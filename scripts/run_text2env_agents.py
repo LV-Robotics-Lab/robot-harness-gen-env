@@ -25,6 +25,11 @@ PROMPTS_DIR = ROOT / "prompts"
 SCHEMA_DOC = ROOT / "schemas" / "text2env_schema_v0.md"
 API_NOTES = ROOT / "robotwin2_task_api_notes.md"
 EXAMPLES_DIR = ROOT / "examples" / "tabletop_tasks"
+MOCK_EXAMPLES = (
+    "move_object_between_zones.json",
+    "move_red_block_to_blue_zone.json",
+    "put_cup_in_drawer.json",
+)
 
 JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.DOTALL | re.IGNORECASE)
 
@@ -77,11 +82,25 @@ def compact_json(data: Any) -> str:
 
 def default_reference_examples() -> str:
     refs = []
-    for name in ("move_object_between_zones.json", "put_cup_in_drawer.json"):
+    for name in MOCK_EXAMPLES:
         path = EXAMPLES_DIR / name
         if path.exists():
             refs.append(f"## {name}\n{read_text(path)}")
     return "\n\n".join(refs)
+
+
+def select_mock_example(instruction: str) -> str:
+    """Choose the closest canned Text2Env example for plumbing tests."""
+    text = instruction.lower()
+    keyword_routes = (
+        (("red", "block", "blue", "zone"), "move_red_block_to_blue_zone.json"),
+        (("green", "block", "left", "right", "zone"), "move_object_between_zones.json"),
+        (("cup", "drawer"), "put_cup_in_drawer.json"),
+    )
+    for keywords, example_name in keyword_routes:
+        if all(keyword in text for keyword in keywords):
+            return example_name
+    return "move_object_between_zones.json"
 
 
 def request_chat(
@@ -124,7 +143,7 @@ def request_chat(
 def mock_response(stage: str, instruction: str, draft: Any | None = None) -> Any:
     """A plumbing-only backend for testing the script without an LLM server."""
     if stage == "designer":
-        data = load_json(EXAMPLES_DIR / "move_object_between_zones.json")
+        data = load_json(EXAMPLES_DIR / select_mock_example(instruction))
         data["language_instruction"] = instruction
         return data
     if stage == "critic":
