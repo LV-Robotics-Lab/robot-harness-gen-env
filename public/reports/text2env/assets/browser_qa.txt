@@ -1,0 +1,47 @@
+{
+  "console_errors": [],
+  "index": "/Users/boris/workspace/alchedata-self-improving-agents/reports/text2env_literature_review/index.html",
+  "page_errors": [],
+  "report": "text2env",
+  "status": "pass_browser_qa",
+  "viewports": {
+    "desktop": {
+      "image_count": 13,
+      "local_link_count": 20,
+      "overflow": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440
+      },
+      "video_count": 1,
+      "videos": [
+        {
+          "duration": 2,
+          "error": null,
+          "height": 540,
+          "readyState": 4,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/text2env_literature_review/assets/empirics/isaac_command_loop/isaac_place_on_rollout.mp4",
+          "width": 960
+        }
+      ]
+    },
+    "mobile": {
+      "image_count": 13,
+      "local_link_count": 20,
+      "overflow": {
+        "clientWidth": 390,
+        "scrollWidth": 391
+      },
+      "video_count": 1,
+      "videos": [
+        {
+          "duration": 2,
+          "error": null,
+          "height": 540,
+          "readyState": 4,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/text2env_literature_review/assets/empirics/isaac_command_loop/isaac_place_on_rollout.mp4",
+          "width": 960
+        }
+      ]
+    }
+  }
+}

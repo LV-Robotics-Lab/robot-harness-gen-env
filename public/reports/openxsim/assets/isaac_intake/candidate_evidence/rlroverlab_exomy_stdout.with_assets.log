@@ -1,0 +1,78 @@
+Loading user config located at: '/home/jingxiang/workspace/agenticsim-runtime/.venv/lib/python3.11/site-packages/isaacsim/kit/data/Kit/Isaac-Sim/5.1/user.config.json'
+[Info] [carb] Logging to file: /home/jingxiang/workspace/agenticsim-runtime/.venv/lib/python3.11/site-packages/isaacsim/kit/logs/Kit/Isaac-Sim/5.1/kit_20260713_205029.log
+2026-07-13T12:50:29Z [97ms] [Warning] [carb.windowing-glfw.plugin] GLFW initialization failed.
+2026-07-13T12:50:29Z [97ms] [Warning] [carb] Failed to startup plugin carb.windowing-glfw.plugin (interfaces: [carb::windowing::IGLContext v1.0],[carb::windowing::IWindowing v1.5]) (impl: carb.windowing-glfw.plugin)
+2026-07-13T12:50:29Z [107ms] [Warning] [omni.platforminfo.plugin] failed to open the default display.  Can't verify X Server version.
+2026-07-13T12:50:29Z [286ms] [Warning] [carb.windowing-glfw.plugin] GLFW initialization failed.
+2026-07-13T12:50:29Z [286ms] [Warning] [carb] Failed to startup plugin carb.windowing-glfw.plugin (interfaces: [carb::windowing::IGLContext v1.0],[carb::windowing::IWindowing v1.5]) (impl: carb.windowing-glfw.plugin)
+2026-07-13T12:50:29Z [421ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: AMD Ryzen 7 7800X3D 8-Core Processor (RADV RAPHAEL_MENDOCINO)
+2026-07-13T12:50:29Z [421ms] [Warning] [gpu.foundation.plugin] Skipping unsupported non-NVIDIA GPU: AMD Ryzen 7 7800X3D 8-Core Processor (RADV RAPHAEL_MENDOCINO)
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 580.159.03    | Graphics API: Vulkan
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA GeForce RTX 5090          | Yes: 0 |     | 32607   MB | 10de      | 0          |
+|     |                                  |        |     |            | 2b85      | f854badd.. |
+|     |                                  |        |     |            | 1         |            |
+|---------------------------------------------------------------------------------------------|
+| 1   | AMD Ryzen 7 7800X3D 8-Core Pro.. |        |     | 21476   MB | 1002      | 0          |
+|     |                                  |        |     |            | 164e      | 00000000.. |
+|     |                                  |        |     |            | 12        |            |
+|=============================================================================================|
+| OS: 24.04.4 LTS (Noble Numbat) ubuntu, Version: 24.04.4, Kernel: 6.17.0-35-generic
+| Processor: AMD Ryzen 7 7800X3D 8-Core Processor
+| Cores: 8 | Logical Cores: 16
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 63405 | Free Memory: 59500
+| Total Page/Swap (MB): 62499 | Free Page/Swap: 62499
+|---------------------------------------------------------------------------------------------|
+2026-07-13T12:50:30Z [691ms] [Warning] [gpu.foundation.plugin] IOMMU is enabled.
+2026-07-13T12:50:30Z [691ms] [Warning] [gpu.foundation.plugin] Detected IOMMU is enabled. Running CUDA peer-to-peer bandwidth and latency validation.
+Unidirectional P2P=Enabled Bandwidth (P2P Writes) Matrix (GB/s)
+   D\D     0 
+     0 1525.88 
+P2P=Enabled Latency (P2P Writes) Matrix (us)
+   GPU     0 
+     0   2.07 
+
+   CPU     0 
+     0   1.60 
+2026-07-13T12:50:30Z [1,087ms] [Warning] [carb.windowing-glfw.plugin] GLFW initialization failed.
+2026-07-13T12:50:30Z [1,088ms] [Warning] [carb] Failed to startup plugin carb.windowing-glfw.plugin (interfaces: [carb::windowing::IGLContext v1.0],[carb::windowing::IWindowing v1.5]) (impl: carb.windowing-glfw.plugin)
+2026-07-13T12:50:30Z [1,101ms] [Warning] [carb.windowing-glfw.plugin] GLFW initialization failed.
+2026-07-13T12:50:30Z [1,101ms] [Warning] [carb] Failed to startup plugin carb.windowing-glfw.plugin (interfaces: [carb::windowing::IGLContext v1.0],[carb::windowing::IWindowing v1.5]) (impl: carb.windowing-glfw.plugin)
+2026-07-13T12:50:30Z [1,106ms] [Warning] [carb.windowing-glfw.plugin] GLFW initialization failed.
+2026-07-13T12:50:30Z [1,106ms] [Warning] [carb] Failed to startup plugin carb.windowing-glfw.plugin (interfaces: [carb::windowing::IGLContext v1.0],[carb::windowing::IWindowing v1.5]) (impl: carb.windowing-glfw.plugin)
+2026-07-13T12:50:30Z [1,118ms] [Warning] [carb.windowing-glfw.plugin] GLFW initialization failed.
+2026-07-13T12:50:30Z [1,118ms] [Warning] [carb] Failed to startup plugin carb.windowing-glfw.plugin (interfaces: [carb::windowing::IGLContext v1.0],[carb::windowing::IWindowing v1.5]) (impl: carb.windowing-glfw.plugin)
+2026-07-13T12:50:30Z [1,119ms] [Warning] [carb.windowing-glfw.plugin] GLFW initialization failed.
+2026-07-13T12:50:30Z [1,119ms] [Warning] [carb] Failed to startup plugin carb.windowing-glfw.plugin (interfaces: [carb::windowing::IGLContext v1.0],[carb::windowing::IWindowing v1.5]) (impl: carb.windowing-glfw.plugin)
+2026-07-13T12:50:30Z [1,120ms] [Warning] [carb.windowing-glfw.plugin] GLFW initialization failed.
+2026-07-13T12:50:30Z [1,120ms] [Warning] [carb] Failed to startup plugin carb.windowing-glfw.plugin (interfaces: [carb::windowing::IGLContext v1.0],[carb::windowing::IWindowing v1.5]) (impl: carb.windowing-glfw.plugin)
+2026-07-13T12:50:30Z [1,208ms] [Warning] [omni.log] Source: omni.hydra was already registered.
+2026-07-13T12:50:30Z [1,392ms] [Warning] [carb] Acquiring non optional plugin interface which is not listed as dependency: [omni::physx::IPhysxBenchmarks v1.0] (plugin: <default plugin>), by client: omni.physics.physx.plugin. Add it to CARB_PLUGIN_IMPL_DEPS() macro of a client.
+2026-07-13T12:50:30Z [1,400ms] [Warning] [omni.isaac.dynamic_control] omni.isaac.dynamic_control is deprecated as of Isaac Sim 4.5. No action is needed from end-users.
+2026-07-13T12:50:32Z [2,747ms] [Warning] [pxr.Semantics] pxr.Semantics is deprecated - please use Semantics instead
+2026-07-13T12:50:32Z [2,842ms] [Warning] [omni.graph.core.plugin] Found duplicate of category 'Replicator' - was 'Annotators', adding 'Fabric Reader'
+2026-07-13T12:50:32Z [2,842ms] [Warning] [omni.graph.core.plugin] Category 'Replicator' not accepted on node type 'omni.replicator.core.FabricReader' in extension 'omni.replicator.core'
+2026-07-13T12:50:32Z [2,842ms] [Warning] [omni.replicator.core.scripts.extension] No material configuration file, adding configuration to material settings directly.
+2026-07-13T12:50:35Z [6,182ms] [Warning] [omni.fabric.plugin] Warning: attribute viewportHandle not found for bucket id 7
+
+2026-07-13T12:50:35Z [6,215ms] [Warning] [rtx.postprocessing.plugin] DLSS increasing input dimensions: Render resolution of (480, 270) is below minimal input resolution of 300.
+2026-07-13T12:50:36Z [6,851ms] [Warning] [isaaclab.envs.manager_based_env] Seed not set for the environment. The environment creation may not be deterministic.
+2026-07-13T12:50:36Z [6,871ms] [Warning] [isaaclab.envs.manager_based_env] The render interval (1) is smaller than the decimation (6). Multiple render calls will happen for each environment step. If this is not intended, set the render interval to be equal to the decimation.
+2026-07-13T12:50:56Z [26,605ms] [Warning] [omni.usd] Warning (secondary thread): in _ReportErrors at line 3172 of /builds/omniverse/usd-ci/USD/pxr/usd/usd/stage.cpp -- In </World/terrain/hidden_terrain/terrain.material:binding>: The relationship target </_materials/Red> from </hidden_terrain/terrain.material:binding> in layer @/home/jingxiang/workspace/agenticsim-runtime/candidates/rlroverlab/rover_envs/assets/terrains/mars/terrain1/terrain_merged.usd@ refers to a path outside the scope of the reference from </World/terrain/hidden_terrain>.  Ignoring. (getting targets for relationship </World/terrain/hidden_terrain/terrain.material:binding> on stage @anon:0x651873b53730:World0.usd@ <0x65187f972380>)
+
+2026-07-13T12:50:56Z [27,047ms] [Warning] [isaaclab.actuators.actuator_pd] The <ImplicitActuatorCfg> object has a value for 'effort_limit'. This parameter will be removed in the future. To set the effort limit, please use 'effort_limit_sim' instead.
+2026-07-13T12:50:56Z [27,047ms] [Warning] [isaaclab.actuators.actuator_pd] The <ImplicitActuatorCfg> object has a value for 'velocity_limit'. Previously, although this value was specified, it was not getting used by implicit actuators. Since this parameter affects the simulation behavior, we continue to not use it. This parameter will be removed in the future. To set the velocity limit, please use 'velocity_limit_sim' instead.
+2026-07-13T12:50:56Z [27,086ms] [Warning] [isaaclab.actuators.actuator_pd] The <ImplicitActuatorCfg> object has a value for 'effort_limit'. This parameter will be removed in the future. To set the effort limit, please use 'effort_limit_sim' instead.
+2026-07-13T12:50:56Z [27,086ms] [Warning] [isaaclab.actuators.actuator_pd] The <ImplicitActuatorCfg> object has a value for 'velocity_limit'. Previously, although this value was specified, it was not getting used by implicit actuators. Since this parameter affects the simulation behavior, we continue to not use it. This parameter will be removed in the future. To set the velocity limit, please use 'velocity_limit_sim' instead.
+2026-07-13T12:50:56Z [27,089ms] [Warning] [isaaclab.actuators.actuator_pd] The <ImplicitActuatorCfg> object has a value for 'effort_limit'. This parameter will be removed in the future. To set the effort limit, please use 'effort_limit_sim' instead.
+2026-07-13T12:50:56Z [27,089ms] [Warning] [isaaclab.actuators.actuator_pd] The <ImplicitActuatorCfg> object has a value for 'velocity_limit'. Previously, although this value was specified, it was not getting used by implicit actuators. Since this parameter affects the simulation behavior, we continue to not use it. This parameter will be removed in the future. To set the velocity limit, please use 'velocity_limit_sim' instead.
+2026-07-13T12:50:57Z [28,118ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/heading_goal.
+2026-07-13T12:50:57Z [28,118ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/position_goal.
+2026-07-13T12:50:58Z [28,481ms] [Warning] [omni.physx.fabric.plugin] FabricManager::initializePointInstancer mismatched prototypes on point instancer: /Visuals/Command/heading_goal.

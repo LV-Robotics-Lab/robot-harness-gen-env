@@ -1,0 +1,87 @@
+{
+  "schema_version": "robotwin.tabletop_asset_grounding.v0",
+  "prompt": "open the drawer and place the mug inside",
+  "direction_frame": "robot_or_dual_arm_first_person",
+  "master_catalog": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/adapter_catalog/robotwin_discovered_catalog.json",
+  "model_provider": "deterministic_alias",
+  "generated_at": "2026-07-12",
+  "matched_assets": [
+    {
+      "mention": "drawer",
+      "asset_id": "036_cabinet",
+      "semantic_name": "cabinet",
+      "match_type": "exact_alias",
+      "confidence": 1.0,
+      "reason": "Prompt mention 'drawer' matched catalog exact alias for 036_cabinet."
+    },
+    {
+      "mention": "mug",
+      "asset_id": "039_mug",
+      "semantic_name": "mug",
+      "match_type": "exact_semantic_name",
+      "confidence": 1.0,
+      "reason": "Prompt mention 'mug' matched catalog exact semantic name for 039_mug."
+    }
+  ],
+  "selected_asset_ids": [
+    "036_cabinet",
+    "039_mug"
+  ],
+  "unmatched_mentions": [],
+  "spatial_relations": [
+    {
+      "subject_mention": "drawer",
+      "subject_asset_id": "036_cabinet",
+      "relation": "on_surface",
+      "reference": "table",
+      "reference_asset_id": null,
+      "direction_frame": "robot_or_dual_arm_first_person"
+    },
+    {
+      "subject_mention": "mug",
+      "subject_asset_id": "039_mug",
+      "relation": "on_surface",
+      "reference": "table",
+      "reference_asset_id": null,
+      "direction_frame": "robot_or_dual_arm_first_person"
+    }
+  ],
+  "warnings": [],
+  "validation": {
+    "schema_version": "robotwin.tabletop_asset_grounding_validation.v0",
+    "status": "pass",
+    "fail_count": 0,
+    "checks": [
+      {
+        "name": "schema_version",
+        "status": "pass",
+        "message": "Schema version is v0."
+      },
+      {
+        "name": "matched_assets_nonempty",
+        "status": "pass",
+        "message": "Found 2 matched asset(s)."
+      },
+      {
+        "name": "asset_exists:036_cabinet",
+        "status": "pass",
+        "message": "Checked 036_cabinet in master catalog."
+      },
+      {
+        "name": "confidence_range:036_cabinet",
+        "status": "pass",
+        "message": "confidence=1.0"
+      },
+      {
+        "name": "asset_exists:039_mug",
+        "status": "pass",
+        "message": "Checked 039_mug in master catalog."
+      },
+      {
+        "name": "confidence_range:039_mug",
+        "status": "pass",
+        "message": "confidence=1.0"
+      }
+    ]
+  }
+}

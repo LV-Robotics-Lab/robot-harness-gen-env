@@ -1,0 +1,278 @@
+{
+  "schema_version": "alchedata.pose_conditioned_trajectory_policy.v0",
+  "status": "pass_pose_conditioned_trajectory_training",
+  "policy_type": "supervised_pose_conditioned_phase_aligned_trajectory_regression",
+  "checkpoint": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/pose_conditioned_train_apple_plate_v1/pose_conditioned_policy.npz",
+  "checkpoint_sha256": "bea8d1cee069554951073dbb8e1dc93a6512898a7d783b216381e1f0e883d9e4",
+  "demonstration_count": 15,
+  "unique_placement_count": 10,
+  "training_pose_signatures": [
+    "10db349166acc7ed6eadf3f747db43e9dc4f5895d4148bfdabc893fe719b002a",
+    "221ac82dde77684aa542eb2c8fdbbf4e1b065f3234329718b83122271b5a2d97",
+    "3af343c5ae9e4d58ba17af9a8c2e430ee15a23aa0d69acc129ed592c9e74229a",
+    "3c72b18e0f048fb344e70c3f55cfe236a23c1ce13641ec70dd5759afc35682a1",
+    "3fb3d3b8a90b93b67ba74132eacd892901f665b155bacbc375e04e40c44ef84f",
+    "588a87ffba8763256c79ba0dd97404806441e07e0156e4a9fc015a89379ec9d5",
+    "8f988791f434176bd08a9857f7814e098a4378486449f221821503a046e67559",
+    "9e9c9388d6746c7363a7d5a57d29cebbcb28b152494a975ca9a688cce0e6e42f",
+    "c08dc3fcc7901ec198c89ea6d2337dfb7b6cb80728e5b5fc503b8e0850528adc",
+    "f31f4c2a752837f44eb984e2d1972cb581a93d82c3c553b03b2e6c9e2328c926"
+  ],
+  "training_features_xy_m": [
+    [
+      -0.21643795561385556,
+      -0.09211086760834403,
+      -0.02755258506766197,
+      -0.005955017018821632
+    ],
+    [
+      -0.17146107893185808,
+      -0.11364882984080578,
+      -0.022008859563069805,
+      -0.03049520408298336
+    ],
+    [
+      -0.18184508413097875,
+      -0.10129816539976422,
+      -0.028552955412990952,
+      -0.044046821535737295
+    ],
+    [
+      -0.20750231346017523,
+      -0.08464832173551187,
+      -0.0195640541349913,
+      -0.04366890647503059
+    ],
+    [
+      -0.19,
+      -0.08,
+      -0.03,
+      -0.04
+    ],
+    [
+      -0.19872688132497535,
+      -0.08723778149290447,
+      -0.03274180826243331,
+      -0.060822005375788774
+    ],
+    [
+      -0.21450766368570012,
+      -0.0883269355268182,
+      -0.025789909148267877,
+      -0.0226919587742698
+    ],
+    [
+      -0.17108059722046418,
+      -0.08179217379597986,
+      -0.018425339704206498,
+      -0.016219081826558505
+    ],
+    [
+      -0.19381359254573627,
+      -0.09197911200708517,
+      -0.0013567981505888602,
+      -0.05645047804854633
+    ],
+    [
+      -0.1748478219552104,
+      -0.10367307123982428,
+      -0.012874869593500038,
+      -0.030023752241374747
+    ]
+  ],
+  "training_episodes": [
+    {
+      "hdf5": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_apple_plate_recovery_v4/data/episode_0.hdf5",
+      "hdf5_sha256": "1a0a2758760061c38398e543196c05c4e3952daf7daa610154e6e9f005ecbe46",
+      "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified_v1/placements/train/train_000.json",
+      "placement_sha256": "1b2db602df2f6f8fbdfac15ebab06ce69f46e9ca5572d2d660fea00b7c0c6a83",
+      "pose_signature": "3fb3d3b8a90b93b67ba74132eacd892901f665b155bacbc375e04e40c44ef84f",
+      "seed": 300,
+      "action_count": 170
+    },
+    {
+      "hdf5": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_apple_plate_recovery_v4/data/episode_1.hdf5",
+      "hdf5_sha256": "f7d51420a57159da666a834673312681b35ebae37abfe64ed69780c48eb60cdc",
+      "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified_v1/placements/train/train_001.json",
+      "placement_sha256": "a373327a95ff40b52e1984294cc89b9b6e25aff29ceea01a5e27902cbcc658a9",
+      "pose_signature": "9e9c9388d6746c7363a7d5a57d29cebbcb28b152494a975ca9a688cce0e6e42f",
+      "seed": 302,
+      "action_count": 172
+    },
+    {
+      "hdf5": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_apple_plate_recovery_v4/data/episode_2.hdf5",
+      "hdf5_sha256": "8509daa3935d3e84ae364fa0c53188ad3f4f6e0ca51048147d1e61c5f0b34b5a",
+      "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified_v1/placements/train/train_002.json",
+      "placement_sha256": "77ac090f6565dc59d8dc51dcdf1b05ac65cb092f74a536e5a4abf6758fe32ea8",
+      "pose_signature": "588a87ffba8763256c79ba0dd97404806441e07e0156e4a9fc015a89379ec9d5",
+      "seed": 303,
+      "action_count": 162
+    },
+    {
+      "hdf5": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_apple_plate_recovery_v4/data/episode_3.hdf5",
+      "hdf5_sha256": "ad661f248db67c786245d4fb7e70872639be33628f5d53520ac25aee37543c46",
+      "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified_v1/placements/train/train_004.json",
+      "placement_sha256": "6faab71e000119131c81a7ef2c49310dbf65289a824d66d2791d3c6e38f0eacd",
+      "pose_signature": "c08dc3fcc7901ec198c89ea6d2337dfb7b6cb80728e5b5fc503b8e0850528adc",
+      "seed": 305,
+      "action_count": 175
+    },
+    {
+      "hdf5": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_apple_plate_recovery_v4/data/episode_4.hdf5",
+      "hdf5_sha256": "069ba00b19647b8ea16c7775dd28ad1dc087899e3de22fc4defb0c11ebe31c46",
+      "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified_v1/placements/train/train_006.json",
+      "placement_sha256": "2a9856305899d451cf1b30886f6ce93eae70d115051b6d13c531b4b042f0373e",
+      "pose_signature": "10db349166acc7ed6eadf3f747db43e9dc4f5895d4148bfdabc893fe719b002a",
+      "seed": 309,
+      "action_count": 170
+    },
+    {
+      "hdf5": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_apple_plate_recovery_v4/data/episode_5.hdf5",
+      "hdf5_sha256": "30b7e637c6578f666ebd6a88a7b4c9708679ce45e4859da4be2832a8f6ea64ae",
+      "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified_v1/placements/train/train_000.json",
+      "placement_sha256": "1b2db602df2f6f8fbdfac15ebab06ce69f46e9ca5572d2d660fea00b7c0c6a83",
+      "pose_signature": "3fb3d3b8a90b93b67ba74132eacd892901f665b155bacbc375e04e40c44ef84f",
+      "seed": 1300,
+      "action_count": 170
+    },
+    {
+      "hdf5": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_apple_plate_recovery_v4/data/episode_6.hdf5",
+      "hdf5_sha256": "39d5ab6c7c330a36cfe135e08433623ca5e6fa220582afbd868c80f7bc89c12b",
+      "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified_v1/placements/train/train_001.json",
+      "placement_sha256": "a373327a95ff40b52e1984294cc89b9b6e25aff29ceea01a5e27902cbcc658a9",
+      "pose_signature": "9e9c9388d6746c7363a7d5a57d29cebbcb28b152494a975ca9a688cce0e6e42f",
+      "seed": 1301,
+      "action_count": 172
+    },
+    {
+      "hdf5": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_apple_plate_recovery_v4/data/episode_7.hdf5",
+      "hdf5_sha256": "a8aaf288a67fb09421eade19e07f12ebe5f6ef45be472257548178c707cd7c58",
+      "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified_v1/placements/train/train_002.json",
+      "placement_sha256": "77ac090f6565dc59d8dc51dcdf1b05ac65cb092f74a536e5a4abf6758fe32ea8",
+      "pose_signature": "588a87ffba8763256c79ba0dd97404806441e07e0156e4a9fc015a89379ec9d5",
+      "seed": 1302,
+      "action_count": 162
+    },
+    {
+      "hdf5": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_apple_plate_recovery_v4/data/episode_8.hdf5",
+      "hdf5_sha256": "be8565ede4c354a8f436ddb95644ff7e6ec8b078b329b8983245c95ec65485cc",
+      "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified_v1/placements/train/train_004.json",
+      "placement_sha256": "6faab71e000119131c81a7ef2c49310dbf65289a824d66d2791d3c6e38f0eacd",
+      "pose_signature": "c08dc3fcc7901ec198c89ea6d2337dfb7b6cb80728e5b5fc503b8e0850528adc",
+      "seed": 1304,
+      "action_count": 175
+    },
+    {
+      "hdf5": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_apple_plate_recovery_v4/data/episode_9.hdf5",
+      "hdf5_sha256": "4d6bfd64477b91e874938994bc7402ac1d33f664b3352ed1c10d214695c5cbc8",
+      "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified_v1/placements/train/train_006.json",
+      "placement_sha256": "2a9856305899d451cf1b30886f6ce93eae70d115051b6d13c531b4b042f0373e",
+      "pose_signature": "10db349166acc7ed6eadf3f747db43e9dc4f5895d4148bfdabc893fe719b002a",
+      "seed": 1306,
+      "action_count": 170
+    },
+    {
+      "hdf5": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_apple_plate_recovery_v4/data/episode_10.hdf5",
+      "hdf5_sha256": "0eb6e005c60c51332d2c0efd801630de4ae98a1c01f9a2e19685125b915d7ec1",
+      "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified10_v2/placements/train/train_001.json",
+      "placement_sha256": "96d38806b7d911de262a4534a08c0121365df8e1cff9a440366125b8a9d85992",
+      "pose_signature": "8f988791f434176bd08a9857f7814e098a4378486449f221821503a046e67559",
+      "seed": 2301,
+      "action_count": 174
+    },
+    {
+      "hdf5": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_apple_plate_recovery_v4/data/episode_11.hdf5",
+      "hdf5_sha256": "43ed28a1d02521820ecb4c3ec55b0fd1607b6776f4227e977f61260467240d58",
+      "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified10_v2/placements/train/train_009.json",
+      "placement_sha256": "6616d5e325bb6b6c109d782d90c80cd207f52ef2deac6f3b34cb7abb93119035",
+      "pose_signature": "3c72b18e0f048fb344e70c3f55cfe236a23c1ce13641ec70dd5759afc35682a1",
+      "seed": 2313,
+      "action_count": 160
+    },
+    {
+      "hdf5": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_apple_plate_recovery_v4/data/episode_12.hdf5",
+      "hdf5_sha256": "a7c959975b424b93380d5cfed2921b95fe34c0dbf0d40698cddb37f7136eecba",
+      "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified_v1/placements/eval/eval_001.json",
+      "placement_sha256": "ff58570741ff47b8186679ce37f6723e31429cd9e08f3bba56a0e0aad8f75a51",
+      "pose_signature": "f31f4c2a752837f44eb984e2d1972cb581a93d82c3c553b03b2e6c9e2328c926",
+      "seed": 3403,
+      "action_count": 162
+    },
+    {
+      "hdf5": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_apple_plate_recovery_v4/data/episode_13.hdf5",
+      "hdf5_sha256": "f42497653df59ecdb3ca3ce6100ff2188d1977516263d7846eabee407d81f454",
+      "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified_v1/placements/eval/eval_002.json",
+      "placement_sha256": "5a4406733621bf5e1117ceb5de223c955511ef67ad098da8ab32d1efe34c0f2b",
+      "pose_signature": "221ac82dde77684aa542eb2c8fdbbf4e1b065f3234329718b83122271b5a2d97",
+      "seed": 3404,
+      "action_count": 163
+    },
+    {
+      "hdf5": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_apple_plate_recovery_v4/data/episode_14.hdf5",
+      "hdf5_sha256": "8d387aa98b290bd4652bfdf52f97caf8ce8a714f6a8301c333c908f38d3690fd",
+      "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified_v1/placements/eval/eval_003.json",
+      "placement_sha256": "9b3bbe1b7c91edd3275e7a520322c8348c7ef3d0b02c0c194e5e971064377e7c",
+      "pose_signature": "3af343c5ae9e4d58ba17af9a8c2e430ee15a23aa0d69acc129ed592c9e74229a",
+      "seed": 3407,
+      "action_count": 169
+    }
+  ],
+  "action_dim": 14,
+  "canonical_action_count": 169,
+  "active_gripper_index": 6,
+  "phase_lengths": [
+    85,
+    56,
+    28
+  ],
+  "feature_definition": [
+    "source_x_m",
+    "source_y_m",
+    "target_x_m",
+    "target_y_m"
+  ],
+  "ridge": 1e-05,
+  "rbf_sigma": 3.0,
+  "cross_validation": {
+    "affine_mse": 0.004677578253957848,
+    "rbf": [
+      {
+        "sigma": 0.35,
+        "mse": 0.9743103355005213
+      },
+      {
+        "sigma": 0.5,
+        "mse": 0.9297434318556321
+      },
+      {
+        "sigma": 0.75,
+        "mse": 0.6635936992081813
+      },
+      {
+        "sigma": 1.0,
+        "mse": 0.36322000791984577
+      },
+      {
+        "sigma": 1.5,
+        "mse": 0.12915565212368194
+      },
+      {
+        "sigma": 2.0,
+        "mse": 0.07584141624333977
+      },
+      {
+        "sigma": 3.0,
+        "mse": 0.03478199019746654
+      }
+    ],
+    "selected_rbf_sigma": 3.0,
+    "selection_reason": "minimum_leave_one_unique_placement_out_trajectory_mse"
+  },
+  "available_predictors": [
+    "affine",
+    "rbf",
+    "blend",
+    "nearest"
+  ],
+  "claim_boundary": "This checkpoint is learned from successful RoboTwin demonstrations, but it is privileged and open-loop: it conditions once on simulator source/target XY poses and emits a full joint trajectory. It is not a vision policy, language-conditioned policy, closed-loop controller, or broad task-generalization result."
+}

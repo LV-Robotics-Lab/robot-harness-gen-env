@@ -1,0 +1,386 @@
+{
+  "schema_version": "alchedata.selection2env.v0",
+  "task_id": "task_laptop_knife",
+  "task_text": "place the laptop to the right of the knife",
+  "status": "pass_sim_smoke",
+  "source_pipeline_status": "pass_static_only",
+  "scene_id": "scene_laptop_knife_v0",
+  "catalog_sources": {
+    "robotwin": {
+      "entry_count": 123,
+      "selection_eligible_count": 123,
+      "match_count": 2
+    },
+    "agenticsim": {
+      "entry_count": 8,
+      "selection_eligible_count": 8,
+      "match_count": 0
+    },
+    "articraft10k": {
+      "entry_count": 9996,
+      "selection_eligible_count": 0,
+      "match_count": 103
+    }
+  },
+  "asset_candidates": [
+    {
+      "asset_id": "rec_laptop_clamshell_0001",
+      "semantic_name": "laptop clamshell 0001",
+      "catalog_source": "articraft10k",
+      "backend_asset_id": "rec_laptop_clamshell_0001",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "decision": "rejected",
+      "reason": "matched task text but was not selected or did not pass the execution gate"
+    },
+    {
+      "asset_id": "rec_laptop_clamshell_0002",
+      "semantic_name": "laptop clamshell 0002",
+      "catalog_source": "articraft10k",
+      "backend_asset_id": "rec_laptop_clamshell_0002",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "decision": "rejected",
+      "reason": "matched task text but was not selected or did not pass the execution gate"
+    },
+    {
+      "asset_id": "rec_laptop_clamshell_00e36cd311c74caa887a388758bdba7f",
+      "semantic_name": "laptop clamshell",
+      "catalog_source": "articraft10k",
+      "backend_asset_id": "rec_laptop_clamshell_00e36cd311c74caa887a388758bdba7f",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "decision": "rejected",
+      "reason": "matched task text but was not selected or did not pass the execution gate"
+    },
+    {
+      "asset_id": "rec_laptop_clamshell_170598888ef0495faf3c7badc2718d45",
+      "semantic_name": "laptop clamshell",
+      "catalog_source": "articraft10k",
+      "backend_asset_id": "rec_laptop_clamshell_170598888ef0495faf3c7badc2718d45",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "decision": "rejected",
+      "reason": "matched task text but was not selected or did not pass the execution gate"
+    },
+    {
+      "asset_id": "rec_laptop_clamshell_1d93c98b593a46eab1752ce4bd985a12",
+      "semantic_name": "laptop clamshell",
+      "catalog_source": "articraft10k",
+      "backend_asset_id": "rec_laptop_clamshell_1d93c98b593a46eab1752ce4bd985a12",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "decision": "rejected",
+      "reason": "matched task text but was not selected or did not pass the execution gate"
+    },
+    {
+      "asset_id": "rec_laptop_clamshell_20334ebdfb664cf29059d6d55e876522",
+      "semantic_name": "laptop clamshell",
+      "catalog_source": "articraft10k",
+      "backend_asset_id": "rec_laptop_clamshell_20334ebdfb664cf29059d6d55e876522",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "decision": "rejected",
+      "reason": "matched task text but was not selected or did not pass the execution gate"
+    },
+    {
+      "asset_id": "rec_laptop_clamshell_23f3d79cd362422a9a77f00e744ff753",
+      "semantic_name": "laptop clamshell",
+      "catalog_source": "articraft10k",
+      "backend_asset_id": "rec_laptop_clamshell_23f3d79cd362422a9a77f00e744ff753",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "decision": "rejected",
+      "reason": "matched task text but was not selected or did not pass the execution gate"
+    },
+    {
+      "asset_id": "rec_laptop_clamshell_2941265dbf4e4405b0e184f2de4ba558",
+      "semantic_name": "laptop clamshell",
+      "catalog_source": "articraft10k",
+      "backend_asset_id": "rec_laptop_clamshell_2941265dbf4e4405b0e184f2de4ba558",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "decision": "rejected",
+      "reason": "matched task text but was not selected or did not pass the execution gate"
+    },
+    {
+      "asset_id": "015_laptop",
+      "semantic_name": "laptop",
+      "catalog_source": "robotwin",
+      "backend_asset_id": "015_laptop",
+      "execution_status": "robotwin_loadable",
+      "selection_eligible": true,
+      "decision": "accepted",
+      "reason": "selected by placement spec and execution-eligible"
+    },
+    {
+      "asset_id": "034_knife",
+      "semantic_name": "knife",
+      "catalog_source": "robotwin",
+      "backend_asset_id": "034_knife",
+      "execution_status": "robotwin_loadable",
+      "selection_eligible": true,
+      "decision": "accepted",
+      "reason": "selected by placement spec and execution-eligible"
+    }
+  ],
+  "selected_assets": [
+    {
+      "object_id": "laptop_1",
+      "asset_id": "015_laptop",
+      "model_id": 0,
+      "role": "scene_object",
+      "semantic": "laptop"
+    },
+    {
+      "object_id": "knife_1",
+      "asset_id": "034_knife",
+      "model_id": 0,
+      "role": "reference_object",
+      "semantic": "knife"
+    }
+  ],
+  "placement_regions": {
+    "left_reachable_area": {
+      "x": [
+        -0.24,
+        -0.06
+      ],
+      "y": [
+        -0.16,
+        0.08
+      ],
+      "purpose": "reachable free tabletop area for the first mentioned object"
+    },
+    "right_reachable_area": {
+      "x": [
+        0.08,
+        0.3
+      ],
+      "y": [
+        -0.16,
+        0.08
+      ],
+      "purpose": "reachable tabletop area for the second mentioned object"
+    },
+    "center_clearance_area": {
+      "x": [
+        -0.05,
+        0.07
+      ],
+      "y": [
+        -0.2,
+        0.12
+      ],
+      "purpose": "free corridor for downstream manipulation"
+    }
+  },
+  "support_surface": {
+    "type": "table",
+    "frame": "robot_first_person_tabletop; x is robot-left/right across the table, y is robot-front/back on the table, z is height; the RoboTwin adapter maps this frame into the simulator task frame",
+    "bounds": {
+      "x": [
+        -0.45,
+        0.45
+      ],
+      "y": [
+        -0.35,
+        0.25
+      ],
+      "z": [
+        0.74,
+        1.1
+      ]
+    }
+  },
+  "pose_constraints": [
+    {
+      "object_id": "laptop_1",
+      "region": "left_reachable_area",
+      "xyz": [
+        -0.19,
+        -0.08,
+        0.76
+      ],
+      "qpos": [
+        0.7,
+        0,
+        0,
+        0.7
+      ],
+      "z_policy": "snap_to_tabletop_on_load",
+      "physical": {
+        "is_static": true,
+        "collision": true,
+        "stable_on_table": true
+      }
+    },
+    {
+      "object_id": "knife_1",
+      "region": "right_reachable_area",
+      "xyz": [
+        0.13999999999999999,
+        0.0,
+        0.755
+      ],
+      "qpos": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "z_policy": "snap_to_tabletop_on_load",
+      "physical": {
+        "is_static": true,
+        "collision": true,
+        "stable_on_table": false
+      }
+    }
+  ],
+  "camera_observation": {
+    "required_views": [
+      "head_camera",
+      "observer_camera"
+    ],
+    "visual_checks": [
+      "object visibility",
+      "prompt relation match",
+      "occlusion",
+      "reachability",
+      "stability",
+      "visual plausibility beyond rigid collision"
+    ]
+  },
+  "robot_constraints": {
+    "embodiment": "RoboTwin tabletop manipulator",
+    "workspace_reachability": "all objects must be inside named reachable regions before simulator smoke",
+    "action_interface": "RoboTwin task-program input; policy data is produced by /collect after smoke"
+  },
+  "success_verifier": {
+    "type": "static_then_simulator_then_visual",
+    "conditions": [
+      "static schema validation passes",
+      "RoboTwin assets exist under robotwin_root",
+      "asset-load render smoke exits pass",
+      "Base_Task/CuRobo smoke exits pass",
+      "/collect dry-run writes dataset manifest, camera samples, and object state traces",
+      "visual review confirms placement semantics"
+    ],
+    "failure_modes": [
+      "missing asset",
+      "object penetration",
+      "floating object",
+      "unreachable pose",
+      "occlusion",
+      "unstable settling",
+      "task intent not represented"
+    ]
+  },
+  "artifacts": {
+    "pipeline_summary": "runs/probe_static_laptop_knife/pipeline_summary.json",
+    "final_placement": "runs/probe_static_laptop_knife/final_placement.json",
+    "static_validation_final": "runs/probe_static_laptop_knife/static_validation_final.json",
+    "task_program_input": "artifacts/task_program_inputs/task_laptop_knife.json",
+    "catalog_candidate_search": "artifacts/adapter_catalog/selection2env_queries/task_laptop_knife.json",
+    "asset_smoke_report": "runs/smoke_asset_laptop_knife/smoke_report.json",
+    "asset_observer_camera": "runs/smoke_asset_laptop_knife/observer_camera.png",
+    "asset_head_camera": "runs/smoke_asset_laptop_knife/head_camera.png",
+    "basetask_smoke_report": "runs/smoke_basetask_laptop_knife/smoke_report.json",
+    "basetask_observer_camera": "runs/smoke_basetask_laptop_knife/observer_camera.png",
+    "basetask_head_camera": "runs/smoke_basetask_laptop_knife/head_camera.png",
+    "collect_report": "runs/collect_dryrun_laptop_knife/collect_report.json",
+    "collect_dataset_manifest": "runs/collect_dryrun_laptop_knife/dataset_manifest.json",
+    "collect_object_states": "runs/collect_dryrun_laptop_knife/episode_000/object_states.jsonl",
+    "collect_scene_info": "runs/collect_dryrun_laptop_knife/episode_000/scene_info.json"
+  },
+  "simulator_smoke": {
+    "asset_load_render": {
+      "status": "pass_asset_load_render",
+      "object_count": 2,
+      "pose_delta_norm_m": {
+        "laptop_1": 0.0,
+        "knife_1": 0.0
+      },
+      "pixel_stats": {
+        "observer_camera": {
+          "mean": 200.95080729166668,
+          "std": 15.406868993909908,
+          "min": 46.0,
+          "max": 255.0
+        },
+        "head_camera": {
+          "mean": 199.78910807291666,
+          "std": 22.540413682704493,
+          "min": 28.0,
+          "max": 255.0
+        }
+      },
+      "report": "runs/smoke_asset_laptop_knife/smoke_report.json",
+      "scope": "asset_load_render_without_robot_planner"
+    },
+    "basetask_curobo": {
+      "status": "pass",
+      "object_count": 2,
+      "pose_delta_norm_m": {
+        "laptop_1": 0.0,
+        "knife_1": 0.0
+      },
+      "pixel_stats": {},
+      "report": "runs/smoke_basetask_laptop_knife/smoke_report.json",
+      "scope": "robotwin_base_task_with_curobo_initialized"
+    },
+    "collect_dry_run": {
+      "status": "pass_collect_dry_run",
+      "episode_count": 1,
+      "object_count": 2,
+      "observation_file_count": 10,
+      "policy_execution": "not_run",
+      "task_success_claim": "not_claimed",
+      "dataset_manifest": "runs/collect_dryrun_laptop_knife/dataset_manifest.json",
+      "report": "runs/collect_dryrun_laptop_knife/collect_report.json",
+      "scope": "robotwin_base_task_observation_and_object_state_trace"
+    },
+    "generated_action_rollout": {
+      "status": "not_run_for_task",
+      "scope": "generated_selection2env_play_once_action_repair",
+      "message": "No generated action-repair play_once is attached to this normalized task; apple/plate and can/basket side repairs are tracked in the generated action-repair summary."
+    },
+    "generated_rollout_collection": {
+      "status": "not_run_for_task",
+      "scope": "generated_selection2env_multi_episode_play_once_collection",
+      "message": "No generated rollout collection is attached to this normalized task; apple/plate and can/basket side repairs are tracked in the generated action-repair summary."
+    },
+    "generated_policy_evaluation": {
+      "status": "not_run_for_task",
+      "scope": "generated_selection2env_learned_act_evaluate",
+      "message": "The bounded learned-ACT /evaluate adapter currently covers only apple/plate."
+    }
+  },
+  "blockers": [
+    {
+      "code": "POLICY_EVALUATION_TASK_COVERAGE_PENDING",
+      "message": "Generated collection and learned-policy /evaluate coverage are not attached to this normalized task; the bounded learned-ACT adapter currently covers apple/plate only.",
+      "owner": "Zheng Ye / Gaochen"
+    }
+  ],
+  "handoff": {
+    "collect_outputs": [
+      "rollout logs",
+      "scene/task manifest",
+      "camera previews",
+      "object state traces",
+      "failure diagnosis"
+    ],
+    "train_reads": [
+      "rollout dataset manifest",
+      "policy config",
+      "data requirement spec"
+    ],
+    "evaluate_reads": [
+      "policy checkpoint",
+      "eval task set",
+      "verifier results",
+      "failure trace clusters"
+    ]
+  }
+}

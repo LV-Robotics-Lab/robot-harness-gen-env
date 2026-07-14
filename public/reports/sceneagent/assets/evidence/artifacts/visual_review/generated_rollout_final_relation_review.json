@@ -1,0 +1,99 @@
+{
+  "schema_version": "alchedata.generated_rollout_final_relation_review.v0",
+  "created_at": "2026-07-09",
+  "review_type": "agent_visual_review_plus_simulator_metrics",
+  "contact_sheet": "artifacts/visual_review/generated_rollout_final_relation_contact_sheet.png",
+  "overall_status": "pass_scripted_final_relation_support_separate_fixed_scene_policy_eval_passed",
+  "claim_boundary": "This review checks scripted generated-rollout final relation support from saved observer frames and simulator relation metrics. The separate native synchronized learned-ACT evaluation passes 3/3 on one fixed placement; this visual review is not cross-placement or cross-task policy evidence.",
+  "cases": [
+    {
+      "task_id": "task_apple_plate",
+      "prompt": "move the apple onto the plate",
+      "collection_report": "runs/generated_collect_apple_plate_action_repair/collection_report.json",
+      "dataset_manifest": "runs/generated_collect_apple_plate_action_repair/dataset_manifest.json",
+      "final_relation": "apple visually supported on or over the plate in all reviewed final observer frames",
+      "metric_gate": {
+        "max_xy_distance_m": 0.06160250404351306,
+        "min_z_delta_m": 0.03450745344161987,
+        "threshold_xy_m": 0.08,
+        "status": "pass"
+      },
+      "episodes": [
+        {
+          "episode_index": 0,
+          "seed": 0,
+          "final_observer_image": "runs/generated_collect_apple_plate_action_repair/episode_000/final_observer_camera.png",
+          "check_success": true,
+          "xy_distance_m": 0.031838589165001915,
+          "z_delta_m": 0.05856490135192871,
+          "visual_relation_check": "pass"
+        },
+        {
+          "episode_index": 1,
+          "seed": 1,
+          "final_observer_image": "runs/generated_collect_apple_plate_action_repair/episode_001/final_observer_camera.png",
+          "check_success": true,
+          "xy_distance_m": 0.06160250404351306,
+          "z_delta_m": 0.03450745344161987,
+          "visual_relation_check": "pass"
+        },
+        {
+          "episode_index": 2,
+          "seed": 3,
+          "final_observer_image": "runs/generated_collect_apple_plate_action_repair/episode_002/final_observer_camera.png",
+          "check_success": true,
+          "xy_distance_m": 0.031838589165001915,
+          "z_delta_m": 0.05856490135192871,
+          "visual_relation_check": "pass"
+        }
+      ]
+    },
+    {
+      "task_id": "task_can_basket",
+      "prompt": "put the can into the basket",
+      "collection_report": "runs/generated_collect_can_basket_action_repair/collection_report.json",
+      "dataset_manifest": "runs/generated_collect_can_basket_action_repair/dataset_manifest.json",
+      "final_relation": "can visually overlaps the basket opening or rim area in all reviewed final observer frames",
+      "metric_gate": {
+        "max_xy_distance_m": 0.038859232311298036,
+        "min_z_delta_m": 0.021507561206817627,
+        "threshold_xy_m": 0.08,
+        "status": "pass"
+      },
+      "episodes": [
+        {
+          "episode_index": 0,
+          "seed": 0,
+          "final_observer_image": "runs/generated_collect_can_basket_action_repair/episode_000/final_observer_camera.png",
+          "check_success": true,
+          "xy_distance_m": 0.0345082806056541,
+          "z_delta_m": 0.021507561206817627,
+          "visual_relation_check": "pass"
+        },
+        {
+          "episode_index": 1,
+          "seed": 1,
+          "final_observer_image": "runs/generated_collect_can_basket_action_repair/episode_001/final_observer_camera.png",
+          "check_success": true,
+          "xy_distance_m": 0.03138125445650728,
+          "z_delta_m": 0.09907054901123047,
+          "visual_relation_check": "pass"
+        },
+        {
+          "episode_index": 2,
+          "seed": 2,
+          "final_observer_image": "runs/generated_collect_can_basket_action_repair/episode_002/final_observer_camera.png",
+          "check_success": true,
+          "xy_distance_m": 0.038859232311298036,
+          "z_delta_m": 0.024972915649414062,
+          "visual_relation_check": "pass"
+        }
+      ]
+    }
+  ],
+  "remaining_gates": [
+    "Collect non-identical synchronized demonstrations across varied source and target poses.",
+    "Expand learned-policy evaluation beyond fixed apple/plate placement to randomized, held-out-placement, and cross-task cases.",
+    "Expand Articraft-10K archive coverage beyond the five sampled probes and pass broader scale/material/task-suitability gates."
+  ]
+}

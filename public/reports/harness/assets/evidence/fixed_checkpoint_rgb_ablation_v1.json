@@ -1,0 +1,126 @@
+{
+  "causal_result": "Within this fixed-placement, fixed-checkpoint, three-seed protocol, the corrected RGB harness adapter caused the measured success increase.",
+  "claim_boundary": "This ablation attributes the measured difference within the matched fixed-scene protocol. It does not establish placement robustness, cross-task generalization, domain-randomized robustness, or real-robot benefit.",
+  "claim_class": "COMPUTED",
+  "confidence": "HIGH",
+  "evidence": {
+    "baseline_report": "runs/harness_ablation_rgb_swap_baseline_v1/evaluate_report.json",
+    "baseline_report_sha256": "496ab27ef9c325e83b3240bff8b962af7b29e0ad96c5c884606f02fd4fbe42b1",
+    "candidate_report": "runs/harness_ablation_rgb_identity_candidate_v1/evaluate_report.json",
+    "candidate_report_sha256": "d7f59610cfae2e5498ba768cbba9041a139a93f055b1c2567fbeefd62bdcbf31"
+  },
+  "experiment": {
+    "fixed_variables": {
+      "action_selection": "execute_full_161_action_chunk_before_replan",
+      "checkpoint_sha256": "7e4cd9a0fde41a058efa39cf836ef582acaf3b8956edce914c9e71ac4e088870",
+      "dataset_stats_sha256": "e254fdeae1b552aaae49733c99e01cc02a8509c9f1cf39bdc259dd032a4f0c7a",
+      "domain_randomization": {
+        "cluttered_table": false,
+        "random_background": false,
+        "random_head_camera_dis": 0.0,
+        "random_light": false,
+        "random_table_height": 0.0
+      },
+      "eval_placements": [
+        {
+          "placement_id": "fixed",
+          "placement_sha256": "f8f0b053e754920a36c174cefbbaa3752f07444145f3f95f6ff2e3cd985c8180",
+          "pose_signature": null,
+          "seed": 4
+        },
+        {
+          "placement_id": "fixed",
+          "placement_sha256": "f8f0b053e754920a36c174cefbbaa3752f07444145f3f95f6ff2e3cd985c8180",
+          "pose_signature": null,
+          "seed": 5
+        },
+        {
+          "placement_id": "fixed",
+          "placement_sha256": "f8f0b053e754920a36c174cefbbaa3752f07444145f3f95f6ff2e3cd985c8180",
+          "pose_signature": null,
+          "seed": 6
+        }
+      ],
+      "held_out_seeds": [
+        4,
+        5,
+        6
+      ],
+      "model_config": {
+        "action_dim": 14,
+        "backbone": "resnet18",
+        "camera_names": [
+          "cam_high"
+        ],
+        "chunk_size": 161,
+        "dec_layers": 7,
+        "device": "cuda:0",
+        "dilation": false,
+        "dim_feedforward": 256,
+        "dropout": 0.1,
+        "enc_layers": 4,
+        "hidden_dim": 64,
+        "kl_weight": 1.0,
+        "lr": 1e-05,
+        "lr_backbone": 1e-05,
+        "masks": false,
+        "nheads": 8,
+        "num_epochs": 1,
+        "policy_class": "ACT",
+        "position_embedding": "sine",
+        "pre_norm": false,
+        "state_dim": 14,
+        "weight_decay": 0.0001
+      },
+      "placement_randomization": "fixed_action_repair_placement",
+      "runtime_camera_source": "head_camera",
+      "source_training_seeds": [
+        0,
+        1,
+        2
+      ],
+      "task_config": "demo_clean",
+      "task_id": "task_apple_plate",
+      "training_camera_key": "cam_high"
+    },
+    "hypothesis": "Correcting the runtime RGB adapter improves task success without changing the learned policy or task protocol.",
+    "intervention": {
+      "baseline": "swap_red_blue",
+      "candidate": "identity",
+      "harness_surface": "observations.runtime_color_adapter",
+      "only_declared_difference": true
+    },
+    "predeclared_promotion_threshold": {
+      "all_episodes_execute": true,
+      "candidate_success": "3/3",
+      "minimum_success_delta": 2,
+      "no_observed_infrastructure_or_nonfinite_action_regression": true
+    }
+  },
+  "generated_at": "2026-07-13T15:32:37.155165+00:00",
+  "outcomes": {
+    "baseline_success_count": 0,
+    "baseline_success_rate": 0.0,
+    "both_arms_execution_complete": true,
+    "candidate_success_count": 3,
+    "candidate_success_rate": 1.0,
+    "episode_count_per_arm": 3,
+    "no_observed_safety_regression": true,
+    "success_delta": 3
+  },
+  "promotion": {
+    "candidate_harness_id": "runtime_rgb_identity_v1",
+    "decision": "accept",
+    "gates": {
+      "candidate_all_success": true,
+      "matched_fixed_checkpoint_protocol": true,
+      "minimum_success_delta": true,
+      "no_observed_safety_regression": true
+    },
+    "parent_harness_id": "runtime_rgb_swap_red_blue_v0",
+    "promoted_harness_id": "runtime_rgb_identity_v1",
+    "rollback_harness_id": "runtime_rgb_swap_red_blue_v0"
+  },
+  "schema_version": "alchedata.harness_causal_ablation.v0",
+  "status": "pass_matched_harness_ablation_candidate_promoted"
+}

@@ -1,0 +1,105 @@
+{
+  "schema_version": "alchedata.robotwin_asset_smoke.v0",
+  "status": "pass_asset_load_render",
+  "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/probe_static_apple_plate/final_placement.json",
+  "robotwin_root": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin",
+  "out_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/smoke_asset_apple_plate",
+  "seed": 0,
+  "settle_steps": 120,
+  "video_frames": 24,
+  "notes": [
+    "This smoke uses official RoboTwin object assets and SAPIEN rendering.",
+    "It intentionally bypasses Robot/Base_Task planner initialization.",
+    "It validates asset load, physics scene insertion, render capture, and pose trace evidence.",
+    "It is not a CuRobo planner or manipulation policy smoke."
+  ],
+  "object_count": 2,
+  "objects": [
+    "apple_1",
+    "plate_1"
+  ],
+  "images": {
+    "observer_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/smoke_asset_apple_plate/observer_camera.png",
+    "head_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/smoke_asset_apple_plate/head_camera.png"
+  },
+  "video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/smoke_asset_apple_plate/observer_camera.mp4",
+  "initial_poses": {
+    "apple_1": {
+      "p": [
+        -0.1899999976158142,
+        -0.07999999821186066,
+        0.7409999966621399
+      ],
+      "q": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "plate_1": {
+      "p": [
+        0.14000000059604645,
+        0.0,
+        0.7409999966621399
+      ],
+      "q": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "final_poses": {
+    "apple_1": {
+      "p": [
+        -0.19058001041412354,
+        -0.08091820031404495,
+        0.765590250492096
+      ],
+      "q": [
+        0.9997366070747375,
+        0.019000215455889702,
+        -0.012828347273170948,
+        0.0012381821870803833
+      ]
+    },
+    "plate_1": {
+      "p": [
+        0.14000000059604645,
+        0.0,
+        0.7409999966621399
+      ],
+      "q": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "pose_delta_norm_m": {
+    "apple_1": 0.024614225426942176,
+    "plate_1": 0.0
+  },
+  "pixel_stats": {
+    "observer_camera": {
+      "mean": 201.66218098958333,
+      "std": 13.669818276100736,
+      "min": 38.0,
+      "max": 255.0
+    },
+    "head_camera": {
+      "mean": 201.15644856770834,
+      "std": 15.660394902655561,
+      "min": 41.0,
+      "max": 253.0
+    }
+  },
+  "runtime": {
+    "python": "3.10.20",
+    "platform": "Linux-6.17.0-35-generic-x86_64-with-glibc2.39",
+    "sapien_module": "/home/jingxiang/miniconda3/envs/robotwin-smoke/lib/python3.10/site-packages/sapien/core/__init__.py"
+  }
+}

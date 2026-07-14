@@ -1,0 +1,395 @@
+{
+  "schema_version": "alchedata.failure_score_correlation.v0",
+  "status": "pass_predeclared_failure_score_correlation_reported",
+  "generated_at": "2026-07-13T16:22:39.336912+00:00",
+  "protocol": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_protocol_v1/protocol.json",
+  "protocol_sha256": "39665cf39298d4cfd85a27d693d310303bcd1b594e4320b9e9d8d998000c8997",
+  "evaluate_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/evaluate_report.json",
+  "evaluate_report_sha256": "b71ad32a5c103d56e05238f3c30033b136c83be14f0e1823354353873d9105a4",
+  "sample_count": 12,
+  "unique_pose_signature_count": 12,
+  "success_count": 10,
+  "failure_count": 2,
+  "metrics": {
+    "point_biserial_pearson_r": -0.254515644061242,
+    "spearman_rho": -0.2550690905693111,
+    "exact_two_sided_label_permutation_p": 0.7272727272727273
+  },
+  "interpretation": "higher score was not associated with more failures in this bounded sample",
+  "all_samples_retained": true,
+  "samples": [
+    {
+      "case_id": "case_000",
+      "source_split": "source_train",
+      "source_placement_id": "train_000",
+      "pose_signature": "3fb3d3b8a90b93b67ba74132eacd892901f665b155bacbc375e04e40c44ef84f",
+      "pose_vector": [
+        -0.19,
+        -0.08,
+        -0.03,
+        -0.04
+      ],
+      "failure_score": 0.0,
+      "nearest_training_feature_index": 4,
+      "placement": "../placement_robustness_apple_plate_verified10_v2/placements/train/train_000.json",
+      "placement_sha256": "1b2db602df2f6f8fbdfac15ebab06ce69f46e9ca5572d2d660fea00b7c0c6a83",
+      "episode_seed": 8100,
+      "policy_success": true,
+      "failure": 0,
+      "status": "completed_policy_success",
+      "policy_step_count": 147,
+      "relation_metrics": {
+        "xy_distance_m": 0.02008080899911116,
+        "source_z_m": 0.7526640892028809,
+        "target_z_m": 0.7409999966621399,
+        "source_minus_target_z_m": 0.011664092540740967,
+        "left_gripper_open": true,
+        "right_gripper_open": true
+      },
+      "episode_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_000_case_000_seed_8100/episode_report.json",
+      "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_000_case_000_seed_8100/observer_policy_rollout.mp4"
+    },
+    {
+      "case_id": "case_001",
+      "source_split": "source_train",
+      "source_placement_id": "train_001",
+      "pose_signature": "8f988791f434176bd08a9857f7814e098a4378486449f221821503a046e67559",
+      "pose_vector": [
+        -0.21450766368570012,
+        -0.0883269355268182,
+        -0.025789909148267877,
+        -0.0226919587742698
+      ],
+      "failure_score": 0.0,
+      "nearest_training_feature_index": 6,
+      "placement": "../placement_robustness_apple_plate_verified10_v2/placements/train/train_001.json",
+      "placement_sha256": "96d38806b7d911de262a4534a08c0121365df8e1cff9a440366125b8a9d85992",
+      "episode_seed": 8101,
+      "policy_success": true,
+      "failure": 0,
+      "status": "completed_policy_success",
+      "policy_step_count": 148,
+      "relation_metrics": {
+        "xy_distance_m": 0.019682754995230426,
+        "source_z_m": 0.7476481795310974,
+        "target_z_m": 0.7409999966621399,
+        "source_minus_target_z_m": 0.0066481828689575195,
+        "left_gripper_open": true,
+        "right_gripper_open": true
+      },
+      "episode_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_001_case_001_seed_8101/episode_report.json",
+      "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_001_case_001_seed_8101/observer_policy_rollout.mp4"
+    },
+    {
+      "case_id": "case_002",
+      "source_split": "source_train",
+      "source_placement_id": "train_002",
+      "pose_signature": "9e9c9388d6746c7363a7d5a57d29cebbcb28b152494a975ca9a688cce0e6e42f",
+      "pose_vector": [
+        -0.17108059722046418,
+        -0.08179217379597986,
+        -0.018425339704206498,
+        -0.016219081826558505
+      ],
+      "failure_score": 0.0,
+      "nearest_training_feature_index": 7,
+      "placement": "../placement_robustness_apple_plate_verified10_v2/placements/train/train_002.json",
+      "placement_sha256": "2c6a5e06bd3a1b8a81cc4c5c86934d3acf1b691daaaff749fe714817ff7241e5",
+      "episode_seed": 8102,
+      "policy_success": true,
+      "failure": 0,
+      "status": "completed_policy_success",
+      "policy_step_count": 157,
+      "relation_metrics": {
+        "xy_distance_m": 0.11447576001257694,
+        "source_z_m": 0.7953720092773438,
+        "target_z_m": 0.7409999966621399,
+        "source_minus_target_z_m": 0.05437201261520386,
+        "left_gripper_open": true,
+        "right_gripper_open": true
+      },
+      "episode_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_002_case_002_seed_8102/episode_report.json",
+      "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_002_case_002_seed_8102/observer_policy_rollout.mp4"
+    },
+    {
+      "case_id": "case_003",
+      "source_split": "source_train",
+      "source_placement_id": "train_003",
+      "pose_signature": "588a87ffba8763256c79ba0dd97404806441e07e0156e4a9fc015a89379ec9d5",
+      "pose_vector": [
+        -0.19872688132497535,
+        -0.08723778149290447,
+        -0.03274180826243331,
+        -0.060822005375788774
+      ],
+      "failure_score": 0.0,
+      "nearest_training_feature_index": 5,
+      "placement": "../placement_robustness_apple_plate_verified10_v2/placements/train/train_003.json",
+      "placement_sha256": "7c29c8a4fd467dde5e665f0cca91f57131c949590489b234e00660e18e844873",
+      "episode_seed": 8103,
+      "policy_success": true,
+      "failure": 0,
+      "status": "completed_policy_success",
+      "policy_step_count": 143,
+      "relation_metrics": {
+        "xy_distance_m": 0.029739019055695058,
+        "source_z_m": 0.7545565366744995,
+        "target_z_m": 0.7409999966621399,
+        "source_minus_target_z_m": 0.01355654001235962,
+        "left_gripper_open": true,
+        "right_gripper_open": true
+      },
+      "episode_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_003_case_003_seed_8103/episode_report.json",
+      "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_003_case_003_seed_8103/observer_policy_rollout.mp4"
+    },
+    {
+      "case_id": "case_004",
+      "source_split": "source_train",
+      "source_placement_id": "train_004",
+      "pose_signature": "fd5994b4c50cc2dad56ea390bc5fc66f9bd8032453338a207baf14e4f2b60ba2",
+      "pose_vector": [
+        -0.18520403298673613,
+        -0.05493146378349795,
+        -0.024167412867711718,
+        -0.008859997734088576
+      ],
+      "failure_score": 2.8961845498238277,
+      "nearest_training_feature_index": 7,
+      "placement": "../placement_robustness_apple_plate_verified10_v2/placements/train/train_004.json",
+      "placement_sha256": "3e2f328a26624a271769593abe81eeee07e573a8c2017ddc9251072461bc91ee",
+      "episode_seed": 8104,
+      "policy_success": true,
+      "failure": 0,
+      "status": "completed_policy_success",
+      "policy_step_count": 147,
+      "relation_metrics": {
+        "xy_distance_m": 0.048170686488772124,
+        "source_z_m": 0.7870466709136963,
+        "target_z_m": 0.7409999966621399,
+        "source_minus_target_z_m": 0.046046674251556396,
+        "left_gripper_open": true,
+        "right_gripper_open": true
+      },
+      "episode_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_004_case_004_seed_8104/episode_report.json",
+      "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_004_case_004_seed_8104/observer_policy_rollout.mp4"
+    },
+    {
+      "case_id": "case_005",
+      "source_split": "source_train",
+      "source_placement_id": "train_005",
+      "pose_signature": "c08dc3fcc7901ec198c89ea6d2337dfb7b6cb80728e5b5fc503b8e0850528adc",
+      "pose_vector": [
+        -0.19381359254573627,
+        -0.09197911200708517,
+        -0.0013567981505888602,
+        -0.05645047804854633
+      ],
+      "failure_score": 0.0,
+      "nearest_training_feature_index": 8,
+      "placement": "../placement_robustness_apple_plate_verified10_v2/placements/train/train_005.json",
+      "placement_sha256": "04b2f0a72796ae7a25854f7e9a08cef0506bf248d56268195686a86929615199",
+      "episode_seed": 8105,
+      "policy_success": true,
+      "failure": 0,
+      "status": "completed_policy_success",
+      "policy_step_count": 150,
+      "relation_metrics": {
+        "xy_distance_m": 0.04533465021476874,
+        "source_z_m": 0.7528247833251953,
+        "target_z_m": 0.7409999966621399,
+        "source_minus_target_z_m": 0.01182478666305542,
+        "left_gripper_open": true,
+        "right_gripper_open": true
+      },
+      "episode_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_005_case_005_seed_8105/episode_report.json",
+      "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_005_case_005_seed_8105/observer_policy_rollout.mp4"
+    },
+    {
+      "case_id": "case_006",
+      "source_split": "source_train",
+      "source_placement_id": "train_006",
+      "pose_signature": "ab09079fa55d843adf3b3bddcaab44c6271bba80f8998783ecf4405778b88426",
+      "pose_vector": [
+        -0.1674445881750707,
+        -0.06802541946634422,
+        -0.023567129356500346,
+        -0.05502974793581368
+      ],
+      "failure_score": 2.1607836658130295,
+      "nearest_training_feature_index": 4,
+      "placement": "../placement_robustness_apple_plate_verified10_v2/placements/train/train_006.json",
+      "placement_sha256": "4be99eff9c0db63553ac0670fc8ee7c6a5749e23c74c4b43d2d83ec5a953af3f",
+      "episode_seed": 8106,
+      "policy_success": true,
+      "failure": 0,
+      "status": "completed_policy_success",
+      "policy_step_count": 18,
+      "relation_metrics": {
+        "xy_distance_m": 0.11476824716612044,
+        "source_z_m": 0.7693473696708679,
+        "target_z_m": 0.7409999966621399,
+        "source_minus_target_z_m": 0.028347373008728027,
+        "left_gripper_open": true,
+        "right_gripper_open": true
+      },
+      "episode_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_006_case_006_seed_8106/episode_report.json",
+      "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_006_case_006_seed_8106/observer_policy_rollout.mp4"
+    },
+    {
+      "case_id": "case_007",
+      "source_split": "source_train",
+      "source_placement_id": "train_007",
+      "pose_signature": "10db349166acc7ed6eadf3f747db43e9dc4f5895d4148bfdabc893fe719b002a",
+      "pose_vector": [
+        -0.21643795561385556,
+        -0.09211086760834403,
+        -0.02755258506766197,
+        -0.005955017018821632
+      ],
+      "failure_score": 0.0,
+      "nearest_training_feature_index": 0,
+      "placement": "../placement_robustness_apple_plate_verified10_v2/placements/train/train_007.json",
+      "placement_sha256": "287c6dc981314ef59dd92ec9ecac7f16ef29b80345f1827878b2274e4549d363",
+      "episode_seed": 8107,
+      "policy_success": false,
+      "failure": 1,
+      "status": "completed_policy_failure",
+      "policy_step_count": 175,
+      "relation_metrics": {
+        "xy_distance_m": 0.247531918162447,
+        "source_z_m": 0.7648476362228394,
+        "target_z_m": 0.7409999966621399,
+        "source_minus_target_z_m": 0.023847639560699463,
+        "left_gripper_open": true,
+        "right_gripper_open": true
+      },
+      "episode_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_007_case_007_seed_8107/episode_report.json",
+      "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_007_case_007_seed_8107/observer_policy_rollout.mp4"
+    },
+    {
+      "case_id": "case_008",
+      "source_split": "source_eval",
+      "source_placement_id": "eval_000",
+      "pose_signature": "e07eec9b233f12f4df39b84492994c927a620842e8b2d394b4d65f891026818a",
+      "pose_vector": [
+        -0.21919113303568727,
+        -0.10295827050134897,
+        -0.016400230177993035,
+        -0.05674038097996417
+      ],
+      "failure_score": 2.129710252804635,
+      "nearest_training_feature_index": 3,
+      "placement": "../placement_robustness_apple_plate_verified10_v2/placements/eval/eval_000.json",
+      "placement_sha256": "8107ac10d709579a3ad9bffc5f2810eb2e76035dc449109826f1fd038e698d68",
+      "episode_seed": 8108,
+      "policy_success": true,
+      "failure": 0,
+      "status": "completed_policy_success",
+      "policy_step_count": 147,
+      "relation_metrics": {
+        "xy_distance_m": 0.03209610482377738,
+        "source_z_m": 0.7632936239242554,
+        "target_z_m": 0.7409999966621399,
+        "source_minus_target_z_m": 0.02229362726211548,
+        "left_gripper_open": true,
+        "right_gripper_open": true
+      },
+      "episode_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_008_case_008_seed_8108/episode_report.json",
+      "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_008_case_008_seed_8108/observer_policy_rollout.mp4"
+    },
+    {
+      "case_id": "case_009",
+      "source_split": "source_eval",
+      "source_placement_id": "eval_001",
+      "pose_signature": "f31f4c2a752837f44eb984e2d1972cb581a93d82c3c553b03b2e6c9e2328c926",
+      "pose_vector": [
+        -0.1748478219552104,
+        -0.10367307123982428,
+        -0.012874869593500038,
+        -0.030023752241374747
+      ],
+      "failure_score": 0.0,
+      "nearest_training_feature_index": 9,
+      "placement": "../placement_robustness_apple_plate_verified10_v2/placements/eval/eval_001.json",
+      "placement_sha256": "ff58570741ff47b8186679ce37f6723e31429cd9e08f3bba56a0e0aad8f75a51",
+      "episode_seed": 8109,
+      "policy_success": true,
+      "failure": 0,
+      "status": "completed_policy_success",
+      "policy_step_count": 145,
+      "relation_metrics": {
+        "xy_distance_m": 0.03488354935847763,
+        "source_z_m": 0.7741889953613281,
+        "target_z_m": 0.7409999966621399,
+        "source_minus_target_z_m": 0.03318899869918823,
+        "left_gripper_open": true,
+        "right_gripper_open": true
+      },
+      "episode_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_009_case_009_seed_8109/episode_report.json",
+      "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_009_case_009_seed_8109/observer_policy_rollout.mp4"
+    },
+    {
+      "case_id": "case_010",
+      "source_split": "source_eval",
+      "source_placement_id": "eval_002",
+      "pose_signature": "221ac82dde77684aa542eb2c8fdbbf4e1b065f3234329718b83122271b5a2d97",
+      "pose_vector": [
+        -0.17146107893185808,
+        -0.11364882984080578,
+        -0.022008859563069805,
+        -0.03049520408298336
+      ],
+      "failure_score": 0.0,
+      "nearest_training_feature_index": 1,
+      "placement": "../placement_robustness_apple_plate_verified10_v2/placements/eval/eval_002.json",
+      "placement_sha256": "5a4406733621bf5e1117ceb5de223c955511ef67ad098da8ab32d1efe34c0f2b",
+      "episode_seed": 8110,
+      "policy_success": false,
+      "failure": 1,
+      "status": "completed_policy_failure",
+      "policy_step_count": 175,
+      "relation_metrics": {
+        "xy_distance_m": 0.20681027681790384,
+        "source_z_m": 0.7648563385009766,
+        "target_z_m": 0.7409999966621399,
+        "source_minus_target_z_m": 0.02385634183883667,
+        "left_gripper_open": true,
+        "right_gripper_open": true
+      },
+      "episode_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_010_case_010_seed_8110/episode_report.json",
+      "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_010_case_010_seed_8110/observer_policy_rollout.mp4"
+    },
+    {
+      "case_id": "case_011",
+      "source_split": "source_eval",
+      "source_placement_id": "eval_003",
+      "pose_signature": "3af343c5ae9e4d58ba17af9a8c2e430ee15a23aa0d69acc129ed592c9e74229a",
+      "pose_vector": [
+        -0.18184508413097875,
+        -0.10129816539976422,
+        -0.028552955412990952,
+        -0.044046821535737295
+      ],
+      "failure_score": 0.0,
+      "nearest_training_feature_index": 2,
+      "placement": "../placement_robustness_apple_plate_verified10_v2/placements/eval/eval_003.json",
+      "placement_sha256": "9b3bbe1b7c91edd3275e7a520322c8348c7ef3d0b02c0c194e5e971064377e7c",
+      "episode_seed": 8111,
+      "policy_success": true,
+      "failure": 0,
+      "status": "completed_policy_success",
+      "policy_step_count": 145,
+      "relation_metrics": {
+        "xy_distance_m": 0.019071696713282238,
+        "source_z_m": 0.749775767326355,
+        "target_z_m": 0.7409999966621399,
+        "source_minus_target_z_m": 0.008775770664215088,
+        "left_gripper_open": true,
+        "right_gripper_open": true
+      },
+      "episode_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_011_case_011_seed_8111/episode_report.json",
+      "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_failure_score_act_eval_v1/episode_011_case_011_seed_8111/observer_policy_rollout.mp4"
+    }
+  ],
+  "claim_boundary": "This protocol tests one geometric distance heuristic against one ACT checkpoint. A correlation, including a positive one, would not prove causality or transfer to other policies, tasks, or simulators."
+}

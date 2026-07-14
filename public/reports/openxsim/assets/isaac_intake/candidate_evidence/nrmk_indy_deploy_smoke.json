@@ -1,0 +1,306 @@
+{
+  "action_space": "Box(-inf, inf, (1, 6), float32)",
+  "asset_root": "",
+  "camera_pose": [
+    [
+      2.4,
+      2.4,
+      2.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.7
+    ]
+  ],
+  "capture_timeout_s": 180,
+  "device": "cuda:0",
+  "elapsed_s": 10.663,
+  "imported_modules": [
+    {
+      "file": "/home/jingxiang/workspace/agenticsim-runtime/candidates/nrmk_isaaclab_public_selective/isaac_neuromeka/tasks/__init__.py",
+      "module": "isaac_neuromeka.tasks"
+    }
+  ],
+  "num_envs": 1,
+  "observation_space": "Dict('policy': Dict('op_state': Box(-inf, inf, (1, 1), float32), 'p': Box(-inf, inf, (1, 7), float32), 'pdot': Box(-inf, inf, (1, 6), float32), 'q': Box(-inf, inf, (1, 6), float32), 'qdot': Box(-inf, inf, (1, 6), float32)))",
+  "pythonpath": [],
+  "register_modules": [
+    "isaac_neuromeka.tasks"
+  ],
+  "reset_info": {
+    "log": {}
+  },
+  "schema": "agenticsim.isaaclab_gym_task_smoke.v0",
+  "screenshot": "/home/jingxiang/workspace/agenticsim-runtime/artifacts/candidates/nrmk_indy_deploy_smoke.png",
+  "screenshot_ready": true,
+  "screenshot_size_bytes": 518993,
+  "stage": {
+    "matches": [
+      {
+        "path": "/World/envs/env_0/Robot",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks",
+        "type": "Scope"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_black",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_black/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_blue",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_blue/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_brown",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_brown/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_green",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_green/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_grey_",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_grey_/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_metal",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_metal/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_metal_grey",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_metal_grey/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_metal_white",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_metal_white/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_orange",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_orange/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_red",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_red/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_white",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_white/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link0",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link0/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link0/collisions",
+        "type": "Cylinder"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link0/joint0",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/root_joint",
+        "type": "PhysicsFixedJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link1",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link1/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link1/collisions",
+        "type": ""
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link1/collisions/mesh_0",
+        "type": "Cylinder"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link1/collisions/mesh_1",
+        "type": "Capsule"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link1/joint1",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link2",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link2/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link2/collisions",
+        "type": "Capsule"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link2/joint2",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link3",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link3/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link3/collisions",
+        "type": ""
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link3/collisions/mesh_0",
+        "type": "Cylinder"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link3/collisions/mesh_1",
+        "type": "Capsule"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link3/joint3",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link4",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link4/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link4/collisions",
+        "type": "Cylinder"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link4/joint4",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link5",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link5/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link5/collisions",
+        "type": "Cylinder"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link5/joint5",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link6",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link6/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link6/collisions",
+        "type": "Cylinder"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/link6/tcp",
+        "type": "PhysicsFixedJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/tcp",
+        "type": "Xform"
+      }
+    ],
+    "ready": true,
+    "root_layer": "anon:0x5bba0f715ca0:World0.usd"
+  },
+  "status": "captured",
+  "step_samples": [
+    {
+      "reward": [
+        0.0
+      ],
+      "step": 0,
+      "terminated": [
+        false
+      ],
+      "truncated": [
+        false
+      ]
+    },
+    {
+      "reward": [
+        0.0
+      ],
+      "step": 19,
+      "terminated": [
+        false
+      ],
+      "truncated": [
+        false
+      ]
+    }
+  ],
+  "steps_completed": 20,
+  "steps_requested": 20,
+  "task": "Indy-Deploy"
+}

@@ -1,0 +1,440 @@
+{
+  "action_space": "Box(-inf, inf, (1, 12), float32)",
+  "asset_root": "",
+  "camera_pose": [
+    [
+      1.307459767908032,
+      1.2624140579036554,
+      1.9592872331060394
+    ],
+    [
+      0.04504571000437668,
+      0.0,
+      1.264959501259029
+    ]
+  ],
+  "capture_timeout_s": 180,
+  "device": "cuda:0",
+  "elapsed_s": 10.683,
+  "env_cfg_overrides": [],
+  "env_cfg_overrides_requested": [],
+  "framed_asset": {
+    "name": "robot",
+    "root_position": [
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "framed_prim": {
+    "center": [
+      0.04504571000437668,
+      0.0,
+      1.264959501259029
+    ],
+    "extent": [
+      0.5738245717743887,
+      0.3240260016322136,
+      0.5377490027099849
+    ],
+    "maximum": [
+      0.33195799589157104,
+      0.1620130008161068,
+      1.5338340026140214
+    ],
+    "minimum": [
+      -0.24186657588281768,
+      -0.1620130008161068,
+      0.9960849999040364
+    ],
+    "path": "/World/envs/env_0/Robot",
+    "ready": true,
+    "root_translation": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "type": "Xform"
+  },
+  "imported_modules": [
+    {
+      "file": "/home/jingxiang/workspace/agenticsim-runtime/candidates/robot_identification/sysid_isaaclab/tasks/register_my_tasks.py",
+      "module": "tasks.register_my_tasks"
+    }
+  ],
+  "num_envs": 1,
+  "observation_space": "Dict('policy': Dict('actions': Box(-inf, inf, (1, 12), float32), 'joint_pos': Box(-inf, inf, (1, 12), float32), 'joint_vel': Box(-inf, inf, (1, 12), float32)))",
+  "pythonpath": [
+    "candidates/robot_identification/sysid_isaaclab",
+    "candidates/robot_identification/sysid_isaaclab/pace-sim2real/source/pace_sim2real"
+  ],
+  "register_modules": [
+    "tasks.register_my_tasks"
+  ],
+  "reset_info": {
+    "log": {
+      "Episode_Reward/dof_pos_limits": 0.0,
+      "Episode_Termination/time_out": 0.0
+    }
+  },
+  "schema": "agenticsim.isaaclab_gym_task_smoke.v0",
+  "screenshot": "/home/jingxiang/workspace/agenticsim-runtime/artifacts/candidates/robot_identification_go2_smoke.with_cmaes.png",
+  "screenshot_ready": true,
+  "screenshot_size_bytes": 569082,
+  "stage": {
+    "matches": [
+      {
+        "path": "/World/envs/env_0/Robot",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Materials",
+        "type": "Scope"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Materials/black",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Materials/white",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Materials/gray",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Materials/metal",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base/base_0",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base/base_1",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base/base_2",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base/base_3",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base/base_4",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base/Box",
+        "type": "Cube"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base/Box_1",
+        "type": "Cube"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base/Box_2",
+        "type": "Cube"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base/Box_3",
+        "type": "Cube"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base/Capsule",
+        "type": "Capsule"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base/Capsule_1",
+        "type": "Capsule"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base/Capsule_2",
+        "type": "Capsule"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base/Sphere",
+        "type": "Sphere"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base/imu",
+        "type": "Sphere"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/base/FixedJoint",
+        "type": "PhysicsFixedJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_hip",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_hip/hip_0",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_hip/hip_1",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_hip/Capsule",
+        "type": "Capsule"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_hip/RR_hip_joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RL_hip",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RL_hip/hip_0",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RL_hip/hip_1",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RL_hip/Capsule",
+        "type": "Capsule"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RL_hip/RL_hip_joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_hip",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_hip/hip_0",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_hip/hip_1",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_hip/Capsule",
+        "type": "Capsule"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_hip/FR_hip_joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_hip",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_hip/hip_0",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_hip/hip_1",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_hip/Capsule",
+        "type": "Capsule"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_hip/FL_hip_joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_thigh",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_thigh/thigh_mirror_0",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_thigh/thigh_mirror_1",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_thigh/Box",
+        "type": "Cube"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_thigh/RR_thigh_joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_calf",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_calf/calf_mirror_0",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_calf/calf_mirror_1",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_calf/Box",
+        "type": "Cube"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_calf/Box_1",
+        "type": "Cube"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_calf/Box_2",
+        "type": "Cube"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_calf/foot",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_calf/RR_calf_joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_foot",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_foot/RR",
+        "type": "Sphere"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_foot/PhysicsFixedJoint",
+        "type": "PhysicsFixedJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_thigh",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_thigh/thigh_0",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_thigh/thigh_1",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_thigh/Box",
+        "type": "Cube"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_thigh/FL_thigh_joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_calf",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_calf/calf_0",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_calf/calf_1",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_calf/Box",
+        "type": "Cube"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_calf/Box_1",
+        "type": "Cube"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_calf/Box_2",
+        "type": "Cube"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_calf/foot",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_calf/FL_calf_joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_foot",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_foot/FL",
+        "type": "Sphere"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_foot/PhysicsFixedJoint",
+        "type": "PhysicsFixedJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_thigh",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_thigh/thigh_mirror_0",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_thigh/thigh_mirror_1",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_thigh/Box",
+        "type": "Cube"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_thigh/FR_thigh_joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_calf",
+        "type": "Xform"
+      }
+    ],
+    "ready": true,
+    "root_layer": "anon:0x5bb549a9c040:World0.usd"
+  },
+  "status": "captured",
+  "step_samples": [
+    {
+      "reward": [
+        0.0
+      ],
+      "step": 0,
+      "terminated": [
+        false
+      ],
+      "truncated": [
+        false
+      ]
+    },
+    {
+      "reward": [
+        0.0
+      ],
+      "step": 9,
+      "terminated": [
+        false
+      ],
+      "truncated": [
+        false
+      ]
+    }
+  ],
+  "steps_completed": 10,
+  "steps_requested": 10,
+  "task": "IsaacLab-Pace-Go2"
+}

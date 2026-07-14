@@ -1,0 +1,200 @@
+{
+  "version": "1",
+  "pip_version": "26.1.2",
+  "install": [
+    {
+      "download_info": {
+        "url": "https://files.pythonhosted.org/packages/8a/67/f95b5460f127840310d2187f916cf0023b5875c0717fdf893f71e1325e87/plotly-6.5.2-py3-none-any.whl",
+        "archive_info": {
+          "hashes": {
+            "sha256": "91757653bd9c550eeea2fa2404dba6b85d1e366d54804c340b2c874e5a7eb4a4"
+          },
+          "hash": "sha256=91757653bd9c550eeea2fa2404dba6b85d1e366d54804c340b2c874e5a7eb4a4"
+        }
+      },
+      "is_direct": false,
+      "is_yanked": false,
+      "requested": true,
+      "metadata": {
+        "metadata_version": "2.4",
+        "name": "plotly",
+        "version": "6.5.2",
+        "dynamic": [
+          "license-file"
+        ],
+        "summary": "An open-source interactive data visualization library for Python",
+        "description": "# plotly.py\n\n<table>\n    <tr>\n        <td>Latest Release</td>\n        <td>\n            <a href=\"https://pypi.org/project/plotly/\"/>\n            <img src=\"https://badge.fury.io/py/plotly.svg\"/>\n        </td>\n    </tr>\n    <tr>\n        <td>User forum</td>\n        <td>\n            <a href=\"https://community.plotly.com/\"/>\n            <img src=\"https://img.shields.io/badge/help_forum-discourse-blue.svg\"/>\n        </td>\n    </tr>\n    <tr>\n        <td>PyPI Downloads</td>\n        <td>\n            <a href=\"https://pepy.tech/project/plotly\"/>\n            <img src=\"https://pepy.tech/badge/plotly/month\"/>\n        </td>\n    </tr>\n    <tr>\n        <td>License</td>\n        <td>\n            <a href=\"https://opensource.org/licenses/MIT\"/>\n            <img src=\"https://img.shields.io/badge/License-MIT-yellow.svg\"/>\n        </td>\n    </tr>\n</table>\n\n<div align=\"center\">\n  <a href=\"https://dash.plotly.com/project-maintenance\">\n    <img src=\"https://dash.plotly.com/assets/images/maintained-by-plotly.png\" width=\"400px\" alt=\"Maintained by Plotly\">\n  </a>\n</div>\n\n## Quickstart\n\n`pip install plotly`\n\n```python\nimport plotly.express as px\nfig = px.bar(x=[\"a\", \"b\", \"c\"], y=[1, 3, 2])\nfig.show()\n```\n\nSee the [Python documentation](https://plotly.com/python/) for more examples.\n\n## Overview\n\n[plotly.py](https://plotly.com/python/) is an interactive, open-source, and browser-based graphing library for Python :sparkles:\n\nBuilt on top of [plotly.js](https://github.com/plotly/plotly.js), `plotly.py` is a high-level, declarative charting library. plotly.js ships with over 30 chart types, including scientific charts, 3D graphs, statistical charts, SVG maps, financial charts, and more.\n\n`plotly.py` is [MIT Licensed](https://github.com/plotly/plotly.py/blob/main/LICENSE.txt). Plotly graphs can be viewed in [Jupyter notebooks](https://jupyter.org), other Python notebook software such as [marimo](https://marimo.io), as standalone HTML files, or integrated into [Dash applications](https://dash.plotly.com/).\n\n[Contact us](https://plotly.com/consulting-and-oem/) for consulting, dashboard development, application integration, and feature additions.\n\n<p align=\"center\">\n    <a href=\"https://plotly.com/python/\" target=\"_blank\">\n    <img src=\"https://raw.githubusercontent.com/cldougl/plot_images/add_r_img/plotly_2017.png\">\n</a></p>\n\n---\n\n- [Online Documentation](https://plotly.com/python/)\n- [Contributing to plotly](https://github.com/plotly/plotly.py/blob/main/CONTRIBUTING.md)\n- [Changelog](https://github.com/plotly/plotly.py/blob/main/CHANGELOG.md)\n- [Code of Conduct](https://github.com/plotly/plotly.py/blob/main/CODE_OF_CONDUCT.md)\n- [Community forum](https://community.plotly.com)\n\n---\n\n## Installation\n\nplotly.py may be installed using pip\n\n```\npip install plotly\n```\n\nor conda.\n\n```\nconda install -c conda-forge plotly\n```\n\n### Jupyter Widget Support\n\nFor use as a Jupyter widget, install `jupyter` and `anywidget`\npackages using `pip`:\n\n```\npip install jupyter anywidget\n```\n\nor `conda`:\n\n```\nconda install jupyter anywidget\n```\n\n### Static Image Export\n\nplotly.py supports [static image export](https://plotly.com/python/static-image-export/),\nusing either the [`kaleido`](https://github.com/plotly/Kaleido)\npackage (recommended, supported as of `plotly` version 4.9) or the [orca](https://github.com/plotly/orca)\ncommand line utility (legacy as of `plotly` version 4.9).\n\n#### Kaleido\n\nThe [`kaleido`](https://github.com/plotly/Kaleido) package has no dependencies and can be installed\nusing pip\n\n```\npip install -U kaleido\n```\n\nor conda\n\n```\nconda install -c conda-forge python-kaleido\n```\n\n### Extended Geo Support\n\nSome plotly.py features rely on fairly large geographic shape files. The county\nchoropleth figure factory is one such example. These shape files are distributed as a\nseparate `plotly-geo` package. This package can be installed using pip...\n\n```\npip install plotly-geo==1.0.0\n```\n\nor conda\n\n```\nconda install -c plotly plotly-geo=1.0.0\n```\n\n`plotly-geo` can be found on Github at https://github.com/plotly/plotly-geo.\n\n## Copyright and Licenses\n\nCode and documentation copyright 2019 Plotly, Inc.\n\nCode released under the [MIT license](https://github.com/plotly/plotly.py/blob/main/LICENSE.txt).\n\nDocs released under the [Creative Commons license](https://github.com/plotly/documentation/blob/source/LICENSE).\n\n",
+        "description_content_type": "text/markdown",
+        "author_email": "Chris P <chris@plot.ly>",
+        "maintainer_email": "Martha Cryan <martha.cryan@plot.ly>, Emily Kellison-Linn <emily@plot.ly>",
+        "license": "MIT License\n\nCopyright (c) 2016-2024 Plotly Technologies Inc.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n",
+        "license_file": [
+          "LICENSE.txt"
+        ],
+        "classifier": [
+          "Development Status :: 5 - Production/Stable",
+          "Programming Language :: Python :: 3.8",
+          "Programming Language :: Python :: 3.9",
+          "Programming Language :: Python :: 3.10",
+          "Programming Language :: Python :: 3.11",
+          "Programming Language :: Python :: 3.12",
+          "Programming Language :: Python :: 3.13",
+          "Topic :: Scientific/Engineering :: Visualization",
+          "License :: OSI Approved :: MIT License"
+        ],
+        "requires_dist": [
+          "narwhals>=1.15.1",
+          "packaging",
+          "numpy; extra == \"express\"",
+          "kaleido>=1.1.0; extra == \"kaleido\"",
+          "pytest; extra == \"dev-core\"",
+          "requests; extra == \"dev-core\"",
+          "ruff==0.11.12; extra == \"dev-core\"",
+          "plotly[dev_core]; extra == \"dev-build\"",
+          "build; extra == \"dev-build\"",
+          "jupyter; extra == \"dev-build\"",
+          "plotly[dev_build]; extra == \"dev-optional\"",
+          "plotly[kaleido]; extra == \"dev-optional\"",
+          "anywidget; extra == \"dev-optional\"",
+          "colorcet; extra == \"dev-optional\"",
+          "fiona<=1.9.6; python_version <= \"3.8\" and extra == \"dev-optional\"",
+          "geopandas; extra == \"dev-optional\"",
+          "inflect; extra == \"dev-optional\"",
+          "numpy; extra == \"dev-optional\"",
+          "orjson; extra == \"dev-optional\"",
+          "pandas; extra == \"dev-optional\"",
+          "pdfrw; extra == \"dev-optional\"",
+          "pillow; extra == \"dev-optional\"",
+          "plotly-geo; extra == \"dev-optional\"",
+          "polars[timezone]; extra == \"dev-optional\"",
+          "pyarrow; extra == \"dev-optional\"",
+          "pyshp; extra == \"dev-optional\"",
+          "pytz; extra == \"dev-optional\"",
+          "scikit-image; extra == \"dev-optional\"",
+          "scipy; extra == \"dev-optional\"",
+          "shapely; extra == \"dev-optional\"",
+          "statsmodels; extra == \"dev-optional\"",
+          "vaex; python_version <= \"3.9\" and extra == \"dev-optional\"",
+          "xarray; extra == \"dev-optional\"",
+          "plotly[dev_optional]; extra == \"dev\""
+        ],
+        "requires_python": ">=3.8",
+        "project_url": [
+          "HomePage, https://plotly.com/python/",
+          "Documentation, https://plotly.com/python/",
+          "Github, https://github.com/plotly/plotly.py",
+          "Changelog, https://github.com/plotly/plotly.py/blob/main/CHANGELOG.md"
+        ],
+        "provides_extra": [
+          "express",
+          "kaleido",
+          "dev-core",
+          "dev-build",
+          "dev-optional",
+          "dev"
+        ]
+      }
+    },
+    {
+      "download_info": {
+        "url": "https://files.pythonhosted.org/packages/7e/85/a5bfaebfd305ac18b57b0854d74e37e586809061a91fda62f0bd50c8518e/narwhals-2.24.0-py3-none-any.whl",
+        "archive_info": {
+          "hashes": {
+            "sha256": "42fdedf44e5b2ca7505630d45b4ac3058f38d8485cba9fe1652ca23152df7489"
+          },
+          "hash": "sha256=42fdedf44e5b2ca7505630d45b4ac3058f38d8485cba9fe1652ca23152df7489"
+        }
+      },
+      "is_direct": false,
+      "is_yanked": false,
+      "requested": false,
+      "metadata": {
+        "metadata_version": "2.4",
+        "name": "narwhals",
+        "version": "2.24.0",
+        "summary": "Extremely lightweight compatibility layer between dataframe libraries",
+        "description": "# Narwhals\n\n<h1 align=\"center\">\n\t<img\n\t\twidth=\"400\"\n\t\talt=\"narwhals_small\"\n\t\tsrc=\"https://github.com/user-attachments/assets/968545af-ea0f-48bb-8377-144e93f7abf8\">\n</h1>\n\n[![PyPI version](https://badge.fury.io/py/narwhals.svg)](https://badge.fury.io/py/narwhals)\n[![Downloads](https://static.pepy.tech/badge/narwhals/month)](https://pepy.tech/project/narwhals)\n[![Trusted publishing](https://img.shields.io/badge/Trusted_publishing-Provides_attestations-bright_green)](https://peps.python.org/pep-0740/)\n[![PYPI - Types](https://img.shields.io/pypi/types/narwhals)](https://pypi.org/project/narwhals)\n[![LFX Health Score](https://insights.linuxfoundation.org/api/badge/health-score?project=narwhals-dev-narwhals)](https://insights.linuxfoundation.org/project/narwhals-dev-narwhals)\n[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/narwhals-dev/narwhals/badge)](https://securityscorecards.dev/viewer/?uri=github.com/narwhals-dev/narwhals)\n\nExtremely lightweight and extensible compatibility layer between dataframe libraries!\n\n- **Full API support**: cuDF, Modin, pandas, Polars, PyArrow.\n- **Lazy-only support**: Daft, Dask, DuckDB, Ibis, PySpark, SQLFrame.\n\nSeamlessly support all, without depending on any!\n\n- ✅ **Just use** [a subset of **the Polars API**](https://narwhals-dev.github.io/narwhals/api-reference/), no need to learn anything new\n- ✅ **Zero dependencies**, Narwhals only uses what\n  the user passes in so your library can stay lightweight\n- ✅ Separate **lazy** and eager APIs, use **expressions**\n- ✅ Support pandas' complicated type system and index, without\n  either getting in the way\n- ✅ **100% branch coverage**, tested against pandas and Polars nightly builds\n- ✅ **Negligible overhead**, see [overhead](https://narwhals-dev.github.io/narwhals/overhead/)\n- ✅ Let your IDE help you thanks to **full static typing**, see [typing](https://narwhals-dev.github.io/narwhals/api-reference/typing/)\n- ✅ **Perfect backwards compatibility policy**,\n  see [stable api](https://narwhals-dev.github.io/narwhals/backcompat/) for how to opt-in\n\nGet started!\n\n- [Read the documentation](https://narwhals-dev.github.io/narwhals/)\n- [Chat with us on Discord!](https://discord.gg/V3PqtB4VA4)\n- [Join our community call](https://calendar.google.com/calendar/embed?src=27ff6dc5f598c1d94c1f6e627a1aaae680e2fac88f848bda1f2c7946ae74d5ab%40group.calendar.google.com)\n- [Read the contributing guide](https://github.com/narwhals-dev/narwhals/blob/main/CONTRIBUTING.md)\n\n<details>\n<summary>Table of contents</summary>\n\n- [Narwhals](#narwhals)\n  - [Installation](#installation)\n  - [Usage](#usage)\n  - [Example](#example)\n  - [Scope](#scope)\n  - [Roadmap](#roadmap)\n  - [Used by](#used-by)\n  - [Sponsors and institutional partners](#sponsors-and-institutional-partners)\n  - [Support](#support)\n  - [Appears on](#appears-on)\n  - [Why \"Narwhals\"?](#why-narwhals)\n\n</details>\n\n## Installation\n\n- pip (recommended, as it's the most up-to-date)\n  ```\n  pip install narwhals\n  ```\n- conda-forge (also fine, but the latest version may take longer to appear)\n  ```\n  conda install -c conda-forge narwhals\n  ```\n\n## Usage\n\nThere are three steps to writing dataframe-agnostic code using Narwhals:\n\n1. use `narwhals.from_native` to wrap a pandas/Polars/Modin/cuDF/PyArrow\n   DataFrame/LazyFrame in a Narwhals class\n2. use the [subset of the Polars API supported by Narwhals](https://narwhals-dev.github.io/narwhals/api-reference/)\n3. use `narwhals.to_native` to return an object to the user in its original\n   dataframe flavour. For example:\n\n   - if you started with pandas, you'll get pandas back\n   - if you started with Polars, you'll get Polars back\n   - if you started with Modin, you'll get Modin back (and compute will be distributed)\n   - if you started with cuDF, you'll get cuDF back (and compute will happen on GPU)\n   - if you started with PyArrow, you'll get PyArrow back\n\n<h1 align=\"left\">\n\t<img\n\t\twidth=\"600\"\n\t\talt=\"narwhals_gif\"\n\t\tsrc=\"https://github.com/user-attachments/assets/88292d3c-6359-4155-973d-d0f8e3fbf5ac\">\n\n</h1>\n\n## Example\n\nNarwhals allows you to define dataframe-agnostic functions. For example:\n\n```python\nimport narwhals as nw\nfrom narwhals.typing import IntoFrameT\n\n\ndef agnostic_function(df_native: IntoFrameT) -> IntoFrameT:\n    return (\n        nw.from_native(df_native)\n        .with_columns(\n            category=nw.when(nw.col(\"animal\").str.contains(\"whale\"))\n            .then(nw.lit(\"whale\"))\n            .otherwise(nw.lit(\"other\"))\n        )\n        .to_native()\n    )\n```\n\nYou can then pass `pandas.DataFrame`, `polars.DataFrame`, `polars.LazyFrame`, `duckdb.DuckDBPyRelation`,\n`pyspark.sql.DataFrame`, `pyarrow.Table`, and more, to `agnostic_function`. In each case, no additional\ndependencies will be required, and computation will stay native to the input library:\n\n```python\nimport duckdb\nimport polars as pl\nimport pandas as pd\n\ndata = {\n    \"animal\": [\"blue whale\", \"orca\", \"dolphin\", \"humpback whale\", \"seal\"],\n    \"length_m\": [30.0, 8, 2.5, 17, 2.2],\n    \"weight_kg\": [150000, 4000, 200, 30000, 85],\n}\n\nprint(\"Polars result\")\ndf_pl = pl.DataFrame(data)\nprint(agnostic_function(df_pl))\n\nprint(\"DuckDB result\")\nprint(agnostic_function(duckdb.sql(\"select * from df_pl\")))\n\nprint(\"pandas result\")\ndf_pd = pd.DataFrame(data)\nprint(agnostic_function(df_pd))\n```\n\n```terminal\nPolars result\nshape: (5, 4)\n┌────────────────┬──────────┬───────────┬──────────┐\n│ animal         ┆ length_m ┆ weight_kg ┆ category │\n│ ---            ┆ ---      ┆ ---       ┆ ---      │\n│ str            ┆ f64      ┆ i64       ┆ str      │\n╞════════════════╪══════════╪═══════════╪══════════╡\n│ blue whale     ┆ 30.0     ┆ 150000    ┆ whale    │\n│ orca           ┆ 8.0      ┆ 4000      ┆ other    │\n│ dolphin        ┆ 2.5      ┆ 200       ┆ other    │\n│ humpback whale ┆ 17.0     ┆ 30000     ┆ whale    │\n│ seal           ┆ 2.2      ┆ 85        ┆ other    │\n└────────────────┴──────────┴───────────┴──────────┘\nDuckDB result\n┌────────────────┬──────────┬───────────┬──────────┐\n│     animal     │ length_m │ weight_kg │ category │\n│    varchar     │  double  │   int64   │ varchar  │\n├────────────────┼──────────┼───────────┼──────────┤\n│ blue whale     │     30.0 │    150000 │ whale    │\n│ orca           │      8.0 │      4000 │ other    │\n│ dolphin        │      2.5 │       200 │ other    │\n│ humpback whale │     17.0 │     30000 │ whale    │\n│ seal           │      2.2 │        85 │ other    │\n└────────────────┴──────────┴───────────┴──────────┘\n\npandas result\n           animal  length_m  weight_kg category\n0      blue whale      30.0     150000    whale\n1            orca       8.0       4000    other\n2         dolphin       2.5        200    other\n3  humpback whale      17.0      30000    whale\n4            seal       2.2         85    other\n```\n\nSee the [tutorial](https://narwhals-dev.github.io/narwhals/basics/dataframe/) for several examples!\n\n## Scope\n\n- Do you maintain a dataframe-consuming library?\n- Do you have a specific Polars function in mind that you would like Narwhals to have in order to make your work easier?\n\nIf you said yes to both, we'd love to hear from you!\n\n## Roadmap\n\nSee [roadmap discussion on GitHub](https://github.com/narwhals-dev/narwhals/discussions/1370)\nfor an up-to-date plan of future work.\n\n## Used by\n\nJoin the party!\n\n- [altair](https://github.com/vega/altair/)\n- [bokeh](https://github.com/bokeh/bokeh)\n- [darts](https://github.com/unit8co/darts)\n- [fairlearn](https://github.com/fairlearn/fairlearn)\n- [formulaic](https://github.com/matthewwardrop/formulaic)\n- [gt-extras](https://github.com/posit-dev/gt-extras)\n- [hierarchicalforecast](https://github.com/Nixtla/hierarchicalforecast)\n- [lightgbm](https://github.com/lightgbm-org/LightGBM)\n- [marimo](https://github.com/marimo-team/marimo)\n- [metalearners](https://github.com/Quantco/metalearners)\n- [mosaic](https://github.com/uwdata/mosaic)\n- [pandera](https://github.com/pandera-dev/pandera)\n- [panel-graphic-walker](https://github.com/panel-extensions/panel-graphic-walker)\n- [plotly](https://plotly.com)\n- [pointblank](https://github.com/posit-dev/pointblank)\n- [pymarginaleffects](https://github.com/vincentarelbundock/pymarginaleffects)\n- [pyreadstat](https://github.com/Roche/pyreadstat)\n- [py-shiny](https://github.com/posit-dev/py-shiny)\n- [pysummaries](https://github.com/Genentech/pysummaries)\n- [rio](https://github.com/rio-labs/rio)\n- [scikit-learn](https://github.com/scikit-learn/scikit-learn)\n- [scikit-lego](https://github.com/koaning/scikit-lego)\n- [scikit-playtime](https://github.com/koaning/scikit-playtime)\n- [tabmat](https://github.com/Quantco/tabmat)\n- [tea-tasting](https://github.com/e10v/tea-tasting)\n- [timebasedcv](https://github.com/FBruzzesi/timebasedcv)\n- [tubular](https://github.com/lvgig/tubular)\n- [Validoopsie](https://github.com/akmalsoliev/Validoopsie)\n- [vegafusion](https://github.com/vega/vegafusion)\n- [wimsey](https://github.com/benrutter/wimsey)\n\nFeel free to add your project to the list if it's missing, and/or\n[chat with us on Discord](https://discord.gg/V3PqtB4VA4) if you'd like any support.\n\n## Sponsors and institutional partners\n\nNarwhals is 100% independent, community-driven, and community-owned.\nWe are extremely grateful to the following organisations for having\nprovided some funding / development time:\n\n- [Quansight Labs](https://labs.quansight.org)\n- [Quansight Futures](https://www.qi.ventures)\n- [OpenTeams](https://www.openteams.com)\n- [POSSEE initiative](https://possee.org)\n- [BYU-Idaho](https://www.byui.edu)\n\nIf you contribute to Narwhals on your organization's time, please let us know. We'd be happy to add your employer\nto this list!\n\n## Support\n\nIf you'd like to say \"thank you\", please give us a ⭐ star ⭐.\n\nPlease contact [hello_narwhals@proton.me](hello_narwhals@proton.me) if you would like to:\n\n- Receive professional support (e.g., if you're using or would like to use Narwhals at your company).\n- Have any Narwhals fixes / features prioritised.\n- Commission any Narwhals plugins for new backends.\n\n## Appears on\n\nNarwhals has been featured in several talks, podcasts, and blog posts:\n\n- [Inspiring Computing Podcast](https://www.inspiringcomputing.com/2107763/episodes/16702460-the-rise-of-narwhals-in-open-source)\n  The Rise of Narwhals in Open-Source\n\n- [PyCon DE & PyData 2025](https://youtu.be/DJk782DWcss)\n  How Narwhals is silently bringing pandas, Polars, DuckDB, PyArrow, and more together\n\n- [The Python Exchange March 2025](https://youtu.be/TvFWFlK-2po)\n  What Can Narwhals Do for You?\n\n- [PyData London 2025](https://youtu.be/r2PxJlO7_QA)\n  How Narwhals brings Polars, DuckDB, PyArrow, & pandas together\n\n- [Talk Python to me Podcast](https://youtu.be/FSH7BZ0tuE0)\n  Ahoy, Narwhals are bridging the data science APIs\n\n- [Python Bytes Podcast](https://www.youtube.com/live/N7w_ESVW40I?si=y-wN1uCsAuJOKlOT&t=382)\n  Episode 402, topic #2\n\n- [Super Data Science: ML & AI Podcast](https://www.youtube.com/watch?v=TeG4U8R0U8U)  \n  Narwhals: For Pandas-to-Polars DataFrame Compatibility\n\n- [Sample Space Podcast | probabl](https://youtu.be/8hYdq4sWbbQ?si=WG0QP1CZ6gkFf18b)  \n  How Narwhals has many end users ... that never use it directly. - Marco Gorelli\n\n- [The Real Python Podcast](https://www.youtube.com/watch?v=w5DFZbFYzCM)\n  Narwhals: Expanding DataFrame Compatibility Between Libraries\n\n- [Pycon Lithuania 2024](https://www.youtube.com/watch?v=-mdx7Cn6_6E)  \n  Marco Gorelli - DataFrame interoperatiblity - what's been achieved, and what comes next?\n\n- [Pycon Italy 2024](https://www.youtube.com/watch?v=3IqUli9XsmQ)  \n  How you can write a dataframe-agnostic library - Marco Gorelli\n\n- [Polars Blog Post](https://pola.rs/posts/lightweight_plotting/)  \n  Polars has a new lightweight plotting backend\n\n- [Quansight Labs blog post (w/ Scikit-Lego)](https://labs.quansight.org/blog/scikit-lego-narwhals)  \n  How Narwhals and scikit-lego came together to achieve dataframe-agnosticism\n\n## Why \"Narwhals\"?\n\n[Coz they are so awesome](https://youtu.be/ykwqXuMPsoc?si=A-i8LdR38teYsos4).\n\nThanks to [Olha Urdeichuk](https://www.fiverr.com/olhaurdeichuk) for the illustration!\n",
+        "description_content_type": "text/markdown",
+        "keywords": [
+          "dataframes",
+          "interoperability",
+          "pandas",
+          "polars",
+          "pyarrow",
+          "dask",
+          "modin",
+          "cudf"
+        ],
+        "author": "Marco Gorelli",
+        "author_email": "Marco Gorelli <hello_narwhals@proton.me>",
+        "license_expression": "MIT",
+        "license_file": [
+          "LICENSE.md"
+        ],
+        "classifier": [
+          "Development Status :: 5 - Production/Stable",
+          "Operating System :: OS Independent",
+          "Programming Language :: Python :: 3",
+          "Programming Language :: Python :: 3.10",
+          "Programming Language :: Python :: 3.11",
+          "Programming Language :: Python :: 3.12",
+          "Programming Language :: Python :: 3.13",
+          "Programming Language :: Python :: 3.14",
+          "Programming Language :: Python :: Free Threading :: 2 - Beta",
+          "Typing :: Typed"
+        ],
+        "requires_dist": [
+          "cudf-cu12>=24.10.0 ; sys_platform == 'linux' and extra == 'cudf'",
+          "dask[dataframe]>=2024.8 ; extra == 'dask'",
+          "duckdb>=1.1 ; extra == 'duckdb'",
+          "ibis-framework>=6.0.0 ; extra == 'ibis'",
+          "packaging>=21.3 ; extra == 'ibis'",
+          "pyarrow-hotfix>=0.7 ; extra == 'ibis'",
+          "modin>=0.22.0 ; extra == 'modin'",
+          "pandas>=1.3.4 ; extra == 'pandas'",
+          "polars>=0.20.4 ; extra == 'polars'",
+          "pyarrow>=13.0.0 ; extra == 'pyarrow'",
+          "pyspark>=3.5.0 ; extra == 'pyspark'",
+          "pyspark[connect]>=3.5.0 ; extra == 'pyspark-connect'",
+          "narwhals[duckdb] ; extra == 'sql'",
+          "sqlparse>=0.5.5 ; extra == 'sql'",
+          "sqlframe>=3.22.0,!=3.39.3 ; extra == 'sqlframe'"
+        ],
+        "requires_python": ">=3.10",
+        "project_url": [
+          "Homepage, https://github.com/narwhals-dev/narwhals",
+          "Documentation, https://narwhals-dev.github.io/narwhals/",
+          "Repository, https://github.com/narwhals-dev/narwhals",
+          "Bug Tracker, https://github.com/narwhals-dev/narwhals/issues"
+        ],
+        "provides_extra": [
+          "cudf",
+          "dask",
+          "duckdb",
+          "ibis",
+          "modin",
+          "pandas",
+          "polars",
+          "pyarrow",
+          "pyspark",
+          "pyspark-connect",
+          "sql",
+          "sqlframe"
+        ]
+      }
+    }
+  ],
+  "environment": {
+    "implementation_name": "cpython",
+    "implementation_version": "3.11.15",
+    "os_name": "posix",
+    "platform_machine": "x86_64",
+    "platform_release": "6.17.0-35-generic",
+    "platform_system": "Linux",
+    "platform_version": "#35~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May 26 19:30:42 UTC 2",
+    "python_full_version": "3.11.15",
+    "platform_python_implementation": "CPython",
+    "python_version": "3.11",
+    "sys_platform": "linux"
+  }
+}

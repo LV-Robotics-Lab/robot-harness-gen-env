@@ -1,0 +1,53 @@
+{
+  "catalog_version": "robotwin.tabletop_asset_catalog_case.v0",
+  "catalog_name": "drawer_mug_unified_prompt_case",
+  "updated_at": "2026-07-12",
+  "purpose": "Prompt-specific asset selection for: open the drawer and place the mug inside",
+  "base_catalog": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/adapter_catalog/robotwin_discovered_catalog.json",
+  "mvp_prompt": "open the drawer and place the mug inside",
+  "selected_asset_ids": [
+    "036_cabinet",
+    "039_mug"
+  ],
+  "entry_overrides": {},
+  "direction_frame": "robot_or_dual_arm_first_person",
+  "asset_grounding": {
+    "schema_version": "robotwin.tabletop_asset_grounding.v0",
+    "matched_assets": [
+      {
+        "mention": "drawer",
+        "asset_id": "036_cabinet",
+        "semantic_name": "cabinet",
+        "match_type": "exact_alias",
+        "confidence": 1.0,
+        "reason": "Prompt mention 'drawer' matched catalog exact alias for 036_cabinet."
+      },
+      {
+        "mention": "mug",
+        "asset_id": "039_mug",
+        "semantic_name": "mug",
+        "match_type": "exact_semantic_name",
+        "confidence": 1.0,
+        "reason": "Prompt mention 'mug' matched catalog exact semantic name for 039_mug."
+      }
+    ],
+    "spatial_relations": [
+      {
+        "subject_mention": "drawer",
+        "subject_asset_id": "036_cabinet",
+        "relation": "on_surface",
+        "reference": "table",
+        "reference_asset_id": null,
+        "direction_frame": "robot_or_dual_arm_first_person"
+      },
+      {
+        "subject_mention": "mug",
+        "subject_asset_id": "039_mug",
+        "relation": "on_surface",
+        "reference": "table",
+        "reference_asset_id": null,
+        "direction_frame": "robot_or_dual_arm_first_person"
+      }
+    ]
+  }
+}

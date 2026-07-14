@@ -1,0 +1,92 @@
+{
+  "schema_version": "alchedata.gen_env_fallback_probe.v0",
+  "fallback_id": "blocked_drawer_mug_video2sim_forge",
+  "fallback_type": "video2sim_forge",
+  "command": "/gen-env",
+  "owner": "Zheng Ye / Boris",
+  "checked_at": "2026-07-13T01:42:09.788040+00:00",
+  "status": "blocked_missing_inputs",
+  "inputs": {
+    "source_task": "open the drawer and place the mug inside",
+    "blocked_selection2env_artifact": "artifacts/selection2env/task_drawer_mug_blocker.json",
+    "capture_source": null,
+    "reference_video": null,
+    "rgbd_capture": null,
+    "asset_catalog_gap": [
+      "drawer",
+      "mug"
+    ]
+  },
+  "expected_outputs": [
+    "object_prompts",
+    "segmentation_masks",
+    "mesh_paths",
+    "world_frame_poses",
+    "scene_json",
+    "urdf_or_articulated_description",
+    "approximate_physics_metadata",
+    "provenance",
+    "sapien_import_smoke_report"
+  ],
+  "checks": [
+    {
+      "name": "selection2env_blocker_exists",
+      "status": "pass",
+      "evidence": "artifacts/selection2env/task_drawer_mug_blocker.json records missing drawer/mug assets"
+    },
+    {
+      "name": "capture_source_available",
+      "status": "fail",
+      "evidence": "No RGB-D capture, reference video, masks, or object prompt package is present in this workspace"
+    },
+    {
+      "name": "sapien_import_smoke",
+      "status": "not_run",
+      "evidence": "Forge output is absent, so there is no mesh/URDF to import or smoke-test"
+    }
+  ],
+  "import_gate_matrix": {
+    "import": {
+      "status": "blocked_missing_forge_artifact",
+      "evidence": "No generated mesh, URDF, scene, pose, physics, or material artifact exists for this gate"
+    },
+    "scale": {
+      "status": "blocked_missing_forge_artifact",
+      "evidence": "No generated mesh, URDF, scene, pose, physics, or material artifact exists for this gate"
+    },
+    "collision": {
+      "status": "blocked_missing_forge_artifact",
+      "evidence": "No generated mesh, URDF, scene, pose, physics, or material artifact exists for this gate"
+    },
+    "support": {
+      "status": "blocked_missing_forge_artifact",
+      "evidence": "No generated mesh, URDF, scene, pose, physics, or material artifact exists for this gate"
+    },
+    "material": {
+      "status": "blocked_missing_forge_artifact",
+      "evidence": "No generated mesh, URDF, scene, pose, physics, or material artifact exists for this gate"
+    },
+    "render": {
+      "status": "blocked_missing_forge_artifact",
+      "evidence": "No generated mesh, URDF, scene, pose, physics, or material artifact exists for this gate"
+    },
+    "verifier": {
+      "status": "blocked_missing_forge_artifact",
+      "evidence": "No generated mesh, URDF, scene, pose, physics, or material artifact exists for this gate"
+    }
+  },
+  "blockers": [
+    {
+      "code": "FORGE_CAPTURE_SOURCE_MISSING",
+      "message": "video2sim-forge-style dry run needs a reference video or RGB-D capture with object prompts/masks before mesh/URDF generation can be probed",
+      "owner": "Zheng Ye"
+    },
+    {
+      "code": "FORGE_IMPORT_ARTIFACT_MISSING",
+      "message": "No generated mesh, URDF, world-frame pose, or physics metadata exists for a RoboTwin/SAPIEN import gate",
+      "owner": "Zheng Ye / Boris"
+    }
+  ],
+  "next_step": "Attach one drawer/mug RGB-D or reference-video package, then run forge output through scale, collision, support, material, SAPIEN import, and verifier gates.",
+  "claim_boundary": "This is a machine-readable blocker for the missing-asset forge fallback. It does not claim video2sim-forge execution or generated asset validity."
+}

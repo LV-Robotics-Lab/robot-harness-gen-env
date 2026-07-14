@@ -1,0 +1,111 @@
+{
+  "console_errors": [],
+  "index": "/Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/index.html",
+  "page_errors": [],
+  "report": "openxsim",
+  "status": "pass_browser_qa",
+  "viewports": {
+    "desktop": {
+      "image_count": 24,
+      "local_link_count": 23,
+      "overflow": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440
+      },
+      "video_count": 5,
+      "videos": [
+        {
+          "duration": 2,
+          "error": null,
+          "height": 540,
+          "readyState": 4,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/isaac_command_loop/isaac_place_on_rollout.mp4",
+          "width": 960
+        },
+        {
+          "duration": 2.666667,
+          "error": null,
+          "height": 540,
+          "readyState": 4,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/isaac_intake/baseline_motion.mp4",
+          "width": 960
+        },
+        {
+          "duration": 53.333333,
+          "error": null,
+          "height": 240,
+          "readyState": 4,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/benchmark_videos/open_laptop.mp4",
+          "width": 320
+        },
+        {
+          "duration": 44.25,
+          "error": null,
+          "height": 240,
+          "readyState": 4,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/benchmark_videos/place_mouse_pad.mp4",
+          "width": 320
+        },
+        {
+          "duration": 43.916667,
+          "error": null,
+          "height": 240,
+          "readyState": 4,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/benchmark_videos/place_container_plate.mp4",
+          "width": 320
+        }
+      ]
+    },
+    "mobile": {
+      "image_count": 24,
+      "local_link_count": 23,
+      "overflow": {
+        "clientWidth": 390,
+        "scrollWidth": 390
+      },
+      "video_count": 5,
+      "videos": [
+        {
+          "duration": 2,
+          "error": null,
+          "height": 540,
+          "readyState": 4,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/isaac_command_loop/isaac_place_on_rollout.mp4",
+          "width": 960
+        },
+        {
+          "duration": 2.666667,
+          "error": null,
+          "height": 540,
+          "readyState": 4,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/isaac_intake/baseline_motion.mp4",
+          "width": 960
+        },
+        {
+          "duration": 53.333333,
+          "error": null,
+          "height": 240,
+          "readyState": 4,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/benchmark_videos/open_laptop.mp4",
+          "width": 320
+        },
+        {
+          "duration": 44.25,
+          "error": null,
+          "height": 240,
+          "readyState": 4,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/benchmark_videos/place_mouse_pad.mp4",
+          "width": 320
+        },
+        {
+          "duration": 43.916667,
+          "error": null,
+          "height": 240,
+          "readyState": 4,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/benchmark_videos/place_container_plate.mp4",
+          "width": 320
+        }
+      ]
+    }
+  }
+}

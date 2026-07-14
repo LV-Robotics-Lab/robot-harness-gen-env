@@ -1,0 +1,28 @@
+{
+  "asset_root": "",
+  "device": "cuda:0",
+  "elapsed_s": 7.017,
+  "error": "FileNotFoundError(\"USD file not found at path at: 'path/to/unitree_model/Go2/usd/go2.usd'.\")",
+  "error_message": "USD file not found at path at: 'path/to/unitree_model/Go2/usd/go2.usd'.",
+  "error_type": "FileNotFoundError",
+  "imported_modules": [
+    {
+      "file": "/home/jingxiang/workspace/agenticsim-runtime/candidates/unitree_rl_lab/source/unitree_rl_lab/unitree_rl_lab/tasks/__init__.py",
+      "module": "unitree_rl_lab.tasks"
+    }
+  ],
+  "num_envs": 1,
+  "pythonpath": [
+    "candidates/unitree_rl_lab/source/unitree_rl_lab"
+  ],
+  "register_modules": [
+    "unitree_rl_lab.tasks"
+  ],
+  "schema": "agenticsim.isaaclab_gym_task_smoke.v0",
+  "screenshot": "/home/jingxiang/workspace/agenticsim-runtime/artifacts/candidates/unitree_rl_lab_go2_smoke.png",
+  "screenshot_ready": false,
+  "screenshot_size_bytes": 0,
+  "status": "failed",
+  "steps_requested": 20,
+  "task": "Unitree-Go2-Velocity"
+}

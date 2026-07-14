@@ -1,0 +1,3 @@
+{"event": "setup_demo", "duration_sec": 7.5423, "status": "pass"}
+{"event": "generated_play_once", "duration_sec": 2.8736, "status": "fail_plan"}
+{"event": "check_success", "status": "fail", "success": false}

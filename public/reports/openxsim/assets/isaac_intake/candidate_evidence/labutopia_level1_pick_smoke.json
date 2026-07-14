@@ -1,0 +1,66 @@
+{
+  "config_name": "level1_pick",
+  "controller_started": false,
+  "duration_s": 20.05,
+  "scene_usd": {
+    "path": "/home/jingxiang/workspace/agenticsim-runtime/candidates/labutopia/assets/chemistry_lab/lab_001/lab_001.usd",
+    "sha256": "26212d40a78cd28f2bc3a38b2e06f05875b3096501c7d6dd5ccbe9a6e9019983",
+    "size_bytes": 3824750
+  },
+  "schema": "agenticsim.labutopia_task_smoke.v1",
+  "screenshot": {
+    "camera_names": [
+      "camera_1",
+      "camera_2",
+      "camera_3"
+    ],
+    "height": 256,
+    "path": "/home/jingxiang/workspace/agenticsim-runtime/artifacts/candidates/labutopia_level1_pick_smoke.png",
+    "sha256": "ff3bf48509181db6838337b46a87666e29335c523f3a0ae561aa5e01240bfd14",
+    "size_bytes": 126618,
+    "width": 768
+  },
+  "source_root": "/home/jingxiang/workspace/agenticsim-runtime/candidates/labutopia",
+  "stage_prim_count": 461,
+  "started_at_epoch_s": 1783948276.4819083,
+  "status": "passed",
+  "steps_completed": 10,
+  "steps_requested": 10,
+  "task_state": {
+    "camera_data_keys": [
+      "camera_1_rgb",
+      "camera_2_rgb",
+      "camera_3_rgb"
+    ],
+    "frame_idx": 10,
+    "gripper_position": [
+      -0.33184874093291566,
+      0.00036281163741691254,
+      1.613181782378874
+    ],
+    "joint_positions": [
+      0.007008736487478018,
+      -0.3424758315086365,
+      5.8798425015993416e-05,
+      -0.3374324142932892,
+      -0.0007207420421764255,
+      0.5155787467956543,
+      0.44806042313575745,
+      6.723764272464905e-06,
+      6.462568126153201e-05
+    ],
+    "object_path": "/World/conical_bottle02",
+    "object_position": [
+      0.3102300597588439,
+      0.024933446246265797,
+      0.8620255284148067
+    ]
+  },
+  "viewport_screenshot": {
+    "height": 720,
+    "path": "/home/jingxiang/workspace/agenticsim-runtime/artifacts/candidates/labutopia_level1_pick_viewport.png",
+    "sha256": "0b4448aaaf51fc05c1fbe5dbff46dfb5d2b268730a00095256f640509d4d735d",
+    "size_bytes": 508991,
+    "width": 1280
+  }
+}

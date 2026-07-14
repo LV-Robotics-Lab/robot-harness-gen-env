@@ -1,0 +1,69 @@
+{
+  "schema_version": "alchedata.selection2env_visual_review.v0",
+  "reviewed_at": "2026-07-09",
+  "reviewer": "Codex local visual inspection",
+  "review_scope": "RoboTwin Base_Task observer/head camera images for initial-scene support, not policy rollout success",
+  "overall_status": "pass_initial_scene_support_with_task_success_pending",
+  "limitations": [
+    "This review inspects saved PNG evidence only.",
+    "It does not execute manipulation actions.",
+    "It does not claim final task-success semantics.",
+    "A human or external VLM review can replace this artifact if the project requires independent visual acceptance."
+  ],
+  "cases": [
+    {
+      "task_id": "task_apple_plate",
+      "task_text": "move the apple onto the plate",
+      "images": {
+        "observer_camera": "runs/smoke_basetask_apple_plate/observer_camera.png",
+        "head_camera": "runs/smoke_basetask_apple_plate/head_camera.png"
+      },
+      "checks": {
+        "object_presence": "pass",
+        "object_visibility": "pass",
+        "table_contact_and_stability": "pass",
+        "occlusion": "pass",
+        "initial_scene_supports_task": "pass",
+        "final_task_relation": "not_claimed"
+      },
+      "evidence_summary": "Apple and plate are both visible and separated on the tabletop, which supports a pick-and-place setup. The apple is not already on the plate, so this image cannot be used as task-success evidence.",
+      "status": "pass_initial_scene_support"
+    },
+    {
+      "task_id": "task_laptop_knife",
+      "task_text": "place the laptop to the right of the knife",
+      "images": {
+        "observer_camera": "runs/smoke_basetask_laptop_knife/observer_camera.png",
+        "head_camera": "runs/smoke_basetask_laptop_knife/head_camera.png"
+      },
+      "checks": {
+        "object_presence": "pass",
+        "object_visibility": "pass",
+        "table_contact_and_stability": "pass",
+        "occlusion": "pass",
+        "initial_scene_supports_task": "pass_with_warning",
+        "final_task_relation": "not_claimed"
+      },
+      "evidence_summary": "Laptop and knife are both visible and separated on the tabletop. In rendered image coordinates the laptop appears left of the knife, so this is acceptable only as a pre-task setup or as a robot-frame relation requiring an explicit frame definition.",
+      "status": "pass_initial_scene_support_with_relation_frame_warning"
+    },
+    {
+      "task_id": "task_vegetable_basket",
+      "task_text": "put the vegetable into the basket",
+      "images": {
+        "observer_camera": "runs/smoke_basetask_vegetable_basket/observer_camera.png",
+        "head_camera": "runs/smoke_basetask_vegetable_basket/head_camera.png"
+      },
+      "checks": {
+        "object_presence": "pass",
+        "object_visibility": "pass",
+        "table_contact_and_stability": "pass",
+        "occlusion": "pass",
+        "initial_scene_supports_task": "pass",
+        "final_task_relation": "not_claimed"
+      },
+      "evidence_summary": "Vegetable and basket are both visible, the basket is open upward, and the vegetable starts outside the basket. This supports a containment-task setup but is not evidence that the vegetable was placed inside.",
+      "status": "pass_initial_scene_support"
+    }
+  ]
+}

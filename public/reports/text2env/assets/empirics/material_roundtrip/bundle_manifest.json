@@ -1,0 +1,57 @@
+{
+  "file_count": 10,
+  "files": [
+    {
+      "bytes": 1403,
+      "path": "comparison.json",
+      "sha256": "69e1aa2bd181bd28a7c17edff43389ff787ed63e9db37e99b19cb2aa045850fb"
+    },
+    {
+      "bytes": 897,
+      "path": "isaac_material_import.json",
+      "sha256": "70bdadee859cb7c52cae01bae63f0b27c94cf020c3342bec3cff9e389bcbdd4c"
+    },
+    {
+      "bytes": 398362,
+      "path": "isaac_material_render.png",
+      "sha256": "3cb7cec56e6812cdc6a049de7bec3bf4640d77a55b27b8186a8e183b5e4c2a38"
+    },
+    {
+      "bytes": 25930,
+      "path": "isaac_render_foreground.png",
+      "sha256": "ecd20d601d7a9673e4d1b490ff5a882519e480e430cef7d77ce75b8ae88443ba"
+    },
+    {
+      "bytes": 5674,
+      "path": "material_scene.usda",
+      "sha256": "f0dcd482632676870c6bb5456186e03eb3b8810dfcc6072316ff89f5e7453cc9"
+    },
+    {
+      "bytes": 1287,
+      "path": "material_sidecar.json",
+      "sha256": "17f95202586d70f70e5d06a0e00ae9f19f8dd1ebb69e744a8e4ec6d95d2dbfb5"
+    },
+    {
+      "bytes": 1989,
+      "path": "roundtrip_report.json",
+      "sha256": "ea744434a6864352b637f85190f87e0fec2dd7604bbb20e05789f91229d40048"
+    },
+    {
+      "bytes": 699,
+      "path": "run_state.json",
+      "sha256": "2a70ab830486ddfb66bbd18d9e5d46de71bb508833b15ca6171af878b11a91b5"
+    },
+    {
+      "bytes": 3195,
+      "path": "source_crop.png",
+      "sha256": "31f37a92b33cebebab83fa96212aa9d37120a6c78acf41901530dc9169e00ee2"
+    },
+    {
+      "bytes": 385,
+      "path": "source_foreground.png",
+      "sha256": "0c13cb8cb77ad7d7b8d2e98245c37421a424cc0084952afae51f05cb602514e8"
+    }
+  ],
+  "schema_version": "alchedata.material_roundtrip_manifest.v0",
+  "status": "pass_material_roundtrip_bundle"
+}

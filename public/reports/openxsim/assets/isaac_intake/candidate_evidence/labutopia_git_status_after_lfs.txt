@@ -1,0 +1,2 @@
+ M images/logo.png
+ M images/teaser.png

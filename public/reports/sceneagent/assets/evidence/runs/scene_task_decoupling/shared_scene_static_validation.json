@@ -1,0 +1,109 @@
+{
+  "schema_version": "robotwin.tabletop_placement_validation.v0",
+  "placement_name": "apple_plate_shared_scene_two_task_v0",
+  "status": "pass",
+  "fail_count": 0,
+  "warning_count": 0,
+  "checks": [
+    {
+      "name": "required_top_level_fields",
+      "status": "pass",
+      "message": "All required top-level fields are present."
+    },
+    {
+      "name": "schema_version",
+      "status": "pass",
+      "message": "Schema version is v0."
+    },
+    {
+      "name": "objects_nonempty",
+      "status": "pass",
+      "message": "Found 2 object(s)."
+    },
+    {
+      "name": "object_ids_unique",
+      "status": "pass",
+      "message": "Object ids are unique."
+    },
+    {
+      "name": "workspace_bounds_shape",
+      "status": "pass",
+      "message": "Workspace bounds contain numeric x/y/z ranges."
+    },
+    {
+      "name": "asset_exists:apple_1",
+      "status": "pass",
+      "message": "035_apple exists in the asset catalog."
+    },
+    {
+      "name": "model_id_exists:apple_1",
+      "status": "pass",
+      "message": "model_id 0 is available for 035_apple."
+    },
+    {
+      "name": "semantic_prompt_match:apple_1",
+      "status": "pass",
+      "message": "apple is grounded in the prompt."
+    },
+    {
+      "name": "pose_qpos_norm:apple_1",
+      "status": "pass",
+      "message": "Quaternion norm is 1.000."
+    },
+    {
+      "name": "pose_in_workspace_bounds:apple_1",
+      "status": "pass",
+      "message": "xyz=[-0.19, -0.08, 0.76] checked against workspace bounds."
+    },
+    {
+      "name": "pose_in_named_region:apple_1",
+      "status": "pass",
+      "message": "xy=[-0.19, -0.08] checked against region left_reachable_area."
+    },
+    {
+      "name": "stable_on_table_flag:apple_1",
+      "status": "pass",
+      "message": "Object marks stable_on_table=true."
+    },
+    {
+      "name": "asset_exists:plate_1",
+      "status": "pass",
+      "message": "003_plate exists in the asset catalog."
+    },
+    {
+      "name": "model_id_exists:plate_1",
+      "status": "pass",
+      "message": "model_id 0 is available for 003_plate."
+    },
+    {
+      "name": "semantic_prompt_match:plate_1",
+      "status": "pass",
+      "message": "plate is grounded in the prompt."
+    },
+    {
+      "name": "pose_qpos_norm:plate_1",
+      "status": "pass",
+      "message": "Quaternion norm is 1.000."
+    },
+    {
+      "name": "pose_in_workspace_bounds:plate_1",
+      "status": "pass",
+      "message": "xyz=[-0.03, -0.04, 0.755] checked against workspace bounds."
+    },
+    {
+      "name": "pose_in_named_region:plate_1",
+      "status": "pass",
+      "message": "xy=[-0.03, -0.04] checked against region center_clearance_area."
+    },
+    {
+      "name": "stable_on_table_flag:plate_1",
+      "status": "pass",
+      "message": "Object marks stable_on_table=true."
+    },
+    {
+      "name": "approx_xy_collision:apple_1:plate_1",
+      "status": "pass",
+      "message": "xy distance=0.165m, approximate clearance=0.017m."
+    }
+  ]
+}

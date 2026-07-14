@@ -1,0 +1,26 @@
+{
+  "asset_root": "",
+  "device": "cuda:0",
+  "elapsed_s": 6.71,
+  "env_cfg_overrides_requested": [],
+  "error": "OSError('Environment variable MATTERIX_PATH is not set. Please set it to the root path of the Matterix source.')",
+  "error_message": "Environment variable MATTERIX_PATH is not set. Please set it to the root path of the Matterix source.",
+  "error_type": "OSError",
+  "num_envs": 1,
+  "pythonpath": [
+    "candidates/matterix/source/matterix",
+    "candidates/matterix/source/matterix_assets",
+    "candidates/matterix/source/matterix_tasks",
+    "candidates/matterix/source/matterix_sm"
+  ],
+  "register_modules": [
+    "matterix_tasks"
+  ],
+  "schema": "agenticsim.isaaclab_gym_task_smoke.v0",
+  "screenshot": "/home/jingxiang/workspace/agenticsim-runtime/artifacts/candidates/matterix_beakers_franka_smoke.initial.png",
+  "screenshot_ready": false,
+  "screenshot_size_bytes": 0,
+  "status": "failed",
+  "steps_requested": 5,
+  "task": "Matterix-Test-Beakers-Franka-v1"
+}

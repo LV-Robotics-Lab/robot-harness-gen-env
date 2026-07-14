@@ -1,0 +1,18 @@
+{
+  "schema_version": "alchedata.pearl_run_state.v0",
+  "command": "/evaluate",
+  "state": "completed",
+  "task_id": "task_can_basket",
+  "all_eval_placements_held_out": false,
+  "domain_randomization": {
+    "random_background": false,
+    "cluttered_table": false,
+    "random_light": false,
+    "random_table_height": 0.0,
+    "random_head_camera_dis": 0.0
+  },
+  "policy_success_rate": 1.0,
+  "evaluate_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/pose_conditioned_eval_can_basket_heldout_seeds_v1/evaluate_report.json",
+  "events": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/pose_conditioned_eval_can_basket_heldout_seeds_v1/events.jsonl",
+  "updated_at": "2026-07-13T16:06:51.541000+00:00"
+}

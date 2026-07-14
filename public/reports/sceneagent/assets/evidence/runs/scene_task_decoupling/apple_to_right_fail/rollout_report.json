@@ -1,0 +1,188 @@
+{
+  "schema_version": "alchedata.generated_selection2env_rollout_probe.v0",
+  "command": "/collect",
+  "probe_type": "generated_selection2env_play_once",
+  "task_id": "task_apple_plate_to_right",
+  "scene_id": "scene_apple_plate_action_repair_v0",
+  "task_program_input": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/task_program_inputs/task_apple_plate_to_right.json",
+  "task_config": "demo_clean",
+  "seed": 0,
+  "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/probe_static_apple_plate_action_repair/final_placement.json",
+  "placement_sha256": "f8f0b053e754920a36c174cefbbaa3752f07444145f3f95f6ff2e3cd985c8180",
+  "scene_module": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/robotwin-text2env-demo/generated_scenes/apple_plate_scene.py",
+  "robotwin_root": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin",
+  "out_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right",
+  "task_binding": {
+    "template": "place_in_region",
+    "source_id": "apple_1",
+    "target_kind": "region",
+    "target_region": "right_reachable_area"
+  },
+  "native_data_recording_requested": false,
+  "domain_randomization": {
+    "random_background": false,
+    "cluttered_table": false,
+    "random_light": false,
+    "random_table_height": 0.0,
+    "random_head_camera_dis": 0.0
+  },
+  "status": "fail_generated_action_rollout",
+  "limitations": [
+    "This probe executes a generated selection2env play_once template against a generated placement.",
+    "It is an action-stack smoke test, not learned-policy training or evaluation.",
+    "It does not prove robustness across randomization, embodiments, or held-out tasks."
+  ],
+  "setup_duration_sec": 7.5494,
+  "play_once_duration_sec": 0.4757,
+  "plan_success": false,
+  "check_success": false,
+  "task_info": {
+    "cluttered_table_info": [],
+    "texture_info": {
+      "wall_texture": null,
+      "table_texture": null
+    },
+    "info": {
+      "{source}": "035_apple/base0",
+      "{target}": "right_reachable_area",
+      "{arm}": "left",
+      "{template}": "place_in_region",
+      "{motion_mode}": "direct_topdown+direct_topdown_place+direct_topdown_place_after_fail",
+      "{grasp_rejected_attempts}": 0,
+      "{place_rejected_attempts}": 0
+    }
+  },
+  "move_event_count": 5,
+  "left_joint_path_len": 5,
+  "right_joint_path_len": 0,
+  "initial_objects": {
+    "apple_1": {
+      "p": [
+        -0.190109983086586,
+        -0.08041048049926758,
+        0.7650402784347534
+      ],
+      "q": [
+        0.9999300837516785,
+        0.010233338922262192,
+        -0.005435734521597624,
+        0.0023971404880285263
+      ]
+    },
+    "plate_1": {
+      "p": [
+        -0.029999999329447746,
+        -0.03999999910593033,
+        0.7409999966621399
+      ],
+      "q": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "final_objects": {
+    "apple_1": {
+      "p": [
+        -0.186050683259964,
+        -0.08068836480379105,
+        0.86245197057724
+      ],
+      "q": [
+        0.9982703328132629,
+        0.044264476746320724,
+        0.016789954155683517,
+        -0.034860432147979736
+      ]
+    },
+    "plate_1": {
+      "p": [
+        -0.029999999329447746,
+        -0.03999999910593033,
+        0.7409999966621399
+      ],
+      "q": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "relation_metrics": {
+    "source_id": "apple_1",
+    "left_gripper_open": false,
+    "right_gripper_open": true,
+    "target_kind": "region",
+    "target_region": "right_reachable_area",
+    "source_xy": [
+      -0.186050683259964,
+      -0.08068836480379105
+    ],
+    "region_center_xy": [
+      0.19,
+      -0.04
+    ],
+    "distance_to_region_center_m": 0.3782455015075422,
+    "inside_region": false
+  },
+  "images": {
+    "initial_head_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/initial_head_camera.png",
+    "initial_observer_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/initial_observer_camera.png",
+    "final_head_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/final_head_camera.png",
+    "final_observer_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/final_observer_camera.png"
+  },
+  "pixel_stats": {
+    "initial": {
+      "head_camera": {
+        "mean": 237.69344618055555,
+        "std": 30.351407454647074,
+        "min": 9.0,
+        "max": 255.0
+      },
+      "observer_camera": {
+        "mean": 222.4913671875,
+        "std": 45.12543209383267,
+        "min": 0.0,
+        "max": 255.0
+      }
+    },
+    "final": {
+      "head_camera": {
+        "mean": 216.63065538194445,
+        "std": 61.63099386563236,
+        "min": 0.0,
+        "max": 255.0
+      },
+      "observer_camera": {
+        "mean": 220.8845746527778,
+        "std": 47.44353571882167,
+        "min": 0.0,
+        "max": 255.0
+      }
+    }
+  },
+  "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/observer_rollout_probe.mp4",
+  "events": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/events.jsonl",
+  "move_events": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/move_events.jsonl",
+  "policy_trace": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/policy_trace.json",
+  "native_synchronized_data": {
+    "status": "not_requested",
+    "save_freq": 15
+  },
+  "next_data_requirement": "Repair generated play_once target pose, grasp contact point, or asset pose before claiming /collect success.",
+  "failure_diagnosis": {
+    "status": "failure_observed",
+    "checked_categories": [
+      "wrong_grasp_location",
+      "object_knocked_over",
+      "arm_jitter",
+      "uncontrolled_gripper_open_close",
+      "after_contact_failure",
+      "visual_material_mismatch",
+      "target_relation_not_satisfied"
+    ]
+  }
+}

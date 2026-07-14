@@ -1,0 +1,5 @@
+Collecting pyserial==3.5
+  Using cached pyserial-3.5-py2.py3-none-any.whl.metadata (1.6 kB)
+Downloading pyserial-3.5-py2.py3-none-any.whl (90 kB)
+Installing collected packages: pyserial
+Successfully installed pyserial-3.5

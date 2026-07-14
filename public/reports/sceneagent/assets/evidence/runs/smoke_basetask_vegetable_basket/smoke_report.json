@@ -1,0 +1,79 @@
+{
+  "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/probe_static_vegetable_basket/final_placement.json",
+  "out_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/smoke_basetask_vegetable_basket",
+  "stage": "robotwin_smoke",
+  "scene_module": null,
+  "seed": 0,
+  "status": "pass",
+  "images": {
+    "head_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/smoke_basetask_vegetable_basket/head_camera.png",
+    "observer_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/smoke_basetask_vegetable_basket/observer_camera.png"
+  },
+  "video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/smoke_basetask_vegetable_basket/observer_camera.mp4",
+  "initial_poses": {
+    "vagetable_1": {
+      "p": [
+        -0.18931977450847626,
+        -0.07951169461011887,
+        0.7557304501533508
+      ],
+      "q": [
+        0.999707818031311,
+        -0.015549897216260433,
+        0.018496494740247726,
+        0.0007946040132082999
+      ]
+    },
+    "basket_1": {
+      "p": [
+        0.14000000059604645,
+        0.0,
+        0.7409999966621399
+      ],
+      "q": [
+        0.7071068286895752,
+        0.7071068286895752,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "final_poses": {
+    "vagetable_1": {
+      "p": [
+        -0.18931977450847626,
+        -0.07951169461011887,
+        0.7557304501533508
+      ],
+      "q": [
+        0.999707818031311,
+        -0.015549897216260433,
+        0.018496494740247726,
+        0.0007946040132082999
+      ]
+    },
+    "basket_1": {
+      "p": [
+        0.14000000059604645,
+        0.0,
+        0.7409999966621399
+      ],
+      "q": [
+        0.7071068286895752,
+        0.7071068286895752,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "pose_delta_norm_m": {
+    "vagetable_1": 0.0,
+    "basket_1": 0.0
+  },
+  "notes": [
+    "Objects were loaded from RoboTwin assets through create_actor.",
+    "If scene_module is set, objects were loaded through generated load_scene(task).",
+    "Object-specific scale and pose metadata are read from the placement spec when provided.",
+    "This smoke confirms load/render evidence; human or VLM visual review should inspect the saved image/video."
+  ]
+}

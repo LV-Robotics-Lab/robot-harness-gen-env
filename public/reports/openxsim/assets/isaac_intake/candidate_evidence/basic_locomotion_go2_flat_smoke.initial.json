@@ -1,0 +1,23 @@
+{
+  "asset_root": "",
+  "device": "cuda:0",
+  "elapsed_s": 6.564,
+  "env_cfg_overrides_requested": [],
+  "error": "ImportError(\"cannot import name 'MultiMeshRayCasterCamera' from 'isaaclab.sensors' (/home/jingxiang/workspace/agenticsim-runtime/IsaacLab/source/isaaclab/isaaclab/sensors/__init__.py)\")",
+  "error_message": "cannot import name 'MultiMeshRayCasterCamera' from 'isaaclab.sensors' (/home/jingxiang/workspace/agenticsim-runtime/IsaacLab/source/isaaclab/isaaclab/sensors/__init__.py)",
+  "error_type": "ImportError",
+  "num_envs": 1,
+  "pythonpath": [
+    "candidates/basic_locomotion/source/basic_locomotion_isaaclab"
+  ],
+  "register_modules": [
+    "basic_locomotion_isaaclab.tasks.locomotion"
+  ],
+  "schema": "agenticsim.isaaclab_gym_task_smoke.v0",
+  "screenshot": "/home/jingxiang/workspace/agenticsim-runtime/artifacts/candidates/basic_locomotion_go2_flat_smoke.initial.png",
+  "screenshot_ready": false,
+  "screenshot_size_bytes": 0,
+  "status": "failed",
+  "steps_requested": 10,
+  "task": "Locomotion-Go2-Flat"
+}

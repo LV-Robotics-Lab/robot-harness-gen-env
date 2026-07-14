@@ -1,0 +1,18 @@
+{
+  "schema_version": "alchedata.pearl_run_state.v0",
+  "command": "/evaluate",
+  "state": "completed",
+  "task_id": "task_apple_plate",
+  "held_out_seeds": [
+    6100,
+    6101,
+    6102,
+    6103
+  ],
+  "all_eval_placements_held_out": true,
+  "evaluate_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4/evaluate_report.json",
+  "events": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4/events.jsonl",
+  "policy_success_rate": 0.25,
+  "next_data_requirement": "Task success was observed; expand placement and domain randomization before making a robustness claim.",
+  "updated_at": "2026-07-11T08:40:49.644973+00:00"
+}

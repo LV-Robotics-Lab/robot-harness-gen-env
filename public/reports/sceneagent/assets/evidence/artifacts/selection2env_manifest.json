@@ -1,0 +1,1321 @@
+{
+  "schema_version": "alchedata.selection2env_manifest.v0",
+  "artifacts": [
+    {
+      "schema_version": "alchedata.selection2env.v0",
+      "task_id": "task_apple_plate",
+      "task_text": "move the apple onto the plate",
+      "status": "pass_sim_smoke",
+      "source_pipeline_status": "pass_static_only",
+      "scene_id": "scene_apple_plate_shared_two_task_v0",
+      "catalog_sources": {
+        "robotwin": {
+          "entry_count": 123,
+          "selection_eligible_count": 123,
+          "match_count": 2
+        },
+        "agenticsim": {
+          "entry_count": 8,
+          "selection_eligible_count": 8,
+          "match_count": 0
+        },
+        "articraft10k": {
+          "entry_count": 9996,
+          "selection_eligible_count": 0,
+          "match_count": 0
+        }
+      },
+      "asset_candidates": [
+        {
+          "asset_id": "003_plate",
+          "semantic_name": "plate",
+          "catalog_source": "robotwin",
+          "backend_asset_id": "003_plate",
+          "execution_status": "robotwin_loadable",
+          "selection_eligible": true,
+          "decision": "accepted",
+          "reason": "selected by placement spec and execution-eligible"
+        },
+        {
+          "asset_id": "035_apple",
+          "semantic_name": "apple",
+          "catalog_source": "robotwin",
+          "backend_asset_id": "035_apple",
+          "execution_status": "robotwin_loadable",
+          "selection_eligible": true,
+          "decision": "accepted",
+          "reason": "selected by placement spec and execution-eligible"
+        }
+      ],
+      "selected_assets": [
+        {
+          "object_id": "apple_1",
+          "asset_id": "035_apple",
+          "model_id": 0,
+          "role": "manipuland_candidate",
+          "semantic": "apple"
+        },
+        {
+          "object_id": "plate_1",
+          "asset_id": "003_plate",
+          "model_id": 0,
+          "role": "support_or_target_candidate",
+          "semantic": "plate"
+        }
+      ],
+      "placement_regions": {
+        "left_reachable_area": {
+          "x": [
+            -0.24,
+            -0.06
+          ],
+          "y": [
+            -0.16,
+            0.08
+          ],
+          "purpose": "reachable free tabletop area for the first mentioned object"
+        },
+        "right_reachable_area": {
+          "x": [
+            0.08,
+            0.3
+          ],
+          "y": [
+            -0.16,
+            0.08
+          ],
+          "purpose": "reachable tabletop area for the second mentioned object"
+        },
+        "center_clearance_area": {
+          "x": [
+            -0.05,
+            0.07
+          ],
+          "y": [
+            -0.2,
+            0.12
+          ],
+          "purpose": "plate target area for the primary task"
+        },
+        "left_front_reachable_area": {
+          "x": [
+            -0.2,
+            -0.14
+          ],
+          "y": [
+            0.01,
+            0.07
+          ],
+          "purpose": "free left-arm target region for the alternate task",
+          "success_tolerance_m": 0.03
+        }
+      },
+      "support_surface": {
+        "type": "table",
+        "frame": "robot_first_person_tabletop; x is robot-left/right across the table, y is robot-front/back on the table, z is height; the RoboTwin adapter maps this frame into the simulator task frame",
+        "bounds": {
+          "x": [
+            -0.45,
+            0.45
+          ],
+          "y": [
+            -0.35,
+            0.25
+          ],
+          "z": [
+            0.74,
+            1.1
+          ]
+        }
+      },
+      "pose_constraints": [
+        {
+          "object_id": "apple_1",
+          "region": "left_reachable_area",
+          "xyz": [
+            -0.19,
+            -0.08,
+            0.76
+          ],
+          "qpos": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "z_policy": "snap_to_tabletop_on_load",
+          "physical": {
+            "is_static": false,
+            "collision": true,
+            "stable_on_table": true
+          }
+        },
+        {
+          "object_id": "plate_1",
+          "region": "center_clearance_area",
+          "xyz": [
+            -0.03,
+            -0.04,
+            0.755
+          ],
+          "qpos": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "z_policy": "snap_to_tabletop_on_load",
+          "physical": {
+            "is_static": true,
+            "collision": true,
+            "stable_on_table": true
+          }
+        }
+      ],
+      "camera_observation": {
+        "required_views": [
+          "head_camera",
+          "observer_camera"
+        ],
+        "visual_checks": [
+          "object visibility",
+          "prompt relation match",
+          "occlusion",
+          "reachability",
+          "stability",
+          "visual plausibility beyond rigid collision"
+        ]
+      },
+      "robot_constraints": {
+        "embodiment": "RoboTwin tabletop manipulator",
+        "workspace_reachability": "all objects must be inside named reachable regions before simulator smoke",
+        "action_interface": "RoboTwin task-program input; policy data is produced by /collect after smoke"
+      },
+      "success_verifier": {
+        "type": "static_then_simulator_then_visual",
+        "conditions": [
+          "static schema validation passes",
+          "RoboTwin assets exist under robotwin_root",
+          "asset-load render smoke exits pass",
+          "Base_Task/CuRobo smoke exits pass",
+          "/collect dry-run writes dataset manifest, camera samples, and object state traces",
+          "visual review confirms placement semantics"
+        ],
+        "failure_modes": [
+          "missing asset",
+          "object penetration",
+          "floating object",
+          "unreachable pose",
+          "occlusion",
+          "unstable settling",
+          "task intent not represented"
+        ]
+      },
+      "artifacts": {
+        "pipeline_summary": "runs/probe_static_apple_plate/pipeline_summary.json",
+        "final_placement": "runs/scene_task_decoupling/shared_apple_plate_scene.json",
+        "static_validation_final": "runs/scene_task_decoupling/shared_scene_static_validation.json",
+        "task_program_input": "artifacts/task_program_inputs/task_apple_plate.json",
+        "catalog_candidate_search": "artifacts/adapter_catalog/selection2env_queries/task_apple_plate.json",
+        "alternate_task_program_input": "artifacts/task_program_inputs/task_apple_plate_to_left_front.json",
+        "scene_task_decoupling_report": "artifacts/scene_task_decoupling/apple_plate_two_tasks.json",
+        "scene_task_repair_failure": "runs/scene_task_decoupling/original_placement_apple_on_plate_fail/rollout_report.json",
+        "asset_smoke_report": "runs/smoke_asset_apple_plate/smoke_report.json",
+        "asset_observer_camera": "runs/smoke_asset_apple_plate/observer_camera.png",
+        "asset_head_camera": "runs/smoke_asset_apple_plate/head_camera.png",
+        "basetask_smoke_report": "runs/smoke_basetask_apple_plate/smoke_report.json",
+        "basetask_observer_camera": "runs/smoke_basetask_apple_plate/observer_camera.png",
+        "basetask_head_camera": "runs/smoke_basetask_apple_plate/head_camera.png",
+        "collect_report": "runs/collect_dryrun_apple_plate/collect_report.json",
+        "collect_dataset_manifest": "runs/collect_dryrun_apple_plate/dataset_manifest.json",
+        "collect_object_states": "runs/collect_dryrun_apple_plate/episode_000/object_states.jsonl",
+        "collect_scene_info": "runs/collect_dryrun_apple_plate/episode_000/scene_info.json",
+        "generated_action_repair_placement": "runs/probe_static_apple_plate_action_repair/final_placement.json",
+        "generated_action_rollout_report": "runs/generated_rollout_apple_plate_action_repair_pass/rollout_report.json",
+        "generated_action_rollout_events": "runs/generated_rollout_apple_plate_action_repair_pass/events.jsonl",
+        "generated_action_rollout_move_events": "runs/generated_rollout_apple_plate_action_repair_pass/move_events.jsonl",
+        "generated_action_rollout_observer_video": "runs/generated_rollout_apple_plate_action_repair_pass/observer_rollout_probe.mp4",
+        "generated_rollout_collection_report": "runs/generated_collect_apple_plate_action_repair/collection_report.json",
+        "generated_rollout_collection_manifest": "runs/generated_collect_apple_plate_action_repair/dataset_manifest.json",
+        "generated_rollout_collection_events": "runs/generated_collect_apple_plate_action_repair/events.jsonl",
+        "generated_policy_evaluate_report": "runs/act_eval_native_sync_rgb_chunk161_1200e_best/evaluate_report.json",
+        "generated_policy_evaluate_run_state": "runs/act_eval_native_sync_rgb_chunk161_1200e_best/run_state.json",
+        "generated_policy_evaluate_events": "runs/act_eval_native_sync_rgb_chunk161_1200e_best/events.jsonl",
+        "generated_policy_diagnosis": "artifacts/diagnosis/native_act_closed_loop_diagnosis.json"
+      },
+      "simulator_smoke": {
+        "asset_load_render": {
+          "status": "pass_asset_load_render",
+          "object_count": 2,
+          "pose_delta_norm_m": {
+            "apple_1": 0.024614225426942176,
+            "plate_1": 0.0
+          },
+          "pixel_stats": {
+            "observer_camera": {
+              "mean": 201.66218098958333,
+              "std": 13.669818276100736,
+              "min": 38.0,
+              "max": 255.0
+            },
+            "head_camera": {
+              "mean": 201.15644856770834,
+              "std": 15.660394902655561,
+              "min": 41.0,
+              "max": 253.0
+            }
+          },
+          "report": "runs/smoke_asset_apple_plate/smoke_report.json",
+          "scope": "asset_load_render_without_robot_planner"
+        },
+        "basetask_curobo": {
+          "status": "pass",
+          "object_count": 2,
+          "pose_delta_norm_m": {
+            "apple_1": 0.0,
+            "plate_1": 0.0
+          },
+          "pixel_stats": {},
+          "report": "runs/smoke_basetask_apple_plate/smoke_report.json",
+          "scope": "robotwin_base_task_with_curobo_initialized"
+        },
+        "collect_dry_run": {
+          "status": "pass_collect_dry_run",
+          "episode_count": 1,
+          "object_count": 2,
+          "observation_file_count": 10,
+          "policy_execution": "not_run",
+          "task_success_claim": "not_claimed",
+          "dataset_manifest": "runs/collect_dryrun_apple_plate/dataset_manifest.json",
+          "report": "runs/collect_dryrun_apple_plate/collect_report.json",
+          "scope": "robotwin_base_task_observation_and_object_state_trace"
+        },
+        "generated_action_rollout": {
+          "status": "pass_generated_action_rollout",
+          "probe_type": "generated_selection2env_play_once",
+          "check_success": true,
+          "plan_success": true,
+          "move_event_count": 4,
+          "relation_metrics": {
+            "source_id": "apple_1",
+            "target_id": "plate_1",
+            "xy_distance_m": 0.031838589165001915,
+            "z_delta_m": 0.05856490135192871,
+            "left_gripper_open": true,
+            "right_gripper_open": true
+          },
+          "report": "runs/generated_rollout_apple_plate_action_repair_pass/rollout_report.json",
+          "scope": "generated_selection2env_play_once_action_repair"
+        },
+        "generated_rollout_collection": {
+          "status": "pass_generated_rollout_collection",
+          "episode_count": 3,
+          "pass_count": 3,
+          "fail_count": 0,
+          "policy_execution": "generated_scripted_play_once",
+          "learned_policy_training": "not_run",
+          "learned_policy_evaluation": "not_run",
+          "dataset_manifest": "runs/generated_collect_apple_plate_action_repair/dataset_manifest.json",
+          "report": "runs/generated_collect_apple_plate_action_repair/collection_report.json",
+          "scope": "generated_selection2env_multi_episode_play_once_collection"
+        },
+        "generated_policy_evaluation": {
+          "status": "pass_generated_act_evaluate_execution",
+          "episode_count": 3,
+          "execution_count": 3,
+          "success_count": 3,
+          "policy_success_rate": 1.0,
+          "held_out_seeds": [
+            4,
+            5,
+            6
+          ],
+          "all_eval_seeds_held_out": true,
+          "policy_result": "task_success_observed",
+          "next_data_requirement": "Task success was observed; expand placement and domain randomization before making a robustness claim.",
+          "report": "runs/act_eval_native_sync_rgb_chunk161_1200e_best/evaluate_report.json",
+          "scope": "generated_selection2env_learned_act_evaluate"
+        }
+      },
+      "blockers": [
+        {
+          "code": "POLICY_ROBUSTNESS_FAILED",
+          "message": "Varied-placement held-out evaluation was executed before and after failure-to-data recovery; both evaluations passed infrastructure checks but scored 1/4 task success, so promotion is rejected.",
+          "owner": "Zheng Ye / Gaochen"
+        }
+      ],
+      "handoff": {
+        "collect_outputs": [
+          "rollout logs",
+          "scene/task manifest",
+          "camera previews",
+          "object state traces",
+          "failure diagnosis"
+        ],
+        "train_reads": [
+          "rollout dataset manifest",
+          "policy config",
+          "data requirement spec"
+        ],
+        "evaluate_reads": [
+          "policy checkpoint",
+          "eval task set",
+          "verifier results",
+          "failure trace clusters"
+        ]
+      }
+    },
+    {
+      "schema_version": "alchedata.selection2env.v0",
+      "task_id": "task_laptop_knife",
+      "task_text": "place the laptop to the right of the knife",
+      "status": "pass_sim_smoke",
+      "source_pipeline_status": "pass_static_only",
+      "scene_id": "scene_laptop_knife_v0",
+      "catalog_sources": {
+        "robotwin": {
+          "entry_count": 123,
+          "selection_eligible_count": 123,
+          "match_count": 2
+        },
+        "agenticsim": {
+          "entry_count": 8,
+          "selection_eligible_count": 8,
+          "match_count": 0
+        },
+        "articraft10k": {
+          "entry_count": 9996,
+          "selection_eligible_count": 0,
+          "match_count": 103
+        }
+      },
+      "asset_candidates": [
+        {
+          "asset_id": "rec_laptop_clamshell_0001",
+          "semantic_name": "laptop clamshell 0001",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_laptop_clamshell_0001",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "rec_laptop_clamshell_0002",
+          "semantic_name": "laptop clamshell 0002",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_laptop_clamshell_0002",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "rec_laptop_clamshell_00e36cd311c74caa887a388758bdba7f",
+          "semantic_name": "laptop clamshell",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_laptop_clamshell_00e36cd311c74caa887a388758bdba7f",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "rec_laptop_clamshell_170598888ef0495faf3c7badc2718d45",
+          "semantic_name": "laptop clamshell",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_laptop_clamshell_170598888ef0495faf3c7badc2718d45",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "rec_laptop_clamshell_1d93c98b593a46eab1752ce4bd985a12",
+          "semantic_name": "laptop clamshell",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_laptop_clamshell_1d93c98b593a46eab1752ce4bd985a12",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "rec_laptop_clamshell_20334ebdfb664cf29059d6d55e876522",
+          "semantic_name": "laptop clamshell",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_laptop_clamshell_20334ebdfb664cf29059d6d55e876522",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "rec_laptop_clamshell_23f3d79cd362422a9a77f00e744ff753",
+          "semantic_name": "laptop clamshell",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_laptop_clamshell_23f3d79cd362422a9a77f00e744ff753",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "rec_laptop_clamshell_2941265dbf4e4405b0e184f2de4ba558",
+          "semantic_name": "laptop clamshell",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_laptop_clamshell_2941265dbf4e4405b0e184f2de4ba558",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "015_laptop",
+          "semantic_name": "laptop",
+          "catalog_source": "robotwin",
+          "backend_asset_id": "015_laptop",
+          "execution_status": "robotwin_loadable",
+          "selection_eligible": true,
+          "decision": "accepted",
+          "reason": "selected by placement spec and execution-eligible"
+        },
+        {
+          "asset_id": "034_knife",
+          "semantic_name": "knife",
+          "catalog_source": "robotwin",
+          "backend_asset_id": "034_knife",
+          "execution_status": "robotwin_loadable",
+          "selection_eligible": true,
+          "decision": "accepted",
+          "reason": "selected by placement spec and execution-eligible"
+        }
+      ],
+      "selected_assets": [
+        {
+          "object_id": "laptop_1",
+          "asset_id": "015_laptop",
+          "model_id": 0,
+          "role": "scene_object",
+          "semantic": "laptop"
+        },
+        {
+          "object_id": "knife_1",
+          "asset_id": "034_knife",
+          "model_id": 0,
+          "role": "reference_object",
+          "semantic": "knife"
+        }
+      ],
+      "placement_regions": {
+        "left_reachable_area": {
+          "x": [
+            -0.24,
+            -0.06
+          ],
+          "y": [
+            -0.16,
+            0.08
+          ],
+          "purpose": "reachable free tabletop area for the first mentioned object"
+        },
+        "right_reachable_area": {
+          "x": [
+            0.08,
+            0.3
+          ],
+          "y": [
+            -0.16,
+            0.08
+          ],
+          "purpose": "reachable tabletop area for the second mentioned object"
+        },
+        "center_clearance_area": {
+          "x": [
+            -0.05,
+            0.07
+          ],
+          "y": [
+            -0.2,
+            0.12
+          ],
+          "purpose": "free corridor for downstream manipulation"
+        }
+      },
+      "support_surface": {
+        "type": "table",
+        "frame": "robot_first_person_tabletop; x is robot-left/right across the table, y is robot-front/back on the table, z is height; the RoboTwin adapter maps this frame into the simulator task frame",
+        "bounds": {
+          "x": [
+            -0.45,
+            0.45
+          ],
+          "y": [
+            -0.35,
+            0.25
+          ],
+          "z": [
+            0.74,
+            1.1
+          ]
+        }
+      },
+      "pose_constraints": [
+        {
+          "object_id": "laptop_1",
+          "region": "left_reachable_area",
+          "xyz": [
+            -0.19,
+            -0.08,
+            0.76
+          ],
+          "qpos": [
+            0.7,
+            0,
+            0,
+            0.7
+          ],
+          "z_policy": "snap_to_tabletop_on_load",
+          "physical": {
+            "is_static": true,
+            "collision": true,
+            "stable_on_table": true
+          }
+        },
+        {
+          "object_id": "knife_1",
+          "region": "right_reachable_area",
+          "xyz": [
+            0.13999999999999999,
+            0.0,
+            0.755
+          ],
+          "qpos": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "z_policy": "snap_to_tabletop_on_load",
+          "physical": {
+            "is_static": true,
+            "collision": true,
+            "stable_on_table": false
+          }
+        }
+      ],
+      "camera_observation": {
+        "required_views": [
+          "head_camera",
+          "observer_camera"
+        ],
+        "visual_checks": [
+          "object visibility",
+          "prompt relation match",
+          "occlusion",
+          "reachability",
+          "stability",
+          "visual plausibility beyond rigid collision"
+        ]
+      },
+      "robot_constraints": {
+        "embodiment": "RoboTwin tabletop manipulator",
+        "workspace_reachability": "all objects must be inside named reachable regions before simulator smoke",
+        "action_interface": "RoboTwin task-program input; policy data is produced by /collect after smoke"
+      },
+      "success_verifier": {
+        "type": "static_then_simulator_then_visual",
+        "conditions": [
+          "static schema validation passes",
+          "RoboTwin assets exist under robotwin_root",
+          "asset-load render smoke exits pass",
+          "Base_Task/CuRobo smoke exits pass",
+          "/collect dry-run writes dataset manifest, camera samples, and object state traces",
+          "visual review confirms placement semantics"
+        ],
+        "failure_modes": [
+          "missing asset",
+          "object penetration",
+          "floating object",
+          "unreachable pose",
+          "occlusion",
+          "unstable settling",
+          "task intent not represented"
+        ]
+      },
+      "artifacts": {
+        "pipeline_summary": "runs/probe_static_laptop_knife/pipeline_summary.json",
+        "final_placement": "runs/probe_static_laptop_knife/final_placement.json",
+        "static_validation_final": "runs/probe_static_laptop_knife/static_validation_final.json",
+        "task_program_input": "artifacts/task_program_inputs/task_laptop_knife.json",
+        "catalog_candidate_search": "artifacts/adapter_catalog/selection2env_queries/task_laptop_knife.json",
+        "asset_smoke_report": "runs/smoke_asset_laptop_knife/smoke_report.json",
+        "asset_observer_camera": "runs/smoke_asset_laptop_knife/observer_camera.png",
+        "asset_head_camera": "runs/smoke_asset_laptop_knife/head_camera.png",
+        "basetask_smoke_report": "runs/smoke_basetask_laptop_knife/smoke_report.json",
+        "basetask_observer_camera": "runs/smoke_basetask_laptop_knife/observer_camera.png",
+        "basetask_head_camera": "runs/smoke_basetask_laptop_knife/head_camera.png",
+        "collect_report": "runs/collect_dryrun_laptop_knife/collect_report.json",
+        "collect_dataset_manifest": "runs/collect_dryrun_laptop_knife/dataset_manifest.json",
+        "collect_object_states": "runs/collect_dryrun_laptop_knife/episode_000/object_states.jsonl",
+        "collect_scene_info": "runs/collect_dryrun_laptop_knife/episode_000/scene_info.json"
+      },
+      "simulator_smoke": {
+        "asset_load_render": {
+          "status": "pass_asset_load_render",
+          "object_count": 2,
+          "pose_delta_norm_m": {
+            "laptop_1": 0.0,
+            "knife_1": 0.0
+          },
+          "pixel_stats": {
+            "observer_camera": {
+              "mean": 200.95080729166668,
+              "std": 15.406868993909908,
+              "min": 46.0,
+              "max": 255.0
+            },
+            "head_camera": {
+              "mean": 199.78910807291666,
+              "std": 22.540413682704493,
+              "min": 28.0,
+              "max": 255.0
+            }
+          },
+          "report": "runs/smoke_asset_laptop_knife/smoke_report.json",
+          "scope": "asset_load_render_without_robot_planner"
+        },
+        "basetask_curobo": {
+          "status": "pass",
+          "object_count": 2,
+          "pose_delta_norm_m": {
+            "laptop_1": 0.0,
+            "knife_1": 0.0
+          },
+          "pixel_stats": {},
+          "report": "runs/smoke_basetask_laptop_knife/smoke_report.json",
+          "scope": "robotwin_base_task_with_curobo_initialized"
+        },
+        "collect_dry_run": {
+          "status": "pass_collect_dry_run",
+          "episode_count": 1,
+          "object_count": 2,
+          "observation_file_count": 10,
+          "policy_execution": "not_run",
+          "task_success_claim": "not_claimed",
+          "dataset_manifest": "runs/collect_dryrun_laptop_knife/dataset_manifest.json",
+          "report": "runs/collect_dryrun_laptop_knife/collect_report.json",
+          "scope": "robotwin_base_task_observation_and_object_state_trace"
+        },
+        "generated_action_rollout": {
+          "status": "not_run_for_task",
+          "scope": "generated_selection2env_play_once_action_repair",
+          "message": "No generated action-repair play_once is attached to this normalized task; apple/plate and can/basket side repairs are tracked in the generated action-repair summary."
+        },
+        "generated_rollout_collection": {
+          "status": "not_run_for_task",
+          "scope": "generated_selection2env_multi_episode_play_once_collection",
+          "message": "No generated rollout collection is attached to this normalized task; apple/plate and can/basket side repairs are tracked in the generated action-repair summary."
+        },
+        "generated_policy_evaluation": {
+          "status": "not_run_for_task",
+          "scope": "generated_selection2env_learned_act_evaluate",
+          "message": "The bounded learned-ACT /evaluate adapter currently covers only apple/plate."
+        }
+      },
+      "blockers": [
+        {
+          "code": "POLICY_EVALUATION_TASK_COVERAGE_PENDING",
+          "message": "Generated collection and learned-policy /evaluate coverage are not attached to this normalized task; the bounded learned-ACT adapter currently covers apple/plate only.",
+          "owner": "Zheng Ye / Gaochen"
+        }
+      ],
+      "handoff": {
+        "collect_outputs": [
+          "rollout logs",
+          "scene/task manifest",
+          "camera previews",
+          "object state traces",
+          "failure diagnosis"
+        ],
+        "train_reads": [
+          "rollout dataset manifest",
+          "policy config",
+          "data requirement spec"
+        ],
+        "evaluate_reads": [
+          "policy checkpoint",
+          "eval task set",
+          "verifier results",
+          "failure trace clusters"
+        ]
+      }
+    },
+    {
+      "schema_version": "alchedata.selection2env.v0",
+      "task_id": "task_vegetable_basket",
+      "task_text": "put the vegetable into the basket",
+      "status": "pass_sim_smoke",
+      "source_pipeline_status": "pass_static_only",
+      "scene_id": "scene_vegetable_basket_v0",
+      "catalog_sources": {
+        "robotwin": {
+          "entry_count": 123,
+          "selection_eligible_count": 123,
+          "match_count": 1
+        },
+        "agenticsim": {
+          "entry_count": 8,
+          "selection_eligible_count": 8,
+          "match_count": 1
+        },
+        "articraft10k": {
+          "entry_count": 9996,
+          "selection_eligible_count": 0,
+          "match_count": 17
+        }
+      },
+      "asset_candidates": [
+        {
+          "asset_id": "110_basket",
+          "semantic_name": "basket",
+          "catalog_source": "agenticsim",
+          "backend_asset_id": "110_basket",
+          "execution_status": "robotwin_alias_loadable",
+          "selection_eligible": true,
+          "decision": "accepted",
+          "reason": "selected by placement spec and execution-eligible"
+        },
+        {
+          "asset_id": "rec_air_fryer_with_pullout_basket_049e41a4db3d45cdb9c6f24c19cc4ddb",
+          "semantic_name": "air fryer with pullout basket",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_air_fryer_with_pullout_basket_049e41a4db3d45cdb9c6f24c19cc4ddb",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "rec_air_fryer_with_pullout_basket_0698981e06784c5fa82c21f62e9d4b23",
+          "semantic_name": "air fryer with pullout basket",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_air_fryer_with_pullout_basket_0698981e06784c5fa82c21f62e9d4b23",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "rec_air_fryer_with_pullout_basket_06ff8882ac1f45f6b590d64ec0ab0d85",
+          "semantic_name": "air fryer with pullout basket",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_air_fryer_with_pullout_basket_06ff8882ac1f45f6b590d64ec0ab0d85",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "rec_air_fryer_with_pullout_basket_1251681ab15f416d8c44d0e3fa137232",
+          "semantic_name": "air fryer with pullout basket",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_air_fryer_with_pullout_basket_1251681ab15f416d8c44d0e3fa137232",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "rec_air_fryer_with_pullout_basket_12cf1e07ef9f4da390817bc964040dbb",
+          "semantic_name": "air fryer with pullout basket",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_air_fryer_with_pullout_basket_12cf1e07ef9f4da390817bc964040dbb",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "rec_air_fryer_with_pullout_basket_14ac4c8c9e35416b864382571fa27e62",
+          "semantic_name": "air fryer with pullout basket",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_air_fryer_with_pullout_basket_14ac4c8c9e35416b864382571fa27e62",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "rec_air_fryer_with_pullout_basket_1d12cef9d027455894e45670267e92aa",
+          "semantic_name": "air fryer with pullout basket",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_air_fryer_with_pullout_basket_1d12cef9d027455894e45670267e92aa",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "rec_air_fryer_with_pullout_basket_21d5168db6624dfeb492161c31e330dd",
+          "semantic_name": "air fryer with pullout basket",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_air_fryer_with_pullout_basket_21d5168db6624dfeb492161c31e330dd",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "matched task text but was not selected or did not pass the execution gate"
+        },
+        {
+          "asset_id": "110_basket",
+          "semantic_name": "basket",
+          "catalog_source": "robotwin",
+          "backend_asset_id": "110_basket",
+          "execution_status": "robotwin_loadable",
+          "selection_eligible": true,
+          "decision": "accepted",
+          "reason": "selected by placement spec and execution-eligible"
+        }
+      ],
+      "selected_assets": [
+        {
+          "object_id": "vagetable_1",
+          "asset_id": "069_vagetable",
+          "model_id": 2,
+          "role": "scene_object",
+          "semantic": "vagetable"
+        },
+        {
+          "object_id": "basket_1",
+          "asset_id": "110_basket",
+          "model_id": 0,
+          "role": "container_candidate",
+          "semantic": "basket"
+        }
+      ],
+      "placement_regions": {
+        "left_reachable_area": {
+          "x": [
+            -0.24,
+            -0.06
+          ],
+          "y": [
+            -0.16,
+            0.08
+          ],
+          "purpose": "reachable free tabletop area for the first mentioned object"
+        },
+        "right_reachable_area": {
+          "x": [
+            0.08,
+            0.3
+          ],
+          "y": [
+            -0.16,
+            0.08
+          ],
+          "purpose": "reachable tabletop area for the second mentioned object"
+        },
+        "center_clearance_area": {
+          "x": [
+            -0.05,
+            0.07
+          ],
+          "y": [
+            -0.2,
+            0.12
+          ],
+          "purpose": "free corridor for downstream manipulation"
+        }
+      },
+      "support_surface": {
+        "type": "table",
+        "frame": "robot_first_person_tabletop; x is robot-left/right across the table, y is robot-front/back on the table, z is height; the RoboTwin adapter maps this frame into the simulator task frame",
+        "bounds": {
+          "x": [
+            -0.45,
+            0.45
+          ],
+          "y": [
+            -0.35,
+            0.25
+          ],
+          "z": [
+            0.74,
+            1.1
+          ]
+        }
+      },
+      "pose_constraints": [
+        {
+          "object_id": "vagetable_1",
+          "region": "left_reachable_area",
+          "xyz": [
+            -0.19,
+            -0.08,
+            0.76
+          ],
+          "qpos": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "z_policy": "snap_to_tabletop_on_load",
+          "physical": {
+            "is_static": false,
+            "collision": true,
+            "stable_on_table": false
+          }
+        },
+        {
+          "object_id": "basket_1",
+          "region": "right_reachable_area",
+          "xyz": [
+            0.13999999999999999,
+            0.0,
+            0.755
+          ],
+          "qpos": [
+            0.70710678,
+            0.70710678,
+            0,
+            0
+          ],
+          "z_policy": "snap_to_tabletop_on_load",
+          "physical": {
+            "is_static": true,
+            "collision": true,
+            "stable_on_table": true
+          }
+        }
+      ],
+      "camera_observation": {
+        "required_views": [
+          "head_camera",
+          "observer_camera"
+        ],
+        "visual_checks": [
+          "object visibility",
+          "prompt relation match",
+          "occlusion",
+          "reachability",
+          "stability",
+          "visual plausibility beyond rigid collision"
+        ]
+      },
+      "robot_constraints": {
+        "embodiment": "RoboTwin tabletop manipulator",
+        "workspace_reachability": "all objects must be inside named reachable regions before simulator smoke",
+        "action_interface": "RoboTwin task-program input; policy data is produced by /collect after smoke"
+      },
+      "success_verifier": {
+        "type": "static_then_simulator_then_visual",
+        "conditions": [
+          "static schema validation passes",
+          "RoboTwin assets exist under robotwin_root",
+          "asset-load render smoke exits pass",
+          "Base_Task/CuRobo smoke exits pass",
+          "/collect dry-run writes dataset manifest, camera samples, and object state traces",
+          "visual review confirms placement semantics"
+        ],
+        "failure_modes": [
+          "missing asset",
+          "object penetration",
+          "floating object",
+          "unreachable pose",
+          "occlusion",
+          "unstable settling",
+          "task intent not represented"
+        ]
+      },
+      "artifacts": {
+        "pipeline_summary": "runs/probe_static_vegetable_basket/pipeline_summary.json",
+        "final_placement": "runs/probe_static_vegetable_basket/final_placement.json",
+        "static_validation_final": "runs/probe_static_vegetable_basket/static_validation_final.json",
+        "task_program_input": "artifacts/task_program_inputs/task_vegetable_basket.json",
+        "catalog_candidate_search": "artifacts/adapter_catalog/selection2env_queries/task_vegetable_basket.json",
+        "asset_smoke_report": "runs/smoke_asset_vegetable_basket/smoke_report.json",
+        "asset_observer_camera": "runs/smoke_asset_vegetable_basket/observer_camera.png",
+        "asset_head_camera": "runs/smoke_asset_vegetable_basket/head_camera.png",
+        "basetask_smoke_report": "runs/smoke_basetask_vegetable_basket/smoke_report.json",
+        "basetask_observer_camera": "runs/smoke_basetask_vegetable_basket/observer_camera.png",
+        "basetask_head_camera": "runs/smoke_basetask_vegetable_basket/head_camera.png",
+        "collect_report": "runs/collect_dryrun_vegetable_basket/collect_report.json",
+        "collect_dataset_manifest": "runs/collect_dryrun_vegetable_basket/dataset_manifest.json",
+        "collect_object_states": "runs/collect_dryrun_vegetable_basket/episode_000/object_states.jsonl",
+        "collect_scene_info": "runs/collect_dryrun_vegetable_basket/episode_000/scene_info.json"
+      },
+      "simulator_smoke": {
+        "asset_load_render": {
+          "status": "pass_asset_load_render",
+          "object_count": 2,
+          "pose_delta_norm_m": {
+            "vagetable_1": 0.01574955469950776,
+            "basket_1": 0.0
+          },
+          "pixel_stats": {
+            "observer_camera": {
+              "mean": 197.92688151041668,
+              "std": 24.64107746003291,
+              "min": 9.0,
+              "max": 255.0
+            },
+            "head_camera": {
+              "mean": 198.25452799479166,
+              "std": 24.046012876319665,
+              "min": 15.0,
+              "max": 255.0
+            }
+          },
+          "report": "runs/smoke_asset_vegetable_basket/smoke_report.json",
+          "scope": "asset_load_render_without_robot_planner"
+        },
+        "basetask_curobo": {
+          "status": "pass",
+          "object_count": 2,
+          "pose_delta_norm_m": {
+            "vagetable_1": 0.0,
+            "basket_1": 0.0
+          },
+          "pixel_stats": {},
+          "report": "runs/smoke_basetask_vegetable_basket/smoke_report.json",
+          "scope": "robotwin_base_task_with_curobo_initialized"
+        },
+        "collect_dry_run": {
+          "status": "pass_collect_dry_run",
+          "episode_count": 1,
+          "object_count": 2,
+          "observation_file_count": 10,
+          "policy_execution": "not_run",
+          "task_success_claim": "not_claimed",
+          "dataset_manifest": "runs/collect_dryrun_vegetable_basket/dataset_manifest.json",
+          "report": "runs/collect_dryrun_vegetable_basket/collect_report.json",
+          "scope": "robotwin_base_task_observation_and_object_state_trace"
+        },
+        "generated_action_rollout": {
+          "status": "not_run_for_task",
+          "scope": "generated_selection2env_play_once_action_repair",
+          "message": "No generated action-repair play_once is attached to this normalized task; apple/plate and can/basket side repairs are tracked in the generated action-repair summary."
+        },
+        "generated_rollout_collection": {
+          "status": "not_run_for_task",
+          "scope": "generated_selection2env_multi_episode_play_once_collection",
+          "message": "No generated rollout collection is attached to this normalized task; apple/plate and can/basket side repairs are tracked in the generated action-repair summary."
+        },
+        "generated_policy_evaluation": {
+          "status": "not_run_for_task",
+          "scope": "generated_selection2env_learned_act_evaluate",
+          "message": "The bounded learned-ACT /evaluate adapter currently covers only apple/plate."
+        }
+      },
+      "blockers": [
+        {
+          "code": "POLICY_EVALUATION_TASK_COVERAGE_PENDING",
+          "message": "Generated collection and learned-policy /evaluate coverage are not attached to this normalized task; the bounded learned-ACT adapter currently covers apple/plate only.",
+          "owner": "Zheng Ye / Gaochen"
+        }
+      ],
+      "handoff": {
+        "collect_outputs": [
+          "rollout logs",
+          "scene/task manifest",
+          "camera previews",
+          "object state traces",
+          "failure diagnosis"
+        ],
+        "train_reads": [
+          "rollout dataset manifest",
+          "policy config",
+          "data requirement spec"
+        ],
+        "evaluate_reads": [
+          "policy checkpoint",
+          "eval task set",
+          "verifier results",
+          "failure trace clusters"
+        ]
+      }
+    },
+    {
+      "schema_version": "alchedata.selection2env.v0",
+      "task_id": "task_drawer_mug_blocker",
+      "task_text": "open the drawer and place the mug inside",
+      "status": "unsupported_blocker",
+      "scene_id": "drawer_container_scene_missing_assets",
+      "catalog_sources": {
+        "robotwin": {
+          "entry_count": 123,
+          "selection_eligible_count": 123,
+          "match_count": 1
+        },
+        "agenticsim": {
+          "entry_count": 8,
+          "selection_eligible_count": 8,
+          "match_count": 1
+        },
+        "articraft10k": {
+          "entry_count": 9996,
+          "selection_eligible_count": 0,
+          "match_count": 202
+        }
+      },
+      "asset_candidates": [
+        {
+          "asset_id": "036_cabinet",
+          "semantic_name": "cabinet",
+          "catalog_source": "agenticsim",
+          "backend_asset_id": "036_cabinet",
+          "execution_status": "robotwin_alias_loadable",
+          "selection_eligible": true,
+          "decision": "rejected",
+          "reason": "cabinet/drawer candidate exists, but no verified drawer-open task API is available"
+        },
+        {
+          "asset_id": "rec_desk_with_drawer_0001",
+          "semantic_name": "desk with drawer 0001",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_desk_with_drawer_0001",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "catalog match is not a verified executable drawer-and-mug task binding"
+        },
+        {
+          "asset_id": "rec_desk_with_drawer_0002",
+          "semantic_name": "desk with drawer 0002",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_desk_with_drawer_0002",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "catalog match is not a verified executable drawer-and-mug task binding"
+        },
+        {
+          "asset_id": "rec_desk_with_drawer_0003",
+          "semantic_name": "desk with drawer 0003",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_desk_with_drawer_0003",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "catalog match is not a verified executable drawer-and-mug task binding"
+        },
+        {
+          "asset_id": "rec_desk_with_drawer_0004",
+          "semantic_name": "desk with drawer 0004",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_desk_with_drawer_0004",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "catalog match is not a verified executable drawer-and-mug task binding"
+        },
+        {
+          "asset_id": "rec_desk_with_drawer_0005",
+          "semantic_name": "desk with drawer 0005",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_desk_with_drawer_0005",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "catalog match is not a verified executable drawer-and-mug task binding"
+        },
+        {
+          "asset_id": "rec_desk_with_drawer_0006",
+          "semantic_name": "desk with drawer 0006",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_desk_with_drawer_0006",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "catalog match is not a verified executable drawer-and-mug task binding"
+        },
+        {
+          "asset_id": "rec_desk_with_drawer_0007",
+          "semantic_name": "desk with drawer 0007",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_desk_with_drawer_0007",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "catalog match is not a verified executable drawer-and-mug task binding"
+        },
+        {
+          "asset_id": "rec_desk_with_drawer_005a4eef8c9847ca84a2505b94558ba4",
+          "semantic_name": "desk with drawer",
+          "catalog_source": "articraft10k",
+          "backend_asset_id": "rec_desk_with_drawer_005a4eef8c9847ca84a2505b94558ba4",
+          "execution_status": "catalog_only_not_imported",
+          "selection_eligible": false,
+          "decision": "rejected",
+          "reason": "catalog match is not a verified executable drawer-and-mug task binding"
+        },
+        {
+          "asset_id": "039_mug",
+          "semantic_name": "mug",
+          "catalog_source": "robotwin",
+          "backend_asset_id": "039_mug",
+          "execution_status": "robotwin_loadable",
+          "selection_eligible": true,
+          "decision": "rejected",
+          "reason": "catalog match is not a verified executable drawer-and-mug task binding"
+        }
+      ],
+      "selected_assets": [],
+      "placement_regions": {},
+      "support_surface": {
+        "type": "unknown",
+        "frame": "robot_first_person_tabletop",
+        "bounds": {}
+      },
+      "pose_constraints": [],
+      "camera_observation": {
+        "required_views": [
+          "head_camera",
+          "observer_camera"
+        ],
+        "visual_checks": [
+          "unsupported task evidence"
+        ]
+      },
+      "robot_constraints": {
+        "embodiment": "RoboTwin tabletop manipulator",
+        "workspace_reachability": "not evaluated because the articulated task API is blocked",
+        "action_interface": "blocked before executable task-program generation"
+      },
+      "success_verifier": {
+        "type": "blocker_record",
+        "conditions": [
+          "candidate assets and API blockers are explicitly recorded"
+        ],
+        "failure_modes": [
+          "drawer articulation API unsupported",
+          "interior-placement verifier unavailable",
+          "no executable task-program input"
+        ]
+      },
+      "artifacts": {
+        "scene_generation_summary": "runs/probe_static_drawer_mug_unified/scene_generation_summary.json",
+        "final_placement": "runs/probe_static_drawer_mug_unified/final_placement.json",
+        "static_validation": "runs/probe_static_drawer_mug_unified/attempt_0_static_validation.json",
+        "catalog_candidate_search": "artifacts/adapter_catalog/selection2env_queries/task_drawer_mug_blocker.json",
+        "source_scene_status": "pass_static_scene_module"
+      },
+      "blockers": [
+        {
+          "code": "ARTICULATED_CONTAINER_TASK_API_UNSUPPORTED",
+          "message": "AgenticSim maps drawer to RoboTwin 036_cabinet, but drawer opening and interior placement are not verified by the task scaffold/API.",
+          "owner": "Zheng Ye / RoboTwin task adapter owner"
+        }
+      ],
+      "handoff": {
+        "collect_outputs": [],
+        "train_reads": [],
+        "evaluate_reads": [
+          "blocker can be used to prioritize asset acquisition or forge fallback"
+        ]
+      }
+    }
+  ]
+}

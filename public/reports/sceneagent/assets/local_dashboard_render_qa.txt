@@ -1,0 +1,19 @@
+status=PASS
+mounted_done_task=true
+mounted_comment=true
+mounted_claim_boundary=true
+comments_summary=Comments (10)
+console_errors=0
+page_errors=0
+screenshot_exists=true
+Starting server 1/1: npm run dev
+Waiting for server on port 8765...
+Server ready on port 8765
+
+All 1 server(s) ready
+Running: /Users/boris/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node /tmp/qa_local_sceneagent_dashboard.mjs
+
+
+Stopping 1 server(s)...
+Server 1 stopped
+All servers stopped

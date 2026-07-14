@@ -1,0 +1,23 @@
+{
+  "asset_root": "",
+  "device": "cuda:0",
+  "elapsed_s": 6.575,
+  "env_cfg_overrides_requested": [],
+  "error": "ModuleNotFoundError(\"No module named 'pymeshlab'\")",
+  "error_message": "No module named 'pymeshlab'",
+  "error_type": "ModuleNotFoundError",
+  "num_envs": 1,
+  "pythonpath": [
+    "candidates/rlroverlab"
+  ],
+  "register_modules": [
+    "rover_envs.envs.navigation.robots.exomy"
+  ],
+  "schema": "agenticsim.isaaclab_gym_task_smoke.v0",
+  "screenshot": "/home/jingxiang/workspace/agenticsim-runtime/artifacts/candidates/rlroverlab_exomy_smoke.initial.png",
+  "screenshot_ready": false,
+  "screenshot_size_bytes": 0,
+  "status": "failed",
+  "steps_requested": 5,
+  "task": "Exomy-v0"
+}

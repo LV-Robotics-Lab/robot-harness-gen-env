@@ -1,0 +1,29 @@
+{
+  "schema_version": "robotwin.tabletop_validation_plan.v0",
+  "plan_name": "cabinet_mug_table_final_render_accepted_v0_validation_plan",
+  "stage": "orchestrator_validation_plan",
+  "target_placement": "final_placement.json",
+  "language_prompt": "open the drawer and place the mug inside",
+  "static_checks": [
+    "schema",
+    "asset_exists",
+    "model_id_exists",
+    "pose_in_workspace_bounds",
+    "approx_no_initial_collision"
+  ],
+  "simulator_smoke_checks": [
+    "robotwin_scene_load",
+    "settling_stability",
+    "save_head_and_observer_camera"
+  ],
+  "render_or_visual_checks": [
+    "object_visibility",
+    "visual_prompt_match",
+    "floating_or_penetration_failure_modes"
+  ],
+  "pass_criteria": [
+    "Static validation passes.",
+    "RoboTwin smoke exits PASS.",
+    "Preview image/video visibly contains the requested tabletop objects."
+  ]
+}

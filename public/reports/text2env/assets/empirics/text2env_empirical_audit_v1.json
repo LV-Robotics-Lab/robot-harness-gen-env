@@ -1,0 +1,61 @@
+{
+  "schema_version": "alchedata.text2env_empirical_audit.v0",
+  "status": "pass_all_text2env_empirical_gates",
+  "generated_at": "2026-07-13T16:25:46.965970+00:00",
+  "gates": {
+    "same_task_cross_sim_execution": {
+      "status": "pass",
+      "task_id": "openxsim_place_container_plate_v1",
+      "command_count": 5,
+      "task_success": true,
+      "trace_steps": 120,
+      "video_frames": 24,
+      "unique_video_frames": 24,
+      "transfer_status": "pass_task_semantic_transfer_with_declared_losses",
+      "task_contract": "artifacts/openxsim_cross_sim/place_container_plate_task_contract.json",
+      "isaac_bundle": "runs/isaac_openxsim_place_container_plate_v1"
+    },
+    "memory_ablation": {
+      "status": "pass",
+      "report": "artifacts/text2env_empirics/memory_ablation_rgb_adapter_v1.json",
+      "report_sha256": "9656a122e1251706e540f552a304382126b3c4c9e6d16594fe1c675652a53b89",
+      "no_memory_success_count": 0,
+      "memory_success_count": 3,
+      "episode_count_per_arm": 3,
+      "success_delta": 3,
+      "both_arms_execution_complete": true
+    },
+    "material_extraction": {
+      "status": "pass_material_extraction_import_render_compare",
+      "report": "runs/isaac_material_sidecar_roundtrip_v1/roundtrip_report.json",
+      "report_sha256": "ea744434a6864352b637f85190f87e0fec2dd7604bbb20e05789f91229d40048",
+      "source_foreground_pixels": 94,
+      "rendered_foreground_pixels": 15204,
+      "rgb_mae": 0.050980392156862765,
+      "cie76_delta_e": 13.875818858052044,
+      "shader_id": "UsdPreviewSurface"
+    },
+    "failure_score_correlation": {
+      "status": "pass_negative_result_retained",
+      "report": "artifacts/text2env_empirics/failure_score_correlation_v1.json",
+      "report_sha256": "4d6b188dac9f8a7bb9a2d3f09d8efeb5982be38133363fd5e7e8fecc0b6bf296",
+      "sample_count": 12,
+      "success_count": 10,
+      "failure_count": 2,
+      "metrics": {
+        "point_biserial_pearson_r": -0.254515644061242,
+        "spearman_rho": -0.2550690905693111,
+        "exact_two_sided_label_permutation_p": 0.7272727272727273
+      },
+      "interpretation": "higher score was not associated with more failures in this bounded sample"
+    },
+    "robust_policy_result": {
+      "status": "pass_bounded_privileged_policy",
+      "report": "artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json",
+      "report_sha256": "8fffd22d3af717c7e50f1298d338cda8087cbead0004c8a17f3e17a466cae804",
+      "decision": "accept_for_bounded_sceneagent_selection2env_gate",
+      "claim_boundary": "Promotion is limited to a privileged, initial-pose-conditioned, open-loop learned trajectory baseline in the generated RoboTwin apple/plate task, plus fixed-placement seed holdout on can/basket. It does not promote ACT, establish visual robustness, prove language-conditioned control, or establish broad task transfer."
+    }
+  },
+  "claim_boundary": "These gates add executed empirical evidence to the literature review. They do not reproduce the cited methods, establish state of the art, validate a visual language policy, or turn the negative failure-score correlation into a usable prioritization signal."
+}

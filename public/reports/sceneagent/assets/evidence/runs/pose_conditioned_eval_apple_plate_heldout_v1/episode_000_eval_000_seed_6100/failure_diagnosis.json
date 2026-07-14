@@ -1,0 +1,56 @@
+{
+  "status": "no_failure_observed",
+  "required_categories_checked": [
+    "wrong_grasp_location",
+    "object_knocked_over",
+    "arm_jitter",
+    "uncontrolled_gripper_open_close",
+    "after_contact_failure",
+    "visual_material_mismatch"
+  ],
+  "categories": {
+    "wrong_grasp_location": {
+      "status": "not_observed",
+      "evidence": {
+        "source_displacement_m": 0.25935816978075604
+      }
+    },
+    "object_knocked_over": {
+      "status": "not_observed",
+      "evidence": {
+        "target_displacement_m": 0.0,
+        "target_rotation_deg": 0.0
+      }
+    },
+    "arm_jitter": {
+      "status": "not_observed",
+      "evidence": {
+        "max_consecutive_action_delta": 1.0
+      }
+    },
+    "uncontrolled_gripper_open_close": {
+      "status": "not_observed",
+      "evidence": {
+        "gripper_threshold_toggle_count": 2
+      }
+    },
+    "after_contact_failure": {
+      "status": "not_observed",
+      "evidence": {
+        "source_displacement_m": 0.25935816978075604,
+        "success_verifier": true
+      }
+    },
+    "visual_material_mismatch": {
+      "status": "not_measured",
+      "evidence": "No calibrated material reference or material-sidecar render gate is available for this task."
+    },
+    "target_relation_not_satisfied": {
+      "status": "not_observed",
+      "evidence": {
+        "success_verifier": true
+      }
+    }
+  },
+  "infrastructure_error": null
+}

@@ -1,0 +1,162 @@
+{
+  "schema_version": "alchedata.generated_selection2env_rollout_probe.v0",
+  "command": "/collect",
+  "probe_type": "generated_selection2env_play_once",
+  "task_id": "task_can_basket",
+  "task_config": "demo_clean",
+  "seed": 0,
+  "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/probe_static_can_basket_action_repair/final_placement.json",
+  "scene_module": null,
+  "robotwin_root": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin",
+  "out_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/generated_rollout_can_basket_action_repair",
+  "task_binding": {
+    "template": "place_in",
+    "source_id": "can_1",
+    "target_id": "basket_1"
+  },
+  "status": "pass_generated_action_rollout",
+  "limitations": [
+    "This probe executes a generated selection2env play_once template against a generated placement.",
+    "It is an action-stack smoke test, not learned-policy training or evaluation.",
+    "It does not prove robustness across randomization, embodiments, or held-out tasks."
+  ],
+  "setup_duration_sec": 7.4914,
+  "play_once_duration_sec": 5.7924,
+  "plan_success": true,
+  "check_success": true,
+  "task_info": {
+    "cluttered_table_info": [],
+    "texture_info": {
+      "wall_texture": null,
+      "table_texture": null
+    },
+    "info": {
+      "{source}": "071_can/base0",
+      "{target}": "110_basket/base0",
+      "{arm}": "left",
+      "{template}": "place_in",
+      "{motion_mode}": "robotwin_contact_grasp+direct_topdown_place_after_fail",
+      "{grasp_rejected_attempts}": 0,
+      "{place_rejected_attempts}": 0
+    }
+  },
+  "move_event_count": 5,
+  "left_joint_path_len": 7,
+  "right_joint_path_len": 0,
+  "initial_objects": {
+    "can_1": {
+      "p": [
+        -0.21999920904636383,
+        0.040001366287469864,
+        0.7404224276542664
+      ],
+      "q": [
+        0.7067103385925293,
+        0.707362949848175,
+        -0.009921317920088768,
+        -0.009988013654947281
+      ]
+    },
+    "basket_1": {
+      "p": [
+        0.019999999552965164,
+        -0.05999999865889549,
+        0.7409999966621399
+      ],
+      "q": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "final_objects": {
+    "can_1": {
+      "p": [
+        -0.0006764912977814674,
+        -0.02111293002963066,
+        0.7648120522499084
+      ],
+      "q": [
+        0.7349969148635864,
+        0.5290700793266296,
+        0.3802277147769928,
+        0.18786001205444336
+      ]
+    },
+    "basket_1": {
+      "p": [
+        0.019999999552965164,
+        -0.05999999865889549,
+        0.7409999966621399
+      ],
+      "q": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "relation_metrics": {
+    "source_id": "can_1",
+    "target_id": "basket_1",
+    "xy_distance_m": 0.044042268112327754,
+    "z_delta_m": 0.023812055587768555,
+    "left_gripper_open": true,
+    "right_gripper_open": true
+  },
+  "images": {
+    "initial_head_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/generated_rollout_can_basket_action_repair/initial_head_camera.png",
+    "initial_observer_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/generated_rollout_can_basket_action_repair/initial_observer_camera.png",
+    "final_head_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/generated_rollout_can_basket_action_repair/final_head_camera.png",
+    "final_observer_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/generated_rollout_can_basket_action_repair/final_observer_camera.png"
+  },
+  "pixel_stats": {
+    "initial": {
+      "head_camera": {
+        "mean": 224.7724609375,
+        "std": 49.22402331824126,
+        "min": 11.0,
+        "max": 255.0
+      },
+      "observer_camera": {
+        "mean": 220.67505642361112,
+        "std": 46.7477521671268,
+        "min": 0.0,
+        "max": 255.0
+      }
+    },
+    "final": {
+      "head_camera": {
+        "mean": 193.91219184027779,
+        "std": 75.1368125001219,
+        "min": 2.0,
+        "max": 255.0
+      },
+      "observer_camera": {
+        "mean": 220.28109375,
+        "std": 47.131893065551694,
+        "min": 0.0,
+        "max": 255.0
+      }
+    }
+  },
+  "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/generated_rollout_can_basket_action_repair/observer_rollout_probe.mp4",
+  "events": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/generated_rollout_can_basket_action_repair/events.jsonl",
+  "move_events": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/generated_rollout_can_basket_action_repair/move_events.jsonl",
+  "next_data_requirement": "Use this generated play_once template to record full multi-episode demonstrations before /train.",
+  "failure_diagnosis": {
+    "status": "no_failure_observed",
+    "checked_categories": [
+      "wrong_grasp_location",
+      "object_knocked_over",
+      "arm_jitter",
+      "uncontrolled_gripper_open_close",
+      "after_contact_failure",
+      "visual_material_mismatch",
+      "target_relation_not_satisfied"
+    ]
+  }
+}

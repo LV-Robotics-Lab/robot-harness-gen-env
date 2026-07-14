@@ -1,0 +1,98 @@
+{
+  "schema_version": "alchedata.generated_act_evaluate_episode.v0",
+  "command": "/evaluate",
+  "task_id": "task_apple_plate",
+  "seed": 6100,
+  "held_out_seed": true,
+  "placement_id": "eval_000",
+  "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/placement_robustness_apple_plate_verified_holdout_v4/placements/eval/eval_000.json",
+  "placement_split": "eval",
+  "pose_signature": "2338bdc3b21eac957467aa21c230b1945ac40ff359b9f90f8d04f6122b306cd8",
+  "pose_vector": [
+    -0.22099685637682226,
+    -0.06645851402520413,
+    -0.007979220066550944,
+    -0.018635811845858052
+  ],
+  "held_out_placement": true,
+  "status": "completed_policy_success",
+  "execution_complete": true,
+  "policy_success": true,
+  "policy_step_count": 148,
+  "setup_seconds": 7.3764491800102405,
+  "relation_metrics": {
+    "xy_distance_m": 0.046907890130874194,
+    "source_z_m": 0.7587504386901855,
+    "target_z_m": 0.7409999966621399,
+    "source_minus_target_z_m": 0.017750442028045654,
+    "left_gripper_open": true,
+    "right_gripper_open": true
+  },
+  "initial_poses": {
+    "apple_1": {
+      "p": [
+        -0.22127079963684082,
+        -0.06711208075284958,
+        0.7647781372070312
+      ],
+      "q": [
+        0.9998468160629272,
+        0.01508226990699768,
+        -0.008631793782114983,
+        0.002155885100364685
+      ]
+    },
+    "plate_1": {
+      "p": [
+        -0.007979219779372215,
+        -0.018635811284184456,
+        0.7409999966621399
+      ],
+      "q": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "final_poses": {
+    "apple_1": {
+      "p": [
+        -0.049882691353559494,
+        0.002446153201162815,
+        0.7587504386901855
+      ],
+      "q": [
+        0.42167574167251587,
+        0.7038466930389404,
+        6.887316703796387e-05,
+        -0.5716551542282104
+      ]
+    },
+    "plate_1": {
+      "p": [
+        -0.007979219779372215,
+        -0.018635811284184456,
+        0.7409999966621399
+      ],
+      "q": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "failure_diagnosis": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4/episode_000_eval_000_seed_6100/failure_diagnosis.json",
+  "events": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4/episode_000_eval_000_seed_6100/events.jsonl",
+  "action_trace": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4/episode_000_eval_000_seed_6100/action_trace.json",
+  "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4/episode_000_eval_000_seed_6100/observer_policy_rollout.mp4",
+  "images": {
+    "initial_head_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4/episode_000_eval_000_seed_6100/initial_head_camera.png",
+    "initial_observer_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4/episode_000_eval_000_seed_6100/initial_observer_camera.png",
+    "final_head_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4/episode_000_eval_000_seed_6100/final_head_camera.png",
+    "final_observer_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4/episode_000_eval_000_seed_6100/final_observer_camera.png"
+  },
+  "infrastructure_error": null
+}

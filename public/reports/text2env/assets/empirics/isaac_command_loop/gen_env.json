@@ -1,0 +1,55 @@
+{
+  "adapter": "Isaac Sim 5.1",
+  "asset_bindings": {
+    "container": "DynamicCuboid primitive proxy",
+    "plate": "FixedCuboid primitive proxy"
+  },
+  "claim_boundary": "The target scene uses Isaac primitives and proves executable scene construction, not source-asset identity or material parity.",
+  "command": "/gen-env",
+  "gates": {
+    "physics": true,
+    "renderer": true,
+    "reset": true,
+    "stage_export": true
+  },
+  "placement": {
+    "container_goal_m": [
+      0.1,
+      0.0,
+      0.19
+    ],
+    "container_size_m": [
+      0.2,
+      0.2,
+      0.2
+    ],
+    "container_start_m": [
+      -0.65,
+      -0.15,
+      0.11
+    ],
+    "plate_position_m": [
+      0.1,
+      0.0,
+      0.04
+    ],
+    "plate_size_m": [
+      0.65,
+      0.65,
+      0.08
+    ]
+  },
+  "scene_stage": {
+    "bytes": 8646,
+    "path": "scene.usda",
+    "sha256": "0a22dabe7637acb157dac0f9d42319981f299a3c95fc2dd2d749959e4e832b26"
+  },
+  "schema_version": "alchedata.openxsim.isaac_gen_env.v0",
+  "status": "pass_isaac_gen_env",
+  "task_contract": {
+    "bytes": 1361,
+    "path": "artifacts/openxsim_cross_sim/place_container_plate_task_contract.json",
+    "sha256": "5cf27576fc3577a5cc3500d9182e7eafcba5e8f5397f5c9dd6838ce649bc187d"
+  },
+  "task_id": "openxsim_place_container_plate_v1"
+}

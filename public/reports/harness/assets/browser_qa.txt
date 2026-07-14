@@ -1,0 +1,119 @@
+{
+  "console_errors": [],
+  "index": "/Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/index.html",
+  "page_errors": [],
+  "report": "harness",
+  "status": "pass_browser_qa",
+  "viewports": {
+    "desktop": {
+      "image_count": 6,
+      "local_link_count": 17,
+      "overflow": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440
+      },
+      "video_count": 4,
+      "videos": [
+        {
+          "duration": 2,
+          "error": null,
+          "height": 540,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/isaac_task_semantic_transfer_poster.png",
+          "readyState": 4,
+          "renderedHeight": 451.5,
+          "renderedWidth": 602,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/isaac_task_semantic_transfer.mp4",
+          "width": 960
+        },
+        {
+          "duration": 17.875,
+          "error": null,
+          "height": 480,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/policy_heldout_poster.png",
+          "readyState": 4,
+          "renderedHeight": 451.5,
+          "renderedWidth": 602,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/policy_heldout.mp4",
+          "width": 640
+        },
+        {
+          "duration": 17.875,
+          "error": null,
+          "height": 480,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/policy_randomized_poster.png",
+          "readyState": 4,
+          "renderedHeight": 451.5,
+          "renderedWidth": 602,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/policy_randomized.mp4",
+          "width": 640
+        },
+        {
+          "duration": 18,
+          "error": null,
+          "height": 480,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/policy_cross_task_poster.png",
+          "readyState": 4,
+          "renderedHeight": 451.5,
+          "renderedWidth": 602,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/policy_cross_task.mp4",
+          "width": 640
+        }
+      ]
+    },
+    "mobile": {
+      "image_count": 6,
+      "local_link_count": 17,
+      "overflow": {
+        "clientWidth": 390,
+        "scrollWidth": 390
+      },
+      "video_count": 4,
+      "videos": [
+        {
+          "duration": 2,
+          "error": null,
+          "height": 540,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/isaac_task_semantic_transfer_poster.png",
+          "readyState": 4,
+          "renderedHeight": 276,
+          "renderedWidth": 368,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/isaac_task_semantic_transfer.mp4",
+          "width": 960
+        },
+        {
+          "duration": 17.875,
+          "error": null,
+          "height": 480,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/policy_heldout_poster.png",
+          "readyState": 4,
+          "renderedHeight": 276,
+          "renderedWidth": 368,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/policy_heldout.mp4",
+          "width": 640
+        },
+        {
+          "duration": 17.875,
+          "error": null,
+          "height": 480,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/policy_randomized_poster.png",
+          "readyState": 4,
+          "renderedHeight": 276,
+          "renderedWidth": 368,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/policy_randomized.mp4",
+          "width": 640
+        },
+        {
+          "duration": 18,
+          "error": null,
+          "height": 480,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/policy_cross_task_poster.png",
+          "readyState": 4,
+          "renderedHeight": 276,
+          "renderedWidth": 368,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/embodied_harness/assets/evidence/policy_cross_task.mp4",
+          "width": 640
+        }
+      ]
+    }
+  }
+}

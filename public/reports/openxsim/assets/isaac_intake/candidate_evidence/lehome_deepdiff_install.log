@@ -1,0 +1,9 @@
+Collecting deepdiff==8.6.1
+  Downloading deepdiff-8.6.1-py3-none-any.whl.metadata (8.6 kB)
+Collecting orderly-set<6,>=5.4.1 (from deepdiff==8.6.1)
+  Using cached orderly_set-5.5.0-py3-none-any.whl.metadata (6.6 kB)
+Downloading deepdiff-8.6.1-py3-none-any.whl (91 kB)
+Downloading orderly_set-5.5.0-py3-none-any.whl (13 kB)
+Installing collected packages: orderly-set, deepdiff
+
+Successfully installed deepdiff-8.6.1 orderly-set-5.5.0

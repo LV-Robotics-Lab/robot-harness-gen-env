@@ -1,0 +1,18 @@
+{
+  "schema_version": "alchedata.pearl_run_state.v0",
+  "command": "/evaluate",
+  "state": "completed",
+  "task_id": "task_apple_plate",
+  "all_eval_placements_held_out": true,
+  "domain_randomization": {
+    "random_background": false,
+    "cluttered_table": false,
+    "random_light": false,
+    "random_table_height": 0.0,
+    "random_head_camera_dis": 0.0
+  },
+  "policy_success_rate": 1.0,
+  "evaluate_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/pose_conditioned_eval_apple_plate_heldout_v1/evaluate_report.json",
+  "events": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/pose_conditioned_eval_apple_plate_heldout_v1/events.jsonl",
+  "updated_at": "2026-07-13T15:50:23.423902+00:00"
+}

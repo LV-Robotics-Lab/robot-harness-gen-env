@@ -1,0 +1,43 @@
+{
+  "schema_version": "alchedata.openxsim_source_capture.v1",
+  "status": "pass_source_page_capture",
+  "source_count": 4,
+  "sources": [
+    {
+      "source_id": "shaoxiang_awesome_isaac_sim",
+      "url": "https://github.com/shaoxiang/awesome-isaac-sim",
+      "screenshot": "assets/source_pages/shaoxiang_awesome_isaac_sim.png",
+      "http_status": 200,
+      "title": "GitHub - shaoxiang/awesome-isaac-sim: A curated collection of essential resources, tutorials, and projects for NVIDIA Isaac Sim, the powerful platform for designing, simulating, testing, and training AI-driven robots and autonomous machines with GPU-accelerated multi-physics simulations. · GitHub",
+      "console_error_count": 0,
+      "captured_at": "2026-07-13"
+    },
+    {
+      "source_id": "sjtuyinjie_awesome_isaac_sim",
+      "url": "https://github.com/sjtuyinjie/awesome-isaac-sim",
+      "screenshot": "assets/source_pages/sjtuyinjie_awesome_isaac_sim.png",
+      "http_status": 200,
+      "title": "GitHub - sjtuyinjie/awesome-isaac-sim: Collect some related resources of NVIDIA Isaac Sim · GitHub",
+      "console_error_count": 2,
+      "captured_at": "2026-07-13"
+    },
+    {
+      "source_id": "video2sim_forge",
+      "url": "https://github.com/Marvelousp4/video2sim-forge",
+      "screenshot": "assets/source_pages/video2sim_forge.png",
+      "http_status": 200,
+      "title": "GitHub - Marvelousp4/video2sim-forge: RGB-D video to simulation assets for robotics manipulation · GitHub",
+      "console_error_count": 2,
+      "captured_at": "2026-07-13"
+    },
+    {
+      "source_id": "neumatex",
+      "url": "https://nvlabs.github.io/neumatex/",
+      "screenshot": "assets/source_pages/neumatex.png",
+      "http_status": 200,
+      "title": "Extracting Neural Materials from Multi-view Images",
+      "console_error_count": 2,
+      "captured_at": "2026-07-13"
+    }
+  ]
+}

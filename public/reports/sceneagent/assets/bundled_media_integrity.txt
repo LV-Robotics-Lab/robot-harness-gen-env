@@ -1,0 +1,4 @@
+png_total=69
+png_decode_failures=0
+mp4_total=14
+mp4_probe_failures=0

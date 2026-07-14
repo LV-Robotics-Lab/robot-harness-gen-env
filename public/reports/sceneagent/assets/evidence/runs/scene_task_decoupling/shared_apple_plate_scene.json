@@ -1,0 +1,227 @@
+{
+  "schema_version": "robotwin.tabletop_placement.v0",
+  "placement_name": "apple_plate_shared_scene_two_task_v0",
+  "stage": "accepted_shared_scene_for_two_task_execution",
+  "language_prompt": "move the apple onto the plate",
+  "asset_catalog_path": "asset_catalogs/robotwin_tabletop_assets_master.json",
+  "generated_by": {
+    "agent": "orchestrator",
+    "model_backend": "codex_reference",
+    "prompt_template": "skills/orchestrate-placement-pipeline/SKILL.md",
+    "generated_at": "2026-07-09"
+  },
+  "workspace": {
+    "surface": "table",
+    "coordinate_convention": "robot_first_person_tabletop; x is robot-left/right across the table, y is robot-front/back on the table, z is height; the RoboTwin adapter maps this frame into the simulator task frame",
+    "bounds": {
+      "x": [
+        -0.45,
+        0.45
+      ],
+      "y": [
+        -0.35,
+        0.25
+      ],
+      "z": [
+        0.74,
+        1.1
+      ]
+    },
+    "spatial_regions": {
+      "left_reachable_area": {
+        "x": [
+          -0.24,
+          -0.06
+        ],
+        "y": [
+          -0.16,
+          0.08
+        ],
+        "purpose": "reachable free tabletop area for the first mentioned object"
+      },
+      "right_reachable_area": {
+        "x": [
+          0.08,
+          0.3
+        ],
+        "y": [
+          -0.16,
+          0.08
+        ],
+        "purpose": "reachable tabletop area for the second mentioned object"
+      },
+      "center_clearance_area": {
+        "x": [
+          -0.05,
+          0.07
+        ],
+        "y": [
+          -0.2,
+          0.12
+        ],
+        "purpose": "plate target area for the primary task"
+      },
+      "left_front_reachable_area": {
+        "x": [
+          -0.2,
+          -0.14
+        ],
+        "y": [
+          0.01,
+          0.07
+        ],
+        "purpose": "free left-arm target region for the alternate task",
+        "success_tolerance_m": 0.03
+      }
+    }
+  },
+  "objects": [
+    {
+      "id": "apple_1",
+      "semantic": "apple",
+      "asset_id": "035_apple",
+      "model_id": 0,
+      "role": "manipuland_candidate",
+      "pose": {
+        "region": "left_reachable_area",
+        "xyz": [
+          -0.19,
+          -0.08,
+          0.76
+        ],
+        "qpos": [
+          1,
+          0,
+          0,
+          0
+        ],
+        "z_policy": "snap_to_tabletop_on_load"
+      },
+      "physical": {
+        "is_static": false,
+        "collision": true,
+        "stable_on_table": true
+      },
+      "asset_metadata": {
+        "approx_scaled_extents_m": [
+          0.06611724393084956,
+          0.06433970880288944,
+          0.05572773730724063
+        ],
+        "scale": [
+          0.7,
+          0.7,
+          0.7
+        ],
+        "asset_type": "rigid",
+        "graspable": true,
+        "support_surface_candidate": false,
+        "placement_defaults": {}
+      },
+      "affordance_notes": []
+    },
+    {
+      "id": "plate_1",
+      "semantic": "plate",
+      "asset_id": "003_plate",
+      "model_id": 0,
+      "role": "support_or_target_candidate",
+      "pose": {
+        "region": "center_clearance_area",
+        "xyz": [
+          -0.03,
+          -0.04,
+          0.755
+        ],
+        "qpos": [
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "z_policy": "snap_to_tabletop_on_load"
+      },
+      "physical": {
+        "is_static": true,
+        "collision": true,
+        "stable_on_table": true
+      },
+      "asset_metadata": {
+        "approx_scaled_extents_m": [
+          0.22973311309440356,
+          0.02797171981547376,
+          0.23002034072493324
+        ],
+        "scale": [
+          0.025,
+          0.025,
+          0.025
+        ],
+        "asset_type": "rigid",
+        "graspable": false,
+        "support_surface_candidate": true,
+        "placement_defaults": {}
+      },
+      "affordance_notes": []
+    }
+  ],
+  "relations": [
+    {
+      "type": "on_surface",
+      "subject": "apple_1",
+      "object": "table",
+      "status": "designed"
+    },
+    {
+      "type": "on_surface",
+      "subject": "plate_1",
+      "object": "table",
+      "status": "designed"
+    },
+    {
+      "type": "separated_initially",
+      "subject": "apple_1",
+      "object": "plate_1",
+      "minimum_center_distance_m": 0.12,
+      "status": "relaxed_for_action_repair"
+    }
+  ],
+  "constraints": [
+    "use_only_catalog_assets",
+    "objects_on_table",
+    "no_initial_collision",
+    "keep_robot_reachable",
+    "keep_camera_visible",
+    "do_not_generate_task_program"
+  ],
+  "downstream_task_hints": [
+    "the placed scene can be consumed by a downstream manipulation task"
+  ],
+  "validation": {
+    "semantic_check": "pass_static",
+    "asset_check": "pass_static",
+    "bounds_check": "pass_static",
+    "approx_collision_check": "pass_static",
+    "stability_metadata_check": "pass_static",
+    "robotwin_load_check": "pending_simulator_smoke",
+    "render_visibility": "pending_render_review",
+    "simulator_stability": "pending_simulator_smoke"
+  },
+  "designer_notes": [
+    "codex_reference is a deterministic reference provider, not a live LLM call.",
+    "Future providers should keep the same output schema and validation gate.",
+    "For lateral language relations, left/right/front/back are interpreted from the robot or dual-arm first-person viewpoint unless the prompt explicitly names another frame.",
+    "Action repair candidate: moved plate into left/center reachable area to test whether generated play_once failure is caused by cross-table target reachability.",
+    "Scene-task decoupling: the same object poses support apple-on-plate and apple-to-left-front-region task specs."
+  ],
+  "source_designer_placement": "designer_initial_placement.json",
+  "source_critic_review": "critic_review.json",
+  "orchestrator_decision": {
+    "decision": "accept_for_smoke",
+    "reason": "Critic accepted the static placement.",
+    "remaining_uncertainties": [
+      "Exact simulator contact must be confirmed by RoboTwin smoke.",
+      "Camera visibility must be confirmed by render evidence."
+    ]
+  }
+}

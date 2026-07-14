@@ -1,0 +1,26 @@
+diff --git a/source/basic_locomotion_isaaclab/basic_locomotion_isaaclab/tasks/locomotion/__init__.py b/source/basic_locomotion_isaaclab/basic_locomotion_isaaclab/tasks/locomotion/__init__.py
+index b371361..71915ff 100644
+--- a/source/basic_locomotion_isaaclab/basic_locomotion_isaaclab/tasks/locomotion/__init__.py
++++ b/source/basic_locomotion_isaaclab/basic_locomotion_isaaclab/tasks/locomotion/__init__.py
+@@ -8,6 +8,14 @@ Ant locomotion environment.
+ """
+
+ import gymnasium as gym
++import isaaclab.sensors as isaaclab_sensors
++
++# The flat tasks do not instantiate the project-specific multi-mesh camera.
++# Keep their registration importable on stock Isaac Lab 2.3.x.
++if not hasattr(isaaclab_sensors, "MultiMeshRayCasterCamera"):
++    isaaclab_sensors.MultiMeshRayCasterCamera = isaaclab_sensors.RayCasterCamera
++if not hasattr(isaaclab_sensors, "MultiMeshRayCasterCameraCfg"):
++    isaaclab_sensors.MultiMeshRayCasterCameraCfg = isaaclab_sensors.RayCasterCameraCfg
+
+ from . import agents
+
+@@ -182,4 +190,4 @@ gym.register(
+         "env_cfg_entry_point": PegasusRoughVisionEnvCfg,
+         "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:RoughPPORunnerCfg",
+     },
+-)
+\ No newline at end of file
++)

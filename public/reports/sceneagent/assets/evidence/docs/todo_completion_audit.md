@@ -1,0 +1,43 @@
+# TODO Completion Audit
+
+## Current Verdict
+
+The workspace has moved past static-only evidence. It has a 123-object discovered RoboTwin catalog, eight AgenticSim aliases resolved against that catalog, a 9996-entry searchable Articraft manifest, three RoboTwin `Base_Task` smoke runs with CuRobo initialized on the RTX 5090-compatible `robotwin-5090` environment, bounded `/collect` dry-runs, and generated action rollouts. One byte-identical apple/plate scene now executes two distinct task specs with `check_success=true`. The policy path remains separate: both varied-placement policies score 1/4 on signature-disjoint eval splits, so promotion is rejected.
+
+The four explicit dashboard TODO acceptance lists are covered by current artifacts. This is not a claim that the research program is complete: non-identical demonstrations and held-out placement evaluation have now been executed, but policy promotion remains blocked on placement quality, declared domain randomization, and cross-task learned evaluation. Default ACT wrappers remain incompatible with generated tasks; broad Articraft scale/material/task-suitability coverage is unproven; and forge/material branches remain explicit blockers, which the TODO permits. Dashboard publication is proven from the dashboard repo and hosted API, not by this alchedata verifier.
+
+## Requirement Audit
+
+| area | evidence | status |
+|---|---|---|
+| selection2env schema | `schemas/selection2env.schema.json`, `docs/selection2env_schema.md` | covered |
+| accepted/rejected asset candidates | `artifacts/selection2env/*.json` | covered |
+| RoboTwin asset connection | `artifacts/adapter_catalog/robotwin_discovered_catalog.json`, `external/RoboTwin`, `runs/smoke_basetask_*` | covered for 123 live discovered assets |
+| AgenticSim/Articraft connection | `artifacts/adapter_catalog/selection2env_catalog_sources.json`, AgenticSim alias snapshot, Articraft manifest/search/probes | covered for 8/8 AgenticSim aliases and 9996 Articraft metadata entries; Articraft remains catalog-only except separately probed samples |
+| 3 task samples | apple/plate, laptop/knife, vegetable/basket | covered |
+| unsupported sample | drawer/mug static scene plus task-API blocker | covered: existing assets ground, but drawer articulation/interior placement/verifier are not executable |
+| Text2Env JSON/task input | `schemas/robotwin_task_program_input.schema.json`, `artifacts/task_program_inputs/*.json` | covered with explicit binding, scene ID, placement path, and SHA |
+| simulator smoke | `runs/smoke_basetask_*` | covered for Base_Task/CuRobo render smoke |
+| data collection dry run | `runs/collect_dryrun_*` contains `collect_report.json`, `dataset_manifest.json`, `episode_000/object_states.jsonl`, camera PNGs, and observer MP4s | covered as dry-run; no policy rollout claimed |
+| official action rollout smoke | `runs/official_rollout_*` contains `rollout_report.json`, `events.jsonl`, `move_events.jsonl`, camera PNGs, and observer MP4s | covered for official RoboTwin tasks |
+| generated action rollout smoke | `runs/generated_rollout_apple_plate_action_repair_pass/rollout_report.json`, `runs/generated_rollout_can_basket_action_repair/rollout_report.json`, `artifacts/generated_rollout_repair/generated_selection2env_action_repair_summary.json` | covered for apple/plate and can/basket action-repair placements |
+| generated rollout collection | `runs/generated_collect_apple_plate_action_repair/collection_report.json`, `runs/generated_collect_can_basket_action_repair/collection_report.json`, dataset manifests, per-episode reports/videos/logs | covered for apple/plate and can/basket with 3 episodes each, 3 pass, 0 fail; no learned policy claimed |
+| ACT HDF5 adapter smoke | `runs/act_hdf5_generated_smoke/conversion_report.json`, `runs/act_hdf5_generated_smoke/load_data_report.json`, `runs/act_hdf5_generated_smoke/SIM_TASK_CONFIGS.generated.json` | covered as format/loader smoke: six generated planner-trace episodes converted to ACT-compatible HDF5 at 96x72 camera size; no training or checkpoint claimed |
+| ACT train smoke | `runs/act_train_smoke_generated/train_smoke_report.json`, `runs/act_train_smoke_generated/act_ckpt/policy_best.ckpt`, train/validation plots | covered as one-epoch smoke: ACT imports, reads generated HDF5, computes loss, and writes a checkpoint; no policy quality or eval claimed |
+| native synchronized policy data | `runs/generated_collect_apple_plate_native_sync`, `runs/act_hdf5_native_sync`, `runs/act_action_replay_native_sync` | covered for synchronized head RGB/qpos recording, temporal alignment, loader shapes, channel-order repair, exact reset match, and successful 161-action expert replay |
+| generated learned-policy evaluation | `runs/act_train_native_sync_rgb_chunk161_1200e`, `runs/act_eval_native_sync_rgb_chunk161_1200e_best`, `artifacts/diagnosis/native_act_closed_loop_diagnosis.json` | covered for fixed-placement apple/plate: checkpoint keys match, 3/3 source-seed-held-out executions pass; data has one unique trajectory and no placement/domain randomization, so robustness is not claimed |
+| placement robustness and failure-to-data loop | `artifacts/diagnosis/placement_robustness_diagnosis.json`, `docs/placement_robustness_diagnosis.md` | executed: varied native data reaches 15 episodes, 10 placements, and 14 unique trajectories; two held-out splits execute 4/4 but each scores 1/4; three failed positions are recovered as expert data; current can/basket scripted/native regression passes 2/2; policy promotion is rejected |
+| default policy wrapper probe | `runs/policy_train_eval_entrypoint_probe/probe_report.json` plus stdout/stderr logs | still blocked: process_data targets old source data, default train task is absent from config, and upstream eval lacks `envs.task_apple_plate`; this does not negate the separate generated-task adapter pass |
+| per-benchmark command-loop artifacts | `artifacts/openxsim_benchmarks/manifest.json` and three task bundles | covered for `open_laptop`, `place_mouse_pad`, and `place_container_plate`: each has run state, command events, scene/task manifests, rollout/move logs, dense diagnosis, observer video, official success verifier, and next data requirement; `learned_policy=false` is explicit |
+| VLM/agent semantic critique | `artifacts/visual_review/selection2env_visual_review.json`, `artifacts/visual_review/generated_rollout_final_relation_review.json` | covered for initial-scene support and generated final-relation support on apple/plate plus can/basket; learned-policy eval not claimed |
+| generation2env blocker memo | `docs/generation2env_blockers.md`, `artifacts/generation_fallback/fallback_blocker_summary.json` | covered |
+| Gaochen handoff API | `docs/selection2env_schema.md`, `docs/openxsim_command_spec.md` | covered |
+| scene-task decoupling | `artifacts/scene_task_decoupling/apple_plate_two_tasks.json`, `runs/scene_task_decoupling/apple_on_plate`, `runs/scene_task_decoupling/apple_to_left_front` | covered by two passing `play_once/check_success` executions over identical placement bytes; failed repair attempts are retained |
+| literature review in Downloads | `/home/jingxiang/Downloads/text2env_literature_review.md`, `/Users/boris/Downloads/text2env_literature_review.md` | covered |
+| dashboard comment path | dashboard repo and hosted API records the Text2Env Downloads path plus SceneAgent/Open X Sim evidence updates | covered outside this workspace; verify via dashboard repo/API |
+| PEARL command spec | `docs/openxsim_command_spec.md`, `schemas/pearl_command.schema.json`, `schemas/gen_env.schema.json`, `artifacts/gen_env_contract/*.json` | covered for command envelope plus selection2env/forge/material `/gen-env` route contracts |
+| 2-3 RoboTwin smoke benchmarks | `artifacts/openxsim_benchmarks/*` backed by three `runs/official_rollout_*`, plus generated action-repair/collection and ACT evidence | covered with three unified scripted command-loop bundles; learned evaluation across 2-3 tasks is not claimed |
+| run_state/events | `artifacts/run_state/*`, `runs/collect_dryrun_*/dataset_manifest.json`, final ACT `run_state.json`, aggregate/per-episode `events.jsonl` | covered through successful fixed-placement learned `/evaluate` execution for apple/plate |
+| video2sim/NeuMaTeX blockers | `docs/generation2env_blockers.md`, `artifacts/generation_fallback/blocked_drawer_mug_video2sim_forge.json`, `artifacts/generation_fallback/blocked_neumatex_material_sidecar.json` | covered as typed blockers, not dry runs |
+| Open X Sim adapter matrix | `docs/openxsim_command_spec.md` | covered |
+| paper framing | `docs/embodied_harness_thesis.md` | covered |

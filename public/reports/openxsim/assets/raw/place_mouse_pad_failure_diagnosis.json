@@ -1,0 +1,18 @@
+{
+  "schema_version": "alchedata.openxsim_failure_diagnosis.v0",
+  "benchmark_id": "robotwin_place_mouse_pad_seed_0",
+  "task_name": "place_mouse_pad",
+  "source_rollout_report": "runs/official_rollout_place_mouse_pad/rollout_report.json",
+  "status": "no_failure_observed",
+  "checked_categories": [
+    "wrong_grasp_location",
+    "object_knocked_over",
+    "arm_jitter",
+    "uncontrolled_gripper_open_close",
+    "after_contact_failure",
+    "visual_material_mismatch"
+  ],
+  "move_events": 3,
+  "plan_success": true,
+  "task_success": true
+}

@@ -1,0 +1,169 @@
+{
+  "version": "1",
+  "pip_version": "26.1.2",
+  "install": [
+    {
+      "download_info": {
+        "url": "https://files.pythonhosted.org/packages/f7/e6/efe534ef0952b531b630780e19cabd416e2032697019d5295defc6ef9bd9/deepdiff-8.6.1-py3-none-any.whl",
+        "archive_info": {
+          "hashes": {
+            "sha256": "ee8708a7f7d37fb273a541fa24ad010ed484192cd0c4ffc0fa0ed5e2d4b9e78b"
+          },
+          "hash": "sha256=ee8708a7f7d37fb273a541fa24ad010ed484192cd0c4ffc0fa0ed5e2d4b9e78b"
+        }
+      },
+      "is_direct": false,
+      "is_yanked": false,
+      "requested": true,
+      "metadata": {
+        "metadata_version": "2.4",
+        "name": "deepdiff",
+        "version": "8.6.1",
+        "summary": "Deep Difference and Search of any Python object/data. Recreate objects by adding adding deltas to each other.",
+        "description": "# DeepDiff v 8.6.1\n\n![Downloads](https://img.shields.io/pypi/dm/deepdiff.svg?style=flat)\n![Python Versions](https://img.shields.io/pypi/pyversions/deepdiff.svg?style=flat)\n![License](https://img.shields.io/pypi/l/deepdiff.svg?version=latest)\n[![Build Status](https://github.com/seperman/deepdiff/workflows/Unit%20Tests/badge.svg)](https://github.com/seperman/deepdiff/actions)\n[![codecov](https://codecov.io/gh/seperman/deepdiff/branch/master/graph/badge.svg?token=KkHZ3siA3m)](https://codecov.io/gh/seperman/deepdiff)\n\n## Modules\n\n- [DeepDiff](https://zepworks.com/deepdiff/current/diff.html): Deep Difference of dictionaries, iterables, strings, and ANY other object.\n- [DeepSearch](https://zepworks.com/deepdiff/current/dsearch.html): Search for objects within other objects.\n- [DeepHash](https://zepworks.com/deepdiff/current/deephash.html): Hash any object based on their content.\n- [Delta](https://zepworks.com/deepdiff/current/delta.html): Store the difference of objects and apply them to other objects.\n- [Extract](https://zepworks.com/deepdiff/current/extract.html): Extract an item from a nested Python object using its path.\n- [commandline](https://zepworks.com/deepdiff/current/commandline.html): Use DeepDiff from commandline.\n\nTested on Python 3.9+ and PyPy3.\n\n- **[Documentation](https://zepworks.com/deepdiff/8.6.1/)**\n\n## What is new?\n\nPlease check the [ChangeLog](CHANGELOG.md) file for the detailed information.\n\nDeepDiff 8-6-1\n- Patched security vulnerability in the Delta class which was vulnerable to class pollution via its constructor, and when combined with a gadget available in DeltaDiff itself, it could lead to Denial of Service and Remote Code Execution (via insecure Pickle deserialization).\n\nDeepDiff 8-6-0\n\n- Added Colored View thanks to @mauvilsa \n- Added support for applying deltas to NamedTuple thanks to @paulsc \n- Fixed test_delta.py with Python 3.14 thanks to @Romain-Geissler-1A\n- Added python property serialization to json\n- Added ip address serialization\n- Switched to UV from pip\n- Added Claude.md\n- Added uuid hashing thanks to @akshat62\n- Added `ignore_uuid_types` flag to DeepDiff to avoid type reports when comparing UUID and string.\n- Added comprehensive type hints across the codebase (multiple commits for better type safety)\n- Added support for memoryview serialization\n- Added support for bytes serialization (non-UTF8 compatible)\n- Fixed bug where group_by with numbers would leak type info into group path reports\n- Fixed bug in `_get_clean_to_keys_mapping without` explicit significant digits\n- Added support for python dict key serialization\n- Enhanced support for IP address serialization with safe module imports\n- Added development tooling improvements (pyright config, .envrc example)\n- Updated documentation and development instructions\n\n\nDeepDiff 8-5-0\n\n- Updating deprecated pydantic calls\n- Switching to pyproject.toml\n- Fix for moving nested tables when using iterable_compare_func.  by \n- Fix recursion depth limit when hashing numpy.datetime64\n- Moving from legacy setuptools use to pyproject.toml\n\n\nDeepDiff 8-4-2\n\n- fixes the type hints for the base\n- fixes summarize so if json dumps fails, we can still get a repr of the results\n- adds ipaddress support\n\n\n## Installation\n\n### Install from PyPi:\n\n`pip install deepdiff`\n\nIf you want to use DeepDiff from commandline:\n\n`pip install \"deepdiff[cli]\"`\n\nIf you want to improve the performance of DeepDiff with certain functionalities such as improved json serialization:\n\n`pip install \"deepdiff[optimize]\"`\n\nInstall optional packages:\n- [yaml](https://pypi.org/project/PyYAML/)\n- [tomli](https://pypi.org/project/tomli/) (python 3.10 and older) and [tomli-w](https://pypi.org/project/tomli-w/) for writing\n- [clevercsv](https://pypi.org/project/clevercsv/) for more rubust CSV parsing\n- [orjson](https://pypi.org/project/orjson/) for speed and memory optimized parsing\n- [pydantic](https://pypi.org/project/pydantic/)\n\n\n# Documentation\n\n<https://zepworks.com/deepdiff/current/>\n\n### A message from Sep, the creator of DeepDiff\n\n> 👋 Hi there,\n>\n> Thank you for using DeepDiff!\n> As an engineer, I understand the frustration of wrestling with **unruly data** in pipelines.\n> That's why I developed a new tool - [Qluster](https://qluster.ai/solution) to empower non-engineers to control and resolve data issues at scale autonomously and **stop bugging the engineers**! 🛠️\n>\n> If you are going through this pain now, I would love to give you [early access](https://www.qluster.ai/try-qluster) to Qluster and get your feedback.\n\n\n# ChangeLog\n\nPlease take a look at the [CHANGELOG](CHANGELOG.md) file.\n\n# Survey\n\n:mega: **Please fill out our [fast 5-question survey](https://forms.gle/E6qXexcgjoKnSzjB8)** so that we can learn how & why you use DeepDiff, and what improvements we should make. Thank you! :dancers:\n\n# Local dev\n\n1. Clone the repo\n2. Switch to the dev branch\n3. Create your own branch\n4. Install dependencies\n\n    - Method 1: Use [`uv`](https://github.com/astral-sh/uv) to install the dependencies:  `uv sync --all-extras`.\n    - Method 2: Use pip: `pip install -e \".[cli,coverage,dev,docs,static,test]\"`\n5. Build `flit build`\n\n# Contribute\n\n1. Please make your PR against the dev branch\n2. Please make sure that your PR has tests. Since DeepDiff is used in many sensitive data driven projects, we strive to maintain around 100% test coverage on the code.\n\nPlease run `pytest --cov=deepdiff --runslow` to see the coverage report. Note that the `--runslow` flag will run some slow tests too. In most cases you only want to run the fast tests which so you wont add the `--runslow` flag.\n\nOr to see a more user friendly version, please run: `pytest --cov=deepdiff --cov-report term-missing --runslow`.\n\nThank you!\n\n# Authors\n\nPlease take a look at the [AUTHORS](AUTHORS.md) file.\n\n",
+        "description_content_type": "text/markdown",
+        "keywords": [],
+        "author_email": "Seperman <sep@zepworks.com>",
+        "maintainer_email": "Seperman <sep@zepworks.com>",
+        "license_file": [
+          "LICENSE"
+        ],
+        "classifier": [
+          "Intended Audience :: Developers",
+          "Operating System :: OS Independent",
+          "Topic :: Software Development",
+          "Programming Language :: Python :: 3.9",
+          "Programming Language :: Python :: 3.10",
+          "Programming Language :: Python :: 3.11",
+          "Programming Language :: Python :: 3.12",
+          "Programming Language :: Python :: 3.13",
+          "Programming Language :: Python :: Implementation :: PyPy",
+          "Development Status :: 5 - Production/Stable",
+          "License :: OSI Approved :: MIT License"
+        ],
+        "requires_dist": [
+          "orderly-set>=5.4.1,<6",
+          "click~=8.1.0 ; extra == \"cli\"",
+          "pyyaml~=6.0.0 ; extra == \"cli\"",
+          "coverage~=7.6.0 ; extra == \"coverage\"",
+          "bump2version~=1.0.0 ; extra == \"dev\"",
+          "jsonpickle~=4.0.0 ; extra == \"dev\"",
+          "ipdb~=0.13.0 ; extra == \"dev\"",
+          "numpy~=2.2.0 ; extra == \"dev\" and ( python_version >= '3.10')",
+          "numpy~=2.0 ; extra == \"dev\" and ( python_version < '3.10')",
+          "python-dateutil~=2.9.0 ; extra == \"dev\"",
+          "orjson~=3.10.0 ; extra == \"dev\"",
+          "tomli~=2.2.0 ; extra == \"dev\"",
+          "tomli-w~=1.2.0 ; extra == \"dev\"",
+          "pandas~=2.2.0 ; extra == \"dev\"",
+          "polars~=1.21.0 ; extra == \"dev\"",
+          "nox==2025.5.1 ; extra == \"dev\"",
+          "uuid6==2025.0.1 ; extra == \"dev\"",
+          "Sphinx~=6.2.0 ; extra == \"docs\"",
+          "sphinx-sitemap~=2.6.0 ; extra == \"docs\"",
+          "sphinxemoji~=0.3.0 ; extra == \"docs\"",
+          "orjson ; extra == \"optimize\"",
+          "flake8~=7.1.0 ; extra == \"static\"",
+          "flake8-pyproject~=1.2.3 ; extra == \"static\"",
+          "pydantic~=2.10.0 ; extra == \"static\"",
+          "pytest~=8.3.0 ; extra == \"test\"",
+          "pytest-benchmark~=5.1.0 ; extra == \"test\"",
+          "pytest-cov~=6.0.0 ; extra == \"test\"",
+          "python-dotenv~=1.0.0 ; extra == \"test\""
+        ],
+        "requires_python": ">=3.9",
+        "project_url": [
+          "Documentation, https://zepworks.com/deepdiff/",
+          "Homepage, https://zepworks.com/deepdiff/",
+          "Issues, https://github.com/seperman/deepdiff/issues",
+          "Repository, https://github.com/seperman/deepdiff"
+        ],
+        "provides_extra": [
+          "cli",
+          "coverage",
+          "dev",
+          "docs",
+          "optimize",
+          "static",
+          "test"
+        ]
+      }
+    },
+    {
+      "download_info": {
+        "url": "https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl",
+        "archive_info": {
+          "hashes": {
+            "sha256": "46f0b801948e98f427b412fcabb831677194c05c3b699b80de260374baa0b1e7"
+          },
+          "hash": "sha256=46f0b801948e98f427b412fcabb831677194c05c3b699b80de260374baa0b1e7"
+        }
+      },
+      "is_direct": false,
+      "is_yanked": false,
+      "requested": false,
+      "metadata": {
+        "metadata_version": "2.4",
+        "name": "orderly-set",
+        "version": "5.5.0",
+        "summary": "Orderly set",
+        "description": "# Orderly Set 5.5.0\n\nOrderly Set is a package containing multiple implementations of Ordered Set.\n\n\n## OrderlySet\n\nThis implementation keeps the order in all set operations except set difference operations.\nAs a result, it can do set difference operations much faster than other implementations. Still 2X slower than of Python's built-in set.\n\n\n## StableSet\n\nA StableSet is a mutable set that remembers its insertion order.\nFeaturing: Fast O(1) insertion, deletion, iteration and membership testing.\nBut slow O(N) Index Lookup.\n\n## StableSetEq\n\nSame as StableSet but the order of items doesn't matter for equality comparisons.\n\n## OrderedSet\n\nAn OrderedSet is a mutable data structure that is a hybrid of a list and a set.\nIt remembers its insertion order so that every entry has an index that can be looked up. \nFeaturing: O(1) Index lookup, insertion, iteration and membership testing.\nBut slow O(N) Deletion.\n\n\n## SortedSet\n\nSortedSet is basically set but when printed, turned into string, or iterated over, returns the items in alphabetical order.\n\n# Installation\n\n`pip install orderly-set`\n\n# Usage examples\n\nAn OrderedSet is created and used like a set:\n\n    >>> from orderly_set import OrderedSet\n\n    >>> letters = OrderedSet('abracadabra')\n\n    >>> letters\n    OrderedSet(['a', 'b', 'r', 'c', 'd'])\n\n    >>> 'r' in letters\n    True\n\nIt is efficient to find the index of an entry in an OrderedSet, or find an\nentry by its index. To help with this use case, the `.add()` method returns\nthe index of the added item, whether it was already in the set or not.\n\n    >>> letters.index('r')\n    2\n\n    >>> letters[2]\n    'r'\n\n    >>> letters.add('r')\n    2\n\n    >>> letters.add('x')\n    5\n\nOrderedSets implement the union (`|`), intersection (`&`), and difference (`-`)\noperators like sets do.\n\n    >>> letters |= OrderedSet('shazam')\n\n    >>> letters\n    OrderedSet(['a', 'b', 'r', 'c', 'd', 'x', 's', 'h', 'z', 'm'])\n\n    >>> letters & set('aeiou')\n    OrderedSet(['a'])\n\n    >>> letters -= 'abcd'\n\n    >>> letters\n    OrderedSet(['r', 'x', 's', 'h', 'z', 'm'])\n\nThe `__getitem__()` method has been extended to accept any\niterable except a string, returning a list, to perform NumPy-like \"fancy\nindexing\".\n\n    >>> letters = OrderedSet('abracadabra')\n\n    >>> letters[[0, 2, 3]]\n    ['a', 'r', 'c']\n\n    >>> letters.indexes(['a', 'r', 'c'])\n    [0, 2, 3]\n\nOrderedSet implements `__getstate__` and `__setstate__` so it can be pickled,\nand implements the abstract base classes `collections.MutableSet` and\n`collections.Sequence`.\n\nOrderedSet can be used as a generic collection type, similar to the collections\nin the `typing` module like List, Dict, and Set. For example, you can annotate\na variable as having the type `OrderedSet[str]` or `OrderedSet[Tuple[int,\nstr]]`.\n\n\n# Authors\n\nPlease check the [Authors](AUTHORS.md) file.\n\n# Comparisons\n\n```\n-- initialize a set --\nUsing Python dict time: 4.13\nset time: 2.98\nordered_set.OrderedSet time: 15.77\norderly_set.OrderedSet time: 15.25\nStableSet time: 4.78\nOrderlySet time: 4.38\nSortedSet time: 3.09\n\n-- update a set --\nUsing Python dict: 6.77\nset time: 2.46\nordered_set.OrderedSet time: 10.17\norderly_set.OrderedSet time: 10.06\nStableSet time: 7.16\nOrderlySet time: 6.77\nSortedSet time: 2.46\n\n-- update a set and get item --\nordered_set.OrderedSet time: 29.98\norderly_set.OrderedSet time: 29.57\nStableSet time: 14.31\nOrderlySet time: 14.23\nSortedSet time: 9.03\n\n-- set symmetric difference (xor) --\nset time: 5.368663903005654\nordered_set.OrderedSet time: 39.25\norderly_set.OrderedSet time: 80.31\nStableSet time: 42.81\nOrderlySet time: 11.44\nSortedSet time: 3.87\n\n-- set difference (-) --\nset time: 3.7398674299911363\nordered_set.OrderedSet time: 22.39\norderly_set.OrderedSet time: 38.00\nStableSet time: 22.30\nOrderlySet time: 8.92\nSortedSet time: 3.03\n```\n\nDespite what you see in the benchmarks, in DeepDiff OrderlySet performed better than SortedSet.\n\n\nA StableSet is a mutable set that remembers its insertion order.\nFeaturing: Fast O(1) insertion, deletion, iteration and membership testing.\nBut slow O(N) Index Lookup.\n\nAn OrderedSet is a mutable data structure that is a hybrid of a list and a set.\nIt remembers its insertion order so that every entry has an index that can be looked up. \nFeaturing: O(1) Index lookup, insertion, iteration and membership testing.\nBut slow O(N) Deletion.\n\nBoth have similar interfaces but differ in respect of their implementation and performance.\n\nThe original implementation of OrderedSet was a [recipe posted to ActiveState\nRecipes][recipe] by Raymond Hettiger, released under the MIT license.\n\n[recipe]: https://code.activestate.com/recipes/576694-orderedset/\n\nHettiger's implementation kept its content in a doubly-linked list referenced by a\ndict. As a result, looking up an item by its index was an O(N) operation, while\ndeletion was O(1).\n\nThis version of OrderedSet makes different trade-offs for the sake of efficient lookups. \nIts content is a standard Python list instead of a doubly-linked list. This\nprovides O(1) lookups by index at the expense of O(N) deletion, as well as\nslightly faster iteration.\n\n",
+        "description_content_type": "text/markdown",
+        "author_email": "Seperman <sep@zepworks.com>",
+        "license_file": [
+          "MIT-LICENSE"
+        ],
+        "classifier": [
+          "Intended Audience :: Developers",
+          "Operating System :: OS Independent",
+          "Topic :: Software Development",
+          "Programming Language :: Python :: 3.8",
+          "Programming Language :: Python :: 3.9",
+          "Programming Language :: Python :: 3.10",
+          "Programming Language :: Python :: 3.11",
+          "Programming Language :: Python :: 3.12",
+          "Programming Language :: Python :: Implementation :: PyPy",
+          "Development Status :: 5 - Production/Stable",
+          "License :: OSI Approved :: MIT License"
+        ],
+        "requires_dist": [
+          "coverage~=7.6.0 ; extra == \"coverage\"",
+          "bump2version~=1.0.0 ; extra == \"dev\"",
+          "ipdb~=0.13.0 ; extra == \"dev\"",
+          "orjson ; extra == \"optimize\"",
+          "flake8~=7.1.0 ; extra == \"static\"",
+          "flake8-pyproject~=1.2.3 ; extra == \"static\"",
+          "pytest~=8.3.0 ; extra == \"test\"",
+          "pytest-benchmark~=5.1.0 ; extra == \"test\"",
+          "pytest-cov~=6.0.0 ; extra == \"test\"",
+          "python-dotenv~=1.0.0 ; extra == \"test\""
+        ],
+        "requires_python": ">=3.8",
+        "project_url": [
+          "Download, https://github.com/seperman/orderly-set/tarball/master",
+          "Homepage, https://github.com/seperman/orderly-set"
+        ],
+        "provides_extra": [
+          "coverage",
+          "dev",
+          "optimize",
+          "static",
+          "test"
+        ]
+      }
+    }
+  ],
+  "environment": {
+    "implementation_name": "cpython",
+    "implementation_version": "3.11.15",
+    "os_name": "posix",
+    "platform_machine": "x86_64",
+    "platform_release": "6.17.0-35-generic",
+    "platform_system": "Linux",
+    "platform_version": "#35~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May 26 19:30:42 UTC 2",
+    "python_full_version": "3.11.15",
+    "platform_python_implementation": "CPython",
+    "python_version": "3.11",
+    "sys_platform": "linux"
+  }
+}

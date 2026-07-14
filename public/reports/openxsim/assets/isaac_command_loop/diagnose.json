@@ -1,0 +1,57 @@
+{
+  "categories": {
+    "after_contact_failure": {
+      "evidence": {
+        "checks": {
+          "horizontal_center_distance": true,
+          "source_speed": true,
+          "vertical_support_gap": true
+        },
+        "horizontal_center_distance_m": 0.00023756474973744843,
+        "source_bottom_to_target_top_abs_m": 2.0056962968251213e-07,
+        "source_bottom_z_m": 0.07999979853630065,
+        "source_speed_mps": 0.000719415198545903,
+        "success": true,
+        "target_top_z_m": 0.07999999910593034
+      },
+      "status": "not_observed"
+    },
+    "arm_jitter": {
+      "reason": "No robot arm is present in the target execution.",
+      "status": "not_applicable"
+    },
+    "object_knocked_over": {
+      "evidence": {
+        "final_position_m": [
+          0.10004112869501114,
+          -0.00023397769837174565,
+          0.17999979853630066
+        ]
+      },
+      "status": "not_observed"
+    },
+    "uncontrolled_gripper_open_close": {
+      "reason": "No gripper is present in the target execution.",
+      "status": "not_applicable"
+    },
+    "visual_material_mismatch": {
+      "evidence": "Primitive colors replace source materials.",
+      "status": "known_transfer_loss"
+    },
+    "wrong_grasp_location": {
+      "reason": "No gripper is present in the target execution.",
+      "status": "not_applicable"
+    }
+  },
+  "claim_boundary": "Not-applicable categories are retained rather than reported as absent failure modes.",
+  "command": "/diagnose",
+  "root_cause_hypothesis": null,
+  "schema_version": "alchedata.openxsim.isaac_diagnose.v0",
+  "status": "no_failure_observed",
+  "task_id": "openxsim_place_container_plate_v1",
+  "trace": {
+    "bytes": 43077,
+    "path": "state_action_trace.jsonl",
+    "sha256": "dfe607c9ee09efb583b2d5893a33b7408e8f24977d0b104309d90609633c4bc0"
+  }
+}

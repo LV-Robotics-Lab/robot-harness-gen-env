@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SceneAgent / selection2env 完成审计</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18212b;
+      --muted: #5f6b76;
+      --line: #d8dee5;
+      --surface: #ffffff;
+      --canvas: #f3f5f7;
+      --green: #13795b;
+      --green-bg: #e8f5ef;
+      --blue: #1d4ed8;
+      --blue-bg: #eaf0ff;
+      --amber: #8a5100;
+      --amber-bg: #fff4d6;
+      --red: #b42318;
+      --red-bg: #fdecea;
+      --charcoal: #27313b;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.55;
+      letter-spacing: 0;
+    }
+
+    a { color: var(--blue); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { color: #173ea8; }
+    code, pre, .mono {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      overflow-wrap: anywhere;
+    }
+
+    .topbar {
+      background: var(--charcoal);
+      color: #fff;
+      border-bottom: 4px solid #38a57b;
+    }
+    .topbar-inner {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .brand { font-weight: 720; font-size: 15px; }
+    .top-meta { color: #d9e0e6; font-size: 12px; text-align: right; }
+
+    main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 64px; }
+    .report-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 24px;
+      padding-bottom: 26px;
+      border-bottom: 1px solid var(--line);
+    }
+    h1 { margin: 0 0 8px; font-size: 34px; line-height: 1.16; letter-spacing: 0; }
+    .subtitle { margin: 0; max-width: 760px; color: var(--muted); }
+    .verdict {
+      min-width: 205px;
+      padding: 14px 16px;
+      border: 1px solid #9fd2be;
+      border-radius: 6px;
+      background: var(--green-bg);
+      color: #0e6047;
+    }
+    .verdict strong { display: block; font-size: 20px; line-height: 1.2; }
+    .verdict span { font-size: 12px; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 22px 0;
+    }
+    .metric {
+      min-height: 108px;
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+    .metric .value { display: block; font-size: 27px; font-weight: 760; line-height: 1.15; }
+    .metric .label { display: block; margin-top: 7px; color: var(--muted); font-size: 13px; }
+
+    .boundary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      border: 1px solid var(--line);
+      background: var(--line);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .boundary > div { padding: 16px; background: var(--surface); }
+    .boundary .pass { border-top: 4px solid var(--green); }
+    .boundary .blocked { border-top: 4px solid var(--amber); }
+    .boundary h2 { margin: 0 0 6px; font-size: 16px; }
+    .boundary p { margin: 0; color: var(--muted); font-size: 13px; }
+
+    section { padding-top: 42px; }
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    h2 { margin: 0; font-size: 23px; line-height: 1.25; }
+    h3 { margin: 0 0 8px; font-size: 16px; line-height: 1.3; }
+    .section-note { margin: 0; color: var(--muted); font-size: 12px; }
+
+    .tag {
+      display: inline-block;
+      margin-right: 5px;
+      padding: 2px 6px;
+      border: 1px solid #aeb8c2;
+      border-radius: 4px;
+      color: #4b5864;
+      background: #f8fafb;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.35;
+      white-space: nowrap;
+      vertical-align: 1px;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 720;
+      white-space: nowrap;
+    }
+    .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .status.pass { color: var(--green); background: var(--green-bg); }
+    .status.blocked { color: var(--amber); background: var(--amber-bg); }
+    .status.fail { color: var(--red); background: var(--red-bg); }
+    .status.info { color: var(--blue); background: var(--blue-bg); }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: #eef1f4; color: #48545f; font-size: 11px; text-transform: uppercase; }
+    td { font-size: 13px; }
+    tr:last-child td { border-bottom: 0; }
+    .acceptance-index { width: 44px; color: var(--muted); font-weight: 700; }
+
+    .source-grid, .task-grid, .media-grid, .repair-grid, .proof-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .source-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .task-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .media-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .repair-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .proof-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .card {
+      min-width: 0;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .card-body { padding: 14px; }
+    .card p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+    .card .big { margin: 3px 0; color: var(--ink); font-size: 24px; font-weight: 750; }
+    .card img, .card video {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      background: #111820;
+      border-bottom: 1px solid var(--line);
+    }
+    .card video { object-fit: contain; }
+    .caption { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+
+    .shared-scene {
+      padding: 14px;
+      border-left: 4px solid var(--blue);
+      background: var(--blue-bg);
+      color: #163b8f;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+      margin-bottom: 12px;
+    }
+
+    .file-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+    .file-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: #f8fafb;
+      font-size: 11px;
+      text-decoration: none;
+    }
+
+    .log {
+      margin: 0;
+      max-height: 340px;
+      overflow: auto;
+      padding: 14px;
+      background: #111820;
+      color: #d9e4ec;
+      border-radius: 6px;
+      font-size: 11px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    .provenance { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 8px 12px; margin: 0; }
+    .provenance dt { color: var(--muted); font-size: 12px; }
+    .provenance dd { margin: 0; font-size: 12px; overflow-wrap: anywhere; }
+
+    footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+
+    @media (max-width: 980px) {
+      .metrics, .task-grid, .repair-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .source-grid, .media-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 680px) {
+      main, .topbar-inner { width: min(100% - 20px, 1180px); }
+      .topbar-inner { align-items: flex-start; flex-direction: column; padding: 12px 0; gap: 4px; }
+      .top-meta { text-align: left; }
+      .report-head { grid-template-columns: 1fr; align-items: start; }
+      h1 { font-size: 27px; }
+      .verdict { min-width: 0; width: 100%; }
+      .metrics, .boundary, .task-grid, .repair-grid, .proof-grid { grid-template-columns: 1fr; }
+      .section-head { align-items: start; flex-direction: column; }
+      .provenance { grid-template-columns: 1fr; }
+      .provenance dd { margin-bottom: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">ALCHEDATA · SELF IMPROVING AGENTS</div>
+      <div class="top-meta">SceneAgent / selection2env · 2026-07-12 · jingxiang-b850m-c / RTX 5090</div>
+    </div>
+  </header>
+
+  <main>
+    <header class="report-head">
+      <div>
+        <h1>SceneAgent / selection2env 完成审计</h1>
+        <p class="subtitle"><span class="tag">[COMPUTED]</span><span class="tag">[CONFIDENCE: HIGH]</span>基于 <span class="mono">yezheng04/robotwin-text2env-demo</span> 的场景布置管线已接入 RoboTwin 现有资产，并由 schema、实机 rollout、失败留档与可重放补丁共同约束。</p>
+      </div>
+      <div class="verdict">
+        <strong>TODO 9 / 9</strong>
+        <span>[COMPUTED] [CONFIDENCE: HIGH] 严格验收项已闭环</span>
+      </div>
+    </header>
+
+    <div class="metrics" aria-label="关键指标">
+      <div class="metric"><span class="value">123</span><span class="label">[COMPUTED] [CONFIDENCE: HIGH] RoboTwin 实机发现资产</span></div>
+      <div class="metric"><span class="value">4 / 4</span><span class="label">[COMPUTED] [CONFIDENCE: HIGH] signature-disjoint held-out placements</span></div>
+      <div class="metric"><span class="value">4 / 4</span><span class="label">[COMPUTED] [CONFIDENCE: HIGH] declared domain-randomized placements</span></div>
+      <div class="metric"><span class="value">3 / 3</span><span class="label">[COMPUTED] [CONFIDENCE: HIGH] can/basket held-out seeds</span></div>
+    </div>
+
+    <div class="boundary">
+      <div class="pass">
+        <h2>本 TODO：完成</h2>
+        <p><span class="tag">[COMPUTED]</span><span class="tag">[CONFIDENCE: HIGH]</span>目录接入、候选门控、任务输入、RoboTwin smoke、双任务解耦、blocker、handoff 与受限 learned-policy promotion 均有 verifier 和哈希证据。</p>
+      </div>
+      <div class="blocked">
+        <h2>研究边界：仍受限</h2>
+        <p><span class="tag">[KNOWN]</span><span class="tag">[CONFIDENCE: HIGH]</span>新 promotion 仅覆盖 privileged initial-pose-conditioned open-loop trajectory policy；它不提升旧 ACT、也不证明视觉、语言条件、闭环控制或广义跨任务泛化。</p>
+      </div>
+    </div>
+
+    <section id="acceptance">
+      <div class="section-head">
+        <h2>验收矩阵</h2>
+        <p class="section-note">[KNOWN] [CONFIDENCE: HIGH] 证据链接全部指向本报告内的本地资产。</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>验收项</th><th>结论</th><th>证据</th></tr></thead>
+          <tbody>
+            <tr><td class="acceptance-index">01</td><td>selection2env 与任务程序 schema</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] placement、task binding、SHA 与引用验证均被强制。</td><td><a href="assets/evidence/schemas/selection2env.schema.json">selection2env schema</a> · <a href="assets/evidence/schemas/robotwin_task_program_input.schema.json">task program schema</a></td></tr>
+            <tr><td class="acceptance-index">02</td><td>RoboTwin / AgenticSim / Articraft 目录接入</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] 123 / 8 / 9,996，且执行资格边界明确。</td><td><a href="assets/evidence/artifacts/adapter_catalog/selection2env_catalog_sources.json">source audit</a> · <a href="assets/evidence/artifacts/adapter_catalog/robotwin_discovered_catalog.json">RoboTwin catalog</a></td></tr>
+            <tr><td class="acceptance-index">03</td><td>至少 3 个任务与 Text2Env/task 输入</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] apple/plate、laptop/knife、vegetable/basket 均有输入、smoke 与采集证据。</td><td><a href="assets/evidence/artifacts/task_program_inputs/">task inputs</a> · <a href="assets/evidence/artifacts/selection2env_manifest.json">manifest</a></td></tr>
+            <tr><td class="acceptance-index">04</td><td>明确 unsupported / blocker 样本</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] drawer 与 mug 均已 ground；剩余 blocker 是 articulation / interior verifier API。</td><td><a href="assets/evidence/runs/probe_static_drawer_mug_unified/scene_generation_summary.json">static scene summary</a> · <a href="assets/evidence/artifacts/selection2env/task_drawer_mug_blocker.json">typed blocker</a></td></tr>
+            <tr><td class="acceptance-index">05</td><td>超出碰撞检查的视觉/语义 critique</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] 初始支撑关系与最终目标关系均有独立 review 资产。</td><td><a href="assets/evidence/artifacts/visual_review/selection2env_visual_review.json">initial review</a> · <a href="assets/evidence/artifacts/visual_review/generated_rollout_final_relation_review.json">final relation review</a></td></tr>
+            <tr><td class="acceptance-index">06</td><td>候选、placement、代码 diff、命令、日志、图像与视频</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] 可重放补丁从公开基线生成相同 Git tree，运行资产完整打包。</td><td><a href="assets/evidence/vendor/patches/robotwin-text2env-selection2env.patch">patch</a> · <a href="assets/provenance.txt">provenance</a> · <a href="assets/asset_sha256.txt">asset hashes</a></td></tr>
+            <tr><td class="acceptance-index">07</td><td>generation2env blocker memo 与 Gaochen handoff</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] forge、material sidecar 与下游 API 边界已结构化记录。</td><td><a href="assets/evidence/docs/generation2env_blockers.md">blocker memo</a> · <a href="assets/evidence/docs/selection2env_schema.md">handoff contract</a></td></tr>
+            <tr><td class="acceptance-index">08</td><td>同一场景运行至少两个不同任务 spec</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] 两个任务共享相同 scene/path/SHA 与字节相同初始图，并分别通过 check_success。</td><td><a href="assets/evidence/artifacts/scene_task_decoupling/apple_plate_two_tasks.json">decoupling report</a> · <a href="#decoupling">visual proof</a></td></tr>
+            <tr><td class="acceptance-index">09</td><td>受限 learned-policy promotion</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] 独立 pose-conditioned policy 通过 4/4 held-out、4/4 domain randomization、3/3 can/basket seed holdout；旧 ACT 1/4 失败仍保留。</td><td><a href="assets/evidence/artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json">promotion record</a> · <a href="#policy-promotion">videos and boundary</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="catalogs">
+      <div class="section-head"><h2>统一资产目录</h2><p class="section-note">[KNOWN] [CONFIDENCE: HIGH] 搜索可见性不自动等于模拟器可执行性。</p></div>
+      <div class="source-grid">
+        <article class="card"><div class="card-body"><h3>RoboTwin</h3><div class="big">123 / 123</div><span class="status pass">EXECUTION ELIGIBLE</span><p>[COMPUTED] [CONFIDENCE: HIGH] 从 5090 的现有对象目录实时发现，全部进入执行候选。</p></div></article>
+        <article class="card"><div class="card-body"><h3>AgenticSim</h3><div class="big">8 / 8</div><span class="status pass">BACKEND RESOLVED</span><p>[COMPUTED] [CONFIDENCE: HIGH] alias 仅在 backend_asset_id 存在于 RoboTwin 目录时可选。</p></div></article>
+        <article class="card"><div class="card-body"><h3>Articraft-10K</h3><div class="big">9,996 / 0</div><span class="status blocked">CATALOG ONLY</span><p>[COMPUTED] [CONFIDENCE: HIGH] 元数据可搜索；默认 execution_eligible 为 0，避免把未导入 URDF 伪装为可用资产。</p></div></article>
+      </div>
+      <div class="file-list">
+        <a class="file-link" href="assets/evidence/artifacts/adapter_catalog/selection2env_queries/task_apple_plate.json">apple / plate query</a>
+        <a class="file-link" href="assets/evidence/artifacts/adapter_catalog/selection2env_queries/task_laptop_knife.json">laptop / knife query</a>
+        <a class="file-link" href="assets/evidence/artifacts/adapter_catalog/selection2env_queries/task_vegetable_basket.json">vegetable / basket query</a>
+        <a class="file-link" href="assets/evidence/artifacts/adapter_catalog/selection2env_queries/task_drawer_mug_blocker.json">drawer / mug query</a>
+      </div>
+    </section>
+
+    <section id="tasks">
+      <div class="section-head"><h2>任务覆盖</h2><p class="section-note">[COMPUTED] [CONFIDENCE: HIGH] 3 个支持任务 + 1 个诚实 blocker。</p></div>
+      <div class="task-grid">
+        <article class="card"><img src="assets/evidence/runs/smoke_asset_apple_plate/observer_camera.png" alt="RoboTwin apple and plate scene"><div class="card-body"><div class="caption"><h3>Apple / Plate</h3><span class="status pass">SIM PASS</span></div><p>[COMPUTED] [CONFIDENCE: HIGH] Base_Task、CuRobo、生成动作与双任务复用均有证据。</p></div></article>
+        <article class="card"><img src="assets/evidence/runs/smoke_asset_laptop_knife/observer_camera.png" alt="RoboTwin laptop and knife scene"><div class="card-body"><div class="caption"><h3>Laptop / Knife</h3><span class="status pass">SIM PASS</span></div><p>[COMPUTED] [CONFIDENCE: HIGH] 资产 smoke、Base_Task smoke、collect dry-run 与官方 rollout 已保留。</p></div></article>
+        <article class="card"><img src="assets/evidence/runs/smoke_asset_vegetable_basket/observer_camera.png" alt="RoboTwin vegetable and basket scene"><div class="card-body"><div class="caption"><h3>Vegetable / Basket</h3><span class="status pass">SIM PASS</span></div><p>[COMPUTED] [CONFIDENCE: HIGH] 资产、动作与采集链路均有本地视频和结构化日志。</p></div></article>
+        <article class="card"><div class="card-body"><div class="caption"><h3>Drawer / Mug</h3><span class="status blocked">API BLOCKER</span></div><p>[COMPUTED] [CONFIDENCE: HIGH] <span class="mono">036_cabinet</span> 与 <span class="mono">039_mug</span> 已完成 grounding 和静态 scene generation；未证明 drawer-open / inside verifier。</p><div class="file-list"><a class="file-link" href="assets/evidence/runs/probe_static_drawer_mug_unified/final_placement.json">placement</a><a class="file-link" href="assets/evidence/runs/probe_static_drawer_mug_unified/scene_critic_review.json">critic</a></div></div></article>
+      </div>
+    </section>
+
+    <section id="decoupling">
+      <div class="section-head"><h2>同场景双任务</h2><p class="section-note">[COMPUTED] [CONFIDENCE: HIGH] 两次 reset 使用相同 placement bytes。</p></div>
+      <div class="shared-scene"><strong>scene_apple_plate_shared_two_task_v0</strong><br>placement SHA-256: <span class="mono">c39169d68ab617debdd8b4462d7bc9d30ad6fae0ce5c3d4aa9e4a34893bee592</span><br>[COMPUTED] [CONFIDENCE: HIGH] 两个初始 observer 图 SHA-256 均为 <span class="mono">18e53b736c0a9716e7489dc889a2c2375c7d26fe3078d207dccf61e8cac53012</span>。</div>
+      <div class="media-grid">
+        <article class="card"><img src="assets/evidence/runs/scene_task_decoupling/apple_on_plate/initial_observer_camera.png" alt="Byte-identical initial apple plate scene"><div class="card-body"><h3>Shared initial scene</h3><p>[COMPUTED] [CONFIDENCE: HIGH] apple 尚未满足两个任务中的任一最终关系。</p></div></article>
+        <article class="card"><img src="assets/evidence/runs/scene_task_decoupling/apple_on_plate/final_observer_camera.png" alt="Final place-on relation from the shared scene"><div class="card-body"><div class="caption"><h3>Task A · place_on</h3><span class="status pass">CHECK SUCCESS</span></div><p>[COMPUTED] [CONFIDENCE: HIGH] apple → plate；XY 距离 0.0529 m，Z 差 0.0080 m，双夹爪释放。此处展示 verifier 终态图，不把两帧 endpoint probe 冒充连续视频。</p></div></article>
+        <article class="card"><img src="assets/evidence/runs/scene_task_decoupling/apple_to_left_front/final_observer_camera.png" alt="Final place-in-region relation from the shared scene"><div class="card-body"><div class="caption"><h3>Task B · place_in_region</h3><span class="status pass">CHECK SUCCESS</span></div><p>[COMPUTED] [CONFIDENCE: HIGH] apple → left_front_reachable_area；距中心 0.0517 m，在 0.03 m tolerance 下通过。此处展示 verifier 终态图，不把两帧 endpoint probe 冒充连续视频。</p></div></article>
+      </div>
+      <div class="file-list">
+        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/shared_apple_plate_scene.json">shared placement</a>
+        <a class="file-link" href="assets/evidence/artifacts/task_program_inputs/task_apple_plate.json">Task A spec</a>
+        <a class="file-link" href="assets/evidence/artifacts/task_program_inputs/task_apple_plate_to_left_front.json">Task B spec</a>
+        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/apple_on_plate/rollout_report.json">Task A report</a>
+        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/apple_to_left_front/rollout_report.json">Task B report</a>
+      </div>
+    </section>
+
+    <section id="policy-promotion">
+      <div class="section-head"><h2>受限 learned-policy promotion</h2><p class="section-note">[COMPUTED] [CONFIDENCE: HIGH] 同一声明策略在预注册 split 上评测；三组视频均为连续 simulator-step capture。</p></div>
+      <div class="shared-scene"><strong>Promotion decision: accept_for_bounded_sceneagent_selection2env_gate</strong><br>[COMPUTED] [CONFIDENCE: HIGH] Apple/plate 使用 15 个成功 demonstrations、10 个唯一 training placements，拟合 phase-aligned 14-D qpos trajectory；held-out placements 与训练签名不重叠。Domain-randomized arm 固定同一 predictor、checkpoint 和 split，并启用官方 background、random light、head-camera displacement 0.01 m 与 table-height range 0.005 m。Can/basket 仅证明固定 placement 的 unseen-seed holdout。<br>[KNOWN] [CONFIDENCE: HIGH] 输入包含 privileged initial source/target XY，动作是 open-loop trajectory；不是视觉或语言策略。</div>
+      <div class="media-grid">
+        <article class="card"><video controls preload="metadata" poster="assets/evidence/runs/pose_conditioned_eval_apple_plate_heldout_v1/episode_000_eval_000_seed_6100/final_observer_camera.png"><source src="assets/evidence/runs/pose_conditioned_eval_apple_plate_heldout_v1/episode_000_eval_000_seed_6100/observer_policy_rollout.mp4" type="video/mp4"></video><div class="card-body"><div class="caption"><h3>Held-out placement</h3><span class="status pass">4 / 4</span></div><p>[COMPUTED] [CONFIDENCE: HIGH] Signature-disjoint、scripted-feasible placements；每段 143 frames，首段为 seed 6100。</p></div></article>
+        <article class="card"><video controls preload="metadata" poster="assets/evidence/runs/pose_conditioned_eval_apple_plate_domain_randomized_v2/episode_000_eval_000_seed_6100/final_observer_camera.png"><source src="assets/evidence/runs/pose_conditioned_eval_apple_plate_domain_randomized_v2/episode_000_eval_000_seed_6100/observer_policy_rollout.mp4" type="video/mp4"></video><div class="card-body"><div class="caption"><h3>Domain randomized</h3><span class="status pass">4 / 4</span></div><p>[COMPUTED] [CONFIDENCE: HIGH] Background、lighting、camera、table height 已声明并实际采样；每段 143 frames。</p></div></article>
+        <article class="card"><video controls preload="metadata" poster="assets/evidence/runs/pose_conditioned_eval_can_basket_heldout_seeds_v1/episode_000_fixed_seed_7300/final_observer_camera.png"><source src="assets/evidence/runs/pose_conditioned_eval_can_basket_heldout_seeds_v1/episode_000_fixed_seed_7300/observer_policy_rollout.mp4" type="video/mp4"></video><div class="card-body"><div class="caption"><h3>Can / basket</h3><span class="status pass">3 / 3</span></div><p>[COMPUTED] [CONFIDENCE: HIGH] Train seeds 7200/7201；held-out seeds 7300/7301/7302；固定 placement；每段 144 frames。</p></div></article>
+      </div>
+      <div class="file-list">
+        <a class="file-link" href="assets/evidence/artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json">promotion record</a>
+        <a class="file-link" href="assets/evidence/artifacts/sceneagent_policy_promotion/robotwin_background_asset_receipt.json">official background receipt</a>
+        <a class="file-link" href="assets/evidence/runs/pose_conditioned_train_apple_plate_v1/training_report.json">apple training report</a>
+        <a class="file-link" href="assets/evidence/runs/pose_conditioned_eval_apple_plate_heldout_v1/evaluate_report.json">held-out report</a>
+        <a class="file-link" href="assets/evidence/runs/pose_conditioned_eval_apple_plate_domain_randomized_v2/evaluate_report.json">randomized report</a>
+        <a class="file-link" href="assets/evidence/runs/pose_conditioned_eval_can_basket_heldout_seeds_v1/evaluate_report.json">cross-task report</a>
+        <a class="file-link" href="assets/evidence/runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4/evaluate_report.json">retained ACT 1/4 parent</a>
+      </div>
+    </section>
+
+    <section id="official-rollouts">
+      <div class="section-head"><h2>RoboTwin rollout 证据</h2><p class="section-note">[KNOWN] [CONFIDENCE: HIGH] 视频均已复制到报告目录。</p></div>
+      <div class="media-grid">
+        <article class="card"><video controls preload="metadata" poster="assets/evidence/runs/official_rollout_open_laptop/final_observer_camera.png"><source src="assets/evidence/runs/official_rollout_continuous/open_laptop.mp4" type="video/mp4"></video><div class="card-body"><h3>Open laptop</h3><p>[COMPUTED] [CONFIDENCE: HIGH] 连续 simulator-step capture：640 decoded / 640 unique frames。</p></div></article>
+        <article class="card"><video controls preload="metadata" poster="assets/evidence/runs/official_rollout_place_mouse_pad/final_observer_camera.png"><source src="assets/evidence/runs/official_rollout_continuous/place_mouse_pad.mp4" type="video/mp4"></video><div class="card-body"><h3>Place mouse on pad</h3><p>[COMPUTED] [CONFIDENCE: HIGH] 连续 simulator-step capture：531 decoded / 531 unique frames。</p></div></article>
+        <article class="card"><video controls preload="metadata" poster="assets/evidence/runs/official_rollout_place_container_plate/final_observer_camera.png"><source src="assets/evidence/runs/official_rollout_continuous/place_container_plate.mp4" type="video/mp4"></video><div class="card-body"><h3>Place container on plate</h3><p>[COMPUTED] [CONFIDENCE: HIGH] 连续 simulator-step capture：527 decoded / 527 unique frames。</p></div></article>
+      </div>
+    </section>
+
+    <section id="repair-trail">
+      <div class="section-head"><h2>失败与修复轨迹</h2><p class="section-note">[KNOWN] [CONFIDENCE: HIGH] 失败没有被覆盖或删除。</p></div>
+      <div class="repair-grid">
+        <article class="card"><img src="assets/evidence/runs/scene_task_decoupling/original_placement_apple_on_plate_fail/final_observer_camera.png" alt="Original placement failed rollout"><div class="card-body"><h3>原 placement</h3><span class="status fail">FAIL</span><p>[COMPUTED] [CONFIDENCE: HIGH] 初始几何使动作计划未能形成成功关系。</p></div></article>
+        <article class="card"><img src="assets/evidence/runs/scene_task_decoupling/action_repair_auto_mode_fail/final_observer_camera.png" alt="Auto mode failed rollout"><div class="card-body"><h3>Auto mode</h3><span class="status fail">FAIL</span><p>[COMPUTED] [CONFIDENCE: HIGH] apple 被送出有效桌面区域，促成目标点约束修复。</p></div></article>
+        <article class="card"><img src="assets/evidence/runs/scene_task_decoupling/apple_to_right_fail/final_observer_camera.png" alt="Right-side target failed rollout"><div class="card-body"><h3>Right region</h3><span class="status fail">FAIL</span><p>[COMPUTED] [CONFIDENCE: HIGH] 右侧区域暴露跨臂可达性问题，随后改为左前可达区域。</p></div></article>
+        <article class="card"><img src="assets/evidence/runs/scene_task_decoupling/apple_to_left_front_strict_region_fail/final_observer_camera.png" alt="Strict region tolerance failed rollout"><div class="card-body"><h3>Strict region</h3><span class="status fail">FAIL</span><p>[COMPUTED] [CONFIDENCE: HIGH] 成功移动但距严格边界差 0.022 m；显式加入 0.03 m verifier tolerance 后重跑通过。</p></div></article>
+      </div>
+      <div class="file-list">
+        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/original_placement_apple_on_plate_fail/observer_rollout_probe.mp4">original failure video</a>
+        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/action_repair_auto_mode_fail/observer_rollout_probe.mp4">auto failure video</a>
+        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/apple_to_right_fail/observer_rollout_probe.mp4">right failure video</a>
+        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/apple_to_left_front_strict_region_fail/observer_rollout_probe.mp4">strict-region failure video</a>
+      </div>
+    </section>
+
+    <section id="verification">
+      <div class="section-head"><h2>验证与可复现性</h2><p class="section-note">[COMPUTED] [CONFIDENCE: HIGH] 本地与 5090 使用相同 patch-id。</p></div>
+      <div class="proof-grid">
+        <article class="card"><div class="card-body"><h3>Workspace verifier</h3><pre class="log">PASS workspace verification
+docs=10 static_runs=4 asset_smoke_runs=3 basetask_smoke_runs=3
+collect_dry_runs=3 official_rollouts=3 generated_rollouts=2
+articraft_assets=9996 articraft_archive_passes=3
+sim_supported=task_apple_plate,task_laptop_knife,task_vegetable_basket
+unsupported=task_drawer_mug_blocker</pre><div class="file-list"><a class="file-link" href="assets/workspace_verification.txt">full verifier output</a><a class="file-link" href="assets/outer_tests.txt">outer tests</a><a class="file-link" href="assets/upstream_tests.txt">upstream tests</a></div></div></article>
+        <article class="card"><div class="card-body"><h3>Git provenance</h3><dl class="provenance">
+          <dt>outer local</dt><dd class="mono">f35a0aa6d720fb160770bc9318351ebcce1d8c3f</dd>
+          <dt>outer 5090</dt><dd class="mono">2f31d221dd0008ba48b2e4610e9cdb2755639209</dd>
+          <dt>dashboard mirror</dt><dd class="mono">46f7126fdcc91aba69456eddf7b2143111df21ae</dd>
+          <dt>upstream local</dt><dd class="mono">029911db427c8eaee5f8837792198351314ea7de</dd>
+          <dt>upstream 5090</dt><dd class="mono">e3e3c76ad359f26c3dfa88e3b543865f66b7bc06</dd>
+          <dt>result tree</dt><dd class="mono">68e84128bbf5f8702f918024f6ca0c6e056a478f</dd>
+          <dt>stable patch-id</dt><dd class="mono">78bf1ccf90882d16ee2017532445dfd383cc64a9</dd>
+          <dt>publish status</dt><dd><span class="status blocked">NOT PUSHED</span></dd>
+        </dl><p>[KNOWN] [CONFIDENCE: HIGH] 上游仓库规则禁止未经明确请求 push；本地与 5090 已提交，公开发布未发生。</p><div class="file-list"><a class="file-link" href="assets/provenance.txt">raw provenance</a><a class="file-link" href="assets/evidence/external_sources.lock.json">source lock</a><a class="file-link" href="assets/evidence/vendor/patches/robotwin-text2env-selection2env.patch">replay patch</a></div></div></article>
+      </div>
+      <div class="shared-scene" style="margin-top: 12px;"><strong>Dashboard truth surface</strong><br>[COMPUTED] [CONFIDENCE: HIGH] Hosted Vercel Blob/API 联合回读显示四个核心 TODO 与 environment coverage 均为 done；SceneAgent 为 Comments (11)，最新证据 comment ID 是 <span class="mono">comment_6d2b3b3f-eabe-4fc3-9954-352261f1eb8d</span>。<br>[KNOWN] [CONFIDENCE: HIGH] 本地 fallback mirror 含无关未提交用户改动，因此没有 force-pull 覆盖；旧 local-mirror screenshot 仅保留历史上下文，不作为本次 hosted readback 证明。<div class="file-list"><a class="file-link" href="assets/dashboard_proof.json">hosted API proof</a><a class="file-link" href="assets/local_dashboard_render_qa.txt">historical render QA log</a><a class="file-link" href="qa/local-mirror-dashboard-sceneagent.png">historical render screenshot</a></div></div>
+    </section>
+
+    <section id="assets">
+      <div class="section-head"><h2>本地资产包</h2><p class="section-note">[COMPUTED] [CONFIDENCE: HIGH] 目录接入、失败轨迹、promotion 数据、PNG、连续 MP4 与机器报告均由 report manifest 做逐文件 SHA-256 索引。</p></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>资产组</th><th>内容</th><th>状态</th></tr></thead>
+          <tbody>
+            <tr><td>Scene task decoupling</td><td>所有成功与失败目录、camera PNG、observer MP4、rollout report、policy trace</td><td><span class="status pass">BUNDLED</span></td></tr>
+            <tr><td>Three task smoke</td><td>asset smoke、Base_Task smoke、official rollout、generated rollout</td><td><span class="status pass">BUNDLED</span></td></tr>
+            <tr><td>Contracts and catalogs</td><td>schema、task programs、unified catalogs、queries、drawer/mug static run</td><td><span class="status pass">BUNDLED</span></td></tr>
+            <tr><td>Reproducibility</td><td>source lock、replay patch、test logs、verifier output、SHA-256 manifest</td><td><span class="status pass">BUNDLED</span></td></tr>
+            <tr><td>Policy promotion</td><td>training reports、held-out/randomized/cross-task episodes、连续视频、官方 background receipt、旧 ACT negative parent</td><td><span class="status pass">BUNDLED</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="file-list">
+        <a class="file-link" href="assets/asset_sha256.txt">SHA-256 manifest</a>
+        <a class="file-link" href="assets/bundled_media_integrity.txt">media integrity</a>
+        <a class="file-link" href="assets/report_qa.txt">browser QA</a>
+        <a class="file-link" href="assets/evidence/docs/dashboard_todo_traceability.md">traceability matrix</a>
+        <a class="file-link" href="assets/evidence/docs/todo_completion_audit.md">completion audit</a>
+      </div>
+    </section>
+
+    <footer>
+      <span class="tag">[KNOWN]</span><span class="tag">[CONFIDENCE: HIGH]</span>报告入口、样式和证据均位于同一目录；打开 <span class="mono">index.html</span> 不需要网络或构建步骤。
+    </footer>
+  </main>
+</body>
+</html>

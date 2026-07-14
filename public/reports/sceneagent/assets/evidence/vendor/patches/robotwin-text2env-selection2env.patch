@@ -1,0 +1,763 @@
+From 5bc0a5bbbd41d5c85d7c5082b577764d005eaf2f Mon Sep 17 00:00:00 2001
+From: BorisGuo <borisguo6@gmail.com>
+Date: Sun, 12 Jul 2026 21:39:28 +0800
+Subject: [PATCH 1/2] Add unified selection2env catalog sources
+
+---
+ .github/workflows/test.yml                    |  16 +
+ README.md                                     |  35 ++
+ .../agenticsim_placement_assets.json          |  70 ++++
+ generate_scene/catalog_sources.py             | 329 ++++++++++++++++++
+ .../run_scene_generation_pipeline.py          |  27 ++
+ pyproject.toml                                |  16 +
+ tests/test_catalog_sources.py                 |  98 ++++++
+ 7 files changed, 591 insertions(+)
+ create mode 100644 .github/workflows/test.yml
+ create mode 100644 asset_catalogs/agenticsim_placement_assets.json
+ create mode 100644 generate_scene/catalog_sources.py
+ create mode 100644 pyproject.toml
+ create mode 100644 tests/test_catalog_sources.py
+
+diff --git a/.github/workflows/test.yml b/.github/workflows/test.yml
+new file mode 100644
+index 0000000..e668977
+--- /dev/null
++++ b/.github/workflows/test.yml
+@@ -0,0 +1,16 @@
++name: test
++
++on:
++  push:
++  pull_request:
++
++jobs:
++  unit:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v4
++      - uses: actions/setup-python@v5
++        with:
++          python-version: "3.11"
++      - run: python -m pip install -e ".[test]"
++      - run: python -m pytest -q
+diff --git a/README.md b/README.md
+index b4f3914..5472de0 100644
+--- a/README.md
++++ b/README.md
+@@ -42,6 +42,41 @@ Designer draft
+ -> Orchestrator repair or final accept
+ ```
+
++## selection2env Catalog Sources
++
++`generate_scene/catalog_sources.py` normalizes three candidate sources without
++weakening the RoboTwin execution gate:
++
++- RoboTwin discovered object directories are execution-eligible.
++- `asset_catalogs/agenticsim_placement_assets.json` snapshots the existing
++  AgenticSim placement-agent aliases. An alias is eligible only when its
++  `backend_asset_id` exists in the active RoboTwin catalog.
++- Articraft-10K metadata is searchable, but each result stays
++  `catalog_only_not_imported` until a separate URDF/import/physics probe passes.
++
++Search all three sources and write the RoboTwin execution catalog:
++
++```bash
++python3 generate_scene/catalog_sources.py \
++  --prompt "open the drawer and place the mug inside" \
++  --robotwin-catalog runs/catalog/robotwin_discovered.json \
++  --agenticsim-catalog asset_catalogs/agenticsim_placement_assets.json \
++  --articraft-manifest /path/to/articraft10k_manifest.json \
++  --out runs/catalog/drawer_mug_candidates.json \
++  --execution-catalog-out runs/catalog/robotwin_with_agenticsim_aliases.json
++```
++
++The main scene pipeline accepts the same optional AgenticSim and Articraft
++paths through `--agenticsim-catalog` and `--articraft-manifest`. It writes
++`catalog_candidate_search.json` beside the normal scene-generation artifacts.
++
++Run the pure catalog tests with:
++
++```bash
++python3 -m pip install -e ".[test]"
++python3 -m pytest -q
++```
++
+ ## One Command
+
+ On the 5090 machine:
+diff --git a/asset_catalogs/agenticsim_placement_assets.json b/asset_catalogs/agenticsim_placement_assets.json
+new file mode 100644
+index 0000000..ac5b4ad
+--- /dev/null
++++ b/asset_catalogs/agenticsim_placement_assets.json
+@@ -0,0 +1,70 @@
++{
++  "catalog_version": "agenticsim.placement_asset_aliases.v0",
++  "catalog_name": "agenticsim_placement_agent_robotwin_aliases",
++  "source": {
++    "project": "AgenticSim",
++    "source_commit": "f34d56a",
++    "source_file": "source/agenticsim/agenticsim/generation/placement_agent.py",
++    "snapshot_date": "2026-06-30",
++    "execution_backend": "RoboTwin",
++    "claim_boundary": "Snapshot of the existing AgenticSim placement agent ASSET_ALIASES mapping; it is not an independent mesh inventory."
++  },
++  "entries": [
++    {
++      "semantic_name": "bowl",
++      "aliases": ["bowl", "blue bowl"],
++      "backend_asset_id": "002_bowl",
++      "model_ids": [3],
++      "tags": ["container", "tabletop"]
++    },
++    {
++      "semantic_name": "can",
++      "aliases": ["can", "cola can", "coke can", "soda can"],
++      "backend_asset_id": "071_can",
++      "model_ids": [0],
++      "tags": ["container", "graspable", "tabletop"]
++    },
++    {
++      "semantic_name": "bottle",
++      "aliases": ["bottle", "cola bottle", "coke bottle", "water bottle"],
++      "backend_asset_id": "114_bottle",
++      "model_ids": [1],
++      "tags": ["container", "graspable", "tabletop"]
++    },
++    {
++      "semantic_name": "cup",
++      "aliases": ["cup"],
++      "backend_asset_id": "021_cup",
++      "model_ids": [0],
++      "tags": ["container", "graspable", "tabletop"]
++    },
++    {
++      "semantic_name": "cabinet",
++      "aliases": ["drawer", "cabinet"],
++      "backend_asset_id": "036_cabinet",
++      "model_ids": [0],
++      "tags": ["articulated", "container"]
++    },
++    {
++      "semantic_name": "basket",
++      "aliases": ["basket"],
++      "backend_asset_id": "110_basket",
++      "model_ids": [1],
++      "tags": ["container", "tabletop"]
++    },
++    {
++      "semantic_name": "mouse",
++      "aliases": ["mouse"],
++      "backend_asset_id": "047_mouse",
++      "model_ids": [0],
++      "tags": ["graspable", "tabletop"]
++    },
++    {
++      "semantic_name": "block asset",
++      "aliases": ["block_asset"],
++      "backend_asset_id": "108_block",
++      "model_ids": [0],
++      "tags": ["block", "graspable", "tabletop"]
++    }
++  ]
++}
+diff --git a/generate_scene/catalog_sources.py b/generate_scene/catalog_sources.py
+new file mode 100644
+index 0000000..71d3711
+--- /dev/null
++++ b/generate_scene/catalog_sources.py
+@@ -0,0 +1,329 @@
++#!/usr/bin/env python3
++"""Normalize and search selection2env asset catalog sources.
++
++RoboTwin remains the execution catalog. AgenticSim contributes aliases for
++RoboTwin-backed assets, while Articraft contributes searchable candidates that
++stay ineligible until an import/probe gate promotes them.
++"""
++
++from __future__ import annotations
++
++import argparse
++import copy
++import re
++import sys
++from pathlib import Path
++from typing import Any
++
++REPO_ROOT = Path(__file__).resolve().parents[1]
++if str(REPO_ROOT) not in sys.path:
++    sys.path.insert(0, str(REPO_ROOT))
++
++from generate_scene.schemas import read_json, write_json
++
++
++STOP_TERMS = {
++    "a",
++    "an",
++    "and",
++    "from",
++    "in",
++    "inside",
++    "into",
++    "of",
++    "on",
++    "place",
++    "put",
++    "the",
++    "to",
++}
++
++
++def _norm(value: str) -> str:
++    return re.sub(r"\s+", " ", str(value).lower().replace("_", " ").replace("-", " ")).strip()
++
++
++def _tokens(value: str) -> set[str]:
++    return {
++        token
++        for token in re.findall(r"[a-z0-9]+", _norm(value))
++        if len(token) > 1 and token not in STOP_TERMS
++    }
++
++
++def _contains_term(text: str, term: str) -> bool:
++    pattern = r"(?<![a-z0-9])" + re.escape(term) + r"(?![a-z0-9])"
++    return re.search(pattern, text) is not None
++
++
++def _unique_strings(values: list[Any]) -> list[str]:
++    result: list[str] = []
++    for value in values:
++        item = str(value or "").strip()
++        if item and item not in result:
++            result.append(item)
++    return result
++
++
++def normalize_robotwin_catalog(catalog: dict[str, Any], *, source_path: str) -> list[dict[str, Any]]:
++    candidates: list[dict[str, Any]] = []
++    for entry in catalog.get("entries", []):
++        asset_id = str(entry["asset_id"])
++        semantic_name = str(entry.get("semantic_name") or asset_id)
++        candidates.append(
++            {
++                "candidate_id": f"robotwin:{asset_id}",
++                "catalog_source": "robotwin",
++                "asset_id": asset_id,
++                "backend_asset_id": asset_id,
++                "semantic_name": semantic_name,
++                "aliases": _unique_strings([semantic_name, *entry.get("aliases", [])]),
++                "tags": _unique_strings(entry.get("tags", [])),
++                "asset_format": "RoboTwin object directory",
++                "execution_status": "robotwin_loadable",
++                "selection_eligible": True,
++                "provenance": {
++                    "catalog_path": source_path,
++                    "catalog_version": catalog.get("catalog_version"),
++                    "discovery": entry.get("discovery"),
++                },
++            }
++        )
++    return candidates
++
++
++def normalize_agenticsim_catalog(
++    catalog: dict[str, Any],
++    *,
++    source_path: str,
++    robotwin_asset_ids: set[str],
++) -> list[dict[str, Any]]:
++    candidates: list[dict[str, Any]] = []
++    source = catalog.get("source", {})
++    for entry in catalog.get("entries", []):
++        backend_asset_id = str(entry["backend_asset_id"])
++        semantic_name = str(entry.get("semantic_name") or backend_asset_id)
++        backend_available = backend_asset_id in robotwin_asset_ids
++        candidates.append(
++            {
++                "candidate_id": f"agenticsim:{backend_asset_id}",
++                "catalog_source": "agenticsim",
++                "asset_id": backend_asset_id,
++                "backend_asset_id": backend_asset_id,
++                "semantic_name": semantic_name,
++                "aliases": _unique_strings([semantic_name, *entry.get("aliases", [])]),
++                "tags": _unique_strings(entry.get("tags", [])),
++                "asset_format": "AgenticSim alias -> RoboTwin object directory",
++                "execution_status": (
++                    "robotwin_alias_loadable" if backend_available else "blocked_missing_robotwin_backend"
++                ),
++                "selection_eligible": backend_available,
++                "model_ids": entry.get("model_ids", []),
++                "provenance": {
++                    "catalog_path": source_path,
++                    "catalog_version": catalog.get("catalog_version"),
++                    "source_project": source.get("project"),
++                    "source_commit": source.get("source_commit"),
++                    "source_file": source.get("source_file"),
++                },
++            }
++        )
++    return candidates
++
++
++def normalize_articraft_manifest(manifest: dict[str, Any], *, source_path: str) -> list[dict[str, Any]]:
++    candidates: list[dict[str, Any]] = []
++    for entry in manifest.get("entries", []):
++        asset_id = str(entry["asset_id"])
++        semantic_name = str(entry.get("semantic_text") or asset_id)
++        candidates.append(
++            {
++                "candidate_id": f"articraft10k:{asset_id}",
++                "catalog_source": "articraft10k",
++                "asset_id": asset_id,
++                "backend_asset_id": None,
++                "semantic_name": semantic_name,
++                "aliases": [semantic_name],
++                "tags": _unique_strings(entry.get("semantic_tokens", [])),
++                "asset_format": str(entry.get("asset_format_in_archive") or "URDF"),
++                "execution_status": str(entry.get("import_status") or "catalog_only_not_imported"),
++                "selection_eligible": False,
++                "provenance": {
++                    "catalog_path": source_path,
++                    "dataset": manifest.get("dataset"),
++                    "source_path": entry.get("source_path"),
++                    "download_url": entry.get("download_url"),
++                },
++            }
++        )
++    return candidates
++
++
++def augment_robotwin_catalog_with_agenticsim_aliases(
++    robotwin_catalog: dict[str, Any],
++    agenticsim_catalog: dict[str, Any] | None,
++) -> dict[str, Any]:
++    """Merge only AgenticSim aliases backed by a RoboTwin catalog entry."""
++
++    result = copy.deepcopy(robotwin_catalog)
++    if not agenticsim_catalog:
++        return result
++
++    entries = {str(entry["asset_id"]): entry for entry in result.get("entries", [])}
++    for alias_entry in agenticsim_catalog.get("entries", []):
++        backend_asset_id = str(alias_entry["backend_asset_id"])
++        target = entries.get(backend_asset_id)
++        if target is None:
++            continue
++        target["aliases"] = _unique_strings(
++            [
++                *target.get("aliases", []),
++                alias_entry.get("semantic_name", ""),
++                *alias_entry.get("aliases", []),
++            ]
++        )
++        alias_sources = target.setdefault("alias_sources", [])
++        source_record = {
++            "source": "agenticsim",
++            "catalog_version": agenticsim_catalog.get("catalog_version"),
++            "source_commit": agenticsim_catalog.get("source", {}).get("source_commit"),
++        }
++        if source_record not in alias_sources:
++            alias_sources.append(source_record)
++    return result
++
++
++def _match_score(prompt: str, candidate: dict[str, Any]) -> tuple[int, list[str]]:
++    prompt_norm = _norm(prompt)
++    prompt_tokens = _tokens(prompt_norm)
++    terms = _unique_strings(
++        [candidate.get("semantic_name", ""), *candidate.get("aliases", []), *candidate.get("tags", [])]
++    )
++    matched_terms: list[str] = []
++    score = 0
++    for raw_term in terms:
++        term = _norm(raw_term)
++        if not term:
++            continue
++        if _contains_term(prompt_norm, term):
++            matched_terms.append(raw_term)
++            score = max(score, 1000 + 100 * len(_tokens(term)) + len(term))
++    candidate_tokens: set[str] = set()
++    for term in terms:
++        candidate_tokens.update(_tokens(term))
++    overlap = prompt_tokens.intersection(candidate_tokens)
++    if overlap:
++        score += len(overlap) * 25
++        matched_terms.extend(sorted(overlap))
++    return score, _unique_strings(matched_terms)
++
++
++def build_candidate_search(
++    *,
++    prompt: str,
++    robotwin_catalog: dict[str, Any],
++    robotwin_catalog_path: str,
++    agenticsim_catalog: dict[str, Any] | None = None,
++    agenticsim_catalog_path: str | None = None,
++    articraft_manifest: dict[str, Any] | None = None,
++    articraft_manifest_path: str | None = None,
++    limit_per_source: int = 8,
++) -> dict[str, Any]:
++    robotwin_ids = {str(entry["asset_id"]) for entry in robotwin_catalog.get("entries", [])}
++    candidates = normalize_robotwin_catalog(robotwin_catalog, source_path=robotwin_catalog_path)
++    if agenticsim_catalog:
++        candidates.extend(
++            normalize_agenticsim_catalog(
++                agenticsim_catalog,
++                source_path=agenticsim_catalog_path or "agenticsim_catalog",
++                robotwin_asset_ids=robotwin_ids,
++            )
++        )
++    if articraft_manifest:
++        candidates.extend(
++            normalize_articraft_manifest(
++                articraft_manifest,
++                source_path=articraft_manifest_path or "articraft_manifest",
++            )
++        )
++
++    source_stats: dict[str, dict[str, int]] = {}
++    ranked_by_source: dict[str, list[dict[str, Any]]] = {}
++    for candidate in candidates:
++        source = str(candidate["catalog_source"])
++        stats = source_stats.setdefault(source, {"entry_count": 0, "selection_eligible_count": 0, "match_count": 0})
++        stats["entry_count"] += 1
++        if candidate["selection_eligible"]:
++            stats["selection_eligible_count"] += 1
++        score, matched_terms = _match_score(prompt, candidate)
++        if score <= 0:
++            continue
++        stats["match_count"] += 1
++        ranked_by_source.setdefault(source, []).append(
++            {**candidate, "match_score": score, "matched_terms": matched_terms}
++        )
++
++    matches: list[dict[str, Any]] = []
++    for source in sorted(ranked_by_source):
++        ranked = sorted(
++            ranked_by_source[source],
++            key=lambda item: (-int(item["match_score"]), str(item["candidate_id"])),
++        )
++        matches.extend(ranked[: max(1, limit_per_source)])
++
++    return {
++        "schema_version": "robotwin.selection2env_catalog_search.v0",
++        "prompt": prompt,
++        "source_stats": source_stats,
++        "match_count_returned": len(matches),
++        "selection_rule": (
++            "Only selection_eligible candidates may enter RoboTwin scene generation; catalog-only candidates remain blockers."
++        ),
++        "matches": matches,
++    }
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser(description="Search RoboTwin, AgenticSim, and Articraft selection2env catalogs.")
++    parser.add_argument("--prompt", required=True)
++    parser.add_argument("--robotwin-catalog", required=True)
++    parser.add_argument("--agenticsim-catalog")
++    parser.add_argument("--articraft-manifest")
++    parser.add_argument("--limit-per-source", type=int, default=8)
++    parser.add_argument("--out", required=True)
++    parser.add_argument("--execution-catalog-out")
++    args = parser.parse_args()
++
++    robotwin_path = Path(args.robotwin_catalog)
++    robotwin_catalog = read_json(robotwin_path)
++    agenticsim_path = Path(args.agenticsim_catalog) if args.agenticsim_catalog else None
++    agenticsim_catalog = read_json(agenticsim_path) if agenticsim_path else None
++    articraft_path = Path(args.articraft_manifest) if args.articraft_manifest else None
++    articraft_manifest = read_json(articraft_path) if articraft_path else None
++
++    report = build_candidate_search(
++        prompt=args.prompt,
++        robotwin_catalog=robotwin_catalog,
++        robotwin_catalog_path=str(robotwin_path),
++        agenticsim_catalog=agenticsim_catalog,
++        agenticsim_catalog_path=str(agenticsim_path) if agenticsim_path else None,
++        articraft_manifest=articraft_manifest,
++        articraft_manifest_path=str(articraft_path) if articraft_path else None,
++        limit_per_source=args.limit_per_source,
++    )
++    write_json(Path(args.out), report)
++    if args.execution_catalog_out:
++        execution_catalog = augment_robotwin_catalog_with_agenticsim_aliases(robotwin_catalog, agenticsim_catalog)
++        write_json(Path(args.execution_catalog_out), execution_catalog)
++    print(
++        "PASS "
++        + " ".join(
++            f"{source}={stats['entry_count']}" for source, stats in sorted(report["source_stats"].items())
++        )
++        + f" matches={report['match_count_returned']}"
++    )
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/generate_scene/run_scene_generation_pipeline.py b/generate_scene/run_scene_generation_pipeline.py
+index f0f2e57..7df9593 100644
+--- a/generate_scene/run_scene_generation_pipeline.py
++++ b/generate_scene/run_scene_generation_pipeline.py
+@@ -16,6 +16,10 @@ if str(REPO_ROOT) not in sys.path:
+
+ from generate_scene.asset_catalog import load_asset_catalog
+ from generate_scene.asset_discovery import discover_robotwin_assets
++from generate_scene.catalog_sources import (
++    augment_robotwin_catalog_with_agenticsim_aliases,
++    build_candidate_search,
++)
+ from generate_scene.asset_grounding import (
+     ground_assets,
+     prompt_case_from_grounding,
+@@ -108,6 +112,9 @@ def main() -> int:
+     parser.add_argument("--prompt", required=True)
+     parser.add_argument("--master-catalog", default="asset_catalogs/robotwin_tabletop_assets_master.json")
+     parser.add_argument("--discover-assets-from-robotwin", action="store_true")
++    parser.add_argument("--agenticsim-catalog")
++    parser.add_argument("--articraft-manifest")
++    parser.add_argument("--catalog-search-limit", type=int, default=8)
+     parser.add_argument("--prompt-case")
+     parser.add_argument("--case-name")
+     parser.add_argument("--overwrite-prompt-case", action="store_true")
+@@ -139,6 +146,11 @@ def main() -> int:
+         discovered_catalog = discover_robotwin_assets(Path(args.robotwin_root))
+         write_json(master_catalog_path, discovered_catalog)
+     master_catalog = load_asset_catalog(master_catalog_path)
++    agenticsim_catalog_path = Path(args.agenticsim_catalog) if args.agenticsim_catalog else None
++    agenticsim_catalog = read_json(agenticsim_catalog_path) if agenticsim_catalog_path else None
++    articraft_manifest_path = Path(args.articraft_manifest) if args.articraft_manifest else None
++    articraft_manifest = read_json(articraft_manifest_path) if articraft_manifest_path else None
++    master_catalog = augment_robotwin_catalog_with_agenticsim_aliases(master_catalog, agenticsim_catalog)
+     case_name = args.case_name or slugify_prompt(args.prompt)
+     if args.prompt_case:
+         prompt_case_path = Path(args.prompt_case)
+@@ -164,6 +176,21 @@ def main() -> int:
+     }
+     if args.discover_assets_from_robotwin:
+         summary["artifacts"]["discovered_asset_catalog"] = _rel(master_catalog_path)
++    if agenticsim_catalog or articraft_manifest:
++        candidate_search = build_candidate_search(
++            prompt=args.prompt,
++            robotwin_catalog=master_catalog,
++            robotwin_catalog_path=_rel(master_catalog_path),
++            agenticsim_catalog=agenticsim_catalog,
++            agenticsim_catalog_path=_rel(agenticsim_catalog_path) if agenticsim_catalog_path else None,
++            articraft_manifest=articraft_manifest,
++            articraft_manifest_path=_rel(articraft_manifest_path) if articraft_manifest_path else None,
++            limit_per_source=args.catalog_search_limit,
++        )
++        candidate_search_path = out_dir / "catalog_candidate_search.json"
++        write_json(candidate_search_path, candidate_search)
++        summary["artifacts"]["catalog_candidate_search"] = _rel(candidate_search_path)
++        summary["catalog_sources"] = candidate_search["source_stats"]
+
+     try:
+         if _uses_llm_agent(args.model_provider):
+diff --git a/pyproject.toml b/pyproject.toml
+new file mode 100644
+index 0000000..e22edd2
+--- /dev/null
++++ b/pyproject.toml
+@@ -0,0 +1,16 @@
++[build-system]
++requires = ["setuptools>=69"]
++build-backend = "setuptools.build_meta"
++
++[project]
++name = "robotwin-text2env-demo"
++version = "0.1.0"
++description = "RoboTwin tabletop scene generation and selection2env catalog tooling"
++requires-python = ">=3.10"
++
++[project.optional-dependencies]
++test = ["pytest>=8,<9"]
++
++[tool.pytest.ini_options]
++pythonpath = ["."]
++testpaths = ["tests"]
+diff --git a/tests/test_catalog_sources.py b/tests/test_catalog_sources.py
+new file mode 100644
+index 0000000..fb5c259
+--- /dev/null
++++ b/tests/test_catalog_sources.py
+@@ -0,0 +1,98 @@
++from __future__ import annotations
++
++import json
++from pathlib import Path
++
++from generate_scene.asset_grounding import ground_assets
++from generate_scene.catalog_sources import (
++    augment_robotwin_catalog_with_agenticsim_aliases,
++    build_candidate_search,
++)
++
++
++REPO_ROOT = Path(__file__).resolve().parents[1]
++
++
++def read_json(path: Path) -> dict:
++    return json.loads(path.read_text(encoding="utf-8"))
++
++
++def test_agenticsim_aliases_enter_grounding_only_with_robotwin_backend() -> None:
++    robotwin = {
++        "catalog_version": "test",
++        "entries": [
++            {"asset_id": "071_can", "semantic_name": "can", "aliases": ["can"], "tags": []},
++            {"asset_id": "110_basket", "semantic_name": "basket", "aliases": ["basket"], "tags": []},
++        ],
++    }
++    agenticsim = read_json(REPO_ROOT / "asset_catalogs" / "agenticsim_placement_assets.json")
++
++    execution_catalog = augment_robotwin_catalog_with_agenticsim_aliases(robotwin, agenticsim)
++    grounding = ground_assets(
++        prompt="place the cola can into the basket",
++        master_catalog=execution_catalog,
++        master_catalog_path="robotwin.json",
++    )
++
++    assert grounding["selected_asset_ids"] == ["071_can", "110_basket"]
++    can = next(entry for entry in execution_catalog["entries"] if entry["asset_id"] == "071_can")
++    assert "cola can" in can["aliases"]
++    assert can["alias_sources"][0]["source"] == "agenticsim"
++
++
++def test_catalog_search_keeps_articraft_catalog_only() -> None:
++    robotwin = {
++        "catalog_version": "test",
++        "entries": [
++            {"asset_id": "036_cabinet", "semantic_name": "cabinet", "aliases": ["cabinet"], "tags": []}
++        ],
++    }
++    agenticsim = read_json(REPO_ROOT / "asset_catalogs" / "agenticsim_placement_assets.json")
++    articraft = {
++        "schema_version": "alchedata.articraft10k_manifest.v0",
++        "dataset": "camvsl/Articraft-10K",
++        "entries": [
++            {
++                "asset_id": "rec_drawer_1",
++                "semantic_text": "small tabletop drawer",
++                "semantic_tokens": ["small", "tabletop", "drawer"],
++                "source_path": "rec_drawer_1.tar.gz",
++                "download_url": "https://example.invalid/rec_drawer_1.tar.gz",
++                "asset_format_in_archive": "URDF",
++                "import_status": "catalog_only_not_imported",
++            }
++        ],
++    }
++
++    report = build_candidate_search(
++        prompt="open the drawer",
++        robotwin_catalog=robotwin,
++        robotwin_catalog_path="robotwin.json",
++        agenticsim_catalog=agenticsim,
++        agenticsim_catalog_path="agenticsim.json",
++        articraft_manifest=articraft,
++        articraft_manifest_path="articraft.json",
++    )
++
++    by_source = {match["catalog_source"]: match for match in report["matches"]}
++    assert by_source["agenticsim"]["backend_asset_id"] == "036_cabinet"
++    assert by_source["agenticsim"]["selection_eligible"] is True
++    assert by_source["articraft10k"]["execution_status"] == "catalog_only_not_imported"
++    assert by_source["articraft10k"]["selection_eligible"] is False
++
++
++def test_missing_agenticsim_backend_stays_blocked() -> None:
++    robotwin = {"catalog_version": "test", "entries": []}
++    agenticsim = read_json(REPO_ROOT / "asset_catalogs" / "agenticsim_placement_assets.json")
++
++    report = build_candidate_search(
++        prompt="place the cola can",
++        robotwin_catalog=robotwin,
++        robotwin_catalog_path="robotwin.json",
++        agenticsim_catalog=agenticsim,
++        agenticsim_catalog_path="agenticsim.json",
++    )
++
++    match = next(item for item in report["matches"] if item["catalog_source"] == "agenticsim")
++    assert match["execution_status"] == "blocked_missing_robotwin_backend"
++    assert match["selection_eligible"] is False
+--
+2.54.0
+
+
+From 029911db427c8eaee5f8837792198351314ea7de Mon Sep 17 00:00:00 2001
+From: BorisGuo <borisguo6@gmail.com>
+Date: Sun, 12 Jul 2026 21:41:51 +0800
+Subject: [PATCH 2/2] Preserve grounded prompt-case assets
+
+---
+ generate_scene/model_providers.py |  5 +++++
+ tests/test_catalog_sources.py     | 32 +++++++++++++++++++++++++++++++
+ 2 files changed, 37 insertions(+)
+
+diff --git a/generate_scene/model_providers.py b/generate_scene/model_providers.py
+index 1cab72f..b00ea22 100644
+--- a/generate_scene/model_providers.py
++++ b/generate_scene/model_providers.py
+@@ -33,6 +33,11 @@ DEFAULT_WORKSPACE = {
+
+
+ def _entries_by_prompt_order(prompt: str, catalog: dict[str, Any]) -> list[dict[str, Any]]:
++    selected_asset_ids = [str(asset_id) for asset_id in catalog.get("selected_asset_ids", [])]
++    if selected_asset_ids:
++        entries_by_id = {str(entry["asset_id"]): entry for entry in catalog.get("entries", [])}
++        return [entries_by_id[asset_id] for asset_id in selected_asset_ids if asset_id in entries_by_id]
++
+     prompt_lower = prompt.lower()
+     matches: list[tuple[int, dict[str, Any]]] = []
+     for entry in catalog.get("entries", []):
+diff --git a/tests/test_catalog_sources.py b/tests/test_catalog_sources.py
+index fb5c259..2c6a669 100644
+--- a/tests/test_catalog_sources.py
++++ b/tests/test_catalog_sources.py
+@@ -8,6 +8,7 @@ from generate_scene.catalog_sources import (
+     augment_robotwin_catalog_with_agenticsim_aliases,
+     build_candidate_search,
+ )
++from generate_scene.model_providers import design_initial_spec
+
+
+ REPO_ROOT = Path(__file__).resolve().parents[1]
+@@ -96,3 +97,34 @@ def test_missing_agenticsim_backend_stays_blocked() -> None:
+     match = next(item for item in report["matches"] if item["catalog_source"] == "agenticsim")
+     assert match["execution_status"] == "blocked_missing_robotwin_backend"
+     assert match["selection_eligible"] is False
++
++
++def test_prompt_case_keeps_assets_selected_through_external_aliases() -> None:
++    catalog = {
++        "catalog_version": "robotwin.tabletop_asset_catalog_case.v0",
++        "selected_asset_ids": ["036_cabinet", "039_mug"],
++        "entries": [
++            {
++                "asset_id": "036_cabinet",
++                "semantic_name": "cabinet",
++                "aliases": ["cabinet"],
++                "default_model_id": 0,
++                "placement_affordances": {"role_candidates": ["scene_object"]},
++            },
++            {
++                "asset_id": "039_mug",
++                "semantic_name": "mug",
++                "aliases": ["mug"],
++                "default_model_id": 0,
++                "placement_affordances": {"role_candidates": ["scene_object"]},
++            },
++        ],
++    }
++
++    placement = design_initial_spec(
++        prompt="open the drawer and place the mug inside",
++        catalog=catalog,
++        asset_catalog_path="prompt_case.json",
++    )
++
++    assert [obj["asset_id"] for obj in placement["objects"]] == ["036_cabinet", "039_mug"]
+--
+2.54.0

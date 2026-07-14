@@ -1,0 +1,261 @@
+{
+  "schema_version": "alchedata.selection2env_catalog_sources.v0",
+  "status": "pass_unified_catalog_sources",
+  "sources": {
+    "robotwin": {
+      "path": "artifacts/adapter_catalog/robotwin_discovered_catalog.json",
+      "entry_count": 123,
+      "execution_eligible_count": 123
+    },
+    "agenticsim": {
+      "path": "external/robotwin-text2env-demo/asset_catalogs/agenticsim_placement_assets.json",
+      "source_commit": "f34d56a",
+      "entry_count": 8,
+      "execution_eligible_count": 8,
+      "backend_mappings": [
+        {
+          "candidate_id": "agenticsim:002_bowl",
+          "catalog_source": "agenticsim",
+          "asset_id": "002_bowl",
+          "backend_asset_id": "002_bowl",
+          "semantic_name": "bowl",
+          "aliases": [
+            "bowl",
+            "blue bowl"
+          ],
+          "tags": [
+            "container",
+            "tabletop"
+          ],
+          "asset_format": "AgenticSim alias -> RoboTwin object directory",
+          "execution_status": "robotwin_alias_loadable",
+          "selection_eligible": true,
+          "model_ids": [
+            3
+          ],
+          "provenance": {
+            "catalog_path": "external/robotwin-text2env-demo/asset_catalogs/agenticsim_placement_assets.json",
+            "catalog_version": "agenticsim.placement_asset_aliases.v0",
+            "source_project": "AgenticSim",
+            "source_commit": "f34d56a",
+            "source_file": "source/agenticsim/agenticsim/generation/placement_agent.py"
+          }
+        },
+        {
+          "candidate_id": "agenticsim:071_can",
+          "catalog_source": "agenticsim",
+          "asset_id": "071_can",
+          "backend_asset_id": "071_can",
+          "semantic_name": "can",
+          "aliases": [
+            "can",
+            "cola can",
+            "coke can",
+            "soda can"
+          ],
+          "tags": [
+            "container",
+            "graspable",
+            "tabletop"
+          ],
+          "asset_format": "AgenticSim alias -> RoboTwin object directory",
+          "execution_status": "robotwin_alias_loadable",
+          "selection_eligible": true,
+          "model_ids": [
+            0
+          ],
+          "provenance": {
+            "catalog_path": "external/robotwin-text2env-demo/asset_catalogs/agenticsim_placement_assets.json",
+            "catalog_version": "agenticsim.placement_asset_aliases.v0",
+            "source_project": "AgenticSim",
+            "source_commit": "f34d56a",
+            "source_file": "source/agenticsim/agenticsim/generation/placement_agent.py"
+          }
+        },
+        {
+          "candidate_id": "agenticsim:114_bottle",
+          "catalog_source": "agenticsim",
+          "asset_id": "114_bottle",
+          "backend_asset_id": "114_bottle",
+          "semantic_name": "bottle",
+          "aliases": [
+            "bottle",
+            "cola bottle",
+            "coke bottle",
+            "water bottle"
+          ],
+          "tags": [
+            "container",
+            "graspable",
+            "tabletop"
+          ],
+          "asset_format": "AgenticSim alias -> RoboTwin object directory",
+          "execution_status": "robotwin_alias_loadable",
+          "selection_eligible": true,
+          "model_ids": [
+            1
+          ],
+          "provenance": {
+            "catalog_path": "external/robotwin-text2env-demo/asset_catalogs/agenticsim_placement_assets.json",
+            "catalog_version": "agenticsim.placement_asset_aliases.v0",
+            "source_project": "AgenticSim",
+            "source_commit": "f34d56a",
+            "source_file": "source/agenticsim/agenticsim/generation/placement_agent.py"
+          }
+        },
+        {
+          "candidate_id": "agenticsim:021_cup",
+          "catalog_source": "agenticsim",
+          "asset_id": "021_cup",
+          "backend_asset_id": "021_cup",
+          "semantic_name": "cup",
+          "aliases": [
+            "cup"
+          ],
+          "tags": [
+            "container",
+            "graspable",
+            "tabletop"
+          ],
+          "asset_format": "AgenticSim alias -> RoboTwin object directory",
+          "execution_status": "robotwin_alias_loadable",
+          "selection_eligible": true,
+          "model_ids": [
+            0
+          ],
+          "provenance": {
+            "catalog_path": "external/robotwin-text2env-demo/asset_catalogs/agenticsim_placement_assets.json",
+            "catalog_version": "agenticsim.placement_asset_aliases.v0",
+            "source_project": "AgenticSim",
+            "source_commit": "f34d56a",
+            "source_file": "source/agenticsim/agenticsim/generation/placement_agent.py"
+          }
+        },
+        {
+          "candidate_id": "agenticsim:036_cabinet",
+          "catalog_source": "agenticsim",
+          "asset_id": "036_cabinet",
+          "backend_asset_id": "036_cabinet",
+          "semantic_name": "cabinet",
+          "aliases": [
+            "cabinet",
+            "drawer"
+          ],
+          "tags": [
+            "articulated",
+            "container"
+          ],
+          "asset_format": "AgenticSim alias -> RoboTwin object directory",
+          "execution_status": "robotwin_alias_loadable",
+          "selection_eligible": true,
+          "model_ids": [
+            0
+          ],
+          "provenance": {
+            "catalog_path": "external/robotwin-text2env-demo/asset_catalogs/agenticsim_placement_assets.json",
+            "catalog_version": "agenticsim.placement_asset_aliases.v0",
+            "source_project": "AgenticSim",
+            "source_commit": "f34d56a",
+            "source_file": "source/agenticsim/agenticsim/generation/placement_agent.py"
+          }
+        },
+        {
+          "candidate_id": "agenticsim:110_basket",
+          "catalog_source": "agenticsim",
+          "asset_id": "110_basket",
+          "backend_asset_id": "110_basket",
+          "semantic_name": "basket",
+          "aliases": [
+            "basket"
+          ],
+          "tags": [
+            "container",
+            "tabletop"
+          ],
+          "asset_format": "AgenticSim alias -> RoboTwin object directory",
+          "execution_status": "robotwin_alias_loadable",
+          "selection_eligible": true,
+          "model_ids": [
+            1
+          ],
+          "provenance": {
+            "catalog_path": "external/robotwin-text2env-demo/asset_catalogs/agenticsim_placement_assets.json",
+            "catalog_version": "agenticsim.placement_asset_aliases.v0",
+            "source_project": "AgenticSim",
+            "source_commit": "f34d56a",
+            "source_file": "source/agenticsim/agenticsim/generation/placement_agent.py"
+          }
+        },
+        {
+          "candidate_id": "agenticsim:047_mouse",
+          "catalog_source": "agenticsim",
+          "asset_id": "047_mouse",
+          "backend_asset_id": "047_mouse",
+          "semantic_name": "mouse",
+          "aliases": [
+            "mouse"
+          ],
+          "tags": [
+            "graspable",
+            "tabletop"
+          ],
+          "asset_format": "AgenticSim alias -> RoboTwin object directory",
+          "execution_status": "robotwin_alias_loadable",
+          "selection_eligible": true,
+          "model_ids": [
+            0
+          ],
+          "provenance": {
+            "catalog_path": "external/robotwin-text2env-demo/asset_catalogs/agenticsim_placement_assets.json",
+            "catalog_version": "agenticsim.placement_asset_aliases.v0",
+            "source_project": "AgenticSim",
+            "source_commit": "f34d56a",
+            "source_file": "source/agenticsim/agenticsim/generation/placement_agent.py"
+          }
+        },
+        {
+          "candidate_id": "agenticsim:108_block",
+          "catalog_source": "agenticsim",
+          "asset_id": "108_block",
+          "backend_asset_id": "108_block",
+          "semantic_name": "block asset",
+          "aliases": [
+            "block asset",
+            "block_asset"
+          ],
+          "tags": [
+            "block",
+            "graspable",
+            "tabletop"
+          ],
+          "asset_format": "AgenticSim alias -> RoboTwin object directory",
+          "execution_status": "robotwin_alias_loadable",
+          "selection_eligible": true,
+          "model_ids": [
+            0
+          ],
+          "provenance": {
+            "catalog_path": "external/robotwin-text2env-demo/asset_catalogs/agenticsim_placement_assets.json",
+            "catalog_version": "agenticsim.placement_asset_aliases.v0",
+            "source_project": "AgenticSim",
+            "source_commit": "f34d56a",
+            "source_file": "source/agenticsim/agenticsim/generation/placement_agent.py"
+          }
+        }
+      ]
+    },
+    "articraft10k": {
+      "path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+      "entry_count": 9996,
+      "execution_eligible_count": 0,
+      "gate": "catalog_only_until_per_asset_import_probe"
+    }
+  },
+  "query_artifacts": [
+    "artifacts/adapter_catalog/selection2env_queries/task_apple_plate.json",
+    "artifacts/adapter_catalog/selection2env_queries/task_laptop_knife.json",
+    "artifacts/adapter_catalog/selection2env_queries/task_vegetable_basket.json",
+    "artifacts/adapter_catalog/selection2env_queries/task_drawer_mug_blocker.json"
+  ],
+  "claim_boundary": "RoboTwin entries and AgenticSim aliases backed by those entries are selection-eligible. Articraft metadata is searchable but remains ineligible without per-asset import evidence."
+}

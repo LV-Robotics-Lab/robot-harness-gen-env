@@ -1,0 +1,461 @@
+{
+  "schema_version": "robotwin.selection2env_catalog_search.v0",
+  "prompt": "place the cola can into the basket",
+  "source_stats": {
+    "robotwin": {
+      "entry_count": 123,
+      "selection_eligible_count": 123,
+      "match_count": 3
+    },
+    "agenticsim": {
+      "entry_count": 8,
+      "selection_eligible_count": 8,
+      "match_count": 3
+    },
+    "articraft10k": {
+      "entry_count": 9996,
+      "selection_eligible_count": 0,
+      "match_count": 17
+    }
+  },
+  "match_count_returned": 14,
+  "selection_rule": "Only selection_eligible candidates may enter RoboTwin scene generation; catalog-only candidates remain blockers.",
+  "matches": [
+    {
+      "candidate_id": "agenticsim:071_can",
+      "catalog_source": "agenticsim",
+      "asset_id": "071_can",
+      "backend_asset_id": "071_can",
+      "semantic_name": "can",
+      "aliases": [
+        "can",
+        "cola can",
+        "coke can",
+        "soda can"
+      ],
+      "tags": [
+        "container",
+        "graspable",
+        "tabletop"
+      ],
+      "asset_format": "AgenticSim alias -> RoboTwin object directory",
+      "execution_status": "robotwin_alias_loadable",
+      "selection_eligible": true,
+      "model_ids": [
+        0
+      ],
+      "provenance": {
+        "catalog_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/robotwin-text2env-demo/asset_catalogs/agenticsim_placement_assets.json",
+        "catalog_version": "agenticsim.placement_asset_aliases.v0",
+        "source_project": "AgenticSim",
+        "source_commit": "f34d56a",
+        "source_file": "source/agenticsim/agenticsim/generation/placement_agent.py"
+      },
+      "match_score": 1258,
+      "matched_terms": [
+        "can",
+        "cola can",
+        "cola"
+      ]
+    },
+    {
+      "candidate_id": "agenticsim:110_basket",
+      "catalog_source": "agenticsim",
+      "asset_id": "110_basket",
+      "backend_asset_id": "110_basket",
+      "semantic_name": "basket",
+      "aliases": [
+        "basket"
+      ],
+      "tags": [
+        "container",
+        "tabletop"
+      ],
+      "asset_format": "AgenticSim alias -> RoboTwin object directory",
+      "execution_status": "robotwin_alias_loadable",
+      "selection_eligible": true,
+      "model_ids": [
+        1
+      ],
+      "provenance": {
+        "catalog_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/robotwin-text2env-demo/asset_catalogs/agenticsim_placement_assets.json",
+        "catalog_version": "agenticsim.placement_asset_aliases.v0",
+        "source_project": "AgenticSim",
+        "source_commit": "f34d56a",
+        "source_file": "source/agenticsim/agenticsim/generation/placement_agent.py"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "basket"
+      ]
+    },
+    {
+      "candidate_id": "agenticsim:114_bottle",
+      "catalog_source": "agenticsim",
+      "asset_id": "114_bottle",
+      "backend_asset_id": "114_bottle",
+      "semantic_name": "bottle",
+      "aliases": [
+        "bottle",
+        "cola bottle",
+        "coke bottle",
+        "water bottle"
+      ],
+      "tags": [
+        "container",
+        "graspable",
+        "tabletop"
+      ],
+      "asset_format": "AgenticSim alias -> RoboTwin object directory",
+      "execution_status": "robotwin_alias_loadable",
+      "selection_eligible": true,
+      "model_ids": [
+        1
+      ],
+      "provenance": {
+        "catalog_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/robotwin-text2env-demo/asset_catalogs/agenticsim_placement_assets.json",
+        "catalog_version": "agenticsim.placement_asset_aliases.v0",
+        "source_project": "AgenticSim",
+        "source_commit": "f34d56a",
+        "source_file": "source/agenticsim/agenticsim/generation/placement_agent.py"
+      },
+      "match_score": 25,
+      "matched_terms": [
+        "cola"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_air_fryer_with_pullout_basket_049e41a4db3d45cdb9c6f24c19cc4ddb",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_air_fryer_with_pullout_basket_049e41a4db3d45cdb9c6f24c19cc4ddb",
+      "backend_asset_id": null,
+      "semantic_name": "air fryer with pullout basket",
+      "aliases": [
+        "air fryer with pullout basket"
+      ],
+      "tags": [
+        "air",
+        "basket",
+        "fryer",
+        "pullout"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_air_fryer_with_pullout_basket_049e41a4db3d45cdb9c6f24c19cc4ddb.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_air_fryer_with_pullout_basket_049e41a4db3d45cdb9c6f24c19cc4ddb.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "basket"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_air_fryer_with_pullout_basket_0698981e06784c5fa82c21f62e9d4b23",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_air_fryer_with_pullout_basket_0698981e06784c5fa82c21f62e9d4b23",
+      "backend_asset_id": null,
+      "semantic_name": "air fryer with pullout basket",
+      "aliases": [
+        "air fryer with pullout basket"
+      ],
+      "tags": [
+        "air",
+        "basket",
+        "fryer",
+        "pullout"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_air_fryer_with_pullout_basket_0698981e06784c5fa82c21f62e9d4b23.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_air_fryer_with_pullout_basket_0698981e06784c5fa82c21f62e9d4b23.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "basket"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_air_fryer_with_pullout_basket_06ff8882ac1f45f6b590d64ec0ab0d85",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_air_fryer_with_pullout_basket_06ff8882ac1f45f6b590d64ec0ab0d85",
+      "backend_asset_id": null,
+      "semantic_name": "air fryer with pullout basket",
+      "aliases": [
+        "air fryer with pullout basket"
+      ],
+      "tags": [
+        "air",
+        "basket",
+        "fryer",
+        "pullout"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_air_fryer_with_pullout_basket_06ff8882ac1f45f6b590d64ec0ab0d85.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_air_fryer_with_pullout_basket_06ff8882ac1f45f6b590d64ec0ab0d85.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "basket"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_air_fryer_with_pullout_basket_1251681ab15f416d8c44d0e3fa137232",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_air_fryer_with_pullout_basket_1251681ab15f416d8c44d0e3fa137232",
+      "backend_asset_id": null,
+      "semantic_name": "air fryer with pullout basket",
+      "aliases": [
+        "air fryer with pullout basket"
+      ],
+      "tags": [
+        "air",
+        "basket",
+        "fryer",
+        "pullout"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_air_fryer_with_pullout_basket_1251681ab15f416d8c44d0e3fa137232.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_air_fryer_with_pullout_basket_1251681ab15f416d8c44d0e3fa137232.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "basket"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_air_fryer_with_pullout_basket_12cf1e07ef9f4da390817bc964040dbb",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_air_fryer_with_pullout_basket_12cf1e07ef9f4da390817bc964040dbb",
+      "backend_asset_id": null,
+      "semantic_name": "air fryer with pullout basket",
+      "aliases": [
+        "air fryer with pullout basket"
+      ],
+      "tags": [
+        "air",
+        "basket",
+        "fryer",
+        "pullout"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_air_fryer_with_pullout_basket_12cf1e07ef9f4da390817bc964040dbb.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_air_fryer_with_pullout_basket_12cf1e07ef9f4da390817bc964040dbb.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "basket"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_air_fryer_with_pullout_basket_14ac4c8c9e35416b864382571fa27e62",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_air_fryer_with_pullout_basket_14ac4c8c9e35416b864382571fa27e62",
+      "backend_asset_id": null,
+      "semantic_name": "air fryer with pullout basket",
+      "aliases": [
+        "air fryer with pullout basket"
+      ],
+      "tags": [
+        "air",
+        "basket",
+        "fryer",
+        "pullout"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_air_fryer_with_pullout_basket_14ac4c8c9e35416b864382571fa27e62.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_air_fryer_with_pullout_basket_14ac4c8c9e35416b864382571fa27e62.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "basket"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_air_fryer_with_pullout_basket_1d12cef9d027455894e45670267e92aa",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_air_fryer_with_pullout_basket_1d12cef9d027455894e45670267e92aa",
+      "backend_asset_id": null,
+      "semantic_name": "air fryer with pullout basket",
+      "aliases": [
+        "air fryer with pullout basket"
+      ],
+      "tags": [
+        "air",
+        "basket",
+        "fryer",
+        "pullout"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_air_fryer_with_pullout_basket_1d12cef9d027455894e45670267e92aa.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_air_fryer_with_pullout_basket_1d12cef9d027455894e45670267e92aa.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "basket"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_air_fryer_with_pullout_basket_21d5168db6624dfeb492161c31e330dd",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_air_fryer_with_pullout_basket_21d5168db6624dfeb492161c31e330dd",
+      "backend_asset_id": null,
+      "semantic_name": "air fryer with pullout basket",
+      "aliases": [
+        "air fryer with pullout basket"
+      ],
+      "tags": [
+        "air",
+        "basket",
+        "fryer",
+        "pullout"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_air_fryer_with_pullout_basket_21d5168db6624dfeb492161c31e330dd.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_air_fryer_with_pullout_basket_21d5168db6624dfeb492161c31e330dd.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "basket"
+      ]
+    },
+    {
+      "candidate_id": "robotwin:110_basket",
+      "catalog_source": "robotwin",
+      "asset_id": "110_basket",
+      "backend_asset_id": "110_basket",
+      "semantic_name": "basket",
+      "aliases": [
+        "basket",
+        "110_basket"
+      ],
+      "tags": [
+        "basket"
+      ],
+      "asset_format": "RoboTwin object directory",
+      "execution_status": "robotwin_loadable",
+      "selection_eligible": true,
+      "provenance": {
+        "catalog_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/adapter_catalog/robotwin_discovered_catalog.json",
+        "catalog_version": "robotwin.tabletop_asset_catalog_discovered.v0",
+        "discovery": {
+          "source": "robotwin.assets.objects",
+          "asset_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/110_basket",
+          "has_collision_dir": true,
+          "has_visual_dir": true,
+          "has_articulated_models": false
+        }
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "basket"
+      ]
+    },
+    {
+      "candidate_id": "robotwin:071_can",
+      "catalog_source": "robotwin",
+      "asset_id": "071_can",
+      "backend_asset_id": "071_can",
+      "semantic_name": "can",
+      "aliases": [
+        "can",
+        "071_can"
+      ],
+      "tags": [
+        "can"
+      ],
+      "asset_format": "RoboTwin object directory",
+      "execution_status": "robotwin_loadable",
+      "selection_eligible": true,
+      "provenance": {
+        "catalog_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/adapter_catalog/robotwin_discovered_catalog.json",
+        "catalog_version": "robotwin.tabletop_asset_catalog_discovered.v0",
+        "discovery": {
+          "source": "robotwin.assets.objects",
+          "asset_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/071_can",
+          "has_collision_dir": true,
+          "has_visual_dir": true,
+          "has_articulated_models": false
+        }
+      },
+      "match_score": 1128,
+      "matched_terms": [
+        "can"
+      ]
+    },
+    {
+      "candidate_id": "robotwin:105_sauce-can",
+      "catalog_source": "robotwin",
+      "asset_id": "105_sauce-can",
+      "backend_asset_id": "105_sauce-can",
+      "semantic_name": "sauce can",
+      "aliases": [
+        "sauce can",
+        "saucecan",
+        "sauce-can",
+        "sauce_can",
+        "105_sauce-can"
+      ],
+      "tags": [
+        "sauce can",
+        "sauce",
+        "can"
+      ],
+      "asset_format": "RoboTwin object directory",
+      "execution_status": "robotwin_loadable",
+      "selection_eligible": true,
+      "provenance": {
+        "catalog_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/adapter_catalog/robotwin_discovered_catalog.json",
+        "catalog_version": "robotwin.tabletop_asset_catalog_discovered.v0",
+        "discovery": {
+          "source": "robotwin.assets.objects",
+          "asset_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/105_sauce-can",
+          "has_collision_dir": true,
+          "has_visual_dir": true,
+          "has_articulated_models": false
+        }
+      },
+      "match_score": 1128,
+      "matched_terms": [
+        "can"
+      ]
+    }
+  ]
+}

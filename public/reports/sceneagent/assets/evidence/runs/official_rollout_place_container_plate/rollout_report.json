@@ -1,0 +1,198 @@
+{
+  "schema_version": "alchedata.official_task_rollout_probe.v0",
+  "command": "/collect",
+  "probe_type": "official_robotwin_play_once",
+  "task_name": "place_container_plate",
+  "task_config": "demo_clean",
+  "seed": 0,
+  "robotwin_root": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin",
+  "out_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/official_rollout_place_container_plate",
+  "status": "pass_action_rollout",
+  "limitations": [
+    "This probe runs an official RoboTwin task class play_once(), not a generated selection2env play_once().",
+    "It tests the action/planner stack and produces rollout evidence for PEARL command-loop smoke.",
+    "It does not train or evaluate a learned policy."
+  ],
+  "setup_duration_sec": 7.5532,
+  "play_once_duration_sec": 0.7895,
+  "plan_success": true,
+  "check_success": true,
+  "check_success_error": null,
+  "task_info": {
+    "cluttered_table_info": [],
+    "texture_info": {
+      "wall_texture": null,
+      "table_texture": null
+    },
+    "info": {
+      "{A}": "003_plate/base0",
+      "{B}": "002_bowl/base5",
+      "{a}": "left"
+    }
+  },
+  "move_event_count": 4,
+  "left_joint_path_len": 6,
+  "right_joint_path_len": 0,
+  "initial_entities": {
+    "container": {
+      "p": [
+        -0.23120751976966858,
+        -0.0969674214720726,
+        0.7399999499320984
+      ],
+      "q": [
+        0.5011510252952576,
+        0.49884480237960815,
+        0.5005853772163391,
+        0.4994155168533325
+      ]
+    },
+    "plate": {
+      "p": [
+        -0.027799271047115326,
+        -0.10106908529996872,
+        0.7409999966621399
+      ],
+      "q": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "table": {
+      "p": [
+        0,
+        0,
+        0.7400000095367432
+      ],
+      "q": [
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    "wall": {
+      "p": [
+        0,
+        1,
+        1.5
+      ],
+      "q": [
+        1,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "final_entities": {
+    "container": {
+      "p": [
+        -0.03833368048071861,
+        -0.09868733584880829,
+        0.7486827373504639
+      ],
+      "q": [
+        0.48776331543922424,
+        0.4900975823402405,
+        0.5098651647567749,
+        0.5117900371551514
+      ]
+    },
+    "plate": {
+      "p": [
+        -0.027799271047115326,
+        -0.10106908529996872,
+        0.7409999966621399
+      ],
+      "q": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "table": {
+      "p": [
+        0,
+        0,
+        0.7400000095367432
+      ],
+      "q": [
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    "wall": {
+      "p": [
+        0,
+        1,
+        1.5
+      ],
+      "q": [
+        1,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "images": {
+    "initial_head_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/official_rollout_place_container_plate/initial_head_camera.png",
+    "initial_observer_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/official_rollout_place_container_plate/initial_observer_camera.png",
+    "final_head_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/official_rollout_place_container_plate/final_head_camera.png",
+    "final_observer_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/official_rollout_place_container_plate/final_observer_camera.png"
+  },
+  "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/official_rollout_place_container_plate/observer_rollout_probe.mp4",
+  "events": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/official_rollout_place_container_plate/events.jsonl",
+  "move_events": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/official_rollout_place_container_plate/move_events.jsonl",
+  "pixel_stats": {
+    "initial": {
+      "head_camera": {
+        "mean": 234.81526475694446,
+        "std": 29.836650341805125,
+        "min": 7,
+        "max": 255
+      },
+      "observer_camera": {
+        "mean": 222.4065451388889,
+        "std": 45.00081527665843,
+        "min": 0,
+        "max": 255
+      }
+    },
+    "final": {
+      "head_camera": {
+        "mean": 213.53407118055554,
+        "std": 65.64795446897193,
+        "min": 0,
+        "max": 255
+      },
+      "observer_camera": {
+        "mean": 222.25756510416667,
+        "std": 45.03860604358288,
+        "min": 0,
+        "max": 255
+      }
+    }
+  },
+  "failure_diagnosis": {
+    "status": "no_failure_observed",
+    "checked_categories": [
+      "wrong_grasp_location",
+      "object_knocked_over",
+      "arm_jitter",
+      "uncontrolled_gripper_open_close",
+      "after_contact_failure",
+      "visual_material_mismatch"
+    ],
+    "move_events": 4,
+    "plan_success": true,
+    "task_success": true
+  },
+  "next_data_requirement": "Promote from official RoboTwin task smoke to generated selection2env play_once and policy /train-/evaluate integration."
+}

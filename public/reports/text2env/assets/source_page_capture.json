@@ -1,0 +1,118 @@
+{
+  "schema_version": "pearl.text2env_source_page_capture.v1",
+  "captured_at": "2026-07-13",
+  "status": "pass_source_page_capture",
+  "source_count": 10,
+  "sources": [
+    {
+      "source_id": "scenesmith",
+      "url": "https://scenesmith.github.io/",
+      "final_url": "https://scenesmith.github.io/",
+      "http_status": 200,
+      "title": "SceneSmith: Agentic Generation of Simulation-Ready Indoor Scenes",
+      "screenshot": "assets/source_pages/scenesmith.png",
+      "screenshot_sha256": "4457b0b9d33350a551fdd518bfecfe4f6b56b171c39ea937503e22b5f9d3ffa0",
+      "screenshot_bytes": 1073131,
+      "console_error_count": 0
+    },
+    {
+      "source_id": "robotwin_2",
+      "url": "https://robotwin-platform.github.io/",
+      "final_url": "https://robotwin-platform.github.io/",
+      "http_status": 200,
+      "title": "RoboTwin 2.0",
+      "screenshot": "assets/source_pages/robotwin_2.png",
+      "screenshot_sha256": "3d4a781794eaaef2629a3ea90abe1c878b4a45db04bf616310f03710baf05afa",
+      "screenshot_bytes": 300756,
+      "console_error_count": 0
+    },
+    {
+      "source_id": "robotwin_digital_twins",
+      "url": "https://arxiv.org/abs/2504.13059",
+      "final_url": "https://arxiv.org/abs/2504.13059",
+      "http_status": 200,
+      "title": "[2504.13059] RoboTwin: Dual-Arm Robot Benchmark with Generative Digital Twins",
+      "screenshot": "assets/source_pages/robotwin_digital_twins.png",
+      "screenshot_sha256": "e20dea4816d9655f8a5f8fcddcbb940dd8a39771b631b0325cf307e626c0fc4e",
+      "screenshot_bytes": 207499,
+      "console_error_count": 0
+    },
+    {
+      "source_id": "robogen",
+      "url": "https://robogen-ai.github.io/",
+      "final_url": "https://robogen-ai.github.io/",
+      "http_status": 200,
+      "title": "RoboGen",
+      "screenshot": "assets/source_pages/robogen.png",
+      "screenshot_sha256": "e97b910addaac6af492b0c1a16fdfcd661a520c47cd9b4f429ba6b9b3a716895",
+      "screenshot_bytes": 116964,
+      "console_error_count": 3
+    },
+    {
+      "source_id": "fate",
+      "url": "https://arxiv.org/abs/2603.01505",
+      "final_url": "https://arxiv.org/abs/2603.01505",
+      "http_status": 200,
+      "title": "[2603.01505] FATE: Closed-Loop Feasibility-Aware Task Generation with Active Repair for Physically Grounded Robotic Curricula",
+      "screenshot": "assets/source_pages/fate.png",
+      "screenshot_sha256": "509b779e6f347d9f14e7b48afe75d9ab7560b8490b4c176b9da42cafb1a58c19",
+      "screenshot_bytes": 200269,
+      "console_error_count": 0
+    },
+    {
+      "source_id": "vlmbench",
+      "url": "https://github.com/UCSB-AI/VLMbench",
+      "final_url": "https://github.com/UCSB-AI/VLMbench",
+      "http_status": 200,
+      "title": "GitHub - UCSB-AI/VLMbench: NeurIPS 2022 Paper \"VLMbench: A Compositional Benchmark for Vision-and-Language Manipulation\" · GitHub",
+      "screenshot": "assets/source_pages/vlmbench.png",
+      "screenshot_sha256": "8bd2f89fccf5b8907226dd8dd23a75acff8178ff1627185224ed9cfd4d015d59",
+      "screenshot_bytes": 167792,
+      "console_error_count": 1
+    },
+    {
+      "source_id": "realm",
+      "url": "https://martin-sedlacek.com/realm/",
+      "final_url": "https://martin-sedlacek.com/realm/",
+      "http_status": 200,
+      "title": "REALM: A Real-to-Sim Validated Benchmark for Generalization in Robotic Manipulation",
+      "screenshot": "assets/source_pages/realm.png",
+      "screenshot_sha256": "a02df9fa892a6a6af3d827bc91ecf2413f0ca458c07342c99f3b61d6b9dfdc40",
+      "screenshot_bytes": 111414,
+      "console_error_count": 6
+    },
+    {
+      "source_id": "aspire",
+      "url": "https://research.nvidia.com/labs/gear/aspire/",
+      "final_url": "https://research.nvidia.com/labs/gear/aspire/",
+      "http_status": 200,
+      "title": "ASPIRE: Agentic /Skills Discovery for Robotics",
+      "screenshot": "assets/source_pages/aspire.png",
+      "screenshot_sha256": "52ed8c7fbe128280c72a775154f540be491448e010bd8a7fc742407c3410a66d",
+      "screenshot_bytes": 1265343,
+      "console_error_count": 0
+    },
+    {
+      "source_id": "enpire",
+      "url": "https://research.nvidia.com/labs/gear/enpire/",
+      "final_url": "https://research.nvidia.com/labs/gear/enpire/",
+      "http_status": 200,
+      "title": "ENPIRE: Agentic Robot Policy Self-Improvement in the Real World",
+      "screenshot": "assets/source_pages/enpire.png",
+      "screenshot_sha256": "38d805780d831e9ef627a62c8935adabdd7e9a4cd6326b6123fb532c60a80d2e",
+      "screenshot_bytes": 208273,
+      "console_error_count": 0
+    },
+    {
+      "source_id": "articraft",
+      "url": "https://articraft3d.github.io/",
+      "final_url": "https://articraft3d.github.io/",
+      "http_status": 200,
+      "title": "Articraft: An Agentic System for Scalable Articulated 3D Asset Generation",
+      "screenshot": "assets/source_pages/articraft.png",
+      "screenshot_sha256": "a00efc2d3b76b84c41597ee895fbe51cc05a56fab01d0d38b8c72c4bfe4d01eb",
+      "screenshot_bytes": 1011827,
+      "console_error_count": 0
+    }
+  ]
+}

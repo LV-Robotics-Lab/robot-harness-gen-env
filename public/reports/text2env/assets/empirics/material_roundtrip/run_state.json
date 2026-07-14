@@ -1,0 +1,19 @@
+{
+  "finished_at": "2026-07-13T16:22:59.465403+00:00",
+  "gates": {
+    "comparison": "pass_material_roundtrip_comparison",
+    "native_material_import": "pass_usd_preview_surface_binding",
+    "observation_extraction": "pass_observation_material_extraction",
+    "render": true
+  },
+  "runtime": {
+    "hostname": "jingxiang-B850M-C",
+    "platform": "Linux-6.17.0-35-generic-x86_64-with-glibc2.39",
+    "python": "3.11.15",
+    "simulator": "Isaac Sim 5.1"
+  },
+  "schema_version": "alchedata.material_roundtrip_run_state.v0",
+  "source_image_sha256": "d61ef22f7521eec994de94299f680dc911c6d447aeb86b9be429cc7337b55851",
+  "started_at": "2026-07-13T16:22:50.478410+00:00",
+  "state": "completed"
+}

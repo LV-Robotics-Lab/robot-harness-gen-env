@@ -1,0 +1,50 @@
+{
+  "schema_version": "alchedata.embodied_harness_acceptance_audit.v1",
+  "status": "pass_embodied_harness_acceptance",
+  "acceptance_count": 6,
+  "items": [
+    {
+      "id": 1,
+      "requirement": "Write a one-page thesis with precise scope and no unsupported priority overclaim.",
+      "status": "pass",
+      "evidence": ["docs/embodied_harness_thesis.md#one-page-thesis", "artifacts/embodied_harness/embodied_harness_spec.json#paper_claim"]
+    },
+    {
+      "id": 2,
+      "requirement": "Map the full h_t execution, weakness, proposal, regression, promotion, and h_{t+1} loop into PEARL terms.",
+      "status": "pass",
+      "evidence": ["artifacts/embodied_harness/embodied_harness_spec.json#loop_steps"]
+    },
+    {
+      "id": 3,
+      "requirement": "Define embodied reset, observation/action, tools, safety, traces, validation, data, memory, and rollback surfaces.",
+      "status": "pass",
+      "evidence": ["artifacts/embodied_harness/embodied_harness_spec.json#embodied_surfaces"]
+    },
+    {
+      "id": 4,
+      "requirement": "Compare against LLM coding harnesses, ASPIRE, ENPIRE, RoboTwin/Text2Env, and standard VLA evaluation.",
+      "status": "pass",
+      "evidence": ["artifacts/embodied_harness/embodied_harness_spec.json#novelty_table"]
+    },
+    {
+      "id": 5,
+      "requirement": "Draft a figure caption and architecture diagram brief.",
+      "status": "pass",
+      "evidence": ["artifacts/embodied_harness/embodied_harness_spec.json#figure", "reports/embodied_harness/assets/embodied_harness_loop.png"]
+    },
+    {
+      "id": 6,
+      "requirement": "Route implementation requirements into /gen-env, /collect, /evaluate, /diagnose, and /transfer.",
+      "status": "pass",
+      "evidence": ["artifacts/embodied_harness/embodied_harness_spec.json#command_routing", "artifacts/openxsim/openxsim_command_registry.json"]
+    }
+  ],
+  "delivery": {
+    "report_repo_path": "reports/embodied_harness/index.html",
+    "local_downloads_path": "/Users/boris/Downloads/embodied_harness_20260713/",
+    "remote_downloads_path": "/home/jingxiang/Downloads/embodied_harness_20260713/",
+    "bundled_image_count": 10
+  },
+  "claim_boundary": "Acceptance is complete for paper framing and implementation routing. Publication priority and causal system claims remain unproven."
+}

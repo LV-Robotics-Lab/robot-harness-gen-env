@@ -1,0 +1,366 @@
+{
+  "action_space": "Box(-inf, inf, (1, 12), float32)",
+  "asset_root": "",
+  "device": "cpu",
+  "elapsed_s": 28.046,
+  "env_cfg_overrides": [
+    {
+      "path": "garment_name",
+      "previous": null,
+      "value": "Top_Long_Unseen_0"
+    }
+  ],
+  "env_cfg_overrides_requested": [
+    "garment_name=Top_Long_Unseen_0"
+  ],
+  "error": "AttributeError(\"'GarmentObject' object has no attribute 'initial_points_positions'\")",
+  "error_message": "'GarmentObject' object has no attribute 'initial_points_positions'",
+  "error_type": "AttributeError",
+  "imported_modules": [
+    {
+      "file": "/home/jingxiang/workspace/agenticsim-runtime/candidates/lehome-challenge/source/lehome/lehome/tasks/__init__.py",
+      "module": "lehome.tasks"
+    }
+  ],
+  "num_envs": 1,
+  "observation_space": "Box(-inf, inf, (1, 12), float32)",
+  "pythonpath": [
+    "/home/jingxiang/workspace/agenticsim-runtime/candidates/lehome-challenge/source/lehome"
+  ],
+  "register_modules": [
+    "lehome.tasks"
+  ],
+  "schema": "agenticsim.isaaclab_gym_task_smoke.v0",
+  "screenshot": "/home/jingxiang/workspace/agenticsim-runtime/artifacts/candidates/lehome_biso101_garment_v2_smoke.png",
+  "screenshot_ready": false,
+  "screenshot_size_bytes": 0,
+  "stage": {
+    "matches": [
+      {
+        "path": "/physicsScene",
+        "type": "PhysicsScene"
+      },
+      {
+        "path": "/physicsScene/defaultMaterial",
+        "type": "Material"
+      },
+      {
+        "path": "/World/Robot",
+        "type": ""
+      },
+      {
+        "path": "/World/Robot/Left_Robot",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/Looks",
+        "type": "Scope"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/Looks/material_a_3d_printed",
+        "type": "Material"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/Looks/material_a_3d_printed/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/Looks/material_sts3215",
+        "type": "Material"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/Looks/material_sts3215/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/Looks/DefaultMaterial",
+        "type": "Material"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/Looks/DefaultMaterial/DefaultMaterial",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/joints",
+        "type": "Scope"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/joints/shoulder_pan",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/joints/shoulder_lift",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/joints/elbow_flex",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/joints/wrist_flex",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/joints/wrist_roll",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/joints/gripper",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/base",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/base/visuals",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/base/collisions",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/base/FixedJoint",
+        "type": "PhysicsFixedJoint"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/shoulder",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/shoulder/visuals",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/shoulder/collisions",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/upper_arm",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/upper_arm/visuals",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/upper_arm/collisions",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/lower_arm",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/lower_arm/visuals",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/lower_arm/collisions",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/wrist",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/wrist/visuals",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/wrist/collisions",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/gripper",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/gripper/visuals",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/gripper/collisions",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/gripper/Capsule",
+        "type": "Capsule"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/gripper/left_wrist_camera",
+        "type": "Camera"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/jaw",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/jaw/visuals",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/jaw/collisions",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Left_Robot/jaw/Capsule",
+        "type": "Capsule"
+      },
+      {
+        "path": "/World/Robot/Right_Robot",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/Looks",
+        "type": "Scope"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/Looks/material_a_3d_printed",
+        "type": "Material"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/Looks/material_a_3d_printed/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/Looks/material_sts3215",
+        "type": "Material"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/Looks/material_sts3215/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/Looks/DefaultMaterial",
+        "type": "Material"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/Looks/DefaultMaterial/DefaultMaterial",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/joints",
+        "type": "Scope"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/joints/shoulder_pan",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/joints/shoulder_lift",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/joints/elbow_flex",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/joints/wrist_flex",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/joints/wrist_roll",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/joints/gripper",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/base",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/base/visuals",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/base/collisions",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/base/FixedJoint",
+        "type": "PhysicsFixedJoint"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/base/top_camera",
+        "type": "Camera"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/shoulder",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/shoulder/visuals",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/shoulder/collisions",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/upper_arm",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/upper_arm/visuals",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/upper_arm/collisions",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/lower_arm",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/lower_arm/visuals",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/lower_arm/collisions",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/wrist",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/wrist/visuals",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/wrist/collisions",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/gripper",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/gripper/visuals",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/gripper/collisions",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/gripper/Capsule",
+        "type": "Capsule"
+      },
+      {
+        "path": "/World/Robot/Right_Robot/gripper/right_wrist_camera",
+        "type": "Camera"
+      }
+    ],
+    "ready": true,
+    "root_layer": "anon:0x5c2a5da4e6e0:World0.usd"
+  },
+  "status": "failed",
+  "steps_requested": 5,
+  "task": "LeHome-BiSO101-Direct-Garment-v2"
+}

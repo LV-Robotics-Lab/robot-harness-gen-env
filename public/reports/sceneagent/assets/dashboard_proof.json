@@ -1,0 +1,46 @@
+{
+  "hosted_health": {
+    "ok": true,
+    "writable": true,
+    "storage": "vercel-blob"
+  },
+  "hosted_task": {
+    "task_id": "task_self_improving_sceneagent_selection2env_20260701",
+    "status": "done",
+    "updated_at": "2026-07-13T16:48:18.569Z",
+    "comment_count": 11,
+    "comment": {
+      "comment_id": "comment_6d2b3b3f-eabe-4fc3-9954-352261f1eb8d",
+      "author": "Codex / jingxiang-b850m-c",
+      "created_at": "2026-07-13T16:48:18.569Z"
+    }
+  },
+  "hosted_related_tasks": [
+    {
+      "task_id": "task_self_improving_text2env_lit_review_20260701",
+      "status": "done",
+      "comment_count": 6,
+      "last_comment_id": "comment_eaf64f98-1e53-4ef4-8f59-4252c53af3b9"
+    },
+    {
+      "task_id": "task_self_improving_openxsim_command_loop_20260703",
+      "status": "done",
+      "comment_count": 15,
+      "last_comment_id": "comment_2df66e1c-b0ec-45da-af4b-e0bcc6361766"
+    },
+    {
+      "task_id": "task_self_improving_embodied_harness_positioning_20260707",
+      "status": "done",
+      "comment_count": 5,
+      "last_comment_id": "comment_7b0a265e-7304-4ec3-be98-69f631afda98"
+    },
+    {
+      "task_id": "task_self_improving_environment_coverage",
+      "status": "done",
+      "comment_count": 4,
+      "last_comment_id": "comment_8c669659-965c-400b-9b2f-05fa49c3b839"
+    }
+  ],
+  "local_mirror_status": "not_force_pulled_unrelated_dirty_worktree_preserved",
+  "claim_boundary": "Hosted Vercel Blob mutation and public API re-read are verified for all four core TODOs plus environment coverage. The local fallback mirror was intentionally not force-pulled because it contains unrelated uncommitted user changes."
+}

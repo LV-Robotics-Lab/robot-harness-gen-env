@@ -1,0 +1,853 @@
+{
+  "schema_version": "alchedata.openxsim_agenticsim_awesome_isaac_snapshot.v3",
+  "status": "pass_agenticsim_awesome_isaac_snapshot",
+  "source_repository": "https://github.com/LV-Robotics-Lab/AgenticSim",
+  "source_commit": "6d952560870b0a9b71f707f0476d28425bfab256",
+  "source_files": [
+    {
+      "path": "docs/awesome_isaac_environment_catalog.json",
+      "size_bytes": 3353771,
+      "sha256": "d0149f184e827be5201d470b32b36913c37e407913ad2a66b6f972a052742548"
+    },
+    {
+      "path": "docs/awesome_isaac_agenticsim_intake.json",
+      "size_bytes": 284864,
+      "sha256": "177bd402257e327ff24d759ffc1b58851072b75647358fe42274b10fa461f46b"
+    },
+    {
+      "path": "docs/awesome_isaac_runtime_evidence.json",
+      "size_bytes": 72897,
+      "sha256": "af0dbf100f0ab341f385337db7737ec4ba27df0676a34c9fd473cafb7a0f0133"
+    },
+    {
+      "path": "docs/awesome_isaac_environment_audit.md",
+      "size_bytes": 19301,
+      "sha256": "7758ae3840cc1f90259b076f7c95d33e3ec2f5d83a3e0a18f38e1c037de6ca84"
+    }
+  ],
+  "usage_policy": {
+    "policy_id": "noncommercial_academic_local_use",
+    "license_gate_mode": "advisory",
+    "runtime_admission_rule": "runtime_passed",
+    "asset_redistribution": "not_included"
+  },
+  "catalog_summary": {
+    "activity_status_counts": {
+      "active_within_3y": 720,
+      "stale_over_3y": 2,
+      "unknown_activity": 23
+    },
+    "agenticsim_intake_status_counts": {
+      "blocked_from_intake": 439,
+      "current_runtime_blocked": 1,
+      "current_runtime_passed_with_conditions": 11,
+      "eligible_after_dependency_review": 48,
+      "existing_agenticsim_strict_evidence": 12,
+      "integrated_source_pending_strict_runtime": 2,
+      "reference_or_manual_review": 232
+    },
+    "agenticsim_submodule_repo_count": 42,
+    "content_status_counts": {
+      "current_isaac_environment_source_missing_runbook": 36,
+      "documented_current_isaac_environment_source": 84,
+      "isaac_related_without_environment_source_evidence": 137,
+      "legacy_isaac_gym_environment_source": 3,
+      "no_isaac_source_evidence": 23,
+      "non_environment_tool_or_template": 25,
+      "not_content_audited": 437
+    },
+    "current_candidate_academic_use_accepted_count": 11,
+    "current_candidate_runtime_blocked_count": 1,
+    "current_candidate_runtime_license_advisory_count": 5,
+    "current_candidate_runtime_pass_count": 11,
+    "current_candidate_runtime_probe_count": 12,
+    "current_candidate_strict_open_source_runtime_pass_count": 6,
+    "documented_current_isaac_environment_source_count": 84,
+    "execution_status_counts": {
+      "agenticsim_submodule_source_only": 20,
+      "current_agenticsim_candidate_runtime_blocked": 1,
+      "current_agenticsim_candidate_runtime_passed": 11,
+      "existing_agenticsim_bounded_evidence_reported": 10,
+      "existing_agenticsim_strict_evidence_reported": 12,
+      "not_executed_in_agenticsim": 691
+    },
+    "existing_agenticsim_strict_evidence_count": 12,
+    "open_source_status_counts": {
+      "blocked_no_detected_license": 412,
+      "blocked_private": 2,
+      "blocked_unavailable": 23,
+      "verified_open_source": 308
+    },
+    "project_kind_counts": {
+      "asset_collection": 7,
+      "environment_collection": 305,
+      "framework_or_simulator": 3,
+      "infrastructure_or_tooling": 93,
+      "library_or_model": 5,
+      "related_project_needs_review": 41,
+      "resource_or_tutorial": 58,
+      "task_environment": 216,
+      "uncertain_or_not_isaac": 17
+    },
+    "repository_count": 745,
+    "source_list_overlap_count": 19,
+    "source_list_union_count": 714,
+    "static_open_environment_candidate_count": 64,
+    "static_usability_status_counts": {
+      "blocked_archived_or_disabled": 12,
+      "blocked_no_detected_license": 406,
+      "blocked_private": 2,
+      "blocked_unavailable": 23,
+      "legacy_isaac_gym_environment_source": 3,
+      "open_but_not_environment_candidate": 179,
+      "open_framework_or_simulator": 1,
+      "static_documented_isaac_source_role_review": 20,
+      "static_environment_source_missing_runbook": 35,
+      "static_open_environment_candidate": 64
+    },
+    "verified_open_source_count": 308
+  },
+  "source_list_audit": [
+    {
+      "commit": "7c42a15f4a2819802abe3e91900dd6505942b3af",
+      "head_oid": "7c42a15f4a2819802abe3e91900dd6505942b3af",
+      "is_archived": false,
+      "license_spdx": null,
+      "open_source_status": "blocked_no_detected_license",
+      "raw_link_count": 706,
+      "readme_lines": 1931,
+      "readme_sha256": "e4119861e6896022a6d27905158ad86a501e7ea8f383523ee01a84b2050c6d7d",
+      "repo": "shaoxiang/awesome-isaac-sim",
+      "source": "shaoxiang",
+      "unique_repo_count": 705,
+      "url": "https://github.com/shaoxiang/awesome-isaac-sim"
+    },
+    {
+      "commit": "be3e8f1972a79bee90dc682e523a314e84f15021",
+      "head_oid": "be3e8f1972a79bee90dc682e523a314e84f15021",
+      "is_archived": false,
+      "license_spdx": "MIT",
+      "open_source_status": "verified_open_source",
+      "raw_link_count": 31,
+      "readme_lines": 91,
+      "readme_sha256": "f7c0eb341e670d886ef7429d7291639cce906f64d1af6a6cad35cf9614a3c4ff",
+      "repo": "sjtuyinjie/awesome-isaac-sim",
+      "source": "sjtuyinjie",
+      "unique_repo_count": 28,
+      "url": "https://github.com/sjtuyinjie/awesome-isaac-sim"
+    }
+  ],
+  "intake_summary": {
+    "blocked_from_intake_count": 439,
+    "item_count": 127,
+    "tier_counts": {
+      "current_runtime_evidence": 11,
+      "dependency_review": 48,
+      "integrated_runtime_gate": 2,
+      "legacy_migration": 3,
+      "role_review": 20,
+      "runbook_review": 30,
+      "runtime_blocked": 1,
+      "runtime_evidence_existing": 12
+    }
+  },
+  "runtime_summary": {
+    "repository_probe_count": 12,
+    "runtime_pass_count": 11,
+    "runtime_blocked_count": 1,
+    "direct_unmodified_pass_count": 0,
+    "source_unmodified_runtime_pass_count": 9,
+    "runtime_pass_after_source_patch_count": 2,
+    "runtime_pass_with_asset_license_gap_count": 4,
+    "runtime_pass_with_asset_use_restriction_count": 1,
+    "strict_open_source_runtime_pass_count": 6,
+    "runtime_pass_without_open_source_closure_count": 5,
+    "academic_use_runtime_accepted_count": 11,
+    "academic_use_runtime_blocked_count": 1,
+    "academic_use_license_advisory_count": 5,
+    "visual_evidence_accepted_count": 11,
+    "candidate_screenshot_count": 11,
+    "runtime_status_counts": {
+      "blocked_external_core_asset_unavailable": 1,
+      "passed_after_asset_submodule_materialization_and_path_configuration": 1,
+      "passed_after_compatibility_patch": 2,
+      "passed_after_declared_dependencies_and_external_terrain_archive": 1,
+      "passed_after_declared_dependency_and_submodule_checkout": 1,
+      "passed_after_declared_dependency_install": 1,
+      "passed_after_dependency_and_asset_repair": 1,
+      "passed_after_git_lfs_materialization": 1,
+      "passed_with_external_asset_dataset": 1,
+      "passed_with_minimal_dependency_overlay_and_bounded_external_harness": 1,
+      "passed_with_repository_root_pythonpath": 1
+    }
+  },
+  "runtime_baseline": {
+    "status": "passed",
+    "host": "jingxiang-B850M-C",
+    "gpu": "NVIDIA GeForce RTX 5090, 580.159.03, 32607 MiB",
+    "platform": "Linux-6.17.0-35-generic-x86_64-with-glibc2.39",
+    "python": "3.11.15",
+    "isaac_sim": "5.1.0.0",
+    "torch": {
+      "architecture": "sm_120",
+      "architecture_list": [
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_90",
+        "sm_100",
+        "sm_120",
+        "compute_120"
+      ],
+      "architecture_supported": true,
+      "compute_passed": true,
+      "cuda_available": true,
+      "cuda_version": "12.8",
+      "device_capability": [
+        12,
+        0
+      ],
+      "device_count": 1,
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "matmul_checksum": -308.773987,
+      "matmul_elapsed_ms": 106.018,
+      "matmul_finite": true,
+      "matmul_shape": [
+        1024,
+        1024
+      ],
+      "version": "2.7.0+cu128"
+    },
+    "steps_completed": 180,
+    "gates": {
+      "physics": true,
+      "render": true,
+      "torch": true,
+      "video": true
+    },
+    "video_evidence": {
+      "frame_count": 32,
+      "unique_frame_sha256_count": 32,
+      "pose_movement_transition_count": 31,
+      "unique_position_count": 32,
+      "fps": 12.0,
+      "duration_seconds": 2.666667,
+      "resolution": [
+        960,
+        540
+      ]
+    },
+    "artifacts": {
+      "report": {
+        "path": "artifacts/awesome_isaac/5090_runtime_baseline/isaac_runtime_visual_smoke_continuous.json",
+        "size_bytes": 10610,
+        "sha256": "ef4abb2f05b19ba19bf7dbc5668aef7ec5c7a9803a860165e32dc91a67718e3b"
+      },
+      "screenshot": {
+        "path": "artifacts/awesome_isaac/5090_runtime_baseline/isaac_runtime_visual_smoke_continuous.png",
+        "size_bytes": 693432,
+        "sha256": "1c87e7817ccf7a447c1d03bab3e69d261fd7c47e22974524a3d2eaa437bed14b"
+      },
+      "video": {
+        "path": "artifacts/awesome_isaac/5090_runtime_baseline/isaac_runtime_visual_smoke_continuous.mp4",
+        "size_bytes": 412244,
+        "sha256": "7d8e4557e92b318869b54598ed6be1f1e60f8d02a81fa3417027b6c8b43aae03"
+      },
+      "contact_sheet": {
+        "path": "artifacts/awesome_isaac/5090_runtime_baseline/isaac_runtime_visual_smoke_contact_sheet.jpg",
+        "size_bytes": 143318,
+        "sha256": "e3d15855800e111015e57e1e952fc073fab5f9d7f553101ccb6dd53794427544"
+      }
+    },
+    "finished_at": "2026-07-13T09:14:01.825299+00:00"
+  },
+  "current_runtime_rows": [
+    {
+      "slug": "AccelerationConsortium/Matterix",
+      "canonical_slug": "AccelerationConsortium/Matterix",
+      "head_oid": "f36180bd4ffe43733eee358e29b98ea02f3e702f",
+      "task": "Matterix-Test-Beakers-Franka-v1",
+      "runtime_status": "passed_after_asset_submodule_materialization_and_path_configuration",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "runtime_usable_but_required_asset_submodule_license_unverified",
+      "open_source_closure_status": "blocked_required_asset_license_unverified",
+      "open_source_closure_confirmed": false,
+      "academic_use_accepted": true,
+      "academic_use_status": "accepted_noncommercial_academic_local_use",
+      "academic_use_license_advisory": "required_asset_license_unverified",
+      "required_asset_license_status": "no_license_detected_in_required_asset_submodule",
+      "asset_license_gap": true,
+      "asset_use_restriction": null,
+      "source_tree_modified": false,
+      "steps_requested": 10,
+      "steps_completed": 10,
+      "render_passed": true,
+      "conditions": [
+        "Initialize Matterix_assets at the recorded commit and materialize all 14 Git LFS objects.",
+        "Set MATTERIX_PATH to the repository root before importing Matterix packages."
+      ],
+      "remaining_blockers": [
+        "The required Matterix_assets repository exposes no detected license metadata or license file at the pinned commit.",
+        "The matterix_assets Python package declares MIT while its source headers say BSD-3-Clause; neither declaration appears in the separate data submodule."
+      ],
+      "error": null,
+      "license_findings": {
+        "github_detected_spdx": "BSD-3-Clause",
+        "root_license_spdx": "BSD-3-Clause",
+        "required_asset_submodule": "AccelerationConsortium/Matterix_assets",
+        "asset_submodule_head_oid": "0d856a0572d3e0823204264fd3d2700e15a43f4b",
+        "asset_submodule_license": null,
+        "asset_submodule_license_files": [],
+        "status": "code_open_source_required_asset_submodule_license_unverified"
+      },
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/matterix_beakers_franka_smoke.json",
+          "size_bytes": 12286,
+          "sha256": "c1ae17b1e50693825eafd83a5a1c2564b7fa3d3496361c3e52ddeb31f0fdf39c"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/matterix_beakers_franka_smoke.png",
+          "size_bytes": 734091,
+          "sha256": "b55bdecb573e4a23e8b8c113840ddc7891434c7e6d11b679e07e6d0faa6e6d20"
+        }
+      }
+    },
+    {
+      "slug": "Rui-li023/LabUtopia",
+      "canonical_slug": "Rui-li023/LabUtopia",
+      "head_oid": "8df72784265c375a327ffa3f0a0cf8c676f229a7",
+      "task": "level1_pick",
+      "runtime_status": "passed_with_minimal_dependency_overlay_and_bounded_external_harness",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "runtime_usable_for_noncommercial_research_but_required_assets_are_not_open_source",
+      "open_source_closure_status": "blocked_noncommercial_required_asset_license",
+      "open_source_closure_confirmed": false,
+      "academic_use_accepted": true,
+      "academic_use_status": "accepted_noncommercial_academic_local_use",
+      "academic_use_license_advisory": "noncommercial_asset_terms_apply",
+      "required_asset_license_status": "cc_by_nc_4_0_noncommercial_research_and_education_only",
+      "asset_license_gap": false,
+      "asset_use_restriction": "CC-BY-NC-4.0 noncommercial research and education only",
+      "source_tree_modified": false,
+      "steps_requested": 10,
+      "steps_completed": 10,
+      "render_passed": true,
+      "conditions": [
+        "Materialize 472 Git LFS objects; the retained assets manifest contains 471 files.",
+        "Provide zarr==3.1.5, numcodecs==0.16.5, donfig==0.8.1.post1, and google-crc32c==1.7.1 in an isolated overlay without replacing the baseline Torch stack.",
+        "Use the bounded AgenticSim harness for reset, ten task steps, three native camera frames, and clean shutdown without starting the data-writer controller."
+      ],
+      "remaining_blockers": [
+        "The required data assets are CC BY-NC 4.0 and explicitly limited to research and educational use, so this is not an unrestricted open-source runtime closure.",
+        "The upstream --headless argument is parsed but ignored by a hardcoded headless=False launch configuration.",
+        "The upstream default config name does not match any config filename.",
+        "The original controller factory eagerly imports local policy dependencies even in collect mode.",
+        "An external timeout of the original parallel HDF5 writer can terminate inside native signal handling; the bounded harness avoids that shutdown path."
+      ],
+      "error": null,
+      "license_findings": {
+        "github_detected_spdx": "MIT",
+        "code_license": "MIT",
+        "data_asset_license": "CC-BY-NC-4.0",
+        "data_asset_use_scope": "research_and_education_only",
+        "status": "code_open_source_required_assets_noncommercial"
+      },
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/labutopia_level1_pick_smoke.json",
+          "size_bytes": 1972,
+          "sha256": "bd9ee05272384eade93b5eb70c4f244fb2f648319b29a02f1ec2b300560bd851"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/labutopia_level1_pick_viewport.png",
+          "size_bytes": 508991,
+          "sha256": "0b4448aaaf51fc05c1fbe5dbff46dfb5d2b268730a00095256f640509d4d735d"
+        }
+      }
+    },
+    {
+      "slug": "abmoRobotics/RLRoverLab",
+      "canonical_slug": "abmoRobotics/RLRoverLab",
+      "head_oid": "64aeb78497753e5a220b56680d3aa10a06f1c08e",
+      "task": "Exomy-v0",
+      "runtime_status": "passed_after_declared_dependencies_and_external_terrain_archive",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "runtime_usable_but_required_external_terrain_license_unverified",
+      "open_source_closure_status": "blocked_required_asset_license_unverified",
+      "open_source_closure_confirmed": false,
+      "academic_use_accepted": true,
+      "academic_use_status": "accepted_noncommercial_academic_local_use",
+      "academic_use_license_advisory": "required_asset_license_unverified",
+      "required_asset_license_status": "no_license_detected_in_required_external_archive",
+      "asset_license_gap": true,
+      "asset_use_restriction": null,
+      "source_tree_modified": false,
+      "steps_requested": 5,
+      "steps_completed": 5,
+      "render_passed": true,
+      "conditions": [
+        "Install pymeshlab==2025.7.post1, termcolor==3.3.0, and gdown==6.1.0.",
+        "Download the documented Google Drive terrain archive and verify SHA-256 792dea9a62d2e5a339fe4faddf7eb6597e63c5a805145c88a7bf5be7889358fc.",
+        "Extract the 62 required object and terrain files; the actual and expected manifests must match exactly."
+      ],
+      "remaining_blockers": [
+        "The required 779,695,564-byte terrain archive contains no license file, so redistribution and commercial-use rights are unverified.",
+        "The package metadata says BSD-3-Clause while the root repository license is Apache-2.0."
+      ],
+      "error": null,
+      "license_findings": {
+        "github_detected_spdx": "Apache-2.0",
+        "root_license_spdx": "Apache-2.0",
+        "package_declared_spdx": "BSD-3-Clause",
+        "required_terrain_archive_license": null,
+        "required_terrain_archive_license_files": [],
+        "status": "code_open_source_required_external_terrain_license_unverified"
+      },
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/rlroverlab_exomy_smoke.with_assets.json",
+          "size_bytes": 12223,
+          "sha256": "1cee02f0ff5ef21f30065544bed2225a3b6ab29e58333d84d6ce705edfb224a6"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/rlroverlab_exomy_smoke.with_assets.png",
+          "size_bytes": 1232934,
+          "sha256": "6f95820977ce3b52f22636468cdac87081bb422585b6a18ec639848d32be4cbf"
+        }
+      }
+    },
+    {
+      "slug": "enactic/openarm_isaac_lab",
+      "canonical_slug": "enactic/openarm_isaac_lab",
+      "head_oid": "bad82e23716e6941c2de78ccb978f57c78b37734",
+      "task": "Isaac-Reach-OpenArm-Play-v0",
+      "runtime_status": "passed_with_repository_root_pythonpath",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "usable_open_source_with_conditions",
+      "open_source_closure_status": "confirmed_for_tested_runtime_scope",
+      "open_source_closure_confirmed": true,
+      "academic_use_accepted": true,
+      "academic_use_status": "accepted_noncommercial_academic_local_use",
+      "academic_use_license_advisory": "none",
+      "required_asset_license_status": "covered_by_repository_license",
+      "asset_license_gap": false,
+      "asset_use_restriction": null,
+      "source_tree_modified": false,
+      "steps_requested": 20,
+      "steps_completed": 20,
+      "render_passed": true,
+      "conditions": [
+        "Install source/openarm as an editable package.",
+        "Add the repository root to PYTHONPATH because candidate modules import source.openarm paths."
+      ],
+      "remaining_blockers": [
+        "Package-only execution is not portable until repository-root imports are removed upstream."
+      ],
+      "error": null,
+      "license_findings": {
+        "github_detected_spdx": "Apache-2.0",
+        "status": "recognized_open_source_license"
+      },
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/openarm_reach_smoke.json",
+          "size_bytes": 7162,
+          "sha256": "aa61c2080ec46fe66e69c0b23e170e782fa2776a638c619bf0a13a95f7e80312"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/openarm_reach_smoke.png",
+          "size_bytes": 573078,
+          "sha256": "22e8ee24ce84e216a962d315b339e8bf21f30ac253327fe0084cafc7e3a5546b"
+        }
+      }
+    },
+    {
+      "slug": "fan-ziqi/robot_lab",
+      "canonical_slug": "fan-ziqi/robot_lab",
+      "head_oid": "500399ed75f510aeaff28705a8ce736c514dbec3",
+      "task": "RobotLab-Isaac-Velocity-Flat-Unitree-Go2-v0",
+      "runtime_status": "passed_after_declared_dependency_install",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "runtime_usable_repository_license_recognized_asset_provenance_review_remaining",
+      "open_source_closure_status": "confirmed_for_tested_runtime_scope",
+      "open_source_closure_confirmed": true,
+      "academic_use_accepted": true,
+      "academic_use_status": "accepted_noncommercial_academic_local_use",
+      "academic_use_license_advisory": "none",
+      "required_asset_license_status": "bundled_under_repository_license_no_separate_asset_notice_detected",
+      "asset_license_gap": false,
+      "asset_use_restriction": null,
+      "source_tree_modified": false,
+      "steps_requested": 20,
+      "steps_completed": 20,
+      "render_passed": true,
+      "conditions": [
+        "Install the declared but unpinned cusrl dependency; the bounded probe used cusrl==1.2.0 without the all extra."
+      ],
+      "remaining_blockers": [
+        "The bundled Go2 meshes cite unitree_ros provenance but do not carry a separate asset license notice.",
+        "The zero-action screenshot proves composition and physics, not a trained locomotion policy."
+      ],
+      "error": null,
+      "license_findings": {
+        "github_detected_spdx": "Apache-2.0",
+        "bundled_go2_asset_provenance": "unitreerobotics/unitree_ros",
+        "status": "recognized_open_source_license_bundled_asset_provenance_not_independently_licensed"
+      },
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/robot_lab_go2_smoke.json",
+          "size_bytes": 11376,
+          "sha256": "e5fd4772769766dc58c1d21e5cadcdebe1b98c4beb22a7cb592639025eb7c399"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/robot_lab_go2_smoke.png",
+          "size_bytes": 532401,
+          "sha256": "2f79e0709c3f9a154813d0df06eeff4b97205dfa0328ff7bd3ad54981d8f638a"
+        }
+      }
+    },
+    {
+      "slug": "iit-DLSLab/basic-locomotion-dls-isaaclab",
+      "canonical_slug": "iit-DLSLab/basic-locomotion-isaaclab",
+      "head_oid": "82f03e748ee5dff49b64389970c6b0202d49c281",
+      "task": "Locomotion-Go2-Flat",
+      "runtime_status": "passed_after_compatibility_patch",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "open_source_code_and_bundled_assets_runtime_usable_after_source_patch",
+      "open_source_closure_status": "confirmed_for_tested_runtime_scope",
+      "open_source_closure_confirmed": true,
+      "academic_use_accepted": true,
+      "academic_use_status": "accepted_noncommercial_academic_local_use",
+      "academic_use_license_advisory": "none",
+      "required_asset_license_status": "covered_by_repository_bsd_3_clause",
+      "asset_license_gap": false,
+      "asset_use_restriction": null,
+      "source_tree_modified": true,
+      "steps_requested": 10,
+      "steps_completed": 10,
+      "render_passed": true,
+      "conditions": [
+        "Install the repository package and its declared Isaac Lab dependencies.",
+        "Apply the recorded import-only aliases for the absent project-specific MultiMeshRayCasterCamera classes on stock Isaac Lab 2.3.x."
+      ],
+      "remaining_blockers": [
+        "Unpatched import fails before task registration because the repository expects custom sensor classes absent from stock Isaac Lab 2.3.x.",
+        "The package metadata says Apache-2.0 while the root license and source headers say BSD-3-Clause.",
+        "The zero-action screenshot proves composition and physics, not a trained locomotion policy."
+      ],
+      "error": null,
+      "license_findings": {
+        "github_detected_spdx": "BSD-3-Clause",
+        "root_license_spdx": "BSD-3-Clause",
+        "package_declared_spdx": "Apache-2.0",
+        "bundled_go2_asset_license": "covered_by_root_bsd_3_clause",
+        "status": "recognized_open_source_license_with_package_metadata_mismatch"
+      },
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/basic_locomotion_go2_flat_smoke.patched.json",
+          "size_bytes": 11966,
+          "sha256": "a50517a22854a27d08cef715fef3ae0de6cf639ddf962df5afa6143b98d3ffc4"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/basic_locomotion_go2_flat_smoke.patched.png",
+          "size_bytes": 481157,
+          "sha256": "8a6976c64d98435ad3b450bbcefacde397c631e384c853fe08d845aa459dbbb9"
+        }
+      }
+    },
+    {
+      "slug": "iit-DLSLab/simple-joints-identification-isaaclab",
+      "canonical_slug": "iit-DLSLab/sim2real-robot-identification",
+      "head_oid": "091ac8845dfb63053daa03789f6fb3989ce0ca50",
+      "task": "IsaacLab-Pace-Go2",
+      "runtime_status": "passed_after_declared_dependency_and_submodule_checkout",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "open_source_code_submodule_and_bundled_model_runtime_usable_with_conditions",
+      "open_source_closure_status": "confirmed_for_tested_runtime_scope",
+      "open_source_closure_confirmed": true,
+      "academic_use_accepted": true,
+      "academic_use_status": "accepted_noncommercial_academic_local_use",
+      "academic_use_license_advisory": "none",
+      "required_asset_license_status": "bundled_model_covered_by_repository_bsd_3_clause",
+      "asset_license_gap": false,
+      "asset_use_restriction": null,
+      "source_tree_modified": false,
+      "steps_requested": 10,
+      "steps_completed": 10,
+      "render_passed": true,
+      "conditions": [
+        "Initialize the pace-sim2real submodule at the recorded Apache-2.0 commit.",
+        "Install the declared cmaes dependency; the probe used cmaes==0.13.0."
+      ],
+      "remaining_blockers": [
+        "The bundled Go2 model has no separate provenance notice beyond the repository BSD-3-Clause license.",
+        "The zero-action screenshot proves task creation and physics, not identification quality or policy success."
+      ],
+      "error": null,
+      "license_findings": {
+        "github_detected_spdx": "BSD-3-Clause",
+        "root_license_spdx": "BSD-3-Clause",
+        "pace_submodule": "leggedrobotics/pace-sim2real",
+        "pace_submodule_head_oid": "617e4e2df3f60c39f7e246e718f7d2bcb35bdccb",
+        "pace_submodule_license": "Apache-2.0",
+        "status": "recognized_open_source_root_and_submodule_licenses"
+      },
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/robot_identification_go2_smoke.with_cmaes.json",
+          "size_bytes": 10662,
+          "sha256": "7c45a5ce4dac9e1e469fb306ab3f179a633dd92c31644350a54d0f59b78e1537"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/robot_identification_go2_smoke.with_cmaes.png",
+          "size_bytes": 569082,
+          "sha256": "c6481479e7a28515b35ed6eabf54abc93afa091f0fb870fd94d69828feac86a7"
+        }
+      }
+    },
+    {
+      "slug": "lehome-official/lehome-challenge",
+      "canonical_slug": "lehome-official/lehome-challenge",
+      "head_oid": "a805ad2f7ab52a4583066fc4ee5180459a7f9d15",
+      "task": "LeHome-BiSO101-Direct-Garment-v2",
+      "runtime_status": "passed_after_compatibility_patch",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "open_source_code_and_assets_runtime_usable_after_source_patch",
+      "open_source_closure_status": "confirmed_for_tested_runtime_scope",
+      "open_source_closure_confirmed": true,
+      "academic_use_accepted": true,
+      "academic_use_status": "accepted_noncommercial_academic_local_use",
+      "academic_use_license_advisory": "none",
+      "required_asset_license_status": "apache_2_0",
+      "asset_license_gap": false,
+      "asset_use_restriction": null,
+      "source_tree_modified": true,
+      "steps_requested": 5,
+      "steps_completed": 5,
+      "render_passed": true,
+      "conditions": [
+        "Download and materialize the public Apache-2.0 lehome/asset_challenge dataset.",
+        "Install plotly==6.5.2, pyserial==3.5, and deepdiff==8.6.1 without the full lerobot dependency set.",
+        "Set cfg.garment_name=Top_Long_Unseen_0 before environment creation.",
+        "Apply the recorded two-line GarmentObject first-reset compatibility patch."
+      ],
+      "remaining_blockers": [
+        "Upstream reset calls GarmentObject.reset before initialize on Isaac Sim 5.1; unpatched CUDA execution fails.",
+        "Three of four registered task IDs reference Python modules absent from this commit; only the v2 task source is present.",
+        "A full lerobot==0.4.3 install would change core NumPy, packaging, and protobuf versions and was deliberately not applied."
+      ],
+      "error": null,
+      "license_findings": {
+        "github_detected_spdx": "Apache-2.0",
+        "required_asset_dataset": "lehome/asset_challenge",
+        "asset_dataset_head_oid": "bea65fd960ad5a1bb3bd3fa77164b28001c08ef9",
+        "asset_dataset_license": "Apache-2.0",
+        "status": "recognized_open_source_code_and_required_asset_license"
+      },
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_biso101_garment_v2_smoke.json",
+          "size_bytes": 9976,
+          "sha256": "52a507085fdb0aae2ca413d4fa19363866ada578e6efdbb298978886810fded9"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_biso101_garment_v2_smoke.png",
+          "size_bytes": 996701,
+          "sha256": "88cde175acb3835f3c11cdd7efdefeec9cd6aac9242ec8bbba6d6f104b9eae7a"
+        }
+      }
+    },
+    {
+      "slug": "liorbenhorin/lerobot_so101_teleop",
+      "canonical_slug": "liorbenhorin/lerobot_so101_teleop",
+      "head_oid": "9ea18b2c77df29e05c1c45bb1915dfd95514c470",
+      "task": "Lerobot-So101-Teleop-Base",
+      "runtime_status": "passed_after_git_lfs_materialization",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "runtime_usable_but_attributed_core_asset_license_unverified",
+      "open_source_closure_status": "blocked_required_asset_license_unverified",
+      "open_source_closure_confirmed": false,
+      "academic_use_accepted": true,
+      "academic_use_status": "accepted_noncommercial_academic_local_use",
+      "academic_use_license_advisory": "required_asset_license_unverified",
+      "required_asset_license_status": "upstream_no_license_detected",
+      "asset_license_gap": true,
+      "asset_use_restriction": null,
+      "source_tree_modified": false,
+      "steps_requested": 5,
+      "steps_completed": 5,
+      "render_passed": true,
+      "conditions": [
+        "Materialize all 13 Git LFS assets and add the repository source directory to PYTHONPATH.",
+        "Use the task-native viewer pose; a generic wide pose did not frame the arm."
+      ],
+      "remaining_blockers": [
+        "The repository attributes the SO101 USD to MuammerBay/so-arm101-ros2-bridge, which has no detected license or license file."
+      ],
+      "error": null,
+      "license_findings": {
+        "github_detected_spdx": "MIT",
+        "attributed_so101_asset_source": "MuammerBay/so-arm101-ros2-bridge",
+        "attributed_asset_source_license": null,
+        "attributed_asset_source_license_files": [],
+        "status": "code_open_source_attributed_core_asset_license_unverified"
+      },
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lerobot_so101_base_smoke.reframed.json",
+          "size_bytes": 6500,
+          "sha256": "5e926526966253455bb48248b264bed6fcd5b29de8371c4365ce28f91a362f5a"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lerobot_so101_base_smoke.reframed.png",
+          "size_bytes": 831693,
+          "sha256": "8f6fe8110ab57583f1816c420c6aaaebcc04c6ad97a77cd498d75e4dab39ff64"
+        }
+      }
+    },
+    {
+      "slug": "neuromeka-robotics/nrmk_isaaclab_public",
+      "canonical_slug": "neuromeka-robotics/nrmk_isaaclab_public",
+      "head_oid": "8284fb3cccdeafbf25ba313291333b4cc70b1348",
+      "task": "Indy-Deploy",
+      "runtime_status": "passed_after_dependency_and_asset_repair",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "usable_open_source_with_conditions",
+      "open_source_closure_status": "confirmed_for_tested_runtime_scope",
+      "open_source_closure_confirmed": true,
+      "academic_use_accepted": true,
+      "academic_use_status": "accepted_noncommercial_academic_local_use",
+      "academic_use_license_advisory": "none",
+      "required_asset_license_status": "covered_by_repository_license",
+      "asset_license_gap": false,
+      "asset_use_restriction": null,
+      "source_tree_modified": false,
+      "steps_requested": 20,
+      "steps_completed": 20,
+      "render_passed": true,
+      "conditions": [
+        "Set PYNPUT_BACKEND=dummy for headless execution.",
+        "Install the undeclared runtime dependencies tensordict and rsl-rl-lib==3.0.1.",
+        "Materialize the Indy7 Git LFS object before task creation."
+      ],
+      "remaining_blockers": [
+        "The package metadata does not declare tensordict or rsl-rl-lib.",
+        "Other tasks still require their own Git LFS assets and hardcoded-path review."
+      ],
+      "error": null,
+      "license_findings": {
+        "github_detected_spdx": "Apache-2.0",
+        "status": "recognized_open_source_license"
+      },
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/nrmk_indy_deploy_smoke.json",
+          "size_bytes": 7697,
+          "sha256": "691b03af0611316f19e50a585d79dc7725d9045a9502bde14f253705bac1629e"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/nrmk_indy_deploy_smoke.png",
+          "size_bytes": 518993,
+          "sha256": "6f6296feba100f423e49738eba0eb458704e68d71ce33bdc451adeb40a92b39c"
+        }
+      }
+    },
+    {
+      "slug": "noxrick91/WobbleGo",
+      "canonical_slug": "noxrick91/WobbleGo",
+      "head_oid": "061fb498c8b4a52a8f21af733b2ebd2447f397b9",
+      "task": "WobbleGo-Direct-v0",
+      "runtime_status": "blocked_external_core_asset_unavailable",
+      "runtime_passed": false,
+      "open_source_runtime_verdict": "not_runtime_usable_core_asset_unavailable",
+      "open_source_closure_status": "blocked_required_asset_unavailable",
+      "open_source_closure_confirmed": false,
+      "academic_use_accepted": false,
+      "academic_use_status": "blocked_runtime_failure",
+      "academic_use_license_advisory": "not_evaluated_runtime_blocked",
+      "required_asset_license_status": "unavailable_and_unverified",
+      "asset_license_gap": false,
+      "asset_use_restriction": null,
+      "source_tree_modified": false,
+      "steps_requested": 20,
+      "steps_completed": 0,
+      "render_passed": false,
+      "conditions": [],
+      "remaining_blockers": [
+        "The core WobbleGo USD is not present in the repository and the configured remote URL did not resolve in Isaac Sim."
+      ],
+      "error": {
+        "type": "FileNotFoundError",
+        "message": "USD file not found at path at: 'https://data.noxcaw.com/downloads/wobble-go/usds/WobbleGo.usd'."
+      },
+      "license_findings": {
+        "github_detected_spdx": "MIT",
+        "package_declared_spdx": "Apache-2.0",
+        "source_header_spdx": "BSD-3-Clause",
+        "status": "recognized_open_source_license_with_inconsistent_metadata"
+      },
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/wobblego_smoke.json",
+          "size_bytes": 937,
+          "sha256": "7ee998a1796247550c7b8fa780a65d025c3a1b0bdb4a3ab73357d3567450d747"
+        }
+      }
+    },
+    {
+      "slug": "unitreerobotics/unitree_rl_lab",
+      "canonical_slug": "unitreerobotics/unitree_rl_lab",
+      "head_oid": "4960b84732b0c2ec593dccbfe963fda1bcd7b1e3",
+      "task": "Unitree-Go2-Velocity",
+      "runtime_status": "passed_with_external_asset_dataset",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "runtime_usable_but_required_asset_license_unverified",
+      "open_source_closure_status": "blocked_required_asset_license_unverified",
+      "open_source_closure_confirmed": false,
+      "academic_use_accepted": true,
+      "academic_use_status": "accepted_noncommercial_academic_local_use",
+      "academic_use_license_advisory": "required_asset_license_unverified",
+      "required_asset_license_status": "no_license_detected",
+      "asset_license_gap": true,
+      "asset_use_restriction": null,
+      "source_tree_modified": false,
+      "steps_requested": 20,
+      "steps_completed": 20,
+      "render_passed": true,
+      "conditions": [
+        "Download the public, non-gated unitreerobotics/unitree_model dataset and configure UNITREE_MODEL_DIR.",
+        "Materialize the Go2 Git LFS object before task creation.",
+        "Frame the camera from robot.data.root_pos_w because terrain placement moved env_0 about 79 meters from the authored USD origin."
+      ],
+      "remaining_blockers": [
+        "The required unitree_model dataset exposes neither license metadata nor a license file, so redistribution rights are unverified.",
+        "UNITREE_MODEL_DIR remains a literal source placeholder rather than an environment variable or package setting."
+      ],
+      "error": null,
+      "license_findings": {
+        "github_detected_spdx": "Apache-2.0",
+        "required_asset_dataset": "unitreerobotics/unitree_model",
+        "asset_dataset_head_oid": "323e350252b9c3aee9c40acbfdad84f6ce46a5ac",
+        "asset_dataset_license": null,
+        "asset_dataset_card_metadata": null,
+        "status": "code_open_source_required_asset_license_unverified"
+      },
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/unitree_rl_lab_go2_smoke.runtime_framed.json",
+          "size_bytes": 12275,
+          "sha256": "9a8fc1fc295a51cffb93ded2a8c8b9bd884b61dd94f751af7d79f997b8d672a6"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/unitree_rl_lab_go2_smoke.runtime_framed.png",
+          "size_bytes": 557326,
+          "sha256": "9e9e56cd3cd6c39d3dafb96d41e60eaed651f956859521120e5160a3c4ac61cf"
+        }
+      }
+    }
+  ],
+  "claim_boundary": "The snapshot pins AgenticSim catalog and runtime evidence by commit and file hash. Under the local noncommercial academic-use policy, every technical runtime pass is admitted and license findings remain provenance advisories. Strict open-source closure stays separately reported. The snapshot proves the recorded RTX baseline and named bounded candidate smokes, not learned policy quality or a complete PEARL command loop over Isaac Sim."
+}

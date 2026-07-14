@@ -1,0 +1,3 @@
+{"event": "setup_demo", "duration_sec": 7.4786, "status": "pass"}
+{"event": "play_once", "duration_sec": 1.9401, "status": "pass", "move_events": 3}
+{"event": "check_success", "status": "pass", "error": null}

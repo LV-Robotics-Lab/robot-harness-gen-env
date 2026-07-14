@@ -1,0 +1,467 @@
+{
+  "action_space": "Box(-inf, inf, (1, 2), float32)",
+  "asset_root": "",
+  "camera_pose": [
+    [
+      84.10759821777648,
+      172.37066916097407,
+      -4.854197438282338
+    ],
+    [
+      82.35759821777648,
+      170.62066916097407,
+      -5.816697438282338
+    ]
+  ],
+  "capture_timeout_s": 180,
+  "device": "cuda:0",
+  "elapsed_s": 34.532,
+  "env_cfg_overrides": [],
+  "env_cfg_overrides_requested": [],
+  "framed_asset": {
+    "name": "robot",
+    "root_position": [
+      82.35759735107422,
+      170.60678100585938,
+      -5.917969226837158
+    ]
+  },
+  "framed_prim": {
+    "center": [
+      8.667022685648895e-07,
+      0.01388815511470079,
+      0.10127178855482057
+    ],
+    "extent": [
+      0.278560924336261,
+      0.39293312048904205,
+      0.4090253831157262
+    ],
+    "maximum": [
+      0.13928132887039907,
+      0.21035471535922182,
+      0.30578448011268367
+    ],
+    "minimum": [
+      -0.13927959546586194,
+      -0.18257840512982024,
+      -0.10324090300304253
+    ],
+    "path": "/World/envs/env_0/Robot",
+    "ready": true,
+    "root_translation": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "type": "Xform"
+  },
+  "imported_modules": [
+    {
+      "file": "/home/jingxiang/workspace/agenticsim-runtime/candidates/rlroverlab/rover_envs/envs/navigation/robots/exomy/__init__.py",
+      "module": "rover_envs.envs.navigation.robots.exomy"
+    }
+  ],
+  "num_envs": 1,
+  "observation_space": "Dict('policy': Box(-inf, inf, (1, 10206), float32))",
+  "pythonpath": [
+    "candidates/rlroverlab"
+  ],
+  "register_modules": [
+    "rover_envs.envs.navigation.robots.exomy"
+  ],
+  "reset_info": {
+    "episode": {
+      "Episode_Reward/angle_diff": 0.0,
+      "Episode_Reward/angle_to_target": 0.0,
+      "Episode_Reward/collision": 0.0,
+      "Episode_Reward/distance_to_target": 0.0,
+      "Episode_Reward/far_from_target": 0.0,
+      "Episode_Reward/heading_soft_contraint": 0.0,
+      "Episode_Reward/oscillation": 0.0,
+      "Episode_Reward/reached_target": 0.0,
+      "Episode_Termination/collision": 0.0,
+      "Episode_Termination/far_from_target": 0.0,
+      "Episode_Termination/is_success": 0.0,
+      "Episode_Termination/time_limit": 0.0,
+      "Metrics/target_pose/error_heading": 0.0,
+      "Metrics/target_pose/error_pos": 0.0
+    },
+    "log": {
+      "Episode_Reward/angle_diff": 0.0,
+      "Episode_Reward/angle_to_target": 0.0,
+      "Episode_Reward/collision": 0.0,
+      "Episode_Reward/distance_to_target": 0.0,
+      "Episode_Reward/far_from_target": 0.0,
+      "Episode_Reward/heading_soft_contraint": 0.0,
+      "Episode_Reward/oscillation": 0.0,
+      "Episode_Reward/reached_target": 0.0,
+      "Episode_Termination/collision": 0.0,
+      "Episode_Termination/far_from_target": 0.0,
+      "Episode_Termination/is_success": 0.0,
+      "Episode_Termination/time_limit": 0.0,
+      "Metrics/target_pose/error_heading": 0.0,
+      "Metrics/target_pose/error_pos": 0.0
+    }
+  },
+  "schema": "agenticsim.isaaclab_gym_task_smoke.v0",
+  "screenshot": "/home/jingxiang/workspace/agenticsim-runtime/artifacts/candidates/rlroverlab_exomy_smoke.with_assets.png",
+  "screenshot_ready": true,
+  "screenshot_size_bytes": 1232934,
+  "stage": {
+    "matches": [
+      {
+        "path": "/World/envs/env_0/Robot",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks",
+        "type": "Scope"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_DefaultMaterial",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_DefaultMaterial/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_DefaultMaterial_01",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/material_DefaultMaterial_01/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/Plastic_ABS",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/Plastic_ABS/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/Copper_Antique_Brushed",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/Copper_Antique_Brushed/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/Aluminum_Brushed",
+        "type": "Material"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Looks/Aluminum_Brushed/Shader",
+        "type": "Shader"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Mast",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Mast/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Mast/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Mast/Tracking_Cam_Joint",
+        "type": "PhysicsFixedJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Mast/a_D_Cam_Joint",
+        "type": "PhysicsFixedJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Tracking_Cam",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Tracking_Cam/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Tracking_Cam/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/a_D_Cam",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/a_D_Cam/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/a_D_Cam/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Body",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Body/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Body/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Body/Left_Bogie_Joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Body/Mast_Joint",
+        "type": "PhysicsFixedJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Body/Rear_Bogie_Joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Body/Right_Bogie_Joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Left_Bogie",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Left_Bogie/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Left_Bogie/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Left_Bogie/CL_Steer_Joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Left_Bogie/FL_Steer_Joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Right_Bogie",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Right_Bogie/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Right_Bogie/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Right_Bogie/CR_Steer_Joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Right_Bogie/FR_Steer_Joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Rear_Bogie",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Rear_Bogie/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Rear_Bogie/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Rear_Bogie/RL_Steer_Joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/Rear_Bogie/RR_Steer_Joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_Steer",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_Steer/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_Steer/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_Steer/FL_Drive_Joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_Steer",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_Steer/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_Steer/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_Steer/FR_Drive_Joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/CL_Steer",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/CL_Steer/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/CL_Steer/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/CL_Steer/CL_Drive_Joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/CR_Steer",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/CR_Steer/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/CR_Steer/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/CR_Steer/CR_Drive_Joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RL_Steer",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RL_Steer/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RL_Steer/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RL_Steer/RL_Drive_Joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_Steer",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_Steer/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_Steer/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/RR_Steer/RR_Drive_Joint",
+        "type": "PhysicsRevoluteJoint"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_Drive",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_Drive/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FL_Drive/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_Drive",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_Drive/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/FR_Drive/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/CL_Drive",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/CL_Drive/visuals",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/CL_Drive/collisions",
+        "type": "Mesh"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/CR_Drive",
+        "type": "Xform"
+      },
+      {
+        "path": "/World/envs/env_0/Robot/CR_Drive/visuals",
+        "type": "Mesh"
+      }
+    ],
+    "ready": true,
+    "root_layer": "anon:0x651873b53730:World0.usd"
+  },
+  "status": "captured",
+  "step_samples": [
+    {
+      "reward": [
+        0.001369038480333984
+      ],
+      "step": 0,
+      "terminated": [
+        false
+      ],
+      "truncated": [
+        false
+      ]
+    },
+    {
+      "reward": [
+        0.00018037327390629798
+      ],
+      "step": 4,
+      "terminated": [
+        false
+      ],
+      "truncated": [
+        false
+      ]
+    }
+  ],
+  "steps_completed": 5,
+  "steps_requested": 5,
+  "task": "Exomy-v0"
+}

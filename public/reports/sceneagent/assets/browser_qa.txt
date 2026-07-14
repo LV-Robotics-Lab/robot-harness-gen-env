@@ -1,0 +1,163 @@
+{
+  "console_errors": [],
+  "index": "/Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/index.html",
+  "page_errors": [],
+  "report": "sceneagent",
+  "status": "pass_browser_qa",
+  "viewports": {
+    "desktop": {
+      "image_count": 10,
+      "local_link_count": 53,
+      "overflow": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440
+      },
+      "video_count": 6,
+      "videos": [
+        {
+          "duration": 17.875,
+          "error": null,
+          "height": 480,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/pose_conditioned_eval_apple_plate_heldout_v1/episode_000_eval_000_seed_6100/final_observer_camera.png",
+          "readyState": 4,
+          "renderedHeight": 287.484375,
+          "renderedWidth": 383.328125,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/pose_conditioned_eval_apple_plate_heldout_v1/episode_000_eval_000_seed_6100/observer_policy_rollout.mp4",
+          "width": 640
+        },
+        {
+          "duration": 17.875,
+          "error": null,
+          "height": 480,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/pose_conditioned_eval_apple_plate_domain_randomized_v2/episode_000_eval_000_seed_6100/final_observer_camera.png",
+          "readyState": 4,
+          "renderedHeight": 287.484375,
+          "renderedWidth": 383.328125,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/pose_conditioned_eval_apple_plate_domain_randomized_v2/episode_000_eval_000_seed_6100/observer_policy_rollout.mp4",
+          "width": 640
+        },
+        {
+          "duration": 18,
+          "error": null,
+          "height": 480,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/pose_conditioned_eval_can_basket_heldout_seeds_v1/episode_000_fixed_seed_7300/final_observer_camera.png",
+          "readyState": 4,
+          "renderedHeight": 287.5,
+          "renderedWidth": 383.34375,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/pose_conditioned_eval_can_basket_heldout_seeds_v1/episode_000_fixed_seed_7300/observer_policy_rollout.mp4",
+          "width": 640
+        },
+        {
+          "duration": 53.333333,
+          "error": null,
+          "height": 240,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/official_rollout_open_laptop/final_observer_camera.png",
+          "readyState": 4,
+          "renderedHeight": 287.484375,
+          "renderedWidth": 383.328125,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/official_rollout_continuous/open_laptop.mp4",
+          "width": 320
+        },
+        {
+          "duration": 44.25,
+          "error": null,
+          "height": 240,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/official_rollout_place_mouse_pad/final_observer_camera.png",
+          "readyState": 4,
+          "renderedHeight": 287.484375,
+          "renderedWidth": 383.328125,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/official_rollout_continuous/place_mouse_pad.mp4",
+          "width": 320
+        },
+        {
+          "duration": 43.916667,
+          "error": null,
+          "height": 240,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/official_rollout_place_container_plate/final_observer_camera.png",
+          "readyState": 4,
+          "renderedHeight": 287.5,
+          "renderedWidth": 383.34375,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/official_rollout_continuous/place_container_plate.mp4",
+          "width": 320
+        }
+      ]
+    },
+    "mobile": {
+      "image_count": 10,
+      "local_link_count": 53,
+      "overflow": {
+        "clientWidth": 390,
+        "scrollWidth": 390
+      },
+      "video_count": 6,
+      "videos": [
+        {
+          "duration": 17.875,
+          "error": null,
+          "height": 480,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/pose_conditioned_eval_apple_plate_heldout_v1/episode_000_eval_000_seed_6100/final_observer_camera.png",
+          "readyState": 4,
+          "renderedHeight": 276,
+          "renderedWidth": 368,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/pose_conditioned_eval_apple_plate_heldout_v1/episode_000_eval_000_seed_6100/observer_policy_rollout.mp4",
+          "width": 640
+        },
+        {
+          "duration": 17.875,
+          "error": null,
+          "height": 480,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/pose_conditioned_eval_apple_plate_domain_randomized_v2/episode_000_eval_000_seed_6100/final_observer_camera.png",
+          "readyState": 4,
+          "renderedHeight": 276,
+          "renderedWidth": 368,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/pose_conditioned_eval_apple_plate_domain_randomized_v2/episode_000_eval_000_seed_6100/observer_policy_rollout.mp4",
+          "width": 640
+        },
+        {
+          "duration": 18,
+          "error": null,
+          "height": 480,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/pose_conditioned_eval_can_basket_heldout_seeds_v1/episode_000_fixed_seed_7300/final_observer_camera.png",
+          "readyState": 4,
+          "renderedHeight": 276,
+          "renderedWidth": 368,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/pose_conditioned_eval_can_basket_heldout_seeds_v1/episode_000_fixed_seed_7300/observer_policy_rollout.mp4",
+          "width": 640
+        },
+        {
+          "duration": 53.333333,
+          "error": null,
+          "height": 240,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/official_rollout_open_laptop/final_observer_camera.png",
+          "readyState": 4,
+          "renderedHeight": 276,
+          "renderedWidth": 368,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/official_rollout_continuous/open_laptop.mp4",
+          "width": 320
+        },
+        {
+          "duration": 44.25,
+          "error": null,
+          "height": 240,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/official_rollout_place_mouse_pad/final_observer_camera.png",
+          "readyState": 4,
+          "renderedHeight": 276,
+          "renderedWidth": 368,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/official_rollout_continuous/place_mouse_pad.mp4",
+          "width": 320
+        },
+        {
+          "duration": 43.916667,
+          "error": null,
+          "height": 240,
+          "poster": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/official_rollout_place_container_plate/final_observer_camera.png",
+          "readyState": 4,
+          "renderedHeight": 276,
+          "renderedWidth": 368,
+          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/sceneagent_selection2env/assets/evidence/runs/official_rollout_continuous/place_container_plate.mp4",
+          "width": 320
+        }
+      ]
+    }
+  }
+}

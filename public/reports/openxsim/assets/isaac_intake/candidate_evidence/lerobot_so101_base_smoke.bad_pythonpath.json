@@ -1,0 +1,22 @@
+{
+  "asset_root": "",
+  "device": "cuda:0",
+  "elapsed_s": 6.646,
+  "error": "ModuleNotFoundError(\"No module named 'lerobot_so101_teleop'\")",
+  "error_message": "No module named 'lerobot_so101_teleop'",
+  "error_type": "ModuleNotFoundError",
+  "num_envs": 1,
+  "pythonpath": [
+    "candidates/lerobot_so101_teleop/source/lerobot_so101_teleop"
+  ],
+  "register_modules": [
+    "lerobot_so101_teleop.tasks"
+  ],
+  "schema": "agenticsim.isaaclab_gym_task_smoke.v0",
+  "screenshot": "/home/jingxiang/workspace/agenticsim-runtime/artifacts/candidates/lerobot_so101_base_smoke.png",
+  "screenshot_ready": false,
+  "screenshot_size_bytes": 0,
+  "status": "failed",
+  "steps_requested": 20,
+  "task": "Lerobot-So101-Teleop-Base"
+}
