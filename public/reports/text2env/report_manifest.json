@@ -407,9 +407,9 @@
       "sha256": "5bf44d302acfa83376f6bede11297c452e9718d1d1c054a0846bd2113e731884"
     },
     {
-      "bytes": 4423251,
+      "bytes": 4499373,
       "path": "qa/desktop-viewport.png",
-      "sha256": "72fda328fd9423aec787612c0f1f7c749f086780151cf9f19703024d91f3d971"
+      "sha256": "dceaeac633cc925b164d76f232b87bbf8fc131057fcdc77860da1376b4836d15"
     },
     {
       "bytes": 1491117,
@@ -417,9 +417,9 @@
       "sha256": "3dbbf2603fc90ffe668c0ce1ce049efbaa4288fd15eba835d17e08d60ea8415d"
     },
     {
-      "bytes": 4423563,
+      "bytes": 2533237,
       "path": "qa/mobile-viewport.png",
-      "sha256": "7f7aa8a8c8803fd0becef7064226d2c2f0a373b0df8e966c691bb2173d15e3aa"
+      "sha256": "2361067a4caed7a209df454df16528a039790f2595dc49e0c4abf473b4373832"
     },
     {
       "bytes": 27212,
@@ -427,7 +427,7 @@
       "sha256": "dae26bc8bac80d71ea5614434b2d0956c1a6f9f42c5222105a6e90e269384931"
     }
   ],
-  "generated_at": "2026-07-14T02:32:57.123164+00:00",
+  "generated_at": "2026-07-14T02:47:32.788749+00:00",
   "schema_version": "alchedata.text2env_report_manifest.v1",
   "status": "pass_report_bundle"
 }
