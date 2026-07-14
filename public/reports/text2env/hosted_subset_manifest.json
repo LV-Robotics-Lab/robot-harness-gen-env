@@ -2,17 +2,22 @@
   "schema_version": "pearl.hosted_report_subset.v1",
   "status": "pass_hosted_subset_manifest",
   "source_manifest": "report_manifest.json",
-  "file_count": 32,
+  "file_count": 42,
   "files": [
     {
       "path": "assets/acceptance_audit.json",
-      "bytes": 13272,
-      "sha256": "4b44c30cb094dbf621132a1cb338e8eadd330e7b6bfb30a7c53fe00cc72ae2c5"
+      "bytes": 14407,
+      "sha256": "565d0904f5f1b64b0ec915d647cdb95e26975f0c794affe7ab8ee6f165ecd306"
     },
     {
       "path": "assets/browser_qa.txt",
-      "bytes": 1314,
-      "sha256": "5c43e4e37d217c1bcfac75cc6959220ebd5bd8220b299942576ed4dbde9309a8"
+      "bytes": 18787,
+      "sha256": "cead73b43dfc09623347c648c740b4eec40627514b521c70cae9a08de32bf8a8"
+    },
+    {
+      "path": "assets/candidate_project_intake.json",
+      "bytes": 11288,
+      "sha256": "23c85c834fb45df11953aa97395834043c320ec715b72f9069269e88bdc76754"
     },
     {
       "path": "assets/empirics/failure_score_correlation_v1.json",
@@ -71,33 +76,63 @@
     },
     {
       "path": "assets/method_matrix.json",
-      "bytes": 7037,
-      "sha256": "ba2135e24df57f28f2148695d35fab047c4ebb573a8ad1e4be38c09e5c41e5fe"
+      "bytes": 10071,
+      "sha256": "45ab354caaeedee3cf4e4578c7881bcd4e9ddf5da4fdfe0b3136058aeda81c95"
     },
     {
       "path": "assets/source_page_capture.json",
-      "bytes": 5019,
-      "sha256": "cd82edbe6f89b3b324db628285cceba1030b9d574b39ab8956b7f45953eae42b"
+      "bytes": 9954,
+      "sha256": "e7aabf5dd30e8f0788705b92b715ffc18f34e6c13b4ad252de171a94e86cfc39"
     },
     {
       "path": "assets/source_pages/articraft.png",
-      "bytes": 1011827,
-      "sha256": "a00efc2d3b76b84c41597ee895fbe51cc05a56fab01d0d38b8c72c4bfe4d01eb"
+      "bytes": 592386,
+      "sha256": "0f26ae32c2b19da665adc85c7a53e3269cd06372c8b074f4288a04f1479ae029"
     },
     {
       "path": "assets/source_pages/aspire.png",
-      "bytes": 1265343,
-      "sha256": "52ed8c7fbe128280c72a775154f540be491448e010bd8a7fc742407c3410a66d"
+      "bytes": 1008048,
+      "sha256": "10a3845195b40efccb300e147e7b727b488321eb5aaacaa3e369b4121206933f"
+    },
+    {
+      "path": "assets/source_pages/dipo.png",
+      "bytes": 145108,
+      "sha256": "2190be641320659aa09354b0d191697a4f38e970c3979384a207165258cd9975"
+    },
+    {
+      "path": "assets/source_pages/dirtnet.png",
+      "bytes": 136322,
+      "sha256": "e6cb4e82f9be77c01918cbb06eca62837112222bc371ba0d400b9e5d66dfc9e2"
+    },
+    {
+      "path": "assets/source_pages/embodiedgen_v2.png",
+      "bytes": 211881,
+      "sha256": "11949165fdffe9f6ff542238e1182f305eeb6fa01ede3137358bcf622b4a2a67"
     },
     {
       "path": "assets/source_pages/enpire.png",
-      "bytes": 208273,
-      "sha256": "38d805780d831e9ef627a62c8935adabdd7e9a4cd6326b6123fb532c60a80d2e"
+      "bytes": 1319025,
+      "sha256": "7df621ccaba2993ae67857005049072e11f4953630ffb76438b1a83cfdddbaea"
     },
     {
       "path": "assets/source_pages/fate.png",
       "bytes": 200269,
       "sha256": "509b779e6f347d9f14e7b48afe75d9ab7560b8490b4c176b9da42cafb1a58c19"
+    },
+    {
+      "path": "assets/source_pages/gausstr.png",
+      "bytes": 184099,
+      "sha256": "67db792d74da934631727ad84f370a64726f25953d3886242d50f8bd54ba6ab4"
+    },
+    {
+      "path": "assets/source_pages/generative_worlds_sim2real_rl.png",
+      "bytes": 214140,
+      "sha256": "b43f6a1a404460cf07bb7b78c43039f303bbb039e67a4e040f3f19fa43824a76"
+    },
+    {
+      "path": "assets/source_pages/instancenet.png",
+      "bytes": 138065,
+      "sha256": "527d5e97d84939c84f8bb9ec92646ba0d0399d92e342382167fac6995331ab9d"
     },
     {
       "path": "assets/source_pages/realm.png",
@@ -106,8 +141,8 @@
     },
     {
       "path": "assets/source_pages/robogen.png",
-      "bytes": 116964,
-      "sha256": "e97b910addaac6af492b0c1a16fdfcd661a520c47cd9b4f429ba6b9b3a716895"
+      "bytes": 115392,
+      "sha256": "21b218f73eb85e8ff565fb806d2c3b45cedb223ebea5119201997b71d53b2f3a"
     },
     {
       "path": "assets/source_pages/robotwin_2.png",
@@ -120,9 +155,24 @@
       "sha256": "e20dea4816d9655f8a5f8fcddcbb940dd8a39771b631b0325cf307e626c0fc4e"
     },
     {
+      "path": "assets/source_pages/roboverse.png",
+      "bytes": 374897,
+      "sha256": "937d7272fb11e32029cbe5a03e9a4297feb3bda4dccfbb171a3587dcab7a2275"
+    },
+    {
       "path": "assets/source_pages/scenesmith.png",
-      "bytes": 1073131,
-      "sha256": "4457b0b9d33350a551fdd518bfecfe4f6b56b171c39ea937503e22b5f9d3ffa0"
+      "bytes": 760480,
+      "sha256": "526d8dc57b25858473ccd354705d93e58d7b903f82d5820c93a79bb6db786f66"
+    },
+    {
+      "path": "assets/source_pages/three_d_fixer.png",
+      "bytes": 261877,
+      "sha256": "c6b9182ac2e7433ab9cbcf050de5325a556c35bce087cfda2040b62133ed21e3"
+    },
+    {
+      "path": "assets/source_pages/uni3r.png",
+      "bytes": 173376,
+      "sha256": "4173f9cf82daadce4935a895a0e8d01ac984a5be165dcb5aaff3f8abc20b0cc7"
     },
     {
       "path": "assets/source_pages/vlmbench.png",
@@ -131,38 +181,38 @@
     },
     {
       "path": "assets/source_pages_contact_sheet.png",
-      "bytes": 2053498,
-      "sha256": "0aa923e58427991d77599f11a70b6ad82374ba4c922282ca543980f4c9222d04"
+      "bytes": 5539301,
+      "sha256": "a8b725be14172803d1663822bf7a1d370d3dbe1e1c328d2817972711233b6f97"
     },
     {
       "path": "assets/source_registry.json",
-      "bytes": 29829,
-      "sha256": "9126e2707c4062ea6396cccb3c6a3bfeec371821a4d79d7d8950732176d478f0"
+      "bytes": 44290,
+      "sha256": "51d682a1e3ef48c94c631ba3781b13b81da13311d6291e7cd7663d9d6784f9ee"
     },
     {
       "path": "index.html",
-      "bytes": 67781,
-      "sha256": "82c7d82b5e4e4430d448a46f1ab7a827d1e831fe23a7b36f8b21f1103a1f77da"
+      "bytes": 98026,
+      "sha256": "76c6db946c62848b52a4d7e319f80ffe8359be5c600995919f0cf47ddd2e1b0a"
     },
     {
       "path": "qa/desktop-viewport.png",
-      "bytes": 3191296,
-      "sha256": "40d77cda59ac970167775d3a9859da0413a74e892f33c13b37fed4c03a6cf1ae"
+      "bytes": 4423251,
+      "sha256": "72fda328fd9423aec787612c0f1f7c749f086780151cf9f19703024d91f3d971"
     },
     {
       "path": "qa/mobile-viewport.png",
-      "bytes": 1800512,
-      "sha256": "bcca115e8256feb61b0e2b400aa84f14980114e0c98b4a94d7a8762e80129550"
+      "bytes": 4423563,
+      "sha256": "7f7aa8a8c8803fd0becef7064226d2c2f0a373b0df8e966c691bb2173d15e3aa"
     },
     {
       "path": "report_manifest.json",
-      "bytes": 13854,
-      "sha256": "abe24218d2b0947d2bc12b3d328537108e872f0d86804b6c5d75d2574d5631e4"
+      "bytes": 15575,
+      "sha256": "2c13d09f8f7a6fad6d972f7f3dfcd659a7da92b818204ab01a1d89851650a55e"
     },
     {
       "path": "text2env_literature_review.md",
-      "bytes": 20247,
-      "sha256": "164770ca40ed2e5a4a21d27888bf708f13b3cdb96f855d632f7079a65ba9b0b7"
+      "bytes": 27212,
+      "sha256": "dae26bc8bac80d71ea5614434b2d0956c1a6f9f42c5222105a6e90e269384931"
     }
   ]
 }

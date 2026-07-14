@@ -2,17 +2,17 @@
   "schema_version": "pearl.hosted_report_subset.v1",
   "status": "pass_hosted_subset_manifest",
   "source_manifest": "report_manifest.json",
-  "file_count": 54,
+  "file_count": 56,
   "files": [
     {
       "path": "assets/acceptance_audit.json",
       "bytes": 4157,
-      "sha256": "a7541ceb3254dba9e6e60a9cde1455d5263c4c78d01a472f650fdc2c51625399"
+      "sha256": "bdd1363307a8f555d891a14f6fad62f18e4950f9db4e6c81f3dfd0b61eae34ee"
     },
     {
       "path": "assets/adapter_matrix.json",
-      "bytes": 9362,
-      "sha256": "8ce6ee22146744c506bd2e7b024646ead472f7d5847b9b16b047ccbb58da0197"
+      "bytes": 12271,
+      "sha256": "f8295b67224a705ecae0cce41aea20a8916af06d3bd1227ce54d6b2a8e9afccc"
     },
     {
       "path": "assets/benchmark_frames/open_laptop_final.png",
@@ -66,8 +66,8 @@
     },
     {
       "path": "assets/browser_qa.txt",
-      "bytes": 3747,
-      "sha256": "d789dfd6f33ddc3196ba90855ce60e61e242256867e86a6b7892f8550c69b785"
+      "bytes": 411,
+      "sha256": "9359f2a7704824d522220b91b06afa1d14ec91304f8fac1928aea8e88c8c7e46"
     },
     {
       "path": "assets/command_registry.json",
@@ -221,13 +221,23 @@
     },
     {
       "path": "assets/source_page_capture.json",
-      "bytes": 1873,
-      "sha256": "adeada66c374d862957ff353a5e68d1186756b877d7a4ee9747b9672c76179dc"
+      "bytes": 2638,
+      "sha256": "7e50fff59f8d535310d85178d5c3ffb65687d34b80cd4a080742ac6230b68605"
+    },
+    {
+      "path": "assets/source_pages/embodiedgen_v2.png",
+      "bytes": 211881,
+      "sha256": "11949165fdffe9f6ff542238e1182f305eeb6fa01ede3137358bcf622b4a2a67"
     },
     {
       "path": "assets/source_pages/neumatex.png",
       "bytes": 431901,
       "sha256": "19bc0c16335afd0a4848c461861b354630c08ea9ad7ba6773c94c806744ebf2d"
+    },
+    {
+      "path": "assets/source_pages/roboverse.png",
+      "bytes": 374897,
+      "sha256": "937d7272fb11e32029cbe5a03e9a4297feb3bda4dccfbb171a3587dcab7a2275"
     },
     {
       "path": "assets/source_pages/shaoxiang_awesome_isaac_sim.png",
@@ -251,28 +261,28 @@
     },
     {
       "path": "index.html",
-      "bytes": 65316,
-      "sha256": "d8abe7a06a741ae071f425dbc89485780327870907dc9951af3bd42762de473e"
+      "bytes": 67887,
+      "sha256": "cf25196ff1fa66755801a20d4daf31127f89b17cb36ac96ed09ce7ea94618e8f"
     },
     {
       "path": "openxsim_command_loop.md",
-      "bytes": 17259,
-      "sha256": "ed1c340dd7f2226ec484646f939ed0f7e2c844522e45a2aa844c5908e25abbb9"
+      "bytes": 18400,
+      "sha256": "339f17577621d06994871780163ed22a7ddfd83459765ee3f02951f9bff22bf9"
     },
     {
       "path": "qa/desktop-viewport.png",
-      "bytes": 4764784,
-      "sha256": "121629e5c9ea699b7dd7d6e53d027a2ec22cc21ae35c20a57bde836540954abd"
+      "bytes": 431478,
+      "sha256": "b4b9e9ae1af7690e7afc8591873356d9272d6f07a0531d390e69099549f04bfe"
     },
     {
       "path": "qa/mobile-viewport.png",
-      "bytes": 3587638,
-      "sha256": "08a8c246a2b956d92b6d78fedab0dba9c5a049c7cd1cce5b5b87ce6b72751201"
+      "bytes": 62129,
+      "sha256": "73e124e89a6dcbd7f5182555d6ff674a0de87993f5c3eb34bdcd4d300476ef5c"
     },
     {
       "path": "report_manifest.json",
-      "bytes": 42742,
-      "sha256": "73853fba48e2f3699fb2aa2cb2a2d58b03f9156e62bbc9e34318d7db4a93c56f"
+      "bytes": 43084,
+      "sha256": "003610e90648507e6462ee65bb92bc110749644b2f7baf29f6ff047f6c4f3869"
     }
   ]
 }

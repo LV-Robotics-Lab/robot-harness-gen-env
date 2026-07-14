@@ -82,6 +82,36 @@
       "source_id": "agenticsim_placement_agent",
       "scores": {"task_generation": "medium", "asset_retrieval_generation": "medium", "placement_planning": "high", "physics_collision_validation": "low", "code_generation_repair": "low", "simulator_smoke": "low", "data_collection": "none", "policy_evaluation": "none"},
       "evidence": "Placement-only alias selection and backend mapping; execution remains delegated to concrete simulator adapters."
+    },
+    {
+      "source_id": "embodiedgen_v2",
+      "scores": {"task_generation": "high", "asset_retrieval_generation": "high", "placement_planning": "high", "physics_collision_validation": "high", "code_generation_repair": "high", "simulator_smoke": "high", "data_collection": "high", "policy_evaluation": "high"},
+      "evidence": "Agentic simulation-ready asset, layout, affordance, task-world, and cross-simulator generation with documented policy-training and evaluation hooks."
+    },
+    {
+      "source_id": "roboverse",
+      "scores": {"task_generation": "medium", "asset_retrieval_generation": "medium", "placement_planning": "medium", "physics_collision_validation": "high", "code_generation_repair": "medium", "simulator_smoke": "high", "data_collection": "high", "policy_evaluation": "high"},
+      "evidence": "MetaSim normalizes environment, asset, robot, data, and benchmark interfaces across multiple simulators; it is an integration substrate rather than a language generator."
+    },
+    {
+      "source_id": "generative_worlds_sim2real_rl",
+      "scores": {"task_generation": "low", "asset_retrieval_generation": "high", "placement_planning": "high", "physics_collision_validation": "high", "code_generation_repair": "low", "simulator_smoke": "high", "data_collection": "high", "policy_evaluation": "high"},
+      "evidence": "Generated interactive worlds are connected to VLA reinforcement learning, simulation evaluation, real-robot evaluation, and scene-diversity ablation; separate training code was not located."
+    },
+    {
+      "source_id": "dipo",
+      "scores": {"task_generation": "none", "asset_retrieval_generation": "high", "placement_planning": "none", "physics_collision_validation": "medium", "code_generation_repair": "medium", "simulator_smoke": "low", "data_collection": "none", "policy_evaluation": "none"},
+      "evidence": "Dual-state images are converted into articulated part layout, joints, and URDF-oriented assets; simulator execution and task validation remain downstream."
+    },
+    {
+      "source_id": "three_d_fixer",
+      "scores": {"task_generation": "none", "asset_retrieval_generation": "high", "placement_planning": "medium", "physics_collision_validation": "low", "code_generation_repair": "low", "simulator_smoke": "low", "data_collection": "none", "policy_evaluation": "none"},
+      "evidence": "Single-image reconstruction preserves in-place layout through fragmented geometry anchors, but physical metadata and executable simulator import are not core outputs."
+    },
+    {
+      "source_id": "uni3r",
+      "scores": {"task_generation": "none", "asset_retrieval_generation": "medium", "placement_planning": "low", "physics_collision_validation": "none", "code_generation_repair": "none", "simulator_smoke": "low", "data_collection": "low", "policy_evaluation": "medium"},
+      "evidence": "Unposed multi-view images produce Gaussian geometry, depth, and open-vocabulary semantics for observation and evaluation, not collision or task-ready environments."
     }
   ],
   "claim_boundary": "Matrix levels summarize capabilities demonstrated by primary sources or audited workspace evidence. They are ordinal review judgments, not normalized benchmark scores."

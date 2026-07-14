@@ -1,10 +1,10 @@
 # Text2Env / SceneAgent Literature Review for PEARL
 
-Reviewed: 2026-07-13
+Reviewed: 2026-07-14
 
 ## Executive Verdict
 
-[COMPUTED] [CONFIDENCE: HIGH] The review package contains 14 audited source rows, including 11 academic primary sources, a 14-by-8 method matrix, a strict selection2env/generation2env taxonomy, an implementation shortlist, a typed Zheng Ye-to-Gaochen handoff, and a post-ASPIRE/ENPIRE experiment plan.
+[COMPUTED] [CONFIDENCE: HIGH] The review package contains 20 audited source rows, including 17 academic primary sources, a 20-by-8 method matrix, a strict selection2env/generation2env taxonomy, an implementation shortlist, a typed Zheng Ye-to-Gaochen handoff, and a post-ASPIRE/ENPIRE experiment plan.
 
 [INFERRED] [CONFIDENCE: HIGH] PEARL should not claim novelty from generic self-improvement, code repair, task generation, real-robot rollout loops, or scene generation in isolation. ASPIRE, ENPIRE, RoboGen, FATE, SceneSmith, and RoboTwin already cover substantial portions of those claims.
 
@@ -15,6 +15,7 @@ Machine-readable evidence:
 - `artifacts/literature_review/text2env_primary_sources.json`
 - `artifacts/literature_review/text2env_method_matrix.json`
 - `artifacts/literature_review/text2env_acceptance_audit.json`
+- `artifacts/literature_review/candidate_project_intake_paul_20260714.json`
 - `schemas/text2env_literature_review.schema.json`
 - `scripts/text2env_literature_review.py`
 
@@ -50,6 +51,12 @@ Machine-readable evidence:
 | ENPIRE | 2026 | [project](https://research.nvidia.com/labs/gear/enpire/) · [paper](https://arxiv.org/abs/2606.19980) · code: not released | real task + policy + reset/rollout feedback -> repeated verify/refine iterations | Push-T, pin insertion, zip-tie, GPU insertion, simulation evaluation | Paper/project open; no official code link located. | Direct prior for reset-execute-verify-refine; PEARL must prove extra scene/adapter/data surfaces. | positioning |
 | Articraft | 2026 | [project](https://articraft3d.github.io/) · [paper](https://arxiv.org/abs/2605.15187) · [dataset](https://huggingface.co/datasets/camvsl/Articraft-10K/tree/main) · generation code: not located | articulated-asset request -> agent-written asset program, geometry, joints, tests, URDF archives | Articraft-10K, over 10K assets and 245 categories; audited snapshot has 9,996 archives | Dataset is CC-BY-4.0. Workspace metadata is complete; 3 sample imports pass and 2 retain collision blockers. | Searchable P1 source only; require archive, URDF, mesh, scale, collision, SAPIEN, and task gates. | P1 |
 | NeuMatEx | 2026 | [project](https://nvlabs.github.io/neumatex/) · [paper](https://arxiv.org/abs/2606.26715) · code: not released | calibrated multi-view images -> diffuse base color and neural specular material latent | inverse-rendered appearance; geometry/tasks are out of scope | Paper/project open; no official extraction code located. | P2 material sidecar only; cannot substitute for geometry, physics, or task verification. | P2 |
+| EmbodiedGen V2 | 2026 | [project](https://horizonrobotics.github.io/EmbodiedGen/) · [paper](https://arxiv.org/abs/2607.07459) · [code](https://github.com/HorizonRobotics/EmbodiedGen) | language/images/edit/task requirements -> articulated assets, layouts, affordances, task worlds, URDF/mesh/3DGS and cross-sim exports | generated rigid/articulated objects, garments, rooms, backgrounds, and task-oriented worlds | Apache-2.0 code released and audited at `cc3015c`; full generation needs checkpoints/services/storage and was not run here. | P1 generation2env backend candidate; require geometry, scale, collision, articulation, import, verifier, and transfer-equivalence gates. | P1 |
+| RoboVerse / MetaSim | 2025 | [project](https://roboverseorg.github.io/) · [paper](https://arxiv.org/abs/2504.18904) · [code](https://github.com/RoboVerseOrg/RoboVerse) | normalized robot/scene/task/simulator configs -> cross-simulator environments, trajectories, datasets, and evaluations | Isaac, MuJoCo, SAPIEN, PyBullet, Genesis, and related backend integration | Apache-2.0 code released and audited at `e9b5c6e`; not installed or run here. | P1 Open X Sim schema/adapter candidate; it is an integration substrate rather than a language-to-scene generator. | P1 |
+| Generative 3D worlds for sim-to-real VLA RL | 2026 | [paper](https://arxiv.org/abs/2603.18532) · [EmbodiedGen project](https://horizonrobotics.github.io/EmbodiedGen/) | pretrained imitation VLA + generated interactive worlds -> RL-fine-tuned policy and sim/real evaluation | hundreds of EmbodiedGen interactive scenes | Paper open; no separate RL training codebase was identified and results were not reproduced here. | P1 evidence that generation must connect to `/train`, held-out `/evaluate`, and `/transfer`, not stop at visual output. | P1 |
+| DIPO | 2025 | [project](https://rq-wu.github.io/projects/DIPO/DIPO.html) · [paper](https://arxiv.org/abs/2505.20460) · [code](https://github.com/RQ-Wu/DIPO) | dual-state object images -> articulated parts, layout, joints, and URDF-oriented assets | PM-X and LEGO-Art-expanded articulated objects | Code audited at `78efeff`; no repository LICENSE file was located; checkpoints, data, and GPT-4o/Azure configuration are required. | P1 missing-articulation fallback after retrieval failure; require URDF, joint, collision, state-transition, import, and task gates. | P1 |
+| 3D-Fixer | 2026 | [project](https://zx-yin.github.io/3dfixer/) · [paper](https://arxiv.org/abs/2604.04406) · [code](https://github.com/HorizonRobotics/3D-Fixer) | single scene image + fragmented geometry anchors -> in-place completed 3D assets preserving layout | ARSG-110K plus reconstructed scene objects | Apache-2.0 code audited at `f6a6032`; models/data/submodules and about 24 GB GPU are documented; not run here. | P1 image-conditioned geometry fallback; require metric scale, watertightness, collision, physics, import, render alignment, and verifier gates. | P1 |
+| Uni3R | 2026 | [paper](https://arxiv.org/abs/2508.03643) · [code](https://github.com/HorizonRobotics/Uni3R) | unposed multi-view RGB -> Gaussian scene, depth, and open-vocabulary semantics | observation-derived Gaussian representation | CC-BY-NC-SA-4.0 code audited at `4a5dd00`; README release statements conflict with retained checkpoint/inference TODOs; not run here. | P2 observation/semantic sidecar only; it is not collision geometry, dynamics, or an executable task environment. | P2 |
 
 ### Direct implementation references
 
@@ -59,7 +66,29 @@ Machine-readable evidence:
 | robotwin-text2env-demo | 2026 | [code](https://github.com/yezheng04/robotwin-text2env-demo) | tabletop task prompt + catalog -> candidates, placement, scene module, static validation, critic | Public base plus locked patch reproduces the audited result tree; local and RTX 5090 tests pass. Public repo has no detected SPDX license. | Direct P0 implementation base. | P0 |
 | AgenticSim placement_agent | 2026 | private/local implementation; public link unavailable | task prompt + alias catalog -> placement spec with backend asset ids | Audited alias snapshot records source commit `f34d56a`; 8/8 aliases resolve to live RoboTwin assets. Full AgenticSim repo is not on the 5090. | Direct placement-only compatibility surface; alias eligibility depends on concrete backend resolution. | P0 |
 
-[COMPUTED] [CONFIDENCE: HIGH] Public repository snapshots and license metadata were rechecked on 2026-07-13. The exact snapshot hashes are recorded in `text2env_primary_sources.json`; paper-only systems are not represented as reproduced code.
+[COMPUTED] [CONFIDENCE: HIGH] Public repository snapshots and license metadata were rechecked through 2026-07-14. The exact snapshot hashes are recorded in `text2env_primary_sources.json`; paper-only systems are not represented as reproduced code.
+
+## Candidate-Nominated Project Audit
+
+[COMPUTED] [CONFIDENCE: HIGH] The candidate CV contributed 12 project labels. Nine map to identifiable public primary sources; six enter the core registry, three remain adjacent evidence, and three remain resume-only because no uniquely identifiable public artifact was located. The intake stores the CV filename and SHA-256 while omitting contact details.
+
+### Adjacent public evidence
+
+| project | public primary source | verified relevance | disposition |
+|---|---|---|---|
+| GaussTR | [paper](https://arxiv.org/abs/2412.13193) · [code](https://github.com/hustvl/GaussTR) | Gaussian semantic occupancy and foundation-model alignment on nuScenes; useful for observation/data-loop context. | Appendix only: it does not generate executable simulator environments. |
+| DirtNet | [Fraunhofer publication](https://publica.fraunhofer.de/entities/publication/a98dd796-7363-469d-9fc2-030e157ba603) · [IEEE record](https://ieeexplore.ieee.org/document/9196559) | Visual dirt detection with synthetic data generation for cleaning robots. | Appendix only: historical synthetic-data evidence, not Text2Env. |
+| InstanceNet | [Fraunhofer publication](https://publica.fraunhofer.de/handle/publica/412776) | Fast incremental instance detection through an ensemble of single-class detectors. | Appendix only: continual-learning/data-loop relevance, not environment generation. |
+
+### Resume-only items
+
+| project label | public-source result | disposition |
+|---|---|---|
+| WAM | No uniquely identifiable public paper, repository, or project page located under the CV label. | Do not add to scientific registry; request a title or link before review. |
+| 4DLABEL | No uniquely identifiable public paper, repository, or project page located under the CV label. | Do not infer method, dataset access, or reproducibility from the resume description. |
+| Unnamed CoRL 2026 instruction-following benchmark | No title, paper identifier, or repository was supplied. | Keep as unverified follow-up, not evidence. |
+
+[COMPUTED] [CONFIDENCE: HIGH] `artifacts/literature_review/candidate_project_intake_paul_20260714.json` is the complete machine-readable audit. It verifies public artifacts and scope, not the candidate's personal contribution to those artifacts.
 
 ## Method Matrix
 
@@ -81,6 +110,12 @@ Legend: H = high/direct capability, M = medium/partial, L = low/adjacent, - = no
 | NeuMatEx | - | M | - | - | - | L | - | L |
 | robotwin-text2env-demo | M | H | H | M | M | H | M | L |
 | AgenticSim placement_agent | M | M | H | L | L | L | - | - |
+| EmbodiedGen V2 | H | H | H | H | H | H | H | H |
+| RoboVerse / MetaSim | M | M | M | H | M | H | H | H |
+| Generative 3D worlds for sim-to-real VLA RL | L | H | H | H | L | H | H | H |
+| DIPO | - | H | - | M | M | L | - | - |
+| 3D-Fixer | - | H | M | L | L | L | - | - |
+| Uni3R | - | M | L | - | - | L | L | M |
 
 [COMPUTED] [CONFIDENCE: HIGH] The machine-readable matrix requires all eight capability columns for every source and rejects rows that omit a capability.
 
@@ -99,10 +134,14 @@ Legend: H = high/direct capability, M = medium/partial, L = low/adjacent, - = no
 - [KNOWN] [CONFIDENCE: HIGH] SceneSmith retrieval/support-surface logic is a strong reference, but its code, gated models, and datasets are not installed here.
 - [COMPUTED] [CONFIDENCE: HIGH] video2sim-forge has a typed fallback contract only. No RGB-D/reference-video input, generated mesh, URDF, or RoboTwin import exists.
 - [COMPUTED] [CONFIDENCE: HIGH] REALM-style held-out simulation has started, but policy success remains 1/4 and real-to-sim correlation has not been measured.
+- [COMPUTED] [CONFIDENCE: HIGH] EmbodiedGen V2, DIPO, and 3D-Fixer now have audited producer contracts, snapshots, and downstream gates; none has produced an imported RoboTwin or Isaac asset in this workspace.
+- [COMPUTED] [CONFIDENCE: HIGH] RoboVerse/MetaSim is now an Open X Sim adapter candidate. The schema relation is documented, but dependencies and same-task equivalence have not been executed.
+- [KNOWN] [CONFIDENCE: HIGH] The generative-world sim-to-real paper makes `/train`, held-out `/evaluate`, and real `/transfer` part of the environment-generation evidence chain; its reported training result is not reproduced here.
 
 ### P2: deferred
 
 - [COMPUTED] [CONFIDENCE: HIGH] NeuMatEx-style fields exist only as a material-sidecar blocker. Multiview extraction and renderer binding are not executed.
+- [COMPUTED] [CONFIDENCE: HIGH] Uni3R is restricted to a Gaussian observation/depth/semantic sidecar until collision geometry, dynamics, and task bindings are independently supplied and validated.
 - [KNOWN] [CONFIDENCE: HIGH] RLBench, Isaac Sim, MuJoCo, LIBERO, Robosuite, BEHAVIOR, and REALM require explicit `/transfer` contracts and same-task cross-adapter execution.
 - [INFERRED] [CONFIDENCE: HIGH] Full generation2env should stay deferred until geometry, scale, collision, support, material, import, render, and task-verifier gates are automated.
 

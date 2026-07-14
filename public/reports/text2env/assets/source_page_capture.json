@@ -1,8 +1,8 @@
 {
   "schema_version": "pearl.text2env_source_page_capture.v1",
-  "captured_at": "2026-07-13",
+  "captured_at": "2026-07-14",
   "status": "pass_source_page_capture",
-  "source_count": 10,
+  "source_count": 19,
   "sources": [
     {
       "source_id": "scenesmith",
@@ -11,8 +11,8 @@
       "http_status": 200,
       "title": "SceneSmith: Agentic Generation of Simulation-Ready Indoor Scenes",
       "screenshot": "assets/source_pages/scenesmith.png",
-      "screenshot_sha256": "4457b0b9d33350a551fdd518bfecfe4f6b56b171c39ea937503e22b5f9d3ffa0",
-      "screenshot_bytes": 1073131,
+      "screenshot_sha256": "526d8dc57b25858473ccd354705d93e58d7b903f82d5820c93a79bb6db786f66",
+      "screenshot_bytes": 760480,
       "console_error_count": 0
     },
     {
@@ -44,8 +44,8 @@
       "http_status": 200,
       "title": "RoboGen",
       "screenshot": "assets/source_pages/robogen.png",
-      "screenshot_sha256": "e97b910addaac6af492b0c1a16fdfcd661a520c47cd9b4f429ba6b9b3a716895",
-      "screenshot_bytes": 116964,
+      "screenshot_sha256": "21b218f73eb85e8ff565fb806d2c3b45cedb223ebea5119201997b71d53b2f3a",
+      "screenshot_bytes": 115392,
       "console_error_count": 3
     },
     {
@@ -88,8 +88,8 @@
       "http_status": 200,
       "title": "ASPIRE: Agentic /Skills Discovery for Robotics",
       "screenshot": "assets/source_pages/aspire.png",
-      "screenshot_sha256": "52ed8c7fbe128280c72a775154f540be491448e010bd8a7fc742407c3410a66d",
-      "screenshot_bytes": 1265343,
+      "screenshot_sha256": "10a3845195b40efccb300e147e7b727b488321eb5aaacaa3e369b4121206933f",
+      "screenshot_bytes": 1008048,
       "console_error_count": 0
     },
     {
@@ -99,8 +99,8 @@
       "http_status": 200,
       "title": "ENPIRE: Agentic Robot Policy Self-Improvement in the Real World",
       "screenshot": "assets/source_pages/enpire.png",
-      "screenshot_sha256": "38d805780d831e9ef627a62c8935adabdd7e9a4cd6326b6123fb532c60a80d2e",
-      "screenshot_bytes": 208273,
+      "screenshot_sha256": "7df621ccaba2993ae67857005049072e11f4953630ffb76438b1a83cfdddbaea",
+      "screenshot_bytes": 1319025,
       "console_error_count": 0
     },
     {
@@ -110,9 +110,108 @@
       "http_status": 200,
       "title": "Articraft: An Agentic System for Scalable Articulated 3D Asset Generation",
       "screenshot": "assets/source_pages/articraft.png",
-      "screenshot_sha256": "a00efc2d3b76b84c41597ee895fbe51cc05a56fab01d0d38b8c72c4bfe4d01eb",
-      "screenshot_bytes": 1011827,
+      "screenshot_sha256": "0f26ae32c2b19da665adc85c7a53e3269cd06372c8b074f4288a04f1479ae029",
+      "screenshot_bytes": 592386,
       "console_error_count": 0
+    },
+    {
+      "source_id": "embodiedgen_v2",
+      "url": "https://github.com/HorizonRobotics/EmbodiedGen",
+      "final_url": "https://github.com/HorizonRobotics/EmbodiedGen",
+      "http_status": 200,
+      "title": "GitHub - HorizonRobotics/EmbodiedGen: Towards a Generative 3D World Engine for Embodied Intelligence · GitHub",
+      "screenshot": "assets/source_pages/embodiedgen_v2.png",
+      "screenshot_sha256": "11949165fdffe9f6ff542238e1182f305eeb6fa01ede3137358bcf622b4a2a67",
+      "screenshot_bytes": 211881,
+      "console_error_count": 1
+    },
+    {
+      "source_id": "roboverse",
+      "url": "https://roboverseorg.github.io/",
+      "final_url": "https://roboverseorg.github.io/",
+      "http_status": 200,
+      "title": "RoboVerse: Towards a Unified Platform, Dataset and Benchmark for Scalable and Generalizable Robot Learning",
+      "screenshot": "assets/source_pages/roboverse.png",
+      "screenshot_sha256": "937d7272fb11e32029cbe5a03e9a4297feb3bda4dccfbb171a3587dcab7a2275",
+      "screenshot_bytes": 374897,
+      "console_error_count": 87
+    },
+    {
+      "source_id": "generative_worlds_sim2real_rl",
+      "url": "https://arxiv.org/abs/2603.18532",
+      "final_url": "https://arxiv.org/abs/2603.18532",
+      "http_status": 200,
+      "title": "[2603.18532] Scaling Sim-to-Real Reinforcement Learning for Robot VLAs with Generative 3D Worlds",
+      "screenshot": "assets/source_pages/generative_worlds_sim2real_rl.png",
+      "screenshot_sha256": "b43f6a1a404460cf07bb7b78c43039f303bbb039e67a4e040f3f19fa43824a76",
+      "screenshot_bytes": 214140,
+      "console_error_count": 0
+    },
+    {
+      "source_id": "dipo",
+      "url": "https://github.com/RQ-Wu/DIPO",
+      "final_url": "https://github.com/RQ-Wu/DIPO",
+      "http_status": 200,
+      "title": "GitHub - RQ-Wu/DIPO: [NeurIPS 2025] | DIPO: Dual-State Images Controlled Articulated Object Generation Powered by Diverse Data · GitHub",
+      "screenshot": "assets/source_pages/dipo.png",
+      "screenshot_sha256": "2190be641320659aa09354b0d191697a4f38e970c3979384a207165258cd9975",
+      "screenshot_bytes": 145108,
+      "console_error_count": 0
+    },
+    {
+      "source_id": "three_d_fixer",
+      "url": "https://zx-yin.github.io/3dfixer/",
+      "final_url": "https://zx-yin.github.io/3dfixer/",
+      "http_status": 200,
+      "title": "3D-Fixer: Coarse-to-Fine In-place Completion for 3D Scenes from a Single Image",
+      "screenshot": "assets/source_pages/three_d_fixer.png",
+      "screenshot_sha256": "c6b9182ac2e7433ab9cbcf050de5325a556c35bce087cfda2040b62133ed21e3",
+      "screenshot_bytes": 261877,
+      "console_error_count": 9
+    },
+    {
+      "source_id": "uni3r",
+      "url": "https://github.com/HorizonRobotics/Uni3R",
+      "final_url": "https://github.com/HorizonRobotics/Uni3R",
+      "http_status": 200,
+      "title": "GitHub - HorizonRobotics/Uni3R: [CVPR 2026 Highlight] Unified 3D Reconstruction and Semantic Understanding via Generalizable Gaussian Splatting from Unposed Multi-View Images · GitHub",
+      "screenshot": "assets/source_pages/uni3r.png",
+      "screenshot_sha256": "4173f9cf82daadce4935a895a0e8d01ac984a5be165dcb5aaff3f8abc20b0cc7",
+      "screenshot_bytes": 173376,
+      "console_error_count": 1
+    },
+    {
+      "source_id": "gausstr",
+      "url": "https://github.com/hustvl/GaussTR",
+      "final_url": "https://github.com/hustvl/GaussTR",
+      "http_status": 200,
+      "title": "GitHub - hustvl/GaussTR: [CVPR 2025] GaussTR: Foundation Model-Aligned Gaussian Transformer for Self-Supervised 3D Spatial Understanding · GitHub",
+      "screenshot": "assets/source_pages/gausstr.png",
+      "screenshot_sha256": "67db792d74da934631727ad84f370a64726f25953d3886242d50f8bd54ba6ab4",
+      "screenshot_bytes": 184099,
+      "console_error_count": 1
+    },
+    {
+      "source_id": "dirtnet",
+      "url": "https://publica.fraunhofer.de/entities/publication/a98dd796-7363-469d-9fc2-030e157ba603",
+      "final_url": "https://publica.fraunhofer.de/entities/publication/a98dd796-7363-469d-9fc2-030e157ba603",
+      "http_status": 200,
+      "title": "DirtNet: Visual Dirt Detection for Autonomous Cleaning Robots",
+      "screenshot": "assets/source_pages/dirtnet.png",
+      "screenshot_sha256": "e6cb4e82f9be77c01918cbb06eca62837112222bc371ba0d400b9e5d66dfc9e2",
+      "screenshot_bytes": 136322,
+      "console_error_count": 1
+    },
+    {
+      "source_id": "instancenet",
+      "url": "https://publica.fraunhofer.de/handle/publica/412776",
+      "final_url": "https://publica.fraunhofer.de/entities/publication/10d93abd-8d86-44e5-a254-a1069d56a15d",
+      "http_status": 200,
+      "title": "Real-time Instance Detection with Fast Incremental Learning",
+      "screenshot": "assets/source_pages/instancenet.png",
+      "screenshot_sha256": "527d5e97d84939c84f8bb9ec92646ba0d0399d92e342382167fac6995331ab9d",
+      "screenshot_bytes": 138065,
+      "console_error_count": 1
     }
   ]
 }

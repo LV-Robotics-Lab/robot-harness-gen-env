@@ -11,7 +11,7 @@
     "migration_difficulty",
     "current_status"
   ],
-  "adapter_count": 8,
+  "adapter_count": 10,
   "adapters": [
     {
       "adapter_id": "robotwin_sapien",
@@ -141,7 +141,41 @@
       "evidence": [
         "docs/openxsim_command_spec.md"
       ]
+    },
+    {
+      "adapter_id": "embodiedgen_cross_sim",
+      "source": "EmbodiedGen V2 cross-simulator generation and conversion",
+      "source_url": "https://github.com/HorizonRobotics/EmbodiedGen",
+      "engine_renderer": "Generation backend with documented SAPIEN, Isaac Gym, PyBullet, MuJoCo, Genesis, and Isaac Sim output or conversion paths",
+      "asset_format": "URDF, meshes, 3D Gaussian representations, scene layouts, affordances, and simulator-specific conversion artifacts",
+      "material_system": "Generated mesh materials and 3DGS appearance with backend-specific conversion; PEARL renderer bindings remain unverified",
+      "reset_step_verifier_api": "EmbodiedGen emits assets and worlds; PEARL must supply backend reset, step, observation, action, and task-verifier adapters after import",
+      "license_access": "Public Apache-2.0 repository; generated-model, service, checkpoint, and source-asset provenance remains attached per output bundle",
+      "migration_difficulty": "Automate metric scale, collision, articulation, physics metadata, import, renderer, task verifier, and cross-simulator equivalence gates",
+      "current_status": "P1_source_audited_not_run",
+      "evidence": [
+        "artifacts/literature_review/text2env_primary_sources.json",
+        "artifacts/literature_review/candidate_project_intake_paul_20260714.json",
+        "docs/openxsim_command_spec.md"
+      ]
+    },
+    {
+      "adapter_id": "roboverse_metasim",
+      "source": "RoboVerse / MetaSim",
+      "source_url": "https://github.com/RoboVerseOrg/RoboVerse",
+      "engine_renderer": "MetaSim abstraction across Isaac Lab or Sim, Isaac Gym, MuJoCo, SAPIEN, PyBullet, Genesis, and related backends",
+      "asset_format": "Normalized robot, object, scene, task, simulator, and data-generation configurations plus backend-native assets",
+      "material_system": "Delegated to each simulator backend; material-equivalence metadata must be preserved in PEARL transfer manifests",
+      "reset_step_verifier_api": "MetaSim normalizes simulator-facing configuration and APIs; PEARL still requires task-level reset, observation, action, and verifier equivalence receipts",
+      "license_access": "Public Apache-2.0 code repository; per-asset provenance is recorded without using license completeness as an academic-use execution blocker",
+      "migration_difficulty": "Install the split RoboVerse/MetaSim stack, map PEARL command schemas, resolve assets, and run the same normalized task across at least two backends",
+      "current_status": "P1_source_audited_not_run",
+      "evidence": [
+        "artifacts/literature_review/text2env_primary_sources.json",
+        "artifacts/literature_review/candidate_project_intake_paul_20260714.json",
+        "docs/openxsim_command_spec.md"
+      ]
     }
   ],
-  "claim_boundary": "RoboTwin/SAPIEN has robot-action benchmark execution. Isaac Sim has one completed five-command task-semantic bundle using primitive proxies, scripted object-space actions, a backend-native trace, and a target verifier. This is not robot embodiment, joint-action policy, source-asset, material, or learned-policy transfer. Articraft remains a bounded catalog/probe source; the remaining rows are unexecuted targets."
+  "claim_boundary": "RoboTwin/SAPIEN has robot-action benchmark execution. Isaac Sim has one completed five-command task-semantic bundle using primitive proxies, scripted object-space actions, a backend-native trace, and a target verifier. This is not robot embodiment, joint-action policy, source-asset, material, or learned-policy transfer. Articraft remains a bounded catalog/probe source. EmbodiedGen and RoboVerse/MetaSim are primary-source-audited adapter candidates, not executed backends; the remaining rows are unexecuted targets."
 }

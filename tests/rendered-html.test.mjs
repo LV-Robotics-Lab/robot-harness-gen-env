@@ -87,6 +87,6 @@ test("bundles every hosted report asset with matching size and SHA-256", async (
     }
   }
 
-  assert.equal(verifiedFiles, 188);
+  assert.equal(verifiedFiles, 200);
   await access(path.join(root, "public", "og.png"));
 });

@@ -23,17 +23,17 @@ const reports = [
     subtitle: "From paper matrix to executed empirical gates",
     status: "DONE · 5/5 GATES",
     statusClass: "status-pass",
-    metric: "14 × 8",
+    metric: "20 × 8",
     metricLabel: "sources × capability dimensions",
     summary:
-      "A source-pinned taxonomy spanning scene synthesis, task generation, materials, memory, evaluation, and simulator transfer, followed by bounded experiments.",
+      "A 20-source audit spanning scene synthesis, articulated assets, cross-simulator infrastructure, training transfer, materials, memory, and evaluation, including candidate-nominated projects.",
     boundary:
       "The predeclared failure-score experiment is a retained null result: r = −0.255, exact p = 0.727, n = 12.",
     href: "/reports/text2env/index.html",
     manifest: "/reports/text2env/hosted_subset_manifest.json",
     image:
-      "/reports/text2env/assets/empirics/material_roundtrip/isaac_material_render.png",
-    imageAlt: "Isaac material sidecar roundtrip render",
+      "/reports/text2env/assets/source_pages/embodiedgen_v2.png",
+    imageAlt: "EmbodiedGen V2 official repository snapshot",
   },
   {
     number: "03",
@@ -41,8 +41,8 @@ const reports = [
     subtitle: "A command surface across simulator backends",
     status: "DONE · 8/8 ACCEPTANCE",
     statusClass: "status-pass",
-    metric: "120 steps",
-    metricLabel: "24/24 unique frames · 34 hashed files",
+    metric: "10 adapters",
+    metricLabel: "2 newly audited · 120 executed Isaac steps",
     summary:
       "Defines /gen-env, /collect, /train, /evaluate, /diagnose, and /transfer with typed inputs, artifacts, ownership, and failure codes.",
     boundary:

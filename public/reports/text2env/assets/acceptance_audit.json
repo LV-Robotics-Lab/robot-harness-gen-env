@@ -1,7 +1,7 @@
 {
   "schema_version": "pearl.text2env_literature_review_acceptance.v1",
   "status": "pass_text2env_literature_review_acceptance",
-  "audited_at": "2026-07-13",
+  "audited_at": "2026-07-14",
   "acceptance_count": 7,
   "items": [
     {
@@ -23,6 +23,7 @@
       "requirement": "Audit at least eight primary sources with links, year, I/O, assets, openness, reproducibility, and simulator-interface relation.",
       "evidence": [
         "artifacts/literature_review/text2env_primary_sources.json",
+        "artifacts/literature_review/candidate_project_intake_paul_20260714.json",
         "schemas/text2env_literature_review.schema.json"
       ]
     },
@@ -84,7 +85,7 @@
     "policy_eval_data_hook": "Connect scene/task artifacts to collection, training, evaluation, diagnosis, promotion, and failure-to-data decisions."
   },
   "shortlist": {
-    "decision_window": "Original weekly decision from 2026-07-01, re-audited against implementation state on 2026-07-13.",
+    "decision_window": "Original weekly decision from 2026-07-01, re-audited against implementation state and candidate-nominated projects on 2026-07-14.",
     "P0": [
       {
         "decision": "Adopt robotwin-text2env-demo as the concrete placement/scene-generation base.",
@@ -127,6 +128,16 @@
         "decision": "Add REALM-style held-out perturbation and real-to-sim validation to policy evaluation.",
         "current_status": "heldout_sim_partial_real_validation_missing",
         "evidence": "Held-out placements execute; policy remains 1/4 and no real-to-sim correlation study exists."
+      },
+      {
+        "decision": "Evaluate EmbodiedGen V2, DIPO, and 3D-Fixer as staged generation2env backends.",
+        "current_status": "primary_sources_audited_not_executed",
+        "evidence": "Public paper/code snapshots and output contracts are recorded; no generated asset has passed RoboTwin or Isaac import gates."
+      },
+      {
+        "decision": "Evaluate RoboVerse MetaSim as an Open X Sim schema and adapter candidate.",
+        "current_status": "primary_source_audited_not_executed",
+        "evidence": "MetaSim simulator coverage and contracts are recorded; dependencies and same-task equivalence have not been executed here."
       }
     ],
     "P2": [
@@ -144,6 +155,11 @@
         "decision": "Attempt full generation2env only after import, collision, support, material, render, and verifier gates are automated.",
         "current_status": "deferred",
         "evidence": "Current forge and material branches are explicit blockers, not executions."
+      },
+      {
+        "decision": "Use Uni3R only as an observation, depth, and semantic sidecar until physical geometry is separately validated.",
+        "current_status": "source_audited_not_executed",
+        "evidence": "The public Gaussian reconstruction code is recorded; collision geometry, dynamics, and task bindings are outside the verified scope."
       }
     ]
   },
@@ -254,7 +270,7 @@
     "repo_markdown": "reports/text2env_literature_review/text2env_literature_review.md",
     "local_downloads_dir": "/Users/boris/Downloads/text2env_literature_review_20260713",
     "remote_downloads_dir": "/home/jingxiang/Downloads/text2env_literature_review_20260713",
-    "source_page_screenshot_count": 10,
+    "source_page_screenshot_count": 19,
     "browser_qa_required": true
   },
   "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"

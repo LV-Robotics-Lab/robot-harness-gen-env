@@ -1,9 +1,9 @@
 {
   "schema_version": "pearl.text2env_literature_review.v1",
   "status": "pass_primary_source_audit",
-  "reviewed_at": "2026-07-13",
-  "source_count": 14,
-  "academic_primary_source_count": 11,
+  "reviewed_at": "2026-07-14",
+  "source_count": 20,
+  "academic_primary_source_count": 17,
   "required_scope_ids": [
     "scenesmith",
     "robotwin_2",
@@ -18,7 +18,13 @@
     "video2sim_forge",
     "neumatex",
     "robotwin_text2env_demo",
-    "agenticsim_placement_agent"
+    "agenticsim_placement_agent",
+    "embodiedgen_v2",
+    "roboverse",
+    "generative_worlds_sim2real_rl",
+    "dipo",
+    "three_d_fixer",
+    "uni3r"
   ],
   "sources": [
     {
@@ -566,6 +572,245 @@
         "adoption_tier": "P0",
         "direct_fields": ["asset_candidates", "backend_asset_id", "aliases", "placement_regions"],
         "required_gates": ["alias provenance", "backend resolution", "selection eligibility", "RoboTwin asset load"]
+      },
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "source_id": "embodiedgen_v2",
+      "name": "EmbodiedGen V2: An Agentic, Simulation-Ready 3D World Engine for Embodied AI",
+      "year": 2026,
+      "source_kind": "paper_and_code",
+      "categories": ["text2task", "text2scene", "text2asset", "generation2env", "sim_in_loop_repair", "domain_randomization_data_generation", "policy_eval_data_hook"],
+      "links": {
+        "project": "https://horizonrobotics.github.io/EmbodiedGen/",
+        "paper": "https://arxiv.org/abs/2607.07459",
+        "code": "https://github.com/HorizonRobotics/EmbodiedGen",
+        "data": null
+      },
+      "input": "Language, reference images, edit commands, task requirements, and optional observations from an existing scene.",
+      "output": "Simulation-ready articulated assets, layouts, affordances, task worlds, URDF or mesh packages, 3D Gaussian representations, and cross-simulator exports.",
+      "environment_assets": "Generated rigid and articulated objects, garments, multi-room scenes, backgrounds, affordances, and task-oriented world layouts.",
+      "open_status": {
+        "paper_access": "open",
+        "code_status": "released",
+        "license": "Apache-2.0"
+      },
+      "reproducibility": {
+        "level": "runnable_with_external_dependencies",
+        "evidence": [
+          "Public code snapshot cc3015ca5ccdacf94df3428d9e65f79375982216 audited on 2026-07-14.",
+          "The repository documents URDF, mesh, and 3DGS generation plus SAPIEN, Isaac Gym, PyBullet, MuJoCo, Genesis, and Isaac Sim conversion paths."
+        ],
+        "blockers": [
+          "Model checkpoints, external generation services, GPU capacity, and substantial storage are required for the full stack.",
+          "No EmbodiedGen-generated world has passed this workspace's RoboTwin or Isaac execution gates."
+        ]
+      },
+      "interface_relation": {
+        "robotwin": "Use as a P1 generation2env producer whose outputs must enter RoboTwin through explicit geometry, scale, collision, articulation, import, and task-verifier gates.",
+        "agenticsim": "Expose EmbodiedGen as a generation backend and preserve its cross-simulator conversion provenance in AgenticSim environment manifests.",
+        "adoption_tier": "P1",
+        "direct_fields": ["asset_candidates", "meshes", "urdf", "world_frame_poses", "physics_metadata", "affordances", "task_program", "provenance"],
+        "required_gates": ["geometry", "metric scale", "collision", "articulation", "physics metadata", "simulator import", "task verifier", "transfer equivalence"]
+      },
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "source_id": "roboverse",
+      "name": "RoboVerse: A Unified Platform, Dataset and Benchmark for Scalable and Generalizable Robot Learning",
+      "year": 2025,
+      "source_kind": "paper_and_code",
+      "categories": ["selection2env", "domain_randomization_data_generation", "policy_eval_data_hook"],
+      "links": {
+        "project": "https://roboverseorg.github.io/",
+        "paper": "https://arxiv.org/abs/2504.18904",
+        "code": "https://github.com/RoboVerseOrg/RoboVerse",
+        "data": "https://huggingface.co/datasets/RoboVerseOrg/roboverse_data"
+      },
+      "input": "Normalized robot, scene, object, task, simulator, and data-generation configurations.",
+      "output": "Cross-simulator environment instances, trajectories, benchmark datasets, and evaluation results through the MetaSim abstraction.",
+      "environment_assets": "Unified assets and task configurations spanning Isaac Lab or Sim, Isaac Gym, MuJoCo, SAPIEN, PyBullet, Genesis, and related backends.",
+      "open_status": {
+        "paper_access": "open",
+        "code_status": "released",
+        "license": "Apache-2.0"
+      },
+      "reproducibility": {
+        "level": "code_available_not_run",
+        "evidence": [
+          "Public code snapshot e9b5c6efeb665052edeb934fc3172df8b9d3c9d7 audited on 2026-07-14.",
+          "The official project and repository document the MetaSim cross-simulator configuration and API layer."
+        ],
+        "blockers": [
+          "RoboVerse and MetaSim dependencies are not installed in this workspace.",
+          "Its configurations and assets still require task-level reset, observation, action, and verifier equivalence checks before PEARL transfer claims."
+        ]
+      },
+      "interface_relation": {
+        "robotwin": "Use its normalized simulator and data contracts as a P1 reference while retaining RoboTwin as the current P0 execution backend.",
+        "agenticsim": "Add MetaSim as an Open X Sim adapter candidate and compare its simulator schema with AgenticSim's environment and transfer manifests.",
+        "adoption_tier": "P1",
+        "direct_fields": ["simulator_id", "robot_id", "scene_id", "task_id", "asset_manifest", "observation_schema", "action_schema", "dataset_manifest"],
+        "required_gates": ["dependency install", "asset resolution", "reset equivalence", "observation equivalence", "action equivalence", "verifier equivalence", "same-task cross-sim smoke"]
+      },
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "source_id": "generative_worlds_sim2real_rl",
+      "name": "Scaling Sim-to-Real Reinforcement Learning for Robot VLAs with Generative 3D Worlds",
+      "year": 2026,
+      "source_kind": "paper_only",
+      "categories": ["text2scene", "text2asset", "generation2env", "domain_randomization_data_generation", "policy_eval_data_hook"],
+      "links": {
+        "project": "https://horizonrobotics.github.io/EmbodiedGen/",
+        "paper": "https://arxiv.org/abs/2603.18532",
+        "code": null,
+        "data": null
+      },
+      "input": "A pretrained imitation VLA policy, generatively produced interactive 3D worlds, and reinforcement-learning objectives.",
+      "output": "A simulation-fine-tuned robot policy with simulation, real-robot, task-speed, and scene-diversity evaluation results.",
+      "environment_assets": "Hundreds of generated interactive scenes constructed through the EmbodiedGen world-generation path.",
+      "open_status": {
+        "paper_access": "open",
+        "code_status": "not_released",
+        "license": "paper only; the environment-generation implementation path is documented through the EmbodiedGen repository"
+      },
+      "reproducibility": {
+        "level": "paper_only",
+        "evidence": [
+          "Primary arXiv paper and its EmbodiedGen project linkage were audited on 2026-07-14."
+        ],
+        "blockers": [
+          "No separate released reinforcement-learning training package was identified.",
+          "The reported simulation and real-robot results were not reproduced in this workspace."
+        ]
+      },
+      "interface_relation": {
+        "robotwin": "Use as evidence that scene diversity must connect generation to /train and held-out /evaluate, not stop at visual scene output.",
+        "agenticsim": "Use the reported generated-world training loop to specify environment manifests and transfer evidence across AgenticSim backends.",
+        "adoption_tier": "P1",
+        "direct_fields": ["environment_manifest", "dataset_manifest", "checkpoint", "simulation_metrics", "real_robot_metrics", "transfer_result"],
+        "required_gates": ["environment provenance", "baseline parity", "held-out scene diversity", "simulation evaluation", "real-robot evaluation", "transfer rollback"]
+      },
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "source_id": "dipo",
+      "name": "DIPO: Dual-State Images to Part-Level Articulated Objects",
+      "year": 2025,
+      "source_kind": "paper_and_code",
+      "categories": ["text2asset", "generation2env"],
+      "links": {
+        "project": "https://rq-wu.github.io/projects/DIPO/DIPO.html",
+        "paper": "https://arxiv.org/abs/2505.20460",
+        "code": "https://github.com/RQ-Wu/DIPO",
+        "data": null
+      },
+      "input": "A pair of object images showing different articulation states plus optional language-model assistance.",
+      "output": "Part-level articulated geometry, object-part layout, joint parameters, and URDF-oriented asset packages.",
+      "environment_assets": "PM-X articulated-object data and generated articulated assets augmented through the LEGO-Art construction path.",
+      "open_status": {
+        "paper_access": "open",
+        "code_status": "released",
+        "license": "no repository LICENSE file located in the audited snapshot"
+      },
+      "reproducibility": {
+        "level": "runnable_with_external_dependencies",
+        "evidence": [
+          "Public code snapshot 78efeff5acd5f6db7cda1d1fdab769ca42ebfc1a audited on 2026-07-14.",
+          "The repository documents inference, training, PM-X data preparation, and URDF-oriented output."
+        ],
+        "blockers": [
+          "The documented path depends on checkpoints, PM-X data, and GPT-4o or Azure configuration.",
+          "No DIPO-generated articulation has passed RoboTwin, SAPIEN, or Isaac import and state-transition gates here."
+        ]
+      },
+      "interface_relation": {
+        "robotwin": "Use as a P1 missing-articulation generator after existing RoboTwin and Articraft retrieval fails.",
+        "agenticsim": "Store dual-state input, inferred parts, joints, and URDF provenance as a generation2env candidate, not an executable alias by default.",
+        "adoption_tier": "P1",
+        "direct_fields": ["capture_source", "meshes", "urdf", "joint_types", "joint_axes", "joint_limits", "provenance"],
+        "required_gates": ["part completeness", "URDF parse", "joint limits", "mesh resolution", "collision", "state transition", "simulator import", "task verifier"]
+      },
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "source_id": "three_d_fixer",
+      "name": "3D-Fixer: Geometry-Conditioned Reconstruction of In-Place 3D Scene Assets",
+      "year": 2026,
+      "source_kind": "paper_and_code",
+      "categories": ["text2scene", "text2asset", "generation2env"],
+      "links": {
+        "project": "https://zx-yin.github.io/3dfixer/",
+        "paper": "https://arxiv.org/abs/2604.04406",
+        "code": "https://github.com/HorizonRobotics/3D-Fixer",
+        "data": null
+      },
+      "input": "A single RGB scene image and fragmented geometry anchors for objects already present in the scene.",
+      "output": "Layout-preserving reconstructed and completed 3D assets aligned to their original in-place scene geometry.",
+      "environment_assets": "ARSG-110K with 110K scenes and 3M images plus reconstructed scene objects and geometric anchors.",
+      "open_status": {
+        "paper_access": "open",
+        "code_status": "released",
+        "license": "Apache-2.0"
+      },
+      "reproducibility": {
+        "level": "runnable_with_external_dependencies",
+        "evidence": [
+          "Public code snapshot f6a60328b4646389b4dd4b2ecea9df31bab9a9bd audited on 2026-07-14.",
+          "The official project exposes code, models, data, and qualitative scene reconstruction results."
+        ],
+        "blockers": [
+          "The documented Linux stack requires model downloads, submodules, and approximately 24 GB of GPU memory.",
+          "Reconstructed geometry has not passed metric-scale, collision, physics, or simulator-import validation here."
+        ]
+      },
+      "interface_relation": {
+        "robotwin": "Use as a P1 scene-specific geometry fallback when reference imagery exists and catalog retrieval cannot preserve the observed layout.",
+        "agenticsim": "Represent the image, geometry anchors, reconstructed meshes, transforms, and uncertainty as a staged generation artifact.",
+        "adoption_tier": "P1",
+        "direct_fields": ["capture_source", "geometry_anchors", "meshes", "world_frame_poses", "uncertainty", "provenance"],
+        "required_gates": ["camera alignment", "metric scale", "watertight geometry", "collision proxy", "physics metadata", "simulator import", "render alignment", "task verifier"]
+      },
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "source_id": "uni3r",
+      "name": "Uni3R: Unified 3D Reconstruction and Semantic Understanding for Embodied Agents",
+      "year": 2026,
+      "source_kind": "paper_and_code",
+      "categories": ["text2scene", "text2asset", "policy_eval_data_hook"],
+      "links": {
+        "project": null,
+        "paper": "https://arxiv.org/abs/2508.03643",
+        "code": "https://github.com/HorizonRobotics/Uni3R",
+        "data": null
+      },
+      "input": "Unposed multi-view RGB images.",
+      "output": "A feed-forward 3D Gaussian scene representation with geometry, depth, and open-vocabulary semantic features.",
+      "environment_assets": "Observation-derived Gaussian scenes and semantic fields; rigid-body collision and dynamics are outside the released method's core output.",
+      "open_status": {
+        "paper_access": "open",
+        "code_status": "released",
+        "license": "CC-BY-NC-SA-4.0"
+      },
+      "reproducibility": {
+        "level": "code_available_not_run",
+        "evidence": [
+          "Public code snapshot 4a5dd00b6737a95afd4c6b1760cad166cf17d3d4 audited on 2026-07-14.",
+          "The repository publishes code and a noncommercial share-alike license."
+        ],
+        "blockers": [
+          "The README simultaneously announces release and retains TODO entries for inference, checkpoints, and loss code, so runnable completeness is unresolved.",
+          "No Gaussian scene has been bound to collision geometry, dynamics, or a task verifier in this workspace."
+        ]
+      },
+      "interface_relation": {
+        "robotwin": "Use as a P2 semantic observation and reconstruction sidecar, not as executable RoboTwin geometry.",
+        "agenticsim": "Expose Gaussian rendering, depth, and semantics only through a typed observation adapter with explicit geometry and physics separation.",
+        "adoption_tier": "P2",
+        "direct_fields": ["capture_source", "gaussian_scene", "depth", "semantic_features", "camera_estimates", "renderer_binding"],
+        "required_gates": ["checkpoint availability", "camera consistency", "render smoke", "semantic query", "observation adapter", "geometry separation"]
       },
       "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
     }

@@ -1,111 +1,16 @@
-{
-  "console_errors": [],
-  "index": "/Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/index.html",
-  "page_errors": [],
-  "report": "openxsim",
-  "status": "pass_browser_qa",
-  "viewports": {
-    "desktop": {
-      "image_count": 24,
-      "local_link_count": 23,
-      "overflow": {
-        "clientWidth": 1440,
-        "scrollWidth": 1440
-      },
-      "video_count": 5,
-      "videos": [
-        {
-          "duration": 2,
-          "error": null,
-          "height": 540,
-          "readyState": 4,
-          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/isaac_command_loop/isaac_place_on_rollout.mp4",
-          "width": 960
-        },
-        {
-          "duration": 2.666667,
-          "error": null,
-          "height": 540,
-          "readyState": 4,
-          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/isaac_intake/baseline_motion.mp4",
-          "width": 960
-        },
-        {
-          "duration": 53.333333,
-          "error": null,
-          "height": 240,
-          "readyState": 4,
-          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/benchmark_videos/open_laptop.mp4",
-          "width": 320
-        },
-        {
-          "duration": 44.25,
-          "error": null,
-          "height": 240,
-          "readyState": 4,
-          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/benchmark_videos/place_mouse_pad.mp4",
-          "width": 320
-        },
-        {
-          "duration": 43.916667,
-          "error": null,
-          "height": 240,
-          "readyState": 4,
-          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/benchmark_videos/place_container_plate.mp4",
-          "width": 320
-        }
-      ]
-    },
-    "mobile": {
-      "image_count": 24,
-      "local_link_count": 23,
-      "overflow": {
-        "clientWidth": 390,
-        "scrollWidth": 390
-      },
-      "video_count": 5,
-      "videos": [
-        {
-          "duration": 2,
-          "error": null,
-          "height": 540,
-          "readyState": 4,
-          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/isaac_command_loop/isaac_place_on_rollout.mp4",
-          "width": 960
-        },
-        {
-          "duration": 2.666667,
-          "error": null,
-          "height": 540,
-          "readyState": 4,
-          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/isaac_intake/baseline_motion.mp4",
-          "width": 960
-        },
-        {
-          "duration": 53.333333,
-          "error": null,
-          "height": 240,
-          "readyState": 4,
-          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/benchmark_videos/open_laptop.mp4",
-          "width": 320
-        },
-        {
-          "duration": 44.25,
-          "error": null,
-          "height": 240,
-          "readyState": 4,
-          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/benchmark_videos/place_mouse_pad.mp4",
-          "width": 320
-        },
-        {
-          "duration": 43.916667,
-          "error": null,
-          "height": 240,
-          "readyState": 4,
-          "src": "file:///Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/assets/benchmark_videos/place_container_plate.mp4",
-          "width": 320
-        }
-      ]
-    }
-  }
-}
+status=PASS
+entry=/Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/index.html
+viewports=desktop:1440x1000,mobile:390x844
+images=26
+videos=5
+video_durations=2.000,2.667,53.333,44.250,43.917
+commands=6
+candidates=12
+adapters=10
+acceptance_rows=8
+checked_references=55
+desktop_horizontal_overflow=0
+mobile_horizontal_overflow=0
+clipped_statuses=0
+console_errors=0
+page_errors=0

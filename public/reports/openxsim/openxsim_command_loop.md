@@ -259,7 +259,7 @@ Failure codes:
 
 Artifact roots: `artifacts/openxsim/openxsim_adapter_matrix.json` and `artifacts/openxsim/agenticsim_awesome_isaac_snapshot.json`.
 
-Initial adapter matrix:
+Current ten-adapter matrix:
 
 | source | engine/renderer | asset format | material system | reset/step/verifier | license/access | migration difficulty | status |
 |---|---|---|---|---|---|---|---|
@@ -271,5 +271,7 @@ Initial adapter matrix:
 | LIBERO | MuJoCo through robosuite-style envs | BDDL, MJCF, meshes, textures | MuJoCo/robosuite materials | benchmark reset/step/success need adapter | public repo; benchmark assets/dependencies require audit | BDDL semantics, observations, predicates | P2 target, not run |
 | robosuite | MuJoCo wrappers | MJCF, meshes, textures, arena/object classes | MuJoCo materials/textures | reset/step exists; success predicates need manifests | public repo; asset/dependency licenses require manifest | controllers, cameras, registries, predicates | P2 target, not run |
 | BEHAVIOR/OmniGibson | Omniverse/PhysX | USD-backed scene/object assets | USD/Omniverse materials | activity reset/step/predicates need adapter | public project/dataset; usage terms require audit | large-scene state, predicates, embodiment, verifier mapping | P2 target, not run |
+| EmbodiedGen V2 | generation plus SAPIEN, Isaac Gym, PyBullet, MuJoCo, Genesis, and Isaac Sim conversion paths | URDF, meshes, 3DGS, layouts, affordances | generated materials/3DGS plus backend conversions | asset/world producer only; PEARL reset/step/verifier remains downstream | Apache-2.0 code; preserve generated-model/service/source-asset provenance | automate scale, collision, articulation, physics, import, renderer, verifier, and transfer-equivalence gates | P1 source audited, not run |
+| RoboVerse/MetaSim | unified abstraction over Isaac, MuJoCo, SAPIEN, PyBullet, Genesis, and related backends | normalized robot/object/scene/task/simulator configs and backend-native assets | delegated per backend with transfer metadata | normalized simulator APIs; PEARL task reset/observation/action/verifier equivalence still required | Apache-2.0 code; per-asset provenance remains metadata for academic use | install split stack, map PEARL commands, resolve assets, run same-task cross-sim receipt | P1 source audited, not run |
 
-The JSON matrix is normative because it preserves complete evidence paths and claim boundaries. RoboTwin/SAPIEN remains the only backend with robot-action benchmark execution. Isaac Sim now has one completed normalized task-semantic `/gen-env`, `/collect`, `/evaluate`, `/diagnose`, and `/transfer` bundle plus 11 bounded task smokes; the bundle explicitly does not transfer robot embodiment, joint-action policy, source assets, or materials. The remaining rows are bounded catalog sources or unexecuted targets.
+The JSON matrix is normative because it preserves complete evidence paths and claim boundaries. RoboTwin/SAPIEN remains the only backend with robot-action benchmark execution. Isaac Sim now has one completed normalized task-semantic `/gen-env`, `/collect`, `/evaluate`, `/diagnose`, and `/transfer` bundle plus 11 bounded task smokes; the bundle explicitly does not transfer robot embodiment, joint-action policy, source assets, or materials. EmbodiedGen V2 and RoboVerse/MetaSim are new primary-source-audited candidates, not executed backends. The remaining rows are bounded catalog sources or unexecuted targets.
