@@ -1,8 +1,0 @@
-{
-  "schema_version": "robotwin.generated_scene_module.v0",
-  "status": "pass",
-  "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/probe_static_drawer_mug_unified/final_placement.json",
-  "scene_module": "/tmp/selection2env_generated_scenes/drawer_mug_unified_scene.py",
-  "scene_name": "cabinet_mug_table_final_render_accepted_v0",
-  "generated_at": "2026-07-12"
-}

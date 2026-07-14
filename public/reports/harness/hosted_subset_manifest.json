@@ -1,0 +1,148 @@
+{
+  "schema_version": "pearl.hosted_report_subset.v1",
+  "status": "pass_hosted_subset_manifest",
+  "source_manifest": "report_manifest.json",
+  "file_count": 28,
+  "files": [
+    {
+      "path": "assets/acceptance_audit.json",
+      "bytes": 2309,
+      "sha256": "59514c09c1a1ed3d1f7e1c0c2edc35a983ac594c5e61227cf0718e93c15af970"
+    },
+    {
+      "path": "assets/aspire.png",
+      "bytes": 1265343,
+      "sha256": "52ed8c7fbe128280c72a775154f540be491448e010bd8a7fc742407c3410a66d"
+    },
+    {
+      "path": "assets/browser_qa.txt",
+      "bytes": 4801,
+      "sha256": "5af6fd316c34d75a9d85c5b950c9330da1f4d4d55d46ee68504f5df96701c406"
+    },
+    {
+      "path": "assets/embodied_harness_loop.png",
+      "bytes": 206739,
+      "sha256": "30a8ed86a8b2770ae791a0f657f7c04b7699525ef9a39ecf63d7aea3e5882180"
+    },
+    {
+      "path": "assets/embodied_harness_spec.json",
+      "bytes": 19792,
+      "sha256": "16c16cb0b7df65a98f2ec372a3eef35bab88422af399fd70f6f235aea49362b2"
+    },
+    {
+      "path": "assets/enpire.png",
+      "bytes": 208273,
+      "sha256": "38d805780d831e9ef627a62c8935adabdd7e9a4cd6326b6123fb532c60a80d2e"
+    },
+    {
+      "path": "assets/evidence/fixed_checkpoint_rgb_ablation_v1.json",
+      "bytes": 4569,
+      "sha256": "79ec5956715218d09ad63c55fb90ac6947b2afacf02e71d0a77a60e53fa44e39"
+    },
+    {
+      "path": "assets/evidence/isaac_bundle_manifest.json",
+      "bytes": 5471,
+      "sha256": "cc453ae7addbc3fb95ca5b75392540480e53ed531e4e9c9b6aea57259b7f1f55"
+    },
+    {
+      "path": "assets/evidence/isaac_task_semantic_transfer.mp4",
+      "bytes": 266334,
+      "sha256": "832cb505dfaf6f270d314c16e4af864530ba79270c87d0c8137ff1ad7556324d"
+    },
+    {
+      "path": "assets/evidence/isaac_task_semantic_transfer_poster.png",
+      "bytes": 666685,
+      "sha256": "9dc6de11786bbaf18cee379fe9d5990e394a0eb6de1f8d4bbe57b2bcdd1ae754"
+    },
+    {
+      "path": "assets/evidence/isaac_transfer.json",
+      "bytes": 2941,
+      "sha256": "dcff38b8702464eb695b7361ea08b7887af55d3e8740bdc8f9642d0f4a662ef6"
+    },
+    {
+      "path": "assets/evidence/memory_ablation_rgb_adapter_v1.json",
+      "bytes": 3183,
+      "sha256": "9656a122e1251706e540f552a304382126b3c4c9e6d16594fe1c675652a53b89"
+    },
+    {
+      "path": "assets/evidence/policy_cross_task.mp4",
+      "bytes": 780743,
+      "sha256": "ab8c942604a1f8892f6123dfa7fa96d0af3c1c242d1f2fd6c160c6a1b9fb6fc8"
+    },
+    {
+      "path": "assets/evidence/policy_cross_task_poster.png",
+      "bytes": 114104,
+      "sha256": "1bdaecc4cb6b83197590291a23ed8bb44050e6ef1920e56b01cdf44f11819a0a"
+    },
+    {
+      "path": "assets/evidence/policy_heldout.mp4",
+      "bytes": 747602,
+      "sha256": "401caa2a89d0a88473de9129e3e2f1a3a66ddd74cf18a249386afa2c586a1876"
+    },
+    {
+      "path": "assets/evidence/policy_heldout_poster.png",
+      "bytes": 111283,
+      "sha256": "0944105628e4c5965cc088420ccf4eceb7806fdc96666cab4e6318fee6ca5bf5"
+    },
+    {
+      "path": "assets/evidence/policy_randomized.mp4",
+      "bytes": 802428,
+      "sha256": "63be2e23503bf5c419f03fe5d95168292463af6422c6852a8ff4f4db7b95fdfb"
+    },
+    {
+      "path": "assets/evidence/policy_randomized_poster.png",
+      "bytes": 133271,
+      "sha256": "1d65c78e62dbcecbf367a9c1cca2188e13ff182085e513af6eab9151ba50dcae"
+    },
+    {
+      "path": "assets/evidence/pose_conditioned_policy_promotion_v1.json",
+      "bytes": 8774,
+      "sha256": "8fffd22d3af717c7e50f1298d338cda8087cbead0004c8a17f3e17a466cae804"
+    },
+    {
+      "path": "assets/evidence/text2env_empirical_audit_v1.json",
+      "bytes": 3178,
+      "sha256": "62061c14653ca8bd58fbb5f4ed11c1c5fa1ecc031796d5cced2f59baa751131f"
+    },
+    {
+      "path": "assets/openxsim_benchmarks.png",
+      "bytes": 454099,
+      "sha256": "c38cedadd5f31b0b825fde5359c3ca3c1f1ac96aba8a161d98a737fc6bc52da5"
+    },
+    {
+      "path": "assets/openxsim_fallbacks.png",
+      "bytes": 58707,
+      "sha256": "a840c487018aa1edae417255b289198ca42c41037d57315a3f23d7ca1a1b03b7"
+    },
+    {
+      "path": "assets/robotwin_2.png",
+      "bytes": 300756,
+      "sha256": "3d4a781794eaaef2629a3ea90abe1c878b4a45db04bf616310f03710baf05afa"
+    },
+    {
+      "path": "embodied_harness_thesis.md",
+      "bytes": 12523,
+      "sha256": "ec3d383681b04047a309b73b0a5b95d129db7d9b3ab01991ffca0eb2dc23dd04"
+    },
+    {
+      "path": "index.html",
+      "bytes": 33761,
+      "sha256": "bd2d4aa54ffa15389ab83f37b938c1f8cf204e35a87d561368a3941ca1f90eba"
+    },
+    {
+      "path": "qa/desktop-viewport.png",
+      "bytes": 3198609,
+      "sha256": "abbd4fbc0c270dc4dbf19618bccf35782c80b813a9f2f20fd9253291ef27e51a"
+    },
+    {
+      "path": "qa/mobile-viewport.png",
+      "bytes": 1756953,
+      "sha256": "dbadeb72aefc2463794b635c0cb2b9cff58193fdbd5ba575c528b7a59dde0c06"
+    },
+    {
+      "path": "report_manifest.json",
+      "bytes": 5804,
+      "sha256": "89404d67645f243fc1ee1dd8610a591f8a32962d92514ea66b1b82487259eee1"
+    }
+  ]
+}

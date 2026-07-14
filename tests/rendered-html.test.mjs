@@ -53,21 +53,26 @@ test("server-renders the finished PEARL evidence portal", async () => {
 
   for (const report of reports) {
     assert.match(html, new RegExp(`/reports/${report}/index\\.html`));
-    assert.match(html, new RegExp(`/reports/${report}/report_manifest\\.json`));
+    assert.match(
+      html,
+      new RegExp(`/reports/${report}/hosted_subset_manifest\\.json`),
+    );
   }
 });
 
-test("bundles every report asset with matching size and SHA-256", async () => {
+test("bundles every hosted report asset with matching size and SHA-256", async () => {
   let verifiedFiles = 0;
 
   for (const report of reports) {
     const reportRoot = path.join(root, "public", "reports", report);
-    const manifestPath = path.join(reportRoot, "report_manifest.json");
+    const manifestPath = path.join(reportRoot, "hosted_subset_manifest.json");
     const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 
     assert.equal(manifest.file_count, manifest.files.length);
-    assert.ok(manifest.status.startsWith("pass_"));
+    assert.equal(manifest.status, "pass_hosted_subset_manifest");
+    assert.equal(manifest.source_manifest, "report_manifest.json");
     await access(path.join(reportRoot, "index.html"));
+    await access(path.join(reportRoot, "report_manifest.json"));
 
     for (const entry of manifest.files) {
       const filePath = path.join(reportRoot, entry.path);
@@ -82,6 +87,6 @@ test("bundles every report asset with matching size and SHA-256", async () => {
     }
   }
 
-  assert.equal(verifiedFiles, 692);
+  assert.equal(verifiedFiles, 188);
   await access(path.join(root, "public", "og.png"));
 });

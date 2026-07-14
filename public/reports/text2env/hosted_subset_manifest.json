@@ -1,0 +1,168 @@
+{
+  "schema_version": "pearl.hosted_report_subset.v1",
+  "status": "pass_hosted_subset_manifest",
+  "source_manifest": "report_manifest.json",
+  "file_count": 32,
+  "files": [
+    {
+      "path": "assets/acceptance_audit.json",
+      "bytes": 13272,
+      "sha256": "4b44c30cb094dbf621132a1cb338e8eadd330e7b6bfb30a7c53fe00cc72ae2c5"
+    },
+    {
+      "path": "assets/browser_qa.txt",
+      "bytes": 1314,
+      "sha256": "5c43e4e37d217c1bcfac75cc6959220ebd5bd8220b299942576ed4dbde9309a8"
+    },
+    {
+      "path": "assets/empirics/failure_score_correlation_v1.json",
+      "bytes": 18563,
+      "sha256": "4d6b188dac9f8a7bb9a2d3f09d8efeb5982be38133363fd5e7e8fecc0b6bf296"
+    },
+    {
+      "path": "assets/empirics/isaac_command_loop/bundle_manifest.json",
+      "bytes": 5471,
+      "sha256": "cc453ae7addbc3fb95ca5b75392540480e53ed531e4e9c9b6aea57259b7f1f55"
+    },
+    {
+      "path": "assets/empirics/isaac_command_loop/frames/frame_00023.png",
+      "bytes": 666685,
+      "sha256": "9dc6de11786bbaf18cee379fe9d5990e394a0eb6de1f8d4bbe57b2bcdd1ae754"
+    },
+    {
+      "path": "assets/empirics/isaac_command_loop/isaac_place_on_rollout.mp4",
+      "bytes": 266334,
+      "sha256": "832cb505dfaf6f270d314c16e4af864530ba79270c87d0c8137ff1ad7556324d"
+    },
+    {
+      "path": "assets/empirics/material_roundtrip/isaac_material_render.png",
+      "bytes": 398362,
+      "sha256": "3cb7cec56e6812cdc6a049de7bec3bf4640d77a55b27b8186a8e183b5e4c2a38"
+    },
+    {
+      "path": "assets/empirics/material_roundtrip/isaac_render_foreground.png",
+      "bytes": 25930,
+      "sha256": "ecd20d601d7a9673e4d1b490ff5a882519e480e430cef7d77ce75b8ae88443ba"
+    },
+    {
+      "path": "assets/empirics/material_roundtrip/roundtrip_report.json",
+      "bytes": 1989,
+      "sha256": "ea744434a6864352b637f85190f87e0fec2dd7604bbb20e05789f91229d40048"
+    },
+    {
+      "path": "assets/empirics/material_roundtrip/source_crop.png",
+      "bytes": 3195,
+      "sha256": "31f37a92b33cebebab83fa96212aa9d37120a6c78acf41901530dc9169e00ee2"
+    },
+    {
+      "path": "assets/empirics/memory_ablation_rgb_adapter_v1.json",
+      "bytes": 3183,
+      "sha256": "9656a122e1251706e540f552a304382126b3c4c9e6d16594fe1c675652a53b89"
+    },
+    {
+      "path": "assets/empirics/pose_conditioned_policy_promotion_v1.json",
+      "bytes": 8774,
+      "sha256": "8fffd22d3af717c7e50f1298d338cda8087cbead0004c8a17f3e17a466cae804"
+    },
+    {
+      "path": "assets/empirics/text2env_empirical_audit_v1.json",
+      "bytes": 3178,
+      "sha256": "62061c14653ca8bd58fbb5f4ed11c1c5fa1ecc031796d5cced2f59baa751131f"
+    },
+    {
+      "path": "assets/method_matrix.json",
+      "bytes": 7037,
+      "sha256": "ba2135e24df57f28f2148695d35fab047c4ebb573a8ad1e4be38c09e5c41e5fe"
+    },
+    {
+      "path": "assets/source_page_capture.json",
+      "bytes": 5019,
+      "sha256": "cd82edbe6f89b3b324db628285cceba1030b9d574b39ab8956b7f45953eae42b"
+    },
+    {
+      "path": "assets/source_pages/articraft.png",
+      "bytes": 1011827,
+      "sha256": "a00efc2d3b76b84c41597ee895fbe51cc05a56fab01d0d38b8c72c4bfe4d01eb"
+    },
+    {
+      "path": "assets/source_pages/aspire.png",
+      "bytes": 1265343,
+      "sha256": "52ed8c7fbe128280c72a775154f540be491448e010bd8a7fc742407c3410a66d"
+    },
+    {
+      "path": "assets/source_pages/enpire.png",
+      "bytes": 208273,
+      "sha256": "38d805780d831e9ef627a62c8935adabdd7e9a4cd6326b6123fb532c60a80d2e"
+    },
+    {
+      "path": "assets/source_pages/fate.png",
+      "bytes": 200269,
+      "sha256": "509b779e6f347d9f14e7b48afe75d9ab7560b8490b4c176b9da42cafb1a58c19"
+    },
+    {
+      "path": "assets/source_pages/realm.png",
+      "bytes": 111414,
+      "sha256": "a02df9fa892a6a6af3d827bc91ecf2413f0ca458c07342c99f3b61d6b9dfdc40"
+    },
+    {
+      "path": "assets/source_pages/robogen.png",
+      "bytes": 116964,
+      "sha256": "e97b910addaac6af492b0c1a16fdfcd661a520c47cd9b4f429ba6b9b3a716895"
+    },
+    {
+      "path": "assets/source_pages/robotwin_2.png",
+      "bytes": 300756,
+      "sha256": "3d4a781794eaaef2629a3ea90abe1c878b4a45db04bf616310f03710baf05afa"
+    },
+    {
+      "path": "assets/source_pages/robotwin_digital_twins.png",
+      "bytes": 207499,
+      "sha256": "e20dea4816d9655f8a5f8fcddcbb940dd8a39771b631b0325cf307e626c0fc4e"
+    },
+    {
+      "path": "assets/source_pages/scenesmith.png",
+      "bytes": 1073131,
+      "sha256": "4457b0b9d33350a551fdd518bfecfe4f6b56b171c39ea937503e22b5f9d3ffa0"
+    },
+    {
+      "path": "assets/source_pages/vlmbench.png",
+      "bytes": 167792,
+      "sha256": "8bd2f89fccf5b8907226dd8dd23a75acff8178ff1627185224ed9cfd4d015d59"
+    },
+    {
+      "path": "assets/source_pages_contact_sheet.png",
+      "bytes": 2053498,
+      "sha256": "0aa923e58427991d77599f11a70b6ad82374ba4c922282ca543980f4c9222d04"
+    },
+    {
+      "path": "assets/source_registry.json",
+      "bytes": 29829,
+      "sha256": "9126e2707c4062ea6396cccb3c6a3bfeec371821a4d79d7d8950732176d478f0"
+    },
+    {
+      "path": "index.html",
+      "bytes": 67781,
+      "sha256": "82c7d82b5e4e4430d448a46f1ab7a827d1e831fe23a7b36f8b21f1103a1f77da"
+    },
+    {
+      "path": "qa/desktop-viewport.png",
+      "bytes": 3191296,
+      "sha256": "40d77cda59ac970167775d3a9859da0413a74e892f33c13b37fed4c03a6cf1ae"
+    },
+    {
+      "path": "qa/mobile-viewport.png",
+      "bytes": 1800512,
+      "sha256": "bcca115e8256feb61b0e2b400aa84f14980114e0c98b4a94d7a8762e80129550"
+    },
+    {
+      "path": "report_manifest.json",
+      "bytes": 13854,
+      "sha256": "abe24218d2b0947d2bc12b3d328537108e872f0d86804b6c5d75d2574d5631e4"
+    },
+    {
+      "path": "text2env_literature_review.md",
+      "bytes": 20247,
+      "sha256": "164770ca40ed2e5a4a21d27888bf708f13b3cdb96f855d632f7079a65ba9b0b7"
+    }
+  ]
+}

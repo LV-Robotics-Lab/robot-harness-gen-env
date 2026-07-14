@@ -12,7 +12,7 @@ const reports = [
     boundary:
       "The promoted policy is pose-conditioned and open-loop. Historical ACT robustness remains 1/4 and is retained as a negative parent.",
     href: "/reports/sceneagent/index.html",
-    manifest: "/reports/sceneagent/report_manifest.json",
+    manifest: "/reports/sceneagent/hosted_subset_manifest.json",
     image:
       "/reports/harness/assets/evidence/policy_randomized_poster.png",
     imageAlt: "RoboTwin domain-randomized apple and plate rollout",
@@ -30,7 +30,7 @@ const reports = [
     boundary:
       "The predeclared failure-score experiment is a retained null result: r = −0.255, exact p = 0.727, n = 12.",
     href: "/reports/text2env/index.html",
-    manifest: "/reports/text2env/report_manifest.json",
+    manifest: "/reports/text2env/hosted_subset_manifest.json",
     image:
       "/reports/text2env/assets/empirics/material_roundtrip/isaac_material_render.png",
     imageAlt: "Isaac material sidecar roundtrip render",
@@ -48,7 +48,7 @@ const reports = [
     boundary:
       "Isaac executes the five non-training commands. Transfer proves task-semantic reuse, not policy, embodiment, asset, or material parity.",
     href: "/reports/openxsim/index.html",
-    manifest: "/reports/openxsim/report_manifest.json",
+    manifest: "/reports/openxsim/hosted_subset_manifest.json",
     image:
       "/reports/openxsim/assets/isaac_command_loop/frames/frame_00023.png",
     imageAlt: "Isaac Open X Sim placement task final frame",
@@ -66,7 +66,7 @@ const reports = [
     boundary:
       "Historical priority is not established and real-robot evaluation was not run. Both claims remain prohibited by the specification.",
     href: "/reports/harness/index.html",
-    manifest: "/reports/harness/report_manifest.json",
+    manifest: "/reports/harness/hosted_subset_manifest.json",
     image:
       "/reports/harness/assets/evidence/policy_cross_task_poster.png",
     imageAlt: "Cross-task can and basket policy rollout",
@@ -165,10 +165,11 @@ export default function Home() {
             <h2>Four workstreams. One evidence chain.</h2>
           </div>
           <p className="section-summary">
-            Each report is self-contained and ships with its original video,
-            images, JSON artifacts, QA captures, and a SHA-256 manifest. “Done”
+            Each hosted report preserves every image, video, and evidence file
+            referenced by its HTML page. The original bundle inventory and a
+            SHA-256 hosted-subset manifest remain available for audit. “Done”
             means the declared bounded acceptance passed, not that excluded
-            research claims were silently promoted.
+            claims were silently promoted.
           </p>
         </div>
 
@@ -202,7 +203,7 @@ export default function Home() {
                     Open full report
                   </a>
                   <a className="manifest-link" href={report.manifest}>
-                    Inspect manifest
+                    Inspect hosted assets
                   </a>
                 </div>
               </div>
@@ -344,7 +345,7 @@ export default function Home() {
       <footer>
         <div>
           <strong>PEARL / SELF-IMPROVING AGENTS</strong>
-          <span>Evidence portal · all four report bundles included</span>
+          <span>Evidence portal · four reports with reachable assets</span>
         </div>
         <a href="#top">Back to top</a>
       </footer>
