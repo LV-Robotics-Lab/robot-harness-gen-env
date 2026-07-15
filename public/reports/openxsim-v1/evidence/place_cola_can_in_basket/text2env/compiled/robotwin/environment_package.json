@@ -1,0 +1,376 @@
+{
+  "anchors": [],
+  "assets": [
+    {
+      "articulation": {},
+      "asset_id": "cola_can_asset",
+      "category": "can",
+      "physical": {
+        "graspable": true,
+        "is_static": false,
+        "mass_kg": 0.01,
+        "movable": true
+      },
+      "representations": [
+        {
+          "backend": "sapien",
+          "format": "robotwin_model",
+          "metadata": {
+            "model_id": 0,
+            "modelname": "071_can",
+            "resolved": true
+          },
+          "role": "visual_and_collision",
+          "sha256": "",
+          "size_bytes": 0,
+          "uri": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/071_can"
+        }
+      ],
+      "source": {
+        "kind": "robotwin_asset",
+        "modelname": "071_can",
+        "source_root": "external/RoboTwin/assets/objects"
+      },
+      "tags": [
+        "robotwin",
+        "manipulated"
+      ]
+    },
+    {
+      "articulation": {},
+      "asset_id": "basket_asset",
+      "category": "basket",
+      "physical": {
+        "graspable": false,
+        "is_static": false,
+        "mass_kg": 0.5,
+        "movable": true
+      },
+      "representations": [
+        {
+          "backend": "sapien",
+          "format": "robotwin_model",
+          "metadata": {
+            "model_id": 1,
+            "modelname": "110_basket",
+            "resolved": true
+          },
+          "role": "visual_and_collision",
+          "sha256": "",
+          "size_bytes": 0,
+          "uri": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/110_basket"
+        }
+      ],
+      "source": {
+        "kind": "robotwin_asset",
+        "modelname": "110_basket",
+        "source_root": "external/RoboTwin/assets/objects"
+      },
+      "tags": [
+        "robotwin",
+        "container"
+      ]
+    }
+  ],
+  "env": {
+    "gravity_mps2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "metadata": {
+      "surface": "table",
+      "table": {
+        "height_m": 0.74
+      },
+      "workspace_type": "tabletop"
+    },
+    "name": "place_cola_can_in_basket",
+    "objects": [
+      {
+        "asset_id": "cola_can_asset",
+        "instance_id": "cola_can",
+        "metadata": {
+          "description_key": "071_can/base0",
+          "protected_region": {
+            "enabled": true,
+            "padding_m": 0.1
+          }
+        },
+        "pose": {
+          "orientation_wxyz": [
+            0.707225,
+            0.706849,
+            -0.0100455,
+            -0.00982061
+          ],
+          "position": [
+            -0.225,
+            0.05,
+            0.741
+          ]
+        },
+        "randomization": {},
+        "role": "manipulated",
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "static": false
+      },
+      {
+        "asset_id": "basket_asset",
+        "instance_id": "basket",
+        "metadata": {
+          "description_key": "110_basket/base1",
+          "protected_region": {
+            "enabled": true,
+            "padding_m": 0.05
+          }
+        },
+        "pose": {
+          "orientation_wxyz": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "position": [
+            0.02,
+            -0.06,
+            0.741
+          ]
+        },
+        "randomization": {},
+        "role": "container",
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "static": false
+      }
+    ],
+    "randomization": {
+      "cluttered_table": false,
+      "lighting": false,
+      "object_pose": true,
+      "table_height": false,
+      "texture": false
+    },
+    "regions": [],
+    "robots": [
+      {
+        "id": "robot",
+        "setup": "dual_arm",
+        "source": "robotwin"
+      }
+    ],
+    "sensors": [
+      {
+        "id": "head_camera",
+        "required": true,
+        "type": "rgb"
+      },
+      {
+        "id": "left_camera",
+        "required": false,
+        "type": "rgb"
+      },
+      {
+        "id": "right_camera",
+        "required": false,
+        "type": "rgb"
+      }
+    ],
+    "units": "m",
+    "up_axis": "Z",
+    "workspace_bounds_m": [
+      -0.4,
+      -0.3,
+      0.74,
+      0.4,
+      0.25,
+      1.1
+    ]
+  },
+  "metadata": {
+    "placement_manifest": {
+      "agent": "agenticsim.generation.placement_agent",
+      "asset_checks": [
+        {
+          "blocker": null,
+          "kind": "robotwin_asset",
+          "object_id": "cola_can",
+          "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/071_can",
+          "requirement": "071_can",
+          "resolved": true,
+          "source": "external/RoboTwin/assets/objects"
+        },
+        {
+          "blocker": null,
+          "kind": "robotwin_asset",
+          "object_id": "basket",
+          "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/110_basket",
+          "requirement": "110_basket",
+          "resolved": true,
+          "source": "external/RoboTwin/assets/objects"
+        }
+      ],
+      "asset_generation_route": "not_used",
+      "asset_generation_used": false,
+      "blockers": [],
+      "instruction": "Place the cola can into the basket.",
+      "main_path": "use_existing_assets",
+      "schema_version": "placement_agent.v0",
+      "status": "ready_for_scaffold",
+      "task_name": "place_cola_can_in_basket"
+    }
+  },
+  "package_id": "place_cola_can_in_basket",
+  "schema_version": "agenticsim.environment_package.v1",
+  "source": {
+    "asset_generation_used": false,
+    "blockers": [],
+    "compiler": "agenticsim.generation.placement_agent",
+    "mode": "text_only",
+    "network_used": false,
+    "schema": "text2env.tabletop.v0"
+  },
+  "target_backends": [
+    "robotwin"
+  ],
+  "task": {
+    "action": {
+      "arm_policy": {
+        "fixed_arm": "left",
+        "save_as": "main_arm",
+        "type": "fixed"
+      },
+      "interface": "robotwin_primitive_plan",
+      "operations": [
+        "grasp",
+        "place"
+      ]
+    },
+    "instruction": "Place the cola can into the basket.",
+    "intent": "place_in_container",
+    "metadata": {
+      "language": {
+        "full_description": "Place the cola can into the basket.",
+        "placeholders": {
+          "{A}": "071_can/base0",
+          "{B}": "110_basket/base1",
+          "{a}": "$main_arm"
+        },
+        "preference": "Short imperative instructions.",
+        "schema": "{A} is the manipulated object, {B} is the basket, {a} is the arm used to move the object.",
+        "seen_templates": [
+          "Place {A} in {B}.",
+          "Use {a} to put {A} into {B}.",
+          "Move {A} into {B}."
+        ],
+        "unseen_templates": [
+          "Drop {A} into {B}.",
+          "Carry {A} to {B}.",
+          "Set {A} inside {B}."
+        ]
+      },
+      "source_schema": "text2env.tabletop.v0",
+      "source_status": "ready_for_scaffold"
+    },
+    "observation": {
+      "cameras": [
+        "head_camera",
+        "left_camera",
+        "right_camera"
+      ],
+      "state": [
+        "object_pose",
+        "robot_joint_position",
+        "contact"
+      ]
+    },
+    "plan": [
+      {
+        "arm": "$main_arm",
+        "comment": "Pick the existing RoboTwin cola can asset.",
+        "grasp_dis": 0.0,
+        "object": "cola_can",
+        "op": "grasp",
+        "pre_grasp_dis": 0.05
+      },
+      {
+        "arm": "$main_arm",
+        "comment": "Use the basket functional point instead of a procedural target marker.",
+        "constrain": "free",
+        "dis": 0.02,
+        "is_open": false,
+        "object": "cola_can",
+        "op": "place",
+        "pre_dis": 0.1,
+        "recovery": {
+          "type": "can_basket"
+        },
+        "target": "basket",
+        "target_functional_point_id": 0,
+        "target_quat_by_arm": {
+          "left": [
+            -1,
+            0,
+            0,
+            0
+          ],
+          "right": [
+            0.05,
+            0,
+            0,
+            0.99
+          ]
+        }
+      }
+    ],
+    "reset": {
+      "constraints": [
+        "no_initial_object_collision",
+        "target_reachable_by_robot",
+        "success_condition_sim_state_observable",
+        "task_objects_stable",
+        "protected_regions_defined",
+        "all_placeholders_bound",
+        "assets_exist_in_robotwin",
+        "target_object_functional_point_bound"
+      ],
+      "object_poses": "from_env_spec",
+      "randomization": {
+        "cluttered_table": false,
+        "lighting": false,
+        "object_pose": true,
+        "table_height": false,
+        "texture": false
+      }
+    },
+    "success": [
+      {
+        "comment": "The cola can should end inside or near the basket footprint.",
+        "object": "cola_can",
+        "target_object": "basket",
+        "threshold_m": 0.15,
+        "type": "near"
+      },
+      {
+        "comment": "The cola can should contact the basket.",
+        "object": "cola_can",
+        "target_object": "basket",
+        "type": "contact"
+      }
+    ],
+    "termination": [
+      {
+        "steps": 1000,
+        "type": "timeout"
+      }
+    ]
+  }
+}

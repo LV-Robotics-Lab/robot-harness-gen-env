@@ -1,0 +1,37 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "World"
+{
+    def PhysicsScene "PhysicsScene"
+    {
+        vector3f physics:gravityDirection = (0.0, 0.0, -9.81)
+        float physics:gravityMagnitude = 1
+    }
+    def Cube "Ground"
+    {
+        double size = 1
+        double3 xformOp:scale = (4, 4, 0.02)
+        double3 xformOp:translate = (0, 0, -0.02)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+    def Scope "Objects"
+    {
+        def Xform "dex_cube" (
+            prepend references = @../../../compiled/dex_cube/dex_cube.usda@
+        )
+        {
+            quatd xformOp:orient = (1.0, (0.0, 0.0, 0.0))
+            double3 xformOp:translate = (0.0, 0.0, 0.25)
+            double3 xformOp:scale = (0.1, 0.1, 0.1)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+        }
+    }
+    def Scope "Regions"
+    {
+    }
+}

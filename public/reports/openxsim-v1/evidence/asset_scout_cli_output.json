@@ -1,0 +1,72 @@
+{
+  "asset_id": "dex_cube",
+  "representations": [
+    {
+      "backend": "portable",
+      "format": "obj",
+      "metadata": {
+        "original_download": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/cache/033a71c6f740be62d5ec/dex_cube.obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "2b88294ed0228f1df0c6d070bdecaef10c214d9cea8e5edf393d3eaddc4b014d",
+      "size_bytes": 1151,
+      "uri": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/compiled/dex_cube/source.obj"
+    },
+    {
+      "backend": "isaacsim",
+      "format": "usda",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "f3239e5d01d71ff3ef174a200aa304aab88eadc2012a74f9a749b3af44bf03ca",
+      "size_bytes": 470,
+      "uri": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/compiled/dex_cube/dex_cube.usda"
+    },
+    {
+      "backend": "mujoco",
+      "format": "mjcf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "613cb9ba8b2658f02f4dddefd2c392e5f0b847ba0c7bb8165b2cf47c8754cc06",
+      "size_bytes": 192,
+      "uri": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/compiled/dex_cube/dex_cube.xml"
+    },
+    {
+      "backend": "portable",
+      "format": "urdf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "cd35d2ead219fd22942cf3f1ea55faed3d9e9d93f28feb982312a660066a59fa",
+      "size_bytes": 214,
+      "uri": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/compiled/dex_cube/dex_cube.urdf"
+    },
+    {
+      "backend": "sapien",
+      "format": "sapien_manifest",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "ba6a79547e306f332331b6c83eb74815affbb7d4541cfd3674cf4b48898e41b8",
+      "size_bytes": 404,
+      "uri": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/compiled/dex_cube/sapien_asset.json"
+    },
+    {
+      "backend": "metasim",
+      "format": "metasim_object",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "4b7a51eed52624979f1db6e86a70f39734fcae03133f2605b5de9f962fb8985b",
+      "size_bytes": 548,
+      "uri": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/compiled/dex_cube/metasim_object.json"
+    }
+  ],
+  "selected_candidate": "github:google-deepmind/mujoco_menagerie:tetheria_aero_hand_open/assets/dex_cube.obj"
+}

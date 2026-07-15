@@ -1,0 +1,320 @@
+{
+  "compile_results": {
+    "isaacsim": {
+      "artifact_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/isaacsim/scene.usda",
+      "backend": "isaacsim",
+      "blockers": [],
+      "manifest_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/isaacsim/compile_manifest.json",
+      "metadata": {
+        "artifact_format": "usda",
+        "asset_ids": [
+          "settle_cube_asset"
+        ],
+        "object_ids": [
+          "settle_cube"
+        ],
+        "runtime_scene_builder": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/isaacsim/run_isaac_smoke.py",
+        "schema": "agenticsim.backend_compile.v1",
+        "task_contract": {
+          "action": {
+            "interface": "zero_action",
+            "operations": []
+          },
+          "observation": {
+            "state": [
+              "object_pose",
+              "contact"
+            ]
+          },
+          "reset": {
+            "object_poses": "mjcf_defaults"
+          },
+          "success": [
+            {
+              "type": "state_trace_available"
+            }
+          ],
+          "termination": [
+            {
+              "steps": 20,
+              "type": "timeout"
+            }
+          ]
+        }
+      },
+      "package_digest": "75e7761c64cc27dfe2792b51bfd23f7c769ccd11200d9935231b4770c31d0a3c",
+      "package_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/isaacsim/environment_package.json",
+      "runtime_command": [
+        "python",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/isaacsim/run_isaac_smoke.py",
+        "--package",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/isaacsim/environment_package.json",
+        "--output",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/isaacsim/runtime_evidence.json"
+      ],
+      "status": "compiled",
+      "warnings": []
+    },
+    "metasim": {
+      "artifact_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/metasim/scenario.py",
+      "backend": "metasim",
+      "blockers": [],
+      "manifest_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/metasim/compile_manifest.json",
+      "metadata": {
+        "artifact_format": "metasim_scenario_cfg",
+        "asset_ids": [
+          "settle_cube_asset"
+        ],
+        "object_ids": [
+          "settle_cube"
+        ],
+        "runner_syntax_validated": true,
+        "scenario_json": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/metasim/scenario.json",
+        "schema": "agenticsim.backend_compile.v1",
+        "task_contract": {
+          "action": {
+            "interface": "zero_action",
+            "operations": []
+          },
+          "observation": {
+            "state": [
+              "object_pose",
+              "contact"
+            ]
+          },
+          "reset": {
+            "object_poses": "mjcf_defaults"
+          },
+          "success": [
+            {
+              "type": "state_trace_available"
+            }
+          ],
+          "termination": [
+            {
+              "steps": 20,
+              "type": "timeout"
+            }
+          ]
+        }
+      },
+      "package_digest": "75e7761c64cc27dfe2792b51bfd23f7c769ccd11200d9935231b4770c31d0a3c",
+      "package_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/metasim/environment_package.json",
+      "runtime_command": [
+        "python",
+        "-c",
+        "exec(open('/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/metasim/scenario.py').read()); print(cfg)"
+      ],
+      "status": "compiled",
+      "warnings": []
+    },
+    "mujoco": {
+      "artifact_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/mujoco/scene.xml",
+      "backend": "mujoco",
+      "blockers": [],
+      "manifest_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/mujoco/compile_manifest.json",
+      "metadata": {
+        "artifact_format": "mjcf",
+        "asset_ids": [
+          "settle_cube_asset"
+        ],
+        "object_ids": [
+          "settle_cube"
+        ],
+        "schema": "agenticsim.backend_compile.v1",
+        "task_contract": {
+          "action": {
+            "interface": "zero_action",
+            "operations": []
+          },
+          "observation": {
+            "state": [
+              "object_pose",
+              "contact"
+            ]
+          },
+          "reset": {
+            "object_poses": "mjcf_defaults"
+          },
+          "success": [
+            {
+              "type": "state_trace_available"
+            }
+          ],
+          "termination": [
+            {
+              "steps": 20,
+              "type": "timeout"
+            }
+          ]
+        },
+        "xml_validated": true
+      },
+      "package_digest": "75e7761c64cc27dfe2792b51bfd23f7c769ccd11200d9935231b4770c31d0a3c",
+      "package_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/mujoco/environment_package.json",
+      "runtime_command": [
+        "python",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/mujoco/run_mujoco_smoke.py",
+        "--model",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/mujoco/scene.xml",
+        "--output",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/mujoco/runtime_evidence.json"
+      ],
+      "status": "compiled",
+      "warnings": []
+    }
+  },
+  "conformance": {
+    "isaacsim": {
+      "checks": [
+        {
+          "details": "artifact exists and passed backend-specific static validation",
+          "level": "L0",
+          "metrics": {
+            "artifact": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/isaacsim/scene.usda",
+            "size_bytes": 976
+          },
+          "name": "asset_import",
+          "status": "pass"
+        },
+        {
+          "details": "units, axes, objects, assets, regions, and nominal poses agree",
+          "level": "L1",
+          "metrics": {
+            "max_pose_error_m": 0.0,
+            "pose_tolerance_m": 1e-06
+          },
+          "name": "scene_structure",
+          "status": "pass"
+        },
+        {
+          "details": "task contracts match statically, but both source and target runtime evidence are required",
+          "level": "L2",
+          "metrics": {},
+          "name": "task_semantics",
+          "status": "not_evaluated"
+        },
+        {
+          "details": "both runtimes must provide non-empty trajectory arrays",
+          "level": "L3",
+          "metrics": {},
+          "name": "trajectory_replay",
+          "status": "not_evaluated"
+        },
+        {
+          "details": "source and target policy evaluation evidence are both required",
+          "level": "L4",
+          "metrics": {},
+          "name": "policy_behavior",
+          "status": "not_evaluated"
+        }
+      ],
+      "highest_consecutive_level": "L1",
+      "package_id": "existing_settle",
+      "schema": "agenticsim.conformance_report.v1",
+      "source_backend": "sapien",
+      "target_backend": "isaacsim"
+    },
+    "metasim": {
+      "checks": [
+        {
+          "details": "artifact exists and passed backend-specific static validation",
+          "level": "L0",
+          "metrics": {
+            "artifact": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/metasim/scenario.py",
+            "size_bytes": 495
+          },
+          "name": "asset_import",
+          "status": "pass"
+        },
+        {
+          "details": "units, axes, objects, assets, regions, and nominal poses agree",
+          "level": "L1",
+          "metrics": {
+            "max_pose_error_m": 0.0,
+            "pose_tolerance_m": 1e-06
+          },
+          "name": "scene_structure",
+          "status": "pass"
+        },
+        {
+          "details": "task contracts match statically, but both source and target runtime evidence are required",
+          "level": "L2",
+          "metrics": {},
+          "name": "task_semantics",
+          "status": "not_evaluated"
+        },
+        {
+          "details": "both runtimes must provide non-empty trajectory arrays",
+          "level": "L3",
+          "metrics": {},
+          "name": "trajectory_replay",
+          "status": "not_evaluated"
+        },
+        {
+          "details": "source and target policy evaluation evidence are both required",
+          "level": "L4",
+          "metrics": {},
+          "name": "policy_behavior",
+          "status": "not_evaluated"
+        }
+      ],
+      "highest_consecutive_level": "L1",
+      "package_id": "existing_settle",
+      "schema": "agenticsim.conformance_report.v1",
+      "source_backend": "sapien",
+      "target_backend": "metasim"
+    },
+    "mujoco": {
+      "checks": [
+        {
+          "details": "artifact exists and passed backend-specific static validation",
+          "level": "L0",
+          "metrics": {
+            "artifact": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/mujoco/scene.xml",
+            "size_bytes": 951
+          },
+          "name": "asset_import",
+          "status": "pass"
+        },
+        {
+          "details": "units, axes, objects, assets, regions, and nominal poses agree",
+          "level": "L1",
+          "metrics": {
+            "max_pose_error_m": 0.0,
+            "pose_tolerance_m": 1e-06
+          },
+          "name": "scene_structure",
+          "status": "pass"
+        },
+        {
+          "details": "task contracts match statically, but both source and target runtime evidence are required",
+          "level": "L2",
+          "metrics": {},
+          "name": "task_semantics",
+          "status": "not_evaluated"
+        },
+        {
+          "details": "both runtimes must provide non-empty trajectory arrays",
+          "level": "L3",
+          "metrics": {},
+          "name": "trajectory_replay",
+          "status": "not_evaluated"
+        },
+        {
+          "details": "source and target policy evaluation evidence are both required",
+          "level": "L4",
+          "metrics": {},
+          "name": "policy_behavior",
+          "status": "not_evaluated"
+        }
+      ],
+      "highest_consecutive_level": "L1",
+      "package_id": "existing_settle",
+      "schema": "agenticsim.conformance_report.v1",
+      "source_backend": "sapien",
+      "target_backend": "mujoco"
+    }
+  },
+  "package_id": "existing_settle"
+}

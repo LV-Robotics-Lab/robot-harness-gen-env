@@ -1,0 +1,428 @@
+{
+  "candidate_count": 20,
+  "candidates": [
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:tetheria_aero_hand_open/assets/dex_cube.obj",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/tetheria_aero_hand_open/assets/dex_cube.obj",
+      "format": "obj",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "tetheria_aero_hand_open/assets/dex_cube.obj",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "dex_cube.obj",
+      "provider": "github_repository_discovery",
+      "score": 2.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/tetheria_aero_hand_open/assets/dex_cube.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:franka_emika_panda/mjx_single_cube.xml",
+      "category": "franka_emika_panda",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/franka_emika_panda/mjx_single_cube.xml",
+      "format": "mjcf",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "franka_emika_panda/mjx_single_cube.xml",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "mjx_single_cube.xml",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/franka_emika_panda/mjx_single_cube.xml"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:iit_softfoot/meshes/cube_connection_back.stl",
+      "category": "meshes",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/iit_softfoot/meshes/cube_connection_back.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "iit_softfoot/meshes/cube_connection_back.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "cube_connection_back.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/iit_softfoot/meshes/cube_connection_back.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:iit_softfoot/meshes/cube_connection_frontal.stl",
+      "category": "meshes",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/iit_softfoot/meshes/cube_connection_frontal.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "iit_softfoot/meshes/cube_connection_frontal.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "cube_connection_frontal.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/iit_softfoot/meshes/cube_connection_frontal.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/Asm-MRH-F-Mid-Visual,00+MagTac,00.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/Asm-MRH-F-Mid-Visual%2C00%2BMagTac%2C00.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/Asm-MRH-F-Mid-Visual,00+MagTac,00.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "Asm-MRH-F-Mid-Visual,00+MagTac,00.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/Asm-MRH-F-Mid-Visual%2C00%2BMagTac%2C00.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/Asm-MRH-F-Prox-Visual,00+Magtac,00.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/Asm-MRH-F-Prox-Visual%2C00%2BMagtac%2C00.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/Asm-MRH-F-Prox-Visual,00+Magtac,00.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "Asm-MRH-F-Prox-Visual,00+Magtac,00.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/Asm-MRH-F-Prox-Visual%2C00%2BMagtac%2C00.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/Asm-MRH-HB1-Visual,00-Plastic.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/Asm-MRH-HB1-Visual%2C00-Plastic.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/Asm-MRH-HB1-Visual,00-Plastic.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "Asm-MRH-HB1-Visual,00-Plastic.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/Asm-MRH-HB1-Visual%2C00-Plastic.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/Asm-MRH-HB1-Visual,00-Puck.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/Asm-MRH-HB1-Visual%2C00-Puck.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/Asm-MRH-HB1-Visual,00-Puck.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "Asm-MRH-HB1-Visual,00-Puck.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/Asm-MRH-HB1-Visual%2C00-Puck.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/MRH-F-Distal-Sensor-Visual,00.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/MRH-F-Distal-Sensor-Visual%2C00.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/MRH-F-Distal-Sensor-Visual,00.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "MRH-F-Distal-Sensor-Visual,00.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/MRH-F-Distal-Sensor-Visual%2C00.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/MRH-F-Distal-Visual,00.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/MRH-F-Distal-Visual%2C00.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/MRH-F-Distal-Visual,00.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "MRH-F-Distal-Visual,00.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/MRH-F-Distal-Visual%2C00.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/MRH-F-J0Link-Visual,00.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/MRH-F-J0Link-Visual%2C00.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/MRH-F-J0Link-Visual,00.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "MRH-F-J0Link-Visual,00.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/MRH-F-J0Link-Visual%2C00.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/MRH-F-Mid-MagTac-Sensor-Visual,00.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/MRH-F-Mid-MagTac-Sensor-Visual%2C00.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/MRH-F-Mid-MagTac-Sensor-Visual,00.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "MRH-F-Mid-MagTac-Sensor-Visual,00.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/MRH-F-Mid-MagTac-Sensor-Visual%2C00.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/MRH-F-Mid-Visual,00.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/MRH-F-Mid-Visual%2C00.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/MRH-F-Mid-Visual,00.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "MRH-F-Mid-Visual,00.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/MRH-F-Mid-Visual%2C00.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/MRH-F-Prox-MagTac-Sensor-Visual,00.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/MRH-F-Prox-MagTac-Sensor-Visual%2C00.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/MRH-F-Prox-MagTac-Sensor-Visual,00.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "MRH-F-Prox-MagTac-Sensor-Visual,00.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/MRH-F-Prox-MagTac-Sensor-Visual%2C00.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/MRH-F-Prox-Visual,00-Lid.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/MRH-F-Prox-Visual%2C00-Lid.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/MRH-F-Prox-Visual,00-Lid.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "MRH-F-Prox-Visual,00-Lid.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/MRH-F-Prox-Visual%2C00-Lid.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/MRH-F-Prox-Visual,00-Main.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/MRH-F-Prox-Visual%2C00-Main.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/MRH-F-Prox-Visual,00-Main.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "MRH-F-Prox-Visual,00-Main.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/MRH-F-Prox-Visual%2C00-Main.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/MRH-F-Prox-Visual,00.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/MRH-F-Prox-Visual%2C00.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/MRH-F-Prox-Visual,00.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "MRH-F-Prox-Visual,00.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/MRH-F-Prox-Visual%2C00.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/MRH-FB-Main-Cover-Visual,00.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/MRH-FB-Main-Cover-Visual%2C00.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/MRH-FB-Main-Cover-Visual,00.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "MRH-FB-Main-Cover-Visual,00.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/MRH-FB-Main-Cover-Visual%2C00.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/MRH-FB-MainALU-Visual,00.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/MRH-FB-MainALU-Visual%2C00.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/MRH-FB-MainALU-Visual,00.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "MRH-FB-MainALU-Visual,00.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/MRH-FB-MainALU-Visual%2C00.stl"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:shadow_dexee/assets/MRH-FB-PulleyBlock1-Visual,00.stl",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/shadow_dexee/assets/MRH-FB-PulleyBlock1-Visual%2C00.stl",
+      "format": "stl",
+      "license": "NOASSERTION",
+      "metadata": {
+        "branch": "main",
+        "path": "shadow_dexee/assets/MRH-FB-PulleyBlock1-Visual,00.stl",
+        "repository": "google-deepmind/mujoco_menagerie",
+        "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+        "repository_query": "mujoco menagerie",
+        "repository_stars": 3729,
+        "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+      },
+      "name": "MRH-FB-PulleyBlock1-Visual,00.stl",
+      "provider": "github_repository_discovery",
+      "score": 1.1785854415904344,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/shadow_dexee/assets/MRH-FB-PulleyBlock1-Visual%2C00.stl"
+    }
+  ],
+  "provider_errors": [],
+  "query": "dex cube",
+  "schema": "agenticsim.asset_search_evidence.v1",
+  "selected": {
+    "candidate_id": "github:google-deepmind/mujoco_menagerie:tetheria_aero_hand_open/assets/dex_cube.obj",
+    "category": "assets",
+    "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/tetheria_aero_hand_open/assets/dex_cube.obj",
+    "format": "obj",
+    "license": "NOASSERTION",
+    "metadata": {
+      "branch": "main",
+      "path": "tetheria_aero_hand_open/assets/dex_cube.obj",
+      "repository": "google-deepmind/mujoco_menagerie",
+      "repository_description": "A collection of high-quality models for the MuJoCo physics engine, curated by Google DeepMind.",
+      "repository_query": "mujoco menagerie",
+      "repository_stars": 3729,
+      "repository_url": "https://github.com/google-deepmind/mujoco_menagerie"
+    },
+    "name": "dex_cube.obj",
+    "provider": "github_repository_discovery",
+    "score": 2.1785854415904344,
+    "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/tetheria_aero_hand_open/assets/dex_cube.obj"
+  }
+}

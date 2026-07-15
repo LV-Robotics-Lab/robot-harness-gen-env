@@ -1,0 +1,24 @@
+{
+  "schema": "pearl.report_browser_qa.v1",
+  "status": "pass",
+  "desktop": {
+    "viewport": [1440, 1000],
+    "horizontal_overflow": false,
+    "bad_images": 0,
+    "console_errors": 0,
+    "page_errors": 0,
+    "request_failures": 0
+  },
+  "mobile": {
+    "viewport": [390, 844],
+    "horizontal_overflow": false,
+    "bad_images": 0,
+    "console_errors": 0,
+    "page_errors": 0,
+    "request_failures": 0
+  },
+  "videos": [
+    { "duration_seconds": 51.083333, "width": 320, "height": 240, "decoded_frames": 613 },
+    { "duration_seconds": 50.75, "width": 320, "height": 240, "decoded_frames": 609 }
+  ]
+}

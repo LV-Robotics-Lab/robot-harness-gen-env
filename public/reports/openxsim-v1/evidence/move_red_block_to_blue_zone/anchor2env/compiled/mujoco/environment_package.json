@@ -1,0 +1,530 @@
+{
+  "anchors": [
+    {
+      "anchor_id": "anchor_5bc4c050bbed",
+      "appearance_constraints": [
+        {
+          "confidence": 0.95,
+          "dominant_color": "red",
+          "instance_id": "red_block"
+        },
+        {
+          "confidence": 0.95,
+          "dominant_color": "blue",
+          "instance_id": "blue_zone"
+        }
+      ],
+      "camera_constraints": [],
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_5bc4c050bbed/frame_000.png",
+          "sha256": "b556225f068b7b2db7aa2e92f4a05974685be686cec8fc8866d42ea5df9aa56a",
+          "size_bytes": 2895
+        },
+        {
+          "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_5bc4c050bbed/frame_001.png",
+          "sha256": "a41ddd6835b9fc1ae700214b49f2b54fc76d93df58c441cb10f6538b3b237904",
+          "size_bytes": 2567
+        },
+        {
+          "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_5bc4c050bbed/frame_002.png",
+          "sha256": "4aff3ea5e4717acf1708707ee2534cbb6d341a727834e96fef2f0952980849a5",
+          "size_bytes": 2552
+        },
+        {
+          "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_5bc4c050bbed/frame_003.png",
+          "sha256": "99354cbd6c73a49ab97503f75951655afb5c5ec819b7f91835b150772d65a342",
+          "size_bytes": 2439
+        },
+        {
+          "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_5bc4c050bbed/frame_004.png",
+          "sha256": "b1376dba0415251a4e108a4cbce04e5d76702a9b790c71ce89bae6b767829b4d",
+          "size_bytes": 2816
+        },
+        {
+          "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_5bc4c050bbed/frame_005.png",
+          "sha256": "2238fdafecdb7e5baecb5d44eab516bfe519c6525132bea55dfba60e96cf054e",
+          "size_bytes": 2606
+        },
+        {
+          "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_5bc4c050bbed/frame_006.png",
+          "sha256": "abee42613cb84d2f8d11bbb71e5678dc5e55e93935b82c73815a5cffc982770b",
+          "size_bytes": 2540
+        },
+        {
+          "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_5bc4c050bbed/frame_007.png",
+          "sha256": "073b9d82a46361c221c79d9d3ad81ed2c7489f5b85ea991d4bf874012ca7fc20",
+          "size_bytes": 2481
+        }
+      ],
+      "media_sha256": "5bc4c050bbed6d8379f877f798ddb7a9040c82789acfbfee3b6b5cd93ff6cfe9",
+      "media_type": "video",
+      "media_uri": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/anchor_inputs/red_block_to_blue_zone.mp4",
+      "motion_constraints": [
+        {
+          "confidence": 0.95,
+          "end_frame": 7,
+          "instance_id": "red_block",
+          "normalized_displacement": [
+            0.475,
+            0.0
+          ],
+          "start_frame": 0
+        }
+      ],
+      "object_constraints": [
+        {
+          "confidence": 0.95,
+          "frames_observed": 8,
+          "instance_id": "red_block",
+          "label": "red region or object",
+          "metric_depth_status": "unknown",
+          "normalized_bbox": [
+            0.5375,
+            0.375,
+            0.659375,
+            0.5375
+          ],
+          "normalized_center": [
+            0.5984375,
+            0.45625
+          ]
+        },
+        {
+          "confidence": 0.95,
+          "frames_observed": 8,
+          "instance_id": "blue_zone",
+          "label": "blue region or object",
+          "metric_depth_status": "unknown",
+          "normalized_bbox": [
+            0.71875,
+            0.3125,
+            0.91875,
+            0.5791666666666667
+          ],
+          "normalized_center": [
+            0.81875,
+            0.44583333333333336
+          ]
+        }
+      ],
+      "observations": {
+        "duration_s": 2.0,
+        "fps": 12.0,
+        "frame_count": 24,
+        "height": 240,
+        "sample_count": 8,
+        "sample_times_s": [
+          0.0,
+          0.27380952380952384,
+          0.5476190476190477,
+          0.8214285714285714,
+          1.0952380952380953,
+          1.369047619047619,
+          1.6428571428571428,
+          1.9166666666666667
+        ],
+        "semantic_provider": "color_layout_v1",
+        "width": 320
+      },
+      "spatial_constraints": [
+        {
+          "confidence": 0.7,
+          "object": "blue_zone",
+          "subject": "red_block",
+          "type": "left_of"
+        }
+      ],
+      "uncertainty": [
+        "color_segmentation_is_not_category_recognition",
+        "metric_depth_unknown",
+        "occlusion_not_resolved",
+        "absolute_scale_unknown",
+        "unobserved_geometry_unknown"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "articulation": {},
+      "asset_id": "red_block_asset",
+      "category": "block",
+      "physical": {
+        "graspable": true,
+        "is_static": false,
+        "mass_kg": 0.05,
+        "movable": true
+      },
+      "representations": [
+        {
+          "backend": "portable",
+          "format": "primitive_box",
+          "metadata": {
+            "color_rgb": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "half_size_m": [
+              0.025,
+              0.025,
+              0.025
+            ]
+          },
+          "role": "visual_and_collision",
+          "sha256": "",
+          "size_bytes": 0,
+          "uri": "primitive://box"
+        }
+      ],
+      "source": {
+        "generator": "RoboTwin.create_box",
+        "kind": "procedural_primitive"
+      },
+      "tags": [
+        "primitive",
+        "tabletop"
+      ]
+    }
+  ],
+  "env": {
+    "gravity_mps2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "metadata": {
+      "anchor_fusion": {
+        "anchor_id": "anchor_5bc4c050bbed",
+        "applied_object_positions": [
+          "blue_zone",
+          "red_block"
+        ],
+        "uncertainty": [
+          "color_segmentation_is_not_category_recognition",
+          "metric_depth_unknown",
+          "occlusion_not_resolved",
+          "absolute_scale_unknown",
+          "unobserved_geometry_unknown"
+        ]
+      },
+      "surface": "table",
+      "table": {
+        "height_m": 0.74
+      },
+      "workspace_type": "tabletop"
+    },
+    "name": "move_red_block_to_blue_zone",
+    "objects": [
+      {
+        "asset_id": "red_block_asset",
+        "instance_id": "red_block",
+        "metadata": {
+          "description_key": "red block",
+          "protected_region": {
+            "enabled": true,
+            "padding_m": 0.07
+          }
+        },
+        "pose": {
+          "orientation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            -0.2,
+            0.015,
+            0.766
+          ]
+        },
+        "randomization": {
+          "mode": "random_uniform",
+          "qpos": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "rotate_lim": [
+            0,
+            0,
+            0.4
+          ],
+          "rotate_rand": true,
+          "xlim": [
+            -0.28,
+            -0.12
+          ],
+          "ylim": [
+            -0.05,
+            0.08
+          ],
+          "zlim": [
+            0.766,
+            0.766
+          ]
+        },
+        "role": "manipulated",
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "static": false
+      }
+    ],
+    "randomization": {
+      "cluttered_table": false,
+      "lighting": false,
+      "object_pose": true,
+      "table_height": false,
+      "texture": false
+    },
+    "regions": [
+      {
+        "center": [
+          0.05,
+          -0.1,
+          0.742
+        ],
+        "color": [
+          0.0,
+          0.35,
+          1.0,
+          0.45
+        ],
+        "id": "blue_zone",
+        "size": [
+          0.16,
+          0.12,
+          0.004
+        ],
+        "success_tolerance_m": 0.04,
+        "type": "target_zone",
+        "visible": true
+      }
+    ],
+    "robots": [
+      {
+        "id": "robot",
+        "setup": "dual_arm",
+        "source": "robotwin"
+      }
+    ],
+    "sensors": [
+      {
+        "id": "head_camera",
+        "required": true,
+        "type": "rgb"
+      },
+      {
+        "id": "left_camera",
+        "required": false,
+        "type": "rgb"
+      },
+      {
+        "id": "right_camera",
+        "required": false,
+        "type": "rgb"
+      }
+    ],
+    "units": "m",
+    "up_axis": "Z",
+    "workspace_bounds_m": [
+      -0.4,
+      -0.3,
+      0.74,
+      0.4,
+      0.25,
+      1.1
+    ]
+  },
+  "metadata": {
+    "placement_manifest": {
+      "agent": "agenticsim.generation.placement_agent",
+      "asset_checks": [
+        {
+          "blocker": null,
+          "kind": "robotwin_primitive",
+          "object_id": "red_block",
+          "path": null,
+          "requirement": "procedural_box:red",
+          "resolved": true,
+          "source": "create_box"
+        },
+        {
+          "blocker": null,
+          "kind": "robotwin_primitive",
+          "object_id": "blue_zone",
+          "path": null,
+          "requirement": "logical_region_marker",
+          "resolved": true,
+          "source": "create_box"
+        }
+      ],
+      "asset_generation_route": "not_used",
+      "asset_generation_used": false,
+      "blockers": [],
+      "instruction": "Move the red block onto the blue zone.",
+      "main_path": "use_existing_assets",
+      "schema_version": "placement_agent.v0",
+      "status": "ready_for_scaffold",
+      "task_name": "move_red_block_to_blue_zone"
+    }
+  },
+  "package_id": "move_red_block_to_blue_zone",
+  "schema_version": "agenticsim.environment_package.v1",
+  "source": {
+    "anchor_count": 1,
+    "asset_generation_used": false,
+    "blockers": [],
+    "compiler": "agenticsim.generation.placement_agent",
+    "mode": "anchor_to_env",
+    "network_used": false,
+    "schema": "text2env.tabletop.v0"
+  },
+  "target_backends": [
+    "isaacsim",
+    "mujoco",
+    "sapien",
+    "metasim"
+  ],
+  "task": {
+    "action": {
+      "arm_policy": {
+        "negative_arm": "left",
+        "nonnegative_arm": "right",
+        "object": "red_block",
+        "save_as": "main_arm",
+        "type": "by_object_x"
+      },
+      "interface": "robotwin_primitive_plan",
+      "operations": [
+        "grasp",
+        "move_by",
+        "place"
+      ]
+    },
+    "instruction": "Move the red block onto the blue zone.",
+    "intent": "place_in_region",
+    "metadata": {
+      "language": {
+        "full_description": "Move the red block onto the blue zone.",
+        "placeholders": {
+          "{A}": "red block",
+          "{B}": "blue zone",
+          "{a}": "$main_arm"
+        },
+        "preference": "Short imperative instructions.",
+        "schema": "{A} is the red block, {B} is the blue zone, {a} is the arm used to move the block.",
+        "seen_templates": [
+          "Move {A} onto {B}.",
+          "Use {a} to place {A} on {B}.",
+          "Put {A} in {B}."
+        ],
+        "unseen_templates": [
+          "Place {A} onto {B}.",
+          "Carry {A} to {B}.",
+          "Set {A} down on {B}."
+        ]
+      },
+      "source_schema": "text2env.tabletop.v0",
+      "source_status": "ready_for_scaffold"
+    },
+    "observation": {
+      "cameras": [
+        "head_camera",
+        "left_camera",
+        "right_camera"
+      ],
+      "state": [
+        "object_pose",
+        "robot_joint_position",
+        "contact"
+      ]
+    },
+    "plan": [
+      {
+        "arm": "$main_arm",
+        "comment": "Pick the object with the arm selected from its x position.",
+        "grasp_dis": 0.0,
+        "object": "red_block",
+        "op": "grasp",
+        "pre_grasp_dis": 0.09
+      },
+      {
+        "arm": "$main_arm",
+        "axis": "world",
+        "comment": "Lift before moving to the target region.",
+        "delta": [
+          0.0,
+          0.0,
+          0.08
+        ],
+        "op": "move_by"
+      },
+      {
+        "arm": "$main_arm",
+        "comment": "Place the object in the target region.",
+        "dis": 0.0,
+        "is_open": true,
+        "object": "red_block",
+        "op": "place",
+        "pre_dis": 0.05,
+        "target": "blue_zone"
+      },
+      {
+        "arm": "$main_arm",
+        "axis": "world",
+        "comment": "Move away after release.",
+        "delta": [
+          0.0,
+          0.0,
+          0.06
+        ],
+        "op": "move_by"
+      }
+    ],
+    "reset": {
+      "constraints": [
+        "no_initial_object_collision",
+        "target_reachable_by_robot",
+        "success_condition_sim_state_observable",
+        "task_objects_stable",
+        "protected_regions_defined",
+        "all_placeholders_bound"
+      ],
+      "object_poses": "from_env_spec",
+      "randomization": {
+        "cluttered_table": false,
+        "lighting": false,
+        "object_pose": true,
+        "table_height": false,
+        "texture": false
+      }
+    },
+    "success": [
+      {
+        "comment": "The red block center should end inside blue_zone.",
+        "object": "red_block",
+        "region": "blue_zone",
+        "tolerance_m": 0.04,
+        "type": "in_region"
+      },
+      {
+        "comment": "The robot should release the object.",
+        "required": true,
+        "type": "grippers_open"
+      }
+    ],
+    "termination": [
+      {
+        "steps": 1000,
+        "type": "timeout"
+      }
+    ]
+  }
+}

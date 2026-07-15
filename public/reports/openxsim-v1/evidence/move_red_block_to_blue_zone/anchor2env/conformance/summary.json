@@ -1,0 +1,89 @@
+{
+  "isaacsim": {
+    "highest": "L1",
+    "l2": {
+      "binding_failures": [
+        "source.action_interface_bound",
+        "source.success_evaluator_bound",
+        "target.action_interface_bound",
+        "target.success_evaluator_bound"
+      ],
+      "contract_hash_failures": []
+    },
+    "l3": {
+      "contact_mismatch_steps": 0,
+      "max_state_error_m": 0.0,
+      "state_tolerance_m": 0.001,
+      "steps": 21
+    },
+    "statuses": [
+      "pass",
+      "pass",
+      "fail",
+      "pass",
+      "not_evaluated"
+    ]
+  },
+  "metasim": {
+    "highest": "L1",
+    "l2": {},
+    "l3": {},
+    "statuses": [
+      "pass",
+      "pass",
+      "not_evaluated",
+      "not_evaluated",
+      "not_evaluated"
+    ]
+  },
+  "mujoco": {
+    "highest": "L1",
+    "l2": {
+      "binding_failures": [
+        "source.action_interface_bound",
+        "source.success_evaluator_bound",
+        "target.action_interface_bound",
+        "target.success_evaluator_bound"
+      ],
+      "contract_hash_failures": []
+    },
+    "l3": {
+      "contact_mismatch_steps": 0,
+      "max_state_error_m": 4.9814936925377214e-08,
+      "state_tolerance_m": 0.001,
+      "steps": 21
+    },
+    "statuses": [
+      "pass",
+      "pass",
+      "fail",
+      "pass",
+      "not_evaluated"
+    ]
+  },
+  "sapien": {
+    "highest": "L1",
+    "l2": {
+      "binding_failures": [
+        "source.action_interface_bound",
+        "source.success_evaluator_bound",
+        "target.action_interface_bound",
+        "target.success_evaluator_bound"
+      ],
+      "contract_hash_failures": []
+    },
+    "l3": {
+      "contact_mismatch_steps": 0,
+      "max_state_error_m": 0.0,
+      "state_tolerance_m": 0.001,
+      "steps": 21
+    },
+    "statuses": [
+      "pass",
+      "pass",
+      "fail",
+      "pass",
+      "not_evaluated"
+    ]
+  }
+}

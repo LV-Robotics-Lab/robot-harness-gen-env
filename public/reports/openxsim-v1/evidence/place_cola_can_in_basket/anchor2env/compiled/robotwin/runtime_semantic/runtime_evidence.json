@@ -1,0 +1,176 @@
+{
+  "action_interface": "robotwin_primitive_plan",
+  "action_interface_bound": true,
+  "backend": "robotwin",
+  "endpoint_states": {
+    "final_objects": {
+      "basket": {
+        "p": [
+          0.019999999552965164,
+          -0.05999999865889549,
+          0.7409999966621399
+        ],
+        "q": [
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "cola_can": {
+        "p": [
+          -0.0516141876578331,
+          -0.02048231102526188,
+          0.8911049962043762
+        ],
+        "q": [
+          0.8371387124061584,
+          0.08881469815969467,
+          0.5198987126350403,
+          -0.14496925473213196
+        ]
+      }
+    },
+    "initial_objects": {
+      "basket": {
+        "p": [
+          0.019999999552965164,
+          -0.05999999865889549,
+          0.7409999966621399
+        ],
+        "q": [
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "cola_can": {
+        "p": [
+          -0.22499847412109375,
+          0.05000143125653267,
+          0.7404220700263977
+        ],
+        "q": [
+          0.7067387104034424,
+          0.7073349952697754,
+          -0.009932244196534157,
+          -0.009953374974429607
+        ]
+      }
+    }
+  },
+  "limitations": [
+    "Endpoint states are not promoted to an L3 trajectory replay.",
+    "One generated action rollout is not an L4 policy evaluation."
+  ],
+  "observation_keys": [
+    "contact",
+    "object_pose",
+    "robot_joint_position"
+  ],
+  "package_digest": "f68fd78284cb5f5fd7e4ade56d5b65f9602f6615218a7f0ec05919f90b075a68",
+  "package_id": "place_cola_can_in_basket",
+  "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/place_cola_can_in_basket/anchor2env/compiled/robotwin/placement.json",
+  "placement_sha256": "b7e8271a44c4696835cce739d7dde074d09ad15d062fc105416053e5d5f1c8a6",
+  "reset_ok": true,
+  "rollout_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/place_cola_can_in_basket/anchor2env/compiled/robotwin/runtime_semantic/rollout_report.json",
+  "rollout_report_sha256": "a613ed4b7d2d4f73e08f08b584ac1c9f91326ada29dd709657b310ac56df46e0",
+  "schema": "agenticsim.runtime_evidence.v1",
+  "semantic_verification": {
+    "all_passed": true,
+    "conditions": [
+      {
+        "comment": "The cola can should end inside or near the basket footprint.",
+        "object": "cola_can",
+        "target_object": "basket",
+        "threshold_m": 0.15,
+        "type": "near"
+      },
+      {
+        "comment": "The cola can should contact the basket.",
+        "object": "cola_can",
+        "target_object": "basket",
+        "type": "contact"
+      }
+    ],
+    "contact_pairs": [
+      [
+        "basket",
+        "cola_can"
+      ]
+    ],
+    "plan_success": true,
+    "results": [
+      {
+        "index": 0,
+        "metrics": {
+          "distance_m": 0.0817938839142188,
+          "metric": "xy",
+          "threshold_m": 0.15
+        },
+        "passed": true,
+        "type": "near"
+      },
+      {
+        "index": 1,
+        "metrics": {
+          "object_pair": [
+            "basket",
+            "cola_can"
+          ],
+          "observed_contact_pairs": [
+            [
+              "basket",
+              "cola_can"
+            ]
+          ]
+        },
+        "passed": true,
+        "type": "contact"
+      }
+    ],
+    "schema": "agenticsim.robotwin_success_verification.v1",
+    "source": "task_program.verifier.conditions"
+  },
+  "step_ok": true,
+  "success_evaluator": {
+    "conditions": [
+      {
+        "comment": "The cola can should end inside or near the basket footprint.",
+        "object": "cola_can",
+        "target_object": "basket",
+        "threshold_m": 0.15,
+        "type": "near"
+      },
+      {
+        "comment": "The cola can should contact the basket.",
+        "object": "cola_can",
+        "target_object": "basket",
+        "type": "contact"
+      }
+    ],
+    "relation": "in",
+    "source_object_id": "cola_can",
+    "target_object_id": "basket",
+    "type": "conjunction"
+  },
+  "success_evaluator_bound": true,
+  "task_contract_hash": "cac105ca0381ef9325b88aa76048986f6c3b2987d4ebe8b3c00e00acbbd1f779",
+  "task_program": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/place_cola_can_in_basket/anchor2env/compiled/robotwin/task_program.json",
+  "task_program_sha256": "719a3208a4484c30a84c8657f25ced4dedd539f3a212f3f9a6f2876b800e3a85",
+  "video": {
+    "capped": false,
+    "capture_requests": 607,
+    "capture_stride_sim_steps": 4,
+    "duration_sec": 50.75,
+    "endpoint_only": false,
+    "fps": 12,
+    "frame_count": 609,
+    "max_frames": 2400,
+    "mode": "robotwin_native_save_frequency_hook",
+    "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/place_cola_can_in_basket/anchor2env/compiled/robotwin/runtime_semantic/observer_rollout_probe.mp4",
+    "sha256": "0dd258624dd72a801567c2fda2809f77a4c6d9b61c32603086b67ed82d4d9ad0",
+    "size_bytes": 696065
+  }
+}

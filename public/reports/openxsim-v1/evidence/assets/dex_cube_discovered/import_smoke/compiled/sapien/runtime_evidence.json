@@ -1,0 +1,263 @@
+{
+  "action_interface": "zero_action",
+  "action_interface_bound": true,
+  "backend": "sapien",
+  "object_positions_final": {
+    "dex_cube_discovered": [
+      7.152067826865505e-10,
+      0.0,
+      0.04998961463570595
+    ]
+  },
+  "object_positions_initial": {
+    "dex_cube_discovered": [
+      0.0,
+      0.0,
+      0.25
+    ]
+  },
+  "observation_keys": [
+    "contact",
+    "object_pose"
+  ],
+  "reset_ok": true,
+  "schema": "agenticsim.runtime_evidence.v1",
+  "step_ok": true,
+  "steps": 20,
+  "success_evaluator_bound": true,
+  "task_contract_hash": "a27669b4830d1d83a5ab6f6bc2edd8c64b4640fcbf10475ce88bec726aeca934",
+  "trajectory": [
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.25
+        ]
+      },
+      "step": 0
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.24901899695396423
+        ]
+      },
+      "step": 1
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.2470569908618927
+        ]
+      },
+      "step": 2
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.2441139966249466
+        ]
+      },
+      "step": 3
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.24018999934196472
+        ]
+      },
+      "step": 4
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.23528499901294708
+        ]
+      },
+      "step": 5
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.22939899563789368
+        ]
+      },
+      "step": 6
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.2225319892168045
+        ]
+      },
+      "step": 7
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.21468399465084076
+        ]
+      },
+      "step": 8
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.20585499703884125
+        ]
+      },
+      "step": 9
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.19604499638080597
+        ]
+      },
+      "step": 10
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.18525399267673492
+        ]
+      },
+      "step": 11
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.1734820008277893
+        ]
+      },
+      "step": 12
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.16072900593280792
+        ]
+      },
+      "step": 13
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.14699500799179077
+        ]
+      },
+      "step": 14
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.13228000700473785
+        ]
+      },
+      "step": 15
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.11658401042222977
+        ]
+      },
+      "step": 16
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.09990701079368591
+        ]
+      },
+      "step": 17
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.08224901556968689
+        ]
+      },
+      "step": 18
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          0.0,
+          0.0,
+          0.0636100172996521
+        ]
+      },
+      "step": 19
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "dex_cube_discovered": [
+          7.152067826865505e-10,
+          0.0,
+          0.04998961463570595
+        ]
+      },
+      "step": 20
+    }
+  ],
+  "trajectory_mode": "zero_action_physics_rollout"
+}

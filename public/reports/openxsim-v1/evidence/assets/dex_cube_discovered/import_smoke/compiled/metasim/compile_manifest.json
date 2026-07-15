@@ -1,0 +1,53 @@
+{
+  "artifact_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube_discovered/import_smoke/compiled/metasim/scenario.py",
+  "backend": "metasim",
+  "blockers": [],
+  "manifest_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube_discovered/import_smoke/compiled/metasim/compile_manifest.json",
+  "metadata": {
+    "artifact_format": "metasim_scenario_cfg",
+    "asset_ids": [
+      "dex_cube_discovered"
+    ],
+    "object_ids": [
+      "dex_cube_discovered"
+    ],
+    "runner_syntax_validated": true,
+    "scenario_json": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube_discovered/import_smoke/compiled/metasim/scenario.json",
+    "schema": "agenticsim.backend_compile.v1",
+    "task_contract": {
+      "action": {
+        "interface": "zero_action",
+        "operations": []
+      },
+      "observation": {
+        "state": [
+          "object_pose",
+          "contact"
+        ]
+      },
+      "reset": {
+        "object_poses": "from_env_spec"
+      },
+      "success": [
+        {
+          "type": "state_trace_available"
+        }
+      ],
+      "termination": [
+        {
+          "steps": 20,
+          "type": "timeout"
+        }
+      ]
+    }
+  },
+  "package_digest": "c3c93303dc8d901fcc08189dda82e3496eadf7f6860c553c218cc7f5aa011d6c",
+  "package_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube_discovered/import_smoke/compiled/metasim/environment_package.json",
+  "runtime_command": [
+    "python",
+    "-c",
+    "exec(open('/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube_discovered/import_smoke/compiled/metasim/scenario.py').read()); print(cfg)"
+  ],
+  "status": "compiled",
+  "warnings": []
+}

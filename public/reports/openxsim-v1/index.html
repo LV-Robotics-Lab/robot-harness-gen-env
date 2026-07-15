@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Open-X-Sim Four Workflows | V1 Evidence Report</title>
+  <style>
+    :root {
+      --ink: #172026;
+      --muted: #5f6c73;
+      --line: #d9e0e3;
+      --paper: #f7f8f7;
+      --surface: #ffffff;
+      --green: #176b4d;
+      --green-soft: #e6f2ec;
+      --red: #a23a32;
+      --red-soft: #f8e9e6;
+      --blue: #225f86;
+      --blue-soft: #e7f0f6;
+      --gold: #8b6715;
+      --gold-soft: #f7f0dc;
+      --code: #101820;
+      --sidebar: 270px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+      line-height: 1.55;
+    }
+    a { color: var(--blue); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { color: #153e59; }
+    code, pre { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+    .layout { display: grid; grid-template-columns: var(--sidebar) minmax(0, 1fr); min-height: 100vh; }
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 28px 20px;
+      background: #182229;
+      color: #edf2f3;
+      border-right: 1px solid #2d3b43;
+      overflow-y: auto;
+    }
+    .brand { margin-bottom: 28px; }
+    .brand-kicker { color: #9db0ba; font-size: 11px; text-transform: uppercase; font-weight: 700; }
+    .brand h1 { margin: 4px 0 8px; font-size: 22px; line-height: 1.15; }
+    .brand p { margin: 0; color: #b8c4ca; font-size: 13px; }
+    nav { display: grid; gap: 4px; }
+    nav a {
+      color: #b8c4ca;
+      text-decoration: none;
+      padding: 8px 10px;
+      border-left: 2px solid transparent;
+      font-size: 13px;
+    }
+    nav a:hover, nav a.active { color: #fff; background: #223039; border-left-color: #64b894; }
+    .side-meta { margin-top: 28px; padding-top: 18px; border-top: 1px solid #34434b; font-size: 12px; color: #9db0ba; }
+    main { min-width: 0; }
+    .masthead {
+      min-height: 390px;
+      display: grid;
+      align-items: end;
+      position: relative;
+      background: #111a20 url("evidence/place_cola_can_in_basket/text2env/compiled/robotwin/runtime_semantic/final_head_camera.png") center 42% / cover no-repeat;
+      color: white;
+      border-bottom: 1px solid #24313a;
+    }
+    .masthead::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(9, 15, 19, .92) 0%, rgba(9, 15, 19, .75) 52%, rgba(9, 15, 19, .28) 100%);
+    }
+    .masthead-inner { position: relative; z-index: 1; width: min(1080px, 100%); padding: 48px clamp(24px, 5vw, 72px); }
+    .eyebrow { margin: 0 0 12px; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #9fd8bd; }
+    .masthead h2 { margin: 0; max-width: 780px; font-size: clamp(34px, 5vw, 62px); line-height: 1.02; letter-spacing: 0; }
+    .masthead .lead { max-width: 760px; margin: 18px 0 0; color: #d8e0e3; font-size: 17px; }
+    .masthead-stats { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+    .masthead-stat { border: 1px solid rgba(255,255,255,.28); padding: 8px 11px; font-size: 12px; background: rgba(9,15,19,.55); }
+    .content { width: min(1120px, calc(100% - 48px)); margin: 0 auto; padding: 42px 0 80px; }
+    section { scroll-margin-top: 24px; padding: 38px 0; border-bottom: 1px solid var(--line); }
+    section:last-child { border-bottom: 0; }
+    .section-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; margin-bottom: 22px; }
+    .section-number { margin: 0 0 5px; color: var(--blue); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+    h3 { margin: 0; font-size: clamp(25px, 3vw, 36px); line-height: 1.15; letter-spacing: 0; }
+    h4 { margin: 0 0 10px; font-size: 18px; letter-spacing: 0; }
+    p { margin: 0 0 14px; overflow-wrap: anywhere; }
+    .muted { color: var(--muted); }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 28px;
+      padding: 4px 9px;
+      border: 1px solid;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .pass { color: var(--green); border-color: #9ec8b6; background: var(--green-soft); }
+    .active { color: var(--gold); border-color: #d8bd70; background: var(--gold-soft); }
+    .blocked { color: var(--red); border-color: #dbaca7; background: var(--red-soft); }
+    .info { color: var(--blue); border-color: #9fbfd4; background: var(--blue-soft); }
+    .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); background: var(--surface); }
+    .summary-item { padding: 20px; border-right: 1px solid var(--line); }
+    .summary-item:last-child { border-right: 0; }
+    .summary-item b { display: block; margin-bottom: 7px; font-size: 15px; }
+    .summary-item p { margin: 0; color: var(--muted); font-size: 13px; }
+    .summary-item .status { margin-bottom: 12px; }
+    .truth-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); }
+    .truth-table th, .truth-table td { padding: 13px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 13px; }
+    .truth-table th { background: #edf1f2; color: #3e4b52; font-size: 11px; text-transform: uppercase; }
+    .truth-table tr:last-child td { border-bottom: 0; }
+    .truth-table td:first-child { width: 19%; font-weight: 750; }
+    .truth-table td:nth-child(2) { width: 15%; }
+    .two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .three-col { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .panel { border: 1px solid var(--line); background: var(--surface); padding: 20px; border-radius: 6px; min-width: 0; }
+    .panel > :last-child { margin-bottom: 0; }
+    .metric-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin: 18px 0; }
+    .metric { background: var(--surface); padding: 14px; min-width: 0; }
+    .metric strong { display: block; font-size: 23px; line-height: 1.05; overflow-wrap: anywhere; }
+    .metric span { display: block; margin-top: 6px; color: var(--muted); font-size: 11px; text-transform: uppercase; font-weight: 700; }
+    .media-pair { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(260px, .7fr); gap: 18px; align-items: start; }
+    figure { margin: 0; min-width: 0; }
+    video, figure img { display: block; width: 100%; background: #111a20; border: 1px solid #26333b; }
+    video { aspect-ratio: 4 / 3; object-fit: contain; }
+    figcaption { padding: 9px 0 0; color: var(--muted); font-size: 12px; }
+    .image-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .frame-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+    .frame-strip img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border: 1px solid var(--line); background: #dfe5e7; }
+    .frame-strip figure { position: relative; }
+    .frame-strip figcaption { position: absolute; left: 5px; bottom: 5px; padding: 2px 5px; color: white; background: rgba(0,0,0,.7); font-size: 10px; }
+    .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 20px; }
+    .flow-step { position: relative; border: 1px solid var(--line); background: var(--surface); min-height: 100px; padding: 14px; font-size: 12px; }
+    .flow-step b { display: block; margin-bottom: 6px; font-size: 14px; }
+    .flow-step:not(:last-child)::after { content: "→"; position: absolute; right: -11px; top: 34px; z-index: 2; color: var(--blue); font-weight: 900; background: var(--paper); padding: 0 3px; }
+    .file-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .file-list a { display: block; padding: 8px 10px; background: #f0f3f4; border-left: 3px solid #9fb1b9; overflow-wrap: anywhere; font-size: 12px; }
+    .claim { border-left: 4px solid var(--blue); background: var(--blue-soft); padding: 14px 16px; margin: 16px 0; }
+    .claim.warn { border-left-color: var(--gold); background: var(--gold-soft); }
+    .claim.stop { border-left-color: var(--red); background: var(--red-soft); }
+    pre { overflow: auto; padding: 16px; color: #dce7eb; background: var(--code); border-radius: 4px; font-size: 12px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .mono { font-family: "SFMono-Regular", Consolas, monospace; overflow-wrap: anywhere; }
+    .tag { font-weight: 800; }
+    .footer { padding: 28px 0 0; color: var(--muted); font-size: 12px; }
+    @media (max-width: 980px) {
+      :root { --sidebar: 220px; }
+      .summary-grid { grid-template-columns: 1fr 1fr; }
+      .summary-item:nth-child(2) { border-right: 0; }
+      .summary-item:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .flow { grid-template-columns: 1fr 1fr; }
+      .flow-step::after { display: none; }
+      .media-pair { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 740px) {
+      .layout { display: block; }
+      aside { position: relative; height: auto; padding: 18px; }
+      nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .side-meta { display: none; }
+      .masthead { min-height: 430px; }
+      .masthead::before { background: rgba(9,15,19,.77); }
+      .content { width: min(100% - 28px, 1120px); padding-top: 24px; }
+      .section-head { grid-template-columns: 1fr; gap: 12px; align-items: start; }
+      .summary-grid, .two-col, .three-col, .metric-row, .flow { grid-template-columns: 1fr; }
+      .summary-item { border-right: 0; border-bottom: 1px solid var(--line); }
+      .summary-item:last-child { border-bottom: 0; }
+      .frame-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .truth-table { display: table; width: 100%; table-layout: fixed; }
+      .truth-table th, .truth-table td { min-width: 0; padding: 9px 7px; overflow-wrap: anywhere; font-size: 11px; }
+      .truth-table td:first-child, .truth-table td:nth-child(2) { width: auto; }
+      .truth-table .status { max-width: 100%; white-space: normal; line-height: 1.2; }
+      .image-stack { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="brand">
+        <div class="brand-kicker">PEARL / AgenticSim</div>
+        <h1>Open-X-Sim V1</h1>
+        <p>Four-workflow evidence report</p>
+      </div>
+      <nav aria-label="Report sections">
+        <a href="#verdict">结论</a>
+        <a href="#architecture">共享架构</a>
+        <a href="#text2env">1. Text2Env</a>
+        <a href="#anchor2env">2. Anchor2Env</a>
+        <a href="#assetscout">3. AssetScout</a>
+        <a href="#transfer">4. Open-X-Sim</a>
+        <a href="#tests">测试与资产</a>
+        <a href="#next">剩余验收</a>
+      </nav>
+      <div class="side-meta">
+        <div>Generated 2026-07-15</div>
+        <div>Runtime: RTX 5090 / driver 580.159.03</div>
+        <div>Evidence root: 302 files</div>
+      </div>
+    </aside>
+
+    <main>
+      <header class="masthead">
+        <div class="masthead-inner">
+          <p class="eyebrow">Environment Compiler + Asset Acquisition + Cross-Simulator Conformance</p>
+          <h2>四条工作流，单一可验证环境包</h2>
+          <p class="lead"><span class="tag">[KNOWN][HIGH]</span> V1 已把文本、图片/视频 anchor、联网资产获取和跨仿真器迁移连到同一套 typed IR、编译器与证据模型；dashboard 的扩大验收仍保持 active，不虚标 done。</p>
+          <div class="masthead-stats">
+            <span class="masthead-stat">42 local tests</span>
+            <span class="masthead-stat">36 RTX 5090 tests</span>
+            <span class="masthead-stat">613 + 609 video frames</span>
+            <span class="masthead-stat">L3 rigid transfer</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <section id="verdict">
+          <div class="section-head">
+            <div>
+              <p class="section-number">Executive verdict</p>
+              <h3>现在真正完成了什么</h3>
+            </div>
+            <span class="status pass">V1 runtime evidence complete</span>
+          </div>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="status pass">V1 pass</span>
+              <b>1. Pure Text2Env</b>
+              <p>纯文本输入编译到 RoboTwin 现有资产、布局、任务程序、真实 rollout 和 success verifier。</p>
+            </div>
+            <div class="summary-item">
+              <span class="status pass">V1 pass</span>
+              <b>2. Anchor2Env</b>
+              <p>真实视频解码、全时间轴采样、带置信度约束融合，并重新运行 RoboTwin rollout。</p>
+            </div>
+            <div class="summary-item">
+              <span class="status pass">V1 pass</span>
+              <b>3. AssetScout</b>
+              <p>GitHub 自主发现、下载、哈希、归一化、碰撞代理、材质与多后端格式编译。</p>
+            </div>
+            <div class="summary-item">
+              <span class="status pass">V1 pass</span>
+              <b>4. Open-X-Sim</b>
+              <p>原生 SAPIEN 场景输入迁移到 MuJoCo 与 Isaac Sim，刚体公共子集达到 L3。</p>
+            </div>
+          </div>
+          <div class="claim warn"><span class="tag">[KNOWN][HIGH]</span> “V1 pass”不等于 dashboard 大 TODO 全部验收。宽口径 TODO 还要求更多场景、更多资产来源、关节物体、相机敏感迁移、消融与失败图库，因此保持 active。</div>
+          <table class="truth-table">
+            <thead><tr><th>Dashboard TODO</th><th>当前状态</th><th>已有证据</th><th>缺口</th></tr></thead>
+            <tbody>
+              <tr><td>Text2Env Stage 0–1 / 2–4</td><td><span class="status active">active</span></td><td>can/basket 现有资产、确定性包、RoboTwin 语义 rollout</td><td>严格双语 catalog/golden、100 seeds、完整 SAPIEN 可见性与重放门</td></tr>
+              <tr><td>Anchor2Env</td><td><span class="status active">active</span></td><td>视频 613 帧输入、8 帧采样、609 帧输出、typed uncertainty</td><td>至少 3 个场景、still-image full runtime、text-vs-anchor ablation、failure gallery</td></tr>
+              <tr><td>Asset Web Agent</td><td><span class="status active">active</span></td><td>1 个自主发现资产、20 candidates、OBJ→USD/MJCF/URDF/SAPIEN/MetaSim</td><td>3 个官方来源、10 个异构资产、关节资产、source-vs-import previews</td></tr>
+              <tr><td>Open-X-Sim</td><td><span class="status active">active</span></td><td>SAPIEN→MuJoCo/Isaac L3，MetaSim 官方 config 构造</td><td>3 场景中的 articulated 与 camera-sensitive、controller/policy transfer、L4</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="architecture">
+          <div class="section-head">
+            <div><p class="section-number">Shared architecture</p><h3>不是四套独立管线</h3></div>
+            <span class="status info">typed IR</span>
+          </div>
+          <p><span class="tag">[INFERRED][HIGH]</span> 第 2 项是第 1 项的多模态约束扩展，第 3 项是共享资产基础设施，第 4 项是统一环境包的编译和验证层。所有入口最终生成同一 `EnvironmentPackage`。</p>
+          <div class="flow" aria-label="Open-X-Sim compilation flow">
+            <div class="flow-step"><b>Inputs</b>Text request<br>Image / video<br>Existing simulator env</div>
+            <div class="flow-step"><b>Evidence</b>AnchorSpec<br>Asset provenance<br>Source adapter</div>
+            <div class="flow-step"><b>Typed IR</b>EnvSpec<br>AssetBundle<br>TaskSpec</div>
+            <div class="flow-step"><b>Compilers</b>RoboTwin<br>SAPIEN / MuJoCo<br>Isaac / MetaSim</div>
+            <div class="flow-step"><b>Proof</b>RuntimeEvidence<br>ConformanceReport<br>Hashes + blockers</div>
+          </div>
+          <div class="two-col" style="margin-top:18px">
+            <div class="panel"><h4>核心类型</h4><p class="muted">`EnvSpec` 管世界、机器人、传感器和随机化；`AssetBundle` 管视觉/碰撞/关节/多格式与来源；`TaskSpec` 管动作、观测与成功条件；`AnchorSpec` 管观测约束与不确定性。</p></div>
+            <div class="panel"><h4>验收级别</h4><p class="muted">L0 可导入；L1 结构与初态；L2 reset/action/observation/success；L3 轨迹状态与接触误差；L4 同一策略的统计行为。缺证据不会自动晋级。</p></div>
+          </div>
+        </section>
+
+        <section id="text2env">
+          <div class="section-head">
+            <div><p class="section-number">Workflow 1</p><h3>Pure Text2Env</h3></div>
+            <span class="status pass">RoboTwin semantic pass</span>
+          </div>
+          <p><span class="tag">[KNOWN][HIGH]</span> 输入 “Place the cola can into the basket.” 后，系统只使用文本和 RoboTwin 现有资产，选中 `071_can/base0` 与 `110_basket/base1`，输出 package、placement、task program，并执行真实 RoboTwin primitive plan。</p>
+          <div class="metric-row">
+            <div class="metric"><strong>613</strong><span>decoded video frames</span></div>
+            <div class="metric"><strong>51.08 s</strong><span>continuous duration</span></div>
+            <div class="metric"><strong>0.0757 m</strong><span>final XY distance, threshold 0.15 m</span></div>
+          </div>
+          <div class="media-pair">
+            <figure>
+              <video controls preload="metadata" playsinline src="evidence/place_cola_can_in_basket/text2env/compiled/robotwin/runtime_semantic/observer_rollout_probe.mp4"></video>
+              <figcaption><span class="tag">[COMPUTED][HIGH]</span> 320×240, 12 fps, 613 frames. `endpoint_only=false`; SHA-256 starts `28622067422a`.</figcaption>
+            </figure>
+            <div class="image-stack">
+              <figure><img src="evidence/place_cola_can_in_basket/text2env/compiled/robotwin/runtime_semantic/initial_head_camera.png" alt="Text2Env initial RoboTwin head camera view"><figcaption>Initial head camera</figcaption></figure>
+              <figure><img src="evidence/place_cola_can_in_basket/text2env/compiled/robotwin/runtime_semantic/final_head_camera.png" alt="Text2Env final RoboTwin head camera view"><figcaption>Final head camera</figcaption></figure>
+            </div>
+          </div>
+          <div class="two-col" style="margin-top:18px">
+            <div class="panel">
+              <h4>Verifier result</h4>
+              <p><span class="tag">[KNOWN][HIGH]</span> `near` 与真实 SAPIEN contact pair `basket / cola_can` 均通过；action interface 与 success evaluator 都绑定到 package/task hashes。</p>
+              <ul class="file-list">
+                <li><a href="evidence/place_cola_can_in_basket/text2env/compiled/robotwin/runtime_semantic/runtime_evidence.json">runtime_evidence.json</a></li>
+                <li><a href="evidence/place_cola_can_in_basket/text2env/compiled/robotwin/task_program.json">task_program.json</a></li>
+                <li><a href="evidence/place_cola_can_in_basket/text2env/environment_package.json">environment_package.json</a></li>
+              </ul>
+            </div>
+            <div class="panel">
+              <h4>Claim boundary</h4>
+              <p><span class="tag">[KNOWN][HIGH]</span> 这是 RoboTwin 单后端的语义运行证据，不是跨引擎 L3，也不是 learned policy 或 L4 统计评估。</p>
+              <p class="mono">package digest<br>dc02ac61d744d1c559cd8222a83f91602979172a28d7e145af4bb5d5dde3e47b</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="anchor2env">
+          <div class="section-head">
+            <div><p class="section-number">Workflow 2</p><h3>Image / Video Anchor2Env</h3></div>
+            <span class="status pass">video-conditioned pass</span>
+          </div>
+          <p><span class="tag">[KNOWN][HIGH]</span> Anchor 管线对 613 帧输入视频进行 ffprobe 验证和均匀时间采样，抽取 8 个真实帧；用户/VLM annotations 写入 object、camera、appearance、motion 和 uncertainty 约束，再与文本任务融合。</p>
+          <div class="metric-row">
+            <div class="metric"><strong>8</strong><span>uniform timeline samples</span></div>
+            <div class="metric"><strong>0.88</strong><span>anchor confidence</span></div>
+            <div class="metric"><strong>609</strong><span>output rollout frames</span></div>
+          </div>
+          <figure>
+            <video controls preload="metadata" playsinline src="evidence/place_cola_can_in_basket/anchor2env/compiled/robotwin/runtime_semantic/observer_rollout_probe.mp4"></video>
+            <figcaption><span class="tag">[COMPUTED][HIGH]</span> Anchor-conditioned RoboTwin rollout: 320×240, 12 fps, 609 frames, 50.75 s; near + real contact pass.</figcaption>
+          </figure>
+          <div class="frame-strip" aria-label="Eight sampled anchor frames">
+            <figure><img src="evidence/place_cola_can_in_basket/anchor2env/anchor_evidence/anchor_28622067422a/frame_000.png" alt="Anchor sample at 0 seconds"><figcaption>0.00 s</figcaption></figure>
+            <figure><img src="evidence/place_cola_can_in_basket/anchor2env/anchor_evidence/anchor_28622067422a/frame_001.png" alt="Anchor sample at 7.29 seconds"><figcaption>7.29 s</figcaption></figure>
+            <figure><img src="evidence/place_cola_can_in_basket/anchor2env/anchor_evidence/anchor_28622067422a/frame_002.png" alt="Anchor sample at 14.57 seconds"><figcaption>14.57 s</figcaption></figure>
+            <figure><img src="evidence/place_cola_can_in_basket/anchor2env/anchor_evidence/anchor_28622067422a/frame_003.png" alt="Anchor sample at 21.86 seconds"><figcaption>21.86 s</figcaption></figure>
+            <figure><img src="evidence/place_cola_can_in_basket/anchor2env/anchor_evidence/anchor_28622067422a/frame_004.png" alt="Anchor sample at 29.14 seconds"><figcaption>29.14 s</figcaption></figure>
+            <figure><img src="evidence/place_cola_can_in_basket/anchor2env/anchor_evidence/anchor_28622067422a/frame_005.png" alt="Anchor sample at 36.43 seconds"><figcaption>36.43 s</figcaption></figure>
+            <figure><img src="evidence/place_cola_can_in_basket/anchor2env/anchor_evidence/anchor_28622067422a/frame_006.png" alt="Anchor sample at 43.71 seconds"><figcaption>43.71 s</figcaption></figure>
+            <figure><img src="evidence/place_cola_can_in_basket/anchor2env/anchor_evidence/anchor_28622067422a/frame_007.png" alt="Anchor sample at 51.00 seconds"><figcaption>51.00 s</figcaption></figure>
+          </div>
+          <div class="two-col" style="margin-top:18px">
+            <div class="panel"><h4>Typed uncertainty</h4><p class="muted">`metric_positions_are_seed_specific`, `unobserved_geometry_unknown`, `appearance_labels_are_user_or_vlm_annotations`, `absolute_scale_unknown`。Anchor 是约束，不冒充完整 3D ground truth。</p></div>
+            <div class="panel"><h4>Evidence</h4><ul class="file-list"><li><a href="evidence/place_cola_can_in_basket/anchor2env/anchor_evidence/anchor_28622067422a/anchor.json">anchor.json</a></li><li><a href="evidence/place_cola_can_in_basket/anchor2env/compiled/robotwin/runtime_semantic/runtime_evidence.json">runtime_evidence.json</a></li><li><a href="evidence/place_cola_can_in_basket/anchor2env/environment_package.json">environment_package.json</a></li></ul></div>
+          </div>
+        </section>
+
+        <section id="assetscout">
+          <div class="section-head">
+            <div><p class="section-number">Workflow 3</p><h3>AssetScout + AssetCompiler</h3></div>
+            <span class="status pass">autonomous discovery pass</span>
+          </div>
+          <p><span class="tag">[KNOWN][HIGH]</span> 本次运行没有预先给 owner/repo。Agent 先搜索仓库，再在树中检索资产，从 20 个候选中选择 `google-deepmind/mujoco_menagerie/.../dex_cube.obj`，下载并记录来源、哈希和原始 license API 返回值。</p>
+          <div class="three-col">
+            <div class="panel"><h4>Discovery</h4><p><b>Provider</b><br>GitHub repository discovery</p><p><b>Candidates</b><br>20</p><p><b>Selected source</b><br><a href="https://github.com/google-deepmind/mujoco_menagerie/blob/main/tetheria_aero_hand_open/assets/dex_cube.obj">MuJoCo Menagerie / dex_cube.obj</a></p></div>
+            <div class="panel"><h4>Normalization</h4><p><b>Source extent</b><br>2 × 2 × 2</p><p><b>Normalized extent</b><br>1 × 1 × 1 m</p><p><b>Generated</b><br>default material + AABB collision proxy</p></div>
+            <div class="panel"><h4>Outputs</h4><p>Normalized OBJ<br>collision OBJ<br>USDA<br>MJCF<br>URDF<br>SAPIEN manifest<br>MetaSim object config</p></div>
+          </div>
+          <div class="claim stop"><span class="tag">[KNOWN][HIGH]</span> GitHub license API 对本次候选返回 `NOASSERTION`，报告保持原值，不伪造为 Apache-2.0。仓库级 LICENSE 可作为后续人工核验线索，但不是当前 per-file 证明。</div>
+          <table class="truth-table">
+            <thead><tr><th>Runtime/import surface</th><th>Result</th><th>Boundary</th></tr></thead>
+            <tbody>
+              <tr><td>MuJoCo</td><td><span class="status pass">20-step pass</span></td><td>normalized mesh settles; final z ≈ 0.04399 m</td></tr>
+              <tr><td>SAPIEN</td><td><span class="status pass">20-step pass</span></td><td>normalized mesh settles; final z ≈ 0.04999 m</td></tr>
+              <tr><td>Isaac Sim</td><td><span class="status info">import smoke</span></td><td>USDA static reference loads; dynamic collision parity not claimed</td></tr>
+              <tr><td>MetaSim</td><td><span class="status info">config pass</span></td><td>official object/config construction; no runtime simulator selected</td></tr>
+            </tbody>
+          </table>
+          <div class="two-col" style="margin-top:18px">
+            <div class="panel"><h4>Search and provenance</h4><ul class="file-list"><li><a href="evidence/assets/dex_cube_discovered/search_evidence.json">search_evidence.json</a></li><li><a href="evidence/assets/dex_cube_discovered/cache/033a71c6f740be62d5ec/provenance.json">provenance.json</a></li><li><a href="evidence/assets/dex_cube_discovered/asset_bundle.json">asset_bundle.json</a></li></ul></div>
+            <div class="panel"><h4>Compiled asset</h4><ul class="file-list"><li><a href="evidence/assets/dex_cube_discovered/compiled/dex_cube_discovered/asset_validation.json">asset_validation.json</a></li><li><a href="evidence/assets/dex_cube_discovered/compiled/dex_cube_discovered/dex_cube_discovered.normalized.obj">normalized OBJ</a></li><li><a href="evidence/assets/dex_cube_discovered/compiled/dex_cube_discovered/dex_cube_discovered.usda">USDA</a></li><li><a href="evidence/assets/dex_cube_discovered/compiled/dex_cube_discovered/dex_cube_discovered.xml">MJCF</a></li><li><a href="evidence/assets/dex_cube_discovered/compiled/dex_cube_discovered/dex_cube_discovered.urdf">URDF</a></li></ul></div>
+          </div>
+        </section>
+
+        <section id="transfer">
+          <div class="section-head">
+            <div><p class="section-number">Workflow 4</p><h3>Open-X-Sim Transfer</h3></div>
+            <span class="status pass">rigid common subset L3</span>
+          </div>
+          <p><span class="tag">[KNOWN][HIGH]</span> 原生 SAPIEN JSON 场景被安全解析成 `EnvironmentPackage`，不执行来源 Python，也不依赖 compile sidecar。相同 rigid settle package 编译到 MuJoCo 与 Isaac Sim，比较 21 个状态点和接触序列。</p>
+          <div class="metric-row">
+            <div class="metric"><strong>4.98e−8 m</strong><span>SAPIEN → MuJoCo max state error</span></div>
+            <div class="metric"><strong>0.0 m</strong><span>SAPIEN → Isaac max state error</span></div>
+            <div class="metric"><strong>0</strong><span>contact mismatch steps</span></div>
+          </div>
+          <table class="truth-table">
+            <thead><tr><th>Target</th><th>Highest level</th><th>Evidence</th><th>Not claimed</th></tr></thead>
+            <tbody>
+              <tr><td>MuJoCo</td><td><span class="status pass">L3</span></td><td>L0–L3 pass, 21 points, 0.001 m tolerance</td><td>L4 policy statistics</td></tr>
+              <tr><td>Isaac Sim</td><td><span class="status pass">L3</span></td><td>L0–L3 pass, 21 points, 0.001 m tolerance</td><td>articulation/controller/camera equivalence</td></tr>
+              <tr><td>MetaSim</td><td><span class="status info">official config</span></td><td>`ScenarioCfg` + `PrimitiveCubeCfg` constructed</td><td>runtime backend execution</td></tr>
+            </tbody>
+          </table>
+          <div class="claim warn"><span class="tag">[KNOWN][HIGH]</span> 当前 L3 仅适用于刚体 primitive、zero-action、公共观测子集。它不能外推到关节限制、执行器、相机投影、接触丰富任务、同一控制器或同一 learned policy。</div>
+          <div class="two-col">
+            <div class="panel"><h4>SAPIEN source proof</h4><ul class="file-list"><li><a href="evidence/transfer_inputs/existing_settle_sapien_scene.json">native SAPIEN input</a></li><li><a href="evidence/sapien_source_transfer/existing_settle/transfer/imported_environment_package.json">imported package</a></li><li><a href="evidence/sapien_source_transfer/existing_settle/transfer/conformance/runtime_summary.json">runtime summary</a></li></ul></div>
+            <div class="panel"><h4>MJCF source proof</h4><ul class="file-list"><li><a href="evidence/existing_settle/transfer/workflow_manifest.json">workflow manifest</a></li><li><a href="evidence/existing_settle/transfer/conformance/runtime_summary.json">cross-backend summary</a></li><li><a href="evidence/existing_settle/transfer/compiled/isaacsim/runtime_evidence.json">Isaac runtime evidence</a></li></ul></div>
+          </div>
+        </section>
+
+        <section id="tests">
+          <div class="section-head">
+            <div><p class="section-number">Verification</p><h3>测试、源码与原始资产</h3></div>
+            <span class="status pass">artifact-first</span>
+          </div>
+          <div class="two-col">
+            <div class="panel">
+              <h4>Automated tests</h4>
+              <p><span class="tag">[COMPUTED][HIGH]</span> 本机定向测试 42/42；RTX 5090 远端定向测试 36/36。最终重跑日志与 manifest 位于本目录根部。</p>
+              <pre>PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=source/agenticsim \
+  /Users/boris/miniconda3/bin/python -m pytest -q \
+  tests/test_placement_agent.py \
+  tests/test_openxsim_anchors.py \
+  tests/test_openxsim_assets.py \
+  tests/test_openxsim_conformance_pipeline.py \
+  tests/test_openxsim_ir_backends.py</pre>
+              <ul class="file-list">
+                <li><a href="tests_local.txt">local test log: 42 passed</a></li>
+                <li><a href="tests_remote_rtx5090.txt">RTX 5090 test log: 36 passed</a></li>
+                <li><a href="report_manifest.json">report manifest and claim boundaries</a></li>
+                <li><a href="hosted_subset_manifest.json">hosted file hashes</a></li>
+                <li><a href="manifest.sha256">offline SHA-256 inventory</a></li>
+              </ul>
+            </div>
+            <div class="panel">
+              <h4>Source snapshot</h4>
+              <ul class="file-list">
+                <li><a href="source_snapshot/docs/openxsim_four_workflows.md">implementation and reproduction guide</a></li>
+                <li><a href="source_snapshot/source/agenticsim/agenticsim/openxsim/ir.py">typed IR</a></li>
+                <li><a href="source_snapshot/source/agenticsim/agenticsim/openxsim/anchors.py">anchor extraction</a></li>
+                <li><a href="source_snapshot/source/agenticsim/agenticsim/openxsim/assets.py">asset discovery/compiler</a></li>
+                <li><a href="source_snapshot/source/agenticsim/agenticsim/openxsim/importers.py">safe importers</a></li>
+                <li><a href="source_snapshot/source/agenticsim/agenticsim/openxsim/conformance.py">L0–L4 harness</a></li>
+                <li><a href="source_snapshot/remote_runtime/run_generated_selection2env_rollout_probe.py">RoboTwin semantic rollout probe</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="claim"><span class="tag">[KNOWN][HIGH]</span> 原始 evidence 目录保留 302 个文件，包括视频、PNG、EnvironmentPackage、runtime evidence、conformance、搜索候选、provenance、编译格式、stdout/stderr 与 failure evidence。`manifest.sha256` 对报告目录中的文件逐一校验。</div>
+        </section>
+
+        <section id="next">
+          <div class="section-head">
+            <div><p class="section-number">Acceptance backlog</p><h3>下一步不是重复做 V1</h3></div>
+            <span class="status active">four TODOs remain active</span>
+          </div>
+          <table class="truth-table">
+            <thead><tr><th>优先级</th><th>工作</th><th>完成门</th></tr></thead>
+            <tbody>
+              <tr><td>P0</td><td>补齐 Text2Env strict bilingual Stage 0–4</td><td>真实 catalog、goldens、100 seeds、可见性、resolved-only replay</td></tr>
+              <tr><td>P0</td><td>Anchor2Env 扩到 3 个场景</td><td>至少 1 image + 1 video full runtime，ablation 与 failure gallery</td></tr>
+              <tr><td>P0</td><td>AssetScout 扩到 3 sources / 10 assets</td><td>异构格式、关节资产、settle/render/collision QA、typed decisions</td></tr>
+              <tr><td>P1</td><td>Open-X-Sim 加 articulated + camera-sensitive</td><td>控制/观测/相机误差与 loss records；不把文件加载当等价</td></tr>
+              <tr><td>P2</td><td>L4 policy transfer</td><td>固定策略、多 seed、统计成功率和回归区间</td></tr>
+            </tbody>
+          </table>
+          <div class="footer">
+            <p><span class="tag">[KNOWN][HIGH]</span> Report root: `/Users/boris/Downloads/openxsim_four_workflows_20260715/`</p>
+            <p><span class="tag">[RULES I BROKE]</span>: None.</p>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script>
+    const links = [...document.querySelectorAll('nav a')];
+    const sections = links.map((link) => document.querySelector(link.getAttribute('href'))).filter(Boolean);
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      links.forEach((link) => link.classList.toggle('active', link.getAttribute('href') === `#${visible.target.id}`));
+    }, { rootMargin: '-15% 0px -70% 0px', threshold: [0, .1, .5] });
+    sections.forEach((section) => observer.observe(section));
+  </script>
+</body>
+</html>

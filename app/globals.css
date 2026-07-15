@@ -348,6 +348,11 @@ video {
   color: #087052;
 }
 
+.status-active {
+  background: var(--orange-soft);
+  color: #8b4a1f;
+}
+
 .report-metric {
   margin-top: 24px;
   display: flex;

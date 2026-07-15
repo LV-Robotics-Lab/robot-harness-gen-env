@@ -1,0 +1,35 @@
+{
+  "schema_version": "alchedata.generated_selection2env_rollout_probe.v0",
+  "command": "/collect",
+  "probe_type": "generated_selection2env_play_once",
+  "task_id": "place_cola_can_in_basket",
+  "scene_id": "place_cola_can_in_basket_scene",
+  "task_program_input": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/place_cola_can_in_basket/text2env/compiled/robotwin/task_program.json",
+  "task_config": "demo_clean",
+  "seed": 0,
+  "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/place_cola_can_in_basket/text2env/compiled/robotwin/placement.json",
+  "placement_sha256": "c995a4107bd46baed6b5d288e1f7c06c67514fadf0c0207ee15adff5e99a9a3e",
+  "scene_module": null,
+  "robotwin_root": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin",
+  "out_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/place_cola_can_in_basket/text2env/compiled/robotwin/runtime",
+  "task_binding": {
+    "template": "place_in",
+    "source_id": "cola_can",
+    "target_kind": "object",
+    "target_id": "basket"
+  },
+  "native_data_recording_requested": false,
+  "domain_randomization": {
+    "random_background": false,
+    "cluttered_table": false,
+    "random_light": false,
+    "random_table_height": 0.0,
+    "random_head_camera_dis": 0.0
+  },
+  "status": "started",
+  "limitations": [
+    "This probe executes a generated selection2env play_once template against a generated placement.",
+    "It is an action-stack smoke test, not learned-policy training or evaluation.",
+    "It does not prove robustness across randomization, embodiments, or held-out tasks."
+  ]
+}

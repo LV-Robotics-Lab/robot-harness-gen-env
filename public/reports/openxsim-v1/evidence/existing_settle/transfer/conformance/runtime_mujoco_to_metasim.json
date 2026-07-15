@@ -1,0 +1,50 @@
+{
+  "checks": [
+    {
+      "details": "artifact exists and passed backend-specific static validation",
+      "level": "L0",
+      "metrics": {
+        "artifact": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/existing_settle/transfer/compiled/metasim/scenario.py",
+        "size_bytes": 495
+      },
+      "name": "asset_import",
+      "status": "pass"
+    },
+    {
+      "details": "units, axes, objects, assets, regions, and nominal poses agree",
+      "level": "L1",
+      "metrics": {
+        "max_pose_error_m": 0.0,
+        "pose_tolerance_m": 1e-06
+      },
+      "name": "scene_structure",
+      "status": "pass"
+    },
+    {
+      "details": "task contracts match statically, but both source and target runtime evidence are required",
+      "level": "L2",
+      "metrics": {},
+      "name": "task_semantics",
+      "status": "not_evaluated"
+    },
+    {
+      "details": "both runtimes must provide non-empty trajectory arrays",
+      "level": "L3",
+      "metrics": {},
+      "name": "trajectory_replay",
+      "status": "not_evaluated"
+    },
+    {
+      "details": "source and target policy evaluation evidence are both required",
+      "level": "L4",
+      "metrics": {},
+      "name": "policy_behavior",
+      "status": "not_evaluated"
+    }
+  ],
+  "highest_consecutive_level": "L1",
+  "package_id": "existing_settle",
+  "schema": "agenticsim.conformance_report.v1",
+  "source_backend": "mujoco",
+  "target_backend": "metasim"
+}

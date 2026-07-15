@@ -1,0 +1,25 @@
+{
+  "candidate": {
+    "candidate_id": "github:google-deepmind/mujoco_menagerie:tetheria_aero_hand_open/assets/dex_cube.obj",
+    "category": "assets",
+    "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/tetheria_aero_hand_open/assets/dex_cube.obj",
+    "format": "obj",
+    "license": "Apache-2.0",
+    "metadata": {
+      "branch": "main",
+      "path": "tetheria_aero_hand_open/assets/dex_cube.obj",
+      "repository": "google-deepmind/mujoco_menagerie"
+    },
+    "name": "dex_cube.obj",
+    "provider": "github_tree",
+    "score": 2.0,
+    "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/tetheria_aero_hand_open/assets/dex_cube.obj"
+  },
+  "detected_format": "obj",
+  "downloaded_at_unix": 1784097898,
+  "media_type": "text/plain",
+  "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/cache/033a71c6f740be62d5ec/dex_cube.obj",
+  "schema": "agenticsim.asset_provenance.v1",
+  "sha256": "2b88294ed0228f1df0c6d070bdecaef10c214d9cea8e5edf393d3eaddc4b014d",
+  "size_bytes": 1151
+}

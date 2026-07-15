@@ -1,0 +1,53 @@
+{
+  "artifact_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/metasim/scenario.py",
+  "backend": "metasim",
+  "blockers": [],
+  "manifest_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/metasim/compile_manifest.json",
+  "metadata": {
+    "artifact_format": "metasim_scenario_cfg",
+    "asset_ids": [
+      "settle_cube_asset"
+    ],
+    "object_ids": [
+      "settle_cube"
+    ],
+    "runner_syntax_validated": true,
+    "scenario_json": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/metasim/scenario.json",
+    "schema": "agenticsim.backend_compile.v1",
+    "task_contract": {
+      "action": {
+        "interface": "zero_action",
+        "operations": []
+      },
+      "observation": {
+        "state": [
+          "object_pose",
+          "contact"
+        ]
+      },
+      "reset": {
+        "object_poses": "mjcf_defaults"
+      },
+      "success": [
+        {
+          "type": "state_trace_available"
+        }
+      ],
+      "termination": [
+        {
+          "steps": 20,
+          "type": "timeout"
+        }
+      ]
+    }
+  },
+  "package_digest": "75e7761c64cc27dfe2792b51bfd23f7c769ccd11200d9935231b4770c31d0a3c",
+  "package_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/metasim/environment_package.json",
+  "runtime_command": [
+    "python",
+    "-c",
+    "exec(open('/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/sapien_source_transfer/existing_settle/transfer/compiled/metasim/scenario.py').read()); print(cfg)"
+  ],
+  "status": "compiled",
+  "warnings": []
+}

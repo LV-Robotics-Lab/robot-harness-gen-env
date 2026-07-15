@@ -1,0 +1,6 @@
+<robot name="dex_cube_discovered">
+  <link name="base">
+    <visual><geometry><mesh filename="dex_cube_discovered.normalized.obj"/></geometry></visual>
+    <collision><geometry><mesh filename="dex_cube_discovered.collision_box.obj"/></geometry></collision>
+  </link>
+</robot>

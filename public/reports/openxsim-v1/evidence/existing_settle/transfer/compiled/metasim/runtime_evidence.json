@@ -1,0 +1,24 @@
+{
+  "backend": "metasim",
+  "gravity": [
+    0.0,
+    0.0,
+    -9.81
+  ],
+  "object_count": 1,
+  "objects": [
+    {
+      "class": "PrimitiveCubeCfg",
+      "name": "settle_cube",
+      "position": [
+        -0.2,
+        0.015,
+        0.766
+      ]
+    }
+  ],
+  "scenario_class": "metasim.scenario.scenario.ScenarioCfg",
+  "scenario_import_ok": true,
+  "schema": "agenticsim.metasim_config_evidence.v1",
+  "simulator": null
+}

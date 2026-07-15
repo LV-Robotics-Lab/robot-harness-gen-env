@@ -1,0 +1,148 @@
+{
+  "constraints": [
+    "no_initial_object_collision",
+    "target_reachable_by_robot",
+    "success_condition_sim_state_observable",
+    "task_objects_stable",
+    "protected_regions_defined",
+    "all_placeholders_bound",
+    "assets_exist_in_robotwin",
+    "target_object_functional_point_bound"
+  ],
+  "downstream_task_hints": [
+    "place_in",
+    "generated_selection2env_play_once"
+  ],
+  "generated_by": {
+    "agent": "agenticsim.openxsim.robotwin",
+    "source_package_digest": "f68fd78284cb5f5fd7e4ade56d5b65f9602f6615218a7f0ec05919f90b075a68",
+    "source_schema": "agenticsim.environment_package.v1"
+  },
+  "language_prompt": "Place the cola can into the basket.",
+  "objects": [
+    {
+      "asset_id": "071_can",
+      "asset_metadata": {
+        "asset_type": "rigid",
+        "graspable": true,
+        "placement_defaults": {
+          "loader": "create_actor",
+          "qpos": [
+            0.707225,
+            0.706849,
+            -0.0100455,
+            -0.00982061
+          ],
+          "z_policy": "snap_to_tabletop_on_load"
+        },
+        "scale": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "support_surface_candidate": false
+      },
+      "id": "cola_can",
+      "model_id": 0,
+      "physical": {
+        "collision": true,
+        "is_static": false,
+        "stable_on_table": true
+      },
+      "pose": {
+        "qpos": [
+          0.707225,
+          0.706849,
+          -0.0100455,
+          -0.00982061
+        ],
+        "xyz": [
+          -0.22499921917915344,
+          0.05000058934092522,
+          0.7404223084449768
+        ],
+        "z_policy": "snap_to_tabletop_on_load"
+      },
+      "role": "manipuland_candidate",
+      "semantic": "can",
+      "source": {
+        "environment_package_asset_id": "cola_can_asset",
+        "representation_uri": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/071_can",
+        "resolved": true
+      }
+    },
+    {
+      "asset_id": "110_basket",
+      "asset_metadata": {
+        "asset_type": "rigid",
+        "graspable": false,
+        "placement_defaults": {
+          "loader": "create_actor",
+          "qpos": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "z_policy": "snap_to_tabletop_on_load"
+        },
+        "scale": [
+          0.12,
+          0.12,
+          0.12
+        ],
+        "support_surface_candidate": true
+      },
+      "id": "basket",
+      "model_id": 1,
+      "physical": {
+        "collision": true,
+        "is_static": true,
+        "stable_on_table": true
+      },
+      "pose": {
+        "qpos": [
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "xyz": [
+          0.019999999552965164,
+          -0.05999999865889549,
+          0.7409999966621399
+        ],
+        "z_policy": "snap_to_tabletop_on_load"
+      },
+      "role": "container_candidate",
+      "semantic": "basket",
+      "source": {
+        "environment_package_asset_id": "basket_asset",
+        "representation_uri": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/110_basket",
+        "resolved": true
+      }
+    }
+  ],
+  "placement_name": "place_cola_can_in_basket",
+  "schema_version": "robotwin.tabletop_placement.v0",
+  "stage": "compiled_from_environment_package",
+  "workspace": {
+    "bounds": {
+      "x": [
+        -0.4,
+        0.4
+      ],
+      "y": [
+        -0.3,
+        0.25
+      ],
+      "z": [
+        0.74,
+        1.1
+      ]
+    },
+    "coordinate_convention": "robot_first_person_tabletop; z up; metres",
+    "spatial_regions": {},
+    "surface": "table"
+  }
+}

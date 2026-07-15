@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/envs/robot/planner.py", line 15, in <module>
+    from curobo.types.math import Pose as CuroboPose
+ModuleNotFoundError: No module named 'curobo'
+Traceback (most recent call last):
+  File "/home/jingxiang/workspace/alchedata-self-improving-agents/scripts/run_generated_selection2env_rollout_probe.py", line 915, in <module>
+    raise SystemExit(main())
+  File "/home/jingxiang/workspace/alchedata-self-improving-agents/scripts/run_generated_selection2env_rollout_probe.py", line 387, in main
+    from envs._base_task import Base_Task
+  File "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/envs/_base_task.py", line 17, in <module>
+    from .robot import Robot
+  File "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/envs/robot/__init__.py", line 1, in <module>
+    from .robot import *
+  File "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/envs/robot/robot.py", line 15, in <module>
+    from .planner import CuroboPlanner
+ImportError: cannot import name 'CuroboPlanner' from 'envs.robot.planner' (/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/envs/robot/planner.py)

@@ -1,0 +1,225 @@
+{
+  "asset_id": "dex_cube",
+  "compile_results": {
+    "isaacsim": {
+      "artifact_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/isaacsim/scene.usda",
+      "backend": "isaacsim",
+      "blockers": [],
+      "manifest_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/isaacsim/compile_manifest.json",
+      "metadata": {
+        "artifact_format": "usda",
+        "asset_ids": [
+          "dex_cube"
+        ],
+        "object_ids": [
+          "dex_cube"
+        ],
+        "runtime_scene_builder": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/isaacsim/run_isaac_smoke.py",
+        "schema": "agenticsim.backend_compile.v1",
+        "task_contract": {
+          "action": {
+            "interface": "zero_action",
+            "operations": []
+          },
+          "observation": {
+            "state": [
+              "object_pose",
+              "contact"
+            ]
+          },
+          "reset": {
+            "object_poses": "from_env_spec"
+          },
+          "success": [
+            {
+              "type": "state_trace_available"
+            }
+          ],
+          "termination": [
+            {
+              "steps": 20,
+              "type": "timeout"
+            }
+          ]
+        }
+      },
+      "package_digest": "2cdac4ca172720266035a74f00d26f1f210c7d033d308b170568fa4127d2ca36",
+      "package_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/isaacsim/environment_package.json",
+      "runtime_command": [
+        "python",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/isaacsim/run_isaac_smoke.py",
+        "--package",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/isaacsim/environment_package.json",
+        "--output",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/isaacsim/runtime_evidence.json"
+      ],
+      "status": "compiled",
+      "warnings": []
+    },
+    "metasim": {
+      "artifact_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/metasim/scenario.py",
+      "backend": "metasim",
+      "blockers": [],
+      "manifest_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/metasim/compile_manifest.json",
+      "metadata": {
+        "artifact_format": "metasim_scenario_cfg",
+        "asset_ids": [
+          "dex_cube"
+        ],
+        "object_ids": [
+          "dex_cube"
+        ],
+        "runner_syntax_validated": true,
+        "scenario_json": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/metasim/scenario.json",
+        "schema": "agenticsim.backend_compile.v1",
+        "task_contract": {
+          "action": {
+            "interface": "zero_action",
+            "operations": []
+          },
+          "observation": {
+            "state": [
+              "object_pose",
+              "contact"
+            ]
+          },
+          "reset": {
+            "object_poses": "from_env_spec"
+          },
+          "success": [
+            {
+              "type": "state_trace_available"
+            }
+          ],
+          "termination": [
+            {
+              "steps": 20,
+              "type": "timeout"
+            }
+          ]
+        }
+      },
+      "package_digest": "2cdac4ca172720266035a74f00d26f1f210c7d033d308b170568fa4127d2ca36",
+      "package_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/metasim/environment_package.json",
+      "runtime_command": [
+        "python",
+        "-c",
+        "exec(open('/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/metasim/scenario.py').read()); print(cfg)"
+      ],
+      "status": "compiled",
+      "warnings": []
+    },
+    "mujoco": {
+      "artifact_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/mujoco/scene.xml",
+      "backend": "mujoco",
+      "blockers": [],
+      "manifest_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/mujoco/compile_manifest.json",
+      "metadata": {
+        "artifact_format": "mjcf",
+        "asset_ids": [
+          "dex_cube"
+        ],
+        "object_ids": [
+          "dex_cube"
+        ],
+        "schema": "agenticsim.backend_compile.v1",
+        "task_contract": {
+          "action": {
+            "interface": "zero_action",
+            "operations": []
+          },
+          "observation": {
+            "state": [
+              "object_pose",
+              "contact"
+            ]
+          },
+          "reset": {
+            "object_poses": "from_env_spec"
+          },
+          "success": [
+            {
+              "type": "state_trace_available"
+            }
+          ],
+          "termination": [
+            {
+              "steps": 20,
+              "type": "timeout"
+            }
+          ]
+        },
+        "xml_validated": true
+      },
+      "package_digest": "2cdac4ca172720266035a74f00d26f1f210c7d033d308b170568fa4127d2ca36",
+      "package_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/mujoco/environment_package.json",
+      "runtime_command": [
+        "python",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/mujoco/run_mujoco_smoke.py",
+        "--model",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/mujoco/scene.xml",
+        "--output",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/mujoco/runtime_evidence.json"
+      ],
+      "status": "compiled",
+      "warnings": []
+    },
+    "sapien": {
+      "artifact_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/sapien/scene_spec.json",
+      "backend": "sapien",
+      "blockers": [],
+      "manifest_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/sapien/compile_manifest.json",
+      "metadata": {
+        "artifact_format": "sapien_scene_json",
+        "asset_ids": [
+          "dex_cube"
+        ],
+        "object_ids": [
+          "dex_cube"
+        ],
+        "runner_syntax_validated": true,
+        "schema": "agenticsim.backend_compile.v1",
+        "task_contract": {
+          "action": {
+            "interface": "zero_action",
+            "operations": []
+          },
+          "observation": {
+            "state": [
+              "object_pose",
+              "contact"
+            ]
+          },
+          "reset": {
+            "object_poses": "from_env_spec"
+          },
+          "success": [
+            {
+              "type": "state_trace_available"
+            }
+          ],
+          "termination": [
+            {
+              "steps": 20,
+              "type": "timeout"
+            }
+          ]
+        }
+      },
+      "package_digest": "2cdac4ca172720266035a74f00d26f1f210c7d033d308b170568fa4127d2ca36",
+      "package_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/sapien/environment_package.json",
+      "runtime_command": [
+        "python",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/sapien/run_sapien_smoke.py",
+        "--spec",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/sapien/scene_spec.json",
+        "--output",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/sapien/runtime_evidence.json"
+      ],
+      "status": "compiled",
+      "warnings": []
+    }
+  },
+  "package_digest": "2cdac4ca172720266035a74f00d26f1f210c7d033d308b170568fa4127d2ca36",
+  "schema": "agenticsim.asset_import_smoke.v1"
+}

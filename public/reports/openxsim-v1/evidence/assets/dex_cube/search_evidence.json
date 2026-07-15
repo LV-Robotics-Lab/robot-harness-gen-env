@@ -1,0 +1,344 @@
+{
+  "candidate_count": 20,
+  "candidates": [
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:tetheria_aero_hand_open/assets/dex_cube.obj",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/tetheria_aero_hand_open/assets/dex_cube.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "tetheria_aero_hand_open/assets/dex_cube.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "dex_cube.obj",
+      "provider": "github_tree",
+      "score": 2.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/tetheria_aero_hand_open/assets/dex_cube.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/1mc_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/1mc_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/1mc_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "1mc_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/1mc_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/2distph_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/2distph_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/2distph_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "2distph_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/2distph_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/2mc_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/2mc_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/2mc_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "2mc_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/2mc_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/2midph_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/2midph_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/2midph_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "2midph_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/2midph_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/2proxph_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/2proxph_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/2proxph_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "2proxph_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/2proxph_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/3distph_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/3distph_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/3distph_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "3distph_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/3distph_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/3mc_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/3mc_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/3mc_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "3mc_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/3mc_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/3midph_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/3midph_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/3midph_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "3midph_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/3midph_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/3proxph_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/3proxph_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/3proxph_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "3proxph_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/3proxph_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/4distph_new_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/4distph_new_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/4distph_new_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "4distph_new_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/4distph_new_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/4mc_new_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/4mc_new_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/4mc_new_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "4mc_new_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/4mc_new_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/4midph_new_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/4midph_new_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/4midph_new_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "4midph_new_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/4midph_new_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/4proxph_new_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/4proxph_new_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/4proxph_new_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "4proxph_new_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/4proxph_new_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/5distph_new_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/5distph_new_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/5distph_new_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "5distph_new_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/5distph_new_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/5mc_new_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/5mc_new_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/5mc_new_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "5mc_new_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/5mc_new_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/5midph_new_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/5midph_new_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/5midph_new_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "5midph_new_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/5midph_new_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:ms_human_700/assets/geometry/5proxph_new_mirror.obj",
+      "category": "geometry",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/ms_human_700/assets/geometry/5proxph_new_mirror.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "ms_human_700/assets/geometry/5proxph_new_mirror.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "5proxph_new_mirror.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/ms_human_700/assets/geometry/5proxph_new_mirror.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:rainbow_robotics_rby1/assets/EE_BODY.obj",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/rainbow_robotics_rby1/assets/EE_BODY.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "rainbow_robotics_rby1/assets/EE_BODY.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "EE_BODY.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/rainbow_robotics_rby1/assets/EE_BODY.obj"
+    },
+    {
+      "candidate_id": "github:google-deepmind/mujoco_menagerie:rainbow_robotics_rby1/assets/EE_FINGER_0.obj",
+      "category": "assets",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/rainbow_robotics_rby1/assets/EE_FINGER_0.obj",
+      "format": "obj",
+      "license": "Apache-2.0",
+      "metadata": {
+        "branch": "main",
+        "path": "rainbow_robotics_rby1/assets/EE_FINGER_0.obj",
+        "repository": "google-deepmind/mujoco_menagerie"
+      },
+      "name": "EE_FINGER_0.obj",
+      "provider": "github_tree",
+      "score": 1.0,
+      "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/rainbow_robotics_rby1/assets/EE_FINGER_0.obj"
+    }
+  ],
+  "provider_errors": [],
+  "query": "cube obj",
+  "schema": "agenticsim.asset_search_evidence.v1",
+  "selected": {
+    "candidate_id": "github:google-deepmind/mujoco_menagerie:tetheria_aero_hand_open/assets/dex_cube.obj",
+    "category": "assets",
+    "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/tetheria_aero_hand_open/assets/dex_cube.obj",
+    "format": "obj",
+    "license": "Apache-2.0",
+    "metadata": {
+      "branch": "main",
+      "path": "tetheria_aero_hand_open/assets/dex_cube.obj",
+      "repository": "google-deepmind/mujoco_menagerie"
+    },
+    "name": "dex_cube.obj",
+    "provider": "github_tree",
+    "score": 2.0,
+    "source_page": "https://github.com/google-deepmind/mujoco_menagerie/blob/main/tetheria_aero_hand_open/assets/dex_cube.obj"
+  }
+}

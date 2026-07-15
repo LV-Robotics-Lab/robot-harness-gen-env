@@ -71,6 +71,24 @@ const reports = [
       "/reports/harness/assets/evidence/policy_cross_task_poster.png",
     imageAlt: "Cross-task can and basket policy rollout",
   },
+  {
+    number: "05",
+    title: "Open-X-Sim four workflows V1",
+    subtitle: "Text, media anchors, autonomous assets, and simulator transfer",
+    status: "V1 PASS · TODO ACTIVE",
+    statusClass: "status-active",
+    metric: "613 + 609",
+    metricLabel: "continuous RoboTwin evidence frames",
+    summary:
+      "Implements one typed environment package across pure Text2Env, image/video Anchor2Env, autonomous asset discovery and conversion, and SAPIEN-to-MuJoCo/Isaac conformance.",
+    boundary:
+      "The expanded dashboard acceptance remains active: three anchor scenes, three sources and ten assets, articulated transfer, camera-sensitive transfer, and L4 policy statistics are not yet complete.",
+    href: "/reports/openxsim-v1/index.html",
+    manifest: "/reports/openxsim-v1/hosted_subset_manifest.json",
+    image:
+      "/reports/openxsim-v1/evidence/place_cola_can_in_basket/anchor2env/anchor_evidence/anchor_28622067422a/frame_004.png",
+    imageAlt: "RoboTwin video anchor sample during the cola-can-to-basket rollout",
+  },
 ];
 
 const metrics = [
@@ -79,7 +97,7 @@ const metrics = [
   ["3/3", "cross-task policy"],
   ["0/3 → 3/3", "memory intervention"],
   ["24/24", "unique Isaac frames"],
-  ["8/8", "SceneAgent V0 acceptance"],
+  ["42 + 36", "local + RTX 5090 workflow tests"],
 ];
 
 const commands = [
@@ -143,7 +161,7 @@ export default function Home() {
         </div>
         <div className="hero-proof">
           <span className="proof-dot" aria-hidden="true" />
-          <span>[COMPUTED] ALL CORE CAUSAL GATES PASS</span>
+          <span>[COMPUTED] DECLARED V1 GATES PASS · EXPANDED TODOS ACTIVE</span>
         </div>
       </section>
 
@@ -162,7 +180,7 @@ export default function Home() {
         <div className="section-heading">
           <div>
             <p className="eyebrow dark">COMPLETE PROJECT RECORD</p>
-            <h2>Four workstreams. One evidence chain.</h2>
+            <h2>Five reports. One evidence chain.</h2>
           </div>
           <p className="section-summary">
             Each hosted report preserves every image, video, and evidence file
@@ -178,7 +196,7 @@ export default function Home() {
             <article className="report-row" key={report.number}>
               <div className="report-index">{report.number}</div>
               <div className="report-visual">
-                <img src={report.image} alt={report.imageAlt} loading="lazy" />
+                <img src={report.image} alt={report.imageAlt} />
               </div>
               <div className="report-body">
                 <div className="report-title-line">

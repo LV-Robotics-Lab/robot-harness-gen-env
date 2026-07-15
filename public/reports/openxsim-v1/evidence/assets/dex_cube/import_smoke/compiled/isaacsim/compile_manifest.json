@@ -1,0 +1,55 @@
+{
+  "artifact_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/isaacsim/scene.usda",
+  "backend": "isaacsim",
+  "blockers": [],
+  "manifest_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/isaacsim/compile_manifest.json",
+  "metadata": {
+    "artifact_format": "usda",
+    "asset_ids": [
+      "dex_cube"
+    ],
+    "object_ids": [
+      "dex_cube"
+    ],
+    "runtime_scene_builder": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/isaacsim/run_isaac_smoke.py",
+    "schema": "agenticsim.backend_compile.v1",
+    "task_contract": {
+      "action": {
+        "interface": "zero_action",
+        "operations": []
+      },
+      "observation": {
+        "state": [
+          "object_pose",
+          "contact"
+        ]
+      },
+      "reset": {
+        "object_poses": "from_env_spec"
+      },
+      "success": [
+        {
+          "type": "state_trace_available"
+        }
+      ],
+      "termination": [
+        {
+          "steps": 20,
+          "type": "timeout"
+        }
+      ]
+    }
+  },
+  "package_digest": "2cdac4ca172720266035a74f00d26f1f210c7d033d308b170568fa4127d2ca36",
+  "package_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/isaacsim/environment_package.json",
+  "runtime_command": [
+    "python",
+    "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/isaacsim/run_isaac_smoke.py",
+    "--package",
+    "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/isaacsim/environment_package.json",
+    "--output",
+    "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/import_smoke/compiled/isaacsim/runtime_evidence.json"
+  ],
+  "status": "compiled",
+  "warnings": []
+}

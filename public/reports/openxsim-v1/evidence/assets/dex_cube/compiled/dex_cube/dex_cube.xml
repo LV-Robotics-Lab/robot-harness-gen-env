@@ -1,0 +1,4 @@
+<mujoco model="asset">
+  <asset><mesh name="dex_cube_mesh" file="source.obj"/></asset>
+  <worldbody><body name="dex_cube"><geom type="mesh" mesh="dex_cube_mesh"/></body></worldbody>
+</mujoco>

@@ -1,0 +1,19 @@
+{
+  "schema": "agenticsim.metasim_import_evidence.v1",
+  "backend": "metasim",
+  "official_metasim_import": true,
+  "scenario_cfg_type": "ScenarioCfg",
+  "object_count": 1,
+  "object_cfg_type": "RigidObjCfg",
+  "object_name": "dex_cube_discovered",
+  "mesh_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube_discovered/compiled/dex_cube_discovered/dex_cube_discovered.normalized.obj",
+  "mesh_exists": true,
+  "gravity": [
+    0.0,
+    0.0,
+    -9.81
+  ],
+  "reset_ok": null,
+  "step_ok": null,
+  "claim_boundary": "Official MetaSim ScenarioCfg construction succeeded; simulator runtime was not selected."
+}

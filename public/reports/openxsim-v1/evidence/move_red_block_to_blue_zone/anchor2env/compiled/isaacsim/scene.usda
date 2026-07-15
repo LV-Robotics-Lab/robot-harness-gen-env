@@ -1,0 +1,45 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "World"
+{
+    def PhysicsScene "PhysicsScene"
+    {
+        vector3f physics:gravityDirection = (0.0, 0.0, -9.81)
+        float physics:gravityMagnitude = 1
+    }
+    def Cube "Ground"
+    {
+        double size = 1
+        double3 xformOp:scale = (4, 4, 0.02)
+        double3 xformOp:translate = (0, 0, -0.02)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+    def Scope "Objects"
+    {
+        def Cube "red_block"
+        {
+            double size = 1
+            color3f[] primvars:displayColor = [(1.0, 0.0, 0.0)]
+            double3 xformOp:scale = (0.05, 0.05, 0.05)
+            quatd xformOp:orient = (1.0, (0.0, 0.0, 0.0))
+            double3 xformOp:translate = (-0.2, 0.015, 0.766)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+        }
+    }
+    def Scope "Regions"
+    {
+        def Cube "blue_zone"
+        {
+            double size = 1
+            color3f[] primvars:displayColor = [(0.0, 0.35, 1.0)]
+            double3 xformOp:scale = (0.16, 0.12, 0.004)
+            double3 xformOp:translate = (0.05, -0.1, 0.742)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+    }
+}

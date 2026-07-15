@@ -1,0 +1,12 @@
+<mujoco model="dex_cube_discovered_import_smoke">
+  <compiler angle="radian" coordinate="local"/>
+  <option gravity="0.0 0.0 -9.81" timestep="0.01"/>
+  <asset>
+    <mesh name="dex_cube_discovered_mesh" file="../../../compiled/dex_cube_discovered/dex_cube_discovered.normalized.obj" scale="0.1 0.1 0.1"/>
+  </asset>
+  <custom><text name="agenticsim_task_contract" data="{&quot;action&quot;:{&quot;interface&quot;:&quot;zero_action&quot;,&quot;operations&quot;:[]},&quot;observation&quot;:{&quot;state&quot;:[&quot;object_pose&quot;,&quot;contact&quot;]},&quot;reset&quot;:{&quot;object_poses&quot;:&quot;from_env_spec&quot;},&quot;success&quot;:[{&quot;type&quot;:&quot;state_trace_available&quot;}],&quot;termination&quot;:[{&quot;steps&quot;:20,&quot;type&quot;:&quot;timeout&quot;}]}"/></custom>
+  <worldbody>
+    <geom name="ground" type="plane" size="3 3 0.1" rgba="0.3 0.3 0.3 1"/>
+    <body name="dex_cube_discovered" pos="0 0 0.25" quat="1 0 0 0"><freejoint name="dex_cube_discovered_free"/><geom name="dex_cube_discovered_geom" type="mesh" mesh="dex_cube_discovered_mesh"/></body>
+  </worldbody>
+</mujoco>
