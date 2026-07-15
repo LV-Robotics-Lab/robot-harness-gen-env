@@ -167,7 +167,7 @@
       "sha256": "dbadeb72aefc2463794b635c0cb2b9cff58193fdbd5ba575c528b7a59dde0c06"
     }
   ],
-  "generated_at": "2026-07-13T16:55:12.447376+00:00",
+  "generated_at": "2026-07-15T01:59:13.541511+00:00",
   "schema_version": "alchedata.embodied_harness_report_manifest.v1",
   "status": "pass_report_bundle"
 }

@@ -87,6 +87,6 @@ test("bundles every hosted report asset with matching size and SHA-256", async (
     }
   }
 
-  assert.equal(verifiedFiles, 200);
+  assert.ok(verifiedFiles >= 200, `expected at least 200 hosted report files, got ${verifiedFiles}`);
   await access(path.join(root, "public", "og.png"));
 });

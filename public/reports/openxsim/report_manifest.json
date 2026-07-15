@@ -1057,9 +1057,9 @@
       "sha256": "ce8fa035c536d42d7f0a57c65fdcaad7fc22672c1fb5bc0508a7fdd5a3ebb13c"
     },
     {
-      "bytes": 5038786,
+      "bytes": 5041752,
       "path": "qa/desktop-full.png",
-      "sha256": "edb11e381b0ea2ba1a73adcce48c8fda52beb034714e2229a9bf8588c3c21e13"
+      "sha256": "7b8a4fe96fa530ef074d9b197b17e5523ea3e80ffd2125aea7790df754ae46fa"
     },
     {
       "bytes": 2151085,
@@ -1067,14 +1067,14 @@
       "sha256": "14fd728b22fa667b70ec6ee0076d74002e094937d9910fca293bba81257f0c90"
     },
     {
-      "bytes": 431478,
+      "bytes": 432991,
       "path": "qa/desktop-viewport.png",
-      "sha256": "b4b9e9ae1af7690e7afc8591873356d9272d6f07a0531d390e69099549f04bfe"
+      "sha256": "dc76cb83cb51501d06ed552d711c07fbaddfe2853730f48e7514ebc5e004cb2d"
     },
     {
-      "bytes": 3364859,
+      "bytes": 3364458,
       "path": "qa/mobile-full.png",
-      "sha256": "18149aff57ad91e7de53e7e2b84d2cdd0197e9fc8ebd4867c279e52db06c801a"
+      "sha256": "9968d2672944a9178de808d9a1f71b1014b179e15d35a94fa93d44c1cb6c0d1f"
     },
     {
       "bytes": 1538322,
@@ -1087,7 +1087,7 @@
       "sha256": "73e124e89a6dcbd7f5182555d6ff674a0de87993f5c3eb34bdcd4d300476ef5c"
     }
   ],
-  "generated_at": "2026-07-14T02:32:57.218595+00:00",
+  "generated_at": "2026-07-15T01:59:13.519349+00:00",
   "schema_version": "alchedata.openxsim_report_manifest.v1",
   "status": "pass_report_bundle"
 }

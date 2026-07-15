@@ -1,4 +1,16 @@
-png_total=69
+status=pass_sceneagent_media_integrity
+png_total=166
 png_decode_failures=0
-mp4_total=14
+mp4_total=36
 mp4_probe_failures=0
+displayed_video_count=8
+displayed_video_min_frames=143
+sparse_non_displayed_count=11
+displayed_video=assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/observer_rollout_probe.mp4 frames=589 fps=12/1 duration_sec=49.083333
+displayed_video=assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/observer_rollout_probe.mp4 frames=585 fps=12/1 duration_sec=48.750000
+displayed_video=assets/evidence/runs/official_rollout_continuous/open_laptop.mp4 frames=640 fps=12/1 duration_sec=53.333333
+displayed_video=assets/evidence/runs/official_rollout_continuous/place_container_plate.mp4 frames=527 fps=12/1 duration_sec=43.916667
+displayed_video=assets/evidence/runs/official_rollout_continuous/place_mouse_pad.mp4 frames=531 fps=12/1 duration_sec=44.250000
+displayed_video=assets/evidence/runs/pose_conditioned_eval_apple_plate_domain_randomized_v2/episode_000_eval_000_seed_6100/observer_policy_rollout.mp4 frames=143 fps=8/1 duration_sec=17.875000
+displayed_video=assets/evidence/runs/pose_conditioned_eval_apple_plate_heldout_v1/episode_000_eval_000_seed_6100/observer_policy_rollout.mp4 frames=143 fps=8/1 duration_sec=17.875000
+displayed_video=assets/evidence/runs/pose_conditioned_eval_can_basket_heldout_seeds_v1/episode_000_fixed_seed_7300/observer_policy_rollout.mp4 frames=144 fps=8/1 duration_sec=18.000000

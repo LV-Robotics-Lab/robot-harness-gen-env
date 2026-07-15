@@ -3,19 +3,19 @@ const reports = [
     number: "01",
     title: "SceneAgent / selection2env",
     subtitle: "RoboTwin existing-asset scene composition",
-    status: "DONE · BOUNDED",
+    status: "DONE · 8/8 V0",
     statusClass: "status-pass",
-    metric: "4/4 · 4/4 · 3/3",
-    metricLabel: "held-out · randomized · cross-task",
+    metric: "589 + 585",
+    metricLabel: "continuous same-scene task frames",
     summary:
       "Connects natural-language task intent to asset selection, placement regions, executable task programs, rollout evidence, and promotion gates.",
     boundary:
-      "The promoted policy is pose-conditioned and open-loop. Historical ACT robustness remains 1/4 and is retained as a negative parent.",
+      "The V0 acceptance does not include the separate SceneGen Stage 0-1 and Stage 2-4 follow-on tasks. Its promoted policy remains pose-conditioned and open-loop.",
     href: "/reports/sceneagent/index.html",
     manifest: "/reports/sceneagent/hosted_subset_manifest.json",
     image:
-      "/reports/harness/assets/evidence/policy_randomized_poster.png",
-    imageAlt: "RoboTwin domain-randomized apple and plate rollout",
+      "/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/final_observer_camera.png",
+    imageAlt: "RoboTwin same-scene apple-on-plate rollout final frame",
   },
   {
     number: "02",
@@ -79,7 +79,7 @@ const metrics = [
   ["3/3", "cross-task policy"],
   ["0/3 → 3/3", "memory intervention"],
   ["24/24", "unique Isaac frames"],
-  ["36/36", "local + RTX tests"],
+  ["8/8", "SceneAgent V0 acceptance"],
 ];
 
 const commands = [
@@ -241,10 +241,9 @@ export default function Home() {
             <h2>Inspect motion, not endpoints.</h2>
           </div>
           <p className="section-summary">
-            Continuous rollout videos replace the earlier two-frame endpoint
-            proxies. The Isaac trace contains 120 states and actions; the
-            RoboTwin policy views show held-out, randomized, and cross-task
-            execution.
+            The same initial RoboTwin scene now executes two different task
+            specifications in 589- and 585-frame videos. The Isaac trace
+            separately preserves 120 states and actions.
           </p>
         </div>
 
@@ -275,16 +274,16 @@ export default function Home() {
               controls
               playsInline
               preload="metadata"
-              poster="/reports/harness/assets/evidence/policy_heldout_poster.png"
+              poster="/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/final_observer_camera.png"
             >
               <source
-                src="/reports/harness/assets/evidence/policy_heldout.mp4"
+                src="/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/observer_rollout_probe.mp4"
                 type="video/mp4"
               />
             </video>
             <figcaption>
-              <span>ROBOTWIN · HELD-OUT</span>
-              <strong>4/4 varied placements</strong>
+              <span>ROBOTWIN · SAME SCENE · PLACE_ON</span>
+              <strong>589 frames · verifier pass</strong>
             </figcaption>
           </figure>
 
@@ -293,16 +292,16 @@ export default function Home() {
               controls
               playsInline
               preload="metadata"
-              poster="/reports/harness/assets/evidence/policy_cross_task_poster.png"
+              poster="/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/final_observer_camera.png"
             >
               <source
-                src="/reports/harness/assets/evidence/policy_cross_task.mp4"
+                src="/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/observer_rollout_probe.mp4"
                 type="video/mp4"
               />
             </video>
             <figcaption>
-              <span>ROBOTWIN · CROSS-TASK</span>
-              <strong>3/3 can to basket</strong>
+              <span>ROBOTWIN · SAME SCENE · REGION</span>
+              <strong>585 frames · verifier pass</strong>
             </figcaption>
           </figure>
         </div>

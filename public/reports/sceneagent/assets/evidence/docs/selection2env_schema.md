@@ -73,6 +73,8 @@ Three supported cases now also have RoboTwin/SAPIEN asset-load render smoke, str
 
 `pass_asset_load_render` proves the official object assets load into SAPIEN and render into nonblank observer/head images. `pass` in `runs/smoke_basetask_*` additionally proves RoboTwin `Base_Task` and CuRobo initialize on the RTX 5090-compatible `robotwin-5090` env. `pass_collect_dry_run` proves `/collect` can write a dataset manifest, camera samples, and object-state traces for the loaded placement. `runs/official_rollout_*` proves three official RoboTwin task `play_once()` probes pass with `check_success=true`.
 
+The final acceptance rerun adds `runs/final_acceptance_20260715/collect_apple_plate` and `collect_laptop_knife`. Each run passes on `jingxiang-b850m-c`, records 97 consecutive simulator-step observer frames at 12 fps, retains five observer/head PNG sample pairs, and writes stdout/stderr logs. These replace sparse endpoint-style dry-run videos as the primary acceptance media.
+
 Generated action-repair evidence is now split:
 
 | case | generated action evidence | result |
@@ -96,13 +98,15 @@ These generated probes and collections are scripted demonstrations and do not th
 - `artifacts/task_program_inputs/task_apple_plate.json`: place `apple_1` on `plate_1`;
 - `artifacts/task_program_inputs/task_apple_plate_to_left_front.json`: place `apple_1` in `left_front_reachable_area`.
 
-Both reset from `runs/scene_task_decoupling/shared_apple_plate_scene.json`, execute generated `play_once()`, and return `check_success=true`. Their initial observer and head PNGs are byte-identical. `artifacts/scene_task_decoupling/apple_plate_two_tasks.json` independently checks task IDs, scene ID, placement path/SHA, bindings, rollout status, and screenshots/videos. Failed pre-repair attempts remain under `runs/scene_task_decoupling/*_fail/`.
+Both reset from `runs/scene_task_decoupling/shared_apple_plate_scene.json`, execute generated `play_once()`, and return `check_success=true`. The fresh acceptance runs under `runs/final_acceptance_20260715/scene_task_decoupling/` have byte-identical initial observer pixels and continuous 589/585-frame videos captured through RoboTwin's native simulator-step hook. `artifacts/scene_task_decoupling/apple_plate_two_tasks.json` independently checks task IDs, scene ID, placement path/SHA, bindings, initial image hash, rollout status, and encoded video metadata. Failed pre-repair attempts remain under `runs/scene_task_decoupling/*_fail/`.
 
 `artifacts/visual_review/generated_rollout_final_relation_review.json` adds agent visual review of the apple/plate and can/basket collection final observer frames. That review supports the generated final relation for those six episodes, but does not replace `/train`, `/evaluate`, or held-out semantic review.
 
 `runs/act_hdf5_generated_smoke/conversion_report.json` and `runs/act_hdf5_generated_smoke/load_data_report.json` add an ACT data-format smoke: six generated planner-trace episodes are converted to ACT-compatible HDF5 with 96x72 observer frames and are readable through RoboTwin ACT dataset utilities. `runs/act_train_smoke_generated/train_smoke_report.json` adds a one-epoch ACT train smoke that writes `policy_best.ckpt`. `runs/act_eval_smoke_generated/evaluate_report.json` then loads that checkpoint and completes 3/3 bounded apple/plate evaluations for held-out source-collection seeds 4, 5, and 6, with 0/3 task success. This resolves the generated-task inference/action/verifier hook, not policy quality, randomized robustness, or default upstream wrapper integration.
 
-The production-oriented adapter path is separate. `runs/generated_collect_apple_plate_native_sync/collection_report.json` records RoboTwin-native synchronized head-camera and 14-D qpos frames. `runs/act_hdf5_native_sync/conversion_report.json` repairs the native JPEG channel order and aligns `qpos[t], image[t] -> action=qpos[t+1]`; its loader report sees three 161-step episodes. `runs/act_action_replay_native_sync/replay_report.json` proves all 161 converted expert actions succeed from an exact fresh reset. A 1200-epoch chunk-20 policy scores 0/3, while `runs/act_train_native_sync_rgb_chunk161_1200e/` plus `runs/act_eval_native_sync_rgb_chunk161_1200e_best/` score 3/3 with a full 161-step chunk. The follow-up placement audit then grows data to 15 episodes, 10 pose signatures, and 14 unique action/qpos/image trajectories, but both signature-disjoint held-out eval splits score 1/4. `artifacts/diagnosis/native_act_closed_loop_diagnosis.json` and `artifacts/diagnosis/placement_robustness_diagnosis.json` preserve both stages and reject promotion.
+The production-oriented ACT adapter path is separate. `runs/generated_collect_apple_plate_native_sync/collection_report.json` records RoboTwin-native synchronized head-camera and 14-D qpos frames. `runs/act_hdf5_native_sync/conversion_report.json` repairs the native JPEG channel order and aligns `qpos[t], image[t] -> action=qpos[t+1]`; its loader report sees three 161-step episodes. `runs/act_action_replay_native_sync/replay_report.json` proves all 161 converted expert actions succeed from an exact fresh reset. A 1200-epoch chunk-20 policy scores 0/3, while `runs/act_train_native_sync_rgb_chunk161_1200e/` plus `runs/act_eval_native_sync_rgb_chunk161_1200e_best/` score 3/3 with a full 161-step chunk. The follow-up ACT placement audit grows data to 15 episodes, 10 pose signatures, and 14 unique action/qpos/image trajectories, but both signature-disjoint held-out eval splits score 1/4; that ACT branch remains unpromoted.
+
+`artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json` records a separate bounded baseline. It learns a phase-aligned trajectory regressor from the same 15 successful demonstrations using privileged initial source/target poses, then passes 4/4 signature-disjoint held-out placements, 4/4 held-out placements with declared background/light/camera/table-height randomization, and 3/3 fixed-placement can/basket seeds. This promotes only the privileged open-loop baseline for the bounded SceneAgent gate; it does not promote ACT or establish visual, language-conditioned, closed-loop, or broad task transfer.
 
 ## VLM / Agent Critique Requirements
 
@@ -115,7 +119,7 @@ The critic must check more than collision:
 - support and stability: containers/support surfaces plausibly hold target objects;
 - task decoupling: a scene can receive a new task spec without regenerating assets.
 
-Current artifact: `artifacts/visual_review/selection2env_visual_review.json` covers object presence, visibility, table contact, occlusion, and initial-scene task support for the three supported cases. It intentionally leaves final task-success semantics as `not_claimed`.
+Current artifact: `artifacts/visual_review/selection2env_visual_review.json` binds exact image hashes and explicitly checks collision/penetration, visual plausibility, task intent, occlusion, reachability, and support/stability for all three supported cases. Reachability and stability also require runtime corroboration; they are not inferred from pixels alone. Final task-success semantics remain `not_claimed` in this initial-scene artifact.
 
 ## Gaochen Pipeline Handoff
 
@@ -154,7 +158,8 @@ Current artifact: `artifacts/visual_review/selection2env_visual_review.json` cov
 
 | code | meaning | owner |
 |---|---|---|
-| `POLICY_ROBUSTNESS_FAILED` | Distinct trajectories and two held-out placement evaluations now exist, but both varied-placement ACT policies score 1/4. Domain randomization and cross-task learned evaluation are still absent. See `artifacts/diagnosis/placement_robustness_diagnosis.json`. | Zheng Ye / Gaochen |
+| `DEFAULT_ACT_PLACEMENT_ROBUSTNESS_FAILED` | The retained ACT recovery branch scores 1/4 on varied-placement holdout. The separate privileged pose-conditioned baseline passes its bounded gate, but does not repair or promote ACT. | Zheng Ye / Gaochen |
+| `LEARNED_POLICY_TASK_COVERAGE_BOUNDARY` | A supported normalized task has selection2env/smoke evidence but no learned-policy evaluation attached; this is a post-TODO coverage boundary, not a selection2env completion blocker. | Zheng Ye / Gaochen |
 | `DEFAULT_POLICY_WRAPPER_NOT_WIRED` | `runs/policy_train_eval_entrypoint_probe/probe_report.json` shows the default ACT process/train/eval wrappers still target old data/config/task-module conventions even though the bounded generated-task adapter executes. | Zheng Ye / Gaochen |
 | `ARTICULATED_CONTAINER_TASK_API_UNSUPPORTED` | drawer and mug assets are found, but opening `036_cabinet`, placing inside it, and verifying containment are not wired as an executable task. | Zheng Ye / RoboTwin task adapter owner |
 | `VISUAL_REVIEW_REQUIRED` | generic future-scene code when smoke artifacts exist but no VLM/human visual semantics review has accepted them; it is not active on the three supported current artifacts. | Boris / Zheng Ye |

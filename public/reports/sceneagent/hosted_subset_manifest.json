@@ -2,22 +2,22 @@
   "schema_version": "pearl.hosted_report_subset.v1",
   "status": "pass_hosted_subset_manifest",
   "source_manifest": "report_manifest.json",
-  "file_count": 74,
+  "file_count": 81,
   "files": [
     {
       "path": "assets/asset_sha256.txt",
-      "bytes": 28637,
-      "sha256": "5fa6dea6b2015c89cbdcf308621ee34d2cdcf0784e182202be9e1ae701d94b25"
+      "bytes": 68482,
+      "sha256": "65bd5b343c4ff9554d72394dc4f4d9160d8517a635161df126235df6e79712cf"
     },
     {
       "path": "assets/bundled_media_integrity.txt",
-      "bytes": 69,
-      "sha256": "aec4d4d5d980ffb19dcd57780465e6e538145db437200a09438c17abdcf9b1ef"
+      "bytes": 1486,
+      "sha256": "8b52250cc270fe7bbfdc783d4888ec01655c4fdf6535bb5cac4adbd30c7aa79f"
     },
     {
       "path": "assets/dashboard_proof.json",
-      "bytes": 1655,
-      "sha256": "2b47438796196ff24e9e0da404b4169899a966847ade93c6d30c3c88277f6db4"
+      "bytes": 3558,
+      "sha256": "914d7d8645f701088be39e37d9847a4e1c1366099c65ddda9e20c1e7f0aee507"
     },
     {
       "path": "assets/evidence/artifacts/adapter_catalog/robotwin_discovered_catalog.json",
@@ -51,18 +51,23 @@
     },
     {
       "path": "assets/evidence/artifacts/scene_task_decoupling/apple_plate_two_tasks.json",
-      "bytes": 8404,
-      "sha256": "64f78dc05bdfd83b3e6af349d4cd2d6365ab27e4dfbaa0035ab647f8a759f90b"
+      "bytes": 9577,
+      "sha256": "7911feb96c46c9293a28c9870c481d30446354f2d7e1988b5a8cf694e8d92b07"
     },
     {
       "path": "assets/evidence/artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json",
-      "bytes": 8774,
-      "sha256": "8fffd22d3af717c7e50f1298d338cda8087cbead0004c8a17f3e17a466cae804"
+      "bytes": 8781,
+      "sha256": "25f29aa38eb97f8281d03844303ec841999f081ca6ae07ab61b5301f4092b274"
     },
     {
       "path": "assets/evidence/artifacts/sceneagent_policy_promotion/robotwin_background_asset_receipt.json",
       "bytes": 1485,
       "sha256": "607bec58f6f53741a10bd8f91ca193e2d33980599365837d06f1a834aac78b7a"
+    },
+    {
+      "path": "assets/evidence/artifacts/sceneagent_selection2env_acceptance_audit.json",
+      "bytes": 13566,
+      "sha256": "64268c042e839ca6ac51b06fa4bea95632215ebf3360ffd0bc76d70fa41c0133"
     },
     {
       "path": "assets/evidence/artifacts/selection2env/task_drawer_mug_blocker.json",
@@ -71,8 +76,8 @@
     },
     {
       "path": "assets/evidence/artifacts/selection2env_manifest.json",
-      "bytes": 50272,
-      "sha256": "7c04475e7f121fa448f606fd019e3133f9f7ccd708489b512a5fb3f2b4e545b1"
+      "bytes": 50416,
+      "sha256": "cbe02b16522cd6009820b6976212346d125a5dd28c0b7b945417d809fac9e5a9"
     },
     {
       "path": "assets/evidence/artifacts/task_program_inputs/task_apple_plate.json",
@@ -101,28 +106,33 @@
     },
     {
       "path": "assets/evidence/artifacts/visual_review/selection2env_visual_review.json",
-      "bytes": 3264,
-      "sha256": "fce9316d35d051b760850480aa2dc7d0c90356ea4d3ba75e15b2aae910c1a885"
+      "bytes": 4756,
+      "sha256": "1fca5d8cdf9d9b3d878514de99361c86c8c0853f3cab4803051a58d9ee0e4e6e"
     },
     {
       "path": "assets/evidence/docs/dashboard_todo_traceability.md",
-      "bytes": 7264,
-      "sha256": "02768a37fc5f2cb21b567b1f0f80aa79c554d48e3ca82b9be7f033343f3caea5"
+      "bytes": 12119,
+      "sha256": "1c0e3af154facb02fcd7f18787b0ddd8f363c3093db9c9940dfafdc27a00be14"
     },
     {
       "path": "assets/evidence/docs/generation2env_blockers.md",
-      "bytes": 6020,
-      "sha256": "e7dcc992dcc2e3191b24359155ce69df3a36c87e62c11d4365f4cccb617a4c18"
+      "bytes": 6126,
+      "sha256": "e965d3f95db9524177fadd63959a2dfd702b29cecc39805759223f96978ad9f5"
+    },
+    {
+      "path": "assets/evidence/docs/sceneagent_reproduction_commands.md",
+      "bytes": 4382,
+      "sha256": "33314bf09628dfff0e50bbf1b8ea097b4e4b8030f2abb7f8819f66ae1edd53ac"
     },
     {
       "path": "assets/evidence/docs/selection2env_schema.md",
-      "bytes": 12925,
-      "sha256": "83b0cabb64c46baebef79291157e01c58860acd6308a9f9bfb2e52f8ab4cb3ea"
+      "bytes": 14367,
+      "sha256": "bca9fb3c141b806c73fed46c19738e5c16441af7b415b9c0fd19a56886988bc0"
     },
     {
       "path": "assets/evidence/docs/todo_completion_audit.md",
-      "bytes": 8654,
-      "sha256": "86160287230847c19eedfe42928a540abd6cf47c4b45f458eb951a9d948eeba4"
+      "bytes": 11007,
+      "sha256": "e96e817b17c7f1b515d2b2504f3a75b9784575e6ef934bef78cbe17f7fec6166"
     },
     {
       "path": "assets/evidence/external_sources.lock.json",
@@ -133,6 +143,41 @@
       "path": "assets/evidence/runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4/evaluate_report.json",
       "bytes": 25338,
       "sha256": "a05c4310065cca663ad9edbc1a6ae20579045462e4fcd8c85c79d224017a9a18"
+    },
+    {
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/final_observer_camera.png",
+      "bytes": 111968,
+      "sha256": "1bdcaf386340f8d68c74402124e4179f409e5becc1322d62d9dd2d2eb795a84a"
+    },
+    {
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/initial_observer_camera.png",
+      "bytes": 105772,
+      "sha256": "18e53b736c0a9716e7489dc889a2c2375c7d26fe3078d207dccf61e8cac53012"
+    },
+    {
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/observer_rollout_probe.mp4",
+      "bytes": 602021,
+      "sha256": "a8947c22fbcbbfe868e36cdaa8229da65de9ffa3513f85728c090ed56e63544e"
+    },
+    {
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/rollout_report.json",
+      "bytes": 6478,
+      "sha256": "0612939211468fa62e64fe51d10b37ff978b3cc2625b4715d9c7ec92537b2a08"
+    },
+    {
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/final_observer_camera.png",
+      "bytes": 114545,
+      "sha256": "c9254afb5e6890f6301fa641f745b74014f397a4e25fef1f8b40f1c11158df8a"
+    },
+    {
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/observer_rollout_probe.mp4",
+      "bytes": 602898,
+      "sha256": "4cecb2aad594ba7ada8c415f970ccc3be80c89000911b0177b441b29c6a83938"
+    },
+    {
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/rollout_report.json",
+      "bytes": 6785,
+      "sha256": "b55f16c09b7ed223bad69b6f33ff0fd2088b6fa413fa3ff8b0c480030f0d906f"
     },
     {
       "path": "assets/evidence/runs/official_rollout_continuous/open_laptop.mp4",
@@ -151,18 +196,18 @@
     },
     {
       "path": "assets/evidence/runs/official_rollout_open_laptop/final_observer_camera.png",
-      "bytes": 109599,
-      "sha256": "7207b563d3af85441775975ca78d4a2057162675f317024b8451b76a982d0f41"
+      "bytes": 109659,
+      "sha256": "f064e787bf83cf27c53674b2fb65da704282151b5edc9a9430c5631f36a84548"
     },
     {
       "path": "assets/evidence/runs/official_rollout_place_container_plate/final_observer_camera.png",
-      "bytes": 110277,
-      "sha256": "2ee832f4b530ed5d8e5370799e940e6dabb84aad80d9581a0c518c4506154c85"
+      "bytes": 110292,
+      "sha256": "eaf9729586570c1c347072d90c732a1b4c93e1fd8c511a5d496ea2788c20f9c3"
     },
     {
       "path": "assets/evidence/runs/official_rollout_place_mouse_pad/final_observer_camera.png",
-      "bytes": 106551,
-      "sha256": "c342a033b1c59888fc22719068b6361606753555e5bb0fea6fdc5bd388b03990"
+      "bytes": 106348,
+      "sha256": "7af0ecf7217b596723b785710e6b92e3e77b717b49f4d866eda7b1663f6f01e5"
     },
     {
       "path": "assets/evidence/runs/pose_conditioned_eval_apple_plate_domain_randomized_v2/episode_000_eval_000_seed_6100/final_observer_camera.png",
@@ -225,44 +270,14 @@
       "sha256": "b2535460aabaf30cd9c7d3be100f99788b36b23763ead94c008fd887d73f9629"
     },
     {
-      "path": "assets/evidence/runs/probe_static_drawer_mug_unified/scene_generation_summary.json",
-      "bytes": 3308,
-      "sha256": "892044cf878ea0be8e017f7540a8fd3540d3f0a5aab61b38ad1478c390a9c457"
-    },
-    {
       "path": "assets/evidence/runs/scene_task_decoupling/action_repair_auto_mode_fail/final_observer_camera.png",
       "bytes": 111954,
       "sha256": "0fef99dc2781e8e9fb82946b8eef38540ee542824b45669fa76deb30cc03356f"
     },
     {
-      "path": "assets/evidence/runs/scene_task_decoupling/action_repair_auto_mode_fail/observer_rollout_probe.mp4",
-      "bytes": 11428,
-      "sha256": "a34aa87079ae00efa72bbeb65e807e3f653b81b6577d38a15242b3a61eb4cf1c"
-    },
-    {
-      "path": "assets/evidence/runs/scene_task_decoupling/apple_on_plate/final_observer_camera.png",
-      "bytes": 111996,
-      "sha256": "0ff0be0f795d913287c2a236abae3ec1b2feacee9632ccdfbcae7d062d5866ef"
-    },
-    {
-      "path": "assets/evidence/runs/scene_task_decoupling/apple_on_plate/initial_observer_camera.png",
-      "bytes": 105772,
-      "sha256": "18e53b736c0a9716e7489dc889a2c2375c7d26fe3078d207dccf61e8cac53012"
-    },
-    {
-      "path": "assets/evidence/runs/scene_task_decoupling/apple_on_plate/rollout_report.json",
-      "bytes": 5983,
-      "sha256": "8b0077930f8917bfd82457e9131b28cacc77819d9981bf3c800373d13fa9f285"
-    },
-    {
-      "path": "assets/evidence/runs/scene_task_decoupling/apple_to_left_front/final_observer_camera.png",
-      "bytes": 114812,
-      "sha256": "da8c81d9dc3451c9a20777a58353ffe6f8838d8ec7f83ebf75efc038e795b3b5"
-    },
-    {
-      "path": "assets/evidence/runs/scene_task_decoupling/apple_to_left_front/rollout_report.json",
-      "bytes": 6300,
-      "sha256": "fc1b45f5336c70d2c669eee1ddc6b7a863e5d95d12789eb0444e05c573b8011e"
+      "path": "assets/evidence/runs/scene_task_decoupling/action_repair_auto_mode_fail/rollout_report.json",
+      "bytes": 6072,
+      "sha256": "f51146cb23121b3e9858f0ff19edf97506903ef9919737318b8c4d2f3a30212d"
     },
     {
       "path": "assets/evidence/runs/scene_task_decoupling/apple_to_left_front_strict_region_fail/final_observer_camera.png",
@@ -270,9 +285,9 @@
       "sha256": "da8c81d9dc3451c9a20777a58353ffe6f8838d8ec7f83ebf75efc038e795b3b5"
     },
     {
-      "path": "assets/evidence/runs/scene_task_decoupling/apple_to_left_front_strict_region_fail/observer_rollout_probe.mp4",
-      "bytes": 11744,
-      "sha256": "7647cab6f41bb107102d36c1eab5f61fe20a30ecfb9ebaad24ac7218d7cdbe2e"
+      "path": "assets/evidence/runs/scene_task_decoupling/apple_to_left_front_strict_region_fail/rollout_report.json",
+      "bytes": 6278,
+      "sha256": "578410da871c54a3b339a56cdd95ffbbb0222b4ab5cf9f2eff969b2d4cb117d1"
     },
     {
       "path": "assets/evidence/runs/scene_task_decoupling/apple_to_right_fail/final_observer_camera.png",
@@ -280,9 +295,9 @@
       "sha256": "a0e1f6861211886cc7ebd719ef62966198860a3267f17446859157ca19d63c1a"
     },
     {
-      "path": "assets/evidence/runs/scene_task_decoupling/apple_to_right_fail/observer_rollout_probe.mp4",
-      "bytes": 10881,
-      "sha256": "ea3c81d6a81848a2a008c60bf159870e7f51a417f8eeb513801f69f875d4db1d"
+      "path": "assets/evidence/runs/scene_task_decoupling/apple_to_right_fail/rollout_report.json",
+      "bytes": 6245,
+      "sha256": "983c58f75fb3c54b4efb9ef10d979835e1e93b984429d120b8b77ae8343f5cde"
     },
     {
       "path": "assets/evidence/runs/scene_task_decoupling/original_placement_apple_on_plate_fail/final_observer_camera.png",
@@ -290,9 +305,9 @@
       "sha256": "e1aaa83fd2b2c57d6805057e93ad8c539a08e5d71ac709c2a653908867af6682"
     },
     {
-      "path": "assets/evidence/runs/scene_task_decoupling/original_placement_apple_on_plate_fail/observer_rollout_probe.mp4",
-      "bytes": 11167,
-      "sha256": "ec944560ed8e6c0cdfeb77d54de098d0bb76ebf8ee71390d4e599312c727354e"
+      "path": "assets/evidence/runs/scene_task_decoupling/original_placement_apple_on_plate_fail/rollout_report.json",
+      "bytes": 6007,
+      "sha256": "96861062ef2ee4af377de3bb1255eb13b0b375d75ca8c88e44ac40eed0144a46"
     },
     {
       "path": "assets/evidence/runs/scene_task_decoupling/shared_apple_plate_scene.json",
@@ -330,19 +345,44 @@
       "sha256": "aac9f153dcf94340528f65678dab8d8c2e4784e6594963937a11350886d41f2e"
     },
     {
+      "path": "assets/hosted_dashboard_qa.txt",
+      "bytes": 961,
+      "sha256": "a7ac711faecc9b8b235c34f0f278c8e508312a468767b2fd42ff9848d9147994"
+    },
+    {
       "path": "assets/local_dashboard_render_qa.txt",
       "bytes": 481,
       "sha256": "8f98a8eeba33d995a70cb4b1b522def42bb93ed72f2d394c03afd5e2503ac1bc"
     },
     {
-      "path": "assets/outer_tests.txt",
-      "bytes": 98,
-      "sha256": "8ed60f24f8d313d813753acffd447aa3c95cd4cf1ad8a81c8de2fb04653a881f"
+      "path": "assets/local_targeted_tests.txt",
+      "bytes": 99,
+      "sha256": "30d94c007e9ab46cb1e642f2a09b97836dd307bd1d26e07dd5615c2d6eedb70f"
+    },
+    {
+      "path": "assets/local_workspace_verification.txt",
+      "bytes": 1208,
+      "sha256": "1196166ebf5eda24e3f851088b5fbb023ce7c9e0fd121b86c3ea5c4029e1c73a"
     },
     {
       "path": "assets/provenance.txt",
-      "bytes": 563,
-      "sha256": "e67b6cbaf6a8bba062e9231b115f1154e5733b1e8ab1cdd227eed3949b9fb3aa"
+      "bytes": 728,
+      "sha256": "8d7283fc5e62958ef71c4e8acb9091784730a19c805b1504c978106e1d448785"
+    },
+    {
+      "path": "assets/public_patch_replay.txt",
+      "bytes": 431,
+      "sha256": "36bbdcb3da1417fbe916f79742ef3dcf8df6c4834d274bb965f22c11948e6395"
+    },
+    {
+      "path": "assets/remote_targeted_tests.txt",
+      "bytes": 99,
+      "sha256": "ab9421c66ce409ee2c687555bc43dc067ed70ac97c6e37bed5f7079a98672925"
+    },
+    {
+      "path": "assets/remote_workspace_verification.txt",
+      "bytes": 1208,
+      "sha256": "1196166ebf5eda24e3f851088b5fbb023ce7c9e0fd121b86c3ea5c4029e1c73a"
     },
     {
       "path": "assets/report_qa.txt",
@@ -355,24 +395,19 @@
       "sha256": "4250d1f2029068ddc50a143f438d48c0e151e05c734fe713ffea94436ecf9381"
     },
     {
-      "path": "assets/workspace_verification.txt",
-      "bytes": 801,
-      "sha256": "4f1eb64ec36987e7ade7ab95dc39dc11d51384547307b5788435d2a41879b6fa"
-    },
-    {
       "path": "index.html",
-      "bytes": 35439,
-      "sha256": "feca65aaf6855bb7807da20b3bd8a0816651419e83afcd12b8a72c3cde03cbe9"
+      "bytes": 36749,
+      "sha256": "3fecbe2cd494c226ad47f5fad4fe811f2d7b0cbe2a06114d6ae0f35e3165d90a"
     },
     {
-      "path": "qa/local-mirror-dashboard-sceneagent.png",
-      "bytes": 1032526,
-      "sha256": "48f063c1e354f3f884832926cac1a524abb2b14ebc9387820985522fdeaad390"
+      "path": "qa/hosted-dashboard-sceneagent.png",
+      "bytes": 710133,
+      "sha256": "e310d35c710e3aaaab38c1a05767d37ed154bf4b5a3329450ae0a1a4473c6903"
     },
     {
       "path": "report_manifest.json",
-      "bytes": 85506,
-      "sha256": "30569677de06a96cd204b11240feedd6cb1f343de6cffd8e1b9b060fc1845104"
+      "bytes": 101616,
+      "sha256": "2734a5423c622f5abd36f9c6b1c4d16764063cafe9d60784dfcb40fc22636f0f"
     }
   ]
 }

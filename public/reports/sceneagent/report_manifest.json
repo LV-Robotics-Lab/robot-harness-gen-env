@@ -1,25 +1,45 @@
 {
-  "file_count": 369,
+  "file_count": 439,
   "files": [
     {
-      "bytes": 28637,
+      "bytes": 68482,
       "path": "assets/asset_sha256.txt",
-      "sha256": "5fa6dea6b2015c89cbdcf308621ee34d2cdcf0784e182202be9e1ae701d94b25"
+      "sha256": "65bd5b343c4ff9554d72394dc4f4d9160d8517a635161df126235df6e79712cf"
     },
     {
-      "bytes": 8564,
+      "bytes": 11288,
       "path": "assets/browser_qa.txt",
-      "sha256": "2f05a64add1103281cb4526fbd4dd00225af19d32e115d681e8a58bb11225472"
+      "sha256": "a5c00adf09bc56f7eb0a396ef8cd6ef0aa7c80abad31622568063b6e6b44d310"
     },
     {
-      "bytes": 69,
+      "bytes": 34754,
+      "path": "assets/bundled_media_integrity.json",
+      "sha256": "3788289b91c63336a4a1f5b3a8982ab7362927e8e52ea76c682fa138ff3dc84a"
+    },
+    {
+      "bytes": 1486,
       "path": "assets/bundled_media_integrity.txt",
-      "sha256": "aec4d4d5d980ffb19dcd57780465e6e538145db437200a09438c17abdcf9b1ef"
+      "sha256": "8b52250cc270fe7bbfdc783d4888ec01655c4fdf6535bb5cac4adbd30c7aa79f"
     },
     {
-      "bytes": 1655,
+      "bytes": 3558,
       "path": "assets/dashboard_proof.json",
-      "sha256": "2b47438796196ff24e9e0da404b4169899a966847ade93c6d30c3c88277f6db4"
+      "sha256": "914d7d8645f701088be39e37d9847a4e1c1366099c65ddda9e20c1e7f0aee507"
+    },
+    {
+      "bytes": 9488909,
+      "path": "assets/evidence/artifacts/adapter_catalog/articraft10k_manifest.json",
+      "sha256": "8e17c29896f97ee1da326639b20bb62b060942fa2e912c99809f3aad6484fcfc"
+    },
+    {
+      "bytes": 989,
+      "path": "assets/evidence/artifacts/adapter_catalog/articraft10k_probe.json",
+      "sha256": "27bf2c6066ec90e3f1a331dc3a602f845a26c9b4b91c4b8788107a1d5ecd312b"
+    },
+    {
+      "bytes": 9795,
+      "path": "assets/evidence/artifacts/adapter_catalog/articraft10k_search_examples.json",
+      "sha256": "51f6a47864ab1b4f92ca39ce94f70ca6e3d5ca9d6c744486e0cc0eab7d7b0bfe"
     },
     {
       "bytes": 334992,
@@ -77,14 +97,19 @@
       "sha256": "1e946dcf46deef88b3c646899a9df87fb12cafcac8f5099330d03531d58d2d63"
     },
     {
-      "bytes": 8404,
-      "path": "assets/evidence/artifacts/scene_task_decoupling/apple_plate_two_tasks.json",
-      "sha256": "64f78dc05bdfd83b3e6af349d4cd2d6365ab27e4dfbaa0035ab647f8a759f90b"
+      "bytes": 2117,
+      "path": "assets/evidence/artifacts/runtime/robotwin_5090_env.json",
+      "sha256": "f9c3d13ea6e9c9b6f03f872c4431f554915c2cb34cb0cb46bc838d271dbb9bc0"
     },
     {
-      "bytes": 8774,
+      "bytes": 9577,
+      "path": "assets/evidence/artifacts/scene_task_decoupling/apple_plate_two_tasks.json",
+      "sha256": "7911feb96c46c9293a28c9870c481d30446354f2d7e1988b5a8cf694e8d92b07"
+    },
+    {
+      "bytes": 8781,
       "path": "assets/evidence/artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json",
-      "sha256": "8fffd22d3af717c7e50f1298d338cda8087cbead0004c8a17f3e17a466cae804"
+      "sha256": "25f29aa38eb97f8281d03844303ec841999f081ca6ae07ab61b5301f4092b274"
     },
     {
       "bytes": 1485,
@@ -92,9 +117,14 @@
       "sha256": "607bec58f6f53741a10bd8f91ca193e2d33980599365837d06f1a834aac78b7a"
     },
     {
-      "bytes": 12132,
+      "bytes": 13566,
+      "path": "assets/evidence/artifacts/sceneagent_selection2env_acceptance_audit.json",
+      "sha256": "64268c042e839ca6ac51b06fa4bea95632215ebf3360ffd0bc76d70fa41c0133"
+    },
+    {
+      "bytes": 12242,
       "path": "assets/evidence/artifacts/selection2env/task_apple_plate.json",
-      "sha256": "804598452e841cef857b65d50d7a4a2508f61489bfd829057a3bd339a875d1ba"
+      "sha256": "da2c4c8acb6af19705dc992d2a4434dff07a031dc0bb643e3d4195739d771ab3"
     },
     {
       "bytes": 6584,
@@ -102,19 +132,19 @@
       "sha256": "3172b21577b9c1aa8b76dd2eadd3ef27646c40abe413466f6ee381aaf6ad1123"
     },
     {
-      "bytes": 12825,
+      "bytes": 12842,
       "path": "assets/evidence/artifacts/selection2env/task_laptop_knife.json",
-      "sha256": "a41fac136898c26fe9e6baca84e18f68958ff07af55445769a17a09033201e7b"
+      "sha256": "de02504e1eeaadd1ad0149d37ee15010204bff643db3f158660af561cb2974b0"
     },
     {
-      "bytes": 13380,
+      "bytes": 13397,
       "path": "assets/evidence/artifacts/selection2env/task_vegetable_basket.json",
-      "sha256": "7a8cd81ee18b4fd0038dca9e53b5d4199275a7cbfb54160933f7fa9c9f22dde0"
+      "sha256": "8b8991a16b2810a4630a90d198b72dd9125353fed72647924989b01d4754b71a"
     },
     {
-      "bytes": 50272,
+      "bytes": 50416,
       "path": "assets/evidence/artifacts/selection2env_manifest.json",
-      "sha256": "7c04475e7f121fa448f606fd019e3133f9f7ccd708489b512a5fb3f2b4e545b1"
+      "sha256": "cbe02b16522cd6009820b6976212346d125a5dd28c0b7b945417d809fac9e5a9"
     },
     {
       "bytes": 1318,
@@ -147,29 +177,39 @@
       "sha256": "42c949b5e881b59502e43427e50749fbbea1469f2c18b291f0f7ccc9eb4e2313"
     },
     {
-      "bytes": 3264,
+      "bytes": 4756,
       "path": "assets/evidence/artifacts/visual_review/selection2env_visual_review.json",
-      "sha256": "fce9316d35d051b760850480aa2dc7d0c90356ea4d3ba75e15b2aae910c1a885"
+      "sha256": "1fca5d8cdf9d9b3d878514de99361c86c8c0853f3cab4803051a58d9ee0e4e6e"
     },
     {
-      "bytes": 7264,
+      "bytes": 12119,
       "path": "assets/evidence/docs/dashboard_todo_traceability.md",
-      "sha256": "02768a37fc5f2cb21b567b1f0f80aa79c554d48e3ca82b9be7f033343f3caea5"
+      "sha256": "1c0e3af154facb02fcd7f18787b0ddd8f363c3093db9c9940dfafdc27a00be14"
     },
     {
-      "bytes": 6020,
+      "bytes": 6126,
       "path": "assets/evidence/docs/generation2env_blockers.md",
-      "sha256": "e7dcc992dcc2e3191b24359155ce69df3a36c87e62c11d4365f4cccb617a4c18"
+      "sha256": "e965d3f95db9524177fadd63959a2dfd702b29cecc39805759223f96978ad9f5"
     },
     {
-      "bytes": 12925,
+      "bytes": 18997,
+      "path": "assets/evidence/docs/robotwin_smoke_evidence.md",
+      "sha256": "44cdc58853da329f866a30756b675e17c9efd991ee4885f3901bf5efe30c0c59"
+    },
+    {
+      "bytes": 4382,
+      "path": "assets/evidence/docs/sceneagent_reproduction_commands.md",
+      "sha256": "33314bf09628dfff0e50bbf1b8ea097b4e4b8030f2abb7f8819f66ae1edd53ac"
+    },
+    {
+      "bytes": 14367,
       "path": "assets/evidence/docs/selection2env_schema.md",
-      "sha256": "83b0cabb64c46baebef79291157e01c58860acd6308a9f9bfb2e52f8ab4cb3ea"
+      "sha256": "bca9fb3c141b806c73fed46c19738e5c16441af7b415b9c0fd19a56886988bc0"
     },
     {
-      "bytes": 8654,
+      "bytes": 11007,
       "path": "assets/evidence/docs/todo_completion_audit.md",
-      "sha256": "86160287230847c19eedfe42928a540abd6cf47c4b45f458eb951a9d948eeba4"
+      "sha256": "e96e817b17c7f1b515d2b2504f3a75b9784575e6ef934bef78cbe17f7fec6166"
     },
     {
       "bytes": 676,
@@ -382,6 +422,286 @@
       "sha256": "dec34d97e27b643172ec991b9fb77530681d2e96d498e4654b4da7f6c890961d"
     },
     {
+      "bytes": 3027,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/collect_report.json",
+      "sha256": "9200f09100838f9fdac2e03a5132c15512b027eb00c06154d6c5efd8bb149240"
+    },
+    {
+      "bytes": 1274,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/dataset_manifest.json",
+      "sha256": "36deb62312c4e079f1e269fd572700d6d200d91e28712215cafd658ac9a685b3"
+    },
+    {
+      "bytes": 30545,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/episode_000/object_states.jsonl",
+      "sha256": "d11134d0daf6fa3df9dc61dcfb3d69743bcae831ed3ebd256ca7053604a89197"
+    },
+    {
+      "bytes": 124097,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/episode_000/observations/head_camera_0000.png",
+      "sha256": "48b9c89962b6ef8aeeaad773414cbeb9d6e82c976dab71d283da0fea4a46b550"
+    },
+    {
+      "bytes": 124097,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/episode_000/observations/head_camera_0024.png",
+      "sha256": "48b9c89962b6ef8aeeaad773414cbeb9d6e82c976dab71d283da0fea4a46b550"
+    },
+    {
+      "bytes": 124097,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/episode_000/observations/head_camera_0048.png",
+      "sha256": "48b9c89962b6ef8aeeaad773414cbeb9d6e82c976dab71d283da0fea4a46b550"
+    },
+    {
+      "bytes": 124097,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/episode_000/observations/head_camera_0072.png",
+      "sha256": "48b9c89962b6ef8aeeaad773414cbeb9d6e82c976dab71d283da0fea4a46b550"
+    },
+    {
+      "bytes": 124097,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/episode_000/observations/head_camera_0096.png",
+      "sha256": "48b9c89962b6ef8aeeaad773414cbeb9d6e82c976dab71d283da0fea4a46b550"
+    },
+    {
+      "bytes": 105772,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/episode_000/observations/observer_camera_0000.png",
+      "sha256": "18e53b736c0a9716e7489dc889a2c2375c7d26fe3078d207dccf61e8cac53012"
+    },
+    {
+      "bytes": 105772,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/episode_000/observations/observer_camera_0024.png",
+      "sha256": "18e53b736c0a9716e7489dc889a2c2375c7d26fe3078d207dccf61e8cac53012"
+    },
+    {
+      "bytes": 105772,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/episode_000/observations/observer_camera_0048.png",
+      "sha256": "18e53b736c0a9716e7489dc889a2c2375c7d26fe3078d207dccf61e8cac53012"
+    },
+    {
+      "bytes": 105772,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/episode_000/observations/observer_camera_0072.png",
+      "sha256": "18e53b736c0a9716e7489dc889a2c2375c7d26fe3078d207dccf61e8cac53012"
+    },
+    {
+      "bytes": 105772,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/episode_000/observations/observer_camera_0096.png",
+      "sha256": "18e53b736c0a9716e7489dc889a2c2375c7d26fe3078d207dccf61e8cac53012"
+    },
+    {
+      "bytes": 26970,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/episode_000/observer_camera.mp4",
+      "sha256": "618644f266e35f0629b292461c80354f571cf23b5082909842db71e528b238b5"
+    },
+    {
+      "bytes": 331,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/episode_000/scene_info.json",
+      "sha256": "6e522eeec4c14f9e6d08bd982b39aeee4bf606c70b85eb420834c0778788a6e7"
+    },
+    {
+      "bytes": 21534,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/process_stderr.log",
+      "sha256": "34f9dcd2fff2c87426a915fc1828d35ace58fd2e7d8b3a455f1b1385254e086a"
+    },
+    {
+      "bytes": 299,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_apple_plate/process_stdout.log",
+      "sha256": "33b344a01ff00c7415af8266fff2adc1e045a208a5bc3f2d5a4e751386939745"
+    },
+    {
+      "bytes": 2999,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/collect_report.json",
+      "sha256": "c32e67b934436d7bb6f7ffc5dd004881a16ecb2e41680702c60dbc2ab1ebb52c"
+    },
+    {
+      "bytes": 1275,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/dataset_manifest.json",
+      "sha256": "8bcf5382e6ebfb117a0a4a1e3ff955b7dafded7a7fa3852ec000b34c210ea931"
+    },
+    {
+      "bytes": 28896,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/episode_000/object_states.jsonl",
+      "sha256": "06dea9fcbc8f132f1df21f39515b50300482f508b549aaa5541dcf69bd50c91a"
+    },
+    {
+      "bytes": 127786,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/episode_000/observations/head_camera_0000.png",
+      "sha256": "08a62e5f6be66c23ce718dfdeecadd42851f0fe56073c079f0dbed638837131d"
+    },
+    {
+      "bytes": 127786,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/episode_000/observations/head_camera_0024.png",
+      "sha256": "08a62e5f6be66c23ce718dfdeecadd42851f0fe56073c079f0dbed638837131d"
+    },
+    {
+      "bytes": 127786,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/episode_000/observations/head_camera_0048.png",
+      "sha256": "08a62e5f6be66c23ce718dfdeecadd42851f0fe56073c079f0dbed638837131d"
+    },
+    {
+      "bytes": 127786,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/episode_000/observations/head_camera_0072.png",
+      "sha256": "08a62e5f6be66c23ce718dfdeecadd42851f0fe56073c079f0dbed638837131d"
+    },
+    {
+      "bytes": 127786,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/episode_000/observations/head_camera_0096.png",
+      "sha256": "08a62e5f6be66c23ce718dfdeecadd42851f0fe56073c079f0dbed638837131d"
+    },
+    {
+      "bytes": 106746,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/episode_000/observations/observer_camera_0000.png",
+      "sha256": "a5dec1f94901e5f2aa9574fca26bacdada33901f487627dd11db2eed35d94605"
+    },
+    {
+      "bytes": 106746,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/episode_000/observations/observer_camera_0024.png",
+      "sha256": "a5dec1f94901e5f2aa9574fca26bacdada33901f487627dd11db2eed35d94605"
+    },
+    {
+      "bytes": 106746,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/episode_000/observations/observer_camera_0048.png",
+      "sha256": "a5dec1f94901e5f2aa9574fca26bacdada33901f487627dd11db2eed35d94605"
+    },
+    {
+      "bytes": 106746,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/episode_000/observations/observer_camera_0072.png",
+      "sha256": "a5dec1f94901e5f2aa9574fca26bacdada33901f487627dd11db2eed35d94605"
+    },
+    {
+      "bytes": 106746,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/episode_000/observations/observer_camera_0096.png",
+      "sha256": "a5dec1f94901e5f2aa9574fca26bacdada33901f487627dd11db2eed35d94605"
+    },
+    {
+      "bytes": 27290,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/episode_000/observer_camera.mp4",
+      "sha256": "06276735558480dbbd316f930da83631d53373aa012ceb86e270a84eebe84ee4"
+    },
+    {
+      "bytes": 328,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/episode_000/scene_info.json",
+      "sha256": "3eb8b319b059247639937dba262902adcf3dc9da5ddcb43b03b033b51bec01e5"
+    },
+    {
+      "bytes": 21534,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/process_stderr.log",
+      "sha256": "49d1c1edc90ea86a66ae57771f7aa9b69ccae7ed30301313f4648eafdcf28596"
+    },
+    {
+      "bytes": 300,
+      "path": "assets/evidence/runs/final_acceptance_20260715/collect_laptop_knife/process_stdout.log",
+      "sha256": "3a77b233053ebe7859dbc60dbd256bdcffb69ec7d8fc3645a8b992056bf96424"
+    },
+    {
+      "bytes": 204,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/events.jsonl",
+      "sha256": "c65e44fca1431ff99e97c57384de6122487c9764a96567f4b2345ad2405b216e"
+    },
+    {
+      "bytes": 149104,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/final_head_camera.png",
+      "sha256": "78bc375c4702c022062bdedb2972a08253df05005a96a18dbb2eae76984239c5"
+    },
+    {
+      "bytes": 111968,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/final_observer_camera.png",
+      "sha256": "1bdcaf386340f8d68c74402124e4179f409e5becc1322d62d9dd2d2eb795a84a"
+    },
+    {
+      "bytes": 124097,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/initial_head_camera.png",
+      "sha256": "48b9c89962b6ef8aeeaad773414cbeb9d6e82c976dab71d283da0fea4a46b550"
+    },
+    {
+      "bytes": 105772,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/initial_observer_camera.png",
+      "sha256": "18e53b736c0a9716e7489dc889a2c2375c7d26fe3078d207dccf61e8cac53012"
+    },
+    {
+      "bytes": 1726,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/move_events.jsonl",
+      "sha256": "66b92317851f327501ac38ed8682c3338194d85599708c1f2fd5eefdb514a90d"
+    },
+    {
+      "bytes": 602021,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/observer_rollout_probe.mp4",
+      "sha256": "a8947c22fbcbbfe868e36cdaa8229da65de9ffa3513f85728c090ed56e63544e"
+    },
+    {
+      "bytes": 695538,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/policy_trace.json",
+      "sha256": "162f1a4ad85b0555b645f974e9f9be3597c270ae45796838e832eb16aaa1b334"
+    },
+    {
+      "bytes": 127806,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/process_stderr.log",
+      "sha256": "8d66f212c7717604b593e77e648141aee85bfb185349fef1a7981b211ea7b4ea"
+    },
+    {
+      "bytes": 165,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/process_stdout.log",
+      "sha256": "f3b45421c98948d69f00dbbba748d91474b0add989e469a54e6dad379c55e5d8"
+    },
+    {
+      "bytes": 6478,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/rollout_report.json",
+      "sha256": "0612939211468fa62e64fe51d10b37ff978b3cc2625b4715d9c7ec92537b2a08"
+    },
+    {
+      "bytes": 204,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/events.jsonl",
+      "sha256": "d548b405a48167671a23789a0bab7fc7d72e5257c5f1791a3d29b669f6f761c5"
+    },
+    {
+      "bytes": 144636,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/final_head_camera.png",
+      "sha256": "0ece830d594defd5aeedb621966fa6ae28e7032ad63d276eeb9030baa0be10e2"
+    },
+    {
+      "bytes": 114545,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/final_observer_camera.png",
+      "sha256": "c9254afb5e6890f6301fa641f745b74014f397a4e25fef1f8b40f1c11158df8a"
+    },
+    {
+      "bytes": 124097,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/initial_head_camera.png",
+      "sha256": "48b9c89962b6ef8aeeaad773414cbeb9d6e82c976dab71d283da0fea4a46b550"
+    },
+    {
+      "bytes": 105772,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/initial_observer_camera.png",
+      "sha256": "18e53b736c0a9716e7489dc889a2c2375c7d26fe3078d207dccf61e8cac53012"
+    },
+    {
+      "bytes": 1725,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/move_events.jsonl",
+      "sha256": "80a70157523513eda0792458c6c85bb3a20c49f621b134fcf04a3016f9197509"
+    },
+    {
+      "bytes": 602898,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/observer_rollout_probe.mp4",
+      "sha256": "4cecb2aad594ba7ada8c415f970ccc3be80c89000911b0177b441b29c6a83938"
+    },
+    {
+      "bytes": 685638,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/policy_trace.json",
+      "sha256": "caf1bb8e0d86857647949cc5d334b5431b16826d0cecbefd3443266462c69ab6"
+    },
+    {
+      "bytes": 126942,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/process_stderr.log",
+      "sha256": "44c62d82caafa40f41e96632a926feac5675939a28b53512b510d843193c7963"
+    },
+    {
+      "bytes": 165,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/process_stdout.log",
+      "sha256": "f3b45421c98948d69f00dbbba748d91474b0add989e469a54e6dad379c55e5d8"
+    },
+    {
+      "bytes": 6785,
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/rollout_report.json",
+      "sha256": "b55f16c09b7ed223bad69b6f33ff0fd2088b6fa413fa3ff8b0c480030f0d906f"
+    },
+    {
       "bytes": 203,
       "path": "assets/evidence/runs/generated_rollout_apple_plate_action_repair_pass/events.jsonl",
       "sha256": "3f3e21aed65882f20035459b2d11849e1a33e01872a1f555bea26db74fb849fa"
@@ -477,19 +797,19 @@
       "sha256": "f575063c890380d0c1dc92e469e0c80df6cc65c7ddc78c861fbf44e24ba05c04"
     },
     {
-      "bytes": 208,
+      "bytes": 210,
       "path": "assets/evidence/runs/official_rollout_open_laptop/events.jsonl",
-      "sha256": "4cd6a04ba1e321ca43c2697e2ceda55d2e70bc4e12fc88a583cc122c0d21c8b2"
+      "sha256": "8c9ea2115eac84dcb7efa7b73466378f2f444fe8d6586b842983ded354e2b201"
     },
     {
-      "bytes": 146142,
+      "bytes": 146730,
       "path": "assets/evidence/runs/official_rollout_open_laptop/final_head_camera.png",
-      "sha256": "474b3814667bd621928b120f93736e4f5496820f3aaebd9a2e6d2d1a43e4acd7"
+      "sha256": "baaf67a0cba73e9ec717508ac44d832f0b49efc7b1c3c77b5eddf737e6b75120"
     },
     {
-      "bytes": 109599,
+      "bytes": 109659,
       "path": "assets/evidence/runs/official_rollout_open_laptop/final_observer_camera.png",
-      "sha256": "7207b563d3af85441775975ca78d4a2057162675f317024b8451b76a982d0f41"
+      "sha256": "f064e787bf83cf27c53674b2fb65da704282151b5edc9a9430c5631f36a84548"
     },
     {
       "bytes": 119571,
@@ -502,34 +822,34 @@
       "sha256": "ae3d0a4281d7269eb2147b5d8db3e3b8fe22c56762bbca9989a5a8463062f016"
     },
     {
-      "bytes": 1147,
+      "bytes": 1148,
       "path": "assets/evidence/runs/official_rollout_open_laptop/move_events.jsonl",
-      "sha256": "fd0fd70aff428c0bf54870d22dbd3bb60dcf5f64dc329118f5540f55e6332775"
+      "sha256": "ce9a4bf7f8e27951d9bda614a1096574afb355de866893632848db7d7003407d"
     },
     {
-      "bytes": 11321,
+      "bytes": 538746,
       "path": "assets/evidence/runs/official_rollout_open_laptop/observer_rollout_probe.mp4",
-      "sha256": "70d3177af462ca14e2aafcebb882296d7a3010d98364214a50b8875ffc6ae8ce"
+      "sha256": "340293086406668fab0ecc3aaa42d75714950e208a7041c898fe182847b0f6e0"
     },
     {
-      "bytes": 4632,
+      "bytes": 5180,
       "path": "assets/evidence/runs/official_rollout_open_laptop/rollout_report.json",
-      "sha256": "3afc3100a8b65e3c039d1357070b7f4353dcea99d5890fc7d5139b2b719c5477"
+      "sha256": "57c617c78f0f10d5b3fac43ff9967e3c9762bd7794c278b1753a0c909d6399e0"
     },
     {
-      "bytes": 209,
+      "bytes": 210,
       "path": "assets/evidence/runs/official_rollout_place_container_plate/events.jsonl",
-      "sha256": "977356ddd8a42aa8e6b53a31f8114bc5cdbeab4e118d745dcec4c4511bfb33f1"
+      "sha256": "159be822436b8013164050fba3b6fb315847e2c20631c34916c45b516371a955"
     },
     {
-      "bytes": 140116,
+      "bytes": 139838,
       "path": "assets/evidence/runs/official_rollout_place_container_plate/final_head_camera.png",
-      "sha256": "834fd6b4ff590e380eb670a99855fe5cb5abe7841e0eb7c62cef9ad9239b1841"
+      "sha256": "777728eaf253304be28e9a3d511a2896393fe9a71861db9834a4b1672020f3be"
     },
     {
-      "bytes": 110277,
+      "bytes": 110292,
       "path": "assets/evidence/runs/official_rollout_place_container_plate/final_observer_camera.png",
-      "sha256": "2ee832f4b530ed5d8e5370799e940e6dabb84aad80d9581a0c518c4506154c85"
+      "sha256": "eaf9729586570c1c347072d90c732a1b4c93e1fd8c511a5d496ea2788c20f9c3"
     },
     {
       "bytes": 125677,
@@ -542,34 +862,34 @@
       "sha256": "599fc09bb5ed10c2dbc85f2c0ce33c8619d06fae11ff56dd8ac7ca6557a2934b"
     },
     {
-      "bytes": 1148,
+      "bytes": 1147,
       "path": "assets/evidence/runs/official_rollout_place_container_plate/move_events.jsonl",
-      "sha256": "6aa60392c7aa56ef14cbe5223dd9369a24dae0b7f68ff76e0f6291ca67c0998b"
+      "sha256": "4b7e9633931538ddb71f23c98698473b37f29659fe8c8f00e2cd53e92659de41"
     },
     {
-      "bytes": 11048,
+      "bytes": 549050,
       "path": "assets/evidence/runs/official_rollout_place_container_plate/observer_rollout_probe.mp4",
-      "sha256": "2bf907d56255c1c567a3f8bf1892c4ea1e5d05b4fe035625a59e53e9c0d93b73"
+      "sha256": "fb0e9ec9fb635639567e4035baeda1aca598508ff0d933a2f9ecc364f0ca3b51"
     },
     {
-      "bytes": 5041,
+      "bytes": 5585,
       "path": "assets/evidence/runs/official_rollout_place_container_plate/rollout_report.json",
-      "sha256": "0754d7b750f9104d83fda75a277b17f1f67d1a3af6f9a2391dcf03e15ecd0638"
+      "sha256": "35e196db6829c8d73cadd42891c1bcff1148a0f2c262ced837ae7228431d39b1"
     },
     {
       "bytes": 209,
       "path": "assets/evidence/runs/official_rollout_place_mouse_pad/events.jsonl",
-      "sha256": "60c804071bfab430fb4372e0dc9072f5790938331409377535dbeecf15cd4e33"
+      "sha256": "c5c619cb36877e84c3e206a5102626abb68e7be704727ea2dd235ab627f59d74"
     },
     {
-      "bytes": 131738,
+      "bytes": 131286,
       "path": "assets/evidence/runs/official_rollout_place_mouse_pad/final_head_camera.png",
-      "sha256": "c70d617650be2e8da235905673541d504809e3261a226c948890c41bb1357ca4"
+      "sha256": "e214f0ac65fd278a241d95633458dab02c0bfb8b96acc4c1c16506f53fdfe438"
     },
     {
-      "bytes": 106551,
+      "bytes": 106348,
       "path": "assets/evidence/runs/official_rollout_place_mouse_pad/final_observer_camera.png",
-      "sha256": "c342a033b1c59888fc22719068b6361606753555e5bb0fea6fdc5bd388b03990"
+      "sha256": "7af0ecf7217b596723b785710e6b92e3e77b717b49f4d866eda7b1663f6f01e5"
     },
     {
       "bytes": 112698,
@@ -582,19 +902,19 @@
       "sha256": "8ea1661e5bf30436c8bf515ed2fca369857f17a21dcfdc40c3506b7597380f7a"
     },
     {
-      "bytes": 860,
+      "bytes": 861,
       "path": "assets/evidence/runs/official_rollout_place_mouse_pad/move_events.jsonl",
-      "sha256": "16c4628ca94675f430d0e36ba0fc448b57ee54770e363df50344c9e098369c21"
+      "sha256": "0e5a895a8128b0110b5fef902ef1ac4030c80606526808e641ab24633ae77a87"
     },
     {
-      "bytes": 10511,
+      "bytes": 510319,
       "path": "assets/evidence/runs/official_rollout_place_mouse_pad/observer_rollout_probe.mp4",
-      "sha256": "9ff291b76c34213b6f17a3513cc8dfd6b9fa195593e909767d3bf02c5262e281"
+      "sha256": "f575063c890380d0c1dc92e469e0c80df6cc65c7ddc78c861fbf44e24ba05c04"
     },
     {
-      "bytes": 4949,
+      "bytes": 5518,
       "path": "assets/evidence/runs/official_rollout_place_mouse_pad/rollout_report.json",
-      "sha256": "77d2c7024524e8699c63e1ddb07cec5c2816997ded0a0efac4dc1d2e407328de"
+      "sha256": "5cccb252bef5ed2517511976ada6e2d8bde1bc15a4999c49afa760d96e8cc654"
     },
     {
       "bytes": 37071,
@@ -1762,9 +2082,9 @@
       "sha256": "aac9f153dcf94340528f65678dab8d8c2e4784e6594963937a11350886d41f2e"
     },
     {
-      "bytes": 508,
+      "bytes": 961,
       "path": "assets/hosted_dashboard_qa.txt",
-      "sha256": "4201dde2bbebe8574d8cc2b0279fd5644cce914781d62ec8c0490b849a73d712"
+      "sha256": "a7ac711faecc9b8b235c34f0f278c8e508312a468767b2fd42ff9848d9147994"
     },
     {
       "bytes": 481,
@@ -1772,14 +2092,44 @@
       "sha256": "8f98a8eeba33d995a70cb4b1b522def42bb93ed72f2d394c03afd5e2503ac1bc"
     },
     {
+      "bytes": 99,
+      "path": "assets/local_targeted_tests.txt",
+      "sha256": "30d94c007e9ab46cb1e642f2a09b97836dd307bd1d26e07dd5615c2d6eedb70f"
+    },
+    {
+      "bytes": 1208,
+      "path": "assets/local_workspace_verification.txt",
+      "sha256": "1196166ebf5eda24e3f851088b5fbb023ce7c9e0fd121b86c3ea5c4029e1c73a"
+    },
+    {
+      "bytes": 1486,
+      "path": "assets/media_integrity.txt",
+      "sha256": "8b52250cc270fe7bbfdc783d4888ec01655c4fdf6535bb5cac4adbd30c7aa79f"
+    },
+    {
       "bytes": 98,
       "path": "assets/outer_tests.txt",
       "sha256": "8ed60f24f8d313d813753acffd447aa3c95cd4cf1ad8a81c8de2fb04653a881f"
     },
     {
-      "bytes": 563,
+      "bytes": 728,
       "path": "assets/provenance.txt",
-      "sha256": "e67b6cbaf6a8bba062e9231b115f1154e5733b1e8ab1cdd227eed3949b9fb3aa"
+      "sha256": "8d7283fc5e62958ef71c4e8acb9091784730a19c805b1504c978106e1d448785"
+    },
+    {
+      "bytes": 431,
+      "path": "assets/public_patch_replay.txt",
+      "sha256": "36bbdcb3da1417fbe916f79742ef3dcf8df6c4834d274bb965f22c11948e6395"
+    },
+    {
+      "bytes": 99,
+      "path": "assets/remote_targeted_tests.txt",
+      "sha256": "ab9421c66ce409ee2c687555bc43dc067ed70ac97c6e37bed5f7079a98672925"
+    },
+    {
+      "bytes": 1208,
+      "path": "assets/remote_workspace_verification.txt",
+      "sha256": "1196166ebf5eda24e3f851088b5fbb023ce7c9e0fd121b86c3ea5c4029e1c73a"
     },
     {
       "bytes": 221,
@@ -1797,34 +2147,34 @@
       "sha256": "4f1eb64ec36987e7ade7ab95dc39dc11d51384547307b5788435d2a41879b6fa"
     },
     {
-      "bytes": 35439,
+      "bytes": 36749,
       "path": "index.html",
-      "sha256": "feca65aaf6855bb7807da20b3bd8a0816651419e83afcd12b8a72c3cde03cbe9"
+      "sha256": "3fecbe2cd494c226ad47f5fad4fe811f2d7b0cbe2a06114d6ae0f35e3165d90a"
     },
     {
-      "bytes": 409801,
+      "bytes": 417393,
       "path": "qa/desktop-decoupling.png",
-      "sha256": "962668603f6f35a19aaf1e160e3d37ee139cbeb2421cf074a02b870fdef96956"
+      "sha256": "28b343bf9bd7f76f66d9b1e9f2320bfc98dfa5dbd45cb131a9d62383649e2ef8"
     },
     {
-      "bytes": 1736962,
+      "bytes": 2388012,
       "path": "qa/desktop-full.png",
-      "sha256": "a186162fa5e9ef74d81f072d278bf555a11567b84af3fe6b696ed9574c0e4367"
+      "sha256": "2f72a6ff1fdc8c68df7ac1ea13c5a5b6eb8f654d1c7fc4107f20d11f0135a7c2"
     },
     {
-      "bytes": 303046,
+      "bytes": 301531,
       "path": "qa/desktop-repair-trail.png",
-      "sha256": "e31aae8e6e9f39297a88f900baefe27965a1049630b2f06305931d55b75c0fc7"
+      "sha256": "e28b84be99a44890f0e28a398c908fb9dcd50246e6907f845b093c7840fe4551"
     },
     {
-      "bytes": 128748,
+      "bytes": 143077,
       "path": "qa/desktop-verification.png",
-      "sha256": "03695f52799aba08666f437a9201693d68c9f25d1fe163168e46a839b8601de0"
+      "sha256": "80f32279b4d8f616e22eb960b29f54228eeb2492f069713b4a33fe7f105c6fa6"
     },
     {
-      "bytes": 2366669,
+      "bytes": 2388012,
       "path": "qa/desktop-viewport.png",
-      "sha256": "dd37f86a12cf256647b2538676faacaca07e2ff4c7c47caa99ecd2d056e74630"
+      "sha256": "2f72a6ff1fdc8c68df7ac1ea13c5a5b6eb8f654d1c7fc4107f20d11f0135a7c2"
     },
     {
       "bytes": 710133,
@@ -1837,17 +2187,17 @@
       "sha256": "48f063c1e354f3f884832926cac1a524abb2b14ebc9387820985522fdeaad390"
     },
     {
-      "bytes": 2020105,
+      "bytes": 2645843,
       "path": "qa/mobile-full.png",
-      "sha256": "4156d0f099f4bd528aac6ed4a16726639cd6338f6e00a6fec6fdee9efca61d7a"
+      "sha256": "7e757b1e63f0c272e3c426d187a679f84df44bffd7cc743d3676af0ab7bcbef4"
     },
     {
-      "bytes": 2629477,
+      "bytes": 2645843,
       "path": "qa/mobile-viewport.png",
-      "sha256": "870c08009d92dd2b54b0f7b2944e51be2c902333613561833f698898d8a3197a"
+      "sha256": "7e757b1e63f0c272e3c426d187a679f84df44bffd7cc743d3676af0ab7bcbef4"
     }
   ],
-  "generated_at": "2026-07-13T16:55:12.286192+00:00",
+  "generated_at": "2026-07-15T01:59:13.378764+00:00",
   "schema_version": "alchedata.sceneagent_report_manifest.v1",
   "status": "pass_report_bundle"
 }

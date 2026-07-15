@@ -339,8 +339,8 @@
       },
       "blockers": [
         {
-          "code": "POLICY_ROBUSTNESS_FAILED",
-          "message": "Varied-placement held-out evaluation was executed before and after failure-to-data recovery; both evaluations passed infrastructure checks but scored 1/4 task success, so promotion is rejected.",
+          "code": "DEFAULT_ACT_PLACEMENT_ROBUSTNESS_FAILED",
+          "message": "The retained ACT recovery branch scores 1/4 on varied-placement holdout. A separate privileged pose-conditioned open-loop policy passes the bounded SceneAgent gate at 4/4 held-out, 4/4 declared domain randomization, and 3/3 fixed-placement can/basket; this does not repair or promote ACT.",
           "owner": "Zheng Ye / Gaochen"
         }
       ],
@@ -725,8 +725,8 @@
       },
       "blockers": [
         {
-          "code": "POLICY_EVALUATION_TASK_COVERAGE_PENDING",
-          "message": "Generated collection and learned-policy /evaluate coverage are not attached to this normalized task; the bounded learned-ACT adapter currently covers apple/plate only.",
+          "code": "LEARNED_POLICY_TASK_COVERAGE_BOUNDARY",
+          "message": "Generated collection and learned-policy /evaluate coverage are not attached to this normalized task. This is a post-TODO policy-coverage boundary, not a selection2env completion blocker.",
           "owner": "Zheng Ye / Gaochen"
         }
       ],
@@ -1111,8 +1111,8 @@
       },
       "blockers": [
         {
-          "code": "POLICY_EVALUATION_TASK_COVERAGE_PENDING",
-          "message": "Generated collection and learned-policy /evaluate coverage are not attached to this normalized task; the bounded learned-ACT adapter currently covers apple/plate only.",
+          "code": "LEARNED_POLICY_TASK_COVERAGE_BOUNDARY",
+          "message": "Generated collection and learned-policy /evaluate coverage are not attached to this normalized task. This is a post-TODO policy-coverage boundary, not a selection2env completion blocker.",
           "owner": "Zheng Ye / Gaochen"
         }
       ],

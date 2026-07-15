@@ -8,7 +8,7 @@
   "task_config": "demo_clean",
   "seed": 0,
   "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/shared_apple_plate_scene.json",
-  "placement_sha256": "c39169d68ab617debdd8b4462d7bc9d30ad6fae0ce5c3d4aa9e4a34893bee592",
+  "placement_sha256": "e828f1b99877b2b8b51aa893dc82d0139021e15492d9afa7d5f9aba174084519",
   "scene_module": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/robotwin-text2env-demo/generated_scenes/apple_plate_scene.py",
   "robotwin_root": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin",
   "out_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_left_front",
@@ -26,16 +26,16 @@
     "random_table_height": 0.0,
     "random_head_camera_dis": 0.0
   },
-  "status": "pass_generated_action_rollout",
+  "status": "fail_generated_action_rollout",
   "limitations": [
     "This probe executes a generated selection2env play_once template against a generated placement.",
     "It is an action-stack smoke test, not learned-policy training or evaluation.",
     "It does not prove robustness across randomization, embodiments, or held-out tasks."
   ],
-  "setup_duration_sec": 7.5349,
-  "play_once_duration_sec": 0.7186,
+  "setup_duration_sec": 7.5628,
+  "play_once_duration_sec": 0.716,
   "plan_success": true,
-  "check_success": true,
+  "check_success": false,
   "task_info": {
     "cluttered_table_info": [],
     "texture_info": {
@@ -126,8 +126,7 @@
       0.04
     ],
     "distance_to_region_center_m": 0.05174664093423076,
-    "region_tolerance_m": 0.03,
-    "inside_region": true
+    "inside_region": false
   },
   "images": {
     "initial_head_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_left_front/initial_head_camera.png",
@@ -173,9 +172,9 @@
     "status": "not_requested",
     "save_freq": 15
   },
-  "next_data_requirement": "Use this generated play_once template to record full multi-episode demonstrations before /train.",
+  "next_data_requirement": "Repair generated play_once target pose, grasp contact point, or asset pose before claiming /collect success.",
   "failure_diagnosis": {
-    "status": "no_failure_observed",
+    "status": "failure_observed",
     "checked_categories": [
       "wrong_grasp_location",
       "object_knocked_over",

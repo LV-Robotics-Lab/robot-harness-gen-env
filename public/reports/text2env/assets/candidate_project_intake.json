@@ -1,7 +1,8 @@
 {
   "schema_version": "pearl.candidate_project_intake.v1",
   "status": "pass_public_source_triage",
-  "reviewed_at": "2026-07-14",
+  "reviewed_at": "2026-07-15",
+  "snapshot_capture_date": "2026-07-14",
   "candidate_label": "Paul",
   "source_provenance": {
     "document": "2026_07_14_Paul_具身智能_简历.pdf",

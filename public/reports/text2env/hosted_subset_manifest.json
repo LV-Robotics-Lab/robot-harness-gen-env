@@ -16,8 +16,8 @@
     },
     {
       "path": "assets/candidate_project_intake.json",
-      "bytes": 11288,
-      "sha256": "23c85c834fb45df11953aa97395834043c320ec715b72f9069269e88bdc76754"
+      "bytes": 11329,
+      "sha256": "013c84339b8fb48b36d127ace3c45ac6a243c8f3c66e36f400802684d6873696"
     },
     {
       "path": "assets/empirics/failure_score_correlation_v1.json",
@@ -66,8 +66,8 @@
     },
     {
       "path": "assets/empirics/pose_conditioned_policy_promotion_v1.json",
-      "bytes": 8774,
-      "sha256": "8fffd22d3af717c7e50f1298d338cda8087cbead0004c8a17f3e17a466cae804"
+      "bytes": 8781,
+      "sha256": "25f29aa38eb97f8281d03844303ec841999f081ca6ae07ab61b5301f4092b274"
     },
     {
       "path": "assets/empirics/text2env_empirical_audit_v1.json",
@@ -191,28 +191,28 @@
     },
     {
       "path": "index.html",
-      "bytes": 98026,
-      "sha256": "76c6db946c62848b52a4d7e319f80ffe8359be5c600995919f0cf47ddd2e1b0a"
+      "bytes": 98135,
+      "sha256": "920a36478e27e9bc173b9be1eccdad455e33782d4faafe4ee90f92b070878940"
     },
     {
       "path": "qa/desktop-viewport.png",
-      "bytes": 4499373,
-      "sha256": "dceaeac633cc925b164d76f232b87bbf8fc131057fcdc77860da1376b4836d15"
+      "bytes": 4508880,
+      "sha256": "ee156bdaa98cd059632c61eb6b8e3b5bcb6f0d110abceb7a513e60680a63fae0"
     },
     {
       "path": "qa/mobile-viewport.png",
-      "bytes": 2533237,
-      "sha256": "2361067a4caed7a209df454df16528a039790f2595dc49e0c4abf473b4373832"
+      "bytes": 2539620,
+      "sha256": "6b641bac965fbd879d9a0dcc895bb8f01818971c3409db45112ea797cc23060e"
     },
     {
       "path": "report_manifest.json",
       "bytes": 15575,
-      "sha256": "c47633cb1714e3199017bf17d5fc93ec415551b8b54cef01c03ad8e866d408e4"
+      "sha256": "5735c135a60552a08a0c4b14b079ae3cf20956f4fd4d045e4fb35adeed977c95"
     },
     {
       "path": "text2env_literature_review.md",
-      "bytes": 27212,
-      "sha256": "dae26bc8bac80d71ea5614434b2d0956c1a6f9f42c5222105a6e90e269384931"
+      "bytes": 27248,
+      "sha256": "25fd19a280db322cc16ad4bbaa47ce9b23f2da91847cc4f9cec4702b1d8a560c"
     }
   ]
 }

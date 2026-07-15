@@ -2,21 +2,21 @@
   "schema_version": "alchedata.generated_selection2env_rollout_probe.v0",
   "command": "/collect",
   "probe_type": "generated_selection2env_play_once",
-  "task_id": "task_apple_plate",
-  "scene_id": "scene_apple_plate_shared_two_task_v0",
-  "task_program_input": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/task_program_inputs/task_apple_plate.json",
+  "task_id": "task_apple_plate_to_right",
+  "scene_id": "scene_apple_plate_action_repair_v0",
+  "task_program_input": "/home/jingxiang/workspace/alchedata-self-improving-agents/artifacts/task_program_inputs/task_apple_plate_to_right.json",
   "task_config": "demo_clean",
   "seed": 0,
-  "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/shared_apple_plate_scene.json",
-  "placement_sha256": "c39169d68ab617debdd8b4462d7bc9d30ad6fae0ce5c3d4aa9e4a34893bee592",
+  "placement": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/probe_static_apple_plate_action_repair/final_placement.json",
+  "placement_sha256": "f8f0b053e754920a36c174cefbbaa3752f07444145f3f95f6ff2e3cd985c8180",
   "scene_module": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/robotwin-text2env-demo/generated_scenes/apple_plate_scene.py",
   "robotwin_root": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin",
-  "out_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_on_plate",
+  "out_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right",
   "task_binding": {
-    "template": "place_on",
+    "template": "place_in_region",
     "source_id": "apple_1",
-    "target_kind": "object",
-    "target_id": "plate_1"
+    "target_kind": "region",
+    "target_region": "right_reachable_area"
   },
   "native_data_recording_requested": false,
   "domain_randomization": {
@@ -26,16 +26,16 @@
     "random_table_height": 0.0,
     "random_head_camera_dis": 0.0
   },
-  "status": "pass_generated_action_rollout",
+  "status": "fail_generated_action_rollout",
   "limitations": [
     "This probe executes a generated selection2env play_once template against a generated placement.",
     "It is an action-stack smoke test, not learned-policy training or evaluation.",
     "It does not prove robustness across randomization, embodiments, or held-out tasks."
   ],
-  "setup_duration_sec": 7.5666,
-  "play_once_duration_sec": 0.7484,
-  "plan_success": true,
-  "check_success": true,
+  "setup_duration_sec": 7.5494,
+  "play_once_duration_sec": 0.4757,
+  "plan_success": false,
+  "check_success": false,
   "task_info": {
     "cluttered_table_info": [],
     "texture_info": {
@@ -44,16 +44,16 @@
     },
     "info": {
       "{source}": "035_apple/base0",
-      "{target}": "003_plate/base0",
+      "{target}": "right_reachable_area",
       "{arm}": "left",
-      "{template}": "place_on",
-      "{motion_mode}": "direct_topdown+direct_topdown_place",
+      "{template}": "place_in_region",
+      "{motion_mode}": "direct_topdown+direct_topdown_place+direct_topdown_place_after_fail",
       "{grasp_rejected_attempts}": 0,
       "{place_rejected_attempts}": 0
     }
   },
-  "move_event_count": 4,
-  "left_joint_path_len": 6,
+  "move_event_count": 5,
+  "left_joint_path_len": 5,
   "right_joint_path_len": 0,
   "initial_objects": {
     "apple_1": {
@@ -86,15 +86,15 @@
   "final_objects": {
     "apple_1": {
       "p": [
-        -0.03322137892246246,
-        0.012798982672393322,
-        0.7489537000656128
+        -0.186050683259964,
+        -0.08068836480379105,
+        0.86245197057724
       ],
       "q": [
-        0.3748813271522522,
-        0.2958908677101135,
-        0.6136640906333923,
-        0.6287521123886108
+        0.9982703328132629,
+        0.044264476746320724,
+        0.016789954155683517,
+        -0.034860432147979736
       ]
     },
     "plate_1": {
@@ -113,18 +113,26 @@
   },
   "relation_metrics": {
     "source_id": "apple_1",
-    "left_gripper_open": true,
+    "left_gripper_open": false,
     "right_gripper_open": true,
-    "target_kind": "object",
-    "target_id": "plate_1",
-    "xy_distance_m": 0.052897162147983366,
-    "z_delta_m": 0.0079537034034729
+    "target_kind": "region",
+    "target_region": "right_reachable_area",
+    "source_xy": [
+      -0.186050683259964,
+      -0.08068836480379105
+    ],
+    "region_center_xy": [
+      0.19,
+      -0.04
+    ],
+    "distance_to_region_center_m": 0.3782455015075422,
+    "inside_region": false
   },
   "images": {
-    "initial_head_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_on_plate/initial_head_camera.png",
-    "initial_observer_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_on_plate/initial_observer_camera.png",
-    "final_head_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_on_plate/final_head_camera.png",
-    "final_observer_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_on_plate/final_observer_camera.png"
+    "initial_head_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/initial_head_camera.png",
+    "initial_observer_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/initial_observer_camera.png",
+    "final_head_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/final_head_camera.png",
+    "final_observer_camera": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/final_observer_camera.png"
   },
   "pixel_stats": {
     "initial": {
@@ -143,30 +151,30 @@
     },
     "final": {
       "head_camera": {
-        "mean": 210.8101519097222,
-        "std": 64.72329212609722,
+        "mean": 216.63065538194445,
+        "std": 61.63099386563236,
         "min": 0.0,
         "max": 255.0
       },
       "observer_camera": {
-        "mean": 221.35786024305557,
-        "std": 46.270589967519044,
+        "mean": 220.8845746527778,
+        "std": 47.44353571882167,
         "min": 0.0,
         "max": 255.0
       }
     }
   },
-  "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_on_plate/observer_rollout_probe.mp4",
-  "events": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_on_plate/events.jsonl",
-  "move_events": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_on_plate/move_events.jsonl",
-  "policy_trace": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_on_plate/policy_trace.json",
+  "observer_video": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/observer_rollout_probe.mp4",
+  "events": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/events.jsonl",
+  "move_events": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/move_events.jsonl",
+  "policy_trace": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/scene_task_decoupling/apple_to_right/policy_trace.json",
   "native_synchronized_data": {
     "status": "not_requested",
     "save_freq": 15
   },
-  "next_data_requirement": "Use this generated play_once template to record full multi-episode demonstrations before /train.",
+  "next_data_requirement": "Repair generated play_once target pose, grasp contact point, or asset pose before claiming /collect success.",
   "failure_diagnosis": {
-    "status": "no_failure_observed",
+    "status": "failure_observed",
     "checked_categories": [
       "wrong_grasp_location",
       "object_knocked_over",

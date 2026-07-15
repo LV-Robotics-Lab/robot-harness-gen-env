@@ -1,6 +1,6 @@
 # Text2Env / SceneAgent Literature Review for PEARL
 
-Reviewed: 2026-07-14
+Reviewed: 2026-07-15
 
 ## Executive Verdict
 
@@ -66,7 +66,7 @@ Machine-readable evidence:
 | robotwin-text2env-demo | 2026 | [code](https://github.com/yezheng04/robotwin-text2env-demo) | tabletop task prompt + catalog -> candidates, placement, scene module, static validation, critic | Public base plus locked patch reproduces the audited result tree; local and RTX 5090 tests pass. Public repo has no detected SPDX license. | Direct P0 implementation base. | P0 |
 | AgenticSim placement_agent | 2026 | private/local implementation; public link unavailable | task prompt + alias catalog -> placement spec with backend asset ids | Audited alias snapshot records source commit `f34d56a`; 8/8 aliases resolve to live RoboTwin assets. Full AgenticSim repo is not on the 5090. | Direct placement-only compatibility surface; alias eligibility depends on concrete backend resolution. | P0 |
 
-[COMPUTED] [CONFIDENCE: HIGH] Public repository snapshots and license metadata were rechecked through 2026-07-14. The exact snapshot hashes are recorded in `text2env_primary_sources.json`; paper-only systems are not represented as reproduced code.
+[COMPUTED] [CONFIDENCE: HIGH] Repository snapshots and license metadata were audited on 2026-07-14; public primary URLs were rechecked on 2026-07-15. The exact snapshot hashes are recorded in `text2env_primary_sources.json`; paper-only systems are not represented as reproduced code.
 
 ## Candidate-Nominated Project Audit
 

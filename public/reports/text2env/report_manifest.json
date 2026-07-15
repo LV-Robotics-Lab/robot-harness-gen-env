@@ -12,9 +12,9 @@
       "sha256": "cead73b43dfc09623347c648c740b4eec40627514b521c70cae9a08de32bf8a8"
     },
     {
-      "bytes": 11288,
+      "bytes": 11329,
       "path": "assets/candidate_project_intake.json",
-      "sha256": "23c85c834fb45df11953aa97395834043c320ec715b72f9069269e88bdc76754"
+      "sha256": "013c84339b8fb48b36d127ace3c45ac6a243c8f3c66e36f400802684d6873696"
     },
     {
       "bytes": 18563,
@@ -257,9 +257,9 @@
       "sha256": "9656a122e1251706e540f552a304382126b3c4c9e6d16594fe1c675652a53b89"
     },
     {
-      "bytes": 8774,
+      "bytes": 8781,
       "path": "assets/empirics/pose_conditioned_policy_promotion_v1.json",
-      "sha256": "8fffd22d3af717c7e50f1298d338cda8087cbead0004c8a17f3e17a466cae804"
+      "sha256": "25f29aa38eb97f8281d03844303ec841999f081ca6ae07ab61b5301f4092b274"
     },
     {
       "bytes": 3178,
@@ -382,9 +382,9 @@
       "sha256": "51d682a1e3ef48c94c631ba3781b13b81da13311d6291e7cd7663d9d6784f9ee"
     },
     {
-      "bytes": 98026,
+      "bytes": 98135,
       "path": "index.html",
-      "sha256": "76c6db946c62848b52a4d7e319f80ffe8359be5c600995919f0cf47ddd2e1b0a"
+      "sha256": "920a36478e27e9bc173b9be1eccdad455e33782d4faafe4ee90f92b070878940"
     },
     {
       "bytes": 2356976,
@@ -407,9 +407,9 @@
       "sha256": "5bf44d302acfa83376f6bede11297c452e9718d1d1c054a0846bd2113e731884"
     },
     {
-      "bytes": 4499373,
+      "bytes": 4508880,
       "path": "qa/desktop-viewport.png",
-      "sha256": "dceaeac633cc925b164d76f232b87bbf8fc131057fcdc77860da1376b4836d15"
+      "sha256": "ee156bdaa98cd059632c61eb6b8e3b5bcb6f0d110abceb7a513e60680a63fae0"
     },
     {
       "bytes": 1491117,
@@ -417,17 +417,17 @@
       "sha256": "3dbbf2603fc90ffe668c0ce1ce049efbaa4288fd15eba835d17e08d60ea8415d"
     },
     {
-      "bytes": 2533237,
+      "bytes": 2539620,
       "path": "qa/mobile-viewport.png",
-      "sha256": "2361067a4caed7a209df454df16528a039790f2595dc49e0c4abf473b4373832"
+      "sha256": "6b641bac965fbd879d9a0dcc895bb8f01818971c3409db45112ea797cc23060e"
     },
     {
-      "bytes": 27212,
+      "bytes": 27248,
       "path": "text2env_literature_review.md",
-      "sha256": "dae26bc8bac80d71ea5614434b2d0956c1a6f9f42c5222105a6e90e269384931"
+      "sha256": "25fd19a280db322cc16ad4bbaa47ce9b23f2da91847cc4f9cec4702b1d8a560c"
     }
   ],
-  "generated_at": "2026-07-14T02:47:32.788749+00:00",
+  "generated_at": "2026-07-15T01:59:13.434640+00:00",
   "schema_version": "alchedata.text2env_report_manifest.v1",
   "status": "pass_report_bundle"
 }

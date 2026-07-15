@@ -1,0 +1,11 @@
+status=pass_hosted_dashboard_readback
+fetched_at=2026-07-14T17:41:25.488772+00:00
+health_ok=true
+storage=vercel-blob
+task_id=task_self_improving_sceneagent_selection2env_20260701
+task_status=done
+comment_count=12
+last_comment_id=comment_71efa0ff-7256-4bb1-a8fa-c10a76cb7f3d
+related_core_statuses=task_self_improving_text2env_lit_review_20260701:done,task_self_improving_openxsim_command_loop_20260703:done,task_self_improving_embodied_harness_positioning_20260707:done,task_self_improving_environment_coverage:done
+follow_on_statuses=task_self_improving_agents_robotwin_scenegen_stage_0_1_scenespec_20260714:todo,task_self_improving_agents_robotwin_scenegen_stage_2_4_grounding_sapien_20260714:todo
+claim_boundary=The original SceneAgent selection2env V0 task and the four related core TODOs are done on the hosted Dashboard. The two stricter SceneGen Stage 0-1 and Stage 2-4 follow-on tasks remain separate and are not claimed by the V0 8/8 acceptance result.

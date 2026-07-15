@@ -256,7 +256,7 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">ALCHEDATA · SELF IMPROVING AGENTS</div>
-      <div class="top-meta">SceneAgent / selection2env · 2026-07-12 · jingxiang-b850m-c / RTX 5090</div>
+      <div class="top-meta">SceneAgent / selection2env · 2026-07-15 · jingxiang-b850m-c / RTX 5090</div>
     </div>
   </header>
 
@@ -267,8 +267,8 @@
         <p class="subtitle"><span class="tag">[COMPUTED]</span><span class="tag">[CONFIDENCE: HIGH]</span>基于 <span class="mono">yezheng04/robotwin-text2env-demo</span> 的场景布置管线已接入 RoboTwin 现有资产，并由 schema、实机 rollout、失败留档与可重放补丁共同约束。</p>
       </div>
       <div class="verdict">
-        <strong>TODO 9 / 9</strong>
-        <span>[COMPUTED] [CONFIDENCE: HIGH] 严格验收项已闭环</span>
+        <strong>TODO 8 / 8</strong>
+        <span>[COMPUTED] [CONFIDENCE: HIGH] 原始 Dashboard 验收项全部通过；另有 1 个受限 policy gate</span>
       </div>
     </header>
 
@@ -301,13 +301,13 @@
           <tbody>
             <tr><td class="acceptance-index">01</td><td>selection2env 与任务程序 schema</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] placement、task binding、SHA 与引用验证均被强制。</td><td><a href="assets/evidence/schemas/selection2env.schema.json">selection2env schema</a> · <a href="assets/evidence/schemas/robotwin_task_program_input.schema.json">task program schema</a></td></tr>
             <tr><td class="acceptance-index">02</td><td>RoboTwin / AgenticSim / Articraft 目录接入</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] 123 / 8 / 9,996，且执行资格边界明确。</td><td><a href="assets/evidence/artifacts/adapter_catalog/selection2env_catalog_sources.json">source audit</a> · <a href="assets/evidence/artifacts/adapter_catalog/robotwin_discovered_catalog.json">RoboTwin catalog</a></td></tr>
-            <tr><td class="acceptance-index">03</td><td>至少 3 个任务与 Text2Env/task 输入</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] apple/plate、laptop/knife、vegetable/basket 均有输入、smoke 与采集证据。</td><td><a href="assets/evidence/artifacts/task_program_inputs/">task inputs</a> · <a href="assets/evidence/artifacts/selection2env_manifest.json">manifest</a></td></tr>
-            <tr><td class="acceptance-index">04</td><td>明确 unsupported / blocker 样本</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] drawer 与 mug 均已 ground；剩余 blocker 是 articulation / interior verifier API。</td><td><a href="assets/evidence/runs/probe_static_drawer_mug_unified/scene_generation_summary.json">static scene summary</a> · <a href="assets/evidence/artifacts/selection2env/task_drawer_mug_blocker.json">typed blocker</a></td></tr>
-            <tr><td class="acceptance-index">05</td><td>超出碰撞检查的视觉/语义 critique</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] 初始支撑关系与最终目标关系均有独立 review 资产。</td><td><a href="assets/evidence/artifacts/visual_review/selection2env_visual_review.json">initial review</a> · <a href="assets/evidence/artifacts/visual_review/generated_rollout_final_relation_review.json">final relation review</a></td></tr>
-            <tr><td class="acceptance-index">06</td><td>候选、placement、代码 diff、命令、日志、图像与视频</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] 可重放补丁从公开基线生成相同 Git tree，运行资产完整打包。</td><td><a href="assets/evidence/vendor/patches/robotwin-text2env-selection2env.patch">patch</a> · <a href="assets/provenance.txt">provenance</a> · <a href="assets/asset_sha256.txt">asset hashes</a></td></tr>
-            <tr><td class="acceptance-index">07</td><td>generation2env blocker memo 与 Gaochen handoff</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] forge、material sidecar 与下游 API 边界已结构化记录。</td><td><a href="assets/evidence/docs/generation2env_blockers.md">blocker memo</a> · <a href="assets/evidence/docs/selection2env_schema.md">handoff contract</a></td></tr>
-            <tr><td class="acceptance-index">08</td><td>同一场景运行至少两个不同任务 spec</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] 两个任务共享相同 scene/path/SHA 与字节相同初始图，并分别通过 check_success。</td><td><a href="assets/evidence/artifacts/scene_task_decoupling/apple_plate_two_tasks.json">decoupling report</a> · <a href="#decoupling">visual proof</a></td></tr>
-            <tr><td class="acceptance-index">09</td><td>受限 learned-policy promotion</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] 独立 pose-conditioned policy 通过 4/4 held-out、4/4 domain randomization、3/3 can/basket seed holdout；旧 ACT 1/4 失败仍保留。</td><td><a href="assets/evidence/artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json">promotion record</a> · <a href="#policy-promotion">videos and boundary</a></td></tr>
+            <tr><td class="acceptance-index">03</td><td>至少 3 个任务、2 个可执行样例与 1 个 blocker</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] 三个支持任务均有 Text2Env/task 输入、smoke 与采集证据；drawer/mug 保留 task-API blocker。</td><td><a href="assets/evidence/artifacts/task_program_inputs/">task inputs</a> · <a href="assets/evidence/artifacts/selection2env_manifest.json">manifest</a> · <a href="assets/evidence/artifacts/selection2env/task_drawer_mug_blocker.json">typed blocker</a></td></tr>
+            <tr><td class="acceptance-index">04</td><td>超出碰撞检查的视觉/语义 critique</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] 强制检查 collision、visual plausibility、task intent、occlusion、reachability、support/stability。</td><td><a href="assets/evidence/artifacts/visual_review/selection2env_visual_review.json">initial review</a> · <a href="assets/evidence/artifacts/visual_review/generated_rollout_final_relation_review.json">final relation review</a></td></tr>
+            <tr><td class="acceptance-index">05</td><td>候选、placement、代码 diff、命令、日志、图像与视频</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] 可重放补丁生成相同 Git tree；运行命令、stdout/stderr、失败截图和连续视频均已打包。</td><td><a href="assets/evidence/vendor/patches/robotwin-text2env-selection2env.patch">patch</a> · <a href="assets/evidence/docs/sceneagent_reproduction_commands.md">commands</a> · <a href="assets/asset_sha256.txt">asset hashes</a></td></tr>
+            <tr><td class="acceptance-index">06</td><td>generation2env blocker memo</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] forge 与 material sidecar 的输入、导入和物理门控均为 typed blocker，不冒充执行结果。</td><td><a href="assets/evidence/docs/generation2env_blockers.md">blocker memo</a></td></tr>
+            <tr><td class="acceptance-index">07</td><td>Gaochen pipeline handoff API</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] /collect 输出与 /train、/evaluate 读取字段均已结构化定义。</td><td><a href="assets/evidence/docs/selection2env_schema.md">handoff contract</a></td></tr>
+            <tr><td class="acceptance-index">08</td><td>同一场景运行至少两个不同任务 spec</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] 相同 scene/path/SHA 与初始像素；两个 check_success 通过；连续视频为 589/585 帧。</td><td><a href="assets/evidence/artifacts/scene_task_decoupling/apple_plate_two_tasks.json">decoupling report</a> · <a href="#decoupling">continuous video proof</a></td></tr>
+            <tr><td class="acceptance-index">S1</td><td>补充：受限 learned-policy promotion</td><td><span class="status pass">PASS</span><br>[COMPUTED] [CONFIDENCE: HIGH] 独立 pose-conditioned policy 通过 4/4 held-out、4/4 domain randomization、3/3 can/basket seed holdout；旧 ACT 1/4 失败仍保留。</td><td><a href="assets/evidence/artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json">promotion record</a> · <a href="#policy-promotion">videos and boundary</a></td></tr>
           </tbody>
         </table>
       </div>
@@ -342,16 +342,17 @@
       <div class="section-head"><h2>同场景双任务</h2><p class="section-note">[COMPUTED] [CONFIDENCE: HIGH] 两次 reset 使用相同 placement bytes。</p></div>
       <div class="shared-scene"><strong>scene_apple_plate_shared_two_task_v0</strong><br>placement SHA-256: <span class="mono">c39169d68ab617debdd8b4462d7bc9d30ad6fae0ce5c3d4aa9e4a34893bee592</span><br>[COMPUTED] [CONFIDENCE: HIGH] 两个初始 observer 图 SHA-256 均为 <span class="mono">18e53b736c0a9716e7489dc889a2c2375c7d26fe3078d207dccf61e8cac53012</span>。</div>
       <div class="media-grid">
-        <article class="card"><img src="assets/evidence/runs/scene_task_decoupling/apple_on_plate/initial_observer_camera.png" alt="Byte-identical initial apple plate scene"><div class="card-body"><h3>Shared initial scene</h3><p>[COMPUTED] [CONFIDENCE: HIGH] apple 尚未满足两个任务中的任一最终关系。</p></div></article>
-        <article class="card"><img src="assets/evidence/runs/scene_task_decoupling/apple_on_plate/final_observer_camera.png" alt="Final place-on relation from the shared scene"><div class="card-body"><div class="caption"><h3>Task A · place_on</h3><span class="status pass">CHECK SUCCESS</span></div><p>[COMPUTED] [CONFIDENCE: HIGH] apple → plate；XY 距离 0.0529 m，Z 差 0.0080 m，双夹爪释放。此处展示 verifier 终态图，不把两帧 endpoint probe 冒充连续视频。</p></div></article>
-        <article class="card"><img src="assets/evidence/runs/scene_task_decoupling/apple_to_left_front/final_observer_camera.png" alt="Final place-in-region relation from the shared scene"><div class="card-body"><div class="caption"><h3>Task B · place_in_region</h3><span class="status pass">CHECK SUCCESS</span></div><p>[COMPUTED] [CONFIDENCE: HIGH] apple → left_front_reachable_area；距中心 0.0517 m，在 0.03 m tolerance 下通过。此处展示 verifier 终态图，不把两帧 endpoint probe 冒充连续视频。</p></div></article>
+        <article class="card"><img src="assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/initial_observer_camera.png" alt="Byte-identical initial apple plate scene"><div class="card-body"><h3>Shared initial scene</h3><p>[COMPUTED] [CONFIDENCE: HIGH] 两个 fresh rollout 的初始 observer 像素逐字节相同；apple 尚未满足任一最终关系。</p></div></article>
+        <article class="card"><video controls preload="metadata" poster="assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/final_observer_camera.png"><source src="assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/observer_rollout_probe.mp4" type="video/mp4"></video><div class="card-body"><div class="caption"><h3>Task A · place_on</h3><span class="status pass">CHECK SUCCESS</span></div><p>[COMPUTED] [CONFIDENCE: HIGH] apple → plate；XY 距离 0.0115 m，Z 差 0.0068 m，双夹爪释放。视频为 589 帧、12 fps、49.08 秒的连续 simulator-step capture。</p></div></article>
+        <article class="card"><video controls preload="metadata" poster="assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/final_observer_camera.png"><source src="assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/observer_rollout_probe.mp4" type="video/mp4"></video><div class="card-body"><div class="caption"><h3>Task B · place_in_region</h3><span class="status pass">CHECK SUCCESS</span></div><p>[COMPUTED] [CONFIDENCE: HIGH] apple → left_front_reachable_area；距中心 0.0143 m，在 0.03 m tolerance 内。视频为 585 帧、12 fps、48.75 秒的连续 simulator-step capture。</p></div></article>
       </div>
       <div class="file-list">
         <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/shared_apple_plate_scene.json">shared placement</a>
         <a class="file-link" href="assets/evidence/artifacts/task_program_inputs/task_apple_plate.json">Task A spec</a>
         <a class="file-link" href="assets/evidence/artifacts/task_program_inputs/task_apple_plate_to_left_front.json">Task B spec</a>
-        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/apple_on_plate/rollout_report.json">Task A report</a>
-        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/apple_to_left_front/rollout_report.json">Task B report</a>
+        <a class="file-link" href="assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/rollout_report.json">Task A report</a>
+        <a class="file-link" href="assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/rollout_report.json">Task B report</a>
+        <a class="file-link" href="assets/evidence/artifacts/scene_task_decoupling/apple_plate_two_tasks.json">cross-run audit</a>
       </div>
     </section>
 
@@ -392,10 +393,10 @@
         <article class="card"><img src="assets/evidence/runs/scene_task_decoupling/apple_to_left_front_strict_region_fail/final_observer_camera.png" alt="Strict region tolerance failed rollout"><div class="card-body"><h3>Strict region</h3><span class="status fail">FAIL</span><p>[COMPUTED] [CONFIDENCE: HIGH] 成功移动但距严格边界差 0.022 m；显式加入 0.03 m verifier tolerance 后重跑通过。</p></div></article>
       </div>
       <div class="file-list">
-        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/original_placement_apple_on_plate_fail/observer_rollout_probe.mp4">original failure video</a>
-        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/action_repair_auto_mode_fail/observer_rollout_probe.mp4">auto failure video</a>
-        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/apple_to_right_fail/observer_rollout_probe.mp4">right failure video</a>
-        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/apple_to_left_front_strict_region_fail/observer_rollout_probe.mp4">strict-region failure video</a>
+        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/original_placement_apple_on_plate_fail/rollout_report.json">original failure report</a>
+        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/action_repair_auto_mode_fail/rollout_report.json">auto failure report</a>
+        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/apple_to_right_fail/rollout_report.json">right failure report</a>
+        <a class="file-link" href="assets/evidence/runs/scene_task_decoupling/apple_to_left_front_strict_region_fail/rollout_report.json">strict-region failure report</a>
       </div>
     </section>
 
@@ -403,23 +404,24 @@
       <div class="section-head"><h2>验证与可复现性</h2><p class="section-note">[COMPUTED] [CONFIDENCE: HIGH] 本地与 5090 使用相同 patch-id。</p></div>
       <div class="proof-grid">
         <article class="card"><div class="card-body"><h3>Workspace verifier</h3><pre class="log">PASS workspace verification
-docs=10 static_runs=4 asset_smoke_runs=3 basetask_smoke_runs=3
-collect_dry_runs=3 official_rollouts=3 generated_rollouts=2
-articraft_assets=9996 articraft_archive_passes=3
+docs=11 static_runs=4 asset_smoke_runs=3 basetask_smoke_runs=3
+collect_dry_runs=3 fresh_collect_dry_runs=2
+official_rollouts=3 generated_rollouts=2
+sceneagent_acceptance=8/8 scene_task_videos=589+585
 sim_supported=task_apple_plate,task_laptop_knife,task_vegetable_basket
-unsupported=task_drawer_mug_blocker</pre><div class="file-list"><a class="file-link" href="assets/workspace_verification.txt">full verifier output</a><a class="file-link" href="assets/outer_tests.txt">outer tests</a><a class="file-link" href="assets/upstream_tests.txt">upstream tests</a></div></div></article>
+unsupported=task_drawer_mug_blocker</pre><div class="file-list"><a class="file-link" href="assets/local_workspace_verification.txt">local verifier</a><a class="file-link" href="assets/remote_workspace_verification.txt">5090 verifier</a><a class="file-link" href="assets/local_targeted_tests.txt">local targeted tests</a><a class="file-link" href="assets/remote_targeted_tests.txt">5090 targeted tests</a><a class="file-link" href="assets/upstream_tests.txt">upstream tests</a><a class="file-link" href="assets/evidence/artifacts/sceneagent_selection2env_acceptance_audit.json">strict 8/8 audit</a></div></div></article>
         <article class="card"><div class="card-body"><h3>Git provenance</h3><dl class="provenance">
-          <dt>outer local</dt><dd class="mono">f35a0aa6d720fb160770bc9318351ebcce1d8c3f</dd>
-          <dt>outer 5090</dt><dd class="mono">2f31d221dd0008ba48b2e4610e9cdb2755639209</dd>
-          <dt>dashboard mirror</dt><dd class="mono">46f7126fdcc91aba69456eddf7b2143111df21ae</dd>
+          <dt>outer local HEAD</dt><dd class="mono">52b24cad3a5ed9eadc88fe3205034dc7bbdf47b4</dd>
+          <dt>outer 5090 HEAD</dt><dd class="mono">1e8c2ddec1219daeeb9c5ef98f11bcb4db7eed5d</dd>
           <dt>upstream local</dt><dd class="mono">029911db427c8eaee5f8837792198351314ea7de</dd>
           <dt>upstream 5090</dt><dd class="mono">e3e3c76ad359f26c3dfa88e3b543865f66b7bc06</dd>
           <dt>result tree</dt><dd class="mono">68e84128bbf5f8702f918024f6ca0c6e056a478f</dd>
-          <dt>stable patch-id</dt><dd class="mono">78bf1ccf90882d16ee2017532445dfd383cc64a9</dd>
+          <dt>patch SHA-256</dt><dd class="mono">aac9f153dcf94340528f65678dab8d8c2e4784e6594963937a11350886d41f2e</dd>
+          <dt>public-base replay</dt><dd><span class="status pass">PASS</span></dd>
           <dt>publish status</dt><dd><span class="status blocked">NOT PUSHED</span></dd>
-        </dl><p>[KNOWN] [CONFIDENCE: HIGH] 上游仓库规则禁止未经明确请求 push；本地与 5090 已提交，公开发布未发生。</p><div class="file-list"><a class="file-link" href="assets/provenance.txt">raw provenance</a><a class="file-link" href="assets/evidence/external_sources.lock.json">source lock</a><a class="file-link" href="assets/evidence/vendor/patches/robotwin-text2env-selection2env.patch">replay patch</a></div></div></article>
+        </dl><p>[KNOWN] [CONFIDENCE: HIGH] 外层 local/5090 工作区均含本任务及其他未提交改动；可复现声明绑定 clean upstream commit、patch SHA 和结果 tree，不绑定外层 dirty HEAD。未经明确请求没有 push。</p><div class="file-list"><a class="file-link" href="assets/provenance.txt">raw provenance</a><a class="file-link" href="assets/evidence/external_sources.lock.json">source lock</a><a class="file-link" href="assets/evidence/vendor/patches/robotwin-text2env-selection2env.patch">replay patch</a><a class="file-link" href="assets/public_patch_replay.txt">replay log</a></div></div></article>
       </div>
-      <div class="shared-scene" style="margin-top: 12px;"><strong>Dashboard truth surface</strong><br>[COMPUTED] [CONFIDENCE: HIGH] Hosted Vercel Blob/API 联合回读显示四个核心 TODO 与 environment coverage 均为 done；SceneAgent 为 Comments (11)，最新证据 comment ID 是 <span class="mono">comment_6d2b3b3f-eabe-4fc3-9954-352261f1eb8d</span>。<br>[KNOWN] [CONFIDENCE: HIGH] 本地 fallback mirror 含无关未提交用户改动，因此没有 force-pull 覆盖；旧 local-mirror screenshot 仅保留历史上下文，不作为本次 hosted readback 证明。<div class="file-list"><a class="file-link" href="assets/dashboard_proof.json">hosted API proof</a><a class="file-link" href="assets/local_dashboard_render_qa.txt">historical render QA log</a><a class="file-link" href="qa/local-mirror-dashboard-sceneagent.png">historical render screenshot</a></div></div>
+      <div class="shared-scene" style="margin-top: 12px;"><strong>Dashboard truth surface</strong><br>[COMPUTED] [CONFIDENCE: HIGH] Hosted Vercel Blob/API 回读状态与最新证据 comment 记录在机器可读 proof；本地 fallback mirror 含无关未提交用户改动，因此没有 force-pull 覆盖。<br>[KNOWN] [CONFIDENCE: HIGH] 旧 local-mirror screenshot 仅保留历史上下文，不作为本次 hosted readback 证明。<div class="file-list"><a class="file-link" href="assets/dashboard_proof.json">hosted API proof</a><a class="file-link" href="assets/hosted_dashboard_qa.txt">hosted readback QA</a><a class="file-link" href="qa/hosted-dashboard-sceneagent.png">hosted screenshot</a><a class="file-link" href="assets/local_dashboard_render_qa.txt">historical local QA</a></div></div>
     </section>
 
     <section id="assets">
@@ -442,6 +444,8 @@ unsupported=task_drawer_mug_blocker</pre><div class="file-list"><a class="file-l
         <a class="file-link" href="assets/report_qa.txt">browser QA</a>
         <a class="file-link" href="assets/evidence/docs/dashboard_todo_traceability.md">traceability matrix</a>
         <a class="file-link" href="assets/evidence/docs/todo_completion_audit.md">completion audit</a>
+        <a class="file-link" href="assets/evidence/docs/sceneagent_reproduction_commands.md">reproduction commands</a>
+        <a class="file-link" href="assets/evidence/artifacts/sceneagent_selection2env_acceptance_audit.json">strict acceptance audit</a>
       </div>
     </section>
 

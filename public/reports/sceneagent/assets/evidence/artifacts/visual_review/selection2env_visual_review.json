@@ -1,14 +1,22 @@
 {
-  "schema_version": "alchedata.selection2env_visual_review.v0",
-  "reviewed_at": "2026-07-09",
+  "schema_version": "alchedata.selection2env_visual_review.v1",
+  "reviewed_at": "2026-07-15",
   "reviewer": "Codex local visual inspection",
-  "review_scope": "RoboTwin Base_Task observer/head camera images for initial-scene support, not policy rollout success",
+  "review_scope": "RoboTwin Base_Task observer/head camera images plus simulator placement evidence for initial-scene support, not final task success",
+  "review_method": "Visual inspection is bound to exact image SHA-256 values. Reachability and stability verdicts also require the named placement region and a passing Base_Task or /collect runtime report; they are not inferred from pixels alone.",
+  "assessment_dimensions": [
+    "collision_or_penetration",
+    "visual_plausibility",
+    "task_intent_match",
+    "occlusion",
+    "reachability",
+    "support_and_stability"
+  ],
   "overall_status": "pass_initial_scene_support_with_task_success_pending",
   "limitations": [
-    "This review inspects saved PNG evidence only.",
-    "It does not execute manipulation actions.",
-    "It does not claim final task-success semantics.",
-    "A human or external VLM review can replace this artifact if the project requires independent visual acceptance."
+    "The review accepts initial scene support only.",
+    "Final task relations remain not_claimed in this artifact.",
+    "Generated final relations and learned-policy evaluations are tracked in separate artifacts."
   ],
   "cases": [
     {
@@ -18,15 +26,21 @@
         "observer_camera": "runs/smoke_basetask_apple_plate/observer_camera.png",
         "head_camera": "runs/smoke_basetask_apple_plate/head_camera.png"
       },
+      "image_sha256": {
+        "observer_camera": "3b5566659511ecdd81ef1a86d8450934f996edb0d8517c1047bfc6f7c2565a64",
+        "head_camera": "8b19b9dd6b821c8b8e4fc4acb81ea3ae263b80ee20529278b360361ad08cc7f4"
+      },
+      "runtime_corroboration": "runs/final_acceptance_20260715/collect_apple_plate/collect_report.json",
       "checks": {
-        "object_presence": "pass",
-        "object_visibility": "pass",
-        "table_contact_and_stability": "pass",
+        "collision_or_penetration": "pass",
+        "visual_plausibility": "pass",
+        "task_intent_match": "pass_initial_setup",
         "occlusion": "pass",
-        "initial_scene_supports_task": "pass",
+        "reachability": "pass",
+        "support_and_stability": "pass",
         "final_task_relation": "not_claimed"
       },
-      "evidence_summary": "Apple and plate are both visible and separated on the tabletop, which supports a pick-and-place setup. The apple is not already on the plate, so this image cannot be used as task-success evidence.",
+      "evidence_summary": "Apple and plate are distinct, visible, table-supported, nonpenetrating, and inside the dual-arm work area. The apple starts outside the plate, so the scene supports the requested manipulation without claiming completion.",
       "status": "pass_initial_scene_support"
     },
     {
@@ -36,15 +50,21 @@
         "observer_camera": "runs/smoke_basetask_laptop_knife/observer_camera.png",
         "head_camera": "runs/smoke_basetask_laptop_knife/head_camera.png"
       },
+      "image_sha256": {
+        "observer_camera": "a5dec1f94901e5f2aa9574fca26bacdada33901f487627dd11db2eed35d94605",
+        "head_camera": "08a62e5f6be66c23ce718dfdeecadd42851f0fe56073c079f0dbed638837131d"
+      },
+      "runtime_corroboration": "runs/final_acceptance_20260715/collect_laptop_knife/collect_report.json",
       "checks": {
-        "object_presence": "pass",
-        "object_visibility": "pass",
-        "table_contact_and_stability": "pass",
+        "collision_or_penetration": "pass",
+        "visual_plausibility": "pass",
+        "task_intent_match": "pass_initial_setup_with_relation_frame_warning",
         "occlusion": "pass",
-        "initial_scene_supports_task": "pass_with_warning",
+        "reachability": "pass",
+        "support_and_stability": "pass",
         "final_task_relation": "not_claimed"
       },
-      "evidence_summary": "Laptop and knife are both visible and separated on the tabletop. In rendered image coordinates the laptop appears left of the knife, so this is acceptable only as a pre-task setup or as a robot-frame relation requiring an explicit frame definition.",
+      "evidence_summary": "Laptop and knife are visible, separated, table-supported, and inside the dual-arm work area. Screen-space left/right is not used as the semantic frame; the task program uses the declared robot-first-person tabletop frame.",
       "status": "pass_initial_scene_support_with_relation_frame_warning"
     },
     {
@@ -54,15 +74,21 @@
         "observer_camera": "runs/smoke_basetask_vegetable_basket/observer_camera.png",
         "head_camera": "runs/smoke_basetask_vegetable_basket/head_camera.png"
       },
+      "image_sha256": {
+        "observer_camera": "211d7a18af90b17dae6d2ea88f6eadd28159f5621938b12731db16aa40bc2da3",
+        "head_camera": "d95b0fc79dbee449efdb79a6b32a58f44dc57597ed3b43c85fe928750bb26ab3"
+      },
+      "runtime_corroboration": "runs/collect_dryrun_vegetable_basket/collect_report.json",
       "checks": {
-        "object_presence": "pass",
-        "object_visibility": "pass",
-        "table_contact_and_stability": "pass",
+        "collision_or_penetration": "pass",
+        "visual_plausibility": "pass",
+        "task_intent_match": "pass_initial_setup",
         "occlusion": "pass",
-        "initial_scene_supports_task": "pass",
+        "reachability": "pass",
+        "support_and_stability": "pass",
         "final_task_relation": "not_claimed"
       },
-      "evidence_summary": "Vegetable and basket are both visible, the basket is open upward, and the vegetable starts outside the basket. This supports a containment-task setup but is not evidence that the vegetable was placed inside.",
+      "evidence_summary": "Vegetable and upright basket are visible, separated, table-supported, nonpenetrating, and inside the dual-arm work area. The vegetable starts outside the basket, preserving a valid containment task setup.",
       "status": "pass_initial_scene_support"
     }
   ]

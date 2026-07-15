@@ -271,8 +271,8 @@
     },
     {
       "path": "qa/desktop-viewport.png",
-      "bytes": 431478,
-      "sha256": "b4b9e9ae1af7690e7afc8591873356d9272d6f07a0531d390e69099549f04bfe"
+      "bytes": 432991,
+      "sha256": "dc76cb83cb51501d06ed552d711c07fbaddfe2853730f48e7514ebc5e004cb2d"
     },
     {
       "path": "qa/mobile-viewport.png",
@@ -282,7 +282,7 @@
     {
       "path": "report_manifest.json",
       "bytes": 43084,
-      "sha256": "003610e90648507e6462ee65bb92bc110749644b2f7baf29f6ff047f6c4f3869"
+      "sha256": "2002a5dc5c1c9a89bfa0765d557f685ca5c317ab7f840eb65b430b5073ba3112"
     }
   ]
 }

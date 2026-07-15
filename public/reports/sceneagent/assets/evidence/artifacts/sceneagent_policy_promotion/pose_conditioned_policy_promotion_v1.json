@@ -1,7 +1,7 @@
 {
   "schema_version": "alchedata.sceneagent_policy_promotion.v0",
   "status": "pass_bounded_pose_conditioned_policy_promotion",
-  "generated_at": "2026-07-13T16:10:25.848878+00:00",
+  "generated_at": "2026-07-14T17:29:42.898741+00:00",
   "decision": "accept_for_bounded_sceneagent_selection2env_gate",
   "candidate": {
     "policy_type": "supervised_pose_conditioned_phase_aligned_trajectory_regression",
@@ -210,5 +210,5 @@
     "trigger": "candidate verifier regression, evidence hash mismatch, or use outside declared policy boundary"
   },
   "claim_boundary": "Promotion is limited to a privileged, initial-pose-conditioned, open-loop learned trajectory baseline in the generated RoboTwin apple/plate task, plus fixed-placement seed holdout on can/basket. It does not promote ACT, establish visual robustness, prove language-conditioned control, or establish broad task transfer.",
-  "diagnosis_status": "pass_failure_to_data_iteration_promotion_rejected"
+  "parent_diagnosis_status": "pass_failure_to_data_iteration_promotion_rejected"
 }
