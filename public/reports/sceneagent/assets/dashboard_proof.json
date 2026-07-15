@@ -1,6 +1,6 @@
 {
   "claim_boundary": "The original SceneAgent selection2env V0 task and the four related core TODOs are done on the hosted Dashboard. The two stricter SceneGen Stage 0-1 and Stage 2-4 follow-on tasks remain separate and are not claimed by the V0 8/8 acceptance result.",
-  "fetched_at": "2026-07-14T17:41:25.488772+00:00",
+  "fetched_at": "2026-07-15T02:39:04.739937+00:00",
   "follow_on_tasks_not_in_v0_acceptance": [
     {
       "comment_count": 0,
@@ -20,7 +20,7 @@
     }
   ],
   "hosted_health": {
-    "blob_etag": "\"bf357ae9eaf282d84209c4ce75bbdcf4\"",
+    "blob_etag": "\"535cea3712f1b76076206901de76ba6a\"",
     "ok": true,
     "storage": "vercel-blob",
     "task_count": 226,
@@ -62,15 +62,15 @@
   ],
   "hosted_task": {
     "comment": {
-      "author": "Codex",
-      "comment_id": "comment_71efa0ff-7256-4bb1-a8fa-c10a76cb7f3d",
-      "created_at": "2026-07-14T17:09:40.578Z"
+      "author": "Codex SceneAgent closure",
+      "comment_id": "comment_245754fc-5ded-42af-bb93-354225d63f8b",
+      "created_at": "2026-07-15T02:38:05.566Z"
     },
-    "comment_count": 12,
+    "comment_count": 13,
     "status": "done",
     "task_id": "task_self_improving_sceneagent_selection2env_20260701",
     "title": "SceneAgent / selection2env\uff1a\u63a5\u5165 RoboTwin \u73b0\u6709\u8d44\u4ea7\u7684\u573a\u666f\u5e03\u7f6e\u7ba1\u7ebf",
-    "updated_at": "2026-07-14T17:09:40.578Z"
+    "updated_at": "2026-07-15T02:38:05.566Z"
   },
   "local_mirror_status": "not_force_pulled_unrelated_dirty_worktree_preserved",
   "schema_version": "alchedata.sceneagent_dashboard_proof.v1",

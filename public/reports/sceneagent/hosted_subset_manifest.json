@@ -16,8 +16,8 @@
     },
     {
       "path": "assets/dashboard_proof.json",
-      "bytes": 3558,
-      "sha256": "914d7d8645f701088be39e37d9847a4e1c1366099c65ddda9e20c1e7f0aee507"
+      "bytes": 3577,
+      "sha256": "a80e627afe5711e2ef97e5790da826a4d7da37b22e8c944f3cfb0ac2e4a35cdb"
     },
     {
       "path": "assets/evidence/artifacts/adapter_catalog/robotwin_discovered_catalog.json",
@@ -347,7 +347,7 @@
     {
       "path": "assets/hosted_dashboard_qa.txt",
       "bytes": 961,
-      "sha256": "a7ac711faecc9b8b235c34f0f278c8e508312a468767b2fd42ff9848d9147994"
+      "sha256": "74f104fc0809ca70b46e3499465a3f85c90f0f72dbb4e60225c90db9b4147113"
     },
     {
       "path": "assets/local_dashboard_render_qa.txt",
@@ -407,7 +407,7 @@
     {
       "path": "report_manifest.json",
       "bytes": 101616,
-      "sha256": "2734a5423c622f5abd36f9c6b1c4d16764063cafe9d60784dfcb40fc22636f0f"
+      "sha256": "ebb143baff2e666230b80000bcc4cc5ed2d7ff652d995a16d2e04c991ea931d9"
     }
   ]
 }

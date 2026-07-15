@@ -22,9 +22,9 @@
       "sha256": "8b52250cc270fe7bbfdc783d4888ec01655c4fdf6535bb5cac4adbd30c7aa79f"
     },
     {
-      "bytes": 3558,
+      "bytes": 3577,
       "path": "assets/dashboard_proof.json",
-      "sha256": "914d7d8645f701088be39e37d9847a4e1c1366099c65ddda9e20c1e7f0aee507"
+      "sha256": "a80e627afe5711e2ef97e5790da826a4d7da37b22e8c944f3cfb0ac2e4a35cdb"
     },
     {
       "bytes": 9488909,
@@ -2084,7 +2084,7 @@
     {
       "bytes": 961,
       "path": "assets/hosted_dashboard_qa.txt",
-      "sha256": "a7ac711faecc9b8b235c34f0f278c8e508312a468767b2fd42ff9848d9147994"
+      "sha256": "74f104fc0809ca70b46e3499465a3f85c90f0f72dbb4e60225c90db9b4147113"
     },
     {
       "bytes": 481,
@@ -2197,7 +2197,7 @@
       "sha256": "7e757b1e63f0c272e3c426d187a679f84df44bffd7cc743d3676af0ab7bcbef4"
     }
   ],
-  "generated_at": "2026-07-15T01:59:13.378764+00:00",
+  "generated_at": "2026-07-15T02:39:24.982448+00:00",
   "schema_version": "alchedata.sceneagent_report_manifest.v1",
   "status": "pass_report_bundle"
 }
