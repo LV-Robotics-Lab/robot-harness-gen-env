@@ -2,7 +2,7 @@
   "schema_version": "pearl.hosted_report_subset.v1",
   "status": "pass_hosted_subset_manifest",
   "source_manifest": "report_manifest.json",
-  "file_count": 81,
+  "file_count": 83,
   "files": [
     {
       "path": "assets/asset_sha256.txt",
@@ -160,6 +160,11 @@
       "sha256": "a8947c22fbcbbfe868e36cdaa8229da65de9ffa3513f85728c090ed56e63544e"
     },
     {
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/observer_rollout_probe_browser.mp4",
+      "bytes": 602022,
+      "sha256": "e01ab20b79dc01844af39b7068ecdb82cb4eb6d72aabc44896194fffad2c6774"
+    },
+    {
       "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/rollout_report.json",
       "bytes": 6478,
       "sha256": "0612939211468fa62e64fe51d10b37ff978b3cc2625b4715d9c7ec92537b2a08"
@@ -173,6 +178,11 @@
       "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/observer_rollout_probe.mp4",
       "bytes": 602898,
       "sha256": "4cecb2aad594ba7ada8c415f970ccc3be80c89000911b0177b441b29c6a83938"
+    },
+    {
+      "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/observer_rollout_probe_browser.mp4",
+      "bytes": 602899,
+      "sha256": "f8ec6922f195f9a17583935d74159b1afbc0f97d74bd802feebb4ac1d4e5dd51"
     },
     {
       "path": "assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/rollout_report.json",
@@ -396,8 +406,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 36749,
-      "sha256": "3fecbe2cd494c226ad47f5fad4fe811f2d7b0cbe2a06114d6ae0f35e3165d90a"
+      "bytes": 36765,
+      "sha256": "d356c48d95b17772426ad426bc2ade42956d0a6924da7ad5fc79ad63992ea5f9"
     },
     {
       "path": "qa/hosted-dashboard-sceneagent.png",

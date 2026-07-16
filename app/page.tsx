@@ -124,7 +124,7 @@ export default function Home() {
           aria-label="RoboTwin domain-randomized policy rollout"
         >
           <source
-            src="/reports/harness/assets/evidence/policy_randomized.mp4"
+            src="/reports/harness/assets/evidence/policy_randomized_browser.mp4"
             type="video/mp4"
           />
         </video>
@@ -295,7 +295,7 @@ export default function Home() {
               poster="/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/final_observer_camera.png"
             >
               <source
-                src="/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/observer_rollout_probe.mp4"
+                src="/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/observer_rollout_probe_browser.mp4"
                 type="video/mp4"
               />
             </video>
@@ -313,7 +313,7 @@ export default function Home() {
               poster="/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/final_observer_camera.png"
             >
               <source
-                src="/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/observer_rollout_probe.mp4"
+                src="/reports/sceneagent/assets/evidence/runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/observer_rollout_probe_browser.mp4"
                 type="video/mp4"
               />
             </video>

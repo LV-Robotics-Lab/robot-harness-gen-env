@@ -2,7 +2,7 @@
   "schema_version": "pearl.hosted_report_subset.v1",
   "status": "pass_hosted_subset_manifest",
   "source_manifest": "report_manifest.json",
-  "file_count": 28,
+  "file_count": 31,
   "files": [
     {
       "path": "assets/acceptance_audit.json",
@@ -70,6 +70,11 @@
       "sha256": "ab8c942604a1f8892f6123dfa7fa96d0af3c1c242d1f2fd6c160c6a1b9fb6fc8"
     },
     {
+      "path": "assets/evidence/policy_cross_task_browser.mp4",
+      "bytes": 780744,
+      "sha256": "e4871fc70339963d5bbace089fddfe0a3fbafca0b8448ba13e16f1b5b122da2c"
+    },
+    {
       "path": "assets/evidence/policy_cross_task_poster.png",
       "bytes": 114104,
       "sha256": "1bdaecc4cb6b83197590291a23ed8bb44050e6ef1920e56b01cdf44f11819a0a"
@@ -80,6 +85,11 @@
       "sha256": "401caa2a89d0a88473de9129e3e2f1a3a66ddd74cf18a249386afa2c586a1876"
     },
     {
+      "path": "assets/evidence/policy_heldout_browser.mp4",
+      "bytes": 747603,
+      "sha256": "daeb82da3c70cb52799ebd89af66395cfa49d73d7d8cbdfaa68743c5e3d51004"
+    },
+    {
       "path": "assets/evidence/policy_heldout_poster.png",
       "bytes": 111283,
       "sha256": "0944105628e4c5965cc088420ccf4eceb7806fdc96666cab4e6318fee6ca5bf5"
@@ -88,6 +98,11 @@
       "path": "assets/evidence/policy_randomized.mp4",
       "bytes": 802428,
       "sha256": "63be2e23503bf5c419f03fe5d95168292463af6422c6852a8ff4f4db7b95fdfb"
+    },
+    {
+      "path": "assets/evidence/policy_randomized_browser.mp4",
+      "bytes": 802429,
+      "sha256": "1044b541e809a5249e7b980bf57e370f873493249a5d4f25c0f76f3e6b86e60f"
     },
     {
       "path": "assets/evidence/policy_randomized_poster.png",
@@ -126,8 +141,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 33761,
-      "sha256": "bd2d4aa54ffa15389ab83f37b938c1f8cf204e35a87d561368a3941ca1f90eba"
+      "bytes": 33785,
+      "sha256": "3428c86a57355b2c0c6c4cbc21b75c8723b0a8aec2f3200e06bfd58ebcbc2235"
     },
     {
       "path": "qa/desktop-viewport.png",
