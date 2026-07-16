@@ -9,6 +9,13 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const reportsRoot = path.join(root, "public", "reports");
 const reportKeys = ["sceneagent", "text2env", "openxsim", "harness", "openxsim-v2"];
 const apply = process.argv.includes("--apply");
+const requestedReport = process.argv
+  .find((argument) => argument.startsWith("--report="))
+  ?.slice("--report=".length);
+if (requestedReport && !reportKeys.includes(requestedReport)) {
+  throw new Error(`Unknown report: ${requestedReport}`);
+}
+const selectedReportKeys = requestedReport ? [requestedReport] : reportKeys;
 const attributePattern =
   /\b(?:src|href|poster|data-src)\s*=\s*["']([^"']+)["']/gi;
 
@@ -105,10 +112,38 @@ async function buildReportSubset(reportKey, rootPage) {
     if (path.dirname(file) === reportRoot && file.endsWith(".md")) keep.add(file);
   }
 
-  // The final implementation report is itself the audit bundle: raw runtime,
-  // conversion, source, and failure evidence must remain downloadable.
+  // Keep complete conversion and cross-simulator evidence, plus three complete
+  // Text2Env seed samples. The aggregate report still covers all 100 seeds.
   if (reportKey === "openxsim-v2") {
-    for (const file of allFiles) keep.add(file);
+    const retainedDirectories = [
+      "assets/anchor2env",
+      "assets/asset_scout",
+      "assets/crosssim",
+      "assets/text2env/failure_samples",
+      "assets/text2env/representative",
+      "assets/text2env/acceptance_100_v2/scenes/seed_000000",
+      "assets/text2env/acceptance_100_v2/scenes/seed_000017",
+      "assets/text2env/acceptance_100_v2/scenes/seed_000099",
+      "source_snapshot",
+    ];
+    const retainedFiles = [
+      "acceptance_summary.json",
+      "assets/text2env/acceptance_100_v2/acceptance_report.json",
+      "assets/text2env/acceptance_100_v2/batch.log",
+      "qa/verification.json",
+      "tests_agenticsim.txt",
+      "tests_scenegen.txt",
+      "video_probe.json",
+    ];
+
+    for (const relative of retainedDirectories) {
+      for (const file of await walk(path.join(reportRoot, relative))) {
+        keep.add(file);
+      }
+    }
+    for (const relative of retainedFiles) {
+      keep.add(path.join(reportRoot, relative));
+    }
   }
 
   const rootReferencePattern = new RegExp(
@@ -180,7 +215,7 @@ async function buildReportSubset(reportKey, rootPage) {
 
 const rootPage = await readFile(path.join(root, "app", "page.tsx"), "utf8");
 const results = [];
-for (const reportKey of reportKeys) {
+for (const reportKey of selectedReportKeys) {
   results.push(await buildReportSubset(reportKey, rootPage));
 }
 console.log(JSON.stringify({ apply, reports: results }, null, 2));

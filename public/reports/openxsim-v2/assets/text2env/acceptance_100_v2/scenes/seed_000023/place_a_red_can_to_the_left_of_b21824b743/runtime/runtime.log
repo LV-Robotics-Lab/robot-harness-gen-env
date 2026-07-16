@@ -1,7 +1,0 @@
-/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/envs/curobo/src/curobo/opt/opt_base.py:298: UserWarning: Sparse invariant checks are implicitly disabled. Memory errors (e.g. SEGFAULT) will occur when operating on a sparse tensor which violates the invariants, but checks incur performance overhead. To silence this warning, explicitly opt in or out. See `torch.sparse.check_sparse_tensor_invariants.__doc__` for guidance.  (Triggered internally at /pytorch/aten/src/ATen/Context.cpp:760.)
-  self.problem_kernel_ = torch.sparse_coo_tensor(
-[2026-07-16 11:19:44.210] [svulkan2] [error] OIDN Error: unsupported device type: CUDA
-[2026-07-16 11:19:44.224] [svulkan2] [error] OIDN Error: invalid handle
-missing pytorch3d
-Warp DeprecationWarning: The symbol `warp.torch.device_from_torch` will soon be removed from the public API. Use `warp.device_from_torch` instead.
-PASS scene=place_a_red_can_to_the_left_of_b21824b743 fail=0 video_frames=0
