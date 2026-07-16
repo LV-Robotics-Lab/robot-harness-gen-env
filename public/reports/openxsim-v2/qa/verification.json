@@ -1,0 +1,192 @@
+{
+  "schema": "openxsim.report_browser_qa.v1",
+  "status": "pass",
+  "results": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "title": "Open-X-Sim 四条工作流最终验收",
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "images": [
+        {
+          "src": "assets/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/anchor_vs_mujoco.png",
+          "complete": true,
+          "naturalWidth": 1064,
+          "naturalHeight": 464
+        },
+        {
+          "src": "assets/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/anchor_vs_mujoco.png",
+          "complete": true,
+          "naturalWidth": 1064,
+          "naturalHeight": 464
+        },
+        {
+          "src": "assets/anchor2env/failure_gallery/failure_gallery.png",
+          "complete": true,
+          "naturalWidth": 1080,
+          "naturalHeight": 300
+        },
+        {
+          "src": "assets/asset_scout/imported_contact_sheet.png",
+          "complete": true,
+          "naturalWidth": 1180,
+          "naturalHeight": 472
+        },
+        {
+          "src": "assets/asset_scout/sapien_runtime/sapien_contact_sheet.png",
+          "complete": true,
+          "naturalWidth": 2560,
+          "naturalHeight": 1024
+        },
+        {
+          "src": "assets/asset_scout/previews/mujoco_mug/source.png",
+          "complete": true,
+          "naturalWidth": 512,
+          "naturalHeight": 512
+        },
+        {
+          "src": "assets/asset_scout/previews/mujoco_mug/imported.png",
+          "complete": true,
+          "naturalWidth": 512,
+          "naturalHeight": 512
+        },
+        {
+          "src": "assets/crosssim/scenes/crosssim_camera_alignment/source/mujoco/inspection_camera_rgb.png",
+          "complete": true,
+          "naturalWidth": 640,
+          "naturalHeight": 480
+        },
+        {
+          "src": "assets/crosssim/remote_targets/crosssim_camera_alignment/compiled/sapien/inspection_camera_rgb.png",
+          "complete": true,
+          "naturalWidth": 640,
+          "naturalHeight": 480
+        }
+      ],
+      "videos": [
+        {
+          "src": "assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/runtime_upright/observer_runtime.mp4",
+          "readyState": 4,
+          "duration": 10,
+          "currentTime": 1.508369,
+          "videoWidth": 320,
+          "videoHeight": 240
+        },
+        {
+          "src": "assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/runtime_upright/observer_runtime.mp4",
+          "readyState": 4,
+          "duration": 10,
+          "currentTime": 0,
+          "videoWidth": 320,
+          "videoHeight": 240
+        },
+        {
+          "src": "assets/anchor2env/media/scene_3_browser_h264.mp4",
+          "readyState": 4,
+          "duration": 4,
+          "currentTime": 0,
+          "videoWidth": 480,
+          "videoHeight": 320
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": [],
+      "pass": true
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "title": "Open-X-Sim 四条工作流最终验收",
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "images": [
+        {
+          "src": "assets/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/anchor_vs_mujoco.png",
+          "complete": true,
+          "naturalWidth": 1064,
+          "naturalHeight": 464
+        },
+        {
+          "src": "assets/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/anchor_vs_mujoco.png",
+          "complete": true,
+          "naturalWidth": 1064,
+          "naturalHeight": 464
+        },
+        {
+          "src": "assets/anchor2env/failure_gallery/failure_gallery.png",
+          "complete": true,
+          "naturalWidth": 1080,
+          "naturalHeight": 300
+        },
+        {
+          "src": "assets/asset_scout/imported_contact_sheet.png",
+          "complete": true,
+          "naturalWidth": 1180,
+          "naturalHeight": 472
+        },
+        {
+          "src": "assets/asset_scout/sapien_runtime/sapien_contact_sheet.png",
+          "complete": true,
+          "naturalWidth": 2560,
+          "naturalHeight": 1024
+        },
+        {
+          "src": "assets/asset_scout/previews/mujoco_mug/source.png",
+          "complete": true,
+          "naturalWidth": 512,
+          "naturalHeight": 512
+        },
+        {
+          "src": "assets/asset_scout/previews/mujoco_mug/imported.png",
+          "complete": true,
+          "naturalWidth": 512,
+          "naturalHeight": 512
+        },
+        {
+          "src": "assets/crosssim/scenes/crosssim_camera_alignment/source/mujoco/inspection_camera_rgb.png",
+          "complete": true,
+          "naturalWidth": 640,
+          "naturalHeight": 480
+        },
+        {
+          "src": "assets/crosssim/remote_targets/crosssim_camera_alignment/compiled/sapien/inspection_camera_rgb.png",
+          "complete": true,
+          "naturalWidth": 640,
+          "naturalHeight": 480
+        }
+      ],
+      "videos": [
+        {
+          "src": "assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/runtime_upright/observer_runtime.mp4",
+          "readyState": 4,
+          "duration": 10,
+          "currentTime": 1.501715,
+          "videoWidth": 320,
+          "videoHeight": 240
+        },
+        {
+          "src": "assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/runtime_upright/observer_runtime.mp4",
+          "readyState": 4,
+          "duration": 10,
+          "currentTime": 0,
+          "videoWidth": 320,
+          "videoHeight": 240
+        },
+        {
+          "src": "assets/anchor2env/media/scene_3_browser_h264.mp4",
+          "readyState": 4,
+          "duration": 4,
+          "currentTime": 0,
+          "videoWidth": 480,
+          "videoHeight": 320
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": [],
+      "pass": true
+    }
+  ]
+}

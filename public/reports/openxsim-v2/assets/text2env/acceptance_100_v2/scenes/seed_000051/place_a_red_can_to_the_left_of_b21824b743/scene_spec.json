@@ -1,0 +1,66 @@
+{
+  "schema_version": "robotwin.scene_spec.v1",
+  "scene_id": "place_a_red_can_to_the_left_of_b21824b743",
+  "request": "Place a red can to the left of a plastic basket near the center.",
+  "language": "en",
+  "frame": {
+    "name": "robotwin_world",
+    "x_axis": "right",
+    "y_axis": "front",
+    "z_axis": "up",
+    "handedness": "right_handed"
+  },
+  "unit": "m",
+  "seed": 51,
+  "workspace": {
+    "support_surface": "table",
+    "table_height_m": 0.741,
+    "x_bounds_m": [
+      -0.35,
+      0.35
+    ],
+    "y_bounds_m": [
+      -0.2,
+      0.3
+    ],
+    "robot_keepout_x_m": [
+      -0.16,
+      0.16
+    ],
+    "robot_keepout_y_m": [
+      -0.2,
+      -0.08
+    ]
+  },
+  "objects": [
+    {
+      "object_id": "can_1",
+      "category": "can",
+      "color": "red",
+      "region": "center"
+    },
+    {
+      "object_id": "basket_1",
+      "category": "basket",
+      "material": "plastic",
+      "region": "center"
+    }
+  ],
+  "relations": [
+    {
+      "relation": "on_table",
+      "source": "can_1",
+      "target": "table"
+    },
+    {
+      "relation": "on_table",
+      "source": "basket_1",
+      "target": "table"
+    },
+    {
+      "relation": "left_of",
+      "source": "can_1",
+      "target": "basket_1"
+    }
+  ]
+}

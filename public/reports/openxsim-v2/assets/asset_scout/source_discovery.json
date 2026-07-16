@@ -1,0 +1,52 @@
+{
+  "sources": [
+    {
+      "commit": "f841b67c17349aca1a0999b1408b746a262ff805",
+      "configured_license": "Apache-2.0",
+      "default_branch": "main",
+      "description": "Multi-Joint dynamics with Contact. A general purpose physics simulator.",
+      "discovery_query": "robotics simulation object mesh obj",
+      "license_spdx": "Apache-2.0",
+      "missing_paths": [],
+      "repository": "google-deepmind/mujoco",
+      "repository_url": "https://github.com/google-deepmind/mujoco",
+      "selected_asset_count": 3,
+      "selected_paths_present": true,
+      "status": "pass",
+      "tree_sha": "f841b67c17349aca1a0999b1408b746a262ff805",
+      "tree_truncated": false
+    },
+    {
+      "commit": "63c4d67e337017f9d8b298c900e9aabdb69296e7",
+      "configured_license": "Zlib",
+      "default_branch": "master",
+      "description": "Bullet Physics SDK: real-time collision detection and multi-physics simulation for VR, games, visual effects, robotics, machine learning etc.",
+      "discovery_query": "robotics household object mesh obj",
+      "license_spdx": "NOASSERTION",
+      "missing_paths": [],
+      "repository": "bulletphysics/bullet3",
+      "repository_url": "https://github.com/bulletphysics/bullet3",
+      "selected_asset_count": 5,
+      "selected_paths_present": true,
+      "status": "pass",
+      "tree_sha": "63c4d67e337017f9d8b298c900e9aabdb69296e7",
+      "tree_truncated": false
+    },
+    {
+      "commit": "a939f2479513a4d92060f2348909886b67d548aa",
+      "configured_license": "BSD-3-Clause",
+      "default_branch": "master",
+      "description": "The official Open-Asset-Importer-Library Repository. Loads 40+ 3D-file-formats into one unified and clean data structure. ",
+      "discovery_query": "open 3d mesh import test assets obj",
+      "license_spdx": "NOASSERTION",
+      "missing_paths": [],
+      "repository": "assimp/assimp",
+      "repository_url": "https://github.com/assimp/assimp",
+      "selected_asset_count": 2,
+      "selected_paths_present": true,
+      "status": "pass",
+      "tree_sha": "a939f2479513a4d92060f2348909886b67d548aa",
+      "tree_truncated": false
+    }
+  ]
+}

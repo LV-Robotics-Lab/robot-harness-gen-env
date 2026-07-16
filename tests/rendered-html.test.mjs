@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const reports = ["sceneagent", "text2env", "openxsim", "harness", "openxsim-v1"];
+const reports = ["sceneagent", "text2env", "openxsim", "harness", "openxsim-v2"];
 
 async function render() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -48,8 +48,8 @@ test("server-renders the finished PEARL evidence portal", async () => {
   const html = await response.text();
   assert.match(html, /<title>PEARL Self-Improving Agents<\/title>/i);
   assert.match(html, /Five reports\. One evidence chain\./);
-  assert.match(html, /DECLARED V1 GATES PASS/);
-  assert.match(html, /EXPANDED TODOS ACTIVE/);
+  assert.match(html, /FOUR ENVIRONMENT WORKFLOWS PASS/);
+  assert.match(html, /BOUNDED CLAIMS/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
 
   for (const report of reports) {

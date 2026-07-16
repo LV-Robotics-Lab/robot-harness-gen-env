@@ -1,0 +1,232 @@
+{
+  "anchors": [],
+  "assets": [
+    {
+      "articulation": {
+        "joints": [
+          {
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "child": "door",
+            "damping": 0.1,
+            "id": "door_hinge",
+            "parent": "cabinet_base",
+            "range": [
+              -1.2,
+              0.0
+            ],
+            "type": "revolute"
+          }
+        ],
+        "links": [
+          {
+            "geometry": {
+              "color_rgb": [
+                0.42,
+                0.48,
+                0.55
+              ],
+              "half_size_m": [
+                0.18,
+                0.08,
+                0.2
+              ],
+              "type": "box"
+            },
+            "geometry_origin": {
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "position": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "id": "cabinet_base",
+            "mass_kg": 1.0,
+            "pose": {
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "position": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "geometry": {
+              "color_rgb": [
+                0.82,
+                0.24,
+                0.18
+              ],
+              "half_size_m": [
+                0.18,
+                0.015,
+                0.2
+              ],
+              "type": "box"
+            },
+            "geometry_origin": {
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "position": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "id": "door",
+            "mass_kg": 0.3,
+            "pose": {
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "position": [
+                0.0,
+                -0.095,
+                0.0
+              ]
+            }
+          }
+        ],
+        "movable_joint_count": 1,
+        "root_link": "cabinet_base",
+        "schema": "agenticsim.articulation_tree.v1",
+        "source": "embedded_acceptance_fixture"
+      },
+      "asset_id": "hinged_cabinet_asset",
+      "category": "articulated_cabinet",
+      "physical": {},
+      "representations": [
+        {
+          "backend": "portable",
+          "format": "articulation_tree",
+          "metadata": {},
+          "role": "source",
+          "sha256": "",
+          "size_bytes": 0,
+          "uri": "embedded://hinged_cabinet"
+        }
+      ],
+      "source": {
+        "kind": "procedural_articulation_common_subset"
+      },
+      "tags": [
+        "articulated",
+        "one_dof"
+      ]
+    }
+  ],
+  "env": {
+    "gravity_mps2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "metadata": {},
+    "name": "crosssim_articulated_hinge",
+    "objects": [
+      {
+        "asset_id": "hinged_cabinet_asset",
+        "instance_id": "cabinet",
+        "metadata": {},
+        "pose": {
+          "orientation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            0.0,
+            0.2
+          ]
+        },
+        "randomization": {},
+        "role": "object",
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "static": true
+      }
+    ],
+    "randomization": {},
+    "regions": [],
+    "robots": [],
+    "sensors": [],
+    "units": "m",
+    "up_axis": "Z",
+    "workspace_bounds_m": [
+      -1.0,
+      -1.0,
+      0.0,
+      1.0,
+      1.0,
+      2.0
+    ]
+  },
+  "metadata": {},
+  "package_id": "crosssim_articulated_hinge",
+  "schema_version": "agenticsim.environment_package.v1",
+  "source": {
+    "case": "articulated",
+    "mode": "existing_mujoco_environment_fixture"
+  },
+  "target_backends": [
+    "mujoco",
+    "sapien"
+  ],
+  "task": {
+    "action": {
+      "interface": "zero_action",
+      "operations": []
+    },
+    "instruction": "Keep the hinged cabinet stable while preserving its door joint.",
+    "intent": "cross_sim_zero_action_replay",
+    "metadata": {},
+    "observation": {
+      "state": [
+        "object_pose",
+        "contact"
+      ]
+    },
+    "plan": [],
+    "reset": {
+      "object_poses": "from_env_spec"
+    },
+    "success": [
+      {
+        "type": "settled"
+      }
+    ],
+    "termination": [
+      {
+        "steps": 120,
+        "type": "timeout"
+      }
+    ]
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "articulation": {
+    "articulated": false,
+    "joint_count": 0,
+    "joint_types": [],
+    "status": "rigid_mesh_no_joint_schema"
+  },
+  "asset_id": "assimp_wuson",
+  "collision": {
+    "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/assimp_wuson.collision_box.obj",
+    "sha256": "d0b123143c4f3a91e2052111793a5bad59b5706a865d9bbb361862e2a6eef56e",
+    "status": "generated",
+    "strategy": "axis_aligned_convex_box"
+  },
+  "material": {
+    "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/default_material.mtl",
+    "sha256": "67349ace1cad813ed6fb8c8cdeb2c5dfd3506dc452cdb1e8b3cb770e1cb9fcf6",
+    "status": "generated_default_material"
+  },
+  "normalization": {
+    "face_count": 3732,
+    "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/default_material.mtl",
+    "material_status": "generated_default_material",
+    "normalized_bounds": {
+      "extent": [
+        0.28354339241617466,
+        0.4671981738852773,
+        1.0
+      ],
+      "maximum": [
+        0.14177169620808733,
+        0.23359908694263867,
+        0.5
+      ],
+      "minimum": [
+        -0.14177169620808733,
+        -0.23359908694263862,
+        -0.5
+      ]
+    },
+    "scale_factor": 0.3082154203873405,
+    "source_bounds": {
+      "extent": [
+        0.919952,
+        1.515817,
+        3.244484
+      ],
+      "maximum": [
+        0.459976,
+        1.515251,
+        1.622242
+      ],
+      "minimum": [
+        -0.459976,
+        -0.000566,
+        -1.622242
+      ]
+    },
+    "source_center": [
+      0.0,
+      0.7573424999999999,
+      0.0
+    ],
+    "target_max_extent_m": 1.0,
+    "vertex_count": 2117
+  },
+  "runtime_import_required": true,
+  "schema": "agenticsim.asset_validation.v1",
+  "source_format": "obj"
+}

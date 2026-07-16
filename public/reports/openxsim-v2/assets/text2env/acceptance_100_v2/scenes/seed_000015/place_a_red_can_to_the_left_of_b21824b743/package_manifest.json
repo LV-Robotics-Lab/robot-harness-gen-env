@@ -1,0 +1,33 @@
+{
+  "schema_version": "robotwin.generated_scene_package.v1",
+  "scene_id": "place_a_red_can_to_the_left_of_b21824b743",
+  "seed": 15,
+  "source_scene_spec_sha256": "6d2304723c8be9321b872f6940e913d2e6f5fdd36197d8f07c9fe51b0038c78a",
+  "resolved_scene_sha256": "658566c0bfc7d185aa18a60c3e66438bd6b0c3a730c0e2d8c144c632b4e8615e",
+  "asset_catalog_sha256": "555047d1f713909b4ecf4fb52ce952d244c27cf923ca54a0914b1cc95c030bc5",
+  "compiler_version": "scene_gen.stage2_solver.v1",
+  "entrypoint": "generated_scene.py:load_scene",
+  "resolved_only_entrypoint": "scene_gen.envs.generated_scene:load_resolved_scene",
+  "files": [
+    {
+      "path": "request.txt",
+      "sha256": "5000b39800d92bd1dded4ec2ffccad885e845327f0a165a5aab61abf7e81be52",
+      "bytes": 65
+    },
+    {
+      "path": "scene_spec.json",
+      "sha256": "6a77708dbaff144c89f2424cceb37f1b4a4d0eda7cf5c52c060f47ab21a4ab3f",
+      "bytes": 1243
+    },
+    {
+      "path": "resolved_scene.json",
+      "sha256": "3d7d101de98bd09f44a263bcb4a426258fbaacd180db78d5ee113bc06876d081",
+      "bytes": 56506
+    },
+    {
+      "path": "generated_scene.py",
+      "sha256": "590e5ef7b8003aab05b67118c4738fbf01fef6dc47b045f715eecb934d1ea86e",
+      "bytes": 34582
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "gravity_mps2": [
+    0.0,
+    0.0,
+    -9.81
+  ],
+  "objects": [
+    {
+      "color_rgb": [
+        0.9,
+        0.15,
+        0.12
+      ],
+      "half_size_m": [
+        0.05,
+        0.05,
+        0.05
+      ],
+      "kind": "box",
+      "name": "rigid_box",
+      "orientation_wxyz": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "position": [
+        0.0,
+        0.0,
+        0.35
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "static": false
+    }
+  ],
+  "package_id": "crosssim_rigid_drop",
+  "regions": [],
+  "schema": "agenticsim.sapien_scene.v1",
+  "sensors": [],
+  "task_contract": {
+    "action": {
+      "interface": "zero_action",
+      "operations": []
+    },
+    "observation": {
+      "state": [
+        "object_pose",
+        "contact"
+      ]
+    },
+    "reset": {
+      "object_poses": "from_env_spec"
+    },
+    "success": [
+      {
+        "type": "settled"
+      }
+    ],
+    "termination": [
+      {
+        "steps": 120,
+        "type": "timeout"
+      }
+    ]
+  }
+}

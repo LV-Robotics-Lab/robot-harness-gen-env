@@ -1,0 +1,258 @@
+{
+  "schema_version": "robotwin.scene_runtime_evidence.v1",
+  "scene_id": "place_a_red_can_to_the_left_of_b21824b743",
+  "resolved_scene_sha256": "cadfeaa2b832ebc3647c67edadac0fd25cae6ca3aee8c953d336eb6d7753a5a7",
+  "seed": 13,
+  "status": "pass",
+  "robot_initial_collision_count": 0,
+  "robot_initial_collision_pairs": [],
+  "robot_final_collision_count": 0,
+  "robot_final_collision_pairs": [],
+  "objects": {
+    "basket_1": {
+      "asset_id": "110_basket",
+      "entity_id": 66,
+      "initial_pose": {
+        "position_m": [
+          0.06221882253885269,
+          0.08710920810699463,
+          0.7409999966621399
+        ],
+        "orientation_wxyz": [
+          0.513948380947113,
+          0.513948380947113,
+          -0.4856511652469635,
+          -0.4856511652469635
+        ]
+      },
+      "final_pose": {
+        "position_m": [
+          0.06221882253885269,
+          0.08710920810699463,
+          0.7409999966621399
+        ],
+        "orientation_wxyz": [
+          0.513948380947113,
+          0.513948380947113,
+          -0.4856511652469635,
+          -0.4856511652469635
+        ]
+      },
+      "translation_drift_m": 0.0,
+      "rotation_drift_deg": 0.019736522733965183,
+      "late_window_translation_m": 0.0,
+      "late_window_rotation_deg": 0.019736522733965183,
+      "still_moving": false,
+      "visible_pixels": 7539,
+      "penetration_count": 0,
+      "support_contact": false,
+      "support_mode": "fixed_static_pose",
+      "dropped": false
+    },
+    "can_1": {
+      "asset_id": "071_can",
+      "entity_id": 67,
+      "initial_pose": {
+        "position_m": [
+          -0.1941571980714798,
+          0.03968365117907524,
+          0.7404213547706604
+        ],
+        "orientation_wxyz": [
+          0.6662113070487976,
+          0.6667894124984741,
+          0.23628339171409607,
+          0.23606085777282715
+        ]
+      },
+      "final_pose": {
+        "position_m": [
+          -0.1941571980714798,
+          0.03968365117907524,
+          0.7404213547706604
+        ],
+        "orientation_wxyz": [
+          0.6662113070487976,
+          0.6667894124984741,
+          0.23628339171409607,
+          0.23606085777282715
+        ]
+      },
+      "translation_drift_m": 0.0,
+      "rotation_drift_deg": 0.0,
+      "late_window_translation_m": 0.0,
+      "late_window_rotation_deg": 0.0,
+      "still_moving": false,
+      "visible_pixels": 983,
+      "penetration_count": 0,
+      "support_contact": true,
+      "support_mode": "table_contact",
+      "dropped": false
+    }
+  },
+  "initial_contact_records": [
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    }
+  ],
+  "final_contact_records": [
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0
+    }
+  ],
+  "images": {
+    "head": "/home/jingxiang/workspace/robotwin-text2env-stage04-validation/data/acceptance_100_v2/scenes/seed_000013/place_a_red_can_to_the_left_of_b21824b743/runtime/preview_head.png",
+    "segmentation": "/home/jingxiang/workspace/robotwin-text2env-stage04-validation/data/acceptance_100_v2/scenes/seed_000013/place_a_red_can_to_the_left_of_b21824b743/runtime/preview_segmentation.png"
+  },
+  "video": null,
+  "video_frame_count": 0,
+  "fps": 12
+}

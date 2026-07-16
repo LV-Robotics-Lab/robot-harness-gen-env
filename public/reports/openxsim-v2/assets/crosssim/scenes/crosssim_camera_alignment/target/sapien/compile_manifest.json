@@ -1,0 +1,57 @@
+{
+  "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/target/sapien/scene_spec.json",
+  "backend": "sapien",
+  "blockers": [],
+  "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/target/sapien/compile_manifest.json",
+  "metadata": {
+    "artifact_format": "sapien_scene_json",
+    "asset_ids": [
+      "red_marker_asset",
+      "blue_marker_asset"
+    ],
+    "object_ids": [
+      "red_marker",
+      "blue_marker"
+    ],
+    "runner_syntax_validated": true,
+    "schema": "agenticsim.backend_compile.v1",
+    "task_contract": {
+      "action": {
+        "interface": "zero_action",
+        "operations": []
+      },
+      "observation": {
+        "state": [
+          "object_pose",
+          "contact"
+        ]
+      },
+      "reset": {
+        "object_poses": "from_env_spec"
+      },
+      "success": [
+        {
+          "type": "settled"
+        }
+      ],
+      "termination": [
+        {
+          "steps": 120,
+          "type": "timeout"
+        }
+      ]
+    }
+  },
+  "package_digest": "0fd993aa539cf525e6f7d08349e6bfb425517812630f36f1de63fd608872c2c8",
+  "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/target/sapien/environment_package.json",
+  "runtime_command": [
+    "python",
+    "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/target/sapien/run_sapien_smoke.py",
+    "--spec",
+    "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/target/sapien/scene_spec.json",
+    "--output",
+    "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/target/sapien/runtime_evidence.json"
+  ],
+  "status": "compiled",
+  "warnings": []
+}

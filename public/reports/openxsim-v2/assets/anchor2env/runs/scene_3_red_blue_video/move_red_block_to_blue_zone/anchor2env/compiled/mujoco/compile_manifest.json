@@ -1,0 +1,96 @@
+{
+  "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/scene.xml",
+  "backend": "mujoco",
+  "blockers": [],
+  "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/compile_manifest.json",
+  "metadata": {
+    "artifact_format": "mjcf",
+    "asset_ids": [
+      "red_block_asset"
+    ],
+    "object_ids": [
+      "red_block"
+    ],
+    "schema": "agenticsim.backend_compile.v1",
+    "task_contract": {
+      "action": {
+        "arm_policy": {
+          "negative_arm": "left",
+          "nonnegative_arm": "right",
+          "object": "red_block",
+          "save_as": "main_arm",
+          "type": "by_object_x"
+        },
+        "interface": "robotwin_primitive_plan",
+        "operations": [
+          "grasp",
+          "move_by",
+          "place"
+        ]
+      },
+      "observation": {
+        "cameras": [
+          "head_camera",
+          "left_camera",
+          "right_camera"
+        ],
+        "state": [
+          "object_pose",
+          "robot_joint_position",
+          "contact"
+        ]
+      },
+      "reset": {
+        "constraints": [
+          "no_initial_object_collision",
+          "target_reachable_by_robot",
+          "success_condition_sim_state_observable",
+          "task_objects_stable",
+          "protected_regions_defined",
+          "all_placeholders_bound"
+        ],
+        "object_poses": "from_env_spec",
+        "randomization": {
+          "cluttered_table": false,
+          "lighting": false,
+          "object_pose": true,
+          "table_height": false,
+          "texture": false
+        }
+      },
+      "success": [
+        {
+          "comment": "The red block center should end inside blue_zone.",
+          "object": "red_block",
+          "region": "blue_zone",
+          "tolerance_m": 0.04,
+          "type": "in_region"
+        },
+        {
+          "comment": "The robot should release the object.",
+          "required": true,
+          "type": "grippers_open"
+        }
+      ],
+      "termination": [
+        {
+          "steps": 1000,
+          "type": "timeout"
+        }
+      ]
+    },
+    "xml_validated": true
+  },
+  "package_digest": "3c254458a36d71a93d383240412fc331e4add9efaec2562fbab104cdeeaaead7",
+  "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/environment_package.json",
+  "runtime_command": [
+    "python",
+    "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/run_mujoco_smoke.py",
+    "--model",
+    "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/scene.xml",
+    "--output",
+    "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/runtime_evidence.json"
+  ],
+  "status": "compiled",
+  "warnings": []
+}

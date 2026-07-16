@@ -1,0 +1,223 @@
+{
+  "articulation": {
+    "articulated": false,
+    "joint_count": 0,
+    "joint_types": [],
+    "status": "rigid_mesh_no_joint_schema"
+  },
+  "asset_id": "bullet_pan",
+  "category": "pan",
+  "physical": {
+    "collision_status": "generated",
+    "collision_strategy": "axis_aligned_convex_box",
+    "material_status": "generated_default_material",
+    "normalization": {
+      "face_count": 540,
+      "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_pan/default_material.mtl",
+      "material_status": "generated_default_material",
+      "normalized_bounds": {
+        "extent": [
+          1.0,
+          0.9945207547169811,
+          0.28301886792452824
+        ],
+        "maximum": [
+          0.5,
+          0.49726037735849055,
+          0.14150943396226412
+        ],
+        "minimum": [
+          -0.5,
+          -0.49726037735849055,
+          -0.14150943396226412
+        ]
+      },
+      "scale_factor": 3.773584905660377,
+      "source_bounds": {
+        "extent": [
+          0.265,
+          0.263548,
+          0.075
+        ],
+        "maximum": [
+          0.1325,
+          0.131774,
+          0.075
+        ],
+        "minimum": [
+          -0.1325,
+          -0.131774,
+          0.0
+        ]
+      },
+      "source_center": [
+        0.0,
+        0.0,
+        0.0375
+      ],
+      "target_max_extent_m": 1.0,
+      "vertex_count": 270
+    },
+    "runtime_import_required": true
+  },
+  "representations": [
+    {
+      "backend": "portable",
+      "format": "obj_source",
+      "metadata": {
+        "original_download": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/a41b81713e56f79daa42/pan_tefal.obj",
+        "preserved_source": true
+      },
+      "role": "source",
+      "sha256": "8e11390403740667ab37250f962d1e977922817f768da358f041f7b558b3fdc2",
+      "size_bytes": 40801,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_pan/source.obj"
+    },
+    {
+      "backend": "portable",
+      "format": "obj",
+      "metadata": {
+        "normalization": {
+          "face_count": 540,
+          "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_pan/default_material.mtl",
+          "material_status": "generated_default_material",
+          "normalized_bounds": {
+            "extent": [
+              1.0,
+              0.9945207547169811,
+              0.28301886792452824
+            ],
+            "maximum": [
+              0.5,
+              0.49726037735849055,
+              0.14150943396226412
+            ],
+            "minimum": [
+              -0.5,
+              -0.49726037735849055,
+              -0.14150943396226412
+            ]
+          },
+          "scale_factor": 3.773584905660377,
+          "source_bounds": {
+            "extent": [
+              0.265,
+              0.263548,
+              0.075
+            ],
+            "maximum": [
+              0.1325,
+              0.131774,
+              0.075
+            ],
+            "minimum": [
+              -0.1325,
+              -0.131774,
+              0.0
+            ]
+          },
+          "source_center": [
+            0.0,
+            0.0,
+            0.0375
+          ],
+          "target_max_extent_m": 1.0,
+          "vertex_count": 270
+        }
+      },
+      "role": "visual",
+      "sha256": "a67e534aca325a392391c2338f1bd7b2c71d046e6487868234c619386fdb0ce2",
+      "size_bytes": 16380,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_pan/bullet_pan.normalized.obj"
+    },
+    {
+      "backend": "portable",
+      "format": "obj_collision_proxy",
+      "metadata": {
+        "strategy": "axis_aligned_convex_box"
+      },
+      "role": "collision",
+      "sha256": "bd2917a4815dcb46a96764af5dfaed342c13fa6ad63bc806c1c327984c9d199f",
+      "size_bytes": 352,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_pan/bullet_pan.collision_box.obj"
+    },
+    {
+      "backend": "isaacsim",
+      "format": "usda",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "158a9fc22cde4ed5f45ae37f83d116bc500007d04b8e301ca74caafb636ec35d",
+      "size_bytes": 19588,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_pan/bullet_pan.usda"
+    },
+    {
+      "backend": "mujoco",
+      "format": "mjcf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "9debd53506c67e584137572f2fd8905fd2886c145c3d75a06b3369573ae9d40c",
+      "size_bytes": 428,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_pan/bullet_pan.xml"
+    },
+    {
+      "backend": "portable",
+      "format": "urdf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "a1f336c6c6adbcf4d34751b60417a35b0eee790fbb2fbe6c362c8e27a9c40b92",
+      "size_bytes": 249,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_pan/bullet_pan.urdf"
+    },
+    {
+      "backend": "sapien",
+      "format": "sapien_manifest",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "483e14b617b7cb435aed42b9523c629352dd619f7b14926b8c15337ce88a6b64",
+      "size_bytes": 1375,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_pan/sapien_asset.json"
+    },
+    {
+      "backend": "metasim",
+      "format": "metasim_object",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "264d7ccc872cd31b67de8753216b8f1f946b54608a06b376fb1bcafd6651d1c3",
+      "size_bytes": 494,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_pan/metasim_object.json"
+    },
+    {
+      "backend": "portable",
+      "format": "validation_manifest",
+      "metadata": {},
+      "role": "validation",
+      "sha256": "82f0e5cbf9817dbad0912379e3a4ae49aa4e320fc4fba21f961e13aa453822d5",
+      "size_bytes": 1854,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_pan/asset_validation.json"
+    }
+  ],
+  "source": {
+    "download_sha256": "8e11390403740667ab37250f962d1e977922817f768da358f041f7b558b3fdc2",
+    "download_url": "https://raw.githubusercontent.com/bulletphysics/bullet3/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/dinnerware/pan_tefal.obj",
+    "license": "Zlib",
+    "provenance_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/a41b81713e56f79daa42/provenance.json",
+    "provider": "github_tree_pinned",
+    "source_page": "https://github.com/bulletphysics/bullet3/blob/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/dinnerware/pan_tefal.obj"
+  },
+  "tags": [
+    "downloaded",
+    "provenance_recorded",
+    "validated",
+    "normalized"
+  ]
+}

@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Open-X-Sim 四条工作流最终验收</title>
+  <style>
+    :root {
+      --ink: #18211f;
+      --muted: #64706d;
+      --line: #d8dfdc;
+      --paper: #f4f6f4;
+      --surface: #ffffff;
+      --charcoal: #161d1c;
+      --green: #08795b;
+      --green-soft: #e4f2ec;
+      --blue: #236b8e;
+      --blue-soft: #e7f0f5;
+      --amber: #9a6614;
+      --amber-soft: #f6ecd8;
+      --red: #a64338;
+      --red-soft: #f7e9e6;
+      --sidebar: 250px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--paper); }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+      line-height: 1.55;
+    }
+    a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    img, video { display: block; width: 100%; }
+    code, .mono { font-family: "SFMono-Regular", Consolas, monospace; }
+    .layout { display: grid; grid-template-columns: var(--sidebar) minmax(0, 1fr); min-height: 100vh; }
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 26px 18px;
+      color: #f1f5f3;
+      background: var(--charcoal);
+      border-right: 1px solid #303a37;
+    }
+    .brand-kicker { color: #8ccab2; font-size: 11px; font-weight: 750; }
+    .brand h1 { margin: 5px 0 7px; font-size: 21px; line-height: 1.15; }
+    .brand p { margin: 0; color: #aebbb7; font-size: 12px; }
+    nav { display: grid; gap: 3px; margin-top: 28px; }
+    nav a {
+      padding: 8px 10px;
+      color: #b7c2bf;
+      border-left: 2px solid transparent;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    nav a:hover, nav a:focus-visible, nav a.active {
+      color: #fff;
+      background: #222d2a;
+      border-left-color: #6bc4a3;
+    }
+    .side-meta {
+      margin-top: 28px;
+      padding-top: 16px;
+      border-top: 1px solid #34413d;
+      color: #94a39e;
+      font-size: 11px;
+    }
+    main { min-width: 0; }
+    .hero {
+      position: relative;
+      min-height: 620px;
+      display: flex;
+      align-items: end;
+      overflow: hidden;
+      color: #fff;
+      background: #101615;
+    }
+    .hero video, .hero-overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .hero video { object-fit: cover; object-position: center 60%; }
+    .hero-overlay { background: rgba(8, 15, 13, 0.76); }
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+      width: min(1120px, calc(100% - 56px));
+      margin: 0 auto;
+      padding: 62px 0 58px;
+    }
+    .eyebrow { margin: 0 0 12px; color: #9bd4be; font-size: 12px; font-weight: 800; }
+    .hero h2 { max-width: 900px; margin: 0; font-size: 56px; line-height: 1.03; font-weight: 680; }
+    .hero-lede { max-width: 820px; margin: 20px 0 0; color: #d8e2de; font-size: 18px; }
+    .hero-stats { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 28px; }
+    .hero-stat { padding: 8px 10px; border: 1px solid rgba(255,255,255,.28); background: rgba(8,15,13,.56); font-size: 12px; }
+    .content { width: min(1120px, calc(100% - 56px)); margin: 0 auto; padding: 26px 0 76px; }
+    section { padding: 42px 0; border-bottom: 1px solid var(--line); scroll-margin-top: 20px; }
+    section:last-child { border-bottom: 0; }
+    .section-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; margin-bottom: 22px; }
+    .section-number { margin: 0 0 6px; color: var(--blue); font-size: 12px; font-weight: 800; }
+    h3 { margin: 0; font-size: 34px; line-height: 1.15; }
+    h4 { margin: 0 0 9px; font-size: 18px; }
+    p { margin: 0 0 14px; overflow-wrap: anywhere; }
+    .muted { color: var(--muted); }
+    .claim-tag { font-weight: 800; white-space: nowrap; }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 28px;
+      padding: 4px 9px;
+      border: 1px solid;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .pass { color: var(--green); border-color: #9fc9b8; background: var(--green-soft); }
+    .pending { color: var(--amber); border-color: #d9bc78; background: var(--amber-soft); }
+    .boundary { color: var(--red); border-color: #dbaca6; background: var(--red-soft); }
+    .info { color: var(--blue); border-color: #9fbfd0; background: var(--blue-soft); }
+    .verdict-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); background: var(--surface); }
+    .verdict-item { min-width: 0; padding: 19px; border-right: 1px solid var(--line); }
+    .verdict-item:last-child { border-right: 0; }
+    .verdict-item b { display: block; margin: 11px 0 6px; }
+    .verdict-item p { margin: 0; color: var(--muted); font-size: 13px; }
+    .metric-band { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 18px 0; border: 1px solid var(--line); background: var(--line); }
+    .metric { min-width: 0; padding: 15px; background: var(--surface); }
+    .metric strong { display: block; font-size: 25px; line-height: 1.05; overflow-wrap: anywhere; }
+    .metric span { display: block; margin-top: 6px; color: var(--muted); font-size: 11px; font-weight: 700; }
+    .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+    .flow div { min-height: 98px; padding: 14px; border: 1px solid var(--line); background: var(--surface); font-size: 12px; }
+    .flow b { display: block; margin-bottom: 6px; font-size: 14px; }
+    .two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .three-col { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .evidence-panel { min-width: 0; padding: 18px; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; }
+    .evidence-panel > :last-child { margin-bottom: 0; }
+    figure { margin: 0; min-width: 0; }
+    figure img, figure video { border: 1px solid #35413e; background: #151c1b; }
+    figure video { aspect-ratio: 4 / 3; object-fit: contain; }
+    figcaption { padding-top: 8px; color: var(--muted); font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; border: 1px solid var(--line); background: var(--surface); }
+    th, td { padding: 12px 13px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 13px; }
+    th { color: #43504c; background: #eaf0ed; font-size: 11px; }
+    tr:last-child td { border-bottom: 0; }
+    .callout { margin: 17px 0; padding: 14px 16px; border-left: 4px solid var(--blue); background: var(--blue-soft); }
+    .callout.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+    .callout.stop { border-left-color: var(--red); background: var(--red-soft); }
+    .file-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .file-list a { display: block; padding: 8px 10px; background: #edf1ef; border-left: 3px solid #9aaba5; font-size: 12px; overflow-wrap: anywhere; }
+    .footer { padding-top: 28px; color: var(--muted); font-size: 12px; }
+    @media (max-width: 960px) {
+      :root { --sidebar: 210px; }
+      .verdict-grid, .metric-band { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .verdict-item:nth-child(2) { border-right: 0; }
+      .verdict-item:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 720px) {
+      .layout { display: block; }
+      aside { position: relative; height: auto; padding: 18px; }
+      nav { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }
+      .side-meta { display: none; }
+      .hero { min-height: 560px; }
+      .hero-copy, .content { width: min(100% - 28px, 1120px); }
+      .hero-copy { padding-bottom: 38px; }
+      .hero h2 { font-size: 38px; }
+      .hero-lede { font-size: 16px; }
+      .section-head, .verdict-grid, .metric-band, .flow, .two-col, .three-col { grid-template-columns: 1fr; }
+      .section-head { align-items: start; gap: 12px; }
+      .verdict-item { border-right: 0; border-bottom: 1px solid var(--line); }
+      .verdict-item:last-child { border-bottom: 0; }
+      h3 { font-size: 28px; }
+      table { table-layout: fixed; }
+      th, td { padding: 8px 6px; overflow-wrap: anywhere; font-size: 10px; }
+      .status { white-space: normal; line-height: 1.2; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="brand">
+        <div class="brand-kicker">PEARL / AgenticSim</div>
+        <h1>Open-X-Sim Final</h1>
+        <p>四条工作流的宽口径验收</p>
+      </div>
+      <nav aria-label="报告章节">
+        <a href="#verdict">总览</a>
+        <a href="#architecture">统一环境包</a>
+        <a href="#text2env">1. Text2Env</a>
+        <a href="#anchor2env">2. Anchor2Env</a>
+        <a href="#assetscout">3. AssetScout</a>
+        <a href="#crosssim">4. Open-X-Sim</a>
+        <a href="#boundaries">边界</a>
+        <a href="#evidence">证据索引</a>
+      </nav>
+      <div class="side-meta">
+        <div>Frozen: 2026-07-16</div>
+        <div>RoboTwin runtime: RTX 5090</div>
+        <div>MuJoCo source / SAPIEN target</div>
+      </div>
+    </aside>
+
+    <main>
+      <header class="hero">
+        <video autoplay muted loop playsinline preload="metadata" poster="assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/runtime_upright/preview_head.png" aria-label="RoboTwin Text2Env 连续场景回放">
+          <source src="assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/runtime_upright/observer_runtime.mp4" type="video/mp4">
+        </video>
+        <div class="hero-overlay"></div>
+        <div class="hero-copy">
+          <p class="eyebrow">TEXT → ANCHOR → ASSET → CROSS-SIM</p>
+          <h2>四条工作流，一套可复核环境包</h2>
+          <p class="hero-lede"><span class="claim-tag">[KNOWN] [CONFIDENCE: HIGH]</span> 本报告按 dashboard 的扩大验收逐项核对纯文本环境生成、图片/视频 anchor、联网资产导入和跨仿真器迁移；每条结论都链接到本包内的运行证据。</p>
+          <div class="hero-stats">
+            <span class="hero-stat" id="hero-text-status">Text2Env: 100/100</span>
+            <span class="hero-stat">Anchor2Env: 3/3</span>
+            <span class="hero-stat">AssetScout: 3 sources / 10 assets</span>
+            <span class="hero-stat">CrossSim: 3/3 L3</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <section id="verdict">
+          <div class="section-head">
+            <div><p class="section-number">EXECUTIVE VERDICT</p><h3>宽口径验收状态</h3></div>
+            <span class="status pass" id="overall-status">4 / 4 implementation gates pass</span>
+          </div>
+          <div class="verdict-grid">
+            <div class="verdict-item">
+              <span class="status pass" id="text-status">100 / 100 pass</span>
+              <b>1. Pure Text2Env</b>
+              <p>严格双语 SceneSpec、真实 RoboTwin catalog、grounding、bounded solver、SAPIEN validation 与 resolved replay。</p>
+            </div>
+            <div class="verdict-item">
+              <span class="status pass">3 / 3 pass</span>
+              <b>2. Anchor2Env</b>
+              <p>2 张图片与 1 个完整视频；固定输入可复现，保留 uncertainty、消融和失败图库。</p>
+            </div>
+            <div class="verdict-item">
+              <span class="status pass" id="asset-status">10 / 10 in two runtimes</span>
+              <b>3. AssetScout</b>
+              <p>3 个固定官方来源与 10 个异构 OBJ；哈希、转换、碰撞代理、预览和 MuJoCo runtime 已通过。</p>
+            </div>
+            <div class="verdict-item">
+              <span class="status pass">3 / 3 L3</span>
+              <b>4. Open-X-Sim</b>
+              <p>刚体、单关节和相机敏感场景由同一版本包从 MuJoCo 迁移到 SAPIEN。</p>
+            </div>
+          </div>
+          <div class="callout" id="freeze-note"><span class="claim-tag">[COMPUTED] [CONFIDENCE: HIGH]</span> 最终冻结结果：Text2Env 100/100 独立 runtime、Anchor2Env 3/3、AssetScout 10/10 MuJoCo + 10/10 SAPIEN、CrossSim 3/3 L3 均通过。Done 只覆盖下述明确验收范围，不扩张为 L4 策略等价。</div>
+        </section>
+
+        <section id="architecture">
+          <div class="section-head">
+            <div><p class="section-number">SHARED CONTRACT</p><h3>四个入口，不是四套孤立实现</h3></div>
+            <span class="status info">EnvironmentPackage v1</span>
+          </div>
+          <p><span class="claim-tag">[INFERRED] [CONFIDENCE: HIGH]</span> Anchor2Env 是 Text2Env 的多模态约束入口，AssetScout 为两者补齐缺失资产，Open-X-Sim 负责把同一环境包编译和验收到不同后端。</p>
+          <div class="flow" aria-label="统一环境编译链路">
+            <div><b>Inputs</b>Text<br>Image / video<br>Native simulator env</div>
+            <div><b>Evidence</b>AnchorManifest<br>Source provenance<br>Hashes</div>
+            <div><b>Typed IR</b>EnvSpec<br>AssetBundle<br>TaskSpec</div>
+            <div><b>Compilers</b>RoboTwin<br>MuJoCo<br>SAPIEN / MetaSim</div>
+            <div><b>Proof</b>RuntimeEvidence<br>ConformanceReport<br>Typed blockers</div>
+          </div>
+        </section>
+
+        <section id="text2env">
+          <div class="section-head">
+            <div><p class="section-number">01 / PURE TEXT2ENV</p><h3>自然语言到 RoboTwin 可重放场景</h3></div>
+            <span class="status pass" id="text-section-status">100 / 100 retained runtime</span>
+          </div>
+          <div class="metric-band">
+            <div class="metric"><strong>125</strong><span>真实资产目录</span></div>
+            <div class="metric"><strong>10</strong><span>当前严格可用资产</span></div>
+            <div class="metric"><strong>31 / 31</strong><span>SceneGen tests</span></div>
+            <div class="metric"><strong id="text-seed-metric">100 / 100</strong><span>独立保留 runtime seeds</span></div>
+          </div>
+          <table style="margin-top:18px">
+            <thead><tr><th>Seed</th><th>视频</th><th>帧率 / 时长</th><th>唯一解码帧</th><th>SHA-256</th></tr></thead>
+            <tbody>
+              <tr><td>0</td><td><a href="assets/text2env/acceptance_100_v2/scenes/seed_000000/place_a_red_can_to_the_left_of_b21824b743/runtime/observer_runtime.mp4">120 frames</a></td><td>12 fps / 10 s</td><td>27</td><td class="mono">81d1ceaa...</td></tr>
+              <tr><td>17</td><td><a href="assets/text2env/acceptance_100_v2/scenes/seed_000017/place_a_red_can_to_the_left_of_b21824b743/runtime/observer_runtime.mp4">120 frames</a></td><td>12 fps / 10 s</td><td>22</td><td class="mono">9a203e81...</td></tr>
+              <tr><td>99</td><td><a href="assets/text2env/acceptance_100_v2/scenes/seed_000099/place_a_red_can_to_the_left_of_b21824b743/runtime/observer_runtime.mp4">120 frames</a></td><td>12 fps / 10 s</td><td>31</td><td class="mono">48d87d38...</td></tr>
+            </tbody>
+          </table>
+          <div class="callout"><span class="claim-tag">[COMPUTED] [CONFIDENCE: HIGH]</span> 100 个 seed 的 scene 目录、resolved digest、final runtime validation 与 evidence hash 均为 100 个；生成 commit 为 <span class="mono">69606dd...</span>，RoboTwin 基线为 <span class="mono">c3ddfa8...</span>。输入拒绝和 replay loader 的后续测试补强 commit 为 <span class="mono">b4d9641...</span>。</div>
+          <div class="two-col">
+            <figure>
+              <video controls playsinline preload="metadata" poster="assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/runtime_upright/preview_head.png">
+                <source src="assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/runtime_upright/observer_runtime.mp4" type="video/mp4">
+              </video>
+              <figcaption><span class="claim-tag">[COMPUTED] [CONFIDENCE: HIGH]</span> 120 帧代表性连续回放，不是起点/终点两帧替代品。</figcaption>
+            </figure>
+            <div class="evidence-panel">
+              <h4>实现边界</h4>
+              <p><span class="claim-tag">[KNOWN] [CONFIDENCE: HIGH]</span> `SceneSpec` 禁止模型输出 Python、资产路径、model_id、坐标和四元数；解析器只接受受限类别、属性、区域和关系。</p>
+              <p><span class="claim-tag">[KNOWN] [CONFIDENCE: HIGH]</span> grounding 记录候选、打分和拒绝原因；solver 用固定 seed 的有界采样与回溯产生最终位姿。</p>
+              <p><span class="claim-tag">[KNOWN] [CONFIDENCE: HIGH]</span> runtime validation 检查边界、重叠、语言关系、稳定性、接触、机器人初始碰撞和 head-camera 可见像素。</p>
+              <ul class="file-list">
+                <li><a href="assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/scene_spec.json">SceneSpec</a></li>
+                <li><a href="assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/resolved_scene.json">ResolvedScene</a></li>
+                <li><a href="assets/text2env/representative/place_a_red_can_to_the_left_of_b21824b743/runtime_upright/runtime_validation_report.json">Runtime validation</a></li>
+                <li><a href="assets/text2env/acceptance_100_v2/acceptance_report.json">100-seed acceptance</a></li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="anchor2env">
+          <div class="section-head">
+            <div><p class="section-number">02 / IMAGE + VIDEO ANCHORS</p><h3>Anchor 改变几何，但不伪造隐藏信息</h3></div>
+            <span class="status pass">3 / 3 pass</span>
+          </div>
+          <div class="metric-band">
+            <div class="metric"><strong>2 + 1</strong><span>图片 + 视频场景</span></div>
+            <div class="metric"><strong>8 / 8</strong><span>视频唯一采样帧</span></div>
+            <div class="metric"><strong>3</strong><span>预期失败样例</span></div>
+            <div class="metric"><strong>100%</strong><span>固定输入 digest 重放</span></div>
+          </div>
+          <div class="three-col">
+            <figure><img src="assets/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/anchor_vs_mujoco.png" alt="红蓝图像 anchor 与 MuJoCo 重建对比"><figcaption>图像场景 1：anchor 与重建。</figcaption></figure>
+            <figure><img src="assets/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/anchor_vs_mujoco.png" alt="绿黄图像 anchor 与 MuJoCo 重建对比"><figcaption>图像场景 2：另一组颜色与布局。</figcaption></figure>
+            <figure>
+              <video controls playsinline preload="metadata" poster="assets/anchor2env/media/scene_3_frames/frame_0000.png"><source src="assets/anchor2env/media/scene_3_browser_h264.mp4" type="video/mp4"></video>
+              <figcaption>视频场景：完整时间轴输入，采样不是首尾两帧。</figcaption>
+            </figure>
+          </div>
+          <div class="two-col" style="margin-top:18px">
+            <div class="evidence-panel">
+              <h4>消融</h4>
+              <p><span class="claim-tag">[COMPUTED] [CONFIDENCE: HIGH]</span> 三个场景中，anchor-conditioned 输出都改变了对象和目标区域的几何位置；报告保留 text-only 与 anchor digest、逐对象位移和最大位移。</p>
+              <a href="assets/anchor2env/anchor_acceptance.json">打开完整 Anchor2Env 验收 JSON</a>
+            </div>
+            <figure><img src="assets/anchor2env/failure_gallery/failure_gallery.png" alt="Anchor2Env 失败图库"><figcaption><span class="claim-tag">[KNOWN] [CONFIDENCE: HIGH]</span> 损坏媒体、低置信度和缺失观测被结构化拒绝。</figcaption></figure>
+          </div>
+          <div class="callout"><span class="claim-tag">[COMPUTED] [CONFIDENCE: HIGH]</span> 三个 anchor 包还在远端 SAPIEN 完成了 120-step load/step smoke。其 `robotwin_primitive_plan` action interface 在通用 SAPIEN runner 中未绑定，因此该补充证据不用于宣称任务控制语义等价。 <a href="assets/anchor2env/sapien_runtime/remote_summary.json">查看 SAPIEN summary</a></div>
+        </section>
+
+        <section id="assetscout">
+          <div class="section-head">
+            <div><p class="section-number">03 / AUTONOMOUS ASSET ACQUISITION</p><h3>下载网格不等于可用仿真资产</h3></div>
+            <span class="status pass" id="asset-section-status">MuJoCo 10/10 · SAPIEN 10/10</span>
+          </div>
+          <div class="metric-band">
+            <div class="metric"><strong>3</strong><span>固定官方来源</span></div>
+            <div class="metric"><strong>10 / 10</strong><span>MuJoCo runtime</span></div>
+            <div class="metric"><strong>9</strong><span>输出表示 / 资产</span></div>
+            <div class="metric"><strong id="asset-sapien-metric">10 / 10</strong><span>SAPIEN settle + render</span></div>
+          </div>
+          <figure><img src="assets/asset_scout/imported_contact_sheet.png" alt="十个导入资产的预览总表"><figcaption><span class="claim-tag">[COMPUTED] [CONFIDENCE: HIGH]</span> 10 个异构导入结果：mug、card、bunny、banana、cup、pan、plate、duck、spider mesh 与 character mesh。</figcaption></figure>
+          <figure style="margin-top:18px"><img src="assets/asset_scout/sapien_runtime/sapien_contact_sheet.png" alt="十个资产在 SAPIEN 的导入渲染总表"><figcaption><span class="claim-tag">[COMPUTED] [CONFIDENCE: HIGH]</span> 同一批 10 资产在 SAPIEN 3.0.0b1 的真实渲染；10/10 ground contact、稳定与非空像素检查通过。</figcaption></figure>
+          <div class="two-col" style="margin-top:18px">
+            <figure><img src="assets/asset_scout/previews/mujoco_mug/source.png" alt="Mug 源网格预览"><figcaption>源网格预览与下载哈希绑定。</figcaption></figure>
+            <figure><img src="assets/asset_scout/previews/mujoco_mug/imported.png" alt="Mug 归一化导入预览"><figcaption>归一化后的视觉网格；碰撞代理单独保存。</figcaption></figure>
+          </div>
+          <table style="margin-top:18px">
+            <thead><tr><th>来源</th><th>固定 commit</th><th>许可记录</th><th>入选资产</th></tr></thead>
+            <tbody>
+              <tr><td>google-deepmind/mujoco</td><td class="mono">f841b67...</td><td>Apache-2.0</td><td>mug, card, bunny</td></tr>
+              <tr><td>bulletphysics/bullet3</td><td class="mono">63c4d67...</td><td>Zlib</td><td>banana, cup, pan, plate, duck</td></tr>
+              <tr><td>assimp/assimp</td><td class="mono">a939f24...</td><td>BSD-3-Clause</td><td>spider, character</td></tr>
+            </tbody>
+          </table>
+          <div class="callout"><span class="claim-tag">[KNOWN] [CONFIDENCE: HIGH]</span> 每个资产保留来源 URL、commit、Git blob、下载 SHA-256、源网格、归一化网格、碰撞代理、默认材质、USD/MJCF/URDF/SAPIEN/MetaSim 表示和 pass/block 记录。</div>
+          <ul class="file-list">
+            <li><a href="assets/asset_scout/asset_acceptance.json">AssetScout 10-asset acceptance</a></li>
+            <li><a href="assets/asset_scout/sapien_runtime/sapien_asset_acceptance.json">SAPIEN runtime acceptance</a></li>
+          </ul>
+        </section>
+
+        <section id="crosssim">
+          <div class="section-head">
+            <div><p class="section-number">04 / CROSS-SIM REUSE</p><h3>同一包迁移，损失必须显式计量</h3></div>
+            <span class="status pass">3 / 3 L3</span>
+          </div>
+          <div class="metric-band">
+            <div class="metric"><strong>1.94 cm</strong><span>刚体最大位置误差</span></div>
+            <div class="metric"><strong>0 rad</strong><span>关节最大轨迹误差</span></div>
+            <div class="metric"><strong>≈ 0.003</strong><span>红 / 蓝图像中心误差</span></div>
+            <div class="metric"><strong>121</strong><span>每场景对齐状态数</span></div>
+          </div>
+          <div class="two-col">
+            <figure><img src="assets/crosssim/scenes/crosssim_camera_alignment/source/mujoco/inspection_camera_rgb.png" alt="MuJoCo 相机敏感场景"><figcaption>MuJoCo source，640 × 480，FOV 55°。</figcaption></figure>
+            <figure><img src="assets/crosssim/remote_targets/crosssim_camera_alignment/compiled/sapien/inspection_camera_rgb.png" alt="SAPIEN 相机敏感场景"><figcaption>SAPIEN target，640 × 480，FOV 55°。</figcaption></figure>
+          </div>
+          <table style="margin-top:18px">
+            <thead><tr><th>场景</th><th>L0</th><th>L1</th><th>L2</th><th>L3</th><th>专项指标</th></tr></thead>
+            <tbody>
+              <tr><td>Rigid drop</td><td>pass</td><td>pass</td><td>pass</td><td>pass</td><td>4/121 原始短暂接触差；50 ms 去抖后 0</td></tr>
+              <tr><td>Hinged cabinet</td><td>pass</td><td>pass</td><td>pass</td><td>pass</td><td>door_hinge 名称与 121-step qpos 全匹配</td></tr>
+              <tr><td>Camera alignment</td><td>pass</td><td>pass</td><td>pass</td><td>pass</td><td>红蓝中心误差分别约 0.003</td></tr>
+            </tbody>
+          </table>
+          <div class="callout warn"><span class="claim-tag">[INFERRED] [CONFIDENCE: HIGH]</span> MetaSim 的当前决策是 `adapter_only`：保留静态编译和接口对照，不声明未运行的 runtime parity。</div>
+          <a href="assets/crosssim/crosssim_acceptance.json">打开 CrossSim 完整验收 JSON</a>
+        </section>
+
+        <section id="boundaries">
+          <div class="section-head">
+            <div><p class="section-number">CLAIM BOUNDARIES</p><h3>通过的范围与仍禁止的结论</h3></div>
+            <span class="status boundary">No seamless-equivalence claim</span>
+          </div>
+          <div class="three-col">
+            <div class="evidence-panel"><h4>L4 未评估</h4><p><span class="claim-tag">[KNOWN] [CONFIDENCE: HIGH]</span> 当前只到 L3 trajectory/contact/camera/joint conformance，没有跨后端策略成功率统计。</p></div>
+            <div class="evidence-panel"><h4>资产物理仍有限</h4><p><span class="claim-tag">[KNOWN] [CONFIDENCE: HIGH]</span> 10 个外部资产是刚体网格；未知真实质量、惯量和材质参数保持 unknown，不用默认值冒充测量值。</p></div>
+            <div class="evidence-panel"><h4>Stage 5 延期</h4><p><span class="claim-tag">[KNOWN] [CONFIDENCE: HIGH]</span> Text2Env MVP 不包含 stacking、inside、articulation 初始关节、复杂多层支撑和 VLM rendered-scene critic。</p></div>
+          </div>
+        </section>
+
+        <section id="evidence">
+          <div class="section-head">
+            <div><p class="section-number">AUDIT SURFACE</p><h3>证据、源码快照与文件哈希</h3></div>
+            <span class="status info">relative paths only</span>
+          </div>
+          <div class="two-col">
+            <div class="evidence-panel">
+              <h4>核心验收</h4>
+              <ul class="file-list">
+                <li><a href="assets/text2env/acceptance_100_v2/acceptance_report.json">Text2Env 100-seed report</a></li>
+                <li><a href="assets/anchor2env/anchor_acceptance.json">Anchor2Env 3-scene report</a></li>
+                <li><a href="assets/asset_scout/asset_acceptance.json">AssetScout 10-asset report</a></li>
+                <li><a href="assets/crosssim/crosssim_acceptance.json">CrossSim 3-scene report</a></li>
+              </ul>
+            </div>
+            <div class="evidence-panel">
+              <h4>复现入口</h4>
+              <ul class="file-list">
+                <li><a href="source_snapshot/run_anchor2env_acceptance.py">Anchor2Env acceptance runner</a></li>
+                <li><a href="source_snapshot/run_asset_scout_acceptance.py">AssetScout acceptance runner</a></li>
+                <li><a href="source_snapshot/run_crosssim_acceptance.py">CrossSim acceptance runner</a></li>
+                <li><a href="manifest.sha256">完整文件 SHA-256 清单</a></li>
+                <li><a href="report_manifest.json">报告清单</a></li>
+              </ul>
+            </div>
+          </div>
+          <p class="footer"><span class="claim-tag">[KNOWN] [CONFIDENCE: HIGH]</span> 报告只使用包内相对资产；若某个链接缺失，托管验收必须失败，不能把本机绝对路径当作已上传证据。</p>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script>
+    const links = Array.from(document.querySelectorAll("nav a"));
+    const sections = links.map((link) => document.querySelector(link.getAttribute("href"))).filter(Boolean);
+    const observer = new IntersectionObserver((entries) => {
+      const active = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!active) return;
+      links.forEach((link) => link.classList.toggle("active", link.getAttribute("href") === `#${active.target.id}`));
+    }, { rootMargin: "-15% 0px -65% 0px", threshold: [0, 0.25, 0.5] });
+    sections.forEach((section) => observer.observe(section));
+  </script>
+</body>
+</html>

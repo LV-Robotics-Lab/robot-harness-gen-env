@@ -1,0 +1,87 @@
+{
+  "anchor_id": "anchor_43cce1ae2b30",
+  "appearance_constraints": [
+    {
+      "confidence": 0.95,
+      "dominant_color": "green",
+      "instance_id": "green_block"
+    },
+    {
+      "confidence": 0.95,
+      "dominant_color": "yellow",
+      "instance_id": "yellow_zone"
+    }
+  ],
+  "camera_constraints": [],
+  "confidence": 0.9,
+  "evidence": [
+    {
+      "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/anchor_evidence/anchor_43cce1ae2b30/source.png",
+      "sha256": "43cce1ae2b30e0e0961864658ffc28127f2378e4ffdfd3497b8a7b10e1159123",
+      "size_bytes": 1894
+    }
+  ],
+  "media_sha256": "43cce1ae2b30e0e0961864658ffc28127f2378e4ffdfd3497b8a7b10e1159123",
+  "media_type": "image",
+  "media_uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/media/scene_2.png",
+  "motion_constraints": [],
+  "object_constraints": [
+    {
+      "confidence": 0.95,
+      "frames_observed": 1,
+      "instance_id": "green_block",
+      "label": "green region or object",
+      "metric_depth_status": "unknown",
+      "normalized_bbox": [
+        0.6666666666666666,
+        0.578125,
+        0.7916666666666666,
+        0.765625
+      ],
+      "normalized_center": [
+        0.7291666666666666,
+        0.671875
+      ]
+    },
+    {
+      "confidence": 0.95,
+      "frames_observed": 1,
+      "instance_id": "yellow_zone",
+      "label": "yellow region or object",
+      "metric_depth_status": "unknown",
+      "normalized_bbox": [
+        0.15625,
+        0.209375,
+        0.3645833333333333,
+        0.446875
+      ],
+      "normalized_center": [
+        0.2604166666666667,
+        0.328125
+      ]
+    }
+  ],
+  "observations": {
+    "format": "png",
+    "height": 320,
+    "sample_count": 1,
+    "semantic_provider": "color_layout_v1",
+    "width": 480
+  },
+  "spatial_constraints": [
+    {
+      "confidence": 0.7,
+      "object": "green_block",
+      "subject": "yellow_zone",
+      "type": "left_of"
+    }
+  ],
+  "uncertainty": [
+    "color_segmentation_is_not_category_recognition",
+    "metric_depth_unknown",
+    "occlusion_not_resolved",
+    "occluded_geometry_unknown",
+    "absolute_scale_unknown",
+    "depth_ambiguous"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "candidate": {
+    "candidate_id": "bullet_banana",
+    "category": "banana",
+    "download_url": "https://raw.githubusercontent.com/bulletphysics/bullet3/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/banana.obj",
+    "format": "obj",
+    "license": "Zlib",
+    "metadata": {
+      "commit": "63c4d67e337017f9d8b298c900e9aabdb69296e7",
+      "path": "data/banana.obj",
+      "repository": "bulletphysics/bullet3"
+    },
+    "name": "banana.obj",
+    "provider": "github_tree_pinned",
+    "score": 0.0,
+    "source_page": "https://github.com/bulletphysics/bullet3/blob/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/banana.obj"
+  },
+  "detected_format": "obj",
+  "downloaded_at_unix": 1784170301,
+  "media_type": "text/plain",
+  "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/8964f7ba16b193b984db/banana.obj",
+  "schema": "agenticsim.asset_provenance.v1",
+  "sha256": "99847d86fe1c518f4f231084f6f0752eea10258153f7b8f38c8210918bf23c92",
+  "size_bytes": 96699
+}

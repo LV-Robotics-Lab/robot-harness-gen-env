@@ -1,0 +1,879 @@
+{
+  "complete": true,
+  "expected_failure_count": 3,
+  "failure_gallery": [
+    {
+      "case": "two_frame_sampling",
+      "error": "video sample_count must be at least 3",
+      "status": "expected_rejection"
+    },
+    {
+      "case": "corrupt_media",
+      "error": "image decode failed for /Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/failure_gallery/corrupt.png: cannot identify image file '/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/failure_gallery/corrupt.png'",
+      "status": "expected_rejection"
+    },
+    {
+      "case": "low_confidence_projection",
+      "confidence": 0.2,
+      "status": "expected_ignore",
+      "threshold": 0.5
+    }
+  ],
+  "failure_gallery_image": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/failure_gallery/failure_gallery.png",
+  "image_scene_count": 2,
+  "pass_count": 3,
+  "scene_count": 3,
+  "scenes": [
+    {
+      "ablation": {
+        "anchor_digest": "d90317cb1bdc05023f56e7143fc984ab6db93628648c161558cc57b639e47610",
+        "changed_count": 2,
+        "comparisons": [
+          {
+            "anchor_position_m": [
+              0.20000000000000007,
+              0.04374999999999998,
+              0.742
+            ],
+            "delta_m": 0.2077596267324333,
+            "id": "blue_zone",
+            "text_only_position_m": [
+              0.05,
+              -0.1,
+              0.742
+            ]
+          },
+          {
+            "anchor_position_m": [
+              -0.225,
+              -0.12812500000000004,
+              0.766
+            ],
+            "delta_m": 0.14529200124232586,
+            "id": "red_block",
+            "text_only_position_m": [
+              -0.2,
+              0.015,
+              0.766
+            ]
+          }
+        ],
+        "max_delta_m": 0.2077596267324333,
+        "text_only_digest": "e946975ced5ff319df5e780007fb7d792a724cc14fe85d7ba6914303a0abd52e"
+      },
+      "anchor_confidence": 0.9,
+      "compile_results": {
+        "mujoco": {
+          "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/scene.xml",
+          "backend": "mujoco",
+          "blockers": [],
+          "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/compile_manifest.json",
+          "metadata": {
+            "artifact_format": "mjcf",
+            "asset_ids": [
+              "red_block_asset"
+            ],
+            "object_ids": [
+              "red_block"
+            ],
+            "schema": "agenticsim.backend_compile.v1",
+            "task_contract": {
+              "action": {
+                "arm_policy": {
+                  "negative_arm": "left",
+                  "nonnegative_arm": "right",
+                  "object": "red_block",
+                  "save_as": "main_arm",
+                  "type": "by_object_x"
+                },
+                "interface": "robotwin_primitive_plan",
+                "operations": [
+                  "grasp",
+                  "move_by",
+                  "place"
+                ]
+              },
+              "observation": {
+                "cameras": [
+                  "head_camera",
+                  "left_camera",
+                  "right_camera"
+                ],
+                "state": [
+                  "object_pose",
+                  "robot_joint_position",
+                  "contact"
+                ]
+              },
+              "reset": {
+                "constraints": [
+                  "no_initial_object_collision",
+                  "target_reachable_by_robot",
+                  "success_condition_sim_state_observable",
+                  "task_objects_stable",
+                  "protected_regions_defined",
+                  "all_placeholders_bound"
+                ],
+                "object_poses": "from_env_spec",
+                "randomization": {
+                  "cluttered_table": false,
+                  "lighting": false,
+                  "object_pose": true,
+                  "table_height": false,
+                  "texture": false
+                }
+              },
+              "success": [
+                {
+                  "comment": "The red block center should end inside blue_zone.",
+                  "object": "red_block",
+                  "region": "blue_zone",
+                  "tolerance_m": 0.04,
+                  "type": "in_region"
+                },
+                {
+                  "comment": "The robot should release the object.",
+                  "required": true,
+                  "type": "grippers_open"
+                }
+              ],
+              "termination": [
+                {
+                  "steps": 1000,
+                  "type": "timeout"
+                }
+              ]
+            },
+            "xml_validated": true
+          },
+          "package_digest": "d90317cb1bdc05023f56e7143fc984ab6db93628648c161558cc57b639e47610",
+          "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/environment_package.json",
+          "runtime_command": [
+            "python",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/run_mujoco_smoke.py",
+            "--model",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/scene.xml",
+            "--output",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/runtime_evidence.json"
+          ],
+          "status": "compiled",
+          "warnings": []
+        },
+        "sapien": {
+          "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/compiled/sapien/scene_spec.json",
+          "backend": "sapien",
+          "blockers": [],
+          "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/compiled/sapien/compile_manifest.json",
+          "metadata": {
+            "artifact_format": "sapien_scene_json",
+            "asset_ids": [
+              "red_block_asset"
+            ],
+            "object_ids": [
+              "red_block"
+            ],
+            "runner_syntax_validated": true,
+            "schema": "agenticsim.backend_compile.v1",
+            "task_contract": {
+              "action": {
+                "arm_policy": {
+                  "negative_arm": "left",
+                  "nonnegative_arm": "right",
+                  "object": "red_block",
+                  "save_as": "main_arm",
+                  "type": "by_object_x"
+                },
+                "interface": "robotwin_primitive_plan",
+                "operations": [
+                  "grasp",
+                  "move_by",
+                  "place"
+                ]
+              },
+              "observation": {
+                "cameras": [
+                  "head_camera",
+                  "left_camera",
+                  "right_camera"
+                ],
+                "state": [
+                  "object_pose",
+                  "robot_joint_position",
+                  "contact"
+                ]
+              },
+              "reset": {
+                "constraints": [
+                  "no_initial_object_collision",
+                  "target_reachable_by_robot",
+                  "success_condition_sim_state_observable",
+                  "task_objects_stable",
+                  "protected_regions_defined",
+                  "all_placeholders_bound"
+                ],
+                "object_poses": "from_env_spec",
+                "randomization": {
+                  "cluttered_table": false,
+                  "lighting": false,
+                  "object_pose": true,
+                  "table_height": false,
+                  "texture": false
+                }
+              },
+              "success": [
+                {
+                  "comment": "The red block center should end inside blue_zone.",
+                  "object": "red_block",
+                  "region": "blue_zone",
+                  "tolerance_m": 0.04,
+                  "type": "in_region"
+                },
+                {
+                  "comment": "The robot should release the object.",
+                  "required": true,
+                  "type": "grippers_open"
+                }
+              ],
+              "termination": [
+                {
+                  "steps": 1000,
+                  "type": "timeout"
+                }
+              ]
+            }
+          },
+          "package_digest": "d90317cb1bdc05023f56e7143fc984ab6db93628648c161558cc57b639e47610",
+          "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/compiled/sapien/environment_package.json",
+          "runtime_command": [
+            "python",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/compiled/sapien/run_sapien_smoke.py",
+            "--spec",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/compiled/sapien/scene_spec.json",
+            "--output",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/compiled/sapien/runtime_evidence.json"
+          ],
+          "status": "compiled",
+          "warnings": []
+        }
+      },
+      "deterministic_recompile": true,
+      "id": "scene_1_red_blue_image",
+      "instruction": "Move the red block onto the blue zone.",
+      "media_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/media/scene_1.png",
+      "media_sha256": "f87f8e6236c60501857117449bc3da6d489dd4e64e0a33c8cdcd0e55e3e8a09c",
+      "media_type": "image",
+      "package_digest": "d90317cb1bdc05023f56e7143fc984ab6db93628648c161558cc57b639e47610",
+      "resolved_replay_digest_match": true,
+      "runtime": {
+        "body_count": 3,
+        "final_qpos": [
+          -0.225,
+          -0.128125,
+          0.55999,
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "final_time_s": 0.20000000000000004,
+        "geom_count": 3,
+        "initial_qpos": [
+          -0.225,
+          -0.128125,
+          0.766,
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "mujoco_version": "3.3.7",
+        "preview": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/mujoco_runtime.png",
+        "preview_nonblack_fraction": 1.0,
+        "preview_pixel_std": 20.383445739746094,
+        "qpos_finite": true,
+        "status": "pass",
+        "steps": 20
+      },
+      "sample_count": 1,
+      "sample_sha256_unique_count": 1,
+      "side_by_side": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/anchor_vs_mujoco.png",
+      "status": "pass",
+      "uncertainty": [
+        "color_segmentation_is_not_category_recognition",
+        "metric_depth_unknown",
+        "occlusion_not_resolved",
+        "occluded_geometry_unknown",
+        "absolute_scale_unknown",
+        "depth_ambiguous"
+      ]
+    },
+    {
+      "ablation": {
+        "anchor_digest": "a956073bfc9f833f73d8183518a593f0153fa5e13721544e3aeb2eb1d447744c",
+        "changed_count": 2,
+        "comparisons": [
+          {
+            "anchor_position_m": [
+              0.18333333333333335,
+              -0.11953125000000003,
+              0.766
+            ],
+            "delta_m": 0.40625497125697674,
+            "id": "green_block",
+            "text_only_position_m": [
+              -0.2,
+              0.015,
+              0.766
+            ]
+          },
+          {
+            "anchor_position_m": [
+              -0.19166666666666665,
+              0.06953124999999999,
+              0.742
+            ],
+            "delta_m": 0.2952009866249438,
+            "id": "yellow_zone",
+            "text_only_position_m": [
+              0.05,
+              -0.1,
+              0.742
+            ]
+          }
+        ],
+        "max_delta_m": 0.40625497125697674,
+        "text_only_digest": "0fdc9e38dca97ecf770ab9cfbbfb20bace9a654a21410793f81a3dbc02f0f1d2"
+      },
+      "anchor_confidence": 0.9,
+      "compile_results": {
+        "mujoco": {
+          "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/compiled/mujoco/scene.xml",
+          "backend": "mujoco",
+          "blockers": [],
+          "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/compiled/mujoco/compile_manifest.json",
+          "metadata": {
+            "artifact_format": "mjcf",
+            "asset_ids": [
+              "green_block_asset"
+            ],
+            "object_ids": [
+              "green_block"
+            ],
+            "schema": "agenticsim.backend_compile.v1",
+            "task_contract": {
+              "action": {
+                "arm_policy": {
+                  "negative_arm": "left",
+                  "nonnegative_arm": "right",
+                  "object": "green_block",
+                  "save_as": "main_arm",
+                  "type": "by_object_x"
+                },
+                "interface": "robotwin_primitive_plan",
+                "operations": [
+                  "grasp",
+                  "move_by",
+                  "place"
+                ]
+              },
+              "observation": {
+                "cameras": [
+                  "head_camera",
+                  "left_camera",
+                  "right_camera"
+                ],
+                "state": [
+                  "object_pose",
+                  "robot_joint_position",
+                  "contact"
+                ]
+              },
+              "reset": {
+                "constraints": [
+                  "no_initial_object_collision",
+                  "target_reachable_by_robot",
+                  "success_condition_sim_state_observable",
+                  "task_objects_stable",
+                  "protected_regions_defined",
+                  "all_placeholders_bound"
+                ],
+                "object_poses": "from_env_spec",
+                "randomization": {
+                  "cluttered_table": false,
+                  "lighting": false,
+                  "object_pose": true,
+                  "table_height": false,
+                  "texture": false
+                }
+              },
+              "success": [
+                {
+                  "comment": "The green block center should end inside yellow_zone.",
+                  "object": "green_block",
+                  "region": "yellow_zone",
+                  "tolerance_m": 0.04,
+                  "type": "in_region"
+                },
+                {
+                  "comment": "The robot should release the object.",
+                  "required": true,
+                  "type": "grippers_open"
+                }
+              ],
+              "termination": [
+                {
+                  "steps": 1000,
+                  "type": "timeout"
+                }
+              ]
+            },
+            "xml_validated": true
+          },
+          "package_digest": "a956073bfc9f833f73d8183518a593f0153fa5e13721544e3aeb2eb1d447744c",
+          "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/compiled/mujoco/environment_package.json",
+          "runtime_command": [
+            "python",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/compiled/mujoco/run_mujoco_smoke.py",
+            "--model",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/compiled/mujoco/scene.xml",
+            "--output",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/compiled/mujoco/runtime_evidence.json"
+          ],
+          "status": "compiled",
+          "warnings": []
+        },
+        "sapien": {
+          "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/compiled/sapien/scene_spec.json",
+          "backend": "sapien",
+          "blockers": [],
+          "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/compiled/sapien/compile_manifest.json",
+          "metadata": {
+            "artifact_format": "sapien_scene_json",
+            "asset_ids": [
+              "green_block_asset"
+            ],
+            "object_ids": [
+              "green_block"
+            ],
+            "runner_syntax_validated": true,
+            "schema": "agenticsim.backend_compile.v1",
+            "task_contract": {
+              "action": {
+                "arm_policy": {
+                  "negative_arm": "left",
+                  "nonnegative_arm": "right",
+                  "object": "green_block",
+                  "save_as": "main_arm",
+                  "type": "by_object_x"
+                },
+                "interface": "robotwin_primitive_plan",
+                "operations": [
+                  "grasp",
+                  "move_by",
+                  "place"
+                ]
+              },
+              "observation": {
+                "cameras": [
+                  "head_camera",
+                  "left_camera",
+                  "right_camera"
+                ],
+                "state": [
+                  "object_pose",
+                  "robot_joint_position",
+                  "contact"
+                ]
+              },
+              "reset": {
+                "constraints": [
+                  "no_initial_object_collision",
+                  "target_reachable_by_robot",
+                  "success_condition_sim_state_observable",
+                  "task_objects_stable",
+                  "protected_regions_defined",
+                  "all_placeholders_bound"
+                ],
+                "object_poses": "from_env_spec",
+                "randomization": {
+                  "cluttered_table": false,
+                  "lighting": false,
+                  "object_pose": true,
+                  "table_height": false,
+                  "texture": false
+                }
+              },
+              "success": [
+                {
+                  "comment": "The green block center should end inside yellow_zone.",
+                  "object": "green_block",
+                  "region": "yellow_zone",
+                  "tolerance_m": 0.04,
+                  "type": "in_region"
+                },
+                {
+                  "comment": "The robot should release the object.",
+                  "required": true,
+                  "type": "grippers_open"
+                }
+              ],
+              "termination": [
+                {
+                  "steps": 1000,
+                  "type": "timeout"
+                }
+              ]
+            }
+          },
+          "package_digest": "a956073bfc9f833f73d8183518a593f0153fa5e13721544e3aeb2eb1d447744c",
+          "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/compiled/sapien/environment_package.json",
+          "runtime_command": [
+            "python",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/compiled/sapien/run_sapien_smoke.py",
+            "--spec",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/compiled/sapien/scene_spec.json",
+            "--output",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/compiled/sapien/runtime_evidence.json"
+          ],
+          "status": "compiled",
+          "warnings": []
+        }
+      },
+      "deterministic_recompile": true,
+      "id": "scene_2_green_yellow_image",
+      "instruction": "Place the green block in the yellow zone.",
+      "media_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/media/scene_2.png",
+      "media_sha256": "43cce1ae2b30e0e0961864658ffc28127f2378e4ffdfd3497b8a7b10e1159123",
+      "media_type": "image",
+      "package_digest": "a956073bfc9f833f73d8183518a593f0153fa5e13721544e3aeb2eb1d447744c",
+      "resolved_replay_digest_match": true,
+      "runtime": {
+        "body_count": 3,
+        "final_qpos": [
+          0.183333333,
+          -0.11953125,
+          0.55999,
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "final_time_s": 0.20000000000000004,
+        "geom_count": 3,
+        "initial_qpos": [
+          0.183333333,
+          -0.11953125,
+          0.766,
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "mujoco_version": "3.3.7",
+        "preview": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/mujoco_runtime.png",
+        "preview_nonblack_fraction": 1.0,
+        "preview_pixel_std": 22.379446029663086,
+        "qpos_finite": true,
+        "status": "pass",
+        "steps": 20
+      },
+      "sample_count": 1,
+      "sample_sha256_unique_count": 1,
+      "side_by_side": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/anchor_vs_mujoco.png",
+      "status": "pass",
+      "uncertainty": [
+        "color_segmentation_is_not_category_recognition",
+        "metric_depth_unknown",
+        "occlusion_not_resolved",
+        "occluded_geometry_unknown",
+        "absolute_scale_unknown",
+        "depth_ambiguous"
+      ]
+    },
+    {
+      "ablation": {
+        "anchor_digest": "3c254458a36d71a93d383240412fc331e4add9efaec2562fbab104cdeeaaead7",
+        "changed_count": 2,
+        "comparisons": [
+          {
+            "anchor_position_m": [
+              0.23447469162058698,
+              0.05099930880476389,
+              0.742
+            ],
+            "delta_m": 0.23839400812106648,
+            "id": "blue_zone",
+            "text_only_position_m": [
+              0.05,
+              -0.1,
+              0.742
+            ]
+          },
+          {
+            "anchor_position_m": [
+              0.17501344086021509,
+              0.017954889112903216,
+              0.766
+            ],
+            "delta_m": 0.37502508208850194,
+            "id": "red_block",
+            "text_only_position_m": [
+              -0.2,
+              0.015,
+              0.766
+            ]
+          }
+        ],
+        "max_delta_m": 0.37502508208850194,
+        "text_only_digest": "de2b233b677c50710fe02245cde11efbc161638069ebad610298f4f011eecace"
+      },
+      "anchor_confidence": 0.9,
+      "compile_results": {
+        "mujoco": {
+          "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/scene.xml",
+          "backend": "mujoco",
+          "blockers": [],
+          "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/compile_manifest.json",
+          "metadata": {
+            "artifact_format": "mjcf",
+            "asset_ids": [
+              "red_block_asset"
+            ],
+            "object_ids": [
+              "red_block"
+            ],
+            "schema": "agenticsim.backend_compile.v1",
+            "task_contract": {
+              "action": {
+                "arm_policy": {
+                  "negative_arm": "left",
+                  "nonnegative_arm": "right",
+                  "object": "red_block",
+                  "save_as": "main_arm",
+                  "type": "by_object_x"
+                },
+                "interface": "robotwin_primitive_plan",
+                "operations": [
+                  "grasp",
+                  "move_by",
+                  "place"
+                ]
+              },
+              "observation": {
+                "cameras": [
+                  "head_camera",
+                  "left_camera",
+                  "right_camera"
+                ],
+                "state": [
+                  "object_pose",
+                  "robot_joint_position",
+                  "contact"
+                ]
+              },
+              "reset": {
+                "constraints": [
+                  "no_initial_object_collision",
+                  "target_reachable_by_robot",
+                  "success_condition_sim_state_observable",
+                  "task_objects_stable",
+                  "protected_regions_defined",
+                  "all_placeholders_bound"
+                ],
+                "object_poses": "from_env_spec",
+                "randomization": {
+                  "cluttered_table": false,
+                  "lighting": false,
+                  "object_pose": true,
+                  "table_height": false,
+                  "texture": false
+                }
+              },
+              "success": [
+                {
+                  "comment": "The red block center should end inside blue_zone.",
+                  "object": "red_block",
+                  "region": "blue_zone",
+                  "tolerance_m": 0.04,
+                  "type": "in_region"
+                },
+                {
+                  "comment": "The robot should release the object.",
+                  "required": true,
+                  "type": "grippers_open"
+                }
+              ],
+              "termination": [
+                {
+                  "steps": 1000,
+                  "type": "timeout"
+                }
+              ]
+            },
+            "xml_validated": true
+          },
+          "package_digest": "3c254458a36d71a93d383240412fc331e4add9efaec2562fbab104cdeeaaead7",
+          "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/environment_package.json",
+          "runtime_command": [
+            "python",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/run_mujoco_smoke.py",
+            "--model",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/scene.xml",
+            "--output",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/mujoco/runtime_evidence.json"
+          ],
+          "status": "compiled",
+          "warnings": []
+        },
+        "sapien": {
+          "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/sapien/scene_spec.json",
+          "backend": "sapien",
+          "blockers": [],
+          "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/sapien/compile_manifest.json",
+          "metadata": {
+            "artifact_format": "sapien_scene_json",
+            "asset_ids": [
+              "red_block_asset"
+            ],
+            "object_ids": [
+              "red_block"
+            ],
+            "runner_syntax_validated": true,
+            "schema": "agenticsim.backend_compile.v1",
+            "task_contract": {
+              "action": {
+                "arm_policy": {
+                  "negative_arm": "left",
+                  "nonnegative_arm": "right",
+                  "object": "red_block",
+                  "save_as": "main_arm",
+                  "type": "by_object_x"
+                },
+                "interface": "robotwin_primitive_plan",
+                "operations": [
+                  "grasp",
+                  "move_by",
+                  "place"
+                ]
+              },
+              "observation": {
+                "cameras": [
+                  "head_camera",
+                  "left_camera",
+                  "right_camera"
+                ],
+                "state": [
+                  "object_pose",
+                  "robot_joint_position",
+                  "contact"
+                ]
+              },
+              "reset": {
+                "constraints": [
+                  "no_initial_object_collision",
+                  "target_reachable_by_robot",
+                  "success_condition_sim_state_observable",
+                  "task_objects_stable",
+                  "protected_regions_defined",
+                  "all_placeholders_bound"
+                ],
+                "object_poses": "from_env_spec",
+                "randomization": {
+                  "cluttered_table": false,
+                  "lighting": false,
+                  "object_pose": true,
+                  "table_height": false,
+                  "texture": false
+                }
+              },
+              "success": [
+                {
+                  "comment": "The red block center should end inside blue_zone.",
+                  "object": "red_block",
+                  "region": "blue_zone",
+                  "tolerance_m": 0.04,
+                  "type": "in_region"
+                },
+                {
+                  "comment": "The robot should release the object.",
+                  "required": true,
+                  "type": "grippers_open"
+                }
+              ],
+              "termination": [
+                {
+                  "steps": 1000,
+                  "type": "timeout"
+                }
+              ]
+            }
+          },
+          "package_digest": "3c254458a36d71a93d383240412fc331e4add9efaec2562fbab104cdeeaaead7",
+          "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/sapien/environment_package.json",
+          "runtime_command": [
+            "python",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/sapien/run_sapien_smoke.py",
+            "--spec",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/sapien/scene_spec.json",
+            "--output",
+            "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/compiled/sapien/runtime_evidence.json"
+          ],
+          "status": "compiled",
+          "warnings": []
+        }
+      },
+      "deterministic_recompile": true,
+      "id": "scene_3_red_blue_video",
+      "instruction": "Move the red block to the blue zone.",
+      "media_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/media/scene_3.mp4",
+      "media_sha256": "a5e04e412ad4d67a40420f25066081a90dcf6fd4bdbdaa6a4871ec4c7897123c",
+      "media_type": "video",
+      "package_digest": "3c254458a36d71a93d383240412fc331e4add9efaec2562fbab104cdeeaaead7",
+      "resolved_replay_digest_match": true,
+      "runtime": {
+        "body_count": 3,
+        "final_qpos": [
+          0.175013441,
+          0.0179548891,
+          0.55999,
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "final_time_s": 0.20000000000000004,
+        "geom_count": 3,
+        "initial_qpos": [
+          0.175013441,
+          0.0179548891,
+          0.766,
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "mujoco_version": "3.3.7",
+        "preview": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/mujoco_runtime.png",
+        "preview_nonblack_fraction": 1.0,
+        "preview_pixel_std": 18.930099487304688,
+        "qpos_finite": true,
+        "status": "pass",
+        "steps": 20
+      },
+      "sample_count": 8,
+      "sample_sha256_unique_count": 8,
+      "side_by_side": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/anchor_vs_mujoco.png",
+      "status": "pass",
+      "uncertainty": [
+        "color_segmentation_is_not_category_recognition",
+        "metric_depth_unknown",
+        "occlusion_not_resolved",
+        "absolute_scale_unknown",
+        "unobserved_geometry_unknown"
+      ]
+    }
+  ],
+  "schema": "agenticsim.anchor2env_acceptance.v1",
+  "status": "pass",
+  "video_scene_count": 1
+}

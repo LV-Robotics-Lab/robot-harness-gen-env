@@ -1,0 +1,10 @@
+<mujoco model="asset">
+  <asset>
+    <mesh name="bullet_duck_visual" file="bullet_duck.normalized.obj"/>
+    <mesh name="bullet_duck_collision" file="bullet_duck.collision_box.obj"/>
+  </asset>
+  <worldbody><body name="bullet_duck">
+    <geom type="mesh" mesh="bullet_duck_visual" contype="0" conaffinity="0" rgba="0.65 0.68 0.72 1"/>
+    <geom type="mesh" mesh="bullet_duck_collision" density="1000"/>
+  </body></worldbody>
+</mujoco>

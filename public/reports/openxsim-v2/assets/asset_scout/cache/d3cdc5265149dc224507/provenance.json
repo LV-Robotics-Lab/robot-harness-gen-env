@@ -1,0 +1,25 @@
+{
+  "candidate": {
+    "candidate_id": "assimp_wuson",
+    "category": "character_mesh",
+    "download_url": "https://raw.githubusercontent.com/assimp/assimp/a939f2479513a4d92060f2348909886b67d548aa/test/models/OBJ/WusonOBJ.obj",
+    "format": "obj",
+    "license": "BSD-3-Clause",
+    "metadata": {
+      "commit": "a939f2479513a4d92060f2348909886b67d548aa",
+      "path": "test/models/OBJ/WusonOBJ.obj",
+      "repository": "assimp/assimp"
+    },
+    "name": "WusonOBJ.obj",
+    "provider": "github_tree_pinned",
+    "score": 0.0,
+    "source_page": "https://github.com/assimp/assimp/blob/a939f2479513a4d92060f2348909886b67d548aa/test/models/OBJ/WusonOBJ.obj"
+  },
+  "detected_format": "obj",
+  "downloaded_at_unix": 1784170319,
+  "media_type": "text/plain",
+  "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/d3cdc5265149dc224507/WusonOBJ.obj",
+  "schema": "agenticsim.asset_provenance.v1",
+  "sha256": "092295203dc1ddb7be09aa0ebd7b2708d7553300698e44a48bc6ac65c6bd86cf",
+  "size_bytes": 258268
+}

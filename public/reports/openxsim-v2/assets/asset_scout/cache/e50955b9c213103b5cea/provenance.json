@@ -1,0 +1,25 @@
+{
+  "candidate": {
+    "candidate_id": "assimp_spider",
+    "category": "spider_mesh",
+    "download_url": "https://raw.githubusercontent.com/assimp/assimp/a939f2479513a4d92060f2348909886b67d548aa/test/models/OBJ/spider.obj",
+    "format": "obj",
+    "license": "BSD-3-Clause",
+    "metadata": {
+      "commit": "a939f2479513a4d92060f2348909886b67d548aa",
+      "path": "test/models/OBJ/spider.obj",
+      "repository": "assimp/assimp"
+    },
+    "name": "spider.obj",
+    "provider": "github_tree_pinned",
+    "score": 0.0,
+    "source_page": "https://github.com/assimp/assimp/blob/a939f2479513a4d92060f2348909886b67d548aa/test/models/OBJ/spider.obj"
+  },
+  "detected_format": "obj",
+  "downloaded_at_unix": 1784170312,
+  "media_type": "text/plain",
+  "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/e50955b9c213103b5cea/spider.obj",
+  "schema": "agenticsim.asset_provenance.v1",
+  "sha256": "a176f0223a6e74e90185c067ed45f928257e775cad7e17687ed4612a3343c206",
+  "size_bytes": 105735
+}

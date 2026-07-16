@@ -1,0 +1,244 @@
+{
+  "anchors": [],
+  "assets": [
+    {
+      "articulation": {
+        "joints": [
+          {
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "child": "cabinet__door",
+            "damping": 0.1,
+            "id": "door_hinge",
+            "parent": "cabinet",
+            "range": [
+              -1.2,
+              0.0
+            ],
+            "type": "revolute"
+          }
+        ],
+        "links": [
+          {
+            "geometry": {
+              "color_rgb": [
+                0.42,
+                0.48,
+                0.55
+              ],
+              "half_size_m": [
+                0.18,
+                0.08,
+                0.2
+              ],
+              "type": "box"
+            },
+            "geometry_origin": {
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "position": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "id": "cabinet",
+            "mass_kg": 0.2,
+            "pose": {
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "position": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "geometry": {
+              "color_rgb": [
+                0.82,
+                0.24,
+                0.18
+              ],
+              "half_size_m": [
+                0.18,
+                0.015,
+                0.2
+              ],
+              "type": "box"
+            },
+            "geometry_origin": {
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "position": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "id": "cabinet__door",
+            "mass_kg": 0.2,
+            "pose": {
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "position": [
+                0.0,
+                -0.095,
+                0.0
+              ]
+            }
+          }
+        ],
+        "movable_joint_count": 1,
+        "root_link": "cabinet",
+        "schema": "agenticsim.articulation_tree.v1",
+        "source": "native_mjcf_body_tree"
+      },
+      "asset_id": "cabinet_asset",
+      "category": "articulated_object",
+      "physical": {},
+      "representations": [
+        {
+          "backend": "mujoco",
+          "format": "mjcf",
+          "metadata": {},
+          "role": "source",
+          "sha256": "",
+          "size_bytes": 0,
+          "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/scene.xml"
+        }
+      ],
+      "source": {
+        "kind": "mjcf_articulation",
+        "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/scene.xml",
+        "root_body": "cabinet"
+      },
+      "tags": [
+        "articulated",
+        "native_mjcf"
+      ]
+    }
+  ],
+  "env": {
+    "gravity_mps2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "metadata": {
+      "articulated_object_count": 1,
+      "camera_count": 0,
+      "mjcf_angle": "radian"
+    },
+    "name": "crosssim_articulated_hinge",
+    "objects": [
+      {
+        "asset_id": "cabinet_asset",
+        "instance_id": "cabinet",
+        "metadata": {
+          "articulation_preserved": true,
+          "source_body": "cabinet"
+        },
+        "pose": {
+          "orientation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            0.0,
+            0.2
+          ]
+        },
+        "randomization": {},
+        "role": "object",
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "static": true
+      }
+    ],
+    "randomization": {},
+    "regions": [],
+    "robots": [],
+    "sensors": [],
+    "units": "m",
+    "up_axis": "Z",
+    "workspace_bounds_m": [
+      -1.0,
+      -1.0,
+      0.0,
+      1.0,
+      1.0,
+      2.0
+    ]
+  },
+  "metadata": {},
+  "package_id": "crosssim_articulated_hinge",
+  "schema_version": "agenticsim.environment_package.v1",
+  "source": {
+    "backend": "mujoco",
+    "limitations": [],
+    "mode": "existing_environment_import",
+    "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/scene.xml"
+  },
+  "target_backends": [
+    "mujoco"
+  ],
+  "task": {
+    "action": {
+      "interface": "zero_action",
+      "operations": []
+    },
+    "instruction": "Imported AgenticSim MJCF task",
+    "intent": "imported_task",
+    "metadata": {
+      "task_contract_embedded": true
+    },
+    "observation": {
+      "state": [
+        "object_pose",
+        "contact"
+      ]
+    },
+    "plan": [],
+    "reset": {
+      "object_poses": "from_env_spec"
+    },
+    "success": [
+      {
+        "type": "settled"
+      }
+    ],
+    "termination": [
+      {
+        "steps": 120,
+        "type": "timeout"
+      }
+    ]
+  }
+}

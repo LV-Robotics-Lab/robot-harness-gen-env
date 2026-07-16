@@ -1,0 +1,140 @@
+{
+  "anchors": [],
+  "assets": [
+    {
+      "articulation": {},
+      "asset_id": "rigid_box_asset",
+      "category": "box",
+      "physical": {},
+      "representations": [
+        {
+          "backend": "portable",
+          "format": "primitive_box",
+          "metadata": {
+            "color_rgb": [
+              0.9,
+              0.15,
+              0.12
+            ],
+            "half_size_m": [
+              0.05,
+              0.05,
+              0.05
+            ]
+          },
+          "role": "visual_and_collision",
+          "sha256": "",
+          "size_bytes": 0,
+          "uri": "primitive://box"
+        }
+      ],
+      "source": {
+        "geom": "rigid_box_geom",
+        "kind": "mjcf",
+        "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/source/mujoco/scene.xml"
+      },
+      "tags": []
+    }
+  ],
+  "env": {
+    "gravity_mps2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "metadata": {
+      "articulated_object_count": 0,
+      "camera_count": 0,
+      "mjcf_angle": "radian"
+    },
+    "name": "crosssim_rigid_drop",
+    "objects": [
+      {
+        "asset_id": "rigid_box_asset",
+        "instance_id": "rigid_box",
+        "metadata": {
+          "source_body": "rigid_box"
+        },
+        "pose": {
+          "orientation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            0.0,
+            0.35
+          ]
+        },
+        "randomization": {},
+        "role": "object",
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "static": false
+      }
+    ],
+    "randomization": {},
+    "regions": [],
+    "robots": [],
+    "sensors": [],
+    "units": "m",
+    "up_axis": "Z",
+    "workspace_bounds_m": [
+      -1.0,
+      -1.0,
+      0.0,
+      1.0,
+      1.0,
+      2.0
+    ]
+  },
+  "metadata": {},
+  "package_id": "crosssim_rigid_drop",
+  "schema_version": "agenticsim.environment_package.v1",
+  "source": {
+    "backend": "mujoco",
+    "limitations": [],
+    "mode": "existing_environment_import",
+    "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/source/mujoco/scene.xml"
+  },
+  "target_backends": [
+    "mujoco"
+  ],
+  "task": {
+    "action": {
+      "interface": "zero_action",
+      "operations": []
+    },
+    "instruction": "Imported AgenticSim MJCF task",
+    "intent": "imported_task",
+    "metadata": {
+      "task_contract_embedded": true
+    },
+    "observation": {
+      "state": [
+        "object_pose",
+        "contact"
+      ]
+    },
+    "plan": [],
+    "reset": {
+      "object_poses": "from_env_spec"
+    },
+    "success": [
+      {
+        "type": "settled"
+      }
+    ],
+    "termination": [
+      {
+        "steps": 120,
+        "type": "timeout"
+      }
+    ]
+  }
+}

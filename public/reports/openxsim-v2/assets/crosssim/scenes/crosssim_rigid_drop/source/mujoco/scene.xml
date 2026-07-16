@@ -1,0 +1,19 @@
+<mujoco model="crosssim_rigid_drop">
+  <compiler angle="radian" coordinate="local"/>
+  <option gravity="0.0 0.0 -9.81" timestep="0.01"/>
+  <visual><headlight ambient="0.45 0.45 0.45" diffuse="0.8 0.8 0.8" specular="0.15 0.15 0.15"/></visual>
+  <asset>
+  </asset>
+  <custom>
+    <text name="agenticsim_task_contract" data="{&quot;action&quot;:{&quot;interface&quot;:&quot;zero_action&quot;,&quot;operations&quot;:[]},&quot;observation&quot;:{&quot;state&quot;:[&quot;object_pose&quot;,&quot;contact&quot;]},&quot;reset&quot;:{&quot;object_poses&quot;:&quot;from_env_spec&quot;},&quot;success&quot;:[{&quot;type&quot;:&quot;settled&quot;}],&quot;termination&quot;:[{&quot;steps&quot;:120,&quot;type&quot;:&quot;timeout&quot;}]}"/>
+    <text name="agenticsim_object_ids" data="[&quot;rigid_box&quot;]"/>
+    <text name="agenticsim_sensors" data="[]"/>
+  </custom>
+  <contact>
+  </contact>
+  <worldbody>
+    <geom name="ground" type="plane" size="3 3 0.1" rgba="0.3 0.3 0.3 1"/>
+    <light name="key_light" pos="0 -1 2" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <body name="rigid_box" pos="0 0 0.35" quat="1 0 0 0"><freejoint name="rigid_box_free"/><geom name="rigid_box_geom" type="box" size="0.05 0.05 0.05" rgba="0.9 0.15 0.12 1"/></body>
+  </worldbody>
+</mujoco>

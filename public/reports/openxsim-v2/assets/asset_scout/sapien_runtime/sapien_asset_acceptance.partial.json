@@ -1,0 +1,255 @@
+{
+  "assets": [
+    {
+      "asset_id": "mujoco_mug",
+      "category": "mug",
+      "collision_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/mujoco_mug/mujoco_mug.collision_box.obj",
+      "final_position_m": [
+        -8.143507329805288e-06,
+        -5.414692623162409e-06,
+        0.3627058267593384
+      ],
+      "ground_contact_last_20_steps": true,
+      "initial_position_m": [
+        0.0,
+        0.0,
+        0.4427056908607483
+      ],
+      "positions_finite": true,
+      "preview_nonempty_threshold": 3.0,
+      "preview_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/sapien_runtime/mujoco_mug/sapien_import.png",
+      "preview_pixel_std": 29.485049070099052,
+      "status": "pass",
+      "steps": 120,
+      "tail_max_step_motion_m": 0.0,
+      "tail_motion_threshold_m": 0.005,
+      "visual_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/mujoco_mug/mujoco_mug.normalized.obj"
+    },
+    {
+      "asset_id": "mujoco_card",
+      "category": "card",
+      "collision_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/mujoco_card/mujoco_card.collision_box.obj",
+      "final_position_m": [
+        -1.8033556159480213e-07,
+        -3.609212910760107e-07,
+        0.0013297933619469404
+      ],
+      "ground_contact_last_20_steps": true,
+      "initial_position_m": [
+        0.0,
+        0.0,
+        0.08132978528738022
+      ],
+      "positions_finite": true,
+      "preview_nonempty_threshold": 3.0,
+      "preview_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/sapien_runtime/mujoco_card/sapien_import.png",
+      "preview_pixel_std": 28.945189700291255,
+      "status": "pass",
+      "steps": 120,
+      "tail_max_step_motion_m": 0.0,
+      "tail_motion_threshold_m": 0.005,
+      "visual_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/mujoco_card/mujoco_card.normalized.obj"
+    },
+    {
+      "asset_id": "mujoco_bunny",
+      "category": "bunny",
+      "collision_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/mujoco_bunny/mujoco_bunny.collision_box.obj",
+      "final_position_m": [
+        -1.2794646863767412e-05,
+        -6.775434940209379e-06,
+        0.38796836137771606
+      ],
+      "ground_contact_last_20_steps": true,
+      "initial_position_m": [
+        0.0,
+        0.0,
+        0.46796858310699463
+      ],
+      "positions_finite": true,
+      "preview_nonempty_threshold": 3.0,
+      "preview_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/sapien_runtime/mujoco_bunny/sapien_import.png",
+      "preview_pixel_std": 29.143225353089402,
+      "status": "pass",
+      "steps": 120,
+      "tail_max_step_motion_m": 0.0,
+      "tail_motion_threshold_m": 0.005,
+      "visual_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/mujoco_bunny/mujoco_bunny.normalized.obj"
+    },
+    {
+      "asset_id": "bullet_banana",
+      "category": "banana",
+      "collision_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/bullet_banana/bullet_banana.collision_box.obj",
+      "final_position_m": [
+        -2.1023097360739484e-06,
+        -6.925704383320408e-06,
+        0.08650806546211243
+      ],
+      "ground_contact_last_20_steps": true,
+      "initial_position_m": [
+        0.0,
+        0.0,
+        0.16650813817977905
+      ],
+      "positions_finite": true,
+      "preview_nonempty_threshold": 3.0,
+      "preview_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/sapien_runtime/bullet_banana/sapien_import.png",
+      "preview_pixel_std": 28.99845667523008,
+      "status": "pass",
+      "steps": 120,
+      "tail_max_step_motion_m": 0.0,
+      "tail_motion_threshold_m": 0.005,
+      "visual_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/bullet_banana/bullet_banana.normalized.obj"
+    },
+    {
+      "asset_id": "bullet_cup",
+      "category": "cup",
+      "collision_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/bullet_cup/bullet_cup.collision_box.obj",
+      "final_position_m": [
+        -8.869461112226418e-07,
+        -6.159215445222799e-06,
+        0.49999988079071045
+      ],
+      "ground_contact_last_20_steps": true,
+      "initial_position_m": [
+        0.0,
+        0.0,
+        0.5799999833106995
+      ],
+      "positions_finite": true,
+      "preview_nonempty_threshold": 3.0,
+      "preview_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/sapien_runtime/bullet_cup/sapien_import.png",
+      "preview_pixel_std": 30.362825099429422,
+      "status": "pass",
+      "steps": 120,
+      "tail_max_step_motion_m": 0.0,
+      "tail_motion_threshold_m": 0.005,
+      "visual_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/bullet_cup/bullet_cup.normalized.obj"
+    },
+    {
+      "asset_id": "bullet_pan",
+      "category": "pan",
+      "collision_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/bullet_pan/bullet_pan.collision_box.obj",
+      "final_position_m": [
+        -9.95070604403736e-06,
+        -8.051714758039452e-06,
+        0.14150935411453247
+      ],
+      "ground_contact_last_20_steps": true,
+      "initial_position_m": [
+        0.0,
+        0.0,
+        0.2215094268321991
+      ],
+      "positions_finite": true,
+      "preview_nonempty_threshold": 3.0,
+      "preview_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/sapien_runtime/bullet_pan/sapien_import.png",
+      "preview_pixel_std": 29.996961572494584,
+      "status": "pass",
+      "steps": 120,
+      "tail_max_step_motion_m": 0.0,
+      "tail_motion_threshold_m": 0.005,
+      "visual_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/bullet_pan/bullet_pan.normalized.obj"
+    },
+    {
+      "asset_id": "bullet_plate",
+      "category": "plate",
+      "collision_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/bullet_plate/bullet_plate.collision_box.obj",
+      "final_position_m": [
+        -1.0621031833579764e-05,
+        -8.34111233416479e-06,
+        0.1530611515045166
+      ],
+      "ground_contact_last_20_steps": true,
+      "initial_position_m": [
+        0.0,
+        0.0,
+        0.23306122422218323
+      ],
+      "positions_finite": true,
+      "preview_nonempty_threshold": 3.0,
+      "preview_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/sapien_runtime/bullet_plate/sapien_import.png",
+      "preview_pixel_std": 29.390705221873546,
+      "status": "pass",
+      "steps": 120,
+      "tail_max_step_motion_m": 0.0,
+      "tail_motion_threshold_m": 0.005,
+      "visual_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/bullet_plate/bullet_plate.normalized.obj"
+    },
+    {
+      "asset_id": "bullet_duck",
+      "category": "duck",
+      "collision_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/bullet_duck/bullet_duck.collision_box.obj",
+      "final_position_m": [
+        -1.3705493984161876e-05,
+        -7.759171239740681e-06,
+        0.34894371032714844
+      ],
+      "ground_contact_last_20_steps": true,
+      "initial_position_m": [
+        0.0,
+        0.0,
+        0.4289439022541046
+      ],
+      "positions_finite": true,
+      "preview_nonempty_threshold": 3.0,
+      "preview_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/sapien_runtime/bullet_duck/sapien_import.png",
+      "preview_pixel_std": 29.41418722766937,
+      "status": "pass",
+      "steps": 120,
+      "tail_max_step_motion_m": 0.0,
+      "tail_motion_threshold_m": 0.005,
+      "visual_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/bullet_duck/bullet_duck.normalized.obj"
+    },
+    {
+      "asset_id": "assimp_spider",
+      "category": "spider_mesh",
+      "collision_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/assimp_spider/assimp_spider.collision_box.obj",
+      "final_position_m": [
+        -8.9628611021908e-06,
+        -3.4752021747408435e-05,
+        0.4999995827674866
+      ],
+      "ground_contact_last_20_steps": true,
+      "initial_position_m": [
+        0.0,
+        0.0,
+        0.5799999833106995
+      ],
+      "positions_finite": true,
+      "preview_nonempty_threshold": 3.0,
+      "preview_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/sapien_runtime/assimp_spider/sapien_import.png",
+      "preview_pixel_std": 28.782680569452328,
+      "status": "pass",
+      "steps": 120,
+      "tail_max_step_motion_m": 0.0,
+      "tail_motion_threshold_m": 0.005,
+      "visual_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/assimp_spider/assimp_spider.normalized.obj"
+    },
+    {
+      "asset_id": "assimp_wuson",
+      "category": "character_mesh",
+      "collision_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/assimp_wuson/assimp_wuson.collision_box.obj",
+      "final_position_m": [
+        1.1466718206065707e-05,
+        -3.12278643832542e-05,
+        0.4999994933605194
+      ],
+      "ground_contact_last_20_steps": true,
+      "initial_position_m": [
+        0.0,
+        0.0,
+        0.5799999833106995
+      ],
+      "positions_finite": true,
+      "preview_nonempty_threshold": 3.0,
+      "preview_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/sapien_runtime/assimp_wuson/sapien_import.png",
+      "preview_pixel_std": 28.909046870521035,
+      "status": "pass",
+      "steps": 120,
+      "tail_max_step_motion_m": 0.0,
+      "tail_motion_threshold_m": 0.005,
+      "visual_path": "/home/jingxiang/workspace/openxsim-final-acceptance/asset_scout/compiled/assimp_wuson/assimp_wuson.normalized.obj"
+    }
+  ],
+  "complete": false
+}

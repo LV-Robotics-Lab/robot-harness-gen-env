@@ -1,0 +1,192 @@
+{
+  "schema_version": "robotwin.scene_validation.v1",
+  "scene_id": "place_a_red_can_to_the_left_of_b21824b743",
+  "resolved_scene_sha256": "57369477484b3c8e9e9876027f9e74cdac1cdfde6fecbda385861b62c090f7c9",
+  "status": "incomplete",
+  "fail_count": 0,
+  "not_run_count": 1,
+  "checks": [
+    {
+      "name": "workspace_bounds:basket_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.07659111557633266,
+          0.14231372757633268,
+          -0.05236836450643449,
+          0.21736027650643447
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:basket_1",
+      "status": "pass",
+      "evidence": {
+        "z_m": 0.741,
+        "table_height_m": 0.741
+      }
+    },
+    {
+      "name": "real_asset_files:basket_1",
+      "status": "pass",
+      "evidence": {
+        "paths": [
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/110_basket/collision/base1.glb",
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/110_basket/model_data1.json",
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/110_basket/visual/base1.glb"
+        ],
+        "exists": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "workspace_bounds:can_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.24178422592695464,
+          -0.16632708807304536,
+          0.07481579707304535,
+          0.15027293492695465
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:can_1",
+      "status": "pass",
+      "evidence": {
+        "z_m": 0.741,
+        "table_height_m": 0.741
+      }
+    },
+    {
+      "name": "real_asset_files:can_1",
+      "status": "pass",
+      "evidence": {
+        "paths": [
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/071_can/collision/base0.glb",
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/071_can/model_data0.json",
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/071_can/visual/base0.glb"
+        ],
+        "exists": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "no_overlap:basket_1:can_1",
+      "status": "pass",
+      "evidence": {
+        "first_aabb": [
+          -0.07659111557633266,
+          0.14231372757633268,
+          -0.05236836450643449,
+          0.21736027650643447
+        ],
+        "second_aabb": [
+          -0.24178422592695464,
+          -0.16632708807304536,
+          0.07481579707304535,
+          0.15027293492695465
+        ]
+      }
+    },
+    {
+      "name": "relation:on_table:can_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "relation:on_table:basket_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "relation:left_of:can_1:basket_1",
+      "status": "pass",
+      "evidence": {
+        "center_distance_m": 0.23881489547486662,
+        "source_aabb": [
+          -0.24178422592695464,
+          -0.16632708807304536,
+          0.07481579707304535,
+          0.15027293492695465
+        ],
+        "target_aabb": [
+          -0.07659111557633266,
+          0.14231372757633268,
+          -0.05236836450643449,
+          0.21736027650643447
+        ]
+      }
+    },
+    {
+      "name": "resolved_only_roundtrip",
+      "status": "pass",
+      "evidence": {
+        "before": "57369477484b3c8e9e9876027f9e74cdac1cdfde6fecbda385861b62c090f7c9",
+        "after": "57369477484b3c8e9e9876027f9e74cdac1cdfde6fecbda385861b62c090f7c9"
+      }
+    },
+    {
+      "name": "package_manifest",
+      "status": "pass",
+      "evidence": {
+        "schema_version": "robotwin.generated_scene_package_verification.v1",
+        "status": "pass",
+        "checks": [
+          {
+            "path": "request.txt",
+            "exists": true,
+            "expected_sha256": "5000b39800d92bd1dded4ec2ffccad885e845327f0a165a5aab61abf7e81be52",
+            "actual_sha256": "5000b39800d92bd1dded4ec2ffccad885e845327f0a165a5aab61abf7e81be52",
+            "pass": true
+          },
+          {
+            "path": "scene_spec.json",
+            "exists": true,
+            "expected_sha256": "d6269243006fab3fc0ea7115123863c5798aa846fa9b7ee3f70d94e5dce07ce8",
+            "actual_sha256": "d6269243006fab3fc0ea7115123863c5798aa846fa9b7ee3f70d94e5dce07ce8",
+            "pass": true
+          },
+          {
+            "path": "resolved_scene.json",
+            "exists": true,
+            "expected_sha256": "e0a5cf107d36c136e47e629a3615a559287cd0e12c3e9ee90eb7309cac99bacd",
+            "actual_sha256": "e0a5cf107d36c136e47e629a3615a559287cd0e12c3e9ee90eb7309cac99bacd",
+            "pass": true
+          },
+          {
+            "path": "generated_scene.py",
+            "exists": true,
+            "expected_sha256": "6692668b1e3f3dcdf7ef44cbfc29abbdc3993e3b07e83fff3533bb62a40a7ab2",
+            "actual_sha256": "6692668b1e3f3dcdf7ef44cbfc29abbdc3993e3b07e83fff3533bb62a40a7ab2",
+            "pass": true
+          },
+          {
+            "path": "resolved_scene.json#canonical_digest",
+            "expected_sha256": "57369477484b3c8e9e9876027f9e74cdac1cdfde6fecbda385861b62c090f7c9",
+            "actual_sha256": "57369477484b3c8e9e9876027f9e74cdac1cdfde6fecbda385861b62c090f7c9",
+            "pass": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "runtime_evidence",
+      "status": "not_run",
+      "evidence": {
+        "required": false
+      }
+    }
+  ]
+}

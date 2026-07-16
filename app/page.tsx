@@ -73,31 +73,31 @@ const reports = [
   },
   {
     number: "05",
-    title: "Open-X-Sim four workflows V1",
+    title: "Open-X-Sim four workflows",
     subtitle: "Text, media anchors, autonomous assets, and simulator transfer",
-    status: "V1 PASS · TODO ACTIVE",
-    statusClass: "status-active",
-    metric: "613 + 609",
-    metricLabel: "continuous RoboTwin evidence frames",
+    status: "DONE · 4/4 GATES",
+    statusClass: "status-pass",
+    metric: "100 · 3 · 10 · 3",
+    metricLabel: "text seeds · anchor scenes · assets · cross-sim scenes",
     summary:
-      "Implements one typed environment package across pure Text2Env, image/video Anchor2Env, autonomous asset discovery and conversion, and SAPIEN-to-MuJoCo/Isaac conformance.",
+      "Implements and executes one typed environment package across pure Text2Env, image/video Anchor2Env, autonomous asset discovery and conversion, and MuJoCo-to-SAPIEN conformance.",
     boundary:
-      "The expanded dashboard acceptance remains active: three anchor scenes, three sources and ten assets, articulated transfer, camera-sensitive transfer, and L4 policy statistics are not yet complete.",
-    href: "/reports/openxsim-v1/index.html",
-    manifest: "/reports/openxsim-v1/hosted_subset_manifest.json",
+      "Cross-simulator policy behavior L4 and MetaSim runtime parity are not claimed. Generic SAPIEN anchor smoke tests prove scene load and stepping, not RoboTwin action binding.",
+    href: "/reports/openxsim-v2/index.html",
+    manifest: "/reports/openxsim-v2/hosted_subset_manifest.json",
     image:
-      "/reports/openxsim-v1/evidence/place_cola_can_in_basket/anchor2env/anchor_evidence/anchor_28622067422a/frame_004.png",
-    imageAlt: "RoboTwin video anchor sample during the cola-can-to-basket rollout",
+      "/reports/openxsim-v2/assets/crosssim/remote_targets/crosssim_camera_alignment/compiled/sapien/inspection_camera_rgb.png",
+    imageAlt: "SAPIEN cross-simulator camera-alignment target render",
   },
 ];
 
 const metrics = [
   ["4/4", "held-out placement"],
-  ["4/4", "declared randomization"],
-  ["3/3", "cross-task policy"],
   ["0/3 → 3/3", "memory intervention"],
-  ["24/24", "unique Isaac frames"],
-  ["42 + 36", "local + RTX 5090 workflow tests"],
+  ["100/100", "Text2Env runtime seeds"],
+  ["3/3", "image and video anchors"],
+  ["10 + 10", "asset MuJoCo + SAPIEN runs"],
+  ["3/3", "cross-simulator L3 scenes"],
 ];
 
 const commands = [
@@ -161,7 +161,7 @@ export default function Home() {
         </div>
         <div className="hero-proof">
           <span className="proof-dot" aria-hidden="true" />
-          <span>[COMPUTED] DECLARED V1 GATES PASS · EXPANDED TODOS ACTIVE</span>
+          <span>[COMPUTED] FOUR ENVIRONMENT WORKFLOWS PASS · BOUNDED CLAIMS</span>
         </div>
       </section>
 
@@ -362,7 +362,7 @@ export default function Home() {
       <footer>
         <div>
           <strong>PEARL / SELF-IMPROVING AGENTS</strong>
-          <span>Evidence portal · four reports with reachable assets</span>
+          <span>Evidence portal · five reports with reachable assets</span>
         </div>
         <a href="#top">Back to top</a>
       </footer>

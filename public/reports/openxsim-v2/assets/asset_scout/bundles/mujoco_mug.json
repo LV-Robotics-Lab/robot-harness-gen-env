@@ -1,0 +1,223 @@
+{
+  "articulation": {
+    "articulated": false,
+    "joint_count": 0,
+    "joint_types": [],
+    "status": "rigid_mesh_no_joint_schema"
+  },
+  "asset_id": "mujoco_mug",
+  "category": "mug",
+  "physical": {
+    "collision_status": "generated",
+    "collision_strategy": "axis_aligned_convex_box",
+    "material_status": "generated_default_material",
+    "normalization": {
+      "face_count": 24544,
+      "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_mug/default_material.mtl",
+      "material_status": "generated_default_material",
+      "normalized_bounds": {
+        "extent": [
+          1.0,
+          0.5837046697616892,
+          0.7254113903376378
+        ],
+        "maximum": [
+          0.5,
+          0.2918523348808446,
+          0.3627056951688189
+        ],
+        "minimum": [
+          -0.5,
+          -0.2918523348808446,
+          -0.3627056951688189
+        ]
+      },
+      "scale_factor": 0.08115608465715815,
+      "source_bounds": {
+        "extent": [
+          12.321935,
+          7.192371,
+          8.938472
+        ],
+        "maximum": [
+          7.852664,
+          7.192498,
+          4.469236
+        ],
+        "minimum": [
+          -4.469271,
+          0.000127,
+          -4.469236
+        ]
+      },
+      "source_center": [
+        1.6916965,
+        3.5963125,
+        0.0
+      ],
+      "target_max_extent_m": 1.0,
+      "vertex_count": 12272
+    },
+    "runtime_import_required": true
+  },
+  "representations": [
+    {
+      "backend": "portable",
+      "format": "obj_source",
+      "metadata": {
+        "original_download": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/e285bd4525ab89288c31/mug.obj",
+        "preserved_source": true
+      },
+      "role": "source",
+      "sha256": "656bfc987a038c90417ec98c671ab481e6a3ebe35a17d3b92e2ec0ee9593eb19",
+      "size_bytes": 2197848,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_mug/source.obj"
+    },
+    {
+      "backend": "portable",
+      "format": "obj",
+      "metadata": {
+        "normalization": {
+          "face_count": 24544,
+          "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_mug/default_material.mtl",
+          "material_status": "generated_default_material",
+          "normalized_bounds": {
+            "extent": [
+              1.0,
+              0.5837046697616892,
+              0.7254113903376378
+            ],
+            "maximum": [
+              0.5,
+              0.2918523348808446,
+              0.3627056951688189
+            ],
+            "minimum": [
+              -0.5,
+              -0.2918523348808446,
+              -0.3627056951688189
+            ]
+          },
+          "scale_factor": 0.08115608465715815,
+          "source_bounds": {
+            "extent": [
+              12.321935,
+              7.192371,
+              8.938472
+            ],
+            "maximum": [
+              7.852664,
+              7.192498,
+              4.469236
+            ],
+            "minimum": [
+              -4.469271,
+              0.000127,
+              -4.469236
+            ]
+          },
+          "source_center": [
+            1.6916965,
+            3.5963125,
+            0.0
+          ],
+          "target_max_extent_m": 1.0,
+          "vertex_count": 12272
+        }
+      },
+      "role": "visual",
+      "sha256": "d59c8a74927209f43aed1b1fd4230fd3b1457ecdb0defa56c6fb263a5227d72b",
+      "size_bytes": 914381,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_mug/mujoco_mug.normalized.obj"
+    },
+    {
+      "backend": "portable",
+      "format": "obj_collision_proxy",
+      "metadata": {
+        "strategy": "axis_aligned_convex_box"
+      },
+      "role": "collision",
+      "sha256": "277e28293b524b184536d01607cf16b90d5cc575d46f2182308b53e5ee341f03",
+      "size_bytes": 352,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_mug/mujoco_mug.collision_box.obj"
+    },
+    {
+      "backend": "isaacsim",
+      "format": "usda",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "9166044c7d67bb4dcfc438e8cd0738d60baa8ad814266f45a5a4082f80e948b2",
+      "size_bytes": 1049601,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_mug/mujoco_mug.usda"
+    },
+    {
+      "backend": "mujoco",
+      "format": "mjcf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "c909f4fae0620486484286f032ab81ee611ffaf0d51b418a5fa7d35e3a028dca",
+      "size_bytes": 428,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_mug/mujoco_mug.xml"
+    },
+    {
+      "backend": "portable",
+      "format": "urdf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "8c26dad87754e4c85533087f0f87a686414c0cd2e457d16eb3100608dd0279b2",
+      "size_bytes": 249,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_mug/mujoco_mug.urdf"
+    },
+    {
+      "backend": "sapien",
+      "format": "sapien_manifest",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "df14991b0ca504df0ea4a6576164d1da16ec44c65d65597b5f4441e723a72fa5",
+      "size_bytes": 1404,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_mug/sapien_asset.json"
+    },
+    {
+      "backend": "metasim",
+      "format": "metasim_object",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "8e014f45d2b814f60ae8d7f70c48089680254f1ed739f39c1030cf8c7a1b16d2",
+      "size_bytes": 494,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_mug/metasim_object.json"
+    },
+    {
+      "backend": "portable",
+      "format": "validation_manifest",
+      "metadata": {},
+      "role": "validation",
+      "sha256": "89b1accb126065bddb092254d7bfcba8ee5a4a500d35e6fcdc151d084b060b6d",
+      "size_bytes": 1883,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_mug/asset_validation.json"
+    }
+  ],
+  "source": {
+    "download_sha256": "656bfc987a038c90417ec98c671ab481e6a3ebe35a17d3b92e2ec0ee9593eb19",
+    "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco/f841b67c17349aca1a0999b1408b746a262ff805/model/mug/mug.obj",
+    "license": "Apache-2.0",
+    "provenance_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/e285bd4525ab89288c31/provenance.json",
+    "provider": "github_tree_pinned",
+    "source_page": "https://github.com/google-deepmind/mujoco/blob/f841b67c17349aca1a0999b1408b746a262ff805/model/mug/mug.obj"
+  },
+  "tags": [
+    "downloaded",
+    "provenance_recorded",
+    "validated",
+    "normalized"
+  ]
+}

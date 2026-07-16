@@ -1,0 +1,235 @@
+{
+  "schema_version": "robotwin.scene_validation.v1",
+  "scene_id": "place_a_red_can_to_the_left_of_b21824b743",
+  "resolved_scene_sha256": "1666d3a8ddfb771a83d55bbf7b71f2e9464dc5335d5d6b9a75aab917a3682da3",
+  "status": "pass",
+  "fail_count": 0,
+  "not_run_count": 0,
+  "checks": [
+    {
+      "name": "workspace_bounds:basket_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.053177826548109444,
+          0.21001805854810945,
+          -0.05884381895379159,
+          0.2178751049537916
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:basket_1",
+      "status": "pass",
+      "evidence": {
+        "z_m": 0.741,
+        "table_height_m": 0.741
+      }
+    },
+    {
+      "name": "real_asset_files:basket_1",
+      "status": "pass",
+      "evidence": {
+        "paths": [
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/110_basket/collision/base1.glb",
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/110_basket/model_data1.json",
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/110_basket/visual/base1.glb"
+        ],
+        "exists": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "workspace_bounds:can_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.2358695502467945,
+          -0.1450113877532055,
+          0.12528727775320553,
+          0.2161454402467945
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:can_1",
+      "status": "pass",
+      "evidence": {
+        "z_m": 0.741,
+        "table_height_m": 0.741
+      }
+    },
+    {
+      "name": "real_asset_files:can_1",
+      "status": "pass",
+      "evidence": {
+        "paths": [
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/071_can/collision/base0.glb",
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/071_can/model_data0.json",
+          "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/071_can/visual/base0.glb"
+        ],
+        "exists": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "no_overlap:basket_1:can_1",
+      "status": "pass",
+      "evidence": {
+        "first_aabb": [
+          -0.053177826548109444,
+          0.21001805854810945,
+          -0.05884381895379159,
+          0.2178751049537916
+        ],
+        "second_aabb": [
+          -0.2358695502467945,
+          -0.1450113877532055,
+          0.12528727775320553,
+          0.2161454402467945
+        ]
+      }
+    },
+    {
+      "name": "relation:on_table:can_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "relation:on_table:basket_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "relation:left_of:can_1:basket_1",
+      "status": "pass",
+      "evidence": {
+        "center_distance_m": 0.2839077046602555,
+        "source_aabb": [
+          -0.2358695502467945,
+          -0.1450113877532055,
+          0.12528727775320553,
+          0.2161454402467945
+        ],
+        "target_aabb": [
+          -0.053177826548109444,
+          0.21001805854810945,
+          -0.05884381895379159,
+          0.2178751049537916
+        ]
+      }
+    },
+    {
+      "name": "resolved_only_roundtrip",
+      "status": "pass",
+      "evidence": {
+        "before": "1666d3a8ddfb771a83d55bbf7b71f2e9464dc5335d5d6b9a75aab917a3682da3",
+        "after": "1666d3a8ddfb771a83d55bbf7b71f2e9464dc5335d5d6b9a75aab917a3682da3"
+      }
+    },
+    {
+      "name": "runtime_status",
+      "status": "pass",
+      "evidence": null
+    },
+    {
+      "name": "robot_initial_collision",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "translation_drift:basket_1",
+      "status": "pass",
+      "evidence": 0.0
+    },
+    {
+      "name": "rotation_drift:basket_1",
+      "status": "pass",
+      "evidence": 0.0
+    },
+    {
+      "name": "penetration:basket_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:basket_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "support_contact:basket_1",
+      "status": "pass",
+      "evidence": {
+        "raw_contact": false,
+        "mode": "fixed_static_pose",
+        "is_static": true
+      }
+    },
+    {
+      "name": "not_dropped:basket_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "head_visibility:basket_1",
+      "status": "pass",
+      "evidence": {
+        "pixels": 8609,
+        "threshold": 64
+      }
+    },
+    {
+      "name": "translation_drift:can_1",
+      "status": "pass",
+      "evidence": 0.0
+    },
+    {
+      "name": "rotation_drift:can_1",
+      "status": "pass",
+      "evidence": 0.0
+    },
+    {
+      "name": "penetration:can_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:can_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "support_contact:can_1",
+      "status": "pass",
+      "evidence": {
+        "raw_contact": true,
+        "mode": "table_contact",
+        "is_static": false
+      }
+    },
+    {
+      "name": "not_dropped:can_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "head_visibility:can_1",
+      "status": "pass",
+      "evidence": {
+        "pixels": 850,
+        "threshold": 64
+      }
+    }
+  ]
+}

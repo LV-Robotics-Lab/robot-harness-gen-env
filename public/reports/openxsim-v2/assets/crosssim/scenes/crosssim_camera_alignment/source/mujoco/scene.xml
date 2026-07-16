@@ -1,0 +1,21 @@
+<mujoco model="crosssim_camera_alignment">
+  <compiler angle="radian" coordinate="local"/>
+  <option gravity="0.0 0.0 -9.81" timestep="0.01"/>
+  <visual><headlight ambient="0.45 0.45 0.45" diffuse="0.8 0.8 0.8" specular="0.15 0.15 0.15"/></visual>
+  <asset>
+  </asset>
+  <custom>
+    <text name="agenticsim_task_contract" data="{&quot;action&quot;:{&quot;interface&quot;:&quot;zero_action&quot;,&quot;operations&quot;:[]},&quot;observation&quot;:{&quot;state&quot;:[&quot;object_pose&quot;,&quot;contact&quot;]},&quot;reset&quot;:{&quot;object_poses&quot;:&quot;from_env_spec&quot;},&quot;success&quot;:[{&quot;type&quot;:&quot;settled&quot;}],&quot;termination&quot;:[{&quot;steps&quot;:120,&quot;type&quot;:&quot;timeout&quot;}]}"/>
+    <text name="agenticsim_object_ids" data="[&quot;red_marker&quot;,&quot;blue_marker&quot;]"/>
+    <text name="agenticsim_sensors" data="[{&quot;convention&quot;:&quot;look_at_world_z_up&quot;,&quot;far_m&quot;:10.0,&quot;fov_y_deg&quot;:55.0,&quot;height&quot;:480,&quot;id&quot;:&quot;inspection_camera&quot;,&quot;look_at&quot;:[0.0,0.0,0.08],&quot;near_m&quot;:0.01,&quot;position&quot;:[0.0,-1.0,0.72],&quot;type&quot;:&quot;camera&quot;,&quot;up&quot;:[0.0,0.0,1.0],&quot;width&quot;:640}]"/>
+  </custom>
+  <contact>
+  </contact>
+  <worldbody>
+    <geom name="ground" type="plane" size="3 3 0.1" rgba="0.3 0.3 0.3 1"/>
+    <light name="key_light" pos="0 -1 2" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <camera name="inspection_camera" pos="0 -1 0.72" xyaxes="1 -0 0 0 0.539053696 0.842271401" fovy="55"/>
+    <body name="red_marker" pos="-0.18 0 0.07" quat="1 0 0 0"><geom name="red_marker_geom" type="box" size="0.07 0.07 0.07" rgba="0.92 0.08 0.07 1"/></body>
+    <body name="blue_marker" pos="0.18 0 0.08" quat="1 0 0 0"><geom name="blue_marker_geom" type="box" size="0.08 0.08 0.08" rgba="0.05 0.24 0.9 1"/></body>
+  </worldbody>
+</mujoco>

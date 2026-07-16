@@ -1,0 +1,223 @@
+{
+  "articulation": {
+    "articulated": false,
+    "joint_count": 0,
+    "joint_types": [],
+    "status": "rigid_mesh_no_joint_schema"
+  },
+  "asset_id": "assimp_wuson",
+  "category": "character_mesh",
+  "physical": {
+    "collision_status": "generated",
+    "collision_strategy": "axis_aligned_convex_box",
+    "material_status": "generated_default_material",
+    "normalization": {
+      "face_count": 3732,
+      "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/default_material.mtl",
+      "material_status": "generated_default_material",
+      "normalized_bounds": {
+        "extent": [
+          0.28354339241617466,
+          0.4671981738852773,
+          1.0
+        ],
+        "maximum": [
+          0.14177169620808733,
+          0.23359908694263867,
+          0.5
+        ],
+        "minimum": [
+          -0.14177169620808733,
+          -0.23359908694263862,
+          -0.5
+        ]
+      },
+      "scale_factor": 0.3082154203873405,
+      "source_bounds": {
+        "extent": [
+          0.919952,
+          1.515817,
+          3.244484
+        ],
+        "maximum": [
+          0.459976,
+          1.515251,
+          1.622242
+        ],
+        "minimum": [
+          -0.459976,
+          -0.000566,
+          -1.622242
+        ]
+      },
+      "source_center": [
+        0.0,
+        0.7573424999999999,
+        0.0
+      ],
+      "target_max_extent_m": 1.0,
+      "vertex_count": 2117
+    },
+    "runtime_import_required": true
+  },
+  "representations": [
+    {
+      "backend": "portable",
+      "format": "obj_source",
+      "metadata": {
+        "original_download": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/d3cdc5265149dc224507/WusonOBJ.obj",
+        "preserved_source": true
+      },
+      "role": "source",
+      "sha256": "092295203dc1ddb7be09aa0ebd7b2708d7553300698e44a48bc6ac65c6bd86cf",
+      "size_bytes": 258268,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/source.obj"
+    },
+    {
+      "backend": "portable",
+      "format": "obj",
+      "metadata": {
+        "normalization": {
+          "face_count": 3732,
+          "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/default_material.mtl",
+          "material_status": "generated_default_material",
+          "normalized_bounds": {
+            "extent": [
+              0.28354339241617466,
+              0.4671981738852773,
+              1.0
+            ],
+            "maximum": [
+              0.14177169620808733,
+              0.23359908694263867,
+              0.5
+            ],
+            "minimum": [
+              -0.14177169620808733,
+              -0.23359908694263862,
+              -0.5
+            ]
+          },
+          "scale_factor": 0.3082154203873405,
+          "source_bounds": {
+            "extent": [
+              0.919952,
+              1.515817,
+              3.244484
+            ],
+            "maximum": [
+              0.459976,
+              1.515251,
+              1.622242
+            ],
+            "minimum": [
+              -0.459976,
+              -0.000566,
+              -1.622242
+            ]
+          },
+          "source_center": [
+            0.0,
+            0.7573424999999999,
+            0.0
+          ],
+          "target_max_extent_m": 1.0,
+          "vertex_count": 2117
+        }
+      },
+      "role": "visual",
+      "sha256": "1177ca2bcf8db8059dcc8515b546660b3e66a16752fec0559db6223b1a06122c",
+      "size_bytes": 142787,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/assimp_wuson.normalized.obj"
+    },
+    {
+      "backend": "portable",
+      "format": "obj_collision_proxy",
+      "metadata": {
+        "strategy": "axis_aligned_convex_box"
+      },
+      "role": "collision",
+      "sha256": "d0b123143c4f3a91e2052111793a5bad59b5706a865d9bbb361862e2a6eef56e",
+      "size_bytes": 352,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/assimp_wuson.collision_box.obj"
+    },
+    {
+      "backend": "isaacsim",
+      "format": "usda",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "0f9458d7d8429935aecd6511cd9f48e41f803c7eee186eff8003ef1de14a5300",
+      "size_bytes": 164297,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/assimp_wuson.usda"
+    },
+    {
+      "backend": "mujoco",
+      "format": "mjcf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "0f1f3f41d1d43cecd874d4b84d7d52a04f5cd8ab06e4212ae0928c23841e6283",
+      "size_bytes": 442,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/assimp_wuson.xml"
+    },
+    {
+      "backend": "portable",
+      "format": "urdf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "0fb91fad3b5e06b0a020692c19f024eeeb734e6dab74b6f09e39a77a1211764c",
+      "size_bytes": 255,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/assimp_wuson.urdf"
+    },
+    {
+      "backend": "sapien",
+      "format": "sapien_manifest",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "798aece43db5493bd9dc46270e91485318b11500f24a233be109fefbb6c7a9d2",
+      "size_bytes": 1421,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/sapien_asset.json"
+    },
+    {
+      "backend": "metasim",
+      "format": "metasim_object",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "07a7a1ec7b4d6ad68dd0eb78c3d4a3c78bc163dc268d1f5c3f5a8c3fb8918165",
+      "size_bytes": 508,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/metasim_object.json"
+    },
+    {
+      "backend": "portable",
+      "format": "validation_manifest",
+      "metadata": {},
+      "role": "validation",
+      "sha256": "c1ac6edf5d9829691429ebccdde6367b58d7d7f6916d0c2b3c7feeb4bf7caba9",
+      "size_bytes": 1898,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/asset_validation.json"
+    }
+  ],
+  "source": {
+    "download_sha256": "092295203dc1ddb7be09aa0ebd7b2708d7553300698e44a48bc6ac65c6bd86cf",
+    "download_url": "https://raw.githubusercontent.com/assimp/assimp/a939f2479513a4d92060f2348909886b67d548aa/test/models/OBJ/WusonOBJ.obj",
+    "license": "BSD-3-Clause",
+    "provenance_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/d3cdc5265149dc224507/provenance.json",
+    "provider": "github_tree_pinned",
+    "source_page": "https://github.com/assimp/assimp/blob/a939f2479513a4d92060f2348909886b67d548aa/test/models/OBJ/WusonOBJ.obj"
+  },
+  "tags": [
+    "downloaded",
+    "provenance_recorded",
+    "validated",
+    "normalized"
+  ]
+}

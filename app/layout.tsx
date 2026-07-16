@@ -26,11 +26,11 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase,
     title: "PEARL Self-Improving Agents",
     description:
-      "An evidence portal for SceneAgent, Text2Env, Open X Sim, and the embodied harness system.",
+      "An evidence portal for SceneAgent, Text2Env, anchored generation, asset import, Open X Sim, and the embodied harness system.",
     openGraph: {
       title: "PEARL Self-Improving Agents",
       description:
-        "Four bounded workstreams, one auditable chain from scene intent to promotion decision.",
+        "Five bounded reports, one auditable chain from scene intent to promotion decision.",
       type: "website",
       images: [
         {
@@ -45,7 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title: "PEARL Self-Improving Agents",
       description:
-        "Scene composition, empirical Text2Env review, Open X Sim commands, and embodied harness evidence.",
+        "Scene composition, anchored generation, autonomous asset import, cross-simulator reuse, and embodied harness evidence.",
       images: [socialImage],
     },
   };

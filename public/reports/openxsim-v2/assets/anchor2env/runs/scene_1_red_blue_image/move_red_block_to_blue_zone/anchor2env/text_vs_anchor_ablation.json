@@ -1,0 +1,36 @@
+{
+  "anchor_digest": "d90317cb1bdc05023f56e7143fc984ab6db93628648c161558cc57b639e47610",
+  "changed_count": 2,
+  "comparisons": [
+    {
+      "anchor_position_m": [
+        0.20000000000000007,
+        0.04374999999999998,
+        0.742
+      ],
+      "delta_m": 0.2077596267324333,
+      "id": "blue_zone",
+      "text_only_position_m": [
+        0.05,
+        -0.1,
+        0.742
+      ]
+    },
+    {
+      "anchor_position_m": [
+        -0.225,
+        -0.12812500000000004,
+        0.766
+      ],
+      "delta_m": 0.14529200124232586,
+      "id": "red_block",
+      "text_only_position_m": [
+        -0.2,
+        0.015,
+        0.766
+      ]
+    }
+  ],
+  "max_delta_m": 0.2077596267324333,
+  "text_only_digest": "e946975ced5ff319df5e780007fb7d792a724cc14fe85d7ba6914303a0abd52e"
+}

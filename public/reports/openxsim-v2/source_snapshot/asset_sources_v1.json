@@ -1,0 +1,149 @@
+{
+  "schema": "agenticsim.asset_source_catalog.v1",
+  "selection_policy": "github_api_tree_search_then_pin_commit_and_blob",
+  "sources": [
+    {
+      "repository": "google-deepmind/mujoco",
+      "commit": "f841b67c17349aca1a0999b1408b746a262ff805",
+      "license": "Apache-2.0",
+      "discovery_query": "robotics simulation object mesh obj",
+      "repository_url": "https://github.com/google-deepmind/mujoco"
+    },
+    {
+      "repository": "bulletphysics/bullet3",
+      "commit": "63c4d67e337017f9d8b298c900e9aabdb69296e7",
+      "license": "Zlib",
+      "discovery_query": "robotics household object mesh obj",
+      "repository_url": "https://github.com/bulletphysics/bullet3"
+    },
+    {
+      "repository": "assimp/assimp",
+      "commit": "a939f2479513a4d92060f2348909886b67d548aa",
+      "license": "BSD-3-Clause",
+      "discovery_query": "open 3d mesh import test assets obj",
+      "repository_url": "https://github.com/assimp/assimp"
+    }
+  ],
+  "assets": [
+    {
+      "candidate_id": "mujoco_mug",
+      "name": "mug.obj",
+      "asset_id": "mujoco_mug",
+      "category": "mug",
+      "format": "obj",
+      "provider": "github_tree_pinned",
+      "license": "Apache-2.0",
+      "source_page": "https://github.com/google-deepmind/mujoco/blob/f841b67c17349aca1a0999b1408b746a262ff805/model/mug/mug.obj",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco/f841b67c17349aca1a0999b1408b746a262ff805/model/mug/mug.obj",
+      "metadata": {"repository": "google-deepmind/mujoco", "commit": "f841b67c17349aca1a0999b1408b746a262ff805", "path": "model/mug/mug.obj"}
+    },
+    {
+      "candidate_id": "mujoco_card",
+      "name": "card.obj",
+      "asset_id": "mujoco_card",
+      "category": "card",
+      "format": "obj",
+      "provider": "github_tree_pinned",
+      "license": "Apache-2.0",
+      "source_page": "https://github.com/google-deepmind/mujoco/blob/f841b67c17349aca1a0999b1408b746a262ff805/model/cards/assets/card.obj",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco/f841b67c17349aca1a0999b1408b746a262ff805/model/cards/assets/card.obj",
+      "metadata": {"repository": "google-deepmind/mujoco", "commit": "f841b67c17349aca1a0999b1408b746a262ff805", "path": "model/cards/assets/card.obj"}
+    },
+    {
+      "candidate_id": "mujoco_bunny",
+      "name": "bunny.obj",
+      "asset_id": "mujoco_bunny",
+      "category": "bunny",
+      "format": "obj",
+      "provider": "github_tree_pinned",
+      "license": "Apache-2.0",
+      "source_page": "https://github.com/google-deepmind/mujoco/blob/f841b67c17349aca1a0999b1408b746a262ff805/model/flex/asset/bunny.obj",
+      "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco/f841b67c17349aca1a0999b1408b746a262ff805/model/flex/asset/bunny.obj",
+      "metadata": {"repository": "google-deepmind/mujoco", "commit": "f841b67c17349aca1a0999b1408b746a262ff805", "path": "model/flex/asset/bunny.obj"}
+    },
+    {
+      "candidate_id": "bullet_banana",
+      "name": "banana.obj",
+      "asset_id": "bullet_banana",
+      "category": "banana",
+      "format": "obj",
+      "provider": "github_tree_pinned",
+      "license": "Zlib",
+      "source_page": "https://github.com/bulletphysics/bullet3/blob/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/banana.obj",
+      "download_url": "https://raw.githubusercontent.com/bulletphysics/bullet3/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/banana.obj",
+      "metadata": {"repository": "bulletphysics/bullet3", "commit": "63c4d67e337017f9d8b298c900e9aabdb69296e7", "path": "data/banana.obj"}
+    },
+    {
+      "candidate_id": "bullet_cup",
+      "name": "cup_vhacd.obj",
+      "asset_id": "bullet_cup",
+      "category": "cup",
+      "format": "obj",
+      "provider": "github_tree_pinned",
+      "license": "Zlib",
+      "source_page": "https://github.com/bulletphysics/bullet3/blob/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/dinnerware/cup/Cup/cup_vhacd.obj",
+      "download_url": "https://raw.githubusercontent.com/bulletphysics/bullet3/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/dinnerware/cup/Cup/cup_vhacd.obj",
+      "metadata": {"repository": "bulletphysics/bullet3", "commit": "63c4d67e337017f9d8b298c900e9aabdb69296e7", "path": "data/dinnerware/cup/Cup/cup_vhacd.obj"}
+    },
+    {
+      "candidate_id": "bullet_pan",
+      "name": "pan_tefal.obj",
+      "asset_id": "bullet_pan",
+      "category": "pan",
+      "format": "obj",
+      "provider": "github_tree_pinned",
+      "license": "Zlib",
+      "source_page": "https://github.com/bulletphysics/bullet3/blob/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/dinnerware/pan_tefal.obj",
+      "download_url": "https://raw.githubusercontent.com/bulletphysics/bullet3/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/dinnerware/pan_tefal.obj",
+      "metadata": {"repository": "bulletphysics/bullet3", "commit": "63c4d67e337017f9d8b298c900e9aabdb69296e7", "path": "data/dinnerware/pan_tefal.obj"}
+    },
+    {
+      "candidate_id": "bullet_plate",
+      "name": "plate.obj",
+      "asset_id": "bullet_plate",
+      "category": "plate",
+      "format": "obj",
+      "provider": "github_tree_pinned",
+      "license": "Zlib",
+      "source_page": "https://github.com/bulletphysics/bullet3/blob/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/dinnerware/plate.obj",
+      "download_url": "https://raw.githubusercontent.com/bulletphysics/bullet3/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/dinnerware/plate.obj",
+      "metadata": {"repository": "bulletphysics/bullet3", "commit": "63c4d67e337017f9d8b298c900e9aabdb69296e7", "path": "data/dinnerware/plate.obj"}
+    },
+    {
+      "candidate_id": "bullet_duck",
+      "name": "duck.obj",
+      "asset_id": "bullet_duck",
+      "category": "duck",
+      "format": "obj",
+      "provider": "github_tree_pinned",
+      "license": "Zlib",
+      "source_page": "https://github.com/bulletphysics/bullet3/blob/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/duck.obj",
+      "download_url": "https://raw.githubusercontent.com/bulletphysics/bullet3/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/duck.obj",
+      "metadata": {"repository": "bulletphysics/bullet3", "commit": "63c4d67e337017f9d8b298c900e9aabdb69296e7", "path": "data/duck.obj"}
+    },
+    {
+      "candidate_id": "assimp_spider",
+      "name": "spider.obj",
+      "asset_id": "assimp_spider",
+      "category": "spider_mesh",
+      "format": "obj",
+      "provider": "github_tree_pinned",
+      "license": "BSD-3-Clause",
+      "source_page": "https://github.com/assimp/assimp/blob/a939f2479513a4d92060f2348909886b67d548aa/test/models/OBJ/spider.obj",
+      "download_url": "https://raw.githubusercontent.com/assimp/assimp/a939f2479513a4d92060f2348909886b67d548aa/test/models/OBJ/spider.obj",
+      "metadata": {"repository": "assimp/assimp", "commit": "a939f2479513a4d92060f2348909886b67d548aa", "path": "test/models/OBJ/spider.obj"}
+    },
+    {
+      "candidate_id": "assimp_wuson",
+      "name": "WusonOBJ.obj",
+      "asset_id": "assimp_wuson",
+      "category": "character_mesh",
+      "format": "obj",
+      "provider": "github_tree_pinned",
+      "license": "BSD-3-Clause",
+      "source_page": "https://github.com/assimp/assimp/blob/a939f2479513a4d92060f2348909886b67d548aa/test/models/OBJ/WusonOBJ.obj",
+      "download_url": "https://raw.githubusercontent.com/assimp/assimp/a939f2479513a4d92060f2348909886b67d548aa/test/models/OBJ/WusonOBJ.obj",
+      "metadata": {"repository": "assimp/assimp", "commit": "a939f2479513a4d92060f2348909886b67d548aa", "path": "test/models/OBJ/WusonOBJ.obj"}
+    }
+  ]
+}
