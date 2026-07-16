@@ -1,8 +1,0 @@
-{
-  "asset_id": "dex_cube",
-  "mesh_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/compiled/dex_cube/source.obj",
-  "mjcf_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/compiled/dex_cube/dex_cube.xml",
-  "schema": "agenticsim.metasim_object.v1",
-  "urdf_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/compiled/dex_cube/dex_cube.urdf",
-  "usd_path": null
-}

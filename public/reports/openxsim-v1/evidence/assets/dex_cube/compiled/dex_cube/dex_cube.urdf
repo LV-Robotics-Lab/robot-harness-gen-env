@@ -1,6 +1,0 @@
-<robot name="dex_cube">
-  <link name="base">
-    <visual><geometry><mesh filename="source.obj"/></geometry></visual>
-    <collision><geometry><mesh filename="source.obj"/></geometry></collision>
-  </link>
-</robot>

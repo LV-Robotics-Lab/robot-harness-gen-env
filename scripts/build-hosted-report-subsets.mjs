@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const reportsRoot = path.join(root, "public", "reports");
-const reportKeys = ["sceneagent", "text2env", "openxsim", "harness", "openxsim-v1"];
+const reportKeys = ["sceneagent", "text2env", "openxsim", "harness", "openxsim-v2"];
 const apply = process.argv.includes("--apply");
 const attributePattern =
   /\b(?:src|href|poster|data-src)\s*=\s*["']([^"']+)["']/gi;
@@ -105,9 +105,9 @@ async function buildReportSubset(reportKey, rootPage) {
     if (path.dirname(file) === reportRoot && file.endsWith(".md")) keep.add(file);
   }
 
-  // The V1 implementation report is itself the audit bundle: raw runtime,
+  // The final implementation report is itself the audit bundle: raw runtime,
   // conversion, source, and failure evidence must remain downloadable.
-  if (reportKey === "openxsim-v1") {
+  if (reportKey === "openxsim-v2") {
     for (const file of allFiles) keep.add(file);
   }
 

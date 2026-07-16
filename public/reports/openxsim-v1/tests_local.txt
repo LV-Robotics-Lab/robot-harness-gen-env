@@ -1,6 +1,0 @@
-Command:
-PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=source/agenticsim /Users/boris/miniconda3/bin/python -m pytest -q tests/test_placement_agent.py tests/test_openxsim_anchors.py tests/test_openxsim_assets.py tests/test_openxsim_conformance_pipeline.py tests/test_openxsim_ir_backends.py
-
-Result:
-..........................................                               [100%]
-42 passed in 3.69s

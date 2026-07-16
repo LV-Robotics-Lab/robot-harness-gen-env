@@ -1,2 +1,0 @@
-/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube_discovered/import_smoke/compiled/sapien/run_sapien_smoke.py:19: DeprecationWarning: Engine is deprecated. use sapien.Scene() directly.
-  engine = sapien.Engine()

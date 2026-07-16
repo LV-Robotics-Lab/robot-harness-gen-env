@@ -1,7 +1,0 @@
-{
-  "asset_id": "dex_cube",
-  "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/compiled/dex_cube/source.obj",
-  "schema": "agenticsim.sapien_asset.v1",
-  "source_format": "obj",
-  "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/openxsim_four_workflows/assets/dex_cube/compiled/dex_cube/source.obj"
-}

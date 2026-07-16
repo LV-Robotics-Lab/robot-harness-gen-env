@@ -1,9 +1,0 @@
-Host:
-jingxiang-b850m-c / 100.64.0.6 / NVIDIA GeForce RTX 5090 / driver 580.159.03
-
-Command:
-cd /home/jingxiang/workspace/openxsim-validation && PYTHONPATH=source/agenticsim /home/jingxiang/workspace/agenticsim-runtime/.venv/bin/python -m pytest -q tests/test_openxsim_anchors.py tests/test_openxsim_assets.py tests/test_openxsim_conformance_pipeline.py tests/test_openxsim_ir_backends.py
-
-Result:
-....................................                                     [100%]
-36 passed in 4.79s
