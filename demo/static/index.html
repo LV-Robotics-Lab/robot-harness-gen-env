@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Text2Env · RoboTwin Console</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-block">
+      <span class="brand-mark" aria-hidden="true">T2E</span>
+      <div>
+        <h1>Text2Env</h1>
+        <p>RoboTwin Scene Console</p>
+      </div>
+    </div>
+    <div class="system-state" id="system-state">
+      <span class="state-dot" aria-hidden="true"></span>
+      <span id="system-state-label">连接中</span>
+      <span class="gpu-label">RTX 5090 · 100.64.0.6</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="command-band" aria-labelledby="command-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-index">01</span>
+          <h2 id="command-title">场景请求</h2>
+        </div>
+        <select id="example-select" aria-label="示例场景">
+          <option value="">选择示例</option>
+          <option value="Place a can on top of a plate.">堆叠</option>
+          <option value="Put a cup inside a basket.">容器内部</option>
+          <option value="Place a half-open cabinet on the table.">多关节柜体</option>
+          <option value="Place a purple hexagonal pedestal on the table.">新资产代理</option>
+          <option value="Place a red can to the left of a plastic basket near the center.">左右关系</option>
+        </select>
+      </div>
+
+      <form id="scene-form" class="scene-form">
+        <label for="prompt">Text prompt</label>
+        <textarea id="prompt" name="prompt" rows="4" maxlength="2000" spellcheck="false">Place a can on top of a plate.</textarea>
+        <div class="form-row">
+          <label class="seed-control" for="seed">
+            <span>Seed</span>
+            <input id="seed" name="seed" type="number" min="0" max="2147483647" step="1" value="42">
+          </label>
+          <button class="primary-button" id="generate-button" type="submit">
+            <i data-lucide="play" aria-hidden="true"></i>
+            <span>生成并运行</span>
+          </button>
+        </div>
+        <p class="form-error" id="form-error" role="alert" hidden></p>
+      </form>
+    </section>
+
+    <section class="run-band" aria-labelledby="run-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-index">02</span>
+          <h2 id="run-title">执行状态</h2>
+        </div>
+        <button class="icon-button" id="refresh-button" type="button" title="刷新作业" aria-label="刷新作业">
+          <i data-lucide="refresh-cw" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="empty-run" id="empty-run">尚未选择作业</div>
+      <div id="active-run" hidden>
+        <div class="run-summary">
+          <div>
+            <span class="job-id" id="job-id"></span>
+            <p id="job-prompt"></p>
+          </div>
+          <div class="run-actions">
+            <span class="status-badge" id="job-status"></span>
+            <button class="secondary-button" id="open-result-button" type="button" hidden>
+              <i data-lucide="external-link" aria-hidden="true"></i>
+              <span>打开场景结果</span>
+            </button>
+          </div>
+        </div>
+        <ol class="pipeline" id="pipeline">
+          <li data-stage="compile"><span>1</span><div><strong>Compile</strong><small>SceneSpec · assets · solve</small></div><i data-lucide="circle" aria-hidden="true"></i></li>
+          <li data-stage="runtime"><span>2</span><div><strong>Simulate</strong><small>RoboTwin · SAPIEN · 120 frames</small></div><i data-lucide="circle" aria-hidden="true"></i></li>
+          <li data-stage="critic"><span>3</span><div><strong>Critique</strong><small>Rendered scene · Qwen2.5-VL</small></div><i data-lucide="circle" aria-hidden="true"></i></li>
+        </ol>
+        <pre class="stage-output" id="stage-output" aria-live="polite"></pre>
+      </div>
+    </section>
+
+    <section class="evidence-band" id="evidence-band" aria-labelledby="evidence-title" hidden>
+      <div class="section-heading">
+        <div>
+          <span class="section-index">03</span>
+          <h2 id="evidence-title">仿真证据</h2>
+        </div>
+        <span class="verdict" id="verdict"></span>
+      </div>
+      <div class="media-toolbar" id="media-toolbar" role="tablist" aria-label="仿真媒体"></div>
+      <div class="media-stage" id="media-stage"></div>
+      <div class="artifact-tabs" id="artifact-tabs" role="tablist" aria-label="结构化证据"></div>
+      <pre class="json-view" id="json-view"></pre>
+    </section>
+
+    <section class="history-band" aria-labelledby="history-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-index">04</span>
+          <h2 id="history-title">作业记录</h2>
+        </div>
+      </div>
+      <div class="history-list" id="history-list"></div>
+    </section>
+  </main>
+
+  <script src="/static/vendor/lucide.min.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

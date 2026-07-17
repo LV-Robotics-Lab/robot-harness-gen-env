@@ -1,0 +1,140 @@
+schema_version: robotwin.asset_overrides.v1
+assets:
+  001_bottle:
+    category: bottle
+    aliases: [bottle]
+    materials: [plastic, glass, metal]
+    models:
+      "0": {stable_pose_id: upright, z_policy: origin_on_table, footprint_shape: circle}
+  002_bowl:
+    category: bowl
+    aliases: [bowl]
+    materials: [ceramic, plastic]
+    models:
+      "1": {stable_pose_id: upright, z_policy: origin_on_table}
+  003_plate:
+    category: plate
+    aliases: [plate, dish]
+    materials: [ceramic, plastic]
+    models:
+      "0":
+        stable_pose_id: robotwin_plate_upright
+        stable_orientation_wxyz: [0.5, 0.5, 0.5, 0.5]
+        z_policy: origin_on_table
+        dimensions_m: [0.2297, 0.2300, 0.0280]
+        interior_dimensions_m: [0.1800, 0.1800, 0.0200]
+        footprint_shape: circle
+        support_surface_shape: circle
+        support_surface_dimensions_m: [0.1000, 0.1000]
+        support_surface_z_offset_m: 0.0060
+        support_margin_m: 0.0080
+        support_spawn_clearance_m: 0.0040
+  015_laptop:
+    category: laptop
+    aliases: [laptop, notebook computer]
+    materials: [metal, plastic]
+    models:
+      "10098":
+        stable_pose_id: robotwin_laptop_base_flat
+        z_policy: origin_on_table
+        is_static: true
+        articulation_closed_qpos: [-1.45]
+        articulation_open_qpos: [0.0]
+  004_fluted-block:
+    semantic_name: block
+    category: block
+    aliases: [block, cube]
+    materials: [wood, plastic]
+    models:
+      "0": {stable_pose_id: flat_face, z_policy: origin_on_table}
+  017_calculator:
+    category: calculator
+    aliases: [calculator]
+    materials: [plastic]
+    models:
+      "0": {stable_pose_id: lie_flat, z_policy: origin_on_table}
+  020_hammer:
+    category: hammer
+    aliases: [hammer]
+    materials: [metal, wood]
+    models:
+      "0": {stable_pose_id: lie_flat, z_policy: origin_on_table}
+  021_cup:
+    category: cup
+    aliases: [cup, mug]
+    materials: [ceramic, plastic, metal]
+    models:
+      "0":
+        stable_pose_id: robotwin_cup_upright
+        stable_orientation_wxyz: [0.70710678, 0.70710678, 0.0, 0.0]
+        z_policy: origin_on_table
+  034_knife:
+    category: knife
+    aliases: [knife]
+    materials: [metal]
+    models:
+      "0": {stable_pose_id: lie_flat, z_policy: origin_on_table, is_static: true}
+  035_apple:
+    category: apple
+    aliases: [apple, fruit]
+    materials: [organic]
+    models:
+      "0":
+        stable_pose_id: upright
+        z_policy: origin_on_table
+        dimensions_m: [0.0661, 0.0643, 0.0557]
+        footprint_shape: circle
+  036_cabinet:
+    category: cabinet
+    aliases: [cabinet, drawer cabinet]
+    materials: [wood, metal]
+    models:
+      "46653":
+        stable_pose_id: robotwin_cabinet_upright
+        stable_orientation_wxyz: [0.70710678, 0.70710678, 0.0, 0.0]
+        z_policy: origin_on_table
+        is_static: true
+        articulation_closed_qpos: [0.0, 0.0, 0.0]
+        articulation_open_qpos: [0.50, 0.50, 0.50]
+  037_box:
+    category: box
+    aliases: [box, storage box, container]
+    materials: [plastic, wood]
+    models:
+      "426":
+        stable_pose_id: robotwin_box_upright
+        z_policy: origin_on_table
+        is_static: true
+        articulation_closed_qpos: [-3.20, -3.20]
+        articulation_open_qpos: [0.0, 0.0]
+  069_vagetable:
+    semantic_name: vegetable
+    category: vegetable
+    aliases: [vegetable, veggie]
+    materials: [organic]
+    models:
+      "2": {stable_pose_id: metadata_default, z_policy: origin_on_table}
+  071_can:
+    category: can
+    aliases: [can, soda can, cola can]
+    materials: [metal]
+    models:
+      "0":
+        stable_pose_id: robotwin_can_upright
+        stable_orientation_wxyz: [0.70710678, 0.70710678, 0.0, 0.0]
+        z_policy: origin_on_table
+        dimensions_m: [0.0712, 0.0712, 0.0965]
+        footprint_shape: circle
+  110_basket:
+    category: basket
+    aliases: [basket, container]
+    materials: [plastic]
+    models:
+      "1":
+        stable_pose_id: robotwin_basket_upright
+        stable_orientation_wxyz: [0.70710678, 0.70710678, 0.0, 0.0]
+        z_policy: origin_on_table
+        dimensions_m: [0.2332, 0.1512, 0.1767]
+        interior_dimensions_m: [0.1900, 0.1120, 0.1450]
+        interior_floor_z_offset_m: 0.0120
+        is_static: true

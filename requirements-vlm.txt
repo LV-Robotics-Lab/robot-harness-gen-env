@@ -1,0 +1,4 @@
+-r requirements-scene-gen.txt
+accelerate>=1.2,<2
+qwen-vl-utils>=0.0.8,<0.1
+transformers>=4.49,<5

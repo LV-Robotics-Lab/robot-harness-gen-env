@@ -1,0 +1,23 @@
+{
+  "schema_version": "robotwin.scene_golden_prompts.v1",
+  "valid": [
+    {"language": "en", "prompt": "Place a red can to the left of a yellow basket near the center."},
+    {"language": "en", "prompt": "A blue cup is in front of a wooden block and both objects are near each other."},
+    {"language": "en", "prompt": "Put an apple to the right of a ceramic plate in the back region."},
+    {"language": "en", "prompt": "A metal hammer is behind a plastic calculator and at least 0.20 m away."},
+    {"language": "en", "prompt": "Put the apple inside the basket."},
+    {"language": "en", "prompt": "Stack the apple on top of the plate."},
+    {"language": "en", "prompt": "Place a half-open cabinet on the table."},
+    {"language": "zh", "prompt": "把红色罐子放在黄色篮子的左边，两件物体靠近桌面中心。"},
+    {"language": "zh", "prompt": "蓝色杯子在木质方块的前方，两个物体相邻。"},
+    {"language": "zh", "prompt": "苹果在陶瓷盘子的右边，放在桌面后部。"},
+    {"language": "zh", "prompt": "金属锤子在塑料计算器的后方，并保持至少0.20米距离。"}
+  ],
+  "invalid": [
+    {"reason": "missing_object", "prompt": "Arrange something nicely on the table."},
+    {"reason": "backend_id", "prompt": "Use asset_id 071_can and model_id 0."},
+    {"reason": "coordinate", "prompt": "Put the can at x=0.2, y=0.1, z=0.74."},
+    {"reason": "python", "prompt": "import sapien and exec(load_scene())."},
+    {"reason": "path", "prompt": "Load the cup from /tmp/cup.glb."}
+  ]
+}

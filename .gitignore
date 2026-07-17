@@ -1,0 +1,36 @@
+# Python / local runtime
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# Large generated robotics data
+*.hdf5
+*.h5
+data/
+datasets/
+outputs/
+checkpoints/
+logs/
+wandb/
+install_logs/
+.cache/
+runs/
+artifacts/
+
+# RoboTwin / simulator heavy assets
+assets/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Local generated scene experiments are reproducible run outputs.
+generated/
