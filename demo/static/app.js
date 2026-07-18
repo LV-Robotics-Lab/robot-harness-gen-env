@@ -49,13 +49,13 @@ function renderPipeline(job) {
 
 function mediaEntries(job) {
   const labels = {
+    video: ['10 s · 120 frames', 'video'],
     head: ['Head camera', 'image'],
     world_left: ['World left', 'image'],
     world_right: ['World right', 'image'],
     observer_start: ['Frame 001', 'image'],
     observer_mid: ['Frame 060', 'image'],
     observer_end: ['Frame 120', 'image'],
-    video: ['120-frame video', 'video'],
   };
   return Object.entries(labels)
     .filter(([key]) => job.artifacts?.[key])
@@ -83,17 +83,24 @@ function selectMedia(job, entry) {
   const stage = $('#media-stage');
   stage.replaceChildren();
   const element = document.createElement(entry.kind === 'video' ? 'video' : 'img');
-  element.src = artifactUrl(job, entry.path);
   if (entry.kind === 'video') {
     element.controls = true;
+    element.autoplay = true;
+    element.loop = true;
+    element.muted = true;
     element.playsInline = true;
-    element.preload = 'metadata';
+    element.preload = 'auto';
     const poster = job.artifacts?.world_left || job.artifacts?.head;
     if (poster) element.poster = artifactUrl(job, poster);
   } else {
     element.alt = `${entry.label} simulation evidence`;
   }
+  element.src = artifactUrl(job, entry.path);
   stage.appendChild(element);
+  if (entry.kind === 'video') {
+    element.load();
+    void element.play().catch(() => {});
+  }
 }
 
 async function selectArtifact(job, entry) {
@@ -123,7 +130,7 @@ function renderEvidence(job) {
   const media = mediaEntries(job);
   const toolbar = $('#media-toolbar');
   toolbar.replaceChildren();
-  media.forEach((entry, index) => {
+  media.forEach((entry) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'media-button';
@@ -133,9 +140,8 @@ function renderEvidence(job) {
     button.textContent = entry.label;
     button.addEventListener('click', () => selectMedia(job, entry));
     toolbar.appendChild(button);
-    if (index === 0 && !state.mediaKey) selectMedia(job, entry);
   });
-  const selectedMedia = media.find((entry) => entry.key === state.mediaKey);
+  const selectedMedia = media.find((entry) => entry.key === state.mediaKey) || media[0];
   if (selectedMedia) selectMedia(job, selectedMedia);
 
   const artifacts = artifactEntries(job);

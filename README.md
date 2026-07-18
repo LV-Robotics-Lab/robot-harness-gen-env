@@ -23,6 +23,10 @@ policies, data collection, training, evaluation, or simulator transfer.
   margin. Outer object AABBs are not treated as stable support.
 - Nested source objects are dynamic and must contact their declared target for
   at least 80% of the final sampling window.
+- Contact candidates count only when at least one point is within 1 mm of the
+  collision surface. Broad-phase pairs with positive clearance do not count.
+- Nested objects must have zero active contact with undeclared support targets,
+  including the table below a plate or container.
 - Container placement uses target-local interior geometry and an explicit
   collision-floor offset.
 - Final translation and rotation must remain within 20 mm and 5 degrees of the
@@ -127,6 +131,27 @@ Add `--runtime --robotwin-root /path/to/RoboTwin` for SAPIEN replay. Only the
 seeds listed by `--video-seeds` retain MP4 files; every runtime seed retains
 structured physical evidence.
 
+## Validated Physics Evidence
+
+[COMPUTED] The 2026-07-17 RTX 5090 acceptance run passed 20/20 forced SAPIEN
+replays: 10 seeds for can-on-plate and 10 seeds for cup-in-basket. No run used
+resume data.
+
+- Can-on-plate: minimum target-contact fraction 1.0, maximum unexpected-contact
+  fraction 0.0, minimum final support margin 8.55 mm, maximum resolved
+  translation error 4.08 mm, and maximum rotation error 1.043 degrees.
+- Cup-in-basket: all 10 final states remained contained, minimum target-contact
+  fraction 1.0, maximum unexpected-contact fraction 0.0, maximum resolved
+  translation error 2.645 mm, and maximum rotation error 0.975 degrees.
+- Both matrices reported zero penetration points, moving final states, and
+  dropped nested objects.
+- The expected-negative request `Place a red block on top of a plate.` was
+  rejected because the source footprint cannot satisfy the plate support
+  margin.
+
+The commands, thresholds, report schema, and exact source hashes are recorded
+in [the physics acceptance note](docs/evidence/physics-acceptance-20260717.md).
+
 ## Browser Demo
 
 ```bash
@@ -140,6 +165,9 @@ python -m demo.app --host 0.0.0.0 --port 8765
 
 The demo queues GPU work, accepts text and a seed, and exposes only registered
 screenshots, video, manifests, and validation evidence from each job.
+
+The current lab-network deployment is available at
+[`http://100.64.0.6:8765`](http://100.64.0.6:8765).
 
 ## Optional Rendered Critic
 

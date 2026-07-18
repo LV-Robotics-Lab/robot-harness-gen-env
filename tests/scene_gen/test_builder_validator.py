@@ -94,6 +94,8 @@ def test_runtime_validator_requires_each_object_visibility_and_physics() -> None
                 "still_moving": False,
                 "support_contact": not item.is_static,
                 "support_contact_fraction": 1.0 if not item.is_static else 0.0,
+                "unexpected_contact_fraction": 0.0,
+                "unexpected_contact_targets": [],
                 "support_mode": "fixed_static_pose" if item.is_static else "on_table_contact",
                 "support_target": None if item.is_static else "table",
                 "dropped": False,
@@ -133,6 +135,8 @@ def test_runtime_validator_accepts_explicit_fixed_static_support_only_for_static
             "still_moving": False,
             "support_contact": False,
             "support_contact_fraction": 0.0,
+            "unexpected_contact_fraction": 0.0,
+            "unexpected_contact_targets": [],
             "support_mode": "fixed_static_pose" if item.is_static else "table_contact",
             "support_target": None,
             "dropped": False,
@@ -253,6 +257,8 @@ def test_runtime_validator_rejects_static_contact_free_nested_support() -> None:
             "still_moving": False,
             "support_contact": False if nested else True,
             "support_contact_fraction": 0.0 if nested else 1.0,
+            "unexpected_contact_fraction": 0.0,
+            "unexpected_contact_targets": [],
             "support_mode": "fixed_static_pose" if nested else "on_table_contact",
             "support_target": None if nested else "table",
             "support_footprint_margin_m": 0.008 if nested else None,
@@ -283,6 +289,8 @@ def test_runtime_validator_rejects_intermittent_nested_contact() -> None:
             "still_moving": False,
             "support_contact": True,
             "support_contact_fraction": 0.25 if nested else 1.0,
+            "unexpected_contact_fraction": 0.0,
+            "unexpected_contact_targets": [],
             "support_mode": "on_top_of_contact" if nested else "on_table_contact",
             "support_target": "plate_1" if nested else "table",
             "support_footprint_margin_m": 0.008 if nested else None,
@@ -293,3 +301,39 @@ def test_runtime_validator_rejects_intermittent_nested_contact() -> None:
     report = validate_resolved_scene(resolved, runtime_evidence=evidence, require_runtime=True)
     support = next(item for item in report["checks"] if item["name"] == "support_contact:can_1")
     assert support["status"] == "fail"
+
+
+def test_runtime_validator_rejects_nested_source_contacting_table() -> None:
+    _, _, resolved = stacked_case()
+    evidence = {
+        "status": "pass",
+        "robot_initial_collision_count": 0,
+        "objects": {},
+    }
+    for item in resolved.objects:
+        nested = item.object_id == "can_1"
+        evidence["objects"][item.object_id] = {
+            "translation_drift_m": 0.0,
+            "rotation_drift_deg": 0.0,
+            "resolved_translation_error_m": 0.0,
+            "resolved_rotation_error_deg": 0.0,
+            "penetration_count": 0,
+            "still_moving": False,
+            "support_contact": True,
+            "support_contact_fraction": 1.0,
+            "unexpected_contact_fraction": 1.0 if nested else 0.0,
+            "unexpected_contact_targets": ["table"] if nested else [],
+            "support_mode": "on_top_of_contact" if nested else "on_table_contact",
+            "support_target": "plate_1" if nested else "table",
+            "support_footprint_margin_m": 0.008 if nested else None,
+            "inside_contained": None,
+            "dropped": False,
+            "visible_pixels": 512,
+        }
+    report = validate_resolved_scene(resolved, runtime_evidence=evidence, require_runtime=True)
+    check = next(
+        item
+        for item in report["checks"]
+        if item["name"] == "no_unexpected_support_contact:can_1"
+    )
+    assert check["status"] == "fail"

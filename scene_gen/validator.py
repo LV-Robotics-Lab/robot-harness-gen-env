@@ -320,6 +320,8 @@ def validate_resolved_scene(
             support_mode = evidence.get("support_mode")
             support_target = evidence.get("support_target")
             support_contact_fraction = evidence.get("support_contact_fraction")
+            unexpected_contact_fraction = evidence.get("unexpected_contact_fraction")
+            unexpected_contact_targets = evidence.get("unexpected_contact_targets")
             support_margin = evidence.get("support_footprint_margin_m")
             inside_contained = evidence.get("inside_contained")
             dropped = evidence.get("dropped")
@@ -400,6 +402,19 @@ def validate_resolved_scene(
                     "minimum_contact_fraction": min_support_contact_fraction,
                 },
             )
+            if item.support_relation != RelationType.ON_TABLE:
+                _check(
+                    checks,
+                    f"no_unexpected_support_contact:{item.object_id}",
+                    "pass"
+                    if unexpected_contact_fraction == 0.0
+                    and unexpected_contact_targets == []
+                    else "fail",
+                    {
+                        "contact_fraction": unexpected_contact_fraction,
+                        "targets": unexpected_contact_targets,
+                    },
+                )
             if item.support_relation == RelationType.ON_TOP_OF:
                 required_margin = objects[item.support_target].support_margin_m
                 _check(

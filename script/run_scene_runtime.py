@@ -243,6 +243,28 @@ def contact_penetration_count(contact: Any, threshold_m: float = -0.002) -> int:
     return count
 
 
+def contact_point_metrics(contact: Any, active_separation_m: float = 0.001) -> dict[str, Any]:
+    points = list(getattr(contact, "points", []) or [])
+    separations = [
+        float(value)
+        for point in points
+        if isinstance((value := getattr(point, "separation", None)), (int, float))
+    ]
+    impulses = []
+    for point in points:
+        impulse = getattr(point, "impulse", None)
+        if impulse is not None:
+            impulses.append(float(np.linalg.norm(np.asarray(impulse, dtype=float))))
+    active_points = sum(value <= active_separation_m for value in separations)
+    return {
+        "point_count": len(points),
+        "active_point_count": active_points,
+        "min_separation_m": min(separations) if separations else None,
+        "max_impulse_norm": max(impulses) if impulses else None,
+        "active": active_points > 0,
+    }
+
+
 def summarize_contacts(
     contacts: list[Any],
     generated_names: set[str],
@@ -252,15 +274,27 @@ def summarize_contacts(
     penetration_by_object = {name: 0 for name in generated_names}
     support_by_object = {name: False for name in generated_names}
     observed_support_targets: dict[str, str | None] = {name: None for name in generated_names}
+    unexpected_targets_by_object: dict[str, set[str]] = {
+        name: set() for name in generated_names
+    }
     robot_collision_pairs: set[tuple[str, str]] = set()
     for contact in contacts:
         first, second = contact_pair(contact)
         if first not in generated_names and second not in generated_names:
             continue
         penetrations = contact_penetration_count(contact)
-        records.append({"bodies": [first, second], "penetration_points": penetrations})
+        metrics = contact_point_metrics(contact)
+        records.append(
+            {
+                "bodies": [first, second],
+                "penetration_points": penetrations,
+                **metrics,
+            }
+        )
         for generated, other in ((first, second), (second, first)):
             if generated not in generated_names:
+                continue
+            if not metrics["active"]:
                 continue
             other_lower = other.lower()
             if other in generated_names:
@@ -271,10 +305,15 @@ def summarize_contacts(
                     continue
                 else:
                     penetration_by_object[generated] += penetrations
-            elif any(token in other_lower for token in ("table", "ground", "wall")):
+                    unexpected_targets_by_object[generated].add(other)
+            elif "table" in other_lower:
                 if expected_support_targets.get(generated) == "table":
                     support_by_object[generated] = True
                     observed_support_targets[generated] = "table"
+                else:
+                    unexpected_targets_by_object[generated].add("table")
+            elif any(token in other_lower for token in ("ground", "wall")):
+                unexpected_targets_by_object[generated].add(other)
             else:
                 robot_collision_pairs.add((generated, other))
     return {
@@ -282,6 +321,9 @@ def summarize_contacts(
         "penetration_by_object": penetration_by_object,
         "support_by_object": support_by_object,
         "observed_support_targets": observed_support_targets,
+        "unexpected_targets_by_object": {
+            name: sorted(targets) for name, targets in unexpected_targets_by_object.items()
+        },
         "robot_collision_pairs": [list(pair) for pair in sorted(robot_collision_pairs)],
         "robot_collision_count": len(robot_collision_pairs),
     }
@@ -392,6 +434,8 @@ def main() -> int:
         total_steps = max(args.settle_steps, args.video_frames)
         contact_window_steps = min(max(1, args.contact_window_steps), total_steps)
         support_contact_hits = {name: 0 for name in generated_names}
+        unexpected_contact_hits = {name: 0 for name in generated_names}
+        unexpected_contact_targets = {name: set() for name in generated_names}
         support_contact_samples = 0
         for index in range(total_steps):
             task.scene.step()
@@ -417,6 +461,10 @@ def main() -> int:
                 for name in generated_names:
                     if contact_sample["support_by_object"][name]:
                         support_contact_hits[name] += 1
+                    targets = contact_sample["unexpected_targets_by_object"][name]
+                    if targets:
+                        unexpected_contact_hits[name] += 1
+                        unexpected_contact_targets[name].update(targets)
         final = {
             name: {
                 "position_m": actor.get_pose().p.tolist(),
@@ -436,7 +484,12 @@ def main() -> int:
             save_rgb(out_dir / "observer_start.png", frames[0])
             save_rgb(out_dir / "observer_mid.png", frames[len(frames) // 2])
             save_rgb(out_dir / "observer_end.png", frames[-1])
-            imageio.mimsave(out_dir / "observer_runtime.mp4", frames, fps=args.fps)
+            imageio.mimsave(
+                out_dir / "observer_runtime.mp4",
+                frames,
+                fps=args.fps,
+                output_params=["-movflags", "+faststart"],
+            )
         unique_video_frame_count = len(
             {hashlib.sha256(frame.tobytes()).digest() for frame in frames}
         )
@@ -462,6 +515,9 @@ def main() -> int:
             late_rotation = quaternion_angle_deg(after["orientation_wxyz"], late["orientation_wxyz"])
             dropped = after["position_m"][2] < resolved.workspace.table_height_m - 0.03
             contact_fraction = support_contact_hits[name] / max(1, support_contact_samples)
+            unexpected_contact_fraction = (
+                unexpected_contact_hits[name] / max(1, support_contact_samples)
+            )
             raw_support_contact = (
                 final_contacts["support_by_object"][name]
                 or support_contact_hits[name] > 0
@@ -526,6 +582,8 @@ def main() -> int:
                 "support_contact": raw_support_contact,
                 "support_contact_fraction": contact_fraction,
                 "support_contact_samples": support_contact_samples,
+                "unexpected_contact_fraction": unexpected_contact_fraction,
+                "unexpected_contact_targets": sorted(unexpected_contact_targets[name]),
                 "support_mode": support_mode,
                 "support_target": observed_support_target,
                 "expected_support_target": by_id[name].support_target,

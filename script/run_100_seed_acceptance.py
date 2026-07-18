@@ -141,6 +141,7 @@ def main() -> int:
     parser.add_argument("--task-config", default="demo_clean")
     parser.add_argument("--precheck-steps", type=int, default=0)
     parser.add_argument("--settle-steps", type=int, default=180)
+    parser.add_argument("--contact-window-steps", type=int, default=60)
     parser.add_argument("--video-seeds", default="0,17,99")
     parser.add_argument("--video-frames", type=int, default=120)
     parser.add_argument("--min-visible-pixels", type=int, default=64)
@@ -239,6 +240,8 @@ def main() -> int:
                 str(args.settle_steps),
                 "--video-frames",
                 str(args.video_frames if seed in video_seeds else 0),
+                "--contact-window-steps",
+                str(args.contact_window_steps),
                 "--min-visible-pixels",
                 str(args.min_visible_pixels),
             ]
@@ -275,6 +278,36 @@ def main() -> int:
                 outcome["status"] = "pass"
             else:
                 outcome["failure_stage"] = "runtime_validation"
+        runtime_evidence_path = runtime_dir / "runtime_evidence.json"
+        try:
+            runtime_evidence = json.loads(runtime_evidence_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            pass
+        else:
+            outcome["physics_metrics"] = {
+                "contact_window_steps": runtime_evidence.get("contact_window_steps"),
+                "video_frame_count": runtime_evidence.get("video_frame_count"),
+                "unique_video_frame_count": runtime_evidence.get("unique_video_frame_count"),
+                "objects": {
+                    name: {
+                        key: value.get(key)
+                        for key in (
+                            "resolved_translation_error_m",
+                            "resolved_rotation_error_deg",
+                            "support_contact_fraction",
+                            "support_target",
+                            "unexpected_contact_fraction",
+                            "unexpected_contact_targets",
+                            "support_footprint_margin_m",
+                            "inside_contained",
+                            "penetration_count",
+                            "still_moving",
+                            "dropped",
+                        )
+                    }
+                    for name, value in (runtime_evidence.get("objects") or {}).items()
+                },
+            }
         evidence, retained = evidence_record(scene_dir, out_root, runtime_required=True)
         outcome["evidence"] = evidence
         outcome["evidence_retained"] = retained
