@@ -1,0 +1,52 @@
+{
+  "schema_version": "robotwin.prompt_matrix.v1",
+  "seeds": [7, 31, 73],
+  "cases": [
+    {
+      "id": "red_block_on_plate",
+      "prompt": "Place a red block on top of a plate."
+    },
+    {
+      "id": "can_on_plate",
+      "prompt": "Place a can on top of a plate."
+    },
+    {
+      "id": "apple_in_basket",
+      "prompt": "Put an apple inside a basket."
+    },
+    {
+      "id": "cup_in_basket",
+      "prompt": "Put a cup inside a basket."
+    },
+    {
+      "id": "red_can_left_of_basket",
+      "prompt": "Place a red can to the left of a plastic basket near the center."
+    },
+    {
+      "id": "blue_cup_front_of_block",
+      "prompt": "A blue cup is in front of a wooden block and both objects are near each other."
+    },
+    {
+      "id": "apple_right_of_plate",
+      "prompt": "Put an apple to the right of a ceramic plate."
+    },
+    {
+      "id": "infeasible_apple_plate_back_region",
+      "prompt": "Put an apple to the right of a ceramic plate in the back region.",
+      "expect": "reject",
+      "expected_failure_stage": "solver"
+    },
+    {
+      "id": "half_open_cabinet",
+      "prompt": "Place a half-open cabinet on the table."
+    },
+    {
+      "id": "zh_red_block_on_plate",
+      "prompt": "把红色方块叠在盘子上。"
+    },
+    {
+      "id": "zh_apple_in_basket",
+      "prompt": "把苹果放进篮子里。"
+    }
+  ]
+}

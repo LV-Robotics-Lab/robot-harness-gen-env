@@ -220,6 +220,44 @@ def _string_tuple(value: Any) -> tuple[str, ...]:
     return tuple(sorted({str(item).strip().lower() for item in values if str(item).strip()}))
 
 
+def _generated_model_override(provenance: dict[str, Any], model_id: int) -> dict[str, Any]:
+    if not provenance or model_id != 0:
+        return {}
+    if provenance.get("generation_kind") == "derived_uniform_scale":
+        return {
+            key: value
+            for key, value in {
+                "dimensions_m": provenance.get("dimensions_m"),
+                "interior_dimensions_m": provenance.get("interior_dimensions_m"),
+                "interior_floor_z_offset_m": provenance.get("interior_floor_z_offset_m"),
+                "footprint_shape": provenance.get("footprint_shape"),
+                "support_surface_shape": provenance.get("support_surface_shape"),
+                "support_surface_dimensions_m": provenance.get(
+                    "support_surface_dimensions_m"
+                ),
+                "support_surface_z_offset_m": provenance.get(
+                    "support_surface_z_offset_m"
+                ),
+                "support_margin_m": provenance.get("support_margin_m"),
+                "support_spawn_clearance_m": provenance.get(
+                    "support_spawn_clearance_m"
+                ),
+                "stable_pose_id": provenance.get("source_stable_pose_id"),
+                "stable_orientation_wxyz": provenance.get(
+                    "source_stable_orientation_wxyz"
+                ),
+                "z_policy": provenance.get("source_z_policy"),
+                "is_static": provenance.get("source_is_static"),
+            }.items()
+            if value is not None
+        }
+    return {
+        "dimensions_m": provenance.get("dimensions_m"),
+        "stable_pose_id": "procedural_flat_base",
+        "z_policy": "origin_on_table",
+    }
+
+
 def _scan_model(
     asset_dir: Path,
     model_dir: Path,
@@ -455,15 +493,7 @@ def scan_robotwin_assets(
                 load_type,
                 model_id,
                 {
-                    **(
-                        {
-                            "dimensions_m": generated_provenance.get("dimensions_m"),
-                            "stable_pose_id": "procedural_flat_base",
-                            "z_policy": "origin_on_table",
-                        }
-                        if generated_provenance and model_id == 0
-                        else {}
-                    ),
+                    **_generated_model_override(generated_provenance, model_id),
                     **_override_for(overrides, asset_dir.name, model_id),
                 },
             )
@@ -473,12 +503,18 @@ def scan_robotwin_assets(
         generated_category = generated_provenance.get("semantic_category")
         semantic_name = str(
             asset_override.get("semantic_name")
+            or generated_provenance.get("semantic_name")
             or generated_category
             or _normalized_semantic(asset_dir.name)
         )
         category = str(asset_override.get("category") or generated_category or semantic_name).lower().replace(" ", "_")
         aliases = _string_tuple(
-            [semantic_name, semantic_name.replace("_", " "), *(asset_override.get("aliases") or [])]
+            [
+                semantic_name,
+                semantic_name.replace("_", " "),
+                *(generated_provenance.get("aliases") or []),
+                *(asset_override.get("aliases") or []),
+            ]
         )
         available = any(model.usable for model in models)
         reasons = sorted({reason for model in models for reason in model.missing})
@@ -495,6 +531,7 @@ def scan_robotwin_assets(
                 materials=_string_tuple(
                     asset_override.get("materials")
                     or generated_provenance.get("requested_material")
+                    or generated_provenance.get("materials")
                 ),
                 load_type=load_type,
                 asset_path=str(asset_dir.resolve()),
@@ -505,7 +542,18 @@ def scan_robotwin_assets(
                     [
                         *_string_tuple(asset_override.get("source_notes")),
                         *(
-                            ["procedural_generated", generated_provenance.get("generator"), "proxy_geometry"]
+                            [
+                                "derived_scaled_proxy",
+                                "geometry_compatible_derived",
+                                generated_provenance.get("generator"),
+                            ]
+                            if generated_provenance.get("generation_kind")
+                            in {"derived_uniform_scale", "derived_scaled_proxy"}
+                            else [
+                                "procedural_generated",
+                                generated_provenance.get("generator"),
+                                "proxy_geometry",
+                            ]
                             if generated_provenance
                             else []
                         ),

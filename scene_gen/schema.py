@@ -341,6 +341,7 @@ class ResolvedObject(StrictModel):
     support_spawn_clearance_m: float = Field(default=0.003, ge=0.0, le=0.02)
     z_policy: Literal["origin_on_table", "center_on_table"] = "origin_on_table"
     mass_kg: float | None = Field(default=None, gt=0.0)
+    mesh_scale: tuple[float, float, float] | None = None
     collision_available: bool
     source_files: tuple[str, ...]
     grounding_score: float
@@ -354,8 +355,15 @@ class ResolvedObject(StrictModel):
     articulation_joint_names: tuple[str, ...] = ()
     articulation_joint_limits: tuple[tuple[float, float], ...] = ()
     articulation_qpos: tuple[float, ...] = ()
-    asset_provenance: Literal["robotwin_catalog", "procedural_generated"] = "robotwin_catalog"
+    asset_provenance: Literal[
+        "robotwin_catalog",
+        "procedural_generated",
+        "derived_scaled_proxy",
+    ] = "robotwin_catalog"
     generation_metadata_path: str | None = None
+    derived_from_asset_id: str | None = None
+    derived_from_model_id: int | None = Field(default=None, ge=0)
+    uniform_scale_factor: float | None = Field(default=None, gt=0.0, le=1.0)
 
     @model_validator(mode="after")
     def stable_pose_plus_yaw_only(self) -> "ResolvedObject":
@@ -423,6 +431,20 @@ class ResolvedObject(StrictModel):
                 raise SceneSpecError(
                     f"interior exceeds object height for {self.object_id}"
                 )
+        derived_fields = (
+            self.derived_from_asset_id,
+            self.derived_from_model_id,
+            self.uniform_scale_factor,
+        )
+        if self.asset_provenance == "derived_scaled_proxy":
+            if any(value is None for value in derived_fields):
+                raise SceneSpecError(
+                    f"derived asset lineage is incomplete for {self.object_id}"
+                )
+        elif any(value is not None for value in derived_fields):
+            raise SceneSpecError(
+                f"non-derived object cannot carry scale lineage for {self.object_id}"
+            )
         return self
 
 
