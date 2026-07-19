@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from demo.app import create_app, utc_now
+from demo.app import DEFAULT_SETTLE_STEPS, create_app, utc_now
 
 
 def configured_app(tmp_path: Path, monkeypatch):
@@ -24,6 +24,7 @@ def configured_app(tmp_path: Path, monkeypatch):
 
 
 def test_health_and_job_input_boundary(tmp_path: Path, monkeypatch) -> None:
+    assert DEFAULT_SETTLE_STEPS == 900
     app = configured_app(tmp_path, monkeypatch)
     client = app.test_client()
     assert client.get("/api/health").json["status"] == "ready"
