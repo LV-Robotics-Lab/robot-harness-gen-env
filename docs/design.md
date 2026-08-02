@@ -8,7 +8,7 @@
 ## 1. 这是什么 & 目标
 在**不修改上游一行**的前提下扩展 env-gen：
 - **任务 1 · 资产复用**：提升 RoboTwin 资产在场景生成中的复用效率。⏳ 具体机制（复用索引 / 缓存 / 跨场景共享 / proxy 复用…）待 brainstorm。
-- **任务 2 · 仿真环境迁移**：让 env-gen 的场景包能在 SAPIEN 之外的仿真后端运行。⏳ 目标后端（Isaac / 其它）与适配范围待 brainstorm。
+- **任务 2 · 仿真环境迁移**：让 env-gen 的场景包能在 SAPIEN 之外的仿真后端运行。**迁移引擎已就位 = openxsim**（后端中立 IR + 多后端编译 + 一致性测试，搬入 `2_sim_migration/openxsim/`，36 测试通过）。⏳ 剩余：把 env-gen 的 `resolved_scene` 桥接进 openxsim IR + 选定首个目标后端。
 
 ## 2. 设计原则 & 关键约束
 - **上游只读、加新层**：env-gen 作为外部只读依赖（`external/env-gen-github`，pristine 克隆，`git pull` 同步）；新代码只 import/adapter 引用，绝不改上游。
@@ -21,7 +21,7 @@
 ## 4. 方案详解（分步 / 组件）
 ⏳ 待 brainstorm 后填：
 - 任务 1 资产复用：组件划分、复用键设计、与上游 grounding/catalog 的接口。
-- 任务 2 仿真迁移：adapter 接口（load/step/read-state/render）、首个目标后端、迁移验证方式。
+- 任务 2 仿真迁移：**引擎 openxsim 已搬入**（`2_sim_migration/openxsim/`，详见其 README/UPSTREAM）；待设计的是 **env-gen→openxsim 桥接**（`resolved_scene` → openxsim IR）、首个目标后端、迁移一致性验证口径。
 
 ## 5. 交付规范 / 输出
 - 代码落各阶段 `lib/` + `sN_` 步骤；运行产物落 `results/<YYYYMMDD>_<目的>/`。

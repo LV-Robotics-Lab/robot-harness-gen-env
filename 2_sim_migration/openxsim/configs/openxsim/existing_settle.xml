@@ -1,0 +1,14 @@
+<mujoco model="existing_settle">
+  <compiler angle="radian" coordinate="local"/>
+  <option gravity="0 0 -9.81" timestep="0.01"/>
+  <custom>
+    <text name="agenticsim_task_contract" data="{&quot;action&quot;:{&quot;interface&quot;:&quot;zero_action&quot;,&quot;operations&quot;:[]},&quot;observation&quot;:{&quot;state&quot;:[&quot;object_pose&quot;,&quot;contact&quot;]},&quot;reset&quot;:{&quot;object_poses&quot;:&quot;mjcf_defaults&quot;},&quot;success&quot;:[{&quot;type&quot;:&quot;state_trace_available&quot;}],&quot;termination&quot;:[{&quot;steps&quot;:20,&quot;type&quot;:&quot;timeout&quot;}]}"/>
+  </custom>
+  <worldbody>
+    <geom name="ground" type="plane" size="3 3 0.1" rgba="0.3 0.3 0.3 1"/>
+    <body name="settle_cube" pos="-0.2 0.015 0.766">
+      <freejoint name="settle_cube_free"/>
+      <geom name="settle_cube_geom" type="box" size="0.025 0.025 0.025" rgba="0.1 0.45 0.9 1" mass="0.1"/>
+    </body>
+  </worldbody>
+</mujoco>

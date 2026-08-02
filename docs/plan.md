@@ -18,10 +18,12 @@
 - [ ] Commit
 
 ### Task 2: 仿真环境迁移（阶段 2）
-**Files:** Create `2_sim_migration/{lib/,sN_*.py}`
-- [ ] ⏳ brainstorm 目标后端 + adapter 接口 → 填 `docs/design.md` 第 4 节
-- [ ] Step: 待设计后拆分步骤
-- [ ] Verify: 待定
+**引擎已就位**：openxsim 搬入 `2_sim_migration/openxsim/`（后端中立 IR + 多后端 + 一致性；36 测试通过）。
+**Files:** Create `2_sim_migration/lib/`（env-gen↔openxsim 桥接）
+- [x] 搬入 openxsim + 标准外壳（README/UPSTREAM）+ 冒烟(--help)/测试(36 passed)
+- [ ] ⏳ brainstorm：`resolved_scene` → openxsim IR 的桥接设计 + 首个目标后端
+- [ ] Step: 写桥接 adapter → `2_sim_migration/lib/`
+- [ ] Verify: 一个 env-gen 场景经 openxsim `transfer` 跑到目标后端 + 一致性通过
 - [ ] Commit
 
 > 注：本计划当前为脚手架骨架；两任务的 Step/Verify 在各自 brainstorm 后细化。
