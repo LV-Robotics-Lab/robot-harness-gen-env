@@ -48,4 +48,4 @@ cd external/env-gen-github && git pull   # 该目录正是 conda 环境 editable
 ## 7. 来历 / 依赖
 - **上游只读依赖（引用不改）**：`robot-harness-gen-env`（GitHub: https://github.com/LV-Robotics-Lab/robot-harness-gen-env ）。
 - **运行时依赖**：SAPIEN / RoboTwin `envs`（含 curobo）/ torch cu128 —— 详见 `docs/env-setup/RUNBOOK.md`。
-- **本项目 GitHub 仓库**：`<建库后填 URL>`。
+- **本项目 GitHub 仓库**：https://github.com/huyuxinn/env-gen-dev。
