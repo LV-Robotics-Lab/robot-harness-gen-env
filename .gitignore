@@ -1,0 +1,25 @@
+# 外部只读依赖：不入 git，clone 后自建软链（见 README）
+/external/
+
+# 运行产物 / 大文件 / 缓存：靠 README + stats 追溯，不提交
+/data/
+/results/
+/work/
+/runs/
+/out/
+
+# Python 缓存 / 构建
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# 环境 / 密钥
+.env
+*.local
+
+# macOS AppleDouble / DS_Store
+._*
+.DS_Store
