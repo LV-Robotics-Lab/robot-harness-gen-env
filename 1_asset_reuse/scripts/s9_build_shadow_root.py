@@ -53,7 +53,13 @@ for item in (real / "assets").iterdir():
 objects = shadow / "assets" / "objects"
 objects.mkdir()
 n_real = 0
+n_skipped = 0
 for item in (real / "assets" / "objects").iterdir():
+    if item.name.startswith("900_"):
+        # residue of earlier generated/derived proxies (900_gen_*, 900_scaled_*):
+        # not canonical assets; keeping them out enforces reuse-before-generation
+        n_skipped += 1
+        continue
     (objects / item.name).symlink_to(item)  # dirs AND plain files (same.json etc.)
     n_real += 1
 n_ext = 0
@@ -61,7 +67,7 @@ for item in lib.iterdir():
     if item.is_dir() and not item.name.startswith("_"):
         (objects / item.name).symlink_to(item)
         n_ext += 1
-print(f"shadow root: {n_real} robotwin + {n_ext} external asset dirs")
+print(f"shadow root: {n_real} robotwin + {n_ext} external asset dirs (skipped {n_skipped} 900_* proxy residues)")
 
 # ---- extended overrides (copy upstream + append ours) ----
 upstream_overrides = Path(args.upstream) / "scene_gen" / "asset_overrides.yml"
