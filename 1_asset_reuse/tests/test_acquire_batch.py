@@ -8,6 +8,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import acquire_batch as ab
 from lib.a1_providers import Tier
+from lib import a2_selection as a2
 
 
 def cand(key, score=1.0):
@@ -116,7 +117,10 @@ def test_resolve_catalog_path_falls_back_when_missing(tmp_path):
 def test_exhausted_when_all_attempts_fail(tmp_path):
     tiers = [
         Tier(0, FakeProvider("t0", [])),
-        Tier(1, FakeProvider("t1", [cand("a/x.usd")])),
+        Tier(
+            1,
+            FakeProvider("t1", [cand("a/x.usd", 2.0), cand("a/never_tried.usd", 1.0)]),
+        ),
     ]
     rec = ab.process_entry(
         {"category": "pitcher"},
@@ -126,3 +130,10 @@ def test_exhausted_when_all_attempts_fail(tmp_path):
         lambda cmd, env=None: 0,
     )
     assert rec["status"] == "exhausted"
+    outranked = [c for c in rec["candidates"] if c["verdict"] == "outranked"]
+    assert outranked and outranked[0]["candidate_id"].endswith("never_tried.usd")
+    assert outranked[0]["rejection"]["code"] == a2.REJ_OUTRANKED
+    assert (
+        outranked[0]["rejection"]["detail"]
+        == "not attempted; fallback budget exhausted"
+    )

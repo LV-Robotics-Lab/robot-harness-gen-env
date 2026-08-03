@@ -133,12 +133,17 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             "detail": f"{asset} m{model} not materialized; see import matrix under {out}",
         }
     used = rec["attempts"]
+    outranked_detail = (
+        "ranked below selected"
+        if imported
+        else "not attempted; fallback budget exhausted"
+    )
     for r in viable[used if imported is None else max(used, 1) :]:
         if r["verdict"] == "viable":
             r["verdict"] = "outranked"
             r["rejection"] = {
                 "code": a2.REJ_OUTRANKED,
-                "detail": "ranked below selected",
+                "detail": outranked_detail,
             }
     rec["candidates"] = [
         {
