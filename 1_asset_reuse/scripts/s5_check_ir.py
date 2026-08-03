@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(
-    0, "/home/jingxiang/yuxin/env-gen-dev/2_sim_migration/openxsim/source/agenticsim"
+    0, "/home/jingxiang/yuxin/env-gen-dev/shared/openxsim/source/agenticsim"
 )
 from agenticsim.openxsim.ir import AssetBundle  # noqa: E402
 

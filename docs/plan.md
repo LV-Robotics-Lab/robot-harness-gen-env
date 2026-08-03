@@ -18,7 +18,7 @@
 - [ ] Commit
 
 ### Task 2: 仿真环境迁移（阶段 2）
-**引擎已就位**：openxsim 搬入 `2_sim_migration/openxsim/`（后端中立 IR + 多后端 + 一致性；36 测试通过）。
+**引擎已就位**：openxsim 搬入 `shared/openxsim/`（后端中立 IR + 多后端 + 一致性；36 测试通过）。
 **Files:** Create `2_sim_migration/lib/`（env-gen↔openxsim 桥接）
 - [x] 搬入 openxsim + 标准外壳（README/UPSTREAM）+ 冒烟(--help)/测试(36 passed)
 - [ ] ⏳ brainstorm：`resolved_scene` → openxsim IR 的桥接设计 + 首个目标后端

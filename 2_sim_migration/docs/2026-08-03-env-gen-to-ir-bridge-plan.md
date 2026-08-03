@@ -14,7 +14,7 @@
 - **不静默降级 / 不编造 / 标未知**：缺资产硬失败；mass/inertia/friction 标 `{"status":"unknown"}`。
 - **位姿约定**：米 + wxyz 四元数（两边一致，直搬）。
 - **PYTHONPATH**（跑测试/CLI 必需）：`openxsim/{source/agenticsim, deps/metasim_core, third_party/MetaSim}`。
-- 路径基准：`OX=2_sim_migration/openxsim`；包目录 `PKG=$OX/source/agenticsim/agenticsim/openxsim`。
+- 路径基准：`OX=shared/openxsim`；包目录 `PKG=$OX/source/agenticsim/agenticsim/openxsim`。
 
 ## File Structure
 - **Create** `$PKG/env_gen.py` — 导入器（本任务核心）。
@@ -39,7 +39,7 @@
 - [ ] **Step 1: 准备 fixture**
 
 ```bash
-OX=/home/jingxiang/yuxin/env-gen-dev/2_sim_migration/openxsim
+OX=/home/jingxiang/yuxin/env-gen-dev/shared/openxsim
 mkdir -p $OX/tests/fixtures/env_gen
 cp /home/jingxiang/yuxin/env-gen-github/data/generated_scenes/place_a_can_on_top_of_a_plate_fe0b76e316/resolved_scene.json \
    $OX/tests/fixtures/env_gen/can_on_plate.resolved_scene.json
@@ -256,7 +256,7 @@ Run: 同 Step 3。 Expected: PASS（1 passed）。
 
 ```bash
 cd /home/jingxiang/yuxin/env-gen-dev
-git add 2_sim_migration/openxsim/source 2_sim_migration/openxsim/tests
+git add shared/openxsim/source shared/openxsim/tests
 git commit -m "feat(2_sim_migration): env_gen importer core (rigid scene -> IR)"
 ```
 
@@ -302,7 +302,7 @@ Run: `... python -m pytest tests/test_env_gen_import.py -q`  Expected: PASS（3 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add 2_sim_migration/openxsim/tests
+git add shared/openxsim/tests
 git commit -m "test(2_sim_migration): lock env_gen importer fidelity (unknown physics, provenance, relations)"
 ```
 
@@ -319,10 +319,10 @@ git commit -m "test(2_sim_migration): lock env_gen importer fidelity (unknown ph
 - [ ] **Step 1: 造"缺资产" fixture**
 
 ```bash
-OX=/home/jingxiang/yuxin/env-gen-dev/2_sim_migration/openxsim
+OX=/home/jingxiang/yuxin/env-gen-dev/shared/openxsim
 python3 - <<'PY'
 import json, pathlib
-base = pathlib.Path("$OX/tests/fixtures/env_gen/can_on_plate.resolved_scene.json".replace("$OX","/home/jingxiang/yuxin/env-gen-dev/2_sim_migration/openxsim"))
+base = pathlib.Path("$OX/tests/fixtures/env_gen/can_on_plate.resolved_scene.json".replace("$OX","/home/jingxiang/yuxin/env-gen-dev/shared/openxsim"))
 d = json.loads(base.read_text())
 d["objects"][0]["source_files"] = ["/nonexistent/missing.glb"]
 out = base.with_name("missing_asset.resolved_scene.json")
@@ -393,7 +393,7 @@ Run: `... python -m pytest tests/test_env_gen_import.py -q`  Expected: PASS（6 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add 2_sim_migration/openxsim/source 2_sim_migration/openxsim/tests
+git add shared/openxsim/source shared/openxsim/tests
 git commit -m "feat(2_sim_migration): env_gen importer error handling (missing asset / non-env-gen / bad json)"
 ```
 
@@ -449,7 +449,7 @@ Run: `... python -m pytest tests -q`  Expected: PASS（≥ 36 + 8）。
 - [ ] **Step 6: Commit**
 
 ```bash
-git add 2_sim_migration/openxsim/source 2_sim_migration/openxsim/tests
+git add shared/openxsim/source shared/openxsim/tests
 git commit -m "feat(2_sim_migration): wire env_gen into import_environment dispatcher"
 ```
 

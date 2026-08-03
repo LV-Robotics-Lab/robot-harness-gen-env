@@ -1,7 +1,7 @@
 # env-gen → openxsim IR 桥接 · 设计 spec
 
 > **日期**：2026-08-03 · **状态**：设计定稿（待实现） · **所属**：Phase 2 · 4.7 Transfer 的 env-gen 上游 importer
-> **名词**：**env-gen** = `robot-harness-gen-env`（文字→物理已验证的 RoboTwin 场景）；**IR** = openxsim `EnvironmentPackage`（后端中立中间交换包）；**openxsim** = 跨模拟器迁移引擎（在 `2_sim_migration/openxsim/`）。
+> **名词**：**env-gen** = `robot-harness-gen-env`（文字→物理已验证的 RoboTwin 场景）；**IR** = openxsim `EnvironmentPackage`（后端中立中间交换包）；**openxsim** = 跨模拟器迁移引擎（在 `shared/openxsim/`）。
 
 ## 1. 目标与范围
 

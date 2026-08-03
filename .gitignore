@@ -8,9 +8,9 @@
 /runs/
 /out/
 
-# openxsim vendored 依赖（约 5.8M，见 2_sim_migration/openxsim/UPSTREAM.md）
-2_sim_migration/openxsim/third_party/
-2_sim_migration/openxsim/deps/
+# openxsim vendored 依赖（约 5.8M，见 shared/openxsim/UPSTREAM.md）
+shared/openxsim/third_party/
+shared/openxsim/deps/
 
 # Python 缓存 / 构建
 __pycache__/

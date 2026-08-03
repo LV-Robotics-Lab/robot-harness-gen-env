@@ -122,7 +122,7 @@ grounding 打分确定性可复算）→ 回放 `fail=0` → 全量验证 `fail=
 | RoboTwin 资产库 + envs 运行时 | **外部只读**（影子根引用） | `/home/jingxiang/workspace/.../external/RoboTwin` |
 | NVIDIA Isaac Assets 5.1（YCB 等） | 外部 HTTP 源，逐文件哈希入账；许可证标 unknown 待查 | `omniverse-content-production.s3-us-west-2.amazonaws.com` |
 | env-gen 上游（catalog/编译/验证器） | **外部只读**，全部经 CLI 参数消费 | `env-gen-dev/external/env-gen-github` |
-| openxsim（AssetBundle IR） | 项目内 vendored | `env-gen-dev/2_sim_migration/openxsim/` |
+| openxsim（AssetBundle IR） | 项目内 vendored | `env-gen-dev/shared/openxsim/` |
 | Isaac Sim 5.1.0.0（pip 版） | 双向转换 + Isaac 侧验证 | conda `isaac-smoke`（py3.11） |
 | SAPIEN 3.0.0b1 + trimesh | SAPIEN 侧验证与网格处理 | conda `env-gen-yuxin`（py3.10） |
 
