@@ -47,7 +47,8 @@ bash scripts/s10_e2e_scene.sh
 
 ## 已知限制（当前版本事实）
 
-- 碰撞体 = 视觉网格副本（加载时凸分解）；容器类内腔任务需 CoACD 精化。
+- 碰撞体默认视觉副本（加载时凸分解）；清单 `collision: coacd` 可启用离线 CoACD 精分解（容器/接触敏感件已启用，304_bottle 接触抖动由此修复）。
+- 圆柱类滚动件（SM 杯/剪刀/夹钳）静置定姿追不上滚动平衡（unstable_rest 淘汰）——收录需逐源人工朝向覆盖（P3 待办）。
 - 穿模判据基于原点 z，对翻滚静止的物体（如 banana）过严——保守淘汰。
 - A 线脚本（s1/s2）绑定打样样本 bottle/cabinet；RoboTwin 全库批量时再参数化。
 - 外部资产许可证标 unknown（NVIDIA EULA / YCB 条款），再分发前必须补查。

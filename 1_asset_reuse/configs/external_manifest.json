@@ -1,5 +1,5 @@
 {
-  "comment": "External asset import manifest. Grouped by NVIDIA asset-server prefix; items grouped into RoboTwin-style multi-model asset dirs (3XX numbering). 'flat' relaxes the upright gate to 45 deg for objects whose natural rest pose is lying down. Optional per-asset 'size_policy': match_category (default; rescale only when max-dim ratio vs same-category median is outside [0.6,1.6]) | absolute:<meters> | none.",
+  "comment": "External asset import manifest. Grouped by NVIDIA asset-server prefix; items grouped into RoboTwin-style multi-model asset dirs (3XX numbering). 'flat' relaxes the upright gate to 45 deg for objects whose natural rest pose is lying down. Optional per-asset 'size_policy': match_category (default; rescale only when max-dim ratio vs same-category median is outside [0.6,1.6]) | absolute:<meters> | none. Per-item 'collision': coacd|copy (coacd = offline convex decomposition for clean contacts/interiors). Per-item 'reorient': settle (bake physical rest pose into mesh before gating; for sources whose declared axis mismatches geometry).",
   "groups": [
     {
       "name": "ycb_axis_aligned",
@@ -17,7 +17,8 @@
           "colors": [
             "red"
           ],
-          "footprint": "circle"
+          "footprint": "circle",
+          "collision": "coacd"
         },
         {
           "usd": "002_master_chef_can.usd",
@@ -77,12 +78,14 @@
           "aliases": [
             "bottle"
           ],
-          "footprint": "circle"
+          "footprint": "circle",
+          "collision": "coacd"
         },
         {
           "usd": "021_bleach_cleanser.usd",
           "asset": "304_bottle",
-          "model": 1
+          "model": 1,
+          "collision": "coacd"
         },
         {
           "usd": "024_bowl.usd",
@@ -92,7 +95,8 @@
           "aliases": [
             "bowl"
           ],
-          "footprint": "circle"
+          "footprint": "circle",
+          "collision": "coacd"
         },
         {
           "usd": "036_wood_block.usd",
@@ -128,7 +132,8 @@
             "pitcher",
             "jug"
           ],
-          "footprint": "circle"
+          "footprint": "circle",
+          "collision": "coacd"
         },
         {
           "usd": "035_power_drill.usd",
@@ -149,7 +154,8 @@
           "aliases": [
             "scissors"
           ],
-          "flat": true
+          "flat": true,
+          "reorient": "settle"
         },
         {
           "usd": "040_large_marker.usd",
@@ -170,13 +176,15 @@
           "aliases": [
             "clamp"
           ],
-          "flat": true
+          "flat": true,
+          "reorient": "settle"
         },
         {
           "usd": "052_extra_large_clamp.usd",
           "asset": "312_clamp",
           "model": 1,
-          "flat": true
+          "flat": true,
+          "reorient": "settle"
         }
       ]
     },
@@ -193,22 +201,26 @@
             "cup",
             "mug"
           ],
-          "footprint": "circle"
+          "footprint": "circle",
+          "reorient": "settle"
         },
         {
           "usd": "SM_Mug_B1.usd",
           "asset": "313_cup",
-          "model": 1
+          "model": 1,
+          "reorient": "settle"
         },
         {
           "usd": "SM_Mug_C1.usd",
           "asset": "313_cup",
-          "model": 2
+          "model": 2,
+          "reorient": "settle"
         },
         {
           "usd": "SM_Mug_D1.usd",
           "asset": "313_cup",
-          "model": 3
+          "model": 3,
+          "reorient": "settle"
         }
       ]
     }

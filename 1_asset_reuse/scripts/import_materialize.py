@@ -70,7 +70,31 @@ def quat_rotate(q, v):
     return np.array(v) + w * t + np.cross(qv, t)
 
 
-def settle_check(vis, col, height, flat):
+def quat_to_mat(q):
+    w, x, y, z = q
+    return np.array([
+        [1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)],
+        [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)],
+        [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)],
+    ])
+
+
+def probe_rest_quat(vis, col):
+    """Drop from the standard spawn and return the settled orientation (wxyz)."""
+    sc = sapien.Scene()
+    sc.set_timestep(1 / 100)
+    sc.add_ground(0)
+    b = sc.create_actor_builder()
+    b.add_multiple_convex_collisions_from_file(filename=str(col))
+    b.add_visual_from_file(filename=str(vis))
+    actor = b.build(name="probe")
+    actor.set_pose(sapien.Pose(p=[0, 0, 0.005], q=ROTX90))
+    for _ in range(300):
+        sc.step()
+    return [float(v) for v in actor.get_pose().q]
+
+
+def settle_check(vis, col, height, flat, sample_pts=None):
     sc = sapien.Scene()
     sc.set_timestep(1 / 100)
     sc.add_ground(0)
@@ -90,6 +114,11 @@ def settle_check(vis, col, height, flat):
     drift = float(np.linalg.norm(np.array(final.p) - np.array(poses[-2].p)))
     up = quat_rotate(list(final.q), [0.0, 1.0, 0.0])
     tilt = float(np.degrees(np.arccos(np.clip(up[2], -1, 1))))
+    min_corner_z = float(final.p[2])
+    if sample_pts is not None and len(sample_pts):
+        R = quat_to_mat(list(final.q))
+        world = np.asarray(sample_pts) @ R.T + np.array(final.p)
+        min_corner_z = float(world[:, 2].min())
     cam = sc.add_camera("cam", 320, 240, np.deg2rad(60), 0.01, 10.0)
     eye = np.array([0.3, -0.3, 0.25])
     f = np.array([0, 0, height / 2]) - eye
@@ -117,7 +146,8 @@ def settle_check(vis, col, height, flat):
         "late_drift_m": drift,
         "settled": drift < 0.002,
         "final_z_m": float(final.p[2]),
-        "no_penetration": final.p[2] > -0.002,
+        "min_corner_z_m": min_corner_z,
+        "no_penetration": min_corner_z > -0.005,
         "tilt_deg": tilt,
         "tilt_ok": tilt < tilt_lim,
         "tilt_limit": tilt_lim,
@@ -174,7 +204,7 @@ if args.only_index is None:
             str(i),
         ]
         try:
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=420)
             tail = [
                 ln
                 for ln in (proc.stdout + proc.stderr).splitlines()
@@ -267,8 +297,39 @@ for idx, r in worker_records:
 
         vis = lib / asset / "visual" / f"base{model}.glb"
         col = lib / asset / "collision" / f"base{model}.glb"
+
+        reorient = r.get("reorient") or meta.get("reorient")
+        if reorient == "settle":
+            scene.export(str(vis))
+            shutil.copy(vis, col)
+            qf = probe_rest_quat(vis, col)
+            delta = quat_to_mat(ROTX90).T @ quat_to_mat(qf)
+            T = np.eye(4)
+            T[:3, :3] = delta
+            scene.apply_transform(T)
+            lo, hi = scene.bounds
+            scene.apply_transform(trimesh.transformations.translation_matrix(
+                [-(lo[0] + hi[0]) / 2, -float(lo[1]), -(lo[2] + hi[2]) / 2]))
+            lo, hi = scene.bounds
+            size = [float(b - a) for a, b in zip(lo, hi)]
+            row["reorient_baked_quat"] = [round(float(v), 5) for v in qf]
+
         scene.export(str(vis))
-        shutil.copy(vis, col)
+        collision_mode = r.get("collision") or meta.get("collision") or "copy"
+        if collision_mode == "coacd":
+            import coacd
+
+            merged = scene.dump(concatenate=True) if isinstance(scene, trimesh.Scene) else scene
+            cmesh = coacd.Mesh(np.asarray(merged.vertices), np.asarray(merged.faces))
+            parts = coacd.run_coacd(cmesh, threshold=0.05)
+            cs = trimesh.Scene()
+            for vs, fs in parts:
+                cs.add_geometry(trimesh.Trimesh(np.asarray(vs), np.asarray(fs)))
+            cs.export(str(col))
+            row["collision_mode"] = f"coacd:{len(parts)}parts"
+        else:
+            shutil.copy(vis, col)
+            row["collision_mode"] = "copy"
         (lib / asset / f"model_data{model}.json").write_text(
             json.dumps(
                 {
@@ -297,7 +358,11 @@ for idx, r in worker_records:
             )
         )
 
-        checks, img = settle_check(vis, col, size[1], bool(meta.get("flat")))
+        merged_v = (scene.dump(concatenate=True) if isinstance(scene, trimesh.Scene)
+                    else scene).vertices
+        step = max(1, len(merged_v) // 3000)
+        checks, img = settle_check(vis, col, size[1], bool(meta.get("flat")),
+                                   sample_pts=np.asarray(merged_v)[::step])
         from PIL import Image
 
         Image.fromarray(img).save(out / "shots" / f"{asset}_m{model}.png")
