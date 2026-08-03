@@ -119,3 +119,100 @@ class RoboTwinLocalProvider:
                 )
             )
         return sorted(out, key=lambda c: (-c.score, c.candidate_id))[:limit]
+
+
+from dataclasses import dataclass
+
+from agenticsim.openxsim.assets import AssetScout
+
+
+@dataclass
+class Tier:
+    tier: int
+    provider: object
+
+
+def load_providers(config):
+    g = dict(config.get("globals", {}))
+    pc = config["providers"]
+    tiers = []
+    if pc.get("robotwin_local", {}).get("enabled"):
+        tiers.append(
+            Tier(
+                pc["robotwin_local"].get("tier", 0),
+                RoboTwinLocalProvider(pc["robotwin_local"]["catalog"]),
+            )
+        )
+    if pc.get("nvidia_server", {}).get("enabled"):
+        n = pc["nvidia_server"]
+        tiers.append(
+            Tier(
+                n.get("tier", 1),
+                NvidiaAssetServerProvider(n["prefixes"], n["index_path"]),
+            )
+        )
+    if pc.get("github_tree", {}).get("enabled"):
+        from agenticsim.openxsim.assets import GitHubTreeSearchProvider
+
+        for repo in pc["github_tree"]["repositories"]:
+            tiers.append(
+                Tier(
+                    pc["github_tree"].get("tier", 2),
+                    GitHubTreeSearchProvider(
+                        repo["repository"],
+                        branch=repo.get("branch", "main"),
+                        license=repo.get("license", "unknown"),
+                    ),
+                )
+            )
+    if pc.get("github_discovery", {}).get("enabled"):
+        from agenticsim.openxsim.assets import GitHubRepositoryDiscoveryProvider
+
+        d = pc["github_discovery"]
+        tiers.append(
+            Tier(
+                d.get("tier", 3),
+                GitHubRepositoryDiscoveryProvider(
+                    repository_limit=d.get("repository_limit", 5)
+                ),
+            )
+        )
+    return tiers, g
+
+
+def tiered_search(tiers, query, *, viable_fn, limit=20):
+    consulted, errors = [], []
+    for tier_no in sorted({t.tier for t in tiers}):
+        group = [t.provider for t in tiers if t.tier == tier_no]
+        consulted.append(tier_no)
+        scout = AssetScout(group)
+        try:
+            cands = scout.search(query, limit=limit)
+        except Exception as exc:  # noqa: BLE001
+            errors.append(
+                {"tier": tier_no, "provider": group[0].name, "error": str(exc)}
+            )
+            continue
+        errors.extend({"tier": tier_no, **e} for e in scout.last_errors)
+        if tier_no == 0:
+            if cands:
+                return {
+                    "tier0_hit": cands[0],
+                    "candidates": [],
+                    "tiers_consulted": consulted,
+                    "provider_errors": errors,
+                }
+            continue
+        if any(viable_fn(c) for c in cands):
+            return {
+                "tier0_hit": None,
+                "candidates": cands,
+                "tiers_consulted": consulted,
+                "provider_errors": errors,
+            }
+    return {
+        "tier0_hit": None,
+        "candidates": [],
+        "tiers_consulted": consulted,
+        "provider_errors": errors,
+    }

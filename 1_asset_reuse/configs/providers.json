@@ -1,0 +1,14 @@
+{
+  "globals": {"top_k": 5, "max_fallback": 2, "max_size_bytes": 200000000, "license_gate": false},
+  "providers": {
+    "robotwin_local": {"enabled": true, "tier": 0,
+      "catalog": "/home/jingxiang/yuxin/env-gen-dev/data/scene_gen_ext/asset_catalog.json"},
+    "nvidia_server": {"enabled": true, "tier": 1,
+      "prefixes": ["Assets/Isaac/5.1/Isaac/Props/YCB/Axis_Aligned"],
+      "index_path": "data/asset_index/nvidia_keys.json"},
+    "github_tree": {"enabled": false, "tier": 2, "repositories": [
+      {"repository": "KhronosGroup/glTF-Sample-Assets", "branch": "main",
+       "license": "per-model (see source_page); repo docs list per-asset licenses"}]},
+    "github_discovery": {"enabled": false, "tier": 3, "repository_limit": 5}
+  }
+}
