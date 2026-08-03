@@ -98,7 +98,16 @@ for i, (lo, up) in enumerate(limits):
     art.set_qpos(q)
 
 cam = sc.add_camera("cam", 640, 480, np.deg2rad(60), 0.01, 10.0)
-eye = np.array([1.6, -1.6, 1.2])
+# pose joints half-open for an informative screenshot (doors/drawers visible)
+q_show = np.array([lo + 0.6 * (up - lo) if abs(lo) > abs(up) else lo + 0.6 * (up - lo)
+                   for lo, up in limits])
+q_show = np.array([(lo if abs(lo) > abs(up) else up) * 0.6 for lo, up in limits])
+art.set_qpos(q_show)
+for _ in range(10):
+    sc.step()
+    art.set_qpos(q_show)
+span = max(bbox)
+eye = np.array([1.35 * span, -1.35 * span, 1.05 * span])
 f = np.array([0, 0, bbox[2] / 2]) - eye
 f /= np.linalg.norm(f)
 left = np.cross([0, 0, 1], f)
