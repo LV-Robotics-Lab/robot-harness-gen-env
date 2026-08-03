@@ -27,7 +27,7 @@ sys.path.insert(0, args.shadow)
 
 import sapien
 
-from envs.utils import create_actor  # RoboTwin's real loader
+from envs.utils import create_actor, create_sapien_urdf_obj  # RoboTwin's real loaders
 
 STABLE_Q = [math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]
 cat = json.loads(Path(args.catalog).read_text())
@@ -51,14 +51,14 @@ for entry in targets:
             sc = sapien.Scene()
             sc.set_timestep(1 / 100)
             sc.add_ground(0)
-            actor = create_actor(
-                sc,
-                sapien.Pose(p=[0, 0, 0.005], q=STABLE_Q),
-                modelname=aid,
-                convex=True,
-                is_static=False,
-                model_id=mid,
-            )
+            if m.get("urdf_path"):
+                actor = create_sapien_urdf_obj(
+                    sc, sapien.Pose(p=[0, 0, 0.005], q=[1, 0, 0, 0]),
+                    modelname=aid, modelid=mid, fix_root_link=True)
+            else:
+                actor = create_actor(
+                    sc, sapien.Pose(p=[0, 0, 0.005], q=STABLE_Q),
+                    modelname=aid, convex=True, is_static=False, model_id=mid)
             if actor is None:
                 raise RuntimeError("create_actor returned None")
             ent = getattr(actor, "actor", actor)
