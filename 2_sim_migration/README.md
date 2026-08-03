@@ -1,6 +1,6 @@
 # 2_sim_migration — 阶段 2 · 仿真环境迁移
 
-> 让场景能在 **SAPIEN 之外的仿真后端**运行。本阶段的**迁移引擎 = openxsim**（Open-X-Sim）：一套**后端中立 IR**（`EnvironmentPackage`）+ 多后端编译 + 跨模拟器一致性测试，代码在 `../shared/openxsim/`（2026-08-03 自本目录移入 `shared/`，因阶段 1 也消费它）并跑通自带测试。**与 env-gen 的桥接（把 env-gen 的 `resolved_scene` 喂进 openxsim IR）是后续开发**，见 `../docs/design.md`。
+> 让场景能在 **SAPIEN 之外的仿真后端**运行。本阶段的**迁移引擎 = openxsim**（Open-X-Sim）：一套**后端中立 IR**（`EnvironmentPackage`）+ 多后端编译 + 跨模拟器一致性测试，代码在 `../shared/openxsim/`（2026-08-03 自本目录移入 `shared/`，因阶段 1 也消费它）并跑通自带测试。**与 env-gen 的桥接已实现**：env_gen importer 落 `../shared/openxsim/source/agenticsim/agenticsim/openxsim/env_gen.py`（`import_env_gen` + `import_environment` 自动分派，`resolved_scene` → openxsim IR），env-gen 场景经 openxsim `transfer` 端到端可用，见 `../docs/design.md`。
 
 ## 1. 这是什么 / 目标
 - **输入**：文本 / 已有仿真环境 / 资产 →（编译进）后端中立 IR。
@@ -24,7 +24,7 @@
 | `../shared/openxsim/configs/` `../shared/openxsim/tests/` | 配置 / 测试（36 passed） |
 | `../shared/openxsim/third_party/MetaSim/` | vendored 多后端仿真框架（含 IsaacSim 工具）。**不入 git**，见 `../shared/openxsim/UPSTREAM.md` |
 | `../shared/openxsim/deps/metasim_core/` | vendored 依赖。**不入 git** |
-| `lib/` | 预留：env-gen ↔ openxsim 的桥接 adapter（待开发） |
+| `lib/` | 空：桥接 adapter 未落于此，已直接落 openxsim 包内的 `env_gen.py`（见上） |
 
 ## 4. 怎么用
 ```bash
@@ -44,7 +44,7 @@ python -m pytest $OX/tests -q                       # 预期 36 passed
 ## 6. 坑与注意
 - 跑 openxsim 需把 `source/agenticsim`、`deps/metasim_core`、`third_party/MetaSim` 加进 `PYTHONPATH`（见上）。
 - `third_party/` 与 `deps/` **不入 git**（本地已存在、可跑）；**fresh clone 需按 `../shared/openxsim/UPSTREAM.md` 重新填充**才能跑。
-- **openxsim 目前独立于 env-gen**（有自己的 text2env/IR，不读 env-gen 的 `resolved_scene.json`）；打通两者是本阶段待开发的桥接。
+- **openxsim 已能读 env-gen**：`import_env_gen`（`env_gen.py`）解析 env-gen 的 `resolved_scene.json` 并编译进 openxsim IR；Isaac 后端对缺 USD 表示的网格资产会如实报 blocker（不静默降级）。
 
 ## 7. 来历 / 依赖
 - **引擎来历**：从 `/home/jingxiang/workspace/openxsim-validation` 搬入（2026-08-02），详见 `../shared/openxsim/UPSTREAM.md`。
