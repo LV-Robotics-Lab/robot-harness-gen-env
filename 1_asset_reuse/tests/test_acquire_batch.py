@@ -287,3 +287,69 @@ def test_local_entry_convert_failure_records_rejection(tmp_path, monkeypatch):
     rec = ab.process_entry(entry, [], {}, p, lambda cmd, env=None: 0)
     assert rec["status"] == "exhausted"
     assert rec["candidates"][0]["rejection"]["code"] == a2.REJ_CONVERT
+
+
+def test_pinned_entry_with_existing_model_reuses_without_runner_calls(tmp_path):
+    p = paths(tmp_path)
+    d = p["library"] / "301_kettle"
+    (d / "visual").mkdir(parents=True, exist_ok=True)
+    (d / "visual" / "base0.glb").write_bytes(b"x")
+    (d / "model_data0.json").write_text("{}")
+    calls = []
+
+    entry = {
+        "category": "kettle",
+        "pinned": {
+            "prefix": "Assets/Isaac/5.1/Isaac/Props/YCB/Axis_Aligned",
+            "usd": "019_pitcher_base.usd",
+        },
+    }
+    rec = ab.process_entry(
+        entry, [], {}, p, lambda cmd, env=None: calls.append(cmd) or 0
+    )
+    assert rec["status"] == "reused_local"
+    assert rec["local_reuse"] == {"asset_id": "301_kettle", "reason": a2.ALREADY}
+    assert calls == []
+
+
+def test_local_entry_with_existing_model_reuses_without_runner_calls(tmp_path):
+    p = paths(tmp_path)
+    d = p["library"] / "301_teapot"
+    (d / "visual").mkdir(parents=True, exist_ok=True)
+    (d / "visual" / "base0.glb").write_bytes(b"x")
+    (d / "model_data0.json").write_text("{}")
+    calls = []
+    src = tmp_path / "teapot.glb"
+    src.write_bytes(b"glTF-bytes")
+
+    entry = {"category": "teapot", "local": {"path": str(src), "up_axis": "Y"}}
+    rec = ab.process_entry(
+        entry, [], {}, p, lambda cmd, env=None: calls.append(cmd) or 0
+    )
+    assert rec["status"] == "reused_local"
+    assert rec["local_reuse"] == {"asset_id": "301_teapot", "reason": a2.ALREADY}
+    assert calls == []
+
+
+def test_local_entry_success_appends_manifest_group(tmp_path):
+    p = paths(tmp_path)
+    src = tmp_path / "teapot.glb"
+    src.write_bytes(b"glTF-bytes")
+
+    def runner(cmd, env=None):
+        if "import_materialize.py" in str(cmd[1]):
+            d = p["library"] / "301_teapot"
+            (d / "visual").mkdir(parents=True, exist_ok=True)
+            (d / "visual" / "base0.glb").write_bytes(b"x")
+            (d / "model_data0.json").write_text("{}")
+        return 0
+
+    entry = {"category": "teapot", "local": {"path": str(src), "up_axis": "Y"}}
+    rec = ab.process_entry(entry, [], {}, p, runner)
+    assert rec["status"] == "imported"
+    groups = json.loads(p["manifest"].read_text())["groups"]
+    assert groups and groups[0]["name"] == "acq_301_teapot"
+    item = groups[0]["items"][0]
+    assert item["asset"] == "301_teapot"
+    assert item["model"] == 0
+    assert item["category"] == "teapot"

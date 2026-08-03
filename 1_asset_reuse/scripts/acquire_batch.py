@@ -44,13 +44,26 @@ def check_imported(library_dir, asset, model):
 
 
 def _attempt_import(
-    rec, viable, entry, category, globals_cfg, paths, runner, max_attempts
+    rec,
+    viable,
+    entry,
+    category,
+    globals_cfg,
+    paths,
+    runner,
+    max_attempts,
+    preallocated=None,
 ):
     imported = None
-    for r in viable[:max_attempts]:
+    for i, r in enumerate(viable[:max_attempts]):
         candidate = r["candidate"]
         rec["attempts"] += 1
-        asset, model = a2.allocate_asset(category, paths["library"], paths["manifest"])
+        if i == 0 and preallocated is not None:
+            asset, model = preallocated
+        else:
+            asset, model = a2.allocate_asset(
+                category, paths["library"], paths["manifest"]
+            )
         group = a2.build_manifest_group(candidate, asset, model, entry)
         out = Path(paths["out"])
         out.mkdir(parents=True, exist_ok=True)
@@ -157,6 +170,11 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             "tiers_consulted": [],
             "provider_errors": [],
         }
+        asset, model = a2.allocate_asset(category, paths["library"], paths["manifest"])
+        if model > 0:
+            rec["status"] = "reused_local"
+            rec["local_reuse"] = {"asset_id": asset, "reason": a2.ALREADY}
+            return rec
         candidate = a2.pinned_candidate(entry)
         gated = a2.gate_candidates([candidate], globals_cfg)
         if gated[0]["verdict"] != "viable":
@@ -170,7 +188,15 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             rec["status"] = "exhausted"
             return rec
         return _attempt_import(
-            rec, [gated[0]], entry, category, globals_cfg, paths, runner, max_attempts=1
+            rec,
+            [gated[0]],
+            entry,
+            category,
+            globals_cfg,
+            paths,
+            runner,
+            max_attempts=1,
+            preallocated=(asset, model),
         )
     if "local" in entry:
         rec = {
@@ -185,6 +211,10 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         from agenticsim.openxsim.assets import AssetCandidate
 
         asset, model = a2.allocate_asset(category, paths["library"], paths["manifest"])
+        if model > 0:
+            rec["status"] = "reused_local"
+            rec["local_reuse"] = {"asset_id": asset, "reason": a2.ALREADY}
+            return rec
         out = Path(paths["out"])
         staging = out / f"staging_{asset}_m{model}"
         src = Path(entry["local"]["path"])
@@ -284,6 +314,8 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
                 "asset": asset,
                 "model": model,
             }
+            group = a2.build_manifest_group(candidate, asset, model, entry)
+            a2.append_manifest(paths["manifest"], group)
         else:
             rec["status"] = "exhausted"
             rec["candidates"] = [
