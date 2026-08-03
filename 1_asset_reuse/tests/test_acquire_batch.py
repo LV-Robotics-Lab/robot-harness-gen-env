@@ -252,3 +252,38 @@ def test_local_entry_materializes_from_file(tmp_path):
     assert rec["status"] == "imported"
     staging = list(Path(p["out"]).glob("staging_*/staging_manifest.json"))
     assert staging and json.loads(staging[0].read_text())[0]["up_axis"] == "Y"
+
+
+def test_local_entry_oversize_rejected_without_materialize(tmp_path):
+    p = paths(tmp_path)
+    src = tmp_path / "big.glb"
+    src.write_bytes(b"x" * 100)
+    calls = []
+
+    entry = {"category": "urn", "local": {"path": str(src)}}
+    rec = ab.process_entry(
+        entry,
+        [],
+        {"max_size_bytes": 10},
+        p,
+        lambda cmd, env=None: calls.append(cmd) or 0,
+    )
+    assert rec["status"] == "exhausted"
+    assert rec["candidates"][0]["verdict"] == "rejected"
+    assert rec["candidates"][0]["rejection"]["code"] == a2.REJ_OVERSIZE
+    assert calls == []
+
+
+def test_local_entry_convert_failure_records_rejection(tmp_path, monkeypatch):
+    p = paths(tmp_path)
+    src = tmp_path / "bad.obj"
+    src.write_bytes(b"not a real mesh")
+
+    def boom(*a, **k):
+        raise RuntimeError("bad mesh")
+
+    monkeypatch.setattr(a3w, "to_glb", boom)
+    entry = {"category": "gizmo", "local": {"path": str(src)}}
+    rec = ab.process_entry(entry, [], {}, p, lambda cmd, env=None: 0)
+    assert rec["status"] == "exhausted"
+    assert rec["candidates"][0]["rejection"]["code"] == a2.REJ_CONVERT

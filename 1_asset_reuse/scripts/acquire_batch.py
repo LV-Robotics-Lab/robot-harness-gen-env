@@ -177,11 +177,12 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             "query": {"category": category},
             "entry_mode": "local",
             "candidates": [],
-            "attempts": 1,
+            "attempts": 0,
             "tiers_consulted": [],
             "provider_errors": [],
         }
         from lib import a3_webfetch as a3w
+        from agenticsim.openxsim.assets import AssetCandidate
 
         asset, model = a2.allocate_asset(category, paths["library"], paths["manifest"])
         out = Path(paths["out"])
@@ -202,16 +203,63 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
                 }
             ]
             return rec
-        glb = a3w.to_glb(src, staging / f"{asset}_m{model}.glb")
-        record = a3w.synth_staging_record(
-            glb,
-            src,
-            a3w._sha256(src),
-            asset,
-            model,
-            entry,
-            up_axis=entry["local"].get("up_axis", "Y"),
+        try:
+            glb = a3w.to_glb(src, staging / f"{asset}_m{model}.glb")
+            record = a3w.synth_staging_record(
+                glb,
+                src,
+                a3w._sha256(src),
+                asset,
+                model,
+                entry,
+                up_axis=entry["local"].get("up_axis", "Y"),
+            )
+        except Exception as exc:  # noqa: BLE001
+            rec["status"] = "exhausted"
+            rec["candidates"] = [
+                {
+                    "candidate_id": f"local:{src}",
+                    "provider": "local",
+                    "url": str(src),
+                    "format": src.suffix.lstrip("."),
+                    "license": "user-provided",
+                    "score": 0.0,
+                    "verdict": "rejected",
+                    "rejection": {
+                        "code": a2.REJ_CONVERT,
+                        "detail": f"{type(exc).__name__}: {exc}",
+                    },
+                }
+            ]
+            return rec
+        candidate = AssetCandidate(
+            candidate_id=f"local:{src}",
+            name=src.name,
+            category=category,
+            download_url=str(src),
+            source_page=str(src),
+            format="glb",
+            provider="local",
+            license="user-provided",
+            score=0.0,
+            metadata={
+                "key": str(src),
+                "path": str(src),
+                "size_bytes": Path(glb).stat().st_size,
+            },
         )
+        gated = a2.gate_candidates([candidate], globals_cfg)
+        if gated[0]["verdict"] != "viable":
+            rec["status"] = "exhausted"
+            rec["candidates"] = [
+                {
+                    **a2.candidate_dict(candidate),
+                    "verdict": "rejected",
+                    "rejection": gated[0]["rejection"],
+                }
+            ]
+            return rec
+        rec["attempts"] = 1
         (staging / "staging_manifest.json").write_text(json.dumps([record], indent=1))
         fragment = Path(paths["fragment_dir"]) / f"{asset}_m{model}.yml"
         fragment.parent.mkdir(parents=True, exist_ok=True)
@@ -232,17 +280,22 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         if check_imported(paths["library"], asset, model):
             rec["status"] = "imported"
             rec["selected"] = {
-                "candidate_id": f"local:{src}",
-                "provider": "local",
-                "url": str(src),
-                "format": "glb",
-                "license": "user-provided",
-                "score": 0.0,
+                **a2.candidate_dict(candidate),
                 "asset": asset,
                 "model": model,
             }
         else:
             rec["status"] = "exhausted"
+            rec["candidates"] = [
+                {
+                    **a2.candidate_dict(candidate),
+                    "verdict": "rejected",
+                    "rejection": {
+                        "code": "validation_failed:materialize",
+                        "detail": f"{asset} m{model} not materialized; see import matrix under {out}",
+                    },
+                }
+            ]
         return rec
     query = " ".join([category, *entry.get("colors", []), *entry.get("aliases", [])])
     rec = {
