@@ -109,3 +109,7 @@ importer 放进 **openxsim 包内**（与 `import_sapien_scene`/`import_mjcf`/`i
 - **后端选型 / 第二适配器目标**：Onboarding + 团队待确认。
 - **relations → 可判定 task 合成**：留将来（本任务只把 relations 当数据带入 IR）。
 - **上游只读**：不改 `external/env-gen-github`；`resolved_scene.json` 当外部数据读。
+
+## 8. 实测里程碑（2026-08-03）
+- **env-gen → IR → Isaac 端到端跑通**：补上 `2_sim_migration/lib/usd_enrich.py`（接头：把资产管线转好的 USD 登记进 IR 的 isaacsim 表示）后，env-gen bottle 场景经 `import_env_gen` → `enrich_isaac_usd` → `IsaacSimCompiler` **干净编译出 `scene.usda`（status=compiled，无 missing-USD blocker，scene.usda 引用 bottle.usd）**。测试 `shared/openxsim/tests/test_env_gen_isaac_enrich_e2e.py`（+全量 49 passed）。
+- **分工**：GLB→USD 转换是资产管线（1_asset_reuse，isaac-smoke/omni.kit.asset_converter）的活；本桥负责 IR + 用 enrich 登记 USD 表示。env-gen→RoboTwin 为原生直达、不经 IR（该 round-trip 从 DoD 移除）。
