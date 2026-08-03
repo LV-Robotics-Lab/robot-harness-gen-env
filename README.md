@@ -14,7 +14,7 @@ env-gen 是一个已发布、结构固定的上游子系统；直接改它会破
 | 路径 | 作用 |
 |---|---|
 | `external/env-gen-github/` | **软链**到上游 pristine 克隆（`/home/jingxiang/yuxin/env-gen-github`）；只读、可 `git pull` 同步。**不入 git** |
-| `1_asset_reuse/` | 阶段 1 · 资产复用（`lib/` 放本阶段模块） |
+| `1_asset_reuse/` | 阶段 1 · 资产复用：A线 RoboTwin→Isaac USD / B线 外部USD→RoboTwin布局 / C线 注册进扩展catalog被文字场景选中；含批量导入工具（详见其 OVERVIEW.md） |
 | `2_sim_migration/` | 阶段 2 · 仿真环境迁移（SAPIEN→其他后端 adapter） |
 | `shared/` | 跨阶段共享（adapter 基类 / schema / tests） |
 | `data/` | 输入 / 资产（大文件用软链，**不入 git**） |

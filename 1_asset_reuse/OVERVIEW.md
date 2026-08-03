@@ -11,7 +11,9 @@
   grounding 真实选中、通过 SAPIEN 物理回放与全量验证。
 
 打样样本：001_bottle（刚体）、036_cabinet（关节体）、YCB 025_mug（外部引入，红色马克杯，
-注册为 `301_cup`）。所有转换以"双后端物理验证 + 哈希账本"证明没走样。
+注册为 `301_cup`）。批量线已按清单导入 NVIDIA 资产 25 个模型：**17 通过入库**（9 个资产
+类目，catalog available 18→27），8 个带原因淘汰（见 `import_matrix.json`）。所有转换以
+"双后端物理验证 + 哈希账本"证明没走样。
 
 ## 2. 整体 输入 → 输出
 
@@ -45,6 +47,8 @@
 | B | ⑨ 物化 RoboTwin 布局 + SAPIEN 验证 + 账本 | `s8b_materialize_validate.py` |
 | C | ⑩ 影子根 + 扩展 overrides + 上游 catalog 扫描 | `s9_build_shadow_root.py` |
 | C | ⑪ e2e：文字→场景选中外部资产→回放→全量验证 | `s10_e2e_scene.sh` |
+| B批量 | ⑫ 清单驱动批量拉取+转换（一次 App 会话转全部） | `import_fetch_convert.py` + `configs/external_manifest.json` |
+| B批量 | ⑬ 批量物化+逐模型验证（进程隔离防原生崩溃；淘汰模型物理隔离出资产池） | `import_materialize.py` |
 
 ```
 线A: RoboTwin GLB/URDF ──转换──> USD ──双后端验证──> 账本(isaacsim 表示) ──> Transfer 可消费
