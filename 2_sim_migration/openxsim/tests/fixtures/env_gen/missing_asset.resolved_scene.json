@@ -1,0 +1,261 @@
+{
+  "schema_version": "robotwin.resolved_scene.v1",
+  "scene_id": "place_a_can_on_top_of_a_plate_fe0b76e316",
+  "request": "Place a can on top of a plate.",
+  "frame": {
+    "name": "robotwin_world",
+    "x_axis": "right",
+    "y_axis": "front",
+    "z_axis": "up",
+    "handedness": "right_handed"
+  },
+  "unit": "m",
+  "seed": 42,
+  "workspace": {
+    "support_surface": "table",
+    "table_height_m": 0.741,
+    "x_bounds_m": [
+      -0.35,
+      0.35
+    ],
+    "y_bounds_m": [
+      -0.2,
+      0.3
+    ],
+    "robot_keepout_x_m": [
+      -0.16,
+      0.16
+    ],
+    "robot_keepout_y_m": [
+      -0.2,
+      -0.08
+    ]
+  },
+  "source_scene_spec_sha256": "4f8e994534e3739646273ec2e9382cc19d4bffe1d4c3fbbf9e9f54b38fc32b48",
+  "asset_catalog_sha256": "15872390a857160867f88d4ae5296d418d9e34ce41ff4dad79b8fd9666c7fbbd",
+  "compiler_version": "scene_gen.stage5_solver.v3",
+  "objects": [
+    {
+      "object_id": "can_1",
+      "category": "can",
+      "asset_id": "071_can",
+      "model_id": 0,
+      "load_type": "rigid",
+      "stable_pose_id": "robotwin_can_upright",
+      "stable_orientation_wxyz": [
+        0.7071067811865476,
+        0.7071067811865476,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0712,
+        0.0712,
+        0.0965
+      ],
+      "footprint_shape": "circle",
+      "support_margin_m": 0.005,
+      "support_spawn_clearance_m": 0.003,
+      "z_policy": "origin_on_table",
+      "mesh_scale": [
+        0.05,
+        0.05,
+        0.05
+      ],
+      "collision_available": true,
+      "source_files": [
+        "/nonexistent/missing.glb"
+      ],
+      "grounding_score": 103.0,
+      "grounding_reasons": [
+        "exact category match",
+        "collision representation available",
+        "normalized dimensions available"
+      ],
+      "rejected_candidates": [
+        {
+          "asset_id": "071_can",
+          "model_id": 1,
+          "score": 100.0,
+          "reasons": [
+            "model unusable",
+            "stable_pose"
+          ]
+        },
+        {
+          "asset_id": "071_can",
+          "model_id": 2,
+          "score": 100.0,
+          "reasons": [
+            "model unusable",
+            "stable_pose"
+          ]
+        },
+        {
+          "asset_id": "071_can",
+          "model_id": 3,
+          "score": 100.0,
+          "reasons": [
+            "model unusable",
+            "stable_pose"
+          ]
+        },
+        {
+          "asset_id": "071_can",
+          "model_id": 5,
+          "score": 100.0,
+          "reasons": [
+            "model unusable",
+            "stable_pose"
+          ]
+        },
+        {
+          "asset_id": "071_can",
+          "model_id": 6,
+          "score": 100.0,
+          "reasons": [
+            "model unusable",
+            "stable_pose"
+          ]
+        }
+      ],
+      "pose": {
+        "position_m": [
+          -0.125948517,
+          0.073604037,
+          0.751
+        ],
+        "orientation_wxyz": [
+          0.642282049461,
+          0.642282049461,
+          -0.295759647247,
+          -0.295759647247
+        ],
+        "yaw_rad": -0.863073811751
+      },
+      "is_static": false,
+      "support_relation": "on_top_of",
+      "support_target": "plate_1",
+      "articulation_joint_names": [],
+      "articulation_joint_limits": [],
+      "articulation_qpos": [],
+      "asset_provenance": "robotwin_catalog"
+    },
+    {
+      "object_id": "plate_1",
+      "category": "plate",
+      "asset_id": "003_plate",
+      "model_id": 0,
+      "load_type": "rigid",
+      "stable_pose_id": "robotwin_plate_upright",
+      "stable_orientation_wxyz": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "dimensions_m": [
+        0.2297,
+        0.23,
+        0.028
+      ],
+      "interior_dimensions_m": [
+        0.18,
+        0.18,
+        0.02
+      ],
+      "footprint_shape": "circle",
+      "support_surface_shape": "circle",
+      "support_surface_dimensions_m": [
+        0.1,
+        0.1
+      ],
+      "support_surface_z_offset_m": 0.006,
+      "support_margin_m": 0.008,
+      "support_spawn_clearance_m": 0.004,
+      "z_policy": "origin_on_table",
+      "mesh_scale": [
+        0.025,
+        0.025,
+        0.025
+      ],
+      "collision_available": true,
+      "source_files": [
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/003_plate/collision/base0.glb",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/003_plate/model_data0.json",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/003_plate/visual/base0.glb"
+      ],
+      "grounding_score": 103.0,
+      "grounding_reasons": [
+        "exact category match",
+        "collision representation available",
+        "normalized dimensions available"
+      ],
+      "rejected_candidates": [],
+      "pose": {
+        "position_m": [
+          -0.128389593,
+          0.068683975,
+          0.741
+        ],
+        "orientation_wxyz": [
+          0.240721546612,
+          0.240721546612,
+          0.664870767139,
+          0.664870767139
+        ],
+        "yaw_rad": 0.876044411498
+      },
+      "is_static": false,
+      "support_relation": "on_table",
+      "support_target": "table",
+      "articulation_joint_names": [],
+      "articulation_joint_limits": [],
+      "articulation_qpos": [],
+      "asset_provenance": "robotwin_catalog"
+    }
+  ],
+  "relations": [
+    {
+      "relation": "on_table",
+      "source": "plate_1",
+      "target": "table"
+    },
+    {
+      "relation": "on_top_of",
+      "source": "can_1",
+      "target": "plate_1"
+    }
+  ],
+  "solver_trace": {
+    "algorithm": "bounded_rejection_backtracking_v1",
+    "seed": 42,
+    "max_attempts_per_object": 96,
+    "total_attempts": 2,
+    "attempts": [
+      {
+        "attempt": 1,
+        "object_id": "plate_1",
+        "candidate_xy_m": [
+          -0.128389593,
+          0.068683975
+        ],
+        "yaw_rad": 0.876044411498,
+        "accepted": true,
+        "reasons": []
+      },
+      {
+        "attempt": 2,
+        "object_id": "can_1",
+        "candidate_xy_m": [
+          -0.125948517,
+          0.073604037
+        ],
+        "yaw_rad": -0.863073811751,
+        "accepted": true,
+        "reasons": []
+      }
+    ],
+    "status": "pass"
+  }
+}

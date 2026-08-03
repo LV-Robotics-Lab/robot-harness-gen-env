@@ -31,19 +31,19 @@ def _representation(
         path = Path(p).expanduser()
         return path if path.is_absolute() else (base / path).resolve()
 
-    candidates = list(source_files)
+    def _make(fmt: str, resolved: Path) -> AssetRepresentation:
+        if not resolved.exists():
+            raise EnvironmentImportError(f"env-gen asset file missing: {resolved}")
+        return AssetRepresentation(format=fmt, uri=str(resolved), backend="sapien")
+
     if load_type == "urdf":
-        for f in candidates:
+        for f in source_files:
             if f.lower().endswith(".urdf"):
-                return AssetRepresentation(
-                    format="urdf", uri=str(_resolve(f)), backend="sapien"
-                )
-    for f in candidates:
+                return _make("urdf", _resolve(f))
+    for f in source_files:
         suffix = Path(f).suffix.lower().lstrip(".")
         if suffix in _MESH_SUFFIXES:
-            return AssetRepresentation(
-                format=suffix, uri=str(_resolve(f)), backend="sapien"
-            )
+            return _make(suffix, _resolve(f))
     raise EnvironmentImportError(
         f"no mesh/urdf representation in source_files: {source_files}"
     )

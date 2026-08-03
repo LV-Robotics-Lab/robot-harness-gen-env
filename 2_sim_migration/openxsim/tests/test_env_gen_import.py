@@ -52,3 +52,29 @@ def test_fidelity_unknown_physics_and_provenance_and_relations():
 def test_rigid_asset_has_empty_articulation():
     pkg = import_env_gen(FIX)
     assert all(a.articulation == {} for a in pkg.assets)  # can/plate 无关节
+
+
+def test_missing_asset_file_raises():
+    from agenticsim.openxsim.importers import EnvironmentImportError
+
+    bad = FIX.with_name("missing_asset.resolved_scene.json")
+    with pytest.raises(EnvironmentImportError):
+        import_env_gen(bad)
+
+
+def test_non_env_gen_input_raises(tmp_path):
+    from agenticsim.openxsim.importers import EnvironmentImportError
+
+    p = tmp_path / "other.json"
+    p.write_text('{"compiler_version": "something_else", "objects": []}')
+    with pytest.raises(EnvironmentImportError):
+        import_env_gen(p)
+
+
+def test_malformed_json_raises(tmp_path):
+    from agenticsim.openxsim.importers import EnvironmentImportError
+
+    p = tmp_path / "broken.json"
+    p.write_text("{not json")
+    with pytest.raises(EnvironmentImportError):
+        import_env_gen(p)
