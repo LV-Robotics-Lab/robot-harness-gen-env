@@ -108,6 +108,26 @@ def test_manifest_group_and_append(tmp_path):
     assert len(json.loads(p.read_text())["groups"]) == 1
 
 
+def test_manifest_group_tolerates_github_candidate_without_key():
+    c = AssetCandidate(
+        candidate_id="github:KhronosGroup/glTF-Sample-Assets:Models/Lantern/glTF-Binary/Lantern.glb",
+        name="Lantern.glb",
+        category="lantern",
+        download_url="https://raw.test/Lantern.glb",
+        source_page="https://gh",
+        format="glb",
+        provider="github_tree",
+        license="CC0",
+        score=1.0,
+        metadata={"path": "Models/Lantern/glTF-Binary/Lantern.glb"},
+    )
+    g = a2.build_manifest_group(
+        c, "303_lantern", 0, {"category": "lantern", "aliases": ["lantern"]}
+    )
+    assert g["prefix"] == "Models/Lantern/glTF-Binary"
+    assert g["items"][0]["usd"] == "Lantern.glb"
+
+
 def test_write_evidence_schema(tmp_path):
     a2.write_evidence(
         tmp_path / "e.json",

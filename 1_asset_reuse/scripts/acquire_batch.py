@@ -90,24 +90,39 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         out = Path(paths["out"])
         out.mkdir(parents=True, exist_ok=True)
         staging = out / f"staging_{asset}_m{model}"
-        tmp_manifest = out / f"manifest_{asset}_m{model}.json"
-        tmp_manifest.write_text(json.dumps({"groups": [group]}, indent=1))
         fragment = Path(paths["fragment_dir"]) / f"{asset}_m{model}.yml"
         fragment.parent.mkdir(parents=True, exist_ok=True)
-        runner(
-            [
-                paths["py_isa"],
-                "-u",
-                paths["scripts"] / "import_fetch_convert.py",
-                "--manifest",
-                tmp_manifest,
-                "--source-root",
-                paths["source"],
-                "--staging",
-                staging,
-            ],
-            env={"OMNI_KIT_ACCEPT_EULA": "YES"},
-        )
+        if str(candidate.provider).startswith("github"):
+            from lib import a3_webfetch as a3w
+
+            try:
+                a3w.stage_web_candidate(
+                    candidate, entry, asset, model, staging, out / "webcache"
+                )
+            except Exception as exc:  # noqa: BLE001
+                r["verdict"] = "rejected"
+                r["rejection"] = {
+                    "code": a2.REJ_FETCH,
+                    "detail": f"{type(exc).__name__}: {exc}",
+                }
+                continue
+        else:
+            tmp_manifest = out / f"manifest_{asset}_m{model}.json"
+            tmp_manifest.write_text(json.dumps({"groups": [group]}, indent=1))
+            runner(
+                [
+                    paths["py_isa"],
+                    "-u",
+                    paths["scripts"] / "import_fetch_convert.py",
+                    "--manifest",
+                    tmp_manifest,
+                    "--source-root",
+                    paths["source"],
+                    "--staging",
+                    staging,
+                ],
+                env={"OMNI_KIT_ACCEPT_EULA": "YES"},
+            )
         runner(
             [
                 paths["py_sap"],

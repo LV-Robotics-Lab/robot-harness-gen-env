@@ -90,7 +90,9 @@ def allocate_asset(category, library_dir, manifest_path):
 
 
 def build_manifest_group(candidate, asset, model, entry):
-    key = candidate.metadata["key"]
+    key = candidate.metadata.get("key") or candidate.metadata.get(
+        "path", candidate.name
+    )
     item = {
         "usd": key.rsplit("/", 1)[-1],
         "asset": asset,
