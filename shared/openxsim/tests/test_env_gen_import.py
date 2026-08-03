@@ -91,3 +91,14 @@ def test_dispatcher_routes_env_gen():
 
 def test_determinism_same_input_same_digest():
     assert import_env_gen(FIX).digest() == import_env_gen(FIX).digest()
+
+
+def test_articulated_scene_carries_joints_and_state():
+    fix = FIX.with_name("cabinet_articulated.resolved_scene.json")
+    pkg = import_env_gen(fix)
+    pkg.validate()
+    art = [a.articulation for a in pkg.assets if a.articulation]
+    assert art, "expected at least one asset with non-empty articulation"
+    a0 = art[0]
+    assert a0["joint_names"]  # 关节名带过来了
+    assert "state" in a0  # articulation_state 字段存在（Fix 1）

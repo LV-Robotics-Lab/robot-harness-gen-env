@@ -1,0 +1,153 @@
+{
+  "schema_version": "robotwin.resolved_scene.v1",
+  "scene_id": "place_a_half_open_cabinet_on_the_table_461e8cb5ad",
+  "request": "Place a half-open cabinet on the table.",
+  "frame": {
+    "name": "robotwin_world",
+    "x_axis": "right",
+    "y_axis": "front",
+    "z_axis": "up",
+    "handedness": "right_handed"
+  },
+  "unit": "m",
+  "seed": 42,
+  "workspace": {
+    "support_surface": "table",
+    "table_height_m": 0.741,
+    "x_bounds_m": [
+      -0.35,
+      0.35
+    ],
+    "y_bounds_m": [
+      -0.2,
+      0.3
+    ],
+    "robot_keepout_x_m": [
+      -0.16,
+      0.16
+    ],
+    "robot_keepout_y_m": [
+      -0.2,
+      -0.08
+    ]
+  },
+  "source_scene_spec_sha256": "678ce7a516a3a0b0ddf5e231f41e96e887934e01313bd99c0433132d216c52a1",
+  "asset_catalog_sha256": "15872390a857160867f88d4ae5296d418d9e34ce41ff4dad79b8fd9666c7fbbd",
+  "compiler_version": "scene_gen.stage5_solver.v3",
+  "objects": [
+    {
+      "object_id": "cabinet_1",
+      "category": "cabinet",
+      "asset_id": "036_cabinet",
+      "model_id": 46653,
+      "load_type": "urdf",
+      "stable_pose_id": "robotwin_cabinet_upright",
+      "stable_orientation_wxyz": [
+        0.7071067811865476,
+        0.7071067811865476,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.23067099000000002,
+        0.24268491,
+        0.43591365
+      ],
+      "footprint_shape": "box",
+      "support_margin_m": 0.005,
+      "support_spawn_clearance_m": 0.003,
+      "z_policy": "origin_on_table",
+      "mesh_scale": [
+        0.27,
+        0.27,
+        0.27
+      ],
+      "collision_available": true,
+      "source_files": [
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/036_cabinet/46653/mobility.urdf",
+        "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/036_cabinet/46653/model_data.json"
+      ],
+      "grounding_score": 103.0,
+      "grounding_reasons": [
+        "exact category match",
+        "collision representation available",
+        "normalized dimensions available"
+      ],
+      "rejected_candidates": [],
+      "pose": {
+        "position_m": [
+          0.0,
+          0.104664505,
+          0.741
+        ],
+        "orientation_wxyz": [
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "yaw_rad": 1.570796326795
+      },
+      "is_static": true,
+      "support_relation": "on_table",
+      "support_target": "table",
+      "articulation_state": {
+        "state": "partially_open",
+        "open_fraction": 0.5,
+        "joint_selector": "all_movable"
+      },
+      "articulation_joint_names": [
+        "joint_1",
+        "joint_2",
+        "joint_3"
+      ],
+      "articulation_joint_limits": [
+        [
+          0.0,
+          0.17820000000000005
+        ],
+        [
+          0.0,
+          0.17820000000000005
+        ],
+        [
+          0.0,
+          0.17820000000000005
+        ]
+      ],
+      "articulation_qpos": [
+        0.0675,
+        0.0675,
+        0.0675
+      ],
+      "asset_provenance": "robotwin_catalog"
+    }
+  ],
+  "relations": [
+    {
+      "relation": "on_table",
+      "source": "cabinet_1",
+      "target": "table"
+    }
+  ],
+  "solver_trace": {
+    "algorithm": "bounded_rejection_backtracking_v1",
+    "seed": 42,
+    "max_attempts_per_object": 96,
+    "total_attempts": 1,
+    "attempts": [
+      {
+        "attempt": 1,
+        "object_id": "cabinet_1",
+        "candidate_xy_m": [
+          0.0,
+          0.104664505
+        ],
+        "yaw_rad": 1.570796326795,
+        "accepted": true,
+        "reasons": []
+      }
+    ],
+    "status": "pass"
+  }
+}

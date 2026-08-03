@@ -21,7 +21,7 @@
 |---|---|
 | `../shared/openxsim/source/agenticsim/agenticsim/openxsim/` | 引擎源码：`ir.py`(中立 IR) `backends.py`(多后端编译) `robotwin.py`(RoboTwin 适配) `conformance.py`(L0-L4 一致性) `importers.py` `text2env.py` `pipeline.py` `assets.py` |
 | `../shared/openxsim/scripts/openxsim.py` | CLI 入口（自定位 `source/agenticsim`） |
-| `../shared/openxsim/configs/` `../shared/openxsim/tests/` | 配置 / 测试（36 passed） |
+| `../shared/openxsim/configs/` `../shared/openxsim/tests/` | 配置 / 测试（47 passed） |
 | `../shared/openxsim/third_party/MetaSim/` | vendored 多后端仿真框架（含 IsaacSim 工具）。**不入 git**，见 `../shared/openxsim/UPSTREAM.md` |
 | `../shared/openxsim/deps/metasim_core/` | vendored 依赖。**不入 git** |
 | `lib/` | 空：桥接 adapter 未落于此，已直接落 openxsim 包内的 `env_gen.py`（见上） |
@@ -32,7 +32,7 @@ conda activate env-gen-yuxin
 OX=/home/jingxiang/yuxin/env-gen-dev/shared/openxsim
 export PYTHONPATH="$OX/source/agenticsim:$OX/deps/metasim_core:$OX/third_party/MetaSim:$PYTHONPATH"
 python $OX/scripts/openxsim.py --help              # 5 个工作流
-python -m pytest $OX/tests -q                       # 预期 36 passed
+python -m pytest $OX/tests -q                       # 预期 47 passed
 ```
 
 ## 5. 关键概念 / 术语

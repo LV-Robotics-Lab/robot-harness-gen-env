@@ -8,7 +8,7 @@
 ## 1. 这是什么 & 目标
 在**不修改上游一行**的前提下扩展 env-gen：
 - **任务 1 · 资产复用**：提升 RoboTwin 资产在场景生成中的复用效率。⏳ 具体机制（复用索引 / 缓存 / 跨场景共享 / proxy 复用…）待 brainstorm。
-- **任务 2 · 仿真环境迁移**：让 env-gen 的场景包能在 SAPIEN 之外的仿真后端运行。**迁移引擎已就位 = openxsim**（后端中立 IR + 多后端编译 + 一致性测试，搬入 `shared/openxsim/`，36 测试通过）。✅ 已实现 `import_env_gen` + `import_environment` 分派（env-gen `resolved_scene` → openxsim IR）；env-gen 场景经 openxsim `transfer` 端到端可用；Isaac 网格类资产需 USD 转换，缺 USD 时如实报 blocker（不静默降级）。importer 落 `shared/openxsim/`。
+- **任务 2 · 仿真环境迁移**：让 env-gen 的场景包能在 SAPIEN 之外的仿真后端运行。**迁移引擎已就位 = openxsim**（后端中立 IR + 多后端编译 + 一致性测试，搬入 `shared/openxsim/`，47 测试通过）。✅ 已实现 `import_env_gen` + `import_environment` 分派（env-gen `resolved_scene` → openxsim IR）；env-gen 场景经 openxsim `transfer` 端到端可用；Isaac 网格类资产需 USD 转换，缺 USD 时如实报 blocker（不静默降级）。importer 落 `shared/openxsim/`。
 
 ## 2. 设计原则 & 关键约束
 - **上游只读、加新层**：env-gen 作为外部只读依赖（`external/env-gen-github`，pristine 克隆，`git pull` 同步）；新代码只 import/adapter 引用，绝不改上游。

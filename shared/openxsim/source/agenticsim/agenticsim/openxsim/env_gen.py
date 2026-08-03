@@ -141,6 +141,7 @@ def import_env_gen(path: str | Path) -> EnvironmentPackage:
                             obj.get("articulation_joint_limits") or []
                         ),
                         "qpos": list(obj.get("articulation_qpos") or []),
+                        "state": obj.get("articulation_state"),
                     }
                     if joints
                     else {}
