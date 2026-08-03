@@ -1,6 +1,7 @@
 import json
+from pathlib import Path
 
-from lib.a1_providers import BUCKET, NvidiaAssetServerProvider
+from lib.a1_providers import BUCKET, NvidiaAssetServerProvider, RoboTwinLocalProvider
 
 FAKE_KEYS = [
     ("Assets/Isaac/5.1/Isaac/Props/YCB/Axis_Aligned/019_pitcher_base.usd", 4200000),
@@ -12,6 +13,8 @@ FAKE_KEYS = [
     ("Assets/Isaac/5.1/Isaac/Props/YCB/Axis_Aligned/Materials/wood.mdl", 12000),
 ]
 PREFIX = "Assets/Isaac/5.1/Isaac/Props/YCB/Axis_Aligned"
+
+FIX = Path(__file__).parent / "fixtures" / "mini_catalog.json"
 
 
 def make_provider(tmp_path, calls=None):
@@ -52,3 +55,14 @@ def test_index_cached_after_first_build(tmp_path):
     p.search("pitcher")
     assert calls == [PREFIX]
     assert json.loads((tmp_path / "idx.json").read_text())[PREFIX]
+
+
+def test_local_provider_hits_alias():
+    got = RoboTwinLocalProvider(FIX).search("mug")
+    assert got and got[0].format == "catalog_entry"
+    assert got[0].metadata["asset_id"]
+    assert got[0].provider == "robotwin_local"
+
+
+def test_local_provider_miss_returns_empty():
+    assert RoboTwinLocalProvider(FIX).search("pitcher") == []

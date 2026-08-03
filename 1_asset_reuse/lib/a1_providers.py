@@ -79,3 +79,43 @@ class NvidiaAssetServerProvider:
                     )
                 )
         return sorted(out, key=lambda c: (-c.score, c.candidate_id))[:limit]
+
+
+class RoboTwinLocalProvider:
+    name = "robotwin_local"
+
+    def __init__(self, catalog_path):
+        self.catalog_path = Path(catalog_path)
+
+    def search(self, query, limit=20):
+        data = json.loads(self.catalog_path.read_text())
+        entries = data["entries"] if isinstance(data, dict) else data
+        toks = _tokens(query)
+        out = []
+        for e in entries:
+            names = {
+                str(n).lower()
+                for n in [
+                    e.get("category", ""),
+                    e.get("semantic_name", ""),
+                    *e.get("aliases", []),
+                ]
+            }
+            hits = sum(1 for t in toks if t in names)
+            if not hits:
+                continue
+            out.append(
+                AssetCandidate(
+                    candidate_id=f"catalog:{e['asset_id']}",
+                    name=e["asset_id"],
+                    category=e.get("category", ""),
+                    download_url=f"file://{e.get('asset_path', '')}",
+                    source_page=str(self.catalog_path),
+                    format="catalog_entry",
+                    provider=self.name,
+                    license="already registered",
+                    score=float(hits),
+                    metadata={"asset_id": e["asset_id"], "colors": e.get("colors", [])},
+                )
+            )
+        return sorted(out, key=lambda c: (-c.score, c.candidate_id))[:limit]
