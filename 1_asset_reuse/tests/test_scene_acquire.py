@@ -60,3 +60,44 @@ def test_gap_triggers_acquire_then_blocker_when_still_missing(tmp_path):
     blocker = json.loads((tmp_path / "out" / "asset_gap_blocker.json").read_text())
     assert blocker["schema"] == "envgen.asset_gap_blocker.v1"
     assert blocker["unmet"][0]["category"] == "hammer"
+
+
+def test_generate_scene_receives_absolute_paths(tmp_path, monkeypatch):
+    # Regression test: generate_scene.py runs with cwd=UP (a different directory),
+    # so relative --catalog/--out values must be absolutized before being handed
+    # to that subprocess, or they resolve against the wrong cwd.
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "p.json").write_text("{}")
+    (tmp_path / "catalog.json").write_text(Path(FIX).read_text())
+    calls = []
+
+    def runner(cmd, cwd=None, env=None):
+        calls.append([str(c) for c in cmd])
+        scene = Path("out") / "scenes" / "s1"
+        scene.mkdir(parents=True, exist_ok=True)
+        (scene / "resolved_scene.json").write_text("{}")
+        return 0
+
+    rc = sa.main(
+        [
+            "--prompt",
+            "Place a red mug on the table.",
+            "--seed",
+            "42",
+            "--catalog",
+            "catalog.json",
+            "--providers",
+            "p.json",
+            "--dev-root",
+            ".",
+            "--out",
+            "out",
+        ],
+        runner=runner,
+    )
+    assert rc == 0
+    cmd = calls[0]
+    catalog_arg = cmd[cmd.index("--asset-catalog") + 1]
+    out_root_arg = cmd[cmd.index("--out-root") + 1]
+    assert Path(catalog_arg).is_absolute()
+    assert Path(out_root_arg).is_absolute()

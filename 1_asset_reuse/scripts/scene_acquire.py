@@ -30,7 +30,7 @@ def main(argv=None, runner=None):
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
     runner = runner or default_runner
-    out = Path(a.out)
+    out = Path(a.out).resolve()
     out.mkdir(parents=True, exist_ok=True)
     spec, _ = a4.extract_needs(a.prompt, a.seed)
     records = a4.check_coverage(spec, a.catalog)
@@ -87,7 +87,7 @@ def main(argv=None, runner=None):
             "--seed",
             str(a.seed),
             "--asset-catalog",
-            catalog,
+            str(Path(catalog).resolve()),
             "--out-root",
             out / "scenes",
         ],
