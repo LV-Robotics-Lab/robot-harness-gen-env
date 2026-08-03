@@ -22,6 +22,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--instance-dir", required=True, help=".../314_cabinet/0")
 parser.add_argument("--source-usd", required=True)
 parser.add_argument("--out", required=True)
+parser.add_argument("--allow-free-joints", action="store_true",
+                    help="accept joints whose gravity equilibrium differs from rest pose (recorded)")
 args = parser.parse_args()
 
 inst = Path(args.instance_dir)
@@ -55,10 +57,26 @@ dof = int(art.dof)
 active = art.get_active_joints()
 limits = [(float(j.get_limits()[0][0]), float(j.get_limits()[0][1])) for j in active]
 
-for _ in range(120):
+q0 = np.asarray(art.get_qpos(), dtype=float)
+q_mid = None
+for i in range(120):
     sc.step()
+    if i == 89:
+        q_mid = np.asarray(art.get_qpos(), dtype=float)
 qpos = np.asarray(art.get_qpos(), dtype=float)
 settle_ok = bool(np.isfinite(qpos).all())
+converged = bool(np.all(np.abs(qpos - q_mid) < 1e-3))
+jtypes = [getattr(j, "type", "revolute") for j in active]
+free_joints = []
+equilibrium = []
+for i2, jt in enumerate(jtypes):
+    drift = float(abs(qpos[i2] - q0[i2]))
+    thresh = 0.005 if "prismatic" in str(jt) else math.radians(5)
+    equilibrium.append({"joint": i2, "type": str(jt), "rest": round(float(q0[i2]), 4),
+                        "equilibrium": round(float(qpos[i2]), 4),
+                        "self_drift": round(drift, 4), "free": drift > thresh})
+    if drift > thresh:
+        free_joints.append(i2)
 
 sweep_ok = True
 sweep_detail = []
@@ -139,16 +157,20 @@ checks = {
     "dof_matches": dof == expected_movable,
     "limits": [[round(a, 3), round(b, 3)] for a, b in limits],
     "settle_finite": settle_ok,
+    "converged": converged,
+    "free_joints": free_joints,
+    "equilibrium": equilibrium,
+    "free_joints_allowed": bool(args.allow_free_joints),
     "sweep_ok": sweep_ok,
     "sweep_detail": sweep_detail,
     "screenshot_ok": bool(img.std() > 1),
 }
-checks["status"] = (
-    "pass"
-    if checks["dof_matches"] and settle_ok and sweep_ok and checks["screenshot_ok"]
-    else "fail"
-)
-
+free_ok = (not free_joints) or args.allow_free_joints
+if free_joints and not args.allow_free_joints:
+    print(f"joints {free_joints} swing freely under gravity; "
+          "pass --allow-free-joints to accept (recorded) or fix dynamics")
+checks["status"] = ("pass" if checks["dof_matches"] and settle_ok and converged
+                    and sweep_ok and free_ok and checks["screenshot_ok"] else "fail")
 bundle = {
     "asset_id": "external_314_cabinet_m0",
     "category": "cabinet",
@@ -190,6 +212,7 @@ bundle = {
     "articulation": {
         "joint_count_movable": expected_movable,
         "joints": report["movable"],
+        "equilibrium": equilibrium,
     },
     "tags": ["articulated", "external", "reverse-import"],
 }

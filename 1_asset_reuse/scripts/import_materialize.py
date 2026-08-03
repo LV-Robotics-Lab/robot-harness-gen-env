@@ -14,6 +14,7 @@ excluded from the overrides fragment (= excluded from the catalog).
 
 import argparse
 import hashlib
+import sys
 import json
 import math
 import shutil
@@ -23,11 +24,19 @@ import numpy as np
 import sapien
 import trimesh
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+import conventions as conv_lib  # noqa: E402
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--staging", required=True)
 parser.add_argument("--library-dir", required=True)
 parser.add_argument("--out", required=True)
 parser.add_argument("--overrides-fragment", required=True)
+parser.add_argument(
+    "--reference-catalog",
+    default="/home/jingxiang/yuxin/env-gen-dev/external/env-gen-github/data/scene_gen/asset_catalog.json",
+    help="catalog used for convention inheritance and category sizing",
+)
 parser.add_argument(
     "--only-index",
     type=int,
@@ -243,6 +252,16 @@ for idx, r in worker_records:
         )
         lo, hi = scene.bounds
         size = [float(b - a) for a, b in zip(lo, hi)]
+        size_res = conv_lib.resolve_size(
+            meta.get("category", "unknown"), size, args.reference_catalog,
+            meta.get("size_policy", "match_category"))
+        if size_res["scale"] != 1.0:
+            scene.apply_transform(
+                trimesh.transformations.scale_matrix(size_res["scale"]))
+            lo, hi = scene.bounds
+            size = [float(b - a) for a, b in zip(lo, hi)]
+        conv = conv_lib.inherit_conventions(
+            meta.get("category", "unknown"), args.reference_catalog)
         if not (0.01 < size[1] < 1.0):
             raise ValueError(f"implausible height {size[1]:.3f}m")
 
@@ -282,7 +301,9 @@ for idx, r in worker_records:
         from PIL import Image
 
         Image.fromarray(img).save(out / "shots" / f"{asset}_m{model}.png")
-        row.update(bbox_m=size, rotated_z2y=rotated, **checks)
+        row.update(bbox_m=size, rotated_z2y=rotated,
+                   scale_applied=size_res["scale"], size_verdict=size_res["verdict"],
+                   conventions_inherited_from=conv["precedent"], **checks)
         row["status"] = "accepted" if checks["pass"] else "rejected"
         if not checks["pass"]:
             row["reasons"] = [
@@ -340,6 +361,9 @@ for idx, r in worker_records:
                     "runtime_default_kg": 0.1,
                 },
                 "mesh_bbox_m": size,
+                "scale_applied": size_res["scale"],
+                "size_resolution": size_res,
+                "conventions": conv,
                 "scale": [1.0, 1.0, 1.0],
                 "mesh_up_axis": "Y",
             },
@@ -381,6 +405,9 @@ for asset, rows in sorted(by_asset.items()):
     if not accepted:
         continue
     meta = meta_by_asset.get(asset, {})
+    conv = conv_lib.inherit_conventions(
+        meta.get("category", "unknown"), args.reference_catalog)
+    orient = conv_lib.orientation_for_kind("rigid_yup")
     frag_lines.append(f"  {asset}:")
     frag_lines.append(f"    category: {meta.get('category', 'unknown')}")
     frag_lines.append(f"    aliases: [{', '.join(meta.get('aliases', []))}]")
@@ -391,10 +418,12 @@ for asset, rows in sorted(by_asset.items()):
         frag_lines.append(f'      "{x["model"]}":')
         frag_lines.append("        stable_pose_id: upright")
         frag_lines.append(
-            "        stable_orientation_wxyz: [0.7071067811865476, 0.7071067811865476, 0.0, 0.0]"
-        )
-        frag_lines.append("        z_policy: origin_on_table")
-        frag_lines.append(f"        footprint_shape: {meta.get('footprint', 'box')}")
+            f"        stable_orientation_wxyz: [{orient[0]}, {orient[1]}, {orient[2]}, {orient[3]}]")
+        frag_lines.append(f"        z_policy: {conv['z_policy']}")
+        frag_lines.append(
+            f"        footprint_shape: {meta.get('footprint') or conv['footprint_shape']}")
+        if meta.get("is_static", conv["is_static"]):
+            frag_lines.append("        is_static: true")
 Path(args.overrides_fragment).parent.mkdir(parents=True, exist_ok=True)
 Path(args.overrides_fragment).write_text("\n".join(frag_lines) + "\n")
 

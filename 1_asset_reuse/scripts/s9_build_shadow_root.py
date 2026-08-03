@@ -25,6 +25,10 @@ parser.add_argument(
     "--upstream", default="/home/jingxiang/yuxin/env-gen-dev/external/env-gen-github"
 )
 parser.add_argument(
+    "--admission", choices=["report", "enforce"], default=None,
+    help="run s14 catalog-view admission after build; enforce filters not_admitted externals from THIS view",
+)
+parser.add_argument(
     "--extra-overrides",
     default=None,
     help="yml fragment appended to upstream overrides (replaces built-in 301_cup block)",
@@ -149,5 +153,21 @@ for asset_id in wanted:
         print(f"{asset_id}: category={entry['category']} usable={len(usable)}")
         if not usable:
             ok = False
+if ok and args.admission:
+    import subprocess as sp
+
+    cmd = [sys.executable, str(Path(__file__).resolve().parent / "s14_catalog_admission.py"),
+           "--catalog", str(cat_out), "--upstream", args.upstream,
+           "--work-dir", str(ext / "_admission_work"),
+           "--report", str(ext / "catalog_admission.json")]
+    if args.admission == "enforce":
+        cmd.append("--enforce")
+    r = sp.run(cmd, text=True, capture_output=True)
+    for line in r.stdout.strip().splitlines()[-14:]:
+        print(line)
+    if r.returncode != 0:
+        print(r.stderr[-400:])
+        print("FAIL s9: admission step errored")
+        ok = False
 print("PASS s9" if ok else "FAIL s9")
 sys.exit(0 if ok else 1)

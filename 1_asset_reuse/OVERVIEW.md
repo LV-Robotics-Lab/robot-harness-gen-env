@@ -49,6 +49,8 @@
 | C | ⑪ e2e：文字→场景选中外部资产→回放→全量验证 | `s10_e2e_scene.sh` |
 | B批量 | ⑫ 清单驱动批量拉取+转换（一次 App 会话转全部） | `import_fetch_convert.py` + `configs/external_manifest.json` |
 | B批量 | ⑬ 批量物化+逐模型验证（进程隔离防原生崩溃；淘汰模型物理隔离出资产池） | `import_materialize.py` |
+| 防护 | ⑭ 惯例继承+尺寸策略（类别语义抄先例、几何语义按规范化 kind） | `lib/conventions.py` |
+| 防护 | ⑮ 目录准入（视图层单资产编译检查，池层永不拒收） | `s14_catalog_admission.py` |
 
 ```
 线A: RoboTwin GLB/URDF ──转换──> USD ──双后端验证──> 账本(isaacsim 表示) ──> Transfer 可消费
@@ -122,7 +124,7 @@ grounding 打分确定性可复算）→ 回放 `fail=0` → 全量验证 `fail=
 | RoboTwin 资产库 + envs 运行时 | **外部只读**（影子根引用） | `/home/jingxiang/workspace/.../external/RoboTwin` |
 | NVIDIA Isaac Assets 5.1（YCB 等） | 外部 HTTP 源，逐文件哈希入账；许可证标 unknown 待查 | `omniverse-content-production.s3-us-west-2.amazonaws.com` |
 | env-gen 上游（catalog/编译/验证器） | **外部只读**，全部经 CLI 参数消费 | `env-gen-dev/external/env-gen-github` |
-| openxsim（AssetBundle IR） | 项目内 vendored | `env-gen-dev/2_sim_migration/openxsim/` |
+| openxsim（AssetBundle IR） | 项目内 vendored | `env-gen-dev/shared/openxsim/` |
 | Isaac Sim 5.1.0.0（pip 版） | 双向转换 + Isaac 侧验证 | conda `isaac-smoke`（py3.11） |
 | SAPIEN 3.0.0b1 + trimesh | SAPIEN 侧验证与网格处理 | conda `env-gen-yuxin`（py3.10） |
 

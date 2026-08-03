@@ -11,6 +11,7 @@ sits at z=0 (origin_on_table convention). Units scaled by metersPerUnit.
 import argparse
 import json
 import math
+import sys
 from pathlib import Path
 
 parser = argparse.ArgumentParser()
@@ -19,6 +20,13 @@ parser.add_argument(
     "--out-dir", required=True, help="instance dir, e.g. .../314_cabinet/0"
 )
 parser.add_argument("--robot-name", default="imported_articulation")
+parser.add_argument("--size-policy", default=None,
+                    help="match_category | absolute:<m>; needs --category for match mode")
+parser.add_argument("--category", default=None)
+parser.add_argument(
+    "--reference-catalog",
+    default="/home/jingxiang/yuxin/env-gen-dev/external/env-gen-github/data/scene_gen/asset_catalog.json",
+)
 parser.add_argument("--scale", type=float, default=1.0,
                     help="uniform sizing scale on top of metersPerUnit (recorded)")
 args = parser.parse_args()
@@ -35,7 +43,21 @@ try:
     (out / "textured_objs").mkdir(parents=True, exist_ok=True)
 
     stage = Usd.Stage.Open(args.usd)
-    mpu = float(UsdGeom.GetStageMetersPerUnit(stage)) * args.scale
+    mpu_base = float(UsdGeom.GetStageMetersPerUnit(stage))
+    scale = args.scale
+    size_resolution = None
+    if args.size_policy and scale == 1.0:
+        cache0 = UsdGeom.BBoxCache(Usd.TimeCode.Default(), ["default", "render"])
+        rng0 = cache0.ComputeWorldBound(stage.GetDefaultPrim()).ComputeAlignedRange()
+        raw = [float(v) * mpu_base for v in (rng0.GetMax() - rng0.GetMin())]
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+        import conventions as conv_lib
+
+        size_resolution = conv_lib.resolve_size(
+            args.category or "unknown", raw, args.reference_catalog, args.size_policy)
+        scale = size_resolution["scale"]
+        print(f"size policy: {size_resolution}")
+    mpu = mpu_base * scale
     xc = UsdGeom.XformCache()
 
     def to_np(m):
@@ -249,7 +271,8 @@ try:
         json.dumps(
             {
                 "source_usd": args.usd,
-                "scale_applied": args.scale,
+                "scale_applied": scale,
+                "size_resolution": size_resolution,
                 "mpu": mpu,
                 "links": len(bodies),
                 "joints_total": len(joints),
