@@ -534,6 +534,11 @@ def import_environment(path: str | Path, *, source_backend: str | None = None) -
         return import_isaac_usda(source)
     if source.suffix.lower() == ".json":
         data = json.loads(source.read_text(encoding="utf-8"))
+        # env-gen (robot-harness-gen-env) resolved_scene.json
+        from .env_gen import _is_env_gen, import_env_gen  # local import avoids a cycle
+
+        if backend == "env_gen" or _is_env_gen(data):
+            return import_env_gen(source)
         if data.get("schema") == "agenticsim.sapien_scene.v1" or backend in {"sapien", "sapien3"}:
             return import_sapien_scene(source)
         if data.get("schema") == "agenticsim.metasim_scenario.v1" or backend == "metasim":

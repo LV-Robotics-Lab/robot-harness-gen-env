@@ -78,3 +78,16 @@ def test_malformed_json_raises(tmp_path):
     p.write_text("{not json")
     with pytest.raises(EnvironmentImportError):
         import_env_gen(p)
+
+
+def test_dispatcher_routes_env_gen():
+    from agenticsim.openxsim.importers import import_environment
+
+    pkg = import_environment(FIX)  # 自动识别
+    assert pkg.source["backend"] == "env_gen"
+    pkg2 = import_environment(FIX, source_backend="env_gen")  # 显式
+    assert pkg2.package_id == pkg.package_id
+
+
+def test_determinism_same_input_same_digest():
+    assert import_env_gen(FIX).digest() == import_env_gen(FIX).digest()
