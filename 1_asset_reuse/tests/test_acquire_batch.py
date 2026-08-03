@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import acquire_batch as ab
 from lib.a1_providers import Tier
 from lib import a2_selection as a2
+from lib import a3_webfetch as a3w
 
 
 def cand(key, score=1.0):
@@ -23,6 +24,21 @@ def cand(key, score=1.0):
         license="unknown",
         score=score,
         metadata={"key": key, "size_bytes": 10},
+    )
+
+
+def gh_cand(name, score=1.0):
+    return AssetCandidate(
+        candidate_id=f"github:x/{name}",
+        name=name,
+        category="x",
+        download_url=f"https://raw.test/{name}",
+        source_page="https://gh",
+        format="glb",
+        provider="github_tree",
+        license="CC0",
+        score=score,
+        metadata={"path": name},
     )
 
 
@@ -137,3 +153,57 @@ def test_exhausted_when_all_attempts_fail(tmp_path):
         outranked[0]["rejection"]["detail"]
         == "not attempted; fallback budget exhausted"
     )
+
+
+def test_github_candidate_uses_stage_web_candidate_not_fetch_convert(
+    tmp_path, monkeypatch
+):
+    staged = []
+    monkeypatch.setattr(
+        a3w, "stage_web_candidate", lambda *a, **k: staged.append(a) or {}
+    )
+    runner_calls = []
+    tiers = [
+        Tier(0, FakeProvider("t0", [])),
+        Tier(1, FakeProvider("t1", [gh_cand("Lantern.glb")])),
+    ]
+    ab.process_entry(
+        {"category": "lantern"},
+        tiers,
+        {"max_fallback": 0},
+        paths(tmp_path),
+        lambda cmd, env=None: runner_calls.append([str(c) for c in cmd]) or 0,
+    )
+    assert len(staged) == 1
+    assert any("import_materialize.py" in c[1] for c in runner_calls)
+    assert not any("import_fetch_convert.py" in c[1] for c in runner_calls)
+
+
+def test_github_fetch_failure_records_rejection_and_continues(tmp_path, monkeypatch):
+    def fake_stage(candidate, *a, **k):
+        if candidate.name == "first.glb":
+            raise RuntimeError("boom")
+        return {}
+
+    monkeypatch.setattr(a3w, "stage_web_candidate", fake_stage)
+    tiers = [
+        Tier(0, FakeProvider("t0", [])),
+        Tier(
+            1,
+            FakeProvider("t1", [gh_cand("first.glb", 2.0), gh_cand("second.glb", 1.0)]),
+        ),
+    ]
+    rec = ab.process_entry(
+        {"category": "lantern"},
+        tiers,
+        {"max_fallback": 1},
+        paths(tmp_path),
+        lambda cmd, env=None: 0,
+    )
+    assert rec["attempts"] == 2
+    codes = {
+        c["candidate_id"].rsplit("/", 1)[-1]: c["rejection"]["code"]
+        for c in rec["candidates"]
+    }
+    assert codes["first.glb"] == a2.REJ_FETCH
+    assert codes["second.glb"] == "validation_failed:materialize"

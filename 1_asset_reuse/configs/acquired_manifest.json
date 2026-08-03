@@ -16,6 +16,36 @@
      ]
     }
    ]
+  },
+  {
+   "name": "acq_302_bowl",
+   "prefix": "Assets/Isaac/5.1/Isaac/Props/YCB/Axis_Aligned",
+   "items": [
+    {
+     "usd": "024_bowl.usd",
+     "asset": "302_bowl",
+     "model": 0,
+     "category": "bowl",
+     "aliases": [
+      "bowl"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "acq_303_boombox",
+   "prefix": "Models/BoomBox/glTF-Binary",
+   "items": [
+    {
+     "usd": "BoomBox.glb",
+     "asset": "303_boombox",
+     "model": 0,
+     "category": "boombox",
+     "aliases": [
+      "boombox"
+     ]
+    }
+   ]
   }
  ]
 }
