@@ -120,6 +120,25 @@ def append_manifest(manifest_path, group):
     return p
 
 
+def pinned_candidate(entry):
+    from agenticsim.openxsim.assets import AssetCandidate
+
+    pin = entry["pinned"]
+    key = f"{pin['prefix'].rstrip('/')}/{pin['usd']}"
+    return AssetCandidate(
+        candidate_id=f"pinned:{key}",
+        name=pin["usd"],
+        category=entry["category"],
+        download_url=key,
+        source_page=key,
+        format="usd",
+        provider="nvidia_server",
+        license="unknown (NVIDIA Omniverse asset server; pinned_by_user)",
+        score=0.0,
+        metadata={"key": key, "pinned_by_user": True},
+    )
+
+
 def write_evidence(path, *, run_id, providers_snapshot, categories):
     payload = {
         "schema": "envgen.asset_selection_evidence.v1",

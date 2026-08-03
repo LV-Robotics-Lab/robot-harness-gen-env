@@ -46,6 +46,21 @@
      ]
     }
    ]
+  },
+  {
+   "name": "acq_304_kettle",
+   "prefix": "Assets/Isaac/5.1/Isaac/Props/YCB/Axis_Aligned",
+   "items": [
+    {
+     "usd": "019_pitcher_base.usd",
+     "asset": "304_kettle",
+     "model": 0,
+     "category": "kettle",
+     "aliases": [
+      "kettle"
+     ]
+    }
+   ]
   }
  ]
 }

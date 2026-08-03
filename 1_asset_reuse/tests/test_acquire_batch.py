@@ -207,3 +207,48 @@ def test_github_fetch_failure_records_rejection_and_continues(tmp_path, monkeypa
     }
     assert codes["first.glb"] == a2.REJ_FETCH
     assert codes["second.glb"] == "validation_failed:materialize"
+
+
+def test_pinned_entry_skips_search_but_gates(tmp_path):
+    p = paths(tmp_path)
+
+    def runner(cmd, env=None):
+        if "import_materialize.py" in str(cmd[1]):
+            d = p["library"] / "301_kettle"
+            (d / "visual").mkdir(parents=True, exist_ok=True)
+            (d / "visual" / "base0.glb").write_bytes(b"x")
+            (d / "model_data0.json").write_text("{}")
+        return 0
+
+    entry = {
+        "category": "kettle",
+        "pinned": {
+            "prefix": "Assets/Isaac/5.1/Isaac/Props/YCB/Axis_Aligned",
+            "usd": "019_pitcher_base.usd",
+        },
+    }
+    rec = ab.process_entry(entry, [], {}, p, runner)
+    assert rec["entry_mode"] == "pinned"
+    assert rec["status"] == "imported"
+    assert rec["attempts"] == 1
+
+
+def test_local_entry_materializes_from_file(tmp_path):
+    p = paths(tmp_path)
+    src = tmp_path / "teapot.glb"
+    src.write_bytes(b"glTF-bytes")
+
+    def runner(cmd, env=None):
+        if "import_materialize.py" in str(cmd[1]):
+            d = p["library"] / "301_teapot"
+            (d / "visual").mkdir(parents=True, exist_ok=True)
+            (d / "visual" / "base0.glb").write_bytes(b"x")
+            (d / "model_data0.json").write_text("{}")
+        return 0
+
+    entry = {"category": "teapot", "local": {"path": str(src), "up_axis": "Y"}}
+    rec = ab.process_entry(entry, [], {}, p, runner)
+    assert rec["entry_mode"] == "local"
+    assert rec["status"] == "imported"
+    staging = list(Path(p["out"]).glob("staging_*/staging_manifest.json"))
+    assert staging and json.loads(staging[0].read_text())[0]["up_axis"] == "Y"

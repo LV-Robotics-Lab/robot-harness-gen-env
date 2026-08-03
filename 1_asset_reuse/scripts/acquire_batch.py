@@ -43,44 +43,9 @@ def check_imported(library_dir, asset, model):
     ).is_file()
 
 
-def process_entry(entry, tiers, globals_cfg, paths, runner):
-    category = entry["category"]
-    query = " ".join([category, *entry.get("colors", []), *entry.get("aliases", [])])
-    rec = {
-        "query": {"category": category, "aliases": entry.get("aliases", [category])},
-        "entry_mode": "searched",
-        "candidates": [],
-        "attempts": 0,
-    }
-    res = a1.tiered_search(
-        tiers,
-        query,
-        viable_fn=lambda c: a2.gate(c, globals_cfg) is None,
-        limit=int(globals_cfg.get("top_k", 5)),
-    )
-    rec["tiers_consulted"] = res["tiers_consulted"]
-    rec["provider_errors"] = res["provider_errors"]
-    if res["tier0_hit"] is not None:
-        rec["status"] = "reused_local"
-        rec["local_reuse"] = {
-            "asset_id": res["tier0_hit"].metadata.get("asset_id"),
-            "reason": a2.ALREADY,
-        }
-        return rec
-    gated = a2.gate_candidates(res["candidates"], globals_cfg)
-    viable = [r for r in gated if r["verdict"] == "viable"]
-    if not viable:
-        rec["status"] = "search_failed" if not res["candidates"] else "exhausted"
-        rec["candidates"] = [
-            {
-                **a2.candidate_dict(r["candidate"]),
-                "verdict": r["verdict"],
-                "rejection": r["rejection"],
-            }
-            for r in gated
-        ]
-        return rec
-    max_attempts = 1 + int(globals_cfg.get("max_fallback", 2))
+def _attempt_import(
+    rec, viable, entry, category, globals_cfg, paths, runner, max_attempts
+):
     imported = None
     for r in viable[:max_attempts]:
         candidate = r["candidate"]
@@ -166,7 +131,7 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             "verdict": r["verdict"],
             "rejection": r.get("rejection"),
         }
-        for r in gated
+        for r in viable
     ]
     if imported:
         candidate, asset, model = imported
@@ -178,6 +143,154 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         }
     else:
         rec["status"] = "exhausted"
+    return rec
+
+
+def process_entry(entry, tiers, globals_cfg, paths, runner):
+    category = entry["category"]
+    if "pinned" in entry:
+        rec = {
+            "query": {"category": category},
+            "entry_mode": "pinned",
+            "candidates": [],
+            "attempts": 0,
+            "tiers_consulted": [],
+            "provider_errors": [],
+        }
+        candidate = a2.pinned_candidate(entry)
+        gated = a2.gate_candidates([candidate], globals_cfg)
+        if gated[0]["verdict"] != "viable":
+            rec["candidates"] = [
+                {
+                    **a2.candidate_dict(candidate),
+                    "verdict": "rejected",
+                    "rejection": gated[0]["rejection"],
+                }
+            ]
+            rec["status"] = "exhausted"
+            return rec
+        return _attempt_import(
+            rec, [gated[0]], entry, category, globals_cfg, paths, runner, max_attempts=1
+        )
+    if "local" in entry:
+        rec = {
+            "query": {"category": category},
+            "entry_mode": "local",
+            "candidates": [],
+            "attempts": 1,
+            "tiers_consulted": [],
+            "provider_errors": [],
+        }
+        from lib import a3_webfetch as a3w
+
+        asset, model = a2.allocate_asset(category, paths["library"], paths["manifest"])
+        out = Path(paths["out"])
+        staging = out / f"staging_{asset}_m{model}"
+        src = Path(entry["local"]["path"])
+        if not src.is_file():
+            rec["status"] = "exhausted"
+            rec["candidates"] = [
+                {
+                    "candidate_id": f"local:{src}",
+                    "provider": "local",
+                    "url": str(src),
+                    "format": src.suffix.lstrip("."),
+                    "license": "user-provided",
+                    "score": 0.0,
+                    "verdict": "rejected",
+                    "rejection": {"code": a2.REJ_FETCH, "detail": "file missing"},
+                }
+            ]
+            return rec
+        glb = a3w.to_glb(src, staging / f"{asset}_m{model}.glb")
+        record = a3w.synth_staging_record(
+            glb,
+            src,
+            a3w._sha256(src),
+            asset,
+            model,
+            entry,
+            up_axis=entry["local"].get("up_axis", "Y"),
+        )
+        (staging / "staging_manifest.json").write_text(json.dumps([record], indent=1))
+        fragment = Path(paths["fragment_dir"]) / f"{asset}_m{model}.yml"
+        fragment.parent.mkdir(parents=True, exist_ok=True)
+        runner(
+            [
+                paths["py_sap"],
+                paths["scripts"] / "import_materialize.py",
+                "--staging",
+                staging,
+                "--library-dir",
+                paths["library"],
+                "--out",
+                out,
+                "--overrides-fragment",
+                fragment,
+            ]
+        )
+        if check_imported(paths["library"], asset, model):
+            rec["status"] = "imported"
+            rec["selected"] = {
+                "candidate_id": f"local:{src}",
+                "provider": "local",
+                "url": str(src),
+                "format": "glb",
+                "license": "user-provided",
+                "score": 0.0,
+                "asset": asset,
+                "model": model,
+            }
+        else:
+            rec["status"] = "exhausted"
+        return rec
+    query = " ".join([category, *entry.get("colors", []), *entry.get("aliases", [])])
+    rec = {
+        "query": {"category": category, "aliases": entry.get("aliases", [category])},
+        "entry_mode": "searched",
+        "candidates": [],
+        "attempts": 0,
+    }
+    res = a1.tiered_search(
+        tiers,
+        query,
+        viable_fn=lambda c: a2.gate(c, globals_cfg) is None,
+        limit=int(globals_cfg.get("top_k", 5)),
+    )
+    rec["tiers_consulted"] = res["tiers_consulted"]
+    rec["provider_errors"] = res["provider_errors"]
+    if res["tier0_hit"] is not None:
+        rec["status"] = "reused_local"
+        rec["local_reuse"] = {
+            "asset_id": res["tier0_hit"].metadata.get("asset_id"),
+            "reason": a2.ALREADY,
+        }
+        return rec
+    gated = a2.gate_candidates(res["candidates"], globals_cfg)
+    viable = [r for r in gated if r["verdict"] == "viable"]
+    if not viable:
+        rec["status"] = "search_failed" if not res["candidates"] else "exhausted"
+        rec["candidates"] = [
+            {
+                **a2.candidate_dict(r["candidate"]),
+                "verdict": r["verdict"],
+                "rejection": r["rejection"],
+            }
+            for r in gated
+        ]
+        return rec
+    max_attempts = 1 + int(globals_cfg.get("max_fallback", 2))
+    rec = _attempt_import(
+        rec, viable, entry, category, globals_cfg, paths, runner, max_attempts
+    )
+    rec["candidates"] = [
+        {
+            **a2.candidate_dict(r["candidate"]),
+            "verdict": r["verdict"],
+            "rejection": r.get("rejection"),
+        }
+        for r in gated
+    ]
     return rec
 
 
