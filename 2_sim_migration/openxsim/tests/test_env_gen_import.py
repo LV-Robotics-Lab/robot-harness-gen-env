@@ -29,3 +29,26 @@ def test_rigid_scene_maps_to_valid_ir():
     }
     assert pkg.task.instruction
     assert any(c.get("type") == "unbound" for c in pkg.task.success)
+
+
+def test_fidelity_unknown_physics_and_provenance_and_relations():
+    pkg = import_env_gen(FIX)
+    asset = pkg.assets[0]
+    # 未知物理显式标记，不编造
+    assert asset.physical["mass_kg"] == {"status": "unknown"}
+    assert asset.physical["inertia"] == {"status": "unknown"}
+    assert asset.physical["dimensions_m"] is not None
+    # 血缘入 IR
+    assert asset.source["kind"] == "env_gen"
+    assert asset.source["asset_provenance"] == "robotwin_catalog"
+    # relations 作为数据带入 env.metadata（本任务不合成 task）
+    rels = pkg.env.metadata["relations"]
+    assert {r["relation"] for r in rels} == {"on_table", "on_top_of"}
+    # env-gen 溯源哈希带入
+    assert pkg.env.metadata["source_scene_spec_sha256"]
+    assert pkg.env.metadata["compiler_version"].startswith("scene_gen")
+
+
+def test_rigid_asset_has_empty_articulation():
+    pkg = import_env_gen(FIX)
+    assert all(a.articulation == {} for a in pkg.assets)  # can/plate 无关节
