@@ -1,47 +1,54 @@
-# asset_spike — 资产复用打样（试验夹，不入 git）
+# 1_asset_reuse — 资产复用（阶段 1）
 
-RoboTwin 资产 → Isaac Sim 可用 USD 的冒烟验证：1 刚体（001_bottle）+ 1 关节体
-（036_cabinet/46653）走通「读取 → 转换 → 双后端静置验证 → IR 注册」全流程。
-绿灯后脚本参数化并晋升到 `1_asset_reuse/`（另出方案）。
+让 RoboTwin 和 Isaac/USD 生态两边的资产互通、并都能被 env-gen 全流程复用。
+三条线：**A** RoboTwin→Isaac USD；**B** 外部 USD→RoboTwin 布局；**C** 注册进扩展
+catalog 被文字场景真实选中。全景与逐文件说明见本目录 `OVERVIEW.md`。
+
+## 结构
+
+| 路径 | 作用 |
+|---|---|
+| `scripts/` | 全部步骤脚本（打样样本版 s0–s10 + 批量导入 import_*） |
+| `configs/external_manifest.json` | 外部资产批量清单（来源 URL、资产归组、类别/别名/footprint） |
+| `../data/asset_library/` | 外部资产池（RoboTwin 布局；`_source/` 存源镜像+哈希清单；不入 git） |
+| `../data/robotwin_shadow/` | 影子根（symlink 真 RoboTwin + 注入外部资产；不入 git） |
+| `../data/scene_gen_ext/` | 扩展 overrides + catalog（上游扫描器产出；不入 git） |
 
 ## 用法
 
 ```bash
-bash run_smoke.sh    # 11 步全流程；产物落 results/_test/2026080{2,3}_*/
+export OMNI_KIT_ACCEPT_EULA=YES
+# 打样回归（A+B+C 样本，11 步）
+bash scripts/run_smoke.sh
+# 批量导入外部资产（按 configs/external_manifest.json）
+~/miniconda3/envs/isaac-smoke/bin/python  scripts/import_fetch_convert.py \
+  --manifest configs/external_manifest.json \
+  --source-root ../data/asset_library/_source --staging <staging目录>
+~/miniconda3/envs/env-gen-yuxin/bin/python scripts/import_materialize.py \
+  --staging <staging目录> --library-dir ../data/asset_library \
+  --out <结果目录> --overrides-fragment ../data/scene_gen_ext/external_overrides_fragment.yml
+# 重建影子根 + 扩展 catalog（消费上面的 fragment）
+~/miniconda3/envs/env-gen-yuxin/bin/python scripts/s9_build_shadow_root.py \
+  --library-dir ../data/asset_library --shadow ../data/robotwin_shadow \
+  --ext-dir ../data/scene_gen_ext \
+  --extra-overrides ../data/scene_gen_ext/external_overrides_fragment.yml
+# e2e 回归（文字→场景选中外部资产→回放→全量验证）
+bash scripts/s10_e2e_scene.sh
 ```
 
-前置：conda env `env-gen-yuxin`（SAPIEN 侧）+ `isaac-smoke`（Isaac Sim 5.1.0.0, py3.11）。
+前置：conda `env-gen-yuxin`（SAPIEN 侧）+ `isaac-smoke`（Isaac Sim 5.1，py3.11）。
 
-## 步骤
+## 批量验收纪律（4.5 对齐）
 
-| 步骤 | 脚本 | 环境 | 作用 |
-|---|---|---|---|
-| 1 | `robotwin_asset.py` | env-gen-yuxin | RoboTwin 私有目录 → AssetBundle JSON（sapien 侧表示 + sha256 + 结构化未知） |
-| 2 | `s1_convert_rigid.py` | isaac-smoke | 瓶子 GLB→USD（asset_converter）+ 物理装配（碰撞 schema、烘焙 scale 0.05 与 Y-up→Z-up） |
-| 3 | `s2_convert_articulated.py` | isaac-smoke | 柜子 URDF→USD（URDF importer）+ 关节数/限位核对 |
-| 4 | `s3_validate_sapien.py` | env-gen-yuxin | 原始资产在 SAPIEN 静置验证 + 截图 |
-| 5 | `s4_validate_isaac.py` | isaac-smoke | 转换 USD 在 Isaac 静置验证 + 截图 |
-| 6 | `s5_check_ir.py` | env-gen-yuxin | openxsim AssetBundle 校验 + `representation_for("isaacsim")` 命中 |
+- 每模型硬门：settle 位移<2mm、无穿模（原点 z>-2mm）、直立（<15°；自然平躺物 <45°）。
+- 未过门的模型进 `import_matrix.json` 淘汰记录（含原因），**不进 catalog**。
+- 来源→转换→产物全程 sha256；质量/许可证等未知项标结构化 unknown。
+- 判定一律以产物内容为准（Kit 吞退出码）。
 
-## 绿灯标准
+## 已知限制（当前版本事实）
 
-转换无 blocker；双后端静置位移 < 2mm、无穿透、直立（倾斜 < 15°）、截图非空；
-柜子 USD 关节数 = URDF 可动关节数且限位保留；哈希链完整；IR 查询命中。
-
-## B/C 线（外部资产引入 + 全流程复用，2026-08-03 全绿）
-
-- **s7**（一次性探测）：asset_converter 反向导出 GLB/GLTF/OBJ 均可；NVIDIA 服务器选品 YCB 025_mug。
-- **s8a/s8b**：拉取源 USD+贴图（哈希入账）→ 反向转 GLB → 规范化（upAxis 元数据驱动旋转、
-  原点=底部中心）→ 物化 `data/asset_library/301_cup/` → SAPIEN 静置 PASS → 账本双表示。
-- **s9**：影子根 `data/robotwin_shadow/`（symlink 镜像+注入）→ 上游扫描器出扩展 catalog
-  （131 条/available 19）。overrides 必须含 `stable_orientation_wxyz`（Y-up 网格 X+90），缺则资产躺着生成。
-- **s10**："Place a red mug on the table." → grounding 选中 301_cup（红色限定词 108>103 分）
-  → 回放+全量验证 `fail=0 not_run=0`。
-- 另有负样本证据：mug 放盘子上被求解器正确拒绝（footprint 11.7cm > 盘子稳定面 10cm），
-  见 `results/_test/20260803_smoke_usd2envgen/scenes/` 的 failure_report。
-
-## 已知假设（结构化未知，非隐瞒）
-
-- 质量/惯量：RoboTwin 无此数据 → 记 unknown + 运行默认 0.1kg（记录在 bundle）。
-- 柜子米制尺寸：PartNet-Mobility 归一化单位 → distance_scale=1.0 假设，定尺策略待定。
-- 许可证：RoboTwin 逐物体来源未公布 → 记 unknown，批量前需补查。
+- 碰撞体 = 视觉网格副本（加载时凸分解）；容器类内腔任务需 CoACD 精化。
+- 穿模判据基于原点 z，对翻滚静止的物体（如 banana）过严——保守淘汰。
+- A 线脚本（s1/s2）绑定打样样本 bottle/cabinet；RoboTwin 全库批量时再参数化。
+- 外部资产许可证标 unknown（NVIDIA EULA / YCB 条款），再分发前必须补查。
+- 质量默认 0.1kg（结构化未知记录在各 bundle）。

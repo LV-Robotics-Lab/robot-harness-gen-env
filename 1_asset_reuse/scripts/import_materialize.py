@@ -28,6 +28,12 @@ parser.add_argument("--staging", required=True)
 parser.add_argument("--library-dir", required=True)
 parser.add_argument("--out", required=True)
 parser.add_argument("--overrides-fragment", required=True)
+parser.add_argument(
+    "--only-index",
+    type=int,
+    default=None,
+    help="worker mode: process a single record (crash isolation)",
+)
 args = parser.parse_args()
 
 staging = Path(args.staging)
@@ -124,11 +130,71 @@ for r in records:
             if k in r
         }
 
-wiped = set()
-matrix = []
 bundles_dir = out / "bundles"
 bundles_dir.mkdir(exist_ok=True)
-for r in records:
+rows_dir = out / "rows"
+rows_dir.mkdir(exist_ok=True)
+
+if args.only_index is None:
+    # driver: pre-wipe asset dirs, then one crash-isolated subprocess per record
+    import subprocess
+    import sys as _sys
+
+    for asset_name in {r["asset"] for r in records}:
+        if (lib / asset_name).exists():
+            shutil.rmtree(lib / asset_name)
+        (lib / asset_name / "visual").mkdir(parents=True)
+        (lib / asset_name / "collision").mkdir(parents=True)
+    matrix = []
+    for i, r in enumerate(records):
+        row_file = rows_dir / f"row_{i}.json"
+        if row_file.exists():
+            row_file.unlink()
+        cmd = [
+            _sys.executable,
+            __file__,
+            "--staging",
+            args.staging,
+            "--library-dir",
+            args.library_dir,
+            "--out",
+            args.out,
+            "--overrides-fragment",
+            args.overrides_fragment,
+            "--only-index",
+            str(i),
+        ]
+        try:
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+            tail = [
+                ln
+                for ln in (proc.stdout + proc.stderr).splitlines()
+                if ln.startswith(("ACCEPTED", "REJECTED"))
+            ]
+            if tail:
+                print(tail[-1])
+        except subprocess.TimeoutExpired:
+            pass
+        if row_file.exists():
+            matrix.append(json.loads(row_file.read_text()))
+        else:
+            matrix.append(
+                {
+                    "asset": r["asset"],
+                    "model": r["model"],
+                    "usd": r["usd"],
+                    "category": r.get("category"),
+                    "status": "rejected",
+                    "reasons": ["native crash or timeout during processing"],
+                }
+            )
+            print(f"REJECTED {r['asset']} m{r['model']} (native crash/timeout)")
+    worker_records = []
+else:
+    worker_records = [(args.only_index, records[args.only_index])]
+    matrix = []
+
+for idx, r in worker_records:
     asset, model = r["asset"], r["model"]
     meta = {
         **meta_by_asset.get(asset, {}),
@@ -144,9 +210,22 @@ for r in records:
         "usd": r["usd"],
         "category": meta.get("category"),
     }
+
+    def emit_row(row_dict):
+        (rows_dir / f"row_{idx}.json").write_text(
+            json.dumps(
+                row_dict, default=lambda o: o.item() if hasattr(o, "item") else str(o)
+            )
+        )
+        print(
+            f"{row_dict['status'].upper()} {row_dict['asset']} m{row_dict['model']} "
+            f"({row_dict.get('tilt_deg', -1):.1f}deg, "
+            f"{'/'.join(row_dict.get('reasons', [])) or 'ok'})"
+        )
+
     if r["status"] != "converted":
         row.update(status="rejected", reasons=[r.get("error", "conversion failed")])
-        matrix.append(row)
+        emit_row(row)
         continue
     try:
         scene = trimesh.load(r["glb"])
@@ -167,12 +246,6 @@ for r in records:
         if not (0.01 < size[1] < 1.0):
             raise ValueError(f"implausible height {size[1]:.3f}m")
 
-        if asset not in wiped:
-            if (lib / asset).exists():
-                shutil.rmtree(lib / asset)
-            (lib / asset / "visual").mkdir(parents=True)
-            (lib / asset / "collision").mkdir(parents=True)
-            wiped.add(asset)
         vis = lib / asset / "visual" / f"base{model}.glb"
         col = lib / asset / "collision" / f"base{model}.glb"
         scene.export(str(vis))
@@ -278,11 +351,25 @@ for r in records:
         )
     except Exception as exc:  # noqa: BLE001
         row.update(status="rejected", reasons=[f"{type(exc).__name__}: {exc}"])
-    matrix.append(row)
-    print(
-        f"{row['status'].upper()} {asset} m{model} "
-        f"({row.get('tilt_deg', -1):.1f}deg, {'/'.join(row.get('reasons', [])) or 'ok'})"
-    )
+    emit_row(row)
+
+if args.only_index is not None:
+    raise SystemExit(0)
+
+# quarantine rejected models: their files must NOT stay in the library, or the
+# catalog scanner would pick them up as usable without overrides
+for row in matrix:
+    if row["status"] != "accepted":
+        a, m = row["asset"], row["model"]
+        for p in (lib / a / "visual" / f"base{m}.glb",
+                  lib / a / "collision" / f"base{m}.glb",
+                  lib / a / f"model_data{m}.json"):
+            if p.exists():
+                p.unlink()
+for a in {row["asset"] for row in matrix}:
+    if not any(x["status"] == "accepted" for x in matrix if x["asset"] == a):
+        if (lib / a).exists():
+            shutil.rmtree(lib / a)
 
 # overrides fragment: only assets with >=1 accepted model
 frag_lines = []
