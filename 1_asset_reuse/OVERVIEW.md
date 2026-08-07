@@ -49,6 +49,8 @@
 | C | ⑪ e2e：文字→场景选中外部资产→回放→全量验证 | `s10_e2e_scene.sh` |
 | B批量 | ⑫ 清单驱动批量拉取+转换（一次 App 会话转全部） | `import_fetch_convert.py` + `configs/external_manifest.json` |
 | B批量 | ⑬ 批量物化+逐模型验证（进程隔离防原生崩溃；淘汰模型物理隔离出资产池） | `import_materialize.py` |
+| D | ⑭ 检索选定层（四级 provider→门禁→自动引进） | `lib/a1–a4` + `acquire_batch.py` |
+| D | ⑮ 场景驱动自适应（prompt→覆盖→缺口引进→场景） | `scene_acquire.py` |
 
 ```
 线A: RoboTwin GLB/URDF ──转换──> USD ──双后端验证──> 账本(isaacsim 表示) ──> Transfer 可消费
@@ -100,6 +102,23 @@ grounding 打分确定性可复算）→ 回放 `fail=0` → 全量验证 `fail=
 **一键运行**：`export OMNI_KIT_ACCEPT_EULA=YES && bash run_smoke.sh`（步骤 ②⑦为一次性，
 不在其中）。产物落 `results/_test/20260802_smoke_bottle_cabinet_glb2usd/`（线 A）与
 `results/_test/20260803_smoke_usd2envgen/`（线 B/C）。
+
+### ⑭⑮ 检索选定层 — `acquire_batch.py` / `scene_acquire.py`（env-gen-yuxin）
+
+线 D 把线 B/B批量的"人工挑资产、手写清单"升级为自动化：`lib/a1_providers.py` 按四级
+信任梯度依次询问 provider——tier0 `robotwin_local`（已在库，直接复用）→ tier1
+`nvidia_server`（YCB 等已知许可授权源）→ tier2 `github_tree`（公开仓库、逐仓声明许可证）
+→ tier3 `github_discovery`（默认禁用的更广搜索），一旦命中即停，不做无谓的下一级探测；
+`lib/a2_selection.py` 的 `gate()` 对候选做格式/体积/许可证淘汰，通过后交给既有
+`import_fetch_convert.py`/`import_materialize.py` 物化并复用 line B 的双后端验证与账本。
+`entry` 除常规检索外，也接受 `pinned`（用户指定的服务器 USD key，跳过搜索但仍需过门禁+
+物化）与 `local`（用户指定的本地网格文件，经 `a3_webfetch.to_glb`/`synth_staging_record`
+直接进 staging）两种旁路形态，供已知目标资产或离线样本使用。整条线落三份可追溯产物：
+`selection_evidence.json`（每类目候选/淘汰码/最终选中）、`coverage_report.json`（`scene_acquire.py`
+对 prompt 解析出的对象逐一给 covered/gap 判定）、`asset_gap_blocker.json`（全部梯度耗尽后
+仍未覆盖的对象，作为生成式兜底的结构化输入而非静默失败）。设计依据与决策记录见
+`docs/2026-08-03-asset-retrieval-integration-design.md`（八项设计决策、淘汰码表、幂等与
+回退语义均对应本节实现）。
 
 ## 5. 关键概念 / 术语
 
