@@ -47,8 +47,18 @@ bash scripts/s10_e2e_scene.sh
 
 ## 已知限制（当前版本事实）
 
-- 碰撞体 = 视觉网格副本（加载时凸分解）；容器类内腔任务需 CoACD 精化。
+- 碰撞体默认视觉副本（加载时凸分解）；清单 `collision: coacd` 可启用离线 CoACD 精分解（容器/接触敏感件已启用，304_bottle 接触抖动由此修复）。
+- 圆柱类滚动件（SM 杯/剪刀/夹钳）静置定姿追不上滚动平衡（unstable_rest 淘汰）——收录需逐源人工朝向覆盖（P3 待办）。
 - 穿模判据基于原点 z，对翻滚静止的物体（如 banana）过严——保守淘汰。
 - A 线脚本（s1/s2）绑定打样样本 bottle/cabinet；RoboTwin 全库批量时再参数化。
 - 外部资产许可证标 unknown（NVIDIA EULA / YCB 条款），再分发前必须补查。
 - 质量默认 0.1kg（结构化未知记录在各 bundle）。
+
+## 自动防护机制（三类历史问题的结构性防复发）
+
+| 机制 | 位置 | 防什么 |
+|---|---|---|
+| 惯例继承 | `lib/conventions.py` + materialize/fragment | 新资产自动照抄同类先例的 is_static/z_policy/footprint（账本记 `conventions_inherited_from`）；无先例标"惯例未验证"。朝向不继承（资产几何语义，由规范化管线按 kind 决定） |
+| 尺寸策略 | manifest `size_policy` + `resolve_size` | match_category（默认，同类中位数参照、容差 [0.6,1.6] 外才缩放）/ absolute:<m> / none；缩放系数与参照来源入账本 |
+| 关节平衡门 | `s13b` | 硬门=收敛（末段 qpos 差分<1e-3）；自由漂移关节（>5°/5mm）默认拒绝，`--allow-free-joints` 显式豁免并记录实测平衡位 |
+| 目录准入 | `s14_catalog_admission.py`（s9 `--admission`） | 视图层检查：每个外部资产单独编译标准 prompt，不适配只滤出本视图（可逆），资产池永不动 |

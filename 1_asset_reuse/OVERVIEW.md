@@ -51,6 +51,8 @@
 | B批量 | ⑬ 批量物化+逐模型验证（进程隔离防原生崩溃；淘汰模型物理隔离出资产池） | `import_materialize.py` |
 | D | ⑭ 检索选定层（四级 provider→门禁→自动引进） | `lib/a1–a4` + `acquire_batch.py` |
 | D | ⑮ 场景驱动自适应（prompt→覆盖→缺口引进→场景） | `scene_acquire.py` |
+| 防护 | ⑯ 惯例继承+尺寸策略（类别语义抄先例、几何语义按规范化 kind） | `lib/conventions.py` |
+| 防护 | ⑰ 目录准入（视图层单资产编译检查，池层永不拒收） | `s14_catalog_admission.py` |
 
 ```
 线A: RoboTwin GLB/URDF ──转换──> USD ──双后端验证──> 账本(isaacsim 表示) ──> Transfer 可消费

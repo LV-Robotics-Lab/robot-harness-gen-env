@@ -25,6 +25,10 @@ parser.add_argument(
     "--upstream", default="/home/jingxiang/yuxin/env-gen-dev/external/env-gen-github"
 )
 parser.add_argument(
+    "--admission", choices=["report", "enforce"], default=None,
+    help="run s14 catalog-view admission after build; enforce filters not_admitted externals from THIS view",
+)
+parser.add_argument(
     "--extra-overrides",
     default=None,
     help="yml fragment appended to upstream overrides (replaces built-in 301_cup block)",
@@ -53,7 +57,13 @@ for item in (real / "assets").iterdir():
 objects = shadow / "assets" / "objects"
 objects.mkdir()
 n_real = 0
+n_skipped = 0
 for item in (real / "assets" / "objects").iterdir():
+    if item.name.startswith("900_"):
+        # residue of earlier generated/derived proxies (900_gen_*, 900_scaled_*):
+        # not canonical assets; keeping them out enforces reuse-before-generation
+        n_skipped += 1
+        continue
     (objects / item.name).symlink_to(item)  # dirs AND plain files (same.json etc.)
     n_real += 1
 n_ext = 0
@@ -61,7 +71,7 @@ for item in lib.iterdir():
     if item.is_dir() and not item.name.startswith("_"):
         (objects / item.name).symlink_to(item)
         n_ext += 1
-print(f"shadow root: {n_real} robotwin + {n_ext} external asset dirs")
+print(f"shadow root: {n_real} robotwin + {n_ext} external asset dirs (skipped {n_skipped} 900_* proxy residues)")
 
 # ---- extended overrides (copy upstream + append ours) ----
 upstream_overrides = Path(args.upstream) / "scene_gen" / "asset_overrides.yml"
@@ -143,5 +153,21 @@ for asset_id in wanted:
         print(f"{asset_id}: category={entry['category']} usable={len(usable)}")
         if not usable:
             ok = False
+if ok and args.admission:
+    import subprocess as sp
+
+    cmd = [sys.executable, str(Path(__file__).resolve().parent / "s14_catalog_admission.py"),
+           "--catalog", str(cat_out), "--upstream", args.upstream,
+           "--work-dir", str(ext / "_admission_work"),
+           "--report", str(ext / "catalog_admission.json")]
+    if args.admission == "enforce":
+        cmd.append("--enforce")
+    r = sp.run(cmd, text=True, capture_output=True)
+    for line in r.stdout.strip().splitlines()[-14:]:
+        print(line)
+    if r.returncode != 0:
+        print(r.stderr[-400:])
+        print("FAIL s9: admission step errored")
+        ok = False
 print("PASS s9" if ok else "FAIL s9")
 sys.exit(0 if ok else 1)

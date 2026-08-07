@@ -110,6 +110,14 @@ try:
     if not dest.exists():
         raise RuntimeError(f"expected output {dest} missing")
 
+    fixstage = Usd.Stage.Open(str(dest))
+    if not fixstage.GetDefaultPrim():
+        roots = [c for c in fixstage.GetPseudoRoot().GetChildren()]
+        if roots:
+            fixstage.SetDefaultPrim(roots[0])
+            fixstage.GetRootLayer().Save()
+            print(f"defaultPrim set -> {roots[0].GetPath()}")
+
     check = Usd.Stage.Open(str(dest))
     revolute = prismatic = with_limits = 0
     for prim in check.Traverse():

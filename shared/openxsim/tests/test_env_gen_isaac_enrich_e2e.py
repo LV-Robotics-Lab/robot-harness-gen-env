@@ -5,8 +5,15 @@ representation to the env-gen IR makes IsaacSimCompiler stop reporting
 "no existing USD representation" and emit a scene.usda. A minimal stub .usd is
 used (the compiler only needs the file to exist to reference it); the real
 GLB->USD conversion is the asset pipeline's job, exercised separately.
+
+Also guards the two defects found while making the render actually work:
+  * Bug 1 (openxsim IsaacSimCompiler): quatd xformOp:orient was emitted as a
+    nested tuple ``(w, (x, y, z))`` -> invalid USD, unopenable. Must be flat.
+  * Bug 2 (this junction): a baked USD carries mesh_scale, so re-applying the
+    object's scale double-scaled it. enrich must neutralize scale to identity.
 """
 
+import re
 import sys
 from pathlib import Path
 
@@ -58,3 +65,37 @@ def test_enrich_leaves_unmatched_assets_untouched(tmp_path):
         pkg, {("nonexistent", 0): str(_stub_usd(tmp_path / "x.usd"))}
     )
     assert enriched.assets[0].representation_for("isaacsim", ("usd",)) is None
+
+
+def test_enrich_neutralizes_scale_for_baked_usd(tmp_path):
+    """Bug 2: a matched (baked) USD -> object scale becomes identity; an
+    unmatched asset keeps its original mesh_scale (SAPIEN path still needs it)."""
+    pkg = import_env_gen(FIX)
+    original = pkg.env.objects[0].scale
+    assert original != (1.0, 1.0, 1.0)  # env-gen bottle carries a real mesh_scale
+
+    usd = _stub_usd(tmp_path / "bottle.usd")
+    enriched = enrich_isaac_usd(pkg, {("001_bottle", 0): str(usd)})
+    assert enriched.env.objects[0].scale == (1.0, 1.0, 1.0)
+
+    # no match -> scale preserved
+    untouched = enrich_isaac_usd(pkg, {("nonexistent", 0): str(usd)})
+    assert untouched.env.objects[0].scale == original
+
+
+def test_compiled_usda_quat_flat_and_scale_identity(tmp_path):
+    """Bug 1 + Bug 2 as they surface in the emitted scene.usda text (no pxr needed):
+    quatd orient is a flat 4-tuple, and the baked object's scale line is identity."""
+    pkg = import_env_gen(FIX)
+    usd = _stub_usd(tmp_path / "bottle.usd")
+    enriched = enrich_isaac_usd(pkg, {("001_bottle", 0): str(usd)})
+    r = IsaacSimCompiler().compile(enriched, tmp_path / "out")
+    text = Path(r.artifact_path).read_text()
+
+    m = re.search(r"quatd xformOp:orient = \(([^\n]*)\)", text)
+    assert m, "no quatd orient found in scene.usda"
+    inner = m.group(1)
+    assert "(" not in inner and ")" not in inner, f"nested quat tuple: {inner!r}"
+    assert len(inner.split(",")) == 4, f"quat is not a flat 4-tuple: {inner!r}"
+
+    assert "xformOp:scale = (1.0, 1.0, 1.0)" in text
