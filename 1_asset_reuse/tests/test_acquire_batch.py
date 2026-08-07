@@ -353,3 +353,40 @@ def test_local_entry_success_appends_manifest_group(tmp_path):
     assert item["asset"] == "301_teapot"
     assert item["model"] == 0
     assert item["category"] == "teapot"
+
+
+def test_malformed_entry_isolated_batch_completes(tmp_path, capsys):
+    categories = tmp_path / "categories.json"
+    categories.write_text(json.dumps([{"no_category": True}, {"category": "cup"}]))
+    providers = tmp_path / "providers.json"
+    providers.write_text(json.dumps({"globals": {}}))
+    tiers = [Tier(0, FakeProvider("t0", [cand("cup_hit")]))]
+
+    rc = ab.main(
+        [
+            "--categories",
+            str(categories),
+            "--providers",
+            str(providers),
+            "--dev-root",
+            str(tmp_path),
+            "--out",
+            str(tmp_path / "out"),
+        ],
+        runner=lambda cmd, env=None: 0,
+        tiers=tiers,
+    )
+    assert rc != 0
+    evidence = json.loads((tmp_path / "out" / "selection_evidence.json").read_text())
+    statuses = [c["status"] for c in evidence["categories"]]
+    assert statuses == ["entry_error", "reused_local"]
+    assert len(evidence["categories"]) == 2
+    err = evidence["categories"][0]
+    assert err["query"]["category"] == "<invalid>"
+    assert err["entry_mode"] == "error"
+    assert err["candidates"] == []
+    assert err["attempts"] == 0
+    assert "KeyError" in err["error"]
+    out = capsys.readouterr().out
+    assert "FAIL <invalid> status=entry_error" in out
+    assert "PASS cup status=reused_local" in out

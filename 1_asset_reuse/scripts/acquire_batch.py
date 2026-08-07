@@ -417,7 +417,21 @@ def main(argv=None, runner=None, tiers=None):
         "fragment_dir": Path(a.out) / "fragments",
     }
     entries = json.loads(Path(a.categories).read_text())
-    results = [process_entry(e, tiers, globals_cfg, paths, runner) for e in entries]
+    results = []
+    for e in entries:
+        try:
+            results.append(process_entry(e, tiers, globals_cfg, paths, runner))
+        except Exception as exc:  # noqa: BLE001
+            results.append(
+                {
+                    "query": {"category": str(e.get("category", "<invalid>"))},
+                    "entry_mode": "error",
+                    "status": "entry_error",
+                    "error": f"{type(exc).__name__}: {exc}",
+                    "candidates": [],
+                    "attempts": 0,
+                }
+            )
     imported = [r for r in results if r["status"] == "imported"]
     if imported:
         merged = Path(a.out) / "overrides_ext_all.yml"
