@@ -233,6 +233,26 @@ def test_github_convert_failure_records_convert_failed(tmp_path, monkeypatch):
     assert codes["first.glb"] == a2.REJ_CONVERT
 
 
+def test_materialize_gate_extracts_tilt_reason(tmp_path):
+    (tmp_path / "import_matrix.json").write_text(
+        json.dumps(
+            [
+                {
+                    "asset": "301_pitcher",
+                    "model": 0,
+                    "status": "rejected",
+                    "reasons": ["tilt_ok"],
+                }
+            ]
+        )
+    )
+    assert ab._materialize_gate(tmp_path, "301_pitcher", 0) == "tilt"
+
+
+def test_materialize_gate_falls_back_when_matrix_file_missing(tmp_path):
+    assert ab._materialize_gate(tmp_path, "301_pitcher", 0) is None
+
+
 def test_pinned_entry_skips_search_but_gates(tmp_path):
     p = paths(tmp_path)
 

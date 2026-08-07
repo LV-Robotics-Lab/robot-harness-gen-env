@@ -43,6 +43,31 @@ def check_imported(library_dir, asset, model):
     ).is_file()
 
 
+def _materialize_gate(out_dir, asset, model):
+    """Extract a short gate keyword from import_materialize.py's import_matrix.json
+    for the given asset/model, or None if unavailable/unrecognized."""
+    path = Path(out_dir) / "import_matrix.json"
+    if not path.is_file():
+        return None
+    try:
+        matrix = json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return None
+    for row in matrix:
+        if row.get("asset") == asset and row.get("model") == model:
+            text = " ".join(str(x) for x in row.get("reasons", [])).lower()
+            for keywords, gate in (
+                (("settle", "settled"), "settle"),
+                (("penetration",), "penetration"),
+                (("tilt",), "tilt"),
+                (("height", "plausib"), "height"),
+            ):
+                if any(k in text for k in keywords):
+                    return gate
+            return None
+    return None
+
+
 def _attempt_import(
     rec,
     viable,
@@ -127,9 +152,15 @@ def _attempt_import(
             imported = (candidate, asset, model)
             a2.append_manifest(paths["manifest"], group)
             break
+        gate_name = _materialize_gate(out, asset, model)
+        code = (
+            f"validation_failed:{gate_name}"
+            if gate_name
+            else "validation_failed:materialize"
+        )
         r["verdict"] = "rejected"
         r["rejection"] = {
-            "code": "validation_failed:materialize",
+            "code": code,
             "detail": f"{asset} m{model} not materialized; see import matrix under {out}",
         }
     used = rec["attempts"]
@@ -324,13 +355,19 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             group = a2.build_manifest_group(candidate, asset, model, entry)
             a2.append_manifest(paths["manifest"], group)
         else:
+            gate_name = _materialize_gate(out, asset, model)
+            code = (
+                f"validation_failed:{gate_name}"
+                if gate_name
+                else "validation_failed:materialize"
+            )
             rec["status"] = "exhausted"
             rec["candidates"] = [
                 {
                     **a2.candidate_dict(candidate),
                     "verdict": "rejected",
                     "rejection": {
-                        "code": "validation_failed:materialize",
+                        "code": code,
                         "detail": f"{asset} m{model} not materialized; see import matrix under {out}",
                     },
                 }
