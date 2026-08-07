@@ -105,7 +105,12 @@ def build_manifest_group(candidate, asset, model, entry):
         item["colors"] = entry["colors"]
     if entry.get("flat"):
         item["flat"] = True
-    return {"name": f"acq_{asset}", "prefix": key.rsplit("/", 1)[0], "items": [item]}
+    return {
+        "name": f"acq_{asset}",
+        "prefix": key.rsplit("/", 1)[0],
+        "source": candidate.provider,
+        "items": [item],
+    }
 
 
 def append_manifest(manifest_path, group):

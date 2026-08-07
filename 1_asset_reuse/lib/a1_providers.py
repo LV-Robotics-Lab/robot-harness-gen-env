@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import urllib.parse
 import urllib.request
@@ -179,12 +180,13 @@ def load_providers(config):
         from agenticsim.openxsim.assets import GitHubRepositoryDiscoveryProvider
 
         d = pc["github_discovery"]
+        kwargs = {"repository_limit": d.get("repository_limit", 5)}
+        if "token_env" in d:
+            kwargs["token"] = os.environ.get(d["token_env"])
         tiers.append(
             Tier(
                 d.get("tier", 3),
-                GitHubRepositoryDiscoveryProvider(
-                    repository_limit=d.get("repository_limit", 5)
-                ),
+                GitHubRepositoryDiscoveryProvider(**kwargs),
             )
         )
     return tiers, g

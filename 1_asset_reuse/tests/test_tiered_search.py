@@ -109,3 +109,31 @@ def test_load_providers_from_config(tmp_path):
     tiers, g = load_providers(cfg)
     assert [t.tier for t in tiers] == [0, 1]
     assert g["top_k"] == 3
+
+
+def test_load_providers_github_discovery_reads_token_env(monkeypatch):
+    monkeypatch.setenv("GH_TOKEN_TEST", "secret123")
+    cfg = {
+        "globals": {},
+        "providers": {
+            "github_discovery": {
+                "enabled": True,
+                "tier": 3,
+                "repository_limit": 2,
+                "token_env": "GH_TOKEN_TEST",
+            },
+        },
+    }
+    tiers, g = load_providers(cfg)
+    assert tiers[0].provider.token == "secret123"
+
+
+def test_load_providers_github_discovery_without_token_env():
+    cfg = {
+        "globals": {},
+        "providers": {
+            "github_discovery": {"enabled": True, "tier": 3},
+        },
+    }
+    tiers, g = load_providers(cfg)
+    assert tiers[0].provider.token is None

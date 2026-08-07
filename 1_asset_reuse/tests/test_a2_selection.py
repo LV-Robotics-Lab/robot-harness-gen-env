@@ -96,6 +96,7 @@ def test_manifest_group_and_append(tmp_path):
         c, "302_pitcher", 0, {"category": "pitcher", "aliases": ["pitcher"]}
     )
     assert g["prefix"] == "Assets/Props/YCB/Axis_Aligned"
+    assert g["source"] == "nvidia_server"
     assert g["items"][0] == {
         "usd": "019_pitcher_base.usd",
         "asset": "302_pitcher",
@@ -125,6 +126,7 @@ def test_manifest_group_tolerates_github_candidate_without_key():
         c, "303_lantern", 0, {"category": "lantern", "aliases": ["lantern"]}
     )
     assert g["prefix"] == "Models/Lantern/glTF-Binary"
+    assert g["source"] == "github_tree"
     assert g["items"][0]["usd"] == "Lantern.glb"
 
 
