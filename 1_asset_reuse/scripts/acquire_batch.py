@@ -431,6 +431,12 @@ def main(argv=None, runner=None, tiers=None):
     ap.add_argument("--dev-root", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--refresh-index", action="store_true")
+    ap.add_argument(
+        "--tier0-catalog",
+        default=None,
+        help="absolute path overriding robotwin_local's catalog after load, so "
+        "tier-0 dedup and coverage checks read the same catalog",
+    )
     a = ap.parse_args(argv)
     runner = runner or default_runner
     dev = Path(a.dev_root)
@@ -449,6 +455,8 @@ def main(argv=None, runner=None, tiers=None):
                 t.provider.catalog_path = resolve_catalog_path(
                     dev, t.provider.catalog_path, MAIN_TREE_CATALOG_FALLBACK
                 )
+                if a.tier0_catalog:
+                    t.provider.catalog_path = Path(a.tier0_catalog)
     else:
         globals_cfg = cfg.get("globals", {})
     paths = {

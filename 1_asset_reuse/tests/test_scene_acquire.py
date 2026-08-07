@@ -177,3 +177,38 @@ def test_generate_scene_receives_absolute_paths(tmp_path, monkeypatch):
     out_root_arg = cmd[cmd.index("--out-root") + 1]
     assert Path(catalog_arg).is_absolute()
     assert Path(out_root_arg).is_absolute()
+
+
+def test_acquire_batch_invocation_includes_absolute_tier0_catalog(
+    tmp_path, monkeypatch
+):
+    # scene_acquire must pass its own --catalog through to acquire_batch as
+    # --tier0-catalog (absolutized), so tier-0 dedup and coverage read the
+    # same catalog instead of two independent sources of truth.
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "p.json").write_text("{}")
+    (tmp_path / "catalog.json").write_text(Path(FIX).read_text())
+    calls = []
+
+    rc = sa.main(
+        [
+            "--prompt",
+            "Place a hammer on the table.",
+            "--seed",
+            "42",
+            "--catalog",
+            "catalog.json",
+            "--providers",
+            "p.json",
+            "--dev-root",
+            ".",
+            "--out",
+            "out",
+        ],
+        runner=lambda cmd, cwd=None, env=None: calls.append([str(c) for c in cmd]) or 0,
+    )
+    assert rc == 1
+    ab_call = next(c for c in calls if "acquire_batch.py" in c[1])
+    idx = ab_call.index("--tier0-catalog")
+    assert Path(ab_call[idx + 1]).is_absolute()
+    assert ab_call[idx + 1] == str((tmp_path / "catalog.json").resolve())

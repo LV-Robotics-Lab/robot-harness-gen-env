@@ -11,6 +11,8 @@ from lib.a1_providers import Tier
 from lib import a2_selection as a2
 from lib import a3_webfetch as a3w
 
+FIX = Path(__file__).parent / "fixtures" / "mini_catalog.json"
+
 
 def cand(key, score=1.0):
     return AssetCandidate(
@@ -259,6 +261,48 @@ def test_process_entry_copies_provider_stats_into_record(tmp_path):
         {"tier": 0, "provider": "t0", "scanned": 4, "token_miss": 4},
         {"tier": 1, "provider": "t1", "scanned": 10, "token_miss": 9},
     ]
+
+
+def test_tier0_catalog_flag_overrides_provider_path(tmp_path):
+    # providers.json points robotwin_local at a nonexistent catalog; passing
+    # --tier0-catalog should redirect the provider to the real fixture, so a
+    # "cup" search hits tier0 instead of failing to read a missing file.
+    tier0_catalog = tmp_path / "tier0.json"
+    tier0_catalog.write_text(Path(FIX).read_text())
+    categories = tmp_path / "categories.json"
+    categories.write_text(json.dumps([{"category": "cup", "aliases": ["cup", "mug"]}]))
+    providers = tmp_path / "providers.json"
+    providers.write_text(
+        json.dumps(
+            {
+                "globals": {},
+                "providers": {
+                    "robotwin_local": {
+                        "enabled": True,
+                        "tier": 0,
+                        "catalog": str(tmp_path / "nonexistent.json"),
+                    }
+                },
+            }
+        )
+    )
+    rc = ab.main(
+        [
+            "--categories",
+            str(categories),
+            "--providers",
+            str(providers),
+            "--dev-root",
+            str(tmp_path),
+            "--out",
+            str(tmp_path / "out"),
+            "--tier0-catalog",
+            str(tier0_catalog),
+        ],
+        runner=lambda cmd, env=None: 0,
+    )
+    evidence = json.loads((tmp_path / "out" / "selection_evidence.json").read_text())
+    assert evidence["categories"][0]["status"] == "reused_local"
 
 
 def test_materialize_gate_extracts_tilt_reason(tmp_path):

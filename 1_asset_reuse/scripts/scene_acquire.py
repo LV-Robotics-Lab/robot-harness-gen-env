@@ -53,6 +53,8 @@ def main(argv=None, runner=None):
                 a.dev_root,
                 "--out",
                 out / "acquire",
+                "--tier0-catalog",
+                str(Path(a.catalog).resolve()),
             ]
         )
         rebuilt = Path(a.dev_root) / "data" / "scene_gen_ext" / "asset_catalog.json"
