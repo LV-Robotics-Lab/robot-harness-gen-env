@@ -60,6 +60,58 @@ def test_gaps_to_entries_dedup_and_color():
     ]
 
 
+def test_mark_acquired_gap_to_covered_becomes_acquired():
+    before = [{"object_id": "a", "category": "hammer", "color": None, "status": "gap"}]
+    after = [
+        {
+            "object_id": "a",
+            "category": "hammer",
+            "color": None,
+            "status": "covered",
+            "asset_id": "301_hammer",
+            "model_id": 0,
+            "score": 100.0,
+        }
+    ]
+    result = a4.mark_acquired(before, after)
+    assert result[0]["status"] == "acquired"
+    assert result[0]["asset_id"] == "301_hammer"
+    assert result[0]["model_id"] == 0
+    assert result[0]["score"] == 100.0
+
+
+def test_mark_acquired_always_covered_stays_covered():
+    before = [
+        {
+            "object_id": "a",
+            "category": "cup",
+            "color": None,
+            "status": "covered",
+            "asset_id": "301_cup",
+            "model_id": 0,
+            "score": 100.0,
+        }
+    ]
+    after = [dict(before[0])]
+    result = a4.mark_acquired(before, after)
+    assert result[0]["status"] == "covered"
+
+
+def test_mark_acquired_still_gap_stays_gap():
+    before = [{"object_id": "a", "category": "hammer", "color": None, "status": "gap"}]
+    after = [
+        {
+            "object_id": "a",
+            "category": "hammer",
+            "color": None,
+            "status": "gap",
+            "detail": "still missing",
+        }
+    ]
+    result = a4.mark_acquired(before, after)
+    assert result[0]["status"] == "gap"
+
+
 def test_write_coverage_report(tmp_path):
     a4.write_coverage_report(
         tmp_path / "c.json",

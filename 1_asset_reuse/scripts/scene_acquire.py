@@ -37,6 +37,7 @@ def main(argv=None, runner=None):
     gaps = a4.gaps_to_entries(records)
     catalog = a.catalog
     if gaps:
+        before = records
         (out / "acquire_categories.json").write_text(
             json.dumps(gaps, indent=1, ensure_ascii=False)
         )
@@ -58,6 +59,7 @@ def main(argv=None, runner=None):
         if rebuilt.is_file():
             catalog = str(rebuilt)
         records = a4.check_coverage(spec, catalog)
+        records = a4.mark_acquired(before, records)
     a4.write_coverage_report(out / "coverage_report.json", a.prompt, a.seed, records)
     remaining = [r for r in records if r["status"] == "gap"]
     if remaining:

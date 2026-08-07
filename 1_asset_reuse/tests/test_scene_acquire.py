@@ -94,6 +94,50 @@ def test_stale_scene_with_no_new_output_still_fails(tmp_path):
     assert rc == 1
 
 
+def test_gap_acquired_marks_status_acquired(tmp_path):
+    # Simulate a successful gap-driven acquire: the fake runner "imports" a
+    # hammer by writing a rebuilt catalog at the dev-root path scene_acquire
+    # checks after invoking acquire_batch, so the re-check finds it covered.
+    (tmp_path / "p.json").write_text("{}")
+    hammer_catalog = json.dumps(
+        {
+            "schema_version": "robotwin.asset_catalog.v1",
+            "robotwin_root": "/x",
+            "objects_root": "/x",
+            "entries": [
+                {
+                    "asset_id": "301_hammer",
+                    "semantic_name": "hammer",
+                    "category": "hammer",
+                    "aliases": ["hammer"],
+                    "load_type": "rigid",
+                    "asset_path": "/x/301_hammer",
+                    "models": [{"model_id": 0, "usable": True}],
+                    "available": True,
+                }
+            ],
+        }
+    )
+
+    def runner(cmd, cwd=None, env=None):
+        cmd = [str(c) for c in cmd]
+        if "acquire_batch.py" in cmd[1]:
+            rebuilt = tmp_path / "data" / "scene_gen_ext" / "asset_catalog.json"
+            rebuilt.parent.mkdir(parents=True, exist_ok=True)
+            rebuilt.write_text(hammer_catalog)
+            return 0
+        scene = tmp_path / "out" / "scenes" / "s1"
+        scene.mkdir(parents=True, exist_ok=True)
+        (scene / "resolved_scene.json").write_text("{}")
+        return 0
+
+    rc = run_main(tmp_path, "Place a hammer on the table.", runner)
+    assert rc == 0
+    report = json.loads((tmp_path / "out" / "coverage_report.json").read_text())
+    assert report["objects"][0]["status"] == "acquired"
+    assert report["objects"][0]["asset_id"] == "301_hammer"
+
+
 def test_generate_scene_receives_absolute_paths(tmp_path, monkeypatch):
     # Regression test: generate_scene.py runs with cwd=UP (a different directory),
     # so relative --catalog/--out values must be absolutized before being handed

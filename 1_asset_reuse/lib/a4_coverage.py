@@ -61,6 +61,20 @@ def gaps_to_entries(records):
     return entries
 
 
+def mark_acquired(before, after):
+    """Rewrite status "covered" -> "acquired" for objects that were a "gap"
+    in `before` and are now "covered" in `after` (gap-driven acquire succeeded).
+    Everything else passes through unchanged."""
+    before_by_id = {r["object_id"]: r for r in before}
+    result = []
+    for r in after:
+        b = before_by_id.get(r["object_id"])
+        if b and b.get("status") == "gap" and r.get("status") == "covered":
+            r = {**r, "status": "acquired"}
+        result.append(r)
+    return result
+
+
 def write_coverage_report(path, prompt, seed, records):
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     Path(path).write_text(
