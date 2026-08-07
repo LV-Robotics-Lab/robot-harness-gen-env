@@ -388,6 +388,7 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
     )
     rec["tiers_consulted"] = res["tiers_consulted"]
     rec["provider_errors"] = res["provider_errors"]
+    rec["provider_stats"] = res.get("provider_stats", [])
     if res["tier0_hit"] is not None:
         rec["status"] = "reused_local"
         rec["local_reuse"] = {

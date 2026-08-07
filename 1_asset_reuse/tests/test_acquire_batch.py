@@ -233,6 +233,34 @@ def test_github_convert_failure_records_convert_failed(tmp_path, monkeypatch):
     assert codes["first.glb"] == a2.REJ_CONVERT
 
 
+def test_process_entry_copies_provider_stats_into_record(tmp_path):
+    class StatefulProvider(FakeProvider):
+        def __init__(self, name, results, stats):
+            super().__init__(name, results)
+            self.last_stats = stats
+
+    tiers = [
+        Tier(0, StatefulProvider("t0", [], {"scanned": 4, "token_miss": 4})),
+        Tier(
+            1,
+            StatefulProvider(
+                "t1", [cand("a/x.usd", 2.0)], {"scanned": 10, "token_miss": 9}
+            ),
+        ),
+    ]
+    rec = ab.process_entry(
+        {"category": "pitcher"},
+        tiers,
+        {"max_fallback": 0},
+        paths(tmp_path),
+        lambda cmd, env=None: 0,
+    )
+    assert rec["provider_stats"] == [
+        {"tier": 0, "provider": "t0", "scanned": 4, "token_miss": 4},
+        {"tier": 1, "provider": "t1", "scanned": 10, "token_miss": 9},
+    ]
+
+
 def test_materialize_gate_extracts_tilt_reason(tmp_path):
     (tmp_path / "import_matrix.json").write_text(
         json.dumps(

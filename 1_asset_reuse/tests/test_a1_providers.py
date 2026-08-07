@@ -66,3 +66,32 @@ def test_local_provider_hits_alias():
 
 def test_local_provider_miss_returns_empty():
     assert RoboTwinLocalProvider(FIX).search("pitcher") == []
+
+
+def test_nvidia_search_records_last_stats(tmp_path):
+    p = make_provider(tmp_path)
+    p.search("pitcher")
+    # scanned = every entry examined; token_miss = passed format filter but
+    # missed the token match (bowl.usd). thumbs + .mdl are filtered by format,
+    # not counted as token_miss.
+    assert p.last_stats == {"scanned": len(FAKE_KEYS), "token_miss": 1}
+
+
+def test_robotwin_local_search_records_last_stats():
+    p = RoboTwinLocalProvider(FIX)
+    got = p.search("mug")
+    assert got
+    data = json.loads(FIX.read_text())
+    total = len(data["entries"])
+    assert p.last_stats["scanned"] == total
+    assert p.last_stats["token_miss"] == total - len(
+        [e for e in data["entries"] if "mug" in e.get("aliases", [])]
+    )
+
+
+def test_robotwin_local_search_all_miss_records_stats():
+    p = RoboTwinLocalProvider(FIX)
+    assert p.search("pitcher") == []
+    data = json.loads(FIX.read_text())
+    total = len(data["entries"])
+    assert p.last_stats == {"scanned": total, "token_miss": total}

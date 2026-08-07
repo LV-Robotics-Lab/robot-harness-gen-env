@@ -63,6 +63,28 @@ def test_provider_error_recorded_and_continues():
     assert any("down" in e["error"] for e in res["provider_errors"])
 
 
+class StatefulProvider(FakeProvider):
+    def __init__(self, name, results, stats):
+        super().__init__(name, results)
+        self.last_stats = stats
+
+
+def test_provider_stats_aggregated_per_tier():
+    t0 = StatefulProvider("t0", [], {"scanned": 5, "token_miss": 5})
+    t1 = StatefulProvider("t1", [cand("good")], {"scanned": 3, "token_miss": 1})
+    res = tiered_search([Tier(0, t0), Tier(1, t1)], "cup", viable_fn=lambda c: True)
+    assert res["provider_stats"] == [
+        {"tier": 0, "provider": "t0", "scanned": 5, "token_miss": 5},
+        {"tier": 1, "provider": "t1", "scanned": 3, "token_miss": 1},
+    ]
+
+
+def test_provider_stats_empty_for_providers_without_last_stats():
+    tiers = [Tier(0, FakeProvider("t0", [cand("local")]))]
+    res = tiered_search(tiers, "cup", viable_fn=lambda c: True)
+    assert res["provider_stats"] == []
+
+
 def test_load_providers_from_config(tmp_path):
     cfg = {
         "globals": {"top_k": 3},
