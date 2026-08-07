@@ -78,7 +78,9 @@ def main(argv=None, runner=None):
             f"FAIL scene_acquire: {len(remaining)} unmet -> {out / 'asset_gap_blocker.json'}"
         )
         return 1
-    runner(
+    scenes_dir = out / "scenes"
+    before = set(scenes_dir.glob("*/resolved_scene.json"))
+    rc = runner(
         [
             sys.executable,
             "script/generate_scene.py",
@@ -89,13 +91,14 @@ def main(argv=None, runner=None):
             "--asset-catalog",
             str(Path(catalog).resolve()),
             "--out-root",
-            out / "scenes",
+            scenes_dir,
         ],
         cwd=UP,
     )
-    scenes = sorted((out / "scenes").glob("*/resolved_scene.json"))
-    if scenes:
-        print(f"PASS scene_acquire scene={scenes[-1].parent.name}")
+    new = set(scenes_dir.glob("*/resolved_scene.json")) - before
+    if rc == 0 and new:
+        newest = sorted(new)[-1]
+        print(f"PASS scene_acquire scene={newest.parent.name}")
         return 0
     print("FAIL scene_acquire: no resolved scene produced")
     return 1

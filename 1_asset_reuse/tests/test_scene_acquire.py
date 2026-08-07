@@ -62,6 +62,38 @@ def test_gap_triggers_acquire_then_blocker_when_still_missing(tmp_path):
     assert blocker["unmet"][0]["category"] == "hammer"
 
 
+def test_stale_scene_with_runner_failure_still_fails(tmp_path):
+    # Reused --out dir has a stale resolved_scene.json from a prior run; the
+    # generate_scene subprocess this time fails (rc=1) and creates nothing new.
+    (tmp_path / "p.json").write_text("{}")
+    stale = tmp_path / "out" / "scenes" / "old"
+    stale.mkdir(parents=True)
+    (stale / "resolved_scene.json").write_text("{}")
+
+    rc = run_main(
+        tmp_path,
+        "Place a red mug on the table.",
+        lambda cmd, cwd=None, env=None: 1,
+    )
+    assert rc == 1
+
+
+def test_stale_scene_with_no_new_output_still_fails(tmp_path):
+    # rc==0 but the subprocess didn't actually create a new resolved_scene.json;
+    # the stale file from a reused --out must not false-PASS this run.
+    (tmp_path / "p.json").write_text("{}")
+    stale = tmp_path / "out" / "scenes" / "old"
+    stale.mkdir(parents=True)
+    (stale / "resolved_scene.json").write_text("{}")
+
+    rc = run_main(
+        tmp_path,
+        "Place a red mug on the table.",
+        lambda cmd, cwd=None, env=None: 0,
+    )
+    assert rc == 1
+
+
 def test_generate_scene_receives_absolute_paths(tmp_path, monkeypatch):
     # Regression test: generate_scene.py runs with cwd=UP (a different directory),
     # so relative --catalog/--out values must be absolutized before being handed
