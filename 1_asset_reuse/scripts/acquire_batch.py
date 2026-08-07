@@ -77,6 +77,13 @@ def _attempt_import(
                 a3w.stage_web_candidate(
                     candidate, entry, asset, model, staging, out / "webcache"
                 )
+            except a3w.ConvertError as exc:
+                r["verdict"] = "rejected"
+                r["rejection"] = {
+                    "code": a2.REJ_CONVERT,
+                    "detail": f"{type(exc).__name__}: {exc}",
+                }
+                continue
             except Exception as exc:  # noqa: BLE001
                 r["verdict"] = "rejected"
                 r["rejection"] = {

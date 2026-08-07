@@ -46,6 +46,10 @@ def synth_staging_record(
     }
 
 
+class ConvertError(RuntimeError):
+    """Raised when a fetched web candidate fails GLB conversion / record synthesis."""
+
+
 def stage_web_candidate(
     candidate, entry, asset, model, staging_dir, cache_dir, fetch_fn=None
 ):
@@ -54,9 +58,12 @@ def stage_web_candidate(
     downloaded = fetch_fn(candidate, cache_dir)
     staging = Path(staging_dir)
     staging.mkdir(parents=True, exist_ok=True)
-    glb = to_glb(downloaded.path, staging / f"{asset}_m{model}.glb")
-    record = synth_staging_record(
-        glb, downloaded.path, downloaded.sha256, asset, model, entry
-    )
+    try:
+        glb = to_glb(downloaded.path, staging / f"{asset}_m{model}.glb")
+        record = synth_staging_record(
+            glb, downloaded.path, downloaded.sha256, asset, model, entry
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise ConvertError(f"{type(exc).__name__}: {exc}") from exc
     (staging / "staging_manifest.json").write_text(json.dumps([record], indent=1))
     return record

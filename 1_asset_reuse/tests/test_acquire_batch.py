@@ -209,6 +209,30 @@ def test_github_fetch_failure_records_rejection_and_continues(tmp_path, monkeypa
     assert codes["second.glb"] == "validation_failed:materialize"
 
 
+def test_github_convert_failure_records_convert_failed(tmp_path, monkeypatch):
+    def fake_stage(candidate, *a, **k):
+        raise a3w.ConvertError("bad mesh")
+
+    monkeypatch.setattr(a3w, "stage_web_candidate", fake_stage)
+    tiers = [
+        Tier(0, FakeProvider("t0", [])),
+        Tier(1, FakeProvider("t1", [gh_cand("first.glb")])),
+    ]
+    rec = ab.process_entry(
+        {"category": "lantern"},
+        tiers,
+        {"max_fallback": 0},
+        paths(tmp_path),
+        lambda cmd, env=None: 0,
+    )
+    assert rec["status"] == "exhausted"
+    codes = {
+        c["candidate_id"].rsplit("/", 1)[-1]: c["rejection"]["code"]
+        for c in rec["candidates"]
+    }
+    assert codes["first.glb"] == a2.REJ_CONVERT
+
+
 def test_pinned_entry_skips_search_but_gates(tmp_path):
     p = paths(tmp_path)
 

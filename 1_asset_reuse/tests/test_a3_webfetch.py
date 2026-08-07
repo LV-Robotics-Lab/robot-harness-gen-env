@@ -71,3 +71,54 @@ def test_stage_web_candidate_writes_staging_manifest(tmp_path):
     manifest = json.loads((tmp_path / "staging" / "staging_manifest.json").read_text())
     assert manifest == [rec]
     assert Path(rec["glb"]).is_file()
+
+
+def test_stage_web_candidate_wraps_to_glb_failure_in_convert_error(
+    tmp_path, monkeypatch
+):
+    src = tmp_path / "cache" / "Lantern.glb"
+    src.parent.mkdir(parents=True)
+    src.write_bytes(b"glTF-binary-bytes")
+
+    def fake_fetch(candidate, cache_dir):
+        return SimpleNamespace(path=str(src), sha256="cd" * 32)
+
+    def boom(*a, **k):
+        raise RuntimeError("bad mesh")
+
+    monkeypatch.setattr(a3, "to_glb", boom)
+    try:
+        a3.stage_web_candidate(
+            gh_cand(),
+            {"category": "lantern", "aliases": ["lantern"]},
+            "301_lantern",
+            0,
+            tmp_path / "staging",
+            tmp_path / "cache",
+            fetch_fn=fake_fetch,
+        )
+        raise AssertionError("expected ConvertError")
+    except a3.ConvertError as exc:
+        assert "bad mesh" in str(exc)
+        assert isinstance(exc.__cause__, RuntimeError)
+
+
+def test_stage_web_candidate_lets_fetch_failure_propagate(tmp_path):
+    def fake_fetch(candidate, cache_dir):
+        raise RuntimeError("network down")
+
+    try:
+        a3.stage_web_candidate(
+            gh_cand(),
+            {"category": "lantern", "aliases": ["lantern"]},
+            "301_lantern",
+            0,
+            tmp_path / "staging",
+            tmp_path / "cache",
+            fetch_fn=fake_fetch,
+        )
+        raise AssertionError("expected RuntimeError")
+    except a3.ConvertError:
+        raise AssertionError("fetch failure must not be wrapped as ConvertError")
+    except RuntimeError as exc:
+        assert "network down" in str(exc)
