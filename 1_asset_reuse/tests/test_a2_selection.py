@@ -138,3 +138,41 @@ def test_write_evidence_schema(tmp_path):
     d = json.loads((tmp_path / "e.json").read_text())
     assert d["schema"] == "envgen.asset_selection_evidence.v1"
     assert d["categories"][0]["status"] == "reused_local"
+
+
+def test_write_evidence_omits_categories_sha256_when_not_given(tmp_path):
+    a2.write_evidence(
+        tmp_path / "e.json", run_id="r1", providers_snapshot={}, categories=[]
+    )
+    d = json.loads((tmp_path / "e.json").read_text())
+    assert "categories_sha256" not in d
+
+
+def test_write_evidence_categories_sha256_stable_and_changes(tmp_path):
+    a2.write_evidence(
+        tmp_path / "e1.json",
+        run_id="r1",
+        providers_snapshot={},
+        categories=[],
+        categories_input=[{"category": "cup"}],
+    )
+    a2.write_evidence(
+        tmp_path / "e2.json",
+        run_id="r1",
+        providers_snapshot={},
+        categories=[],
+        categories_input=[{"category": "cup"}],
+    )
+    a2.write_evidence(
+        tmp_path / "e3.json",
+        run_id="r1",
+        providers_snapshot={},
+        categories=[],
+        categories_input=[{"category": "bowl"}],
+    )
+    d1 = json.loads((tmp_path / "e1.json").read_text())
+    d2 = json.loads((tmp_path / "e2.json").read_text())
+    d3 = json.loads((tmp_path / "e3.json").read_text())
+    assert "categories_sha256" in d1
+    assert d1["categories_sha256"] == d2["categories_sha256"]
+    assert d1["categories_sha256"] != d3["categories_sha256"]

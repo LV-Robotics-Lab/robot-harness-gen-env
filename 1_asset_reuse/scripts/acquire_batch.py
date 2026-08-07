@@ -459,6 +459,7 @@ def main(argv=None, runner=None, tiers=None):
         run_id=Path(a.out).name,
         providers_snapshot=cfg,
         categories=results,
+        categories_input=entries,
     )
     ok = True
     for r in results:

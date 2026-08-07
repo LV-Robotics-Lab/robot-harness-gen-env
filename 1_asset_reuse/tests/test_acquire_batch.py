@@ -390,3 +390,4 @@ def test_malformed_entry_isolated_batch_completes(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "FAIL <invalid> status=entry_error" in out
     assert "PASS cup status=reused_local" in out
+    assert "categories_sha256" in evidence

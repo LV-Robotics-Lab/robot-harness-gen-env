@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -139,12 +140,18 @@ def pinned_candidate(entry):
     )
 
 
-def write_evidence(path, *, run_id, providers_snapshot, categories):
+def write_evidence(
+    path, *, run_id, providers_snapshot, categories, categories_input=None
+):
     payload = {
         "schema": "envgen.asset_selection_evidence.v1",
         "run_id": run_id,
         "providers": providers_snapshot,
         "categories": categories,
     }
+    if categories_input is not None:
+        payload["categories_sha256"] = hashlib.sha256(
+            json.dumps(categories_input, sort_keys=True).encode()
+        ).hexdigest()
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     Path(path).write_text(json.dumps(payload, indent=1, ensure_ascii=False))
