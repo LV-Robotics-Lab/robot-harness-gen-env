@@ -83,7 +83,7 @@ def main(argv=None, runner=None):
         )
         return 1
     scenes_dir = out / "scenes"
-    before = set(scenes_dir.glob("*/resolved_scene.json"))
+    scenes_before = set(scenes_dir.glob("*/resolved_scene.json"))
     rc = runner(
         [
             sys.executable,
@@ -99,7 +99,7 @@ def main(argv=None, runner=None):
         ],
         cwd=UP,
     )
-    new = set(scenes_dir.glob("*/resolved_scene.json")) - before
+    new = set(scenes_dir.glob("*/resolved_scene.json")) - scenes_before
     if rc == 0 and new:
         newest = sorted(new)[-1]
         print(f"PASS scene_acquire scene={newest.parent.name}")

@@ -53,7 +53,11 @@ def _materialize_gate(out_dir, asset, model):
         matrix = json.loads(path.read_text())
     except (json.JSONDecodeError, OSError):
         return None
+    if not isinstance(matrix, list):
+        return None
     for row in matrix:
+        if not isinstance(row, dict):
+            continue
         if row.get("asset") == asset and row.get("model") == model:
             text = " ".join(str(x) for x in row.get("reasons", [])).lower()
             for keywords, gate in (
@@ -456,7 +460,7 @@ def main(argv=None, runner=None, tiers=None):
                     dev, t.provider.catalog_path, MAIN_TREE_CATALOG_FALLBACK
                 )
                 if a.tier0_catalog:
-                    t.provider.catalog_path = Path(a.tier0_catalog)
+                    t.provider.catalog_path = Path(a.tier0_catalog).resolve()
     else:
         globals_cfg = cfg.get("globals", {})
     paths = {

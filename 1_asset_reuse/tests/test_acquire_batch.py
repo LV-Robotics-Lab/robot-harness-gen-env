@@ -325,6 +325,22 @@ def test_materialize_gate_falls_back_when_matrix_file_missing(tmp_path):
     assert ab._materialize_gate(tmp_path, "301_pitcher", 0) is None
 
 
+def test_materialize_gate_falls_back_when_matrix_is_not_a_list(tmp_path):
+    # Parses as JSON but the top level isn't a list (e.g. a schema-malformed
+    # import_matrix.json) -- must not raise, must fall back to None.
+    (tmp_path / "import_matrix.json").write_text(json.dumps({"not": "a list"}))
+    assert ab._materialize_gate(tmp_path, "301_pitcher", 0) is None
+
+
+def test_materialize_gate_skips_non_dict_rows(tmp_path):
+    # A list containing a non-dict row (e.g. a bare string) must not raise
+    # AttributeError; the malformed row is skipped, not fatal.
+    (tmp_path / "import_matrix.json").write_text(
+        json.dumps(["not a row", {"asset": "301_pitcher", "model": 0, "reasons": []}])
+    )
+    assert ab._materialize_gate(tmp_path, "301_pitcher", 0) is None
+
+
 def test_pinned_entry_skips_search_but_gates(tmp_path):
     p = paths(tmp_path)
 
