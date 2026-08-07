@@ -7,6 +7,6 @@
 3. [done] 证据保真包：write_evidence 补清单哈希；GitHub 通路区分 fetch_failed/convert_failed；validation_failed:<gate> 提取真实门禁名；no_token_match 统计
 4. [done] coverage_report 增 "acquired" 状态（区别于复查后的 covered）
 5. [done] tier-0 catalog 与 coverage catalog 统一或写明配置纪律；文档化颜色限定缺口的 v1 局限
-6. 真实"第一名失败→第二名成功"回退演练一次（parked 项，风险低，仍未做）；local 分支去重简化（仍未做）；[done] acquired_manifest 增 source 字段；[done] github_discovery token 配置面
+6. [done 2026-08-08] 真实回退演练：scissors 拒收 validation_failed:tilt → 自动落第二名 foam_brick 入库（attempts=2，evidence: results/_test/20260808_fallback_drill；演练资产已清理，catalog 恢复 141）；local 分支去重简化（仍未做）；[done] acquired_manifest 增 source 字段；[done] github_discovery token 配置面
 
 （2026-08-08 hardening pass：1–5 全部完成 + 6 的 source 字段/token 配置面两个代码点；6 剩余两项按裁定不在本轮范围，留待后续。）
