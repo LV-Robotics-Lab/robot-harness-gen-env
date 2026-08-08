@@ -192,3 +192,125 @@ def test_apply_is_idempotent(tmp_path):
     report2 = json.loads((tmp_path / "rep2/backfill_report.json").read_text())
     assert report2["written"] == 0
     assert report2["skipped"] == ["399_widget"]
+
+
+def test_origin_convention_prefers_sapien_backend(tmp_path):
+    # review fix-round-1: a non-sapien representation with role=="visual" must
+    # not be picked for physical.origin_convention just because it's first in
+    # the list -- only the sapien-backed visual rep's metadata.origin counts.
+    lib = tmp_path / "asset_library"
+    a = lib / "397_probe"
+    (a / "visual").mkdir(parents=True)
+    (a / "collision").mkdir(parents=True)
+    vis_sapien = a / "visual/base0.glb"
+    vis_sapien.write_bytes(b"V")
+    col_sapien = a / "collision/base0.glb"
+    col_sapien.write_bytes(b"V")
+    vis_isaac = a / "visual/base0.usd"
+    vis_isaac.write_bytes(b"V")
+    (a / "model_data0.json").write_text(json.dumps({"extents": [0.1, 0.2, 0.1]}))
+
+    src = lib / "_source/acq_397_probe"
+    src.mkdir(parents=True)
+    (src / "SOURCE_MANIFEST.json").write_text(
+        json.dumps({"files": {"p.usd": "cd" * 32}})
+    )
+
+    run = tmp_path / "results/20260803_import/bundles"
+    run.mkdir(parents=True)
+    sha = hashlib.sha256(b"V").hexdigest()
+
+    bundle = {
+        "asset_id": "external_397_probe_m0",
+        "category": "probe",
+        "representations": [
+            {
+                "format": "usd",
+                "uri": str(vis_isaac),
+                "backend": "isaacsim",
+                "role": "visual",
+                "sha256": sha,
+                "size_bytes": 1,
+                "metadata": {"origin": "wrong-value normalized"},
+            },
+            {
+                "format": "glb",
+                "uri": str(vis_sapien),
+                "backend": "sapien",
+                "role": "visual",
+                "sha256": sha,
+                "size_bytes": 1,
+                "metadata": {
+                    "derived_from": "p.usd",
+                    "rotated_z2y": True,
+                    "origin": "bottom-center normalized",
+                },
+            },
+            {
+                "format": "glb",
+                "uri": str(col_sapien),
+                "backend": "sapien",
+                "role": "collision",
+                "sha256": sha,
+                "size_bytes": 1,
+                "metadata": {},
+            },
+        ],
+        "source": {
+            "library": "NVIDIA Isaac Assets 5.1",
+            "group": "acq_397_probe",
+            "file": "p.usd",
+            "license": "unknown (test)",
+        },
+        "physical": {
+            "mass_kg": {"value": None, "status": "unknown", "runtime_default_kg": 0.1},
+            "mesh_bbox_m": [0.1, 0.2, 0.1],
+            "scale_applied": 1.0,
+            "size_resolution": {
+                "mode": "match_category",
+                "actual_max_dim_m": 0.2,
+                "scale": 1.0,
+                "reference_max_dim_m": None,
+                "reference_assets": [],
+                "verdict": "no_precedent",
+            },
+            "conventions": {
+                "is_static": False,
+                "z_policy": "origin_on_table",
+                "footprint_shape": "box",
+                "precedent": None,
+                "note": "no precedent",
+            },
+            "scale": [1.0, 1.0, 1.0],
+            "mesh_up_axis": "Y",
+        },
+        "articulation": {},
+        "tags": ["rigid", "external", "batch"],
+    }
+    (run / "397_probe_m0.json").write_text(json.dumps(bundle))
+    (run.parent / "import_matrix.json").write_text(
+        json.dumps(
+            [
+                {
+                    "asset": "397_probe",
+                    "model": 0,
+                    "status": "accepted",
+                    "settled": True,
+                    "no_penetration": True,
+                    "tilt_ok": True,
+                }
+            ]
+        )
+    )
+    frag = tmp_path / "fragment.yml"
+    frag.write_text(
+        "  397_probe:\n    category: probe\n    aliases: [probe]\n"
+        '    models:\n      "0":\n        stable_pose_id: upright\n'
+        "        stable_orientation_wxyz: [0.7071067811865476, 0.7071067811865476, 0.0, 0.0]\n"
+        "        z_policy: origin_on_table\n        footprint_shape: box\n"
+    )
+
+    r = _run(lib, tmp_path / "results", frag, tmp_path / "rep", apply=True)
+    assert r.returncode == 0, r.stderr
+    led = json.loads((lib / "397_probe/ledger.json").read_text())
+    assert led["models"][0]["physical"]["origin_convention"] == "bottom-center"

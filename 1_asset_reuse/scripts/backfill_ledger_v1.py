@@ -70,7 +70,7 @@ def _transform_representations(old_reps):
 
 def _origin_convention(old_reps):
     for rep in old_reps:
-        if rep.get("role") == "visual":
+        if rep.get("role") == "visual" and rep.get("backend") == "sapien":
             origin = (rep.get("metadata") or {}).get("origin")
             if origin:
                 return _map_origin(origin)
