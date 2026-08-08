@@ -13,6 +13,7 @@ excluded from the overrides fragment (= excluded from the catalog).
 """
 
 import argparse
+import datetime as dt
 import hashlib
 import sys
 import json
@@ -26,6 +27,22 @@ import trimesh
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 import conventions as conv_lib  # noqa: E402
+
+# v1 ledger + fragment generator (Task 5): this file lives in scripts/b_batch/,
+# lib/ is two levels up (parents[2]), gen_fragment.py is one level up in
+# scripts/ (parents[1]) -- same nesting pattern as s13b_validate_articulated.py.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from lib import ledger as ledger_mod  # noqa: E402
+from lib.ledger import (  # noqa: E402
+    ledger_path,
+    new_model_entry,
+    reps_digest,
+    to_ir_bundles,
+    upsert_model,
+    validate_ledger,
+)
+import gen_fragment  # noqa: E402
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--staging", required=True)
@@ -72,11 +89,13 @@ def quat_rotate(q, v):
 
 def quat_to_mat(q):
     w, x, y, z = q
-    return np.array([
-        [1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)],
-        [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)],
-        [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)],
-    ])
+    return np.array(
+        [
+            [1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)],
+            [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)],
+            [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)],
+        ]
+    )
 
 
 def probe_rest_quat(vis, col):
@@ -283,15 +302,20 @@ for idx, r in worker_records:
         lo, hi = scene.bounds
         size = [float(b - a) for a, b in zip(lo, hi)]
         size_res = conv_lib.resolve_size(
-            meta.get("category", "unknown"), size, args.reference_catalog,
-            meta.get("size_policy", "match_category"))
+            meta.get("category", "unknown"),
+            size,
+            args.reference_catalog,
+            meta.get("size_policy", "match_category"),
+        )
         if size_res["scale"] != 1.0:
             scene.apply_transform(
-                trimesh.transformations.scale_matrix(size_res["scale"]))
+                trimesh.transformations.scale_matrix(size_res["scale"])
+            )
             lo, hi = scene.bounds
             size = [float(b - a) for a, b in zip(lo, hi)]
         conv = conv_lib.inherit_conventions(
-            meta.get("category", "unknown"), args.reference_catalog)
+            meta.get("category", "unknown"), args.reference_catalog
+        )
         if not (0.01 < size[1] < 1.0):
             raise ValueError(f"implausible height {size[1]:.3f}m")
 
@@ -308,8 +332,11 @@ for idx, r in worker_records:
             T[:3, :3] = delta
             scene.apply_transform(T)
             lo, hi = scene.bounds
-            scene.apply_transform(trimesh.transformations.translation_matrix(
-                [-(lo[0] + hi[0]) / 2, -float(lo[1]), -(lo[2] + hi[2]) / 2]))
+            scene.apply_transform(
+                trimesh.transformations.translation_matrix(
+                    [-(lo[0] + hi[0]) / 2, -float(lo[1]), -(lo[2] + hi[2]) / 2]
+                )
+            )
             lo, hi = scene.bounds
             size = [float(b - a) for a, b in zip(lo, hi)]
             row["reorient_baked_quat"] = [round(float(v), 5) for v in qf]
@@ -319,7 +346,11 @@ for idx, r in worker_records:
         if collision_mode == "coacd":
             import coacd
 
-            merged = scene.dump(concatenate=True) if isinstance(scene, trimesh.Scene) else scene
+            merged = (
+                scene.dump(concatenate=True)
+                if isinstance(scene, trimesh.Scene)
+                else scene
+            )
             cmesh = coacd.Mesh(np.asarray(merged.vertices), np.asarray(merged.faces))
             parts = coacd.run_coacd(cmesh, threshold=0.05)
             cs = trimesh.Scene()
@@ -358,85 +389,211 @@ for idx, r in worker_records:
             )
         )
 
-        merged_v = (scene.dump(concatenate=True) if isinstance(scene, trimesh.Scene)
-                    else scene).vertices
+        merged_v = (
+            scene.dump(concatenate=True) if isinstance(scene, trimesh.Scene) else scene
+        ).vertices
         step = max(1, len(merged_v) // 3000)
-        checks, img = settle_check(vis, col, size[1], bool(meta.get("flat")),
-                                   sample_pts=np.asarray(merged_v)[::step])
+        checks, img = settle_check(
+            vis,
+            col,
+            size[1],
+            bool(meta.get("flat")),
+            sample_pts=np.asarray(merged_v)[::step],
+        )
         from PIL import Image
 
         Image.fromarray(img).save(out / "shots" / f"{asset}_m{model}.png")
-        row.update(bbox_m=size, rotated_z2y=rotated,
-                   scale_applied=size_res["scale"], size_verdict=size_res["verdict"],
-                   conventions_inherited_from=conv["precedent"], **checks)
+        row.update(
+            bbox_m=size,
+            rotated_z2y=rotated,
+            scale_applied=size_res["scale"],
+            size_verdict=size_res["verdict"],
+            conventions_inherited_from=conv["precedent"],
+            **checks,
+        )
         row["status"] = "accepted" if checks["pass"] else "rejected"
         if not checks["pass"]:
             row["reasons"] = [
                 k for k in ("settled", "no_penetration", "tilt_ok") if not checks[k]
             ]
 
-        bundle = {
-            "asset_id": f"external_{asset}_m{model}",
-            "category": meta.get("category", "unknown"),
-            "representations": [
-                {
-                    "format": "glb",
-                    "uri": str(vis),
-                    "backend": "sapien",
-                    "role": "visual",
-                    "sha256": sha256(vis),
-                    "size_bytes": vis.stat().st_size,
-                    "metadata": {
-                        "derived_from": r["usd"],
-                        "rotated_z2y": rotated,
-                        "origin": "bottom-center normalized",
-                    },
+        aliases = meta.get("aliases", [])
+        colors = meta.get("colors", [])
+
+        reps = [
+            {
+                "format": "glb",
+                "uri": str(vis),
+                "backend": "sapien",
+                "role": "visual",
+                "sha256": sha256(vis),
+                "size_bytes": vis.stat().st_size,
+                "metadata": {
+                    "derived_from": r["usd"],
+                    "converter": "omni.kit.asset_converter@isaac-5.1",
+                    "conversion_params": {"rotated_z2y": rotated},
                 },
-                {
-                    "format": "glb",
-                    "uri": str(col),
-                    "backend": "sapien",
-                    "role": "collision",
-                    "sha256": sha256(col),
-                    "size_bytes": col.stat().st_size,
-                    "metadata": {
-                        "note": "copy of visual; convex decomposition at load"
-                    },
-                },
-                {
-                    "format": "usd",
-                    "uri": r["usd_local"],
-                    "backend": "isaacsim",
-                    "role": "visual_and_collision",
-                    "sha256": r["usd_sha256"],
-                    "size_bytes": 0,
-                    "metadata": {"origin_prefix": r["group"]},
-                },
-            ],
-            "source": {
-                "library": "NVIDIA Isaac Assets 5.1",
-                "group": r["group"],
-                "file": r["usd"],
-                "license": "unknown (NVIDIA asset EULA; YCB dataset terms for ycb group)",
             },
-            "physical": {
-                "mass_kg": {
-                    "value": None,
-                    "status": "unknown",
-                    "runtime_default_kg": 0.1,
-                },
-                "mesh_bbox_m": size,
-                "scale_applied": size_res["scale"],
-                "size_resolution": size_res,
-                "conventions": conv,
-                "scale": [1.0, 1.0, 1.0],
-                "mesh_up_axis": "Y",
+            {
+                "format": "glb",
+                "uri": str(col),
+                "backend": "sapien",
+                "role": "collision",
+                "sha256": sha256(col),
+                "size_bytes": col.stat().st_size,
+                "metadata": {"note": "copy of visual; convex decomposition at load"},
             },
-            "articulation": {},
-            "tags": ["rigid", "external", "batch"],
+            {
+                "format": "usd",
+                "uri": r["usd_local"],
+                "backend": "isaacsim",
+                "role": "visual_and_collision",
+                "sha256": r["usd_sha256"],
+                "size_bytes": 0,
+                "metadata": {"origin_prefix": r["group"]},
+            },
+        ]
+
+        # snapshot representation (owner decision #2): reuse the front-view
+        # render settle_check() already took (img, above) rather than
+        # re-render a second SAPIEN scene -- same camera segment as
+        # s3_validate_sapien.py's save_shot, captured before that scene's
+        # teardown. Only recorded once settle passes; a failure here must
+        # not block ingestion (snapshot representation is optional).
+        if checks["pass"]:
+            try:
+                snap_dir = lib / asset / "snapshots"
+                snap_dir.mkdir(parents=True, exist_ok=True)
+                snap_path = snap_dir / f"m{model}_default.png"
+                Image.fromarray(img).save(snap_path)
+                reps.append(
+                    {
+                        "format": "png",
+                        "uri": str(snap_path),
+                        "backend": "portable",
+                        "role": "snapshot",
+                        "sha256": sha256(snap_path),
+                        "size_bytes": snap_path.stat().st_size,
+                        "metadata": {
+                            "yaw_deg": 0,
+                            "camera": "front-default",
+                            "renderer": "sapien-3.0.0b1",
+                        },
+                    }
+                )
+            except Exception as snap_exc:  # noqa: BLE001
+                print(
+                    f"WARNING: snapshot render failed for {asset} m{model}: "
+                    f"{type(snap_exc).__name__}: {snap_exc}",
+                    file=sys.stderr,
+                )
+
+        manifest_path = lib / "_source" / r["group"] / "SOURCE_MANIFEST.json"
+        source_v1 = {
+            "library": "NVIDIA Isaac Assets 5.1",
+            "group": r["group"],
+            "file": r["usd"],
+            "license": {
+                "spdx": None,
+                "status": "unknown",
+                "terms_note": "NVIDIA asset EULA; YCB dataset terms for ycb group",
+            },
+            "retrieved_at": dt.date.fromtimestamp(
+                (staging / "staging_manifest.json").stat().st_mtime
+            ).isoformat(),
+            "source_manifest_path": (
+                str(manifest_path.resolve()) if manifest_path.exists() else None
+            ),
         }
+
+        # thresholds mirror settle_check()'s real gate constants above
+        # (0.002 late-drift, -0.005 no-penetration floor -- note this is
+        # -5mm, not the -2mm the module docstring states; tilt 15/45deg).
+        settle_entry = {
+            "backend": "sapien",
+            "check": "settle",
+            "verdict": "pass" if checks["pass"] else "fail",
+            "run_id": out.name,
+            "timestamp": dt.datetime.now().isoformat(timespec="seconds"),
+            "verified_digest": "",  # backfilled below once `entry` is assembled
+            "report_path": str(out / "import_matrix.json"),
+            "thresholds": {
+                "settle_disp_m": 0.002,
+                "z_min_m": -0.005,
+                "tilt_deg": 15,
+                "tilt_deg_flat": 45,
+            },
+        }
+        conv_v1 = {
+            **{k: conv[k] for k in ("is_static", "z_policy", "footprint_shape")},
+            "stable_poses": [
+                {
+                    "pose_id": "upright",
+                    "orientation_wxyz": ledger_mod.X90_WXYZ,
+                    "is_default": True,
+                }
+            ],
+            "inherited_from": conv.get("precedent"),
+        }
+        entry = new_model_entry(
+            model=int(model),
+            representations=reps,
+            mesh_bbox_m=size,
+            mesh_up_axis="Y",
+            origin_convention="bottom-center",
+            scale_applied=size_res["scale"],
+            size_resolution=size_res,
+            conventions=conv_v1,
+            source=source_v1,
+            verification=[settle_entry],
+        )
+        settle_entry["verified_digest"] = reps_digest(entry, "sapien")
+
+        led_path = ledger_path(args.library_dir, asset)
+        existing = json.loads(led_path.read_text()) if led_path.exists() else None
+        led = upsert_model(
+            existing,
+            asset=asset,
+            category=meta.get("category", "unknown"),
+            kind="rigid",
+            aliases=aliases,
+            colors=colors,
+            materials=[],
+            tags=["rigid", "external", "batch"],
+            model_entry=entry,
+        )
+        violations = validate_ledger(led, check_files=True)
+        if violations or not checks["pass"]:
+            row["status"] = "rejected"
+            row.setdefault("reasons", []).extend(
+                f"schema_violation:{v.code}" for v in violations
+            )
+        else:
+            led_path.write_text(json.dumps(led, indent=2, ensure_ascii=False))
+        # run snapshot: always written (pool-layer record), even for a
+        # rejected model -- when there are validator violations, unpack from
+        # a fresh single-model ledger instead of `led` so this doesn't
+        # depend on the rest of the asset's (possibly also-invalid) models.
         (bundles_dir / f"{asset}_m{model}.json").write_text(
-            json.dumps(bundle, indent=2, ensure_ascii=False)
+            json.dumps(
+                to_ir_bundles(
+                    led
+                    if not violations
+                    else upsert_model(
+                        None,
+                        asset=asset,
+                        category=meta.get("category", "unknown"),
+                        kind="rigid",
+                        aliases=aliases,
+                        colors=colors,
+                        materials=[],
+                        tags=["rigid", "external", "batch"],
+                        model_entry=entry,
+                    )
+                )[-1],
+                indent=2,
+                ensure_ascii=False,
+            )
         )
     except Exception as exc:  # noqa: BLE001
         row.update(status="rejected", reasons=[f"{type(exc).__name__}: {exc}"])
@@ -450,9 +607,11 @@ if args.only_index is not None:
 for row in matrix:
     if row["status"] != "accepted":
         a, m = row["asset"], row["model"]
-        for p in (lib / a / "visual" / f"base{m}.glb",
-                  lib / a / "collision" / f"base{m}.glb",
-                  lib / a / f"model_data{m}.json"):
+        for p in (
+            lib / a / "visual" / f"base{m}.glb",
+            lib / a / "collision" / f"base{m}.glb",
+            lib / a / f"model_data{m}.json",
+        ):
             if p.exists():
                 p.unlink()
 for a in {row["asset"] for row in matrix}:
@@ -460,37 +619,20 @@ for a in {row["asset"] for row in matrix}:
         if (lib / a).exists():
             shutil.rmtree(lib / a)
 
-# overrides fragment: only assets with >=1 accepted model
-frag_lines = []
+# overrides fragment: regenerated from the authoritative per-asset ledgers
+# under --library-dir (gen_fragment.generate scans the whole library, not
+# just this run's records -- latest-settle-pass filter is
+# lib.ledger.latest_verification, see gen_fragment.py docstring).
 by_asset = {}
 for row in matrix:
     by_asset.setdefault(row["asset"], []).append(row)
-for asset, rows in sorted(by_asset.items()):
-    accepted = [x for x in rows if x["status"] == "accepted"]
-    if not accepted:
-        continue
-    meta = meta_by_asset.get(asset, {})
-    conv = conv_lib.inherit_conventions(
-        meta.get("category", "unknown"), args.reference_catalog)
-    orient = conv_lib.orientation_for_kind("rigid_yup")
-    frag_lines.append(f"  {asset}:")
-    frag_lines.append(f"    category: {meta.get('category', 'unknown')}")
-    frag_lines.append(f"    aliases: [{', '.join(meta.get('aliases', []))}]")
-    if meta.get("colors"):
-        frag_lines.append(f"    colors: [{', '.join(meta['colors'])}]")
-    frag_lines.append("    models:")
-    for x in accepted:
-        frag_lines.append(f'      "{x["model"]}":')
-        frag_lines.append("        stable_pose_id: upright")
-        frag_lines.append(
-            f"        stable_orientation_wxyz: [{orient[0]}, {orient[1]}, {orient[2]}, {orient[3]}]")
-        frag_lines.append(f"        z_policy: {conv['z_policy']}")
-        frag_lines.append(
-            f"        footprint_shape: {meta.get('footprint') or conv['footprint_shape']}")
-        if meta.get("is_static", conv["is_static"]):
-            frag_lines.append("        is_static: true")
+frag, stats = gen_fragment.generate(args.library_dir)
 Path(args.overrides_fragment).parent.mkdir(parents=True, exist_ok=True)
-Path(args.overrides_fragment).write_text("\n".join(frag_lines) + "\n")
+gen_fragment.write_yaml(frag, Path(args.overrides_fragment))
+print(
+    f"WARNING: {stats['unknown_license_models']} models with unknown license in view",
+    file=sys.stderr,
+)
 
 (out / "import_matrix.json").write_text(
     json.dumps(
