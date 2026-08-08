@@ -203,19 +203,25 @@ if args.only_index is None:
     import subprocess
     import sys as _sys
 
+    # M-1 fix-round-2 (Critical): no pre-deletion at all anymore, only
+    # directory creation. An upfront bulk delete -- even at model
+    # granularity, one record at a time -- still races: if this run's
+    # `records` reprocesses MULTIPLE models of the same asset (e.g. a
+    # straight re-run of the same manifest), deleting every one of them
+    # before ANY worker runs still leaves an as-yet-unprocessed sibling's
+    # file missing when an earlier-processed model's validate_ledger(...,
+    # check_files=True) checks the whole merged ledger (every model in it,
+    # not just the one being written). There is no functional need to
+    # delete-then-recreate: scene.export()/shutil.copy()/write_text() below
+    # all overwrite their target in place, so a model's own file is never
+    # missing at any point another model's validation might observe it --
+    # it's either still the old (valid, ledger-matching) content or already
+    # the new one. Anything left over from a model that ends up rejected
+    # this run is removed by quarantine at the end (below), not up front.
     for asset_name in {r["asset"] for r in records}:
         adir = lib / asset_name
-        # M-1: only clear the rebuildable asset body (GLBs, model_data*.json)
-        # -- NOT the whole asset dir. A wholesale rmtree would also delete
-        # ledger.json (append-only verification history) and snapshots/,
-        # defeating the audit trail on every re-run.
-        for sub in ("visual", "collision"):
-            if (adir / sub).exists():
-                shutil.rmtree(adir / sub)
-        for p in adir.glob("model_data*.json"):
-            p.unlink()
-        (adir / "visual").mkdir(parents=True)
-        (adir / "collision").mkdir(parents=True)
+        (adir / "visual").mkdir(parents=True, exist_ok=True)
+        (adir / "collision").mkdir(parents=True, exist_ok=True)
     matrix = []
     for i, r in enumerate(records):
         row_file = rows_dir / f"row_{i}.json"
@@ -635,8 +641,20 @@ for idx, r in worker_records:
 if args.only_index is not None:
     raise SystemExit(0)
 
-# quarantine rejected models: their files must NOT stay in the library, or the
-# catalog scanner would pick them up as usable without overrides
+# quarantine rejected models (fix-round-2, M-1 Critical): their files must
+# NOT stay in the library, or the catalog scanner would pick them up as
+# usable without overrides -- AND, if this exact model_id already had an
+# entry in the authoritative ledger from an earlier run (verdict=pass,
+# pointing at files this loop is about to delete), that entry must be
+# pruned too, or gen_fragment would keep projecting a dangling reference
+# (files gone, ledger still says pass). models[] is a point-in-time image
+# of the pool's current state, not an audit log -- pruning on eviction is
+# consistent with "quarantine physically isolates out of the asset pool"
+# (OVERVIEW.md); the audit trail lives in import_matrix.json + the run's
+# bundle snapshot, not the ledger. Per-model granularity throughout (no
+# whole-directory rmtree here) -- same reasoning as the driver pre-wipe fix
+# above: a directory-wide operation would also touch sibling models this
+# run never rejected.
 for row in matrix:
     if row["status"] != "accepted":
         a, m = row["asset"], row["model"]
@@ -647,22 +665,20 @@ for row in matrix:
         ):
             if p.exists():
                 p.unlink()
-for a in {row["asset"] for row in matrix}:
-    if not any(x["status"] == "accepted" for x in matrix if x["asset"] == a):
-        adir = lib / a
-        led_file = ledger_path(args.library_dir, a)
-        if led_file.exists():
-            # M-1's audit-trail concern applies here too: this run's records
-            # may be a partial re-run against an asset that already has
-            # accepted models (and ledger history) from a prior run --
-            # clear only the rebuildable body, not the whole dir.
-            for sub in ("visual", "collision"):
-                if (adir / sub).exists():
-                    shutil.rmtree(adir / sub)
-            for p in adir.glob("model_data*.json"):
-                p.unlink()
-        elif adir.exists():
-            shutil.rmtree(adir)
+        lp = ledger_path(args.library_dir, a)
+        if lp.exists():
+            led_on_disk = json.loads(lp.read_text())
+            models = led_on_disk.get("models", [])
+            pruned = [mm for mm in models if mm.get("model_id") != int(m)]
+            if len(pruned) != len(models):
+                if pruned:
+                    led_on_disk["models"] = pruned
+                    ledger_mod.write_ledger(lp, led_on_disk)
+                else:
+                    lp.unlink()
+                    lock_p = lp.with_suffix(".lock")
+                    if lock_p.exists():
+                        lock_p.unlink()
 
 # overrides fragment (I-4): --overrides-fragment stays scoped to this run's
 # assets (acquire_batch's per-candidate concatenation and s9's "wanted"
