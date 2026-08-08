@@ -82,6 +82,38 @@ REQUIRED_MODEL = (
     "verification",
 )
 
+# Per-model fields that may not be null even when the key is present (same
+# present-but-null gap as NOT_NULLABLE_ASSET, but for REQUIRED_MODEL). Not
+# every REQUIRED_MODEL path belongs here:
+#   - physical.conventions.inherited_from is null BY DESIGN (no precedent).
+#   - physical.mass_kg / physical.friction: a null here is already caught as
+#     "not a dict" -> unknown_shape (see _validate_model), a more specific
+#     code than a blanket "missing" would be.
+#   - source.license: a null here is already caught by _validate_license
+#     (not isinstance(..., dict)) -> license_not_structured.
+# Nested optional sub-fields (source.license.spdx,
+# physical.size_resolution.reference_max_dim_m, friction.runtime_default,
+# ...) are legitimately nullable and are intentionally NOT on this list --
+# only REQUIRED_MODEL's own (whole-field) paths are checked here.
+NOT_NULLABLE_MODEL = (
+    "model_id",
+    "physical.mesh_bbox_m",
+    "physical.mesh_up_axis",
+    "physical.origin_convention",
+    "physical.scale_applied",
+    "physical.size_resolution",
+    "physical.conventions.is_static",
+    "physical.conventions.z_policy",
+    "physical.conventions.footprint_shape",
+    "physical.conventions.stable_poses",
+    "source.library",
+    "source.group",
+    "source.file",
+    "source.retrieved_at",
+    "source.source_manifest_path",
+    "verification",
+)
+
 # Derived fields that must never be handwritten into a ledger on disk; they
 # are computed by derive_usable() at read time.
 DERIVED_FIELDS = ("usable", "missing")
@@ -323,6 +355,14 @@ def _validate_verification(verifications, prefix, out):
 
 def _validate_model(model, prefix, out):
     _check_required(model, REQUIRED_MODEL, prefix, out)
+
+    # present-but-null is invisible to the presence-only check above (the
+    # key does exist); see NOT_NULLABLE_MODEL's docstring for which
+    # REQUIRED_MODEL paths are excluded and why.
+    for p in NOT_NULLABLE_MODEL:
+        if _get(model, p) is None:
+            full = f"{prefix}.{p}"
+            out.append(Violation(full, "missing", f"required field is null: {full}"))
 
     conv = _get(model, "physical.conventions")
     if isinstance(conv, dict):

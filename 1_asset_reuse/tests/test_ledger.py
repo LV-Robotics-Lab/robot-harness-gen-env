@@ -262,6 +262,11 @@ CASES = [
     # I-4: models present but not a list (e.g. an empty dict) must not
     # silently produce zero violations.
     (_set("models", {}), "bad_type"),
+    # fix-round-2: model_id/verification present-but-null must not silently
+    # bypass validation either (the presence-only REQUIRED_MODEL check saw
+    # the key exists and stopped there; NOT_NULLABLE_MODEL closes that gap).
+    (_set("models.0.model_id", None), "missing"),
+    (_set("models.0.verification", None), "missing"),
 ]
 
 
@@ -288,6 +293,20 @@ def test_missing_model_id_not_falsely_duplicate():
     m1 = make_model()
     del m1["model_id"]
     b = make_valid(models=[m0, m1])
+    codes = [v.code for v in ledger.validate_ledger(b, check_files=False)]
+    assert "duplicate_model_id" not in codes
+    assert codes.count("missing") >= 2
+
+
+def test_null_model_id_not_falsely_duplicate():
+    # fix-round-2: same as test_missing_model_id_not_falsely_duplicate but
+    # for model_id explicitly set to None (present-but-null) rather than the
+    # key being absent -- this was the actual regression the reviewer found:
+    # the round-1 fix's `if mid is not None:` dedup guard combined with
+    # _check_required's null-blind presence check let a null model_id
+    # through with ZERO violations (worse than the original false-positive
+    # duplicate_model_id bug it replaced).
+    b = make_valid(models=[make_model(model_id=None), make_model(model_id=None)])
     codes = [v.code for v in ledger.validate_ledger(b, check_files=False)]
     assert "duplicate_model_id" not in codes
     assert codes.count("missing") >= 2
