@@ -518,6 +518,41 @@ def test_append_and_latest(tmp_path):
     # ↑ 最新条 digest 与当前 reps 不符 → 失效返回 None（如实报未验证）
 
 
+def test_append_verification_runtime_load_backfill(tmp_path):
+    # T7: s11 backfills a runtime_load entry the same way after its sweep --
+    # pin the round trip for this check specifically (the other tests here
+    # only exercise "settle"), and confirm it coexists with the model's
+    # existing settle entry rather than clobbering it.
+    p = tmp_path / "ledger.json"
+    led = make_valid()
+    dig = ledger.reps_digest(led["models"][0], "sapien")
+    led["models"][0]["verification"][0]["verified_digest"] = dig
+    p.write_text(json.dumps(led))
+
+    entry = {
+        "backend": "sapien",
+        "check": "runtime_load",
+        "verdict": "pass",
+        "run_id": "sweep_20260808",
+        "timestamp": "2026-08-08T14:00:00",
+        "verified_digest": dig,
+        "report_path": "/tmp/sweep_20260808.json",
+    }
+    out = ledger.append_verification(p, 0, entry)
+    model = out["models"][0]
+    assert len(model["verification"]) == 2  # fixture's settle + new runtime_load
+
+    latest = ledger.latest_verification(model, "sapien", "runtime_load")
+    assert latest is not None
+    assert latest["verdict"] == "pass"
+    assert latest["run_id"] == "sweep_20260808"
+
+    settle = ledger.latest_verification(model, "sapien", "settle")
+    assert settle is not None and settle["run_id"] == "20260808_import"  # untouched
+
+    assert ledger.validate_ledger(out, check_files=False) == []
+
+
 def test_to_ir_bundles_roundtrip():
     sys.path.insert(
         0,
