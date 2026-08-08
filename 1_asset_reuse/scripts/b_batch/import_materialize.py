@@ -209,15 +209,24 @@ if args.only_index is None:
     # `records` reprocesses MULTIPLE models of the same asset (e.g. a
     # straight re-run of the same manifest), deleting every one of them
     # before ANY worker runs still leaves an as-yet-unprocessed sibling's
-    # file missing when an earlier-processed model's validate_ledger(...,
-    # check_files=True) checks the whole merged ledger (every model in it,
-    # not just the one being written). There is no functional need to
-    # delete-then-recreate: scene.export()/shutil.copy()/write_text() below
-    # all overwrite their target in place, so a model's own file is never
-    # missing at any point another model's validation might observe it --
-    # it's either still the old (valid, ledger-matching) content or already
-    # the new one. Anything left over from a model that ends up rejected
-    # this run is removed by quarantine at the end (below), not up front.
+    # file missing when an earlier-processed model's validation looks at it.
+    # There is no functional need to delete-then-recreate:
+    # scene.export()/shutil.copy()/write_text() below all overwrite their
+    # target in place, so a model's own file is never *missing* mid-run.
+    # This does NOT make a sibling model's on-disk file always
+    # ledger-consistent, though (fix-round-3, harness 4): a model can
+    # legitimately re-export new bytes and then fail its OWN settle check,
+    # in which case its ledger entry is never rewritten -- disk now has new
+    # content, the ledger still has the old digest. That combination used
+    # to leak into a DIFFERENT model's admission decision because
+    # validate_ledger(check_files=True) walked every representation in the
+    # whole merged ledger, siblings included. Fixed at the validation call
+    # site below (see the `single_led` two-layer check) rather than here --
+    # this file-management section only needs to guarantee "never
+    # transiently missing", not "always digest-fresh"; the latter is what
+    # the split validation now handles per-model. Anything left over from a
+    # model that ends up rejected this run is removed by quarantine at the
+    # end (below), not up front.
     for asset_name in {r["asset"] for r in records}:
         adir = lib / asset_name
         (adir / "visual").mkdir(parents=True, exist_ok=True)
@@ -589,7 +598,35 @@ for idx, r in worker_records:
             tags=["rigid", "external", "batch"],
             model_entry=entry,
         )
-        violations = validate_ledger(led, check_files=True)
+        # single_led: a throwaway ledger containing ONLY this model's own
+        # entry. Built once, reused both as the file-integrity check input
+        # right below and (unconditionally when there are violations) as
+        # the run-snapshot unpack source further down -- not rebuilt twice.
+        single_led = upsert_model(
+            None,
+            asset=asset,
+            category=meta.get("category", "unknown"),
+            kind="rigid",
+            aliases=aliases,
+            colors=colors,
+            materials=[],
+            tags=["rigid", "external", "batch"],
+            model_entry=entry,
+        )
+        # Two-layer gate (fix-round-3, Critical -- harness 4): structural
+        # checks run over the whole merged ledger (`led`, check_files=False)
+        # -- schema/required-field/duplicate-id shape is legitimately a
+        # whole-asset concern. File integrity (existence + sha256) runs
+        # ONLY over `single_led` (check_files=True), i.e. only this model's
+        # own representations. A sibling model's disk state -- missing
+        # (fix-round-2's bug) or digest-stale because it re-exported new
+        # bytes and then failed its own settle check (fix-round-3's bug) --
+        # can no longer leak into THIS model's admission decision. Whole-
+        # library file-integrity sweeps are T8's job, not this per-model
+        # gate's.
+        violations = validate_ledger(led, check_files=False) + validate_ledger(
+            single_led, check_files=True
+        )
         if violations or not checks["pass"]:
             row["status"] = "rejected"
             row.setdefault("reasons", []).extend(
@@ -603,24 +640,10 @@ for idx, r in worker_records:
             # reader of this asset.
             ledger_mod.write_ledger(led_path, led)
         # run snapshot: always written (pool-layer record), even for a
-        # rejected model -- when there are validator violations, unpack from
-        # a fresh single-model ledger instead of `led` so this doesn't
-        # depend on the rest of the asset's (possibly also-invalid) models.
-        bundle_ledger = (
-            led
-            if not violations
-            else upsert_model(
-                None,
-                asset=asset,
-                category=meta.get("category", "unknown"),
-                kind="rigid",
-                aliases=aliases,
-                colors=colors,
-                materials=[],
-                tags=["rigid", "external", "batch"],
-                model_entry=entry,
-            )
-        )
+        # rejected model -- when there are violations, unpack from
+        # single_led instead of `led` so this doesn't depend on the rest of
+        # the asset's (possibly also-invalid) models.
+        bundle_ledger = led if not violations else single_led
         # I-2: pick the bundle by asset_id suffix, not to_ir_bundles(...)[-1]
         # -- [-1] silently depended on "this model_id was just appended to
         # the end of models[]", which M-1's fix (no longer wiping ledger.json
@@ -679,6 +702,25 @@ for row in matrix:
                     lock_p = lp.with_suffix(".lock")
                     if lock_p.exists():
                         lock_p.unlink()
+
+# fix-round-3 (configured item 1): an asset that never made it into the
+# ledger at all this run -- brand new and every model rejected, or pruned
+# down to nothing above -- would otherwise leave an empty shell behind
+# (empty visual/, collision/, and any orphaned snapshots/ from a model that
+# settled fine but got rejected on a schema violation before quarantine
+# ever touched its snapshot file). Left alone, s9_build_shadow_root.py
+# symlinks that empty shell straight into the shadow tree. Whole-directory
+# removal is safe HERE specifically because "no ledger.json and no
+# model_data*.json left" means there is no surviving model for this asset
+# to disturb -- not a bulk pre-emptive wipe like the bugs fixed above.
+for a in {row["asset"] for row in matrix}:
+    adir = lib / a
+    if (
+        adir.exists()
+        and not ledger_path(args.library_dir, a).exists()
+        and not any(adir.glob("model_data*.json"))
+    ):
+        shutil.rmtree(adir)
 
 # overrides fragment (I-4): --overrides-fragment stays scoped to this run's
 # assets (acquire_batch's per-candidate concatenation and s9's "wanted"
