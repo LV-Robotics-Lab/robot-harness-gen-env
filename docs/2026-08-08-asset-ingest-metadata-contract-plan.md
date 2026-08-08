@@ -15,7 +15,8 @@
 - `1_asset_reuse/lib/` 纯 stdlib（双 conda 环境可 import）；PyYAML 只出现在 `scripts/`。
 - 上游只读；fragment YAML 输出语义与 `data/scene_gen_ext/external_overrides_fragment_merged.yml` 一致（s9 零改动）；**openxsim 本体零改动**（拆包适配在我方 lib）。
 - 账本权威位置：`data/asset_library/<asset>/ledger.json`（每资产一份含 models[]）；**账本纳入 git**（Task 1 配 .gitignore 豁免）；`results/<run>/bundles/` 写 per-model 摊平快照（=`to_ir_bundles` 输出）。
-- 工作区有他人未提交改动（`1_asset_reuse/OVERVIEW.md`、`configs/providers.json`）：**禁止 `git add -A`**，逐文件 add；本计划不改 OVERVIEW.md。
+- **共享工作区并发（重要）**：另一会话在本仓活跃开发（2026-08-08：Pipeline Studio 前端 + scripts/ 目录重组为 `{a_forward,b_batch,b_reverse,c_catalog,d_acquire}/`，且 `import_materialize.py`/`run_smoke.sh`/多个测试有未提交改动）。纪律：每任务动手前 `git status && git log --oneline -3` 核对现场；**提交一律 `git commit <明确路径>` 带 pathspec**（裸 `git commit` 会连他人暂存一起提交，已有先例）；Task 5–7 涉及 `import_materialize.py`/`s13b`/`s11`，动手前与并发会话协调改动窗口；计划中的行号以当前文件实际内容为准重新定位。
+- 工作区有他人未提交改动：**禁止 `git add -A`**，逐文件 add；本计划不改 OVERVIEW.md。
 - 池层只进不出；未知值结构化（mass/friction 三态 status，`estimated` 必带 estimator；friction runtime_default 可 null）；不编造。
 - verification：append-only、fcntl 锁、条目带 `run_id`/`timestamp`（秒级 ISO）/`verified_digest`；**读取一律 latest-per-(backend,check) 且 digest 一致**——禁止 `any(pass)`。
 - license gate：`gen_fragment --license-gate` 默认关；无论开关每次运行打印 unknown 计数警告。license 核查（audit）**待议，不在本计划**。
@@ -31,10 +32,10 @@
 | `1_asset_reuse/tests/test_backfill_ledger.py` | 新建 | tmp 迷你池聚合正确性 + 幂等 |
 | `1_asset_reuse/scripts/gen_fragment.py` | 新建 | 账本→fragment（latest-settle+digest 过滤、default pose 投影、--license-gate、unknown 警告） |
 | `1_asset_reuse/tests/test_gen_fragment.py` | 新建 | 投影/过滤/gate/警告/幂等 |
-| `1_asset_reuse/scripts/import_materialize.py` | 修改（378-441、493 一带） | builder+upsert 落账、validator 门、快照渲制、fragment 改调 generator |
-| `1_asset_reuse/scripts/s13b_validate_articulated.py` | 修改 | 关节体 v1 落账 + balance_gate + joint_sweep 验证条目 |
-| `1_asset_reuse/scripts/s11_runtime_load_sweep.py` | 修改 | runtime_load 验证回填 |
-| `1_asset_reuse/scripts/s5_check_ir.py` | 修改（18-20 行一带） | 改经 `to_ir_bundles` 消费权威账本 |
+| `1_asset_reuse/scripts/b_batch/import_materialize.py` | 修改（bundle 构造/写出/fragment 三处；行号按当前文件重定位——该文件另有并发未提交改动） | builder+upsert 落账、validator 门、快照渲制、fragment 改调 generator |
+| `1_asset_reuse/scripts/b_reverse/s13b_validate_articulated.py` | 修改 | 关节体 v1 落账 + balance_gate + joint_sweep 验证条目 |
+| `1_asset_reuse/scripts/c_catalog/s11_runtime_load_sweep.py` | 修改 | runtime_load 验证回填 |
+| `1_asset_reuse/scripts/a_forward/s5_check_ir.py` | 修改（AssetBundle.from_dict 调用处） | 改经 `to_ir_bundles` 消费权威账本 |
 | `1_asset_reuse/README.md` | 修改 | 账本契约用法 + 发布纪律（license-gate） |
 
 **Interfaces 总览（Task 2 产出，后续任务消费）：**
@@ -552,7 +553,7 @@ git commit -m "feat(ledger): gen_fragment——latest-settle+digest 过滤、def
 
 ### Task 5: `import_materialize.py` 切 v1 + 快照 + validator 门
 
-**Files:** Modify: `1_asset_reuse/scripts/import_materialize.py`（378-441、438、493 一带）
+**Files:** Modify: `1_asset_reuse/scripts/b_batch/import_materialize.py`（bundle 构造 / 落账写出 / fragment 写出三处——原 378-441、493 一带，行号按当前文件重定位；**该文件有并发会话未提交改动，动手前先协调**）
 
 **Interfaces:** Consumes `new_model_entry/upsert_model/validate_ledger/ledger_path/reps_digest`（Task 2）、`gen_fragment.generate/write_yaml`（Task 4）。
 
@@ -584,7 +585,7 @@ git commit -m "feat(ledger): gen_fragment——latest-settle+digest 过滤、def
 
 - [ ] **Step 2: settle 通过后渲快照（owner 决定 #2）**
 
-settle 场景销毁前，挂 offscreen 相机渲一张正面照（**复用 `s3_validate_sapien.py` 的渲染写法**——它已实现 settle+渲染，把相机段搬过来）：存 `<library_dir>/<asset>/snapshots/m<N>_default.png`，追加 representation：
+settle 场景销毁前，挂 offscreen 相机渲一张正面照（**复用 `scripts/a_forward/s3_validate_sapien.py` 的渲染写法**——它已实现 settle+渲染，把相机段搬过来）：存 `<library_dir>/<asset>/snapshots/m<N>_default.png`，追加 representation：
 
 ```python
         reps.append({"format": "png", "uri": str(snap_path), "backend": "portable",
@@ -633,15 +634,15 @@ print(f"WARNING: {stats['unknown_license_models']} models with unknown license i
 - [ ] **Step 5: 冒烟（ast.parse + 关键字断言 + 全量 pytest，同 r1 计划 Task 5 Step 4 写法，断言改 `upsert_model(`/`schema_violation`/`role": "snapshot"` 存在、`frag_lines` 不存在）** → **Step 6: Commit**
 
 ```bash
-git add 1_asset_reuse/scripts/import_materialize.py
-git commit -m "feat(ledger): materialize 切 v1 账本（upsert+validator 门+快照渲制+fragment 生成化）"
+git add 1_asset_reuse/scripts/b_batch/import_materialize.py
+git commit 1_asset_reuse/scripts/b_batch/import_materialize.py -m "feat(ledger): materialize 切 v1 账本（upsert+validator 门+快照渲制+fragment 生成化）"
 ```
 
 ---
 
 ### Task 6: `s13b` 关节体 v1 落账
 
-**Files:** Modify: `1_asset_reuse/scripts/s13b_validate_articulated.py` / Test: 追加 `test_ledger.py`
+**Files:** Modify: `1_asset_reuse/scripts/b_reverse/s13b_validate_articulated.py` / Test: 追加 `test_ledger.py`
 
 - [ ] **Step 1: 追加 articulated builder 测试**（同 r1 计划 Task 6 Step 1，改动：conventions 用 `stable_poses:[{pose_id:"upright", orientation_wxyz: IDENTITY_WXYZ, is_default: True}]`，mass_override basis=`urdf_inertial`，断言 `validate_ledger` 0 violation + `balance_gate` 在 `models[0]["articulation"]`）
 - [ ] **Step 2: 跑测试**（builder 已支持则 PASS）
@@ -649,15 +650,15 @@ git commit -m "feat(ledger): materialize 切 v1 账本（upsert+validator 门+�
 - [ ] **Step 4: `ast.parse` + 全量 pytest** → **Step 5: Commit**
 
 ```bash
-git add 1_asset_reuse/scripts/s13b_validate_articulated.py 1_asset_reuse/tests/test_ledger.py
-git commit -m "feat(ledger): s13b 关节体 v1 落账（balance_gate+joint_sweep 验证条目）"
+git add 1_asset_reuse/scripts/b_reverse/s13b_validate_articulated.py 1_asset_reuse/tests/test_ledger.py
+git commit 1_asset_reuse/scripts/b_reverse/s13b_validate_articulated.py 1_asset_reuse/tests/test_ledger.py -m "feat(ledger): s13b 关节体 v1 落账（balance_gate+joint_sweep 验证条目）"
 ```
 
 ---
 
 ### Task 7: `s11` 回填 + `s5` 改读权威账本
 
-**Files:** Modify: `s11_runtime_load_sweep.py`（96 行后）、`s5_check_ir.py`（18-20 行）
+**Files:** Modify: `scripts/c_catalog/s11_runtime_load_sweep.py`（rows 写出后）、`scripts/a_forward/s5_check_ir.py`（AssetBundle.from_dict 调用处）
 
 - [ ] **Step 1: s11**——rows 写出后逐 row：
 
@@ -680,8 +681,8 @@ if lp.exists():
 - [ ] **Step 4: pytest + ast.parse 两脚本** → **Step 5: Commit**
 
 ```bash
-git add 1_asset_reuse/scripts/s11_runtime_load_sweep.py 1_asset_reuse/scripts/s5_check_ir.py 1_asset_reuse/tests/test_ledger.py
-git commit -m "feat(ledger): s11 runtime_load 回填 + s5 经 to_ir_bundles 消费权威账本"
+git add 1_asset_reuse/scripts/c_catalog/s11_runtime_load_sweep.py 1_asset_reuse/scripts/a_forward/s5_check_ir.py 1_asset_reuse/tests/test_ledger.py
+git commit 1_asset_reuse/scripts/c_catalog/s11_runtime_load_sweep.py 1_asset_reuse/scripts/a_forward/s5_check_ir.py 1_asset_reuse/tests/test_ledger.py -m "feat(ledger): s11 runtime_load 回填 + s5 经 to_ir_bundles 消费权威账本"
 ```
 
 ---
@@ -694,7 +695,7 @@ git commit -m "feat(ledger): s11 runtime_load 回填 + s5 经 to_ir_bundles 消�
 - [ ] **Step 2: `--apply`**；`ls ../data/asset_library/*/ledger.json | wc -l` 期望 = 资产数（16）；报告 violations=={}。
 - [ ] **Step 3: fragment 语义等价守门**（yaml.safe_load 双方 assert 相等，脚本同 r1 计划）——注意生成版由 stable_poses 投影而来，等价即证明投影无损；不等价先归因后切换。
 - [ ] **Step 4: 切换 + 全量回归**：cp 生成版为 s9 输入；`pytest tests/ -q`（42+新增）+ openxsim 49 不破。
-- [ ] **Step 5: e2e**：s9 重建 + `s10_e2e_scene.sh` 四连判定照过。
+- [ ] **Step 5: e2e**：`scripts/c_catalog/s9_build_shadow_root.py` 重建（参数同 README 用法节）+ `bash scripts/c_catalog/s10_e2e_scene.sh` 四连判定照过（脚本已重组进 c_catalog/，s10 头部写死的路径若因重组失效，先修 s10 头部变量——属重组适配，非本计划范围扩张）。
 - [ ] **Step 6: 账本入 git**：
 
 ```bash
