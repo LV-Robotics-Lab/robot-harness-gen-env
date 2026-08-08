@@ -40,7 +40,7 @@ metadata 不是「描述资产的一切属性」，而是**下游消费者输入
 |---|---|---|---|---|
 | `schema_version` | 账本格式版本号——**目的**：validator 据此决定校验规则；旧账本被明确识别并引导 backfill，杜绝对无版本文件的语义猜测 | const `"asset_ledger.v1"` | ✅ | 新增 |
 | `asset_id` | 资产在库内与 IR 中的唯一标识——**目的**：账本→catalog→`resolved_scene`→IR 全链路靠它对齐同一资产 | str，IR 合法标识符（现状形如 `external_315_shears_m0`，不重构 id 体系） | ✅ | 已有 |
-| `model_id` | 同一资产下第几个模型变体（RoboTwin 一资产多 model 惯例）——**目的**：与上游 catalog `models[]` 对齐；fragment 逐 model 字段生成时定位 | int | ✅ | 新增（现在只隐含在 asset_id 后缀里） |
+| `model_id` | 同一资产下第几个模型变体（RoboTwin 一资产多 model 惯例）——**目的**：与上游 catalog `models[]` 对齐；fragment 逐 model 字段生成时定位，读者不必解析 asset_id 字符串（id 保持不透明标识符）。validator 交叉校验 asset_id 后缀 ↔ model_id 一致，冗余变一致性检查 | int | ✅ | 新增（现在只隐含在 asset_id 后缀里） |
 | `category` | 资产类目（cup/can/…）——**目的**：grounding 按类目选中；惯例继承与尺寸参照按同类先例查找 | str 非空 | ✅ | 已有 |
 | `semantic_name` | 人类可读语义名——**目的**：对齐上游 catalog 同名字段，保持内外资产条目同构 | str | ✅ | 新增 |
 | `kind` | 刚体还是关节体——**目的**：validator 按 kind 切换必填表（articulation 组是否必填）；管线据此选验证路径（settle vs 关节扫掠） | `rigid` \| `articulated` | ✅ | 新增（现在隐含在 tags 里） |
@@ -53,7 +53,8 @@ metadata 不是「描述资产的一切属性」，而是**下游消费者输入
 | `aliases` | 文字请求中可能指代该资产的同义词——**目的**：grounding 命中率；prompt 说 "mug" 也能选中 cup 类资产。**缺失失败模式：文字场景永远选不到它**（入了库等于白入） | list[str]，≥1 | ✅ | 从 fragment 收编 |
 | `colors` | 外观颜色词——**目的**：带颜色的 prompt（"red mug"）过滤；s10 e2e 正是靠它 ground 到 301_cup | list[str] | 可空 | 从 fragment 收编 |
 | `materials` | 材质词——**目的**：带材质 prompt 过滤；上游 catalog 有此字段，外部资产补齐保持同构 | list[str] | 可空 | 新增（上游 catalog 有，外部资产缺） |
-| `description` | 一句话自由描述——**目的**：线 D 未来语义检索预留；**无当前读者**，若嫌冗余可删，validator 不检查 | str | 可选 | 新增 |
+
+（评审决定：不设 `description` 字段——线 D 现行检索为词表匹配，语义检索无当前读者；按「无读者不进 schema」判据不预留占位，将来立项时按真实需求加字段，schema_version 支持演进。）
 
 ### 3.3 `physical`（读者：solver 摆放 + 迁移编译；现有组扩展）
 
@@ -166,7 +167,7 @@ s4 / s11 / s13b 验证步 ──append──> 账本 verification[]
 
 ## 7. 测试与验收
 
-1. **单测**（`1_asset_reuse/tests/test_ledger.py`）：validator 正反例（每条必填规则一个反例）；四元数模长；sha256 核对；unknown 结构合法性；旧版账本报 backfill。
+1. **单测**（`1_asset_reuse/tests/test_ledger.py`）：validator 正反例（每条必填规则一个反例）；四元数模长；sha256 核对；asset_id 后缀 ↔ model_id 交叉校验；unknown 结构合法性；旧版账本报 backfill。
 2. **generator 幂等**：`gen_fragment` 输出与现 merged fragment 语义 diff = 0（键序无关比较）。
 3. **回归**：openxsim 全量测试（49 passed）不破；`run_smoke.sh` s10/s12 四连判定照过。
 4. **验收**：全量现存入库资产 `validate_ingest` 0 error；任选一资产走 transfer，能从账本 `verification[]` 程序化读出目标后端验证状态。
@@ -175,5 +176,5 @@ s4 / s11 / s13b 验证步 ──append──> 账本 verification[]
 
 - **license 实际核查**（NVIDIA EULA / YCB terms 逐条确认）：治理后续任务，本契约只保证「unknown 必须显式」。
 - **迁移一致性验证口径 L0-L4**（`docs/design.md` ⏳ 项）：`verification[].check` 枚举为其预留扩展位，口径定稿后追加取值即可，不改结构。
-- **线 D 语义检索增强**：`semantics.description` 为其预留，本任务不实现读者。
+- **线 D 语义检索增强**：本任务不涉及，schema 亦不预留占位字段；将来立项时按真实需求加字段（schema_version 支持演进）。
 - 上游只读约束不变：不改 `external/env-gen-github`；fragment 格式与 s9 接口零改动。
