@@ -72,6 +72,18 @@ def _materialize_gate(out_dir, asset, model):
     return None
 
 
+def _rejected(candidate, code, detail):
+    """Build the standard rejected-candidate record: candidate_dict fields plus
+    verdict/rejection. `candidate` may be an AssetCandidate or an already
+    candidate_dict-shaped mapping (used before an AssetCandidate exists)."""
+    base = candidate if isinstance(candidate, dict) else a2.candidate_dict(candidate)
+    return {
+        **base,
+        "verdict": "rejected",
+        "rejection": {"code": code, "detail": detail},
+    }
+
+
 def _attempt_import(
     rec,
     viable,
@@ -260,49 +272,31 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         out = Path(paths["out"])
         staging = out / f"staging_{asset}_m{model}"
         src = Path(entry["local"]["path"])
+        stub = {
+            "candidate_id": f"local:{src}",
+            "provider": "local",
+            "url": str(src),
+            "format": src.suffix.lstrip("."),
+            "license": "user-provided",
+            "score": 0.0,
+        }
         if not src.is_file():
             rec["status"] = "exhausted"
-            rec["candidates"] = [
-                {
-                    "candidate_id": f"local:{src}",
-                    "provider": "local",
-                    "url": str(src),
-                    "format": src.suffix.lstrip("."),
-                    "license": "user-provided",
-                    "score": 0.0,
-                    "verdict": "rejected",
-                    "rejection": {"code": a2.REJ_FETCH, "detail": "file missing"},
-                }
-            ]
+            rec["candidates"] = [_rejected(stub, a2.REJ_FETCH, "file missing")]
             return rec
         try:
-            glb = a3w.to_glb(src, staging / f"{asset}_m{model}.glb")
-            record = a3w.synth_staging_record(
-                glb,
+            record = a3w.stage_source(
                 src,
                 a3w._sha256(src),
+                entry,
                 asset,
                 model,
-                entry,
+                staging,
                 up_axis=entry["local"].get("up_axis", "Y"),
             )
-        except Exception as exc:  # noqa: BLE001
+        except a3w.ConvertError as exc:
             rec["status"] = "exhausted"
-            rec["candidates"] = [
-                {
-                    "candidate_id": f"local:{src}",
-                    "provider": "local",
-                    "url": str(src),
-                    "format": src.suffix.lstrip("."),
-                    "license": "user-provided",
-                    "score": 0.0,
-                    "verdict": "rejected",
-                    "rejection": {
-                        "code": a2.REJ_CONVERT,
-                        "detail": f"{type(exc).__name__}: {exc}",
-                    },
-                }
-            ]
+            rec["candidates"] = [_rejected(stub, a2.REJ_CONVERT, str(exc))]
             return rec
         candidate = AssetCandidate(
             candidate_id=f"local:{src}",
@@ -317,22 +311,15 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             metadata={
                 "key": str(src),
                 "path": str(src),
-                "size_bytes": Path(glb).stat().st_size,
+                "size_bytes": Path(record["glb"]).stat().st_size,
             },
         )
         gated = a2.gate_candidates([candidate], globals_cfg)
         if gated[0]["verdict"] != "viable":
             rec["status"] = "exhausted"
-            rec["candidates"] = [
-                {
-                    **a2.candidate_dict(candidate),
-                    "verdict": "rejected",
-                    "rejection": gated[0]["rejection"],
-                }
-            ]
+            rec["candidates"] = [_rejected(candidate, **gated[0]["rejection"])]
             return rec
         rec["attempts"] = 1
-        (staging / "staging_manifest.json").write_text(json.dumps([record], indent=1))
         fragment = Path(paths["fragment_dir"]) / f"{asset}_m{model}.yml"
         fragment.parent.mkdir(parents=True, exist_ok=True)
         runner(
@@ -367,14 +354,11 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             )
             rec["status"] = "exhausted"
             rec["candidates"] = [
-                {
-                    **a2.candidate_dict(candidate),
-                    "verdict": "rejected",
-                    "rejection": {
-                        "code": code,
-                        "detail": f"{asset} m{model} not materialized; see import matrix under {out}",
-                    },
-                }
+                _rejected(
+                    candidate,
+                    code,
+                    f"{asset} m{model} not materialized; see import matrix under {out}",
+                )
             ]
         return rec
     query = " ".join([category, *entry.get("colors", []), *entry.get("aliases", [])])

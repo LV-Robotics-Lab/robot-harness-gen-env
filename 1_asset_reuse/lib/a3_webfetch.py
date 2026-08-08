@@ -50,20 +50,29 @@ class ConvertError(RuntimeError):
     """Raised when a fetched web candidate fails GLB conversion / record synthesis."""
 
 
+def stage_source(src_path, source_sha, entry, asset, model, staging_dir, up_axis="Y"):
+    """Convert src_path to GLB, synthesize a staging record, and write
+    staging_manifest.json under staging_dir. Conversion failures are wrapped
+    in ConvertError; the manifest write itself is not."""
+    staging = Path(staging_dir)
+    staging.mkdir(parents=True, exist_ok=True)
+    try:
+        glb = to_glb(src_path, staging / f"{asset}_m{model}.glb")
+        record = synth_staging_record(
+            glb, src_path, source_sha, asset, model, entry, up_axis=up_axis
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise ConvertError(f"{type(exc).__name__}: {exc}") from exc
+    (staging / "staging_manifest.json").write_text(json.dumps([record], indent=1))
+    return record
+
+
 def stage_web_candidate(
     candidate, entry, asset, model, staging_dir, cache_dir, fetch_fn=None
 ):
     if fetch_fn is None:
         from agenticsim.openxsim.assets import download_candidate as fetch_fn
     downloaded = fetch_fn(candidate, cache_dir)
-    staging = Path(staging_dir)
-    staging.mkdir(parents=True, exist_ok=True)
-    try:
-        glb = to_glb(downloaded.path, staging / f"{asset}_m{model}.glb")
-        record = synth_staging_record(
-            glb, downloaded.path, downloaded.sha256, asset, model, entry
-        )
-    except Exception as exc:  # noqa: BLE001
-        raise ConvertError(f"{type(exc).__name__}: {exc}") from exc
-    (staging / "staging_manifest.json").write_text(json.dumps([record], indent=1))
-    return record
+    return stage_source(
+        downloaded.path, downloaded.sha256, entry, asset, model, staging_dir
+    )
