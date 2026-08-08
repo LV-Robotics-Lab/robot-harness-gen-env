@@ -64,6 +64,15 @@ def make_model(**over):
                     "conversion_params": {"rotated_z2y": True},
                 },
             },
+            {
+                "format": "png",
+                "uri": "/tmp/x/snapshot.png",
+                "backend": "sapien",
+                "role": "snapshot",
+                "sha256": "1" * 64,
+                "size_bytes": 5,
+                "metadata": {},
+            },
         ],
         "articulation": {},
         "source": {
@@ -214,6 +223,45 @@ CASES = [
     (_del("models.0.verification.0.verified_digest"), "missing"),
     (_del("models.0.verification.0.run_id"), "missing"),
     (_set("usable", True), "derived_field_handwritten"),
+    # I-1: only a snapshot representation (even sapien-backed) doesn't count
+    # as "has a sapien representation" -- the exclusion applies regardless of
+    # which backend the snapshot happens to be tagged with.
+    (
+        _set(
+            "models.0.representations",
+            [
+                {
+                    "format": "png",
+                    "uri": "/tmp/x/snapshot.png",
+                    "backend": "sapien",
+                    "role": "snapshot",
+                    "sha256": "1" * 64,
+                    "size_bytes": 5,
+                }
+            ],
+        ),
+        "no_sapien_representation",
+    ),
+    # I-5: mass_kg/friction present but not a dict must not silently bypass
+    # validation.
+    (_set("models.0.physical.mass_kg", "not-a-dict"), "unknown_shape"),
+    (_set("models.0.physical.friction", "not-a-dict"), "unknown_shape"),
+    # I-6: model_id and verification are required keys on a model entry
+    # (an empty verification list is fine; the key itself must exist).
+    (_del("models.0.model_id"), "missing"),
+    (_del("models.0.verification"), "missing"),
+    # M-3: sha256 format is checked even outside check_files=True (out-of-
+    # contract code, declared in the report).
+    (_set("models.0.representations.0.sha256", "not-a-valid-sha256"), "bad_sha256"),
+    # I-4: present-but-null on a non-nullable asset-level field is as
+    # unusable as an absent key.
+    (_set("asset_id", None), "missing"),
+    (_set("kind", None), "missing"),
+    (_set("tags", None), "missing"),
+    (_set("models", None), "missing"),
+    # I-4: models present but not a list (e.g. an empty dict) must not
+    # silently produce zero violations.
+    (_set("models", {}), "bad_type"),
 ]
 
 
@@ -229,6 +277,20 @@ def test_duplicate_model_id():
     b = make_valid(models=[make_model(), make_model()])  # 两个 model_id=0
     codes = [v.code for v in ledger.validate_ledger(b, check_files=False)]
     assert "duplicate_model_id" in codes
+
+
+def test_missing_model_id_not_falsely_duplicate():
+    # I-6: two models that both LACK the model_id key (not "both set to the
+    # same id") must each get their own "missing" violation, and must not
+    # also be reported as duplicates of each other.
+    m0 = make_model()
+    del m0["model_id"]
+    m1 = make_model()
+    del m1["model_id"]
+    b = make_valid(models=[m0, m1])
+    codes = [v.code for v in ledger.validate_ledger(b, check_files=False)]
+    assert "duplicate_model_id" not in codes
+    assert codes.count("missing") >= 2
 
 
 def test_articulated_requires_articulation():
@@ -298,6 +360,26 @@ def test_new_model_entry_and_upsert():
         model_entry=m1,
     )
     assert [x["model_id"] for x in led2["models"]] == [0, 1]
+
+    # I-3: re-upserting an EXISTING model_id must replace that entry wholesale
+    # in place, not append a duplicate.
+    m0_updated = dict(m, physical=dict(m["physical"], scale_applied=2.0))
+    led3 = ledger.upsert_model(
+        led2,
+        asset="315_shears",
+        category="shears",
+        kind="rigid",
+        aliases=["shears"],
+        colors=[],
+        materials=[],
+        tags=["rigid", "external"],
+        model_entry=m0_updated,
+    )
+    assert len(led3["models"]) == 2  # still 2 -- replaced, not appended
+    assert (
+        led3["models"][0]["physical"]["scale_applied"] == 2.0
+    )  # content actually replaced
+
     with pytest.raises(ValueError):  # 资产级漂移写时即抓
         ledger.upsert_model(
             led2,
@@ -309,6 +391,60 @@ def test_new_model_entry_and_upsert():
             materials=[],
             tags=["rigid", "external"],
             model_entry=dict(m, model_id=2),
+        )
+
+
+def test_upsert_model_detects_semantic_name_and_asset_drift():
+    # C-1: the "asset-level fields must match on re-upsert" rule had missed
+    # semantic_name entirely (silently kept the old value), and never
+    # cross-checked the `asset` param itself against the existing asset_id.
+    m = ledger.new_model_entry(
+        model=0,
+        representations=make_model()["representations"],
+        mesh_bbox_m=[0.078, 0.051, 0.053],
+        mesh_up_axis="Y",
+        origin_convention="bottom-center",
+        scale_applied=1.0,
+        size_resolution=make_model()["physical"]["size_resolution"],
+        conventions=make_model()["physical"]["conventions"],
+        source=make_model()["source"],
+        verification=make_model()["verification"],
+    )
+    led = ledger.upsert_model(
+        None,
+        asset="315_shears",
+        category="shears",
+        kind="rigid",
+        aliases=["shears"],
+        colors=[],
+        materials=[],
+        tags=["rigid", "external"],
+        model_entry=m,
+    )
+    with pytest.raises(ValueError):  # semantic_name drift
+        ledger.upsert_model(
+            led,
+            asset="315_shears",
+            category="shears",
+            kind="rigid",
+            aliases=["shears"],
+            colors=[],
+            materials=[],
+            tags=["rigid", "external"],
+            semantic_name="not_shears",
+            model_entry=dict(m, model_id=1),
+        )
+    with pytest.raises(ValueError):  # wrong asset name, caught via asset_id suffix
+        ledger.upsert_model(
+            led,
+            asset="999_wrong",
+            category="shears",
+            kind="rigid",
+            aliases=["shears"],
+            colors=[],
+            materials=[],
+            tags=["rigid", "external"],
+            model_entry=dict(m, model_id=1),
         )
 
 
@@ -329,12 +465,28 @@ def test_append_and_latest(tmp_path):
     }
     out = ledger.append_verification(p, 0, fail)
     assert len(out["models"][0]["verification"]) == 2  # append-only
+    assert oct(p.stat().st_mode)[-3:] == "644"  # M-1: not mkstemp's default 0600
     latest = ledger.latest_verification(out["models"][0], "sapien", "settle")
     assert latest["verdict"] == "fail"  # 新 fail 压过旧 pass —— 禁 any(pass)
     assert (
         ledger.append_verification(p, 0, fail)["models"][0]["verification"]
         == out["models"][0]["verification"]
     )  # 同 (backend,check,run_id,digest) 去重
+
+    # I-2: appended LAST but timestamped EARLIER than the current latest --
+    # must not become "latest". Pins timestamp-max semantics against a
+    # candidates[-1]-style (list-order) regression. Digest still matches, so
+    # this isn't the staleness path.
+    early_pass = dict(
+        fail, run_id="r1_early", timestamp="2026-08-08T08:00:00", verdict="pass"
+    )
+    out_early = ledger.append_verification(p, 0, early_pass)
+    assert len(out_early["models"][0]["verification"]) == 3
+    latest_after_early = ledger.latest_verification(
+        out_early["models"][0], "sapien", "settle"
+    )
+    assert latest_after_early["run_id"] == "r2"  # still the 12:00 fail
+
     stale = dict(
         fail,
         run_id="r3",
@@ -360,3 +512,45 @@ def test_to_ir_bundles_roundtrip():
     ab.validate()
     assert ab.representation_for("sapien") is not None
     assert all(r["role"] != "snapshot" for r in flat[0]["representations"])
+
+
+def test_derive_usable():
+    # I-7: positive case -- a fully valid ledger's only model is usable with
+    # no missing paths.
+    b = make_valid()
+    ok, missing = ledger.derive_usable(b, 0)
+    assert ok is True
+    assert missing == []
+
+    # negative case -- a required field absent on the model shows up in
+    # missing_paths with the model[model_id=N]-prefixed dotted-path format.
+    b2 = make_valid()
+    del b2["models"][0]["physical"]["mesh_bbox_m"]
+    ok2, missing2 = ledger.derive_usable(b2, 0)
+    assert ok2 is False
+    assert "models[model_id=0].physical.mesh_bbox_m" in missing2
+
+    # negative case -- unknown model_id.
+    ok3, missing3 = ledger.derive_usable(b, 99)
+    assert ok3 is False
+    assert missing3 == ["models[model_id=99]"]
+
+
+def test_reps_digest_literal():
+    # I-7: pin reps_digest's exact contract (sorted, comma-joined, snapshot
+    # excluded, wrong-backend excluded) against a hand-computed hex value
+    # rather than re-deriving the same hashlib call inside the test.
+    model = {
+        "representations": [
+            {"backend": "sapien", "role": "visual", "sha256": "2" * 64},
+            {"backend": "sapien", "role": "collision", "sha256": "1" * 64},
+            {"backend": "sapien", "role": "snapshot", "sha256": "9" * 64},  # excluded
+            {"backend": "isaacsim", "role": "visual", "sha256": "3" * 64},  # excluded
+        ]
+    }
+    # hand-computed offline:
+    #   sha256(",".join(sorted(["1"*64, "2"*64])).encode()).hexdigest()
+    assert (
+        ledger.reps_digest(model, "sapien")
+        == "d24a4134be711dad6027de088dda210b4d2fb13a7528e0d87e5918c837150e2f"
+    )

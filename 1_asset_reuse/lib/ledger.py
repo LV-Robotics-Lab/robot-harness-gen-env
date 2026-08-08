@@ -45,8 +45,22 @@ REQUIRED_ASSET = (
     "models",
 )
 
+# Asset-level fields that may not be null even when the key is present
+# (present-but-null is otherwise invisible to the presence-only REQUIRED_ASSET
+# check, since the key does exist).
+NOT_NULLABLE_ASSET = (
+    "asset_id",
+    "category",
+    "semantic_name",
+    "kind",
+    "tags",
+    "semantics",
+    "models",
+)
+
 # Per-model required fields (dotted paths, relative to a models[] entry).
 REQUIRED_MODEL = (
+    "model_id",
     "physical.mesh_bbox_m",
     "physical.mesh_up_axis",
     "physical.origin_convention",
@@ -65,6 +79,7 @@ REQUIRED_MODEL = (
     "source.license",
     "source.retrieved_at",
     "source.source_manifest_path",
+    "verification",
 )
 
 # Derived fields that must never be handwritten into a ledger on disk; they
@@ -318,12 +333,30 @@ def _validate_model(model, prefix, out):
             )
 
     mass = _get(model, "physical.mass_kg")
-    if isinstance(mass, dict):
-        _validate_mass_or_friction(mass, f"{prefix}.physical.mass_kg", out)
+    if mass is not _MISSING:
+        if isinstance(mass, dict):
+            _validate_mass_or_friction(mass, f"{prefix}.physical.mass_kg", out)
+        else:
+            out.append(
+                Violation(
+                    f"{prefix}.physical.mass_kg",
+                    "unknown_shape",
+                    "mass_kg is not a dict",
+                )
+            )
 
     friction = _get(model, "physical.friction")
-    if isinstance(friction, dict):
-        _validate_mass_or_friction(friction, f"{prefix}.physical.friction", out)
+    if friction is not _MISSING:
+        if isinstance(friction, dict):
+            _validate_mass_or_friction(friction, f"{prefix}.physical.friction", out)
+        else:
+            out.append(
+                Violation(
+                    f"{prefix}.physical.friction",
+                    "unknown_shape",
+                    "friction is not a dict",
+                )
+            )
 
     reps = model.get("representations")
     if reps is not None:
@@ -380,6 +413,13 @@ def validate_ledger(ledger, *, check_files=True):
 
     _check_required(ledger, REQUIRED_ASSET, "", out)
 
+    # present-but-null is invisible to the presence-only check above (the key
+    # does exist); a null value on any of these is just as unusable as an
+    # absent key, so it's reported the same way.
+    for field in NOT_NULLABLE_ASSET:
+        if field in ledger and ledger[field] is None:
+            out.append(Violation(field, "missing", f"required field is null: {field}"))
+
     kind = ledger.get("kind")
     if kind is not None and "kind" in ledger and kind not in KINDS:
         out.append(Violation("kind", "bad_enum", f"kind {kind!r} not in {KINDS}"))
@@ -394,13 +434,22 @@ def validate_ledger(ledger, *, check_files=True):
 
     models = ledger.get("models")
     if models is not None:
-        if models == []:
+        if not isinstance(models, list):
+            out.append(
+                Violation(
+                    "models",
+                    "bad_type",
+                    f"models must be a list, got {type(models).__name__}",
+                )
+            )
+        elif models == []:
             out.append(Violation("models", "no_models", "models is empty"))
         else:
             seen_ids = {}
             for i, m in enumerate(models):
                 mid = m.get("model_id")
-                seen_ids.setdefault(mid, []).append(i)
+                if mid is not None:
+                    seen_ids.setdefault(mid, []).append(i)
                 _validate_model(m, f"models.{i}", out)
                 if kind == "articulated":
                     articulation = m.get("articulation")
@@ -425,7 +474,7 @@ def validate_ledger(ledger, *, check_files=True):
                         )
                     )
 
-    if check_files and models:
+    if check_files and isinstance(models, list):
         for i, m in enumerate(models):
             for j, r in enumerate(m.get("representations", [])):
                 uri = r.get("uri")
@@ -578,9 +627,15 @@ def upsert_model(
         }
     else:
         ledger = json.loads(json.dumps(ledger))  # deep copy, don't mutate caller's dict
+        existing_asset_id = ledger.get("asset_id") or ""
+        if not existing_asset_id.endswith(f"_{asset}"):
+            raise ValueError(
+                f"asset param {asset!r} does not match existing asset_id {existing_asset_id!r}"
+            )
         expected = {
             "category": category,
             "kind": kind,
+            "semantic_name": semantic_name,
             "tags": list(tags),
             "semantics.aliases": list(aliases),
             "semantics.colors": list(colors),
@@ -618,6 +673,7 @@ def _atomic_write_json(path, data):
         with os.fdopen(fd, "w") as f:
             json.dump(data, f, indent=2)
             f.write("\n")
+        os.chmod(tmp_name, 0o644)  # mkstemp defaults to 0600; shared machine
         os.replace(tmp_name, path)
     except BaseException:
         if os.path.exists(tmp_name):
