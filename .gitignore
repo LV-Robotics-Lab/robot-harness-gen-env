@@ -2,11 +2,18 @@
 /external/
 
 # 运行产物 / 大文件 / 缓存：靠 README + stats 追溯，不提交
-/data/
+/data/*
 /results/
 /work/
 /runs/
 /out/
+
+# asset ledger 是唯一权威入库记录，必须有 git 历史（spec §3.9 治理注记）
+!/data/asset_library/
+data/asset_library/*
+!data/asset_library/*/
+data/asset_library/*/*
+!data/asset_library/*/ledger.json
 
 # openxsim vendored 依赖（约 5.8M，见 shared/openxsim/UPSTREAM.md）
 shared/openxsim/third_party/
