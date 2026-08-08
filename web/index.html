@@ -178,6 +178,7 @@
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
   .stage-title { font-weight: 600; font-size: 13.5px; }
   .stage-skip { color: var(--text-dim); font-size: 11.5px; margin-left: auto; }
+  .stage-active-label { color: var(--active); font-size: 11.5px; margin-left: auto; font-weight: 600; }
   .stage-body { padding: 0 14px 14px; display: none; }
   .stage.expanded .stage-body { display: block; }
 
@@ -399,6 +400,7 @@ function outcomeBanner(status) {
 function renderStatus(status) {
   const content = document.getElementById("content");
   const banner = outcomeBanner(status);
+  const state = status.state;
   const stages = status.stages || {};
 
   const coverageObjs = (stages.coverage && stages.coverage.objects) || [];
@@ -407,6 +409,46 @@ function renderStatus(status) {
   const hasBlocker = !!stages.blocker;
   const hasScene = !!stages.scene;
   const render = stages.render || {images: [], videos: []};
+  const shots = stages.shots || [];
+  const meta = status.meta;
+  const rebuildRan = !!(meta && meta.exclude_category);
+  const gapSkipped = coverageObjs.length > 0 && allCovered && evidenceCats.length === 0;
+  const convertQcSkipped = evidenceCats.length === 0;
+  const renderSkipped = hasBlocker || !hasScene;
+
+  // Live-run active-stage indicator: only for a run still in progress.
+  // Finished-run (phase "done") and history (no state) rendering is
+  // completely unaffected by any of this block.
+  const live = !!(state && (state.phase === "pipeline" || state.phase === "render"));
+  const liveMarker = live ? computeLiveMarker(status.log_tail) : null;
+  const stage5MarkerDone = !!(liveMarker && liveMarker.kind === "done" && liveMarker.stage === 5);
+  const stage5Done = rebuildRan || stage5MarkerDone;
+
+  const baseDone = {
+    1: coverageObjs.length > 0,
+    2: evidenceCats.length > 0,
+    3: shots.length > 0,
+    4: shots.length > 0,
+    5: stage5Done,
+    6: hasScene,
+    7: render.images.length > 0 || render.videos.length > 0,
+  };
+  const baseSkip = {
+    1: false, 2: gapSkipped, 3: convertQcSkipped, 4: convertQcSkipped,
+    5: !stage5Done, 6: hasBlocker, 7: renderSkipped,
+  };
+
+  let liveActiveStage = null, liveActiveLabel = null;
+  if (live) {
+    for (let n = 1; n <= 7; n++) {
+      if (!baseDone[n] && !baseSkip[n]) { liveActiveStage = n; liveActiveLabel = "执行中"; break; }
+    }
+    if (liveMarker && liveMarker.kind === "active") {
+      liveActiveStage = liveMarker.stage;
+      liveActiveLabel = liveMarker.label;
+    }
+  }
+  const activeLabelFor = n => (live && liveActiveStage === n) ? liveActiveLabel : null;
 
   let html = `<div class="banner ${banner.cls}">${banner.text}</div>`;
 
@@ -423,16 +465,15 @@ function renderStatus(status) {
   html += '<div class="rail">';
 
   // Stage 1: coverage
-  html += stageCard(1, "①需求提取+覆盖检查", coverageObjs.length > 0, false, false, `
+  html += stageCard(1, "①需求提取+覆盖检查", baseDone[1], baseSkip[1], false, `
     ${coverageObjs.length ? `<table><thead><tr><th>object_id</th><th>category</th><th>status</th><th>asset_id</th><th>score</th></tr></thead><tbody>
       ${coverageObjs.map(o => `<tr><td class="mono">${escapeHtml(o.object_id)}</td><td>${escapeHtml(o.category)}</td><td>${escapeHtml(o.status)}</td><td class="mono">${escapeHtml(o.asset_id)}</td><td>${escapeHtml(o.score ?? "")}</td></tr>`).join("")}
     </tbody></table>` : '<div class="empty">尚无数据</div>'}
     ${rawDetails("coverage_report.json 原始数据", stages.coverage)}
-  `);
+  `, activeLabelFor(1));
 
   // Stage 2: gap import (evidence)
-  const gapSkipped = coverageObjs.length > 0 && allCovered && evidenceCats.length === 0;
-  html += stageCard(2, "②缺口引进（四级检索）", evidenceCats.length > 0, gapSkipped, false, `
+  html += stageCard(2, "②缺口引进（四级检索）", baseDone[2], baseSkip[2], false, `
     ${gapSkipped ? '<div class="stage-skip-inline">全部类别已覆盖，跳过引进</div>' : ""}
     ${evidenceCats.map(cat => `
       <div style="margin-bottom:8px;">
@@ -448,23 +489,36 @@ function renderStatus(status) {
       </div>
     `).join("")}
     ${rawDetails("selection_evidence.json 原始数据", stages.evidence)}
-  `);
+  `, activeLabelFor(2));
 
-  // Stages 3-4: shots (convert + QC, we only observe the shot images produced)
-  const shots = stages.shots || [];
-  html += stageCard(3, "③下载+Isaac 转换 / ④SAPIEN 物理质检", shots.length > 0, evidenceCats.length === 0, false, `
+  // Stage 3: download + Isaac conversion. Shots are QC screenshots (stage 4's
+  // artifact), so stage 3 has no direct visual evidence of its own — its
+  // "done" state is proxied by shots existing (conversion must have
+  // succeeded for QC to have produced them), same proxy as before the split.
+  html += stageCard(3, "③下载+Isaac 转换", baseDone[3], baseSkip[3], false, `
+    ${shots.length
+      ? '<div class="empty">转换已完成，详见④质检截图与运行日志</div>'
+      : (baseSkip[3] ? "" : '<div class="empty">尚无数据，详见运行日志</div>')}
+  `, activeLabelFor(3));
+
+  // Stage 4: SAPIEN physical QC — the shots gallery.
+  html += stageCard(4, "④SAPIEN 物理质检", baseDone[4], baseSkip[4], false, `
     ${shots.length ? `<div class="thumbs">${shots.map(p => thumbImg(p)).join("")}</div>` : '<div class="empty">无质检截图</div>'}
-  `);
+  `, activeLabelFor(4));
 
-  // Stage 5: catalog rebuild — inferred from run_meta (exclude_category path)
-  const meta = status.meta;
-  const rebuildRan = !!(meta && meta.exclude_category);
-  html += stageCard(5, "⑤catalog 重建", rebuildRan, !rebuildRan, false, `
-    ${rebuildRan ? `<div class="mono">exclude_category=${escapeHtml(meta.exclude_category)}<br>catalog=${escapeHtml(meta.catalog)}</div>` : '<div class="stage-skip-inline">本次运行未触发过滤 catalog</div>'}
-  `);
+  // Stage 5: catalog rebuild — real artifact evidence is meta.exclude_category
+  // (web-triggered) OR, live only, the "PASS s9" log marker (natural gap-fill
+  // triggered rebuilds that weren't user-forced).
+  html += stageCard(5, "⑤catalog 重建", stage5Done, baseSkip[5], false, `
+    ${rebuildRan
+      ? `<div class="mono">exclude_category=${escapeHtml(meta.exclude_category)}<br>catalog=${escapeHtml(meta.catalog)}</div>`
+      : (stage5MarkerDone
+          ? '<div class="mono">运行日志确认 catalog 重建已完成（PASS s9）</div>'
+          : '<div class="stage-skip-inline">本次运行未触发过滤 catalog</div>')}
+  `, activeLabelFor(5));
 
   // Stage 6: scene
-  html += stageCard(6, "⑥场景生成", hasScene, hasBlocker, hasBlocker, `
+  html += stageCard(6, "⑥场景生成", baseDone[6], baseSkip[6], hasBlocker, `
     ${hasScene ? `
       <div class="mono" style="color:var(--text-dim);">${escapeHtml(stages.scene.dir)} · validation=${escapeHtml(stages.scene.validation)}</div>
       <table><thead><tr><th>object_id</th><th>asset_id</th><th>model_id</th></tr></thead><tbody>
@@ -472,15 +526,14 @@ function renderStatus(status) {
       </tbody></table>
       ${rawDetails("scene 原始数据", stages.scene)}
     ` : (hasBlocker ? '<div class="stage-skip-inline">资产缺口，跳过场景生成</div>' : '<div class="empty">尚无数据</div>')}
-  `);
+  `, activeLabelFor(6));
 
   // Stage 7: render
-  const renderSkipped = hasBlocker || !hasScene;
-  html += stageCard(7, "⑦回放渲染", render.images.length > 0 || render.videos.length > 0, renderSkipped, false, `
+  html += stageCard(7, "⑦回放渲染", baseDone[7], baseSkip[7], false, `
     ${render.images.length ? `<div class="render-gallery">${render.images.map(p => thumbImg(p)).join("")}</div>` : ""}
     ${render.videos.map(p => `<video controls src="${fileUrl(currentGroup, currentId, p)}"></video>`).join("")}
     ${(!render.images.length && !render.videos.length) ? '<div class="empty">无渲染产物</div>' : ""}
-  `);
+  `, activeLabelFor(7));
 
   html += "</div>"; // .rail
 
@@ -509,16 +562,50 @@ function rawDetails(label, obj) {
   return `<details class="raw"><summary>${escapeHtml(label)}</summary><pre>${escapeHtml(JSON.stringify(obj, null, 2))}</pre></details>`;
 }
 
-function stageCard(num, title, done, skipped, rejected, bodyHtml) {
-  const cls = `stage ${done ? "done" : ""} ${rejected ? "rejected" : ""}`.trim();
+function stageCard(num, title, done, skipped, rejected, bodyHtml, activeLabel) {
+  const isActive = !!activeLabel && !done && !rejected;
+  const cls = `stage ${done ? "done" : ""} ${rejected ? "rejected" : ""} ${isActive ? "active" : ""}`.trim();
+  let badge = "";
+  if (isActive) {
+    badge = `<div class="stage-active-label">${escapeHtml(activeLabel)}</div>`;
+  } else if (skipped && !done) {
+    badge = '<div class="stage-skip">跳过</div>';
+  }
   return `<div class="${cls} expanded">
     <div class="stage-head">
       <div class="stage-num">${num}</div>
       <div class="stage-title">${title}</div>
-      ${skipped && !done ? '<div class="stage-skip">跳过</div>' : ""}
+      ${badge}
     </div>
     <div class="stage-body">${bodyHtml}</div>
   </div>`;
+}
+
+// Live-run marker detection: case-insensitive substring scan of log_tail,
+// latest matching line wins. Only consulted while state.phase is
+// "pipeline"/"render" (finished-run rendering never calls this).
+const LIVE_MARKERS = [
+  {needles: ["simulation app startup", "app ready"], stage: 3, kind: "active", label: "Isaac 转换中"},
+  {needles: ["accepted ", "rejected "], stage: 4, kind: "active", label: "SAPIEN 质检中"},
+  {needles: ["pass s9"], stage: 5, kind: "done", label: null},
+  {needles: ["=== stage: render ==="], stage: 7, kind: "active", label: "回放渲染中"},
+];
+
+function computeLiveMarker(logTail) {
+  if (!logTail) return null;
+  const lines = logTail.split("\n");
+  let best = null;
+  lines.forEach((line, idx) => {
+    const low = line.toLowerCase();
+    for (const rule of LIVE_MARKERS) {
+      if (rule.needles.some(n => low.includes(n))) {
+        if (!best || idx >= best.idx) {
+          best = {idx, stage: rule.stage, kind: rule.kind, label: rule.label};
+        }
+      }
+    }
+  });
+  return best;
 }
 
 function openLightbox(url) {
