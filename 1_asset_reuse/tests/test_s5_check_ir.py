@@ -129,3 +129,47 @@ def test_ledger_input_one_bad_model_fails_whole_run(tmp_path):
     assert "PASS ledger.json::external_399_widget_m0" in r.stdout
     assert "FAIL " in r.stdout and "external_399_widget_m1" in r.stdout
     assert "representation uri missing on disk" in r.stdout
+
+
+def test_structurally_broken_ledger_fails_that_arg_not_whole_run(tmp_path):
+    # Review fix: to_bundles(data) is called before the per-bundle try block,
+    # so it needs its own try/except -- a ledger with "models" present but
+    # structurally broken (here: a model missing "model_id", which
+    # ledger.to_ir_bundles indexes directly via m["model_id"], raising
+    # KeyError) must FAIL that one CLI arg and continue to the next, not
+    # crash the whole script uncaught.
+    bad_ledger = {
+        "asset_id": "external_399_widget",
+        "category": "widget",
+        "tags": ["rigid"],
+        "models": [
+            {
+                # model_id deliberately omitted
+                "physical": {},
+                "representations": [_rep(tmp_path, "m0.usd", "a")],
+                "source": {},
+                "articulation": {},
+            },
+        ],
+    }
+    bad_path = tmp_path / "bad_ledger.json"
+    bad_path.write_text(json.dumps(bad_ledger))
+
+    good_doc = {
+        "asset_id": "external_400_gadget_m0",
+        "category": "gadget",
+        "representations": [_rep(tmp_path, "good.usd", "c")],
+        "source": {},
+        "physical": {},
+        "articulation": {},
+        "tags": [],
+    }
+    good_path = tmp_path / "good_bundle.json"
+    good_path.write_text(json.dumps(good_doc))
+
+    r = _run(bad_path, good_path)
+    assert r.returncode == 1, r.stdout + r.stderr
+    assert f"FAIL {bad_path}: KeyError" in r.stdout  # crash caught, not propagated
+    assert "model_id" in r.stdout
+    assert f"PASS {good_path.name}: isaacsim rep" in r.stdout  # 2nd arg unaffected
+    assert "FAIL s5" in r.stdout

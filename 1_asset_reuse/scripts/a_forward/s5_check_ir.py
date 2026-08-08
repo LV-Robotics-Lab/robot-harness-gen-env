@@ -35,7 +35,13 @@ ok = True
 for arg in sys.argv[1:]:
     data = json.loads(Path(arg).read_text())
     is_ledger = isinstance(data, dict) and "models" in data
-    for bundle_data in to_bundles(data):
+    try:
+        bundles = to_bundles(data)
+    except Exception as exc:  # noqa: BLE001
+        print(f"FAIL {arg}: {type(exc).__name__}: {exc}")
+        ok = False
+        continue
+    for bundle_data in bundles:
         label = f"{arg}::{bundle_data['asset_id']}" if is_ledger else arg
         pass_label = (
             f"{Path(arg).name}::{bundle_data['asset_id']}"
