@@ -48,7 +48,16 @@ bbox = report["bbox_m"]
 # category has no CLI arg on this script (unlike s13a) so it keeps the value
 # this script has always hardcoded.
 asset = inst.parent.name
-model_id = int(inst.name) if inst.name.isdigit() else 0
+if not inst.name.isdigit():
+    # upsert_model replaces model_id wholesale (re-import semantics) -- a
+    # silent fallback to 0 here would silently clobber an existing model 0
+    # on any non-numeric --instance-dir leaf. Fail loudly instead.
+    print(
+        f"FAIL s13b: --instance-dir model directory {inst.name!r} is not "
+        f"numeric (expected .../{asset}/<model_id>/)"
+    )
+    sys.exit(1)
+model_id = int(inst.name)
 category = "cabinet"
 
 
@@ -253,22 +262,25 @@ representations = [
     },
 ]
 
-# joint_names/types indexed to match `active`/`limits` (dof-length); s13a's
-# export_report.json "movable" list is expected to be in the same relative
-# order (fixed joints filtered out of both, URDF file order preserved) but
-# we don't hard-fail on a length mismatch (dof_matches already flags that in
-# `checks`) -- fall back to a placeholder name/type per unmatched index.
+# joint_names/types indexed to match `active`/`limits` (dof-length). s13a's
+# export_report.json "movable" list is a list of dicts -- verified against
+# s13a_usd2urdf.py (each movable joint's `rec` dict, `rot1` stripped when
+# written out) -- in the same relative order (fixed joints filtered out of
+# both, URDF file order preserved). Guard both the index bound and the
+# element shape (neither is a schema this script itself controls) and fall
+# back to a placeholder name/type per unmatched/malformed index rather than
+# hard-failing -- dof_matches already flags a length mismatch in `checks`.
 movable_meta = report.get("movable", [])
-joint_names = [
-    (movable_meta[i].get("name") or f"j{i}") if i < len(movable_meta) else f"j{i}"
-    for i in range(len(active))
-]
-joint_types = [
-    movable_meta[i].get("type", str(jtypes[i]))
-    if i < len(movable_meta)
-    else str(jtypes[i])
-    for i in range(len(active))
-]
+
+
+def _movable_field(i, key, fallback):
+    if i < len(movable_meta) and isinstance(movable_meta[i], dict):
+        return movable_meta[i].get(key) or fallback
+    return fallback
+
+
+joint_names = [_movable_field(i, "name", f"j{i}") for i in range(len(active))]
+joint_types = [_movable_field(i, "type", str(jtypes[i])) for i in range(len(active))]
 articulation = {
     "joint_names": joint_names,
     "joint_types": joint_types,
