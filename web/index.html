@@ -1,0 +1,562 @@
+<title>Pipeline Studio · env-gen-dev</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f6f7f6;
+    --panel: #ffffff;
+    --border: #dfe3e0;
+    --text: #1c211f;
+    --text-dim: #5c655f;
+    --mono-bg: #eef0ee;
+    --accent: #1F7A63;
+    --accent-fg: #ffffff;
+    --pending: #c7cbc8;
+    --active: #d99a2b;
+    --done: #1F7A63;
+    --rejected: #c0392b;
+    --card-shadow: 0 1px 2px rgba(20, 30, 25, 0.06);
+  }
+  :root[data-theme="dark"] {
+    --bg: #141715;
+    --panel: #1b1f1c;
+    --border: #2c3330;
+    --text: #e7ebe8;
+    --text-dim: #9aa39d;
+    --mono-bg: #10141a;
+    --accent: #58B394;
+    --accent-fg: #0c1210;
+    --pending: #3a423e;
+    --active: #e0b158;
+    --done: #58B394;
+    --rejected: #e07a6a;
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141715;
+      --panel: #1b1f1c;
+      --border: #2c3330;
+      --text: #e7ebe8;
+      --text-dim: #9aa39d;
+      --mono-bg: #10141a;
+      --accent: #58B394;
+      --accent-fg: #0c1210;
+      --pending: #3a423e;
+      --active: #e0b158;
+      --done: #58B394;
+      --rejected: #e07a6a;
+      --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "PingFang SC", "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  code, .mono, .path {
+    font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px;
+  }
+  header {
+    padding: 18px 24px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+  }
+  header h1 { margin: 0; font-size: 18px; font-weight: 650; }
+  header .sub { color: var(--text-dim); font-size: 12.5px; margin-top: 3px; }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    padding: 14px 24px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  .controls input[type=text], .controls input[type=number] {
+    background: var(--mono-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    color: var(--text);
+    font-size: 13px;
+  }
+  #prompt { flex: 1 1 320px; min-width: 220px; }
+  #seed { width: 84px; }
+  #excludeCategory { width: 160px; }
+  button#runBtn {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border: none;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button#runBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+  button#runBtn:hover:not(:disabled) { filter: brightness(1.06); }
+
+  .layout { display: flex; align-items: flex-start; }
+  aside {
+    width: 260px;
+    flex: 0 0 260px;
+    border-right: 1px solid var(--border);
+    min-height: calc(100vh - 120px);
+    background: var(--panel);
+  }
+  aside h2 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-dim);
+    margin: 16px 14px 6px;
+  }
+  .run-item {
+    padding: 8px 14px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+  }
+  .run-item:hover { background: var(--mono-bg); }
+  .run-item.active { border-left-color: var(--accent); background: var(--mono-bg); }
+  .run-item .label { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .run-item .meta { color: var(--text-dim); font-size: 11px; display: flex; gap: 6px; align-items: center; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .dot.scene { background: var(--done); }
+  .dot.blocker { background: var(--rejected); }
+  .dot.failed { background: var(--rejected); }
+  .dot.running { background: var(--active); animation: pulse 1.4s ease-in-out infinite; }
+  .dot.evidence { background: var(--pending); }
+
+  main { flex: 1 1 auto; padding: 18px 24px 60px; min-width: 0; }
+
+  .banner {
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 13.5px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--panel);
+  }
+  .banner.running { color: var(--active); }
+  .banner.scene { color: var(--done); }
+  .banner.blocker, .banner.failed { color: var(--rejected); }
+
+  .rail { display: flex; flex-direction: column; gap: 10px; }
+  .stage {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+  }
+  .stage-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+  .stage-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    background: var(--pending); color: var(--panel);
+    flex: 0 0 auto;
+  }
+  .stage.done .stage-num { background: var(--done); }
+  .stage.rejected .stage-num { background: var(--rejected); }
+  .stage.active .stage-num { background: var(--active); animation: pulse 1.4s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .stage.active .stage-num, .dot.running { animation: none; } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+  .stage-title { font-weight: 600; font-size: 13.5px; }
+  .stage-skip { color: var(--text-dim); font-size: 11.5px; margin-left: auto; }
+  .stage-body { padding: 0 14px 14px; display: none; }
+  .stage.expanded .stage-body { display: block; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; margin: 6px 0; }
+  th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-dim); font-weight: 600; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+  .chip {
+    border-radius: 12px; padding: 3px 10px; font-size: 11.5px;
+    border: 1px solid var(--border); background: var(--mono-bg);
+  }
+  .chip.selected { border-color: var(--done); color: var(--done); }
+  .chip.rejected { border-color: var(--rejected); color: var(--rejected); }
+
+  .thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+  .thumbs img, .render-gallery img {
+    width: 110px; height: 110px; object-fit: cover;
+    border-radius: 6px; border: 1px solid var(--border); cursor: pointer;
+  }
+  .render-gallery { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0; }
+  video { max-width: 320px; border-radius: 6px; border: 1px solid var(--border); }
+
+  details.raw { margin-top: 8px; }
+  details.raw summary { cursor: pointer; color: var(--text-dim); font-size: 11.5px; }
+  details.raw pre {
+    background: var(--mono-bg); padding: 8px; border-radius: 6px;
+    overflow: auto; max-height: 260px; font-size: 11.5px;
+  }
+
+  .blocker-card {
+    border: 1px solid var(--rejected); border-radius: 8px; padding: 10px 14px;
+    margin-bottom: 14px; background: var(--panel);
+  }
+
+  .log-wrap { margin-top: 18px; }
+  .log-wrap summary { cursor: pointer; font-weight: 600; font-size: 13px; }
+  #logPre {
+    background: var(--mono-bg); padding: 10px; border-radius: 8px;
+    max-height: 320px; overflow: auto; font-size: 11.5px; white-space: pre-wrap;
+  }
+
+  #toast {
+    position: fixed; bottom: 16px; right: 16px; z-index: 50;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .toast-line {
+    background: var(--rejected); color: #fff; padding: 8px 14px;
+    border-radius: 6px; font-size: 12.5px; box-shadow: var(--card-shadow);
+  }
+
+  .empty { color: var(--text-dim); font-size: 12.5px; padding: 20px 0; }
+
+  .lightbox {
+    position: fixed; inset: 0; background: rgba(0,0,0,.75);
+    display: none; align-items: center; justify-content: center; z-index: 100;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 92vw; max-height: 92vh; border-radius: 6px; }
+</style>
+
+<header>
+  <h1>Pipeline Studio · env-gen-dev</h1>
+  <div class="sub">提示词驱动的资产自适应场景生成流水线 — 实时阶段追踪</div>
+</header>
+
+<div class="controls">
+  <input type="text" id="prompt" placeholder="Place a red mug on the table.">
+  <input type="number" id="seed" value="42">
+  <input type="text" id="excludeCategory" placeholder="如 bowl（可选）"
+         title="为本次运行临时剔除该类别以触发真实引进；引进的资产会真实入库">
+  <button id="runBtn">运行</button>
+</div>
+
+<div class="layout">
+  <aside>
+    <h2>本次会话</h2>
+    <div id="webList"><div class="empty">暂无</div></div>
+    <h2>历史记录</h2>
+    <div id="historyList"><div class="empty">加载中…</div></div>
+  </aside>
+  <main>
+    <div id="content"><div class="empty">选择左侧运行，或提交一个新提示词开始。</div></div>
+  </main>
+</div>
+
+<div id="toast"></div>
+<div class="lightbox" id="lightbox"><img id="lightboxImg"></div>
+
+<script>
+const STAGE_DEFS = [
+  {key: "coverage", num: 1, title: "①需求提取+覆盖检查"},
+  {key: "gap",      num: 2, title: "②缺口引进（四级检索）"},
+  {key: "convert",  num: 3, title: "③下载+Isaac 转换"},
+  {key: "qc",       num: 4, title: "④SAPIEN 物理质检"},
+  {key: "rebuild",  num: 5, title: "⑤catalog 重建"},
+  {key: "scene",    num: 6, title: "⑥场景生成"},
+  {key: "render",   num: 7, title: "⑦回放渲染"},
+];
+
+let currentGroup = null, currentId = null;
+let pollGeneration = 0;
+let pollFailures = 0;
+const MAX_POLL_FAILURES = 5;
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  const el = document.createElement("div");
+  el.className = "toast-line";
+  el.textContent = msg;
+  t.appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  if (!res.ok) {
+    let body = {};
+    try { body = await res.json(); } catch (e) {}
+    const err = new Error(body.error || res.statusText);
+    err.status = res.status; err.body = body;
+    throw err;
+  }
+  return res.json();
+}
+
+function fileUrl(group, id, p) {
+  return `/api/run/${group}/${id}/file?p=${encodeURIComponent(p)}`;
+}
+
+async function refreshRuns() {
+  try {
+    const data = await api("/api/runs");
+    renderList("webList", data.web, "web");
+    renderList("historyList", data.history, "history");
+  } catch (e) {
+    toast("加载运行列表失败: " + e.message);
+  }
+}
+
+function outcomeDotClass(item) {
+  if (item.outcome === "scene") return "scene";
+  if (item.outcome === "blocker") return "blocker";
+  if (item.outcome === "failed") return "failed";
+  if (item.outcome === "evidence") return "evidence";
+  return "running";
+}
+
+function renderList(elId, items, group) {
+  const el = document.getElementById(elId);
+  if (!items || !items.length) { el.innerHTML = '<div class="empty">暂无</div>'; return; }
+  el.innerHTML = "";
+  for (const item of items) {
+    const div = document.createElement("div");
+    div.className = "run-item" + (group === currentGroup && item.id === currentId ? " active" : "");
+    div.innerHTML = `<div class="label">${escapeHtml(item.label)}</div>
+      <div class="meta"><span class="dot ${outcomeDotClass(item)}"></span>${escapeHtml(item.id)}</div>`;
+    div.onclick = () => loadRun(group, item.id);
+    el.appendChild(div);
+  }
+}
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+async function loadRun(group, id) {
+  currentGroup = group; currentId = id;
+  pollFailures = 0;
+  const gen = ++pollGeneration;
+  refreshRuns();
+  await scheduleTick(gen);
+}
+
+async function scheduleTick(gen) {
+  if (gen !== pollGeneration) return;
+  const done = await tick();
+  if (gen !== pollGeneration) return;
+  if (!done) {
+    setTimeout(() => scheduleTick(gen), 1500);
+  }
+}
+
+async function tick() {
+  let status;
+  try {
+    status = await api(`/api/run/${currentGroup}/${currentId}/status`);
+    pollFailures = 0;
+  } catch (e) {
+    pollFailures++;
+    if (pollFailures >= MAX_POLL_FAILURES) {
+      toast(`状态加载连续失败 ${pollFailures} 次，已停止轮询: ` + e.message);
+      return true;
+    }
+    toast(`状态加载失败（将重试 ${pollFailures}/${MAX_POLL_FAILURES}）: ` + e.message);
+    return false;
+  }
+  renderStatus(status);
+  const phase = status.state && status.state.phase;
+  return !phase || phase === "done";
+}
+
+function outcomeBanner(status) {
+  const state = status.state;
+  const phase = state && state.phase;
+  const outcome = state && state.outcome;
+  if (!phase || phase === "done") {
+    if (outcome === "scene") return {cls: "scene", text: "✅ 场景生成成功"};
+    if (outcome === "blocker") return {cls: "blocker", text: "⛔ 资产缺口阻塞（等待人工/引进）"};
+    if (outcome === "failed") {
+      const rc = state ? state.pipeline_rc : null;
+      return {cls: "failed", text: `❌ 运行失败 (rc=${rc})`};
+    }
+    return {cls: "", text: "历史记录（无实时状态）"};
+  }
+  return {cls: "running", text: `⏳ 运行中 · ${phase === "pipeline" ? "流水线" : "渲染"} 阶段…`};
+}
+
+function renderStatus(status) {
+  const content = document.getElementById("content");
+  const banner = outcomeBanner(status);
+  const stages = status.stages || {};
+
+  const coverageObjs = (stages.coverage && stages.coverage.objects) || [];
+  const allCovered = coverageObjs.length > 0 && coverageObjs.every(o => o.status === "covered");
+  const evidenceCats = (stages.evidence && stages.evidence.categories) || [];
+  const hasBlocker = !!stages.blocker;
+  const hasScene = !!stages.scene;
+  const render = stages.render || {images: [], videos: []};
+
+  let html = `<div class="banner ${banner.cls}">${banner.text}</div>`;
+
+  if (hasBlocker) {
+    html += `<div class="blocker-card">
+      <strong>⛔ asset_gap_blocker</strong>
+      <div class="mono">${escapeHtml(stages.blocker.note || "")}</div>
+      <table><thead><tr><th>object_id</th><th>category</th><th>detail</th></tr></thead><tbody>
+      ${(stages.blocker.unmet || []).map(u => `<tr><td class="mono">${escapeHtml(u.object_id)}</td><td>${escapeHtml(u.category)}</td><td>${escapeHtml(u.detail)}</td></tr>`).join("")}
+      </tbody></table>
+    </div>`;
+  }
+
+  html += '<div class="rail">';
+
+  // Stage 1: coverage
+  html += stageCard(1, "①需求提取+覆盖检查", coverageObjs.length > 0, false, false, `
+    ${coverageObjs.length ? `<table><thead><tr><th>object_id</th><th>category</th><th>status</th><th>asset_id</th><th>score</th></tr></thead><tbody>
+      ${coverageObjs.map(o => `<tr><td class="mono">${escapeHtml(o.object_id)}</td><td>${escapeHtml(o.category)}</td><td>${escapeHtml(o.status)}</td><td class="mono">${escapeHtml(o.asset_id)}</td><td>${escapeHtml(o.score ?? "")}</td></tr>`).join("")}
+    </tbody></table>` : '<div class="empty">尚无数据</div>'}
+    ${rawDetails("coverage_report.json 原始数据", stages.coverage)}
+  `);
+
+  // Stage 2: gap import (evidence)
+  const gapSkipped = coverageObjs.length > 0 && allCovered && evidenceCats.length === 0;
+  html += stageCard(2, "②缺口引进（四级检索）", evidenceCats.length > 0, gapSkipped, false, `
+    ${gapSkipped ? '<div class="stage-skip-inline">全部类别已覆盖，跳过引进</div>' : ""}
+    ${evidenceCats.map(cat => `
+      <div style="margin-bottom:8px;">
+        <strong>${escapeHtml(cat.category)}</strong>
+        <span class="mono" style="color:var(--text-dim);"> status=${escapeHtml(cat.status)} tiers=${escapeHtml(JSON.stringify(cat.tiers_consulted))} attempts=${escapeHtml(cat.attempts ?? "")}</span>
+        <div class="chips">
+          ${(cat.candidates || []).map(c => {
+            const rejCode = c.rejection && c.rejection.code;
+            const cls = c.verdict === "selected" ? "selected" : (rejCode ? "rejected" : "");
+            return `<span class="chip ${cls}" title="${escapeHtml(c.candidate_id)}">${escapeHtml(c.id)} · ${escapeHtml(c.verdict)}${rejCode ? " · " + escapeHtml(rejCode) : ""}</span>`;
+          }).join("")}
+        </div>
+      </div>
+    `).join("")}
+    ${rawDetails("selection_evidence.json 原始数据", stages.evidence)}
+  `);
+
+  // Stages 3-4: shots (convert + QC, we only observe the shot images produced)
+  const shots = stages.shots || [];
+  html += stageCard(3, "③下载+Isaac 转换 / ④SAPIEN 物理质检", shots.length > 0, evidenceCats.length === 0, false, `
+    ${shots.length ? `<div class="thumbs">${shots.map(p => thumbImg(p)).join("")}</div>` : '<div class="empty">无质检截图</div>'}
+  `);
+
+  // Stage 5: catalog rebuild — inferred from run_meta (exclude_category path)
+  const meta = status.meta;
+  const rebuildRan = !!(meta && meta.exclude_category);
+  html += stageCard(5, "⑤catalog 重建", rebuildRan, !rebuildRan, false, `
+    ${rebuildRan ? `<div class="mono">exclude_category=${escapeHtml(meta.exclude_category)}<br>catalog=${escapeHtml(meta.catalog)}</div>` : '<div class="stage-skip-inline">本次运行未触发过滤 catalog</div>'}
+  `);
+
+  // Stage 6: scene
+  html += stageCard(6, "⑥场景生成", hasScene, hasBlocker, hasBlocker, `
+    ${hasScene ? `
+      <div class="mono" style="color:var(--text-dim);">${escapeHtml(stages.scene.dir)} · validation=${escapeHtml(stages.scene.validation)}</div>
+      <table><thead><tr><th>object_id</th><th>asset_id</th><th>model_id</th></tr></thead><tbody>
+        ${stages.scene.objects.map(o => `<tr><td class="mono">${escapeHtml(o.object_id)}</td><td class="mono">${escapeHtml(o.asset_id)}</td><td>${escapeHtml(o.model_id)}</td></tr>`).join("")}
+      </tbody></table>
+      ${rawDetails("scene 原始数据", stages.scene)}
+    ` : (hasBlocker ? '<div class="stage-skip-inline">资产缺口，跳过场景生成</div>' : '<div class="empty">尚无数据</div>')}
+  `);
+
+  // Stage 7: render
+  const renderSkipped = hasBlocker || !hasScene;
+  html += stageCard(7, "⑦回放渲染", render.images.length > 0 || render.videos.length > 0, renderSkipped, false, `
+    ${render.images.length ? `<div class="render-gallery">${render.images.map(p => thumbImg(p)).join("")}</div>` : ""}
+    ${render.videos.map(p => `<video controls src="${fileUrl(currentGroup, currentId, p)}"></video>`).join("")}
+    ${(!render.images.length && !render.videos.length) ? '<div class="empty">无渲染产物</div>' : ""}
+  `);
+
+  html += "</div>"; // .rail
+
+  html += `<div class="log-wrap"><details><summary>运行日志</summary><pre id="logPre">${escapeHtml(status.log_tail || "（无日志）")}</pre></details></div>`;
+
+  content.innerHTML = html;
+
+  const logPre = document.getElementById("logPre");
+  if (logPre) logPre.scrollTop = logPre.scrollHeight;
+
+  content.querySelectorAll(".thumbs img, .render-gallery img").forEach(img => {
+    img.onclick = () => openLightbox(img.dataset.full);
+  });
+  content.querySelectorAll(".stage-head").forEach(h => {
+    h.onclick = () => h.parentElement.classList.toggle("expanded");
+  });
+}
+
+function thumbImg(p) {
+  const url = fileUrl(currentGroup, currentId, p);
+  return `<img src="${url}" data-full="${url}" loading="lazy" title="${escapeHtml(p)}">`;
+}
+
+function rawDetails(label, obj) {
+  if (!obj) return "";
+  return `<details class="raw"><summary>${escapeHtml(label)}</summary><pre>${escapeHtml(JSON.stringify(obj, null, 2))}</pre></details>`;
+}
+
+function stageCard(num, title, done, skipped, rejected, bodyHtml) {
+  const cls = `stage ${done ? "done" : ""} ${rejected ? "rejected" : ""}`.trim();
+  return `<div class="${cls} expanded">
+    <div class="stage-head">
+      <div class="stage-num">${num}</div>
+      <div class="stage-title">${title}</div>
+      ${skipped && !done ? '<div class="stage-skip">跳过</div>' : ""}
+    </div>
+    <div class="stage-body">${bodyHtml}</div>
+  </div>`;
+}
+
+function openLightbox(url) {
+  document.getElementById("lightboxImg").src = url;
+  document.getElementById("lightbox").classList.add("open");
+}
+document.getElementById("lightbox").onclick = () => {
+  document.getElementById("lightbox").classList.remove("open");
+};
+
+document.getElementById("runBtn").onclick = async () => {
+  const prompt = document.getElementById("prompt").value.trim();
+  if (!prompt) { toast("请输入提示词"); return; }
+  const seedParsed = parseInt(document.getElementById("seed").value, 10);
+  const seed = Number.isNaN(seedParsed) ? 42 : seedParsed;
+  const exclude = document.getElementById("excludeCategory").value.trim() || null;
+  const btn = document.getElementById("runBtn");
+  btn.disabled = true;
+  try {
+    const res = await api("/api/run", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({prompt, seed, exclude_category: exclude}),
+    });
+    await loadRun("web", res.run_id);
+  } catch (e) {
+    if (e.status === 409) {
+      const cur = e.body.current;
+      toast("已有运行进行中: " + cur);
+      loadRun("web", cur);
+    } else {
+      toast("提交失败: " + e.message);
+    }
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+refreshRuns();
+setInterval(refreshRuns, 5000);
+</script>
