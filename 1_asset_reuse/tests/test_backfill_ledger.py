@@ -135,19 +135,23 @@ def _mini_pool(tmp_path):
     return lib, tmp_path / "results", frag
 
 
-def _run(lib, results, frag, out, apply=False):
-    cmd = [
-        sys.executable,
-        str(SCRIPT),
-        "--library-dir",
-        str(lib),
-        "--results-root",
-        str(results),
-        "--fragment",
-        str(frag),
-        "--out",
-        str(out),
-    ] + (["--apply"] if apply else [])
+def _run(lib, results, frag, out, apply=False, extra_args=()):
+    cmd = (
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--library-dir",
+            str(lib),
+            "--results-root",
+            str(results),
+            "--fragment",
+            str(frag),
+            "--out",
+            str(out),
+        ]
+        + (["--apply"] if apply else [])
+        + list(extra_args)
+    )
     return subprocess.run(cmd, capture_output=True, text=True)
 
 
@@ -314,3 +318,302 @@ def test_origin_convention_prefers_sapien_backend(tmp_path):
     assert r.returncode == 0, r.stderr
     led = json.loads((lib / "397_probe/ledger.json").read_text())
     assert led["models"][0]["physical"]["origin_convention"] == "bottom-center"
+
+
+def test_bundle_alias_articulated_derivations(tmp_path):
+    # Reproduces the 314_cabinet-shaped gaps the T8 real-pool backfill run
+    # needed mapping fixes for: legacy bundle filed outside the
+    # */bundles/<asset>_m<n>.json convention (picked up via --bundle-alias),
+    # model marker nested under <asset>/<n>/model_data<n>.json (not the flat
+    # rigid-asset layout), source.group/file absent but recoverable from a
+    # representation's uri/derived_from, a _source/<group>/ mirror dir
+    # present without a SOURCE_MANIFEST.json (generated on --apply), and
+    # articulation.joints[].name present but not the required joint_names.
+    lib = tmp_path / "asset_library"
+    asset_dir = lib / "298_locker"
+    (asset_dir / "0").mkdir(parents=True)
+    (asset_dir / "0" / "model_data0.json").write_text(
+        json.dumps({"extents": [0.2, 0.2, 0.3]})
+    )
+    urdf_path = asset_dir / "0" / "mobility.urdf"
+    urdf_path.write_bytes(b"<robot/>")
+    urdf_sha = hashlib.sha256(b"<robot/>").hexdigest()
+    vis_path = asset_dir / "0" / "preview.glb"
+    vis_path.write_bytes(b"V")
+    vis_sha = hashlib.sha256(b"V").hexdigest()
+
+    src_dir = lib / "_source/acq_298_locker"
+    src_dir.mkdir(parents=True)
+    (src_dir / "locker.usd").write_bytes(b"U")
+    src_sha = hashlib.sha256(b"U").hexdigest()
+
+    stray = tmp_path / "misc_run" / "articulated"
+    stray.mkdir(parents=True)
+    bundle = {
+        "asset_id": "external_298_locker_m0",
+        "category": "locker",
+        "representations": [
+            {
+                "format": "urdf",
+                "uri": str(urdf_path),
+                "backend": "sapien",
+                "role": "visual_and_collision",
+                "sha256": urdf_sha,
+                "size_bytes": 1,
+                "metadata": {"derived_from": str(src_dir / "locker.usd")},
+            },
+            {
+                "format": "glb",
+                "uri": str(vis_path),
+                "backend": "sapien",
+                "role": "visual",
+                "sha256": vis_sha,
+                "size_bytes": 1,
+                "metadata": {"origin": "bottom-center normalized"},
+            },
+        ],
+        "source": {"library": "Test Lib", "license": "unknown (test)"},
+        "physical": {
+            "mass_kg": {"value": None, "status": "unknown", "runtime_default_kg": 1.0},
+            "mesh_bbox_m": [0.2, 0.2, 0.3],
+            "mesh_up_axis": "Z",
+            "size_resolution": {
+                "mode": "match_category",
+                "actual_max_dim_m": 0.3,
+                "scale": 1.0,
+                "reference_max_dim_m": None,
+                "reference_assets": [],
+                "verdict": "no_precedent",
+            },
+            "scale": [1.0, 1.0, 1.0],
+        },
+        "articulation": {"joints": [{"name": "door_joint"}, {"name": "drawer_joint"}]},
+        "tags": ["articulated", "external"],
+    }
+    (stray / "locker_bundle.json").write_text(json.dumps(bundle))
+
+    frag = tmp_path / "fragment.yml"
+    frag.write_text(
+        "  298_locker:\n    category: locker\n    aliases: [locker]\n"
+        '    models:\n      "0":\n        stable_pose_id: upright\n'
+        "        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]\n"
+        "        z_policy: origin_on_table\n        footprint_shape: box\n"
+    )
+
+    out = tmp_path / "rep"
+    r = _run(
+        lib,
+        tmp_path / "results",
+        frag,
+        out,
+        apply=True,
+        extra_args=[f"--bundle-alias=298_locker:0={stray / 'locker_bundle.json'}"],
+    )
+    assert r.returncode == 0, r.stderr
+
+    led = json.loads((asset_dir / "ledger.json").read_text())
+    m = led["models"][0]
+    assert m["source"]["group"] == "acq_298_locker"
+    assert m["source"]["file"] == "locker.usd"
+    assert m["physical"]["scale_applied"] == 1.0
+    assert m["articulation"]["joint_names"] == ["door_joint", "drawer_joint"]
+
+    manifest_path = src_dir / "SOURCE_MANIFEST.json"
+    assert manifest_path.exists()
+    manifest = json.loads(manifest_path.read_text())
+    assert manifest["files"]["locker.usd"] == src_sha
+    assert m["source"]["source_manifest_path"] == str(manifest_path.resolve())
+
+    report = json.loads((out / "backfill_report.json").read_text())
+    assert report["violations"] == {}
+    assert "298_locker" not in report["excluded"]
+    notes = report["notes"]
+    assert "298_locker:m0:acq_298_locker" in notes["group_derived_from_representations"]
+    assert "298_locker:m0" in notes["source_manifest_generated"]
+    assert "298_locker:m0" in notes["file_derived_from_representations"]
+    assert "298_locker:m0" in notes["scale_applied_derived_from_scale_vector"]
+
+
+def test_violations_block_apply_write(tmp_path):
+    # A legacy bundle that predates mesh_up_axis/size_resolution and whose
+    # _source/<group>/ mirror dir was never kept: a real, irreducible data
+    # gap (not something mapping logic can derive without fabricating a
+    # value). The pool is only-append -- backfill must not write a ledger
+    # that fails its own validator, and must say so in the report.
+    lib = tmp_path / "asset_library"
+    a = lib / "396_gap"
+    (a / "visual").mkdir(parents=True)
+    (a / "collision").mkdir(parents=True)
+    vis = a / "visual/base0.glb"
+    vis.write_bytes(b"V")
+    col = a / "collision/base0.glb"
+    col.write_bytes(b"V")
+    (a / "model_data0.json").write_text(json.dumps({"extents": [0.1, 0.1, 0.1]}))
+
+    run = tmp_path / "results/20260803_import/bundles"
+    run.mkdir(parents=True)
+    sha = hashlib.sha256(b"V").hexdigest()
+    bundle = {
+        "asset_id": "external_396_gap_m0",
+        "category": "gap",
+        "representations": [
+            {
+                "format": "glb",
+                "uri": str(vis),
+                "backend": "sapien",
+                "role": "visual",
+                "sha256": sha,
+                "size_bytes": 1,
+                "metadata": {"origin": "bottom-center normalized"},
+            },
+            {
+                "format": "glb",
+                "uri": str(col),
+                "backend": "sapien",
+                "role": "collision",
+                "sha256": sha,
+                "size_bytes": 1,
+                "metadata": {},
+            },
+        ],
+        "source": {
+            "library": "NVIDIA Isaac Assets 5.1",
+            "group": "acq_396_gap",
+            "file": "g.usd",
+            "license": "unknown (test)",
+        },
+        "physical": {
+            "mass_kg": {"value": None, "status": "unknown", "runtime_default_kg": 0.1},
+            "mesh_bbox_m": [0.1, 0.1, 0.1],
+            # mesh_up_axis / size_resolution deliberately absent, and
+            # source.group's mirror dir is never created below -- nothing
+            # here is legitimately derivable.
+            "scale": [
+                1.0,
+                2.0,
+                1.0,
+            ],  # non-uniform: scale_applied stays undeducible too
+            "conventions": {
+                "is_static": False,
+                "z_policy": "origin_on_table",
+                "footprint_shape": "box",
+                "precedent": None,
+            },
+        },
+        "articulation": {},
+        "tags": ["rigid", "external"],
+    }
+    (run / "396_gap_m0.json").write_text(json.dumps(bundle))
+    frag = tmp_path / "fragment.yml"
+    frag.write_text(
+        "  396_gap:\n    category: gap\n    aliases: [gap]\n"
+        '    models:\n      "0":\n        stable_pose_id: upright\n'
+        "        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]\n"
+        "        z_policy: origin_on_table\n        footprint_shape: box\n"
+    )
+    out = tmp_path / "rep"
+    r = _run(lib, tmp_path / "results", frag, out, apply=True)
+    assert r.returncode == 1  # violations present -> non-zero exit, contract unchanged
+    assert not (a / "ledger.json").exists()
+    report = json.loads((out / "backfill_report.json").read_text())
+    assert report["excluded"] == ["396_gap"]
+    assert report["written"] == 0
+    codes = {v["code"] for v in report["violations"]["396_gap"]}
+    assert "missing" in codes
+
+
+def test_uri_rebased_to_current_library_dir(tmp_path):
+    # The recorded uri lives under a repo root that's since been renamed
+    # (env-gen-dev-asset -> env-gen-dev is the real-world case this fixes);
+    # the file is real, just findable only by re-anchoring on the
+    # data/asset_library/ segment still present in the stale path.
+    lib = tmp_path / "asset_library"
+    a = lib / "395_relic"
+    (a / "visual").mkdir(parents=True)
+    (a / "collision").mkdir(parents=True)
+    vis = a / "visual/base0.glb"
+    vis.write_bytes(b"V")
+    col = a / "collision/base0.glb"
+    col.write_bytes(b"V")
+    (a / "model_data0.json").write_text(json.dumps({"extents": [0.1, 0.1, 0.1]}))
+
+    src = lib / "_source/acq_395_relic"
+    src.mkdir(parents=True)
+    (src / "SOURCE_MANIFEST.json").write_text(
+        json.dumps({"files": {"r.usd": "ab" * 32}})
+    )
+
+    run = tmp_path / "results/20260803_import/bundles"
+    run.mkdir(parents=True)
+    sha = hashlib.sha256(b"V").hexdigest()
+    stale_vis_uri = "/stale-old-root/data/asset_library/395_relic/visual/base0.glb"
+    stale_col_uri = "/stale-old-root/data/asset_library/395_relic/collision/base0.glb"
+    bundle = {
+        "asset_id": "external_395_relic_m0",
+        "category": "relic",
+        "representations": [
+            {
+                "format": "glb",
+                "uri": stale_vis_uri,
+                "backend": "sapien",
+                "role": "visual",
+                "sha256": sha,
+                "size_bytes": 1,
+                "metadata": {"origin": "bottom-center normalized"},
+            },
+            {
+                "format": "glb",
+                "uri": stale_col_uri,
+                "backend": "sapien",
+                "role": "collision",
+                "sha256": sha,
+                "size_bytes": 1,
+                "metadata": {},
+            },
+        ],
+        "source": {
+            "library": "NVIDIA Isaac Assets 5.1",
+            "group": "acq_395_relic",
+            "file": "r.usd",
+            "license": "unknown (test)",
+        },
+        "physical": {
+            "mass_kg": {"value": None, "status": "unknown", "runtime_default_kg": 0.1},
+            "mesh_bbox_m": [0.1, 0.1, 0.1],
+            "mesh_up_axis": "Y",
+            "scale_applied": 1.0,
+            "size_resolution": {
+                "mode": "match_category",
+                "actual_max_dim_m": 0.1,
+                "scale": 1.0,
+                "reference_max_dim_m": None,
+                "reference_assets": [],
+                "verdict": "no_precedent",
+            },
+            "conventions": {
+                "is_static": False,
+                "z_policy": "origin_on_table",
+                "footprint_shape": "box",
+                "precedent": None,
+            },
+        },
+        "articulation": {},
+        "tags": ["rigid", "external"],
+    }
+    (run / "395_relic_m0.json").write_text(json.dumps(bundle))
+    frag = tmp_path / "fragment.yml"
+    frag.write_text(
+        "  395_relic:\n    category: relic\n    aliases: [relic]\n"
+        '    models:\n      "0":\n        stable_pose_id: upright\n'
+        "        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]\n"
+        "        z_policy: origin_on_table\n        footprint_shape: box\n"
+    )
+    out = tmp_path / "rep"
+    r = _run(lib, tmp_path / "results", frag, out, apply=True)
+    assert r.returncode == 0, r.stderr
+    led = json.loads((a / "ledger.json").read_text())
+    reps = led["models"][0]["representations"]
+    assert reps[0]["uri"] == str(vis)
+    assert reps[1]["uri"] == str(col)
+    report = json.loads((out / "backfill_report.json").read_text())
+    assert "395_relic:m0" in report["notes"]["uri_rebased"]

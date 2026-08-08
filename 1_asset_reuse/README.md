@@ -38,6 +38,46 @@ bash scripts/s10_e2e_scene.sh
 
 前置：conda `env-gen-yuxin`（SAPIEN 侧）+ `isaac-smoke`（Isaac Sim 5.1，py3.11）。
 
+### 账本契约（asset_ledger.v1）
+
+- **权威位置**：`../data/asset_library/<asset>/ledger.json`（每资产一份，含
+  `models[]`；随 git 提交，是唯一权威入库记录——`results/**/bundles/` 只是它的摊平快照产物）。
+- **现存资产升级 v1**（一次性、幂等；已是 v1 的资产自动跳过）：
+  ```bash
+  # 先跑 dry-run（不带 --apply）看报告，violations 逐条 triage
+  ~/miniconda3/envs/env-gen-yuxin/bin/python scripts/backfill_ledger_v1.py \
+    --library-dir ../data/asset_library --results-root ../results \
+    --fragment ../data/scene_gen_ext/external_overrides_fragment_merged.yml \
+    --out <报告目录>
+  # violations 能清零的资产落账本
+  ~/miniconda3/envs/env-gen-yuxin/bin/python scripts/backfill_ledger_v1.py \
+    --library-dir ../data/asset_library --results-root ../results \
+    --fragment ../data/scene_gen_ext/external_overrides_fragment_merged.yml \
+    --out <报告目录> --apply
+  ```
+  个别资产若在不编造的前提下无法清零 violations（如缺 `_source/<group>/`
+  镜像目录、旧 bundle 从未记录 `mesh_up_axis`/`size_resolution`），会被列进
+  报告的 `excluded`，账本不落——不阻塞其它资产，人工补齐数据源后重跑即可纳入。
+- **fragment（`external_overrides_fragment*.yml`）是从账本生成的产物，不是权威源**：
+  手改不会被后续任何步骤读取，下次重新生成会静默覆盖。要改 fragment 内容，改账本
+  （或 backfill 的映射逻辑），再重新生成：
+  ```bash
+  ~/miniconda3/envs/env-gen-yuxin/bin/python scripts/gen_fragment.py \
+    --library-dir ../data/asset_library --out <生成目录>/fragment.yml
+  ```
+- **发布纪律**：对外发布前必须加 `--license-gate`（默认关，只过滤本次生成的
+  fragment，不改账本）；无论开关每次运行都打印 unknown 许可证计数警告，发布前
+  需将其清零：
+  ```bash
+  ~/miniconda3/envs/env-gen-yuxin/bin/python scripts/gen_fragment.py \
+    --library-dir ../data/asset_library --out <生成目录>/fragment.yml --license-gate
+  ```
+- **手工删除库内资产文件是不安全操作**：账本 / `results/**/bundles/` 快照 /
+  `_source/` 镜像三者以 sha256 + `source_manifest_path` 互相引用，直接 `rm`
+  会让引用它的账本条目产生悬空指针而不报错。资产退役需经账本裁剪（从
+  `models[]` 移除 + 级联检查无其它引用）——**该工具目前未建**，在此之前不要
+  手工删资产池文件。
+
 ## 批量验收纪律（4.5 对齐）
 
 - 每模型硬门：settle 位移<2mm、无穿模（原点 z>-2mm）、直立（<15°；自然平躺物 <45°）。
