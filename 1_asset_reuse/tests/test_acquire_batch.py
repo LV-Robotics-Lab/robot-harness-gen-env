@@ -421,6 +421,28 @@ def test_local_entry_convert_failure_records_rejection(tmp_path, monkeypatch):
     assert rec["candidates"][0]["rejection"]["code"] == a2.REJ_CONVERT
 
 
+def test_local_entry_unwrapped_stage_source_exception_records_convert_failed(
+    tmp_path, monkeypatch
+):
+    # stage_source's own staging.mkdir sits outside its ConvertError-wrapping
+    # try/except (by design, so the github path keeps classifying mkdir failures
+    # as fetch_failed). The local branch must still degrade such an unwrapped
+    # exception to a clean exhausted/convert_failed rejection instead of letting
+    # it leak past process_entry as an entry_error.
+    p = paths(tmp_path)
+    src = tmp_path / "teapot.glb"
+    src.write_bytes(b"glTF-bytes")
+
+    def boom(*a, **k):
+        raise RuntimeError("mkdir boom")
+
+    monkeypatch.setattr(a3w, "stage_source", boom)
+    entry = {"category": "teapot", "local": {"path": str(src)}}
+    rec = ab.process_entry(entry, [], {}, p, lambda cmd, env=None: 0)
+    assert rec["status"] == "exhausted"
+    assert rec["candidates"][0]["rejection"]["code"] == a2.REJ_CONVERT
+
+
 def test_pinned_entry_with_existing_model_reuses_without_runner_calls(tmp_path):
     p = paths(tmp_path)
     d = p["library"] / "301_kettle"

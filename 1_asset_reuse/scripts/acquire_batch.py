@@ -298,6 +298,17 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             rec["status"] = "exhausted"
             rec["candidates"] = [_rejected(stub, a2.REJ_CONVERT, str(exc))]
             return rec
+        except Exception as exc:  # noqa: BLE001
+            # stage_source's own staging.mkdir sits outside its try/except (so the
+            # github path can still classify mkdir failures as fetch_failed, not
+            # convert_failed) -- catch that and any other unwrapped exception here
+            # too, so the local path still degrades to a clean rejection instead of
+            # leaking to main()'s per-entry entry_error handler.
+            rec["status"] = "exhausted"
+            rec["candidates"] = [
+                _rejected(stub, a2.REJ_CONVERT, f"{type(exc).__name__}: {exc}")
+            ]
+            return rec
         candidate = AssetCandidate(
             candidate_id=f"local:{src}",
             name=src.name,
@@ -314,6 +325,9 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
                 "size_bytes": Path(record["glb"]).stat().st_size,
             },
         )
+        # Note: stage_source already wrote staging_manifest.json above, so if the
+        # gate below rejects this candidate, that manifest file is left on disk
+        # under `staging` for a candidate that never gets imported.
         gated = a2.gate_candidates([candidate], globals_cfg)
         if gated[0]["verdict"] != "viable":
             rec["status"] = "exhausted"
