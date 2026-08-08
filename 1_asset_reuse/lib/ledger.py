@@ -9,6 +9,7 @@ a documentation view of these tables, not the other way around: if the two
 ever disagree, this file wins and spec §3 needs to be updated to match.
 """
 
+import datetime
 import hashlib
 import fcntl
 import json
@@ -126,6 +127,24 @@ class Violation:
     path: str
     code: str
     message: str
+
+
+def _is_iso_datetime(value):
+    """True iff value is a str parseable by datetime.fromisoformat -- accepts
+    both a bare ISO date ("2026-08-08", used by source.retrieved_at) and a
+    full ISO datetime ("2026-08-08T10:00:00", used by verification.timestamp).
+    Guards against exactly the incident shape that motivated this check: a
+    directory name like "batch_v3" naively sliced into date components
+    produced "batc-h_-v3T00:00:00" -- syntactically a string, semantically
+    garbage, and silently accepted everywhere downstream (latest_verification
+    included, since it only ever *compares* timestamps, never parses them)."""
+    if not isinstance(value, str):
+        return False
+    try:
+        datetime.datetime.fromisoformat(value)
+    except ValueError:
+        return False
+    return True
 
 
 def _get(node, dotted_path):
@@ -351,6 +370,18 @@ def _validate_verification(verifications, prefix, out):
                     f"verdict {v['verdict']!r} not in {VERDICTS}",
                 )
             )
+        if (
+            "timestamp" in v
+            and v["timestamp"] is not None
+            and not _is_iso_datetime(v["timestamp"])
+        ):
+            out.append(
+                Violation(
+                    f"{vp}.timestamp",
+                    "bad_timestamp",
+                    f"timestamp {v['timestamp']!r} is not a valid ISO date/datetime",
+                )
+            )
 
 
 def _validate_model(model, prefix, out):
@@ -413,6 +444,20 @@ def _validate_model(model, prefix, out):
     license_block = _get(model, "source.license")
     if license_block is not _MISSING:
         _validate_license(license_block, f"{prefix}.source.license", out)
+
+    retrieved_at = _get(model, "source.retrieved_at")
+    if (
+        retrieved_at is not _MISSING
+        and retrieved_at is not None
+        and not _is_iso_datetime(retrieved_at)
+    ):
+        out.append(
+            Violation(
+                f"{prefix}.source.retrieved_at",
+                "bad_timestamp",
+                f"retrieved_at {retrieved_at!r} is not a valid ISO date/datetime",
+            )
+        )
 
     verifications = model.get("verification")
     if verifications is not None:

@@ -1,7 +1,9 @@
 import hashlib
 import json
+import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "backfill_ledger_v1.py"
@@ -430,8 +432,106 @@ def test_bundle_alias_articulated_derivations(tmp_path):
     notes = report["notes"]
     assert "298_locker:m0:acq_298_locker" in notes["group_derived_from_representations"]
     assert "298_locker:m0" in notes["source_manifest_generated"]
+    assert "298_locker:m0" in notes["source_manifest_written"]
     assert "298_locker:m0" in notes["file_derived_from_representations"]
     assert "298_locker:m0" in notes["scale_applied_derived_from_scale_vector"]
+
+
+def test_pending_manifest_not_written_when_asset_excluded(tmp_path):
+    # T8 review I-1: a _source/<group>/ mirror dir missing only its
+    # SOURCE_MANIFEST.json must not get one synthesized on disk unless the
+    # asset it's attached to actually clears validate_ledger and gets
+    # promoted -- otherwise a synthetic manifest is orphaned in the pool for
+    # an asset that was never actually backfilled (the real incident: 314
+    # _cabinet stayed excluded but sektion_cabinet/SOURCE_MANIFEST.json got
+    # written anyway, wrong prefix shape and all).
+    lib = tmp_path / "asset_library"
+    a = lib / "394_orphan"
+    (a / "visual").mkdir(parents=True)
+    (a / "collision").mkdir(parents=True)
+    vis = a / "visual/base0.glb"
+    vis.write_bytes(b"V")
+    col = a / "collision/base0.glb"
+    col.write_bytes(b"V")
+    (a / "model_data0.json").write_text(json.dumps({"extents": [0.1, 0.1, 0.1]}))
+
+    src_dir = lib / "_source/acq_394_orphan"
+    src_dir.mkdir(parents=True)
+    (src_dir / "o.usd").write_bytes(b"U")
+
+    run = tmp_path / "results/20260803_import/bundles"
+    run.mkdir(parents=True)
+    sha = hashlib.sha256(b"V").hexdigest()
+    bundle = {
+        "asset_id": "external_394_orphan_m0",
+        "category": "orphan",
+        "representations": [
+            {
+                "format": "glb",
+                "uri": str(vis),
+                "backend": "sapien",
+                "role": "visual",
+                "sha256": sha,
+                "size_bytes": 1,
+                "metadata": {"origin": "bottom-center normalized"},
+            },
+            {
+                "format": "glb",
+                "uri": str(col),
+                "backend": "sapien",
+                "role": "collision",
+                "sha256": sha,
+                "size_bytes": 1,
+                "metadata": {},
+            },
+        ],
+        "source": {
+            "library": "NVIDIA Isaac Assets 5.1",
+            "group": "acq_394_orphan",
+            "file": "o.usd",
+            "license": "unknown (test)",
+        },
+        "physical": {
+            "mass_kg": {"value": None, "status": "unknown", "runtime_default_kg": 0.1},
+            "mesh_bbox_m": [0.1, 0.1, 0.1],
+            # mesh_up_axis / size_resolution deliberately absent -- an
+            # irreducible gap, this asset must end up excluded regardless of
+            # the manifest-pending mechanics being tested here.
+            "scale": [1.0, 1.0, 1.0],
+            "conventions": {
+                "is_static": False,
+                "z_policy": "origin_on_table",
+                "footprint_shape": "box",
+                "precedent": None,
+            },
+        },
+        "articulation": {},
+        "tags": ["rigid", "external"],
+    }
+    (run / "394_orphan_m0.json").write_text(json.dumps(bundle))
+    frag = tmp_path / "fragment.yml"
+    frag.write_text(
+        "  394_orphan:\n    category: orphan\n    aliases: [orphan]\n"
+        '    models:\n      "0":\n        stable_pose_id: upright\n'
+        "        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]\n"
+        "        z_policy: origin_on_table\n        footprint_shape: box\n"
+    )
+    out = tmp_path / "rep"
+    r = _run(lib, tmp_path / "results", frag, out, apply=True)
+    assert r.returncode == 1  # violations present (mesh_up_axis etc.)
+
+    manifest_path = src_dir / "SOURCE_MANIFEST.json"
+    assert not manifest_path.exists()  # core assertion: no orphaned synthetic manifest
+    assert not (a / "ledger.json").exists()
+
+    report = json.loads((out / "backfill_report.json").read_text())
+    assert "394_orphan" in report["excluded"]
+    notes = report["notes"]
+    # the build-time preview still fires (useful for triage: "this asset
+    # WOULD get a manifest generated if it cleared validation") ...
+    assert "394_orphan:m0" in notes["source_manifest_generated"]
+    # ... but nothing was actually written to disk for it.
+    assert "394_orphan:m0" not in notes["source_manifest_written"]
 
 
 def test_violations_block_apply_write(tmp_path):
@@ -617,3 +717,33 @@ def test_uri_rebased_to_current_library_dir(tmp_path):
     assert reps[1]["uri"] == str(col)
     report = json.loads((out / "backfill_report.json").read_text())
     assert "395_relic:m0" in report["notes"]["uri_rebased"]
+
+
+def test_web_runs_bundle_not_trusted(tmp_path):
+    # T8 review I-3: results/web_runs/ is the OTHER concurrent session's live
+    # output area (Pipeline Studio) -- it uses the same YYYYMMDD_ naming
+    # convention as historical import/acquire runs, so only a name-based
+    # denylist (not a date-pattern check) can keep backfill from reading its
+    # output. The decoy is given a strictly newer mtime than the legitimate
+    # bundle so this test actually exercises the trust filter, not just the
+    # "latest mtime wins" tie-break.
+    lib, results, frag = _mini_pool(tmp_path)  # writes 399_widget m0+m1
+
+    decoy_dir = (
+        results / "web_runs" / "20260808_195234_place_a_brick_on_the_table" / "bundles"
+    )
+    decoy_dir.mkdir(parents=True)
+    real_path = results / "20260803_import" / "bundles" / "399_widget_m0.json"
+    decoy = json.loads(real_path.read_text())
+    decoy["physical"]["mass_kg"]["runtime_default_kg"] = 999.0  # decoy marker
+    decoy_path = decoy_dir / "399_widget_m0.json"
+    decoy_path.write_text(json.dumps(decoy))
+
+    now = time.time()
+    os.utime(real_path, (now - 100, now - 100))
+    os.utime(decoy_path, (now, now))  # decoy strictly newer than the legitimate bundle
+
+    r = _run(lib, results, frag, tmp_path / "rep", apply=True)
+    assert r.returncode == 0, r.stderr
+    led = json.loads((lib / "399_widget/ledger.json").read_text())
+    assert led["models"][0]["physical"]["mass_kg"]["runtime_default_kg"] == 0.1

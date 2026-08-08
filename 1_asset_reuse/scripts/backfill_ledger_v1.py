@@ -30,9 +30,39 @@ from lib import ledger
 _ORIGIN_NORMALIZED_SUFFIX = " normalized"
 _UNKNOWN_CONVERTER = "unknown (pre-v1 import)"
 
+_RUN_DATE_RE = re.compile(r"^(\d{4})(\d{2})(\d{2})")
+# results/web_runs/ is the OTHER concurrent session's live output area
+# (Pipeline Studio); its run dirs use the same YYYYMMDD_ naming convention as
+# the historical import/acquire runs backfill is meant to read, so a bare
+# date-pattern check can't tell them apart -- excluded by name, explicitly.
+_LIVE_OUTPUT_DIRS = frozenset({"web_runs"})
+
 
 def _mtime_date(path):
     return datetime.date.fromtimestamp(path.stat().st_mtime).isoformat()
+
+
+def _dated_run_match(name):
+    """Regex match iff `name` starts with a genuinely valid YYYYMMDD date --
+    not just 8 digits shaped like one (rejects e.g. "99999999_foo")."""
+    m = _RUN_DATE_RE.match(name)
+    if not m:
+        return None
+    try:
+        datetime.date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+    except ValueError:
+        return None
+    return m
+
+
+def _is_trusted_bundle_path(path, results_root):
+    """A discovered bundle is only trusted if its lineage (results_root ->
+    file) includes a genuine dated run directory, and its top-level
+    container isn't a known live/concurrent-output area."""
+    rel_parts = path.relative_to(results_root).parts
+    if rel_parts and rel_parts[0] in _LIVE_OUTPUT_DIRS:
+        return False
+    return any(_dated_run_match(part) for part in rel_parts)
 
 
 def _parse_bundle_aliases(raw_list):
@@ -59,9 +89,15 @@ def _find_latest_bundle(results_root, asset, n, bundle_aliases=None):
     # rglob, not a fixed one-level glob: the historical results tree has
     # bundles/ at varying depths across pipeline eras (e.g.
     # <results_root>/_test/<run>/bundles/ vs
-    # <results_root>/_test/<run>/<subrun>/bundles/); the newest match by
-    # mtime wins regardless of depth.
-    matches = list(results_root.rglob(f"bundles/{asset}_m{n}.json"))
+    # <results_root>/_test/<run>/<subrun>/bundles/) -- but only matches whose
+    # lineage traces to a genuine dated run are trusted (see
+    # _is_trusted_bundle_path); anything else needs an explicit
+    # --bundle-alias escape hatch. The newest trusted match by mtime wins.
+    matches = [
+        p
+        for p in results_root.rglob(f"bundles/{asset}_m{n}.json")
+        if _is_trusted_bundle_path(p, results_root)
+    ]
     if not matches:
         return None
     return max(matches, key=lambda p: p.stat().st_mtime)
@@ -215,7 +251,17 @@ def _generate_source_manifest(group_dir, prefix_hint):
     return {"prefix": prefix_hint, "files": files}
 
 
-def _build_source(lib, bundle, bundle_path, report, note_key, apply):
+def _build_source(lib, bundle, bundle_path, report, note_key):
+    """Returns (source_dict, pending_manifest). pending_manifest is None
+    unless a _source/<group>/ mirror dir exists without a SOURCE_MANIFEST.json
+    -- in which case it's (manifest_path, manifest_content, note_key), NOT
+    yet written to disk. Writing it is main()'s job, gated on this asset's
+    ledger actually clearing validate_ledger (T8 review I-1: writing it here
+    unconditionally left an orphaned synthetic manifest in the pool for
+    314_cabinet/sektion_cabinet even though 314_cabinet never promoted to
+    v1 -- wrong prefix shape, and a retrieved_at that would resolve to the
+    manifest's own (backfill-run-day) mtime on any later rerun instead of
+    the real acquisition date)."""
     old_source = bundle.get("source", {})
     old_reps = bundle.get("representations", [])
     group = old_source.get("group")
@@ -228,19 +274,20 @@ def _build_source(lib, bundle, bundle_path, report, note_key, apply):
     group_dir = lib / "_source" / group if group else None
     manifest_path = group_dir / "SOURCE_MANIFEST.json" if group_dir else None
 
+    pending_manifest = None
     if manifest_path is not None and manifest_path.exists():
         retrieved_at = _mtime_date(manifest_path)
         source_manifest_path = str(manifest_path.resolve())
         basis = "source_manifest"
     elif group_dir is not None and group_dir.is_dir():
-        # Mirror dir exists, the manifest file itself doesn't -- derive one
-        # from the files on disk. Only written under --apply; dry-run just
-        # previews the would-be path (validator's check_files never checks
-        # source_manifest_path existence, only representations[].uri).
-        if apply:
-            prefix_hint = _derive_prefix_from_reps(old_reps, old_source.get("library"))
-            manifest = _generate_source_manifest(group_dir, prefix_hint)
-            manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+        # Mirror dir exists, the manifest file itself doesn't -- derive its
+        # content now (pure computation, no write yet) so validate_ledger
+        # can see a would-be source_manifest_path (check_files never checks
+        # source_manifest_path existence, only representations[].uri, so
+        # previewing the path here is safe).
+        prefix_hint = _derive_prefix_from_reps(old_reps, old_source.get("library"))
+        manifest_content = _generate_source_manifest(group_dir, prefix_hint)
+        pending_manifest = (manifest_path, manifest_content, note_key)
         report["notes"]["source_manifest_generated"].append(note_key)
         retrieved_at = _mtime_date(group_dir)
         source_manifest_path = str(manifest_path.resolve())
@@ -260,7 +307,7 @@ def _build_source(lib, bundle, bundle_path, report, note_key, apply):
     license_raw = old_source.get("license")
     license_block = {"spdx": None, "status": "unknown", "terms_note": license_raw}
 
-    return {
+    source = {
         "library": old_source.get("library"),
         "group": group,
         "file": file,
@@ -268,21 +315,20 @@ def _build_source(lib, bundle, bundle_path, report, note_key, apply):
         "retrieved_at": retrieved_at,
         "source_manifest_path": source_manifest_path,
     }
-
-
-_RUN_DATE_RE = re.compile(r"^(\d{4})(\d{2})(\d{2})")
+    return source, pending_manifest
 
 
 def _run_timestamp(run_dir, matrix_path):
-    """ISO timestamp for a verification entry: prefer an 8-digit YYYYMMDD
-    date off run_dir's own name or its immediate parent's -- later pipeline
-    eras nest bundles/ (and the import_matrix.json next to it) under a named
-    sub-batch (e.g. .../20260803_smoke_usd2envgen/batch_v3/bundles/), so the
-    dated run directory is one level up from run_dir, not run_dir itself.
-    Falls back to import_matrix.json's own mtime date rather than parsing a
-    non-numeric directory name (e.g. "batch_v3") into a bogus date."""
+    """ISO timestamp for a verification entry: prefer a genuinely valid
+    YYYYMMDD date off run_dir's own name or its immediate parent's -- later
+    pipeline eras nest bundles/ (and the import_matrix.json next to it)
+    under a named sub-batch (e.g. .../20260803_smoke_usd2envgen/batch_v3/
+    bundles/), so the dated run directory is one level up from run_dir, not
+    run_dir itself. Falls back to import_matrix.json's own mtime date rather
+    than parsing a non-numeric directory name (e.g. "batch_v3") into a
+    bogus date."""
     for d in (run_dir, run_dir.parent):
-        m = _RUN_DATE_RE.match(d.name)
+        m = _dated_run_match(d.name)
         if m:
             return f"{m.group(1)}-{m.group(2)}-{m.group(3)}T00:00:00"
     return f"{_mtime_date(matrix_path)}T00:00:00"
@@ -346,9 +392,7 @@ def _normalize_articulation(old_articulation):
     return art
 
 
-def _build_model_entry(
-    lib, results_root, asset, n, frag_data, report, bundle_aliases, apply
-):
+def _build_model_entry(lib, results_root, asset, n, frag_data, report, bundle_aliases):
     bundle_path = _find_latest_bundle(results_root, asset, n, bundle_aliases)
     note_key = f"{asset}:m{n}"
     if bundle_path is None:
@@ -377,7 +421,7 @@ def _build_model_entry(
         "urdf_inertial" if kind == "articulated" else "global_constant"
     )
 
-    source = _build_source(lib, bundle, bundle_path, report, note_key, apply)
+    source, pending_manifest = _build_source(lib, bundle, bundle_path, report, note_key)
 
     scale_applied = old_physical.get("scale_applied")
     if scale_applied is None:
@@ -405,6 +449,7 @@ def _build_model_entry(
         "kind": kind,
         "category": bundle.get("category"),
         "tags": bundle.get("tags", []),
+        "pending_manifest": pending_manifest,
     }
 
 
@@ -450,6 +495,7 @@ def _empty_report():
             "retrieved_at_basis": {},
             "group_derived_from_representations": [],
             "source_manifest_generated": [],
+            "source_manifest_written": [],
             "scale_applied_derived_from_scale_vector": [],
             "uri_rebased": [],
             "file_derived_from_representations": [],
@@ -503,19 +549,15 @@ def main():
             continue
 
         led = None
+        pending_manifests = []
         for n in model_ids:
             built = _build_model_entry(
-                lib,
-                results_root,
-                asset,
-                n,
-                frag_data,
-                report,
-                bundle_aliases,
-                args.apply,
+                lib, results_root, asset, n, frag_data, report, bundle_aliases
             )
             if built is None:
                 continue
+            if built["pending_manifest"] is not None:
+                pending_manifests.append(built["pending_manifest"])
             aliases, colors = _semantics_for_asset(
                 asset, built["category"], frag_data, report, seen_defaults
             )
@@ -542,9 +584,20 @@ def main():
             ]
             # Real data gap the mapping logic can't close without fabricating
             # a value -- pool layer is only-append: don't write a ledger
-            # that would fail its own validator.
+            # that would fail its own validator, and don't write any
+            # SOURCE_MANIFEST.json side effect for it either (T8 review I-1:
+            # a manifest written for an asset that never promotes to v1
+            # would sit in the pool as an orphaned, undated synthetic file).
             report["excluded"].append(asset)
         elif args.apply:
+            written_paths = set()
+            for manifest_path, manifest_content, mnote_key in pending_manifests:
+                if manifest_path not in written_paths:
+                    manifest_path.write_text(
+                        json.dumps(manifest_content, indent=2) + "\n"
+                    )
+                    written_paths.add(manifest_path)
+                report["notes"]["source_manifest_written"].append(mnote_key)
             lp.parent.mkdir(parents=True, exist_ok=True)
             lp.write_text(json.dumps(led, indent=2) + "\n")
             report["written"] += 1

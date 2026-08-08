@@ -267,6 +267,16 @@ CASES = [
     # the key exists and stopped there; NOT_NULLABLE_MODEL closes that gap).
     (_set("models.0.model_id", None), "missing"),
     (_set("models.0.verification", None), "missing"),
+    # T8 review I-2: a directory name like "batch_v3" naively sliced as if it
+    # were a YYYYMMDD date produced this exact garbage timestamp (real
+    # incident -- almost shipped into the real pool). Neither
+    # verification.timestamp nor source.retrieved_at may hold a string that
+    # doesn't parse as an ISO date/datetime.
+    (
+        _set("models.0.verification.0.timestamp", "batc-h_-v3T00:00:00"),
+        "bad_timestamp",
+    ),
+    (_set("models.0.source.retrieved_at", "batc-h_-v3T00:00:00"), "bad_timestamp"),
 ]
 
 
