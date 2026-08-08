@@ -758,6 +758,26 @@ def append_verification(path, model_id, entry):
             fcntl.flock(lock_f, fcntl.LOCK_UN)
 
 
+def write_ledger(path, ledger):
+    """Write a full ledger dict under an fcntl lock, atomically (tmpfile +
+    os.replace via _atomic_write_json). For writers that replace/insert a
+    whole models[] entry in one shot (e.g. import_materialize's
+    upsert_model) rather than appending a single verification record --
+    a plain path.write_text() from a driver process that gets SIGKILLed
+    mid-write (crash-isolation subprocesses are killed on timeout) would
+    leave a torn ledger.json, breaking every later reader of that asset
+    (other models in the same ledger, gen_fragment's full-library scan)."""
+    path = Path(path)
+    lock_path = _lock_path(path)
+    lock_path.touch(exist_ok=True)
+    with open(lock_path, "w") as lock_f:
+        fcntl.flock(lock_f, fcntl.LOCK_EX)
+        try:
+            _atomic_write_json(path, ledger)
+        finally:
+            fcntl.flock(lock_f, fcntl.LOCK_UN)
+
+
 def latest_verification(model_entry, backend, check):
     """Most recent (by timestamp) verification entry for (backend, check).
     Returns None if there is none, or if the latest entry's verified_digest

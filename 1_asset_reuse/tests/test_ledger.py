@@ -518,6 +518,20 @@ def test_append_and_latest(tmp_path):
     # ↑ 最新条 digest 与当前 reps 不符 → 失效返回 None（如实报未验证）
 
 
+def test_write_ledger_atomic(tmp_path):
+    # T5 fix I-1: whole-ledger writer (import_materialize's upsert path)
+    # must go through the same lock+atomic-replace machinery as
+    # append_verification, not a bare path.write_text().
+    p = tmp_path / "ledger.json"
+    led = make_valid()
+    ledger.write_ledger(p, led)
+    assert json.loads(p.read_text()) == led
+    assert oct(p.stat().st_mode)[-3:] == "644"  # not mkstemp's default 0600
+    led2 = dict(led, category="changed")
+    ledger.write_ledger(p, led2)  # overwrite in place (read-upsert-write pattern)
+    assert json.loads(p.read_text())["category"] == "changed"
+
+
 def test_append_verification_runtime_load_backfill(tmp_path):
     # T7: s11 backfills a runtime_load entry the same way after its sweep --
     # pin the round trip for this check specifically (the other tests here

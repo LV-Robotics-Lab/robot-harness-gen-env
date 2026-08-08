@@ -7,7 +7,7 @@ multi-model asset dirs under data/asset_library/, runs a SAPIEN settle check per
 model, writes per-model AssetBundles, an import matrix, and the overrides
 fragment consumed by the catalog builder.
 
-Gates per model: settled (<2mm late drift), no ground penetration (>-2mm),
+Gates per model: settled (<2mm late drift), no ground penetration (>-5mm),
 tilt < 15 deg (45 deg for 'flat' items). Failures are recorded with reasons and
 excluded from the overrides fragment (= excluded from the catalog).
 """
@@ -25,14 +25,19 @@ import numpy as np
 import sapien
 import trimesh
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-import conventions as conv_lib  # noqa: E402
-
-# v1 ledger + fragment generator (Task 5): this file lives in scripts/b_batch/,
-# lib/ is two levels up (parents[2]), gen_fragment.py is one level up in
-# scripts/ (parents[1]) -- same nesting pattern as s13b_validate_articulated.py.
+# lib/ is two levels up from scripts/b_batch/ (parents[2]), gen_fragment.py is
+# one level up in scripts/ (parents[1]) -- same nesting pattern as
+# s13b_validate_articulated.py. Both inserts must land before any `from lib
+# import ...` below (fix I-3: the old `import conventions as conv_lib` used a
+# separate, miscalculated `parent.parent / "lib"` insert left over from the
+# scripts/ reorg into b_batch/ -- pointed at a nonexistent scripts/lib,
+# breaking both production entry points; folded into one correct set of
+# inserts + `from lib import conventions` so there's exactly one loaded copy
+# of lib.conventions, not a second shadow module under a bare "conventions"
+# name).
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from lib import conventions as conv_lib  # noqa: E402
 from lib import ledger as ledger_mod  # noqa: E402
 from lib.ledger import (  # noqa: E402
     ledger_path,
@@ -199,10 +204,18 @@ if args.only_index is None:
     import sys as _sys
 
     for asset_name in {r["asset"] for r in records}:
-        if (lib / asset_name).exists():
-            shutil.rmtree(lib / asset_name)
-        (lib / asset_name / "visual").mkdir(parents=True)
-        (lib / asset_name / "collision").mkdir(parents=True)
+        adir = lib / asset_name
+        # M-1: only clear the rebuildable asset body (GLBs, model_data*.json)
+        # -- NOT the whole asset dir. A wholesale rmtree would also delete
+        # ledger.json (append-only verification history) and snapshots/,
+        # defeating the audit trail on every re-run.
+        for sub in ("visual", "collision"):
+            if (adir / sub).exists():
+                shutil.rmtree(adir / sub)
+        for p in adir.glob("model_data*.json"):
+            p.unlink()
+        (adir / "visual").mkdir(parents=True)
+        (adir / "collision").mkdir(parents=True)
     matrix = []
     for i, r in enumerate(records):
         row_file = rows_dir / f"row_{i}.json"
@@ -449,7 +462,7 @@ for idx, r in worker_records:
                 "backend": "isaacsim",
                 "role": "visual_and_collision",
                 "sha256": r["usd_sha256"],
-                "size_bytes": 0,
+                "size_bytes": Path(r["usd_local"]).stat().st_size,
                 "metadata": {"origin_prefix": r["group"]},
             },
         ]
@@ -525,7 +538,15 @@ for idx, r in worker_records:
             },
         }
         conv_v1 = {
-            **{k: conv[k] for k in ("is_static", "z_policy", "footprint_shape")},
+            **{k: conv[k] for k in ("is_static", "z_policy")},
+            # C-1: manifest-level footprint override (meta["footprint"]) must
+            # win over the inherited-conventions default, same precedence as
+            # the old hand-assembled frag_lines block used
+            # (`meta.get('footprint') or conv['footprint_shape']`) -- lost
+            # when this was first ported to conv_v1, silently dropping the
+            # override for every asset that sets one (301_cup/305_bowl/
+            # 308_pitcher/313_cup all rely on this).
+            "footprint_shape": meta.get("footprint") or conv["footprint_shape"],
             "stable_poses": [
                 {
                     "pose_id": "upright",
@@ -569,31 +590,43 @@ for idx, r in worker_records:
                 f"schema_violation:{v.code}" for v in violations
             )
         else:
-            led_path.write_text(json.dumps(led, indent=2, ensure_ascii=False))
+            # I-1: whole-ledger write through the fcntl-locked atomic writer
+            # (lib/ledger.py) -- a bare write_text() here would race a
+            # driver-level SIGKILL (crash-isolation subprocesses are killed
+            # on timeout) into a torn ledger.json that breaks every later
+            # reader of this asset.
+            ledger_mod.write_ledger(led_path, led)
         # run snapshot: always written (pool-layer record), even for a
         # rejected model -- when there are validator violations, unpack from
         # a fresh single-model ledger instead of `led` so this doesn't
         # depend on the rest of the asset's (possibly also-invalid) models.
-        (bundles_dir / f"{asset}_m{model}.json").write_text(
-            json.dumps(
-                to_ir_bundles(
-                    led
-                    if not violations
-                    else upsert_model(
-                        None,
-                        asset=asset,
-                        category=meta.get("category", "unknown"),
-                        kind="rigid",
-                        aliases=aliases,
-                        colors=colors,
-                        materials=[],
-                        tags=["rigid", "external", "batch"],
-                        model_entry=entry,
-                    )
-                )[-1],
-                indent=2,
-                ensure_ascii=False,
+        bundle_ledger = (
+            led
+            if not violations
+            else upsert_model(
+                None,
+                asset=asset,
+                category=meta.get("category", "unknown"),
+                kind="rigid",
+                aliases=aliases,
+                colors=colors,
+                materials=[],
+                tags=["rigid", "external", "batch"],
+                model_entry=entry,
             )
+        )
+        # I-2: pick the bundle by asset_id suffix, not to_ir_bundles(...)[-1]
+        # -- [-1] silently depended on "this model_id was just appended to
+        # the end of models[]", which M-1's fix (no longer wiping ledger.json
+        # on every driver pre-wipe) breaks for a re-run that revisits an
+        # existing, non-last model_id.
+        bundle = next(
+            b
+            for b in to_ir_bundles(bundle_ledger)
+            if b["asset_id"].endswith(f"_m{model}")
+        )
+        (bundles_dir / f"{asset}_m{model}.json").write_text(
+            json.dumps(bundle, indent=2, ensure_ascii=False)
         )
     except Exception as exc:  # noqa: BLE001
         row.update(status="rejected", reasons=[f"{type(exc).__name__}: {exc}"])
@@ -616,21 +649,52 @@ for row in matrix:
                 p.unlink()
 for a in {row["asset"] for row in matrix}:
     if not any(x["status"] == "accepted" for x in matrix if x["asset"] == a):
-        if (lib / a).exists():
-            shutil.rmtree(lib / a)
+        adir = lib / a
+        led_file = ledger_path(args.library_dir, a)
+        if led_file.exists():
+            # M-1's audit-trail concern applies here too: this run's records
+            # may be a partial re-run against an asset that already has
+            # accepted models (and ledger history) from a prior run --
+            # clear only the rebuildable body, not the whole dir.
+            for sub in ("visual", "collision"):
+                if (adir / sub).exists():
+                    shutil.rmtree(adir / sub)
+            for p in adir.glob("model_data*.json"):
+                p.unlink()
+        elif adir.exists():
+            shutil.rmtree(adir)
 
-# overrides fragment: regenerated from the authoritative per-asset ledgers
-# under --library-dir (gen_fragment.generate scans the whole library, not
-# just this run's records -- latest-settle-pass filter is
-# lib.ledger.latest_verification, see gen_fragment.py docstring).
-by_asset = {}
-for row in matrix:
-    by_asset.setdefault(row["asset"], []).append(row)
-frag, stats = gen_fragment.generate(args.library_dir)
+# overrides fragment (I-4): --overrides-fragment stays scoped to this run's
+# assets (acquire_batch's per-candidate concatenation and s9's "wanted"
+# assertion depend on that -- a full-library fragment is gen_fragment's own
+# CLI's job, not this script's). gen_fragment.generate still does the actual
+# projection (authoritative-ledger source of truth, latest-settle-pass
+# filter via lib.ledger.latest_verification -- see gen_fragment.py
+# docstring); the result is filtered down to run_assets afterward rather
+# than re-deriving the projection logic here.
+run_assets = {row["asset"] for row in matrix}
+frag, _lib_stats = gen_fragment.generate(args.library_dir)
+frag = {k: v for k, v in frag.items() if k in run_assets}
 Path(args.overrides_fragment).parent.mkdir(parents=True, exist_ok=True)
 gen_fragment.write_yaml(frag, Path(args.overrides_fragment))
+
+# unknown-license count scoped to run_assets (gen_fragment.generate's own
+# stat is a whole-library aggregate; re-derive the same settle-pass +
+# license-status predicate restricted to this run's assets rather than
+# changing gen_fragment.py's contract for one caller).
+unknown_in_run = 0
+for a in run_assets:
+    lp = ledger_path(args.library_dir, a)
+    if not lp.exists():
+        continue
+    for m in json.loads(lp.read_text()).get("models", []):
+        latest = ledger_mod.latest_verification(m, "sapien", "settle")
+        if latest is None or latest.get("verdict") != "pass":
+            continue
+        if m.get("source", {}).get("license", {}).get("status") != "declared":
+            unknown_in_run += 1
 print(
-    f"WARNING: {stats['unknown_license_models']} models with unknown license in view",
+    f"WARNING: {unknown_in_run} models with unknown license in view",
     file=sys.stderr,
 )
 
@@ -640,6 +704,7 @@ print(
     )
 )
 acc = sum(1 for r in matrix if r["status"] == "accepted")
-print(
-    f"PHASE2 accepted={acc}/{len(matrix)} fragment_assets={len([a for a, rs in by_asset.items() if any(x['status'] == 'accepted' for x in rs)])}"
-)
+# M-4: fragment_assets restored to this-run scope (len(frag) is now
+# run_assets-filtered, see I-4 above) rather than the whole-library count
+# gen_fragment.generate would otherwise report.
+print(f"PHASE2 accepted={acc}/{len(matrix)} fragment_assets={len(frag)}")
