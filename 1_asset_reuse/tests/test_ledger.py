@@ -573,3 +573,65 @@ def test_reps_digest_literal():
         ledger.reps_digest(model, "sapien")
         == "d24a4134be711dad6027de088dda210b4d2fb13a7528e0d87e5918c837150e2f"
     )
+
+
+def test_new_model_entry_articulated_full():
+    # T6: articulated builder happy path -- joint_names/types/limits/qpos +
+    # balance_gate in articulation, mass basis=urdf_inertial override,
+    # URDF Z-up stable pose -- exercised end to end through upsert_model +
+    # validate_ledger (0 violations), matching what s13b now assembles.
+    art = {
+        "joint_names": ["drawer_0"],
+        "joint_types": ["prismatic"],
+        "limits": [[0.0, 0.3]],
+        "closed_qpos": [0.0],
+        "open_qpos": [0.3],
+        "balance_gate": {"free_joints_allowed": False, "measured_equilibrium": None},
+    }
+    conv = dict(make_model()["physical"]["conventions"])
+    conv["stable_poses"] = [
+        {
+            "pose_id": "upright",
+            "orientation_wxyz": ledger.IDENTITY_WXYZ,  # URDF Z-up -> identity
+            "is_default": True,
+        }
+    ]
+    m = ledger.new_model_entry(
+        model=0,
+        representations=make_model()["representations"],
+        mesh_bbox_m=[0.6, 0.4, 0.8],
+        mesh_up_axis="Z",
+        origin_convention="base-at-floor",
+        scale_applied=1.0,
+        size_resolution=make_model()["physical"]["size_resolution"],
+        conventions=conv,
+        source=make_model()["source"],
+        verification=[],
+        articulation=art,
+        mass_override={
+            "value": None,
+            "status": "unknown",
+            "runtime_default_kg": 10.0,
+            "runtime_default_basis": "urdf_inertial",
+        },
+    )
+    led = ledger.upsert_model(
+        None,
+        asset="314_cabinet",
+        category="cabinet",
+        kind="articulated",
+        aliases=["cabinet"],
+        colors=[],
+        materials=[],
+        tags=["articulated", "external"],
+        model_entry=m,
+    )
+    assert ledger.validate_ledger(led, check_files=False) == []
+    assert led["kind"] == "articulated"
+    assert (
+        led["models"][0]["articulation"]["balance_gate"]["free_joints_allowed"] is False
+    )
+    assert (
+        led["models"][0]["physical"]["mass_kg"]["runtime_default_basis"]
+        == "urdf_inertial"
+    )

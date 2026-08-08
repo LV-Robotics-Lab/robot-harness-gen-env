@@ -5,10 +5,12 @@ of the exported URDF + library registration.
 Checks: URDF loads via SAPIEN loader (fix_root_link), dof matches the export
 report, limits preserved, 120-step settle finite, and a joint sweep — each
 movable joint driven to both limits without the articulation exploding.
-Writes model_data0.json, screenshot, bundle JSON.
+Writes model_data0.json, screenshot, per-asset v1 ledger entry, and a
+flattened bundle JSON snapshot (back-compat with the pre-ledger consumers).
 """
 
 import argparse
+import datetime
 import hashlib
 import json
 import math
@@ -18,12 +20,19 @@ from pathlib import Path
 import numpy as np
 import sapien
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from lib import conventions, ledger
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--instance-dir", required=True, help=".../314_cabinet/0")
 parser.add_argument("--source-usd", required=True)
 parser.add_argument("--out", required=True)
-parser.add_argument("--allow-free-joints", action="store_true",
-                    help="accept joints whose gravity equilibrium differs from rest pose (recorded)")
+parser.add_argument("--library-dir", required=True, help="data/asset_library root")
+parser.add_argument(
+    "--allow-free-joints",
+    action="store_true",
+    help="accept joints whose gravity equilibrium differs from rest pose (recorded)",
+)
 args = parser.parse_args()
 
 inst = Path(args.instance_dir)
@@ -32,6 +41,15 @@ out.mkdir(parents=True, exist_ok=True)
 report = json.loads((inst / "export_report.json").read_text())
 expected_movable = int(report["joints_movable"])
 bbox = report["bbox_m"]
+
+# Ledger identity: --instance-dir is <asset>/<model_id>/ (see its --help
+# above); asset/model_id are derived from that structure, --library-dir is
+# the separate data/asset_library root (same convention as s8a/s8b/gen_fragment).
+# category has no CLI arg on this script (unlike s13a) so it keeps the value
+# this script has always hardcoded.
+asset = inst.parent.name
+model_id = int(inst.name) if inst.name.isdigit() else 0
+category = "cabinet"
 
 
 def sha256(p):
@@ -72,9 +90,16 @@ equilibrium = []
 for i2, jt in enumerate(jtypes):
     drift = float(abs(qpos[i2] - q0[i2]))
     thresh = 0.005 if "prismatic" in str(jt) else math.radians(5)
-    equilibrium.append({"joint": i2, "type": str(jt), "rest": round(float(q0[i2]), 4),
-                        "equilibrium": round(float(qpos[i2]), 4),
-                        "self_drift": round(drift, 4), "free": drift > thresh})
+    equilibrium.append(
+        {
+            "joint": i2,
+            "type": str(jt),
+            "rest": round(float(q0[i2]), 4),
+            "equilibrium": round(float(qpos[i2]), 4),
+            "self_drift": round(drift, 4),
+            "free": drift > thresh,
+        }
+    )
     if drift > thresh:
         free_joints.append(i2)
 
@@ -99,8 +124,12 @@ for i, (lo, up) in enumerate(limits):
 
 cam = sc.add_camera("cam", 640, 480, np.deg2rad(60), 0.01, 10.0)
 # pose joints half-open for an informative screenshot (doors/drawers visible)
-q_show = np.array([lo + 0.6 * (up - lo) if abs(lo) > abs(up) else lo + 0.6 * (up - lo)
-                   for lo, up in limits])
+q_show = np.array(
+    [
+        lo + 0.6 * (up - lo) if abs(lo) > abs(up) else lo + 0.6 * (up - lo)
+        for lo, up in limits
+    ]
+)
 q_show = np.array([(lo if abs(lo) > abs(up) else up) * 0.6 for lo, up in limits])
 art.set_qpos(q_show)
 for _ in range(10):
@@ -176,57 +205,189 @@ checks = {
 }
 free_ok = (not free_joints) or args.allow_free_joints
 if free_joints and not args.allow_free_joints:
-    print(f"joints {free_joints} swing freely under gravity; "
-          "pass --allow-free-joints to accept (recorded) or fix dynamics")
-checks["status"] = ("pass" if checks["dof_matches"] and settle_ok and converged
-                    and sweep_ok and free_ok and checks["screenshot_ok"] else "fail")
-bundle = {
-    "asset_id": "external_314_cabinet_m0",
-    "category": "cabinet",
-    "representations": [
-        {
-            "format": "urdf",
-            "uri": str(inst / "mobility.urdf"),
-            "backend": "sapien",
-            "role": "visual_and_collision",
-            "sha256": sha256(inst / "mobility.urdf"),
-            "size_bytes": (inst / "mobility.urdf").stat().st_size,
-            "metadata": {
-                "derived_from": report["source_usd"],
-                "links": report["links"],
-                "movable_joints": expected_movable,
-                "note": "geometry-only OBJs; source materials not ported (lossy)",
-            },
+    print(
+        f"joints {free_joints} swing freely under gravity; "
+        "pass --allow-free-joints to accept (recorded) or fix dynamics"
+    )
+checks["status"] = (
+    "pass"
+    if checks["dof_matches"]
+    and settle_ok
+    and converged
+    and sweep_ok
+    and free_ok
+    and checks["screenshot_ok"]
+    else "fail"
+)
+
+# ---------------------------------------------------------------------------
+# v1 ledger registration (T6): assemble one models[] entry from this script's
+# own dof/limits verification results + the s13a export report, upsert it
+# into the per-asset ledger.json (authoritative), and re-derive the legacy
+# flattened bundle snapshot from the ledger for back-compat readers.
+# ---------------------------------------------------------------------------
+
+representations = [
+    {
+        "format": "urdf",
+        "uri": str(inst / "mobility.urdf"),
+        "backend": "sapien",
+        "role": "visual_and_collision",
+        "sha256": sha256(inst / "mobility.urdf"),
+        "size_bytes": (inst / "mobility.urdf").stat().st_size,
+        "metadata": {
+            "derived_from": report["source_usd"],
+            "links": report["links"],
+            "movable_joints": expected_movable,
+            "note": "geometry-only OBJs; source materials not ported (lossy)",
         },
-        {
-            "format": "usd",
-            "uri": args.source_usd,
-            "backend": "isaacsim",
-            "role": "visual_and_collision",
-            "sha256": sha256(args.source_usd),
-            "size_bytes": Path(args.source_usd).stat().st_size,
-            "metadata": {"origin": "Isaac Assets 5.1 /Isaac/Props/Sektion_Cabinet"},
-        },
-    ],
-    "source": {
-        "library": "NVIDIA Isaac Assets 5.1",
-        "id": "Sektion_Cabinet",
-        "license": "unknown (NVIDIA asset EULA; verify before redistribution)",
     },
-    "physical": {
-        "mass_kg": {"value": None, "status": "unknown", "runtime_default_kg": 10.0},
-        "mesh_bbox_m": bbox,
-        "scale": [1.0, 1.0, 1.0],
+    {
+        "format": "usd",
+        "uri": args.source_usd,
+        "backend": "isaacsim",
+        "role": "visual_and_collision",
+        "sha256": sha256(args.source_usd),
+        "size_bytes": Path(args.source_usd).stat().st_size,
+        "metadata": {"origin": "Isaac Assets 5.1 /Isaac/Props/Sektion_Cabinet"},
     },
-    "articulation": {
-        "joint_count_movable": expected_movable,
-        "joints": report["movable"],
-        "equilibrium": equilibrium,
+]
+
+# joint_names/types indexed to match `active`/`limits` (dof-length); s13a's
+# export_report.json "movable" list is expected to be in the same relative
+# order (fixed joints filtered out of both, URDF file order preserved) but
+# we don't hard-fail on a length mismatch (dof_matches already flags that in
+# `checks`) -- fall back to a placeholder name/type per unmatched index.
+movable_meta = report.get("movable", [])
+joint_names = [
+    (movable_meta[i].get("name") or f"j{i}") if i < len(movable_meta) else f"j{i}"
+    for i in range(len(active))
+]
+joint_types = [
+    movable_meta[i].get("type", str(jtypes[i]))
+    if i < len(movable_meta)
+    else str(jtypes[i])
+    for i in range(len(active))
+]
+articulation = {
+    "joint_names": joint_names,
+    "joint_types": joint_types,
+    "limits": checks["limits"],
+    "closed_qpos": [lo for lo, up in checks["limits"]],
+    "open_qpos": [up for lo, up in checks["limits"]],
+    "balance_gate": {
+        "free_joints_allowed": bool(args.allow_free_joints),
+        "measured_equilibrium": equilibrium if args.allow_free_joints else None,
     },
-    "tags": ["articulated", "external", "reverse-import"],
 }
+
+mass_override = {
+    "value": None,
+    "status": "unknown",
+    "runtime_default_kg": 10.0,
+    "runtime_default_basis": "urdf_inertial",
+}
+
+conventions_block = {
+    "is_static": conventions.CONSERVATIVE_DEFAULTS["is_static"],
+    "z_policy": conventions.CONSERVATIVE_DEFAULTS["z_policy"],
+    "footprint_shape": conventions.CONSERVATIVE_DEFAULTS["footprint_shape"],
+    "stable_poses": [
+        {
+            "pose_id": "upright",
+            "orientation_wxyz": ledger.IDENTITY_WXYZ,  # URDF Z-up -> identity
+            "is_default": True,
+        }
+    ],
+    "inherited_from": None,
+}
+
+# s13a only writes a real size_resolution dict when --size-policy was passed;
+# otherwise export_report.json has a bare null. physical.size_resolution is
+# not-nullable in the ledger, so synthesize the equivalent "no policy
+# applied" shape (mirrors conventions.resolve_size's own no-op branch).
+size_resolution = report.get("size_resolution") or {
+    "mode": None,
+    "actual_max_dim_m": max(bbox),
+    "scale": report.get("scale_applied", 1.0),
+    "reference_max_dim_m": None,
+    "reference_assets": [],
+    "verdict": "ok",
+}
+
+source_usd_path = Path(args.source_usd)
+source_block = {
+    "library": "NVIDIA Isaac Assets 5.1",
+    "group": "Sektion_Cabinet",
+    "file": source_usd_path.name,
+    "license": {
+        "spdx": None,
+        "status": "unknown",
+        "terms_note": "NVIDIA asset EULA; verify before redistribution",
+    },
+    "retrieved_at": datetime.date.fromtimestamp(
+        source_usd_path.stat().st_mtime
+    ).isoformat(),
+    "source_manifest_path": str(inst / "export_report.json"),
+}
+
+verified_digest = ledger.reps_digest({"representations": representations}, "sapien")
+verification_entry = {
+    "backend": "sapien",
+    "check": "joint_sweep",
+    "verdict": checks["status"],
+    "run_id": out.name,
+    "timestamp": datetime.datetime.now().isoformat(timespec="seconds"),
+    "verified_digest": verified_digest,
+    "report_path": str(out / "cabinet314_validation.json"),
+}
+
+model_entry = ledger.new_model_entry(
+    model=model_id,
+    representations=representations,
+    mesh_bbox_m=bbox,
+    mesh_up_axis="Z",
+    origin_convention="base-at-floor",
+    scale_applied=report.get("scale_applied", 1.0),
+    size_resolution=size_resolution,
+    conventions=conventions_block,
+    source=source_block,
+    verification=[verification_entry],
+    articulation=articulation,
+    mass_override=mass_override,
+)
+
+lib_dir = Path(args.library_dir)
+lp = ledger.ledger_path(lib_dir, asset)
+existing_ledger = json.loads(lp.read_text()) if lp.exists() else None
+led = ledger.upsert_model(
+    existing_ledger,
+    asset=asset,
+    category=category,
+    kind="articulated",
+    aliases=[category],
+    colors=[],
+    materials=[],
+    tags=["articulated", "external", "reverse-import"],
+    model_entry=model_entry,
+)
+violations = ledger.validate_ledger(led, check_files=False)
+if violations:
+    print(f"WARN s13b ledger: {len(violations)} violation(s):")
+    for v in violations:
+        print(f"  {v.path} [{v.code}] {v.message}")
+lp.parent.mkdir(parents=True, exist_ok=True)
+lp.write_text(json.dumps(led, indent=2) + "\n")
+
+# Back-compat snapshot at the original bundle path: same authoritative
+# content, re-derived (flattened) from the ledger rather than hand-assembled.
+flat_bundle = next(
+    b
+    for b in ledger.to_ir_bundles(led)
+    if b["asset_id"] == f"{led['asset_id']}_m{model_id}"
+)
 (out / "cabinet314_bundle.json").write_text(
-    json.dumps(bundle, indent=2, ensure_ascii=False)
+    json.dumps(flat_bundle, indent=2, ensure_ascii=False)
 )
 (out / "cabinet314_validation.json").write_text(
     json.dumps(
