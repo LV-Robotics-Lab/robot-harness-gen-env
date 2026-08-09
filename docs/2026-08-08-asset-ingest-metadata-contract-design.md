@@ -103,7 +103,7 @@ metadata 不是「描述资产的一切属性」，而是**下游消费者输入
 |---|---|---|---|---|
 | `library` / `group` / `file` / `url` | 来源坐标——**目的**：定位原始出处；url 是重新获取与许可核查入口 | str | ✅（url 有则填） | 已有+新增 |
 | `license` | 许可结构化记录——**目的**：发布合规程序化判据。`status` 语义（r2 明确）：`unknown`＝**来源清楚但条款未核查**（不是来源不明——来源不明进不了池），`declared`＝已核查并记录适用范围。unknown 合法但必须显式 | `{spdx: str\|null, status: declared\|unknown, terms_note}` | ✅ | 已有→结构化 |
-| `retrieved_at` / `source_manifest_path` | 获取日期 / 源镜像哈希清单——**目的**：来源快照锚定；转换链两端有哈希 | ISO 日期 / str | ✅ | 新增/入账 |
+| `retrieved_at` / `source_manifest_path` | 获取日期 / 源镜像哈希清单——**目的**：来源快照锚定；转换链两端有哈希。`retrieved_at` 格式（H1 硬化 5 收紧）：仅接受规范日期形 `YYYY-MM-DD`（10 字符，无时间部分），带时间的完整 datetime 字符串视为格式错误——见 §3.8 timestamp 的收紧理由，对称适用 | ISO 日期（`YYYY-MM-DD`）/ str | ✅ | 新增/入账 |
 | `selection_evidence_path` / `import_matrix_path` | 检索决策链 / 导入判定记录——**目的**：「为什么引进它」可追溯；挂链接防漂移 | str \| null | 有则填 | 新增 |
 
 ### 3.8 `models[].verification[]`（读者：迁移前可信度判断 + 治理；r2 语义修复）
@@ -114,7 +114,7 @@ metadata 不是「描述资产的一切属性」，而是**下游消费者输入
 |---|---|---|
 | `backend` / `check` / `verdict` | 在哪验、验什么、过没过——**目的**：跨后端验证不等价，逐后端记账；check 枚举为 L0-L4 预留 | `sapien`\|`isaacsim`\|… / `settle`\|`joint_sweep`\|`runtime_load`\|`e2e`\|`admission_report` / `pass`\|`fail` |
 | `run_id` | 本次验证所属运行标识（如 results 运行目录名）——**目的**：追溯到完整运行上下文；同 run 重复条目去重依据（r2） | str |
-| `timestamp` | 验证时刻，**秒级 ISO**——**目的**：同日多次验证可排序；latest 语义的排序键（r2，原 `date` 只到日不可判序） | ISO datetime |
+| `timestamp` | 验证时刻，**秒级 ISO**——**目的**：同日多次验证可排序；latest 语义的排序键（r2，原 `date` 只到日不可判序）。格式（H1 硬化 5 收紧）：仅接受规范 T 形 `YYYY-MM-DDTHH:MM:SS`（19 字符、`T` 分隔、秒级精度）；拒绝 `Z` 后缀、空格分隔形、紧凑无横杠形、纯日期形——理由：裸 `datetime.fromisoformat` 能接受的集合在 py3.10/py3.11 间不一致（本项目双跑两个 env），且空格分隔形与规范 T 形混用时按字符串比较会颠倒 `latest_verification` 的排序语义 | ISO datetime（`YYYY-MM-DDTHH:MM:SS`） |
 | `verified_digest` | **验证时该 model 同 backend 全部 representations 的内容摘要**（各 sha256 排序连接后再 sha256）——**目的**：钉住「验的是哪个内容」；文件更换后 digest 不再匹配 → 该记录自动失效。没有它，「资产改了要重验」无任何可执行机制（r2 必改#1） | str（64 hex） |
 | `report_path` / `thresholds` | 完整报告路径 / 当次门限——**目的**：按内容判定落点；pass 可解释 | str / dict 可选 |
 
@@ -171,6 +171,16 @@ ledger.json ──to_ir_bundles 拆包──> openxsim transfer / enrich / s5（
 | openxsim 读账本 | 经 `to_ir_bundles` 拆包；IR `AssetBundle.from_dict` 按键选择性读取（`ir.py:136-147`），拆包输出与旧 bundle 同构 |
 | `stable_poses` 为空 / 无 default / 非单位四元数 | validator 拒绝 |
 | license unknown | 入池合法；gen_fragment 常显警告；`--license-gate` 开启时不进视图（发布纪律见 §8） |
+
+### 6.1 validator 违规码全集（实现新增部分）
+
+上表按「情形」组织；以下三个 violation code 是实现里存在、但上表未逐一点名的判据，补记含义与引入原因（§8 末行原则同样适用于本节：**`ledger.py` 常量表为规范文本，本节为文档视图**——如两者不一致，以 `ledger.py` 为准）：
+
+| code | 含义 | 引入原因 |
+|---|---|---|
+| `bad_type` | 字段存在但类型不符（如 `models` 不是 list） | 与「missing（缺失）」区分：值本身存在，只是形状错——presence-only 检查看不出这类错误，需要单独判据 |
+| `bad_timestamp` | `verification.timestamp` / `source.retrieved_at` 不满足各自的规范格式 | 防止目录名（如 `batch_v3`）被误切片拼出语法合法、语义垃圾的时间戳字符串静默通过（T8 真实事故，见 §3.8） |
+| `bad_sha256` | `representations[].sha256` 不是 64 位十六进制字符串 | 契约外码：`check_files=False`（不碰磁盘）时也生效，独立于需要磁盘存在才能判定的 `file_missing`/`sha256_mismatch` |
 
 ## 7. 测试与验收
 

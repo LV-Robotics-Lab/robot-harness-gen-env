@@ -277,6 +277,27 @@ CASES = [
         "bad_timestamp",
     ),
     (_set("models.0.source.retrieved_at", "batc-h_-v3T00:00:00"), "bad_timestamp"),
+    # H1 hardening 5: _is_iso_datetime/_is_iso_date tightened to the
+    # canonical T-form / date-form only. Bare fromisoformat() accepts a
+    # strictly larger, py3.10-vs-3.11-divergent set (Z suffix, space
+    # separator, compact digits, ...) -- these reject exactly that.
+    (
+        _set("models.0.verification.0.timestamp", "2026-08-08T10:00:00Z"),
+        "bad_timestamp",
+    ),  # Z suffix
+    (
+        _set("models.0.verification.0.timestamp", "2026-08-08 10:00:00"),
+        "bad_timestamp",
+    ),  # space separator instead of T
+    (_set("models.0.source.retrieved_at", "20260808"), "bad_timestamp"),  # compact form
+    (
+        _set("models.0.verification.0.timestamp", "2026-08-08"),
+        "bad_timestamp",
+    ),  # bare date into timestamp (needs full T-datetime)
+    (
+        _set("models.0.source.retrieved_at", "2026-08-08T10:00:00"),
+        "bad_timestamp",
+    ),  # full datetime into retrieved_at (needs bare date)
 ]
 
 
@@ -526,6 +547,26 @@ def test_append_and_latest(tmp_path):
     out3 = ledger.append_verification(p, 0, stale)
     assert ledger.latest_verification(out3["models"][0], "sapien", "settle") is None
     # ↑ 最新条 digest 与当前 reps 不符 → 失效返回 None（如实报未验证）
+
+
+def test_atomic_write_json_fsyncs(tmp_path, monkeypatch):
+    # H1 顺手: crash-durability for the contract store -- flush() + fsync()
+    # before the atomic os.replace() so a completed write is actually on
+    # disk, not sitting in an OS buffer that a crash right after could still
+    # lose. Spies on ledger.os.fsync (the same os module _atomic_write_json
+    # uses) rather than importing os separately here.
+    calls = []
+    orig_fsync = ledger.os.fsync
+
+    def spy_fsync(fd):
+        calls.append(fd)
+        return orig_fsync(fd)
+
+    monkeypatch.setattr(ledger.os, "fsync", spy_fsync)
+    p = tmp_path / "ledger.json"
+    ledger._atomic_write_json(p, {"a": 1})
+    assert calls, "os.fsync was not called during atomic write"
+    assert json.loads(p.read_text()) == {"a": 1}
 
 
 def test_write_ledger_atomic(tmp_path):

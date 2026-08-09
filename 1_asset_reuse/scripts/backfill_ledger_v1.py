@@ -18,8 +18,10 @@ import argparse
 import datetime
 import hashlib
 import json
+import os
 import re
 import sys
+import tempfile
 from pathlib import Path
 
 import yaml
@@ -40,6 +42,43 @@ _LIVE_OUTPUT_DIRS = frozenset({"web_runs"})
 
 def _mtime_date(path):
     return datetime.date.fromtimestamp(path.stat().st_mtime).isoformat()
+
+
+def _latest_file_mtime_date(dir_path):
+    """Date of the most recently modified *file* under dir_path (recursive).
+    A directory's own mtime is NOT a proxy for its content's age -- it
+    changes on any add/delete inside it, independent of the age of the
+    files that remain (real incident: a _source/<group>/ mirror dir's own
+    mtime read days after every actual file still inside it, because a file
+    had since been deleted from the dir). Returns None if the directory
+    contains no files, so the caller can fall back explicitly rather than
+    silently taking max() of an empty sequence."""
+    files = [p for p in dir_path.rglob("*") if p.is_file()]
+    if not files:
+        return None
+    return datetime.date.fromtimestamp(
+        max(p.stat().st_mtime for p in files)
+    ).isoformat()
+
+
+def _atomic_write_text(path, content):
+    """tmpfile + os.replace, matching lib.ledger._atomic_write_json's
+    atomicity -- SOURCE_MANIFEST.json lives in the shared _source/ pool
+    where a concurrent backfill/import run may be reading it; a bare
+    path.write_text() could be observed half-written."""
+    fd, tmp_name = tempfile.mkstemp(
+        dir=str(path.parent), prefix=path.name + ".", suffix=".tmp"
+    )
+    try:
+        with os.fdopen(fd, "w") as f:
+            f.write(content)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_name, path)
+    except BaseException:
+        if os.path.exists(tmp_name):
+            os.remove(tmp_name)
+        raise
 
 
 def _dated_run_match(name):
@@ -83,7 +122,7 @@ def _parse_bundle_aliases(raw_list):
     return aliases
 
 
-def _find_latest_bundle(results_root, asset, n, bundle_aliases=None):
+def _find_latest_bundle(results_root, asset, n, report, note_key, bundle_aliases=None):
     if bundle_aliases and (asset, n) in bundle_aliases:
         return bundle_aliases[(asset, n)]
     # rglob, not a fixed one-level glob: the historical results tree has
@@ -93,11 +132,19 @@ def _find_latest_bundle(results_root, asset, n, bundle_aliases=None):
     # lineage traces to a genuine dated run are trusted (see
     # _is_trusted_bundle_path); anything else needs an explicit
     # --bundle-alias escape hatch. The newest trusted match by mtime wins.
-    matches = [
-        p
-        for p in results_root.rglob(f"bundles/{asset}_m{n}.json")
-        if _is_trusted_bundle_path(p, results_root)
-    ]
+    #
+    # H1 顺手: candidates rejected by the trust filter are derived (filtered)
+    # behavior, not just an absence -- log each one to the report instead of
+    # letting it vanish silently (T8's own incident was exactly this shape:
+    # a derived-behavior change with no record of what was excluded and why).
+    matches = []
+    for p in results_root.rglob(f"bundles/{asset}_m{n}.json"):
+        if _is_trusted_bundle_path(p, results_root):
+            matches.append(p)
+        else:
+            report["notes"]["bundle_rejected_untrusted"].append(
+                f"{note_key}:{p.relative_to(results_root)}"
+            )
     if not matches:
         return None
     return max(matches, key=lambda p: p.stat().st_mtime)
@@ -289,7 +336,18 @@ def _build_source(lib, bundle, bundle_path, report, note_key):
         manifest_content = _generate_source_manifest(group_dir, prefix_hint)
         pending_manifest = (manifest_path, manifest_content, note_key)
         report["notes"]["source_manifest_generated"].append(note_key)
-        retrieved_at = _mtime_date(group_dir)
+        # H1 hardening 4: the mirror dir's OWN mtime is polluted by any
+        # later add/delete inside it and doesn't reflect the age of the
+        # files that remain -- use the newest FILE inside instead. An empty
+        # dir has no file mtime to fall back to, so it keeps the prior
+        # (dir-mtime) semantics, explicitly flagged in the report rather
+        # than silently falling through.
+        latest_file_date = _latest_file_mtime_date(group_dir)
+        if latest_file_date is not None:
+            retrieved_at = latest_file_date
+        else:
+            retrieved_at = _mtime_date(group_dir)
+            report["notes"]["retrieved_at_mirror_dir_empty"].append(note_key)
         source_manifest_path = str(manifest_path.resolve())
         basis = "generated_from_mirror_dir"
     else:
@@ -393,8 +451,10 @@ def _normalize_articulation(old_articulation):
 
 
 def _build_model_entry(lib, results_root, asset, n, frag_data, report, bundle_aliases):
-    bundle_path = _find_latest_bundle(results_root, asset, n, bundle_aliases)
     note_key = f"{asset}:m{n}"
+    bundle_path = _find_latest_bundle(
+        results_root, asset, n, report, note_key, bundle_aliases
+    )
     if bundle_path is None:
         report["notes"]["no_bundle_found"].append(note_key)
         return None
@@ -499,6 +559,8 @@ def _empty_report():
             "scale_applied_derived_from_scale_vector": [],
             "uri_rebased": [],
             "file_derived_from_representations": [],
+            "retrieved_at_mirror_dir_empty": [],
+            "bundle_rejected_untrusted": [],
         },
     }
 
@@ -593,8 +655,8 @@ def main():
             written_paths = set()
             for manifest_path, manifest_content, mnote_key in pending_manifests:
                 if manifest_path not in written_paths:
-                    manifest_path.write_text(
-                        json.dumps(manifest_content, indent=2) + "\n"
+                    _atomic_write_text(
+                        manifest_path, json.dumps(manifest_content, indent=2) + "\n"
                     )
                     written_paths.add(manifest_path)
                 report["notes"]["source_manifest_written"].append(mnote_key)

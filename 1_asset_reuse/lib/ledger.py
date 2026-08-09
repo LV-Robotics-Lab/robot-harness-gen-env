@@ -15,6 +15,7 @@ import fcntl
 import json
 import math
 import os
+import re
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -129,16 +130,62 @@ class Violation:
     message: str
 
 
+_ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_ISO_DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$")
+
+
+def _is_iso_date(value):
+    """True iff value is a str in canonical YYYY-MM-DD form (exactly 10
+    chars, date only -- no time component) that also parses via
+    datetime.date.fromisoformat. Used for source.retrieved_at, which is a
+    date-of-acquisition, not a timestamp.
+
+    The regex is checked first, not just the fromisoformat try/except: bare
+    fromisoformat() alone would accept shapes that are simply the wrong
+    field's format (e.g. a full "YYYY-MM-DDTHH:MM:SS" datetime string is a
+    valid date-ish prefix to some parsers but is not a bare date) -- see
+    _is_iso_datetime's docstring for the fuller rationale, which applies
+    symmetrically here."""
+    if not isinstance(value, str) or len(value) != 10 or not _ISO_DATE_RE.match(value):
+        return False
+    try:
+        datetime.date.fromisoformat(value)
+    except ValueError:
+        return False
+    return True
+
+
 def _is_iso_datetime(value):
-    """True iff value is a str parseable by datetime.fromisoformat -- accepts
-    both a bare ISO date ("2026-08-08", used by source.retrieved_at) and a
-    full ISO datetime ("2026-08-08T10:00:00", used by verification.timestamp).
-    Guards against exactly the incident shape that motivated this check: a
-    directory name like "batch_v3" naively sliced into date components
-    produced "batc-h_-v3T00:00:00" -- syntactically a string, semantically
-    garbage, and silently accepted everywhere downstream (latest_verification
-    included, since it only ever *compares* timestamps, never parses them)."""
-    if not isinstance(value, str):
+    """True iff value is a str in canonical YYYY-MM-DDTHH:MM:SS form
+    (exactly 19 chars, 'T'-separated, second precision) that also parses via
+    datetime.datetime.fromisoformat. Used for verification.timestamp.
+
+    The regex runs first and is load-bearing, not cosmetic: bare
+    fromisoformat() alone accepts a strictly larger set that differs
+    BETWEEN py3.10 and py3.11 (e.g. a 'Z' suffix, fractional seconds, or a
+    compact "YYYYMMDD" form are 3.11-only extensions) -- this project runs
+    both interpreters (isaac-smoke py3.11 / env-gen-yuxin py3.10), so
+    accepting fromisoformat's raw acceptance set would make a ledger's
+    validity depend on which interpreter happened to validate it. The
+    space-separated form ("YYYY-MM-DD HH:MM:SS", accepted by fromisoformat
+    on both versions) is doubly dangerous even though both interpreters
+    agree on it: ' ' (0x20) sorts below every digit, while 'T' (0x54) sorts
+    above every digit, so on the same date a space-form entry compares as
+    "earlier" than a T-form entry EVEN IF its actual time-of-day is later
+    (e.g. "2026-08-08 15:00:00" < "2026-08-08T09:00:00" as strings, though
+    15:00 is chronologically after 09:00) -- silently corrupting
+    latest_verification's timestamp-max "latest" semantics (max() by string
+    comparison) if a space-form entry ever slips in alongside canonical
+    ones. Guards against exactly the incident
+    shape that motivated this check in the first place: a directory name
+    like "batch_v3" naively sliced into date components produced
+    "batc-h_-v3T00:00:00" -- syntactically a string, semantically garbage,
+    and silently accepted everywhere downstream."""
+    if (
+        not isinstance(value, str)
+        or len(value) != 19
+        or not _ISO_DATETIME_RE.match(value)
+    ):
         return False
     try:
         datetime.datetime.fromisoformat(value)
@@ -449,13 +496,13 @@ def _validate_model(model, prefix, out):
     if (
         retrieved_at is not _MISSING
         and retrieved_at is not None
-        and not _is_iso_datetime(retrieved_at)
+        and not _is_iso_date(retrieved_at)
     ):
         out.append(
             Violation(
                 f"{prefix}.source.retrieved_at",
                 "bad_timestamp",
-                f"retrieved_at {retrieved_at!r} is not a valid ISO date/datetime",
+                f"retrieved_at {retrieved_at!r} is not a valid ISO date",
             )
         )
 
@@ -758,6 +805,10 @@ def _atomic_write_json(path, data):
         with os.fdopen(fd, "w") as f:
             json.dump(data, f, indent=2)
             f.write("\n")
+            f.flush()
+            os.fsync(
+                f.fileno()
+            )  # crash-durability: on disk before replace, not just OS buffer
         os.chmod(tmp_name, 0o644)  # mkstemp defaults to 0600; shared machine
         os.replace(tmp_name, path)
     except BaseException:

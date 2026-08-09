@@ -747,3 +747,142 @@ def test_web_runs_bundle_not_trusted(tmp_path):
     assert r.returncode == 0, r.stderr
     led = json.loads((lib / "399_widget/ledger.json").read_text())
     assert led["models"][0]["physical"]["mass_kg"]["runtime_default_kg"] == 0.1
+
+    # H1 顺手: a rejected-as-untrusted candidate must not just silently
+    # vanish from the discovery step -- it's derived (filtered) behavior,
+    # and T8's own incident was exactly a silent derived-behavior change.
+    # The report must show what was found and rejected, not just what won.
+    report = json.loads((tmp_path / "rep/backfill_report.json").read_text())
+    rejected = report["notes"].get("bundle_rejected_untrusted", [])
+    assert any("399_widget:m0" in r and "web_runs" in r for r in rejected), rejected
+
+
+def test_generated_manifest_retrieved_at_uses_latest_file_mtime(tmp_path):
+    # H1 hardening 4: a _source/<group>/ mirror dir's OWN mtime is polluted
+    # by any later file add/delete inside it (real incident: a mirror dir's
+    # mtime read days after every actual file still inside it, because a
+    # file had since been deleted from the dir). retrieved_at for the
+    # generated_from_mirror_dir basis must come from the newest FILE inside
+    # the dir, not the dir's own mtime.
+    lib = tmp_path / "asset_library"
+    a = lib / "393_relic2"
+    (a / "visual").mkdir(parents=True)
+    (a / "collision").mkdir(parents=True)
+    vis = a / "visual/base0.glb"
+    vis.write_bytes(b"V")
+    col = a / "collision/base0.glb"
+    col.write_bytes(b"V")
+    (a / "model_data0.json").write_text(json.dumps({"extents": [0.1, 0.1, 0.1]}))
+
+    src_dir = lib / "_source/acq_393_relic2"
+    src_dir.mkdir(parents=True)
+    old_file = src_dir / "old.usd"
+    old_file.write_bytes(b"U1")
+    new_file = src_dir / "new.usd"
+    new_file.write_bytes(b"U2")
+
+    now = time.time()
+    old_ts = now - 6 * 86400
+    new_ts = now - 4 * 86400
+    os.utime(old_file, (old_ts, old_ts))
+    os.utime(new_file, (new_ts, new_ts))
+    os.utime(src_dir, (now, now))  # dir mtime is the NEWEST of all -- must not win
+
+    run = tmp_path / "results/20260803_import/bundles"
+    run.mkdir(parents=True)
+    sha = hashlib.sha256(b"V").hexdigest()
+    bundle = {
+        "asset_id": "external_393_relic2_m0",
+        "category": "relic2",
+        "representations": [
+            {
+                "format": "glb",
+                "uri": str(vis),
+                "backend": "sapien",
+                "role": "visual",
+                "sha256": sha,
+                "size_bytes": 1,
+                "metadata": {"origin": "bottom-center normalized"},
+            },
+            {
+                "format": "glb",
+                "uri": str(col),
+                "backend": "sapien",
+                "role": "collision",
+                "sha256": sha,
+                "size_bytes": 1,
+                "metadata": {},
+            },
+        ],
+        "source": {
+            "library": "NVIDIA Isaac Assets 5.1",
+            "group": "acq_393_relic2",
+            "file": "new.usd",
+            "license": "unknown (test)",
+        },
+        "physical": {
+            "mass_kg": {"value": None, "status": "unknown", "runtime_default_kg": 0.1},
+            "mesh_bbox_m": [0.1, 0.1, 0.1],
+            "mesh_up_axis": "Y",
+            "scale_applied": 1.0,
+            "size_resolution": {
+                "mode": "match_category",
+                "actual_max_dim_m": 0.1,
+                "scale": 1.0,
+                "reference_max_dim_m": None,
+                "reference_assets": [],
+                "verdict": "no_precedent",
+            },
+            "conventions": {
+                "is_static": False,
+                "z_policy": "origin_on_table",
+                "footprint_shape": "box",
+                "precedent": None,
+            },
+        },
+        "articulation": {},
+        "tags": ["rigid", "external"],
+    }
+    (run / "393_relic2_m0.json").write_text(json.dumps(bundle))
+    frag = tmp_path / "fragment.yml"
+    frag.write_text(
+        "  393_relic2:\n    category: relic2\n    aliases: [relic2]\n"
+        '    models:\n      "0":\n        stable_pose_id: upright\n'
+        "        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]\n"
+        "        z_policy: origin_on_table\n        footprint_shape: box\n"
+    )
+    out = tmp_path / "rep"
+    r = _run(lib, tmp_path / "results", frag, out, apply=True)
+    assert r.returncode == 0, r.stderr
+    led = json.loads((a / "ledger.json").read_text())
+    retrieved_at = led["models"][0]["source"]["retrieved_at"]
+
+    expected = time.strftime("%Y-%m-%d", time.localtime(new_ts))
+    dir_mtime_date = time.strftime("%Y-%m-%d", time.localtime(now))
+    assert retrieved_at == expected
+    assert retrieved_at != dir_mtime_date
+
+
+def test_generate_source_manifest_atomic_write(tmp_path, monkeypatch):
+    # H1 顺手: SOURCE_MANIFEST.json lives in the shared _source/ pool where
+    # other backfill/import runs may read concurrently -- writing it must go
+    # through the same tempfile+os.replace atomicity as lib.ledger's writes,
+    # not a bare path.write_text() that a concurrent reader could observe
+    # half-written.
+    sys.path.insert(0, str(SCRIPT.parent))
+    import backfill_ledger_v1 as backfill_mod
+
+    calls = []
+    orig_replace = os.replace
+
+    def spy_replace(src, dst):
+        assert os.path.exists(src)  # tempfile exists and is fully written pre-replace
+        calls.append((src, dst))
+        return orig_replace(src, dst)
+
+    monkeypatch.setattr(backfill_mod.os, "replace", spy_replace)
+    target = tmp_path / "SOURCE_MANIFEST.json"
+    backfill_mod._atomic_write_text(target, '{"a": 1}\n')
+    assert calls, "os.replace was not used for the manifest write"
+    assert target.read_text() == '{"a": 1}\n'
+    assert list(tmp_path.glob("*.tmp")) == []  # no leftover tempfile
