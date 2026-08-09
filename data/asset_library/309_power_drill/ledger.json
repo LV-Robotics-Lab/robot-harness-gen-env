@@ -116,9 +116,12 @@
         "group": "ycb_axis_aligned",
         "file": "035_power_drill.usd",
         "license": {
-          "spdx": null,
-          "status": "unknown",
-          "terms_note": "unknown (NVIDIA asset EULA; YCB dataset terms for ycb group)"
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "Underlying YCB dataset CC BY 4.0 (attribution: Calli et al., doi:10.1109/MRA.2015.2448951 & doi:10.1109/ICAR.2015.7251504); NVIDIA USD conversion layer under NVIDIA Isaac Sim Additional Software and Materials License (internal R&D permitted; redistribution of converted USD unclear -- rebuild from upstream YCB data for clean redistribution)",
+          "evidence_url": "http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/ ; https://registry.opendata.aws/ycb-benchmarks/ ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "checked_date": "2026-08-09",
+          "checked_by": "owner-directed research 2026-08-09"
         },
         "retrieved_at": "2026-08-03",
         "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json"
