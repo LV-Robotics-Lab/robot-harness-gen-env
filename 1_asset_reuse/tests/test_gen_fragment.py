@@ -75,3 +75,49 @@ def test_cli_warns_unknown(tmp_path, capsys):
         ["--library-dir", str(tmp_path), "--out", str(tmp_path / "f.yml")]
     )
     assert "unknown license" in capsys.readouterr().err.lower()  # 无论开关必打警告
+
+
+def _articulated_ledger(verification):
+    led = make_valid(
+        kind="articulated", tags=["articulated", "external", "reverse-import"]
+    )
+    led["models"][0]["verification"] = verification
+    return led
+
+
+def test_articulated_joint_sweep_pass_included(tmp_path):
+    led = _articulated_ledger(
+        [
+            {
+                "backend": "sapien",
+                "check": "joint_sweep",
+                "verdict": "pass",
+                "run_id": "attempt1",
+                "timestamp": "2026-08-09T22:02:13",
+                "verified_digest": "补真值占位",
+                "report_path": "r.json",
+            }
+        ]
+    )
+    _write(tmp_path, "314_cabinet", led)
+    frag, _ = gen_fragment.generate(tmp_path)
+    assert "314_cabinet" in frag  # kind=articulated + joint_sweep pass → 入视图
+
+
+def test_articulated_settle_only_excluded(tmp_path):
+    led = _articulated_ledger(
+        [
+            {
+                "backend": "sapien",
+                "check": "settle",
+                "verdict": "pass",
+                "run_id": "attempt1",
+                "timestamp": "2026-08-08T10:00:00",
+                "verified_digest": "补真值占位",
+                "report_path": "r.json",
+            }
+        ]
+    )
+    _write(tmp_path, "314_cabinet", led)
+    frag, _ = gen_fragment.generate(tmp_path)
+    assert "314_cabinet" not in frag  # 关节体不认 settle -- 防倒灌

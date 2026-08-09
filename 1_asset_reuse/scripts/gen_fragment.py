@@ -2,8 +2,11 @@
 """Generate the overrides fragment (external_overrides_fragment_merged.yml
 shape) from the authoritative per-asset ledgers under --library-dir.
 
-Filtering: a model is included only if its latest (backend=sapien,
-check=settle) verification is present, digest-fresh, and verdict == pass --
+Filtering: a model is included only if its latest (backend=sapien, check=X)
+verification is present, digest-fresh, and verdict == pass, where X is
+kind-aware: asset-level kind=="articulated" ledgers (s13b pipeline) check
+"joint_sweep" -- its 120-step settle-then-sweep already subsumes a bare
+settle check -- while kind=="rigid" ledgers check "settle" as before.
 lib.ledger.latest_verification already encodes "latest-per-(backend,check)
 and digest still matches reps_digest" (stale digest -> None); this module
 never re-derives that with any(v["verdict"] == "pass" for v in verification).
@@ -62,13 +65,15 @@ def _project_asset(led, models_out):
 
 def generate(library_dir, *, license_gate=False):
     """Project the per-asset ledgers under library_dir into an overrides
-    fragment dict, filtering on latest-settle-pass (+ optional license
-    gate). Returns (fragment, stats).
+    fragment dict, filtering on latest-verification-pass (+ optional
+    license gate). The verification check is kind-aware: "joint_sweep" for
+    asset-level kind=="articulated" ledgers, "settle" for kind=="rigid"
+    ledgers (see module docstring). Returns (fragment, stats).
 
-    stats["unknown_license_models"] counts settle-passing models whose
-    source.license.status != "declared" -- computed the same way regardless
-    of license_gate (it answers "how many need a license decision", not
-    "how many the gate happened to eat this run")."""
+    stats["unknown_license_models"] counts verification-passing models
+    whose source.license.status != "declared" -- computed the same way
+    regardless of license_gate (it answers "how many need a license
+    decision", not "how many the gate happened to eat this run")."""
     library_dir = Path(library_dir)
     frag = {}
     stats = {"unknown_license_models": 0}
@@ -76,9 +81,10 @@ def generate(library_dir, *, license_gate=False):
     for ledger_file in sorted(library_dir.glob("*/ledger.json")):
         asset_key = ledger_file.parent.name
         led = json.loads(ledger_file.read_text())
+        check = "joint_sweep" if led.get("kind") == "articulated" else "settle"
         models_out = {}
         for model in led.get("models", []):
-            latest = ledger.latest_verification(model, "sapien", "settle")
+            latest = ledger.latest_verification(model, "sapien", check)
             if latest is None or latest.get("verdict") != "pass":
                 continue
             license_status = model.get("source", {}).get("license", {}).get("status")
