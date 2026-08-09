@@ -5,7 +5,7 @@ assets:
     aliases: [bottle]
     materials: [plastic, glass, metal]
     models:
-      "0": {stable_pose_id: upright, z_policy: origin_on_table, footprint_shape: circle}
+      "0": {stable_pose_id: upright, stable_orientation_wxyz: [0.70710678, 0.70710678, 0.0, 0.0], z_policy: origin_on_table, footprint_shape: circle}
   002_bowl:
     category: bowl
     aliases: [bowl]
