@@ -390,11 +390,15 @@ if violations:
     # to WARN and write anyway. The run snapshot below (bundle/validation
     # JSON, model_data0.json, screenshot) is unaffected: those are a
     # point-in-time record of this run, not the pool's authoritative state.
-    print(
-        f"WARN s13b ledger: {len(violations)} violation(s), "
-        "NOT writing authoritative ledger:",
-        file=sys.stderr,
-    )
+    #
+    # I-3 (review round 1): blocking the write alone left this silent --
+    # the script could still print PASS s13b / exit 0 on a run whose ledger
+    # never got persisted, which is *more* likely to go unnoticed than the
+    # old WARN-and-write-anyway behavior. The headline goes to stdout in
+    # this script's own FAIL style (grep-able, and folded into the final
+    # exit code below); the per-violation trace stays on stderr as detail.
+    print(f"FAIL s13b: schema violations ({len(violations)})")
+    print("NOT writing authoritative ledger:", file=sys.stderr)
     for v in violations:
         print(f"  {v.path} [{v.code}] {v.message}", file=sys.stderr)
 else:
@@ -424,5 +428,9 @@ print(
         checks, indent=2, default=lambda o: o.item() if hasattr(o, "item") else str(o)
     )
 )
-print("PASS s13b" if checks["status"] == "pass" else "FAIL s13b")
-sys.exit(0 if checks["status"] == "pass" else 1)
+# I-3: a ledger violation must fail the run even when the physics checks
+# themselves passed -- the ledger not landing is exactly the kind of
+# failure this exit code exists to signal.
+overall_ok = checks["status"] == "pass" and not violations
+print("PASS s13b" if overall_ok else "FAIL s13b")
+sys.exit(0 if overall_ok else 1)

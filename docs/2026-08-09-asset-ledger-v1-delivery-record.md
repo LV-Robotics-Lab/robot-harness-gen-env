@@ -34,6 +34,31 @@
 
 另：license audit（NVIDIA EULA/YCB 两来源核查→批量回写）为**待议**项（owner 2026-08-08 标记），发布前必须 `--license-gate` 且 unknown 归零。
 
+## 5. 硬化执行记录（feat/ledger-hardening）
+
+对照 §4 后续硬化清单的编号，H1/H2 完成项如下（M-6：本节移到附录之前，与 §1-4 同属正文）。
+
+**H1（契约层小修，commits c820853, 0208840）** — §4 编号 4/5/7 + 三个顺手项：
+- 4：backfill `generated_from_mirror_dir` 分支的 `retrieved_at` 改取镜像目录内最新**文件** mtime（不再用目录自身 mtime，防增删文件污染日期）。
+- 5：`_is_iso_datetime` 收紧为规范 T 形（19 字符/秒级/正则先行），拆出 `_is_iso_date` 专司 `source.retrieved_at`；消灭 py3.10/3.11 `fromisoformat` 接受集分歧与空格分隔形排序反转隐患。
+- 7：spec §6 补「validator 违规码全集」小节（`bad_type`/`bad_timestamp`/`bad_sha256`）。
+- 顺手：`_atomic_write_json` 补 `flush()+fsync()`（§4-8 低优先项之一）；backfill 的 `SOURCE_MANIFEST.json` 落盘改临时文件+`os.replace` 原子写；`_find_latest_bundle` 信任过滤拒绝的候选记入 `notes.bundle_rejected_untrusted`。
+- 测试：139→148 passed（0 回归）。
+
+**H2（工具+写盘收敛）** — §4 编号 1/2/3，含审查修复轮 1（下方以最终状态描述）：
+- 1：新增全库巡检工具 `scripts/ledger_audit.py`——扫 `*/ledger.json` 逐份 `validate_ledger(check_files=True)`，无账本但已材质化（有 `model_data*.json`）的资产记 `no_ledger`（非失败）。exit 码：有 violation → 1；扫描结果 `audited==0` 且 `no_ledger==0`（很可能 `--library-dir` 指错目录）→ 2（M-4）；否则 0。一句话用法：
+  ```bash
+  python scripts/ledger_audit.py --library-dir data/asset_library [--out report.json]
+  ```
+- 2：新增退役工具 `scripts/retire_asset.py`——`--model N` 删单 model（网格+`model_data{N}.json`+快照，账本裁条目经 `write_ledger` 原子写回；裁空则连账本/`.lock`/整目录一起删），不带 `--model` 则退役整资产；只清**池内**文件+裁账本，不级联清理 `results/**/bundles/` 运行快照或 `_source/` 镜像（镜像可能多资产共享，保守不清是有意设计，README 已说明）；默认 dry-run。containment guard（I-1/I-2）：`--asset` 转义 `--library-dir`（`../`、绝对路径——pathlib 的 `/` 遇绝对右操作数会直接丢弃左侧）或落在 symlink 上（防误指到 `data/robotwin_shadow/` 之类的影子根、经软链删到真实池）均拒绝，exit 2；无账本资产 / 未知 `--model` 是业务性错误，exit 1。一句话用法：
+  ```bash
+  python scripts/retire_asset.py --library-dir data/asset_library --asset <name> [--model N] [--apply]
+  ```
+- 3：写盘收敛——`backfill_ledger_v1.py` 与 `s13b_validate_articulated.py` 的账本落盘从裸 `write_text` 改为 `lib.ledger.write_ledger`（原子+锁+权限）。s13b 门禁语义对齐 `import_materialize`：`validate_ledger` 有 violation 时 stdout 打印 `FAIL s13b: schema violations (N)`（本脚本既有 FAIL 风格）+ 整体 `exit 1`（I-3：仅拦写不够，会让"账本没落但仍 PASS/exit 0"比改前的"WARN 仍写"更易被忽略），详细违规逐条走 stderr；**不写权威账本**，运行快照（bundle/validation JSON、screenshot、model_data）仍照写。顺手：`import_materialize.py` 的 quarantine 段落补删被隔离 model 的孤儿快照 `snapshots/m{N}_*.png`。
+- 审查修复轮 1（4 Important + 3 Minor 落地，3 Minor 推迟）：I-1/I-2 上述 containment guard（复审曾在隔离池实测越界删除成功，真实破坏面）；I-3 上述 s13b FAIL+exit 1；I-4 README 措辞补充「retire_asset.py 不级联清 results/bundles 与 \_source 镜像」；M-2 整资产 rmtree 前打印实际文件数（**选择了"改文案"而非"实现双重门禁"**——纯信息展示，真正把关的仍是 containment guard，不做成会误导"通过即安全"的第二道假门）；M-4/M-6 见上；M-5 `ledger_audit.py` docstring 补一句：`representations[].uri` 是导入时刻的绝对路径，库搬家/换挂载点会让 `check_files=True` 整批误报 `file_missing`，非本工具能特判。M-1（两工具对坏账本 JSON 的口径不统一）、M-3（rmtree 执行到一半的中间态）、M-7（空 `snapshots/` 目录遗留）如实推迟，未修。
+- 测试：148→159（H2 首轮）→163 passed（修复轮 1 新增 4 条：`retire_asset` traversal 3 条 + `ledger_audit` 空扫描 1 条；s13b 既有测试原地加断言未新增用例；0 回归）。
+- 范围说明：`lib/ledger.py` 全程未改动，两个新工具与写盘收敛均直接消费其既有 API（`validate_ledger`/`write_ledger`/`ledger_path`）。`import_materialize.py` 的孤儿快照一行改动因该文件目前无任何 pytest 覆盖（无 `main()` 守卫、纯脚本式，需真实 trimesh/SAPIEN fixture 才能跑通）而未配自动化测试——功能改动已核对代码路径（与快照写入的命名约定 `m{model}_default.png` 精确匹配），如实说明留作已知缺口。
+
 ## 附录：执行审计 ledger（原文）
 # SDD ledger — plan: /private/tmp/claude-501/-Users-yuxin-Library-Mobile-Documents-iCloud-md-obsidian-Documents----/350ddfd4-ebf6-4c54-9ca8-0e3ff58a36e9/scratchpad/2026-08-08-asset-ingest-metadata-contract-plan.md
 # 远程仓库: lv-5090:/home/jingxiang/yuxin/env-gen-dev · 工作树: /home/jingxiang/yuxin/env-gen-dev-ledger (Task1 创建) · 分支: feat/asset-ledger-v1
@@ -87,27 +112,3 @@ Task 8: fix round 1/5 (3 addressed, 0 open — pending_manifest 写序倒转+合
 Task 8: complete (commits 87acc9d..0e7c292, review clean after 1 fix round; worktree 139 + openxsim 51; 10/16 资产入 v1, 6 排除带证据清单)
 Task 8: minor (deferred, 后续硬化): ①镜像目录 retrieved_at 改取目录内最新文件 mtime(否则 314 将来入 v1 带 2026-08-09 错日期); ②_is_iso_datetime 收紧规范 T 形(py3.10/3.11 fromisoformat 分歧+空格形排序反转,均潜伏); ③不可信 bundle 拒绝加独立 report 记录(防派生行为静默改变)
 === 全部 8 任务完成, 进入全分支终审 ===
-
-## 5. 硬化执行记录（feat/ledger-hardening）
-
-对照 §4 后续硬化清单的编号，H1/H2 完成项如下。
-
-**H1（契约层小修，commits c820853, 0208840）** — §4 编号 4/5/7 + 三个顺手项：
-- 4：backfill `generated_from_mirror_dir` 分支的 `retrieved_at` 改取镜像目录内最新**文件** mtime（不再用目录自身 mtime，防增删文件污染日期）。
-- 5：`_is_iso_datetime` 收紧为规范 T 形（19 字符/秒级/正则先行），拆出 `_is_iso_date` 专司 `source.retrieved_at`；消灭 py3.10/3.11 `fromisoformat` 接受集分歧与空格分隔形排序反转隐患。
-- 7：spec §6 补「validator 违规码全集」小节（`bad_type`/`bad_timestamp`/`bad_sha256`）。
-- 顺手：`_atomic_write_json` 补 `flush()+fsync()`（§4-8 低优先项之一）；backfill 的 `SOURCE_MANIFEST.json` 落盘改临时文件+`os.replace` 原子写；`_find_latest_bundle` 信任过滤拒绝的候选记入 `notes.bundle_rejected_untrusted`。
-- 测试：139→148 passed（0 回归）。
-
-**H2（工具+写盘收敛，本次交付）** — §4 编号 1/2/3：
-- 1：新增全库巡检工具 `scripts/ledger_audit.py`——扫 `*/ledger.json` 逐份 `validate_ledger(check_files=True)`，无账本但已材质化（有 `model_data*.json`）的资产记 `no_ledger`（非失败）；有 violation 则 exit 1。一句话用法：
-  ```bash
-  python scripts/ledger_audit.py --library-dir data/asset_library [--out report.json]
-  ```
-- 2：新增退役工具 `scripts/retire_asset.py`——`--model N` 删单 model（网格+`model_data{N}.json`+快照，账本裁条目经 `write_ledger` 原子写回；裁空则连账本/`.lock`/整目录一起删），不带 `--model` 则退役整资产；无账本资产报错拒绝（本工具只管 v1 账本资产）；默认 dry-run。README「手工删除库内资产文件不安全」那句已改为指向本工具（只动该句，未碰同文件的并发改动面）。一句话用法：
-  ```bash
-  python scripts/retire_asset.py --library-dir data/asset_library --asset <name> [--model N] [--apply]
-  ```
-- 3：写盘收敛——`backfill_ledger_v1.py` 与 `s13b_validate_articulated.py` 的账本落盘从裸 `write_text` 改为 `lib.ledger.write_ledger`（原子+锁+权限）；s13b 门禁语义对齐 `import_materialize`：`validate_ledger` 有 violation 时只 stderr 警告、**不再写权威账本**（运行快照/screenshot/model_data 仍照写），替换此前的"仅 WARN 仍写"。顺手：`import_materialize.py` 的 quarantine 段落补删被隔离 model 的孤儿快照 `snapshots/m{N}_*.png`。
-- 测试：148→159 passed（新增 11 条：s13b 违规门禁 1 条、`ledger_audit` 4 条、`retire_asset` 6 条；0 回归）。
-- 范围说明：`lib/ledger.py` 本轮未改动，两个新工具与写盘收敛均直接消费其既有 API（`validate_ledger`/`write_ledger`/`ledger_path`）。`import_materialize.py` 的孤儿快照一行改动因该文件目前无任何 pytest 覆盖（无 `main()` 守卫、纯脚本式，需真实 trimesh/SAPIEN fixture 才能跑通）而未配自动化测试——功能改动已核对代码路径（与快照写入的命名约定 `m{model}_default.png` 精确匹配），如实说明留作已知缺口。

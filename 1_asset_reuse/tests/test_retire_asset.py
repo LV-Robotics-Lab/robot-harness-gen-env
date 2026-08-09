@@ -226,3 +226,63 @@ def test_unknown_model_id_errors_out(tmp_path):
     assert "model_id 7 not found" in r.stderr
     assert files[0]["vis"].exists()  # nothing touched
     assert (adir / "ledger.json").exists()
+
+
+# --- I-1/I-2 (review round 1): containment guard regression tests -----------
+# pathlib's `/` silently discards the left operand when the right one is
+# absolute, and --library-dir could be accidentally pointed at a
+# symlink-based tree (e.g. a shadow root) whose entries point at the real
+# pool. All three must be rejected (exit code 2, distinct from the exit-1
+# "known, ordinary" errors above) with the escape target left untouched.
+
+
+def test_relative_traversal_asset_is_rejected(tmp_path):
+    lib = tmp_path / "asset_library"
+    lib.mkdir()
+    outside = tmp_path / "OUTSIDE"
+    outside.mkdir()
+    marker = outside / "keepme.txt"
+    marker.write_text("sensitive")
+
+    r = _run(lib, "../OUTSIDE", model=None, apply=True)
+    assert r.returncode == 2, r.stdout + r.stderr
+    assert "escapes" in r.stderr
+
+    assert outside.exists()
+    assert marker.read_text() == "sensitive"
+
+
+def test_absolute_path_asset_is_rejected(tmp_path):
+    lib = tmp_path / "asset_library"
+    lib.mkdir()
+    outside = tmp_path / "OUTSIDE2"
+    outside.mkdir()
+    marker = outside / "keepme.txt"
+    marker.write_text("sensitive")
+
+    r = _run(lib, str(outside), model=None, apply=True)
+    assert r.returncode == 2, r.stdout + r.stderr
+    assert "escapes" in r.stderr
+
+    assert outside.exists()
+    assert marker.read_text() == "sensitive"
+
+
+def test_symlinked_asset_is_rejected(tmp_path):
+    lib = tmp_path / "asset_library"
+    lib.mkdir()
+    real_target = tmp_path / "real_target"
+    real_target.mkdir()
+    marker = real_target / "keepme.txt"
+    marker.write_text("sensitive")
+
+    linked = lib / "linked_asset"
+    linked.symlink_to(real_target, target_is_directory=True)
+
+    r = _run(lib, "linked_asset", model=None, apply=True)
+    assert r.returncode == 2, r.stdout + r.stderr
+    assert "symlink" in r.stderr
+
+    assert real_target.exists()
+    assert marker.read_text() == "sensitive"
+    assert linked.is_symlink()  # the symlink itself wasn't touched either

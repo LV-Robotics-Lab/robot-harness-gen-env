@@ -23,6 +23,18 @@ in one shot.
 
 Safety valve: an asset dir with no ledger.json is out of scope for this
 tool -- it only manages v1-ledger assets. Handle it manually (see README).
+
+Containment guard (review round 1, I-1/I-2): --asset is meant to be a bare
+directory name under --library-dir, not a path. pathlib's `/` silently
+discards the left operand when the right one is absolute (so
+`--asset /etc` or `--asset ../../etc` would otherwise resolve OUTSIDE
+--library-dir instead of erroring), and if --library-dir is accidentally
+pointed at a symlink-based tree (e.g. data/robotwin_shadow/, whose
+per-asset entries are symlinks into the real pool), operating on that
+entry follows the symlink and mutates the real pool it points at. Both are
+rejected with exit code 2 (distinct from the exit-1 "known, ordinary"
+failures below -- no ledger.json / unknown --model) before anything on
+disk is touched.
 """
 
 import argparse
@@ -33,6 +45,33 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from lib import ledger
+
+
+def _containment_error(lib, asset):
+    """None if `lib/asset` is safe to operate on; an error message
+    otherwise. Two checks, in order:
+    (1) `lib/asset` is not itself a symlink -- refuses to follow one into a
+        tree outside the caller's intended library_dir (e.g. a shadow root
+        symlinked back into the real pool).
+    (2) once resolved, its parent is exactly the resolved library_dir --
+        catches both `--asset ../escape` (resolves to a different parent)
+        and `--asset /abs/path` (pathlib's `/` drops the left operand
+        entirely for an absolute right operand, so this is the only thing
+        that catches it) and any other multi-component --asset value
+        (a bare asset name never contains a path separator).
+    Deliberately checked on the *unresolved* `lib/asset` for (1) --
+    resolving first would follow the symlink away and make it
+    unobservable."""
+    raw = lib / asset
+    if raw.is_symlink():
+        return (
+            f"{asset!r} resolves to a symlink under {lib} -- refusing "
+            "(possible shadow-root escape)"
+        )
+    resolved = raw.resolve()
+    if resolved.parent != lib.resolve():
+        return f"{asset!r} escapes --library-dir {lib} (resolves to {resolved})"
+    return None
 
 
 def _model_files(lib, asset, model_id):
@@ -60,11 +99,17 @@ def _model_files(lib, asset, model_id):
 
 def plan(library_dir, asset, model_id=None):
     """Compute what would be deleted, without touching disk. Returns a dict;
-    on failure {"error": <message>}, on success {"error": None, "asset_dir",
-    "whole_asset" (bool), "files" (list[Path]), "remaining_models"
-    (list[dict]), "led" (dict, only for the model-level non-whole-asset
-    case -- the caller needs the parsed ledger to prune and rewrite it)}."""
+    on failure {"error": <message>, "exit_code": 1 or 2}, on success
+    {"error": None, "asset_dir", "whole_asset" (bool), "files" (list[Path]),
+    "remaining_models" (list[dict]), "led" (dict, only for the model-level
+    non-whole-asset case -- the caller needs the parsed ledger to prune and
+    rewrite it)}."""
     lib = Path(library_dir)
+
+    containment_error = _containment_error(lib, asset)
+    if containment_error:
+        return {"error": containment_error, "exit_code": 2}
+
     asset_dir = lib / asset
     lp = asset_dir / "ledger.json"
     if not lp.exists():
@@ -72,7 +117,8 @@ def plan(library_dir, asset, model_id=None):
             "error": (
                 f"{asset!r} has no ledger.json -- this tool only manages "
                 "v1-ledger assets; retire it manually"
-            )
+            ),
+            "exit_code": 1,
         }
 
     led = json.loads(lp.read_text())
@@ -91,7 +137,10 @@ def plan(library_dir, asset, model_id=None):
         }
 
     if not any(m.get("model_id") == model_id for m in models):
-        return {"error": f"model_id {model_id} not found in {asset!r}'s ledger"}
+        return {
+            "error": f"model_id {model_id} not found in {asset!r}'s ledger",
+            "exit_code": 1,
+        }
 
     remaining = [m for m in models if m.get("model_id") != model_id]
     return {
@@ -107,6 +156,18 @@ def plan(library_dir, asset, model_id=None):
 def execute(asset_dir, p):
     if p["whole_asset"]:
         if asset_dir.exists():
+            # M-2 (review round 1): informational only, not a second gate --
+            # the containment check above is what decides whether this
+            # rmtree is safe to run at all. This just tells the operator the
+            # real on-disk count (which can exceed len(p["files"]): that
+            # list is derived from the ledger's own models[], so it misses
+            # untracked leftovers -- e.g. a stray file from an interrupted
+            # earlier run -- that this rmtree will also remove).
+            actual = [f for f in asset_dir.rglob("*") if f.is_file()]
+            print(
+                f"deleting {len(actual)} file(s) under {asset_dir} "
+                "(includes any untracked leftovers not listed above)"
+            )
             shutil.rmtree(asset_dir)
         return
 
@@ -156,7 +217,7 @@ def main():
     p = plan(args.library_dir, args.asset, args.model)
     if p["error"]:
         print(f"ERROR: {p['error']}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(p["exit_code"])
 
     _print_plan(args.asset, args.model, p)
 

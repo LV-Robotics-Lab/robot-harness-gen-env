@@ -141,7 +141,11 @@ def test_violations_block_ledger_write_but_snapshot_stays(tmp_path):
         capture_output=True,
         text=True,
     )
-    assert "WARN s13b ledger" in r.stderr, r.stdout + r.stderr
+    # I-3 (review round 1): a ledger violation must fail the run loudly --
+    # not just skip the write silently. FAIL headline on stdout (this
+    # script's own style), returncode != 0, detail trace on stderr.
+    assert r.returncode != 0, r.stdout + r.stderr
+    assert "FAIL s13b: schema violations" in r.stdout
     assert "NOT writing authoritative ledger" in r.stderr
 
     # authoritative ledger untouched -- still just the seeded broken model 0,

@@ -19,6 +19,14 @@ noted in the delivery record) are NOT a violation -- they're recorded under
 materialized (has a model_data*.json marker, flat or articulated layout);
 an asset dir with neither a ledger nor any model markers is silently
 skipped (not an asset this tool has an opinion about).
+
+M-5 (deferred, noted): representations[].uri is recorded as an absolute
+path at import time, so validate_ledger(check_files=True) -- and therefore
+this whole sweep -- is bound to the physical layout of the machine the
+ledger was written on. Moving/re-mounting the library elsewhere will read
+as mass file_missing here even though nothing was actually deleted; that's
+a pre-existing property of the ledger contract, not something this audit
+tool can special-case.
 """
 
 import argparse
@@ -108,6 +116,21 @@ def main():
         print(f"no_ledger: {len(report['no_ledger'])} asset(s)")
         for asset in sorted(report["no_ledger"]):
             print(f"  {asset}")
+
+    # M-4 (review round 1): audited==0 and no_ledger==0 means this sweep saw
+    # NOTHING at all -- indistinguishable, from the report alone, between "a
+    # genuinely empty/all-clean library" and "--library-dir points at the
+    # wrong directory" (an empty dir, a typo, a fresh checkout). A wrong
+    # --out report is otherwise a silent, easy-to-miss "clean" reading. exit
+    # 2 (distinct from the exit-1 "found violations" case) so this can't be
+    # mistaken for either outcome.
+    if report["audited"] == 0 and not report["no_ledger"]:
+        print(
+            "ERROR: nothing to audit (0 ledgers, 0 no_ledger assets) -- "
+            "check --library-dir points at the right directory",
+            file=sys.stderr,
+        )
+        sys.exit(2)
 
     sys.exit(1 if report["violations"] else 0)
 

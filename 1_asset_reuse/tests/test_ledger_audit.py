@@ -159,3 +159,16 @@ def test_no_out_prints_stdout_summary(tmp_path):
     assert r.returncode == 0, r.stdout + r.stderr
     assert "audited: 1" in r.stdout
     assert "clean: 1" in r.stdout
+
+
+def test_empty_sweep_errors_out(tmp_path):
+    # M-4 (review round 1): audited==0 and no_ledger==0 -- e.g. an empty dir,
+    # or --library-dir pointed at the wrong place entirely -- must not read
+    # as a silent "all clean" (exit 0). exit 2, distinct from the exit-1
+    # "found violations" case.
+    lib = tmp_path / "asset_library"
+    lib.mkdir()
+
+    r = _run(lib)
+    assert r.returncode == 2, r.stdout + r.stderr
+    assert "nothing to audit" in r.stderr
