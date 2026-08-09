@@ -58,7 +58,7 @@ assets:
     aliases: [hammer]
     materials: [metal, wood]
     models:
-      "0": {stable_pose_id: lie_flat, z_policy: origin_on_table}
+      "0": {stable_pose_id: lie_flat, stable_orientation_wxyz: [0.70710678, 0.0, 0.70710678, 0.0], z_policy: origin_on_table}
   021_cup:
     category: cup
     aliases: [cup, mug]
