@@ -688,6 +688,11 @@ for row in matrix:
         ):
             if p.exists():
                 p.unlink()
+        # H3 顺手: orphaned snapshot from a model that settled fine (snapshot
+        # rendered) but got rejected on a schema violation before this loop
+        # ever ran -- same pool-hygiene reasoning as the 3 files above.
+        for p in (lib / a / "snapshots").glob(f"m{m}_*.png"):
+            p.unlink()
         lp = ledger_path(args.library_dir, a)
         if lp.exists():
             led_on_disk = json.loads(lp.read_text())

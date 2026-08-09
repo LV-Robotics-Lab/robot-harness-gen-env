@@ -385,11 +385,24 @@ led = ledger.upsert_model(
 )
 violations = ledger.validate_ledger(led, check_files=False)
 if violations:
-    print(f"WARN s13b ledger: {len(violations)} violation(s):")
+    # H3: gate aligned with import_materialize's own gate (a ledger that
+    # fails its own validator must not become authoritative) -- this used
+    # to WARN and write anyway. The run snapshot below (bundle/validation
+    # JSON, model_data0.json, screenshot) is unaffected: those are a
+    # point-in-time record of this run, not the pool's authoritative state.
+    print(
+        f"WARN s13b ledger: {len(violations)} violation(s), "
+        "NOT writing authoritative ledger:",
+        file=sys.stderr,
+    )
     for v in violations:
-        print(f"  {v.path} [{v.code}] {v.message}")
-lp.parent.mkdir(parents=True, exist_ok=True)
-lp.write_text(json.dumps(led, indent=2) + "\n")
+        print(f"  {v.path} [{v.code}] {v.message}", file=sys.stderr)
+else:
+    lp.parent.mkdir(parents=True, exist_ok=True)
+    # atomic + fcntl-locked write (lib.ledger.write_ledger) instead of a
+    # bare write_text() -- same torn-file risk import_materialize's I-1
+    # fix addressed (crash-isolation subprocesses are killed on timeout).
+    ledger.write_ledger(lp, led)
 
 # Back-compat snapshot at the original bundle path: same authoritative
 # content, re-derived (flattened) from the ledger rather than hand-assembled.

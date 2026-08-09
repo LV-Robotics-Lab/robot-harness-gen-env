@@ -664,7 +664,11 @@ def main():
                     written_paths.add(manifest_path)
                 report["notes"]["source_manifest_written"].append(mnote_key)
             lp.parent.mkdir(parents=True, exist_ok=True)
-            lp.write_text(json.dumps(led, indent=2) + "\n")
+            # H3: atomic + fcntl-locked write (lib.ledger.write_ledger)
+            # instead of a bare write_text() -- same torn-file risk this
+            # driver process is exposed to as import_materialize's own I-1
+            # fix (crash-isolation subprocesses are killed on timeout).
+            ledger.write_ledger(lp, led)
             report["written"] += 1
 
     out_dir.mkdir(parents=True, exist_ok=True)

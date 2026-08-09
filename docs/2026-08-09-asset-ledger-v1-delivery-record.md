@@ -87,3 +87,27 @@ Task 8: fix round 1/5 (3 addressed, 0 open — pending_manifest 写序倒转+合
 Task 8: complete (commits 87acc9d..0e7c292, review clean after 1 fix round; worktree 139 + openxsim 51; 10/16 资产入 v1, 6 排除带证据清单)
 Task 8: minor (deferred, 后续硬化): ①镜像目录 retrieved_at 改取目录内最新文件 mtime(否则 314 将来入 v1 带 2026-08-09 错日期); ②_is_iso_datetime 收紧规范 T 形(py3.10/3.11 fromisoformat 分歧+空格形排序反转,均潜伏); ③不可信 bundle 拒绝加独立 report 记录(防派生行为静默改变)
 === 全部 8 任务完成, 进入全分支终审 ===
+
+## 5. 硬化执行记录（feat/ledger-hardening）
+
+对照 §4 后续硬化清单的编号，H1/H2 完成项如下。
+
+**H1（契约层小修，commits c820853, 0208840）** — §4 编号 4/5/7 + 三个顺手项：
+- 4：backfill `generated_from_mirror_dir` 分支的 `retrieved_at` 改取镜像目录内最新**文件** mtime（不再用目录自身 mtime，防增删文件污染日期）。
+- 5：`_is_iso_datetime` 收紧为规范 T 形（19 字符/秒级/正则先行），拆出 `_is_iso_date` 专司 `source.retrieved_at`；消灭 py3.10/3.11 `fromisoformat` 接受集分歧与空格分隔形排序反转隐患。
+- 7：spec §6 补「validator 违规码全集」小节（`bad_type`/`bad_timestamp`/`bad_sha256`）。
+- 顺手：`_atomic_write_json` 补 `flush()+fsync()`（§4-8 低优先项之一）；backfill 的 `SOURCE_MANIFEST.json` 落盘改临时文件+`os.replace` 原子写；`_find_latest_bundle` 信任过滤拒绝的候选记入 `notes.bundle_rejected_untrusted`。
+- 测试：139→148 passed（0 回归）。
+
+**H2（工具+写盘收敛，本次交付）** — §4 编号 1/2/3：
+- 1：新增全库巡检工具 `scripts/ledger_audit.py`——扫 `*/ledger.json` 逐份 `validate_ledger(check_files=True)`，无账本但已材质化（有 `model_data*.json`）的资产记 `no_ledger`（非失败）；有 violation 则 exit 1。一句话用法：
+  ```bash
+  python scripts/ledger_audit.py --library-dir data/asset_library [--out report.json]
+  ```
+- 2：新增退役工具 `scripts/retire_asset.py`——`--model N` 删单 model（网格+`model_data{N}.json`+快照，账本裁条目经 `write_ledger` 原子写回；裁空则连账本/`.lock`/整目录一起删），不带 `--model` 则退役整资产；无账本资产报错拒绝（本工具只管 v1 账本资产）；默认 dry-run。README「手工删除库内资产文件不安全」那句已改为指向本工具（只动该句，未碰同文件的并发改动面）。一句话用法：
+  ```bash
+  python scripts/retire_asset.py --library-dir data/asset_library --asset <name> [--model N] [--apply]
+  ```
+- 3：写盘收敛——`backfill_ledger_v1.py` 与 `s13b_validate_articulated.py` 的账本落盘从裸 `write_text` 改为 `lib.ledger.write_ledger`（原子+锁+权限）；s13b 门禁语义对齐 `import_materialize`：`validate_ledger` 有 violation 时只 stderr 警告、**不再写权威账本**（运行快照/screenshot/model_data 仍照写），替换此前的"仅 WARN 仍写"。顺手：`import_materialize.py` 的 quarantine 段落补删被隔离 model 的孤儿快照 `snapshots/m{N}_*.png`。
+- 测试：148→159 passed（新增 11 条：s13b 违规门禁 1 条、`ledger_audit` 4 条、`retire_asset` 6 条；0 回归）。
+- 范围说明：`lib/ledger.py` 本轮未改动，两个新工具与写盘收敛均直接消费其既有 API（`validate_ledger`/`write_ledger`/`ledger_path`）。`import_materialize.py` 的孤儿快照一行改动因该文件目前无任何 pytest 覆盖（无 `main()` 守卫、纯脚本式，需真实 trimesh/SAPIEN fixture 才能跑通）而未配自动化测试——功能改动已核对代码路径（与快照写入的命名约定 `m{model}_default.png` 精确匹配），如实说明留作已知缺口。
