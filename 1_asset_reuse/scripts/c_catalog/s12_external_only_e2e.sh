@@ -7,7 +7,7 @@ DEV=$HOME/yuxin/env-gen-dev
 UP=$DEV/external/env-gen-github
 SHADOW=$DEV/data/robotwin_shadow
 CAT=$DEV/data/scene_gen_ext/asset_catalog_external_only.json
-OUT=$DEV/results/_test/20260803_smoke_usd2envgen/ext_only
+OUT=$DEV/results/_test/$(date +%Y%m%d)_ext_only_e2e
 mkdir -p "$OUT/scenes"
 PROMPTS=("Place a can on the table." "Place a box on the table." "Place a bottle on the table." "Place a bowl on the table." "Place a block on the table.")
 pass=0; total=0
@@ -15,7 +15,11 @@ cd "$UP"
 for PROMPT in "${PROMPTS[@]}"; do
   total=$((total+1))
   $PY script/generate_scene.py --prompt "$PROMPT" --seed 42 --asset-catalog "$CAT" --out-root "$OUT/scenes" > /tmp/gen.out 2>&1
-  SCENE=$(ls -t "$OUT/scenes" | head -1)
+  SCENE=$(grep -oE "scene_id=[^ ]+" /tmp/gen.out | head -1 | cut -d= -f2)
+  if [ -z "$SCENE" ]; then
+    echo "RESULT prompt=[$PROMPT] asset=GEN_FAIL runtime=SKIP val=SKIP ok=no"
+    continue
+  fi
   ASSET=$($PY -c "import json;d=json.load(open(\"$OUT/scenes/$SCENE/resolved_scene.json\"));print(d[\"objects\"][0][\"asset_id\"])" 2>/dev/null || echo COMPILE_FAIL)
   mkdir -p "$OUT/runtime/$SCENE"
   $PY script/run_scene_runtime.py --robotwin-root "$SHADOW" --resolved-scene "$OUT/scenes/$SCENE/resolved_scene.json" --asset-catalog "$CAT" --out-dir "$OUT/runtime/$SCENE" --settle-steps 900 --contact-window-steps 120 --video-frames 120 --fps 12 > /tmp/rt.out 2>&1
