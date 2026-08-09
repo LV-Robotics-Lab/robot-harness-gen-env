@@ -11,7 +11,7 @@ assets:
     aliases: [bowl]
     materials: [ceramic, plastic]
     models:
-      "1": {stable_pose_id: upright, z_policy: origin_on_table}
+      "1": {stable_pose_id: upright, stable_orientation_wxyz: [0.70710678, 0.70710678, 0.0, 0.0], z_policy: origin_on_table}
   003_plate:
     category: plate
     aliases: [plate, dish]
