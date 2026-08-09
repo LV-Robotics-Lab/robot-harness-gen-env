@@ -118,3 +118,10 @@ Task 8: minor (deferred, 后续硬化): ①镜像目录 retrieved_at 改取目�
 - retire 的 symlink 防护只覆盖资产目录本身，不覆盖目录内部条目（现实唯一造链者 s9 在资产层、已被覆盖；作用域边界如实记录）
 - audit 对不存在的 --library-dir 仍是 traceback/exit 1，与 violation 的 exit 1 不可区分（M-4 只覆盖了"存在但空"）
 - retire docstring 遗留一句未实现的"双守卫"声称（execute 注释已如实说明实际行为）
+
+## §6 收尾执行记录（2026-08-09 晚，owner 授权"全部执行"）
+- **重导入**：301_brick/302_bowl/304_kettle/305_teacup（批量管线重取源）+ 314_cabinet（s13a/s13b 重跑）入 v1；305_teacup 侦查还原真实源（web_ 标签误导，实为 YCB 025_mug 本地复用）；**303_boombox 排除**——源 key 已从 NVIDIA 服务器消失（KeyCount=0 双重确认），池 15/16。
+- **license audit（owner 指示：查明而非记 unknown）**：条款研究（Isaac Sim Additional Software and Materials License v2025-06-09 + YCB CC-BY-4.0，出处与关键引文在 _source/_license_evidence/20260809/）；关键发现：**按 S3 路径分组而非物体类型**——22 model 属 YCB（水壶/钻头/剪刀都是），仅 314_cabinet 属 NVIDIA Props；判定：内部研究两组均明确允许；再分发 NVIDIA Props 明确禁止、NVIDIA 转制 YCB USD 条款未明（干净路径=从上游 CC-BY-4.0 数据重建+署名）。15 份账本 license 全部 declared（写回脚本+分类表在 results/20260809_license_switch/）。
+- **生产切换**：fragment v2（license-gate 开启零排除，15 资产）部署 + s9 重建生产影子（15 外部资产全 usable）+ **s10 四连 PASS** + **s12 5/5 PASS**。
+- **顺带修复两个缺陷**：gen_fragment 关节体过滤（joint_sweep 认可，9022f03）；s12 场景选取 bug（ls -t 抓旧目录产生假 FAIL，改 scene_id 解析+日期戳目录，0bb1fe4）。
+- 账本提交 235b3b9；备份：results/20260809_license_switch/backup_*。
