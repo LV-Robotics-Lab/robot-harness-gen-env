@@ -75,8 +75,9 @@ bash scripts/s10_e2e_scene.sh
 - **手工删除库内资产文件是不安全操作**：账本 / `results/**/bundles/` 快照 /
   `_source/` 镜像三者以 sha256 + `source_manifest_path` 互相引用，直接 `rm`
   会让引用它的账本条目产生悬空指针而不报错。资产退役需经账本裁剪（从
-  `models[]` 移除 + 级联检查无其它引用）——**该工具目前未建**，在此之前不要
-  手工删资产池文件。
+  `models[]` 移除 + 级联检查无其它引用）——用 `scripts/retire_asset.py
+  --library-dir ... --asset <资产名> [--model N] [--apply]`（缺省 dry-run，
+  打印将删清单不落盘），不要手工删资产池文件。
 
 ## 批量验收纪律（4.5 对齐）
 
