@@ -39,7 +39,7 @@ assets:
         z_policy: origin_on_table
         is_static: true
         articulation_closed_qpos: [-1.45]
-        articulation_open_qpos: [0.0]
+        articulation_open_qpos: [-0.16]
   004_fluted-block:
     semantic_name: block
     category: block
