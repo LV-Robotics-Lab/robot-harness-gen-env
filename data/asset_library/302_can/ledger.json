@@ -1,0 +1,533 @@
+{
+  "schema_version": "asset_ledger.v1",
+  "asset_id": "external_302_can",
+  "category": "can",
+  "semantic_name": "can",
+  "kind": "rigid",
+  "tags": [
+    "rigid",
+    "external",
+    "batch"
+  ],
+  "semantics": {
+    "aliases": [
+      "can"
+    ],
+    "colors": [],
+    "materials": []
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.10240378627768632,
+          0.14017700835666783,
+          0.10230851898397833
+        ],
+        "mesh_up_axis": "Y",
+        "origin_convention": "bottom-center",
+        "scale_applied": 1.0,
+        "size_resolution": {
+          "mode": "match_category",
+          "actual_max_dim_m": 0.14017700835666783,
+          "scale": 1.0,
+          "reference_max_dim_m": 0.0965,
+          "reference_assets": [
+            "071_can"
+          ],
+          "verdict": "ok"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "circle",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "inherited_from": "071_can",
+          "note": "inherited from 071_can"
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default": null,
+          "runtime_default_basis": "none"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/302_can/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "0cdf57e92a1e0f23b4d602d38effad2bf49b5adddf169672a5d59b3dc54dba22",
+          "size_bytes": 12107024,
+          "metadata": {
+            "derived_from": "002_master_chef_can.usd",
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/302_can/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "0cdf57e92a1e0f23b4d602d38effad2bf49b5adddf169672a5d59b3dc54dba22",
+          "size_bytes": 12107024,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/002_master_chef_can.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "f5bd7d98fb23d777b0aa4710bcc93d3077b8e06cefaafe5863b11eb23f2c4175",
+          "size_bytes": 0,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "ycb_axis_aligned",
+        "file": "002_master_chef_can.usd",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "unknown (NVIDIA asset EULA; YCB dataset terms for ycb group)"
+        },
+        "retrieved_at": "2026-08-03",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "batch_v3",
+          "timestamp": "2026-08-03T00:00:00",
+          "verified_digest": "9c744bb372568be36c04dc58c5791fcbb828aee508ea5ffa17fe2a0eabae68b4",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev/results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
+        },
+        {
+          "backend": "sapien",
+          "check": "runtime_load",
+          "verdict": "pass",
+          "run_id": "s11",
+          "timestamp": "2026-08-09T00:45:55",
+          "verified_digest": "9c744bb372568be36c04dc58c5791fcbb828aee508ea5ffa17fe2a0eabae68b4",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev-ledger/results/20260809_ledger_v1_accept/s11"
+        }
+      ]
+    },
+    {
+      "model_id": 1,
+      "physical": {
+        "mesh_bbox_m": [
+          0.0676593789236386,
+          0.1018549991729483,
+          0.06771425811094957
+        ],
+        "mesh_up_axis": "Y",
+        "origin_convention": "bottom-center",
+        "scale_applied": 1.0,
+        "size_resolution": {
+          "mode": "match_category",
+          "actual_max_dim_m": 0.1018549991729483,
+          "scale": 1.0,
+          "reference_max_dim_m": 0.0965,
+          "reference_assets": [
+            "071_can"
+          ],
+          "verdict": "ok"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "circle",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "inherited_from": "071_can",
+          "note": "inherited from 071_can"
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default": null,
+          "runtime_default_basis": "none"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/302_can/visual/base1.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "d193393421f1b8c289f1bb50efb9a083aa7053f815ddddc05076dc819c85206f",
+          "size_bytes": 10674180,
+          "metadata": {
+            "derived_from": "005_tomato_soup_can.usd",
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/302_can/collision/base1.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "d193393421f1b8c289f1bb50efb9a083aa7053f815ddddc05076dc819c85206f",
+          "size_bytes": 10674180,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/005_tomato_soup_can.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "e16f7533402d465535042d8ddf3a8e401b4e3c1821d34c6e5cb8993e13d5381e",
+          "size_bytes": 0,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "ycb_axis_aligned",
+        "file": "005_tomato_soup_can.usd",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "unknown (NVIDIA asset EULA; YCB dataset terms for ycb group)"
+        },
+        "retrieved_at": "2026-08-03",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "batch_v3",
+          "timestamp": "2026-08-03T00:00:00",
+          "verified_digest": "5acbf699e4afd51e0fa309f32d79f4be727af711174ece1de0e891fb452bbb78",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev/results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
+        },
+        {
+          "backend": "sapien",
+          "check": "runtime_load",
+          "verdict": "pass",
+          "run_id": "s11",
+          "timestamp": "2026-08-09T00:45:55",
+          "verified_digest": "5acbf699e4afd51e0fa309f32d79f4be727af711174ece1de0e891fb452bbb78",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev-ledger/results/20260809_ledger_v1_accept/s11"
+        }
+      ]
+    },
+    {
+      "model_id": 2,
+      "physical": {
+        "mesh_bbox_m": [
+          0.08555899905654041,
+          0.03353799983401595,
+          0.08553999709621075
+        ],
+        "mesh_up_axis": "Y",
+        "origin_convention": "bottom-center",
+        "scale_applied": 1.0,
+        "size_resolution": {
+          "mode": "match_category",
+          "actual_max_dim_m": 0.08555899905654041,
+          "scale": 1.0,
+          "reference_max_dim_m": 0.0965,
+          "reference_assets": [
+            "071_can"
+          ],
+          "verdict": "ok"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "circle",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "inherited_from": "071_can",
+          "note": "inherited from 071_can"
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default": null,
+          "runtime_default_basis": "none"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/302_can/visual/base2.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "0e32094db4f746c326d226f49127e4644b9a9a4c8679035a805f434c783d149d",
+          "size_bytes": 8797260,
+          "metadata": {
+            "derived_from": "007_tuna_fish_can.usd",
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/302_can/collision/base2.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "0e32094db4f746c326d226f49127e4644b9a9a4c8679035a805f434c783d149d",
+          "size_bytes": 8797260,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/007_tuna_fish_can.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "da22c2bec9851089ef8d3047515e2b36e22d685290c5ec6f319206f338c4a90b",
+          "size_bytes": 0,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "ycb_axis_aligned",
+        "file": "007_tuna_fish_can.usd",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "unknown (NVIDIA asset EULA; YCB dataset terms for ycb group)"
+        },
+        "retrieved_at": "2026-08-03",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "batch_v3",
+          "timestamp": "2026-08-03T00:00:00",
+          "verified_digest": "8a2e39f319b3073e17b4ef71624318d4ea7c0b80ea0bde1e14c601b76c594c64",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev/results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
+        },
+        {
+          "backend": "sapien",
+          "check": "runtime_load",
+          "verdict": "pass",
+          "run_id": "s11",
+          "timestamp": "2026-08-09T00:45:55",
+          "verified_digest": "8a2e39f319b3073e17b4ef71624318d4ea7c0b80ea0bde1e14c601b76c594c64",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev-ledger/results/20260809_ledger_v1_accept/s11"
+        }
+      ]
+    },
+    {
+      "model_id": 3,
+      "physical": {
+        "mesh_bbox_m": [
+          0.1016467977692157,
+          0.08354299835392087,
+          0.05760092844960997
+        ],
+        "mesh_up_axis": "Y",
+        "origin_convention": "bottom-center",
+        "scale_applied": 1.0,
+        "size_resolution": {
+          "mode": "match_category",
+          "actual_max_dim_m": 0.1016467977692157,
+          "scale": 1.0,
+          "reference_max_dim_m": 0.0965,
+          "reference_assets": [
+            "071_can"
+          ],
+          "verdict": "ok"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "circle",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "inherited_from": "071_can",
+          "note": "inherited from 071_can"
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default": null,
+          "runtime_default_basis": "none"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/302_can/visual/base3.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "20e9f7098f687ec080d3176871c77541d564c9b6283ab7e477f6625ee30ab375",
+          "size_bytes": 9522508,
+          "metadata": {
+            "derived_from": "010_potted_meat_can.usd",
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/302_can/collision/base3.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "20e9f7098f687ec080d3176871c77541d564c9b6283ab7e477f6625ee30ab375",
+          "size_bytes": 9522508,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/010_potted_meat_can.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "50472367ec0e026b2fb0372da279ef6f6f354225c4eb84a76fad307f132d8ada",
+          "size_bytes": 0,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "ycb_axis_aligned",
+        "file": "010_potted_meat_can.usd",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "unknown (NVIDIA asset EULA; YCB dataset terms for ycb group)"
+        },
+        "retrieved_at": "2026-08-03",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "batch_v3",
+          "timestamp": "2026-08-03T00:00:00",
+          "verified_digest": "f711e822991428bc246e7ee78fda97fcbcbda841788c1cc799ac3e3f183d6ed4",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev/results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
+        },
+        {
+          "backend": "sapien",
+          "check": "runtime_load",
+          "verdict": "pass",
+          "run_id": "s11",
+          "timestamp": "2026-08-09T00:45:55",
+          "verified_digest": "f711e822991428bc246e7ee78fda97fcbcbda841788c1cc799ac3e3f183d6ed4",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev-ledger/results/20260809_ledger_v1_accept/s11"
+        }
+      ]
+    }
+  ]
+}
