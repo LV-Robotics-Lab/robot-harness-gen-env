@@ -863,6 +863,104 @@ def test_generated_manifest_retrieved_at_uses_latest_file_mtime(tmp_path):
     assert retrieved_at != dir_mtime_date
 
 
+def test_generated_manifest_retrieved_at_falls_back_to_dir_mtime_when_empty(tmp_path):
+    # H1 hardening 4 edge case (review fix round 1: this branch had zero
+    # test coverage): a mirror dir that exists but contains no files has no
+    # file mtime to derive retrieved_at from -- must fall back to the dir's
+    # own mtime (the prior, pre-hardening semantics) and say so explicitly
+    # via notes.retrieved_at_mirror_dir_empty rather than silently.
+    lib = tmp_path / "asset_library"
+    a = lib / "392_hollow"
+    (a / "visual").mkdir(parents=True)
+    (a / "collision").mkdir(parents=True)
+    vis = a / "visual/base0.glb"
+    vis.write_bytes(b"V")
+    col = a / "collision/base0.glb"
+    col.write_bytes(b"V")
+    (a / "model_data0.json").write_text(json.dumps({"extents": [0.1, 0.1, 0.1]}))
+
+    src_dir = lib / "_source/acq_392_hollow"
+    src_dir.mkdir(parents=True)  # exists but empty -- no files inside
+
+    dir_ts = time.time() - 3 * 86400
+    os.utime(src_dir, (dir_ts, dir_ts))
+
+    run = tmp_path / "results/20260803_import/bundles"
+    run.mkdir(parents=True)
+    sha = hashlib.sha256(b"V").hexdigest()
+    bundle = {
+        "asset_id": "external_392_hollow_m0",
+        "category": "hollow",
+        "representations": [
+            {
+                "format": "glb",
+                "uri": str(vis),
+                "backend": "sapien",
+                "role": "visual",
+                "sha256": sha,
+                "size_bytes": 1,
+                "metadata": {"origin": "bottom-center normalized"},
+            },
+            {
+                "format": "glb",
+                "uri": str(col),
+                "backend": "sapien",
+                "role": "collision",
+                "sha256": sha,
+                "size_bytes": 1,
+                "metadata": {},
+            },
+        ],
+        "source": {
+            "library": "NVIDIA Isaac Assets 5.1",
+            "group": "acq_392_hollow",
+            "file": "h.usd",
+            "license": "unknown (test)",
+        },
+        "physical": {
+            "mass_kg": {"value": None, "status": "unknown", "runtime_default_kg": 0.1},
+            "mesh_bbox_m": [0.1, 0.1, 0.1],
+            "mesh_up_axis": "Y",
+            "scale_applied": 1.0,
+            "size_resolution": {
+                "mode": "match_category",
+                "actual_max_dim_m": 0.1,
+                "scale": 1.0,
+                "reference_max_dim_m": None,
+                "reference_assets": [],
+                "verdict": "no_precedent",
+            },
+            "conventions": {
+                "is_static": False,
+                "z_policy": "origin_on_table",
+                "footprint_shape": "box",
+                "precedent": None,
+            },
+        },
+        "articulation": {},
+        "tags": ["rigid", "external"],
+    }
+    (run / "392_hollow_m0.json").write_text(json.dumps(bundle))
+    frag = tmp_path / "fragment.yml"
+    frag.write_text(
+        "  392_hollow:\n    category: hollow\n    aliases: [hollow]\n"
+        '    models:\n      "0":\n        stable_pose_id: upright\n'
+        "        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]\n"
+        "        z_policy: origin_on_table\n        footprint_shape: box\n"
+    )
+    out = tmp_path / "rep"
+    r = _run(lib, tmp_path / "results", frag, out, apply=True)
+    assert r.returncode == 0, r.stderr
+    led = json.loads((a / "ledger.json").read_text())
+    retrieved_at = led["models"][0]["source"]["retrieved_at"]
+
+    expected = time.strftime("%Y-%m-%d", time.localtime(dir_ts))
+    assert retrieved_at == expected  # fell back to dir mtime, not today
+
+    report = json.loads((out / "backfill_report.json").read_text())
+    assert "392_hollow:m0" in report["notes"]["retrieved_at_mirror_dir_empty"]
+
+
 def test_generate_source_manifest_atomic_write(tmp_path, monkeypatch):
     # H1 顺手: SOURCE_MANIFEST.json lives in the shared _source/ pool where
     # other backfill/import runs may read concurrently -- writing it must go
@@ -886,3 +984,9 @@ def test_generate_source_manifest_atomic_write(tmp_path, monkeypatch):
     assert calls, "os.replace was not used for the manifest write"
     assert target.read_text() == '{"a": 1}\n'
     assert list(tmp_path.glob("*.tmp")) == []  # no leftover tempfile
+    # review fix round 1: mkstemp defaults to 0600 and os.replace doesn't
+    # change mode bits -- without an explicit chmod the manifest would land
+    # 0600, blocking the very "shared pool concurrent read" scenario this
+    # atomic-write hardening exists for (see lib.ledger._atomic_write_json's
+    # identical chmod).
+    assert oct(target.stat().st_mode)[-3:] == "644"

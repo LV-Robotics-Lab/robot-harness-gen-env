@@ -74,6 +74,9 @@ def _atomic_write_text(path, content):
             f.write(content)
             f.flush()
             os.fsync(f.fileno())
+        os.chmod(
+            tmp_name, 0o644
+        )  # mkstemp defaults to 0600; shared pool needs group-read
         os.replace(tmp_name, path)
     except BaseException:
         if os.path.exists(tmp_name):
