@@ -118,7 +118,7 @@ def pipeline_worker(run_id, run_dir, prompt, seed, catalog_used, providers_used)
 
         cmd = [
             PY,
-            "scripts/scene_acquire.py",
+            "scripts/d_acquire/scene_acquire.py",
             "--prompt",
             prompt,
             "--seed",
