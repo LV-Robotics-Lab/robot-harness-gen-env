@@ -46,7 +46,7 @@ assets:
     aliases: [block, cube]
     materials: [wood, plastic]
     models:
-      "0": {stable_pose_id: flat_face, z_policy: origin_on_table}
+      "0": {stable_pose_id: flat_face, stable_orientation_wxyz: [0.70710678, 0.70710678, 0.0, 0.0], z_policy: origin_on_table}
   017_calculator:
     category: calculator
     aliases: [calculator]
