@@ -112,3 +112,9 @@ Task 8: fix round 1/5 (3 addressed, 0 open — pending_manifest 写序倒转+合
 Task 8: complete (commits 87acc9d..0e7c292, review clean after 1 fix round; worktree 139 + openxsim 51; 10/16 资产入 v1, 6 排除带证据清单)
 Task 8: minor (deferred, 后续硬化): ①镜像目录 retrieved_at 改取目录内最新文件 mtime(否则 314 将来入 v1 带 2026-08-09 错日期); ②_is_iso_datetime 收紧规范 T 形(py3.10/3.11 fromisoformat 分歧+空格形排序反转,均潜伏); ③不可信 bundle 拒绝加独立 report 记录(防派生行为静默改变)
 === 全部 8 任务完成, 进入全分支终审 ===
+
+### §5.1 复审残留（非阻塞，与 M-1/M-3/M-7 同列后续清单）
+- retire 的真实删除计数只在 --apply 时打印，dry-run 仍是账本推导数（建议同等计数进 dry-run）
+- retire 的 symlink 防护只覆盖资产目录本身，不覆盖目录内部条目（现实唯一造链者 s9 在资产层、已被覆盖；作用域边界如实记录）
+- audit 对不存在的 --library-dir 仍是 traceback/exit 1，与 violation 的 exit 1 不可区分（M-4 只覆盖了"存在但空"）
+- retire docstring 遗留一句未实现的"双守卫"声称（execute 注释已如实说明实际行为）
