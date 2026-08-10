@@ -660,3 +660,164 @@ def test_root_remap_absent_by_default(tmp_path):
     assert r.returncode == 0, r.stderr
     report = json.loads((out / "backfill_upstream_report.json").read_text())
     assert report["notes"]["root_remap"] is None
+
+
+# --- round 3: general geometric up_axis rule (rigid + articulated alike) ---
+
+
+def test_rigid_up_axis_identity_orientation_is_zup(tmp_path):
+    # 901_widget in the shared fixture carries stable_orientation_wxyz ==
+    # IDENTITY -- round 3 replaced the round-1/2 kind-conditioned hardcode
+    # (rigid always "Y") with one geometric rule applied to both kinds, so
+    # rigid now derives "Z" here exactly like an articulated IDENTITY case.
+    catalog_path, _ = _mini_catalog(tmp_path)
+    out = tmp_path / "out"
+    r = _run(catalog_path, out, apply=True)
+    assert r.returncode == 0, r.stderr
+    physical = json.loads((out / "901_widget/ledger.json").read_text())["models"][0][
+        "physical"
+    ]
+    assert physical["mesh_up_axis"] == "Z"
+    assert physical["origin_convention"] == "base-at-floor"
+
+
+def _mini_catalog_x90_rigid(tmp_path):
+    rt = tmp_path / "RoboTwinX90Rigid"
+    objects = rt / "assets/objects"
+    a = objects / "806_tilted"
+    vis0, col0 = a / "visual/base0.glb", a / "collision/base0.glb"
+    _write(vis0, b"VISUAL-806-0")
+    _write(col0, b"COLLISION-806-0")
+
+    entry = {
+        "asset_id": "806_tilted",
+        "semantic_name": "tilted",
+        "category": "tilted",
+        "aliases": ["tilted"],
+        "colors": [],
+        "materials": [],
+        "load_type": "rigid",
+        "asset_path": str(a),
+        "models": [
+            {
+                "model_id": 0,
+                "model_path": str(a),
+                "metadata_path": str(a / "model_data0.json"),
+                "visual_path": str(vis0),
+                "collision_path": str(col0),
+                "scale": [0.1, 0.1, 0.1],
+                "dimensions_m": [0.05, 0.05, 0.05],
+                "footprint_shape": "box",
+                "support_margin_m": 0.005,
+                "support_spawn_clearance_m": 0.003,
+                "stable_pose_id": "upright",
+                "stable_orientation_wxyz": list(ledger.X90_WXYZ),
+                "z_policy": "origin_on_table",
+                "is_static": False,
+                "articulation_joints": [],
+                "articulation_closed_qpos": [],
+                "articulation_open_qpos": [],
+                "usable": True,
+                "missing": [],
+            }
+        ],
+    }
+    catalog = {
+        "schema_version": 1,
+        "robotwin_root": str(rt),
+        "objects_root": str(objects),
+        "source_commit": "x90rigidcommit",
+        "entries": [entry],
+    }
+    catalog_path = tmp_path / "x90_rigid_catalog.json"
+    catalog_path.write_text(json.dumps(catalog, indent=2))
+    return catalog_path
+
+
+def test_rigid_up_axis_x90_orientation_is_yup(tmp_path):
+    catalog_path = _mini_catalog_x90_rigid(tmp_path)
+    out = tmp_path / "out"
+    r = _run(catalog_path, out, apply=True)
+    assert r.returncode == 0, r.stderr
+    led = json.loads((out / "806_tilted/ledger.json").read_text())
+    physical = led["models"][0]["physical"]
+    assert physical["mesh_up_axis"] == "Y"
+    assert physical["origin_convention"] == "bottom-center"
+    assert ledger.validate_ledger(led, check_files=True) == []
+
+
+def _mini_catalog_ambiguous_orientation(tmp_path):
+    """A rigid asset whose stable_orientation_wxyz is a 90-degree rotation
+    about world Y: neither the mesh's local Y nor Z axis image ends up
+    close to world +Z (it's the local X axis that does -- a mesh authoring
+    convention this Y/Z-only rule has no basis to classify). Exercises the
+    ambiguous-exclusion path; not a real RoboTwin case (no real usable
+    model in the actual catalog hit this branch -- see u2-report.md)."""
+    rt = tmp_path / "RoboTwinAmbiguous"
+    objects = rt / "assets/objects"
+    a = objects / "805_odd"
+    vis0, col0 = a / "visual/base0.glb", a / "collision/base0.glb"
+    _write(vis0, b"VISUAL-805-0")
+    _write(col0, b"COLLISION-805-0")
+
+    entry = {
+        "asset_id": "805_odd",
+        "semantic_name": "odd",
+        "category": "odd",
+        "aliases": ["odd"],
+        "colors": [],
+        "materials": [],
+        "load_type": "rigid",
+        "asset_path": str(a),
+        "models": [
+            {
+                "model_id": 0,
+                "model_path": str(a),
+                "metadata_path": str(a / "model_data0.json"),
+                "visual_path": str(vis0),
+                "collision_path": str(col0),
+                "scale": [0.1, 0.1, 0.1],
+                "dimensions_m": [0.05, 0.05, 0.05],
+                "footprint_shape": "box",
+                "support_margin_m": 0.005,
+                "support_spawn_clearance_m": 0.003,
+                "stable_pose_id": "odd_pose",
+                "stable_orientation_wxyz": [
+                    0.7071067811865476,
+                    0.0,
+                    0.7071067811865476,
+                    0.0,
+                ],
+                "z_policy": "origin_on_table",
+                "is_static": False,
+                "articulation_joints": [],
+                "articulation_closed_qpos": [],
+                "articulation_open_qpos": [],
+                "usable": True,
+                "missing": [],
+            }
+        ],
+    }
+    catalog = {
+        "schema_version": 1,
+        "robotwin_root": str(rt),
+        "objects_root": str(objects),
+        "source_commit": "ambiguouscommit",
+        "entries": [entry],
+    }
+    catalog_path = tmp_path / "ambiguous_catalog.json"
+    catalog_path.write_text(json.dumps(catalog, indent=2))
+    return catalog_path
+
+
+def test_up_axis_ambiguous_model_is_excluded(tmp_path):
+    catalog_path = _mini_catalog_ambiguous_orientation(tmp_path)
+    out = tmp_path / "out"
+    r = _run(catalog_path, out, apply=True)
+    assert r.returncode == 0, r.stderr  # not a validation failure -- an honest skip
+
+    assert not (out / "805_odd/ledger.json").exists()
+
+    report = json.loads((out / "backfill_upstream_report.json").read_text())
+    assert report["notes"]["up_axis_ambiguous"] == ["805_odd:m0"]
+    assert "805_odd" not in report["written"]

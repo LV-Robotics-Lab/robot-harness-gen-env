@@ -26,6 +26,7 @@ import argparse
 import datetime
 import hashlib
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -49,56 +50,54 @@ ISAAC_USD_CONVERTER = (
     "a_forward line converter (tool/version not tracked by backfill_upstream)"
 )
 
-# Rigid (GLB) assets: kept at the robotwin_asset.py precedent (mesh_up_axis
-# "Y", origin "bottom-center"). NOTE (see u2-report.md "up_axis 判据"): a
-# full sweep of the real catalog's usable rigid models shows this is NOT
-# uniformly backed by X90 stable orientations the way it was first assumed
-# -- only 3/15 are X90; most are IDENTITY and one is a non-axis-aligned
-# quaternion. Left unchanged here because it's out of this round's scope,
-# flagged for follow-up.
-RIGID_MESH_UP_AXIS = "Y"
-RIGID_ORIGIN_CONVENTION = "bottom-center"
-
-# Articulated (URDF/PartNet-Mobility) assets: derived PER MODEL from the
-# catalog's own stable_orientation_wxyz, using the causal rule documented in
-# lib/conventions.py's module docstring -- "stable_orientation is
-# ASSET-GEOMETRY semantics... the import pipeline sets it from the
-# normalization it applied (rigid normalized-to-Y-up -> X+90, URDF Z-up ->
-# identity)". RoboTwin's own catalog-generation applies the same mechanical
-# rule (stable_orientation_wxyz is whatever rotation the asset needs, from
-# its own raw mesh/URDF frame, to rest correctly in SAPIEN's Z-up world):
-# IDENTITY means the raw frame already IS Z-up (no correction needed) ->
-# mesh_up_axis "Z"; X90 means the raw frame is Y-up and needs the standard
-# +90-about-X correction -> mesh_up_axis "Y". A real sweep of the catalog's
-# 3 usable urdf models found BOTH: 015_laptop/037_box are IDENTITY (Z-up),
-# but 036_cabinet is X90 (Y-up) -- i.e. NOT uniform, so a per-load_type
-# constant (as originally used) would have been wrong for 036_cabinet.
-# origin_convention is paired with the derived axis using the only two
-# precedents on record: Y+"bottom-center" (external Y-up pool assets) and
-# Z+"base-at-floor" (314_cabinet, the one existing articulated ledger).
+# mesh_up_axis / origin_convention: general geometric rule (round 3),
+# replacing an earlier per-kind hardcode/branch (round 1: uniform "Y" for
+# everything; round 2: rigid stayed "Y", articulated special-cased against
+# the two named quaternion constants IDENTITY_WXYZ/X90_WXYZ). Neither
+# survived contact with the real catalog: a sweep of ALL 18 usable models
+# showed stable_orientation_wxyz is not uniform within EITHER kind (rigid:
+# 11 IDENTITY / 3 X90 / 1 other; articulated: 2 IDENTITY / 1 X90 --
+# 036_cabinet itself, the round-2 "precedent" asset, is the X90 outlier).
+#
+# The rule here doesn't special-case IDENTITY/X90 at all -- it rotates the
+# mesh's own Y=(0,1,0) and Z=(0,0,1) axes by stable_orientation_wxyz and
+# checks which image ends up closer to world +Z=(0,0,1) (the axis that
+# "becomes up" once the object is placed in its stable resting pose is, by
+# construction, the mesh's own native up-axis). IDENTITY -> Z's image IS
+# +Z -> "Z"; X90 -> Y's image IS +Z -> "Y" fall out automatically as the
+# two exact special cases. A model where neither image clears the cos(45
+# deg) threshold is genuinely undetermined by this method and is EXCLUDED
+# from ingestion (not defaulted) -- see notes.up_axis_ambiguous.
+_UP_AXIS_DOT_THRESHOLD = math.cos(math.radians(45))  # ~0.70710678
 _AXIS_ORIGIN = {"Y": "bottom-center", "Z": "base-at-floor"}
-_QUAT_TOL = 1e-6
 
 
-def _quat_close(a, b, tol=_QUAT_TOL):
-    return (
-        a is not None and len(a) == 4 and all(abs(x - y) <= tol for x, y in zip(a, b))
-    )
+def _quat_rotate_y_and_z(q):
+    """(R(q) @ (0,1,0), R(q) @ (0,0,1)) for unit quaternion q=(w,x,y,z),
+    via the standard Hamilton unit-quaternion rotation matrix -- columns 1
+    and 2 read off directly (pure stdlib arithmetic, no matrix/vector lib;
+    the two lookups needed don't justify building the full 3x3 matrix)."""
+    w, x, y, z = q
+    img_y = (2 * (x * y - w * z), 1 - 2 * (x * x + z * z), 2 * (y * z + w * x))
+    img_z = (2 * (x * z + w * y), 2 * (y * z - w * x), 1 - 2 * (x * x + y * y))
+    return img_y, img_z
 
 
-def _articulated_up_axis_and_origin(model, report, note_key):
-    orientation = model.get("stable_orientation_wxyz")
-    if _quat_close(orientation, ledger.IDENTITY_WXYZ):
-        axis = "Z"
-    elif _quat_close(orientation, ledger.X90_WXYZ):
-        axis = "Y"
-    else:
-        # No precedent covers a non-axis-aligned stable orientation (e.g.
-        # 003_plate's diagonal quaternion, seen on the rigid side); default
-        # to the URDF/PartNet-Mobility format convention (Z-up) rather than
-        # guessing, and flag it loudly instead of silently picking one.
-        axis = "Z"
+def _derive_up_axis_and_origin(model, report, note_key):
+    """Returns (axis, origin_convention), or None if the orientation is
+    malformed or genuinely ambiguous (caller must then exclude the model
+    from ingestion and has already had the exclusion recorded here)."""
+    q = model.get("stable_orientation_wxyz")
+    if not q or len(q) != 4:
         report["notes"]["up_axis_ambiguous"].append(note_key)
+        return None
+    img_y, img_z = _quat_rotate_y_and_z(q)
+    # dot with world +Z=(0,0,1) is just the z-component of the image.
+    dot_y, dot_z = img_y[2], img_z[2]
+    if dot_y < _UP_AXIS_DOT_THRESHOLD and dot_z < _UP_AXIS_DOT_THRESHOLD:
+        report["notes"]["up_axis_ambiguous"].append(note_key)
+        return None
+    axis = "Y" if dot_y > dot_z else "Z"
     return axis, _AXIS_ORIGIN[axis]
 
 
@@ -294,15 +293,10 @@ def _build_model_entry(
     isaac_usd_path,
     report,
     note_key,
+    up_axis,
+    origin_convention,
 ):
     scale_applied = _derive_scale_applied(model.get("scale"), report, note_key)
-
-    if kind == "articulated":
-        up_axis, origin_convention = _articulated_up_axis_and_origin(
-            model, report, note_key
-        )
-    else:
-        up_axis, origin_convention = RIGID_MESH_UP_AXIS, RIGID_ORIGIN_CONVENTION
 
     representations = (
         _articulated_representations(model)
@@ -539,7 +533,23 @@ def main():
         if not usable_models:
             continue
 
-        first_usable_model_id = usable_models[0]["model_id"]
+        # Geometric up_axis resolution happens before any file I/O (sha256,
+        # existence checks) for a model: an ambiguous orientation excludes
+        # the model from ingestion entirely (report-and-skip, not defaulted
+        # -- see _derive_up_axis_and_origin), so there's no point hashing
+        # files for a model that won't be written.
+        resolved_models = []
+        for m in usable_models:
+            note_key = f"{asset}:m{m['model_id']}"
+            axis_origin = _derive_up_axis_and_origin(m, report, note_key)
+            if axis_origin is None:
+                continue
+            resolved_models.append((m, axis_origin[0], axis_origin[1]))
+
+        if not resolved_models:
+            continue
+
+        first_usable_model_id = resolved_models[0][0]["model_id"]
 
         # upsert_model deep-copies existing_ledger internally and validates
         # asset-level fields match; start from None explicitly here (the
@@ -547,7 +557,7 @@ def main():
         # from the catalog) and let each upsert_model call below re-attach
         # models[] one at a time.
         led = None
-        for m in usable_models:
+        for m, up_axis, origin_convention in resolved_models:
             note_key = f"{asset}:m{m['model_id']}"
             existing_model = _existing_model(existing_ledger, m["model_id"])
             isaac_usd_path = (
@@ -567,6 +577,8 @@ def main():
                 isaac_usd_path,
                 report,
                 note_key,
+                up_axis,
+                origin_convention,
             )
             led = ledger.upsert_model(
                 led,
