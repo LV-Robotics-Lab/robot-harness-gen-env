@@ -18,17 +18,21 @@ Only catalog models with usable == True are ingested; usable == False models
 are skipped and recorded in the report (they were already excluded upstream
 via the catalog's own derive_usable-style bookkeeping -- see `missing`).
 
-Pure stdlib (matches lib/ledger.py's two-conda-env constraint), except this
-script itself only ever runs under env-gen-yuxin.
+Stdlib plus trimesh (for rigid mesh_up_axis/mesh_bbox_m measurement -- see
+_measure_rigid_geometry); this script only ever runs under env-gen-yuxin
+(which has trimesh installed), unlike lib/ledger.py, which stays pure
+stdlib so both conda envs (isaac-smoke py3.11 / env-gen-yuxin py3.10) can
+import it.
 """
 
 import argparse
 import datetime
 import hashlib
 import json
-import math
 import sys
 from pathlib import Path
+
+import trimesh
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from lib import ledger
@@ -50,55 +54,96 @@ ISAAC_USD_CONVERTER = (
     "a_forward line converter (tool/version not tracked by backfill_upstream)"
 )
 
-# mesh_up_axis / origin_convention: general geometric rule (round 3),
-# replacing an earlier per-kind hardcode/branch (round 1: uniform "Y" for
-# everything; round 2: rigid stayed "Y", articulated special-cased against
-# the two named quaternion constants IDENTITY_WXYZ/X90_WXYZ). Neither
-# survived contact with the real catalog: a sweep of ALL 18 usable models
-# showed stable_orientation_wxyz is not uniform within EITHER kind (rigid:
-# 11 IDENTITY / 3 X90 / 1 other; articulated: 2 IDENTITY / 1 X90 --
-# 036_cabinet itself, the round-2 "precedent" asset, is the X90 outlier).
+# mesh_up_axis / origin_convention (round 4, review fix-round-1 C1+C2):
+# rounds 1-3 all inferred this from stable_orientation_wxyz in one way or
+# another (uniform "Y"; kind-conditioned named-constant matching; a general
+# quaternion/dot-product rule). All three were wrong for the same root
+# reason, caught by an external review's per-asset mesh audit: of the 18
+# usable models, only 5 have a genuinely asset-specific stable_orientation_wxyz
+# override -- the rest are an unset library default that happens to read as
+# a valid quaternion. Treating "nobody filled this in" as geometric evidence
+# was the mistake; round 3's more mathematically careful treatment of that
+# same bad signal made accuracy WORSE (14/18 -> 9/18 correct against
+# ground truth), not better.
 #
-# The rule here doesn't special-case IDENTITY/X90 at all -- it rotates the
-# mesh's own Y=(0,1,0) and Z=(0,0,1) axes by stable_orientation_wxyz and
-# checks which image ends up closer to world +Z=(0,0,1) (the axis that
-# "becomes up" once the object is placed in its stable resting pose is, by
-# construction, the mesh's own native up-axis). IDENTITY -> Z's image IS
-# +Z -> "Z"; X90 -> Y's image IS +Z -> "Y" fall out automatically as the
-# two exact special cases. A model where neither image clears the cos(45
-# deg) threshold is genuinely undetermined by this method and is EXCLUDED
-# from ingestion (not defaulted) -- see notes.up_axis_ambiguous.
-_UP_AXIS_DOT_THRESHOLD = math.cos(math.radians(45))  # ~0.70710678
+# Geometry and pose are now fully decoupled:
+#   - mesh_up_axis is measured directly off the asset's own files (see
+#     _measure_rigid_geometry for rigid; the fixed constant below for
+#     articulated) -- a file-format fact, never inferred from a placement
+#     quaternion.
+#   - stable_orientation_wxyz stays exactly where it always was, feeding
+#     ONLY physical.conventions.stable_poses (_stable_poses, unchanged
+#     across every round) -- it's catalog-authored task/placement data, not
+#     mesh-geometry evidence. 036_cabinet's X90 stable pose is real upstream
+#     data and is kept verbatim in stable_poses; it no longer has any
+#     bearing on mesh_up_axis, which resolves the round-2/3 apparent
+#     contradiction (same asset, two "disagreeing" signals) by recognizing
+#     the two signals were never answering the same question.
 _AXIS_ORIGIN = {"Y": "bottom-center", "Z": "base-at-floor"}
 
+# "Touches the floor" tolerance for _measure_rigid_geometry, relative to the
+# mesh's own largest extent (not an absolute meter value -- raw mesh units
+# aren't necessarily meters; catalog `scale` converts them later). Verified
+# against the real catalog: every genuine floor-touching axis measures at
+# effectively exact 0 (e.g. 004_fluted-block's Y-minimum is -1.8e-8 after
+# its node-level transform is applied), while genuinely-ambiguous meshes
+# (020_hammer, 034_knife: authored centroid-centered, confirmed by their
+# min/(extent/2) ratio being ~1.0 -- i.e. symmetric about the origin -- on
+# ALL THREE axes, not a near-miss on any one of them) aren't remotely close
+# to this tolerance on any axis. 1e-3 has margin on both sides for every
+# real asset measured; it is not a fitted/fragile threshold.
+_FLOOR_REL_TOL = 1e-3
 
-def _quat_rotate_y_and_z(q):
-    """(R(q) @ (0,1,0), R(q) @ (0,0,1)) for unit quaternion q=(w,x,y,z),
-    via the standard Hamilton unit-quaternion rotation matrix -- columns 1
-    and 2 read off directly (pure stdlib arithmetic, no matrix/vector lib;
-    the two lookups needed don't justify building the full 3x3 matrix)."""
-    w, x, y, z = q
-    img_y = (2 * (x * y - w * z), 1 - 2 * (x * x + z * z), 2 * (y * z + w * x))
-    img_z = (2 * (x * z + w * y), 2 * (y * z - w * x), 1 - 2 * (x * x + y * y))
-    return img_y, img_z
+# Articulated (URDF/PartNet-Mobility): fixed, not measured. All 3 usable
+# urdf assets' mobility.urdf share the exact same root fixed-joint
+# transform (rpy="1.570796326794897 0 -1.570796326794897", connecting
+# link "base" -> the rest of the kinematic tree) -- independently confirmed
+# byte-for-byte identical across 015_laptop/036_cabinet/037_box, not just
+# asserted. That's PartNet-Mobility's standard Z-up export convention,
+# applied uniformly by construction (not something a per-model geometry
+# check would add confidence to); it also matches the one pre-existing
+# articulated ledger precedent in the pool (314_cabinet: Z + base-at-floor).
+_ARTICULATED_AXIS = "Z"
+_ARTICULATED_ORIGIN = _AXIS_ORIGIN[_ARTICULATED_AXIS]
 
 
-def _derive_up_axis_and_origin(model, report, note_key):
-    """Returns (axis, origin_convention), or None if the orientation is
-    malformed or genuinely ambiguous (caller must then exclude the model
-    from ingestion and has already had the exclusion recorded here)."""
-    q = model.get("stable_orientation_wxyz")
-    if not q or len(q) != 4:
+def _measure_rigid_geometry(visual_path, report, note_key):
+    """Load the visual mesh via trimesh (same call as the RoboTwin smoke
+    precedent, scripts/a_forward/robotwin_asset.py's glb_bbox helper:
+    trimesh.load(path).bounds) -- for a GLB/OBJ with a node hierarchy this
+    is already computed with every node/scene transform applied, so e.g.
+    004_fluted-block's node-level X+90 transform is baked into the
+    measurement, not something this function has to special-case.
+    RoboTwin's rigid assets rest with their bottom flush against their own
+    local origin plane; the axis whose measured minimum sits at
+    (approximately, see _FLOOR_REL_TOL) zero is that mesh's up axis.
+    Returns (axis, origin_convention, extents_m) where extents_m is the
+    SAME measurement's per-axis extent (max-min, mesh's own native/measured
+    axis order -- not reordered to any canonical frame), unscaled; the
+    caller multiplies by scale_applied. Using this measurement for both the
+    axis call AND mesh_bbox_m (round 3's bug: mesh_bbox_m was catalog
+    dimensions_m, a distinct annotation -- robotwin_asset.py's own
+    docstring warns model_data "extents" can disagree with the actual mesh
+    bbox) means the two can never silently disagree with each other.
+    Returns None (report['notes']['up_axis_ambiguous'] populated) if the
+    file fails to load, if zero or more-than-one axis is near-zero, or if
+    the (unique) near-zero axis is X (index 0 -- not a representable Y|Z
+    up_axis value): e.g. 020_hammer/034_knife, whose meshes are authored
+    centroid-centered on every axis (see module-level comment)."""
+    try:
+        scene = trimesh.load(str(visual_path))
+        lo, hi = scene.bounds
+    except Exception:
         report["notes"]["up_axis_ambiguous"].append(note_key)
         return None
-    img_y, img_z = _quat_rotate_y_and_z(q)
-    # dot with world +Z=(0,0,1) is just the z-component of the image.
-    dot_y, dot_z = img_y[2], img_z[2]
-    if dot_y < _UP_AXIS_DOT_THRESHOLD and dot_z < _UP_AXIS_DOT_THRESHOLD:
+    extents = [float(h - l) for l, h in zip(lo, hi)]
+    max_extent = max(extents) or 1.0
+    near_zero = [i for i in range(3) if abs(lo[i]) <= _FLOOR_REL_TOL * max_extent]
+    axis = {1: "Y", 2: "Z"}.get(near_zero[0]) if len(near_zero) == 1 else None
+    if axis is None:
         report["notes"]["up_axis_ambiguous"].append(note_key)
         return None
-    axis = "Y" if dot_y > dot_z else "Z"
-    return axis, _AXIS_ORIGIN[axis]
+    return axis, _AXIS_ORIGIN[axis], extents
 
 
 def _sha256_file(path):
@@ -107,6 +152,14 @@ def _sha256_file(path):
         for chunk in iter(lambda: f.read(1 << 20), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def _format_from_uri(path):
+    """representations[].format from the file's own suffix (review fix C3)
+    -- rounds 1-3 hardcoded "glb" for every rigid representation, which was
+    silently wrong for the four 900_* series assets (900_gen_block_2057baba
+    etc.), whose visual/collision files are .obj, not .glb."""
+    return Path(path).suffix.lstrip(".").lower()
 
 
 def _latest_file_mtime_date(dir_path):
@@ -166,11 +219,14 @@ def _stable_poses(model):
     ]
 
 
-def _size_resolution(model, scale_applied):
-    dims = model["dimensions_m"]
+def _size_resolution(mesh_bbox_m, scale_applied):
+    # Takes the already-resolved mesh_bbox_m (round 4: trimesh-measured x
+    # scale for rigid, catalog dimensions_m for articulated -- see
+    # _resolve_models) rather than re-deriving it from the catalog model
+    # dict, so actual_max_dim_m can never disagree with mesh_bbox_m itself.
     return {
         "mode": "upstream_catalog",
-        "actual_max_dim_m": max(dims),
+        "actual_max_dim_m": max(mesh_bbox_m),
         "scale": scale_applied,
         "reference_max_dim_m": None,
         "reference_assets": [],
@@ -206,7 +262,7 @@ def _rigid_representations(model):
     collision = Path(model["collision_path"])
     return [
         {
-            "format": "glb",
+            "format": _format_from_uri(visual),
             "uri": str(visual),
             "backend": "sapien",
             "role": "visual",
@@ -215,7 +271,7 @@ def _rigid_representations(model):
             "metadata": {},
         },
         {
-            "format": "glb",
+            "format": _format_from_uri(collision),
             "uri": str(collision),
             "backend": "sapien",
             "role": "collision",
@@ -234,7 +290,7 @@ def _articulated_representations(model):
     urdf = Path(model.get("urdf_path") or model["visual_path"])
     return [
         {
-            "format": "urdf",
+            "format": _format_from_uri(urdf),
             "uri": str(urdf),
             "backend": "sapien",
             "role": "visual_and_collision",
@@ -258,7 +314,7 @@ def _articulation(model):
 
 def _isaac_representation(usd_path, derived_from):
     return {
-        "format": "usd",
+        "format": _format_from_uri(usd_path),
         "uri": str(usd_path),
         "backend": "isaacsim",
         "role": "visual_and_collision",
@@ -295,9 +351,13 @@ def _build_model_entry(
     note_key,
     up_axis,
     origin_convention,
+    mesh_bbox_m,
+    scale_applied,
 ):
-    scale_applied = _derive_scale_applied(model.get("scale"), report, note_key)
-
+    # up_axis/origin_convention/mesh_bbox_m/scale_applied are all resolved
+    # once by _resolve_models (before any of this asset's models reach here)
+    # -- not recomputed per call, so _derive_scale_applied's report side
+    # effect (notes.non_uniform_scale) fires exactly once per model.
     representations = (
         _articulated_representations(model)
         if kind == "articulated"
@@ -338,11 +398,11 @@ def _build_model_entry(
     model_entry = ledger.new_model_entry(
         model=model["model_id"],
         representations=representations,
-        mesh_bbox_m=model["dimensions_m"],
+        mesh_bbox_m=mesh_bbox_m,
         mesh_up_axis=up_axis,
         origin_convention=origin_convention,
         scale_applied=scale_applied,
-        size_resolution=_size_resolution(model, scale_applied),
+        size_resolution=_size_resolution(mesh_bbox_m, scale_applied),
         conventions=_conventions(model),
         source=source,
         verification=verification,
@@ -350,6 +410,53 @@ def _build_model_entry(
         mass_override=_mass_override(kind),
     )
     return model_entry
+
+
+def _resolve_models(entry, kind, report):
+    """usable-filter (unchanged since round 1: usable:false models are
+    skipped, recorded in report['skipped_unusable']) + per-model geometry
+    resolution (round 4: rigid measured via trimesh, articulated fixed to
+    the verified PartNet-Mobility convention -- see module-level comments
+    above _measure_rigid_geometry). Runs once per entry, before any output
+    file is touched for that entry, so:
+      - notes.non_uniform_scale / notes.up_axis_ambiguous are each
+        populated exactly once per model (not recomputed later);
+      - main() can validate --isaac-usd targets (I1) against the same
+        resolved set used for writing, before any file gets written.
+    Returns [(model, up_axis, origin_convention, mesh_bbox_m, scale_applied),
+    ...] -- only for models that are BOTH usable:true AND resolved to a
+    concrete up_axis (an ambiguous or unmeasurable rigid model is excluded
+    here, not defaulted)."""
+    asset = entry["asset_id"]
+    usable_models = [m for m in entry["models"] if m.get("usable")]
+    for m in entry["models"]:
+        if not m.get("usable"):
+            report["skipped_unusable"].append(f"{asset}:m{m['model_id']}")
+
+    resolved = []
+    for m in usable_models:
+        note_key = f"{asset}:m{m['model_id']}"
+        scale_applied = _derive_scale_applied(m.get("scale"), report, note_key)
+        if kind == "articulated":
+            resolved.append(
+                (
+                    m,
+                    _ARTICULATED_AXIS,
+                    _ARTICULATED_ORIGIN,
+                    m["dimensions_m"],
+                    scale_applied,
+                )
+            )
+            continue
+        measured = _measure_rigid_geometry(Path(m["visual_path"]), report, note_key)
+        if measured is None:
+            continue
+        axis, origin_convention, extents = measured
+        mesh_bbox_m = [
+            e * (scale_applied if scale_applied is not None else 1.0) for e in extents
+        ]
+        resolved.append((m, axis, origin_convention, mesh_bbox_m, scale_applied))
+    return resolved
 
 
 def _parse_isaac_usd(raw_list):
@@ -500,8 +607,36 @@ def main():
 
     report = _empty_report()
 
+    # Phase 1: usable-filter + geometry/up_axis resolution for every entry,
+    # before any output file is touched. This lets --isaac-usd targets be
+    # validated (I1, below) against the exact same resolved set the write
+    # phase will use -- an asset present in the catalog but with zero
+    # ingestible models after resolution (e.g. its only usable model's
+    # up_axis is ambiguous) can only be known after resolution runs, not
+    # from catalog presence alone.
+    resolved_by_asset = {}
     for asset, entry in entries_by_asset.items():
         kind = "articulated" if entry.get("load_type") == "urdf" else "rigid"
+        resolved_by_asset[asset] = (kind, _resolve_models(entry, kind, report))
+
+    unresolvable_isaac_usd = {
+        asset for asset in isaac_usd_map if not resolved_by_asset[asset][1]
+    }
+    if unresolvable_isaac_usd:
+        print(
+            "ERROR: --isaac-usd asset(s) have no ingestible model (all "
+            f"unusable or up_axis-ambiguous): {sorted(unresolvable_isaac_usd)}",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+    # Phase 2: build + (if --apply) write one ledger per asset that has at
+    # least one resolved model, reusing phase 1's resolution unchanged.
+    for asset, entry in entries_by_asset.items():
+        kind, resolved_models = resolved_by_asset[asset]
+        if not resolved_models:
+            continue
+
         category = entry["category"]
         semantic_name = entry.get("semantic_name") or category
         aliases = list(entry.get("aliases") or [])
@@ -525,30 +660,6 @@ def main():
 
         source_manifest_path = (out_dir / asset / "SOURCE_MANIFEST.json").resolve()
 
-        usable_models = [m for m in entry["models"] if m.get("usable")]
-        for m in entry["models"]:
-            if not m.get("usable"):
-                report["skipped_unusable"].append(f"{asset}:m{m['model_id']}")
-
-        if not usable_models:
-            continue
-
-        # Geometric up_axis resolution happens before any file I/O (sha256,
-        # existence checks) for a model: an ambiguous orientation excludes
-        # the model from ingestion entirely (report-and-skip, not defaulted
-        # -- see _derive_up_axis_and_origin), so there's no point hashing
-        # files for a model that won't be written.
-        resolved_models = []
-        for m in usable_models:
-            note_key = f"{asset}:m{m['model_id']}"
-            axis_origin = _derive_up_axis_and_origin(m, report, note_key)
-            if axis_origin is None:
-                continue
-            resolved_models.append((m, axis_origin[0], axis_origin[1]))
-
-        if not resolved_models:
-            continue
-
         first_usable_model_id = resolved_models[0][0]["model_id"]
 
         # upsert_model deep-copies existing_ledger internally and validates
@@ -557,7 +668,13 @@ def main():
         # from the catalog) and let each upsert_model call below re-attach
         # models[] one at a time.
         led = None
-        for m, up_axis, origin_convention in resolved_models:
+        for (
+            m,
+            up_axis,
+            origin_convention,
+            mesh_bbox_m,
+            scale_applied,
+        ) in resolved_models:
             note_key = f"{asset}:m{m['model_id']}"
             existing_model = _existing_model(existing_ledger, m["model_id"])
             isaac_usd_path = (
@@ -579,6 +696,8 @@ def main():
                 note_key,
                 up_axis,
                 origin_convention,
+                mesh_bbox_m,
+                scale_applied,
             )
             led = ledger.upsert_model(
                 led,

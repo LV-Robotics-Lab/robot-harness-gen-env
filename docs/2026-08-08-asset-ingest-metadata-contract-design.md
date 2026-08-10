@@ -215,3 +215,4 @@ ledger.json ──to_ir_bundles 拆包──> openxsim transfer / enrich / s5（
 - catalog 标 `usable:false` 的 model 如实跳过不入账（报告记录），不硬凑。
 - license 初始 unknown（RoboTwin 资产来源混合，条款核查是独立后续 audit）。
 - 消费端：迁移侧（usd_enrich）按资产名先查账本（上游+外部两区）的 isaacsim 表示；查不到行为不变（如实报缺）。
+- `SOURCE_MANIFEST.json` 不入 git（与池内 `_source/` 现有实践一致，`.gitignore` 只豁免 `ledger.json`）：它是本机可再生产物，克隆仓库后对同一 catalog 重跑一次 `backfill_upstream --apply` 即再生，不依赖任何未跟踪的历史状态。
