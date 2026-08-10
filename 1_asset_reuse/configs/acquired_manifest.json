@@ -61,6 +61,23 @@
      ]
     }
    ]
+  },
+  {
+   "name": "acq_315_soap_dish",
+   "prefix": "/home/jingxiang/yuxin/env-gen-dev-src/data/asset_library/_source/web_315_soap_dish/mesh",
+   "source": "local",
+   "items": [
+    {
+     "usd": "soap_dish_003.glb",
+     "asset": "315_soap_dish",
+     "model": 0,
+     "category": "soap_dish",
+     "aliases": [
+      "soap dish",
+      "soap_dish"
+     ]
+    }
+   ]
   }
  ]
 }
