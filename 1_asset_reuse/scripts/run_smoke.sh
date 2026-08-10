@@ -31,13 +31,7 @@ esac
 
 MANIFEST=${SMOKE_MANIFEST:-$SPIKE/../configs/smoke_manifest.json}
 LIB=$RUN/asset_library
-# import_materialize.py:524 derives the SOURCE_MANIFEST path as
-#   <library-dir>/_source/<group>/SOURCE_MANIFEST.json
-# -- it ignores whatever --source-root phase 1 was given. Put the mirror
-# where phase 2 will look, or the ledger loses source_manifest_path and the
-# asset is rejected with schema_violation:missing. Still fully isolated:
-# $LIB lives under results/_test/, production _source is never written.
-SRC=$LIB/_source
+SRC=$RUN/_source            # own source mirror -- production _source untouched
 SHADOW=$RUN/robotwin_shadow
 EXT=$RUN/scene_gen_ext
 STAGING=$RUN/staging
