@@ -143,6 +143,55 @@ class Tier:
     provider: object
 
 
+class DedupedProvider:
+    """Wrap a provider that truncates its result list *before* de-duplicating.
+
+    ``GitHubRepositoryDiscoveryProvider`` walks several repositories, pools every
+    match, then does ``sorted(...)[:limit]`` with no de-duplication (openxsim
+    ``assets.py``). Asset repos are heavily forked/mirrored on GitHub, so the same
+    model can occupy several of those ``limit`` slots. ``AssetScout`` does de-dup
+    afterwards, but by then the truncation already happened -- de-duping can only
+    shrink the list, never pull replacements up from rank ``limit + 1``.
+
+    So ask the inner provider for ``overfetch`` times as many candidates, collapse
+    duplicate ``download_url``s (keeping the higher-scored one), and only then
+    truncate. openxsim itself stays unmodified, per the retrieval design decision.
+    """
+
+    def __init__(self, inner, overfetch=4):
+        if overfetch < 1:
+            raise ValueError("overfetch must be >= 1")
+        self.inner = inner
+        self.overfetch = overfetch
+        self.name = inner.name
+
+    def search(self, query, limit=20):
+        raw = self.inner.search(query, limit=limit * self.overfetch)
+        best = {}
+        for c in raw:
+            prev = best.get(c.download_url)
+            if prev is None or c.score > prev.score:
+                best[c.download_url] = c
+        ranked = sorted(best.values(), key=lambda c: (-c.score, c.candidate_id))
+        self.last_stats = {
+            "fetched": len(raw),
+            "after_dedup": len(ranked),
+            "returned": min(len(ranked), limit),
+            "duplicates_dropped": len(raw) - len(ranked),
+        }
+        return ranked[:limit]
+
+    @property
+    def last_errors(self):
+        return getattr(self.inner, "last_errors", [])
+
+    def __getattr__(self, item):
+        """Stay transparent: anything this wrapper does not define itself
+        (``token``, ``repository_limit``, ``timeout_s`` ...) resolves on the
+        wrapped provider, so wrapping does not change the provider's surface."""
+        return getattr(self.inner, item)
+
+
 def load_providers(config):
     g = dict(config.get("globals", {}))
     pc = config["providers"]
@@ -186,7 +235,10 @@ def load_providers(config):
         tiers.append(
             Tier(
                 d.get("tier", 3),
-                GitHubRepositoryDiscoveryProvider(**kwargs),
+                DedupedProvider(
+                    GitHubRepositoryDiscoveryProvider(**kwargs),
+                    overfetch=int(d.get("overfetch", 4)),
+                ),
             )
         )
     return tiers, g
