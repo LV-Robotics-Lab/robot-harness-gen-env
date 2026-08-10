@@ -20,7 +20,9 @@ catalog 被文字场景真实选中。全景与逐文件说明见本目录 `OVER
 ```bash
 export OMNI_KIT_ACCEPT_EULA=YES
 # 打样回归（B+C 样本，4 步）
-bash scripts/run_smoke.sh
+# 注意：步 2 的 s8b 会整目录重建 <SMOKE_LIB>/301_cup（覆盖 coacd 碰撞体、删 ledger.json），
+# 所以脚本不再默认写生产库，必须显式给 SMOKE_LIB；跑完需按 coacd 条目重新导入该资产。
+SMOKE_LIB=../data/asset_library bash scripts/run_smoke.sh
 # 批量导入外部资产（按 configs/external_manifest.json）
 ~/miniconda3/envs/isaac-smoke/bin/python  scripts/2_convert/import_fetch_convert.py \
   --manifest configs/external_manifest.json \
