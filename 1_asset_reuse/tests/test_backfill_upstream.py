@@ -64,8 +64,19 @@ def _mini_catalog(tmp_path):
     (a1 / "model_data0.json").parent.mkdir(parents=True, exist_ok=True)
     (a1 / "model_data0.json").write_text("{}")
     vis1, col1 = a1 / "visual/base1.glb", a1 / "collision/base1.glb"
-    _write(vis1, b"VISUAL-901-1")  # never loaded: model 1 is usable:false
-    _write(col1, b"COLLISION-901-1")
+    # I2.2 (review fix-round-2): model 1 must have REAL, loadable, non-
+    # ambiguous geometry, not opaque placeholder bytes. With placeholder
+    # bytes, trimesh.load() throws on model 1 regardless of the usable
+    # filter, so it would ALSO land in up_axis_ambiguous if the usable
+    # filter were ever broken/removed -- making usable-filtering tests
+    # vacuously true (they'd still pass via a completely different
+    # exclusion path, not because usable:false was actually enforced).
+    # Real, unambiguously-Y-up geometry here means a broken usable filter
+    # would let model 1 resolve to a concrete axis and actually get
+    # ingested, so "model 1 not in the ledger" genuinely depends on the
+    # usable:false gate. Confirmed by mutation testing (see u2-report.md).
+    _write_box_mesh(vis1, extents=(0.04, 0.07, 0.04), translate=(0, 0.035, 0))
+    _write_box_mesh(col1, extents=(0.04, 0.07, 0.04), translate=(0, 0.035, 0))
 
     rigid_entry = {
         "asset_id": "901_widget",
