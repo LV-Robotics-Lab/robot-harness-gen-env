@@ -6,7 +6,7 @@ import sys
 import time
 from pathlib import Path
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "backfill_ledger_v1.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "ledger" / "backfill_ledger_v1.py"
 
 
 def _mini_pool(tmp_path):

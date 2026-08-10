@@ -5,9 +5,8 @@
 
 ## 1. 这是什么
 
-**四条功能线 + 一层横切防护**，均已端到端验证：
+**三条在役功能线 + 一层横切防护**，均已端到端验证：
 
-- **线 A（正向转换）**：RoboTwin 资产（GLB/URDF）→ Isaac Sim 可直接加载的 USD；
 - **线 B（反向引入）**：外部 USD 物体 → RoboTwin 布局资产。刚体单件打样（s8）、
   关节体 USD→URDF（s13）、清单驱动批量导入（import_*）三种形态；
 - **线 C（全流程复用）**：外部资产注册进 env-gen 的 asset catalog，被文字请求的
@@ -16,9 +15,12 @@
   prompt → 四级信任梯度检索 → 门禁淘汰 → 自动走批量引入管线，全程留决策证据；
 - **横切防护**：惯例继承 + 尺寸策略 + 关节平衡门 + 目录准入，防三类历史问题结构性
   复发（四类机制总表见 `README.md`）。
+- **线 A（正向转换，RoboTwin → Isaac USD）已于 2026-08-10 归档**至
+  `archive/1_forward_convert/`：其目标（Transfer 资产侧阻塞消除）已达成，且方向与
+  上述引入管线相反、无法纳入统一编号；结论与产物留档，代码不再维护。
 
-打样样本：001_bottle（刚体）、036_cabinet（关节体）、YCB 025_mug（外部引入，红色马克杯，
-注册为 `301_cup`）。批量线已按清单导入 NVIDIA 资产 25 个模型：**17 通过入库**（9 个资产
+打样样本：YCB 025_mug（外部引入，红色马克杯，注册为 `301_cup`）；
+001_bottle / 036_cabinet 是已归档线 A 的样本，见 `archive/1_forward_convert/README.md`。批量线已按清单导入 NVIDIA 资产 25 个模型：**17 通过入库**（9 个资产
 类目，catalog available 18→27），8 个带原因淘汰（见 `import_matrix.json`）。所有转换以
 「双后端物理验证 + 哈希账本」证明没走样。
 
@@ -27,15 +29,14 @@
 ```
 输入（只读）                                    输出
 ├─ RoboTwin 资产库（134 物体，jingxiang 处）     ├─ AssetBundle 账本 JSON（每资产一份，双后端表示+哈希+结构化未知）
-├─ NVIDIA Isaac 资产服务器（HTTP，逐 prop 拉）   ├─ 线A: bottle.usd / cabinet.usd（Isaac 可加载）+ 证据渲染
+├─ NVIDIA Isaac 资产服务器（HTTP，逐 prop 拉）   ├─ （线A 产物 bottle.usd / cabinet.usd 已随线 A 归档，见 archive/）
 ├─ GitHub 公开仓库（tier2 检索源，逐仓声明许可）  ├─ ../data/asset_library/（外部资产池，RoboTwin 布局）
 ├─ openxsim IR 库（AssetBundle 数据结构）        ├─ ../data/robotwin_shadow/（影子根）+ ../data/scene_gen_ext/（扩展 overrides+catalog）
 └─ env-gen 上游（catalog/场景编译/验证器）       ├─ 检索证据 selection_evidence / coverage_report / asset_gap_blocker
                                                └─ 双后端验证报告 / e2e 场景包 / 回放视频截图
 ```
 
-**成功标志**：线 A = openxsim `representation_for("isaacsim")` 命中（Transfer 阻塞消除）；
-线 B = 外部资产在 SAPIEN 静置验证 pass；线 C = 文字 prompt 生成的场景 `resolved_scene.json`
+**成功标志**：线 B = 外部资产在 SAPIEN 静置验证 pass；线 C = 文字 prompt 生成的场景 `resolved_scene.json`
 中 asset_id 为外部资产，且全量验证 `fail=0 not_run=0`；线 D = 检索到的资产走完 B/C 全部
 门禁入库。
 
@@ -46,11 +47,10 @@
 ## 3. 阶段总览
 
 代码全在本目录 `{scripts,lib,configs,tests}/`；数据产物在 `../data/`（不入 git）；
-打样总入口 `scripts/run_smoke.sh`（11 步）。scripts/ 内按功能线分夹：线 A=`a_forward/`、线 B=`b_reverse/`、B批量=`b_batch/`、线 C=`c_catalog/`、线 D=`d_acquire/`（各夹地图见 `scripts/README.md`）。
+打样总入口 `scripts/run_smoke.sh`（4 步）。scripts/ 内按**外部资产引入的流程顺序**编号分夹：`1_search/ → 2_convert/ → 3_materialize/ → 4_validate/ → 5_catalog/`；横切工具在 `ledger/`（账本工具链）与 `probe/`（一次性探测/自检）（各夹地图见 `scripts/README.md`）。`sN` 文件名序号保留不改，阶段归属以文件夹为准。
 
 | 阶段 | 职责（一句话） | 代码 |
 |---|---|---|
-| A · 正向转换 | RoboTwin GLB/URDF→USD，双后端验证 + IR 注册 + 证据渲染 | `robotwin_asset` `s0–s6` `s15` |
 | B · 反向引入打样 | NVIDIA USD→RoboTwin 布局 GLB（探测 + 单件全流程） | `s7` `s8a` `s8b` |
 | B批量 · 清单批量导入 | manifest 驱动、两阶段（Kit 转换 / 物化验证）、逐模型硬门 | `import_fetch_convert` `import_materialize` |
 | B关节 · 关节体反向 | USD articulation→URDF + 逐 link 网格，SAPIEN 关节扫掠验证 | `s13a` `s13b` |
@@ -59,7 +59,6 @@
 | 防护（横切） | 惯例继承 + 尺寸策略（被 B批量/B关节/D 调用） | `lib/conventions.py` |
 
 ```
-线A: RoboTwin GLB/URDF ──转换──> USD ──双后端验证──> 账本(isaacsim 表示) ──> Transfer 可消费
 线B: 外部 USD ──(刚体s8 / 关节s13 / 批量import_*)──> RoboTwin 布局资产 ──验证──> 账本 + asset_library
 线C: asset_library ──s9 影子根+catalog(±s14 准入)──> grounding 选中 ──SAPIEN 回放──> 全量验证 PASS
 线D: 类目/prompt ──a1 四级检索──a2 门禁──> 复用 B批量管线入库 ──> 覆盖报告 / 缺口结构化输出
@@ -71,7 +70,18 @@
 不重复。Kit 步骤跑 conda `isaac-smoke`（py3.11），SAPIEN/上游步骤跑 `env-gen-yuxin`
 （py3.10），Kit 前置 `export OMNI_KIT_ACCEPT_EULA=YES`。）
 
-### 4.1 线 A · 正向转换（RoboTwin → Isaac USD）
+### 4.1 线 A · 正向转换（RoboTwin → Isaac USD）——【已归档 2026-08-10】
+
+6 个脚本（`robotwin_asset` `s1` `s2` `s4` `s6` `s15`）整体移入
+`archive/1_forward_convert/`，`run_smoke.sh` 不再调用。归档理由、逐文件功能、
+恢复步骤见 `archive/1_forward_convert/README.md`。
+
+**三个原属本线、但本身不是「正向转换」的脚本未归档**，已按语义归位且仍在生产链路上：
+`s3_validate_sapien.py` → `scripts/4_validate/`（SAPIEN 侧物理验证）、
+`s5_check_ir.py` → `scripts/ledger/`（账本 IR 校验）、
+`s0_verify_isaac.py` → `scripts/probe/`（Isaac 环境自检）。
+
+<details><summary>归档前的原始记录（保留备查）</summary>
 
 - **目标**：RoboTwin 私有布局资产转成 Isaac 可加载 USD，双后端证明物理不走样，注册进账本。
 - **输入 → 输出**：RoboTwin 001_bottle / 036_cabinet → `bottle.usd` / `cabinet.usd` +
@@ -91,8 +101,10 @@
 
 **参数**：s1/s2 `--bundle --out-dir`；s3/s4 `--out`；s15 `--assets-dir`（A 线结果目录）`--out`。
 
-**一键运行**：`bash scripts/run_smoke.sh` 步 1–7（产物落
-`results/_test/20260802_smoke_bottle_cabinet_glb2usd/`）。
+**一键运行**（归档前）：`run_smoke.sh` 步 1–7，产物落
+`results/_test/20260802_smoke_bottle_cabinet_glb2usd/`。
+
+</details>
 
 ### 4.2 线 B · 反向引入打样（NVIDIA USD → RoboTwin GLB）
 
@@ -108,7 +120,7 @@
 
 **参数**：s7 `--out`；s8a `--source-dir --out`；s8b `--glb --source-dir --library-dir --out`。
 
-**一键运行**：`run_smoke.sh` 步 8–9（产物落 `results/_test/20260803_smoke_usd2envgen/`）。
+**一键运行**：`run_smoke.sh` 步 1–2（产物落 `results/_test/20260803_smoke_usd2envgen/`）。
 
 ### 4.3 线 B批量 · 清单驱动批量导入
 
@@ -182,7 +194,7 @@
 | s14 `--enforce` | 把 not_admitted 外部条目滤出视图文件（记录在报告，可逆） | 只报告 |
 | s11 `--shadow --catalog --out` | 影子根 / catalog / 报告目录 | 必填 |
 
-s10/s12 无参数（路径写死在脚本头部变量）。**一键运行**：`run_smoke.sh` 步 10–11。
+s10/s12 无参数（路径写死在脚本头部变量）。**一键运行**：`run_smoke.sh` 步 3–4。
 
 ### 4.6 线 D · 检索选定层（自动获取）
 
@@ -198,8 +210,8 @@ s10/s12 无参数（路径写死在脚本头部变量）。**一键运行**：`r
 | `lib/a2_selection.py` | 候选门禁 `gate()` 与淘汰码（unsupported_format / thumbs_artifact / oversize / license_blocked…）+ 选定簿记 |
 | `lib/a3_webfetch.py` | 拉取 web（GitHub）候选、`to_glb`/`synth_staging_record` 合成 staging 记录对接 materialize |
 | `lib/a4_coverage.py` | 场景需求抽取 + 覆盖判定（只读 import 上游 parser/grounding/catalog） |
-| `scripts/d_acquire/acquire_batch.py` | 批量引擎：类目条目→检索→门禁→复用 import 管线物化；per-category PASS/FAIL + SUMMARY，按内容判定；entry 亦接受 `pinned`（指定服务器 USD key）与 `local`（本地网格文件），跳过搜索但仍过门禁 + 物化 |
-| `scripts/d_acquire/scene_acquire.py` | 场景驱动自适应：prompt→覆盖检查→缺口自动引进→重查→生成场景；仍未覆盖的写 `asset_gap_blocker.json`（生成式兜底的结构化输入） |
+| `scripts/1_search/acquire_batch.py` | 批量引擎：类目条目→检索→门禁→复用 import 管线物化；per-category PASS/FAIL + SUMMARY，按内容判定；entry 亦接受 `pinned`（指定服务器 USD key）与 `local`（本地网格文件），跳过搜索但仍过门禁 + 物化 |
+| `scripts/1_search/scene_acquire.py` | 场景驱动自适应：prompt→覆盖检查→缺口自动引进→重查→生成场景；仍未覆盖的写 `asset_gap_blocker.json`（生成式兜底的结构化输入） |
 | `configs/providers.json` | provider 开关/层级/源配置 + 全局 `top_k`/`max_fallback`/`max_size_bytes`/`license_gate` |
 | `configs/acquire_categories.json` | 类目需求清单（category + aliases） |
 | `configs/acquired_manifest.json` | acquire_batch 自动生成的已引进清单（与手写 external_manifest 同构） |
@@ -253,5 +265,6 @@ s10/s12 无参数（路径写死在脚本头部变量）。**一键运行**：`r
 | Isaac Sim 5.1.0.0（pip 版） | 双向转换 + Isaac 侧验证 | conda `isaac-smoke`（py3.11） |
 | SAPIEN 3.0.0b1 + trimesh | SAPIEN 侧验证与网格处理 | conda `env-gen-yuxin`（py3.10） |
 
-任务上下文：Phase 2 · 4.5 Asset reuse；线 A 产物同时为 4.7 Transfer 解除资产侧阻塞。
+任务上下文：Phase 2 · 4.5 Asset reuse。线 A 产物曾为 4.7 Transfer 解除资产侧阻塞，
+该结论已达成并随线 A 归档（`archive/1_forward_convert/`）。
 局部细节（用法命令、批量验收纪律、已知限制、防护机制表）见同目录 `README.md`。

@@ -4,7 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "ledger_audit.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "ledger" / "ledger_audit.py"
 
 
 def _write_clean_asset(lib, asset, category="widget"):

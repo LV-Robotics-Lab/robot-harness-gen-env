@@ -61,7 +61,7 @@ import trimesh
 SCRIPT = Path(
     sys.argv[1]
     if len(sys.argv) > 1
-    else "/home/jingxiang/yuxin/env-gen-dev-ledger/1_asset_reuse/scripts/b_batch/import_materialize.py"
+    else "/home/jingxiang/yuxin/env-gen-dev-ledger/1_asset_reuse/scripts/3_materialize/import_materialize.py"
 )
 PY = sys.executable
 ROOT = Path("/tmp/t5_dev_harness")
