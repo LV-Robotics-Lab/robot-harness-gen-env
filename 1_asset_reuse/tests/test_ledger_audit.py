@@ -4,11 +4,15 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from lib import ledger  # noqa: E402  -- for SCHEMA_VERSION, so this fixture
+# tracks the contract instead of pinning a version literal that goes stale.
+
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "ledger" / "ledger_audit.py"
 
 
 def _write_clean_asset(lib, asset, category="widget"):
-    """A minimal but genuinely valid v1 ledger, with a real on-disk file
+    """A minimal but genuinely valid v2 ledger, with a real on-disk file
     (correct sha256/size_bytes) so validate_ledger(check_files=True) passes
     cleanly -- same field shape as tests/test_ledger.py's make_model/
     make_valid, just pointed at real tmp files instead of /tmp/x/ stubs."""
@@ -24,7 +28,6 @@ def _write_clean_asset(lib, asset, category="widget"):
             "mesh_bbox_m": [0.1, 0.1, 0.1],
             "mesh_up_axis": "Y",
             "origin_convention": "bottom-center",
-            "scale_applied": 1.0,
             "size_resolution": {
                 "mode": "match_category",
                 "actual_max_dim_m": 0.1,
@@ -72,6 +75,7 @@ def _write_clean_asset(lib, asset, category="widget"):
         ],
         "articulation": {},
         "source": {
+            "kind": "retrieved",
             "library": "test",
             "group": "test_group",
             "file": "base0.glb",
@@ -82,13 +86,23 @@ def _write_clean_asset(lib, asset, category="widget"):
         "verification": [],
     }
     led = {
-        "schema_version": "asset_ledger.v1",
+        "schema_version": ledger.SCHEMA_VERSION,
+        "profile": "sapien_only",
         "asset_id": f"external_{asset}",
         "category": category,
         "semantic_name": category,
         "kind": "rigid",
         "tags": ["rigid", "external", "batch"],
-        "semantics": {"aliases": [category], "colors": [], "materials": []},
+        "semantics": {
+            "aliases": [category],
+            "colors": [],
+            "materials": [],
+            "identity": {
+                "basis": "manifest_human",
+                "evidence": None,
+                "verified": False,
+            },
+        },
         "models": [model],
     }
     (adir / "ledger.json").write_text(json.dumps(led, indent=2) + "\n")

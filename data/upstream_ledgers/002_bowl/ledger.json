@@ -1,5 +1,5 @@
 {
-  "schema_version": "asset_ledger.v1",
+  "schema_version": "asset_ledger.v2",
   "asset_id": "robotwin_002_bowl",
   "category": "bowl",
   "semantic_name": "bowl",
@@ -17,7 +17,12 @@
     "materials": [
       "ceramic",
       "plastic"
-    ]
+    ],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "external/env-gen-github/data/scene_gen/asset_catalog.json",
+      "verified": false
+    }
   },
   "models": [
     {
@@ -30,10 +35,9 @@
         ],
         "mesh_up_axis": "Y",
         "origin_convention": "bottom-center",
-        "scale_applied": 0.047,
         "size_resolution": {
           "mode": "upstream_catalog",
-          "actual_max_dim_m": 0.11118856143951417,
+          "actual_max_dim_m": 2.3657140731811523,
           "scale": 0.047,
           "reference_max_dim_m": null,
           "reference_assets": [],
@@ -103,9 +107,11 @@
           "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
         },
         "retrieved_at": "2025-06-27",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/002_bowl/SOURCE_MANIFEST.json"
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/002_bowl/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
       },
       "verification": []
     }
-  ]
+  ],
+  "profile": "sapien_only"
 }

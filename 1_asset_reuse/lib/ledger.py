@@ -3,10 +3,32 @@
 Pure stdlib so both conda envs (isaac-smoke py3.11 / env-gen-yuxin py3.10) can
 import it. May import lib.conventions (also pure stdlib) but nothing else.
 
-The constant tables below (KINDS, BACKENDS, ROLES, CHECKS, VERDICTS,
-MASS_STATUS, DEFAULT_BASIS, REQUIRED_MODEL, ...) ARE the contract. spec §3 is
-a documentation view of these tables, not the other way around: if the two
-ever disagree, this file wins and spec §3 needs to be updated to match.
+The constant tables below (KINDS, PROFILES, SOURCE_KINDS, BACKENDS, ROLES,
+CHECKS, VERDICTS, MASS_STATUS, DEFAULT_BASIS, INERTIAL_BASIS, IDENTITY_BASIS,
+REQUIRED_MODEL, REQUIRED_SOURCE, PROFILE_REQUIRED_MODEL, ...) ARE the
+contract. spec §3 is a documentation view of these tables, not the other way
+around: if the two ever disagree, this file wins and spec §3 needs to be
+updated to match.
+
+v2 changes the shape of "required" itself. In v1 there was one required table
+for every model; v2 has three, composed:
+
+  REQUIRED_MODEL          always, whatever the asset is
+  REQUIRED_SOURCE[kind]   by how the model came to exist (fetched vs generated)
+  PROFILE_REQUIRED_MODEL  by what the asset is FOR (SAPIEN only vs cross-backend)
+
+The reason is that "does this field have a reader" stopped being a global
+question: a transfer compiler genuinely reads inertial data, and an asset that
+never leaves SAPIEN genuinely has no reader for it. Making it globally
+required forces most of the library to carry structured unknowns; making it
+globally optional leaves migration with nothing to check. Declaring intent
+(`profile`) and keying the requirement off that is the same mechanism
+OpenUSD's applied API schemas and NVIDIA's SimReady profiles use.
+
+Orthogonal to all three: a field whose value is UNRECOVERABLE once ingest is
+over (source licence terms, generation prompt/seed/model version) is required
+under every profile and every kind. Profiles relax what must be *checked*;
+they never relax what must be *captured*.
 """
 
 import datetime
@@ -22,14 +44,62 @@ from pathlib import Path
 
 from lib import conventions
 
-SCHEMA_VERSION = "asset_ledger.v1"
+SCHEMA_VERSION = "asset_ledger.v2"
 KINDS = ("rigid", "articulated")
+
+# What the asset is FOR. Declared, never derived: an asset that happens to
+# own an isaacsim USD is not thereby promoted to cross_backend, and one that
+# declares cross_backend without a USD is not thereby demoted -- it owes one,
+# and profile_requirement_unmet is how that debt stays visible instead of
+# reading as a silent absence. Adding a profile later (e.g. contact_rich,
+# once the L0-L4 transfer-consistency thresholds exist) is append-only.
+PROFILES = ("sapien_only", "cross_backend")
+
+# How the model came to exist. `retrieved` covers anything that existed
+# before we went and got it (a download, a local library); `generated` covers
+# anything a model produced, which by definition has no URL, no source
+# mirror, and no retrieval date -- and instead has a prompt, a seed and a
+# model version that cease to exist the moment the run ends.
+SOURCE_KINDS = ("retrieved", "generated")
+
 BACKENDS = ("sapien", "isaacsim", "portable")
 ROLES = ("visual", "collision", "visual_and_collision", "snapshot")
-CHECKS = ("settle", "joint_sweep", "runtime_load", "e2e", "admission_report")
+# generation_qc is the generator's own pre-physics screening (truncated
+# geometry, duplicate bodies, aesthetic threshold). It rides in the same
+# verification[] list rather than a parallel field so that "which gates has
+# this model passed" keeps exactly one answer and one read semantics.
+CHECKS = (
+    "settle",
+    "joint_sweep",
+    "runtime_load",
+    "e2e",
+    "admission_report",
+    "generation_qc",
+)
 VERDICTS = ("pass", "fail")
 MASS_STATUS = ("known", "estimated", "unknown")
 DEFAULT_BASIS = ("global_constant", "category_typical", "urdf_inertial", "none")
+
+# Where a centre-of-mass / inertia tensor came from. engine_derived with null
+# values is a complete, informative answer -- it says "not an asset fact, the
+# engine infers this from collision geometry" -- and is what most rigid
+# models legitimately carry. Silence would say the same thing far less
+# usefully, which is why cross_backend requires the KEY, not a value.
+INERTIAL_BASIS = ("measured", "urdf_inertial", "engine_derived", "none")
+
+# How this asset's identity (category/aliases) was decided. These are the
+# four routes that actually exist today -- measured by the 2026-08-10
+# semantics audit over all 31 ledgers -- plus `vlm` for visual re-checking.
+# `unknown` is legal and honest: 2 of 31 assets came in through the
+# single-articulated-asset path, which keeps no manifest, so their identity
+# claim genuinely cannot be attributed after the fact.
+IDENTITY_BASIS = (
+    "upstream_catalog",
+    "manifest_human",
+    "requested_by_acquire",
+    "vlm",
+    "unknown",
+)
 
 # Re-exported from conventions.py (not `from ... import X90_WXYZ` — an
 # unused-import formatter strips names that are only ever re-exported).
@@ -42,8 +112,11 @@ REQUIRED_ASSET = (
     "category",
     "semantic_name",
     "kind",
+    "profile",
     "tags",
     "semantics.aliases",
+    "semantics.identity.basis",
+    "semantics.identity.verified",
     "models",
 )
 
@@ -55,6 +128,7 @@ NOT_NULLABLE_ASSET = (
     "category",
     "semantic_name",
     "kind",
+    "profile",
     "tags",
     "semantics",
     "models",
@@ -66,7 +140,6 @@ REQUIRED_MODEL = (
     "physical.mesh_bbox_m",
     "physical.mesh_up_axis",
     "physical.origin_convention",
-    "physical.scale_applied",
     "physical.size_resolution",
     "physical.conventions.is_static",
     "physical.conventions.z_policy",
@@ -75,14 +148,66 @@ REQUIRED_MODEL = (
     "physical.conventions.inherited_from",
     "physical.mass_kg",
     "physical.friction",
-    "source.library",
-    "source.group",
-    "source.file",
+    # source.kind selects which REQUIRED_SOURCE branch applies; source.license
+    # is required under BOTH branches (unrecoverable-after-ingest rule: terms
+    # pages change and disappear, and a generated asset's licence is its
+    # model's output terms, not "none").
+    "source.kind",
     "source.license",
-    "source.retrieved_at",
-    "source.source_manifest_path",
     "verification",
 )
+
+# v1 had physical.scale_applied here too. It was removed in v2, not renamed:
+# every writer set it from size_resolution["scale"] (import_materialize.py,
+# s13b, backfill_upstream all did), it was equal to that value in 31/31
+# ledgers on disk, and nothing anywhere read it. The scale now lives once,
+# inside the decision record that explains it.
+
+# Branch tables keyed by source.kind. The two branches are disjoint by
+# construction -- see _validate_source, which reports a model carrying fields
+# from the other branch as source_field_mismatch rather than ignoring them
+# (the realistic failure is a ledger copy-pasted from a neighbour and only
+# half-edited, which no presence check would otherwise catch).
+REQUIRED_SOURCE = {
+    "retrieved": (
+        "source.library",
+        "source.group",
+        "source.file",
+        "source.retrieved_at",
+        "source.source_manifest_path",
+    ),
+    "generated": (
+        "source.generator.tool",
+        "source.generator.tool_version",
+        "source.generator.model",
+        "source.generator.model_version",
+        "source.generator.input",
+        "source.generator.seed",
+        "source.generator.params",
+        "source.generator.generated_at",
+    ),
+}
+
+# Fields from the OTHER branch, whose presence means the two got mixed.
+FOREIGN_SOURCE_FIELDS = {
+    "retrieved": ("source.generator",),
+    "generated": (
+        "source.library",
+        "source.group",
+        "source.file",
+        "source.url",
+        "source.retrieved_at",
+        "source.source_manifest_path",
+    ),
+}
+
+# Required only under the named profile. sapien_only adds nothing: an asset
+# that never leaves SAPIEN has no reader for inertial data, and demanding it
+# would only produce structured unknowns nobody consults.
+PROFILE_REQUIRED_MODEL = {
+    "sapien_only": (),
+    "cross_backend": ("physical.inertial",),
+}
 
 # Per-model fields that may not be null even when the key is present (same
 # present-but-null gap as NOT_NULLABLE_ASSET, but for REQUIRED_MODEL). Not
@@ -102,19 +227,37 @@ NOT_NULLABLE_MODEL = (
     "physical.mesh_bbox_m",
     "physical.mesh_up_axis",
     "physical.origin_convention",
-    "physical.scale_applied",
     "physical.size_resolution",
     "physical.conventions.is_static",
     "physical.conventions.z_policy",
     "physical.conventions.footprint_shape",
     "physical.conventions.stable_poses",
-    "source.library",
-    "source.group",
-    "source.file",
-    "source.retrieved_at",
-    "source.source_manifest_path",
+    "source.kind",
     "verification",
 )
+
+# Per-branch non-nullables. Deliberately NOT the whole REQUIRED_SOURCE list:
+#   - source.generator.model_version and .seed are required KEYS whose value
+#     may legitimately be null. A null seed is not an omission, it is the
+#     statement "this generation is not reproducible" -- which is a fact a
+#     gate can act on, and strictly more informative than an absent field.
+NOT_NULLABLE_SOURCE = {
+    "retrieved": (
+        "source.library",
+        "source.group",
+        "source.file",
+        "source.retrieved_at",
+        "source.source_manifest_path",
+    ),
+    "generated": (
+        "source.generator.tool",
+        "source.generator.tool_version",
+        "source.generator.model",
+        "source.generator.input",
+        "source.generator.params",
+        "source.generator.generated_at",
+    ),
+}
 
 # Derived fields that must never be handwritten into a ledger on disk; they
 # are computed by derive_usable() at read time.
@@ -320,7 +463,12 @@ def _validate_representations(reps, prefix, out):
         )
     for i, r in enumerate(reps):
         rp = f"{prefix}.{i}"
-        for field in ("format", "uri", "role", "sha256", "size_bytes"):
+        # size_bytes was required in v1 and is optional in v2: the only reader
+        # of a size_bytes anywhere in this project is a2_selection's
+        # max_size_bytes gate, which reads the RETRIEVAL CANDIDATE's metadata
+        # before ingest -- never the ledger. sha256 carries identity; byte
+        # count carried nothing.
+        for field in ("format", "uri", "role", "sha256"):
             if field not in r or r[field] is None:
                 out.append(
                     Violation(
@@ -382,6 +530,182 @@ def _validate_license(license_block, prefix, out):
         )
 
 
+def _validate_identity(identity, prefix, out):
+    """semantics.identity: how this asset's category/aliases were decided.
+
+    Without it the identity claim is unattributable -- `category: "cup"` reads
+    the same whether a human read it off the source page, a retrieval run
+    asserted it because "cup" was the query, or nobody knows. Those have very
+    different failure modes: a `requested_by_acquire` identity is what we
+    ASKED for, so a loose search gate silently yields an asset that is not
+    actually a cup while grounding keeps selecting it as one."""
+    if not isinstance(identity, dict):
+        out.append(Violation(prefix, "bad_type", "semantics.identity is not a dict"))
+        return
+    basis = identity.get("basis")
+    if basis not in IDENTITY_BASIS:
+        out.append(
+            Violation(
+                f"{prefix}.basis",
+                "bad_enum",
+                f"identity basis {basis!r} not in {IDENTITY_BASIS}",
+            )
+        )
+    verified = identity.get("verified")
+    if not isinstance(verified, bool):
+        out.append(
+            Violation(
+                f"{prefix}.verified",
+                "bad_type",
+                f"identity verified must be a bool, got {type(verified).__name__}",
+            )
+        )
+
+
+def _validate_inertial(block, prefix, out):
+    """physical.inertial = {com_m, inertia_diagonal_kgm2, [inertia_off_diagonal],
+    status, [estimator], basis}. Centre of mass and inertia share ONE envelope
+    because they share one provenance: both come off the URDF inertial block,
+    or both are inferred by the engine from collision geometry -- there is no
+    real case where one is measured and the other guessed."""
+    if not isinstance(block, dict):
+        out.append(Violation(prefix, "unknown_shape", "inertial is not a dict"))
+        return
+    status = block.get("status")
+    if status not in MASS_STATUS:
+        out.append(
+            Violation(
+                f"{prefix}.status",
+                "bad_enum",
+                f"status {status!r} not in {MASS_STATUS}",
+            )
+        )
+    elif status == "known" and (
+        block.get("com_m") is None and block.get("inertia_diagonal_kgm2") is None
+    ):
+        out.append(
+            Violation(
+                f"{prefix}.status",
+                "unknown_shape",
+                "status=known but neither com_m nor inertia_diagonal_kgm2 is set",
+            )
+        )
+    elif status == "estimated" and not block.get("estimator"):
+        out.append(
+            Violation(
+                f"{prefix}.estimator",
+                "estimator_required",
+                "status=estimated requires an estimator",
+            )
+        )
+    basis = block.get("basis")
+    if basis not in INERTIAL_BASIS:
+        out.append(
+            Violation(
+                f"{prefix}.basis",
+                "bad_enum",
+                f"inertial basis {basis!r} not in {INERTIAL_BASIS}",
+            )
+        )
+    for field, length in (("com_m", 3), ("inertia_diagonal_kgm2", 3)):
+        value = block.get(field)
+        if value is None:
+            continue
+        if not isinstance(value, (list, tuple)) or len(value) != length:
+            out.append(
+                Violation(
+                    f"{prefix}.{field}",
+                    "bad_type",
+                    f"{field} must be null or a {length}-vector",
+                )
+            )
+
+
+def _validate_source(source, prefix, out):
+    """source.kind selects the branch; the branches are disjoint."""
+    if not isinstance(source, dict):
+        out.append(Violation(prefix, "unknown_shape", "source is not a dict"))
+        return
+    kind = source.get("kind")
+    if kind not in SOURCE_KINDS:
+        out.append(
+            Violation(
+                f"{prefix}.kind",
+                "bad_source_kind",
+                f"source kind {kind!r} not in {SOURCE_KINDS}",
+            )
+        )
+        return  # branch tables are meaningless without a valid branch
+
+    model_node = {"source": source}
+    for path in REQUIRED_SOURCE[kind]:
+        if _get(model_node, path) is _MISSING:
+            out.append(
+                Violation(
+                    f"{prefix}.{path[len('source.') :]}",
+                    "missing",
+                    f"source.kind={kind} requires {path}",
+                )
+            )
+    for path in NOT_NULLABLE_SOURCE[kind]:
+        if _get(model_node, path) is None:
+            out.append(
+                Violation(
+                    f"{prefix}.{path[len('source.') :]}",
+                    "missing",
+                    f"source.kind={kind} requires a non-null {path}",
+                )
+            )
+    for path in FOREIGN_SOURCE_FIELDS[kind]:
+        if _get(model_node, path) is not _MISSING:
+            out.append(
+                Violation(
+                    f"{prefix}.{path[len('source.') :]}",
+                    "source_field_mismatch",
+                    f"source.kind={kind} must not carry {path} "
+                    f"(it belongs to the other branch)",
+                )
+            )
+
+    # Acquisition dates: same canonical YYYY-MM-DD rule on both branches, and
+    # the same violation code -- retrieved_at and generated_at are the same
+    # question ("when did this model enter our possession") asked of the two
+    # ways a model can come into existence.
+    for field in ("retrieved_at", "generator.generated_at"):
+        value = _get(model_node, f"source.{field}")
+        if value is _MISSING or value is None:
+            continue
+        if not _is_iso_date(value):
+            out.append(
+                Violation(
+                    f"{prefix}.{field}",
+                    "bad_timestamp",
+                    f"{field} {value!r} is not a canonical ISO date (YYYY-MM-DD)",
+                )
+            )
+
+    if kind == "generated":
+        params = _get(model_node, "source.generator.params")
+        if params is not _MISSING and not isinstance(params, dict):
+            out.append(
+                Violation(
+                    f"{prefix}.generator.params",
+                    "bad_type",
+                    "generator.params must be a dict (frozen verbatim, "
+                    "never interpreted by the validator)",
+                )
+            )
+        inp = _get(model_node, "source.generator.input")
+        if isinstance(inp, dict) and inp.get("type") not in ("text", "image", "video"):
+            out.append(
+                Violation(
+                    f"{prefix}.generator.input.type",
+                    "bad_enum",
+                    f"input type {inp.get('type')!r} not in ('text', 'image', 'video')",
+                )
+            )
+
+
 def _validate_verification(verifications, prefix, out):
     required = (
         "backend",
@@ -431,8 +755,23 @@ def _validate_verification(verifications, prefix, out):
             )
 
 
-def _validate_model(model, prefix, out):
+def _validate_model(model, prefix, out, profile=None):
     _check_required(model, REQUIRED_MODEL, prefix, out)
+
+    # Profile-conditional requirements. An unknown/absent profile adds none:
+    # validate_ledger has already reported it as bad_profile, and piling
+    # requirement failures on top of that would just bury the real cause.
+    for p in PROFILE_REQUIRED_MODEL.get(profile, ()):
+        if _get(model, p) is _MISSING:
+            full = f"{prefix}.{p}"
+            out.append(
+                Violation(
+                    full,
+                    "profile_requirement_unmet",
+                    f"profile={profile} requires {full} "
+                    f"(the value may be a structured unknown; the key may not be absent)",
+                )
+            )
 
     # present-but-null is invisible to the presence-only check above (the
     # key does exist); see NOT_NULLABLE_MODEL's docstring for which
@@ -488,27 +827,79 @@ def _validate_model(model, prefix, out):
             )
         )
 
+    inertial = _get(model, "physical.inertial")
+    if inertial is not _MISSING:
+        _validate_inertial(inertial, f"{prefix}.physical.inertial", out)
+
+    _check_size_invariant(model, prefix, out)
+
+    # extras is the deliberate escape hatch: structured data an upstream
+    # producer already emits (affordance masks, Young's modulus, whatever the
+    # generator attaches) that we have no reader for yet. Typed but never
+    # interpreted, and it can never influence usable/missing -- so it costs
+    # nothing to keep and loses nothing that a later field promotion would
+    # need. Borrowed wholesale from glTF's `extras` plus its round-trip rule:
+    # what you don't understand, you preserve rather than drop.
+    extras = model.get("extras")
+    if extras is not None and not isinstance(extras, dict):
+        out.append(
+            Violation(
+                f"{prefix}.extras",
+                "bad_type",
+                f"extras must be a dict, got {type(extras).__name__}",
+            )
+        )
+
     license_block = _get(model, "source.license")
     if license_block is not _MISSING:
         _validate_license(license_block, f"{prefix}.source.license", out)
 
-    retrieved_at = _get(model, "source.retrieved_at")
-    if (
-        retrieved_at is not _MISSING
-        and retrieved_at is not None
-        and not _is_iso_date(retrieved_at)
-    ):
-        out.append(
-            Violation(
-                f"{prefix}.source.retrieved_at",
-                "bad_timestamp",
-                f"retrieved_at {retrieved_at!r} is not a valid ISO date",
-            )
-        )
+    source = model.get("source")
+    if source is not None:
+        _validate_source(source, f"{prefix}.source", out)
 
     verifications = model.get("verification")
     if verifications is not None:
         _validate_verification(verifications, f"{prefix}.verification", out)
+
+
+def _check_size_invariant(model, prefix, out):
+    """max(mesh_bbox_m) == actual_max_dim_m * scale, to 1e-3 relative.
+
+    mesh_bbox_m is MEASURED off the converted mesh; actual_max_dim_m is the
+    PRE-scale dimension the sizing decision was taken against. Keeping both is
+    redundant only in the sense that a checksum is redundant: when they stop
+    agreeing, a converter's unit assumption has silently changed -- the exact
+    failure that is invisible to the eye and catastrophic downstream (an
+    asset 100x too large still validates field-by-field).
+
+    v2 pins actual_max_dim_m to the pre-scale reading, which is what
+    conventions.resolve_size has always produced. backfill_upstream wrote the
+    post-scale reading instead (its own max(mesh_bbox_m)), which is why 12 of
+    39 models on disk failed this identity before migration: same field name,
+    two meanings, two writers. That is the ambiguity this check exists to
+    prevent from recurring."""
+    bbox = _get(model, "physical.mesh_bbox_m")
+    sizing = _get(model, "physical.size_resolution")
+    if not isinstance(bbox, (list, tuple)) or not bbox or not isinstance(sizing, dict):
+        return
+    actual = sizing.get("actual_max_dim_m")
+    scale = sizing.get("scale")
+    if not isinstance(actual, (int, float)) or not isinstance(scale, (int, float)):
+        return
+    if not all(isinstance(e, (int, float)) for e in bbox):
+        return
+    expected = actual * scale
+    measured = max(bbox)
+    if abs(measured - expected) > 1e-3 * max(abs(expected), 1e-9):
+        out.append(
+            Violation(
+                f"{prefix}.physical.size_resolution.actual_max_dim_m",
+                "size_invariant_mismatch",
+                f"max(mesh_bbox_m)={measured!r} != actual_max_dim_m*scale="
+                f"{expected!r} (actual_max_dim_m is the PRE-scale dimension)",
+            )
+        )
 
 
 def validate_ledger(ledger, *, check_files=True):
@@ -556,6 +947,19 @@ def validate_ledger(ledger, *, check_files=True):
     if kind is not None and "kind" in ledger and kind not in KINDS:
         out.append(Violation("kind", "bad_enum", f"kind {kind!r} not in {KINDS}"))
 
+    profile = ledger.get("profile")
+    if profile is not None and "profile" in ledger and profile not in PROFILES:
+        out.append(
+            Violation(
+                "profile", "bad_profile", f"profile {profile!r} not in {PROFILES}"
+            )
+        )
+        profile = None  # don't let an invalid profile select a requirement table
+
+    identity = _get(ledger, "semantics.identity")
+    if identity is not _MISSING:
+        _validate_identity(identity, "semantics.identity", out)
+
     aliases = _get(ledger, "semantics.aliases")
     if aliases is not None and aliases != _MISSING and aliases == []:
         out.append(
@@ -582,7 +986,26 @@ def validate_ledger(ledger, *, check_files=True):
                 mid = m.get("model_id")
                 if mid is not None:
                     seen_ids.setdefault(mid, []).append(i)
-                _validate_model(m, f"models.{i}", out)
+                _validate_model(m, f"models.{i}", out, profile=profile)
+                # cross_backend's other half: declaring the intent to migrate
+                # and owning no target-backend representation is a debt, and
+                # this is where it becomes visible. Under sapien_only the same
+                # absence is simply correct, which is the whole point of
+                # asking the asset to declare what it is for.
+                if profile == "cross_backend":
+                    reps = m.get("representations") or []
+                    if not any(
+                        r.get("backend") == "isaacsim" and r.get("role") != "snapshot"
+                        for r in reps
+                    ):
+                        out.append(
+                            Violation(
+                                f"models.{i}.representations",
+                                "profile_requirement_unmet",
+                                "profile=cross_backend requires a non-snapshot "
+                                "isaacsim representation",
+                            )
+                        )
                 if kind == "articulated":
                     articulation = m.get("articulation")
                     if (
@@ -646,7 +1069,19 @@ def derive_usable(ledger, model_id):
 
     missing = []
     prefix = f"models[model_id={model_id}]"
+    profile = ledger.get("profile")
     for p in REQUIRED_MODEL:
+        if _get(model, p) is _MISSING:
+            missing.append(f"{prefix}.{p}")
+
+    # Branch and profile requirements count toward usable exactly as the
+    # unconditional ones do -- "usable" means "meets the contract this asset
+    # declared", not "meets some fixed subset of it".
+    source_kind = _get(model, "source.kind")
+    for p in REQUIRED_SOURCE.get(source_kind, ()):
+        if _get(model, p) is _MISSING:
+            missing.append(f"{prefix}.{p}")
+    for p in PROFILE_REQUIRED_MODEL.get(profile, ()):
         if _get(model, p) is _MISSING:
             missing.append(f"{prefix}.{p}")
 
@@ -659,6 +1094,10 @@ def derive_usable(ledger, model_id):
         r.get("backend") == "sapien" and r.get("role") != "snapshot" for r in reps
     ):
         missing.append(f"{prefix}.representations[backend=sapien]")
+    if profile == "cross_backend" and not any(
+        r.get("backend") == "isaacsim" and r.get("role") != "snapshot" for r in reps
+    ):
+        missing.append(f"{prefix}.representations[backend=isaacsim]")
 
     if ledger.get("kind") == "articulated":
         articulation = model.get("articulation")
@@ -680,7 +1119,6 @@ def new_model_entry(
     mesh_bbox_m,
     mesh_up_axis,
     origin_convention,
-    scale_applied,
     size_resolution,
     conventions,
     source,
@@ -688,9 +1126,16 @@ def new_model_entry(
     articulation=None,
     mass_override=None,
     friction_override=None,
+    inertial=None,
+    extras=None,
 ):
     """Assemble one models[] entry. mass/friction default to the
-    conservative unknown shape unless an override is supplied."""
+    conservative unknown shape unless an override is supplied.
+
+    v2: `scale_applied` is gone -- it duplicated size_resolution["scale"]
+    exactly, in every writer. `inertial` is optional here and required by the
+    validator only under profile=cross_backend, so a sapien_only writer need
+    not think about it at all."""
     mass_kg = mass_override or {
         "value": None,
         "status": "unknown",
@@ -703,22 +1148,40 @@ def new_model_entry(
         "runtime_default": None,
         "runtime_default_basis": "none",
     }
-    return {
+    physical = {
+        "mesh_bbox_m": mesh_bbox_m,
+        "mesh_up_axis": mesh_up_axis,
+        "origin_convention": origin_convention,
+        "size_resolution": size_resolution,
+        "conventions": conventions,
+        "mass_kg": mass_kg,
+        "friction": friction,
+    }
+    if inertial is not None:
+        physical["inertial"] = inertial
+    entry = {
         "model_id": model,
-        "physical": {
-            "mesh_bbox_m": mesh_bbox_m,
-            "mesh_up_axis": mesh_up_axis,
-            "origin_convention": origin_convention,
-            "scale_applied": scale_applied,
-            "size_resolution": size_resolution,
-            "conventions": conventions,
-            "mass_kg": mass_kg,
-            "friction": friction,
-        },
+        "physical": physical,
         "representations": representations,
         "articulation": articulation or {},
         "source": source,
         "verification": verification,
+    }
+    if extras is not None:
+        entry["extras"] = extras
+    return entry
+
+
+def unknown_inertial(basis="engine_derived"):
+    """The honest default for a model whose mass distribution the engine will
+    infer from collision geometry. Not a placeholder: it states positively
+    that no asset-side measurement exists, which is what a transfer compiler
+    needs to know when two backends disagree about how something topples."""
+    return {
+        "com_m": None,
+        "inertia_diagonal_kgm2": None,
+        "status": "unknown",
+        "basis": basis,
     }
 
 
@@ -728,6 +1191,8 @@ def upsert_model(
     asset,
     category,
     kind,
+    profile,
+    identity,
     aliases,
     colors,
     materials,
@@ -739,7 +1204,22 @@ def upsert_model(
     """ledger=None creates a new per-asset ledger. If ledger already exists,
     asset-level fields must match what's already on disk (ValueError on
     drift). A model_entry with an existing model_id replaces that entry
-    wholesale (re-import semantics); otherwise it's appended."""
+    wholesale (re-import semantics); otherwise it's appended.
+
+    `profile` and `identity` are required, without defaults, on purpose. A
+    default profile would be the writer quietly deciding what an asset is for;
+    a default identity basis would be the writer quietly asserting where a
+    category came from. Both are exactly the kind of unattributed claim the
+    v2 contract exists to make impossible.
+
+    `semantic_name` still falls back to `category`, and in 31/31 ledgers on
+    disk it IS the category. That is fine and deliberate: upstream's scorer
+    reads entry.semantic_name normalised (lower(), spaces -> underscores) and
+    compares it for EQUALITY against a single-token query category, so a
+    descriptive value like "red plastic mug" could never match anything and
+    would only delete a rung from the ladder. The field exists for structural
+    isomorphism with the upstream catalog, not to carry a description --
+    descriptive text belongs in extras."""
     semantic_name = semantic_name or category
 
     if ledger is None:
@@ -749,11 +1229,13 @@ def upsert_model(
             "category": category,
             "semantic_name": semantic_name,
             "kind": kind,
+            "profile": profile,
             "tags": list(tags),
             "semantics": {
                 "aliases": list(aliases),
                 "colors": list(colors),
                 "materials": list(materials),
+                "identity": dict(identity),
             },
             "models": [],
         }
@@ -767,11 +1249,13 @@ def upsert_model(
         expected = {
             "category": category,
             "kind": kind,
+            "profile": profile,
             "semantic_name": semantic_name,
             "tags": list(tags),
             "semantics.aliases": list(aliases),
             "semantics.colors": list(colors),
             "semantics.materials": list(materials),
+            "semantics.identity": dict(identity),
         }
         for path, value in expected.items():
             current = _get(ledger, path)

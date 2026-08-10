@@ -1,5 +1,5 @@
 {
-  "schema_version": "asset_ledger.v1",
+  "schema_version": "asset_ledger.v2",
   "asset_id": "robotwin_036_cabinet",
   "category": "cabinet",
   "semantic_name": "cabinet",
@@ -18,7 +18,12 @@
     "materials": [
       "metal",
       "wood"
-    ]
+    ],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "external/env-gen-github/data/scene_gen/asset_catalog.json",
+      "verified": false
+    }
   },
   "models": [
     {
@@ -31,10 +36,9 @@
         ],
         "mesh_up_axis": "Z",
         "origin_convention": "base-at-floor",
-        "scale_applied": 0.27,
         "size_resolution": {
           "mode": "upstream_catalog",
-          "actual_max_dim_m": 0.43591365,
+          "actual_max_dim_m": 1.6144949999999998,
           "scale": 0.27,
           "reference_max_dim_m": null,
           "reference_assets": [],
@@ -71,6 +75,12 @@
           "status": "unknown",
           "runtime_default": null,
           "runtime_default_basis": "none"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "urdf_inertial"
         }
       },
       "representations": [
@@ -143,9 +153,11 @@
           "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
         },
         "retrieved_at": "2025-06-27",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/036_cabinet/SOURCE_MANIFEST.json"
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/036_cabinet/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
       },
       "verification": []
     }
-  ]
+  ],
+  "profile": "cross_backend"
 }

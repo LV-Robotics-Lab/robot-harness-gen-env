@@ -1,5 +1,5 @@
 {
-  "schema_version": "asset_ledger.v1",
+  "schema_version": "asset_ledger.v2",
   "asset_id": "external_314_cabinet",
   "category": "cabinet",
   "semantic_name": "cabinet",
@@ -14,7 +14,12 @@
       "cabinet"
     ],
     "colors": [],
-    "materials": []
+    "materials": [],
+    "identity": {
+      "basis": "unknown",
+      "evidence": null,
+      "verified": false
+    }
   },
   "models": [
     {
@@ -27,7 +32,6 @@
         ],
         "mesh_up_axis": "Z",
         "origin_convention": "base-at-floor",
-        "scale_applied": 0.5545248162554224,
         "size_resolution": {
           "mode": "match_category",
           "actual_max_dim_m": 0.7861030511558056,
@@ -67,6 +71,12 @@
           "status": "unknown",
           "runtime_default": null,
           "runtime_default_basis": "none"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "urdf_inertial"
         }
       },
       "representations": [
@@ -157,7 +167,8 @@
           "checked_by": "owner-directed research 2026-08-09"
         },
         "retrieved_at": "2026-08-03",
-        "source_manifest_path": "../data/asset_library/314_cabinet/0/export_report.json"
+        "source_manifest_path": "../data/asset_library/314_cabinet/0/export_report.json",
+        "kind": "retrieved"
       },
       "verification": [
         {
@@ -171,5 +182,6 @@
         }
       ]
     }
-  ]
+  ],
+  "profile": "cross_backend"
 }

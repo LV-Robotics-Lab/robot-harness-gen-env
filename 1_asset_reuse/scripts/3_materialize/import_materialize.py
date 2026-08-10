@@ -53,6 +53,18 @@ parser.add_argument("--library-dir", required=True)
 parser.add_argument("--out", required=True)
 parser.add_argument("--overrides-fragment", required=True)
 parser.add_argument(
+    "--identity-basis",
+    required=True,
+    choices=("manifest_human", "requested_by_acquire"),
+    help="where these assets' category/aliases came from: hand-written into "
+    "a manifest, or asserted as a retrieval query by acquire_batch",
+)
+parser.add_argument(
+    "--identity-evidence",
+    default=None,
+    help="path to the manifest / selection evidence backing that claim",
+)
+parser.add_argument(
     "--reference-catalog",
     default="/home/jingxiang/yuxin/env-gen-dev/external/env-gen-github/data/scene_gen/asset_catalog.json",
     help="catalog used for convention inheritance and category sizing",
@@ -65,6 +77,12 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+
+IDENTITY = {
+    "basis": args.identity_basis,
+    "evidence": args.identity_evidence,
+    "verified": False,
+}
 staging = Path(args.staging)
 lib = Path(args.library_dir)
 out = Path(args.out)
@@ -536,6 +554,7 @@ for idx, r in worker_records:
             else lib / "_source" / r["group"] / "SOURCE_MANIFEST.json"
         )
         source_v1 = {
+            "kind": "retrieved",
             "library": "NVIDIA Isaac Assets 5.1",
             "group": r["group"],
             "file": r["usd"],
@@ -595,7 +614,6 @@ for idx, r in worker_records:
             mesh_bbox_m=size,
             mesh_up_axis="Y",
             origin_convention="bottom-center",
-            scale_applied=size_res["scale"],
             size_resolution=size_res,
             conventions=conv_v1,
             source=source_v1,
@@ -610,6 +628,11 @@ for idx, r in worker_records:
             asset=asset,
             category=meta.get("category", "unknown"),
             kind="rigid",
+            # Every model this path ingests mirrors a source USD, which is
+            # registered as its isaacsim representation a few lines above --
+            # so cross_backend is a statement of fact here, not a guess.
+            profile="cross_backend",
+            identity=IDENTITY,
             aliases=aliases,
             colors=colors,
             materials=[],
@@ -625,6 +648,11 @@ for idx, r in worker_records:
             asset=asset,
             category=meta.get("category", "unknown"),
             kind="rigid",
+            # Every model this path ingests mirrors a source USD, which is
+            # registered as its isaacsim representation a few lines above --
+            # so cross_backend is a statement of fact here, not a guess.
+            profile="cross_backend",
+            identity=IDENTITY,
             aliases=aliases,
             colors=colors,
             materials=[],

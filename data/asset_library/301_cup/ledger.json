@@ -1,5 +1,5 @@
 {
-  "schema_version": "asset_ledger.v1",
+  "schema_version": "asset_ledger.v2",
   "asset_id": "external_301_cup",
   "category": "cup",
   "semantic_name": "cup",
@@ -17,7 +17,12 @@
     "colors": [
       "red"
     ],
-    "materials": []
+    "materials": [],
+    "identity": {
+      "basis": "manifest_human",
+      "evidence": "1_asset_reuse/configs/external_manifest.json",
+      "verified": false
+    }
   },
   "models": [
     {
@@ -30,7 +35,6 @@
         ],
         "mesh_up_axis": "Y",
         "origin_convention": "bottom-center",
-        "scale_applied": 1.0,
         "size_resolution": {
           "mode": "match_category",
           "actual_max_dim_m": 0.11699008680157164,
@@ -70,6 +74,12 @@
           "status": "unknown",
           "runtime_default": null,
           "runtime_default_basis": "none"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
         }
       },
       "representations": [
@@ -136,7 +146,8 @@
           "terms_note": "NVIDIA asset EULA; YCB dataset terms for ycb group"
         },
         "retrieved_at": "2026-08-10",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json"
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
       },
       "verification": [
         {
@@ -156,5 +167,6 @@
         }
       ]
     }
-  ]
+  ],
+  "profile": "cross_backend"
 }

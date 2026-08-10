@@ -329,6 +329,7 @@ size_resolution = report.get("size_resolution") or {
 
 source_usd_path = Path(args.source_usd)
 source_block = {
+    "kind": "retrieved",
     "library": "NVIDIA Isaac Assets 5.1",
     "group": "Sektion_Cabinet",
     "file": source_usd_path.name,
@@ -360,13 +361,13 @@ model_entry = ledger.new_model_entry(
     mesh_bbox_m=bbox,
     mesh_up_axis="Z",
     origin_convention="base-at-floor",
-    scale_applied=report.get("scale_applied", 1.0),
     size_resolution=size_resolution,
     conventions=conventions_block,
     source=source_block,
     verification=[verification_entry],
     articulation=articulation,
     mass_override=mass_override,
+    inertial=ledger.unknown_inertial("urdf_inertial"),
 )
 
 lib_dir = Path(args.library_dir)
@@ -377,6 +378,16 @@ led = ledger.upsert_model(
     asset=asset,
     category=category,
     kind="articulated",
+    # The source USD is registered as this model's isaacsim representation
+    # (see representations above), so the asset is cross-backend capable by
+    # construction; inertial rides along as a structured unknown whose basis
+    # says the engine reads the mass distribution out of the URDF.
+    profile="cross_backend",
+    # Single-articulated-asset imports go through no manifest at all, so
+    # there is nothing to attribute the category claim to. The 2026-08-10
+    # semantics audit found exactly 2 such assets and this is why they read
+    # as unknown -- recording that honestly beats inventing a basis.
+    identity={"basis": "unknown", "evidence": None, "verified": False},
     aliases=[category],
     colors=[],
     materials=[],
