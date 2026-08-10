@@ -1,5 +1,5 @@
 {
-  "globals": {"top_k": 5, "max_fallback": 2, "max_size_bytes": 200000000, "license_gate": false},
+  "globals": {"top_k": 8, "max_fallback": 4, "max_size_bytes": 200000000, "license_gate": false},
   "providers": {
     "robotwin_local": {"enabled": true, "tier": 0,
       "catalog": "data/scene_gen_ext/asset_catalog.json"},

@@ -3,7 +3,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "retire_asset.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "ledger" / "retire_asset.py"
 
 
 def _model(model_id, vis, col, snap):

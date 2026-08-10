@@ -6,7 +6,7 @@ import pytest
 yaml = pytest.importorskip("yaml")
 
 REPO = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO / "1_asset_reuse/scripts"))
+sys.path.insert(0, str(REPO / "1_asset_reuse/scripts/ledger"))
 sys.path.insert(0, str(REPO / "1_asset_reuse"))
 from lib import ledger
 from tests.test_ledger import make_valid

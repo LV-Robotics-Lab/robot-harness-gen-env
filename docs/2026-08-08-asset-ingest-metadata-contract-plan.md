@@ -1,4 +1,32 @@
 # asset_ledger.v1 入库 metadata 契约 · 实现计划（r2）
+> ⚠️ **实现现状 · 与本文差异（2026-08-10，提交 `df9cb66`）**
+>
+> `1_asset_reuse/scripts/` 已按**流程顺序**重新组织，本文正文里的**所有脚本路径均已过时**
+> ——包括 §Files 表、各 Task 的 `git add` / `git commit` 逐字命令、以及 Task 8 Step 5 的
+> e2e 命令。执行时按下表替换路径，**以下表为准**：
+>
+> | 本文写的 | 实际位置 |
+> |---|---|
+> | `scripts/b_batch/import_materialize.py` | `scripts/3_materialize/import_materialize.py` |
+> | `scripts/b_reverse/s13b_validate_articulated.py` | `scripts/4_validate/s13b_validate_articulated.py` |
+> | `scripts/c_catalog/s11_runtime_load_sweep.py` | `scripts/4_validate/s11_runtime_load_sweep.py` |
+> | `scripts/a_forward/s5_check_ir.py` | `scripts/ledger/s5_check_ir.py` |
+> | `scripts/a_forward/s3_validate_sapien.py` | `scripts/4_validate/s3_validate_sapien.py` |
+> | `scripts/c_catalog/s9_build_shadow_root.py` | `scripts/5_catalog/s9_build_shadow_root.py` |
+> | `scripts/c_catalog/s10_e2e_scene.sh` | `scripts/5_catalog/s10_e2e_scene.sh` |
+> | `scripts/gen_fragment.py` | `scripts/ledger/gen_fragment.py` |
+> | `scripts/backfill_ledger_v1.py` | `scripts/ledger/backfill_ledger_v1.py` |
+>
+> 另有三点影响本文：
+> 1. **`s5_check_ir.py` / `s3_validate_sapien.py` 没有被归档**——线 A（正向转换）的 6 个脚本
+>    移入 `1_asset_reuse/archive/1_forward_convert/`，但这两个因本计划 Task 5/7 仍需消费，
+>    已按语义归位到上表位置，仍在生产链路上。
+> 2. **Task 8 Step 5 里"s10 头部写死的路径若因重组失效"那条已无需处理**——s10/s12 用的是
+>    `$HOME/yuxin/env-gen-dev` 绝对路径，不含脚本夹名，重组后未受影响。
+> 3. **`run_smoke.sh` 从 11 步缩为 4 步**（线 A 的 7 步随归档移除，原步 8–11 重编号为 1–4）。
+>
+> 计划的**内容**（改动点、验收口径、"行号按当前文件重定位"的纪律）不受影响，只有路径变了。
+> 当前目录地图见 `1_asset_reuse/scripts/README.md`。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

@@ -25,18 +25,16 @@ import numpy as np
 import sapien
 import trimesh
 
-# lib/ is two levels up from scripts/b_batch/ (parents[2]), gen_fragment.py is
-# one level up in scripts/ (parents[1]) -- same nesting pattern as
-# s13b_validate_articulated.py. Both inserts must land before any `from lib
-# import ...` below (fix I-3: the old `import conventions as conv_lib` used a
-# separate, miscalculated `parent.parent / "lib"` insert left over from the
-# scripts/ reorg into b_batch/ -- pointed at a nonexistent scripts/lib,
-# breaking both production entry points; folded into one correct set of
-# inserts + `from lib import conventions` so there's exactly one loaded copy
-# of lib.conventions, not a second shadow module under a bare "conventions"
-# name).
+# lib/ is two levels up from scripts/3_materialize/ (parents[2]); gen_fragment.py
+# lives in scripts/ledger/ (parents[1] / "ledger"). Both inserts must land before
+# any `from lib import ...` below (fix I-3: an earlier `import conventions as
+# conv_lib` used a separate, miscalculated `parent.parent / "lib"` insert that
+# pointed at a nonexistent scripts/lib and broke both production entry points;
+# folded into one correct set of inserts + `from lib import conventions` so
+# there's exactly one loaded copy of lib.conventions, not a second shadow module
+# under a bare "conventions" name).
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ledger"))
 from lib import conventions as conv_lib  # noqa: E402
 from lib import ledger as ledger_mod  # noqa: E402
 from lib.ledger import (  # noqa: E402
