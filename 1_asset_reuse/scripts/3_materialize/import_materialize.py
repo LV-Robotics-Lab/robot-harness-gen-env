@@ -467,7 +467,14 @@ for idx, r in worker_records:
                 "role": "collision",
                 "sha256": sha256(col),
                 "size_bytes": col.stat().st_size,
-                "metadata": {"note": "copy of visual; convex decomposition at load"},
+                "metadata": {
+                    "collision_mode": row["collision_mode"],
+                    "note": (
+                        "offline convex decomposition by coacd (threshold=0.05)"
+                        if row["collision_mode"].startswith("coacd")
+                        else "copy of visual; convex decomposition at load"
+                    ),
+                },
             },
             {
                 "format": "usd",
