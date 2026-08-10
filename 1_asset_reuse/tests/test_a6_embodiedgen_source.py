@@ -157,7 +157,7 @@ def test_fetch_asset_downloads_urdf_and_mesh_files_with_hashes(tmp_path):
 
     assert len(result["files"]) == 3
     for f in result["files"]:
-        assert (dest / f).is_file() or (dest.parent / f).is_file() or True
+        assert (dest / f).is_file()
     written = {str(f) for f in result["files"]}
     assert any(w.endswith("soap_dish_003.urdf") for w in written)
     assert any(w.endswith("soap_dish_003.obj") for w in written)
@@ -177,6 +177,7 @@ def test_fetch_asset_skips_video_and_ply(tmp_path):
         [
             _tree_entry(f"{mesh_dir}/soap_dish_003.obj", 10),
             _tree_entry(f"{mesh_dir}/gs_model.ply", 10),
+            _tree_entry(f"{mesh_dir}/video.mp4", 10),
         ]
     ).encode()
 
@@ -187,8 +188,39 @@ def test_fetch_asset_skips_video_and_ply(tmp_path):
             return b"<robot></robot>"
         if url.endswith(".ply"):
             raise AssertionError(".ply must not be fetched")
+        if url.endswith(".mp4"):
+            raise AssertionError(".mp4 must not be fetched")
         return b"data"
 
     p._fetch = fetch
     result = p.fetch_asset(candidate, tmp_path / "fetched2")
     assert not any(str(f).endswith(".ply") for f in result["files"])
+    assert not any(str(f).endswith(".mp4") for f in result["files"])
+
+
+def test_fetch_asset_pins_mesh_files_inside_dest_dir(tmp_path):
+    """A malicious/malformed tree-listing entry with a path-traversal
+    filename (e.g. from a compromised or misbehaving HF API response) must
+    not be able to write outside dest_dir -- only the basename is used for
+    the local path, never the dataset-supplied directory structure."""
+    p = make_provider(tmp_path)
+    candidate = p.search("soap dish")[0]
+
+    mesh_dir = "dataset/bathroom_supplies/bath_products/u1soapdish/mesh"
+    tree_listing = json.dumps(
+        [_tree_entry(f"{mesh_dir}/../../../../evil.obj", 10)]
+    ).encode()
+
+    def fetch(url, timeout_s=60):
+        if "/api/datasets/" in url and url.endswith("/mesh"):
+            return tree_listing
+        return b"payload"
+
+    p._fetch = fetch
+    dest = tmp_path / "fetched3"
+    result = p.fetch_asset(candidate, dest)
+
+    for f in result["files"]:
+        local_path = (dest / f).resolve()
+        assert dest.resolve() in local_path.parents or local_path == dest.resolve()
+    assert not (tmp_path / "evil.obj").exists()

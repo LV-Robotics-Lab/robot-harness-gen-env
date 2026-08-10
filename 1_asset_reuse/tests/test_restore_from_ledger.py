@@ -260,6 +260,26 @@ def test_verify_exit_code_zero_when_all_ok(tmp_path):
     assert code == 0
 
 
+def test_verify_counts_corrupt_ledger_as_a_problem(tmp_path):
+    """A ledger.json that fails to parse must not be silently skipped -- it
+    has to surface as a problem (LEDGER_CORRUPT) and fail the exit code,
+    same as any other asset-integrity failure."""
+    lib = tmp_path / "asset_library"
+    d = lib / "301_soap_dish"
+    d.mkdir(parents=True)
+    (d / "ledger.json").write_text("{not valid json")
+
+    results = rfl.verify_library(lib)
+    assert len(results) == 1
+    assert results[0]["asset"] == "301_soap_dish"
+    assert results[0]["status"] == "LEDGER_CORRUPT"
+    assert len(results[0]["problems"]) == 1
+    assert results[0]["problems"][0]["status"] == "LEDGER_CORRUPT"
+
+    code = rfl.main(["--library-dir", str(lib)])
+    assert code != 0
+
+
 # ---------------------------------------------------------------------------
 # restore
 # ---------------------------------------------------------------------------

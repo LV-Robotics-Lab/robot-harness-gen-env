@@ -52,6 +52,12 @@ def _default_fetch(url, timeout_s=60):
 
 
 def iter_ledgers(library_dir, asset_filter=None):
+    """Yields (asset_name, ledger, error) for every data/asset_library/*/
+    ledger.json. `error` is None on success; on a JSON parse failure it's a
+    message describing the failure and `ledger` is None -- corruption must
+    be surfaced to callers (a verify tool that silently skips an unreadable
+    ledger is hiding exactly the kind of problem it exists to catch), not
+    dropped on the floor."""
     lib = Path(library_dir)
     if not lib.is_dir():
         return
@@ -65,15 +71,25 @@ def iter_ledgers(library_dir, asset_filter=None):
             continue
         try:
             ledger = json.loads(lp.read_text())
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as exc:
+            yield d.name, None, f"{type(exc).__name__}: {exc}"
             continue
-        yield d.name, ledger
+        yield d.name, ledger, None
 
 
 def verify_library(library_dir, asset_filter=None):
-    """Per-asset OK/MISSING/HASH_MISMATCH report. Read-only."""
+    """Per-asset OK/MISSING/HASH_MISMATCH/LEDGER_CORRUPT report. Read-only."""
     results = []
-    for asset, ledger in iter_ledgers(library_dir, asset_filter):
+    for asset, ledger, error in iter_ledgers(library_dir, asset_filter):
+        if error is not None:
+            results.append(
+                {
+                    "asset": asset,
+                    "status": "LEDGER_CORRUPT",
+                    "problems": [{"status": "LEDGER_CORRUPT", "error": error}],
+                }
+            )
+            continue
         problems = []
         for model in ledger.get("models", []):
             for i, rep in enumerate(model.get("representations", [])):
@@ -129,7 +145,7 @@ def _load_source_manifest(path):
 
 def _resolve_download_url(prefix, filename):
     if prefix.startswith("http://") or prefix.startswith("https://"):
-        return prefix.rstrip("/") + "/" + filename
+        return prefix.rstrip("/") + "/" + urllib.parse.quote(filename)
     return BUCKET + "/" + urllib.parse.quote(prefix.rstrip("/") + "/" + filename)
 
 
@@ -140,7 +156,12 @@ def restore_library(library_dir, asset_filter=None, fetch_fn=None):
     the catalog; the caller (main/CLI) prints the catalog-rebuild hint."""
     fetch_fn = fetch_fn or _default_fetch
     restored, mismatched, unrecoverable = [], [], []
-    for asset, ledger in iter_ledgers(library_dir, asset_filter):
+    for asset, ledger, error in iter_ledgers(library_dir, asset_filter):
+        if error is not None:
+            unrecoverable.append(
+                {"asset": asset, "reason": f"ledger.json is corrupt: {error}"}
+            )
+            continue
         for model in ledger.get("models", []):
             source = model.get("source", {})
             manifest = _load_source_manifest(source.get("source_manifest_path"))
@@ -228,9 +249,6 @@ def main(argv=None, fetch_fn=None):
     )
     ap.add_argument("--asset", default=None, help="scope to a single asset id")
     ap.add_argument(
-        "--verify", action="store_true", help="verify only, no writes (default)"
-    )
-    ap.add_argument(
         "--restore",
         action="store_true",
         help="re-fetch MISSING representation files from recorded provenance",
@@ -243,9 +261,12 @@ def main(argv=None, fetch_fn=None):
     for r in results:
         print(f"{r['status']} {r['asset']}")
         for pr in r["problems"]:
-            print(
-                f"  {pr['status']} model={pr['model']} rep{pr['rep_index']} {pr['uri']}"
-            )
+            if pr["status"] == "LEDGER_CORRUPT":
+                print(f"  LEDGER_CORRUPT {pr['error']}")
+            else:
+                print(
+                    f"  {pr['status']} model={pr['model']} rep{pr['rep_index']} {pr['uri']}"
+                )
             problems_total += 1
     print(
         f"SUMMARY {'OK' if problems_total == 0 else 'PROBLEMS'} assets={len(results)} problems={problems_total}"
@@ -264,7 +285,9 @@ def main(argv=None, fetch_fn=None):
             f"MISMATCH {r['asset']} {r['uri']} -> quarantined at {r['quarantine_path']}"
         )
     for r in restore_result["unrecoverable"]:
-        print(f"UNRECOVERABLE {r['asset']} {r['uri']}: {r['reason']}")
+        print(
+            f"UNRECOVERABLE {r['asset']} {r.get('uri', '<ledger.json>')}: {r['reason']}"
+        )
     print(
         "Catalog was NOT rebuilt automatically -- restored files won't show up until "
         "you run (production catalog-rebuild flow, not this tool):\n"
