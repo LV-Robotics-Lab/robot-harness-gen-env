@@ -635,7 +635,7 @@ for idx, r in worker_records:
         if violations or not checks["pass"]:
             row["status"] = "rejected"
             row.setdefault("reasons", []).extend(
-                f"schema_violation:{v.code}" for v in violations
+                f"schema_violation:{v.code}:{v.path}" for v in violations
             )
         else:
             # I-1: whole-ledger write through the fcntl-locked atomic writer
