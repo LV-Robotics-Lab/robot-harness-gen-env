@@ -545,3 +545,127 @@ def test_malformed_entry_isolated_batch_completes(tmp_path, capsys):
     assert "FAIL <invalid> status=entry_error" in out
     assert "PASS cup status=reused_local" in out
     assert "categories_sha256" in evidence
+
+
+# ---- alias expansion / semantic screening (opt-in via expand_fn / screen_fn) ----
+
+
+def test_expand_fn_injects_extra_terms_into_query_and_records_expanded(tmp_path):
+    captured_queries = []
+
+    class CapturingProvider(FakeProvider):
+        def search(self, query, limit=20):
+            captured_queries.append(query)
+            return self.results
+
+    tiers = [
+        Tier(0, CapturingProvider("t0", [])),
+        Tier(1, CapturingProvider("t1", [cand("a/x.usd", 2.0)])),
+    ]
+
+    def expand_fn(category, aliases):
+        return {
+            "terms": [category, "extra_widget_term"],
+            "added": ["extra_widget_term"],
+            "source": "split",
+        }
+
+    rec = ab.process_entry(
+        {"category": "widget"},
+        tiers,
+        {"max_fallback": 0},
+        paths(tmp_path),
+        lambda cmd, env=None: 0,
+        expand_fn=expand_fn,
+    )
+    assert any("extra_widget_term" in q for q in captured_queries)
+    assert rec["query"]["expanded"] == ["extra_widget_term"]
+
+
+def test_screen_fn_rejects_top_candidate_and_fallback_succeeds(tmp_path):
+    p = paths(tmp_path)
+
+    def runner(cmd, env=None):
+        if "import_materialize.py" in str(cmd[1]):
+            d = p["library"] / "301_pitcher"
+            (d / "visual").mkdir(parents=True, exist_ok=True)
+            (d / "visual" / "base0.glb").write_bytes(b"x")
+            (d / "model_data0.json").write_text("{}")
+        return 0
+
+    tiers = [
+        Tier(0, FakeProvider("t0", [])),
+        Tier(
+            1, FakeProvider("t1", [cand("a/first.usd", 2.0), cand("a/second.usd", 1.0)])
+        ),
+    ]
+
+    def screen_fn(category, candidates):
+        top = candidates[0]
+        return {top.candidate_id: {"ok": False, "reason": "not a pitcher"}}
+
+    rec = ab.process_entry(
+        {"category": "pitcher"},
+        tiers,
+        {"max_fallback": 2},
+        p,
+        runner,
+        screen_fn=screen_fn,
+    )
+    assert rec["status"] == "imported"
+    assert rec["attempts"] == 1
+    assert rec["selected"]["candidate_id"].endswith("second.usd")
+    codes = {
+        c["candidate_id"].rsplit("/", 1)[-1]: c["rejection"]["code"]
+        for c in rec["candidates"]
+        if c["verdict"] == "rejected"
+    }
+    assert codes["first.usd"] == a2.REJ_SEMANTIC
+    assert rec["semantic_screen"] == {"screened": 2, "rejected": 1}
+
+
+def test_alias_write_back_merges_added_terms_into_manifest(tmp_path):
+    p = paths(tmp_path)
+
+    def runner(cmd, env=None):
+        if "import_materialize.py" in str(cmd[1]):
+            d = p["library"] / "301_widget"
+            (d / "visual").mkdir(parents=True, exist_ok=True)
+            (d / "visual" / "base0.glb").write_bytes(b"x")
+            (d / "model_data0.json").write_text("{}")
+        return 0
+
+    tiers = [
+        Tier(0, FakeProvider("t0", [])),
+        Tier(1, FakeProvider("t1", [cand("a/widget.usd", 1.0)])),
+    ]
+
+    def expand_fn(category, aliases):
+        return {"terms": [category, "gizmo"], "added": ["gizmo"], "source": "split"}
+
+    rec = ab.process_entry(
+        {"category": "widget"},
+        tiers,
+        {"max_fallback": 0},
+        p,
+        runner,
+        expand_fn=expand_fn,
+    )
+    assert rec["status"] == "imported"
+    groups = json.loads(p["manifest"].read_text())["groups"]
+    item = groups[0]["items"][0]
+    assert "gizmo" in item["aliases"]
+
+
+def test_all_none_new_params_keep_query_dict_shape_unchanged(tmp_path):
+    # Spot check: with expand_fn/screen_fn left at their default None, process_entry
+    # must behave byte-identically to before this feature existed -- no "expanded"
+    # key added to rec["query"], no "semantic_screen" key added to rec.
+    tiers = [Tier(0, FakeProvider("t0", [cand("local")]))]
+    rec = ab.process_entry(
+        {"category": "cup"}, tiers, {}, paths(tmp_path), lambda cmd, env=None: 0
+    )
+    assert rec["status"] == "reused_local"
+    assert rec["query"] == {"category": "cup", "aliases": ["cup"]}
+    assert "expanded" not in rec["query"]
+    assert "semantic_screen" not in rec

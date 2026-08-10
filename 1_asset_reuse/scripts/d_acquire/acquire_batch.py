@@ -15,6 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from lib import a1_providers as a1  # noqa: E402
 from lib import a2_selection as a2  # noqa: E402
+from lib import a5_alias as a5  # noqa: E402
 
 PY_SAP = "/home/jingxiang/miniconda3/envs/env-gen-yuxin/bin/python"
 PY_ISA = "/home/jingxiang/miniconda3/envs/isaac-smoke/bin/python"
@@ -70,6 +71,27 @@ def _materialize_gate(out_dir, asset, model):
                     return gate
             return None
     return None
+
+
+def _make_expand_fn(cache_path, llm_cfg, llm_fn):
+    """Alias expansion always runs (degraded mode: cache hit or compound_split
+    fallback), independent of whether an LLM is configured."""
+
+    def expand_fn(category, aliases):
+        cache = a5.load_alias_cache(cache_path)
+        result = a5.expand_terms(category, aliases, llm_cfg, llm_fn=llm_fn, cache=cache)
+        if result["source"] == "llm":
+            a5.save_alias_cache(cache_path, cache)
+        return result
+
+    return expand_fn
+
+
+def _make_screen_fn(llm_cfg, llm_fn):
+    def screen_fn(category, candidates):
+        return a5.screen_candidates(category, candidates, llm_cfg, llm_fn=llm_fn)
+
+    return screen_fn
 
 
 def _rejected(candidate, code, detail):
@@ -213,7 +235,9 @@ def _attempt_import(
     return rec
 
 
-def process_entry(entry, tiers, globals_cfg, paths, runner):
+def process_entry(
+    entry, tiers, globals_cfg, paths, runner, expand_fn=None, screen_fn=None
+):
     category = entry["category"]
     if "pinned" in entry:
         rec = {
@@ -375,13 +399,22 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
                 )
             ]
         return rec
-    query = " ".join([category, *entry.get("colors", []), *entry.get("aliases", [])])
+    aliases_in = entry.get("aliases", [])
+    added_terms = None
+    if expand_fn is None:
+        query = " ".join([category, *entry.get("colors", []), *aliases_in])
+    else:
+        expansion = expand_fn(category, aliases_in)
+        added_terms = expansion["added"]
+        query = " ".join([*expansion["terms"], *entry.get("colors", [])])
     rec = {
         "query": {"category": category, "aliases": entry.get("aliases", [category])},
         "entry_mode": "searched",
         "candidates": [],
         "attempts": 0,
     }
+    if expand_fn is not None:
+        rec["query"]["expanded"] = added_terms
     res = a1.tiered_search(
         tiers,
         query,
@@ -411,6 +444,26 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             for r in gated
         ]
         return rec
+    if screen_fn is not None:
+        screened = screen_fn(category, [r["candidate"] for r in viable])
+        rejected_n = 0
+        for r in viable:
+            verdict = screened.get(r["candidate"].candidate_id)
+            if verdict is not None and not verdict.get("ok", True):
+                r["verdict"] = "rejected"
+                r["rejection"] = {
+                    "code": a2.REJ_SEMANTIC,
+                    "detail": verdict.get("reason", ""),
+                }
+                rejected_n += 1
+        rec["semantic_screen"] = {"screened": len(viable), "rejected": rejected_n}
+        viable = [r for r in viable if r["verdict"] == "viable"]
+
+    if expand_fn is not None and added_terms:
+        existing = entry.get("aliases", [])
+        merged = existing + [t for t in added_terms if t not in existing]
+        entry = {**entry, "aliases": merged}
+
     max_attempts = 1 + int(globals_cfg.get("max_fallback", 2))
     rec = _attempt_import(
         rec, viable, entry, category, globals_cfg, paths, runner, max_attempts
@@ -461,6 +514,11 @@ def main(argv=None, runner=None, tiers=None):
                     t.provider.catalog_path = Path(a.tier0_catalog).resolve()
     else:
         globals_cfg = cfg.get("globals", {})
+    llm_cfg = cfg.get("llm", {})
+    llm_fn = a5.default_llm_fn(llm_cfg) if llm_cfg.get("enabled") else None
+    alias_cache_path = Path(a.providers).resolve().parent / "query_aliases.json"
+    expand_fn = _make_expand_fn(alias_cache_path, llm_cfg, llm_fn)
+    screen_fn = _make_screen_fn(llm_cfg, llm_fn) if llm_cfg.get("enabled") else None
     paths = {
         "py_sap": PY_SAP,
         "py_isa": PY_ISA,
@@ -475,7 +533,17 @@ def main(argv=None, runner=None, tiers=None):
     results = []
     for e in entries:
         try:
-            results.append(process_entry(e, tiers, globals_cfg, paths, runner))
+            results.append(
+                process_entry(
+                    e,
+                    tiers,
+                    globals_cfg,
+                    paths,
+                    runner,
+                    expand_fn=expand_fn,
+                    screen_fn=screen_fn,
+                )
+            )
         except Exception as exc:  # noqa: BLE001
             results.append(
                 {
