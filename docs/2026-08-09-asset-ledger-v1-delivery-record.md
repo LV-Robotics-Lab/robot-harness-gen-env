@@ -125,3 +125,8 @@ Task 8: minor (deferred, 后续硬化): ①镜像目录 retrieved_at 改取目�
 - **生产切换**：fragment v2（license-gate 开启零排除，15 资产）部署 + s9 重建生产影子（15 外部资产全 usable）+ **s10 四连 PASS** + **s12 5/5 PASS**。
 - **顺带修复两个缺陷**：gen_fragment 关节体过滤（joint_sweep 认可，9022f03）；s12 场景选取 bug（ls -t 抓旧目录产生假 FAIL，改 scene_id 解析+日期戳目录，0bb1fe4）。
 - 账本提交 235b3b9；备份：results/20260809_license_switch/backup_*。
+
+## §7 上游资产纳入（feat/upstream-ledgers，2026-08-10）
+- 架构：派生核心（catalog 自动再生成，上游权威）+ 增量层（isaacsim 表示/verification/license，本项目权威，再生成保留合并）——spec §9。
+- 产物：`data/upstream_ledgers/<asset>/ledger.json`（约 130 份）+ 逐资产 SOURCE_MANIFEST（兼上游漂移检测锚）；A 线打样 USD（bottle/cabinet）登记为首批 isaacsim 表示。
+- 消费端：usd_enrich 支持按账本查 USD 表示；gen_fragment/ledger_audit 零改动（audit 传 --library-dir 即可巡检新区）。

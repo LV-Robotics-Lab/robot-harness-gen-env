@@ -34,3 +34,10 @@ __pycache__/
 # macOS AppleDouble / DS_Store
 ._*
 .DS_Store
+
+# upstream asset ledgers -- same exemption cascade as asset_library ledgers
+!/data/upstream_ledgers/
+/data/upstream_ledgers/*
+!/data/upstream_ledgers/*/
+/data/upstream_ledgers/*/*
+!/data/upstream_ledgers/*/ledger.json
