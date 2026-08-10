@@ -121,6 +121,17 @@ def test_expand_terms_missing_cfg_defaults_to_split_path():
     assert result["source"] == "split"
 
 
+def test_expand_terms_title_cased_category_still_splits():
+    # Regression: expand_terms must pass the *lowered* lookup key to
+    # compound_split, not the raw category -- otherwise a title-cased
+    # category (e.g. from a categories.json authored with capitals) would
+    # fail compound_split's pure-lowercase-compound check and silently lose
+    # the split fallback (source "none" instead of "split").
+    result = a5.expand_terms("Milktea", [], {"enabled": False}, cache={})
+    assert result["source"] == "split"
+    assert result["added"] == ["milk tea"]
+
+
 # ---- screen_candidates ----
 
 

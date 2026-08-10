@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import urllib.request
 from pathlib import Path
@@ -82,9 +83,14 @@ def load_alias_cache(path) -> dict:
 
 
 def save_alias_cache(path, cache) -> None:
+    """Write atomically: write to a same-directory temp file, then
+    os.replace (atomic on POSIX) so concurrent readers/writers never see a
+    partial file, and a crash mid-write can't corrupt the cache."""
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(cache, indent=2, ensure_ascii=False, sort_keys=True))
+    tmp = p.with_name(f".{p.name}.tmp{os.getpid()}")
+    tmp.write_text(json.dumps(cache, indent=2, ensure_ascii=False, sort_keys=True))
+    os.replace(tmp, p)
 
 
 def compound_split(term: str) -> list[str]:
@@ -151,7 +157,7 @@ def expand_terms(category, aliases, cfg, llm_fn=None, cache=None) -> dict:
                 cache[key] = list(extras)
                 source = "llm"
         if not extras:
-            extras = compound_split(category)
+            extras = compound_split(key)
             source = "split" if extras else "none"
 
     terms = []

@@ -81,7 +81,13 @@ def _make_expand_fn(cache_path, llm_cfg, llm_fn):
         cache = a5.load_alias_cache(cache_path)
         result = a5.expand_terms(category, aliases, llm_cfg, llm_fn=llm_fn, cache=cache)
         if result["source"] == "llm":
-            a5.save_alias_cache(cache_path, cache)
+            # Reload-merge-save right before persisting (rather than saving
+            # the `cache` dict loaded at the top of this call) to shrink the
+            # lost-update window against a concurrent acquire_batch run that
+            # wrote a different entry in between.
+            fresh = a5.load_alias_cache(cache_path)
+            fresh[category.lower()] = list(result["added"])
+            a5.save_alias_cache(cache_path, fresh)
         return result
 
     return expand_fn

@@ -10,6 +10,7 @@ import acquire_batch as ab
 from lib.a1_providers import Tier
 from lib import a2_selection as a2
 from lib import a3_webfetch as a3w
+from lib import a5_alias as a5
 
 FIX = Path(__file__).parent / "fixtures" / "mini_catalog.json"
 
@@ -669,3 +670,26 @@ def test_all_none_new_params_keep_query_dict_shape_unchanged(tmp_path):
     assert rec["query"] == {"category": "cup", "aliases": ["cup"]}
     assert "expanded" not in rec["query"]
     assert "semantic_screen" not in rec
+
+
+def test_expand_fn_write_back_preserves_concurrently_added_keys(tmp_path):
+    # Regression: _make_expand_fn's write-back must reload-merge-save right
+    # before persisting, not just re-save the `cache` dict loaded at the top
+    # of the call -- otherwise a concurrent acquire_batch run that wrote a
+    # different entry in between would get clobbered (last-writer-wins).
+    cache_path = tmp_path / "query_aliases.json"
+    a5.save_alias_cache(cache_path, {})
+
+    def fake_llm(prompt):
+        # Simulate another process persisting a different cache entry while
+        # this LLM call is "in flight", before this closure's write-back.
+        a5.save_alias_cache(cache_path, {"concurrent": ["c1"]})
+        return json.dumps(["new alias one"])
+
+    expand_fn = ab._make_expand_fn(cache_path, {"enabled": True}, fake_llm)
+    result = expand_fn("newcat", [])
+    assert result["source"] == "llm"
+
+    saved = a5.load_alias_cache(cache_path)
+    assert saved["concurrent"] == ["c1"]
+    assert saved["newcat"] == ["new alias one"]
