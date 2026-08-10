@@ -9,6 +9,6 @@
     "github_tree": {"enabled": true, "tier": 2, "repositories": [
       {"repository": "KhronosGroup/glTF-Sample-Assets", "branch": "main",
        "license": "per-model (see source_page); repo docs list per-asset licenses"}]},
-    "github_discovery": {"enabled": true, "tier": 3, "repository_limit": 5}
+    "github_discovery": {"enabled": false, "tier": 3, "repository_limit": 5}
   }
 }
