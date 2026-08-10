@@ -49,15 +49,57 @@ ISAAC_USD_CONVERTER = (
     "a_forward line converter (tool/version not tracked by backfill_upstream)"
 )
 
-# RoboTwin's own scene-generation layout is Y-up with a bottom-center mesh
-# origin for every load_type it emits (rigid GLB pairs and PartNet-Mobility
-# URDF alike) -- evidenced by z_policy being uniformly "origin_on_table"
-# across both load_types in the catalog, and by the rigid-asset precedent in
-# scripts/a_forward/robotwin_asset.py (mesh_up_axis="Y"). No per-asset
-# variation is recorded anywhere upstream, so this is applied uniformly
-# rather than conditioned on kind.
-MESH_UP_AXIS = "Y"
-ORIGIN_CONVENTION = "bottom-center"
+# Rigid (GLB) assets: kept at the robotwin_asset.py precedent (mesh_up_axis
+# "Y", origin "bottom-center"). NOTE (see u2-report.md "up_axis 判据"): a
+# full sweep of the real catalog's usable rigid models shows this is NOT
+# uniformly backed by X90 stable orientations the way it was first assumed
+# -- only 3/15 are X90; most are IDENTITY and one is a non-axis-aligned
+# quaternion. Left unchanged here because it's out of this round's scope,
+# flagged for follow-up.
+RIGID_MESH_UP_AXIS = "Y"
+RIGID_ORIGIN_CONVENTION = "bottom-center"
+
+# Articulated (URDF/PartNet-Mobility) assets: derived PER MODEL from the
+# catalog's own stable_orientation_wxyz, using the causal rule documented in
+# lib/conventions.py's module docstring -- "stable_orientation is
+# ASSET-GEOMETRY semantics... the import pipeline sets it from the
+# normalization it applied (rigid normalized-to-Y-up -> X+90, URDF Z-up ->
+# identity)". RoboTwin's own catalog-generation applies the same mechanical
+# rule (stable_orientation_wxyz is whatever rotation the asset needs, from
+# its own raw mesh/URDF frame, to rest correctly in SAPIEN's Z-up world):
+# IDENTITY means the raw frame already IS Z-up (no correction needed) ->
+# mesh_up_axis "Z"; X90 means the raw frame is Y-up and needs the standard
+# +90-about-X correction -> mesh_up_axis "Y". A real sweep of the catalog's
+# 3 usable urdf models found BOTH: 015_laptop/037_box are IDENTITY (Z-up),
+# but 036_cabinet is X90 (Y-up) -- i.e. NOT uniform, so a per-load_type
+# constant (as originally used) would have been wrong for 036_cabinet.
+# origin_convention is paired with the derived axis using the only two
+# precedents on record: Y+"bottom-center" (external Y-up pool assets) and
+# Z+"base-at-floor" (314_cabinet, the one existing articulated ledger).
+_AXIS_ORIGIN = {"Y": "bottom-center", "Z": "base-at-floor"}
+_QUAT_TOL = 1e-6
+
+
+def _quat_close(a, b, tol=_QUAT_TOL):
+    return (
+        a is not None and len(a) == 4 and all(abs(x - y) <= tol for x, y in zip(a, b))
+    )
+
+
+def _articulated_up_axis_and_origin(model, report, note_key):
+    orientation = model.get("stable_orientation_wxyz")
+    if _quat_close(orientation, ledger.IDENTITY_WXYZ):
+        axis = "Z"
+    elif _quat_close(orientation, ledger.X90_WXYZ):
+        axis = "Y"
+    else:
+        # No precedent covers a non-axis-aligned stable orientation (e.g.
+        # 003_plate's diagonal quaternion, seen on the rigid side); default
+        # to the URDF/PartNet-Mobility format convention (Z-up) rather than
+        # guessing, and flag it loudly instead of silently picking one.
+        axis = "Z"
+        report["notes"]["up_axis_ambiguous"].append(note_key)
+    return axis, _AXIS_ORIGIN[axis]
 
 
 def _sha256_file(path):
@@ -247,13 +289,20 @@ def _build_model_entry(
     retrieved_at,
     source_manifest_path,
     group,
-    robotwin_root,
+    relbase,
     existing_model,
     isaac_usd_path,
     report,
     note_key,
 ):
     scale_applied = _derive_scale_applied(model.get("scale"), report, note_key)
+
+    if kind == "articulated":
+        up_axis, origin_convention = _articulated_up_axis_and_origin(
+            model, report, note_key
+        )
+    else:
+        up_axis, origin_convention = RIGID_MESH_UP_AXIS, RIGID_ORIGIN_CONVENTION
 
     representations = (
         _articulated_representations(model)
@@ -281,7 +330,7 @@ def _build_model_entry(
     source = {
         "library": SOURCE_LIBRARY,
         "group": group,
-        "file": _relative_to_root(model["model_path"], robotwin_root),
+        "file": _relative_to_root(model["model_path"], relbase),
         "license": DEFAULT_LICENSE,
         "retrieved_at": retrieved_at,
         "source_manifest_path": str(source_manifest_path),
@@ -296,8 +345,8 @@ def _build_model_entry(
         model=model["model_id"],
         representations=representations,
         mesh_bbox_m=model["dimensions_m"],
-        mesh_up_axis=MESH_UP_AXIS,
-        origin_convention=ORIGIN_CONVENTION,
+        mesh_up_axis=up_axis,
+        origin_convention=origin_convention,
         scale_applied=scale_applied,
         size_resolution=_size_resolution(model, scale_applied),
         conventions=_conventions(model),
@@ -326,6 +375,67 @@ def _parse_isaac_usd(raw_list):
     return out
 
 
+def _parse_root_remap(raw):
+    """--root-remap OLD=NEW -> (old, new), or None if not given. Single
+    rule only (the user's rsync target is one destination tree)."""
+    if raw is None:
+        return None
+    old, sep, new = raw.partition("=")
+    if not sep or not old or not new:
+        raise ValueError(f"--root-remap must be OLD=NEW, got {raw!r}")
+    return old, new
+
+
+# Absolute path fields that may need remapping, before any existence check,
+# sha256 computation, or uri write touches them. urdf_path is included even
+# though the coordinator's field list didn't name it explicitly: it aliases
+# visual_path/collision_path for a urdf-load_type entry (see
+# _articulated_representations, which prefers it when present) -- remapping
+# the other two but not this one would silently re-point the urdf
+# representation at the stale, un-copied location.
+_REMAP_FIELDS_ENTRY = ("asset_path",)
+_REMAP_FIELDS_MODEL = (
+    "model_path",
+    "visual_path",
+    "collision_path",
+    "metadata_path",
+    "urdf_path",
+)
+
+
+def _apply_root_remap(catalog, root_remap):
+    """Rewrite every absolute path field under old_prefix to new_prefix,
+    across every entry/model in catalog. Returns (catalog, hits) -- catalog
+    is a deep copy (the loaded dict is never mutated in place), hits is the
+    count of individual field replacements performed (for the report).
+    catalog["robotwin_root"] is deliberately left untouched: the physical
+    move here is only the assets/objects/ subtree (per the coordinator's
+    rsync target data/robotwin_assets/objects/), not the whole external
+    RoboTwin checkout, so robotwin_root genuinely still refers to the old
+    location. _relative_to_root's caller in main() compensates by using
+    new_prefix itself as the relative-path base when a remap is active,
+    rather than trying to keep robotwin_root in sync with a subtree move it
+    wasn't part of."""
+    if root_remap is None:
+        return catalog, 0
+    old, new = root_remap
+    catalog = json.loads(json.dumps(catalog))
+    hits = 0
+    for entry in catalog["entries"]:
+        for field in _REMAP_FIELDS_ENTRY:
+            value = entry.get(field)
+            if isinstance(value, str) and value.startswith(old):
+                entry[field] = new + value[len(old) :]
+                hits += 1
+        for model in entry.get("models", []):
+            for field in _REMAP_FIELDS_MODEL:
+                value = model.get(field)
+                if isinstance(value, str) and value.startswith(old):
+                    model[field] = new + value[len(old) :]
+                    hits += 1
+    return catalog, hits
+
+
 def _empty_report():
     return {
         "written": [],
@@ -335,6 +445,8 @@ def _empty_report():
         "notes": {
             "non_uniform_scale": [],
             "isaac_usd_registered": [],
+            "up_axis_ambiguous": [],
+            "root_remap": None,
         },
     }
 
@@ -351,6 +463,14 @@ def main():
         help="register an isaacsim USD representation for ASSET's first "
         "usable model (incremental layer). Repeatable.",
     )
+    parser.add_argument(
+        "--root-remap",
+        default=None,
+        metavar="OLD_PREFIX=NEW_PREFIX",
+        help="rewrite absolute paths under OLD_PREFIX to NEW_PREFIX before "
+        "any file-existence check / sha256 / uri write (e.g. the upstream "
+        "checkout was rsync'd into this repo). Single rule.",
+    )
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
 
@@ -361,9 +481,19 @@ def main():
 
     try:
         isaac_usd_map = _parse_isaac_usd(args.isaac_usd)
+        root_remap = _parse_root_remap(args.root_remap)
     except (ValueError, FileNotFoundError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         sys.exit(2)
+
+    catalog, root_remap_hits = _apply_root_remap(catalog, root_remap)
+    # After a remap, model/asset paths point into the new (in-repo) tree,
+    # which is not necessarily still under robotwin_root (only the
+    # assets/objects/ subtree moved, not the whole external checkout) --
+    # use the remap's own new_prefix as the relative-path base so
+    # source.file stays a clean relative path instead of falling back to a
+    # raw, host-specific absolute one (see _apply_root_remap's docstring).
+    relbase = Path(root_remap[1]) if root_remap else robotwin_root
 
     entries_by_asset = {e["asset_id"]: e for e in catalog["entries"]}
     unknown_isaac_usd = set(isaac_usd_map) - set(entries_by_asset)
@@ -432,7 +562,7 @@ def main():
                 retrieved_at,
                 source_manifest_path,
                 source_commit,
-                robotwin_root,
+                relbase,
                 existing_model,
                 isaac_usd_path,
                 report,
@@ -466,6 +596,13 @@ def main():
             ledger.write_ledger(lp, led)
             manifest = _build_source_manifest(asset_dir)
             source_manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+
+    if root_remap:
+        report["notes"]["root_remap"] = {
+            "old_prefix": root_remap[0],
+            "new_prefix": root_remap[1],
+            "hits": root_remap_hits,
+        }
 
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "backfill_upstream_report.json").write_text(

@@ -440,3 +440,223 @@ def test_isaac_usd_missing_file_errors_out(tmp_path):
     )
     assert r.returncode != 0
     assert not (out / "901_widget/ledger.json").exists()
+
+
+def test_isaac_usd_registration_articulated_first_usable_model(tmp_path):
+    # 902_gadget's only usable model has model_id=10001 (a PartNet-Mobility
+    # id, never literally 0) -- "model 0" in the spec is interpreted as
+    # "catalog order's first usable model", not literal model_id==0, since
+    # the latter is never true for any articulated asset in the real
+    # catalog and would make --isaac-usd unusable for that whole kind.
+    catalog_path, _ = _mini_catalog(tmp_path)
+    out = tmp_path / "out"
+    usd_path = tmp_path / "902_gadget.usd"
+    usd_path.write_bytes(b"USD-CONTENT-902")
+
+    r = _run(
+        catalog_path,
+        out,
+        apply=True,
+        extra_args=[f"--isaac-usd=902_gadget={usd_path}"],
+    )
+    assert r.returncode == 0, r.stderr
+
+    led = json.loads((out / "902_gadget/ledger.json").read_text())
+    model0 = led["models"][0]
+    assert model0["model_id"] == 10001
+    isaac_reps = [rp for rp in model0["representations"] if rp["backend"] == "isaacsim"]
+    assert len(isaac_reps) == 1
+    rep = isaac_reps[0]
+    assert rep["role"] == "visual_and_collision"
+    assert rep["sha256"] == _sha(b"USD-CONTENT-902")
+    assert rep["size_bytes"] == len(b"USD-CONTENT-902")
+    assert rep["metadata"]["derived_from"] == model0["representations"][0]["uri"]
+
+
+def test_articulated_up_axis_identity_orientation_is_zup(tmp_path):
+    # 902_gadget in the shared fixture carries stable_orientation_wxyz ==
+    # IDENTITY -- per conventions.py's causal rule (URDF Z-up -> identity),
+    # that means its raw frame is already Z-up.
+    catalog_path, _ = _mini_catalog(tmp_path)
+    out = tmp_path / "out"
+    r = _run(catalog_path, out, apply=True)
+    assert r.returncode == 0, r.stderr
+    physical = json.loads((out / "902_gadget/ledger.json").read_text())["models"][0][
+        "physical"
+    ]
+    assert physical["mesh_up_axis"] == "Z"
+    assert physical["origin_convention"] == "base-at-floor"
+
+
+def _mini_catalog_x90_articulated(tmp_path):
+    """A second, standalone articulated asset whose stable_orientation_wxyz
+    is X90 (not IDENTITY) -- real-catalog evidence (036_cabinet) that
+    articulated up-axis is NOT uniformly Z, so it must be derived per model,
+    not hardcoded."""
+    rt = tmp_path / "RoboTwinX90"
+    objects = rt / "assets/objects"
+    a = objects / "804_hinge/500"
+    urdf = a / "mobility.urdf"
+    _write(urdf, b"<robot name='h'></robot>")
+
+    entry = {
+        "asset_id": "804_hinge",
+        "semantic_name": "hinge",
+        "category": "hinge",
+        "aliases": ["hinge"],
+        "colors": [],
+        "materials": [],
+        "load_type": "urdf",
+        "asset_path": str(objects / "804_hinge"),
+        "models": [
+            {
+                "model_id": 500,
+                "model_path": str(a),
+                "metadata_path": str(a / "model_data.json"),
+                "visual_path": str(urdf),
+                "collision_path": str(urdf),
+                "urdf_path": str(urdf),
+                "scale": [0.2, 0.2, 0.2],
+                "dimensions_m": [0.1, 0.1, 0.1],
+                "footprint_shape": "box",
+                "support_margin_m": 0.005,
+                "support_spawn_clearance_m": 0.003,
+                "stable_pose_id": "upright",
+                "stable_orientation_wxyz": list(ledger.X90_WXYZ),
+                "z_policy": "origin_on_table",
+                "is_static": False,
+                "articulation_joints": [
+                    {
+                        "name": "j0",
+                        "joint_type": "revolute",
+                        "lower": -0.5,
+                        "upper": 0.5,
+                    }
+                ],
+                "articulation_closed_qpos": [0.0],
+                "articulation_open_qpos": [0.5],
+                "usable": True,
+                "missing": [],
+            }
+        ],
+    }
+    catalog = {
+        "schema_version": 1,
+        "robotwin_root": str(rt),
+        "objects_root": str(objects),
+        "source_commit": "x90commit",
+        "entries": [entry],
+    }
+    catalog_path = tmp_path / "x90_catalog.json"
+    catalog_path.write_text(json.dumps(catalog, indent=2))
+    return catalog_path
+
+
+def test_articulated_up_axis_x90_orientation_is_yup(tmp_path):
+    catalog_path = _mini_catalog_x90_articulated(tmp_path)
+    out = tmp_path / "out"
+    r = _run(catalog_path, out, apply=True)
+    assert r.returncode == 0, r.stderr
+    led = json.loads((out / "804_hinge/ledger.json").read_text())
+    physical = led["models"][0]["physical"]
+    assert physical["mesh_up_axis"] == "Y"
+    assert physical["origin_convention"] == "bottom-center"
+    # sanity: validator still 0 violations for this shape too
+    assert ledger.validate_ledger(led, check_files=True) == []
+
+
+def _mini_catalog_for_remap(tmp_path):
+    """A rigid asset whose catalog paths all carry a fake OLD prefix that
+    never exists on disk; the real files live under a separate NEW prefix
+    directory. Exercises --root-remap OLD=NEW rewriting every absolute path
+    field before any file-existence check / sha256 / uri write happens."""
+    old_root = "/old/fake/RoboTwin"
+    old_objects = f"{old_root}/assets/objects"
+    new_root = tmp_path / "new_root"
+    new_objects = new_root / "assets/objects"
+
+    a1 = new_objects / "801_gizmo"
+    vis0, col0 = a1 / "visual/base0.glb", a1 / "collision/base0.glb"
+    _write(vis0, b"VISUAL-801-0")
+    _write(col0, b"COLLISION-801-0")
+
+    old_a1 = f"{old_objects}/801_gizmo"
+    entry = {
+        "asset_id": "801_gizmo",
+        "semantic_name": "gizmo",
+        "category": "gizmo",
+        "aliases": ["gizmo"],
+        "colors": [],
+        "materials": [],
+        "load_type": "rigid",
+        "asset_path": old_a1,
+        "models": [
+            {
+                "model_id": 0,
+                "model_path": old_a1,
+                "metadata_path": f"{old_a1}/model_data0.json",
+                "visual_path": f"{old_a1}/visual/base0.glb",
+                "collision_path": f"{old_a1}/collision/base0.glb",
+                "scale": [0.1, 0.1, 0.1],
+                "dimensions_m": [0.05, 0.05, 0.05],
+                "footprint_shape": "box",
+                "support_margin_m": 0.005,
+                "support_spawn_clearance_m": 0.003,
+                "stable_pose_id": "upright",
+                "stable_orientation_wxyz": [1.0, 0.0, 0.0, 0.0],
+                "z_policy": "origin_on_table",
+                "is_static": False,
+                "articulation_joints": [],
+                "articulation_closed_qpos": [],
+                "articulation_open_qpos": [],
+                "usable": True,
+                "missing": [],
+            }
+        ],
+    }
+    catalog = {
+        "schema_version": 1,
+        "robotwin_root": old_root,
+        "objects_root": old_objects,
+        "source_commit": "cafebabe",
+        "entries": [entry],
+    }
+    catalog_path = tmp_path / "remap_catalog.json"
+    catalog_path.write_text(json.dumps(catalog, indent=2))
+    return catalog_path, old_objects, str(new_objects)
+
+
+def test_root_remap_rewrites_paths_before_file_checks(tmp_path):
+    catalog_path, old_prefix, new_prefix = _mini_catalog_for_remap(tmp_path)
+    out = tmp_path / "out"
+    r = _run(
+        catalog_path,
+        out,
+        apply=True,
+        extra_args=[f"--root-remap={old_prefix}={new_prefix}"],
+    )
+    assert r.returncode == 0, r.stderr
+
+    led = json.loads((out / "801_gizmo/ledger.json").read_text())
+    model0 = led["models"][0]
+    for rep in model0["representations"]:
+        assert rep["uri"].startswith(new_prefix)
+        assert not rep["uri"].startswith(old_prefix)
+
+    # source.file stays a clean relative path (relative to the new prefix),
+    # not a raw absolute path -- robotwin_root itself never moved, only the
+    # objects/ subtree did, so the relative-path base must follow the remap.
+    assert model0["source"]["file"] == "801_gizmo"
+
+    report = json.loads((out / "backfill_upstream_report.json").read_text())
+    rr = report["notes"]["root_remap"]
+    assert rr == {"old_prefix": old_prefix, "new_prefix": new_prefix, "hits": 5}
+
+
+def test_root_remap_absent_by_default(tmp_path):
+    catalog_path, _ = _mini_catalog(tmp_path)
+    out = tmp_path / "out"
+    r = _run(catalog_path, out, apply=True)
+    assert r.returncode == 0, r.stderr
+    report = json.loads((out / "backfill_upstream_report.json").read_text())
+    assert report["notes"]["root_remap"] is None
