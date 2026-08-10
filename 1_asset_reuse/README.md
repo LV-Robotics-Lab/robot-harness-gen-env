@@ -8,7 +8,7 @@ catalog 被文字场景真实选中。全景与逐文件说明见本目录 `OVER
 
 | 路径 | 作用 |
 |---|---|
-| `scripts/` | 全部步骤脚本（打样样本版 s0–s10 + 批量导入 import_*） |
+| `scripts/` | 步骤脚本按功能线分夹：a_forward/ b_reverse/ b_batch/ c_catalog/ d_acquire/（入口 run_smoke.sh 在根，地图见 scripts/README.md） |
 | `configs/external_manifest.json` | 外部资产批量清单（来源 URL、资产归组、类别/别名/footprint） |
 | `../data/asset_library/` | 外部资产池（RoboTwin 布局；`_source/` 存源镜像+哈希清单；不入 git） |
 | `../data/robotwin_shadow/` | 影子根（symlink 真 RoboTwin + 注入外部资产；不入 git） |
@@ -21,19 +21,19 @@ export OMNI_KIT_ACCEPT_EULA=YES
 # 打样回归（A+B+C 样本，11 步）
 bash scripts/run_smoke.sh
 # 批量导入外部资产（按 configs/external_manifest.json）
-~/miniconda3/envs/isaac-smoke/bin/python  scripts/import_fetch_convert.py \
+~/miniconda3/envs/isaac-smoke/bin/python  scripts/b_batch/import_fetch_convert.py \
   --manifest configs/external_manifest.json \
   --source-root ../data/asset_library/_source --staging <staging目录>
-~/miniconda3/envs/env-gen-yuxin/bin/python scripts/import_materialize.py \
+~/miniconda3/envs/env-gen-yuxin/bin/python scripts/b_batch/import_materialize.py \
   --staging <staging目录> --library-dir ../data/asset_library \
   --out <结果目录> --overrides-fragment ../data/scene_gen_ext/external_overrides_fragment.yml
 # 重建影子根 + 扩展 catalog（消费上面的 fragment）
-~/miniconda3/envs/env-gen-yuxin/bin/python scripts/s9_build_shadow_root.py \
+~/miniconda3/envs/env-gen-yuxin/bin/python scripts/c_catalog/s9_build_shadow_root.py \
   --library-dir ../data/asset_library --shadow ../data/robotwin_shadow \
   --ext-dir ../data/scene_gen_ext \
   --extra-overrides ../data/scene_gen_ext/external_overrides_fragment.yml
 # e2e 回归（文字→场景选中外部资产→回放→全量验证）
-bash scripts/s10_e2e_scene.sh
+bash scripts/c_catalog/s10_e2e_scene.sh
 ```
 
 前置：conda `env-gen-yuxin`（SAPIEN 侧）+ `isaac-smoke`（Isaac Sim 5.1，py3.11）。
