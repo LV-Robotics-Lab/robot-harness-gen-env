@@ -137,3 +137,117 @@ def test_load_providers_github_discovery_without_token_env():
     }
     tiers, g = load_providers(cfg)
     assert tiers[0].provider.token is None
+
+
+# --- DedupedProvider (tier-3 over-fetch + de-dup, see lib/a1_providers.py) ---
+
+
+def dup_cand(cid, url, score):
+    return AssetCandidate(
+        candidate_id=cid,
+        name=cid,
+        category="x",
+        download_url=url,
+        source_page="https://x",
+        format="glb",
+        provider="github_repository_discovery",
+        license="unknown",
+        score=score,
+        metadata={"path": cid},
+    )
+
+
+class RecordingProvider:
+    """Returns a fixed pool but records the limit it was asked for."""
+
+    name = "github_repository_discovery"
+
+    def __init__(self, pool):
+        self.pool = pool
+        self.asked_limit = None
+        self.last_errors = [{"repository": "a/b", "error": "boom"}]
+
+    def search(self, query, limit=20):
+        self.asked_limit = limit
+        return self.pool[:limit]
+
+
+def test_deduped_provider_overfetches_then_truncates():
+    from lib.a1_providers import DedupedProvider
+
+    inner = RecordingProvider([dup_cand(f"c{i}", f"https://x/{i}", 1.0) for i in range(50)])
+    out = DedupedProvider(inner, overfetch=4).search("cup", limit=5)
+    assert inner.asked_limit == 20  # 5 * 4
+    assert len(out) == 5
+
+
+def test_deduped_provider_collapses_same_url_keeping_higher_score():
+    from lib.a1_providers import DedupedProvider
+
+    inner = RecordingProvider(
+        [
+            dup_cand("mirror_lo", "https://x/mug.glb", 1.0),
+            dup_cand("mirror_hi", "https://x/mug.glb", 5.0),
+            dup_cand("other", "https://x/pan.glb", 2.0),
+        ]
+    )
+    out = DedupedProvider(inner, overfetch=4).search("mug", limit=5)
+    assert [c.candidate_id for c in out] == ["mirror_hi", "other"]
+
+
+def test_deduped_provider_fills_slots_that_duplicates_would_have_burned():
+    """Two mirrors of the same model must not cost two of the limit slots."""
+    from lib.a1_providers import DedupedProvider
+
+    pool = [
+        dup_cand("dupA", "https://x/same.glb", 9.0),
+        dup_cand("dupB", "https://x/same.glb", 8.0),
+        dup_cand("real1", "https://x/one.glb", 7.0),
+        dup_cand("real2", "https://x/two.glb", 6.0),
+    ]
+    out = DedupedProvider(RecordingProvider(pool), overfetch=4).search("q", limit=3)
+    assert [c.candidate_id for c in out] == ["dupA", "real1", "real2"]
+
+
+def test_deduped_provider_reports_stats_and_forwards_errors():
+    from lib.a1_providers import DedupedProvider
+
+    w = DedupedProvider(
+        RecordingProvider(
+            [
+                dup_cand("a", "https://x/1", 1.0),
+                dup_cand("b", "https://x/1", 2.0),
+            ]
+        )
+    )
+    w.search("q", limit=5)
+    assert w.last_stats == {
+        "fetched": 2,
+        "after_dedup": 1,
+        "returned": 1,
+        "duplicates_dropped": 1,
+    }
+    assert w.last_errors == [{"repository": "a/b", "error": "boom"}]
+
+
+def test_load_providers_wraps_github_discovery_in_dedup():
+    from lib.a1_providers import DedupedProvider
+
+    cfg = {
+        "globals": {},
+        "providers": {"github_discovery": {"enabled": True, "tier": 3}},
+    }
+    tiers, _ = load_providers(cfg)
+    assert isinstance(tiers[0].provider, DedupedProvider)
+    assert tiers[0].provider.name == "github_repository_discovery"
+
+
+def test_deduped_provider_is_attribute_transparent():
+    from lib.a1_providers import DedupedProvider
+
+    inner = RecordingProvider([])
+    inner.token = "secret123"
+    inner.repository_limit = 2
+    w = DedupedProvider(inner)
+    assert w.token == "secret123"
+    assert w.repository_limit == 2

@@ -1,0 +1,113 @@
+{
+  "schema_version": "asset_ledger.v1",
+  "asset_id": "robotwin_021_cup",
+  "category": "cup",
+  "semantic_name": "cup",
+  "kind": "rigid",
+  "tags": [
+    "upstream",
+    "robotwin",
+    "rigid"
+  ],
+  "semantics": {
+    "aliases": [
+      "cup",
+      "mug"
+    ],
+    "colors": [],
+    "materials": [
+      "ceramic",
+      "metal",
+      "plastic"
+    ]
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.08255403089523315,
+          0.088,
+          0.08197807025909423
+        ],
+        "mesh_up_axis": "Y",
+        "origin_convention": "bottom-center",
+        "scale_applied": 0.088,
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 0.088,
+          "scale": 0.088,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "robotwin_cup_upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default": null,
+          "runtime_default_basis": "none"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/021_cup/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "ea0b83f737c86b1823f6d3a7aeb7e9dcaf4d7b3b82b02a19207c968ebffad69a",
+          "size_bytes": 1886864,
+          "metadata": {}
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/021_cup/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "176cdeb32f0152656f50b68e1312e01e74c6e96634f6f9271d9566ee77c9e2ca",
+          "size_bytes": 879188,
+          "metadata": {}
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "RoboTwin (upstream)",
+        "group": "c3ddfa8b97d5519efa828b075999bd0006778e5e",
+        "file": "021_cup",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/021_cup/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    }
+  ]
+}

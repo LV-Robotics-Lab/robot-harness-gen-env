@@ -1,0 +1,125 @@
+{
+  "schema_version": "asset_ledger.v1",
+  "asset_id": "robotwin_001_bottle",
+  "category": "bottle",
+  "semantic_name": "bottle",
+  "kind": "rigid",
+  "tags": [
+    "upstream",
+    "robotwin",
+    "rigid"
+  ],
+  "semantics": {
+    "aliases": [
+      "bottle"
+    ],
+    "colors": [],
+    "materials": [
+      "glass",
+      "metal",
+      "plastic"
+    ]
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.0719153208732605,
+          0.25031674003601073,
+          0.0711943302154541
+        ],
+        "mesh_up_axis": "Y",
+        "origin_convention": "bottom-center",
+        "scale_applied": 0.132,
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 0.25031674003601073,
+          "scale": 0.132,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "circle",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default": null,
+          "runtime_default_basis": "none"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/001_bottle/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "32310f63a7de183e4c665c24681b7e1407b408241035a4d36c378507c1fd8373",
+          "size_bytes": 2375936,
+          "metadata": {}
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/001_bottle/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "289a8a4b2c949f684c8277341b2a72ca1769a8354d83089915ddc3ac2a83720a",
+          "size_bytes": 274784,
+          "metadata": {}
+        },
+        {
+          "format": "usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/usd/001_bottle/bottle.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "9e3c783911bb75fe5ea84c42f87e68cba5e65b5b8da0ff58ec46ad989a8ed506",
+          "size_bytes": 1540,
+          "metadata": {
+            "derived_from": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/001_bottle/visual/base0.glb",
+            "converter": "a_forward line converter (tool/version not tracked by backfill_upstream)",
+            "conversion_params": {}
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "RoboTwin (upstream)",
+        "group": "c3ddfa8b97d5519efa828b075999bd0006778e5e",
+        "file": "001_bottle",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/001_bottle/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    }
+  ]
+}

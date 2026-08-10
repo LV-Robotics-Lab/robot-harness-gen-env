@@ -5,9 +5,9 @@ set -uo pipefail
 PY=$HOME/miniconda3/envs/env-gen-yuxin/bin/python
 DEV=$HOME/yuxin/env-gen-dev
 UP=$DEV/external/env-gen-github
-SHADOW=$DEV/data/robotwin_shadow
-CAT=$DEV/data/scene_gen_ext/asset_catalog.json
-OUT=$DEV/results/_test/20260803_smoke_usd2envgen
+SHADOW=${S10_SHADOW:-$DEV/data/robotwin_shadow}
+CAT=${S10_CATALOG:-$DEV/data/scene_gen_ext/asset_catalog.json}
+OUT=${S10_OUT:-$DEV/results/_test/20260803_smoke_usd2envgen}
 PROMPT="Place a red mug on the table."
 
 echo "=== [s10.1] compile scene ($(TZ=Asia/Singapore date +%T) SGT)"

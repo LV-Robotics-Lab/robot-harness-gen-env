@@ -93,10 +93,11 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "8911ee3dbb3e4e8bbe810b276e7c565a6ff6f7b58e6fc550cbf95d702bc4b93c",
-          "size_bytes": 510000,
+          "sha256": "4264a72477e720b760ce6e4456eb90f5d85d9911f3fb69e74be6cc0b3717a7b2",
+          "size_bytes": 505628,
           "metadata": {
-            "note": "copy of visual; convex decomposition at load"
+            "collision_mode": "coacd:80parts",
+            "note": "offline convex decomposition by coacd (threshold=0.05)"
           }
         },
         {
@@ -115,8 +116,8 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
-          "sha256": "9a114599d902373f4f1fd1ddc2d35d331b97474b28dd90a3f397e303895ba92e",
-          "size_bytes": 5052,
+          "sha256": "a8aa04e129a22ca3870b64ce6cf6dd736b0eb7c5aa1fcae70ae1e261f46798f8",
+          "size_bytes": 5057,
           "metadata": {
             "yaw_deg": 0,
             "camera": "front-default",
@@ -142,10 +143,10 @@
           "backend": "sapien",
           "check": "settle",
           "verdict": "pass",
-          "run_id": "mat",
-          "timestamp": "2026-08-10T18:09:08",
-          "verified_digest": "14b713eb05e6193094921170ce120a3818a71901d1896b4420c87bdc795859ca",
-          "report_path": "results/20260810_repair_301cup_coacd/mat/import_matrix.json",
+          "run_id": "mat2",
+          "timestamp": "2026-08-10T18:20:02",
+          "verified_digest": "1705b21ac9881a23ab98521425e2edc0dd0ca3396bb341c7dad7c010d7ca82a1",
+          "report_path": "results/20260810_repair_301cup_coacd/mat2/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

@@ -467,7 +467,14 @@ for idx, r in worker_records:
                 "role": "collision",
                 "sha256": sha256(col),
                 "size_bytes": col.stat().st_size,
-                "metadata": {"note": "copy of visual; convex decomposition at load"},
+                "metadata": {
+                    "collision_mode": row["collision_mode"],
+                    "note": (
+                        "offline convex decomposition by coacd (threshold=0.05)"
+                        if row["collision_mode"].startswith("coacd")
+                        else "copy of visual; convex decomposition at load"
+                    ),
+                },
             },
             {
                 "format": "usd",
@@ -514,7 +521,20 @@ for idx, r in worker_records:
                     file=sys.stderr,
                 )
 
-        manifest_path = lib / "_source" / r["group"] / "SOURCE_MANIFEST.json"
+        # Follow where phase 1 actually mirrored the source. The staging record's
+        # usd_local is <source-root>/<group>/<file>, so its parent is that group's
+        # mirror dir. Deriving this from `lib` instead silently assumed
+        # --source-root == <library-dir>/_source -- an undocumented coupling
+        # between the two stages' CLIs. When they diverged, source_manifest_path
+        # (required AND not-nullable) came out None and the asset was rejected as
+        # schema_violation:missing. Falls back to the old derivation only when a
+        # record carries no usd_local at all.
+        usd_local = r.get("usd_local")
+        manifest_path = (
+            Path(usd_local).parent / "SOURCE_MANIFEST.json"
+            if usd_local
+            else lib / "_source" / r["group"] / "SOURCE_MANIFEST.json"
+        )
         source_v1 = {
             "library": "NVIDIA Isaac Assets 5.1",
             "group": r["group"],
@@ -628,7 +648,7 @@ for idx, r in worker_records:
         if violations or not checks["pass"]:
             row["status"] = "rejected"
             row.setdefault("reasons", []).extend(
-                f"schema_violation:{v.code}" for v in violations
+                f"schema_violation:{v.code}:{v.path}" for v in violations
             )
         else:
             # I-1: whole-ledger write through the fcntl-locked atomic writer

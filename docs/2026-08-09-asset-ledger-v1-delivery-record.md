@@ -125,3 +125,13 @@ Task 8: minor (deferred, 后续硬化): ①镜像目录 retrieved_at 改取目�
 - **生产切换**：fragment v2（license-gate 开启零排除，15 资产）部署 + s9 重建生产影子（15 外部资产全 usable）+ **s10 四连 PASS** + **s12 5/5 PASS**。
 - **顺带修复两个缺陷**：gen_fragment 关节体过滤（joint_sweep 认可，9022f03）；s12 场景选取 bug（ls -t 抓旧目录产生假 FAIL，改 scene_id 解析+日期戳目录，0bb1fe4）。
 - 账本提交 235b3b9；备份：results/20260809_license_switch/backup_*。
+
+## §7 上游资产纳入（feat/upstream-ledgers，2026-08-10）
+- 架构：派生核心（catalog 自动再生成，上游权威）+ 增量层（isaacsim 表示/verification/license，本项目权威，再生成保留合并）——spec §9。
+- 产物：`data/upstream_ledgers/<asset>/ledger.json`（约 130 份）+ 逐资产 SOURCE_MANIFEST（兼上游漂移检测锚）；A 线打样 USD（bottle/cabinet）登记为首批 isaacsim 表示。
+- 消费端：usd_enrich 支持按账本查 USD 表示；gen_fragment/ledger_audit 零改动（audit 传 --library-dir 即可巡检新区）。
+
+### §7.1 实跑结果（2026-08-10 晚）
+- 上游账本首批：catalog 130 条 / 18 usable model → **16 资产入账**（up 轴实测判定 9Y/7Z）、2 如实跳过（020_hammer/034_knife 网格原点对称，现有 origin 词汇不可诚实表达，follow-up 已记录）；audit 16/16 clean、双次 apply 字节幂等；001_bottle/036_cabinet 登记 A 线 USD（已迁稳定家 data/robotwin_assets/usd/）。
+- **RoboTwin 资产本地化（owner 决策）**：4.4GB/134 目录 rsync 入仓 data/robotwin_assets/（含上游 LICENSE 存证）；运行时根 data/robotwin_local/ 拼装（代码/纹理→上游 checkout 软链，objects→本仓副本）；生产 s9 重指向后 **s10 四连 PASS + s12 5/5**——资产维护自此与上游 checkout 解耦，同步上游=显式重拷+重跑 backfill。
+- usd_enrich 账本查表接线（U3）：外部池+上游两区统一查询，audit/复审真实数据闭环。

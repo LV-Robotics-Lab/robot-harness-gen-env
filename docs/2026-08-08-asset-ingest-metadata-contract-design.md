@@ -197,3 +197,22 @@ ledger.json ──to_ir_bundles 拆包──> openxsim transfer / enrich / s5（
 - **verification 长期形态**：例行 sweep 上线时切换为「摘要进账本 + JSONL 历史归档」，届时定规则（对抗评审 C 项）。
 - 上游只读不变；fragment 格式与 s9 接口零改动。
 - validator 的规范文本 = `ledger.py` 内常量表；本文件 §3 为文档视图（消灭双真相，r2）。
+
+## 9. 上游资产账本（r3 追加，2026-08-10）
+
+**动机**：迁移消费者需对场景中出现的**任何**资产回答「目标引擎拿什么加载、验过没有」——上游 RoboTwin 资产（约 130 条 catalog 条目）此前不在账本范围，现纳入。
+
+**架构：派生核心 + 增量层**（不改上游一行、不产生会腐烂的复制品）：
+
+| 层 | 字段 | 权威 | 再生成语义 |
+|---|---|---|---|
+| 派生核心 | 身份/语义/几何/摆放（由上游 asset_catalog.json 条目映射） | **上游 catalog**（我们的账本禁手改这些字段） | 每次重跑 backfill_upstream **覆盖刷新**（上游 pull 后重跑一次即同步） |
+| 增量层 | representations 的非 sapien 条目（如 isaacsim USD 登记）、verification[]、license（人工判定后） | **本项目** | 再生成时**保留合并** |
+
+**约定**：
+- 位置 `data/upstream_ledgers/<asset>/ledger.json`（与外部池分目录——gen_fragment 只扫外部池，上游资产走上游 catalog 入场景，不经我们的视图层）；asset_id 前缀 `robotwin_`（builder 的 asset_id_prefix 参数）。
+- `source_manifest_path` 指向 backfill 生成的逐文件哈希清单（存于账本同目录，兼作上游资产漂移检测锚——上游文件变了哈希对不上即知过时）；`retrieved_at` 取上游资产目录内最新文件 mtime（获取时刻不可考，basis 记录于报告）。
+- catalog 标 `usable:false` 的 model 如实跳过不入账（报告记录），不硬凑。
+- license 初始 unknown（RoboTwin 资产来源混合，条款核查是独立后续 audit）。
+- 消费端：迁移侧（usd_enrich）按资产名先查账本（上游+外部两区）的 isaacsim 表示；查不到行为不变（如实报缺）。
+- `SOURCE_MANIFEST.json` 不入 git（与池内 `_source/` 现有实践一致，`.gitignore` 只豁免 `ledger.json`）：它是本机可再生产物，克隆仓库后对同一 catalog 重跑一次 `backfill_upstream --apply` 即再生，不依赖任何未跟踪的历史状态。
