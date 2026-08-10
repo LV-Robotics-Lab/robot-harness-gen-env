@@ -1,5 +1,5 @@
 {
-  "globals": {"top_k": 5, "max_fallback": 2, "max_size_bytes": 200000000, "license_gate": false},
+  "globals": {"top_k": 8, "max_fallback": 4, "max_size_bytes": 200000000, "license_gate": false},
   "llm": {"enabled": false, "base_url": "https://api.miromind.site/v1", "model": "", "api_key_file": "~/.config/miromind.key"},
   "providers": {
     "robotwin_local": {"enabled": true, "tier": 0,

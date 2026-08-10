@@ -3,7 +3,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "a_forward" / "s5_check_ir.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "ledger" / "s5_check_ir.py"
 
 
 def _rep(tmp_path, name, sha_char):

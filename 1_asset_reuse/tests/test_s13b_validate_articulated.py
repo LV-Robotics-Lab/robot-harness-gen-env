@@ -6,7 +6,7 @@ from pathlib import Path
 SCRIPT = (
     Path(__file__).resolve().parents[1]
     / "scripts"
-    / "b_reverse"
+    / "4_validate"
     / "s13b_validate_articulated.py"
 )
 

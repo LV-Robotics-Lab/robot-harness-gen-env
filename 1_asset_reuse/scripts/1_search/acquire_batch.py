@@ -12,7 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from lib import a1_providers as a1  # noqa: E402
 from lib import a2_selection as a2  # noqa: E402
 from lib import a5_alias as a5  # noqa: E402
@@ -167,7 +167,7 @@ def _attempt_import(
                 [
                     paths["py_isa"],
                     "-u",
-                    paths["scripts"] / "import_fetch_convert.py",
+                    paths["scripts"] / "2_convert" / "import_fetch_convert.py",
                     "--manifest",
                     tmp_manifest,
                     "--source-root",
@@ -180,7 +180,7 @@ def _attempt_import(
         runner(
             [
                 paths["py_sap"],
-                paths["scripts"] / "import_materialize.py",
+                paths["scripts"] / "3_materialize" / "import_materialize.py",
                 "--staging",
                 staging,
                 "--library-dir",
@@ -369,7 +369,7 @@ def process_entry(
         runner(
             [
                 paths["py_sap"],
-                paths["scripts"] / "import_materialize.py",
+                paths["scripts"] / "3_materialize" / "import_materialize.py",
                 "--staging",
                 staging,
                 "--library-dir",
@@ -528,7 +528,7 @@ def main(argv=None, runner=None, tiers=None):
     paths = {
         "py_sap": PY_SAP,
         "py_isa": PY_ISA,
-        "scripts": Path(__file__).resolve().parent,
+        "scripts": Path(__file__).resolve().parents[1],
         "library": dev / "data" / "asset_library",
         "source": dev / "data" / "asset_library" / "_source",
         "out": Path(a.out),
@@ -572,7 +572,7 @@ def main(argv=None, runner=None, tiers=None):
         runner(
             [
                 PY_SAP,
-                paths["scripts"] / "s9_build_shadow_root.py",
+                paths["scripts"] / "5_catalog" / "s9_build_shadow_root.py",
                 "--library-dir",
                 paths["library"],
                 "--shadow",

@@ -8,7 +8,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from lib import a4_coverage as a4  # noqa: E402
 
 UP = "/home/jingxiang/yuxin/env-gen-github"

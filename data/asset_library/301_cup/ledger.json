@@ -57,8 +57,7 @@
               "is_default": true
             }
           ],
-          "inherited_from": "021_cup",
-          "note": "inherited from 021_cup"
+          "inherited_from": "021_cup"
         },
         "mass_kg": {
           "value": null,
@@ -79,11 +78,11 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "b5022a33d42657e1d43a40b4a6e9e956ff9a09ec339b37a7bd157af93a6b40f2",
-          "size_bytes": 7112120,
+          "sha256": "b8465f7630f002860b6712a19b449d8a11b2fc4f89695985066d9b0e3f9decec",
+          "size_bytes": 7112128,
           "metadata": {
             "derived_from": "025_mug.usd",
-            "converter": "unknown (pre-v1 import)",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
             "conversion_params": {
               "rotated_z2y": true
             }
@@ -94,11 +93,10 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "37baa530ecfa3b2c9ea4d0d9ad1b056b9684519714cde1eea731f697458f09b0",
+          "sha256": "8911ee3dbb3e4e8bbe810b276e7c565a6ff6f7b58e6fc550cbf95d702bc4b93c",
           "size_bytes": 510000,
           "metadata": {
-            "converter": "unknown (pre-v1 import)",
-            "conversion_params": {}
+            "note": "copy of visual; convex decomposition at load"
           }
         },
         {
@@ -107,10 +105,22 @@
           "backend": "isaacsim",
           "role": "visual_and_collision",
           "sha256": "923c7034200de93a233ea3a223e90e032336342ec6974c47223cefa1ed8d88c3",
-          "size_bytes": 0,
+          "size_bytes": 556368,
           "metadata": {
-            "converter": "unknown (pre-v1 import)",
-            "conversion_params": {}
+            "origin_prefix": "ycb_axis_aligned"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "9a114599d902373f4f1fd1ddc2d35d331b97474b28dd90a3f397e303895ba92e",
+          "size_bytes": 5052,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
           }
         }
       ],
@@ -120,14 +130,11 @@
         "group": "ycb_axis_aligned",
         "file": "025_mug.usd",
         "license": {
-          "spdx": "CC-BY-4.0",
-          "status": "declared",
-          "terms_note": "Underlying YCB dataset CC BY 4.0 (attribution: Calli et al., doi:10.1109/MRA.2015.2448951 & doi:10.1109/ICAR.2015.7251504); NVIDIA USD conversion layer under NVIDIA Isaac Sim Additional Software and Materials License (internal R&D permitted; redistribution of converted USD unclear -- rebuild from upstream YCB data for clean redistribution)",
-          "evidence_url": "http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/ ; https://registry.opendata.aws/ycb-benchmarks/ ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
-          "checked_date": "2026-08-09",
-          "checked_by": "owner-directed research 2026-08-09"
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "NVIDIA asset EULA; YCB dataset terms for ycb group"
         },
-        "retrieved_at": "2026-08-03",
+        "retrieved_at": "2026-08-10",
         "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json"
       },
       "verification": [
@@ -135,19 +142,16 @@
           "backend": "sapien",
           "check": "settle",
           "verdict": "pass",
-          "run_id": "batch_v3",
-          "timestamp": "2026-08-03T00:00:00",
-          "verified_digest": "a8065247a34accbc1838310d881abeb6dc2ed88f5aea6a827c50ef6fb4ce9109",
-          "report_path": "/home/jingxiang/yuxin/env-gen-dev/results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
-        },
-        {
-          "backend": "sapien",
-          "check": "runtime_load",
-          "verdict": "pass",
-          "run_id": "s11",
-          "timestamp": "2026-08-09T00:45:55",
-          "verified_digest": "a8065247a34accbc1838310d881abeb6dc2ed88f5aea6a827c50ef6fb4ce9109",
-          "report_path": "/home/jingxiang/yuxin/env-gen-dev-ledger/results/20260809_ledger_v1_accept/s11"
+          "run_id": "mat",
+          "timestamp": "2026-08-10T18:09:08",
+          "verified_digest": "14b713eb05e6193094921170ce120a3818a71901d1896b4420c87bdc795859ca",
+          "report_path": "results/20260810_repair_301cup_coacd/mat/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
         }
       ]
     }
