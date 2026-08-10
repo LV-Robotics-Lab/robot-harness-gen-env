@@ -1,0 +1,110 @@
+{
+  "schema_version": "asset_ledger.v1",
+  "asset_id": "robotwin_900_gen_block_2057baba",
+  "category": "block",
+  "semantic_name": "block",
+  "kind": "rigid",
+  "tags": [
+    "upstream",
+    "robotwin",
+    "rigid"
+  ],
+  "semantics": {
+    "aliases": [
+      "block"
+    ],
+    "colors": [
+      "red"
+    ],
+    "materials": []
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.038890872,
+          0.038890872,
+          0.04
+        ],
+        "mesh_up_axis": "Z",
+        "origin_convention": "base-at-floor",
+        "scale_applied": 1.0,
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 0.04,
+          "scale": 1.0,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "procedural_flat_base",
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default": null,
+          "runtime_default_basis": "none"
+        }
+      },
+      "representations": [
+        {
+          "format": "obj",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/900_gen_block_2057baba/visual/textured0.obj",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "a189d1954f76d74b0e8c48944572d7fd9d90dcf9941f85cc883e127b162e25c7",
+          "size_bytes": 469,
+          "metadata": {}
+        },
+        {
+          "format": "obj",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/900_gen_block_2057baba/collision/textured0.obj",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "3e995bf7f7d17cb0258645c33e33bc38ca81f4c53a7be9144cf3d7737d15351c",
+          "size_bytes": 423,
+          "metadata": {}
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "RoboTwin (upstream)",
+        "group": "c3ddfa8b97d5519efa828b075999bd0006778e5e",
+        "file": "900_gen_block_2057baba",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2026-07-19",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/900_gen_block_2057baba/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    }
+  ]
+}

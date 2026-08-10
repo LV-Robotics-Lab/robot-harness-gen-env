@@ -1,0 +1,112 @@
+{
+  "schema_version": "asset_ledger.v1",
+  "asset_id": "robotwin_003_plate",
+  "category": "plate",
+  "semantic_name": "plate",
+  "kind": "rigid",
+  "tags": [
+    "upstream",
+    "robotwin",
+    "rigid"
+  ],
+  "semantics": {
+    "aliases": [
+      "dish",
+      "plate"
+    ],
+    "colors": [],
+    "materials": [
+      "ceramic",
+      "plastic"
+    ]
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.189684796333313,
+          0.025,
+          0.1903301000595093
+        ],
+        "mesh_up_axis": "Y",
+        "origin_convention": "bottom-center",
+        "scale_applied": 0.025,
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 0.1903301000595093,
+          "scale": 0.025,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "circle",
+          "stable_poses": [
+            {
+              "pose_id": "robotwin_plate_upright",
+              "orientation_wxyz": [
+                0.5,
+                0.5,
+                0.5,
+                0.5
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.008,
+          "support_spawn_clearance_m": 0.004,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default": null,
+          "runtime_default_basis": "none"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/003_plate/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "557429b6d585ff8b511428cb5726332a45bfc54f50537c9b5fa6ba60b08a39e0",
+          "size_bytes": 1600432,
+          "metadata": {}
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/003_plate/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "2d2682b1294d70ebd997bb174e7cef34e8f86f2da496621445eefd4aab621266",
+          "size_bytes": 807744,
+          "metadata": {}
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "RoboTwin (upstream)",
+        "group": "c3ddfa8b97d5519efa828b075999bd0006778e5e",
+        "file": "003_plate",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/003_plate/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    }
+  ]
+}
