@@ -5,7 +5,7 @@ from agenticsim.openxsim.assets import AssetCandidate
 
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "d_acquire"))
 import acquire_batch as ab
 from lib.a1_providers import Tier
 from lib import a2_selection as a2
@@ -56,7 +56,7 @@ def paths(tmp_path):
     return {
         "py_sap": "PY_SAP",
         "py_isa": "PY_ISA",
-        "scripts": Path(__file__).resolve().parents[1] / "scripts",
+        "scripts": Path(__file__).resolve().parents[1] / "scripts" / "d_acquire",
         "library": tmp_path / "library",
         "source": tmp_path / "source",
         "out": tmp_path / "out",

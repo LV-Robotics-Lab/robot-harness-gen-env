@@ -2,7 +2,7 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "d_acquire"))
 import scene_acquire as sa
 
 FIX = str(Path(__file__).parent / "fixtures" / "mini_catalog.json")

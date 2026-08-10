@@ -50,7 +50,7 @@ try:
         cache0 = UsdGeom.BBoxCache(Usd.TimeCode.Default(), ["default", "render"])
         rng0 = cache0.ComputeWorldBound(stage.GetDefaultPrim()).ComputeAlignedRange()
         raw = [float(v) * mpu_base for v in (rng0.GetMax() - rng0.GetMin())]
-        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lib"))
         import conventions as conv_lib
 
         size_resolution = conv_lib.resolve_size(
