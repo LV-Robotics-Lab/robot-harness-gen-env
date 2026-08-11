@@ -39,3 +39,10 @@ pkill -f web/app.py
 - `/status` 新增 `stage_timeline` / `log_size` / `server_now`；`/api/runs` 新增 `current`
 
 测试：`python -m pytest web/tests/`（env-gen-yuxin 环境）。
+
+## 资产库视图（2026-08-12）
+
+header「资产库」页签（#library）：KPI/可用性解锁清单/来源与检索梯队/类别深度/标注覆盖/最近引进，
+均可下钻到具体资产（带缩略图）。新增接口 `GET /api/library/stats`（mtime 缓存）与
+`GET /api/library/thumb/<asset_id>`。缩略图烘焙：`python web/tools/bake_thumbs.py`（幂等，
+输出 results/web_thumbs/；引进资产自带 snapshots 无需烘焙）。

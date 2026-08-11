@@ -4,6 +4,7 @@
 <title>Pipeline Studio · env-gen-dev</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20y='.9em'%20font-size='90'%3E%F0%9F%8F%AD%3C/text%3E%3C/svg%3E">
 <style>
   :root {
     --bg: #f6f7f6;
@@ -21,6 +22,10 @@
     --card-shadow: 0 1px 2px rgba(20, 30, 25, 0.06);
     --log-bg: #14181a;
     --log-fg: #c9d4cd;
+    /* dataviz 校验通过的分类色对 + 中性量级条色 */
+    --cat-a: #0E8A5F;
+    --cat-b: #5B5FC7;
+    --bar-neutral: #566873;
   }
   :root[data-theme="dark"] {
     --bg: #141715;
@@ -38,6 +43,9 @@
     --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
     --log-bg: #0d1112;
     --log-fg: #b7c4bc;
+    --cat-a: #2E9A75;
+    --cat-b: #6B6FD6;
+    --bar-neutral: #7E8C96;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -56,6 +64,9 @@
       --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
       --log-bg: #0d1112;
       --log-fg: #b7c4bc;
+      --cat-a: #2E9A75;
+      --cat-b: #6B6FD6;
+      --bar-neutral: #7E8C96;
     }
   }
 
@@ -136,6 +147,115 @@
     font-size: 12px; color: var(--text-dim); cursor: pointer; background: var(--panel);
   }
   .hint-chip:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ---------- view tabs ---------- */
+  #viewTabs {
+    display: flex; gap: 2px; background: var(--mono-bg); border: 1px solid var(--border);
+    border-radius: 9px; padding: 2px; margin-left: 4px;
+  }
+  .vtab {
+    padding: 5px 14px; border-radius: 7px; font-size: 12.5px; font-weight: 600;
+    color: var(--text-dim); cursor: pointer; user-select: none; white-space: nowrap;
+  }
+  .vtab.active { background: var(--panel); color: var(--text); box-shadow: var(--card-shadow); }
+  .vtab:hover:not(.active) { color: var(--text); }
+
+  /* ---------- library view ---------- */
+  .libcard {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: var(--card-shadow); padding: 14px 18px 16px; margin-bottom: 12px;
+  }
+  .libcard h3 { margin: 0 0 4px; font-size: 14px; }
+  .libcard .sub { color: var(--text-dim); font-size: 12px; margin-bottom: 10px; }
+  #libHead { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+  #libHead h2 { margin: 0; font-size: 16px; }
+  #libHead .meta { color: var(--text-dim); font-size: 12px; }
+  #libRefresh {
+    margin-left: auto; font-size: 12px; color: var(--accent); cursor: pointer;
+    border: 1px solid var(--border); border-radius: 7px; padding: 4px 12px; background: var(--panel);
+  }
+  #libRefresh:hover { border-color: var(--accent); }
+
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 12px; }
+  .kpi {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: var(--card-shadow); padding: 12px 16px 10px;
+  }
+  .kpi .num { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .kpi .lbl { font-size: 11.5px; color: var(--text-dim); font-weight: 600; display: flex; align-items: center; gap: 5px; }
+  .kpi .ctx { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .kpi .lbl .kdot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  .prop { display: flex; height: 14px; border-radius: 4px; overflow: hidden; background: var(--mono-bg); }
+  .prop .seg { height: 100%; }
+  .prop .seg + .seg { margin-left: 2px; }
+  .prop-lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-dim); margin-top: 5px; }
+
+  .hbar-row {
+    display: grid; grid-template-columns: 150px 1fr 150px; gap: 10px; align-items: center;
+    padding: 4px 6px; border-radius: 7px; cursor: pointer; font-size: 12.5px;
+  }
+  .hbar-row:hover { background: var(--mono-bg); }
+  .hbar-row .hl { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hbar-track { display: block; height: 14px; border-radius: 4px; background: var(--mono-bg); overflow: hidden; }
+  .hbar-fill { display: block; height: 100%; border-radius: 0 4px 4px 0; background: var(--bar-neutral); }
+  .hbar-val { color: var(--text-dim); font-size: 11.5px; text-align: right; font-variant-numeric: tabular-nums; }
+  .hbar-val b { color: var(--text); }
+
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; }
+  .legend .li { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .legend .li:hover { color: var(--accent); }
+  .ldot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+
+  .tier-row { display: flex; gap: 10px; overflow-x: auto; margin-top: 10px; }
+  .tier-card {
+    flex: 1 1 0; min-width: 150px; border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; background: var(--mono-bg);
+  }
+  .tier-card .tn {
+    width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--accent-fg);
+    font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-bottom: 6px;
+  }
+  .tier-card .tname { font-size: 12.5px; font-weight: 650; font-family: Menlo, Consolas, monospace; }
+  .tier-card .tscale { font-size: 11.5px; color: var(--text-dim); margin-top: 3px; }
+  .tier-card.off { opacity: .5; }
+
+  .warnline {
+    display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--active);
+    font-weight: 600; margin-top: 8px;
+  }
+  .cat-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .cat-chip {
+    border: 1px solid var(--border); border-radius: 12px; padding: 3px 10px; font-size: 11.5px;
+    cursor: pointer; background: var(--mono-bg);
+  }
+  .cat-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .cat-chip b { font-weight: 700; }
+
+  .cov-row { display: grid; grid-template-columns: 90px 1fr 96px; gap: 10px; align-items: center; font-size: 12.5px; padding: 4px 0; }
+  .cov-track { display: block; height: 10px; border-radius: 4px; background: var(--mono-bg); overflow: hidden; }
+  .cov-fill { display: block; height: 100%; border-radius: 0 4px 4px 0; background: var(--accent); }
+  .cov-val { color: var(--text-dim); font-size: 11.5px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .imp-strip { display: flex; gap: 10px; overflow-x: auto; padding: 4px 0; }
+  .imp-card { flex: 0 0 auto; width: 108px; cursor: pointer; }
+  .imp-card img, .imp-card .phld {
+    width: 108px; height: 108px; border-radius: 8px; border: 1px solid var(--border);
+    object-fit: cover; background: var(--mono-bg); display: block;
+  }
+  .imp-card .iid { font-size: 11px; font-family: Menlo, Consolas, monospace; margin-top: 3px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .imp-card .icat { font-size: 10.5px; color: var(--text-dim); }
+
+  .drill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 12px; padding: 14px 16px; }
+  .drill-cell { font-size: 11px; }
+  .drill-cell img, .drill-cell .phld {
+    width: 100%; aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--border);
+    object-fit: cover; background: var(--mono-bg); display: block; cursor: zoom-in;
+  }
+  .phld { display: flex !important; align-items: center; justify-content: center; color: var(--pending); }
+  .drill-cell .did { font-family: Menlo, Consolas, monospace; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .drill-cell .dmeta { color: var(--text-dim); font-size: 10.5px; display: flex; gap: 5px; align-items: center; }
 
   /* ---------- run header card ---------- */
   #runHeader { margin-bottom: 12px; }
@@ -311,6 +431,10 @@
     <h1>Pipeline Studio</h1>
     <div class="sub">env-gen-dev · 资产自适应场景生成</div>
   </div>
+  <nav id="viewTabs">
+    <span class="vtab active" data-v="run">运行</span>
+    <span class="vtab" data-v="library">资产库</span>
+  </nav>
   <div id="form">
     <div class="field grow">
       <label for="prompt">提示词</label>
@@ -345,7 +469,11 @@
           <span class="hint-chip">put a duck on the table</span>
           <span class="hint-chip">place a laptop on the table</span>
         </div>
+        <div style="margin-top:16px;">
+          <span class="hint-chip" id="libEntry" style="border-style:solid;">📦 资产库总览 — 量级 / 可用性 / 来源统计</span>
+        </div>
       </div>
+      <div id="libView" style="display:none;"></div>
       <div id="runView" style="display:none;">
         <div id="runHeader"></div>
         <div id="stepper"></div>
@@ -413,6 +541,7 @@ async function api(path, opts) {
 function fileUrl(p) { return `/api/run/${S.group}/${S.id}/file?p=${encodeURIComponent(p)}`; }
 function fmtDur(s) {
   if (s == null) return "";
+  if (s < 1) return "<1s";
   s = Math.round(s);
   if (s < 60) return s + "s";
   const m = Math.floor(s / 60), r = s % 60;
@@ -513,8 +642,8 @@ async function loadRun(group, id) {
   const lb = document.getElementById("logBody");
   lb.innerHTML = ""; delete lb.dataset.sig;
   ["runHeader", "stepper", "stagePanel", "filesPanel"].forEach(i => { delete document.getElementById(i).dataset.sig; });
-  document.getElementById("welcome").style.display = "none";
-  document.getElementById("runView").style.display = "";
+  if (location.hash) location.hash = "";
+  setView("run");
   renderSidebar();
   fetchFiles();
   await pollStatus();
@@ -580,18 +709,20 @@ function renderRunHeader() {
   const tEnd = state.finished_at ? Date.parse(state.finished_at) / 1000 : null;
   const total = (t0 && tEnd) ? tEnd - t0 : null;
 
-  setRegion(el, {p: meta.prompt, id: S.id, badge, total, live}, () => {
+  const cov = st.stages && st.stages.coverage;
+  const promptShown = meta.prompt || (cov && cov.prompt) || S.id;
+  setRegion(el, {p: promptShown, id: S.id, badge, total, live}, () => {
     const kv = [];
     if (meta.seed != null) kv.push(`seed <b>${escapeHtml(meta.seed)}</b>`);
     if (meta.exclude_category) kv.push(`演示缺口 <b>${escapeHtml(meta.exclude_category)}</b>`);
-    kv.push(`<span class="mono">${escapeHtml(S.id)}</span>`);
+    if (promptShown !== S.id) kv.push(`<span class="mono">${escapeHtml(S.id)}</span>`);
     if (t0) kv.push(`开始 <b>${fmtTime(t0)}</b>`);
     const elapsedHtml = live
       ? `<div class="elapsed"><div class="big" id="elapsedVal">--:--</div><div class="lbl">已运行</div></div>`
       : (total != null ? `<div class="elapsed"><div class="big">${fmtDur(total)}</div><div class="lbl">总耗时</div></div>` : "");
     return `<div class="runcard">
       <div style="flex:1 1 340px;min-width:240px;">
-        <div class="prompt">${escapeHtml(meta.prompt || S.id)}</div>
+        <div class="prompt">${escapeHtml(promptShown)}</div>
         <div class="kv">${kv.join("<span style='opacity:.4'>·</span>")}</div>
       </div>
       ${elapsedHtml}
@@ -874,6 +1005,7 @@ async function openFilePreview(p) {
   const modal = document.getElementById("modal");
   const body = document.getElementById("modalBody");
   document.getElementById("modalTitle").textContent = p;
+  document.getElementById("modalRaw").style.display = "";
   document.getElementById("modalRaw").href = fileUrl(p);
   if (/\.mp4$/.test(low)) {
     body.innerHTML = `<video controls autoplay src="${fileUrl(p)}"></video>`;
@@ -932,6 +1064,9 @@ async function fetchLogDelta(gen) {
       S.logOffset = r.size;
     }
     document.getElementById("logCnt").textContent = r.size ? fmtSize(r.size) : "";
+    if (!r.size && !logBodyEl.children.length) {
+      logBodyEl.innerHTML = '<div class="ll" id="logEmpty" style="color:var(--text-dim);">（无日志）</div>';
+    }
     if (!r.more) break;
   }
 }
@@ -943,6 +1078,8 @@ function logLineClass(l) {
   return "";
 }
 function appendLogLines(chunk, flushPartial) {
+  const ph = document.getElementById("logEmpty");
+  if (ph) ph.remove();
   let text = S.logPartial + chunk;
   const lines = text.split("\n");
   S.logPartial = flushPartial ? "" : lines.pop();
@@ -1055,9 +1192,213 @@ document.querySelectorAll(".hint-chip").forEach(c => {
   c.onclick = () => { document.getElementById("prompt").value = c.textContent; document.getElementById("prompt").focus(); };
 });
 
+// ---------- library view ----------
+const REASON_LABELS = {
+  stable_pose: "稳定姿态", dimensions_m: "实际尺寸", scale: "缩放标定",
+  model_metadata: "模型元数据", supported_loader: "加载器支持",
+  collision_mesh: "碰撞网格", visual_mesh: "视觉网格",
+};
+const PHLD_SVG = "data:image/svg+xml;utf8," + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+  '<g fill="none" stroke="#9aa39d" stroke-width="3" stroke-linejoin="round" opacity="0.6">' +
+  '<path d="M50 18 82 34 82 66 50 82 18 66 18 34Z"/><path d="M18 34 50 50 82 34M50 50 50 82"/></g></svg>');
+
+function pct(n, d) { return d ? Math.round((n / d) * 100) : 0; }
+function thumbImgHtml(aid, cls) {
+  const a = (S.library && S.library.assets[aid]) || {};
+  if (!a.thumb) return `<div class="phld ${cls || ""}"><img src="${PHLD_SVG}" style="width:46%;opacity:.9;border:none;background:none;"></div>`;
+  return `<img class="${cls || ""}" src="/api/library/thumb/${encodeURIComponent(aid)}" loading="lazy" onerror="this.src='${PHLD_SVG}'">`;
+}
+
+async function fetchLibrary() {
+  const el = document.getElementById("libView");
+  if (!S.library) el.innerHTML = '<div class="empty">加载资产库统计…</div>';
+  try {
+    S.library = await api("/api/library/stats");
+    renderLibrary();
+  } catch (e) {
+    el.innerHTML = `<div class="empty">统计加载失败: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderLibrary() {
+  const s = S.library;
+  const el = document.getElementById("libView");
+  const k = s.kpis;
+  S.drills = {};
+
+  // --- KPI 行
+  let html = `<div id="libHead">
+    <h2>📦 资产库总览</h2>
+    <span class="meta">catalog 更新于 ${fmtTime(s.catalog_mtime)} · 统计生成于 ${fmtTime(s.generated_at)}</span>
+    <button id="libRefresh">刷新</button>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="num">${k.assets}</div><div class="lbl">资产总数</div><div class="ctx">${k.model_variants} 个模型变体</div></div>
+    <div class="kpi"><div class="num">${k.categories}</div><div class="lbl">类别</div><div class="ctx">${s.category_depth.singletons} 类仅 1 个资产</div></div>
+    <div class="kpi"><div class="num">${k.available}</div><div class="lbl"><span class="kdot" style="background:var(--done);"></span>场景可用</div><div class="ctx">占 ${pct(k.available, k.assets)}%，其余待解锁</div></div>
+    <div class="kpi"><div class="num">${k.imported}</div><div class="lbl"><span class="kdot" style="background:var(--cat-b);"></span>缺口引进</div><div class="ctx">占 ${pct(k.imported, k.assets)}%，随运行增长</div></div>
+    <div class="kpi"><div class="num">${(s.retrieval.tiers.length || 1) - 1}+1</div><div class="lbl">检索梯队</div><div class="ctx">tier0 本地 + ${s.retrieval.tiers.length - 1} 级外部</div></div>
+  </div>`;
+
+  // --- 可用性 & 解锁清单
+  const av = s.availability;
+  const maxReason = av.reasons.length ? av.reasons[0].count : 1;
+  html += `<div class="libcard">
+    <h3>可用性 · 解锁清单</h3>
+    <div class="sub">available = 可直接进入场景生成；未达标资产按缺失项归类，补齐即解锁</div>
+    <div class="prop" title="可用 ${av.available} / ${av.total}">
+      <span class="seg" style="width:${pct(av.available, av.total)}%;background:var(--done);"></span>
+    </div>
+    <div class="prop-lbl"><span><b style="color:var(--text);">${av.available} / ${av.total}</b> 可直接用于场景（${pct(av.available, av.total)}%）</span><span>缺失项可叠加，一个资产可能欠多项</span></div>
+    <div style="margin-top:12px;">
+      ${av.reasons.map(r => {
+        S.drills["reason:" + r.reason] = {title: `缺 ${r.reason}（${REASON_LABELS[r.reason] || ""}）· ${r.count} 个资产`, ids: r.asset_ids};
+        return `<div class="hbar-row" data-drill="reason:${escapeHtml(r.reason)}" title="点击查看具体资产">
+          <span class="hl">${escapeHtml(r.reason)} <span style="color:var(--text-dim);">${REASON_LABELS[r.reason] || ""}</span></span>
+          <span class="hbar-track"><span class="hbar-fill" style="width:${pct(r.count, maxReason)}%;"></span></span>
+          <span class="hbar-val"><b>${r.count}</b> · 补齐解锁 ${r.count} 个</span>
+        </div>`;
+      }).join("")}
+    </div>
+  </div>`;
+
+  // --- 来源 & 检索梯队
+  const src = s.sources;
+  const totalSrc = src.reduce((a, x) => a + x.count, 0);
+  const srcColor = {robotwin_native: "var(--cat-a)", imported: "var(--cat-b)"};
+  src.forEach(x => { S.drills["src:" + x.key] = {title: `${x.label} · ${x.count} 个资产`, ids: x.asset_ids}; });
+  html += `<div class="libcard">
+    <h3>来源构成 · 检索梯队</h3>
+    <div class="sub">本地资产两种来路；缺口触发时按梯队向外逐级检索</div>
+    <div class="prop">
+      ${src.map(x => `<span class="seg" data-drill="src:${x.key}" style="width:${pct(x.count, totalSrc)}%;background:${srcColor[x.key]};cursor:pointer;" title="${escapeHtml(x.label)} ${x.count}"></span>`).join("")}
+    </div>
+    <div class="legend">
+      ${src.map(x => `<span class="li" data-drill="src:${x.key}"><span class="ldot" style="background:${srcColor[x.key]};"></span>${escapeHtml(x.label)} <b>${x.count}</b>（${pct(x.count, totalSrc)}%）</span>`).join("")}
+    </div>
+    <div class="tier-row">
+      ${s.retrieval.tiers.map(t => `<div class="tier-card ${t.enabled ? "" : "off"}">
+        <div class="tn">${t.tier}</div>
+        <div class="tname">${t.providers.map(escapeHtml).join("<br>")}</div>
+        <div class="tscale">${escapeHtml(t.scale || "")}${t.enabled ? "" : " · 未启用"}</div>
+      </div>`).join("")}
+    </div>
+  </div>`;
+
+  // --- 类别深度 + 标注覆盖（并排两卡）
+  const depthLabels = {"1": "仅 1 个资产", "2": "2 个资产", "3+": "3 个及以上"};
+  const maxDepth = Math.max(...s.category_depth.buckets.map(b => b.categories), 1);
+  const ann = s.annotation;
+  const annRows = [["materials", "材质"], ["colors", "颜色"], ["aliases", "别名"]];
+  html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px;">
+  <div class="libcard" style="margin-bottom:0;">
+    <h3>类别深度</h3>
+    <div class="sub">每个类别有几个可选资产 —— 深度决定同类替换与选优空间</div>
+    ${s.category_depth.buckets.map(b => `<div class="hbar-row" style="cursor:default;grid-template-columns:110px 1fr 60px;">
+      <span>${depthLabels[b.depth] || b.depth}</span>
+      <span class="hbar-track"><span class="hbar-fill" style="width:${pct(b.categories, maxDepth)}%;"></span></span>
+      <span class="hbar-val"><b>${b.categories}</b> 类</span>
+    </div>`).join("")}
+    <div class="warnline">⚠ ${s.category_depth.singletons} 个类别只有 1 个资产 — 同类无备选</div>
+    <div class="cat-chips">
+      ${s.category_depth.top.filter(c => c.count > 1).map(c => {
+        S.drills["cat:" + c.category] = {title: `类别 ${c.category} · ${c.count} 个资产`, ids: c.asset_ids};
+        return `<span class="cat-chip" data-drill="cat:${escapeHtml(c.category)}">${escapeHtml(c.category)} <b>×${c.count}</b></span>`;
+      }).join("")}
+    </div>
+  </div>
+  <div class="libcard" style="margin-bottom:0;">
+    <h3>语义标注覆盖</h3>
+    <div class="sub">标注越全，检索命中与同类选优越准</div>
+    ${annRows.map(([key, zh]) => `<div class="cov-row">
+      <span>${zh} <span class="mono" style="color:var(--text-dim);font-size:11px;">${key}</span></span>
+      <span class="cov-track"><span class="cov-fill" style="width:${pct(ann[key], ann.total)}%;"></span></span>
+      <span class="cov-val"><b style="color:var(--text);">${ann[key]}</b> / ${ann.total} · ${pct(ann[key], ann.total)}%</span>
+    </div>`).join("")}
+    <div class="sub" style="margin:10px 0 0;">材质/颜色标注稀疏是当前检索质量的隐性瓶颈之一。</div>
+  </div>
+  </div>`;
+
+  // --- 最近引进
+  const imp = s.recent_imports;
+  html += `<div class="libcard" style="margin-top:12px;">
+    <h3>最近引进</h3>
+    <div class="sub">缺口引进的资产按入库时间倒序；每次带「演示缺口」或真实缺口的运行都会让这里生长</div>
+    ${imp.length ? `<div class="imp-strip">${imp.map(x => `
+      <div class="imp-card" data-thumb="${escapeHtml(x.asset_id)}">
+        ${thumbImgHtml(x.asset_id)}
+        <div class="iid" title="${escapeHtml(x.asset_id)}">${escapeHtml(x.asset_id)}</div>
+        <div class="icat">${escapeHtml(x.category || "")} · ${relTime(x.mtime)}</div>
+      </div>`).join("")}</div>` : '<div class="empty">尚无引进记录</div>'}
+  </div>
+  <details class="raw" style="margin:0 4px 20px;"><summary>library stats 原始数据</summary><pre>${escapeHtml(JSON.stringify(s, null, 2))}</pre></details>`;
+
+  el.innerHTML = html;
+
+  el.querySelector("#libRefresh").onclick = () => fetchLibrary();
+  el.querySelectorAll("[data-drill]").forEach(n => {
+    n.addEventListener("click", () => openAssetDrill(n.dataset.drill));
+  });
+  el.querySelectorAll(".imp-card").forEach(n => {
+    n.onclick = () => {
+      const aid = n.dataset.thumb;
+      if ((S.library.assets[aid] || {}).thumb) {
+        S.lbList = [{url: `/api/library/thumb/${encodeURIComponent(aid)}`, cap: aid}];
+        S.lbIdx = 0; showLb();
+      }
+    };
+  });
+}
+
+function openAssetDrill(key) {
+  const d = S.drills && S.drills[key];
+  if (!d) return;
+  const s = S.library;
+  document.getElementById("modalTitle").textContent = d.title;
+  document.getElementById("modalRaw").style.display = "none";
+  const body = document.getElementById("modalBody");
+  body.innerHTML = `<div class="drill-grid">${d.ids.map(aid => {
+    const a = s.assets[aid] || {};
+    return `<div class="drill-cell" data-aid="${escapeHtml(aid)}">
+      ${thumbImgHtml(aid)}
+      <div class="did" title="${escapeHtml(aid)}">${escapeHtml(aid)}</div>
+      <div class="dmeta"><span class="dot ${a.available ? "scene" : "evidence"}"></span>${a.available ? "可用" : "待解锁"} · ${escapeHtml(a.load_type || "?")}${a.models > 1 ? " · " + a.models + " 变体" : ""}</div>
+    </div>`;
+  }).join("")}</div>`;
+  document.getElementById("modal").classList.add("open");
+  const imgs = [...body.querySelectorAll(".drill-cell img:not(.phld img)")].filter(i => !i.src.startsWith("data:"));
+  body.querySelectorAll(".drill-cell").forEach(cell => {
+    const img = cell.querySelector("img");
+    if (!img || img.src.startsWith("data:")) return;
+    img.onclick = () => {
+      S.lbList = imgs.map(i => ({url: i.src, cap: i.closest(".drill-cell").dataset.aid}));
+      S.lbIdx = Math.max(0, imgs.indexOf(img));
+      showLb();
+    };
+  });
+}
+
+// ---------- view switching ----------
+function setView(v) {
+  S.view = v;
+  document.querySelectorAll("#viewTabs .vtab").forEach(t => t.classList.toggle("active", t.dataset.v === v));
+  const lib = v === "library";
+  document.getElementById("libView").style.display = lib ? "" : "none";
+  document.getElementById("welcome").style.display = (!lib && !S.id) ? "" : "none";
+  document.getElementById("runView").style.display = (!lib && S.id) ? "" : "none";
+  if (lib && !S.library) fetchLibrary();
+}
+window.addEventListener("hashchange", () => setView(location.hash === "#library" ? "library" : "run"));
+document.querySelectorAll("#viewTabs .vtab").forEach(t => {
+  t.onclick = () => { location.hash = t.dataset.v === "library" ? "#library" : ""; };
+});
+document.getElementById("libEntry").onclick = () => { location.hash = "#library"; };
+
 // ---------- boot ----------
 refreshRuns();
 setInterval(refreshRuns, 5000);
+setView(location.hash === "#library" ? "library" : "run");
 </script>
 </body>
 </html>
