@@ -17,6 +17,9 @@ def write_model(asset: Path, *, model_id: int = 0) -> None:
                 "scale": [0.05, 0.05, 0.05],
                 "extents": [1.0, 2.0, 1.0],
                 "mass_kg": 1.5,
+                "static_friction": 2.0,
+                "dynamic_friction": 1.5,
+                "restitution": 0.1,
             }
         ),
         encoding="utf-8",
@@ -65,6 +68,9 @@ assets:
     assert Path(entry.models[0].collision_path).is_file()
     assert entry.models[0].dimensions_m == (0.05, 0.05, 0.1)
     assert entry.models[0].mass_kg == 1.5
+    assert entry.models[0].static_friction == 2.0
+    assert entry.models[0].dynamic_friction == 1.5
+    assert entry.models[0].restitution == 0.1
     assert entry.models[0].stable_pose_id == "robotwin_can_upright"
     assert entry.models[0].stable_orientation_wxyz is not None
     assert abs(entry.models[0].stable_orientation_wxyz[0] - 2**-0.5) < 1e-7

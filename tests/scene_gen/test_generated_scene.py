@@ -8,7 +8,11 @@ import types
 from pathlib import Path
 
 from scene_gen.catalog import load_catalog
-from scene_gen.envs.generated_scene import _runtime_modelname, load_resolved_scene
+from scene_gen.envs.generated_scene import (
+    _apply_physical_material,
+    _runtime_modelname,
+    load_resolved_scene,
+)
 from scene_gen.parser import parse_rule_based
 from scene_gen.solver import solve_scene
 
@@ -53,6 +57,58 @@ def test_runtime_modelname_uses_valid_external_asset_directory(tmp_path: Path) -
     )
 
     assert _runtime_modelname(item) == str(asset_directory.resolve())
+
+
+def test_apply_physical_material_updates_all_collision_shapes() -> None:
+    class FakeCollisionShape:
+        def __init__(self) -> None:
+            self.physical_material = None
+
+        def set_physical_material(self, material) -> None:
+            self.physical_material = material
+
+    shapes = [FakeCollisionShape(), FakeCollisionShape()]
+    physics_component = types.SimpleNamespace(
+        get_collision_shapes=lambda: shapes
+    )
+    actor = types.SimpleNamespace(
+        actor=types.SimpleNamespace(components=[physics_component])
+    )
+
+    created_materials = []
+
+    class FakeScene:
+        def create_physical_material(
+            self,
+            static_friction,
+            dynamic_friction,
+            restitution,
+        ):
+            material = types.SimpleNamespace(
+                static_friction=static_friction,
+                dynamic_friction=dynamic_friction,
+                restitution=restitution,
+            )
+            created_materials.append(material)
+            return material
+
+    task = types.SimpleNamespace(scene=FakeScene())
+    item = types.SimpleNamespace(
+        object_id="scissors_1",
+        static_friction=2.0,
+        dynamic_friction=1.5,
+        restitution=0.1,
+    )
+
+    applied_count = _apply_physical_material(task, actor, item)
+
+    assert applied_count == 2
+    assert len(created_materials) == 1
+    material = created_materials[0]
+    assert material.static_friction == 2.0
+    assert material.dynamic_friction == 1.5
+    assert material.restitution == 0.1
+    assert all(shape.physical_material is material for shape in shapes)
 
 
 def test_generated_scene_loads_only_resolved_assets_and_registers_footprints(monkeypatch) -> None:

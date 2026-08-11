@@ -45,7 +45,14 @@ def test_solver_propagates_catalog_mass_to_resolved_object() -> None:
     for entry in catalog.entries:
         if entry.asset_id == "071_can":
             models = tuple(
-                model.model_copy(update={"mass_kg": 1.5})
+                model.model_copy(
+                    update={
+                        "mass_kg": 1.5,
+                        "static_friction": 2.0,
+                        "dynamic_friction": 1.5,
+                        "restitution": 0.1,
+                    }
+                )
                 if model.model_id == 0
                 else model
                 for model in entry.models
@@ -60,6 +67,9 @@ def test_solver_propagates_catalog_mass_to_resolved_object() -> None:
     )
     can = next(item for item in resolved.objects if item.asset_id == "071_can")
     assert can.mass_kg == pytest.approx(1.5)
+    assert can.static_friction == pytest.approx(2.0)
+    assert can.dynamic_friction == pytest.approx(1.5)
+    assert can.restitution == pytest.approx(0.1)
 
 
 def test_solver_meets_all_geometric_relations() -> None:

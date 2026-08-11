@@ -47,6 +47,76 @@ def _runtime_modelname(item: Any) -> str:
     return str(asset_directory)
 
 
+def _collision_shapes(actor: Any) -> list[Any]:
+    raw = getattr(actor, "actor", actor)
+    link_getter = getattr(raw, "get_links", None)
+    entities = list(link_getter()) if callable(link_getter) else [raw]
+
+    shapes: list[Any] = []
+    seen: set[int] = set()
+    for entity in entities:
+        candidates = [entity]
+        component_getter = getattr(entity, "get_components", None)
+        if callable(component_getter):
+            candidates.extend(component_getter())
+        else:
+            candidates.extend(getattr(entity, "components", ()))
+
+        for candidate in candidates:
+            shape_getter = getattr(candidate, "get_collision_shapes", None)
+            if callable(shape_getter):
+                candidate_shapes = shape_getter()
+            else:
+                candidate_shapes = getattr(candidate, "collision_shapes", ())
+            for shape in candidate_shapes:
+                if id(shape) not in seen:
+                    shapes.append(shape)
+                    seen.add(id(shape))
+    return shapes
+
+
+def _apply_physical_material(task: Any, actor: Any, item: Any) -> int:
+    values = (
+        item.static_friction,
+        item.dynamic_friction,
+        item.restitution,
+    )
+    if all(value is None for value in values):
+        return 0
+    if any(value is None for value in values):
+        raise RuntimeError(
+            f"RoboTwin actor {item.object_id} has incomplete physical material metadata"
+        )
+
+    scene = getattr(task, "scene", None)
+    material_creator = getattr(scene, "create_physical_material", None)
+    if not callable(material_creator):
+        raise RuntimeError(
+            f"RoboTwin task cannot create physical material for {item.object_id}"
+        )
+
+    physical_material = material_creator(
+        float(item.static_friction),
+        float(item.dynamic_friction),
+        float(item.restitution),
+    )
+    shapes = _collision_shapes(actor)
+    if not shapes:
+        raise RuntimeError(
+            f"RoboTwin actor {item.object_id} exposes no collision shapes"
+        )
+
+    for shape in shapes:
+        setter = getattr(shape, "set_physical_material", None)
+        if not callable(setter):
+            raise RuntimeError(
+                f"RoboTwin collision shape for {item.object_id} "
+                f"does not expose set_physical_material"
+            )
+        setter(physical_material)
+    return len(shapes)
+
+
 def _render_entities(actor: Any) -> list[Any]:
     raw = getattr(actor, "actor", actor)
     link_getter = getattr(raw, "get_links", None)
@@ -118,6 +188,7 @@ def load_resolved_scene(task: Any, resolved: ResolvedSceneSpec | dict[str, Any] 
                     f"RoboTwin actor {item.object_id} does not expose set_mass"
                 )
             mass_setter(float(item.mass_kg))
+        _apply_physical_material(task, actor, item)
         if item.color and _apply_color_override(actor, item.color) == 0:
             raise RuntimeError(
                 f"RoboTwin loaded {item.object_id} without a tintable render material"
