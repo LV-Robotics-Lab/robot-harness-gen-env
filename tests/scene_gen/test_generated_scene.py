@@ -8,7 +8,7 @@ import types
 from pathlib import Path
 
 from scene_gen.catalog import load_catalog
-from scene_gen.envs.generated_scene import load_resolved_scene
+from scene_gen.envs.generated_scene import _runtime_modelname, load_resolved_scene
 from scene_gen.parser import parse_rule_based
 from scene_gen.solver import solve_scene
 
@@ -29,6 +29,26 @@ class FakeActor:
 
     def set_qpos(self, qpos) -> None:
         self.qpos = tuple(qpos)
+
+
+def test_runtime_modelname_uses_valid_external_asset_directory(tmp_path: Path) -> None:
+    asset_directory = tmp_path / "901_robolab_corn_can"
+    source_paths = (
+        asset_directory / "collision" / "base0.glb",
+        asset_directory / "model_data0.json",
+        asset_directory / "visual" / "base0.glb",
+    )
+    for path in source_paths:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"fixture")
+
+    item = types.SimpleNamespace(
+        asset_id="901_robolab_corn_can",
+        model_id=0,
+        source_files=tuple(str(path) for path in source_paths),
+    )
+
+    assert _runtime_modelname(item) == str(asset_directory.resolve())
 
 
 def test_generated_scene_loads_only_resolved_assets_and_registers_footprints(monkeypatch) -> None:

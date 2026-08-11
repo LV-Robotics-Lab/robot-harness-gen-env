@@ -17,6 +17,36 @@ def _coerce_resolved(value: ResolvedSceneSpec | dict[str, Any] | str | Path) -> 
     return ResolvedSceneSpec.model_validate(value)
 
 
+def _runtime_modelname(item: Any) -> str:
+    """Use a validated external asset directory when RoboTwin has no native copy."""
+
+    native_directory = Path("assets/objects") / item.asset_id
+    if native_directory.is_dir():
+        return item.asset_id
+
+    metadata_name = (
+        "model_data.json"
+        if item.model_id is None
+        else f"model_data{item.model_id}.json"
+    )
+    source_paths = tuple(Path(path).resolve() for path in item.source_files)
+    metadata_paths = [path for path in source_paths if path.name == metadata_name]
+    if len(metadata_paths) != 1:
+        return item.asset_id
+
+    asset_directory = metadata_paths[0].parent
+    if asset_directory.name != item.asset_id:
+        return item.asset_id
+
+    sources_are_valid = all(
+        path.is_file() and path.is_relative_to(asset_directory)
+        for path in source_paths
+    )
+    if not sources_are_valid:
+        return item.asset_id
+    return str(asset_directory)
+
+
 def _render_entities(actor: Any) -> list[Any]:
     raw = getattr(actor, "actor", actor)
     link_getter = getattr(raw, "get_links", None)
@@ -57,11 +87,16 @@ def load_resolved_scene(task: Any, resolved: ResolvedSceneSpec | dict[str, Any] 
     actors: dict[str, Any] = {}
     for item in scene.objects:
         pose = sapien.Pose(item.pose.position_m, item.pose.orientation_wxyz)
+        modelname = (
+            item.asset_id
+            if item.load_type == "urdf"
+            else _runtime_modelname(item)
+        )
         if item.load_type == "urdf":
             actor = create_sapien_urdf_obj(
                 task,
                 pose=pose,
-                modelname=item.asset_id,
+                modelname=modelname,
                 modelid=item.model_id,
                 fix_root_link=item.is_static,
             )
@@ -69,7 +104,7 @@ def load_resolved_scene(task: Any, resolved: ResolvedSceneSpec | dict[str, Any] 
             actor = create_actor(
                 task,
                 pose=pose,
-                modelname=item.asset_id,
+                modelname=modelname,
                 model_id=item.model_id,
                 convex=True,
                 is_static=item.is_static,
