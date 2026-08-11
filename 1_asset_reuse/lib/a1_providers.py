@@ -19,6 +19,53 @@ def _tokens(query: str) -> set[str]:
     return {t for t in re.findall(r"[a-z0-9]+", query.lower()) if len(t) > 1}
 
 
+# Entries that are not candidate objects at all: material libraries, physics-
+# only proxies, scene scaffolding. Measured 2026-08-11 over the NVIDIA prop
+# listing: 88 of 465 (19%). Letting them into the candidate pool costs a gate
+# round-trip each and, worse, lets a query like "a metal wrench" rank five
+# metal SHADERS above any actual tool.
+NON_OBJECT = re.compile(
+    r"(^|_)(materials?|physics_material|plane|frame_prim|checkerboard|"
+    r"instaceable_meshes|instanceable_meshes)(\.|$)"
+    r"|^(Acrylic|Aluminium|Metal|MetalPainted|Plastic|Rubber|Steel)_"
+    r"|_physics$"
+    r"|^M_ConveyorBelt",
+    re.IGNORECASE,
+)
+
+
+def _words(stem: str) -> set[str]:
+    """Split an asset stem into words. USD names delimit with _ - . and
+    camelCase (`035_power_drill`, `SM_Mug_A2`, `sm_whitecorrugatedbox_b04`),
+    so camel boundaries are made explicit before splitting."""
+    hay = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", stem)
+    return {w for w in re.sub(r"[^A-Za-z0-9]+", "_", hay).lower().split("_") if w}
+
+
+def boundary_hits(toks: set[str], stem: str) -> int:
+    """Number of query tokens that match `stem` AT A WORD BOUNDARY.
+
+    Replaces a plain substring test, which produced confidently wrong results
+    rather than no result -- measured on the real listing:
+        "trash bin"  -> sektion_ca(bin)et   3 hits
+        "teddy bear" -> caster_(bear)ing    2 hits
+    Neither object exists in the corpus, but the retriever returned a cabinet
+    and a bearing, and the ledger then records the identity we ASKED for
+    (`identity.basis = requested_by_acquire`), so nothing downstream can tell.
+
+    Measured cost of the tightening (2026-08-11, 30 labelled queries): gold
+    stays top-1 on 26/30 -- identical to substring -- nothing broke, and the
+    candidate pool for "cardboard box" fell 33 -> 6. A trailing digit run is
+    still absorbed (`b04` matches token `b`) because USD names suffix variants
+    that way."""
+    words = _words(stem)
+    hits = 0
+    for t in toks:
+        if t in words or any(w.startswith(t) and w[len(t) :].isdigit() for w in words):
+            hits += 1
+    return hits
+
+
 def list_bucket_keys(prefix, bucket=BUCKET, timeout_s=120):
     ns = "{http://s3.amazonaws.com/doc/2006-03-01/}"
     out, token = [], None
@@ -59,13 +106,18 @@ class NvidiaAssetServerProvider:
         out = []
         scanned = 0
         token_miss = 0
+        non_object = 0
         for prefix, entries in self.ensure_index().items():
             for key, size in entries:
                 scanned += 1
-                base = key.rsplit("/", 1)[-1].lower()
-                if ".thumbs" in key or not base.endswith(".usd"):
+                base = key.rsplit("/", 1)[-1]
+                if ".thumbs" in key or not base.lower().endswith(".usd"):
                     continue
-                hits = sum(1 for t in toks if t in base)
+                stem = base[:-4]
+                if NON_OBJECT.search(stem):
+                    non_object += 1
+                    continue
+                hits = boundary_hits(toks, stem)
                 if toks and not hits:
                     token_miss += 1
                     continue
@@ -83,7 +135,11 @@ class NvidiaAssetServerProvider:
                         metadata={"key": key, "size_bytes": size, "prefix": prefix},
                     )
                 )
-        self.last_stats = {"scanned": scanned, "token_miss": token_miss}
+        self.last_stats = {
+            "scanned": scanned,
+            "token_miss": token_miss,
+            "non_object": non_object,
+        }
         return sorted(out, key=lambda c: (-c.score, c.candidate_id))[:limit]
 
 
