@@ -148,6 +148,22 @@ def test_failed_run_marks_failed_stage(roots):
     assert all(s["status"] != "pending" for s in tl)
 
 
+def test_stale_mtime_artifacts_do_not_break_durations(roots):
+    """复制来的产物 mtime 早于 run 开始时，不得产生离谱耗时。"""
+    import os
+    import time
+
+    web, _ = roots
+    d = make_covered_run(web)
+    old = time.time() - 3600
+    sc = d / "scenes" / "x" / "resolved_scene.json"
+    os.utime(sc, (old, old))
+    tl = timeline_of(d)
+    total = 180  # meta 里 started→finished 共 3 分钟
+    for s in tl:
+        assert s["duration_s"] is None or s["duration_s"] <= total + 1
+
+
 def test_status_endpoint_new_fields(roots):
     web, _ = roots
     make_covered_run(web)

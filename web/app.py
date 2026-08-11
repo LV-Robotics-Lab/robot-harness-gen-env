@@ -678,17 +678,42 @@ def compute_stage_timeline(run_dir, meta, state, log_text):
     if stages[7][0] == "failed":
         details[7] = f"render_rc={state.get('render_rc')}"
 
+    total_s = None
+    fin = _parse_iso_ts(state.get("finished_at"))
+    if t0 and fin and fin >= t0:
+        total_s = fin - t0
+
+    def _valid(ts):
+        # 早于 run 开始的产物 mtime（复制/恢复的 fixture）不参与时间轴
+        return bool(ts) and not (t0 and ts < t0 - 1)
+
+    # ③④ 是②内部的子活动（真实时序 ①→③④→②收尾），用独立锚点
+    sub_durs = {}
+    shot_lo = min(shot_ms) if shot_ms else None
+    shot_hi = max(shot_ms) if shot_ms else None
+    if _valid(shot_lo):
+        base3 = m_acq if _valid(m_acq) else t0
+        if base3 and shot_lo >= base3:
+            sub_durs[3] = shot_lo - base3
+        sub_durs[4] = shot_hi - shot_lo
+
     out = []
     anchor = t0
     for n, key, title in STAGE_TITLES:
         st, end = stages[n]
+        end_valid = _valid(end)
         dur = None
-        if st in ("done", "blocked", "failed") and end and anchor and end >= anchor:
-            dur = end - anchor
+        if st in ("done", "blocked", "failed"):
+            if n in (3, 4):
+                dur = sub_durs.get(n)
+            elif end_valid and anchor and end >= anchor:
+                dur = end - anchor
         elif st == "active" and anchor:
             dur = max(0.0, now_ts - anchor)
-        if end and st in ("done", "blocked", "failed"):
-            anchor = end
+        if dur is not None and total_s is not None and dur > total_s + 1:
+            dur = None
+        if end_valid and n not in (3, 4) and st in ("done", "blocked", "failed"):
+            anchor = max(anchor, end) if anchor else end
         out.append(
             {
                 "n": n,
