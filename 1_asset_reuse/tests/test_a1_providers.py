@@ -74,13 +74,12 @@ def test_nvidia_search_records_last_stats(tmp_path):
     # scanned = every entry examined; token_miss = passed format filter but
     # missed the token match (bowl.usd). thumbs + .mdl are filtered by format,
     # not counted as token_miss.
-    # non_object counts entries dropped as material/physics/scaffolding before
-    # the token test even runs (2026-08-11: the corpus is ~19% such entries).
-    assert p.last_stats == {
-        "scanned": len(FAKE_KEYS),
-        "token_miss": 1,
-        "non_object": 0,
-    }
+    # Stats describe the INDEX now, not a per-query scan: with an inverted
+    # index a query touches only its own posting lists, so "how many rows did
+    # this query walk" stopped existing. indexed = searchable entries (the two
+    # USDs; the thumbnail and the .mdl are not), matched = entries this query
+    # touched, non_object = dropped by corpus hygiene.
+    assert p.last_stats == {"indexed": 2, "matched": 1, "non_object": 0}
 
 
 def test_word_boundary_matching_rejects_substring_false_positives(tmp_path):

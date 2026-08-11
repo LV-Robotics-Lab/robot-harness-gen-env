@@ -257,7 +257,12 @@ class VisualProvider:
                 .numpy()
             )
         sims = (self._emb @ t.T).squeeze(-1)
-        order = np.argsort(-sims)
+        # argpartition, not argsort: we need the best few, not a total order.
+        # O(N) instead of O(N log N), and over-fetch because corpus hygiene
+        # drops some of the leaders before the caller's limit is filled.
+        want = min(len(sims), max(limit * 4, 32))
+        head = np.argpartition(-sims, want - 1)[:want]
+        order = head[np.argsort(-sims[head])]
         out, dropped = [], 0
         for i in order:
             key = self._keys[int(i)]

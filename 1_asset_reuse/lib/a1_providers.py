@@ -92,53 +92,130 @@ class NvidiaAssetServerProvider:
         self._list = list_keys_fn or list_bucket_keys
 
     def ensure_index(self, refresh=False):
+        # Cached in memory: this used to re-read and re-parse a 322 KB JSON on
+        # EVERY query (0.78 ms of a 2.48 ms search -- a third of the cost spent
+        # re-learning something that had not changed).
+        if getattr(self, "_index_cache", None) is not None and not refresh:
+            return self._index_cache
         if self.index_path.is_file() and not refresh:
-            return json.loads(self.index_path.read_text())
+            self._index_cache = json.loads(self.index_path.read_text())
+            self._postings = None
+            return self._index_cache
         index = {
             p: [[k, s] for k, s in self._list(p, self.bucket)] for p in self.prefixes
         }
         self.index_path.parent.mkdir(parents=True, exist_ok=True)
         self.index_path.write_text(json.dumps(index, indent=1))
+        self._index_cache = index
+        self._postings = None
         return index
 
-    def search(self, query, limit=20):
-        toks = _tokens(query)
-        out = []
-        scanned = 0
-        token_miss = 0
-        non_object = 0
-        for prefix, entries in self.ensure_index().items():
-            for key, size in entries:
-                scanned += 1
+    def _non_object_count(self):
+        """How many listed USDs the corpus-hygiene rule removed. Computed once
+        alongside the postings; kept in last_stats because a sudden change here
+        means the upstream listing gained a new kind of non-object."""
+        if getattr(self, "_non_object", None) is None:
+            n = 0
+            for _prefix, rows in self.ensure_index().items():
+                for key, _size in rows:
+                    base = key.rsplit("/", 1)[-1]
+                    if ".thumbs" in key or not base.lower().endswith(".usd"):
+                        continue
+                    if NON_OBJECT.search(base[:-4]):
+                        n += 1
+            self._non_object = n
+        return self._non_object
+
+    def _build_postings(self):
+        """word -> {entry ids}. Built once per index, so a query costs the
+        length of its own posting lists instead of walking the whole corpus and
+        regex-splitting every filename.
+
+        Exactness is preserved deliberately: the postings hold exactly the
+        words boundary_hits would have matched -- including the digit-suffix
+        form (`b04` also posts under `b`) -- and the ids are held in SETS. A
+        list would let one entry be posted twice for one query token (once as
+        `b04`, once as its stripped head `b`) and inflate that entry's score,
+        silently changing the ranking this optimisation is supposed to leave
+        untouched."""
+        if getattr(self, "_postings", None) is not None:
+            return self._postings, self._entries
+        entries, postings = [], {}
+        for prefix, rows in self.ensure_index().items():
+            for key, size in rows:
                 base = key.rsplit("/", 1)[-1]
                 if ".thumbs" in key or not base.lower().endswith(".usd"):
                     continue
                 stem = base[:-4]
                 if NON_OBJECT.search(stem):
-                    non_object += 1
                     continue
-                hits = boundary_hits(toks, stem)
-                if toks and not hits:
-                    token_miss += 1
-                    continue
-                out.append(
-                    AssetCandidate(
-                        candidate_id=f"nvidia:{key}",
-                        name=key.rsplit("/", 1)[-1],
-                        category=key.rsplit("/", 2)[-2].lower(),
-                        download_url=f"{self.bucket}/{urllib.parse.quote(key)}",
-                        source_page=f"{self.bucket}/{urllib.parse.quote(key)}",
-                        format="usd",
-                        provider=self.name,
-                        license="unknown (NVIDIA Omniverse asset server)",
-                        score=float(hits),
-                        metadata={"key": key, "size_bytes": size, "prefix": prefix},
-                    )
-                )
+                idx = len(entries)
+                entries.append((key, size, prefix))
+                for w in _words(stem):
+                    # boundary_hits accepts a token t for word w when w == t,
+                    # or w starts with t and everything after is digits. So a
+                    # word must post under EVERY such prefix, not just the
+                    # one with all trailing digits stripped: `004` is reachable
+                    # as `004`, `00` and `0`. Getting this wrong made 32 of 407
+                    # differential-test queries disagree with the pre-index
+                    # implementation -- all digit queries, all silent.
+                    for cut in range(1, len(w) + 1):
+                        if cut == len(w) or w[cut:].isdigit():
+                            postings.setdefault(w[:cut], set()).add(idx)
+        self._postings, self._entries = postings, entries
+        return postings, entries
+
+    def search(self, query, limit=20):
+        toks = _tokens(query)
+        postings, entries = self._build_postings()
+        # A query with no usable token (single characters are dropped by
+        # _tokens) now returns nothing. The pre-index implementation returned
+        # the ENTIRE corpus at score 0 here -- its `if toks and not hits`
+        # guard short-circuits when toks is empty, so every entry fell through
+        # to the append. That was already wrong; it is worse now that the
+        # identity gate would be handed hundreds of arbitrary candidates to
+        # photograph. This is the one deliberate behaviour change of the
+        # inverted-index rewrite; every other query is bit-identical, verified
+        # by differential test over the corpus's whole vocabulary.
+        if not toks:
+            self.last_stats = {
+                "indexed": len(entries),
+                "matched": 0,
+                "non_object": self._non_object_count(),
+            }
+            return []
+        hit_counts = {}
+        for t in toks:
+            for idx in postings.get(t, ()):
+                hit_counts[idx] = hit_counts.get(idx, 0) + 1
+        out = [
+            AssetCandidate(
+                candidate_id=f"nvidia:{entries[idx][0]}",
+                name=entries[idx][0].rsplit("/", 1)[-1],
+                category=entries[idx][0].rsplit("/", 2)[-2].lower(),
+                download_url=f"{self.bucket}/{urllib.parse.quote(entries[idx][0])}",
+                source_page=f"{self.bucket}/{urllib.parse.quote(entries[idx][0])}",
+                format="usd",
+                provider=self.name,
+                license="unknown (NVIDIA Omniverse asset server)",
+                score=float(hits),
+                metadata={
+                    "key": entries[idx][0],
+                    "size_bytes": entries[idx][1],
+                    "prefix": entries[idx][2],
+                },
+            )
+            for idx, hits in hit_counts.items()
+        ]
+        # Stat semantics changed with the inverted index and say so rather
+        # than faking continuity: a query no longer scans anything, so
+        # "scanned per query" stopped being a real quantity. `indexed` is the
+        # searchable corpus size, `matched` is what this query actually
+        # touched -- which is the number that now bounds query cost.
         self.last_stats = {
-            "scanned": scanned,
-            "token_miss": token_miss,
-            "non_object": non_object,
+            "indexed": len(entries),
+            "matched": len(hit_counts),
+            "non_object": self._non_object_count(),
         }
         return sorted(out, key=lambda c: (-c.score, c.candidate_id))[:limit]
 
@@ -149,9 +226,19 @@ class RoboTwinLocalProvider:
     def __init__(self, catalog_path):
         self.catalog_path = Path(catalog_path)
 
+    def _entries(self):
+        # The catalog is 748 KB and was re-read + re-parsed on every single
+        # query -- effectively the provider's entire 2.42 ms cost. Keyed by
+        # (path, mtime) so a rebuilt catalog is still picked up.
+        stamp = (str(self.catalog_path), self.catalog_path.stat().st_mtime_ns)
+        if getattr(self, "_cache_stamp", None) != stamp:
+            data = json.loads(self.catalog_path.read_text())
+            self._cache_entries = data["entries"] if isinstance(data, dict) else data
+            self._cache_stamp = stamp
+        return self._cache_entries
+
     def search(self, query, limit=20):
-        data = json.loads(self.catalog_path.read_text())
-        entries = data["entries"] if isinstance(data, dict) else data
+        entries = self._entries()
         toks = _tokens(query)
         out = []
         scanned = 0
