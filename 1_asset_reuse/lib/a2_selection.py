@@ -14,6 +14,7 @@ REJ_LICENSE = "license_blocked"
 REJ_OUTRANKED = "outranked"
 REJ_FETCH = "fetch_failed"
 REJ_CONVERT = "convert_failed"
+REJ_IDENTITY = "identity_unverified"
 ALREADY = "already_available_locally"
 
 WEB_FORMATS = {"glb", "gltf", "obj"}

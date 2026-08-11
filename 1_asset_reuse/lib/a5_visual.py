@@ -165,7 +165,16 @@ def rrf_merge(rank_lists, *, k: int = 60, limit: int = 20):
             scores[cand.candidate_id] = scores.get(cand.candidate_id, 0.0) + 1.0 / (
                 k + rank
             )
-            seen.setdefault(cand.candidate_id, cand)
+            kept = seen.setdefault(cand.candidate_id, cand)
+            # The two channels describe the same asset with different metadata:
+            # only the visual one knows where the thumbnail is, and the identity
+            # gate downstream needs exactly that. Keeping whichever arrived
+            # first silently stripped it, so every fused winner reported
+            #  and nothing could ever be verified.
+            if kept is not cand and isinstance(cand.metadata, dict):
+                for key, value in cand.metadata.items():
+                    if kept.metadata.get(key) in (None, ""):
+                        kept.metadata[key] = value
     order = sorted(scores.items(), key=lambda kv: (-kv[1], kv[0]))
     return [seen[cid] for cid, _s in order[:limit]]
 

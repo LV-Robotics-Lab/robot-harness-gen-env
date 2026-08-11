@@ -94,7 +94,12 @@ def _attempt_import(
     runner,
     max_attempts,
     preallocated=None,
+    identity=None,
 ):
+    # Where this asset's category claim comes from. Never defaulted silently:
+    # a pinned/manifest entry is a human's claim about a specific file; a
+    # searched entry only becomes a claim once the gate has seen the picture.
+    identity = identity or {"basis": "manifest_human", "evidence": None}
     imported = None
     for i, r in enumerate(viable[:max_attempts]):
         candidate = r["candidate"]
@@ -161,6 +166,13 @@ def _attempt_import(
                 out,
                 "--overrides-fragment",
                 fragment,
+                "--identity-basis",
+                identity["basis"],
+                *(
+                    ["--identity-evidence", str(identity["evidence"])]
+                    if identity.get("evidence")
+                    else []
+                ),
             ]
         )
         if check_imported(paths["library"], asset, model):
@@ -334,6 +346,9 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             rec["candidates"] = [_rejected(candidate, **gated[0]["rejection"])]
             return rec
         rec["attempts"] = 1
+        # A `local` entry is a human pointing at a specific file on disk: no
+        # retrieval to verify, no thumbnail to look at.
+        identity = {"basis": "manifest_human", "evidence": None}
         fragment = Path(paths["fragment_dir"]) / f"{asset}_m{model}.yml"
         fragment.parent.mkdir(parents=True, exist_ok=True)
         runner(
@@ -348,6 +363,13 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
                 out,
                 "--overrides-fragment",
                 fragment,
+                "--identity-basis",
+                identity["basis"],
+                *(
+                    ["--identity-evidence", str(identity["evidence"])]
+                    if identity.get("evidence")
+                    else []
+                ),
             ]
         )
         if check_imported(paths["library"], asset, model):
@@ -411,9 +433,65 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             for r in gated
         ]
         return rec
+    # ---- identity gate ---------------------------------------------------
+    # Ranking puts the right asset in the top 5 on every labelled query, but no
+    # ranking can say "this corpus contains no trash bin": measured 2026-08-11,
+    # all three abstention signals overlap completely between present and
+    # absent queries, and the visual channel returns its top-N unconditionally.
+    # So entry to the pool is a POSITIVE answer about the picture, not the
+    # absence of a bad score.
+    verify_cfg = globals_cfg.get("identity_gate", {})
+    identity = {"basis": "requested_by_acquire", "evidence": None}
+    if verify_cfg.get("enabled", True):
+        from lib import a6_verify as a6
+
+        vr = a6.verify_candidates(
+            [r["candidate"] for r in viable],
+            category,
+            aliases=entry.get("aliases"),
+            model_name=verify_cfg.get("model", a6.DEFAULT_MODEL),
+            max_check=int(verify_cfg.get("max_check", 3)),
+        )
+        ev = Path(paths["out"]) / f"identity_{category.replace(' ', '_')}.json"
+        ev.parent.mkdir(parents=True, exist_ok=True)
+        ev.write_text(json.dumps(vr["results"], indent=2, ensure_ascii=False) + "\n")
+        rec["identity_gate"] = {"outcome": vr["outcome"], "evidence": str(ev)}
+        if vr["outcome"] == "unverifiable":
+            # Nothing to look at (web sources publish no thumbnail). Proceed
+            # with the weaker claim rather than closing an entire source --
+            # the ledger keeps basis=requested_by_acquire, verified=false, so
+            # the difference stays visible instead of being laundered.
+            identity = {"basis": "requested_by_acquire", "evidence": ev}
+        elif vr["accepted"] is None:
+            # Not "try the next one": every candidate the gate saw was some
+            # other object. Importing anyway would put a thing of the wrong
+            # identity into the pool under the name we asked for.
+            rec["status"] = "identity_unverified"
+            rec["candidates"] = [
+                {
+                    **a2.candidate_dict(r["candidate"]),
+                    "verdict": "rejected",
+                    "rejection": {"code": a2.REJ_IDENTITY, "detail": str(ev)},
+                }
+                for r in viable
+            ]
+            return rec
+        else:
+            accepted_id = vr["accepted"].candidate_id
+            viable = [r for r in viable if r["candidate"].candidate_id == accepted_id]
+            identity = {"basis": "vlm", "evidence": ev}
+
     max_attempts = 1 + int(globals_cfg.get("max_fallback", 2))
     rec = _attempt_import(
-        rec, viable, entry, category, globals_cfg, paths, runner, max_attempts
+        rec,
+        viable,
+        entry,
+        category,
+        globals_cfg,
+        paths,
+        runner,
+        max_attempts,
+        identity=identity,
     )
     rec["candidates"] = [
         {
