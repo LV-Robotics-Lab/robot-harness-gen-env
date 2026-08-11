@@ -13,6 +13,12 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+import sys as _sys
+from pathlib import Path as _P
+
+_sys.path.insert(0, str(_P(__file__).resolve().parents[1] / "ledger"))
+import gen_fragment as gen_fragment_mod  # noqa: E402
+
 from lib import a1_providers as a1  # noqa: E402
 from lib import a2_selection as a2  # noqa: E402
 
@@ -621,12 +627,18 @@ def main(argv=None, runner=None, tiers=None):
             )
     imported = [r for r in results if r["status"] == "imported"]
     if imported:
+        # The fragment fed to s9 is regenerated from EVERY ledger in the
+        # pool, not merged from this run's per-asset fragments. The run-local
+        # merge was written for a fresh sandbox pool and is a trap on an
+        # incremental production run: s9 would receive overrides for only the
+        # newly imported assets, silently narrowing the catalog view for the
+        # 15 already-pooled ones. The ledger is the single source of truth
+        # and the fragment is its derived view -- so derive it, wholesale,
+        # every time (gen_fragment filters to latest settle-pass models with
+        # digest-consistent representations, same as always).
         merged = Path(a.out) / "overrides_ext_all.yml"
-        merged.write_text(
-            "\n".join(
-                p.read_text() for p in sorted(Path(paths["fragment_dir"]).glob("*.yml"))
-            )
-        )
+        frag = gen_fragment_mod.generate(str(paths["library"]))
+        gen_fragment_mod.write_yaml(frag, merged)
         runner(
             [
                 PY_SAP,
