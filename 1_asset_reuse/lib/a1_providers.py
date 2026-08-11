@@ -267,6 +267,25 @@ def load_providers(config):
                 NvidiaAssetServerProvider(n["prefixes"], n["index_path"]),
             )
         )
+    if pc.get("nvidia_visual", {}).get("enabled"):
+        from lib.a5_visual import VisualProvider
+
+        v = pc["nvidia_visual"]
+        tiers.append(
+            Tier(
+                # Same tier as the lexical NVIDIA provider on purpose: the two
+                # are channels over ONE corpus, not a fallback chain, and
+                # tiered_search fuses same-tier channels rather than letting
+                # whichever answers first win.
+                v.get("tier", 1),
+                VisualProvider(
+                    v.get("index_path", pc["nvidia_server"]["index_path"]),
+                    v["thumbs_dir"],
+                    v["cache_path"],
+                    model_name=v.get("model", "openai/clip-vit-large-patch14"),
+                ),
+            )
+        )
     if pc.get("github_tree", {}).get("enabled"):
         from agenticsim.openxsim.assets import GitHubTreeSearchProvider
 
@@ -304,10 +323,31 @@ def tiered_search(tiers, query, *, viable_fn, limit=20):
     consulted, errors, provider_stats = [], [], []
     for tier_no in sorted({t.tier for t in tiers}):
         group = [t.provider for t in tiers if t.tier == tier_no]
+        # The visual channel is scored in cosine similarity, the lexical one in
+        # token-hit counts; AssetScout would sort them into one list as if the
+        # numbers were comparable. Split it out and fuse by RANK instead.
+        visual = [p for p in group if getattr(p, "name", "") == "nvidia_visual"]
+        group = [p for p in group if getattr(p, "name", "") != "nvidia_visual"]
         consulted.append(tier_no)
-        scout = AssetScout(group)
+        scout = AssetScout(group) if group else None
         try:
-            cands = scout.search(query, limit=limit)
+            cands = scout.search(query, limit=limit) if scout else []
+            if visual:
+                from lib.a5_visual import rrf_merge
+
+                vis_cands = visual[0].search(query, limit=limit)
+                provider_stats.append(
+                    {
+                        "tier": tier_no,
+                        "provider": visual[0].name,
+                        **visual[0].last_stats,
+                    }
+                )
+                cands = (
+                    rrf_merge([cands, vis_cands], limit=limit)
+                    if cands
+                    else vis_cands[:limit]
+                )
         except Exception as exc:  # noqa: BLE001
             errors.append(
                 {"tier": tier_no, "provider": group[0].name, "error": str(exc)}

@@ -18,13 +18,19 @@ ALREADY = "already_available_locally"
 
 WEB_FORMATS = {"glb", "gltf", "obj"}
 SERVER_FORMATS = {"usd"}
+# Providers that serve the NVIDIA asset server's own USDs. The visual channel
+# (a5) indexes the SAME corpus by thumbnail, so it yields the same USD
+# candidates under a different provider name -- keying the format allowlist off
+# a single literal name silently rejected every one of them as
+# unsupported_format.
+SERVER_PROVIDERS = {"nvidia_server", "nvidia_visual"}
 
 
 def gate(candidate, globals_cfg):
     key = candidate.metadata.get("key", "")
     if ".thumbs" in key:
         return (REJ_THUMBS, f"thumbnail artifact: {key}")
-    allowed = SERVER_FORMATS if candidate.provider == "nvidia_server" else WEB_FORMATS
+    allowed = SERVER_FORMATS if candidate.provider in SERVER_PROVIDERS else WEB_FORMATS
     fmt = candidate.format.lower()
     if fmt not in allowed:
         return (REJ_UNSUPPORTED, f"format {fmt!r} not in {sorted(allowed)}")
