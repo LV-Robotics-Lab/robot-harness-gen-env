@@ -55,7 +55,7 @@ parser.add_argument("--overrides-fragment", required=True)
 parser.add_argument(
     "--identity-basis",
     required=True,
-    choices=("manifest_human", "requested_by_acquire"),
+    choices=("manifest_human", "requested_by_acquire", "vlm"),
     help="where these assets' category/aliases came from: hand-written into "
     "a manifest, or asserted as a retrieval query by acquire_batch",
 )

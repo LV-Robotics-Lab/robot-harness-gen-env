@@ -531,6 +531,15 @@ def main(argv=None, runner=None, tiers=None):
                     else Path(t.provider.index_path)
                 )
                 t.provider.ensure_index(refresh=a.refresh_index)
+            elif getattr(t.provider, "name", "") == "nvidia_visual":
+                # Same dev-root resolution the lexical NVIDIA provider gets:
+                # the thumbnail mirror and embedding cache are corpus-side
+                # artefacts, so a sandbox run must read the sandbox's copies
+                # rather than whatever happens to sit under the cwd.
+                for attr in ("index_path", "thumbs_dir", "cache_path"):
+                    val = Path(getattr(t.provider, attr))
+                    if not val.is_absolute():
+                        setattr(t.provider, attr, dev / val)
             elif getattr(t.provider, "name", "") == "robotwin_local":
                 t.provider.catalog_path = resolve_catalog_path(
                     dev, t.provider.catalog_path, MAIN_TREE_CATALOG_FALLBACK
