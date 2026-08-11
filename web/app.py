@@ -45,6 +45,7 @@ ALLOWED_FILE_SUFFIXES = {
     ".log",
     ".txt",
     ".yml",
+    ".py",
 }
 
 WEB_RUNS.mkdir(parents=True, exist_ok=True)
@@ -369,7 +370,7 @@ def api_runs():
                 }
             )
 
-    return jsonify({"web": web, "history": history})
+    return jsonify({"web": web, "history": history, "current": CURRENT["run_id"]})
 
 
 # --- run dir resolution / containment ------------------------------------
@@ -489,16 +490,230 @@ def _list_render(run_dir):
     return {"images": images, "videos": videos}
 
 
+# --- stage timeline ---------------------------------------------------
+
+STAGE_TITLES = [
+    (1, "coverage", "覆盖检查"),
+    (2, "gap", "缺口引进"),
+    (3, "convert", "下载转换"),
+    (4, "qc", "物理质检"),
+    (5, "rebuild", "catalog 重建"),
+    (6, "scene", "场景生成"),
+    (7, "render", "回放渲染"),
+]
+
+# (needle, stage) — 运行中细化 active 阶段用；取日志中最后出现的标记
+TL_LOG_MARKERS = [
+    ("simulation app startup", 3),
+    ("app ready", 3),
+    ("accepted ", 4),
+    ("rejected ", 4),
+    ("=== stage: render ===", 7),
+]
+
+
+def _mtime(p):
+    try:
+        return p.stat().st_mtime
+    except OSError:
+        return None
+
+
+def _parse_iso_ts(s):
+    if not s:
+        return None
+    try:
+        return datetime.fromisoformat(s).timestamp()
+    except (ValueError, TypeError):
+        return None
+
+
+def compute_stage_timeline(run_dir, meta, state, log_text):
+    """七阶段状态/时间轴。信号 = 产物文件 mtime + run.log 全文标记 + run_state。"""
+    acq_cat = run_dir / "acquire_categories.json"
+    coverage_p = run_dir / "coverage_report.json"
+    evidence_p = run_dir / "acquire" / "selection_evidence.json"
+    if not evidence_p.exists():
+        evidence_p = run_dir / "selection_evidence.json"
+    blocker_p = run_dir / "asset_gap_blocker.json"
+    scene_matches = sorted(
+        glob.glob(str(run_dir / "scenes" / "*" / "resolved_scene.json"))
+    )
+    shots = []
+    for sub in ("acquire/shots", "shots"):
+        d = run_dir / sub
+        if d.is_dir():
+            shots.extend(sorted(d.glob("*.png")))
+    runtime_mtimes = []
+    runtime_dir = run_dir / "runtime"
+    if runtime_dir.is_dir():
+        for p in runtime_dir.rglob("*"):
+            if p.is_file() and p.suffix.lower() in (".png", ".jpg", ".jpeg", ".mp4"):
+                m = _mtime(p)
+                if m:
+                    runtime_mtimes.append(m)
+
+    log_low = (log_text or "").lower()
+    gap_ran = acq_cat.exists() or evidence_p.exists()
+    rebuild_done = ("pass s9" in log_low) or bool(meta.get("exclude_category"))
+    phase = state.get("phase")
+    live = phase in ("pipeline", "render")
+    outcome = state.get("outcome")
+
+    m_acq = _mtime(acq_cat)
+    m_cov = _mtime(coverage_p)
+    m_evi = _mtime(evidence_p)
+    m_blk = _mtime(blocker_p)
+    m_scene = _mtime(Path(scene_matches[0])) if scene_matches else None
+    shot_ms = [m for m in (_mtime(p) for p in shots) if m]
+
+    stages = {}
+    s1_sigs = [m for m in (m_acq, m_cov, m_evi) if m]
+    stages[1] = ("done", min(s1_sigs)) if s1_sigs else ("pending", None)
+    if gap_ran:
+        if m_cov or (m_evi and not live):
+            stages[2] = ("done", m_evi or m_cov)
+        else:
+            stages[2] = ("pending", None)
+    else:
+        stages[2] = (
+            ("skipped", None)
+            if (coverage_p.exists() or live)
+            else (
+                "pending",
+                None,
+            )
+        )
+    if not gap_ran:
+        stages[3] = ("skipped", None)
+        stages[4] = ("skipped", None)
+    else:
+        stages[3] = ("done", min(shot_ms)) if shot_ms else ("pending", None)
+        stages[4] = ("done", max(shot_ms)) if shot_ms else ("pending", None)
+    if rebuild_done:
+        stages[5] = ("done", m_cov)
+    elif live and gap_ran:
+        stages[5] = ("pending", None)
+    else:
+        stages[5] = ("skipped", None)
+    if blocker_p.exists():
+        stages[6] = ("blocked", m_blk)
+    elif scene_matches:
+        stages[6] = ("done", m_scene)
+    else:
+        stages[6] = ("pending", None)
+    if blocker_p.exists():
+        stages[7] = ("skipped", None)
+    elif not scene_matches:
+        stages[7] = ("pending", None)
+    elif not live and (runtime_mtimes or state.get("render_rc") == 0):
+        end7 = (
+            max(runtime_mtimes)
+            if runtime_mtimes
+            else _parse_iso_ts(state.get("finished_at"))
+        )
+        stages[7] = ("done", end7)
+    else:
+        stages[7] = ("pending", None)
+
+    if live:
+        if phase == "render":
+            active_n = 7
+        else:
+            active_n = next((n for n in range(1, 8) if stages[n][0] == "pending"), None)
+            best = None
+            for needle, sn in TL_LOG_MARKERS:
+                idx = log_low.rfind(needle)
+                if idx >= 0 and (best is None or idx > best[0]):
+                    best = (idx, sn)
+            if (
+                best
+                and active_n
+                and best[1] > active_n
+                and stages[best[1]][0] == "pending"
+            ):
+                active_n = best[1]
+        if active_n:
+            stages[active_n] = ("active", None)
+    elif outcome == "failed":
+        fail_n = next((n for n in range(1, 8) if stages[n][0] == "pending"), None)
+        if fail_n:
+            stages[fail_n] = ("failed", None)
+
+    if (
+        not live
+        and state.get("render_rc") not in (None, 0)
+        and stages[7][0]
+        in (
+            "done",
+            "skipped",
+        )
+    ):
+        stages[7] = ("failed", stages[7][1])
+
+    if not live:
+        for n in range(1, 8):
+            if stages[n][0] == "pending":
+                stages[n] = ("skipped", stages[n][1])
+
+    t0 = _parse_iso_ts(meta.get("started_at"))
+    if t0 is None:
+        known = [e for (_s, e) in stages.values() if e]
+        t0 = min(known) if known else None
+    now_ts = now_sgt().timestamp()
+
+    details = {}
+    if stages[2][0] == "skipped" and coverage_p.exists():
+        details[2] = "全部类别已覆盖"
+    if stages[5][0] == "done":
+        details[5] = (
+            f"exclude={meta.get('exclude_category')}"
+            if meta.get("exclude_category")
+            else "日志确认重建完成 (PASS s9)"
+        )
+    if stages[6][0] == "blocked":
+        details[6] = "资产缺口阻塞"
+    if stages[6][0] == "failed":
+        details[6] = f"rc={state.get('pipeline_rc')}"
+    if stages[7][0] == "failed":
+        details[7] = f"render_rc={state.get('render_rc')}"
+
+    out = []
+    anchor = t0
+    for n, key, title in STAGE_TITLES:
+        st, end = stages[n]
+        dur = None
+        if st in ("done", "blocked", "failed") and end and anchor and end >= anchor:
+            dur = end - anchor
+        elif st == "active" and anchor:
+            dur = max(0.0, now_ts - anchor)
+        if end and st in ("done", "blocked", "failed"):
+            anchor = end
+        out.append(
+            {
+                "n": n,
+                "key": key,
+                "title": title,
+                "status": st,
+                "ended_at": end,
+                "duration_s": dur,
+                "detail": details.get(n),
+            }
+        )
+    return out
+
+
 @app.get("/api/run/<group>/<run_id>/status")
 def api_run_status(group, run_id):
     run_dir = resolve_run_dir(group, run_id)
 
     log_tail = None
+    log_text_full = ""
     log_path = run_dir / "run.log"
     if log_path.exists():
         try:
-            lines = log_path.read_text(errors="replace").splitlines()
-            log_tail = "\n".join(lines[-100:])
+            log_text_full = log_path.read_text(errors="replace")
+            log_tail = "\n".join(log_text_full.splitlines()[-100:])
         except Exception:
             log_tail = None
 
@@ -514,8 +729,64 @@ def api_run_status(group, run_id):
             "blocker": _read_json(run_dir / "asset_gap_blocker.json"),
         },
         "log_tail": log_tail,
+        "stage_timeline": compute_stage_timeline(
+            run_dir,
+            _read_json(run_dir / "run_meta.json") or {},
+            _read_json(run_dir / "run_state.json") or {},
+            log_text_full,
+        ),
+        "log_size": log_path.stat().st_size if log_path.exists() else 0,
+        "server_now": now_sgt().timestamp(),
     }
     return jsonify(payload)
+
+
+# --- GET /api/run/<group>/<id>/log ----------------------------------------
+
+LOG_CHUNK = 256 * 1024
+
+
+@app.get("/api/run/<group>/<run_id>/log")
+def api_run_log(group, run_id):
+    run_dir = resolve_run_dir(group, run_id)
+    p = run_dir / "run.log"
+    if not p.is_file():
+        return jsonify({"offset": 0, "size": 0, "chunk": "", "more": False})
+    size = p.stat().st_size
+    try:
+        offset = max(0, min(int(request.args.get("offset", 0)), size))
+    except ValueError:
+        offset = 0
+    with open(p, "rb") as f:
+        f.seek(offset)
+        data = f.read(LOG_CHUNK)
+    return jsonify(
+        {
+            "offset": offset,
+            "size": size,
+            "chunk": data.decode("utf-8", errors="replace"),
+            "more": offset + len(data) < size,
+        }
+    )
+
+
+# --- GET /api/run/<group>/<id>/files --------------------------------------
+
+
+@app.get("/api/run/<group>/<run_id>/files")
+def api_run_files(group, run_id):
+    run_dir = resolve_run_dir(group, run_id)
+    files = []
+    for p in sorted(run_dir.rglob("*")):
+        if not p.is_file() or p.suffix.lower() not in ALLOWED_FILE_SUFFIXES:
+            continue
+        st = p.stat()
+        files.append(
+            {"p": str(p.relative_to(run_dir)), "size": st.st_size, "mtime": st.st_mtime}
+        )
+        if len(files) >= 500:
+            break
+    return jsonify({"files": files})
 
 
 # --- GET /api/run/<group>/<id>/file ---------------------------------------
@@ -529,6 +800,7 @@ MIME_BY_SUFFIX = {
     ".log": "text/plain",
     ".txt": "text/plain",
     ".yml": "text/yaml",
+    ".py": "text/plain",
 }
 
 
