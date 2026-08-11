@@ -61,6 +61,45 @@
      ]
     }
    ]
+  },
+  {
+   "name": "acq_315_crate",
+   "prefix": "Assets/Isaac/5.1/Isaac/Props/PackingTable/props/SM_Crate_A07_Yellow_01",
+   "source": "nvidia_server",
+   "items": [
+    {
+     "usd": "SM_Crate_A07_Yellow_01.usd",
+     "asset": "315_crate",
+     "model": 0,
+     "category": "crate",
+     "aliases": [
+      "crate",
+      "storage crate",
+      "plastic crate",
+      "box"
+     ],
+     "size_policy": "absolute:0.28"
+    }
+   ]
+  },
+  {
+   "name": "acq_316_duck",
+   "prefix": "Models/Duck/glTF-Binary",
+   "source": "github_tree",
+   "items": [
+    {
+     "usd": "Duck.glb",
+     "asset": "316_duck",
+     "model": 0,
+     "category": "duck",
+     "aliases": [
+      "duck",
+      "rubber duck",
+      "toy duck"
+     ],
+     "size_policy": "absolute:0.12"
+    }
+   ]
   }
  ]
 }

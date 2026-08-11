@@ -637,7 +637,7 @@ def main(argv=None, runner=None, tiers=None):
         # every time (gen_fragment filters to latest settle-pass models with
         # digest-consistent representations, same as always).
         merged = Path(a.out) / "overrides_ext_all.yml"
-        frag = gen_fragment_mod.generate(str(paths["library"]))
+        frag, _frag_stats = gen_fragment_mod.generate(str(paths["library"]))
         gen_fragment_mod.write_yaml(frag, merged)
         runner(
             [
