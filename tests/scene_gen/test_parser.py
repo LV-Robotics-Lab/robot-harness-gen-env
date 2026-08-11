@@ -50,6 +50,14 @@ def test_direction_and_distance_semantics_match_the_fixed_frame() -> None:
     assert spec.frame.y_axis == "front"
 
 
+def test_rule_parser_preserves_mug_semantic_category() -> None:
+    spec = parse_rule_based("Place a mug on the table.", seed=42)
+
+    assert len(spec.objects) == 1
+    assert spec.objects[0].object_id == "mug_1"
+    assert spec.objects[0].category == "mug"
+
+
 def test_provider_payload_cannot_smuggle_backend_fields_or_change_request() -> None:
     spec = parse_rule_based("A can is left of a basket.", seed=4)
     payload = spec.canonical_dict()
