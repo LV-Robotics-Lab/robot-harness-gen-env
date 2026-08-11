@@ -202,6 +202,45 @@ def settle_check(vis, col, height, flat, sample_pts=None):
     return checks, img
 
 
+# Licenses only ever auto-declare from this allowlist: permissive terms whose
+# scope needs no per-asset judgment. Anything else (SCEA, EULAs, ...) keeps
+# status=unknown with the fetched SPDX + evidence recorded, and waits for a
+# human decision -- an automated pipeline asserting "declared" about terms it
+# cannot read would be exactly the kind of invented provenance the ledger
+# contract forbids.
+AUTO_DECLARE_SPDX = {"CC0-1.0", "CC-BY-4.0", "MIT", "BSD-3-Clause", "Apache-2.0"}
+
+
+def _web_license(r):
+    spdx = r.get("license_spdx")
+    if not spdx:
+        return {
+            "spdx": None,
+            "status": "unknown",
+            "terms_note": r.get("source_license", "unknown (web source)"),
+        }
+    declared = spdx in AUTO_DECLARE_SPDX
+    return {
+        "spdx": spdx,
+        "status": "declared" if declared else "unknown",
+        "terms_note": (
+            f"{r.get('license_text') or spdx}; owner: {r.get('license_owner')}"
+            + (
+                ""
+                if declared
+                else " -- SPDX auto-fetched from repo metadata; terms scope needs human sign-off"
+            )
+        ),
+        "evidence_url": r.get("license_metadata_url"),
+        "checked_date": dt.date.today().isoformat(),
+        "checked_by": (
+            "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
+            if declared
+            else "auto-fetched from repo metadata.json; awaiting human sign-off"
+        ),
+    }
+
+
 # fill per-item defaults from the first item of the same asset
 meta_by_asset = {}
 for r in records:
@@ -670,11 +709,7 @@ for idx, r in worker_records:
                 "group": r["group"],
                 "file": r["usd"],
                 "url": r.get("source_url"),
-                "license": {
-                    "spdx": None,
-                    "status": "unknown",
-                    "terms_note": r.get("source_license", "unknown (web source)"),
-                },
+                "license": _web_license(r),
                 "retrieved_at": dt.date.fromtimestamp(
                     (staging / "staging_manifest.json").stat().st_mtime
                 ).isoformat(),
@@ -758,6 +793,24 @@ for idx, r in worker_records:
 
         led_path = ledger_path(args.library_dir, asset)
         existing = json.loads(led_path.read_text()) if led_path.exists() else None
+        # A re-import replaces the model entry wholesale, which silently
+        # DOWNGRADED hand-audited licenses: 301_cup was declared CC-BY-4.0 by
+        # the 2026-08-09 audit, got re-imported on 08-10 for a collision fix,
+        # and came out status=unknown again. The audit is attached to the
+        # SOURCE (library/group/file), not to the import event -- so as long
+        # as those coordinates are unchanged and the incoming record knows
+        # nothing the existing one doesn't, the audited license survives.
+        if existing:
+            for em in existing.get("models", []):
+                if em.get("model_id") != int(model):
+                    continue
+                es, ns = em.get("source", {}), source_v1
+                if (
+                    es.get("license", {}).get("status") == "declared"
+                    and ns["license"]["status"] == "unknown"
+                    and all(es.get(k) == ns.get(k) for k in ("library", "group", "file"))
+                ):
+                    ns["license"] = es["license"]
         led = upsert_model(
             existing,
             asset=asset,

@@ -69,6 +69,44 @@ def stage_source(src_path, source_sha, entry, asset, model, staging_dir, up_axis
     return record
 
 
+def _lookup_model_license(download_url, fetch=None):
+    """glTF-Sample-Assets publishes machine-readable per-model licensing:
+    Models/<name>/metadata.json with legal[].spdx next to every model dir.
+    Deriving that path from the file URL (…/Models/Duck/glTF-Binary/Duck.glb
+    -> …/Models/Duck/metadata.json) turns "license: see source page" -- a
+    note nobody ever resolves -- into an SPDX id with an evidence URL, at the
+    only moment it is free to grab (ingest; the repo can move later).
+    Returns None quietly when the layout doesn't match: absence of metadata
+    is not an error, it just leaves the license unknown, honestly."""
+    if not download_url:
+        return None
+    import re
+    import urllib.request
+
+    m = re.match(r"(.*/Models/[^/]+)/", str(download_url))
+    if not m:
+        return None
+    url = m.group(1) + "/metadata.json"
+    try:
+        if fetch is None:
+            with urllib.request.urlopen(url, timeout=20) as r:
+                raw = r.read()
+        else:
+            raw = fetch(url)
+        legal = (json.loads(raw).get("legal") or [{}])[0]
+    except Exception:  # noqa: BLE001 -- no metadata is a normal outcome
+        return None
+    if not legal.get("spdx"):
+        return None
+    return {
+        "spdx": legal.get("spdx"),
+        "text": legal.get("text"),
+        "owner": legal.get("owner"),
+        "year": legal.get("year"),
+        "metadata_url": url,
+    }
+
+
 def stage_web_candidate(
     candidate, entry, asset, model, staging_dir, cache_dir, fetch_fn=None
 ):
@@ -87,6 +125,12 @@ def stage_web_candidate(
     record["source_page"] = candidate.source_page
     record["source_license"] = str(candidate.license)
     record["source_provider"] = candidate.provider
+    lic = _lookup_model_license(candidate.download_url)
+    if lic:
+        record["license_spdx"] = lic.get("spdx")
+        record["license_text"] = lic.get("text")
+        record["license_owner"] = lic.get("owner")
+        record["license_metadata_url"] = lic.get("metadata_url")
     manifest_file = Path(staging_dir) / "staging_manifest.json"
     manifest = json.loads(manifest_file.read_text())
     for i, m in enumerate(manifest):
