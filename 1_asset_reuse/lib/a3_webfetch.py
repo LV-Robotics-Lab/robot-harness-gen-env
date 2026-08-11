@@ -43,6 +43,8 @@ def synth_staging_record(
         "glb_sha256": _sha256(glb_path),
         "up_axis": up_axis,
         "status": "converted",
+        # same per-item knobs a hand-written manifest item may carry
+        **{k: entry[k] for k in ("size_policy", "collision", "reorient", "flat") if entry.get(k)},
     }
 
 
@@ -73,6 +75,22 @@ def stage_web_candidate(
     if fetch_fn is None:
         from agenticsim.openxsim.assets import download_candidate as fetch_fn
     downloaded = fetch_fn(candidate, cache_dir)
-    return stage_source(
+    record = stage_source(
         downloaded.path, downloaded.sha256, entry, asset, model, staging_dir
     )
+    # Provenance the ledger's retrieved branch requires and only the candidate
+    # knows. It must land in the ON-DISK staging manifest, not just the
+    # returned dict: materialize reads the manifest, and a field that exists
+    # only in the return value quietly never reaches the ledger (the a3 unit
+    # test caught exactly that half-write).
+    record["source_url"] = candidate.download_url
+    record["source_page"] = candidate.source_page
+    record["source_license"] = str(candidate.license)
+    record["source_provider"] = candidate.provider
+    manifest_file = Path(staging_dir) / "staging_manifest.json"
+    manifest = json.loads(manifest_file.read_text())
+    for i, m in enumerate(manifest):
+        if m.get("asset") == asset and m.get("model") == model:
+            manifest[i] = record
+    manifest_file.write_text(json.dumps(manifest, indent=1) + "\n")
+    return record

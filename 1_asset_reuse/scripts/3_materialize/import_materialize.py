@@ -44,6 +44,7 @@ from lib.ledger import (  # noqa: E402
     to_ir_bundles,
     upsert_model,
     validate_ledger,
+    unknown_inertial,
 )
 import gen_fragment  # noqa: E402
 
@@ -81,7 +82,10 @@ args = parser.parse_args()
 IDENTITY = {
     "basis": args.identity_basis,
     "evidence": args.identity_evidence,
-    "verified": False,
+    # basis=vlm means the acquire-side gate already looked at the source
+    # thumbnail and answered positively; hardcoding False here contradicted
+    # the evidence file the record itself points to.
+    "verified": args.identity_basis == "vlm",
 }
 staging = Path(args.staging)
 lib = Path(args.library_dir)
@@ -205,7 +209,16 @@ for r in records:
     if a not in meta_by_asset and "category" in r:
         meta_by_asset[a] = {
             k: r[k]
-            for k in ("category", "aliases", "colors", "footprint", "flat")
+            for k in (
+                "category",
+                "aliases",
+                "colors",
+                "footprint",
+                "flat",
+                "size_policy",
+                "collision",
+                "reorient",
+            )
             if k in r
         }
 
@@ -325,7 +338,16 @@ for idx, r in worker_records:
         **meta_by_asset.get(asset, {}),
         **{
             k: r[k]
-            for k in ("category", "aliases", "colors", "footprint", "flat")
+            for k in (
+                "category",
+                "aliases",
+                "colors",
+                "footprint",
+                "flat",
+                "size_policy",
+                "collision",
+                "reorient",
+            )
             if k in r
         },
     }
@@ -484,6 +506,39 @@ for idx, r in worker_records:
                 k for k in ("settled", "no_penetration", "tilt_ok") if not checks[k]
             ]
 
+        # ---- post-render identity check -------------------------------
+        # A web-sourced candidate had no picture before download, so the
+        # pre-download gate could only wave it through as "unverifiable".
+        # But the settle shot above IS a picture of the thing that would
+        # enter the pool -- so this is where "nothing to look at" stops
+        # being a free pass. A match upgrades the identity claim to
+        # basis=vlm/verified=true (same standard the NVIDIA path meets);
+        # a mismatch rejects the model outright; model trouble (unreadable)
+        # keeps the honest degraded claim rather than blocking on infra.
+        identity_final = dict(IDENTITY)
+        if checks["pass"] and args.identity_basis == "requested_by_acquire":
+            from lib import a6_verify as a6
+
+            shot = out / "shots" / f"{asset}_m{model}.png"
+            verdict = a6.verify_image(
+                shot, meta.get("category"), aliases=meta.get("aliases")
+            )
+            vpath = out / f"identity_post_render_{asset}_m{model}.json"
+            vpath.write_text(json.dumps(verdict, indent=2, ensure_ascii=False) + "\n")
+            row["identity_post_render"] = verdict.get("verdict")
+            if verdict["verdict"] == a6.MATCH:
+                identity_final = {
+                    "basis": "vlm",
+                    "evidence": str(vpath),
+                    "verified": True,
+                }
+            elif verdict["verdict"] == a6.MISMATCH:
+                checks["pass"] = False
+                row["status"] = "rejected"
+                row["reasons"] = [
+                    f"identity_mismatch_post_render:{verdict.get('seen_as')}"
+                ]
+
         aliases = meta.get("aliases", [])
         colors = meta.get("colors", [])
 
@@ -518,9 +573,16 @@ for idx, r in worker_records:
                 },
             },
             {
-                "format": "usd",
+                # NVIDIA sources ship an Isaac-loadable USD; a web source is a
+                # GLB, which no Isaac backend can consume as-is. Claiming it
+                # as isaacsim would make the asset read as cross-backend-ready
+                # when it is not -- register it as the portable source instead
+                # and let the profile say sapien_only honestly.
+                "format": "usd" if not r["group"].startswith("web_") else "glb",
                 "uri": r["usd_local"],
-                "backend": "isaacsim",
+                "backend": (
+                    "isaacsim" if not r["group"].startswith("web_") else "portable"
+                ),
                 "role": "visual_and_collision",
                 "sha256": r["usd_sha256"],
                 "size_bytes": Path(r["usd_local"]).stat().st_size,
@@ -576,23 +638,66 @@ for idx, r in worker_records:
             if usd_local
             else lib / "_source" / r["group"] / "SOURCE_MANIFEST.json"
         )
-        source_v1 = {
-            "kind": "retrieved",
-            "library": "NVIDIA Isaac Assets 5.1",
-            "group": r["group"],
-            "file": r["usd"],
-            "license": {
-                "spdx": None,
-                "status": "unknown",
-                "terms_note": "NVIDIA asset EULA; YCB dataset terms for ycb group",
-            },
-            "retrieved_at": dt.date.fromtimestamp(
-                (staging / "staging_manifest.json").stat().st_mtime
-            ).isoformat(),
-            "source_manifest_path": (
-                str(manifest_path.resolve()) if manifest_path.exists() else None
-            ),
-        }
+        is_web = r["group"].startswith("web_")
+        if is_web:
+            # A web candidate was fetched into a run-scoped cache, which is
+            # not a source mirror: the pool's provenance contract (source
+            # retained under _source/, hashed manifest, so conversions can be
+            # re-derived and licences re-checked) applies to every retrieved
+            # asset regardless of where it came from. Mirror it now.
+            web_src_dir = lib / "_source" / r["group"]
+            web_src_dir.mkdir(parents=True, exist_ok=True)
+            mirrored = web_src_dir / Path(r["usd_local"]).name
+            if not mirrored.exists():
+                shutil.copy(r["usd_local"], mirrored)
+            manifest_path = web_src_dir / "SOURCE_MANIFEST.json"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "files": {mirrored.name: r["usd_sha256"]},
+                        "source_url": r.get("source_url"),
+                        "source_page": r.get("source_page"),
+                        "provider": r.get("source_provider"),
+                    },
+                    indent=2,
+                )
+                + "\n"
+            )
+            r["usd_local"] = str(mirrored)
+            source_v1 = {
+                "kind": "retrieved",
+                "library": f"web ({r.get('source_provider', 'github')})",
+                "group": r["group"],
+                "file": r["usd"],
+                "url": r.get("source_url"),
+                "license": {
+                    "spdx": None,
+                    "status": "unknown",
+                    "terms_note": r.get("source_license", "unknown (web source)"),
+                },
+                "retrieved_at": dt.date.fromtimestamp(
+                    (staging / "staging_manifest.json").stat().st_mtime
+                ).isoformat(),
+                "source_manifest_path": str(manifest_path.resolve()),
+            }
+        else:
+            source_v1 = {
+                "kind": "retrieved",
+                "library": "NVIDIA Isaac Assets 5.1",
+                "group": r["group"],
+                "file": r["usd"],
+                "license": {
+                    "spdx": None,
+                    "status": "unknown",
+                    "terms_note": "NVIDIA asset EULA; YCB dataset terms for ycb group",
+                },
+                "retrieved_at": dt.date.fromtimestamp(
+                    (staging / "staging_manifest.json").stat().st_mtime
+                ).isoformat(),
+                "source_manifest_path": (
+                    str(manifest_path.resolve()) if manifest_path.exists() else None
+                ),
+            }
 
         # thresholds mirror settle_check()'s real gate constants above
         # (0.002 late-drift, -0.005 no-penetration floor -- note this is
@@ -641,6 +746,13 @@ for idx, r in worker_records:
             conventions=conv_v1,
             source=source_v1,
             verification=[settle_entry],
+            # This writer declares profile=cross_backend (it registers the
+            # source USD as the isaacsim representation), and cross_backend
+            # requires the inertial KEY to exist. engine_derived + nulls is
+            # the honest value for a rigid import: no asset-side measurement
+            # exists, the engine infers mass distribution from collision
+            # geometry. Omitting this made the writer fail its own validator.
+            inertial=unknown_inertial("engine_derived"),
         )
         settle_entry["verified_digest"] = reps_digest(entry, "sapien")
 
@@ -651,11 +763,12 @@ for idx, r in worker_records:
             asset=asset,
             category=meta.get("category", "unknown"),
             kind="rigid",
-            # Every model this path ingests mirrors a source USD, which is
-            # registered as its isaacsim representation a few lines above --
-            # so cross_backend is a statement of fact here, not a guess.
-            profile="cross_backend",
-            identity=IDENTITY,
+            # cross_backend is a statement of fact, not aspiration: NVIDIA
+            # records register their source USD as an isaacsim representation;
+            # a web record's GLB is registered as portable, so it declares
+            # sapien_only and owes nothing it cannot show.
+            profile="sapien_only" if is_web else "cross_backend",
+            identity=identity_final,
             aliases=aliases,
             colors=colors,
             materials=[],
@@ -671,11 +784,12 @@ for idx, r in worker_records:
             asset=asset,
             category=meta.get("category", "unknown"),
             kind="rigid",
-            # Every model this path ingests mirrors a source USD, which is
-            # registered as its isaacsim representation a few lines above --
-            # so cross_backend is a statement of fact here, not a guess.
-            profile="cross_backend",
-            identity=IDENTITY,
+            # cross_backend is a statement of fact, not aspiration: NVIDIA
+            # records register their source USD as an isaacsim representation;
+            # a web record's GLB is registered as portable, so it declares
+            # sapien_only and owes nothing it cannot show.
+            profile="sapien_only" if is_web else "cross_backend",
+            identity=identity_final,
             aliases=aliases,
             colors=colors,
             materials=[],

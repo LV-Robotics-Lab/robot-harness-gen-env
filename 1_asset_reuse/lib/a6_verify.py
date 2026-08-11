@@ -134,39 +134,62 @@ def _local_infer(image_path: Path, prompt: str, model_name: str) -> str:
 _MODEL_CACHE: dict = {}
 
 
-def verify_candidate(
-    candidate, category, *, aliases=None, infer=None, model_name=DEFAULT_MODEL
+def verify_image(
+    image_path, category, *, aliases=None, infer=None, model_name=DEFAULT_MODEL
 ):
-    """One candidate -> verdict dict. Never raises on model trouble: an
-    inference failure is reported as `unreadable`, which does NOT admit the
-    asset."""
-    thumb = (candidate.metadata or {}).get("thumbnail")
+    """One image -> verdict dict. The primitive both call sites share:
+
+    - pre-download, on the SOURCE's thumbnail (NVIDIA publishes one per prop);
+    - post-render, on OUR OWN settle snapshot -- which is how web-sourced
+      assets get verified at all. A GitHub candidate has no picture before
+      download, but the materialize step renders one before anything reaches
+      the ledger, and looking at that render closes the loophole where
+      "nothing to look at" simply admitted the asset. Measured in vivo
+      2026-08-11: token matching handed "trash bin" an AnimatedColorsCube.glb,
+      and only the physics gate happened to stop it.
+
+    Never raises on model trouble: an inference failure is reported as
+    `unreadable`, which does NOT admit the asset."""
     base = {
         "schema_version": VERIFY_SCHEMA_VERSION,
-        "candidate_id": candidate.candidate_id,
-        "name": candidate.name,
         "asked_category": category,
         "model": model_name,
+        "image": str(image_path) if image_path else None,
     }
-    if not thumb or not Path(thumb).is_file():
-        return {**base, "verdict": NO_THUMBNAIL, "thumbnail": thumb}
+    if not image_path or not Path(image_path).is_file():
+        return {**base, "verdict": NO_THUMBNAIL}
     prompt = build_prompt(category, aliases)
     run = infer or (lambda p, q: _local_infer(p, q, model_name))
     try:
-        raw = run(Path(thumb), prompt)
+        raw = run(Path(image_path), prompt)
     except Exception as exc:  # noqa: BLE001 -- reported, never admitted
-        return {**base, "verdict": UNREADABLE, "thumbnail": thumb, "error": repr(exc)}
+        return {**base, "verdict": UNREADABLE, "error": repr(exc)}
     parsed = _parse(raw)
     if parsed is None:
-        return {**base, "verdict": UNREADABLE, "thumbnail": thumb, "raw": raw[:400]}
+        return {**base, "verdict": UNREADABLE, "raw": raw[:400]}
     return {
         **base,
         "verdict": MATCH if parsed.get("match") is True else MISMATCH,
-        "thumbnail": thumb,
         "seen_as": parsed.get("object"),
         "colors": [str(c).lower() for c in (parsed.get("colors") or []) if c],
         "materials": [str(m).lower() for m in (parsed.get("materials") or []) if m],
         "confidence": parsed.get("confidence"),
+    }
+
+
+def verify_candidate(
+    candidate, category, *, aliases=None, infer=None, model_name=DEFAULT_MODEL
+):
+    """One candidate -> verdict dict, keyed off its source thumbnail."""
+    thumb = (candidate.metadata or {}).get("thumbnail")
+    r = verify_image(
+        thumb, category, aliases=aliases, infer=infer, model_name=model_name
+    )
+    return {
+        **r,
+        "candidate_id": candidate.candidate_id,
+        "name": candidate.name,
+        "thumbnail": thumb,
     }
 
 

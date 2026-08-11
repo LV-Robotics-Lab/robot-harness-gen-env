@@ -71,6 +71,10 @@ def candidate_dict(c):
 
 
 def allocate_asset(category, library_dir, manifest_path):
+    # Directory and asset_id come from this name, and the ledger requires an
+    # IR-legal identifier -- "301_trash bin" (with the space) was a real
+    # allocation before this normalisation.
+    category = str(category).strip().lower().replace(" ", "_")
     numbers, model_counts = set(), {}
 
     def note(name, count):
@@ -112,6 +116,13 @@ def build_manifest_group(candidate, asset, model, entry):
         item["colors"] = entry["colors"]
     if entry.get("flat"):
         item["flat"] = True
+    # Acquisition entries carry the same per-item knobs a hand-written
+    # manifest does; dropping them here silently reverted every acquired
+    # asset to defaults (a Khronos lantern is 25.664 m tall at scale 1.0 --
+    # the sanity gate rejects it, correctly, unless size_policy survives).
+    for knob in ("size_policy", "collision", "reorient"):
+        if entry.get(knob):
+            item[knob] = entry[knob]
     return {
         "name": f"acq_{asset}",
         "prefix": key.rsplit("/", 1)[0],
