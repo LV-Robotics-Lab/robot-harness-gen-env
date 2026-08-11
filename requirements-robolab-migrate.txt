@@ -1,0 +1,5 @@
+numpy==2.4.6
+Pillow==12.3.0
+scipy==1.17.1
+trimesh==5.0.0
+usd-core==26.5
