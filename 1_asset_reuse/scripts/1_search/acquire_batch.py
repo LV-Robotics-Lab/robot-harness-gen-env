@@ -101,14 +101,30 @@ def _attempt_import(
     max_attempts,
     preallocated=None,
     identity=None,
+    identity_fn=None,
 ):
     # Where this asset's category claim comes from. Never defaulted silently:
     # a pinned/manifest entry is a human's claim about a specific file; a
     # searched entry only becomes a claim once the gate has seen the picture.
-    identity = identity or {"basis": "manifest_human", "evidence": None}
+    # identity_fn(candidate) -> dict | None lets the searched path verify each
+    # FALLBACK candidate lazily at the moment it is actually about to be
+    # imported: the gate stops at the first match, so runner-up candidates
+    # arrive here unexamined, and importing one under the winner's verified
+    # identity would be a lie -- while refusing all fallbacks made one broken
+    # download the end of the whole acquisition.
+    static = identity or {"basis": "manifest_human", "evidence": None}
+    identity_fn = identity_fn or (lambda _c: static)
     imported = None
     for i, r in enumerate(viable[:max_attempts]):
         candidate = r["candidate"]
+        identity = identity_fn(candidate)
+        if identity is None:
+            r["verdict"] = "rejected"
+            r["rejection"] = {
+                "code": a2.REJ_IDENTITY,
+                "detail": "fallback candidate failed its own identity check",
+            }
+            continue
         rec["attempts"] += 1
         if i == 0 and preallocated is not None:
             asset, model = preallocated
@@ -501,18 +517,27 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
     # as rejected/identity_unverified rather than silently vanishing.
     gated = a2.gate_candidates(res["candidates"], globals_cfg)
     accepted_ids = {c.candidate_id for c in res.get("accepted", [])}
-    viable = []
+    examined = {r_["candidate_id"]: r_["verdict"] for r_ in gate_log["results"]}
+    viable, fallbacks = [], []
     for r in gated:
         if r["verdict"] != "viable":
             continue
-        if r["candidate"].candidate_id in accepted_ids:
+        cid = r["candidate"].candidate_id
+        if cid in accepted_ids:
             viable.append(r)
-        elif gate_log["results"]:
+        elif gate_log["results"] and examined.get(cid) == "mismatch":
+            # the gate looked at this one and it was some other object
             r["verdict"] = "rejected"
             r["rejection"] = {
                 "code": a2.REJ_IDENTITY,
                 "detail": rec.get("identity_gate", {}).get("evidence", ""),
             }
+        elif gate_log["results"]:
+            # never examined (the gate stops at the first match): keep as a
+            # fallback -- it earns its own identity check the moment an
+            # import of it is actually attempted (identity_fn below)
+            fallbacks.append(r)
+    viable.extend(fallbacks)
     if not viable:
         # Either no tier produced a viable candidate, or the gate looked at
         # everything every tier offered and refuted it all. The two read
@@ -532,6 +557,40 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         ]
         return rec
 
+    verified_cache = {c.candidate_id: identity for c in res.get("accepted", [])}
+
+    def _identity_for(cand):
+        """The gate's winner reuses its verdict; a fallback earns its own the
+        moment an import of it is attempted. None keeps it out."""
+        if cand.candidate_id in verified_cache:
+            return verified_cache[cand.candidate_id]
+        if not verify_cfg.get("enabled", True):
+            return {"basis": "requested_by_acquire", "evidence": None}
+        from lib import a6_verify as a6
+
+        vr = a6.verify_candidates(
+            [cand],
+            category,
+            aliases=entry.get("aliases"),
+            model_name=verify_cfg.get("model", a6.DEFAULT_MODEL),
+            max_check=1,
+            second_opinion=bool(verify_cfg.get("second_opinion", True)),
+        )
+        gate_log["results"].extend({**r_, "tier": "fallback"} for r_ in vr["results"])
+        ev_path = rec.get("identity_gate", {}).get("evidence")
+        if ev_path:
+            Path(ev_path).write_text(
+                json.dumps(gate_log["results"], indent=2, ensure_ascii=False) + "\n"
+            )
+        if vr["outcome"] == "verified":
+            ident = {"basis": "vlm", "evidence": ev_path}
+        elif vr["outcome"] == "unverifiable":
+            ident = {"basis": "requested_by_acquire", "evidence": ev_path}
+        else:
+            ident = None
+        verified_cache[cand.candidate_id] = ident
+        return ident
+
     max_attempts = 1 + int(globals_cfg.get("max_fallback", 2))
     rec = _attempt_import(
         rec,
@@ -543,6 +602,7 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         runner,
         max_attempts,
         identity=identity,
+        identity_fn=_identity_for,
     )
     rec["candidates"] = [
         {

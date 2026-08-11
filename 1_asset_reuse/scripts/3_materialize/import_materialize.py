@@ -124,7 +124,14 @@ def quat_to_mat(q):
 
 
 def probe_rest_quat(vis, col):
-    """Drop from the standard spawn and return the settled orientation (wxyz)."""
+    """Drop from the standard spawn and return the settled orientation (wxyz).
+
+    900 steps, same horizon as settle_check: a probe shorter than the gate
+    captures MID-FALL poses as "rest". Field case (2026-08-12): the Khronos
+    street lantern tips slowly -- at 300 steps the probe caught a partial
+    lean, the rescue baked that unstable pose, and the object simply kept
+    tipping back to 62.6 deg in the 900-step recheck, making the bake an
+    expensive no-op that reproduced the original number to five decimals."""
     sc = sapien.Scene()
     sc.set_timestep(1 / 100)
     sc.add_ground(0)
@@ -133,12 +140,21 @@ def probe_rest_quat(vis, col):
     b.add_visual_from_file(filename=str(vis))
     actor = b.build(name="probe")
     actor.set_pose(sapien.Pose(p=[0, 0, 0.005], q=ROTX90))
-    for _ in range(300):
+    for _ in range(900):
         sc.step()
     return [float(v) for v in actor.get_pose().q]
 
 
 def settle_check(vis, col, height, flat, sample_pts=None):
+    """Import-time physics gate, 900 steps -- aligned with the scene runtime.
+
+    It was 300, and a gate weaker than the runtime's doesn't protect
+    anything, it just moves the failure somewhere more expensive: both
+    beaker_500ml (8.0 deg) and P_Glassware_Short (11.7 deg) imported
+    cleanly at 300 steps and then crept past the drift limit in the
+    900-step scene replay. Failing HERE instead also puts slow-creep
+    assets within reach of the auto-reorient rescue, which can still bake
+    their true rest pose at this stage."""
     sc = sapien.Scene()
     sc.set_timestep(1 / 100)
     sc.add_ground(0)
@@ -150,9 +166,9 @@ def settle_check(vis, col, height, flat, sample_pts=None):
     actor = b.build(name="obj")
     actor.set_pose(sapien.Pose(p=[0, 0, 0.005], q=ROTX90))
     poses = []
-    for i in range(300):
+    for i in range(900):
         sc.step()
-        if i % 50 == 0 or i == 299:
+        if i % 50 == 0 or i == 899:
             poses.append(actor.get_pose())
     final = poses[-1]
     drift = float(np.linalg.norm(np.array(final.p) - np.array(poses[-2].p)))
@@ -477,65 +493,138 @@ for idx, r in worker_records:
             if size_res.get("scale"):
                 size_res["actual_max_dim_m"] = max(size) / size_res["scale"]
 
-        scene.export(str(vis))
         collision_mode = r.get("collision") or meta.get("collision") or "copy"
-        if collision_mode == "coacd":
-            import coacd
+        _phys_dir = out / "physcheck"
+        _phys_dir.mkdir(exist_ok=True)
+        _attempt = {"n": 0}
 
-            merged = (
+        def _export_and_check(cur_lo, cur_hi, cur_size):
+            """Export the current scene, (re)build its collision, write
+            model_data and run the settle gates. Factored so the auto-reorient
+            rescue below can re-run the EXACT same procedure on the baked mesh
+            -- including rebuilding coacd from the baked geometry, which is
+            what keeps probe collision and gate collision consistent."""
+            scene.export(str(vis))
+            if collision_mode == "coacd":
+                import coacd
+
+                merged = (
+                    scene.dump(concatenate=True)
+                    if isinstance(scene, trimesh.Scene)
+                    else scene
+                )
+                cmesh = coacd.Mesh(
+                    np.asarray(merged.vertices), np.asarray(merged.faces)
+                )
+                parts = coacd.run_coacd(cmesh, threshold=0.05)
+                cs = trimesh.Scene()
+                for vs, fs in parts:
+                    cs.add_geometry(trimesh.Trimesh(np.asarray(vs), np.asarray(fs)))
+                cs.export(str(col))
+                row["collision_mode"] = f"coacd:{len(parts)}parts"
+            else:
+                shutil.copy(vis, col)
+                row["collision_mode"] = "copy"
+            (lib / asset / f"model_data{model}.json").write_text(
+                json.dumps(
+                    {
+                        "center": [float((a + b) / 2) for a, b in zip(cur_lo, cur_hi)],
+                        "extents": cur_size,
+                        "scale": [1.0, 1.0, 1.0],
+                        "transform_matrix": [
+                            [1, 0, 0, 0],
+                            [0, 1, 0, 0],
+                            [0, 0, 1, 0],
+                            [0, 0, 0, 1],
+                        ],
+                        "target_pose": [],
+                        "contact_points_pose": [],
+                        "functional_matrix": [],
+                        "orientation_point": [],
+                        "contact_points_group": [],
+                        "contact_points_mask": [],
+                        "target_point_discription": [],
+                        "contact_points_discription": [],
+                        "functional_point_discription": [],
+                        "orientation_point_discription": [],
+                        "stable": True,
+                    },
+                    indent=2,
+                )
+            )
+            merged_v = (
                 scene.dump(concatenate=True)
                 if isinstance(scene, trimesh.Scene)
                 else scene
+            ).vertices
+            step = max(1, len(merged_v) // 3000)
+            # SAPIEN caches loaded meshes BY FILENAME within a process, so a
+            # mesh re-exported to the same path settles as its PREVIOUS
+            # content -- measured: the lantern rescue re-tumbled to exactly
+            # 62.582593540038985 deg, 15 identical decimals, because the
+            # recheck never saw the baked geometry; the same file under a fresh
+            # name settled at 0.0 deg. Every physics check therefore runs on
+            # a unique-named copy of the current export.
+            _attempt["n"] += 1
+            vis_p = _phys_dir / f"{asset}_m{model}_a{_attempt['n']}.glb"
+            col_p = _phys_dir / f"{asset}_m{model}_a{_attempt['n']}.col.glb"
+            shutil.copy(vis, vis_p)
+            shutil.copy(col, col_p)
+            return settle_check(
+                vis_p,
+                col_p,
+                cur_size[1],
+                bool(meta.get("flat")),
+                sample_pts=np.asarray(merged_v)[::step],
             )
-            cmesh = coacd.Mesh(np.asarray(merged.vertices), np.asarray(merged.faces))
-            parts = coacd.run_coacd(cmesh, threshold=0.05)
-            cs = trimesh.Scene()
-            for vs, fs in parts:
-                cs.add_geometry(trimesh.Trimesh(np.asarray(vs), np.asarray(fs)))
-            cs.export(str(col))
-            row["collision_mode"] = f"coacd:{len(parts)}parts"
-        else:
-            shutil.copy(vis, col)
-            row["collision_mode"] = "copy"
-        (lib / asset / f"model_data{model}.json").write_text(
-            json.dumps(
-                {
-                    "center": [float((a + b) / 2) for a, b in zip(lo, hi)],
-                    "extents": size,
-                    "scale": [1.0, 1.0, 1.0],
-                    "transform_matrix": [
-                        [1, 0, 0, 0],
-                        [0, 1, 0, 0],
-                        [0, 0, 1, 0],
-                        [0, 0, 0, 1],
-                    ],
-                    "target_pose": [],
-                    "contact_points_pose": [],
-                    "functional_matrix": [],
-                    "orientation_point": [],
-                    "contact_points_group": [],
-                    "contact_points_mask": [],
-                    "target_point_discription": [],
-                    "contact_points_discription": [],
-                    "functional_point_discription": [],
-                    "orientation_point_discription": [],
-                    "stable": True,
-                },
-                indent=2,
-            )
-        )
 
-        merged_v = (
-            scene.dump(concatenate=True) if isinstance(scene, trimesh.Scene) else scene
-        ).vertices
-        step = max(1, len(merged_v) // 3000)
-        checks, img = settle_check(
-            vis,
-            col,
-            size[1],
-            bool(meta.get("flat")),
-            sample_pts=np.asarray(merged_v)[::step],
-        )
+        checks, img = _export_and_check(lo, hi, size)
+
+        # ---- auto-reorient rescue --------------------------------------
+        # An object that fails the physics gates in the STANDARD upright
+        # pose is not thereby unusable -- it may simply rest differently
+        # (a leaning beaker, a lying lantern). Same idea as pose iteration
+        # on the generation side: probe how the object actually comes to
+        # rest, bake THAT pose into the mesh, rebuild the collision from
+        # the baked geometry, and judge it again. Two honesty rules:
+        #   - probe with the REAL collision (col at this point is the final
+        #     coacd/copy) -- probing with a convex hull and then gating with
+        #     coacd is the inconsistency that sank the beaker;
+        #   - both attempts stay in the row, so a rescued asset is visibly
+        #     rescued, not silently normal.
+        _PHYSICS_GATES = ("settled", "no_penetration", "tilt_ok")
+        failed_phys = [k for k in _PHYSICS_GATES if not checks[k]]
+        if not checks["pass"] and failed_phys:
+            first_attempt = {k: checks[k] for k in _PHYSICS_GATES}
+            first_attempt["tilt_deg"] = checks["tilt_deg"]
+            qf = probe_rest_quat(vis, col)
+            delta = quat_to_mat(ROTX90).T @ quat_to_mat(qf)
+            T = np.eye(4)
+            T[:3, :3] = delta
+            scene.apply_transform(T)
+            b_lo, b_hi = scene.bounds
+            scene.apply_transform(
+                trimesh.transformations.translation_matrix(
+                    [
+                        -(b_lo[0] + b_hi[0]) / 2,
+                        -float(b_lo[1]),
+                        -(b_lo[2] + b_hi[2]) / 2,
+                    ]
+                )
+            )
+            lo, hi = scene.bounds
+            size = [float(b - a) for a, b in zip(lo, hi)]
+            if size_res.get("scale"):
+                # same post-bake repair as the manual reorient branch: the
+                # v2 size invariant pins actual_max_dim_m to the FINAL mesh
+                size_res["actual_max_dim_m"] = max(size) / size_res["scale"]
+            checks, img = _export_and_check(lo, hi, size)
+            row["auto_reorient"] = {
+                "first_attempt": first_attempt,
+                "baked_quat": [round(float(v), 5) for v in qf],
+                "recovered": bool(checks["pass"]),
+            }
+
         from PIL import Image
 
         Image.fromarray(img).save(out / "shots" / f"{asset}_m{model}.png")

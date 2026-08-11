@@ -66,7 +66,12 @@ def mirror_group(group):
         dst = gdir / rel
         if not dst.exists():
             dst.parent.mkdir(parents=True, exist_ok=True)
-            urllib.request.urlretrieve(f"{BUCKET}/{key}", dst)
+            # ArchVis/DigitalTwin keys contain spaces and parentheses; an
+            # unquoted URL crashes urlretrieve -- which is how a gate-verified
+            # BronzeLantern died at the download step (2026-08-12).
+            urllib.request.urlretrieve(
+                f"{BUCKET}/{urllib.parse.quote(key)}", dst
+            )
         files[rel] = sha256(dst)
     (gdir / "SOURCE_MANIFEST.json").write_text(
         json.dumps({"prefix": group["prefix"], "files": files}, indent=2)
