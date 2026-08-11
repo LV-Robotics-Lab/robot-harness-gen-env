@@ -126,11 +126,19 @@ def stage_web_candidate(
     record["source_license"] = str(candidate.license)
     record["source_provider"] = candidate.provider
     lic = _lookup_model_license(candidate.download_url)
+    meta = candidate.metadata or {}
     if lic:
         record["license_spdx"] = lic.get("spdx")
         record["license_text"] = lic.get("text")
         record["license_owner"] = lic.get("owner")
         record["license_metadata_url"] = lic.get("metadata_url")
+    elif meta.get("license_spdx"):
+        # Some sources hydrate machine-readable licensing straight onto the
+        # candidate (Objaverse: per-object CC slug from its metadata shards).
+        record["license_spdx"] = meta["license_spdx"]
+        record["license_text"] = str(candidate.license)
+        record["license_owner"] = meta.get("sketchfab_name") or candidate.provider
+        record["license_metadata_url"] = meta.get("license_metadata_url")
     manifest_file = Path(staging_dir) / "staging_manifest.json"
     manifest = json.loads(manifest_file.read_text())
     for i, m in enumerate(manifest):

@@ -138,7 +138,11 @@ def _attempt_import(
         staging = out / f"staging_{asset}_m{model}"
         fragment = Path(paths["fragment_dir"]) / f"{asset}_m{model}.yml"
         fragment.parent.mkdir(parents=True, exist_ok=True)
-        if str(candidate.provider).startswith("github"):
+        # Web-mesh candidates (github, objaverse, any future host) stage via
+        # download+convert; only the NVIDIA server path goes via Kit. The
+        # old provider-name-prefix test silently routed every non-github web
+        # source into the Kit USD pipeline, which cannot read a GLB.
+        if candidate.format.lower() in a2.WEB_FORMATS:
             from lib import a3_webfetch as a3w
 
             try:
@@ -458,96 +462,159 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             return viable_cands
         return []  # looked, and every one was something else -> next tier
 
-    res = a1.tiered_search(
-        tiers,
-        query,
-        viable_fn=lambda c: a2.gate(c, globals_cfg) is None,
-        limit=int(globals_cfg.get("top_k", 5)),
-        # Reuse phrases = the requested CATEGORY only, deliberately not the
-        # aliases. Request-side aliases are search wideners ("beaker, also
-        # try: cup") and letting them assert reuse equivalence made a beaker
-        # request reuse-hit the pool's mug the moment "cup" was added as an
-        # alias. Pool-side aliases still count (a request for "mug" matches an
-        # entry aliased mug); the asymmetry is the point -- catalog aliases
-        # are curated identity claims, request aliases are just extra words.
-        phrases=[category],
-        accept_fn=_accept,
-    )
-    rec["tiers_consulted"] = res["tiers_consulted"]
-    rec["provider_errors"] = res["provider_errors"]
-    rec["provider_stats"] = res.get("provider_stats", [])
-    if res["tier0_hit"] is not None:
-        rec["status"] = "reused_local"
-        rec["local_reuse"] = {
-            "asset_id": res["tier0_hit"].metadata.get("asset_id"),
-            "reason": a2.ALREADY,
-        }
-        return rec
-    gated = a2.gate_candidates(res["candidates"], globals_cfg)
-    viable = [r for r in gated if r["verdict"] == "viable"]
-    if not viable:
-        rec["status"] = "search_failed" if not res["candidates"] else "exhausted"
-        rec["candidates"] = [
-            {
-                **a2.candidate_dict(r["candidate"]),
-                "verdict": r["verdict"],
-                "rejection": r["rejection"],
-            }
-            for r in gated
-        ]
-        return rec
-    if gate_log["results"]:
-        ev = Path(paths["out"]) / f"identity_{category.replace(' ', '_')}.json"
-        ev.parent.mkdir(parents=True, exist_ok=True)
-        ev.write_text(json.dumps(gate_log["results"], indent=2, ensure_ascii=False) + "\n")
-        rec["identity_gate"] = {"outcome": gate_log["outcome"], "evidence": str(ev)}
-
-    identity = {"basis": "requested_by_acquire", "evidence": None}
-    if gate_log["outcome"] == "verified":
-        identity = {"basis": "vlm", "evidence": rec["identity_gate"]["evidence"]}
-    elif gate_log["outcome"] == "unverifiable":
-        identity = {
-            "basis": "requested_by_acquire",
-            "evidence": rec["identity_gate"]["evidence"],
-        }
-
-    # Bookkeeping keeps the OLD record shape (every candidate of the tier that
-    # answered, with a verdict), while the attempt list narrows to what the
-    # gate actually accepted. A viable candidate the gate refuted is recorded
-    # as rejected/identity_unverified rather than silently vanishing.
-    gated = a2.gate_candidates(res["candidates"], globals_cfg)
-    accepted_ids = {c.candidate_id for c in res.get("accepted", [])}
-    examined = {r_["candidate_id"]: r_["verdict"] for r_ in gate_log["results"]}
-    viable, fallbacks = [], []
-    for r in gated:
-        if r["verdict"] != "viable":
-            continue
-        cid = r["candidate"].candidate_id
-        if cid in accepted_ids:
-            viable.append(r)
-        elif gate_log["results"] and examined.get(cid) == "mismatch":
-            # the gate looked at this one and it was some other object
-            r["verdict"] = "rejected"
-            r["rejection"] = {
-                "code": a2.REJ_IDENTITY,
-                "detail": rec.get("identity_gate", {}).get("evidence", ""),
-            }
-        elif gate_log["results"]:
-            # never examined (the gate stops at the first match): keep as a
-            # fallback -- it earns its own identity check the moment an
-            # import of it is actually attempted (identity_fn below)
-            fallbacks.append(r)
-    viable.extend(fallbacks)
-    if not viable:
-        # Either no tier produced a viable candidate, or the gate looked at
-        # everything every tier offered and refuted it all. The two read
-        # differently downstream: the former is a coverage gap, the latter is
-        # the gate doing its job.
-        rec["status"] = (
-            "identity_unverified" if gate_log["results"] else
-            ("search_failed" if not res["candidates"] else "exhausted")
+    def _walk_once(walk_tiers):
+        nonlocal rec
+        res = a1.tiered_search(
+            walk_tiers,
+            query,
+            viable_fn=lambda c: a2.gate(c, globals_cfg) is None,
+            limit=int(globals_cfg.get("top_k", 5)),
+            # Reuse phrases = the requested CATEGORY only, deliberately not the
+            # aliases. Request-side aliases are search wideners ("beaker, also
+            # try: cup") and letting them assert reuse equivalence made a beaker
+            # request reuse-hit the pool's mug the moment "cup" was added as an
+            # alias. Pool-side aliases still count (a request for "mug" matches an
+            # entry aliased mug); the asymmetry is the point -- catalog aliases
+            # are curated identity claims, request aliases are just extra words.
+            phrases=[category],
+            accept_fn=_accept,
         )
-        rec["candidates"] = [
+        rec["tiers_consulted"] = sorted(
+            set(rec.get("tiers_consulted", [])) | set(res["tiers_consulted"])
+        )
+        rec["provider_errors"] = rec.get("provider_errors", []) + res["provider_errors"]
+        rec["provider_stats"] = rec.get("provider_stats", []) + res.get(
+            "provider_stats", []
+        )
+        if res["tier0_hit"] is not None:
+            rec["status"] = "reused_local"
+            rec["local_reuse"] = {
+                "asset_id": res["tier0_hit"].metadata.get("asset_id"),
+                "reason": a2.ALREADY,
+            }
+            return rec
+        gated = a2.gate_candidates(res["candidates"], globals_cfg)
+        viable = [r for r in gated if r["verdict"] == "viable"]
+        if not viable:
+            rec["status"] = "search_failed" if not res["candidates"] else "exhausted"
+            rec["candidates"] = rec.get("candidates", []) + [
+                {
+                    **a2.candidate_dict(r["candidate"]),
+                    "verdict": r["verdict"],
+                    "rejection": r["rejection"],
+                }
+                for r in gated
+            ]
+            return rec
+        if gate_log["results"]:
+            ev = Path(paths["out"]) / f"identity_{category.replace(' ', '_')}.json"
+            ev.parent.mkdir(parents=True, exist_ok=True)
+            ev.write_text(json.dumps(gate_log["results"], indent=2, ensure_ascii=False) + "\n")
+            rec["identity_gate"] = {"outcome": gate_log["outcome"], "evidence": str(ev)}
+
+        identity = {"basis": "requested_by_acquire", "evidence": None}
+        if gate_log["outcome"] == "verified":
+            identity = {"basis": "vlm", "evidence": rec["identity_gate"]["evidence"]}
+        elif gate_log["outcome"] == "unverifiable":
+            identity = {
+                "basis": "requested_by_acquire",
+                "evidence": rec["identity_gate"]["evidence"],
+            }
+
+        # Bookkeeping keeps the OLD record shape (every candidate of the tier that
+        # answered, with a verdict), while the attempt list narrows to what the
+        # gate actually accepted. A viable candidate the gate refuted is recorded
+        # as rejected/identity_unverified rather than silently vanishing.
+        gated = a2.gate_candidates(res["candidates"], globals_cfg)
+        accepted_ids = {c.candidate_id for c in res.get("accepted", [])}
+        examined = {r_["candidate_id"]: r_["verdict"] for r_ in gate_log["results"]}
+        viable, fallbacks = [], []
+        for r in gated:
+            if r["verdict"] != "viable":
+                continue
+            cid = r["candidate"].candidate_id
+            if cid in accepted_ids:
+                viable.append(r)
+            elif gate_log["results"] and examined.get(cid) == "mismatch":
+                # the gate looked at this one and it was some other object
+                r["verdict"] = "rejected"
+                r["rejection"] = {
+                    "code": a2.REJ_IDENTITY,
+                    "detail": rec.get("identity_gate", {}).get("evidence", ""),
+                }
+            elif gate_log["results"]:
+                # never examined (the gate stops at the first match): keep as a
+                # fallback -- it earns its own identity check the moment an
+                # import of it is actually attempted (identity_fn below)
+                fallbacks.append(r)
+        viable.extend(fallbacks)
+        if not viable:
+            # Either no tier produced a viable candidate, or the gate looked at
+            # everything every tier offered and refuted it all. The two read
+            # differently downstream: the former is a coverage gap, the latter is
+            # the gate doing its job.
+            rec["status"] = (
+                "identity_unverified" if gate_log["results"] else
+                ("search_failed" if not res["candidates"] else "exhausted")
+            )
+            rec["candidates"] = rec.get("candidates", []) + [
+                {
+                    **a2.candidate_dict(r["candidate"]),
+                    "verdict": r["verdict"],
+                    "rejection": r.get("rejection"),
+                }
+                for r in gated
+            ]
+            return rec
+
+        verified_cache = {c.candidate_id: identity for c in res.get("accepted", [])}
+
+        def _identity_for(cand):
+            """The gate's winner reuses its verdict; a fallback earns its own the
+            moment an import of it is attempted. None keeps it out."""
+            if cand.candidate_id in verified_cache:
+                return verified_cache[cand.candidate_id]
+            if not verify_cfg.get("enabled", True):
+                return {"basis": "requested_by_acquire", "evidence": None}
+            from lib import a6_verify as a6
+
+            vr = a6.verify_candidates(
+                [cand],
+                category,
+                aliases=entry.get("aliases"),
+                model_name=verify_cfg.get("model", a6.DEFAULT_MODEL),
+                max_check=1,
+                second_opinion=bool(verify_cfg.get("second_opinion", True)),
+            )
+            gate_log["results"].extend({**r_, "tier": "fallback"} for r_ in vr["results"])
+            ev_path = rec.get("identity_gate", {}).get("evidence")
+            if ev_path:
+                Path(ev_path).write_text(
+                    json.dumps(gate_log["results"], indent=2, ensure_ascii=False) + "\n"
+                )
+            if vr["outcome"] == "verified":
+                ident = {"basis": "vlm", "evidence": ev_path}
+            elif vr["outcome"] == "unverifiable":
+                ident = {"basis": "requested_by_acquire", "evidence": ev_path}
+            else:
+                ident = None
+            verified_cache[cand.candidate_id] = ident
+            return ident
+
+        max_attempts = 1 + int(globals_cfg.get("max_fallback", 2))
+        rec = _attempt_import(
+            rec,
+            viable,
+            entry,
+            category,
+            globals_cfg,
+            paths,
+            runner,
+            max_attempts,
+            identity=identity,
+            identity_fn=_identity_for,
+        )
+        rec["candidates"] = rec.get("candidates", []) + [
             {
                 **a2.candidate_dict(r["candidate"]),
                 "verdict": r["verdict"],
@@ -557,62 +624,31 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         ]
         return rec
 
-    verified_cache = {c.candidate_id: identity for c in res.get("accepted", [])}
-
-    def _identity_for(cand):
-        """The gate's winner reuses its verdict; a fallback earns its own the
-        moment an import of it is attempted. None keeps it out."""
-        if cand.candidate_id in verified_cache:
-            return verified_cache[cand.candidate_id]
-        if not verify_cfg.get("enabled", True):
-            return {"basis": "requested_by_acquire", "evidence": None}
-        from lib import a6_verify as a6
-
-        vr = a6.verify_candidates(
-            [cand],
-            category,
-            aliases=entry.get("aliases"),
-            model_name=verify_cfg.get("model", a6.DEFAULT_MODEL),
-            max_check=1,
-            second_opinion=bool(verify_cfg.get("second_opinion", True)),
-        )
-        gate_log["results"].extend({**r_, "tier": "fallback"} for r_ in vr["results"])
-        ev_path = rec.get("identity_gate", {}).get("evidence")
-        if ev_path:
-            Path(ev_path).write_text(
-                json.dumps(gate_log["results"], indent=2, ensure_ascii=False) + "\n"
-            )
-        if vr["outcome"] == "verified":
-            ident = {"basis": "vlm", "evidence": ev_path}
-        elif vr["outcome"] == "unverifiable":
-            ident = {"basis": "requested_by_acquire", "evidence": ev_path}
-        else:
-            ident = None
-        verified_cache[cand.candidate_id] = ident
-        return ident
-
-    max_attempts = 1 + int(globals_cfg.get("max_fallback", 2))
-    rec = _attempt_import(
-        rec,
-        viable,
-        entry,
-        category,
-        globals_cfg,
-        paths,
-        runner,
-        max_attempts,
-        identity=identity,
-        identity_fn=_identity_for,
-    )
-    rec["candidates"] = [
-        {
-            **a2.candidate_dict(r["candidate"]),
-            "verdict": r["verdict"],
-            "rejection": r.get("rejection"),
-        }
-        for r in gated
-    ]
-    return rec
+    # Post-import exhaustion resumes the walk at deeper tiers. Measured
+    # 2026-08-12 (hammer at the 50k corpus): tier 1's pre-gate accepted an
+    # ambiguous-silhouette candidate, so the walk stopped there -- and when
+    # every tier-1 candidate then died at the post-render identity check, the
+    # acquisition ended "exhausted" while tier 3 (Objaverse) held 59 real
+    # hammers it had never been allowed to offer. An exhausted attempt list is
+    # a verdict on the CONSULTED tiers, not on the sources below them.
+    walk_pool = list(tiers)
+    while True:
+        out_rec = _walk_once(walk_pool)
+        if out_rec.get("resumed_after_exhaustion") and out_rec["status"] in (
+            "search_failed",
+            "identity_unverified",
+        ):
+            # a resumed pass that found nothing deeper does not launder the
+            # aggregate story: candidates existed and every one died
+            out_rec["status"] = "exhausted"
+        if out_rec["status"] != "exhausted":
+            return out_rec
+        walked = max(out_rec.get("tiers_consulted") or [0])
+        deeper = [t for t in walk_pool if t.tier > walked]
+        if not deeper:
+            return out_rec
+        out_rec.setdefault("resumed_after_exhaustion", []).append(walked)
+        walk_pool = deeper
 
 
 def main(argv=None, runner=None, tiers=None):
@@ -651,6 +687,10 @@ def main(argv=None, runner=None, tiers=None):
                     val = Path(getattr(t.provider, attr))
                     if not val.is_absolute():
                         setattr(t.provider, attr, dev / val)
+            elif getattr(t.provider, "name", "") == "objaverse":
+                d_ = Path(t.provider.data_dir)
+                if not d_.is_absolute():
+                    t.provider.data_dir = dev / d_
             elif getattr(t.provider, "name", "") == "robotwin_local":
                 t.provider.catalog_path = resolve_catalog_path(
                     dev, t.provider.catalog_path, MAIN_TREE_CATALOG_FALLBACK

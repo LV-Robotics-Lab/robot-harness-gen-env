@@ -651,8 +651,17 @@ for idx, r in worker_records:
         # basis=vlm/verified=true (same standard the NVIDIA path meets);
         # a mismatch rejects the model outright; model trouble (unreadable)
         # keeps the honest degraded claim rather than blocking on infra.
+        #
+        # Pre-verified (basis=vlm) models are re-checked too, not skipped:
+        # the pre-download gate saw a 256px server thumbnail, and at the
+        # 50k corpus that picture can be an ambiguous crop -- dsready's
+        # TrafficCamera05 thumbnail is indistinguishable from a sledgehammer
+        # (2026-08-12). The settle shot is a second, independent viewpoint
+        # of the REAL converted geometry; agreement keeps verified=true with
+        # the extra evidence on file, disagreement evicts the model even
+        # though the thumbnail once matched.
         identity_final = dict(IDENTITY)
-        if checks["pass"] and args.identity_basis == "requested_by_acquire":
+        if checks["pass"] and args.identity_basis in ("requested_by_acquire", "vlm"):
             from lib import a6_verify as a6
 
             shot = out / "shots" / f"{asset}_m{model}.png"

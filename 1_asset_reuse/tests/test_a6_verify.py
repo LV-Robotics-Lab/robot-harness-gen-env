@@ -82,8 +82,10 @@ def test_stops_at_first_match_and_bounds_cost(tmp_path):
     out = a6.verify_candidates(cands, "mug", infer=infer, max_check=3)
     assert out["accepted"].name == "b.usd"
     # a.png: one closed ask (mismatch). b.png: closed ask + the open-question
-    # second opinion that guards the match. c/d: never reached.
-    assert seen == ["a.png", "b.png", "b.png"]
+    # second opinion + the name question ("b.usd" carries no category word,
+    # and the reply here parses as neither plausible nor contradiction, which
+    # keeps the match). c/d: never reached.
+    assert seen == ["a.png", "b.png", "b.png", "b.png"]
 
 
 def test_second_opinion_vetoes_a_leading_yes(tmp_path):
@@ -92,6 +94,7 @@ def test_second_opinion_vetoes_a_leading_yes(tmp_path):
     flowerpot; asked openly what it saw, it said flowerpot. The open answer
     is the model's real perception -- when the two disagree, the match is
     vetoed."""
+
     def infer(_p, prompt):
         if "single main object" in prompt:  # the open question
             return '{"object": "flowerpot"}'
@@ -109,9 +112,10 @@ def test_second_opinion_vetoes_a_leading_yes(tmp_path):
 
 
 def test_second_opinion_accepts_alias_worded_answers(tmp_path):
-    """"yellow cup" must agree with category mug via alias "cup" -- the veto
+    """ "yellow cup" must agree with category mug via alias "cup" -- the veto
     is for different OBJECTS, not different WORDINGS, and the alias list is
     exactly where wordings live."""
+
     def infer(_p, prompt):
         if "single main object" in prompt:
             return '{"object": "yellow cup"}'
@@ -125,6 +129,72 @@ def test_second_opinion_accepts_alias_worded_answers(tmp_path):
     )
     assert out["accepted"] is not None
     assert out["results"][0]["verdict"] == a6.MATCH
+
+
+def test_name_contradiction_vetoes_ambiguous_silhouette(tmp_path):
+    """The 50k-scale failure (2026-08-12, dsready): TrafficCamera05's
+    thumbnail is a Mjolnir-shaped crop, and the model honestly answers
+    "hammer" to BOTH the closed and the open question -- pixels cannot save
+    this one, and neither could the post-render check (the converted geometry
+    looks like a hammer too). The filename is the only dissenting evidence
+    channel, so a visual MATCH whose name clearly denotes a different object
+    is vetoed."""
+    assert a6._name_words("TrafficCamera03.usd") == {"traffic", "camera", "03", "usd"}
+
+    def infer(_p, prompt):
+        if "single main object" in prompt:
+            return '{"object": "mjolnir hammer"}'
+        if "plausible" in prompt:
+            return '{"plausible": false, "suggests": "traffic camera"}'
+        return reply(True, "hammer")
+
+    out = a6.verify_candidates(
+        [cand("TrafficCamera05.usd", png(tmp_path))], "hammer", infer=infer
+    )
+    assert out["accepted"] is None
+    assert out["results"][0]["name_check"] == "contradiction:traffic camera"
+    assert out["results"][0]["name_veto"] is True
+
+
+def test_product_names_stay_admissible(tmp_path):
+    """Reginald is a real office chair whose filename is just a product name.
+    The name channel must only veto ACTIVE contradictions -- absence of
+    support is normal (half the corpus is product codes)."""
+
+    def infer(_p, prompt):
+        if "single main object" in prompt:
+            return '{"object": "office chair"}'
+        if "plausible" in prompt:
+            return '{"plausible": true, "suggests": "nothing specific"}'
+        return reply(True, "office chair")
+
+    out = a6.verify_candidates(
+        [cand("Reginald.usd", png(tmp_path))],
+        "office chair",
+        aliases=["chair"],
+        infer=infer,
+    )
+    assert out["accepted"] is not None
+    assert out["results"][0]["name_check"] == "plausible"
+
+
+def test_name_support_skips_the_name_question(tmp_path):
+    """constr_mov_jack_hammer_01 contains the category word: asking a model
+    whether "hammer" might be a hammer is a wasted inference."""
+    calls = []
+
+    def infer(_p, prompt):
+        calls.append(prompt)
+        if "single main object" in prompt:
+            return '{"object": "hammer"}'
+        return reply(True, "hammer")
+
+    out = a6.verify_candidates(
+        [cand("constr_mov_jack_hammer_01.usd", png(tmp_path))], "hammer", infer=infer
+    )
+    assert out["accepted"] is not None
+    assert out["results"][0]["name_check"] == "supports"
+    assert len(calls) == 2  # closed + open only, no name question
 
 
 def test_no_thumbnail_is_unverifiable_not_rejected():
