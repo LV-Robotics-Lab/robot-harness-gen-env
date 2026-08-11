@@ -44,6 +44,7 @@ from lib.ledger import (  # noqa: E402
     to_ir_bundles,
     upsert_model,
     validate_ledger,
+    unknown_inertial,
 )
 import gen_fragment  # noqa: E402
 
@@ -52,6 +53,18 @@ parser.add_argument("--staging", required=True)
 parser.add_argument("--library-dir", required=True)
 parser.add_argument("--out", required=True)
 parser.add_argument("--overrides-fragment", required=True)
+parser.add_argument(
+    "--identity-basis",
+    required=True,
+    choices=("manifest_human", "requested_by_acquire", "vlm"),
+    help="where these assets' category/aliases came from: hand-written into "
+    "a manifest, or asserted as a retrieval query by acquire_batch",
+)
+parser.add_argument(
+    "--identity-evidence",
+    default=None,
+    help="path to the manifest / selection evidence backing that claim",
+)
 parser.add_argument(
     "--reference-catalog",
     default="/home/jingxiang/yuxin/env-gen-dev/external/env-gen-github/data/scene_gen/asset_catalog.json",
@@ -65,6 +78,15 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+
+IDENTITY = {
+    "basis": args.identity_basis,
+    "evidence": args.identity_evidence,
+    # basis=vlm means the acquire-side gate already looked at the source
+    # thumbnail and answered positively; hardcoding False here contradicted
+    # the evidence file the record itself points to.
+    "verified": args.identity_basis == "vlm",
+}
 staging = Path(args.staging)
 lib = Path(args.library_dir)
 out = Path(args.out)
@@ -180,6 +202,45 @@ def settle_check(vis, col, height, flat, sample_pts=None):
     return checks, img
 
 
+# Licenses only ever auto-declare from this allowlist: permissive terms whose
+# scope needs no per-asset judgment. Anything else (SCEA, EULAs, ...) keeps
+# status=unknown with the fetched SPDX + evidence recorded, and waits for a
+# human decision -- an automated pipeline asserting "declared" about terms it
+# cannot read would be exactly the kind of invented provenance the ledger
+# contract forbids.
+AUTO_DECLARE_SPDX = {"CC0-1.0", "CC-BY-4.0", "MIT", "BSD-3-Clause", "Apache-2.0"}
+
+
+def _web_license(r):
+    spdx = r.get("license_spdx")
+    if not spdx:
+        return {
+            "spdx": None,
+            "status": "unknown",
+            "terms_note": r.get("source_license", "unknown (web source)"),
+        }
+    declared = spdx in AUTO_DECLARE_SPDX
+    return {
+        "spdx": spdx,
+        "status": "declared" if declared else "unknown",
+        "terms_note": (
+            f"{r.get('license_text') or spdx}; owner: {r.get('license_owner')}"
+            + (
+                ""
+                if declared
+                else " -- SPDX auto-fetched from repo metadata; terms scope needs human sign-off"
+            )
+        ),
+        "evidence_url": r.get("license_metadata_url"),
+        "checked_date": dt.date.today().isoformat(),
+        "checked_by": (
+            "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
+            if declared
+            else "auto-fetched from repo metadata.json; awaiting human sign-off"
+        ),
+    }
+
+
 # fill per-item defaults from the first item of the same asset
 meta_by_asset = {}
 for r in records:
@@ -187,7 +248,16 @@ for r in records:
     if a not in meta_by_asset and "category" in r:
         meta_by_asset[a] = {
             k: r[k]
-            for k in ("category", "aliases", "colors", "footprint", "flat")
+            for k in (
+                "category",
+                "aliases",
+                "colors",
+                "footprint",
+                "flat",
+                "size_policy",
+                "collision",
+                "reorient",
+            )
             if k in r
         }
 
@@ -225,10 +295,6 @@ if args.only_index is None:
     # the split validation now handles per-model. Anything left over from a
     # model that ends up rejected this run is removed by quarantine at the
     # end (below), not up front.
-    for asset_name in {r["asset"] for r in records}:
-        adir = lib / asset_name
-        (adir / "visual").mkdir(parents=True, exist_ok=True)
-        (adir / "collision").mkdir(parents=True, exist_ok=True)
     matrix = []
     for i, r in enumerate(records):
         row_file = rows_dir / f"row_{i}.json"
@@ -245,6 +311,23 @@ if args.only_index is None:
             args.out,
             "--overrides-fragment",
             args.overrides_fragment,
+            # The worker re-parses THIS script's own argparse, so every
+            # required argument the driver received must be forwarded, or the
+            # worker dies inside argparse before writing its row file and the
+            # driver can only report "native crash" -- which is exactly how
+            # the omission of --identity-basis (added as required 2026-08-10)
+            # surfaced: not as an argparse error anywhere visible, but as a
+            # phantom crash with no traceback. reference-catalog rides along
+            # for the same reason, so a driver override reaches the worker.
+            "--identity-basis",
+            args.identity_basis,
+            *(
+                ["--identity-evidence", str(args.identity_evidence)]
+                if args.identity_evidence
+                else []
+            ),
+            "--reference-catalog",
+            args.reference_catalog,
             "--only-index",
             str(i),
         ]
@@ -278,13 +361,32 @@ else:
     worker_records = [(args.only_index, records[args.only_index])]
     matrix = []
 
+# Both modes need the target directories: the driver creates them for its
+# workers, but a worker also runs standalone (--only-index, crash repro) and
+# scene.export() does not create parents -- exporting into a missing
+# visual/ dir raises FileNotFoundError with a message that reads like the
+# GLB itself vanished.
+for asset_name in {r["asset"] for r in records}:
+    adir = lib / asset_name
+    (adir / "visual").mkdir(parents=True, exist_ok=True)
+    (adir / "collision").mkdir(parents=True, exist_ok=True)
+
 for idx, r in worker_records:
     asset, model = r["asset"], r["model"]
     meta = {
         **meta_by_asset.get(asset, {}),
         **{
             k: r[k]
-            for k in ("category", "aliases", "colors", "footprint", "flat")
+            for k in (
+                "category",
+                "aliases",
+                "colors",
+                "footprint",
+                "flat",
+                "size_policy",
+                "collision",
+                "reorient",
+            )
             if k in r
         },
     }
@@ -366,6 +468,14 @@ for idx, r in worker_records:
             lo, hi = scene.bounds
             size = [float(b - a) for a, b in zip(lo, hi)]
             row["reorient_baked_quat"] = [round(float(v), 5) for v in qf]
+            # The bake rotates the mesh, so its bbox -- and therefore
+            # max(mesh_bbox_m) -- changes AFTER the sizing decision was taken.
+            # actual_max_dim_m is contractually the pre-scale dimension of the
+            # FINAL mesh (the v2 size invariant enforces exactly that), so
+            # recompute it from the post-bake bounds; pure arithmetic, same
+            # repair the v1->v2 migration applied to backfill_upstream's rows.
+            if size_res.get("scale"):
+                size_res["actual_max_dim_m"] = max(size) / size_res["scale"]
 
         scene.export(str(vis))
         collision_mode = r.get("collision") or meta.get("collision") or "copy"
@@ -443,6 +553,39 @@ for idx, r in worker_records:
                 k for k in ("settled", "no_penetration", "tilt_ok") if not checks[k]
             ]
 
+        # ---- post-render identity check -------------------------------
+        # A web-sourced candidate had no picture before download, so the
+        # pre-download gate could only wave it through as "unverifiable".
+        # But the settle shot above IS a picture of the thing that would
+        # enter the pool -- so this is where "nothing to look at" stops
+        # being a free pass. A match upgrades the identity claim to
+        # basis=vlm/verified=true (same standard the NVIDIA path meets);
+        # a mismatch rejects the model outright; model trouble (unreadable)
+        # keeps the honest degraded claim rather than blocking on infra.
+        identity_final = dict(IDENTITY)
+        if checks["pass"] and args.identity_basis == "requested_by_acquire":
+            from lib import a6_verify as a6
+
+            shot = out / "shots" / f"{asset}_m{model}.png"
+            verdict = a6.verify_image(
+                shot, meta.get("category"), aliases=meta.get("aliases")
+            )
+            vpath = out / f"identity_post_render_{asset}_m{model}.json"
+            vpath.write_text(json.dumps(verdict, indent=2, ensure_ascii=False) + "\n")
+            row["identity_post_render"] = verdict.get("verdict")
+            if verdict["verdict"] == a6.MATCH:
+                identity_final = {
+                    "basis": "vlm",
+                    "evidence": str(vpath),
+                    "verified": True,
+                }
+            elif verdict["verdict"] == a6.MISMATCH:
+                checks["pass"] = False
+                row["status"] = "rejected"
+                row["reasons"] = [
+                    f"identity_mismatch_post_render:{verdict.get('seen_as')}"
+                ]
+
         aliases = meta.get("aliases", [])
         colors = meta.get("colors", [])
 
@@ -477,9 +620,16 @@ for idx, r in worker_records:
                 },
             },
             {
-                "format": "usd",
+                # NVIDIA sources ship an Isaac-loadable USD; a web source is a
+                # GLB, which no Isaac backend can consume as-is. Claiming it
+                # as isaacsim would make the asset read as cross-backend-ready
+                # when it is not -- register it as the portable source instead
+                # and let the profile say sapien_only honestly.
+                "format": "usd" if not r["group"].startswith("web_") else "glb",
                 "uri": r["usd_local"],
-                "backend": "isaacsim",
+                "backend": (
+                    "isaacsim" if not r["group"].startswith("web_") else "portable"
+                ),
                 "role": "visual_and_collision",
                 "sha256": r["usd_sha256"],
                 "size_bytes": Path(r["usd_local"]).stat().st_size,
@@ -521,23 +671,76 @@ for idx, r in worker_records:
                     file=sys.stderr,
                 )
 
-        manifest_path = lib / "_source" / r["group"] / "SOURCE_MANIFEST.json"
-        source_v1 = {
-            "library": "NVIDIA Isaac Assets 5.1",
-            "group": r["group"],
-            "file": r["usd"],
-            "license": {
-                "spdx": None,
-                "status": "unknown",
-                "terms_note": "NVIDIA asset EULA; YCB dataset terms for ycb group",
-            },
-            "retrieved_at": dt.date.fromtimestamp(
-                (staging / "staging_manifest.json").stat().st_mtime
-            ).isoformat(),
-            "source_manifest_path": (
-                str(manifest_path.resolve()) if manifest_path.exists() else None
-            ),
-        }
+        # Follow where phase 1 actually mirrored the source. The staging record's
+        # usd_local is <source-root>/<group>/<file>, so its parent is that group's
+        # mirror dir. Deriving this from `lib` instead silently assumed
+        # --source-root == <library-dir>/_source -- an undocumented coupling
+        # between the two stages' CLIs. When they diverged, source_manifest_path
+        # (required AND not-nullable) came out None and the asset was rejected as
+        # schema_violation:missing. Falls back to the old derivation only when a
+        # record carries no usd_local at all.
+        usd_local = r.get("usd_local")
+        manifest_path = (
+            Path(usd_local).parent / "SOURCE_MANIFEST.json"
+            if usd_local
+            else lib / "_source" / r["group"] / "SOURCE_MANIFEST.json"
+        )
+        is_web = r["group"].startswith("web_")
+        if is_web:
+            # A web candidate was fetched into a run-scoped cache, which is
+            # not a source mirror: the pool's provenance contract (source
+            # retained under _source/, hashed manifest, so conversions can be
+            # re-derived and licences re-checked) applies to every retrieved
+            # asset regardless of where it came from. Mirror it now.
+            web_src_dir = lib / "_source" / r["group"]
+            web_src_dir.mkdir(parents=True, exist_ok=True)
+            mirrored = web_src_dir / Path(r["usd_local"]).name
+            if not mirrored.exists():
+                shutil.copy(r["usd_local"], mirrored)
+            manifest_path = web_src_dir / "SOURCE_MANIFEST.json"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "files": {mirrored.name: r["usd_sha256"]},
+                        "source_url": r.get("source_url"),
+                        "source_page": r.get("source_page"),
+                        "provider": r.get("source_provider"),
+                    },
+                    indent=2,
+                )
+                + "\n"
+            )
+            r["usd_local"] = str(mirrored)
+            source_v1 = {
+                "kind": "retrieved",
+                "library": f"web ({r.get('source_provider', 'github')})",
+                "group": r["group"],
+                "file": r["usd"],
+                "url": r.get("source_url"),
+                "license": _web_license(r),
+                "retrieved_at": dt.date.fromtimestamp(
+                    (staging / "staging_manifest.json").stat().st_mtime
+                ).isoformat(),
+                "source_manifest_path": str(manifest_path.resolve()),
+            }
+        else:
+            source_v1 = {
+                "kind": "retrieved",
+                "library": "NVIDIA Isaac Assets 5.1",
+                "group": r["group"],
+                "file": r["usd"],
+                "license": {
+                    "spdx": None,
+                    "status": "unknown",
+                    "terms_note": "NVIDIA asset EULA; YCB dataset terms for ycb group",
+                },
+                "retrieved_at": dt.date.fromtimestamp(
+                    (staging / "staging_manifest.json").stat().st_mtime
+                ).isoformat(),
+                "source_manifest_path": (
+                    str(manifest_path.resolve()) if manifest_path.exists() else None
+                ),
+            }
 
         # thresholds mirror settle_check()'s real gate constants above
         # (0.002 late-drift, -0.005 no-penetration floor -- note this is
@@ -582,21 +785,51 @@ for idx, r in worker_records:
             mesh_bbox_m=size,
             mesh_up_axis="Y",
             origin_convention="bottom-center",
-            scale_applied=size_res["scale"],
             size_resolution=size_res,
             conventions=conv_v1,
             source=source_v1,
             verification=[settle_entry],
+            # This writer declares profile=cross_backend (it registers the
+            # source USD as the isaacsim representation), and cross_backend
+            # requires the inertial KEY to exist. engine_derived + nulls is
+            # the honest value for a rigid import: no asset-side measurement
+            # exists, the engine infers mass distribution from collision
+            # geometry. Omitting this made the writer fail its own validator.
+            inertial=unknown_inertial("engine_derived"),
         )
         settle_entry["verified_digest"] = reps_digest(entry, "sapien")
 
         led_path = ledger_path(args.library_dir, asset)
         existing = json.loads(led_path.read_text()) if led_path.exists() else None
+        # A re-import replaces the model entry wholesale, which silently
+        # DOWNGRADED hand-audited licenses: 301_cup was declared CC-BY-4.0 by
+        # the 2026-08-09 audit, got re-imported on 08-10 for a collision fix,
+        # and came out status=unknown again. The audit is attached to the
+        # SOURCE (library/group/file), not to the import event -- so as long
+        # as those coordinates are unchanged and the incoming record knows
+        # nothing the existing one doesn't, the audited license survives.
+        if existing:
+            for em in existing.get("models", []):
+                if em.get("model_id") != int(model):
+                    continue
+                es, ns = em.get("source", {}), source_v1
+                if (
+                    es.get("license", {}).get("status") == "declared"
+                    and ns["license"]["status"] == "unknown"
+                    and all(es.get(k) == ns.get(k) for k in ("library", "group", "file"))
+                ):
+                    ns["license"] = es["license"]
         led = upsert_model(
             existing,
             asset=asset,
             category=meta.get("category", "unknown"),
             kind="rigid",
+            # cross_backend is a statement of fact, not aspiration: NVIDIA
+            # records register their source USD as an isaacsim representation;
+            # a web record's GLB is registered as portable, so it declares
+            # sapien_only and owes nothing it cannot show.
+            profile="sapien_only" if is_web else "cross_backend",
+            identity=identity_final,
             aliases=aliases,
             colors=colors,
             materials=[],
@@ -612,6 +845,12 @@ for idx, r in worker_records:
             asset=asset,
             category=meta.get("category", "unknown"),
             kind="rigid",
+            # cross_backend is a statement of fact, not aspiration: NVIDIA
+            # records register their source USD as an isaacsim representation;
+            # a web record's GLB is registered as portable, so it declares
+            # sapien_only and owes nothing it cannot show.
+            profile="sapien_only" if is_web else "cross_backend",
+            identity=identity_final,
             aliases=aliases,
             colors=colors,
             materials=[],
@@ -635,7 +874,7 @@ for idx, r in worker_records:
         if violations or not checks["pass"]:
             row["status"] = "rejected"
             row.setdefault("reasons", []).extend(
-                f"schema_violation:{v.code}" for v in violations
+                f"schema_violation:{v.code}:{v.path}" for v in violations
             )
         else:
             # I-1: whole-ledger write through the fcntl-locked atomic writer

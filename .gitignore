@@ -3,7 +3,11 @@
 
 # 运行产物 / 大文件 / 缓存：靠 README + stats 追溯，不提交
 /data/*
-/results/
+# 运行产物一律不入 git。原先只写 /results/（锚定仓库根），于是
+# <阶段目录>/results/ 会漏网——2026-08-10 值夜时 1_asset_reuse/results/
+# 的 41MB 测试产物就是这么被 git add -A 收进去的。去掉前导斜杠，任意
+# 层级的 results/ 都忽略。
+results/
 /work/
 /runs/
 /out/

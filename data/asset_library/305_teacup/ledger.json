@@ -1,5 +1,5 @@
 {
-  "schema_version": "asset_ledger.v1",
+  "schema_version": "asset_ledger.v2",
   "asset_id": "external_305_teacup",
   "category": "teacup",
   "semantic_name": "teacup",
@@ -14,7 +14,12 @@
       "teacup"
     ],
     "colors": [],
-    "materials": []
+    "materials": [],
+    "identity": {
+      "basis": "unknown",
+      "evidence": null,
+      "verified": false
+    }
   },
   "models": [
     {
@@ -27,7 +32,6 @@
         ],
         "mesh_up_axis": "Y",
         "origin_convention": "bottom-center",
-        "scale_applied": 1.0,
         "size_resolution": {
           "mode": "match_category",
           "actual_max_dim_m": 0.11699008680157164,
@@ -65,6 +69,12 @@
           "status": "unknown",
           "runtime_default": null,
           "runtime_default_basis": "none"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
         }
       },
       "representations": [
@@ -133,7 +143,8 @@
           "checked_by": "owner-directed research 2026-08-09"
         },
         "retrieved_at": "2026-08-09",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_305_teacup/SOURCE_MANIFEST.json"
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_305_teacup/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
       },
       "verification": [
         {
@@ -153,5 +164,6 @@
         }
       ]
     }
-  ]
+  ],
+  "profile": "cross_backend"
 }

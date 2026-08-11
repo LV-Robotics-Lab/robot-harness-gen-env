@@ -47,7 +47,7 @@
 ## 3. 阶段总览
 
 代码全在本目录 `{scripts,lib,configs,tests}/`；数据产物在 `../data/`（不入 git）；
-打样总入口 `scripts/run_smoke.sh`（4 步）。scripts/ 内按**外部资产引入的流程顺序**编号分夹：`1_search/ → 2_convert/ → 3_materialize/ → 4_validate/ → 5_catalog/`；横切工具在 `ledger/`（账本工具链）与 `probe/`（一次性探测/自检）（各夹地图见 `scripts/README.md`）。`sN` 文件名序号保留不改，阶段归属以文件夹为准。
+打样总入口 `scripts/run_smoke.sh`（4 步，**全程隔离**：产物全落 `results/_test/<run>/`，生产 `data/` 只读不写；输入清单 `configs/smoke_manifest.json`）。scripts/ 内按**外部资产引入的流程顺序**编号分夹：`1_search/ → 2_convert/ → 3_materialize/ → 4_validate/ → 5_catalog/`；横切工具在 `ledger/`（账本工具链）与 `probe/`（一次性探测/自检）（各夹地图见 `scripts/README.md`）。`sN` 文件名序号保留不改，阶段归属以文件夹为准。
 
 | 阶段 | 职责（一句话） | 代码 |
 |---|---|---|
@@ -106,7 +106,10 @@
 
 </details>
 
-### 4.2 线 B · 反向引入打样（NVIDIA USD → RoboTwin GLB）
+### 4.2 线 B · 反向引入打样（NVIDIA USD → RoboTwin GLB）——【s8a/s8b 已归档 2026-08-10】
+
+单件打样的两个脚本移入 `archive/2_single_asset_probe/`：其能力被 B批量管线完全覆盖，且 `s8b` 早于 v1 账本、会整目录重建资产并删掉 `ledger.json`（2026-08-10 实测毁过 301_cup 的
+coacd 碰撞体）。`run_smoke.sh` 已改走批量管线。`s7_probe_reverse` 仍在 `scripts/probe/`。
 
 - **目标**：证明 USD 生态资产能反向进 RoboTwin 布局并过 SAPIEN 验证（单件打样）。
 - **输入 → 输出**：NVIDIA 服务器 YCB 025_mug →
@@ -120,7 +123,7 @@
 
 **参数**：s7 `--out`；s8a `--source-dir --out`；s8b `--glb --source-dir --library-dir --out`。
 
-**一键运行**：`run_smoke.sh` 步 1–2（产物落 `results/_test/20260803_smoke_usd2envgen/`）。
+**一键运行**（归档前）：`run_smoke.sh` 步 1–2，产物落 `results/_test/20260803_smoke_usd2envgen/`。
 
 ### 4.3 线 B批量 · 清单驱动批量导入
 

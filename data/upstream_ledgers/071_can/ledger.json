@@ -1,5 +1,5 @@
 {
-  "schema_version": "asset_ledger.v1",
+  "schema_version": "asset_ledger.v2",
   "asset_id": "robotwin_071_can",
   "category": "can",
   "semantic_name": "can",
@@ -18,7 +18,12 @@
     "colors": [],
     "materials": [
       "metal"
-    ]
+    ],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "external/env-gen-github/data/scene_gen/asset_catalog.json",
+      "verified": false
+    }
   },
   "models": [
     {
@@ -31,10 +36,9 @@
         ],
         "mesh_up_axis": "Y",
         "origin_convention": "bottom-center",
-        "scale_applied": 0.05,
         "size_resolution": {
           "mode": "upstream_catalog",
-          "actual_max_dim_m": 0.09516479969024659,
+          "actual_max_dim_m": 1.9032959938049316,
           "scale": 0.05,
           "reference_max_dim_m": null,
           "reference_assets": [],
@@ -104,9 +108,11 @@
           "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
         },
         "retrieved_at": "2025-06-27",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/071_can/SOURCE_MANIFEST.json"
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/071_can/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
       },
       "verification": []
     }
-  ]
+  ],
+  "profile": "sapien_only"
 }

@@ -1,14 +1,50 @@
 {
-  "globals": {"top_k": 8, "max_fallback": 4, "max_size_bytes": 200000000, "license_gate": false},
+  "globals": {
+    "top_k": 8,
+    "max_fallback": 4,
+    "max_size_bytes": 200000000,
+    "license_gate": false
+  },
   "providers": {
-    "robotwin_local": {"enabled": true, "tier": 0,
-      "catalog": "data/scene_gen_ext/asset_catalog.json"},
-    "nvidia_server": {"enabled": true, "tier": 1,
-      "prefixes": ["Assets/Isaac/5.1/Isaac/Props"],
-      "index_path": "data/asset_index/nvidia_keys.json"},
-    "github_tree": {"enabled": true, "tier": 2, "repositories": [
-      {"repository": "KhronosGroup/glTF-Sample-Assets", "branch": "main",
-       "license": "per-model (see source_page); repo docs list per-asset licenses"}]},
-    "github_discovery": {"enabled": true, "tier": 3, "repository_limit": 5}
+    "robotwin_local": {
+      "enabled": true,
+      "tier": 0,
+      "catalog": "data/scene_gen_ext/asset_catalog.json"
+    },
+    "nvidia_server": {
+      "enabled": true,
+      "tier": 1,
+      "prefixes": [
+        "Assets/Isaac/5.1/Isaac/Props",
+        "Assets/Isaac/5.1/NVIDIA/Assets/ArchVis",
+        "Assets/Isaac/5.1/NVIDIA/Assets/Vegetation",
+        "Assets/Isaac/5.1/NVIDIA/Assets/DigitalTwin",
+        "Assets/Isaac/5.1/Isaac/IsaacLab"
+      ],
+      "index_path": "data/asset_index/nvidia_keys_2k.json"
+    },
+    "github_tree": {
+      "enabled": true,
+      "tier": 2,
+      "repositories": [
+        {
+          "repository": "KhronosGroup/glTF-Sample-Assets",
+          "branch": "main",
+          "license": "per-model (see source_page); repo docs list per-asset licenses"
+        }
+      ]
+    },
+    "github_discovery": {
+      "enabled": true,
+      "tier": 3,
+      "repository_limit": 5
+    },
+    "nvidia_visual": {
+      "enabled": true,
+      "tier": 1,
+      "thumbs_dir": "data/asset_index/thumbs_2k",
+      "cache_path": "data/asset_index/clip_l14_2k.npz",
+      "model": "openai/clip-vit-large-patch14"
+    }
   }
 }

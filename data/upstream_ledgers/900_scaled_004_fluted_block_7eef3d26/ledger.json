@@ -1,5 +1,5 @@
 {
-  "schema_version": "asset_ledger.v1",
+  "schema_version": "asset_ledger.v2",
   "asset_id": "robotwin_900_scaled_004_fluted_block_7eef3d26",
   "category": "block",
   "semantic_name": "block",
@@ -20,7 +20,12 @@
     "materials": [
       "plastic",
       "wood"
-    ]
+    ],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "external/env-gen-github/data/scene_gen/asset_catalog.json",
+      "verified": false
+    }
   },
   "models": [
     {
@@ -33,10 +38,9 @@
         ],
         "mesh_up_axis": "Y",
         "origin_convention": "bottom-center",
-        "scale_applied": 0.26865,
         "size_resolution": {
           "mode": "upstream_catalog",
-          "actual_max_dim_m": 0.054096437437087294,
+          "actual_max_dim_m": 0.20136399567127228,
           "scale": 0.26865,
           "reference_max_dim_m": null,
           "reference_assets": [],
@@ -106,9 +110,11 @@
           "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
         },
         "retrieved_at": "2026-07-19",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/900_scaled_004_fluted_block_7eef3d26/SOURCE_MANIFEST.json"
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/900_scaled_004_fluted_block_7eef3d26/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
       },
       "verification": []
     }
-  ]
+  ],
+  "profile": "sapien_only"
 }

@@ -1,9 +1,10 @@
 {
   "schema_version": "asset_ledger.v2",
-  "asset_id": "external_301_brick",
-  "category": "brick",
-  "semantic_name": "brick",
+  "asset_id": "external_315_crate",
+  "category": "crate",
+  "semantic_name": "crate",
   "kind": "rigid",
+  "profile": "cross_backend",
   "tags": [
     "rigid",
     "external",
@@ -11,15 +12,17 @@
   ],
   "semantics": {
     "aliases": [
-      "brick",
-      "foam brick"
+      "crate",
+      "storage crate",
+      "plastic crate",
+      "box"
     ],
     "colors": [],
     "materials": [],
     "identity": {
-      "basis": "requested_by_acquire",
-      "evidence": "1_asset_reuse/configs/acquired_manifest.json",
-      "verified": false
+      "basis": "vlm",
+      "evidence": "../results/20260811_production_first_run/identity_crate.json",
+      "verified": true
     }
   },
   "models": [
@@ -27,19 +30,19 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.07787399594767397,
-          0.05119300012604146,
-          0.052559999244809155
+          0.28,
+          0.18703937378212104,
+          0.07914403264822353
         ],
         "mesh_up_axis": "Y",
         "origin_convention": "bottom-center",
         "size_resolution": {
-          "mode": "match_category",
-          "actual_max_dim_m": 0.07787399594767397,
-          "scale": 1.0,
-          "reference_max_dim_m": null,
+          "mode": "absolute:0.28",
+          "actual_max_dim_m": 0.6014586091041565,
+          "scale": 0.46553494415359103,
+          "reference_max_dim_m": 0.28,
           "reference_assets": [],
-          "verdict": "no_precedent"
+          "verdict": "scaled"
         },
         "conventions": {
           "is_static": false,
@@ -81,13 +84,13 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "../data/asset_library/301_brick/visual/base0.glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/315_crate/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "9e6c1264875fcf808e41eaba8a8ec1a9a0a6904294f411354bd8d05d66e43ca9",
-          "size_bytes": 5226732,
+          "sha256": "4616e3887c0ad69624d66569e9208980da52d3983c2d9ae251d621523e313bf2",
+          "size_bytes": 4225528,
           "metadata": {
-            "derived_from": "061_foam_brick.usd",
+            "derived_from": "SM_Crate_A07_Yellow_01.usd",
             "converter": "omni.kit.asset_converter@isaac-5.1",
             "conversion_params": {
               "rotated_z2y": true
@@ -96,33 +99,34 @@
         },
         {
           "format": "glb",
-          "uri": "../data/asset_library/301_brick/collision/base0.glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/315_crate/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "9e6c1264875fcf808e41eaba8a8ec1a9a0a6904294f411354bd8d05d66e43ca9",
-          "size_bytes": 5226732,
+          "sha256": "4616e3887c0ad69624d66569e9208980da52d3983c2d9ae251d621523e313bf2",
+          "size_bytes": 4225528,
           "metadata": {
+            "collision_mode": "copy",
             "note": "copy of visual; convex decomposition at load"
           }
         },
         {
           "format": "usd",
-          "uri": "../data/asset_library/_source/acq_301_brick/061_foam_brick.usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_315_crate/SM_Crate_A07_Yellow_01.usd",
           "backend": "isaacsim",
           "role": "visual_and_collision",
-          "sha256": "117a5ea3afcf370730ad92a864aa89c7bca4c161753ac59d2eea13eb603e550d",
-          "size_bytes": 464249,
+          "sha256": "664510890d80a766368f7423e27a1daf83bb5bc0cd4a0446b71dd50f57ce6a71",
+          "size_bytes": 2444144,
           "metadata": {
-            "origin_prefix": "acq_301_brick"
+            "origin_prefix": "acq_315_crate"
           }
         },
         {
           "format": "png",
-          "uri": "../data/asset_library/301_brick/snapshots/m0_default.png",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/315_crate/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
-          "sha256": "a9ca6ccf63c1faae6e8a1201a70f0fddf553f2657cbf268a09a81b79524c7f9f",
-          "size_bytes": 3066,
+          "sha256": "0044994fdf4624827564b89ef0a7df59b75a4ec3de40697a798233256cbfd006",
+          "size_bytes": 11988,
           "metadata": {
             "yaw_deg": 0,
             "camera": "front-default",
@@ -132,30 +136,30 @@
       ],
       "articulation": {},
       "source": {
+        "kind": "retrieved",
         "library": "NVIDIA Isaac Assets 5.1",
-        "group": "acq_301_brick",
-        "file": "061_foam_brick.usd",
+        "group": "acq_315_crate",
+        "file": "SM_Crate_A07_Yellow_01.usd",
         "license": {
-          "spdx": "CC-BY-4.0",
+          "spdx": null,
           "status": "declared",
-          "terms_note": "Underlying YCB dataset CC BY 4.0 (attribution: Calli et al., doi:10.1109/MRA.2015.2448951 & doi:10.1109/ICAR.2015.7251504); NVIDIA USD conversion layer under NVIDIA Isaac Sim Additional Software and Materials License (internal R&D permitted; redistribution of converted USD unclear -- rebuild from upstream YCB data for clean redistribution)",
-          "evidence_url": "http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/ ; https://registry.opendata.aws/ycb-benchmarks/ ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4) [applied to new import 2026-08-11: same NVIDIA Isaac Assets source as the audited batch]",
+          "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
           "checked_date": "2026-08-09",
           "checked_by": "owner-directed research 2026-08-09"
         },
-        "retrieved_at": "2026-08-09",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_301_brick/SOURCE_MANIFEST.json",
-        "kind": "retrieved"
+        "retrieved_at": "2026-08-11",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_315_crate/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
           "backend": "sapien",
           "check": "settle",
           "verdict": "pass",
-          "run_id": "batch3",
-          "timestamp": "2026-08-09T22:00:40",
-          "verified_digest": "629f07491642aaec1040fd5d117f23baf531d6aac3bd5535099054d9a8406d79",
-          "report_path": "results/20260809_reimport6/mat/batch3/import_matrix.json",
+          "run_id": "20260811_production_first_run",
+          "timestamp": "2026-08-11T21:56:55",
+          "verified_digest": "3147d64af1f95c10b1a8a7ae97dadde1d1693eaf967fdca59fc2e316cf9aa9d0",
+          "report_path": "../results/20260811_production_first_run/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,
@@ -165,6 +169,5 @@
         }
       ]
     }
-  ],
-  "profile": "cross_backend"
+  ]
 }

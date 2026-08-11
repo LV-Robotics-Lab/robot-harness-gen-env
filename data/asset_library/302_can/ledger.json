@@ -1,5 +1,5 @@
 {
-  "schema_version": "asset_ledger.v1",
+  "schema_version": "asset_ledger.v2",
   "asset_id": "external_302_can",
   "category": "can",
   "semantic_name": "can",
@@ -14,7 +14,12 @@
       "can"
     ],
     "colors": [],
-    "materials": []
+    "materials": [],
+    "identity": {
+      "basis": "manifest_human",
+      "evidence": "1_asset_reuse/configs/external_manifest.json",
+      "verified": false
+    }
   },
   "models": [
     {
@@ -27,7 +32,6 @@
         ],
         "mesh_up_axis": "Y",
         "origin_convention": "bottom-center",
-        "scale_applied": 1.0,
         "size_resolution": {
           "mode": "match_category",
           "actual_max_dim_m": 0.14017700835666783,
@@ -68,6 +72,12 @@
           "status": "unknown",
           "runtime_default": null,
           "runtime_default_basis": "none"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
         }
       },
       "representations": [
@@ -125,7 +135,8 @@
           "checked_by": "owner-directed research 2026-08-09"
         },
         "retrieved_at": "2026-08-03",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json"
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
       },
       "verification": [
         {
@@ -158,7 +169,6 @@
         ],
         "mesh_up_axis": "Y",
         "origin_convention": "bottom-center",
-        "scale_applied": 1.0,
         "size_resolution": {
           "mode": "match_category",
           "actual_max_dim_m": 0.1018549991729483,
@@ -199,6 +209,12 @@
           "status": "unknown",
           "runtime_default": null,
           "runtime_default_basis": "none"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
         }
       },
       "representations": [
@@ -256,7 +272,8 @@
           "checked_by": "owner-directed research 2026-08-09"
         },
         "retrieved_at": "2026-08-03",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json"
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
       },
       "verification": [
         {
@@ -289,7 +306,6 @@
         ],
         "mesh_up_axis": "Y",
         "origin_convention": "bottom-center",
-        "scale_applied": 1.0,
         "size_resolution": {
           "mode": "match_category",
           "actual_max_dim_m": 0.08555899905654041,
@@ -330,6 +346,12 @@
           "status": "unknown",
           "runtime_default": null,
           "runtime_default_basis": "none"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
         }
       },
       "representations": [
@@ -387,7 +409,8 @@
           "checked_by": "owner-directed research 2026-08-09"
         },
         "retrieved_at": "2026-08-03",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json"
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
       },
       "verification": [
         {
@@ -420,7 +443,6 @@
         ],
         "mesh_up_axis": "Y",
         "origin_convention": "bottom-center",
-        "scale_applied": 1.0,
         "size_resolution": {
           "mode": "match_category",
           "actual_max_dim_m": 0.1016467977692157,
@@ -461,6 +483,12 @@
           "status": "unknown",
           "runtime_default": null,
           "runtime_default_basis": "none"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
         }
       },
       "representations": [
@@ -518,7 +546,8 @@
           "checked_by": "owner-directed research 2026-08-09"
         },
         "retrieved_at": "2026-08-03",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json"
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
       },
       "verification": [
         {
@@ -541,5 +570,6 @@
         }
       ]
     }
-  ]
+  ],
+  "profile": "cross_backend"
 }

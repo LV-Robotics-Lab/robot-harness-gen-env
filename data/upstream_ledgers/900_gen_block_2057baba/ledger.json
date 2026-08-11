@@ -1,5 +1,5 @@
 {
-  "schema_version": "asset_ledger.v1",
+  "schema_version": "asset_ledger.v2",
   "asset_id": "robotwin_900_gen_block_2057baba",
   "category": "block",
   "semantic_name": "block",
@@ -16,7 +16,12 @@
     "colors": [
       "red"
     ],
-    "materials": []
+    "materials": [],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "external/env-gen-github/data/scene_gen/asset_catalog.json",
+      "verified": false
+    }
   },
   "models": [
     {
@@ -29,7 +34,6 @@
         ],
         "mesh_up_axis": "Z",
         "origin_convention": "base-at-floor",
-        "scale_applied": 1.0,
         "size_resolution": {
           "mode": "upstream_catalog",
           "actual_max_dim_m": 0.04,
@@ -102,9 +106,11 @@
           "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
         },
         "retrieved_at": "2026-07-19",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/900_gen_block_2057baba/SOURCE_MANIFEST.json"
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/900_gen_block_2057baba/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
       },
       "verification": []
     }
-  ]
+  ],
+  "profile": "sapien_only"
 }

@@ -74,7 +74,58 @@ def test_nvidia_search_records_last_stats(tmp_path):
     # scanned = every entry examined; token_miss = passed format filter but
     # missed the token match (bowl.usd). thumbs + .mdl are filtered by format,
     # not counted as token_miss.
-    assert p.last_stats == {"scanned": len(FAKE_KEYS), "token_miss": 1}
+    # Stats describe the INDEX now, not a per-query scan: with an inverted
+    # index a query touches only its own posting lists, so "how many rows did
+    # this query walk" stopped existing. indexed = searchable entries (the two
+    # USDs; the thumbnail and the .mdl are not), matched = entries this query
+    # touched, non_object = dropped by corpus hygiene.
+    assert p.last_stats == {"indexed": 2, "matched": 1, "non_object": 0}
+
+
+def test_word_boundary_matching_rejects_substring_false_positives(tmp_path):
+    """Substring matching returned a cabinet for "trash bin" and a bearing for
+    "teddy bear" on the real listing -- confidently wrong rather than empty,
+    which is worse: the ledger then records the identity we asked for."""
+    keys = [
+        (f"{PREFIX}/sektion_cabinet_instanceable.usd", 1000),
+        (f"{PREFIX}/caster_bearing.usd", 1000),
+        (f"{PREFIX}/035_power_drill.usd", 1000),
+        (f"{PREFIX}/sm_whitecorrugatedbox_b04_brown_01.usd", 1000),
+    ]
+    prov = NvidiaAssetServerProvider(
+        [PREFIX], tmp_path / "idx2.json", list_keys_fn=lambda *_a, **_k: keys
+    )
+    assert prov.search("trash bin") == []
+    assert prov.search("teddy bear") == []
+    # and the tightening must not cost real matches
+    assert [c.name for c in prov.search("power drill")] == ["035_power_drill.usd"]
+    # MEASURED COST of the tightening, asserted rather than hidden: names that
+    # glue words together ( splits to
+    # {sm, whitecorrugatedbox, b04, brown, 01}) no longer match "box", which
+    # substring matching did. The lexical channel gives up that recall on
+    # purpose -- recovering it is the visual channel's job, and CLIP does
+    # retrieve exactly these files for "a cardboard box" off their thumbnails.
+    assert prov.search("corrugated box") == []
+    assert prov.search("whitecorrugatedbox") != []
+
+
+def test_non_object_entries_never_become_candidates(tmp_path):
+    """Material shaders and physics proxies are not graspable props; letting
+    them in lets "a metal wrench" rank five metal SHADERS above any tool."""
+    keys = [
+        (f"{PREFIX}/MetalPainted_Yellow_Glossy_A.usd", 1000),
+        (f"{PREFIX}/Plastic_Red_A.usd", 1000),
+        (f"{PREFIX}/dolly_physics.usd", 1000),
+        (f"{PREFIX}/024_bowl.usd", 1000),
+    ]
+    prov = NvidiaAssetServerProvider(
+        [PREFIX], tmp_path / "idx3.json", list_keys_fn=lambda *_a, **_k: keys
+    )
+    assert prov.search("metal") == []
+    assert prov.search("plastic") == []
+    assert prov.search("dolly") == []
+    assert [c.name for c in prov.search("bowl")] == ["024_bowl.usd"]
+    assert prov.last_stats["non_object"] == 3
 
 
 def test_robotwin_local_search_records_last_stats():

@@ -219,14 +219,37 @@ def _stable_poses(model):
     ]
 
 
+def _has_isaac_rep(led, model_entry):
+    """True iff every model this ledger will hold owns a non-snapshot
+    isaacsim representation -- the same rule migrate_ledger_v2 applied, kept
+    identical so a rerun of this backfill cannot silently reclassify."""
+    models = list((led or {}).get("models") or [])
+    models = [m for m in models if m.get("model_id") != model_entry.get("model_id")]
+    models.append(model_entry)
+    return bool(models) and all(
+        any(
+            r.get("backend") == "isaacsim" and r.get("role") != "snapshot"
+            for r in m.get("representations") or []
+        )
+        for m in models
+    )
+
+
 def _size_resolution(mesh_bbox_m, scale_applied):
     # Takes the already-resolved mesh_bbox_m (round 4: trimesh-measured x
     # scale for rigid, catalog dimensions_m for articulated -- see
-    # _resolve_models) rather than re-deriving it from the catalog model
-    # dict, so actual_max_dim_m can never disagree with mesh_bbox_m itself.
+    # _resolve_models) rather than re-deriving it from the catalog model dict.
+    #
+    # v2: actual_max_dim_m is the PRE-scale reading, matching what
+    # conventions.resolve_size has always produced and what the validator's
+    # size identity (max(mesh_bbox_m) == actual_max_dim_m * scale) now
+    # enforces. This used to write max(mesh_bbox_m) -- the POST-scale number
+    # under a pre-scale field name -- which made the same field mean two
+    # different things depending on which writer produced the ledger.
+    scale = scale_applied if scale_applied else 1.0
     return {
         "mode": "upstream_catalog",
-        "actual_max_dim_m": max(mesh_bbox_m),
+        "actual_max_dim_m": max(mesh_bbox_m) / scale,
         "scale": scale_applied,
         "reference_max_dim_m": None,
         "reference_assets": [],
@@ -382,6 +405,10 @@ def _build_model_entry(
     representations = representations + preserved
 
     source = {
+        # v2: which of the two ways this model came to exist. Everything
+        # this backfill sees already existed in the RoboTwin library, so it
+        # is retrieved by definition -- nothing here was generated.
+        "kind": "retrieved",
         "library": SOURCE_LIBRARY,
         "group": group,
         "file": _relative_to_root(model["model_path"], relbase),
@@ -401,13 +428,19 @@ def _build_model_entry(
         mesh_bbox_m=mesh_bbox_m,
         mesh_up_axis=up_axis,
         origin_convention=origin_convention,
-        scale_applied=scale_applied,
         size_resolution=_size_resolution(mesh_bbox_m, scale_applied),
         conventions=_conventions(model),
         source=source,
         verification=verification,
         articulation=_articulation(model) if kind == "articulated" else None,
         mass_override=_mass_override(kind),
+        # Always recorded, whatever the profile turns out to be: under
+        # cross_backend the validator requires the key, and under sapien_only
+        # a structured unknown costs nothing and still says something true --
+        # that no asset-side measurement exists and where the engine gets it.
+        inertial=ledger.unknown_inertial(
+            "urdf_inertial" if kind == "articulated" else "engine_derived"
+        ),
     )
     return model_entry
 
@@ -704,6 +737,17 @@ def main():
                 asset=asset,
                 category=category,
                 kind=kind,
+                # Upstream RoboTwin assets carry no isaacsim representation
+                # unless one was registered by hand via --isaac-usd; the
+                # profile follows that evidence rather than an aspiration.
+                profile=(
+                    "cross_backend" if _has_isaac_rep(led, model_entry) else "sapien_only"
+                ),
+                identity={
+                    "basis": "upstream_catalog",
+                    "evidence": str(args.catalog),
+                    "verified": False,
+                },
                 aliases=aliases,
                 colors=colors,
                 materials=materials,

@@ -8,6 +8,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from lib import ledger
 
 
+IDENTITY = {
+    "basis": "manifest_human",
+    "evidence": "configs/external_manifest.json",
+    "verified": False,
+}
+
+
 def make_model(**over):
     m = {
         "model_id": 0,
@@ -15,7 +22,6 @@ def make_model(**over):
             "mesh_bbox_m": [0.078, 0.051, 0.053],
             "mesh_up_axis": "Y",
             "origin_convention": "bottom-center",
-            "scale_applied": 1.0,
             "size_resolution": {
                 "mode": "match_category",
                 "actual_max_dim_m": 0.078,
@@ -76,6 +82,7 @@ def make_model(**over):
         ],
         "articulation": {},
         "source": {
+            "kind": "retrieved",
             "library": "NVIDIA Isaac Assets 5.1",
             "group": "acq_315_shears",
             "file": "061_foam_brick.usd",
@@ -103,17 +110,77 @@ def make_model(**over):
     return m
 
 
+def make_generated_source(**over):
+    """source for a model a generator produced. Disjoint from the retrieved
+    branch by construction: no url, no retrieval date, no source mirror --
+    those describe fetching something that already existed."""
+    s = {
+        "kind": "generated",
+        "generator": {
+            "tool": "embodiedgen",
+            "tool_version": "v2.1.0",
+            "model": "trellis",
+            "model_version": None,
+            "input": {
+                "type": "text",
+                "prompt": "a pair of shears",
+                "source_media_sha256": None,
+            },
+            "seed": 42,
+            "params": {"n_retry": 2},
+            "generated_at": "2026-08-10",
+        },
+        "license": {
+            "spdx": None,
+            "status": "unknown",
+            "terms_note": "generator output terms unaudited",
+        },
+    }
+    s.update(over)
+    return s
+
+
 def make_valid(**over):
     b = {
-        "schema_version": "asset_ledger.v1",
+        "schema_version": ledger.SCHEMA_VERSION,
         "asset_id": "external_315_shears",
         "category": "shears",
         "semantic_name": "shears",
         "kind": "rigid",
+        "profile": "sapien_only",
         "tags": ["rigid", "external", "batch"],
-        "semantics": {"aliases": ["shears", "scissors"], "colors": [], "materials": []},
+        "semantics": {
+            "aliases": ["shears", "scissors"],
+            "colors": [],
+            "materials": [],
+            "identity": {
+                "basis": "manifest_human",
+                "evidence": "configs/external_manifest.json",
+                "verified": False,
+            },
+        },
         "models": [make_model()],
     }
+    b.update(over)
+    return b
+
+
+def make_cross_backend(**over):
+    """A cross_backend asset: isaacsim representation + inertial key present.
+    Both are what the profile means, so both live in the one factory."""
+    model = make_model()
+    model["physical"]["inertial"] = ledger.unknown_inertial("engine_derived")
+    model["representations"].append(
+        {
+            "format": "usd",
+            "uri": "/tmp/x/asset.usd",
+            "backend": "isaacsim",
+            "role": "visual_and_collision",
+            "sha256": "2" * 64,
+            "metadata": {},
+        }
+    )
+    b = make_valid(profile="cross_backend", models=[model])
     b.update(over)
     return b
 
@@ -298,6 +365,59 @@ CASES = [
         _set("models.0.source.retrieved_at", "2026-08-08T10:00:00"),
         "bad_timestamp",
     ),  # full datetime into retrieved_at (needs bare date)
+    # ---- v2 ----------------------------------------------------------------
+    # profile is declared, not inferred, so an absent or bogus one is a hard
+    # failure: without it the validator cannot know WHICH required table
+    # applies, and silently picking the lenient one would let a migration
+    # target slip through under-checked.
+    (_del("profile"), "missing"),
+    (_set("profile", None), "missing"),
+    (_set("profile", "isaac_only"), "bad_profile"),
+    # identity: the claim "this is a cup" must say where it came from.
+    (_del("semantics.identity"), "missing"),
+    (_set("semantics.identity.basis", "vibes"), "bad_enum"),
+    (_set("semantics.identity.verified", "yes"), "bad_type"),
+    (_set("semantics.identity", ["manifest_human"]), "bad_type"),
+    # source branching
+    (_del("models.0.source.kind"), "missing"),
+    (_set("models.0.source.kind", "downloaded"), "bad_source_kind"),
+    # retrieved branch still owes its retrieval coordinates
+    (_del("models.0.source.library"), "missing"),
+    (_del("models.0.source.source_manifest_path"), "missing"),
+    # cross-branch contamination: the realistic version of this is a ledger
+    # copy-pasted from a neighbour and only half-edited.
+    (
+        _set("models.0.source.generator", {"tool": "embodiedgen"}),
+        "source_field_mismatch",
+    ),
+    # the size identity: a converter whose unit assumption drifts produces an
+    # asset that is still field-by-field valid and 100x the wrong size.
+    (
+        _set("models.0.physical.mesh_bbox_m", [7.8, 0.051, 0.053]),
+        "size_invariant_mismatch",
+    ),
+    # extras is typed but never interpreted -- and must actually be a mapping.
+    (_set("models.0.extras", ["affordance"]), "bad_type"),
+]
+
+GENERATED_CASES = [
+    # A generated model owes its generation lineage: nothing else can
+    # reconstruct which model, which prompt, which seed produced this mesh
+    # once the run is over.
+    (_del("models.0.source.generator.tool_version"), "missing"),
+    (_del("models.0.source.generator.input"), "missing"),
+    (_del("models.0.source.generator.params"), "missing"),
+    (_del("models.0.source.generator.generated_at"), "missing"),
+    (_set("models.0.source.generator.params", ["n_retry"]), "bad_type"),
+    (_set("models.0.source.generator.input.type", "audio"), "bad_enum"),
+    (
+        _set("models.0.source.generator.generated_at", "2026-08-10T10:00:00"),
+        "bad_timestamp",
+    ),
+    # retrieval fields on a generated model: the same half-edited-copy defect
+    # seen from the other side.
+    (_set("models.0.source.url", "https://example.com/x.usd"), "source_field_mismatch"),
+    (_set("models.0.source.retrieved_at", "2026-08-10"), "source_field_mismatch"),
 ]
 
 
@@ -307,6 +427,114 @@ def test_violations(mutate, code):
     mutate(b)
     codes = [v.code for v in ledger.validate_ledger(b, check_files=False)]
     assert code in codes, f"expected {code}, got {codes}"
+
+
+def make_generated_valid(**over):
+    model = make_model(source=make_generated_source())
+    b = make_valid(models=[model])
+    b.update(over)
+    return b
+
+
+def test_generated_source_is_valid():
+    assert ledger.validate_ledger(make_generated_valid(), check_files=False) == []
+
+
+def test_generated_seed_and_model_version_may_be_null():
+    """A null seed is a fact, not an omission: it states that this generation
+    is not reproducible, which a release gate can act on. An absent key states
+    nothing."""
+    b = make_generated_valid()
+    b["models"][0]["source"]["generator"]["seed"] = None
+    b["models"][0]["source"]["generator"]["model_version"] = None
+    assert ledger.validate_ledger(b, check_files=False) == []
+
+
+@pytest.mark.parametrize("mutate,code", GENERATED_CASES)
+def test_generated_violations(mutate, code):
+    b = make_generated_valid()
+    mutate(b)
+    codes = [v.code for v in ledger.validate_ledger(b, check_files=False)]
+    assert code in codes, f"expected {code}, got {codes}"
+
+
+def test_cross_backend_profile_is_valid():
+    assert ledger.validate_ledger(make_cross_backend(), check_files=False) == []
+
+
+def test_cross_backend_requires_isaac_representation_and_inertial():
+    """The same absence that is correct under sapien_only is a visible debt
+    under cross_backend. That asymmetry is the whole point of declaring what
+    an asset is for."""
+    plain = make_valid()
+    assert ledger.validate_ledger(plain, check_files=False) == []
+
+    promoted = make_valid(profile="cross_backend")
+    codes = [v.code for v in ledger.validate_ledger(promoted, check_files=False)]
+    assert codes.count("profile_requirement_unmet") == 2, codes
+
+
+def test_profile_does_not_restrict_what_may_be_stored():
+    """profile gates what MUST be present, never what MAY be: a sapien_only
+    asset carrying inertial data and an isaacsim USD is perfectly legal."""
+    b = make_cross_backend(profile="sapien_only")
+    assert ledger.validate_ledger(b, check_files=False) == []
+
+
+def test_extras_is_preserved_and_never_affects_usable():
+    b = make_valid()
+    b["models"][0]["extras"] = {"affordance": {"graspable_parts": ["handle"]}}
+    assert ledger.validate_ledger(b, check_files=False) == []
+    ok, missing = ledger.derive_usable(b, 0)
+    assert ok is True and missing == []
+    # survives the IR round-trip rather than being dropped on the floor
+    bundle = ledger.to_ir_bundles(b)[0]
+    assert bundle["asset_id"].endswith("_m0")
+
+
+def test_size_invariant_holds_for_a_rescaled_model():
+    """actual_max_dim_m is the PRE-scale reading; the bbox is measured after
+    scaling. backfill_upstream used to write the post-scale value under the
+    same name, which is exactly what this identity now catches."""
+    b = make_valid()
+    ph = b["models"][0]["physical"]
+    ph["mesh_bbox_m"] = [0.039, 0.0255, 0.0265]
+    ph["size_resolution"]["actual_max_dim_m"] = 0.078
+    ph["size_resolution"]["scale"] = 0.5
+    assert ledger.validate_ledger(b, check_files=False) == []
+
+    ph["size_resolution"]["actual_max_dim_m"] = 0.039  # post-scale, the old bug
+    codes = [v.code for v in ledger.validate_ledger(b, check_files=False)]
+    assert "size_invariant_mismatch" in codes
+
+
+def test_derive_usable_is_profile_aware():
+    """usable means "meets the contract this asset declared" -- so promoting
+    the profile without the evidence must flip it, not silently pass."""
+    ok, missing = ledger.derive_usable(make_cross_backend(), 0)
+    assert ok is True and missing == []
+
+    ok, missing = ledger.derive_usable(make_valid(profile="cross_backend"), 0)
+    assert ok is False
+    assert any("inertial" in m for m in missing)
+    assert any("backend=isaacsim" in m for m in missing)
+
+
+def test_inertial_unknown_is_a_complete_answer():
+    """engine_derived + null values is not a placeholder: it positively says
+    'no asset-side measurement exists, the engine infers this'."""
+    b = make_cross_backend()
+    assert ledger.validate_ledger(b, check_files=False) == []
+    inertial = b["models"][0]["physical"]["inertial"]
+    assert inertial["status"] == "unknown" and inertial["basis"] == "engine_derived"
+
+    inertial["status"] = "estimated"
+    codes = [v.code for v in ledger.validate_ledger(b, check_files=False)]
+    assert "estimator_required" in codes
+
+    inertial.update({"status": "known", "basis": "measured", "com_m": [0, 0, 1, 2]})
+    codes = [v.code for v in ledger.validate_ledger(b, check_files=False)]
+    assert "bad_type" in codes
 
 
 def test_duplicate_model_id():
@@ -376,7 +604,6 @@ def test_new_model_entry_and_upsert():
         mesh_bbox_m=[0.078, 0.051, 0.053],
         mesh_up_axis="Y",
         origin_convention="bottom-center",
-        scale_applied=1.0,
         size_resolution=make_model()["physical"]["size_resolution"],
         conventions=make_model()["physical"]["conventions"],
         source=make_model()["source"],
@@ -387,6 +614,8 @@ def test_new_model_entry_and_upsert():
         asset="315_shears",
         category="shears",
         kind="rigid",
+        profile="sapien_only",
+        identity=IDENTITY,
         aliases=["shears"],
         colors=[],
         materials=[],
@@ -403,6 +632,8 @@ def test_new_model_entry_and_upsert():
         asset="315_shears",
         category="shears",
         kind="rigid",
+        profile="sapien_only",
+        identity=IDENTITY,
         aliases=["shears"],
         colors=[],
         materials=[],
@@ -413,12 +644,20 @@ def test_new_model_entry_and_upsert():
 
     # I-3: re-upserting an EXISTING model_id must replace that entry wholesale
     # in place, not append a duplicate.
-    m0_updated = dict(m, physical=dict(m["physical"], scale_applied=2.0))
+    m0_updated = dict(
+        m,
+        physical=dict(
+            m["physical"],
+            size_resolution=dict(m["physical"]["size_resolution"], scale=2.0),
+        ),
+    )
     led3 = ledger.upsert_model(
         led2,
         asset="315_shears",
         category="shears",
         kind="rigid",
+        profile="sapien_only",
+        identity=IDENTITY,
         aliases=["shears"],
         colors=[],
         materials=[],
@@ -427,8 +666,9 @@ def test_new_model_entry_and_upsert():
     )
     assert len(led3["models"]) == 2  # still 2 -- replaced, not appended
     assert (
-        led3["models"][0]["physical"]["scale_applied"] == 2.0
+        led3["models"][0]["physical"]["size_resolution"]["scale"] == 2.0
     )  # content actually replaced
+    assert "scale_applied" not in led3["models"][0]["physical"]  # v2: gone for good
 
     with pytest.raises(ValueError):  # 资产级漂移写时即抓
         ledger.upsert_model(
@@ -436,6 +676,8 @@ def test_new_model_entry_and_upsert():
             asset="315_shears",
             category="shears",
             kind="rigid",
+            profile="sapien_only",
+            identity=IDENTITY,
             aliases=["tin"],
             colors=[],
             materials=[],
@@ -454,7 +696,6 @@ def test_upsert_model_detects_semantic_name_and_asset_drift():
         mesh_bbox_m=[0.078, 0.051, 0.053],
         mesh_up_axis="Y",
         origin_convention="bottom-center",
-        scale_applied=1.0,
         size_resolution=make_model()["physical"]["size_resolution"],
         conventions=make_model()["physical"]["conventions"],
         source=make_model()["source"],
@@ -465,6 +706,8 @@ def test_upsert_model_detects_semantic_name_and_asset_drift():
         asset="315_shears",
         category="shears",
         kind="rigid",
+        profile="sapien_only",
+        identity=IDENTITY,
         aliases=["shears"],
         colors=[],
         materials=[],
@@ -477,6 +720,8 @@ def test_upsert_model_detects_semantic_name_and_asset_drift():
             asset="315_shears",
             category="shears",
             kind="rigid",
+            profile="sapien_only",
+            identity=IDENTITY,
             aliases=["shears"],
             colors=[],
             materials=[],
@@ -490,6 +735,8 @@ def test_upsert_model_detects_semantic_name_and_asset_drift():
             asset="999_wrong",
             category="shears",
             kind="rigid",
+            profile="sapien_only",
+            identity=IDENTITY,
             aliases=["shears"],
             colors=[],
             materials=[],
@@ -702,8 +949,13 @@ def test_new_model_entry_articulated_full():
         mesh_bbox_m=[0.6, 0.4, 0.8],
         mesh_up_axis="Z",
         origin_convention="base-at-floor",
-        scale_applied=1.0,
-        size_resolution=make_model()["physical"]["size_resolution"],
+        # actual_max_dim_m is the PRE-scale reading, so it has to agree with
+        # this model's own bbox (0.8 at scale 1.0) -- reusing the rigid
+        # fixture's 0.078 would trip size_invariant_mismatch, which is the
+        # check working, not a fixture inconvenience.
+        size_resolution=dict(
+            make_model()["physical"]["size_resolution"], actual_max_dim_m=0.8
+        ),
         conventions=conv,
         source=make_model()["source"],
         verification=[],
@@ -720,6 +972,8 @@ def test_new_model_entry_articulated_full():
         asset="314_cabinet",
         category="cabinet",
         kind="articulated",
+        profile="sapien_only",
+        identity=IDENTITY,
         aliases=["cabinet"],
         colors=[],
         materials=[],

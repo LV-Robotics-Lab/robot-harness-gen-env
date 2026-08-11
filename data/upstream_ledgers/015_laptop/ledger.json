@@ -1,5 +1,5 @@
 {
-  "schema_version": "asset_ledger.v1",
+  "schema_version": "asset_ledger.v2",
   "asset_id": "robotwin_015_laptop",
   "category": "laptop",
   "semantic_name": "laptop",
@@ -18,7 +18,12 @@
     "materials": [
       "metal",
       "plastic"
-    ]
+    ],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "external/env-gen-github/data/scene_gen/asset_catalog.json",
+      "verified": false
+    }
   },
   "models": [
     {
@@ -31,10 +36,9 @@
         ],
         "mesh_up_axis": "Z",
         "origin_convention": "base-at-floor",
-        "scale_applied": 0.15,
         "size_resolution": {
           "mode": "upstream_catalog",
-          "actual_max_dim_m": 0.2038767,
+          "actual_max_dim_m": 1.359178,
           "scale": 0.15,
           "reference_max_dim_m": null,
           "reference_assets": [],
@@ -114,9 +118,11 @@
           "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
         },
         "retrieved_at": "2025-06-27",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/015_laptop/SOURCE_MANIFEST.json"
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/015_laptop/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
       },
       "verification": []
     }
-  ]
+  ],
+  "profile": "sapien_only"
 }

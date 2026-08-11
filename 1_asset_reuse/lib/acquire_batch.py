@@ -13,12 +13,6 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-import sys as _sys
-from pathlib import Path as _P
-
-_sys.path.insert(0, str(_P(__file__).resolve().parents[1] / "ledger"))
-import gen_fragment as gen_fragment_mod  # noqa: E402
-
 from lib import a1_providers as a1  # noqa: E402
 from lib import a2_selection as a2  # noqa: E402
 
@@ -429,7 +423,6 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             aliases=entry.get("aliases"),
             model_name=verify_cfg.get("model", a6.DEFAULT_MODEL),
             max_check=int(verify_cfg.get("max_check", 3)),
-            second_opinion=bool(verify_cfg.get("second_opinion", True)),
         )
         gate_log["results"].extend({**r, "tier": tier_no} for r in vr["results"])
         gate_log["outcome"], gate_log["tier"] = vr["outcome"], tier_no
@@ -447,14 +440,7 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         query,
         viable_fn=lambda c: a2.gate(c, globals_cfg) is None,
         limit=int(globals_cfg.get("top_k", 5)),
-        # Reuse phrases = the requested CATEGORY only, deliberately not the
-        # aliases. Request-side aliases are search wideners ("beaker, also
-        # try: cup") and letting them assert reuse equivalence made a beaker
-        # request reuse-hit the pool's mug the moment "cup" was added as an
-        # alias. Pool-side aliases still count (a request for "mug" matches an
-        # entry aliased mug); the asymmetry is the point -- catalog aliases
-        # are curated identity claims, request aliases are just extra words.
-        phrases=[category],
+        phrases=[category, *entry.get("aliases", [])],
         accept_fn=_accept,
     )
     rec["tiers_consulted"] = res["tiers_consulted"]
@@ -495,24 +481,7 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             "evidence": rec["identity_gate"]["evidence"],
         }
 
-    # Bookkeeping keeps the OLD record shape (every candidate of the tier that
-    # answered, with a verdict), while the attempt list narrows to what the
-    # gate actually accepted. A viable candidate the gate refuted is recorded
-    # as rejected/identity_unverified rather than silently vanishing.
-    gated = a2.gate_candidates(res["candidates"], globals_cfg)
-    accepted_ids = {c.candidate_id for c in res.get("accepted", [])}
-    viable = []
-    for r in gated:
-        if r["verdict"] != "viable":
-            continue
-        if r["candidate"].candidate_id in accepted_ids:
-            viable.append(r)
-        elif gate_log["results"]:
-            r["verdict"] = "rejected"
-            r["rejection"] = {
-                "code": a2.REJ_IDENTITY,
-                "detail": rec.get("identity_gate", {}).get("evidence", ""),
-            }
+    viable = [{"candidate": c, "verdict": "viable"} for c in res.get("accepted", [])]
     if not viable:
         # Either no tier produced a viable candidate, or the gate looked at
         # everything every tier offered and refuted it all. The two read
@@ -524,11 +493,16 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         )
         rec["candidates"] = [
             {
-                **a2.candidate_dict(r["candidate"]),
-                "verdict": r["verdict"],
-                "rejection": r.get("rejection"),
+                **a2.candidate_dict(c),
+                "verdict": "rejected",
+                "rejection": {
+                    "code": a2.REJ_IDENTITY,
+                    "detail": rec.get("identity_gate", {}).get("evidence", ""),
+                }
+                if gate_log["results"]
+                else {"code": "not_viable", "detail": ""},
             }
-            for r in gated
+            for c in res["candidates"]
         ]
         return rec
 
@@ -627,18 +601,12 @@ def main(argv=None, runner=None, tiers=None):
             )
     imported = [r for r in results if r["status"] == "imported"]
     if imported:
-        # The fragment fed to s9 is regenerated from EVERY ledger in the
-        # pool, not merged from this run's per-asset fragments. The run-local
-        # merge was written for a fresh sandbox pool and is a trap on an
-        # incremental production run: s9 would receive overrides for only the
-        # newly imported assets, silently narrowing the catalog view for the
-        # 15 already-pooled ones. The ledger is the single source of truth
-        # and the fragment is its derived view -- so derive it, wholesale,
-        # every time (gen_fragment filters to latest settle-pass models with
-        # digest-consistent representations, same as always).
         merged = Path(a.out) / "overrides_ext_all.yml"
-        frag, _frag_stats = gen_fragment_mod.generate(str(paths["library"]))
-        gen_fragment_mod.write_yaml(frag, merged)
+        merged.write_text(
+            "\n".join(
+                p.read_text() for p in sorted(Path(paths["fragment_dir"]).glob("*.yml"))
+            )
+        )
         runner(
             [
                 PY_SAP,

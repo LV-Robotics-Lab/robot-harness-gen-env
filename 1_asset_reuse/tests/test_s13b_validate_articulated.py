@@ -111,14 +111,23 @@ def test_violations_block_ledger_write_but_snapshot_stays(tmp_path):
     asset_dir = lib_dir / asset
     asset_dir.mkdir(parents=True)
     lp = asset_dir / "ledger.json"
+    # v2-shaped, and matching what s13b itself would write for this asset --
+    # the asset-level fields have to agree or upsert_model raises on drift
+    # before the run ever reaches the schema gate this test is about.
     seed_ledger = {
-        "schema_version": "asset_ledger.v1",
+        "schema_version": "asset_ledger.v2",
         "asset_id": f"external_{asset}",
         "category": "cabinet",
         "semantic_name": "cabinet",
         "kind": "articulated",
+        "profile": "cross_backend",
         "tags": ["articulated", "external", "reverse-import"],
-        "semantics": {"aliases": ["cabinet"], "colors": [], "materials": []},
+        "semantics": {
+            "aliases": ["cabinet"],
+            "colors": [],
+            "materials": [],
+            "identity": {"basis": "unknown", "evidence": None, "verified": False},
+        },
         "models": [{"model_id": 0}],  # deliberately broken sibling
     }
     lp.write_text(json.dumps(seed_ledger, indent=2) + "\n")

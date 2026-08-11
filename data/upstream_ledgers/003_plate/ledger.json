@@ -1,5 +1,5 @@
 {
-  "schema_version": "asset_ledger.v1",
+  "schema_version": "asset_ledger.v2",
   "asset_id": "robotwin_003_plate",
   "category": "plate",
   "semantic_name": "plate",
@@ -18,7 +18,12 @@
     "materials": [
       "ceramic",
       "plastic"
-    ]
+    ],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "external/env-gen-github/data/scene_gen/asset_catalog.json",
+      "verified": false
+    }
   },
   "models": [
     {
@@ -31,10 +36,9 @@
         ],
         "mesh_up_axis": "Y",
         "origin_convention": "bottom-center",
-        "scale_applied": 0.025,
         "size_resolution": {
           "mode": "upstream_catalog",
-          "actual_max_dim_m": 0.1903301000595093,
+          "actual_max_dim_m": 7.613204002380371,
           "scale": 0.025,
           "reference_max_dim_m": null,
           "reference_assets": [],
@@ -104,9 +108,11 @@
           "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
         },
         "retrieved_at": "2025-06-27",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/003_plate/SOURCE_MANIFEST.json"
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/003_plate/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
       },
       "verification": []
     }
-  ]
+  ],
+  "profile": "sapien_only"
 }
