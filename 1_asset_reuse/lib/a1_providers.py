@@ -237,6 +237,56 @@ class RoboTwinLocalProvider:
             self._cache_stamp = stamp
         return self._cache_entries
 
+    def search_phrases(self, phrases, limit=20):
+        """Tier-0 reuse check by WHOLE PHRASE, not bag-of-words.
+
+        The token path scored `hits = tokens ∩ names`, which made the alias
+        "garbage can" reuse-hit 302_can: its token "can" equals a catalog
+        name, so the pipeline concluded "already have a trash bin" and
+        silently skipped acquisition. That is the worst failure mode this
+        layer has -- not a wrong import (the pool is untouched) but a wrong
+        ABSENCE, invisible until someone asks why no bin ever arrived.
+
+        A reuse claim must therefore mean: some requested name, taken as a
+        whole, IS one of this entry's names. "garbage_can" == "can" is false;
+        "cup" == "cup" still holds."""
+        entries = self._entries()
+        wanted = {str(p).strip().lower().replace(" ", "_") for p in phrases if p}
+        out = []
+        for e in entries:
+            names = {
+                str(n).strip().lower().replace(" ", "_")
+                for n in [
+                    e.get("category", ""),
+                    e.get("semantic_name", ""),
+                    *e.get("aliases", []),
+                ]
+                if n
+            }
+            matched = wanted & names
+            if not matched:
+                continue
+            out.append(
+                AssetCandidate(
+                    candidate_id=f"catalog:{e['asset_id']}",
+                    name=e["asset_id"],
+                    category=e.get("category", ""),
+                    download_url=f"file://{e.get('asset_path', '')}",
+                    source_page=str(self.catalog_path),
+                    format="catalog_entry",
+                    provider=self.name,
+                    license="already registered",
+                    score=float(len(matched)),
+                    metadata={
+                        "asset_id": e["asset_id"],
+                        "colors": e.get("colors", []),
+                        "matched_phrases": sorted(matched),
+                    },
+                )
+            )
+        self.last_stats = {"scanned": len(entries), "phrase_matched": len(out)}
+        return sorted(out, key=lambda c: (-c.score, c.candidate_id))[:limit]
+
     def search(self, query, limit=20):
         entries = self._entries()
         toks = _tokens(query)
@@ -406,7 +456,21 @@ def load_providers(config):
     return tiers, g
 
 
-def tiered_search(tiers, query, *, viable_fn, limit=20):
+def tiered_search(tiers, query, *, viable_fn, limit=20, phrases=None, accept_fn=None):
+    """Walk tiers in trust order.
+
+    phrases   -- the requested category + aliases as WHOLE phrases. Tier 0
+                 (local reuse) matches on these exactly when the provider
+                 supports it; matching reuse on loose tokens is how
+                 "garbage can" once reuse-hit a soup can.
+    accept_fn -- (tier_no, viable_candidates) -> accepted subset. The identity
+                 gate goes here rather than after the search: "hit and stop"
+                 was designed for a precise lexical channel, but the visual
+                 channel answers EVERY query with its top-N, so a tier can
+                 look successful while containing only wrong objects. When
+                 accept_fn returns nothing, the walk continues to the next
+                 (less trusted) tier instead of stopping on garbage.
+    """
     consulted, errors, provider_stats = [], [], []
     for tier_no in sorted({t.tier for t in tiers}):
         group = [t.provider for t in tiers if t.tier == tier_no]
@@ -418,7 +482,15 @@ def tiered_search(tiers, query, *, viable_fn, limit=20):
         consulted.append(tier_no)
         scout = AssetScout(group) if group else None
         try:
-            cands = scout.search(query, limit=limit) if scout else []
+            if tier_no == 0 and phrases:
+                cands = []
+                for prov in group:
+                    if hasattr(prov, "search_phrases"):
+                        cands.extend(prov.search_phrases(phrases, limit=limit))
+                    else:
+                        cands.extend(prov.search(query, limit=limit))
+            else:
+                cands = scout.search(query, limit=limit) if scout else []
             if visual:
                 from lib.a5_visual import rrf_merge
 
@@ -456,17 +528,25 @@ def tiered_search(tiers, query, *, viable_fn, limit=20):
                     "provider_stats": provider_stats,
                 }
             continue
-        if any(viable_fn(c) for c in cands):
-            return {
-                "tier0_hit": None,
-                "candidates": cands,
-                "tiers_consulted": consulted,
-                "provider_errors": errors,
-                "provider_stats": provider_stats,
-            }
+        viable = [c for c in cands if viable_fn(c)]
+        if viable:
+            accepted = accept_fn(tier_no, viable) if accept_fn else viable
+            if accepted:
+                return {
+                    "tier0_hit": None,
+                    "candidates": cands,
+                    "accepted": accepted,
+                    "tiers_consulted": consulted,
+                    "provider_errors": errors,
+                    "provider_stats": provider_stats,
+                }
+            # the gate looked at this tier's answers and none was the thing --
+            # keep walking down the trust ladder rather than stopping on them
+            continue
     return {
         "tier0_hit": None,
         "candidates": [],
+        "accepted": [],
         "tiers_consulted": consulted,
         "provider_errors": errors,
         "provider_stats": provider_stats,

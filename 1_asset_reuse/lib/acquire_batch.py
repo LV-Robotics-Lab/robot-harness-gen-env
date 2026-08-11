@@ -481,24 +481,7 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             "evidence": rec["identity_gate"]["evidence"],
         }
 
-    # Bookkeeping keeps the OLD record shape (every candidate of the tier that
-    # answered, with a verdict), while the attempt list narrows to what the
-    # gate actually accepted. A viable candidate the gate refuted is recorded
-    # as rejected/identity_unverified rather than silently vanishing.
-    gated = a2.gate_candidates(res["candidates"], globals_cfg)
-    accepted_ids = {c.candidate_id for c in res.get("accepted", [])}
-    viable = []
-    for r in gated:
-        if r["verdict"] != "viable":
-            continue
-        if r["candidate"].candidate_id in accepted_ids:
-            viable.append(r)
-        elif gate_log["results"]:
-            r["verdict"] = "rejected"
-            r["rejection"] = {
-                "code": a2.REJ_IDENTITY,
-                "detail": rec.get("identity_gate", {}).get("evidence", ""),
-            }
+    viable = [{"candidate": c, "verdict": "viable"} for c in res.get("accepted", [])]
     if not viable:
         # Either no tier produced a viable candidate, or the gate looked at
         # everything every tier offered and refuted it all. The two read
@@ -510,11 +493,16 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         )
         rec["candidates"] = [
             {
-                **a2.candidate_dict(r["candidate"]),
-                "verdict": r["verdict"],
-                "rejection": r.get("rejection"),
+                **a2.candidate_dict(c),
+                "verdict": "rejected",
+                "rejection": {
+                    "code": a2.REJ_IDENTITY,
+                    "detail": rec.get("identity_gate", {}).get("evidence", ""),
+                }
+                if gate_log["results"]
+                else {"code": "not_viable", "detail": ""},
             }
-            for r in gated
+            for c in res["candidates"]
         ]
         return rec
 

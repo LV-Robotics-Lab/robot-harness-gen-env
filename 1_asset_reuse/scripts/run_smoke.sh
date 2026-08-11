@@ -50,7 +50,8 @@ step() {
 step 1/4 "fetch+convert (Kit)"   "$PY_ISA" -u "$SPIKE/2_convert/import_fetch_convert.py" \
   --manifest "$MANIFEST" --source-root "$SRC" --staging "$STAGING"
 step 2/4 "materialize+validate"  "$PY_SAP" "$SPIKE/3_materialize/import_materialize.py" \
-  --staging "$STAGING" --library-dir "$LIB" --out "$RUN/mat" --overrides-fragment "$FRAG"
+  --staging "$STAGING" --library-dir "$LIB" --out "$RUN/mat" --overrides-fragment "$FRAG" \
+  --identity-basis manifest_human --identity-evidence "$MANIFEST"
 step 3/4 "shadow+catalog"        "$PY_SAP" "$SPIKE/5_catalog/s9_build_shadow_root.py" \
   --library-dir "$LIB" --shadow "$SHADOW" --ext-dir "$EXT" --extra-overrides "$FRAG"
 step 4/4 "e2e text->scene"       env \

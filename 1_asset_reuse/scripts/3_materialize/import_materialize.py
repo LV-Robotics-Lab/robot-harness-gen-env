@@ -243,10 +243,6 @@ if args.only_index is None:
     # the split validation now handles per-model. Anything left over from a
     # model that ends up rejected this run is removed by quarantine at the
     # end (below), not up front.
-    for asset_name in {r["asset"] for r in records}:
-        adir = lib / asset_name
-        (adir / "visual").mkdir(parents=True, exist_ok=True)
-        (adir / "collision").mkdir(parents=True, exist_ok=True)
     matrix = []
     for i, r in enumerate(records):
         row_file = rows_dir / f"row_{i}.json"
@@ -263,6 +259,23 @@ if args.only_index is None:
             args.out,
             "--overrides-fragment",
             args.overrides_fragment,
+            # The worker re-parses THIS script's own argparse, so every
+            # required argument the driver received must be forwarded, or the
+            # worker dies inside argparse before writing its row file and the
+            # driver can only report "native crash" -- which is exactly how
+            # the omission of --identity-basis (added as required 2026-08-10)
+            # surfaced: not as an argparse error anywhere visible, but as a
+            # phantom crash with no traceback. reference-catalog rides along
+            # for the same reason, so a driver override reaches the worker.
+            "--identity-basis",
+            args.identity_basis,
+            *(
+                ["--identity-evidence", str(args.identity_evidence)]
+                if args.identity_evidence
+                else []
+            ),
+            "--reference-catalog",
+            args.reference_catalog,
             "--only-index",
             str(i),
         ]
@@ -295,6 +308,16 @@ if args.only_index is None:
 else:
     worker_records = [(args.only_index, records[args.only_index])]
     matrix = []
+
+# Both modes need the target directories: the driver creates them for its
+# workers, but a worker also runs standalone (--only-index, crash repro) and
+# scene.export() does not create parents -- exporting into a missing
+# visual/ dir raises FileNotFoundError with a message that reads like the
+# GLB itself vanished.
+for asset_name in {r["asset"] for r in records}:
+    adir = lib / asset_name
+    (adir / "visual").mkdir(parents=True, exist_ok=True)
+    (adir / "collision").mkdir(parents=True, exist_ok=True)
 
 for idx, r in worker_records:
     asset, model = r["asset"], r["model"]
