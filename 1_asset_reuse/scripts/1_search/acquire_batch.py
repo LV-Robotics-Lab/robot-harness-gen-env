@@ -423,6 +423,7 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             aliases=entry.get("aliases"),
             model_name=verify_cfg.get("model", a6.DEFAULT_MODEL),
             max_check=int(verify_cfg.get("max_check", 3)),
+            second_opinion=bool(verify_cfg.get("second_opinion", True)),
         )
         gate_log["results"].extend({**r, "tier": tier_no} for r in vr["results"])
         gate_log["outcome"], gate_log["tier"] = vr["outcome"], tier_no
@@ -440,7 +441,14 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         query,
         viable_fn=lambda c: a2.gate(c, globals_cfg) is None,
         limit=int(globals_cfg.get("top_k", 5)),
-        phrases=[category, *entry.get("aliases", [])],
+        # Reuse phrases = the requested CATEGORY only, deliberately not the
+        # aliases. Request-side aliases are search wideners ("beaker, also
+        # try: cup") and letting them assert reuse equivalence made a beaker
+        # request reuse-hit the pool's mug the moment "cup" was added as an
+        # alias. Pool-side aliases still count (a request for "mug" matches an
+        # entry aliased mug); the asymmetry is the point -- catalog aliases
+        # are curated identity claims, request aliases are just extra words.
+        phrases=[category],
         accept_fn=_accept,
     )
     rec["tiers_consulted"] = res["tiers_consulted"]

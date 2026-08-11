@@ -37,12 +37,39 @@ import re
 from pathlib import Path
 
 VERIFY_SCHEMA_VERSION = "identity_verification.v1"
-DEFAULT_MODEL = "Qwen/Qwen2.5-VL-3B-Instruct"
+# 7B, not 3B, after a measured perception failure the questioning protocol
+# could not fix: shown a fluted planter and asked "is this a trash bin?", the
+# 3B said yes at high confidence, and even its OPEN answer for the larger
+# planter was "black trash can" -- a sincere misperception. The 7B, same
+# prompts, answers "textured cylinder / cylinder with ridges" and fails the
+# match honestly (measured 2026-08-11, work/oneoff/gate_hardening_probe.py).
+# Latency roughly doubles (still seconds per acquisition, amortised by the
+# in-process model cache); the 3B remains selectable via identity_gate.model.
+DEFAULT_MODEL = "Qwen/Qwen2.5-VL-7B-Instruct"
 
 MATCH = "match"
 MISMATCH = "mismatch"
 UNREADABLE = "unreadable"
 NO_THUMBNAIL = "no_thumbnail"
+
+OPEN_PROMPT = (
+    "Look at this image and answer with one JSON object and nothing else:\n"
+    '{"object": "<the single main object you see, 1-3 words>"}'
+)
+
+
+def _open_agrees(seen, category, aliases):
+    """Does the model's OPEN description name the requested thing (or one of
+    its aliases)? Word-set overlap plus substring both ways, so "yellow cup"
+    agrees with alias "cup" and alias "cycle" agrees with "unicycle"."""
+    if not seen:
+        return False
+    seen = seen.lower()
+    seen_words = set(seen.replace("-", " ").split())
+    names = {str(category).lower(), *(str(a).lower() for a in aliases or [])}
+    return any(
+        n in seen or seen in n or (set(n.split()) & seen_words) for n in names
+    )
 
 
 def build_prompt(category: str, aliases=None) -> str:
@@ -135,7 +162,13 @@ _MODEL_CACHE: dict = {}
 
 
 def verify_image(
-    image_path, category, *, aliases=None, infer=None, model_name=DEFAULT_MODEL
+    image_path,
+    category,
+    *,
+    aliases=None,
+    infer=None,
+    model_name=DEFAULT_MODEL,
+    second_opinion=True,
 ):
     """One image -> verdict dict. The primitive both call sites share:
 
@@ -167,7 +200,7 @@ def verify_image(
     parsed = _parse(raw)
     if parsed is None:
         return {**base, "verdict": UNREADABLE, "raw": raw[:400]}
-    return {
+    result = {
         **base,
         "verdict": MATCH if parsed.get("match") is True else MISMATCH,
         "seen_as": parsed.get("object"),
@@ -175,15 +208,53 @@ def verify_image(
         "materials": [str(m).lower() for m in (parsed.get("materials") or []) if m],
         "confidence": parsed.get("confidence"),
     }
+    if result["verdict"] == MATCH and second_opinion:
+        # Second opinion, measured 2026-08-11 on the expanded corpus (16
+        # queries): the yes/no question alone accepted a fluted planter as a
+        # "trash bin" AT HIGH CONFIDENCE -- confidence gating caught nothing,
+        # and an image-anchored forced choice flipped back to the wrong
+        # answer too. The only reliable signal was ASKING WITHOUT THE LABEL:
+        # shown the same image open-endedly, the model said "flowerpot".
+        # A leading question plants its own answer; the open question is the
+        # model's actual perception. Accept only when the two agree.
+        #
+        # Measured cost: adjacent-name misses (open says "ceramic cup" of a
+        # beaker) reject a true positive when the alias net is thin. That is
+        # the right side of the asymmetry -- a false reject is recoverable
+        # (walk continues; honest "not found"; richer aliases fix it), a
+        # false accept is a permanently mislabeled pool asset -- but it is a
+        # real cost, so entry authors should list common synonyms.
+        try:
+            open_raw = run(Path(image_path), OPEN_PROMPT)
+        except Exception as exc:  # noqa: BLE001
+            return {**result, "verdict": UNREADABLE, "error": repr(exc)}
+        m = re.search(r'"object"\s*:\s*"([^"]+)"', open_raw)
+        open_seen = m.group(1).lower() if m else None
+        result["open_answer"] = open_seen
+        if not _open_agrees(open_seen, category, aliases):
+            result["verdict"] = MISMATCH
+            result["second_opinion_veto"] = True
+    return result
 
 
 def verify_candidate(
-    candidate, category, *, aliases=None, infer=None, model_name=DEFAULT_MODEL
+    candidate,
+    category,
+    *,
+    aliases=None,
+    infer=None,
+    model_name=DEFAULT_MODEL,
+    second_opinion=True,
 ):
     """One candidate -> verdict dict, keyed off its source thumbnail."""
     thumb = (candidate.metadata or {}).get("thumbnail")
     r = verify_image(
-        thumb, category, aliases=aliases, infer=infer, model_name=model_name
+        thumb,
+        category,
+        aliases=aliases,
+        infer=infer,
+        model_name=model_name,
+        second_opinion=second_opinion,
     )
     return {
         **r,
@@ -201,6 +272,7 @@ def verify_candidates(
     infer=None,
     model_name=DEFAULT_MODEL,
     max_check=3,
+    second_opinion=True,
 ):
     """Verify candidates in rank order, stopping at the first match.
 
@@ -211,7 +283,12 @@ def verify_candidates(
     results, accepted = [], None
     for cand in candidates[:max_check]:
         r = verify_candidate(
-            cand, category, aliases=aliases, infer=infer, model_name=model_name
+            cand,
+            category,
+            aliases=aliases,
+            infer=infer,
+            model_name=model_name,
+            second_opinion=second_opinion,
         )
         results.append(r)
         if r["verdict"] == MATCH:

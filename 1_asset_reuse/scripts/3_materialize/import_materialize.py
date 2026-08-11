@@ -468,6 +468,14 @@ for idx, r in worker_records:
             lo, hi = scene.bounds
             size = [float(b - a) for a, b in zip(lo, hi)]
             row["reorient_baked_quat"] = [round(float(v), 5) for v in qf]
+            # The bake rotates the mesh, so its bbox -- and therefore
+            # max(mesh_bbox_m) -- changes AFTER the sizing decision was taken.
+            # actual_max_dim_m is contractually the pre-scale dimension of the
+            # FINAL mesh (the v2 size invariant enforces exactly that), so
+            # recompute it from the post-bake bounds; pure arithmetic, same
+            # repair the v1->v2 migration applied to backfill_upstream's rows.
+            if size_res.get("scale"):
+                size_res["actual_max_dim_m"] = max(size) / size_res["scale"]
 
         scene.export(str(vis))
         collision_mode = r.get("collision") or meta.get("collision") or "copy"

@@ -81,7 +81,50 @@ def test_stops_at_first_match_and_bounds_cost(tmp_path):
     ]
     out = a6.verify_candidates(cands, "mug", infer=infer, max_check=3)
     assert out["accepted"].name == "b.usd"
-    assert seen == ["a.png", "b.png"]  # stopped at the match, never reached c/d
+    # a.png: one closed ask (mismatch). b.png: closed ask + the open-question
+    # second opinion that guards the match. c/d: never reached.
+    assert seen == ["a.png", "b.png", "b.png"]
+
+
+def test_second_opinion_vetoes_a_leading_yes(tmp_path):
+    """The measured failure mode (2026-08-11, expanded corpus): asked "is
+    this a trash bin?" the model said yes AT HIGH CONFIDENCE about a fluted
+    flowerpot; asked openly what it saw, it said flowerpot. The open answer
+    is the model's real perception -- when the two disagree, the match is
+    vetoed."""
+    def infer(_p, prompt):
+        if "single main object" in prompt:  # the open question
+            return '{"object": "flowerpot"}'
+        return reply(True, "trash bin")
+
+    out = a6.verify_candidates(
+        [cand("Fluted_Medium.usd", png(tmp_path))],
+        "trash bin",
+        aliases=["garbage can"],
+        infer=infer,
+    )
+    assert out["accepted"] is None
+    assert out["results"][0]["second_opinion_veto"] is True
+    assert out["results"][0]["open_answer"] == "flowerpot"
+
+
+def test_second_opinion_accepts_alias_worded_answers(tmp_path):
+    """"yellow cup" must agree with category mug via alias "cup" -- the veto
+    is for different OBJECTS, not different WORDINGS, and the alias list is
+    exactly where wordings live."""
+    def infer(_p, prompt):
+        if "single main object" in prompt:
+            return '{"object": "yellow cup"}'
+        return reply(True, "mug")
+
+    out = a6.verify_candidates(
+        [cand("SM_Mug_C1.usd", png(tmp_path))],
+        "mug",
+        aliases=["cup"],
+        infer=infer,
+    )
+    assert out["accepted"] is not None
+    assert out["results"][0]["verdict"] == a6.MATCH
 
 
 def test_no_thumbnail_is_unverifiable_not_rejected():
