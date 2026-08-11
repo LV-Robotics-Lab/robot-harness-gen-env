@@ -50,6 +50,7 @@ conda run -n robolab-migrate \
 | 903 | measuring cups | HANDAL | CC BY-NC-SA 4.0 | PASS |
 | 904 | cordless drill | YCB | MIT | PASS |
 | 905 | scissors | YCB | MIT | PASS |
+| 906 | mug | YCB | MIT | PASS |
 
 ## 当前限制
 
