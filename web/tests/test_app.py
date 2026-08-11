@@ -201,6 +201,104 @@ def test_log_incremental(roots):
     assert r3 == {"offset": 0, "size": 0, "chunk": "", "more": False}
 
 
+def make_library(tmp_path):
+    cat = {
+        "entries": [
+            {
+                "asset_id": "a1",
+                "category": "cup",
+                "available": True,
+                "load_type": "rigid",
+                "asset_path": "/external/rt/a1",
+                "models": [{}, {}],
+                "materials": ["glass"],
+                "aliases": ["cup"],
+                "colors": [],
+            },
+            {
+                "asset_id": "a2",
+                "category": "cup",
+                "available": False,
+                "load_type": "rigid",
+                "asset_path": "/external/rt/a2",
+                "models": [{}],
+                "availability_reasons": ["stable_pose", "scale"],
+                "aliases": [],
+                "colors": [],
+            },
+            {
+                "asset_id": "b1",
+                "category": "door",
+                "available": False,
+                "load_type": "urdf",
+                "asset_path": str(tmp_path / "lib" / "b1"),
+                "models": [{}],
+                "availability_reasons": ["stable_pose"],
+                "aliases": [],
+                "colors": [],
+            },
+        ]
+    }
+    catp = tmp_path / "cat.json"
+    catp.write_text(json.dumps(cat))
+    lib = tmp_path / "lib"
+    (lib / "b1" / "snapshots").mkdir(parents=True)
+    (lib / "b1" / "snapshots" / "m0_default.png").write_bytes(b"\x89PNGfake")
+    prov = tmp_path / "prov.json"
+    prov.write_text(
+        json.dumps({"providers": {"robotwin_local": {"enabled": True, "tier": 0}}})
+    )
+    return catp, lib, prov
+
+
+def test_library_stats_aggregation(tmp_path):
+    catp, lib, prov = make_library(tmp_path)
+    s = studio.compute_library_stats(catp, lib, prov)
+    assert s["kpis"] == {
+        "assets": 3,
+        "categories": 2,
+        "model_variants": 4,
+        "available": 1,
+        "imported": 1,
+    }
+    assert s["availability"]["reasons"][0] == {
+        "reason": "stable_pose",
+        "count": 2,
+        "asset_ids": ["a2", "b1"],
+    }
+    assert {x["key"]: x["count"] for x in s["sources"]} == {
+        "robotwin_native": 2,
+        "imported": 1,
+    }
+    assert s["category_depth"]["singletons"] == 1
+    assert s["annotation"]["materials"] == 1
+    assert s["assets"]["b1"]["thumb"] is True
+    assert s["assets"]["a1"]["thumb"] is False
+    assert [t["tier"] for t in s["retrieval"]["tiers"]] == [0]
+
+
+def test_library_endpoints(tmp_path, monkeypatch, roots):
+    catp, lib, prov = make_library(tmp_path)
+    thumbs = tmp_path / "web_thumbs"
+    thumbs.mkdir()
+    monkeypatch.setattr(studio, "DEFAULT_CATALOG", catp)
+    monkeypatch.setattr(studio, "ASSET_LIB", lib)
+    monkeypatch.setattr(studio, "DEFAULT_PROVIDERS", prov)
+    monkeypatch.setattr(studio, "WEB_THUMBS", thumbs)
+    studio._LIB_CACHE.update({"mtime": None, "data": None})
+    c = studio.app.test_client()
+    r = c.get("/api/library/stats").get_json()
+    assert r["kpis"]["assets"] == 3 and "generated_at" in r
+
+    # thumb 解析顺序：web_thumbs 优先 → snapshots 兜底 → 404
+    assert c.get("/api/library/thumb/b1").status_code == 200
+    (thumbs / "b1.png").write_bytes(b"\x89PNGoverride")
+    r2 = c.get("/api/library/thumb/b1")
+    assert r2.status_code == 200 and b"override" in r2.data
+    assert c.get("/api/library/thumb/a1").status_code == 404
+    assert c.get("/api/library/thumb/..%2Fcat").status_code == 404
+
+
 def test_files_listing_and_py_whitelist(roots):
     web, _ = roots
     d = make_covered_run(web)

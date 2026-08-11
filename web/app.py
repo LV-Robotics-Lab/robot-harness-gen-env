@@ -26,6 +26,8 @@ UP = Path("/home/jingxiang/yuxin/env-gen-github")
 PORT = 8811
 
 WEB_RUNS = DEV / "results" / "web_runs"
+WEB_THUMBS = DEV / "results" / "web_thumbs"
+ASSET_LIB = DEV / "data" / "asset_library"
 HISTORY_ROOT = DEV / "results" / "_test"
 DEFAULT_CATALOG = DEV / "data" / "scene_gen_ext" / "asset_catalog.json"
 DEFAULT_PROVIDERS = DEV / "1_asset_reuse" / "configs" / "providers.json"
@@ -844,6 +846,213 @@ def api_run_file(group, run_id):
         abort(404)
     mimetype = MIME_BY_SUFFIX.get(full.suffix.lower(), "application/octet-stream")
     return send_file(str(full), mimetype=mimetype)
+
+
+# --- asset library stats ---------------------------------------------------
+
+
+def _thumb_available(asset_id, asset_lib):
+    if (WEB_THUMBS / f"{asset_id}.png").is_file():
+        return True
+    return (Path(asset_lib) / asset_id / "snapshots" / "m0_default.png").is_file()
+
+
+def _tier_scale(providers_in_tier, n_assets):
+    parts = []
+    for name, p in providers_in_tier:
+        if name == "robotwin_local":
+            parts.append(f"{n_assets} 资产")
+        ip = p.get("index_path")
+        if ip:
+            data = _read_json(DEV / ip)
+            try:
+                if (
+                    isinstance(data, dict)
+                    and data
+                    and all(isinstance(v, list) for v in data.values())
+                ):
+                    n = sum(len(v) for v in data.values())
+                elif isinstance(data, dict):
+                    n = len(data.get("keys", data))
+                else:
+                    n = len(data)
+                parts.append(f"索引 {n:,}")
+            except Exception:
+                pass
+        td = p.get("thumbs_dir")
+        if td and (DEV / td).is_dir():
+            n = sum(1 for f in (DEV / td).iterdir() if f.is_file())
+            parts.append(f"视觉语料 {n:,} 张")
+        for r in p.get("repositories") or []:
+            parts.append(r.get("repository", "?").split("/")[-1])
+        if "repository_limit" in p:
+            parts.append(f"动态发现 ≤{p['repository_limit']} repo")
+    return " · ".join(parts)
+
+
+def compute_library_stats(catalog_path, asset_lib, providers_path):
+    cat = _read_json(Path(catalog_path)) or {}
+    entries = cat.get("entries", [])
+    asset_lib = Path(asset_lib)
+    lib_resolved = str(asset_lib.resolve())
+
+    def imported(e):
+        p = e.get("asset_path") or ""
+        return p.startswith(lib_resolved) or "/data/asset_library/" in p
+
+    categories = {}
+    reasons = {}
+    load_types = {}
+    sources = {"robotwin_native": [], "imported": []}
+    assets = {}
+    n_models = 0
+    n_avail = 0
+    ann = {"materials": 0, "colors": 0, "aliases": 0}
+    for e in entries:
+        aid = e.get("asset_id")
+        if not aid:
+            continue
+        n_models += len(e.get("models") or [])
+        if e.get("available"):
+            n_avail += 1
+        else:
+            for r in e.get("availability_reasons") or ["unknown"]:
+                reasons.setdefault(str(r), []).append(aid)
+        categories.setdefault(e.get("category") or "未分类", []).append(aid)
+        load_types.setdefault(e.get("load_type") or "unknown", []).append(aid)
+        sources["imported" if imported(e) else "robotwin_native"].append(aid)
+        for k in ann:
+            if e.get(k):
+                ann[k] += 1
+        assets[aid] = {
+            "category": e.get("category"),
+            "available": bool(e.get("available")),
+            "load_type": e.get("load_type"),
+            "models": len(e.get("models") or []),
+            "thumb": _thumb_available(aid, asset_lib),
+        }
+
+    depth_buckets = {"1": 0, "2": 0, "3+": 0}
+    for ids in categories.values():
+        n = len(ids)
+        depth_buckets["1" if n == 1 else "2" if n == 2 else "3+"] += 1
+    top_cats = sorted(categories.items(), key=lambda kv: (-len(kv[1]), kv[0]))[:12]
+
+    recent = []
+    for aid in sources["imported"]:
+        d = asset_lib / aid
+        try:
+            recent.append(
+                {
+                    "asset_id": aid,
+                    "category": assets[aid]["category"],
+                    "mtime": d.stat().st_mtime,
+                }
+            )
+        except OSError:
+            continue
+    recent.sort(key=lambda x: -x["mtime"])
+
+    prov = _read_json(Path(providers_path)) or {}
+    by_tier = {}
+    for name, p in (prov.get("providers") or {}).items():
+        if not isinstance(p, dict) or "tier" not in p:
+            continue
+        by_tier.setdefault(p["tier"], []).append((name, p))
+    tiers = []
+    for t in sorted(by_tier):
+        ps = by_tier[t]
+        tiers.append(
+            {
+                "tier": t,
+                "providers": [n for n, _ in ps],
+                "enabled": any(p.get("enabled") for _, p in ps),
+                "scale": _tier_scale(ps, len(entries)),
+            }
+        )
+
+    return {
+        "catalog_mtime": _mtime(Path(catalog_path)),
+        "kpis": {
+            "assets": len(entries),
+            "categories": len(categories),
+            "model_variants": n_models,
+            "available": n_avail,
+            "imported": len(sources["imported"]),
+        },
+        "retrieval": {"tiers": tiers},
+        "availability": {
+            "available": n_avail,
+            "total": len(entries),
+            "reasons": [
+                {"reason": r, "count": len(ids), "asset_ids": sorted(ids)}
+                for r, ids in sorted(
+                    reasons.items(), key=lambda kv: (-len(kv[1]), kv[0])
+                )
+            ],
+        },
+        "sources": [
+            {
+                "key": "robotwin_native",
+                "label": "RoboTwin 原生",
+                "count": len(sources["robotwin_native"]),
+                "asset_ids": sorted(sources["robotwin_native"]),
+            },
+            {
+                "key": "imported",
+                "label": "缺口引进",
+                "count": len(sources["imported"]),
+                "asset_ids": sorted(sources["imported"]),
+            },
+        ],
+        "load_types": [
+            {"key": k, "count": len(ids), "asset_ids": sorted(ids)}
+            for k, ids in sorted(
+                load_types.items(), key=lambda kv: (-len(kv[1]), kv[0])
+            )
+        ],
+        "category_depth": {
+            "buckets": [
+                {"depth": d, "categories": n} for d, n in depth_buckets.items()
+            ],
+            "singletons": depth_buckets["1"],
+            "top": [
+                {"category": c, "count": len(ids), "asset_ids": sorted(ids)}
+                for c, ids in top_cats
+            ],
+        },
+        "annotation": {"total": len(entries), **ann},
+        "recent_imports": recent[:10],
+        "assets": assets,
+    }
+
+
+_LIB_CACHE = {"mtime": None, "data": None}
+
+
+@app.get("/api/library/stats")
+def api_library_stats():
+    key = (_mtime(DEFAULT_CATALOG), _mtime(WEB_THUMBS))
+    if _LIB_CACHE["data"] is None or _LIB_CACHE["mtime"] != key:
+        _LIB_CACHE["data"] = compute_library_stats(
+            DEFAULT_CATALOG, ASSET_LIB, DEFAULT_PROVIDERS
+        )
+        _LIB_CACHE["mtime"] = key
+    payload = dict(_LIB_CACHE["data"])
+    payload["generated_at"] = now_sgt().timestamp()
+    return jsonify(payload)
+
+
+@app.get("/api/library/thumb/<asset_id>")
+def api_library_thumb(asset_id):
+    if not ID_RE.match(asset_id):
+        abort(404)
+    p = WEB_THUMBS / f"{asset_id}.png"
+    if not p.is_file():
+        p = ASSET_LIB / asset_id / "snapshots" / "m0_default.png"
+    if not p.is_file():
+        abort(404)
+    return send_file(str(p), mimetype="image/png")
 
 
 # --- GET / ------------------------------------------------------------
