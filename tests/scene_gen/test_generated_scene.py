@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[2]
 class FakeActor:
     def __init__(self) -> None:
         self.name: str | None = None
+        self.mass_kg: float | None = None
         self.qpos: tuple[float, ...] = ()
         self.material = types.SimpleNamespace(base_color=[1.0, 1.0, 1.0, 1.0])
         shape = types.SimpleNamespace(material=self.material, parts=[])
@@ -26,6 +27,9 @@ class FakeActor:
 
     def set_name(self, name: str) -> None:
         self.name = name
+
+    def set_mass(self, mass_kg: float) -> None:
+        self.mass_kg = mass_kg
 
     def set_qpos(self, qpos) -> None:
         self.qpos = tuple(qpos)
@@ -55,6 +59,16 @@ def test_generated_scene_loads_only_resolved_assets_and_registers_footprints(mon
     catalog = load_catalog(ROOT / "tests" / "fixtures" / "asset_catalog.json")
     spec = parse_rule_based("A red can is left of a plastic basket near the center.", seed=11)
     resolved = solve_scene(spec, catalog)
+    resolved = resolved.model_copy(
+        update={
+            "objects": tuple(
+                item.model_copy(update={"mass_kg": 1.5})
+                if item.asset_id == "071_can"
+                else item
+                for item in resolved.objects
+            )
+        }
+    )
     calls: list[dict] = []
 
     class FakePose:
@@ -115,6 +129,8 @@ def test_generated_scene_loads_only_resolved_assets_and_registers_footprints(mon
         assert call["pose"].orientation == item.pose.orientation_wxyz
         assert actors[item.object_id].name == item.object_id
     assert actors["can_1"].material.base_color == [0.82, 0.10, 0.12, 1.0]
+    assert actors["can_1"].mass_kg == 1.5
+    assert actors["basket_1"].mass_kg is None
 
 
 def test_generate_scene_cli_writes_structured_input_failure(tmp_path: Path) -> None:

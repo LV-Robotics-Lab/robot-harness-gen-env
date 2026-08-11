@@ -12,7 +12,13 @@ def write_model(asset: Path, *, model_id: int = 0) -> None:
     (asset / "visual" / f"base{model_id}.glb").write_bytes(b"visual")
     (asset / "collision" / f"base{model_id}.glb").write_bytes(b"collision")
     (asset / f"model_data{model_id}.json").write_text(
-        json.dumps({"scale": [0.05, 0.05, 0.05], "extents": [1.0, 2.0, 1.0]}),
+        json.dumps(
+            {
+                "scale": [0.05, 0.05, 0.05],
+                "extents": [1.0, 2.0, 1.0],
+                "mass_kg": 1.5,
+            }
+        ),
         encoding="utf-8",
     )
 
@@ -58,6 +64,7 @@ assets:
     assert Path(entry.models[0].visual_path).is_file()
     assert Path(entry.models[0].collision_path).is_file()
     assert entry.models[0].dimensions_m == (0.05, 0.05, 0.1)
+    assert entry.models[0].mass_kg == 1.5
     assert entry.models[0].stable_pose_id == "robotwin_can_upright"
     assert entry.models[0].stable_orientation_wxyz is not None
     assert abs(entry.models[0].stable_orientation_wxyz[0] - 2**-0.5) < 1e-7

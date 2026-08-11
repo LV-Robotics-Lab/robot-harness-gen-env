@@ -582,6 +582,7 @@ def solve_scene(
                 stable_pose_id=model.stable_pose_id,
                 stable_orientation_wxyz=stable_orientation,
                 dimensions_m=model.dimensions_m,
+                mass_kg=model.mass_kg,
                 interior_dimensions_m=model.interior_dimensions_m,
                 interior_floor_z_offset_m=model.interior_floor_z_offset_m,
                 footprint_shape=model.footprint_shape,

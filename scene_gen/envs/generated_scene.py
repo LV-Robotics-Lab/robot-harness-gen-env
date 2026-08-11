@@ -111,6 +111,13 @@ def load_resolved_scene(task: Any, resolved: ResolvedSceneSpec | dict[str, Any] 
             )
         if actor is None:
             raise RuntimeError(f"RoboTwin failed to load {item.asset_id}/model{item.model_id}")
+        if item.mass_kg is not None:
+            mass_setter = getattr(actor, "set_mass", None)
+            if not callable(mass_setter):
+                raise RuntimeError(
+                    f"RoboTwin actor {item.object_id} does not expose set_mass"
+                )
+            mass_setter(float(item.mass_kg))
         if item.color and _apply_color_override(actor, item.color) == 0:
             raise RuntimeError(
                 f"RoboTwin loaded {item.object_id} without a tintable render material"
