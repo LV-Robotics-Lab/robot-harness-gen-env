@@ -37,8 +37,9 @@
     },
     "github_discovery": {
       "enabled": true,
-      "tier": 3,
-      "repository_limit": 5
+      "tier": 4,
+      "repository_limit": 5,
+      "comment": "repo-level discovery: tested 3 query strategies at 0 hits for arbitrary object categories; unauthenticated 60req/h -- tier4 last resort after objaverse"
     },
     "nvidia_visual": {
       "enabled": true,

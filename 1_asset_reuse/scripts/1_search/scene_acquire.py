@@ -89,6 +89,7 @@ def main(argv=None, runner=None):
         return 1
     scenes_dir = out / "scenes"
     scenes_before = set(scenes_dir.glob("*/resolved_scene.json"))
+    failures_before = set(scenes_dir.glob("*/failure_report.json"))
     rc = runner(
         [
             sys.executable,
@@ -109,6 +110,37 @@ def main(argv=None, runner=None):
         newest = sorted(new)[-1]
         print(f"PASS scene_acquire scene={newest.parent.name}")
         return 0
+    # The solver's failure report knows WHY nothing resolved ("footprint does
+    # not fit stable support surface" x4656 for a duck on a cup) -- surface
+    # the counted reasons instead of a bare "no resolved scene" so the Studio
+    # can show what actually blocked the request.
+    new_failures = set(scenes_dir.glob("*/failure_report.json")) - failures_before
+    if new_failures:
+        from collections import Counter
+
+        report = json.loads(sorted(new_failures)[-1].read_text())
+        reasons = Counter(
+            reason
+            for attempt in report.get("attempts", [])
+            for reason in attempt.get("reasons", [])
+        )
+        (out / "solver_blocker.json").write_text(
+            json.dumps(
+                {
+                    "schema": "envgen.solver_blocker.v1",
+                    "prompt": a.prompt,
+                    "scene_id": report.get("scene_id"),
+                    "blocker": report.get("blocker"),
+                    "total_attempts": report.get("total_attempts"),
+                    "top_reasons": dict(reasons.most_common(5)),
+                },
+                indent=1,
+                ensure_ascii=False,
+            )
+        )
+        top = "; ".join(f"{k} x{v}" for k, v in reasons.most_common(2))
+        print(f"FAIL scene_acquire: solver blocked ({report.get('blocker')}) -- {top}")
+        return 1
     print("FAIL scene_acquire: no resolved scene produced")
     return 1
 

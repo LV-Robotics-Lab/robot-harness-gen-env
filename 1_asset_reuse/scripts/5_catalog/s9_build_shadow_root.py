@@ -152,6 +152,60 @@ if calib_path.exists():
     print(
         f"calibration patch: {n_patch} z_policy corrected, {n_add} native models added"
     )
+
+# ---- top-support survey patches (HOLLOW verdicts only) ----
+# Measured 2026-08-13: the solver treats any bbox top as a flat platform, so
+# a duck was placed on a cup's rim and toppled at runtime. probe_top_support
+# drops a 3x3 probe grid on every usable model; models whose probes SINK are
+# containers: they gain measured interior data (enabling INSIDE) and a
+# 2x2 mm support surface no real footprint can pass, so "duck on cup" is
+# refused honestly at solve time. "unsupportive" verdicts (probes slide off)
+# stay ADVISORY-ONLY: the 2 cm probe under-approximates what wider-based
+# objects can rest on -- a mug bridged a duck's back in a run the Studio
+# recorded as stable -- so closing those tops would regress working scenes;
+# genuinely unstable stacks remain the runtime check's honest verdict.
+# Hand-declared support/interior data always wins.
+survey_path = ext / "top_support_survey.json"
+if survey_path.exists():
+    import yaml
+
+    survey = json.loads(survey_path.read_text())
+    data = yaml.safe_load(ext_overrides.read_text()) or {}
+    root = data.setdefault("assets", {})
+    n_int = n_closed = 0
+    for aid, models in survey.get("models", {}).items():
+        for mid, row in models.items():
+            if row.get("verdict") != "hollow":
+                continue
+            entry = (
+                root.setdefault(aid, {})
+                .setdefault("models", {})
+                .setdefault(str(mid), {})
+            )
+            if "stable_pose_id" not in entry:
+                continue  # only annotate otherwise-declared models
+            dims = entry.get("dimensions_m")
+            top_z = (
+                dims[2]
+                if dims
+                else max((c["bottom_z"] for c in row.get("cells", [])), default=None)
+            )
+            if "interior_dimensions_m" not in entry:
+                entry["interior_dimensions_m"] = row["interior"]["dimensions_m"]
+                entry["interior_floor_z_offset_m"] = row["interior"]["floor_z_offset_m"]
+                n_int += 1
+            if "support_surface_dimensions_m" not in entry and top_z:
+                entry["support_surface_dimensions_m"] = [0.002, 0.002]
+                entry["support_surface_shape"] = "box"
+                entry["support_surface_z_offset_m"] = round(float(top_z), 4)
+                n_closed += 1
+    ext_overrides.write_text(
+        "# GENERATED (see calibration header above)\n"
+        + yaml.safe_dump(data, sort_keys=False, allow_unicode=True)
+    )
+    print(
+        f"top-support patch: {n_int} interiors measured, {n_closed} hollow tops closed"
+    )
 print(f"extended overrides -> {ext_overrides}")
 
 # ---- run upstream catalog scanner over the shadow ----

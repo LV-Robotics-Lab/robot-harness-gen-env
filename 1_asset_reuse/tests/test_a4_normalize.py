@@ -42,6 +42,22 @@ def test_numeric_ranges_untouched():
     assert a4.normalize_prompt("seed 42-45 run") == "seed 42-45 run"
 
 
+def test_bare_in_becomes_inside():
+    """The upstream relation lookahead lacks bare "in": "Place a tea in the
+    cup" silently dropped the tea mention (measured 2026-08-13)."""
+    assert a4.normalize_prompt("Place a tea in the cup") == (
+        "Place a tea inside the cup"
+    )
+    assert a4.normalize_prompt("put an apple in a basket") == (
+        "put an apple inside a basket"
+    )
+    # positional wording is not containment
+    assert a4.normalize_prompt("a knife in front of the plate") == (
+        "a knife in front of the plate"
+    )
+    assert a4.normalize_prompt("in the front row") == "in the front row"
+
+
 def test_parse_after_normalization_yields_compound_category():
     """End-to-end with the real upstream parser: the compound must arrive as
     its own category (honest gap candidate), not collapse to "box"."""

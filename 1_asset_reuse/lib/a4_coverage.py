@@ -76,6 +76,13 @@ def normalize_prompt_ex(prompt: str) -> tuple[str, dict[str, list[str]]]:
         return joined
 
     rewritten = re.sub(r"[A-Za-z]+(?:[-_][A-Za-z]+)+", _fix, prompt)
+    # The upstream relation lookahead knows "inside/into" but NOT bare "in":
+    # "Place a tea in the cup" silently drops the tea mention (measured
+    # 2026-08-13). Rewrite genuinely containment-flavoured " in the/a " to
+    # " inside the/a ", leaving "in front of" untouched.
+    rewritten = re.sub(
+        r"\bin\s+(the|a|an)\s+(?!front\b)", r"inside \1 ", rewritten, flags=re.I
+    )
     return rewritten, aliases
 
 
@@ -163,7 +170,15 @@ def gaps_to_entries(records, extra_aliases=None):
         if key in seen:
             continue
         seen.add(key)
-        entry = {"category": r["category"], "aliases": [r["category"]]}
+        # Web sources ship at arbitrary author scales (a 13.6 m tissue box,
+        # measured 2026-08-13); without a size policy the import gate rightly
+        # rejects them as implausible. Every gap-driven acquisition therefore
+        # carries a tabletop default; per-request policies can override later.
+        entry = {
+            "category": r["category"],
+            "aliases": [r["category"]],
+            "size_policy": "absolute:0.25",
+        }
         # compound categories arrive concatenated ("tissuebox", see
         # normalize_prompt_ex); the readable word forms ride along as search
         # wideners so retrieval still looks for "tissue box"
