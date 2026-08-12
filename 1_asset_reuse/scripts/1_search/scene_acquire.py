@@ -32,9 +32,14 @@ def main(argv=None, runner=None):
     runner = runner or default_runner
     out = Path(a.out).resolve()
     out.mkdir(parents=True, exist_ok=True)
-    spec, _ = a4.extract_needs(a.prompt, a.seed)
+    # One normalization applied to the whole chain: coverage parse AND the
+    # upstream generate_scene call see the same prompt, or a compound like
+    # "tissue-box" would ground differently in the two parses. The compound's
+    # readable word forms travel as acquisition aliases.
+    prompt, compound_aliases = a4.normalize_prompt_ex(a.prompt)
+    spec, _ = a4.extract_needs(prompt, a.seed)
     records = a4.check_coverage(spec, a.catalog)
-    gaps = a4.gaps_to_entries(records)
+    gaps = a4.gaps_to_entries(records, extra_aliases=compound_aliases)
     catalog = a.catalog
     if gaps:
         before = records
@@ -89,7 +94,7 @@ def main(argv=None, runner=None):
             sys.executable,
             "script/generate_scene.py",
             "--prompt",
-            a.prompt,
+            prompt,
             "--seed",
             str(a.seed),
             "--asset-catalog",
