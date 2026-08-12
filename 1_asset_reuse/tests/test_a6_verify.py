@@ -197,6 +197,44 @@ def test_name_support_skips_the_name_question(tmp_path):
     assert len(calls) == 2  # closed + open only, no name question
 
 
+def test_synonym_check_rescues_true_synonyms(tmp_path):
+    """ "dustbin" vs open answer "trash can": word-level disagreement is not
+    object disagreement -- three real dustbins were vetoed across two tiers
+    (measured 2026-08-13). The lexical question rescues explicit synonyms."""
+
+    def infer(_p, prompt):
+        if "single main object" in prompt:
+            return '{"object": "trash can"}'
+        if "same_kind" in prompt:
+            return '{"same_kind": true}'
+        return reply(True, "dustbin")
+
+    out = a6.verify_candidates(
+        [cand("obs_dustbin_02.usd", png(tmp_path))], "dustbin", infer=infer
+    )
+    assert out["accepted"] is not None
+    assert out["results"][0]["synonym_check"] is True
+
+
+def test_synonym_check_false_keeps_the_veto(tmp_path):
+    """The flowerpot class must stay dead: open answer names a DIFFERENT
+    object and the lexical question confirms they are different kinds."""
+
+    def infer(_p, prompt):
+        if "single main object" in prompt:
+            return '{"object": "flowerpot"}'
+        if "same_kind" in prompt:
+            return '{"same_kind": false}'
+        return reply(True, "trash bin")
+
+    out = a6.verify_candidates(
+        [cand("Fluted_Medium.usd", png(tmp_path))], "trash bin", infer=infer
+    )
+    assert out["accepted"] is None
+    assert out["results"][0]["second_opinion_veto"] is True
+    assert out["results"][0]["synonym_check"] is False
+
+
 def test_open_agreement_normalizes_slug_categories(tmp_path):
     """Parser categories are slugs ("teddy_bear"); the model answers in words
     ("teddy bear"). Unnormalised these NEVER agreed, and the open question
