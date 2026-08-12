@@ -254,6 +254,13 @@ class RoboTwinLocalProvider:
         wanted = {str(p).strip().lower().replace(" ", "_") for p in phrases if p}
         out = []
         for e in entries:
+            # A reuse claim must also mean the entry is USABLE. 008_tray sat
+            # in the catalog with 0/3 validated models: coverage said "gap"
+            # (usable view) while this tier said "already have it" (existence
+            # view), deadlocking the request into a blocker that acquisition
+            # believed it had already solved (measured 2026-08-13).
+            if not any(m.get("usable") for m in e.get("models", [])):
+                continue
             names = {
                 str(n).strip().lower().replace(" ", "_")
                 for n in [

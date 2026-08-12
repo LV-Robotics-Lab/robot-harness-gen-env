@@ -1,5 +1,5 @@
-"""a7: Objaverse (LVIS subset) retrieval provider -- the first asset source
-outside the NVIDIA server, added deliberately as a DIFFERENT kind of source:
+"""a7: Objaverse retrieval provider -- the first asset source outside the
+NVIDIA server, added deliberately as a DIFFERENT kind of source:
 
   - different host (Hugging Face + Sketchfab ecosystem vs NVIDIA S3),
   - different curation (46,207 community objects labelled into 1,156 LVIS
@@ -9,19 +9,29 @@ outside the NVIDIA server, added deliberately as a DIFFERENT kind of source:
     SPDX auto-declare allowlist: a CC-BY hammer arrives license-declared with
     evidence, no human in the loop.
 
-Category matching leans on what LVIS actually is -- a curated category
-vocabulary -- so the lexical channel here matches CATEGORY NAMES exactly
-(`hammer`, `teddy_bear`), not filename substrings. That sidesteps the whole
-class of substring accidents the NVIDIA channel needed word-boundary logic
-for.
+Two search channels, ranked together then hydrated:
 
-Candidate hydration is lazy and happens only for the top few results per
-query: the per-object metadata (real name, CC license, Sketchfab thumbnail
-URL) lives in ~160 sharded json.gz files; we fetch just the shards those
-candidates need, cache them, and pull the thumbnail down so the pre-download
-identity gate has a picture to look at. A dead thumbnail URL (the 2022-era
-CDN links do rot) simply leaves the candidate unverifiable -- the post-render
-check at materialize time covers identity then, same as the GitHub path.
+  lvis_category  exact curated-category matching ("hammer", "teddy_bear") --
+                 no filename substrings, so the whole class of substring
+                 accidents the NVIDIA channel needed word-boundary logic for
+                 never arises. Partial-coverage category hits are scaled by
+                 how much of the query they cover: unscaled, category "box"
+                 (1 of 2 query words) outranked full-name "tissue box"
+                 matches and the identity gate's top-3 window saw only
+                 crates (measured 2026-08-13).
+  name_match     the 798k objects OUTSIDE the LVIS subset, matched by what
+                 their authors NAMED them (index built by
+                 scripts/1_search/build_objaverse_name_index.py). Requires
+                 >=2 name-word agreement for multi-word queries so "tissue
+                 box" pulls tissue boxes, not every box on Sketchfab.
+
+Candidate hydration is lazy and happens only for the ranked winners: the
+per-object metadata (real name, CC license, Sketchfab thumbnail URL) lives in
+~160 sharded json.gz files, cached on disk and memoized in memory by mtime
+(the a1 catalog-cache idiom; re-parsing per candidate once put a warm query
+at 929 ms). A dead thumbnail URL simply leaves the candidate unverifiable --
+the post-render check at materialize time covers identity then, same as the
+GitHub path.
 """
 
 from __future__ import annotations
@@ -62,6 +72,9 @@ class ObjaverseLvisProvider:
         self._fetch = fetch  # injectable for tests
         self._lvis = None
         self._paths = None
+        self._paths_full = None  # 798k, loaded only when the name channel fires
+        self._names = None
+        self._tokens = None
         self._shard_mem = {}  # shard -> (mtime_ns, parsed) -- see _annotation
         self.last_stats = {}
         self.last_errors = []
@@ -77,6 +90,29 @@ class ObjaverseLvisProvider:
         keep = {u for uids in lvis.values() for u in uids}
         self._lvis = {_norm(cat): uids for cat, uids in lvis.items()}
         self._paths = {u: p for u, p in paths.items() if u in keep}
+        # the NAME channel (see search) reaches outside the LVIS subset, so
+        # keep the full uid->path map -- but only when its index exists
+        if (self.data_dir / "name_index.json.gz").exists():
+            self._paths_full = paths
+
+    def _load_names(self):
+        """Full-corpus name index (798k objects). Lazy: costs ~150 MB in
+        memory, paid only on the first query that needs it."""
+        if self._names is not None:
+            return True
+        idx = self.data_dir / "name_index.json.gz"
+        tok = self.data_dir / "token_index.json.gz"
+        if not (idx.exists() and tok.exists()):
+            return False
+        self._names = json.load(gzip.open(idx))
+        self._tokens = json.load(gzip.open(tok))
+        return True
+
+    def _path_of(self, uid):
+        p = self._paths.get(uid)
+        if p is None and self._paths_full:
+            p = self._paths_full.get(uid)
+        return p
 
     def _http(self, url):
         if self._fetch is not None:
@@ -87,12 +123,9 @@ class ObjaverseLvisProvider:
     def _annotation(self, uid):
         """Per-object metadata via its shard, cached on disk AND in memory.
         The shard id is the same partition the object's glb lives in
-        (glbs/000-118/<uid>.glb -> metadata/000-118.json.gz).
-
-        The in-memory layer exists because re-parsing a gzipped shard per
-        candidate put a warm 6-candidate query at 929ms; keyed by mtime (the
-        a1 catalog-cache idiom) so a rewritten shard file is still picked up."""
-        shard = Path(self._paths[uid]).parent.name
+        (glbs/000-118/<uid>.glb -> metadata/000-118.json.gz). Memoized by
+        mtime so a rewritten shard file is still picked up."""
+        shard = Path(self._path_of(uid)).parent.name
         cache = self.data_dir / "metadata" / f"{shard}.json.gz"
         if not cache.exists():
             cache.parent.mkdir(parents=True, exist_ok=True)
@@ -132,13 +165,15 @@ class ObjaverseLvisProvider:
         self.last_errors = []
         q = _norm(query)
         q_tokens = set(q.split("_"))
+
         scored = []
         for cat, uids in self._lvis.items():
             cat_tokens = set(cat.split("_"))
             if cat == q:
                 score = 3.0  # the whole query IS this category
             elif cat_tokens and cat_tokens <= q_tokens:
-                score = 2.0  # query mentions the full category name
+                # query mentions the category, scaled by query coverage
+                score = 2.0 * len(cat_tokens) / max(1, len(q_tokens))
             elif q_tokens and q_tokens <= cat_tokens:
                 score = 1.5  # query is a strict part of the category name
             else:
@@ -146,59 +181,93 @@ class ObjaverseLvisProvider:
             scored.append((score, cat, uids))
         scored.sort(key=lambda t: (-t[0], t[1]))
 
-        out, hydrated = [], 0
+        # Both channels become (score, uid, label, channel) specs first;
+        # hydration -- the expensive part -- happens only for ranked winners.
+        specs, seen = [], set()
         for score, cat, uids in scored:
             for uid in uids[: self.per_category_cap]:
-                if len(out) >= limit:
-                    break
-                if uid not in self._paths:
+                if uid in seen or uid not in self._paths:
                     continue
-                try:
-                    ann = self._annotation(uid)
-                except Exception as exc:  # noqa: BLE001
-                    self.last_errors.append({"uid": uid, "annotation": repr(exc)})
-                    ann = {}
-                hydrated += 1
-                slug = str(ann.get("license") or "").lower()
-                spdx = SPDX_BY_SLUG.get(slug)
-                thumb = self._thumbnail(uid, ann) if ann else None
-                pretty = ann.get("name") or f"{cat}_{uid[:8]}"
-                out.append(
-                    AssetCandidate(
-                        candidate_id=f"objaverse:{uid}",
-                        name=f"{pretty} ({uid[:8]}.glb)",
-                        category=cat,
-                        download_url=f"{HF_BASE}/{self._paths[uid]}",
-                        source_page=(
-                            (ann.get("viewerUrl") or ann.get("uri"))
-                            or f"{HF_BASE}/{self._paths[uid]}"
-                        ),
-                        format="glb",
-                        provider=self.name,
-                        license=(
-                            f"{spdx} (Objaverse per-object metadata)"
-                            if spdx
-                            else f"unknown (objaverse slug: {slug or 'missing'})"
-                        ),
-                        score=score,
-                        metadata={
-                            "uid": uid,
-                            "lvis_category": cat,
-                            "thumbnail": thumb,
-                            "license_spdx": spdx,
-                            "license_slug": slug,
-                            "license_metadata_url": f"{HF_BASE}/metadata/"
-                            f"{Path(self._paths[uid]).parent.name}.json.gz",
-                            "sketchfab_name": ann.get("name"),
-                        },
-                    )
-                )
+                seen.add(uid)
+                specs.append((score, uid, cat, "lvis_category"))
+
+        name_matches = 0
+        if self._load_names():
+            words = [w for w in q_tokens if len(w) > 1 and w in self._tokens]
+            need = min(2, len(words)) if len(words) > 1 else 1
+            counts: dict[int, int] = {}
+            for w in words:
+                for row in self._tokens[w]:
+                    counts[row] = counts.get(row, 0) + 1
+            ranked = sorted(
+                (r for r, n in counts.items() if n >= need),
+                key=lambda r: (-counts[r], r),
+            )
+            for row in ranked[: 6 * self.per_category_cap]:
+                uid = self._names["uids"][row]
+                if uid in seen or self._path_of(uid) is None:
+                    continue
+                seen.add(uid)
+                specs.append((1.2, uid, q, "name_match"))
+                name_matches += 1
+
+        specs.sort(key=lambda t: -t[0])
+        out, hydrated = [], 0
+        for score, uid, label, channel in specs:
             if len(out) >= limit:
                 break
+            c = self._candidate(uid, label, score, channel=channel)
+            if c is not None:
+                out.append(c)
+                hydrated += 1
+
         self.last_stats = {
             "lvis_categories": len(self._lvis),
             "matched_categories": len(scored),
             "hydrated": hydrated,
+            "name_matches": name_matches,
             "thumbnail_failures": sum(1 for e in self.last_errors if "thumbnail" in e),
         }
-        return out[:limit]
+        return out
+
+    def _candidate(self, uid, category, score, *, channel):
+        path = self._path_of(uid)
+        if path is None:
+            return None
+        try:
+            ann = self._annotation(uid)
+        except Exception as exc:  # noqa: BLE001
+            self.last_errors.append({"uid": uid, "annotation": repr(exc)})
+            ann = {}
+        slug = str(ann.get("license") or "").lower()
+        spdx = SPDX_BY_SLUG.get(slug)
+        thumb = self._thumbnail(uid, ann) if ann else None
+        pretty = ann.get("name") or f"{category}_{uid[:8]}"
+        return AssetCandidate(
+            candidate_id=f"objaverse:{uid}",
+            name=f"{pretty} ({uid[:8]}.glb)",
+            category=category,
+            download_url=f"{HF_BASE}/{path}",
+            source_page=(
+                (ann.get("viewerUrl") or ann.get("uri")) or f"{HF_BASE}/{path}"
+            ),
+            format="glb",
+            provider=self.name,
+            license=(
+                f"{spdx} (Objaverse per-object metadata)"
+                if spdx
+                else f"unknown (objaverse slug: {slug or 'missing'})"
+            ),
+            score=score,
+            metadata={
+                "uid": uid,
+                "lvis_category": category if channel == "lvis_category" else None,
+                "channel": channel,
+                "thumbnail": thumb,
+                "license_spdx": spdx,
+                "license_slug": slug,
+                "license_metadata_url": f"{HF_BASE}/metadata/"
+                f"{Path(path).parent.name}.json.gz",
+                "sketchfab_name": ann.get("name"),
+            },
+        )

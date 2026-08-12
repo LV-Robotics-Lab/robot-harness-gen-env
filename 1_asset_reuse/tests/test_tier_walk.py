@@ -19,11 +19,18 @@ def _catalog(tmp_path):
             {
                 "entries": [
                     {"asset_id": "302_can", "category": "can", "semantic_name": "can",
-                     "aliases": ["can"], "asset_path": "/x/302_can"},
+                     "aliases": ["can"], "asset_path": "/x/302_can",
+                     "models": [{"model_id": 0, "usable": True}]},
                     {"asset_id": "021_cup", "category": "cup", "semantic_name": "cup",
-                     "aliases": ["cup", "mug"], "asset_path": "/x/021_cup"},
+                     "aliases": ["cup", "mug"], "asset_path": "/x/021_cup",
+                     "models": [{"model_id": 0, "usable": True}]},
                     {"asset_id": "303_box", "category": "box", "semantic_name": "box",
-                     "aliases": ["box", "storage box"], "asset_path": "/x/303_box"},
+                     "aliases": ["box", "storage box"], "asset_path": "/x/303_box",
+                     "models": [{"model_id": 0, "usable": True}]},
+                    {"asset_id": "008_tray", "category": "tray", "semantic_name": "tray",
+                     "aliases": ["tray"], "asset_path": "/x/008_tray",
+                     "models": [{"model_id": 0, "usable": False},
+                                {"model_id": 1, "usable": False}]},
                 ]
             }
         )
@@ -41,6 +48,16 @@ def test_phrase_reuse_does_not_fire_on_shared_tokens(tmp_path):
     # whole-phrase matches still work, including multi-word aliases
     assert [c.name for c in p.search_phrases(["cup"])] == ["021_cup"]
     assert [c.name for c in p.search_phrases(["storage box"])] == ["303_box"]
+
+
+def test_unusable_entries_never_claim_reuse(tmp_path):
+    """The tray deadlock (2026-08-13): 008_tray sat in the catalog with zero
+    validated models; coverage said "gap" (usable view) while tier-0 said
+    "already have a tray" (existence view), so acquisition returned
+    reused_local and the request died in a blocker it believed it had
+    solved. A reuse claim must mean a USABLE entry exists."""
+    p = _catalog(tmp_path)
+    assert p.search_phrases(["tray"]) == []
 
 
 class _Stub:

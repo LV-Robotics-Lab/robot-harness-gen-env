@@ -55,8 +55,15 @@ def test_gaps_to_entries_dedup_and_color():
     ]
     entries = a4.gaps_to_entries(records)
     assert entries == [
-        {"category": "bowl", "aliases": ["bowl"]},
-        {"category": "cup", "aliases": ["cup"], "colors": ["blue"]},
+        # gap-driven acquisitions carry a tabletop default size: web sources
+        # arrive at arbitrary author scales (a 13.6 m tissue box, 2026-08-13)
+        {"category": "bowl", "aliases": ["bowl"], "size_policy": "absolute:0.25"},
+        {
+            "category": "cup",
+            "aliases": ["cup"],
+            "size_policy": "absolute:0.25",
+            "colors": ["blue"],
+        },
     ]
 
 

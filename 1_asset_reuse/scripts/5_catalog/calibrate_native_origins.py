@@ -103,94 +103,149 @@ def main():
     print(f"待校准: {len(todo)} 个刚体模型")
 
     engine = sapien.Engine()
-    result = {}
-    n_ok = 0
-    for aid, mid in todo:
+
+    def settle(scene, act, max_steps):
+        """Step until velocities stay tiny for 50 consecutive steps. Thin
+        objects (trays) bounce and rock well past a fixed 800-step budget --
+        the tray class failed reverify at 36-77 deg purely from unfinished
+        rocking (measured 2026-08-13)."""
+        body = act.find_component_by_type(
+            sapien.pysapien.physx.PhysxRigidDynamicComponent
+        )
+        quiet = 0
+        for i in range(max_steps):
+            scene.step()
+            v = np.linalg.norm(body.get_linear_velocity())
+            w = np.linalg.norm(body.get_angular_velocity())
+            quiet = quiet + 1 if (v < 1e-3 and w < 0.02) else 0
+            if quiet >= 50:
+                return True
+        return False
+
+    def attempt(aid, mid, q0):
         scene = engine.create_scene()
         scene.set_timestep(1 / 250)
         scene.add_ground(0.0)
+        actor0 = create_actor(
+            scene, pose=sapien.Pose([0, 0, 0], q0), modelname=aid,
+            model_id=mid, convex=True,
+        )
+        if actor0 is None:
+            raise RuntimeError("create_actor returned None")
+        act = actor0.actor
+        lo, _hi = world_aabb(act)
+        act.set_pose(sapien.Pose([0, 0, -float(lo[2]) + 0.005], q0))
+        settle(scene, act, 2000)
+        p, q_rest = act.get_pose().p, act.get_pose().q
+        lo, hi = world_aabb(act)
+        dims = [float(hi[i] - lo[i]) for i in range(3)]
+        h = float(p[2])
+        half = dims[2] / 2
+        if abs(h) < 0.008:
+            zp = "origin_on_table"
+        elif abs(h - half) < max(0.008, 0.15 * half):
+            zp = "center_on_table"
+        else:
+            zp = None
+        row = dict(
+            origin_height_m=round(h, 4),
+            dims_m=[round(d, 4) for d in dims],
+            rest_orientation_wxyz=[round(float(x), 6) for x in q_rest],
+            center_offset_xy_m=[
+                round(float((lo[0] + hi[0]) / 2 - p[0]), 4),
+                round(float((lo[1] + hi[1]) / 2 - p[1]), 4),
+            ],
+        )
+        if max(dims) > 0.8:
+            row["verdict"] = (
+                f"oversized_needs_scale (dims={[round(d, 2) for d in dims]})"
+            )
+            return row
+        if zp is None:
+            row["verdict"] = f"unsupported_origin (h={h:.3f}, half={half:.3f})"
+            return row
+        spawn_z = 0.001 if zp == "origin_on_table" else half + 0.001
+        act.set_pose(sapien.Pose([0, 0, spawn_z], q_rest))
+        body = act.find_component_by_type(
+            sapien.pysapien.physx.PhysxRigidDynamicComponent
+        )
+        body.set_linear_velocity([0, 0, 0])
+        body.set_angular_velocity([0, 0, 0])
+        settle(scene, act, 600)
+        p2, q2 = act.get_pose().p, act.get_pose().q
+        drift = float(np.linalg.norm(np.asarray(p2) - [0, 0, spawn_z]))
+        tilt = quat_angle_deg(q2, q_rest)
+        row.update(reverify_drift_m=round(drift, 4), reverify_tilt_deg=round(tilt, 2))
+        if drift < 0.02 and tilt < 3.0:
+            row.update(verdict="ok", z_policy=zp)
+        else:
+            row["verdict"] = f"reverify_failed (drift={drift:.3f}, tilt={tilt:.1f})"
+        return row
+
+    # Start orientations: the declared one first, then axis flips. A Y-up
+    # tray at identity starts standing on edge; where it topples from there
+    # is not a stable pose measurement. One of the flips usually starts the
+    # object already lying on its natural face.
+    R2 = 0.7071067811865476
+    CANDIDATE_Q = [
+        [1, 0, 0, 0],
+        [R2, R2, 0, 0],
+        [R2, -R2, 0, 0],
+        [R2, 0, R2, 0],
+        [R2, 0, -R2, 0],
+    ]
+
+    result = {}
+    n_ok = 0
+    for aid, mid in todo:
         decl = (overrides.get(aid) or {}).get("models", {}).get(str(mid), {})
-        q0 = decl.get("stable_orientation_wxyz", [1, 0, 0, 0])
+        declared_q = decl.get("stable_orientation_wxyz")
+        tries = ([declared_q] if declared_q else []) + [
+            q for q in CANDIDATE_Q if q != declared_q
+        ]
         row = {"declared_z_policy": decl.get("z_policy"), "had_override": bool(decl)}
+        best = None
         try:
-            actor0 = create_actor(
-                scene,
-                pose=sapien.Pose([0, 0, 0], q0),
-                modelname=aid,
-                model_id=mid,
-                convex=True,
-            )
-            if actor0 is None:
-                raise RuntimeError("create_actor returned None")
-            act = actor0.actor
-            lo, _hi = world_aabb(act)
-            act.set_pose(sapien.Pose([0, 0, -float(lo[2]) + 0.02], q0))
-            for _ in range(800):
-                scene.step()
-            p, q_rest = act.get_pose().p, act.get_pose().q
-            lo, hi = world_aabb(act)
-            dims = [float(hi[i] - lo[i]) for i in range(3)]
-            h = float(p[2])  # origin height above the resting plane (~ground)
-            half = dims[2] / 2
-            if abs(h) < 0.008:
-                zp = "origin_on_table"
-            elif abs(h - half) < max(0.008, 0.15 * half):
-                zp = "center_on_table"
-            else:
-                zp = None
-            row.update(
-                origin_height_m=round(h, 4),
-                dims_m=[round(d, 4) for d in dims],
-                rest_orientation_wxyz=[round(float(x), 6) for x in q_rest],
-                center_offset_xy_m=[
-                    round(float((lo[0] + hi[0]) / 2 - p[0]), 4),
-                    round(float((lo[1] + hi[1]) / 2 - p[1]), 4),
-                ],
-            )
-            if max(dims) > 0.8:
-                # scale-less model_data loads 1:1; a tabletop native measuring
-                # >0.8 m is a missing-scale artifact, not a real prop
-                row["verdict"] = (
-                    f"oversized_needs_scale (dims={[round(d, 2) for d in dims]})"
-                )
-            elif zp is None:
-                row["verdict"] = f"unsupported_origin (h={h:.3f}, half={half:.3f})"
-            else:
-                # reverify at the derived pose, as the solver would place it
-                spawn_z = 0.001 if zp == "origin_on_table" else half + 0.001
-                act.set_pose(sapien.Pose([0, 0, spawn_z], q_rest))
-                body = act.find_component_by_type(
-                    sapien.pysapien.physx.PhysxRigidDynamicComponent
-                )
-                body.set_linear_velocity([0, 0, 0])
-                body.set_angular_velocity([0, 0, 0])
-                for _ in range(300):
-                    scene.step()
-                p2, q2 = act.get_pose().p, act.get_pose().q
-                drift = float(np.linalg.norm(np.asarray(p2) - [0, 0, spawn_z]))
-                tilt = quat_angle_deg(q2, q_rest)
-                row.update(
-                    reverify_drift_m=round(drift, 4), reverify_tilt_deg=round(tilt, 2)
-                )
-                if drift < 0.02 and tilt < 3.0:
-                    row.update(verdict="ok", z_policy=zp)
-                    n_ok += 1
-                else:
-                    row["verdict"] = (
-                        f"reverify_failed (drift={drift:.3f}, tilt={tilt:.1f})"
-                    )
-        except Exception as ex:  # noqa: BLE001 -- recorded per model, sweep continues
-            row["verdict"] = f"error: {str(ex)[:120]}"
+            # Declared metadata gets NO free pass: place the model exactly as
+            # the solver would from its declaration and require it to stay
+            # put. 020_hammer's upstream "lie_flat + origin_on_table" left
+            # its origin hovering 3.5 cm up; a bare "Place a hammer" scene
+            # toppled at runtime while the declaration was trusted
+            # (measured 2026-08-13, prompt-matrix campaign).
+            if decl.get("z_policy"):
+                dr = attempt(aid, mid, declared_q or [1, 0, 0, 0])
+                row["declared_reverify"] = {
+                    k: dr.get(k)
+                    for k in ("verdict", "reverify_drift_m", "reverify_tilt_deg",
+                              "origin_height_m")
+                }
+                row["declared_trusted"] = dr.get("verdict") == "ok" and dr.get(
+                    "z_policy"
+                ) == decl.get("z_policy")
+
+            for i, q0 in enumerate(tries):
+                r = attempt(aid, mid, q0)
+                if best is None:
+                    best = r
+                if r.get("verdict") == "ok":
+                    best = r
+                    best["start_orientation_attempt"] = i
+                    break
+        except Exception as ex:  # noqa: BLE001 -- recorded per model
+            best = {"verdict": f"error: {str(ex)[:120]}"}
+        row.update(best or {})
+        if row.get("verdict") == "ok":
+            n_ok += 1
         result.setdefault(aid, {})[str(mid)] = row
-        scene = None
         flag = "OK " if row.get("verdict") == "ok" else "-- "
         print(
-            f"{flag}{aid}/m{mid}: {row.get('verdict')} zp={row.get('z_policy')} h={row.get('origin_height_m')}"
+            f"{flag}{aid}/m{mid}: {row.get('verdict')} zp={row.get('z_policy')} h={row.get('origin_height_m')}",
+            flush=True,
         )
 
     out = {
         "schema": "envgen.native_origin_calibration.v1",
-        "method": "sapien drop-settle 800 steps + reverify 300 steps at derived pose (create_actor convex=True)",
+        "method": "sapien drop + velocity-converged settle (<=2000 steps), multi start-orientation retry, reverify at derived pose (create_actor convex=True)",
         "measured_at": date.today().isoformat(),
         "accepted": n_ok,
         "models": result,
