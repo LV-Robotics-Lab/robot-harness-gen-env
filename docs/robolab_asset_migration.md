@@ -54,6 +54,7 @@ conda run -n robolab-migrate \
 | 907 | mustard bottle | YCB | MIT | PASS |
 | 908 | banana | YCB | MIT | PASS |
 | 909 | wood block | YCB | MIT | PASS |
+| 910 | dry erase marker | YCB | MIT | PASS |
 
 ## 当前限制
 
