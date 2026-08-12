@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from scene_gen.catalog import load_catalog
@@ -10,14 +11,114 @@ from scene_gen.grounding import ground_object
 from scene_gen.parser import parse_rule_based
 from scene_gen.schema import SceneSpecError
 
+# Words that appear inside hyphenated RELATION phrases ("on-top-of"); a hyphen
+# touching one of these is left alone so we never rewrite spatial wording.
+_RELATION_WORDS = {
+    "on",
+    "top",
+    "of",
+    "in",
+    "front",
+    "next",
+    "to",
+    "left",
+    "right",
+    "behind",
+    "near",
+    "inside",
+    "into",
+    "the",
+}
+
+
+def _vocab_words():
+    """Single-word terms of the upstream vocabulary ("box", "cup", "remote",
+    ...). Only these can collide inside a hyphenated compound."""
+    from scene_gen.parser import OBJECT_TERMS
+
+    return {
+        t.lower()
+        for terms in OBJECT_TERMS.values()
+        for t in terms
+        if " " not in t and t.isascii()
+    }
+
+
+def normalize_prompt_ex(prompt: str) -> tuple[str, dict[str, list[str]]]:
+    """Defuse hyphen/underscore compounds whose parts collide with the
+    upstream vocabulary, returning (rewritten_prompt, {joined: aliases}).
+
+    The measured failure (web run 2026-08-12): "tissue-box" -- the upstream
+    term scan's boundary class is `(?<![a-z0-9])`, so both '-' and '_' count
+    as boundaries and the vocabulary word "box" matched inside the compound;
+    the free capture that would have kept the whole compound is skipped for
+    any span overlapping a term hit, and a plain storage box was staged for a
+    tissue-box request. The only prompt-level rewrite the upstream parser
+    cannot mis-split is seamless concatenation: tissue-box -> "tissuebox",
+    which free-captures as one honest category. The readable word forms are
+    returned as aliases so acquisition still searches for "tissue box".
+
+    Compounds with NO vocabulary collision ("dumbbell-rack") are left alone --
+    they already free-capture correctly -- and hyphens touching relation
+    words ("on-top-of") are never rewritten."""
+    vocab = _vocab_words()
+    aliases: dict[str, list[str]] = {}
+
+    def _fix(m: re.Match) -> str:
+        parts = re.split(r"[-_]", m.group(0))
+        low = [p.lower() for p in parts]
+        if any(p in _RELATION_WORDS for p in low):
+            return m.group(0)
+        if not any(p in vocab for p in low):
+            return m.group(0)
+        joined = "".join(low)
+        aliases[joined] = [" ".join(low), "-".join(low)]
+        return joined
+
+    rewritten = re.sub(r"[A-Za-z]+(?:[-_][A-Za-z]+)+", _fix, prompt)
+    return rewritten, aliases
+
+
+def normalize_prompt(prompt: str) -> str:
+    return normalize_prompt_ex(prompt)[0]
+
 
 def extract_needs(prompt, seed=0):
-    spec = parse_rule_based(prompt, seed=seed)
+    spec = parse_rule_based(normalize_prompt(prompt), seed=seed)
     needs = [
         {"object_id": o.object_id, "category": o.category, "color": o.color}
         for o in spec.objects
     ]
     return spec, needs
+
+
+def _get(o, key, default=None):
+    if isinstance(o, dict):
+        return o.get(key, default)
+    return getattr(o, key, default)
+
+
+def _unusable_same_category(catalog, category):
+    """Assets of the requested category that exist but have zero usable
+    models. "the library has no X" and "the library has an X nobody has
+    validated yet" demand different responses (acquire vs validate), and the
+    generic gap detail collapsed them -- a dumbbell-rack request 2026-08-12
+    walked all the way to an external-search blocker while 013_dumbbell-rack
+    sat in the catalog with 4 unvalidated models."""
+    hints = []
+    for entry in _get(catalog, "entries", []) or []:
+        if _get(entry, "category") != category:
+            continue
+        models = _get(entry, "models", []) or []
+        if models and not any(_get(m, "usable") for m in models):
+            missing = sorted(
+                {str(r) for m in models for r in (_get(m, "missing") or [])}
+            )
+            hints.append(
+                f"{_get(entry, 'asset_id')}: 0/{len(models)} models usable"
+                f" (missing: {', '.join(missing) or 'unknown'})"
+            )
+    return hints
 
 
 def check_coverage(spec, catalog_path):
@@ -41,11 +142,19 @@ def check_coverage(spec, catalog_path):
                 }
             )
         except SceneSpecError as exc:
-            records.append({**base, "status": "gap", "detail": str(exc)})
+            rec = {**base, "status": "gap", "detail": str(exc)}
+            hints = _unusable_same_category(catalog, obj.category)
+            if hints:
+                rec["unusable_candidates"] = hints
+                rec["detail"] += (
+                    "; catalog HAS same-category assets awaiting validation: "
+                    + "; ".join(hints)
+                )
+            records.append(rec)
     return records
 
 
-def gaps_to_entries(records):
+def gaps_to_entries(records, extra_aliases=None):
     seen, entries = set(), []
     for r in records:
         if r["status"] != "gap":
@@ -55,6 +164,12 @@ def gaps_to_entries(records):
             continue
         seen.add(key)
         entry = {"category": r["category"], "aliases": [r["category"]]}
+        # compound categories arrive concatenated ("tissuebox", see
+        # normalize_prompt_ex); the readable word forms ride along as search
+        # wideners so retrieval still looks for "tissue box"
+        for alias in (extra_aliases or {}).get(r["category"], []):
+            if alias not in entry["aliases"]:
+                entry["aliases"].append(alias)
         if r.get("color"):
             entry["colors"] = [r["color"]]
         entries.append(entry)
