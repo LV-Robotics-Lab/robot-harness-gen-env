@@ -139,26 +139,41 @@ def main():
                 for r in rests
                 if abs(r["bottom_z"] - dz) < 0.012 and r["xy_drift"] < 0.03
             ]
-            hollow_cells = [
-                r
-                for r in rests
-                if r["bottom_z"] < dz - 0.03
-                and r["bottom_z"] > 0.003
-                and r["xy_drift"] < max(dx, dy)
+            # Reference plane = the highest place a probe actually RESTED,
+            # not the declared bbox top: a lie-flat hammer whose declared
+            # dims are its upright bbox (0.178 m) read as "hollow" against
+            # that phantom top and was assigned an interior it does not have
+            # (measured 2026-08-13).
+            resting = [
+                r for r in rests if r["xy_drift"] < 0.03 and r["bottom_z"] > 0.003
             ]
+            dz_ref = max((r["bottom_z"] for r in resting), default=dz)
+            if abs(dz_ref - dz) < 0.012:
+                top_cells = [r for r in resting if abs(r["bottom_z"] - dz_ref) < 0.012]
+            hollow_cells = [r for r in resting if r["bottom_z"] < dz_ref - 0.03]
             row["cells"] = rests
+            row["dz_ref"] = round(float(dz_ref), 4)
             if len(top_cells) >= 7:
                 row["verdict"] = "flat"
             elif hollow_cells:
                 floor = min(r["bottom_z"] for r in hollow_cells)
+                # interior extent from where probes actually sank: a +-0.3
+                # ring cell sinking too means the cavity spans ~0.75 of the
+                # footprint; centre-only sinking keeps a conservative 0.55.
+                # (A flat 0.5 rejected a 6.6 cm apple from a 13 cm bowl whose
+                # real cavity is ~9 cm -- measured 2026-08-13.)
+                ring = any(
+                    max(abs(r["cell"][0]), abs(r["cell"][1])) >= 0.3
+                    for r in hollow_cells
+                )
+                k = 0.75 if ring else 0.55
                 row["verdict"] = "hollow"
                 row["interior"] = {
                     "floor_z_offset_m": round(floor, 4),
-                    # conservative: half the footprint, full remaining height
                     "dimensions_m": [
-                        round(dx * 0.5, 4),
-                        round(dy * 0.5, 4),
-                        round(dz - floor - 0.005, 4),
+                        round(dx * k, 4),
+                        round(dy * k, 4),
+                        round(dz_ref - floor - 0.005, 4),
                     ],
                 }
             else:

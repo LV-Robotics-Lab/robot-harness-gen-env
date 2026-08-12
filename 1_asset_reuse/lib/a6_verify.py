@@ -86,9 +86,17 @@ def _open_agrees(seen, category, aliases):
     agrees with alias "cup" and alias "cycle" agrees with "unicycle"."""
     if not seen:
         return False
-    seen = seen.lower()
-    seen_words = set(seen.replace("-", " ").split())
-    names = {str(category).lower(), *(str(a).lower() for a in aliases or [])}
+
+    def norm(t):
+        # parser categories are slugs ("teddy_bear"); the model answers in
+        # words ("teddy bear"). Unnormalised, the two NEVER agreed and the
+        # open question vetoed every real teddy bear on two tiers
+        # (measured 2026-08-13).
+        return str(t).lower().replace("_", " ").replace("-", " ").strip()
+
+    seen = norm(seen)
+    seen_words = set(seen.split())
+    names = {norm(category), *(norm(a) for a in aliases or [])}
     return any(n in seen or seen in n or (set(n.split()) & seen_words) for n in names)
 
 
@@ -342,7 +350,15 @@ def verify_candidates(
     confirm the leader, not to re-rank the field. `max_check` bounds the cost
     at a few 256x256 images per acquisition."""
     results, accepted = [], None
-    for cand in candidates[:max_check]:
+    looked_n = 0
+    # NO_THUMBNAIL must not consume the inspection window: community
+    # thumbnails rot, and with max_check=3 two dead links pushed the real
+    # teddy bears at ranks 6-8 out of view entirely (measured 2026-08-13).
+    # The window counts candidates we could actually LOOK at; a hard cap of
+    # 4x still bounds the walk over a rotten list.
+    for cand in candidates[: 4 * max_check]:
+        if looked_n >= max_check:
+            break
         r = verify_candidate(
             cand,
             category,
@@ -352,6 +368,8 @@ def verify_candidates(
             second_opinion=second_opinion,
         )
         results.append(r)
+        if r["verdict"] != NO_THUMBNAIL:
+            looked_n += 1
         if r["verdict"] == MATCH:
             accepted = cand
             break

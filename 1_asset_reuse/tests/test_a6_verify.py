@@ -197,6 +197,48 @@ def test_name_support_skips_the_name_question(tmp_path):
     assert len(calls) == 2  # closed + open only, no name question
 
 
+def test_open_agreement_normalizes_slug_categories(tmp_path):
+    """Parser categories are slugs ("teddy_bear"); the model answers in words
+    ("teddy bear"). Unnormalised these NEVER agreed, and the open question
+    vetoed every real teddy bear on two tiers (measured 2026-08-13)."""
+
+    def infer(_p, prompt):
+        if "single main object" in prompt:
+            return '{"object": "teddy bear"}'
+        return reply(True, "teddy bear")
+
+    out = a6.verify_candidates(
+        [cand("teddy_bear.usd", png(tmp_path))],
+        "teddy_bear",
+        aliases=["teddy_bear"],
+        infer=infer,
+    )
+    assert out["accepted"] is not None
+    assert out["results"][0]["verdict"] == a6.MATCH
+
+
+def test_dead_thumbnails_do_not_consume_the_window(tmp_path):
+    """Community thumbnails rot: with max_check=3, two dead links pushed the
+    real teddy bears at ranks 6-8 out of view entirely (measured 2026-08-13).
+    NO_THUMBNAIL rows are recorded but only LOOKED-at candidates count."""
+    cands = [
+        cand("dead1.glb"),
+        cand("dead2.glb"),
+        cand("wrong.usd", png(tmp_path, "w.png")),
+        cand("dead3.glb"),
+        cand("right.usd", png(tmp_path, "r.png")),
+    ]
+
+    def infer(p, prompt):
+        if "single main object" in prompt:
+            return '{"object": "mug"}'
+        return reply(p.name == "r.png", "mug" if p.name == "r.png" else "vase")
+
+    out = a6.verify_candidates(cands, "mug", infer=infer, max_check=3)
+    assert out["accepted"] is not None
+    assert out["accepted"].name == "right.usd"
+
+
 def test_no_thumbnail_is_unverifiable_not_rejected():
     """'We looked and it was wrong' and 'there was nothing to look at' must not
     collapse: only the NVIDIA corpus ships thumbnails, so treating absence as

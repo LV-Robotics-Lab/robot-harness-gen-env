@@ -496,7 +496,30 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         gated = a2.gate_candidates(res["candidates"], globals_cfg)
         viable = [r for r in gated if r["verdict"] == "viable"]
         if not viable:
-            rec["status"] = "search_failed" if not res["candidates"] else "exhausted"
+            # The walk can end with ZERO candidates precisely BECAUSE the
+            # gate refuted every tier -- that is identity_unverified (the
+            # gate did its job), not search_failed, and the identity evidence
+            # must survive either way (measured 2026-08-13: teddy_bear
+            # reported search_failed with no evidence file while the 7B had
+            # examined and refuted candidates on two tiers).
+            if gate_log["results"]:
+                ev = (
+                    Path(paths["out"]) / f"identity_{category.replace(' ', '_')}.json"
+                )
+                ev.parent.mkdir(parents=True, exist_ok=True)
+                ev.write_text(
+                    json.dumps(gate_log["results"], indent=2, ensure_ascii=False)
+                    + "\n"
+                )
+                rec["identity_gate"] = {
+                    "outcome": gate_log["outcome"],
+                    "evidence": str(ev),
+                }
+                rec["status"] = "identity_unverified"
+            else:
+                rec["status"] = (
+                    "search_failed" if not res["candidates"] else "exhausted"
+                )
             rec["candidates"] = rec.get("candidates", []) + [
                 {
                     **a2.candidate_dict(r["candidate"]),
