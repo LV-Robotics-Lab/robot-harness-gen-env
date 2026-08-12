@@ -1269,14 +1269,18 @@ function renderLibrary() {
   const srcColor = {robotwin_native: "var(--cat-a)", imported: "var(--cat-b)"};
   src.forEach(x => { S.drills["src:" + x.key] = {title: `${x.label} · ${x.count} 个资产`, ids: x.asset_ids}; });
   html += `<div class="libcard">
-    <h3>来源构成 · 检索梯队</h3>
-    <div class="sub">本地资产两种来路；缺口触发时按梯队向外逐级检索</div>
+    <h3>来源构成</h3>
+    <div class="sub">已入库的 ${totalSrc} 个资产从哪来 —— 场景生成只使用这些本地资产</div>
     <div class="prop">
       ${src.map(x => `<span class="seg" data-drill="src:${x.key}" style="width:${pct(x.count, totalSrc)}%;background:${srcColor[x.key]};cursor:pointer;" title="${escapeHtml(x.label)} ${x.count}"></span>`).join("")}
     </div>
     <div class="legend">
       ${src.map(x => `<span class="li" data-drill="src:${x.key}"><span class="ldot" style="background:${srcColor[x.key]};"></span>${escapeHtml(x.label)} <b>${x.count}</b>（${pct(x.count, totalSrc)}%）</span>`).join("")}
     </div>
+  </div>
+  <div class="libcard">
+    <h3>检索梯队</h3>
+    <div class="sub">缺口发生时按 tier 0→3 逐级向外检索的<b>外部候选池</b> —— 不计入本地资产数；候选通过下载、转换、质检后才落库成为「缺口引进」</div>
     <div class="tier-row">
       ${s.retrieval.tiers.map(t => `<div class="tier-card ${t.enabled ? "" : "off"}">
         <div class="tn">${t.tier}</div>
