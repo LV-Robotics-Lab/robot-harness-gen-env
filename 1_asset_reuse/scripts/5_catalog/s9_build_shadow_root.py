@@ -122,7 +122,7 @@ if calib_path.exists():
     data = yaml.safe_load(ext_overrides.read_text()) or {}
     root = data.setdefault("assets", {})  # the scanner reads overrides["assets"] only
     n_patch = n_add = 0
-    n_replace = n_revoke = 0
+    n_replace = n_revoke = n_skip = 0
     for aid, models in calib.get("models", {}).items():
         for mid, row in models.items():
             asset = root.setdefault(aid, {})
@@ -142,6 +142,23 @@ if calib_path.exists():
                         "declared pose failed reverify; no measured pose"
                     )
                     n_revoke += 1
+                continue
+            dims = row.get("dims_m") or []
+            infeasible = dims and (
+                max(dims[0], dims[1]) > 0.42 or dims[2] > 0.55
+            )
+            if infeasible and "stable_pose_id" not in entry:
+                # Admission must align with the solver's placement envelope
+                # (workspace 0.70 x 0.50 m + margins + robot keepout): the
+                # 0.65 x 0.74 m dustbin passed the 0.8 m bbox guard yet can
+                # NEVER be placed -- solver refused x96 and the user saw a
+                # bare error (2026-08-13). Better an honest gap that
+                # acquisition can fill with a tabletop-sized one.
+                entry["placement_infeasible"] = (
+                    f"footprint {dims[0]:.2f}x{dims[1]:.2f} h {dims[2]:.2f}"
+                    " exceeds tabletop envelope"
+                )
+                n_skip += 1
                 continue
             if "stable_pose_id" not in entry:
                 entry.update(
@@ -173,7 +190,8 @@ if calib_path.exists():
     )
     print(
         f"calibration patch: {n_patch} z_policy corrected, {n_add} added, "
-        f"{n_replace} untrusted declarations replaced, {n_revoke} revoked"
+        f"{n_replace} untrusted declarations replaced, {n_revoke} revoked, "
+        f"{n_skip} tabletop-infeasible skipped"
     )
 
 # ---- top-support survey patches (HOLLOW verdicts only) ----
@@ -213,7 +231,13 @@ if survey_path.exists():
                 if dims
                 else max((c["bottom_z"] for c in row.get("cells", [])), default=None)
             )
-            if "interior_dimensions_m" not in entry:
+            if (
+                "interior_dimensions_m" not in entry
+                and row["interior"]["dimensions_m"][2] >= 0.03
+            ):
+                # a cavity shallower than 3 cm holds nothing INSIDE-worthy
+                # (a plate's 2 cm "cavity" made cup-in-plate solvable on
+                # paper and refused x4608 in practice, 2026-08-13)
                 entry["interior_dimensions_m"] = row["interior"]["dimensions_m"]
                 entry["interior_floor_z_offset_m"] = row["interior"]["floor_z_offset_m"]
                 n_int += 1
@@ -229,6 +253,59 @@ if survey_path.exists():
     print(
         f"top-support patch: {n_int} interiors measured, {n_closed} hollow tops closed"
     )
+# ---- final envelope + consistency pass over ALL declared entries ----
+# The per-branch feasibility check missed the replace path: 034_knife's
+# untrusted declaration was REPLACED with its measured 0.46 m lie-flat pose,
+# which cannot share a 0.70x0.50 m workspace with anything (left_of refused
+# x2496, 2026-08-13). One final sweep over every entry closes every path in;
+# it also repairs upstream declarations that carry interior dims with a null
+# floor offset (003_plate), which the solver consumes as numbers.
+import yaml as _yaml
+
+_data = _yaml.safe_load(ext_overrides.read_text()) or {}
+_root = _data.get("assets") or {}
+# override entries do not always carry dimensions (fragment entries leave
+# them to bundle metadata: 314_cabinet slipped through exactly this hole);
+# fall back to the PREVIOUS catalog's resolved dims for those.
+_prev_dims = {}
+_prev_cat = ext / "asset_catalog.json"
+if _prev_cat.exists():
+    _pc = json.loads(_prev_cat.read_text())
+    for _e in (_pc["entries"] if isinstance(_pc, dict) else _pc):
+        for _m in _e.get("models", []):
+            if _m.get("dimensions_m"):
+                _prev_dims[(_e["asset_id"], str(_m["model_id"]))] = _m[
+                    "dimensions_m"
+                ]
+_n_env = _n_floor = 0
+for _aid, _asset in _root.items():
+    for _mid, _entry in (_asset.get("models") or {}).items():
+        if not isinstance(_entry, dict):
+            continue
+        _dims = _entry.get("dimensions_m") or _prev_dims.get((_aid, str(_mid)))
+        if (
+            _entry.get("stable_pose_id")
+            and _dims
+            and (max(_dims[0], _dims[1]) > 0.42 or _dims[2] > 0.55)
+        ):
+            del _entry["stable_pose_id"]
+            _entry["placement_infeasible"] = (
+                f"footprint {_dims[0]:.2f}x{_dims[1]:.2f} h {_dims[2]:.2f}"
+                " exceeds tabletop envelope"
+            )
+            _n_env += 1
+        if (
+            _entry.get("interior_dimensions_m")
+            and _entry.get("interior_floor_z_offset_m") is None
+        ):
+            _entry["interior_floor_z_offset_m"] = 0.005
+            _n_floor += 1
+if _n_env or _n_floor:
+    ext_overrides.write_text(
+        "# GENERATED (see calibration header above)\n"
+        + _yaml.safe_dump(_data, sort_keys=False, allow_unicode=True)
+    )
+print(f"envelope pass: {_n_env} entries revoked, {_n_floor} null floors repaired")
 print(f"extended overrides -> {ext_overrides}")
 
 # ---- run upstream catalog scanner over the shadow ----
@@ -283,7 +360,17 @@ for asset_id in wanted:
     else:
         print(f"{asset_id}: category={entry['category']} usable={len(usable)}")
         if not usable:
-            ok = False
+            # an entry the envelope pass deliberately revoked is EXPECTED to
+            # be unusable -- that is the pass doing its job, not a failure
+            revoked = any(
+                m.get("placement_infeasible")
+                for m in ((_root.get(asset_id) or {}).get("models") or {}).values()
+                if isinstance(m, dict)
+            )
+            if revoked:
+                print(f"{asset_id}: revoked by envelope pass (expected)")
+            else:
+                ok = False
 if ok and args.admission:
     import subprocess as sp
 

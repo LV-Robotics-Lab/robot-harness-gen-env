@@ -260,8 +260,29 @@ def verify_image(
         open_seen = m.group(1).lower() if m else None
         result["open_answer"] = open_seen
         if not _open_agrees(open_seen, category, aliases):
-            result["verdict"] = MISMATCH
-            result["second_opinion_veto"] = True
+            # Word-level disagreement is not always OBJECT disagreement: for
+            # "dustbin" the open answer was "trash can" and three real
+            # dustbins were vetoed across two tiers (measured 2026-08-13).
+            # Ask the model's LEXICAL knowledge -- a text question about the
+            # two words, no image bias; only an explicit yes rescues the
+            # match, so the flowerpot-vs-trash-bin veto class stands.
+            same = None
+            if open_seen:
+                try:
+                    syn_raw = run(
+                        Path(image_path),
+                        f'Are "{open_seen}" and "{category}" two names for the '
+                        "same kind of everyday object? Answer with one JSON "
+                        'object and nothing else: {"same_kind": true|false}',
+                    )
+                    sm = re.search(r'"same_kind"\s*:\s*(true|false)', syn_raw)
+                    same = sm.group(1) == "true" if sm else None
+                except Exception:  # noqa: BLE001 -- auxiliary, veto stands
+                    same = None
+            result["synonym_check"] = same
+            if same is not True:
+                result["verdict"] = MISMATCH
+                result["second_opinion_veto"] = True
     return result
 
 
