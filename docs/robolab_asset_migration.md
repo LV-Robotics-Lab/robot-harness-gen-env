@@ -52,6 +52,7 @@ conda run -n robolab-migrate \
 | 905 | scissors | YCB | MIT | PASS |
 | 906 | mug | YCB | MIT | PASS |
 | 907 | mustard bottle | YCB | MIT | PASS |
+| 908 | banana | YCB | MIT | PASS |
 
 ## 当前限制
 
