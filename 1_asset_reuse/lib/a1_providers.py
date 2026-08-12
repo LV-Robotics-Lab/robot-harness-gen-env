@@ -437,6 +437,19 @@ def load_providers(config):
                     ),
                 )
             )
+    if pc.get("objaverse", {}).get("enabled"):
+        from lib.a7_objaverse import ObjaverseLvisProvider
+
+        o = pc["objaverse"]
+        tiers.append(
+            Tier(
+                o.get("tier", 3),
+                ObjaverseLvisProvider(
+                    o.get("data_dir", "data/asset_index/objaverse"),
+                    per_category_cap=int(o.get("per_category_cap", 6)),
+                ),
+            )
+        )
     if pc.get("github_discovery", {}).get("enabled"):
         from agenticsim.openxsim.assets import GitHubRepositoryDiscoveryProvider
 

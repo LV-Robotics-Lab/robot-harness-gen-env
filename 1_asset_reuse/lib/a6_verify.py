@@ -58,6 +58,28 @@ OPEN_PROMPT = (
 )
 
 
+def _name_words(name):
+    """Filename -> word set, splitting camelCase, letter/digit boundaries and
+    separators: TrafficCamera03.usd -> {traffic, camera, 03, usd}."""
+    s = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", str(name or ""))
+    s = re.sub(r"([a-zA-Z])([0-9])", r"\1 \2", s)
+    s = re.sub(r"([0-9])([a-zA-Z])", r"\1 \2", s)
+    return {w for w in re.split(r"[^a-zA-Z0-9]+", s.lower()) if w}
+
+
+def name_check_prompt(name: str, category: str) -> str:
+    return (
+        f'A 3D asset file is named "{name}".\n'
+        f"Judging ONLY this filename (ignore the image), could this file "
+        f"plausibly contain a {category}?\n"
+        'Generic codes, product or brand names (e.g. "Reginald", "SM_Obj_C1") '
+        "could name anything, so they are plausible.\n"
+        "A name that clearly denotes a DIFFERENT kind of object is not.\n"
+        "Reply with one JSON object and nothing else:\n"
+        '{"plausible": true|false, "suggests": "<what the name suggests, 1-3 words>"}'
+    )
+
+
 def _open_agrees(seen, category, aliases):
     """Does the model's OPEN description name the requested thing (or one of
     its aliases)? Word-set overlap plus substring both ways, so "yellow cup"
@@ -67,9 +89,7 @@ def _open_agrees(seen, category, aliases):
     seen = seen.lower()
     seen_words = set(seen.replace("-", " ").split())
     names = {str(category).lower(), *(str(a).lower() for a in aliases or [])}
-    return any(
-        n in seen or seen in n or (set(n.split()) & seen_words) for n in names
-    )
+    return any(n in seen or seen in n or (set(n.split()) & seen_words) for n in names)
 
 
 def build_prompt(category: str, aliases=None) -> str:
@@ -246,7 +266,23 @@ def verify_candidate(
     model_name=DEFAULT_MODEL,
     second_opinion=True,
 ):
-    """One candidate -> verdict dict, keyed off its source thumbnail."""
+    """One candidate -> verdict dict, keyed off its source thumbnail.
+
+    A visual MATCH additionally has to survive a NAME check, because pixels
+    alone have a measured failure mode at industrial-corpus scale (2026-08-12,
+    dsready): TrafficCamera05's 256px thumbnail is a Mjolnir-shaped crop, and
+    the model honestly answers "hammer" to both the closed and the open
+    question -- and the settle render of the converted geometry looks like a
+    hammer too, so the post-render check agreed as well. The filename is the
+    one evidence channel that dissents. Policy:
+
+      name contains a category/alias word  -> supports, no question asked
+      name is a code or product name       -> plausible (Reginald IS a chair)
+      name clearly denotes another object  -> veto the match
+
+    Only an ACTIVE contradiction vetoes; absence of support never does, and a
+    name-question failure keeps the visual verdict (auxiliary signal, never an
+    infra veto)."""
     thumb = (candidate.metadata or {}).get("thumbnail")
     r = verify_image(
         thumb,
@@ -256,12 +292,37 @@ def verify_candidate(
         model_name=model_name,
         second_opinion=second_opinion,
     )
-    return {
+    r = {
         **r,
         "candidate_id": candidate.candidate_id,
         "name": candidate.name,
         "thumbnail": thumb,
     }
+    if r["verdict"] == MATCH:
+        tokens = set()
+        for n in (category, *(aliases or [])):
+            tokens |= set(str(n).lower().split())
+        if tokens & _name_words(candidate.name):
+            r["name_check"] = "supports"
+        else:
+            run = infer or (lambda p, q: _local_infer(p, q, model_name))
+            try:
+                raw = run(Path(thumb), name_check_prompt(candidate.name, category))
+                m = re.search(r'"plausible"\s*:\s*(true|false)', raw)
+                sm = re.search(r'"suggests"\s*:\s*"([^"]+)"', raw)
+                suggests = sm.group(1).lower() if sm else None
+                if m is None:
+                    r["name_check"] = "unreadable"
+                elif m.group(1) == "true":
+                    r["name_check"] = "plausible"
+                else:
+                    r["name_check"] = f"contradiction:{suggests}"
+                    r["verdict"] = MISMATCH
+                    r["name_veto"] = True
+            except Exception as exc:  # noqa: BLE001 -- auxiliary, never blocks
+                r["name_check"] = "unreadable"
+                r["name_check_error"] = repr(exc)
+    return r
 
 
 def verify_candidates(
