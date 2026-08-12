@@ -30,6 +30,7 @@ OBJECT_TERMS: dict[str, tuple[str, ...]] = {
     "apple": ("apple", "苹果"),
     "basket": ("basket", "篮子", "筐"),
     "block": ("block", "cube", "方块", "积木"),
+    "mustard_bottle": ("mustard bottle",),
     "bottle": ("bottle", "瓶子", "瓶"),
     "bowl": ("bowl", "碗"),
     "calculator": ("calculator", "计算器"),
