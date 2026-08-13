@@ -89,6 +89,7 @@
       },
       "retained": ["reconciled active source", "shared OpenXSim source and tests", "branch overlays", "asset acquisition manifest", "ledger and model metadata", "full local asset SHA-256 manifest"],
       "content_receipt": "self_improving/asset_pipeline/receipts/asset_library_manifest.json",
+      "ignored_workbench_snapshot": "self_improving/asset_pipeline/workbench_snapshots",
       "excluded": ["vendored OpenXSim dependencies", "MetaSim checkout", "meshes", "renders", "results", "caches", "shadow upstream clone"],
       "storage_uri": null
     },

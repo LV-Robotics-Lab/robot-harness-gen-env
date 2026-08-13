@@ -13,6 +13,7 @@ runtime assumptions into the core trust boundary.
 | `asset_pipeline/active/` | active | Asset discovery, ingest, ledger, catalog integration, Web Studio, and simulator-migration adapters from `env-gen-dev`. |
 | `asset_pipeline/active/shared/openxsim/` | active shared core | First-party OpenXSim IR, asset contracts, adapters, conformance tests, and bridge scripts consumed by both asset reuse and simulator migration. Vendored dependencies and the MetaSim checkout are excluded. |
 | `asset_pipeline/branch_overlays/` | preserved | Source-only snapshots of the alias-screening and asset-sources worktrees. |
+| `asset_pipeline/workbench_snapshots/` | read-only | Source and notes recovered from ignored `work/` trees; historical paths are retained and these are not supported entry points. |
 | `asset_pipeline/receipts/` | active metadata | Acquired-asset manifest and ledger/model metadata; downloaded meshes and renders are deliberately external. |
 | `contributor_notes/` | historical evidence | Unique planning, design, and handoff documents recovered from the named student workspaces, with source-path and SHA-256 index. |
 | `sim_adapters/agenticsim_runtime/` | active adapter | Orchestration scripts and hermetic tests recovered from the former non-Git runtime workspace. It is not the retired AgenticSim product repository. |
