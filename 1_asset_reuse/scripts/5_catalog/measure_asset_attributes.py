@@ -153,7 +153,17 @@ def main():
                 continue
             todo.append((aid, m["model_id"], tuple(m.get("dimensions_m") or ())))
     todo = sorted(set(todo))
-    print(f"待测: {len(todo)} 个可用模型", flush=True)
+    # 续测：GPU 被他人训练占用时渲染缓存会耗尽，外层脚本分批重启本进程，
+    # 已测出的行必须原样保留（2026-08-14）
+    done = {}
+    outp = Path(a.out)
+    if outp.exists() and not a.only:
+        try:
+            done = json.loads(outp.read_text()).get("models", {})
+        except Exception:  # noqa: BLE001
+            done = {}
+    todo = [t for t in todo if str(t[1]) not in done.get(t[0], {})]
+    print(f"待测: {len(todo)} 个可用模型（已完成 {sum(len(v) for v in done.values())}）", flush=True)
 
     dump = Path(a.dump_dir) if a.dump_dir else None
     if dump:
@@ -168,7 +178,7 @@ def main():
     scene.add_directional_light([0, -0.5, -1], [0.35, 0.35, 0.35])
     cam = scene.add_camera(name="c", width=192, height=192, fovy=0.9, near=0.02, far=20)
 
-    result = {}
+    result = {k: dict(v) for k, v in done.items()}
     for aid, mid, dims in todo:
         decl = (overrides.get(aid) or {}).get("models", {}).get(str(mid), {})
         q = decl.get("stable_orientation_wxyz", [1, 0, 0, 0])
@@ -250,6 +260,16 @@ def main():
                         rm(ent)
         result.setdefault(aid, {})[str(mid)] = row
         print(f"{aid}/m{mid}: {row.get('colors', row.get('error'))}", flush=True)
+        try:
+            import sapien.render as _sr
+
+            _sr.clear_cache()
+        except Exception:  # noqa: BLE001
+            pass
+        if "buffer" in str(row.get("error", "")):
+            print("渲染缓存耗尽，保存进度并退出（外层会重启续测）", flush=True)
+            result[aid].pop(str(mid), None)
+            break
 
     Path(a.out).write_text(
         json.dumps(
