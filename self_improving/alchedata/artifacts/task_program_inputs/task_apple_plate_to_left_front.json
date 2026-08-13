@@ -1,0 +1,36 @@
+{
+  "schema_version": "alchedata.robotwin_task_program_input.v0",
+  "task_id": "task_apple_plate_to_left_front",
+  "variant": "same_scene_alternate_region",
+  "language_prompt": "move the apple from the left rear pose into the left front reachable area",
+  "scene_id": "scene_apple_plate_shared_two_task_v0",
+  "placement_spec": "runs/scene_task_decoupling/shared_apple_plate_scene.json",
+  "placement_sha256": "c39169d68ab617debdd8b4462d7bc9d30ad6fae0ce5c3d4aa9e4a34893bee592",
+  "task_binding": {
+    "template": "place_in_region",
+    "source_object_id": "apple_1",
+    "target_region": "left_front_reachable_area"
+  },
+  "robotwin_adapter": {
+    "backend": "RoboTwin/SAPIEN",
+    "entrypoint": "scripts/run_generated_selection2env_rollout_probe.py",
+    "task_config": "demo_clean",
+    "python_env": "/home/jingxiang/miniconda3/envs/robotwin-5090",
+    "requires_robotwin_root": true
+  },
+  "verifier": {
+    "type": "simulator_state_and_visual",
+    "relation": "in_region",
+    "source_object_id": "apple_1",
+    "success_conditions": [
+      "generated play_once completes without planner failure",
+      "simulator-state relation predicate passes",
+      "both grippers are open after release",
+      "head and observer camera artifacts are nonblank"
+    ],
+    "target_region": "left_front_reachable_area"
+  },
+  "execution_evidence": {
+    "rollout_report": "runs/scene_task_decoupling/apple_to_left_front/rollout_report.json"
+  }
+}

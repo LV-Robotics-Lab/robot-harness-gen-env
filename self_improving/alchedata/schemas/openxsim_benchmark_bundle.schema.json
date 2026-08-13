@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alchedata.local/schemas/openxsim_benchmark_bundle.schema.json",
+  "title": "PEARL Open X Sim Benchmark Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "benchmark_id",
+    "task_name",
+    "simulator_adapter",
+    "status",
+    "video_capture",
+    "command_loop",
+    "artifacts",
+    "next_data_requirement",
+    "claim_boundary"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "alchedata.openxsim_benchmark_bundle.v0"
+    },
+    "benchmark_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "simulator_adapter": {
+      "const": "RoboTwin/SAPIEN"
+    },
+    "status": {
+      "const": "pass_openxsim_scripted_benchmark_bundle"
+    },
+    "video_capture": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["mode", "endpoint_only", "frame_count", "fps", "duration_sec", "capture_stride_sim_steps"],
+      "properties": {
+        "mode": {"const": "robotwin_native_save_frequency_hook"},
+        "endpoint_only": {"const": false},
+        "frame_count": {"type": "integer", "minimum": 24},
+        "fps": {"type": "number", "exclusiveMinimum": 0},
+        "duration_sec": {"type": "number", "minimum": 2},
+        "capture_stride_sim_steps": {"type": "integer", "minimum": 1}
+      }
+    },
+    "command_loop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["/gen-env", "/collect", "/diagnose", "/evaluate"],
+      "properties": {
+        "/gen-env": {"$ref": "#/$defs/stage"},
+        "/collect": {"$ref": "#/$defs/stage"},
+        "/diagnose": {"$ref": "#/$defs/stage"},
+        "/evaluate": {"$ref": "#/$defs/stage"}
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_state",
+        "events",
+        "scene_manifest",
+        "task_manifest",
+        "rollout_report",
+        "rollout_events",
+        "move_events",
+        "failure_diagnosis",
+        "observer_video"
+      ],
+      "properties": {
+        "run_state": {"$ref": "#/$defs/path"},
+        "events": {"$ref": "#/$defs/path"},
+        "scene_manifest": {"$ref": "#/$defs/path"},
+        "task_manifest": {"$ref": "#/$defs/path"},
+        "rollout_report": {"$ref": "#/$defs/path"},
+        "rollout_events": {"$ref": "#/$defs/path"},
+        "move_events": {"$ref": "#/$defs/path"},
+        "failure_diagnosis": {"$ref": "#/$defs/path"},
+        "observer_video": {"$ref": "#/$defs/path"}
+      }
+    },
+    "next_data_requirement": {
+      "type": "string",
+      "minLength": 1
+    },
+    "claim_boundary": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["status", "artifact"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifact": {"$ref": "#/$defs/path"}
+      }
+    }
+  }
+}

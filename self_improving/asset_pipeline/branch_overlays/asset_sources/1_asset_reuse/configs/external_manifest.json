@@ -1,0 +1,228 @@
+{
+  "comment": "External asset import manifest. Grouped by NVIDIA asset-server prefix; items grouped into RoboTwin-style multi-model asset dirs (3XX numbering). 'flat' relaxes the upright gate to 45 deg for objects whose natural rest pose is lying down. Optional per-asset 'size_policy': match_category (default; rescale only when max-dim ratio vs same-category median is outside [0.6,1.6]) | absolute:<meters> | none. Per-item 'collision': coacd|copy (coacd = offline convex decomposition for clean contacts/interiors). Per-item 'reorient': settle (bake physical rest pose into mesh before gating; for sources whose declared axis mismatches geometry).",
+  "groups": [
+    {
+      "name": "ycb_axis_aligned",
+      "prefix": "Assets/Isaac/5.1/Isaac/Props/YCB/Axis_Aligned",
+      "items": [
+        {
+          "usd": "025_mug.usd",
+          "asset": "301_cup",
+          "model": 0,
+          "category": "cup",
+          "aliases": [
+            "cup",
+            "mug"
+          ],
+          "colors": [
+            "red"
+          ],
+          "footprint": "circle",
+          "collision": "coacd"
+        },
+        {
+          "usd": "002_master_chef_can.usd",
+          "asset": "302_can",
+          "model": 0,
+          "category": "can",
+          "aliases": [
+            "can"
+          ],
+          "footprint": "circle"
+        },
+        {
+          "usd": "005_tomato_soup_can.usd",
+          "asset": "302_can",
+          "model": 1
+        },
+        {
+          "usd": "007_tuna_fish_can.usd",
+          "asset": "302_can",
+          "model": 2
+        },
+        {
+          "usd": "010_potted_meat_can.usd",
+          "asset": "302_can",
+          "model": 3
+        },
+        {
+          "usd": "003_cracker_box.usd",
+          "asset": "303_box",
+          "model": 0,
+          "category": "box",
+          "aliases": [
+            "box",
+            "storage box"
+          ]
+        },
+        {
+          "usd": "004_sugar_box.usd",
+          "asset": "303_box",
+          "model": 1
+        },
+        {
+          "usd": "008_pudding_box.usd",
+          "asset": "303_box",
+          "model": 2
+        },
+        {
+          "usd": "009_gelatin_box.usd",
+          "asset": "303_box",
+          "model": 3
+        },
+        {
+          "usd": "006_mustard_bottle.usd",
+          "asset": "304_bottle",
+          "model": 0,
+          "category": "bottle",
+          "aliases": [
+            "bottle"
+          ],
+          "footprint": "circle",
+          "collision": "coacd"
+        },
+        {
+          "usd": "021_bleach_cleanser.usd",
+          "asset": "304_bottle",
+          "model": 1,
+          "collision": "coacd"
+        },
+        {
+          "usd": "024_bowl.usd",
+          "asset": "305_bowl",
+          "model": 0,
+          "category": "bowl",
+          "aliases": [
+            "bowl"
+          ],
+          "footprint": "circle",
+          "collision": "coacd"
+        },
+        {
+          "usd": "036_wood_block.usd",
+          "asset": "306_block",
+          "model": 0,
+          "category": "block",
+          "aliases": [
+            "block",
+            "cube"
+          ]
+        },
+        {
+          "usd": "061_foam_brick.usd",
+          "asset": "306_block",
+          "model": 1
+        },
+        {
+          "usd": "011_banana.usd",
+          "asset": "307_banana",
+          "model": 0,
+          "category": "banana",
+          "aliases": [
+            "banana"
+          ],
+          "flat": true
+        },
+        {
+          "usd": "019_pitcher_base.usd",
+          "asset": "308_pitcher",
+          "model": 0,
+          "category": "pitcher",
+          "aliases": [
+            "pitcher",
+            "jug"
+          ],
+          "footprint": "circle",
+          "collision": "coacd"
+        },
+        {
+          "usd": "035_power_drill.usd",
+          "asset": "309_power_drill",
+          "model": 0,
+          "category": "power_drill",
+          "aliases": [
+            "power drill",
+            "drill"
+          ],
+          "flat": true
+        },
+        {
+          "usd": "037_scissors.usd",
+          "asset": "310_scissors",
+          "model": 0,
+          "category": "scissors",
+          "aliases": [
+            "scissors"
+          ],
+          "flat": true,
+          "reorient": "settle"
+        },
+        {
+          "usd": "040_large_marker.usd",
+          "asset": "311_marker",
+          "model": 0,
+          "category": "marker",
+          "aliases": [
+            "marker",
+            "pen"
+          ],
+          "flat": true
+        },
+        {
+          "usd": "051_large_clamp.usd",
+          "asset": "312_clamp",
+          "model": 0,
+          "category": "clamp",
+          "aliases": [
+            "clamp"
+          ],
+          "flat": true,
+          "reorient": "settle"
+        },
+        {
+          "usd": "052_extra_large_clamp.usd",
+          "asset": "312_clamp",
+          "model": 1,
+          "flat": true,
+          "reorient": "settle"
+        }
+      ]
+    },
+    {
+      "name": "mugs",
+      "prefix": "Assets/Isaac/5.1/Isaac/Props/Mugs",
+      "items": [
+        {
+          "usd": "SM_Mug_A2.usd",
+          "asset": "313_cup",
+          "model": 0,
+          "category": "cup",
+          "aliases": [
+            "cup",
+            "mug"
+          ],
+          "footprint": "circle",
+          "reorient": "settle"
+        },
+        {
+          "usd": "SM_Mug_B1.usd",
+          "asset": "313_cup",
+          "model": 1,
+          "reorient": "settle"
+        },
+        {
+          "usd": "SM_Mug_C1.usd",
+          "asset": "313_cup",
+          "model": 2,
+          "reorient": "settle"
+        },
+        {
+          "usd": "SM_Mug_D1.usd",
+          "asset": "313_cup",
+          "model": 3,
+          "reorient": "settle"
+        }
+      ]
+    }
+  ]
+}

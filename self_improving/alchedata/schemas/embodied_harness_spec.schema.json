@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alchedata.local/schemas/embodied_harness_spec.schema.json",
+  "title": "PEARL Embodied Harness Spec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "paper_claim",
+    "loop_steps",
+    "embodied_surfaces",
+    "novelty_table",
+    "command_routing",
+    "figure",
+    "proof_obligations",
+    "claim_boundary"
+  ],
+  "properties": {
+    "schema_version": { "const": "alchedata.embodied_harness_spec.v1" },
+    "status": { "const": "pass_embodied_harness_spec" },
+    "paper_claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "working_claim",
+        "priority_claim_status",
+        "prohibited_public_claim",
+        "claim_scope",
+        "object_under_test",
+        "evolving_harness",
+        "attribution_control",
+        "thesis"
+      ],
+      "properties": {
+        "working_claim": { "$ref": "#/$defs/text" },
+        "priority_claim_status": { "const": "not_established" },
+        "prohibited_public_claim": { "const": "first real embodied harness system" },
+        "claim_scope": { "$ref": "#/$defs/text" },
+        "object_under_test": { "$ref": "#/$defs/text" },
+        "evolving_harness": { "$ref": "#/$defs/text_array" },
+        "attribution_control": { "$ref": "#/$defs/text" },
+        "thesis": { "$ref": "#/$defs/text_array" }
+      }
+    },
+    "loop_steps": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": { "$ref": "#/$defs/loop_step" }
+    },
+    "embodied_surfaces": {
+      "type": "array",
+      "minItems": 10,
+      "items": { "$ref": "#/$defs/surface" }
+    },
+    "novelty_table": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/comparison" }
+    },
+    "command_routing": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/route" }
+    },
+    "figure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["caption", "brief", "asset"],
+      "properties": {
+        "caption": { "$ref": "#/$defs/text" },
+        "brief": { "$ref": "#/$defs/text_array" },
+        "asset": { "$ref": "#/$defs/text" }
+      }
+    },
+    "proof_obligations": {
+      "type": "array",
+      "minItems": 4,
+      "items": { "$ref": "#/$defs/proof" }
+    },
+    "claim_boundary": { "$ref": "#/$defs/text" }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1 },
+    "text_array": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/text" }
+    },
+    "loop_step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["order", "sketch_term", "pearl_term", "inputs", "outputs", "gate", "evidence"],
+      "properties": {
+        "order": { "type": "integer", "minimum": 1, "maximum": 9 },
+        "sketch_term": { "$ref": "#/$defs/text" },
+        "pearl_term": { "$ref": "#/$defs/text" },
+        "inputs": { "$ref": "#/$defs/text_array" },
+        "outputs": { "$ref": "#/$defs/text_array" },
+        "gate": { "$ref": "#/$defs/text" },
+        "evidence": { "$ref": "#/$defs/text_array" }
+      }
+    },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surface", "contract", "artifacts"],
+      "properties": {
+        "surface": { "$ref": "#/$defs/text" },
+        "contract": { "$ref": "#/$defs/text" },
+        "artifacts": { "$ref": "#/$defs/text_array" }
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["comparison", "overlap", "pearl_hypothesis", "implemented_evidence", "missing_evidence"],
+      "properties": {
+        "comparison": { "$ref": "#/$defs/text" },
+        "overlap": { "$ref": "#/$defs/text" },
+        "pearl_hypothesis": { "$ref": "#/$defs/text" },
+        "implemented_evidence": { "$ref": "#/$defs/text" },
+        "missing_evidence": { "$ref": "#/$defs/text" }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "harness_surfaces", "required_fields", "promotion_gate", "evidence"],
+      "properties": {
+        "command": { "enum": ["/gen-env", "/collect", "/evaluate", "/diagnose", "/transfer"] },
+        "harness_surfaces": { "$ref": "#/$defs/text_array" },
+        "required_fields": { "$ref": "#/$defs/text_array" },
+        "promotion_gate": { "$ref": "#/$defs/text" },
+        "evidence": { "$ref": "#/$defs/text" }
+      }
+    },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim", "status", "required_next_evidence"],
+      "properties": {
+        "claim": { "$ref": "#/$defs/text" },
+        "status": { "enum": ["proven_bounded", "partially_proven", "not_run", "not_established"] },
+        "required_next_evidence": { "$ref": "#/$defs/text" }
+      }
+    }
+  }
+}

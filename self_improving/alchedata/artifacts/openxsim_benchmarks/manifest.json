@@ -1,0 +1,26 @@
+{
+  "schema_version": "alchedata.openxsim_benchmark_manifest.v0",
+  "status": "pass_three_openxsim_benchmark_bundles",
+  "benchmark_count": 3,
+  "benchmarks": [
+    {
+      "benchmark_id": "robotwin_open_laptop_seed_0",
+      "task_name": "open_laptop",
+      "status": "pass_openxsim_scripted_benchmark_bundle",
+      "manifest": "artifacts/openxsim_benchmarks/open_laptop/benchmark_manifest.json"
+    },
+    {
+      "benchmark_id": "robotwin_place_mouse_pad_seed_0",
+      "task_name": "place_mouse_pad",
+      "status": "pass_openxsim_scripted_benchmark_bundle",
+      "manifest": "artifacts/openxsim_benchmarks/place_mouse_pad/benchmark_manifest.json"
+    },
+    {
+      "benchmark_id": "robotwin_place_container_plate_seed_0",
+      "task_name": "place_container_plate",
+      "status": "pass_openxsim_scripted_benchmark_bundle",
+      "manifest": "artifacts/openxsim_benchmarks/place_container_plate/benchmark_manifest.json"
+    }
+  ],
+  "claim_boundary": "Three official RoboTwin scripted benchmark bundles with unified command-loop artifacts; not three learned-policy evaluations."
+}

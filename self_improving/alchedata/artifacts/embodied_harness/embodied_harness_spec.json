@@ -1,0 +1,293 @@
+{
+  "schema_version": "alchedata.embodied_harness_spec.v1",
+  "status": "pass_embodied_harness_spec",
+  "paper_claim": {
+    "working_claim": "PEARL is an embodied harness system that versions and evaluates the experimental machinery around an embodied model or policy.",
+    "priority_claim_status": "not_established",
+    "prohibited_public_claim": "first real embodied harness system",
+    "claim_scope": "system framing, implemented artifact contract, and bounded evidence for a fixed-checkpoint harness edit, memory-mediated adapter selection, task-semantic second-simulator execution, and privileged policy promotion",
+    "object_under_test": "A versioned embodied model or policy checkpoint executed on a declared scene, task, embodiment, and simulator or robot adapter.",
+    "evolving_harness": [
+      "prompts",
+      "tools",
+      "simulator_adapters",
+      "reset_protocols",
+      "evaluation_protocols",
+      "validators",
+      "memory",
+      "data_requirements",
+      "promotion_rules",
+      "rollback_pointers"
+    ],
+    "attribution_control": "During a harness-candidate regression comparison, the model or policy checkpoint, seeds, task set, and declared environment conditions stay fixed. Policy retraining is a separate versioned intervention and cannot be credited as a harness-only gain.",
+    "thesis": [
+      "PEARL treats embodied experimentation as a versioned harness around a model or policy under test, rather than treating every failure as permission to change the policy, task, scene, simulator, and metric at once.",
+      "The harness state h_t makes reset, observations, actions, tools, adapters, validators, memory, data requirements, safety limits, and rollback explicit. Each execution emits traces that can be clustered into weaknesses and translated into a bounded candidate edit.",
+      "A candidate becomes h_{t+1} only after replay and regression gates pass under controlled attribution. Rejected candidates remain evidence, and failed policy promotion remains a valid result rather than being rewritten as success.",
+      "The current workspace includes four bounded results: a fixed-checkpoint RGB-adapter edit improves 0/3 to 3/3; failure memory selects that correction under a matched 0/3 versus 3/3 protocol; one normalized task executes five task-semantic commands in Isaac with 120 trace steps and a passing verifier; and a privileged pose-conditioned open-loop policy passes 4/4 held-out placements, 4/4 domain-randomized placements, and 3/3 fixed-placement seeds on a second task. These results do not establish publication priority, real-robot evolution, robot-policy cross-simulator transfer, or a visual language policy."
+    ]
+  },
+  "loop_steps": [
+    {
+      "order": 1,
+      "sketch_term": "current harness h_t",
+      "pearl_term": "versioned command, adapter, validator, memory, task-set, and rollback state",
+      "inputs": ["harness_version", "policy_checkpoint", "task_set", "seed_plan"],
+      "outputs": ["declared_execution_contract"],
+      "gate": "all referenced schemas, adapters, tasks, and checkpoints resolve before execution",
+      "evidence": ["artifacts/openxsim/openxsim_command_registry.json", "schemas/pearl_command.schema.json"]
+    },
+    {
+      "order": 2,
+      "sketch_term": "embodied task execution",
+      "pearl_term": "/collect or /evaluate through a simulator or robot adapter",
+      "inputs": ["declared_execution_contract", "reset_protocol", "observation_action_interface"],
+      "outputs": ["run_state", "events", "rollout_traces", "verifier_result"],
+      "gate": "execution completion, trace completeness, and task success are recorded separately",
+      "evidence": ["artifacts/openxsim_benchmarks/manifest.json", "runs/act_eval_native_sync_rgb_chunk161_1200e_best/evaluate_report.json"]
+    },
+    {
+      "order": 3,
+      "sketch_term": "weakness mining",
+      "pearl_term": "/diagnose over state, action, gripper, camera, contact, and verifier traces",
+      "inputs": ["rollout_traces", "object_state", "arm_motion", "gripper_state", "visual_observations"],
+      "outputs": ["dense_category_verdicts", "root_cause_hypotheses"],
+      "gate": "the diagnosis cites concrete trace fields and distinguishes observed, not observed, and unresolvable",
+      "evidence": ["artifacts/diagnosis/native_act_closed_loop_diagnosis.json", "artifacts/openxsim_benchmarks/*/failure_diagnosis.json"]
+    },
+    {
+      "order": 4,
+      "sketch_term": "clustered failure patterns",
+      "pearl_term": "failure clusters linked to next data or harness requirements",
+      "inputs": ["dense_category_verdicts", "per_episode_results"],
+      "outputs": ["failure_cluster", "next_data_requirement"],
+      "gate": "clusters retain episode and artifact provenance instead of relying on a summary score alone",
+      "evidence": ["artifacts/diagnosis/placement_robustness_diagnosis.json", "artifacts/embodied_harness/fixed_checkpoint_rgb_ablation_v1.json", "artifacts/text2env_empirics/memory_ablation_rgb_adapter_v1.json"]
+    },
+    {
+      "order": 5,
+      "sketch_term": "harness proposal",
+      "pearl_term": "bounded proposal against one or more typed harness surfaces",
+      "inputs": ["failure_cluster", "current_harness", "allowed_edit_surfaces"],
+      "outputs": ["proposal_record", "expected_effect", "risk_and_rollback_plan"],
+      "gate": "proposal names the changed surface, expected effect, confounds, owner, and rollback pointer",
+      "evidence": ["artifacts/diagnosis/placement_robustness_diagnosis.json", "artifacts/text2env_empirics/rgb_adapter_failure_memory_v1.json"]
+    },
+    {
+      "order": 6,
+      "sketch_term": "proposed edits",
+      "pearl_term": "versioned schema, prompt, tool, adapter, validator, reset, or data-requirement patch",
+      "inputs": ["proposal_record"],
+      "outputs": ["candidate_diff", "candidate_harness_version"],
+      "gate": "the diff is narrow enough to attribute and does not silently change the policy checkpoint or benchmark",
+      "evidence": ["schemas/gen_env.schema.json", "artifacts/openxsim/openxsim_adapter_matrix.json", "scripts/harness_observation_adapter.py"]
+    },
+    {
+      "order": 7,
+      "sketch_term": "regression test",
+      "pearl_term": "schema validation, simulator replay, visual checks, and held-out evaluation",
+      "inputs": ["candidate_harness_version", "fixed_checkpoint", "regression_task_set"],
+      "outputs": ["regression_report", "safety_verdict", "artifact_integrity_verdict"],
+      "gate": "candidate and baseline use matched checkpoints, seeds, tasks, and declared environment conditions",
+      "evidence": ["scripts/verify_workspace.py", "artifacts/scene_task_decoupling/apple_plate_two_tasks.json", "artifacts/diagnosis/placement_robustness_diagnosis.json", "runs/harness_ablation_rgb_swap_baseline_v1/evaluate_report.json", "runs/harness_ablation_rgb_identity_candidate_v1/evaluate_report.json", "runs/isaac_openxsim_place_container_plate_v1/bundle_manifest.json", "artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json"]
+    },
+    {
+      "order": 8,
+      "sketch_term": "promotion decision",
+      "pearl_term": "accept, reject, or block candidate using declared gates",
+      "inputs": ["regression_report", "promotion_thresholds", "claim_boundary"],
+      "outputs": ["promotion_record", "rejection_evidence"],
+      "gate": "no promotion on infrastructure completion alone; task, safety, robustness, and provenance gates remain distinct",
+      "evidence": ["artifacts/diagnosis/placement_robustness_diagnosis.json", "artifacts/embodied_harness/fixed_checkpoint_rgb_ablation_v1.json", "artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json"]
+    },
+    {
+      "order": 9,
+      "sketch_term": "updated harness h_{t+1}",
+      "pearl_term": "committed harness state with parent and rollback pointers",
+      "inputs": ["accepted_candidate", "parent_harness_version"],
+      "outputs": ["new_harness_version", "rollback_pointer", "audit_log"],
+      "gate": "only accepted candidates change the active harness; rejected candidates remain immutable evidence",
+      "evidence": ["docs/todo_completion_audit.md", "external_sources.lock.json", "artifacts/embodied_harness/fixed_checkpoint_rgb_ablation_v1.json", "artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json"]
+    }
+  ],
+  "embodied_surfaces": [
+    {
+      "surface": "reset",
+      "contract": "robot or simulator reset state, seed, placement, calibration, and failure mode",
+      "artifacts": ["run_state.json", "scene_manifest.json"]
+    },
+    {
+      "surface": "observations",
+      "contract": "camera views, proprioception, object state, timing, and channel conventions",
+      "artifacts": ["camera PNG/MP4", "object_states.jsonl", "HDF5 observations"]
+    },
+    {
+      "surface": "actions",
+      "contract": "action space, controller, frequency, gripper semantics, and temporal alignment",
+      "artifacts": ["action traces", "move_events.jsonl", "HDF5 action"]
+    },
+    {
+      "surface": "tool_calls",
+      "contract": "planner, simulator, renderer, asset, and validation tool inputs and outputs",
+      "artifacts": ["events.jsonl", "command envelopes"]
+    },
+    {
+      "surface": "simulator_adapters",
+      "contract": "engine, renderer, asset/material format, reset/step/verifier mapping, and access terms",
+      "artifacts": ["openxsim_adapter_matrix.json", "adapter manifest"]
+    },
+    {
+      "surface": "safety_limits",
+      "contract": "workspace, collision, velocity, contact, termination, and robot constraints",
+      "artifacts": ["robot_constraints", "safety verdict"]
+    },
+    {
+      "surface": "real_sim_traces",
+      "contract": "timestamped state, action, image, contact, process, and verifier evidence",
+      "artifacts": ["run_state.json", "events.jsonl", "rollout logs"]
+    },
+    {
+      "surface": "validation_rules",
+      "contract": "schema, import, physics, visual, task, robustness, and provenance gates",
+      "artifacts": ["verifier report", "success verifier", "visual review"]
+    },
+    {
+      "surface": "data_requirements",
+      "contract": "failure-linked collection request with coverage, diversity, and split criteria",
+      "artifacts": ["next_data_requirement", "dataset manifest"]
+    },
+    {
+      "surface": "memory",
+      "contract": "versioned failure, proposal, decision, and reusable debug record with provenance",
+      "artifacts": ["diagnosis record", "audit log"]
+    },
+    {
+      "surface": "rollback",
+      "contract": "parent harness, candidate diff, rejected evidence, and restoration pointer",
+      "artifacts": ["parent_version", "rollback_pointer", "commit"]
+    }
+  ],
+  "novelty_table": [
+    {
+      "comparison": "LLM coding harnesses",
+      "overlap": "execution, tests, repair, tools, memory, and regression gates",
+      "pearl_hypothesis": "Embodied reset, observation/action timing, simulator adapters, safety, physical state traces, and task verifiers require a richer harness contract.",
+      "implemented_evidence": "Typed Open X Sim commands, simulator runs, media, state traces, verifiers, a fixed-checkpoint RGB-adapter promotion, and a matched memory-mediated adapter-selection result are present.",
+      "missing_evidence": "No matched comparison against a coding-harness baseline has run."
+    },
+    {
+      "comparison": "ASPIRE",
+      "overlap": "multimodal rollout traces, code-as-policy repair, held-out regression, and reusable skill framing",
+      "pearl_hypothesis": "PEARL versions scene, task, adapter, data, validator, and rollback surfaces in addition to program repair.",
+      "implemented_evidence": "Scene-task decoupling, command artifacts, dense traces, failure-to-data execution, and one matched failure-memory adapter-selection ablation exist.",
+      "missing_evidence": "No matched ASPIRE implementation or reusable skill-library comparison exists."
+    },
+    {
+      "comparison": "ENPIRE",
+      "overlap": "reset, execute, verify, refine, and repeated real-world improvement loops",
+      "pearl_hypothesis": "PEARL exposes simulation-first scene/task/adapter artifacts and transfer contracts before real-robot promotion.",
+      "implemented_evidence": "RoboTwin/SAPIEN robot-action command loops and one Isaac task-semantic five-command bundle with a target verifier exist.",
+      "missing_evidence": "No real-robot harness evolution or sim-to-real transfer result exists."
+    },
+    {
+      "comparison": "RoboTwin/Text2Env",
+      "overlap": "task generation, scene assets, simulator execution, data collection, and code repair",
+      "pearl_hypothesis": "Text2Env becomes one /gen-env route inside a larger versioned harness with independent collection, diagnosis, evaluation, transfer, and rollback.",
+      "implemented_evidence": "Selection2env, same-scene two-task execution, command schemas, benchmark bundles, an Isaac task-semantic transfer, and an observation-derived native-material roundtrip exist.",
+      "missing_evidence": "Generative scene synthesis, source-asset/material identity, and robot-policy transfer are not complete."
+    },
+    {
+      "comparison": "standard VLA evaluation",
+      "overlap": "held-out tasks, success metrics, rollout traces, and benchmark comparison",
+      "pearl_hypothesis": "Evaluation failures become typed harness proposals and data requirements with explicit regression and rollback gates.",
+      "implemented_evidence": "The failed ACT promotion remains recorded, while a separate privileged pose-conditioned open-loop policy passes 4/4 held-out, 4/4 randomized, and 3/3 fixed-placement second-task gates.",
+      "missing_evidence": "No visual, language-conditioned, closed-loop broad task policy is established."
+    }
+  ],
+  "command_routing": [
+    {
+      "command": "/gen-env",
+      "harness_surfaces": ["simulator_adapters", "validation_rules", "reset"],
+      "required_fields": ["scene_manifest", "task_manifest", "asset_manifest", "success_verifier", "blockers"],
+      "promotion_gate": "schema, asset provenance, import, placement, visual, physics, and verifier gates",
+      "evidence": "artifacts/gen_env_contract/gen_env_contract_manifest.json"
+    },
+    {
+      "command": "/collect",
+      "harness_surfaces": ["reset", "observations", "actions", "real_sim_traces", "data_requirements"],
+      "required_fields": ["seed_plan", "reset_record", "state_trace", "action_trace", "camera_trace", "dataset_manifest"],
+      "promotion_gate": "trace completeness, temporal alignment, data diversity, and declared collection provenance",
+      "evidence": "runs/generated_collect_apple_plate_native_sync/collection_report.json"
+    },
+    {
+      "command": "/evaluate",
+      "harness_surfaces": ["validation_rules", "safety_limits", "real_sim_traces", "rollback"],
+      "required_fields": ["checkpoint", "eval_split", "verifier", "per_episode_results", "promotion_decision"],
+      "promotion_gate": "matched checkpoint and protocol, task success, safety, held-out robustness, and provenance",
+      "evidence": "artifacts/diagnosis/placement_robustness_diagnosis.json"
+    },
+    {
+      "command": "/diagnose",
+      "harness_surfaces": ["real_sim_traces", "memory", "data_requirements", "validation_rules"],
+      "required_fields": ["failure_cluster", "root_cause_hypothesis", "trace_provenance", "next_data_requirement", "proposed_edit"],
+      "promotion_gate": "diagnosis must cite trace evidence and preserve unknown or unresolvable states",
+      "evidence": "artifacts/diagnosis/native_act_closed_loop_diagnosis.json"
+    },
+    {
+      "command": "/transfer",
+      "harness_surfaces": ["simulator_adapters", "tool_calls", "validation_rules", "rollback"],
+      "required_fields": ["source", "engine_renderer", "asset_format", "material_system", "reset_step_verifier_api", "license_access", "migration_difficulty"],
+      "promotion_gate": "license/access, asset/material translation, reset/step/verifier parity, and smoke execution",
+      "evidence": "artifacts/openxsim/openxsim_adapter_matrix.json"
+    }
+  ],
+  "figure": {
+    "caption": "PEARL maintains a versioned embodied harness h_t around a declared model or policy checkpoint. It executes tasks through simulator or robot adapters, records synchronized state, action, visual, contact, tool, and verifier traces, clusters weaknesses, and proposes bounded edits to harness surfaces. Candidate edits run matched regression and safety gates; accepted candidates become h_{t+1}, while rejected candidates remain evidence with rollback context.",
+    "brief": [
+      "Left: h_t as a versioned container around a fixed checkpoint, prompts, tools, adapters, reset/eval protocols, validators, memory, data requirements, and rollback.",
+      "Top: embodied execution and trace collection, visually separating execution completion from task success.",
+      "Center: weakness mining and clustered failure patterns linked to concrete trace provenance.",
+      "Bottom: bounded candidate edits and matched regression gates with explicit accept, reject, and blocked outcomes.",
+      "Right: h_{t+1} with parent and rollback arrows; policy retraining is shown as a separate intervention, not a hidden harness edit."
+    ],
+    "asset": "reports/embodied_harness/assets/embodied_harness_loop.png"
+  },
+  "proof_obligations": [
+    {
+      "claim": "implemented embodied harness artifact contract",
+      "status": "proven_bounded",
+      "required_next_evidence": "Replicate the candidate-promotion contract beyond one fixed scene and observation adapter."
+    },
+    {
+      "claim": "harness edits improve outcomes independently of policy changes",
+      "status": "proven_bounded",
+      "required_next_evidence": "Repeat the matched fixed-checkpoint result on signature-disjoint placements, another task, and declared domain randomization."
+    },
+    {
+      "claim": "Open X Sim supports task-semantic reuse across simulators",
+      "status": "proven_bounded",
+      "required_next_evidence": "Repeat with robot embodiment, joint-action policy, source assets and materials, and at least one additional task."
+    },
+    {
+      "claim": "failure memory can improve a controlled harness decision",
+      "status": "proven_bounded",
+      "required_next_evidence": "Repeat across multiple independent failure classes, tasks, and null-effect controls rather than one RGB-channel repair."
+    },
+    {
+      "claim": "a learned policy can pass the bounded SceneAgent promotion contract",
+      "status": "proven_bounded",
+      "required_next_evidence": "Replace privileged initial-pose open-loop control with visual or language-conditioned closed-loop policies and broader task splits."
+    },
+    {
+      "claim": "real-robot harness evolution",
+      "status": "not_run",
+      "required_next_evidence": "Execute a safety-reviewed harness transition on hardware with calibrated reset, traces, verifier, rollback, and intervention attribution."
+    },
+    {
+      "claim": "first real embodied harness system",
+      "status": "not_established",
+      "required_next_evidence": "Systematic priority search, precise definition, independent related-work audit, and public timestamp evidence."
+    }
+  ],
+  "claim_boundary": "This spec supports a scoped PEARL embodied-harness framing, an implemented artifact contract, one fixed-checkpoint RGB-adapter causal result, one matched memory-mediated correction, one task-semantic second-simulator command bundle, and one privileged pose-conditioned open-loop policy promotion. It does not establish first-in-field priority, real-robot evolution, robot-policy cross-simulator transfer, source-asset or material parity, intrinsic neural-material recovery, or a visual language closed-loop policy."
+}

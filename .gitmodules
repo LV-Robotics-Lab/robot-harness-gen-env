@@ -1,0 +1,8 @@
+[submodule "external/OpenReal2Sim"]
+	path = external/OpenReal2Sim
+	url = https://github.com/LV-Robotics-Lab/OpenReal2Sim.git
+	branch = integration/self-improving
+[submodule "external/digital-cousins"]
+	path = external/digital-cousins
+	url = https://github.com/LV-Robotics-Lab/digital-cousins.git
+	branch = integration/self-improving

@@ -1,0 +1,659 @@
+{
+  "catalog_version": "robotwin.tabletop_asset_catalog.v0",
+  "catalog_name": "robotwin_tabletop_assets_master",
+  "updated_at": "2026-07-02",
+  "purpose": "Master RoboTwin tabletop asset catalog for placement-agent scene generation. Prompt-specific catalogs should select from this file and only store overrides.",
+  "source": {
+    "robotwin_root": "~/RoboTwin",
+    "objects_root": "~/RoboTwin/assets/objects",
+    "source_machine_path": "/data/sdb/zhengye/RoboTwin/assets/objects"
+  },
+  "entries": [
+    {
+      "asset_id": "035_apple",
+      "semantic_name": "apple",
+      "category": "fruit",
+      "aliases": [
+        "apple",
+        "fruit apple"
+      ],
+      "tags": [
+        "apple",
+        "fruit",
+        "round",
+        "graspable",
+        "tabletop"
+      ],
+      "asset_type": "rigid",
+      "robotwin_path": "~/RoboTwin/assets/objects/035_apple",
+      "available_model_ids": [
+        0,
+        1
+      ],
+      "default_model_id": 0,
+      "files": {
+        "visual": [
+          "visual/base0.glb",
+          "visual/base1.glb"
+        ],
+        "collision": [
+          "collision/base0.glb",
+          "collision/base1.glb"
+        ],
+        "model_data": [
+          "model_data0.json",
+          "model_data1.json"
+        ],
+        "points_info": "points_info.json"
+      },
+      "model_metadata": [
+        {
+          "model_id": 0,
+          "raw_center": [
+            0.0008172467243884321,
+            0.03814048367178239,
+            -0.0011298758841109897
+          ],
+          "raw_extents": [
+            0.09445320561549936,
+            0.0919138697184135,
+            0.07961105329605804
+          ],
+          "scale": [
+            0.7,
+            0.7,
+            0.7
+          ],
+          "approx_scaled_extents_m": [
+            0.06611724393084956,
+            0.06433970880288944,
+            0.05572773730724063
+          ],
+          "stable": true
+        },
+        {
+          "model_id": 1,
+          "raw_center": [
+            -1.4901161193906814e-07,
+            0.03863577172160148,
+            7.810114255840798e-19
+          ],
+          "raw_extents": [
+            0.07726018130779268,
+            0.07727154344320297,
+            0.07365814596414566
+          ],
+          "scale": [
+            0.7,
+            0.7,
+            0.7
+          ],
+          "approx_scaled_extents_m": [
+            0.05408212691545487,
+            0.05409008041024208,
+            0.05156070217490196
+          ],
+          "stable": true
+        }
+      ],
+      "placement_affordances": {
+        "stable_on_table": true,
+        "graspable": true,
+        "support_surface_candidate": false,
+        "role_candidates": [
+          "manipuland_candidate",
+          "distractor"
+        ]
+      },
+      "points": {
+        "contact_points": [
+          {
+            "ids": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "description": "At the center of the apple",
+            "usage": "Used for grasping the apple from top down."
+          }
+        ],
+        "functional_points": []
+      },
+      "retrieval_notes": {
+        "prompt_terms": [
+          "apple"
+        ],
+        "selection_rule": "Use this asset when the placement prompt mentions an apple or a round fruit object."
+      }
+    },
+    {
+      "asset_id": "003_plate",
+      "semantic_name": "plate",
+      "category": "tableware",
+      "aliases": [
+        "plate",
+        "dish"
+      ],
+      "tags": [
+        "plate",
+        "dish",
+        "tableware",
+        "flat",
+        "support_surface",
+        "tabletop"
+      ],
+      "asset_type": "rigid",
+      "robotwin_path": "~/RoboTwin/assets/objects/003_plate",
+      "available_model_ids": [
+        0
+      ],
+      "default_model_id": 0,
+      "files": {
+        "visual": [
+          "visual/base0.glb"
+        ],
+        "collision": [
+          "collision/base0.glb"
+        ],
+        "model_data": [
+          "model_data0.json"
+        ],
+        "points_info": "points_info.json"
+      },
+      "model_metadata": [
+        {
+          "model_id": 0,
+          "raw_center": [
+            -0.0003539751035050815,
+            0.5593997291638277,
+            -0.00017879302435633006
+          ],
+          "raw_extents": [
+            9.189324523776142,
+            1.1188687926189504,
+            9.20081362899733
+          ],
+          "scale": [
+            0.025,
+            0.025,
+            0.025
+          ],
+          "approx_scaled_extents_m": [
+            0.22973311309440356,
+            0.02797171981547376,
+            0.23002034072493324
+          ],
+          "stable": true
+        }
+      ],
+      "placement_affordances": {
+        "stable_on_table": true,
+        "graspable": false,
+        "support_surface_candidate": true,
+        "role_candidates": [
+          "support_or_target_candidate",
+          "container_like_target",
+          "distractor"
+        ]
+      },
+      "points": {
+        "contact_points": [],
+        "functional_points": [
+          {
+            "id": 0,
+            "description": "The center of the plate top surface",
+            "usage": "Used to indicate where to place other objects on the plate."
+          }
+        ]
+      },
+      "retrieval_notes": {
+        "prompt_terms": [
+          "plate",
+          "dish"
+        ],
+        "selection_rule": "Use this asset when the placement prompt mentions a plate, dish, or a flat support surface for food."
+      }
+    },
+    {
+      "asset_id": "069_vagetable",
+      "semantic_name": "vagetable",
+      "category": "food",
+      "aliases": [
+        "vagetable",
+        "vegetable",
+        "veggie"
+      ],
+      "tags": [
+        "vagetable",
+        "vegetable",
+        "food",
+        "tabletop",
+        "graspable"
+      ],
+      "asset_type": "rigid",
+      "robotwin_path": "~/RoboTwin/assets/objects/069_vagetable",
+      "available_model_ids": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "default_model_id": 2,
+      "files": {
+        "visual": [
+          "visual/base0.glb",
+          "visual/base1.glb",
+          "visual/base2.glb",
+          "visual/base3.glb",
+          "visual/base4.glb",
+          "visual/base5.glb",
+          "visual/base6.glb"
+        ],
+        "collision": [
+          "collision/base0.glb",
+          "collision/base1.glb",
+          "collision/base2.glb",
+          "collision/base3.glb",
+          "collision/base4.glb",
+          "collision/base5.glb",
+          "collision/base6.glb"
+        ],
+        "model_data": [
+          "model_data0.json",
+          "model_data1.json",
+          "model_data2.json",
+          "model_data3.json",
+          "model_data4.json",
+          "model_data5.json",
+          "model_data6.json"
+        ],
+        "points_info": "points_info.json"
+      },
+      "model_metadata": [
+        {
+          "model_id": 2,
+          "raw_center": [
+            0.02930667623464407,
+            0.5184626027809279,
+            -0.005641270540778287
+          ],
+          "raw_extents": [
+            2.1891563290793647,
+            1.45606165548848,
+            0.6712120654779623
+          ],
+          "scale": [
+            0.05,
+            0.05,
+            0.05
+          ],
+          "approx_scaled_extents_m": [
+            0.10945781645396824,
+            0.072803082774424,
+            0.03356060327389812
+          ],
+          "stable": false
+        }
+      ],
+      "placement_affordances": {
+        "stable_on_table": false,
+        "graspable": true,
+        "support_surface_candidate": false,
+        "role_candidates": [
+          "scene_object",
+          "manipuland_candidate",
+          "distractor"
+        ]
+      },
+      "points": {
+        "contact_points": [],
+        "functional_points": []
+      },
+      "retrieval_notes": {
+        "prompt_terms": [
+          "vagetable",
+          "vegetable",
+          "veggie"
+        ],
+        "selection_rule": "Use this asset when the placement prompt mentions a vegetable-like food object. The RoboTwin asset directory intentionally spells this as vagetable."
+      }
+    },
+    {
+      "asset_id": "110_basket",
+      "semantic_name": "basket",
+      "category": "container",
+      "aliases": [
+        "basket"
+      ],
+      "tags": [
+        "basket",
+        "container",
+        "tabletop",
+        "graspable",
+        "support_surface"
+      ],
+      "asset_type": "rigid",
+      "robotwin_path": "~/RoboTwin/assets/objects/110_basket",
+      "available_model_ids": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "default_model_id": 0,
+      "files": {
+        "visual": [
+          "visual/base0.glb",
+          "visual/base1.glb",
+          "visual/base2.glb",
+          "visual/base3.glb"
+        ],
+        "collision": [
+          "collision/base0.glb",
+          "collision/base1.glb",
+          "collision/base2.glb",
+          "collision/base3.glb"
+        ],
+        "model_data": [
+          "model_data0.json",
+          "model_data1.json",
+          "model_data2.json",
+          "model_data3.json"
+        ],
+        "points_info": "points_info.json"
+      },
+      "model_metadata": [
+        {
+          "model_id": 0,
+          "raw_center": [
+            6.746175394224274e-05,
+            0.7122694006730915,
+            0.0010830574433379715
+          ],
+          "raw_extents": [
+            1.91571146709009,
+            1.4595062351118098,
+            1.199379781411152
+          ],
+          "scale": [
+            0.12,
+            0.12,
+            0.12
+          ],
+          "approx_scaled_extents_m": [
+            0.2298853760508108,
+            0.17514074821341716,
+            0.14392557376933823
+          ],
+          "stable": true
+        }
+      ],
+      "placement_affordances": {
+        "stable_on_table": true,
+        "graspable": true,
+        "support_surface_candidate": true,
+        "role_candidates": [
+          "container_candidate",
+          "support_or_target_candidate",
+          "distractor"
+        ]
+      },
+      "placement_defaults": {
+        "qpos": [
+          0.70710678,
+          0.70710678,
+          0,
+          0
+        ],
+        "is_static": true,
+        "z_policy": "snap_to_tabletop_on_load",
+        "notes": [
+          "RoboTwin 110_basket appears side-facing with identity orientation.",
+          "x90 qpos was selected from a rendered orientation probe because it makes the basket open upward in the observer camera."
+        ]
+      },
+      "points": {
+        "contact_points": [
+          {
+            "ids": [
+              0,
+              1
+            ],
+            "description": "On the handle of the basket.",
+            "usage": "Used to hold or grip the basket."
+          }
+        ],
+        "functional_points": [
+          {
+            "id": 0,
+            "description": "Above one side of the basket.",
+            "usage": "Used to indicate other objects' positions when placed on the basket."
+          },
+          {
+            "id": 1,
+            "description": "Above the other side of the basket.",
+            "usage": "Used to indicate other objects' positions when placed on the basket."
+          }
+        ]
+      },
+      "retrieval_notes": {
+        "prompt_terms": [
+          "basket"
+        ],
+        "selection_rule": "Use this asset when the placement prompt mentions a basket or tabletop container."
+      }
+    },
+    {
+      "asset_id": "015_laptop",
+      "semantic_name": "laptop",
+      "category": "office",
+      "aliases": [
+        "laptop",
+        "notebook computer",
+        "computer"
+      ],
+      "tags": [
+        "laptop",
+        "computer",
+        "office",
+        "tabletop",
+        "articulated"
+      ],
+      "asset_type": "articulated",
+      "robotwin_path": "~/RoboTwin/assets/objects/015_laptop",
+      "available_model_ids": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "default_model_id": 0,
+      "files": {
+        "urdf": "*/mobility.urdf",
+        "model_data": "*/model_data.json",
+        "points_info": "points_info.json"
+      },
+      "model_metadata": [
+        {
+          "model_id": 0,
+          "robotwin_subdir": "10040",
+          "scale": [
+            0.15,
+            0.15,
+            0.15
+          ],
+          "raw_extents": [
+            1.268553,
+            0.665073,
+            1.439813
+          ],
+          "approx_scaled_extents_m": [
+            0.19028295,
+            0.09976095,
+            0.21597195
+          ],
+          "stable": true
+        }
+      ],
+      "placement_affordances": {
+        "stable_on_table": true,
+        "graspable": false,
+        "support_surface_candidate": false,
+        "role_candidates": [
+          "scene_object",
+          "reference_object",
+          "distractor"
+        ]
+      },
+      "placement_defaults": {
+        "loader": "sapien_urdf",
+        "qpos": [
+          0.7,
+          0,
+          0,
+          0.7
+        ],
+        "is_static": true,
+        "fix_root_link": true,
+        "z_policy": "snap_to_tabletop_on_load",
+        "notes": [
+          "RoboTwin open_laptop uses qpos [0.7, 0, 0, 0.7] and fix_root_link=True when loading 015_laptop."
+        ]
+      },
+      "points": {
+        "contact_points": [],
+        "functional_points": []
+      },
+      "retrieval_notes": {
+        "prompt_terms": [
+          "laptop",
+          "notebook computer",
+          "computer"
+        ],
+        "selection_rule": "Use this asset when the placement prompt mentions a laptop or notebook computer."
+      }
+    },
+    {
+      "asset_id": "034_knife",
+      "semantic_name": "knife",
+      "category": "tableware",
+      "aliases": [
+        "knife"
+      ],
+      "tags": [
+        "knife",
+        "tableware",
+        "tool",
+        "thin",
+        "tabletop"
+      ],
+      "asset_type": "rigid",
+      "robotwin_path": "~/RoboTwin/assets/objects/034_knife",
+      "available_model_ids": [
+        0
+      ],
+      "default_model_id": 0,
+      "files": {
+        "visual": [
+          "visual/base0.glb"
+        ],
+        "collision": [
+          "collision/base0.glb"
+        ],
+        "model_data": [
+          "model_data0.json"
+        ],
+        "points_info": "points_info.json"
+      },
+      "model_metadata": [
+        {
+          "model_id": 0,
+          "raw_center": [
+            0.00014706707680413436,
+            -0.00518529097648603,
+            0.0019079088629515557
+          ],
+          "raw_extents": [
+            0.09775587600243035,
+            1.4940585339120356,
+            0.40469942084235694
+          ],
+          "scale": [
+            0.31,
+            0.31,
+            0.31
+          ],
+          "approx_scaled_extents_m": [
+            0.030304321560753408,
+            0.463158145512731,
+            0.12545682046113063
+          ],
+          "stable": false
+        }
+      ],
+      "placement_affordances": {
+        "stable_on_table": false,
+        "graspable": true,
+        "support_surface_candidate": false,
+        "role_candidates": [
+          "reference_object",
+          "scene_object",
+          "manipuland_candidate"
+        ]
+      },
+      "placement_defaults": {
+        "qpos": [
+          1,
+          0,
+          0,
+          0
+        ],
+        "is_static": true,
+        "z_policy": "snap_to_tabletop_on_load",
+        "notes": [
+          "034_knife is marked stable=false in RoboTwin metadata, so this placement smoke treats it as a static background/reference object."
+        ]
+      },
+      "points": {
+        "contact_points": [
+          {
+            "ids": [
+              0
+            ],
+            "description": "On the handle of the knife.",
+            "usage": "Used for grasping the knife."
+          }
+        ],
+        "functional_points": [
+          {
+            "id": 0,
+            "description": "At the blade of the knife.",
+            "usage": "Used to indicate where the knife will make contact with other objects."
+          }
+        ]
+      },
+      "retrieval_notes": {
+        "prompt_terms": [
+          "knife"
+        ],
+        "selection_rule": "Use this asset when the placement prompt mentions a knife."
+      }
+    }
+  ],
+  "agent_usage": {
+    "designer": "Select entries whose aliases/tags match the placement prompt, then propose tabletop poses in the robot/dual-arm first-person direction frame.",
+    "critic": "Check selected asset ids exist, category/tags match the prompt, affordances support the requested scene, and visual review uses the robot-centric direction frame.",
+    "orchestrator": "Finalize selected asset ids, model ids, roles, scale, and any repair instructions before RoboTwin loading."
+  }
+}

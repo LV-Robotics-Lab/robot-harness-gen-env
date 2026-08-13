@@ -1,0 +1,34 @@
+{
+  "schema_version": "alchedata.openxsim.normalized_task_contract.v0",
+  "status": "pass_normalized_cross_sim_task_contract",
+  "task_id": "openxsim_place_container_plate_v1",
+  "task_text": "Place the container on the plate.",
+  "relation": {
+    "type": "place_on",
+    "source_role": "container",
+    "target_role": "plate",
+    "success_verifier": {
+      "horizontal_center_distance_max_m": 0.12,
+      "source_bottom_to_target_top_abs_max_m": 0.04,
+      "source_speed_max_mps": 0.08
+    }
+  },
+  "source_backend": {
+    "adapter": "RoboTwin/SAPIEN",
+    "task_name": "place_container_plate",
+    "execution_type": "official_scripted_robot_expert",
+    "evidence": "runs/official_rollout_place_container_plate/rollout_report.json",
+    "benchmark_bundle": "artifacts/openxsim_benchmarks/place_container_plate/benchmark_manifest.json"
+  },
+  "target_backend": {
+    "adapter": "Isaac Sim 5.1",
+    "execution_type": "scripted_object_space_expert",
+    "asset_binding": {
+      "container": "DynamicCuboid primitive proxy",
+      "plate": "FixedCuboid primitive proxy"
+    }
+  },
+  "evidence_class": "COMPUTED",
+  "confidence": "HIGH",
+  "claim_boundary": "This contract tests relation-level task and verifier transfer. It does not claim identical assets, robot embodiment, action interface, materials, learned-policy transfer, or sim-to-real transfer."
+}

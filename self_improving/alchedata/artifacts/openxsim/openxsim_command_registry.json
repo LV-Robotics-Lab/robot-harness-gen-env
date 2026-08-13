@@ -1,0 +1,254 @@
+{
+  "schema_version": "alchedata.openxsim_command_registry.v1",
+  "status": "pass_six_command_contracts",
+  "command_count": 6,
+  "commands": [
+    {
+      "command": "/gen-env",
+      "owner": "Zheng Ye",
+      "support_owner": "Boris",
+      "inputs": [
+        "task_text",
+        "reference_image_or_rgbd_or_video",
+        "asset_catalog_roots",
+        "allowed_simulator_adapters",
+        "robot_constraints"
+      ],
+      "outputs": [
+        "route_contract",
+        "scene_manifest",
+        "task_manifest",
+        "asset_manifest",
+        "material_sidecar_or_typed_blocker",
+        "validation_plan"
+      ],
+      "artifact_paths": [
+        "schemas/gen_env.schema.json",
+        "artifacts/gen_env_contract/",
+        "artifacts/selection2env/",
+        "artifacts/generation_fallback/"
+      ],
+      "failure_codes": [
+        "ASSET_CATALOG_MISS",
+        "ROBOTWIN_ROOT_MISSING",
+        "SIM_IMPORT_FAIL",
+        "VISUAL_REVIEW_REQUIRED",
+        "GENERATION2ENV_DEFERRED",
+        "FORGE_CAPTURE_SOURCE_MISSING",
+        "FORGE_IMPORT_ARTIFACT_MISSING",
+        "MATERIAL_MULTIVIEW_INPUT_MISSING",
+        "MATERIAL_RENDER_BINDING_MISSING"
+      ],
+      "current_evidence": [
+        "artifacts/gen_env_contract/gen_env_contract_manifest.json",
+        "artifacts/scene_task_decoupling/apple_plate_two_tasks.json",
+        "runs/isaac_openxsim_place_container_plate_v1/gen_env.json"
+      ],
+      "claim_boundary": "The selection2env route executes with existing assets, and one Isaac primitive-proxy scene executes. Forge and neural-material routes remain separate and are not implied by the Isaac result."
+    },
+    {
+      "command": "/collect",
+      "owner": "Zheng Ye",
+      "support_owner": "Gaochen",
+      "inputs": [
+        "accepted_scene_manifest",
+        "task_manifest",
+        "policy_or_scripted_expert",
+        "simulator_adapter",
+        "rollout_count_and_seed_plan"
+      ],
+      "outputs": [
+        "rollout_logs",
+        "object_state_traces",
+        "action_traces",
+        "camera_previews_and_video",
+        "dataset_manifest",
+        "diagnosis_seed_records"
+      ],
+      "artifact_paths": [
+        "runs/collect_dryrun_*/",
+        "runs/official_rollout_*/",
+        "runs/generated_collect_*/"
+      ],
+      "failure_codes": [
+        "SCENE_LOAD_FAIL",
+        "RESET_FAIL",
+        "ROLLOUT_CRASH",
+        "VERIFIER_TIMEOUT",
+        "MISSING_CAMERA_TRACE"
+      ],
+      "current_evidence": [
+        "runs/generated_collect_apple_plate_native_sync/collection_report.json",
+        "artifacts/openxsim_benchmarks/manifest.json",
+        "artifacts/openxsim/openxsim_video_frame_uniqueness.json",
+        "runs/isaac_openxsim_place_container_plate_v1/collect.json"
+      ],
+      "claim_boundary": "Official benchmark bundles use scripted RoboTwin experts; learned-policy evidence is tracked separately."
+    },
+    {
+      "command": "/train",
+      "owner": "Gaochen",
+      "support_owner": "Boris",
+      "inputs": [
+        "rollout_dataset_manifest",
+        "training_recipe",
+        "policy_base_checkpoint",
+        "data_requirement_filters"
+      ],
+      "outputs": [
+        "checkpoint",
+        "training_log",
+        "data_coverage_report",
+        "failure_to_data_linkage_report"
+      ],
+      "artifact_paths": [
+        "runs/act_hdf5_native_sync/",
+        "runs/act_train_native_sync_rgb_chunk161_1200e/"
+      ],
+      "failure_codes": [
+        "DATA_MANIFEST_INVALID",
+        "TRAIN_DATA_FORMAT_BLOCKED",
+        "POLICY_DEPENDENCY_MISSING",
+        "GPU_OOM",
+        "CHECKPOINT_WRITE_FAIL",
+        "POLICY_INTERFACE_MISMATCH"
+      ],
+      "current_evidence": [
+        "runs/act_train_native_sync_rgb_chunk161_1200e/train_smoke_report.json",
+        "runs/policy_train_eval_entrypoint_probe/probe_report.json"
+      ],
+      "claim_boundary": "The generated-task adapter trains successfully; default upstream RoboTwin ACT wrapper compatibility remains separately blocked."
+    },
+    {
+      "command": "/evaluate",
+      "owner": "Gaochen",
+      "support_owner": "Boris",
+      "inputs": [
+        "checkpoint",
+        "eval_task_set",
+        "verifier_definitions",
+        "simulator_or_real_execution_mode"
+      ],
+      "outputs": [
+        "eval_results",
+        "per_task_traces",
+        "success_failure_labels",
+        "regression_report",
+        "next_data_requirement"
+      ],
+      "artifact_paths": [
+        "runs/act_eval_native_sync_rgb_chunk161_1200e_best/",
+        "artifacts/diagnosis/placement_robustness_diagnosis.json"
+      ],
+      "failure_codes": [
+        "EVAL_TASK_LOAD_FAIL",
+        "EVAL_TASK_ENV_MISSING",
+        "POLICY_LOAD_FAIL",
+        "VERIFIER_CONTRADICTION",
+        "REGRESSION_DETECTED"
+      ],
+      "current_evidence": [
+        "runs/act_eval_native_sync_rgb_chunk161_1200e_best/evaluate_report.json",
+        "artifacts/diagnosis/placement_robustness_diagnosis.json",
+        "runs/isaac_openxsim_place_container_plate_v1/evaluate.json",
+        "artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json"
+      ],
+      "claim_boundary": "The earlier RoboTwin ACT recovery remains rejected at 1/4 varied-placement success. A separate privileged pose-conditioned open-loop policy passes its bounded 4/4 held-out, 4/4 randomized, and 3/3 second-task gates. Isaac has one successful scripted object-space target verifier. None establishes a robust visual cross-simulator learned policy."
+    },
+    {
+      "command": "/diagnose",
+      "owner": "Boris",
+      "support_owner": "Zheng Ye / Gaochen",
+      "inputs": [
+        "rollout_traces",
+        "simulator_state",
+        "object_poses",
+        "arm_motion",
+        "gripper_state",
+        "visual_observations"
+      ],
+      "outputs": [
+        "failure_cluster",
+        "root_cause_hypothesis",
+        "dense_category_verdicts",
+        "next_data_requirement",
+        "proposed_harness_edit"
+      ],
+      "artifact_paths": [
+        "artifacts/openxsim_benchmarks/*/failure_diagnosis.json",
+        "artifacts/diagnosis/native_act_closed_loop_diagnosis.json",
+        "artifacts/diagnosis/placement_robustness_diagnosis.json"
+      ],
+      "failure_codes": [
+        "DIAGNOSIS_INPUT_MISSING",
+        "STATE_TRACE_INCOMPLETE",
+        "FAILURE_CLUSTER_UNRESOLVED",
+        "VISUAL_MATERIAL_REVIEW_MISSING"
+      ],
+      "current_evidence": [
+        "artifacts/openxsim_benchmarks/open_laptop/failure_diagnosis.json",
+        "runs/act_eval_native_sync_rgb_chunk161_1200e_best/evaluate_report.json",
+        "runs/isaac_openxsim_place_container_plate_v1/diagnose.json"
+      ],
+      "claim_boundary": "Dense categories are evaluated from available traces; a not-observed verdict is not proof that a failure mode is impossible."
+    },
+    {
+      "command": "/transfer",
+      "owner": "Zheng Ye",
+      "support_owner": "Boris",
+      "inputs": [
+        "external_environment_source",
+        "adapter_metadata",
+        "asset_format",
+        "material_system",
+        "reset_step_verifier_api"
+      ],
+      "outputs": [
+        "adapter_manifest",
+        "migration_blocker_list",
+        "smoke_command",
+        "license_access_note",
+        "verifier_mapping"
+      ],
+      "artifact_paths": [
+        "artifacts/openxsim/openxsim_adapter_matrix.json",
+        "artifacts/adapter_catalog/selection2env_catalog_sources.json"
+      ],
+      "failure_codes": [
+        "ADAPTER_SOURCE_UNAVAILABLE",
+        "LICENSE_ACCESS_UNRESOLVED",
+        "ASSET_FORMAT_UNSUPPORTED",
+        "RESET_STEP_API_UNMAPPED",
+        "VERIFIER_API_UNMAPPED",
+        "MATERIAL_BINDING_UNSUPPORTED",
+        "TRANSFER_SMOKE_FAIL"
+      ],
+      "current_evidence": [
+        "artifacts/openxsim/openxsim_adapter_matrix.json",
+        "artifacts/adapter_catalog/robotwin_discovered_catalog.json",
+        "artifacts/openxsim/agenticsim_awesome_isaac_snapshot.json",
+        "artifacts/openxsim_cross_sim/place_container_plate_task_contract.json",
+        "runs/isaac_openxsim_place_container_plate_v1/transfer.json"
+      ],
+      "claim_boundary": "Isaac Sim now has one executed task-semantic command bundle with primitive proxies and a target verifier. Robot embodiment, joint-action policy, source assets/materials, and learned-policy transfer are explicitly not transferred."
+    }
+  ],
+  "owner_split": {
+    "Zheng Ye": [
+      "/gen-env",
+      "/transfer",
+      "/collect scene/task execution"
+    ],
+    "Gaochen": [
+      "/train",
+      "/evaluate",
+      "/collect data-interface compatibility"
+    ],
+    "Boris": [
+      "architecture",
+      "/diagnose schema",
+      "Dashboard and proposal alignment"
+    ]
+  },
+  "claim_boundary": "This registry defines six command contracts, a full RoboTwin/SAPIEN benchmark path, and one five-command Isaac task-semantic bundle. It does not claim every adapter target, fallback route, robot policy, or material path executes."
+}

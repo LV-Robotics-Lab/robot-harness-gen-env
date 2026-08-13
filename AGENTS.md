@@ -1,9 +1,9 @@
 <!-- Generated: 2026-07-29 | Updated: 2026-07-29 -->
 
-# Robot Harness /gen-env
+# Robot Harness Gen-Env and Self-Improving Platform
 
 ## Purpose（用途）
-确定性编译器，把受限的中英双语自然语言请求编译成 RoboTwin 可加载的场景包，并在 SAPIEN 中完成物理验证，之后才允许进入 Robot Harness 命令循环。本仓库仅是 `/gen-env` 子系统——不实现机器人任务策略、数据采集、训练、评估或跨仿真器迁移。
+仓库包含两层：稳定的 `/gen-env` 确定性编译器，以及围绕它组织选择、生成、采集、评估、诊断、资产复用和跨仿真适配的 `self_improving/` 平台。`scene_gen/` 的信任边界不变；策略或仿真器特定实现只能进入平台适配层或独立子模块。
 
 ## Key Files（关键文件）
 | File | Description |
@@ -28,6 +28,8 @@
 | `docs/` | 已验证的物理/prompt-matrix 证据笔记（见 `docs/AGENTS.md`） |
 | `.github/` | CI 工作流定义（见 `.github/AGENTS.md`） |
 | `repo-docs/` | 仓库行为讲解（中文）：一条真实路径、代码地图、概念模块、证据底座（见 `repo-docs/README.md`） |
+| `self_improving/` | Self-Improving 平台编排、历史 stage、资产管线、迁移工具和机读来源清单 |
+| `external/` | 独立生命周期的 OpenReal2Sim 与 digital-cousins 子模块 |
 
 ## Repo docs
 
@@ -42,7 +44,7 @@ This repo's `repo-docs/` guide is reader-facing Chinese documentation. When upda
 ## For AI Agents（给 AI agent 的提示）
 
 ### Working In This Directory（在本目录工作）
-- 本仓库作用域仅限 `/gen-env`。不要在此添加策略执行、采集、训练、评估或跨仿真器迁移。
+- `scene_gen/` 仍只负责 `/gen-env`；策略执行、采集、训练、评估和跨仿真器迁移必须放在 `self_improving/` 的明确模块中，不能反向污染核心编译器。
 - 权威贡献者契约（作用域、验收规则、测试、数据、git）在下文 `<!-- MANUAL -->` 之下逐字保留——改动前先读。
 - Python 3.11 是已测试的本地版本；ruff 行宽 100。
 
@@ -72,9 +74,10 @@ This repo's `repo-docs/` guide is reader-facing Chinese documentation. When upda
 
 ## Scope
 
-This repository owns `text -> SceneSpec -> ResolvedSceneSpec -> RoboTwin/SAPIEN
-evidence`. Do not add policy execution, collection, training, evaluation, or
-cross-simulator transfer here.
+The stable core owns `text -> SceneSpec -> ResolvedSceneSpec -> RoboTwin/SAPIEN
+evidence`. The `self_improving/` layer may orchestrate collection, training,
+evaluation, diagnosis, asset reuse, and simulator adapters without weakening or
+bypassing the core contracts.
 
 ## Acceptance Rules
 
@@ -103,5 +106,7 @@ committed only when they are needed to explain an acceptance contract.
 
 ## Git
 
-Keep changes scoped to `/gen-env`. Preserve upstream attribution and avoid
-rewriting published history.
+Keep core changes scoped to `/gen-env` and platform changes scoped to named
+modules under `self_improving/`. Preserve upstream attribution and avoid
+rewriting published history. External projects belong in submodules, not copied
+vendor trees.

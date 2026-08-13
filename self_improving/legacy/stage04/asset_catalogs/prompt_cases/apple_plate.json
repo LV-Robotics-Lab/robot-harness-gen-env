@@ -1,0 +1,17 @@
+{
+  "catalog_version": "robotwin.tabletop_asset_catalog_case.v0",
+  "catalog_name": "apple_plate_prompt_case",
+  "updated_at": "2026-07-02",
+  "purpose": "Prompt-specific asset selection for: an apple and a plate on the table.",
+  "base_catalog": "../robotwin_tabletop_assets_master.json",
+  "mvp_prompt": "an apple and a plate on the table",
+  "selected_asset_ids": [
+    "035_apple",
+    "003_plate"
+  ],
+  "entry_overrides": {},
+  "agent_usage": {
+    "designer": "Select apple and plate assets from the master catalog, then place both on reachable tabletop regions.",
+    "critic": "Check object presence, table contact, no collision, and whether this scene can support downstream pick-apple-to-plate tasks."
+  }
+}

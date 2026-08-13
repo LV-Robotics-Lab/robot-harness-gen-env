@@ -1,0 +1,33 @@
+{
+  "schema_version": "alchedata.failure_memory.v0",
+  "status": "active_failure_memory",
+  "memory_id": "rgb_adapter_double_swap_failure_v1",
+  "created_at": "2026-07-13T16:14:18.203379+00:00",
+  "source_failure": {
+    "controller": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_memory_no_memory_v1/memory_controller.json",
+    "controller_sha256": "790e9be1588e654888f9c22b8f11eb134a3337a611579750cfd383ca5bf87f52",
+    "evaluator_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/text2env_memory_no_memory_v1/evaluation/evaluate_report.json",
+    "evaluator_report_sha256": "517c376cac7ffb895b3bcbec912158263c970e555cb57a436d5a188f32dc489c",
+    "success_count": 0,
+    "episode_count": 3,
+    "selected_adapter": "swap_red_blue"
+  },
+  "supporting_contract": {
+    "conversion_report": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_hdf5_native_sync/conversion_report.json",
+    "conversion_report_sha256": "ec2c2b6d3a881b4c306ac69de7c44d8a8c7d534cb5627b40938f9ed0352c699e",
+    "native_jpeg_color_repair": {
+      "source_behavior": "RoboTwin pkl2hdf5.py passes RGB camera arrays directly to cv2.imencode, which assumes BGR.",
+      "adapter_behavior": "Decode the JPEG as RGB, then swap red and blue channels back to runtime head-camera RGB order."
+    }
+  },
+  "applicability": {
+    "task_id": "task_apple_plate",
+    "checkpoint_sha256": "7e4cd9a0fde41a058efa39cf836ef582acaf3b8956edce914c9e71ac4e088870",
+    "runtime_camera_source": "head_camera"
+  },
+  "recommendation": {
+    "runtime_color_adapter": "identity",
+    "reason": "The synchronized HDF5 conversion already repairs stored JPEG BGR ordering into runtime RGB. Applying swap_red_blue again at runtime is a double swap; preserve runtime RGB with identity."
+  },
+  "claim_boundary": "This memory records one executed failure and a matching data-contract correction. It is not a general semantic memory, retrieval benchmark, or proof that memory improves unseen failure classes."
+}

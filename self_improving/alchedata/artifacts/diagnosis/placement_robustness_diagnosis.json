@@ -1,0 +1,330 @@
+{
+  "schema_version": "alchedata.placement_robustness_diagnosis.v0",
+  "status": "pass_failure_to_data_iteration_promotion_rejected",
+  "generated_at": "2026-07-11T08:43:40.725263+00:00",
+  "task_id": "task_apple_plate",
+  "claim_boundary": "This diagnosis proves varied native demonstrations, byte-level trajectory diversity, two ACT training runs, two signature-disjoint held-out placement evaluations, a targeted failure-to-data repair, and fresh scripted execution on an additional task. It does not claim robust policy promotion because both held-out learned-policy evaluations score 1/4, domain randomization is disabled, and the additional task is not a learned-policy eval.",
+  "initial_iteration": {
+    "dataset": {
+      "report": "runs/act_hdf5_apple_plate_varied_v3/diversity_report.json",
+      "status": "pass_act_dataset_diversity",
+      "episode_count": 12,
+      "unique_placement_signature_count": 7,
+      "unique_action_trajectory_count": 11,
+      "unique_qpos_trajectory_count": 11,
+      "unique_image_trajectory_count": 11
+    },
+    "train": {
+      "report": "runs/act_train_apple_plate_varied_chunk175_1200e_v3/train_smoke_report.json",
+      "status": "pass_act_train_execution",
+      "num_epochs": 1200,
+      "best_epoch": 1157,
+      "best_val_loss": 0.004906,
+      "learning_rate": "1e-4",
+      "checkpoint": {
+        "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_train_apple_plate_varied_chunk175_1200e_v3/act_ckpt/policy_best.ckpt",
+        "exists": true,
+        "size_bytes": 48610247
+      }
+    },
+    "heldout_evaluate": {
+      "report": "runs/act_eval_apple_plate_varied_heldout_chunk175_v3/evaluate_report.json",
+      "status": "pass_generated_act_evaluate_execution",
+      "episode_count": 4,
+      "execution_count": 4,
+      "success_count": 1,
+      "policy_success_rate": 0.25,
+      "all_eval_placements_held_out": true,
+      "action_selection": "execute_full_175_action_chunk_before_replan",
+      "episodes": [
+        {
+          "placement_id": "eval_000",
+          "seed": 400,
+          "pose_signature": "e07eec9b233f12f4df39b84492994c927a620842e8b2d394b4d65f891026818a",
+          "policy_success": true,
+          "policy_step_count": 131,
+          "xy_distance_m": 0.013623840226866715,
+          "status": "completed_policy_success"
+        },
+        {
+          "placement_id": "eval_001",
+          "seed": 403,
+          "pose_signature": "f31f4c2a752837f44eb984e2d1972cb581a93d82c3c553b03b2e6c9e2328c926",
+          "policy_success": false,
+          "policy_step_count": 175,
+          "xy_distance_m": 0.21095542952442647,
+          "status": "completed_policy_failure"
+        },
+        {
+          "placement_id": "eval_002",
+          "seed": 404,
+          "pose_signature": "221ac82dde77684aa542eb2c8fdbbf4e1b065f3234329718b83122271b5a2d97",
+          "policy_success": false,
+          "policy_step_count": 175,
+          "xy_distance_m": 0.1766832179694942,
+          "status": "completed_policy_failure"
+        },
+        {
+          "placement_id": "eval_003",
+          "seed": 407,
+          "pose_signature": "3af343c5ae9e4d58ba17af9a8c2e430ee15a23aa0d69acc129ed592c9e74229a",
+          "policy_success": false,
+          "policy_step_count": 175,
+          "xy_distance_m": 0.2075491723113091,
+          "status": "completed_policy_failure"
+        }
+      ]
+    },
+    "chunk_prefix_40_evaluate": {
+      "report": "runs/act_eval_apple_plate_varied_heldout_chunk175_h40_v3/evaluate_report.json",
+      "status": "pass_generated_act_evaluate_execution",
+      "episode_count": 4,
+      "execution_count": 4,
+      "success_count": 1,
+      "policy_success_rate": 0.25,
+      "all_eval_placements_held_out": true,
+      "action_selection": "execute_first_40_of_175_actions_before_replan",
+      "episodes": [
+        {
+          "placement_id": "eval_000",
+          "seed": 400,
+          "pose_signature": "e07eec9b233f12f4df39b84492994c927a620842e8b2d394b4d65f891026818a",
+          "policy_success": true,
+          "policy_step_count": 119,
+          "xy_distance_m": 0.004393622095485856,
+          "status": "completed_policy_success"
+        },
+        {
+          "placement_id": "eval_001",
+          "seed": 403,
+          "pose_signature": "f31f4c2a752837f44eb984e2d1972cb581a93d82c3c553b03b2e6c9e2328c926",
+          "policy_success": false,
+          "policy_step_count": 175,
+          "xy_distance_m": 0.19832776834249688,
+          "status": "completed_policy_failure"
+        },
+        {
+          "placement_id": "eval_002",
+          "seed": 404,
+          "pose_signature": "221ac82dde77684aa542eb2c8fdbbf4e1b065f3234329718b83122271b5a2d97",
+          "policy_success": false,
+          "policy_step_count": 175,
+          "xy_distance_m": 0.17949036539138563,
+          "status": "completed_policy_failure"
+        },
+        {
+          "placement_id": "eval_003",
+          "seed": 407,
+          "pose_signature": "3af343c5ae9e4d58ba17af9a8c2e430ee15a23aa0d69acc129ed592c9e74229a",
+          "policy_success": false,
+          "policy_step_count": 175,
+          "xy_distance_m": 0.1995681429975567,
+          "status": "completed_policy_failure"
+        }
+      ]
+    },
+    "promotion_decision": "reject_heldout_success_1_of_4"
+  },
+  "failure_to_data_iteration": {
+    "mined_failed_placement_ids": [
+      "eval_001",
+      "eval_002",
+      "eval_003"
+    ],
+    "recovery_collection": {
+      "report": "runs/generated_collect_apple_plate_failed_eval_recovery_v4/collection_report.json",
+      "status": "pass_generated_rollout_collection",
+      "episode_count": 3,
+      "pass_count": 3,
+      "native_synchronized_pass_count": 3,
+      "passed_placement_ids": [
+        "eval_001",
+        "eval_002",
+        "eval_003"
+      ],
+      "passed_pose_signatures": [
+        "f31f4c2a752837f44eb984e2d1972cb581a93d82c3c553b03b2e6c9e2328c926",
+        "221ac82dde77684aa542eb2c8fdbbf4e1b065f3234329718b83122271b5a2d97",
+        "3af343c5ae9e4d58ba17af9a8c2e430ee15a23aa0d69acc129ed592c9e74229a"
+      ],
+      "domain_randomization": {
+        "random_background": false,
+        "cluttered_table": false,
+        "random_light": false,
+        "random_table_height": 0.0,
+        "random_head_camera_dis": 0.0
+      }
+    },
+    "all_failed_placements_recovered_as_expert_data": true,
+    "dataset": {
+      "report": "runs/act_hdf5_apple_plate_recovery_v4/diversity_report.json",
+      "status": "pass_act_dataset_diversity",
+      "episode_count": 15,
+      "unique_placement_signature_count": 10,
+      "unique_action_trajectory_count": 14,
+      "unique_qpos_trajectory_count": 14,
+      "unique_image_trajectory_count": 14
+    },
+    "train": {
+      "report": "runs/act_train_apple_plate_recovery_chunk175_1200e_v4/train_smoke_report.json",
+      "status": "pass_act_train_execution",
+      "num_epochs": 1200,
+      "best_epoch": 1031,
+      "best_val_loss": 0.005318,
+      "learning_rate": "1e-4",
+      "checkpoint": {
+        "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/runs/act_train_apple_plate_recovery_chunk175_1200e_v4/act_ckpt/policy_best.ckpt",
+        "exists": true,
+        "size_bytes": 48610247
+      }
+    },
+    "new_holdout_feasibility": {
+      "report": "runs/generated_collect_apple_plate_holdout_candidates_eval_v4a/collection_report.json",
+      "status": "fail_generated_rollout_collection",
+      "episode_count": 8,
+      "pass_count": 6,
+      "native_synchronized_pass_count": 0,
+      "passed_placement_ids": [
+        "eval_000",
+        "eval_001",
+        "eval_002",
+        "eval_003",
+        "eval_004",
+        "eval_005"
+      ],
+      "passed_pose_signatures": [
+        "2338bdc3b21eac957467aa21c230b1945ac40ff359b9f90f8d04f6122b306cd8",
+        "5c92ca5b0266256f7546c25fbb3f45c42068aed1a30bfc131f44f769688ba7ed",
+        "f9e3caae6613963e698d7c3c158d2be36f1dc420b473df64b4eaf418d11f6e34",
+        "bceaef7589412a8f64b51db9ce7e4bc44582e2ee5c018af9dd6c6ea037ce7470",
+        "34876e09622faa2e425b0fba946ef40da92ee7f6ac777bc4bb2326fd1fe21bb8",
+        "35e038acd3be6f8adb6cecb4c5f101a8479b5faad6ed9b5f24415865d8504f0f"
+      ],
+      "domain_randomization": {
+        "random_background": false,
+        "cluttered_table": false,
+        "random_light": false,
+        "random_table_height": 0.0,
+        "random_head_camera_dis": 0.0
+      }
+    },
+    "new_holdout_manifest": "runs/placement_robustness_apple_plate_verified_holdout_v4/placement_manifest.json",
+    "new_holdout_minimum_pose_vector_distance_to_training_m": 0.00789669474031637,
+    "new_holdout_pose_vector_distances_to_training_m": [
+      0.029223457259968822,
+      0.00789669474031637,
+      0.02630657045244513,
+      0.03256597519992001
+    ],
+    "new_heldout_evaluate": {
+      "report": "runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4/evaluate_report.json",
+      "status": "pass_generated_act_evaluate_execution",
+      "episode_count": 4,
+      "execution_count": 4,
+      "success_count": 1,
+      "policy_success_rate": 0.25,
+      "all_eval_placements_held_out": true,
+      "action_selection": "execute_full_175_action_chunk_before_replan",
+      "episodes": [
+        {
+          "placement_id": "eval_000",
+          "seed": 6100,
+          "pose_signature": "2338bdc3b21eac957467aa21c230b1945ac40ff359b9f90f8d04f6122b306cd8",
+          "policy_success": true,
+          "policy_step_count": 148,
+          "xy_distance_m": 0.046907890130874194,
+          "status": "completed_policy_success"
+        },
+        {
+          "placement_id": "eval_001",
+          "seed": 6101,
+          "pose_signature": "5c92ca5b0266256f7546c25fbb3f45c42068aed1a30bfc131f44f769688ba7ed",
+          "policy_success": false,
+          "policy_step_count": 175,
+          "xy_distance_m": 0.4878181747363067,
+          "status": "completed_policy_failure"
+        },
+        {
+          "placement_id": "eval_002",
+          "seed": 6102,
+          "pose_signature": "f9e3caae6613963e698d7c3c158d2be36f1dc420b473df64b4eaf418d11f6e34",
+          "policy_success": false,
+          "policy_step_count": 175,
+          "xy_distance_m": 0.18682920260383043,
+          "status": "completed_policy_failure"
+        },
+        {
+          "placement_id": "eval_003",
+          "seed": 6103,
+          "pose_signature": "bceaef7589412a8f64b51db9ce7e4bc44582e2ee5c018af9dd6c6ea037ce7470",
+          "policy_success": false,
+          "policy_step_count": 175,
+          "xy_distance_m": 0.18561554810595102,
+          "status": "completed_policy_failure"
+        }
+      ]
+    },
+    "promotion_decision": "reject_heldout_success_1_of_4"
+  },
+  "additional_task_execution": {
+    "report": "runs/generated_collect_can_basket_native_regression_v4/collection_report.json",
+    "status": "pass_generated_rollout_collection",
+    "episode_count": 2,
+    "pass_count": 2,
+    "native_synchronized_pass_count": 2,
+    "passed_placement_ids": [
+      "fixed",
+      "fixed"
+    ],
+    "passed_pose_signatures": [],
+    "domain_randomization": {
+      "random_background": false,
+      "cluttered_table": false,
+      "random_light": false,
+      "random_table_height": 0.0,
+      "random_head_camera_dis": 0.0
+    }
+  },
+  "promotion_gates": {
+    "native_varied_dataset_diversity": true,
+    "failure_to_data_targeting": true,
+    "new_heldout_eval_infrastructure": true,
+    "new_heldout_eval_all_success": false,
+    "additional_task_scripted_execution": true,
+    "declared_visual_physics_domain_randomization": false,
+    "additional_task_learned_policy_evaluation": false
+  },
+  "policy_promotion": "blocked_placement_domain_and_cross_task_robustness",
+  "hypotheses": [
+    {
+      "rank": 1,
+      "hypothesis": "The fixed-placement source data lacks real trajectory diversity.",
+      "verdict": "confirmed_and_fixed",
+      "evidence": "The repaired dataset grows to 15 episodes, 10 placement signatures, and 14 unique action/qpos/image trajectories."
+    },
+    {
+      "rank": 2,
+      "hypothesis": "Executing the full 175-action chunk is the primary cause of held-out failure.",
+      "verdict": "falsified",
+      "evidence": "A 40-action replanning prefix remains at 1/4 on the same held-out split."
+    },
+    {
+      "rank": 3,
+      "hypothesis": "Adding expert demonstrations for the three failed placements is sufficient for broad placement generalization.",
+      "verdict": "falsified_for_current_act_configuration",
+      "evidence": "All three targeted recovery demonstrations pass, but a fresh signature-disjoint split remains at 1/4."
+    },
+    {
+      "rank": 4,
+      "hypothesis": "The learned-policy failures are caused by evaluation infrastructure errors or infeasible placements.",
+      "verdict": "falsified",
+      "evidence": "Both eval runs execute 4/4 without infrastructure errors, and each final eval placement passed scripted feasibility first."
+    }
+  ],
+  "next_data_requirement": {
+    "placement_coverage": "Collect substantially more successful unique placements across the declared regions before another ACT promotion attempt.",
+    "observation_ablation": "Compare the current 96x72 head camera against a higher-resolution observation and an explicit object-pose-conditioned baseline.",
+    "domain_randomization": "Train and evaluate declared lighting, camera, background, and table-height variations instead of leaving all randomization disabled.",
+    "cross_task": "Train and evaluate a learned policy on at least one additional generated task; scripted can/basket execution is only an action-stack regression proof."
+  }
+}

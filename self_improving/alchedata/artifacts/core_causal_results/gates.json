@@ -1,0 +1,161 @@
+{
+  "schema_version": "alchedata.core_causal_result_gates.v0",
+  "status": "pass_all_core_causal_result_gates",
+  "evidence_class": "COMPUTED",
+  "confidence": "HIGH",
+  "decision_rule": "A gate passes only when every required machine-readable field and referenced artifact is present. Infrastructure completion and report generation do not substitute for task success or a matched causal comparison.",
+  "todos": [
+    {
+      "todo_id": "sceneagent_selection2env",
+      "current_state": "pass_bounded_privileged_policy_promotion",
+      "gates": [
+        {
+          "gate_id": "heldout_varied_placement",
+          "pass_condition": "Four of four signature-disjoint, scripted-feasible held-out placements succeed with one declared learned policy and zero infrastructure failures.",
+          "status": "pass",
+          "current_result": "4/4",
+          "evidence": "artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json#heldout_varied_placement"
+        },
+        {
+          "gate_id": "declared_domain_randomization",
+          "pass_condition": "The same learned policy is evaluated on four held-out cases with declared lighting, camera, background, and table-height randomization; all four execute and succeed.",
+          "status": "pass",
+          "current_result": "4/4",
+          "evidence": "artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json#declared_domain_randomization"
+        },
+        {
+          "gate_id": "cross_task_learned_policy",
+          "pass_condition": "A learned policy for one additional generated task executes and succeeds on at least three held-out seeds with a task verifier.",
+          "status": "pass",
+          "current_result": "3/3",
+          "evidence": "artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json#cross_task_learned_policy"
+        },
+        {
+          "gate_id": "promotion_record",
+          "pass_condition": "A machine-readable promotion record binds checkpoint hashes, splits, verifier results, domain randomization, cross-task evidence, parent state, and rollback state.",
+          "status": "pass",
+          "evidence": "artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json"
+        }
+      ]
+    },
+    {
+      "todo_id": "text2env_empirical_claims",
+      "current_state": "pass_review_and_bounded_empirical_follow_through",
+      "gates": [
+        {
+          "gate_id": "same_task_cross_sim_execution",
+          "pass_condition": "One normalized task contract executes through gen-env, collect, evaluate, diagnose, and transfer on RoboTwin/SAPIEN and Isaac Sim with backend-native traces and verifiers.",
+          "status": "pass",
+          "evidence": "artifacts/text2env_empirics/text2env_empirical_audit_v1.json#same_task_cross_sim_execution"
+        },
+        {
+          "gate_id": "memory_ablation",
+          "pass_condition": "Matched no-memory and memory-enabled runs fix checkpoint, task cases, seeds, and evaluator; the result is reported even if the effect is null or negative.",
+          "status": "pass",
+          "current_result": "0/3 no-memory versus 3/3 memory",
+          "evidence": "artifacts/text2env_empirics/memory_ablation_rgb_adapter_v1.json"
+        },
+        {
+          "gate_id": "material_extraction",
+          "pass_condition": "A material sidecar is extracted from an input observation, imported into a simulator-native material, rendered, and compared against the source with recorded metrics.",
+          "status": "pass_bounded_material_sidecar_roundtrip",
+          "evidence": "runs/isaac_material_sidecar_roundtrip_v1/roundtrip_report.json"
+        },
+        {
+          "gate_id": "failure_score_correlation",
+          "pass_condition": "A predeclared failure score is compared with actual verifier outcomes over at least twelve executable episodes and reports the correlation with all samples retained.",
+          "status": "pass_negative_result_retained",
+          "current_result": "n=12, r=-0.2545156441, exact p=0.7272727273",
+          "evidence": "artifacts/text2env_empirics/failure_score_correlation_v1.json"
+        },
+        {
+          "gate_id": "robust_policy_result",
+          "pass_condition": "The SceneAgent robust-policy gates pass or the executed negative result is retained without a promotion claim.",
+          "status": "pass_bounded_privileged_policy",
+          "evidence": "artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json"
+        }
+      ]
+    },
+    {
+      "todo_id": "openxsim_command_loop",
+      "current_state": "pass_robotwin_robot_action_plus_isaac_task_semantic_loop",
+      "gates": [
+        {
+          "gate_id": "isaac_full_loop",
+          "pass_condition": "Isaac Sim executes backend-native gen-env, collect, evaluate, and diagnose commands for one normalized task contract; each command emits the declared artifact contract.",
+          "status": "pass",
+          "current_result": "5 commands, 120 trace steps, 24/24 unique frames, target verifier pass",
+          "evidence": "runs/isaac_openxsim_place_container_plate_v1/bundle_manifest.json"
+        },
+        {
+          "gate_id": "same_task_transfer",
+          "pass_condition": "Transfer maps the same task contract between RoboTwin/SAPIEN and Isaac Sim, records every field mapping or loss, and runs the target verifier.",
+          "status": "pass_with_declared_losses",
+          "evidence": "runs/isaac_openxsim_place_container_plate_v1/transfer.json"
+        },
+        {
+          "gate_id": "learned_policy_boundary",
+          "pass_condition": "Every benchmark is explicitly typed as scripted, learned, or replay; scripted success is never counted as learned-policy evidence.",
+          "status": "pass",
+          "evidence": "runs/isaac_openxsim_place_container_plate_v1/evaluate.json"
+        }
+      ]
+    },
+    {
+      "todo_id": "embodied_harness_system",
+      "current_state": "pass_framing_and_bounded_system_evidence",
+      "gates": [
+        {
+          "gate_id": "fixed_checkpoint_harness_ablation",
+          "pass_condition": "Baseline and candidate use identical checkpoint hash, task cases, seeds, action selection, and verifier; exactly one declared harness surface differs.",
+          "status": "pass",
+          "current_result": "0/3 swapped-channel baseline versus 3/3 identity candidate",
+          "evidence": "artifacts/embodied_harness/fixed_checkpoint_rgb_ablation_v1.json"
+        },
+        {
+          "gate_id": "candidate_promotion",
+          "pass_condition": "Both arms execute, the candidate meets a predeclared improvement threshold without safety regression, and accept or reject is written with parent and rollback references.",
+          "status": "pass",
+          "evidence": "artifacts/embodied_harness/fixed_checkpoint_rgb_ablation_v1.json#promotion"
+        },
+        {
+          "gate_id": "second_simulator_parity",
+          "pass_condition": "The accepted artifact contract is exercised on a second simulator through the same normalized command sequence.",
+          "status": "pass_bounded_task_semantic_parity",
+          "evidence": "artifacts/text2env_empirics/text2env_empirical_audit_v1.json#same_task_cross_sim_execution"
+        },
+        {
+          "gate_id": "memory_ablation",
+          "pass_condition": "A matched memory/no-memory comparison is executed and reported without requiring a positive effect.",
+          "status": "pass",
+          "current_result": "0/3 no-memory versus 3/3 memory",
+          "evidence": "artifacts/text2env_empirics/memory_ablation_rgb_adapter_v1.json"
+        },
+        {
+          "gate_id": "priority_claim",
+          "pass_condition": "No first-in-field claim is made without a systematic search, public timestamps, and independent audit.",
+          "status": "pass_claim_prohibited",
+          "evidence": "artifacts/embodied_harness/embodied_harness_spec.json#paper_claim"
+        }
+      ]
+    },
+    {
+      "todo_id": "report_delivery",
+      "current_state": "pass_repository_and_downloads_delivery",
+      "gates": [
+        {
+          "gate_id": "tracked_bundles",
+          "pass_condition": "All four TODO reports have repository-tracked HTML bundles with size and SHA-256 manifests.",
+          "status": "pass",
+          "evidence": "scripts/report_delivery.py plus four repository report manifests"
+        },
+        {
+          "gate_id": "downloads_mirror",
+          "pass_condition": "All four tracked bundles are mirrored into the declared Downloads paths and independently verified against their manifests.",
+          "status": "pass",
+          "evidence": "/Users/boris/Downloads/{alchedata_sceneagent_selection2env_20260712,text2env_literature_review_20260713,openxsim_command_loop_20260713,embodied_harness_20260713}"
+        }
+      ]
+    }
+  ]
+}

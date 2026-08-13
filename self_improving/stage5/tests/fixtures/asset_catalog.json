@@ -1,0 +1,351 @@
+{
+  "schema_version": "robotwin.asset_catalog.v1",
+  "robotwin_root": "/opt/robotwin-fixture/RoboTwin",
+  "objects_root": "/opt/robotwin-fixture/RoboTwin/assets/objects",
+  "entries": [
+    {
+      "asset_id": "003_plate",
+      "semantic_name": "plate",
+      "category": "plate",
+      "aliases": [
+        "dish",
+        "plate"
+      ],
+      "colors": [],
+      "materials": [
+        "ceramic",
+        "plastic"
+      ],
+      "load_type": "rigid",
+      "asset_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/003_plate",
+      "models": [
+        {
+          "model_id": 0,
+          "model_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/003_plate",
+          "metadata_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/003_plate/model_data0.json",
+          "visual_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/003_plate/visual/base0.glb",
+          "collision_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/003_plate/collision/base0.glb",
+          "scale": [
+            0.025,
+            0.025,
+            0.025
+          ],
+          "dimensions_m": [
+            0.2297,
+            0.23,
+            0.028
+          ],
+          "interior_dimensions_m": [
+            0.18,
+            0.18,
+            0.02
+          ],
+          "stable_pose_id": "robotwin_plate_upright",
+          "stable_orientation_wxyz": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "z_policy": "origin_on_table",
+          "is_static": false,
+          "articulation_joints": [],
+          "articulation_closed_qpos": [],
+          "articulation_open_qpos": [],
+          "usable": true,
+          "missing": [],
+          "footprint_shape": "circle",
+          "support_surface_shape": "circle",
+          "support_surface_dimensions_m": [
+            0.1,
+            0.1
+          ],
+          "support_surface_z_offset_m": 0.006,
+          "support_margin_m": 0.008,
+          "support_spawn_clearance_m": 0.004
+        }
+      ],
+      "available": true,
+      "availability_reasons": [],
+      "source_notes": []
+    },
+    {
+      "asset_id": "004_fluted-block",
+      "semantic_name": "block",
+      "category": "block",
+      "aliases": [
+        "block",
+        "cube"
+      ],
+      "colors": [],
+      "materials": [
+        "plastic",
+        "wood"
+      ],
+      "load_type": "rigid",
+      "asset_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/004_fluted-block",
+      "models": [
+        {
+          "model_id": 0,
+          "model_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/004_fluted-block",
+          "metadata_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/004_fluted-block/model_data0.json",
+          "visual_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/004_fluted-block/visual/base0.glb",
+          "collision_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/004_fluted-block/collision/base0.glb",
+          "scale": [
+            0.45,
+            0.4,
+            0.45
+          ],
+          "dimensions_m": [
+            0.0922750510275364,
+            0.09062625020742418,
+            0.06529266834259033
+          ],
+          "stable_pose_id": "flat_face",
+          "stable_orientation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "z_policy": "origin_on_table",
+          "is_static": false,
+          "articulation_joints": [],
+          "articulation_closed_qpos": [],
+          "articulation_open_qpos": [],
+          "usable": true,
+          "missing": []
+        }
+      ],
+      "available": true,
+      "availability_reasons": [
+        "stable_pose"
+      ],
+      "source_notes": []
+    },
+    {
+      "asset_id": "021_cup",
+      "semantic_name": "cup",
+      "category": "cup",
+      "aliases": [
+        "cup",
+        "mug"
+      ],
+      "colors": [],
+      "materials": [
+        "ceramic",
+        "metal",
+        "plastic"
+      ],
+      "load_type": "rigid",
+      "asset_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/021_cup",
+      "models": [
+        {
+          "model_id": 0,
+          "model_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/021_cup",
+          "metadata_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/021_cup/model_data0.json",
+          "visual_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/021_cup/visual/base0.glb",
+          "collision_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/021_cup/collision/base0.glb",
+          "scale": [
+            0.088,
+            0.088,
+            0.088
+          ],
+          "dimensions_m": [
+            0.08690809750731039,
+            0.08641119367807502,
+            0.0895141257492691
+          ],
+          "stable_pose_id": "robotwin_cup_upright",
+          "stable_orientation_wxyz": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0.0,
+            0.0
+          ],
+          "z_policy": "origin_on_table",
+          "is_static": false,
+          "articulation_joints": [],
+          "articulation_closed_qpos": [],
+          "articulation_open_qpos": [],
+          "usable": true,
+          "missing": []
+        }
+      ],
+      "available": true,
+      "availability_reasons": [
+        "stable_pose"
+      ],
+      "source_notes": []
+    },
+    {
+      "asset_id": "035_apple",
+      "semantic_name": "apple",
+      "category": "apple",
+      "aliases": [
+        "apple",
+        "fruit"
+      ],
+      "colors": [],
+      "materials": [
+        "organic"
+      ],
+      "load_type": "rigid",
+      "asset_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/035_apple",
+      "models": [
+        {
+          "model_id": 0,
+          "model_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/035_apple",
+          "metadata_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/035_apple/model_data0.json",
+          "visual_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/035_apple/visual/base0.glb",
+          "collision_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/035_apple/collision/base0.glb",
+          "scale": [
+            0.7,
+            0.7,
+            0.7
+          ],
+          "dimensions_m": [
+            0.0661,
+            0.0643,
+            0.0557
+          ],
+          "stable_pose_id": "upright",
+          "stable_orientation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "z_policy": "origin_on_table",
+          "is_static": false,
+          "articulation_joints": [],
+          "articulation_closed_qpos": [],
+          "articulation_open_qpos": [],
+          "usable": true,
+          "missing": [],
+          "footprint_shape": "circle"
+        }
+      ],
+      "available": true,
+      "availability_reasons": [
+        "stable_pose"
+      ],
+      "source_notes": []
+    },
+    {
+      "asset_id": "071_can",
+      "semantic_name": "can",
+      "category": "can",
+      "aliases": [
+        "can",
+        "cola can",
+        "soda can"
+      ],
+      "colors": [],
+      "materials": [
+        "metal"
+      ],
+      "load_type": "rigid",
+      "asset_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/071_can",
+      "models": [
+        {
+          "model_id": 0,
+          "model_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/071_can",
+          "metadata_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/071_can/model_data0.json",
+          "visual_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/071_can/visual/base0.glb",
+          "collision_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/071_can/collision/base0.glb",
+          "scale": [
+            0.05,
+            0.05,
+            0.05
+          ],
+          "dimensions_m": [
+            0.0712,
+            0.0712,
+            0.0965
+          ],
+          "stable_pose_id": "robotwin_can_upright",
+          "stable_orientation_wxyz": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0.0,
+            0.0
+          ],
+          "z_policy": "origin_on_table",
+          "is_static": false,
+          "articulation_joints": [],
+          "articulation_closed_qpos": [],
+          "articulation_open_qpos": [],
+          "usable": true,
+          "missing": [],
+          "footprint_shape": "circle"
+        }
+      ],
+      "available": true,
+      "availability_reasons": [
+        "stable_pose"
+      ],
+      "source_notes": []
+    },
+    {
+      "asset_id": "110_basket",
+      "semantic_name": "basket",
+      "category": "basket",
+      "aliases": [
+        "basket",
+        "container"
+      ],
+      "colors": [],
+      "materials": [
+        "plastic"
+      ],
+      "load_type": "rigid",
+      "asset_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/110_basket",
+      "models": [
+        {
+          "model_id": 1,
+          "model_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/110_basket",
+          "metadata_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/110_basket/model_data1.json",
+          "visual_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/110_basket/visual/base1.glb",
+          "collision_path": "/opt/robotwin-fixture/RoboTwin/assets/objects/110_basket/collision/base1.glb",
+          "scale": [
+            0.12,
+            0.12,
+            0.12
+          ],
+          "dimensions_m": [
+            0.2332,
+            0.1512,
+            0.1767
+          ],
+          "interior_dimensions_m": [
+            0.19,
+            0.112,
+            0.145
+          ],
+          "interior_floor_z_offset_m": 0.012,
+          "stable_pose_id": "robotwin_basket_upright",
+          "stable_orientation_wxyz": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0.0,
+            0.0
+          ],
+          "z_policy": "origin_on_table",
+          "is_static": true,
+          "articulation_joints": [],
+          "articulation_closed_qpos": [],
+          "articulation_open_qpos": [],
+          "usable": true,
+          "missing": []
+        }
+      ],
+      "available": true,
+      "availability_reasons": [
+        "stable_pose"
+      ],
+      "source_notes": []
+    }
+  ],
+  "source_commit": "fixture-c3ddfa8"
+}

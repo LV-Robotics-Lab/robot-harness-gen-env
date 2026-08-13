@@ -9,7 +9,7 @@ GitHub Actions CI 工作流定义。在受支持的 Python 版本上跑基于 fi
 ## Key Files（关键文件）
 | File | Description |
 |------|-------------|
-| `ci.yml` | CI：在 Python 3.11 & 3.12、ubuntu-latest 上跑 `pytest -q`，安装 `.[dev,demo]` |
+| `ci.yml` | CI：在 Python 3.11 & 3.12、ubuntu-latest 上初始化 submodule，并跑核心与 self-improving 全量离线测试。 |
 
 ## Subdirectories（子目录）
 无。
@@ -22,6 +22,7 @@ GitHub Actions CI 工作流定义。在受支持的 Python 版本上跑基于 fi
 
 ### Testing Requirements（测试要求）
 - push 会触发 CI 运行；合并前确认工作流为绿。
+- 统一入口是 `script/run_self_improving_tests.sh`；新增模块时同步扩展该脚本。
 - 提交前用 action 校验器校验 YAML 语法。
 
 ### Common Patterns（常见模式）

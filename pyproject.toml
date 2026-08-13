@@ -16,6 +16,9 @@ dependencies = [
   "Pillow>=10,<12",
 ]
 
+[project.scripts]
+self-improving-audit = "self_improving.__main__:main"
+
 [project.optional-dependencies]
 demo = ["Flask>=3.0,<4"]
 vlm = [
@@ -24,9 +27,14 @@ vlm = [
   "transformers>=4.49,<5",
 ]
 dev = ["pytest>=8.3,<9", "ruff>=0.9,<1"]
+platform = [
+  "jsonschema>=4.23,<5",
+  "numpy>=1.26,<3",
+  "trimesh>=4.5,<5",
+]
 
 [tool.setuptools.packages.find]
-include = ["scene_gen*", "demo*"]
+include = ["scene_gen*", "demo*", "self_improving"]
 
 [tool.setuptools.package-data]
 scene_gen = ["asset_overrides.yml", "prompts/*.md"]

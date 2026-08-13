@@ -1,0 +1,89 @@
+{
+  "schema_version": "robotwin.selection2env_catalog_search.v0",
+  "prompt": "move the apple onto the plate",
+  "source_stats": {
+    "robotwin": {
+      "entry_count": 123,
+      "selection_eligible_count": 123,
+      "match_count": 2
+    },
+    "agenticsim": {
+      "entry_count": 8,
+      "selection_eligible_count": 8,
+      "match_count": 0
+    },
+    "articraft10k": {
+      "entry_count": 9996,
+      "selection_eligible_count": 0,
+      "match_count": 0
+    }
+  },
+  "match_count_returned": 2,
+  "selection_rule": "Only selection_eligible candidates may enter RoboTwin scene generation; catalog-only candidates remain blockers.",
+  "matches": [
+    {
+      "candidate_id": "robotwin:003_plate",
+      "catalog_source": "robotwin",
+      "asset_id": "003_plate",
+      "backend_asset_id": "003_plate",
+      "semantic_name": "plate",
+      "aliases": [
+        "plate",
+        "003_plate"
+      ],
+      "tags": [
+        "plate"
+      ],
+      "asset_format": "RoboTwin object directory",
+      "execution_status": "robotwin_loadable",
+      "selection_eligible": true,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/robotwin_discovered_catalog.json",
+        "catalog_version": "robotwin.tabletop_asset_catalog_discovered.v0",
+        "discovery": {
+          "source": "robotwin.assets.objects",
+          "asset_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/003_plate",
+          "has_collision_dir": true,
+          "has_visual_dir": true,
+          "has_articulated_models": false
+        }
+      },
+      "match_score": 1130,
+      "matched_terms": [
+        "plate"
+      ]
+    },
+    {
+      "candidate_id": "robotwin:035_apple",
+      "catalog_source": "robotwin",
+      "asset_id": "035_apple",
+      "backend_asset_id": "035_apple",
+      "semantic_name": "apple",
+      "aliases": [
+        "apple",
+        "035_apple"
+      ],
+      "tags": [
+        "apple"
+      ],
+      "asset_format": "RoboTwin object directory",
+      "execution_status": "robotwin_loadable",
+      "selection_eligible": true,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/robotwin_discovered_catalog.json",
+        "catalog_version": "robotwin.tabletop_asset_catalog_discovered.v0",
+        "discovery": {
+          "source": "robotwin.assets.objects",
+          "asset_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/035_apple",
+          "has_collision_dir": true,
+          "has_visual_dir": true,
+          "has_articulated_models": false
+        }
+      },
+      "match_score": 1130,
+      "matched_terms": [
+        "apple"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "catalog_version": "robotwin.tabletop_asset_catalog_case.v0",
+  "catalog_name": "vegetable_basket_prompt_case",
+  "updated_at": "2026-07-02",
+  "purpose": "Prompt-specific asset selection for: a vagetable and a basket on the table.",
+  "base_catalog": "../robotwin_tabletop_assets_master.json",
+  "mvp_prompt": "a vagetable and a basket on the table",
+  "selected_asset_ids": [
+    "069_vagetable",
+    "110_basket"
+  ],
+  "entry_overrides": {},
+  "agent_usage": {
+    "designer": "Select vegetable and basket assets from the master catalog, preserving basket placement defaults.",
+    "critic": "Pay special attention to basket orientation and table penetration."
+  }
+}

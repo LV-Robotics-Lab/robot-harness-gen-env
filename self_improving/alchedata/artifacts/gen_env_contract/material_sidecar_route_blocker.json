@@ -1,0 +1,76 @@
+{
+  "schema_version": "alchedata.gen_env.v0",
+  "command": "/gen-env",
+  "route": "material_sidecar",
+  "status": "blocked_material_sidecar",
+  "task_text": "extract a relightable material sidecar for a generated or imported asset",
+  "owner": "Zheng Ye / Boris",
+  "checked_at": "2026-07-12T13:59:14.296122+00:00",
+  "inputs": {
+    "task_text": "extract a relightable material sidecar for a generated or imported asset",
+    "reference_image": null,
+    "rgbd_capture": null,
+    "reference_video": null,
+    "capture_source": null,
+    "multi_view_images": [],
+    "camera_calibration": null,
+    "lighting_assumption": null,
+    "asset_catalog_roots": [
+      "external/robotwin-text2env-demo/asset_catalogs/robotwin_tabletop_assets_master.json",
+      "artifacts/adapter_catalog/articraft10k_manifest.json"
+    ],
+    "allowed_simulator_adapters": [
+      "RoboTwin/SAPIEN"
+    ],
+    "robot_constraints": {
+      "embodiment": "RoboTwin dual-arm",
+      "workspace_reachability": "tabletop",
+      "action_interface": "Base_Task/CuRobo or generated play_once"
+    }
+  },
+  "outputs": {
+    "material_sidecar": {
+      "textures": [],
+      "materials": [],
+      "albedo": null,
+      "specular_latent": null,
+      "uncertainty": null,
+      "lighting_assumption": null,
+      "renderer_binding": null,
+      "material_provenance": {
+        "blocker_artifact": "artifacts/generation_fallback/blocked_neumatex_material_sidecar.json",
+        "candidate_asset": "generated_or_articraft_asset_pending_material_review"
+      },
+      "render_gate": {
+        "status": "not_run",
+        "reason": "material sidecar output is absent, so renderer binding and visual-material checks cannot run"
+      }
+    },
+    "handoff": {
+      "collect_outputs": [
+        "render_smoke_report",
+        "visual_material_check"
+      ],
+      "train_reads": [
+        "accepted rollout dataset manifest"
+      ],
+      "evaluate_reads": [
+        "render gate outputs",
+        "visual-material mismatch diagnosis"
+      ]
+    }
+  },
+  "blockers": [
+    {
+      "code": "MATERIAL_MULTIVIEW_INPUT_MISSING",
+      "message": "NeuMaTeX-style extraction needs calibrated multi-view images or rendered captures before material fields can be produced",
+      "owner": "Zheng Ye"
+    },
+    {
+      "code": "MATERIAL_RENDER_BINDING_MISSING",
+      "message": "No texture/material sidecar has been bound to a RoboTwin/SAPIEN asset for render verification",
+      "owner": "Zheng Ye / Boris"
+    }
+  ],
+  "claim_boundary": "This sample validates the material_sidecar branch of the unified /gen-env contract. It is a blocker record and does not claim NeuMaTeX execution."
+}

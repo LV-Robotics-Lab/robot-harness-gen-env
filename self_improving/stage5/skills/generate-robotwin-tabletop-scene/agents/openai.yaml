@@ -1,0 +1,4 @@
+interface:
+  display_name: "Generate RoboTwin Scene"
+  short_description: "Generate tabletop RoboTwin scenes from prompts"
+  default_prompt: "Use $generate-robotwin-tabletop-scene to create and validate a RoboTwin tabletop scene from my placement prompt."

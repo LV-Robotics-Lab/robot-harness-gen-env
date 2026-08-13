@@ -1,0 +1,214 @@
+{
+  "schema_version": "alchedata.sceneagent_policy_promotion.v0",
+  "status": "pass_bounded_pose_conditioned_policy_promotion",
+  "generated_at": "2026-07-14T17:29:42.898741+00:00",
+  "decision": "accept_for_bounded_sceneagent_selection2env_gate",
+  "candidate": {
+    "policy_type": "supervised_pose_conditioned_phase_aligned_trajectory_regression",
+    "checkpoint": "pose_conditioned_policy.npz",
+    "checkpoint_sha256": "bea8d1cee069554951073dbb8e1dc93a6512898a7d783b216381e1f0e883d9e4",
+    "demonstration_count": 15,
+    "unique_training_placement_count": 10,
+    "predictor": "affine",
+    "privileged_initial_object_pose": true,
+    "open_loop_after_initial_observation": true
+  },
+  "parent_state": {
+    "status": "retained_negative_act_result",
+    "evaluate_report": "runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4/evaluate_report.json",
+    "evaluate_report_sha256": "a05c4310065cca663ad9edbc1a6ae20579045462e4fcd8c85c79d224017a9a18",
+    "checkpoint_sha256": null,
+    "success_count": 1,
+    "episode_count": 4,
+    "diagnosis": "artifacts/diagnosis/placement_robustness_diagnosis.json",
+    "diagnosis_sha256": "b616074a6dea090a2153ddbe67366575f3dd715e515637d1a4f409a8da2d9f20"
+  },
+  "gates": {
+    "heldout_varied_placement": {
+      "status": "pass",
+      "success_count": 4,
+      "episode_count": 4,
+      "signature_disjoint": true,
+      "report": "runs/pose_conditioned_eval_apple_plate_heldout_v1/evaluate_report.json",
+      "report_sha256": "e033fe719e7900bd6c12161219b78d7ac956741ef3fb9237ad8c3c7af1187d74",
+      "videos": [
+        {
+          "placement_id": "eval_000",
+          "seed": 6100,
+          "path": "runs/pose_conditioned_eval_apple_plate_heldout_v1/episode_000_eval_000_seed_6100/observer_policy_rollout.mp4",
+          "sha256": "401caa2a89d0a88473de9129e3e2f1a3a66ddd74cf18a249386afa2c586a1876",
+          "frame_count": 143,
+          "fps": 8.0,
+          "duration_sec": 17.875,
+          "width": 640,
+          "height": 480
+        },
+        {
+          "placement_id": "eval_001",
+          "seed": 6101,
+          "path": "runs/pose_conditioned_eval_apple_plate_heldout_v1/episode_001_eval_001_seed_6101/observer_policy_rollout.mp4",
+          "sha256": "03a85f1bc27fcbdf52cb2c8f7803243a29745d69766352a77e2f277f2489dffd",
+          "frame_count": 143,
+          "fps": 8.0,
+          "duration_sec": 17.875,
+          "width": 640,
+          "height": 480
+        },
+        {
+          "placement_id": "eval_002",
+          "seed": 6102,
+          "path": "runs/pose_conditioned_eval_apple_plate_heldout_v1/episode_002_eval_002_seed_6102/observer_policy_rollout.mp4",
+          "sha256": "436eb97c5259dcd5128d9642da53e82594bdc92c8eacb9382d0894d375d816ed",
+          "frame_count": 143,
+          "fps": 8.0,
+          "duration_sec": 17.875,
+          "width": 640,
+          "height": 480
+        },
+        {
+          "placement_id": "eval_003",
+          "seed": 6103,
+          "path": "runs/pose_conditioned_eval_apple_plate_heldout_v1/episode_003_eval_003_seed_6103/observer_policy_rollout.mp4",
+          "sha256": "efd45b925108e99852074852aab75c807df45bae45b8a8a1673ba7d9aa36661a",
+          "frame_count": 143,
+          "fps": 8.0,
+          "duration_sec": 17.875,
+          "width": 640,
+          "height": 480
+        }
+      ]
+    },
+    "declared_domain_randomization": {
+      "status": "pass",
+      "success_count": 4,
+      "episode_count": 4,
+      "requested": {
+        "random_background": true,
+        "cluttered_table": false,
+        "random_light": true,
+        "random_table_height": 0.005,
+        "random_head_camera_dis": 0.01
+      },
+      "sampled_table_z_bias_m": [
+        -0.003098553687946679,
+        -0.00381691442010157,
+        -0.002868524809040451,
+        -0.0024143925744436905
+      ],
+      "report": "runs/pose_conditioned_eval_apple_plate_domain_randomized_v2/evaluate_report.json",
+      "report_sha256": "d72262726182dbce8b6aa393cdf68d3d1bad7ae0ba201e4be8a98bb3d9ae1dd4",
+      "videos": [
+        {
+          "placement_id": "eval_000",
+          "seed": 6100,
+          "path": "runs/pose_conditioned_eval_apple_plate_domain_randomized_v2/episode_000_eval_000_seed_6100/observer_policy_rollout.mp4",
+          "sha256": "63be2e23503bf5c419f03fe5d95168292463af6422c6852a8ff4f4db7b95fdfb",
+          "frame_count": 143,
+          "fps": 8.0,
+          "duration_sec": 17.875,
+          "width": 640,
+          "height": 480
+        },
+        {
+          "placement_id": "eval_001",
+          "seed": 6101,
+          "path": "runs/pose_conditioned_eval_apple_plate_domain_randomized_v2/episode_001_eval_001_seed_6101/observer_policy_rollout.mp4",
+          "sha256": "c64606bfd47262137951e64ee972f492ccfdd3b69f8c0aee5d1a5840f8f86e26",
+          "frame_count": 143,
+          "fps": 8.0,
+          "duration_sec": 17.875,
+          "width": 640,
+          "height": 480
+        },
+        {
+          "placement_id": "eval_002",
+          "seed": 6102,
+          "path": "runs/pose_conditioned_eval_apple_plate_domain_randomized_v2/episode_002_eval_002_seed_6102/observer_policy_rollout.mp4",
+          "sha256": "ef665ff0484ec1f1847acdc45d48c0ff20d2acd3c3702893c99f820c6eb49a3b",
+          "frame_count": 143,
+          "fps": 8.0,
+          "duration_sec": 17.875,
+          "width": 640,
+          "height": 480
+        },
+        {
+          "placement_id": "eval_003",
+          "seed": 6103,
+          "path": "runs/pose_conditioned_eval_apple_plate_domain_randomized_v2/episode_003_eval_003_seed_6103/observer_policy_rollout.mp4",
+          "sha256": "ac666e82cfdeab80d894a0c81ce82ddad9a025e70eae67fd6a466a85bd7d8c2b",
+          "frame_count": 143,
+          "fps": 8.0,
+          "duration_sec": 17.875,
+          "width": 640,
+          "height": 480
+        }
+      ],
+      "asset_receipt": "artifacts/sceneagent_policy_promotion/robotwin_background_asset_receipt.json",
+      "asset_receipt_sha256": "607bec58f6f53741a10bd8f91ca193e2d33980599365837d06f1a834aac78b7a"
+    },
+    "cross_task_learned_policy": {
+      "status": "pass",
+      "task_id": "task_can_basket",
+      "success_count": 3,
+      "episode_count": 3,
+      "training_seeds": [
+        7200,
+        7201
+      ],
+      "heldout_eval_seeds": [
+        7300,
+        7301,
+        7302
+      ],
+      "checkpoint_sha256": "71be8da5ee06efc866956dd074c8f709842452177bb737b0636f5b0d20b42e9d",
+      "report": "runs/pose_conditioned_eval_can_basket_heldout_seeds_v1/evaluate_report.json",
+      "report_sha256": "94fc60ca77551e34ea5a98cae98e68644c32c1d2ef95c79a9a81789204bc7c64",
+      "videos": [
+        {
+          "placement_id": "fixed",
+          "seed": 7300,
+          "path": "runs/pose_conditioned_eval_can_basket_heldout_seeds_v1/episode_000_fixed_seed_7300/observer_policy_rollout.mp4",
+          "sha256": "ab8c942604a1f8892f6123dfa7fa96d0af3c1c242d1f2fd6c160c6a1b9fb6fc8",
+          "frame_count": 144,
+          "fps": 8.0,
+          "duration_sec": 18.0,
+          "width": 640,
+          "height": 480
+        },
+        {
+          "placement_id": "fixed",
+          "seed": 7301,
+          "path": "runs/pose_conditioned_eval_can_basket_heldout_seeds_v1/episode_001_fixed_seed_7301/observer_policy_rollout.mp4",
+          "sha256": "ab8c942604a1f8892f6123dfa7fa96d0af3c1c242d1f2fd6c160c6a1b9fb6fc8",
+          "frame_count": 144,
+          "fps": 8.0,
+          "duration_sec": 18.0,
+          "width": 640,
+          "height": 480
+        },
+        {
+          "placement_id": "fixed",
+          "seed": 7302,
+          "path": "runs/pose_conditioned_eval_can_basket_heldout_seeds_v1/episode_002_fixed_seed_7302/observer_policy_rollout.mp4",
+          "sha256": "ab8c942604a1f8892f6123dfa7fa96d0af3c1c242d1f2fd6c160c6a1b9fb6fc8",
+          "frame_count": 144,
+          "fps": 8.0,
+          "duration_sec": 18.0,
+          "width": 640,
+          "height": 480
+        }
+      ],
+      "placement_boundary": "fixed placement; seed holdout only"
+    },
+    "promotion_record": {
+      "status": "pass"
+    }
+  },
+  "rollback_state": {
+    "action": "restore_parent_act_checkpoint_and_negative_result",
+    "parent_evaluate_report": "runs/act_eval_apple_plate_recovery_new_holdout_chunk175_v4/evaluate_report.json",
+    "trigger": "candidate verifier regression, evidence hash mismatch, or use outside declared policy boundary"
+  },
+  "claim_boundary": "Promotion is limited to a privileged, initial-pose-conditioned, open-loop learned trajectory baseline in the generated RoboTwin apple/plate task, plus fixed-placement seed holdout on can/basket. It does not promote ACT, establish visual robustness, prove language-conditioned control, or establish broad task transfer.",
+  "parent_diagnosis_status": "pass_failure_to_data_iteration_promotion_rejected"
+}

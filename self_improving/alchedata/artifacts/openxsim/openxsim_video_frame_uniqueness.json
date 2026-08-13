@@ -1,0 +1,52 @@
+{
+  "schema_version": "alchedata.openxsim_video_frame_uniqueness.v1",
+  "status": "pass_all_decoded_frames_unique",
+  "method": "Decode each final MP4 video stream with ffmpeg and hash every decoded frame using the framemd5 muxer.",
+  "videos": [
+    {
+      "video_id": "isaac_runtime_baseline",
+      "report_path": "assets/isaac_intake/baseline_motion.mp4",
+      "bytes": 412244,
+      "sha256": "7d8e4557e92b318869b54598ed6be1f1e60f8d02a81fa3417027b6c8b43aae03",
+      "decoded_frame_count": 32,
+      "unique_decoded_frame_hash_count": 32,
+      "all_decoded_frames_unique": true,
+      "fps": 12.0,
+      "duration_seconds": 2.666667
+    },
+    {
+      "video_id": "open_laptop",
+      "report_path": "assets/benchmark_videos/open_laptop.mp4",
+      "bytes": 538746,
+      "sha256": "340293086406668fab0ecc3aaa42d75714950e208a7041c898fe182847b0f6e0",
+      "decoded_frame_count": 640,
+      "unique_decoded_frame_hash_count": 640,
+      "all_decoded_frames_unique": true,
+      "fps": 12.0,
+      "duration_seconds": 53.333333
+    },
+    {
+      "video_id": "place_mouse_pad",
+      "report_path": "assets/benchmark_videos/place_mouse_pad.mp4",
+      "bytes": 510319,
+      "sha256": "f575063c890380d0c1dc92e469e0c80df6cc65c7ddc78c861fbf44e24ba05c04",
+      "decoded_frame_count": 531,
+      "unique_decoded_frame_hash_count": 531,
+      "all_decoded_frames_unique": true,
+      "fps": 12.0,
+      "duration_seconds": 44.25
+    },
+    {
+      "video_id": "place_container_plate",
+      "report_path": "assets/benchmark_videos/place_container_plate.mp4",
+      "bytes": 549050,
+      "sha256": "fb0e9ec9fb635639567e4035baeda1aca598508ff0d933a2f9ecc364f0ca3b51",
+      "decoded_frame_count": 527,
+      "unique_decoded_frame_hash_count": 527,
+      "all_decoded_frames_unique": true,
+      "fps": 12.0,
+      "duration_seconds": 43.916667
+    }
+  ],
+  "claim_boundary": "Byte-distinct decoded frames prove that the bundled videos are not endpoint-only two-frame repeats. They do not by themselves prove task success, policy quality, or semantic motion quality."
+}

@@ -1,0 +1,8 @@
+{
+  "schema_version": "alchedata.run_state.v0",
+  "run_id": "task_apple_plate_static",
+  "command": "/gen-env",
+  "status": "pass_sim_smoke",
+  "artifact_root": "artifacts/run_state/task_apple_plate",
+  "source_summary": "runs/probe_static_apple_plate/pipeline_summary.json"
+}

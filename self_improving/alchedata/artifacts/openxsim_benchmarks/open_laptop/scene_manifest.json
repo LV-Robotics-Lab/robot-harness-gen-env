@@ -1,0 +1,107 @@
+{
+  "schema_version": "alchedata.openxsim_scene_manifest.v0",
+  "benchmark_id": "robotwin_open_laptop_seed_0",
+  "scene_id": "robotwin_open_laptop_seed_0",
+  "source": "official_robotwin_task_class",
+  "simulator_adapter": "RoboTwin/SAPIEN",
+  "task_config": "demo_clean",
+  "seed": 0,
+  "initial_entities": {
+    "laptop": {
+      "p": [
+        -0.0022334882523864508,
+        0.021825309842824936,
+        0.7456061244010925
+      ],
+      "q": [
+        0.8170540928840637,
+        3.522428960422985e-05,
+        5.205589332035743e-05,
+        0.5765609741210938
+      ],
+      "qpos": [
+        -1.374816656112671
+      ]
+    },
+    "table": {
+      "p": [
+        0.0,
+        0.0,
+        0.7400000095367432
+      ],
+      "q": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "wall": {
+      "p": [
+        0.0,
+        1.0,
+        1.5
+      ],
+      "q": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "final_entities": {
+    "laptop": {
+      "p": [
+        -0.0022334882523864508,
+        0.021825309842824936,
+        0.7456061244010925
+      ],
+      "q": [
+        0.8170540928840637,
+        3.522428960422985e-05,
+        5.205589332035743e-05,
+        0.5765609741210938
+      ],
+      "qpos": [
+        -0.5371635556221008
+      ]
+    },
+    "table": {
+      "p": [
+        0.0,
+        0.0,
+        0.7400000095367432
+      ],
+      "q": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "wall": {
+      "p": [
+        0.0,
+        1.0,
+        1.5
+      ],
+      "q": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "texture_info": {
+    "wall_texture": null,
+    "table_texture": null
+  },
+  "camera_artifacts": {
+    "initial_head_camera": "runs/official_rollout_open_laptop/initial_head_camera.png",
+    "initial_observer_camera": "runs/official_rollout_open_laptop/initial_observer_camera.png",
+    "final_head_camera": "runs/official_rollout_open_laptop/final_head_camera.png",
+    "final_observer_camera": "runs/official_rollout_open_laptop/final_observer_camera.png"
+  }
+}

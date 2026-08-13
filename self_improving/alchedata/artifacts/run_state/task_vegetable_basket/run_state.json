@@ -1,0 +1,8 @@
+{
+  "schema_version": "alchedata.run_state.v0",
+  "run_id": "task_vegetable_basket_static",
+  "command": "/gen-env",
+  "status": "pass_sim_smoke",
+  "artifact_root": "artifacts/run_state/task_vegetable_basket",
+  "source_summary": "runs/probe_static_vegetable_basket/pipeline_summary.json"
+}

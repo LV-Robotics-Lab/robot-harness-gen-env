@@ -1,0 +1,2932 @@
+{
+  "schema_version": "robotwin.prompt_matrix_report.v1",
+  "generated_at": "2026-07-19T11:48:12.527481+00:00",
+  "matrix": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/tests/fixtures/prompt_matrix.json",
+  "matrix_sha256": "7af1f2d0207abdf558494c267954b75294aa268d7453d0ec323b4a3e5a7dc743",
+  "asset_catalog": "/home/jingxiang/workspace/robotwin-text2env-stage05-validation/data/scene_gen/asset_catalog.json",
+  "asset_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+  "runtime_requested": true,
+  "runtime_all_seeds": false,
+  "case_count": 11,
+  "seed_count_per_case": 3,
+  "total": 33,
+  "pass_count": 33,
+  "fail_count": 0,
+  "runtime_count": 10,
+  "runtime_pass_count": 10,
+  "status": "pass",
+  "complete": true,
+  "outcomes": [
+    {
+      "case_id": "red_block_on_plate",
+      "prompt": "Place a red block on top of a plate.",
+      "seed": 7,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "place_a_red_block_on_top_of_a_01bcb41f58",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_block_on_plate/seed_000007/place_a_red_block_on_top_of_a_01bcb41f58",
+      "resolved_scene_sha256": "1c52d5589e72513127a73237f6e1074a6c0f7e5eb602a8110f47771b22455a3c",
+      "manifest_sha256": "640a722d8a9996bf469ad13955af923e17a2a3ef9116eb2da3bba988727f3a4c",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "place_a_red_block_on_top_of_a_01bcb41f58",
+        "status": "generated",
+        "generated_count": 1,
+        "procedural_count": 0,
+        "derived_scale_count": 1,
+        "scaled_proxy_count": 1,
+        "stabilized_proxy_count": 0,
+        "generated": [
+          {
+            "schema_version": "robotwin.generated_asset_provenance.v1",
+            "generator": "scene_gen.derived_primitive_scale.v2",
+            "generation_kind": "derived_scaled_proxy",
+            "asset_id": "900_scaled_proxy_block_76197fa2",
+            "semantic_category": "block",
+            "requested_color": "red",
+            "requested_material": null,
+            "geometry_family": "bounded_box_proxy",
+            "geometry_fidelity": "primitive_proxy_preserving_uniform_source_dimensions",
+            "generated_license": "project_generated_academic_artifact",
+            "dimensions_m": [
+              0.055088205463,
+              0.054103871374,
+              0.038979723001
+            ],
+            "uniform_scale_factor": 0.597,
+            "source_asset_id": "004_fluted-block",
+            "source_model_id": 0,
+            "source_dimensions_m": [
+              0.0922750510275364,
+              0.09062625020742418,
+              0.06529266834259033
+            ],
+            "adaptation_reasons": [
+              "source_runtime_instability",
+              "nested_geometry_incompatible"
+            ],
+            "semantic_name": "block",
+            "aliases": [
+              "block",
+              "cube"
+            ],
+            "materials": [
+              "plastic",
+              "wood"
+            ],
+            "compatibility": {
+              "relation": "on_top_of",
+              "target_asset_id": "003_plate",
+              "target_model_id": 0,
+              "headroom_fraction": 0.92,
+              "source_runtime_probe": "catalog collision unstable; primitive proxy required"
+            },
+            "files": {
+              "visual": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/visual/textured0.obj",
+                "sha256": "e4f4f854c272069a124bb2d5aa07445193547ab8e1b00752f3c589e4e72997dd"
+              },
+              "collision": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/collision/textured0.obj",
+                "sha256": "4c130801f7c3efcc2d26916aa3f797654f74e02efb9c573e4a1bdf4c5ddf7bad"
+              },
+              "material": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/visual/material.mtl",
+                "sha256": "a67b5598fb06fcedc134869f2f649f101cb7af65436cd6e24272f7ef7cdb35e4"
+              },
+              "metadata": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/model_data0.json",
+                "sha256": "1765371a567ea29de0f773226bb5c9cb9e8ac01e350dd9c714a4a9a6c4bece7d"
+              }
+            }
+          }
+        ],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "049234ba9aba908addfcecc2c35aa4c459140b4789425946674b0140c4cdd879"
+      },
+      "objects": [
+        {
+          "object_id": "block_1",
+          "asset_id": "900_scaled_proxy_block_76197fa2",
+          "asset_provenance": "derived_scaled_proxy",
+          "dimensions_m": [
+            0.055088205463,
+            0.054103871374,
+            0.038979723001
+          ],
+          "uniform_scale_factor": 0.597
+        },
+        {
+          "object_id": "plate_1",
+          "asset_id": "003_plate",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2297,
+            0.23,
+            0.028
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime_exit_code": 0,
+      "runtime": {
+        "status": "pass",
+        "fail_count": 0,
+        "video_frame_count": 120,
+        "unique_video_frame_count": 100,
+        "objects": {
+          "block_1": {
+            "translation_drift_m": 0.0033390405708761317,
+            "rotation_drift_deg": 0.4796043010901754,
+            "support_contact_fraction": 1.0,
+            "support_target": "plate_1",
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": 0.008860584459791897,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 881
+          },
+          "plate_1": {
+            "translation_drift_m": 0.0010069610499289963,
+            "rotation_drift_deg": 0.0,
+            "support_contact_fraction": 1.0,
+            "support_target": "table",
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 3642
+          }
+        },
+        "artifacts": {
+          "runtime_evidence": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_block_on_plate/seed_000007/place_a_red_block_on_top_of_a_01bcb41f58/runtime/runtime_evidence.json",
+            "sha256": "a46c48d1ee289c82c30bb9cbc111ecf414e10f70d84f1223cce112e094455b1e"
+          },
+          "runtime_validation": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_block_on_plate/seed_000007/place_a_red_block_on_top_of_a_01bcb41f58/runtime/runtime_validation_report.json",
+            "sha256": "0ef17a9868d82ed495bcedfbc19ea6159757920608bc736c56ab8d2bddebc5c1"
+          },
+          "head": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_block_on_plate/seed_000007/place_a_red_block_on_top_of_a_01bcb41f58/runtime/preview_head.png",
+            "sha256": "ceb91398eae2a679b9648539c4de1386dbe16fa508d3fee7e68834e4aa0a354d"
+          },
+          "world_left": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_block_on_plate/seed_000007/place_a_red_block_on_top_of_a_01bcb41f58/runtime/preview_world_left.png",
+            "sha256": "1507d7c4e0c0fa6467c9cd0f500c4c0780206cdb397db98c101ab8efb225ca21"
+          },
+          "world_right": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_block_on_plate/seed_000007/place_a_red_block_on_top_of_a_01bcb41f58/runtime/preview_world_right.png",
+            "sha256": "26ac1282e141dce26e1c7d7aed92634537094d2b06a03951f341cb87ee1a4456"
+          },
+          "observer_start": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_block_on_plate/seed_000007/place_a_red_block_on_top_of_a_01bcb41f58/runtime/observer_start.png",
+            "sha256": "df3d1c67a956c8bc31f3ce68c59675cdff1c2958e5ab79447cf1cf6c0f152863"
+          },
+          "observer_mid": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_block_on_plate/seed_000007/place_a_red_block_on_top_of_a_01bcb41f58/runtime/observer_mid.png",
+            "sha256": "d52f74aeda6c068553fc414a3e37e83425613877e380b9f6ad1d6c38c6ae2fba"
+          },
+          "observer_end": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_block_on_plate/seed_000007/place_a_red_block_on_top_of_a_01bcb41f58/runtime/observer_end.png",
+            "sha256": "4987b13e597c3260958f4938506984b7e8729ca7d357f3073131c23b3d8da8f3"
+          },
+          "video": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_block_on_plate/seed_000007/place_a_red_block_on_top_of_a_01bcb41f58/runtime/observer_runtime.mp4",
+            "sha256": "c8718ba7e657b7cdb6fd13b45000bad3463b7f4b28a4e1e3485a6059fadd93b7"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "red_block_on_plate",
+      "prompt": "Place a red block on top of a plate.",
+      "seed": 31,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "place_a_red_block_on_top_of_a_01bcb41f58",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_block_on_plate/seed_000031/place_a_red_block_on_top_of_a_01bcb41f58",
+      "resolved_scene_sha256": "0a06541a3f950dc69a753ec2900dd63abf4710604f5caaf4abd30e1cb1fe46cc",
+      "manifest_sha256": "f5bc7aa155e72304f6b863d71738b0da118d223bb2228427d1b39ee185186aaf",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "place_a_red_block_on_top_of_a_01bcb41f58",
+        "status": "generated",
+        "generated_count": 1,
+        "procedural_count": 0,
+        "derived_scale_count": 1,
+        "scaled_proxy_count": 1,
+        "stabilized_proxy_count": 0,
+        "generated": [
+          {
+            "schema_version": "robotwin.generated_asset_provenance.v1",
+            "generator": "scene_gen.derived_primitive_scale.v2",
+            "generation_kind": "derived_scaled_proxy",
+            "asset_id": "900_scaled_proxy_block_76197fa2",
+            "semantic_category": "block",
+            "requested_color": "red",
+            "requested_material": null,
+            "geometry_family": "bounded_box_proxy",
+            "geometry_fidelity": "primitive_proxy_preserving_uniform_source_dimensions",
+            "generated_license": "project_generated_academic_artifact",
+            "dimensions_m": [
+              0.055088205463,
+              0.054103871374,
+              0.038979723001
+            ],
+            "uniform_scale_factor": 0.597,
+            "source_asset_id": "004_fluted-block",
+            "source_model_id": 0,
+            "source_dimensions_m": [
+              0.0922750510275364,
+              0.09062625020742418,
+              0.06529266834259033
+            ],
+            "adaptation_reasons": [
+              "source_runtime_instability",
+              "nested_geometry_incompatible"
+            ],
+            "semantic_name": "block",
+            "aliases": [
+              "block",
+              "cube"
+            ],
+            "materials": [
+              "plastic",
+              "wood"
+            ],
+            "compatibility": {
+              "relation": "on_top_of",
+              "target_asset_id": "003_plate",
+              "target_model_id": 0,
+              "headroom_fraction": 0.92,
+              "source_runtime_probe": "catalog collision unstable; primitive proxy required"
+            },
+            "files": {
+              "visual": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/visual/textured0.obj",
+                "sha256": "e4f4f854c272069a124bb2d5aa07445193547ab8e1b00752f3c589e4e72997dd"
+              },
+              "collision": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/collision/textured0.obj",
+                "sha256": "4c130801f7c3efcc2d26916aa3f797654f74e02efb9c573e4a1bdf4c5ddf7bad"
+              },
+              "material": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/visual/material.mtl",
+                "sha256": "a67b5598fb06fcedc134869f2f649f101cb7af65436cd6e24272f7ef7cdb35e4"
+              },
+              "metadata": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/model_data0.json",
+                "sha256": "1765371a567ea29de0f773226bb5c9cb9e8ac01e350dd9c714a4a9a6c4bece7d"
+              }
+            }
+          }
+        ],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "049234ba9aba908addfcecc2c35aa4c459140b4789425946674b0140c4cdd879"
+      },
+      "objects": [
+        {
+          "object_id": "block_1",
+          "asset_id": "900_scaled_proxy_block_76197fa2",
+          "asset_provenance": "derived_scaled_proxy",
+          "dimensions_m": [
+            0.055088205463,
+            0.054103871374,
+            0.038979723001
+          ],
+          "uniform_scale_factor": 0.597
+        },
+        {
+          "object_id": "plate_1",
+          "asset_id": "003_plate",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2297,
+            0.23,
+            0.028
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "red_block_on_plate",
+      "prompt": "Place a red block on top of a plate.",
+      "seed": 73,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "place_a_red_block_on_top_of_a_01bcb41f58",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_block_on_plate/seed_000073/place_a_red_block_on_top_of_a_01bcb41f58",
+      "resolved_scene_sha256": "0954c62ed218401237e57496f34e7f04cf118363df72ab7dfe02adf6f2b0767f",
+      "manifest_sha256": "6481d7bae33a334dc176e83c54dc6dddfd7c50d1088f60755ff2c014dc0fd4de",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "place_a_red_block_on_top_of_a_01bcb41f58",
+        "status": "generated",
+        "generated_count": 1,
+        "procedural_count": 0,
+        "derived_scale_count": 1,
+        "scaled_proxy_count": 1,
+        "stabilized_proxy_count": 0,
+        "generated": [
+          {
+            "schema_version": "robotwin.generated_asset_provenance.v1",
+            "generator": "scene_gen.derived_primitive_scale.v2",
+            "generation_kind": "derived_scaled_proxy",
+            "asset_id": "900_scaled_proxy_block_76197fa2",
+            "semantic_category": "block",
+            "requested_color": "red",
+            "requested_material": null,
+            "geometry_family": "bounded_box_proxy",
+            "geometry_fidelity": "primitive_proxy_preserving_uniform_source_dimensions",
+            "generated_license": "project_generated_academic_artifact",
+            "dimensions_m": [
+              0.055088205463,
+              0.054103871374,
+              0.038979723001
+            ],
+            "uniform_scale_factor": 0.597,
+            "source_asset_id": "004_fluted-block",
+            "source_model_id": 0,
+            "source_dimensions_m": [
+              0.0922750510275364,
+              0.09062625020742418,
+              0.06529266834259033
+            ],
+            "adaptation_reasons": [
+              "source_runtime_instability",
+              "nested_geometry_incompatible"
+            ],
+            "semantic_name": "block",
+            "aliases": [
+              "block",
+              "cube"
+            ],
+            "materials": [
+              "plastic",
+              "wood"
+            ],
+            "compatibility": {
+              "relation": "on_top_of",
+              "target_asset_id": "003_plate",
+              "target_model_id": 0,
+              "headroom_fraction": 0.92,
+              "source_runtime_probe": "catalog collision unstable; primitive proxy required"
+            },
+            "files": {
+              "visual": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/visual/textured0.obj",
+                "sha256": "e4f4f854c272069a124bb2d5aa07445193547ab8e1b00752f3c589e4e72997dd"
+              },
+              "collision": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/collision/textured0.obj",
+                "sha256": "4c130801f7c3efcc2d26916aa3f797654f74e02efb9c573e4a1bdf4c5ddf7bad"
+              },
+              "material": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/visual/material.mtl",
+                "sha256": "a67b5598fb06fcedc134869f2f649f101cb7af65436cd6e24272f7ef7cdb35e4"
+              },
+              "metadata": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/model_data0.json",
+                "sha256": "1765371a567ea29de0f773226bb5c9cb9e8ac01e350dd9c714a4a9a6c4bece7d"
+              }
+            }
+          }
+        ],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "049234ba9aba908addfcecc2c35aa4c459140b4789425946674b0140c4cdd879"
+      },
+      "objects": [
+        {
+          "object_id": "block_1",
+          "asset_id": "900_scaled_proxy_block_76197fa2",
+          "asset_provenance": "derived_scaled_proxy",
+          "dimensions_m": [
+            0.055088205463,
+            0.054103871374,
+            0.038979723001
+          ],
+          "uniform_scale_factor": 0.597
+        },
+        {
+          "object_id": "plate_1",
+          "asset_id": "003_plate",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2297,
+            0.23,
+            0.028
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "can_on_plate",
+      "prompt": "Place a can on top of a plate.",
+      "seed": 7,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "place_a_can_on_top_of_a_plate_fe0b76e316",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/can_on_plate/seed_000007/place_a_can_on_top_of_a_plate_fe0b76e316",
+      "resolved_scene_sha256": "88c2630df98f14d225091ed98999833dc54ef428d480328c0870963b605965de",
+      "manifest_sha256": "2a622193aa2a92fc4899109e79ec419995ffcf3fc32da368d6f009dae06f5b8a",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "place_a_can_on_top_of_a_plate_fe0b76e316",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "can_1",
+          "asset_id": "071_can",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.0712,
+            0.0712,
+            0.0965
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "plate_1",
+          "asset_id": "003_plate",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2297,
+            0.23,
+            0.028
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime_exit_code": 0,
+      "runtime": {
+        "status": "pass",
+        "fail_count": 0,
+        "video_frame_count": 120,
+        "unique_video_frame_count": 100,
+        "objects": {
+          "can_1": {
+            "translation_drift_m": 0.003921278254504423,
+            "rotation_drift_deg": 0.9168463853201176,
+            "support_contact_fraction": 1.0,
+            "support_target": "plate_1",
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": 0.00969294839223022,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 928
+          },
+          "plate_1": {
+            "translation_drift_m": 0.0010074377070130268,
+            "rotation_drift_deg": 0.0,
+            "support_contact_fraction": 1.0,
+            "support_target": "table",
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 3628
+          }
+        },
+        "artifacts": {
+          "runtime_evidence": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/can_on_plate/seed_000007/place_a_can_on_top_of_a_plate_fe0b76e316/runtime/runtime_evidence.json",
+            "sha256": "a8aa3bf7b36f7b19a90adc6fb9253f554aeade0394cea7aa27cdb93446627c32"
+          },
+          "runtime_validation": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/can_on_plate/seed_000007/place_a_can_on_top_of_a_plate_fe0b76e316/runtime/runtime_validation_report.json",
+            "sha256": "50abd1123ff5c584a5cd0251dda49ed022ae000c5c8df172a775014cc306eaa7"
+          },
+          "head": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/can_on_plate/seed_000007/place_a_can_on_top_of_a_plate_fe0b76e316/runtime/preview_head.png",
+            "sha256": "1f6a509d3dbbab9061106ca1fdf0fbd0b62063c4eb79cc01647b8d28033eaaca"
+          },
+          "world_left": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/can_on_plate/seed_000007/place_a_can_on_top_of_a_plate_fe0b76e316/runtime/preview_world_left.png",
+            "sha256": "1ec2720b8a5bc8a8b8201538475fc982f25439f2969d58feb2f1fc5ae36fb097"
+          },
+          "world_right": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/can_on_plate/seed_000007/place_a_can_on_top_of_a_plate_fe0b76e316/runtime/preview_world_right.png",
+            "sha256": "3f019e47c64badcc6a3d96e5f65c7054687830137125e2eeda7ea1c503173d32"
+          },
+          "observer_start": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/can_on_plate/seed_000007/place_a_can_on_top_of_a_plate_fe0b76e316/runtime/observer_start.png",
+            "sha256": "738693faf957f83a895a50c2dedf880495c03bd3dc045c53f341ae13a9e3d32e"
+          },
+          "observer_mid": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/can_on_plate/seed_000007/place_a_can_on_top_of_a_plate_fe0b76e316/runtime/observer_mid.png",
+            "sha256": "bb4cc281a42bcca937e9084b91030f19d04f2e1bf044e5ae4e879ca5e2045b97"
+          },
+          "observer_end": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/can_on_plate/seed_000007/place_a_can_on_top_of_a_plate_fe0b76e316/runtime/observer_end.png",
+            "sha256": "c93468cf0c1e381f573e0e3c7b8760146d94fe2b2c7907241fa184b47d2b17ce"
+          },
+          "video": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/can_on_plate/seed_000007/place_a_can_on_top_of_a_plate_fe0b76e316/runtime/observer_runtime.mp4",
+            "sha256": "a41d05366050ba0c2af635e69299a12a4b2a0e78ed27490517d27b122fa12a4e"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "can_on_plate",
+      "prompt": "Place a can on top of a plate.",
+      "seed": 31,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "place_a_can_on_top_of_a_plate_fe0b76e316",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/can_on_plate/seed_000031/place_a_can_on_top_of_a_plate_fe0b76e316",
+      "resolved_scene_sha256": "e310bb17cf0390deb8f2c60649719ccdd18f8917e669a3dd9719aa52d62d1ade",
+      "manifest_sha256": "1f6445f2722564a46cab502f0aa37c321819bd2dced7cf11a59dae350240c351",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "place_a_can_on_top_of_a_plate_fe0b76e316",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "can_1",
+          "asset_id": "071_can",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.0712,
+            0.0712,
+            0.0965
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "plate_1",
+          "asset_id": "003_plate",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2297,
+            0.23,
+            0.028
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "can_on_plate",
+      "prompt": "Place a can on top of a plate.",
+      "seed": 73,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "place_a_can_on_top_of_a_plate_fe0b76e316",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/can_on_plate/seed_000073/place_a_can_on_top_of_a_plate_fe0b76e316",
+      "resolved_scene_sha256": "40297cb29447817a9ed5a3f86425a84fb788772210e14ab0fb853ca5e260ce48",
+      "manifest_sha256": "acf25d6b5e7fb9479e1a478f864cb332ccafab2df31590d3cf6d2585f5f45c07",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "place_a_can_on_top_of_a_plate_fe0b76e316",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "can_1",
+          "asset_id": "071_can",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.0712,
+            0.0712,
+            0.0965
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "plate_1",
+          "asset_id": "003_plate",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2297,
+            0.23,
+            0.028
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "apple_in_basket",
+      "prompt": "Put an apple inside a basket.",
+      "seed": 7,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "put_an_apple_inside_a_basket_e25720c395",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_in_basket/seed_000007/put_an_apple_inside_a_basket_e25720c395",
+      "resolved_scene_sha256": "7fdd10a42488bc104039c11c32401ed1d408dd7fcad4873789455c01fceb0ca6",
+      "manifest_sha256": "59930fb368c6a243fa69747c3b05872828171e72f0711d2697862190c51cdb9f",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "put_an_apple_inside_a_basket_e25720c395",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "apple_1",
+          "asset_id": "035_apple",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.0661,
+            0.0643,
+            0.0557
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "basket_1",
+          "asset_id": "110_basket",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2332,
+            0.1512,
+            0.1767
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime_exit_code": 0,
+      "runtime": {
+        "status": "pass",
+        "fail_count": 0,
+        "video_frame_count": 120,
+        "unique_video_frame_count": 120,
+        "objects": {
+          "apple_1": {
+            "translation_drift_m": 0.0660018831092395,
+            "rotation_drift_deg": 88.9947283900022,
+            "support_contact_fraction": 1.0,
+            "support_target": "basket_1",
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": true,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 505
+          },
+          "basket_1": {
+            "translation_drift_m": 0.0,
+            "rotation_drift_deg": 0.0,
+            "support_contact_fraction": 0.0,
+            "support_target": null,
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 7203
+          }
+        },
+        "artifacts": {
+          "runtime_evidence": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_in_basket/seed_000007/put_an_apple_inside_a_basket_e25720c395/runtime/runtime_evidence.json",
+            "sha256": "985783b7a8d0e92b7f95d88a0c302ae059d4a74fa99153031a26c4875aab584d"
+          },
+          "runtime_validation": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_in_basket/seed_000007/put_an_apple_inside_a_basket_e25720c395/runtime/runtime_validation_report.json",
+            "sha256": "8370f0453a613b6d1c52254f998fe5dd15b5a3beb30a48fa1ccc21fb3c06aeea"
+          },
+          "head": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_in_basket/seed_000007/put_an_apple_inside_a_basket_e25720c395/runtime/preview_head.png",
+            "sha256": "60b91bfb8fa73e1df12b59a7eec31b0ceb8bd59c1ca95c03b52df77ff185d648"
+          },
+          "world_left": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_in_basket/seed_000007/put_an_apple_inside_a_basket_e25720c395/runtime/preview_world_left.png",
+            "sha256": "95adbe23a7eb42f598fceebf3b5e83746ae60ed34f872d30a6adb18511b03bd3"
+          },
+          "world_right": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_in_basket/seed_000007/put_an_apple_inside_a_basket_e25720c395/runtime/preview_world_right.png",
+            "sha256": "950cb829ee9a1fcc321796a1d2931ed3a1250b063703aa1b1318f5a75f00ebf5"
+          },
+          "observer_start": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_in_basket/seed_000007/put_an_apple_inside_a_basket_e25720c395/runtime/observer_start.png",
+            "sha256": "a7d274c6f324578fe5d48f59f5b53ed1533f772ba178d8a4ae80f5944380ac2f"
+          },
+          "observer_mid": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_in_basket/seed_000007/put_an_apple_inside_a_basket_e25720c395/runtime/observer_mid.png",
+            "sha256": "2af9e5b8ec7598ed9105ff9b1b9a272af3bf8b64860c6449e5d03039725e5918"
+          },
+          "observer_end": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_in_basket/seed_000007/put_an_apple_inside_a_basket_e25720c395/runtime/observer_end.png",
+            "sha256": "d260b45d379df98450dacef98ab51ca20544f81240a467b4b62b548968cf29cb"
+          },
+          "video": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_in_basket/seed_000007/put_an_apple_inside_a_basket_e25720c395/runtime/observer_runtime.mp4",
+            "sha256": "734e918e38810575dd86b27c95a4bc34894d5f2c9b9deed478801243a8fbe423"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "apple_in_basket",
+      "prompt": "Put an apple inside a basket.",
+      "seed": 31,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "put_an_apple_inside_a_basket_e25720c395",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_in_basket/seed_000031/put_an_apple_inside_a_basket_e25720c395",
+      "resolved_scene_sha256": "aa8d2d7fa4c78452da8a7edaab634195311378a90822faf75f7f34771e9fea74",
+      "manifest_sha256": "f01cf9921822156eea47e12f81931316bac47ac3a7362cbb9dce79a84810b9e3",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "put_an_apple_inside_a_basket_e25720c395",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "apple_1",
+          "asset_id": "035_apple",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.0661,
+            0.0643,
+            0.0557
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "basket_1",
+          "asset_id": "110_basket",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2332,
+            0.1512,
+            0.1767
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "apple_in_basket",
+      "prompt": "Put an apple inside a basket.",
+      "seed": 73,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "put_an_apple_inside_a_basket_e25720c395",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_in_basket/seed_000073/put_an_apple_inside_a_basket_e25720c395",
+      "resolved_scene_sha256": "5c4b09e49d1c6767ace21301d8bb2d770feab413c90d39a92b34b056ff6b53ab",
+      "manifest_sha256": "8c3cf414d1789bf6849d88ed15ceb1c3f8324cab6dce58dbd81a061533243228",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "put_an_apple_inside_a_basket_e25720c395",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "apple_1",
+          "asset_id": "035_apple",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.0661,
+            0.0643,
+            0.0557
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "basket_1",
+          "asset_id": "110_basket",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2332,
+            0.1512,
+            0.1767
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "cup_in_basket",
+      "prompt": "Put a cup inside a basket.",
+      "seed": 7,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "put_a_cup_inside_a_basket_f1d4aaeeea",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/cup_in_basket/seed_000007/put_a_cup_inside_a_basket_f1d4aaeeea",
+      "resolved_scene_sha256": "12d53efdd8164f2bfaa255fc59b2d310027e6437e9ed2fc48549ae9e52351037",
+      "manifest_sha256": "ae203c7680171520e16f772cae7c7903aa018a06db04781a3b72132d851db5ad",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "put_a_cup_inside_a_basket_f1d4aaeeea",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "basket_1",
+          "asset_id": "110_basket",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2332,
+            0.1512,
+            0.1767
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.08690809750731039,
+            0.08641119367807502,
+            0.0895141257492691
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime_exit_code": 0,
+      "runtime": {
+        "status": "pass",
+        "fail_count": 0,
+        "video_frame_count": 120,
+        "unique_video_frame_count": 100,
+        "objects": {
+          "basket_1": {
+            "translation_drift_m": 0.0,
+            "rotation_drift_deg": 0.0,
+            "support_contact_fraction": 0.0,
+            "support_target": null,
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 6108
+          },
+          "cup_1": {
+            "translation_drift_m": 0.002644663437853825,
+            "rotation_drift_deg": 0.3618032987387902,
+            "support_contact_fraction": 1.0,
+            "support_target": "basket_1",
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": true,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 1626
+          }
+        },
+        "artifacts": {
+          "runtime_evidence": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/cup_in_basket/seed_000007/put_a_cup_inside_a_basket_f1d4aaeeea/runtime/runtime_evidence.json",
+            "sha256": "8e3f4fb8506c860be0041fd13fa842dde04cd0ed4d809d0c7f4ff675782ff3e1"
+          },
+          "runtime_validation": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/cup_in_basket/seed_000007/put_a_cup_inside_a_basket_f1d4aaeeea/runtime/runtime_validation_report.json",
+            "sha256": "a8c9eed43973f04fe370f1e386fe259e513185f9a8ac6eaafa9cf95518c980b2"
+          },
+          "head": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/cup_in_basket/seed_000007/put_a_cup_inside_a_basket_f1d4aaeeea/runtime/preview_head.png",
+            "sha256": "f44085849e75ad9555306f776014b4492cce66d2a174da3029f4aabbdf8ae993"
+          },
+          "world_left": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/cup_in_basket/seed_000007/put_a_cup_inside_a_basket_f1d4aaeeea/runtime/preview_world_left.png",
+            "sha256": "7a5ddf4d28812f43573f14d73b1e049bbaf366f28e8e86ecae7495382b56e906"
+          },
+          "world_right": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/cup_in_basket/seed_000007/put_a_cup_inside_a_basket_f1d4aaeeea/runtime/preview_world_right.png",
+            "sha256": "b9f850c71589d338a21a18ce0965865234ef83117fcfa75011e40c3c75882baa"
+          },
+          "observer_start": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/cup_in_basket/seed_000007/put_a_cup_inside_a_basket_f1d4aaeeea/runtime/observer_start.png",
+            "sha256": "58ef81b382b108f02abf902f749d47a4ef3644425de91c5b42d06bbcafa33784"
+          },
+          "observer_mid": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/cup_in_basket/seed_000007/put_a_cup_inside_a_basket_f1d4aaeeea/runtime/observer_mid.png",
+            "sha256": "14cb8e3d6a552c60398bfd64822dd99c4bbd2614c964ae9a37f025886d50b73c"
+          },
+          "observer_end": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/cup_in_basket/seed_000007/put_a_cup_inside_a_basket_f1d4aaeeea/runtime/observer_end.png",
+            "sha256": "ecfb11a08cc1fa6e5b11898628740a80330af02c4a173723a22bda759fbc364a"
+          },
+          "video": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/cup_in_basket/seed_000007/put_a_cup_inside_a_basket_f1d4aaeeea/runtime/observer_runtime.mp4",
+            "sha256": "25b37f20fe5af3223ff78c5ec9a1b0305713a179ae527bf8deed281a893e474f"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "cup_in_basket",
+      "prompt": "Put a cup inside a basket.",
+      "seed": 31,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "put_a_cup_inside_a_basket_f1d4aaeeea",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/cup_in_basket/seed_000031/put_a_cup_inside_a_basket_f1d4aaeeea",
+      "resolved_scene_sha256": "88b0eb9648710f846e9aa4384ad04256bd99fdbe15914a81b76464d7357b2186",
+      "manifest_sha256": "3b532fa72d09fa279a685651e2bd97a01cda7cdfee1a69b7acb6c6ab23ab9e14",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "put_a_cup_inside_a_basket_f1d4aaeeea",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "basket_1",
+          "asset_id": "110_basket",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2332,
+            0.1512,
+            0.1767
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.08690809750731039,
+            0.08641119367807502,
+            0.0895141257492691
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "cup_in_basket",
+      "prompt": "Put a cup inside a basket.",
+      "seed": 73,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "put_a_cup_inside_a_basket_f1d4aaeeea",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/cup_in_basket/seed_000073/put_a_cup_inside_a_basket_f1d4aaeeea",
+      "resolved_scene_sha256": "b0ee55d48a9fc6a3d879f3b5c497964fc6ed649079d52d629749c6dc61836f65",
+      "manifest_sha256": "5a0bbf2730423b2cf713227a07120c4607e23e22fbd97789f9cc4d97645b0366",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "put_a_cup_inside_a_basket_f1d4aaeeea",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "basket_1",
+          "asset_id": "110_basket",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2332,
+            0.1512,
+            0.1767
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.08690809750731039,
+            0.08641119367807502,
+            0.0895141257492691
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "red_can_left_of_basket",
+      "prompt": "Place a red can to the left of a plastic basket near the center.",
+      "seed": 7,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "place_a_red_can_to_the_left_of_b21824b743",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_can_left_of_basket/seed_000007/place_a_red_can_to_the_left_of_b21824b743",
+      "resolved_scene_sha256": "310dbc0162824830c2fc0aa889ba82936b30832e952cf379c15721870f175600",
+      "manifest_sha256": "bbcf084cee99855a1badf33e8b4ae354a77d41421d400ceec56df25589c5bb70",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "place_a_red_can_to_the_left_of_b21824b743",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "basket_1",
+          "asset_id": "110_basket",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2332,
+            0.1512,
+            0.1767
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "can_1",
+          "asset_id": "071_can",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.0712,
+            0.0712,
+            0.0965
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime_exit_code": 0,
+      "runtime": {
+        "status": "pass",
+        "fail_count": 0,
+        "video_frame_count": 120,
+        "unique_video_frame_count": 100,
+        "objects": {
+          "basket_1": {
+            "translation_drift_m": 0.0,
+            "rotation_drift_deg": 0.0,
+            "support_contact_fraction": 0.0,
+            "support_target": null,
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 7545
+          },
+          "can_1": {
+            "translation_drift_m": 0.0005773310518306147,
+            "rotation_drift_deg": 0.04567122473453394,
+            "support_contact_fraction": 1.0,
+            "support_target": "table",
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 929
+          }
+        },
+        "artifacts": {
+          "runtime_evidence": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_can_left_of_basket/seed_000007/place_a_red_can_to_the_left_of_b21824b743/runtime/runtime_evidence.json",
+            "sha256": "a05c49b6736a37f954e1a3e012f75f2a18445b60c01f4aa4fb958ed97e2a8023"
+          },
+          "runtime_validation": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_can_left_of_basket/seed_000007/place_a_red_can_to_the_left_of_b21824b743/runtime/runtime_validation_report.json",
+            "sha256": "7fdc82d3ff1a53457a4f2a6c70417cc9f0b08429198fbe48af6e1b4c1cf764b8"
+          },
+          "head": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_can_left_of_basket/seed_000007/place_a_red_can_to_the_left_of_b21824b743/runtime/preview_head.png",
+            "sha256": "0a151acb7f051b3e3d13cdddc845ed05e3ffa2d0cd87ab4de0e66c6a264f1e85"
+          },
+          "world_left": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_can_left_of_basket/seed_000007/place_a_red_can_to_the_left_of_b21824b743/runtime/preview_world_left.png",
+            "sha256": "f1c9ee7b9128ecfaaccba2f5e1a9404af53812d4f4c8cf3f91f391ec9660b05d"
+          },
+          "world_right": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_can_left_of_basket/seed_000007/place_a_red_can_to_the_left_of_b21824b743/runtime/preview_world_right.png",
+            "sha256": "2bbbba1cefcd7233fb6f36ff846c428c23a398d85b27b0dd744913ebec306868"
+          },
+          "observer_start": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_can_left_of_basket/seed_000007/place_a_red_can_to_the_left_of_b21824b743/runtime/observer_start.png",
+            "sha256": "d9dccec84700ec0b0e72e8039e9a47f7ef63c4b5a11fea30008a6c34a677fc95"
+          },
+          "observer_mid": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_can_left_of_basket/seed_000007/place_a_red_can_to_the_left_of_b21824b743/runtime/observer_mid.png",
+            "sha256": "bbe08c207dda48e56079e773568ce02969cd461e782cfd46210c66d16b0775c3"
+          },
+          "observer_end": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_can_left_of_basket/seed_000007/place_a_red_can_to_the_left_of_b21824b743/runtime/observer_end.png",
+            "sha256": "4d391204cce1ffdca8b1ae33226b2c8353610188d02195107c357aa6eb433f0a"
+          },
+          "video": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_can_left_of_basket/seed_000007/place_a_red_can_to_the_left_of_b21824b743/runtime/observer_runtime.mp4",
+            "sha256": "5ca731d68c76a91a57a6185cafdebbbeb7d8b3db1c85c6f6245ac6af5f1371bd"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "red_can_left_of_basket",
+      "prompt": "Place a red can to the left of a plastic basket near the center.",
+      "seed": 31,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "place_a_red_can_to_the_left_of_b21824b743",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_can_left_of_basket/seed_000031/place_a_red_can_to_the_left_of_b21824b743",
+      "resolved_scene_sha256": "1fef06d72b99aed3e376e88f1886cfddefd087e7a527a5ba46051f56ffe3e759",
+      "manifest_sha256": "c180fa2369a35b5c708086906c5dcf82e1bbd494b7d42dafb3c9a735d226f5be",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "place_a_red_can_to_the_left_of_b21824b743",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "basket_1",
+          "asset_id": "110_basket",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2332,
+            0.1512,
+            0.1767
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "can_1",
+          "asset_id": "071_can",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.0712,
+            0.0712,
+            0.0965
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "red_can_left_of_basket",
+      "prompt": "Place a red can to the left of a plastic basket near the center.",
+      "seed": 73,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "place_a_red_can_to_the_left_of_b21824b743",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/red_can_left_of_basket/seed_000073/place_a_red_can_to_the_left_of_b21824b743",
+      "resolved_scene_sha256": "1ad074385b33d122d24b31b48340bf6b896a10784086d8a7653136fe71cb7b07",
+      "manifest_sha256": "5b2be2f52d8b1230c6a90d835f0a09d4f0a1871298371da0182356a0feca705b",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "place_a_red_can_to_the_left_of_b21824b743",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "basket_1",
+          "asset_id": "110_basket",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2332,
+            0.1512,
+            0.1767
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "can_1",
+          "asset_id": "071_can",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.0712,
+            0.0712,
+            0.0965
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "blue_cup_front_of_block",
+      "prompt": "A blue cup is in front of a wooden block and both objects are near each other.",
+      "seed": 7,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "a_blue_cup_is_in_front_of_a_f4b7a750af",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/blue_cup_front_of_block/seed_000007/a_blue_cup_is_in_front_of_a_f4b7a750af",
+      "resolved_scene_sha256": "14444715f80f3894a885cfae4994134a0ea0f883677f1e84b281a3e9bda0feb6",
+      "manifest_sha256": "a83eca65c4e3da20da758db4e76cc16bd2851b5dd13eb1606e7cb90843a741da",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "a_blue_cup_is_in_front_of_a_f4b7a750af",
+        "status": "generated",
+        "generated_count": 1,
+        "procedural_count": 0,
+        "derived_scale_count": 1,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 1,
+        "generated": [
+          {
+            "schema_version": "robotwin.generated_asset_provenance.v1",
+            "generator": "scene_gen.derived_primitive_scale.v2",
+            "generation_kind": "derived_scaled_proxy",
+            "asset_id": "900_scaled_proxy_block_db2c1b2c",
+            "semantic_category": "block",
+            "requested_color": null,
+            "requested_material": "wood",
+            "geometry_family": "bounded_box_proxy",
+            "geometry_fidelity": "primitive_proxy_preserving_uniform_source_dimensions",
+            "generated_license": "project_generated_academic_artifact",
+            "dimensions_m": [
+              0.0922750510275364,
+              0.09062625020742418,
+              0.06529266834259033
+            ],
+            "uniform_scale_factor": 1.0,
+            "source_asset_id": "004_fluted-block",
+            "source_model_id": 0,
+            "source_dimensions_m": [
+              0.0922750510275364,
+              0.09062625020742418,
+              0.06529266834259033
+            ],
+            "adaptation_reasons": [
+              "source_runtime_instability"
+            ],
+            "semantic_name": "block",
+            "aliases": [
+              "block",
+              "cube"
+            ],
+            "materials": [
+              "plastic",
+              "wood"
+            ],
+            "compatibility": {
+              "relation": "on_table",
+              "target_asset_id": "table",
+              "target_model_id": null,
+              "headroom_fraction": 0.92,
+              "source_runtime_probe": "catalog collision unstable; primitive proxy required"
+            },
+            "files": {
+              "visual": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_db2c1b2c/visual/textured0.obj",
+                "sha256": "0686df0a0626ab9a20361ef9b5a3e5be47bc398f4efdf1e4faae4683c1685e5b"
+              },
+              "collision": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_db2c1b2c/collision/textured0.obj",
+                "sha256": "7cb6da0abb600417434fad90a3f3e8b726880d04872d6e8ded16d38c461c15eb"
+              },
+              "material": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_db2c1b2c/visual/material.mtl",
+                "sha256": "625c94d78c34cbdad40bc0eb499e0f17dd08b58ec63dfd8e4f12dd054d9988fc"
+              },
+              "metadata": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_db2c1b2c/model_data0.json",
+                "sha256": "d5bb8859896dc8bc073cf83b352164baafaa872b425520fd005e0ecff1cd052a"
+              }
+            }
+          }
+        ],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "052eb47638f75cfcd4a4db88cf0098652745808d7e0be14aaa712599ecd1fd73"
+      },
+      "objects": [
+        {
+          "object_id": "block_1",
+          "asset_id": "900_scaled_proxy_block_db2c1b2c",
+          "asset_provenance": "derived_scaled_proxy",
+          "dimensions_m": [
+            0.0922750510275364,
+            0.09062625020742418,
+            0.06529266834259033
+          ],
+          "uniform_scale_factor": 1.0
+        },
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.08690809750731039,
+            0.08641119367807502,
+            0.0895141257492691
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime_exit_code": 0,
+      "runtime": {
+        "status": "pass",
+        "fail_count": 0,
+        "video_frame_count": 120,
+        "unique_video_frame_count": 100,
+        "objects": {
+          "block_1": {
+            "translation_drift_m": 0.000999927520890741,
+            "rotation_drift_deg": 0.0,
+            "support_contact_fraction": 1.0,
+            "support_target": "table",
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 2677
+          },
+          "cup_1": {
+            "translation_drift_m": 0.0010208487519381545,
+            "rotation_drift_deg": 0.0,
+            "support_contact_fraction": 1.0,
+            "support_target": "table",
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 1477
+          }
+        },
+        "artifacts": {
+          "runtime_evidence": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/blue_cup_front_of_block/seed_000007/a_blue_cup_is_in_front_of_a_f4b7a750af/runtime/runtime_evidence.json",
+            "sha256": "e420b2ff6f0d713b35810b370897e93d2af6da05f1aa2fbfd11c40a756b0b7e3"
+          },
+          "runtime_validation": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/blue_cup_front_of_block/seed_000007/a_blue_cup_is_in_front_of_a_f4b7a750af/runtime/runtime_validation_report.json",
+            "sha256": "223f5a4c62fd751228cbd656822d7da57df156f4b97fe71799b3df9be19aefb1"
+          },
+          "head": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/blue_cup_front_of_block/seed_000007/a_blue_cup_is_in_front_of_a_f4b7a750af/runtime/preview_head.png",
+            "sha256": "9ce4b96f9ccb77bf079f8b11273fb2d701ec5d297446fcec6282d64ca8429b5d"
+          },
+          "world_left": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/blue_cup_front_of_block/seed_000007/a_blue_cup_is_in_front_of_a_f4b7a750af/runtime/preview_world_left.png",
+            "sha256": "3e821d4fd9922e3f9a60ad3aad1d4e9860dea3254ea7a53fbc519f8a4edcbb2e"
+          },
+          "world_right": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/blue_cup_front_of_block/seed_000007/a_blue_cup_is_in_front_of_a_f4b7a750af/runtime/preview_world_right.png",
+            "sha256": "0c350a5905877b45d6dba0fa4dbabc93ce9b1e35c523825c66ecbe9838d86448"
+          },
+          "observer_start": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/blue_cup_front_of_block/seed_000007/a_blue_cup_is_in_front_of_a_f4b7a750af/runtime/observer_start.png",
+            "sha256": "778d7a650a9be6fa6fe0a3ef9e3ee27fe7c2cad3e86208b633ed872f6f8731b8"
+          },
+          "observer_mid": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/blue_cup_front_of_block/seed_000007/a_blue_cup_is_in_front_of_a_f4b7a750af/runtime/observer_mid.png",
+            "sha256": "944901b2ababc9a56bc20ed18b6bc213e2ae988c8f99a0f22bf6c35770abbd5e"
+          },
+          "observer_end": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/blue_cup_front_of_block/seed_000007/a_blue_cup_is_in_front_of_a_f4b7a750af/runtime/observer_end.png",
+            "sha256": "70907f5f223ad4cfbc347899a834c322cc6c9bf60397f1973a2d857c715d89e2"
+          },
+          "video": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/blue_cup_front_of_block/seed_000007/a_blue_cup_is_in_front_of_a_f4b7a750af/runtime/observer_runtime.mp4",
+            "sha256": "8996a69508f4030daa820a80fa2414d29064e5db6097445fcf21f554cde32b7a"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "blue_cup_front_of_block",
+      "prompt": "A blue cup is in front of a wooden block and both objects are near each other.",
+      "seed": 31,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "a_blue_cup_is_in_front_of_a_f4b7a750af",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/blue_cup_front_of_block/seed_000031/a_blue_cup_is_in_front_of_a_f4b7a750af",
+      "resolved_scene_sha256": "ed68b55fcd1d4bdd6f496bf4c89d9f8ca9aad3e96db3a595f674079f479b2ec5",
+      "manifest_sha256": "92c3e2082a43fb3cc4618460cefac66ac4e6b0bdba7aa81c8168aaabc0807398",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "a_blue_cup_is_in_front_of_a_f4b7a750af",
+        "status": "generated",
+        "generated_count": 1,
+        "procedural_count": 0,
+        "derived_scale_count": 1,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 1,
+        "generated": [
+          {
+            "schema_version": "robotwin.generated_asset_provenance.v1",
+            "generator": "scene_gen.derived_primitive_scale.v2",
+            "generation_kind": "derived_scaled_proxy",
+            "asset_id": "900_scaled_proxy_block_db2c1b2c",
+            "semantic_category": "block",
+            "requested_color": null,
+            "requested_material": "wood",
+            "geometry_family": "bounded_box_proxy",
+            "geometry_fidelity": "primitive_proxy_preserving_uniform_source_dimensions",
+            "generated_license": "project_generated_academic_artifact",
+            "dimensions_m": [
+              0.0922750510275364,
+              0.09062625020742418,
+              0.06529266834259033
+            ],
+            "uniform_scale_factor": 1.0,
+            "source_asset_id": "004_fluted-block",
+            "source_model_id": 0,
+            "source_dimensions_m": [
+              0.0922750510275364,
+              0.09062625020742418,
+              0.06529266834259033
+            ],
+            "adaptation_reasons": [
+              "source_runtime_instability"
+            ],
+            "semantic_name": "block",
+            "aliases": [
+              "block",
+              "cube"
+            ],
+            "materials": [
+              "plastic",
+              "wood"
+            ],
+            "compatibility": {
+              "relation": "on_table",
+              "target_asset_id": "table",
+              "target_model_id": null,
+              "headroom_fraction": 0.92,
+              "source_runtime_probe": "catalog collision unstable; primitive proxy required"
+            },
+            "files": {
+              "visual": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_db2c1b2c/visual/textured0.obj",
+                "sha256": "0686df0a0626ab9a20361ef9b5a3e5be47bc398f4efdf1e4faae4683c1685e5b"
+              },
+              "collision": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_db2c1b2c/collision/textured0.obj",
+                "sha256": "7cb6da0abb600417434fad90a3f3e8b726880d04872d6e8ded16d38c461c15eb"
+              },
+              "material": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_db2c1b2c/visual/material.mtl",
+                "sha256": "625c94d78c34cbdad40bc0eb499e0f17dd08b58ec63dfd8e4f12dd054d9988fc"
+              },
+              "metadata": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_db2c1b2c/model_data0.json",
+                "sha256": "d5bb8859896dc8bc073cf83b352164baafaa872b425520fd005e0ecff1cd052a"
+              }
+            }
+          }
+        ],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "052eb47638f75cfcd4a4db88cf0098652745808d7e0be14aaa712599ecd1fd73"
+      },
+      "objects": [
+        {
+          "object_id": "block_1",
+          "asset_id": "900_scaled_proxy_block_db2c1b2c",
+          "asset_provenance": "derived_scaled_proxy",
+          "dimensions_m": [
+            0.0922750510275364,
+            0.09062625020742418,
+            0.06529266834259033
+          ],
+          "uniform_scale_factor": 1.0
+        },
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.08690809750731039,
+            0.08641119367807502,
+            0.0895141257492691
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "blue_cup_front_of_block",
+      "prompt": "A blue cup is in front of a wooden block and both objects are near each other.",
+      "seed": 73,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "a_blue_cup_is_in_front_of_a_f4b7a750af",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/blue_cup_front_of_block/seed_000073/a_blue_cup_is_in_front_of_a_f4b7a750af",
+      "resolved_scene_sha256": "57e0ed18465476796a383f019959b9e90ef6da8cae3189068d4f85eec28a37d9",
+      "manifest_sha256": "9cb7bb2eff4c77492e74ded7e4e38eb7b650b144f5d297b52a5b009f32382922",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "a_blue_cup_is_in_front_of_a_f4b7a750af",
+        "status": "generated",
+        "generated_count": 1,
+        "procedural_count": 0,
+        "derived_scale_count": 1,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 1,
+        "generated": [
+          {
+            "schema_version": "robotwin.generated_asset_provenance.v1",
+            "generator": "scene_gen.derived_primitive_scale.v2",
+            "generation_kind": "derived_scaled_proxy",
+            "asset_id": "900_scaled_proxy_block_db2c1b2c",
+            "semantic_category": "block",
+            "requested_color": null,
+            "requested_material": "wood",
+            "geometry_family": "bounded_box_proxy",
+            "geometry_fidelity": "primitive_proxy_preserving_uniform_source_dimensions",
+            "generated_license": "project_generated_academic_artifact",
+            "dimensions_m": [
+              0.0922750510275364,
+              0.09062625020742418,
+              0.06529266834259033
+            ],
+            "uniform_scale_factor": 1.0,
+            "source_asset_id": "004_fluted-block",
+            "source_model_id": 0,
+            "source_dimensions_m": [
+              0.0922750510275364,
+              0.09062625020742418,
+              0.06529266834259033
+            ],
+            "adaptation_reasons": [
+              "source_runtime_instability"
+            ],
+            "semantic_name": "block",
+            "aliases": [
+              "block",
+              "cube"
+            ],
+            "materials": [
+              "plastic",
+              "wood"
+            ],
+            "compatibility": {
+              "relation": "on_table",
+              "target_asset_id": "table",
+              "target_model_id": null,
+              "headroom_fraction": 0.92,
+              "source_runtime_probe": "catalog collision unstable; primitive proxy required"
+            },
+            "files": {
+              "visual": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_db2c1b2c/visual/textured0.obj",
+                "sha256": "0686df0a0626ab9a20361ef9b5a3e5be47bc398f4efdf1e4faae4683c1685e5b"
+              },
+              "collision": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_db2c1b2c/collision/textured0.obj",
+                "sha256": "7cb6da0abb600417434fad90a3f3e8b726880d04872d6e8ded16d38c461c15eb"
+              },
+              "material": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_db2c1b2c/visual/material.mtl",
+                "sha256": "625c94d78c34cbdad40bc0eb499e0f17dd08b58ec63dfd8e4f12dd054d9988fc"
+              },
+              "metadata": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_db2c1b2c/model_data0.json",
+                "sha256": "d5bb8859896dc8bc073cf83b352164baafaa872b425520fd005e0ecff1cd052a"
+              }
+            }
+          }
+        ],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "052eb47638f75cfcd4a4db88cf0098652745808d7e0be14aaa712599ecd1fd73"
+      },
+      "objects": [
+        {
+          "object_id": "block_1",
+          "asset_id": "900_scaled_proxy_block_db2c1b2c",
+          "asset_provenance": "derived_scaled_proxy",
+          "dimensions_m": [
+            0.0922750510275364,
+            0.09062625020742418,
+            0.06529266834259033
+          ],
+          "uniform_scale_factor": 1.0
+        },
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.08690809750731039,
+            0.08641119367807502,
+            0.0895141257492691
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "apple_right_of_plate",
+      "prompt": "Put an apple to the right of a ceramic plate.",
+      "seed": 7,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "put_an_apple_to_the_right_of_a_8635e96843",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_right_of_plate/seed_000007/put_an_apple_to_the_right_of_a_8635e96843",
+      "resolved_scene_sha256": "b8b9e4832a6933d4764849cc135a52d532031af6b3edd7c9e0b94d04a1c9e452",
+      "manifest_sha256": "64596996bf7d7e1332fd767a87e8efa0f72520496a6fb131b92c7fc7dd33b8be",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "put_an_apple_to_the_right_of_a_8635e96843",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "apple_1",
+          "asset_id": "035_apple",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.0661,
+            0.0643,
+            0.0557
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "plate_1",
+          "asset_id": "003_plate",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2297,
+            0.23,
+            0.028
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime_exit_code": 0,
+      "runtime": {
+        "status": "pass",
+        "fail_count": 0,
+        "video_frame_count": 120,
+        "unique_video_frame_count": 120,
+        "objects": {
+          "apple_1": {
+            "translation_drift_m": 0.023896743843737397,
+            "rotation_drift_deg": 1.7173167387793793,
+            "support_contact_fraction": 1.0,
+            "support_target": "table",
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 475
+          },
+          "plate_1": {
+            "translation_drift_m": 0.0010076761248826256,
+            "rotation_drift_deg": 0.0,
+            "support_contact_fraction": 1.0,
+            "support_target": "table",
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 4852
+          }
+        },
+        "artifacts": {
+          "runtime_evidence": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_right_of_plate/seed_000007/put_an_apple_to_the_right_of_a_8635e96843/runtime/runtime_evidence.json",
+            "sha256": "055778fcce0a70e76e0f6ca642713b7e6dafa69b1c64ac3b8dfcc667d70b74df"
+          },
+          "runtime_validation": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_right_of_plate/seed_000007/put_an_apple_to_the_right_of_a_8635e96843/runtime/runtime_validation_report.json",
+            "sha256": "a524ba39db0340bae334119d3be462983fe501b4f1b1721c80f1c4f12ac0558c"
+          },
+          "head": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_right_of_plate/seed_000007/put_an_apple_to_the_right_of_a_8635e96843/runtime/preview_head.png",
+            "sha256": "1aa9d763e673cdc4e1186b6bdb0397934a48d66c7a7a4e93be68be37516fb3d8"
+          },
+          "world_left": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_right_of_plate/seed_000007/put_an_apple_to_the_right_of_a_8635e96843/runtime/preview_world_left.png",
+            "sha256": "090d131cd7d88f9fd1f7d02daf0281d2f18d6ffc553600f88aa7d9ebe38c1a4d"
+          },
+          "world_right": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_right_of_plate/seed_000007/put_an_apple_to_the_right_of_a_8635e96843/runtime/preview_world_right.png",
+            "sha256": "fcda5ec720f90b8183e387ef6cf0eee0c4e881a01c3eb9fe659692c091d8ea7b"
+          },
+          "observer_start": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_right_of_plate/seed_000007/put_an_apple_to_the_right_of_a_8635e96843/runtime/observer_start.png",
+            "sha256": "6b3bd37b35b273357b93faa0ae2c92796ebc0d61194140354d645d024577d99c"
+          },
+          "observer_mid": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_right_of_plate/seed_000007/put_an_apple_to_the_right_of_a_8635e96843/runtime/observer_mid.png",
+            "sha256": "6ef19b654e9eb1b631dbdc45a099d9a750b2bf5472f4a2cab1e9f645af74fcf6"
+          },
+          "observer_end": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_right_of_plate/seed_000007/put_an_apple_to_the_right_of_a_8635e96843/runtime/observer_end.png",
+            "sha256": "30baf96ab65551709dac9e57cfcd723f13ed53954f890fb5e5e2a39dc218a78b"
+          },
+          "video": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_right_of_plate/seed_000007/put_an_apple_to_the_right_of_a_8635e96843/runtime/observer_runtime.mp4",
+            "sha256": "f51696f3228ca5fab27a29d701806dfcecdd0a9114073ef3efeb5b9ce07d952d"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "apple_right_of_plate",
+      "prompt": "Put an apple to the right of a ceramic plate.",
+      "seed": 31,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "put_an_apple_to_the_right_of_a_8635e96843",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_right_of_plate/seed_000031/put_an_apple_to_the_right_of_a_8635e96843",
+      "resolved_scene_sha256": "1799efa1280a6386699239a5522a17647c75db1345b600061d697d63b2a24b54",
+      "manifest_sha256": "22d4e61494fd0f2396dc1a2dbcb8f6662a644b144b828e7178045d1e95d95e7b",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "put_an_apple_to_the_right_of_a_8635e96843",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "apple_1",
+          "asset_id": "035_apple",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.0661,
+            0.0643,
+            0.0557
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "plate_1",
+          "asset_id": "003_plate",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2297,
+            0.23,
+            0.028
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "apple_right_of_plate",
+      "prompt": "Put an apple to the right of a ceramic plate.",
+      "seed": 73,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "put_an_apple_to_the_right_of_a_8635e96843",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/apple_right_of_plate/seed_000073/put_an_apple_to_the_right_of_a_8635e96843",
+      "resolved_scene_sha256": "94d38f630e13a9f6c09f6248656672e98d85190fd29c104c05d05d21d936d6f6",
+      "manifest_sha256": "c354d6e3a1a928f972d99d44fa7b0ccebcbeff3fef46b7c2c810658c46c92605",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "put_an_apple_to_the_right_of_a_8635e96843",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "apple_1",
+          "asset_id": "035_apple",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.0661,
+            0.0643,
+            0.0557
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "plate_1",
+          "asset_id": "003_plate",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2297,
+            0.23,
+            0.028
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "infeasible_apple_plate_back_region",
+      "prompt": "Put an apple to the right of a ceramic plate in the back region.",
+      "seed": 7,
+      "expectation": "reject",
+      "status": "pass",
+      "failure_stage": "expected_rejection",
+      "error": {
+        "type": "SceneSolveError",
+        "message": "bounded solver exhausted"
+      },
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "infeasible_apple_plate_back_region",
+      "prompt": "Put an apple to the right of a ceramic plate in the back region.",
+      "seed": 31,
+      "expectation": "reject",
+      "status": "pass",
+      "failure_stage": "expected_rejection",
+      "error": {
+        "type": "SceneSolveError",
+        "message": "bounded solver exhausted"
+      },
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "infeasible_apple_plate_back_region",
+      "prompt": "Put an apple to the right of a ceramic plate in the back region.",
+      "seed": 73,
+      "expectation": "reject",
+      "status": "pass",
+      "failure_stage": "expected_rejection",
+      "error": {
+        "type": "SceneSolveError",
+        "message": "bounded solver exhausted"
+      },
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "half_open_cabinet",
+      "prompt": "Place a half-open cabinet on the table.",
+      "seed": 7,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "place_a_half_open_cabinet_on_the_table_461e8cb5ad",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/half_open_cabinet/seed_000007/place_a_half_open_cabinet_on_the_table_461e8cb5ad",
+      "resolved_scene_sha256": "6cdd935a99b8c3e7fb026542c396847454c1c7d471598be17641ea86ffa6692d",
+      "manifest_sha256": "32285f923eb68034832f623cd2caf93b0b12b3594c085b44412fc2efb65ff5f2",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "place_a_half_open_cabinet_on_the_table_461e8cb5ad",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "cabinet_1",
+          "asset_id": "036_cabinet",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.23067099000000002,
+            0.24268491,
+            0.43591365
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime_exit_code": 0,
+      "runtime": {
+        "status": "pass",
+        "fail_count": 0,
+        "video_frame_count": 120,
+        "unique_video_frame_count": 100,
+        "objects": {
+          "cabinet_1": {
+            "translation_drift_m": 0.0,
+            "rotation_drift_deg": 0.0,
+            "support_contact_fraction": 0.0,
+            "support_target": null,
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": 2.682209010451686e-09,
+            "visible_pixels": 34829
+          }
+        },
+        "artifacts": {
+          "runtime_evidence": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/half_open_cabinet/seed_000007/place_a_half_open_cabinet_on_the_table_461e8cb5ad/runtime/runtime_evidence.json",
+            "sha256": "f4f4e10a027f31884743c61961f680acaaac9b839d1b79339ef2f2163b33c76f"
+          },
+          "runtime_validation": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/half_open_cabinet/seed_000007/place_a_half_open_cabinet_on_the_table_461e8cb5ad/runtime/runtime_validation_report.json",
+            "sha256": "8d0b3351fe35afc509043c03f9d8be1e23cbed05b8822c7fe1c06e60631d469c"
+          },
+          "head": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/half_open_cabinet/seed_000007/place_a_half_open_cabinet_on_the_table_461e8cb5ad/runtime/preview_head.png",
+            "sha256": "921dce8f63385c0ce5603b03775459deb587762a88ed817ab580b550ae497070"
+          },
+          "world_left": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/half_open_cabinet/seed_000007/place_a_half_open_cabinet_on_the_table_461e8cb5ad/runtime/preview_world_left.png",
+            "sha256": "35f929dbdb57ad528a2069b0d3653957c60ef359bd54539ccf59ed563b587107"
+          },
+          "world_right": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/half_open_cabinet/seed_000007/place_a_half_open_cabinet_on_the_table_461e8cb5ad/runtime/preview_world_right.png",
+            "sha256": "1d95c25919c5ab7ab75ebd32d166cf32ea6324206a490a75144159cdb736543d"
+          },
+          "observer_start": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/half_open_cabinet/seed_000007/place_a_half_open_cabinet_on_the_table_461e8cb5ad/runtime/observer_start.png",
+            "sha256": "4685a44c5c679550d9a2f63256c1fdaf7e6a5c91088c6d7045ff328837755f9d"
+          },
+          "observer_mid": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/half_open_cabinet/seed_000007/place_a_half_open_cabinet_on_the_table_461e8cb5ad/runtime/observer_mid.png",
+            "sha256": "3a837aacfd4aba0fae1b79d3f66cb2104039383de6b37814fbd41ccecdc473a0"
+          },
+          "observer_end": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/half_open_cabinet/seed_000007/place_a_half_open_cabinet_on_the_table_461e8cb5ad/runtime/observer_end.png",
+            "sha256": "9ea3c6b8ec319a4e1039b0ff17654c9aa424316524faeb73538d234131abc37f"
+          },
+          "video": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/half_open_cabinet/seed_000007/place_a_half_open_cabinet_on_the_table_461e8cb5ad/runtime/observer_runtime.mp4",
+            "sha256": "3e27d35dff7ca3f7ff276886149343811a265f48e9eb565c913da956349940d2"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "half_open_cabinet",
+      "prompt": "Place a half-open cabinet on the table.",
+      "seed": 31,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "place_a_half_open_cabinet_on_the_table_461e8cb5ad",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/half_open_cabinet/seed_000031/place_a_half_open_cabinet_on_the_table_461e8cb5ad",
+      "resolved_scene_sha256": "99fc354c4890160d6104822c639693d32ed74e2e1010e7af6688fe8b4ab5a8cb",
+      "manifest_sha256": "57f133de9904d6c113901eac61191179c9e97cb8f2e8718f0ddcf63f690d1325",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "place_a_half_open_cabinet_on_the_table_461e8cb5ad",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "cabinet_1",
+          "asset_id": "036_cabinet",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.23067099000000002,
+            0.24268491,
+            0.43591365
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "half_open_cabinet",
+      "prompt": "Place a half-open cabinet on the table.",
+      "seed": 73,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "place_a_half_open_cabinet_on_the_table_461e8cb5ad",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/half_open_cabinet/seed_000073/place_a_half_open_cabinet_on_the_table_461e8cb5ad",
+      "resolved_scene_sha256": "d41b1a1c3388d2010ef6192e0cd583ac7eaf488ba6cd003f9e13709c9a106f0b",
+      "manifest_sha256": "a84dec27e29a9665f777d598352fe35e993aa1cc68442f45904a4c951c090651",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "place_a_half_open_cabinet_on_the_table_461e8cb5ad",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "cabinet_1",
+          "asset_id": "036_cabinet",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.23067099000000002,
+            0.24268491,
+            0.43591365
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "zh_red_block_on_plate",
+      "prompt": "把红色方块叠在盘子上。",
+      "seed": 7,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "scene_abde6c1291",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_red_block_on_plate/seed_000007/scene_abde6c1291",
+      "resolved_scene_sha256": "0084555457df6aeda829455831763f188435c8a03eb42145450b62198e69df82",
+      "manifest_sha256": "2f8a231992cb8d71c8676888a228f4c0c020d6c02a02f996a77d0ea035d73b74",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "scene_abde6c1291",
+        "status": "generated",
+        "generated_count": 1,
+        "procedural_count": 0,
+        "derived_scale_count": 1,
+        "scaled_proxy_count": 1,
+        "stabilized_proxy_count": 0,
+        "generated": [
+          {
+            "schema_version": "robotwin.generated_asset_provenance.v1",
+            "generator": "scene_gen.derived_primitive_scale.v2",
+            "generation_kind": "derived_scaled_proxy",
+            "asset_id": "900_scaled_proxy_block_76197fa2",
+            "semantic_category": "block",
+            "requested_color": "red",
+            "requested_material": null,
+            "geometry_family": "bounded_box_proxy",
+            "geometry_fidelity": "primitive_proxy_preserving_uniform_source_dimensions",
+            "generated_license": "project_generated_academic_artifact",
+            "dimensions_m": [
+              0.055088205463,
+              0.054103871374,
+              0.038979723001
+            ],
+            "uniform_scale_factor": 0.597,
+            "source_asset_id": "004_fluted-block",
+            "source_model_id": 0,
+            "source_dimensions_m": [
+              0.0922750510275364,
+              0.09062625020742418,
+              0.06529266834259033
+            ],
+            "adaptation_reasons": [
+              "source_runtime_instability",
+              "nested_geometry_incompatible"
+            ],
+            "semantic_name": "block",
+            "aliases": [
+              "block",
+              "cube"
+            ],
+            "materials": [
+              "plastic",
+              "wood"
+            ],
+            "compatibility": {
+              "relation": "on_top_of",
+              "target_asset_id": "003_plate",
+              "target_model_id": 0,
+              "headroom_fraction": 0.92,
+              "source_runtime_probe": "catalog collision unstable; primitive proxy required"
+            },
+            "files": {
+              "visual": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/visual/textured0.obj",
+                "sha256": "e4f4f854c272069a124bb2d5aa07445193547ab8e1b00752f3c589e4e72997dd"
+              },
+              "collision": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/collision/textured0.obj",
+                "sha256": "4c130801f7c3efcc2d26916aa3f797654f74e02efb9c573e4a1bdf4c5ddf7bad"
+              },
+              "material": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/visual/material.mtl",
+                "sha256": "a67b5598fb06fcedc134869f2f649f101cb7af65436cd6e24272f7ef7cdb35e4"
+              },
+              "metadata": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/model_data0.json",
+                "sha256": "1765371a567ea29de0f773226bb5c9cb9e8ac01e350dd9c714a4a9a6c4bece7d"
+              }
+            }
+          }
+        ],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "049234ba9aba908addfcecc2c35aa4c459140b4789425946674b0140c4cdd879"
+      },
+      "objects": [
+        {
+          "object_id": "block_1",
+          "asset_id": "900_scaled_proxy_block_76197fa2",
+          "asset_provenance": "derived_scaled_proxy",
+          "dimensions_m": [
+            0.055088205463,
+            0.054103871374,
+            0.038979723001
+          ],
+          "uniform_scale_factor": 0.597
+        },
+        {
+          "object_id": "plate_1",
+          "asset_id": "003_plate",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2297,
+            0.23,
+            0.028
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime_exit_code": 0,
+      "runtime": {
+        "status": "pass",
+        "fail_count": 0,
+        "video_frame_count": 120,
+        "unique_video_frame_count": 100,
+        "objects": {
+          "block_1": {
+            "translation_drift_m": 0.0033390405708761317,
+            "rotation_drift_deg": 0.4796043010901754,
+            "support_contact_fraction": 1.0,
+            "support_target": "plate_1",
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": 0.008860584459791897,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 881
+          },
+          "plate_1": {
+            "translation_drift_m": 0.0010069610499289963,
+            "rotation_drift_deg": 0.0,
+            "support_contact_fraction": 1.0,
+            "support_target": "table",
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 3642
+          }
+        },
+        "artifacts": {
+          "runtime_evidence": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_red_block_on_plate/seed_000007/scene_abde6c1291/runtime/runtime_evidence.json",
+            "sha256": "8f87434ccd3c96a753bad3958fbe4f5051291e36751eef6533af5deb070d3dfb"
+          },
+          "runtime_validation": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_red_block_on_plate/seed_000007/scene_abde6c1291/runtime/runtime_validation_report.json",
+            "sha256": "d209533dd08e9e723ca8809243ab09ddef27d56a8c716f2ad65f7bc484c11992"
+          },
+          "head": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_red_block_on_plate/seed_000007/scene_abde6c1291/runtime/preview_head.png",
+            "sha256": "ceb91398eae2a679b9648539c4de1386dbe16fa508d3fee7e68834e4aa0a354d"
+          },
+          "world_left": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_red_block_on_plate/seed_000007/scene_abde6c1291/runtime/preview_world_left.png",
+            "sha256": "1507d7c4e0c0fa6467c9cd0f500c4c0780206cdb397db98c101ab8efb225ca21"
+          },
+          "world_right": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_red_block_on_plate/seed_000007/scene_abde6c1291/runtime/preview_world_right.png",
+            "sha256": "26ac1282e141dce26e1c7d7aed92634537094d2b06a03951f341cb87ee1a4456"
+          },
+          "observer_start": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_red_block_on_plate/seed_000007/scene_abde6c1291/runtime/observer_start.png",
+            "sha256": "df3d1c67a956c8bc31f3ce68c59675cdff1c2958e5ab79447cf1cf6c0f152863"
+          },
+          "observer_mid": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_red_block_on_plate/seed_000007/scene_abde6c1291/runtime/observer_mid.png",
+            "sha256": "d52f74aeda6c068553fc414a3e37e83425613877e380b9f6ad1d6c38c6ae2fba"
+          },
+          "observer_end": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_red_block_on_plate/seed_000007/scene_abde6c1291/runtime/observer_end.png",
+            "sha256": "4987b13e597c3260958f4938506984b7e8729ca7d357f3073131c23b3d8da8f3"
+          },
+          "video": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_red_block_on_plate/seed_000007/scene_abde6c1291/runtime/observer_runtime.mp4",
+            "sha256": "c8718ba7e657b7cdb6fd13b45000bad3463b7f4b28a4e1e3485a6059fadd93b7"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "zh_red_block_on_plate",
+      "prompt": "把红色方块叠在盘子上。",
+      "seed": 31,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "scene_abde6c1291",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_red_block_on_plate/seed_000031/scene_abde6c1291",
+      "resolved_scene_sha256": "77de8d27394a2290c405e9c993c4590493c5b057e600807928f7ebfbebbc0039",
+      "manifest_sha256": "413e25b03d2157a460e61281c80b0e42a79677d7a6a1848ced33c70e3b330796",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "scene_abde6c1291",
+        "status": "generated",
+        "generated_count": 1,
+        "procedural_count": 0,
+        "derived_scale_count": 1,
+        "scaled_proxy_count": 1,
+        "stabilized_proxy_count": 0,
+        "generated": [
+          {
+            "schema_version": "robotwin.generated_asset_provenance.v1",
+            "generator": "scene_gen.derived_primitive_scale.v2",
+            "generation_kind": "derived_scaled_proxy",
+            "asset_id": "900_scaled_proxy_block_76197fa2",
+            "semantic_category": "block",
+            "requested_color": "red",
+            "requested_material": null,
+            "geometry_family": "bounded_box_proxy",
+            "geometry_fidelity": "primitive_proxy_preserving_uniform_source_dimensions",
+            "generated_license": "project_generated_academic_artifact",
+            "dimensions_m": [
+              0.055088205463,
+              0.054103871374,
+              0.038979723001
+            ],
+            "uniform_scale_factor": 0.597,
+            "source_asset_id": "004_fluted-block",
+            "source_model_id": 0,
+            "source_dimensions_m": [
+              0.0922750510275364,
+              0.09062625020742418,
+              0.06529266834259033
+            ],
+            "adaptation_reasons": [
+              "source_runtime_instability",
+              "nested_geometry_incompatible"
+            ],
+            "semantic_name": "block",
+            "aliases": [
+              "block",
+              "cube"
+            ],
+            "materials": [
+              "plastic",
+              "wood"
+            ],
+            "compatibility": {
+              "relation": "on_top_of",
+              "target_asset_id": "003_plate",
+              "target_model_id": 0,
+              "headroom_fraction": 0.92,
+              "source_runtime_probe": "catalog collision unstable; primitive proxy required"
+            },
+            "files": {
+              "visual": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/visual/textured0.obj",
+                "sha256": "e4f4f854c272069a124bb2d5aa07445193547ab8e1b00752f3c589e4e72997dd"
+              },
+              "collision": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/collision/textured0.obj",
+                "sha256": "4c130801f7c3efcc2d26916aa3f797654f74e02efb9c573e4a1bdf4c5ddf7bad"
+              },
+              "material": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/visual/material.mtl",
+                "sha256": "a67b5598fb06fcedc134869f2f649f101cb7af65436cd6e24272f7ef7cdb35e4"
+              },
+              "metadata": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/model_data0.json",
+                "sha256": "1765371a567ea29de0f773226bb5c9cb9e8ac01e350dd9c714a4a9a6c4bece7d"
+              }
+            }
+          }
+        ],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "049234ba9aba908addfcecc2c35aa4c459140b4789425946674b0140c4cdd879"
+      },
+      "objects": [
+        {
+          "object_id": "block_1",
+          "asset_id": "900_scaled_proxy_block_76197fa2",
+          "asset_provenance": "derived_scaled_proxy",
+          "dimensions_m": [
+            0.055088205463,
+            0.054103871374,
+            0.038979723001
+          ],
+          "uniform_scale_factor": 0.597
+        },
+        {
+          "object_id": "plate_1",
+          "asset_id": "003_plate",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2297,
+            0.23,
+            0.028
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "zh_red_block_on_plate",
+      "prompt": "把红色方块叠在盘子上。",
+      "seed": 73,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "scene_abde6c1291",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_red_block_on_plate/seed_000073/scene_abde6c1291",
+      "resolved_scene_sha256": "920955c742f78365e53e7da6f258cbf87d23386f65f89ab0b1de01cdd0ea6bb9",
+      "manifest_sha256": "efe45a89e282a21363e2d9acac4861cb0224a4abd296628819f29e6dd5757bfe",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "scene_abde6c1291",
+        "status": "generated",
+        "generated_count": 1,
+        "procedural_count": 0,
+        "derived_scale_count": 1,
+        "scaled_proxy_count": 1,
+        "stabilized_proxy_count": 0,
+        "generated": [
+          {
+            "schema_version": "robotwin.generated_asset_provenance.v1",
+            "generator": "scene_gen.derived_primitive_scale.v2",
+            "generation_kind": "derived_scaled_proxy",
+            "asset_id": "900_scaled_proxy_block_76197fa2",
+            "semantic_category": "block",
+            "requested_color": "red",
+            "requested_material": null,
+            "geometry_family": "bounded_box_proxy",
+            "geometry_fidelity": "primitive_proxy_preserving_uniform_source_dimensions",
+            "generated_license": "project_generated_academic_artifact",
+            "dimensions_m": [
+              0.055088205463,
+              0.054103871374,
+              0.038979723001
+            ],
+            "uniform_scale_factor": 0.597,
+            "source_asset_id": "004_fluted-block",
+            "source_model_id": 0,
+            "source_dimensions_m": [
+              0.0922750510275364,
+              0.09062625020742418,
+              0.06529266834259033
+            ],
+            "adaptation_reasons": [
+              "source_runtime_instability",
+              "nested_geometry_incompatible"
+            ],
+            "semantic_name": "block",
+            "aliases": [
+              "block",
+              "cube"
+            ],
+            "materials": [
+              "plastic",
+              "wood"
+            ],
+            "compatibility": {
+              "relation": "on_top_of",
+              "target_asset_id": "003_plate",
+              "target_model_id": 0,
+              "headroom_fraction": 0.92,
+              "source_runtime_probe": "catalog collision unstable; primitive proxy required"
+            },
+            "files": {
+              "visual": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/visual/textured0.obj",
+                "sha256": "e4f4f854c272069a124bb2d5aa07445193547ab8e1b00752f3c589e4e72997dd"
+              },
+              "collision": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/collision/textured0.obj",
+                "sha256": "4c130801f7c3efcc2d26916aa3f797654f74e02efb9c573e4a1bdf4c5ddf7bad"
+              },
+              "material": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/visual/material.mtl",
+                "sha256": "a67b5598fb06fcedc134869f2f649f101cb7af65436cd6e24272f7ef7cdb35e4"
+              },
+              "metadata": {
+                "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/900_scaled_proxy_block_76197fa2/model_data0.json",
+                "sha256": "1765371a567ea29de0f773226bb5c9cb9e8ac01e350dd9c714a4a9a6c4bece7d"
+              }
+            }
+          }
+        ],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "049234ba9aba908addfcecc2c35aa4c459140b4789425946674b0140c4cdd879"
+      },
+      "objects": [
+        {
+          "object_id": "block_1",
+          "asset_id": "900_scaled_proxy_block_76197fa2",
+          "asset_provenance": "derived_scaled_proxy",
+          "dimensions_m": [
+            0.055088205463,
+            0.054103871374,
+            0.038979723001
+          ],
+          "uniform_scale_factor": 0.597
+        },
+        {
+          "object_id": "plate_1",
+          "asset_id": "003_plate",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2297,
+            0.23,
+            0.028
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "zh_apple_in_basket",
+      "prompt": "把苹果放进篮子里。",
+      "seed": 7,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "scene_e012b5d8a4",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_apple_in_basket/seed_000007/scene_e012b5d8a4",
+      "resolved_scene_sha256": "07fadee0482aef5fa64b256b8fd40865e73d586de9d16eb12eec89fca78e9d7d",
+      "manifest_sha256": "4a11acd737b78a03c35c572907606157b4f5aa5b75593aee81a5f04c09a09100",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "scene_e012b5d8a4",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "apple_1",
+          "asset_id": "035_apple",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.0661,
+            0.0643,
+            0.0557
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "basket_1",
+          "asset_id": "110_basket",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2332,
+            0.1512,
+            0.1767
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime_exit_code": 0,
+      "runtime": {
+        "status": "pass",
+        "fail_count": 0,
+        "video_frame_count": 120,
+        "unique_video_frame_count": 120,
+        "objects": {
+          "apple_1": {
+            "translation_drift_m": 0.0660018831092395,
+            "rotation_drift_deg": 88.9947283900022,
+            "support_contact_fraction": 1.0,
+            "support_target": "basket_1",
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": true,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 505
+          },
+          "basket_1": {
+            "translation_drift_m": 0.0,
+            "rotation_drift_deg": 0.0,
+            "support_contact_fraction": 0.0,
+            "support_target": null,
+            "unexpected_contact_fraction": 0.0,
+            "support_footprint_margin_m": null,
+            "inside_contained": null,
+            "penetration_count": 0,
+            "still_moving": false,
+            "dropped": false,
+            "articulation_max_abs_error": null,
+            "visible_pixels": 7203
+          }
+        },
+        "artifacts": {
+          "runtime_evidence": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_apple_in_basket/seed_000007/scene_e012b5d8a4/runtime/runtime_evidence.json",
+            "sha256": "b30c14b78bd15d896fb61a268d928dbd189bc3d92b244fb4da7b7f4a4efee4d5"
+          },
+          "runtime_validation": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_apple_in_basket/seed_000007/scene_e012b5d8a4/runtime/runtime_validation_report.json",
+            "sha256": "35b1d1c4f874d6bb55a97b5352a9a278b2470a1b5e04693133fb1f97516ce29c"
+          },
+          "head": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_apple_in_basket/seed_000007/scene_e012b5d8a4/runtime/preview_head.png",
+            "sha256": "60b91bfb8fa73e1df12b59a7eec31b0ceb8bd59c1ca95c03b52df77ff185d648"
+          },
+          "world_left": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_apple_in_basket/seed_000007/scene_e012b5d8a4/runtime/preview_world_left.png",
+            "sha256": "95adbe23a7eb42f598fceebf3b5e83746ae60ed34f872d30a6adb18511b03bd3"
+          },
+          "world_right": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_apple_in_basket/seed_000007/scene_e012b5d8a4/runtime/preview_world_right.png",
+            "sha256": "950cb829ee9a1fcc321796a1d2931ed3a1250b063703aa1b1318f5a75f00ebf5"
+          },
+          "observer_start": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_apple_in_basket/seed_000007/scene_e012b5d8a4/runtime/observer_start.png",
+            "sha256": "a7d274c6f324578fe5d48f59f5b53ed1533f772ba178d8a4ae80f5944380ac2f"
+          },
+          "observer_mid": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_apple_in_basket/seed_000007/scene_e012b5d8a4/runtime/observer_mid.png",
+            "sha256": "2af9e5b8ec7598ed9105ff9b1b9a272af3bf8b64860c6449e5d03039725e5918"
+          },
+          "observer_end": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_apple_in_basket/seed_000007/scene_e012b5d8a4/runtime/observer_end.png",
+            "sha256": "d260b45d379df98450dacef98ab51ca20544f81240a467b4b62b548968cf29cb"
+          },
+          "video": {
+            "path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_apple_in_basket/seed_000007/scene_e012b5d8a4/runtime/observer_runtime.mp4",
+            "sha256": "734e918e38810575dd86b27c95a4bc34894d5f2c9b9deed478801243a8fbe423"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "zh_apple_in_basket",
+      "prompt": "把苹果放进篮子里。",
+      "seed": 31,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "scene_e012b5d8a4",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_apple_in_basket/seed_000031/scene_e012b5d8a4",
+      "resolved_scene_sha256": "47acddc00a375fb8cbea8d1870120ce69aed12a7eeca0509b8b12408140145a2",
+      "manifest_sha256": "8324044831f07315e8c013d8256d1858b8710a79367982b8129bfc3922108a15",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "scene_e012b5d8a4",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "apple_1",
+          "asset_id": "035_apple",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.0661,
+            0.0643,
+            0.0557
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "basket_1",
+          "asset_id": "110_basket",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2332,
+            0.1512,
+            0.1767
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    },
+    {
+      "case_id": "zh_apple_in_basket",
+      "prompt": "把苹果放进篮子里。",
+      "seed": 73,
+      "expectation": "pass",
+      "status": "pass",
+      "scene_id": "scene_e012b5d8a4",
+      "scene_dir": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719/data/prompt_matrix_runtime_v4/zh_apple_in_basket/seed_000073/scene_e012b5d8a4",
+      "resolved_scene_sha256": "ca2d09246f0ac82f81c67ba75278fd7f8bd0e6b51ba0cb7375b81883c2fcb7c3",
+      "manifest_sha256": "057201e84594a4b1dd3692a350700dd157211800691d1bee1f62ea7a7cc79c7d",
+      "static_status": "incomplete",
+      "static_fail_count": 0,
+      "asset_generation": {
+        "schema_version": "robotwin.asset_generation_report.v1",
+        "generator": "scene_gen.asset_adaptation.v2",
+        "scene_id": "scene_e012b5d8a4",
+        "status": "not_needed",
+        "generated_count": 0,
+        "procedural_count": 0,
+        "derived_scale_count": 0,
+        "scaled_proxy_count": 0,
+        "stabilized_proxy_count": 0,
+        "generated": [],
+        "base_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe",
+        "effective_catalog_sha256": "8ba15e8460d7c7b095bd4061b5bc0ce2a4fea4b7bb1293f8e3665ba27b4c5dbe"
+      },
+      "objects": [
+        {
+          "object_id": "apple_1",
+          "asset_id": "035_apple",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.0661,
+            0.0643,
+            0.0557
+          ],
+          "uniform_scale_factor": null
+        },
+        {
+          "object_id": "basket_1",
+          "asset_id": "110_basket",
+          "asset_provenance": "robotwin_catalog",
+          "dimensions_m": [
+            0.2332,
+            0.1512,
+            0.1767
+          ],
+          "uniform_scale_factor": null
+        }
+      ],
+      "runtime": {
+        "status": "not_requested"
+      }
+    }
+  ]
+}

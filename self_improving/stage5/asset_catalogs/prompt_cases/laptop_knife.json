@@ -1,0 +1,18 @@
+{
+  "catalog_version": "robotwin.tabletop_asset_catalog_case.v0",
+  "catalog_name": "laptop_knife_prompt_case",
+  "updated_at": "2026-07-02",
+  "purpose": "Prompt-specific asset selection for: a laptop is on the right side of a knife.",
+  "base_catalog": "../robotwin_tabletop_assets_master.json",
+  "mvp_prompt": "a laptop is on the right side of a knife",
+  "selected_asset_ids": [
+    "015_laptop",
+    "034_knife"
+  ],
+  "entry_overrides": {},
+  "direction_frame": "robot_or_dual_arm_first_person",
+  "agent_usage": {
+    "designer": "Select laptop and knife assets from the master catalog. Satisfy right-of using the robot/dual-arm first-person viewpoint.",
+    "critic": "Check the robot-centric right-of relation, laptop URDF loading, knife static placement, collision, and visual prompt match after render."
+  }
+}
