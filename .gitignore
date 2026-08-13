@@ -45,3 +45,14 @@ __pycache__/
 !/data/upstream_ledgers/*/
 /data/upstream_ledgers/*/*
 !/data/upstream_ledgers/*/ledger.json
+
+# 实测元数据必须有 git 历史（2026-08-14 事故注记）：这些 JSON 只有几百 KB，
+# 但每一份都是数小时 GPU 实测的产物（原点校准 430 条、顶面/内腔探针、颜色
+# 属性 508 个模型）。当天 /home/jingxiang/yuxin 被整体清空 530GB 时，代码
+# 因为在 GitHub 上毫发无伤，这些测量却全部蒸发——同样的东西不该再丢第二次。
+!/data/scene_gen_ext/
+data/scene_gen_ext/*
+!data/scene_gen_ext/native_origin_calibration.json
+!data/scene_gen_ext/top_support_survey.json
+!data/scene_gen_ext/asset_attributes.json
+!data/scene_gen_ext/runtime_revocations.json
