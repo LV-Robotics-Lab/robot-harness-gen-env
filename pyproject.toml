@@ -11,6 +11,8 @@ requires-python = ">=3.11"
 license = {text = "Apache-2.0"}
 authors = [{name = "LV Robotics Lab"}]
 dependencies = [
+  "imageio>=2.34,<3",
+  "numpy>=1.26,<3",
   "pydantic>=2.9,<3",
   "PyYAML>=6,<7",
   "Pillow>=10,<12",

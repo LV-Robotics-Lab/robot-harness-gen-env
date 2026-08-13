@@ -39,10 +39,29 @@ def save_rgb(path: Path, value: np.ndarray) -> None:
     Image.fromarray(value.astype(np.uint8)).save(path)
 
 
+def _robotwin_task_config_path(
+    robotwin_root: Path,
+    task_config: str,
+) -> Path:
+    candidates = (
+        robotwin_root / "task_config" / f"{task_config}.yml",
+        robotwin_root / "env_cfg" / "task_config" / f"{task_config}.yml",
+    )
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+
+    searched = ", ".join(str(candidate) for candidate in candidates)
+    raise FileNotFoundError(
+        f"RoboTwin task config {task_config!r} was not found; searched: {searched}"
+    )
+
+
 def load_robotwin_args(robotwin_root: Path, task_config: str) -> dict[str, Any]:
     from envs._GLOBAL_CONFIGS import CONFIGS_PATH
 
-    with (robotwin_root / "task_config" / f"{task_config}.yml").open("r", encoding="utf-8") as stream:
+    task_config_path = _robotwin_task_config_path(robotwin_root, task_config)
+    with task_config_path.open("r", encoding="utf-8") as stream:
         args = yaml.load(stream.read(), Loader=yaml.FullLoader)
     embodiment_type = args.get("embodiment")
     with (Path(CONFIGS_PATH) / "_embodiment_config.yml").open("r", encoding="utf-8") as stream:

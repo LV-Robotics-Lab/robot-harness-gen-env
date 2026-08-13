@@ -39,6 +39,39 @@ def test_solver_is_deterministic_and_preserves_real_asset_paths() -> None:
     )
 
 
+def test_solver_propagates_catalog_mass_to_resolved_object() -> None:
+    catalog = _real_catalog()
+    updated_entries = []
+    for entry in catalog.entries:
+        if entry.asset_id == "071_can":
+            models = tuple(
+                model.model_copy(
+                    update={
+                        "mass_kg": 1.5,
+                        "static_friction": 2.0,
+                        "dynamic_friction": 1.5,
+                        "restitution": 0.1,
+                    }
+                )
+                if model.model_id == 0
+                else model
+                for model in entry.models
+            )
+            entry = entry.model_copy(update={"models": models})
+        updated_entries.append(entry)
+    catalog = catalog.model_copy(update={"entries": tuple(updated_entries)})
+
+    resolved = solve_scene(
+        parse_rule_based("Place a can on the table.", seed=42),
+        catalog,
+    )
+    can = next(item for item in resolved.objects if item.asset_id == "071_can")
+    assert can.mass_kg == pytest.approx(1.5)
+    assert can.static_friction == pytest.approx(2.0)
+    assert can.dynamic_friction == pytest.approx(1.5)
+    assert can.restitution == pytest.approx(0.1)
+
+
 def test_solver_meets_all_geometric_relations() -> None:
     catalog = _real_catalog()
     spec = parse_rule_based("A cup is in front of a wooden block and at least 0.20 m away.", seed=19)

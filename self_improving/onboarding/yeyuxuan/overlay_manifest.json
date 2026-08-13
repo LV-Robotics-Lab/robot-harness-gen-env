@@ -1,0 +1,25 @@
+{
+  "schema_version": "robot_harness.external_asset_overlay.v1",
+  "captured_at": "2026-08-14",
+  "source_path": "/home/jingxiang/yeyuxuan/robotwin-robolab-overlay",
+  "asset_range": [901, 920],
+  "asset_count": 20,
+  "file_count": 100,
+  "file_bytes": 132369548,
+  "sha256_manifest": "overlay_manifest.sha256",
+  "sha256_manifest_sha256": "410af9fdafd2bfaa73fe20d503f3534186109540977a3fd82465fcb2344fa26c",
+  "storage_uri": null,
+  "tracked_here": [
+    "per-asset SOURCE.md records",
+    "20-asset validation summary",
+    "migration source and tests",
+    "full-file SHA-256 manifest"
+  ],
+  "external_only": [
+    "GLB visual and collision meshes",
+    "PNG previews",
+    "MP4 runtime videos",
+    "tar bundles",
+    "generated scene packages"
+  ]
+}

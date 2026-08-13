@@ -1,3 +1,5 @@
+imageio>=2.34,<3
+numpy>=1.26,<3
 pydantic>=2.9,<3
 PyYAML>=6,<7
 Pillow>=10,<12

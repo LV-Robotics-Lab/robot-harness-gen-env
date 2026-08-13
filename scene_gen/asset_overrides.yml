@@ -5,13 +5,13 @@ assets:
     aliases: [bottle]
     materials: [plastic, glass, metal]
     models:
-      "0": {stable_pose_id: upright, z_policy: origin_on_table, footprint_shape: circle}
+      "0": {stable_pose_id: upright, stable_orientation_wxyz: [0.70710678, 0.70710678, 0.0, 0.0], z_policy: origin_on_table, footprint_shape: circle}
   002_bowl:
     category: bowl
     aliases: [bowl]
     materials: [ceramic, plastic]
     models:
-      "1": {stable_pose_id: upright, z_policy: origin_on_table}
+      "1": {stable_pose_id: upright, stable_orientation_wxyz: [0.70710678, 0.70710678, 0.0, 0.0], z_policy: origin_on_table}
   003_plate:
     category: plate
     aliases: [plate, dish]
@@ -39,14 +39,14 @@ assets:
         z_policy: origin_on_table
         is_static: true
         articulation_closed_qpos: [-1.45]
-        articulation_open_qpos: [0.0]
+        articulation_open_qpos: [-0.16]
   004_fluted-block:
     semantic_name: block
     category: block
     aliases: [block, cube]
     materials: [wood, plastic]
     models:
-      "0": {stable_pose_id: flat_face, z_policy: origin_on_table}
+      "0": {stable_pose_id: flat_face, stable_orientation_wxyz: [0.70710678, 0.70710678, 0.0, 0.0], z_policy: origin_on_table}
   017_calculator:
     category: calculator
     aliases: [calculator]
@@ -58,7 +58,7 @@ assets:
     aliases: [hammer]
     materials: [metal, wood]
     models:
-      "0": {stable_pose_id: lie_flat, z_policy: origin_on_table}
+      "0": {stable_pose_id: lie_flat, stable_orientation_wxyz: [0.70710678, 0.0, 0.70710678, 0.0], z_policy: origin_on_table}
   021_cup:
     category: cup
     aliases: [cup, mug]
