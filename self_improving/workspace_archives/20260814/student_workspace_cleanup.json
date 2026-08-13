@@ -4,7 +4,7 @@
   "host": "jingxiang@100.64.0.6",
   "canonical_repository": "/home/jingxiang/workspace/robot-harness-gen-env",
   "integration_branch": "integration/student-workspaces-20260814",
-  "integration_commit": "d139004d964ee952c8a7fab60f4e6211d26c2872",
+  "integration_commit_tested": "5f1cab61f2006ef9c0cd367864dc504e68f7062c",
   "remote_repository": "LV-Robotics-Lab/robot-harness-gen-env",
   "deleted_redundant_paths": [
     "/home/jingxiang/bingsheng/robot-harness-gen-env",
@@ -30,7 +30,7 @@
     "asset_pipeline_results": "self_improving/asset_pipeline/active/results"
   },
   "local_manifests": {
-    "local_data/MANIFEST.sha256": "51403d000b49ce1062ae0395659266c8b2f1eb2199f1d207ab43963fb0a1e868",
+    "local_data/MANIFEST.sha256": "e03e7938e1122339a77bd2f86b2ab223c383dfd1840e65c6973626fcafe9f7b5",
     "self_improving/asset_pipeline/active/data/NON_ASSET_MANIFEST.sha256": "77a54e94dafc34228fcd031bee7d3c85ef5c70a5081038e007b09c752a7446c7",
     "self_improving/asset_pipeline/active/results/MANIFEST.sha256": "961a66d619a1c23ad2708dcfa8d891619a5632c90275cc9ddd21d80b63dbb6ff",
     "self_improving/asset_pipeline/receipts/asset_library_301_361.sha256": "e661ac55235d9eec3a1fe5af342b14306b3dcc51a734d54a93f1a037c9a21e60"
@@ -38,7 +38,42 @@
   "robotwin_duplicate_checks": {
     "bingsheng_vs_gujie": "bingsheng-vs-gujie-robotwin-assets.rsync",
     "yuxin_vs_gujie": "yuxin-vs-gujie-robotwin-assets.rsync",
+    "yuxin_recovery_vs_canonical": "yuxin-recovery-vs-canonical-robotwin-assets.rsync",
+    "yuxin_recovery_difference_rows": 6,
+    "yuxin_recovery_difference_note": "the only differences are the six Curobo YAML files repaired to use the canonical RoboTwin path",
     "comparison_mode": "rsync recursive dry-run with whole-file checksum and delete reporting"
+  },
+  "recovery_archive": {
+    "branch": "archive/yuxin-env-gen-dev-recovery-20260814",
+    "commit": "0b747c0323679267ccad2cbedbc922275fe0cb3b",
+    "verified_by": "git ls-remote",
+    "restored_local_payload_manifest": "local_data/student_workspaces/yuxin/recovery-restored-20260814/MANIFEST.sha256",
+    "restored_local_payload_manifest_sha256": "9cbe18328bbe9b51b1d680f248d7b5e23ba96fbcce8acda54abc4aab9b96258b"
+  },
+  "canonical_robotwin": {
+    "path": "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin",
+    "source_commit": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123",
+    "rewritten_generated_symlinks": 227,
+    "broken_generated_symlinks_after_rewrite": 0,
+    "curobo_path_patch": "robotwin-canonical-paths.patch"
+  },
+  "completed_training_checkpoint": {
+    "path": "external/RoboTwin/XPolicyLab/policy/DP/checkpoints/demo_clean-beat_block_hammer-aloha_agilex-joint-0/600.ckpt",
+    "bytes": 1549185541,
+    "sha256": "50984e60b933cacbd168f332df827ceb480df79fe49dd37c1b96a5209537b3b4",
+    "storage_uri": null,
+    "note": "local checkpoint integrity evidence only; no remote backup is claimed"
+  },
+  "runtime_validation": {
+    "scene_id": "place_a_can_on_the_table_acd20a6814",
+    "status": "pass",
+    "fail_count": 0,
+    "not_run_count": 0,
+    "simulation_steps": 900,
+    "video_frames": 120,
+    "runtime_evidence_sha256": "bbbaf69086525ba2fd858aacc60d527a197815a1438d9593fb2ee25ba9bab3a1",
+    "runtime_validation_report_sha256": "446ad037ecdebc6b8dcbcd48411bb4d2b1e504a86153a68e7493724e341f3f13",
+    "evidence_directory": "../../validation_evidence/student_workspace_20260814"
   },
   "recovery": {
     "git_source": "organization archive and integration branches, verified by ls-remote",
@@ -47,8 +82,7 @@
     "remote_backup_note": "local manifests are audit evidence, not remote backup proof"
   },
   "remaining_gate": {
-    "path": "/home/jingxiang/gujie/RoboTwin",
-    "reason": "active robot-diffusion-policy training has this tree as its working directory",
-    "action": "move to canonical external/RoboTwin after PID 231012 exits, then repair generated symlinks and rerun SAPIEN replay"
+    "status": "resolved",
+    "resolution": "training exited naturally; RoboTwin moved to canonical external/RoboTwin; symlinks and Curobo paths repaired; real SAPIEN replay passed"
   }
 }

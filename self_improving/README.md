@@ -22,7 +22,8 @@ runtime assumptions into the core trust boundary.
 | `legacy/robotwin_text2env_alt/` | read-only | Alternate `text2env.tabletop.v0` prototype at source tip `c226358`, including its repair utility and bounded smoke evidence. It must not replace the active Stage 5 compiler. |
 | `validation_evidence/openxsim_20260716/` | preserved evidence | Compact JSON, logs, and replay scripts recovered from the former OpenXSim acceptance workspaces. |
 | `workspace_archives/20260716/` | provenance | Full-file SHA-256 manifest and the repository Release pointer for the consolidated Jingxiang workspaces. |
-| `workspace_archives/20260814/` | cleanup receipt | Student-workspace path disposition, local manifest hashes, RoboTwin checksum comparisons, and remaining runtime gate. |
+| `workspace_archives/20260814/` | cleanup receipt | Student-workspace path disposition, local manifest hashes, RoboTwin checksum comparisons, completed checkpoint hash, and resolved runtime gate. |
+| `validation_evidence/student_workspace_20260814/` | current consolidation evidence | Real canonical-path RoboTwin/SAPIEN replay JSON, resolved scene, and exact evidence manifest. |
 
 Independent projects remain Git submodules in `external/`:
 
@@ -84,6 +85,10 @@ python -m pytest -q self_improving/asset_pipeline/active/web/tests
 The current source-only baseline is 542 passed and 6 skipped. The skips are
 explicit physical/runtime checks that require SAPIEN or the excluded raw
 Isaac, SceneAgent, media, and report bundles; they are not silently mocked.
+In addition, the Jingxiang consolidation gate was exercised in the real
+`robotwin-5090` environment: `place_a_can_on_the_table_acd20a6814` passed 900
+simulation steps with `fail_count=0` and `not_run_count=0`. Its compact reports
+are tracked under `validation_evidence/student_workspace_20260814/`.
 
 ## Artifact policy
 
@@ -96,6 +101,9 @@ metadata stays in `asset_pipeline/receipts/` and `onboarding/yeyuxuan/`.
 The 2026-08-14 asset receipt covers 12,047 files (27,637,543,884 bytes) in
 Yuxin's local `301`–`361` asset namespace; because `storage_uri` is still null,
 that checksum inventory is audit evidence rather than remote recovery proof.
+The completed diffusion-policy `600.ckpt` is handled the same way: its local
+size and SHA-256 are recorded in the 2026-08-14 cleanup receipt, while
+`storage_uri` remains null and therefore no remote backup is claimed.
 
 The PEARL portal is the narrow exception for already curated, browser-served
 report media under `apps/pearl_evidence_portal/public/reports/`; raw runs and
