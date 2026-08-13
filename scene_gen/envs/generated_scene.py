@@ -17,6 +17,106 @@ def _coerce_resolved(value: ResolvedSceneSpec | dict[str, Any] | str | Path) -> 
     return ResolvedSceneSpec.model_validate(value)
 
 
+def _runtime_modelname(item: Any) -> str:
+    """Use a validated external asset directory when RoboTwin has no native copy."""
+
+    native_directory = Path("assets/objects") / item.asset_id
+    if native_directory.is_dir():
+        return item.asset_id
+
+    metadata_name = (
+        "model_data.json"
+        if item.model_id is None
+        else f"model_data{item.model_id}.json"
+    )
+    source_paths = tuple(Path(path).resolve() for path in item.source_files)
+    metadata_paths = [path for path in source_paths if path.name == metadata_name]
+    if len(metadata_paths) != 1:
+        return item.asset_id
+
+    asset_directory = metadata_paths[0].parent
+    if asset_directory.name != item.asset_id:
+        return item.asset_id
+
+    sources_are_valid = all(
+        path.is_file() and path.is_relative_to(asset_directory)
+        for path in source_paths
+    )
+    if not sources_are_valid:
+        return item.asset_id
+    return str(asset_directory)
+
+
+def _collision_shapes(actor: Any) -> list[Any]:
+    raw = getattr(actor, "actor", actor)
+    link_getter = getattr(raw, "get_links", None)
+    entities = list(link_getter()) if callable(link_getter) else [raw]
+
+    shapes: list[Any] = []
+    seen: set[int] = set()
+    for entity in entities:
+        candidates = [entity]
+        component_getter = getattr(entity, "get_components", None)
+        if callable(component_getter):
+            candidates.extend(component_getter())
+        else:
+            candidates.extend(getattr(entity, "components", ()))
+
+        for candidate in candidates:
+            shape_getter = getattr(candidate, "get_collision_shapes", None)
+            if callable(shape_getter):
+                candidate_shapes = shape_getter()
+            else:
+                candidate_shapes = getattr(candidate, "collision_shapes", ())
+            for shape in candidate_shapes:
+                if id(shape) not in seen:
+                    shapes.append(shape)
+                    seen.add(id(shape))
+    return shapes
+
+
+def _apply_physical_material(task: Any, actor: Any, item: Any) -> int:
+    values = (
+        item.static_friction,
+        item.dynamic_friction,
+        item.restitution,
+    )
+    if all(value is None for value in values):
+        return 0
+    if any(value is None for value in values):
+        raise RuntimeError(
+            f"RoboTwin actor {item.object_id} has incomplete physical material metadata"
+        )
+
+    scene = getattr(task, "scene", None)
+    material_creator = getattr(scene, "create_physical_material", None)
+    if not callable(material_creator):
+        raise RuntimeError(
+            f"RoboTwin task cannot create physical material for {item.object_id}"
+        )
+
+    physical_material = material_creator(
+        float(item.static_friction),
+        float(item.dynamic_friction),
+        float(item.restitution),
+    )
+    shapes = _collision_shapes(actor)
+    if not shapes:
+        raise RuntimeError(
+            f"RoboTwin actor {item.object_id} exposes no collision shapes"
+        )
+
+    for shape in shapes:
+        setter = getattr(shape, "set_physical_material", None)
+        if not callable(setter):
+            raise RuntimeError(
+                f"RoboTwin collision shape for {item.object_id} "
+                f"does not expose set_physical_material"
+            )
+        setter(physical_material)
+    return len(shapes)
+
+
 def _render_entities(actor: Any) -> list[Any]:
     raw = getattr(actor, "actor", actor)
     link_getter = getattr(raw, "get_links", None)
@@ -57,11 +157,16 @@ def load_resolved_scene(task: Any, resolved: ResolvedSceneSpec | dict[str, Any] 
     actors: dict[str, Any] = {}
     for item in scene.objects:
         pose = sapien.Pose(item.pose.position_m, item.pose.orientation_wxyz)
+        modelname = (
+            item.asset_id
+            if item.load_type == "urdf"
+            else _runtime_modelname(item)
+        )
         if item.load_type == "urdf":
             actor = create_sapien_urdf_obj(
                 task,
                 pose=pose,
-                modelname=item.asset_id,
+                modelname=modelname,
                 modelid=item.model_id,
                 fix_root_link=item.is_static,
             )
@@ -69,13 +174,21 @@ def load_resolved_scene(task: Any, resolved: ResolvedSceneSpec | dict[str, Any] 
             actor = create_actor(
                 task,
                 pose=pose,
-                modelname=item.asset_id,
+                modelname=modelname,
                 model_id=item.model_id,
                 convex=True,
                 is_static=item.is_static,
             )
         if actor is None:
             raise RuntimeError(f"RoboTwin failed to load {item.asset_id}/model{item.model_id}")
+        if item.mass_kg is not None:
+            mass_setter = getattr(actor, "set_mass", None)
+            if not callable(mass_setter):
+                raise RuntimeError(
+                    f"RoboTwin actor {item.object_id} does not expose set_mass"
+                )
+            mass_setter(float(item.mass_kg))
+        _apply_physical_material(task, actor, item)
         if item.color and _apply_color_override(actor, item.color) == 0:
             raise RuntimeError(
                 f"RoboTwin loaded {item.object_id} without a tintable render material"

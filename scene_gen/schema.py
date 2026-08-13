@@ -341,6 +341,9 @@ class ResolvedObject(StrictModel):
     support_spawn_clearance_m: float = Field(default=0.003, ge=0.0, le=0.02)
     z_policy: Literal["origin_on_table", "center_on_table"] = "origin_on_table"
     mass_kg: float | None = Field(default=None, gt=0.0)
+    static_friction: float | None = Field(default=None, ge=0.0)
+    dynamic_friction: float | None = Field(default=None, ge=0.0)
+    restitution: float | None = Field(default=None, ge=0.0, le=1.0)
     mesh_scale: tuple[float, float, float] | None = None
     collision_available: bool
     source_files: tuple[str, ...]

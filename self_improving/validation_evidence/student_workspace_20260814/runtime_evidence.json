@@ -1,0 +1,350 @@
+{
+  "schema_version": "robotwin.scene_runtime_evidence.v2",
+  "scene_id": "place_a_can_on_the_table_acd20a6814",
+  "resolved_scene_sha256": "4e1f775547a24502156dc6af2d6319e51ccfd57060681aadb517c4d59acd8070",
+  "seed": 42,
+  "status": "pass",
+  "robot_initial_collision_count": 0,
+  "robot_initial_collision_pairs": [],
+  "robot_final_collision_count": 0,
+  "robot_final_collision_pairs": [],
+  "objects": {
+    "can_1": {
+      "asset_id": "071_can",
+      "entity_id": 66,
+      "entity_ids": [
+        66
+      ],
+      "initial_pose": {
+        "position_m": [
+          -0.20367538928985596,
+          0.03302612155675888,
+          0.7409999966621399
+        ],
+        "orientation_wxyz": [
+          0.6403504610061646,
+          0.6403504610061646,
+          0.2999188005924225,
+          0.2999188005924225
+        ],
+        "qpos": []
+      },
+      "final_pose": {
+        "position_m": [
+          -0.20367471873760223,
+          0.03302620351314545,
+          0.74042147397995
+        ],
+        "orientation_wxyz": [
+          0.6400775909423828,
+          0.6406335234642029,
+          0.30004486441612244,
+          0.2997705936431885
+        ],
+        "qpos": []
+      },
+      "translation_drift_m": 0.0005785230766057809,
+      "rotation_drift_deg": 0.05488830014596531,
+      "resolved_translation_error_m": 0.0005785264129073885,
+      "loader_translation_offset_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "resolved_rotation_error_deg": 0.05485467720379118,
+      "late_window_translation_m": 0.0,
+      "late_window_rotation_deg": 0.03105053098722677,
+      "still_moving": false,
+      "visible_pixels": 989,
+      "penetration_count": 0,
+      "support_contact": true,
+      "support_contact_fraction": 1.0,
+      "support_contact_samples": 60,
+      "unexpected_contact_fraction": 0.0,
+      "unexpected_contact_targets": [],
+      "support_mode": "on_table_contact",
+      "support_target": "table",
+      "expected_support_target": "table",
+      "support_footprint_margin_m": null,
+      "inside_contained": null,
+      "dropped": false,
+      "articulation_target_qpos": [],
+      "articulation_final_qpos": [],
+      "articulation_max_abs_error": null
+    }
+  },
+  "relations": {},
+  "initial_contact_records": [],
+  "final_contact_records": [
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 4,
+      "min_separation_m": 2.9334190912777558e-05,
+      "max_impulse_norm": 0.0,
+      "active": true
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 4,
+      "min_separation_m": 1.2617123502423055e-05,
+      "max_impulse_norm": 0.0,
+      "active": true
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 4,
+      "min_separation_m": 1.3633196431328543e-05,
+      "max_impulse_norm": 0.0,
+      "active": true
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 4,
+      "min_separation_m": 4.263542723492719e-05,
+      "max_impulse_norm": 0.0,
+      "active": true
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.0029903852846473455,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.0036840573884546757,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 4,
+      "min_separation_m": 1.6973267520370428e-06,
+      "max_impulse_norm": 4.1230269011961324e-05,
+      "active": true
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 4,
+      "min_separation_m": 1.880980676105537e-06,
+      "max_impulse_norm": 0.00012962724219193217,
+      "active": true
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.0028420083690434694,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 4,
+      "min_separation_m": -1.3940721466099149e-08,
+      "max_impulse_norm": 0.00021898519310814942,
+      "active": true
+    },
+    {
+      "bodies": [
+        "can_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 4,
+      "min_separation_m": 3.7573066435925284e-08,
+      "max_impulse_norm": 0.0,
+      "active": true
+    }
+  ],
+  "images": {
+    "head": "/tmp/robot-harness-runtime-evidence-20260814/can_on_table_retry2/preview_head.png",
+    "world_left": "/tmp/robot-harness-runtime-evidence-20260814/can_on_table_retry2/preview_world_left.png",
+    "world_right": "/tmp/robot-harness-runtime-evidence-20260814/can_on_table_retry2/preview_world_right.png",
+    "segmentation": "/tmp/robot-harness-runtime-evidence-20260814/can_on_table_retry2/preview_segmentation.png",
+    "observer_start": "/tmp/robot-harness-runtime-evidence-20260814/can_on_table_retry2/observer_start.png",
+    "observer_mid": "/tmp/robot-harness-runtime-evidence-20260814/can_on_table_retry2/observer_mid.png",
+    "observer_end": "/tmp/robot-harness-runtime-evidence-20260814/can_on_table_retry2/observer_end.png"
+  },
+  "video": "/tmp/robot-harness-runtime-evidence-20260814/can_on_table_retry2/observer_runtime.mp4",
+  "video_frame_count": 120,
+  "unique_video_frame_count": 100,
+  "fps": 12,
+  "simulation_step_count": 900,
+  "video_sample_step_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97,
+    98,
+    99,
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,
+    117,
+    118,
+    899
+  ],
+  "precheck_steps": 0,
+  "contact_window_steps": 60
+}

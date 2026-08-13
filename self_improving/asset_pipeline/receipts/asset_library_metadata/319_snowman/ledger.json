@@ -108,7 +108,7 @@
         },
         {
           "format": "glb",
-          "uri": "/tmp/campaign/acq_snowman/acquire/webcache/c39858c1517be8ff7e60/05ade23c1a4d4d01b1d546a3ba3145b7.glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_319_snowman/05ade23c1a4d4d01b1d546a3ba3145b7.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "77b05324880a5a4e88e06f1bbadf09be96b47849f7b04e3396e5aefb5d8f15c6",

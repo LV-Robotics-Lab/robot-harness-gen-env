@@ -8,7 +8,7 @@
 | `script/` | CLI 入口：编译、回放、批量验收、矩阵、可选渲染评判、stage-5 报告。 | `generate_scene.py`、`run_scene_runtime.py`、`run_100_seed_acceptance.py`、`run_prompt_matrix.py` | 编排 `scene_gen`；流水线逻辑加进 `scene_gen`，不要加在这里 |
 | `demo/` | Flask 控制面，把 GPU 任务队列入队并按 id 暴露已注册产物。 | `app.py` | 复用同一 `scene_gen` 流水线；不是新流水线，只加队列 + 路由 |
 | `tests/` | pytest 套件 + committed fixture；为每个误报模式留攻击测试。 | `tests/scene_gen/test_<module>.py`、`tests/fixtures/{asset_catalog,golden_prompts,prompt_matrix}.json` | 锁住契约与失败分支；套件无需 RoboTwin checkout 即可跑 |
-| `self_improving/` | 平台编排、闭环诊断、资产复用、仿真适配、来源清单与只读历史。 | `registry.py`、`source_inventory.json`、各命名模块 | 消费稳定核心；平台改动不能降低 `scene_gen` 门控 |
+| `self_improving/` | 平台编排、闭环诊断、资产复用、仿真适配、来源清单与只读历史。 | `registry.py`、`source_inventory.json`、`asset_pipeline/active/runtime_config.py`、各命名模块 | 消费稳定核心；平台改动不能降低 `scene_gen` 门控 |
 | `apps/pearl_evidence_portal/` | PEARL Self-Improving Agents 的独立证据门户、构建脚本、测试与已裁剪的浏览器报告子集。 | `app/page.tsx`、`scripts/build-hosted-report-subsets.mjs`、`tests/rendered-html.test.mjs` | 只呈现已有证据；不产出或修改核心验收结论 |
 | `external/` | 独立项目的 Git submodule。 | `OpenReal2Sim`、`digital-cousins` | 各自保留提交历史和发布周期；主仓只钉 commit |
 
@@ -71,6 +71,17 @@
 | `tests/fixtures/golden_prompts.json` | golden prompt fixture。 |—| 被 `test_parser.py` 用 |
 | `tests/fixtures/prompt_matrix.json` | 11 例中英 prompt × 3 seed，含 1 例预期 solver 拒绝。 | `infeasible_apple_plate_back_region`（`expect: reject`、`expected_failure_stage: solver`） | 被 `run_prompt_matrix.py` 与 `test_prompt_matrix.py` 用 |
 | `tests/demo/` | Flask API 测试，无真实 GPU；见下小节。 |—| 改 `demo/app.py` 先跑；`pytest -q tests/demo` |
+
+## `self_improving/asset_pipeline/`
+
+| 重要代码 | 功能 | 关键符号 / 配置 | 验证 |
+| --- | --- | --- | --- |
+| `active/runtime_config.py` | 把仓库、RoboTwin、shadow、catalog、override、运行解释器统一成可迁移默认值和环境变量。 | `ASSET_PIPELINE_ROOT`、`GEN_ENV_ROOT`、`ROBOTWIN_ROOT`、`ROBOTWIN_SHADOW_ROOT`、`ASSET_CATALOG`、`ASSET_OVERRIDES` | `active/1_asset_reuse/tests/test_runtime_config.py` |
+| `active/1_asset_reuse/` | 资产发现、采购、转换、实测属性、ledger、catalog 接入与物理验收。 | `acquire_batch.py`、`measure_asset_attributes.py`、`s9_build_shadow_root.py` | 模块内 264 passed、1 skipped |
+| `active/web/` | 本地资产流水线 Web Studio。 | `app.py` | 11 passed |
+| `active/shared/openxsim/` | 跨仿真 IR、adapter、导入/导出与 conformance。 | `agenticsim.openxsim` | 56 passed |
+| `receipts/` | 外部资产的选择、ledger/model metadata 与全文件摘要；不含 mesh/texture/render。 | `asset_library_manifest.json`、`asset_library_301_361.sha256` | JSON 解析、manifest 摘要回读 |
+| `branch_overlays/` | 只读保存 alias-screening 与 asset-sources 分支表面。 | 分支来源登记见 `source_inventory.json` | 不作为当前运行入口 |
 
 ## `tests/demo/`
 

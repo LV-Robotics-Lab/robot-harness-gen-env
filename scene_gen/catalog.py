@@ -34,6 +34,10 @@ class CatalogModel(StrictModel):
     urdf_path: str | None = None
     scale: tuple[float, float, float] | None = None
     dimensions_m: tuple[float, float, float] | None = None
+    mass_kg: float | None = Field(default=None, gt=0.0)
+    static_friction: float | None = Field(default=None, ge=0.0)
+    dynamic_friction: float | None = Field(default=None, ge=0.0)
+    restitution: float | None = Field(default=None, ge=0.0, le=1.0)
     interior_dimensions_m: tuple[float, float, float] | None = None
     interior_floor_z_offset_m: float | None = Field(default=None, ge=0.0)
     footprint_shape: Literal["box", "circle"] = "box"
@@ -349,6 +353,57 @@ def _scan_model(
     scale = _triplet(override.get("scale")) or _triplet(metadata.get("scale"))
     if scale is None:
         missing.append("scale")
+    raw_mass_kg = override.get("mass_kg")
+    if raw_mass_kg is None:
+        raw_mass_kg = metadata.get("mass_kg")
+    mass_kg = None
+    if raw_mass_kg is not None:
+        if isinstance(raw_mass_kg, bool) or not isinstance(raw_mass_kg, (int, float)):
+            raise ValueError(
+                f"mass_kg must be a positive number: {asset_dir.name}/{model_id}"
+            )
+        mass_kg = float(raw_mass_kg)
+        if mass_kg <= 0.0:
+            raise ValueError(
+                f"mass_kg must be greater than zero: {asset_dir.name}/{model_id}"
+            )
+    raw_physics = {}
+    for physics_key in ("static_friction", "dynamic_friction", "restitution"):
+        raw_value = override.get(physics_key)
+        if raw_value is None:
+            raw_value = metadata.get(physics_key)
+        raw_physics[physics_key] = raw_value
+
+    provided_physics = {
+        key: value for key, value in raw_physics.items() if value is not None
+    }
+    if provided_physics and len(provided_physics) != len(raw_physics):
+        raise ValueError(
+            f"physical material requires static_friction, dynamic_friction, "
+            f"and restitution together: {asset_dir.name}/{model_id}"
+        )
+
+    static_friction = None
+    dynamic_friction = None
+    restitution = None
+    if provided_physics:
+        for physics_key, raw_value in raw_physics.items():
+            if isinstance(raw_value, bool) or not isinstance(raw_value, (int, float)):
+                raise ValueError(
+                    f"{physics_key} must be numeric: {asset_dir.name}/{model_id}"
+                )
+            if float(raw_value) < 0.0:
+                raise ValueError(
+                    f"{physics_key} must be non-negative: {asset_dir.name}/{model_id}"
+                )
+        static_friction = float(raw_physics["static_friction"])
+        dynamic_friction = float(raw_physics["dynamic_friction"])
+        restitution = float(raw_physics["restitution"])
+        if restitution > 1.0:
+            raise ValueError(
+                f"restitution must not exceed one: {asset_dir.name}/{model_id}"
+            )
+
     stable_pose_id = override.get("stable_pose_id")
     if not stable_pose_id:
         missing.append("stable_pose")
@@ -409,6 +464,10 @@ def _scan_model(
         urdf_path=str(urdf_path) if urdf_path else None,
         scale=scale,
         dimensions_m=dimensions,
+        mass_kg=mass_kg,
+        static_friction=static_friction,
+        dynamic_friction=dynamic_friction,
+        restitution=restitution,
         interior_dimensions_m=interior_dimensions,
         interior_floor_z_offset_m=(
             float(interior_floor_z_offset) if interior_floor_z_offset is not None else None

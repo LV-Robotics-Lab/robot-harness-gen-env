@@ -61,6 +61,70 @@ def test_direction_and_distance_semantics_match_the_fixed_frame() -> None:
     assert spec.frame.y_axis == "front"
 
 
+def test_rule_parser_preserves_mustard_bottle_semantic_category() -> None:
+    spec = parse_rule_based("Place a mustard bottle on the table.", seed=42)
+
+    assert len(spec.objects) == 1
+    assert spec.objects[0].object_id == "mustard_bottle_1"
+    assert spec.objects[0].category == "mustard_bottle"
+
+
+def test_rule_parser_preserves_mug_semantic_category() -> None:
+    spec = parse_rule_based("Place a mug on the table.", seed=42)
+
+    assert len(spec.objects) == 1
+    assert spec.objects[0].object_id == "mug_1"
+    assert spec.objects[0].category == "mug"
+
+
+def test_rule_parser_preserves_coffee_can_semantic_category() -> None:
+    spec = parse_rule_based("Place a coffee can on the table.", seed=42)
+
+    assert len(spec.objects) == 1
+    assert spec.objects[0].object_id == "coffee_can_1"
+    assert spec.objects[0].category == "coffee_can"
+
+
+def test_rule_parser_preserves_sugar_box_semantic_category() -> None:
+    spec = parse_rule_based("Place a sugar box on the table.", seed=42)
+
+    assert len(spec.objects) == 1
+    assert spec.objects[0].object_id == "sugar_box_1"
+    assert spec.objects[0].category == "sugar_box"
+
+
+def test_rule_parser_preserves_soft_scrub_semantic_category() -> None:
+    for request in (
+        "Place a soft scrub bottle on the table.",
+        "Place soft scrub on the table.",
+    ):
+        spec = parse_rule_based(request, seed=42)
+
+        assert len(spec.objects) == 1
+        assert spec.objects[0].object_id == "soft_scrub_1"
+        assert spec.objects[0].category == "soft_scrub"
+
+
+def test_rule_parser_preserves_cheez_it_semantic_category() -> None:
+    for request in (
+        "Place a Cheez-It box on the table.",
+        "Place a Cheez It box on the table.",
+    ):
+        spec = parse_rule_based(request, seed=42)
+
+        assert len(spec.objects) == 1
+        assert spec.objects[0].object_id == "cheez_it_1"
+        assert spec.objects[0].category == "cheez_it"
+
+
+def test_rule_parser_preserves_spam_can_semantic_category() -> None:
+    spec = parse_rule_based("Place a Spam can on the table.", seed=42)
+
+    assert len(spec.objects) == 1
+    assert spec.objects[0].object_id == "spam_can_1"
+    assert spec.objects[0].category == "spam_can"
+
+
 def test_provider_payload_cannot_smuggle_backend_fields_or_change_request() -> None:
     spec = parse_rule_based("A can is left of a basket.", seed=4)
     payload = spec.canonical_dict()
@@ -171,7 +235,7 @@ def test_parser_expands_chinese_quantity_group_and_inside_relation() -> None:
             ["apple_1", "apple_2", "apple_3", "basket_1"],
         ),
         ("Place two boxes on the table.", ["box_1", "box_2"]),
-        ("Place two coffee mugs on the table.", ["cup_1", "cup_2"]),
+        ("Place two coffee mugs on the table.", ["mug_1", "mug_2"]),
         ("Place two knives on top of a plate.", ["knife_1", "knife_2", "plate_1"]),
     ],
 )

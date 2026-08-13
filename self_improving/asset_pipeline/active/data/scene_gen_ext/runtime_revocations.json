@@ -1,0 +1,12 @@
+{
+ "schema": "envgen.runtime_revocations.v1",
+ "basis": "run_scene_runtime settle 1500 steps, late-window still_moving",
+ "measured_at": "2026-08-14",
+ "models": [],
+ "considered_and_kept": [
+  {"asset_id": "339_panel", "model_id": 0, "late_window_rotation_deg": 1.06},
+  {"asset_id": "343_ceiling", "model_id": 0, "late_window_rotation_deg": 3.10},
+  {"asset_id": "320_teddy_bear", "model_id": 1, "late_window_rotation_deg": 0.54}
+ ],
+ "why_kept": "撤销后重新采购：三个类目的新候选都通过了身份门，却全数卡在入库物理门(圆底/软体凸包本就微晃)，类目直接变成 blocker。诚实比较下，1-3 度的持续微晃优于该类目彻底不可用；三者已列入残留清单，等上游 settled 判据(late window >0.5deg)或软体碰撞代理方案落地再解。"
+}

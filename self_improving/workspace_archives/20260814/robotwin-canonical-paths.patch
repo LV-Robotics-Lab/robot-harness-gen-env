@@ -1,0 +1,17 @@
+Subject: [local-runtime] repoint Curobo asset paths to canonical RoboTwin
+
+This patch records the mechanical runtime-only repair applied to the ignored
+`external/RoboTwin` checkout on Jingxiang. All twelve occurrences of
+`/home/jingxiang/gujie/RoboTwin` in these six YAML files were replaced with
+`/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin`:
+
+- assets/embodiments/ARX-X5/curobo.yml
+- assets/embodiments/aloha-agilex/curobo_left.yml
+- assets/embodiments/aloha-agilex/curobo_right.yml
+- assets/embodiments/franka-panda/curobo.yml
+- assets/embodiments/piper/curobo.yml
+- assets/embodiments/ur5-wsg/curobo.yml
+
+The changed fields are each embodiment's `urdf_path` and `collision_spheres`.
+The repair is deliberately recorded as local runtime provenance because the
+bulk RoboTwin checkout is excluded from this repository.

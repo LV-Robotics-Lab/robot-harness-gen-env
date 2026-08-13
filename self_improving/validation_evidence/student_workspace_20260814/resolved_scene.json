@@ -1,0 +1,174 @@
+{
+  "schema_version": "robotwin.resolved_scene.v1",
+  "scene_id": "place_a_can_on_the_table_acd20a6814",
+  "request": "Place a can on the table.",
+  "frame": {
+    "name": "robotwin_world",
+    "x_axis": "right",
+    "y_axis": "front",
+    "z_axis": "up",
+    "handedness": "right_handed"
+  },
+  "unit": "m",
+  "seed": 42,
+  "workspace": {
+    "support_surface": "table",
+    "table_height_m": 0.741,
+    "x_bounds_m": [
+      -0.35,
+      0.35
+    ],
+    "y_bounds_m": [
+      -0.2,
+      0.3
+    ],
+    "robot_keepout_x_m": [
+      -0.16,
+      0.16
+    ],
+    "robot_keepout_y_m": [
+      -0.2,
+      -0.08
+    ]
+  },
+  "source_scene_spec_sha256": "54954c7228e43274508d00fcde0aa35f0caa3d0e63d4e0733594b0a455a62004",
+  "asset_catalog_sha256": "7f61aa1cf86d0d30ae1b43661335049937e0aeaa8e1646edcbe885170516d2d6",
+  "compiler_version": "scene_gen.stage5_solver.v3",
+  "objects": [
+    {
+      "object_id": "can_1",
+      "category": "can",
+      "asset_id": "071_can",
+      "model_id": 0,
+      "load_type": "rigid",
+      "stable_pose_id": "robotwin_can_upright",
+      "stable_orientation_wxyz": [
+        0.7071067811865476,
+        0.7071067811865476,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0712,
+        0.0712,
+        0.0965
+      ],
+      "footprint_shape": "circle",
+      "support_margin_m": 0.005,
+      "support_spawn_clearance_m": 0.003,
+      "z_policy": "origin_on_table",
+      "mesh_scale": [
+        0.05,
+        0.05,
+        0.05
+      ],
+      "collision_available": true,
+      "source_files": [
+        "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/071_can/collision/base0.glb",
+        "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/071_can/model_data0.json",
+        "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/071_can/visual/base0.glb"
+      ],
+      "grounding_score": 103.0,
+      "grounding_reasons": [
+        "exact category match",
+        "collision representation available",
+        "normalized dimensions available"
+      ],
+      "rejected_candidates": [
+        {
+          "asset_id": "071_can",
+          "model_id": 1,
+          "score": 100.0,
+          "reasons": [
+            "model unusable",
+            "stable_pose"
+          ]
+        },
+        {
+          "asset_id": "071_can",
+          "model_id": 2,
+          "score": 100.0,
+          "reasons": [
+            "model unusable",
+            "stable_pose"
+          ]
+        },
+        {
+          "asset_id": "071_can",
+          "model_id": 3,
+          "score": 100.0,
+          "reasons": [
+            "model unusable",
+            "stable_pose"
+          ]
+        },
+        {
+          "asset_id": "071_can",
+          "model_id": 5,
+          "score": 100.0,
+          "reasons": [
+            "model unusable",
+            "stable_pose"
+          ]
+        },
+        {
+          "asset_id": "071_can",
+          "model_id": 6,
+          "score": 100.0,
+          "reasons": [
+            "model unusable",
+            "stable_pose"
+          ]
+        }
+      ],
+      "pose": {
+        "position_m": [
+          -0.203675388,
+          0.033026122,
+          0.741
+        ],
+        "orientation_wxyz": [
+          0.640350466044,
+          0.640350466044,
+          0.29991879007,
+          0.29991879007
+        ],
+        "yaw_rad": 0.876044411498
+      },
+      "is_static": false,
+      "support_relation": "on_table",
+      "support_target": "table",
+      "articulation_joint_names": [],
+      "articulation_joint_limits": [],
+      "articulation_qpos": [],
+      "asset_provenance": "robotwin_catalog"
+    }
+  ],
+  "relations": [
+    {
+      "relation": "on_table",
+      "source": "can_1",
+      "target": "table"
+    }
+  ],
+  "solver_trace": {
+    "algorithm": "bounded_rejection_backtracking_v1",
+    "seed": 42,
+    "max_attempts_per_object": 96,
+    "total_attempts": 1,
+    "attempts": [
+      {
+        "attempt": 1,
+        "object_id": "can_1",
+        "candidate_xy_m": [
+          -0.203675388,
+          0.033026122
+        ],
+        "yaw_rad": 0.876044411498,
+        "accepted": true,
+        "reasons": []
+      }
+    ],
+    "status": "pass"
+  }
+}

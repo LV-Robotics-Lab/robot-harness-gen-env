@@ -8,7 +8,11 @@ import types
 from pathlib import Path
 
 from scene_gen.catalog import load_catalog
-from scene_gen.envs.generated_scene import load_resolved_scene
+from scene_gen.envs.generated_scene import (
+    _apply_physical_material,
+    _runtime_modelname,
+    load_resolved_scene,
+)
 from scene_gen.parser import parse_rule_based
 from scene_gen.solver import solve_scene
 
@@ -18,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 class FakeActor:
     def __init__(self) -> None:
         self.name: str | None = None
+        self.mass_kg: float | None = None
         self.qpos: tuple[float, ...] = ()
         self.material = types.SimpleNamespace(base_color=[1.0, 1.0, 1.0, 1.0])
         shape = types.SimpleNamespace(material=self.material, parts=[])
@@ -27,14 +32,99 @@ class FakeActor:
     def set_name(self, name: str) -> None:
         self.name = name
 
+    def set_mass(self, mass_kg: float) -> None:
+        self.mass_kg = mass_kg
+
     def set_qpos(self, qpos) -> None:
         self.qpos = tuple(qpos)
+
+
+def test_runtime_modelname_uses_valid_external_asset_directory(tmp_path: Path) -> None:
+    asset_directory = tmp_path / "901_robolab_corn_can"
+    source_paths = (
+        asset_directory / "collision" / "base0.glb",
+        asset_directory / "model_data0.json",
+        asset_directory / "visual" / "base0.glb",
+    )
+    for path in source_paths:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"fixture")
+
+    item = types.SimpleNamespace(
+        asset_id="901_robolab_corn_can",
+        model_id=0,
+        source_files=tuple(str(path) for path in source_paths),
+    )
+
+    assert _runtime_modelname(item) == str(asset_directory.resolve())
+
+
+def test_apply_physical_material_updates_all_collision_shapes() -> None:
+    class FakeCollisionShape:
+        def __init__(self) -> None:
+            self.physical_material = None
+
+        def set_physical_material(self, material) -> None:
+            self.physical_material = material
+
+    shapes = [FakeCollisionShape(), FakeCollisionShape()]
+    physics_component = types.SimpleNamespace(
+        get_collision_shapes=lambda: shapes
+    )
+    actor = types.SimpleNamespace(
+        actor=types.SimpleNamespace(components=[physics_component])
+    )
+
+    created_materials = []
+
+    class FakeScene:
+        def create_physical_material(
+            self,
+            static_friction,
+            dynamic_friction,
+            restitution,
+        ):
+            material = types.SimpleNamespace(
+                static_friction=static_friction,
+                dynamic_friction=dynamic_friction,
+                restitution=restitution,
+            )
+            created_materials.append(material)
+            return material
+
+    task = types.SimpleNamespace(scene=FakeScene())
+    item = types.SimpleNamespace(
+        object_id="scissors_1",
+        static_friction=2.0,
+        dynamic_friction=1.5,
+        restitution=0.1,
+    )
+
+    applied_count = _apply_physical_material(task, actor, item)
+
+    assert applied_count == 2
+    assert len(created_materials) == 1
+    material = created_materials[0]
+    assert material.static_friction == 2.0
+    assert material.dynamic_friction == 1.5
+    assert material.restitution == 0.1
+    assert all(shape.physical_material is material for shape in shapes)
 
 
 def test_generated_scene_loads_only_resolved_assets_and_registers_footprints(monkeypatch) -> None:
     catalog = load_catalog(ROOT / "tests" / "fixtures" / "asset_catalog.json")
     spec = parse_rule_based("A red can is left of a plastic basket near the center.", seed=11)
     resolved = solve_scene(spec, catalog)
+    resolved = resolved.model_copy(
+        update={
+            "objects": tuple(
+                item.model_copy(update={"mass_kg": 1.5})
+                if item.asset_id == "071_can"
+                else item
+                for item in resolved.objects
+            )
+        }
+    )
     calls: list[dict] = []
 
     class FakePose:
@@ -95,6 +185,8 @@ def test_generated_scene_loads_only_resolved_assets_and_registers_footprints(mon
         assert call["pose"].orientation == item.pose.orientation_wxyz
         assert actors[item.object_id].name == item.object_id
     assert actors["can_1"].material.base_color == [0.82, 0.10, 0.12, 1.0]
+    assert actors["can_1"].mass_kg == 1.5
+    assert actors["basket_1"].mass_kg is None
 
 
 def test_generate_scene_cli_writes_structured_input_failure(tmp_path: Path) -> None:

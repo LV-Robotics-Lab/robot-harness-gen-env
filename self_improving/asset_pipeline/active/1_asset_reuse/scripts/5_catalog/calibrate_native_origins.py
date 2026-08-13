@@ -87,14 +87,21 @@ def main():
     ov_path = DEV / "data/scene_gen_ext/asset_overrides_ext.yml"
     _raw = yaml.safe_load(ov_path.read_text()) if ov_path.exists() else {}
     # upstream schema nests entries under "assets"; earlier ext files were flat
-    overrides = {**(_raw.get("assets") or {}), **{k: v for k, v in _raw.items() if k not in ("schema_version", "assets")}}
+    overrides = {
+        **(_raw.get("assets") or {}),
+        **{k: v for k, v in _raw.items() if k not in ("schema_version", "assets")},
+    }
 
     cat = json.load(open(a.catalog))
     entries = cat["entries"] if isinstance(cat, dict) else cat
     todo = []
     for e in entries:
         aid = e["asset_id"]
-        if not (aid[:3].isdigit() and int(aid[:3]) < 300):
+        # default domain is rigid NATIVES (<300): externals get their pose
+        # measured at import. But import settle proved looser than the
+        # upstream runtime window (336/339/343/359, 2026-08-13 sweep), so an
+        # explicit --only may name externals for the same measurement.
+        if not a.only and not (aid[:3].isdigit() and int(aid[:3]) < 300):
             continue
         if a.only and aid not in a.only:
             continue
@@ -130,8 +137,11 @@ def main():
         scene.set_timestep(1 / 250)
         scene.add_ground(0.0)
         actor0 = create_actor(
-            scene, pose=sapien.Pose([0, 0, 0], q0), modelname=aid,
-            model_id=mid, convex=True,
+            scene,
+            pose=sapien.Pose([0, 0, 0], q0),
+            modelname=aid,
+            model_id=mid,
+            convex=True,
         )
         if actor0 is None:
             raise RuntimeError("create_actor returned None")
@@ -198,8 +208,23 @@ def main():
         [R2, 0, -R2, 0],
     ]
 
-    result = {}
-    n_ok = 0
+    # 续测（2026-08-14 事故后加）：共享机器上 GPU 被他人训练占满时渲染缓存会
+    # 耗尽，进程必须能分批重启接着跑，否则一小时的实测一次报废。
+    done = {}
+    outp = Path(a.out)
+    if outp.exists() and not a.only:
+        try:
+            done = json.loads(outp.read_text()).get("models", {})
+        except Exception:  # noqa: BLE001
+            done = {}
+    todo = [t for t in todo if str(t[1]) not in done.get(t[0], {})]
+    if done:
+        print(f"续测：沿用 {sum(len(v) for v in done.values())} 条，剩 {len(todo)}", flush=True)
+
+    result = {k: dict(v) for k, v in done.items()}
+    n_ok = sum(
+        1 for v in done.values() for r in v.values() if r.get("verdict") == "ok"
+    )
     for aid, mid in todo:
         decl = (overrides.get(aid) or {}).get("models", {}).get(str(mid), {})
         declared_q = decl.get("stable_orientation_wxyz")
@@ -219,8 +244,12 @@ def main():
                 dr = attempt(aid, mid, declared_q or [1, 0, 0, 0])
                 row["declared_reverify"] = {
                     k: dr.get(k)
-                    for k in ("verdict", "reverify_drift_m", "reverify_tilt_deg",
-                              "origin_height_m")
+                    for k in (
+                        "verdict",
+                        "reverify_drift_m",
+                        "reverify_tilt_deg",
+                        "origin_height_m",
+                    )
                 }
                 row["declared_trusted"] = dr.get("verdict") == "ok" and dr.get(
                     "z_policy"
@@ -245,6 +274,16 @@ def main():
             f"{flag}{aid}/m{mid}: {row.get('verdict')} zp={row.get('z_policy')} h={row.get('origin_height_m')}",
             flush=True,
         )
+        try:
+            import sapien.render as _sr
+
+            _sr.clear_cache()
+        except Exception:  # noqa: BLE001
+            pass
+        if "buffer" in str(row.get("verdict", "")):
+            result[aid].pop(str(mid), None)
+            print("渲染缓存耗尽：保存进度并退出，交由外层重启续测", flush=True)
+            break
 
     out = {
         "schema": "envgen.native_origin_calibration.v1",
@@ -254,7 +293,11 @@ def main():
         "models": result,
     }
     Path(a.out).write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
-    print(f"\n校准完成: {n_ok}/{len(todo)} accepted -> {a.out}")
+    n_all = sum(len(v) for v in result.values())
+    if not todo:
+        print(f"\n校准完成: {n_ok}/{n_all} accepted -> {a.out}")
+    else:
+        print(f"\n本批结束: 累计 {n_ok}/{n_all} accepted -> {a.out}")
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ dist/
 *.hdf5
 *.h5
 data/
+local_data/
 datasets/
 outputs/
 checkpoints/
@@ -26,6 +27,7 @@ artifacts/
 
 # RoboTwin / simulator heavy assets
 assets/
+/external/RoboTwin/
 
 # OS / editor
 .DS_Store
@@ -57,6 +59,17 @@ self_improving/**/*.usda
 self_improving/**/.env
 self_improving/**/local_config.py
 self_improving/alchedata/report_sources/
+
+# Hours-long measured metadata is small and must remain recoverable. Keep the
+# rest of the asset-pipeline data tree ignored.
+!self_improving/asset_pipeline/active/data/
+self_improving/asset_pipeline/active/data/*
+!self_improving/asset_pipeline/active/data/scene_gen_ext/
+self_improving/asset_pipeline/active/data/scene_gen_ext/*
+!self_improving/asset_pipeline/active/data/scene_gen_ext/native_origin_calibration.json
+!self_improving/asset_pipeline/active/data/scene_gen_ext/top_support_survey.json
+!self_improving/asset_pipeline/active/data/scene_gen_ext/asset_attributes.json
+!self_improving/asset_pipeline/active/data/scene_gen_ext/runtime_revocations.json
 
 # Curated, test-bound structured fixtures retained from Alchedata. Bulk runs
 # remain ignored; only the named placement seed is versioned.

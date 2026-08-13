@@ -1,0 +1,158 @@
+{
+  "schema_version": "robotwin.scene_validation.v1",
+  "scene_id": "place_a_can_on_the_table_acd20a6814",
+  "resolved_scene_sha256": "4e1f775547a24502156dc6af2d6319e51ccfd57060681aadb517c4d59acd8070",
+  "status": "pass",
+  "fail_count": 0,
+  "not_run_count": 0,
+  "checks": [
+    {
+      "name": "workspace_bounds:can_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.239275388,
+          -0.16807538800000002,
+          -0.0025738780000000017,
+          0.068626122
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:can_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.741,
+        "table_height_m": 0.741,
+        "support_relation": "on_table"
+      }
+    },
+    {
+      "name": "real_asset_files:can_1",
+      "status": "pass",
+      "evidence": {
+        "paths": [
+          "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/071_can/collision/base0.glb",
+          "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/071_can/model_data0.json",
+          "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/071_can/visual/base0.glb"
+        ],
+        "exists": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "relation:on_table:can_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "resolved_only_roundtrip",
+      "status": "pass",
+      "evidence": {
+        "before": "4e1f775547a24502156dc6af2d6319e51ccfd57060681aadb517c4d59acd8070",
+        "after": "4e1f775547a24502156dc6af2d6319e51ccfd57060681aadb517c4d59acd8070"
+      }
+    },
+    {
+      "name": "runtime_status",
+      "status": "pass",
+      "evidence": null
+    },
+    {
+      "name": "robot_initial_collision",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "observer_video_frame_count",
+      "status": "pass",
+      "evidence": {
+        "frames": 120,
+        "minimum": 3
+      }
+    },
+    {
+      "name": "observer_video_unique_frames",
+      "status": "pass",
+      "evidence": {
+        "unique_frames": 100,
+        "minimum": 30
+      }
+    },
+    {
+      "name": "translation_drift:can_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_m": 0.0005785230766057809,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "rotation_drift:can_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_deg": 0.05488830014596531,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_translation_error:can_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_m": 0.0005785264129073885,
+        "threshold_m": 0.02,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_rotation_error:can_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_deg": 0.05485467720379118,
+        "threshold_deg": 5.0,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "penetration:can_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:can_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "support_contact:can_1",
+      "status": "pass",
+      "evidence": {
+        "raw_contact": true,
+        "mode": "on_table_contact",
+        "is_static": false,
+        "expected_target": "table",
+        "observed_target": "table",
+        "contact_fraction": 1.0,
+        "minimum_contact_fraction": 0.8
+      }
+    },
+    {
+      "name": "not_dropped:can_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "head_visibility:can_1",
+      "status": "pass",
+      "evidence": {
+        "pixels": 989,
+        "threshold": 64
+      }
+    }
+  ]
+}

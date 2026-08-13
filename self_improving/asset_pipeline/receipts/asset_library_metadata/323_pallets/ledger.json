@@ -108,7 +108,7 @@
         },
         {
           "format": "glb",
-          "uri": "/tmp/sweep/C_pallets/acquire/webcache/2455adda4387e1c18cbc/124f251081854c90a2965d12c37af3f8.glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_323_pallets/124f251081854c90a2965d12c37af3f8.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "3827b46c94d43390a99aa5490bc105cca048043a3db919a62d9e11dec7415837",

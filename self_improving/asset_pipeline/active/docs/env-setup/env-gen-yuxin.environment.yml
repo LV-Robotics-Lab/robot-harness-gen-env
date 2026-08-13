@@ -319,4 +319,3 @@ dependencies:
       - yourdfpy==0.0.60
       - zarr==2.18.3
       - zipp==4.1.0
-prefix: /home/jingxiang/miniconda3/envs/env-gen-yuxin
