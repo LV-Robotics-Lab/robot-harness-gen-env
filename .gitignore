@@ -27,6 +27,7 @@ artifacts/
 
 # RoboTwin / simulator heavy assets
 assets/
+/external/RoboTwin/
 
 # OS / editor
 .DS_Store

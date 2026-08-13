@@ -22,6 +22,7 @@ runtime assumptions into the core trust boundary.
 | `legacy/robotwin_text2env_alt/` | read-only | Alternate `text2env.tabletop.v0` prototype at source tip `c226358`, including its repair utility and bounded smoke evidence. It must not replace the active Stage 5 compiler. |
 | `validation_evidence/openxsim_20260716/` | preserved evidence | Compact JSON, logs, and replay scripts recovered from the former OpenXSim acceptance workspaces. |
 | `workspace_archives/20260716/` | provenance | Full-file SHA-256 manifest and the repository Release pointer for the consolidated Jingxiang workspaces. |
+| `workspace_archives/20260814/` | cleanup receipt | Student-workspace path disposition, local manifest hashes, RoboTwin checksum comparisons, and remaining runtime gate. |
 
 Independent projects remain Git submodules in `external/`:
 

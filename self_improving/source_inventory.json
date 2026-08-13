@@ -161,6 +161,14 @@
       }
     },
     {
+      "name": "jingxiang-student-workspace-consolidation",
+      "captured_at": "2026-08-14",
+      "destination": "self_improving/workspace_archives/20260814",
+      "cleanup_receipt": "self_improving/workspace_archives/20260814/student_workspace_cleanup.json",
+      "retained": ["organization archive branches", "ignored workbench source", "unique contributor notes", "local payload manifests", "RoboTwin checksum comparisons"],
+      "storage_uri": null
+    },
+    {
       "name": "OpenReal2Sim",
       "repository": "LV-Robotics-Lab/OpenReal2Sim",
       "destination": "external/OpenReal2Sim",

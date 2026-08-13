@@ -1,0 +1,8 @@
+*deleting   .cache/huggingface/CACHEDIR.TAG
+>f+++++++++ .cache/huggingface/download/background_texture.zip.lock
+>fcsT...... .cache/huggingface/download/background_texture.zip.metadata
+>f+++++++++ .cache/huggingface/download/embodiments.zip.lock
+>fc.T...... .cache/huggingface/download/embodiments.zip.metadata
+>f+++++++++ .cache/huggingface/download/objects.zip.lock
+>fcsT...... .cache/huggingface/download/objects.zip.metadata
+>fcsT...... embodiments/aloha-agilex/config.yml

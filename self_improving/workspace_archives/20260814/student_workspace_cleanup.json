@@ -1,0 +1,54 @@
+{
+  "schema_version": "robot_harness.student_workspace_cleanup.v1",
+  "captured_at": "2026-08-14",
+  "host": "jingxiang@100.64.0.6",
+  "canonical_repository": "/home/jingxiang/workspace/robot-harness-gen-env",
+  "integration_branch": "integration/student-workspaces-20260814",
+  "integration_commit": "d7fbb8f72a57bf68c77046d1778f841cc3faa747",
+  "remote_repository": "LV-Robotics-Lab/robot-harness-gen-env",
+  "deleted_redundant_paths": [
+    "/home/jingxiang/bingsheng/robot-harness-gen-env",
+    "/home/jingxiang/bingsheng/RoboTwin",
+    "/home/jingxiang/gujie/robot-harness-gen-env",
+    "/home/jingxiang/gujie/OpenReal2Sim",
+    "/home/jingxiang/gujie/digital-cousins",
+    "/home/jingxiang/gujie/X2Env",
+    "/home/jingxiang/yeyuxuan/robot-harness-gen-env",
+    "/home/jingxiang/yeyuxuan/robolab-source",
+    "/home/jingxiang/yeyuxuan/robotwin-robolab-overlay",
+    "/home/jingxiang/yuxin/env-gen-dev",
+    "/home/jingxiang/yuxin/env-gen-dev-alias",
+    "/home/jingxiang/yuxin/env-gen-dev-src",
+    "/home/jingxiang/yuxin/env-gen-github",
+    "/home/jingxiang/yuxin/wt-main",
+    "/home/jingxiang/yuxin/robotwin_upstream"
+  ],
+  "local_payload_destinations": {
+    "student_workspaces": "local_data/student_workspaces",
+    "external_runtime_data": "local_data/external",
+    "asset_pipeline_data": "self_improving/asset_pipeline/active/data",
+    "asset_pipeline_results": "self_improving/asset_pipeline/active/results"
+  },
+  "local_manifests": {
+    "local_data/MANIFEST.sha256": "51403d000b49ce1062ae0395659266c8b2f1eb2199f1d207ab43963fb0a1e868",
+    "self_improving/asset_pipeline/active/data/NON_ASSET_MANIFEST.sha256": "77a54e94dafc34228fcd031bee7d3c85ef5c70a5081038e007b09c752a7446c7",
+    "self_improving/asset_pipeline/active/results/MANIFEST.sha256": "961a66d619a1c23ad2708dcfa8d891619a5632c90275cc9ddd21d80b63dbb6ff",
+    "self_improving/asset_pipeline/receipts/asset_library_301_361.sha256": "e661ac55235d9eec3a1fe5af342b14306b3dcc51a734d54a93f1a037c9a21e60"
+  },
+  "robotwin_duplicate_checks": {
+    "bingsheng_vs_gujie": "bingsheng-vs-gujie-robotwin-assets.rsync",
+    "yuxin_vs_gujie": "yuxin-vs-gujie-robotwin-assets.rsync",
+    "comparison_mode": "rsync recursive dry-run with whole-file checksum and delete reporting"
+  },
+  "recovery": {
+    "git_source": "organization archive and integration branches, verified by ls-remote",
+    "third_party_payload_storage_uri": null,
+    "local_payload_note": "payloads were moved into the canonical checkout, not deleted",
+    "remote_backup_note": "local manifests are audit evidence, not remote backup proof"
+  },
+  "remaining_gate": {
+    "path": "/home/jingxiang/gujie/RoboTwin",
+    "reason": "active robot-diffusion-policy training has this tree as its working directory",
+    "action": "move to canonical external/RoboTwin after PID 231012 exits, then repair generated symlinks and rerun SAPIEN replay"
+  }
+}
