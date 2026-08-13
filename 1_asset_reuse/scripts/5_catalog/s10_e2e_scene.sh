@@ -36,7 +36,9 @@ GROUND_OK=$?
 
 echo "=== [s10.3] SAPIEN runtime replay"
 mkdir -p "$OUT/runtime/$SCENE"
-$PY script/run_scene_runtime.py \
+# CUDA_LAUNCH_BLOCKING: vendored curobo's planner warmup crashes on sm_120
+# under async launches (2026-08-13)
+CUDA_LAUNCH_BLOCKING=1 $PY script/run_scene_runtime.py \
   --robotwin-root "$SHADOW" \
   --resolved-scene "$OUT/scenes/$SCENE/resolved_scene.json" \
   --asset-catalog "$CAT" \

@@ -166,9 +166,14 @@ def pipeline_worker(run_id, run_dir, prompt, seed, catalog_used, providers_used)
                 "--fps",
                 "12",
             ]
+            # rebuilt curobo (vendored, pinned version) hits an async CUDA
+            # launch race on sm_120 during planner warmup; render survives
+            # only with serialized launches (2026-08-13). Scoped to this
+            # stage -- the acquire stage's VLM would pay real latency for it.
+            render_env = {**env, "CUDA_LAUNCH_BLOCKING": "1"}
             try:
                 render_rc = run_subprocess_logged(
-                    render_cmd, UP, env, run_dir, "render"
+                    render_cmd, UP, render_env, run_dir, "render"
                 )
             except Exception as exc:
                 append_log(run_dir, f"\nrender step raised: {exc!r}\n")
