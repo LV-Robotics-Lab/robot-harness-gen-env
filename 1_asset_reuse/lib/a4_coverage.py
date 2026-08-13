@@ -136,6 +136,10 @@ def check_coverage(spec, catalog_path):
             "object_id": obj.object_id,
             "category": obj.category,
             "color": obj.color,
+            # material rides along with colour: upstream grounding rejects a
+            # material mismatch exactly like a colour mismatch, so a gap for
+            # "a wooden bowl" has to reach acquisition as one (2026-08-14)
+            "material": obj.material,
         }
         try:
             sel = ground_object(obj, catalog, seed=spec.seed)
@@ -166,7 +170,7 @@ def gaps_to_entries(records, extra_aliases=None):
     for r in records:
         if r["status"] != "gap":
             continue
-        key = (r["category"], r.get("color"))
+        key = (r["category"], r.get("color"), r.get("material"))
         if key in seen:
             continue
         seen.add(key)
@@ -187,6 +191,8 @@ def gaps_to_entries(records, extra_aliases=None):
                 entry["aliases"].append(alias)
         if r.get("color"):
             entry["colors"] = [r["color"]]
+        if r.get("material"):
+            entry["materials"] = [r["material"]]
         entries.append(entry)
     return entries
 

@@ -434,7 +434,16 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
                 )
             ]
         return rec
-    query = " ".join([category, *entry.get("colors", []), *entry.get("aliases", [])])
+    want_color = (entry.get("colors") or [None])[0]
+    want_material = (entry.get("materials") or [None])[0]
+    query = " ".join(
+        [
+            category,
+            *entry.get("colors", []),
+            *entry.get("materials", []),
+            *entry.get("aliases", []),
+        ]
+    )
     rec = {
         "query": {"category": category, "aliases": entry.get("aliases", [category])},
         "entry_mode": "searched",
@@ -461,6 +470,11 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             model_name=verify_cfg.get("model", a6.DEFAULT_MODEL),
             max_check=int(verify_cfg.get("max_check", 3)),
             second_opinion=bool(verify_cfg.get("second_opinion", True)),
+            # a colour/material-qualified request must be satisfied by an
+            # asset that actually LOOKS like that, not by the first object of
+            # the right shape (2026-08-14)
+            want_color=want_color,
+            want_material=want_material,
         )
         gate_log["results"].extend({**r, "tier": tier_no} for r in vr["results"])
         gate_log["outcome"], gate_log["tier"] = vr["outcome"], tier_no

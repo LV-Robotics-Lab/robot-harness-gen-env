@@ -261,6 +261,82 @@ if survey_path.exists():
     print(
         f"top-support patch: {n_int} interiors measured, {n_closed} hollow tops closed"
     )
+# ---- measured appearance attributes (colors) ----
+# Upstream has supported colour-qualified retrieval all along (parser lifts
+# "red"/"红色" into query.color, grounding matches it against entry.colors,
+# the runtime tints by it) -- we simply never measured a single asset, so
+# every query hit the "color metadata unknown" branch and any colour of cup
+# satisfied "a red cup". measure_asset_attributes.py renders each usable
+# model and votes its pixels into the ten canonical colours.
+#
+# Publishing rule: entry.colors is ASSET-level upstream, and a non-empty
+# value makes grounding REJECT every mismatching query. So a colour is
+# published only when all usable models of the asset agree; a multi-colour
+# native like 110_basket (yellow m1, red m2, white m3) stays unknown rather
+# than claiming a colour the spawned model may not have.
+attr_path = ext / "asset_attributes.json"
+if attr_path.exists():
+    import yaml
+
+    _attrs = json.loads(attr_path.read_text())
+    _data_a = yaml.safe_load(ext_overrides.read_text()) or {}
+    _root_a = _data_a.setdefault("assets", {})
+    _n_col = _n_split = 0
+    for _aid, _models in _attrs.get("models", {}).items():
+        _sets = [
+            tuple(r.get("colors") or ()) for r in _models.values() if not r.get("error")
+        ]
+        _sets = [s for s in _sets if s]
+        if not _sets:
+            continue
+        _entry_a = _root_a.setdefault(_aid, {})
+        if "colors" in _entry_a:
+            continue  # hand-declared wins
+        if len(set(_sets)) == 1:
+            _entry_a["colors"] = list(_sets[0])
+            _n_col += 1
+        else:
+            _entry_a["colors_disagree"] = [list(s) for s in sorted(set(_sets))]
+            _n_split += 1
+    ext_overrides.write_text(
+        "# GENERATED (see calibration header above)\n"
+        + yaml.safe_dump(_data_a, sort_keys=False, allow_unicode=True)
+    )
+    print(
+        f"attribute patch: {_n_col} assets got measured colors, "
+        f"{_n_split} left unknown (models disagree)"
+    )
+
+# ---- runtime-verified revocations ----
+# Our offline rigs are more forgiving than the RoboTwin runtime: a pose that
+# settles here can keep micro-rocking there (339_panel 1.1 deg, 343_ceiling
+# 3.1 deg in the late window, both after a 1500-step settle -- 2026-08-13).
+# The runtime is what the user's Studio actually shows, so its verdict wins:
+# models listed here lose their placement declaration and acquisition looks
+# for a replacement. Entries are appended from real runtime evidence only.
+revoke_path = ext / "runtime_revocations.json"
+if revoke_path.exists():
+    import yaml
+
+    _rev = json.loads(revoke_path.read_text())
+    _data_r = yaml.safe_load(ext_overrides.read_text()) or {}
+    _root_r = _data_r.get("assets") or {}
+    _n_rev = 0
+    for _row in _rev.get("models", []):
+        _e = (_root_r.get(_row["asset_id"], {}).get("models") or {}).get(
+            str(_row["model_id"])
+        )
+        if isinstance(_e, dict) and "stable_pose_id" in _e:
+            del _e["stable_pose_id"]
+            _e["placement_revoked"] = _row.get("reason", "runtime verification failed")
+            _n_rev += 1
+    if _n_rev:
+        ext_overrides.write_text(
+            "# GENERATED (see calibration header above)\n"
+            + yaml.safe_dump(_data_r, sort_keys=False, allow_unicode=True)
+        )
+    print(f"runtime revocations: {_n_rev} models revoked")
+
 # ---- final envelope + consistency pass over ALL declared entries ----
 # The per-branch feasibility check missed the replace path: 034_knife's
 # untrusted declaration was REPLACED with its measured 0.46 m lie-flat pose,

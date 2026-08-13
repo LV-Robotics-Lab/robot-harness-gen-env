@@ -286,6 +286,46 @@ def verify_image(
     return result
 
 
+COLOR_NEIGHBOURS = {
+    # a thumbnail's lighting shifts a hue by one step either way; these pairs
+    # are treated as agreement so "a red cup" is not rejected for reading
+    # crimson/orange under a warm key light
+    "red": {"orange", "pink", "brown", "crimson", "maroon", "scarlet"},
+    "orange": {"red", "yellow", "brown", "amber", "tan"},
+    "yellow": {"orange", "gold", "beige", "cream"},
+    "green": {"olive", "lime", "teal"},
+    "blue": {"navy", "teal", "cyan", "light blue", "dark blue"},
+    "purple": {"violet", "magenta", "pink", "lavender"},
+    "pink": {"red", "purple", "magenta", "rose"},
+    "brown": {"tan", "beige", "orange", "wood", "wooden"},
+    "black": {"dark", "charcoal", "dark gray", "dark grey"},
+    "white": {"cream", "beige", "ivory", "light gray", "light grey", "silver"},
+}
+MATERIAL_NEIGHBOURS = {
+    "wood": {"wooden", "timber", "bamboo"},
+    "metal": {"metallic", "steel", "aluminium", "aluminum", "iron", "chrome", "brass"},
+    "plastic": {"polymer", "acrylic", "resin", "pvc"},
+    "glass": {"crystal", "transparent glass"},
+    "ceramic": {"porcelain", "clay", "earthenware", "stoneware"},
+}
+ATTR_MISMATCH = "attribute_mismatch"
+
+
+def _attr_agrees(seen, wanted, neighbours):
+    """Does an observed attribute list satisfy a requested attribute?"""
+    if not wanted:
+        return True
+    if not seen:
+        return None  # unknown: caller decides, never a silent yes
+    want = str(wanted).lower()
+    ok = {want, *neighbours.get(want, set())}
+    for s in seen:
+        s = str(s).lower()
+        if s in ok or any(w in s.split() for w in ok):
+            return True
+    return False
+
+
 def verify_candidate(
     candidate,
     category,
@@ -294,6 +334,8 @@ def verify_candidate(
     infer=None,
     model_name=DEFAULT_MODEL,
     second_opinion=True,
+    want_color=None,
+    want_material=None,
 ):
     """One candidate -> verdict dict, keyed off its source thumbnail.
 
@@ -351,6 +393,25 @@ def verify_candidate(
             except Exception as exc:  # noqa: BLE001 -- auxiliary, never blocks
                 r["name_check"] = "unreadable"
                 r["name_check_error"] = repr(exc)
+    # A colour-qualified request ("a red cup") must not be satisfied by the
+    # first cup of any colour: the same gate that already reads the object's
+    # colours off the thumbnail now has to agree with what was asked for.
+    # Unknown (the model listed no colours) is NOT taken as agreement -- the
+    # candidate is passed over, since another candidate can still prove it.
+    if r["verdict"] == MATCH and (want_color or want_material):
+        checks = {
+            "color": _attr_agrees(r.get("colors"), want_color, COLOR_NEIGHBOURS),
+            "material": _attr_agrees(
+                r.get("materials"), want_material, MATERIAL_NEIGHBOURS
+            ),
+        }
+        r["attribute_check"] = {
+            k: ("ok" if v is True else "unknown" if v is None else "mismatch")
+            for k, v in checks.items()
+        }
+        if any(v is not True for v in checks.values()):
+            r["verdict"] = MISMATCH
+            r["attribute_veto"] = ATTR_MISMATCH
     return r
 
 
@@ -363,6 +424,8 @@ def verify_candidates(
     model_name=DEFAULT_MODEL,
     max_check=3,
     second_opinion=True,
+    want_color=None,
+    want_material=None,
 ):
     """Verify candidates in rank order, stopping at the first match.
 
@@ -387,6 +450,8 @@ def verify_candidates(
             infer=infer,
             model_name=model_name,
             second_opinion=second_opinion,
+            want_color=want_color,
+            want_material=want_material,
         )
         results.append(r)
         if r["verdict"] != NO_THUMBNAIL:
