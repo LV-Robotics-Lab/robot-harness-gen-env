@@ -116,6 +116,78 @@ def test_runtime_validator_requires_each_object_visibility_and_physics() -> None
         for item in failed_report["checks"]
     )
 
+    endpoint_only_video = json.loads(json.dumps(evidence))
+    endpoint_only_video["video_frame_count"] = 120
+    endpoint_only_video["unique_video_frame_count"] = 2
+    endpoint_report = validate_resolved_scene(
+        resolved,
+        runtime_evidence=endpoint_only_video,
+        require_runtime=True,
+    )
+    unique_frames = next(
+        item
+        for item in endpoint_report["checks"]
+        if item["name"] == "observer_video_unique_frames"
+    )
+    assert unique_frames["status"] == "fail"
+    assert unique_frames["evidence"]["minimum"] == 30
+
+
+def test_runtime_v2_validates_dynamic_relations_instead_of_exact_spawn_pose() -> None:
+    _, _, resolved = solved_case()
+    relations = {
+        f"{relation.relation.value}:{relation.source}:{relation.target}": {
+            "pass": True,
+        }
+        for relation in resolved.relations
+        if relation.target != "table"
+    }
+    evidence = {
+        "schema_version": "robotwin.scene_runtime_evidence.v2",
+        "status": "pass",
+        "robot_initial_collision_count": 0,
+        "relations": relations,
+        "objects": {},
+    }
+    for item in resolved.objects:
+        dynamic = not item.is_static
+        evidence["objects"][item.object_id] = {
+            "translation_drift_m": 0.06 if dynamic else 0.0,
+            "rotation_drift_deg": 45.0 if dynamic else 0.0,
+            "resolved_translation_error_m": 0.06 if dynamic else 0.0,
+            "resolved_rotation_error_deg": 45.0 if dynamic else 0.0,
+            "penetration_count": 0,
+            "still_moving": False,
+            "support_contact": dynamic,
+            "support_contact_fraction": 1.0 if dynamic else 0.0,
+            "unexpected_contact_fraction": 0.0,
+            "unexpected_contact_targets": [],
+            "support_mode": "on_table_contact" if dynamic else "fixed_static_pose",
+            "support_target": "table" if dynamic else None,
+            "dropped": False,
+            "visible_pixels": 512,
+        }
+
+    report = validate_resolved_scene(resolved, runtime_evidence=evidence, require_runtime=True)
+    assert report["status"] == "pass"
+    dynamic_id = next(item.object_id for item in resolved.objects if not item.is_static)
+    assert next(
+        item for item in report["checks"] if item["name"] == f"translation_drift:{dynamic_id}"
+    )["status"] == "not_applicable"
+
+    failed = json.loads(json.dumps(evidence))
+    failed["relations"][next(iter(relations))]["pass"] = False
+    failed_report = validate_resolved_scene(
+        resolved,
+        runtime_evidence=failed,
+        require_runtime=True,
+    )
+    assert failed_report["status"] == "fail"
+    assert any(
+        item["name"].startswith("runtime_relation:") and item["status"] == "fail"
+        for item in failed_report["checks"]
+    )
+
 
 def test_runtime_validator_accepts_explicit_fixed_static_support_only_for_static_objects() -> None:
     _, _, resolved = solved_case()

@@ -16,6 +16,8 @@ from typing import Any
 
 from flask import Flask, jsonify, request, send_from_directory
 
+DEFAULT_SETTLE_STEPS = 900
+
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -218,7 +220,7 @@ class ScenePipeline:
                     "--precheck-steps",
                     "0",
                     "--settle-steps",
-                    "300",
+                    str(DEFAULT_SETTLE_STEPS),
                     "--contact-window-steps",
                     "120",
                     "--video-frames",

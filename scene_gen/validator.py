@@ -89,7 +89,6 @@ def _relation_pass(relation: Any, source: Any, target: Any) -> tuple[bool, dict[
     inside_margin: float | None = None
     if relation.relation == RelationType.ON_TOP_OF:
         source_3d = _aabb3(source)
-        target_3d = _aabb3(target)
         surface_shape, surface_dimensions, surface_z = _support_surface(target)
         footprint_margin = support_footprint_margin(
             source_dimensions_m=source.dimensions_m,
@@ -294,6 +293,7 @@ def validate_resolved_scene(
         video_frame_count = runtime_evidence.get("video_frame_count", 0)
         if isinstance(video_frame_count, int) and video_frame_count > 0:
             unique_video_frame_count = runtime_evidence.get("unique_video_frame_count")
+            minimum_unique_frames = min(video_frame_count, 30)
             _check(
                 checks,
                 "observer_video_frame_count",
@@ -305,9 +305,12 @@ def validate_resolved_scene(
                 "observer_video_unique_frames",
                 "pass"
                 if isinstance(unique_video_frame_count, int)
-                and unique_video_frame_count >= 3
+                and unique_video_frame_count >= minimum_unique_frames
                 else "fail",
-                {"unique_frames": unique_video_frame_count, "minimum": 3},
+                {
+                    "unique_frames": unique_video_frame_count,
+                    "minimum": minimum_unique_frames,
+                },
             )
         for item in resolved.objects:
             evidence = (runtime_evidence.get("objects") or {}).get(item.object_id) or {}
@@ -328,40 +331,68 @@ def validate_resolved_scene(
             articulation_error = evidence.get("articulation_max_abs_error")
             resolved_translation_error = evidence.get("resolved_translation_error_m")
             resolved_rotation_error = evidence.get("resolved_rotation_error_deg")
+            exact_pose_required = item.is_static
             _check(
                 checks,
                 f"translation_drift:{item.object_id}",
-                "pass" if isinstance(drift, (int, float)) and drift <= max_translation_drift_m else "fail",
-                drift,
+                (
+                    "pass"
+                    if isinstance(drift, (int, float))
+                    and drift <= max_translation_drift_m
+                    else "fail"
+                )
+                if exact_pose_required
+                else "not_applicable",
+                {"drift_m": drift, "exact_pose_required": exact_pose_required},
             )
             _check(
                 checks,
                 f"rotation_drift:{item.object_id}",
-                "pass" if isinstance(rotation, (int, float)) and rotation <= max_rotation_drift_deg else "fail",
-                rotation,
+                (
+                    "pass"
+                    if isinstance(rotation, (int, float))
+                    and rotation <= max_rotation_drift_deg
+                    else "fail"
+                )
+                if exact_pose_required
+                else "not_applicable",
+                {
+                    "drift_deg": rotation,
+                    "exact_pose_required": exact_pose_required,
+                },
             )
             _check(
                 checks,
                 f"resolved_translation_error:{item.object_id}",
-                "pass"
-                if isinstance(resolved_translation_error, (int, float))
-                and resolved_translation_error <= max_resolved_translation_error_m
-                else "fail",
+                (
+                    "pass"
+                    if isinstance(resolved_translation_error, (int, float))
+                    and resolved_translation_error <= max_resolved_translation_error_m
+                    else "fail"
+                )
+                if exact_pose_required
+                else "not_applicable",
                 {
                     "error_m": resolved_translation_error,
                     "threshold_m": max_resolved_translation_error_m,
+                    "exact_pose_required": exact_pose_required,
                 },
             )
             _check(
                 checks,
                 f"resolved_rotation_error:{item.object_id}",
-                "pass"
-                if isinstance(resolved_rotation_error, (int, float))
-                and resolved_rotation_error <= max_resolved_rotation_error_deg
-                else "fail",
+                (
+                    "pass"
+                    if isinstance(resolved_rotation_error, (int, float))
+                    and resolved_rotation_error <= max_resolved_rotation_error_deg
+                    else "fail"
+                )
+                if exact_pose_required
+                else "not_applicable",
                 {
                     "error_deg": resolved_rotation_error,
                     "threshold_deg": max_resolved_rotation_error_deg,
+                    "exact_pose_required": exact_pose_required,
                 },
             )
             _check(
@@ -459,6 +490,25 @@ def validate_resolved_scene(
                         "max_abs_error": articulation_error,
                         "target_qpos": list(item.articulation_qpos),
                     },
+                )
+        if runtime_evidence.get("schema_version") == "robotwin.scene_runtime_evidence.v2":
+            runtime_relations = runtime_evidence.get("relations") or {}
+            for relation in resolved.relations:
+                if relation.target == "table" or relation.relation in {
+                    RelationType.ON_TOP_OF,
+                    RelationType.INSIDE,
+                }:
+                    continue
+                key = f"{relation.relation.value}:{relation.source}:{relation.target}"
+                relation_evidence = runtime_relations.get(key)
+                _check(
+                    checks,
+                    f"runtime_relation:{key}",
+                    "pass"
+                    if isinstance(relation_evidence, dict)
+                    and relation_evidence.get("pass") is True
+                    else "fail",
+                    relation_evidence,
                 )
 
     fail_count = sum(item["status"] == "fail" for item in checks)

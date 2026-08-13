@@ -29,11 +29,13 @@ policies, data collection, training, evaluation, or simulator transfer.
   including the table below a plate or container.
 - Container placement uses target-local interior geometry and an explicit
   collision-floor offset.
-- Final translation and rotation must remain within 20 mm and 5 degrees of the
-  resolved pose.
+- Fixed objects must remain within 20 mm and 5 degrees of the resolved pose.
+  Dynamic objects are checked against final contact, containment, and spatial
+  relations after settling rather than their released spawn pose.
 - Objects must settle, remain visible, avoid penetration, and stay inside the
   declared workspace.
-- Requested runtime videos must contain at least three real and distinct frames.
+- A 120-frame runtime video must contain at least 30 distinct frames. The
+  capture keeps 119 consecutive release frames plus the final settled frame.
 - Static, contact-free acceptance is limited to fixed objects placed directly on
   the table. It cannot satisfy stacking or containment.
 
@@ -55,6 +57,12 @@ Place a red can to the left of a plastic basket near the center.
 
 Catalog misses can optionally produce deterministic geometric proxies. This is
 not unrestricted text-to-3D generation.
+
+For the runtime-unstable `004_fluted-block`, the compiler emits a deterministic
+primitive proxy with source lineage. It preserves native dimensions on the
+table and applies a uniformly scaled footprint only when a nested support
+surface requires it. Automatic compatibility scaling is currently restricted
+to block/cube categories that have passed real SAPIEN replay.
 
 ## Install And Test
 
@@ -107,14 +115,33 @@ python script/run_scene_runtime.py \
   --asset-catalog data/scene_gen/asset_catalog.json \
   --out-dir data/runtime/<scene-id> \
   --precheck-steps 0 \
-  --settle-steps 300 \
+  --settle-steps 900 \
   --contact-window-steps 120 \
   --video-frames 120 \
   --fps 12
 ```
 
 Starting with zero precheck steps records the physical release and prevents an
-unstable initial state from being hidden before evidence capture.
+unstable initial state from being hidden before evidence capture. The 900-step
+window is required by the current apple-in-basket asset pair; it still had
+measurable motion at 300 steps.
+
+## Prompt Matrix
+
+```bash
+python script/run_prompt_matrix.py \
+  --matrix tests/fixtures/prompt_matrix.json \
+  --asset-catalog data/scene_gen/asset_catalog.json \
+  --generated-objects-root /path/to/RoboTwin/assets/objects \
+  --out-root data/prompt_matrix \
+  --report data/prompt_matrix/report.json \
+  --runtime \
+  --robotwin-root /path/to/RoboTwin
+```
+
+The committed matrix has 11 English/Chinese cases and three seeds. Runtime is
+run for the first seed of each positive case unless `--runtime-all-seeds` is
+set. Expected solver rejections remain part of the aggregate pass/fail result.
 
 ## Acceptance Batches
 
@@ -145,12 +172,22 @@ resume data.
   translation error 2.645 mm, and maximum rotation error 0.975 degrees.
 - Both matrices reported zero penetration points, moving final states, and
   dropped nested objects.
-- The expected-negative request `Place a red block on top of a plate.` was
-  rejected because the source footprint cannot satisfy the plate support
-  margin.
+- The native `004_fluted-block` footprint cannot satisfy the plate support
+  margin. The current compiler derives a `0.597x` stable primitive proxy with
+  dimensions `55.088 x 54.104 x 38.980 mm`; its real replay retained an
+  `8.861 mm` support margin and continuous target contact.
 
-The commands, thresholds, report schema, and exact source hashes are recorded
-in [the physics acceptance note](docs/evidence/physics-acceptance-20260717.md).
+[COMPUTED] The 2026-07-19 prompt matrix passed 33/33 compile outcomes and 10/10
+real SAPIEN replays on the RTX 5090 host. Every 120-frame MP4 contained at least
+100 distinct frames. The matrix includes stacking, containment, table support,
+left/right/front/near relations, articulation state, bilingual equivalence,
+derived scale adaptation, and an infeasible-region expected rejection.
+
+The current commands, thresholds, report hashes, and per-case results are in
+[the prompt-matrix acceptance note](docs/evidence/prompt-matrix-20260719.md) and
+[its structured report](docs/evidence/prompt-matrix-runtime-20260719.json).
+The earlier 20-seed baseline remains in
+[the 2026-07-17 physics note](docs/evidence/physics-acceptance-20260717.md).
 
 ## Browser Demo
 

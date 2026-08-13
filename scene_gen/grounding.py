@@ -54,6 +54,9 @@ def _semantic_score(query: SceneObjectSpec, entry: CatalogEntry) -> tuple[float,
             return None
         else:
             reasons.append(f"material metadata unknown; query {query.material} preserved")
+    if "geometry_compatible_derived" in entry.source_notes:
+        score += 3.0
+        reasons.append("derived asset satisfies nested geometry")
     return score, reasons
 
 

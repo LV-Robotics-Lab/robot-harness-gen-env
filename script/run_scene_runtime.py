@@ -18,6 +18,7 @@ import yaml
 from PIL import Image
 
 from scene_gen.envs.generated_scene import load_resolved_scene
+from scene_gen.runtime_sampling import video_sample_steps
 from scene_gen.schema import RelationType, ResolvedSceneSpec
 from scene_gen.support_geometry import (
     footprint_2d,
@@ -163,6 +164,82 @@ def runtime_inside_contained(
         <= target_bottom + interior_height + tolerance_m
     )
     return horizontal and vertical
+
+
+def runtime_relation_results(
+    resolved: ResolvedSceneSpec,
+    positions: dict[str, list[float]],
+) -> dict[str, dict[str, Any]]:
+    by_id = {item.object_id: item for item in resolved.objects}
+    results: dict[str, dict[str, Any]] = {}
+    gap = 0.015
+    for relation in resolved.relations:
+        if relation.target == "table" or relation.relation in {
+            RelationType.ON_TOP_OF,
+            RelationType.INSIDE,
+        }:
+            continue
+        source = by_id[relation.source]
+        target = by_id[relation.target]
+        source_position = positions[source.object_id]
+        target_position = positions[target.object_id]
+        source_footprint = footprint_2d(
+            source.dimensions_m,
+            source.pose.yaw_rad,
+            source.footprint_shape,
+        )
+        target_footprint = footprint_2d(
+            target.dimensions_m,
+            target.pose.yaw_rad,
+            target.footprint_shape,
+        )
+        dx = source_position[0] - target_position[0]
+        dy = source_position[1] - target_position[1]
+        distance = math.hypot(dx, dy)
+        if relation.relation == RelationType.LEFT_OF:
+            passed = (
+                source_position[0] + source_footprint.half_x + gap
+                <= target_position[0] - target_footprint.half_x
+            )
+        elif relation.relation == RelationType.RIGHT_OF:
+            passed = (
+                source_position[0] - source_footprint.half_x - gap
+                >= target_position[0] + target_footprint.half_x
+            )
+        elif relation.relation == RelationType.FRONT_OF:
+            passed = (
+                source_position[1] - source_footprint.half_y - gap
+                >= target_position[1] + target_footprint.half_y
+            )
+        elif relation.relation == RelationType.BEHIND:
+            passed = (
+                source_position[1] + source_footprint.half_y + gap
+                <= target_position[1] - target_footprint.half_y
+            )
+        elif relation.relation == RelationType.NEAR:
+            passed = distance <= (relation.max_distance_m or 0.25)
+        elif relation.relation == RelationType.DISTANCE_AT_LEAST:
+            passed = distance >= (relation.min_distance_m or 0.0)
+        else:
+            continue
+        key = f"{relation.relation.value}:{relation.source}:{relation.target}"
+        results[key] = {
+            "relation": relation.relation.value,
+            "source": relation.source,
+            "target": relation.target,
+            "pass": bool(passed),
+            "center_delta_m": [dx, dy],
+            "center_distance_m": distance,
+            "source_half_extent_m": [
+                source_footprint.half_x,
+                source_footprint.half_y,
+            ],
+            "target_half_extent_m": [
+                target_footprint.half_x,
+                target_footprint.half_y,
+            ],
+        }
+    return results
 
 
 def entity_id(actor: Any) -> int | None:
@@ -360,7 +437,7 @@ def main() -> int:
     parser.add_argument("--asset-catalog")
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--task-config", default="demo_clean")
-    parser.add_argument("--settle-steps", type=int, default=180)
+    parser.add_argument("--settle-steps", type=int, default=900)
     parser.add_argument("--precheck-steps", type=int, default=0)
     parser.add_argument("--video-frames", type=int, default=120)
     parser.add_argument("--fps", type=int, default=12)
@@ -404,7 +481,7 @@ def main() -> int:
 
     task = GeneratedSceneRuntime(resolved)
     report: dict[str, Any] = {
-        "schema_version": "robotwin.scene_runtime_evidence.v1",
+        "schema_version": "robotwin.scene_runtime_evidence.v2",
         "scene_id": resolved.scene_id,
         "resolved_scene_sha256": resolved.digest(),
         "seed": resolved.seed,
@@ -432,6 +509,8 @@ def main() -> int:
         frames: list[np.ndarray] = []
         prior_window: dict[str, dict[str, list[float]]] | None = None
         total_steps = max(args.settle_steps, args.video_frames)
+        video_steps = video_sample_steps(total_steps, args.video_frames)
+        video_step_set = set(video_steps)
         contact_window_steps = min(max(1, args.contact_window_steps), total_steps)
         support_contact_hits = {name: 0 for name in generated_names}
         unexpected_contact_hits = {name: 0 for name in generated_names}
@@ -448,7 +527,7 @@ def main() -> int:
                     }
                     for name, actor in task.generated_objects.items()
                 }
-            if index < args.video_frames:
+            if index in video_step_set:
                 task.scene.update_render()
                 frames.append(task.cameras.get_observer_rgb())
             if index >= total_steps - contact_window_steps:
@@ -554,6 +633,15 @@ def main() -> int:
                 if len(target_qpos) and len(final_qpos) == len(target_qpos)
                 else None
             )
+            loader_translation_offset = (
+                np.asarray(before["position_m"])
+                - np.asarray(by_id[name].pose.position_m)
+                if by_id[name].load_type == "urdf"
+                else np.zeros(3, dtype=float)
+            )
+            logical_final_position = (
+                np.asarray(after["position_m"]) - loader_translation_offset
+            )
             objects[name] = {
                 "asset_id": by_id[name].asset_id,
                 "entity_id": identifiers[0] if len(identifiers) == 1 else None,
@@ -566,10 +654,11 @@ def main() -> int:
                 "rotation_drift_deg": quaternion_angle_deg(after["orientation_wxyz"], before["orientation_wxyz"]),
                 "resolved_translation_error_m": float(
                     np.linalg.norm(
-                        np.asarray(after["position_m"])
+                        logical_final_position
                         - np.asarray(by_id[name].pose.position_m)
                     )
                 ),
+                "loader_translation_offset_m": loader_translation_offset.tolist(),
                 "resolved_rotation_error_deg": quaternion_angle_deg(
                     after["orientation_wxyz"],
                     list(by_id[name].pose.orientation_wxyz),
@@ -602,6 +691,7 @@ def main() -> int:
                 "robot_final_collision_count": final_contacts["robot_collision_count"],
                 "robot_final_collision_pairs": final_contacts["robot_collision_pairs"],
                 "objects": objects,
+                "relations": runtime_relation_results(resolved, final_positions),
                 "initial_contact_records": initial_contacts["records"],
                 "final_contact_records": final_contacts["records"],
                 "images": {
@@ -617,6 +707,8 @@ def main() -> int:
                 "video_frame_count": len(frames),
                 "unique_video_frame_count": unique_video_frame_count,
                 "fps": args.fps,
+                "simulation_step_count": total_steps,
+                "video_sample_step_indices": list(video_steps),
                 "precheck_steps": args.precheck_steps,
                 "contact_window_steps": contact_window_steps,
             }

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import sys
 import json
 import os
 import subprocess
+import sys
 import types
 from pathlib import Path
 
@@ -19,6 +19,10 @@ class FakeActor:
     def __init__(self) -> None:
         self.name: str | None = None
         self.qpos: tuple[float, ...] = ()
+        self.material = types.SimpleNamespace(base_color=[1.0, 1.0, 1.0, 1.0])
+        shape = types.SimpleNamespace(material=self.material, parts=[])
+        component = types.SimpleNamespace(render_shapes=[shape])
+        self.actor = types.SimpleNamespace(components=[component])
 
     def set_name(self, name: str) -> None:
         self.name = name
@@ -90,6 +94,7 @@ def test_generated_scene_loads_only_resolved_assets_and_registers_footprints(mon
         assert call["pose"].position == item.pose.position_m
         assert call["pose"].orientation == item.pose.orientation_wxyz
         assert actors[item.object_id].name == item.object_id
+    assert actors["can_1"].material.base_color == [0.82, 0.10, 0.12, 1.0]
 
 
 def test_generate_scene_cli_writes_structured_input_failure(tmp_path: Path) -> None:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from ..colors import COLOR_RGB
 from ..schema import ResolvedSceneSpec
 
 
@@ -14,6 +15,36 @@ def _coerce_resolved(value: ResolvedSceneSpec | dict[str, Any] | str | Path) -> 
     if isinstance(value, (str, Path)):
         return ResolvedSceneSpec.model_validate_json(Path(value).read_text(encoding="utf-8"))
     return ResolvedSceneSpec.model_validate(value)
+
+
+def _render_entities(actor: Any) -> list[Any]:
+    raw = getattr(actor, "actor", actor)
+    link_getter = getattr(raw, "get_links", None)
+    if callable(link_getter):
+        return list(link_getter())
+    return [raw]
+
+
+def _apply_color_override(actor: Any, color: str) -> int:
+    rgb = COLOR_RGB.get(color)
+    if rgb is None:
+        raise RuntimeError(f"unsupported runtime color override: {color}")
+    material_ids: set[int] = set()
+    for entity in _render_entities(actor):
+        components = getattr(entity, "components", ())
+        for component in components:
+            for shape in getattr(component, "render_shapes", ()):
+                candidates = [getattr(shape, "material", None)]
+                candidates.extend(
+                    getattr(part, "material", None)
+                    for part in getattr(shape, "parts", ())
+                )
+                for material in candidates:
+                    if material is None or id(material) in material_ids:
+                        continue
+                    material.base_color = [*rgb, 1.0]
+                    material_ids.add(id(material))
+    return len(material_ids)
 
 
 def load_resolved_scene(task: Any, resolved: ResolvedSceneSpec | dict[str, Any] | str | Path) -> dict[str, Any]:
@@ -45,6 +76,10 @@ def load_resolved_scene(task: Any, resolved: ResolvedSceneSpec | dict[str, Any] 
             )
         if actor is None:
             raise RuntimeError(f"RoboTwin failed to load {item.asset_id}/model{item.model_id}")
+        if item.color and _apply_color_override(actor, item.color) == 0:
+            raise RuntimeError(
+                f"RoboTwin loaded {item.object_id} without a tintable render material"
+            )
         if item.articulation_qpos:
             setter = getattr(actor, "set_qpos", None)
             if not callable(setter):

@@ -31,7 +31,7 @@ from .support_geometry import (
     support_surface_z,
 )
 
-COMPILER_VERSION = "scene_gen.stage5_solver.v2"
+COMPILER_VERSION = "scene_gen.stage5_solver.v3"
 
 
 class SceneSolveError(RuntimeError):
@@ -526,6 +526,26 @@ def solve_scene(
                     "attempts": [item.model_dump(mode="json") for item in attempts],
                 }
             ) from error
+        provenance_path = Path(selection.entry.asset_path) / "generation_provenance.json"
+        generated_asset = "procedural_generated" in selection.entry.source_notes
+        derived_asset = "derived_scaled_proxy" in selection.entry.source_notes
+        provenance: dict[str, Any] = {}
+        if generated_asset or derived_asset:
+            try:
+                provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as error:
+                raise SceneSolveError(
+                    {
+                        "schema_version": "robotwin.scene_solver_failure.v1",
+                        "scene_id": spec.scene_id,
+                        "seed": spec.seed,
+                        "status": "fail",
+                        "blocker": f"invalid generated asset provenance: {provenance_path}",
+                        "error": repr(error),
+                        "total_attempts": len(attempts),
+                        "attempts": [item.model_dump(mode="json") for item in attempts],
+                    }
+                ) from error
         files = tuple(
             sorted(
                 {
@@ -535,8 +555,8 @@ def solve_scene(
                         model.visual_path,
                         model.collision_path,
                         model.urdf_path,
-                        str(Path(selection.entry.asset_path) / "generation_provenance.json")
-                        if "procedural_generated" in selection.entry.source_notes
+                        str(provenance_path)
+                        if generated_asset or derived_asset
                         else None,
                     )
                     if value
@@ -544,8 +564,12 @@ def solve_scene(
             )
         )
         stable_orientation = model.stable_orientation_wxyz or (1.0, 0.0, 0.0, 0.0)
-        generated_asset = "procedural_generated" in selection.entry.source_notes
-        generation_metadata_path = Path(selection.entry.asset_path) / "generation_provenance.json"
+        if derived_asset:
+            asset_provenance = "derived_scaled_proxy"
+        elif generated_asset:
+            asset_provenance = "procedural_generated"
+        else:
+            asset_provenance = "robotwin_catalog"
         resolved_objects.append(
             ResolvedObject(
                 object_id=query.object_id,
@@ -567,6 +591,7 @@ def solve_scene(
                 support_margin_m=model.support_margin_m,
                 support_spawn_clearance_m=model.support_spawn_clearance_m,
                 z_policy=model.z_policy,
+                mesh_scale=model.scale,
                 collision_available=bool(model.collision_path or model.urdf_path),
                 source_files=files,
                 grounding_score=selection.score,
@@ -586,9 +611,18 @@ def solve_scene(
                     (joint.lower, joint.upper) for joint in model.articulation_joints
                 ),
                 articulation_qpos=articulation_qpos,
-                asset_provenance="procedural_generated" if generated_asset else "robotwin_catalog",
+                asset_provenance=asset_provenance,
                 generation_metadata_path=(
-                    str(generation_metadata_path.resolve()) if generated_asset else None
+                    str(provenance_path.resolve()) if generated_asset or derived_asset else None
+                ),
+                derived_from_asset_id=(
+                    str(provenance.get("source_asset_id")) if derived_asset else None
+                ),
+                derived_from_model_id=(
+                    int(provenance["source_model_id"]) if derived_asset else None
+                ),
+                uniform_scale_factor=(
+                    float(provenance["uniform_scale_factor"]) if derived_asset else None
                 ),
             )
         )
