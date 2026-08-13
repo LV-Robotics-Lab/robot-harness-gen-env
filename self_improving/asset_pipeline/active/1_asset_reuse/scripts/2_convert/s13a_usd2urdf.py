@@ -14,6 +14,9 @@ import math
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from runtime_config import ASSET_CATALOG  # noqa: E402
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--usd", required=True)
 parser.add_argument(
@@ -25,7 +28,7 @@ parser.add_argument("--size-policy", default=None,
 parser.add_argument("--category", default=None)
 parser.add_argument(
     "--reference-catalog",
-    default="/home/jingxiang/yuxin/env-gen-dev/external/env-gen-github/data/scene_gen/asset_catalog.json",
+    default=str(ASSET_CATALOG),
 )
 parser.add_argument("--scale", type=float, default=1.0,
                     help="uniform sizing scale on top of metersPerUnit (recorded)")

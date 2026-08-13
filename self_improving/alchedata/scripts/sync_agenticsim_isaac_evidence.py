@@ -12,7 +12,8 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_AGENTICSIM_ROOT = ROOT.parent / "AgenticSim"
+DEFAULT_AGENTICSIM_ROOT = ROOT / "fixtures" / "retired_agenticsim"
+ARCHIVED_SOURCE_COMMIT = "6d952560870b0a9b71f707f0476d28425bfab256"
 DEFAULT_OUTPUT = (
     ROOT / "artifacts" / "openxsim" / "agenticsim_awesome_isaac_snapshot.json"
 )
@@ -93,14 +94,17 @@ def build_snapshot(agenticsim_root: Path = DEFAULT_AGENTICSIM_ROOT) -> dict[str,
         for slug, row in sorted(runtime_by_slug.items())
     ]
 
-    head = git_output(agenticsim_root, "rev-parse", "HEAD")
-    tracked_dirty = git_output(
-        agenticsim_root, "status", "--short", "--untracked-files=no"
-    )
-    if tracked_dirty:
-        raise RuntimeError(
-            "AgenticSim tracked worktree must be clean before evidence sync"
+    if (agenticsim_root / ".git").exists():
+        head = git_output(agenticsim_root, "rev-parse", "HEAD")
+        tracked_dirty = git_output(
+            agenticsim_root, "status", "--short", "--untracked-files=no"
         )
+        if tracked_dirty:
+            raise RuntimeError(
+                "AgenticSim tracked worktree must be clean before evidence sync"
+            )
+    else:
+        head = ARCHIVED_SOURCE_COMMIT
 
     return {
         "schema_version": "alchedata.openxsim_agenticsim_awesome_isaac_snapshot.v3",

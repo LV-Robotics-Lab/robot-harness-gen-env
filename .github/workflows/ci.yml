@@ -12,9 +12,11 @@ jobs:
         python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-      - run: python -m pip install -e '.[dev,demo]'
-      - run: pytest -q
+      - run: python -m pip install -e '.[dev,demo,platform]'
+      - run: script/run_self_improving_tests.sh

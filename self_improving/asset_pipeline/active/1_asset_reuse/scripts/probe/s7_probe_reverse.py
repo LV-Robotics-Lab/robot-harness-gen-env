@@ -15,8 +15,23 @@ import asyncio
 import json
 from pathlib import Path
 
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from runtime_config import ASSET_PIPELINE_ROOT  # noqa: E402
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--out", required=True)
+parser.add_argument(
+    "--source-usd",
+    default=str(
+        ASSET_PIPELINE_ROOT
+        / "results"
+        / "_test"
+        / "20260802_smoke_bottle_cabinet_glb2usd"
+        / "bottle.usd"
+    ),
+)
 args = parser.parse_args()
 out = Path(args.out)
 out.mkdir(parents=True, exist_ok=True)
@@ -40,10 +55,7 @@ try:
     import omni.kit.asset_converter as ac
 
     # ---- 1. reverse conversion probe ----
-    src = Path(
-        "/home/jingxiang/yuxin/env-gen-dev/results/_test/"
-        "20260802_smoke_bottle_cabinet_glb2usd/bottle.usd"
-    )
+    src = Path(args.source_usd)
 
     async def try_export(dst):
         ctx = ac.AssetConverterContext()

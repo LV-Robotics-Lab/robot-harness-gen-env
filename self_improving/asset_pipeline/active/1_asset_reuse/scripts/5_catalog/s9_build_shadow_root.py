@@ -13,16 +13,19 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from runtime_config import GEN_ENV_ROOT, ROBOTWIN_ROOT  # noqa: E402
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--robotwin-root",
-    default="/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin",
+    default=str(ROBOTWIN_ROOT),
 )
 parser.add_argument("--library-dir", required=True)
 parser.add_argument("--shadow", required=True)
 parser.add_argument("--ext-dir", required=True, help="data/scene_gen_ext output dir")
 parser.add_argument(
-    "--upstream", default="/home/jingxiang/yuxin/env-gen-dev/external/env-gen-github"
+    "--upstream", default=str(GEN_ENV_ROOT)
 )
 parser.add_argument(
     "--admission",

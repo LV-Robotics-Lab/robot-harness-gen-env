@@ -17,12 +17,15 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from runtime_config import GEN_ENV_ROOT  # noqa: E402
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--catalog", required=True, help="view catalog json (read, optionally rewritten)"
 )
 parser.add_argument(
-    "--upstream", default="/home/jingxiang/yuxin/env-gen-dev/external/env-gen-github"
+    "--upstream", default=str(GEN_ENV_ROOT)
 )
 parser.add_argument("--work-dir", required=True, help="scratch dir for compile outputs")
 parser.add_argument("--report", required=True)

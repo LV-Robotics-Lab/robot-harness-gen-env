@@ -1,9 +1,16 @@
 from __future__ import annotations
 
+from pathlib import Path
+
+import pytest
+
 from scripts.build_sceneagent_acceptance_audit import build
 
 
 def test_sceneagent_acceptance_audit_covers_all_dashboard_items() -> None:
+    root = Path(__file__).resolve().parents[1]
+    if not (root / "runs" / "final_acceptance_20260715").is_dir():
+        pytest.skip("full SceneAgent run and media bundle is intentionally external")
     audit = build()
 
     assert audit["status"] == "pass_all_8_sceneagent_acceptance_items"

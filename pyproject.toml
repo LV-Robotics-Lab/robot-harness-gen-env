@@ -27,6 +27,11 @@ vlm = [
   "transformers>=4.49,<5",
 ]
 dev = ["pytest>=8.3,<9", "ruff>=0.9,<1"]
+platform = [
+  "jsonschema>=4.23,<5",
+  "numpy>=1.26,<3",
+  "trimesh>=4.5,<5",
+]
 
 [tool.setuptools.packages.find]
 include = ["scene_gen*", "demo*", "self_improving"]

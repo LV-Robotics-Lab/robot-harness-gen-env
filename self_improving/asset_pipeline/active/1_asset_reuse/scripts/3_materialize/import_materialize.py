@@ -35,6 +35,7 @@ import trimesh
 # under a bare "conventions" name).
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ledger"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from lib import conventions as conv_lib  # noqa: E402
 from lib import ledger as ledger_mod  # noqa: E402
 from lib.ledger import (  # noqa: E402
@@ -47,6 +48,7 @@ from lib.ledger import (  # noqa: E402
     unknown_inertial,
 )
 import gen_fragment  # noqa: E402
+from runtime_config import ASSET_CATALOG  # noqa: E402
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--staging", required=True)
@@ -67,7 +69,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--reference-catalog",
-    default="/home/jingxiang/yuxin/env-gen-dev/external/env-gen-github/data/scene_gen/asset_catalog.json",
+    default=str(ASSET_CATALOG),
     help="catalog used for convention inheritance and category sizing",
 )
 parser.add_argument(

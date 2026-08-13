@@ -19,17 +19,20 @@ catalog 被文字场景真实选中。全景与逐文件说明见本目录 `OVER
 
 ```bash
 export OMNI_KIT_ACCEPT_EULA=YES
+export SAPIEN_PYTHON=/path/to/env-gen-python
+export ISAAC_PYTHON=/path/to/isaac-sim-python
+export ROBOTWIN_ROOT=/path/to/RoboTwin
 # 打样回归（B+C 全链路，4 步）—— 全程隔离，产物全落 results/_test/，生产 data/ 只读不写
 bash scripts/run_smoke.sh
 # 批量导入外部资产（按 configs/external_manifest.json）
-~/miniconda3/envs/isaac-smoke/bin/python  scripts/2_convert/import_fetch_convert.py \
+"$ISAAC_PYTHON" scripts/2_convert/import_fetch_convert.py \
   --manifest configs/external_manifest.json \
   --source-root ../data/asset_library/_source --staging <staging目录>
-~/miniconda3/envs/env-gen-yuxin/bin/python scripts/3_materialize/import_materialize.py \
+"$SAPIEN_PYTHON" scripts/3_materialize/import_materialize.py \
   --staging <staging目录> --library-dir ../data/asset_library \
   --out <结果目录> --overrides-fragment ../data/scene_gen_ext/external_overrides_fragment.yml
 # 重建影子根 + 扩展 catalog（消费上面的 fragment）
-~/miniconda3/envs/env-gen-yuxin/bin/python scripts/5_catalog/s9_build_shadow_root.py \
+"$SAPIEN_PYTHON" scripts/5_catalog/s9_build_shadow_root.py \
   --library-dir ../data/asset_library --shadow ../data/robotwin_shadow \
   --ext-dir ../data/scene_gen_ext \
   --extra-overrides ../data/scene_gen_ext/external_overrides_fragment.yml
@@ -39,6 +42,11 @@ bash scripts/5_catalog/s10_e2e_scene.sh
 
 前置：conda `env-gen-yuxin`（SAPIEN 侧）+ `isaac-smoke`（Isaac Sim 5.1，py3.11）。
 
+运行路径统一由 `../runtime_config.py` 管理。仓库内目录默认相对此 checkout；
+外部依赖用 `ROBOTWIN_ROOT`、`SAPIEN_PYTHON`、`ISAAC_PYTHON` 注入。高级覆盖项
+包括 `ASSET_PIPELINE_ROOT`、`GEN_ENV_ROOT`、`ASSET_CATALOG` 和
+`OBJAVERSE_DATA_ROOT`，无需再修改源码里的个人绝对路径。
+
 ### 账本契约（asset_ledger.v1）
 
 - **权威位置**：`../data/asset_library/<asset>/ledger.json`（每资产一份，含
@@ -46,12 +54,12 @@ bash scripts/5_catalog/s10_e2e_scene.sh
 - **现存资产升级 v1**（一次性、幂等；已是 v1 的资产自动跳过）：
   ```bash
   # 先跑 dry-run（不带 --apply）看报告，violations 逐条 triage
-  ~/miniconda3/envs/env-gen-yuxin/bin/python scripts/backfill_ledger_v1.py \
+  "$SAPIEN_PYTHON" scripts/backfill_ledger_v1.py \
     --library-dir ../data/asset_library --results-root ../results \
     --fragment ../data/scene_gen_ext/external_overrides_fragment_merged.yml \
     --out <报告目录>
   # violations 能清零的资产落账本
-  ~/miniconda3/envs/env-gen-yuxin/bin/python scripts/backfill_ledger_v1.py \
+  "$SAPIEN_PYTHON" scripts/backfill_ledger_v1.py \
     --library-dir ../data/asset_library --results-root ../results \
     --fragment ../data/scene_gen_ext/external_overrides_fragment_merged.yml \
     --out <报告目录> --apply
@@ -63,14 +71,14 @@ bash scripts/5_catalog/s10_e2e_scene.sh
   手改不会被后续任何步骤读取，下次重新生成会静默覆盖。要改 fragment 内容，改账本
   （或 backfill 的映射逻辑），再重新生成：
   ```bash
-  ~/miniconda3/envs/env-gen-yuxin/bin/python scripts/gen_fragment.py \
+  "$SAPIEN_PYTHON" scripts/gen_fragment.py \
     --library-dir ../data/asset_library --out <生成目录>/fragment.yml
   ```
 - **发布纪律**：对外发布前必须加 `--license-gate`（默认关，只过滤本次生成的
   fragment，不改账本）；无论开关每次运行都打印 unknown 许可证计数警告，发布前
   需将其清零：
   ```bash
-  ~/miniconda3/envs/env-gen-yuxin/bin/python scripts/gen_fragment.py \
+  "$SAPIEN_PYTHON" scripts/gen_fragment.py \
     --library-dir ../data/asset_library --out <生成目录>/fragment.yml --license-gate
   ```
 - **手工删除库内资产文件是不安全操作**：账本 / `results/**/bundles/` 快照 /

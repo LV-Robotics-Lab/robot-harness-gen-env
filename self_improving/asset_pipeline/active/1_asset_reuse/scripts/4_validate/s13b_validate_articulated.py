@@ -18,7 +18,6 @@ import sys
 from pathlib import Path
 
 import numpy as np
-import sapien
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from lib import conventions, ledger
@@ -59,6 +58,12 @@ if not inst.name.isdigit():
     sys.exit(1)
 model_id = int(inst.name)
 category = "cabinet"
+
+try:
+    import sapien
+except ModuleNotFoundError:
+    print("FAIL s13b: SAPIEN is required for articulated runtime validation")
+    sys.exit(1)
 
 
 def sha256(p):

@@ -9,9 +9,11 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from lib import a4_coverage as a4  # noqa: E402
+from runtime_config import GEN_ENV_ROOT  # noqa: E402
 
-UP = "/home/jingxiang/yuxin/env-gen-github"
+UP = str(GEN_ENV_ROOT)
 
 
 def default_runner(cmd, cwd=None, env=None):

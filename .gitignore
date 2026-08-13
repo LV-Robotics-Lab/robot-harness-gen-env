@@ -57,3 +57,12 @@ self_improving/**/*.usda
 self_improving/**/.env
 self_improving/**/local_config.py
 self_improving/alchedata/report_sources/
+
+# Curated, test-bound structured fixtures retained from Alchedata. Bulk runs
+# remain ignored; only the named placement seed is versioned.
+!self_improving/alchedata/artifacts/
+!self_improving/alchedata/artifacts/**
+!self_improving/alchedata/runs/
+self_improving/alchedata/runs/*
+!self_improving/alchedata/runs/probe_static_apple_plate_action_repair/
+!self_improving/alchedata/runs/probe_static_apple_plate_action_repair/final_placement.json

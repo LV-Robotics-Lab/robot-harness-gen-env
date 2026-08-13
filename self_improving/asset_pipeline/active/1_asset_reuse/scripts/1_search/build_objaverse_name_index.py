@@ -23,6 +23,11 @@ import time
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from runtime_config import OBJAVERSE_DATA_ROOT  # noqa: E402
+
 WORD = re.compile(r"[a-z0-9]+")
 
 
@@ -41,7 +46,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument(
         "--data-dir",
-        default="/home/jingxiang/yuxin/env-gen-dev/data/asset_index/objaverse",
+        default=str(OBJAVERSE_DATA_ROOT),
     )
     ap.add_argument("--workers", type=int, default=8)
     a = ap.parse_args()

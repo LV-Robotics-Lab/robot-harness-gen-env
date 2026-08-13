@@ -6,16 +6,19 @@
 - 单个资产失败不中断，末尾汇总 baked/skipped/failed。
 
 用法：
-  /home/jingxiang/miniconda3/envs/env-gen-yuxin/bin/python web/tools/bake_thumbs.py \
+  python web/tools/bake_thumbs.py \
       [--catalog data/scene_gen_ext/asset_catalog.json] [--out results/web_thumbs] \
       [--size 384] [--force]
 """
 
 import argparse
 import json
+import os
 from pathlib import Path
 
-DEV = Path("/home/jingxiang/yuxin/env-gen-dev")
+DEV = Path(
+    os.environ.get("ASSET_PIPELINE_ROOT", Path(__file__).resolve().parents[2])
+).expanduser().resolve()
 LOADABLE = {".glb", ".gltf", ".obj", ".stl", ".ply"}
 
 

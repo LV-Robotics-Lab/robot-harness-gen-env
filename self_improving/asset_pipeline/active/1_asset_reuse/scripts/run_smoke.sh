@@ -18,9 +18,10 @@
 # writes a v1 ledger, and emits the overrides fragment the catalog needs.
 set -uo pipefail
 SPIKE="$(cd "$(dirname "$0")" && pwd)"
-DEV=/home/jingxiang/yuxin/env-gen-dev
-PY_SAP=$HOME/miniconda3/envs/env-gen-yuxin/bin/python
-PY_ISA=$HOME/miniconda3/envs/isaac-smoke/bin/python
+ACTIVE_ROOT="$(cd "$SPIKE/../.." && pwd)"
+DEV=${ASSET_PIPELINE_ROOT:-$ACTIVE_ROOT}
+PY_SAP=${SAPIEN_PYTHON:-python3}
+PY_ISA=${ISAAC_PYTHON:-python3}
 export OMNI_KIT_ACCEPT_EULA=YES
 
 RUN=${SMOKE_RUN:-$DEV/results/_test/$(TZ=Asia/Singapore date +%Y%m%d)_smoke_batch_e2e}

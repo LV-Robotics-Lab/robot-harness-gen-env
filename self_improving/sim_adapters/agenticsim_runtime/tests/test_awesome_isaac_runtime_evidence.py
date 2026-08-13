@@ -5,6 +5,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -23,6 +25,8 @@ def load_module():
 
 def test_runtime_evidence_rebuild_matches_checked_summary() -> None:
     module = load_module()
+    if not module.RAW_ROOT.is_dir():
+        pytest.skip("raw 39 MB runtime evidence bundle is intentionally external")
     rebuilt = module.build_runtime_evidence()
     checked = json.loads(
         (ROOT / "docs" / "awesome_isaac_runtime_evidence.json").read_text(
@@ -44,6 +48,8 @@ def test_runtime_evidence_rebuild_matches_checked_summary() -> None:
 
 def test_runtime_passes_keep_workarounds_and_blockers_visible() -> None:
     module = load_module()
+    if not module.RAW_ROOT.is_dir():
+        pytest.skip("raw 39 MB runtime evidence bundle is intentionally external")
     report = module.build_runtime_evidence()
     by_slug = {row["slug"]: row for row in report["repositories"]}
 

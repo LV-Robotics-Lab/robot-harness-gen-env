@@ -30,7 +30,10 @@ from pathlib import Path
 
 import numpy as np
 
-DEV = Path("/home/jingxiang/yuxin/env-gen-dev")
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from runtime_config import ASSET_PIPELINE_ROOT  # noqa: E402
+
+DEV = ASSET_PIPELINE_ROOT
 
 
 def quat_angle_deg(q1, q2):

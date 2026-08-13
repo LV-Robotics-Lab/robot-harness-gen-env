@@ -37,8 +37,8 @@
       "source_path": "/home/jingxiang/yuxin/env-gen-dev",
       "source_commit": "96f5debb8326b7ddfda045660233ea40ebcb094c",
       "destination": "self_improving/asset_pipeline",
-      "retained": ["active source", "branch overlays", "asset acquisition manifest", "ledger and model metadata"],
-      "excluded": ["meshes", "renders", "results", "caches", "shadow upstream clone"]
+      "retained": ["active source", "shared OpenXSim source and tests", "branch overlays", "asset acquisition manifest", "ledger and model metadata"],
+      "excluded": ["vendored OpenXSim dependencies", "MetaSim checkout", "meshes", "renders", "results", "caches", "shadow upstream clone"]
     },
     {
       "name": "yeyuxuan-onboarding-report",

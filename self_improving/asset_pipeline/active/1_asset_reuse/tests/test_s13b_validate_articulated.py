@@ -3,6 +3,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 SCRIPT = (
     Path(__file__).resolve().parents[1]
     / "scripts"
@@ -79,6 +81,7 @@ _MINI_URDF = """<?xml version="1.0"?>
 
 
 def test_violations_block_ledger_write_but_snapshot_stays(tmp_path):
+    pytest.importorskip("sapien", reason="articulated runtime validation requires SAPIEN")
     # H3: s13b's gate must align with import_materialize's own gate -- a
     # ledger that fails validate_ledger must NOT become authoritative
     # (formerly: WARN and write anyway). Trigger a genuine violation without

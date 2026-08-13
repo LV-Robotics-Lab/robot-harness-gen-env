@@ -11,19 +11,22 @@ import json
 import os
 import re
 import subprocess
+import sys
 import threading
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from flask import Flask, jsonify, request, send_file, abort
+from flask import Flask, abort, jsonify, request, send_file
 
 # --- constants -------------------------------------------------------------
 
-DEV = Path("/home/jingxiang/yuxin/env-gen-dev")
-PY = "/home/jingxiang/miniconda3/envs/env-gen-yuxin/bin/python"
-UP = Path("/home/jingxiang/yuxin/env-gen-github")
-PORT = 8811
+ACTIVE_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[4]
+DEV = Path(os.environ.get("ASSET_PIPELINE_ROOT", ACTIVE_ROOT)).expanduser().resolve()
+PY = os.environ.get("ASSET_PIPELINE_PYTHON", sys.executable)
+UP = Path(os.environ.get("GEN_ENV_ROOT", REPO_ROOT)).expanduser().resolve()
+PORT = int(os.environ.get("ASSET_PIPELINE_PORT", "8811"))
 
 WEB_RUNS = DEV / "results" / "web_runs"
 WEB_THUMBS = DEV / "results" / "web_thumbs"

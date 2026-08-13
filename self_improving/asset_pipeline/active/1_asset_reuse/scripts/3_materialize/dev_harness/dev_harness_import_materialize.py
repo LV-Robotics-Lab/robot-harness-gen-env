@@ -10,8 +10,8 @@ version-controlled, manually-rerunnable dev tool instead (same footing as
 scripts/run_smoke.sh).
 
 Run on lv-5090 with the env-gen-yuxin interpreter (no PYTHONPATH needed):
-    /home/jingxiang/miniconda3/envs/env-gen-yuxin/bin/python \
-        dev_harness_import_materialize.py [path-to-import_materialize.py]
+    "$SAPIEN_PYTHON" dev_harness_import_materialize.py \
+        [path-to-import_materialize.py]
 
 Scenarios (asset_ledger.v1 T5 fix-round-3):
 
@@ -61,7 +61,7 @@ import trimesh
 SCRIPT = Path(
     sys.argv[1]
     if len(sys.argv) > 1
-    else "/home/jingxiang/yuxin/env-gen-dev-ledger/1_asset_reuse/scripts/3_materialize/import_materialize.py"
+    else Path(__file__).resolve().parents[1] / "import_materialize.py"
 )
 PY = sys.executable
 ROOT = Path("/tmp/t5_dev_harness")

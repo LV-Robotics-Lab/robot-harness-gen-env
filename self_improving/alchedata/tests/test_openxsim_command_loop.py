@@ -1,3 +1,7 @@
+from pathlib import Path
+
+import pytest
+
 from scripts.openxsim_command_loop import (
     ADAPTER_MATRIX,
     COMMAND_REGISTRY,
@@ -9,6 +13,9 @@ from scripts.openxsim_command_loop import (
 
 
 def test_openxsim_command_loop_package_passes() -> None:
+    root = Path(__file__).resolve().parents[1]
+    if not (root / "runs" / "isaac_openxsim_place_container_plate_v1").is_dir():
+        pytest.skip("raw Isaac command bundle is intentionally external")
     report = validate_openxsim_package()
 
     assert report["status"] == "pass_openxsim_command_loop_package"

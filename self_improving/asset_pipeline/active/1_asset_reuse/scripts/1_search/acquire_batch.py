@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 import sys as _sys
 from pathlib import Path as _P
 
@@ -21,12 +22,11 @@ import gen_fragment as gen_fragment_mod  # noqa: E402
 
 from lib import a1_providers as a1  # noqa: E402
 from lib import a2_selection as a2  # noqa: E402
+from runtime_config import ASSET_CATALOG, ISAAC_PYTHON, SAPIEN_PYTHON  # noqa: E402
 
-PY_SAP = "/home/jingxiang/miniconda3/envs/env-gen-yuxin/bin/python"
-PY_ISA = "/home/jingxiang/miniconda3/envs/isaac-smoke/bin/python"
-MAIN_TREE_CATALOG_FALLBACK = (
-    "/home/jingxiang/yuxin/env-gen-dev/data/scene_gen_ext/asset_catalog.json"
-)
+PY_SAP = SAPIEN_PYTHON
+PY_ISA = ISAAC_PYTHON
+MAIN_TREE_CATALOG_FALLBACK = str(ASSET_CATALOG)
 
 
 def default_runner(cmd, env=None):

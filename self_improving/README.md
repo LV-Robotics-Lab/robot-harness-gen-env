@@ -11,6 +11,7 @@ runtime assumptions into the core trust boundary.
 | `stage5/` | active | Multi-agent scene design, grounding, critique, MCP-lite tools, prompts, and tests recovered from the stage-05 validation tree. |
 | `alchedata/` | active | `/gen-env -> /collect -> /train -> /evaluate -> /diagnose -> /transfer`, failure memory, promotion gates, schemas, tests, and curated structured evidence. |
 | `asset_pipeline/active/` | active | Asset discovery, ingest, ledger, catalog integration, Web Studio, and simulator-migration adapters from `env-gen-dev`. |
+| `asset_pipeline/active/shared/openxsim/` | active shared core | First-party OpenXSim IR, asset contracts, adapters, conformance tests, and bridge scripts consumed by both asset reuse and simulator migration. Vendored dependencies and the MetaSim checkout are excluded. |
 | `asset_pipeline/branch_overlays/` | preserved | Source-only snapshots of the alias-screening and asset-sources worktrees. |
 | `asset_pipeline/receipts/` | active metadata | Acquired-asset manifest and ledger/model metadata; downloaded meshes and renders are deliberately external. |
 | `sim_adapters/agenticsim_runtime/` | active adapter | Orchestration scripts and hermetic tests recovered from the former non-Git runtime workspace. It is not the retired AgenticSim product repository. |
@@ -35,6 +36,42 @@ python -m self_improving --json
 
 The audit checks source availability only. It does not import GPU frameworks,
 launch simulators, download models, or touch a robot.
+
+Install the hermetic platform-test dependencies with:
+
+```bash
+pip install -e '.[dev,demo,platform]'
+```
+
+Alchedata keeps its original script-style imports, so its standalone test
+command includes both the module root and `scripts/` on `PYTHONPATH`.
+
+Run the complete hermetic regression matrix from the repository root:
+
+```bash
+script/run_self_improving_tests.sh
+```
+
+The script expands to the following module-level commands:
+
+```bash
+python -m pytest -q
+PYTHONPATH=.:self_improving/stage5 python -m pytest -q self_improving/stage5/tests
+PYTHONPATH=self_improving/alchedata:self_improving/alchedata/scripts \
+  python -m pytest -q self_improving/alchedata/tests
+PYTHONPATH=self_improving/sim_adapters/agenticsim_runtime \
+  python -m pytest -q self_improving/sim_adapters/agenticsim_runtime/tests
+(cd self_improving/asset_pipeline/active/1_asset_reuse && \
+  PYTHONPATH=.:scripts:../shared/openxsim/source/agenticsim:../../../.. \
+  python -m pytest -q tests)
+python -m pytest -q self_improving/asset_pipeline/active/web/tests
+(cd self_improving/asset_pipeline/active/shared/openxsim && \
+  PYTHONPATH=source/agenticsim python -m pytest -q tests)
+```
+
+The current source-only baseline is 518 passed and 6 skipped. The skips are
+explicit physical/runtime checks that require SAPIEN or the excluded raw
+Isaac, SceneAgent, media, and report bundles; they are not silently mocked.
 
 ## Artifact policy
 

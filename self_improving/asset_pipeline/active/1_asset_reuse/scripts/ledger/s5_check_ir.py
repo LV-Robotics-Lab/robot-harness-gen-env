@@ -14,11 +14,11 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from lib import ledger  # noqa: E402
+from runtime_config import OPENXSIM_SOURCE  # noqa: E402
 
-sys.path.insert(
-    0, "/home/jingxiang/yuxin/env-gen-dev/shared/openxsim/source/agenticsim"
-)
+sys.path.insert(0, str(OPENXSIM_SOURCE))
 from agenticsim.openxsim.ir import AssetBundle  # noqa: E402
 
 

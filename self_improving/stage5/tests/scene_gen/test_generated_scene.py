@@ -13,6 +13,7 @@ from scene_gen.parser import parse_rule_based
 from scene_gen.solver import solve_scene
 
 ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = ROOT.parents[1]
 
 
 class FakeActor:
@@ -99,11 +100,11 @@ def test_generated_scene_loads_only_resolved_assets_and_registers_footprints(mon
 
 def test_generate_scene_cli_writes_structured_input_failure(tmp_path: Path) -> None:
     environment = os.environ.copy()
-    environment["PYTHONPATH"] = str(ROOT)
+    environment["PYTHONPATH"] = str(REPO_ROOT)
     completed = subprocess.run(
         [
             sys.executable,
-            str(ROOT / "script" / "generate_scene.py"),
+            str(REPO_ROOT / "script" / "generate_scene.py"),
             "--prompt",
             "Use asset_id 071_can and model_id 0.",
             "--seed",
@@ -113,7 +114,7 @@ def test_generate_scene_cli_writes_structured_input_failure(tmp_path: Path) -> N
             "--out-root",
             str(tmp_path),
         ],
-        cwd=ROOT,
+        cwd=REPO_ROOT,
         env=environment,
         text=True,
         capture_output=True,
