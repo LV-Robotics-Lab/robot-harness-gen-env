@@ -31,6 +31,7 @@ OBJECT_TERMS: dict[str, tuple[str, ...]] = {
     "basket": ("basket", "篮子", "筐"),
     "block": ("block", "cube", "方块", "积木"),
     "mustard_bottle": ("mustard bottle",),
+    "soft_scrub": ("soft scrub bottle", "soft scrub"),
     "bottle": ("bottle", "瓶子", "瓶"),
     "bowl": ("bowl", "碗"),
     "calculator": ("calculator", "计算器"),
