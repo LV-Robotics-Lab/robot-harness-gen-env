@@ -38,6 +38,18 @@ MODULES: tuple[ModuleSpec, ...] = (
         mutable=False,
     ),
     ModuleSpec(
+        "robotwin_text2env_alt_archive",
+        "self_improving/legacy/robotwin_text2env_alt",
+        "archive",
+        required=False,
+        mutable=False,
+    ),
+    ModuleSpec(
+        "pearl_evidence_portal",
+        "apps/pearl_evidence_portal",
+        "presentation",
+    ),
+    ModuleSpec(
         "openreal2sim",
         "external/OpenReal2Sim",
         "external",

@@ -29,6 +29,7 @@
 | `.github/` | CI 工作流定义（见 `.github/AGENTS.md`） |
 | `repo-docs/` | 仓库行为讲解（中文）：一条真实路径、代码地图、概念模块、证据底座（见 `repo-docs/README.md`） |
 | `self_improving/` | Self-Improving 平台编排、历史 stage、资产管线、迁移工具和机读来源清单 |
+| `apps/` | 平台的独立呈现层；当前包含保留完整来源历史的 PEARL evidence portal |
 | `external/` | 独立生命周期的 OpenReal2Sim 与 digital-cousins 子模块 |
 
 ## Repo docs

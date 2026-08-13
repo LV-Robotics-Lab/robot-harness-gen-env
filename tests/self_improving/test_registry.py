@@ -11,9 +11,15 @@ def test_registry_has_unique_names_and_paths() -> None:
         "stage5",
         "alchedata",
         "asset_pipeline",
+        "pearl_evidence_portal",
+        "robotwin_text2env_alt_archive",
         "openreal2sim",
         "digital_cousins",
     }
+
+    archive = next(module for module in MODULES if module.name == "robotwin_text2env_alt_archive")
+    assert archive.required is False
+    assert archive.mutable is False
 
 
 def test_audit_is_read_only_and_reports_uninitialized_submodules(tmp_path: Path) -> None:

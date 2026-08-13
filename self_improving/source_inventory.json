@@ -26,6 +26,44 @@
       "excluded": ["generated scenes", "previews", "runtime data"]
     },
     {
+      "name": "pearl-self-improving-evidence-portal",
+      "source_path": "/Users/borisguo/workspace/.tmp/pearl-self-improving-agents",
+      "source_commit": "49a5e57e235dcb0292f6fa109a6af5cec074be2f",
+      "history_merge_commit": "96655164e10d50d5c56b4a0086cfca6e2cc28f3e",
+      "destination": "apps/pearl_evidence_portal",
+      "retained": ["all 12 source commits", "site source", "build scripts", "rendered-HTML test", "bounded hosted report subset"],
+      "local_ahead_commits": [
+        "d848b9239fdf8d54c6323e108c27fef574536ba0",
+        "4f31063123140e144be8284d3d3e67e2e266734e",
+        "405224ccec81dc0ed2e1c071c9d8e3fbbcdf03d8",
+        "867cedbb6216f35d448ca8fc177dd41ead60231e",
+        "fbdf366f3b9a90d67c65fca55060d3bac4d8142d",
+        "49a5e57e235dcb0292f6fa109a6af5cec074be2f"
+      ],
+      "excluded": ["node_modules", "dist", ".next", ".vinext", ".wrangler", "outputs", "work"]
+    },
+    {
+      "name": "robotwin-text2env-alt",
+      "repository": "yezheng04/robotwin-text2env-demo",
+      "source_path": "/Users/borisguo/workspace/.tmp/robotwin-text2env-demo",
+      "source_commit": "c2263586bae09ba081e5f8e45bc8e9c55af2e207",
+      "history_merge_commit": "73c57a031ee64c2bba71f0dcb960960c90ea0942",
+      "destination": "self_improving/legacy/robotwin_text2env_alt",
+      "mode": "read_only_archive",
+      "retained": ["source history", "text2env.tabletop.v0 prototype", "bounded smoke evidence", "repair_text2env_existing_assets.py"],
+      "recovered_file_sha256": {
+        "scripts/repair_text2env_existing_assets.py": "685361cf9caca2c17a3f04ccddbd9238f0dd36e6807203177b57db0b684caed6"
+      },
+      "excluded": ["untracked runtime caches"]
+    },
+    {
+      "name": "can-basket-video-anchor-annotations",
+      "source_path": "/Users/borisguo/workspace/.remote-edit/openxsim-runtime/can_basket_video_anchor_annotations.json",
+      "destination": "self_improving/alchedata/artifacts/openxsim/can_basket_video_anchor_annotations.json",
+      "sha256": "4a1a648437563293d196431352afcb26bcb065504b03cf48f46341cdffc52088",
+      "retained": ["appearance constraints", "camera constraint", "verified rollout endpoint motion constraint", "object constraints"]
+    },
+    {
       "name": "agenticsim-runtime-orchestration",
       "source_path": "/home/jingxiang/workspace/agenticsim-runtime",
       "destination": "self_improving/sim_adapters/agenticsim_runtime",

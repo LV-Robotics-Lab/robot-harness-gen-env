@@ -30,6 +30,9 @@ self_improving/asset_pipeline/     reusable-asset ingest and simulator migration
 self_improving/sim_adapters/       thin simulator integration probes
 self_improving/onboarding/         recovered migration tools and provenance
 self_improving/legacy/stage04/     read-only historical stage snapshot
+self_improving/legacy/robotwin_text2env_alt/
+                                   read-only alternate Text2Env history
+apps/pearl_evidence_portal/        PEARL evidence portal and hosted subset
 external/OpenReal2Sim/             independent Git submodule
 external/digital-cousins/          independent Git submodule
 ```
@@ -257,6 +260,7 @@ demo/               Flask API and browser interface
 tests/fixtures/     self-contained catalog and prompt fixtures
 tests/              parser, solver, validator, critic, demo, and attack tests
 self_improving/     orchestration, diagnosis, asset pipeline, adapters, archives
+apps/               standalone platform presentation surfaces
 external/           OpenReal2Sim and digital-cousins Git submodules
 ```
 
@@ -269,8 +273,9 @@ referenced by path and are not redistributed here.
 
 The platform layer consolidates the former Alchedata self-improving workspace,
 RobotWin Text2Env stage-04/stage-05 trees, AgenticSim runtime orchestration,
-env-gen asset/migration branches, and onboarding migration tools. Exact origins
-and preservation branches are recorded in
+env-gen asset/migration branches, onboarding migration tools, the complete
+PEARL evidence-portal history, and the alternate `text2env.tabletop.v0`
+prototype. Exact origins, merge commits, retained evidence, and exclusions are recorded in
 [`self_improving/source_inventory.json`](self_improving/source_inventory.json).
 
 ## License

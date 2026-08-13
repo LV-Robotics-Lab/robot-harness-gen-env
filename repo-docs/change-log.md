@@ -5,6 +5,7 @@
 - 把仓库文档范围扩展为稳定 `/gen-env` 核心与 `self_improving/` 平台两层。
 - 登记 Alchedata、stage-05、asset pipeline、sim adapter、onboarding、stage-04 历史和两个外部子模块的所有权边界。
 - 明确 AgenticSim 历史仓库与后续 runtime adapter 不是同一个组件。
+- 以完整祖先链迁入 PEARL evidence portal 与 alternate RoboTwin Text2Env，并把后者固定为只读 legacy；补回 can/basket video anchor 标注与精确 SHA-256 来源记录。
 
 | Timestamp | Request | Actions | Verification | Result |
 | --- | --- | --- | --- | --- |

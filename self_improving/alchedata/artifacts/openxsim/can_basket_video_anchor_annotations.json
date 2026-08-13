@@ -1,0 +1,69 @@
+{
+  "appearance_constraints": [
+    {
+      "confidence": 0.86,
+      "instance_id": "cola_can",
+      "label": "cola can"
+    },
+    {
+      "confidence": 0.9,
+      "instance_id": "basket",
+      "label": "basket"
+    }
+  ],
+  "camera_constraints": [
+    {
+      "confidence": 1.0,
+      "sensor_id": "observer_camera",
+      "source": "uploaded_video"
+    }
+  ],
+  "confidence": 0.88,
+  "motion_constraints": [
+    {
+      "confidence": 0.92,
+      "end_position_m": [
+        -0.007908204570412636,
+        0.010364197194576263,
+        0.8404757380485535
+      ],
+      "instance_id": "cola_can",
+      "source": "verified_rollout_endpoints"
+    }
+  ],
+  "object_constraints": [
+    {
+      "confidence": 0.9,
+      "instance_id": "cola_can",
+      "label": "cola can",
+      "position_m": [
+        -0.22499921917915344,
+        0.05000058934092522,
+        0.7404223084449768
+      ]
+    },
+    {
+      "confidence": 0.94,
+      "instance_id": "basket",
+      "label": "basket",
+      "position_m": [
+        0.019999999552965164,
+        -0.05999999865889549,
+        0.7409999966621399
+      ]
+    }
+  ],
+  "spatial_constraints": [
+    {
+      "confidence": 0.9,
+      "object": "basket",
+      "subject": "cola_can",
+      "type": "left_of"
+    }
+  ],
+  "uncertainty": [
+    "metric_positions_are_seed_specific",
+    "unobserved_geometry_unknown",
+    "appearance_labels_are_user_or_vlm_annotations"
+  ]
+}

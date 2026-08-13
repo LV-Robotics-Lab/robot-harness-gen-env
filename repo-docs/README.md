@@ -22,7 +22,7 @@
 | 审计本指南是否真的把模型传给了读者 | [质检报告](references/quality-review.md) | reader simulation、可理解性 review、残余风险 |
 | 把重复见到的术语归一 | [术语表](glossary.md) | `SceneSpec`、`ResolvedSceneSpec`、support margin、derived proxy 等在本仓库里的精确意思 |
 
-范围：核心行为仍记录 `scene_gen/`、`script/`、`demo/`、`tests/`；平台总览额外记录 `self_improving/` 与 `external/` 的所有权边界，不把迁入的历史脚本逐个重述。`docs/evidence/` 的已验证证据被引用但不重述；二进制资产、运行产物和外部依赖只保留来源与机读清单。
+范围：核心行为仍记录 `scene_gen/`、`script/`、`demo/`、`tests/`；平台总览额外记录 `self_improving/`、`apps/` 与 `external/` 的所有权边界，不把迁入的历史脚本逐个重述。`apps/pearl_evidence_portal/` 是独立呈现层，不能反向定义验收结论；`docs/evidence/` 的已验证证据被引用但不重述。除 PEARL 已裁剪的浏览器报告子集外，二进制资产、运行产物和外部依赖只保留来源与机读清单。
 
 注意：本仓库根 `README.md` 的英文段是面向使用者的命令配方与已验证证据摘要；`repo-docs/` 是面向想理解仓库行为的人的中文叙述。两者不重复，互相引用。
 

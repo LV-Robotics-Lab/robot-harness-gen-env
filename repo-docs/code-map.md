@@ -1,6 +1,6 @@
 # 代码地图
 
-主行为模型先在 [一条真实路径](walkthroughs/one-real-run.md) 建好。这里负责把那套行为翻译成「改动从哪里下手」。稳定核心仍是 `scene_gen/`、`script/`、`demo/`、`tests/`；平台组合入口位于 `self_improving/`，独立项目位于 `external/`。
+主行为模型先在 [一条真实路径](walkthroughs/one-real-run.md) 建好。这里负责把那套行为翻译成「改动从哪里下手」。稳定核心仍是 `scene_gen/`、`script/`、`demo/`、`tests/`；平台组合入口位于 `self_improving/`，呈现层位于 `apps/`，独立项目位于 `external/`。
 
 | 路径 | 职责 | 关键代码 | 与主流程的关系 |
 | --- | --- | --- | --- |
@@ -9,6 +9,7 @@
 | `demo/` | Flask 控制面，把 GPU 任务队列入队并按 id 暴露已注册产物。 | `app.py` | 复用同一 `scene_gen` 流水线；不是新流水线，只加队列 + 路由 |
 | `tests/` | pytest 套件 + committed fixture；为每个误报模式留攻击测试。 | `tests/scene_gen/test_<module>.py`、`tests/fixtures/{asset_catalog,golden_prompts,prompt_matrix}.json` | 锁住契约与失败分支；套件无需 RoboTwin checkout 即可跑 |
 | `self_improving/` | 平台编排、闭环诊断、资产复用、仿真适配、来源清单与只读历史。 | `registry.py`、`source_inventory.json`、各命名模块 | 消费稳定核心；平台改动不能降低 `scene_gen` 门控 |
+| `apps/pearl_evidence_portal/` | PEARL Self-Improving Agents 的独立证据门户、构建脚本、测试与已裁剪的浏览器报告子集。 | `app/page.tsx`、`scripts/build-hosted-report-subsets.mjs`、`tests/rendered-html.test.mjs` | 只呈现已有证据；不产出或修改核心验收结论 |
 | `external/` | 独立项目的 Git submodule。 | `OpenReal2Sim`、`digital-cousins` | 各自保留提交历史和发布周期；主仓只钉 commit |
 
 ## `scene_gen/`
@@ -79,7 +80,7 @@
 
 ## 覆盖范围
 
-覆盖：稳定核心四区全部进地图——`scene_gen/`、`script/`、`demo/`、`tests/`；平台总览登记 `self_improving/` 与 `external/` 的边界。`scene_gen/envs/generated_scene.py` 与 `scene_gen/prompts/parse_scene.md` 也属 `scene_gen/` 并已登记。
+覆盖：稳定核心四区全部进地图——`scene_gen/`、`script/`、`demo/`、`tests/`；平台总览登记 `self_improving/`、`apps/` 与 `external/` 的边界。`self_improving/legacy/robotwin_text2env_alt/` 是只读历史，`apps/pearl_evidence_portal/` 是呈现层；两者都不能覆盖 `scene_gen/` 的当前行为。`scene_gen/envs/generated_scene.py` 与 `scene_gen/prompts/parse_scene.md` 也属 `scene_gen/` 并已登记。
 
 摘要但不逐文件追踪：`scene_gen/prompts/` 的 prompt 模板（provider 路径用，rule-based CLI 不读）、`demo/static/` 的前端资产（薄呈现层，不含流水线逻辑）、`tests/fixtures/` 的 JSON 内部结构（fixture 稳定，扩展而非全文展示）。
 

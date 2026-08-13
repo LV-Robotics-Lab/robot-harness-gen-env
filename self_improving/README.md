@@ -17,6 +17,7 @@ runtime assumptions into the core trust boundary.
 | `sim_adapters/agenticsim_runtime/` | active adapter | Orchestration scripts and hermetic tests recovered from the former non-Git runtime workspace. It is not the retired AgenticSim product repository. |
 | `onboarding/yeyuxuan/` | preserved source | RoboLab migration tools, asset overrides, and per-asset provenance recovered from the onboarding report. |
 | `legacy/stage04/` | read-only | Historical stage-04 source snapshot retained for provenance and diffing. New work belongs in `stage5/` or another named module. |
+| `legacy/robotwin_text2env_alt/` | read-only | Alternate `text2env.tabletop.v0` prototype at source tip `c226358`, including its repair utility and bounded smoke evidence. It must not replace the active Stage 5 compiler. |
 
 Independent projects remain Git submodules in `external/`:
 
@@ -26,6 +27,11 @@ Independent projects remain Git submodules in `external/`:
 The old AgenticSim checkout was a sparse historical TacHarness state. Its four
 unique Awesome-Isaac audit files were archived in TacHarness before that local
 checkout was deleted; it is not a dependency here.
+
+The PEARL presentation layer lives in `apps/pearl_evidence_portal/`. Its source
+history and bounded hosted-report subset are versioned together so the portal
+build remains self-contained; build output and dependency caches remain
+excluded. It presents platform evidence but does not define acceptance gates.
 
 ## Checkout audit
 
@@ -81,6 +87,10 @@ environments, caches, training runs, checkpoints, generated datasets, bulk
 screenshots/video, and third-party meshes. Those files are large, frequently
 regenerated, and may carry separate redistribution terms. Their identifying
 metadata stays in `asset_pipeline/receipts/` and `onboarding/yeyuxuan/`.
+
+The PEARL portal is the narrow exception for already curated, browser-served
+report media under `apps/pearl_evidence_portal/public/reports/`; raw runs and
+the portal's generated `dist/` tree are still excluded.
 
 Exact source workspaces, commits, preservation branches, and exclusions are in
 [`source_inventory.json`](source_inventory.json).
