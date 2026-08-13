@@ -156,26 +156,65 @@ def main():
             if len(top_cells) >= 7:
                 row["verdict"] = "flat"
             elif hollow_cells:
-                floor = min(r["bottom_z"] for r in hollow_cells)
-                # interior extent from where probes actually sank: a +-0.3
-                # ring cell sinking too means the cavity spans ~0.75 of the
-                # footprint; centre-only sinking keeps a conservative 0.55.
-                # (A flat 0.5 rejected a 6.6 cm apple from a 13 cm bowl whose
-                # real cavity is ~9 cm -- measured 2026-08-13.)
-                ring = any(
-                    max(abs(r["cell"][0]), abs(r["cell"][1])) >= 0.3
-                    for r in hollow_cells
-                )
-                k = 0.75 if ring else 0.55
+                # v3: MEASURE the cavity with a fine 5x5 in-cavity scan
+                # instead of estimating it from footprint fractions -- the
+                # fraction estimate on basket m3 declared an interior box
+                # offset from the real cavity, and an apple physically inside
+                # the basket failed the containment check (2026-08-13).
+                fine = []
+                for fx in (-0.35, -0.175, 0.0, 0.175, 0.35):
+                    for fy in (-0.35, -0.175, 0.0, 0.175, 0.35):
+                        pb = scene.create_actor_builder()
+                        pb.add_box_collision(half_size=[0.01] * 3)
+                        pb.add_box_visual(half_size=[0.01] * 3)
+                        probe = pb.build(name="probe")
+                        x0, y0 = fx * dx, fy * dy
+                        probe.set_pose(sapien.Pose([x0, y0, dz + 0.04]))
+                        for _ in range(250):
+                            scene.step()
+                        p = probe.get_pose().p
+                        fine.append(
+                            {
+                                "xy": [round(float(p[0]), 4), round(float(p[1]), 4)],
+                                "bottom_z": round(float(p[2]) - 0.01, 4),
+                            }
+                        )
+                        probe.remove_from_scene()
+                sunk = [f for f in fine if 0.003 < f["bottom_z"] < dz_ref - 0.03]
                 row["verdict"] = "hollow"
-                row["interior"] = {
-                    "floor_z_offset_m": round(floor, 4),
-                    "dimensions_m": [
-                        round(dx * k, 4),
-                        round(dy * k, 4),
-                        round(dz_ref - floor - 0.005, 4),
-                    ],
-                }
+                if sunk:
+                    xs = [f["xy"][0] for f in sunk]
+                    ys = [f["xy"][1] for f in sunk]
+                    floor = min(f["bottom_z"] for f in sunk)
+                    pad = 0.012  # probe half + settle scatter margin
+                    # the upstream interior box is CENTRED on the asset
+                    # origin; an off-centre cavity must be declared as its
+                    # symmetric inscription or the box juts into the wall
+                    hx = min(abs(min(xs)), abs(max(xs))) + pad
+                    hy = min(abs(min(ys)), abs(max(ys))) + pad
+                    row["interior"] = {
+                        "floor_z_offset_m": round(floor, 4),
+                        "dimensions_m": [
+                            round(2 * hx, 4),
+                            round(2 * hy, 4),
+                            round(dz_ref - floor - 0.005, 4),
+                        ],
+                        "cavity_span_raw": [
+                            round(min(xs), 4), round(max(xs), 4),
+                            round(min(ys), 4), round(max(ys), 4),
+                        ],
+                        "method": "fine 5x5 in-cavity scan, symmetric inscription",
+                    }
+                else:
+                    floor = min(r["bottom_z"] for r in hollow_cells)
+                    row["interior"] = {
+                        "floor_z_offset_m": round(floor, 4),
+                        "dimensions_m": [
+                            round(dx * 0.55, 4),
+                            round(dy * 0.55, 4),
+                            round(dz_ref - floor - 0.005, 4),
+                        ],
+                    }
             else:
                 row["verdict"] = "unsupportive"
             counts[row["verdict"]] += 1

@@ -724,7 +724,18 @@ for idx, r in worker_records:
                 # when it is not -- register it as the portable source instead
                 # and let the profile say sapien_only honestly.
                 "format": "usd" if not r["group"].startswith("web_") else "glb",
-                "uri": r["usd_local"],
+                # web sources: register the PERSISTENT _source mirror (created
+                # a few lines below), never the run-scoped cache -- four
+                # ledgers pointed into /tmp webcache dirs that a cleanup then
+                # deleted, and the audit flagged them file_missing
+                # (2026-08-13). NVIDIA usd_local already IS the mirror.
+                "uri": (
+                    r["usd_local"]
+                    if not r["group"].startswith("web_")
+                    else str(
+                        lib / "_source" / r["group"] / Path(r["usd_local"]).name
+                    )
+                ),
                 "backend": (
                     "isaacsim" if not r["group"].startswith("web_") else "portable"
                 ),
