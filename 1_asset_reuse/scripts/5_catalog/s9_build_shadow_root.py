@@ -234,15 +234,20 @@ if survey_path.exists():
                 if dims
                 else max((c["bottom_z"] for c in row.get("cells", [])), default=None)
             )
+            measured_int = row.get("interior")
+            # v4 survey may SUPPRESS an interior (interior_suppressed): the
+            # load test tipped the container, so publishing the cavity would
+            # invite runtime rollovers (basket m3, B11 2026-08-13)
             if (
-                "interior_dimensions_m" not in entry
-                and row["interior"]["dimensions_m"][2] >= 0.03
+                measured_int
+                and "interior_dimensions_m" not in entry
+                and measured_int["dimensions_m"][2] >= 0.03
             ):
                 # a cavity shallower than 3 cm holds nothing INSIDE-worthy
                 # (a plate's 2 cm "cavity" made cup-in-plate solvable on
                 # paper and refused x4608 in practice, 2026-08-13)
-                entry["interior_dimensions_m"] = row["interior"]["dimensions_m"]
-                entry["interior_floor_z_offset_m"] = row["interior"]["floor_z_offset_m"]
+                entry["interior_dimensions_m"] = measured_int["dimensions_m"]
+                entry["interior_floor_z_offset_m"] = measured_int["floor_z_offset_m"]
                 n_int += 1
             if "support_surface_dimensions_m" not in entry and top_z:
                 entry["support_surface_dimensions_m"] = [0.002, 0.002]

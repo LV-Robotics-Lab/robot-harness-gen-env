@@ -46,6 +46,9 @@ import numpy as np
 
 DEV = Path("/home/jingxiang/yuxin/env-gen-dev")
 
+# air kept under a spawned payload, on top of its measured resting height
+FLOOR_MARGIN = 0.008
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -200,8 +203,10 @@ def main():
                             round(dz_ref - floor - 0.005, 4),
                         ],
                         "cavity_span_raw": [
-                            round(min(xs), 4), round(max(xs), 4),
-                            round(min(ys), 4), round(max(ys), 4),
+                            round(min(xs), 4),
+                            round(max(xs), 4),
+                            round(min(ys), 4),
+                            round(max(ys), 4),
                         ],
                         "method": "fine 5x5 in-cavity scan, symmetric inscription",
                     }
@@ -215,6 +220,83 @@ def main():
                             round(dz_ref - floor - 0.005, 4),
                         ],
                     }
+                # v4 load test: an interior is only worth publishing if the
+                # container survives RECEIVING an object. basket m3 is stable
+                # empty and stable under a token 4 cm cube, but the block the
+                # solver actually fits into its 12 cm cavity rolled it 71 deg
+                # at runtime (B11, 2026-08-13) -- so the probe payload is
+                # sized to the PUBLISHED cavity (80% of its smaller footprint
+                # side), which is the largest thing the solver may put there.
+                if row.get("interior"):
+                    it = row["interior"]
+                    idims = it["dimensions_m"]
+                    half = max(0.02, min(0.4 * min(idims[0], idims[1]), 0.06))
+                    scene2 = sapien.Scene()
+                    scene2.set_timestep(1 / 250)
+                    scene2.add_ground(0.0)
+                    tgt = create_actor(
+                        scene2,
+                        pose=sapien.Pose([0, 0, pose_z], q),
+                        modelname=aid,
+                        model_id=mid,
+                        convex=True,
+                        is_static=False,
+                    )
+                    if tgt is not None:
+                        for _ in range(120):
+                            scene2.step()
+                        q0 = np.array(tgt.get_pose().q)
+                        pb = scene2.create_actor_builder()
+                        pb.add_box_collision(half_size=[half] * 3)
+                        pb.add_box_visual(half_size=[half] * 3)
+                        load = pb.build(name="load")
+                        # drop it from clear air above the cavity so where it
+                        # STOPS is the honest resting height, not the height
+                        # we guessed from the probe
+                        load.set_pose(
+                            sapien.Pose([0, 0, it["floor_z_offset_m"] + half + 0.02])
+                        )
+                        row["load_half_size_m"] = round(float(half), 4)
+                        for _ in range(400):
+                            scene2.step()
+                        q1 = np.array(tgt.get_pose().q)
+                        tilt = 2 * np.degrees(
+                            np.arccos(min(1.0, abs(float(np.dot(q0, q1)))))
+                        )
+                        row["load_tilt_deg"] = round(float(tilt), 2)
+                        # A 2 cm probe drops into gaps between the decomposed
+                        # convex pieces (or through a wire basket's grid) and
+                        # reports a floor no real payload can reach; spawning
+                        # a block 3 cm below where it can actually rest made
+                        # the runtime depenetration impulse lever the whole
+                        # basket over (B11, 2026-08-13). The published floor
+                        # is therefore where a CAVITY-SIZED payload rests,
+                        # and never lower than the probe's answer.
+                        payload_floor = float(load.get_pose().p[2]) - half
+                        row["payload_floor_z_m"] = round(payload_floor, 4)
+                        # FLOOR_MARGIN: the runtime's depenetration is far
+                        # less forgiving than this rig -- a spawn that merely
+                        # grazes geometry here levers the container over
+                        # there, so the published floor keeps real air under
+                        # the payload.
+                        floor_pub = payload_floor + FLOOR_MARGIN
+                        if floor_pub > it["floor_z_offset_m"]:
+                            it["floor_z_offset_m"] = round(floor_pub, 4)
+                            it["dimensions_m"][2] = round(dz_ref - floor_pub - 0.005, 4)
+                            it["floor_basis"] = f"payload rest +{FLOOR_MARGIN}m margin"
+                        if it["dimensions_m"][2] < 0.03:
+                            sup = row.pop("interior")
+                            sup["reason"] = "cavity under 3 cm once floor is honest"
+                            row["interior_suppressed"] = sup
+                            row["load_tilt_deg"] = round(float(tilt), 2)
+                            counts[row["verdict"]] += 1
+                            survey.setdefault(aid, {})[str(mid)] = row
+                            print(f"{aid}/m{mid}: {row['verdict']} (interior dropped)")
+                            continue
+                        if tilt > 5.0:
+                            sup = row.pop("interior")
+                            sup["reason"] = f"load test tipped container {tilt:.1f} deg"
+                            row["interior_suppressed"] = sup
             else:
                 row["verdict"] = "unsupportive"
             counts[row["verdict"]] += 1
