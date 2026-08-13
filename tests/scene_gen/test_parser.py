@@ -106,6 +106,14 @@ def test_rule_parser_preserves_cheez_it_semantic_category() -> None:
         assert spec.objects[0].category == "cheez_it"
 
 
+def test_rule_parser_preserves_spam_can_semantic_category() -> None:
+    spec = parse_rule_based("Place a Spam can on the table.", seed=42)
+
+    assert len(spec.objects) == 1
+    assert spec.objects[0].object_id == "spam_can_1"
+    assert spec.objects[0].category == "spam_can"
+
+
 def test_provider_payload_cannot_smuggle_backend_fields_or_change_request() -> None:
     spec = parse_rule_based("A can is left of a basket.", seed=4)
     payload = spec.canonical_dict()
