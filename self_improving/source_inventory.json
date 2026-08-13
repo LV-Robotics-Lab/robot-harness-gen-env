@@ -1,0 +1,83 @@
+{
+  "schema_version": "robot_harness.source_inventory.v1",
+  "captured_at": "2026-08-13",
+  "host": "jingxiang@100.64.0.6",
+  "sources": [
+    {
+      "name": "alchedata-self-improving-agents",
+      "source_path": "/home/jingxiang/workspace/alchedata-self-improving-agents",
+      "source_commit": "1e8c2ddec1219daeeb9c5ef98f11bcb4db7eed5d",
+      "destination": "self_improving/alchedata",
+      "retained": ["scripts", "tests", "schemas", "docs", "vendor patches", "curated structured evidence"],
+      "excluded": ["runs", "virtual environments", "nested upstream clones", "generated report bundles", "rendered media"]
+    },
+    {
+      "name": "robotwin-text2env-stage05-validation",
+      "source_path": "/home/jingxiang/workspace/robotwin-text2env-stage05-validation",
+      "destination": "self_improving/stage5",
+      "retained": ["generate_scene", "harness", "mcp_lite", "skills", "prompts", "scripts", "tests", "docs", "asset catalogs"],
+      "excluded": ["generated scenes", "previews", "runtime data"]
+    },
+    {
+      "name": "robotwin-text2env-stage04-validation",
+      "source_path": "/home/jingxiang/workspace/robotwin-text2env-stage04-validation",
+      "destination": "self_improving/legacy/stage04",
+      "mode": "read_only_archive",
+      "excluded": ["generated scenes", "previews", "runtime data"]
+    },
+    {
+      "name": "agenticsim-runtime-orchestration",
+      "source_path": "/home/jingxiang/workspace/agenticsim-runtime",
+      "destination": "self_improving/sim_adapters/agenticsim_runtime",
+      "retained": ["scripts", "tests", "docs", "patches"],
+      "excluded": ["IsaacLab clone", "virtual environment", "candidate repositories", "assets", "datasets", "runtime artifacts"]
+    },
+    {
+      "name": "env-gen-dev",
+      "source_path": "/home/jingxiang/yuxin/env-gen-dev",
+      "source_commit": "96f5debb8326b7ddfda045660233ea40ebcb094c",
+      "destination": "self_improving/asset_pipeline",
+      "retained": ["active source", "branch overlays", "asset acquisition manifest", "ledger and model metadata"],
+      "excluded": ["meshes", "renders", "results", "caches", "shadow upstream clone"]
+    },
+    {
+      "name": "yeyuxuan-onboarding-report",
+      "source_path": "/home/jingxiang/yeyuxuan/robot-harness-gen-env/onboarding-report",
+      "source_repo_commit": "0aa655936c1f3384bc2521d2d865063e62a82ffe",
+      "destination": "self_improving/onboarding/yeyuxuan",
+      "retained": ["migration tools", "asset overrides", "RoboLab source records", "migration summary"],
+      "excluded": ["GLB meshes", "PNG previews", "MP4 videos", "tar archives", "generated runtime packages"]
+    },
+    {
+      "name": "dirty-branch-preservation",
+      "repository": "LV-Robotics-Lab/robot-harness-gen-env",
+      "branches": {
+        "archive/prompt-matrix-20260719": "b0ef933",
+        "archive/harness-mvp-contract-v1": "5deb875",
+        "archive/parser-quantity-groups": "a2334bd"
+      }
+    },
+    {
+      "name": "OpenReal2Sim",
+      "repository": "LV-Robotics-Lab/OpenReal2Sim",
+      "destination": "external/OpenReal2Sim",
+      "branch": "integration/self-improving",
+      "commit": "4b2d095bd084f04c66be09a6d03220779f5e49ed"
+    },
+    {
+      "name": "digital-cousins",
+      "repository": "LV-Robotics-Lab/digital-cousins",
+      "destination": "external/digital-cousins",
+      "branch": "integration/self-improving",
+      "commit": "b1aa90a8dec7273e5c5a4a60450dc829083ce0a0"
+    },
+    {
+      "name": "retired-AgenticSim",
+      "source_commit": "6d952560870b0a9b71f707f0476d28425bfab256",
+      "replacement": "LV-Robotics-Lab/TacHarness",
+      "archive_merge_commit": "b40ed1e57dc86f698e2cf0e497a486efbacf0a0b",
+      "destination": "docs/archive/agenticsim/awesome_isaac_20260713",
+      "local_checkout_deleted": true
+    }
+  ]
+}

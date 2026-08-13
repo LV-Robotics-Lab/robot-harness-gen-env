@@ -1,0 +1,22 @@
+{
+  "schema_version": "alchedata.openxsim_task_manifest.v0",
+  "benchmark_id": "robotwin_open_laptop_seed_0",
+  "task_name": "open_laptop",
+  "task_config": "demo_clean",
+  "execution_mode": "official_robotwin_scripted_play_once",
+  "learned_policy": false,
+  "task_info": {
+    "{A}": "015_laptop/base10",
+    "{a}": "left"
+  },
+  "success_verifier": {
+    "type": "official_robotwin_check_success",
+    "result": true,
+    "plan_success": true
+  },
+  "rollout_report": "runs/official_rollout_open_laptop/rollout_report.json",
+  "rollout_events": "runs/official_rollout_open_laptop/events.jsonl",
+  "move_events": "runs/official_rollout_open_laptop/move_events.jsonl",
+  "failure_diagnosis": "artifacts/openxsim_benchmarks/open_laptop/failure_diagnosis.json",
+  "next_data_requirement": "Promote from official RoboTwin task smoke to generated selection2env play_once and policy /train-/evaluate integration."
+}

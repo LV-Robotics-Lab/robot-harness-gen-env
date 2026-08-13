@@ -1,0 +1,15 @@
+{
+  "schema_version": "alchedata.openxsim_run_state.v0",
+  "run_id": "robotwin_place_mouse_pad_seed_0",
+  "benchmark_id": "robotwin_place_mouse_pad_seed_0",
+  "task_name": "place_mouse_pad",
+  "simulator_adapter": "RoboTwin/SAPIEN",
+  "status": "pass_openxsim_scripted_benchmark_bundle",
+  "current_stage": "/evaluate",
+  "execution_mode": "official_robotwin_scripted_play_once",
+  "learned_policy": false,
+  "artifact_root": "artifacts/openxsim_benchmarks/place_mouse_pad",
+  "events": "artifacts/openxsim_benchmarks/place_mouse_pad/events.jsonl",
+  "source_rollout_report": "runs/official_rollout_place_mouse_pad/rollout_report.json",
+  "next_data_requirement": "Promote from official RoboTwin task smoke to generated selection2env play_once and policy /train-/evaluate integration."
+}

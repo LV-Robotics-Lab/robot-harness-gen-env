@@ -1,0 +1,639 @@
+{
+ "schema_version": "robotwin.asset_catalog.v1",
+ "robotwin_root": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_shadow",
+ "objects_root": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_shadow/assets/objects",
+ "source_commit": "c3ddfa8b97d5519efa828b075999bd0006778e5e+ext301",
+ "entries": [
+  {
+   "asset_id": "021_cup",
+   "semantic_name": "cup",
+   "category": "cup",
+   "aliases": [
+    "cup",
+    "mug"
+   ],
+   "colors": [],
+   "materials": [
+    "ceramic",
+    "metal",
+    "plastic"
+   ],
+   "load_type": "rigid",
+   "asset_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
+   "models": [
+    {
+     "model_id": 0,
+     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
+     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data0.json",
+     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base0.glb",
+     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base0.glb",
+     "scale": [
+      0.088,
+      0.088,
+      0.088
+     ],
+     "dimensions_m": [
+      0.08690809750731039,
+      0.08641119367807502,
+      0.0895141257492691
+     ],
+     "footprint_shape": "box",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "stable_pose_id": "robotwin_cup_upright",
+     "stable_orientation_wxyz": [
+      0.7071067811865476,
+      0.7071067811865476,
+      0.0,
+      0.0
+     ],
+     "z_policy": "origin_on_table",
+     "is_static": false,
+     "articulation_joints": [],
+     "articulation_closed_qpos": [],
+     "articulation_open_qpos": [],
+     "usable": true,
+     "missing": []
+    },
+    {
+     "model_id": 1,
+     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
+     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data1.json",
+     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base1.glb",
+     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base1.glb",
+     "scale": [
+      0.09,
+      0.09,
+      0.09
+     ],
+     "dimensions_m": [
+      0.10740115174189403,
+      0.1073496210518883,
+      0.09160651984449246
+     ],
+     "footprint_shape": "box",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "z_policy": "origin_on_table",
+     "is_static": false,
+     "articulation_joints": [],
+     "articulation_closed_qpos": [],
+     "articulation_open_qpos": [],
+     "usable": false,
+     "missing": [
+      "stable_pose"
+     ]
+    },
+    {
+     "model_id": 2,
+     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
+     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data2.json",
+     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base2.glb",
+     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base2.glb",
+     "scale": [
+      0.11,
+      0.11,
+      0.11
+     ],
+     "dimensions_m": [
+      0.1073070602984684,
+      0.10730323828707694,
+      0.11201116105569693
+     ],
+     "footprint_shape": "box",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "z_policy": "origin_on_table",
+     "is_static": false,
+     "articulation_joints": [],
+     "articulation_closed_qpos": [],
+     "articulation_open_qpos": [],
+     "usable": false,
+     "missing": [
+      "stable_pose"
+     ]
+    },
+    {
+     "model_id": 3,
+     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
+     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data3.json",
+     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base3.glb",
+     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base3.glb",
+     "scale": [
+      0.08,
+      0.08,
+      0.08
+     ],
+     "dimensions_m": [
+      0.0828440076577426,
+      0.08259911509023216,
+      0.08145143819331115
+     ],
+     "footprint_shape": "box",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "z_policy": "origin_on_table",
+     "is_static": false,
+     "articulation_joints": [],
+     "articulation_closed_qpos": [],
+     "articulation_open_qpos": [],
+     "usable": false,
+     "missing": [
+      "stable_pose"
+     ]
+    },
+    {
+     "model_id": 4,
+     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
+     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data4.json",
+     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base4.glb",
+     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base4.glb",
+     "scale": [
+      0.105,
+      0.105,
+      0.105
+     ],
+     "dimensions_m": [
+      0.12830484825973607,
+      0.1282666303274834,
+      0.10694110688064835
+     ],
+     "footprint_shape": "box",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "z_policy": "origin_on_table",
+     "is_static": false,
+     "articulation_joints": [],
+     "articulation_closed_qpos": [],
+     "articulation_open_qpos": [],
+     "usable": false,
+     "missing": [
+      "stable_pose"
+     ]
+    },
+    {
+     "model_id": 5,
+     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
+     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data5.json",
+     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base5.glb",
+     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base5.glb",
+     "scale": [
+      0.08,
+      0.08,
+      0.08
+     ],
+     "dimensions_m": [
+      0.08784697945081522,
+      0.08760860954560522,
+      0.08141741296253482
+     ],
+     "footprint_shape": "box",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "z_policy": "origin_on_table",
+     "is_static": false,
+     "articulation_joints": [],
+     "articulation_closed_qpos": [],
+     "articulation_open_qpos": [],
+     "usable": false,
+     "missing": [
+      "stable_pose"
+     ]
+    },
+    {
+     "model_id": 6,
+     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
+     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data6.json",
+     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base6.glb",
+     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base6.glb",
+     "scale": [
+      0.04,
+      0.04,
+      0.04
+     ],
+     "dimensions_m": [
+      0.08375829444211322,
+      0.08891879097157798,
+      0.05938625518950641
+     ],
+     "footprint_shape": "box",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "z_policy": "origin_on_table",
+     "is_static": false,
+     "articulation_joints": [],
+     "articulation_closed_qpos": [],
+     "articulation_open_qpos": [],
+     "usable": false,
+     "missing": [
+      "stable_pose"
+     ]
+    },
+    {
+     "model_id": 7,
+     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
+     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data7.json",
+     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base7.glb",
+     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base7.glb",
+     "scale": [
+      0.08,
+      0.08,
+      0.08
+     ],
+     "dimensions_m": [
+      0.16721943668488706,
+      0.17969491266728796,
+      0.12996985212820203
+     ],
+     "footprint_shape": "box",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "z_policy": "origin_on_table",
+     "is_static": false,
+     "articulation_joints": [],
+     "articulation_closed_qpos": [],
+     "articulation_open_qpos": [],
+     "usable": false,
+     "missing": [
+      "stable_pose"
+     ]
+    },
+    {
+     "model_id": 8,
+     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
+     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data8.json",
+     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base8.glb",
+     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base8.glb",
+     "scale": [
+      0.08,
+      0.08,
+      0.08
+     ],
+     "dimensions_m": [
+      0.1556738661549142,
+      0.175095597474063,
+      0.09323783378396847
+     ],
+     "footprint_shape": "box",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "z_policy": "origin_on_table",
+     "is_static": false,
+     "articulation_joints": [],
+     "articulation_closed_qpos": [],
+     "articulation_open_qpos": [],
+     "usable": false,
+     "missing": [
+      "stable_pose"
+     ]
+    },
+    {
+     "model_id": 9,
+     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
+     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data9.json",
+     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base9.glb",
+     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base9.glb",
+     "scale": [
+      0.08,
+      0.08,
+      0.08
+     ],
+     "dimensions_m": [
+      0.16413330750052105,
+      0.17242667543131945,
+      0.09948209293184544
+     ],
+     "footprint_shape": "box",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "z_policy": "origin_on_table",
+     "is_static": false,
+     "articulation_joints": [],
+     "articulation_closed_qpos": [],
+     "articulation_open_qpos": [],
+     "usable": false,
+     "missing": [
+      "stable_pose"
+     ]
+    },
+    {
+     "model_id": 10,
+     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
+     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data10.json",
+     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base10.glb",
+     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base10.glb",
+     "scale": [
+      0.08,
+      0.08,
+      0.08
+     ],
+     "dimensions_m": [
+      0.16252530835314283,
+      0.175935827734451,
+      0.07858062792391253
+     ],
+     "footprint_shape": "box",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "z_policy": "origin_on_table",
+     "is_static": false,
+     "articulation_joints": [],
+     "articulation_closed_qpos": [],
+     "articulation_open_qpos": [],
+     "usable": false,
+     "missing": [
+      "stable_pose"
+     ]
+    },
+    {
+     "model_id": 11,
+     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
+     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data11.json",
+     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base11.glb",
+     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base11.glb",
+     "scale": [
+      0.08,
+      0.08,
+      0.08
+     ],
+     "dimensions_m": [
+      0.16654677385187633,
+      0.1815577765425742,
+      0.13051327220528822
+     ],
+     "footprint_shape": "box",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "z_policy": "origin_on_table",
+     "is_static": false,
+     "articulation_joints": [],
+     "articulation_closed_qpos": [],
+     "articulation_open_qpos": [],
+     "usable": false,
+     "missing": [
+      "stable_pose"
+     ]
+    },
+    {
+     "model_id": 12,
+     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
+     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data12.json",
+     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base12.glb",
+     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base12.glb",
+     "scale": [
+      0.08,
+      0.08,
+      0.08
+     ],
+     "dimensions_m": [
+      0.16654677385187633,
+      0.1815577765425742,
+      0.13051327220528822
+     ],
+     "footprint_shape": "box",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "z_policy": "origin_on_table",
+     "is_static": false,
+     "articulation_joints": [],
+     "articulation_closed_qpos": [],
+     "articulation_open_qpos": [],
+     "usable": false,
+     "missing": [
+      "stable_pose"
+     ]
+    }
+   ],
+   "available": true,
+   "availability_reasons": [
+    "stable_pose"
+   ],
+   "source_notes": []
+  },
+  {
+   "asset_id": "036_cabinet",
+   "semantic_name": "cabinet",
+   "category": "cabinet",
+   "aliases": [
+    "cabinet",
+    "drawer cabinet"
+   ],
+   "colors": [],
+   "materials": [
+    "metal",
+    "wood"
+   ],
+   "load_type": "urdf",
+   "asset_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/036_cabinet",
+   "models": [
+    {
+     "model_id": 46653,
+     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/036_cabinet/46653",
+     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/036_cabinet/46653/model_data.json",
+     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/036_cabinet/46653/mobility.urdf",
+     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/036_cabinet/46653/mobility.urdf",
+     "urdf_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/036_cabinet/46653/mobility.urdf",
+     "scale": [
+      0.27,
+      0.27,
+      0.27
+     ],
+     "dimensions_m": [
+      0.23067099000000002,
+      0.24268491,
+      0.43591365
+     ],
+     "footprint_shape": "box",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "stable_pose_id": "robotwin_cabinet_upright",
+     "stable_orientation_wxyz": [
+      0.7071067811865476,
+      0.7071067811865476,
+      0.0,
+      0.0
+     ],
+     "z_policy": "origin_on_table",
+     "is_static": true,
+     "articulation_joints": [
+      {
+       "name": "joint_1",
+       "joint_type": "prismatic",
+       "lower": 0.0,
+       "upper": 0.17820000000000005
+      },
+      {
+       "name": "joint_2",
+       "joint_type": "prismatic",
+       "lower": 0.0,
+       "upper": 0.17820000000000005
+      },
+      {
+       "name": "joint_3",
+       "joint_type": "prismatic",
+       "lower": 0.0,
+       "upper": 0.17820000000000005
+      }
+     ],
+     "articulation_closed_qpos": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "articulation_open_qpos": [
+      0.135,
+      0.135,
+      0.135
+     ],
+     "usable": true,
+     "missing": []
+    }
+   ],
+   "available": true,
+   "availability_reasons": [],
+   "source_notes": []
+  },
+  {
+   "asset_id": "301_cup",
+   "semantic_name": "cup",
+   "category": "cup",
+   "aliases": [
+    "cup",
+    "mug"
+   ],
+   "colors": [
+    "red"
+   ],
+   "materials": [],
+   "load_type": "rigid",
+   "asset_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup",
+   "models": [
+    {
+     "model_id": 0,
+     "model_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup",
+     "metadata_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup/model_data0.json",
+     "visual_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup/visual/base0.glb",
+     "collision_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup/collision/base0.glb",
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "dimensions_m": [
+      0.11699008680157164,
+      0.0930883577520767,
+      0.0813029986328706
+     ],
+     "footprint_shape": "circle",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "stable_pose_id": "upright",
+     "stable_orientation_wxyz": [
+      0.7071067811865476,
+      0.7071067811865476,
+      0.0,
+      0.0
+     ],
+     "z_policy": "origin_on_table",
+     "is_static": false,
+     "articulation_joints": [],
+     "articulation_closed_qpos": [],
+     "articulation_open_qpos": [],
+     "usable": true,
+     "missing": []
+    }
+   ],
+   "available": true,
+   "availability_reasons": [],
+   "source_notes": []
+  },
+  {
+   "asset_id": "314_cabinet",
+   "semantic_name": "cabinet",
+   "category": "cabinet",
+   "aliases": [
+    "cabinet",
+    "drawer cabinet"
+   ],
+   "colors": [],
+   "materials": [],
+   "load_type": "urdf",
+   "asset_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/314_cabinet",
+   "models": [
+    {
+     "model_id": 0,
+     "model_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/314_cabinet/0",
+     "metadata_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/314_cabinet/0/model_data0.json",
+     "visual_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/314_cabinet/0/mobility.urdf",
+     "collision_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/314_cabinet/0/mobility.urdf",
+     "urdf_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/314_cabinet/0/mobility.urdf",
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "dimensions_m": [
+      0.23374015502631662,
+      0.27513606790453193,
+      0.2673195570707321
+     ],
+     "footprint_shape": "box",
+     "support_margin_m": 0.005,
+     "support_spawn_clearance_m": 0.003,
+     "stable_pose_id": "upright",
+     "stable_orientation_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "z_policy": "origin_on_table",
+     "is_static": true,
+     "articulation_joints": [
+      {
+       "name": "door_left_joint",
+       "joint_type": "revolute",
+       "lower": -1.57,
+       "upper": 0.0
+      },
+      {
+       "name": "door_right_joint",
+       "joint_type": "revolute",
+       "lower": 0.0,
+       "upper": 1.57
+      },
+      {
+       "name": "drawer_bottom_joint",
+       "joint_type": "prismatic",
+       "lower": 0.0,
+       "upper": 0.14
+      },
+      {
+       "name": "drawer_top_joint",
+       "joint_type": "prismatic",
+       "lower": 0.0,
+       "upper": 0.14
+      }
+     ],
+     "articulation_closed_qpos": [
+      -1.57,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "articulation_open_qpos": [
+      0.0,
+      1.57,
+      0.14,
+      0.14
+     ],
+     "usable": true,
+     "missing": []
+    }
+   ],
+   "available": true,
+   "availability_reasons": [],
+   "source_notes": []
+  }
+ ]
+}

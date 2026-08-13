@@ -1,0 +1,356 @@
+{
+  "acceptance_item_count": 8,
+  "claim_boundary": "This audit completes the eight dashboard acceptance items. generation2env execution, default upstream ACT wrapper compatibility, visual/language-conditioned closed-loop control, and broad Articraft physical validation remain outside this TODO.",
+  "generated_at": "2026-07-14T17:41:39.642837+00:00",
+  "items": [
+    {
+      "acceptance_item": 1,
+      "evidence": [
+        {
+          "bytes": 4826,
+          "path": "schemas/selection2env.schema.json",
+          "sha256": "d75471969b0d29ca59c5eff806efa2864aa9d486b5235313def8b0558e4b67b3"
+        },
+        {
+          "bytes": 2552,
+          "path": "schemas/robotwin_task_program_input.schema.json",
+          "sha256": "2150c1f4f1c5fce00633946424cc45631a53d976c3e0aaf71ce94916b1bf900c"
+        },
+        {
+          "bytes": 14367,
+          "path": "docs/selection2env_schema.md",
+          "sha256": "bca9fb3c141b806c73fed46c19738e5c16441af7b415b9c0fd19a56886988bc0"
+        }
+      ],
+      "observed": {
+        "required_selection_fields": [
+          "asset_candidates",
+          "blockers",
+          "camera_observation",
+          "placement_regions",
+          "pose_constraints",
+          "robot_constraints",
+          "selected_assets",
+          "success_verifier",
+          "support_surface",
+          "task_text"
+        ],
+        "task_program_binding_required": true
+      },
+      "status": "pass",
+      "title": "Typed selection2env input/output schema"
+    },
+    {
+      "acceptance_item": 2,
+      "evidence": [
+        {
+          "bytes": 9488,
+          "path": "artifacts/adapter_catalog/selection2env_catalog_sources.json",
+          "sha256": "581a990c29a515c7355bd8da9635746f9e11e7fe64ee354e5e17be892fcb8337"
+        },
+        {
+          "bytes": 9488909,
+          "path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+          "sha256": "8e17c29896f97ee1da326639b20bb62b060942fa2e912c99809f3aad6484fcfc"
+        }
+      ],
+      "observed": {
+        "agenticsim_aliases": 8,
+        "articraft_default_execution_eligible": 0,
+        "articraft_searchable": 9996,
+        "robotwin_execution_eligible": 123
+      },
+      "status": "pass",
+      "title": "RoboTwin, AgenticSim, and Articraft catalog connection"
+    },
+    {
+      "acceptance_item": 3,
+      "evidence": [
+        {
+          "bytes": 50416,
+          "path": "artifacts/selection2env_manifest.json",
+          "sha256": "cbe02b16522cd6009820b6976212346d125a5dd28c0b7b945417d809fac9e5a9"
+        },
+        {
+          "bytes": 3027,
+          "path": "runs/final_acceptance_20260715/collect_apple_plate/collect_report.json",
+          "sha256": "9200f09100838f9fdac2e03a5132c15512b027eb00c06154d6c5efd8bb149240"
+        },
+        {
+          "bytes": 2999,
+          "path": "runs/final_acceptance_20260715/collect_laptop_knife/collect_report.json",
+          "sha256": "c32e67b934436d7bb6f7ffc5dd004881a16ecb2e41680702c60dbc2ab1ebb52c"
+        }
+      ],
+      "observed": {
+        "fresh_collect": [
+          {
+            "duration_sec": 8.083333,
+            "fps": 12.0,
+            "frame_count": 97,
+            "height": 240,
+            "task_id": "task_apple_plate",
+            "width": 320
+          },
+          {
+            "duration_sec": 8.083333,
+            "fps": 12.0,
+            "frame_count": 97,
+            "height": 240,
+            "task_id": "task_laptop_knife",
+            "width": 320
+          }
+        ],
+        "supported_task_ids": [
+          "task_apple_plate",
+          "task_laptop_knife",
+          "task_vegetable_basket"
+        ],
+        "unsupported_task_ids": [
+          "task_drawer_mug_blocker"
+        ]
+      },
+      "status": "pass",
+      "title": "Three supported samples plus one typed blocker and two fresh /collect runs"
+    },
+    {
+      "acceptance_item": 4,
+      "evidence": [
+        {
+          "bytes": 4756,
+          "path": "artifacts/visual_review/selection2env_visual_review.json",
+          "sha256": "1fca5d8cdf9d9b3d878514de99361c86c8c0853f3cab4803051a58d9ee0e4e6e"
+        },
+        {
+          "bytes": 4519,
+          "path": "artifacts/visual_review/generated_rollout_final_relation_review.json",
+          "sha256": "42c949b5e881b59502e43427e50749fbbea1469f2c18b291f0f7ccc9eb4e2313"
+        }
+      ],
+      "observed": {
+        "case_count": 3,
+        "dimensions": [
+          "collision_or_penetration",
+          "occlusion",
+          "reachability",
+          "support_and_stability",
+          "task_intent_match",
+          "visual_plausibility"
+        ],
+        "final_task_relation": "not_claimed_in_initial_review"
+      },
+      "status": "pass",
+      "title": "Agent visual and semantic critique beyond collision"
+    },
+    {
+      "acceptance_item": 5,
+      "evidence": [
+        {
+          "bytes": 676,
+          "path": "external_sources.lock.json",
+          "sha256": "f5e3e27ec75f17cdebe01cd9d3e1a10e49c9ce31d7eab517e87489064356af6a"
+        },
+        {
+          "bytes": 29256,
+          "path": "vendor/patches/robotwin-text2env-selection2env.patch",
+          "sha256": "aac9f153dcf94340528f65678dab8d8c2e4784e6594963937a11350886d41f2e"
+        },
+        {
+          "bytes": 4382,
+          "path": "docs/sceneagent_reproduction_commands.md",
+          "sha256": "33314bf09628dfff0e50bbf1b8ea097b4e4b8030f2abb7f8819f66ae1edd53ac"
+        },
+        {
+          "bytes": 165,
+          "path": "runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/process_stdout.log",
+          "sha256": "f3b45421c98948d69f00dbbba748d91474b0add989e469a54e6dad379c55e5d8"
+        },
+        {
+          "bytes": 127806,
+          "path": "runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/process_stderr.log",
+          "sha256": "8d66f212c7717604b593e77e648141aee85bfb185349fef1a7981b211ea7b4ea"
+        },
+        {
+          "bytes": 165,
+          "path": "runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/process_stdout.log",
+          "sha256": "f3b45421c98948d69f00dbbba748d91474b0add989e469a54e6dad379c55e5d8"
+        },
+        {
+          "bytes": 126942,
+          "path": "runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/process_stderr.log",
+          "sha256": "44c62d82caafa40f41e96632a926feac5675939a28b53512b510d843193c7963"
+        },
+        {
+          "bytes": 113301,
+          "path": "runs/scene_task_decoupling/original_placement_apple_on_plate_fail/final_observer_camera.png",
+          "sha256": "e1aaa83fd2b2c57d6805057e93ad8c539a08e5d71ac709c2a653908867af6682"
+        }
+      ],
+      "observed": {
+        "accepted_candidates": 6,
+        "patch_sha256": "aac9f153dcf94340528f65678dab8d8c2e4784e6594963937a11350886d41f2e",
+        "public_base": "78bef41c136a0f4bf2c35ebec2793f3f4ad7dd75",
+        "rejected_candidates": 26,
+        "result_tree": "68e84128bbf5f8702f918024f6ca0c6e056a478f"
+      },
+      "status": "pass",
+      "title": "Candidates, placement, reproducible code diff, commands, logs, images, and continuous videos"
+    },
+    {
+      "acceptance_item": 6,
+      "evidence": [
+        {
+          "bytes": 6126,
+          "path": "docs/generation2env_blockers.md",
+          "sha256": "e965d3f95db9524177fadd63959a2dfd702b29cecc39805759223f96978ad9f5"
+        },
+        {
+          "bytes": 485,
+          "path": "artifacts/generation_fallback/fallback_blocker_summary.json",
+          "sha256": "806aa144d88a85646f3dec7134f76b850259c5cd33213dc32621af46a272b536"
+        }
+      ],
+      "observed": {
+        "completion_gate": "excluded_by_dashboard_acceptance",
+        "status": "blocked_fallback_inputs_missing",
+        "typed_probe_count": 2
+      },
+      "status": "pass",
+      "title": "generation2env blocker memo"
+    },
+    {
+      "acceptance_item": 7,
+      "evidence": [
+        {
+          "bytes": 14367,
+          "path": "docs/selection2env_schema.md",
+          "sha256": "bca9fb3c141b806c73fed46c19738e5c16441af7b415b9c0fd19a56886988bc0"
+        },
+        {
+          "bytes": 18400,
+          "path": "docs/openxsim_command_spec.md",
+          "sha256": "339f17577621d06994871780163ed22a7ddfd83459765ee3f02951f9bff22bf9"
+        },
+        {
+          "bytes": 8945,
+          "path": "artifacts/openxsim/openxsim_command_registry.json",
+          "sha256": "cae297eae3bb2a348bb57c7e13ad00288a63e5176c189862c0c8dd4f95a03840"
+        }
+      ],
+      "observed": {
+        "commands": [
+          "/collect",
+          "/train",
+          "/evaluate"
+        ],
+        "supported_task_count": 3
+      },
+      "status": "pass",
+      "title": "Gaochen pipeline handoff API"
+    },
+    {
+      "acceptance_item": 8,
+      "evidence": [
+        {
+          "bytes": 9577,
+          "path": "artifacts/scene_task_decoupling/apple_plate_two_tasks.json",
+          "sha256": "7911feb96c46c9293a28c9870c481d30446354f2d7e1988b5a8cf694e8d92b07"
+        },
+        {
+          "bytes": 6478,
+          "path": "runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/rollout_report.json",
+          "sha256": "0612939211468fa62e64fe51d10b37ff978b3cc2625b4715d9c7ec92537b2a08"
+        },
+        {
+          "bytes": 6785,
+          "path": "runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/rollout_report.json",
+          "sha256": "b55f16c09b7ed223bad69b6f33ff0fd2088b6fa413fa3ff8b0c480030f0d906f"
+        }
+      ],
+      "observed": {
+        "initial_observer_sha256": "18e53b736c0a9716e7489dc889a2c2375c7d26fe3078d207dccf61e8cac53012",
+        "placement_sha256": "c39169d68ab617debdd8b4462d7bc9d30ad6fae0ce5c3d4aa9e4a34893bee592",
+        "scene_id": "scene_apple_plate_shared_two_task_v0",
+        "tasks": [
+          {
+            "check_success": true,
+            "frame_count": 589,
+            "task_id": "task_apple_plate"
+          },
+          {
+            "check_success": true,
+            "frame_count": 585,
+            "task_id": "task_apple_plate_to_left_front"
+          }
+        ]
+      },
+      "status": "pass",
+      "title": "One byte-identical scene executes two distinct task specs"
+    }
+  ],
+  "pass_count": 8,
+  "runtime": {
+    "basetask_smokes": [
+      "runs/smoke_basetask_apple_plate/smoke_report.json",
+      "runs/smoke_basetask_laptop_knife/smoke_report.json",
+      "runs/smoke_basetask_vegetable_basket/smoke_report.json"
+    ],
+    "cuda_capability": "sm_120",
+    "curobo_build_env": {
+      "CUDA_HOME": "/home/jingxiang/miniconda3/envs/wmfactory",
+      "TORCH_CUDA_ARCH_LIST": "12.0",
+      "extra_include_paths": [
+        "/home/jingxiang/miniconda3/envs/wmfactory/targets/x86_64-linux/include",
+        "/home/jingxiang/miniconda3/envs/robotwin-5090/lib/python3.10/site-packages/nvidia/cuda_runtime/include"
+      ],
+      "extra_library_paths": [
+        "/home/jingxiang/miniconda3/envs/wmfactory/targets/x86_64-linux/lib",
+        "/home/jingxiang/miniconda3/envs/wmfactory/lib"
+      ],
+      "nvcc": "/home/jingxiang/miniconda3/envs/wmfactory/bin/nvcc",
+      "nvcc_version": "12.8.61"
+    },
+    "curobo_git_commit": "d64c4b005459db10c5dd867d8b30a87d5bda9bdb",
+    "curobo_install": "pass",
+    "curobo_source": "external/RoboTwin/envs/curobo",
+    "driver": "580.159.03",
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "host": "jingxiang-b850m-c",
+    "mplib": "0.2.1",
+    "python": "3.10",
+    "python_env": "/home/jingxiang/miniconda3/envs/robotwin-5090",
+    "remaining_post_todo_research_gates": [
+      "default upstream ACT wrapper compatibility",
+      "visual or language-conditioned closed-loop policy robustness",
+      "broad Articraft scale, material, collision, and task-suitability validation"
+    ],
+    "sapien": "3.0.0b1",
+    "schema_version": "alchedata.runtime_probe.v0",
+    "torch": "2.11.0+cu128",
+    "torch_cuda": "12.8",
+    "torch_cuda_kernel_evidence": "1024x1024 CUDA matmul returned 1024.0 and synchronized on RTX 5090",
+    "torch_cuda_kernel_test": "pass",
+    "warnings": [
+      "RoboTwin prints missing pytorch3d during camera utility import; the tested smoke path still exits pass.",
+      "SAPIEN/svulkan2 emits OIDN CUDA denoiser warnings while still writing nonblank images.",
+      "scipy is 1.15.3 after CuRobo dependency installation, while RoboTwin requirements pin scipy==1.10.1; current smoke evidence takes precedence over the pin for this isolated env."
+    ]
+  },
+  "schema_version": "alchedata.sceneagent_selection2env_acceptance_audit.v1",
+  "status": "pass_all_8_sceneagent_acceptance_items",
+  "supplemental_policy_gate": {
+    "claim_boundary": "Promotion is limited to a privileged, initial-pose-conditioned, open-loop learned trajectory baseline in the generated RoboTwin apple/plate task, plus fixed-placement seed holdout on can/basket. It does not promote ACT, establish visual robustness, prove language-conditioned control, or establish broad task transfer.",
+    "cross_task_can_basket": "3/3",
+    "decision": "accept_for_bounded_sceneagent_selection2env_gate",
+    "declared_domain_randomization": "4/4",
+    "evidence": {
+      "bytes": 8781,
+      "path": "artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json",
+      "sha256": "25f29aa38eb97f8281d03844303ec841999f081ca6ae07ab61b5301f4092b274"
+    },
+    "heldout_varied_placement": "4/4",
+    "status": "pass_bounded_pose_conditioned_policy_promotion"
+  },
+  "todo_id": "task_self_improving_sceneagent_selection2env_20260701",
+  "todo_scope": "selection2env over existing RoboTwin, AgenticSim aliases, and catalog-gated Articraft metadata"
+}

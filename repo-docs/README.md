@@ -1,6 +1,6 @@
 # Robot Harness /gen-env 中文 Repo Docs
 
-这个仓库是一个确定性的编译器：一句受限的中英双语自然语言进来，被编译成 RoboTwin 可加载的场景包，然后才允许进入 RoboTwin 命令循环。它做的事很小——`text -> 类型化 SceneSpec -> 资产 grounding -> 目标局部 support/containment 求解 -> 哈希绑定的 resolved 包 -> RoboTwin/SAPIEN 回放 -> 几组运行时门控`。它不做机器人策略、不采集数据、不训练、不评估、不迁移到别的仿真器。看 [一条真实路径](walkthroughs/one-real-run.md) 可以把这条管道一气走完；源码定位去 [代码地图](code-map.md)；某个具体机制模糊去 `modules/` 对应的那一页。
+这个仓库有两层。稳定核心是确定性的 `/gen-env` 编译器：一句受限的中英双语自然语言进来，被编译成 RoboTwin 可加载的场景包，然后才允许进入命令循环。它的路径是 `text -> 类型化 SceneSpec -> 资产 grounding -> 目标局部 support/containment 求解 -> 哈希绑定的 resolved 包 -> RoboTwin/SAPIEN 回放 -> 运行时门控`。外围 `self_improving/` 再组织选择、采集、训练、评估、诊断、记忆、资产复用与跨仿真适配，但不能绕过核心契约。看 [一条真实路径](walkthroughs/one-real-run.md) 可以走完稳定核心；平台边界见 [Self-Improving 平台](modules/self-improving-platform.md)。
 
 为什么这样一个东西值得有专门文档，不在「自然语言几分钟能理解」这一层。难点集中在两件事：一是文本到机器人的信任边界（prompt 不能携带代码、路径、pose，但还得表达丰富的语义），二是「看起来稳」和「物理稳」之间的差距（外层 AABB 能落不等于 plate 里侧 100 mm 那块能落；渲染图能过不等于 SAPIEN 终末接触能过）。每一阶段在某个具体信任塌方之前先挡住它——这就是 [一条真实路径](walkthroughs/one-real-run.md) 一步步想讲清楚的。
 
@@ -17,11 +17,12 @@
 | 理解 catalog miss 与运行时不稳怎么补 | [确定性代理](modules/derived-proxy.md) | procedural primitive、derived uniform scale、来源 lineage |
 | 理解磁盘包怎么自证没被改 | [哈希绑定包](modules/replay-package.md) | 文件清单、SHA-256 manifest、`verify_package` 篡改检测 |
 | 理解运行时物理通过到底验了什么 | [运行时门控](modules/runtime-gates.md) | 接触 fraction、drift、可见性、视频互异帧、嵌套未声明接触等门控 |
+| 理解平台层如何组合旧工作区与外部项目 | [Self-Improving 平台](modules/self-improving-platform.md) | 稳定核心、编排层、资产层、适配层、历史层与子模块的边界 |
 | 审计本指南每条主张背后的源码证据 | [证据底座](references/source-evidence.md) | 两轮遍历、claim/evidence/confidence/caveat 与被消费者 |
 | 审计本指南是否真的把模型传给了读者 | [质检报告](references/quality-review.md) | reader simulation、可理解性 review、残余风险 |
 | 把重复见到的术语归一 | [术语表](glossary.md) | `SceneSpec`、`ResolvedSceneSpec`、support margin、derived proxy 等在本仓库里的精确意思 |
 
-范围：本包记录 `scene_gen/`、`script/`、`demo/`、`tests/` 这四个在范围内的源码区。`docs/evidence/` 的已验证证据被引用但不重述；`.github/` 工作流、`scene_gen/prompts/` 模板、`demo/static/` 前端资产只登记为在范围但属摘要层。`scene_gen/rendered_critic.py` 与 `script/run_rendered_critic.py` 的 VLM 渲染评判只作为可选相邻路径标注，因为它不是物理证据。尚未覆盖的相邻路径在 [代码地图末尾的排除说明](code-map.md#覆盖范围)。
+范围：核心行为仍记录 `scene_gen/`、`script/`、`demo/`、`tests/`；平台总览额外记录 `self_improving/` 与 `external/` 的所有权边界，不把迁入的历史脚本逐个重述。`docs/evidence/` 的已验证证据被引用但不重述；二进制资产、运行产物和外部依赖只保留来源与机读清单。
 
 注意：本仓库根 `README.md` 的英文段是面向使用者的命令配方与已验证证据摘要；`repo-docs/` 是面向想理解仓库行为的人的中文叙述。两者不重复，互相引用。
 

@@ -1,0 +1,10 @@
+{
+  "schema_version": "alchedata.gen_env_fallback_summary.v0",
+  "status": "blocked_fallback_inputs_missing",
+  "generated_at": "2026-07-13T01:42:09.789060+00:00",
+  "probes": [
+    "artifacts/generation_fallback/blocked_drawer_mug_video2sim_forge.json",
+    "artifacts/generation_fallback/blocked_neumatex_material_sidecar.json"
+  ],
+  "claim_boundary": "Records typed /gen-env fallback blockers for Open X Sim acceptance. It does not claim forge or material extraction execution."
+}

@@ -1,0 +1,440 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alchedata.local/schemas/gen_env.schema.json",
+  "title": "PEARL /gen-env route contract",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "command",
+    "route",
+    "status",
+    "task_text",
+    "owner",
+    "inputs",
+    "outputs",
+    "blockers",
+    "claim_boundary"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "alchedata.gen_env.v0"
+    },
+    "command": {
+      "const": "/gen-env"
+    },
+    "route": {
+      "enum": [
+        "selection2env",
+        "forge_fallback",
+        "material_sidecar"
+      ]
+    },
+    "status": {
+      "enum": [
+        "pass_selection2env_contract",
+        "blocked_forge_fallback",
+        "blocked_material_sidecar",
+        "pass_forge_import_smoke",
+        "pass_material_import_smoke",
+        "fail"
+      ]
+    },
+    "task_text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inputs": {
+      "$ref": "#/$defs/gen_env_inputs"
+    },
+    "outputs": {
+      "type": "object",
+      "properties": {
+        "selection2env": {
+          "$ref": "#/$defs/selection2env_outputs"
+        },
+        "forge_fallback": {
+          "$ref": "#/$defs/forge_fallback_outputs"
+        },
+        "material_sidecar": {
+          "$ref": "#/$defs/material_sidecar_outputs"
+        },
+        "handoff": {
+          "$ref": "#/$defs/handoff_outputs"
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/blocker"
+      }
+    },
+    "claim_boundary": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "route": {
+            "const": "selection2env"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "enum": [
+              "pass_selection2env_contract",
+              "fail"
+            ]
+          },
+          "outputs": {
+            "required": [
+              "selection2env"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "route": {
+            "const": "forge_fallback"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "enum": [
+              "blocked_forge_fallback",
+              "pass_forge_import_smoke",
+              "fail"
+            ]
+          },
+          "outputs": {
+            "required": [
+              "forge_fallback"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "route": {
+            "const": "material_sidecar"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "enum": [
+              "blocked_material_sidecar",
+              "pass_material_import_smoke",
+              "fail"
+            ]
+          },
+          "outputs": {
+            "required": [
+              "material_sidecar"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "gen_env_inputs": {
+      "type": "object",
+      "required": [
+        "asset_catalog_roots",
+        "allowed_simulator_adapters",
+        "robot_constraints"
+      ],
+      "properties": {
+        "task_text": {
+          "type": "string"
+        },
+        "reference_image": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rgbd_capture": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reference_video": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "capture_source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "multi_view_images": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "camera_calibration": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lighting_assumption": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "asset_catalog_roots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allowed_simulator_adapters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "robot_constraints": {
+          "type": "object"
+        }
+      }
+    },
+    "selection2env_outputs": {
+      "type": "object",
+      "required": [
+        "asset_candidates",
+        "selected_assets",
+        "placement_regions",
+        "support_surface",
+        "pose_constraints",
+        "camera_observation",
+        "robot_constraints",
+        "success_verifier",
+        "scene_task_decoupling",
+        "artifact_paths"
+      ],
+      "properties": {
+        "asset_candidates": {
+          "type": "array"
+        },
+        "selected_assets": {
+          "type": "array"
+        },
+        "placement_regions": {
+          "type": "object"
+        },
+        "support_surface": {
+          "type": "object"
+        },
+        "pose_constraints": {
+          "type": "array"
+        },
+        "camera_observation": {
+          "type": "object"
+        },
+        "robot_constraints": {
+          "type": "object"
+        },
+        "success_verifier": {
+          "type": "object"
+        },
+        "scene_task_decoupling": {
+          "type": "object"
+        },
+        "artifact_paths": {
+          "type": "object"
+        }
+      }
+    },
+    "forge_fallback_outputs": {
+      "type": "object",
+      "required": [
+        "capture_source",
+        "object_prompts",
+        "masks",
+        "meshes",
+        "world_frame_poses",
+        "scene_json",
+        "urdf",
+        "physics_metadata",
+        "provenance",
+        "import_gate"
+      ],
+      "properties": {
+        "capture_source": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "object_prompts": {
+          "type": "array"
+        },
+        "masks": {
+          "type": "array"
+        },
+        "meshes": {
+          "type": "array"
+        },
+        "world_frame_poses": {
+          "type": "array"
+        },
+        "scene_json": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "urdf": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "physics_metadata": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "import_gate": {
+          "type": "object"
+        }
+      }
+    },
+    "material_sidecar_outputs": {
+      "type": "object",
+      "required": [
+        "textures",
+        "materials",
+        "albedo",
+        "specular_latent",
+        "uncertainty",
+        "lighting_assumption",
+        "renderer_binding",
+        "material_provenance",
+        "render_gate"
+      ],
+      "properties": {
+        "textures": {
+          "type": "array"
+        },
+        "materials": {
+          "type": "array"
+        },
+        "albedo": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "specular_latent": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "uncertainty": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "lighting_assumption": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "renderer_binding": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "material_provenance": {
+          "type": "object"
+        },
+        "render_gate": {
+          "type": "object"
+        }
+      }
+    },
+    "handoff_outputs": {
+      "type": "object",
+      "required": [
+        "collect_outputs",
+        "train_reads",
+        "evaluate_reads"
+      ],
+      "properties": {
+        "collect_outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "train_reads": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evaluate_reads": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "blocker": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "owner"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

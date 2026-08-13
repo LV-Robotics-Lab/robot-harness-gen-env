@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jingxiangguo.com/schemas/text2env_literature_review.schema.json",
+  "title": "PEARL Text2Env literature review source registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "reviewed_at",
+    "source_count",
+    "academic_primary_source_count",
+    "required_scope_ids",
+    "sources",
+    "claim_boundary"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "pearl.text2env_literature_review.v1"
+    },
+    "status": {
+      "const": "pass_primary_source_audit"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "source_count": {
+      "type": "integer",
+      "minimum": 8
+    },
+    "academic_primary_source_count": {
+      "type": "integer",
+      "minimum": 8
+    },
+    "required_scope_ids": {
+      "type": "array",
+      "minItems": 10,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 2
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "claim_boundary": {
+      "type": "string",
+      "minLength": 40
+    }
+  },
+  "$defs": {
+    "nullableUrl": {
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "name",
+        "year",
+        "source_kind",
+        "categories",
+        "links",
+        "input",
+        "output",
+        "environment_assets",
+        "open_status",
+        "reproducibility",
+        "interface_relation",
+        "claim_tag"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 3
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 2022,
+          "maximum": 2026
+        },
+        "source_kind": {
+          "enum": [
+            "paper_and_code",
+            "paper_only",
+            "paper_and_dataset",
+            "code",
+            "local_implementation"
+          ]
+        },
+        "categories": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "text2task",
+              "text2scene",
+              "text2asset",
+              "selection2env",
+              "generation2env",
+              "sim_in_loop_repair",
+              "domain_randomization_data_generation",
+              "policy_eval_data_hook"
+            ]
+          }
+        },
+        "links": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["project", "paper", "code", "data"],
+          "properties": {
+            "project": { "$ref": "#/$defs/nullableUrl" },
+            "paper": { "$ref": "#/$defs/nullableUrl" },
+            "code": { "$ref": "#/$defs/nullableUrl" },
+            "data": { "$ref": "#/$defs/nullableUrl" }
+          },
+          "anyOf": [
+            { "required": ["project"] },
+            { "required": ["paper"] },
+            { "required": ["code"] },
+            { "required": ["data"] }
+          ]
+        },
+        "input": { "type": "string", "minLength": 5 },
+        "output": { "type": "string", "minLength": 5 },
+        "environment_assets": { "type": "string", "minLength": 5 },
+        "open_status": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["paper_access", "code_status", "license"],
+          "properties": {
+            "paper_access": {
+              "enum": ["open", "not_applicable"]
+            },
+            "code_status": {
+              "enum": ["released", "coming_soon", "not_released", "local_only", "dataset_only"]
+            },
+            "license": {
+              "type": "string",
+              "minLength": 2
+            }
+          }
+        },
+        "reproducibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["level", "evidence", "blockers"],
+          "properties": {
+            "level": {
+              "enum": [
+                "workspace_verified",
+                "metadata_verified",
+                "runnable_with_external_dependencies",
+                "code_available_not_run",
+                "paper_only"
+              ]
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 3 }
+            },
+            "blockers": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 3 }
+            }
+          }
+        },
+        "interface_relation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["robotwin", "agenticsim", "adoption_tier", "direct_fields", "required_gates"],
+          "properties": {
+            "robotwin": { "type": "string", "minLength": 5 },
+            "agenticsim": { "type": "string", "minLength": 5 },
+            "adoption_tier": {
+              "enum": ["P0", "P1", "P2", "positioning"]
+            },
+            "direct_fields": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 2 }
+            },
+            "required_gates": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 3 }
+            }
+          }
+        },
+        "claim_tag": {
+          "const": "[COMPUTED] [CONFIDENCE: HIGH]"
+        }
+      }
+    }
+  }
+}

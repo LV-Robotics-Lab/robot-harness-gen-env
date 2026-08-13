@@ -1,0 +1,128 @@
+assets:
+  901_robolab_corn_can:
+    semantic_name: corn_can
+    category: can
+    aliases: [can, corn can, canned corn, food can]
+    materials: [metal]
+    models:
+      "0":
+        stable_pose_id: upright
+        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]
+        z_policy: origin_on_table
+        dimensions_m: [0.0709084, 0.0661020, 0.0580392]
+        footprint_shape: circle
+  902_robolab_milk_carton:
+    semantic_name: milk_carton
+    category: box
+    aliases: [box, carton, milk carton, milk box]
+    materials: [plastic]
+    models:
+      "0":
+        stable_pose_id: upright
+        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]
+        z_policy: origin_on_table
+        dimensions_m: [0.0732622, 0.0721546, 0.1903578]
+        footprint_shape: box
+  903_robolab_measuring_cups:
+    semantic_name: measuring_cups
+    category: cup
+    aliases: [cup, measuring cup, measuring cups]
+    materials: [plastic]
+    models:
+      "0":
+        stable_pose_id: usd_default
+        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]
+        z_policy: origin_on_table
+        dimensions_m: [0.1674112, 0.0827894, 0.0378910]
+        footprint_shape: box
+  904_robolab_cordless_drill:
+    semantic_name: cordless_drill
+    category: cordless_drill
+    aliases: [cordless drill, power drill, drill]
+    materials: [plastic, metal]
+    models:
+      "0":
+        stable_pose_id: usd_side_lying
+        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]
+        z_policy: origin_on_table
+        dimensions_m: [0.1842410, 0.1874340, 0.0573170]
+        footprint_shape: box
+        mass_kg: 1.5
+  905_robolab_scissors:
+    semantic_name: scissors
+    category: scissors
+    aliases: [scissors, pair of scissors]
+    materials: [metal, plastic]
+    models:
+      "0":
+        stable_pose_id: usd_flat_lying
+        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]
+        z_policy: origin_on_table
+        dimensions_m: [0.0960800, 0.2015440, 0.0157160]
+        footprint_shape: box
+        mass_kg: 0.2
+  906_robolab_mug:
+    semantic_name: mug
+    category: mug
+    aliases: [mug, coffee mug]
+    materials: [ceramic, plastic]
+    models:
+      "0":
+        stable_pose_id: usd_upright
+        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]
+        z_policy: origin_on_table
+        dimensions_m: [0.1169660, 0.0930750, 0.0813840]
+        footprint_shape: box
+        mass_kg: 0.3
+  907_robolab_mustard:
+    semantic_name: mustard_bottle
+    category: mustard_bottle
+    aliases: [mustard bottle]
+    materials: [plastic]
+    models:
+      "0":
+        stable_pose_id: usd_upright
+        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]
+        z_policy: origin_on_table
+        dimensions_m: [0.0971500, 0.0666200, 0.1914080]
+        footprint_shape: box
+        mass_kg: 0.5
+  908_robolab_banana:
+    semantic_name: banana
+    category: banana
+    aliases: [banana]
+    materials: [organic]
+    models:
+      "0":
+        stable_pose_id: usd_side_lying
+        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]
+        z_policy: origin_on_table
+        dimensions_m: [0.1088880, 0.1784120, 0.0366700]
+        footprint_shape: box
+        mass_kg: 0.12
+  909_robolab_wood_block:
+    semantic_name: block
+    category: block
+    aliases: [wood block, wooden block, block]
+    materials: [wood]
+    models:
+      "0":
+        stable_pose_id: usd_upright
+        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]
+        z_policy: origin_on_table
+        dimensions_m: [0.1039510, 0.1035480, 0.2058900]
+        footprint_shape: box
+        mass_kg: 2.5
+  910_robolab_dry_erase_marker:
+    semantic_name: dry_erase_marker
+    category: dry_erase_marker
+    aliases: [dry erase marker, marker]
+    materials: [plastic]
+    models:
+      "0":
+        stable_pose_id: usd_side_lying
+        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]
+        z_policy: origin_on_table
+        dimensions_m: [0.0210390, 0.1208450, 0.0188770]
+        footprint_shape: box
+        mass_kg: 0.02

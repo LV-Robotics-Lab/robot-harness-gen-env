@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alchedata.local/schemas/pearl_command.schema.json",
+  "title": "PEARL Command Envelope",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "command",
+    "run_id",
+    "owner",
+    "inputs",
+    "outputs",
+    "artifact_root",
+    "failure_codes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "alchedata.pearl_command.v0"
+    },
+    "command": {
+      "enum": ["/gen-env", "/collect", "/train", "/evaluate", "/diagnose", "/transfer"]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inputs": {
+      "type": "object"
+    },
+    "outputs": {
+      "type": "object"
+    },
+    "artifact_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "failure_codes": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}

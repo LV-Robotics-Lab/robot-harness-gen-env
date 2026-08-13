@@ -1,0 +1,238 @@
+{
+  "schema_version": "alchedata.scene_task_decoupling_evidence.v1",
+  "status": "pass_same_scene_two_executable_tasks",
+  "scene_id": "scene_apple_plate_shared_two_task_v0",
+  "placement_spec": "runs/scene_task_decoupling/shared_apple_plate_scene.json",
+  "placement_sha256": "c39169d68ab617debdd8b4462d7bc9d30ad6fae0ce5c3d4aa9e4a34893bee592",
+  "task_count": 2,
+  "initial_observer_bytes_identical": true,
+  "initial_observer_sha256": "18e53b736c0a9716e7489dc889a2c2375c7d26fe3078d207dccf61e8cac53012",
+  "pair_validation": {
+    "status": "pass",
+    "fail_count": 0,
+    "scene_id": "scene_apple_plate_shared_two_task_v0",
+    "placement_spec": "runs/scene_task_decoupling/shared_apple_plate_scene.json",
+    "placement_sha256": "c39169d68ab617debdd8b4462d7bc9d30ad6fae0ce5c3d4aa9e4a34893bee592",
+    "checks": [
+      {
+        "name": "task_ids_are_distinct",
+        "status": "pass",
+        "message": "task_apple_plate != task_apple_plate_to_left_front"
+      },
+      {
+        "name": "scene_id_is_shared",
+        "status": "pass",
+        "message": "scene_apple_plate_shared_two_task_v0"
+      },
+      {
+        "name": "placement_path_is_shared",
+        "status": "pass",
+        "message": "runs/scene_task_decoupling/shared_apple_plate_scene.json"
+      },
+      {
+        "name": "placement_bytes_are_shared",
+        "status": "pass",
+        "message": "c39169d68ab617debdd8b4462d7bc9d30ad6fae0ce5c3d4aa9e4a34893bee592"
+      },
+      {
+        "name": "bindings_are_distinct",
+        "status": "pass",
+        "message": "primary={'template': 'place_on', 'source_id': 'apple_1', 'target_kind': 'object', 'target_id': 'plate_1'} alternate={'template': 'place_in_region', 'source_id': 'apple_1', 'target_kind': 'region', 'target_region': 'left_front_reachable_area'}"
+      },
+      {
+        "name": "primary_references_resolve",
+        "status": "pass",
+        "message": "fail_count=0"
+      },
+      {
+        "name": "alternate_references_resolve",
+        "status": "pass",
+        "message": "fail_count=0"
+      }
+    ],
+    "primary_validation": {
+      "status": "pass",
+      "fail_count": 0,
+      "placement_path": "runs/scene_task_decoupling/shared_apple_plate_scene.json",
+      "placement_sha256": "c39169d68ab617debdd8b4462d7bc9d30ad6fae0ce5c3d4aa9e4a34893bee592",
+      "binding": {
+        "template": "place_on",
+        "source_id": "apple_1",
+        "target_kind": "object",
+        "target_id": "plate_1"
+      },
+      "checks": [
+        {
+          "name": "placement_spec_exists",
+          "status": "pass",
+          "message": "runs/scene_task_decoupling/shared_apple_plate_scene.json"
+        },
+        {
+          "name": "placement_sha256_matches",
+          "status": "pass",
+          "message": "declared=c39169d68ab617debdd8b4462d7bc9d30ad6fae0ce5c3d4aa9e4a34893bee592 actual=c39169d68ab617debdd8b4462d7bc9d30ad6fae0ce5c3d4aa9e4a34893bee592"
+        },
+        {
+          "name": "task_binding_resolves",
+          "status": "pass",
+          "message": "{\"source_id\": \"apple_1\", \"target_id\": \"plate_1\", \"target_kind\": \"object\", \"template\": \"place_on\"}"
+        },
+        {
+          "name": "verifier_source_matches_binding",
+          "status": "pass",
+          "message": "verifier_source=apple_1"
+        },
+        {
+          "name": "verifier_relation_matches_binding",
+          "status": "pass",
+          "message": "verifier_relation=on expected_relation=on"
+        },
+        {
+          "name": "verifier_target_matches_binding",
+          "status": "pass",
+          "message": "verifier_target=plate_1 expected_target=plate_1"
+        }
+      ]
+    },
+    "alternate_validation": {
+      "status": "pass",
+      "fail_count": 0,
+      "placement_path": "runs/scene_task_decoupling/shared_apple_plate_scene.json",
+      "placement_sha256": "c39169d68ab617debdd8b4462d7bc9d30ad6fae0ce5c3d4aa9e4a34893bee592",
+      "binding": {
+        "template": "place_in_region",
+        "source_id": "apple_1",
+        "target_kind": "region",
+        "target_region": "left_front_reachable_area"
+      },
+      "checks": [
+        {
+          "name": "placement_spec_exists",
+          "status": "pass",
+          "message": "runs/scene_task_decoupling/shared_apple_plate_scene.json"
+        },
+        {
+          "name": "placement_sha256_matches",
+          "status": "pass",
+          "message": "declared=c39169d68ab617debdd8b4462d7bc9d30ad6fae0ce5c3d4aa9e4a34893bee592 actual=c39169d68ab617debdd8b4462d7bc9d30ad6fae0ce5c3d4aa9e4a34893bee592"
+        },
+        {
+          "name": "task_binding_resolves",
+          "status": "pass",
+          "message": "{\"source_id\": \"apple_1\", \"target_kind\": \"region\", \"target_region\": \"left_front_reachable_area\", \"template\": \"place_in_region\"}"
+        },
+        {
+          "name": "verifier_source_matches_binding",
+          "status": "pass",
+          "message": "verifier_source=apple_1"
+        },
+        {
+          "name": "verifier_relation_matches_binding",
+          "status": "pass",
+          "message": "verifier_relation=in_region expected_relation=in_region"
+        },
+        {
+          "name": "verifier_target_matches_binding",
+          "status": "pass",
+          "message": "verifier_target=left_front_reachable_area expected_target=left_front_reachable_area"
+        }
+      ]
+    }
+  },
+  "rollouts": [
+    {
+      "label": "primary",
+      "task_id": "task_apple_plate",
+      "task_program": "artifacts/task_program_inputs/task_apple_plate.json",
+      "rollout_report": "runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/rollout_report.json",
+      "checks": {
+        "status_pass": true,
+        "check_success": true,
+        "task_id_matches": true,
+        "scene_id_matches": true,
+        "placement_sha256_matches": true,
+        "continuous_video": true
+      },
+      "status": "pass",
+      "images": {
+        "initial_head_camera": "runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/initial_head_camera.png",
+        "initial_observer_camera": "runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/initial_observer_camera.png",
+        "final_head_camera": "runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/final_head_camera.png",
+        "final_observer_camera": "runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/final_observer_camera.png"
+      },
+      "observer_video": "runs/final_acceptance_20260715/scene_task_decoupling/apple_on_plate/observer_rollout_probe.mp4",
+      "video_capture": {
+        "mode": "robotwin_native_save_frequency_hook",
+        "endpoint_only": false,
+        "frame_count": 589,
+        "fps": 12,
+        "duration_sec": 49.0833,
+        "capture_stride_sim_steps": 4,
+        "capture_requests": 587,
+        "max_frames": 2400,
+        "capped": false
+      },
+      "relation_metrics": {
+        "source_id": "apple_1",
+        "left_gripper_open": true,
+        "right_gripper_open": true,
+        "target_kind": "object",
+        "target_id": "plate_1",
+        "xy_distance_m": 0.01151542185982659,
+        "z_delta_m": 0.006781637668609619
+      }
+    },
+    {
+      "label": "alternate",
+      "task_id": "task_apple_plate_to_left_front",
+      "task_program": "artifacts/task_program_inputs/task_apple_plate_to_left_front.json",
+      "rollout_report": "runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/rollout_report.json",
+      "checks": {
+        "status_pass": true,
+        "check_success": true,
+        "task_id_matches": true,
+        "scene_id_matches": true,
+        "placement_sha256_matches": true,
+        "continuous_video": true
+      },
+      "status": "pass",
+      "images": {
+        "initial_head_camera": "runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/initial_head_camera.png",
+        "initial_observer_camera": "runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/initial_observer_camera.png",
+        "final_head_camera": "runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/final_head_camera.png",
+        "final_observer_camera": "runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/final_observer_camera.png"
+      },
+      "observer_video": "runs/final_acceptance_20260715/scene_task_decoupling/apple_to_left_front/observer_rollout_probe.mp4",
+      "video_capture": {
+        "mode": "robotwin_native_save_frequency_hook",
+        "endpoint_only": false,
+        "frame_count": 585,
+        "fps": 12,
+        "duration_sec": 48.75,
+        "capture_stride_sim_steps": 4,
+        "capture_requests": 583,
+        "max_frames": 2400,
+        "capped": false
+      },
+      "relation_metrics": {
+        "source_id": "apple_1",
+        "left_gripper_open": true,
+        "right_gripper_open": true,
+        "target_kind": "region",
+        "target_region": "left_front_reachable_area",
+        "source_xy": [
+          -0.1831415891647339,
+          0.034238051623106
+        ],
+        "region_center_xy": [
+          -0.17,
+          0.04
+        ],
+        "distance_to_region_center_m": 0.014349265307765487,
+        "region_tolerance_m": 0.03,
+        "inside_region": true
+      }
+    }
+  ],
+  "claim_boundary": "Both task programs reset from byte-identical placement JSON, begin from byte-identical observer pixels, and pass RoboTwin generated play_once/check_success with continuous simulator-step videos. This proves scene-task decoupling for one scene, not learned-policy cross-task generalization."
+}

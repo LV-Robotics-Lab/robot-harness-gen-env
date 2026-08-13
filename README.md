@@ -1,4 +1,4 @@
-# Robot Harness /gen-env
+# Robot Harness Gen-Env and Self-Improving Platform
 
 `/gen-env` compiles bounded natural-language requests into deterministic,
 RoboTwin-loadable scene packages and validates them in SAPIEN before they can
@@ -14,8 +14,35 @@ text
   -> contact, stability, containment, visibility, and video gates
 ```
 
-This repository is the `/gen-env` subsystem. It does not implement robot task
-policies, data collection, training, evaluation, or simulator transfer.
+The stable `scene_gen/` core owns this `/gen-env` trust boundary. The repository
+also contains a modular `self_improving/` layer for the dashboard's
+Self-Improving Agents project: scene-agent orchestration, collection/evaluation
+adapters, diagnosis and promotion gates, asset reuse, and simulator migration.
+Those integrations consume the core contract; they do not bypass it.
+
+## Repository Architecture
+
+```text
+scene_gen/                         stable deterministic /gen-env core
+self_improving/stage5/             active multi-agent scene workflow
+self_improving/alchedata/          command loop, diagnosis, memory, promotion
+self_improving/asset_pipeline/     reusable-asset ingest and simulator migration
+self_improving/sim_adapters/       thin simulator integration probes
+self_improving/onboarding/         recovered migration tools and provenance
+self_improving/legacy/stage04/     read-only historical stage snapshot
+external/OpenReal2Sim/             independent Git submodule
+external/digital-cousins/          independent Git submodule
+```
+
+Initialize the complete source tree and audit it with:
+
+```bash
+git submodule update --init --recursive
+python -m self_improving --json
+```
+
+See [`self_improving/README.md`](self_improving/README.md) for module ownership,
+source provenance, and the retained-vs-excluded artifact policy.
 
 ## What Is Enforced
 
@@ -229,6 +256,8 @@ script/             compile, runtime, batch acceptance, rendered critic
 demo/               Flask API and browser interface
 tests/fixtures/     self-contained catalog and prompt fixtures
 tests/              parser, solver, validator, critic, demo, and attack tests
+self_improving/     orchestration, diagnosis, asset pipeline, adapters, archives
+external/           OpenReal2Sim and digital-cousins Git submodules
 ```
 
 ## Provenance
@@ -237,6 +266,12 @@ The work started from
 [`yezheng04/robotwin-text2env-demo`](https://github.com/yezheng04/robotwin-text2env-demo)
 and was narrowed into the Robot Harness `/gen-env` subsystem. RoboTwin assets are
 referenced by path and are not redistributed here.
+
+The platform layer consolidates the former Alchedata self-improving workspace,
+RobotWin Text2Env stage-04/stage-05 trees, AgenticSim runtime orchestration,
+env-gen asset/migration branches, and onboarding migration tools. Exact origins
+and preservation branches are recorded in
+[`self_improving/source_inventory.json`](self_improving/source_inventory.json).
 
 ## License
 

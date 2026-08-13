@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alchedata.local/schemas/gen_env_fallback.schema.json",
+  "title": "PEARL /gen-env fallback probe",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "fallback_id",
+    "fallback_type",
+    "command",
+    "status",
+    "owner",
+    "inputs",
+    "expected_outputs",
+    "checks",
+    "import_gate_matrix",
+    "blockers",
+    "next_step",
+    "claim_boundary"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "alchedata.gen_env_fallback_probe.v0"
+    },
+    "fallback_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "fallback_type": {
+      "enum": [
+        "video2sim_forge",
+        "neumatex_material_sidecar"
+      ]
+    },
+    "command": {
+      "const": "/gen-env"
+    },
+    "status": {
+      "enum": [
+        "blocked_missing_inputs",
+        "blocked_missing_dependency",
+        "blocked_import_gate",
+        "pass_dry_run"
+      ]
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inputs": {
+      "type": "object"
+    },
+    "expected_outputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "status", "evidence"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "enum": ["pass", "fail", "not_run"]
+          },
+          "evidence": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "import_gate_matrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "import",
+        "scale",
+        "collision",
+        "support",
+        "material",
+        "render",
+        "verifier"
+      ],
+      "properties": {
+        "import": { "$ref": "#/$defs/import_gate" },
+        "scale": { "$ref": "#/$defs/import_gate" },
+        "collision": { "$ref": "#/$defs/import_gate" },
+        "support": { "$ref": "#/$defs/import_gate" },
+        "material": { "$ref": "#/$defs/import_gate" },
+        "render": { "$ref": "#/$defs/import_gate" },
+        "verifier": { "$ref": "#/$defs/import_gate" }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "message", "owner"],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "next_step": {
+      "type": "string",
+      "minLength": 1
+    },
+    "claim_boundary": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "import_gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "evidence"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

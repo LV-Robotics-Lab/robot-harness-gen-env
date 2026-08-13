@@ -1,0 +1,883 @@
+{
+  "schema": "agenticsim.awesome_isaac_runtime_evidence.v1",
+  "generated_at": "2026-07-13T09:14:01.825299+00:00",
+  "claim_boundary": "The baseline proves Isaac Sim physics, RTX rendering, CUDA compute, and a genuinely multi-frame video on the recorded host. Candidate rows prove only the named task, exact commit, reset/step count, and visual capture. Conditions, source patches, and required-asset license gaps remain part of each usability verdict; a public download is not treated as an open-source license grant.",
+  "baseline": {
+    "status": "passed",
+    "host": "jingxiang-B850M-C",
+    "gpu": "NVIDIA GeForce RTX 5090, 580.159.03, 32607 MiB",
+    "platform": "Linux-6.17.0-35-generic-x86_64-with-glibc2.39",
+    "python": "3.11.15",
+    "isaac_sim": "5.1.0.0",
+    "torch": {
+      "architecture": "sm_120",
+      "architecture_list": [
+        "sm_75",
+        "sm_80",
+        "sm_86",
+        "sm_90",
+        "sm_100",
+        "sm_120",
+        "compute_120"
+      ],
+      "architecture_supported": true,
+      "compute_passed": true,
+      "cuda_available": true,
+      "cuda_version": "12.8",
+      "device_capability": [
+        12,
+        0
+      ],
+      "device_count": 1,
+      "device_name": "NVIDIA GeForce RTX 5090",
+      "matmul_checksum": -308.773987,
+      "matmul_elapsed_ms": 106.018,
+      "matmul_finite": true,
+      "matmul_shape": [
+        1024,
+        1024
+      ],
+      "version": "2.7.0+cu128"
+    },
+    "steps_completed": 180,
+    "gates": {
+      "physics": true,
+      "render": true,
+      "torch": true,
+      "video": true
+    },
+    "video_evidence": {
+      "frame_count": 32,
+      "unique_frame_sha256_count": 32,
+      "pose_movement_transition_count": 31,
+      "unique_position_count": 32,
+      "fps": 12.0,
+      "duration_seconds": 2.666667,
+      "resolution": [
+        960,
+        540
+      ]
+    },
+    "artifacts": {
+      "report": {
+        "path": "artifacts/awesome_isaac/5090_runtime_baseline/isaac_runtime_visual_smoke_continuous.json",
+        "size_bytes": 10610,
+        "sha256": "ef4abb2f05b19ba19bf7dbc5668aef7ec5c7a9803a860165e32dc91a67718e3b"
+      },
+      "screenshot": {
+        "path": "artifacts/awesome_isaac/5090_runtime_baseline/isaac_runtime_visual_smoke_continuous.png",
+        "size_bytes": 693432,
+        "sha256": "1c87e7817ccf7a447c1d03bab3e69d261fd7c47e22974524a3d2eaa437bed14b"
+      },
+      "video": {
+        "path": "artifacts/awesome_isaac/5090_runtime_baseline/isaac_runtime_visual_smoke_continuous.mp4",
+        "size_bytes": 412244,
+        "sha256": "7d8e4557e92b318869b54598ed6be1f1e60f8d02a81fa3417027b6c8b43aae03"
+      },
+      "contact_sheet": {
+        "path": "artifacts/awesome_isaac/5090_runtime_baseline/isaac_runtime_visual_smoke_contact_sheet.jpg",
+        "size_bytes": 143318,
+        "sha256": "e3d15855800e111015e57e1e952fc073fab5f9d7f553101ccb6dd53794427544"
+      }
+    },
+    "finished_at": "2026-07-13T09:14:01.825299+00:00"
+  },
+  "summary": {
+    "repository_probe_count": 7,
+    "runtime_pass_count": 6,
+    "runtime_blocked_count": 1,
+    "direct_unmodified_pass_count": 0,
+    "source_unmodified_runtime_pass_count": 5,
+    "runtime_pass_after_source_patch_count": 1,
+    "runtime_pass_with_asset_license_gap_count": 2,
+    "visual_evidence_accepted_count": 6,
+    "candidate_screenshot_count": 6,
+    "runtime_status_counts": {
+      "blocked_external_core_asset_unavailable": 1,
+      "passed_after_compatibility_patch": 1,
+      "passed_after_declared_dependency_install": 1,
+      "passed_after_dependency_and_asset_repair": 1,
+      "passed_after_git_lfs_materialization": 1,
+      "passed_with_external_asset_dataset": 1,
+      "passed_with_repository_root_pythonpath": 1
+    }
+  },
+  "repositories": [
+    {
+      "slug": "enactic/openarm_isaac_lab",
+      "head_oid": "bad82e23716e6941c2de78ccb978f57c78b37734",
+      "license_findings": {
+        "github_detected_spdx": "Apache-2.0",
+        "status": "recognized_open_source_license"
+      },
+      "task": "Isaac-Reach-OpenArm-Play-v0",
+      "runtime_status": "passed_with_repository_root_pythonpath",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "usable_open_source_with_conditions",
+      "required_asset_license_status": "covered_by_repository_license",
+      "asset_license_gap": false,
+      "source_tree_modified": false,
+      "reset_passed": true,
+      "steps_requested": 20,
+      "steps_completed": 20,
+      "render_passed": true,
+      "visual_evidence_status": "accepted",
+      "visual_evidence_accepted": true,
+      "stage_ready": true,
+      "stage_match_count": 47,
+      "camera_pose": [
+        [
+          3.0,
+          3.0,
+          2.4
+        ],
+        [
+          0.0,
+          0.0,
+          0.45
+        ]
+      ],
+      "framed_prim": null,
+      "framed_asset": null,
+      "env_cfg_overrides": [],
+      "action_space": "Box(-inf, inf, (1, 7), float32)",
+      "observation_space": "Dict('policy': Box(-inf, inf, (1, 28), float32))",
+      "error": null,
+      "conditions": [
+        "Install source/openarm as an editable package.",
+        "Add the repository root to PYTHONPATH because candidate modules import source.openarm paths."
+      ],
+      "remaining_blockers": [
+        "Package-only execution is not portable until repository-root imports are removed upstream."
+      ],
+      "failure_artifacts": [],
+      "dependency_failures": [],
+      "evidence_artifacts": {},
+      "compatibility_patches": [],
+      "registration_findings": null,
+      "selected_asset": null,
+      "external_core_asset": null,
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/openarm_reach_smoke.json",
+          "size_bytes": 7162,
+          "sha256": "aa61c2080ec46fe66e69c0b23e170e782fa2776a638c619bf0a13a95f7e80312"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/openarm_reach_smoke.png",
+          "size_bytes": 573078,
+          "sha256": "22e8ee24ce84e216a962d315b339e8bf21f30ac253327fe0084cafc7e3a5546b"
+        }
+      }
+    },
+    {
+      "slug": "neuromeka-robotics/nrmk_isaaclab_public",
+      "head_oid": "8284fb3cccdeafbf25ba313291333b4cc70b1348",
+      "license_findings": {
+        "github_detected_spdx": "Apache-2.0",
+        "status": "recognized_open_source_license"
+      },
+      "task": "Indy-Deploy",
+      "runtime_status": "passed_after_dependency_and_asset_repair",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "usable_open_source_with_conditions",
+      "required_asset_license_status": "covered_by_repository_license",
+      "asset_license_gap": false,
+      "source_tree_modified": false,
+      "reset_passed": true,
+      "steps_requested": 20,
+      "steps_completed": 20,
+      "render_passed": true,
+      "visual_evidence_status": "accepted",
+      "visual_evidence_accepted": true,
+      "stage_ready": true,
+      "stage_match_count": 58,
+      "camera_pose": [
+        [
+          2.4,
+          2.4,
+          2.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.7
+        ]
+      ],
+      "framed_prim": null,
+      "framed_asset": null,
+      "env_cfg_overrides": [],
+      "action_space": "Box(-inf, inf, (1, 6), float32)",
+      "observation_space": "Dict('policy': Dict('op_state': Box(-inf, inf, (1, 1), float32), 'p': Box(-inf, inf, (1, 7), float32), 'pdot': Box(-inf, inf, (1, 6), float32), 'q': Box(-inf, inf, (1, 6), float32), 'qdot': Box(-inf, inf, (1, 6), float32)))",
+      "error": null,
+      "conditions": [
+        "Set PYNPUT_BACKEND=dummy for headless execution.",
+        "Install the undeclared runtime dependencies tensordict and rsl-rl-lib==3.0.1.",
+        "Materialize the Indy7 Git LFS object before task creation."
+      ],
+      "remaining_blockers": [
+        "The package metadata does not declare tensordict or rsl-rl-lib.",
+        "Other tasks still require their own Git LFS assets and hardcoded-path review."
+      ],
+      "failure_artifacts": [
+        {
+          "label": "missing_tensordict",
+          "category": "dependency",
+          "error_type": "ModuleNotFoundError",
+          "error_message": "No module named 'tensordict'",
+          "artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/nrmk_indy_deploy_smoke.missing_tensordict.json",
+            "size_bytes": 615,
+            "sha256": "ca9d7e1a598ed8f093069a3c1a76b517f9a1109f288e1b2d761b8575da2fc2db"
+          }
+        },
+        {
+          "label": "missing_rsl_rl",
+          "category": "dependency",
+          "error_type": "ModuleNotFoundError",
+          "error_message": "No module named 'rsl_rl'",
+          "artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/nrmk_indy_deploy_smoke.missing_rsl_rl.json",
+            "size_bytes": 607,
+            "sha256": "e5c4012066e1e19077e6cbd2f37f2afe177640c2d2f71c12b927b2781d0cff47"
+          }
+        }
+      ],
+      "dependency_failures": [
+        {
+          "label": "missing_tensordict",
+          "category": "dependency",
+          "error_type": "ModuleNotFoundError",
+          "error_message": "No module named 'tensordict'",
+          "artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/nrmk_indy_deploy_smoke.missing_tensordict.json",
+            "size_bytes": 615,
+            "sha256": "ca9d7e1a598ed8f093069a3c1a76b517f9a1109f288e1b2d761b8575da2fc2db"
+          }
+        },
+        {
+          "label": "missing_rsl_rl",
+          "category": "dependency",
+          "error_type": "ModuleNotFoundError",
+          "error_message": "No module named 'rsl_rl'",
+          "artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/nrmk_indy_deploy_smoke.missing_rsl_rl.json",
+            "size_bytes": 607,
+            "sha256": "e5c4012066e1e19077e6cbd2f37f2afe177640c2d2f71c12b927b2781d0cff47"
+          }
+        }
+      ],
+      "evidence_artifacts": {},
+      "compatibility_patches": [],
+      "registration_findings": null,
+      "selected_asset": {
+        "path": "isaac_neuromeka/assets/model/usd/indy7/indy7.usd",
+        "git_lfs_oid": "sha256:b1c2dfd4003980c07ab02dde2951e6478d55fd771f5e479dc3c241b686c44fae",
+        "size_bytes": 12851047
+      },
+      "external_core_asset": null,
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/nrmk_indy_deploy_smoke.json",
+          "size_bytes": 7697,
+          "sha256": "691b03af0611316f19e50a585d79dc7725d9045a9502bde14f253705bac1629e"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/nrmk_indy_deploy_smoke.png",
+          "size_bytes": 518993,
+          "sha256": "6f6296feba100f423e49738eba0eb458704e68d71ce33bdc451adeb40a92b39c"
+        }
+      }
+    },
+    {
+      "slug": "noxrick91/WobbleGo",
+      "head_oid": "061fb498c8b4a52a8f21af733b2ebd2447f397b9",
+      "license_findings": {
+        "github_detected_spdx": "MIT",
+        "package_declared_spdx": "Apache-2.0",
+        "source_header_spdx": "BSD-3-Clause",
+        "status": "recognized_open_source_license_with_inconsistent_metadata"
+      },
+      "task": "WobbleGo-Direct-v0",
+      "runtime_status": "blocked_external_core_asset_unavailable",
+      "runtime_passed": false,
+      "open_source_runtime_verdict": "not_runtime_usable_core_asset_unavailable",
+      "required_asset_license_status": "unavailable_and_unverified",
+      "asset_license_gap": false,
+      "source_tree_modified": false,
+      "reset_passed": false,
+      "steps_requested": 20,
+      "steps_completed": 0,
+      "render_passed": false,
+      "visual_evidence_status": "not_captured",
+      "visual_evidence_accepted": false,
+      "stage_ready": false,
+      "stage_match_count": 0,
+      "camera_pose": null,
+      "framed_prim": null,
+      "framed_asset": null,
+      "env_cfg_overrides": [],
+      "action_space": null,
+      "observation_space": null,
+      "error": {
+        "type": "FileNotFoundError",
+        "message": "USD file not found at path at: 'https://data.noxcaw.com/downloads/wobble-go/usds/WobbleGo.usd'."
+      },
+      "conditions": [],
+      "remaining_blockers": [
+        "The core WobbleGo USD is not present in the repository and the configured remote URL did not resolve in Isaac Sim."
+      ],
+      "failure_artifacts": [],
+      "dependency_failures": [],
+      "evidence_artifacts": {},
+      "compatibility_patches": [],
+      "registration_findings": null,
+      "selected_asset": null,
+      "external_core_asset": "https://data.noxcaw.com/downloads/wobble-go/usds/WobbleGo.usd",
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/wobblego_smoke.json",
+          "size_bytes": 937,
+          "sha256": "7ee998a1796247550c7b8fa780a65d025c3a1b0bdb4a3ab73357d3567450d747"
+        }
+      }
+    },
+    {
+      "slug": "fan-ziqi/robot_lab",
+      "head_oid": "500399ed75f510aeaff28705a8ce736c514dbec3",
+      "license_findings": {
+        "github_detected_spdx": "Apache-2.0",
+        "bundled_go2_asset_provenance": "unitreerobotics/unitree_ros",
+        "status": "recognized_open_source_license_bundled_asset_provenance_not_independently_licensed"
+      },
+      "task": "RobotLab-Isaac-Velocity-Flat-Unitree-Go2-v0",
+      "runtime_status": "passed_after_declared_dependency_install",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "runtime_usable_repository_license_recognized_asset_provenance_review_remaining",
+      "required_asset_license_status": "bundled_under_repository_license_no_separate_asset_notice_detected",
+      "asset_license_gap": false,
+      "source_tree_modified": false,
+      "reset_passed": true,
+      "steps_requested": 20,
+      "steps_completed": 20,
+      "render_passed": true,
+      "visual_evidence_status": "accepted_robot_fell_under_zero_action",
+      "visual_evidence_accepted": true,
+      "stage_ready": true,
+      "stage_match_count": 80,
+      "camera_pose": [
+        [
+          3.0,
+          3.0,
+          1.7
+        ],
+        [
+          0.0,
+          0.0,
+          0.5
+        ]
+      ],
+      "framed_prim": null,
+      "framed_asset": null,
+      "env_cfg_overrides": [],
+      "action_space": "Box(-inf, inf, (1, 12), float32)",
+      "observation_space": "Dict('critic': Box(-inf, inf, (1, 48), float32), 'policy': Box(-inf, inf, (1, 45), float32))",
+      "error": null,
+      "conditions": [
+        "Install the declared but unpinned cusrl dependency; the bounded probe used cusrl==1.2.0 without the all extra."
+      ],
+      "remaining_blockers": [
+        "The bundled Go2 meshes cite unitree_ros provenance but do not carry a separate asset license notice.",
+        "The zero-action screenshot proves composition and physics, not a trained locomotion policy."
+      ],
+      "failure_artifacts": [
+        {
+          "label": "missing_cusrl",
+          "category": "dependency",
+          "error_type": "ModuleNotFoundError",
+          "error_message": "No module named 'cusrl'",
+          "artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/robot_lab_go2_smoke.missing_cusrl.json",
+            "size_bytes": 675,
+            "sha256": "dbf9a88b1ae3bd7ab1a80e00cabfc67ecfbe99da99efe1a8b36db719b3c9e7b4"
+          }
+        }
+      ],
+      "dependency_failures": [
+        {
+          "label": "missing_cusrl",
+          "category": "dependency",
+          "error_type": "ModuleNotFoundError",
+          "error_message": "No module named 'cusrl'",
+          "artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/robot_lab_go2_smoke.missing_cusrl.json",
+            "size_bytes": 675,
+            "sha256": "dbf9a88b1ae3bd7ab1a80e00cabfc67ecfbe99da99efe1a8b36db719b3c9e7b4"
+          }
+        }
+      ],
+      "evidence_artifacts": {
+        "cusrl_install_report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/robot_lab_cusrl_core_install_report.json",
+          "size_bytes": 118300,
+          "sha256": "b181379728174ad727220b204e1db9ae7bd820bda93be1fb9386ce3e3a4acd2d"
+        },
+        "cusrl_all_dry_run": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/robot_lab_cusrl_dry_run.log",
+          "size_bytes": 11574,
+          "sha256": "e6ed75c44e496fb5d7cfa4f44372f49ce64d154c4b014ca5fa7c12ee4a6ff578"
+        }
+      },
+      "compatibility_patches": [],
+      "registration_findings": null,
+      "selected_asset": null,
+      "external_core_asset": null,
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/robot_lab_go2_smoke.json",
+          "size_bytes": 11376,
+          "sha256": "e5fd4772769766dc58c1d21e5cadcdebe1b98c4beb22a7cb592639025eb7c399"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/robot_lab_go2_smoke.png",
+          "size_bytes": 532401,
+          "sha256": "2f79e0709c3f9a154813d0df06eeff4b97205dfa0328ff7bd3ad54981d8f638a"
+        }
+      }
+    },
+    {
+      "slug": "unitreerobotics/unitree_rl_lab",
+      "head_oid": "4960b84732b0c2ec593dccbfe963fda1bcd7b1e3",
+      "license_findings": {
+        "github_detected_spdx": "Apache-2.0",
+        "required_asset_dataset": "unitreerobotics/unitree_model",
+        "asset_dataset_head_oid": "323e350252b9c3aee9c40acbfdad84f6ce46a5ac",
+        "asset_dataset_license": null,
+        "asset_dataset_card_metadata": null,
+        "status": "code_open_source_required_asset_license_unverified"
+      },
+      "task": "Unitree-Go2-Velocity",
+      "runtime_status": "passed_with_external_asset_dataset",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "runtime_usable_but_required_asset_license_unverified",
+      "required_asset_license_status": "no_license_detected",
+      "asset_license_gap": true,
+      "source_tree_modified": false,
+      "reset_passed": true,
+      "steps_requested": 20,
+      "steps_completed": 20,
+      "render_passed": true,
+      "visual_evidence_status": "accepted_runtime_root_framed",
+      "visual_evidence_accepted": true,
+      "stage_ready": true,
+      "stage_match_count": 80,
+      "camera_pose": [
+        [
+          -19.15569933171106,
+          -75.18174685439375,
+          0.7880461467808226
+        ],
+        [
+          -20.18858349967067,
+          -76.21463102235336,
+          0.21995985440303686
+        ]
+      ],
+      "framed_prim": {
+        "center": [
+          0.04504572701390175,
+          -8.954002223698909e-07,
+          0.21995985440303686
+        ],
+        "extent": [
+          0.5738245377553386,
+          0.32402841623796763,
+          0.5377500339068944
+        ],
+        "maximum": [
+          0.33195799589157104,
+          0.16201331271876146,
+          0.48883487135648407
+        ],
+        "minimum": [
+          -0.24186654186376755,
+          -0.1620151035192062,
+          -0.04891516255041033
+        ],
+        "path": "/World/envs/env_0/Robot",
+        "ready": true,
+        "root_translation": [
+          0.0,
+          0.0,
+          0.4000000059604645
+        ],
+        "type": "Xform"
+      },
+      "framed_asset": {
+        "name": "robot",
+        "root_position": [
+          -20.23362922668457,
+          -76.21463012695312,
+          0.4000000059604645
+        ]
+      },
+      "env_cfg_overrides": [],
+      "action_space": "Box(-inf, inf, (1, 12), float32)",
+      "observation_space": "Dict('critic': Box(-inf, inf, (1, 60), float32), 'policy': Box(-inf, inf, (1, 45), float32))",
+      "error": null,
+      "conditions": [
+        "Download the public, non-gated unitreerobotics/unitree_model dataset and configure UNITREE_MODEL_DIR.",
+        "Materialize the Go2 Git LFS object before task creation.",
+        "Frame the camera from robot.data.root_pos_w because terrain placement moved env_0 about 79 meters from the authored USD origin."
+      ],
+      "remaining_blockers": [
+        "The required unitree_model dataset exposes neither license metadata nor a license file, so redistribution rights are unverified.",
+        "UNITREE_MODEL_DIR remains a literal source placeholder rather than an environment variable or package setting."
+      ],
+      "failure_artifacts": [
+        {
+          "label": "missing_external_asset",
+          "category": "asset",
+          "error_type": "FileNotFoundError",
+          "error_message": "USD file not found at path at: 'path/to/unitree_model/Go2/usd/go2.usd'.",
+          "artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/unitree_rl_lab_go2_smoke.missing_external_asset.json",
+            "size_bytes": 987,
+            "sha256": "b4ebf0ea4fb6aaf87c6580ddbb779f44a15a7e47332c54c09b02b92df3b4c066"
+          }
+        }
+      ],
+      "dependency_failures": [],
+      "evidence_artifacts": {
+        "go2_asset_hashes": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/unitree_model_go2_sha256.txt",
+          "size_bytes": 426,
+          "sha256": "6b8beca48f7e99fb9e73cc7a2805af05b5f4fa1b7f1065a3bad655a16bb2f3a8"
+        },
+        "authored_origin_blank_capture": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/unitree_rl_lab_go2_smoke.framed.json",
+          "size_bytes": 12036,
+          "sha256": "a347d7c946786749c59d8d97a5397b46831cb0b39e67bb13f08f257b5e7ce00a"
+        }
+      },
+      "compatibility_patches": [],
+      "registration_findings": null,
+      "selected_asset": {
+        "dataset": "unitreerobotics/unitree_model",
+        "dataset_head_oid": "323e350252b9c3aee9c40acbfdad84f6ce46a5ac",
+        "path": "Go2/usd/configuration/go2_description_base.usd",
+        "git_lfs_oid": "sha256:eeed42fb9e41395c47bc3fac7ff5d58625ac62f44bfa5a09cacebff83229c7a0",
+        "size_bytes": 18806122
+      },
+      "external_core_asset": null,
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/unitree_rl_lab_go2_smoke.runtime_framed.json",
+          "size_bytes": 12275,
+          "sha256": "9a8fc1fc295a51cffb93ded2a8c8b9bd884b61dd94f751af7d79f997b8d672a6"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/unitree_rl_lab_go2_smoke.runtime_framed.png",
+          "size_bytes": 557326,
+          "sha256": "9e9e56cd3cd6c39d3dafb96d41e60eaed651f956859521120e5160a3c4ac61cf"
+        }
+      }
+    },
+    {
+      "slug": "liorbenhorin/lerobot_so101_teleop",
+      "head_oid": "9ea18b2c77df29e05c1c45bb1915dfd95514c470",
+      "license_findings": {
+        "github_detected_spdx": "MIT",
+        "attributed_so101_asset_source": "MuammerBay/so-arm101-ros2-bridge",
+        "attributed_asset_source_license": null,
+        "attributed_asset_source_license_files": [],
+        "status": "code_open_source_attributed_core_asset_license_unverified"
+      },
+      "task": "Lerobot-So101-Teleop-Base",
+      "runtime_status": "passed_after_git_lfs_materialization",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "runtime_usable_but_attributed_core_asset_license_unverified",
+      "required_asset_license_status": "upstream_no_license_detected",
+      "asset_license_gap": true,
+      "source_tree_modified": false,
+      "reset_passed": true,
+      "steps_requested": 5,
+      "steps_completed": 5,
+      "render_passed": true,
+      "visual_evidence_status": "accepted_native_viewer",
+      "visual_evidence_accepted": true,
+      "stage_ready": true,
+      "stage_match_count": 46,
+      "camera_pose": [
+        [
+          -0.25,
+          -0.4,
+          0.22
+        ],
+        [
+          0.15,
+          0.0,
+          0.12
+        ]
+      ],
+      "framed_prim": null,
+      "framed_asset": null,
+      "env_cfg_overrides": [],
+      "action_space": "Box(-inf, inf, (1, 6), float32)",
+      "observation_space": "Dict('policy': Box(-inf, inf, (1, 6), float32), 'visual': Dict('camera_ego': Box(-inf, inf, (1, 480, 640, 3), float32), 'camera_external': Box(-inf, inf, (1, 480, 640, 3), float32)))",
+      "error": null,
+      "conditions": [
+        "Materialize all 13 Git LFS assets and add the repository source directory to PYTHONPATH.",
+        "Use the task-native viewer pose; a generic wide pose did not frame the arm."
+      ],
+      "remaining_blockers": [
+        "The repository attributes the SO101 USD to MuammerBay/so-arm101-ros2-bridge, which has no detected license or license file."
+      ],
+      "failure_artifacts": [],
+      "dependency_failures": [],
+      "evidence_artifacts": {
+        "lfs_file_list": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lerobot_so101_lfs_files.txt",
+          "size_bytes": 1096,
+          "sha256": "93751df12c4c5f5839020f4f432524517ebf4d8e7ae11fdaf3aed50656e0d2f4"
+        },
+        "lfs_fsck": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lerobot_so101_lfs_fsck.log",
+          "size_bytes": 16,
+          "sha256": "81f6819612dfaf9af7854c05c501e2a69e3852e47f0bfb0a82dfce8f3f6c5db9"
+        }
+      },
+      "compatibility_patches": [],
+      "registration_findings": null,
+      "selected_asset": null,
+      "external_core_asset": null,
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lerobot_so101_base_smoke.reframed.json",
+          "size_bytes": 6500,
+          "sha256": "5e926526966253455bb48248b264bed6fcd5b29de8371c4365ce28f91a362f5a"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lerobot_so101_base_smoke.reframed.png",
+          "size_bytes": 831693,
+          "sha256": "8f6fe8110ab57583f1816c420c6aaaebcc04c6ad97a77cd498d75e4dab39ff64"
+        }
+      }
+    },
+    {
+      "slug": "lehome-official/lehome-challenge",
+      "head_oid": "a805ad2f7ab52a4583066fc4ee5180459a7f9d15",
+      "license_findings": {
+        "github_detected_spdx": "Apache-2.0",
+        "required_asset_dataset": "lehome/asset_challenge",
+        "asset_dataset_head_oid": "bea65fd960ad5a1bb3bd3fa77164b28001c08ef9",
+        "asset_dataset_license": "Apache-2.0",
+        "status": "recognized_open_source_code_and_required_asset_license"
+      },
+      "task": "LeHome-BiSO101-Direct-Garment-v2",
+      "runtime_status": "passed_after_compatibility_patch",
+      "runtime_passed": true,
+      "open_source_runtime_verdict": "open_source_code_and_assets_runtime_usable_after_source_patch",
+      "required_asset_license_status": "apache_2_0",
+      "asset_license_gap": false,
+      "source_tree_modified": true,
+      "reset_passed": true,
+      "steps_requested": 5,
+      "steps_completed": 5,
+      "render_passed": true,
+      "visual_evidence_status": "accepted",
+      "visual_evidence_accepted": true,
+      "stage_ready": true,
+      "stage_match_count": 80,
+      "camera_pose": [
+        [
+          1.4,
+          -1.7,
+          1.3
+        ],
+        [
+          0.0,
+          0.0,
+          0.45
+        ]
+      ],
+      "framed_prim": null,
+      "framed_asset": null,
+      "env_cfg_overrides": [
+        {
+          "path": "garment_name",
+          "previous": null,
+          "value": "Top_Long_Unseen_0"
+        }
+      ],
+      "action_space": "Box(-inf, inf, (1, 12), float32)",
+      "observation_space": "Box(-inf, inf, (1, 12), float32)",
+      "error": null,
+      "conditions": [
+        "Download and materialize the public Apache-2.0 lehome/asset_challenge dataset.",
+        "Install plotly==6.5.2, pyserial==3.5, and deepdiff==8.6.1 without the full lerobot dependency set.",
+        "Set cfg.garment_name=Top_Long_Unseen_0 before environment creation.",
+        "Apply the recorded two-line GarmentObject first-reset compatibility patch."
+      ],
+      "remaining_blockers": [
+        "Upstream reset calls GarmentObject.reset before initialize on Isaac Sim 5.1; unpatched CUDA execution fails.",
+        "Three of four registered task IDs reference Python modules absent from this commit; only the v2 task source is present.",
+        "A full lerobot==0.4.3 install would change core NumPy, packaging, and protobuf versions and was deliberately not applied."
+      ],
+      "failure_artifacts": [
+        {
+          "label": "missing_plotly",
+          "category": "dependency",
+          "error_type": "ModuleNotFoundError",
+          "error_message": "No module named 'plotly'",
+          "artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_biso101_garment_v2_smoke.missing_plotly.json",
+            "size_bytes": 1129,
+            "sha256": "09e6df72fb12f978d5d1490cf89e79ca95651ba090944b7c2a38b0528a007eff"
+          }
+        },
+        {
+          "label": "missing_pyserial",
+          "category": "dependency",
+          "error_type": "ModuleNotFoundError",
+          "error_message": "No module named 'serial'",
+          "artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_biso101_garment_v2_smoke.missing_pyserial.json",
+            "size_bytes": 1128,
+            "sha256": "bf986b721fa82bed5b94342658d844d0669b4432c2461147ac4b51d26cd69a14"
+          }
+        },
+        {
+          "label": "missing_deepdiff",
+          "category": "dependency",
+          "error_type": "ModuleNotFoundError",
+          "error_message": "No module named 'deepdiff'",
+          "artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_biso101_garment_v2_smoke.missing_deepdiff.json",
+            "size_bytes": 1133,
+            "sha256": "ba02fc4feed17136f1406696ae4fc806e76421ae52a0e9ae4cda04bdc3f96787"
+          }
+        },
+        {
+          "label": "unpatched_cuda_reset",
+          "category": "source_compatibility",
+          "error_type": "AttributeError",
+          "error_message": "'GarmentObject' object has no attribute 'initial_points_positions'",
+          "artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_biso101_garment_v2_smoke.unpatched_cuda.json",
+            "size_bytes": 9705,
+            "sha256": "952ac43e8e22dc4ef054c56bb3f58a38168f6b2f011571a5db496565e34cb678"
+          }
+        },
+        {
+          "label": "registered_task_module_missing",
+          "category": "registration",
+          "error_type": "ModuleNotFoundError",
+          "error_message": "No module named 'lehome.tasks.bedroom.garment_cfg'",
+          "artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_so101_garment_smoke.json",
+            "size_bytes": 920,
+            "sha256": "d52dc590d02b760564704fefbf2f4d7e043df6dd2286a1532337cc8c3d6ab1b9"
+          }
+        }
+      ],
+      "dependency_failures": [
+        {
+          "label": "missing_plotly",
+          "category": "dependency",
+          "error_type": "ModuleNotFoundError",
+          "error_message": "No module named 'plotly'",
+          "artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_biso101_garment_v2_smoke.missing_plotly.json",
+            "size_bytes": 1129,
+            "sha256": "09e6df72fb12f978d5d1490cf89e79ca95651ba090944b7c2a38b0528a007eff"
+          }
+        },
+        {
+          "label": "missing_pyserial",
+          "category": "dependency",
+          "error_type": "ModuleNotFoundError",
+          "error_message": "No module named 'serial'",
+          "artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_biso101_garment_v2_smoke.missing_pyserial.json",
+            "size_bytes": 1128,
+            "sha256": "bf986b721fa82bed5b94342658d844d0669b4432c2461147ac4b51d26cd69a14"
+          }
+        },
+        {
+          "label": "missing_deepdiff",
+          "category": "dependency",
+          "error_type": "ModuleNotFoundError",
+          "error_message": "No module named 'deepdiff'",
+          "artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_biso101_garment_v2_smoke.missing_deepdiff.json",
+            "size_bytes": 1133,
+            "sha256": "ba02fc4feed17136f1406696ae4fc806e76421ae52a0e9ae4cda04bdc3f96787"
+          }
+        }
+      ],
+      "evidence_artifacts": {
+        "asset_lfs_fsck": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_assets_lfs_fsck.log",
+          "size_bytes": 16,
+          "sha256": "81f6819612dfaf9af7854c05c501e2a69e3852e47f0bfb0a82dfce8f3f6c5db9"
+        },
+        "plotly_install_report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_plotly_install_report.json",
+          "size_bytes": 26498,
+          "sha256": "3302e80bd17bb65ad80871d40954e0303b32f8b255c43dc66751d1cc60749b78"
+        },
+        "pyserial_install_report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_pyserial_install_report.json",
+          "size_bytes": 3053,
+          "sha256": "b0518412697be5552fd8821a955f15d134ed25cc32ef1ff47a2c9066ff2cab85"
+        },
+        "deepdiff_install_report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_deepdiff_install_report.json",
+          "size_bytes": 17795,
+          "sha256": "f24ebe9e303af7249cdf4fb4ea2e3668559a2b0bb2b9d0b0374ea4d3bcaffff8"
+        },
+        "lerobot_dry_run": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_lerobot_dry_run.log",
+          "size_bytes": 16785,
+          "sha256": "b7ee8a1f160db15fd57423450374145b1f3e7f250cfc41a31d05c31226e2f325"
+        }
+      },
+      "compatibility_patches": [
+        {
+          "name": "initialize_garment_before_first_reset",
+          "reason": "DirectRLEnv invokes reset before GarmentObject.initialize has populated initial_points_positions.",
+          "tracked_artifact": {
+            "path": "docs/awesome_isaac_patches/lehome_garment_initial_reset.patch",
+            "size_bytes": 685,
+            "sha256": "4196385e9a25bdac8b4cf1d6f20671bb3fd07f4ce7b2190f1f64935591f1edd5"
+          },
+          "runtime_artifact": {
+            "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_initial_reset_patch.diff",
+            "size_bytes": 685,
+            "sha256": "4196385e9a25bdac8b4cf1d6f20671bb3fd07f4ce7b2190f1f64935591f1edd5"
+          }
+        }
+      ],
+      "registration_findings": {
+        "registered_task_count": 4,
+        "task_source_present_count": 1,
+        "tested_present_task": "LeHome-BiSO101-Direct-Garment-v2"
+      },
+      "selected_asset": null,
+      "external_core_asset": null,
+      "artifacts": {
+        "report": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_biso101_garment_v2_smoke.json",
+          "size_bytes": 9976,
+          "sha256": "52a507085fdb0aae2ca413d4fa19363866ada578e6efdbb298978886810fded9"
+        },
+        "screenshot": {
+          "path": "artifacts/awesome_isaac/5090_runtime_baseline/candidates/lehome_biso101_garment_v2_smoke.png",
+          "size_bytes": 996701,
+          "sha256": "88cde175acb3835f3c11cdd7efdefeec9cd6aac9242ec8bbba6d6f104b9eae7a"
+        }
+      }
+    }
+  ]
+}

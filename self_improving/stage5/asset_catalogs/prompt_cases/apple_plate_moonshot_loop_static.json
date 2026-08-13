@@ -1,0 +1,53 @@
+{
+  "catalog_version": "robotwin.tabletop_asset_catalog_case.v0",
+  "catalog_name": "apple_plate_moonshot_loop_static_prompt_case",
+  "updated_at": "2026-07-02",
+  "purpose": "Prompt-specific asset selection for: an apple and a plate on the table",
+  "base_catalog": "C:\\Users\\123\\Documents\\nus project\\asset_catalogs\\robotwin_tabletop_assets_master.json",
+  "mvp_prompt": "an apple and a plate on the table",
+  "selected_asset_ids": [
+    "035_apple",
+    "003_plate"
+  ],
+  "entry_overrides": {},
+  "direction_frame": "robot_or_dual_arm_first_person",
+  "asset_grounding": {
+    "schema_version": "robotwin.tabletop_asset_grounding.v0",
+    "matched_assets": [
+      {
+        "mention": "apple",
+        "asset_id": "035_apple",
+        "semantic_name": "apple",
+        "match_type": "exact_semantic_name",
+        "confidence": 1.0,
+        "reason": "Prompt mention 'apple' matched catalog exact semantic name for 035_apple."
+      },
+      {
+        "mention": "plate",
+        "asset_id": "003_plate",
+        "semantic_name": "plate",
+        "match_type": "exact_semantic_name",
+        "confidence": 1.0,
+        "reason": "Prompt mention 'plate' matched catalog exact semantic name for 003_plate."
+      }
+    ],
+    "spatial_relations": [
+      {
+        "subject_mention": "plate",
+        "subject_asset_id": "003_plate",
+        "relation": "on_surface",
+        "reference": "table",
+        "reference_asset_id": null,
+        "direction_frame": "robot_or_dual_arm_first_person"
+      },
+      {
+        "subject_mention": "apple",
+        "subject_asset_id": "035_apple",
+        "relation": "on_surface",
+        "reference": "table",
+        "reference_asset_id": null,
+        "direction_frame": "robot_or_dual_arm_first_person"
+      }
+    ]
+  }
+}

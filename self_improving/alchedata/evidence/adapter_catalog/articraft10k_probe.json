@@ -1,0 +1,25 @@
+{
+  "schema_version": "alchedata.adapter_catalog_probe.v0",
+  "catalog": "Articraft-10K",
+  "checked_at": "2026-07-09T14:51:59.776265+00:00",
+  "host": "huggingface_hub",
+  "status": "pass_hf_metadata_manifest",
+  "dataset": "camvsl/Articraft-10K",
+  "dataset_page": "https://huggingface.co/datasets/camvsl/Articraft-10K",
+  "source_revision": "3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65",
+  "last_modified": "2026-05-15T05:05:02.000Z",
+  "license": "cc-by-4.0",
+  "viewer_status": {
+    "preview": false,
+    "viewer": false,
+    "search": false,
+    "filter": false,
+    "statistics": false
+  },
+  "asset_count": 9996,
+  "sibling_count": 9998,
+  "manifest": "artifacts/adapter_catalog/articraft10k_manifest.json",
+  "search_examples": "artifacts/adapter_catalog/articraft10k_search_examples.json",
+  "previous_local_mount_status": "metadata_not_found_on_host",
+  "claim_boundary": "Metadata is parsed from the public Hugging Face dataset API; full archive mount/import remains pending."
+}

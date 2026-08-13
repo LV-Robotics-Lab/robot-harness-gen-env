@@ -34,3 +34,26 @@ Thumbs.db
 
 # Local generated scene experiments are reproducible run outputs.
 generated/
+
+# Self-improving platform source is first-class. Only local environments,
+# generated runs, rendered media, downloaded assets, and credentials stay out.
+self_improving/**/.venv/
+self_improving/**/__pycache__/
+self_improving/**/.pytest_cache/
+self_improving/**/runs/
+self_improving/**/results/
+self_improving/**/datasets/
+self_improving/**/checkpoints/
+self_improving/**/logs/
+self_improving/**/wandb/
+self_improving/**/assets/
+self_improving/**/data/
+self_improving/**/*.mp4
+self_improving/**/*.tar
+self_improving/**/*.tar.gz
+self_improving/**/*.glb
+self_improving/**/*.usd
+self_improving/**/*.usda
+self_improving/**/.env
+self_improving/**/local_config.py
+self_improving/alchedata/report_sources/

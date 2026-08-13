@@ -1,0 +1,167 @@
+{
+  "schema_version": "asset_ledger.v2",
+  "asset_id": "external_318_scissors",
+  "category": "scissors",
+  "semantic_name": "scissors",
+  "kind": "rigid",
+  "profile": "cross_backend",
+  "tags": [
+    "rigid",
+    "external",
+    "batch"
+  ],
+  "semantics": {
+    "aliases": [
+      "scissors"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "/tmp/campaign/single_scissors/acquire/identity_post_render_318_scissors_m0.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.11147028364428663,
+          0.019934230790010547,
+          0.2514102034890887
+        ],
+        "mesh_up_axis": "Y",
+        "origin_convention": "bottom-center",
+        "size_resolution": {
+          "mode": "absolute:0.25",
+          "actual_max_dim_m": 0.19835088236529863,
+          "scale": 1.2675023195816788,
+          "reference_max_dim_m": 0.25,
+          "reference_assets": [],
+          "verdict": "scaled"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default": null,
+          "runtime_default_basis": "none"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/318_scissors/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "984ea1b51ce020deb4b1094cf774b1e5dd04e93d6ecf133fba0de6c908f8073e",
+          "size_bytes": 3959120,
+          "metadata": {
+            "derived_from": "037_scissors.usd",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/318_scissors/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "984ea1b51ce020deb4b1094cf774b1e5dd04e93d6ecf133fba0de6c908f8073e",
+          "size_bytes": 3959120,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_318_scissors/037_scissors.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "d6be2399b52bc88be16f2facf0d33844604d7d25544dca15d6d4363c10bec834",
+          "size_bytes": 468605,
+          "metadata": {
+            "origin_prefix": "acq_318_scissors"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/318_scissors/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "8dd507ff77d0f333caf341eb912170c5ee6b8cbc1942dce0ad6e73ee4c2ae7d3",
+          "size_bytes": 4037,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "acq_318_scissors",
+        "file": "037_scissors.usd",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "NVIDIA asset EULA; YCB dataset terms for ycb group"
+        },
+        "retrieved_at": "2026-08-12",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_318_scissors/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-12T23:12:09",
+          "verified_digest": "7adf4b66117b07eaaa46713e399159345fe203947563edc51c478322e73fd0a7",
+          "report_path": "/tmp/campaign/single_scissors/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        }
+      ]
+    }
+  ]
+}

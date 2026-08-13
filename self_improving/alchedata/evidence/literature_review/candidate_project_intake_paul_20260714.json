@@ -1,0 +1,224 @@
+{
+  "schema_version": "pearl.candidate_project_intake.v1",
+  "status": "pass_public_source_triage",
+  "reviewed_at": "2026-07-15",
+  "snapshot_capture_date": "2026-07-14",
+  "candidate_label": "Paul",
+  "source_provenance": {
+    "document": "2026_07_14_Paul_具身智能_简历.pdf",
+    "sha256": "be743a23cd98b783a1f7bf633177f3f6cbd9e76784fe32e203151ccfd33cc731",
+    "privacy_boundary": "Contact details and other personal identifiers are intentionally omitted from this research artifact."
+  },
+  "project_count": 12,
+  "public_primary_source_count": 9,
+  "core_registry_addition_count": 6,
+  "adjacent_appendix_count": 3,
+  "resume_only_count": 3,
+  "projects": [
+    {
+      "project_id": "embodiedgen_v2",
+      "name": "EmbodiedGen V2",
+      "resume_relation": "Named embodied world-generation project.",
+      "public_sources": {
+        "project": "https://horizonrobotics.github.io/EmbodiedGen/",
+        "paper": "https://arxiv.org/abs/2607.07459",
+        "code": "https://github.com/HorizonRobotics/EmbodiedGen"
+      },
+      "source_snapshot": "cc3015ca5ccdacf94df3428d9e65f79375982216",
+      "license": "Apache-2.0",
+      "relevance_bucket": "core_text2env",
+      "disposition": "add_to_primary_registry_p1",
+      "verified_scope": "Agentic generation of simulation-ready articulated assets, layouts, affordances, tasks, and cross-simulator export paths.",
+      "boundary": "The public repository and paper were audited, but the generation stack was not executed in this workspace.",
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "project_id": "roboverse",
+      "name": "RoboVerse / MetaSim",
+      "resume_relation": "Named unified simulation and data-generation project.",
+      "public_sources": {
+        "project": "https://roboverseorg.github.io/",
+        "paper": "https://arxiv.org/abs/2504.18904",
+        "code": "https://github.com/RoboVerseOrg/RoboVerse"
+      },
+      "source_snapshot": "e9b5c6efeb665052edeb934fc3172df8b9d3c9d7",
+      "license": "Apache-2.0",
+      "relevance_bucket": "core_text2env",
+      "disposition": "add_to_primary_registry_p1_and_openxsim",
+      "verified_scope": "Cross-simulator configuration, APIs, assets, data generation, and benchmarking through the MetaSim abstraction.",
+      "boundary": "RoboVerse is an integration and benchmark substrate, not by itself a language-to-scene generator, and was not run here.",
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "project_id": "generative_worlds_sim2real_rl",
+      "name": "Scaling Sim-to-Real Reinforcement Learning for Robot VLAs with Generative 3D Worlds",
+      "resume_relation": "Named generative-world sim-to-real research result.",
+      "public_sources": {
+        "project": "https://horizonrobotics.github.io/EmbodiedGen/",
+        "paper": "https://arxiv.org/abs/2603.18532",
+        "code": null
+      },
+      "source_snapshot": null,
+      "license": "Paper only; implementation path is documented through EmbodiedGen.",
+      "relevance_bucket": "core_text2env",
+      "disposition": "add_to_primary_registry_p1",
+      "verified_scope": "Uses generated interactive 3D worlds for reinforcement-learning fine-tuning and reports simulation and real-robot evaluation.",
+      "boundary": "This is evidence for the /train, /evaluate, and /transfer loop, not a separately released environment codebase.",
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "project_id": "dipo",
+      "name": "DIPO",
+      "resume_relation": "Named articulated-object generation project.",
+      "public_sources": {
+        "project": "https://rq-wu.github.io/projects/DIPO/DIPO.html",
+        "paper": "https://arxiv.org/abs/2505.20460",
+        "code": "https://github.com/RQ-Wu/DIPO"
+      },
+      "source_snapshot": "78efeff5acd5f6db7cda1d1fdab769ca42ebfc1a",
+      "license": "No repository LICENSE file located in the audited snapshot.",
+      "relevance_bucket": "core_text2env",
+      "disposition": "add_to_primary_registry_p1",
+      "verified_scope": "Dual-state image input to articulated part layout, joint parameters, and URDF-oriented assets, with PM-X data construction.",
+      "boundary": "The repository documents external API and checkpoint dependencies; no generated asset was imported into RoboTwin or Isaac here.",
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "project_id": "three_d_fixer",
+      "name": "3D-Fixer",
+      "resume_relation": "Named single-image 3D scene reconstruction project.",
+      "public_sources": {
+        "project": "https://zx-yin.github.io/3dfixer/",
+        "paper": "https://arxiv.org/abs/2604.04406",
+        "code": "https://github.com/HorizonRobotics/3D-Fixer"
+      },
+      "source_snapshot": "f6a60328b4646389b4dd4b2ecea9df31bab9a9bd",
+      "license": "Apache-2.0",
+      "relevance_bucket": "core_text2env",
+      "disposition": "add_to_primary_registry_p1",
+      "verified_scope": "Single-image, layout-preserving reconstruction and completion of in-place 3D scene assets using fragmented geometry anchors.",
+      "boundary": "The output still needs metric-scale, collision, physics, and simulator-import gates before it is an executable environment.",
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "project_id": "uni3r",
+      "name": "Uni3R",
+      "resume_relation": "Named feed-forward semantic 3D reconstruction project.",
+      "public_sources": {
+        "project": null,
+        "paper": "https://arxiv.org/abs/2508.03643",
+        "code": "https://github.com/HorizonRobotics/Uni3R"
+      },
+      "source_snapshot": "4a5dd00b6737a95afd4c6b1760cad166cf17d3d4",
+      "license": "CC-BY-NC-SA-4.0",
+      "relevance_bucket": "core_text2env",
+      "disposition": "add_to_primary_registry_p2",
+      "verified_scope": "Unposed multi-view images to Gaussian scene representation with open-vocabulary semantics and depth.",
+      "boundary": "The representation is an observation and semantic sidecar, not collision geometry, dynamics, or an executable task environment; release-status statements in the README are internally inconsistent.",
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "project_id": "gausstr",
+      "name": "GaussTR",
+      "resume_relation": "Named semantic occupancy project.",
+      "public_sources": {
+        "project": null,
+        "paper": "https://arxiv.org/abs/2412.13193",
+        "code": "https://github.com/hustvl/GaussTR"
+      },
+      "source_snapshot": "9ddd19ded6dce44b22a9ba0478d527b5f8123c6d",
+      "license": "MIT",
+      "relevance_bucket": "adjacent_perception",
+      "disposition": "appendix_only",
+      "verified_scope": "Semantic occupancy prediction using Gaussian representations and foundation-model alignment on nuScenes.",
+      "boundary": "Useful for observation and data-loop context, but it does not generate executable simulator environments.",
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "project_id": "dirtnet",
+      "name": "DirtNet",
+      "resume_relation": "Named visual dirt-detection project.",
+      "public_sources": {
+        "project": "https://publica.fraunhofer.de/entities/publication/a98dd796-7363-469d-9fc2-030e157ba603",
+        "paper": "https://ieeexplore.ieee.org/document/9196559",
+        "code": null
+      },
+      "source_snapshot": null,
+      "license": "No public implementation was identified from the primary publication record.",
+      "relevance_bucket": "adjacent_synthetic_data",
+      "disposition": "appendix_only",
+      "verified_scope": "Visual dirt detection for autonomous cleaning robots, including synthetic dataset generation around a YOLOv3-derived detector.",
+      "boundary": "Historical evidence for synthetic-data construction, not Text2Env or simulator-scene generation.",
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "project_id": "instancenet",
+      "name": "InstanceNet",
+      "resume_relation": "Named incremental instance-detection project.",
+      "public_sources": {
+        "project": "https://publica.fraunhofer.de/handle/publica/412776",
+        "paper": null,
+        "code": null
+      },
+      "source_snapshot": null,
+      "license": "No public implementation was identified from the primary publication record.",
+      "relevance_bucket": "adjacent_continual_learning",
+      "disposition": "appendix_only",
+      "verified_scope": "Incremental object-instance detection through an ensemble of single-class detectors and fast addition of new object instances.",
+      "boundary": "Relevant to data and continual-learning loops, not environment generation or simulator transfer.",
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "project_id": "wam",
+      "name": "WAM",
+      "resume_relation": "Resume-described internal world/action modeling project.",
+      "public_sources": {
+        "project": null,
+        "paper": null,
+        "code": null
+      },
+      "source_snapshot": null,
+      "license": "Unknown; no public primary artifact was identified.",
+      "relevance_bucket": "resume_only_unverified",
+      "disposition": "do_not_add_to_primary_registry",
+      "verified_scope": "No public primary source was located under the resume project label.",
+      "boundary": "The resume description is provenance for a follow-up question, not evidence of a reproducible method or result.",
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "project_id": "four_d_label",
+      "name": "4DLABEL",
+      "resume_relation": "Resume-described internal 4D annotation project.",
+      "public_sources": {
+        "project": null,
+        "paper": null,
+        "code": null
+      },
+      "source_snapshot": null,
+      "license": "Unknown; no public primary artifact was identified.",
+      "relevance_bucket": "resume_only_unverified",
+      "disposition": "do_not_add_to_primary_registry",
+      "verified_scope": "No public primary source was located under the resume project label.",
+      "boundary": "The resume description is not sufficient to infer dataset availability, method details, or reproducibility.",
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    },
+    {
+      "project_id": "unnamed_instruction_following_benchmark",
+      "name": "Unnamed CoRL 2026 instruction-following benchmark",
+      "resume_relation": "Resume-described submission without a public title or link.",
+      "public_sources": {
+        "project": null,
+        "paper": null,
+        "code": null
+      },
+      "source_snapshot": null,
+      "license": "Unknown; no public primary artifact was identified.",
+      "relevance_bucket": "resume_only_unverified",
+      "disposition": "do_not_add_to_primary_registry",
+      "verified_scope": "No uniquely identifiable public primary source was available from the resume text.",
+      "boundary": "No title, paper identifier, or repository means the claimed method and results cannot be independently audited.",
+      "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+    }
+  ],
+  "claim_boundary": "This intake records candidate-nominated projects and independently located public primary sources. It does not treat resume-only descriptions as reproduced work, verify personal contribution, or infer unpublished implementation details."
+}

@@ -1,0 +1,60 @@
+{
+  "globals": {
+    "top_k": 8,
+    "max_fallback": 4,
+    "max_size_bytes": 200000000,
+    "license_gate": false
+  },
+  "providers": {
+    "robotwin_local": {
+      "enabled": true,
+      "tier": 0,
+      "catalog": "data/scene_gen_ext/asset_catalog.json"
+    },
+    "nvidia_server": {
+      "enabled": true,
+      "tier": 1,
+      "prefixes": [
+        "Assets/Isaac/5.1/Isaac/Props",
+        "Assets/Isaac/5.1/NVIDIA/Assets/ArchVis",
+        "Assets/Isaac/5.1/NVIDIA/Assets/Vegetation",
+        "Assets/Isaac/5.1/NVIDIA/Assets/DigitalTwin",
+        "Assets/Isaac/5.1/Isaac/IsaacLab",
+        "Assets/Isaac/5.1/NVIDIA/dsready_content"
+      ],
+      "index_path": "data/asset_index/nvidia_keys_50k.json"
+    },
+    "github_tree": {
+      "enabled": true,
+      "tier": 2,
+      "repositories": [
+        {
+          "repository": "KhronosGroup/glTF-Sample-Assets",
+          "branch": "main",
+          "license": "per-model (see source_page); repo docs list per-asset licenses"
+        }
+      ]
+    },
+    "github_discovery": {
+      "enabled": true,
+      "tier": 4,
+      "repository_limit": 5,
+      "comment": "repo-level discovery: tested 3 query strategies at 0 hits for arbitrary object categories; unauthenticated 60req/h -- tier4 last resort after objaverse"
+    },
+    "nvidia_visual": {
+      "enabled": true,
+      "tier": 1,
+      "thumbs_dir": "data/asset_index/thumbs_50k",
+      "cache_path": "data/asset_index/clip_l14_50k.npz",
+      "model": "openai/clip-vit-large-patch14",
+      "index_path": "data/asset_index/nvidia_keys_50k.json"
+    },
+    "objaverse": {
+      "enabled": true,
+      "tier": 3,
+      "data_dir": "data/asset_index/objaverse",
+      "per_category_cap": 6,
+      "comment": "Objaverse LVIS subset: 46,207 objects / 1,156 curated categories; per-object CC license machine-read from metadata shards; thumbnails fetched lazily for the identity gate"
+    }
+  }
+}

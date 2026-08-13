@@ -1,0 +1,289 @@
+{
+  "schema_version": "alchedata.native_act_closed_loop_diagnosis.v0",
+  "status": "pass_native_act_fixed_scene_closed_loop",
+  "generated_at": "2026-07-10T13:09:29.382661+00:00",
+  "task_id": "task_apple_plate",
+  "claim_boundary": "Native synchronized collection, ACT conversion/loading/training, expert-action replay, and learned-policy evaluation are proven for one fixed apple/plate placement. Seeds change reset RNG only; placement and domain randomization remain fixed, so this is not cross-placement, cross-task, or robustness proof.",
+  "collection": {
+    "report": "runs/generated_collect_apple_plate_native_sync/collection_report.json",
+    "status": "fail_generated_rollout_collection",
+    "episode_count": 4,
+    "source_task_success_count": 3,
+    "native_synchronized_pass_count": 4,
+    "native_frame_counts": [
+      162,
+      162,
+      162,
+      162
+    ]
+  },
+  "adapter": {
+    "conversion_report": "runs/act_hdf5_native_sync/conversion_report.json",
+    "conversion_status": "pass_native_act_hdf5_adapter",
+    "converted_episode_count": 3,
+    "skipped_episode_count": 1,
+    "loader_report": "runs/act_hdf5_native_sync/load_data_report.json",
+    "loader_status": "pass_act_hdf5_loader_smoke",
+    "batch_item_shapes": {
+      "image": [
+        1,
+        3,
+        72,
+        96
+      ],
+      "qpos": [
+        14
+      ],
+      "action": [
+        161,
+        14
+      ],
+      "is_pad": [
+        161
+      ]
+    },
+    "temporal_alignment": "qpos[t], head_camera_rgb[t] -> action=qpos[t+1]",
+    "color_repair": {
+      "native_hdf5": "runs/generated_collect_apple_plate_native_sync/episode_000/episode_000/data/episode0.hdf5",
+      "runtime_reference": "runs/generated_collect_apple_plate_native_sync/episode_000/initial_head_camera.png",
+      "decoded_without_repair_mse": 153.03614807128906,
+      "decoded_with_red_blue_swap_mse": 4.7850260734558105,
+      "repair_improvement_ratio": 31.98230181445266,
+      "repair_is_better": true,
+      "cause": "RoboTwin passes RGB arrays to cv2.imencode, whose input convention is BGR."
+    }
+  },
+  "dataset_identity": {
+    "episode_count": 3,
+    "unique_action_trajectory_count": 1,
+    "unique_qpos_trajectory_count": 1,
+    "unique_image_trajectory_count": 1,
+    "all_converted_episodes_byte_identical": true,
+    "episodes": [
+      {
+        "path": "runs/act_hdf5_native_sync/data/episode_0.hdf5",
+        "seed": 0,
+        "timesteps": 161,
+        "qpos_sha256": "df16770ec5d8c65881c20246ace24ce62badf749b20313ab64237e2d7f53f2a2",
+        "action_sha256": "2cc18b4a5ef5e78577d36d8101af0f382c9078975ebf9a00d3e1cef64e9e133a",
+        "image_sha256": "40e1c5ca08dee9920bfacc9298c3fdd6ca83e5a710e55d7bd21d3e27b41b558c"
+      },
+      {
+        "path": "runs/act_hdf5_native_sync/data/episode_1.hdf5",
+        "seed": 1,
+        "timesteps": 161,
+        "qpos_sha256": "df16770ec5d8c65881c20246ace24ce62badf749b20313ab64237e2d7f53f2a2",
+        "action_sha256": "2cc18b4a5ef5e78577d36d8101af0f382c9078975ebf9a00d3e1cef64e9e133a",
+        "image_sha256": "40e1c5ca08dee9920bfacc9298c3fdd6ca83e5a710e55d7bd21d3e27b41b558c"
+      },
+      {
+        "path": "runs/act_hdf5_native_sync/data/episode_2.hdf5",
+        "seed": 2,
+        "timesteps": 161,
+        "qpos_sha256": "df16770ec5d8c65881c20246ace24ce62badf749b20313ab64237e2d7f53f2a2",
+        "action_sha256": "2cc18b4a5ef5e78577d36d8101af0f382c9078975ebf9a00d3e1cef64e9e133a",
+        "image_sha256": "40e1c5ca08dee9920bfacc9298c3fdd6ca83e5a710e55d7bd21d3e27b41b558c"
+      }
+    ]
+  },
+  "expert_action_replay": {
+    "report": "runs/act_action_replay_native_sync/replay_report.json",
+    "status": "pass_act_action_replay_execution",
+    "execution_complete": true,
+    "task_success": true,
+    "executed_action_count": 161,
+    "initial_qpos_max_abs_error": 0.0,
+    "relation_metrics": {
+      "xy_distance_m": 0.023901436515799384,
+      "source_z_m": 0.7751989960670471,
+      "target_z_m": 0.7409999966621399,
+      "source_minus_target_z_m": 0.03419899940490723,
+      "left_gripper_open": true,
+      "right_gripper_open": true
+    }
+  },
+  "experiments": {
+    "chunk20": {
+      "train": {
+        "report": "runs/act_train_native_sync_rgb_chunk20_1200e/train_smoke_report.json",
+        "status": "pass_act_train_execution",
+        "num_epochs": 1200,
+        "best_epoch": 1154,
+        "best_val_loss": 0.020565,
+        "learning_rate": "1e-4",
+        "returncode": 0
+      },
+      "evaluate": {
+        "report": "runs/act_eval_native_sync_rgb_chunk20_1200e_best/evaluate_report.json",
+        "status": "pass_generated_act_evaluate_execution",
+        "chunk_size": 20,
+        "action_selection": "execute_full_20_action_chunk_before_replan",
+        "execution_count": 3,
+        "episode_count": 3,
+        "success_count": 0,
+        "policy_success_rate": 0.0,
+        "held_out_seeds": [
+          4,
+          5,
+          6
+        ],
+        "source_training_seeds": [
+          0,
+          1,
+          2
+        ],
+        "all_eval_seeds_held_out": true,
+        "camera_adapter": {
+          "training_key": "cam_high",
+          "runtime_source": "head_camera",
+          "reason": "The native synchronized converter maps RoboTwin head_camera RGB to cam_high."
+        },
+        "evaluation_scope": {
+          "placement_randomization": "fixed_action_repair_placement",
+          "domain_randomization": false,
+          "action_selection": "execute_full_20_action_chunk_before_replan",
+          "seed_boundary": "Seeds are held out from 3 source collection seeds, but fixed placement and disabled domain randomization mean this tests repeated policy execution, not scene-distribution generalization."
+        },
+        "episodes": [
+          {
+            "seed": 4,
+            "policy_success": false,
+            "policy_step_count": 200,
+            "xy_distance_m": 0.17565749526978322,
+            "nearest_expert_index_at_start": 14,
+            "nearest_expert_index_at_end": 82,
+            "nearest_expert_index_max": 82,
+            "unique_nearest_expert_indices": 8
+          },
+          {
+            "seed": 5,
+            "policy_success": false,
+            "policy_step_count": 200,
+            "xy_distance_m": 0.17565749526978322,
+            "nearest_expert_index_at_start": 14,
+            "nearest_expert_index_at_end": 82,
+            "nearest_expert_index_max": 82,
+            "unique_nearest_expert_indices": 8
+          },
+          {
+            "seed": 6,
+            "policy_success": false,
+            "policy_step_count": 200,
+            "xy_distance_m": 0.17565749526978322,
+            "nearest_expert_index_at_start": 14,
+            "nearest_expert_index_at_end": 82,
+            "nearest_expert_index_max": 82,
+            "unique_nearest_expert_indices": 8
+          }
+        ]
+      }
+    },
+    "chunk161": {
+      "train": {
+        "report": "runs/act_train_native_sync_rgb_chunk161_1200e/train_smoke_report.json",
+        "status": "pass_act_train_execution",
+        "num_epochs": 1200,
+        "best_epoch": 1116,
+        "best_val_loss": 0.015496,
+        "learning_rate": "1e-4",
+        "returncode": 0
+      },
+      "evaluate": {
+        "report": "runs/act_eval_native_sync_rgb_chunk161_1200e_best/evaluate_report.json",
+        "status": "pass_generated_act_evaluate_execution",
+        "chunk_size": 161,
+        "action_selection": "execute_full_161_action_chunk_before_replan",
+        "execution_count": 3,
+        "episode_count": 3,
+        "success_count": 3,
+        "policy_success_rate": 1.0,
+        "held_out_seeds": [
+          4,
+          5,
+          6
+        ],
+        "source_training_seeds": [
+          0,
+          1,
+          2
+        ],
+        "all_eval_seeds_held_out": true,
+        "camera_adapter": {
+          "training_key": "cam_high",
+          "runtime_source": "head_camera",
+          "reason": "The native synchronized converter maps RoboTwin head_camera RGB to cam_high."
+        },
+        "evaluation_scope": {
+          "placement_randomization": "fixed_action_repair_placement",
+          "domain_randomization": false,
+          "action_selection": "execute_full_161_action_chunk_before_replan",
+          "seed_boundary": "Seeds are held out from 3 source collection seeds, but fixed placement and disabled domain randomization mean this tests repeated policy execution, not scene-distribution generalization."
+        },
+        "episodes": [
+          {
+            "seed": 4,
+            "policy_success": true,
+            "policy_step_count": 130,
+            "xy_distance_m": 0.11439000447812972,
+            "nearest_expert_index_at_start": 42,
+            "nearest_expert_index_at_end": 137,
+            "nearest_expert_index_max": 151,
+            "unique_nearest_expert_indices": 33
+          },
+          {
+            "seed": 5,
+            "policy_success": true,
+            "policy_step_count": 130,
+            "xy_distance_m": 0.11439000447812972,
+            "nearest_expert_index_at_start": 42,
+            "nearest_expert_index_at_end": 137,
+            "nearest_expert_index_max": 151,
+            "unique_nearest_expert_indices": 33
+          },
+          {
+            "seed": 6,
+            "policy_success": true,
+            "policy_step_count": 130,
+            "xy_distance_m": 0.11439000447812972,
+            "nearest_expert_index_at_start": 42,
+            "nearest_expert_index_at_end": 137,
+            "nearest_expert_index_max": 151,
+            "unique_nearest_expert_indices": 33
+          }
+        ]
+      }
+    }
+  },
+  "hypotheses": [
+    {
+      "rank": 1,
+      "hypothesis": "The three training episodes provide trajectory diversity.",
+      "verdict": "falsified",
+      "evidence": "All converted qpos, action, and image hashes are identical."
+    },
+    {
+      "rank": 2,
+      "hypothesis": "The native-to-ACT action ordering or 14-D qpos semantics are wrong.",
+      "verdict": "falsified",
+      "evidence": "A fresh reset matches the source initial qpos exactly and all 161 expert actions replay to task success."
+    },
+    {
+      "rank": 3,
+      "hypothesis": "The native JPEG channel order does not match runtime head-camera RGB.",
+      "verdict": "confirmed_and_fixed",
+      "evidence": "Swapping decoded red/blue channels lowers MSE against the runtime RGB reference."
+    },
+    {
+      "rank": 4,
+      "hypothesis": "A 20-action chunk with full-chunk replanning preserves enough temporal progress.",
+      "verdict": "falsified_for_this_dataset",
+      "evidence": "Chunk 20 reaches only a narrow expert-index range and scores 0/3, while chunk 161 scores 3/3 under otherwise matched settings."
+    }
+  ],
+  "conclusion": {
+    "fixed_scene_closed_loop": "pass",
+    "failure_to_fix": "RoboTwin-native synchronized recording plus RGB repair made the data executable; full-episode chunking removed the temporal-progress stall on the one unique fixed-scene trajectory.",
+    "policy_promotion": "blocked_robustness_not_tested",
+    "next_data_requirement": "Collect non-identical successful demonstrations across varied source/target poses and declared domain randomization, verify trajectory/image uniqueness, then evaluate on held-out placements and at least one additional task before promotion."
+  }
+}

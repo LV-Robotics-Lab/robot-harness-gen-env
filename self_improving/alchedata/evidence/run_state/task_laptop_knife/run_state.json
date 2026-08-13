@@ -1,0 +1,8 @@
+{
+  "schema_version": "alchedata.run_state.v0",
+  "run_id": "task_laptop_knife_static",
+  "command": "/gen-env",
+  "status": "pass_sim_smoke",
+  "artifact_root": "artifacts/run_state/task_laptop_knife",
+  "source_summary": "runs/probe_static_laptop_knife/pipeline_summary.json"
+}

@@ -1,0 +1,104 @@
+{
+  "schema_version": "alchedata.openxsim_acceptance_audit.v1",
+  "status": "pass_openxsim_command_loop_acceptance",
+  "acceptance_count": 8,
+  "items": [
+    {
+      "id": 1,
+      "requirement": "Define /gen-env, /collect, /train, /evaluate, /diagnose, and /transfer inputs, outputs, artifact paths, owners, and failure codes.",
+      "status": "pass",
+      "evidence": [
+        "artifacts/openxsim/openxsim_command_registry.json",
+        "docs/openxsim_command_spec.md"
+      ]
+    },
+    {
+      "id": 2,
+      "requirement": "Cover selection2env, forge fallback, and material sidecar fields in the /gen-env schema.",
+      "status": "pass",
+      "evidence": [
+        "schemas/gen_env.schema.json",
+        "artifacts/gen_env_contract/gen_env_contract_manifest.json"
+      ]
+    },
+    {
+      "id": 3,
+      "requirement": "Run two or three RoboTwin single-task command-loop smokes.",
+      "status": "pass",
+      "evidence": [
+        "artifacts/openxsim_benchmarks/manifest.json",
+        "runs/official_rollout_open_laptop/rollout_report.json",
+        "runs/official_rollout_place_mouse_pad/rollout_report.json",
+        "runs/official_rollout_place_container_plate/rollout_report.json"
+      ],
+      "claim_boundary": "All three are official RoboTwin scripted-expert smokes, not learned-policy evaluations."
+    },
+    {
+      "id": 4,
+      "requirement": "Write run_state, events, scene/task manifests, rollout logs, failure diagnosis, and next data requirement for each benchmark.",
+      "status": "pass",
+      "evidence": [
+        "artifacts/openxsim_benchmarks/open_laptop/benchmark_manifest.json",
+        "artifacts/openxsim_benchmarks/place_mouse_pad/benchmark_manifest.json",
+        "artifacts/openxsim_benchmarks/place_container_plate/benchmark_manifest.json"
+      ]
+    },
+    {
+      "id": 5,
+      "requirement": "Run or explicitly block one forge fallback and one material-sidecar fallback with import and validation gates.",
+      "status": "pass",
+      "evidence": [
+        "artifacts/generation_fallback/blocked_drawer_mug_video2sim_forge.json",
+        "artifacts/generation_fallback/blocked_neumatex_material_sidecar.json"
+      ],
+      "claim_boundary": "The acceptance explicitly permits blockers. Neither video2sim-forge nor NeuMaTeX execution is claimed."
+    },
+    {
+      "id": 6,
+      "requirement": "Cover six dense diagnosis categories beyond success rate.",
+      "status": "pass",
+      "evidence": [
+        "artifacts/openxsim_benchmarks/*/failure_diagnosis.json",
+        "runs/act_eval_native_sync_rgb_chunk161_1200e_best/evaluate_report.json"
+      ]
+    },
+    {
+      "id": 7,
+      "requirement": "Provide an Open X Sim adapter matrix with engine/renderer, formats, materials, APIs, license/access, and migration difficulty.",
+      "status": "pass",
+      "evidence": [
+        "artifacts/openxsim/openxsim_adapter_matrix.json",
+        "artifacts/openxsim/agenticsim_awesome_isaac_snapshot.json"
+      ]
+    },
+    {
+      "id": 8,
+      "requirement": "Record Zheng Ye, Gaochen, and Boris ownership boundaries.",
+      "status": "pass",
+      "evidence": [
+        "artifacts/openxsim/openxsim_command_registry.json#owner_split",
+        "docs/openxsim_command_spec.md"
+      ]
+    }
+  ],
+  "dense_diagnosis_categories": [
+    "wrong_grasp_location",
+    "object_knocked_over",
+    "arm_jitter",
+    "uncontrolled_gripper_open_close",
+    "after_contact_failure",
+    "visual_material_mismatch"
+  ],
+  "delivery": {
+    "report_repo_path": "reports/openxsim_command_loop/index.html",
+    "local_downloads_path": "/Users/boris/Downloads/openxsim_command_loop_20260713/",
+    "remote_downloads_path": "/home/jingxiang/Downloads/openxsim_command_loop_20260713/",
+    "benchmark_screenshot_count": 6,
+    "benchmark_video_count": 3,
+    "reference_page_screenshot_count": 6,
+    "isaac_candidate_screenshot_count": 11,
+    "isaac_baseline_image_count": 2,
+    "isaac_baseline_video_count": 1
+  },
+  "claim_boundary": "The eight acceptance items are evidenced without claiming full Any Sim transfer, a complete Isaac PEARL command loop, forge/material execution, or robust policy promotion."
+}

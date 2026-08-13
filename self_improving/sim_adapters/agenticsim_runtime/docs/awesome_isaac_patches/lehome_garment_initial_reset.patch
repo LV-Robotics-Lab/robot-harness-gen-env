@@ -1,0 +1,13 @@
+diff --git a/source/lehome/lehome/assets/object/Garment.py b/source/lehome/lehome/assets/object/Garment.py
+index 191402b..d803810 100644
+--- a/source/lehome/lehome/assets/object/Garment.py
++++ b/source/lehome/lehome/assets/object/Garment.py
+@@ -379,6 +379,8 @@ class GarmentObject(SingleClothPrim):
+         Meanwhile, return back to the initial positions of all particles that make up the object.
+         """
+         logger.debug("[GarmentObject] Performing soft reset")
++        if not hasattr(self, "initial_points_positions"):
++            self.initialize()
+         # Reset Points Positions
+         if self._device == "cpu":
+             self._prim.GetAttribute("points").Set(

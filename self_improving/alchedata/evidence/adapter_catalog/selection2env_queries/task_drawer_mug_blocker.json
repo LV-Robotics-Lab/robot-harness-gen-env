@@ -1,0 +1,312 @@
+{
+  "schema_version": "robotwin.selection2env_catalog_search.v0",
+  "prompt": "open the drawer and place the mug inside",
+  "source_stats": {
+    "robotwin": {
+      "entry_count": 123,
+      "selection_eligible_count": 123,
+      "match_count": 1
+    },
+    "agenticsim": {
+      "entry_count": 8,
+      "selection_eligible_count": 8,
+      "match_count": 1
+    },
+    "articraft10k": {
+      "entry_count": 9996,
+      "selection_eligible_count": 0,
+      "match_count": 202
+    }
+  },
+  "match_count_returned": 10,
+  "selection_rule": "Only selection_eligible candidates may enter RoboTwin scene generation; catalog-only candidates remain blockers.",
+  "matches": [
+    {
+      "candidate_id": "agenticsim:036_cabinet",
+      "catalog_source": "agenticsim",
+      "asset_id": "036_cabinet",
+      "backend_asset_id": "036_cabinet",
+      "semantic_name": "cabinet",
+      "aliases": [
+        "cabinet",
+        "drawer"
+      ],
+      "tags": [
+        "articulated",
+        "container"
+      ],
+      "asset_format": "AgenticSim alias -> RoboTwin object directory",
+      "execution_status": "robotwin_alias_loadable",
+      "selection_eligible": true,
+      "model_ids": [
+        0
+      ],
+      "provenance": {
+        "catalog_path": "external/robotwin-text2env-demo/asset_catalogs/agenticsim_placement_assets.json",
+        "catalog_version": "agenticsim.placement_asset_aliases.v0",
+        "source_project": "AgenticSim",
+        "source_commit": "f34d56a",
+        "source_file": "source/agenticsim/agenticsim/generation/placement_agent.py"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "drawer"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_desk_with_drawer_0001",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_desk_with_drawer_0001",
+      "backend_asset_id": null,
+      "semantic_name": "desk with drawer 0001",
+      "aliases": [
+        "desk with drawer 0001"
+      ],
+      "tags": [
+        "0001",
+        "desk",
+        "drawer"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_desk_with_drawer_0001.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_desk_with_drawer_0001.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "drawer"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_desk_with_drawer_0002",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_desk_with_drawer_0002",
+      "backend_asset_id": null,
+      "semantic_name": "desk with drawer 0002",
+      "aliases": [
+        "desk with drawer 0002"
+      ],
+      "tags": [
+        "0002",
+        "desk",
+        "drawer"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_desk_with_drawer_0002.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_desk_with_drawer_0002.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "drawer"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_desk_with_drawer_0003",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_desk_with_drawer_0003",
+      "backend_asset_id": null,
+      "semantic_name": "desk with drawer 0003",
+      "aliases": [
+        "desk with drawer 0003"
+      ],
+      "tags": [
+        "0003",
+        "desk",
+        "drawer"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_desk_with_drawer_0003.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_desk_with_drawer_0003.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "drawer"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_desk_with_drawer_0004",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_desk_with_drawer_0004",
+      "backend_asset_id": null,
+      "semantic_name": "desk with drawer 0004",
+      "aliases": [
+        "desk with drawer 0004"
+      ],
+      "tags": [
+        "0004",
+        "desk",
+        "drawer"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_desk_with_drawer_0004.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_desk_with_drawer_0004.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "drawer"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_desk_with_drawer_0005",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_desk_with_drawer_0005",
+      "backend_asset_id": null,
+      "semantic_name": "desk with drawer 0005",
+      "aliases": [
+        "desk with drawer 0005"
+      ],
+      "tags": [
+        "0005",
+        "desk",
+        "drawer"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_desk_with_drawer_0005.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_desk_with_drawer_0005.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "drawer"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_desk_with_drawer_0006",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_desk_with_drawer_0006",
+      "backend_asset_id": null,
+      "semantic_name": "desk with drawer 0006",
+      "aliases": [
+        "desk with drawer 0006"
+      ],
+      "tags": [
+        "0006",
+        "desk",
+        "drawer"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_desk_with_drawer_0006.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_desk_with_drawer_0006.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "drawer"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_desk_with_drawer_0007",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_desk_with_drawer_0007",
+      "backend_asset_id": null,
+      "semantic_name": "desk with drawer 0007",
+      "aliases": [
+        "desk with drawer 0007"
+      ],
+      "tags": [
+        "0007",
+        "desk",
+        "drawer"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_desk_with_drawer_0007.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_desk_with_drawer_0007.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "drawer"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_desk_with_drawer_005a4eef8c9847ca84a2505b94558ba4",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_desk_with_drawer_005a4eef8c9847ca84a2505b94558ba4",
+      "backend_asset_id": null,
+      "semantic_name": "desk with drawer",
+      "aliases": [
+        "desk with drawer"
+      ],
+      "tags": [
+        "desk",
+        "drawer"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_desk_with_drawer_005a4eef8c9847ca84a2505b94558ba4.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_desk_with_drawer_005a4eef8c9847ca84a2505b94558ba4.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "drawer"
+      ]
+    },
+    {
+      "candidate_id": "robotwin:039_mug",
+      "catalog_source": "robotwin",
+      "asset_id": "039_mug",
+      "backend_asset_id": "039_mug",
+      "semantic_name": "mug",
+      "aliases": [
+        "mug",
+        "039_mug"
+      ],
+      "tags": [
+        "mug"
+      ],
+      "asset_format": "RoboTwin object directory",
+      "execution_status": "robotwin_loadable",
+      "selection_eligible": true,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/robotwin_discovered_catalog.json",
+        "catalog_version": "robotwin.tabletop_asset_catalog_discovered.v0",
+        "discovery": {
+          "source": "robotwin.assets.objects",
+          "asset_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/039_mug",
+          "has_collision_dir": true,
+          "has_visual_dir": true,
+          "has_articulated_models": false
+        }
+      },
+      "match_score": 1128,
+      "matched_terms": [
+        "mug"
+      ]
+    }
+  ]
+}

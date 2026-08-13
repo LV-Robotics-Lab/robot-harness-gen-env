@@ -1,0 +1,2 @@
+{"ts": "2026-07-14T17:30:11.933045+00:00", "event": "selection2env.static_pipeline_reused", "run_summary": "runs/probe_static_apple_plate/pipeline_summary.json"}
+{"ts": "2026-07-14T17:30:11.933361+00:00", "event": "selection2env.task_program_input_written", "path": "artifacts/task_program_inputs/task_apple_plate.json"}

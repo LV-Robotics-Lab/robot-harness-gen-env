@@ -1,0 +1,220 @@
+{
+  "schema_version": "alchedata.articraft10k_search_examples.v0",
+  "generated_at": "2026-07-09T14:51:59.776265+00:00",
+  "dataset": "camvsl/Articraft-10K",
+  "manifest": "artifacts/adapter_catalog/articraft10k_manifest.json",
+  "query_limit": 5,
+  "queries": [
+    {
+      "query": "microscope",
+      "matches": [
+        {
+          "asset_id": "rec_a-benchtop-monocular-laboratory-microscope-a-hea_20260331_230942_552800_6c80d18c",
+          "semantic_text": "a benchtop monocular laboratory microscope a hea",
+          "source_path": "rec_a-benchtop-monocular-laboratory-microscope-a-hea_20260331_230942_552800_6c80d18c.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_benchtop_monocular_laboratory_microscope_080f397ab8ae4b479a27bb2b62bb1980",
+          "semantic_text": "benchtop monocular laboratory microscope",
+          "source_path": "rec_benchtop_monocular_laboratory_microscope_080f397ab8ae4b479a27bb2b62bb1980.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_benchtop_monocular_laboratory_microscope_0befddfd46d246c4adaff2d4a305cf4e",
+          "semantic_text": "benchtop monocular laboratory microscope",
+          "source_path": "rec_benchtop_monocular_laboratory_microscope_0befddfd46d246c4adaff2d4a305cf4e.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_benchtop_monocular_laboratory_microscope_13c46f4300bb4388bd1133d13a81a29c",
+          "semantic_text": "benchtop monocular laboratory microscope",
+          "source_path": "rec_benchtop_monocular_laboratory_microscope_13c46f4300bb4388bd1133d13a81a29c.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_benchtop_monocular_laboratory_microscope_17e496e5010a453ea2fa4ed842f7c6bf",
+          "semantic_text": "benchtop monocular laboratory microscope",
+          "source_path": "rec_benchtop_monocular_laboratory_microscope_17e496e5010a453ea2fa4ed842f7c6bf.tar.gz",
+          "score": 2
+        }
+      ]
+    },
+    {
+      "query": "monitor",
+      "matches": [
+        {
+          "asset_id": "rec_a-compact-office-monitor-with-a-slim-bezel-a-tel_20260407_110625_768142_efe2ae03",
+          "semantic_text": "a compact office monitor with a slim bezel a tel",
+          "source_path": "rec_a-compact-office-monitor-with-a-slim-bezel-a-tel_20260407_110625_768142_efe2ae03.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_a-gaming-monitor-with-a-broad-screen-a-v-shaped-_20260407_110625_748379_119c2280",
+          "semantic_text": "a gaming monitor with a broad screen a v shaped",
+          "source_path": "rec_a-gaming-monitor-with-a-broad-screen-a-v-shaped-_20260407_110625_748379_119c2280.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_a-professional-monitor-with-a-wide-screen-a-heav_20260407_110625_840317_ddc36b44",
+          "semantic_text": "a professional monitor with a wide screen a heav",
+          "source_path": "rec_a-professional-monitor-with-a-wide-screen-a-heav_20260407_110625_840317_ddc36b44.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_desktop_monitor_with_tilt_swivel_stand_04c3533227724245bc59022d84d6b041",
+          "semantic_text": "desktop monitor with tilt swivel stand",
+          "source_path": "rec_desktop_monitor_with_tilt_swivel_stand_04c3533227724245bc59022d84d6b041.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_desktop_monitor_with_tilt_swivel_stand_0dbd7a1ae4544981a906d183f2bfe9ba",
+          "semantic_text": "desktop monitor with tilt swivel stand",
+          "source_path": "rec_desktop_monitor_with_tilt_swivel_stand_0dbd7a1ae4544981a906d183f2bfe9ba.tar.gz",
+          "score": 2
+        }
+      ]
+    },
+    {
+      "query": "bench",
+      "matches": [
+        {
+          "asset_id": "rec_adjustable_weight_bench_with_hinged_backrest_008247976e6d499d8bcbd1304f26c972",
+          "semantic_text": "adjustable weight bench with hinged backrest",
+          "source_path": "rec_adjustable_weight_bench_with_hinged_backrest_008247976e6d499d8bcbd1304f26c972.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_adjustable_weight_bench_with_hinged_backrest_00e4803d72564cfcb7c401a797524c84",
+          "semantic_text": "adjustable weight bench with hinged backrest",
+          "source_path": "rec_adjustable_weight_bench_with_hinged_backrest_00e4803d72564cfcb7c401a797524c84.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_adjustable_weight_bench_with_hinged_backrest_13e3d8b972e74eed889c1398d3a260a8",
+          "semantic_text": "adjustable weight bench with hinged backrest",
+          "source_path": "rec_adjustable_weight_bench_with_hinged_backrest_13e3d8b972e74eed889c1398d3a260a8.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_adjustable_weight_bench_with_hinged_backrest_15113df5d7ca47b9804dce786e5ea780",
+          "semantic_text": "adjustable weight bench with hinged backrest",
+          "source_path": "rec_adjustable_weight_bench_with_hinged_backrest_15113df5d7ca47b9804dce786e5ea780.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_adjustable_weight_bench_with_hinged_backrest_23efec0bee604236b06e6031fc13453b",
+          "semantic_text": "adjustable weight bench with hinged backrest",
+          "source_path": "rec_adjustable_weight_bench_with_hinged_backrest_23efec0bee604236b06e6031fc13453b.tar.gz",
+          "score": 2
+        }
+      ]
+    },
+    {
+      "query": "lighter",
+      "matches": [
+        {
+          "asset_id": "rec_zippo_lighter_0215496335c84a629660993cbecc92e0",
+          "semantic_text": "zippo lighter",
+          "source_path": "rec_zippo_lighter_0215496335c84a629660993cbecc92e0.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_zippo_lighter_08b841c382024339923566d72ebac413",
+          "semantic_text": "zippo lighter",
+          "source_path": "rec_zippo_lighter_08b841c382024339923566d72ebac413.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_zippo_lighter_0a98c5c5eedf4047b2c26ba17f943fb9",
+          "semantic_text": "zippo lighter",
+          "source_path": "rec_zippo_lighter_0a98c5c5eedf4047b2c26ba17f943fb9.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_zippo_lighter_15ce0b0dae4f4947a4925a893ea9cdd5",
+          "semantic_text": "zippo lighter",
+          "source_path": "rec_zippo_lighter_15ce0b0dae4f4947a4925a893ea9cdd5.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_zippo_lighter_16d841b23f4045779d5807f11670f771",
+          "semantic_text": "zippo lighter",
+          "source_path": "rec_zippo_lighter_16d841b23f4045779d5807f11670f771.tar.gz",
+          "score": 2
+        }
+      ]
+    },
+    {
+      "query": "crane",
+      "matches": [
+        {
+          "asset_id": "rec_a-realistic-highly-detailed-tower-crane-with-a-t_20260318_192043_5916181a",
+          "semantic_text": "a realistic highly detailed tower crane with a t",
+          "source_path": "rec_a-realistic-highly-detailed-tower-crane-with-a-t_20260318_192043_5916181a.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_a-realistic-highly-detailed-tower-crane-with-a-t_20260319_032439_282817_5916181a",
+          "semantic_text": "a realistic highly detailed tower crane with a t",
+          "source_path": "rec_a-realistic-highly-detailed-tower-crane-with-a-t_20260319_032439_282817_5916181a.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_a-realistic-highly-detailed-tower-crane-with-a-t_20260320_183151_099382_ba428c4b",
+          "semantic_text": "a realistic highly detailed tower crane with a t",
+          "source_path": "rec_a-realistic-highly-detailed-tower-crane-with-a-t_20260320_183151_099382_ba428c4b.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_crane_tower_0001",
+          "semantic_text": "crane tower 0001",
+          "source_path": "rec_crane_tower_0001.tar.gz",
+          "score": 2
+        },
+        {
+          "asset_id": "rec_crane_tower_0006",
+          "semantic_text": "crane tower 0006",
+          "source_path": "rec_crane_tower_0006.tar.gz",
+          "score": 2
+        }
+      ]
+    },
+    {
+      "query": "washing machine",
+      "matches": [
+        {
+          "asset_id": "rec_a-front-loading-washing-machine-with-a-white-rec_20260513_002941_547341_050bf63f",
+          "semantic_text": "a front loading washing machine with a white rec",
+          "source_path": "rec_a-front-loading-washing-machine-with-a-white-rec_20260513_002941_547341_050bf63f.tar.gz",
+          "score": 4
+        },
+        {
+          "asset_id": "rec_frontload_washing_machine_0001",
+          "semantic_text": "frontload washing machine 0001",
+          "source_path": "rec_frontload_washing_machine_0001.tar.gz",
+          "score": 4
+        },
+        {
+          "asset_id": "rec_frontload_washing_machine_0002",
+          "semantic_text": "frontload washing machine 0002",
+          "source_path": "rec_frontload_washing_machine_0002.tar.gz",
+          "score": 4
+        },
+        {
+          "asset_id": "rec_frontload_washing_machine_0003",
+          "semantic_text": "frontload washing machine 0003",
+          "source_path": "rec_frontload_washing_machine_0003.tar.gz",
+          "score": 4
+        },
+        {
+          "asset_id": "rec_frontload_washing_machine_0004",
+          "semantic_text": "frontload washing machine 0004",
+          "source_path": "rec_frontload_washing_machine_0004.tar.gz",
+          "score": 4
+        }
+      ]
+    }
+  ],
+  "claim_boundary": "String/token search over manifest metadata only; not a physics import or task success claim."
+}

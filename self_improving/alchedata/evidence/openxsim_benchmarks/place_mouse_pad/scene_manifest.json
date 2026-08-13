@@ -1,0 +1,127 @@
+{
+  "schema_version": "alchedata.openxsim_scene_manifest.v0",
+  "benchmark_id": "robotwin_place_mouse_pad_seed_0",
+  "scene_id": "robotwin_place_mouse_pad_seed_0",
+  "source": "official_robotwin_task_class",
+  "simulator_adapter": "RoboTwin/SAPIEN",
+  "task_config": "demo_clean",
+  "seed": 0,
+  "initial_entities": {
+    "mouse": {
+      "p": [
+        -0.05827966332435608,
+        -0.041655559092760086,
+        0.7403847575187683
+      ],
+      "q": [
+        -0.369219571352005,
+        -0.37114211916923523,
+        0.6023280620574951,
+        0.6026040315628052
+      ]
+    },
+    "table": {
+      "p": [
+        0.0,
+        0.0,
+        0.7400000095367432
+      ],
+      "q": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "target": {
+      "p": [
+        -0.12036562711000443,
+        -0.12635169923305511,
+        0.7409999966621399
+      ],
+      "q": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "wall": {
+      "p": [
+        0.0,
+        1.0,
+        1.5
+      ],
+      "q": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "final_entities": {
+    "mouse": {
+      "p": [
+        -0.11990734189748764,
+        -0.1259939968585968,
+        0.7419155240058899
+      ],
+      "q": [
+        0.0023469794541597366,
+        0.000411757588153705,
+        0.7071099877357483,
+        0.7070997357368469
+      ]
+    },
+    "table": {
+      "p": [
+        0.0,
+        0.0,
+        0.7400000095367432
+      ],
+      "q": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "target": {
+      "p": [
+        -0.12036562711000443,
+        -0.12635169923305511,
+        0.7409999966621399
+      ],
+      "q": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "wall": {
+      "p": [
+        0.0,
+        1.0,
+        1.5
+      ],
+      "q": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "texture_info": {
+    "wall_texture": null,
+    "table_texture": null
+  },
+  "camera_artifacts": {
+    "initial_head_camera": "runs/official_rollout_place_mouse_pad/initial_head_camera.png",
+    "initial_observer_camera": "runs/official_rollout_place_mouse_pad/initial_observer_camera.png",
+    "final_head_camera": "runs/official_rollout_place_mouse_pad/final_head_camera.png",
+    "final_observer_camera": "runs/official_rollout_place_mouse_pad/final_observer_camera.png"
+  }
+}

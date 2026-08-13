@@ -1,0 +1,15 @@
+{
+  "schema_version": "alchedata.external_sources_lock.v0",
+  "sources": {
+    "robotwin_text2env_demo": {
+      "url": "https://github.com/yezheng04/robotwin-text2env-demo.git",
+      "base_commit": "78bef41c136a0f4bf2c35ebec2793f3f4ad7dd75",
+      "patch": "vendor/patches/robotwin-text2env-selection2env.patch",
+      "patch_sha256": "aac9f153dcf94340528f65678dab8d8c2e4784e6594963937a11350886d41f2e",
+      "result_tree": "68e84128bbf5f8702f918024f6ca0c6e056a478f",
+      "local_commit": "029911db427c8eaee5f8837792198351314ea7de",
+      "jingxiang_commit": "e3e3c76ad359f26c3dfa88e3b543865f66b7bc06",
+      "publish_status": "not_pushed_by_repository_policy"
+    }
+  }
+}
