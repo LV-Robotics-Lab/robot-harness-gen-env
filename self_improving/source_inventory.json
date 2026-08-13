@@ -55,6 +55,16 @@
         "archive/prompt-matrix-20260719": "b0ef933",
         "archive/harness-mvp-contract-v1": "5deb875",
         "archive/parser-quantity-groups": "a2334bd"
+      },
+      "history_merges": {
+        "archive/prompt-matrix-20260719": "5aa94574bd747d717c6a26a25564c010fcb55c30",
+        "archive/harness-mvp-contract-v1": "1d841f7f64affe6306d27083ddc12dffaf39c06b",
+        "archive/parser-quantity-groups": "f7eb148d1a68df918b4d213d70e35f8c23991aa0"
+      },
+      "content_disposition": {
+        "archive/prompt-matrix-20260719": "20 changed paths were byte-identical on main; its README claims were retained in the expanded platform README",
+        "archive/harness-mvp-contract-v1": "both documents were byte-identical under docs/contracts",
+        "archive/parser-quantity-groups": "patch-equivalent change was already applied as commit 12be35a"
       }
     },
     {
