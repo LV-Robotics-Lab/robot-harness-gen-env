@@ -3,7 +3,10 @@
 to the real read-only RoboTwin + injected external assets from asset_library),
 write extended overrides, and run the UPSTREAM catalog scanner over it.
 
-Upstream repos and jingxiang's RoboTwin are never written to.
+Upstream repos and the RoboTwin checkout are never written to. The default
+root is OUR OWN copy under ~/yuxin/robotwin_upstream: the previous default
+pointed into a colleague's workspace, which was deleted on 2026-08-13 and
+took every shadow symlink down with it mid-sweep.
 """
 
 import argparse
@@ -16,7 +19,7 @@ from pathlib import Path
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--robotwin-root",
-    default="/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin",
+    default="/home/jingxiang/yuxin/robotwin_upstream",
 )
 parser.add_argument("--library-dir", required=True)
 parser.add_argument("--shadow", required=True)
@@ -127,7 +130,9 @@ if calib_path.exists():
         for mid, row in models.items():
             asset = root.setdefault(aid, {})
             entry = asset.setdefault("models", {}).setdefault(str(mid), {})
-            declared_bad = row.get("had_override") and row.get("declared_trusted") is False
+            declared_bad = (
+                row.get("had_override") and row.get("declared_trusted") is False
+            )
             if row.get("verdict") != "ok":
                 # Declarations get no free pass either: if placing the model
                 # exactly as declared failed its own reverify AND no reliable
@@ -144,9 +149,7 @@ if calib_path.exists():
                     n_revoke += 1
                 continue
             dims = row.get("dims_m") or []
-            infeasible = dims and (
-                max(dims[0], dims[1]) > 0.42 or dims[2] > 0.55
-            )
+            infeasible = dims and (max(dims[0], dims[1]) > 0.42 or dims[2] > 0.55)
             if infeasible and "stable_pose_id" not in entry:
                 # Admission must align with the solver's placement envelope
                 # (workspace 0.70 x 0.50 m + margins + robot keepout): the
@@ -271,12 +274,10 @@ _prev_dims = {}
 _prev_cat = ext / "asset_catalog.json"
 if _prev_cat.exists():
     _pc = json.loads(_prev_cat.read_text())
-    for _e in (_pc["entries"] if isinstance(_pc, dict) else _pc):
+    for _e in _pc["entries"] if isinstance(_pc, dict) else _pc:
         for _m in _e.get("models", []):
             if _m.get("dimensions_m"):
-                _prev_dims[(_e["asset_id"], str(_m["model_id"]))] = _m[
-                    "dimensions_m"
-                ]
+                _prev_dims[(_e["asset_id"], str(_m["model_id"]))] = _m["dimensions_m"]
 _n_env = _n_floor = 0
 for _aid, _asset in _root.items():
     for _mid, _entry in (_asset.get("models") or {}).items():
