@@ -41,6 +41,7 @@ OBJECT_TERMS: dict[str, tuple[str, ...]] = {
     "mug": ("coffee mug", "mug"),
     "cup": ("cup", "马克杯", "杯子", "杯"),
     "sugar_box": ("sugar box",),
+    "cheez_it": ("cheez-it box", "cheez it box", "cheez-it", "cheez it"),
     "box": ("storage box", "box", "盒子", "箱子"),
     "hammer": ("hammer", "锤子", "锤"),
     "knife": ("knife", "刀子", "刀"),
