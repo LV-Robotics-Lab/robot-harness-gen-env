@@ -1,0 +1,8 @@
+{
+  "asset_id": "mujoco_card",
+  "mesh_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_card/mujoco_card.normalized.obj",
+  "mjcf_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_card/mujoco_card.xml",
+  "schema": "agenticsim.metasim_object.v1",
+  "urdf_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_card/mujoco_card.urdf",
+  "usd_path": null
+}

@@ -1,0 +1,173 @@
+{
+  "gravity_mps2": [
+    0.0,
+    0.0,
+    -9.81
+  ],
+  "objects": [
+    {
+      "articulation": {
+        "joints": [
+          {
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "child": "cabinet__door",
+            "damping": 0.1,
+            "id": "door_hinge",
+            "parent": "cabinet",
+            "range": [
+              -1.2,
+              0.0
+            ],
+            "type": "revolute"
+          }
+        ],
+        "links": [
+          {
+            "geometry": {
+              "color_rgb": [
+                0.42,
+                0.48,
+                0.55
+              ],
+              "half_size_m": [
+                0.18,
+                0.08,
+                0.2
+              ],
+              "type": "box"
+            },
+            "geometry_origin": {
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "position": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "id": "cabinet",
+            "mass_kg": 0.2,
+            "pose": {
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "position": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            }
+          },
+          {
+            "geometry": {
+              "color_rgb": [
+                0.82,
+                0.24,
+                0.18
+              ],
+              "half_size_m": [
+                0.18,
+                0.015,
+                0.2
+              ],
+              "type": "box"
+            },
+            "geometry_origin": {
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "position": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "id": "cabinet__door",
+            "mass_kg": 0.2,
+            "pose": {
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "position": [
+                0.0,
+                -0.095,
+                0.0
+              ]
+            }
+          }
+        ],
+        "movable_joint_count": 1,
+        "root_link": "cabinet",
+        "schema": "agenticsim.articulation_tree.v1",
+        "source": "native_mjcf_body_tree"
+      },
+      "kind": "urdf",
+      "name": "cabinet",
+      "orientation_wxyz": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_articulated_hinge/compiled/sapien/generated_urdf/cabinet_asset.urdf",
+      "position": [
+        0.0,
+        0.0,
+        0.2
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "static": true
+    }
+  ],
+  "package_id": "crosssim_articulated_hinge",
+  "regions": [],
+  "schema": "agenticsim.sapien_scene.v1",
+  "sensors": [],
+  "task_contract": {
+    "action": {
+      "interface": "zero_action",
+      "operations": []
+    },
+    "observation": {
+      "state": [
+        "object_pose",
+        "contact"
+      ]
+    },
+    "reset": {
+      "object_poses": "from_env_spec"
+    },
+    "success": [
+      {
+        "type": "settled"
+      }
+    ],
+    "termination": [
+      {
+        "steps": 120,
+        "type": "timeout"
+      }
+    ]
+  }
+}

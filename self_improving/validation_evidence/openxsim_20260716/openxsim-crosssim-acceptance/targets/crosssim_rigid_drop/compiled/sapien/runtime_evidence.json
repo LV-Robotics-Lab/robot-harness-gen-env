@@ -1,0 +1,2043 @@
+{
+  "action_interface": "zero_action",
+  "action_interface_bound": true,
+  "backend": "sapien",
+  "camera_evidence": [],
+  "joint_trajectory": [
+    {
+      "joints": {},
+      "step": 0
+    },
+    {
+      "joints": {},
+      "step": 1
+    },
+    {
+      "joints": {},
+      "step": 2
+    },
+    {
+      "joints": {},
+      "step": 3
+    },
+    {
+      "joints": {},
+      "step": 4
+    },
+    {
+      "joints": {},
+      "step": 5
+    },
+    {
+      "joints": {},
+      "step": 6
+    },
+    {
+      "joints": {},
+      "step": 7
+    },
+    {
+      "joints": {},
+      "step": 8
+    },
+    {
+      "joints": {},
+      "step": 9
+    },
+    {
+      "joints": {},
+      "step": 10
+    },
+    {
+      "joints": {},
+      "step": 11
+    },
+    {
+      "joints": {},
+      "step": 12
+    },
+    {
+      "joints": {},
+      "step": 13
+    },
+    {
+      "joints": {},
+      "step": 14
+    },
+    {
+      "joints": {},
+      "step": 15
+    },
+    {
+      "joints": {},
+      "step": 16
+    },
+    {
+      "joints": {},
+      "step": 17
+    },
+    {
+      "joints": {},
+      "step": 18
+    },
+    {
+      "joints": {},
+      "step": 19
+    },
+    {
+      "joints": {},
+      "step": 20
+    },
+    {
+      "joints": {},
+      "step": 21
+    },
+    {
+      "joints": {},
+      "step": 22
+    },
+    {
+      "joints": {},
+      "step": 23
+    },
+    {
+      "joints": {},
+      "step": 24
+    },
+    {
+      "joints": {},
+      "step": 25
+    },
+    {
+      "joints": {},
+      "step": 26
+    },
+    {
+      "joints": {},
+      "step": 27
+    },
+    {
+      "joints": {},
+      "step": 28
+    },
+    {
+      "joints": {},
+      "step": 29
+    },
+    {
+      "joints": {},
+      "step": 30
+    },
+    {
+      "joints": {},
+      "step": 31
+    },
+    {
+      "joints": {},
+      "step": 32
+    },
+    {
+      "joints": {},
+      "step": 33
+    },
+    {
+      "joints": {},
+      "step": 34
+    },
+    {
+      "joints": {},
+      "step": 35
+    },
+    {
+      "joints": {},
+      "step": 36
+    },
+    {
+      "joints": {},
+      "step": 37
+    },
+    {
+      "joints": {},
+      "step": 38
+    },
+    {
+      "joints": {},
+      "step": 39
+    },
+    {
+      "joints": {},
+      "step": 40
+    },
+    {
+      "joints": {},
+      "step": 41
+    },
+    {
+      "joints": {},
+      "step": 42
+    },
+    {
+      "joints": {},
+      "step": 43
+    },
+    {
+      "joints": {},
+      "step": 44
+    },
+    {
+      "joints": {},
+      "step": 45
+    },
+    {
+      "joints": {},
+      "step": 46
+    },
+    {
+      "joints": {},
+      "step": 47
+    },
+    {
+      "joints": {},
+      "step": 48
+    },
+    {
+      "joints": {},
+      "step": 49
+    },
+    {
+      "joints": {},
+      "step": 50
+    },
+    {
+      "joints": {},
+      "step": 51
+    },
+    {
+      "joints": {},
+      "step": 52
+    },
+    {
+      "joints": {},
+      "step": 53
+    },
+    {
+      "joints": {},
+      "step": 54
+    },
+    {
+      "joints": {},
+      "step": 55
+    },
+    {
+      "joints": {},
+      "step": 56
+    },
+    {
+      "joints": {},
+      "step": 57
+    },
+    {
+      "joints": {},
+      "step": 58
+    },
+    {
+      "joints": {},
+      "step": 59
+    },
+    {
+      "joints": {},
+      "step": 60
+    },
+    {
+      "joints": {},
+      "step": 61
+    },
+    {
+      "joints": {},
+      "step": 62
+    },
+    {
+      "joints": {},
+      "step": 63
+    },
+    {
+      "joints": {},
+      "step": 64
+    },
+    {
+      "joints": {},
+      "step": 65
+    },
+    {
+      "joints": {},
+      "step": 66
+    },
+    {
+      "joints": {},
+      "step": 67
+    },
+    {
+      "joints": {},
+      "step": 68
+    },
+    {
+      "joints": {},
+      "step": 69
+    },
+    {
+      "joints": {},
+      "step": 70
+    },
+    {
+      "joints": {},
+      "step": 71
+    },
+    {
+      "joints": {},
+      "step": 72
+    },
+    {
+      "joints": {},
+      "step": 73
+    },
+    {
+      "joints": {},
+      "step": 74
+    },
+    {
+      "joints": {},
+      "step": 75
+    },
+    {
+      "joints": {},
+      "step": 76
+    },
+    {
+      "joints": {},
+      "step": 77
+    },
+    {
+      "joints": {},
+      "step": 78
+    },
+    {
+      "joints": {},
+      "step": 79
+    },
+    {
+      "joints": {},
+      "step": 80
+    },
+    {
+      "joints": {},
+      "step": 81
+    },
+    {
+      "joints": {},
+      "step": 82
+    },
+    {
+      "joints": {},
+      "step": 83
+    },
+    {
+      "joints": {},
+      "step": 84
+    },
+    {
+      "joints": {},
+      "step": 85
+    },
+    {
+      "joints": {},
+      "step": 86
+    },
+    {
+      "joints": {},
+      "step": 87
+    },
+    {
+      "joints": {},
+      "step": 88
+    },
+    {
+      "joints": {},
+      "step": 89
+    },
+    {
+      "joints": {},
+      "step": 90
+    },
+    {
+      "joints": {},
+      "step": 91
+    },
+    {
+      "joints": {},
+      "step": 92
+    },
+    {
+      "joints": {},
+      "step": 93
+    },
+    {
+      "joints": {},
+      "step": 94
+    },
+    {
+      "joints": {},
+      "step": 95
+    },
+    {
+      "joints": {},
+      "step": 96
+    },
+    {
+      "joints": {},
+      "step": 97
+    },
+    {
+      "joints": {},
+      "step": 98
+    },
+    {
+      "joints": {},
+      "step": 99
+    },
+    {
+      "joints": {},
+      "step": 100
+    },
+    {
+      "joints": {},
+      "step": 101
+    },
+    {
+      "joints": {},
+      "step": 102
+    },
+    {
+      "joints": {},
+      "step": 103
+    },
+    {
+      "joints": {},
+      "step": 104
+    },
+    {
+      "joints": {},
+      "step": 105
+    },
+    {
+      "joints": {},
+      "step": 106
+    },
+    {
+      "joints": {},
+      "step": 107
+    },
+    {
+      "joints": {},
+      "step": 108
+    },
+    {
+      "joints": {},
+      "step": 109
+    },
+    {
+      "joints": {},
+      "step": 110
+    },
+    {
+      "joints": {},
+      "step": 111
+    },
+    {
+      "joints": {},
+      "step": 112
+    },
+    {
+      "joints": {},
+      "step": 113
+    },
+    {
+      "joints": {},
+      "step": 114
+    },
+    {
+      "joints": {},
+      "step": 115
+    },
+    {
+      "joints": {},
+      "step": 116
+    },
+    {
+      "joints": {},
+      "step": 117
+    },
+    {
+      "joints": {},
+      "step": 118
+    },
+    {
+      "joints": {},
+      "step": 119
+    },
+    {
+      "joints": {},
+      "step": 120
+    }
+  ],
+  "object_positions_final": {
+    "rigid_box": [
+      -0.0001524421968497336,
+      -3.404970993869938e-05,
+      0.04999973624944687
+    ]
+  },
+  "object_positions_initial": {
+    "rigid_box": [
+      0.0,
+      0.0,
+      0.3499999940395355
+    ]
+  },
+  "observation_keys": [
+    "contact",
+    "object_pose"
+  ],
+  "reset_ok": true,
+  "schema": "agenticsim.runtime_evidence.v1",
+  "step_ok": true,
+  "steps": 120,
+  "success_evaluator_bound": true,
+  "task_contract_hash": "c59cb00e659f12f890324933f36a6f3aebe5437faab5b19c7f535805157aa81a",
+  "timestep_s": 0.01,
+  "trajectory": [
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.3499999940395355
+        ]
+      },
+      "step": 0
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.34901899099349976
+        ]
+      },
+      "step": 1
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.3470569849014282
+        ]
+      },
+      "step": 2
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.3441139757633209
+        ]
+      },
+      "step": 3
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.34018996357917786
+        ]
+      },
+      "step": 4
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.3352849781513214
+        ]
+      },
+      "step": 5
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.3293989896774292
+        ]
+      },
+      "step": 6
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.3225319981575012
+        ]
+      },
+      "step": 7
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.3146840035915375
+        ]
+      },
+      "step": 8
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.30585500597953796
+        ]
+      },
+      "step": 9
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.2960450053215027
+        ]
+      },
+      "step": 10
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.28525400161743164
+        ]
+      },
+      "step": 11
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.27348199486732483
+        ]
+      },
+      "step": 12
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.26072898507118225
+        ]
+      },
+      "step": 13
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.2469949871301651
+        ]
+      },
+      "step": 14
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.23227998614311218
+        ]
+      },
+      "step": 15
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.2165839970111847
+        ]
+      },
+      "step": 16
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.19990700483322144
+        ]
+      },
+      "step": 17
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.1822490096092224
+        ]
+      },
+      "step": 18
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.16361001133918762
+        ]
+      },
+      "step": 19
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.14399001002311707
+        ]
+      },
+      "step": 20
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.12338901311159134
+        ]
+      },
+      "step": 21
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.10180702060461044
+        ]
+      },
+      "step": 22
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.07924402505159378
+        ]
+      },
+      "step": 23
+    },
+    {
+      "contacts": [],
+      "objects": {
+        "rigid_box": [
+          0.0,
+          0.0,
+          0.05570003390312195
+        ]
+      },
+      "step": 24
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          2.312461777620456e-09,
+          0.0,
+          0.050573382526636124
+        ]
+      },
+      "step": 25
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          5.522788004697077e-09,
+          0.0,
+          0.05199756100773811
+        ]
+      },
+      "step": 26
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          8.733114675862907e-09,
+          0.0,
+          0.05244075879454613
+        ]
+      },
+      "step": 27
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          1.1943444455653207e-08,
+          0.0,
+          0.05190293863415718
+        ]
+      },
+      "step": 28
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          1.5153773347265087e-08,
+          0.0,
+          0.05038413777947426
+        ]
+      },
+      "step": 29
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015860670828260481,
+          -2.449848034302704e-05,
+          0.049999650567770004
+        ]
+      },
+      "step": 30
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015407671162392944,
+          -3.4112774301320314e-05,
+          0.049999937415122986
+        ]
+      },
+      "step": 31
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244940004777163,
+          -3.467834540060721e-05,
+          0.04999978467822075
+        ]
+      },
+      "step": 32
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001525540865259245,
+          -3.417733023525216e-05,
+          0.04999973252415657
+        ]
+      },
+      "step": 33
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015246389375533909,
+          -3.40480801241938e-05,
+          0.04999973997473717
+        ]
+      },
+      "step": 34
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244611131493002,
+          -3.4052405680995435e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 35
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524457475170493,
+          -3.404981180210598e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 36
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524438412161544,
+          -3.404993185540661e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 37
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244376845657825,
+          -3.4049866371788085e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 38
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244392852764577,
+          -3.4051456168526784e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 39
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524438412161544,
+          -3.404978633625433e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 40
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244221140164882,
+          -3.4049691748805344e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 41
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244213864207268,
+          -3.4049629903165624e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 42
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524402032373473,
+          -3.4051718103000894e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 43
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244544192682952,
+          -3.405118332011625e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 44
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244586393237114,
+          -3.404768358450383e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 45
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524454855825752,
+          -3.405179813853465e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 46
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244592214003205,
+          -3.404954259167425e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 47
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244573296513408,
+          -3.404785456950776e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 48
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244547103065997,
+          -3.4051816328428686e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 49
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244596579577774,
+          -3.4049528039759025e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 50
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244397218339145,
+          -3.4051678085234016e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 51
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244593669194728,
+          -3.404939707252197e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 52
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244557289406657,
+          -3.4051703551085666e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 53
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524459512438625,
+          -3.404950984986499e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 54
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244587848428637,
+          -3.40495680575259e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 55
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244555834215134,
+          -3.4051772672683e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 56
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524459512438625,
+          -3.404950984986499e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 57
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244587848428637,
+          -3.4049564419547096e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 58
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244554379023612,
+          -3.4051769034704193e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 59
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524459512438625,
+          -3.404950984986499e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 60
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524438412161544,
+          -3.40499755111523e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 61
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.00015244376845657825,
+          -3.4049877285724506e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 62
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 63
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 64
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 65
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 66
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 67
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 68
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 69
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 70
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 71
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 72
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 73
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 74
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 75
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 76
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 77
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 78
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 79
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 80
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 81
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 82
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 83
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 84
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 85
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 86
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 87
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 88
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 89
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 90
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 91
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 92
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 93
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 94
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 95
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 96
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 97
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 98
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 99
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 100
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 101
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 102
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 103
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 104
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 105
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 106
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 107
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 108
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 109
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 110
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 111
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 112
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 113
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 114
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 115
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 116
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 117
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 118
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 119
+    },
+    {
+      "contacts": [
+        "ground:rigid_box"
+      ],
+      "objects": {
+        "rigid_box": [
+          -0.0001524421968497336,
+          -3.404970993869938e-05,
+          0.04999973624944687
+        ]
+      },
+      "step": 120
+    }
+  ],
+  "trajectory_mode": "zero_action_physics_rollout"
+}

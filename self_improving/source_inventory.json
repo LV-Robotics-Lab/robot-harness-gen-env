@@ -106,6 +106,30 @@
       }
     },
     {
+      "name": "jingxiang-workspace-sibling-consolidation",
+      "captured_at": "2026-08-13",
+      "source_paths": [
+        "/home/jingxiang/workspace/AgenticSim-openxsim-acceptance",
+        "/home/jingxiang/workspace/openxsim-validation",
+        "/home/jingxiang/workspace/openxsim-final-acceptance",
+        "/home/jingxiang/workspace/openxsim-crosssim-acceptance",
+        "/home/jingxiang/workspace/robotwin-text2env-stage04-validation",
+        "/home/jingxiang/workspace/robotwin-text2env-stage05-validation"
+      ],
+      "git_evidence": "self_improving/validation_evidence/openxsim_20260716",
+      "file_manifest": "self_improving/workspace_archives/20260716/MANIFEST.sha256",
+      "release_tag": "workspace-consolidation-20260813",
+      "release_asset": "robot-harness-gen-env-workspace-archives-20260716.tar.gz",
+      "release_asset_bytes": 139152925,
+      "release_asset_sha256": "18ce98febb5c3cd67ac05972fc298d8967334c6d14a108f29abb874e3904f8c7",
+      "archive_excluded": ["nested .git metadata", "__pycache__", "pytest and ruff caches", "*.pyc", "*.egg-info"],
+      "prompt_matrix_clone": {
+        "source_path": "/home/jingxiang/workspace/robot-harness-gen-env-prompt-matrix-20260719",
+        "observed_head": "73d8c08012c69d52a9837633f8c28fcffd90536b",
+        "status": "clean and content/history already merged; no duplicate archive payload"
+      }
+    },
+    {
       "name": "OpenReal2Sim",
       "repository": "LV-Robotics-Lab/OpenReal2Sim",
       "destination": "external/OpenReal2Sim",
@@ -118,6 +142,13 @@
       "destination": "external/digital-cousins",
       "branch": "integration/self-improving",
       "commit": "b1aa90a8dec7273e5c5a4a60450dc829083ce0a0"
+    },
+    {
+      "name": "MetaSim",
+      "repository": "RoboVerseOrg/MetaSim",
+      "destination": "external/MetaSim",
+      "commit": "6947e353ac6832cb85767ebe1472fb8908a5d371",
+      "source_path": "/home/jingxiang/workspace/openxsim-validation/third_party/MetaSim"
     },
     {
       "name": "retired-AgenticSim",

@@ -1,0 +1,8 @@
+{
+  "asset_id": "bullet_pan",
+  "mesh_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_pan/bullet_pan.normalized.obj",
+  "mjcf_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_pan/bullet_pan.xml",
+  "schema": "agenticsim.metasim_object.v1",
+  "urdf_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_pan/bullet_pan.urdf",
+  "usd_path": null
+}

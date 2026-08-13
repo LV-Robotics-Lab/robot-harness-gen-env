@@ -1,0 +1,54 @@
+{
+  "asset_id": "assimp_spider",
+  "collision_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/assimp_spider.collision_box.obj",
+  "normalization": {
+    "face_count": 1368,
+    "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/default_material.mtl",
+    "material_status": "generated_default_material",
+    "normalized_bounds": {
+      "extent": [
+        0.7787236739227562,
+        0.4123321357062483,
+        1.0
+      ],
+      "maximum": [
+        0.3893618369613781,
+        0.20616606785312416,
+        0.5
+      ],
+      "minimum": [
+        -0.3893618369613781,
+        -0.20616606785312416,
+        -0.5
+      ]
+    },
+    "scale_factor": 0.005171101403230077,
+    "source_bounds": {
+      "extent": [
+        150.591453,
+        79.73777799999999,
+        193.3824
+      ],
+      "maximum": [
+        57.936218,
+        37.503952,
+        86.6912
+      ],
+      "minimum": [
+        -92.655235,
+        -42.233826,
+        -106.6912
+      ]
+    },
+    "source_center": [
+      -17.359508500000004,
+      -2.364937000000001,
+      -10.0
+    ],
+    "target_max_extent_m": 1.0,
+    "vertex_count": 762
+  },
+  "schema": "agenticsim.sapien_asset.v1",
+  "source_format": "obj",
+  "visual_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/assimp_spider.normalized.obj"
+}

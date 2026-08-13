@@ -1,0 +1,70 @@
+{
+  "articulation": {
+    "articulated": false,
+    "joint_count": 0,
+    "joint_types": [],
+    "status": "rigid_mesh_no_joint_schema"
+  },
+  "asset_id": "bullet_plate",
+  "collision": {
+    "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_plate/bullet_plate.collision_box.obj",
+    "sha256": "fb19658379cfcfbe4b408d429b70a554d704b53192fb6e005ddd681dcaedebf1",
+    "status": "generated",
+    "strategy": "axis_aligned_convex_box"
+  },
+  "material": {
+    "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_plate/default_material.mtl",
+    "sha256": "67349ace1cad813ed6fb8c8cdeb2c5dfd3506dc452cdb1e8b3cb770e1cb9fcf6",
+    "status": "generated_default_material"
+  },
+  "normalization": {
+    "face_count": 540,
+    "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_plate/default_material.mtl",
+    "material_status": "generated_default_material",
+    "normalized_bounds": {
+      "extent": [
+        1.0,
+        0.9945204081632653,
+        0.30612244897959184
+      ],
+      "maximum": [
+        0.5,
+        0.49726020408163263,
+        0.15306122448979592
+      ],
+      "minimum": [
+        -0.5,
+        -0.49726020408163263,
+        -0.15306122448979592
+      ]
+    },
+    "scale_factor": 5.1020408163265305,
+    "source_bounds": {
+      "extent": [
+        0.196,
+        0.194926,
+        0.06
+      ],
+      "maximum": [
+        0.098,
+        0.097463,
+        0.06
+      ],
+      "minimum": [
+        -0.098,
+        -0.097463,
+        0.0
+      ]
+    },
+    "source_center": [
+      0.0,
+      0.0,
+      0.03
+    ],
+    "target_max_extent_m": 1.0,
+    "vertex_count": 270
+  },
+  "runtime_import_required": true,
+  "schema": "agenticsim.asset_validation.v1",
+  "source_format": "obj"
+}

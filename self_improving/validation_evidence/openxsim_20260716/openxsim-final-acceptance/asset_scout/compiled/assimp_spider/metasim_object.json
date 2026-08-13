@@ -1,0 +1,8 @@
+{
+  "asset_id": "assimp_spider",
+  "mesh_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/assimp_spider.normalized.obj",
+  "mjcf_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/assimp_spider.xml",
+  "schema": "agenticsim.metasim_object.v1",
+  "urdf_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/assimp_spider.urdf",
+  "usd_path": null
+}

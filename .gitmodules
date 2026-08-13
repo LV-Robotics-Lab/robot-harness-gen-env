@@ -6,3 +6,6 @@
 	path = external/digital-cousins
 	url = https://github.com/LV-Robotics-Lab/digital-cousins.git
 	branch = integration/self-improving
+[submodule "external/MetaSim"]
+	path = external/MetaSim
+	url = https://github.com/RoboVerseOrg/MetaSim.git
