@@ -82,7 +82,8 @@ python -m pytest -q self_improving/asset_pipeline/active/web/tests
   PYTHONPATH=source/agenticsim python -m pytest -q tests)
 ```
 
-The current source-only baseline is 542 passed and 6 skipped. The skips are
+The current source-only baseline is 543 passed and 5 skipped with the required
+top-level external submodules initialized. The skips are
 explicit physical/runtime checks that require SAPIEN or the excluded raw
 Isaac, SceneAgent, media, and report bundles; they are not silently mocked.
 In addition, the Jingxiang consolidation gate was exercised in the real
