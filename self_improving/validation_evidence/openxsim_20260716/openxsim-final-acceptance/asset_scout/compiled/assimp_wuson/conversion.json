@@ -1,0 +1,19 @@
+{
+  "asset_id": "assimp_wuson",
+  "generated": {
+    "collision_proxy": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/assimp_wuson.collision_box.obj",
+    "material": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/default_material.mtl",
+    "metasim_object": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/metasim_object.json",
+    "mjcf": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/assimp_wuson.xml",
+    "normalized_obj": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/assimp_wuson.normalized.obj",
+    "sapien_manifest": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/sapien_asset.json",
+    "urdf": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/assimp_wuson.urdf",
+    "usda": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/assimp_wuson.usda",
+    "validation_manifest": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/asset_validation.json"
+  },
+  "provenance_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/d3cdc5265149dc224507/provenance.json",
+  "schema": "agenticsim.asset_conversion.v1",
+  "source_format": "obj",
+  "source_sha256": "092295203dc1ddb7be09aa0ebd7b2708d7553300698e44a48bc6ac65c6bd86cf",
+  "validation_manifest": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_wuson/asset_validation.json"
+}

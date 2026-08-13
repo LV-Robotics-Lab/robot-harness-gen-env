@@ -1,0 +1,28 @@
+{
+  "schema_version": "robot_harness.workspace_archive.v1",
+  "captured_at": "2026-08-13",
+  "release_tag": "workspace-consolidation-20260813",
+  "asset": {
+    "name": "robot-harness-gen-env-workspace-archives-20260716.tar.gz",
+    "bytes": 139152925,
+    "sha256": "18ce98febb5c3cd67ac05972fc298d8967334c6d14a108f29abb874e3904f8c7"
+  },
+  "file_manifest": "MANIFEST.sha256",
+  "file_count": 4380,
+  "sources": [
+    "AgenticSim-openxsim-acceptance",
+    "openxsim-validation",
+    "openxsim-final-acceptance",
+    "openxsim-crosssim-acceptance",
+    "robotwin-text2env-stage04-validation",
+    "robotwin-text2env-stage05-validation"
+  ],
+  "excluded": [
+    "nested .git metadata",
+    "__pycache__",
+    ".pytest_cache",
+    ".ruff_cache",
+    "*.pyc",
+    "*.egg-info"
+  ]
+}

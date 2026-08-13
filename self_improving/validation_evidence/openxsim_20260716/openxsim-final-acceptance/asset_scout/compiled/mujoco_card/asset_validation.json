@@ -1,0 +1,70 @@
+{
+  "articulation": {
+    "articulated": false,
+    "joint_count": 0,
+    "joint_types": [],
+    "status": "rigid_mesh_no_joint_schema"
+  },
+  "asset_id": "mujoco_card",
+  "collision": {
+    "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_card/mujoco_card.collision_box.obj",
+    "sha256": "2065c059674a4ad136a9fe6d6b10697a05c970b29c13eb2d41e1cd7faa9ea45b",
+    "status": "generated",
+    "strategy": "axis_aligned_convex_box"
+  },
+  "material": {
+    "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_card/default_material.mtl",
+    "sha256": "67349ace1cad813ed6fb8c8cdeb2c5dfd3506dc452cdb1e8b3cb770e1cb9fcf6",
+    "status": "generated_default_material"
+  },
+  "normalization": {
+    "face_count": 76,
+    "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_card/default_material.mtl",
+    "material_status": "generated_default_material",
+    "normalized_bounds": {
+      "extent": [
+        1.0,
+        0.6808510638297872,
+        0.0026595744680851063
+      ],
+      "maximum": [
+        0.5,
+        0.3404255319148936,
+        0.0013297872340425532
+      ],
+      "minimum": [
+        -0.5,
+        -0.3404255319148936,
+        -0.0013297872340425532
+      ]
+    },
+    "scale_factor": 10.638297872340425,
+    "source_bounds": {
+      "extent": [
+        0.094,
+        0.064,
+        0.00025
+      ],
+      "maximum": [
+        0.047,
+        0.032,
+        0.000125
+      ],
+      "minimum": [
+        -0.047,
+        -0.032,
+        -0.000125
+      ]
+    },
+    "source_center": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "target_max_extent_m": 1.0,
+    "vertex_count": 40
+  },
+  "runtime_import_required": true,
+  "schema": "agenticsim.asset_validation.v1",
+  "source_format": "obj"
+}

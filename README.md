@@ -32,9 +32,14 @@ self_improving/onboarding/         recovered migration tools and provenance
 self_improving/legacy/stage04/     read-only historical stage snapshot
 self_improving/legacy/robotwin_text2env_alt/
                                    read-only alternate Text2Env history
+self_improving/validation_evidence/
+                                   compact recovered simulator acceptance records
+self_improving/workspace_archives/
+                                   full-file manifests and Release archive pointers
 apps/pearl_evidence_portal/        PEARL evidence portal and hosted subset
 external/OpenReal2Sim/             independent Git submodule
 external/digital-cousins/          independent Git submodule
+external/MetaSim/                  pinned validation dependency submodule
 ```
 
 Initialize the complete source tree and audit it with:

@@ -1,0 +1,54 @@
+{
+  "asset_id": "mujoco_mug",
+  "collision_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_mug/mujoco_mug.collision_box.obj",
+  "normalization": {
+    "face_count": 24544,
+    "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_mug/default_material.mtl",
+    "material_status": "generated_default_material",
+    "normalized_bounds": {
+      "extent": [
+        1.0,
+        0.5837046697616892,
+        0.7254113903376378
+      ],
+      "maximum": [
+        0.5,
+        0.2918523348808446,
+        0.3627056951688189
+      ],
+      "minimum": [
+        -0.5,
+        -0.2918523348808446,
+        -0.3627056951688189
+      ]
+    },
+    "scale_factor": 0.08115608465715815,
+    "source_bounds": {
+      "extent": [
+        12.321935,
+        7.192371,
+        8.938472
+      ],
+      "maximum": [
+        7.852664,
+        7.192498,
+        4.469236
+      ],
+      "minimum": [
+        -4.469271,
+        0.000127,
+        -4.469236
+      ]
+    },
+    "source_center": [
+      1.6916965,
+      3.5963125,
+      0.0
+    ],
+    "target_max_extent_m": 1.0,
+    "vertex_count": 12272
+  },
+  "schema": "agenticsim.sapien_asset.v1",
+  "source_format": "obj",
+  "visual_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_mug/mujoco_mug.normalized.obj"
+}

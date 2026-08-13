@@ -1,0 +1,54 @@
+{
+  "asset_id": "bullet_duck",
+  "collision_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_duck/bullet_duck.collision_box.obj",
+  "normalization": {
+    "face_count": 4212,
+    "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_duck/default_material.mtl",
+    "material_status": "generated_default_material",
+    "normalized_bounds": {
+      "extent": [
+        1.0,
+        0.9310170067614318,
+        0.697887811214023
+      ],
+      "maximum": [
+        0.5,
+        0.4655085033807159,
+        0.3489439056070115
+      ],
+      "minimum": [
+        -0.5,
+        -0.465508503380716,
+        -0.3489439056070115
+      ]
+    },
+    "scale_factor": 0.6069508005681059,
+    "source_bounds": {
+      "extent": [
+        1.64758,
+        1.533925,
+        1.149826
+      ],
+      "maximum": [
+        0.68872,
+        1.63498,
+        0.611818
+      ],
+      "minimum": [
+        -0.95886,
+        0.101055,
+        -0.538008
+      ]
+    },
+    "source_center": [
+      -0.13507000000000002,
+      0.8680175000000001,
+      0.036904999999999966
+    ],
+    "target_max_extent_m": 1.0,
+    "vertex_count": 2108
+  },
+  "schema": "agenticsim.sapien_asset.v1",
+  "source_format": "obj",
+  "visual_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_duck/bullet_duck.normalized.obj"
+}
