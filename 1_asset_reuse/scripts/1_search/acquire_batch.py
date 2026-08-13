@@ -180,6 +180,17 @@ def _attempt_import(
                 ],
                 env={"OMNI_KIT_ACCEPT_EULA": "YES"},
             )
+        # a failed fetch/convert leaves no staging manifest; running
+        # materialize anyway crashes on the missing file and mislabels the
+        # candidate validation_failed:materialize when the truth is the
+        # conversion never happened (C_cycle, network reset mid-download)
+        if not (Path(staging) / "staging_manifest.json").is_file():
+            r["verdict"] = "rejected"
+            r["rejection"] = {
+                "code": a2.REJ_CONVERT,
+                "detail": "fetch/convert produced no staging manifest",
+            }
+            continue
         runner(
             [
                 paths["py_sap"],
@@ -503,13 +514,10 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             # reported search_failed with no evidence file while the 7B had
             # examined and refuted candidates on two tiers).
             if gate_log["results"]:
-                ev = (
-                    Path(paths["out"]) / f"identity_{category.replace(' ', '_')}.json"
-                )
+                ev = Path(paths["out"]) / f"identity_{category.replace(' ', '_')}.json"
                 ev.parent.mkdir(parents=True, exist_ok=True)
                 ev.write_text(
-                    json.dumps(gate_log["results"], indent=2, ensure_ascii=False)
-                    + "\n"
+                    json.dumps(gate_log["results"], indent=2, ensure_ascii=False) + "\n"
                 )
                 rec["identity_gate"] = {
                     "outcome": gate_log["outcome"],
@@ -532,7 +540,9 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         if gate_log["results"]:
             ev = Path(paths["out"]) / f"identity_{category.replace(' ', '_')}.json"
             ev.parent.mkdir(parents=True, exist_ok=True)
-            ev.write_text(json.dumps(gate_log["results"], indent=2, ensure_ascii=False) + "\n")
+            ev.write_text(
+                json.dumps(gate_log["results"], indent=2, ensure_ascii=False) + "\n"
+            )
             rec["identity_gate"] = {"outcome": gate_log["outcome"], "evidence": str(ev)}
 
         identity = {"basis": "requested_by_acquire", "evidence": None}
@@ -577,8 +587,9 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             # differently downstream: the former is a coverage gap, the latter is
             # the gate doing its job.
             rec["status"] = (
-                "identity_unverified" if gate_log["results"] else
-                ("search_failed" if not res["candidates"] else "exhausted")
+                "identity_unverified"
+                if gate_log["results"]
+                else ("search_failed" if not res["candidates"] else "exhausted")
             )
             rec["candidates"] = rec.get("candidates", []) + [
                 {
@@ -609,7 +620,9 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
                 max_check=1,
                 second_opinion=bool(verify_cfg.get("second_opinion", True)),
             )
-            gate_log["results"].extend({**r_, "tier": "fallback"} for r_ in vr["results"])
+            gate_log["results"].extend(
+                {**r_, "tier": "fallback"} for r_ in vr["results"]
+            )
             ev_path = rec.get("identity_gate", {}).get("evidence")
             if ev_path:
                 Path(ev_path).write_text(
