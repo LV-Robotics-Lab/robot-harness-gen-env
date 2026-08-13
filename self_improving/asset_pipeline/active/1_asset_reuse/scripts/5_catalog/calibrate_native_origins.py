@@ -208,8 +208,23 @@ def main():
         [R2, 0, -R2, 0],
     ]
 
-    result = {}
-    n_ok = 0
+    # 续测（2026-08-14 事故后加）：共享机器上 GPU 被他人训练占满时渲染缓存会
+    # 耗尽，进程必须能分批重启接着跑，否则一小时的实测一次报废。
+    done = {}
+    outp = Path(a.out)
+    if outp.exists() and not a.only:
+        try:
+            done = json.loads(outp.read_text()).get("models", {})
+        except Exception:  # noqa: BLE001
+            done = {}
+    todo = [t for t in todo if str(t[1]) not in done.get(t[0], {})]
+    if done:
+        print(f"续测：沿用 {sum(len(v) for v in done.values())} 条，剩 {len(todo)}", flush=True)
+
+    result = {k: dict(v) for k, v in done.items()}
+    n_ok = sum(
+        1 for v in done.values() for r in v.values() if r.get("verdict") == "ok"
+    )
     for aid, mid in todo:
         decl = (overrides.get(aid) or {}).get("models", {}).get(str(mid), {})
         declared_q = decl.get("stable_orientation_wxyz")
@@ -259,6 +274,16 @@ def main():
             f"{flag}{aid}/m{mid}: {row.get('verdict')} zp={row.get('z_policy')} h={row.get('origin_height_m')}",
             flush=True,
         )
+        try:
+            import sapien.render as _sr
+
+            _sr.clear_cache()
+        except Exception:  # noqa: BLE001
+            pass
+        if "buffer" in str(row.get("verdict", "")):
+            result[aid].pop(str(mid), None)
+            print("渲染缓存耗尽：保存进度并退出，交由外层重启续测", flush=True)
+            break
 
     out = {
         "schema": "envgen.native_origin_calibration.v1",
@@ -268,7 +293,11 @@ def main():
         "models": result,
     }
     Path(a.out).write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
-    print(f"\n校准完成: {n_ok}/{len(todo)} accepted -> {a.out}")
+    n_all = sum(len(v) for v in result.values())
+    if not todo:
+        print(f"\n校准完成: {n_ok}/{n_all} accepted -> {a.out}")
+    else:
+        print(f"\n本批结束: 累计 {n_ok}/{n_all} accepted -> {a.out}")
 
 
 if __name__ == "__main__":

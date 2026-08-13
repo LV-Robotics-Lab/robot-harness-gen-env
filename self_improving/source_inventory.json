@@ -82,6 +82,7 @@
       "archive_branches": {
         "main_snapshot": "archive/yuxin-env-gen-dev-main-20260814",
         "main_current_and_dirty": "archive/yuxin-env-gen-dev-main-current-20260814",
+        "recovery_main_and_dirty": "archive/yuxin-env-gen-dev-recovery-20260814",
         "web_studio_v2": "archive/yuxin-env-gen-dev-web-studio-v2-20260814",
         "alias_screening": "archive/yuxin-env-gen-dev-alias-screening-20260814",
         "asset_sources": "archive/yuxin-env-gen-dev-asset-sources-20260814",
@@ -90,6 +91,7 @@
       "retained": ["reconciled active source", "shared OpenXSim source and tests", "branch overlays", "asset acquisition manifest", "ledger and model metadata", "full local asset SHA-256 manifest"],
       "content_receipt": "self_improving/asset_pipeline/receipts/asset_library_manifest.json",
       "ignored_workbench_snapshot": "self_improving/asset_pipeline/workbench_snapshots",
+      "measured_metadata": "self_improving/asset_pipeline/active/data/scene_gen_ext",
       "excluded": ["vendored OpenXSim dependencies", "MetaSim checkout", "meshes", "renders", "results", "caches", "shadow upstream clone"],
       "storage_uri": null
     },
