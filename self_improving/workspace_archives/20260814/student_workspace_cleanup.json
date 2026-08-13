@@ -4,7 +4,7 @@
   "host": "jingxiang@100.64.0.6",
   "canonical_repository": "/home/jingxiang/workspace/robot-harness-gen-env",
   "integration_branch": "integration/student-workspaces-20260814",
-  "integration_commit": "d7fbb8f72a57bf68c77046d1778f841cc3faa747",
+  "integration_commit": "d139004d964ee952c8a7fab60f4e6211d26c2872",
   "remote_repository": "LV-Robotics-Lab/robot-harness-gen-env",
   "deleted_redundant_paths": [
     "/home/jingxiang/bingsheng/robot-harness-gen-env",
