@@ -1,0 +1,217 @@
+{
+  "schema_version": "text2env.tabletop.v0",
+  "task_name": "move_red_block_to_blue_zone",
+  "language_instruction": "Move the red block onto the blue zone.",
+  "intent": "place_in_region",
+  "status": "ready_for_scaffold",
+  "workspace": {
+    "type": "tabletop",
+    "surface": "table",
+    "robot_setup": "dual_arm",
+    "bounds": {
+      "x": [
+        -0.4,
+        0.4
+      ],
+      "y": [
+        -0.3,
+        0.25
+      ],
+      "z": [
+        0.74,
+        1.1
+      ]
+    },
+    "table": {
+      "height_m": 0.74
+    }
+  },
+  "objects": [
+    {
+      "id": "red_block",
+      "role": "manipulated",
+      "kind": "box",
+      "category": "block",
+      "geometry": {
+        "shape": "box",
+        "half_size": [
+          0.025,
+          0.025,
+          0.025
+        ],
+        "color": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "visible": true
+      },
+      "initial_pose": {
+        "mode": "random_uniform",
+        "xlim": [
+          -0.28,
+          -0.12
+        ],
+        "ylim": [
+          -0.05,
+          0.08
+        ],
+        "zlim": [
+          0.766,
+          0.766
+        ],
+        "qpos": [
+          1,
+          0,
+          0,
+          0
+        ],
+        "rotate_rand": true,
+        "rotate_lim": [
+          0,
+          0,
+          0.4
+        ]
+      },
+      "physical": {
+        "mass_kg": 0.05,
+        "graspable": true,
+        "movable": true,
+        "is_static": false
+      },
+      "protected_region": {
+        "enabled": true,
+        "padding_m": 0.07
+      },
+      "description_key": "red block"
+    }
+  ],
+  "regions": [
+    {
+      "id": "blue_zone",
+      "type": "target_zone",
+      "center": [
+        0.05,
+        -0.1,
+        0.742
+      ],
+      "size": [
+        0.16,
+        0.12,
+        0.004
+      ],
+      "color": [
+        0.0,
+        0.35,
+        1.0,
+        0.45
+      ],
+      "visible": true,
+      "success_tolerance_m": 0.04
+    }
+  ],
+  "arm_policy": {
+    "type": "by_object_x",
+    "object": "red_block",
+    "negative_arm": "left",
+    "nonnegative_arm": "right",
+    "save_as": "main_arm"
+  },
+  "plan": [
+    {
+      "op": "grasp",
+      "object": "red_block",
+      "arm": "$main_arm",
+      "pre_grasp_dis": 0.09,
+      "grasp_dis": 0.0,
+      "comment": "Pick the block with the arm selected from its x position."
+    },
+    {
+      "op": "move_by",
+      "arm": "$main_arm",
+      "delta": [
+        0.0,
+        0.0,
+        0.08
+      ],
+      "axis": "world",
+      "comment": "Lift the block before moving to the target zone."
+    },
+    {
+      "op": "place",
+      "object": "red_block",
+      "arm": "$main_arm",
+      "target": "blue_zone",
+      "pre_dis": 0.05,
+      "dis": 0.0,
+      "is_open": true,
+      "comment": "Place the block on the blue zone."
+    },
+    {
+      "op": "move_by",
+      "arm": "$main_arm",
+      "delta": [
+        0.0,
+        0.0,
+        0.06
+      ],
+      "axis": "world",
+      "comment": "Move the arm away after releasing the block."
+    }
+  ],
+  "success": [
+    {
+      "type": "in_region",
+      "object": "red_block",
+      "region": "blue_zone",
+      "tolerance_m": 0.04,
+      "comment": "The red block center should end inside the blue zone."
+    },
+    {
+      "type": "grippers_open",
+      "required": true,
+      "comment": "The robot should release the block."
+    }
+  ],
+  "language": {
+    "full_description": "Move the red block onto the blue zone.",
+    "schema": "{A} is the red block, {B} is the blue zone, {a} is the arm used to move the block.",
+    "preference": "Short imperative instructions.",
+    "placeholders": {
+      "{A}": "red block",
+      "{B}": "blue zone",
+      "{a}": "$main_arm"
+    },
+    "seen_templates": [
+      "Move {A} onto {B}.",
+      "Use {a} to place {A} on {B}.",
+      "Put {A} in {B}."
+    ],
+    "unseen_templates": [
+      "Place {A} onto {B}.",
+      "Carry {A} to {B}.",
+      "Set {A} down on {B}."
+    ]
+  },
+  "randomization": {
+    "object_pose": true,
+    "lighting": false,
+    "texture": false,
+    "cluttered_table": false,
+    "table_height": false
+  },
+  "validation_constraints": [
+    "no_initial_object_collision",
+    "target_reachable_by_robot",
+    "success_condition_sim_state_observable",
+    "task_objects_stable",
+    "protected_regions_defined",
+    "all_placeholders_bound"
+  ],
+  "generation_targets": {
+    "robotwin_task_file": "envs/move_red_block_to_blue_zone.py",
+    "instruction_file": "description/task_instruction/move_red_block_to_blue_zone.json",
+    "preferred_task_config": "demo_smoke"
+  },
+  "notes": "Simple natural-language-to-Text2Env sanity test for SceneSmith-lite Step 3."
+}

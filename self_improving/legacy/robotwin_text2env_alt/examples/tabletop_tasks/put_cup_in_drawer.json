@@ -1,0 +1,223 @@
+{
+  "schema_version": "text2env.tabletop.v0",
+  "task_name": "put_cup_in_drawer",
+  "language_instruction": "Put the red cup into the drawer.",
+  "intent": "articulated_place",
+  "status": "draft_requires_articulation",
+  "workspace": {
+    "type": "tabletop",
+    "surface": "table",
+    "robot_setup": "dual_arm",
+    "bounds": {
+      "x": [
+        -0.4,
+        0.4
+      ],
+      "y": [
+        -0.3,
+        0.3
+      ],
+      "z": [
+        0.74,
+        1.15
+      ]
+    },
+    "table": {
+      "height_m": 0.74
+    }
+  },
+  "objects": [
+    {
+      "id": "red_cup",
+      "role": "manipulated",
+      "kind": "asset",
+      "category": "cup",
+      "asset": {
+        "modelname": "021_cup",
+        "model_id": 1,
+        "convex": true
+      },
+      "initial_pose": {
+        "mode": "random_uniform",
+        "xlim": [
+          -0.28,
+          -0.14
+        ],
+        "ylim": [
+          -0.08,
+          0.08
+        ],
+        "zlim": [
+          0.76,
+          0.76
+        ],
+        "qpos": [
+          1,
+          0,
+          0,
+          0
+        ],
+        "rotate_rand": true,
+        "rotate_lim": [
+          0,
+          0,
+          0.5
+        ]
+      },
+      "physical": {
+        "mass_kg": 0.04,
+        "graspable": true,
+        "movable": true,
+        "is_static": false
+      },
+      "protected_region": {
+        "enabled": true,
+        "padding_m": 0.07
+      },
+      "description_key": "021_cup/base1"
+    },
+    {
+      "id": "drawer",
+      "role": "container",
+      "kind": "urdf",
+      "category": "drawer",
+      "asset": {
+        "modelname": "drawer_candidate",
+        "model_id": null,
+        "fix_root_link": true
+      },
+      "initial_pose": {
+        "mode": "fixed",
+        "xyz": [
+          0.14,
+          -0.08,
+          0.76
+        ],
+        "qpos": [
+          1,
+          0,
+          0,
+          0
+        ]
+      },
+      "physical": {
+        "graspable": false,
+        "movable": false,
+        "is_static": true
+      },
+      "protected_region": {
+        "enabled": true,
+        "padding_m": 0.1
+      },
+      "description_key": "drawer"
+    }
+  ],
+  "regions": [
+    {
+      "id": "drawer_interior",
+      "type": "target_zone",
+      "center": [
+        0.14,
+        -0.08,
+        0.81
+      ],
+      "size": [
+        0.16,
+        0.12,
+        0.08
+      ],
+      "color": [
+        0.8,
+        0.1,
+        0.1,
+        0.25
+      ],
+      "visible": false,
+      "success_tolerance_m": 0.05
+    }
+  ],
+  "arm_policy": {
+    "type": "by_object_x",
+    "object": "red_cup",
+    "negative_arm": "left",
+    "nonnegative_arm": "right",
+    "save_as": "main_arm"
+  },
+  "plan": [
+    {
+      "op": "grasp",
+      "object": "red_cup",
+      "arm": "$main_arm",
+      "pre_grasp_dis": 0.09,
+      "grasp_dis": 0.0
+    },
+    {
+      "op": "move_by",
+      "arm": "$main_arm",
+      "delta": [
+        0.0,
+        0.0,
+        0.1
+      ],
+      "axis": "world"
+    },
+    {
+      "op": "place",
+      "object": "red_cup",
+      "arm": "$main_arm",
+      "target": "drawer_interior",
+      "pre_dis": 0.06,
+      "dis": 0.02,
+      "is_open": true
+    }
+  ],
+  "success": [
+    {
+      "type": "in_region",
+      "object": "red_cup",
+      "region": "drawer_interior",
+      "tolerance_m": 0.05
+    },
+    {
+      "type": "grippers_open",
+      "required": true
+    }
+  ],
+  "language": {
+    "full_description": "Put the red cup into the drawer.",
+    "schema": "{A} is the cup, {B} is the drawer, {a} is the arm used to move the cup.",
+    "preference": "Short imperative instructions.",
+    "placeholders": {
+      "{A}": "021_cup/base1",
+      "{B}": "drawer",
+      "{a}": "$main_arm"
+    },
+    "seen_templates": [
+      "Put {A} into {B}.",
+      "Use {a} to place {A} in {B}."
+    ],
+    "unseen_templates": [
+      "Move {A} inside {B}.",
+      "Place {A} into the drawer using {a}."
+    ]
+  },
+  "randomization": {
+    "object_pose": true,
+    "lighting": false,
+    "texture": false,
+    "cluttered_table": false,
+    "table_height": false
+  },
+  "validation_constraints": [
+    "no_initial_object_collision",
+    "target_reachable_by_robot",
+    "success_condition_sim_state_observable",
+    "all_placeholders_bound"
+  ],
+  "generation_targets": {
+    "robotwin_task_file": "envs/put_cup_in_drawer.py",
+    "instruction_file": "description/task_instruction/put_cup_in_drawer.json",
+    "preferred_task_config": "demo_smoke"
+  },
+  "notes": "Draft only. This requires confirming an actual drawer asset and articulated qpos/open-state handling in RoboTwin2 before scaffold generation."
+}

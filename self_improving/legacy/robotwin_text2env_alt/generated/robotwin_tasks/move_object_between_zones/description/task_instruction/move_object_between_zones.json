@@ -1,0 +1,15 @@
+{
+  "full_description": "Move a green block from the left zone to the right zone while keeping the blue bowl still.",
+  "schema": "{A} is the green block, {B} is the right zone, {C} is the blue bowl, {a} is the arm used to move the block.",
+  "preference": "Short imperative instructions.",
+  "seen": [
+    "Move {A} to {B} without moving {C}.",
+    "Use {a} to place {A} in {B}.",
+    "Transfer {A} into {B} and keep {C} still."
+  ],
+  "unseen": [
+    "Put {A} in {B} while avoiding {C}.",
+    "Place {A} at {B} without disturbing {C}.",
+    "Carry {A} to {B} and leave {C} still."
+  ]
+}

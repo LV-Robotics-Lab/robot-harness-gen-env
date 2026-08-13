@@ -1,0 +1,284 @@
+{
+  "schema_version": "text2env.tabletop.v0",
+  "task_name": "move_object_between_zones",
+  "language_instruction": "Move the green block from the left zone to the right zone without moving the blue bowl.",
+  "intent": "place_in_region",
+  "status": "ready_for_scaffold",
+  "workspace": {
+    "type": "tabletop",
+    "surface": "table",
+    "robot_setup": "dual_arm",
+    "bounds": {
+      "x": [
+        -0.4,
+        0.4
+      ],
+      "y": [
+        -0.3,
+        0.25
+      ],
+      "z": [
+        0.74,
+        1.1
+      ]
+    },
+    "table": {
+      "height_m": 0.74
+    }
+  },
+  "objects": [
+    {
+      "id": "green_block",
+      "role": "manipulated",
+      "kind": "box",
+      "category": "block",
+      "geometry": {
+        "shape": "box",
+        "half_size": [
+          0.025,
+          0.025,
+          0.025
+        ],
+        "color": [
+          0.0,
+          0.8,
+          0.1
+        ],
+        "visible": true
+      },
+      "initial_pose": {
+        "mode": "random_uniform",
+        "xlim": [
+          -0.2,
+          -0.1
+        ],
+        "ylim": [
+          -0.05,
+          0.08
+        ],
+        "zlim": [
+          0.766,
+          0.766
+        ],
+        "qpos": [
+          1,
+          0,
+          0,
+          0
+        ],
+        "rotate_rand": true,
+        "rotate_lim": [
+          0,
+          0,
+          0.4
+        ]
+      },
+      "physical": {
+        "mass_kg": 0.05,
+        "graspable": true,
+        "movable": true,
+        "is_static": false
+      },
+      "protected_region": {
+        "enabled": true,
+        "padding_m": 0.07
+      },
+      "description_key": "green block"
+    },
+    {
+      "id": "blue_bowl",
+      "role": "distractor",
+      "kind": "asset",
+      "category": "bowl",
+      "asset": {
+        "modelname": "002_bowl",
+        "model_id": 3,
+        "convex": true
+      },
+      "initial_pose": {
+        "mode": "fixed",
+        "xyz": [
+          0.24,
+          0.06,
+          0.76
+        ],
+        "qpos": [
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "physical": {
+        "mass_kg": 0.05,
+        "graspable": true,
+        "movable": true,
+        "is_static": false
+      },
+      "protected_region": {
+        "enabled": true,
+        "padding_m": 0.06
+      },
+      "description_key": "002_bowl/base3"
+    }
+  ],
+  "regions": [
+    {
+      "id": "left_zone",
+      "type": "start_zone",
+      "center": [
+        -0.15,
+        -0.12,
+        0.742
+      ],
+      "size": [
+        0.16,
+        0.12,
+        0.004
+      ],
+      "color": [
+        0.0,
+        0.45,
+        1.0,
+        0.45
+      ],
+      "visible": true,
+      "success_tolerance_m": 0.04
+    },
+    {
+      "id": "right_zone",
+      "type": "target_zone",
+      "center": [
+        0.05,
+        -0.12,
+        0.742
+      ],
+      "size": [
+        0.16,
+        0.12,
+        0.004
+      ],
+      "color": [
+        0.1,
+        0.9,
+        0.2,
+        0.45
+      ],
+      "visible": true,
+      "success_tolerance_m": 0.04
+    }
+  ],
+  "arm_policy": {
+    "type": "by_object_x",
+    "object": "green_block",
+    "negative_arm": "left",
+    "nonnegative_arm": "right",
+    "save_as": "main_arm"
+  },
+  "plan": [
+    {
+      "op": "grasp",
+      "object": "green_block",
+      "arm": "$main_arm",
+      "pre_grasp_dis": 0.09,
+      "grasp_dis": 0.0,
+      "comment": "Use the arm selected from the block x position."
+    },
+    {
+      "op": "move_by",
+      "arm": "$main_arm",
+      "delta": [
+        0.0,
+        0.0,
+        0.08
+      ],
+      "axis": "world",
+      "comment": "Lift before crossing the bowl keepout region."
+    },
+    {
+      "op": "place",
+      "object": "green_block",
+      "arm": "$main_arm",
+      "target": "right_zone",
+      "pre_dis": 0.05,
+      "dis": 0.0,
+      "is_open": true,
+      "comment": "Place the block in the right target zone."
+    },
+    {
+      "op": "move_by",
+      "arm": "$main_arm",
+      "delta": [
+        0.0,
+        0.0,
+        0.06
+      ],
+      "axis": "world",
+      "comment": "Move away after release."
+    }
+  ],
+  "success": [
+    {
+      "type": "in_region",
+      "object": "green_block",
+      "region": "right_zone",
+      "tolerance_m": 0.04,
+      "comment": "The green block center should end inside the right zone."
+    },
+    {
+      "type": "max_displacement",
+      "object": "blue_bowl",
+      "reference": "initial",
+      "threshold_m": 0.03,
+      "comment": "The bowl should remain essentially unmoved."
+    },
+    {
+      "type": "grippers_open",
+      "required": true,
+      "comment": "The robot should release the object."
+    }
+  ],
+  "language": {
+    "full_description": "Move a green block from the left zone to the right zone while keeping the blue bowl still.",
+    "schema": "{A} is the green block, {B} is the right zone, {C} is the blue bowl, {a} is the arm used to move the block.",
+    "preference": "Short imperative instructions.",
+    "placeholders": {
+      "{A}": "green block",
+      "{B}": "right zone",
+      "{C}": "002_bowl/base3",
+      "{a}": "$main_arm"
+    },
+    "seen_templates": [
+      "Move {A} to {B} without moving {C}.",
+      "Use {a} to place {A} in {B}.",
+      "Transfer {A} into {B} and keep {C} still."
+    ],
+    "unseen_templates": [
+      "Put {A} in {B} while avoiding {C}.",
+      "Place {A} at {B} without disturbing {C}.",
+      "Carry {A} to {B} and leave {C} still."
+    ]
+  },
+  "randomization": {
+    "object_pose": true,
+    "lighting": false,
+    "texture": false,
+    "cluttered_table": false,
+    "table_height": false
+  },
+  "validation_constraints": [
+    "no_initial_object_collision",
+    "target_reachable_by_robot",
+    "success_condition_sim_state_observable",
+    "task_objects_stable",
+    "protected_regions_defined",
+    "all_placeholders_bound",
+    "assets_exist_in_robotwin"
+  ],
+  "generation_targets": {
+    "robotwin_task_file": "envs/move_object_between_zones.py",
+    "instruction_file": "description/task_instruction/move_object_between_zones.json",
+    "preferred_task_config": "demo_smoke"
+  },
+  "notes": "Primary v0 demo candidate. The scaffold should create visual zone markers as thin static boxes and save the bowl initial pose for the max_displacement predicate."
+}

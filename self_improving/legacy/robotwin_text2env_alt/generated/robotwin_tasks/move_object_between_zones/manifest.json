@@ -1,0 +1,11 @@
+{
+  "task_name": "move_object_between_zones",
+  "source_spec": "examples\\tabletop_tasks\\move_object_between_zones.json",
+  "generated_files": [
+    "envs\\move_object_between_zones.py",
+    "description\\task_instruction\\move_object_between_zones.json"
+  ],
+  "preferred_task_config": "demo_smoke",
+  "run_command": "bash collect_data.sh move_object_between_zones demo_smoke 0",
+  "notes": "Primary v0 demo candidate. The scaffold should create visual zone markers as thin static boxes and save the bowl initial pose for the max_displacement predicate."
+}

@@ -1,0 +1,15 @@
+{
+    "episode_0": {
+        "cluttered_table_info": [],
+        "texture_info": {
+            "wall_texture": null,
+            "table_texture": null
+        },
+        "info": {
+            "{A}": "green block",
+            "{B}": "right zone",
+            "{C}": "002_bowl/base3",
+            "{a}": "left"
+        }
+    }
+}

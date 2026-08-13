@@ -1,0 +1,738 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jingxiangguo.com/schemas/text2env.tabletop.v0.schema.json",
+  "title": "Text2Env Tabletop Task Schema v0",
+  "description": "Structured tabletop manipulation task specification for generating RoboTwin2 task scaffolds.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "task_name",
+    "language_instruction",
+    "intent",
+    "status",
+    "workspace",
+    "objects",
+    "plan",
+    "success",
+    "language"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "text2env.tabletop.v0"
+    },
+    "task_name": {
+      "$ref": "#/$defs/snake_id"
+    },
+    "language_instruction": {
+      "type": "string",
+      "minLength": 1
+    },
+    "intent": {
+      "type": "string",
+      "enum": [
+        "pick_place",
+        "place_in_region",
+        "stack",
+        "tool_use",
+        "container_place",
+        "articulated_place"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ready_for_scaffold",
+        "draft_requires_review",
+        "draft_requires_articulation"
+      ]
+    },
+    "workspace": {
+      "$ref": "#/$defs/workspace"
+    },
+    "objects": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/task_object"
+      }
+    },
+    "regions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/region"
+      },
+      "default": []
+    },
+    "arm_policy": {
+      "$ref": "#/$defs/arm_policy"
+    },
+    "plan": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/plan_step"
+      }
+    },
+    "success": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/success_predicate"
+      }
+    },
+    "language": {
+      "$ref": "#/$defs/language"
+    },
+    "randomization": {
+      "$ref": "#/$defs/randomization"
+    },
+    "validation_constraints": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "no_initial_object_collision",
+          "target_reachable_by_robot",
+          "success_condition_sim_state_observable",
+          "task_objects_stable",
+          "protected_regions_defined",
+          "all_placeholders_bound",
+          "assets_exist_in_robotwin"
+        ]
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "generation_targets": {
+      "$ref": "#/$defs/generation_targets"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "snake_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "range2": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "vec3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "quat": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number"
+      }
+    },
+    "rgba": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 4,
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "surface",
+        "robot_setup",
+        "bounds",
+        "table"
+      ],
+      "properties": {
+        "type": {
+          "const": "tabletop"
+        },
+        "surface": {
+          "const": "table"
+        },
+        "robot_setup": {
+          "type": "string",
+          "enum": [
+            "dual_arm"
+          ]
+        },
+        "bounds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y",
+            "z"
+          ],
+          "properties": {
+            "x": {
+              "$ref": "#/$defs/range2"
+            },
+            "y": {
+              "$ref": "#/$defs/range2"
+            },
+            "z": {
+              "$ref": "#/$defs/range2"
+            }
+          }
+        },
+        "table": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "height_m"
+          ],
+          "properties": {
+            "height_m": {
+              "type": "number"
+            },
+            "xy_bias": {
+              "$ref": "#/$defs/vec3"
+            },
+            "table_height_bias_m": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "task_object": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "role",
+        "kind",
+        "category",
+        "initial_pose"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/snake_id"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "manipulated",
+            "target",
+            "distractor",
+            "tool",
+            "container",
+            "fixture",
+            "region_marker"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "box",
+            "asset",
+            "urdf",
+            "zone_marker",
+            "logical_region"
+          ]
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1
+        },
+        "asset": {
+          "$ref": "#/$defs/asset"
+        },
+        "geometry": {
+          "$ref": "#/$defs/geometry"
+        },
+        "initial_pose": {
+          "$ref": "#/$defs/pose_spec"
+        },
+        "physical": {
+          "$ref": "#/$defs/physical"
+        },
+        "protected_region": {
+          "$ref": "#/$defs/protected_region"
+        },
+        "description_key": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modelname"
+      ],
+      "properties": {
+        "modelname": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_id": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "convex": {
+          "type": "boolean",
+          "default": true
+        },
+        "fix_root_link": {
+          "type": "boolean"
+        }
+      }
+    },
+    "geometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "shape"
+      ],
+      "properties": {
+        "shape": {
+          "type": "string",
+          "enum": [
+            "box",
+            "cylinder",
+            "sphere"
+          ]
+        },
+        "half_size": {
+          "$ref": "#/$defs/vec3"
+        },
+        "radius_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "color": {
+          "$ref": "#/$defs/rgba"
+        },
+        "visible": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "pose_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "fixed",
+            "random_uniform"
+          ]
+        },
+        "xyz": {
+          "$ref": "#/$defs/vec3"
+        },
+        "qpos": {
+          "$ref": "#/$defs/quat"
+        },
+        "xlim": {
+          "$ref": "#/$defs/range2"
+        },
+        "ylim": {
+          "$ref": "#/$defs/range2"
+        },
+        "zlim": {
+          "$ref": "#/$defs/range2"
+        },
+        "rotate_rand": {
+          "type": "boolean",
+          "default": false
+        },
+        "rotate_lim": {
+          "$ref": "#/$defs/vec3"
+        },
+        "ylim_prop": {
+          "type": "boolean",
+          "default": false
+        },
+        "region": {
+          "$ref": "#/$defs/snake_id"
+        }
+      }
+    },
+    "physical": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mass_kg": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "graspable": {
+          "type": "boolean"
+        },
+        "movable": {
+          "type": "boolean"
+        },
+        "is_static": {
+          "type": "boolean"
+        }
+      }
+    },
+    "protected_region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "padding_m"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "padding_m": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "center",
+        "size"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/snake_id"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "start_zone",
+            "target_zone",
+            "keepout_zone",
+            "workspace_zone"
+          ]
+        },
+        "center": {
+          "$ref": "#/$defs/vec3"
+        },
+        "size": {
+          "$ref": "#/$defs/vec3"
+        },
+        "color": {
+          "$ref": "#/$defs/rgba"
+        },
+        "visible": {
+          "type": "boolean",
+          "default": true
+        },
+        "success_tolerance_m": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "arm_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "fixed",
+            "by_object_x",
+            "by_object_region"
+          ]
+        },
+        "object": {
+          "$ref": "#/$defs/snake_id"
+        },
+        "fixed_arm": {
+          "$ref": "#/$defs/arm"
+        },
+        "negative_arm": {
+          "$ref": "#/$defs/arm"
+        },
+        "nonnegative_arm": {
+          "$ref": "#/$defs/arm"
+        },
+        "save_as": {
+          "$ref": "#/$defs/snake_id"
+        }
+      }
+    },
+    "arm": {
+      "type": "string",
+      "enum": [
+        "left",
+        "right"
+      ]
+    },
+    "arm_ref": {
+      "type": "string",
+      "pattern": "^(left|right|auto|\\$[a-z][a-z0-9_]*)$"
+    },
+    "plan_step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op"
+      ],
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": [
+            "grasp",
+            "move_by",
+            "place",
+            "move_to_pose",
+            "open_gripper",
+            "close_gripper",
+            "back_to_origin",
+            "wait"
+          ]
+        },
+        "arm": {
+          "$ref": "#/$defs/arm_ref"
+        },
+        "object": {
+          "$ref": "#/$defs/snake_id"
+        },
+        "target": {
+          "$ref": "#/$defs/snake_id"
+        },
+        "target_pose": {
+          "$ref": "#/$defs/pose_spec"
+        },
+        "delta": {
+          "$ref": "#/$defs/vec3"
+        },
+        "axis": {
+          "type": "string",
+          "enum": [
+            "world",
+            "arm"
+          ]
+        },
+        "pre_grasp_dis": {
+          "type": "number",
+          "minimum": 0
+        },
+        "grasp_dis": {
+          "type": "number",
+          "minimum": 0
+        },
+        "target_gripper_pos": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "pre_dis": {
+          "type": "number",
+          "minimum": 0
+        },
+        "dis": {
+          "type": "number",
+          "minimum": 0
+        },
+        "functional_point_id": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "pre_dis_axis": {
+          "type": "string",
+          "enum": [
+            "grasp",
+            "fp"
+          ]
+        },
+        "is_open": {
+          "type": "boolean"
+        },
+        "duration_steps": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "success_predicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "in_region",
+            "near",
+            "above",
+            "contact",
+            "no_contact",
+            "grippers_open",
+            "max_displacement",
+            "joint_threshold"
+          ]
+        },
+        "object": {
+          "$ref": "#/$defs/snake_id"
+        },
+        "region": {
+          "$ref": "#/$defs/snake_id"
+        },
+        "target_object": {
+          "$ref": "#/$defs/snake_id"
+        },
+        "threshold_m": {
+          "type": "number",
+          "minimum": 0
+        },
+        "tolerance_m": {
+          "type": "number",
+          "minimum": 0
+        },
+        "axis": {
+          "type": "string",
+          "enum": [
+            "x",
+            "y",
+            "z",
+            "xy",
+            "xyz"
+          ]
+        },
+        "reference": {
+          "type": "string",
+          "enum": [
+            "initial",
+            "target",
+            "current"
+          ]
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "language": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "placeholders",
+        "seen_templates",
+        "unseen_templates"
+      ],
+      "properties": {
+        "full_description": {
+          "type": "string"
+        },
+        "schema": {
+          "type": "string"
+        },
+        "preference": {
+          "type": "string"
+        },
+        "placeholders": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^\\{[A-Za-z]\\}$"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "seen_templates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "unseen_templates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "randomization": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "object_pose": {
+          "type": "boolean"
+        },
+        "lighting": {
+          "type": "boolean"
+        },
+        "texture": {
+          "type": "boolean"
+        },
+        "cluttered_table": {
+          "type": "boolean"
+        },
+        "table_height": {
+          "type": "boolean"
+        }
+      }
+    },
+    "generation_targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "robotwin_task_file": {
+          "type": "string"
+        },
+        "instruction_file": {
+          "type": "string"
+        },
+        "preferred_task_config": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
