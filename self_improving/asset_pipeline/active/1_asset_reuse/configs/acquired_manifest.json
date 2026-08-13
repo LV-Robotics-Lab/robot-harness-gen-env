@@ -155,23 +155,6 @@
    ]
   },
   {
-   "name": "acq_320_teddy_bear",
-   "prefix": "line bear (4934cddd.glb)",
-   "source": "objaverse",
-   "items": [
-    {
-     "usd": "line bear (4934cddd.glb)",
-     "asset": "320_teddy_bear",
-     "model": 0,
-     "category": "teddy_bear",
-     "aliases": [
-      "teddy_bear"
-     ],
-     "size_policy": "absolute:0.25"
-    }
-   ]
-  },
-  {
    "name": "acq_321_dustbin",
    "prefix": "Dustbin scan No. 2 (09188811.glb)",
    "source": "objaverse",
@@ -234,6 +217,654 @@
      "category": "knife",
      "aliases": [
       "knife"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_320_teddy_bear",
+   "prefix": "line bear (4934cddd.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "line bear (4934cddd.glb)",
+     "asset": "320_teddy_bear",
+     "model": 1,
+     "category": "teddy_bear",
+     "aliases": [
+      "teddy_bear",
+      "teddy bear",
+      "plush bear"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_325_hubcap",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/dsready_content/nv_content/common_assets/props_general/obs_hubcap_01",
+   "source": "nvidia_server",
+   "items": [
+    {
+     "usd": "obs_hubcap_01.usd",
+     "asset": "325_hubcap",
+     "model": 0,
+     "category": "hubcap",
+     "aliases": [
+      "hubcap"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_326_window",
+   "prefix": "Models/GlassBrokenWindow/glTF-Binary",
+   "source": "github_tree",
+   "items": [
+    {
+     "usd": "GlassBrokenWindow.glb",
+     "asset": "326_window",
+     "model": 0,
+     "category": "window",
+     "aliases": [
+      "window"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_327_sphere",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/Assets/ArchVis/Residential/Decor/Sculptures",
+   "source": "nvidia_server",
+   "items": [
+    {
+     "usd": "GeoSphere_Medium.usd",
+     "asset": "327_sphere",
+     "model": 0,
+     "category": "sphere",
+     "aliases": [
+      "sphere"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_328_fusebox",
+   "prefix": "Broken Fusebox (Raw Scan) (22d71a47.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Broken Fusebox (Raw Scan) (22d71a47.glb)",
+     "asset": "328_fusebox",
+     "model": 0,
+     "category": "fusebox",
+     "aliases": [
+      "fusebox"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_329_tripod",
+   "prefix": "Gold telescope (9279045e.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Gold telescope (9279045e.glb)",
+     "asset": "329_tripod",
+     "model": 0,
+     "category": "tripod",
+     "aliases": [
+      "tripod"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_330_ball",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/Assets/ArchVis/Residential/Entertainment/Games",
+   "source": "nvidia_server",
+   "items": [
+    {
+     "usd": "Ball_Walnut.usd",
+     "asset": "330_ball",
+     "model": 0,
+     "category": "ball",
+     "aliases": [
+      "ball"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_331_vinyl",
+   "prefix": "Simple Vinyl Model (32fb7439.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Simple Vinyl Model (32fb7439.glb)",
+     "asset": "331_vinyl",
+     "model": 0,
+     "category": "vinyl",
+     "aliases": [
+      "vinyl"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_332_curtain",
+   "prefix": "Curtain (024b7af4.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Curtain (024b7af4.glb)",
+     "asset": "332_curtain",
+     "model": 0,
+     "category": "curtain",
+     "aliases": [
+      "curtain"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_333_cherry",
+   "prefix": "Teatime_cherry (44f3cc38.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Teatime_cherry (44f3cc38.glb)",
+     "asset": "333_cherry",
+     "model": 0,
+     "category": "cherry",
+     "aliases": [
+      "cherry"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_334_exit",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/Assets/DigitalTwin/Assets/Warehouse/Equipment/Signage/PlasticHardWiredExit_A",
+   "source": "nvidia_server",
+   "items": [
+    {
+     "usd": "PlasticHardwiredExitSign_A01_Green_01.usd",
+     "asset": "334_exit",
+     "model": 0,
+     "category": "exit",
+     "aliases": [
+      "exit"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_335_gasoline",
+   "prefix": "Gasoline can (122b731d.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Gasoline can (122b731d.glb)",
+     "asset": "335_gasoline",
+     "model": 0,
+     "category": "gasoline",
+     "aliases": [
+      "gasoline"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_336_sleigh",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/dsready_content/nv_content/common_assets/props_general/strt_mov_sleigh_01",
+   "source": "nvidia_server",
+   "items": [
+    {
+     "usd": "strt_mov_sleigh_01.usd",
+     "asset": "336_sleigh",
+     "model": 0,
+     "category": "sleigh",
+     "aliases": [
+      "sleigh"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_337_caution",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/Assets/DigitalTwin/Assets/Warehouse/Safety/Floor_Signs/WetFloor_B",
+   "source": "nvidia_visual",
+   "items": [
+    {
+     "usd": "WetFloorSign_B02_PR_NVD_01.usd",
+     "asset": "337_caution",
+     "model": 0,
+     "category": "caution",
+     "aliases": [
+      "caution"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_338_tank",
+   "prefix": "Tank 001 (79b7e866.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Tank 001 (79b7e866.glb)",
+     "asset": "338_tank",
+     "model": 0,
+     "category": "tank",
+     "aliases": [
+      "tank"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_339_panel",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/Assets/DigitalTwin/Assets/Datacenter/Racks/Patch_Panels/Fiber_A/SubUSDs",
+   "source": "nvidia_server",
+   "items": [
+    {
+     "usd": "Fiber_Patch_Panel_1U_A_inst.usd",
+     "asset": "339_panel",
+     "model": 0,
+     "category": "panel",
+     "aliases": [
+      "panel"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_340_skull",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/Assets/ArchVis/Residential/Decor/Sculptures",
+   "source": "nvidia_server",
+   "items": [
+    {
+     "usd": "HearNoEvil_Skull.usd",
+     "asset": "340_skull",
+     "model": 0,
+     "category": "skull",
+     "aliases": [
+      "skull"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_341_tool",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/dsready_content/nv_content/common_assets/props_general/obs_pipe_benders_01",
+   "source": "nvidia_visual",
+   "items": [
+    {
+     "usd": "obs_pipe_benders_01.usd",
+     "asset": "341_tool",
+     "model": 0,
+     "category": "tool",
+     "aliases": [
+      "tool"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_342_workbench",
+   "prefix": "Assets/Isaac/5.1/Isaac/IsaacLab/Mimic/pick_place_task/pick_place_assets/PackingTable/props/SM_HeavyDutyPackingTable_C02_01",
+   "source": "nvidia_visual",
+   "items": [
+    {
+     "usd": "SM_HeavyDutyPackingTable_C02_01.usd",
+     "asset": "342_workbench",
+     "model": 0,
+     "category": "workbench",
+     "aliases": [
+      "workbench"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_343_ceiling",
+   "prefix": "Ceiling Fan (136562e2.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Ceiling Fan (136562e2.glb)",
+     "asset": "343_ceiling",
+     "model": 0,
+     "category": "ceiling",
+     "aliases": [
+      "ceiling"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_344_scaffold",
+   "prefix": "Scaffold Game Asset (04a0f88a.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Scaffold Game Asset (04a0f88a.glb)",
+     "asset": "344_scaffold",
+     "model": 0,
+     "category": "scaffold",
+     "aliases": [
+      "scaffold"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_345_alarm",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/Assets/DigitalTwin/Assets/Warehouse/Safety/Fire_Protection/SmokeDetector_A",
+   "source": "nvidia_visual",
+   "items": [
+    {
+     "usd": "SmokeDetector_A01_01.usd",
+     "asset": "345_alarm",
+     "model": 0,
+     "category": "alarm",
+     "aliases": [
+      "alarm"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_346_taxi",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/dsready_content/nv_content/china/country_assets/country_signs",
+   "source": "nvidia_server",
+   "items": [
+    {
+     "usd": "sign_taxi_0.usd",
+     "asset": "346_taxi",
+     "model": 0,
+     "category": "taxi",
+     "aliases": [
+      "taxi"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_347_light",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/dsready_content/nv_content/common_assets/props_poles/streetlamp_02",
+   "source": "nvidia_visual",
+   "items": [
+    {
+     "usd": "streetlamp_02.usd",
+     "asset": "347_light",
+     "model": 0,
+     "category": "light",
+     "aliases": [
+      "light"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_348_omniverse",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/Assets/ArchVis/Residential/Decor/Books",
+   "source": "nvidia_visual",
+   "items": [
+    {
+     "usd": "Book_IntroOmni.usd",
+     "asset": "348_omniverse",
+     "model": 0,
+     "category": "omniverse",
+     "aliases": [
+      "omniverse"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_349_airconditioner",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/dsready_content/nv_content/common_assets/props_general/ac_unit_04",
+   "source": "nvidia_visual",
+   "items": [
+    {
+     "usd": "ac_unit_04.usd",
+     "asset": "349_airconditioner",
+     "model": 0,
+     "category": "airconditioner",
+     "aliases": [
+      "airconditioner"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_350_umbrella",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/dsready_content/nv_content/common_assets/props_general/patio_umbrella_01",
+   "source": "nvidia_server",
+   "items": [
+    {
+     "usd": "patio_umbrella_01.usd",
+     "asset": "350_umbrella",
+     "model": 0,
+     "category": "umbrella",
+     "aliases": [
+      "umbrella"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_351_grid",
+   "prefix": "Fence grid gate (3ee6b8c2.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Fence grid gate (3ee6b8c2.glb)",
+     "asset": "351_grid",
+     "model": 0,
+     "category": "grid",
+     "aliases": [
+      "grid"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_352_handicap",
+   "prefix": "Handicap Iron (9348c988.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Handicap Iron (9348c988.glb)",
+     "asset": "352_handicap",
+     "model": 0,
+     "category": "handicap",
+     "aliases": [
+      "handicap"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_353_shelf",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/Assets/ArchVis/Commercial/Storage/Contemporary",
+   "source": "nvidia_visual",
+   "items": [
+    {
+     "usd": "Contemporary_OpenStorage.usd",
+     "asset": "353_shelf",
+     "model": 0,
+     "category": "shelf",
+     "aliases": [
+      "shelf"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_354_stone",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/dsready_content/nv_content/common_assets/props_general/concrete_block_01",
+   "source": "nvidia_visual",
+   "items": [
+    {
+     "usd": "concrete_block_01.usd",
+     "asset": "354_stone",
+     "model": 0,
+     "category": "stone",
+     "aliases": [
+      "stone"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_355_television",
+   "prefix": "Old Television (92e6509f.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Old Television (92e6509f.glb)",
+     "asset": "355_television",
+     "model": 0,
+     "category": "television",
+     "aliases": [
+      "television"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_356_ahead",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/dsready_content/nv_content/common_assets/props_traffic/traf_spd_mov_set_sign_rollup_36in_01_road_work_ahead",
+   "source": "nvidia_server",
+   "items": [
+    {
+     "usd": "traf_spd_mov_set_sign_rollup_36in_01_road_work_ahead_inst.usd",
+     "asset": "356_ahead",
+     "model": 0,
+     "category": "ahead",
+     "aliases": [
+      "ahead"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_357_racks",
+   "prefix": "Standing Coat Racks (2e167d18.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Standing Coat Racks (2e167d18.glb)",
+     "asset": "357_racks",
+     "model": 0,
+     "category": "racks",
+     "aliases": [
+      "racks"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_358_leaves",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/Assets/Vegetation/Debris",
+   "source": "nvidia_visual",
+   "items": [
+    {
+     "usd": "oakfall1.usd",
+     "asset": "358_leaves",
+     "model": 0,
+     "category": "leaves",
+     "aliases": [
+      "leaves"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_359_solar",
+   "prefix": "Solpanel (63591906.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Solpanel (63591906.glb)",
+     "asset": "359_solar",
+     "model": 0,
+     "category": "solar",
+     "aliases": [
+      "solar"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_360_merge",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/dsready_content/nv_content/usa/country_assets/country_signs",
+   "source": "nvidia_visual",
+   "items": [
+    {
+     "usd": "sign_w9_2l.usd",
+     "asset": "360_merge",
+     "model": 0,
+     "category": "merge",
+     "aliases": [
+      "merge"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_361_leaf",
+   "prefix": "Assets/Isaac/5.1/NVIDIA/Assets/Vegetation/Debris",
+   "source": "nvidia_visual",
+   "items": [
+    {
+     "usd": "oakfall1.usd",
+     "asset": "361_leaf",
+     "model": 0,
+     "category": "leaf",
+     "aliases": [
+      "leaf"
      ],
      "size_policy": "absolute:0.25"
     }

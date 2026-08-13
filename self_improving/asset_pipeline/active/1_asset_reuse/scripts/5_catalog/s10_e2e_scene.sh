@@ -2,11 +2,14 @@
 # C line acceptance: text prompt -> scene grounds OUR external mug -> SAPIEN
 # runtime replay -> full validation (fail=0 not_run=0). Content-judged.
 set -uo pipefail
-PY=$HOME/miniconda3/envs/env-gen-yuxin/bin/python
-DEV=$HOME/yuxin/env-gen-dev
-UP=$DEV/external/env-gen-github
-SHADOW=${S10_SHADOW:-$DEV/data/robotwin_shadow}
-CAT=${S10_CATALOG:-$DEV/data/scene_gen_ext/asset_catalog.json}
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+ACTIVE_ROOT=$(cd -- "$SCRIPT_DIR/../../.." && pwd)
+REPO_ROOT=$(cd -- "$ACTIVE_ROOT/../../.." && pwd)
+PY=${SAPIEN_PYTHON:-python3}
+DEV=${ASSET_PIPELINE_ROOT:-$ACTIVE_ROOT}
+UP=${GEN_ENV_ROOT:-$REPO_ROOT}
+SHADOW=${S10_SHADOW:-${ROBOTWIN_SHADOW_ROOT:-$DEV/data/robotwin_shadow}}
+CAT=${S10_CATALOG:-${ASSET_CATALOG:-$DEV/data/scene_gen_ext/asset_catalog.json}}
 OUT=${S10_OUT:-$DEV/results/_test/20260803_smoke_usd2envgen}
 PROMPT="Place a red mug on the table."
 
@@ -36,7 +39,9 @@ GROUND_OK=$?
 
 echo "=== [s10.3] SAPIEN runtime replay"
 mkdir -p "$OUT/runtime/$SCENE"
-$PY script/run_scene_runtime.py \
+# CUDA_LAUNCH_BLOCKING: vendored curobo's planner warmup crashes on sm_120
+# under async launches (2026-08-13)
+CUDA_LAUNCH_BLOCKING=1 $PY script/run_scene_runtime.py \
   --robotwin-root "$SHADOW" \
   --resolved-scene "$OUT/scenes/$SCENE/resolved_scene.json" \
   --asset-catalog "$CAT" \

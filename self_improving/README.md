@@ -14,6 +14,7 @@ runtime assumptions into the core trust boundary.
 | `asset_pipeline/active/shared/openxsim/` | active shared core | First-party OpenXSim IR, asset contracts, adapters, conformance tests, and bridge scripts consumed by both asset reuse and simulator migration. Vendored dependencies and the MetaSim checkout are excluded. |
 | `asset_pipeline/branch_overlays/` | preserved | Source-only snapshots of the alias-screening and asset-sources worktrees. |
 | `asset_pipeline/receipts/` | active metadata | Acquired-asset manifest and ledger/model metadata; downloaded meshes and renders are deliberately external. |
+| `contributor_notes/` | historical evidence | Unique planning, design, and handoff documents recovered from the named student workspaces, with source-path and SHA-256 index. |
 | `sim_adapters/agenticsim_runtime/` | active adapter | Orchestration scripts and hermetic tests recovered from the former non-Git runtime workspace. It is not the retired AgenticSim product repository. |
 | `onboarding/yeyuxuan/` | preserved source | RoboLab migration tools, asset overrides, and per-asset provenance recovered from the onboarding report. |
 | `legacy/stage04/` | read-only | Historical stage-04 source snapshot retained for provenance and diffing. New work belongs in `stage5/` or another named module. |
@@ -78,7 +79,7 @@ python -m pytest -q self_improving/asset_pipeline/active/web/tests
   PYTHONPATH=source/agenticsim python -m pytest -q tests)
 ```
 
-The current source-only baseline is 518 passed and 6 skipped. The skips are
+The current source-only baseline is 542 passed and 6 skipped. The skips are
 explicit physical/runtime checks that require SAPIEN or the excluded raw
 Isaac, SceneAgent, media, and report bundles; they are not silently mocked.
 
@@ -90,6 +91,9 @@ environments, caches, training runs, checkpoints, generated datasets, bulk
 screenshots/video, and third-party meshes. Those files are large, frequently
 regenerated, and may carry separate redistribution terms. Their identifying
 metadata stays in `asset_pipeline/receipts/` and `onboarding/yeyuxuan/`.
+The 2026-08-14 asset receipt covers 12,047 files (27,637,543,884 bytes) in
+Yuxin's local `301`–`361` asset namespace; because `storage_uri` is still null,
+that checksum inventory is audit evidence rather than remote recovery proof.
 
 The PEARL portal is the narrow exception for already curated, browser-served
 report media under `apps/pearl_evidence_portal/public/reports/`; raw runs and

@@ -12,7 +12,9 @@ def _load_config(monkeypatch):
         "ASSET_PIPELINE_ROOT",
         "GEN_ENV_ROOT",
         "ROBOTWIN_ROOT",
+        "ROBOTWIN_SHADOW_ROOT",
         "ASSET_CATALOG",
+        "ASSET_OVERRIDES",
         "OBJAVERSE_DATA_ROOT",
     ):
         monkeypatch.delenv(name, raising=False)
@@ -30,6 +32,10 @@ def test_runtime_paths_default_to_the_current_checkout(monkeypatch):
     assert config.REPO_ROOT == ACTIVE_ROOT.parents[2]
     assert config.GEN_ENV_ROOT == config.REPO_ROOT
     assert config.ASSET_PIPELINE_ROOT == ACTIVE_ROOT
+    assert config.ROBOTWIN_SHADOW_ROOT == ACTIVE_ROOT / "data" / "robotwin_shadow"
+    assert config.ASSET_OVERRIDES == (
+        ACTIVE_ROOT / "data" / "scene_gen_ext" / "asset_overrides_ext.yml"
+    )
     assert config.OPENXSIM_SOURCE.is_dir()
 
 

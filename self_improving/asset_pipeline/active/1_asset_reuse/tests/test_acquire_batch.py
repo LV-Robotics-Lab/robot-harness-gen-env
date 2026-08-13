@@ -65,6 +65,23 @@ def paths(tmp_path):
     }
 
 
+def fake_convert_ok(cmd):
+    """Mirror a successful fetch/convert: the real one writes the staging
+    manifest that the batch now requires before running materialize."""
+    cmd = [str(c) for c in cmd]
+    if any("import_fetch_convert.py" in c for c in cmd):
+        staging = Path(cmd[cmd.index("--staging") + 1])
+        staging.mkdir(parents=True, exist_ok=True)
+        (staging / "staging_manifest.json").write_text("[]")
+
+
+def fake_staged_ok(staging):
+    """Mirror a successful stage_web_candidate for the same reason."""
+    staging = Path(staging)
+    staging.mkdir(parents=True, exist_ok=True)
+    (staging / "staging_manifest.json").write_text("[]")
+
+
 def test_reused_local_makes_no_pipeline_calls(tmp_path):
     calls = []
     tiers = [Tier(0, FakeProvider("t0", [cand("local")]))]
@@ -84,6 +101,7 @@ def test_import_with_fallback_on_failed_materialize(tmp_path):
 
     def runner(cmd, env=None):
         calls.append([str(c) for c in cmd])
+        fake_convert_ok(cmd)
         if (
             "import_materialize.py" in str(cmd[1])
             and len([c for c in calls if "import_materialize.py" in c[1]]) == 2
@@ -161,9 +179,13 @@ def test_github_candidate_uses_stage_web_candidate_not_fetch_convert(
     tmp_path, monkeypatch
 ):
     staged = []
-    monkeypatch.setattr(
-        a3w, "stage_web_candidate", lambda *a, **k: staged.append(a) or {}
-    )
+
+    def fake_stage(*a, **k):
+        staged.append(a)
+        fake_staged_ok(a[4])
+        return {}
+
+    monkeypatch.setattr(a3w, "stage_web_candidate", fake_stage)
     runner_calls = []
     tiers = [
         Tier(0, FakeProvider("t0", [])),
@@ -185,6 +207,7 @@ def test_github_fetch_failure_records_rejection_and_continues(tmp_path, monkeypa
     def fake_stage(candidate, *a, **k):
         if candidate.name == "first.glb":
             raise RuntimeError("boom")
+        fake_staged_ok(a[3])
         return {}
 
     monkeypatch.setattr(a3w, "stage_web_candidate", fake_stage)
@@ -301,6 +324,7 @@ def test_tier0_catalog_flag_overrides_provider_path(tmp_path):
         ],
         runner=lambda cmd, env=None: 0,
     )
+    assert rc == 0
     evidence = json.loads((tmp_path / "out" / "selection_evidence.json").read_text())
     assert evidence["categories"][0]["status"] == "reused_local"
 
@@ -345,6 +369,7 @@ def test_pinned_entry_skips_search_but_gates(tmp_path):
     p = paths(tmp_path)
 
     def runner(cmd, env=None):
+        fake_convert_ok(cmd)
         if "import_materialize.py" in str(cmd[1]):
             d = p["library"] / "301_kettle"
             (d / "visual").mkdir(parents=True, exist_ok=True)

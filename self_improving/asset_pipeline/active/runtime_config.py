@@ -20,9 +20,17 @@ REPO_ROOT = ACTIVE_ROOT.parents[2]
 ASSET_PIPELINE_ROOT = _path_from_env("ASSET_PIPELINE_ROOT", ACTIVE_ROOT)
 GEN_ENV_ROOT = _path_from_env("GEN_ENV_ROOT", REPO_ROOT)
 ROBOTWIN_ROOT = _path_from_env("ROBOTWIN_ROOT", REPO_ROOT / "external" / "RoboTwin")
+ROBOTWIN_SHADOW_ROOT = _path_from_env(
+    "ROBOTWIN_SHADOW_ROOT",
+    ASSET_PIPELINE_ROOT / "data" / "robotwin_shadow",
+)
 ASSET_CATALOG = _path_from_env(
     "ASSET_CATALOG",
     ASSET_PIPELINE_ROOT / "data" / "scene_gen_ext" / "asset_catalog.json",
+)
+ASSET_OVERRIDES = _path_from_env(
+    "ASSET_OVERRIDES",
+    ASSET_PIPELINE_ROOT / "data" / "scene_gen_ext" / "asset_overrides_ext.yml",
 )
 OBJAVERSE_DATA_ROOT = _path_from_env(
     "OBJAVERSE_DATA_ROOT",

@@ -1,7 +1,7 @@
 {
  "schema_version": "robotwin.asset_catalog.v1",
- "robotwin_root": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_shadow",
- "objects_root": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_shadow/assets/objects",
+ "robotwin_root": "fixtures/robotwin_shadow",
+ "objects_root": "fixtures/robotwin_shadow/assets/objects",
  "source_commit": "c3ddfa8b97d5519efa828b075999bd0006778e5e+ext301",
  "entries": [
   {
@@ -19,14 +19,14 @@
     "plastic"
    ],
    "load_type": "rigid",
-   "asset_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
+   "asset_path": "fixtures/robotwin/assets/objects/021_cup",
    "models": [
     {
      "model_id": 0,
-     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
-     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data0.json",
-     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base0.glb",
-     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base0.glb",
+     "model_path": "fixtures/robotwin/assets/objects/021_cup",
+     "metadata_path": "fixtures/robotwin/assets/objects/021_cup/model_data0.json",
+     "visual_path": "fixtures/robotwin/assets/objects/021_cup/visual/base0.glb",
+     "collision_path": "fixtures/robotwin/assets/objects/021_cup/collision/base0.glb",
      "scale": [
       0.088,
       0.088,
@@ -57,10 +57,10 @@
     },
     {
      "model_id": 1,
-     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
-     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data1.json",
-     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base1.glb",
-     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base1.glb",
+     "model_path": "fixtures/robotwin/assets/objects/021_cup",
+     "metadata_path": "fixtures/robotwin/assets/objects/021_cup/model_data1.json",
+     "visual_path": "fixtures/robotwin/assets/objects/021_cup/visual/base1.glb",
+     "collision_path": "fixtures/robotwin/assets/objects/021_cup/collision/base1.glb",
      "scale": [
       0.09,
       0.09,
@@ -86,10 +86,10 @@
     },
     {
      "model_id": 2,
-     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
-     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data2.json",
-     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base2.glb",
-     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base2.glb",
+     "model_path": "fixtures/robotwin/assets/objects/021_cup",
+     "metadata_path": "fixtures/robotwin/assets/objects/021_cup/model_data2.json",
+     "visual_path": "fixtures/robotwin/assets/objects/021_cup/visual/base2.glb",
+     "collision_path": "fixtures/robotwin/assets/objects/021_cup/collision/base2.glb",
      "scale": [
       0.11,
       0.11,
@@ -115,10 +115,10 @@
     },
     {
      "model_id": 3,
-     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
-     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data3.json",
-     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base3.glb",
-     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base3.glb",
+     "model_path": "fixtures/robotwin/assets/objects/021_cup",
+     "metadata_path": "fixtures/robotwin/assets/objects/021_cup/model_data3.json",
+     "visual_path": "fixtures/robotwin/assets/objects/021_cup/visual/base3.glb",
+     "collision_path": "fixtures/robotwin/assets/objects/021_cup/collision/base3.glb",
      "scale": [
       0.08,
       0.08,
@@ -144,10 +144,10 @@
     },
     {
      "model_id": 4,
-     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
-     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data4.json",
-     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base4.glb",
-     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base4.glb",
+     "model_path": "fixtures/robotwin/assets/objects/021_cup",
+     "metadata_path": "fixtures/robotwin/assets/objects/021_cup/model_data4.json",
+     "visual_path": "fixtures/robotwin/assets/objects/021_cup/visual/base4.glb",
+     "collision_path": "fixtures/robotwin/assets/objects/021_cup/collision/base4.glb",
      "scale": [
       0.105,
       0.105,
@@ -173,10 +173,10 @@
     },
     {
      "model_id": 5,
-     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
-     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data5.json",
-     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base5.glb",
-     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base5.glb",
+     "model_path": "fixtures/robotwin/assets/objects/021_cup",
+     "metadata_path": "fixtures/robotwin/assets/objects/021_cup/model_data5.json",
+     "visual_path": "fixtures/robotwin/assets/objects/021_cup/visual/base5.glb",
+     "collision_path": "fixtures/robotwin/assets/objects/021_cup/collision/base5.glb",
      "scale": [
       0.08,
       0.08,
@@ -202,10 +202,10 @@
     },
     {
      "model_id": 6,
-     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
-     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data6.json",
-     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base6.glb",
-     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base6.glb",
+     "model_path": "fixtures/robotwin/assets/objects/021_cup",
+     "metadata_path": "fixtures/robotwin/assets/objects/021_cup/model_data6.json",
+     "visual_path": "fixtures/robotwin/assets/objects/021_cup/visual/base6.glb",
+     "collision_path": "fixtures/robotwin/assets/objects/021_cup/collision/base6.glb",
      "scale": [
       0.04,
       0.04,
@@ -231,10 +231,10 @@
     },
     {
      "model_id": 7,
-     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
-     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data7.json",
-     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base7.glb",
-     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base7.glb",
+     "model_path": "fixtures/robotwin/assets/objects/021_cup",
+     "metadata_path": "fixtures/robotwin/assets/objects/021_cup/model_data7.json",
+     "visual_path": "fixtures/robotwin/assets/objects/021_cup/visual/base7.glb",
+     "collision_path": "fixtures/robotwin/assets/objects/021_cup/collision/base7.glb",
      "scale": [
       0.08,
       0.08,
@@ -260,10 +260,10 @@
     },
     {
      "model_id": 8,
-     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
-     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data8.json",
-     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base8.glb",
-     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base8.glb",
+     "model_path": "fixtures/robotwin/assets/objects/021_cup",
+     "metadata_path": "fixtures/robotwin/assets/objects/021_cup/model_data8.json",
+     "visual_path": "fixtures/robotwin/assets/objects/021_cup/visual/base8.glb",
+     "collision_path": "fixtures/robotwin/assets/objects/021_cup/collision/base8.glb",
      "scale": [
       0.08,
       0.08,
@@ -289,10 +289,10 @@
     },
     {
      "model_id": 9,
-     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
-     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data9.json",
-     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base9.glb",
-     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base9.glb",
+     "model_path": "fixtures/robotwin/assets/objects/021_cup",
+     "metadata_path": "fixtures/robotwin/assets/objects/021_cup/model_data9.json",
+     "visual_path": "fixtures/robotwin/assets/objects/021_cup/visual/base9.glb",
+     "collision_path": "fixtures/robotwin/assets/objects/021_cup/collision/base9.glb",
      "scale": [
       0.08,
       0.08,
@@ -318,10 +318,10 @@
     },
     {
      "model_id": 10,
-     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
-     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data10.json",
-     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base10.glb",
-     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base10.glb",
+     "model_path": "fixtures/robotwin/assets/objects/021_cup",
+     "metadata_path": "fixtures/robotwin/assets/objects/021_cup/model_data10.json",
+     "visual_path": "fixtures/robotwin/assets/objects/021_cup/visual/base10.glb",
+     "collision_path": "fixtures/robotwin/assets/objects/021_cup/collision/base10.glb",
      "scale": [
       0.08,
       0.08,
@@ -347,10 +347,10 @@
     },
     {
      "model_id": 11,
-     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
-     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data11.json",
-     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base11.glb",
-     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base11.glb",
+     "model_path": "fixtures/robotwin/assets/objects/021_cup",
+     "metadata_path": "fixtures/robotwin/assets/objects/021_cup/model_data11.json",
+     "visual_path": "fixtures/robotwin/assets/objects/021_cup/visual/base11.glb",
+     "collision_path": "fixtures/robotwin/assets/objects/021_cup/collision/base11.glb",
      "scale": [
       0.08,
       0.08,
@@ -376,10 +376,10 @@
     },
     {
      "model_id": 12,
-     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup",
-     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/model_data12.json",
-     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/visual/base12.glb",
-     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/021_cup/collision/base12.glb",
+     "model_path": "fixtures/robotwin/assets/objects/021_cup",
+     "metadata_path": "fixtures/robotwin/assets/objects/021_cup/model_data12.json",
+     "visual_path": "fixtures/robotwin/assets/objects/021_cup/visual/base12.glb",
+     "collision_path": "fixtures/robotwin/assets/objects/021_cup/collision/base12.glb",
      "scale": [
       0.08,
       0.08,
@@ -424,15 +424,15 @@
     "wood"
    ],
    "load_type": "urdf",
-   "asset_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/036_cabinet",
+   "asset_path": "fixtures/robotwin/assets/objects/036_cabinet",
    "models": [
     {
      "model_id": 46653,
-     "model_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/036_cabinet/46653",
-     "metadata_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/036_cabinet/46653/model_data.json",
-     "visual_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/036_cabinet/46653/mobility.urdf",
-     "collision_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/036_cabinet/46653/mobility.urdf",
-     "urdf_path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/036_cabinet/46653/mobility.urdf",
+     "model_path": "fixtures/robotwin/assets/objects/036_cabinet/46653",
+     "metadata_path": "fixtures/robotwin/assets/objects/036_cabinet/46653/model_data.json",
+     "visual_path": "fixtures/robotwin/assets/objects/036_cabinet/46653/mobility.urdf",
+     "collision_path": "fixtures/robotwin/assets/objects/036_cabinet/46653/mobility.urdf",
+     "urdf_path": "fixtures/robotwin/assets/objects/036_cabinet/46653/mobility.urdf",
      "scale": [
       0.27,
       0.27,
@@ -506,14 +506,14 @@
    ],
    "materials": [],
    "load_type": "rigid",
-   "asset_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup",
+   "asset_path": "fixtures/asset_library/301_cup",
    "models": [
     {
      "model_id": 0,
-     "model_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup",
-     "metadata_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup/model_data0.json",
-     "visual_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup/visual/base0.glb",
-     "collision_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup/collision/base0.glb",
+     "model_path": "fixtures/asset_library/301_cup",
+     "metadata_path": "fixtures/asset_library/301_cup/model_data0.json",
+     "visual_path": "fixtures/asset_library/301_cup/visual/base0.glb",
+     "collision_path": "fixtures/asset_library/301_cup/collision/base0.glb",
      "scale": [
       1.0,
       1.0,
@@ -558,15 +558,15 @@
    "colors": [],
    "materials": [],
    "load_type": "urdf",
-   "asset_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/314_cabinet",
+   "asset_path": "fixtures/asset_library/314_cabinet",
    "models": [
     {
      "model_id": 0,
-     "model_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/314_cabinet/0",
-     "metadata_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/314_cabinet/0/model_data0.json",
-     "visual_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/314_cabinet/0/mobility.urdf",
-     "collision_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/314_cabinet/0/mobility.urdf",
-     "urdf_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/314_cabinet/0/mobility.urdf",
+     "model_path": "fixtures/asset_library/314_cabinet/0",
+     "metadata_path": "fixtures/asset_library/314_cabinet/0/model_data0.json",
+     "visual_path": "fixtures/asset_library/314_cabinet/0/mobility.urdf",
+     "collision_path": "fixtures/asset_library/314_cabinet/0/mobility.urdf",
+     "urdf_path": "fixtures/asset_library/314_cabinet/0/mobility.urdf",
      "scale": [
       1.0,
       1.0,

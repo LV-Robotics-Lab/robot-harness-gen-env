@@ -1,0 +1,167 @@
+{
+  "schema_version": "asset_ledger.v2",
+  "asset_id": "external_354_stone",
+  "category": "stone",
+  "semantic_name": "stone",
+  "kind": "rigid",
+  "profile": "cross_backend",
+  "tags": [
+    "rigid",
+    "external",
+    "batch"
+  ],
+  "semantics": {
+    "aliases": [
+      "stone"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "/home/jingxiang/yuxin/sweep_out/C_stone/acquire/identity_stone.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.24859665428828054,
+          0.25,
+          0.11903411695091552
+        ],
+        "mesh_up_axis": "Y",
+        "origin_convention": "bottom-center",
+        "size_resolution": {
+          "mode": "absolute:0.25",
+          "actual_max_dim_m": 1.0501191020011906,
+          "scale": 0.23806823390183082,
+          "reference_max_dim_m": 0.25,
+          "reference_assets": [],
+          "verdict": "scaled"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default": null,
+          "runtime_default_basis": "none"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/354_stone/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "6269bb70575240078b067e7ae825e2c20225878de93114d35ef0fd2b3a6ab1fb",
+          "size_bytes": 21348,
+          "metadata": {
+            "derived_from": "concrete_block_01.usd",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/354_stone/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "6269bb70575240078b067e7ae825e2c20225878de93114d35ef0fd2b3a6ab1fb",
+          "size_bytes": 21348,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_354_stone/concrete_block_01.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "9aa36546b91eb1e87c5d0093d795a2bc8b9ebd6dff9f70f00686405ec2000586",
+          "size_bytes": 50996,
+          "metadata": {
+            "origin_prefix": "acq_354_stone"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/354_stone/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "96c42bcd0c88559a47f126c6229aafb20cacd50375a4669cb9abf1039ee902d6",
+          "size_bytes": 1611,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "acq_354_stone",
+        "file": "concrete_block_01.usd",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "NVIDIA asset EULA; YCB dataset terms for ycb group"
+        },
+        "retrieved_at": "2026-08-13",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_354_stone/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-13T22:42:16",
+          "verified_digest": "9bad9f3048d82688f4b4415f6084dd213ee270b4325c242093b5ba90d3e2714e",
+          "report_path": "/home/jingxiang/yuxin/sweep_out/C_stone/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        }
+      ]
+    }
+  ]
+}

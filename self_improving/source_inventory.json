@@ -73,18 +73,48 @@
     {
       "name": "env-gen-dev",
       "source_path": "/home/jingxiang/yuxin/env-gen-dev",
-      "source_commit": "96f5debb8326b7ddfda045660233ea40ebcb094c",
+      "source_heads": {
+        "main": "ecea99faaec4e082e1fdbc3716ee498cea8dbf87",
+        "web_studio_v2": "ec477bc96e8f7bcae0d28a6dfe3d1ed40b1592e1"
+      },
+      "working_tree_snapshot": "0b87fed8a2903be8a13f146b9a2b549658a79b74",
       "destination": "self_improving/asset_pipeline",
-      "retained": ["active source", "shared OpenXSim source and tests", "branch overlays", "asset acquisition manifest", "ledger and model metadata"],
-      "excluded": ["vendored OpenXSim dependencies", "MetaSim checkout", "meshes", "renders", "results", "caches", "shadow upstream clone"]
+      "archive_branches": {
+        "main_snapshot": "archive/yuxin-env-gen-dev-main-20260814",
+        "main_current_and_dirty": "archive/yuxin-env-gen-dev-main-current-20260814",
+        "web_studio_v2": "archive/yuxin-env-gen-dev-web-studio-v2-20260814",
+        "alias_screening": "archive/yuxin-env-gen-dev-alias-screening-20260814",
+        "asset_sources": "archive/yuxin-env-gen-dev-asset-sources-20260814",
+        "asset_reuse_abc": "archive/yuxin-env-gen-dev-asset-reuse-abc-20260814"
+      },
+      "retained": ["reconciled active source", "shared OpenXSim source and tests", "branch overlays", "asset acquisition manifest", "ledger and model metadata", "full local asset SHA-256 manifest"],
+      "content_receipt": "self_improving/asset_pipeline/receipts/asset_library_manifest.json",
+      "excluded": ["vendored OpenXSim dependencies", "MetaSim checkout", "meshes", "renders", "results", "caches", "shadow upstream clone"],
+      "storage_uri": null
     },
     {
       "name": "yeyuxuan-onboarding-report",
       "source_path": "/home/jingxiang/yeyuxuan/robot-harness-gen-env/onboarding-report",
-      "source_repo_commit": "0aa655936c1f3384bc2521d2d865063e62a82ffe",
+      "source_repo_commit": "cf9123a9c6736fa76da0c1cc11e2dfc3d0df7910",
+      "archive_branch": "archive/yeyuxuan-onboarding-20260813",
+      "history_merge_commit": "6b04a78",
       "destination": "self_improving/onboarding/yeyuxuan",
-      "retained": ["migration tools", "asset overrides", "RoboLab source records", "migration summary"],
-      "excluded": ["GLB meshes", "PNG previews", "MP4 videos", "tar archives", "generated runtime packages"]
+      "retained": ["22 source commits", "migration tools", "asset overrides", "20 RoboLab source records", "migration summaries", "overlay SHA-256 manifest"],
+      "excluded": ["GLB meshes", "PNG previews", "MP4 videos", "tar archives", "generated runtime packages"],
+      "storage_uri": null
+    },
+    {
+      "name": "student-contributor-notes",
+      "source_paths": [
+        "/home/jingxiang/bingsheng/GUIDANCE.md",
+        "/home/jingxiang/gujie/X2Env/README.md",
+        "/home/jingxiang/gujie/readme",
+        "/home/jingxiang/gujie/rule_parser_modification_readme.md",
+        "/home/jingxiang/yuxin/env-gen-github/OVERVIEW.md"
+      ],
+      "destination": "self_improving/contributor_notes",
+      "mode": "historical_evidence",
+      "retained": ["byte-identical source documents", "source paths", "SHA-256 index"]
     },
     {
       "name": "dirty-branch-preservation",

@@ -8,7 +8,7 @@ FIX = Path(__file__).parent / "fixtures" / "mini_catalog.json"
 
 def test_extract_needs_red_mug():
     spec, needs = a4.extract_needs("Place a red mug on the table.", seed=42)
-    assert needs[0]["category"] == "cup" and needs[0]["color"] == "red"
+    assert needs[0]["category"] == "mug" and needs[0]["color"] == "red"
 
 
 def test_coverage_covered_and_gap():

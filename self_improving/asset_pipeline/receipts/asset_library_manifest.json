@@ -1,0 +1,23 @@
+{
+  "schema_version": "robot_harness.external_asset_receipt.v1",
+  "captured_at": "2026-08-14",
+  "source_host": "jingxiang@100.64.0.6",
+  "source_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library",
+  "asset_namespace": "301-361",
+  "selected_manifest_groups": 51,
+  "selected_manifest_items": 51,
+  "metadata_directories": 63,
+  "metadata_files": 132,
+  "library_files": 12047,
+  "library_bytes": 27637543884,
+  "file_manifest": "asset_library_301_361.sha256",
+  "file_manifest_sha256": "e661ac55235d9eec3a1fe5af342b14306b3dcc51a734d54a93f1a037c9a21e60",
+  "storage_uri": null,
+  "git_excludes": [
+    "meshes",
+    "textures",
+    "rendered snapshots",
+    "download caches",
+    "source payloads"
+  ]
+}

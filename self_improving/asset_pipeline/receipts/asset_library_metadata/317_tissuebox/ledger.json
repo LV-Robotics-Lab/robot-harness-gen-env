@@ -110,7 +110,7 @@
         },
         {
           "format": "glb",
-          "uri": "/tmp/verify_tissue3/acquire/webcache/4dfc7e96b1cbea7a4e8d/2bd98e8ea09f49bd85453a927011d31d.glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_317_tissuebox/2bd98e8ea09f49bd85453a927011d31d.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "5160ae8c2ecb1ba20e1c8bb7aba888c865afafcb226aa6afd4486329b72a03e6",

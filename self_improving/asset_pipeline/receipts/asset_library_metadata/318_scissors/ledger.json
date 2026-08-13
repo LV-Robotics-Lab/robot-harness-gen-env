@@ -139,8 +139,11 @@
         "file": "037_scissors.usd",
         "license": {
           "spdx": null,
-          "status": "unknown",
-          "terms_note": "NVIDIA asset EULA; YCB dataset terms for ycb group"
+          "status": "declared",
+          "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4) [applied to new import 2026-08-13: same NVIDIA Isaac Assets source as the audited 2026-08-09 batch]",
+          "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "checked_date": "2026-08-13",
+          "checked_by": "carried forward from owner-directed audit 2026-08-09 (same source coordinates class)"
         },
         "retrieved_at": "2026-08-12",
         "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_318_scissors/SOURCE_MANIFEST.json"
