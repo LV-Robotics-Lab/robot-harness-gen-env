@@ -1,0 +1,25 @@
+{
+  "candidate": {
+    "candidate_id": "bullet_duck",
+    "category": "duck",
+    "download_url": "https://raw.githubusercontent.com/bulletphysics/bullet3/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/duck.obj",
+    "format": "obj",
+    "license": "Zlib",
+    "metadata": {
+      "commit": "63c4d67e337017f9d8b298c900e9aabdb69296e7",
+      "path": "data/duck.obj",
+      "repository": "bulletphysics/bullet3"
+    },
+    "name": "duck.obj",
+    "provider": "github_tree_pinned",
+    "score": 0.0,
+    "source_page": "https://github.com/bulletphysics/bullet3/blob/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/duck.obj"
+  },
+  "detected_format": "obj",
+  "downloaded_at_unix": 1784170310,
+  "media_type": "text/plain",
+  "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/c57b482dd7091a385865/duck.obj",
+  "schema": "agenticsim.asset_provenance.v1",
+  "sha256": "d60872d024d0a466faa65eba6fd828b0a5e71d31325bfe918ba54ed817922df3",
+  "size_bytes": 356295
+}

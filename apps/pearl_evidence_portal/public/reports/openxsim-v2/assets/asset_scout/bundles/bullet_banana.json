@@ -1,0 +1,223 @@
+{
+  "articulation": {
+    "articulated": false,
+    "joint_count": 0,
+    "joint_types": [],
+    "status": "rigid_mesh_no_joint_schema"
+  },
+  "asset_id": "bullet_banana",
+  "category": "banana",
+  "physical": {
+    "collision_status": "generated",
+    "collision_strategy": "axis_aligned_convex_box",
+    "material_status": "generated_default_material",
+    "normalization": {
+      "face_count": 1100,
+      "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_banana/default_material.mtl",
+      "material_status": "generated_default_material",
+      "normalized_bounds": {
+        "extent": [
+          1.0,
+          0.4963369319828881,
+          0.17301627737418634
+        ],
+        "maximum": [
+          0.5,
+          0.24816846599144404,
+          0.08650813868709317
+        ],
+        "minimum": [
+          -0.5,
+          -0.24816846599144407,
+          -0.08650813868709317
+        ]
+      },
+      "scale_factor": 4.392167886225283,
+      "source_bounds": {
+        "extent": [
+          0.227678,
+          0.113005,
+          0.039391999999999996
+        ],
+        "maximum": [
+          0.113626,
+          0.113872,
+          0.019722
+        ],
+        "minimum": [
+          -0.114052,
+          0.000867,
+          -0.01967
+        ]
+      },
+      "source_center": [
+        -0.0002129999999999979,
+        0.057369500000000004,
+        2.599999999999998e-05
+      ],
+      "target_max_extent_m": 1.0,
+      "vertex_count": 552
+    },
+    "runtime_import_required": true
+  },
+  "representations": [
+    {
+      "backend": "portable",
+      "format": "obj_source",
+      "metadata": {
+        "original_download": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/8964f7ba16b193b984db/banana.obj",
+        "preserved_source": true
+      },
+      "role": "source",
+      "sha256": "99847d86fe1c518f4f231084f6f0752eea10258153f7b8f38c8210918bf23c92",
+      "size_bytes": 96699,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_banana/source.obj"
+    },
+    {
+      "backend": "portable",
+      "format": "obj",
+      "metadata": {
+        "normalization": {
+          "face_count": 1100,
+          "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_banana/default_material.mtl",
+          "material_status": "generated_default_material",
+          "normalized_bounds": {
+            "extent": [
+              1.0,
+              0.4963369319828881,
+              0.17301627737418634
+            ],
+            "maximum": [
+              0.5,
+              0.24816846599144404,
+              0.08650813868709317
+            ],
+            "minimum": [
+              -0.5,
+              -0.24816846599144407,
+              -0.08650813868709317
+            ]
+          },
+          "scale_factor": 4.392167886225283,
+          "source_bounds": {
+            "extent": [
+              0.227678,
+              0.113005,
+              0.039391999999999996
+            ],
+            "maximum": [
+              0.113626,
+              0.113872,
+              0.019722
+            ],
+            "minimum": [
+              -0.114052,
+              0.000867,
+              -0.01967
+            ]
+          },
+          "source_center": [
+            -0.0002129999999999979,
+            0.057369500000000004,
+            2.599999999999998e-05
+          ],
+          "target_max_extent_m": 1.0,
+          "vertex_count": 552
+        }
+      },
+      "role": "visual",
+      "sha256": "05aa1796bd289d15f4d933e505261d31db59c59ef7be0bf957dedbcd2e48b43e",
+      "size_bytes": 37645,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_banana/bullet_banana.normalized.obj"
+    },
+    {
+      "backend": "portable",
+      "format": "obj_collision_proxy",
+      "metadata": {
+        "strategy": "axis_aligned_convex_box"
+      },
+      "role": "collision",
+      "sha256": "0ac89a282a0ef9f82c2f3b6e2e24c63b834e7ddf370a0151e29c323e505d3eef",
+      "size_bytes": 360,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_banana/bullet_banana.collision_box.obj"
+    },
+    {
+      "backend": "isaacsim",
+      "format": "usda",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "792bbafd1f8acb065dd2c7217d559caf86e6531e893f96bf12688c61db404176",
+      "size_bytes": 43937,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_banana/bullet_banana.usda"
+    },
+    {
+      "backend": "mujoco",
+      "format": "mjcf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "2c73038f90b4c9c6a810e9522cf89b2771ca16fd7272ff4888e9486657bdec76",
+      "size_bytes": 449,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_banana/bullet_banana.xml"
+    },
+    {
+      "backend": "portable",
+      "format": "urdf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "8d6f77e67bc2bada0881927d37fdd4551f97c9dc3b4464312515f76369702358",
+      "size_bytes": 258,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_banana/bullet_banana.urdf"
+    },
+    {
+      "backend": "sapien",
+      "format": "sapien_manifest",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "e41ea9c513921e14a2177d9271e5ae012f97d74d740d43d521ab6463b66843a9",
+      "size_bytes": 1474,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_banana/sapien_asset.json"
+    },
+    {
+      "backend": "metasim",
+      "format": "metasim_object",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "f735243b75f50380952d5b3d68864f3c54814d41dd99430c03991600a7c49592",
+      "size_bytes": 515,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_banana/metasim_object.json"
+    },
+    {
+      "backend": "portable",
+      "format": "validation_manifest",
+      "metadata": {},
+      "role": "validation",
+      "sha256": "ad34b1bc103f21591e10986ea089f5ac4df788c3ce79664d0ee358bdaa00fcbc",
+      "size_bytes": 1950,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_banana/asset_validation.json"
+    }
+  ],
+  "source": {
+    "download_sha256": "99847d86fe1c518f4f231084f6f0752eea10258153f7b8f38c8210918bf23c92",
+    "download_url": "https://raw.githubusercontent.com/bulletphysics/bullet3/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/banana.obj",
+    "license": "Zlib",
+    "provenance_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/8964f7ba16b193b984db/provenance.json",
+    "provider": "github_tree_pinned",
+    "source_page": "https://github.com/bulletphysics/bullet3/blob/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/banana.obj"
+  },
+  "tags": [
+    "downloaded",
+    "provenance_recorded",
+    "validated",
+    "normalized"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "candidate": {
+    "candidate_id": "mujoco_card",
+    "category": "card",
+    "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco/f841b67c17349aca1a0999b1408b746a262ff805/model/cards/assets/card.obj",
+    "format": "obj",
+    "license": "Apache-2.0",
+    "metadata": {
+      "commit": "f841b67c17349aca1a0999b1408b746a262ff805",
+      "path": "model/cards/assets/card.obj",
+      "repository": "google-deepmind/mujoco"
+    },
+    "name": "card.obj",
+    "provider": "github_tree_pinned",
+    "score": 0.0,
+    "source_page": "https://github.com/google-deepmind/mujoco/blob/f841b67c17349aca1a0999b1408b746a262ff805/model/cards/assets/card.obj"
+  },
+  "detected_format": "obj",
+  "downloaded_at_unix": 1784170426,
+  "media_type": "text/plain",
+  "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/0d8bf43ea8c3b8a5dc96/card.obj",
+  "schema": "agenticsim.asset_provenance.v1",
+  "sha256": "3be72c1c6b6caf2f5b4888be01caae89161ce2c290b718cfe192f3487866668b",
+  "size_bytes": 5820
+}

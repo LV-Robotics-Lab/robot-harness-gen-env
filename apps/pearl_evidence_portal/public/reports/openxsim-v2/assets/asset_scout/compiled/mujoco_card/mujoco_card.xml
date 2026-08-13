@@ -1,0 +1,10 @@
+<mujoco model="asset">
+  <asset>
+    <mesh name="mujoco_card_visual" file="mujoco_card.normalized.obj"/>
+    <mesh name="mujoco_card_collision" file="mujoco_card.collision_box.obj"/>
+  </asset>
+  <worldbody><body name="mujoco_card">
+    <geom type="mesh" mesh="mujoco_card_visual" contype="0" conaffinity="0" rgba="0.65 0.68 0.72 1"/>
+    <geom type="mesh" mesh="mujoco_card_collision" density="1000"/>
+  </body></worldbody>
+</mujoco>

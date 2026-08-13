@@ -1,0 +1,20 @@
+<mujoco model="crosssim_articulated_hinge">
+  <compiler angle="radian" coordinate="local"/>
+  <option gravity="0.0 0.0 -9.81" timestep="0.01"/>
+  <visual><headlight ambient="0.45 0.45 0.45" diffuse="0.8 0.8 0.8" specular="0.15 0.15 0.15"/></visual>
+  <asset>
+  </asset>
+  <custom>
+    <text name="agenticsim_task_contract" data="{&quot;action&quot;:{&quot;interface&quot;:&quot;zero_action&quot;,&quot;operations&quot;:[]},&quot;observation&quot;:{&quot;state&quot;:[&quot;object_pose&quot;,&quot;contact&quot;]},&quot;reset&quot;:{&quot;object_poses&quot;:&quot;from_env_spec&quot;},&quot;success&quot;:[{&quot;type&quot;:&quot;settled&quot;}],&quot;termination&quot;:[{&quot;steps&quot;:120,&quot;type&quot;:&quot;timeout&quot;}]}"/>
+    <text name="agenticsim_object_ids" data="[&quot;cabinet&quot;]"/>
+    <text name="agenticsim_sensors" data="[]"/>
+  </custom>
+  <contact>
+    <exclude body1="cabinet" body2="cabinet__door"/>
+  </contact>
+  <worldbody>
+    <geom name="ground" type="plane" size="3 3 0.1" rgba="0.3 0.3 0.3 1"/>
+    <light name="key_light" pos="0 -1 2" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+<body name="cabinet" pos="0 0 0.2" quat="1 0 0 0"><geom name="cabinet__cabinet_base_geom" type="box" size="0.18 0.08 0.2" rgba="0.42 0.48 0.55 1" pos="0 0 0" quat="1 0 0 0" /><body name="cabinet__door" pos="0 -0.095 0" quat="1 0 0 0"><joint name="door_hinge" type="hinge" axis="0 0 1" damping="0.1" range="-1.2 0" limited="true" /><geom name="cabinet__door_geom" type="box" size="0.18 0.015 0.2" rgba="0.82 0.24 0.18 1" pos="0 0 0" quat="1 0 0 0" /></body></body>
+  </worldbody>
+</mujoco>

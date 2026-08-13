@@ -1,0 +1,87 @@
+{
+  "anchor_id": "anchor_f87f8e6236c6",
+  "appearance_constraints": [
+    {
+      "confidence": 0.95,
+      "dominant_color": "red",
+      "instance_id": "red_block"
+    },
+    {
+      "confidence": 0.95,
+      "dominant_color": "blue",
+      "instance_id": "blue_zone"
+    }
+  ],
+  "camera_constraints": [],
+  "confidence": 0.9,
+  "evidence": [
+    {
+      "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_1_red_blue_image/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_f87f8e6236c6/source.png",
+      "sha256": "f87f8e6236c60501857117449bc3da6d489dd4e64e0a33c8cdcd0e55e3e8a09c",
+      "size_bytes": 1907
+    }
+  ],
+  "media_sha256": "f87f8e6236c60501857117449bc3da6d489dd4e64e0a33c8cdcd0e55e3e8a09c",
+  "media_type": "image",
+  "media_uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/media/scene_1.png",
+  "motion_constraints": [],
+  "object_constraints": [
+    {
+      "confidence": 0.95,
+      "frames_observed": 1,
+      "instance_id": "red_block",
+      "label": "red region or object",
+      "metric_depth_status": "unknown",
+      "normalized_bbox": [
+        0.15625,
+        0.59375,
+        0.28125,
+        0.78125
+      ],
+      "normalized_center": [
+        0.21875,
+        0.6875
+      ]
+    },
+    {
+      "confidence": 0.95,
+      "frames_observed": 1,
+      "instance_id": "blue_zone",
+      "label": "blue region or object",
+      "metric_depth_status": "unknown",
+      "normalized_bbox": [
+        0.6458333333333334,
+        0.25625,
+        0.8541666666666666,
+        0.49375
+      ],
+      "normalized_center": [
+        0.75,
+        0.375
+      ]
+    }
+  ],
+  "observations": {
+    "format": "png",
+    "height": 320,
+    "sample_count": 1,
+    "semantic_provider": "color_layout_v1",
+    "width": 480
+  },
+  "spatial_constraints": [
+    {
+      "confidence": 0.7,
+      "object": "blue_zone",
+      "subject": "red_block",
+      "type": "left_of"
+    }
+  ],
+  "uncertainty": [
+    "color_segmentation_is_not_category_recognition",
+    "metric_depth_unknown",
+    "occlusion_not_resolved",
+    "occluded_geometry_unknown",
+    "absolute_scale_unknown",
+    "depth_ambiguous"
+  ]
+}

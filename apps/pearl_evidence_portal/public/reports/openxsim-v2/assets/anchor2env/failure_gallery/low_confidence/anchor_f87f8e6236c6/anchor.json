@@ -1,0 +1,40 @@
+{
+  "anchor_id": "anchor_f87f8e6236c6",
+  "appearance_constraints": [],
+  "camera_constraints": [],
+  "confidence": 0.2,
+  "evidence": [
+    {
+      "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/failure_gallery/low_confidence/anchor_f87f8e6236c6/source.png",
+      "sha256": "f87f8e6236c60501857117449bc3da6d489dd4e64e0a33c8cdcd0e55e3e8a09c",
+      "size_bytes": 1907
+    }
+  ],
+  "media_sha256": "f87f8e6236c60501857117449bc3da6d489dd4e64e0a33c8cdcd0e55e3e8a09c",
+  "media_type": "image",
+  "media_uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/media/scene_1.png",
+  "motion_constraints": [],
+  "object_constraints": [
+    {
+      "confidence": 0.2,
+      "instance_id": "red_block",
+      "normalized_center": [
+        0.1,
+        0.2
+      ]
+    }
+  ],
+  "observations": {
+    "format": "png",
+    "height": 320,
+    "sample_count": 1,
+    "semantic_provider": "user_annotations",
+    "width": 480
+  },
+  "spatial_constraints": [],
+  "uncertainty": [
+    "occluded_geometry_unknown",
+    "absolute_scale_unknown",
+    "depth_ambiguous"
+  ]
+}

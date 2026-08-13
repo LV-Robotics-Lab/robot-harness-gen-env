@@ -1,0 +1,181 @@
+{
+  "schema_version": "alchedata.openxsim_adapter_matrix.v1",
+  "status": "pass_adapter_matrix_complete",
+  "required_columns": [
+    "source",
+    "engine_renderer",
+    "asset_format",
+    "material_system",
+    "reset_step_verifier_api",
+    "license_access",
+    "migration_difficulty",
+    "current_status"
+  ],
+  "adapter_count": 10,
+  "adapters": [
+    {
+      "adapter_id": "robotwin_sapien",
+      "source": "RoboTwin / SAPIEN",
+      "source_url": "https://github.com/RoboTwin-Platform/RoboTwin",
+      "engine_renderer": "SAPIEN physics and renderer",
+      "asset_format": "RoboTwin object directories, GLB/mesh files, model metadata, and task Python modules",
+      "material_system": "SAPIEN render materials and texture files attached through RoboTwin asset metadata",
+      "reset_step_verifier_api": "setup_demo/reset through Base_Task; scripted or policy actions through task methods; task.check_success verifier",
+      "license_access": "Public RoboTwin repository with MIT license; backend assets remain subject to their recorded provenance",
+      "migration_difficulty": "Baseline P0 backend; remaining difficulty is generated-task registration and robust policy coverage",
+      "current_status": "P0_executed",
+      "evidence": [
+        "artifacts/openxsim_benchmarks/manifest.json",
+        "runs/act_eval_native_sync_rgb_chunk161_1200e_best/evaluate_report.json"
+      ]
+    },
+    {
+      "adapter_id": "agenticsim_openxsim_intake",
+      "source": "LV-Robotics-Lab/AgenticSim Open X Sim intake",
+      "source_url": "https://github.com/LV-Robotics-Lab/AgenticSim",
+      "engine_renderer": "Isaac Sim 5.1 / Isaac Lab 2.3 runtime plus the RoboTwin / SAPIEN alias source",
+      "asset_format": "745-repository source catalog, USD task assets, and eight RoboTwin-backed alias records",
+      "material_system": "USD/MDL for Isaac candidates and inherited SAPIEN materials for RoboTwin-backed aliases",
+      "reset_step_verifier_api": "Twelve exact-commit probes exercise task registration, reset, 5-20 steps, stage inspection, and viewport capture; 11 pass technically, while the full PEARL verifier mapping remains separate",
+      "license_access": "Six tested code-and-asset paths close under open-source terms; five technical passes remain blocked by missing or noncommercial required-asset licensing; WobbleGo is runtime-blocked",
+      "migration_difficulty": "Normalize task registration, dependencies, Git LFS or remote assets, observations, licensing, and task verifiers before promotion into the full command loop",
+      "current_status": "P1_agenticsim_runtime_intake_12_probes",
+      "evidence": [
+        "external/robotwin-text2env-demo/asset_catalogs/agenticsim_placement_assets.json",
+        "artifacts/adapter_catalog/selection2env_catalog_sources.json",
+        "artifacts/openxsim/agenticsim_awesome_isaac_snapshot.json"
+      ]
+    },
+    {
+      "adapter_id": "articraft_10k",
+      "source": "Articraft-10K",
+      "source_url": "https://huggingface.co/datasets/camvsl/Articraft-10K",
+      "engine_renderer": "Generated articulated assets probed through SAPIEN",
+      "asset_format": "Searchable metadata plus per-asset tar.gz archives containing URDF geometry",
+      "material_system": "Archive-provided visual meshes and textures where present; no NeuMaTeX sidecar binding",
+      "reset_step_verifier_api": "Archive extraction and SAPIEN load/20-step smoke; no task-level verifier adapter",
+      "license_access": "Public Hugging Face dataset access; per-asset and dataset usage terms must be checked before promotion",
+      "migration_difficulty": "Scale, collision geometry, articulation semantics, materials, and task suitability vary by asset",
+      "current_status": "P1_catalog_with_bounded_smoke",
+      "evidence": [
+        "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "runs/articraft_archive_probe_weight_bench/probe_report.json",
+        "runs/articraft_archive_probe_washing_machine/probe_report.json"
+      ]
+    },
+    {
+      "adapter_id": "isaac_sim_usd",
+      "source": "NVIDIA Isaac Sim / USD",
+      "source_url": "https://docs.isaacsim.omniverse.nvidia.com/5.1.0/index.html",
+      "engine_renderer": "PhysX with Omniverse RTX rendering",
+      "asset_format": "USD scene graphs and referenced meshes",
+      "material_system": "USD material bindings with MDL/Omniverse material workflows",
+      "reset_step_verifier_api": "The RTX baseline and 11 named task smokes pass; one normalized place_container_plate task now executes Isaac /gen-env, /collect, /evaluate, /diagnose, and /transfer with a target geometric verifier",
+      "license_access": "Isaac Sim 5.1 runs under NVIDIA access terms; every candidate repository and required asset is audited separately, leaving five runnable candidates outside strict open-source intake",
+      "migration_difficulty": "Extend the executed primitive-proxy task-semantic bundle to robot embodiment, source assets/materials, policy actions, and additional task-specific verifiers",
+      "current_status": "P1_executed_normalized_task_bundle",
+      "evidence": [
+        "artifacts/openxsim/agenticsim_awesome_isaac_snapshot.json",
+        "artifacts/openxsim_cross_sim/place_container_plate_task_contract.json",
+        "runs/isaac_openxsim_place_container_plate_v1/run_state.json",
+        "runs/isaac_openxsim_place_container_plate_v1/transfer.json",
+        "docs/openxsim_command_spec.md"
+      ]
+    },
+    {
+      "adapter_id": "mujoco",
+      "source": "MuJoCo",
+      "source_url": "https://github.com/google-deepmind/mujoco",
+      "engine_renderer": "MuJoCo physics with its native renderer",
+      "asset_format": "MJCF/XML with mesh and texture references",
+      "material_system": "MJCF material, texture, and RGBA attributes",
+      "reset_step_verifier_api": "Core state reset and simulation step exist; PEARL task/verifier mapping is not implemented",
+      "license_access": "Public open-source repository; exact dependency and asset licenses must be recorded per adapter bundle",
+      "migration_difficulty": "SAPIEN-to-MJCF articulation, contact parameters, camera conventions, and verifier semantics",
+      "current_status": "P2_target_not_run",
+      "evidence": [
+        "docs/openxsim_command_spec.md"
+      ]
+    },
+    {
+      "adapter_id": "libero",
+      "source": "LIBERO",
+      "source_url": "https://github.com/Lifelong-Robot-Learning/LIBERO",
+      "engine_renderer": "MuJoCo through robosuite-style environments",
+      "asset_format": "Benchmark task definitions, BDDL, MJCF/XML, meshes, and textures",
+      "material_system": "MuJoCo/robosuite visual materials and textures",
+      "reset_step_verifier_api": "Benchmark environment reset/step and task success checks require a PEARL adapter",
+      "license_access": "Public repository; benchmark assets and dependency terms must be audited before transfer",
+      "migration_difficulty": "Task language, BDDL semantics, object naming, observations, and success predicates differ from RoboTwin",
+      "current_status": "P2_target_not_run",
+      "evidence": [
+        "docs/openxsim_command_spec.md"
+      ]
+    },
+    {
+      "adapter_id": "robosuite",
+      "source": "robosuite",
+      "source_url": "https://github.com/ARISE-Initiative/robosuite",
+      "engine_renderer": "MuJoCo with robosuite rendering wrappers",
+      "asset_format": "MJCF/XML, meshes, textures, arena and object classes",
+      "material_system": "MuJoCo materials and robosuite texture assets",
+      "reset_step_verifier_api": "Environment reset/step APIs exist; task-specific success predicates need normalized verifier manifests",
+      "license_access": "Public repository; asset and dependency licenses must be included in a transfer manifest",
+      "migration_difficulty": "Robot controller/action spaces, camera observations, object registries, and success predicates need translation",
+      "current_status": "P2_target_not_run",
+      "evidence": [
+        "docs/openxsim_command_spec.md"
+      ]
+    },
+    {
+      "adapter_id": "behavior_omnigibson",
+      "source": "BEHAVIOR / OmniGibson",
+      "source_url": "https://behavior.stanford.edu/",
+      "engine_renderer": "OmniGibson on Omniverse/PhysX",
+      "asset_format": "OmniGibson scene and object assets with USD-backed representations",
+      "material_system": "Omniverse/USD material bindings and dataset-provided appearance assets",
+      "reset_step_verifier_api": "Activity reset/step and predicate evaluation need a PEARL verifier adapter",
+      "license_access": "Public project and dataset access; dataset and simulator usage terms must be recorded before import",
+      "migration_difficulty": "Large-scene state, semantic predicates, USD materials, robot embodiment, and activity verifier mapping",
+      "current_status": "P2_target_not_run",
+      "evidence": [
+        "docs/openxsim_command_spec.md"
+      ]
+    },
+    {
+      "adapter_id": "embodiedgen_cross_sim",
+      "source": "EmbodiedGen V2 cross-simulator generation and conversion",
+      "source_url": "https://github.com/HorizonRobotics/EmbodiedGen",
+      "engine_renderer": "Generation backend with documented SAPIEN, Isaac Gym, PyBullet, MuJoCo, Genesis, and Isaac Sim output or conversion paths",
+      "asset_format": "URDF, meshes, 3D Gaussian representations, scene layouts, affordances, and simulator-specific conversion artifacts",
+      "material_system": "Generated mesh materials and 3DGS appearance with backend-specific conversion; PEARL renderer bindings remain unverified",
+      "reset_step_verifier_api": "EmbodiedGen emits assets and worlds; PEARL must supply backend reset, step, observation, action, and task-verifier adapters after import",
+      "license_access": "Public Apache-2.0 repository; generated-model, service, checkpoint, and source-asset provenance remains attached per output bundle",
+      "migration_difficulty": "Automate metric scale, collision, articulation, physics metadata, import, renderer, task verifier, and cross-simulator equivalence gates",
+      "current_status": "P1_source_audited_not_run",
+      "evidence": [
+        "artifacts/literature_review/text2env_primary_sources.json",
+        "artifacts/literature_review/candidate_project_intake_paul_20260714.json",
+        "docs/openxsim_command_spec.md"
+      ]
+    },
+    {
+      "adapter_id": "roboverse_metasim",
+      "source": "RoboVerse / MetaSim",
+      "source_url": "https://github.com/RoboVerseOrg/RoboVerse",
+      "engine_renderer": "MetaSim abstraction across Isaac Lab or Sim, Isaac Gym, MuJoCo, SAPIEN, PyBullet, Genesis, and related backends",
+      "asset_format": "Normalized robot, object, scene, task, simulator, and data-generation configurations plus backend-native assets",
+      "material_system": "Delegated to each simulator backend; material-equivalence metadata must be preserved in PEARL transfer manifests",
+      "reset_step_verifier_api": "MetaSim normalizes simulator-facing configuration and APIs; PEARL still requires task-level reset, observation, action, and verifier equivalence receipts",
+      "license_access": "Public Apache-2.0 code repository; per-asset provenance is recorded without using license completeness as an academic-use execution blocker",
+      "migration_difficulty": "Install the split RoboVerse/MetaSim stack, map PEARL command schemas, resolve assets, and run the same normalized task across at least two backends",
+      "current_status": "P1_source_audited_not_run",
+      "evidence": [
+        "artifacts/literature_review/text2env_primary_sources.json",
+        "artifacts/literature_review/candidate_project_intake_paul_20260714.json",
+        "docs/openxsim_command_spec.md"
+      ]
+    }
+  ],
+  "claim_boundary": "RoboTwin/SAPIEN has robot-action benchmark execution. Isaac Sim has one completed five-command task-semantic bundle using primitive proxies, scripted object-space actions, a backend-native trace, and a target verifier. This is not robot embodiment, joint-action policy, source-asset, material, or learned-policy transfer. Articraft remains a bounded catalog/probe source. EmbodiedGen and RoboVerse/MetaSim are primary-source-audited adapter candidates, not executed backends; the remaining rows are unexecuted targets."
+}

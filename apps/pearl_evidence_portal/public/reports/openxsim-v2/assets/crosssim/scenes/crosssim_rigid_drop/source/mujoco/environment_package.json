@@ -1,0 +1,131 @@
+{
+  "anchors": [],
+  "assets": [
+    {
+      "articulation": {},
+      "asset_id": "rigid_box_asset",
+      "category": "box",
+      "physical": {
+        "mass_kg": 0.2
+      },
+      "representations": [
+        {
+          "backend": "portable",
+          "format": "primitive_box",
+          "metadata": {
+            "color_rgb": [
+              0.9,
+              0.15,
+              0.12
+            ],
+            "half_size_m": [
+              0.05,
+              0.05,
+              0.05
+            ]
+          },
+          "role": "visual_and_collision",
+          "sha256": "",
+          "size_bytes": 0,
+          "uri": "primitive://box"
+        }
+      ],
+      "source": {
+        "kind": "procedural_common_subset"
+      },
+      "tags": []
+    }
+  ],
+  "env": {
+    "gravity_mps2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "metadata": {},
+    "name": "crosssim_rigid_drop",
+    "objects": [
+      {
+        "asset_id": "rigid_box_asset",
+        "instance_id": "rigid_box",
+        "metadata": {},
+        "pose": {
+          "orientation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            0.0,
+            0.35
+          ]
+        },
+        "randomization": {},
+        "role": "object",
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "static": false
+      }
+    ],
+    "randomization": {},
+    "regions": [],
+    "robots": [],
+    "sensors": [],
+    "units": "m",
+    "up_axis": "Z",
+    "workspace_bounds_m": [
+      -1.0,
+      -1.0,
+      0.0,
+      1.0,
+      1.0,
+      2.0
+    ]
+  },
+  "metadata": {},
+  "package_id": "crosssim_rigid_drop",
+  "schema_version": "agenticsim.environment_package.v1",
+  "source": {
+    "case": "rigid",
+    "mode": "existing_mujoco_environment_fixture"
+  },
+  "target_backends": [
+    "mujoco",
+    "sapien"
+  ],
+  "task": {
+    "action": {
+      "interface": "zero_action",
+      "operations": []
+    },
+    "instruction": "Let the rigid box settle under gravity.",
+    "intent": "cross_sim_zero_action_replay",
+    "metadata": {},
+    "observation": {
+      "state": [
+        "object_pose",
+        "contact"
+      ]
+    },
+    "plan": [],
+    "reset": {
+      "object_poses": "from_env_spec"
+    },
+    "success": [
+      {
+        "type": "settled"
+      }
+    ],
+    "termination": [
+      {
+        "steps": 120,
+        "type": "timeout"
+      }
+    ]
+  }
+}

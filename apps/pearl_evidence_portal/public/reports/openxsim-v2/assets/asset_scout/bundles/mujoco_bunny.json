@@ -1,0 +1,223 @@
+{
+  "articulation": {
+    "articulated": false,
+    "joint_count": 0,
+    "joint_types": [],
+    "status": "rigid_mesh_no_joint_schema"
+  },
+  "asset_id": "mujoco_bunny",
+  "category": "bunny",
+  "physical": {
+    "collision_status": "generated",
+    "collision_strategy": "axis_aligned_convex_box",
+    "material_status": "generated_default_material",
+    "normalization": {
+      "face_count": 4968,
+      "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_bunny/default_material.mtl",
+      "material_status": "generated_default_material",
+      "normalized_bounds": {
+        "extent": [
+          1.0,
+          0.9905058816356515,
+          0.7759371953532634
+        ],
+        "maximum": [
+          0.5,
+          0.4952529408178257,
+          0.3879685976766317
+        ],
+        "minimum": [
+          -0.5,
+          -0.4952529408178257,
+          -0.3879685976766317
+        ]
+      },
+      "scale_factor": 6.444992440668366,
+      "source_bounds": {
+        "extent": [
+          0.15515922000000001,
+          0.15368612,
+          0.12039380999999999
+        ],
+        "maximum": [
+          0.0607788,
+          0.18699602,
+          0.05871464
+        ],
+        "minimum": [
+          -0.09438042,
+          0.0333099,
+          -0.06167917
+        ]
+      },
+      "source_center": [
+        -0.016800810000000003,
+        0.11015296000000001,
+        -0.001482265
+      ],
+      "target_max_extent_m": 1.0,
+      "vertex_count": 2503
+    },
+    "runtime_import_required": true
+  },
+  "representations": [
+    {
+      "backend": "portable",
+      "format": "obj_source",
+      "metadata": {
+        "original_download": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/5a22e745e6465bc2dedc/bunny.obj",
+        "preserved_source": true
+      },
+      "role": "source",
+      "sha256": "c93e4a6fc6423194ff8b24de372d0a0632264290302a11d391f832313a0d55ef",
+      "size_bytes": 198443,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_bunny/source.obj"
+    },
+    {
+      "backend": "portable",
+      "format": "obj",
+      "metadata": {
+        "normalization": {
+          "face_count": 4968,
+          "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_bunny/default_material.mtl",
+          "material_status": "generated_default_material",
+          "normalized_bounds": {
+            "extent": [
+              1.0,
+              0.9905058816356515,
+              0.7759371953532634
+            ],
+            "maximum": [
+              0.5,
+              0.4952529408178257,
+              0.3879685976766317
+            ],
+            "minimum": [
+              -0.5,
+              -0.4952529408178257,
+              -0.3879685976766317
+            ]
+          },
+          "scale_factor": 6.444992440668366,
+          "source_bounds": {
+            "extent": [
+              0.15515922000000001,
+              0.15368612,
+              0.12039380999999999
+            ],
+            "maximum": [
+              0.0607788,
+              0.18699602,
+              0.05871464
+            ],
+            "minimum": [
+              -0.09438042,
+              0.0333099,
+              -0.06167917
+            ]
+          },
+          "source_center": [
+            -0.016800810000000003,
+            0.11015296000000001,
+            -0.001482265
+          ],
+          "target_max_extent_m": 1.0,
+          "vertex_count": 2503
+        }
+      },
+      "role": "visual",
+      "sha256": "cc476c6c9881bf7690d369499e3f61a8059be0299bb39f040ca294ef0b1e4523",
+      "size_bytes": 178437,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_bunny/mujoco_bunny.normalized.obj"
+    },
+    {
+      "backend": "portable",
+      "format": "obj_collision_proxy",
+      "metadata": {
+        "strategy": "axis_aligned_convex_box"
+      },
+      "role": "collision",
+      "sha256": "8fd086d2ed32a9a6ec4a36abb2b0643d911f42244d5e16aa146c485fc7c62b6d",
+      "size_bytes": 352,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_bunny/mujoco_bunny.collision_box.obj"
+    },
+    {
+      "backend": "isaacsim",
+      "format": "usda",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "61fcdabdcac6a0fe22b925b0b9af45492b2890204713dd82a88fe9bbb91f41bc",
+      "size_bytes": 206049,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_bunny/mujoco_bunny.usda"
+    },
+    {
+      "backend": "mujoco",
+      "format": "mjcf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "6e160aec47c45c462478c4888578b4573b4dfd31cbf516a661905884bd6c82ab",
+      "size_bytes": 442,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_bunny/mujoco_bunny.xml"
+    },
+    {
+      "backend": "portable",
+      "format": "urdf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "2e10222e0edc933c69a6033f07ce0bb4c1938038938872328073bd9d81da836f",
+      "size_bytes": 255,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_bunny/mujoco_bunny.urdf"
+    },
+    {
+      "backend": "sapien",
+      "format": "sapien_manifest",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "235fd7e1a73b28975f1d1f6187c4955b454595058ba0d48b95a00f570aeaa116",
+      "size_bytes": 1476,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_bunny/sapien_asset.json"
+    },
+    {
+      "backend": "metasim",
+      "format": "metasim_object",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "3258614c753f1fa7d34f2f5bc6743f912e85578e73bf4eed96271299bec27bec",
+      "size_bytes": 508,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_bunny/metasim_object.json"
+    },
+    {
+      "backend": "portable",
+      "format": "validation_manifest",
+      "metadata": {},
+      "role": "validation",
+      "sha256": "eec9621a0a559464a97c60d3adb6a7bc8f7bf8a2cfd3b91961cc6f8addfd52fa",
+      "size_bytes": 1953,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/mujoco_bunny/asset_validation.json"
+    }
+  ],
+  "source": {
+    "download_sha256": "c93e4a6fc6423194ff8b24de372d0a0632264290302a11d391f832313a0d55ef",
+    "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco/f841b67c17349aca1a0999b1408b746a262ff805/model/flex/asset/bunny.obj",
+    "license": "Apache-2.0",
+    "provenance_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/5a22e745e6465bc2dedc/provenance.json",
+    "provider": "github_tree_pinned",
+    "source_page": "https://github.com/google-deepmind/mujoco/blob/f841b67c17349aca1a0999b1408b746a262ff805/model/flex/asset/bunny.obj"
+  },
+  "tags": [
+    "downloaded",
+    "provenance_recorded",
+    "validated",
+    "normalized"
+  ]
+}

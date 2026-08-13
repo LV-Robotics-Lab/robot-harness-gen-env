@@ -1,0 +1,19 @@
+{
+  "asset_id": "bullet_cup",
+  "generated": {
+    "collision_proxy": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_cup/bullet_cup.collision_box.obj",
+    "material": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_cup/default_material.mtl",
+    "metasim_object": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_cup/metasim_object.json",
+    "mjcf": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_cup/bullet_cup.xml",
+    "normalized_obj": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_cup/bullet_cup.normalized.obj",
+    "sapien_manifest": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_cup/sapien_asset.json",
+    "urdf": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_cup/bullet_cup.urdf",
+    "usda": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_cup/bullet_cup.usda",
+    "validation_manifest": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_cup/asset_validation.json"
+  },
+  "provenance_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/3259b990234e158e76d1/provenance.json",
+  "schema": "agenticsim.asset_conversion.v1",
+  "source_format": "obj",
+  "source_sha256": "50588c5b69958fba92151c2839b1942cd7a68fde07532712f9eb6ac6a5137a22",
+  "validation_manifest": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_cup/asset_validation.json"
+}

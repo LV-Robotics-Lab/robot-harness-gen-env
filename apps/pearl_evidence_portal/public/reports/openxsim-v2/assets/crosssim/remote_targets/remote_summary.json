@@ -1,0 +1,199 @@
+{
+  "complete": true,
+  "record_count": 3,
+  "records": [
+    {
+      "compile_result": {
+        "artifact_path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_articulated_hinge/compiled/sapien/scene_spec.json",
+        "backend": "sapien",
+        "blockers": [],
+        "manifest_path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_articulated_hinge/compiled/sapien/compile_manifest.json",
+        "metadata": {
+          "artifact_format": "sapien_scene_json",
+          "asset_ids": [
+            "cabinet_asset"
+          ],
+          "object_ids": [
+            "cabinet"
+          ],
+          "runner_syntax_validated": true,
+          "schema": "agenticsim.backend_compile.v1",
+          "task_contract": {
+            "action": {
+              "interface": "zero_action",
+              "operations": []
+            },
+            "observation": {
+              "state": [
+                "object_pose",
+                "contact"
+              ]
+            },
+            "reset": {
+              "object_poses": "from_env_spec"
+            },
+            "success": [
+              {
+                "type": "settled"
+              }
+            ],
+            "termination": [
+              {
+                "steps": 120,
+                "type": "timeout"
+              }
+            ]
+          }
+        },
+        "package_digest": "53a0a4a7c4136b92f743043ecec3870eea9f19beb3da39eb3fb639892a71f87b",
+        "package_path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_articulated_hinge/compiled/sapien/environment_package.json",
+        "runtime_command": [
+          "python",
+          "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_articulated_hinge/compiled/sapien/run_sapien_smoke.py",
+          "--spec",
+          "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_articulated_hinge/compiled/sapien/scene_spec.json",
+          "--output",
+          "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_articulated_hinge/compiled/sapien/runtime_evidence.json"
+        ],
+        "status": "compiled",
+        "warnings": []
+      },
+      "package_digest": "53a0a4a7c4136b92f743043ecec3870eea9f19beb3da39eb3fb639892a71f87b",
+      "package_id": "crosssim_articulated_hinge",
+      "runtime_evidence_path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_articulated_hinge/compiled/sapien/runtime_evidence.json",
+      "runtime_exit_code": 0,
+      "runtime_status": "pass",
+      "status": "pass"
+    },
+    {
+      "compile_result": {
+        "artifact_path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_camera_alignment/compiled/sapien/scene_spec.json",
+        "backend": "sapien",
+        "blockers": [],
+        "manifest_path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_camera_alignment/compiled/sapien/compile_manifest.json",
+        "metadata": {
+          "artifact_format": "sapien_scene_json",
+          "asset_ids": [
+            "red_marker_asset",
+            "blue_marker_asset"
+          ],
+          "object_ids": [
+            "red_marker",
+            "blue_marker"
+          ],
+          "runner_syntax_validated": true,
+          "schema": "agenticsim.backend_compile.v1",
+          "task_contract": {
+            "action": {
+              "interface": "zero_action",
+              "operations": []
+            },
+            "observation": {
+              "state": [
+                "object_pose",
+                "contact"
+              ]
+            },
+            "reset": {
+              "object_poses": "from_env_spec"
+            },
+            "success": [
+              {
+                "type": "settled"
+              }
+            ],
+            "termination": [
+              {
+                "steps": 120,
+                "type": "timeout"
+              }
+            ]
+          }
+        },
+        "package_digest": "0fd993aa539cf525e6f7d08349e6bfb425517812630f36f1de63fd608872c2c8",
+        "package_path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_camera_alignment/compiled/sapien/environment_package.json",
+        "runtime_command": [
+          "python",
+          "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_camera_alignment/compiled/sapien/run_sapien_smoke.py",
+          "--spec",
+          "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_camera_alignment/compiled/sapien/scene_spec.json",
+          "--output",
+          "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_camera_alignment/compiled/sapien/runtime_evidence.json"
+        ],
+        "status": "compiled",
+        "warnings": []
+      },
+      "package_digest": "0fd993aa539cf525e6f7d08349e6bfb425517812630f36f1de63fd608872c2c8",
+      "package_id": "crosssim_camera_alignment",
+      "runtime_evidence_path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_camera_alignment/compiled/sapien/runtime_evidence.json",
+      "runtime_exit_code": 0,
+      "runtime_status": "pass",
+      "status": "pass"
+    },
+    {
+      "compile_result": {
+        "artifact_path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_rigid_drop/compiled/sapien/scene_spec.json",
+        "backend": "sapien",
+        "blockers": [],
+        "manifest_path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_rigid_drop/compiled/sapien/compile_manifest.json",
+        "metadata": {
+          "artifact_format": "sapien_scene_json",
+          "asset_ids": [
+            "rigid_box_asset"
+          ],
+          "object_ids": [
+            "rigid_box"
+          ],
+          "runner_syntax_validated": true,
+          "schema": "agenticsim.backend_compile.v1",
+          "task_contract": {
+            "action": {
+              "interface": "zero_action",
+              "operations": []
+            },
+            "observation": {
+              "state": [
+                "object_pose",
+                "contact"
+              ]
+            },
+            "reset": {
+              "object_poses": "from_env_spec"
+            },
+            "success": [
+              {
+                "type": "settled"
+              }
+            ],
+            "termination": [
+              {
+                "steps": 120,
+                "type": "timeout"
+              }
+            ]
+          }
+        },
+        "package_digest": "77ede9c2619097082b62e0e878004fcc877c8fb44e5f2ae4015b1d596f60e813",
+        "package_path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_rigid_drop/compiled/sapien/environment_package.json",
+        "runtime_command": [
+          "python",
+          "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_rigid_drop/compiled/sapien/run_sapien_smoke.py",
+          "--spec",
+          "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_rigid_drop/compiled/sapien/scene_spec.json",
+          "--output",
+          "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_rigid_drop/compiled/sapien/runtime_evidence.json"
+        ],
+        "status": "compiled",
+        "warnings": []
+      },
+      "package_digest": "77ede9c2619097082b62e0e878004fcc877c8fb44e5f2ae4015b1d596f60e813",
+      "package_id": "crosssim_rigid_drop",
+      "runtime_evidence_path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_rigid_drop/compiled/sapien/runtime_evidence.json",
+      "runtime_exit_code": 0,
+      "runtime_status": "pass",
+      "status": "pass"
+    }
+  ],
+  "schema": "agenticsim.crosssim_sapien_remote.v1",
+  "status": "pass"
+}

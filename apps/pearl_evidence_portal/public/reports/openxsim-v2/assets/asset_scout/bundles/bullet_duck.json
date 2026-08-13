@@ -1,0 +1,223 @@
+{
+  "articulation": {
+    "articulated": false,
+    "joint_count": 0,
+    "joint_types": [],
+    "status": "rigid_mesh_no_joint_schema"
+  },
+  "asset_id": "bullet_duck",
+  "category": "duck",
+  "physical": {
+    "collision_status": "generated",
+    "collision_strategy": "axis_aligned_convex_box",
+    "material_status": "generated_default_material",
+    "normalization": {
+      "face_count": 4212,
+      "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_duck/default_material.mtl",
+      "material_status": "generated_default_material",
+      "normalized_bounds": {
+        "extent": [
+          1.0,
+          0.9310170067614318,
+          0.697887811214023
+        ],
+        "maximum": [
+          0.5,
+          0.4655085033807159,
+          0.3489439056070115
+        ],
+        "minimum": [
+          -0.5,
+          -0.465508503380716,
+          -0.3489439056070115
+        ]
+      },
+      "scale_factor": 0.6069508005681059,
+      "source_bounds": {
+        "extent": [
+          1.64758,
+          1.533925,
+          1.149826
+        ],
+        "maximum": [
+          0.68872,
+          1.63498,
+          0.611818
+        ],
+        "minimum": [
+          -0.95886,
+          0.101055,
+          -0.538008
+        ]
+      },
+      "source_center": [
+        -0.13507000000000002,
+        0.8680175000000001,
+        0.036904999999999966
+      ],
+      "target_max_extent_m": 1.0,
+      "vertex_count": 2108
+    },
+    "runtime_import_required": true
+  },
+  "representations": [
+    {
+      "backend": "portable",
+      "format": "obj_source",
+      "metadata": {
+        "original_download": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/c57b482dd7091a385865/duck.obj",
+        "preserved_source": true
+      },
+      "role": "source",
+      "sha256": "d60872d024d0a466faa65eba6fd828b0a5e71d31325bfe918ba54ed817922df3",
+      "size_bytes": 356295,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_duck/source.obj"
+    },
+    {
+      "backend": "portable",
+      "format": "obj",
+      "metadata": {
+        "normalization": {
+          "face_count": 4212,
+          "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_duck/default_material.mtl",
+          "material_status": "generated_default_material",
+          "normalized_bounds": {
+            "extent": [
+              1.0,
+              0.9310170067614318,
+              0.697887811214023
+            ],
+            "maximum": [
+              0.5,
+              0.4655085033807159,
+              0.3489439056070115
+            ],
+            "minimum": [
+              -0.5,
+              -0.465508503380716,
+              -0.3489439056070115
+            ]
+          },
+          "scale_factor": 0.6069508005681059,
+          "source_bounds": {
+            "extent": [
+              1.64758,
+              1.533925,
+              1.149826
+            ],
+            "maximum": [
+              0.68872,
+              1.63498,
+              0.611818
+            ],
+            "minimum": [
+              -0.95886,
+              0.101055,
+              -0.538008
+            ]
+          },
+          "source_center": [
+            -0.13507000000000002,
+            0.8680175000000001,
+            0.036904999999999966
+          ],
+          "target_max_extent_m": 1.0,
+          "vertex_count": 2108
+        }
+      },
+      "role": "visual",
+      "sha256": "03132c397af33c06da6961cab2bdc6e204728cbaf305da6e08fe57ae672494bf",
+      "size_bytes": 149039,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_duck/bullet_duck.normalized.obj"
+    },
+    {
+      "backend": "portable",
+      "format": "obj_collision_proxy",
+      "metadata": {
+        "strategy": "axis_aligned_convex_box"
+      },
+      "role": "collision",
+      "sha256": "77c050e7a05a1162e9cd92c3fb0136d9085728942763a535bb868c79514a12c5",
+      "size_bytes": 352,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_duck/bullet_duck.collision_box.obj"
+    },
+    {
+      "backend": "isaacsim",
+      "format": "usda",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "7150b8061205b5e07019cf4419a16652d9415f5efc81ec3e599924eda9b49fae",
+      "size_bytes": 172443,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_duck/bullet_duck.usda"
+    },
+    {
+      "backend": "mujoco",
+      "format": "mjcf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "90d86209666d284e45face58c279f866d7f9a454ce36e92ce565a7ee143f3a6f",
+      "size_bytes": 435,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_duck/bullet_duck.xml"
+    },
+    {
+      "backend": "portable",
+      "format": "urdf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "01f663a40cf3c7e399fcf4c086cb2388f60284fd8f4cab196dc25b162dc81255",
+      "size_bytes": 252,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_duck/bullet_duck.urdf"
+    },
+    {
+      "backend": "sapien",
+      "format": "sapien_manifest",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "4fde7a8da79b35f7d9c1995895fe95a283273f6431c136920a40c20c4951362a",
+      "size_bytes": 1437,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_duck/sapien_asset.json"
+    },
+    {
+      "backend": "metasim",
+      "format": "metasim_object",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "ee600922f51ad025f40fe93cad6fc05dfbda6936ccf57912c0ab37994a2040d7",
+      "size_bytes": 501,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_duck/metasim_object.json"
+    },
+    {
+      "backend": "portable",
+      "format": "validation_manifest",
+      "metadata": {},
+      "role": "validation",
+      "sha256": "db9a3c79f6e8132de48ead9e1b095078df156ac201d6d0536043a2a82b844779",
+      "size_bytes": 1915,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_duck/asset_validation.json"
+    }
+  ],
+  "source": {
+    "download_sha256": "d60872d024d0a466faa65eba6fd828b0a5e71d31325bfe918ba54ed817922df3",
+    "download_url": "https://raw.githubusercontent.com/bulletphysics/bullet3/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/duck.obj",
+    "license": "Zlib",
+    "provenance_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/c57b482dd7091a385865/provenance.json",
+    "provider": "github_tree_pinned",
+    "source_page": "https://github.com/bulletphysics/bullet3/blob/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/duck.obj"
+  },
+  "tags": [
+    "downloaded",
+    "provenance_recorded",
+    "validated",
+    "normalized"
+  ]
+}

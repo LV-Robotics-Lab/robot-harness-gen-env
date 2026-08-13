@@ -1,0 +1,25 @@
+{
+  "candidate": {
+    "candidate_id": "bullet_cup",
+    "category": "cup",
+    "download_url": "https://raw.githubusercontent.com/bulletphysics/bullet3/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/dinnerware/cup/Cup/cup_vhacd.obj",
+    "format": "obj",
+    "license": "Zlib",
+    "metadata": {
+      "commit": "63c4d67e337017f9d8b298c900e9aabdb69296e7",
+      "path": "data/dinnerware/cup/Cup/cup_vhacd.obj",
+      "repository": "bulletphysics/bullet3"
+    },
+    "name": "cup_vhacd.obj",
+    "provider": "github_tree_pinned",
+    "score": 0.0,
+    "source_page": "https://github.com/bulletphysics/bullet3/blob/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/dinnerware/cup/Cup/cup_vhacd.obj"
+  },
+  "detected_format": "obj",
+  "downloaded_at_unix": 1784170302,
+  "media_type": "text/plain",
+  "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/3259b990234e158e76d1/cup_vhacd.obj",
+  "schema": "agenticsim.asset_provenance.v1",
+  "sha256": "50588c5b69958fba92151c2839b1942cd7a68fde07532712f9eb6ac6a5137a22",
+  "size_bytes": 27465
+}

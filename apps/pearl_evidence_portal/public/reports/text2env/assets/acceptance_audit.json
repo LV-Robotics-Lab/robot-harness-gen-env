@@ -1,0 +1,277 @@
+{
+  "schema_version": "pearl.text2env_literature_review_acceptance.v1",
+  "status": "pass_text2env_literature_review_acceptance",
+  "audited_at": "2026-07-14",
+  "acceptance_count": 7,
+  "items": [
+    {
+      "id": 1,
+      "status": "pass",
+      "requirement": "Deliver local HTML and Markdown reports in Downloads and record the paths in the Dashboard.",
+      "evidence": [
+        "reports/text2env_literature_review/index.html",
+        "reports/text2env_literature_review/text2env_literature_review.md",
+        "/Users/boris/Downloads/text2env_literature_review_20260713/index.html",
+        "/Users/boris/Downloads/text2env_literature_review_20260713/text2env_literature_review.md",
+        "/home/jingxiang/Downloads/text2env_literature_review_20260713/index.html",
+        "/home/jingxiang/Downloads/text2env_literature_review_20260713/text2env_literature_review.md"
+      ]
+    },
+    {
+      "id": 2,
+      "status": "pass",
+      "requirement": "Audit at least eight primary sources with links, year, I/O, assets, openness, reproducibility, and simulator-interface relation.",
+      "evidence": [
+        "artifacts/literature_review/text2env_primary_sources.json",
+        "artifacts/literature_review/candidate_project_intake_paul_20260714.json",
+        "schemas/text2env_literature_review.schema.json"
+      ]
+    },
+    {
+      "id": 3,
+      "status": "pass",
+      "requirement": "Provide the complete eight-capability method matrix.",
+      "evidence": [
+        "artifacts/literature_review/text2env_method_matrix.json",
+        "docs/text2env_literature_review.md#method-matrix"
+      ]
+    },
+    {
+      "id": 4,
+      "status": "pass",
+      "requirement": "Separate selection2env from generation2env and adjacent functions.",
+      "evidence": [
+        "artifacts/literature_review/text2env_acceptance_audit.json#taxonomy",
+        "docs/text2env_literature_review.md#taxonomy-and-command-boundary"
+      ]
+    },
+    {
+      "id": 5,
+      "status": "pass",
+      "requirement": "Give a P0/P1/P2 implementation shortlist with adopted, next, and deferred work.",
+      "evidence": [
+        "artifacts/literature_review/text2env_acceptance_audit.json#shortlist",
+        "docs/text2env_literature_review.md#p0-p1-p2-decision"
+      ]
+    },
+    {
+      "id": 6,
+      "status": "pass",
+      "requirement": "Specify Zheng Ye to Gaochen handoff fields, artifacts, commands, and open blockers.",
+      "evidence": [
+        "artifacts/literature_review/text2env_acceptance_audit.json#handoff",
+        "docs/selection2env_schema.md",
+        "docs/openxsim_command_spec.md"
+      ]
+    },
+    {
+      "id": 7,
+      "status": "pass",
+      "requirement": "State the post-ASPIRE/ENPIRE differentiation as a testable hypothesis tied to schemas, gates, and experiments.",
+      "evidence": [
+        "artifacts/literature_review/text2env_acceptance_audit.json#innovation_after_aspire_enpire",
+        "docs/text2env_literature_review.md#after-aspire-and-enpire"
+      ]
+    }
+  ],
+  "taxonomy": {
+    "text2task": "Generate task definitions, constraints, bindings, and success verifiers from language without necessarily changing the scene.",
+    "text2scene": "Generate or assemble the spatial scene layout from language, including rooms, support surfaces, and object placement.",
+    "text2asset": "Generate or reconstruct geometry, articulation, textures, materials, or physics metadata for assets.",
+    "selection2env": "P0 route that retrieves and places existing execution-eligible assets, then emits reusable scene and task specs without inventing new geometry.",
+    "generation2env": "P1/P2 route that creates missing assets or scenes and must pass geometry, scale, collision, support, material, import, and verifier gates before use.",
+    "sim_in_loop_repair": "Run static and embodied checks, diagnose failures, patch scene/task/program specifications, and re-execute regression cases.",
+    "domain_randomization_data_generation": "Generate controlled placement, appearance, language, embodiment, and trajectory variation for collection and training.",
+    "policy_eval_data_hook": "Connect scene/task artifacts to collection, training, evaluation, diagnosis, promotion, and failure-to-data decisions."
+  },
+  "shortlist": {
+    "decision_window": "Original weekly decision from 2026-07-01, re-audited against implementation state and candidate-nominated projects on 2026-07-14.",
+    "P0": [
+      {
+        "decision": "Adopt robotwin-text2env-demo as the concrete placement/scene-generation base.",
+        "current_status": "completed_and_locked",
+        "evidence": "external_sources.lock.json and vendor/patches/robotwin-text2env-selection2env.patch"
+      },
+      {
+        "decision": "Normalize RoboTwin and AgenticSim existing-asset candidates under selection2env.",
+        "current_status": "completed",
+        "evidence": "artifacts/adapter_catalog/selection2env_catalog_sources.json"
+      },
+      {
+        "decision": "Adopt FATE-style static-then-execution feasibility and active repair ordering.",
+        "current_status": "partially_completed",
+        "evidence": "Static validation, generated rollout repair, and retained failure directories exist; generalized active repair remains future work."
+      },
+      {
+        "decision": "Adopt ASPIRE-style trace completeness, held-out regression, and reusable repair evidence.",
+        "current_status": "partially_completed",
+        "evidence": "Typed events, diagnosis, failure-to-data runs, and held-out evaluation exist; a promoted reusable skill library does not."
+      }
+    ],
+    "P1": [
+      {
+        "decision": "Use Articraft-10K as searchable metadata and gate each imported archive.",
+        "current_status": "metadata_complete_sample_import_partial",
+        "evidence": "9,996 searchable entries, three SAPIEN/collision passes, and two missing-collision blockers."
+      },
+      {
+        "decision": "Use SceneSmith retrieval and support-surface logic as the reference for broader reusable scenes.",
+        "current_status": "not_integrated",
+        "evidence": "Source audited; SceneSmith code and datasets are not installed in this workspace."
+      },
+      {
+        "decision": "Use video2sim-forge only when existing assets fail.",
+        "current_status": "typed_blocker_only",
+        "evidence": "Forge schema exists, but no RGB-D/reference-video input or imported generated asset exists."
+      },
+      {
+        "decision": "Add REALM-style held-out perturbation and real-to-sim validation to policy evaluation.",
+        "current_status": "heldout_sim_partial_real_validation_missing",
+        "evidence": "Held-out placements execute; policy remains 1/4 and no real-to-sim correlation study exists."
+      },
+      {
+        "decision": "Evaluate EmbodiedGen V2, DIPO, and 3D-Fixer as staged generation2env backends.",
+        "current_status": "primary_sources_audited_not_executed",
+        "evidence": "Public paper/code snapshots and output contracts are recorded; no generated asset has passed RoboTwin or Isaac import gates."
+      },
+      {
+        "decision": "Evaluate RoboVerse MetaSim as an Open X Sim schema and adapter candidate.",
+        "current_status": "primary_source_audited_not_executed",
+        "evidence": "MetaSim simulator coverage and contracts are recorded; dependencies and same-task equivalence have not been executed here."
+      }
+    ],
+    "P2": [
+      {
+        "decision": "Add NeuMatEx-style material sidecars after geometry and physics are valid.",
+        "current_status": "typed_blocker_only",
+        "evidence": "Material-sidecar schema exists; multiview extraction and renderer import do not."
+      },
+      {
+        "decision": "Add RLBench, Isaac Sim, MuJoCo, LIBERO, Robosuite, BEHAVIOR, and REALM through /transfer adapters.",
+        "current_status": "adapter_matrix_only",
+        "evidence": "Command spec describes adapters; same-task cross-simulator execution is not proven."
+      },
+      {
+        "decision": "Attempt full generation2env only after import, collision, support, material, render, and verifier gates are automated.",
+        "current_status": "deferred",
+        "evidence": "Current forge and material branches are explicit blockers, not executions."
+      },
+      {
+        "decision": "Use Uni3R only as an observation, depth, and semantic sidecar until physical geometry is separately validated.",
+        "current_status": "source_audited_not_executed",
+        "evidence": "The public Gaussian reconstruction code is recorded; collision geometry, dynamics, and task bindings are outside the verified scope."
+      }
+    ]
+  },
+  "handoff": {
+    "zheng_ye_produces": {
+      "command": "/gen-env",
+      "required_fields": [
+        "task_text",
+        "asset_candidates",
+        "selected_assets",
+        "placement_regions",
+        "support_surface",
+        "pose_constraints",
+        "camera_observation",
+        "robot_constraints",
+        "success_verifier",
+        "blockers"
+      ],
+      "required_artifacts": [
+        "selection2env JSON",
+        "placement manifest",
+        "RoboTwin task-program input",
+        "scene module or adapter payload",
+        "static validation",
+        "critic review",
+        "simulator smoke",
+        "provenance and patch/commit"
+      ]
+    },
+    "gaochen_consumes": {
+      "/collect": ["scene_id", "task_id", "placement_sha256", "camera streams", "qpos/actions", "object states", "success result", "events.jsonl"],
+      "/train": ["dataset manifest", "episode paths", "task config", "camera order", "action horizon", "train/eval split", "checkpoint output"],
+      "/evaluate": ["checkpoint", "scene/task binding", "held-out seeds/placements", "success verifier", "dense diagnosis categories", "promotion gate"]
+    },
+    "open_blockers": [
+      "Drawer articulation and interior-placement task API/verifier are not executable.",
+      "SceneSmith and video2sim-forge generation paths are not imported into RoboTwin/SAPIEN.",
+      "NeuMaTeX-style intrinsic neural material reconstruction is not reproduced; only a bounded observation-color sidecar roundtrip is executed.",
+      "No matched ASPIRE implementation or reusable skill-library comparison exists.",
+      "The promoted pose-conditioned policy is privileged and open-loop; visual, language-conditioned, closed-loop broad task generalization is not proven."
+    ]
+  },
+  "innovation_after_aspire_enpire": {
+    "overlap": {
+      "ASPIRE": "Already covers multimodal trace debugging, code-as-policy repair, held-out validation, and reusable skill memory.",
+      "ENPIRE": "Already covers real-world reset, execute, verify, refine, and coding-agent autoresearch loops."
+    },
+    "distinct_hypothesis_dimensions": [
+      "scene_task_decoupling",
+      "open_x_sim_aggregation",
+      "any_sim_transfer",
+      "mcp_memory_debug_loop",
+      "failure_to_data_requirement"
+    ],
+    "claim_boundary": "These dimensions define a testable PEARL system hypothesis, not established publication novelty or priority. Priority requires a broader related-work search and controlled comparative evidence.",
+    "acceptance_gates": [
+      "Every scene has a stable scene_id and content hash independent of task bindings.",
+      "Every adapter declares asset, reset, step, observation, action, renderer, physics, and verifier contracts.",
+      "Every failure produces a typed diagnosis and next data or harness requirement.",
+      "Every proposed harness change runs regression cases before promotion and records rollback state.",
+      "Cross-simulator or real-robot claims require execution evidence on the target backend."
+    ],
+    "next_experiments": [
+      {
+        "experiment": "Run two different task specs from one byte-identical RoboTwin scene.",
+        "status": "pass",
+        "evidence": "artifacts/scene_task_decoupling/apple_plate_two_tasks.json"
+      },
+      {
+        "experiment": "Run the same task through at least two simulator adapters with equivalent reset and verifier semantics.",
+        "status": "pass",
+        "evidence": "artifacts/text2env_empirics/text2env_empirical_audit_v1.json#same_task_cross_sim_execution"
+      },
+      {
+        "experiment": "Compare PEARL diagnosis/repair against an ASPIRE-style program-repair baseline on the same failures.",
+        "status": "not_run",
+        "evidence": "ASPIRE code is not released and no matched baseline is implemented."
+      },
+      {
+        "experiment": "Ablate persistent MCP memory and compare repeated failure localization and repair cost.",
+        "status": "pass",
+        "evidence": "artifacts/text2env_empirics/memory_ablation_rgb_adapter_v1.json"
+      },
+      {
+        "experiment": "Demonstrate that failure-to-data retraining improves held-out task success enough to pass promotion.",
+        "status": "executed_failed_promotion",
+        "evidence": "Failure data was added and retraining executed, but held-out success remained 1/4."
+      },
+      {
+        "experiment": "Extract a material sidecar from an observation, bind it to a simulator-native shader, render, and compare.",
+        "status": "pass",
+        "evidence": "runs/isaac_material_sidecar_roundtrip_v1/roundtrip_report.json"
+      },
+      {
+        "experiment": "Compare a predeclared failure score with verifier outcomes over at least twelve executable episodes.",
+        "status": "pass",
+        "evidence": "artifacts/text2env_empirics/failure_score_correlation_v1.json; the retained result is null/negative."
+      },
+      {
+        "experiment": "Promote a declared learned policy only after varied-placement, domain-randomized, and cross-task execution gates pass.",
+        "status": "pass",
+        "evidence": "artifacts/sceneagent_policy_promotion/pose_conditioned_policy_promotion_v1.json; scope is privileged pose-conditioned open-loop control."
+      }
+    ]
+  },
+  "delivery": {
+    "repo_html": "reports/text2env_literature_review/index.html",
+    "repo_markdown": "reports/text2env_literature_review/text2env_literature_review.md",
+    "local_downloads_dir": "/Users/boris/Downloads/text2env_literature_review_20260713",
+    "remote_downloads_dir": "/home/jingxiang/Downloads/text2env_literature_review_20260713",
+    "source_page_screenshot_count": 19,
+    "browser_qa_required": true
+  },
+  "claim_tag": "[COMPUTED] [CONFIDENCE: HIGH]"
+}

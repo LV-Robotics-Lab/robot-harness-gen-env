@@ -1,0 +1,6 @@
+<robot name="bullet_plate">
+  <link name="base">
+    <visual><geometry><mesh filename="bullet_plate.normalized.obj"/></geometry></visual>
+    <collision><geometry><mesh filename="bullet_plate.collision_box.obj"/></geometry></collision>
+  </link>
+</robot>

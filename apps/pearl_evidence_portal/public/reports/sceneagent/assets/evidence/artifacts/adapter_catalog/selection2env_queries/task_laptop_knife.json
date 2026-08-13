@@ -1,0 +1,307 @@
+{
+  "schema_version": "robotwin.selection2env_catalog_search.v0",
+  "prompt": "place the laptop to the right of the knife",
+  "source_stats": {
+    "robotwin": {
+      "entry_count": 123,
+      "selection_eligible_count": 123,
+      "match_count": 2
+    },
+    "agenticsim": {
+      "entry_count": 8,
+      "selection_eligible_count": 8,
+      "match_count": 0
+    },
+    "articraft10k": {
+      "entry_count": 9996,
+      "selection_eligible_count": 0,
+      "match_count": 103
+    }
+  },
+  "match_count_returned": 10,
+  "selection_rule": "Only selection_eligible candidates may enter RoboTwin scene generation; catalog-only candidates remain blockers.",
+  "matches": [
+    {
+      "candidate_id": "articraft10k:rec_laptop_clamshell_0001",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_laptop_clamshell_0001",
+      "backend_asset_id": null,
+      "semantic_name": "laptop clamshell 0001",
+      "aliases": [
+        "laptop clamshell 0001"
+      ],
+      "tags": [
+        "0001",
+        "clamshell",
+        "laptop"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_laptop_clamshell_0001.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_laptop_clamshell_0001.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "laptop"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_laptop_clamshell_0002",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_laptop_clamshell_0002",
+      "backend_asset_id": null,
+      "semantic_name": "laptop clamshell 0002",
+      "aliases": [
+        "laptop clamshell 0002"
+      ],
+      "tags": [
+        "0002",
+        "clamshell",
+        "laptop"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_laptop_clamshell_0002.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_laptop_clamshell_0002.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "laptop"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_laptop_clamshell_00e36cd311c74caa887a388758bdba7f",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_laptop_clamshell_00e36cd311c74caa887a388758bdba7f",
+      "backend_asset_id": null,
+      "semantic_name": "laptop clamshell",
+      "aliases": [
+        "laptop clamshell"
+      ],
+      "tags": [
+        "clamshell",
+        "laptop"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_laptop_clamshell_00e36cd311c74caa887a388758bdba7f.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_laptop_clamshell_00e36cd311c74caa887a388758bdba7f.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "laptop"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_laptop_clamshell_170598888ef0495faf3c7badc2718d45",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_laptop_clamshell_170598888ef0495faf3c7badc2718d45",
+      "backend_asset_id": null,
+      "semantic_name": "laptop clamshell",
+      "aliases": [
+        "laptop clamshell"
+      ],
+      "tags": [
+        "clamshell",
+        "laptop"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_laptop_clamshell_170598888ef0495faf3c7badc2718d45.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_laptop_clamshell_170598888ef0495faf3c7badc2718d45.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "laptop"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_laptop_clamshell_1d93c98b593a46eab1752ce4bd985a12",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_laptop_clamshell_1d93c98b593a46eab1752ce4bd985a12",
+      "backend_asset_id": null,
+      "semantic_name": "laptop clamshell",
+      "aliases": [
+        "laptop clamshell"
+      ],
+      "tags": [
+        "clamshell",
+        "laptop"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_laptop_clamshell_1d93c98b593a46eab1752ce4bd985a12.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_laptop_clamshell_1d93c98b593a46eab1752ce4bd985a12.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "laptop"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_laptop_clamshell_20334ebdfb664cf29059d6d55e876522",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_laptop_clamshell_20334ebdfb664cf29059d6d55e876522",
+      "backend_asset_id": null,
+      "semantic_name": "laptop clamshell",
+      "aliases": [
+        "laptop clamshell"
+      ],
+      "tags": [
+        "clamshell",
+        "laptop"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_laptop_clamshell_20334ebdfb664cf29059d6d55e876522.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_laptop_clamshell_20334ebdfb664cf29059d6d55e876522.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "laptop"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_laptop_clamshell_23f3d79cd362422a9a77f00e744ff753",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_laptop_clamshell_23f3d79cd362422a9a77f00e744ff753",
+      "backend_asset_id": null,
+      "semantic_name": "laptop clamshell",
+      "aliases": [
+        "laptop clamshell"
+      ],
+      "tags": [
+        "clamshell",
+        "laptop"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_laptop_clamshell_23f3d79cd362422a9a77f00e744ff753.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_laptop_clamshell_23f3d79cd362422a9a77f00e744ff753.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "laptop"
+      ]
+    },
+    {
+      "candidate_id": "articraft10k:rec_laptop_clamshell_2941265dbf4e4405b0e184f2de4ba558",
+      "catalog_source": "articraft10k",
+      "asset_id": "rec_laptop_clamshell_2941265dbf4e4405b0e184f2de4ba558",
+      "backend_asset_id": null,
+      "semantic_name": "laptop clamshell",
+      "aliases": [
+        "laptop clamshell"
+      ],
+      "tags": [
+        "clamshell",
+        "laptop"
+      ],
+      "asset_format": "URDF",
+      "execution_status": "catalog_only_not_imported",
+      "selection_eligible": false,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/articraft10k_manifest.json",
+        "dataset": "camvsl/Articraft-10K",
+        "source_path": "rec_laptop_clamshell_2941265dbf4e4405b0e184f2de4ba558.tar.gz",
+        "download_url": "https://huggingface.co/datasets/camvsl/Articraft-10K/resolve/3c79d5a05bb7cb6bf7bfee5e090176636ee3ac65/rec_laptop_clamshell_2941265dbf4e4405b0e184f2de4ba558.tar.gz"
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "laptop"
+      ]
+    },
+    {
+      "candidate_id": "robotwin:015_laptop",
+      "catalog_source": "robotwin",
+      "asset_id": "015_laptop",
+      "backend_asset_id": "015_laptop",
+      "semantic_name": "laptop",
+      "aliases": [
+        "laptop",
+        "015_laptop"
+      ],
+      "tags": [
+        "laptop"
+      ],
+      "asset_format": "RoboTwin object directory",
+      "execution_status": "robotwin_loadable",
+      "selection_eligible": true,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/robotwin_discovered_catalog.json",
+        "catalog_version": "robotwin.tabletop_asset_catalog_discovered.v0",
+        "discovery": {
+          "source": "robotwin.assets.objects",
+          "asset_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/015_laptop",
+          "has_collision_dir": false,
+          "has_visual_dir": true,
+          "has_articulated_models": true
+        }
+      },
+      "match_score": 1131,
+      "matched_terms": [
+        "laptop"
+      ]
+    },
+    {
+      "candidate_id": "robotwin:034_knife",
+      "catalog_source": "robotwin",
+      "asset_id": "034_knife",
+      "backend_asset_id": "034_knife",
+      "semantic_name": "knife",
+      "aliases": [
+        "knife",
+        "034_knife"
+      ],
+      "tags": [
+        "knife"
+      ],
+      "asset_format": "RoboTwin object directory",
+      "execution_status": "robotwin_loadable",
+      "selection_eligible": true,
+      "provenance": {
+        "catalog_path": "artifacts/adapter_catalog/robotwin_discovered_catalog.json",
+        "catalog_version": "robotwin.tabletop_asset_catalog_discovered.v0",
+        "discovery": {
+          "source": "robotwin.assets.objects",
+          "asset_dir": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/objects/034_knife",
+          "has_collision_dir": true,
+          "has_visual_dir": true,
+          "has_articulated_models": false
+        }
+      },
+      "match_score": 1130,
+      "matched_terms": [
+        "knife"
+      ]
+    }
+  ]
+}

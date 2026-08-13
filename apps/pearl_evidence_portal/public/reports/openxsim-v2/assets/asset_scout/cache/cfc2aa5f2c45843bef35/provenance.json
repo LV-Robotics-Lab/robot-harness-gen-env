@@ -1,0 +1,25 @@
+{
+  "candidate": {
+    "candidate_id": "mujoco_die",
+    "category": "die",
+    "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco/f841b67c17349aca1a0999b1408b746a262ff805/model/plugin/sdf/asset/die.obj",
+    "format": "obj",
+    "license": "Apache-2.0",
+    "metadata": {
+      "commit": "f841b67c17349aca1a0999b1408b746a262ff805",
+      "path": "model/plugin/sdf/asset/die.obj",
+      "repository": "google-deepmind/mujoco"
+    },
+    "name": "die.obj",
+    "provider": "github_tree_pinned",
+    "score": 0.0,
+    "source_page": "https://github.com/google-deepmind/mujoco/blob/f841b67c17349aca1a0999b1408b746a262ff805/model/plugin/sdf/asset/die.obj"
+  },
+  "detected_format": "obj",
+  "downloaded_at_unix": 1784170295,
+  "media_type": "text/plain",
+  "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/cfc2aa5f2c45843bef35/die.obj",
+  "schema": "agenticsim.asset_provenance.v1",
+  "sha256": "b7132c1865d99d33147df45ce319ef6d528a32caa9ef666ccc5684d4fbfdfab9",
+  "size_bytes": 9028
+}

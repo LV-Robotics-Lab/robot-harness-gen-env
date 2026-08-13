@@ -1,0 +1,55 @@
+{
+  "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/source/mujoco/scene.xml",
+  "backend": "mujoco",
+  "blockers": [],
+  "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/source/mujoco/compile_manifest.json",
+  "metadata": {
+    "artifact_format": "mjcf",
+    "asset_ids": [
+      "rigid_box_asset"
+    ],
+    "object_ids": [
+      "rigid_box"
+    ],
+    "schema": "agenticsim.backend_compile.v1",
+    "task_contract": {
+      "action": {
+        "interface": "zero_action",
+        "operations": []
+      },
+      "observation": {
+        "state": [
+          "object_pose",
+          "contact"
+        ]
+      },
+      "reset": {
+        "object_poses": "from_env_spec"
+      },
+      "success": [
+        {
+          "type": "settled"
+        }
+      ],
+      "termination": [
+        {
+          "steps": 120,
+          "type": "timeout"
+        }
+      ]
+    },
+    "xml_validated": true
+  },
+  "package_digest": "3da20733db7087dfb264bee1785d8dd320ff415c916e38a2fe6485eefa63766e",
+  "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/source/mujoco/environment_package.json",
+  "runtime_command": [
+    "python",
+    "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/source/mujoco/run_mujoco_smoke.py",
+    "--model",
+    "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/source/mujoco/scene.xml",
+    "--output",
+    "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/source/mujoco/runtime_evidence.json"
+  ],
+  "status": "compiled",
+  "warnings": []
+}

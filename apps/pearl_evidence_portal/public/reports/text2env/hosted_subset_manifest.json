@@ -1,0 +1,218 @@
+{
+  "schema_version": "pearl.hosted_report_subset.v1",
+  "status": "pass_hosted_subset_manifest",
+  "source_manifest": "report_manifest.json",
+  "file_count": 42,
+  "files": [
+    {
+      "path": "assets/acceptance_audit.json",
+      "bytes": 14407,
+      "sha256": "565d0904f5f1b64b0ec915d647cdb95e26975f0c794affe7ab8ee6f165ecd306"
+    },
+    {
+      "path": "assets/browser_qa.txt",
+      "bytes": 18787,
+      "sha256": "cead73b43dfc09623347c648c740b4eec40627514b521c70cae9a08de32bf8a8"
+    },
+    {
+      "path": "assets/candidate_project_intake.json",
+      "bytes": 11329,
+      "sha256": "013c84339b8fb48b36d127ace3c45ac6a243c8f3c66e36f400802684d6873696"
+    },
+    {
+      "path": "assets/empirics/failure_score_correlation_v1.json",
+      "bytes": 18563,
+      "sha256": "4d6b188dac9f8a7bb9a2d3f09d8efeb5982be38133363fd5e7e8fecc0b6bf296"
+    },
+    {
+      "path": "assets/empirics/isaac_command_loop/bundle_manifest.json",
+      "bytes": 5471,
+      "sha256": "cc453ae7addbc3fb95ca5b75392540480e53ed531e4e9c9b6aea57259b7f1f55"
+    },
+    {
+      "path": "assets/empirics/isaac_command_loop/frames/frame_00023.png",
+      "bytes": 666685,
+      "sha256": "9dc6de11786bbaf18cee379fe9d5990e394a0eb6de1f8d4bbe57b2bcdd1ae754"
+    },
+    {
+      "path": "assets/empirics/isaac_command_loop/isaac_place_on_rollout.mp4",
+      "bytes": 266334,
+      "sha256": "832cb505dfaf6f270d314c16e4af864530ba79270c87d0c8137ff1ad7556324d"
+    },
+    {
+      "path": "assets/empirics/material_roundtrip/isaac_material_render.png",
+      "bytes": 398362,
+      "sha256": "3cb7cec56e6812cdc6a049de7bec3bf4640d77a55b27b8186a8e183b5e4c2a38"
+    },
+    {
+      "path": "assets/empirics/material_roundtrip/isaac_render_foreground.png",
+      "bytes": 25930,
+      "sha256": "ecd20d601d7a9673e4d1b490ff5a882519e480e430cef7d77ce75b8ae88443ba"
+    },
+    {
+      "path": "assets/empirics/material_roundtrip/roundtrip_report.json",
+      "bytes": 1989,
+      "sha256": "ea744434a6864352b637f85190f87e0fec2dd7604bbb20e05789f91229d40048"
+    },
+    {
+      "path": "assets/empirics/material_roundtrip/source_crop.png",
+      "bytes": 3195,
+      "sha256": "31f37a92b33cebebab83fa96212aa9d37120a6c78acf41901530dc9169e00ee2"
+    },
+    {
+      "path": "assets/empirics/memory_ablation_rgb_adapter_v1.json",
+      "bytes": 3183,
+      "sha256": "9656a122e1251706e540f552a304382126b3c4c9e6d16594fe1c675652a53b89"
+    },
+    {
+      "path": "assets/empirics/pose_conditioned_policy_promotion_v1.json",
+      "bytes": 8781,
+      "sha256": "25f29aa38eb97f8281d03844303ec841999f081ca6ae07ab61b5301f4092b274"
+    },
+    {
+      "path": "assets/empirics/text2env_empirical_audit_v1.json",
+      "bytes": 3178,
+      "sha256": "62061c14653ca8bd58fbb5f4ed11c1c5fa1ecc031796d5cced2f59baa751131f"
+    },
+    {
+      "path": "assets/method_matrix.json",
+      "bytes": 10071,
+      "sha256": "45ab354caaeedee3cf4e4578c7881bcd4e9ddf5da4fdfe0b3136058aeda81c95"
+    },
+    {
+      "path": "assets/source_page_capture.json",
+      "bytes": 9954,
+      "sha256": "e7aabf5dd30e8f0788705b92b715ffc18f34e6c13b4ad252de171a94e86cfc39"
+    },
+    {
+      "path": "assets/source_pages/articraft.png",
+      "bytes": 592386,
+      "sha256": "0f26ae32c2b19da665adc85c7a53e3269cd06372c8b074f4288a04f1479ae029"
+    },
+    {
+      "path": "assets/source_pages/aspire.png",
+      "bytes": 1008048,
+      "sha256": "10a3845195b40efccb300e147e7b727b488321eb5aaacaa3e369b4121206933f"
+    },
+    {
+      "path": "assets/source_pages/dipo.png",
+      "bytes": 145108,
+      "sha256": "2190be641320659aa09354b0d191697a4f38e970c3979384a207165258cd9975"
+    },
+    {
+      "path": "assets/source_pages/dirtnet.png",
+      "bytes": 136322,
+      "sha256": "e6cb4e82f9be77c01918cbb06eca62837112222bc371ba0d400b9e5d66dfc9e2"
+    },
+    {
+      "path": "assets/source_pages/embodiedgen_v2.png",
+      "bytes": 211881,
+      "sha256": "11949165fdffe9f6ff542238e1182f305eeb6fa01ede3137358bcf622b4a2a67"
+    },
+    {
+      "path": "assets/source_pages/enpire.png",
+      "bytes": 1319025,
+      "sha256": "7df621ccaba2993ae67857005049072e11f4953630ffb76438b1a83cfdddbaea"
+    },
+    {
+      "path": "assets/source_pages/fate.png",
+      "bytes": 200269,
+      "sha256": "509b779e6f347d9f14e7b48afe75d9ab7560b8490b4c176b9da42cafb1a58c19"
+    },
+    {
+      "path": "assets/source_pages/gausstr.png",
+      "bytes": 184099,
+      "sha256": "67db792d74da934631727ad84f370a64726f25953d3886242d50f8bd54ba6ab4"
+    },
+    {
+      "path": "assets/source_pages/generative_worlds_sim2real_rl.png",
+      "bytes": 214140,
+      "sha256": "b43f6a1a404460cf07bb7b78c43039f303bbb039e67a4e040f3f19fa43824a76"
+    },
+    {
+      "path": "assets/source_pages/instancenet.png",
+      "bytes": 138065,
+      "sha256": "527d5e97d84939c84f8bb9ec92646ba0d0399d92e342382167fac6995331ab9d"
+    },
+    {
+      "path": "assets/source_pages/realm.png",
+      "bytes": 111414,
+      "sha256": "a02df9fa892a6a6af3d827bc91ecf2413f0ca458c07342c99f3b61d6b9dfdc40"
+    },
+    {
+      "path": "assets/source_pages/robogen.png",
+      "bytes": 115392,
+      "sha256": "21b218f73eb85e8ff565fb806d2c3b45cedb223ebea5119201997b71d53b2f3a"
+    },
+    {
+      "path": "assets/source_pages/robotwin_2.png",
+      "bytes": 300756,
+      "sha256": "3d4a781794eaaef2629a3ea90abe1c878b4a45db04bf616310f03710baf05afa"
+    },
+    {
+      "path": "assets/source_pages/robotwin_digital_twins.png",
+      "bytes": 207499,
+      "sha256": "e20dea4816d9655f8a5f8fcddcbb940dd8a39771b631b0325cf307e626c0fc4e"
+    },
+    {
+      "path": "assets/source_pages/roboverse.png",
+      "bytes": 374897,
+      "sha256": "937d7272fb11e32029cbe5a03e9a4297feb3bda4dccfbb171a3587dcab7a2275"
+    },
+    {
+      "path": "assets/source_pages/scenesmith.png",
+      "bytes": 760480,
+      "sha256": "526d8dc57b25858473ccd354705d93e58d7b903f82d5820c93a79bb6db786f66"
+    },
+    {
+      "path": "assets/source_pages/three_d_fixer.png",
+      "bytes": 261877,
+      "sha256": "c6b9182ac2e7433ab9cbcf050de5325a556c35bce087cfda2040b62133ed21e3"
+    },
+    {
+      "path": "assets/source_pages/uni3r.png",
+      "bytes": 173376,
+      "sha256": "4173f9cf82daadce4935a895a0e8d01ac984a5be165dcb5aaff3f8abc20b0cc7"
+    },
+    {
+      "path": "assets/source_pages/vlmbench.png",
+      "bytes": 167792,
+      "sha256": "8bd2f89fccf5b8907226dd8dd23a75acff8178ff1627185224ed9cfd4d015d59"
+    },
+    {
+      "path": "assets/source_pages_contact_sheet.png",
+      "bytes": 5539301,
+      "sha256": "a8b725be14172803d1663822bf7a1d370d3dbe1e1c328d2817972711233b6f97"
+    },
+    {
+      "path": "assets/source_registry.json",
+      "bytes": 44290,
+      "sha256": "51d682a1e3ef48c94c631ba3781b13b81da13311d6291e7cd7663d9d6784f9ee"
+    },
+    {
+      "path": "index.html",
+      "bytes": 98135,
+      "sha256": "920a36478e27e9bc173b9be1eccdad455e33782d4faafe4ee90f92b070878940"
+    },
+    {
+      "path": "qa/desktop-viewport.png",
+      "bytes": 4508880,
+      "sha256": "ee156bdaa98cd059632c61eb6b8e3b5bcb6f0d110abceb7a513e60680a63fae0"
+    },
+    {
+      "path": "qa/mobile-viewport.png",
+      "bytes": 2539620,
+      "sha256": "6b641bac965fbd879d9a0dcc895bb8f01818971c3409db45112ea797cc23060e"
+    },
+    {
+      "path": "report_manifest.json",
+      "bytes": 15575,
+      "sha256": "5735c135a60552a08a0c4b14b079ae3cf20956f4fd4d045e4fb35adeed977c95"
+    },
+    {
+      "path": "text2env_literature_review.md",
+      "bytes": 27248,
+      "sha256": "25fd19a280db322cc16ad4bbaa47ce9b23f2da91847cc4f9cec4702b1d8a560c"
+    }
+  ]
+}

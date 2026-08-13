@@ -1,0 +1,6 @@
+<robot name="mujoco_mug">
+  <link name="base">
+    <visual><geometry><mesh filename="mujoco_mug.normalized.obj"/></geometry></visual>
+    <collision><geometry><mesh filename="mujoco_mug.collision_box.obj"/></geometry></collision>
+  </link>
+</robot>

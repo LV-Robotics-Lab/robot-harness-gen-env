@@ -1,0 +1,154 @@
+{
+  "anchor_id": "anchor_a5e04e412ad4",
+  "appearance_constraints": [
+    {
+      "confidence": 0.95,
+      "dominant_color": "red",
+      "instance_id": "red_block"
+    },
+    {
+      "confidence": 0.95,
+      "dominant_color": "blue",
+      "instance_id": "blue_zone"
+    }
+  ],
+  "camera_constraints": [],
+  "confidence": 0.9,
+  "evidence": [
+    {
+      "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_a5e04e412ad4/frame_000.png",
+      "sha256": "09f98ead8dfb3b3b1066c6b4dbb59dcc2e9aa238b96b5a9b31c9ade8682dfa9a",
+      "size_bytes": 12353
+    },
+    {
+      "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_a5e04e412ad4/frame_001.png",
+      "sha256": "60bd0aacd1a047f7d47cc6ba9943c3215a270666fcd6739f0b03017f5b2066d3",
+      "size_bytes": 13392
+    },
+    {
+      "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_a5e04e412ad4/frame_002.png",
+      "sha256": "f8026daafe6b21aa59a9aa69dfca023ddeccf33e9ad45fb9d826944eb4fecef8",
+      "size_bytes": 12524
+    },
+    {
+      "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_a5e04e412ad4/frame_003.png",
+      "sha256": "2ccc17c5ae0ca6787a9729f8edca7037d641cce524e6595f3452486a80bc51e4",
+      "size_bytes": 13389
+    },
+    {
+      "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_a5e04e412ad4/frame_004.png",
+      "sha256": "cec977e990ff019a5f7729bdbd5ff2447b08e8a1955800b3951c258371b36ac5",
+      "size_bytes": 12585
+    },
+    {
+      "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_a5e04e412ad4/frame_005.png",
+      "sha256": "abc7bf50267d39590f029d54986d4a1415096b0adc269b1b52ebd269dae77e9e",
+      "size_bytes": 13532
+    },
+    {
+      "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_a5e04e412ad4/frame_006.png",
+      "sha256": "183256de28a765566aadeb0813651d5ffa1ea22b12f74cb4afcc1f27543d285b",
+      "size_bytes": 11203
+    },
+    {
+      "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_3_red_blue_video/move_red_block_to_blue_zone/anchor2env/anchor_evidence/anchor_a5e04e412ad4/frame_007.png",
+      "sha256": "5bc5952a019417753e973314a3549d6029e83477b64667e51fce910864f5d8cf",
+      "size_bytes": 11404
+    }
+  ],
+  "media_sha256": "a5e04e412ad4d67a40420f25066081a90dcf6fd4bdbdaa6a4871ec4c7897123c",
+  "media_type": "video",
+  "media_uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/media/scene_3.mp4",
+  "motion_constraints": [
+    {
+      "confidence": 0.95,
+      "end_frame": 7,
+      "instance_id": "red_block",
+      "normalized_displacement": [
+        0.5312836021505376,
+        -0.2343245967741936
+      ],
+      "start_frame": 0
+    },
+    {
+      "confidence": 0.95,
+      "end_frame": 7,
+      "instance_id": "blue_zone",
+      "normalized_displacement": [
+        0.04296880100169387,
+        -0.02854367588705886
+      ],
+      "start_frame": 0
+    }
+  ],
+  "object_constraints": [
+    {
+      "confidence": 0.95,
+      "frames_observed": 8,
+      "instance_id": "red_block",
+      "label": "red region or object",
+      "metric_depth_status": "unknown",
+      "normalized_bbox": [
+        0.65625,
+        0.328125,
+        0.78125,
+        0.515625
+      ],
+      "normalized_center": [
+        0.7187668010752688,
+        0.4219002016129032
+      ]
+    },
+    {
+      "confidence": 0.95,
+      "frames_observed": 8,
+      "instance_id": "blue_zone",
+      "label": "blue region or object",
+      "metric_depth_status": "unknown",
+      "normalized_bbox": [
+        0.6458333333333334,
+        0.26875,
+        0.85625,
+        0.5
+      ],
+      "normalized_center": [
+        0.7930933645257336,
+        0.3618194385367929
+      ]
+    }
+  ],
+  "observations": {
+    "duration_s": 4.0,
+    "fps": 12.0,
+    "frame_count": 48,
+    "height": 320,
+    "sample_count": 8,
+    "sample_times_s": [
+      0.0,
+      0.5595238095238095,
+      1.119047619047619,
+      1.6785714285714286,
+      2.238095238095238,
+      2.7976190476190474,
+      3.357142857142857,
+      3.9166666666666665
+    ],
+    "semantic_provider": "color_layout_v1",
+    "width": 480
+  },
+  "spatial_constraints": [
+    {
+      "confidence": 0.7,
+      "object": "blue_zone",
+      "subject": "red_block",
+      "type": "left_of"
+    }
+  ],
+  "uncertainty": [
+    "color_segmentation_is_not_category_recognition",
+    "metric_depth_unknown",
+    "occlusion_not_resolved",
+    "absolute_scale_unknown",
+    "unobserved_geometry_unknown"
+  ]
+}

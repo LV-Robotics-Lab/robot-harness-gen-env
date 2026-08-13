@@ -1,0 +1,33 @@
+{
+  "schema_version": "alchedata.robotwin_task_program_input.v0",
+  "task_id": "task_laptop_knife",
+  "variant": "primary",
+  "language_prompt": "place the laptop to the right of the knife",
+  "scene_id": "scene_laptop_knife_v0",
+  "placement_spec": "runs/probe_static_laptop_knife/final_placement.json",
+  "placement_sha256": "f01fe3d978fd0b763011453de8184431ffc49d5fbc01a16492bf2ce200765a83",
+  "task_binding": {
+    "template": "place_right_of",
+    "source_object_id": "laptop_1",
+    "target_object_id": "knife_1"
+  },
+  "robotwin_adapter": {
+    "backend": "RoboTwin/SAPIEN",
+    "entrypoint": "scripts/run_generated_selection2env_rollout_probe.py",
+    "task_config": "demo_clean",
+    "python_env": "/home/jingxiang/miniconda3/envs/robotwin-5090",
+    "requires_robotwin_root": true
+  },
+  "verifier": {
+    "type": "simulator_state_and_visual",
+    "relation": "right_of",
+    "source_object_id": "laptop_1",
+    "success_conditions": [
+      "generated play_once completes without planner failure",
+      "simulator-state relation predicate passes",
+      "both grippers are open after release",
+      "head and observer camera artifacts are nonblank"
+    ],
+    "target_object_id": "knife_1"
+  }
+}

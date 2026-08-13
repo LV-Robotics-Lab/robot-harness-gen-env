@@ -1,0 +1,23 @@
+<mujoco model="move_green_block_to_yellow_zone">
+  <compiler angle="radian" coordinate="local"/>
+  <option gravity="0.0 0.0 -9.81" timestep="0.01"/>
+  <visual><headlight ambient="0.45 0.45 0.45" diffuse="0.8 0.8 0.8" specular="0.15 0.15 0.15"/></visual>
+  <asset>
+  </asset>
+  <custom>
+    <text name="agenticsim_task_contract" data="{&quot;action&quot;:{&quot;arm_policy&quot;:{&quot;negative_arm&quot;:&quot;left&quot;,&quot;nonnegative_arm&quot;:&quot;right&quot;,&quot;object&quot;:&quot;green_block&quot;,&quot;save_as&quot;:&quot;main_arm&quot;,&quot;type&quot;:&quot;by_object_x&quot;},&quot;interface&quot;:&quot;robotwin_primitive_plan&quot;,&quot;operations&quot;:[&quot;grasp&quot;,&quot;move_by&quot;,&quot;place&quot;]},&quot;observation&quot;:{&quot;cameras&quot;:[&quot;head_camera&quot;,&quot;left_camera&quot;,&quot;right_camera&quot;],&quot;state&quot;:[&quot;object_pose&quot;,&quot;robot_joint_position&quot;,&quot;contact&quot;]},&quot;reset&quot;:{&quot;constraints&quot;:[&quot;no_initial_object_collision&quot;,&quot;target_reachable_by_robot&quot;,&quot;success_condition_sim_state_observable&quot;,&quot;task_objects_stable&quot;,&quot;protected_regions_defined&quot;,&quot;all_placeholders_bound&quot;],&quot;object_poses&quot;:&quot;from_env_spec&quot;,&quot;randomization&quot;:{&quot;cluttered_table&quot;:false,&quot;lighting&quot;:false,&quot;object_pose&quot;:true,&quot;table_height&quot;:false,&quot;texture&quot;:false}},&quot;success&quot;:[{&quot;comment&quot;:&quot;The green block center should end inside yellow_zone.&quot;,&quot;object&quot;:&quot;green_block&quot;,&quot;region&quot;:&quot;yellow_zone&quot;,&quot;tolerance_m&quot;:0.04,&quot;type&quot;:&quot;in_region&quot;},{&quot;comment&quot;:&quot;The robot should release the object.&quot;,&quot;required&quot;:true,&quot;type&quot;:&quot;grippers_open&quot;}],&quot;termination&quot;:[{&quot;steps&quot;:1000,&quot;type&quot;:&quot;timeout&quot;}]}"/>
+    <text name="agenticsim_object_ids" data="[&quot;green_block&quot;]"/>
+    <text name="agenticsim_sensors" data="[{&quot;id&quot;:&quot;head_camera&quot;,&quot;required&quot;:true,&quot;type&quot;:&quot;rgb&quot;},{&quot;id&quot;:&quot;left_camera&quot;,&quot;required&quot;:false,&quot;type&quot;:&quot;rgb&quot;},{&quot;id&quot;:&quot;right_camera&quot;,&quot;required&quot;:false,&quot;type&quot;:&quot;rgb&quot;}]"/>
+  </custom>
+  <contact>
+  </contact>
+  <worldbody>
+    <geom name="ground" type="plane" size="3 3 0.1" rgba="0.3 0.3 0.3 1"/>
+    <light name="key_light" pos="0 -1 2" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <camera name="head_camera" pos="0 -1 1" quat="1 0 0 0" fovy="60"/>
+    <camera name="left_camera" pos="0 -1 1" quat="1 0 0 0" fovy="60"/>
+    <camera name="right_camera" pos="0 -1 1" quat="1 0 0 0" fovy="60"/>
+    <body name="green_block" pos="0.183333333 -0.11953125 0.766" quat="1 0 0 0"><freejoint name="green_block_free"/><geom name="green_block_geom" type="box" size="0.025 0.025 0.025" rgba="0 0.8 0.1 1"/></body>
+    <body name="yellow_zone" pos="-0.19166666666666665 0.06953124999999999 0.742"><geom type="box" size="0.08 0.06 0.002" rgba="1.0 0.82 0.0 0.45" contype="0" conaffinity="0"/></body>
+  </worldbody>
+</mujoco>

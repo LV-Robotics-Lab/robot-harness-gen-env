@@ -1,0 +1,82 @@
+{
+  "claim_boundary": "The original SceneAgent selection2env V0 task and the four related core TODOs are done on the hosted Dashboard. The two stricter SceneGen Stage 0-1 and Stage 2-4 follow-on tasks remain separate and are not claimed by the V0 8/8 acceptance result.",
+  "fetched_at": "2026-07-15T02:39:04.739937+00:00",
+  "follow_on_tasks_not_in_v0_acceptance": [
+    {
+      "comment_count": 0,
+      "last_comment_id": null,
+      "status": "todo",
+      "task_id": "task_self_improving_agents_robotwin_scenegen_stage_0_1_scenespec_20260714",
+      "title": "RoboTwin SceneGen Stage 0\u20131\uff1a\u8d44\u4ea7\u76ee\u5f55\u4e0e\u4e25\u683c\u53cc\u8bed SceneSpec",
+      "updated_at": "2026-07-14T17:07:58.238Z"
+    },
+    {
+      "comment_count": 0,
+      "last_comment_id": null,
+      "status": "todo",
+      "task_id": "task_self_improving_agents_robotwin_scenegen_stage_2_4_grounding_sapien_20260714",
+      "title": "RoboTwin SceneGen Stage 2\u20134\uff1a\u786e\u5b9a\u6027 Grounding\u3001\u6c42\u89e3\u3001SAPIEN \u9a8c\u8bc1\u4e0e\u56de\u653e",
+      "updated_at": "2026-07-14T17:09:01.222Z"
+    }
+  ],
+  "hosted_health": {
+    "blob_etag": "\"535cea3712f1b76076206901de76ba6a\"",
+    "ok": true,
+    "storage": "vercel-blob",
+    "task_count": 226,
+    "writable": true
+  },
+  "hosted_related_tasks": [
+    {
+      "comment_count": 6,
+      "last_comment_id": "comment_eaf64f98-1e53-4ef4-8f59-4252c53af3b9",
+      "status": "done",
+      "task_id": "task_self_improving_text2env_lit_review_20260701",
+      "title": "Text2Env literature review\uff1a\u68b3\u7406\u6587\u672c\u5230\u4eff\u771f\u73af\u5883/\u4efb\u52a1\u751f\u6210\u5de5\u4f5c",
+      "updated_at": "2026-07-13T16:51:36.223Z"
+    },
+    {
+      "comment_count": 16,
+      "last_comment_id": "comment_decc6fb9-1af3-4463-af38-47945073d0a6",
+      "status": "done",
+      "task_id": "task_self_improving_openxsim_command_loop_20260703",
+      "title": "PEARL Open X Sim command loop\uff1a\u5b9a\u4e49 /gen-env /collect /train /evaluate /transfer",
+      "updated_at": "2026-07-14T17:10:52.103Z"
+    },
+    {
+      "comment_count": 5,
+      "last_comment_id": "comment_7b0a265e-7304-4ec3-be98-69f631afda98",
+      "status": "done",
+      "task_id": "task_self_improving_embodied_harness_positioning_20260707",
+      "title": "Frame the Self-Improving paper as an embodied harness system",
+      "updated_at": "2026-07-13T16:52:22.584Z"
+    },
+    {
+      "comment_count": 4,
+      "last_comment_id": "comment_8c669659-965c-400b-9b2f-05fa49c3b839",
+      "status": "done",
+      "task_id": "task_self_improving_environment_coverage",
+      "title": "Complete AgenticSim / Open X Sim environment coverage",
+      "updated_at": "2026-07-13T16:52:48.493Z"
+    }
+  ],
+  "hosted_task": {
+    "comment": {
+      "author": "Codex SceneAgent closure",
+      "comment_id": "comment_245754fc-5ded-42af-bb93-354225d63f8b",
+      "created_at": "2026-07-15T02:38:05.566Z"
+    },
+    "comment_count": 13,
+    "status": "done",
+    "task_id": "task_self_improving_sceneagent_selection2env_20260701",
+    "title": "SceneAgent / selection2env\uff1a\u63a5\u5165 RoboTwin \u73b0\u6709\u8d44\u4ea7\u7684\u573a\u666f\u5e03\u7f6e\u7ba1\u7ebf",
+    "updated_at": "2026-07-15T02:38:05.566Z"
+  },
+  "local_mirror_status": "not_force_pulled_unrelated_dirty_worktree_preserved",
+  "schema_version": "alchedata.sceneagent_dashboard_proof.v1",
+  "source": {
+    "health": "https://jingxiangguo.com/api/dashboard/health",
+    "state": "https://jingxiangguo.com/api/dashboard/state"
+  },
+  "status": "pass_hosted_dashboard_readback"
+}

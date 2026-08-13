@@ -1,0 +1,20 @@
+{
+  "failures": [
+    {
+      "case": "two_frame_sampling",
+      "error": "video sample_count must be at least 3",
+      "status": "expected_rejection"
+    },
+    {
+      "case": "corrupt_media",
+      "error": "image decode failed for /Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/failure_gallery/corrupt.png: cannot identify image file '/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/failure_gallery/corrupt.png'",
+      "status": "expected_rejection"
+    },
+    {
+      "case": "low_confidence_projection",
+      "confidence": 0.2,
+      "status": "expected_ignore",
+      "threshold": 0.5
+    }
+  ]
+}

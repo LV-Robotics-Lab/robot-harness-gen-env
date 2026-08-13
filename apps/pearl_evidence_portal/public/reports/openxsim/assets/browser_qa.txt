@@ -1,0 +1,16 @@
+status=PASS
+entry=/Users/boris/workspace/alchedata-self-improving-agents/reports/openxsim_command_loop/index.html
+viewports=desktop:1440x1000,mobile:390x844
+images=26
+videos=5
+video_durations=2.000,2.667,53.333,44.250,43.917
+commands=6
+candidates=12
+adapters=10
+acceptance_rows=8
+checked_references=55
+desktop_horizontal_overflow=0
+mobile_horizontal_overflow=0
+clipped_statuses=0
+console_errors=0
+page_errors=0

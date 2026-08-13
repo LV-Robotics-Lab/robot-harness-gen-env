@@ -1,0 +1,38 @@
+{
+  "schema": "openxsim.video_probe.v1",
+  "videos": [
+    {
+      "seed": 0,
+      "path": "assets/text2env/acceptance_100_v2/scenes/seed_000000/place_a_red_can_to_the_left_of_b21824b743/runtime/observer_runtime.mp4",
+      "width": 320,
+      "height": 240,
+      "fps": 12,
+      "duration_s": 10.0,
+      "decoded_frame_count": 120,
+      "unique_decoded_frame_hash_count": 27,
+      "sha256": "81d1ceaa001205b3c706560c888ce526b7d41b1a48815a083aad88af1a9de823"
+    },
+    {
+      "seed": 17,
+      "path": "assets/text2env/acceptance_100_v2/scenes/seed_000017/place_a_red_can_to_the_left_of_b21824b743/runtime/observer_runtime.mp4",
+      "width": 320,
+      "height": 240,
+      "fps": 12,
+      "duration_s": 10.0,
+      "decoded_frame_count": 120,
+      "unique_decoded_frame_hash_count": 22,
+      "sha256": "9a203e8110619d26c4cfce2683fa3f8a2ccd46df35a1057dd05b3d4c93f81bfc"
+    },
+    {
+      "seed": 99,
+      "path": "assets/text2env/acceptance_100_v2/scenes/seed_000099/place_a_red_can_to_the_left_of_b21824b743/runtime/observer_runtime.mp4",
+      "width": 320,
+      "height": 240,
+      "fps": 12,
+      "duration_s": 10.0,
+      "decoded_frame_count": 120,
+      "unique_decoded_frame_hash_count": 31,
+      "sha256": "48d87d38267adcb181dc96c33325650b2347e277b067f84fecded995eec751e0"
+    }
+  ]
+}

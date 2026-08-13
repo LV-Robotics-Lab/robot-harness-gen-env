@@ -1,0 +1,6 @@
+<robot name="assimp_wuson">
+  <link name="base">
+    <visual><geometry><mesh filename="assimp_wuson.normalized.obj"/></geometry></visual>
+    <collision><geometry><mesh filename="assimp_wuson.collision_box.obj"/></geometry></collision>
+  </link>
+</robot>

@@ -1,0 +1,25 @@
+{
+  "candidate": {
+    "candidate_id": "bullet_plate",
+    "category": "plate",
+    "download_url": "https://raw.githubusercontent.com/bulletphysics/bullet3/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/dinnerware/plate.obj",
+    "format": "obj",
+    "license": "Zlib",
+    "metadata": {
+      "commit": "63c4d67e337017f9d8b298c900e9aabdb69296e7",
+      "path": "data/dinnerware/plate.obj",
+      "repository": "bulletphysics/bullet3"
+    },
+    "name": "plate.obj",
+    "provider": "github_tree_pinned",
+    "score": 0.0,
+    "source_page": "https://github.com/bulletphysics/bullet3/blob/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/dinnerware/plate.obj"
+  },
+  "detected_format": "obj",
+  "downloaded_at_unix": 1784170308,
+  "media_type": "text/plain",
+  "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/2fffaad6599fbf8e5692/plate.obj",
+  "schema": "agenticsim.asset_provenance.v1",
+  "sha256": "9a19b43701f01202e56def0eeca78ae504d3818ef71be4ae86749083e5244c0e",
+  "size_bytes": 40803
+}

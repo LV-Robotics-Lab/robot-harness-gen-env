@@ -1,0 +1,217 @@
+{
+  "anchors": [],
+  "assets": [
+    {
+      "articulation": {},
+      "asset_id": "camera_red_asset",
+      "category": "box",
+      "physical": {
+        "mass_kg": 0.2
+      },
+      "representations": [
+        {
+          "backend": "portable",
+          "format": "primitive_box",
+          "metadata": {
+            "color_rgb": [
+              0.92,
+              0.08,
+              0.07
+            ],
+            "half_size_m": [
+              0.07,
+              0.07,
+              0.07
+            ]
+          },
+          "role": "visual_and_collision",
+          "sha256": "",
+          "size_bytes": 0,
+          "uri": "primitive://box"
+        }
+      ],
+      "source": {
+        "kind": "procedural_common_subset"
+      },
+      "tags": []
+    },
+    {
+      "articulation": {},
+      "asset_id": "camera_blue_asset",
+      "category": "box",
+      "physical": {
+        "mass_kg": 0.2
+      },
+      "representations": [
+        {
+          "backend": "portable",
+          "format": "primitive_box",
+          "metadata": {
+            "color_rgb": [
+              0.05,
+              0.24,
+              0.9
+            ],
+            "half_size_m": [
+              0.08,
+              0.08,
+              0.08
+            ]
+          },
+          "role": "visual_and_collision",
+          "sha256": "",
+          "size_bytes": 0,
+          "uri": "primitive://box"
+        }
+      ],
+      "source": {
+        "kind": "procedural_common_subset"
+      },
+      "tags": []
+    }
+  ],
+  "env": {
+    "gravity_mps2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "metadata": {},
+    "name": "crosssim_camera_alignment",
+    "objects": [
+      {
+        "asset_id": "camera_red_asset",
+        "instance_id": "red_marker",
+        "metadata": {},
+        "pose": {
+          "orientation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            -0.18,
+            0.0,
+            0.07
+          ]
+        },
+        "randomization": {},
+        "role": "object",
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "static": true
+      },
+      {
+        "asset_id": "camera_blue_asset",
+        "instance_id": "blue_marker",
+        "metadata": {},
+        "pose": {
+          "orientation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.18,
+            0.0,
+            0.08
+          ]
+        },
+        "randomization": {},
+        "role": "object",
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "static": true
+      }
+    ],
+    "randomization": {},
+    "regions": [],
+    "robots": [],
+    "sensors": [
+      {
+        "convention": "look_at_world_z_up",
+        "far_m": 10.0,
+        "fov_y_deg": 55.0,
+        "height": 480,
+        "id": "inspection_camera",
+        "look_at": [
+          0.0,
+          0.0,
+          0.08
+        ],
+        "near_m": 0.01,
+        "position": [
+          0.0,
+          -1.0,
+          0.72
+        ],
+        "type": "camera",
+        "up": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "width": 640
+      }
+    ],
+    "units": "m",
+    "up_axis": "Z",
+    "workspace_bounds_m": [
+      -1.0,
+      -1.0,
+      0.0,
+      1.0,
+      1.0,
+      2.0
+    ]
+  },
+  "metadata": {},
+  "package_id": "crosssim_camera_alignment",
+  "schema_version": "agenticsim.environment_package.v1",
+  "source": {
+    "case": "camera_sensitive",
+    "mode": "existing_mujoco_environment_fixture"
+  },
+  "target_backends": [
+    "mujoco",
+    "sapien"
+  ],
+  "task": {
+    "action": {
+      "interface": "zero_action",
+      "operations": []
+    },
+    "instruction": "Observe the red and blue markers from the inspection camera.",
+    "intent": "cross_sim_zero_action_replay",
+    "metadata": {},
+    "observation": {
+      "state": [
+        "object_pose",
+        "contact"
+      ]
+    },
+    "plan": [],
+    "reset": {
+      "object_poses": "from_env_spec"
+    },
+    "success": [
+      {
+        "type": "settled"
+      }
+    ],
+    "termination": [
+      {
+        "steps": 120,
+        "type": "timeout"
+      }
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "bundle_file_count_before_report": 9,
+  "claim_boundary": "This is a deterministic observation heuristic for a bounded roundtrip, not intrinsic decomposition, BRDF identification, relighting invariance, or a NeuMaTeX reproduction.",
+  "comparison": {
+    "bytes": 1403,
+    "path": "comparison.json",
+    "sha256": "69e1aa2bd181bd28a7c17edff43389ff787ed63e9db37e99b19cb2aa045850fb"
+  },
+  "isaac_import": {
+    "bytes": 897,
+    "path": "isaac_material_import.json",
+    "sha256": "70bdadee859cb7c52cae01bae63f0b27c94cf020c3342bec3cff9e389bcbdd4c"
+  },
+  "isaac_render": {
+    "bytes": 398362,
+    "path": "isaac_material_render.png",
+    "sha256": "3cb7cec56e6812cdc6a049de7bec3bf4640d77a55b27b8186a8e183b5e4c2a38"
+  },
+  "material_sidecar": {
+    "bytes": 1287,
+    "path": "material_sidecar.json",
+    "sha256": "17f95202586d70f70e5d06a0e00ae9f19f8dd1ebb69e744a8e4ec6d95d2dbfb5"
+  },
+  "metrics": {
+    "cie76_delta_e": 13.875818858052044,
+    "comparison_scope": "robust median foreground color; geometry, framing, and lighting are not pixel-aligned",
+    "rendered_cie_lab": [
+      49.234012046551584,
+      59.33064012518774,
+      23.348625152060066
+    ],
+    "rendered_foreground_pixel_count": 15204,
+    "rendered_median_srgb": [
+      0.8274509803921568,
+      0.23921568627450981,
+      0.3176470588235294
+    ],
+    "rgb_mean_absolute_error": 0.050980392156862765,
+    "rgb_root_mean_squared_error": 0.054007655581996356,
+    "source_cie_lab": [
+      51.50429735873628,
+      66.2147024654221,
+      35.18052437739655
+    ],
+    "source_foreground_pixel_count": 94,
+    "source_median_srgb": [
+      0.8980392156862745,
+      0.21176470588235294,
+      0.2627450980392157
+    ]
+  },
+  "schema_version": "alchedata.material_sidecar_roundtrip.v0",
+  "source_observation": {
+    "bytes": 106038,
+    "path": "initial_observer_camera.png",
+    "sha256": "d61ef22f7521eec994de94299f680dc911c6d447aeb86b9be429cc7337b55851"
+  },
+  "status": "pass_material_sidecar_roundtrip"
+}

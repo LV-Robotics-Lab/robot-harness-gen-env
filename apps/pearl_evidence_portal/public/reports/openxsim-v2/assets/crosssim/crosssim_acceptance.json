@@ -1,0 +1,615 @@
+{
+  "case_count": 3,
+  "cases": [
+    {
+      "canonical_digest": "3da20733db7087dfb264bee1785d8dd320ff415c916e38a2fe6485eefa63766e",
+      "case": "rigid",
+      "conformance": {
+        "checks": [
+          {
+            "details": "artifact exists and passed backend-specific static validation",
+            "level": "L0",
+            "metrics": {
+              "artifact": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/target/sapien/scene_spec.json",
+              "size_bytes": 1053
+            },
+            "name": "asset_import",
+            "status": "pass"
+          },
+          {
+            "details": "units, axes, objects, assets, regions, and nominal poses agree",
+            "level": "L1",
+            "metrics": {
+              "max_pose_error_m": 0.0,
+              "pose_tolerance_m": 1e-06
+            },
+            "name": "scene_structure",
+            "status": "pass"
+          },
+          {
+            "details": "task contracts match and both runtimes reset and step successfully",
+            "level": "L2",
+            "metrics": {
+              "observation_keys": [
+                "contact",
+                "object_pose"
+              ]
+            },
+            "name": "task_semantics",
+            "status": "pass"
+          },
+          {
+            "details": "trajectory state and contact traces agree within tolerance after closing contact gaps up to 5 steps",
+            "level": "L3",
+            "metrics": {
+              "contact_debounce_steps": 5,
+              "contact_mismatch_steps": 0,
+              "max_state_error_m": 0.019398382526636358,
+              "raw_contact_mismatch_steps": 4,
+              "state_tolerance_m": 0.04,
+              "steps": 121
+            },
+            "name": "trajectory_replay",
+            "status": "pass"
+          },
+          {
+            "details": "source and target policy evaluation evidence are both required",
+            "level": "L4",
+            "metrics": {},
+            "name": "policy_behavior",
+            "status": "not_evaluated"
+          }
+        ],
+        "highest_consecutive_level": "L3",
+        "package_id": "crosssim_rigid_drop",
+        "schema": "agenticsim.conformance_report.v1",
+        "source_backend": "mujoco",
+        "target_backend": "sapien"
+      },
+      "conformance_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/conformance.json",
+      "imported_digest": "77ede9c2619097082b62e0e878004fcc877c8fb44e5f2ae4015b1d596f60e813",
+      "package_id": "crosssim_rigid_drop",
+      "source_compile": {
+        "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/source/mujoco/scene.xml",
+        "backend": "mujoco",
+        "blockers": [],
+        "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/source/mujoco/compile_manifest.json",
+        "metadata": {
+          "artifact_format": "mjcf",
+          "asset_ids": [
+            "rigid_box_asset"
+          ],
+          "object_ids": [
+            "rigid_box"
+          ],
+          "schema": "agenticsim.backend_compile.v1",
+          "task_contract": {
+            "action": {
+              "interface": "zero_action",
+              "operations": []
+            },
+            "observation": {
+              "state": [
+                "object_pose",
+                "contact"
+              ]
+            },
+            "reset": {
+              "object_poses": "from_env_spec"
+            },
+            "success": [
+              {
+                "type": "settled"
+              }
+            ],
+            "termination": [
+              {
+                "steps": 120,
+                "type": "timeout"
+              }
+            ]
+          },
+          "xml_validated": true
+        },
+        "package_digest": "3da20733db7087dfb264bee1785d8dd320ff415c916e38a2fe6485eefa63766e",
+        "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/source/mujoco/environment_package.json",
+        "runtime_command": [
+          "python",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/source/mujoco/run_mujoco_smoke.py",
+          "--model",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/source/mujoco/scene.xml",
+          "--output",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/source/mujoco/runtime_evidence.json"
+        ],
+        "status": "compiled",
+        "warnings": []
+      },
+      "source_runtime_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/source/mujoco/runtime_evidence.json",
+      "status": "pass",
+      "target_compile": {
+        "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/target/sapien/scene_spec.json",
+        "backend": "sapien",
+        "blockers": [],
+        "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/target/sapien/compile_manifest.json",
+        "metadata": {
+          "artifact_format": "sapien_scene_json",
+          "asset_ids": [
+            "rigid_box_asset"
+          ],
+          "object_ids": [
+            "rigid_box"
+          ],
+          "runner_syntax_validated": true,
+          "schema": "agenticsim.backend_compile.v1",
+          "task_contract": {
+            "action": {
+              "interface": "zero_action",
+              "operations": []
+            },
+            "observation": {
+              "state": [
+                "object_pose",
+                "contact"
+              ]
+            },
+            "reset": {
+              "object_poses": "from_env_spec"
+            },
+            "success": [
+              {
+                "type": "settled"
+              }
+            ],
+            "termination": [
+              {
+                "steps": 120,
+                "type": "timeout"
+              }
+            ]
+          }
+        },
+        "package_digest": "77ede9c2619097082b62e0e878004fcc877c8fb44e5f2ae4015b1d596f60e813",
+        "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/target/sapien/environment_package.json",
+        "runtime_command": [
+          "python",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/target/sapien/run_sapien_smoke.py",
+          "--spec",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/target/sapien/scene_spec.json",
+          "--output",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_rigid_drop/target/sapien/runtime_evidence.json"
+        ],
+        "status": "compiled",
+        "warnings": []
+      },
+      "target_runtime_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/remote_targets/crosssim_rigid_drop/compiled/sapien/runtime_evidence.json"
+    },
+    {
+      "articulation_fidelity": {
+        "joint_names_match": true,
+        "max_joint_error_rad": 0.0,
+        "status": "pass",
+        "threshold_rad": 0.05,
+        "trajectory_steps_match": true
+      },
+      "canonical_digest": "1a54cbfeeeb2da9191c6723866f5a0f3772cb079a7dd312a7f2fadbcd6c21d85",
+      "case": "articulated",
+      "conformance": {
+        "checks": [
+          {
+            "details": "artifact exists and passed backend-specific static validation",
+            "level": "L0",
+            "metrics": {
+              "artifact": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/target/sapien/scene_spec.json",
+              "size_bytes": 3589
+            },
+            "name": "asset_import",
+            "status": "pass"
+          },
+          {
+            "details": "units, axes, objects, assets, regions, and nominal poses agree",
+            "level": "L1",
+            "metrics": {
+              "max_pose_error_m": 0.0,
+              "pose_tolerance_m": 1e-06
+            },
+            "name": "scene_structure",
+            "status": "pass"
+          },
+          {
+            "details": "task contracts match and both runtimes reset and step successfully",
+            "level": "L2",
+            "metrics": {
+              "observation_keys": [
+                "contact",
+                "object_pose"
+              ]
+            },
+            "name": "task_semantics",
+            "status": "pass"
+          },
+          {
+            "details": "trajectory state and contact traces agree within tolerance",
+            "level": "L3",
+            "metrics": {
+              "contact_debounce_steps": 5,
+              "contact_mismatch_steps": 0,
+              "max_state_error_m": 2.980232227667301e-09,
+              "raw_contact_mismatch_steps": 0,
+              "state_tolerance_m": 0.04,
+              "steps": 121
+            },
+            "name": "trajectory_replay",
+            "status": "pass"
+          },
+          {
+            "details": "source and target policy evaluation evidence are both required",
+            "level": "L4",
+            "metrics": {},
+            "name": "policy_behavior",
+            "status": "not_evaluated"
+          }
+        ],
+        "highest_consecutive_level": "L3",
+        "package_id": "crosssim_articulated_hinge",
+        "schema": "agenticsim.conformance_report.v1",
+        "source_backend": "mujoco",
+        "target_backend": "sapien"
+      },
+      "conformance_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/conformance.json",
+      "imported_digest": "53a0a4a7c4136b92f743043ecec3870eea9f19beb3da39eb3fb639892a71f87b",
+      "package_id": "crosssim_articulated_hinge",
+      "source_compile": {
+        "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/scene.xml",
+        "backend": "mujoco",
+        "blockers": [],
+        "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/compile_manifest.json",
+        "metadata": {
+          "artifact_format": "mjcf",
+          "asset_ids": [
+            "hinged_cabinet_asset"
+          ],
+          "object_ids": [
+            "cabinet"
+          ],
+          "schema": "agenticsim.backend_compile.v1",
+          "task_contract": {
+            "action": {
+              "interface": "zero_action",
+              "operations": []
+            },
+            "observation": {
+              "state": [
+                "object_pose",
+                "contact"
+              ]
+            },
+            "reset": {
+              "object_poses": "from_env_spec"
+            },
+            "success": [
+              {
+                "type": "settled"
+              }
+            ],
+            "termination": [
+              {
+                "steps": 120,
+                "type": "timeout"
+              }
+            ]
+          },
+          "xml_validated": true
+        },
+        "package_digest": "1a54cbfeeeb2da9191c6723866f5a0f3772cb079a7dd312a7f2fadbcd6c21d85",
+        "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/environment_package.json",
+        "runtime_command": [
+          "python",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/run_mujoco_smoke.py",
+          "--model",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/scene.xml",
+          "--output",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/runtime_evidence.json"
+        ],
+        "status": "compiled",
+        "warnings": []
+      },
+      "source_runtime_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/runtime_evidence.json",
+      "status": "pass",
+      "target_compile": {
+        "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/target/sapien/scene_spec.json",
+        "backend": "sapien",
+        "blockers": [],
+        "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/target/sapien/compile_manifest.json",
+        "metadata": {
+          "artifact_format": "sapien_scene_json",
+          "asset_ids": [
+            "cabinet_asset"
+          ],
+          "object_ids": [
+            "cabinet"
+          ],
+          "runner_syntax_validated": true,
+          "schema": "agenticsim.backend_compile.v1",
+          "task_contract": {
+            "action": {
+              "interface": "zero_action",
+              "operations": []
+            },
+            "observation": {
+              "state": [
+                "object_pose",
+                "contact"
+              ]
+            },
+            "reset": {
+              "object_poses": "from_env_spec"
+            },
+            "success": [
+              {
+                "type": "settled"
+              }
+            ],
+            "termination": [
+              {
+                "steps": 120,
+                "type": "timeout"
+              }
+            ]
+          }
+        },
+        "package_digest": "53a0a4a7c4136b92f743043ecec3870eea9f19beb3da39eb3fb639892a71f87b",
+        "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/target/sapien/environment_package.json",
+        "runtime_command": [
+          "python",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/target/sapien/run_sapien_smoke.py",
+          "--spec",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/target/sapien/scene_spec.json",
+          "--output",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/target/sapien/runtime_evidence.json"
+        ],
+        "status": "compiled",
+        "warnings": []
+      },
+      "target_runtime_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/remote_targets/crosssim_articulated_hinge/compiled/sapien/runtime_evidence.json"
+    },
+    {
+      "camera_fidelity": {
+        "blue_centroid_error_normalized": 0.002967768409716865,
+        "centroid_threshold_normalized": 0.15,
+        "fov_y_deg_source": 55.0,
+        "fov_y_deg_target": 55.0,
+        "red_centroid_error_normalized": 0.0029543779989087676,
+        "source": {
+          "blue_centroid_normalized": [
+            0.6144393430753028,
+            0.5012429787607513
+          ],
+          "blue_pixel_count": 5697,
+          "height": 480,
+          "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/source/mujoco/inspection_camera_rgb.png",
+          "pixel_std": 35.249346796884815,
+          "red_centroid_normalized": [
+            0.3854774764421972,
+            0.5075456791542174
+          ],
+          "red_pixel_count": 4351,
+          "width": 640
+        },
+        "status": "pass",
+        "target": {
+          "blue_centroid_normalized": [
+            0.6114755516865246,
+            0.501089388599877
+          ],
+          "blue_pixel_count": 5959,
+          "height": 480,
+          "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/remote_targets/crosssim_camera_alignment/compiled/sapien/inspection_camera_rgb.png",
+          "pixel_std": 23.001424665779563,
+          "red_centroid_normalized": [
+            0.38821000719344845,
+            0.5064224583148886
+          ],
+          "red_pixel_count": 4518,
+          "width": 640
+        }
+      },
+      "canonical_digest": "0352397d6f2277b851262cfd9e5576935a3f05146951d8bbde96b702f4c94f11",
+      "case": "camera_sensitive",
+      "conformance": {
+        "checks": [
+          {
+            "details": "artifact exists and passed backend-specific static validation",
+            "level": "L0",
+            "metrics": {
+              "artifact": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/target/sapien/scene_spec.json",
+              "size_bytes": 1929
+            },
+            "name": "asset_import",
+            "status": "pass"
+          },
+          {
+            "details": "units, axes, objects, assets, regions, and nominal poses agree",
+            "level": "L1",
+            "metrics": {
+              "max_pose_error_m": 0.0,
+              "pose_tolerance_m": 1e-06
+            },
+            "name": "scene_structure",
+            "status": "pass"
+          },
+          {
+            "details": "task contracts match and both runtimes reset and step successfully",
+            "level": "L2",
+            "metrics": {
+              "observation_keys": [
+                "contact",
+                "object_pose"
+              ]
+            },
+            "name": "task_semantics",
+            "status": "pass"
+          },
+          {
+            "details": "trajectory state and contact traces agree within tolerance",
+            "level": "L3",
+            "metrics": {
+              "contact_debounce_steps": 5,
+              "contact_mismatch_steps": 0,
+              "max_state_error_m": 7.372687392457012e-09,
+              "raw_contact_mismatch_steps": 0,
+              "state_tolerance_m": 0.04,
+              "steps": 121
+            },
+            "name": "trajectory_replay",
+            "status": "pass"
+          },
+          {
+            "details": "source and target policy evaluation evidence are both required",
+            "level": "L4",
+            "metrics": {},
+            "name": "policy_behavior",
+            "status": "not_evaluated"
+          }
+        ],
+        "highest_consecutive_level": "L3",
+        "package_id": "crosssim_camera_alignment",
+        "schema": "agenticsim.conformance_report.v1",
+        "source_backend": "mujoco",
+        "target_backend": "sapien"
+      },
+      "conformance_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/conformance.json",
+      "imported_digest": "0fd993aa539cf525e6f7d08349e6bfb425517812630f36f1de63fd608872c2c8",
+      "package_id": "crosssim_camera_alignment",
+      "source_compile": {
+        "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/source/mujoco/scene.xml",
+        "backend": "mujoco",
+        "blockers": [],
+        "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/source/mujoco/compile_manifest.json",
+        "metadata": {
+          "artifact_format": "mjcf",
+          "asset_ids": [
+            "camera_red_asset",
+            "camera_blue_asset"
+          ],
+          "object_ids": [
+            "red_marker",
+            "blue_marker"
+          ],
+          "schema": "agenticsim.backend_compile.v1",
+          "task_contract": {
+            "action": {
+              "interface": "zero_action",
+              "operations": []
+            },
+            "observation": {
+              "state": [
+                "object_pose",
+                "contact"
+              ]
+            },
+            "reset": {
+              "object_poses": "from_env_spec"
+            },
+            "success": [
+              {
+                "type": "settled"
+              }
+            ],
+            "termination": [
+              {
+                "steps": 120,
+                "type": "timeout"
+              }
+            ]
+          },
+          "xml_validated": true
+        },
+        "package_digest": "0352397d6f2277b851262cfd9e5576935a3f05146951d8bbde96b702f4c94f11",
+        "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/source/mujoco/environment_package.json",
+        "runtime_command": [
+          "python",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/source/mujoco/run_mujoco_smoke.py",
+          "--model",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/source/mujoco/scene.xml",
+          "--output",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/source/mujoco/runtime_evidence.json"
+        ],
+        "status": "compiled",
+        "warnings": []
+      },
+      "source_runtime_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/source/mujoco/runtime_evidence.json",
+      "status": "pass",
+      "target_compile": {
+        "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/target/sapien/scene_spec.json",
+        "backend": "sapien",
+        "blockers": [],
+        "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/target/sapien/compile_manifest.json",
+        "metadata": {
+          "artifact_format": "sapien_scene_json",
+          "asset_ids": [
+            "red_marker_asset",
+            "blue_marker_asset"
+          ],
+          "object_ids": [
+            "red_marker",
+            "blue_marker"
+          ],
+          "runner_syntax_validated": true,
+          "schema": "agenticsim.backend_compile.v1",
+          "task_contract": {
+            "action": {
+              "interface": "zero_action",
+              "operations": []
+            },
+            "observation": {
+              "state": [
+                "object_pose",
+                "contact"
+              ]
+            },
+            "reset": {
+              "object_poses": "from_env_spec"
+            },
+            "success": [
+              {
+                "type": "settled"
+              }
+            ],
+            "termination": [
+              {
+                "steps": 120,
+                "type": "timeout"
+              }
+            ]
+          }
+        },
+        "package_digest": "0fd993aa539cf525e6f7d08349e6bfb425517812630f36f1de63fd608872c2c8",
+        "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/target/sapien/environment_package.json",
+        "runtime_command": [
+          "python",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/target/sapien/run_sapien_smoke.py",
+          "--spec",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/target/sapien/scene_spec.json",
+          "--output",
+          "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_camera_alignment/target/sapien/runtime_evidence.json"
+        ],
+        "status": "compiled",
+        "warnings": []
+      },
+      "target_runtime_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/remote_targets/crosssim_camera_alignment/compiled/sapien/runtime_evidence.json"
+    }
+  ],
+  "complete": true,
+  "failure_gallery": [],
+  "metasim_decision": {
+    "decision": "adapter_only",
+    "included_in_runtime_claim": false,
+    "reason": "No MetaSim runtime dependency is installed on the acceptance host; static compilation is covered, runtime parity is not claimed.",
+    "revisit_when": "MetaSim runtime and matching robot/controller assets are available in the same validation environment."
+  },
+  "pass_count": 3,
+  "schema": "agenticsim.crosssim_acceptance.v1",
+  "source_backend": "mujoco",
+  "status": "pass",
+  "target_backend": "sapien"
+}

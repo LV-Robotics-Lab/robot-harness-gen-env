@@ -1,0 +1,8 @@
+status=PASS
+entry=/Users/boris/Downloads/alchedata_sceneagent_selection2env_20260712/index.html
+viewports=desktop:1440x1000,mobile:390x844
+screenshots=9
+images=8
+checked_local_references=64
+console_errors=0
+page_errors=0

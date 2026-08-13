@@ -1,0 +1,6 @@
+<robot name="bullet_duck">
+  <link name="base">
+    <visual><geometry><mesh filename="bullet_duck.normalized.obj"/></geometry></visual>
+    <collision><geometry><mesh filename="bullet_duck.collision_box.obj"/></geometry></collision>
+  </link>
+</robot>

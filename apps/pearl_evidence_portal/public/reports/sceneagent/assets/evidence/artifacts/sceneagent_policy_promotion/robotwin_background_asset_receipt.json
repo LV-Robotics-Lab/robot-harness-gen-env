@@ -1,0 +1,25 @@
+{
+  "schema_version": "alchedata.robotwin_background_asset_receipt.v0",
+  "status": "pass_official_robotwin_background_asset",
+  "generated_at": "2026-07-13T16:08:38.741362+00:00",
+  "source": {
+    "dataset": "TianxingChen/RoboTwin2.0",
+    "file": "background_texture.zip",
+    "url": "https://huggingface.co/datasets/TianxingChen/RoboTwin2.0",
+    "declared_by": "external/RoboTwin/assets/_download.py"
+  },
+  "archive": {
+    "path": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/background_texture.zip",
+    "size_bytes": 10970687027,
+    "sha256": "54ede0fb5b783e0faa2bc98720d3affd6ca3bb9280b225b48c1aafaf31473070"
+  },
+  "operational_subset": {
+    "directory": "/home/jingxiang/workspace/alchedata-self-improving-agents/external/RoboTwin/assets/background_texture/seen",
+    "selection": "official contiguous seen texture ids 0..255",
+    "file_count": 256,
+    "size_bytes": 259822099,
+    "manifest_sha256": "d1151d05b06ea6310df85faef93c1172075740d5b03c42ef81d1f26c90b0a474",
+    "runtime_contract": "RoboTwin counts files in assets/background_texture/seen and samples integer ids in [0, count). A contiguous 0-based subset therefore exercises the unmodified random_background loader."
+  },
+  "claim_boundary": "The full official archive is downloaded and hash-verified. Exactly the declared contiguous official seen subset is extracted for this bounded evaluation; the result is not a claim that every archive texture was exercised."
+}

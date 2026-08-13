@@ -1,0 +1,25 @@
+{
+  "candidate": {
+    "candidate_id": "bullet_pan",
+    "category": "pan",
+    "download_url": "https://raw.githubusercontent.com/bulletphysics/bullet3/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/dinnerware/pan_tefal.obj",
+    "format": "obj",
+    "license": "Zlib",
+    "metadata": {
+      "commit": "63c4d67e337017f9d8b298c900e9aabdb69296e7",
+      "path": "data/dinnerware/pan_tefal.obj",
+      "repository": "bulletphysics/bullet3"
+    },
+    "name": "pan_tefal.obj",
+    "provider": "github_tree_pinned",
+    "score": 0.0,
+    "source_page": "https://github.com/bulletphysics/bullet3/blob/63c4d67e337017f9d8b298c900e9aabdb69296e7/data/dinnerware/pan_tefal.obj"
+  },
+  "detected_format": "obj",
+  "downloaded_at_unix": 1784170304,
+  "media_type": "text/plain",
+  "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/a41b81713e56f79daa42/pan_tefal.obj",
+  "schema": "agenticsim.asset_provenance.v1",
+  "sha256": "8e11390403740667ab37250f962d1e977922817f768da358f041f7b558b3fdc2",
+  "size_bytes": 40801
+}

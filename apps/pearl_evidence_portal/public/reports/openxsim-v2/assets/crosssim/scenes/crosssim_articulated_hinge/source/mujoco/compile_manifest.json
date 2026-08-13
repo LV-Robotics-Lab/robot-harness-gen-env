@@ -1,0 +1,55 @@
+{
+  "artifact_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/scene.xml",
+  "backend": "mujoco",
+  "blockers": [],
+  "manifest_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/compile_manifest.json",
+  "metadata": {
+    "artifact_format": "mjcf",
+    "asset_ids": [
+      "hinged_cabinet_asset"
+    ],
+    "object_ids": [
+      "cabinet"
+    ],
+    "schema": "agenticsim.backend_compile.v1",
+    "task_contract": {
+      "action": {
+        "interface": "zero_action",
+        "operations": []
+      },
+      "observation": {
+        "state": [
+          "object_pose",
+          "contact"
+        ]
+      },
+      "reset": {
+        "object_poses": "from_env_spec"
+      },
+      "success": [
+        {
+          "type": "settled"
+        }
+      ],
+      "termination": [
+        {
+          "steps": 120,
+          "type": "timeout"
+        }
+      ]
+    },
+    "xml_validated": true
+  },
+  "package_digest": "1a54cbfeeeb2da9191c6723866f5a0f3772cb079a7dd312a7f2fadbcd6c21d85",
+  "package_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/environment_package.json",
+  "runtime_command": [
+    "python",
+    "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/run_mujoco_smoke.py",
+    "--model",
+    "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/scene.xml",
+    "--output",
+    "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/crosssim/scenes/crosssim_articulated_hinge/source/mujoco/runtime_evidence.json"
+  ],
+  "status": "compiled",
+  "warnings": []
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": "robotwin.scene_generation_failure.v1",
+  "status": "fail",
+  "stage": "scene_spec_validation",
+  "blocker": "request rejected before grounding",
+  "error_type": "SceneSpecError",
+  "request": "Use asset_id 071_can and model_id 0.",
+  "seed": 9,
+  "details": [
+    {
+      "message": "prompt contains forbidden backend field"
+    }
+  ]
+}

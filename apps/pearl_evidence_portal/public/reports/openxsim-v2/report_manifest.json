@@ -1,0 +1,18 @@
+{
+  "schema": "openxsim.html_report_manifest.v1",
+  "title": "Open-X-Sim 四条工作流最终验收",
+  "frozen_at": "2026-07-16T11:45:16+08:00",
+  "entrypoint": "index.html",
+  "status": "pass",
+  "implementation_todos_passed": 4,
+  "implementation_todos_total": 4,
+  "file_count_excluding_manifests": 1572,
+  "bytes_excluding_manifests": 45499798,
+  "asset_policy": "All HTML-referenced media and audit JSON are bundled under relative paths; source snapshots and per-seed evidence are included.",
+  "claim_boundaries": [
+    "Cross-simulator policy behavior L4 was not evaluated.",
+    "MetaSim runtime parity is not claimed.",
+    "Anchor SAPIEN smoke proves load and step, not robotwin_primitive_plan action binding.",
+    "External asset physical parameters that were not measured remain unknown."
+  ]
+}

@@ -1,0 +1,223 @@
+{
+  "articulation": {
+    "articulated": false,
+    "joint_count": 0,
+    "joint_types": [],
+    "status": "rigid_mesh_no_joint_schema"
+  },
+  "asset_id": "assimp_spider",
+  "category": "spider_mesh",
+  "physical": {
+    "collision_status": "generated",
+    "collision_strategy": "axis_aligned_convex_box",
+    "material_status": "generated_default_material",
+    "normalization": {
+      "face_count": 1368,
+      "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/default_material.mtl",
+      "material_status": "generated_default_material",
+      "normalized_bounds": {
+        "extent": [
+          0.7787236739227562,
+          0.4123321357062483,
+          1.0
+        ],
+        "maximum": [
+          0.3893618369613781,
+          0.20616606785312416,
+          0.5
+        ],
+        "minimum": [
+          -0.3893618369613781,
+          -0.20616606785312416,
+          -0.5
+        ]
+      },
+      "scale_factor": 0.005171101403230077,
+      "source_bounds": {
+        "extent": [
+          150.591453,
+          79.73777799999999,
+          193.3824
+        ],
+        "maximum": [
+          57.936218,
+          37.503952,
+          86.6912
+        ],
+        "minimum": [
+          -92.655235,
+          -42.233826,
+          -106.6912
+        ]
+      },
+      "source_center": [
+        -17.359508500000004,
+        -2.364937000000001,
+        -10.0
+      ],
+      "target_max_extent_m": 1.0,
+      "vertex_count": 762
+    },
+    "runtime_import_required": true
+  },
+  "representations": [
+    {
+      "backend": "portable",
+      "format": "obj_source",
+      "metadata": {
+        "original_download": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/e50955b9c213103b5cea/spider.obj",
+        "preserved_source": true
+      },
+      "role": "source",
+      "sha256": "a176f0223a6e74e90185c067ed45f928257e775cad7e17687ed4612a3343c206",
+      "size_bytes": 105735,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/source.obj"
+    },
+    {
+      "backend": "portable",
+      "format": "obj",
+      "metadata": {
+        "normalization": {
+          "face_count": 1368,
+          "material_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/default_material.mtl",
+          "material_status": "generated_default_material",
+          "normalized_bounds": {
+            "extent": [
+              0.7787236739227562,
+              0.4123321357062483,
+              1.0
+            ],
+            "maximum": [
+              0.3893618369613781,
+              0.20616606785312416,
+              0.5
+            ],
+            "minimum": [
+              -0.3893618369613781,
+              -0.20616606785312416,
+              -0.5
+            ]
+          },
+          "scale_factor": 0.005171101403230077,
+          "source_bounds": {
+            "extent": [
+              150.591453,
+              79.73777799999999,
+              193.3824
+            ],
+            "maximum": [
+              57.936218,
+              37.503952,
+              86.6912
+            ],
+            "minimum": [
+              -92.655235,
+              -42.233826,
+              -106.6912
+            ]
+          },
+          "source_center": [
+            -17.359508500000004,
+            -2.364937000000001,
+            -10.0
+          ],
+          "target_max_extent_m": 1.0,
+          "vertex_count": 762
+        }
+      },
+      "role": "visual",
+      "sha256": "2db385136e24ba77cb24bd461eeddd74018ae4cb217b3c0fe1f8a0f6ea680494",
+      "size_bytes": 49515,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/assimp_spider.normalized.obj"
+    },
+    {
+      "backend": "portable",
+      "format": "obj_collision_proxy",
+      "metadata": {
+        "strategy": "axis_aligned_convex_box"
+      },
+      "role": "collision",
+      "sha256": "9d57697bfb9f15dbd3fbe83f3869f84b2be94c38cbdcd4f08f57814cd153e763",
+      "size_bytes": 352,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/assimp_spider.collision_box.obj"
+    },
+    {
+      "backend": "isaacsim",
+      "format": "usda",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "3220959236b9cd509d8cf353898683b8c53a05baa3dc3d5c5c1021c44bff7cbe",
+      "size_bytes": 57511,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/assimp_spider.usda"
+    },
+    {
+      "backend": "mujoco",
+      "format": "mjcf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "5f60b9ae7688001383e92a2ff2914b74db8cef24a3d91ae7b30d1d992a1c55e5",
+      "size_bytes": 449,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/assimp_spider.xml"
+    },
+    {
+      "backend": "portable",
+      "format": "urdf",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "c56a7f201a65010cd63cef6d8f669becec07116d6cf0820c524472f9d2def0ad",
+      "size_bytes": 258,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/assimp_spider.urdf"
+    },
+    {
+      "backend": "sapien",
+      "format": "sapien_manifest",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "f061ccad6bf1cd800a884cfb14f6780de36bbed2f66d800b14799322b47bcce0",
+      "size_bytes": 1457,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/sapien_asset.json"
+    },
+    {
+      "backend": "metasim",
+      "format": "metasim_object",
+      "metadata": {
+        "converted_from": "obj"
+      },
+      "role": "visual_and_collision",
+      "sha256": "8d24ea0c78ea93b3075468169d973fdecf83989b97df161ae339488710d46973",
+      "size_bytes": 515,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/metasim_object.json"
+    },
+    {
+      "backend": "portable",
+      "format": "validation_manifest",
+      "metadata": {},
+      "role": "validation",
+      "sha256": "aa69aa1c12f5950241a1a28c9f44c2084aff818c9f18d10e8110821c242592db",
+      "size_bytes": 1933,
+      "uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/assimp_spider/asset_validation.json"
+    }
+  ],
+  "source": {
+    "download_sha256": "a176f0223a6e74e90185c067ed45f928257e775cad7e17687ed4612a3343c206",
+    "download_url": "https://raw.githubusercontent.com/assimp/assimp/a939f2479513a4d92060f2348909886b67d548aa/test/models/OBJ/spider.obj",
+    "license": "BSD-3-Clause",
+    "provenance_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/e50955b9c213103b5cea/provenance.json",
+    "provider": "github_tree_pinned",
+    "source_page": "https://github.com/assimp/assimp/blob/a939f2479513a4d92060f2348909886b67d548aa/test/models/OBJ/spider.obj"
+  },
+  "tags": [
+    "downloaded",
+    "provenance_recorded",
+    "validated",
+    "normalized"
+  ]
+}

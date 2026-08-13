@@ -1,0 +1,8 @@
+{
+  "asset_id": "bullet_plate",
+  "mesh_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_plate/bullet_plate.normalized.obj",
+  "mjcf_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_plate/bullet_plate.xml",
+  "schema": "agenticsim.metasim_object.v1",
+  "urdf_path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/compiled/bullet_plate/bullet_plate.urdf",
+  "usd_path": null
+}

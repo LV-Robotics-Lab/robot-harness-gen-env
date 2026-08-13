@@ -1,0 +1,25 @@
+{
+  "candidate": {
+    "candidate_id": "mujoco_bunny",
+    "category": "bunny",
+    "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco/f841b67c17349aca1a0999b1408b746a262ff805/model/flex/asset/bunny.obj",
+    "format": "obj",
+    "license": "Apache-2.0",
+    "metadata": {
+      "commit": "f841b67c17349aca1a0999b1408b746a262ff805",
+      "path": "model/flex/asset/bunny.obj",
+      "repository": "google-deepmind/mujoco"
+    },
+    "name": "bunny.obj",
+    "provider": "github_tree_pinned",
+    "score": 0.0,
+    "source_page": "https://github.com/google-deepmind/mujoco/blob/f841b67c17349aca1a0999b1408b746a262ff805/model/flex/asset/bunny.obj"
+  },
+  "detected_format": "obj",
+  "downloaded_at_unix": 1784170299,
+  "media_type": "text/plain",
+  "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/5a22e745e6465bc2dedc/bunny.obj",
+  "schema": "agenticsim.asset_provenance.v1",
+  "sha256": "c93e4a6fc6423194ff8b24de372d0a0632264290302a11d391f832313a0d55ef",
+  "size_bytes": 198443
+}

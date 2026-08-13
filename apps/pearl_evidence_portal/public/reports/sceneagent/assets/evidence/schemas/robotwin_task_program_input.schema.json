@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alchedata.local/schemas/robotwin_task_program_input.schema.json",
+  "title": "RoboTwin Task Program Input",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "task_id",
+    "variant",
+    "language_prompt",
+    "scene_id",
+    "placement_spec",
+    "placement_sha256",
+    "task_binding",
+    "robotwin_adapter",
+    "verifier"
+  ],
+  "properties": {
+    "schema_version": {"const": "alchedata.robotwin_task_program_input.v0"},
+    "task_id": {"type": "string", "minLength": 1},
+    "variant": {"type": "string", "minLength": 1},
+    "language_prompt": {"type": "string", "minLength": 1},
+    "scene_id": {"type": "string", "minLength": 1},
+    "placement_spec": {"type": "string", "minLength": 1},
+    "placement_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "task_binding": {
+      "type": "object",
+      "required": ["template", "source_object_id"],
+      "properties": {
+        "template": {
+          "enum": ["place_on", "place_in", "place_in_region", "place_right_of"]
+        },
+        "source_object_id": {"type": "string", "minLength": 1},
+        "target_object_id": {"type": "string", "minLength": 1},
+        "target_region": {"type": "string", "minLength": 1}
+      },
+      "oneOf": [
+        {"required": ["target_object_id"], "not": {"required": ["target_region"]}},
+        {"required": ["target_region"], "not": {"required": ["target_object_id"]}}
+      ],
+      "additionalProperties": false
+    },
+    "robotwin_adapter": {
+      "type": "object",
+      "required": ["backend", "entrypoint", "task_config", "python_env", "requires_robotwin_root"],
+      "properties": {
+        "backend": {"const": "RoboTwin/SAPIEN"},
+        "entrypoint": {"type": "string"},
+        "task_config": {"type": "string"},
+        "python_env": {"type": "string"},
+        "requires_robotwin_root": {"type": "boolean"}
+      }
+    },
+    "verifier": {
+      "type": "object",
+      "required": ["type", "relation", "source_object_id", "success_conditions"],
+      "properties": {
+        "type": {"const": "simulator_state_and_visual"},
+        "relation": {"enum": ["on", "in", "in_region", "right_of"]},
+        "source_object_id": {"type": "string"},
+        "target_object_id": {"type": "string"},
+        "target_region": {"type": "string"},
+        "success_conditions": {"type": "array", "minItems": 3, "items": {"type": "string"}}
+      }
+    },
+    "execution_evidence": {"type": "object"}
+  },
+  "additionalProperties": false
+}

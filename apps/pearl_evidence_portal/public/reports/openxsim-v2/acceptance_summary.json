@@ -1,0 +1,54 @@
+{
+  "schema": "openxsim.four_workflows_acceptance.v2",
+  "frozen_at": "2026-07-16T11:45:16+08:00",
+  "status": "pass",
+  "implementation_todos_passed": 4,
+  "implementation_todos_total": 4,
+  "agenticsim_commit": "e408f18e847c6f023976c3bfaffa7912a206155f",
+  "text2env": {
+    "status": "pass",
+    "seed_pass_count": 100,
+    "seed_count": 100,
+    "retained_scene_count": 100,
+    "unique_resolved_scene_count": 100,
+    "generator_commit": "69606dd5568846f2a6f31136233a05a4c61dc554",
+    "acceptance_hardening_commit": "b4d964167834b5ab34880a08f96feef47b4369b2",
+    "robotwin_commit": "c3ddfa8b97d5519efa828b075999bd0006778e5e",
+    "report_sha256": "fb124b5bf035341d364a7a5d3f2f682ae728ab6ba6f25c7f7220b36134b28a39"
+  },
+  "anchor2env": {
+    "status": "pass",
+    "scene_pass_count": 3,
+    "scene_count": 3,
+    "image_scene_count": 2,
+    "video_scene_count": 1,
+    "sapien_load_step_pass_count": 3,
+    "sapien_load_step_count": 3,
+    "task_action_binding_claimed_for_sapien": false,
+    "report_sha256": "8c242a4589e64d342a14856013d6eed65a5c5a86cde2073067e400a6b17ef02e"
+  },
+  "asset_scout": {
+    "status": "pass",
+    "source_count": 3,
+    "asset_count": 10,
+    "mujoco_pass_count": 10,
+    "sapien_pass_count": 10,
+    "report_sha256": "a9ae143301fddbb77d085ada794c59b7f5ef101b73dbf8203ecadf039ed697c0",
+    "sapien_report_sha256": "f3cfac6adb742d4b557967c44615fa8004064b9c144f9431dc7335191dc7645e"
+  },
+  "cross_sim": {
+    "status": "pass",
+    "scene_pass_count": 3,
+    "scene_count": 3,
+    "highest_claimed_level": "L3",
+    "l4_policy_behavior_evaluated": false,
+    "metasim_runtime_claimed": false,
+    "report_sha256": "207d90c823e40cf06f113b52e9dc5ca1fcf3414fe2284fbb221c508253918c14"
+  },
+  "tests": {
+    "agenticsim_passed": 41,
+    "scene_gen_passed": 33,
+    "agenticsim_log_sha256": "6a4ad1a1e5e5a19b5fc1d81e002f4c9016ada921fe0c2a9c302cce20f76b2ca6",
+    "scene_gen_log_sha256": "2f1ca2659811d34fcaa802ac02c3dc64a6a0ceaeed4289c26f211b69f0edabb1"
+  }
+}

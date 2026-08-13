@@ -1,0 +1,55 @@
+{
+  "artifact_path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_articulated_hinge/compiled/sapien/scene_spec.json",
+  "backend": "sapien",
+  "blockers": [],
+  "manifest_path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_articulated_hinge/compiled/sapien/compile_manifest.json",
+  "metadata": {
+    "artifact_format": "sapien_scene_json",
+    "asset_ids": [
+      "cabinet_asset"
+    ],
+    "object_ids": [
+      "cabinet"
+    ],
+    "runner_syntax_validated": true,
+    "schema": "agenticsim.backend_compile.v1",
+    "task_contract": {
+      "action": {
+        "interface": "zero_action",
+        "operations": []
+      },
+      "observation": {
+        "state": [
+          "object_pose",
+          "contact"
+        ]
+      },
+      "reset": {
+        "object_poses": "from_env_spec"
+      },
+      "success": [
+        {
+          "type": "settled"
+        }
+      ],
+      "termination": [
+        {
+          "steps": 120,
+          "type": "timeout"
+        }
+      ]
+    }
+  },
+  "package_digest": "53a0a4a7c4136b92f743043ecec3870eea9f19beb3da39eb3fb639892a71f87b",
+  "package_path": "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_articulated_hinge/compiled/sapien/environment_package.json",
+  "runtime_command": [
+    "python",
+    "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_articulated_hinge/compiled/sapien/run_sapien_smoke.py",
+    "--spec",
+    "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_articulated_hinge/compiled/sapien/scene_spec.json",
+    "--output",
+    "/home/jingxiang/workspace/openxsim-crosssim-acceptance/targets/crosssim_articulated_hinge/compiled/sapien/runtime_evidence.json"
+  ],
+  "status": "compiled",
+  "warnings": []
+}

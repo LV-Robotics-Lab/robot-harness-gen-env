@@ -1,0 +1,25 @@
+{
+  "candidate": {
+    "candidate_id": "mujoco_mug",
+    "category": "mug",
+    "download_url": "https://raw.githubusercontent.com/google-deepmind/mujoco/f841b67c17349aca1a0999b1408b746a262ff805/model/mug/mug.obj",
+    "format": "obj",
+    "license": "Apache-2.0",
+    "metadata": {
+      "commit": "f841b67c17349aca1a0999b1408b746a262ff805",
+      "path": "model/mug/mug.obj",
+      "repository": "google-deepmind/mujoco"
+    },
+    "name": "mug.obj",
+    "provider": "github_tree_pinned",
+    "score": 0.0,
+    "source_page": "https://github.com/google-deepmind/mujoco/blob/f841b67c17349aca1a0999b1408b746a262ff805/model/mug/mug.obj"
+  },
+  "detected_format": "obj",
+  "downloaded_at_unix": 1784170293,
+  "media_type": "text/plain",
+  "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/asset_scout/cache/e285bd4525ab89288c31/mug.obj",
+  "schema": "agenticsim.asset_provenance.v1",
+  "sha256": "656bfc987a038c90417ec98c671ab481e6a3ebe35a17d3b92e2ec0ee9593eb19",
+  "size_bytes": 2197848
+}

@@ -1,0 +1,504 @@
+{
+  "status": "pass_browser_qa",
+  "report": "text2env",
+  "index": "/Users/boris/workspace/alchedata-self-improving-agents/reports/text2env_literature_review/index.html",
+  "checked_reference_count": 41,
+  "viewports": {
+    "desktop": {
+      "images": [
+        {
+          "src": "assets/source_pages/scenesmith.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/robotwin_2.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/robotwin_digital_twins.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/robogen.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/fate.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/vlmbench.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/realm.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/aspire.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/enpire.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/articraft.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/embodiedgen_v2.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/roboverse.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/generative_worlds_sim2real_rl.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/dipo.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/three_d_fixer.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/uni3r.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/gausstr.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/dirtnet.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/instancenet.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/empirics/material_roundtrip/source_crop.png",
+          "width": 352,
+          "height": 352
+        },
+        {
+          "src": "assets/empirics/material_roundtrip/isaac_material_render.png",
+          "width": 640,
+          "height": 640
+        },
+        {
+          "src": "assets/empirics/material_roundtrip/isaac_render_foreground.png",
+          "width": 640,
+          "height": 640
+        }
+      ],
+      "videos": [
+        {
+          "src": "assets/empirics/isaac_command_loop/isaac_place_on_rollout.mp4",
+          "poster": "assets/empirics/isaac_command_loop/frames/frame_00023.png",
+          "duration": 2,
+          "width": 960,
+          "height": 540,
+          "readyState": 4
+        }
+      ],
+      "references": [
+        "assets/source_pages/scenesmith.png",
+        "assets/source_pages/robotwin_2.png",
+        "assets/source_pages/robotwin_digital_twins.png",
+        "assets/source_pages/robogen.png",
+        "assets/source_pages/fate.png",
+        "assets/source_pages/vlmbench.png",
+        "assets/source_pages/realm.png",
+        "assets/source_pages/aspire.png",
+        "assets/source_pages/enpire.png",
+        "assets/source_pages/articraft.png",
+        "assets/source_pages/embodiedgen_v2.png",
+        "assets/source_pages/roboverse.png",
+        "assets/source_pages/generative_worlds_sim2real_rl.png",
+        "assets/source_pages/dipo.png",
+        "assets/source_pages/three_d_fixer.png",
+        "assets/source_pages/uni3r.png",
+        "https://scenesmith.github.io/",
+        "https://arxiv.org/abs/2602.09153",
+        "https://github.com/nepfaff/scenesmith",
+        "https://huggingface.co/datasets/nepfaff/scenesmith-example-scenes",
+        "https://robotwin-platform.github.io/",
+        "https://arxiv.org/abs/2506.18088",
+        "https://github.com/RoboTwin-Platform/RoboTwin",
+        "https://robotwin-platform.github.io/doc/",
+        "https://robotwin-benchmark.github.io/",
+        "https://arxiv.org/abs/2504.13059",
+        "https://github.com/RoboTwin-Platform/RoboTwin",
+        "https://robotwin-benchmark.github.io/",
+        "https://robogen-ai.github.io/",
+        "https://arxiv.org/abs/2311.01455",
+        "https://github.com/Genesis-Embodied-AI/RoboGen",
+        "https://arxiv.org/abs/2603.01505",
+        "https://arxiv.org/abs/2206.08522",
+        "https://github.com/UCSB-AI/VLMbench",
+        "https://github.com/UCSB-AI/VLMbench/blob/main/download_dataset.sh",
+        "https://martin-sedlacek.com/realm/",
+        "https://arxiv.org/abs/2512.19562",
+        "https://github.com/martin-sedlacek/REALM",
+        "https://research.nvidia.com/labs/gear/aspire/",
+        "https://arxiv.org/abs/2607.00272",
+        "https://research.nvidia.com/labs/gear/enpire/",
+        "https://arxiv.org/abs/2606.19980",
+        "https://articraft3d.github.io/",
+        "https://arxiv.org/abs/2605.15187",
+        "https://huggingface.co/datasets/camvsl/Articraft-10K/tree/main",
+        "https://github.com/Marvelousp4/video2sim-forge",
+        "https://nvlabs.github.io/neumatex/",
+        "https://arxiv.org/abs/2606.26715",
+        "https://github.com/yezheng04/robotwin-text2env-demo",
+        "https://horizonrobotics.github.io/EmbodiedGen/",
+        "https://arxiv.org/abs/2607.07459",
+        "https://github.com/HorizonRobotics/EmbodiedGen",
+        "https://roboverseorg.github.io/",
+        "https://arxiv.org/abs/2504.18904",
+        "https://github.com/RoboVerseOrg/RoboVerse",
+        "https://huggingface.co/datasets/RoboVerseOrg/roboverse_data",
+        "https://horizonrobotics.github.io/EmbodiedGen/",
+        "https://arxiv.org/abs/2603.18532",
+        "https://rq-wu.github.io/projects/DIPO/DIPO.html",
+        "https://arxiv.org/abs/2505.20460",
+        "https://github.com/RQ-Wu/DIPO",
+        "https://zx-yin.github.io/3dfixer/",
+        "https://arxiv.org/abs/2604.04406",
+        "https://github.com/HorizonRobotics/3D-Fixer",
+        "https://arxiv.org/abs/2508.03643",
+        "https://github.com/HorizonRobotics/Uni3R",
+        "https://horizonrobotics.github.io/EmbodiedGen/",
+        "https://arxiv.org/abs/2607.07459",
+        "https://github.com/HorizonRobotics/EmbodiedGen",
+        "https://roboverseorg.github.io/",
+        "https://arxiv.org/abs/2504.18904",
+        "https://github.com/RoboVerseOrg/RoboVerse",
+        "https://horizonrobotics.github.io/EmbodiedGen/",
+        "https://arxiv.org/abs/2603.18532",
+        "https://rq-wu.github.io/projects/DIPO/DIPO.html",
+        "https://arxiv.org/abs/2505.20460",
+        "https://github.com/RQ-Wu/DIPO",
+        "https://zx-yin.github.io/3dfixer/",
+        "https://arxiv.org/abs/2604.04406",
+        "https://github.com/HorizonRobotics/3D-Fixer",
+        "https://arxiv.org/abs/2508.03643",
+        "https://github.com/HorizonRobotics/Uni3R",
+        "https://arxiv.org/abs/2412.13193",
+        "https://github.com/hustvl/GaussTR",
+        "https://publica.fraunhofer.de/entities/publication/a98dd796-7363-469d-9fc2-030e157ba603",
+        "https://ieeexplore.ieee.org/document/9196559",
+        "https://publica.fraunhofer.de/handle/publica/412776",
+        "assets/source_pages/gausstr.png",
+        "assets/source_pages/dirtnet.png",
+        "assets/source_pages/instancenet.png",
+        "assets/empirics/text2env_empirical_audit_v1.json",
+        "assets/empirics/memory_ablation_rgb_adapter_v1.json",
+        "assets/empirics/material_roundtrip/roundtrip_report.json",
+        "assets/empirics/failure_score_correlation_v1.json",
+        "assets/empirics/pose_conditioned_policy_promotion_v1.json",
+        "assets/empirics/isaac_command_loop/isaac_place_on_rollout.mp4",
+        "assets/empirics/isaac_command_loop/frames/frame_00023.png",
+        "assets/empirics/material_roundtrip/source_crop.png",
+        "assets/empirics/material_roundtrip/isaac_material_render.png",
+        "assets/empirics/material_roundtrip/isaac_render_foreground.png",
+        "assets/source_registry.json",
+        "assets/method_matrix.json",
+        "assets/candidate_project_intake.json",
+        "assets/acceptance_audit.json",
+        "assets/empirics/text2env_empirical_audit_v1.json",
+        "assets/empirics/memory_ablation_rgb_adapter_v1.json",
+        "assets/empirics/failure_score_correlation_v1.json",
+        "assets/empirics/pose_conditioned_policy_promotion_v1.json",
+        "assets/empirics/isaac_command_loop/bundle_manifest.json",
+        "assets/source_page_capture.json",
+        "assets/source_pages_contact_sheet.png",
+        "assets/browser_qa.txt",
+        "qa/desktop-viewport.png",
+        "qa/mobile-viewport.png",
+        "report_manifest.json",
+        "text2env_literature_review.md"
+      ],
+      "acceptanceRows": 7,
+      "sourceRows": 20,
+      "matrixRows": 20,
+      "candidateRows": 12,
+      "horizontalOverflow": 0
+    },
+    "mobile": {
+      "images": [
+        {
+          "src": "assets/source_pages/scenesmith.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/robotwin_2.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/robotwin_digital_twins.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/robogen.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/fate.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/vlmbench.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/realm.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/aspire.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/enpire.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/articraft.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/embodiedgen_v2.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/roboverse.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/generative_worlds_sim2real_rl.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/dipo.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/three_d_fixer.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/uni3r.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/gausstr.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/dirtnet.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/source_pages/instancenet.png",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "src": "assets/empirics/material_roundtrip/source_crop.png",
+          "width": 352,
+          "height": 352
+        },
+        {
+          "src": "assets/empirics/material_roundtrip/isaac_material_render.png",
+          "width": 640,
+          "height": 640
+        },
+        {
+          "src": "assets/empirics/material_roundtrip/isaac_render_foreground.png",
+          "width": 640,
+          "height": 640
+        }
+      ],
+      "videos": [
+        {
+          "src": "assets/empirics/isaac_command_loop/isaac_place_on_rollout.mp4",
+          "poster": "assets/empirics/isaac_command_loop/frames/frame_00023.png",
+          "duration": 2,
+          "width": 960,
+          "height": 540,
+          "readyState": 4
+        }
+      ],
+      "references": [
+        "assets/source_pages/scenesmith.png",
+        "assets/source_pages/robotwin_2.png",
+        "assets/source_pages/robotwin_digital_twins.png",
+        "assets/source_pages/robogen.png",
+        "assets/source_pages/fate.png",
+        "assets/source_pages/vlmbench.png",
+        "assets/source_pages/realm.png",
+        "assets/source_pages/aspire.png",
+        "assets/source_pages/enpire.png",
+        "assets/source_pages/articraft.png",
+        "assets/source_pages/embodiedgen_v2.png",
+        "assets/source_pages/roboverse.png",
+        "assets/source_pages/generative_worlds_sim2real_rl.png",
+        "assets/source_pages/dipo.png",
+        "assets/source_pages/three_d_fixer.png",
+        "assets/source_pages/uni3r.png",
+        "https://scenesmith.github.io/",
+        "https://arxiv.org/abs/2602.09153",
+        "https://github.com/nepfaff/scenesmith",
+        "https://huggingface.co/datasets/nepfaff/scenesmith-example-scenes",
+        "https://robotwin-platform.github.io/",
+        "https://arxiv.org/abs/2506.18088",
+        "https://github.com/RoboTwin-Platform/RoboTwin",
+        "https://robotwin-platform.github.io/doc/",
+        "https://robotwin-benchmark.github.io/",
+        "https://arxiv.org/abs/2504.13059",
+        "https://github.com/RoboTwin-Platform/RoboTwin",
+        "https://robotwin-benchmark.github.io/",
+        "https://robogen-ai.github.io/",
+        "https://arxiv.org/abs/2311.01455",
+        "https://github.com/Genesis-Embodied-AI/RoboGen",
+        "https://arxiv.org/abs/2603.01505",
+        "https://arxiv.org/abs/2206.08522",
+        "https://github.com/UCSB-AI/VLMbench",
+        "https://github.com/UCSB-AI/VLMbench/blob/main/download_dataset.sh",
+        "https://martin-sedlacek.com/realm/",
+        "https://arxiv.org/abs/2512.19562",
+        "https://github.com/martin-sedlacek/REALM",
+        "https://research.nvidia.com/labs/gear/aspire/",
+        "https://arxiv.org/abs/2607.00272",
+        "https://research.nvidia.com/labs/gear/enpire/",
+        "https://arxiv.org/abs/2606.19980",
+        "https://articraft3d.github.io/",
+        "https://arxiv.org/abs/2605.15187",
+        "https://huggingface.co/datasets/camvsl/Articraft-10K/tree/main",
+        "https://github.com/Marvelousp4/video2sim-forge",
+        "https://nvlabs.github.io/neumatex/",
+        "https://arxiv.org/abs/2606.26715",
+        "https://github.com/yezheng04/robotwin-text2env-demo",
+        "https://horizonrobotics.github.io/EmbodiedGen/",
+        "https://arxiv.org/abs/2607.07459",
+        "https://github.com/HorizonRobotics/EmbodiedGen",
+        "https://roboverseorg.github.io/",
+        "https://arxiv.org/abs/2504.18904",
+        "https://github.com/RoboVerseOrg/RoboVerse",
+        "https://huggingface.co/datasets/RoboVerseOrg/roboverse_data",
+        "https://horizonrobotics.github.io/EmbodiedGen/",
+        "https://arxiv.org/abs/2603.18532",
+        "https://rq-wu.github.io/projects/DIPO/DIPO.html",
+        "https://arxiv.org/abs/2505.20460",
+        "https://github.com/RQ-Wu/DIPO",
+        "https://zx-yin.github.io/3dfixer/",
+        "https://arxiv.org/abs/2604.04406",
+        "https://github.com/HorizonRobotics/3D-Fixer",
+        "https://arxiv.org/abs/2508.03643",
+        "https://github.com/HorizonRobotics/Uni3R",
+        "https://horizonrobotics.github.io/EmbodiedGen/",
+        "https://arxiv.org/abs/2607.07459",
+        "https://github.com/HorizonRobotics/EmbodiedGen",
+        "https://roboverseorg.github.io/",
+        "https://arxiv.org/abs/2504.18904",
+        "https://github.com/RoboVerseOrg/RoboVerse",
+        "https://horizonrobotics.github.io/EmbodiedGen/",
+        "https://arxiv.org/abs/2603.18532",
+        "https://rq-wu.github.io/projects/DIPO/DIPO.html",
+        "https://arxiv.org/abs/2505.20460",
+        "https://github.com/RQ-Wu/DIPO",
+        "https://zx-yin.github.io/3dfixer/",
+        "https://arxiv.org/abs/2604.04406",
+        "https://github.com/HorizonRobotics/3D-Fixer",
+        "https://arxiv.org/abs/2508.03643",
+        "https://github.com/HorizonRobotics/Uni3R",
+        "https://arxiv.org/abs/2412.13193",
+        "https://github.com/hustvl/GaussTR",
+        "https://publica.fraunhofer.de/entities/publication/a98dd796-7363-469d-9fc2-030e157ba603",
+        "https://ieeexplore.ieee.org/document/9196559",
+        "https://publica.fraunhofer.de/handle/publica/412776",
+        "assets/source_pages/gausstr.png",
+        "assets/source_pages/dirtnet.png",
+        "assets/source_pages/instancenet.png",
+        "assets/empirics/text2env_empirical_audit_v1.json",
+        "assets/empirics/memory_ablation_rgb_adapter_v1.json",
+        "assets/empirics/material_roundtrip/roundtrip_report.json",
+        "assets/empirics/failure_score_correlation_v1.json",
+        "assets/empirics/pose_conditioned_policy_promotion_v1.json",
+        "assets/empirics/isaac_command_loop/isaac_place_on_rollout.mp4",
+        "assets/empirics/isaac_command_loop/frames/frame_00023.png",
+        "assets/empirics/material_roundtrip/source_crop.png",
+        "assets/empirics/material_roundtrip/isaac_material_render.png",
+        "assets/empirics/material_roundtrip/isaac_render_foreground.png",
+        "assets/source_registry.json",
+        "assets/method_matrix.json",
+        "assets/candidate_project_intake.json",
+        "assets/acceptance_audit.json",
+        "assets/empirics/text2env_empirical_audit_v1.json",
+        "assets/empirics/memory_ablation_rgb_adapter_v1.json",
+        "assets/empirics/failure_score_correlation_v1.json",
+        "assets/empirics/pose_conditioned_policy_promotion_v1.json",
+        "assets/empirics/isaac_command_loop/bundle_manifest.json",
+        "assets/source_page_capture.json",
+        "assets/source_pages_contact_sheet.png",
+        "assets/browser_qa.txt",
+        "qa/desktop-viewport.png",
+        "qa/mobile-viewport.png",
+        "report_manifest.json",
+        "text2env_literature_review.md"
+      ],
+      "acceptanceRows": 7,
+      "sourceRows": 20,
+      "matrixRows": 20,
+      "candidateRows": 12,
+      "horizontalOverflow": 0
+    }
+  },
+  "console_errors": [],
+  "page_errors": []
+}

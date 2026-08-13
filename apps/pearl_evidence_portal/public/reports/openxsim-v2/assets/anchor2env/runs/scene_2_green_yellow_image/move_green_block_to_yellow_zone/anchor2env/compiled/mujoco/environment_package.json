@@ -1,0 +1,492 @@
+{
+  "anchors": [
+    {
+      "anchor_id": "anchor_43cce1ae2b30",
+      "appearance_constraints": [
+        {
+          "confidence": 0.95,
+          "dominant_color": "green",
+          "instance_id": "green_block"
+        },
+        {
+          "confidence": 0.95,
+          "dominant_color": "yellow",
+          "instance_id": "yellow_zone"
+        }
+      ],
+      "camera_constraints": [],
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "path": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/runs/scene_2_green_yellow_image/move_green_block_to_yellow_zone/anchor2env/anchor_evidence/anchor_43cce1ae2b30/source.png",
+          "sha256": "43cce1ae2b30e0e0961864658ffc28127f2378e4ffdfd3497b8a7b10e1159123",
+          "size_bytes": 1894
+        }
+      ],
+      "media_sha256": "43cce1ae2b30e0e0961864658ffc28127f2378e4ffdfd3497b8a7b10e1159123",
+      "media_type": "image",
+      "media_uri": "/Users/boris/workspace/AgenticSim/artifacts/openxsim_acceptance/anchor2env/media/scene_2.png",
+      "motion_constraints": [],
+      "object_constraints": [
+        {
+          "confidence": 0.95,
+          "frames_observed": 1,
+          "instance_id": "green_block",
+          "label": "green region or object",
+          "metric_depth_status": "unknown",
+          "normalized_bbox": [
+            0.6666666666666666,
+            0.578125,
+            0.7916666666666666,
+            0.765625
+          ],
+          "normalized_center": [
+            0.7291666666666666,
+            0.671875
+          ]
+        },
+        {
+          "confidence": 0.95,
+          "frames_observed": 1,
+          "instance_id": "yellow_zone",
+          "label": "yellow region or object",
+          "metric_depth_status": "unknown",
+          "normalized_bbox": [
+            0.15625,
+            0.209375,
+            0.3645833333333333,
+            0.446875
+          ],
+          "normalized_center": [
+            0.2604166666666667,
+            0.328125
+          ]
+        }
+      ],
+      "observations": {
+        "format": "png",
+        "height": 320,
+        "sample_count": 1,
+        "semantic_provider": "color_layout_v1",
+        "width": 480
+      },
+      "spatial_constraints": [
+        {
+          "confidence": 0.7,
+          "object": "green_block",
+          "subject": "yellow_zone",
+          "type": "left_of"
+        }
+      ],
+      "uncertainty": [
+        "color_segmentation_is_not_category_recognition",
+        "metric_depth_unknown",
+        "occlusion_not_resolved",
+        "occluded_geometry_unknown",
+        "absolute_scale_unknown",
+        "depth_ambiguous"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "articulation": {},
+      "asset_id": "green_block_asset",
+      "category": "block",
+      "physical": {
+        "graspable": true,
+        "is_static": false,
+        "mass_kg": 0.05,
+        "movable": true
+      },
+      "representations": [
+        {
+          "backend": "portable",
+          "format": "primitive_box",
+          "metadata": {
+            "color_rgb": [
+              0.0,
+              0.8,
+              0.1
+            ],
+            "half_size_m": [
+              0.025,
+              0.025,
+              0.025
+            ]
+          },
+          "role": "visual_and_collision",
+          "sha256": "",
+          "size_bytes": 0,
+          "uri": "primitive://box"
+        }
+      ],
+      "source": {
+        "generator": "RoboTwin.create_box",
+        "kind": "procedural_primitive"
+      },
+      "tags": [
+        "primitive",
+        "tabletop"
+      ]
+    }
+  ],
+  "env": {
+    "gravity_mps2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "metadata": {
+      "anchor_fusion": {
+        "anchor_id": "anchor_43cce1ae2b30",
+        "applied_object_positions": [
+          "green_block"
+        ],
+        "applied_region_positions": [
+          "yellow_zone"
+        ],
+        "ignored_constraints": [],
+        "projection": {
+          "metric_depth": "preserve_text_compiler_z",
+          "minimum_confidence": 0.5,
+          "type": "top_down_linear_workspace_mapping"
+        },
+        "uncertainty": [
+          "color_segmentation_is_not_category_recognition",
+          "metric_depth_unknown",
+          "occlusion_not_resolved",
+          "occluded_geometry_unknown",
+          "absolute_scale_unknown",
+          "depth_ambiguous"
+        ]
+      },
+      "surface": "table",
+      "table": {
+        "height_m": 0.74
+      },
+      "workspace_type": "tabletop"
+    },
+    "name": "move_green_block_to_yellow_zone",
+    "objects": [
+      {
+        "asset_id": "green_block_asset",
+        "instance_id": "green_block",
+        "metadata": {
+          "anchor_override": {
+            "anchor_id": "anchor_43cce1ae2b30",
+            "confidence": 0.95,
+            "projection_assumption": "top_down_linear_workspace_mapping",
+            "source": "normalized_center_workspace_projection"
+          },
+          "description_key": "green block",
+          "protected_region": {
+            "enabled": true,
+            "padding_m": 0.07
+          }
+        },
+        "pose": {
+          "orientation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.18333333333333335,
+            -0.11953125000000003,
+            0.766
+          ]
+        },
+        "randomization": {
+          "mode": "random_uniform",
+          "qpos": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "rotate_lim": [
+            0,
+            0,
+            0.4
+          ],
+          "rotate_rand": true,
+          "xlim": [
+            -0.28,
+            -0.12
+          ],
+          "ylim": [
+            -0.05,
+            0.08
+          ],
+          "zlim": [
+            0.766,
+            0.766
+          ]
+        },
+        "role": "manipulated",
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "static": false
+      }
+    ],
+    "randomization": {
+      "cluttered_table": false,
+      "lighting": false,
+      "object_pose": true,
+      "table_height": false,
+      "texture": false
+    },
+    "regions": [
+      {
+        "anchor_override": {
+          "anchor_id": "anchor_43cce1ae2b30",
+          "confidence": 0.95,
+          "projection_assumption": "top_down_linear_workspace_mapping",
+          "source": "normalized_center_workspace_projection"
+        },
+        "center": [
+          -0.19166666666666665,
+          0.06953124999999999,
+          0.742
+        ],
+        "color": [
+          1.0,
+          0.82,
+          0.0,
+          0.45
+        ],
+        "id": "yellow_zone",
+        "size": [
+          0.16,
+          0.12,
+          0.004
+        ],
+        "success_tolerance_m": 0.04,
+        "type": "target_zone",
+        "visible": true
+      }
+    ],
+    "robots": [
+      {
+        "id": "robot",
+        "setup": "dual_arm",
+        "source": "robotwin"
+      }
+    ],
+    "sensors": [
+      {
+        "id": "head_camera",
+        "required": true,
+        "type": "rgb"
+      },
+      {
+        "id": "left_camera",
+        "required": false,
+        "type": "rgb"
+      },
+      {
+        "id": "right_camera",
+        "required": false,
+        "type": "rgb"
+      }
+    ],
+    "units": "m",
+    "up_axis": "Z",
+    "workspace_bounds_m": [
+      -0.4,
+      -0.3,
+      0.74,
+      0.4,
+      0.25,
+      1.1
+    ]
+  },
+  "metadata": {
+    "placement_manifest": {
+      "agent": "agenticsim.generation.placement_agent",
+      "asset_checks": [
+        {
+          "blocker": null,
+          "kind": "robotwin_primitive",
+          "object_id": "green_block",
+          "path": null,
+          "requirement": "procedural_box:green",
+          "resolved": true,
+          "source": "create_box"
+        },
+        {
+          "blocker": null,
+          "kind": "robotwin_primitive",
+          "object_id": "yellow_zone",
+          "path": null,
+          "requirement": "logical_region_marker",
+          "resolved": true,
+          "source": "create_box"
+        }
+      ],
+      "asset_generation_route": "not_used",
+      "asset_generation_used": false,
+      "blockers": [],
+      "instruction": "Place the green block in the yellow zone.",
+      "main_path": "use_existing_assets",
+      "schema_version": "placement_agent.v0",
+      "status": "ready_for_scaffold",
+      "task_name": "move_green_block_to_yellow_zone"
+    }
+  },
+  "package_id": "move_green_block_to_yellow_zone",
+  "schema_version": "agenticsim.environment_package.v1",
+  "source": {
+    "anchor_count": 1,
+    "asset_generation_used": false,
+    "blockers": [],
+    "compiler": "agenticsim.generation.placement_agent",
+    "mode": "anchor_to_env",
+    "network_used": false,
+    "schema": "text2env.tabletop.v0"
+  },
+  "target_backends": [
+    "mujoco",
+    "sapien"
+  ],
+  "task": {
+    "action": {
+      "arm_policy": {
+        "negative_arm": "left",
+        "nonnegative_arm": "right",
+        "object": "green_block",
+        "save_as": "main_arm",
+        "type": "by_object_x"
+      },
+      "interface": "robotwin_primitive_plan",
+      "operations": [
+        "grasp",
+        "move_by",
+        "place"
+      ]
+    },
+    "instruction": "Place the green block in the yellow zone.",
+    "intent": "place_in_region",
+    "metadata": {
+      "language": {
+        "full_description": "Place the green block in the yellow zone.",
+        "placeholders": {
+          "{A}": "green block",
+          "{B}": "yellow zone",
+          "{a}": "$main_arm"
+        },
+        "preference": "Short imperative instructions.",
+        "schema": "{A} is the green block, {B} is the yellow zone, {a} is the arm used to move the block.",
+        "seen_templates": [
+          "Move {A} onto {B}.",
+          "Use {a} to place {A} on {B}.",
+          "Put {A} in {B}."
+        ],
+        "unseen_templates": [
+          "Place {A} onto {B}.",
+          "Carry {A} to {B}.",
+          "Set {A} down on {B}."
+        ]
+      },
+      "source_schema": "text2env.tabletop.v0",
+      "source_status": "ready_for_scaffold"
+    },
+    "observation": {
+      "cameras": [
+        "head_camera",
+        "left_camera",
+        "right_camera"
+      ],
+      "state": [
+        "object_pose",
+        "robot_joint_position",
+        "contact"
+      ]
+    },
+    "plan": [
+      {
+        "arm": "$main_arm",
+        "comment": "Pick the object with the arm selected from its x position.",
+        "grasp_dis": 0.0,
+        "object": "green_block",
+        "op": "grasp",
+        "pre_grasp_dis": 0.09
+      },
+      {
+        "arm": "$main_arm",
+        "axis": "world",
+        "comment": "Lift before moving to the target region.",
+        "delta": [
+          0.0,
+          0.0,
+          0.08
+        ],
+        "op": "move_by"
+      },
+      {
+        "arm": "$main_arm",
+        "comment": "Place the object in the target region.",
+        "dis": 0.0,
+        "is_open": true,
+        "object": "green_block",
+        "op": "place",
+        "pre_dis": 0.05,
+        "target": "yellow_zone"
+      },
+      {
+        "arm": "$main_arm",
+        "axis": "world",
+        "comment": "Move away after release.",
+        "delta": [
+          0.0,
+          0.0,
+          0.06
+        ],
+        "op": "move_by"
+      }
+    ],
+    "reset": {
+      "constraints": [
+        "no_initial_object_collision",
+        "target_reachable_by_robot",
+        "success_condition_sim_state_observable",
+        "task_objects_stable",
+        "protected_regions_defined",
+        "all_placeholders_bound"
+      ],
+      "object_poses": "from_env_spec",
+      "randomization": {
+        "cluttered_table": false,
+        "lighting": false,
+        "object_pose": true,
+        "table_height": false,
+        "texture": false
+      }
+    },
+    "success": [
+      {
+        "comment": "The green block center should end inside yellow_zone.",
+        "object": "green_block",
+        "region": "yellow_zone",
+        "tolerance_m": 0.04,
+        "type": "in_region"
+      },
+      {
+        "comment": "The robot should release the object.",
+        "required": true,
+        "type": "grippers_open"
+      }
+    ],
+    "termination": [
+      {
+        "steps": 1000,
+        "type": "timeout"
+      }
+    ]
+  }
+}
