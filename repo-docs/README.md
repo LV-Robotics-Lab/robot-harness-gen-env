@@ -18,6 +18,7 @@
 | 理解磁盘包怎么自证没被改 | [哈希绑定包](modules/replay-package.md) | 文件清单、SHA-256 manifest、`verify_package` 篡改检测 |
 | 理解运行时物理通过到底验了什么 | [运行时门控](modules/runtime-gates.md) | 接触 fraction、drift、可见性、视频互异帧、嵌套未声明接触等门控 |
 | 理解平台层如何组合旧工作区与外部项目 | [Self-Improving 平台](modules/self-improving-platform.md) | 稳定核心、编排层、资产层、适配层、历史层与子模块的边界 |
+| 在 Jingxiang 仿真机上开发与协作 | [仿真组工作区协作](workspace-collaboration.md) | 个人目录、`worktree/<人名>` 分支、共享 `main` 与本地大文件的边界 |
 | 审计本指南每条主张背后的源码证据 | [证据底座](references/source-evidence.md) | 两轮遍历、claim/evidence/confidence/caveat 与被消费者 |
 | 审计本指南是否真的把模型传给了读者 | [质检报告](references/quality-review.md) | reader simulation、可理解性 review、残余风险 |
 | 把重复见到的术语归一 | [术语表](glossary.md) | `SceneSpec`、`ResolvedSceneSpec`、support margin、derived proxy 等在本仓库里的精确意思 |
