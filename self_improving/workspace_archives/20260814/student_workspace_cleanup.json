@@ -3,7 +3,11 @@
   "captured_at": "2026-08-14",
   "host": "jingxiang@100.64.0.6",
   "canonical_repository": "/home/jingxiang/workspace/robot-harness-gen-env",
-  "integration_branch": "integration/student-workspaces-20260814",
+  "retired_integration_branch": {
+    "name": "integration/student-workspaces-20260814",
+    "tip": "2fc1f12209f38207c717aee5dd7df5c4244bec0a",
+    "reachable_from": "main"
+  },
   "integration_commit_tested": "c50ee862f155d183e4e39d81852a75a7fb6c0dd4",
   "remote_repository": "LV-Robotics-Lab/robot-harness-gen-env",
   "deleted_redundant_paths": [
@@ -43,12 +47,21 @@
     "yuxin_recovery_difference_note": "the only differences are the six Curobo YAML files repaired to use the canonical RoboTwin path",
     "comparison_mode": "rsync recursive dry-run with whole-file checksum and delete reporting"
   },
-  "recovery_archive": {
-    "branch": "archive/yuxin-env-gen-dev-recovery-20260814",
+  "recovery_history": {
+    "retired_branch": "archive/yuxin-env-gen-dev-recovery-20260814",
     "commit": "0b747c0323679267ccad2cbedbc922275fe0cb3b",
-    "verified_by": "git ls-remote",
+    "reachable_from": "worktree/hyx",
+    "history_merge_commit": "899c649179608d950f7ac776a645d21734af2d20",
+    "verified_by": "git merge-base --is-ancestor",
     "restored_local_payload_manifest": "local_data/student_workspaces/yuxin/recovery-restored-20260814/MANIFEST.sha256",
     "restored_local_payload_manifest_sha256": "9cbe18328bbe9b51b1d680f248d7b5e23ba96fbcce8acda54abc4aab9b96258b"
+  },
+  "branch_retirement": {
+    "retired_remote_ref_count": 16,
+    "hyx_history_merge_commit": "899c649179608d950f7ac776a645d21734af2d20",
+    "unique_commits_reconciled": 38,
+    "active_tree_unchanged": true,
+    "remaining_remote_branches": ["main", "worktree/bingsheng", "worktree/gujie", "worktree/hyx", "worktree/yeyuxuan"]
   },
   "canonical_robotwin": {
     "path": "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin",
@@ -76,7 +89,7 @@
     "evidence_directory": "../../validation_evidence/student_workspace_20260814"
   },
   "recovery": {
-    "git_source": "organization archive and integration branches, verified by ls-remote",
+    "git_source": "active main/worktree branches; former archive/integration tips were verified as ancestors before retirement",
     "third_party_payload_storage_uri": null,
     "local_payload_note": "payloads were moved into the canonical checkout, not deleted",
     "remote_backup_note": "local manifests are audit evidence, not remote backup proof"
