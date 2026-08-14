@@ -13,7 +13,6 @@
 ├── yeyuxuan/
 │   └── robot-harness-gen-env/   # branch: worktree/yeyuxuan
 ├── hyx/
-│   ├── env-gen-dev/             # HYX 自己的独立实验仓库
 │   └── robot-harness-gen-env/   # branch: worktree/hyx
 └── workspace/
     ├── lerobot/
@@ -21,6 +20,8 @@
 ```
 
 四个 `robot-harness-gen-env` 个人目录都是 canonical 仓库登记的 Git worktree，并共享 Git object store；它们不是复制出来的独立 clone。个人 worktree 固定使用 `worktree/<人名>` 分支，不直接在 canonical `main` 上开发。
+
+HYX 原 `huyuxinn/env-gen-dev` 的完整 Git 历史已作为 merge parent 接入 `worktree/hyx`；本地不再保留第二个 `env-gen-dev` checkout。仍有价值的历史工具位于该分支的 `self_improving/asset_pipeline/active/1_asset_reuse/archive/`，当前实现继续以 `active/` 的整合版本为准。
 
 ## 边界
 
