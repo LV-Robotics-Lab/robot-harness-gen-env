@@ -45,13 +45,13 @@ removed. The personal GitHub source history is reachable from the merged HYX
 branch, while ignored payload recovery still depends on its recorded storage
 and manifests rather than Git ancestry alone.
 
-## Complete remote-ref mirror
+## Complete source-ref mirror
 
 The personal repository had seven branches and no Git tags. Every exact branch
-tip was mirrored to the organization repository and verified with
-`git ls-remote`:
+tip was mirrored into the organization repository and verified before the
+temporary archive refs were retired:
 
-| Personal branch | Commit | Organization archive branch |
+| Personal branch | Commit | Former organization archive branch |
 | --- | --- | --- |
 | `feat/alias-screening` | `99db6588d582b8f99eec54c632ed1b8715702fef` | `archive/hyx-env-gen-dev-feat-alias-screening-20260814` |
 | `feat/asset-sources` | `8c2f058215b4d69d10f15c269148397a9f14ccd2` | `archive/hyx-env-gen-dev-feat-asset-sources-20260814` |
@@ -60,6 +60,15 @@ tip was mirrored to the organization repository and verified with
 | `feat/web-studio-v2` | `ec477bc96e8f7bcae0d28a6dfe3d1ed40b1592e1` | `archive/hyx-env-gen-dev-feat-web-studio-v2-20260814` |
 | `feature/asset-reuse-abc-batch` | `4982cc3660d82743b849fd0ba9cbdfd04933e895` | `archive/hyx-env-gen-dev-feature-asset-reuse-abc-batch-20260814` |
 | `main` | `e99e11975764710e2080468662a74aaed00ee0df` | `archive/hyx-env-gen-dev-main-20260814` |
+
+The six archive entry points that jointly retained 38 commits outside `main`
+and all personal worktrees were incorporated into `worktree/hyx` by the
+history-only merge `899c649179608d950f7ac776a645d21734af2d20`. Its tree SHA
+remained `971cb3418612db393be3796c00f0f7470cb23402`, so no archived source
+replaced the active HYX tree. All 15 `archive/*` refs and the single
+`integration/*` ref were then retired only after their tips were confirmed
+reachable from `main` or `worktree/hyx`; the commits in this table remain
+reachable from `worktree/hyx`.
 
 The local checkout has been removed. Deleting the personal GitHub repository
 itself still requires an authenticated `huyuxinn` owner/admin session; the
