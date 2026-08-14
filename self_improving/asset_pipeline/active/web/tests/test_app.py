@@ -299,6 +299,27 @@ def test_library_endpoints(tmp_path, monkeypatch, roots):
     assert c.get("/api/library/thumb/..%2Fcat").status_code == 404
 
 
+def test_tier_scale_dedup_and_objaverse(tmp_path, monkeypatch):
+    import gzip
+
+    monkeypatch.setattr(studio, "DEV", tmp_path)
+    (tmp_path / "idx.json").write_text(json.dumps({"a": [1, 2], "b": [3]}))
+    # 同层两个 provider 指向同一索引 → 只显示一次
+    scale = studio._tier_scale(
+        [("p1", {"index_path": "idx.json"}), ("p2", {"index_path": "idx.json"})], 5
+    )
+    assert scale == "索引 3"
+
+    obja = tmp_path / "obja"
+    obja.mkdir()
+    with gzip.open(obja / "lvis-annotations.json.gz", "wt") as f:
+        json.dump({"cat1": ["u1", "u2"], "cat2": ["u3"]}, f)
+    scale2 = studio._tier_scale(
+        [("objaverse", {"data_dir": "obja", "per_category_cap": 6})], 5
+    )
+    assert scale2 == "LVIS 3 物体 · 2 类 · 每类取 ≤6"
+
+
 def test_files_listing_and_py_whitelist(roots):
     web, _ = roots
     d = make_covered_run(web)

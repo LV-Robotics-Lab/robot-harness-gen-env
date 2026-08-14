@@ -891,11 +891,31 @@ def _tier_scale(providers_in_tier, n_assets):
         if td and (DEV / td).is_dir():
             n = sum(1 for f in (DEV / td).iterdir() if f.is_file())
             parts.append(f"视觉语料 {n:,} 张")
+        dd = p.get("data_dir")
+        if dd:
+            # Objaverse LVIS 子集：物体/类别数取自注解文件
+            try:
+                import gzip
+
+                with gzip.open(DEV / dd / "lvis-annotations.json.gz", "rt") as f:
+                    lvis = json.load(f)
+                if isinstance(lvis, dict) and lvis:
+                    parts.append(
+                        f"LVIS {sum(len(v) for v in lvis.values()):,} 物体"
+                        f" · {len(lvis):,} 类"
+                    )
+            except Exception:
+                pass
+        if p.get("per_category_cap"):
+            parts.append(f"每类取 ≤{p['per_category_cap']}")
         for r in p.get("repositories") or []:
             parts.append(r.get("repository", "?").split("/")[-1])
         if "repository_limit" in p:
             parts.append(f"动态发现 ≤{p['repository_limit']} repo")
-    return " · ".join(parts)
+    # 同层多个 provider 可能指向同一索引 —— 去重并保持顺序
+    seen = set()
+    deduped = [x for x in parts if not (x in seen or seen.add(x))]
+    return " · ".join(deduped)
 
 
 def compute_library_stats(catalog_path, asset_lib, providers_path):
