@@ -248,6 +248,9 @@ if survey_path.exists():
                 # paper and refused x4608 in practice, 2026-08-13)
                 entry["interior_dimensions_m"] = measured_int["dimensions_m"]
                 entry["interior_floor_z_offset_m"] = measured_int["floor_z_offset_m"]
+                # the floor is published check-safe (payload rest MINUS
+                # pad); anti-wedging at spawn time is this clearance's job
+                entry["support_spawn_clearance_m"] = 0.02
                 n_int += 1
             if "support_surface_dimensions_m" not in entry and top_z:
                 entry["support_surface_dimensions_m"] = [0.002, 0.002]
