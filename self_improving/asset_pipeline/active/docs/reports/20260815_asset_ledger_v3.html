@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>asset_ledger.v3 定稿</title>
+<style>
+:root{
+  --bg:#faf9f7; --panel:#ffffff; --ink:#1c1e21; --dim:#6b7280; --line:#e5e3de;
+  --accent:#0f6b5c; --accent-soft:#e7f2ef; --pass:#177245; --pass-bg:#e8f5ec;
+  --stop:#b3261e; --stop-bg:#fdecea; --warn:#8a6d1a; --warn-bg:#faf3d9;
+  --code-bg:#f3f2ee; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171a; --panel:#1d2024; --ink:#e8e6e3; --dim:#9aa0a6; --line:#33373d;
+    --accent:#4dbfab; --accent-soft:#1e312d; --pass:#5fbf87; --pass-bg:#1d2e24;
+    --stop:#e58a84; --stop-bg:#372220; --warn:#d4b45a; --warn-bg:#32301f;
+    --code-bg:#24272c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171a; --panel:#1d2024; --ink:#e8e6e3; --dim:#9aa0a6; --line:#33373d;
+  --accent:#4dbfab; --accent-soft:#1e312d; --pass:#5fbf87; --pass-bg:#1d2e24;
+  --stop:#e58a84; --stop-bg:#372220; --warn:#d4b45a; --warn-bg:#32301f;
+  --code-bg:#24272c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 -apple-system,"PingFang SC","Noto Sans CJK SC",sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 80px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{font-size:30px;line-height:1.25;margin:6px 0 4px;text-wrap:balance}
+.dek{color:var(--dim);margin:0 0 18px}
+h2{font-size:21px;margin:44px 0 10px;padding-top:10px;border-top:1px solid var(--line)}
+h3{font-size:16px;margin:22px 0 8px}
+p{margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+.tblwrap{overflow-x:auto;margin:10px 0}
+.badge{display:inline-block;font:11px/1.6 var(--mono);padding:0 7px;border-radius:4px;font-weight:600;white-space:nowrap}
+.b-pass{color:var(--pass);background:var(--pass-bg)}
+.b-stop{color:var(--stop);background:var(--stop-bg)}
+.b-warn{color:var(--warn);background:var(--warn-bg)}
+.b-info{color:var(--accent);background:var(--accent-soft)}
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0;font-size:14px}
+.callout.red{border-left-color:var(--stop);background:var(--stop-bg)}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;font:12.5px/1.55 var(--mono);margin:8px 0}
+code{font-family:var(--mono);font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:4px}
+pre code{background:none;padding:0}
+.tabs{display:flex;gap:6px;margin:20px 0 0;border-bottom:2px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5;padding-top:6px}
+.tabs button{font:14px/1 inherit;font-weight:600;border:none;background:none;color:var(--dim);padding:10px 16px;cursor:pointer;border-radius:8px 8px 0 0}
+.tabs button[aria-selected="true"]{color:var(--accent);background:var(--panel);box-shadow:inset 0 -2px 0 var(--accent)}
+.pane{display:none}
+.pane.active{display:block}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.kpi .n{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12px;color:var(--dim)}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;align-items:center}
+.filters .lbl{font-size:12px;color:var(--dim);margin-right:2px}
+.filters button{font:12px/1.5 inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:14px;padding:2px 11px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.count{font-size:12px;color:var(--dim);margin:6px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0}
+.card.keep{border-left-color:var(--pass)}
+.card.add{border-left-color:var(--accent)}
+.card.del{border-left-color:var(--stop)}
+.card.demote{border-left-color:var(--warn)}
+.card h4{margin:0 0 4px;font-size:14px;font-family:var(--mono)}
+.card .meta{font-size:12.5px;color:var(--dim)}
+.card .why{font-size:13.5px;margin:6px 0 0}
+details{margin:6px 0}
+summary{cursor:pointer;color:var(--accent);font-size:13px}
+.grp>summary{font-weight:600;font-size:14px;color:var(--ink);padding:6px 0}
+.small{font-size:12.5px;color:var(--dim)}
+.flow{font:12.5px/1.6 var(--mono);}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body><div class="wrap">
+
+<div class="eyebrow">env-gen-dev · 资产管线 · metadata 契约定稿</div>
+<h1>从「一个下载/生成的资产」到「可检索、可跨仿真器迁移的账本」：asset_ledger.v3</h1>
+<p class="dek">四路 subagent 对抗辩证 + 两组实验裁决 + 79 份账本全量迁移的定稿记录。页面上所有数字来自真实运行，不需要读代码。</p>
+
+<div class="tabs" role="tablist">
+  <button role="tab" aria-selected="true" data-pane="p-main">全景</button>
+  <button role="tab" aria-selected="false" data-pane="p-review">样例审查</button>
+  <button role="tab" aria-selected="false" data-pane="p-stats">统计与性能</button>
+</div>
+
+<!-- ==================== 全景 ==================== -->
+<div class="pane active" id="p-main">
+
+<h2>1 · 这是什么</h2>
+<p><b>一句话</b>：这是资产入库 metadata 契约（每个资产一份 <code>ledger.json</code>）的 v3 定稿——回答"一个资产（网络下载的或我们自己生成的）入库时要记下哪些事实，才能支撑高效检索与跨仿真器迁移，且一个多余字段都不留"。</p>
+<p>做法不是开会拍脑袋：四个带真机只读访问的 subagent 各执一个立场互相攻击（检索充分性怀疑者 / 迁移充分性怀疑者 / 冗余审计员 / 外部对标员），产出的每条主张都要配代码行号或实跑数字；争议不下的用两组真实实验裁决（E1 检索消融重跑 44 条矩阵、E2 Isaac 编译+运行时实跑）；定稿后 79 份存量账本自动迁移、双测试套件全绿收工。</p>
+<p><b>吃什么→吐什么</b>：输入 = v2 契约（~80 字段）+ 全部真实消费代码 + 79 份存量账本 + 两天来的实测数据。输出 = <code>lib/ledger.py</code>（v3 契约与校验器，常量表即契约）+ 迁移后的 79 份 v3 账本（git 管辖）+ 决策记录 <code>docs/2026-08-15-asset-ledger-v3-decision-record.md</code> + 本页。</p>
+
+<h2>2 · 验收矩阵：契约要处理的资产情形全集</h2>
+<div class="tblwrap"><table>
+<tr><th>情形</th><th>判定</th><th>真实运行里发生了什么</th></tr>
+<tr><td>网络下载的刚体资产（retrieved）</td><td><span class="badge b-pass">pass</span></td><td>63 份外部账本走完 v3 迁移零失败；身份/许可/来源/验证四组齐全</td></tr>
+<tr><td>程序生成的资产（generated）</td><td><span class="badge b-pass">pass</span></td><td>4 份 900_* 生成资产同批迁移；generator 分支保留 prompt/seed/版本（不可恢复捕获）</td></tr>
+<tr><td>上游 RoboTwin 原生资产</td><td><span class="badge b-pass">pass</span></td><td>16 份上游账本迁移；scale_baked=false 修正（GLB 由加载器施加 scale，非烘入）</td></tr>
+<tr><td>多色资产（同资产不同 model 颜色不同）</td><td><span class="badge b-pass">pass</span></td><td>模型级 appearance 入账；E1 实测颜色真命中 9→23（资产级时代永远"色盲"）</td></tr>
+<tr><td>颜色请求但池内无该色资产</td><td><span class="badge b-pass">pass</span></td><td>按上游设计着色回退（外观正确），不硬造错资产——E1 后仍保持 43/44 全绿</td></tr>
+<tr><td>无作者尺寸的资产（dumbbell-rack 类）</td><td><span class="badge b-stop">stop·如实</span></td><td>不自动编造尺寸；size_policy 字段等人工一句话拍板——这是设计，不是缺陷</td></tr>
+<tr><td>测量所在栈发生变化（换机器/换加载器）</td><td><span class="badge b-pass">pass</span></td><td>v3 强制 measured_against 戳；本周实证同网格换加载器停留差 9mm，全部实测按新栈重做过</td></tr>
+<tr><td>跨后端迁移到 Isaac</td><td><span class="badge b-pass">pass</span></td><td>E2：身份修复后 skipped_no_ledger 清空、compile partial→compiled；scale_baked 声明消除 2.8527× 尺寸漂移</td></tr>
+<tr><td>跨后端迁移到 MuJoCo</td><td><span class="badge b-warn">枚举就位·未实跑</span></td><td>BACKENDS 已含 mujoco、多文件 files[] 留位；编译链未实跑（诚实残留）</td></tr>
+<tr><td>许可证未知的资产</td><td><span class="badge b-stop">stop·如实</span></td><td>license-gate 拦下（当前 23 个 model 待许可决定）；license 事实属"不可恢复捕获"，永远必填</td></tr>
+</table></div>
+<div class="callout"><b>这张表为什么重要</b>：契约的好坏不只看成功路径，更看失败时会不会硬塞一个错的给你。"如实说没有 / 等人拍板 / 未实跑就标未实跑"是契约的正确行为——上面两行红的和一行黄的，就是这个哲学的落地。</div>
+
+<h2>3 · 定稿流程总览</h2>
+<pre class="flow">v2 契约(~80 字段) ──┬─ 检索充分性怀疑者 ──┐
+79 份存量账本        ├─ 迁移充分性怀疑者 ──┤   四路对抗辩证         E1: 模型级颜色消融(44 矩阵重跑)
+全部消费代码         ├─ 冗余审计员      ──┼─→ (每主张配证据) ──→  E2: Isaac 编译+runtime 实跑     ──→ v3 定稿
+两天实测数据         └─ 外部对标员      ──┘   收敛争议清单          冗余回归: 删完跑双套件            79 账本迁移
+                                                                                                    262+57 测试全绿</pre>
+<div class="tblwrap"><table>
+<tr><th>阶段</th><th>一句话职责</th><th>落点</th></tr>
+<tr><td>四路辩证</td><td>四个立场互相攻击 v2 契约，每条主张要代码行号或实跑数字，并如实报告被自己推翻的主张</td><td>四份报告（要点已并入决策记录）</td></tr>
+<tr><td>实验裁决</td><td>争议不下的字段用真实实验定生死</td><td>E1/E2 产物 + 决策记录 §八</td></tr>
+<tr><td>契约落码</td><td>删/降/增全部落进校验器常量表（常量表即契约）</td><td><code>1_asset_reuse/lib/ledger.py</code></td></tr>
+<tr><td>存量迁移</td><td>79 份账本自动迁移+逐份重校验，实测数据（颜色/腔体）回填入账</td><td><code>scripts/ledger/migrate_v3.py</code></td></tr>
+<tr><td>管线义务</td><td>投影缺失 bug、身份键、scale 中和规则三处代码修复</td><td><code>gen_fragment.py</code> / <code>usd_enrich.py</code> / <code>backfill_upstream.py</code></td></tr>
+</table></div>
+
+<h2>4 · 最终契约结构（v3 · 七组字段，每组答"谁读它/缺了怎么失败"）</h2>
+<div class="tblwrap"><table>
+<tr><th>字段组</th><th>核心字段</th><th>谁读它（真实消费者）</th><th>缺了怎么失败（实证）</th></tr>
+<tr><td><b>身份/语义</b></td><td>asset_id · category · kind · profile · aliases · identity{basis} · <span class="badge b-info">新</span> external_ids · category_anchor?</td><td>grounding 类目/别名匹配（100/90 分档）；kind 选验证门；external_ids 是账本↔目录↔IR 的映射键</td><td>E2：没有显式映射键，Isaac 链在第一个真实资产上 skipped_no_ledger（覆盖率 0%）</td></tr>
+<tr><td><b>外观（模型级）</b> <span class="badge b-info">新</span></td><td>models[].appearance{colors_measured, fractions, measured_against}</td><td>fragment 投影→grounding 颜色门；52 资产的颜色现以账本为权威</td><td>E1：资产级时代颜色真命中仅 9/44，且"诚实惩罚悖论"——发布颜色的资产反被淘汰</td></tr>
+<tr><td><b>物理放置</b></td><td>mesh_bbox_m · size_resolution{scale, actual_max_dim} · conventions{z_policy, footprint, stable_poses[]+measured_against} · <span class="badge b-info">新</span> placement{interior…}</td><td>求解器放置/包含检查；size 不变量校验和（历史抓过 12/39 真实错误）</td><td>apple 半埋弹飞、hammer 悬空翻倒、basket 楔入翻滚——每个字段一个真实事故</td></tr>
+<tr><td><b>物性信封</b></td><td>mass_kg/friction{value,status,estimator} · <span class="badge b-info">新</span> friction.static/dynamic · restitution? · inertial{…principal_axes?}</td><td>三态 status 的一致性校验；未来后端编译器（业界最小物理集留位）</td><td>"是测的还是猜的"没有记录时，sim2real 差异无法归因（业界无此设计，我们独有）</td></tr>
+<tr><td><b>表示层</b></td><td>representations[]{format,uri,backend,role,sha256} · <span class="badge b-info">新</span> frame{up_axis} · geometry_state{scale_baked} · files[]? · collision_meta?</td><td>usd_enrich 按 backend/role 选表示；scale 中和以 scale_baked 声明为前提；sha256 承载身份与验证防漂移</td><td>E2：无声明时的无条件中和让 cracker box 在 Isaac 大 2.8527×（=1/scale，30 个 model 命中）</td></tr>
+<tr><td><b>来源/许可</b></td><td>source{kind 分支: retrieved/generated} · license{spdx,status,…attribution?}</td><td>(library,group,file) 三元组做幂等去重键；license-gate 过滤；分支互斥校验抓半改的复制粘贴</td><td>许可条款页会消失——不入账即永久失据（不可恢复捕获铁律）</td></tr>
+<tr><td><b>验证记录</b></td><td>verification[]{backend,check,verdict,run_id,timestamp,verified_digest}</td><td>usable 由此推导（禁手写）；latest-per-(backend,check)；digest 防旧网格的 pass 带新网格入库</td><td>2026-08-14 数据事故中，17 份在 git 的账本是资产池唯一幸存部分——验证记录就是重建的底气</td></tr>
+</table></div>
+<div class="callout"><b>贯穿 v3 的一条硬规则（本周最贵的教训）</b>：物理测量值是 <b>资产 × 测量栈</b> 的属性，不是资产的固有属性——同一个网格换了加载器，停留高度差 9mm。所以 v3 里任何实测块（姿态/腔体/颜色）都必须带 <code>measured_against{backend, run_id}</code>，校验器强制。迁移到新后端时这些数字不能照搬，要按该后端重测——测量脚本全部可续测，重测约 1 小时 GPU。</div>
+
+<h2>5 · 真实 case：一个字段的生与死</h2>
+<h3>case A：一个字段怎么死——<code>semantic_name</code></h3>
+<pre>冗余审计员实测：79/79 份账本 semantic_name == category，无一例外
+grep 全部六个消费面：命中仅契约自身+写入方；上游 grounding 读的是 catalog 的
+  semantic_name，而 catalog 的这个字段由目录名派生——账本→catalog 通路不存在
+删除后：262 测试全绿；catalog 照常生成 ── 判定：死字段，v3 删除</pre>
+<h3>case B：一个字段怎么生——<code>geometry_state.scale_baked</code></h3>
+<pre>迁移怀疑者主张：GLB(已烘 scale) 与 USD(未烘) 是几何上不同的物体，契约无字段区分
+E2 实跑：303_box 账本 scale=0.35054，源 USD bbox / GLB bbox 三轴比值
+  = 2.8527170473137407 ≡ 1/scale（分毫不差）
+  compile 后 Isaac 舞台实测 box 最大边 0.2134m vs 真值 0.0748m
+  影响面账本实扫：52 个 model scale≠1，其中 30 个带 isaacsim 表示
+修复实跑：scale 中和改以 scale_baked 声明为前提 → 尺寸正确 ── 判定：实证必需，v3 新增</pre>
+
+<h2>6 · 为什么不那样做（一行式否决表）</h2>
+<div class="tblwrap"><table>
+<tr><th>被否方案</th><th>实测死因</th></tr>
+<tr><td>CLIP embedding 向量进账本</td><td>随检索模型版本漂移，进契约=把 schema 和模型耦合；业界（Objaverse-XL）也是当数据集交付物发布 → 放契约外 sidecar 向量库</td></tr>
+<tr><td>接触求解器参数（solref/kp/kd…）进账本</td><td>引擎调参不是物体属性，跨后端不可迁移；GSO/YCB 均不记 → 归后端 profile</td></tr>
+<tr><td>grasp/affordance 标注进账本</td><td>ACRONYM 每 (object,scale) 存 2000 条——量级与 gripper 依赖注定是伴生数据集，不是元数据</td></tr>
+<tr><td>形状/尺寸派生量（h/w 比等）入库</td><td>可从 mesh_bbox_m 投影时派生，存储即冗余；真正缺的是上游 parser/grounding 的消费（对齐清单）</td></tr>
+<tr><td>删掉 inertial 整块（73 份全 null）</td><td>外部对标：业界最小物理集含惯量主轴；null+status 是"引擎会推导"的诚实陈述 → 收缩为可选而非删除</td></tr>
+<tr><td>保留 mass 的 runtime_default 对</td><td>"runtime"是谎言：真实运行时质量走上游 catalog 标量通路；86/87 份抄同一常量 0.1；唯一读者是 archive 死代码</td></tr>
+<tr><td>撤销微晃资产（panel/ceiling/teddy）</td><td>替换采购全卡入库物理门，类目直接消失——1-3° 微晃优于类目不可用（保留+对齐清单）</td></tr>
+</table></div>
+
+<h2>7 · 如实记录（深坑与测量失真）</h2>
+<div class="tblwrap"><table>
+<tr><th>坑</th><th>现象 → 真凶</th></tr>
+<tr><td>腔底语义冲突</td><td>同一个 interior_floor 被两个消费者反向拉扯（生成想高、包含检查想低）——载荷真实停留在"+8mm 生成余量"腔底之下 9mm，检查永不可满足 → 拆成"腔底=实测停留−5mm"+"防楔入走 support_spawn_clearance_m"</td></tr>
+<tr><td>负载测试假阴性</td><td>4cm 试块(64g)测不出 540g 积木才触发的翻滚 → 载荷按腔体尺寸缩放后才复现</td></tr>
+<tr><td>"trash bin"零召回</td><td>LVIS 高信通道是精确 token 匹配，同义措辞直接打到 0 → 每次采购在 VLM 门重付一遍本该进索引的一次性成本（对齐清单：同义词层）</td></tr>
+<tr><td>情态动词撞词表</td><td>"a container that <b>can</b> hold an apple"——can 命中可乐罐词表，解析出 [can, apple]（上游 parser 对齐项）</td></tr>
+<tr><td>"large cup"选中最小杯</td><td>尺寸数据全有（dimensions_m 逐 model 齐全）但查询到选型没有一条消费路径——grounding 只做存在性加分</td></tr>
+<tr><td>静态引用的空洞通过</td><td>E2：Isaac 冒烟 reset_ok/step_ok 全绿，但 USD 资产挂成无物理静态引用，20 步位移=0.0——"通过"没有物理含义 → 契约条款：运行时验证须记录物理绑定状态</td></tr>
+</table></div>
+
+<h2>8 · 下一步路线</h2>
+<div class="tblwrap"><table>
+<tr><th>阶段</th><th>做什么</th><th>关键决策点 → 建议方案</th><th>前置/等谁拍板</th></tr>
+<tr><td>上游对齐提案</td><td>把 CatalogModel 模型级颜色、parser 形状/尺寸词表、grounding 数值尺寸匹配提给上游</td><td>以 E1 补丁+数字（9→23）作为提案证据 → 建议直接带 diff 提</td><td>她与上游维护者（Boris/Feibo）</td></tr>
+<tr><td>验证回写义务落地</td><td>Isaac E2E 完成后回写 verification[]（现全库 isaacsim 记录 0 条）；runtime 撤销回写</td><td>回写入口放 usd_enrich 完成钩子还是独立脚本 → 建议独立脚本（职责单一、可重跑）</td><td>无阻塞，1-2 小时</td></tr>
+<tr><td>许可回填</td><td>23 个 unknown-license model 按 08-09 审计口径回填</td><td>沿用 NVIDIA-Isaac/CC 承继先例 → 建议批量脚本+抽查</td><td>无阻塞，约 1 小时</td></tr>
+<tr><td>embedding sidecar</td><td>Objaverse 式向量索引（asset_id 为键），补离散标签的召回</td><td>模型选 CLIP ViT-L/14（与 Objaverse-XL 对齐可复用其特征） → 建议先建 156 库内资产的</td><td>检索层"同类选优"课题一并做</td></tr>
+<tr><td>MuJoCo 编译路径</td><td>OBJ+分解碰撞表示物化，第三后端实跑</td><td>转换器用 CoACD（参数入 collision_meta） → 建议单资产打样先行</td><td>需要时再启动</td></tr>
+</table></div>
+
+<h2>9 · 收尾：术语与位置</h2>
+<p class="small"><b>账本(ledger)</b>=每资产一份的权威入库记录，git 管辖。<b>fragment</b>=账本派生的场景生成视图（yaml）。<b>catalog</b>=上游扫描 shadow 树产出的运行时目录。<b>grounding</b>=把 prompt 里的物体请求匹配到目录条目的上游模块。<b>IR</b>=openxsim 的后端中立中间表示。<b>measured_against</b>=实测数据必须携带的"在哪个栈上测的"戳。</p>
+<p class="small"><b>位置</b>：契约 <code>self_improving/asset_pipeline/active/1_asset_reuse/lib/ledger.py</code>（hyx 分支 0df4fb4 + fb0e014）；决策记录 <code>docs/2026-08-15-asset-ledger-v3-decision-record.md</code>；迁移脚本 <code>scripts/ledger/migrate_v3.py</code>；私有镜像 huyuxinn/env-gen-dev@329e0db。E1 产物 <code>~/e1_matrix_out/</code>、E2 产物 <code>/tmp/e2/</code>（lv-5090）。上游依赖：LV-Robotics-Lab/robot-harness-gen-env（scene_gen 上游只读）、RoboTwin canonical checkout（external/RoboTwin）。</p>
+</div>
+
+<!-- ==================== 样例审查 ==================== -->
+<div class="pane" id="p-review">
+<h2>字段级裁决卡（全量 45 条）与 E1 检索矩阵逐行对照（全量 44 条）</h2>
+<p class="small">两组都是全量呈现非抽样。字段卡逐条给出处置、消费者证据与失败模式——这就是"metadata 定稿"的可审形态；E1 对照表给出模型级颜色接入前后每条 prompt 的真实变化。</p>
+
+<h3>A · 字段裁决卡</h3>
+<div class="filters" id="f-field">
+  <span class="lbl">处置:</span>
+  <button data-k="disp" data-v="all" aria-pressed="true">全部</button>
+  <button data-k="disp" data-v="保留" aria-pressed="false">保留</button>
+  <button data-k="disp" data-v="新增" aria-pressed="false">新增</button>
+  <button data-k="disp" data-v="删除" aria-pressed="false">删除</button>
+  <button data-k="disp" data-v="降级" aria-pressed="false">降级</button>
+  <span class="lbl" style="margin-left:10px">依据:</span>
+  <button data-k="src" data-v="all" aria-pressed="true">全部</button>
+  <button data-k="src" data-v="实验" aria-pressed="false">实验裁决</button>
+  <button data-k="src" data-v="辩证" aria-pressed="false">辩证实证</button>
+  <button data-k="src" data-v="对标" aria-pressed="false">外部对标</button>
+</div>
+<div class="count" id="c-field"></div>
+<div id="l-field"></div>
+
+<h3 style="margin-top:34px">B · E1 检索矩阵逐行对照（资产级颜色 → 模型级颜色）</h3>
+<div class="filters" id="f-e1">
+  <span class="lbl">变化:</span>
+  <button data-k="chg" data-v="all" aria-pressed="true">全部</button>
+  <button data-k="chg" data-v="improved" aria-pressed="false">翻绿(错配→命中)</button>
+  <button data-k="chg" data-v="same-hit" aria-pressed="false">保持命中</button>
+  <button data-k="chg" data-v="fallback" aria-pressed="false">仍着色回退</button>
+  <button data-k="chg" data-v="other" aria-pressed="false">其他</button>
+</div>
+<div class="count" id="c-e1"></div>
+<div class="tblwrap"><table id="t-e1">
+<thead><tr><th>prompt</th><th>请求</th><th>前:选中资产(实测色)</th><th>前判定</th><th>后:选中资产(实测色)</th><th>后判定</th></tr></thead>
+<tbody></tbody>
+</table></div>
+</div>
+
+<!-- ==================== 统计与性能 ==================== -->
+<div class="pane" id="p-stats">
+<h2>运行画像（全部真实运行）</h2>
+<div class="kpis">
+  <div class="kpi"><div class="n">79 / 79</div><div class="l">账本迁移成功（零失败）</div></div>
+  <div class="kpi"><div class="n">262 + 57</div><div class="l">双测试套件全绿（含新增用例）</div></div>
+  <div class="kpi"><div class="n">156</div><div class="l">迁移后可用类目（189 条目）</div></div>
+  <div class="kpi"><div class="n">9 → 23</div><div class="l">E1 颜色真命中（44 条矩阵）</div></div>
+  <div class="kpi"><div class="n">23 → 9</div><div class="l">E1 颜色错配</div></div>
+  <div class="kpi"><div class="n">2.8527×</div><div class="l">E2 修复前 Isaac 尺寸漂移（=1/scale）</div></div>
+  <div class="kpi"><div class="n">30</div><div class="l">受尺寸漂移影响的 model（52 个 scale≠1）</div></div>
+  <div class="kpi"><div class="n">52</div><div class="l">fragment 携带账本权威实测色的资产</div></div>
+</div>
+<div class="tblwrap"><table>
+<tr><th>门/步骤</th><th>结果</th><th>出处</th></tr>
+<tr><td>四路辩证（并行 subagent）</td><td>成立主张 7+7+9+7 条；被自己推翻 6+5+若干条（如实入档）</td><td>决策记录 §一~六</td></tr>
+<tr><td>E1 矩阵重跑（44 条，含中文/组合/关系式）</td><td>真命中 9→23 · 错配 23→9 · 全绿 43/44 保持</td><td>e1_matrix_out/attr_matrix_report.json</td></tr>
+<tr><td>E2 身份修复端到端</td><td>skipped_no_ledger: [asset_302_can_m3] → [] · compile partial→compiled（can/box 双场景）</td><td>/tmp/e2/e2e_results.json</td></tr>
+<tr><td>E2 尺寸漂移</td><td>三轴比值 = 2.8527170473137407 ≡ 1/scale（机器精度）；runtime 舞台同值复现</td><td>/tmp/e2/bbox_report.json · runtime_bbox.json</td></tr>
+<tr><td>迁移后回归</td><td>79/79 校验通过 · B11 端到端 fail=0 · 目录 156 可用</td><td>migrate_v3 输出 · e2e_v3/runtime</td></tr>
+</table></div>
+
+<h2>构成画像（v3 契约本体）</h2>
+<div class="tblwrap"><table>
+<tr><th>维度</th><th>分布</th></tr>
+<tr><td>字段处置</td><td>删除 9 · 降级/收缩 5 · 新增 13 · 保留确认 18（见样例审查 tab 全量卡片）</td></tr>
+<tr><td>裁决依据</td><td>实验裁决 2 组（E1/E2）· 辩证实证（grep 消费面 + 实跑）· 外部对标（USD Physics/KHR/SDF/MJCF/Objaverse/YCB/GSO/SimReady）</td></tr>
+<tr><td>迁移账本来源</td><td>外部下载 59 · 程序生成 4 · 上游原生 16（=79；87 个 model）</td></tr>
+<tr><td>实测数据入账</td><td>appearance（474 个 model 有可发布色，其中入账逐 model）· placement（13 空腔判定 + interior）· 姿态方言显式化（上游 identity vs 外部 X90）</td></tr>
+<tr><td>无法统计项</td><td>各字段的历史读取频次——代码只有静态消费面可查，无运行时读计数（如实标注）</td></tr>
+</table></div>
+
+<h2>性能与规模</h2>
+<div class="tblwrap"><table>
+<tr><th>步骤</th><th>实测耗时</th></tr>
+<tr><td>四路辩证（并行）</td><td>5-13 分钟/路（真机 grep+实跑取证）</td></tr>
+<tr><td>E1 矩阵 44 条重跑</td><td>~21 秒/条 · 全程约 16 分钟</td></tr>
+<tr><td>E2 三实验（含 Isaac SimulationApp 启动）</td><td>~10.5 分钟（时间盒 90 分钟内完成；SimulationApp 启动 ~10s）</td></tr>
+<tr><td>79 账本迁移+校验</td><td>&lt; 5 秒</td></tr>
+<tr><td>双测试套件</td><td>13.3s + 3.3s</td></tr>
+<tr><td>全量重测（若换后端需重做）</td><td>校准 441/534 约 40 分钟 + 探针约 15 分钟 + 颜色 508 model 约 15 分钟（全部可断点续测）</td></tr>
+</table></div>
+</div>
+
+<script>
+const FIELDS = [
+ {f:"asset_id / category / kind / profile", d:"保留", s:"辩证", who:"grounding 类目匹配(100分档)·kind 选验证门·profile 定 cross_backend 债务", why:"四个身份字段各有独立决策消费者，冗余审计确认非重复"},
+ {f:"semantics.aliases", d:"保留", s:"辩证", who:"grounding 别名匹配(90分档)；24/79 账本带非平凡别名(cup/mug)", why:"tissue-box/dustbin 同义案的正解通道"},
+ {f:"semantics.identity{basis,evidence,verified}", d:"保留", s:"辩证", who:"validator 必填枚举；basis 区分人工声明与 VLM 验证的失败模式", why:"verified 无下游读者但属捕获类——如实标注非装饰"},
+ {f:"semantic_name", d:"删除", s:"辩证", who:"零决策消费者（catalog 的同名字段另有来源，账本通路不存在）", why:"79/79 恒等于 category；删除后 262 测试全绿"},
+ {f:"tags", d:"删除", s:"辩证", who:"零决策消费者（openxsim 决策读取 grep 0 命中）", why:"全词表 7 词均为 kind/source 复制品"},
+ {f:"external_ids{env_gen}", d:"新增", s:"实验", who:"usd_enrich 账本查找的映射键（源头是 AssetBundle.source）", why:"E2：无显式键时 Isaac 链首个真实资产即 skipped_no_ledger，修复后 compile 全绿"},
+ {f:"semantics.category_anchor{lvis?,wikidata?}", d:"新增", s:"对标", who:"外部协作者/跨数据集对齐（SimReady 用 Q-code、Objaverse 用 LVIS 的业界惯例）", why:"可选留位；内部暂无消费者——如实标注"},
+ {f:"models[].appearance{colors_measured,…,measured_against}", d:"新增", s:"实验", who:"gen_fragment 投影→grounding 颜色门（52 资产已入 fragment）", why:"E1：接入后颜色真命中 9→23、错配 23→9；资产级时代的诚实惩罚悖论消解"},
+ {f:"semantics.colors（资产级手声明）", d:"保留", s:"辩证", who:"grounding 颜色门；手声明优先于实测投影", why:"上游 schema 资产级；与模型级 appearance 分工=声明 vs 实测"},
+ {f:"semantics.materials", d:"保留", s:"辩证", who:"grounding 材质门——v2 时代 gen_fragment 漏投影（bug 已修）", why:"写而不读的状态结束：投影修复后材质查询可命中外部资产"},
+ {f:"physical.mesh_bbox_m", d:"保留", s:"辩证", who:"尺寸不变量校验和的测量侧 + backfill 尺寸核对", why:"max(bbox)==actual×scale 历史抓过 12/39 真实单位漂移"},
+ {f:"size_resolution.scale + actual_max_dim_m", d:"保留", s:"辩证", who:"同上校验和的另一侧；E2 用它算出 1/scale 漂移倍数", why:"六件套里活的两件"},
+ {f:"size_resolution.{mode,reference_*,verdict}", d:"降级", s:"辩证", who:"入库后零读者（唯一 oversized 命中是校准脚本自己的字符串）", why:"降为可选决策留痕"},
+ {f:"conventions.z_policy / footprint_shape / is_static", d:"保留", s:"辩证", who:"投影→catalog→solver（footprint 9 处消费）", why:"apple 半埋案的正解字段"},
+ {f:"stable_poses[] + measured_against", d:"新增", s:"实验", who:"gen_fragment 默认姿态投影；measured_against 由校验器强制", why:"同库两种互斥姿态方言（上游 identity vs 外部 X90）显式化；9mm 换栈实证"},
+ {f:"physical.placement{interior…, measured_against}", d:"新增", s:"辩证", who:"包含检查与容器检索的 metadata 层（原先只活在 s9 生成层）", why:"权威性漂移修复：可放置性几何首次有契约位置"},
+ {f:"mass_kg/friction 三态{value,status,estimator}", d:"保留", s:"对标", who:"validator 一致性校验；sim2real 归因", why:"业界无'测的还是猜的'记录——我们独有，保留"},
+ {f:"mass/friction 的 runtime_default 对(×4)", d:"删除", s:"辩证", who:"唯一读者是 archive 死代码；真实运行时质量走上游 catalog 标量", why:"86/87 份抄同一常量 0.1；'runtime'名不副实"},
+ {f:"friction.static / dynamic 拆分", d:"新增", s:"对标", who:"IR→后端材质映射（UsdPhysics/PhysX/SAPIEN 均双系数）", why:"单值到任何目标后端都要猜拆分；MJCF 侧标注有损映射"},
+ {f:"physical.restitution（三态）", d:"新增", s:"对标", who:"同上；SAPIEN 三参数材质模型原生支持", why:"业界最小物理集四规范交集（USD/KHR/SDF/GSO）"},
+ {f:"inertial{status,basis} + 数值三件可选", d:"降级", s:"辩证", who:"cross_backend profile 要求 KEY 存在；无编译器读数值", why:"73 份全 null；主轴朝向按对标留可选位"},
+ {f:"inertial.principal_axes_wxyz", d:"新增", s:"对标", who:"未来 IR（UsdPhysics principalAxes / KHR inertiaOrientation / MJCF quat）", why:"缺它时对角惯量对非轴对齐物体是错的；一行成本"},
+ {f:"physical.mesh_up_axis", d:"删除", s:"实验", who:"与 kind 100% 互锁；消费面 0", why:"E2：per-model 字段描述不了 per-representation 帧事实（账本 Y vs USD 实测 Z）→ 下沉到 rep.frame"},
+ {f:"physical.origin_convention", d:"删除", s:"辩证", who:"与 kind 100% 互锁；消费面 0", why:"同上下沉到 rep.geometry_state.origin"},
+ {f:"representations[]{format,uri,backend,role,sha256}", d:"保留", s:"辩证", who:"usd_enrich 按 backend/role 选表示；sha256=身份+验证防漂移+audit 完整性", why:"迁移的核心承载"},
+ {f:"representations[].frame{up_axis}", d:"新增", s:"实验", who:"迁移方重建姿态；backfill 实测写入", why:"E2：同一 model 的 GLB(Y-up) 与 USD(Z-up) 是几何上不同的物体"},
+ {f:"representations[].geometry_state{scale_baked,origin}", d:"新增", s:"实验", who:"usd_enrich 的 scale 中和前提（无声明=保留对象缩放）", why:"E2：2.8527× 尺寸漂移的正解；30 个 model 由错转对"},
+ {f:"representations[].files[]（多文件+各带 sha）", d:"新增", s:"辩证", who:"USD payload/variant 完整性（sektion 缺 payload 单文件 sha 不可察觉）；MuJoCo 多文件", why:"可选留位"},
+ {f:"role:collision + collision_meta{approximation,…}", d:"新增", s:"对标", who:"后端 collider 策略选择 + 碰撞行为不一致溯源", why:"basket 楔入事故的根因维度；业界四规范均有一等碰撞语义"},
+ {f:"representations[].size_bytes", d:"删除", s:"辩证", who:"零决策消费者（检索侧读的是候选元数据非账本）", why:"v2 已降可选，v3 写入方停写"},
+ {f:"BACKENDS += mujoco", d:"新增", s:"辩证", who:"验证记录与表示层的第三后端枚举位", why:"原枚举装不下；编译链未实跑（诚实残留）"},
+ {f:"source{kind: retrieved/generated 分支}", d:"保留", s:"辩证", who:"validator 分支选择 + 互斥校验抓半改复制粘贴", why:"生成资产的 prompt/seed/版本是不可恢复捕获"},
+ {f:"source.{library,group,file}", d:"保留", s:"辩证", who:"import_materialize 以三元组做幂等再导入去重键", why:"最初疑纯 provenance，查证为决策键"},
+ {f:"source.source_manifest_path", d:"降级", s:"辩证", who:"70/87 等于目录约定可派生；16 个例外是死路径", why:"约定即契约，字段变可选覆盖"},
+ {f:"source.license{spdx,status,terms_note}", d:"保留", s:"辩证", who:"license-gate 过滤（当前 23 model 待决定）", why:"不可恢复捕获铁律"},
+ {f:"source.license.attribution", d:"新增", s:"对标", who:"发布打包时生成 NOTICE 的读者（CC-BY 法律要求）", why:"可选"},
+ {f:"license.{evidence_url,checked_date,checked_by}", d:"降级", s:"辩证", who:"writer-only 留痕", why:"维持可选并明示无读者——不装作有"},
+ {f:"verification[]{backend,check,verdict,run_id,timestamp,verified_digest}", d:"保留", s:"辩证", who:"usable 推导（禁手写）·latest-per-(backend,check)·digest 防漂移·run_id 幂等键", why:"业界只有格式校验且不回写——行为级按后端账本无先例，差异化保留"},
+ {f:"verification[].report_path", d:"降级", s:"辩证", who:"零读者（无存在性检查）", why:"必填的审计装饰→可选"},
+ {f:"articulation{joint_names,…}", d:"保留", s:"辩证", who:"validator(kind=articulated)+s13b+IR", why:"迁移怀疑者的单位问题(rad vs deg)记对齐清单"},
+ {f:"extras（glTF 式保留区）", d:"保留", s:"对标", who:"无读者但保序传递（round-trip 规则）", why:"上游生产者附加数据的逃生舱，不影响 usable"},
+ {f:"profile 机制（sapien_only/cross_backend）", d:"保留", s:"对标", who:"PROFILE_REQUIRED_MODEL 的条件必填机制", why:"与 OpenUSD applied API schemas / SimReady profiles 同构"},
+ {f:"CLIP embedding 入账", d:"删除", s:"对标", who:"（从未加入，辩证中被否）", why:"随模型漂移；sidecar 向量库以 asset_id 为键"},
+ {f:"接触求解器参数入账", d:"删除", s:"对标", who:"（从未加入，辩证中被否）", why:"引擎调参非物体属性，业界一致不记"},
+ {f:"grasp/affordance 标注入账", d:"删除", s:"对标", who:"（从未加入，辩证中被否）", why:"量级+gripper 依赖→伴生数据集"}
+];
+const E1 = [{"tag": "C_red_cup", "prompt": "Place a red cup on the table.", "want": "red", "b_asset": "301_cup", "b_truth": "match", "a_asset": "021_cup", "a_truth": "match", "b_measured": ["brown", "red"], "a_measured": ["red"], "b_rt": 0, "a_rt": 0}, {"tag": "C_red_bowl", "prompt": "Place a red bowl on the table.", "want": "red", "b_asset": "002_bowl", "b_truth": "mismatch", "a_asset": "002_bowl", "a_truth": "mismatch", "b_measured": ["white"], "a_measured": ["white"], "b_rt": 0, "a_rt": 0}, {"tag": "C_red_bottle", "prompt": "Place a red bottle on the table.", "want": "red", "b_asset": "001_bottle", "b_truth": "mismatch", "a_asset": "001_bottle", "a_truth": "match", "b_measured": ["orange", "white"], "a_measured": ["red"], "b_rt": 0, "a_rt": 0}, {"tag": "C_blue_cup", "prompt": "Place a blue cup on the table.", "want": "blue", "b_asset": "021_cup", "b_truth": "mismatch", "a_asset": "021_cup", "a_truth": "match", "b_measured": ["white"], "a_measured": ["white", "blue"], "b_rt": 0, "a_rt": 0}, {"tag": "C_blue_bowl", "prompt": "Place a blue bowl on the table.", "want": "blue", "b_asset": "002_bowl", "b_truth": "mismatch", "a_asset": "002_bowl", "a_truth": "match", "b_measured": ["white"], "a_measured": ["blue"], "b_rt": 0, "a_rt": 0}, {"tag": "C_blue_bottle", "prompt": "Place a blue bottle on the table.", "want": "blue", "b_asset": "001_bottle", "b_truth": "mismatch", "a_asset": "001_bottle", "a_truth": "match", "b_measured": ["orange", "white"], "a_measured": ["blue"], "b_rt": 0, "a_rt": 0}, {"tag": "C_green_cup", "prompt": "Place a green cup on the table.", "want": "green", "b_asset": "021_cup", "b_truth": "mismatch", "a_asset": "021_cup", "a_truth": "mismatch", "b_measured": ["white"], "a_measured": ["white"], "b_rt": 0, "a_rt": 0}, {"tag": "C_green_bowl", "prompt": "Place a green bowl on the table.", "want": "green", "b_asset": "002_bowl", "b_truth": "mismatch", "a_asset": "002_bowl", "a_truth": "mismatch", "b_measured": ["white"], "a_measured": ["white"], "b_rt": 0, "a_rt": 0}, {"tag": "C_green_bottle", "prompt": "Place a green bottle on the table.", "want": "green", "b_asset": "001_bottle", "b_truth": "mismatch", "a_asset": "001_bottle", "a_truth": "match", "b_measured": ["orange", "white"], "a_measured": ["green"], "b_rt": 0, "a_rt": 0}, {"tag": "C_yellow_cup", "prompt": "Place a yellow cup on the table.", "want": "yellow", "b_asset": "021_cup", "b_truth": "mismatch", "a_asset": "021_cup", "a_truth": "mismatch", "b_measured": ["white"], "a_measured": ["white"], "b_rt": 0, "a_rt": 0}, {"tag": "C_yellow_bowl", "prompt": "Place a yellow bowl on the table.", "want": "yellow", "b_asset": "002_bowl", "b_truth": "mismatch", "a_asset": "002_bowl", "a_truth": "mismatch", "b_measured": ["white"], "a_measured": ["white"], "b_rt": 0, "a_rt": 0}, {"tag": "C_yellow_bottle", "prompt": "Place a yellow bottle on the table.", "want": "yellow", "b_asset": "001_bottle", "b_truth": "mismatch", "a_asset": "304_bottle", "a_truth": "match", "b_measured": ["orange", "white"], "a_measured": ["yellow"], "b_rt": 0, "a_rt": 0}, {"tag": "C_white_cup", "prompt": "Place a white cup on the table.", "want": "white", "b_asset": "021_cup", "b_truth": "match", "a_asset": "021_cup", "a_truth": "match", "b_measured": ["white"], "a_measured": ["white"], "b_rt": 0, "a_rt": 0}, {"tag": "C_white_bowl", "prompt": "Place a white bowl on the table.", "want": "white", "b_asset": "002_bowl", "b_truth": "match", "a_asset": "002_bowl", "a_truth": "match", "b_measured": ["white"], "a_measured": ["white"], "b_rt": 0, "a_rt": 0}, {"tag": "C_white_bottle", "prompt": "Place a white bottle on the table.", "want": "white", "b_asset": "001_bottle", "b_truth": "match", "a_asset": "001_bottle", "a_truth": "match", "b_measured": ["orange", "white"], "a_measured": ["orange", "white"], "b_rt": 0, "a_rt": 0}, {"tag": "C_black_cup", "prompt": "Place a black cup on the table.", "want": "black", "b_asset": "021_cup", "b_truth": "mismatch", "a_asset": "021_cup", "a_truth": "match", "b_measured": ["white"], "a_measured": ["black"], "b_rt": 0, "a_rt": 0}, {"tag": "C_black_bowl", "prompt": "Place a black bowl on the table.", "want": "black", "b_asset": "002_bowl", "b_truth": "mismatch", "a_asset": "002_bowl", "a_truth": "mismatch", "b_measured": ["white"], "a_measured": ["white"], "b_rt": 0, "a_rt": 0}, {"tag": "C_black_bottle", "prompt": "Place a black bottle on the table.", "want": "black", "b_asset": "001_bottle", "b_truth": "mismatch", "a_asset": "001_bottle", "a_truth": "match", "b_measured": ["orange", "white"], "a_measured": ["black"], "b_rt": 0, "a_rt": 0}, {"tag": "C_brown_cup", "prompt": "Place a brown cup on the table.", "want": "brown", "b_asset": "021_cup", "b_truth": "mismatch", "a_asset": "301_cup", "a_truth": "match", "b_measured": ["white"], "a_measured": ["brown", "red"], "b_rt": 0, "a_rt": 0}, {"tag": "C_brown_bowl", "prompt": "Place a brown bowl on the table.", "want": "brown", "b_asset": "302_bowl", "b_truth": "match", "a_asset": "302_bowl", "a_truth": "match", "b_measured": ["brown"], "a_measured": ["brown"], "b_rt": 0, "a_rt": 0}, {"tag": "C_brown_bottle", "prompt": "Place a brown bottle on the table.", "want": "brown", "b_asset": "001_bottle", "b_truth": "mismatch", "a_asset": "001_bottle", "a_truth": "match", "b_measured": ["orange", "white"], "a_measured": ["brown"], "b_rt": 0, "a_rt": 0}, {"tag": "C_orange_cup", "prompt": "Place a orange cup on the table.", "want": "orange", "b_asset": "021_cup", "b_truth": "mismatch", "a_asset": "021_cup", "a_truth": "mismatch", "b_measured": ["white"], "a_measured": ["white"], "b_rt": 0, "a_rt": 0}, {"tag": "C_orange_bowl", "prompt": "Place a orange bowl on the table.", "want": "orange", "b_asset": "002_bowl", "b_truth": "mismatch", "a_asset": "002_bowl", "a_truth": "mismatch", "b_measured": ["white"], "a_measured": ["white"], "b_rt": 0, "a_rt": 0}, {"tag": "C_orange_bottle", "prompt": "Place a orange bottle on the table.", "want": "orange", "b_asset": "001_bottle", "b_truth": "match", "a_asset": "001_bottle", "a_truth": "match", "b_measured": ["orange", "white"], "a_measured": ["orange", "white"], "b_rt": 0, "a_rt": 0}, {"tag": "M_wood_cup", "prompt": "Place a wood cup on the table.", "want": "wood", "b_asset": "301_cup", "b_truth": "green", "a_asset": "301_cup", "a_truth": "green", "b_measured": [], "a_measured": [], "b_rt": 0, "a_rt": 0}, {"tag": "M_wood_bowl", "prompt": "Place a wood bowl on the table.", "want": "wood", "b_asset": "302_bowl", "b_truth": "green", "a_asset": "302_bowl", "a_truth": "green", "b_measured": [], "a_measured": [], "b_rt": 0, "a_rt": 0}, {"tag": "M_metal_cup", "prompt": "Place a metal cup on the table.", "want": "metal", "b_asset": "021_cup", "b_truth": "green", "a_asset": "021_cup", "a_truth": "green", "b_measured": [], "a_measured": [], "b_rt": 0, "a_rt": 0}, {"tag": "M_metal_bowl", "prompt": "Place a metal bowl on the table.", "want": "metal", "b_asset": "302_bowl", "b_truth": "green", "a_asset": "302_bowl", "a_truth": "green", "b_measured": [], "a_measured": [], "b_rt": 0, "a_rt": 0}, {"tag": "M_plastic_cup", "prompt": "Place a plastic cup on the table.", "want": "plastic", "b_asset": "021_cup", "b_truth": "green", "a_asset": "021_cup", "a_truth": "green", "b_measured": [], "a_measured": [], "b_rt": 0, "a_rt": 0}, {"tag": "M_plastic_bowl", "prompt": "Place a plastic bowl on the table.", "want": "plastic", "b_asset": "002_bowl", "b_truth": "green", "a_asset": "002_bowl", "a_truth": "green", "b_measured": [], "a_measured": [], "b_rt": 0, "a_rt": 0}, {"tag": "M_glass_cup", "prompt": "Place a glass cup on the table.", "want": "glass", "b_asset": "301_cup", "b_truth": "green", "a_asset": "301_cup", "a_truth": "green", "b_measured": [], "a_measured": [], "b_rt": 0, "a_rt": 0}, {"tag": "M_glass_bowl", "prompt": "Place a glass bowl on the table.", "want": "glass", "b_asset": "302_bowl", "b_truth": "green", "a_asset": "302_bowl", "a_truth": "green", "b_measured": [], "a_measured": [], "b_rt": 0, "a_rt": 0}, {"tag": "M_ceramic_cup", "prompt": "Place a ceramic cup on the table.", "want": "ceramic", "b_asset": "021_cup", "b_truth": "green", "a_asset": "021_cup", "a_truth": "green", "b_measured": [], "a_measured": [], "b_rt": 0, "a_rt": 0}, {"tag": "M_ceramic_bowl", "prompt": "Place a ceramic bowl on the table.", "want": "ceramic", "b_asset": "002_bowl", "b_truth": "green", "a_asset": "002_bowl", "a_truth": "green", "b_measured": [], "a_measured": [], "b_rt": 0, "a_rt": 0}, {"tag": "CM_red_plastic_cup", "prompt": "Place a red plastic cup on the table.", "want": "red", "b_asset": "021_cup", "b_truth": "mismatch", "a_asset": "021_cup", "a_truth": "match", "b_measured": ["white"], "a_measured": ["red"], "b_rt": 0, "a_rt": 0}, {"tag": "CM_brown_wood_bowl", "prompt": "Place a brown wood bowl on the table.", "want": "brown", "b_asset": "302_bowl", "b_truth": "match", "a_asset": "302_bowl", "a_truth": "match", "b_measured": ["brown"], "a_measured": ["brown"], "b_rt": 0, "a_rt": 0}, {"tag": "CM_white_ceramic_bowl", "prompt": "Place a white ceramic bowl on the table.", "want": "white", "b_asset": "002_bowl", "b_truth": "match", "a_asset": "002_bowl", "a_truth": "match", "b_measured": ["white"], "a_measured": ["white"], "b_rt": 0, "a_rt": 0}, {"tag": "CM_black_metal_box", "prompt": "Place a black metal box on the table.", "want": "black", "b_asset": "303_box", "b_truth": "mismatch", "a_asset": "303_box", "a_truth": "mismatch", "b_measured": ["red"], "a_measured": ["red"], "b_rt": 0, "a_rt": 0}, {"tag": "CM_blue_glass_bottle", "prompt": "Place a blue glass bottle on the table.", "want": "blue", "b_asset": "001_bottle", "b_truth": "mismatch", "a_asset": "001_bottle", "a_truth": "match", "b_measured": ["orange", "white"], "a_measured": ["blue"], "b_rt": 0, "a_rt": 0}, {"tag": "ZH_red_cup", "prompt": "把红色的杯子放在桌子上", "want": "red", "b_asset": "301_cup", "b_truth": "match", "a_asset": "021_cup", "a_truth": "match", "b_measured": ["brown", "red"], "a_measured": ["red"], "b_rt": 0, "a_rt": 0}, {"tag": "ZH_blue_bowl", "prompt": "把蓝色的碗放在桌子上", "want": "blue", "b_asset": "002_bowl", "b_truth": "mismatch", "a_asset": "002_bowl", "a_truth": "match", "b_measured": ["white"], "a_measured": ["blue"], "b_rt": 0, "a_rt": 0}, {"tag": "ZH_wood_wood", "prompt": "把木质的碗放在桌子上", "want": "wood", "b_asset": "302_bowl", "b_truth": "green", "a_asset": "302_bowl", "a_truth": "green", "b_measured": [], "a_measured": [], "b_rt": 0, "a_rt": 0}, {"tag": "REL_red_apple_bowl", "prompt": "Put a red apple inside the bowl.", "want": "red", "b_asset": "", "b_truth": "gap", "a_asset": "", "a_truth": "gap", "b_measured": [], "a_measured": [], "b_rt": null, "a_rt": null}, {"tag": "REL_blue_cup_table", "prompt": "Place a blue cup to the left of the plate.", "want": "blue", "b_asset": "021_cup", "b_truth": "mismatch", "a_asset": "021_cup", "a_truth": "match", "b_measured": ["white"], "a_measured": ["white", "blue"], "b_rt": 0, "a_rt": 0}];
+
+function classify(r){
+  if(r.b_truth==="mismatch" && r.a_truth==="match") return "improved";
+  if(r.b_truth==="match" && r.a_truth==="match") return "same-hit";
+  if(r.a_truth==="mismatch") return "fallback";
+  return "other";
+}
+const state={disp:"all",src:"all",chg:"all"};
+
+function renderFields(){
+  const el=document.getElementById("l-field");
+  const rows=FIELDS.filter(x=>(state.disp==="all"||x.d===state.disp)&&(state.src==="all"||x.s===state.src));
+  document.getElementById("c-field").textContent=`当前筛出 ${rows.length} 条 / 共 ${FIELDS.length} 条`;
+  el.innerHTML = rows.length? rows.map(x=>{
+    const cls=x.d==="保留"?"keep":x.d==="新增"?"add":x.d==="删除"?"del":"demote";
+    const b=x.d==="保留"?"b-pass":x.d==="新增"?"b-info":x.d==="删除"?"b-stop":"b-warn";
+    return `<div class="card ${cls}"><h4>${x.f} <span class="badge ${b}">${x.d}</span> <span class="badge b-info">${x.s}</span></h4>
+      <div class="meta"><b>谁读它：</b>${x.who}</div><div class="why">${x.why}</div></div>`;
+  }).join("") : '<p class="small">无匹配条目——放宽筛选试试。</p>';
+}
+function renderE1(){
+  const tb=document.querySelector("#t-e1 tbody");
+  const rows=E1.filter(r=>state.chg==="all"||classify(r)===state.chg);
+  document.getElementById("c-e1").textContent=`当前筛出 ${rows.length} 条 / 共 ${E1.length} 条`;
+  const badge=t=>t==="match"?'<span class="badge b-pass">命中</span>':t==="mismatch"?'<span class="badge b-stop">错配/回退</span>':t==="unknown"?'<span class="badge b-warn">未知色</span>':`<span class="badge b-info">${t||"—"}</span>`;
+  tb.innerHTML = rows.length? rows.map(r=>`<tr>
+    <td><code>${r.prompt}</code></td><td>${r.want||"—"}</td>
+    <td>${r.b_asset||"—"} <span class="small">${(r.b_measured||[]).join("/")||""}</span></td><td>${badge(r.b_truth)}</td>
+    <td>${r.a_asset||"—"} <span class="small">${(r.a_measured||[]).join("/")||""}</span></td><td>${badge(r.a_truth)}</td>
+  </tr>`).join("") : '<tr><td colspan="6" class="small">无匹配条目</td></tr>';
+}
+document.querySelectorAll(".filters button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    const k=b.dataset.k;
+    state[k]=b.dataset.v;
+    b.closest(".filters").querySelectorAll(`button[data-k="${k}"]`).forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+    renderFields(); renderE1();
+  });
+});
+document.querySelectorAll('.tabs button').forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute("aria-selected",String(x===b)));
+    document.querySelectorAll('.pane').forEach(p=>p.classList.toggle("active",p.id===b.dataset.pane));
+  });
+});
+renderFields(); renderE1();
+</script>
+</div></body></html>
