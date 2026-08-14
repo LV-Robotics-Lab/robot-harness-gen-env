@@ -44,3 +44,26 @@ After branch push and readback verification, the separate local checkout can be
 removed. The personal GitHub source history is reachable from the merged HYX
 branch, while ignored payload recovery still depends on its recorded storage
 and manifests rather than Git ancestry alone.
+
+## Complete remote-ref mirror
+
+The personal repository had seven branches and no Git tags. Every exact branch
+tip was mirrored to the organization repository and verified with
+`git ls-remote`:
+
+| Personal branch | Commit | Organization archive branch |
+| --- | --- | --- |
+| `feat/alias-screening` | `99db6588d582b8f99eec54c632ed1b8715702fef` | `archive/hyx-env-gen-dev-feat-alias-screening-20260814` |
+| `feat/asset-sources` | `8c2f058215b4d69d10f15c269148397a9f14ccd2` | `archive/hyx-env-gen-dev-feat-asset-sources-20260814` |
+| `feat/env-gen-ir-bridge` | `1c5cd654bffaa15bc471537f828e9070fa7f8a10` | `archive/hyx-env-gen-dev-feat-env-gen-ir-bridge-20260814` |
+| `feat/ledger-v2` | `a297f4f1c92451ba3cfdd32f6b947a3f89de157c` | `archive/hyx-env-gen-dev-feat-ledger-v2-20260814` |
+| `feat/web-studio-v2` | `ec477bc96e8f7bcae0d28a6dfe3d1ed40b1592e1` | `archive/hyx-env-gen-dev-feat-web-studio-v2-20260814` |
+| `feature/asset-reuse-abc-batch` | `4982cc3660d82743b849fd0ba9cbdfd04933e895` | `archive/hyx-env-gen-dev-feature-asset-reuse-abc-batch-20260814` |
+| `main` | `e99e11975764710e2080468662a74aaed00ee0df` | `archive/hyx-env-gen-dev-main-20260814` |
+
+The local checkout has been removed. Deleting the personal GitHub repository
+itself still requires an authenticated `huyuxinn` owner/admin session; the
+available `BorisGuo6` API and browser sessions return 404 for that private
+repository. This access limitation does not affect the completed Git-history
+mirror, but the personal repository must not be described as deleted until its
+owner performs or authorizes that final account-level action.
