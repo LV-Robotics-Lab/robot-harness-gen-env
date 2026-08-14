@@ -12,9 +12,10 @@ local RoboLab onboarding workspace:
   third-party meshes and rendered media.
 
 The source RoboLab checkout was clean at NVLabs/RoboLab commit
-`97bc1e7`. The complete 22-commit implementation history is preserved on
-`archive/yeyuxuan-onboarding-20260813`; current core changes are merged into the
-main repository. Generated scene packages, runtime JSON, GLB meshes, PNG
+`97bc1e7`. The complete 22-commit implementation history was merged at
+`6b04a78` and remains reachable from `main`; the former archive tip
+`cf9123a9c6736fa76da0c1cc11e2dfc3d0df7910` was retired after reachability
+verification. Generated scene packages, runtime JSON, GLB meshes, PNG
 previews, MP4 videos, and tar bundles remain external. Exact source, digest, and
 exclusion context is recorded in `overlay_manifest.json` and
 `../../source_inventory.json`.
