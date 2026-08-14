@@ -10,6 +10,17 @@
   },
   "integration_commit_tested": "c50ee862f155d183e4e39d81852a75a7fb6c0dd4",
   "remote_repository": "LV-Robotics-Lab/robot-harness-gen-env",
+  "post_capture_path_rename": {
+    "renamed_at": "2026-08-14",
+    "from": "local_data",
+    "to": "data",
+    "manifest_entry_count": 9576,
+    "legacy_manifest_path": "data/MANIFEST.legacy-local-data.sha256",
+    "legacy_manifest_sha256": "e03e7938e1122339a77bd2f86b2ab223c383dfd1840e65c6973626fcafe9f7b5",
+    "current_manifest_path": "data/MANIFEST.sha256",
+    "current_manifest_sha256": "6ea8a140122937a695720d11ed36604c4fb920125fea3a15bb2d6bde557ddbab",
+    "verification": "sha256sum --quiet -c data/MANIFEST.sha256"
+  },
   "deleted_redundant_paths": [
     "/home/jingxiang/bingsheng/robot-harness-gen-env",
     "/home/jingxiang/bingsheng/RoboTwin",
