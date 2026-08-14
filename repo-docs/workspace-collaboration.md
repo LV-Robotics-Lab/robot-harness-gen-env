@@ -27,7 +27,7 @@ HYX 原 `huyuxinn/env-gen-dev` 的完整 Git 历史已作为 merge parent 接入
 
 - 个人源码、临时脚本、日志、实验输出、未提升的数据和 checkpoint 必须留在 `/home/jingxiang/<人名>/` 内。
 - `/home/jingxiang/workspace/robot-harness-gen-env` 只用于共享 `main`、公共子模块，以及经过来源和恢复性检查后明确提升的公共材料。
-- 公共 RoboTwin 运行时位于 canonical `external/RoboTwin/`；公共但不进 Git 的材料位于 canonical `local_data/` 或已约定的 ignored data 路径。个人 worktree 可以通过显式环境变量只读引用它们，不应再复制一份到个人目录。
+- 公共 RoboTwin 运行时位于 canonical `external/RoboTwin/`；公共但不进 Git 的材料统一位于 canonical `data/`。个人 worktree 可以通过显式环境变量只读引用它们，不应再复制一份到个人目录。
 - 不在 `/home/jingxiang/workspace/` 下新建第二个个人项目目录，也不把一个人的试验目录软链到另一个人的名字目录。
 - 小型源码、配置、实测 metadata、manifest、哈希和结构化证据通过 PR/评审合入 `main`；大 payload 是否提升为公共材料必须单独核验来源、哈希和恢复位置。
 

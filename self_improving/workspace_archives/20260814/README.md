@@ -23,3 +23,7 @@ Its `600.ckpt` was hashed, the whole RoboTwin runtime was moved to
 and a resource-uncontended SAPIEN replay passed. The compact replay evidence is
 tracked in `validation_evidence/student_workspace_20260814/`; the checkpoint
 and raw runtime media remain local-only and are not remote backups.
+
+The accompanying JSON preserves `local_data` as the path observed when this
+receipt was captured. The active repository convention was later simplified to
+the ignored root `data/`; the historical fields are intentionally not rewritten.
