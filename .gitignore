@@ -78,3 +78,15 @@ self_improving/asset_pipeline/active/data/scene_gen_ext/*
 self_improving/alchedata/runs/*
 !self_improving/alchedata/runs/probe_static_apple_plate_action_repair/
 !self_improving/alchedata/runs/probe_static_apple_plate_action_repair/final_placement.json
+# 账本是唯一权威入库记录，必须有 git 历史（spec §3.9；2026-08-14 事故中
+# 17 份在 git 的账本是資產池唯一幸存的部分，例外规则随迁移带到本仓库）
+!self_improving/asset_pipeline/active/data/asset_library/
+self_improving/asset_pipeline/active/data/asset_library/*
+!self_improving/asset_pipeline/active/data/asset_library/*/
+self_improving/asset_pipeline/active/data/asset_library/*/*
+!self_improving/asset_pipeline/active/data/asset_library/*/ledger.json
+!self_improving/asset_pipeline/active/data/upstream_ledgers/
+self_improving/asset_pipeline/active/data/upstream_ledgers/*
+!self_improving/asset_pipeline/active/data/upstream_ledgers/*/
+self_improving/asset_pipeline/active/data/upstream_ledgers/*/*
+!self_improving/asset_pipeline/active/data/upstream_ledgers/*/ledger.json

@@ -1,0 +1,199 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_336_sleigh",
+  "category": "sleigh",
+  "kind": "rigid",
+  "profile": "cross_backend",
+  "semantics": {
+    "aliases": [
+      "sleigh"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "/home/jingxiang/yuxin/sweep_out/C_sleigh/acquire/identity_post_render_336_sleigh_m0.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.25,
+          0.07327495648761467,
+          0.06164199920452458
+        ],
+        "size_resolution": {
+          "mode": "absolute:0.25",
+          "actual_max_dim_m": 1.3914236724376683,
+          "scale": 0.17967209050139205,
+          "reference_max_dim_m": 0.25,
+          "reference_assets": [],
+          "verdict": "scaled"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/336_sleigh/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "f2a0fed7d608b742608f8906d3ffe0a9dc9ec61d4e87a322fbf3828bb4e3c051",
+          "size_bytes": 46777332,
+          "metadata": {
+            "derived_from": "strt_mov_sleigh_01.usd",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/336_sleigh/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "f2a0fed7d608b742608f8906d3ffe0a9dc9ec61d4e87a322fbf3828bb4e3c051",
+          "size_bytes": 46777332,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_336_sleigh/strt_mov_sleigh_01.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "91e1fa95ab6bb40e68fad3a7e6213edf6f7f1859a19a7b4bf2b6ecab2f4a5e8d",
+          "size_bytes": 17235,
+          "metadata": {
+            "origin_prefix": "acq_336_sleigh"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/336_sleigh/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "76a2c420f2a51c0541348e0f1fcdd76f48fdde22eefcfefac0416376d18ebd65",
+          "size_bytes": 5698,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "acq_336_sleigh",
+        "file": "strt_mov_sleigh_01.usd",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "NVIDIA asset EULA; YCB dataset terms for ycb group"
+        },
+        "retrieved_at": "2026-08-13",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_336_sleigh/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-13T19:11:55",
+          "verified_digest": "a47a75ce1a57dc43c7fa8f21f6f90330834abebb3e35f5bb0341715fbad81417",
+          "report_path": "/home/jingxiang/yuxin/sweep_out/C_sleigh/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "orange"
+        ],
+        "color_fractions": {
+          "orange": 0.798,
+          "red": 0.071,
+          "brown": 0.002
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "external_ids": {
+    "env_gen": "336_sleigh"
+  }
+}

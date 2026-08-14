@@ -1,0 +1,199 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_358_leaves",
+  "category": "leaves",
+  "kind": "rigid",
+  "profile": "cross_backend",
+  "semantics": {
+    "aliases": [
+      "leaves"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "/home/jingxiang/yuxin/sweep_out/C_leaves/acquire/identity_post_render_358_leaves_m0.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.25065944931621464,
+          0.028705432202492928,
+          0.1155086833792256
+        ],
+        "size_resolution": {
+          "mode": "absolute:0.25",
+          "actual_max_dim_m": 0.17509362782030596,
+          "scale": 1.4315737953265777,
+          "reference_max_dim_m": 0.25,
+          "reference_assets": [],
+          "verdict": "scaled"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/358_leaves/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "b8da3c34704a9923e893b8bb3e150878ca11751586a20ee66ac01020a9d98082",
+          "size_bytes": 27413056,
+          "metadata": {
+            "derived_from": "oakfall1.usd",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/358_leaves/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "b8da3c34704a9923e893b8bb3e150878ca11751586a20ee66ac01020a9d98082",
+          "size_bytes": 27413056,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_358_leaves/oakfall1.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "f0c92552fc65eb8a69bd186f1b77acd243bc3c59f025aa38ff8ec5ed54ba5f9b",
+          "size_bytes": 38660,
+          "metadata": {
+            "origin_prefix": "acq_358_leaves"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/358_leaves/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "d80cde2f8ce66befd5527aa4d7e4cc51bdac07caac5c51d071931664a2344d81",
+          "size_bytes": 3614,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "acq_358_leaves",
+        "file": "oakfall1.usd",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "NVIDIA asset EULA; YCB dataset terms for ycb group"
+        },
+        "retrieved_at": "2026-08-13",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_358_leaves/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-13T23:37:12",
+          "verified_digest": "aefda619737a27f2697014499ada6fe65520aab354a608504d7ca493bed6b5ca",
+          "report_path": "/home/jingxiang/yuxin/sweep_out/C_leaves/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "brown",
+          "orange"
+        ],
+        "color_fractions": {
+          "brown": 0.635,
+          "orange": 0.365
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "external_ids": {
+    "env_gen": "358_leaves"
+  }
+}

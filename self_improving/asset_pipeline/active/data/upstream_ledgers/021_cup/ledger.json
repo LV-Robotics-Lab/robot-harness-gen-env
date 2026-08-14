@@ -1,0 +1,150 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "robotwin_021_cup",
+  "category": "cup",
+  "kind": "rigid",
+  "semantics": {
+    "aliases": [
+      "cup",
+      "mug"
+    ],
+    "colors": [],
+    "materials": [
+      "ceramic",
+      "metal",
+      "plastic"
+    ],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "external/env-gen-github/data/scene_gen/asset_catalog.json",
+      "verified": false
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.08255403089523315,
+          0.088,
+          0.08197807025909423
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.0,
+          "scale": 0.088,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "robotwin_cup_upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "upstream catalog declaration (identity dialect)"
+              }
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/021_cup/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "ea0b83f737c86b1823f6d3a7aeb7e9dcaf4d7b3b82b02a19207c968ebffad69a",
+          "size_bytes": 1886864,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": false,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/021_cup/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "176cdeb32f0152656f50b68e1312e01e74c6e96634f6f9271d9566ee77c9e2ca",
+          "size_bytes": 879188,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": false,
+            "origin": "bottom-center"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "RoboTwin (upstream)",
+        "group": "c3ddfa8b97d5519efa828b075999bd0006778e5e",
+        "file": "021_cup",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/021_cup/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
+      },
+      "verification": [],
+      "appearance": {
+        "colors_measured": [
+          "blue"
+        ],
+        "color_fractions": {
+          "blue": 0.999,
+          "white": 0.001
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "profile": "sapien_only",
+  "external_ids": {
+    "env_gen": "021_cup"
+  }
+}

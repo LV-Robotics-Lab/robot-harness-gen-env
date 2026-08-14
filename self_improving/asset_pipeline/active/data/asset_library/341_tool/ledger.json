@@ -1,0 +1,200 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_341_tool",
+  "category": "tool",
+  "kind": "rigid",
+  "profile": "cross_backend",
+  "semantics": {
+    "aliases": [
+      "tool"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "/home/jingxiang/yuxin/sweep_out/C_tool/acquire/identity_post_render_341_tool_m0.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.25,
+          0.04275256143231168,
+          0.043160882377684597
+        ],
+        "size_resolution": {
+          "mode": "absolute:0.25",
+          "actual_max_dim_m": 0.7763082394376399,
+          "scale": 0.3220370302666126,
+          "reference_max_dim_m": 0.25,
+          "reference_assets": [],
+          "verdict": "scaled"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/341_tool/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "4d011f762cabec1a9610005aa1b7b16d010460f287dbfca1c7416c4678b7b3c2",
+          "size_bytes": 13851428,
+          "metadata": {
+            "derived_from": "obs_pipe_benders_01.usd",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/341_tool/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "4d011f762cabec1a9610005aa1b7b16d010460f287dbfca1c7416c4678b7b3c2",
+          "size_bytes": 13851428,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_341_tool/obs_pipe_benders_01.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "9af641633ad56fd4c95eed0dd2f5deb3d8a0e54cefd1c91efda1be5d1d8beb03",
+          "size_bytes": 57211,
+          "metadata": {
+            "origin_prefix": "acq_341_tool"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/341_tool/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "e009dfab2ab4fcf2eb9008bdc7365c4e45c266737fa62574f6f35fb8e8060209",
+          "size_bytes": 3600,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "acq_341_tool",
+        "file": "obs_pipe_benders_01.usd",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "NVIDIA asset EULA; YCB dataset terms for ycb group"
+        },
+        "retrieved_at": "2026-08-13",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_341_tool/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-13T20:04:04",
+          "verified_digest": "e0743581ac84730475d8161a78a0836c4983407380e2e549a176cc7a85dabaa9",
+          "report_path": "/home/jingxiang/yuxin/sweep_out/C_tool/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "red"
+        ],
+        "color_fractions": {
+          "red": 0.578,
+          "white": 0.21,
+          "black": 0.159,
+          "brown": 0.03
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "external_ids": {
+    "env_gen": "341_tool"
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "robotwin_037_box",
+  "category": "box",
+  "kind": "articulated",
+  "semantics": {
+    "aliases": [
+      "box",
+      "container",
+      "storage box"
+    ],
+    "colors": [],
+    "materials": [
+      "plastic",
+      "wood"
+    ],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "external/env-gen-github/data/scene_gen/asset_catalog.json",
+      "verified": false
+    }
+  },
+  "models": [
+    {
+      "model_id": 426,
+      "physical": {
+        "mesh_bbox_m": [
+          0.06950655,
+          0.07481884999999999,
+          0.022352250000000004
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.4963769999999998,
+          "scale": 0.05,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": true,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "robotwin_box_upright",
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "upstream catalog declaration (identity dialect)"
+              }
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "representations": [
+        {
+          "format": "urdf",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/037_box/426/mobility.urdf",
+          "backend": "sapien",
+          "role": "visual_and_collision",
+          "sha256": "60a46a5b19a41ba25c5804101304d13d488ac525039c6da6c59b6643fad483b1",
+          "size_bytes": 2899,
+          "metadata": {}
+        }
+      ],
+      "articulation": {
+        "joint_names": [
+          "joint_0",
+          "joint_1"
+        ],
+        "joint_types": [
+          "revolute",
+          "revolute"
+        ],
+        "limits": [
+          [
+            -3.2609731744262054,
+            1.4451326206513049
+          ],
+          [
+            -3.2421236185046665,
+            1.4199998794225868
+          ]
+        ],
+        "closed_qpos": [
+          -3.2,
+          -3.2
+        ],
+        "open_qpos": [
+          0.0,
+          0.0
+        ]
+      },
+      "source": {
+        "library": "RoboTwin (upstream)",
+        "group": "c3ddfa8b97d5519efa828b075999bd0006778e5e",
+        "file": "037_box/426",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/037_box/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
+      },
+      "verification": []
+    }
+  ],
+  "profile": "sapien_only",
+  "external_ids": {
+    "env_gen": "037_box"
+  }
+}

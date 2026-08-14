@@ -110,7 +110,10 @@ def _isaac_rep(uri):
         "role": "visual_and_collision",
         "sha256": "b" * 64,
         "size_bytes": 2048,
-        "metadata": {"note": "pre-existing"},
+        # v3: the fixture declares its USD baked -- neutralize-on-enrich now
+        # REQUIRES this declaration (E2: undeclared _source USDs are unbaked
+        # and neutralizing them compiled a cracker box 2.8527x too large)
+        "metadata": {"note": "pre-existing", "geometry_state": {"scale_baked": True}},
     }
 
 
@@ -232,6 +235,25 @@ def test_enrich_from_ledgers_classifies_and_registers(tmp_path):
     assert obj_by_asset["robotwin_071_can_m0"].scale == (1.0, 1.0, 1.0)
     assert obj_by_asset["external_302_can_m0"].scale == (2.0, 2.0, 2.0)
     assert obj_by_asset["external_999_missing_m0"].scale == (2.0, 2.0, 2.0)
+
+
+def test_enrich_without_scale_baked_keeps_object_scale(tmp_path):
+    """An isaacsim rep that does NOT declare geometry_state.scale_baked must
+    keep the object's mesh_scale: E2 (2026-08-15) measured the unconditional
+    neutralize compiling a scale=0.3505 asset 2.8527x (=1/scale) too large in
+    Isaac, because the whole external pool's reps point at unbaked _source
+    originals."""
+    usd = tmp_path / "071_can.usd"
+    usd.write_text("#usda 1.0")
+    rep = _isaac_rep(str(usd))
+    rep["metadata"] = {"note": "pre-existing"}  # no geometry_state
+    root = tmp_path / "ledgers"
+    _write_ledger(root, "071_can", "robotwin", _model_entry(0, [_sapien_rep(), rep]))
+    pkg = _pkg(["robotwin_071_can_m0"])
+    enriched, report = enrich_from_ledgers(pkg, [str(root)])
+    assert report["enriched"] == ["robotwin_071_can_m0"]
+    obj = {o.asset_id: o for o in enriched.env.objects}["robotwin_071_can_m0"]
+    assert obj.scale == (2.0, 2.0, 2.0)
 
 
 def test_enrich_from_ledgers_no_verification_does_not_set_verified_flag(tmp_path):

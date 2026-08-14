@@ -386,6 +386,17 @@ def _build_model_entry(
         if kind == "articulated"
         else _rigid_representations(model)
     )
+    # v3: the measured up-axis/origin describe the FILES this backfill just
+    # measured, so they live on those representations (frame/geometry_state),
+    # not as per-model fields -- the same model's other-backend files can and
+    # do disagree (a Y-up baked GLB next to a Z-up unbaked USD).
+    for rp in representations:
+        rp.setdefault("frame", {})["up_axis"] = up_axis
+        gs = rp.setdefault("geometry_state", {})
+        gs.setdefault("origin", origin_convention)
+        # upstream RoboTwin files are loaded WITH model_data scale at
+        # create_actor time -- the file itself does not carry it
+        gs.setdefault("scale_baked", False)
 
     # Incremental layer: carry forward any previously-registered non-sapien
     # representation (e.g. an earlier --isaac-usd registration) untouched,

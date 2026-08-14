@@ -1,0 +1,188 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_362_tvon_the_table",
+  "category": "tvon_the_table",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "tvon_the_table"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "requested_by_acquire",
+      "evidence": "/home/jingxiang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/results/web_runs/20260815_002333_place_a_tvon_the_table/acquire/identity_tvon_the_table.json",
+      "verified": false
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.25,
+          0.10247469629908006,
+          0.08467067261405396
+        ],
+        "size_resolution": {
+          "mode": "absolute:0.25",
+          "actual_max_dim_m": 2.725804567337036,
+          "scale": 0.09171603973216484,
+          "reference_max_dim_m": 0.25,
+          "reference_assets": [],
+          "verdict": "scaled"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/362_tvon_the_table/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "11dca346e3de73d6db13ad5d1f5971a565d13d66748490f0156247262d27253b",
+          "size_bytes": 15870476,
+          "metadata": {
+            "derived_from": "SheenWoodLeatherSofa.glb",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": false
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/362_tvon_the_table/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "11dca346e3de73d6db13ad5d1f5971a565d13d66748490f0156247262d27253b",
+          "size_bytes": 15870476,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_362_tvon_the_table/SheenWoodLeatherSofa.glb",
+          "backend": "portable",
+          "role": "visual_and_collision",
+          "sha256": "5349e042ad41e695e89f1110230c4ee0c75b2bc62ef830c7016be6ecf665bfb6",
+          "size_bytes": 10107912,
+          "metadata": {
+            "origin_prefix": "web_362_tvon_the_table"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/362_tvon_the_table/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "b935b4396e76b3a75bbfc3b52d672ed7ee55a4a78efb130b54368268e8811eb3",
+          "size_bytes": 13069,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "web (github_tree)",
+        "group": "web_362_tvon_the_table",
+        "file": "SheenWoodLeatherSofa.glb",
+        "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/SheenWoodLeatherSofa/glTF-Binary/SheenWoodLeatherSofa.glb",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "Creative Commons Attribution 4.0 International; owner: Darmstadt Graphics Group GmbH",
+          "evidence_url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/SheenWoodLeatherSofa/metadata.json",
+          "checked_date": "2026-08-15",
+          "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
+        },
+        "retrieved_at": "2026-08-15",
+        "source_manifest_path": "/home/jingxiang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/_source/web_362_tvon_the_table/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-15T00:23:47",
+          "verified_digest": "97ffc7dbc6f3c8a1acf3d90d7f16e5dd980809b8dc261663974d9610a2c71639",
+          "report_path": "/home/jingxiang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/results/web_runs/20260815_002333_place_a_tvon_the_table/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        }
+      ]
+    }
+  ],
+  "external_ids": {
+    "env_gen": "362_tvon_the_table"
+  }
+}

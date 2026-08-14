@@ -1,0 +1,194 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_307_banana",
+  "category": "banana",
+  "kind": "rigid",
+  "semantics": {
+    "aliases": [
+      "banana"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "manifest_human",
+      "evidence": "1_asset_reuse/configs/external_manifest.json",
+      "verified": false
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.19717395341752564,
+          0.03864932927528031,
+          0.07406628919989712
+        ],
+        "size_resolution": {
+          "mode": "match_category",
+          "actual_max_dim_m": 0.19717395341752564,
+          "scale": 1.0,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "no_precedent"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null,
+          "note": "no same-category precedent; conventions unverified"
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/307_banana/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "bae27ac736fa1213e6628010b01f6cb6c9836366f59e9d9baf34e0a716bba471",
+          "size_bytes": 4947836,
+          "metadata": {
+            "derived_from": "011_banana.usd",
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/307_banana/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "bae27ac736fa1213e6628010b01f6cb6c9836366f59e9d9baf34e0a716bba471",
+          "size_bytes": 4947836,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/011_banana.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "d4d1fa7af05967365cd538824ac68401111c574865a7fba7bc76d861f54f25dd",
+          "size_bytes": 0,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "ycb_axis_aligned",
+        "file": "011_banana.usd",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "Underlying YCB dataset CC BY 4.0 (attribution: Calli et al., doi:10.1109/MRA.2015.2448951 & doi:10.1109/ICAR.2015.7251504); NVIDIA USD conversion layer under NVIDIA Isaac Sim Additional Software and Materials License (internal R&D permitted; redistribution of converted USD unclear -- rebuild from upstream YCB data for clean redistribution)",
+          "evidence_url": "http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/ ; https://registry.opendata.aws/ycb-benchmarks/ ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "checked_date": "2026-08-09",
+          "checked_by": "owner-directed research 2026-08-09"
+        },
+        "retrieved_at": "2026-08-03",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "batch_v3",
+          "timestamp": "2026-08-03T00:00:00",
+          "verified_digest": "838ebef6d0ddf786b38ed974d421355265eba9a5110f9b6397ccdf5a4208ffa2",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev/results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
+        },
+        {
+          "backend": "sapien",
+          "check": "runtime_load",
+          "verdict": "pass",
+          "run_id": "s11",
+          "timestamp": "2026-08-09T00:45:55",
+          "verified_digest": "838ebef6d0ddf786b38ed974d421355265eba9a5110f9b6397ccdf5a4208ffa2",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev-ledger/results/20260809_ledger_v1_accept/s11"
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "yellow"
+        ],
+        "color_fractions": {
+          "yellow": 0.872,
+          "orange": 0.086,
+          "green": 0.042
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "profile": "cross_backend",
+  "external_ids": {
+    "env_gen": "307_banana"
+  }
+}

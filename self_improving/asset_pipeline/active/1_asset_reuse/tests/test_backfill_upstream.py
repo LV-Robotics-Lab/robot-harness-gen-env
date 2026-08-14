@@ -551,11 +551,12 @@ def test_rigid_up_axis_measured_y_up(tmp_path):
     out = tmp_path / "out"
     r = _run(catalog_path, out, apply=True)
     assert r.returncode == 0, r.stderr
-    physical = json.loads((out / "901_widget/ledger.json").read_text())["models"][0][
-        "physical"
-    ]
-    assert physical["mesh_up_axis"] == "Y"
-    assert physical["origin_convention"] == "bottom-center"
+    led = json.loads((out / "901_widget/ledger.json").read_text())
+    physical = led["models"][0]["physical"]
+    rep0 = led["models"][0]["representations"][0]
+    assert rep0["frame"]["up_axis"] == "Y"
+    assert rep0["geometry_state"]["origin"] == "bottom-center"
+    assert rep0["geometry_state"]["scale_baked"] is False
     # mesh_bbox_m comes from the SAME trimesh measurement x scale_applied
     # (1.0 in this fixture), not catalog dimensions_m ([0.05, 0.06, 0.12],
     # deliberately different in this fixture to prove it's unused). GLB
@@ -628,8 +629,9 @@ def test_rigid_up_axis_measured_z_up(tmp_path):
     assert r.returncode == 0, r.stderr
     led = json.loads((out / "806_zblock/ledger.json").read_text())
     physical = led["models"][0]["physical"]
-    assert physical["mesh_up_axis"] == "Z"
-    assert physical["origin_convention"] == "base-at-floor"
+    rep0 = led["models"][0]["representations"][0]
+    assert rep0["frame"]["up_axis"] == "Z"
+    assert rep0["geometry_state"]["origin"] == "base-at-floor"
     assert ledger.validate_ledger(led, check_files=True) == []
 
 
@@ -777,8 +779,9 @@ def test_articulated_axis_fixed_regardless_of_stable_orientation(tmp_path):
     assert r.returncode == 0, r.stderr
     led = json.loads((out / "804_hinge/ledger.json").read_text())
     physical = led["models"][0]["physical"]
-    assert physical["mesh_up_axis"] == "Z"
-    assert physical["origin_convention"] == "base-at-floor"
+    rep0 = led["models"][0]["representations"][0]
+    assert rep0["frame"]["up_axis"] == "Z"
+    assert rep0["geometry_state"]["origin"] == "base-at-floor"
     # the X90 stable-pose data itself is preserved verbatim, unaffected.
     assert physical["conventions"]["stable_poses"][0]["orientation_wxyz"] == list(
         ledger.X90_WXYZ
@@ -796,11 +799,10 @@ def test_articulated_up_axis_identity_orientation_is_zup(tmp_path):
     out = tmp_path / "out"
     r = _run(catalog_path, out, apply=True)
     assert r.returncode == 0, r.stderr
-    physical = json.loads((out / "902_gadget/ledger.json").read_text())["models"][0][
-        "physical"
-    ]
-    assert physical["mesh_up_axis"] == "Z"
-    assert physical["origin_convention"] == "base-at-floor"
+    led = json.loads((out / "902_gadget/ledger.json").read_text())
+    rep0 = led["models"][0]["representations"][0]
+    assert rep0["frame"]["up_axis"] == "Z"
+    assert rep0["geometry_state"]["origin"] == "base-at-floor"
 
 
 def test_format_derived_from_uri_suffix(tmp_path):
@@ -865,7 +867,7 @@ def test_format_derived_from_uri_suffix(tmp_path):
     reps = {rp["role"]: rp for rp in led["models"][0]["representations"]}
     assert reps["visual"]["format"] == "obj"
     assert reps["collision"]["format"] == "obj"
-    assert led["models"][0]["physical"]["mesh_up_axis"] == "Z"
+    assert led["models"][0]["representations"][0]["frame"]["up_axis"] == "Z"
 
 
 def test_isaac_usd_no_ingestible_model_errors_out(tmp_path):

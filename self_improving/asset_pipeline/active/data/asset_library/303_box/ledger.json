@@ -1,0 +1,720 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_303_box",
+  "category": "box",
+  "kind": "rigid",
+  "semantics": {
+    "aliases": [
+      "box",
+      "storage box"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "manifest_human",
+      "evidence": "1_asset_reuse/configs/external_manifest.json",
+      "verified": false
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.05750167315593538,
+          0.07481884999999999,
+          0.025168986439135854
+        ],
+        "size_resolution": {
+          "mode": "match_category",
+          "actual_max_dim_m": 0.21343700885540964,
+          "scale": 0.35054300283361417,
+          "reference_max_dim_m": 0.07481884999999999,
+          "reference_assets": [
+            "037_box"
+          ],
+          "verdict": "scaled"
+        },
+        "conventions": {
+          "is_static": true,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": "037_box",
+          "note": "inherited from 037_box"
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/303_box/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "8de7829a6284c0347631b67eb5b5caed4b12977afd6aa614b305ea8e87fd063f",
+          "size_bytes": 11625072,
+          "metadata": {
+            "derived_from": "003_cracker_box.usd",
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/303_box/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "8de7829a6284c0347631b67eb5b5caed4b12977afd6aa614b305ea8e87fd063f",
+          "size_bytes": 11625072,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/003_cracker_box.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "2d3725fd7f47e6064cdfdd19553e49f5de6df5f1afcbcceb43466d57847b479d",
+          "size_bytes": 0,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "ycb_axis_aligned",
+        "file": "003_cracker_box.usd",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "Underlying YCB dataset CC BY 4.0 (attribution: Calli et al., doi:10.1109/MRA.2015.2448951 & doi:10.1109/ICAR.2015.7251504); NVIDIA USD conversion layer under NVIDIA Isaac Sim Additional Software and Materials License (internal R&D permitted; redistribution of converted USD unclear -- rebuild from upstream YCB data for clean redistribution)",
+          "evidence_url": "http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/ ; https://registry.opendata.aws/ycb-benchmarks/ ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "checked_date": "2026-08-09",
+          "checked_by": "owner-directed research 2026-08-09"
+        },
+        "retrieved_at": "2026-08-03",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "batch_v3",
+          "timestamp": "2026-08-03T00:00:00",
+          "verified_digest": "b595b162a9cfda7abc4c5ba7a4c82e9eeea81976973f537366b0b248f1e94d29",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev/results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
+        },
+        {
+          "backend": "sapien",
+          "check": "runtime_load",
+          "verdict": "pass",
+          "run_id": "s11",
+          "timestamp": "2026-08-09T00:45:55",
+          "verified_digest": "b595b162a9cfda7abc4c5ba7a4c82e9eeea81976973f537366b0b248f1e94d29",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev-ledger/results/20260809_ledger_v1_accept/s11"
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "red"
+        ],
+        "color_fractions": {
+          "red": 0.474,
+          "white": 0.192,
+          "orange": 0.159,
+          "brown": 0.051
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    },
+    {
+      "model_id": 1,
+      "physical": {
+        "mesh_bbox_m": [
+          0.03934113549885519,
+          0.07481884999999999,
+          0.0191592513705654
+        ],
+        "size_resolution": {
+          "mode": "match_category",
+          "actual_max_dim_m": 0.1762534578981967,
+          "scale": 0.4244957851732762,
+          "reference_max_dim_m": 0.07481884999999999,
+          "reference_assets": [
+            "037_box"
+          ],
+          "verdict": "scaled"
+        },
+        "conventions": {
+          "is_static": true,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": "037_box",
+          "note": "inherited from 037_box"
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/303_box/visual/base1.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "585c6ebbd3188dcbc29167213bcac558c109fb982d359c31cbe29ccc6100b34d",
+          "size_bytes": 12936104,
+          "metadata": {
+            "derived_from": "004_sugar_box.usd",
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/303_box/collision/base1.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "585c6ebbd3188dcbc29167213bcac558c109fb982d359c31cbe29ccc6100b34d",
+          "size_bytes": 12936104,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/004_sugar_box.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "abbf30b1b20585ba36f677c744a4dd7500d84b6fa77e5bd720e9e56bcc0e5201",
+          "size_bytes": 0,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "ycb_axis_aligned",
+        "file": "004_sugar_box.usd",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "Underlying YCB dataset CC BY 4.0 (attribution: Calli et al., doi:10.1109/MRA.2015.2448951 & doi:10.1109/ICAR.2015.7251504); NVIDIA USD conversion layer under NVIDIA Isaac Sim Additional Software and Materials License (internal R&D permitted; redistribution of converted USD unclear -- rebuild from upstream YCB data for clean redistribution)",
+          "evidence_url": "http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/ ; https://registry.opendata.aws/ycb-benchmarks/ ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "checked_date": "2026-08-09",
+          "checked_by": "owner-directed research 2026-08-09"
+        },
+        "retrieved_at": "2026-08-03",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "batch_v3",
+          "timestamp": "2026-08-03T00:00:00",
+          "verified_digest": "e6ce2ab0a1485da46ecb50d88e6423300824c77db0eaa8287e20bef06bec4d9b",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev/results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
+        },
+        {
+          "backend": "sapien",
+          "check": "runtime_load",
+          "verdict": "pass",
+          "run_id": "s11",
+          "timestamp": "2026-08-09T00:45:55",
+          "verified_digest": "e6ce2ab0a1485da46ecb50d88e6423300824c77db0eaa8287e20bef06bec4d9b",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev-ledger/results/20260809_ledger_v1_accept/s11"
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "white",
+          "yellow"
+        ],
+        "color_fractions": {
+          "white": 0.407,
+          "yellow": 0.346,
+          "blue": 0.081,
+          "black": 0.006
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    },
+    {
+      "model_id": 2,
+      "physical": {
+        "mesh_bbox_m": [
+          0.11365433915732037,
+          0.08981695928088662,
+          0.038471370075537914
+        ],
+        "size_resolution": {
+          "mode": "match_category",
+          "actual_max_dim_m": 0.11365433915732037,
+          "scale": 1.0,
+          "reference_max_dim_m": 0.07481884999999999,
+          "reference_assets": [
+            "037_box"
+          ],
+          "verdict": "ok"
+        },
+        "conventions": {
+          "is_static": true,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": "037_box",
+          "note": "inherited from 037_box"
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/303_box/visual/base2.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "2aebb1c8c3f24839ff86034d9f14fbde7fc71f504269c9d5890ead6345ee38dc",
+          "size_bytes": 10083340,
+          "metadata": {
+            "derived_from": "008_pudding_box.usd",
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/303_box/collision/base2.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "2aebb1c8c3f24839ff86034d9f14fbde7fc71f504269c9d5890ead6345ee38dc",
+          "size_bytes": 10083340,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/008_pudding_box.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "e833edb71290afc24a4bea5ffc06714b5b07b26242d315dd796c001e6ea7b9b2",
+          "size_bytes": 0,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "ycb_axis_aligned",
+        "file": "008_pudding_box.usd",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "Underlying YCB dataset CC BY 4.0 (attribution: Calli et al., doi:10.1109/MRA.2015.2448951 & doi:10.1109/ICAR.2015.7251504); NVIDIA USD conversion layer under NVIDIA Isaac Sim Additional Software and Materials License (internal R&D permitted; redistribution of converted USD unclear -- rebuild from upstream YCB data for clean redistribution)",
+          "evidence_url": "http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/ ; https://registry.opendata.aws/ycb-benchmarks/ ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "checked_date": "2026-08-09",
+          "checked_by": "owner-directed research 2026-08-09"
+        },
+        "retrieved_at": "2026-08-03",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "batch_v3",
+          "timestamp": "2026-08-03T00:00:00",
+          "verified_digest": "ae4a945e060cf53bdfc41b89e15d8f920e4858a5027aee0f540cf9840ba5b228",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev/results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
+        },
+        {
+          "backend": "sapien",
+          "check": "runtime_load",
+          "verdict": "pass",
+          "run_id": "s11",
+          "timestamp": "2026-08-09T00:45:55",
+          "verified_digest": "ae4a945e060cf53bdfc41b89e15d8f920e4858a5027aee0f540cf9840ba5b228",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev-ledger/results/20260809_ledger_v1_accept/s11"
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "brown",
+          "white"
+        ],
+        "color_fractions": {
+          "brown": 0.345,
+          "white": 0.281,
+          "red": 0.144,
+          "orange": 0.013
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    },
+    {
+      "model_id": 3,
+      "physical": {
+        "mesh_bbox_m": [
+          0.08918316641785573,
+          0.07311520651470407,
+          0.029983339831605386
+        ],
+        "size_resolution": {
+          "mode": "match_category",
+          "actual_max_dim_m": 0.08918316641785573,
+          "scale": 1.0,
+          "reference_max_dim_m": 0.07481884999999999,
+          "reference_assets": [
+            "037_box"
+          ],
+          "verdict": "ok"
+        },
+        "conventions": {
+          "is_static": true,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": "037_box",
+          "note": "inherited from 037_box"
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "flat",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/303_box/visual/base3.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "71f4eda4ac839abb4ac9c8b27526808ca02ab6416686e39e75ae04fa28d6a113",
+          "size_bytes": 9635600,
+          "metadata": {
+            "derived_from": "009_gelatin_box.usd",
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/303_box/collision/base3.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "71f4eda4ac839abb4ac9c8b27526808ca02ab6416686e39e75ae04fa28d6a113",
+          "size_bytes": 9635600,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/009_gelatin_box.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "c2d00f6051d7212f9d8c627e12362786aa172ba2bc798688a7ff162cb19a19c6",
+          "size_bytes": 0,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "ycb_axis_aligned",
+        "file": "009_gelatin_box.usd",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "Underlying YCB dataset CC BY 4.0 (attribution: Calli et al., doi:10.1109/MRA.2015.2448951 & doi:10.1109/ICAR.2015.7251504); NVIDIA USD conversion layer under NVIDIA Isaac Sim Additional Software and Materials License (internal R&D permitted; redistribution of converted USD unclear -- rebuild from upstream YCB data for clean redistribution)",
+          "evidence_url": "http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/ ; https://registry.opendata.aws/ycb-benchmarks/ ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "checked_date": "2026-08-09",
+          "checked_by": "owner-directed research 2026-08-09"
+        },
+        "retrieved_at": "2026-08-03",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "batch_v3",
+          "timestamp": "2026-08-03T00:00:00",
+          "verified_digest": "4b1d3ca08decbbcdce43c50b3658593f4252be4b8016959915e89a8524b5c1f4",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev/results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
+        },
+        {
+          "backend": "sapien",
+          "check": "runtime_load",
+          "verdict": "pass",
+          "run_id": "s11",
+          "timestamp": "2026-08-09T00:45:55",
+          "verified_digest": "4b1d3ca08decbbcdce43c50b3658593f4252be4b8016959915e89a8524b5c1f4",
+          "report_path": "/home/jingxiang/yuxin/env-gen-dev-ledger/results/20260809_ledger_v1_accept/s11"
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "red",
+          "white"
+        ],
+        "color_fractions": {
+          "red": 0.492,
+          "white": 0.265,
+          "brown": 0.037,
+          "orange": 0.01
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "profile": "cross_backend",
+  "external_ids": {
+    "env_gen": "303_box"
+  }
+}

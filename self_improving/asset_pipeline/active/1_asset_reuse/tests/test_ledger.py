@@ -216,7 +216,6 @@ def _set(path, value):
 CASES = [
     (_del("schema_version"), "needs_backfill"),
     (_set("schema_version", "asset_ledger.v0"), "bad_schema_version"),
-    (_del("semantic_name"), "missing"),
     (_set("kind", "soft"), "bad_enum"),
     (_set("semantics.aliases", []), "empty_aliases"),
     (_set("models", []), "no_models"),
@@ -270,17 +269,14 @@ CASES = [
         ),
         "estimator_required",
     ),
+    # v3: the runtime_default pair is gone; the enum row above it died with
+    # it. What CAN still be malformed is the friction static/dynamic split.
     (
         _set(
-            "models.0.physical.mass_kg",
-            {
-                "value": None,
-                "status": "unknown",
-                "runtime_default_kg": 0.1,
-                "runtime_default_basis": "vibes",
-            },
+            "models.0.physical.friction",
+            {"value": None, "status": "unknown", "static": "high"},
         ),
-        "bad_enum",
+        "unknown_shape",
     ),
     (_del("models.0.physical.friction"), "missing"),
     (_set("models.0.representations", []), "no_sapien_representation"),
@@ -324,7 +320,6 @@ CASES = [
     # unusable as an absent key.
     (_set("asset_id", None), "missing"),
     (_set("kind", None), "missing"),
-    (_set("tags", None), "missing"),
     (_set("models", None), "missing"),
     # I-4: models present but not a list (e.g. an empty dict) must not
     # silently produce zero violations.
@@ -383,7 +378,6 @@ CASES = [
     (_set("models.0.source.kind", "downloaded"), "bad_source_kind"),
     # retrieved branch still owes its retrieval coordinates
     (_del("models.0.source.library"), "missing"),
-    (_del("models.0.source.source_manifest_path"), "missing"),
     # cross-branch contamination: the realistic version of this is a ledger
     # copy-pasted from a neighbour and only half-edited.
     (
@@ -686,10 +680,10 @@ def test_new_model_entry_and_upsert():
         )
 
 
-def test_upsert_model_detects_semantic_name_and_asset_drift():
-    # C-1: the "asset-level fields must match on re-upsert" rule had missed
-    # semantic_name entirely (silently kept the old value), and never
-    # cross-checked the `asset` param itself against the existing asset_id.
+def test_upsert_model_discards_legacy_fields_and_detects_asset_drift():
+    # v2 history: the drift rule once guarded semantic_name; v3 deletes the
+    # field outright (79/79 ledgers had it == category, zero readers), so the
+    # test now asserts the DISCARD plus the surviving asset_id cross-check.
     m = ledger.new_model_entry(
         model=0,
         representations=make_model()["representations"],
@@ -714,21 +708,23 @@ def test_upsert_model_detects_semantic_name_and_asset_drift():
         tags=["rigid", "external"],
         model_entry=m,
     )
-    with pytest.raises(ValueError):  # semantic_name drift
-        ledger.upsert_model(
-            led,
-            asset="315_shears",
-            category="shears",
-            kind="rigid",
-            profile="sapien_only",
-            identity=IDENTITY,
-            aliases=["shears"],
-            colors=[],
-            materials=[],
-            tags=["rigid", "external"],
-            semantic_name="not_shears",
-            model_entry=dict(m, model_id=1),
-        )
+    # v3: semantic_name/tags are accepted and DISCARDED -- no drift to
+    # detect, and the built ledger must not carry either field.
+    led2 = ledger.upsert_model(
+        led,
+        asset="315_shears",
+        category="shears",
+        kind="rigid",
+        profile="sapien_only",
+        identity=IDENTITY,
+        aliases=["shears"],
+        colors=[],
+        materials=[],
+        tags=["rigid", "external"],
+        semantic_name="not_shears",
+        model_entry=dict(m, model_id=1),
+    )
+    assert "semantic_name" not in led2 and "tags" not in led2
     with pytest.raises(ValueError):  # wrong asset name, caught via asset_id suffix
         ledger.upsert_model(
             led,

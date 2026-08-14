@@ -1,0 +1,210 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_352_handicap",
+  "category": "handicap",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "handicap"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "requested_by_acquire",
+      "evidence": "/home/jingxiang/yuxin/sweep_out/C_handicap/acquire/identity_handicap.json",
+      "verified": false
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.24994573899648728,
+          0.2496930397306411,
+          0.24960362273309522
+        ],
+        "size_resolution": {
+          "mode": "absolute:0.25",
+          "actual_max_dim_m": 2.0006652870711443,
+          "scale": 0.12493131190494791,
+          "reference_max_dim_m": 0.25,
+          "reference_assets": [],
+          "verdict": "scaled"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/352_handicap/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "e84c2546397157f96a4e0c02d88779e1191ffb776b314f743010329f90cb6788",
+          "size_bytes": 14377552,
+          "metadata": {
+            "derived_from": "9348c988372a4efa93764bd5981c078a.glb",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": false
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/352_handicap/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "e84c2546397157f96a4e0c02d88779e1191ffb776b314f743010329f90cb6788",
+          "size_bytes": 14377552,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_352_handicap/9348c988372a4efa93764bd5981c078a.glb",
+          "backend": "portable",
+          "role": "visual_and_collision",
+          "sha256": "b7a0170cfbad45d701132a1dd704cd885cdfb3a4f7b8786b0870eb91286f8412",
+          "size_bytes": 14375520,
+          "metadata": {
+            "origin_prefix": "web_352_handicap"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/352_handicap/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "26dba83d773c14968f6b783f5bda9ace01c8fc693163b86ec3ac7876e20aa021",
+          "size_bytes": 8591,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "web (objaverse)",
+        "group": "web_352_handicap",
+        "file": "9348c988372a4efa93764bd5981c078a.glb",
+        "url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-143/9348c988372a4efa93764bd5981c078a.glb",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "CC-BY-4.0 (Objaverse per-object metadata); owner: Handicap Iron",
+          "evidence_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/metadata/000-143.json.gz",
+          "checked_date": "2026-08-13",
+          "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
+        },
+        "retrieved_at": "2026-08-13",
+        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_352_handicap/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-13T22:37:49",
+          "verified_digest": "b4bda440851afb823ffdd72801966a7336a7f7284ca29185ebf543cc1628f203",
+          "report_path": "/home/jingxiang/yuxin/sweep_out/C_handicap/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "blue"
+        ],
+        "color_fractions": {
+          "blue": 0.734,
+          "green": 0.221,
+          "white": 0.045
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "external_ids": {
+    "env_gen": "352_handicap"
+  }
+}

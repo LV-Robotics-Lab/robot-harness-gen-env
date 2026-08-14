@@ -4,7 +4,7 @@ Pure stdlib so both conda envs (isaac-smoke py3.11 / env-gen-yuxin py3.10) can
 import it. May import lib.conventions (also pure stdlib) but nothing else.
 
 The constant tables below (KINDS, PROFILES, SOURCE_KINDS, BACKENDS, ROLES,
-CHECKS, VERDICTS, MASS_STATUS, DEFAULT_BASIS, INERTIAL_BASIS, IDENTITY_BASIS,
+CHECKS, VERDICTS, MASS_STATUS, INERTIAL_BASIS, IDENTITY_BASIS,
 REQUIRED_MODEL, REQUIRED_SOURCE, PROFILE_REQUIRED_MODEL, ...) ARE the
 contract. spec §3 is a documentation view of these tables, not the other way
 around: if the two ever disagree, this file wins and spec §3 needs to be
@@ -44,7 +44,29 @@ from pathlib import Path
 
 from lib import conventions
 
-SCHEMA_VERSION = "asset_ledger.v2"
+SCHEMA_VERSION = "asset_ledger.v3"
+# v3 (2026-08-15, 四路辩证+实验裁决定稿), relative to v2:
+#   DELETED  semantic_name, tags (零决策消费者: semantic_name 79/79 恒等于
+#            category 且账本→catalog 通路不存在; tags 全词表是 kind/source
+#            复制品), mass/friction 的 runtime_default 对 ("runtime" 是谎言:
+#            真实运行时质量走上游 catalog 标量通路, 唯一读者是 archive 死码),
+#            physical.mesh_up_axis / origin_convention (与 kind 100% 互锁,
+#            消费面为零; 帧事实真正的归属是每个 representation 自己 -- 同一
+#            model 的 GLB 是 Y-up 已烘 scale, USD 是 Z-up 未烘, per-model
+#            字段根本描述不了, 见 representations[].frame)
+#   DEMOTED  size_resolution.{mode,reference_*,verdict} / verification[]
+#            .report_path / source.source_manifest_path -> 可选留痕
+#   ADDED    external_ids (账本/上游目录/IR 三套命名的映射曾全靠代码约定,
+#            ledger-backed Isaac 链在第一个真实资产上断裂),
+#            models[].appearance (508 份模型级实测色此前无契约位置),
+#            physical.placement (可放置性几何此前只活在 s9 生成层),
+#            physical.restitution + friction 拆 static/dynamic (业界最小
+#            物理集四规范交集), inertial.principal_axes_wxyz (可选),
+#            stable_poses[].measured_against 与 placement.measured_against
+#            (同库曾并存两种互斥姿态语义; 同网格换加载器停留差 9mm 实证
+#            测量-栈耦合), representations[].frame/geometry_state/files[]/
+#            collision_meta, BACKENDS += mujoco,
+#            semantics.category_anchor / source.license.attribution (可选)
 KINDS = ("rigid", "articulated")
 
 # What the asset is FOR. Declared, never derived: an asset that happens to
@@ -62,7 +84,7 @@ PROFILES = ("sapien_only", "cross_backend")
 # model version that cease to exist the moment the run ends.
 SOURCE_KINDS = ("retrieved", "generated")
 
-BACKENDS = ("sapien", "isaacsim", "portable")
+BACKENDS = ("sapien", "isaacsim", "mujoco", "portable")
 ROLES = ("visual", "collision", "visual_and_collision", "snapshot")
 # generation_qc is the generator's own pre-physics screening (truncated
 # geometry, duplicate bodies, aesthetic threshold). It rides in the same
@@ -78,7 +100,6 @@ CHECKS = (
 )
 VERDICTS = ("pass", "fail")
 MASS_STATUS = ("known", "estimated", "unknown")
-DEFAULT_BASIS = ("global_constant", "category_typical", "urdf_inertial", "none")
 
 # Where a centre-of-mass / inertia tensor came from. engine_derived with null
 # values is a complete, informative answer -- it says "not an asset fact, the
@@ -110,10 +131,8 @@ IDENTITY_WXYZ = conventions.IDENTITY_WXYZ
 REQUIRED_ASSET = (
     "asset_id",
     "category",
-    "semantic_name",
     "kind",
     "profile",
-    "tags",
     "semantics.aliases",
     "semantics.identity.basis",
     "semantics.identity.verified",
@@ -126,10 +145,8 @@ REQUIRED_ASSET = (
 NOT_NULLABLE_ASSET = (
     "asset_id",
     "category",
-    "semantic_name",
     "kind",
     "profile",
-    "tags",
     "semantics",
     "models",
 )
@@ -138,8 +155,6 @@ NOT_NULLABLE_ASSET = (
 REQUIRED_MODEL = (
     "model_id",
     "physical.mesh_bbox_m",
-    "physical.mesh_up_axis",
-    "physical.origin_convention",
     "physical.size_resolution",
     "physical.conventions.is_static",
     "physical.conventions.z_policy",
@@ -174,7 +189,11 @@ REQUIRED_SOURCE = {
         "source.group",
         "source.file",
         "source.retrieved_at",
-        "source.source_manifest_path",
+        # source_manifest_path was required through v2; demoted in v3: 70/87
+        # equalled the `_source/<group>/SOURCE_MANIFEST.json` convention the
+        # writer itself constructs, and 16 of the 17 exceptions pointed into
+        # a checkout that no longer exists. The convention is the contract;
+        # the field is an optional override.
     ),
     "generated": (
         "source.generator.tool",
@@ -219,14 +238,12 @@ PROFILE_REQUIRED_MODEL = {
 #   - source.license: a null here is already caught by _validate_license
 #     (not isinstance(..., dict)) -> license_not_structured.
 # Nested optional sub-fields (source.license.spdx,
-# physical.size_resolution.reference_max_dim_m, friction.runtime_default,
+# physical.size_resolution.reference_max_dim_m, friction.static,
 # ...) are legitimately nullable and are intentionally NOT on this list --
 # only REQUIRED_MODEL's own (whole-field) paths are checked here.
 NOT_NULLABLE_MODEL = (
     "model_id",
     "physical.mesh_bbox_m",
-    "physical.mesh_up_axis",
-    "physical.origin_convention",
     "physical.size_resolution",
     "physical.conventions.is_static",
     "physical.conventions.z_policy",
@@ -247,7 +264,6 @@ NOT_NULLABLE_SOURCE = {
         "source.group",
         "source.file",
         "source.retrieved_at",
-        "source.source_manifest_path",
     ),
     "generated": (
         "source.generator.tool",
@@ -414,6 +430,44 @@ def _validate_stable_poses(poses, prefix, out):
             )
 
 
+def _validate_measured_block(block, prefix, value_keys, out):
+    """v3 measured-data blocks (appearance / physical.placement).
+
+    The one hard rule, learned the expensive way: a measured number is a
+    property of (asset x measuring stack), not of the asset -- the same mesh
+    rested 9 mm lower after a loader change, and the same library once held
+    two mutually exclusive stable-pose semantics with no field to tell them
+    apart. So any measured block MUST say what it was measured against."""
+    if not isinstance(block, dict):
+        out.append(Violation(prefix, "unknown_shape", f"{prefix} is not a dict"))
+        return
+    ma = block.get("measured_against")
+    if not isinstance(ma, dict) or not ma.get("backend"):
+        out.append(
+            Violation(
+                f"{prefix}.measured_against",
+                "measured_against_required",
+                "measured data must record the stack it was measured against "
+                "(at minimum: backend)",
+            )
+        )
+    elif ma.get("backend") not in BACKENDS:
+        out.append(
+            Violation(
+                f"{prefix}.measured_against.backend",
+                "bad_enum",
+                f"backend {ma.get('backend')!r} not in {BACKENDS}",
+            )
+        )
+    for k in value_keys:
+        if k not in block:
+            out.append(
+                Violation(
+                    f"{prefix}.{k}", "missing", f"required field missing: {prefix}.{k}"
+                )
+            )
+
+
 def _validate_mass_or_friction(block, prefix, out):
     status = block.get("status")
     if status not in MASS_STATUS:
@@ -438,15 +492,25 @@ def _validate_mass_or_friction(block, prefix, out):
                 "status=estimated requires an estimator",
             )
         )
-    basis = block.get("runtime_default_basis")
-    if basis not in DEFAULT_BASIS:
-        out.append(
-            Violation(
-                f"{prefix}.runtime_default_basis",
-                "bad_enum",
-                f"runtime_default_basis {basis!r} not in {DEFAULT_BASIS}",
-            )
-        )
+    # v3: the runtime_default pair is gone. The engine-default constant lives
+    # with the engine (runtime_config / the compiler), not copied into every
+    # ledger -- 86/87 v2 ledgers carried the same global 0.1 and nothing in
+    # the live tree ever read it back.
+    # v3: friction may carry a static/dynamic split (industry-minimal set:
+    # UsdPhysics / KHR_physics / SDFormat all model two coefficients). One
+    # envelope, two optional values; a lone legacy `value` remains legal and
+    # is read as "both, unsplit".
+    if prefix.endswith(".friction"):
+        for k in ("static", "dynamic"):
+            v = block.get(k)
+            if v is not None and not isinstance(v, (int, float)):
+                out.append(
+                    Violation(
+                        f"{prefix}.{k}",
+                        "unknown_shape",
+                        f"friction.{k} must be a number or null",
+                    )
+                )
 
 
 def _validate_representations(reps, prefix, out):
@@ -707,6 +771,10 @@ def _validate_source(source, prefix, out):
 
 
 def _validate_verification(verifications, prefix, out):
+    # report_path was required through v2 and is optional in v3: no reader
+    # anywhere checks the file exists or opens it (gen_fragment /
+    # latest_verification / usd_enrich consume backend/check/verdict/
+    # timestamp/verified_digest only). It stays legal as capture.
     required = (
         "backend",
         "check",
@@ -714,7 +782,6 @@ def _validate_verification(verifications, prefix, out):
         "run_id",
         "timestamp",
         "verified_digest",
-        "report_path",
     )
     for i, v in enumerate(verifications):
         vp = f"{prefix}.{i}"
@@ -830,6 +897,42 @@ def _validate_model(model, prefix, out, profile=None):
     inertial = _get(model, "physical.inertial")
     if inertial is not _MISSING:
         _validate_inertial(inertial, f"{prefix}.physical.inertial", out)
+
+    # v3 optional blocks. Optional means the KEY may be absent; a present
+    # block still has to be well-formed -- a malformed measurement record is
+    # worse than none, because readers trust it.
+    restitution = _get(model, "physical.restitution")
+    if restitution is not _MISSING and restitution is not None:
+        if isinstance(restitution, dict):
+            _validate_mass_or_friction(
+                restitution, f"{prefix}.physical.restitution", out
+            )
+        else:
+            out.append(
+                Violation(
+                    f"{prefix}.physical.restitution",
+                    "unknown_shape",
+                    "restitution is not a dict",
+                )
+            )
+
+    appearance = model.get("appearance")
+    if appearance is not None:
+        _validate_measured_block(
+            appearance,
+            f"{prefix}.appearance",
+            value_keys=("colors_measured",),
+            out=out,
+        )
+
+    placement = _get(model, "physical.placement")
+    if placement is not _MISSING and placement is not None:
+        _validate_measured_block(
+            placement,
+            f"{prefix}.physical.placement",
+            value_keys=(),
+            out=out,
+        )
 
     _check_size_invariant(model, prefix, out)
 
@@ -1117,41 +1220,34 @@ def new_model_entry(
     model,
     representations,
     mesh_bbox_m,
-    mesh_up_axis,
-    origin_convention,
     size_resolution,
     conventions,
     source,
     verification,
+    mesh_up_axis=None,
+    origin_convention=None,
     articulation=None,
     mass_override=None,
     friction_override=None,
     inertial=None,
+    appearance=None,
+    placement=None,
+    restitution=None,
     extras=None,
 ):
     """Assemble one models[] entry. mass/friction default to the
     conservative unknown shape unless an override is supplied.
 
-    v2: `scale_applied` is gone -- it duplicated size_resolution["scale"]
-    exactly, in every writer. `inertial` is optional here and required by the
-    validator only under profile=cross_backend, so a sapien_only writer need
-    not think about it at all."""
-    mass_kg = mass_override or {
-        "value": None,
-        "status": "unknown",
-        "runtime_default_kg": 0.1,
-        "runtime_default_basis": "global_constant",
-    }
-    friction = friction_override or {
-        "value": None,
-        "status": "unknown",
-        "runtime_default": None,
-        "runtime_default_basis": "none",
-    }
+    v3: mesh_up_axis / origin_convention are accepted for caller
+    compatibility and DISCARDED (their facts live per-representation in
+    frame/geometry_state now); the runtime_default pair on mass/friction is
+    gone (the engine default lives with the engine). appearance / placement /
+    restitution are the v3 measured blocks, optional at write time."""
+    del mesh_up_axis, origin_convention
+    mass_kg = mass_override or {"value": None, "status": "unknown"}
+    friction = friction_override or {"value": None, "status": "unknown"}
     physical = {
         "mesh_bbox_m": mesh_bbox_m,
-        "mesh_up_axis": mesh_up_axis,
-        "origin_convention": origin_convention,
         "size_resolution": size_resolution,
         "conventions": conventions,
         "mass_kg": mass_kg,
@@ -1159,6 +1255,10 @@ def new_model_entry(
     }
     if inertial is not None:
         physical["inertial"] = inertial
+    if placement is not None:
+        physical["placement"] = placement
+    if restitution is not None:
+        physical["restitution"] = restitution
     entry = {
         "model_id": model,
         "physical": physical,
@@ -1167,6 +1267,8 @@ def new_model_entry(
         "source": source,
         "verification": verification,
     }
+    if appearance is not None:
+        entry["appearance"] = appearance
     if extras is not None:
         entry["extras"] = extras
     return entry
@@ -1220,17 +1322,18 @@ def upsert_model(
     would only delete a rung from the ladder. The field exists for structural
     isomorphism with the upstream catalog, not to carry a description --
     descriptive text belongs in extras."""
-    semantic_name = semantic_name or category
+    # v3: semantic_name and tags are accepted for caller compatibility and
+    # DISCARDED -- 79/79 v2 ledgers had semantic_name == category, and tags
+    # was a copy of kind/source facts. The catalog derives its own.
+    del semantic_name, tags
 
     if ledger is None:
         ledger = {
             "schema_version": SCHEMA_VERSION,
             "asset_id": f"{asset_id_prefix}_{asset}",
             "category": category,
-            "semantic_name": semantic_name,
             "kind": kind,
             "profile": profile,
-            "tags": list(tags),
             "semantics": {
                 "aliases": list(aliases),
                 "colors": list(colors),
@@ -1250,8 +1353,6 @@ def upsert_model(
             "category": category,
             "kind": kind,
             "profile": profile,
-            "semantic_name": semantic_name,
-            "tags": list(tags),
             "semantics.aliases": list(aliases),
             "semantics.colors": list(colors),
             "semantics.materials": list(materials),

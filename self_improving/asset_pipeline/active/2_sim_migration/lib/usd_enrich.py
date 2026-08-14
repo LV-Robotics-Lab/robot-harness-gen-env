@@ -53,17 +53,27 @@ def _apply_isaac_representations(
     place.
     """
     enriched_asset_ids: set[str] = set()
+    neutralize_ids: set[str] = set()
     new_assets = []
     for asset in package.assets:
         rep = enrichment.get(asset.asset_id)
         if rep is not None:
             asset = replace(asset, representations=asset.representations + (rep,))
             enriched_asset_ids.add(asset.asset_id)
+            # v3: neutralize ONLY when the representation declares its scale
+            # baked. The old unconditional neutralize assumed every attached
+            # USD carried the RoboTwin scale -- measured false for the whole
+            # external pool, whose isaacsim reps point at _source originals:
+            # a cracker box compiled 2.8527x (= exactly 1/scale) too large
+            # (E2, 2026-08-15). An undeclared rep keeps the object scale.
+            gs = (rep.metadata or {}).get("geometry_state") or {}
+            if gs.get("scale_baked") is True:
+                neutralize_ids.add(asset.asset_id)
         new_assets.append(asset)
 
     new_objects = tuple(
         replace(obj, scale=(1.0, 1.0, 1.0))
-        if obj.asset_id in enriched_asset_ids
+        if obj.asset_id in neutralize_ids
         else obj
         for obj in package.env.objects
     )
@@ -100,6 +110,9 @@ def enrich_isaac_usd(
                 uri=str(usd),
                 backend="isaacsim",
                 role="visual_and_collision",
+                # this path's contract has always been "caller hands a baked
+                # USD"; state it so the neutralize rule stays uniform
+                metadata={"geometry_state": {"scale_baked": True}},
             )
     return _apply_isaac_representations(package, enrichment)
 
@@ -112,7 +125,7 @@ def enrich_isaac_usd(
 # (upstream asset, same shape via to_ir_bundles) -- see
 # lib/ledger.py:upsert_model's asset_id_prefix and to_ir_bundles' "_m<N>"
 # suffix, which this parser inverts.
-_LEDGER_ID_PREFIXES = ("robotwin_", "external_")
+_LEDGER_ID_PREFIXES = ("asset_", "robotwin_", "external_")
 _MODEL_SUFFIX_RE = re.compile(r"^(.*)_m(\d+)$")
 
 
@@ -185,7 +198,18 @@ def enrich_from_ledgers(
     }
 
     for asset in package.assets:
-        dir_name, model_id = _parse_ledger_asset_id(asset.asset_id)
+        # v3 junction rule: the importer preserves the original env-gen
+        # identity in AssetBundle.source; that is the lookup key. The string
+        # parse of asset_id is only a fallback -- the sanitizer prefixes
+        # numeric-leading ids with "asset_", which silently zeroed ledger
+        # coverage until E2 (skipped_no_ledger on the first real external
+        # asset, 2026-08-15).
+        src_aid = (asset.source or {}).get("asset_id")
+        src_mid = (asset.source or {}).get("model_id")
+        if src_aid:
+            dir_name, model_id = str(src_aid), int(src_mid or 0)
+        else:
+            dir_name, model_id = _parse_ledger_asset_id(asset.asset_id)
 
         ledger_data = None
         for ledger_dir in ledger_dirs:
