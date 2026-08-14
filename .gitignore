@@ -14,7 +14,6 @@ dist/
 *.hdf5
 *.h5
 data/
-local_data/
 datasets/
 outputs/
 checkpoints/
