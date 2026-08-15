@@ -869,6 +869,74 @@
      "size_policy": "absolute:0.25"
     }
    ]
+  },
+  {
+   "name": "acq_362_tvon_the_table",
+   "prefix": "Models/SheenWoodLeatherSofa/glTF-Binary",
+   "source": "github_tree",
+   "items": [
+    {
+     "usd": "SheenWoodLeatherSofa.glb",
+     "asset": "362_tvon_the_table",
+     "model": 0,
+     "category": "tvon_the_table",
+     "aliases": [
+      "tvon_the_table"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_363_sofa",
+   "prefix": "Models/GlamVelvetSofa/glTF-Binary",
+   "source": "github_tree",
+   "items": [
+    {
+     "usd": "GlamVelvetSofa.glb",
+     "asset": "363_sofa",
+     "model": 0,
+     "category": "sofa",
+     "aliases": [
+      "sofa"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_364_hanger",
+   "prefix": "Kleiderbügel (75d97251.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Kleiderbügel (75d97251.glb)",
+     "asset": "364_hanger",
+     "model": 0,
+     "category": "hanger",
+     "aliases": [
+      "hanger"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
+  },
+  {
+   "name": "acq_365_tv",
+   "prefix": "Retro TV (03765a7e.glb)",
+   "source": "objaverse",
+   "items": [
+    {
+     "usd": "Retro TV (03765a7e.glb)",
+     "asset": "365_tv",
+     "model": 0,
+     "category": "tv",
+     "aliases": [
+      "tv"
+     ],
+     "size_policy": "absolute:0.25"
+    }
+   ]
   }
  ]
 }
