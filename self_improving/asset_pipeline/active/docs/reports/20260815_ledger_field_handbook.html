@@ -1,0 +1,236 @@
+<title>账本字段手册</title>
+<style>
+:root{
+  --bg:#f7f6f2; --panel:#fffdf9; --ink:#23211c; --dim:#77716a; --line:#e3ded4;
+  --accent:#33518f; --accent-soft:#e9edf6; --keep:#2c7a4b; --keep-bg:#e7f2ea;
+  --del:#b3372c; --del-bg:#f9e9e6; --warn:#92701f; --warn-bg:#f6efdb;
+  --code-bg:#f0eee7; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#17181c; --panel:#1f2126; --ink:#e9e7e2; --dim:#9b978f; --line:#35373d;
+    --accent:#8fa8e0; --accent-soft:#252b3a; --keep:#6fbf8f; --keep-bg:#1f2e25;
+    --del:#e08a7e; --del-bg:#382320; --warn:#d3b465; --warn-bg:#33301f;
+    --code-bg:#26282e;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#17181c; --panel:#1f2126; --ink:#e9e7e2; --dim:#9b978f; --line:#35373d;
+  --accent:#8fa8e0; --accent-soft:#252b3a; --keep:#6fbf8f; --keep-bg:#1f2e25;
+  --del:#e08a7e; --del-bg:#382320; --warn:#d3b465; --warn-bg:#33301f;
+  --code-bg:#26282e;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 -apple-system,"PingFang SC","Noto Sans CJK SC",sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:30px 20px 90px}
+.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{font-size:30px;line-height:1.22;margin:6px 0 6px;text-wrap:balance}
+.dek{color:var(--dim);margin:0 0 16px;max-width:46em}
+h2{font-size:20px;margin:46px 0 8px;padding-top:14px;border-top:2px solid var(--line)}
+h3{font-size:15.5px;margin:24px 0 6px}
+h3 code{font-size:14px}
+p{margin:8px 0;max-width:52em}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+.tblwrap{overflow-x:auto;margin:10px 0}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:10px 13px;overflow-x:auto;font:12.5px/1.55 var(--mono);margin:8px 0}
+code{font-family:var(--mono);font-size:.93em;background:var(--code-bg);padding:1px 5px;border-radius:4px}
+pre code{background:none;padding:0}
+.chip{display:inline-block;font:11.5px/1.7 var(--mono);padding:0 8px;border-radius:4px;font-weight:600;white-space:nowrap;margin:0 4px 4px 0}
+.c-read{color:var(--accent);background:var(--accent-soft)}
+.c-must{color:var(--keep);background:var(--keep-bg)}
+.c-opt{color:var(--warn);background:var(--warn-bg)}
+.c-dead{color:var(--del);background:var(--del-bg)}
+.story{border-left:3px solid var(--accent);background:var(--accent-soft);padding:9px 14px;border-radius:0 8px 8px 0;margin:10px 0;font-size:13.5px;max-width:52em}
+.story.red{border-left-color:var(--del);background:var(--del-bg)}
+.story b:first-child{color:var(--accent)}
+.story.red b:first-child{color:var(--del)}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:12px 0}
+.case .lbl{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:600;margin-bottom:4px}
+.toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 18px;margin:16px 0;column-count:2;column-gap:28px;font-size:13.5px}
+.toc a{color:var(--accent);text-decoration:none;display:block;padding:2px 0}
+.toc a:hover{text-decoration:underline}
+.small{font-size:12.5px;color:var(--dim)}
+.num{font-variant-numeric:tabular-nums}
+@media (max-width:640px){.toc{column-count:1}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+a{color:var(--accent)}
+</style>
+
+<div class="wrap">
+<div class="eyebrow">env-gen-dev · asset_ledger.v3 · 团队参考</div>
+<h1>账本字段手册</h1>
+<p class="dek">每个资产入库时写一份 <code>ledger.json</code>（账本）——它是这个资产在系统里的唯一权威记录。本手册按字段组解释每个属性是什么、为谁存在、缺了会怎样，案例全部摘自库里的真实账本。最后一章讲仓库其他流程怎样与契约对齐。</p>
+
+<div class="toc">
+<a href="#s0">30 秒总览：一份账本长什么样</a>
+<a href="#s1">身份与语义 — 检索靠什么找到它</a>
+<a href="#s2">外观（模型级实测）— "红色的杯子"怎么成真</a>
+<a href="#s3">尺寸决议 — 为什么沙发和电视都像篮子一样大</a>
+<a href="#s4">物理放置 — 摆得稳、装得下</a>
+<a href="#s5">物性信封 — 测的还是猜的，说清楚</a>
+<a href="#s6">表示层 — 同一资产的多副面孔</a>
+<a href="#s7">来源与许可 — 从哪来，能不能再分发</a>
+<a href="#s8">验证记录 — usable 的唯一来源</a>
+<a href="#s9">仓库其他流程的对齐指南</a>
+<a href="#s10">已知边界与改进方向</a>
+</div>
+
+<h2 id="s0">30 秒总览：一份账本长什么样</h2>
+<pre><code>data/asset_library/302_bowl/ledger.json        ← 每资产一份，git 管辖
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_302_bowl",             ← 账本身份
+  "external_ids": {"env_gen": "302_bowl"},     ← 目录/IR 侧叫什么
+  "category": "bowl",  "kind": "rigid",  "profile": "sapien_only",
+  "semantics": { aliases / colors / materials / identity … },
+  "models": [ {                                 ← 同一资产可有多个 model
+      "model_id": 0,
+      "appearance":  { 实测颜色 … },
+      "physical":    { 尺寸/姿态/放置/质量摩擦 … },
+      "representations": [ GLB / USD 各后端文件 … ],
+      "source":      { 从哪下载 or 怎么生成 + 许可 },
+      "verification":[ 每后端每检查一条记录 … ]
+  } ]
+}</code></pre>
+<p>贯穿全文的两条设计铁律：<b>①谁读它</b>——每个字段必须有真实的代码消费者，否则删（v3 就删了 9 个没人读的字段）；<b>②测量带戳</b>——任何实测数字都是"资产 × 测量栈"的属性，必须带 <code>measured_against</code> 说明在哪个仿真栈上测的（同一个网格换了加载器，停留高度差过 9mm）。</p>
+
+<h2 id="s1">身份与语义 — 检索靠什么找到它</h2>
+<h3><code>asset_id</code> / <code>category</code> / <code>semantics.aliases</code></h3>
+<span class="chip c-must">必填</span><span class="chip c-read">读者：grounding 匹配</span>
+<p>检索的三级匹配依据：prompt 里的物体词与 <code>category</code> 精确相同得 100 分、与别名相同得 90 分。别名解决"同物异名"——杯子资产带 <code>["cup","mug"]</code>，用户说 mug 也能命中。</p>
+<div class="story red"><b>事故背书</b>：垃圾桶资产只有 "dustbin" 一个名字时，"trash can" 检索零命中，采购白跑了一整轮 VLM 验证。别名是一次性成本，检索时是免费的。</div>
+<h3><code>external_ids</code></h3>
+<span class="chip c-must">必填(v3 新增)</span><span class="chip c-read">读者：迁移引擎账本查找</span>
+<p>同一个资产在不同层有不同名字：账本叫 <code>external_302_bowl</code>、目录叫 <code>302_bowl</code>、IR 里可能被消毒成 <code>asset_302_bowl_m0</code>。这个字段把映射写成事实，不再靠代码猜前缀。</p>
+<div class="story red"><b>事故背书</b>：靠字符串剥前缀猜映射时，Isaac 迁移链在第一个真实资产上就 <code>skipped_no_ledger</code>——覆盖率 0% 和 100% 之间只隔一个没猜到的前缀。</div>
+<h3><code>kind</code> / <code>profile</code></h3>
+<span class="chip c-must">必填</span><span class="chip c-read">读者：验证门选择 / 跨后端债务检查</span>
+<p><code>kind</code>（rigid/articulated）决定该资产要过哪种物理验证（刚体过沉降、关节体过关节扫描）。<code>profile</code> 声明用途：<code>cross_backend</code> 的资产"欠"一份 Isaac 表示与惯量键位，欠着不还会一直显示为未达标——声明的债务不会静默消失。</p>
+<h3><code>semantics.identity{basis, evidence}</code></h3>
+<span class="chip c-must">必填</span>
+<p>"它是个碗"这个身份声明是谁做出的：人工清单（manifest_human）、采购请求（requested_by_acquire）、VLM 看图验证（vlm）。出错时能追责到声明通道。</p>
+
+<h2 id="s2">外观（模型级实测）— "红色的杯子"怎么成真</h2>
+<h3><code>models[].appearance</code></h3>
+<span class="chip c-opt">有测量才写</span><span class="chip c-read">读者：fragment 投影 → grounding 颜色门</span>
+<div class="case"><div class="lbl">真实案例 · 302_bowl（外部下载的碗）</div>
+<pre><code>"appearance": {
+  "colors_measured": ["brown"],
+  "color_fractions": {"brown": 0.791, "red": 0.207},
+  "method": "4-view offscreen render, HSV per-pixel vote",
+  "measured_against": {"backend": "sapien", "run_id": "attr-20260814"}
+}</code></pre></div>
+<p>颜色不是人标的，是把模型离屏渲染 4 个视角、逐像素投票到 10 个规范色测出来的。发布规则刻意保守：<b>只有该资产所有可用 model 颜色一致时才对外发布</b>——因为上游检索对"声明了颜色但不匹配"是直接拒绝，标错一个颜色等于让这个资产从此搜不到。</p>
+<div class="story"><b>为什么在 model 级</b>：110_basket 有黄/红/白三只篮子（三个 model）。资产级只能写"未知"；model 级实测让"红色篮子"能选中红的那只。实验数字：接入 model 级颜色后，44 条检索矩阵的颜色真命中从 9 涨到 23。</div>
+
+<h2 id="s3">尺寸决议 — 为什么沙发和电视都像篮子一样大</h2>
+<h3><code>physical.size_resolution</code></h3>
+<span class="chip c-must">scale + actual_max_dim_m 必填</span><span class="chip c-read">读者：尺寸不变量校验</span>
+<div class="case"><div class="lbl">真实案例 · 365_tv（昨天刚采购的电视）</div>
+<pre><code>"size_resolution": {
+  "mode": "absolute:0.25",          ← 采用的决议策略
+  "actual_max_dim_m": 7.733635,     ← 原始素材实测最长边：7.7 米！
+  "scale": 0.0323263,               ← 施加的缩放
+  "reference_max_dim_m": 0.25,      ← 目标：最长边 0.25 米
+  "verdict": "scaled"
+}</code></pre></div>
+<p><b>直接回答你的观察——是的，这就是沙发和电视都"篮子大"的原因，而且它是刻意的。</b>网络素材的作者尺度完全不可信（这台电视素材是 7.7 米，也见过 13.6 米的纸巾盒）；缺口采购的默认策略是把最长边压到 0.25 米——一个保证放得进 0.70×0.50 米桌面工作区、不会把场景撑爆的保守值。代价就是你看到的：<b>所有自动采购的资产都趋向同一个尺寸，丢失了类目间的相对比例</b>（真实世界里电视≈篮子×2，沙发≈篮子×8）。</p>
+<p>决议有三种模式，账本里都留了痕：<code>absolute:X</code>（钉死最长边）、<code>reference</code>（参照库内同类先例的尺寸，<code>reference_assets</code> 记录参照了谁）、素材自带可信尺度时 <code>scale=1</code> 原样通过。改进方向见<a href="#s10">最后一章</a>：给常见类目建真实尺寸先验表，让"电视该有多大"有数据依据——这是一句话就能拍板的决策，拍了我就落。</p>
+<div class="story red"><b>这个字段还是一道安全闸</b>：校验器强制 <code>max(mesh_bbox_m) == actual_max_dim_m × scale</code> 成立，历史上一批 39 个资产里抓出 12 个单位漂移（厘米当米）的真实错误。</div>
+
+<h2 id="s4">物理放置 — 摆得稳、装得下</h2>
+<h3><code>physical.conventions.stable_poses[]</code></h3>
+<span class="chip c-must">必填</span><span class="chip c-read">读者：场景求解器生成姿态</span>
+<div class="case"><div class="lbl">真实案例 · 302_bowl</div>
+<pre><code>"stable_poses": [{
+  "pose_id": "upright",
+  "orientation_wxyz": [0.70711, 0.70711, 0.0, 0.0],   ← 绕 X 转 90°：Y-up 网格立正
+  "is_default": true,
+  "measured_against": {"backend": "sapien", "run_id": "migrate-v3-20260815",
+                       "note": "import normalization chain (X90 dialect)"}
+}]</code></pre></div>
+<p>物体以什么姿态稳定立在桌上。<b>声明无免检</b>：即使上游声明了姿态，校准也会按声明位姿真实放一次、要求它停住——某锤子的上游声明让原点悬空 3.5cm，场景一生成就翻倒，实测后被替换。</p>
+<div class="story red"><b>measured_against 为什么必须有</b>：库里曾同时存在两种互斥的姿态方言（上游资产的 identity 与外部资产的 X90），没有任何字段能判别哪个对哪条装载链成立——迁移方拿错方言，罐头就横躺。v3 起校验器强制这个戳。</div>
+<h3><code>physical.placement</code></h3>
+<span class="chip c-opt">有实测才写(v3 新增)</span><span class="chip c-read">读者：包含检查 / 容器选型</span>
+<p>可放置性几何：顶面是平的还是空腔（<code>verdict: flat/hollow/unsupportive</code>）、空腔的实测内径与腔底高度。腔底的测法很讲究：<b>用与腔体同量级的载荷实测停留高度再减 5mm</b>——细探针会掉进网格缝隙，量出真实物体根本到不了的深度，按那个数生成物体会被楔进缝里、把容器撬翻（篮子案，翻滚 71°）。</p>
+<h3><code>z_policy</code> / <code>footprint_shape</code> / <code>is_static</code></h3>
+<span class="chip c-must">必填</span>
+<p><code>z_policy</code> 说清网格原点在哪（底部还是几何中心）——原点在中心的苹果按"原点贴桌"生成会半埋进桌面，被解算器弹飞（这是整个校准体系诞生的起点事故）。</p>
+
+<h2 id="s5">物性信封 — 测的还是猜的，说清楚</h2>
+<h3><code>mass_kg</code> / <code>friction</code> / <code>restitution</code> / <code>inertial</code></h3>
+<span class="chip c-must">mass/friction 必填</span><span class="chip c-opt">restitution/inertial 可选</span>
+<pre><code>"mass_kg":  {"value": null, "status": "unknown"}
+"friction": {"value": null, "status": "unknown", "static": null, "dynamic": null}</code></pre>
+<p>三态设计（known / estimated / unknown）是这个契约在业界没有对应物的部分：YCB 实测过质量、GSO 一半称重一半估算，但<b>没有一家把"这个值是测的还是猜的"记进元数据</b>。对 sim2real 归因，这是真信息：两个后端对"推不推得动"意见不合时，第一件事就是查这里。<code>status=known</code> 但值为空、或 <code>estimated</code> 却没写估计器，校验器都会拒。</p>
+<p class="small">v3 起摩擦拆 static/dynamic（业界最小物理集：UsdPhysics/KHR/SDF 均双系数），restitution 留三态位；惯量数值可选、但 cross_backend 资产必须带键——"引擎会从碰撞几何推导"是一个完整、诚实的答案。</p>
+
+<h2 id="s6">表示层 — 同一资产的多副面孔</h2>
+<h3><code>representations[]</code></h3>
+<span class="chip c-must">必填(至少一个 sapien 表示)</span><span class="chip c-read">读者：迁移引擎按后端选文件 / 审计验完整性</span>
+<div class="case"><div class="lbl">真实案例 · 302_bowl 的 GLB 表示</div>
+<pre><code>{
+  "format": "glb", "backend": "sapien", "role": "visual",
+  "frame": {"up_axis": "Y"},                          ← v3：这份文件的坐标系
+  "geometry_state": {"scale_baked": true,             ← v3：缩放已烘进文件
+                     "origin": "bottom-center"},
+  "sha256": "…"                                       ← 身份即哈希
+}</code></pre></div>
+<p>同一个 model 在不同后端是不同文件：SAPIEN 用的 GLB（Y-up、缩放已烘入）和 Isaac 用的 USD（Z-up、缩放未烘入）是<b>几何上不同的两个物体</b>。<code>frame</code> 与 <code>geometry_state</code> 把差异写成事实。</p>
+<div class="story red"><b>事故背书</b>：迁移引擎从前假设"所有 USD 都烘好了缩放"并统一中和缩放——实测饼干盒在 Isaac 里大了 2.8527 倍（正好等于 1/scale），30 个 model 中招。现在中和以 <code>scale_baked: true</code> 声明为前提，没声明就保留场景缩放。</div>
+<p class="small"><code>sha256</code> 是三重身份：文件完整性（审计核对）、验证防漂移（旧网格的通过记录带不进新网格）、跨机搬运核对。多文件资产（USD payload、MuJoCo OBJ+分解碰撞）用 <code>files[]</code> 逐文件带哈希。</p>
+
+<h2 id="s7">来源与许可 — 从哪来，能不能再分发</h2>
+<h3><code>source</code>（两个互斥分支）</h3>
+<span class="chip c-must">必填</span><span class="chip c-read">读者：幂等去重 / license 闸</span>
+<div class="case"><div class="lbl">真实案例 · 下载分支（302_bowl）与生成分支（900_gen_hexagonal_pedestal）</div>
+<pre><code>retrieved:  {"library": "...", "group": "...", "file": "...",     ← 三元组=再导入去重键
+             "retrieved_at": "2026-08-09",
+             "license": {"spdx": "CC-BY-4.0", "status": "declared",
+               "terms_note": "Underlying YCB dataset CC BY 4.0
+                (attribution: Calli et al., doi:10.1109/MRA.2015.2448951 …)"}}
+
+generated:  {"generator": {tool, tool_version, model, model_version,
+             input, seed, params, generated_at}}   ← 复现一次生成所需的全部</code></pre></div>
+<p>两个分支互斥且各有必填集，校验器会抓"从邻居账本复制粘贴只改了一半"的混搭。<b>许可是"不可恢复捕获"</b>：条款页会改版、会消失，入库那一刻不记下来就永远失据——所以它在任何 profile 下都必填。生成资产的许可是其生成模型的输出条款，不是"没有"。</p>
+
+<h2 id="s8">验证记录 — usable 的唯一来源</h2>
+<h3><code>verification[]</code></h3>
+<span class="chip c-must">必填</span><span class="chip c-read">读者：usable 推导（禁止手写）/ fragment 准入</span>
+<div class="case"><div class="lbl">真实案例 · 302_bowl</div>
+<pre><code>{"backend": "sapien", "check": "settle", "verdict": "pass",
+ "run_id": "batch3", "timestamp": "2026-08-09T22:00:44",
+ "verified_digest": "5d6a64c3…"}    ← 通过时的网格哈希</code></pre></div>
+<p>一个资产"能不能用"不由任何人手写，由验证记录推导：按 (backend, check) 取最新一条，且 <code>verified_digest</code> 必须与当前网格哈希一致——换了网格，旧的通过作废。每个后端独立记录：SAPIEN 里稳不代表 Isaac 里稳（接触模型不同），这是本契约在业界没有先例、也最值得保留的设计。</p>
+<div class="story red"><b>它救过整个库</b>：8-14 数据事故中磁盘资产全灭，git 里的账本（含验证记录）是唯一幸存，重建时"哪些资产曾以什么状态通过什么检查"全部有据可查。</div>
+
+<h2 id="s9">仓库其他流程的对齐指南</h2>
+<p>账本是唯一权威（source of truth），其余一切都是<b>投影或消费</b>。各流程对齐要点：</p>
+<div class="tblwrap"><table>
+<tr><th>流程</th><th>与账本的关系</th><th>对齐要点（现状）</th></tr>
+<tr><td><b>采集管线</b><br><span class="small">import_materialize / backfill / s13b</span></td><td>唯一写入方</td><td>✅ 已对齐 v3：经 <code>ledger.upsert_model</code> 写入；实测帧写进 representation；后渲染身份复核对无图来源 fail-closed。<b>新写入方守则</b>：永远走 upsert（别手拼 JSON）、写完跑 <code>validate_ledger</code>、实测数字必带 measured_against</td></tr>
+<tr><td><b>fragment 投影</b><br><span class="small">gen_fragment.py</span></td><td>账本 → 场景生成视图</td><td>✅ 已对齐：只投影验证通过的 model；颜色以账本 appearance 为权威（全 model 一致才发布）；materials 投影 bug 已修。<b>守则：新增可检索属性时投影和消费必须同批落地</b>——materials 写而不投影，材质检索空转了一周没人发现</td></tr>
+<tr><td><b>目录构建</b><br><span class="small">s9_build_shadow_root.py</span></td><td>fragment + 上游 → 运行时目录</td><td>✅ 已对齐。注意分层：手声明 &gt; 账本实测 &gt; 旁路测量文件；催化剂是"权威在账本"，s9 的旁路 patch（校准/探针 JSON）应逐步改读账本 placement（差一步，见下章）</td></tr>
+<tr><td><b>场景生成/求解</b><br><span class="small">scene_gen（上游）</span></td><td>只读 catalog，不直接读账本</td><td>⭕ 半对齐：颜色/材质/尺寸数据都到得了 catalog，但 grounding 的消费缺口在上游（模型级选色补丁已验证有效 9→23、尺寸只做存在性加分不做数值匹配）——对齐提案带实验数字提给上游</td></tr>
+<tr><td><b>迁移引擎</b><br><span class="small">openxsim / usd_enrich</span></td><td>按 external_ids + representations 消费</td><td>✅ 身份键改走 source、scale 中和以 scale_baked 为前提。<b>未完成义务：验证回写</b>——Isaac E2E 跑通必须回写 verification[]（现在全库 isaacsim 记录为零，"跑通过"这件事账本不知道）；新后端接入三件套=BACKENDS 枚举、该后端表示、该后端验证记录</td></tr>
+<tr><td><b>Studio 前端</b><br><span class="small">web/app.py</span></td><td>只读展示 + 触发管线</td><td>✅ 解锁清单/可用性直接来自账本推导；prompt 入口的 Unicode 空白归一已在管线层兜底</td></tr>
+<tr><td><b>审计与退役</b><br><span class="small">ledger_audit / retire_asset</span></td><td>一致性巡检 / 全链退役</td><td>✅ 已对齐。守则：<b>删资产永远走 retire_asset</b>，裸 rm 会留下指向空文件的账本条目</td></tr>
+<tr><td><b>测量脚本</b><br><span class="small">calibrate / probe / measure_attributes</span></td><td>实测数据生产方</td><td>⭕ 半对齐：产物已随迁移回填进账本（appearance/placement），但脚本本身仍写旁路 JSON 再由迁移收编——终态应直接写账本（一次性重构，约半天）</td></tr>
+</table></div>
+<div class="story"><b>换仿真栈/换机器时的通用守则</b>（本周两次实战检验）：物理实测值不跟资产走，跟"资产×栈"走。迁移后必须按新栈重跑测量链（校准→探针→颜色，全部可断点续跑，约 1 小时 GPU），产物直接提交——四份实测 JSON 和 79 份账本都在 git 里，这是 8-14 事故后最重要的加固。</div>
+
+<h2 id="s10">已知边界与改进方向</h2>
+<div class="tblwrap"><table>
+<tr><th>边界</th><th>现状</th><th>方向</th></tr>
+<tr><td>尺寸无类目先验</td><td>缺口采购一律 0.25m 最长边 → 沙发=电视=篮子大（你观察到的现象）</td><td>建常见类目真实尺寸先验表（电视 0.6-1.2m、沙发按比例缩小或判桌面不可行）；<code>reference</code> 模式机制已在，缺的是先验数据——待拍板即可落</td></tr>
+<tr><td>模型级颜色选型在上游</td><td>账本已有数据、补丁已验证（命中 9→23），但正式生效需上游 schema 接受模型级颜色</td><td>带实验数字向上游提案</td></tr>
+<tr><td>isaacsim 验证记录为零</td><td>Isaac 链跑通过但从未回写</td><td>回写脚本（1-2 小时工作量），"不写回=未完成"入管线守则</td></tr>
+<tr><td>MuJoCo 未实跑</td><td>枚举与多文件位就绪</td><td>需要时 CoACD 打样单资产先行</td></tr>
+<tr><td>23 个 model 许可未定</td><td>license 闸如实拦截中</td><td>按 08-09 审计口径批量回填</td></tr>
+</table></div>
+
+<p class="small" style="margin-top:30px;border-top:1px solid var(--line);padding-top:12px">契约正文：<code>1_asset_reuse/lib/ledger.py</code>（常量表即契约）· 定稿决策记录：<code>docs/2026-08-15-asset-ledger-v3-decision-record.md</code> · 定稿成果页（辩证与实验全过程）见另一份 artifact「asset_ledger.v3 定稿」。手册案例摘自：302_bowl、110_basket、365_tv、900_gen_hexagonal_pedestal 的真实账本。</p>
+</div>
