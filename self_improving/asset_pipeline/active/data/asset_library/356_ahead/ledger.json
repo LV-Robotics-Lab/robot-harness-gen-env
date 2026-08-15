@@ -154,8 +154,11 @@
         "file": "traf_spd_mov_set_sign_rollup_36in_01_road_work_ahead_base.usd",
         "license": {
           "spdx": null,
-          "status": "unknown",
-          "terms_note": "NVIDIA asset EULA; YCB dataset terms for ycb group"
+          "status": "declared",
+          "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4)",
+          "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "checked_date": "2026-08-16",
+          "checked_by": "carry-forward of 2026-08-09 owner-directed audit (same source library, NVIDIA Isaac Assets 5.1 Props class)"
         },
         "retrieved_at": "2026-08-13",
         "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_356_ahead/SOURCE_MANIFEST.json"
@@ -182,6 +185,14 @@
           "verdict": "fail",
           "run_id": "rescale-planC-20260815",
           "timestamp": "2026-08-15T16:22:25",
+          "verified_digest": "71e98d31e89c1e03895ae5b87de9a44d7faf5edfb0646f037a38bb445a4f9751"
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "fail",
+          "run_id": "settle-repair-20260816",
+          "timestamp": "2026-08-16T01:01:56",
           "verified_digest": "71e98d31e89c1e03895ae5b87de9a44d7faf5edfb0646f037a38bb445a4f9751"
         }
       ],

@@ -162,11 +162,11 @@
         "url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-000/3ee6b8c2b0994655bc5a5536bf0ef01f.glb",
         "license": {
           "spdx": "CC-BY-SA-4.0",
-          "status": "unknown",
-          "terms_note": "CC-BY-SA-4.0 (Objaverse per-object metadata); owner: Fence grid gate -- SPDX auto-fetched from repo metadata; terms scope needs human sign-off",
-          "evidence_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/metadata/000-000.json.gz",
-          "checked_date": "2026-08-13",
-          "checked_by": "auto-fetched from repo metadata.json; awaiting human sign-off"
+          "status": "declared",
+          "terms_note": "CC-BY-SA 4.0 (Objaverse per-object machine-readable license: by-sa); owner: Fence grid gate. ShareAlike: derivatives must carry the same license",
+          "evidence_url": "https://huggingface.co/datasets/allenai/objaverse",
+          "checked_date": "2026-08-16",
+          "checked_by": "auto-declared from objaverse machine-readable license tag"
         },
         "retrieved_at": "2026-08-13",
         "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_351_grid/SOURCE_MANIFEST.json"

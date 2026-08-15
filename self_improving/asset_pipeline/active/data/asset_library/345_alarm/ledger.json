@@ -36,22 +36,22 @@
         },
         "conventions": {
           "is_static": false,
-          "z_policy": "origin_on_table",
+          "z_policy": "center_on_table",
           "footprint_shape": "box",
           "stable_poses": [
             {
-              "pose_id": "upright",
+              "pose_id": "measured_rest",
               "orientation_wxyz": [
-                0.7071067811865476,
-                0.7071067811865476,
-                0.0,
-                0.0
+                0.999992,
+                0.000218,
+                -0.004107,
+                6e-06
               ],
               "is_default": true,
               "measured_against": {
                 "backend": "sapien",
-                "run_id": "migrate-v3-20260815",
-                "note": "import normalization chain (X90 dialect)"
+                "run_id": "settle-repair-20260816",
+                "note": "settle repair: multi-start retry, late-window rest"
               }
             }
           ],
@@ -154,8 +154,11 @@
         "file": "SmokeDetector_A01_01.usd",
         "license": {
           "spdx": null,
-          "status": "unknown",
-          "terms_note": "NVIDIA asset EULA; YCB dataset terms for ycb group"
+          "status": "declared",
+          "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4)",
+          "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "checked_date": "2026-08-16",
+          "checked_by": "carry-forward of 2026-08-09 owner-directed audit (same source library, NVIDIA Isaac Assets 5.1 Props class)"
         },
         "retrieved_at": "2026-08-13",
         "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_345_alarm/SOURCE_MANIFEST.json"
@@ -182,6 +185,14 @@
           "verdict": "fail",
           "run_id": "rescale-planC-20260815",
           "timestamp": "2026-08-15T16:22:22",
+          "verified_digest": "381ca953fe4d46496abe71c1c9fa40fe6fec50d29ca33d35b5a64dd0924aa421"
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "settle-repair-20260816",
+          "timestamp": "2026-08-16T01:01:54",
           "verified_digest": "381ca953fe4d46496abe71c1c9fa40fe6fec50d29ca33d35b5a64dd0924aa421"
         }
       ],

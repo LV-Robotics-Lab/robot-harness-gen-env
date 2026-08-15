@@ -40,18 +40,18 @@
           "footprint_shape": "box",
           "stable_poses": [
             {
-              "pose_id": "upright",
+              "pose_id": "measured_rest",
               "orientation_wxyz": [
-                0.7071067811865476,
-                0.7071067811865476,
-                0.0,
-                0.0
+                -0.009804,
+                0.577479,
+                0.187345,
+                -0.794559
               ],
               "is_default": true,
               "measured_against": {
                 "backend": "sapien",
-                "run_id": "migrate-v3-20260815",
-                "note": "import normalization chain (X90 dialect)"
+                "run_id": "settle-repair-20260816",
+                "note": "settle repair: multi-start retry, late-window rest"
               }
             }
           ],
@@ -193,6 +193,14 @@
           "verdict": "fail",
           "run_id": "rescale-planC-20260815",
           "timestamp": "2026-08-15T16:22:20",
+          "verified_digest": "1633047c44aca52103daf67d409d8a500f8f6ba6da5cfb5fc87b15a939901528"
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "settle-repair-20260816",
+          "timestamp": "2026-08-16T01:01:53",
           "verified_digest": "1633047c44aca52103daf67d409d8a500f8f6ba6da5cfb5fc87b15a939901528"
         }
       ],
