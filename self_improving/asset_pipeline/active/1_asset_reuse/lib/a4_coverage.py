@@ -61,6 +61,12 @@ def normalize_prompt_ex(prompt: str) -> tuple[str, dict[str, list[str]]]:
     Compounds with NO vocabulary collision ("dumbbell-rack") are left alone --
     they already free-capture correctly -- and hyphens touching relation
     words ("on-top-of") are never rewritten."""
+    # Unicode whitespace first: a full-width space (U+3000, the CJK IME
+    # default) or NBSP that a later sanitizer DELETES instead of splitting
+    # fuses neighbouring words -- "Place a TV<U+3000>on" became "TVon" and
+    # bought a sofa under category tvon_the_table (2026-08-15). Every
+    # whitespace rune becomes an ASCII space before anything else looks.
+    prompt = "".join(" " if ch.isspace() else ch for ch in prompt)
     vocab = _vocab_words()
     aliases: dict[str, list[str]] = {}
 

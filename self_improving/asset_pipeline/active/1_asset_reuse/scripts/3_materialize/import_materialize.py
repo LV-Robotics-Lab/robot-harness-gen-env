@@ -685,6 +685,21 @@ for idx, r in worker_records:
                 row["reasons"] = [
                     f"identity_mismatch_post_render:{verdict.get('seen_as')}"
                 ]
+            elif args.identity_basis == "requested_by_acquire":
+                # fail CLOSED, not open: an unverifiable-source candidate has
+                # never shown any visual evidence -- this settle shot was its
+                # first and only chance, and "unreadable" here means the
+                # asset would enter the pool with ZERO identity evidence.
+                # Measured cost of the old fail-open: the VLM cache was
+                # silently absent after the machine migration and a Khronos
+                # sofa entered the pool as category "tvon_the_table"
+                # (2026-08-15). Infra trouble on a pre-verified (basis=vlm)
+                # candidate still keeps the honest degraded claim above.
+                checks["pass"] = False
+                row["status"] = "rejected"
+                row["reasons"] = [
+                    f"identity_unverifiable_post_render:{verdict.get('verdict')}"
+                ]
 
         aliases = meta.get("aliases", [])
         colors = meta.get("colors", [])

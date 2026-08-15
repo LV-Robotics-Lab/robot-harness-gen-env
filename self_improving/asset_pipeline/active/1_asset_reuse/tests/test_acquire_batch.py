@@ -115,7 +115,7 @@ def test_import_with_fallback_on_failed_materialize(tmp_path):
     tiers = [
         Tier(0, FakeProvider("t0", [])),
         Tier(
-            1, FakeProvider("t1", [cand("a/first.usd", 2.0), cand("a/second.usd", 1.0)])
+            1, FakeProvider("t1", [cand("a/pitcher_first.usd", 2.0), cand("a/pitcher_second.usd", 1.0)])
         ),
     ]
     rec = ab.process_entry(
@@ -123,7 +123,7 @@ def test_import_with_fallback_on_failed_materialize(tmp_path):
     )
     assert rec["status"] == "imported"
     assert rec["attempts"] == 2
-    assert rec["selected"]["candidate_id"].endswith("second.usd")
+    assert rec["selected"]["candidate_id"].endswith("pitcher_second.usd")
     failed = [c for c in rec["candidates"] if c["verdict"] == "rejected"]
     assert failed and failed[0]["rejection"]["code"].startswith("validation_failed")
     assert json.loads(p["manifest"].read_text())["groups"]
@@ -155,7 +155,7 @@ def test_exhausted_when_all_attempts_fail(tmp_path):
         Tier(0, FakeProvider("t0", [])),
         Tier(
             1,
-            FakeProvider("t1", [cand("a/x.usd", 2.0), cand("a/never_tried.usd", 1.0)]),
+            FakeProvider("t1", [cand("a/pitcher_x.usd", 2.0), cand("a/pitcher_never.usd", 1.0)]),
         ),
     ]
     rec = ab.process_entry(
@@ -167,7 +167,7 @@ def test_exhausted_when_all_attempts_fail(tmp_path):
     )
     assert rec["status"] == "exhausted"
     outranked = [c for c in rec["candidates"] if c["verdict"] == "outranked"]
-    assert outranked and outranked[0]["candidate_id"].endswith("never_tried.usd")
+    assert outranked and outranked[0]["candidate_id"].endswith("pitcher_never.usd")
     assert outranked[0]["rejection"]["code"] == a2.REJ_OUTRANKED
     assert (
         outranked[0]["rejection"]["detail"]
@@ -205,7 +205,7 @@ def test_github_candidate_uses_stage_web_candidate_not_fetch_convert(
 
 def test_github_fetch_failure_records_rejection_and_continues(tmp_path, monkeypatch):
     def fake_stage(candidate, *a, **k):
-        if candidate.name == "first.glb":
+        if candidate.name == "lantern_first.glb":
             raise RuntimeError("boom")
         fake_staged_ok(a[3])
         return {}
@@ -215,7 +215,7 @@ def test_github_fetch_failure_records_rejection_and_continues(tmp_path, monkeypa
         Tier(0, FakeProvider("t0", [])),
         Tier(
             1,
-            FakeProvider("t1", [gh_cand("first.glb", 2.0), gh_cand("second.glb", 1.0)]),
+            FakeProvider("t1", [gh_cand("lantern_first.glb", 2.0), gh_cand("lantern_second.glb", 1.0)]),
         ),
     ]
     rec = ab.process_entry(
@@ -230,8 +230,8 @@ def test_github_fetch_failure_records_rejection_and_continues(tmp_path, monkeypa
         c["candidate_id"].rsplit("/", 1)[-1]: c["rejection"]["code"]
         for c in rec["candidates"]
     }
-    assert codes["first.glb"] == a2.REJ_FETCH
-    assert codes["second.glb"] == "validation_failed:materialize"
+    assert codes["lantern_first.glb"] == a2.REJ_FETCH
+    assert codes["lantern_second.glb"] == "validation_failed:materialize"
 
 
 def test_github_convert_failure_records_convert_failed(tmp_path, monkeypatch):
@@ -241,7 +241,7 @@ def test_github_convert_failure_records_convert_failed(tmp_path, monkeypatch):
     monkeypatch.setattr(a3w, "stage_web_candidate", fake_stage)
     tiers = [
         Tier(0, FakeProvider("t0", [])),
-        Tier(1, FakeProvider("t1", [gh_cand("first.glb")])),
+        Tier(1, FakeProvider("t1", [gh_cand("lantern_first.glb")])),
     ]
     rec = ab.process_entry(
         {"category": "lantern"},
@@ -255,7 +255,7 @@ def test_github_convert_failure_records_convert_failed(tmp_path, monkeypatch):
         c["candidate_id"].rsplit("/", 1)[-1]: c["rejection"]["code"]
         for c in rec["candidates"]
     }
-    assert codes["first.glb"] == a2.REJ_CONVERT
+    assert codes["lantern_first.glb"] == a2.REJ_CONVERT
 
 
 def test_process_entry_copies_provider_stats_into_record(tmp_path):

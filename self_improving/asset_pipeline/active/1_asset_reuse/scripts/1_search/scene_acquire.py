@@ -42,6 +42,35 @@ def main(argv=None, runner=None):
     spec, _ = a4.extract_needs(prompt, a.seed)
     records = a4.check_coverage(spec, a.catalog)
     gaps = a4.gaps_to_entries(records, extra_aliases=compound_aliases)
+    # Parse-sanity guard: a gap category containing an article/preposition
+    # means the parser fused a broken phrase into a "category" -- the whole
+    # rest of a sentence, usually. Buying an asset for it launders a typo
+    # into a pool entry: "Place a TVon the table" (an eaten space) became
+    # category "tvon_the_table" and imported a sofa (2026-08-15). Refuse
+    # loudly instead; the message names the suspect token.
+    _STOP = {"the", "a", "an", "on", "in", "at", "of", "into", "onto"}
+    bad = [
+        (g["category"], w)
+        for g in gaps
+        for w in g["category"].replace("-", "_").split("_")
+        if w in _STOP
+    ]
+    if bad:
+        cat, w = bad[0]
+        blocker = {
+            "reason": "malformed_category_from_parse",
+            "category": cat,
+            "suspect_token": w,
+            "hint": (
+                "解析出的类目里含虚词，通常是 prompt 空格丢失或短语未被词表"
+                "识别（如 'TVon the table'）。请检查空格/拼写后重试。"
+            ),
+        }
+        (out / "asset_gap_blocker.json").write_text(
+            json.dumps(blocker, indent=1, ensure_ascii=False)
+        )
+        print(f"FAIL scene_acquire: malformed category {cat!r} (token {w!r}) -- 解析异常，已拒绝采购")
+        return 1
     catalog = a.catalog
     if gaps:
         before = records

@@ -483,8 +483,36 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         if vr["outcome"] == "unverifiable":
             # nothing to look at (web sources ship no thumbnail): proceed on
             # the weaker claim -- the ledger will say requested_by_acquire,
-            # verified=false, so the difference stays visible downstream
-            return viable_cands
+            # verified=false, so the difference stays visible downstream.
+            # v3 tightening: "weaker claim" still requires SOME evidence.
+            # With no picture the file name is the only channel left, so a
+            # candidate whose name shares not one meaningful token with the
+            # category/aliases is rejected here -- SheenWoodLeatherSofa
+            # sailed through this branch as "tvon_the_table" while the VLM
+            # was down (2026-08-15).
+            from lib import a6_verify as a6
+
+            stop = {"the", "a", "an", "on", "in", "of", "and"}
+            want = set()
+            for n in (category, *(entry.get("aliases") or [])):
+                want |= a6._name_words(n)
+            want -= stop
+            named = []
+            for c in viable_cands:
+                seen = a6._name_words(c.name) - stop
+                if want & seen:
+                    named.append(c)
+                else:
+                    gate_log["results"].append(
+                        {
+                            "candidate_id": c.candidate_id,
+                            "name": c.name,
+                            "tier": tier_no,
+                            "verdict": "mismatch",
+                            "name_check": "no_token_overlap_unverifiable",
+                        }
+                    )
+            return named
         return []  # looked, and every one was something else -> next tier
 
     def _walk_once(walk_tiers):
