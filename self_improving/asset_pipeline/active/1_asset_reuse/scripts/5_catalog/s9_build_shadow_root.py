@@ -301,6 +301,15 @@ if attr_path.exists():
         else:
             _entry_a["colors_disagree"] = [list(s) for s in sorted(set(_sets))]
             _n_split += 1
+        # model-level colours regardless of asset-level agreement: the
+        # grounder's model loop consumes CatalogModel.colors, which is what
+        # lets "a yellow basket" pick basket m1 (yellow) out of an asset
+        # whose other models are red and white (2026-08-16)
+        for _mid_a, _row_a in _models.items():
+            if _row_a.get("error") or not _row_a.get("colors"):
+                continue
+            _m_entry = _entry_a.setdefault("models", {}).setdefault(str(_mid_a), {})
+            _m_entry.setdefault("colors", list(_row_a["colors"]))
     ext_overrides.write_text(
         "# GENERATED (see calibration header above)\n"
         + yaml.safe_dump(_data_a, sort_keys=False, allow_unicode=True)

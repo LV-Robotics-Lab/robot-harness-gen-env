@@ -48,6 +48,12 @@ def _project_model(model):
     }
     if conv.get("is_static") is True:
         out["is_static"] = True
+    # v3 appearance -> per-MODEL colours in the view (CatalogModel.colors):
+    # the model-level truth the asset-level union cannot carry (a yellow, a
+    # red and a white basket under one asset_id)
+    measured = (model.get("appearance") or {}).get("colors_measured")
+    if measured:
+        out["colors"] = list(measured)
     return out
 
 
@@ -169,6 +175,8 @@ def write_yaml(frag, path):
             lines.append(f"        footprint_shape: {m['footprint_shape']}")
             if m.get("is_static"):
                 lines.append("        is_static: true")
+            if m.get("colors"):
+                lines.append(f"        colors: {_fmt_flow_list(m['colors'])}")
 
     text = "\n".join(lines) + ("\n" if lines else "")
     Path(path).write_text(text)
