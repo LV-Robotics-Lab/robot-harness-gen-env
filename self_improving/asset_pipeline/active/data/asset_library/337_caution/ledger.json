@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.1785402138310008,
-          0.15594732077399642,
-          0.27275233815000954
+          0.274927,
+          0.240137,
+          0.42
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "capped:0.42",
           "actual_max_dim_m": 0.8215383826296315,
-          "scale": 0.3320019416219687,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.5112360041604358,
+          "reference_max_dim_m": 0.42,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/337_caution/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "24751d5e18c05d987edfbfabfc9965aed69bf3928c4e01201b1b59e02cfce33a",
+          "sha256": "9f6c359fded3b1e0b0e2fea237339286841e61adaefb1a294aad4993eb40a863",
           "size_bytes": 24473508,
           "metadata": {
             "derived_from": "WetFloorSign_B02_PR_NVD_01.usd",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/337_caution/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "24751d5e18c05d987edfbfabfc9965aed69bf3928c4e01201b1b59e02cfce33a",
+          "sha256": "eb9bf82ebbc2a0365365b05f2a6b2675b033b60e4569d188b3b3c9de39dd876d",
           "size_bytes": 24473508,
           "metadata": {
             "collision_mode": "copy",
@@ -174,6 +175,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:21",
+          "verified_digest": "9fd1d9b26d7ed32dc6429d893b584a4fd7fa057d72edb8a1da24dfb9bf95eec1"
         }
       ],
       "appearance": {

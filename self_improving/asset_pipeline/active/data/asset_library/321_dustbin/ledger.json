@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.14784905730162784,
-          0.25,
-          0.16829254967567836
+          0.248386,
+          0.42,
+          0.282731
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "capped:0.42",
           "actual_max_dim_m": 20.96686349064112,
-          "scale": 0.011923576462048857,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.020031608456242078,
+          "reference_max_dim_m": 0.42,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/321_dustbin/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "eac9c505ae89875273a26aeb48926b2e76b3d408950b8bd9eed51dfa32d14e3c",
+          "sha256": "f2a72cde61a224701ff1a92aaeb23e8f0e33b5826aaa92d80d2d6e6ce22cb916",
           "size_bytes": 438372,
           "metadata": {
             "derived_from": "09188811da08451e8cb37d3eaecc7351.glb",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/321_dustbin/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "eac9c505ae89875273a26aeb48926b2e76b3d408950b8bd9eed51dfa32d14e3c",
+          "sha256": "233f2a9465d9509bbe9b55038818b5cb92dc3b80e5215b19f5dab146ff49e189",
           "size_bytes": 438372,
           "metadata": {
             "collision_mode": "copy",
@@ -185,6 +186,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:17",
+          "verified_digest": "ca373e5e5bbd0a01a72e10f1a5f4a27439d008b5c2c3b419235105155a034392"
         }
       ]
     }

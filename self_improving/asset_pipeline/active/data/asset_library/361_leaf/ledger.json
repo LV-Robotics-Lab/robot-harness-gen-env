@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.25065944931621464,
-          0.028705432202492928,
-          0.1155086833792256
+          0.15,
+          0.017178,
+          0.069123
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.15",
           "actual_max_dim_m": 0.17509362782030596,
-          "scale": 1.4315737953265777,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.8566845171198412,
+          "reference_max_dim_m": 0.15,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/361_leaf/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "487cc942a7a168c804d302bf5e290d8ca48bda911faffec9b1f81918e887d367",
+          "sha256": "902f3be6f45afbb6cb8271f433557669fe087f565ddba0f598fcd4cbb446b1dd",
           "size_bytes": 27413048,
           "metadata": {
             "derived_from": "oakfall1.usd",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/361_leaf/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "487cc942a7a168c804d302bf5e290d8ca48bda911faffec9b1f81918e887d367",
+          "sha256": "d000c5b6ac5c6db17bc47be7c177395d4dc1922eb3814d11cd7e070e6df391a6",
           "size_bytes": 27413048,
           "metadata": {
             "collision_mode": "copy",
@@ -174,6 +175,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:26",
+          "verified_digest": "8d9013571d26c874e50416c04eba5a662fd249c3319190580a536634c935c563"
         }
       ],
       "appearance": {

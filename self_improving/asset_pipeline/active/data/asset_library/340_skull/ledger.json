@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.19129662584371518,
-          0.2058975759076967,
-          0.281938086140624
+          0.135701,
+          0.146059,
+          0.2
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.2",
           "actual_max_dim_m": 0.2295221737221859,
-          "scale": 1.2283697107273062,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.8713755048437299,
+          "reference_max_dim_m": 0.2,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/340_skull/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "ded465f6ec42ee4d34b4f7b9b9622b12cbd84311e1d1290c5652e98333bf823c",
+          "sha256": "dd74f5dc70863018fa1e58f450a099d47c793060ea7b6d9faae360d9ee312707",
           "size_bytes": 49641768,
           "metadata": {
             "derived_from": "HearNoEvil_Skull.usd",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/340_skull/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "ded465f6ec42ee4d34b4f7b9b9622b12cbd84311e1d1290c5652e98333bf823c",
+          "sha256": "cadf65492bba2cb439b666da6fdb34bc535ce2c772d048ed751761e2ebbec4ee",
           "size_bytes": 49641768,
           "metadata": {
             "collision_mode": "copy",
@@ -174,6 +175,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:22",
+          "verified_digest": "55aac33eac2f0e78d234d6de90234c4d47f1af1b3c2d00207dadf27ade96a7de"
         }
       ],
       "appearance": {

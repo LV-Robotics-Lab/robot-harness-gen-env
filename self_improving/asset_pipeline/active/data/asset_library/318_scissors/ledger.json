@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.11147028364428663,
-          0.019934230790010547,
-          0.2514102034890887
+          0.088676,
+          0.015858,
+          0.2
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.2",
           "actual_max_dim_m": 0.19835088236529863,
-          "scale": 1.2675023195816788,
-          "reference_max_dim_m": 0.25,
+          "scale": 1.0083141431741365,
+          "reference_max_dim_m": 0.2,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/318_scissors/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "984ea1b51ce020deb4b1094cf774b1e5dd04e93d6ecf133fba0de6c908f8073e",
+          "sha256": "d8abf36c76d50f55721a4ae95ac79b0e80263520cdd30d2bc3368caa8bd1257b",
           "size_bytes": 3959120,
           "metadata": {
             "derived_from": "037_scissors.usd",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/318_scissors/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "984ea1b51ce020deb4b1094cf774b1e5dd04e93d6ecf133fba0de6c908f8073e",
+          "sha256": "f3be9cd5b95930cec9d1d717e487197813dffb647f5af292577b104437f25dd9",
           "size_bytes": 3959120,
           "metadata": {
             "collision_mode": "copy",
@@ -177,6 +178,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:16",
+          "verified_digest": "42034966d86651f78b80754038dbd26ead92c4bc62286d21daf2dac75a074795"
         }
       ]
     }

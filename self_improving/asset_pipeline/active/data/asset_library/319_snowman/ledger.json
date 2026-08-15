@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.20684313206236374,
-          0.25,
-          0.10582904496140061
+          0.248212,
+          0.3,
+          0.126995
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.3",
           "actual_max_dim_m": 2.6415200102290823,
-          "scale": 0.09464247820644715,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.11357097384773658,
+          "reference_max_dim_m": 0.3,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/319_snowman/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "660017706d3726872d78477aaf3e168ffff968a3175b5da8bfc09230108078cb",
+          "sha256": "ce62499e1ba60619b8284083286e296a825fe68d378004a28bb3887dfbb82c84",
           "size_bytes": 117924,
           "metadata": {
             "derived_from": "05ade23c1a4d4d01b1d546a3ba3145b7.glb",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/319_snowman/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "660017706d3726872d78477aaf3e168ffff968a3175b5da8bfc09230108078cb",
+          "sha256": "29083854a6819cb4de545633f43897358cad71f9b23d2275ed39fcd24dcc9b25",
           "size_bytes": 117924,
           "metadata": {
             "collision_mode": "copy",
@@ -185,6 +186,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:16",
+          "verified_digest": "de7ce18cae75db11ae628d4550515903bece6d02a2a9d276fc9ff581f5883e85"
         }
       ],
       "appearance": {

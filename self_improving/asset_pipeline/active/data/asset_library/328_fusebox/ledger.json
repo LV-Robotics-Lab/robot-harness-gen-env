@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.22514245462821658,
-          0.24999999999999997,
-          0.23508819576021373
+          0.315199,
+          0.35,
+          0.329123
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.35",
           "actual_max_dim_m": 24.00836420059205,
-          "scale": 0.010413037636018323,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.014578252690425652,
+          "reference_max_dim_m": 0.35,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/328_fusebox/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "cbc7f39530b30908b4ba7ad1d477e599fccb0233ce240ac3ad5a0f59dc5f2feb",
+          "sha256": "f7879a08ceec634b960ed22de53179484718da9de9305c648f1e017ae499b296",
           "size_bytes": 42351268,
           "metadata": {
             "derived_from": "22d71a47f5744677b246ca9ed545a6df.glb",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/328_fusebox/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "cbc7f39530b30908b4ba7ad1d477e599fccb0233ce240ac3ad5a0f59dc5f2feb",
+          "sha256": "963a17ec0e9dc9a4a701d0cb99861c2d3a2baa289ac6fb2f9c808e37e6e8928c",
           "size_bytes": 42351268,
           "metadata": {
             "collision_mode": "copy",
@@ -185,6 +186,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:19",
+          "verified_digest": "4b07fbdb80a1ee1860a3d80becbc5a6ea8e089e33c949b982569e80bb4014ca0"
         }
       ],
       "appearance": {

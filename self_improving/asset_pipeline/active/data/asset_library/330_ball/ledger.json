@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.24999994071519688,
-          0.24999989743503653,
-          0.25
+          0.22,
+          0.22,
+          0.22
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.22",
           "actual_max_dim_m": 0.12911078415345403,
-          "scale": 1.9363215988438551,
-          "reference_max_dim_m": 0.25,
+          "scale": 1.7039630069825926,
+          "reference_max_dim_m": 0.22,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/330_ball/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "1d8f7ac0fb86e93a968d29f4604b3d13809650d75b57aa0d18f0036bfc393eb2",
+          "sha256": "98983ece25f7e61e4224727a787b42647c7e63172b17b1fbb64b0f865f3275ae",
           "size_bytes": 1660540,
           "metadata": {
             "derived_from": "Ball_Walnut.usd",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/330_ball/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "1d8f7ac0fb86e93a968d29f4604b3d13809650d75b57aa0d18f0036bfc393eb2",
+          "sha256": "46ecbe9c2dc4e3c05c55988bab702782a365d740cce230354212be528759c2bf",
           "size_bytes": 1660540,
           "metadata": {
             "collision_mode": "copy",
@@ -174,6 +175,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:19",
+          "verified_digest": "2adbe11a6a51e284d729896fe36b95f05fcb68012060cd9f9f3330bfc10768e7"
         }
       ],
       "appearance": {

@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.25595843487788883,
-          0.1729205809079578,
-          0.24616620374449724
+          0.3,
+          0.202674,
+          0.288523
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.3",
           "actual_max_dim_m": 0.3049472065748992,
-          "scale": 0.8393532695470747,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.9837768424558954,
+          "reference_max_dim_m": 0.3,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/322_raccoon/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "702fa8707e858224cfb662a32b9ed916e7e4d7a1ae3a034bbdf17e5e58a5cb29",
+          "sha256": "7f77b393655b8ba7b945f389f24b347650d010f634fe5d87b3fbfbbd87721bcf",
           "size_bytes": 7154688,
           "metadata": {
             "derived_from": "raccoon_static_pose_03.usd",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/322_raccoon/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "702fa8707e858224cfb662a32b9ed916e7e4d7a1ae3a034bbdf17e5e58a5cb29",
+          "sha256": "2328dc542f24c9213fcebd02397a4adcaeb3d44023fa147490e554920cdf203f",
           "size_bytes": 7154688,
           "metadata": {
             "collision_mode": "copy",
@@ -177,6 +178,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:17",
+          "verified_digest": "61cb53ebf49874676be30e50abbba0d9614467fe2b4d7cb038c5b867a84ac60b"
         }
       ],
       "appearance": {

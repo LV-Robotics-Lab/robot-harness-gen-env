@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.2088273556625151,
-          0.25,
-          0.13579276814695612
+          0.292358,
+          0.35,
+          0.19011
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.35",
           "actual_max_dim_m": 3.4889853447675705,
-          "scale": 0.07165406996476063,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.10031569795066488,
+          "reference_max_dim_m": 0.35,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/335_gasoline/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "82bded4378455efa6b19f2447166fcebec12a665a244aed0a229988226416893",
+          "sha256": "13d6fff7135be9ec68b9e9474e05ce6f1be569388fdb89d8b75280b67efd8cec",
           "size_bytes": 2817832,
           "metadata": {
             "derived_from": "122b731d80f14411976178c6e6e6af45.glb",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/335_gasoline/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "82bded4378455efa6b19f2447166fcebec12a665a244aed0a229988226416893",
+          "sha256": "ea2f53f99c36184a738344271afb96421be12df58ed00b90d046434f5dd22f3b",
           "size_bytes": 2817832,
           "metadata": {
             "collision_mode": "copy",
@@ -185,6 +186,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:20",
+          "verified_digest": "7650a44382dd2b49c852b607d7b70e555e72788ad3b6f2023acb5637b328279a"
         }
       ],
       "appearance": {

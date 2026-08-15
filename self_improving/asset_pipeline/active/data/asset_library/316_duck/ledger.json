@@ -24,16 +24,17 @@
       "physical": {
         "mesh_bbox_m": [
           0.12,
-          0.1117056704865492,
-          0.08357832388217662
+          0.111706,
+          0.083578
         ],
         "size_resolution": {
-          "mode": "absolute:0.12",
+          "mode": "category:0.12",
           "actual_max_dim_m": 1.6547839748535154,
           "scale": 0.07251701842871824,
           "reference_max_dim_m": 0.12,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -187,6 +188,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:21:21",
+          "verified_digest": "0b075ae7911d356dee4d294bc6e0d02f0ec390a19da182886145eaeb367ade0d"
         }
       ],
       "appearance": {

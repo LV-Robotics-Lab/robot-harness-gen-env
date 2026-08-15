@@ -1,0 +1,199 @@
+# 类目典型真实尺寸表（size_policy 方案 C 的数据源）
+#
+# size_m = 该类目物体在真实世界的典型最长边（米）。这是**环境无关的事实**，
+# 与桌子无关——"放不放得上桌"由各视图的包络策略自行裁决（s9 的
+# tabletop 视图：≤0.42 原样 / ≤0.84 压包络打 capped 标 / 更大则该视图拒绝）。
+#
+# confidence: high=日常物件无歧义; medium=尺寸方差大取常见值; low=类目名
+# 本身有歧义（多为标志牌/面板类词），解释写在 note——低置信项请抽查。
+#
+# 作用域：只约束**采购入库**的外部/生成资产。上游原生资产（001-131）保留
+# RoboTwin 作者人工定标，不受此表影响。
+# 起草：2026-08-15（LLM 起草，待人工抽查低置信项）
+schema: envgen.category_sizes.v1
+default_unknown_m: 0.25   # 表里没有的新类目仍用旧缺省，并要求补表
+views:
+  tabletop:            # 当前唯一消费环境（RoboTwin 0.70x0.50m 工作区）
+    fit_max_m: 0.42    # 典型尺寸 <= 此值: 按真实尺寸入库
+    cap_to_m: 0.42     # 温和超限: 压到此值并打 capped 标记
+    refuse_over_m: 0.84  # 超过此值: 本视图诚实拒绝(资产真实尺寸留待其它环境)
+sizes:
+  ahead:          {size_m: 0.45, confidence: low, note: 路牌词"AHEAD"，按小型标志牌}
+  airconditioner: {size_m: 0.75, confidence: medium, note: 窗式空调}
+  alarm:          {size_m: 0.15, confidence: medium, note: 报警器/闹铃}
+  alarm_clock:    {size_m: 0.12, confidence: high}
+  apple:          {size_m: 0.08, confidence: high}
+  baguette:       {size_m: 0.60, confidence: high}
+  ball:           {size_m: 0.22, confidence: medium, note: 按足球/篮球量级}
+  banana:         {size_m: 0.19, confidence: high}
+  basket:         {size_m: 0.40, confidence: high, note: 购物/收纳篮}
+  battery:        {size_m: 0.05, confidence: high, note: 干电池}
+  bell:           {size_m: 0.10, confidence: medium}
+  block:          {size_m: 0.06, confidence: high, note: 积木块}
+  board:          {size_m: 0.60, confidence: low, note: 板类歧义，按砧板/小白板}
+  book:           {size_m: 0.24, confidence: high}
+  bookcase:       {size_m: 1.80, confidence: high}
+  boombox:        {size_m: 0.45, confidence: high}
+  bottle:         {size_m: 0.25, confidence: high}
+  bowl:           {size_m: 0.16, confidence: high}
+  box:            {size_m: 0.30, confidence: medium}
+  boxdrink:       {size_m: 0.13, confidence: high, note: 盒装饮料}
+  bread:          {size_m: 0.20, confidence: high}
+  breadbasket:    {size_m: 0.30, confidence: high}
+  brick:          {size_m: 0.20, confidence: high}
+  brush:          {size_m: 0.20, confidence: high}
+  brush_pen:      {size_m: 0.18, confidence: high}
+  cabinet:        {size_m: 1.00, confidence: medium, note: 小柜/床头柜量级}
+  calculator:     {size_m: 0.16, confidence: high}
+  callbell:       {size_m: 0.08, confidence: high, note: 前台按铃}
+  can:            {size_m: 0.12, confidence: high}
+  candlestick:    {size_m: 0.25, confidence: medium}
+  caution:        {size_m: 0.60, confidence: low, note: 警示牌(A字牌)}
+  ceiling:        {size_m: 0.60, confidence: low, note: 天花板构件/吊顶灯盘，按单块}
+  cherry:         {size_m: 0.025, confidence: high}
+  chips_tub:      {size_m: 0.25, confidence: high, note: 薯片桶}
+  cleaner:        {size_m: 0.28, confidence: medium, note: 清洁剂瓶}
+  coaster:        {size_m: 0.10, confidence: high}
+  coffee_box:     {size_m: 0.18, confidence: medium}
+  crate:          {size_m: 0.50, confidence: medium}
+  cube:           {size_m: 0.06, confidence: high}
+  cup:            {size_m: 0.10, confidence: high}
+  cup_with_liquid: {size_m: 0.10, confidence: high}
+  curtain:        {size_m: 1.80, confidence: medium}
+  displaystand:   {size_m: 0.35, confidence: low, note: 桌面展示架}
+  drill:          {size_m: 0.25, confidence: high}
+  duck:           {size_m: 0.12, confidence: high, note: 玩具鸭}
+  dumbbell:       {size_m: 0.30, confidence: high}
+  dumbbell_rack:  {size_m: 1.20, confidence: medium}
+  dustbin:        {size_m: 0.45, confidence: high, note: 家用垃圾桶}
+  electronicscale: {size_m: 0.30, confidence: high, note: 厨房/体重秤}
+  exit:           {size_m: 0.35, confidence: low, note: EXIT 标志牌}
+  fan:            {size_m: 0.40, confidence: medium, note: 台扇}
+  fork:           {size_m: 0.19, confidence: high}
+  french_fries:   {size_m: 0.14, confidence: high, note: 薯条盒}
+  fruit:          {size_m: 0.10, confidence: medium}
+  fusebox:        {size_m: 0.35, confidence: medium}
+  gasoline:       {size_m: 0.35, confidence: medium, note: 油桶/油壶}
+  globe:          {size_m: 0.30, confidence: high, note: 地球仪}
+  glue:           {size_m: 0.12, confidence: high}
+  gong:           {size_m: 0.40, confidence: medium}
+  grid:           {size_m: 0.40, confidence: low, note: 网格板/格架，歧义}
+  hamburg:        {size_m: 0.11, confidence: high, note: 汉堡}
+  hammer:         {size_m: 0.30, confidence: high}
+  handicap:       {size_m: 0.40, confidence: low, note: 无障碍标志牌}
+  hanger:         {size_m: 0.42, confidence: high, note: 衣架}
+  hubcap:         {size_m: 0.40, confidence: high, note: 轮毂盖}
+  hydrating_oil:  {size_m: 0.18, confidence: medium}
+  jam_jar:        {size_m: 0.11, confidence: high}
+  kettle:         {size_m: 0.25, confidence: high}
+  keyboard:       {size_m: 0.44, confidence: high}
+  kitchenpot:     {size_m: 0.30, confidence: high}
+  knife:          {size_m: 0.30, confidence: high, note: 厨刀}
+  laptop:         {size_m: 0.36, confidence: high}
+  leaf:           {size_m: 0.15, confidence: medium}
+  leaves:         {size_m: 0.25, confidence: low, note: 一束/一堆叶子}
+  light:          {size_m: 0.35, confidence: low, note: 台灯/灯具量级}
+  marker:         {size_m: 0.14, confidence: high}
+  markpen:        {size_m: 0.14, confidence: high}
+  merge:          {size_m: 0.60, confidence: low, note: 路牌词"MERGE"}
+  microphone:     {size_m: 0.25, confidence: high}
+  microwave:      {size_m: 0.50, confidence: high}
+  milk_box:       {size_m: 0.20, confidence: high}
+  milk_tea:       {size_m: 0.18, confidence: high, note: 奶茶杯}
+  mini_chalkboard: {size_m: 0.30, confidence: high}
+  mouse:          {size_m: 0.12, confidence: high}
+  msg:            {size_m: 0.20, confidence: low, note: 味精袋/瓶(MSG)}
+  mug:            {size_m: 0.12, confidence: high}
+  notebook:       {size_m: 0.25, confidence: high}
+  olive_oil:      {size_m: 0.28, confidence: high}
+  oven:           {size_m: 0.60, confidence: high}
+  pallets:        {size_m: 1.20, confidence: high, note: 托盘(物流)}
+  panel:          {size_m: 0.60, confidence: low, note: 面板类歧义}
+  paymentsign:    {size_m: 0.25, confidence: medium, note: 收款码立牌}
+  pen:            {size_m: 0.15, confidence: high}
+  pencup:         {size_m: 0.11, confidence: high}
+  perfume:        {size_m: 0.15, confidence: high}
+  pet_collar:     {size_m: 0.30, confidence: medium}
+  phone:          {size_m: 0.16, confidence: high}
+  phonestand:     {size_m: 0.15, confidence: high}
+  pillbottle:     {size_m: 0.10, confidence: high}
+  pitcher:        {size_m: 0.25, confidence: high}
+  plant:          {size_m: 0.40, confidence: medium, note: 盆栽}
+  plant_pot:      {size_m: 0.25, confidence: high}
+  plasticbox:     {size_m: 0.30, confidence: medium}
+  plate:          {size_m: 0.26, confidence: high}
+  playingcards:   {size_m: 0.09, confidence: high}
+  power_drill:    {size_m: 0.25, confidence: high}
+  raccoon:        {size_m: 0.30, confidence: medium, note: 玩偶量级}
+  rack:           {size_m: 0.40, confidence: low, note: 架类歧义，按桌面架}
+  racks:          {size_m: 0.40, confidence: low, note: 同 rack}
+  remotecontrol:  {size_m: 0.18, confidence: high}
+  rest:           {size_m: 0.30, confidence: low, note: 路牌词/支托，歧义}
+  roll_paper:     {size_m: 0.12, confidence: high}
+  roller:         {size_m: 0.25, confidence: low, note: 滚筒/滚轮，歧义}
+  rubikscube:     {size_m: 0.057, confidence: high}
+  sand_clock:     {size_m: 0.15, confidence: high, note: 沙漏}
+  sauce_can:      {size_m: 0.12, confidence: high}
+  scaffold:       {size_m: 1.50, confidence: medium, note: 脚手架}
+  scanner:        {size_m: 0.35, confidence: medium}
+  scissors:       {size_m: 0.20, confidence: high}
+  screen:         {size_m: 0.60, confidence: medium, note: 显示屏}
+  screwdriver:    {size_m: 0.22, confidence: high}
+  seal:           {size_m: 0.10, confidence: low, note: 印章(按办公印章)}
+  shampoo:        {size_m: 0.22, confidence: high}
+  shelf:          {size_m: 0.90, confidence: medium, note: 置物架}
+  shoe:           {size_m: 0.28, confidence: high}
+  shoe_box:       {size_m: 0.33, confidence: high}
+  skillet:        {size_m: 0.40, confidence: high, note: 含柄煎锅}
+  skull:          {size_m: 0.20, confidence: high, note: 头骨模型}
+  sleigh:         {size_m: 1.00, confidence: medium, note: 雪橇(装饰小型的~0.4)}
+  small_speaker:  {size_m: 0.15, confidence: high}
+  smallshovel:    {size_m: 0.30, confidence: high}
+  snowman:        {size_m: 0.30, confidence: medium, note: 摆件量级}
+  soap:           {size_m: 0.10, confidence: high}
+  sofa:           {size_m: 2.00, confidence: high}
+  solar:          {size_m: 1.00, confidence: low, note: 太阳能板(小型 0.5)}
+  soy_sauce:      {size_m: 0.24, confidence: high}
+  speaker:        {size_m: 0.35, confidence: medium}
+  sphere:         {size_m: 0.10, confidence: low, note: 抽象球体}
+  stapler:        {size_m: 0.15, confidence: high}
+  steamer:        {size_m: 0.32, confidence: high, note: 蒸锅}
+  stone:          {size_m: 0.15, confidence: medium}
+  switch:         {size_m: 0.09, confidence: medium, note: 开关面板}
+  table_tennis:   {size_m: 0.04, confidence: high, note: 乒乓球}
+  tabletrashbin:  {size_m: 0.20, confidence: high, note: 桌面垃圾桶}
+  tank:           {size_m: 0.35, confidence: low, note: 罐/坦克模型歧义，按储罐摆件}
+  taxi:           {size_m: 0.30, confidence: medium, note: 玩具车量级(真车不适用)}
+  tea_box:        {size_m: 0.18, confidence: high}
+  teacup:         {size_m: 0.09, confidence: high}
+  teanet:         {size_m: 0.12, confidence: medium, note: 茶滤}
+  teddy_bear:     {size_m: 0.30, confidence: high}
+  television:     {size_m: 0.60, confidence: medium, note: 小型电视量级(大屏另配视图)}
+  tissue_box:     {size_m: 0.24, confidence: high}
+  tissuebox:      {size_m: 0.24, confidence: high}
+  tool:           {size_m: 0.25, confidence: low, note: 泛称工具}
+  tooth_paste:    {size_m: 0.19, confidence: high}
+  toycar:         {size_m: 0.15, confidence: high}
+  tray:           {size_m: 0.40, confidence: high}
+  tripod:         {size_m: 0.60, confidence: medium, note: 收拢态}
+  trophy:         {size_m: 0.30, confidence: high}
+  tv:             {size_m: 0.60, confidence: medium, note: 同 television}
+  umbrella:       {size_m: 0.80, confidence: high, note: 收拢长柄伞}
+  vegetable:      {size_m: 0.15, confidence: medium}
+  vinegar:        {size_m: 0.24, confidence: high}
+  vinyl:          {size_m: 0.31, confidence: high, note: 黑胶唱片}
+  waterer:        {size_m: 0.35, confidence: high, note: 洒水壶}
+  whiteboard_eraser: {size_m: 0.13, confidence: high}
+  window:         {size_m: 1.00, confidence: medium}
+  wineglass:      {size_m: 0.22, confidence: high}
+  wooden_box:     {size_m: 0.30, confidence: medium}
+  woodenblock:    {size_m: 0.06, confidence: high}
+  woodenmallet:   {size_m: 0.28, confidence: high}
+  workbench:      {size_m: 1.50, confidence: medium, note: 工作台(桌面模型按摆件另议)}
+# 内部/测试类目：不进尺寸约束（保持现状）
+skip:
+  - objaverse
+  - omniverse
+  - sapien_block1
+  - sapien_block2
+  - vis_box

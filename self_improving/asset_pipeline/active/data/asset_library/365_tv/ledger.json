@@ -1,0 +1,168 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_365_tv",
+  "category": "tv",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "tv"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "/home/jingxiang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/results/web_runs/20260815_112656_place_a_tv_on_the_table/acquire/identity_post_render_365_tv_m0.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.272606,
+          0.42,
+          0.175155
+        ],
+        "size_resolution": {
+          "mode": "capped:0.42",
+          "actual_max_dim_m": 7.733635055211955,
+          "scale": 0.054308225950867435,
+          "reference_max_dim_m": 0.42,
+          "reference_assets": [],
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/365_tv/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "73a30e133f7824c2c1e44fd6fe21da2d015efd09bf9887938ce3c73c99d1e962",
+          "size_bytes": 3479716,
+          "metadata": {
+            "derived_from": "03765a7e66374ec7b3fa18749795189a.glb",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": false
+            }
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/365_tv/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "b89620d47be0b42487e392b9b063e20f005cbbbe67c92e12a0d3c26bc70b6c1b",
+          "size_bytes": 3479716,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_365_tv/03765a7e66374ec7b3fa18749795189a.glb",
+          "backend": "portable",
+          "role": "visual_and_collision",
+          "sha256": "b685f4864dd3f31c9e0ffc98be99ef021b17c566a89a424a6f5fcfbb8ed6c025",
+          "size_bytes": 4345692,
+          "metadata": {
+            "origin_prefix": "web_365_tv"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/365_tv/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "fffbb2ec118fe771aeaf3ae6b55dd8b5f76e62c93485b6eedffc4006efe9d640",
+          "size_bytes": 10651,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "web (objaverse)",
+        "group": "web_365_tv",
+        "file": "03765a7e66374ec7b3fa18749795189a.glb",
+        "url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-000/03765a7e66374ec7b3fa18749795189a.glb",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "CC-BY-4.0 (Objaverse per-object metadata); owner: Retro TV",
+          "evidence_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/metadata/000-000.json.gz",
+          "checked_date": "2026-08-15",
+          "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
+        },
+        "retrieved_at": "2026-08-15",
+        "source_manifest_path": "/home/jingxiang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/_source/web_365_tv/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-15T11:27:29",
+          "verified_digest": "fcdc56ebce9af3030d60212f91ccb11422eacab920e35d77bc3c963c8325e961",
+          "report_path": "/home/jingxiang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/results/web_runs/20260815_112656_place_a_tv_on_the_table/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:27",
+          "verified_digest": "a2e4aad8d68debd27aba5adcddabbb7af4ce216bd9e6785c6c2e28c81d1ae6a1"
+        }
+      ]
+    }
+  ]
+}

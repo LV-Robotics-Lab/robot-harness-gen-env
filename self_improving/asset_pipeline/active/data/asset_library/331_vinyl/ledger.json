@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.25,
-          0.24817836174201757,
-          0.007115824177310792
+          0.31,
+          0.307741,
+          0.008824
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.31",
           "actual_max_dim_m": 0.3606810636089454,
-          "scale": 0.6931331451075371,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.8594850999333461,
+          "reference_max_dim_m": 0.31,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/331_vinyl/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "af7dc7089b2aa39f286fb052d5a9bbc39c36a8890fb757bf4f2d35c76a9e9ff6",
+          "sha256": "30559f850238b6fa9b433601f68ae6d400bc14802b8b5c1a1004f7dc1cda9c12",
           "size_bytes": 830852,
           "metadata": {
             "derived_from": "32fb74396ca545fcbdf1ecd47408d4fc.glb",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/331_vinyl/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "af7dc7089b2aa39f286fb052d5a9bbc39c36a8890fb757bf4f2d35c76a9e9ff6",
+          "sha256": "22558518bcff29e2c7f889519c248e2804caf67d5c96b73c2330c362fe830caf",
           "size_bytes": 830852,
           "metadata": {
             "collision_mode": "copy",
@@ -185,6 +186,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:20",
+          "verified_digest": "ac2ee01f46aba384fd32cef8b42bfaaea779d042225a452537ceab184c7e8477"
         }
       ],
       "appearance": {

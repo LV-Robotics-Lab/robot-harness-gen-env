@@ -340,6 +340,48 @@ if revoke_path.exists():
         )
     print(f"runtime revocations: {_n_rev} models revoked")
 
+# ---- tabletop-view category exclusions (size-table plan C) ----
+# The size table records each category's typical REAL size -- an
+# environment-neutral fact. Whether that fits a 0.70x0.50 m table is THIS
+# view's ruling, so categories whose typical size exceeds the view's refuse
+# threshold lose their placement declarations HERE, in the generated view,
+# not in the ledger: the asset keeps its real-size semantics for future
+# non-tabletop environments (born from "everything looks basket-sized",
+# 2026-08-15 -- a 2 m sofa served as a 25 cm miniature is a lie, and
+# deleting the sofa would be waste; the view just declines to serve it).
+_cs_path = Path(__file__).resolve().parents[2] / "configs" / "category_sizes.yml"
+if _cs_path.is_file():
+    import yaml as _yaml_cs
+
+    _cs = _yaml_cs.safe_load(_cs_path.read_text()) or {}
+    _refuse_over = float(
+        ((_cs.get("views") or {}).get("tabletop") or {}).get("refuse_over_m", 0.84)
+    )
+    _oversize_cats = {
+        c for c, r in (_cs.get("sizes") or {}).items()
+        if float(r.get("size_m", 0)) > _refuse_over
+    }
+    _data_cs = _yaml_cs.safe_load(ext_overrides.read_text()) or {}
+    _n_view = 0
+    for _aid, _asset_cs in (_data_cs.get("assets") or {}).items():
+        if (_asset_cs or {}).get("category") not in _oversize_cats:
+            continue
+        for _mid, _entry_cs in (_asset_cs.get("models") or {}).items():
+            if isinstance(_entry_cs, dict) and "stable_pose_id" in _entry_cs:
+                del _entry_cs["stable_pose_id"]
+                _entry_cs["placement_infeasible"] = (
+                    "typical real size exceeds tabletop view "
+                    f"(category {_asset_cs.get('category')!r} > {_refuse_over} m); "
+                    "asset retained for non-tabletop environments"
+                )
+                _n_view += 1
+    if _n_view:
+        ext_overrides.write_text(
+            "# GENERATED (see calibration header above)\n"
+            + _yaml_cs.safe_dump(_data_cs, sort_keys=False, allow_unicode=True)
+        )
+    print(f"tabletop-view exclusions: {_n_view} models across {len(_oversize_cats)} oversize categories")
+
 # ---- final envelope + consistency pass over ALL declared entries ----
 # The per-branch feasibility check missed the replace path: 034_knife's
 # untrusted declaration was REPLACED with its measured 0.46 m lie-flat pose,

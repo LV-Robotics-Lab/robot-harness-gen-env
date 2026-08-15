@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.07546638305283725,
-          0.25,
-          0.23150779427381
+          0.126784,
+          0.42,
+          0.388933
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "capped:0.42",
           "actual_max_dim_m": 53.07788395881652,
-          "scale": 0.004710059658632523,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.007912900226502638,
+          "reference_max_dim_m": 0.42,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/329_tripod/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "0d9e13e3af8e79b3079916942c4ec9cb48bb84d8bffee1ed6278a1fcb1900720",
+          "sha256": "00d64809bbfecf6010dd902357dea46b5216ec330a941e33ca222a9fe79045df",
           "size_bytes": 2208460,
           "metadata": {
             "derived_from": "9279045ec7044e1889f17b02fbb013a5.glb",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/329_tripod/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "0d9e13e3af8e79b3079916942c4ec9cb48bb84d8bffee1ed6278a1fcb1900720",
+          "sha256": "3c9e8cbdb9f2c669d2ec4cfbba4f776a3d16abceb06b1f356226947e140f9442",
           "size_bytes": 2208460,
           "metadata": {
             "collision_mode": "copy",
@@ -185,6 +186,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:19",
+          "verified_digest": "1d08448a156452203d7f4ae59a3e1117d7913a3a72940baadfe04e36cee5bb79"
         }
       ],
       "appearance": {

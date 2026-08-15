@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.19318182155958685,
-          0.25,
-          0.011363704565810966
+          0.309091,
+          0.4,
+          0.018182
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.4",
           "actual_max_dim_m": 109.99999807665881,
-          "scale": 0.0022727273124657278,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.0036363636999451644,
+          "reference_max_dim_m": 0.4,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/351_grid/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "2d51adda0bc9cc5a2c7ba10d9b623999ad79e5a9ffb3a78959b1cb17164d760a",
+          "sha256": "e07c64bca7e9b3c057fbeedf4bac490dbdbf5bd45e8a75ebf0de91f0d0d0d64f",
           "size_bytes": 17900,
           "metadata": {
             "derived_from": "3ee6b8c2b0994655bc5a5536bf0ef01f.glb",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/351_grid/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "2d51adda0bc9cc5a2c7ba10d9b623999ad79e5a9ffb3a78959b1cb17164d760a",
+          "sha256": "811ec3208e81753bb6334aadb289dc3d8b8505061eebcdf9188a83549051d051",
           "size_bytes": 17900,
           "metadata": {
             "collision_mode": "copy",
@@ -185,6 +186,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:24",
+          "verified_digest": "e179ba5ec297e4578d5a8b4c3ffd4f7d0cb1788b34d2074c20a6cd9ce0cb9994"
         }
       ],
       "appearance": {

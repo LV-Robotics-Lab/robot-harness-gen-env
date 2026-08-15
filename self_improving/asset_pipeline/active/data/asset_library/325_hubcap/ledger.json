@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.24998251304372088,
-          0.027259466114457766,
-          0.24997244383953807
+          0.4,
+          0.043618,
+          0.399984
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.4",
           "actual_max_dim_m": 0.4021656074328725,
-          "scale": 0.6215909775065654,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.9946151351760383,
+          "reference_max_dim_m": 0.4,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/325_hubcap/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "270103134869628881156d9bd63c17d000a60f3020e65839f8c6a79c1143048d",
+          "sha256": "f0fa82c13a60e13652ab74a8da37539d47f976e799a9505e7cc5c62f927cb7a2",
           "size_bytes": 5635484,
           "metadata": {
             "derived_from": "obs_hubcap_01.usd",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/325_hubcap/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "270103134869628881156d9bd63c17d000a60f3020e65839f8c6a79c1143048d",
+          "sha256": "61a310d8d74f9fa470b1d7c95d2ce5b2b815e902e92dfef734ea35e3928ad855",
           "size_bytes": 5635484,
           "metadata": {
             "collision_mode": "copy",
@@ -174,6 +175,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:18",
+          "verified_digest": "88d8651f182afa36f9a920f18e6bc2f4defa0da82df17c075f57cd3f7dd135a4"
         }
       ],
       "appearance": {

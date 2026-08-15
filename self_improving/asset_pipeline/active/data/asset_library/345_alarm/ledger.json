@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.2499999999999999,
-          0.24999999999999992,
-          0.11482252119639647
+          0.15,
+          0.15,
+          0.068894
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.15",
           "actual_max_dim_m": 0.09979324042797093,
-          "scale": 2.5051796988238473,
-          "reference_max_dim_m": 0.25,
+          "scale": 1.5031078192943084,
+          "reference_max_dim_m": 0.15,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/345_alarm/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "9df07c80782e544d8e2390943cb64f6d3fb40e6a0dd710f26fb68f088d101bf9",
+          "sha256": "6362342af1f7a8584824bb5924000ec237f44dfd71727316dbf8ec41b0e57ee0",
           "size_bytes": 628936,
           "metadata": {
             "derived_from": "SmokeDetector_A01_01.usd",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/345_alarm/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "9df07c80782e544d8e2390943cb64f6d3fb40e6a0dd710f26fb68f088d101bf9",
+          "sha256": "792d56a92c94fe0d9bb3fbe8a09d10674b4eb1dd362c5d706c83843fc40b36f5",
           "size_bytes": 628936,
           "metadata": {
             "collision_mode": "copy",
@@ -174,6 +175,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "fail",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:22",
+          "verified_digest": "381ca953fe4d46496abe71c1c9fa40fe6fec50d29ca33d35b5a64dd0924aa421"
         }
       ],
       "appearance": {

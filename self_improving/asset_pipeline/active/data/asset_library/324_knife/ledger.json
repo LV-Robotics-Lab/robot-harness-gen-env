@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.2498123969774242,
-          0.013003834320958675,
-          0.030625314540195826
+          0.3,
+          0.015616,
+          0.036778
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.3",
           "actual_max_dim_m": 0.21677899305140824,
-          "scale": 1.1523828645065355,
-          "reference_max_dim_m": 0.25,
+          "scale": 1.3838979311471211,
+          "reference_max_dim_m": 0.3,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": true,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/324_knife/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "d78f121e541e39f82e4cd26bfa3821e6faa20d9b52c5e38c291c1ccffd0f5ce0",
+          "sha256": "846f8c39737725616cf05ddfba4d08265ef36c150f97ebc68f4c48ff35565b4c",
           "size_bytes": 682992,
           "metadata": {
             "derived_from": "Knife.usd",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/324_knife/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "d78f121e541e39f82e4cd26bfa3821e6faa20d9b52c5e38c291c1ccffd0f5ce0",
+          "sha256": "92596e6eef5683f09d6d8ae48cb90557cece3537b03f97f4e3fafa8e263ed4c4",
           "size_bytes": 682992,
           "metadata": {
             "collision_mode": "copy",
@@ -177,6 +178,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:17",
+          "verified_digest": "f6c7168b00501e86ea20518dcf83cd208a71195ceb4acea7b7f2e8496ad6049a"
         }
       ]
     }

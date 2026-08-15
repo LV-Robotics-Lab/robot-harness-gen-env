@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.13970437129968172,
-          0.16759829480727856,
-          0.25
+          0.234703,
+          0.281565,
+          0.42
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "capped:0.42",
           "actual_max_dim_m": 0.7315989689620754,
-          "scale": 0.3417172667078478,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.5740850080691843,
+          "reference_max_dim_m": 0.42,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/355_television/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "3c6a0e74da338d4caa5d43d369caa115fb9590d90cbc95a028f083be880a7e87",
+          "sha256": "5b21c6d0bbc78fd3d23108d594f5a98a7923756e6891a5fcd3361c7b3f5f5db1",
           "size_bytes": 2411352,
           "metadata": {
             "derived_from": "92e6509f3b474298ae66709e8cc24255.glb",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/355_television/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "3c6a0e74da338d4caa5d43d369caa115fb9590d90cbc95a028f083be880a7e87",
+          "sha256": "2fcfc7dbf8eb04826be83c35d56a4484ae5cca935d8827d328105516a10b7a90",
           "size_bytes": 2411352,
           "metadata": {
             "collision_mode": "copy",
@@ -185,6 +186,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:25",
+          "verified_digest": "8ddc62b22c967bedda008e089bdf93d15836a7b557a884e63ee616b0b38d95ee"
         }
       ],
       "appearance": {

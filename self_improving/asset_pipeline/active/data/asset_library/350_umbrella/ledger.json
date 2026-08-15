@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.22120978040827943,
-          0.20432542847640386,
-          0.23957958254219971
+          0.387796,
+          0.358197,
+          0.42
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "capped:0.42",
           "actual_max_dim_m": 2.569730035557936,
-          "scale": 0.09323142089911501,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.16344129312743555,
+          "reference_max_dim_m": 0.42,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/350_umbrella/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "5d5c6949186d57f772034aa9567ff9db3922f85b3db35275252f4fa854c2dc41",
+          "sha256": "414b3578260a9e0d1b638c4aa5d2ef12b5f8b2a6bdf1b0cb7a641b73cedb1ea1",
           "size_bytes": 3930084,
           "metadata": {
             "derived_from": "patio_umbrella_01.usd",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/350_umbrella/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "5d5c6949186d57f772034aa9567ff9db3922f85b3db35275252f4fa854c2dc41",
+          "sha256": "45f68ae3ad43c9a5d3b8425e14b25c43d7b9868606878530ef60b3620666bcc6",
           "size_bytes": 3930084,
           "metadata": {
             "collision_mode": "copy",
@@ -174,6 +175,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:24",
+          "verified_digest": "e6e41abf88977533c63e507e5d0eb7d8000230dc1266fe10e0abb6b768f9beea"
         }
       ],
       "appearance": {

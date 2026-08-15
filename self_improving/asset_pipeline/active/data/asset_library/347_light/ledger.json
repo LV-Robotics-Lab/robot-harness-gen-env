@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.039136009446907025,
-          0.025386694912634507,
-          0.2503482910354421
+          0.054714,
+          0.035492,
+          0.35
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.35",
           "actual_max_dim_m": 6.2238270677472585,
-          "scale": 0.04022417209063888,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.05623549565085908,
+          "reference_max_dim_m": 0.35,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/347_light/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "73c6606eb70b5797902644c8a18f2350487499cd736179cddf893f624dc49a85",
+          "sha256": "0f6b98fe622e0a6216ac965c3eb273768f10e54ed15cfbfe1d2094304e44de79",
           "size_bytes": 13212724,
           "metadata": {
             "derived_from": "streetlamp_02.usd",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/347_light/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "73c6606eb70b5797902644c8a18f2350487499cd736179cddf893f624dc49a85",
+          "sha256": "dec9d22f9163aa028abc31627d25718e95260e00b9858c6de1cbc41bc57096cc",
           "size_bytes": 13212724,
           "metadata": {
             "collision_mode": "copy",
@@ -174,6 +175,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:23",
+          "verified_digest": "8ea9302cffeccaf96bfd88aa08fc43fc32e9fd27c25a273577ccda1f88aac8b6"
         }
       ],
       "appearance": {

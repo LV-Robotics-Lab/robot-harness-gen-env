@@ -24,17 +24,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.28,
-          0.18703937378212104,
-          0.07914403264822353
+          0.42,
+          0.280559,
+          0.118716
         ],
         "size_resolution": {
-          "mode": "absolute:0.28",
+          "mode": "capped:0.42",
           "actual_max_dim_m": 0.6014586091041565,
-          "scale": 0.46553494415359103,
-          "reference_max_dim_m": 0.28,
+          "scale": 0.6983024162303865,
+          "reference_max_dim_m": 0.42,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -87,7 +88,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/315_crate/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "4616e3887c0ad69624d66569e9208980da52d3983c2d9ae251d621523e313bf2",
+          "sha256": "9627a8f30d571e6682e256b2dc8afaf4eb268e4ce47f5c92ff8e6e9f98b72437",
           "size_bytes": 4225528,
           "metadata": {
             "derived_from": "SM_Crate_A07_Yellow_01.usd",
@@ -109,7 +110,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/315_crate/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "4616e3887c0ad69624d66569e9208980da52d3983c2d9ae251d621523e313bf2",
+          "sha256": "483b2cd5f61956ebdef9ac12023868050b08a3fde8082cf30bc132d09c2122ae",
           "size_bytes": 4225528,
           "metadata": {
             "collision_mode": "copy",
@@ -180,6 +181,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:16",
+          "verified_digest": "1a57cb4b2544398a0aa07f476e6cb2864511c39ca5cf1c72aa4d6d6f53a4edbb"
         }
       ],
       "appearance": {

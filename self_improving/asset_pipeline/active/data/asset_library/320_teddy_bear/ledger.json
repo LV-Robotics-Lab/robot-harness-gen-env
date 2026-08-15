@@ -23,17 +23,18 @@
       "model_id": 1,
       "physical": {
         "mesh_bbox_m": [
-          0.1087517555632819,
-          0.21283812005488473,
-          0.25
+          0.130502,
+          0.255406,
+          0.3
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.3",
           "actual_max_dim_m": 122.44400024414062,
-          "scale": 0.0020417496937500078,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.0024500996325000093,
+          "reference_max_dim_m": 0.3,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -86,7 +87,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/320_teddy_bear/visual/base1.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "a9fdc4cf3f296bec333ee573ab9f808003665ef452b984fea764d9c42610bf7e",
+          "sha256": "33b40757c5df5ee133f82139226169cd22403b2b3dab191a1b15592e0a3671f7",
           "size_bytes": 420460,
           "metadata": {
             "derived_from": "4934cddd48a04a3b9c9b1e9667e7470e.glb",
@@ -108,7 +109,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/320_teddy_bear/collision/base1.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "a9fdc4cf3f296bec333ee573ab9f808003665ef452b984fea764d9c42610bf7e",
+          "sha256": "89eb3509fb37e0e1e71c7c79c51f39952a494f8e86cb438c6dc0f6719b454778",
           "size_bytes": 420460,
           "metadata": {
             "collision_mode": "copy",
@@ -187,6 +188,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:16",
+          "verified_digest": "60c8409b0e26528232d850b816c07982c6331ff3163995de9e15457e18525be0"
         }
       ],
       "appearance": {

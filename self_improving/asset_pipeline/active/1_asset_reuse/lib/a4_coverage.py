@@ -171,6 +171,58 @@ def check_coverage(spec, catalog_path):
     return records
 
 
+_SIZE_TABLE = None
+
+
+def _category_sizes():
+    """configs/category_sizes.yml, cached. Returns (sizes, views, default)."""
+    global _SIZE_TABLE
+    if _SIZE_TABLE is None:
+        import yaml
+
+        p = Path(__file__).resolve().parents[1] / "configs" / "category_sizes.yml"
+        d = yaml.safe_load(p.read_text()) if p.is_file() else {}
+        _SIZE_TABLE = (
+            d.get("sizes") or {},
+            (d.get("views") or {}).get("tabletop") or {},
+            float(d.get("default_unknown_m") or 0.25),
+        )
+    return _SIZE_TABLE
+
+
+def resolve_size_policy(category):
+    """Category -> (size_policy string, decision dict) under the tabletop
+    view. The TABLE records the environment-neutral truth (typical real-world
+    max dim); whether that fits a 0.70x0.50 m table is THIS view's ruling:
+
+      fits    typical <= fit_max   -> "category:<typical>"  (real size)
+      capped  typical <= refuse    -> "capped:<cap_to>"     (marked shrink)
+      refuse  typical >  refuse    -> None + refusal record (honest stop;
+              the asset keeps its real size for future non-tabletop views)
+
+    Unknown categories keep the old absolute default -- and the decision
+    says so, because a default is a decision too. Born from the "everything
+    looks basket-sized" report (2026-08-15): absolute:0.25 flattened a
+    0.73 m television and a 43.75 m mis-authored hanger to the same 25 cm."""
+    sizes, view, default = _category_sizes()
+    fit = float(view.get("fit_max_m", 0.42))
+    cap = float(view.get("cap_to_m", 0.42))
+    refuse = float(view.get("refuse_over_m", 0.84))
+    row = sizes.get(category)
+    if not row:
+        return f"absolute:{default}", {
+            "decision": "default_unknown",
+            "note": "category not in size table",
+        }
+    t = float(row["size_m"])
+    base = {"typical_m": t, "confidence": row.get("confidence")}
+    if t <= fit:
+        return f"category:{t}", {**base, "decision": "real_size"}
+    if t <= refuse:
+        return f"capped:{cap}", {**base, "decision": "capped_to_view"}
+    return None, {**base, "decision": "refuse_oversize_for_view"}
+
+
 def gaps_to_entries(records, extra_aliases=None):
     seen, entries = set(), []
     for r in records:
@@ -184,11 +236,16 @@ def gaps_to_entries(records, extra_aliases=None):
         # measured 2026-08-13); without a size policy the import gate rightly
         # rejects them as implausible. Every gap-driven acquisition therefore
         # carries a tabletop default; per-request policies can override later.
+        policy, size_decision = resolve_size_policy(r["category"])
         entry = {
             "category": r["category"],
             "aliases": [r["category"]],
-            "size_policy": "absolute:0.25",
+            "size_decision": size_decision,
         }
+        if policy is None:
+            entry["oversize_refusal"] = True
+        else:
+            entry["size_policy"] = policy
         # compound categories arrive concatenated ("tissuebox", see
         # normalize_prompt_ex); the readable word forms ride along as search
         # wideners so retrieval still looks for "tissue box"

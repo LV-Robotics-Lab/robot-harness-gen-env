@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.1724219136047129,
-          0.25,
-          0.02301997681417554
+          0.289669,
+          0.42,
+          0.038674
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "capped:0.42",
           "actual_max_dim_m": 0.4827328920364382,
-          "scale": 0.5178847435594449,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.8700463691798674,
+          "reference_max_dim_m": 0.42,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/339_panel/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "29441739b1b3b07b9f406bb07ba84eb40aec6398009554ecc528f7b9994f39ed",
+          "sha256": "19b4ef9fcbfb5e3a24d36c7f009cc5a4d3000f34ae28238d2e686699f7f444fe",
           "size_bytes": 1118936,
           "metadata": {
             "derived_from": "Fiber_Patch_Panel_1U_A_inst.usd",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/339_panel/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "29441739b1b3b07b9f406bb07ba84eb40aec6398009554ecc528f7b9994f39ed",
+          "sha256": "d3325d844ff9a10a9af2fd01db58cf5d30a82851b5dbfdf8419bafa310872c13",
           "size_bytes": 1118936,
           "metadata": {
             "collision_mode": "copy",
@@ -174,6 +175,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:21",
+          "verified_digest": "a989d480ecfd1eeea93b71a1e15db21b7f879cd62e104e8820c49e584c7f35fd"
         }
       ],
       "appearance": {

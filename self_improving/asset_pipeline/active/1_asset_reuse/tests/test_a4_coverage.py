@@ -54,14 +54,28 @@ def test_gaps_to_entries_dedup_and_color():
         },
     ]
     entries = a4.gaps_to_entries(records)
+    # 方案 C（2026-08-15）：已知类目按典型真实尺寸入库（category:<m>），
+    # 桌面适配是视图裁决；absolute:0.25 只剩未知类目的诚实缺省。
     assert entries == [
-        # gap-driven acquisitions carry a tabletop default size: web sources
-        # arrive at arbitrary author scales (a 13.6 m tissue box, 2026-08-13)
-        {"category": "bowl", "aliases": ["bowl"], "size_policy": "absolute:0.25"},
+        {
+            "category": "bowl",
+            "aliases": ["bowl"],
+            "size_decision": {
+                "typical_m": 0.16,
+                "confidence": "high",
+                "decision": "real_size",
+            },
+            "size_policy": "category:0.16",
+        },
         {
             "category": "cup",
             "aliases": ["cup"],
-            "size_policy": "absolute:0.25",
+            "size_decision": {
+                "typical_m": 0.1,
+                "confidence": "high",
+                "decision": "real_size",
+            },
+            "size_policy": "category:0.1",
             "colors": ["blue"],
         },
     ]

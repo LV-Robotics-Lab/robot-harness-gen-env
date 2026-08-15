@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.24859665428828054,
-          0.25,
-          0.11903411695091552
+          0.149158,
+          0.15,
+          0.07142
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.15",
           "actual_max_dim_m": 1.0501191020011906,
-          "scale": 0.23806823390183082,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.14284094034109848,
+          "reference_max_dim_m": 0.15,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/354_stone/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "6269bb70575240078b067e7ae825e2c20225878de93114d35ef0fd2b3a6ab1fb",
+          "sha256": "85de18535b709bac1b7af54b6da91ea83665287c4e8b0762fe73ae05ef83a94e",
           "size_bytes": 21348,
           "metadata": {
             "derived_from": "concrete_block_01.usd",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/354_stone/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "6269bb70575240078b067e7ae825e2c20225878de93114d35ef0fd2b3a6ab1fb",
+          "sha256": "58f5dfe86fdb2e0dcc51c51a7ab46ea344805fbd35941f2be155f3105a7d36a0",
           "size_bytes": 21348,
           "metadata": {
             "collision_mode": "copy",
@@ -174,6 +175,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:25",
+          "verified_digest": "68fb21e98297428a59f5690b0c8cf90ec82f75d2fcfb447322195c4c66058366"
         }
       ],
       "appearance": {

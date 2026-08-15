@@ -21,17 +21,18 @@
       "model_id": 0,
       "physical": {
         "mesh_bbox_m": [
-          0.2456935804766821,
-          0.2433395073514294,
-          0.24783787183212797
+          0.099135,
+          0.098185,
+          0.1
         ],
         "size_resolution": {
-          "mode": "absolute:0.25",
+          "mode": "category:0.1",
           "actual_max_dim_m": 0.15023324517645145,
-          "scale": 1.6496872682277366,
-          "reference_max_dim_m": 0.25,
+          "scale": 0.6656316308853499,
+          "reference_max_dim_m": 0.1,
           "reference_assets": [],
-          "verdict": "scaled"
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
         },
         "conventions": {
           "is_static": false,
@@ -84,7 +85,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/327_sphere/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
-          "sha256": "f62b60c6ff82f4d8543bcb749be8ad8fe779f9ff20144dca91dea3bb61856a62",
+          "sha256": "c80ab775c4e3dc46b4d6e763ceaaedd7ae89a396de1a9697f891d3f7350fad2f",
           "size_bytes": 46875656,
           "metadata": {
             "derived_from": "GeoSphere_Medium.usd",
@@ -106,7 +107,7 @@
           "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/327_sphere/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
-          "sha256": "f62b60c6ff82f4d8543bcb749be8ad8fe779f9ff20144dca91dea3bb61856a62",
+          "sha256": "0a836306a6dc4fea26ff83b9654567243270cedc0fbe7ac6485efec1de99954c",
           "size_bytes": 46875656,
           "metadata": {
             "collision_mode": "copy",
@@ -174,6 +175,14 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:18",
+          "verified_digest": "5b725a28d949966c2d1751097356817b5c2e98386371f1b4e6d9fa85e78088f6"
         }
       ],
       "appearance": {

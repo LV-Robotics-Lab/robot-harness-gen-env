@@ -71,6 +71,28 @@ def main(argv=None, runner=None):
         )
         print(f"FAIL scene_acquire: malformed category {cat!r} (token {w!r}) -- 解析异常，已拒绝采购")
         return 1
+    oversize = [g for g in gaps if g.get("oversize_refusal")]
+    if oversize:
+        g = oversize[0]
+        d = g.get("size_decision") or {}
+        blocker = {
+            "reason": "oversize_for_tabletop_view",
+            "category": g["category"],
+            "typical_size_m": d.get("typical_m"),
+            "hint": (
+                f"该类目真实典型尺寸约 {d.get('typical_m')} m，超出桌面工作区"
+                "（0.70x0.50m）的可用范围——桌面视图诚实拒绝，而不是缩成"
+                "玩具。资产库保留真实尺寸语义，未来非桌面环境可直接采购。"
+            ),
+        }
+        (out / "asset_gap_blocker.json").write_text(
+            json.dumps(blocker, indent=1, ensure_ascii=False)
+        )
+        print(
+            f"FAIL scene_acquire: category {g['category']!r} typical size "
+            f"{d.get('typical_m')}m exceeds tabletop view -- 真实尺寸放不上桌"
+        )
+        return 1
     catalog = a.catalog
     if gaps:
         before = records
