@@ -12,7 +12,7 @@
     "materials": [],
     "identity": {
       "basis": "vlm",
-      "evidence": "/home/jingxiang/yuxin/sweep_out/C_leaf/acquire/identity_post_render_361_leaf_m0.json",
+      "evidence": "results/sweep_out/C_leaf/acquire/identity_post_render_361_leaf_m0.json",
       "verified": true
     }
   },
@@ -82,7 +82,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/361_leaf/visual/base0.glb",
+          "uri": "data/asset_library/361_leaf/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "902f3be6f45afbb6cb8271f433557669fe087f565ddba0f598fcd4cbb446b1dd",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/361_leaf/collision/base0.glb",
+          "uri": "data/asset_library/361_leaf/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "d000c5b6ac5c6db17bc47be7c177395d4dc1922eb3814d11cd7e070e6df391a6",
@@ -123,7 +123,7 @@
         },
         {
           "format": "usd",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_361_leaf/oakfall1.usd",
+          "uri": "data/asset_library/_source/acq_361_leaf/oakfall1.usd",
           "backend": "isaacsim",
           "role": "visual_and_collision",
           "sha256": "f0c92552fc65eb8a69bd186f1b77acd243bc3c59f025aa38ff8ec5ed54ba5f9b",
@@ -134,7 +134,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/361_leaf/snapshots/m0_default.png",
+          "uri": "data/asset_library/361_leaf/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "d80cde2f8ce66befd5527aa4d7e4cc51bdac07caac5c51d071931664a2344d81",
@@ -161,7 +161,7 @@
           "checked_by": "carry-forward of 2026-08-09 owner-directed audit (same source library, NVIDIA Isaac Assets 5.1 Props class)"
         },
         "retrieved_at": "2026-08-14",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_361_leaf/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/acq_361_leaf/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
@@ -171,7 +171,7 @@
           "run_id": "acquire",
           "timestamp": "2026-08-14T00:24:28",
           "verified_digest": "bd2a04475a0397869f028ce3d7490de55c474273e34ab1123ae9a895638e3029",
-          "report_path": "/home/jingxiang/yuxin/sweep_out/C_leaf/acquire/import_matrix.json",
+          "report_path": "results/sweep_out/C_leaf/acquire/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

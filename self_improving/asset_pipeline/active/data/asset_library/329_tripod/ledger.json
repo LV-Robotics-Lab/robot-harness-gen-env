@@ -12,7 +12,7 @@
     "materials": [],
     "identity": {
       "basis": "vlm",
-      "evidence": "/home/jingxiang/yuxin/sweep_out/C_tripod/acquire/identity_post_render_329_tripod_m0.json",
+      "evidence": "results/sweep_out/C_tripod/acquire/identity_post_render_329_tripod_m0.json",
       "verified": true
     }
   },
@@ -82,7 +82,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/329_tripod/visual/base0.glb",
+          "uri": "data/asset_library/329_tripod/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "00d64809bbfecf6010dd902357dea46b5216ec330a941e33ca222a9fe79045df",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/329_tripod/collision/base0.glb",
+          "uri": "data/asset_library/329_tripod/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "3c9e8cbdb9f2c669d2ec4cfbba4f776a3d16abceb06b1f356226947e140f9442",
@@ -123,7 +123,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_329_tripod/9279045ec7044e1889f17b02fbb013a5.glb",
+          "uri": "data/asset_library/_source/web_329_tripod/9279045ec7044e1889f17b02fbb013a5.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "d5e8e3e7e10c6a2f3ae718818173f4f293583ff9beb41e85a805911546d49ebc",
@@ -141,7 +141,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/329_tripod/snapshots/m0_default.png",
+          "uri": "data/asset_library/329_tripod/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "d56d16104a1d6f68101825524472929c1ce47dd27a9fe925266d4c10709b2032",
@@ -169,7 +169,7 @@
           "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
         },
         "retrieved_at": "2026-08-13",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_329_tripod/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/web_329_tripod/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
@@ -179,7 +179,7 @@
           "run_id": "acquire",
           "timestamp": "2026-08-13T18:57:18",
           "verified_digest": "36ce547d706d041a2923a39c68e61225b810642be80b37d1b3d3f6c04d6720c5",
-          "report_path": "/home/jingxiang/yuxin/sweep_out/C_tripod/acquire/import_matrix.json",
+          "report_path": "results/sweep_out/C_tripod/acquire/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

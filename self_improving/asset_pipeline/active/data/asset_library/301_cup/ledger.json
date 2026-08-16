@@ -85,7 +85,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup/visual/base0.glb",
+          "uri": "data/asset_library/301_cup/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "b8465f7630f002860b6712a19b449d8a11b2fc4f89695985066d9b0e3f9decec",
@@ -107,7 +107,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup/collision/base0.glb",
+          "uri": "data/asset_library/301_cup/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "4264a72477e720b760ce6e4456eb90f5d85d9911f3fb69e74be6cc0b3717a7b2",
@@ -126,7 +126,7 @@
         },
         {
           "format": "usd",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/025_mug.usd",
+          "uri": "data/asset_library/_source/ycb_axis_aligned/025_mug.usd",
           "backend": "isaacsim",
           "role": "visual_and_collision",
           "sha256": "923c7034200de93a233ea3a223e90e032336342ec6974c47223cefa1ed8d88c3",
@@ -137,7 +137,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/301_cup/snapshots/m0_default.png",
+          "uri": "data/asset_library/301_cup/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "a8aa04e129a22ca3870b64ce6cf6dd736b0eb7c5aa1fcae70ae1e261f46798f8",
@@ -163,7 +163,7 @@
           "checked_by": "owner-directed research 2026-08-09"
         },
         "retrieved_at": "2026-08-10",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
+        "source_manifest_path": "data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
         "kind": "retrieved"
       },
       "verification": [

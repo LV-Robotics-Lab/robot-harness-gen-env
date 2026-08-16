@@ -12,7 +12,7 @@
     "materials": [],
     "identity": {
       "basis": "vlm",
-      "evidence": "/home/jingxiang/yuxin/sweep_out/C_alarm/acquire/identity_post_render_345_alarm_m0.json",
+      "evidence": "results/sweep_out/C_alarm/acquire/identity_post_render_345_alarm_m0.json",
       "verified": true
     }
   },
@@ -82,7 +82,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/345_alarm/visual/base0.glb",
+          "uri": "data/asset_library/345_alarm/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "6362342af1f7a8584824bb5924000ec237f44dfd71727316dbf8ec41b0e57ee0",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/345_alarm/collision/base0.glb",
+          "uri": "data/asset_library/345_alarm/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "792d56a92c94fe0d9bb3fbe8a09d10674b4eb1dd362c5d706c83843fc40b36f5",
@@ -123,7 +123,7 @@
         },
         {
           "format": "usd",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_345_alarm/SmokeDetector_A01_01.usd",
+          "uri": "data/asset_library/_source/acq_345_alarm/SmokeDetector_A01_01.usd",
           "backend": "isaacsim",
           "role": "visual_and_collision",
           "sha256": "fb3bf95310e27e3e4d192a9241e8c90d47d5d238e171bba62a205d6a782e6db8",
@@ -134,7 +134,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/345_alarm/snapshots/m0_default.png",
+          "uri": "data/asset_library/345_alarm/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "0ea8dd982fa6279eca134c41dcfc2b42f5627577c11633a1156d26b22242e623",
@@ -161,7 +161,7 @@
           "checked_by": "carry-forward of 2026-08-09 owner-directed audit (same source library, NVIDIA Isaac Assets 5.1 Props class)"
         },
         "retrieved_at": "2026-08-13",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_345_alarm/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/acq_345_alarm/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
@@ -171,7 +171,7 @@
           "run_id": "acquire",
           "timestamp": "2026-08-13T20:47:06",
           "verified_digest": "04685324a3bd983eced0e0c9e6de835954c8e32a3a218a55902b8a385fef5981",
-          "report_path": "/home/jingxiang/yuxin/sweep_out/C_alarm/acquire/import_matrix.json",
+          "report_path": "results/sweep_out/C_alarm/acquire/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

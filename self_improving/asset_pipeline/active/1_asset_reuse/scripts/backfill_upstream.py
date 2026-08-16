@@ -286,7 +286,7 @@ def _rigid_representations(model):
     return [
         {
             "format": _format_from_uri(visual),
-            "uri": str(visual),
+            "uri": ledger.to_portable_uri(visual),
             "backend": "sapien",
             "role": "visual",
             "sha256": _sha256_file(visual),
@@ -295,7 +295,7 @@ def _rigid_representations(model):
         },
         {
             "format": _format_from_uri(collision),
-            "uri": str(collision),
+            "uri": ledger.to_portable_uri(collision),
             "backend": "sapien",
             "role": "collision",
             "sha256": _sha256_file(collision),
@@ -314,7 +314,7 @@ def _articulated_representations(model):
     return [
         {
             "format": _format_from_uri(urdf),
-            "uri": str(urdf),
+            "uri": ledger.to_portable_uri(urdf),
             "backend": "sapien",
             "role": "visual_and_collision",
             "sha256": _sha256_file(urdf),
@@ -338,7 +338,7 @@ def _articulation(model):
 def _isaac_representation(usd_path, derived_from):
     return {
         "format": _format_from_uri(usd_path),
-        "uri": str(usd_path),
+        "uri": ledger.to_portable_uri(usd_path),
         "backend": "isaacsim",
         "role": "visual_and_collision",
         "sha256": _sha256_file(usd_path),
@@ -425,7 +425,7 @@ def _build_model_entry(
         "file": _relative_to_root(model["model_path"], relbase),
         "license": DEFAULT_LICENSE,
         "retrieved_at": retrieved_at,
-        "source_manifest_path": str(source_manifest_path),
+        "source_manifest_path": ledger.to_portable_uri(source_manifest_path),
     }
     existing_license = (existing_model or {}).get("source", {}).get("license")
     if existing_license and existing_license.get("status") == "declared":

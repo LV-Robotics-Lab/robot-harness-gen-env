@@ -81,7 +81,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/323_pallets/visual/base0.glb",
+          "uri": "data/asset_library/323_pallets/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "25af8404b04c411fa659edb51f9b1d2c5bf19c8771f7c0b662d22e84602cca00",
@@ -103,7 +103,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/323_pallets/collision/base0.glb",
+          "uri": "data/asset_library/323_pallets/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "25af8404b04c411fa659edb51f9b1d2c5bf19c8771f7c0b662d22e84602cca00",
@@ -122,7 +122,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_323_pallets/124f251081854c90a2965d12c37af3f8.glb",
+          "uri": "data/asset_library/_source/web_323_pallets/124f251081854c90a2965d12c37af3f8.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "3827b46c94d43390a99aa5490bc105cca048043a3db919a62d9e11dec7415837",
@@ -140,7 +140,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/323_pallets/snapshots/m0_default.png",
+          "uri": "data/asset_library/323_pallets/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "f84c4c6fbd928a7d53e82c79a4b7d199e784296fc20a46c9363d3cbb9be9c5c8",
@@ -168,7 +168,7 @@
           "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
         },
         "retrieved_at": "2026-08-13",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_323_pallets/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/web_323_pallets/SOURCE_MANIFEST.json"
       },
       "verification": [
         {

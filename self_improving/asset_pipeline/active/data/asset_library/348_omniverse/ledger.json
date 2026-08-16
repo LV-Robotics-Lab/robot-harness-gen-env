@@ -12,7 +12,7 @@
     "materials": [],
     "identity": {
       "basis": "vlm",
-      "evidence": "/home/jingxiang/yuxin/sweep_out/C_omniverse/acquire/identity_omniverse.json",
+      "evidence": "results/sweep_out/C_omniverse/acquire/identity_omniverse.json",
       "verified": true
     }
   },
@@ -81,7 +81,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/348_omniverse/visual/base0.glb",
+          "uri": "data/asset_library/348_omniverse/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "9e4ad66aef591358645248a192a82b054d1b91ed5536fc4d44cb910d66fd0847",
@@ -103,7 +103,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/348_omniverse/collision/base0.glb",
+          "uri": "data/asset_library/348_omniverse/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "9e4ad66aef591358645248a192a82b054d1b91ed5536fc4d44cb910d66fd0847",
@@ -122,7 +122,7 @@
         },
         {
           "format": "usd",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_348_omniverse/Book_IntroOmni.usd",
+          "uri": "data/asset_library/_source/acq_348_omniverse/Book_IntroOmni.usd",
           "backend": "isaacsim",
           "role": "visual_and_collision",
           "sha256": "28dbac11de4af87093af8e25b2ae89876396aec329ef00e3c3f0462b5f7a92f7",
@@ -133,7 +133,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/348_omniverse/snapshots/m0_default.png",
+          "uri": "data/asset_library/348_omniverse/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "1da82eb9ddb297e4788002405f9568ba3e079d2693127066b5db9805c41b91af",
@@ -160,7 +160,7 @@
           "checked_by": "carry-forward of 2026-08-09 owner-directed audit (same source library, NVIDIA Isaac Assets 5.1 Props class)"
         },
         "retrieved_at": "2026-08-13",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_348_omniverse/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/acq_348_omniverse/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
@@ -170,7 +170,7 @@
           "run_id": "acquire",
           "timestamp": "2026-08-13T22:13:55",
           "verified_digest": "32f32c4cf7ea97731ad575862f1d162c209895c33043fb0e5c12f074d7763fef",
-          "report_path": "/home/jingxiang/yuxin/sweep_out/C_omniverse/acquire/import_matrix.json",
+          "report_path": "results/sweep_out/C_omniverse/acquire/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

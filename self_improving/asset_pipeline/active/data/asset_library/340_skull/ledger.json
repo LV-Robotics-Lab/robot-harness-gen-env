@@ -12,7 +12,7 @@
     "materials": [],
     "identity": {
       "basis": "vlm",
-      "evidence": "/home/jingxiang/yuxin/sweep_out/C_skull/acquire/identity_post_render_340_skull_m0.json",
+      "evidence": "results/sweep_out/C_skull/acquire/identity_post_render_340_skull_m0.json",
       "verified": true
     }
   },
@@ -82,7 +82,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/340_skull/visual/base0.glb",
+          "uri": "data/asset_library/340_skull/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "dd74f5dc70863018fa1e58f450a099d47c793060ea7b6d9faae360d9ee312707",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/340_skull/collision/base0.glb",
+          "uri": "data/asset_library/340_skull/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "cadf65492bba2cb439b666da6fdb34bc535ce2c772d048ed751761e2ebbec4ee",
@@ -123,7 +123,7 @@
         },
         {
           "format": "usd",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_340_skull/HearNoEvil_Skull.usd",
+          "uri": "data/asset_library/_source/acq_340_skull/HearNoEvil_Skull.usd",
           "backend": "isaacsim",
           "role": "visual_and_collision",
           "sha256": "2188d6583cf259c10f17b87d3135189360f3d86461ba35ca993e79bf3fe7bfa2",
@@ -134,7 +134,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/340_skull/snapshots/m0_default.png",
+          "uri": "data/asset_library/340_skull/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "713bd9750fe0ebd35678c4d45fd592053523278b5cf51b9b96a8e39a32a7f147",
@@ -161,7 +161,7 @@
           "checked_by": "carry-forward of 2026-08-09 owner-directed audit (same source library, NVIDIA Isaac Assets 5.1 Props class)"
         },
         "retrieved_at": "2026-08-13",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_340_skull/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/acq_340_skull/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
@@ -171,7 +171,7 @@
           "run_id": "acquire",
           "timestamp": "2026-08-13T19:43:43",
           "verified_digest": "b6062e42739a80dfd554cd313fcaf3996f74942d4948011f9b8796746f2c1b76",
-          "report_path": "/home/jingxiang/yuxin/sweep_out/C_skull/acquire/import_matrix.json",
+          "report_path": "results/sweep_out/C_skull/acquire/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

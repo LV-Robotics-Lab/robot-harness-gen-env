@@ -12,7 +12,7 @@
     "materials": [],
     "identity": {
       "basis": "vlm",
-      "evidence": "/home/jingxiang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/results/web_runs/20260815_112333_place_a_hanger_on_the_table/acquire/identity_post_render_364_hanger_m0.json",
+      "evidence": "results/web_runs/20260815_112333_place_a_hanger_on_the_table/acquire/identity_post_render_364_hanger_m0.json",
       "verified": true
     }
   },
@@ -70,7 +70,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/364_hanger/visual/base0.glb",
+          "uri": "data/asset_library/364_hanger/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "3d5ec3c668fb4e99edfc5754450bf13e11008c2897e933a207465aa58d650ace",
@@ -85,7 +85,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/364_hanger/collision/base0.glb",
+          "uri": "data/asset_library/364_hanger/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "a30ab7cfb139927bfc7d06fcf95d686680bd6a2ff022a1719c215358bb11550f",
@@ -97,7 +97,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_364_hanger/75d9725104b744e98cd3548104f7eace.glb",
+          "uri": "data/asset_library/_source/web_364_hanger/75d9725104b744e98cd3548104f7eace.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "55e99d079c6c6256a1c4432b42bb91a67c27a1105ff5e15c07e6199f749f8dc9",
@@ -108,7 +108,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/364_hanger/snapshots/m0_default.png",
+          "uri": "data/asset_library/364_hanger/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "fd028c4b25211c551c5b0a9e7265e07b23c02c311794ed7a66d338549f1967c2",
@@ -136,7 +136,7 @@
           "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
         },
         "retrieved_at": "2026-08-15",
-        "source_manifest_path": "/home/jingxiang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/_source/web_364_hanger/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/web_364_hanger/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
@@ -146,7 +146,7 @@
           "run_id": "acquire",
           "timestamp": "2026-08-15T11:24:10",
           "verified_digest": "5cd54cc99ee3809b0d384aa817d43fff93a385b49bbe5211336e2a83e625eeee",
-          "report_path": "/home/jingxiang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/results/web_runs/20260815_112333_place_a_hanger_on_the_table/acquire/import_matrix.json",
+          "report_path": "results/web_runs/20260815_112333_place_a_hanger_on_the_table/acquire/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

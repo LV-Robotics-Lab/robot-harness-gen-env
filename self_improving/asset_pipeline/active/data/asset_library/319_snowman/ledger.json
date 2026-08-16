@@ -82,7 +82,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/319_snowman/visual/base0.glb",
+          "uri": "data/asset_library/319_snowman/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "ce62499e1ba60619b8284083286e296a825fe68d378004a28bb3887dfbb82c84",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/319_snowman/collision/base0.glb",
+          "uri": "data/asset_library/319_snowman/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "29083854a6819cb4de545633f43897358cad71f9b23d2275ed39fcd24dcc9b25",
@@ -123,7 +123,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_319_snowman/05ade23c1a4d4d01b1d546a3ba3145b7.glb",
+          "uri": "data/asset_library/_source/web_319_snowman/05ade23c1a4d4d01b1d546a3ba3145b7.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "77b05324880a5a4e88e06f1bbadf09be96b47849f7b04e3396e5aefb5d8f15c6",
@@ -141,7 +141,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/319_snowman/snapshots/m0_default.png",
+          "uri": "data/asset_library/319_snowman/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "01037007a10e43f5e66ece83a5d3e7835529e0b10bfe0447772539c38fe2859d",
@@ -169,7 +169,7 @@
           "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
         },
         "retrieved_at": "2026-08-12",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_319_snowman/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/web_319_snowman/SOURCE_MANIFEST.json"
       },
       "verification": [
         {

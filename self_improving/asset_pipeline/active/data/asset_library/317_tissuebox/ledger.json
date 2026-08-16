@@ -84,7 +84,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/317_tissuebox/visual/base0.glb",
+          "uri": "data/asset_library/317_tissuebox/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "d33395ffe7dfc14b9cff3ac2bb0cdd22d889734966181183afee66d16811377d",
@@ -106,7 +106,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/317_tissuebox/collision/base0.glb",
+          "uri": "data/asset_library/317_tissuebox/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "d33395ffe7dfc14b9cff3ac2bb0cdd22d889734966181183afee66d16811377d",
@@ -125,7 +125,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_317_tissuebox/2bd98e8ea09f49bd85453a927011d31d.glb",
+          "uri": "data/asset_library/_source/web_317_tissuebox/2bd98e8ea09f49bd85453a927011d31d.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "5160ae8c2ecb1ba20e1c8bb7aba888c865afafcb226aa6afd4486329b72a03e6",
@@ -143,7 +143,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/317_tissuebox/snapshots/m0_default.png",
+          "uri": "data/asset_library/317_tissuebox/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "a1c9a06645e9c86630bb98919df5d585dccf6ce853ccaf2632e9c2a372d86a84",
@@ -171,7 +171,7 @@
           "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
         },
         "retrieved_at": "2026-08-12",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_317_tissuebox/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/web_317_tissuebox/SOURCE_MANIFEST.json"
       },
       "verification": [
         {

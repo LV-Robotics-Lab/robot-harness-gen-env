@@ -80,7 +80,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/071_can/visual/base0.glb",
+          "uri": "data/robotwin_assets/objects/071_can/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "b88e8c97cbd09cd54b486dfe13fefbb253cab39afe005d1b6b14293b8ccf44d2",
@@ -96,7 +96,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/071_can/collision/base0.glb",
+          "uri": "data/robotwin_assets/objects/071_can/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "599bd4d8a598def3a24ce52118a681c9457c94dd5bc28c41b5ad36fddee2c2ef",
@@ -122,7 +122,7 @@
           "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
         },
         "retrieved_at": "2025-06-27",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/071_can/SOURCE_MANIFEST.json",
+        "source_manifest_path": "data/upstream_ledgers/071_can/SOURCE_MANIFEST.json",
         "kind": "retrieved"
       },
       "verification": [],

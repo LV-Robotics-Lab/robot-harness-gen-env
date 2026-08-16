@@ -12,7 +12,7 @@
     "materials": [],
     "identity": {
       "basis": "vlm",
-      "evidence": "/home/jingxiang/yuxin/sweep_out/C_umbrella/acquire/identity_post_render_350_umbrella_m0.json",
+      "evidence": "results/sweep_out/C_umbrella/acquire/identity_post_render_350_umbrella_m0.json",
       "verified": true
     }
   },
@@ -82,7 +82,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/350_umbrella/visual/base0.glb",
+          "uri": "data/asset_library/350_umbrella/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "414b3578260a9e0d1b638c4aa5d2ef12b5f8b2a6bdf1b0cb7a641b73cedb1ea1",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/350_umbrella/collision/base0.glb",
+          "uri": "data/asset_library/350_umbrella/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "45f68ae3ad43c9a5d3b8425e14b25c43d7b9868606878530ef60b3620666bcc6",
@@ -123,7 +123,7 @@
         },
         {
           "format": "usd",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_350_umbrella/patio_umbrella_01.usd",
+          "uri": "data/asset_library/_source/acq_350_umbrella/patio_umbrella_01.usd",
           "backend": "isaacsim",
           "role": "visual_and_collision",
           "sha256": "a97a6f8f5ff75057204a318f7856067d128e305cb04ff67e39e802dc9a5e6890",
@@ -134,7 +134,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/350_umbrella/snapshots/m0_default.png",
+          "uri": "data/asset_library/350_umbrella/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "535fdaa995011680c533310cfd7430916b04cc8987a72f2eeba413f3a9963cc5",
@@ -161,7 +161,7 @@
           "checked_by": "carry-forward of 2026-08-09 owner-directed audit (same source library, NVIDIA Isaac Assets 5.1 Props class)"
         },
         "retrieved_at": "2026-08-13",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_350_umbrella/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/acq_350_umbrella/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
@@ -171,7 +171,7 @@
           "run_id": "acquire",
           "timestamp": "2026-08-13T22:18:56",
           "verified_digest": "4a3004efbbea637b6ba2ae530fcc82cf951e0dab6e7e99564092ab8f2e3cfe92",
-          "report_path": "/home/jingxiang/yuxin/sweep_out/C_umbrella/acquire/import_matrix.json",
+          "report_path": "results/sweep_out/C_umbrella/acquire/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

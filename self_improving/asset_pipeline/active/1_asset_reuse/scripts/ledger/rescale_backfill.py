@@ -145,8 +145,10 @@ def main():
             # run (mesh rescaled, ledger not) -- fall through to complete
             # the ledger bookkeeping without touching the mesh again.
             if not a.apply:
-                print(f"DRY  {tag}: {cur:.3f} -> {target} ({policy})"
-                      + ("" if need_mesh else "  [ledger-only]"))
+                print(
+                    f"DRY  {tag}: {cur:.3f} -> {target} ({policy})"
+                    + ("" if need_mesh else "  [ledger-only]")
+                )
                 n_done += 1
                 continue
             if need_mesh:
@@ -172,9 +174,7 @@ def main():
             for rep in m.get("representations", []):
                 uri = rep.get("uri") or ""
                 if uri.endswith(f"base{mid}.glb"):
-                    p = Path(uri)
-                    if not p.is_absolute():
-                        p = asset_dir / uri
+                    p = L.resolve_uri(uri)
                     if p.is_file():
                         rep["sha256"] = sha256(p)
             conv = m["physical"].get("conventions") or {}

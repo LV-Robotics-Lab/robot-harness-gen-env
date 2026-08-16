@@ -72,7 +72,7 @@
       "representations": [
         {
           "format": "obj",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/900_gen_hexagonal_pedestal_15d5996c/visual/textured0.obj",
+          "uri": "data/robotwin_assets/objects/900_gen_hexagonal_pedestal_15d5996c/visual/textured0.obj",
           "backend": "sapien",
           "role": "visual",
           "sha256": "45857aee02d68be15245ee97d7451372c38f70026d2a1f7114687b83a81cddcc",
@@ -81,7 +81,7 @@
         },
         {
           "format": "obj",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/900_gen_hexagonal_pedestal_15d5996c/collision/textured0.obj",
+          "uri": "data/robotwin_assets/objects/900_gen_hexagonal_pedestal_15d5996c/collision/textured0.obj",
           "backend": "sapien",
           "role": "collision",
           "sha256": "570a69a1880493e9d4f663c91fc1fc19f3f72cf74d7d200170250ce5948a572e",
@@ -100,7 +100,7 @@
           "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
         },
         "retrieved_at": "2026-07-16",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/900_gen_hexagonal_pedestal_15d5996c/SOURCE_MANIFEST.json",
+        "source_manifest_path": "data/upstream_ledgers/900_gen_hexagonal_pedestal_15d5996c/SOURCE_MANIFEST.json",
         "kind": "retrieved"
       },
       "verification": []

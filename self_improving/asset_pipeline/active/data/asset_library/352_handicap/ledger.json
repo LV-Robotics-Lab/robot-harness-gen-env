@@ -12,7 +12,7 @@
     "materials": [],
     "identity": {
       "basis": "requested_by_acquire",
-      "evidence": "/home/jingxiang/yuxin/sweep_out/C_handicap/acquire/identity_handicap.json",
+      "evidence": "results/sweep_out/C_handicap/acquire/identity_handicap.json",
       "verified": false
     }
   },
@@ -82,7 +82,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/352_handicap/visual/base0.glb",
+          "uri": "data/asset_library/352_handicap/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "9d542f522c64d7ffe2390ae39b6859bbecd8beca16c0a66c4480437f384e2a60",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/352_handicap/collision/base0.glb",
+          "uri": "data/asset_library/352_handicap/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "342e41d65eea18ad1c686d62a1e7396e878094d16fc7de8c9904f1f4b34e9ac9",
@@ -123,7 +123,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_352_handicap/9348c988372a4efa93764bd5981c078a.glb",
+          "uri": "data/asset_library/_source/web_352_handicap/9348c988372a4efa93764bd5981c078a.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "b7a0170cfbad45d701132a1dd704cd885cdfb3a4f7b8786b0870eb91286f8412",
@@ -141,7 +141,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/352_handicap/snapshots/m0_default.png",
+          "uri": "data/asset_library/352_handicap/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "26dba83d773c14968f6b783f5bda9ace01c8fc693163b86ec3ac7876e20aa021",
@@ -169,7 +169,7 @@
           "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
         },
         "retrieved_at": "2026-08-13",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_352_handicap/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/web_352_handicap/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
@@ -179,7 +179,7 @@
           "run_id": "acquire",
           "timestamp": "2026-08-13T22:37:49",
           "verified_digest": "b4bda440851afb823ffdd72801966a7336a7f7284ca29185ebf543cc1628f203",
-          "report_path": "/home/jingxiang/yuxin/sweep_out/C_handicap/acquire/import_matrix.json",
+          "report_path": "results/sweep_out/C_handicap/acquire/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

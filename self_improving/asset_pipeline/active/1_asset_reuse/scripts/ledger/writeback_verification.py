@@ -80,7 +80,9 @@ def main():
             "verified_digest": L.reps_digest(model, a.backend),
         }
         if f.get("report_path"):
-            rec["report_path"] = f["report_path"]
+            # public-repo path hygiene: never store /home/<user>; portable
+            # (ACTIVE_ROOT-relative) when inside the tree, absolute otherwise
+            rec["report_path"] = L.to_portable_uri(f["report_path"])
         model.setdefault("verification", []).append(rec)
         hard = [
             v

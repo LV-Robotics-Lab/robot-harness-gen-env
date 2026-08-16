@@ -12,7 +12,7 @@
     "materials": [],
     "identity": {
       "basis": "vlm",
-      "evidence": "/home/jingxiang/yuxin/sweep_out/C_grid/acquire/identity_post_render_351_grid_m0.json",
+      "evidence": "results/sweep_out/C_grid/acquire/identity_post_render_351_grid_m0.json",
       "verified": true
     }
   },
@@ -82,7 +82,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/351_grid/visual/base0.glb",
+          "uri": "data/asset_library/351_grid/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "e07c64bca7e9b3c057fbeedf4bac490dbdbf5bd45e8a75ebf0de91f0d0d0d64f",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/351_grid/collision/base0.glb",
+          "uri": "data/asset_library/351_grid/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "811ec3208e81753bb6334aadb289dc3d8b8505061eebcdf9188a83549051d051",
@@ -123,7 +123,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_351_grid/3ee6b8c2b0994655bc5a5536bf0ef01f.glb",
+          "uri": "data/asset_library/_source/web_351_grid/3ee6b8c2b0994655bc5a5536bf0ef01f.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "05c83db699c079bf6b429e8fdc8306dad73fb04a1ed3b6bf948fe19635c6fe41",
@@ -141,7 +141,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/351_grid/snapshots/m0_default.png",
+          "uri": "data/asset_library/351_grid/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "68900fe30781e04a1a997d07e589e0b94b1cd6be2ed1b755213f476e58042063",
@@ -169,7 +169,7 @@
           "checked_by": "auto-declared from objaverse machine-readable license tag"
         },
         "retrieved_at": "2026-08-13",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_351_grid/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/web_351_grid/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
@@ -179,7 +179,7 @@
           "run_id": "acquire",
           "timestamp": "2026-08-13T22:22:33",
           "verified_digest": "4ac951124e973ac5c0c13989de911fca16e08377076eaf4d8db389a54a8872d5",
-          "report_path": "/home/jingxiang/yuxin/sweep_out/C_grid/acquire/import_matrix.json",
+          "report_path": "results/sweep_out/C_grid/acquire/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

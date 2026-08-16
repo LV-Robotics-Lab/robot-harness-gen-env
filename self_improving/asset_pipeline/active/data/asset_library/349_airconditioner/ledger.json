@@ -12,7 +12,7 @@
     "materials": [],
     "identity": {
       "basis": "vlm",
-      "evidence": "/home/jingxiang/yuxin/sweep_out/C_airconditioner/acquire/identity_airconditioner.json",
+      "evidence": "results/sweep_out/C_airconditioner/acquire/identity_airconditioner.json",
       "verified": true
     }
   },
@@ -82,7 +82,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/349_airconditioner/visual/base0.glb",
+          "uri": "data/asset_library/349_airconditioner/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "6d3507310a98a629ff07ec37ce6ab20bca7604a05330357defd82a7001ed00e4",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/349_airconditioner/collision/base0.glb",
+          "uri": "data/asset_library/349_airconditioner/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "22cf3bff009198924f98de6e41235cebb45f1344a3fbfb6dc3f83aa3634af3b5",
@@ -123,7 +123,7 @@
         },
         {
           "format": "usd",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_349_airconditioner/ac_unit_04.usd",
+          "uri": "data/asset_library/_source/acq_349_airconditioner/ac_unit_04.usd",
           "backend": "isaacsim",
           "role": "visual_and_collision",
           "sha256": "0d005566703b7606d1201df0fb07da1e707e2b4a4a8caec066bd44765133f079",
@@ -134,7 +134,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/349_airconditioner/snapshots/m0_default.png",
+          "uri": "data/asset_library/349_airconditioner/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "be37d3739926c777373412c53289093990feefe784acfd6c754b8b4b5d7626a4",
@@ -161,7 +161,7 @@
           "checked_by": "carry-forward of 2026-08-09 owner-directed audit (same source library, NVIDIA Isaac Assets 5.1 Props class)"
         },
         "retrieved_at": "2026-08-13",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_349_airconditioner/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/acq_349_airconditioner/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
@@ -171,7 +171,7 @@
           "run_id": "acquire",
           "timestamp": "2026-08-13T22:17:39",
           "verified_digest": "7aee61ea12d5d5648e4f207cad45af8d71b096230055def1f414d4ab8bcbba19",
-          "report_path": "/home/jingxiang/yuxin/sweep_out/C_airconditioner/acquire/import_matrix.json",
+          "report_path": "results/sweep_out/C_airconditioner/acquire/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

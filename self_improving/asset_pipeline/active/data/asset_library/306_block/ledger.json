@@ -84,7 +84,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/306_block/visual/base0.glb",
+          "uri": "data/asset_library/306_block/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "6d4f479bffbce92eead80f11cf5430e7eeb57d5dd23c4e8def62732b458bd106",
@@ -106,7 +106,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/306_block/collision/base0.glb",
+          "uri": "data/asset_library/306_block/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "6d4f479bffbce92eead80f11cf5430e7eeb57d5dd23c4e8def62732b458bd106",
@@ -125,7 +125,7 @@
         },
         {
           "format": "usd",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/036_wood_block.usd",
+          "uri": "data/asset_library/_source/ycb_axis_aligned/036_wood_block.usd",
           "backend": "isaacsim",
           "role": "visual_and_collision",
           "sha256": "8d4fa24d16ed45451122fe12be24a66de7043a8a3e3be9c0ac58d197c776f525",
@@ -150,7 +150,7 @@
           "checked_by": "owner-directed research 2026-08-09"
         },
         "retrieved_at": "2026-08-03",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
+        "source_manifest_path": "data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
         "kind": "retrieved"
       },
       "verification": [
@@ -161,7 +161,7 @@
           "run_id": "batch_v3",
           "timestamp": "2026-08-03T00:00:00",
           "verified_digest": "0d8a440bef52505bc68042848f5b00a4ecc60ef7db1da6ef428c19d45172387d",
-          "report_path": "/home/jingxiang/yuxin/env-gen-dev/results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
+          "report_path": "results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
         },
         {
           "backend": "sapien",
@@ -170,7 +170,7 @@
           "run_id": "s11",
           "timestamp": "2026-08-09T00:45:55",
           "verified_digest": "0d8a440bef52505bc68042848f5b00a4ecc60ef7db1da6ef428c19d45172387d",
-          "report_path": "/home/jingxiang/yuxin/env-gen-dev-ledger/results/20260809_ledger_v1_accept/s11"
+          "report_path": "results/20260809_ledger_v1_accept/s11"
         }
       ],
       "appearance": {
@@ -255,7 +255,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/306_block/visual/base1.glb",
+          "uri": "data/asset_library/306_block/visual/base1.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "4af850e88d555c3d88b06af80897211c73be5fbab43d2b5bb8f3abee5c9e1768",
@@ -277,7 +277,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/306_block/collision/base1.glb",
+          "uri": "data/asset_library/306_block/collision/base1.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "4af850e88d555c3d88b06af80897211c73be5fbab43d2b5bb8f3abee5c9e1768",
@@ -296,7 +296,7 @@
         },
         {
           "format": "usd",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/061_foam_brick.usd",
+          "uri": "data/asset_library/_source/ycb_axis_aligned/061_foam_brick.usd",
           "backend": "isaacsim",
           "role": "visual_and_collision",
           "sha256": "117a5ea3afcf370730ad92a864aa89c7bca4c161753ac59d2eea13eb603e550d",
@@ -321,7 +321,7 @@
           "checked_by": "owner-directed research 2026-08-09"
         },
         "retrieved_at": "2026-08-03",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
+        "source_manifest_path": "data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
         "kind": "retrieved"
       },
       "verification": [
@@ -332,7 +332,7 @@
           "run_id": "batch_v3",
           "timestamp": "2026-08-03T00:00:00",
           "verified_digest": "9e893952b865c4273eb8d711603c5b4fdd5bfab68fa9b9666f67504550214ecd",
-          "report_path": "/home/jingxiang/yuxin/env-gen-dev/results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
+          "report_path": "results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
         },
         {
           "backend": "sapien",
@@ -341,7 +341,7 @@
           "run_id": "s11",
           "timestamp": "2026-08-09T00:45:55",
           "verified_digest": "9e893952b865c4273eb8d711603c5b4fdd5bfab68fa9b9666f67504550214ecd",
-          "report_path": "/home/jingxiang/yuxin/env-gen-dev-ledger/results/20260809_ledger_v1_accept/s11"
+          "report_path": "results/20260809_ledger_v1_accept/s11"
         }
       ],
       "appearance": {

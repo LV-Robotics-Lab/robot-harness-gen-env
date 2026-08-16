@@ -14,7 +14,7 @@
     "materials": [],
     "identity": {
       "basis": "vlm",
-      "evidence": "../results/20260811_production_first_run/identity_post_render_316_duck_m0.json",
+      "evidence": "results/20260811_production_first_run/identity_post_render_316_duck_m0.json",
       "verified": true
     }
   },
@@ -84,7 +84,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/316_duck/visual/base0.glb",
+          "uri": "data/asset_library/316_duck/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "f4f18993bbe7fe5cda632cb9f8812d2e6db152cde3bf8526c62e4f53c635bed2",
@@ -106,7 +106,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/316_duck/collision/base0.glb",
+          "uri": "data/asset_library/316_duck/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "f4f18993bbe7fe5cda632cb9f8812d2e6db152cde3bf8526c62e4f53c635bed2",
@@ -125,7 +125,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/results/20260811_production_first_run/webcache/bb50981c0e2c55f14702/Duck.glb",
+          "uri": "results/20260811_production_first_run/webcache/bb50981c0e2c55f14702/Duck.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "65bf938f54d6073e619e76e007820bbf980cdc3dc0daec0d94830ffc4ae54ab5",
@@ -143,7 +143,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/316_duck/snapshots/m0_default.png",
+          "uri": "data/asset_library/316_duck/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "b1b886e8463ff6aae8c189215e841a9dc7cf502db0ff1cf5fc9df7717766234a",
@@ -171,7 +171,7 @@
           "checked_by": "owner sign-off 2026-08-11 (recorded in _license_evidence/20260811/decisions.json)"
         },
         "retrieved_at": "2026-08-11",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_316_duck/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/web_316_duck/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
@@ -181,7 +181,7 @@
           "run_id": "20260811_production_first_run",
           "timestamp": "2026-08-11T21:57:25",
           "verified_digest": "0b075ae7911d356dee4d294bc6e0d02f0ec390a19da182886145eaeb367ade0d",
-          "report_path": "../results/20260811_production_first_run/import_matrix.json",
+          "report_path": "results/20260811_production_first_run/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

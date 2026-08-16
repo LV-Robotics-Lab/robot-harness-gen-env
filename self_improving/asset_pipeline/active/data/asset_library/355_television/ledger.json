@@ -12,7 +12,7 @@
     "materials": [],
     "identity": {
       "basis": "vlm",
-      "evidence": "/home/jingxiang/yuxin/sweep_out/C_television/acquire/identity_post_render_355_television_m0.json",
+      "evidence": "results/sweep_out/C_television/acquire/identity_post_render_355_television_m0.json",
       "verified": true
     }
   },
@@ -82,7 +82,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/355_television/visual/base0.glb",
+          "uri": "data/asset_library/355_television/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "5b21c6d0bbc78fd3d23108d594f5a98a7923756e6891a5fcd3361c7b3f5f5db1",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/355_television/collision/base0.glb",
+          "uri": "data/asset_library/355_television/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "2fcfc7dbf8eb04826be83c35d56a4484ae5cca935d8827d328105516a10b7a90",
@@ -123,7 +123,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_355_television/92e6509f3b474298ae66709e8cc24255.glb",
+          "uri": "data/asset_library/_source/web_355_television/92e6509f3b474298ae66709e8cc24255.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "e5fda9bbbb7bb3e0c424f5aca01c8290aea74f2f95d7277bc46018127144350c",
@@ -141,7 +141,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/355_television/snapshots/m0_default.png",
+          "uri": "data/asset_library/355_television/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "8e7aa7c663d54479c0dacc5b6e01802c31f09c87d80e4ccd2d7f3bac310591ba",
@@ -169,7 +169,7 @@
           "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
         },
         "retrieved_at": "2026-08-13",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_355_television/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/web_355_television/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
@@ -179,7 +179,7 @@
           "run_id": "acquire",
           "timestamp": "2026-08-13T22:43:40",
           "verified_digest": "2b0e8cb010c6b00343fe6585a9b6eec3732a7daf6321d1c7ab90449c4a243c0b",
-          "report_path": "/home/jingxiang/yuxin/sweep_out/C_television/acquire/import_matrix.json",
+          "report_path": "results/sweep_out/C_television/acquire/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

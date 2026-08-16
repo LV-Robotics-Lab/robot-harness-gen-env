@@ -379,6 +379,31 @@ def _check_required(node, required_paths, prefix, out):
             out.append(Violation(full, "missing", f"required field missing: {full}"))
 
 
+# Path portability contract (public repo: no /home/<user> in tracked ledgers;
+# a path written on one machine must resolve on another). Anchor mirrors
+# runtime_config.ASSET_PIPELINE_ROOT without importing it (lib stays pure
+# stdlib): env override first, else this checkout's active root.
+ACTIVE_ROOT = Path(
+    os.environ.get("ASSET_PIPELINE_ROOT", Path(__file__).resolve().parents[2])
+)
+
+
+def to_portable_uri(path):
+    """ACTIVE_ROOT-relative posix string when under the active tree, else the
+    absolute path unchanged (caller decides whether that is acceptable)."""
+    p = Path(path).resolve()
+    try:
+        return p.relative_to(ACTIVE_ROOT.resolve()).as_posix()
+    except ValueError:
+        return str(p)
+
+
+def resolve_uri(uri):
+    """Inverse of to_portable_uri: relative uris anchor at ACTIVE_ROOT."""
+    p = Path(uri)
+    return p if p.is_absolute() else ACTIVE_ROOT / p
+
+
 def ledger_path(library_dir, asset):
     """<library_dir>/<asset>/ledger.json"""
     return Path(library_dir) / asset / "ledger.json"
@@ -1138,7 +1163,7 @@ def validate_ledger(ledger, *, check_files=True):
                 uri = r.get("uri")
                 if not uri:
                     continue
-                p = Path(uri)
+                p = resolve_uri(uri)
                 rp = f"models.{i}.representations.{j}"
                 if not p.exists():
                     out.append(

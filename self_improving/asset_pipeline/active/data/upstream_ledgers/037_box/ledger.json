@@ -74,7 +74,7 @@
       "representations": [
         {
           "format": "urdf",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/robotwin_assets/objects/037_box/426/mobility.urdf",
+          "uri": "data/robotwin_assets/objects/037_box/426/mobility.urdf",
           "backend": "sapien",
           "role": "visual_and_collision",
           "sha256": "60a46a5b19a41ba25c5804101304d13d488ac525039c6da6c59b6643fad483b1",
@@ -120,7 +120,7 @@
           "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
         },
         "retrieved_at": "2025-06-27",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev-upstream/data/upstream_ledgers/037_box/SOURCE_MANIFEST.json",
+        "source_manifest_path": "data/upstream_ledgers/037_box/SOURCE_MANIFEST.json",
         "kind": "retrieved"
       },
       "verification": []

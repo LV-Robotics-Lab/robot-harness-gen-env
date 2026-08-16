@@ -707,7 +707,7 @@ for idx, r in worker_records:
         reps = [
             {
                 "format": "glb",
-                "uri": str(vis),
+                "uri": ledger_mod.to_portable_uri(vis),
                 "backend": "sapien",
                 "role": "visual",
                 "sha256": sha256(vis),
@@ -720,7 +720,7 @@ for idx, r in worker_records:
             },
             {
                 "format": "glb",
-                "uri": str(col),
+                "uri": ledger_mod.to_portable_uri(col),
                 "backend": "sapien",
                 "role": "collision",
                 "sha256": sha256(col),
@@ -746,12 +746,10 @@ for idx, r in worker_records:
                 # ledgers pointed into /tmp webcache dirs that a cleanup then
                 # deleted, and the audit flagged them file_missing
                 # (2026-08-13). NVIDIA usd_local already IS the mirror.
-                "uri": (
+                "uri": ledger_mod.to_portable_uri(
                     r["usd_local"]
                     if not r["group"].startswith("web_")
-                    else str(
-                        lib / "_source" / r["group"] / Path(r["usd_local"]).name
-                    )
+                    else lib / "_source" / r["group"] / Path(r["usd_local"]).name
                 ),
                 "backend": (
                     "isaacsim" if not r["group"].startswith("web_") else "portable"
@@ -778,7 +776,7 @@ for idx, r in worker_records:
                 reps.append(
                     {
                         "format": "png",
-                        "uri": str(snap_path),
+                        "uri": ledger_mod.to_portable_uri(snap_path),
                         "backend": "portable",
                         "role": "snapshot",
                         "sha256": sha256(snap_path),

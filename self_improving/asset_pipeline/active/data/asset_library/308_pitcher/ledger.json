@@ -82,7 +82,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/308_pitcher/visual/base0.glb",
+          "uri": "data/asset_library/308_pitcher/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "5e8da1eaba448f00208bcc65036d990780983303f32b93a3f87bc3aed725d1da",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/308_pitcher/collision/base0.glb",
+          "uri": "data/asset_library/308_pitcher/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "9bd52419ef4fa37815aeccb693668d775b3d2efc79706b0c3bcd5b05a38f5ecf",
@@ -123,7 +123,7 @@
         },
         {
           "format": "usd",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/019_pitcher_base.usd",
+          "uri": "data/asset_library/_source/ycb_axis_aligned/019_pitcher_base.usd",
           "backend": "isaacsim",
           "role": "visual_and_collision",
           "sha256": "369dff6efbbdadc86703e478dedd8cfe2467cefacb25bd69f8f8b7826eba753f",
@@ -148,7 +148,7 @@
           "checked_by": "owner-directed research 2026-08-09"
         },
         "retrieved_at": "2026-08-03",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
+        "source_manifest_path": "data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
         "kind": "retrieved"
       },
       "verification": [
@@ -159,7 +159,7 @@
           "run_id": "batch_v3",
           "timestamp": "2026-08-03T00:00:00",
           "verified_digest": "1f075c1fdfea5ade2783e9d6b63b4c7e05f8764fdbc695da49e7ea61708b810f",
-          "report_path": "/home/jingxiang/yuxin/env-gen-dev/results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
+          "report_path": "results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
         },
         {
           "backend": "sapien",
@@ -168,7 +168,7 @@
           "run_id": "s11",
           "timestamp": "2026-08-09T00:45:55",
           "verified_digest": "1f075c1fdfea5ade2783e9d6b63b4c7e05f8764fdbc695da49e7ea61708b810f",
-          "report_path": "/home/jingxiang/yuxin/env-gen-dev-ledger/results/20260809_ledger_v1_accept/s11"
+          "report_path": "results/20260809_ledger_v1_accept/s11"
         }
       ],
       "appearance": {

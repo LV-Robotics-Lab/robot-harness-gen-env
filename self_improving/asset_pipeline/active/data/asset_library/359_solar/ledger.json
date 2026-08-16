@@ -12,7 +12,7 @@
     "materials": [],
     "identity": {
       "basis": "vlm",
-      "evidence": "/home/jingxiang/yuxin/sweep_out/C_solar/acquire/identity_post_render_359_solar_m0.json",
+      "evidence": "results/sweep_out/C_solar/acquire/identity_post_render_359_solar_m0.json",
       "verified": true
     }
   },
@@ -81,7 +81,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/359_solar/visual/base0.glb",
+          "uri": "data/asset_library/359_solar/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "ef22512932ab0e5c0b25601b4ff74b8f793f4599a9f46aebb26fc405f698348b",
@@ -103,7 +103,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/359_solar/collision/base0.glb",
+          "uri": "data/asset_library/359_solar/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "ef22512932ab0e5c0b25601b4ff74b8f793f4599a9f46aebb26fc405f698348b",
@@ -122,7 +122,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_359_solar/6359190639544e98ab7646e47b17356e.glb",
+          "uri": "data/asset_library/_source/web_359_solar/6359190639544e98ab7646e47b17356e.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "1a57b97a2b9a56c4b2bb11dfa0e64723047cd2d5014bb7d87c71efd9cd0a1ba3",
@@ -140,7 +140,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/359_solar/snapshots/m0_default.png",
+          "uri": "data/asset_library/359_solar/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "7fc2a4cf23cc215232421aa0e1d0e3fc4a1b9b8e91d22dc968c21914e2edf8b1",
@@ -168,7 +168,7 @@
           "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
         },
         "retrieved_at": "2026-08-13",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_359_solar/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/web_359_solar/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
@@ -178,7 +178,7 @@
           "run_id": "acquire",
           "timestamp": "2026-08-13T23:40:24",
           "verified_digest": "170b0576e6e3413217a6dfcc0ffaec3dea89cc6d084dbd1f73c5f820eb1ea52b",
-          "report_path": "/home/jingxiang/yuxin/sweep_out/C_solar/acquire/import_matrix.json",
+          "report_path": "results/sweep_out/C_solar/acquire/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

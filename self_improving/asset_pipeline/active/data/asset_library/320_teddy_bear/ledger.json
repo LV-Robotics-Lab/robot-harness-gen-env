@@ -84,7 +84,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/320_teddy_bear/visual/base1.glb",
+          "uri": "data/asset_library/320_teddy_bear/visual/base1.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "33b40757c5df5ee133f82139226169cd22403b2b3dab191a1b15592e0a3671f7",
@@ -106,7 +106,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/320_teddy_bear/collision/base1.glb",
+          "uri": "data/asset_library/320_teddy_bear/collision/base1.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "89eb3509fb37e0e1e71c7c79c51f39952a494f8e86cb438c6dc0f6719b454778",
@@ -143,7 +143,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/320_teddy_bear/snapshots/m1_default.png",
+          "uri": "data/asset_library/320_teddy_bear/snapshots/m1_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "0774f5b5b8448a386d6148403aef2f5ab709541e052d5f4fe5706117f2cb675f",
@@ -171,7 +171,7 @@
           "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
         },
         "retrieved_at": "2026-08-13",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_320_teddy_bear/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/web_320_teddy_bear/SOURCE_MANIFEST.json"
       },
       "verification": [
         {

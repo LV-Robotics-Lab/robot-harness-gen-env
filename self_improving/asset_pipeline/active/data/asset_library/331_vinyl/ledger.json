@@ -12,7 +12,7 @@
     "materials": [],
     "identity": {
       "basis": "vlm",
-      "evidence": "/home/jingxiang/yuxin/sweep_out/C_vinyl/acquire/identity_post_render_331_vinyl_m0.json",
+      "evidence": "results/sweep_out/C_vinyl/acquire/identity_post_render_331_vinyl_m0.json",
       "verified": true
     }
   },
@@ -82,7 +82,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/331_vinyl/visual/base0.glb",
+          "uri": "data/asset_library/331_vinyl/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "30559f850238b6fa9b433601f68ae6d400bc14802b8b5c1a1004f7dc1cda9c12",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/331_vinyl/collision/base0.glb",
+          "uri": "data/asset_library/331_vinyl/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "22558518bcff29e2c7f889519c248e2804caf67d5c96b73c2330c362fe830caf",
@@ -123,7 +123,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_331_vinyl/32fb74396ca545fcbdf1ecd47408d4fc.glb",
+          "uri": "data/asset_library/_source/web_331_vinyl/32fb74396ca545fcbdf1ecd47408d4fc.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "31b97d7ccdea05ba14fb325c751177ac3aced2252c4974beaf534cbbd1bd7680",
@@ -141,7 +141,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/331_vinyl/snapshots/m0_default.png",
+          "uri": "data/asset_library/331_vinyl/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "41a649d425c3452398d17d734f69a5d885bfb2dfd999d07ef7458ae998699df1",
@@ -169,7 +169,7 @@
           "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
         },
         "retrieved_at": "2026-08-13",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_331_vinyl/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/web_331_vinyl/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
@@ -179,7 +179,7 @@
           "run_id": "acquire",
           "timestamp": "2026-08-13T19:03:12",
           "verified_digest": "f1f2546275e50e8e38f4edb2f77cadecc1649b4292af1473d2fc44b229a6fb9d",
-          "report_path": "/home/jingxiang/yuxin/sweep_out/C_vinyl/acquire/import_matrix.json",
+          "report_path": "results/sweep_out/C_vinyl/acquire/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

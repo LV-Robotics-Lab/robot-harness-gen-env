@@ -82,7 +82,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/321_dustbin/visual/base0.glb",
+          "uri": "data/asset_library/321_dustbin/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "f2a72cde61a224701ff1a92aaeb23e8f0e33b5826aaa92d80d2d6e6ce22cb916",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/321_dustbin/collision/base0.glb",
+          "uri": "data/asset_library/321_dustbin/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "233f2a9465d9509bbe9b55038818b5cb92dc3b80e5215b19f5dab146ff49e189",
@@ -123,7 +123,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_321_dustbin/09188811da08451e8cb37d3eaecc7351.glb",
+          "uri": "data/asset_library/_source/web_321_dustbin/09188811da08451e8cb37d3eaecc7351.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "edff5d500c8c0eb74fd6c09d556185df892df2cead374372e401bb08f263c0a0",
@@ -141,7 +141,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/321_dustbin/snapshots/m0_default.png",
+          "uri": "data/asset_library/321_dustbin/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "d6b7beea25daff754a5abdac0ff72443b7b56065698bc6326c20363ec30a9f5e",
@@ -169,7 +169,7 @@
           "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
         },
         "retrieved_at": "2026-08-13",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/web_321_dustbin/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/web_321_dustbin/SOURCE_MANIFEST.json"
       },
       "verification": [
         {

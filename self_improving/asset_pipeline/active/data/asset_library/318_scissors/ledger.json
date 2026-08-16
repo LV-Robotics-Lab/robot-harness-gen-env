@@ -82,7 +82,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/318_scissors/visual/base0.glb",
+          "uri": "data/asset_library/318_scissors/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "d8abf36c76d50f55721a4ae95ac79b0e80263520cdd30d2bc3368caa8bd1257b",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/318_scissors/collision/base0.glb",
+          "uri": "data/asset_library/318_scissors/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "f3be9cd5b95930cec9d1d717e487197813dffb647f5af292577b104437f25dd9",
@@ -123,7 +123,7 @@
         },
         {
           "format": "usd",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_318_scissors/037_scissors.usd",
+          "uri": "data/asset_library/_source/acq_318_scissors/037_scissors.usd",
           "backend": "isaacsim",
           "role": "visual_and_collision",
           "sha256": "d6be2399b52bc88be16f2facf0d33844604d7d25544dca15d6d4363c10bec834",
@@ -134,7 +134,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/318_scissors/snapshots/m0_default.png",
+          "uri": "data/asset_library/318_scissors/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "8dd507ff77d0f333caf341eb912170c5ee6b8cbc1942dce0ad6e73ee4c2ae7d3",
@@ -161,7 +161,7 @@
           "checked_by": "carried forward from owner-directed audit 2026-08-09 (same source coordinates class)"
         },
         "retrieved_at": "2026-08-12",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_318_scissors/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/acq_318_scissors/SOURCE_MANIFEST.json"
       },
       "verification": [
         {

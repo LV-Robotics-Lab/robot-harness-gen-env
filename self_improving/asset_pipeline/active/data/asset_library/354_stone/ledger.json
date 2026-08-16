@@ -12,7 +12,7 @@
     "materials": [],
     "identity": {
       "basis": "vlm",
-      "evidence": "/home/jingxiang/yuxin/sweep_out/C_stone/acquire/identity_stone.json",
+      "evidence": "results/sweep_out/C_stone/acquire/identity_stone.json",
       "verified": true
     }
   },
@@ -82,7 +82,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/354_stone/visual/base0.glb",
+          "uri": "data/asset_library/354_stone/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "85de18535b709bac1b7af54b6da91ea83665287c4e8b0762fe73ae05ef83a94e",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/354_stone/collision/base0.glb",
+          "uri": "data/asset_library/354_stone/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "58f5dfe86fdb2e0dcc51c51a7ab46ea344805fbd35941f2be155f3105a7d36a0",
@@ -123,7 +123,7 @@
         },
         {
           "format": "usd",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_354_stone/concrete_block_01.usd",
+          "uri": "data/asset_library/_source/acq_354_stone/concrete_block_01.usd",
           "backend": "isaacsim",
           "role": "visual_and_collision",
           "sha256": "9aa36546b91eb1e87c5d0093d795a2bc8b9ebd6dff9f70f00686405ec2000586",
@@ -134,7 +134,7 @@
         },
         {
           "format": "png",
-          "uri": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/354_stone/snapshots/m0_default.png",
+          "uri": "data/asset_library/354_stone/snapshots/m0_default.png",
           "backend": "portable",
           "role": "snapshot",
           "sha256": "96c42bcd0c88559a47f126c6229aafb20cacd50375a4669cb9abf1039ee902d6",
@@ -161,7 +161,7 @@
           "checked_by": "carry-forward of 2026-08-09 owner-directed audit (same source library, NVIDIA Isaac Assets 5.1 Props class)"
         },
         "retrieved_at": "2026-08-13",
-        "source_manifest_path": "/home/jingxiang/yuxin/env-gen-dev/data/asset_library/_source/acq_354_stone/SOURCE_MANIFEST.json"
+        "source_manifest_path": "data/asset_library/_source/acq_354_stone/SOURCE_MANIFEST.json"
       },
       "verification": [
         {
@@ -171,7 +171,7 @@
           "run_id": "acquire",
           "timestamp": "2026-08-13T22:42:16",
           "verified_digest": "9bad9f3048d82688f4b4415f6084dd213ee270b4325c242093b5ba90d3e2714e",
-          "report_path": "/home/jingxiang/yuxin/sweep_out/C_stone/acquire/import_matrix.json",
+          "report_path": "results/sweep_out/C_stone/acquire/import_matrix.json",
           "thresholds": {
             "settle_disp_m": 0.002,
             "z_min_m": -0.005,

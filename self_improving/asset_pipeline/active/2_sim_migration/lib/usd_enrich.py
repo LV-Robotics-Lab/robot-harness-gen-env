@@ -72,9 +72,7 @@ def _apply_isaac_representations(
         new_assets.append(asset)
 
     new_objects = tuple(
-        replace(obj, scale=(1.0, 1.0, 1.0))
-        if obj.asset_id in neutralize_ids
-        else obj
+        replace(obj, scale=(1.0, 1.0, 1.0)) if obj.asset_id in neutralize_ids else obj
         for obj in package.env.objects
     )
     return replace(
@@ -239,12 +237,18 @@ def enrich_from_ledgers(
             report["skipped_no_isaac_rep"].append(asset.asset_id)
             continue
 
+        from lib import ledger  # noqa: PLC0415 -- see module-level comment
+
+        # ledgers store portable (ACTIVE_ROOT-relative) uris since the path
+        # hygiene pass; resolve here and hand the compiler an absolute path.
         uri = isaac_rep.get("uri")
-        if not uri or not Path(uri).is_file():
+        uri_path = ledger.resolve_uri(uri) if uri else None
+        if uri_path is None or not uri_path.is_file():
             report["warnings"].append(
                 f"{asset.asset_id}: isaacsim representation uri not found: {uri!r}"
             )
             continue
+        uri = str(uri_path)
 
         metadata = dict(isaac_rep.get("metadata") or {})
         if _latest_isaac_pass(model_entry):
