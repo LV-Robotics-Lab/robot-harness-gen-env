@@ -98,4 +98,4 @@ PASS seed=96 runtime=pass
 PASS seed=97 runtime=pass
 PASS seed=98 runtime=pass
 PASS seed=99 runtime=pass
-PASS pass=100/100 rate=1.000 report=/home/jingxiang/workspace/robotwin-text2env-stage04-validation/data/acceptance_100_v2/acceptance_report.json
+PASS pass=100/100 rate=1.000 report=<USER_HOME>/workspace/robotwin-text2env-stage04-validation/data/acceptance_100_v2/acceptance_report.json
