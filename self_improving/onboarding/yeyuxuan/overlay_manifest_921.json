@@ -1,0 +1,30 @@
+{
+  "schema_version": "robot_harness.external_asset_overlay.v1",
+  "captured_at": "2026-08-16",
+  "asset_ids": [
+    "921_robolab_tomato_soup_can"
+  ],
+  "asset_count": 1,
+  "file_count": 5,
+  "file_bytes": 9815900,
+  "overlay_root": "local_data/robotwin-robolab-overlay",
+  "asset_relative_path": "assets/objects/921_robolab_tomato_soup_can",
+  "source_repository": "https://github.com/NVLabs/RoboLab",
+  "source_commit": "97bc1e766300a8c95656067ecb81e267e7e11823",
+  "sha256_manifest": "overlay_manifest_921.sha256",
+  "sha256_manifest_sha256": "f67e99689804294cce2caa0ba0dadf718fd026789cc0041062a98b47b93e98a8",
+  "storage_uri": null,
+  "large_files_tracked_in_git": false,
+  "tracked_here": [
+    "asset_ledger.v2 receipt",
+    "model_data0.json receipt",
+    "source and migration records",
+    "full-file SHA-256 manifest"
+  ],
+  "external_only": [
+    "GLB visual and collision meshes",
+    "runtime images",
+    "runtime videos",
+    "generated scene packages"
+  ]
+}

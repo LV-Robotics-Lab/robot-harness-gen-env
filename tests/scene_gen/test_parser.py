@@ -125,6 +125,18 @@ def test_rule_parser_preserves_spam_can_semantic_category() -> None:
     assert spec.objects[0].category == "spam_can"
 
 
+def test_rule_parser_preserves_tomato_soup_can_without_changing_plain_can() -> None:
+    tomato = parse_rule_based("Place a tomato soup can on the table.", seed=42)
+    plain = parse_rule_based("Place a can on the table.", seed=42)
+
+    assert [(item.object_id, item.category) for item in tomato.objects] == [
+        ("tomato_soup_can_1", "tomato_soup_can")
+    ]
+    assert [(item.object_id, item.category) for item in plain.objects] == [
+        ("can_1", "can")
+    ]
+
+
 def test_provider_payload_cannot_smuggle_backend_fields_or_change_request() -> None:
     spec = parse_rule_based("A can is left of a basket.", seed=4)
     payload = spec.canonical_dict()

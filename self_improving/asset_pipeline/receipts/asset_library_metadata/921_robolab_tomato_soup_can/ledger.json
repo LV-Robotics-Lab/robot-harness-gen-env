@@ -1,0 +1,176 @@
+{
+  "schema_version": "asset_ledger.v2",
+  "asset_id": "921_robolab_tomato_soup_can",
+  "category": "tomato_soup_can",
+  "semantic_name": "tomato_soup_can",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "tags": [
+    "rigid",
+    "robolab",
+    "ycb"
+  ],
+  "semantics": {
+    "aliases": [
+      "tomato_soup_can",
+      "tomato soup can",
+      "soup can",
+      "can"
+    ],
+    "colors": [],
+    "materials": [
+      "metal"
+    ],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "RoboLab assets/objects/ycb/tomato_soup_can.usd at 97bc1e7",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.06785399466753006,
+          0.0677499994635582,
+          0.10203700512647629
+        ],
+        "mesh_up_axis": "Y",
+        "origin_convention": "bottom-center",
+        "size_resolution": {
+          "mode": "reference",
+          "actual_max_dim_m": 0.10203700512647629,
+          "scale": 1.0,
+          "reference_max_dim_m": 0.10203700512647629,
+          "reference_assets": [
+            "RoboLab tomato_soup_can.usd measured world bbox"
+          ],
+          "verdict": "ok"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "circle",
+          "stable_poses": [
+            {
+              "pose_id": "usd_upright",
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": 0.44999998807907104,
+          "status": "known",
+          "runtime_default_kg": 0.44999998807907104,
+          "runtime_default_basis": "none"
+        },
+        "friction": {
+          "value": {
+            "static": 2.0,
+            "dynamic": 2.0,
+            "restitution": 0.10000000149011612
+          },
+          "status": "known",
+          "runtime_default": null,
+          "runtime_default_basis": "none"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "local_data/robotwin-robolab-overlay/assets/objects/921_robolab_tomato_soup_can/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "13c2c819184042164bc5ed3e53f204fe8e6bbe88a1405c1b13537e17b9b719d3",
+          "size_bytes": 9788484,
+          "metadata": {
+            "derived_from": "assets/objects/ycb/tomato_soup_can.usd",
+            "converter": "migrate_robolab_asset.py",
+            "conversion_params": {
+              "world_transform_applied": true,
+              "bottom_aligned_z0": true,
+              "texture_embedded": true
+            }
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "local_data/robotwin-robolab-overlay/assets/objects/921_robolab_tomato_soup_can/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "b42aa607348bbda933ab7e34c99577dedc9e4ecef8470b14f957974926d16b5d",
+          "size_bytes": 24396,
+          "metadata": {
+            "derived_from": "visual mesh",
+            "converter": "trimesh convex_hull",
+            "conversion_params": {
+              "approximation": "single convex hull",
+              "hull_count": 1
+            }
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "NVLabs/RoboLab YCB",
+        "group": "assets/objects/ycb",
+        "file": "tomato_soup_can.usd",
+        "retrieved_at": "2026-08-16",
+        "source_manifest_path": "self_improving/onboarding/yeyuxuan/robolab_sources/921_robolab_tomato_soup_can/migration_record.json",
+        "license": {
+          "spdx": "MIT",
+          "status": "declared",
+          "terms_note": "RoboLab states these USD models derive from YCB-Video; both YCB-Video and BOP-YCB are released under MIT. Preserve the included LICENSE.",
+          "evidence_url": "https://github.com/NVLabs/RoboLab/blob/97bc1e766300a8c95656067ecb81e267e7e11823/assets/objects/ycb/LICENSE",
+          "checked_date": "2026-08-16",
+          "checked_by": "fixed-commit file and SHA-256 audit"
+        }
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "fail",
+          "run_id": "921-seed42-x90-failed",
+          "timestamp": "2026-08-16T21:21:21",
+          "verified_digest": "6a04ab87f1abb7685de4657b10ca5ab60c4388bf56668d4e7b3c37f5b219cef4",
+          "report_path": "local_data/921_robolab_tomato_soup_can/runtime/seed42/runtime_validation_report.json",
+          "thresholds": {
+            "settle_steps": 900,
+            "precheck_steps": 0,
+            "contact_window_steps": 60,
+            "min_support_contact_fraction": 0.8,
+            "min_visible_pixels": 64,
+            "min_unique_video_frames": 30
+          }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "921-seed42-identity-pass",
+          "timestamp": "2026-08-16T21:22:52",
+          "verified_digest": "6a04ab87f1abb7685de4657b10ca5ab60c4388bf56668d4e7b3c37f5b219cef4",
+          "report_path": "local_data/921_robolab_tomato_soup_can/iteration2/runtime/seed42/runtime_validation_report.json",
+          "thresholds": {
+            "settle_steps": 900,
+            "precheck_steps": 0,
+            "contact_window_steps": 60,
+            "min_support_contact_fraction": 0.8,
+            "min_visible_pixels": 64,
+            "min_unique_video_frames": 30
+          }
+        }
+      ]
+    }
+  ]
+}

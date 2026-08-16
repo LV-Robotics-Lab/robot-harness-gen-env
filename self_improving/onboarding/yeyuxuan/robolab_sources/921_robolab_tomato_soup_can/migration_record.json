@@ -1,0 +1,221 @@
+{
+  "schema_version": "robolab_robotwin_migration_record.v1",
+  "asset_id": "921_robolab_tomato_soup_can",
+  "source": {
+    "repository": "https://github.com/NVLabs/RoboLab",
+    "commit": "97bc1e766300a8c95656067ecb81e267e7e11823",
+    "usd_path": "assets/objects/ycb/tomato_soup_can.usd",
+    "texture_path": "assets/objects/ycb/textures/obj_000004.png",
+    "license_path": "assets/objects/ycb/LICENSE",
+    "dataset": "YCB-Video",
+    "license": {
+      "spdx": "MIT",
+      "checked_date": "2026-08-16",
+      "check_method": "Read the LICENSE file at the fixed upstream commit and verified its SHA-256 before migration."
+    },
+    "sha256": {
+      "source_usd": "0cfa0c4ede7c269d4c7e4ecaed43e95bb8ab788ce9aa8b4504f811ffb7f9e3a3",
+      "source_texture": "33183a894eb75ae04ae5188a3ae689fe8d06ec6b9f9624da1bf853c2a25e70d2",
+      "source_license": "46ddc25f12283209928f70e03fbb7d659db7408fba3275fe9526fffd60e7d5ed"
+    }
+  },
+  "measurement": {
+    "method": "UsdGeom XformCache world-space mesh probe before conversion",
+    "mesh_prim": "/tomato_soup_can/obj_000004_Mesh",
+    "source_frame": {
+      "up_axis": "Z",
+      "meters_per_unit": 1.0,
+      "origin": "source-centered"
+    },
+    "points": 8404,
+    "triangles": 15728,
+    "normals": 8404,
+    "uvs": 8404,
+    "world_bbox_m": [
+      0.06785399466753006,
+      0.0677499994635582,
+      0.10203700512647629
+    ]
+  },
+  "conversion": {
+    "tool": "self_improving/onboarding/yeyuxuan/tools/migrate_robolab_asset.py",
+    "python": "3.11.15",
+    "environment": "local_data/envs/robolab-migrate-py311",
+    "working_directory": "repository root",
+    "environment_variables": {
+      "ROBOLAB_SOURCE": "checkout of source.repository at source.commit",
+      "ROBOTWIN_OVERLAY": "local_data/robotwin-robolab-overlay/assets/objects"
+    },
+    "argv": [
+      "local_data/envs/robolab-migrate-py311/bin/python",
+      "self_improving/onboarding/yeyuxuan/tools/migrate_robolab_asset.py",
+      "--source-repo",
+      "${ROBOLAB_SOURCE}",
+      "--usd",
+      "assets/objects/ycb/tomato_soup_can.usd",
+      "--texture",
+      "assets/objects/ycb/textures/obj_000004.png",
+      "--mesh-prim",
+      "/tomato_soup_can/obj_000004_Mesh",
+      "--asset-id",
+      "921_robolab_tomato_soup_can",
+      "--asset-name",
+      "YCB tomato soup can",
+      "--license",
+      "assets/objects/ycb/LICENSE",
+      "--license-label",
+      "MIT",
+      "--out-root",
+      "${ROBOTWIN_OVERLAY}",
+      "--mass-kg",
+      "0.44999998807907104",
+      "--static-friction",
+      "2.0",
+      "--dynamic-friction",
+      "2.0",
+      "--restitution",
+      "0.10000000149011612",
+      "--collision-limitation",
+      "A single convex hull is used; lid seams and small surface details are simplified in the collision representation.",
+      "--intended-use",
+      "RoboTwin rigid-object placement, stability, and grasping validation."
+    ],
+    "sapien_glb_frame": {
+      "up_axis": "Y",
+      "unit": "meter",
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "scale_baked": true,
+      "origin": "bottom-aligned",
+      "origin_operation": "subtract the minimum source-world Z from every vertex Z before GLB export"
+    },
+    "collision": {
+      "approximation": "single convex hull",
+      "implementation": "trimesh.Trimesh(process=True).convex_hull",
+      "hull_count": 1,
+      "vertices": 658,
+      "triangles": 1312
+    },
+    "outputs": {
+      "visual_glb": {
+        "path": "local_data/robotwin-robolab-overlay/assets/objects/921_robolab_tomato_soup_can/visual/base0.glb",
+        "sha256": "13c2c819184042164bc5ed3e53f204fe8e6bbe88a1405c1b13537e17b9b719d3"
+      },
+      "collision_glb": {
+        "path": "local_data/robotwin-robolab-overlay/assets/objects/921_robolab_tomato_soup_can/collision/base0.glb",
+        "sha256": "b42aa607348bbda933ab7e34c99577dedc9e4ecef8470b14f957974926d16b5d"
+      },
+      "model_data": {
+        "path": "local_data/robotwin-robolab-overlay/assets/objects/921_robolab_tomato_soup_can/model_data0.json",
+        "sha256": "b8b5ccb6d1769f8a6414f64ae47d381ede84e9b0ef1519bfb0c75307b90dc96d"
+      }
+    }
+  },
+  "physical_basis": {
+    "method": "USD Physics attributes at the fixed source commit",
+    "mass_kg": {
+      "value": 0.44999998807907104,
+      "status": "known",
+      "basis": "authored source USD Physics mass"
+    },
+    "friction": {
+      "static": 2.0,
+      "dynamic": 2.0,
+      "restitution": 0.10000000149011612,
+      "status": "known",
+      "basis": "authored source USD Physics material attributes"
+    },
+    "center_of_mass": {
+      "value": null,
+      "status": "unknown",
+      "basis": "source centerOfMass is an unset sentinel"
+    },
+    "inertia_tensor": {
+      "value": null,
+      "status": "unknown",
+      "basis": "no usable tensor was authored; SAPIEN derives inertia from collision geometry"
+    }
+  },
+  "stable_pose": {
+    "orientation_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "status": "known",
+    "basis": "confirmed by real SAPIEN replay 921-seed42-identity-pass; the earlier X90 hypothesis failed"
+  },
+  "verification": {
+    "status": "pass",
+    "prompt": "Place a tomato soup can on the table.",
+    "seed": 42,
+    "thresholds": {
+      "simulation_steps": 900,
+      "precheck_steps": 0,
+      "contact_window_steps": 60,
+      "minimum_video_frames": 3,
+      "minimum_unique_video_frames": 30,
+      "minimum_support_contact_fraction": 0.8,
+      "minimum_visible_pixels": 64,
+      "resolved_translation_error_m": 0.02,
+      "resolved_rotation_error_deg": 5.0
+    },
+    "records": [
+      {
+        "backend": "sapien",
+        "run_id": "921-seed42-x90-failed",
+        "timestamp": "2026-08-16T21:21:21+08:00",
+        "verdict": "fail",
+        "resolved_scene_sha256": "1b029ab871884bd0f58b2e78567eaf55a601a4a7fffe5cebbf0a431342142325",
+        "report_path": "local_data/921_robolab_tomato_soup_can/runtime/seed42/runtime_validation_report.json",
+        "report_sha256": "0a1fc538ff1c47dc811f2ac3b6411a9f81021d9a61bdd5c7d1cb5a23b1bb404d",
+        "runtime_evidence_sha256": "1822ca3cf3d1b343e0f611f802101aee52e519d3902f68df1e01b49754f6d431",
+        "video_sha256": "75478df6474a1b82b98bc1861f319ed551318a9eb2fdc6e585da5689b948568c",
+        "metrics": {
+          "translation_drift_m": 0.10458064435977239,
+          "rotation_drift_deg": 176.29869196355915,
+          "late_window_translation_m": 0.015222758866560734,
+          "late_window_rotation_deg": 26.77735573168987,
+          "support_contact_fraction": 1.0,
+          "unexpected_contact_fraction": 0.0,
+          "visible_pixels": 1595,
+          "penetration_count": 0,
+          "still_moving": true,
+          "dropped": false,
+          "video_frame_count": 120,
+          "unique_video_frame_count": 120
+        },
+        "reason": "settled gate failed because the object was still moving at the end of the late window"
+      },
+      {
+        "backend": "sapien",
+        "run_id": "921-seed42-identity-pass",
+        "timestamp": "2026-08-16T21:22:52+08:00",
+        "verdict": "pass",
+        "resolved_scene_sha256": "d395658f280e2512c52dfffe4bff22ebf702db81a5dab6e3e56acfffacc9abef",
+        "report_path": "local_data/921_robolab_tomato_soup_can/iteration2/runtime/seed42/runtime_validation_report.json",
+        "report_sha256": "bd7ab5053e398cfae77bf41d7bba4a106508e3e3e30ed97cce64d5b6b93e1f21",
+        "runtime_evidence_sha256": "8315711ea8d162947bbd50d324a7a97f3b2c3cb723548b33f7999cfdadb0470a",
+        "video_sha256": "fae0aa69eb77b1fa6cea97a8bdd87ede0da633077204f92bb4c73a2659c3b501",
+        "metrics": {
+          "translation_drift_m": 0.0012256624929005827,
+          "rotation_drift_deg": 0.6728385984146344,
+          "late_window_translation_m": 0.0,
+          "late_window_rotation_deg": 0.0,
+          "support_contact_fraction": 1.0,
+          "unexpected_contact_fraction": 0.0,
+          "visible_pixels": 1720,
+          "penetration_count": 0,
+          "still_moving": false,
+          "dropped": false,
+          "video_frame_count": 120,
+          "unique_video_frame_count": 100
+        }
+      }
+    ]
+  }
+}
