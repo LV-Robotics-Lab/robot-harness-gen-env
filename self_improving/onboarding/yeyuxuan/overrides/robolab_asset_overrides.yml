@@ -139,3 +139,16 @@ assets:
         dimensions_m: [0.06785399466753006, 0.0677499994635582, 0.10203700512647629]
         footprint_shape: circle
         mass_kg: 0.44999998807907104
+  922_robolab_gelatin_box:
+    semantic_name: gelatin_box
+    category: gelatin_box
+    aliases: [gelatin box, jello box, Jell-O box]
+    materials: [cardboard]
+    models:
+      "0":
+        stable_pose_id: usd_upright
+        stable_orientation_wxyz: [1.0, 0.0, 0.0, 0.0]
+        z_policy: origin_on_table
+        dimensions_m: [0.08935500681400299, 0.10110899806022644, 0.03012000024318695]
+        footprint_shape: box
+        mass_kg: 0.20000000298023224

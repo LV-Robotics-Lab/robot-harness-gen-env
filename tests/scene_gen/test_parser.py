@@ -137,6 +137,22 @@ def test_rule_parser_preserves_tomato_soup_can_without_changing_plain_can() -> N
     ]
 
 
+def test_rule_parser_preserves_gelatin_box_without_changing_plain_box() -> None:
+    gelatin = parse_rule_based("Place a gelatin box on the table.", seed=42)
+    jello = parse_rule_based("Place a Jell-O box on the table.", seed=42)
+    plain = parse_rule_based("Place a box on the table.", seed=42)
+
+    assert [(item.object_id, item.category) for item in gelatin.objects] == [
+        ("gelatin_box_1", "gelatin_box")
+    ]
+    assert [(item.object_id, item.category) for item in jello.objects] == [
+        ("gelatin_box_1", "gelatin_box")
+    ]
+    assert [(item.object_id, item.category) for item in plain.objects] == [
+        ("box_1", "box")
+    ]
+
+
 def test_provider_payload_cannot_smuggle_backend_fields_or_change_request() -> None:
     spec = parse_rule_based("A can is left of a basket.", seed=4)
     payload = spec.canonical_dict()

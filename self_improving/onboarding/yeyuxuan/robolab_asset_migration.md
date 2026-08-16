@@ -43,8 +43,9 @@ conda run -n robolab-migrate \
 
 ## 已验证资产（首批 10 个）
 
-当前 21 资产结果见 [`robolab_migration_summary_21.md`](robolab_migration_summary_21.md)；
-历史 20 资产快照仍保留在 [`robolab_migration_summary_20.md`](robolab_migration_summary_20.md)。
+当前 22 资产结果见 [`robolab_migration_summary_22.md`](robolab_migration_summary_22.md)；
+历史 21 与 20 资产快照仍分别保留在 [`robolab_migration_summary_21.md`](robolab_migration_summary_21.md)
+和 [`robolab_migration_summary_20.md`](robolab_migration_summary_20.md)。
 
 | ID | 资产 | 数据集 | 许可证 | RoboTwin |
 | --- | --- | --- | --- | --- |

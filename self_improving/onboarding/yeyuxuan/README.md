@@ -4,8 +4,8 @@ This directory keeps the reviewable source and provenance recovered from the
 local RoboLab onboarding workspace:
 
 - the reusable RoboLab-to-RoboTwin migration CLI and five earlier one-off tools;
-- the 10- and 20-asset historical summaries and the current 21-asset PASS summary;
-- twenty-one per-asset `SOURCE.md` records;
+- the 10-, 20-, and 21-asset historical summaries and the current 22-asset PASS summary;
+- twenty-two per-asset `SOURCE.md` records;
 - before/after asset override configurations used to diagnose orientation,
   semantic, and mass issues.
 - a SHA-256 manifest for all 100 local overlay files without redistributing the
@@ -24,3 +24,8 @@ Asset 921 was migrated later in the personal worktree. Its reviewable source and
 runtime facts are in `robolab_sources/921_robolab_tomato_soup_can/SOURCE.md` and
 `robolab_migration_summary_21.md`; its large local evidence is intentionally not
 part of the historical 901–920 overlay manifest.
+
+Asset 922 follows the portable receipt pattern established by 921. Its source,
+conversion, and runtime facts are in `robolab_sources/922_robolab_gelatin_box/`
+and `robolab_migration_summary_22.md`; `overlay_manifest_922.json` and
+`overlay_manifest_922.sha256` cover only its external local overlay bytes.

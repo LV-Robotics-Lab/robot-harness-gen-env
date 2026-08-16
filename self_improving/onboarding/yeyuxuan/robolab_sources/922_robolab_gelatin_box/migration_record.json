@@ -1,0 +1,251 @@
+{
+  "schema_version": "robolab_robotwin_migration_record.v1",
+  "asset_id": "922_robolab_gelatin_box",
+  "source": {
+    "repository": "https://github.com/NVLabs/RoboLab",
+    "commit": "97bc1e766300a8c95656067ecb81e267e7e11823",
+    "usd_path": "assets/objects/ycb/jello.usd",
+    "texture_path": "assets/objects/ycb/textures/obj_000008.png",
+    "license_path": "assets/objects/ycb/LICENSE",
+    "dataset": "YCB-Video",
+    "license": {
+      "spdx": "MIT",
+      "checked_date": "2026-08-16",
+      "check_method": "Read the LICENSE file at the fixed upstream commit and verified its SHA-256 before migration."
+    },
+    "size_bytes": {
+      "source_usd": 338594,
+      "source_texture": 8252359,
+      "source_license": 1613
+    },
+    "sha256": {
+      "source_usd": "12ed6c7cb45ae423970d340dd89e3b6e8f13622667855cd0f1bffa9e6283131d",
+      "source_texture": "5fd0de9bc41b3c77545d116febf7a72875c8b430e35efe974ab601342a942b74",
+      "source_license": "46ddc25f12283209928f70e03fbb7d659db7408fba3275fe9526fffd60e7d5ed"
+    }
+  },
+  "measurement": {
+    "method": "UsdGeom XformCache world-space mesh probe before conversion",
+    "default_prim": "/jello",
+    "mesh_count": 1,
+    "mesh_prim": "/jello/obj_000008_Mesh",
+    "source_frame": {
+      "up_axis": "Z",
+      "meters_per_unit": 1.0,
+      "origin": "source-centered",
+      "world_transform": "identity"
+    },
+    "points": 8268,
+    "triangles": 15728,
+    "all_faces_triangular": true,
+    "normals": 8268,
+    "normal_interpolation": "vertex",
+    "uvs": 8268,
+    "uv_interpolation": "vertex",
+    "world_min_m": [
+      -0.044677503407001495,
+      -0.05055449903011322,
+      -0.015060000121593475
+    ],
+    "world_max_m": [
+      0.044677503407001495,
+      0.05055449903011322,
+      0.015060000121593475
+    ],
+    "world_bbox_m": [
+      0.08935500681400299,
+      0.10110899806022644,
+      0.03012000024318695
+    ],
+    "source_bottom_z_m": -0.015060000121593475,
+    "material_prim": "/jello/Looks/Material",
+    "shader": "OmniPBR",
+    "texture_reference": "./textures/obj_000008.png"
+  },
+  "conversion": {
+    "tool": "self_improving/onboarding/yeyuxuan/tools/migrate_robolab_asset.py",
+    "python": "3.11.15",
+    "environment": "local_data/envs/robolab-migrate-py311",
+    "working_directory": "repository root",
+    "environment_variables": {
+      "ROBOLAB_SOURCE": "checkout of source.repository at source.commit",
+      "ROBOTWIN_OVERLAY": "local_data/robotwin-robolab-overlay/assets/objects"
+    },
+    "argv": [
+      "local_data/envs/robolab-migrate-py311/bin/python",
+      "self_improving/onboarding/yeyuxuan/tools/migrate_robolab_asset.py",
+      "--source-repo",
+      "${ROBOLAB_SOURCE}",
+      "--usd",
+      "assets/objects/ycb/jello.usd",
+      "--texture",
+      "assets/objects/ycb/textures/obj_000008.png",
+      "--mesh-prim",
+      "/jello/obj_000008_Mesh",
+      "--asset-id",
+      "922_robolab_gelatin_box",
+      "--asset-name",
+      "YCB gelatin box",
+      "--license",
+      "assets/objects/ycb/LICENSE",
+      "--license-label",
+      "MIT",
+      "--out-root",
+      "${ROBOTWIN_OVERLAY}",
+      "--mass-kg",
+      "0.20000000298023224",
+      "--static-friction",
+      "2.0",
+      "--dynamic-friction",
+      "2.0",
+      "--restitution",
+      "0.10000000149011612",
+      "--collision-limitation",
+      "A single convex hull is used; cardboard seams and small surface details are simplified in the collision representation.",
+      "--intended-use",
+      "RoboTwin rigid-object placement, stability, and grasping validation."
+    ],
+    "sapien_glb_frame": {
+      "up_axis": "Y",
+      "unit": "meter",
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "scale_baked": true,
+      "origin": "bottom-aligned",
+      "origin_operation": "subtract the minimum source-world Z from every vertex Z before GLB export"
+    },
+    "visual": {
+      "vertices": 8268,
+      "triangles": 15728,
+      "texture_embedded": true,
+      "texture_size_px": [
+        4096,
+        4096
+      ],
+      "bottom_z_m": 0.0,
+      "bounds_m": [
+        [
+          -0.044677503407001495,
+          -0.05055449903011322,
+          0.0
+        ],
+        [
+          0.044677503407001495,
+          0.05055449903011322,
+          0.03012000024318695
+        ]
+      ]
+    },
+    "collision": {
+      "approximation": "single convex hull",
+      "implementation": "trimesh.Trimesh(process=True).convex_hull",
+      "hull_count": 1,
+      "vertices": 360,
+      "triangles": 716,
+      "watertight": true,
+      "convex": true,
+      "limitation": "Cardboard seams and small surface details are simplified."
+    },
+    "outputs": {
+      "visual_glb": {
+        "path": "local_data/robotwin-robolab-overlay/assets/objects/922_robolab_gelatin_box/visual/base0.glb",
+        "sha256": "9d28d5c803383b91313b708acbb09df80c065e84800385ba368bef6c4fdacfcf"
+      },
+      "collision_glb": {
+        "path": "local_data/robotwin-robolab-overlay/assets/objects/922_robolab_gelatin_box/collision/base0.glb",
+        "sha256": "1ecd2e2383244ca50e0b22e41e898c64bc5829311a3a247092693c9b3960a0c2"
+      },
+      "model_data": {
+        "path": "local_data/robotwin-robolab-overlay/assets/objects/922_robolab_gelatin_box/model_data0.json",
+        "sha256": "b5e5258f477f8a0b8089f7a8232ff1a531b3e46995f1aef8e4c83d440db4ba0b"
+      }
+    }
+  },
+  "physical_basis": {
+    "method": "USD Physics attributes at the fixed source commit",
+    "mass_kg": {
+      "value": 0.20000000298023224,
+      "status": "known",
+      "basis": "authored PhysicsMassAPI on /jello"
+    },
+    "friction": {
+      "static": 2.0,
+      "dynamic": 2.0,
+      "restitution": 0.10000000149011612,
+      "status": "known",
+      "basis": "authored PhysicsMaterialAPI on /jello/physics_material"
+    },
+    "center_of_mass": {
+      "value": null,
+      "status": "unknown",
+      "basis": "source centerOfMass is an unset -inf sentinel"
+    },
+    "inertia_tensor": {
+      "value": null,
+      "status": "unknown",
+      "basis": "authored diagonal is zero and principal axes are unset; SAPIEN derives inertia from collision geometry"
+    }
+  },
+  "stable_pose": {
+    "orientation_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "status": "known",
+    "basis": "source identity presents the largest rectangular face downward; confirmed by real SAPIEN replay 922-seed42-identity-pass"
+  },
+  "verification": {
+    "status": "pass",
+    "prompt": "Place a gelatin box on the table.",
+    "seed": 42,
+    "failed_runs": [],
+    "thresholds": {
+      "simulation_steps": 900,
+      "precheck_steps": 0,
+      "contact_window_steps": 120,
+      "minimum_video_frames": 3,
+      "minimum_unique_video_frames": 30,
+      "minimum_support_contact_fraction": 0.8,
+      "minimum_visible_pixels": 64,
+      "resolved_translation_error_m": 0.02,
+      "resolved_rotation_error_deg": 5.0
+    },
+    "records": [
+      {
+        "backend": "sapien",
+        "run_id": "922-seed42-identity-pass",
+        "timestamp": "2026-08-16T22:58:35+08:00",
+        "verdict": "pass",
+        "resolved_scene_sha256": "542890572d7dd07f5849fbc126f43bfdb4284c6cb652067b84e9b0d082b58906",
+        "report_path": "local_data/922_robolab_gelatin_box/runtime/seed42/runtime_validation_report.json",
+        "report_sha256": "5aac9e799e4d114ca7813e48babcaa602675fa1d4e43230876f39a5de8549e1d",
+        "runtime_evidence_sha256": "1e64ad3c3758efd7774658a3f57cd486d339f4771e569a8d90a28b29efd88f5e",
+        "video_sha256": "9526b4e2f718b921c74879b0d98840c101a20bc8b7a00ed10bcc17a4c2077b4f",
+        "metrics": {
+          "translation_drift_m": 0.001458646066564891,
+          "rotation_drift_deg": 0.1012063248050079,
+          "resolved_translation_error_m": 0.0014586494135031404,
+          "resolved_rotation_error_deg": 0.1019220114468391,
+          "late_window_translation_m": 0.0,
+          "late_window_rotation_deg": 0.0,
+          "support_contact_fraction": 1.0,
+          "support_contact_samples": 120,
+          "unexpected_contact_fraction": 0.0,
+          "visible_pixels": 1402,
+          "penetration_count": 0,
+          "robot_initial_collision_count": 0,
+          "robot_final_collision_count": 0,
+          "still_moving": false,
+          "dropped": false,
+          "video_frame_count": 120,
+          "unique_video_frame_count": 100
+        }
+      }
+    ]
+  }
+}
