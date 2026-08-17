@@ -57,6 +57,8 @@ python script/export_harness_schemas.py --check
 
 The Harness contract remains `Status: Proposed`. This first implementation
 tranche does not provide `SkillRegistry`, Text2Env handlers, or an MCP server.
+See the [detailed PR1 implementation report](../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)
+for the schema inventory, invariants, validation evidence, and follow-up boundary.
 
 ## Checkout audit
 

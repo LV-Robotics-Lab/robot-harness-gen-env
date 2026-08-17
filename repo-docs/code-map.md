@@ -76,11 +76,11 @@
 
 | 重要代码 | 功能 | 关键符号 | 验证 |
 | --- | --- | --- | --- |
-| `schemas/base.py`、`schemas/common.py` | 严格 frozen 基类、Skill 标识/SemVer/SHA-256 原语，以及 Descriptor、Invocation、RunState、Event、ArtifactRef、Blocker、Qualification。 | `HarnessModel`、`SkillDescriptor`、`Invocation`、`RunState`、`derive_mcp_tool_name` | `tests/self_improving/harness/test_common_schemas.py`；语句和分支覆盖均强制 100% |
-| `schemas/text2env.py` | compile/replay/validate 六个输入输出，以及对现有哈希绑定包的不可变引用；不复制 `scene_gen` 载荷。 | `EnvironmentPackage`、`Text2EnvCompileInput`、`Text2EnvReplayInput`、`Text2EnvValidateOutput` | `tests/self_improving/harness/test_text2env_schemas.py` |
-| `schema_catalog.py`、`json_schemas/` | 14 个公开 `$id` 到模型的不可变目录，以及可审阅的 JSON Schema 快照和漂移检测。 | `SCHEMA_MODELS`、`schema_documents`、`export_schema_snapshots` | `python script/export_harness_schemas.py --check`、`tests/self_improving/harness/test_schema_catalog.py` |
+| `schemas/base.py`、`schemas/common.py` | 严格 frozen 基类、Skill 标识/SemVer/SHA-256 原语，以及 Descriptor、Invocation、RunState、Event、ArtifactRef、Blocker、Qualification。 | `HarnessModel`、`SkillDescriptor`、`Invocation`、`RunState`、`derive_mcp_tool_name` | `tests/self_improving/harness/test_common_schemas.py`；详见 [Harness Schema Tranche](modules/harness-schema-tranche.md) |
+| `schemas/text2env.py` | compile/replay/validate 六个输入输出，以及对现有哈希绑定包的不可变引用；不复制 `scene_gen` 载荷。 | `EnvironmentPackage`、`Text2EnvCompileInput`、`Text2EnvReplayInput`、`Text2EnvValidateOutput` | `tests/self_improving/harness/test_text2env_schemas.py`；语句和分支覆盖均强制 100% |
+| `schema_catalog.py`、`json_schemas/` | 14 个公开 `$id` 到模型的不可变目录，以及可审阅的 JSON Schema 快照和漂移检测。 | `SCHEMA_MODELS`、`schema_documents`、`export_schema_snapshots` | `python script/export_harness_schemas.py --check`、`tests/self_improving/harness/test_schema_catalog.py`、[PR1 实现报告](../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md) |
 
-这批代码只完成 schema tranche；`SkillRegistry`、Text2Env handler 和 MCP adapter 尚未实现。契约文档仍是 `Status: Proposed`，不能从目录存在推断为已 Accepted。
+这批代码只完成 schema tranche；`SkillRegistry`、Text2Env handler 和 MCP adapter 尚未实现。契约文档仍是 `Status: Proposed`，不能从目录存在推断为已 Accepted。当前专项测试为 21 个；实现与验证明细见 [PR1 报告](../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)。
 
 ## `self_improving/asset_pipeline/`
 

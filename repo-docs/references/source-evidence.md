@@ -1,8 +1,9 @@
-# Source Evidence For /gen-env 一条真实编译 + 回放路径
+# Source Evidence For /gen-env 与 Harness PR1
 
 这是一份审计材料，不是读者首页。如果行为还看不清楚，先读 [一条真实路径](../walkthroughs/one-real-run.md)。
 
-证据基于 commit `60a2597` 收集。
+核心 `/gen-env` 路径证据基于 commit `60a2597` 收集；Harness PR1 schema 证据基于实现
+commit `9b72090` 补充。
 
 被追踪的工作行为：用 `python script/generate_scene.py --prompt "Place a can on top of a plate." --seed 42 --asset-catalog data/scene_gen/asset_catalog.json --out-root data/generated_scenes` 编译出哈希绑定的 resolved 场景包，再用 `python script/run_scene_runtime.py` 把这个包在 RoboTwin/SAPIEN 里物理回放并采到结构化运行时证据。
 
@@ -12,10 +13,16 @@
 | --- | --- | --- | --- |
 | Pass 1 | 把主路径从 prompt 端走到运行时证据端。 | `README.md`、`script/generate_scene.py`、`script/run_scene_runtime.py`、`scene_gen/parser.py`、`scene_gen/schema.py`、`scene_gen/grounding.py`、`scene_gen/solver.py`、`scene_gen/builder.py`、`scene_gen/validator.py`、`scene_gen/envs/generated_scene.py`、`scene_gen/runtime_sampling.py`、`tests/fixtures/prompt_matrix.json`、`scene_gen/asset_overrides.yml`。 | 五段主路径成形：受限解析 → 类型化契约 + grounding → 目标局部求解 → 哈希绑定包 → SAPIEN 回放采集 + 运行时门控。catalog miss/collision 不稳走确定性代理。 |
 | Pass 2 | 用读者怀疑视角挑战模型，补边界与失败分支，盘清在范围内的源码区。 | `scene_gen/asset_generator.py`、`scene_gen/support_geometry.py`、`scene_gen/acceptance.py`、`scene_gen/runtime_sampling.py`、`tests/scene_gen/test_builder_validator.py`（攻击用例清单）、`tests/scene_gen/test_solver.py`、`tests/scene_gen/test_parser.py`、`tests/scene_gen/test_schema.py`、`docs/evidence/prompt-matrix-20260719.md`、`docs/evidence/physics-acceptance-20260717.md`、`demo/app.py` 的环境变量与队列层。 | 模型补齐：求解器是有界拒绝回退、失败带机读 trace；嵌套源必须动态且接触声明 target ≥ 80% 终末窗口、且对未声明 target 零接触；120 帧视频 = 119 释放帧 + 1 终末帧、≥ 30 帧互异；固定物体按 20 mm / 5° 终态误差门控；derived proxy 携来源 lineage；`acceptance.py` 只做 ≥95% 通过率聚合；renderer 不是物理证据。锁定源码区为 `scene_gen/`、`script/`、`demo/`、`tests/`，并标出排除项。 |
+| Pass 3 | 扩展到 Harness PR1 的类型边界，并挑战“schema 已存在即 Skill 可执行”的误读。 | `self_improving/harness/schemas/base.py`、`common.py`、`text2env.py`、`schema_catalog.py`、14 份 `json_schemas/*.schema.json`、`tests/self_improving/harness/`、`script/export_harness_schemas.py`、`script/run_self_improving_tests.sh`、`pyproject.toml`。 | 模型补齐：14 个严格/frozen 公共入口只冻结接口与局部自洽；`ArtifactRef` 引用既有权威载荷；RunState 执行成功不等于验证通过；Pydantic 跨字段语义不全展开进 JSON Schema；Registry、handler、invocation digest、内容哈希与 MCP 尚未实现。 |
 
-Pass 3 暂不需要：Pass 2 已能回答读者最有可能追问的失败分支与边界。
-
-Coverage note：本证据图覆盖在范围内的 `scene_gen/`、`script/`、`demo/`、`tests/` 主路径。已检查但不追踪的相邻路径——`scene_gen/rendered_critic.py` 与 `script/run_rendered_critic.py` 的 VLM 渲染评判（非物理证据、可选 extra）、`script/run_100_seed_acceptance.py` 与 `script/run_prompt_matrix.py` 的批量/矩阵 runner（主路径之上的薄编排）、`script/build_stage5_report.py` 的报告聚合、`demo/app.py` 的 Flask 控制面（消费同一 `scene_gen` 流水线但不是编译路径本体）——都在 [代码地图](../code-map.md) 里登记为在范围但只摘要，不重复追踪。
+Coverage note：本证据图覆盖在范围内的 `scene_gen/`、`script/`、`demo/`、`tests/`
+主路径，以及 `self_improving/harness/` 的 PR1 schema tranche。已检查但不追踪的相邻路径——
+`scene_gen/rendered_critic.py` 与 `script/run_rendered_critic.py` 的 VLM 渲染评判（非物理证据、
+可选 extra）、`script/run_100_seed_acceptance.py` 与 `script/run_prompt_matrix.py` 的批量/矩阵
+runner（主路径之上的薄编排）、`script/build_stage5_report.py` 的报告聚合、`demo/app.py` 的
+Flask 控制面（消费同一 `scene_gen` 流水线但不是编译路径本体）——都在
+[代码地图](../code-map.md) 里登记为在范围但只摘要，不重复追踪。Registry、Text2Env handler
+与 MCP adapter 没有可追踪实现，故只登记为明确缺口，不能从 schema 反推其行为。
 
 | Claim | Evidence | Confidence | Caveat | Used by |
 | --- | --- | --- | --- | --- |
@@ -32,9 +39,12 @@ Coverage note：本证据图覆盖在范围内的 `scene_gen/`、`script/`、`de
 | 渲染不是物理证据；`rendered_critic` 只查可见语义，确定性物理门控才是权威。 | `scene_gen/rendered_critic.py`、`tests/scene_gen/test_rendered_critic.py`、根 `AGENTS.md` 中「渲染不是物理证据」契约。 | Confirmed | VLM 是可选 extra（`pip install -e '.[vlm]'`）。 | runtime-gates, glossary |
 | 真实回放已知通过：2026-07-19 prompt matrix 33/33 编译、10/10 SAPIEN 通过、每段 MP4 ≥ 100 互异帧。 | `docs/evidence/prompt-matrix-20260719.md`、`docs/evidence/prompt-matrix-runtime-20260719.json`、`docs/evidence/physics-acceptance-20260717.md`。 | Confirmed | 该证据为外部 GPU 主机一次性运行结果，非 CI；当前未在本仓库自动重跑。 | walkthrough, runtime-gates, quality-review |
 | `pytest -q` 无需 RoboTwin checkout 即可跑；契约改动另需真机回放。 | `pyproject.toml`、`tests/`、根 `AGENTS.md` 「Testing Requirements」、`tests/fixtures/` 是 committed fixture。 | Confirmed | demo 与运行时路径不在 CI 跑真实 GPU；由中国 AGENTS.md 协议要求在支持 RoboTwin/SAPIEN 的机器上补做真机回放。 | walkthrough, code-map, every module 的 verify 块 |
+| Harness PR1 公开 14 个严格、不可变 schema，并用只读 catalog 与 committed snapshot 锁住 `$id` 和字段形状。 | `self_improving/harness/schemas/base.py:HarnessModel`、`schema_catalog.py:SCHEMA_MODELS`/`schema_documents`/`export_schema_snapshots`、`json_schemas/`、`tests/self_improving/harness/test_schema_catalog.py`。 | Confirmed | Pydantic `model_validator` 不会全部翻译成纯 JSON Schema；跨字段语义仍以进程内模型为准。 | harness-schema-tranche, code-map |
+| `RunState` 只接受 running 到 succeeded/blocked/failed 的生命周期，事件必须连续并与 attempt/时间/终态自洽；succeeded 只表示得到类型化 output。 | `self_improving/harness/schemas/common.py:RunState`、`tests/self_improving/harness/test_common_schemas.py` 的 running、terminal、retry 与破坏历史用例。 | Confirmed | 预检 `attempt=0/max_attempts=0` 是 PR1 实现选择，仍待 RFC Accepted 前确认。 | harness-schema-tranche, glossary, quality-review |
+| Text2Env schema 复用现有 `robotwin.*` 载荷权威，锁定 replay 默认值，并要求只有 `validation_status=pass` 且无 blocker 才能表达 `publishable=true`。 | `self_improving/harness/schemas/text2env.py:RuntimeConfig`/`EnvironmentPackage`/`Text2EnvValidateOutput`、`tests/self_improving/harness/test_text2env_schemas.py`、`test_schema_catalog.py`。 | Confirmed | 跨三个 run、qualification、包内容哈希和物理 gate 的完整发布判断依赖后续 Registry/handler；PR1 只保证输出局部自洽。 | harness-schema-tranche, self-improving-platform, quality-review |
 
 ## 证伪检查
 
-若 `python script/run_prompt_matrix.py --matrix tests/fixtures/prompt_matrix.json --runtime --robotwin-root /path/to/RoboTwin --out-root data/prompt_matrix --report data/prompt_matrix/report.json` 在某次主路径改动后不再 33/33 编译 + 10/10 SAPIEN 通过，本指南中「真实路径」字面通过率就不再对应当前源码——重跑该命令即可证伪。若 `pytest -q` 在改 `scene_gen/schema.py` / `parser.py` / `solver.py` 后出现新 fail，对应步骤里描述的契约已不准确，需回到主路径或对应模块同步源码反证。又一层反证：根 `AGENTS.md` 显式列出已被攻击测试锁住的误报模式（通过 `is_static` 堆叠、无接触 pose、外层 AABB 重叠、起止截图验收），若任一在 validator 改动后通过，则该误报保护已被反转，本指南 [运行时门控](../modules/runtime-gates.md) 攻击表也需同步更新。
+若 `python script/run_prompt_matrix.py --matrix tests/fixtures/prompt_matrix.json --runtime --robotwin-root /path/to/RoboTwin --out-root data/prompt_matrix --report data/prompt_matrix/report.json` 在某次主路径改动后不再 33/33 编译 + 10/10 SAPIEN 通过，本指南中「真实路径」字面通过率就不再对应当前源码——重跑该命令即可证伪。若 `pytest -q` 在改 `scene_gen/schema.py` / `parser.py` / `solver.py` 后出现新 fail，对应步骤里描述的契约已不准确，需回到主路径或对应模块同步源码反证。又一层反证：根 `AGENTS.md` 显式列出已被攻击测试锁住的误报模式（通过 `is_static` 堆叠、无接触 pose、外层 AABB 重叠、起止截图验收），若任一在 validator 改动后通过，则该误报保护已被反转，本指南 [运行时门控](../modules/runtime-gates.md) 攻击表也需同步更新。Harness 侧，`python script/export_harness_schemas.py --check` 的任何漂移或 Harness 覆盖率门失败，都会直接证伪“14 个 committed schema 与 100% 语句/分支覆盖”的当前声明。
 
 证据状态：除特别标注外，本页基于当前源码已确认。

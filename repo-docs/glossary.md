@@ -6,6 +6,10 @@
 | --- | --- | --- |
 | SceneSpec | 受限解析的输入契约。pydantic `StrictModel` 锁死的不可变类型化 spec；只含语义字段，明确不含 `asset_id`/`pose`/`position` 等后端字段。常被误认为「用户传的原始字典」，其实它已经是契约后的产物。 | [类型化场景契约](modules/scene-contract.md) |
 | ResolvedSceneSpec | 编译输出契约。带每个 object 的资产绑定、pose、footprint、稳定朝向、来源 lineage，外加 `source_scene_spec_sha256` 与 `asset_catalog_sha256` 把上游哈希写进自己。常被误认为「SceneSpec 加一些字段」，其实它跨过了三道门（schema、grounding、solver）。 | [类型化场景契约](modules/scene-contract.md) 与 [哈希绑定包](modules/replay-package.md) |
+| SkillDescriptor | Harness 中一个精确 `(skill_id, version)` 的不可变描述，记录 MCP 名、输入输出 schema、实现摘要、确定性、attempt 上限和资格制品。它是注册候选，不等于已经注册或可执行。 | [Harness Schema Tranche](modules/harness-schema-tranche.md) |
+| ArtifactRef | Harness 的制品引用。`uri` 只定位；可信内容身份由 `media_type + schema_version + sha256` 组成。类型化制品的 schema version 是字符串，无类型媒体必须显式为 `null`。 | [Harness Schema Tranche](modules/harness-schema-tranche.md) |
+| RunState | Harness 的 run 生命周期快照，携连续 Event、attempt、制品、类型化 output 或终止 blocker。`succeeded` 只表示 handler 正常产出，不自动等于 validation pass 或 publishable。 | [Harness Schema Tranche](modules/harness-schema-tranche.md) |
+| EnvironmentPackage | 对现有 `scene_gen` 哈希绑定包的不可变引用，不是第二套包格式。`package_id` 等于 resolved scene 摘要，内部引用 catalog 和 package manifest。 | [Harness Schema Tranche](modules/harness-schema-tranche.md) 与 [哈希绑定包](modules/replay-package.md) |
 | support surface / support 目标局部几何 | target 顶面被实测声明为「稳定可承」的一块，独立于 target 外层 AABB。`003_plate` 是 100 mm 内圆、`110_basket` 又有自己的 interior。常与「物体顶面」混淆——稳定面是 override 显式声明，可以是某高度 offset 上的局部一段。 | [目标局部几何](modules/target-local-geometry.md) |
 | support margin | source footprint 必须超出 target 稳定面边界的最小余量。`003_plate` 实测 8 mm。常被误读为「视觉余量」，其实是几何算子 `support_footprint_margin` 的最小一圈取值。 | [目标局部几何](modules/target-local-geometry.md) |
 | interior_dimensions_m + interior_floor_z_offset_m | 声明容器内部可用空间的「水平尺寸 + 高度」与「内底从 object 底起算的偏移」。用于 `inside` 关系几何与运行时 `runtime_inside_contained`。常被误以为「外径减壁厚」，实际全部直接来自 override 实测。 | [目标局部几何](modules/target-local-geometry.md) |
