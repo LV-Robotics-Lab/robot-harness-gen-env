@@ -1,0 +1,342 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "$id": "harness.artifact_ref.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "Blocker": {
+      "$id": "harness.blocker.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "title": "Artifact Refs",
+          "type": "array"
+        },
+        "code": {
+          "pattern": "^[A-Z][A-Z0-9_]{1,63}$",
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Details",
+          "type": "object"
+        },
+        "message": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "stage": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Stage",
+          "type": "string"
+        },
+        "unknowns": {
+          "items": {
+            "$ref": "#/$defs/UnknownField"
+          },
+          "title": "Unknowns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "stage",
+        "retryable",
+        "details",
+        "unknowns",
+        "artifact_refs"
+      ],
+      "title": "Blocker",
+      "type": "object"
+    },
+    "Event": {
+      "$id": "harness.event.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "title": "Artifact Refs",
+          "type": "array"
+        },
+        "attempt": {
+          "minimum": 0,
+          "title": "Attempt",
+          "type": "integer"
+        },
+        "from_status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RunStatus"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "seq": {
+          "minimum": 1,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "stage": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Stage",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "to_status": {
+          "$ref": "#/$defs/RunStatus"
+        }
+      },
+      "required": [
+        "seq",
+        "timestamp",
+        "stage",
+        "attempt",
+        "from_status",
+        "to_status",
+        "artifact_refs"
+      ],
+      "title": "Event",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "RunStatus": {
+      "enum": [
+        "running",
+        "succeeded",
+        "blocked",
+        "failed"
+      ],
+      "title": "RunStatus",
+      "type": "string"
+    },
+    "UnknownField": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Field",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "source": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "reason",
+        "source"
+      ],
+      "title": "UnknownField",
+      "type": "object"
+    }
+  },
+  "$id": "harness.run_state.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifacts": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Artifacts",
+      "type": "array"
+    },
+    "attempt": {
+      "minimum": 0,
+      "title": "Attempt",
+      "type": "integer"
+    },
+    "blocker": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Blocker"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ended_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Ended At"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/Event"
+      },
+      "minItems": 1,
+      "title": "Events",
+      "type": "array"
+    },
+    "invocation_digest": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Invocation Digest"
+    },
+    "max_attempts": {
+      "minimum": 0,
+      "title": "Max Attempts",
+      "type": "integer"
+    },
+    "output": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Output"
+    },
+    "run_id": {
+      "format": "uuid4",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "skill_id": {
+      "maxLength": 4096,
+      "minLength": 1,
+      "title": "Skill Id",
+      "type": "string"
+    },
+    "skill_version": {
+      "maxLength": 4096,
+      "minLength": 1,
+      "title": "Skill Version",
+      "type": "string"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/RunStatus"
+    }
+  },
+  "required": [
+    "run_id",
+    "invocation_digest",
+    "skill_id",
+    "skill_version",
+    "status",
+    "attempt",
+    "max_attempts",
+    "started_at",
+    "ended_at",
+    "events",
+    "artifacts",
+    "output",
+    "blocker"
+  ],
+  "title": "RunState",
+  "type": "object"
+}

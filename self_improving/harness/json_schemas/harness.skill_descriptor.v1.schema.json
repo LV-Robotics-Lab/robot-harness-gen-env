@@ -1,0 +1,137 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "$id": "harness.artifact_ref.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.skill_descriptor.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "deterministic": {
+      "const": true,
+      "title": "Deterministic",
+      "type": "boolean"
+    },
+    "implementation_name": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Implementation Name",
+      "type": "string"
+    },
+    "implementation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Implementation Sha256",
+      "type": "string"
+    },
+    "implementation_version": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Implementation Version",
+      "type": "string"
+    },
+    "input_schema": {
+      "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+\\.v(?:0|[1-9][0-9]*)$",
+      "title": "Input Schema",
+      "type": "string"
+    },
+    "max_attempts": {
+      "minimum": 1,
+      "title": "Max Attempts",
+      "type": "integer"
+    },
+    "mcp_tool_name": {
+      "pattern": "^[a-z][a-z0-9_]{0,127}$",
+      "title": "Mcp Tool Name",
+      "type": "string"
+    },
+    "output_schema": {
+      "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+\\.v(?:0|[1-9][0-9]*)$",
+      "title": "Output Schema",
+      "type": "string"
+    },
+    "qualification_artifact": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "skill_id": {
+      "pattern": "^[a-z][a-z0-9_]{0,31}\\.[a-z][a-z0-9_]{0,31}$",
+      "title": "Skill Id",
+      "type": "string"
+    },
+    "version": {
+      "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$",
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "skill_id",
+    "version",
+    "mcp_tool_name",
+    "input_schema",
+    "output_schema",
+    "implementation_name",
+    "implementation_version",
+    "implementation_sha256",
+    "deterministic",
+    "max_attempts",
+    "qualification_artifact"
+  ],
+  "title": "SkillDescriptor",
+  "type": "object"
+}

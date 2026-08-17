@@ -1,0 +1,116 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "$id": "harness.artifact_ref.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.environment_package.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset_catalog": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "package_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Package Id",
+      "type": "string"
+    },
+    "package_manifest": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "producer_skill_ref": {
+      "pattern": "^[a-z][a-z0-9_]{0,31}\\.[a-z][a-z0-9_]{0,31}@(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$",
+      "title": "Producer Skill Ref",
+      "type": "string"
+    },
+    "resolved_scene_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Resolved Scene Sha256",
+      "type": "string"
+    },
+    "route_id": {
+      "const": "text2env",
+      "title": "Route Id",
+      "type": "string"
+    },
+    "scene_spec_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Scene Spec Sha256",
+      "type": "string"
+    },
+    "seed": {
+      "maximum": 2147483647,
+      "minimum": 0,
+      "title": "Seed",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "package_id",
+    "route_id",
+    "producer_skill_ref",
+    "seed",
+    "scene_spec_sha256",
+    "resolved_scene_sha256",
+    "asset_catalog",
+    "package_manifest"
+  ],
+  "title": "EnvironmentPackage",
+  "type": "object"
+}

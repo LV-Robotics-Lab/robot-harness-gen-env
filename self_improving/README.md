@@ -8,6 +8,7 @@ runtime assumptions into the core trust boundary.
 
 | Path | Status | Responsibility |
 | --- | --- | --- |
+| `harness/` | active schema tranche | Strict, immutable Harness MVP records and Text2Env compile/replay/validate input-output contracts, plus the 14-version JSON Schema catalog and committed drift snapshots. Registry execution, handlers, and MCP adaptation are intentionally outside this tranche. |
 | `stage5/` | active | Multi-agent scene design, grounding, critique, MCP-lite tools, prompts, and tests recovered from the stage-05 validation tree. |
 | `alchedata/` | active | `/gen-env -> /collect -> /train -> /evaluate -> /diagnose -> /transfer`, failure memory, promotion gates, schemas, tests, and curated structured evidence. |
 | `asset_pipeline/active/` | active | Asset discovery, ingest, ledger, catalog integration, Web Studio, and simulator-migration adapters from `env-gen-dev`. |
@@ -40,6 +41,23 @@ history and bounded hosted-report subset are versioned together so the portal
 build remains self-contained; build output and dependency caches remain
 excluded. It presents platform evidence but does not define acceptance gates.
 
+## Harness schema tranche
+
+`self_improving/harness/` defines the Harness-owned records without duplicating
+the authoritative `scene_gen` payloads. Public schema identifiers are JSON
+Schema `$id` values; only `ArtifactRef.schema_version` is a payload field. The
+catalog contains the six common records, `SkillQualification`,
+`EnvironmentPackage`, and the six Text2Env input/output schemas. Regenerate or
+verify their committed snapshots with:
+
+```bash
+python script/export_harness_schemas.py
+python script/export_harness_schemas.py --check
+```
+
+The Harness contract remains `Status: Proposed`. This first implementation
+tranche does not provide `SkillRegistry`, Text2Env handlers, or an MCP server.
+
 ## Checkout audit
 
 ```bash
@@ -68,7 +86,9 @@ script/run_self_improving_tests.sh
 The script expands to the following module-level commands:
 
 ```bash
-python -m pytest -q
+python -m pytest -q \
+  --cov=self_improving.harness --cov-branch \
+  --cov-report=term-missing --cov-fail-under=100
 PYTHONPATH=.:self_improving/stage5 python -m pytest -q self_improving/stage5/tests
 PYTHONPATH=self_improving/alchedata:self_improving/alchedata/scripts \
   python -m pytest -q self_improving/alchedata/tests
@@ -82,7 +102,7 @@ python -m pytest -q self_improving/asset_pipeline/active/web/tests
   PYTHONPATH=source/agenticsim python -m pytest -q tests)
 ```
 
-The current source-only baseline is 543 passed and 5 skipped with the required
+The current source-only baseline is 564 passed and 6 skipped with the required
 top-level external submodules initialized. The skips are
 explicit physical/runtime checks that require SAPIEN or the excluded raw
 Isaac, SceneAgent, media, and report bundles; they are not silently mocked.

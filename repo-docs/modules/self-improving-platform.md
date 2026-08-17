@@ -5,6 +5,7 @@
 | 层 | 目录 | 写什么 | 不写什么 |
 | --- | --- | --- | --- |
 | 稳定核心 | `scene_gen/` | schema、parser、grounding、solver、builder、validator | 策略、训练循环、仿真器特定编排 |
+| Harness 契约 | `self_improving/harness/` | 严格审计记录、Text2Env Skill 输入输出、权威载荷引用、公开 schema 快照 | 复制 `scene_gen` 载荷、Registry 业务分支、MCP 自有类型或发布决策 |
 | 场景编排 | `self_improving/stage5/` | designer/critic/grounding agent、prompt、MCP-lite | 核心物理判定的替代实现 |
 | 闭环 | `self_improving/alchedata/` | collect/train/evaluate/diagnose/transfer、失败记忆、promotion gate | 大规模 runs、checkpoint、下载缓存 |
 | 资产 | `self_improving/asset_pipeline/` | 发现、ingest、ledger、catalog 对接、迁移 adapter | 第三方 mesh 与渲染产物 |
@@ -19,7 +20,9 @@
 
 `python -m self_improving --json` 只检查这些源码是否到位以及子模块是否初始化，不导入 GPU 框架、不启动仿真器。来源工作区、提交、归档分支和排除项在 `self_improving/source_inventory.json`，它是清理旧副本前的审计入口。
 
-当前离线、自包含回归基线是 542 passed、6 skipped。skip 仅对应未纳入 Git 的 Isaac/SceneAgent/媒体/报告原始包或本机未安装的 SAPIEN 物理运行时；源码、schema、ledger、fixture、Web Studio 和 OpenXSim IR/adapter 都有仓库内测试覆盖。完整命令见 `self_improving/README.md`。
+Harness schema tranche 当前公开 14 个以 `$id` 标识的 JSON Schema：六个通用运行/审计记录、Qualification、EnvironmentPackage 和 compile/replay/validate 六个输入输出。`ArtifactRef.schema_version` 指向既有 `robotwin.*` 权威载荷，Harness 不重新定义其内部格式。`python script/export_harness_schemas.py --check` 锁住 committed snapshot；统一测试入口对 `self_improving.harness` 同时强制 100% 语句与分支覆盖。Registry、Text2Env handler 与 MCP adapter 不在这一批实现内，`docs/contracts/HARNESS_MVP_CONTRACT_V1.md` 仍保持 `Status: Proposed`。
+
+当前离线、自包含回归基线是 564 passed、6 skipped。skip 仅对应未纳入 Git 的 Isaac/SceneAgent/媒体/报告原始包或本机未安装的 SAPIEN 物理运行时；源码、schema、ledger、fixture、Web Studio 和 OpenXSim IR/adapter 都有仓库内测试覆盖。完整命令见 `self_improving/README.md`。
 
 2026-08-14 的同学工作区收口把 Yeyuxuan 的完整 RoboLab 分支历史与 20 份来源记录、Yuxin 当前 main/Web/未提交断点续测状态，以及 Bingsheng/Gujie/Yuxin 的独有说明归入同仓库。Yuxin 的第三方资产本体没有进入 Git；`asset_pipeline/receipts/asset_library_301_361.sha256` 只记录 12,047 个文件、约 27.64 GB 内容的精确摘要，`storage_uri: null` 表示它仍不是远端备份。
 

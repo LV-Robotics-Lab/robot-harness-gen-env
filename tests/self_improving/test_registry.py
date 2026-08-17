@@ -8,6 +8,7 @@ def test_registry_has_unique_names_and_paths() -> None:
     assert len({module.path for module in MODULES}) == len(MODULES)
     assert {module.name for module in MODULES} >= {
         "gen_env_core",
+        "harness_mvp",
         "stage5",
         "alchedata",
         "asset_pipeline",

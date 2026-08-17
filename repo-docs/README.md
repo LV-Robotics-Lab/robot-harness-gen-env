@@ -17,13 +17,14 @@
 | 理解 catalog miss 与运行时不稳怎么补 | [确定性代理](modules/derived-proxy.md) | procedural primitive、derived uniform scale、来源 lineage |
 | 理解磁盘包怎么自证没被改 | [哈希绑定包](modules/replay-package.md) | 文件清单、SHA-256 manifest、`verify_package` 篡改检测 |
 | 理解运行时物理通过到底验了什么 | [运行时门控](modules/runtime-gates.md) | 接触 fraction、drift、可见性、视频互异帧、嵌套未声明接触等门控 |
+| 理解 Harness 对外记录与 Text2Env Skill 边界 | [Self-Improving 平台](modules/self-improving-platform.md) | 14 个严格 schema、权威载荷引用、快照漂移门与尚未实现的 Registry/MCP 边界 |
 | 理解平台层如何组合旧工作区与外部项目 | [Self-Improving 平台](modules/self-improving-platform.md) | 稳定核心、编排层、资产层、适配层、历史层与子模块的边界 |
 | 在 Jingxiang 仿真机上开发与协作 | [仿真组工作区协作](workspace-collaboration.md) | 个人目录、`worktree/<人名>` 分支、共享 `main` 与本地大文件的边界 |
 | 审计本指南每条主张背后的源码证据 | [证据底座](references/source-evidence.md) | 两轮遍历、claim/evidence/confidence/caveat 与被消费者 |
 | 审计本指南是否真的把模型传给了读者 | [质检报告](references/quality-review.md) | reader simulation、可理解性 review、残余风险 |
 | 把重复见到的术语归一 | [术语表](glossary.md) | `SceneSpec`、`ResolvedSceneSpec`、support margin、derived proxy 等在本仓库里的精确意思 |
 
-范围：核心行为仍记录 `scene_gen/`、`script/`、`demo/`、`tests/`；平台总览额外记录 `self_improving/`、`apps/` 与 `external/` 的所有权边界，不把迁入的历史脚本逐个重述。`apps/pearl_evidence_portal/` 是独立呈现层，不能反向定义验收结论；`docs/evidence/` 的已验证证据被引用但不重述。除 PEARL 已裁剪的浏览器报告子集外，二进制资产、运行产物和外部依赖只保留来源与机读清单。
+范围：核心行为仍记录 `scene_gen/`、`script/`、`demo/`、`tests/`；平台总览额外记录 `self_improving/`、`apps/` 与 `external/` 的所有权边界，并登记 Harness schema tranche，不把迁入的历史脚本逐个重述。`apps/pearl_evidence_portal/` 是独立呈现层，不能反向定义验收结论；`docs/evidence/` 的已验证证据被引用但不重述。除 PEARL 已裁剪的浏览器报告子集外，二进制资产、运行产物和外部依赖只保留来源与机读清单。
 
 注意：本仓库根 `README.md` 的英文段是面向使用者的命令配方与已验证证据摘要；`repo-docs/` 是面向想理解仓库行为的人的中文叙述。两者不重复，互相引用。
 
