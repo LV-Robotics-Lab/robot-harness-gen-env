@@ -1,8 +1,11 @@
 # 1_asset_reuse — 资产复用（阶段 1）
 
-让 RoboTwin 和 Isaac/USD 生态两边的资产互通、并都能被 env-gen 全流程复用。
-三条线：**A** RoboTwin→Isaac USD；**B** 外部 USD→RoboTwin 布局；**C** 注册进扩展
-catalog 被文字场景真实选中。全景与逐文件说明见本目录 `OVERVIEW.md`。
+**面向不同仿真生态的资产检索与引进管线**：把「要什么物体」（文字 prompt 或类目清单）
+变成「可直接用于场景生成的资产」——按信任梯度检索 本地库 → NVIDIA → GitHub → Objaverse，
+AI 看图验货 + 物理质检合格后收进 RoboTwin 布局资产库、注册进 env-gen 扩展 catalog，
+被文字场景真实选中。底层依托 RoboTwin(SAPIEN) 与 Isaac/USD 两生态的资产互通能力
+（线 B 反向引入 · 线 C 全流程复用 · 线 D 检索选定；线 A 正向转换已归档）。
+全景与逐文件说明见本目录 `OVERVIEW.md`，操作指南见 `docs/asset_search_usage.md`。
 
 ## 结构
 
