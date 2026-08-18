@@ -3,9 +3,9 @@
   "python": "/home/jingxiang/miniconda3/envs/env-gen-sc311/bin/python",
   "gen_env_root": "/home/jingxiang/workspace/robot-harness-gen-env",
   "robotwin_root": "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin",
-  "usg_root": "/home/jingxiang/workspace/usg-env-quality-reproduction/source/usg/repo",
-  "paper_path": "/home/jingxiang/workspace/usg-env-quality-reproduction/source/paper/2503.15005.pdf",
-  "catalog_path": "/home/jingxiang/workspace/usg-env-quality-reproduction/data/raw/asset_catalog.json",
+  "usg_root": "/home/jingxiang/workspace/robot-harness-gen-env/self_improving/studies/usg_env_quality_reproduction/source/usg/repo",
+  "paper_path": "/home/jingxiang/workspace/robot-harness-gen-env/self_improving/studies/usg_env_quality_reproduction/source/paper/2503.15005.pdf",
+  "catalog_path": "/home/jingxiang/workspace/robot-harness-gen-env/self_improving/studies/usg_env_quality_reproduction/data/raw/asset_catalog.json",
   "cabinet": {
     "asset_id": "036_cabinet",
     "model_id": 46653,
