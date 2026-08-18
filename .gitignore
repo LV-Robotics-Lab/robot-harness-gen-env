@@ -82,6 +82,7 @@ self_improving/alchedata/runs/*
 # 17 份在 git 的账本是資產池唯一幸存的部分，例外规则随迁移带到本仓库）
 !self_improving/asset_pipeline/active/data/asset_library/
 self_improving/asset_pipeline/active/data/asset_library/*
+!self_improving/asset_pipeline/active/data/asset_library/README.md
 !self_improving/asset_pipeline/active/data/asset_library/*/
 self_improving/asset_pipeline/active/data/asset_library/*/*
 !self_improving/asset_pipeline/active/data/asset_library/*/ledger.json

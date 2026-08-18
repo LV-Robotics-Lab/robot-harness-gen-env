@@ -30,7 +30,7 @@
 输入（只读）                                    输出
 ├─ RoboTwin 资产库（134 物体，jingxiang 处）     ├─ AssetBundle 账本 JSON（每资产一份，双后端表示+哈希+结构化未知）
 ├─ NVIDIA Isaac 资产服务器（HTTP，逐 prop 拉）   ├─ （线A 产物 bottle.usd / cabinet.usd 已随线 A 归档，见 archive/）
-├─ GitHub 公开仓库（tier2 检索源，逐仓声明许可）  ├─ ../data/asset_library/（外部资产池，RoboTwin 布局）
+├─ GitHub 公开仓库（tier2 检索源，逐仓声明许可）  ├─ ../data/asset_library/（外部资产池，按来源分夹）
 ├─ openxsim IR 库（AssetBundle 数据结构）        ├─ ../data/robotwin_shadow/（影子根）+ ../data/scene_gen_ext/（扩展 overrides+catalog）
 └─ env-gen 上游（catalog/场景编译/验证器）       ├─ 检索证据 selection_evidence / coverage_report / asset_gap_blocker
                                                └─ 双后端验证报告 / e2e 场景包 / 回放视频截图
@@ -113,7 +113,7 @@ coacd 碰撞体）。`run_smoke.sh` 已改走批量管线。`s7_probe_reverse` �
 
 - **目标**：证明 USD 生态资产能反向进 RoboTwin 布局并过 SAPIEN 验证（单件打样）。
 - **输入 → 输出**：NVIDIA 服务器 YCB 025_mug →
-  `../data/asset_library/301_cup/{visual,collision,model_data0.json}` + 账本。
+  `../data/asset_library/nvidia/301_cup/{visual,collision,model_data0.json}` + 账本。
 
 | 文件 | 功能 |
 |---|---|

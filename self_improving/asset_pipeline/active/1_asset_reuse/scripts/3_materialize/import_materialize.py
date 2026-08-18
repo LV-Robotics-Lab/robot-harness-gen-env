@@ -96,6 +96,40 @@ out.mkdir(parents=True, exist_ok=True)
 (out / "shots").mkdir(exist_ok=True)
 records = json.loads((staging / "staging_manifest.json").read_text())
 
+# The library groups assets by source provider. Provider is the only asset
+# property that never changes (category gains aliases, licence goes unknown ->
+# declared, usable flips when a measurement campaign unlocks an asset), which
+# is why it -- and nothing else -- is allowed into the path.
+_WEB_PROVIDER_DIRS = {"objaverse": "objaverse", "github_tree": "github", "github": "github"}
+
+
+def _provider_dir(record):
+    """Mirrors exactly the branch that writes source.library further down
+    (group `web_*` came off the web tiers, everything else off the NVIDIA
+    Isaac server), so a new asset's directory and its ledger's declared source
+    can never disagree."""
+    if not record["group"].startswith("web_"):
+        return "nvidia"
+    provider = record.get("source_provider") or "github"
+    if provider not in _WEB_PROVIDER_DIRS:
+        raise SystemExit(
+            f"unknown source provider {provider!r}: add it to _WEB_PROVIDER_DIRS. "
+            "A new retrieval tier gets its own library subdir -- silently landing "
+            "it in github/ would make the ledger's source and its path disagree."
+        )
+    return _WEB_PROVIDER_DIRS[provider]
+
+
+_PROVIDER_BY_ASSET = {r["asset"]: _provider_dir(r) for r in records}
+
+
+def adir_for(asset):
+    """This asset's directory. An asset that already exists keeps the home it
+    has -- a re-import must never fork a second directory under a different
+    provider -- and a first-time asset is placed by the decision above."""
+    found = ledger_mod.asset_dir(lib, asset)
+    return found if found is not None else lib / _PROVIDER_BY_ASSET[asset] / asset
+
 ROTX90 = [math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]
 
 
@@ -385,7 +419,7 @@ else:
 # visual/ dir raises FileNotFoundError with a message that reads like the
 # GLB itself vanished.
 for asset_name in {r["asset"] for r in records}:
-    adir = lib / asset_name
+    adir = adir_for(asset_name)
     (adir / "visual").mkdir(parents=True, exist_ok=True)
     (adir / "collision").mkdir(parents=True, exist_ok=True)
 
@@ -465,8 +499,8 @@ for idx, r in worker_records:
         if not (0.01 < size[1] < 1.0):
             raise ValueError(f"implausible height {size[1]:.3f}m")
 
-        vis = lib / asset / "visual" / f"base{model}.glb"
-        col = lib / asset / "collision" / f"base{model}.glb"
+        vis = adir_for(asset) / "visual" / f"base{model}.glb"
+        col = adir_for(asset) / "collision" / f"base{model}.glb"
 
         reorient = r.get("reorient") or meta.get("reorient")
         if reorient == "settle":
@@ -527,7 +561,7 @@ for idx, r in worker_records:
             else:
                 shutil.copy(vis, col)
                 row["collision_mode"] = "copy"
-            (lib / asset / f"model_data{model}.json").write_text(
+            (adir_for(asset) / f"model_data{model}.json").write_text(
                 json.dumps(
                     {
                         "center": [float((a + b) / 2) for a, b in zip(cur_lo, cur_hi)],
@@ -769,7 +803,7 @@ for idx, r in worker_records:
         # not block ingestion (snapshot representation is optional).
         if checks["pass"]:
             try:
-                snap_dir = lib / asset / "snapshots"
+                snap_dir = adir_for(asset) / "snapshots"
                 snap_dir.mkdir(parents=True, exist_ok=True)
                 snap_path = snap_dir / f"m{model}_default.png"
                 Image.fromarray(img).save(snap_path)
@@ -1050,16 +1084,16 @@ for row in matrix:
     if row["status"] != "accepted":
         a, m = row["asset"], row["model"]
         for p in (
-            lib / a / "visual" / f"base{m}.glb",
-            lib / a / "collision" / f"base{m}.glb",
-            lib / a / f"model_data{m}.json",
+            adir_for(a) / "visual" / f"base{m}.glb",
+            adir_for(a) / "collision" / f"base{m}.glb",
+            adir_for(a) / f"model_data{m}.json",
         ):
             if p.exists():
                 p.unlink()
         # H3 顺手: orphaned snapshot from a model that settled fine (snapshot
         # rendered) but got rejected on a schema violation before this loop
         # ever ran -- same pool-hygiene reasoning as the 3 files above.
-        for p in (lib / a / "snapshots").glob(f"m{m}_*.png"):
+        for p in (adir_for(a) / "snapshots").glob(f"m{m}_*.png"):
             p.unlink()
         lp = ledger_path(args.library_dir, a)
         if lp.exists():
@@ -1087,7 +1121,7 @@ for row in matrix:
 # model_data*.json left" means there is no surviving model for this asset
 # to disturb -- not a bulk pre-emptive wipe like the bugs fixed above.
 for a in {row["asset"] for row in matrix}:
-    adir = lib / a
+    adir = adir_for(a)
     if (
         adir.exists()
         and not ledger_path(args.library_dir, a).exists()
