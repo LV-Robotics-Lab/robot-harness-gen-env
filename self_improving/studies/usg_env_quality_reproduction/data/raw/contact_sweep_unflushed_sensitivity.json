@@ -1,0 +1,17 @@
+{
+  "schema_version": "usg_env_quality_reproduction.sweep_sensitivity.v1",
+  "primary_scan_order": "qpos, y ascending, x ascending",
+  "sensitivity_scan_order": "qpos, y descending, x descending",
+  "row_count": 4515,
+  "fresh_scene_scope": "new dynamic and static scenes per qpos, not per grid point",
+  "label_mismatch_counts": {
+    "contact_label_match": 324,
+    "penetration_label_match": 365,
+    "static_label_match": 320
+  },
+  "label_agreement_rates": {
+    "contact_label_match": 0.9282392026578073,
+    "penetration_label_match": 0.9191583610188261,
+    "static_label_match": 0.929125138427464
+  }
+}

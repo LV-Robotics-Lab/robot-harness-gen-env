@@ -1,0 +1,62 @@
+{
+  "schema_version": "usg_env_quality_reproduction.config.v1",
+  "python": "/home/jingxiang/miniconda3/envs/env-gen-sc311/bin/python",
+  "gen_env_root": "/home/jingxiang/workspace/robot-harness-gen-env",
+  "robotwin_root": "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin",
+  "usg_root": "/home/jingxiang/workspace/robot-harness-gen-env/self_improving/studies/usg_env_quality_reproduction/source/usg/repo",
+  "paper_path": "/home/jingxiang/workspace/robot-harness-gen-env/self_improving/studies/usg_env_quality_reproduction/source/paper/2503.15005.pdf",
+  "catalog_path": "/home/jingxiang/workspace/robot-harness-gen-env/self_improving/studies/usg_env_quality_reproduction/data/raw/asset_catalog.json",
+  "cabinet": {
+    "asset_id": "036_cabinet",
+    "model_id": 46653,
+    "scale": 0.27,
+    "urdf_relative_path": "assets/objects/036_cabinet/46653/mobility.urdf",
+    "metadata_relative_path": "assets/objects/036_cabinet/46653/model_data.json"
+  },
+  "basket": {
+    "asset_id": "110_basket",
+    "model_id": 1,
+    "scale": [0.12, 0.12, 0.12],
+    "collision_relative_path": "assets/objects/110_basket/collision/base1.glb",
+    "visual_relative_path": "assets/objects/110_basket/visual/base1.glb",
+    "metadata_relative_path": "assets/objects/110_basket/model_data1.json"
+  },
+  "scene": {
+    "table_height_m": 0.741,
+    "cabinet_yaw_rad": 1.5707963267948966,
+    "cabinet_xy_m": [0.10, 0.10],
+    "adversarial_basket_offset_m": [-0.32, -0.18],
+    "control_basket_offset_m": [0.38, 0.0],
+    "half_open_qpos_m": 0.0675
+  },
+  "envelope": {
+    "fractions": 21
+  },
+  "contact_sweep": {
+    "x_min_m": -0.42,
+    "x_max_m": 0.42,
+    "y_min_m": -0.34,
+    "y_max_m": 0.34,
+    "step_m": 0.02,
+    "qpos_m": [0.0, 0.0675, 0.135],
+    "active_separation_m": 0.001,
+    "penetration_separation_m": -0.002,
+    "proxy_clearance_xy_m": 0.005,
+    "proxy_clearance_z_m": 0.002
+  },
+  "rollout": {
+    "timestep_s": 0.004,
+    "steps": 750,
+    "terminal_window_steps": 120,
+    "video_frames": 120,
+    "video_fps": 30,
+    "render_width": 640,
+    "render_height": 480,
+    "perturbation_velocities_m_s": [-0.02, 0.0, 0.02],
+    "max_translation_drift_m": 0.02,
+    "max_rotation_drift_deg": 3.0,
+    "min_support_contact_fraction": 0.8,
+    "min_unexpected_contact_fraction": 0.0
+  },
+  "random_seed": 20260817
+}

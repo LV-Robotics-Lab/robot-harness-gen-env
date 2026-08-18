@@ -1,0 +1,1609 @@
+                                                                                                            Universal Scene Graph Generation
+
+                                                                                                          Shengqiong Wu, Hao Fei∗, Tat-seng Chua
+                                                                                                               National University of Singapore
+                                                                                         swu@u.nus.edu, haofei37@nus.edu.sg, dcscts@nus.edu.sg
+
+                                          Text SG: Abstract/Descriptive                     Image SG: Visually Detailed                                                   Video SG: Dynamic/Sequential                                               3DSG: Spatial/Immersive
+arXiv:2503.15005v1 [cs.CV] 19 Mar 2025
+
+
+
+
+                                                                                                                                                                                                                                                    attached to       leaning sofa close by
+                                                                                         headphones         person             phone
+                                          headphones          Peter         iphone                wearing              watching                                                                                                                   frame        wall against             door
+                                                  wearing            focus on                                        lying                                                                                                                                        close by  table standing
+                                                     relax on
+                                                                                         windowin front of                                                                                                                                            plant                          on vase
+                                                                                                      sofa in front of wall                                                                                                              …                         close by      standing on
+                                                         sofa          in       room        beside         back                                                                                                                                                   standing
+                                                                                             curtain        plant                                                                                                                                    carpet          on            floor
+
+
+                                           P e te r wearing headphones
+                                           relaxes on a sofa, focused
+                                           on his iphone in a room.                                                                                                                                                                      …
+
+                                                       Text
+                                                                                                           Image                                                                             Video                                                             3D Point Cloud
+
+                                           headphones              Peterwatchingiphone                          Peter               iphone                           Peter              iphone                         Peter             iphone                         Peter            iphone
+                                                       wearing                                                           watching                                           holding up                                        watching                                         watching
+
+                                            window in front of lying          wall          window                     sitting on    plant      window                     sitting on     plant   window                    sitting on    plant     window                   lying
+                                                                                                                                                                                                                                                                                  back    plant
+                                                                  in front of                          in front of           back                           in front of          back                         in front of         back                         in front of
+
+                                                beside
+                                                           sofa        attached to
+                                                                                              beside         sofa back               wall          beside         sofa back               wall       beside         sofa back             wall        beside         sofa back            wall
+                                                                back
+                                                                 plant frame                                       plant                                                plant                                             plant                                            plant
+                                            curtain                                         curtain                                             curtain                                           curtain                                           curtain
+                                                                close by                                               close by                                             close by                                         close by                                         close by
+                                                                         standing                                         standing
+                                                                                                                                   frame                                       standing
+                                                                                                                                                                                        frame                                   standing
+                                                                                                                                                                                                                                         frame                                   standing
+                                                                                                                                                                                                                                                                                           frame
+                                             room                           on               room                            on
+                                                                                                                                                  room                            on
+                                                                                                                                                                                                     room                          on
+                                                                                                                                                                                                                                                     room                           on
+                                                              table              vase                        table                vase                            table                vase                         table               vase                         table               vase
+                                                                      standing on                                     standing on                                          standing on                                      standing on                                      standing on
+                                               door     standing
+                                                                                              door                                                 door                                             door                                              door
+                                              carpet       on          floor                carpet standing
+                                                                                                      on               floor                     carpet standing
+                                                                                                                                                           on               floor                 carpet standing
+                                                                                                                                                                                                            on               floor                  carpet standing
+                                                                                                                                                                                                                                                              on              floor
+
+                                                                                                                                             Universal SG: Modality-comprehensive                             Source modality of objects:                                                      3D
+                                                                                                                                                                                                                                                       Text        Image         Video
+
+                                         Figure 1. Illustrations of SGs (top) of single modalities in text, image, video, and 3D, and our proposed Universal SG (bottom). Note that
+                                         the USG instance shown here is under the combination of four complete modalities, while practically any modality can be absent freely.
+                                         Also, the temporal coreference edges are omitted for visual clarity (a full version is given in the Appendix).
+
+                                                                                        Abstract                                                                              associator to relieve the modality gap for cross-modal object
+                                                                                                                                                                              alignment. Further, we propose a text-centric scene con-
+                                         Scene graph (SG) representations can neatly and efficiently                                                                          trasting learning mechanism to mitigate domain imbalances
+                                         describe scene semantics, which has driven sustained inten-                                                                          by aligning multimodal objects and relations with textual
+                                         sive research in SG generation. In the real world, multiple                                                                          SGs. Through extensive experiments, we demonstrate that
+                                         modalities often coexist, with different types, such as images,                                                                      USG offers a stronger capability for expressing scene se-
+                                         text, video, and 3D data, expressing distinct characteristics.                                                                       mantics than standalone SGs, and also that our USG-Par
+                                         Unfortunately, current SG research is largely confined to                                                                            achieves higher efficacy and performance. The project page
+                                         single-modality scene modeling, preventing the full utiliza-                                                                         is https://sqwu.top/USG/.
+                                         tion of the complementary strengths of different modality
+                                         SG representations in depicting holistic scene semantics. To                                                                          1. Introduction
+                                         this end, we introduce Universal SG (USG), a novel rep-
+                                                                                                                                                                               Scene understanding is a fundamental topic in computer vi-
+                                         resentation capable of fully characterizing comprehensive
+                                                                                                                                                                               sion and artificial intelligence, aiming to comprehend and in-
+                                         semantic scenes from any given combination of modality in-
+                                                                                                                                                                               terpret scenes in a manner akin to human perception. Within
+                                         puts, encompassing modality-invariant and modality-specific
+                                                                                                                                                                               scene understanding, SG generation [36, 81, 95] stands as a
+                                         scenes. Further, we tailor a niche-targeting USG parser,
+                                                                                                                                                                               pivotal task, seeking to identify and classify all constituent
+                                         USG-Par, which effectively addresses two key bottlenecks
+                                                                                                                                                                               objects in a given scene, along with their attributes and in-
+                                         of cross-modal object alignment and out-of-domain chal-
+                                                                                                                                                                               terrelationships. This process constructs a semantic graph
+                                         lenges. We design the USG-Par with modular architecture
+                                                                                                                                                                               representation that facilitates a comprehensive understand-
+                                         for end-to-end USG generation, in which we devise an object
+                                                                                                                                                                               ing of the specific scene. SGs are widely applied in various
+                                            * Corresponding author.                                                                                                            real-world applications [6, 16, 17, 56, 59, 69], such as au-
+tonomous driving [25, 80, 100], robot navigation [64, 83],          methods [30, 77, 89, 95, 99]. To achieve USG parsing, a di-
+augmented reality [34, 74], etc. Consequently, SG gen-              rect approach would be to use a pipeline paradigm, i.e., first
+eration has garnered significant research attention in past         parsing each modality’s SG separately, and then merging the
+decades [12, 13, 27, 41, 50, 75].                                   individual SGs into one USG [18, 56]. The most challenging
+    Humans perceive the world through a multitude of sen-           issue here is merging identical objects across multiple modal-
+sory modalities, acquiring information via different channels       ities while retaining modality-specific scene information.
+to form a complete perception of their environment. Thus,           However, because the independent SG parsers for certain
+beyond images, scenes can be represented through various            modalities operate in isolation, it leads to critical problems:
+other modalities as well, including text, video, and 3D for-        i), complementary semantic information across modalities
+mats. Correspondingly, current research has focused on              may be overlooked; ii), due to differences in feature spaces
+constructing scene graphs across these different modalities,        across modalities, it becomes difficult to precisely align iden-
+such as generations of Image SG (ISG) [36, 75, 95], Textual         tical objects across modalities, resulting in a final USG that
+SG (TSG) [11, 43], Video SG (VSG) [12, 65, 66], and 3D              is neither concise nor effective. Second, regarding data, the
+SG (3DSG) [77, 82, 84]. Moreover, due to the inherent na-           lack of annotated USG data is a significant hurdle. Since
+ture of each modality, SGs in each modality possess distinct        manual annotation is labor-intensive, a feasible solution is
+capabilities, as illustrated in Fig. 1. Specifically:               to leverage the existing abundance of single-modality SG
+    • ISG – Images provide concrete visual details, enabling        annotation datasets to learn USG, i.e., through joint training
+       SGs to precisely describe object locations, sizes, and       on various singleton SG datasets. Unfortunately, significant
+      visual attributes, but typically cannot directly convey       domain divergence exists among different modality data.
+       temporal sequences or dynamic changes.                       For example, 3DSG data might focus solely on static indoor
+    • TSG – Compared to the concreteness of vision, text            scenes, VSGs are mostly biased towards action-rich scenes,
+       can flexibly describe abstract entities, actions, events,    while only TSGs hold for general domains. Consequently,
+       and abstract relationships between objects and entities      the resulting USG parser inevitably suffers from scene biases,
+       that are not visually explicit, but usually lack specific    thereby limiting its effectiveness.
+      visual and spatial details.                                       To address these challenges, we present a USG Parser
+    • VSG – Building upon static images, videos are more            (termed USG-Par), capable of end-to-end scene parsing
+       adept at expressing dynamic events, actions, and tem-        from any modality inputs, outputting a USG representation.
+       poral changes.                                               Technically, USG-Par works sequentially through 5 main
+    • 3DSG On top of 2D vision, 3D scenes can further               modules: Step 1 , modality-specific encoders encode inputs
+       model objects and their spatial relationships, sizes, ori-   from different modalities; Step 2 , we employ Mask2Former
+       entations, and other 3-dimensional spatial attributes.       [10] as a shared mask decoder to generate representations
+It is evident that SG representations across different modali-      for scene objects; Step 3 , an object associator is devised
+ties provide complementary insights for describing a whole          to determine whether objects from different modalities are
+scene semantics. Conversely, this implies that relying solely       identical. Specifically, to eliminate the modality gap, objects
+on one single modality’s SG cannot offer a comprehensive            are transformed into their respective modality-specific fea-
+scene representation. In practical applications, an ideal pro-      ture spaces before object association and alignment; Step
+cess involves users providing inputs in any single modal-            4 , a relation proposal constructor generates the most fea-
+ity or even multiple combinations and the system simulta-           sible relation pairs by modeling object-level interactions;
+neously extracting modality-specific and modality-shared            Step 5 , a relation decoder finally predicts the final relations
+scene information to derive a unified SG representation for a       among different objects based on the selected pairs from the
+comprehensive scene understanding. Unfortunately, current           previous step. During model training, to combat the issue
+research [8, 13, 41, 79] communities study SGs for different        of data domain imbalance, we propose a text-centric scene
+modalities separately, and a universal representation encom-        contrasting learning mechanism, where considering that the
+passing all modalities does not yet exist. To bridge this gap,      text modality is scene-unbiased in the general domain, we
+this paper proposes a Universal SG (USG) representation             align objects and relations from various modalities to the
+capable of characterizing any combination of modalities. As         objects and relations in the text space of TSG.
+shown in Fig. 1, USG can incorporate all the characteris-              Experimental results demonstrate that USG provides a
+tics of individual SGs, capturing a comprehensive semantic          more powerful and comprehensive scene representation com-
+scene from any given combination of input modalities.               pared to standalone SGs of individual modalities. Fur-
+    Yet, realizing such a universal SG generation presents two      thermore, extensive experimental results on various SG
+non-trivial challenges from the methodological perspective.         benchmark datasets indicate that, i), the proposed USG-Par
+First, regarding model architecture, the current community          achieves significant performance improvements in single-
+has most largely explored singleton-modality SG generation          modality scene graph parsing; and ii), in multi-modality SG
+            Object Queries                                                                mask   class                       Relation Proposal Constructor
+
+
+
+
+                                                                                                         Object Projector
+          Text
+
+
+
+
+                                                                                                                             Cross-attention
+ Text
+         Encoder
+                                                   Text Objects                                                                                           Pair
+
+
+
+
+                                                                                                                                  q
+
+
+                                                                                                                                               FFN
+                                                                                                                                                       Confidence
+
+
+
+
+                                                                      Object Associator
+          Image       Pixel
+
+
+
+
+                                                                                                                                                                         Relation Decoder
+                                 Mask Decoder
+Image
+         Encoder     Decoder
+
+
+
+
+                                                                                                                                                                                            Relation triplet
+                                                                                                                                        k, v
+                                                  Image Objects
+                                                                                                                                                          Derive Top-k
+
+
+
+
+                                                                                                         Subject Projector
+Video     Image       Pixel
+
+
+
+
+                                                                                                                             Cross-attention
+                                                                                                                             k, v
+Frames   Encoder     Decoder
+                                                  Video Objects
+
+
+
+
+                                                                                                                                               FFN
+                                                                                                                                     q
+Point     Point       Point
+Cloud    Encoder     Decoder                                                                                                                          Relation Queries
+                                                Point Cloud Objects
+Figure 2. Overview of USG-Par architecture. It mainly consists of five modules, including modality-specific encoders, shared mask decoder,
+object associator, relation proposal constructor, and relation decoder.
+
+parsing, USG-Par accurately constructs associations between                                       where D ∈ RP ×6 is the input 3D point clouds, with P
+objects from different modalities, achieving better perfor-                                       standing for the number of point clouds of interest and 6
+mance than pipeline approaches. Further, we show that                                             representing xyz coordinates plus RGB values. Similar to
+USG-Par effectively handles scene parsing for unseen scene                                        ISG, each 3D object oi in the object set O is identified by an
+domains and unseen modality combinations, thanks to the                                           instance segmentation mi ∈ {0, 1}P and a category label coi
+text-centric scene contrasting learning for weak supervision.                                        Lastly, text, as a highly abstract and flexible modality for
+    In summary, this work makes two primary contributions                                         scene description, has motivated research on generating SGs
+to the community. First, we are the first to propose a Univer-                                    from textual inputs [63], formulated as:
+sal SG representation for holistic semantic scene understand-                                                                          F (G S |S) = F ({O, R}|S),                           (4)
+ing. Second, we introduce a novel USG generator, USG-Par,
+                                                                                                  where S ∈ R is a given text. In TSGs, each object node is
+                                                                                                                                L
+which effectively addresses cross-modal object alignment
+                                                                                                  defined solely by its category label.
+and out-of-domain challenges simultaneously.
+                                                                                                  2.2. USG Definition
+2. Universal Scene Graph                                                                          In contrast to existing methods that focus solely on single-
+2.1. Preliminary                                                                                  modality SG generation, we define our USG generation task
+The concept of the SG is initially introduced in [33] as a                                        as being able to handle any single-modality SG generation
+visually grounded graph structure representing object in-                                         as well as any combination of modalities. Given a set of
+stances within an image, where edges depict pairwise rela-                                        input data in various modalities (e.g., image I, video V, 3D
+tionships between these objects. Formally, given an image                                         point cloud D and text S), USG generation is formulated as:
+I ∈ RH×W , ISG generation task is defined as:                                                         F (G U |{I, V, D, S}) = F ({O, R}|{I, V, D, S}), (5)
+                   F (G I |I) = F ({O, R}|I),                                             (1)     where O = {O∗ }, ∗ ∈ {I, V, D, S} represents the set of
+where O is the set of objects, with each object node oi                                           objects across all modalities. Each node involves a cate-
+characterized by a bounding box or a mask segmentation mi                                         gory label coi ∈ CO and a segmentation mask mi . Addi-
+and an associated category label coi ∈ CO , i.e. oi = (coi , mi ).                                tionally, for objects extracted from textual descriptions, we
+R is the set of relations, with each directed edge ri,j between                                   construct a positional binary mask to indicate their locations.
+two objects (subject and object) described by a predicate                                         R = {R∗ , R∗×⋄ }, ∗, ⋄ ∈ {I, V, D, S} and ∗ =    ̸ ⋄. R∗ in-
+cri,j ∈ CR , i.e., ri,j = (oi , cri,j , oj ). CO and CR means the                                 cludes both intra-modality relationships and inter-modality
+object and predicate classes.                                                                     associations R∗×⋄ . For example, in Fig. 1, the text and im-
+     Recently, by incorporating temporal dimensions, VSG                                          age describe the same scene; thus, the textual object “Peter”
+[36] generation has been introduced:                                                              in the TSG should correspond to the visual object “person”
+                                                                                                  in the ISG. Similarly, the “sofa” in the 3DSG corresponds to
+  F (G V |V) = F ({GtV }Tt=1 |V) = F ({Ot , Rt }Tt=1 |V), (2)
+                                                                                                  the object “sofa” in the ISG.
+where V ∈ RT ×H×W is the input video, and GtV =
+{Ot , Rt } denotes a ISG at t-th frame.                                                           3. Methodology
+   To enable spatially immersive understanding, methods                                           Our model consists of five main modules, as shown in Fig.
+for generating 3DSG [77] are then developed:                                                      2. First, we first extract the modality-specific features with
+                 F (G D |D) = F ({O, R}|D),                                               (3)     a modality-specific backbone. Second, we employ a shared
+                                                                                                   ∗
+                                                                         query features Xl∗ ∈ RNq ×d , ∗ ∈ {I, V, D, S} as follows:
+                                                                           Xl∗ = softmax(Ml−1
+                                                                                          ∗
+                                                                                              + Q∗l−1 Kl−1
+                                                                                                       ∗⊤     ∗
+                                                                                                           )Vl−1    ∗
+                                                                                                                 + Xl−1 , (6)
+     Linear
+
+
+
+                                                         Fused Query     where Nq∗ is the number of queries and l is the layer index.
+                                             Filter                      Ml−1∗
+                                                                                 is the binarized output of the resized mask prediction
+                                                                         from the previous stage. X0∗ denotes input object query
+                                                                         features to the mask decoder. Q∗l−1 = Fq (Xl−1    ∗
+                                                                                                                               ), while
+     Linear
+
+
+
+
+                                                                            ∗
+                                                                         Kl−1   = Fk (H ∗ ) and Vl−1∗
+                                                                                                       = Fv (H ∗ ). Here, Fq (·), Fk (·)
+                                                                         and Fv (·) are linear transformations as typically applied in
+                                                                         attention mechanisms. In practice, for image, video, and
+Figure 3. Illustration of the object associator for establishing asso-   3D data, H ∗ is sampled from the multi-scale feature out-
+ciations between different modalities.
+                                                                         put {H I/V/D }3i=1 , while for text, we employ H S across
+mask decoder to extract object queries for various modalities.           different scales. In addition, for video data, to effectively
+These object queries are then fed into the modality-specific             capture the temporal information across frames, we incorpo-
+object detection head to obtain the category label and tracked           rate a transformer-based temporal encoder Ftemp to model
+positions of the corresponding objects. Third, the object                the temporal relationships between objects. After Lmask
+                                                                                                                                   Nq∗
+queries are input into the object associator, which determines           layers, we obtain the refined object queries Q∗ = {qi∗ }i=1   .
+the association relationships between objects across modal-              3.3. Object Associator
+ities. Fourth, a relation proposal constructor is utilized to            The biggest challenge in USG generation would be accu-
+retrieve the most confidential subject-object pairs. Finally, a          rately merging identical objects across multiple modalities.
+relation decoder is employed to decode the final predicate               To establish robust associations and bridge the modality
+prediction between the subjects and objects.                             gap, we propose projecting objects into each other’s fea-
+                                                                         ture spaces using a transformation layer before determining
+3.1. Modality-specific Encoder                                           association relationships:
+To encode each modality, we propose using specialized en-                               Ā∗→⋄ = cos(F∗→⋄ (Q∗ ), Q⋄ ),
+coders for each one: 1) Text Encoder. We employ Open-
+                                                                                        Ā⋄→∗ = cos(F⋄→∗ (Q⋄ ), Q∗ ),                (7)
+CLIP [57] to encode the input text S to obtain the text con-
+textualized features, H S . 2) Image Encoder and Pixel                                  Ā∗↔⋄ = (Ā∗→⋄ + Ā⋄→∗ )/2 ,
+Decoder. We adopt the frozen CLIP-ConvNeXt [49] as the                   where F∗→⋄ (·) is a linear transformation of Q∗ , similar to
+backbone image encoder to model the given image/video                    F⋄→∗ (·). We then design a filtering module to further refine
+inputs, yielding frozen feature H̄ I/V . The pixel decoder,              and learn feasible sparse association pairs. In practice, we
+adapted from Mask2Former, consists of multi-stage de-                    employ a CNN-based architecture, which leverages local
+formable attention layers that transform the frozen features             details while efficiently filtering out redundant noise. The
+                                              I/V
+H̄ I/V , into the fused multi-scale feature {Hi }3i=1 , with             output is a refined association matrix, denoted as A∗↔⋄ . In
+the same channel dimension, where i is the layer index, and              Fig. 3 we illustrate the above process in detail.
+i = 3 corresponds to the highest-resolution feature. 3) Point            3.4. Modality-specific Object Detection Head
+Encoder and Point Decoder. We employ Point-BERT [94]                     Detecting objects involves predicting the segmentation mask
+as the point encoder to encode the input point cloud D, gen-             and category label (containing a “no object” label) from
+erating the super-point features, H̄ D . The point decoder               each object query. To achieve simultaneous object detec-
+is designed to propagate the super-point features to each                tion across different modalities while retaining modality-
+point hierarchically, producing multi-scale point features               specific scene information, we employ modality-specific
+{H D }3i=1 , where i = 3 denotes point clouds features with              heads. The design is consistent across modalities; here, we
+the original number points. All features are projected into a            illustrate the process in the image modality as an exam-
+common d-dimensional space using a linear layer.                         ple. Upon establishing association relationships between
+                                                                         objects
+                                                                               Pacross  modalities, we fuse the object query via qiI =
+3.2. Shared Mask Decoder                                                 qi + j Ai,j (qj ), ∗ ∈ {V, D, S}, allowing the incorpora-
+                                                                           I          I↔∗ ∗
+
+Objects across different modalities can provide complemen-               tion of complementary information from other modalities to
+tary information, facilitating cross-modal learning. There-              enrich the object embeddings of the current modality. Then,
+fore, we employ a shared mask decoder framework to im-                   a category classifier is applied on the fused query features qiI
+plicitly integrate these cross-modal complementary features.             to yield category label probability predictions c̄o,I
+                                                                                                                            i   for each
+Following [10], we utilize multi-scale features and a cas-               segment. For mask prediction, each binary mask prediction
+caded decoder to perform masked cross-attention between                  m̄Ii ∈ [0, 1]H×W is obtained by computing the dot product
+modality-specific features H ∗ and the corresponding object              between the fused query features and per-pixel embeddings
+H3I , i.e., m̄Ii = sigmoid(MLP(QI ) · H3I⊤ ).                               Push away                          Pull in
+                                                                            Text Object/Relation Features      3D Object/Relation Features
+3.5. Relation Proposal Constructor                                          Video Object/Relation Features     Image Object/Relation Features
+
+We employ a subject and object projector, implemented as an
+MLP, to generate subject and object embeddings E obj , E sub ,               table          floor
+                                                                                                                 holing
+                                                                                                                                 wearing
+respectively. we omit the modality superscript for simplicity.
+A straightforward approach would involve calculating rela-                           door                              besides
+tionship embeddings by combining embeddings for all pos-
+sible subject-object pairs and subsequently classifying the
+relationship predicates. However, such an exhaustive pair-          (a) Object-level Text Centric Scene       (b) Relation-level Text Centric
+wise computation is computationally infeasible. Moreover,                  Contrastive Learning                 Scene Contrastive Learning
+intuitively, improving recall of relevant pairs correlates with    Figure 4. Illustration of the object-level and relation-level text-
+enhanced relationship recall, suggesting that focusing on the      centric scene contrasting learning mechanism.
+most promising object pairs could increase computational ef-
+ficiency and overall performance. To this end, we introduce        Object Detection Loss. During training, we first apply
+a Relation Proposal Constructor (RPC) to selectively identify      Hungarian matching between the predicted and ground-truth
+promising object pairs, as shown in Fig. 2. Specifically, we       entity masks to assign object queries to entities in text, video,
+design a two-way relation-aware cross-attention mechanism          image, and 3D modalities. This assignment is then used to
+FCA (q, k, v), to iteratively refine subject and object features   supervise the mask predictions and category label classifica-
+as follows:                                                        tions. We employ a sigmoid Cross-Entropy (CE) loss Locls
+                       obj→sub            obj    obj               as in [52], computed between the ground truth object classes
+          Xlsub = FCA              sub
+                                (Xl−1  , Xl−1 , Xl−1 ),            and logits obtained by computing the inner product of the ob-
+                                                             (8)
+              obj
+           Xl = FCA    sub→obj     obj    sub    sub
+                                (Xl−1 , Xl−1 , Xl−1) ,             ject queries with the text embeddings of the category names.
+                                                                   Moreover, following [81], a binary CE loss Lce and Dice
+where l denotes the layer index, and X0sub = E sub , X0obj =       loss Ldice are leveraged for segmentation.
+E obj . Following LRP C layers of interaction, we compute
+the cosine similarity between the refined subject and ob-                      Lobj = λcls Locls + λce Lce + λdice Ldice ,                  (11)
+ject embeddings, resulting in a Pair Confidence Matrix             where λcls , λce , λdice are the parameter weights.
+C = cos(XLsub , XLobj ). We then perform a top-k selec-            Object Association Loss. To optimize the object associa-
+tion on the C, with the top-k indices used to retrieve the         tor, we take the ground-truth association matrix, which is a
+corresponding subject and object queries from XLsub ,XLobj ,       binary matrix, as the supervised signal. Due to the sparsity of
+which are denoted as Qsub and Qobj respectively.                   the association matrix, we utilize a weighted binary CE loss,
+3.6. Relation Detector                                             Lass , to ensure stable training by significantly increasing the
+                                                                   weight of the positive entries in the matrix.
+After retrieving the potential subject and object queries from
+RPC, they are concatenated together along the length dimen-        Relation Classification Loss. For relation predicate classi-
+sion to construct relationship queries:                            fication, we employ a sigmoid CE loss Lrcls for the predicate
+                                                                   classification, similar to object category classification. In
+           Qrel = [Qsub + E sub ; Qobj + E obj ],           (9)    addition, to supervise the relation proposal constructor in se-
+where [; ] means the concatenation. Then, we employ a              lecting the most confidential object pairs for further relation
+transformer-based relation decoder applying cross-attention        classification, we utilize a weighted binary CE loss, Lpair ,
+with keys and values from contextualized input features and        on the pair confidence matrix C:
+self-attention on queries to predict the final relation:                                      Lrel = Lrcls + Lpair .                        (12)
+                Xlrel = Frel  rel
+                         CA (Xl−1 , H, H),                 (10)
+                                                                   Text-centric Scene Contrastive Learning. A significant
+where X0rel = Q is the relationship query features into
+                  rel
+                                                                   challenge when leveraging single-modal SG data for USG-
+the relation decoder. Since relationship analysis primarily        Par learning is the domain imbalance across modalities, com-
+focuses on examining semantic information, we leverage the         pounded by the lack of USG data for various modality com-
+contextualized representations generated by each modality-         binations, which can result in suboptimal performance. To
+specific encoder as H. After applying Lrel transformer layer,      address these, we propose a text-centric scene contrastive
+we apply a relationship classifier on the refined relationship     learning approach that aligns other modalities with text data,
+queries XLrel to predict the final relationship probabilities.     attributed with two key advantages: 1) TSG data encompass
+                                                                   the most diverse and general domain, and 2) binding infor-
+3.7. Training with Domain-balancing Strategy
+                                                                   mation from other modalities into text effectively addresses
+This section elaborates on the training objectives and strate-     the scarcity of USG data for certain modality combinations
+gies to optimize our system.
+  Modality   Dataset            #Obj. #Rela.  #Tri.     #Ins.             Method          Backbone R/mR@20 R/mR@50 R/mR@100
+  Text       FACTUAL [43]       4,042 1,607  40,149    40,369             IMP [87]          R50     16.5 / 6.5  18.2 / 7.1  18.6 / 7.2
+             VG [36]            5,996 1,024 1,683,231 108,077             Motifs [95]       R50     20.0 / 9.1  21.5 / 9.6  22.0 / 9.7
+  Image
+             PSG [89]            133    56   275,371 48,749               VCTree [75]       R50     20.6 / 9.7 22.1 / 10.2 22.5 / 10.2
+             AG [31]              36    25   772,013 288,782              GPS-Net [45]      R50     17.8 / 7.0  19.6 / 7.5  20.1 / 7.7
+  Video
+             PVSG [91]           126    65    4,587      400              PSGTR [89]        R50    28.4 / 16.6 34.4 / 20.8 36.3 / 22.1
+  3D         3DDSG [77]          528    39   543,956    1,335             PSFormer [89]     R50    18.1 / 14.8 19.6 / 20.1 17.4 / 18.7
+             S −I               6,089 1,235 1,791,309 124,357             HiLo [103]        R50    34.1 / 23.7 40.7 / 30.3 43.0 / 33.1
+             S −V                150   132    6,751      400              DSGG [28]         R50    32.7 / 30.8 42.8 / 38.8 50.0 / 43.4
+  Multimodal S − D               724   257   230,865 46,173               Pair-Net [81]     R50    29.6 / 24.7 35.6 / 28.5 39.6 / 30.6
+             I−V                 126    65    4,587      400              Pair-Net [81]    Swin-B  33.3 / 25.4 39.3 / 28.2 42.4 / 29.7
+             I−D                 345    75    7,689    4,492              USG-Par♮ (Ours) OpenCLIP 35.7 / 29.9 44.6 / 40.9 51.3 / 42.7
+                                                                          USG-Par (Ours) OpenCLIP 36.9 / 32.1 46.4 / 41.7 52.4 / 44.6
+Table 1. Statistics of SG datasets. ‘#Obj.’ and ‘#Rela.’ denote the
+number of the object and relation categories, respectively. ‘#Tri.’ is   Table 2. Evaluation on the PSG [89] under the SGDet task. ♮ means
+relation triplets count, and ‘#Ins.’ is instance count.                  the model is trained solely on the corresponding single-modality
+                                                                         dataset, here, PSG. The top baseline results are underlined, and the
+[23, 104]. Considering the unique characteristics of SG, we              best overall performance is highlighted in bold. The tables below
+design both object-level and relation-level text-centric con-            follow the same format.
+trastive learning, as illustrated in Fig. 4. Given text-* pairs
+                                                                           Method                  R/mR@20       R/mR@50       R/mR@100
+as inputs, where * represents image, video, or 3D modali-
+                                                                           IPS+T+1D Conv. [91]     2.79 / 1.24   2.80 / 1.47   3.10 / 1.59
+ties, we extract textual queries QT and other modal queries                IPS+T+Trans. [91]       4.02 / 1.75   4.41 / 1.86   4.88 / 2.03
+Q∗ , ∗ ∈ {I, V, D}. Positive targets are constructed when                  VPS+1D Conv. [91]       0.60 / 0.27   0.73 / 0.28   0.76 / 0.29
+corresponding textual objects are present in other modal-                  VPS+Trans. [91]         0.75 / 0.36   0.91 / 0.39   0.94 / 0.40
+                                                                           USG-Par♮ (Ours)         4.68 / 2.01   5.37 / 2.02   6.15 / 3.03
+ities; otherwise, they serve as negative targets. Thus, the                USG-Par (Ours)          5.08 / 2.23   6.64 / 2.36   7.45 / 3.76
+object-level text-centric contrastive loss is formulated as:
+                                                                                      Table 3. Evaluation on the PVSG [91].
+               X                    exp(x · y+ )
+   Locons = −       log                                    ,             and enrich captions, allowing for flexible and partially non-
+                         exp(x · y+ ) + y− exp(x · y− )
+                                         P
+                 +
+                 y                                                       literal associations with visual content. Additionally, for
+                                                            (13)         image-video cross-modal SGs, we pair randomly selected
+where x, y+ , and y− are query embeddings of text-* pairs,               frames with temporally non-adjacent video segments. Simi-
+their positive targets, and negative targets, sampled from ob-           larly, we pair 2D image views with corresponding 3D scenes
+ject queries QT and Q∗ , respectively, Similarly, we compute             for image-3D cross-modal SGs. Tab. 1 shows the statis-
+the relation-level text-centric contrastive loss Lrcons . The to-        tics of the datasets, and we provide further details on data
+tal contrastive loss is given by Lcons = Locons + Lrcons .               construction in the Appendix.
+Training Target in Total. We combine all four loss terms
+                                                                         Evaluation Metrics. We evaluate our methods following
+in a linear manner as our final loss function:
+                                                                         three standard evaluation tasks: 1) predicate classification
+           L = αLobj + βLass + γLrel + ηLcons ,                  (14)    (PreCls); 2) scene graph classification (SGCls); 3) scene
+where α, β, γ and η are the weights for the loss terms.                  graph detection (SGDet). Following previous work [81], we
+                                                                         adopt Recall@K (R@K) and mean Recall@K (mR@K) as
+4. Experimental Settings                                                 evaluation metrics to measure the fraction of ground truth
+Datasets and Resources. We conduct experiments on two                    hit in the top K predictions, where K ∈ {10, 20, 50, 100}.
+distinct groups of datasets to comprehensively evaluate our              For the TSG, we compute the Set Match and SPICE as
+method’s SG generation capability in single and multiple                 in [43] for evaluation.
+modalities. 1) Single modality, we employ a range of                     Implementation. We initialize the text and image en-
+well-established datasets: VG [36] and PSG [89] for im-                  coders using OpenCLIP [57]. Following the approach in
+ages, AG [31] and PVSG[91] for videos, 3DDSG [77] for                    [10, 42], we design the pixel decoder. For the point encoder,
+3D scenes, and FACTUAL [43] for text-based scenes. No-                   we adopt Point-BERT [94] as the initialization, and for the
+tably, some of these datasets provide only bounding box                  point decoder, inspired by [94], we implement a hierarchical
+annotations; thus, we use SAM-2 [58] to generate pseudo-                 propagation strategy with distance-based interpolation. The
+segmentation masks, using the bounding boxes as prompts.                 mask decoder follows the design in [10]. We set the number
+2) Multiple modalities, on the one hand, we construct mul-               of predefined learnable queries to 100. The object associator
+timodal SGs by leveraging paired text-image/video/3D data.               is implemented as a 3-layer CNN with a kernel size of 3 × 3.
+We utilize GPT-4o [55] to parse initial TSGs from textual                The relation decoder comprises a 6-layer transformer with
+captions, and then link textual and visual objects through               an embedding dimension of 256. During training, we used
+label matching. To increase the diversity and richness of                the AdamW optimizer with an initial learning rate of 10e − 4.
+textual descriptions in these multimodal pairs, we rephrase              More implementation details can refer to the Appendix.
+   Method
+                                SGCls                   PreCls                                  Baseline       Baseline + MSG              Baseline + USG
+                                                                                       85                                                      26
+                           R@20/50/100              R@20/50/100
+
+
+
+
+                                                                                                                                        EM@1
+                                                                               F1(%)
+
+
+
+
+                                                                                                           F1(%)
+   SGPN [78]              27.0 / 28.8 / 29.0       51.9 / 58.0 / 58.5                                              79
+                                                                                                                                               24
+   SGFN [84]              27.5 / 29.2 / 29.2       52.6 / 58.9 / 59.4                  83
+                                                                                                                   78
+   EdgeGCN [96]           28.0 / 29.8 / 29.8       54.7 / 60.9 / 61.5                                                                          22
+   KISGP [98]             28.5 / 30.0 / 30.1       59.3 / 65.0 / 65.3                       S + I (MRE)                 S + V (ED)             S + D (3DVQA)
+   Feng et al. [21]        - / 31.5 / 31.6          - / 31.5 / 31.6        Figure 5. Comparison of multimodal tasks with and without USG
+   VL-SAT [82]            32.0 / 33.5 / 33.7       67.8 / 79.9 / 80.8
+   CCL-3DDSG [8]          37.6 / 40.3 / 45.7       73.6 / 80.5 / 82.9      integration. Baselines: multimodal relation extraction (MRE) [85],
+   USG-Par♮ (Ours)        36.6 / 41.4 / 46.2       71.9 / 81.0 / 83.4      emotion detection (ED) [38], and 3D visual QA (3DVQA) [4].
+   USG-Par (Ours)         37.9 / 43.1 / 46.9       73.5 / 81.7 / 84.1
+                                                                              LN            Filter   Lass           S − I/V/D                  I−V     I−D
+     Table 4. Evaluation results on the 3DDSG [77] dataset.                   ×               ✓       ✓             4.6 / 3.8 / 1.7             18.2    12.4
+                                                                              ✓               ×       ✓            12.5 / 11.7/ 11.1            22.3    18.2
+                                 Random                   Length              ✓               ✓       ×            10.7 / 10.8 / 11.4           22.8    19.1
+ Method
+                           Set Match     SPICE     Set Match     SPICE        ✓               ✓       ✓            13.6 / 13.9 / 12.0           24.3    20.7
+ SPICE-Parser [1]            13.00        56.15       0.94        38.04
+ AMR-SG-T5 [11]              28.45        64.82      12.16        51.71
+                                                                           Table 7. Ablation study of object associator. “LN” means the linear
+ CDP-T5 [11]                 46.15        73.56      26.50        61.21    transformation. Association accuracy@5 scores are reported.
+ VG-T5 [67]                  11.54        47.46       2.94        42.98
+ FACTUAL-T5 (pre) [43]       79.77        92.91      42.35        82.43    tiple modalities, we conduct experiments using a collec-
+ FACTUAL-T5 [43]             79.44        92.23      38.65        80.76    tion of pair-wise multimodal datasets. As a baseline, we
+ USG-Par♮ (Ours)             80.40        87.53      39.75        83.69
+ USG-Par (Ours)              82.40        88.12      43.83        84.38
+                                                                           adopt a pipeline approach, applying the best SG parser for
+                                                                           each modality independently and then combining them to-
+      Table 5. Performance on the FACTUAL [43] dataset.                    gether. As shown in Tab. 6, our model, trained exclusively
+Method        S −I        S −V       S −D        I−D         I−V           on corresponding multimodal data, achieves superior USG
+            75.4 / 25.4 73.3 / 1.9 71.1 / 13.3 39.1 / 12.6 35.4 / 4.2      generation performance compared to separate SG parsers,
+            [43] + [81] [43] + [91] [43] + [8] [81] + [91] [81] + [8]      demonstrating its ability to leverage cross-modal comple-
+USG-Par♭    78.6 / 26.2 76.4 / 2.0 74.9 / 15.4 40.4 / 13.7 37.6 / 4.2
+USG-Par                                                                    mentary information to enhance accuracy. Furthermore, joint
+         79.6 / 29.2     79.4 / 2.2   77.9 / 17.4 43.3 / 16.7 41.6 / 7.2
+ - Lcons                                                                   training on all multimodal datasets consistently achieves the
+USG-Par 80.3 / 32.4      80.6 / 2.4   79.2 / 20.2 47.3 / 18.6 42.7 / 9.5   highest performances, underscoring USG-Par’s effectiveness
+Table 6. For SGDet task evaluation on multimodal inputs, we apply          in generating USGs across diverse multimodal scenarios.
+separate SG parsers per modality as referenced. ♭ means raining on
+                                                                           5.2. Ablations and Discussions
+corresponding multimodal data only, and −Lcons denotes training
+without text-centric scene contrastive loss. We separately report the      Taking one step further, here we give more discussions and
+Set Match and mR@50 scores for text and other modalities.                  in-depth analyses to reveal how the system advances.
+                                                                           1) Probing Advantage of USG over Singleton SG Rep-
+5. Results and Analyses
+                                                                           resentations. Fig. 5 compares the performance of mul-
+5.1. Main Observations                                                     timodal tasks with and without USG integration. Across
+We compare USG-Par with the existing methods on single                     tasks—multimodal relation extraction (MRE), emotion de-
+and multiple modalities data.                                              tection (ED), and 3D visual QA (3DVQA)—the incorpora-
+1) USG Generation in Single Modality. We present the                       tion of USG consistently improves results over baselines.
+experimental results for both single-dataset training and joint            Additionally, USG shows superior performance compared
+training across multiple datasets, as shown in Tab. 2 3 4 5.               to MSG, which is constructed through a pipeline approach,
+Additional results on other datasets are provided in Appendix.             highlighting the advantages of USG representations.
+In the single-dataset training setting, our model achieves                 2) The Necessity of Each Component of Object Associa-
+comparable performance to the best-performing baselines                    tor. Tab. 7 presents an ablation study on each component
+and even slightly surpasses them on certain datasets, such                 of the object associator. Firstly, removing the transformation
+as PVSG. This demonstrates the effectiveness of our model                  linear layer—computing cosine similarity directly without
+design across different modalities, highlighting its capacity              modality-specific transformations—leads to the lowest per-
+to enhance performance on individual datasets. When com-                   formance, as the model struggles to effectively associate
+paring our joint-training results with baselines, our model                objects across modalities. Incorporating the filter further
+consistently outperforms across all datasets. For example,                 enhances performance by excluding low-confidence pairs.
+on PSG, our method shows an average R@K score improve-                     Finally, adding a supervised signal to the association matrix
+ment of 3.2, indicating that joint learning effectively lever-             significantly improves guidance for both the filter learner
+ages single-modal SG data to boost overall performance.                    and the linear layer, enabling more precise performance.
+2) USG Generation across Multiple Modalities. To eval-                     3) The Necessity of Each Component of RPC. Tab. 8
+uate our model’s performance in parsing USG across mul-                    presents ablation studies on the effectiveness of each com-
+                          PSG        PVSG       3DDSG      FACTUAL               standing      on
+Proj. RAC Lpair                                                           person on       dirt    tree                                 tree      on       dirt
+                                                                          in front of
+                     R/mR@50 R/mR@50 R/mR@50 Set Match                                            bottle
+                                                                           elephant ISG
+                                                                                                                                            standing
+                                                                                                                                           in front of standing
+✓       ✓       ×    38.4 / 31.4 4.4 / 1.8 18.9 / 14.0 79.1               in front of                                                                     on
+                                                                                                                                       Jumbo Peterpartner
+✓       ×       ✓    32.5 / 26.5 2.3 / 1.1  17.9 / 7.2 76.3               elephant             person                                     feeding     of
+                                                                               feeding                                                                partner
+×       ✓       ✓    36.5 / 28.5 4.2 / 1.5 18.6 / 14.9 78.9
+×       ×             2.5 / 1.9  0.5 / 0.4  1.6 / 1.2  64.5              Jumbo                   Peter                                                  using
+
+
+
+
+                                                                                                                                         in front of
+                ✓
+
+
+
+
+                                                                                                                                                                in front of
+                                                                                     feeding
+✓       ✓       ✓    44.6 / 40.9 5.4 / 2.3 21.8 / 15.4 80.4                                                Peter is feeding Jumbo
+                                                                           standing in                     using a bottle. His part-
+                                                                             front of           using                                              bottle
+Table 8. Ablation study of the RPC. “Proj.” denotes the sub-                                               ner is standing in front           elephant
+                                                                                                           of the Jumbo.
+ject/object projector, and “RAC” is the two-way relation-aware           partner        TSG       bottle                                               USG
+cross-attention module. The evaluation is exclusively performed        Figure 6. The USG derived from image and text and wrong associ-
+on the corresponding dataset.                                          ation built between ISG and TSG by the pipeline method.
+                    PSG           PVSG        3DDSG        FACTUAL
+ Architecture                                                          6. Related Work
+                R/mR@50         R/mR@50      R/mR@50       Set Match
+ MLP            34.1 / 20.7      3.6 / 1.0    12.1 / 7.3      61.2
+                                                                       Over decades, SGs have garnered substantial research atten-
+ w/o FCA
+      rel       39.6 / 28.4      4.5 / 1.6   16.7 / 10.0      73.5     tion [36, 43, 77, 95], where various definitions of SG repre-
+ Ours           44.6 / 40.9      5.4 / 2.3   21.8 / 15.4      80.4     sentations under different modalities and settings are devel-
+Table 9. Different Architectures for relation decoder. “w/o FCA
+                                                             rel
+                                                                 ”     oped [31, 36, 37, 63, 77], including image SG [33, 36, 95],
+denotes removing the cross-attention layers.                           textual SGs [43, 63] video [36], 3D [77, 84], and even more
+                                                                       settings such as panoptic SG [89–91] and ego-view SG
+ponent of RPC. Our findings indicate all three components              [62], etc. SGs can accurately capture the semantics of a
+contribute to the performance. Notably, removing the pro-              scene while filtering out undesired visual information. Thus,
+jection and RAC layers leads to model divergence, resulting            SGs have been widely applied to various downstream tasks
+in no correct predictions, as object queries lack essential            [63, 74, 83, 100]. While almost all existing SG research is
+pairwise information and contain only category details. Ad-            confined to modeling within a single modality, we realize
+ditionally, removing the pair loss, which encodes critical             that real-world scenarios necessitate a universal SG represen-
+information on pair distributions to support pair proposal             tation capable of expressing information from various modal-
+matrix learning, also degrades performance.                            ities through a unified cross-modal perspective. This need
+4) The Architecture of Relation Decoder. We evaluate                   is particularly pressing with the development of multimodal
+different architectures for the relation decoder. The results          generalist and agent communities [6, 48, 86, 101], where
+are shown in Tab. 9. We find that the transformer-based archi-         an increasing number of applications require the ability to
+tecture outperforms the MLP-based approach. Additionally,              understand and process multimodal information. Therefore,
+integrating pairwise information with contextualized input             this paper for the first time explores a novel USG representa-
+through cross-attention further improves performance by                tion. Despite the existence of various SG generation methods
+preserving more input details.                                         for different SG types, there should currently not be a special-
+                                                                       ized approach for universally parsing SGs across modalities.
+5) The Impact of Text-centric Scene Contrastive Learn-                 Specifically, a unified model architecture is required for both
+ing. In Tab. 6, we compare the model equipped with and                 modeling modality-invariant SG information and efficiently
+without contrastive learning. The results indicate that apply-         preserving the complementary modality-specific scene.
+ing contrastive learning yields consistent improvements in
+USG generation across all multimodal datasets. This sug-               7. Conclusion
+gests that contrastive learning effectively mitigates modality         This paper presents a Universal Scene Graph (USG), a novel
+gaps, leading to enhanced overall performance.                         representation that characterizes comprehensive semantic
+5.3. Qualitative Case Study with Visualization                         scenes from any combination of modality inputs, encom-
+Finally, we visualize a USG of both image and text inputs              passing both modality-invariant and modality-specific as-
+from our system. As in Fig. 6, the pipeline approach, which            pects. To generate USG effectively, we develop USG-Par, a
+applies separate SG parsing of each modality and then com-             niche-targeting parser for end-to-end USG generation. USG-
+bines them, often leads to incorrect associations, such as             Par addresses the critical challenges of cross-modal object
+an erroneous relation between “person” and “Jumbo”. Con-               alignment and out-of-domain generalization by incorporat-
+versely, we find that USG can offer a more comprehensive               ing an object associator that bridges modality gaps and a
+scene representation by accurately aligning cross-modal ob-            text-centric scene contrasting learning mechanism that miti-
+jects and integrating information from both modalities. For            gates domain imbalances. Through extensive experiments,
+instance, the USG correctly identifies “Peter” as the person           we demonstrate that USG provides a more powerful and
+holding the bottle and “Jumbo” as fed elephant while also              comprehensive semantic scene representation compared to
+effectively integrating other visual elements, e.g., trees and         standalone SGs. Also USG-Par achieves superior efficacy,
+dirt. we provide more visualizations in the Appendix.                  offering a strong benchmark method for USG.
+References                                                         [16] Hao Fei, Shengqiong Wu, Wei Ji, Hanwang Zhang, and
+                                                                        Tat-Seng Chua. Dysen-vdm: Empowering dynamics-aware
+ [1] Peter Anderson, Basura Fernando, Mark Johnson, and                 text-to-video diffusion with llms. In CVPR, 2024. 1
+     Stephen Gould. SPICE: semantic propositional image cap-
+                                                                   [17] Hao Fei, Shengqiong Wu, Wei Ji, Hanwang Zhang, Meishan
+     tion evaluation. In ECCV, pages 382–398, 2016. 7
+                                                                        Zhang, Mong-Li Lee, and Wynne Hsu. Video-of-thought:
+ [2] Anurag Arnab, Chen Sun, and Cordelia Schmid. Unified               Step-by-step video reasoning from perception to cognition.
+     graph structured models for video understanding. In ICCV,          In ICML, 2024. 1
+     pages 8097–8106, 2021. 3                                      [18] Hao Fei, Shengqiong Wu, Meishan Zhang, Min Zhang, Tat-
+ [3] Anurag Arnab, Chen Sun, and Cordelia Schmid. Unified               Seng Chua, and Shuicheng Yan. Enhancing video-language
+     graph structured models for video understanding. In ICCV,          representations with structural spatio-temporal alignment.
+     pages 8097–8106, 2021. 4                                           CoRR, abs/2406.19255, 2024. 2
+ [4] Daichi Azuma, Taiki Miyanishi, Shuhei Kurita, and Motoaki     [19] Mingtao Feng, Haoran Hou, Liang Zhang, Yulan Guo, Hong-
+     Kawanabe. Scanqa: 3d question answering for spatial scene          shan Yu, Yaonan Wang, and Ajmal Mian. Exploring hier-
+     understanding. In CVPR, pages 19107–19117, 2022. 7                 archical spatial layout cues for 3d point cloud based scene
+ [5] Nicolas Carion, Francisco Massa, Gabriel Synnaeve, Nicolas         graph prediction. IEEE Transactions on Multimedia, 2023.
+     Usunier, Alexander Kirillov, and Sergey Zagoruyko. End-            4
+     to-end object detection with transformers. In ECCV, pages     [20] Mingtao Feng, Haoran Hou, Liang Zhang, Zijie Wu, Yulan
+     213–229, 2020. 2                                                   Guo, and Ajmal Mian. 3d spatial multimodal knowledge
+                                                                        accumulation for scene graph prediction in point cloud. In
+ [6] Shivam Chandhok. Scenegpt: A language model for 3d
+                                                                        CVPR, pages 9182–9191, 2023. 4
+     scene understanding. CoRR, abs/2408.06926, 2024. 1, 8, 2
+                                                                   [21] Mingtao Feng, Haoran Hou, Liang Zhang, Zijie Wu, Yulan
+ [7] Dave Zhenyu Chen, Angel X. Chang, and Matthias Nießner.
+                                                                        Guo, and Ajmal Mian. 3d spatial multimodal knowledge
+     Scanrefer: 3d object localization in RGB-D scans using
+                                                                        accumulation for scene graph prediction in point cloud. In
+     natural language. In ECCV, pages 202–221, 2020. 8
+                                                                        CVPR, pages 9182–9191, 2023. 7
+ [8] Lianggangxu Chen, Xuejiao Wang, Jiale Lu, Shaohui Lin,        [22] Shengyu Feng, Hesham Mostafa, Marcel Nassar, Somdeb
+     Changbo Wang, and Gaoqi He. Clip-driven open-vocabulary            Majumdar, and Subarna Tripathi. Exploiting long-term de-
+     3d scene graph generation via cross-modality contrastive           pendencies for generating dynamic scene graphs. In WACV,
+     learning. In CVPR, pages 27863–27873, 2024. 2, 7                   pages 5119–5128, 2023. 2
+ [9] Zhanwen Chen, Saed Rezayi, and Sheng Li. More knowl-          [23] Rohit Girdhar, Alaaeldin El-Nouby, Zhuang Liu, Mannat
+     edge, less bias: Unbiasing scene graph generation with ex-         Singh, Kalyan Vasudev Alwala, Armand Joulin, and Ishan
+     plicit ontological adjustment. In WACV, pages 4012–4021,           Misra. Imagebind one embedding space to bind them all. In
+     2023. 4                                                            CVPR, pages 15180–15190, 2023. 6
+[10] Bowen Cheng, Ishan Misra, Alexander G. Schwing, Alexan-       [24] Kristen Grauman, Andrew Westbury, Eugene Byrne,
+     der Kirillov, and Rohit Girdhar. Masked-attention mask             Zachary Chavis, Antonino Furnari, Rohit Girdhar, Jackson
+     transformer for universal image segmentation. In CVPR,             Hamburger, Hao Jiang, Miao Liu, Xingyu Liu, Miguel Mar-
+     pages 1280–1289, 2022. 2, 4, 6, 5, 8                               tin, Tushar Nagarajan, Ilija Radosavovic, Santhosh Kumar
+[11] Woo Suk Choi, Yu-Jung Heo, Dharani Punithan, and                   Ramakrishnan, Fiona Ryan, Jayant Sharma, Michael Wray,
+     Byoung-Tak Zhang. Scene graph parsing via abstract mean-           Mengmeng Xu, Eric Zhongcong Xu, Chen Zhao, Siddhant
+     ing representation in pre-trained language models. In Work-        Bansal, Dhruv Batra, Vincent Cartillier, Sean Crane, Tien
+     shop on DLG4NLP, pages 30–35, 2022. 2, 7                           Do, Morrie Doulaty, Akshay Erapalli, Christoph Feichten-
+[12] Yuren Cong, Wentong Liao, Hanno Ackermann, Bodo                    hofer, Adriano Fragomeni, Qichen Fu, Abrham Gebrese-
+     Rosenhahn, and Michael Ying Yang. Spatial-temporal trans-          lasie, Cristina González, James Hillis, Xuhua Huang, Yifei
+     former for dynamic scene graph generation. In ICCV, pages          Huang, Wenqi Jia, Weslie Khoo, Jáchym Kolár, Satwik Kot-
+     16352–16362, 2021. 2                                               tur, Anurag Kumar, Federico Landini, Chao Li, Yanghao Li,
+                                                                        Zhenqiang Li, Karttikeya Mangalam, Raghava Modhugu,
+[13] Yuren Cong, Michael Ying Yang, and Bodo Rosenhahn.                 Jonathan Munro, Tullie Murrell, Takumi Nishiyasu, Will
+     Reltr: Relation transformer for scene graph generation.            Price, Paola Ruiz Puentes, Merey Ramazanova, Leda Sari,
+     IEEE Trans. Pattern Anal. Mach. Intell., 45(9):11169–11183,        Kiran Somasundaram, Audrey Southerland, Yusuke Sugano,
+     2023. 2, 3                                                         Ruijie Tao, Minh Vo, Yuchen Wang, Xindi Wu, Takuma
+[14] Angela Dai, Angel X. Chang, Manolis Savva, Maciej Halber,          Yagi, Ziwei Zhao, Yunyi Zhu, Pablo Arbeláez, David Cran-
+     Thomas A. Funkhouser, and Matthias Nießner. Scannet:               dall, Dima Damen, Giovanni Maria Farinella, Christian
+     Richly-annotated 3d reconstructions of indoor scenes. In           Fuegen, Bernard Ghanem, Vamsi Krishna Ithapu, C. V.
+     CVPR, pages 2432–2443, 2017. 8                                     Jawahar, Hanbyul Joo, Kris Kitani, Haizhou Li, Richard A.
+[15] Dima Damen, Hazel Doughty, Giovanni Maria Farinella,               Newcombe, Aude Oliva, Hyun Soo Park, James M. Rehg,
+     Sanja Fidler, Antonino Furnari, Evangelos Kazakos, Da-             Yoichi Sato, Jianbo Shi, Mike Zheng Shou, Antonio Tor-
+     vide Moltisanti, Jonathan Munro, Toby Perrett, Will Price,         ralba, Lorenzo Torresani, Mingfei Yan, and Jitendra Malik.
+     and Michael Wray. Scaling egocentric vision: The EPIC-             Ego4d: Around the world in 3, 000 hours of egocentric
+     KITCHENS dataset. CoRR, abs/1804.02748, 2018. 6                    video. In CVPR, pages 18973–18990, 2022. 6
+[25] Elias Greve, Martin Büchner, Niclas Vödisch, Wolfram Bur-   [38] Bobo Li, Hao Fei, Fei Li, Tat-seng Chua, and Donghong
+     gard, and Abhinav Valada. Collaborative dynamic 3d scene           Ji. Multimodal emotion-cause pair extraction with holistic
+     graphs for automated driving. In ICRA, pages 11118–11124,          interaction and label constraint. ACM Trans. Multimedia
+     2024. 2                                                            Comput. Commun. Appl., 2024. 7
+[26] Qiao Gu, Ali Kuwajerwala, Sacha Morin, Krishna Murthy         [39] Lin Li, Guikun Chen, Jun Xiao, Yi Yang, Chunping Wang,
+     Jatavallabhula, Bipasha Sen, Aditya Agarwal, Corban                and Long Chen. Compositional feature augmentation for
+     Rivera, William Paul, Kirsty Ellis, Rama Chellappa, Chuang         unbiased scene graph generation. In ICCV, pages 21628–
+     Gan, Celso Miguel de Melo, Joshua B. Tenenbaum, Antonio            21638, 2023. 2
+     Torralba, Florian Shkurti, and Liam Paull. Conceptgraphs:     [40] Rongjie Li, Songyang Zhang, Bo Wan, and Xuming He.
+     Open-vocabulary 3d scene graphs for perception and plan-           Bipartite graph network with adaptive message passing for
+     ning. In ICRA, pages 5021–5028, 2024. 4                            unbiased scene graph generation. In CVPR, pages 11109–
+[27] Peng Hao, Xiaobing Wang, Yingying Jiang, Hanchao Jia,              11119, 2021. 2
+     and Xiaoshuai Hao. BCTR: bidirectional conditioning trans-    [41] Rongjie Li, Songyang Zhang, and Xuming He. SGTR: end-
+     former for scene graph generation. CoRR, abs/2407.18715,           to-end scene graph generation with transformer. In CVPR,
+     2024. 2                                                            pages 19464–19474, 2022. 2, 3
+[28] Zeeshan Hayder and Xuming He. DSGG: dense relation            [42] Xiangtai Li, Haobo Yuan, Wei Li, Henghui Ding, Size Wu,
+     transformer for an end-to-end scene graph generation. In           Wenwei Zhang, Yining Li, Kai Chen, and Chen Change Loy.
+     CVPR, pages 28317–28326, 2024. 6                                   Omg-seg: Is one model good enough for all segmentation?
+[29] Fabian Caba Heilbron, Victor Escorcia, Bernard Ghanem,             In CVPR, pages 27948–27959, 2024. 6, 8
+     and Juan Carlos Niebles. Activitynet: A large-scale video     [43] Zhuang Li, Yuyang Chai, Terry Yue Zhuo, Lizhen Qu, Gho-
+     benchmark for human activity understanding. In CVPR,               lamreza Haffari, Fei Li, Donghong Ji, and Quan Hung Tran.
+     pages 961–970, 2015. 8                                             FACTUAL: A benchmark for faithful and consistent textual
+[30] Jinbae Im, JeongYeon Nam, Nokyung Park, Hyungmin Lee,              scene graph parsing. In Findings of ACL, pages 6377–6390,
+     and Seunghyun Park. EGTR: extracting graph from trans-             2023. 2, 6, 7, 8
+     former for scene graph generation. In CVPR, pages 24229–      [44] Tsung-Yi Lin, Michael Maire, Serge J. Belongie, James
+     24238, 2024. 2                                                     Hays, Pietro Perona, Deva Ramanan, Piotr Dollár, and
+[31] Jingwei Ji, Ranjay Krishna, Li Fei-Fei, and Juan Carlos            C. Lawrence Zitnick. Microsoft COCO: common objects in
+     Niebles. Action genome: Actions as compositions of spatio-         context. In ECCV, pages 740–755, 2014. 6, 7
+     temporal scene graphs. In CVPR, pages 10233–10244, 2020.      [45] Xin Lin, Changxing Ding, Jinquan Zeng, and Dacheng Tao.
+     6, 8, 2                                                            Gps-net: Graph property sensing network for scene graph
+[32] Bowen Jiang, Zhijun Zhuang, and Camillo Jose Taylor. En-           generation. In CVPR, pages 3743–3752, 2020. 6, 2
+     hancing scene graph generation with hierarchical relation-    [46] Hengyue Liu and Bir Bhanu. Repsgg: Novel representa-
+     ships and commonsense knowledge. CoRR, abs/2311.12889,             tions of entities and relationships for scene graph generation.
+     2023. 4                                                            IEEE Transactions on Pattern Analysis and Machine Intelli-
+[33] Justin Johnson, Ranjay Krishna, Michael Stark, Li-Jia Li,          gence, pages 1–18, 2024. 2
+     David A. Shamma, Michael S. Bernstein, and Li Fei-Fei.        [47] Hengyue Liu, Ning Yan, Masood S. Mortazavi, and Bir
+     Image retrieval using scene graphs. In CVPR, pages 3668–           Bhanu. Fully convolutional scene graph generation. In
+     3678, 2015. 3, 8, 2                                                CVPR, pages 11546–11556, 2021. 2
+[34] Denis Kalkofen, Erick Méndez, and Dieter Schmalstieg.        [48] Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee.
+     Comprehensible visualization for augmented reality. IEEE           Visual instruction tuning. In NeurIPS, 2023. 8, 2
+     Trans. Vis. Comput. Graph., 15(2):193–204, 2009. 2            [49] Zhuang Liu, Hanzi Mao, Chao-Yuan Wu, Christoph Feicht-
+[35] Kibum Kim, Kanghoon Yoon, Jaehyeong Jeon, Yeonjun                  enhofer, Trevor Darrell, and Saining Xie. A convnet for the
+     In, Jinyoung Moon, Donghyun Kim, and Chanyoung Park.               2020s. CVPR, 2022. 4
+     LLM4SGG: large language models for weakly supervised          [50] Cewu Lu, Ranjay Krishna, Michael S. Bernstein, and Li
+     scene graph generation. In CVPR, pages 28306–28316, 2024.          Fei-Fei. Visual relationship detection with language priors.
+     7                                                                  In ECCV, pages 852–869, 2016. 2
+[36] Ranjay Krishna, Yuke Zhu, Oliver Groth, Justin Johnson,       [51] Yichao Lu, Himanshu Rai, Jason Chang, Boris Knyazev,
+     Kenji Hata, Joshua Kravitz, Stephanie Chen, Yannis Kalan-          Guang Wei Yu, Shashank Shekhar, Graham W. Taylor, and
+     tidis, Li-Jia Li, David A. Shamma, Michael S. Bernstein,           Maksims Volkovs. Context-aware scene graph generation
+     and Li Fei-Fei. Visual genome: Connecting language and             with seq2seq transformers. In ICCV, pages 15911–15921,
+     vision using crowdsourced dense image annotations. Int. J.         2021. 2
+     Comput. Vis., 123(1):32–73, 2017. 1, 2, 3, 6, 8, 7            [52] Matthias Minderer, Alexey A. Gritsenko, Austin Stone,
+[37] Alina Kuznetsova, Hassan Rom, Neil Alldrin, Jasper R. R.           Maxim Neumann, Dirk Weissenborn, Alexey Dosovitskiy,
+     Uijlings, Ivan Krasin, Jordi Pont-Tuset, Shahab Kamali,            Aravindh Mahendran, Anurag Arnab, Mostafa Dehghani,
+     Stefan Popov, Matteo Malloci, Alexander Kolesnikov, Tom            Zhuoran Shen, Xiao Wang, Xiaohua Zhai, Thomas Kipf,
+     Duerig, and Vittorio Ferrari. The open images dataset V4.          and Neil Houlsby. Simple open-vocabulary object detection.
+     Int. J. Comput. Vis., 128(7):1956–1981, 2020. 8, 2                 In ECCV, pages 728–755, 2022. 5
+[53] Sayak Nag, Kyle Min, Subarna Tripathi, and Amit K. Roy-        [67] Sahand Sharifzadeh, Sina Moayed Baharlou, Martin Schmitt,
+     Chowdhury. Unbiased scene graph generation in videos. In            Hinrich Schütze, and Volker Tresp. Improving scene graph
+     CVPR, pages 22803–22813, 2023. 3                                    classification by exploiting knowledge from texts. In AAAI,
+[54] Alejandro Newell and Jia Deng. Pixels to graphs by asso-            pages 2189–2197, 2022. 7
+     ciative embedding. In NeurIPS, pages 2171–2180, 2017.          [68] Piyush Sharma, Nan Ding, Sebastian Goodman, and Radu
+     2                                                                   Soricut. Conceptual captions: A cleaned, hypernymed, im-
+[55] OpenAI.                    Gpt-4      technical      report.        age alt-text dataset for automatic image captioning. In ACL,
+     https://openai.com/research/gpt-4, 2023.                            pages 2556–2565, 2018. 7
+     https://openai.com/research/gpt-4. 6, 7                        [69] Guibao Shen, Luozhou Wang, Jiantao Lin, Wenhang Ge,
+[56] Khoi Pham, Chuong Huynh, Ser-Nam Lim, and Abhinav                   Chaozhe Zhang, Xin Tao, Yuan Zhang, Pengfei Wan,
+     Shrivastava. Composing object relations and attributes for          Zhongyuan Wang, Guangyong Chen, Yijun Li, and Ying-
+     image-text matching. In CVPR, pages 14354–14363, 2024.              Cong Chen. Sg-adapter: Enhancing text-to-image gener-
+     1, 2                                                                ation with scene graph guidance. CoRR, abs/2405.15321,
+[57] Alec Radford, Jong Wook Kim, Chris Hallacy, A. Ramesh,              2024. 1
+     Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda           [70] Gunnar A. Sigurdsson, Gül Varol, Xiaolong Wang, Ali
+     Askell, Pamela Mishkin, Jack Clark, Gretchen Krueger, and           Farhadi, Ivan Laptev, and Abhinav Gupta. Hollywood in
+     Ilya Sutskever. Learning transferable visual models from            homes: Crowdsourcing data collection for activity under-
+     natural language supervision. In ICML, 2021. 4, 6, 8                standing. In ECCV, pages 510–526, 2016. 6
+[58] Nikhila Ravi, Valentin Gabeur, Yuan-Ting Hu, Ronghang          [71] Robyn Speer, Joshua Chin, and Catherine Havasi. Concept-
+     Hu, Chaitanya Ryali, Tengyu Ma, Haitham Khedr, Roman                net 5.5: An open multilingual graph of general knowledge.
+     Rädle, Chloé Rolland, Laura Gustafson, Eric Mintun, Junt-         In AAAI, pages 4444–4451, 2017. 4
+     ing Pan, Kalyan Vasudev Alwala, Nicolas Carion, Chao-          [72] Gopika Sudhakaran, Devendra Singh Dhami, Kristian Kerst-
+     Yuan Wu, Ross B. Girshick, Piotr Dollár, and Christoph             ing, and Stefan Roth. Vision relation transformer for unbi-
+     Feichtenhofer. SAM 2: Segment anything in images and                ased scene graph generation. In ICCV, pages 21825–21836,
+     videos. CoRR, abs/2408.00714, 2024. 6                               2023. 2
+[59] Sonia Raychaudhuri, Tommaso Campari, Unnat Jain, Mano-
+                                                                    [73] Yu Sun, Shuohuan Wang, Yu-Kun Li, Shikun Feng, Hao
+     lis Savva, and Angel X. Chang. Reduce, reuse, recycle:
+                                                                         Tian, Hua Wu, and Haifeng Wang. ERNIE 2.0: A continual
+     Modular multi-object navigation. CoRR, abs/2304.03696,
+                                                                         pre-training framework for language understanding. In AAAI,
+     2023. 1, 4
+                                                                         pages 8968–8975, 2020. 4
+[60] Shaoqing Ren, Kaiming He, Ross B. Girshick, and Jian
+                                                                    [74] Tomu Tahara, Takashi Seno, Gaku Narita, and Tomoya
+     Sun. Faster R-CNN: towards real-time object detection with
+                                                                         Ishikawa. Retargetable AR: context-aware augmented re-
+     region proposal networks. In NeurIPS, pages 91–99, 2015.
+                                                                         ality in indoor scenes based on 3d scene graph. In ISMAR,
+     2
+                                                                         pages 249–255, 2020. 2, 8
+[61] Tianhe Ren, Shilong Liu, Ailing Zeng, Jing Lin, Kun-
+                                                                    [75] Kaihua Tang, Hanwang Zhang, Baoyuan Wu, Wenhan Luo,
+     chang Li, He Cao, Jiayu Chen, Xinyu Huang, Yukang
+                                                                         and Wei Liu. Learning to compose dynamic tree structures
+     Chen, Feng Yan, Zhaoyang Zeng, Hao Zhang, Feng Li, Jie
+                                                                         for visual contexts. In CVPR, pages 6619–6628, 2019. 2, 6
+     Yang, Hongyang Li, Qing Jiang, and Lei Zhang. Grounded
+     SAM: assembling open-world models for diverse visual           [76] Yao Teng, Limin Wang, Zhifeng Li, and Gangshan Wu.
+     tasks. CoRR, abs/2401.14159, 2024. 7, 8                             Target adaptive context aggregation for video scene graph
+[62] Ivan Rodin, Antonino Furnari, Kyle Min, Subarna Tripathi,           generation. In ICCV, pages 13668–13677, 2021. 3, 4
+     and Giovanni Maria Farinella. Action scene graphs for long-    [77] Johanna Wald, Helisa Dhamo, Nassir Navab, and Federico
+     form understanding of egocentric videos. In CVPR, pages             Tombari. Learning 3d semantic scene graphs from 3d indoor
+     18622–18632, 2024. 8, 2                                             reconstructions. In CVPR, pages 3960–3969, 2020. 2, 3, 6,
+[63] Sebastian Schuster, Ranjay Krishna, Angel X. Chang, Li Fei-         7, 8
+     Fei, and Christopher D. Manning. Generating semantically       [78] Johanna Wald, Helisa Dhamo, Nassir Navab, and Federico
+     precise scene graphs from textual descriptions for improved         Tombari. Learning 3d semantic scene graphs from 3d indoor
+     image retrieval. In EMNLP Workshop, pages 70–80, 2015.              reconstructions. In CVPR, pages 3960–3969, 2020. 7
+     3, 8, 2                                                        [79] Guan Wang, Zhimin Li, Qingchao Chen, and Yang Liu.
+[64] Zachary Seymour, Niluthpol Chowdhury Mithun, Han-Pang               OED: towards one-stage end-to-end dynamic scene graph
+     Chiu, Supun Samarasekera, and Rakesh Kumar. Graphmap-               generation. In CVPR, pages 27938–27947, 2024. 2, 3
+     per: Efficient visual navigation by scene graph generation.    [80] Junyao Wang, Arnav Vaibhav Malawade, Junhong Zhou,
+     In ICPR, pages 4146–4153, 2022. 2                                   Shih-Yuan Yu, and Mohammad Abdullah Al Faruque. RS2G:
+[65] Xindi Shang, Tongwei Ren, Jingfan Guo, Hanwang Zhang,               data-driven scene-graph extraction and embedding for ro-
+     and Tat-Seng Chua. Video visual relation detection. In ACM          bust autonomous perception and scenario understanding. In
+     MM, 2017. 2                                                         WACV, pages 7478–7487, 2024. 2
+[66] Xindi Shang, Donglin Di, Junbin Xiao, Yu Cao, Xun Yang,        [81] Jinghao Wang, Zhengyu Wen, Xiangtai Li, Zujin Guo,
+     and Tat-Seng Chua. Annotating objects and relations in              Jingkang Yang, and Ziwei Liu. Pair then relation: Pair-
+     user-generated videos. In ICMR, pages 279–287, 2019. 2, 6           net for panoptic scene graph generation. IEEE Transactions
+     on Pattern Analysis and Machine Intelligence, pages 1–14,        [97] Ce Zhang, Simon Stepputtis, Joseph Campbell, Katia P.
+     2024. 1, 5, 6, 7, 2, 3                                                Sycara, and Yaqi Xie. Hiker-sgg: Hierarchical knowledge
+[82] Ziqin Wang, Bowen Cheng, Lichen Zhao, Dong Xu, Yang                   enhanced robust scene graph generation. In CVPR, pages
+     Tang, and Lu Sheng. VL-SAT: visual-linguistic semantics               28233–28243, 2024. 4
+     assisted training for 3d semantic scene graph prediction in      [98] Shoulong Zhang, Shuai Li, Aimin Hao, and Hong Qin.
+     point cloud. In CVPR, pages 21560–21569, 2023. 2, 7                   Knowledge-inspired 3d scene graph prediction in point
+[83] Abdelrhman Werby, Chenguang Huang, Martin Büchner,                   cloud. In NeurIPS, pages 18620–18632, 2021. 7
+     Abhinav Valada, and Wolfram Burgard. Hierarchical open-          [99] Yong Zhang, Yingwei Pan, Ting Yao, Rui Huang, Tao Mei,
+     vocabulary 3d scene graphs for language-grounded robot                and Chang Wen Chen. End-to-end video scene graph gener-
+     navigation. CoRR, abs/2403.17846, 2024. 2, 8, 4                       ation with temporal propagation transformer. IEEE Trans.
+[84] Shun-Cheng Wu, Johanna Wald, Keisuke Tateno, Nassir                   Multim., 26:1613–1625, 2024. 2
+     Navab, and Federico Tombari. Scenegraphfusion: Incremen-        [100] Yunpeng Zhang, Deheng Qian, Ding Li, Yifeng Pan,
+     tal 3d scene graph prediction from RGB-D sequences. In                Yong Chen, Zhenbao Liang, Zhiyao Zhang, Shurui Zhang,
+     CVPR, pages 7515–7525, 2021. 2, 7, 8                                  Hongxu Li, Maolei Fu, Yun Ye, Zhujin Liang, Yi Shan, and
+[85] Shengqiong Wu, Hao Fei, Yixin Cao, Lidong Bing, and                   Dalong Du. Graphad: Interaction scene graph for end-to-end
+     Tat-Seng Chua. Information screening whilst exploiting!               autonomous driving. CoRR, abs/2403.19098, 2024. 2, 8
+     multimodal relation extraction with feature denoising and       [101] Zhuosheng Zhang and Aston Zhang. You only look at
+     multimodal topic modeling. In ACL, pages 14734–14751,                 screens: Multimodal chain-of-action agents. In ACL, pages
+     2023. 7                                                               3132–3149, 2024. 8, 2
+[86] Shengqiong Wu, Hao Fei, Leigang Qu, Wei Ji, and Tat-Seng        [102] Chaofan Zheng, Xinyu Lyu, Yuyu Guo, Pengpeng Zeng,
+     Chua. Next-gpt: Any-to-any multimodal LLM. In ICML,                   Jingkuan Song, and Lianli Gao. Learning to generate scene
+     2024. 8, 2                                                            graph from head to tail. In ICME, pages 1–6, 2022. 2
+[87] Danfei Xu, Yuke Zhu, Christopher B. Choy, and Li Fei-Fei.       [103] Zijian Zhou, Miaojing Shi, and Holger Caesar. Hilo: Ex-
+     Scene graph generation by iterative message passing. In               ploiting high low frequency relations for unbiased panoptic
+     CVPR, pages 3097–3106, 2017. 6                                        scene graph generation. In ICCV, pages 21580–21591, 2023.
+[88] Danfei Xu, Yuke Zhu, Christopher B. Choy, and Li Fei-Fei.             6
+     Scene graph generation by iterative message passing. In         [104] Bin Zhu, Bin Lin, Munan Ning, Yang Yan, Jiaxi Cui, Hongfa
+     CVPR, pages 3097–3106, 2017. 2, 6                                     Wang, Yatian Pang, Wenhao Jiang, Junwu Zhang, Zong-
+[89] Jingkang Yang, Yi Zhe Ang, Zujin Guo, Kaiyang Zhou,                   wei Li, Caiwan Zhang, Zhifeng Li, Wei Liu, and Li Yuan.
+     Wayne Zhang, and Ziwei Liu. Panoptic scene graph genera-              Languagebind: Extending video-language pretraining to n-
+     tion. In ECCV, pages 178–196, 2022. 2, 6, 8, 3                        modality by language-based semantic alignment. In ICLR,
+[90] Jingkang Yang, Jun CEN, Wenxuan Peng, Shuai Liu,                      2024. 6
+     Fangzhou Hong, Xiangtai Li, Kaiyang Zhou, Qifeng Chen,
+     and Ziwei Liu. 4d panoptic scene graph generation. In
+     NeurIPS, 2023.
+[91] Jingkang Yang, Wenxuan Peng, Xiangtai Li, Zujin Guo,
+     Liangyu Chen, Bo Li, Zheng Ma, Kaiyang Zhou, Wayne
+     Zhang, Chen Change Loy, and Ziwei Liu. Panoptic video
+     scene graph generation. In CVPR, pages 18675–18685, 2023.
+     6, 7, 8, 2
+[92] Jing Yu, Yuan Chai, Yujing Wang, Yue Hu, and Qi Wu.
+     Cogtree: Cognition tree loss for unbiased scene graph gener-
+     ation. In IJCAI, pages 1274–1280, 2021. 4
+[93] Ruichi Yu, Ang Li, Vlad I. Morariu, and Larry S. Davis.
+     Visual relationship detection with internal and external lin-
+     guistic knowledge distillation. In ICCV, pages 1068–1076,
+     2017. 4
+[94] Xumin Yu, Lulu Tang, Yongming Rao, Tiejun Huang, Jie
+     Zhou, and Jiwen Lu. Point-bert: Pre-training 3d point cloud
+     transformers with masked point modeling. In CVPR, pages
+     19291–19300, 2022. 4, 6, 8
+[95] Rowan Zellers, Mark Yatskar, Sam Thomson, and Yejin
+     Choi. Neural motifs: Scene graph parsing with global con-
+     text. In CVPR, pages 5831–5840, 2018. 1, 2, 6, 8
+[96] Chaoyi Zhang, Jianhui Yu, Yang Song, and Weidong Cai.
+     Exploiting edge-oriented reasoning for 3d point-based scene
+     graph analysis. In CVPR, pages 9705–9715, 2021. 7
+                                      Universal Scene Graph Generation
+                                                Supplementary Material
+Overview                                                             Text SG: Abstract/Descriptive                     Image SG: Visually Detailed
+
+The appendix presents more details and additional results                                                        headphones           person        phone
+                                                                                                                                              watching
+                                                                     headphones      Peter            iphone                wearing
+not included in the main paper due to page limitation. The                  wearing         focus on
+                                                                                                                 windowin front of          lying
+list of items included are:                                                    relax on
+                                                                                                                              sofa in front of wall
+                                                                                   sofa       in       room         beside         back
+    • Specification on Task Definition and Setups in §A;                                                             curtain        plant
+    • Full-version Related Work in §B;
+    • Limitations and Future Direction in §C;                         P e te r wearing headphones
+    • Extended Framework Details in §D;                               relaxes on a sofa, focused
+    • Detailed Experimental Settings in §E;                           on his iphone in a room.
+    • Extended Experimental Results in §F.                                    Text
+                                                                                                                                      Image
+
+A. Specification on Task Definition and Setups                                 headphones                     Peter                        iphone
+                                                                                             wearing                       watching
+
+A.1. SG Structure                                                               window in front of              relax on
+                                                                                                                             in front of
+                                                                                                                                            wall
+                                                                                                                sofa
+Here, we provide a detailed description of the nodes and                                     beside
+                                                                                                                back
+edges in the USG. The USG is formally represented as                              curtain  room          plant
+G U = {O, R}, where O = {O∗ }, ∗ ∈ {I, V, D, S} rep-                                 Universal SG: Modality-comprehensive
+resents the set of objects across all modalities. Each node                         Source modality of objects: Text Image
+involves a category label coi ∈ CO and a segmentation mask          Figure 7. Illustration of USG generated from text and image scenes.
+mi . For instance, as illustrated in Fig. 7, the objects node
+set O in the USG comprises of textual objects node set
+OS in the TSG and visual objects node set OI in the ISG.            lations between nodes from other modalities and the objects
+R = {R∗ , R∗×⋄ }, ∗, ⋄ ∈ {I, V, D, S} and ∗ =        ̸ ⋄. R∗ in-    in each frame of the VSG. For instance, as illustrated in
+cludes both intra-modality relationships and inter-modality         Fig. 10, the objects “Peter”, “sofa” and “iPhone” from the
+associations R∗×⋄ . We define the existence of inter-modality       TSG are associated with the objects in every frame of the
+associations between objects from different modalities if they      VSG. To ensure the USG comprehensively represents the
+correspond to the same underlying object described in dis-          scene described by the video and other modalities, the scene
+tinct modalities. For example, as shown in Fig. 7, the textual      from the other modalities is added as the first frame in the
+object “Peter” in the TSG should correspond to the visual           USG. The remaining frames correspond to the frame-level
+object “person” in the ISG. Similarly, as depicted in Fig. 9,       scene graph representations from the VSG. This paradigm
+the “sofa” in the 3DSG aligns with the “sofa” in the ISG.           advances in integrating multimodal information much more
+When inter-modality associations exist, the corresponding           seamlessly, enriching the holistic representation of the scene
+objects are merged into a unified node, as shown in Fig. 7,         within the USG framework.
+with the example of the “headphones” This merged node
+represents the object across multiple modalities, retaining a
+single category label. Typically, the object name from the          A.2. Combination of All Possible Modalities
+textual modality is prioritized for its flexibility and precision
+in description. Similarly, the relation predicate is preferen-      Here we provide illustrations of the USG obtained under
+tially adopted from the TSG, as it often provides a more            different modal combinations:
+descriptive and accurate representation. For instance, in              • Text-Image: in Fig.7.
+Fig. 7, the relationship between “Peter” and “sofa” in the             • Text-3D: in Fig.8.
+USG is “relax on” derived from the TSG, rather than “lying”            • Text-Video: in Fig.10.
+which might be less descriptive. Despite merging nodes,                • Image-3D: in Fig.9.
+the segmentation masks from all modalities are preserved.              • Text-Image-3D: in Fig.11.
+This ensures that each modality’s unique contribution to the           • Text-Image-Video-3D (Complete combination): in
+object’s representation is maintained within the USG.                    Fig.12 we provide a full illustration of USG obtained
+    In addition, to parse the USG for scenes derived from                from the total 4 modalities, i.e., text, image, video, and
+video and other modalities, we first establish association re-           3D.
+ Text SG: Abstract/Descriptive                                    3DSG: Spatial/Immersive                         modalities and settings are developed [31, 36, 37, 63, 77].
+                                                               attached to    leaning sofa close by
+                                                                                                                  Initially, centered on the static vision, researchers pioneered
+ headphones          Peter           iphone                 frame        wall against             door            image SG [33, 36, 95], where nodes represent objects and
+          wearing          focus on                                                   table standing
+             relax on                                             plant close by               on vase            edges denote the relationships between them. Subsequently,
+                                                                           close by
+                sofa          in      room                                        standing
+                                                                                                 standing on
+                                                                                                                  textual SGs [43, 63] are proposed to acknowledge that the
+                                                                  carpet                             floor
+                                                                                     on
+                                                                                                                  textual modality can also convey a complete scene. Later
+                                                                                                                  studies extended SG representations to other data modalities,
+   P e te r wearing headphones                                                                                    including video [36] and 3D [77, 84], and even to more set-
+   relaxes on a sofa, focused
+   on his iphone in a room.
+                                                                                                                  tings such as panoptic SG [89, 91] and ego-view SG [62],
+                                                                                                                  etc. SGs can accurately capture the semantics of a scene
+             Text
+                                                                            3D Point Cloud                        while filtering out undesired visual information. Moreover,
+                                                                                                                  different modalities possess distinct characteristics, allowing
+           headphones                                Peter                                  iphone
+                          wearing                                                watching                         SGs to model semantic scenes with subtly different traits.
+             window
+                             in front of
+                                                          relax on
+                                                                           leaning against wall                   Thus, SGs have been widely applied to various downstream
+                 beside                            sofa close by                   attached to                    tasks [63, 74, 83, 100].
+                                                         plant
+            curtain
+                       room                                close by
+                                                                                              frame                  As previously emphasized, the definitions of SGs across
+                                                                               standing on
+                                                                                                                  differing modalities result in varied features and strengths.
+                                                   table                                      vase
+                          door
+                                            standing
+                                                           standing on
+                                                                                                                  While almost all existing SG research is confined to model-
+                            carpet                          floor
+                                               on
+                                                                                                                  ing within a single modality, we recognize that real-world
+                      Universal SG: Modality-comprehensive                                                        scenarios necessitate a universal SG representation capable
+                      Source modality of objects: Text  3D
+                                                                                                                  of expressing information from various modalities through
+Figure 8. Illustration of USG generated from text and 3D scenes.                                                  a unified cross-modal perspective. This need is particularly
+    Image SG: Visually Detailed                                      3DSG: Spatial/Immersive
+                                                                                                                  pressing with the development of multimodal generalist and
+                                                                                                                  agent communities [6, 48, 86, 101], where an increasing
+                                                                                       leaning sofa close by
+                                                                                                                  number of applications require the ability to understand and
+                                                                    attached to
+headphones          person           phone
+          wearing         watching                             frame           wall against                door
+ windowin front of      lying
+                                                                      plant        close by    table standing
+                                                                                                        on vase
+                                                                                                                  process multimodal information. Therefore, this paper ex-
+    beside
+              sofa in front of wall
+                   back
+                                                                                      close by
+                                                                                   standing
+                                                                                                 standing on      plores a novel USG representation for the first time.
+     curtain        plant                                             carpet          on             floor
+
+                                                                                                                  B.2. SG Generation Methods
+                                                                                                                  Historically, SG generation methods can be broadly catego-
+                                                                                                                  rized into two main groups: two-stage methodsand one-stage
+                 Image                                                       3D Point Cloud                       methods. The two-stage methods [39, 40, 45, 51, 72, 88, 95,
+                                                                                                                  102] involve training separate object detection and relation
+            headphones
+                           wearing
+                                               person                 watching
+                                                                                 phone                            prediction models sequentially. Typically, these methods rely
+ curtainbesidewindow in front of                       lying
+                                                                      in front of wallattached to
+                                                                                                 frame            on off-the-shelf object detectors, such as Faster R-CNN [60],
+                                             sofa
+                                                       back          table standing vase
+                                                                                                                  to detect N object queries. Subsequently, features such as
+                                                                                                                  appearance, spatial information, labels, depth, and masks are
+                                                         close by
+                                           plant                                 on
+                       door                            close by          standing on
+                                                                                                                  extracted for all possible combinations of detected objects.
+                                                                                                                  These features are then fed into the relation prediction model
+                                           standing
+                               carpet         on     floor
+                       Universal SG: Modality-comprehensive                                                       to infer relationships between each object pair. Despite
+                       Source modality of objects: Image    3D
+                                                                                                                  achieving high relation extraction performance, the inher-
+Figure 9. Illustration of USG generated from image and 3D scenes.                                                 ent limitations of the pipeline approaches, particularly the
+                                                                                                                  separate training of components, lead to significant model
+B. Full-version Related Work                                                                                      complexity.
+                                                                                                                     To address this issue, recent research has shifted towards
+B.1. SG Representation and Definition                                                                             one-stage methods [13, 46, 79, 81], where the object detector
+Research on SG generation [36, 43, 77, 95] has long been a                                                        and relation extractor are trained in an end-to-end manner.
+significant focus within the relevant community, aiming to                                                        Early studies proposed fully convolutional SG generation
+deeply understand environmental scenes by not only recog-                                                         models [47] and adopted pixel-based approaches [54]. Fol-
+nizing individual objects but also the semantic relationships                                                     lowing the success of DETR [5], a Transformer-based one-
+between them. Over decades of development, SGs have                                                               stage object detector, many one-stage SGG studies [22, 30]
+garnered substantial research attention and efforts, where                                                        have adopted similar approaches. These methods effectively
+various definitions of SG representations under different                                                         model SG generation by introducing object queries or triplet
+                Text SG: Abstract/Descriptive                                               Video SG: Dynamic/Sequential
+
+
+                headphones       Peter              iphone
+                        wearing          focus on
+                           relax on
+                                                                                                                                                                        …
+                              sofa            in     room
+
+
+                 P e te r wearing headphones
+                 relaxes on a sofa, focused
+                 on his iphone in a room.                                                                                                                           …
+
+                          Text
+                                                                                                                         Video
+
+
+
+
+                                                           Universal SG: Modality-comprehensive
+                                                          Source modality of objects: Text Video
+                                     Figure 10. Illustration of USG generated from text and video scenes.
+
+                Text SG: Abstract/Descriptive                     Image SG: Visually Detailed                                    3DSG: Spatial/Immersive
+
+                                                                                                                                attached to     leaning sofa close by
+                                                             headphones           person           phone
+               headphones       Peter          iphone                   wearing        watching                            frame           wall against            door
+                       wearing         focus on                                      lying                                                    close by table standing
+                          relax on
+                                                             windowin front of                                                     plant                        on vase
+                                                                beside
+                                                                          sofa in front of wall                                               close by    standing on
+                            sofa         in        room                        back                                                           standing
+                                                                 curtain        plant                                            carpet          on        floor
+
+
+                 P e te r wearing headphones
+                 relaxes on a sofa, focused
+                 on his iphone in a room.
+                         Text
+                                                                              Image                                                     3D Point Cloud
+
+                                                      headphones               Peter                         iphone
+                                                                  wearing                      watching
+                                                                                    relax on
+                                     curtainbeside window in front of                          in front of
+                                                                                                             wall                 frame
+                                                                                                                         attached to            Source modality
+                                                                            sofa
+                                                                                    back
+                                                                                     plant                                                        of objects:
+                                                           room                                       door
+                                                                                    close by
+                                                                                                             standing
+                                                                                                                                                Text      Image     3D
+                                                            carpet          table                               on
+                                                                                     standing on
+                                                                                                                        vase
+                                                                                floor
+                                                          Universal SG: Modality-comprehensive
+
+                                Figure 11. Illustration of USG generated from text, image and 3D scenes.
+
+queries. For instance, RelTR [13] introduced paired subject                                    to detect triplets without relying on an object detector.
+and object queries, while SGTR [41] proposed composi-
+tional queries decoupled into subjects, objects, and predi-                                        Beyond architectural designs, several studies [2, 53, 76,
+cates. PairNet [81] designed separate relation and object                                      79] have focused on leveraging modality-specific character-
+queries, and PSGTR [89] directly introduced triplet queries                                    istics to enhance model performance. In the context of VSG
+                                                                                               generation, modeling spatio-temporal features has garnered
+Figure 12. Illustration of USG generated from the text, image, video, and 3D in a stereoscopic viewpoint. This is also the full version of the
+first illustration shown in the Introduction section of the main article. Best viewed via zooming in.
+
+
+significant attention. For example, TRACE [76] employs a                  ularly long videos, such scenarios are common in real-world
+hierarchical tree structure to aggregate spatial context, and             applications. Addressing this limitation presents a valuable
+[3] utilizes message passing in a spatio-temporal graph to                direction for future research.
+enhance feature representation. For 3DSG generation, some
+researches [19, 20] focus on leveraging the spatial layout                C.2. Future Work on USG
+clues to enhance the 3DSG generation performance.                         Going forward on the USG we introduced in this work, we
+    Additionally, to improve performance, many works are                  believe the following aspects should be worth exploring.
+no longer limited to using only visual appearance. Exter-                    First, the USG has significant potential for enhancing the
+nal knowledge has been incorporated to further improve SG                 capabilities of multimodal large language models (MLLMs).
+generation performance [19, 20, 92, 93]. This includes sta-               As a modality-invariant universal representation, the USG
+tistical priors [93], such as co-occurrence frequencies, and              facilitates fine-grained alignment across different modalities,
+commonsense knowledge [9, 32, 97] extracted from sources                  including object-level and relation-level correspondences.
+like Wikipedia or ConceptNet [71].                                        Inspired by the concept of knowledge masking [73], which
+    However, existing SG generation methods remain                        focuses on learning more structured knowledge by masking
+modality-specific, with no approach capable of supporting                 phrases and named entities rather than individual sub-words,
+SG generation across different modalities. This limitation                USG can inject fine-grained, structured semantic knowledge
+highlights the emergency of developing a universal SG gen-                across modalities into MLLMs. This approach enables the
+eration method.                                                           alignment of semantic information at a granular level, foster-
+                                                                          ing a deeper and more precise understanding of cross-modal
+C. Limitations and Future Direction                                       content. Specifically, pre-training tasks can be designed
+C.1. Potential Limitations                                                by masking and predicting various types of nodes in the
+Despite its contributions, this work has several limitations:             USG, parsed from multimodal inputs. These nodes may
+Firstly, the proposed method faces challenges in associating              correspond to objects, relationships, or attributes, and their
+objects across different modalities in highly complex and                 structured representation allows the model to learn modality-
+densely populated scenes. For instance, distinguishing be-                invariant features effectively. This strategy not only im-
+tween multiple similar individuals or matching objects with               proves the alignment across modalities but also strengthens
+their textual object names often requires external common-                the model’s reasoning and generalization capabilities.
+sense knowledge, which is beyond the current scope of the                    Beyond MLLMs, the USG can also serve as a foundation
+model. Secondly, in video scenes, the method struggles with               for numerous downstream applications. In robotics, USG
+particular long-term understanding, particularly in object                could facilitate embodied AI tasks, such as planning [26]
+tracking and relation recognition over extended temporal                  and navigation [59, 83], by providing a universally struc-
+sequences. While our current dataset does not include partic-             tured understanding of dynamic, multimodal environments.
+Moreover, in creative applications like content generation,                         Ml−1∗
+                                                                                            is the binarized output of the resized mask prediction
+USG could bridge visual and textual modalities to produce                           from the previous l − 1-th Transformer decoder layer:
+contextually coherent and semantically rich outputs, such as                                                          if Ml−1
+                                                                                                                           ∗
+                                                                                                           
+                                                                                             ∗                 0              (x, y) = 1
+image-to-text descriptions or cross-modal story generation.                               Ml−1   (x, y) =                                     (16)
+                                                                                                              −∞          otherwise
+   Looking ahead, the universality of USG should lead to
+                                                                                    Moreover, in practice, for image, video, and 3D data, H ∗ is
+unified multimodal benchmarks, where diverse tasks can be
+                                                                                    sampled from the multi-scale feature output {H I/V/D }3i=1 ,
+evaluated under a consistent framework. This would drive
+                                                                                    while for text, we employ H S across different scales. In ad-
+innovation in creating truly generalizable AI systems capa-
+                                                                                    dition, for video data, to effectively capture the temporal in-
+ble of reasoning across multiple domains and modalities.
+                                                                                    formation across frames, we incorporate a transformer-based
+Developing such systems could redefine the boundaries of
+                                                                                    temporal encoder Ftemp to model the temporal relationships
+multimodal AI, enabling applications that require deep con-
+                                                                                    between objects. After Lmask layers, we obtain the refined
+textual understanding, such as virtual reality simulations,                                                      Nq∗
+autonomous systems, and interactive AI agents.                                      object queries Q∗ = {qi∗ }i=1    .
+
+D. Extended Framework Details
+
+
+
+
+                                                                                       Object Embeddings
+
+
+
+
+                                                                                                              Cross-Attention
+
+
+
+
+                                                                                                                                                Self-attention
+                                                                                                                                  Add & Norm
+
+
+
+
+                                                                                                                                                                 Add & Norm
+
+
+
+
+                                                                                                                                                                                    Add & Norm
+                                                                                                                                               k
+In this part, we try to give a more comprehensive picture
+
+
+
+
+                                                                                                                   q k v
+
+
+
+
+                                                                                                                                                                              FFN
+                                                                                                                                               v
+of our USG generation framework, as an extension to the
+description in the main article.
+
+
+
+
+                                                                                                                                                          q
+                                                                 Add & Norm             Subject Embeddings
+
+
+
+                                                                                                               k v
+                                                                                                                Cross-Attention
+
+
+
+
+                                                                                                                                               Self-attention
+                                                                                                                                  Add & Norm
+
+
+
+
+                                                                                                                                                                 Add & Norm
+
+
+
+
+                                                                                                                                                                                    Add & Norm
+                                                                                                                                                k v q
+                                                                     FFN
+
+
+
+
+                                                                                                                                                                              FFN
+                                                                                                                        q
+                                                                 Add & Norm
+Object Queries
+
+
+
+
+                                  Image Objects
+
+
+
+
+                   Mask Decoder
+                                                                 Self-attention
+                                                             k        v       q
+                                                                                    Figure 14. The framework of two-way relation-aware object/subject
+                                                                 Add & Norm         interaction module.
+
+                                       Mask                  Masked Attention
+                  Multi-Scale                          k       v        q           D.2. Two-way Relation-aware Object/Subject Inter-
+                 Image Features
+                                                   Image                                  action
+                                                  Features
+                                                                   Object Queries
+                                                                                    The detailed framework of the two-way relation-aware ob-
+Figure 13. The framework of the mask decoder: multi-scale image                     ject/subject interaction module is demonstrated in Fig. 14.
+features are integrated to refine image object queries, following a                 The two inputs are object embeddings and subject embed-
+similar approach for other modalities such as text, video, and 3D.                  dings, and then the LRP C layers transformer layers with
+                                                                                    cross-attention and self-attention mechanisms perform to
+D.1. Mask Encoder                                                                   iteratively refine subject and object features as follows:
+                                                                                                                      obj→sub          obj    obj
+As depicted in Fig. 13, the randomly initialized object                                                      Xlsub = FCA        sub
+                                                                                                                              (Xl−1 , Xl−1 , Xl−1 ),
+queries are fed into the mask decoder, in which the multi-                                                                                                                                       (17)
+                                                                                                             Xlobj = FCA
+                                                                                                                      sub→obj   obj
+                                                                                                                              (Xl−1    sub
+                                                                                                                                    , Xl−1    sub
+                                                                                                                                           , Xl−1 ),
+scale image features are also injected by masked cross-
+attention to help refine the object query representations.                          where l denotes the layer index, and X0sub = E sub , X0obj =
+Specifically, following [10], we perform masked cross-                              E obj . We define the FCA (X, Y ) as:
+attention between modality-specific features H ∗∗ and the                            FCA (X, Y ) = softmax(Fq (X)⊤ · Fk (Y )) · Fv (Y ), (18)
+corresponding object query features Xl∗ ∈ RNq ×d , ∗ ∈                              where Fq (·), Fk (·) and Fv (·) are linear transformations as
+{I, V, D, S} as follows:                                                            typically applied in attention mechanisms.
+         Xl∗ = softmax(Ml−1
+                        ∗
+                            + Q∗l−1 Kl−1
+                                     ∗⊤     ∗
+                                         )Vl−1    ∗
+                                               + Xl−1 , (15)
+where Nq∗ is the number of queries and l is the layer in-
+                                                                                    D.3. Relation Decoder
+dex. X0∗ denotes input object query features to the mask                            As illustrated in Fig. 15, the relation encoder processes
+decoder. Q∗l−1 = Fq (Xl−1 ∗
+                             ), while Kl−1∗
+                                              = Fk (H ∗ ) and                       the relation queries Qrel alongside contextualized informa-
+Vl−1 = Fv (H ). Here, Fq (·), Fk (·) and Fv (·) are linear
+   ∗           ∗
+                                                                                    tion. Specifically, the initial relation queries are constructed
+transformations as typically applied in attention mechanisms.                       by concatenating the embeddings of selected subject-object
+                                                      Relation Triplets       closest cosine similarity to the text embeddings of all predi-
+                                                              MLP             cate candidates.
+            Text
+   Text                                                   Add & Norm
+           Encoder                                                            E. Detailed Experimental Settings
+                                                              FFN
+                                                                              E.1. Datasets
+            Image
+
+
+                               Relation Decoder
+  Image
+           Encoder                                        Add & Norm          To evaluate the efficacy of USG-Par, which supports both
+                                                                              single-modality and multi-modality scene parsing, we utilize
+                                                          Self-attention      existing single-modality datasets and a manually constructed
+  Video     Image
+  Frames   Encoder
+                                                      k        v       q      multimodal dataset.
+                                                          Add & Norm
+                                                                              E.1.1. Single-modal Dataset
+  Point     Point                                     Cross-Attention         The single-modality datasets used in our experiments are
+  Cloud    Encoder                                k     v        q            categorized into the following four groups based on modality:
+
+
+                                                           Relation Queries
+                                                                              Image: 1) Visual Genome (VG) [36]. We follow the
+           Figure 15. Illustration of relation decoder.                       protocols for the widely-used pre-processed subset VG150
+                                                                              [88], which contains the most frequent 150 entities and 50
+pairs. Then, to leverage complementary contextual infor-                      predicates. The dataset contains approximately 108k images,
+mation from multiple modalities, we propose to fuse the                       with 70% for training and 30% for testing. 2) Panoptic
+multimodal features to enhance the relation extraction per-                   Scene Graph (PSG) [89]. Filtered from COCO [44] and VG
+formance:                                                                     datasets [36], the PSG dataset contains 133 object classes,
+               H = [H S ; H̄ I ; H̄ V ; H̄ D ],       (19)                    including things, stuff, and 56 relation classes. This dataset
+where H represents the fused features, dependent on the                       has 46k training images and 2k testing images with panoptic
+input modalities. For example, given text, image, and 3D                      segmentation and scene graph annotation. We follow the
+inputs, H = [H S ; H̄ I ; H̄ D ]. Then, the fused features                    same data-processing pipelines from [89].
+are integrated using a cross-attention mechanism to retain
+critical relational information:                                              Video: 1) Action Genome (AG) [31] annotates 234,253
+   Xlrel = Frel       rel
+               CA (Xl−1 , H, H)
+                                                                              frame scene graphs for sampled frames from around 10K
+                             rel ⊤
+                                                      (20)                    videos, based on Charades dataset [70]. The annotations
+          = softmax(Fq (Xl−1    ) · Fk (H)) · Fv (H),
+                                                                              cover 35 object categories and 25 predicates. The overall
+where X0rel = Qrel is the initialized relationship query                      predicates consist of three types of predicates: attention,
+features into the relation decoder.                                           spatial, and contracting. 2) Panoptic Video Scene Graph
+                                                                              (PVSG) [91] consists of 400 videos, including 289 third-
+D.4. Inference
+                                                                              person videos from VidOR [66] and 111 egocentric videos
+During inference, our framework, developed as a USG parser,                   from EpicKitchens [15] and Ego4D [24]. Among the videos,
+supports both single-modality and multimodal input for USG                    62 videos feature birthday celebrations, while 35 videos cen-
+generation. For single-modality USG generation, we first                      ter around ceremonies, providing rich content for contextual
+perform object detection, select the most confidential relation               logic and reasoning.
+proposals, and finally perform the relationship classification.
+For multimodal USG generation, we introduce an object as-
+sociator to establish associations between object pairs across                3D: 3D Scene Graph (3DSG) [77] includes 1335 3D re-
+different modalities before object detection and relation clas-               constructed indoor scenes, 528 classes of objects, and 39
+sification. We leverage Hungarian Assignment to find the                      types of predicates.
+associated pairs. Beyond this step, the remaining procedure
+closely follows that of single-modality SG generation.                        Text: FACUTAL [43] is derived from VG [36] dataset,
+    For open-vocabulary USG generation, we compute the                        which includes 4,042 classes of objects, 1,607 types of pred-
+cosine similarity between each predicted object query em-                     icates, and 40,369 instances.
+bedding and a set of class label embeddings derived from
+CLIP [57]. The final label for each object is then assigned                   E.1.2. Multi-modal Dataset
+based on the highest cosine similarity score. Similarly, pred-                Here, we show the detailed process for constructing the USG
+icate classes are determined by selecting the label with the                  dataset involving two input modalities.
+                       Input Image                                Original Caption                              Enriched Caption
+                                                                                                 A man sits in a cushioned armchair, holding a
+                                                        A man sitting in a chair holds up a      blue toothbrush in one hand and an open paper
+                                                        toothbrush while opening a paper         bag in the other. A TV remote rests on the
+                                                        bag.                                     armrest, while a nearby table holds scattered
+                                                                                                 magazines and glasses.
+
+
+                                                        A workspace with a laptop                David is sitting in front of the while desk and
+                                                        displaying a green leaf wallpaper,       watching the laptop. Black speakers, a white
+                                                        accompanied by a monitor, speakers,      keyboard, a smartphone on a red mouse pad
+                                                        a keyboard, and multiple mice on a       with a beer logo, and two wireless mice on a
+                                                        white desk.                              white desk, all set in front of white curtains
+                                                                                                 with cables and a black dock behind.
+
+
+                                                        A girl is playing ball in the park.      A girl plays with a ball in a park surrounded by
+                                                                                                 grass, trees, and a nearby pathway ,
+                                                                                                 accompanied with her mother and her dog.
+
+
+                                                                                                 A baby plays with a balloon on a rug in the
+                                                        A baby is playing with a balloon in      living room, surrounded by a sofa with
+                                                        the living room.                         cushions, a coffee table holding magazines and
+                                                                                                 a remote, a toy box with stuffed animals and
+                                                                                                 blocks, and a TV paused on a cartoon
+
+                                                                                                 A small rectangular room features two single
+                                                                                                 beds along one wall, separated by a narrow
+                                                        A small rectangular room with two        gap, each with neatly tucked white bedding and
+                                                        single beds positioned parallel to       wooden frames. Between the beds, a small
+                                                        each other along one wall, separated     bedside table holds a lamp and a water bottle.
+                                                        by a small gap. A desk and chair are     Near the corner, a wooden desk with a
+                                                        located near the corner, with items      matching chair is cluttered with books, papers,
+                                                        like books and papers scattered on       and a laptop, with a coffee mug and a desk
+                                                        the desk.                                lamp placed on one side. Along the opposite
+                                                                                                 wall, a wardrobe with partially open doors
+                                                                                                 reveals hanging clothes and a suitcase stored at
+                                                                                                 the bottom.
+
+                                                                                                 An outdoor patio features wooden flooring
+                                                                                                 bordered by low, weathered wooden fencing
+                                                        A n outdoor patio area with wooden       with vertical slats. At the center of the space
+                                                        flooring and bordered by partial         stands a rectangular outdoor table with a glass
+                                                        fencing. At the center of the patio is   top, supported by a metal or wicker frame.
+                                                        a rectangular outdoor table with a       Surrounding the table are four matching
+                                                        glass top, surrounded by matching        wicker-style chairs with cushions. On the table,
+                                                        wicker-style chairs, two of which are    a small ceramic planter with succulents and a
+                                                        pulled slightly away from the table.     half-filled water glass rest alongside an open
+                                                                                                 book. A potted fern and a taller plant in a
+                                                                                                 terracotta pot sit near the fence on the left,
+                                                                                                 adding greenery to the scene
+
+           Figure 16. Examples of constructed Text-Image/Video/3D pair dataset with original caption and enriched caption.
+
+
+Text-Image (S − I). We leverage the three image caption                 CC caption dataset, and 57K images on the VG caption
+datasets: COCO caption [44], Conceptual (CC) caption [68],              dataset. Furthermore, we utilize GPT-4o to rephrase and en-
+and VG [36] caption to build the Text-Image pair-wise SG.               hance captions, aiming to increase the diversity and richness
+Specifically, following [35], we first employ the GPT-4o [55]           of textual descriptions, guided by the following prompts:
+to extract the triplets from the original caption. Then, we
+align entities in the triplets with entity classes of interest               Rephrase and Enrich captions
+and align predicates in the triplets with predicate classes of               Input Data: textual captions
+interest. Finally, for the VG dataset with ISG annotation, we                Instruction: From the given sentence, the task is to enrich
+link the textual and visual objects through label matching.                  the caption with reasonable scenes. Let’s take a few
+                                                                             examples to understand how to enrich the captions.
+For the COCO and CC datasets without annotated SG, we
+ground the extracted triplets over relevant image regions to                 [Example-1]:
+                                                                             Input: A lady and a child near a park bench with kites
+get localized triplets via state-of-the-art grounding methods,               and ducks flying in the sky and on the ground.
+i.e., Grounded SAM [61]. Finally, we led to utilizing 64K                    Output: A lady and a child near a park bench surrounded
+                                                                             by lush greenery, with colorful kites soaring in the sky,
+images on the COCO caption dataset, 145K images on the
+                                                                                                              S−I        S−V                 S−D
+
+    ducks flying overhead, and a few waddling on the ground.
+
+
+
+
+                                                                                                                         Accuracy@20
+                                                                          25                                                           15
+    Nearby, a serene pond reflects the vibrant scene, and
+
+
+
+
+                                                                   R@50
+                                                                          20
+    children can be seen playing in the background.                       15
+                                                                                                                                       10
+
+                                                                          10                                                           5
+    [Example-2]:
+    Input: Two men sit on a bench near the sidewalk and one                    0.0−0.2 0.2−0.4 0.4−0.6 0.6−0.8 0.8−1.0                      0.0−0.2 0.2−0.4 0.4−0.6 0.6−0.8 0.8−1.0
+    of them talks on a cell phone.                                                         Overlapping Ratio                                            Overlapping Ratio
+
+    Output: Two men sit on a wooden bench near a bustling
+    sidewalk, shaded by nearby trees. One of them is engaged       Figure 17. Performance of SGDet and association accuracy scores
+    in a conversation on his cell phone, gesturing slightly with   under varying overlap ratios between the two modalities.
+    his free hand, while the other man sits calmly, gazing at
+    passersby.
+    ...
+                                                                   positional information. The relationships among the detected
+                                                                   objects are then derived from the original 3DSG annotations,
+   We present two examples in the first two rows of Fig.           resulting in complete SG annotations for the 2D image views.
+16. After generating the enriched captions, we apply the           The associations between objects in the image and 3D scenes
+aforementioned method used for the original captions to            are determined by whether the 3D objects can be success-
+produce the final pairwise text-image SG annotations.              fully grounded in the image. By integrating ISGs, 3DSGs,
+                                                                   and association relations, we construct the final Image-3D
+Text-Video (S − V). To construct the text-video pairwise           pairwise USG dataset.
+USG dataset, we select 400 videos from ActivityNet [29],
+which includes dense caption annotations. Following the            E.2. Implementations
+procedure for text-image pairs, we first extract triplets and      We initialize the text and image encoders using Open-
+align the entities and predicates with relevant concepts. Fi-      CLIP [57], where the specific version of the image encoder
+nally, we track textual objects in the videos by integrating       is ConvNext-L. we design the pixel decoder by following the
+frame-level object grounding results using Grounded SAM            approach in [10, 42]. For the point encoder, we adopt Point-
+[61]. Additionally, we enrich the video captions to create tex-    BERT [94] as the initialization, and for the point decoder,
+tual SGs, incorporating partially nonliteral associations with     inspired by [94], we implement a hierarchical propagation
+the video content. We depict two examples in the middle            strategy with distance-based interpolation. After the encod-
+two rows of Fig. 16.                                               ing, all the features are projected into a 256-dimension using
+                                                                   a linear layer. The mask decoder follows the design in [10].
+Text-3D (S − D). To construct the text-3D pairwise USG             We set the number of predefined learnable queries to 100.
+dataset, we use the ScanRefer [7] dataset, which contains          The number of layers Lmask is set as 9, with 3 transformer
+46,173 descriptions of 724 object types across 800 ScanNet         layers per scale. The object associator is implemented as a
+[14] scenes. Triplets are extracted from these descriptions        3-layer CNN with a kernel size of 3 × 3. For the two-way
+using GPT-4o. Since ScanRefer provides object localiza-            relation-aware object/subject module, the number of layers,
+tions, we directly align textual entities with 3D objects to       LRP C , is set to 4. The relation decoder comprises a 6-layer
+establish associations between text and 3D data. Addition-         transformer with an embedding dimension of 256. During
+ally, we enrich the textual descriptions to create partially       training, we used the AdamW optimizer with an initial learn-
+overlapping text-3D USG datasets, enhancing diversity and          ing rate of 10e − 4 and a weight decay of 10e − 4. For
+coverage. Two examples are demonstrated in the last two            the object detection loss weights, we set the λce = 5.0 and
+rows of Fig. 16.                                                   λdice = 5.0, and λcls = 2.0 for predictions matched with
+                                                                   ground truth and 0.1 for the “no object”. In the final loss, we
+Image-Video (I − V). To construct the image-video pair-            set the loss weights α = 1.0, β = 1.0 and β = 0.8, η = 0.6.
+wise USG dataset, we utilize the existing PVSG [91] video
+dataset. Specifically, we select the first frame of each video     F. Extended Experimental Results
+to construct frame-level ISGs. We then extract temporally          We exhibit more experimental results here.
+non-adjacent video segments as the corresponding pairwise
+video. The associations between image objects and video            The Impact of the Overlap Ratio. We delve into the
+objects are derived from the original PVSG annotations, en-        analysis of the overlap ratio and its crucial role in influencing
+suring accurate cross-modal connections.                           the performance of USG-Par. To this end, the S − I, S − I,
+                                                                   and S − I datasets are divided into five groups with overlap
+Image-3D (I − D). To construct the Image-3D USG                    ratios ranging from 0.0 to 1.0. The results, presented in
+dataset, we leverage the existing 3DSG [77] dataset. Specifi-      Fig. 17, indicate that as the overlap ratio increases, the model
+cally, we randomly select 2D image views corresponding to          achieves more accurate SG generation. This improvement
+3D scenes. Using object annotations from the 3DSG dataset,         can be attributed to the increased similarity between the
+we ground the objects in the selected images to obtain their       two modalities, where complementary information enhances
+  S     I    V   D S −I S −V S −D I−V I−D
+  28.4 36.9 5.3 38.7 21.6 14.5 7.9 10.7 18.7
+  25.1 ×    ×    ×    -    -    -   -    -
+  27.6 34.0 ×    ×   16.0  -    -   -    -
+                                                                                                             A man sits in a cushioned armchair, holding
+  28.1 34.9 4.9 ×    19.2 14.0  -   -    -                                                                   a blue toothbrush in one hand and an open
+                                                                                                             paper bag in the other. A TV remote rests
+Table 10. The ablation of modality unification. mR@20 scores are                                             on the armrest, while a nearby table holds
+reported.                                                                                                    scattered magazines and glasses.
+                I−V                 I−D
+
+                • Only Corresponding Supervision.                          beside                  holding      man          holding             toothbrush      in   hand
+                 25.1                18.4                           magazines        paper bag
+                                                                                                                                        door-stuff
+                • No Supervision.                                                                                   sit on
+                                                                                                                                                      beside
+                                                                                                                                                                      wall
+                 23.4                16.8                                            armrest                         cushioned armchair
+                                                                                                                    nearby
+Table 11. Emergent zero-shot on the I − V/D dataset, where the                  rest on                                                          glasses
+model is only trained on S − I/V/D data.                                 TV remote
+                                                                                                    on                        on
+                                                                                                                                                 remote
+                                                                                                                table
+SG recognition performance. Furthermore, a higher overlap           Figure 18. Visualization of USG generated from text and image
+ratio allows the model to establish more precise associations
+between objects across modalities.
+The Effect of Modality Unification. Tab. 10 compares
+the performance of our method across different numbers of
+unified modalities. The results demonstrate that incorporat-
+ing additional modalities consistently improves performance                                                                                 A girl plays with a ball
+across all datasets. This observation highlights the com-                                                                                   in a park surrounded by
+                                                                                                                                            grass, trees, and a
+plementary nature of information across modalities when                                                                      …              nearby      pathway    ,
+representing a scene. By unifying multiple modalities, our                                                                                  accompanied with her
+                                                                                                                                            mother and her dog.
+model effectively leverages this complementary informa-
+tion, resulting in enhanced performance compared to using
+a single modality alone.
+The Emergent Capability of USG-Par. Tab. 11 presents
+the emergent zero-shot SG generation performance on I − V
+and I − D, where USG-Par is trained solely on S − I/V/D.                                                                                                               …
+The results indicate that our model achieves performance
+comparable to supervised learning approaches. This demon-
+strates the strong capability of USG-Par to align image,            Figure 19. Visualization of USG generated from text and video
+video, and 3D modalities effectively, leveraging text as a
+unifying bridge.
+More Visualizations. Here, we provide more visualiza-
+tions of generated USG from various input modality combi-
+nations, including 1) text + image in Fig. 18, 2) text + video
+in Fig. 19, and 2) image + 3D in Fig. 20.
+
+
+
+
+                                                                                pot       beside   frame        nearbywicker furniture
+                                                                                                                                beside                   chair
+                                                                                    in front of                                             on      on
+                                                                                                         lean against
+
+                                                                                    window                               plant         on
+                                                                                                         wall                                            floor
+
+                                                                   Figure 20. Visualization of USG generated from 3D and the corre-
+                                                                   sponding view image.
+

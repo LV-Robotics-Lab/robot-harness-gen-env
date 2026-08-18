@@ -1,0 +1,21 @@
+{
+  "schema_version": "usg_env_quality_reproduction.physics_run.v1",
+  "created_at_utc": "2026-08-17T17:06:52.610081+00:00",
+  "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "numpy": "1.26.4",
+  "sapien": "3.0.3",
+  "config_path": "/home/jingxiang/workspace/usg-env-quality-reproduction/config/experiment.json",
+  "config_sha256": "abf9067f2b928f17bf2b38c6cc76f773223da33c7e3f36a7e5de3686806c5f5f",
+  "catalog_sha256": "9ad08664823ee1aaf7b9792c10d62d64f60010f2f67ae65fedbc05ff81019be6",
+  "cabinet_urdf_sha256": "3905eaebdce2c7bee60612ba30633d63a373f4cfbda33d27737c7abc9f2da209",
+  "cabinet_metadata_sha256": "8581c9810986b50245bdeeee9a16b745984984a887c16fa0186a4bcccbad29a0",
+  "basket_collision_sha256": "53cd390a47d060840d38143f27b94ed9dc3244919ffa64e596b6d591d7c2e587",
+  "basket_visual_sha256": "32bc3e1e6b20a81738b4e6abad9c9109753da4b43264871b6a5764ff1d66c0dd",
+  "outputs": {
+    "envelope_rows": 21,
+    "contact_sweep_rows": 4515,
+    "trajectory_rows": 2250,
+    "rollout_trials": 21
+  }
+}

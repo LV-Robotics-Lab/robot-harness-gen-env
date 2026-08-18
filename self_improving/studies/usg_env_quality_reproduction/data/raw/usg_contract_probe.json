@@ -1,0 +1,416 @@
+{
+  "schema_version": "usg_env_quality_reproduction.usg_contract.v1",
+  "scope": "released native output contract; does not constrain future external adapters",
+  "repository": {
+    "path": "/home/jingxiang/workspace/usg-env-quality-reproduction/source/usg/repo",
+    "head": "39e6b77c54bc611980250e74bd45117bd6f166f1",
+    "tree": "2cdd3ffe7f9d1e35461a1174dd068e19f1e083c1",
+    "head_commit_date": "2026-06-21T23:04:28+01:00",
+    "status_porcelain": "",
+    "tracked_file_count": 119,
+    "tracked_manifest_sha256": "28c5e4d1b15ae73d312ab3761ac955ebe11cdfe0df9b9a0d8808e86b1d95de99"
+  },
+  "native_output_contract": {
+    "ModalityOutput": {
+      "file": "/home/jingxiang/workspace/usg-env-quality-reproduction/source/usg/repo/usg_par/model.py",
+      "line": 25,
+      "fields": [
+        {
+          "name": "refined_query",
+          "annotation": "torch.Tensor",
+          "line": 26
+        },
+        {
+          "name": "mask_logits",
+          "annotation": "Optional[torch.Tensor]",
+          "line": 27
+        },
+        {
+          "name": "fused_query",
+          "annotation": "torch.Tensor",
+          "line": 28
+        },
+        {
+          "name": "cls_logits",
+          "annotation": "torch.Tensor",
+          "line": 29
+        },
+        {
+          "name": "pred_masks",
+          "annotation": "Optional[torch.Tensor]",
+          "line": 30
+        },
+        {
+          "name": "rpc_out",
+          "annotation": "RPCOutput",
+          "line": 31
+        },
+        {
+          "name": "relation_logits",
+          "annotation": "torch.Tensor",
+          "line": 32
+        }
+      ]
+    },
+    "USGOutput": {
+      "file": "/home/jingxiang/workspace/usg-env-quality-reproduction/source/usg/repo/usg_par/model.py",
+      "line": 36,
+      "fields": [
+        {
+          "name": "per_modality",
+          "annotation": "Dict[str, ModalityOutput]",
+          "line": 37
+        },
+        {
+          "name": "associations",
+          "annotation": "Dict[str, torch.Tensor]",
+          "line": 38
+        }
+      ]
+    },
+    "RPCOutput": {
+      "file": "/home/jingxiang/workspace/usg-env-quality-reproduction/source/usg/repo/usg_par/rpc.py",
+      "line": 18,
+      "fields": [
+        {
+          "name": "pair_confidence",
+          "annotation": "torch.Tensor",
+          "line": 31
+        },
+        {
+          "name": "q_sub",
+          "annotation": "torch.Tensor",
+          "line": 32
+        },
+        {
+          "name": "q_obj",
+          "annotation": "torch.Tensor",
+          "line": 33
+        },
+        {
+          "name": "e_sub",
+          "annotation": "torch.Tensor",
+          "line": 34
+        },
+        {
+          "name": "e_obj",
+          "annotation": "torch.Tensor",
+          "line": 35
+        },
+        {
+          "name": "sub_idx",
+          "annotation": "torch.Tensor",
+          "line": 36
+        },
+        {
+          "name": "obj_idx",
+          "annotation": "torch.Tensor",
+          "line": 37
+        },
+        {
+          "name": "scores",
+          "annotation": "torch.Tensor",
+          "line": 38
+        }
+      ]
+    }
+  },
+  "released_public_import_probe": {
+    "command": [
+      "/home/jingxiang/miniconda3/envs/env-gen-sc311/bin/python",
+      "-c",
+      "from usg_par.encoders.types import EncodedModality; print(EncodedModality.__name__)"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/home/jingxiang/workspace/usg-env-quality-reproduction/source/usg/repo/usg_par/encoders/__init__.py\", line 3, in <module>\n    from .builders import DEFAULT_PRETRAINED, build_openclip, get_tokenizer\n  File \"/home/jingxiang/workspace/usg-env-quality-reproduction/source/usg/repo/usg_par/encoders/builders.py\", line 7, in <module>\n    import open_clip\nModuleNotFoundError: No module named 'open_clip'\n",
+    "public_import_succeeded": false,
+    "interpretation": "This measures import compatibility in the fixed reproduction environment; it is not a USG accuracy metric."
+  },
+  "released_test_collection_probe": {
+    "command": [
+      "/home/jingxiang/miniconda3/envs/env-gen-sc311/bin/python",
+      "-m",
+      "pytest",
+      "--collect-only",
+      "-q"
+    ],
+    "returncode": 5,
+    "stdout": "\nno tests collected in 0.01s\n",
+    "stderr": "",
+    "tracked_python_test_files": [],
+    "tests_collected": false,
+    "interpretation": "pytest exit code 5 means no tests were collected"
+  },
+  "executable_core_probe": {
+    "purpose": "executable shape/field probe only; random initialization has no semantic meaning",
+    "semantic_accuracy_interpretation_allowed": false,
+    "device": "cpu",
+    "seed": 20260817,
+    "torch_version": "2.11.0+cu128",
+    "elapsed_seconds_for_two_forwards": 0.006727410014718771,
+    "parameter_count": 901193,
+    "per_modality": {
+      "text": {
+        "shapes": {
+          "refined_query": [
+            1,
+            8,
+            32
+          ],
+          "mask_logits": null,
+          "fused_query": [
+            1,
+            8,
+            32
+          ],
+          "cls_logits": [
+            1,
+            8,
+            5
+          ],
+          "pred_masks": null,
+          "relation_logits": [
+            1,
+            10,
+            6
+          ],
+          "rpc_pair_confidence": [
+            1,
+            8,
+            8
+          ],
+          "rpc_sub_idx": [
+            1,
+            10
+          ],
+          "rpc_obj_idx": [
+            1,
+            10
+          ],
+          "rpc_scores": [
+            1,
+            10
+          ]
+        },
+        "finite": {
+          "refined_query": true,
+          "mask_logits": null,
+          "fused_query": true,
+          "cls_logits": true,
+          "pred_masks": null,
+          "relation_logits": true,
+          "rpc_pair_confidence": true,
+          "rpc_sub_idx": true,
+          "rpc_obj_idx": true,
+          "rpc_scores": true
+        },
+        "repeat_exactly_equal": {
+          "refined_query": true,
+          "mask_logits": null,
+          "fused_query": true,
+          "cls_logits": true,
+          "pred_masks": null,
+          "relation_logits": true,
+          "rpc_pair_confidence": true,
+          "rpc_sub_idx": true,
+          "rpc_obj_idx": true,
+          "rpc_scores": true
+        }
+      },
+      "point": {
+        "shapes": {
+          "refined_query": [
+            1,
+            8,
+            32
+          ],
+          "mask_logits": [
+            1,
+            8,
+            9
+          ],
+          "fused_query": [
+            1,
+            8,
+            32
+          ],
+          "cls_logits": [
+            1,
+            8,
+            5
+          ],
+          "pred_masks": [
+            1,
+            8,
+            9
+          ],
+          "relation_logits": [
+            1,
+            10,
+            6
+          ],
+          "rpc_pair_confidence": [
+            1,
+            8,
+            8
+          ],
+          "rpc_sub_idx": [
+            1,
+            10
+          ],
+          "rpc_obj_idx": [
+            1,
+            10
+          ],
+          "rpc_scores": [
+            1,
+            10
+          ]
+        },
+        "finite": {
+          "refined_query": true,
+          "mask_logits": true,
+          "fused_query": true,
+          "cls_logits": true,
+          "pred_masks": true,
+          "relation_logits": true,
+          "rpc_pair_confidence": true,
+          "rpc_sub_idx": true,
+          "rpc_obj_idx": true,
+          "rpc_scores": true
+        },
+        "repeat_exactly_equal": {
+          "refined_query": true,
+          "mask_logits": true,
+          "fused_query": true,
+          "cls_logits": true,
+          "pred_masks": true,
+          "relation_logits": true,
+          "rpc_pair_confidence": true,
+          "rpc_sub_idx": true,
+          "rpc_obj_idx": true,
+          "rpc_scores": true
+        }
+      }
+    },
+    "associations": {
+      "point|text": {
+        "shape": [
+          1,
+          8,
+          8
+        ],
+        "finite": true,
+        "repeat_exactly_equal": true
+      }
+    },
+    "repeat_forward_exactly_equal": true
+  },
+  "checkpoint_availability": {
+    "weight_files_present_in_checkout": [],
+    "weight_files_tracked_by_git": [],
+    "github_release_count": 0,
+    "tracked_dependency_manifest_files": [],
+    "trained_usg_checkpoint_available": false,
+    "semantic_accuracy_evaluable_from_released_artifacts": false,
+    "reason": "no trained USG-Par checkpoint is present or released; encoder initialization is not a trained USG scene-graph model"
+  },
+  "public_reproduction_signal": {
+    "issue_7_present": true,
+    "issue_7_state": "open",
+    "issue_7_comment_count": 0,
+    "issue_7_is_third_party_claim_not_primary_performance_evidence": true,
+    "issue_7_reported_body": "First, thank you for releasing the USG code. Building on it has been very valuable for us, and we appreciate the effort involved in open-sourcing a system of this size.\n\nWe are trying to reproduce the reported PSG SGDet results from the paper, but we are observing a very large gap compared with the reported numbers. We see a similar failure mode on PVSG as well, so we are wondering whether there may be a shared configuration or loss-balancing detail that we are missing.\n\n**Reproduction gap on PSG SGDet**\n\n| metric | paper (USG-Par, OpenCLIP) | our repro |\n  |--------|--------------------------|-----------|\n  | R@20   | 36.9 | 3.57 |\n  | mR@20  | 32.1 | 1.33 |\n  | R@50   | 46.4 | 4.85 |\n  | mR@50  | 41.7 | 1.86 |\n  | R@100  | 52.4 | 5.56 |\n\nR@100 is about 9× lower, and mR@100 is about 20× lower than reported. On PVSG, we observe the same pattern, but even more severe: R@100 ≈ 0.47 and mR@100 ≈ 0.07.\n\n**Environment**\n\nCommit: 39e6b77\nPyTorch: 2.6.0+cu124\nCUDA: 12.4\nGPU: V100, sm_70\nConfigs: configs/psg.yaml, configs/pvsg.yaml\n\n**Possible issue 1:** predicate BCE appears to have no positive weighting\n\nIn `losses.py`, `association_loss` around L184 and `pair_loss` around L191 use `_auto_pos_weight`, but `predicate_loss` around L201–203 appears to use plain BCE without pos_weight.\nGiven RPC top_k=100 pairs/frame and relatively few positive relations, we are concerned that the predicate head may be dominated by negative labels / frequent predicates. In our runs, the model tends to collapse toward the majority predicate. For example, it predicts mostly one class among the 57 predicates, with “on” accounting for roughly 94% of predicate predictions.\nA single-video overfit test also fails to memorize the predicates of one clip: the model predicts 1 predicate class while the ground truth contains 3. In a per-module gradient check, the relation decoder gradient L2 norm is around 0.047, roughly three orders of magnitude below the encoder.\nIs the absence of pos_weight in predicate_loss intentional, or is there an additional balancing term/configuration used in the reported experiments?\n\n**Possible issue 2:** mask IoU appears too low for SGDet evaluation\nFor SGDet, a prediction needs the subject and object masks to each satisfy IoU ≥ 0.5. In our runs, the matched mask IoU is very low: mean IoU is about 0.16, and only around 3% of matched masks reach IoU ≥ 0.5.\nThis means that even when the object labels and predicate are correct, almost no triplets pass the mask-IoU gate. This seems to explain much of the R@K collapse.\nCould you share the expected mask IoU or R@K behavior on PSG validation during training for the released configs?\n\n**Questions**\n- Could you share the exact PSG/PVSG training hyperparameters used for the reported SGDet numbers?\n- Is the missing pos_weight in predicate_loss intentional?\n- What mask IoU and SGDet R@K do you typically observe on PSG validation during training?\n- Are there any additional checkpoints, preprocessing steps, or evaluation settings needed beyond the released configs/psg.yaml and configs/pvsg.yaml?\n- Could you share pre-trained checkpoints of your model ? "
+  },
+  "source_token_audit": {
+    "qpos": {
+      "count": 0,
+      "occurrences": []
+    },
+    "collision": {
+      "count": 0,
+      "occurrences": []
+    },
+    "penetration": {
+      "count": 0,
+      "occurrences": []
+    },
+    "friction": {
+      "count": 0,
+      "occurrences": []
+    },
+    "impulse": {
+      "count": 0,
+      "occurrences": []
+    },
+    "support_polygon": {
+      "count": 0,
+      "occurrences": []
+    },
+    "center_of_mass": {
+      "count": 0,
+      "occurrences": []
+    }
+  },
+  "native_coverage_rows": [
+    {
+      "required_capability": "object categories and instances",
+      "native_explicit_output": "cls_logits, pred_masks",
+      "native_coverage": "yes",
+      "relevance": "can improve semantic grounding if trained weights are available"
+    },
+    {
+      "required_capability": "semantic relations",
+      "native_explicit_output": "relation_logits",
+      "native_coverage": "yes",
+      "relevance": "can propose semantic predicates, subject to accuracy"
+    },
+    {
+      "required_capability": "cross-modal object identity",
+      "native_explicit_output": "associations",
+      "native_coverage": "yes",
+      "relevance": "aligns object queries across input modalities"
+    },
+    {
+      "required_capability": "metric world pose and complete occupied volume",
+      "native_explicit_output": "none",
+      "native_coverage": "no",
+      "relevance": "required for final-qpos collision checks"
+    },
+    {
+      "required_capability": "articulation joint state or qpos",
+      "native_explicit_output": "none",
+      "native_coverage": "no",
+      "relevance": "required for open-drawer geometry"
+    },
+    {
+      "required_capability": "collision/contact/penetration evidence",
+      "native_explicit_output": "none",
+      "native_coverage": "no",
+      "relevance": "required to reject forbidden contact"
+    },
+    {
+      "required_capability": "mass, friction, gravity, CoM, support polygon",
+      "native_explicit_output": "none",
+      "native_coverage": "no",
+      "relevance": "required for stable physical support"
+    },
+    {
+      "required_capability": "simulator body/link to logical-object ownership",
+      "native_explicit_output": "none",
+      "native_coverage": "no",
+      "relevance": "required for evidence closure"
+    },
+    {
+      "required_capability": "failed-scene repair or constrained rearrangement",
+      "native_explicit_output": "none",
+      "native_coverage": "no",
+      "relevance": "required to close generation-validation loop"
+    }
+  ],
+  "inference_boundary": {
+    "supported": "the released native USG output does not itself implement final-qpos geometry, physics validation, body ownership, or repair",
+    "not_supported": "USG can never help, or no adapter can convert trained semantic outputs into inputs for a separate physics-aware solver"
+  }
+}

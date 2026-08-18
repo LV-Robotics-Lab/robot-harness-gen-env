@@ -1,0 +1,238 @@
+{
+  "schema_version": "robotwin.resolved_scene.v1",
+  "scene_id": "measured_cabinet_basket_gate_attack",
+  "request": "Place a half-open cabinet upper-right of a yellow basket on the table.",
+  "frame": {
+    "name": "robotwin_world",
+    "x_axis": "right",
+    "y_axis": "front",
+    "z_axis": "up",
+    "handedness": "right_handed"
+  },
+  "unit": "m",
+  "seed": 20260817,
+  "workspace": {
+    "support_surface": "table",
+    "table_height_m": 0.741,
+    "x_bounds_m": [
+      -0.35,
+      0.35
+    ],
+    "y_bounds_m": [
+      -0.2,
+      0.3
+    ],
+    "robot_keepout_x_m": [
+      -0.16,
+      0.16
+    ],
+    "robot_keepout_y_m": [
+      -0.2,
+      -0.08
+    ]
+  },
+  "source_scene_spec_sha256": "a0092788ae1efdf52ff4184879058b6dac71333f55507acc0c6a534ab2e3fdbe",
+  "asset_catalog_sha256": "7f61aa1cf86d0d30ae1b43661335049937e0aeaa8e1646edcbe885170516d2d6",
+  "compiler_version": "measured-adversarial-probe-current-source",
+  "objects": [
+    {
+      "object_id": "cabinet_1",
+      "category": "cabinet",
+      "asset_id": "036_cabinet",
+      "model_id": 46653,
+      "load_type": "urdf",
+      "stable_pose_id": "robotwin_cabinet_upright",
+      "stable_orientation_wxyz": [
+        0.7071067811865476,
+        0.7071067811865476,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.23067099000000002,
+        0.24268491,
+        0.43591365
+      ],
+      "footprint_shape": "box",
+      "support_margin_m": 0.005,
+      "support_spawn_clearance_m": 0.003,
+      "z_policy": "origin_on_table",
+      "mesh_scale": [
+        0.27,
+        0.27,
+        0.27
+      ],
+      "collision_available": true,
+      "source_files": [
+        "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/036_cabinet/46653/model_data.json",
+        "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/036_cabinet/46653/mobility.urdf",
+        "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/036_cabinet/46653/mobility.urdf",
+        "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/036_cabinet/46653/mobility.urdf"
+      ],
+      "grounding_score": 100.0,
+      "grounding_reasons": [
+        "exact category match",
+        "measured adversarial fixture"
+      ],
+      "rejected_candidates": [],
+      "pose": {
+        "position_m": [
+          0.1,
+          0.1,
+          0.741
+        ],
+        "orientation_wxyz": [
+          0.5000000000000001,
+          0.5000000000000001,
+          0.5,
+          0.5
+        ],
+        "yaw_rad": 1.5707963267948966
+      },
+      "is_static": true,
+      "support_relation": "on_table",
+      "support_target": "table",
+      "articulation_state": {
+        "state": "partially_open",
+        "open_fraction": 0.5,
+        "joint_selector": "all_movable"
+      },
+      "articulation_joint_names": [
+        "joint_1",
+        "joint_2",
+        "joint_3"
+      ],
+      "articulation_joint_limits": [
+        [
+          0.0,
+          0.17820000000000005
+        ],
+        [
+          0.0,
+          0.17820000000000005
+        ],
+        [
+          0.0,
+          0.17820000000000005
+        ]
+      ],
+      "articulation_qpos": [
+        0.0675,
+        0.0675,
+        0.0675
+      ],
+      "asset_provenance": "robotwin_catalog"
+    },
+    {
+      "object_id": "basket_1",
+      "category": "basket",
+      "color": "yellow",
+      "asset_id": "110_basket",
+      "model_id": 1,
+      "load_type": "rigid",
+      "stable_pose_id": "robotwin_basket_upright",
+      "stable_orientation_wxyz": [
+        0.7071067811865476,
+        0.7071067811865476,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.2332,
+        0.1512,
+        0.1767
+      ],
+      "interior_dimensions_m": [
+        0.19,
+        0.112,
+        0.145
+      ],
+      "interior_floor_z_offset_m": 0.012,
+      "footprint_shape": "box",
+      "support_margin_m": 0.005,
+      "support_spawn_clearance_m": 0.003,
+      "z_policy": "origin_on_table",
+      "mesh_scale": [
+        0.12,
+        0.12,
+        0.12
+      ],
+      "collision_available": true,
+      "source_files": [
+        "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/110_basket/model_data1.json",
+        "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/110_basket/visual/base1.glb",
+        "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/110_basket/collision/base1.glb"
+      ],
+      "grounding_score": 100.0,
+      "grounding_reasons": [
+        "exact category match",
+        "measured adversarial fixture"
+      ],
+      "rejected_candidates": [],
+      "pose": {
+        "position_m": [
+          -0.22,
+          -0.07999999999999999,
+          0.741
+        ],
+        "orientation_wxyz": [
+          0.7071067811865476,
+          0.7071067811865476,
+          0.0,
+          0.0
+        ],
+        "yaw_rad": 0.0
+      },
+      "is_static": true,
+      "support_relation": "on_table",
+      "support_target": "table",
+      "articulation_joint_names": [],
+      "articulation_joint_limits": [],
+      "articulation_qpos": [],
+      "asset_provenance": "robotwin_catalog"
+    }
+  ],
+  "relations": [
+    {
+      "relation": "on_table",
+      "source": "cabinet_1",
+      "target": "table"
+    },
+    {
+      "relation": "on_table",
+      "source": "basket_1",
+      "target": "table"
+    }
+  ],
+  "solver_trace": {
+    "algorithm": "bounded_rejection_backtracking_v1",
+    "seed": 20260817,
+    "max_attempts_per_object": 96,
+    "total_attempts": 2,
+    "attempts": [
+      {
+        "attempt": 1,
+        "object_id": "cabinet_1",
+        "candidate_xy_m": [
+          0.1,
+          0.1
+        ],
+        "yaw_rad": 1.5707963267948966,
+        "accepted": true,
+        "reasons": []
+      },
+      {
+        "attempt": 2,
+        "object_id": "basket_1",
+        "candidate_xy_m": [
+          -0.22,
+          -0.07999999999999999
+        ],
+        "yaw_rad": 0.0,
+        "accepted": true,
+        "reasons": []
+      }
+    ],
+    "status": "pass"
+  }
+}

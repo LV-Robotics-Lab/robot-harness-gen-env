@@ -1,0 +1,46 @@
+{
+  "closed_physical_bottom_offset_from_declared_table_m": 0.10185575151443482,
+  "rendered_scenarios": [
+    "fixed_adversarial",
+    "released_adversarial",
+    "released_corrected_control"
+  ],
+  "perturbation_trial_count": 18,
+  "initial_fixed_vs_released": {
+    "shape": [
+      480,
+      640,
+      3
+    ],
+    "exactly_equal": true,
+    "differing_channel_fraction": 0.0,
+    "max_absolute_channel_difference": 0,
+    "rmse_channel_value": 0.0,
+    "fixed_initial_pixel_sha256": "eb689e53427f518f64d746ef521bbb1df71ac861312f27b73f0311188eab638e",
+    "released_initial_pixel_sha256": "eb689e53427f518f64d746ef521bbb1df71ac861312f27b73f0311188eab638e"
+  },
+  "pre_encoding_video_frame_counts": {
+    "fixed_adversarial": {
+      "total_frame_count": 120,
+      "unique_frame_count": 3
+    },
+    "released_adversarial": {
+      "total_frame_count": 120,
+      "unique_frame_count": 40
+    },
+    "released_corrected_control": {
+      "total_frame_count": 120,
+      "unique_frame_count": 18
+    },
+    "fixed-vs-released": {
+      "total_frame_count": 120,
+      "unique_frame_count": 40
+    }
+  },
+  "video_files": [
+    "media/videos/fixed_adversarial.mp4",
+    "media/videos/released_adversarial.mp4",
+    "media/videos/released_corrected_control.mp4",
+    "media/videos/fixed-vs-released.mp4"
+  ]
+}

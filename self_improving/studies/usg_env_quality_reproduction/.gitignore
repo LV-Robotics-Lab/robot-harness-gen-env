@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+source/usg/repo/
+source/paper/*.pdf
