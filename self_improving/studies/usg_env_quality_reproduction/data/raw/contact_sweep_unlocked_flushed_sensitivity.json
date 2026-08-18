@@ -1,0 +1,18 @@
+{
+  "schema_version": "usg_env_quality_reproduction.sweep_sensitivity.v1",
+  "primary_scan_order": "qpos, y ascending, x ascending",
+  "sensitivity_scan_order": "qpos, y descending, x descending",
+  "row_count": 4515,
+  "fresh_scene_scope": "new dynamic and static scenes per qpos, not per grid point",
+  "contact_cache_protocol": "before every query, teleport the basket to a non-contact isolation pose, advance one step, then teleport to the target and advance one measured step",
+  "label_mismatch_counts": {
+    "contact_label_match": 231,
+    "penetration_label_match": 241,
+    "static_label_match": 301
+  },
+  "label_agreement_rates": {
+    "contact_label_match": 0.9488372093023256,
+    "penetration_label_match": 0.9466223698781838,
+    "static_label_match": 0.9333333333333333
+  }
+}

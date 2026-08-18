@@ -1,0 +1,27 @@
+{
+  "schema_version": "usg_env_quality_reproduction.unlocked_joint_drift.v1",
+  "purpose": "adversarial measurement-protocol failure probe; excluded from corrected rates",
+  "requested_qpos_m": 0.0675,
+  "query_count": 1505,
+  "maximum_qpos_abs_error_m": 0.11070000648498535,
+  "final_actual_qpos_m": [
+    0.17820000648498535,
+    0.17820000648498535,
+    0.17819997668266296
+  ],
+  "first_error_above_1mm": {
+    "query_index": 184,
+    "requested_qpos_m": 0.0675,
+    "basket_offset_x_m": -0.19999999999999998,
+    "basket_offset_y_m": -0.26,
+    "actual_qpos_0_m": 0.06616766005754471,
+    "actual_qpos_1_m": 0.06750000268220901,
+    "actual_qpos_2_m": 0.06750000268220901,
+    "qpos_max_abs_error_m": 0.0013323399424552962,
+    "qvel_norm_m_s": 12.451939582824707,
+    "oracle_contact": true,
+    "oracle_penetration": true,
+    "min_separation_m": -0.005958661437034607
+  },
+  "joint_lock_applied": false
+}

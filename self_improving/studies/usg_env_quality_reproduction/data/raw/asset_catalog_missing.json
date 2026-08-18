@@ -1,0 +1,5567 @@
+{
+  "schema_version": "robotwin.asset_catalog_missing.v1",
+  "asset_catalog_sha256": "7f61aa1cf86d0d30ae1b43661335049937e0aeaa8e1646edcbe885170516d2d6",
+  "entry_count": 127,
+  "available_entry_count": 15,
+  "unavailable_entry_count": 112,
+  "entries": [
+    {
+      "asset_id": "001_bottle",
+      "available": true,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": true,
+          "missing": []
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 7,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 8,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 9,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 10,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 11,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 12,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 13,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 14,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 15,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 16,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 17,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 18,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 19,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 20,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 21,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 22,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "002_bowl",
+      "available": true,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 1,
+          "usable": true,
+          "missing": []
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 7,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "004_fluted-block",
+      "available": true,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": true,
+          "missing": []
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "005_french-fries",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "006_hamburg",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "007_shoe-box",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "008_tray",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "009_kettle",
+      "available": false,
+      "load_type": "urdf",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 102730,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 102738,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 102739,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "010_pen",
+      "available": false,
+      "load_type": "urdf",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 101685,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 101727,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 101732,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 101736,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 101748,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 101786,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 101787,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "011_dustbin",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "012_plant-pot",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "013_dumbbell-rack",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "014_bookcase",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "015_laptop",
+      "available": true,
+      "load_type": "urdf",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 9748,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 9912,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 9960,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 9968,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 9992,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 9996,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 10040,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 10098,
+          "usable": true,
+          "missing": []
+        },
+        {
+          "model_id": 10101,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 10125,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 10211,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "016_oven",
+      "available": false,
+      "load_type": "urdf",
+      "reasons": [
+        "dimensions_m",
+        "model_metadata",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 7179,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "model_metadata",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 7201,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "model_metadata",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 7332,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 7347,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "model_metadata",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "017_calculator",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "018_microphone",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "019_coaster",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "021_cup",
+      "available": true,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": true,
+          "missing": []
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 7,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 8,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 9,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 10,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 11,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 12,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "022_cup-with-liquid",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "023_tissue-box",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "024_scanner",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "025_chips-tub",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "026_pet-collar",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "027_table-tennis",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "028_roll-paper",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "029_olive-oil",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "030_drill",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "031_jam-jar",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "032_screwdriver",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "033_fork",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "035_apple",
+      "available": true,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": true,
+          "missing": []
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "038_milk-box",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "039_mug",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 7,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 8,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 9,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 10,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 11,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 12,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "040_rack",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "041_shoe",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 7,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 8,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 9,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "042_wooden_box",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "043_book",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "044_microwave",
+      "available": false,
+      "load_type": "urdf",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 7167,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 7310,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "045_sand-clock",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "046_alarm-clock",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "047_mouse",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "048_stapler",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "049_shampoo",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 7,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "050_bell",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "051_candlestick",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "052_dumbbell",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "053_teanet",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 7,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "054_baguette",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "055_small-speaker",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "056_switch",
+      "available": false,
+      "load_type": "urdf",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 100880,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 100901,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 100905,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 100906,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 100907,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 100914,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 100933,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 100937,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "057_toycar",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "058_markpen",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "059_pencup",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "060_kitchenpot",
+      "available": false,
+      "load_type": "urdf",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 100015,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 100023,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 100038,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 100051,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 100057,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 100058,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 100060,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "061_battery",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "062_plasticbox",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 7,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 8,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 9,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 10,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "063_tabletrashbin",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 7,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 8,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 9,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 10,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "064_msg",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "065_soy-sauce",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "066_vinegar",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "067_steamer",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "068_boxdrink",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "069_vagetable",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "070_paymentsign",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "071_can",
+      "available": true,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": true,
+          "missing": []
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "072_electronicscale",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "073_rubikscube",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "074_displaystand",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "075_bread",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "076_breadbasket",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "077_phone",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "078_phonestand",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "079_remotecontrol",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "080_pillbottle",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "081_playingcards",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "082_smallshovel",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "083_brush",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "084_woodenmallet",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "085_gong",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "086_woodenblock",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "087_waterer",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 7,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "088_wineglass",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "089_globe",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "090_trophy",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "091_kettle",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "092_notebook",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "093_brush-pen",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "094_rest",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "095_glue",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "096_cleaner",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "097_screen",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "098_speaker",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "099_fan",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "100_seal",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "101_milk-tea",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "102_roller",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "103_fruit",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "104_board",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "105_sauce-can",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "106_skillet",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "107_soap",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "108_block",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "109_hydrating-oil",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "110_basket",
+      "available": true,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": true,
+          "missing": []
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "111_callbell",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "112_tea-box",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "113_coffee-box",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 5,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 6,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "114_bottle",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 4,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "115_perfume",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "116_keyboard",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 1,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 2,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        },
+        {
+          "model_id": 3,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "117_whiteboard-eraser",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "118_tooth-paste",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "119_mini-chalkboard",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "120_plant",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "cube",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "model_metadata",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "model_metadata",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "objaverse",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "collision_mesh",
+        "dimensions_m",
+        "model_metadata",
+        "scale",
+        "stable_pose",
+        "visual_mesh"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "collision_mesh",
+            "dimensions_m",
+            "model_metadata",
+            "scale",
+            "stable_pose",
+            "visual_mesh"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "sapien-block1",
+      "available": false,
+      "load_type": "unsupported",
+      "reasons": [
+        "dimensions_m",
+        "model_metadata",
+        "scale",
+        "stable_pose",
+        "supported_loader"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "model_metadata",
+            "scale",
+            "stable_pose",
+            "supported_loader"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "sapien-block2",
+      "available": false,
+      "load_type": "unsupported",
+      "reasons": [
+        "dimensions_m",
+        "model_metadata",
+        "scale",
+        "stable_pose",
+        "supported_loader"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "model_metadata",
+            "scale",
+            "stable_pose",
+            "supported_loader"
+          ]
+        }
+      ]
+    },
+    {
+      "asset_id": "vis_box",
+      "available": false,
+      "load_type": "rigid",
+      "reasons": [
+        "dimensions_m",
+        "model_metadata",
+        "scale",
+        "stable_pose"
+      ],
+      "models": [
+        {
+          "model_id": 0,
+          "usable": false,
+          "missing": [
+            "dimensions_m",
+            "model_metadata",
+            "scale",
+            "stable_pose"
+          ]
+        }
+      ]
+    }
+  ]
+}

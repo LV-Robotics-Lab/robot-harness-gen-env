@@ -1,0 +1,293 @@
+{
+  "schema_version": "robotwin.scene_validation.v1",
+  "scene_id": "measured_cabinet_basket_gate_attack",
+  "resolved_scene_sha256": "e9139b84791c7a5f919d93917139ef6a7826ded79f4c27ebc4dfcc270726e811",
+  "status": "pass",
+  "fail_count": 0,
+  "not_run_count": 0,
+  "checks": [
+    {
+      "name": "workspace_bounds:cabinet_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.02134245500000001,
+          0.22134245500000002,
+          -0.015335495000000018,
+          0.21533549500000004
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:cabinet_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.741,
+        "table_height_m": 0.741,
+        "support_relation": "on_table"
+      }
+    },
+    {
+      "name": "real_asset_files:cabinet_1",
+      "status": "not_applicable",
+      "evidence": {
+        "paths": [
+          "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/036_cabinet/46653/model_data.json",
+          "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/036_cabinet/46653/mobility.urdf",
+          "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/036_cabinet/46653/mobility.urdf",
+          "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/036_cabinet/46653/mobility.urdf"
+        ],
+        "exists": [
+          true,
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "workspace_bounds:basket_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.3366,
+          -0.1034,
+          -0.1556,
+          -0.004399999999999987
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:basket_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.741,
+        "table_height_m": 0.741,
+        "support_relation": "on_table"
+      }
+    },
+    {
+      "name": "real_asset_files:basket_1",
+      "status": "not_applicable",
+      "evidence": {
+        "paths": [
+          "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/110_basket/model_data1.json",
+          "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/110_basket/visual/base1.glb",
+          "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/110_basket/collision/base1.glb"
+        ],
+        "exists": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "no_overlap:basket_1:cabinet_1",
+      "status": "pass",
+      "evidence": {
+        "first_aabb_3d": [
+          -0.3366,
+          -0.1034,
+          -0.1556,
+          -0.004399999999999987,
+          0.741,
+          0.9177
+        ],
+        "second_aabb_3d": [
+          -0.02134245500000001,
+          0.22134245500000002,
+          -0.015335495000000018,
+          0.21533549500000004,
+          0.741,
+          1.17691365
+        ],
+        "expected_support_pair": false
+      }
+    },
+    {
+      "name": "relation:on_table:cabinet_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "relation:on_table:basket_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "resolved_only_roundtrip",
+      "status": "pass",
+      "evidence": {
+        "before": "e9139b84791c7a5f919d93917139ef6a7826ded79f4c27ebc4dfcc270726e811",
+        "after": "e9139b84791c7a5f919d93917139ef6a7826ded79f4c27ebc4dfcc270726e811"
+      }
+    },
+    {
+      "name": "runtime_status",
+      "status": "pass",
+      "evidence": null
+    },
+    {
+      "name": "robot_initial_collision",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "translation_drift:cabinet_1",
+      "status": "pass",
+      "evidence": {
+        "drift_m": 0.0,
+        "exact_pose_required": true
+      }
+    },
+    {
+      "name": "rotation_drift:cabinet_1",
+      "status": "pass",
+      "evidence": {
+        "drift_deg": 0.0,
+        "exact_pose_required": true
+      }
+    },
+    {
+      "name": "resolved_translation_error:cabinet_1",
+      "status": "pass",
+      "evidence": {
+        "error_m": 0.0,
+        "threshold_m": 0.02,
+        "exact_pose_required": true
+      }
+    },
+    {
+      "name": "resolved_rotation_error:cabinet_1",
+      "status": "pass",
+      "evidence": {
+        "error_deg": 0.0,
+        "threshold_deg": 5.0,
+        "exact_pose_required": true
+      }
+    },
+    {
+      "name": "penetration:cabinet_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:cabinet_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "support_contact:cabinet_1",
+      "status": "pass",
+      "evidence": {
+        "raw_contact": false,
+        "mode": "fixed_static_pose",
+        "is_static": true,
+        "expected_target": "table",
+        "observed_target": null,
+        "contact_fraction": 0.0,
+        "minimum_contact_fraction": 0.8
+      }
+    },
+    {
+      "name": "not_dropped:cabinet_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "head_visibility:cabinet_1",
+      "status": "pass",
+      "evidence": {
+        "pixels": 13841,
+        "threshold": 64
+      }
+    },
+    {
+      "name": "articulation_qpos:cabinet_1",
+      "status": "pass",
+      "evidence": {
+        "max_abs_error": 2.682209010451686e-09,
+        "target_qpos": [
+          0.0675,
+          0.0675,
+          0.0675
+        ]
+      }
+    },
+    {
+      "name": "translation_drift:basket_1",
+      "status": "pass",
+      "evidence": {
+        "drift_m": 0.0,
+        "exact_pose_required": true
+      }
+    },
+    {
+      "name": "rotation_drift:basket_1",
+      "status": "pass",
+      "evidence": {
+        "drift_deg": 2.4148365394514667e-06,
+        "exact_pose_required": true
+      }
+    },
+    {
+      "name": "resolved_translation_error:basket_1",
+      "status": "pass",
+      "evidence": {
+        "error_m": 3.969866217489928e-09,
+        "threshold_m": 0.02,
+        "exact_pose_required": true
+      }
+    },
+    {
+      "name": "resolved_rotation_error:basket_1",
+      "status": "pass",
+      "evidence": {
+        "error_deg": 0.0,
+        "threshold_deg": 5.0,
+        "exact_pose_required": true
+      }
+    },
+    {
+      "name": "penetration:basket_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:basket_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "support_contact:basket_1",
+      "status": "pass",
+      "evidence": {
+        "raw_contact": false,
+        "mode": "fixed_static_pose",
+        "is_static": true,
+        "expected_target": "table",
+        "observed_target": null,
+        "contact_fraction": 0.0,
+        "minimum_contact_fraction": 0.8
+      }
+    },
+    {
+      "name": "not_dropped:basket_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "head_visibility:basket_1",
+      "status": "pass",
+      "evidence": {
+        "pixels": 4691,
+        "threshold": 64
+      }
+    }
+  ]
+}

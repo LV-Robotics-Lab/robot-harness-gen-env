@@ -1,0 +1,10 @@
+required_capability,native_explicit_output,native_coverage,relevance
+object categories and instances,"cls_logits, pred_masks",yes,can improve semantic grounding if trained weights are available
+semantic relations,relation_logits,yes,"can propose semantic predicates, subject to accuracy"
+cross-modal object identity,associations,yes,aligns object queries across input modalities
+metric world pose and complete occupied volume,none,no,required for final-qpos collision checks
+articulation joint state or qpos,none,no,required for open-drawer geometry
+collision/contact/penetration evidence,none,no,required to reject forbidden contact
+"mass, friction, gravity, CoM, support polygon",none,no,required for stable physical support
+simulator body/link to logical-object ownership,none,no,required for evidence closure
+failed-scene repair or constrained rearrangement,none,no,required to close generation-validation loop

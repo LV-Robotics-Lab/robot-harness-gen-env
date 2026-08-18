@@ -1,0 +1,96 @@
+{
+  "created_by": "/home/jingxiang/workspace/usg-env-quality-reproduction/scripts/run_usg_contract_probe.py",
+  "python": "3.11.15",
+  "gen_env_head": "c0cf1ee50851c068df0550e292fa81de4d18d56e",
+  "gen_env_status_porcelain": "",
+  "robotwin_head": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123",
+  "robotwin_status_porcelain": "M XPolicyLab\n?? env_cfg/eval/act_one_episode.args",
+  "usg_head": "39e6b77c54bc611980250e74bd45117bd6f166f1",
+  "inputs": [
+    {
+      "path": "/home/jingxiang/workspace/usg-env-quality-reproduction/config/experiment.json",
+      "bytes": 2201,
+      "sha256": "abf9067f2b928f17bf2b38c6cc76f773223da33c7e3f36a7e5de3686806c5f5f"
+    },
+    {
+      "path": "/home/jingxiang/workspace/usg-env-quality-reproduction/source/paper/2503.15005.pdf",
+      "bytes": 3003745,
+      "sha256": "0e3d5ef5423bec46cd065656371012044c9894551bbf2eef730c5a6090cdd845"
+    },
+    {
+      "path": "/home/jingxiang/workspace/usg-env-quality-reproduction/data/raw/asset_catalog.json",
+      "bytes": 777325,
+      "sha256": "9ad08664823ee1aaf7b9792c10d62d64f60010f2f67ae65fedbc05ff81019be6"
+    },
+    {
+      "path": "/home/jingxiang/workspace/usg-env-quality-reproduction/source/paper/arxiv-2503.15005.atom",
+      "bytes": 2945,
+      "sha256": "6e037d3fb47df873c926eb2f77a271d052fc7c34a4378bb71022eb49399ffb00"
+    },
+    {
+      "path": "/home/jingxiang/workspace/usg-env-quality-reproduction/source/usg/github-repository.json",
+      "bytes": 5244,
+      "sha256": "ba46d5b9791fa030f543e84e33ec1c47f746a730b49c305f6783cee897a3eb0b"
+    },
+    {
+      "path": "/home/jingxiang/workspace/usg-env-quality-reproduction/source/usg/github-releases.json",
+      "bytes": 5,
+      "sha256": "2ba33ca0557f1bb5b7ba88d67f9d0093c7185a36ec51fe2b7bd9372d3e001d6d"
+    },
+    {
+      "path": "/home/jingxiang/workspace/usg-env-quality-reproduction/source/usg/github-issues.json",
+      "bytes": 24815,
+      "sha256": "e1e6c3dd20d7d45ebd057a8634f3ddd93abc49ca3ffca6a38657afbceaa86e5b"
+    },
+    {
+      "path": "/home/jingxiang/workspace/usg-env-quality-reproduction/source/usg/repo/README.md",
+      "bytes": 8898,
+      "sha256": "c8064cffe96df698527e82346f64e7ec3d772b075ab710f873e1aadaa9c54376"
+    },
+    {
+      "path": "/home/jingxiang/workspace/usg-env-quality-reproduction/source/usg/repo/usg_par/model.py",
+      "bytes": 10080,
+      "sha256": "d125a455f554f2e38f2d6750729e18ba3aa41aea08d0b498713d73f2d77dcd96"
+    },
+    {
+      "path": "/home/jingxiang/workspace/usg-env-quality-reproduction/source/usg/repo/usg_par/rpc.py",
+      "bytes": 6244,
+      "sha256": "73307e489ffa4db3369e5d48342e17011f53ea1caba396d7fb51b1d97be328f4"
+    },
+    {
+      "path": "/home/jingxiang/workspace/robot-harness-gen-env/scene_gen/solver.py",
+      "bytes": 27904,
+      "sha256": "b3e41830239e8c9138156bcd26cc485312b2f480c0b287887b0e41c868e4359e"
+    },
+    {
+      "path": "/home/jingxiang/workspace/robot-harness-gen-env/scene_gen/validator.py",
+      "bytes": 23297,
+      "sha256": "40f4de25434d3ac40cc7a343f428962ab7b554a1cd479caa0e4bffe32f3bdb4c"
+    },
+    {
+      "path": "/home/jingxiang/workspace/robot-harness-gen-env/script/run_scene_runtime.py",
+      "bytes": 32209,
+      "sha256": "0525dded0ea38c9041fb0c8daac2ac98b7ab0ea26b11d27495ff53bed9941419"
+    },
+    {
+      "path": "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/036_cabinet/46653/mobility.urdf",
+      "bytes": 14530,
+      "sha256": "3905eaebdce2c7bee60612ba30633d63a373f4cfbda33d27737c7abc9f2da209"
+    },
+    {
+      "path": "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/036_cabinet/46653/model_data.json",
+      "bytes": 3161,
+      "sha256": "8581c9810986b50245bdeeee9a16b745984984a887c16fa0186a4bcccbad29a0"
+    },
+    {
+      "path": "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/110_basket/collision/base1.glb",
+      "bytes": 614948,
+      "sha256": "53cd390a47d060840d38143f27b94ed9dc3244919ffa64e596b6d591d7c2e587"
+    },
+    {
+      "path": "/home/jingxiang/workspace/robot-harness-gen-env/external/RoboTwin/assets/objects/110_basket/visual/base1.glb",
+      "bytes": 6533504,
+      "sha256": "32bc3e1e6b20a81738b4e6abad9c9109753da4b43264871b6a5764ff1d66c0dd"
+    }
+  ]
+}
