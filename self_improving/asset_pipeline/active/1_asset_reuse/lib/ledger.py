@@ -1409,6 +1409,7 @@ def upsert_model(
     model_entry,
     semantic_name=None,
     asset_id_prefix="external",
+    attribute_basis=None,
 ):
     """ledger=None creates a new per-asset ledger. If ledger already exists,
     asset-level fields must match what's already on disk (ValueError on
@@ -1449,6 +1450,10 @@ def upsert_model(
             },
             "models": [],
         }
+        # 可选：属性来源标记（manifest/vlm/mixed）。仅在建新账本时写入；
+        # 已有账本保留其原值（不参与下方漂移检查——它是标注元信息，不是资产事实）。
+        if attribute_basis:
+            ledger["semantics"]["attribute_basis"] = dict(attribute_basis)
     else:
         ledger = json.loads(json.dumps(ledger))  # deep copy, don't mutate caller's dict
         existing_asset_id = ledger.get("asset_id") or ""

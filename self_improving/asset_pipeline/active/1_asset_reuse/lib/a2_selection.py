@@ -101,6 +101,45 @@ def allocate_asset(category, library_dir, manifest_path):
     return f"{n}_{category}", 0
 
 
+KNOWN_ENTRY_KEYS = {
+    "category",
+    "aliases",
+    "colors",
+    "materials",
+    "sizes",
+    "size_decision",
+    "size_policy",
+    "collision",
+    "reorient",
+    "flat",
+    "pinned",
+    "local",
+    "allow_similar",
+    "comment",
+}
+
+
+def validate_entries(entries):
+    """清单条目校验：返回警告文本列表。不阻断执行——警告随 evidence 留痕，
+    未知字段照旧忽略（此前是完全静默，字段名拼错无从发现）。"""
+    if not isinstance(entries, list):
+        return [f"categories 清单必须是列表，收到 {type(entries).__name__}"]
+    warnings = []
+    for i, e in enumerate(entries):
+        if not isinstance(e, dict):
+            warnings.append(f"entry[{i}] 不是对象")
+            continue
+        if not e.get("category"):
+            warnings.append(f"entry[{i}] 缺少必填字段 category")
+        unknown = sorted(set(e) - KNOWN_ENTRY_KEYS)
+        if unknown:
+            warnings.append(
+                f"entry[{i}] ({e.get('category', '?')}) 未知字段将被忽略: "
+                + ", ".join(unknown)
+            )
+    return warnings
+
+
 def build_manifest_group(candidate, asset, model, entry):
     key = candidate.metadata.get("key") or candidate.metadata.get(
         "path", candidate.name
@@ -114,6 +153,8 @@ def build_manifest_group(candidate, asset, model, entry):
     }
     if entry.get("colors"):
         item["colors"] = entry["colors"]
+    if entry.get("materials"):
+        item["materials"] = entry["materials"]
     if entry.get("flat"):
         item["flat"] = True
     # Acquisition entries carry the same per-item knobs a hand-written
@@ -164,7 +205,13 @@ def pinned_candidate(entry):
 
 
 def write_evidence(
-    path, *, run_id, providers_snapshot, categories, categories_input=None
+    path,
+    *,
+    run_id,
+    providers_snapshot,
+    categories,
+    categories_input=None,
+    input_warnings=None,
 ):
     payload = {
         "schema": "envgen.asset_selection_evidence.v1",
@@ -172,6 +219,8 @@ def write_evidence(
         "providers": providers_snapshot,
         "categories": categories,
     }
+    if input_warnings:
+        payload["input_warnings"] = list(input_warnings)
     if categories_input is not None:
         payload["categories_sha256"] = hashlib.sha256(
             json.dumps(categories_input, sort_keys=True).encode()

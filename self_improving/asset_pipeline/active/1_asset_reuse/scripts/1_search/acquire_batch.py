@@ -791,6 +791,10 @@ def main(argv=None, runner=None, tiers=None):
         "fragment_dir": Path(a.out) / "fragments",
     }
     entries = json.loads(Path(a.categories).read_text())
+    # A3 清单校验：不阻断，警告上 stderr 并随 evidence 留痕（此前未知字段完全静默）
+    input_warnings = a2.validate_entries(entries)
+    for w in input_warnings:
+        print(f"WARN {w}", file=sys.stderr)
     results = []
     for e in entries:
         try:
@@ -840,6 +844,7 @@ def main(argv=None, runner=None, tiers=None):
         providers_snapshot=cfg,
         categories=results,
         categories_input=entries,
+        input_warnings=input_warnings,
     )
     ok = True
     for r in results:

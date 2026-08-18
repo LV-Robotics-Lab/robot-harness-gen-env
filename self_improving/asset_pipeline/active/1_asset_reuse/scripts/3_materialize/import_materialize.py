@@ -100,7 +100,11 @@ records = json.loads((staging / "staging_manifest.json").read_text())
 # property that never changes (category gains aliases, licence goes unknown ->
 # declared, usable flips when a measurement campaign unlocks an asset), which
 # is why it -- and nothing else -- is allowed into the path.
-_WEB_PROVIDER_DIRS = {"objaverse": "objaverse", "github_tree": "github", "github": "github"}
+_WEB_PROVIDER_DIRS = {
+    "objaverse": "objaverse",
+    "github_tree": "github",
+    "github": "github",
+}
 
 
 def _provider_dir(record):
@@ -129,6 +133,7 @@ def adir_for(asset):
     provider -- and a first-time asset is placed by the decision above."""
     found = ledger_mod.asset_dir(lib, asset)
     return found if found is not None else lib / _PROVIDER_BY_ASSET[asset] / asset
+
 
 ROTX90 = [math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]
 
@@ -697,6 +702,7 @@ for idx, r in worker_records:
         # the extra evidence on file, disagreement evicts the model even
         # though the thumbnail once matched.
         identity_final = dict(IDENTITY)
+        post_verdict = None
         if checks["pass"] and args.identity_basis in ("requested_by_acquire", "vlm"):
             from lib import a6_verify as a6
 
@@ -713,6 +719,7 @@ for idx, r in worker_records:
                     "evidence": str(vpath),
                     "verified": True,
                 }
+                post_verdict = verdict
             elif verdict["verdict"] == a6.MISMATCH:
                 checks["pass"] = False
                 row["status"] = "rejected"
@@ -737,6 +744,7 @@ for idx, r in worker_records:
 
         aliases = meta.get("aliases", [])
         colors = meta.get("colors", [])
+        materials = meta.get("materials", [])
 
         reps = [
             {
@@ -959,6 +967,33 @@ for idx, r in worker_records:
 
         led_path = ledger_path(args.library_dir, asset)
         existing = json.loads(led_path.read_text()) if led_path.exists() else None
+        # A2 语义回填：把 VLM 在 settle shot 上观察到的颜色/材质并进语义栏
+        # （声明优先、观察只填空），并记录 attribute_basis。只对**新建账本**
+        # 生效——已有账本的资产级语义受 upsert 防漂移契约保护，这里改任何
+        # 值都会（正确地）触发 ValueError，所以沿用账本现值。
+        attribute_basis = None
+        if existing is None and post_verdict is not None:
+            from lib import a6_verify as a6_merge_mod
+
+            colors, _cb = a6_merge_mod.merge_observed_attributes(
+                colors, post_verdict.get("colors")
+            )
+            materials, _mb = a6_merge_mod.merge_observed_attributes(
+                materials, post_verdict.get("materials")
+            )
+            basis = {k: v for k, v in (("colors", _cb), ("materials", _mb)) if v}
+            attribute_basis = basis or None
+        elif existing is not None:
+            # 已有账本：声明若只是账本语义的子集（含空——A2 回填造成的常态），
+            # 沿用账本现值以通过防漂移等值检查；声明里出现账本没有的新值则
+            # 保持原样送检，让 upsert 的 ValueError 把真实冲突暴露出来。
+            ex_sem = existing.get("semantics", {})
+            if all(v in ex_sem.get("colors", []) for v in colors):
+                colors = ex_sem.get("colors", colors)
+            if all(v in ex_sem.get("materials", []) for v in materials):
+                materials = ex_sem.get("materials", materials)
+            if all(v in ex_sem.get("aliases", []) for v in aliases):
+                aliases = ex_sem.get("aliases", aliases)
         # A re-import replaces the model entry wholesale, which silently
         # DOWNGRADED hand-audited licenses: 301_cup was declared CC-BY-4.0 by
         # the 2026-08-09 audit, got re-imported on 08-10 for a collision fix,
@@ -974,7 +1009,9 @@ for idx, r in worker_records:
                 if (
                     es.get("license", {}).get("status") == "declared"
                     and ns["license"]["status"] == "unknown"
-                    and all(es.get(k) == ns.get(k) for k in ("library", "group", "file"))
+                    and all(
+                        es.get(k) == ns.get(k) for k in ("library", "group", "file")
+                    )
                 ):
                     ns["license"] = es["license"]
         led = upsert_model(
@@ -990,9 +1027,10 @@ for idx, r in worker_records:
             identity=identity_final,
             aliases=aliases,
             colors=colors,
-            materials=[],
+            materials=materials,
             tags=["rigid", "external", "batch"],
             model_entry=entry,
+            attribute_basis=attribute_basis,
         )
         # single_led: a throwaway ledger containing ONLY this model's own
         # entry. Built once, reused both as the file-integrity check input
@@ -1011,9 +1049,10 @@ for idx, r in worker_records:
             identity=identity_final,
             aliases=aliases,
             colors=colors,
-            materials=[],
+            materials=materials,
             tags=["rigid", "external", "batch"],
             model_entry=entry,
+            attribute_basis=attribute_basis,
         )
         # Two-layer gate (fix-round-3, Critical -- harness 4): structural
         # checks run over the whole merged ledger (`led`, check_files=False)

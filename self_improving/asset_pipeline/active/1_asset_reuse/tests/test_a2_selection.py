@@ -178,3 +178,38 @@ def test_write_evidence_categories_sha256_stable_and_changes(tmp_path):
     assert "categories_sha256" in d1
     assert d1["categories_sha256"] == d2["categories_sha256"]
     assert d1["categories_sha256"] != d3["categories_sha256"]
+
+
+def test_manifest_group_carries_materials():
+    g = a2.build_manifest_group(
+        cand(),
+        "310_kettle",
+        0,
+        {"category": "kettle", "materials": ["metal"], "colors": ["white"]},
+    )
+    assert g["items"][0]["materials"] == ["metal"]
+    assert g["items"][0]["colors"] == ["white"]
+
+
+def test_validate_entries_flags_unknown_and_missing():
+    warns = a2.validate_entries(
+        [
+            {"category": "cup", "colour": ["red"]},
+            {"aliases": ["x"]},
+            {"category": "ok", "comment": "fine"},
+        ]
+    )
+    assert any("colour" in w for w in warns)
+    assert any("category" in w for w in warns)
+    assert len(warns) == 2
+
+
+def test_write_evidence_input_warnings(tmp_path):
+    p = tmp_path / "e.json"
+    a2.write_evidence(
+        p, run_id="r", providers_snapshot={}, categories=[], input_warnings=["w1"]
+    )
+    assert json.loads(p.read_text())["input_warnings"] == ["w1"]
+    p2 = tmp_path / "e2.json"
+    a2.write_evidence(p2, run_id="r", providers_snapshot={}, categories=[])
+    assert "input_warnings" not in json.loads(p2.read_text())

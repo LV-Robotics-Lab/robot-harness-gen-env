@@ -985,3 +985,49 @@ def test_new_model_entry_articulated_full():
         led["models"][0]["physical"]["mass_kg"]["runtime_default_basis"]
         == "urdf_inertial"
     )
+
+
+def test_upsert_model_attribute_basis_optional_and_preserved():
+    m = ledger.new_model_entry(
+        model=0,
+        representations=make_model()["representations"],
+        mesh_bbox_m=[0.078, 0.051, 0.053],
+        mesh_up_axis="Y",
+        origin_convention="bottom-center",
+        size_resolution=make_model()["physical"]["size_resolution"],
+        conventions=make_model()["physical"]["conventions"],
+        source=make_model()["source"],
+        verification=make_model()["verification"],
+    )
+    led = ledger.upsert_model(
+        None,
+        asset="320_ball",
+        category="ball",
+        kind="rigid",
+        profile="sapien_only",
+        identity=IDENTITY,
+        aliases=["ball"],
+        colors=["yellow"],
+        materials=["plastic"],
+        tags=[],
+        model_entry=m,
+        attribute_basis={"colors": "vlm", "materials": "vlm"},
+    )
+    assert led["semantics"]["attribute_basis"] == {"colors": "vlm", "materials": "vlm"}
+    assert ledger.validate_ledger(led, check_files=False) == []
+    # 已有账本再 upsert：basis 保留、不参与漂移检查
+    led2 = ledger.upsert_model(
+        led,
+        asset="320_ball",
+        category="ball",
+        kind="rigid",
+        profile="sapien_only",
+        identity=IDENTITY,
+        aliases=["ball"],
+        colors=["yellow"],
+        materials=["plastic"],
+        tags=[],
+        model_entry=dict(m, model_id=1),
+        attribute_basis=None,
+    )
+    assert led2["semantics"]["attribute_basis"] == {"colors": "vlm", "materials": "vlm"}
