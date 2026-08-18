@@ -21,6 +21,7 @@ _sys.path.insert(0, str(_P(__file__).resolve().parents[1] / "ledger"))
 import gen_fragment as gen_fragment_mod  # noqa: E402
 
 from lib import a1_providers as a1  # noqa: E402
+from lib import ledger  # noqa: E402
 from lib import a2_selection as a2  # noqa: E402
 from runtime_config import ASSET_CATALOG, ISAAC_PYTHON, SAPIEN_PYTHON  # noqa: E402
 
@@ -43,7 +44,9 @@ def resolve_catalog_path(dev_root, catalog_cfg, fallback):
 
 
 def check_imported(library_dir, asset, model):
-    d = Path(library_dir) / asset
+    d = ledger.asset_dir(library_dir, asset)
+    if d is None:
+        return False
     return (d / f"model_data{model}.json").is_file() and (
         d / "visual" / f"base{model}.glb"
     ).is_file()

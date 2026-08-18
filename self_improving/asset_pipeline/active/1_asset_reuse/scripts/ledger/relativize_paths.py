@@ -107,7 +107,10 @@ def walk(node, path, stats, problems):
 def main():
     n_changed = n_fail = 0
     for root in ("data/asset_library", "data/upstream_ledgers"):
-        for lp in sorted((DEV / root).glob("*/ledger.json")):
+        for asset_path in L.iter_assets(DEV / root):
+            lp = asset_path / "ledger.json"
+            if not lp.is_file():
+                continue
             led = json.loads(lp.read_text())
             before = json.dumps(led)
             stats = {"stripped": 0, "relocated": 0, "copied": 0}

@@ -404,9 +404,86 @@ def resolve_uri(uri):
     return p if p.is_absolute() else ACTIVE_ROOT / p
 
 
+_ASSET_DIR_NAME = re.compile(r"^\d+_")
+
+
+def _is_asset_name(name):
+    """Asset directories are `<number>_<category>` (301_cup, 001_bottle); the
+    provider grouping level (nvidia/, objaverse/, github/) never is. A pure
+    name test, so classifying a library costs no extra stat() per entry."""
+    return bool(_ASSET_DIR_NAME.match(name))
+
+
+def asset_dir(library_dir, asset):
+    """Locate `asset`'s directory in a library laid out EITHER flat
+    (<library_dir>/<asset>/) or grouped by source provider
+    (<library_dir>/<provider>/<asset>/).
+
+    Both layouts are accepted deliberately: the reader change and the
+    directory move are separate commits, so every intermediate state stays
+    runnable and either half can be rolled back on its own. Returns None when
+    the asset is absent -- callers needing it raise with their own context.
+    """
+    root = Path(library_dir)
+    flat = root / asset
+    if flat.is_dir():
+        return flat
+    hits = [
+        p
+        for p in root.glob("*/" + asset)
+        if p.is_dir() and not p.parent.name.startswith("_")
+    ]
+    if len(hits) > 1:
+        raise ValueError(
+            "asset %s resolves to %d directories (%s) -- a library must hold "
+            "one directory per asset id" % (asset, len(hits), sorted(map(str, hits)))
+        )
+    return hits[0] if hits else None
+
+
+def iter_assets(library_dir):
+    """Yield every asset directory, flat or provider-grouped, sorted by asset
+    id so reports/fragments stay diffable across runs AND across layouts.
+
+    `_`-prefixed entries (_source/ and friends) are library-internal, never
+    assets and never providers. A duplicated asset id raises rather than
+    silently resolving to one of them: during the layout migration a duplicate
+    means an interrupted move, and picking a winner would hide it.
+    """
+    root = Path(library_dir)
+    if not root.is_dir():
+        return
+    found = {}
+
+    def claim(path):
+        if path.name in found:
+            raise ValueError(
+                "asset %s exists twice in library: %s and %s"
+                % (path.name, found[path.name], path)
+            )
+        found[path.name] = path
+
+    for entry in sorted(root.iterdir()):
+        if not entry.is_dir() or entry.name.startswith("_"):
+            continue
+        if _is_asset_name(entry.name):
+            claim(entry)
+            continue
+        for sub in sorted(entry.iterdir()):
+            if sub.is_dir() and _is_asset_name(sub.name):
+                claim(sub)
+    for name in sorted(found):
+        yield found[name]
+
+
 def ledger_path(library_dir, asset):
-    """<library_dir>/<asset>/ledger.json"""
-    return Path(library_dir) / asset / "ledger.json"
+    """`asset`'s ledger.json, in whichever layout the library uses.
+
+    Falls back to the flat path when the asset does not exist yet, so callers
+    that are about to CREATE an asset still get a writable target.
+    """
+    found = asset_dir(library_dir, asset)
+    return (found or Path(library_dir) / asset) / "ledger.json"
 
 
 def reps_digest(model_entry, backend):

@@ -59,9 +59,7 @@ def audit(library_dir):
     (there's nothing to validate) and aren't counted in it."""
     lib = Path(library_dir)
     report = {"audited": 0, "clean": [], "violations": {}, "no_ledger": []}
-    for asset_dir in sorted(
-        p for p in lib.iterdir() if p.is_dir() and not p.name.startswith("_")
-    ):
+    for asset_dir in ledger.iter_assets(lib):
         asset = asset_dir.name
         lp = asset_dir / "ledger.json"
         if not lp.exists():

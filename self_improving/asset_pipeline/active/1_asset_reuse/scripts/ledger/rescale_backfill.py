@@ -111,7 +111,10 @@ def main():
     lib = Path(a.library)
     shadow = Path(a.shadow)
     n_done = n_skip = n_fail = 0
-    for lp in sorted(lib.glob("*/ledger.json")):
+    for asset_path in L.iter_assets(lib):
+        lp = asset_path / "ledger.json"
+        if not lp.is_file():
+            continue
         led = json.loads(lp.read_text())
         cat = led.get("category")
         row = tbl.get(cat)

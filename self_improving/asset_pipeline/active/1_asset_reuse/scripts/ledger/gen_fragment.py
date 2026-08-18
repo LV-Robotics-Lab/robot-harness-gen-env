@@ -112,8 +112,11 @@ def generate(library_dir, *, license_gate=False):
     frag = {}
     stats = {"unknown_license_models": 0}
 
-    for ledger_file in sorted(library_dir.glob("*/ledger.json")):
-        asset_key = ledger_file.parent.name
+    for asset_path in ledger.iter_assets(library_dir):
+        ledger_file = asset_path / "ledger.json"
+        if not ledger_file.is_file():
+            continue
+        asset_key = asset_path.name
         led = json.loads(ledger_file.read_text())
         check = "joint_sweep" if led.get("kind") == "articulated" else "settle"
         models_out = {}

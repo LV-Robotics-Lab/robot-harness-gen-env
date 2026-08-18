@@ -16,7 +16,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from runtime_config import GEN_ENV_ROOT, ROBOTWIN_ROOT  # noqa: E402
+from lib import ledger  # noqa: E402
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -72,10 +74,12 @@ for item in (real / "assets" / "objects").iterdir():
     (objects / item.name).symlink_to(item)  # dirs AND plain files (same.json etc.)
     n_real += 1
 n_ext = 0
-for item in lib.iterdir():
-    if item.is_dir() and not item.name.startswith("_"):
-        (objects / item.name).symlink_to(item)
-        n_ext += 1
+# iter_assets, not iterdir: with the library grouped by provider the direct
+# children are nvidia/ objaverse/ github/, and symlinking THOSE would hand the
+# upstream scanner three bogus "assets" and hide all 65 real ones.
+for item in ledger.iter_assets(lib):
+    (objects / item.name).symlink_to(item)
+    n_ext += 1
 print(
     f"shadow root: {n_real} robotwin + {n_ext} external asset dirs (skipped {n_skipped} 900_* proxy residues)"
 )

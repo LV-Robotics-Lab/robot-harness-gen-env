@@ -7,6 +7,8 @@ import json
 import re
 from pathlib import Path
 
+from lib import ledger
+
 REJ_UNSUPPORTED = "unsupported_format"
 REJ_THUMBS = "thumbs_artifact"
 REJ_OVERSIZE = "oversize"
@@ -85,10 +87,8 @@ def allocate_asset(category, library_dir, manifest_path):
         model_counts[name] = max(model_counts.get(name, 0), count)
 
     lib = Path(library_dir)
-    if lib.is_dir():
-        for p in lib.iterdir():
-            if p.is_dir():
-                note(p.name, len(list(p.glob("model_data*.json"))))
+    for p in ledger.iter_assets(lib):
+        note(p.name, len(list(p.glob("model_data*.json"))))
     mp = Path(manifest_path)
     if mp.is_file():
         for g in json.loads(mp.read_text()).get("groups", []):

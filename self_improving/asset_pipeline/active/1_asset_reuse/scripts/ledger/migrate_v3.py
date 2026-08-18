@@ -177,7 +177,10 @@ def main():
 
     n_ok = n_bad = 0
     for root, is_up in ((Path(a.library), False), (Path(a.upstream), True)):
-        for lp in sorted(root.glob("*/ledger.json")):
+        for asset_path in L.iter_assets(root):
+            lp = asset_path / "ledger.json"
+            if not lp.is_file():
+                continue
             led = json.loads(lp.read_text())
             led, changed = migrate_one(led, attrs, survey, is_up)
             violations = L.validate_ledger(led, check_files=False)
