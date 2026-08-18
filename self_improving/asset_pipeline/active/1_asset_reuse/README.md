@@ -15,7 +15,10 @@ catalog 被文字场景真实选中。全景与逐文件说明见本目录 `OVER
 | `../data/robotwin_shadow/` | 影子根（symlink 真 RoboTwin + 注入外部资产；不入 git） |
 | `../data/scene_gen_ext/` | 扩展 overrides + catalog（上游扫描器产出；不入 git） |
 
+
 ## 用法
+
+> 资产搜索/引进的完整操作指南（网页 + 命令行清单 + 模板 + 结果解读）→ `docs/asset_search_usage.md`
 
 ```bash
 export OMNI_KIT_ACCEPT_EULA=YES
