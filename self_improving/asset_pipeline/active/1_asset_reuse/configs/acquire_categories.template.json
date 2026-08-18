@@ -1,0 +1,32 @@
+[
+  {
+    "comment": "【searched·最简】只说要什么类别，系统自己四级检索（本地→NVIDIA→GitHub→Objaverse→发现）。category 是唯一必填字段；同类别若库里已有会直接复用、不重复引进",
+    "category": "lamp",
+    "aliases": ["lamp", "desk lamp"]
+  },
+  {
+    "comment": "【searched·带属性约束】colors/materials 参与检索词，并交给 VLM 看图验货——属性不符的候选会被淘汰。size_policy 控制物化缩放: match_category(默认，对齐同类中位尺寸) | absolute:<米> | none",
+    "category": "kettle",
+    "aliases": ["kettle", "teapot"],
+    "colors": ["white"],
+    "materials": ["metal"],
+    "size_policy": "absolute:0.25"
+  },
+  {
+    "comment": "【pinned·钉死 NVIDIA 资产服务器上的具体文件】不检索：直接下载 prefix+usd 指向的文件，过质检后入库。collision: coacd(离线凸分解，接触更干净)|copy",
+    "category": "mug",
+    "aliases": ["mug", "cup"],
+    "pinned": {
+      "prefix": "Assets/Isaac/5.1/Isaac/Props/YCB/Axis_Aligned",
+      "usd": "025_mug.usd"
+    },
+    "collision": "coacd"
+  },
+  {
+    "comment": "【local·验收本地文件入库】模型文件已放在服务器磁盘上（glb 等），只做物化质检+入库。reorient: settle 用于源文件姿态声明与几何不符的情况；flat: true 把直立门放宽到 45 度（自然躺平的物体用）",
+    "category": "toy_duck",
+    "aliases": ["duck", "toy duck"],
+    "local": {"path": "/absolute/path/to/your/model.glb"},
+    "reorient": "settle"
+  }
+]
