@@ -787,7 +787,7 @@ def main(argv=None, runner=None, tiers=None):
         "library": dev / "data" / "asset_library",
         "source": dev / "data" / "asset_library" / "_source",
         "out": Path(a.out),
-        "manifest": dev / "1_asset_reuse" / "configs" / "acquired_manifest.json",
+        "manifest": dev / "data" / "acquired_manifest.json",
         "fragment_dir": Path(a.out) / "fragments",
     }
     entries = json.loads(Path(a.categories).read_text())

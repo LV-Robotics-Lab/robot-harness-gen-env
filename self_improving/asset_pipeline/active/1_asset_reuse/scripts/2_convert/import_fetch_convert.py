@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Batch external import, phase 1 (isaac-smoke env).
 
-Reads configs/external_manifest.json, mirrors each group's server directory
+Reads an external-asset manifest JSON (historical batch record: archive/external_manifest.json), mirrors each group's server directory
 (all keys under the prefix except .thumbs; provenance-hashed), reads each
 source USD's upAxis, converts every item to GLB in one SimulationApp session.
 Writes staging_manifest.json for phase 2. Judged by content: PASS/FAIL lines

@@ -10,7 +10,7 @@ from lib import ledger
 
 IDENTITY = {
     "basis": "manifest_human",
-    "evidence": "configs/external_manifest.json",
+    "evidence": "archive/external_manifest.json",
     "verified": False,
 }
 
@@ -155,7 +155,7 @@ def make_valid(**over):
             "materials": [],
             "identity": {
                 "basis": "manifest_human",
-                "evidence": "configs/external_manifest.json",
+                "evidence": "archive/external_manifest.json",
                 "verified": False,
             },
         },

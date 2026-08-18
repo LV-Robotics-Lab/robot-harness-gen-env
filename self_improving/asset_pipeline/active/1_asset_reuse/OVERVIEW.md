@@ -129,14 +129,14 @@ coacd 碰撞体）。`run_smoke.sh` 已改走批量管线。`s7_probe_reverse` �
 
 - **目标**：一份 manifest 批量引入外部资产——一次 Kit 会话转全部，逐模型进程隔离验证，
   未过门的带原因淘汰、物理隔离出资产池。
-- **输入 → 输出**：`configs/external_manifest.json` → 资产池多模型目录 + 逐模型 bundle +
+- **输入 → 输出**：`archive/external_manifest.json` → 资产池多模型目录 + 逐模型 bundle +
   `import_matrix.json` + `external_overrides_fragment.yml`。
 
 | 文件 | 功能 |
 |---|---|
 | `import_fetch_convert.py` | 阶段 1（isaac-smoke）：镜像各组服务器目录（除 .thumbs，逐文件哈希）、读源 USD upAxis、单次 SimulationApp 会话全量转 GLB，写 `staging_manifest.json` |
 | `import_materialize.py` | 阶段 2（env-gen-yuxin）：GLB 规范化→物化→SAPIEN settle 硬门（位移<2mm、z>-2mm、倾角<15°/平躺物 45°）→账本+矩阵+fragment；惯例继承与尺寸策略在此落账 |
-| `configs/external_manifest.json` | 人工清单：组（服务器 prefix）+ 逐条 usd/asset/model/category/aliases/colors/footprint，可选 `collision: coacd`（离线精分解）、`size_policy` |
+| `archive/external_manifest.json` | 人工清单：组（服务器 prefix）+ 逐条 usd/asset/model/category/aliases/colors/footprint，可选 `collision: coacd`（离线精分解）、`size_policy` |
 
 **参数**：
 
@@ -204,7 +204,7 @@ s10/s12 无参数（路径写死在脚本头部变量）。**一键运行**：`r
 - **目标**：类目清单或场景 prompt 驱动，按信任梯度自动找资产、过门禁、复用批量管线
   引进，全程留决策证据；查缺补漏而非静默失败。
 - **输入 → 输出**：`acquire_categories.json` 或 prompt → 入库资产 +
-  `configs/acquired_manifest.json`（自动生成清单）+ `selection_evidence.json` /
+  `data/acquired_manifest.json`（自动生成清单）+ `selection_evidence.json` /
   `coverage_report.json` / `asset_gap_blocker.json`。
 
 | 文件 | 功能 |
@@ -217,7 +217,7 @@ s10/s12 无参数（路径写死在脚本头部变量）。**一键运行**：`r
 | `scripts/1_search/scene_acquire.py` | 场景驱动自适应：prompt→覆盖检查→缺口自动引进→重查→生成场景；仍未覆盖的写 `asset_gap_blocker.json`（生成式兜底的结构化输入） |
 | `configs/providers.json` | provider 开关/层级/源配置 + 全局 `top_k`/`max_fallback`/`max_size_bytes`/`license_gate` |
 | `configs/acquire_categories.json` | 类目需求清单（category + aliases） |
-| `configs/acquired_manifest.json` | acquire_batch 自动生成的已引进清单（与手写 external_manifest 同构） |
+| `data/acquired_manifest.json` | acquire_batch 自动生成的已引进清单（与手写 external_manifest 同构） |
 | `tests/`（7 文件 + fixtures） | 检索层单测：providers / selection / webfetch / coverage / acquire_batch / scene_acquire / 分层搜索（`fixtures/mini_catalog.json`） |
 
 **参数**：acquire_batch `--categories --providers --dev-root --out`，`--refresh-index`

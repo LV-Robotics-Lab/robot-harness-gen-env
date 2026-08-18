@@ -10,7 +10,7 @@ catalog 被文字场景真实选中。全景与逐文件说明见本目录 `OVER
 |---|---|
 | `scripts/` | 步骤脚本按流程顺序编号分夹：1_search/ 2_convert/ 3_materialize/ 4_validate/ 5_catalog/ + 横切 ledger/ probe/（入口 run_smoke.sh 在根，地图见 scripts/README.md） |
 | `archive/` | 已归档不再维护的代码（1_forward_convert/ = 线 A 正向转换，2026-08-10 归档） |
-| `configs/external_manifest.json` | 外部资产批量清单（来源 URL、资产归组、类别/别名/footprint） |
+| `archive/external_manifest.json` | 外部资产批量清单（来源 URL、资产归组、类别/别名/footprint） |
 | `../data/asset_library/` | 外部资产池（RoboTwin 布局，**按来源分一级**：`nvidia/ objaverse/ github/`；`_source/` 存源镜像+哈希清单，不按来源分。只有 `ledger.json` 入 git，见该目录 README） |
 | `../data/robotwin_shadow/` | 影子根（symlink 真 RoboTwin + 注入外部资产；不入 git） |
 | `../data/scene_gen_ext/` | 扩展 overrides + catalog（上游扫描器产出；不入 git） |
@@ -24,9 +24,9 @@ export ISAAC_PYTHON=/path/to/isaac-sim-python
 export ROBOTWIN_ROOT=/path/to/RoboTwin
 # 打样回归（B+C 全链路，4 步）—— 全程隔离，产物全落 results/_test/，生产 data/ 只读不写
 bash scripts/run_smoke.sh
-# 批量导入外部资产（按 configs/external_manifest.json）
+# 批量导入外部资产（按 archive/external_manifest.json）
 "$ISAAC_PYTHON" scripts/2_convert/import_fetch_convert.py \
-  --manifest configs/external_manifest.json \
+  --manifest archive/external_manifest.json \
   --source-root ../data/asset_library/_source --staging <staging目录>
 "$SAPIEN_PYTHON" scripts/3_materialize/import_materialize.py \
   --staging <staging目录> --library-dir ../data/asset_library \
