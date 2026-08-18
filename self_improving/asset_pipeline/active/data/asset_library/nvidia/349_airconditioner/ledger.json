@@ -1,0 +1,209 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_349_airconditioner",
+  "category": "airconditioner",
+  "kind": "rigid",
+  "profile": "cross_backend",
+  "semantics": {
+    "aliases": [
+      "airconditioner"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "results/sweep_out/C_airconditioner/acquire/identity_airconditioner.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.360203,
+          0.42,
+          0.198328
+        ],
+        "size_resolution": {
+          "mode": "capped:0.42",
+          "actual_max_dim_m": 4.202597618103028,
+          "scale": 0.09993819017809749,
+          "reference_max_dim_m": 0.42,
+          "reference_assets": [],
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/nvidia/349_airconditioner/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "6d3507310a98a629ff07ec37ce6ab20bca7604a05330357defd82a7001ed00e4",
+          "size_bytes": 1846752,
+          "metadata": {
+            "derived_from": "ac_unit_04.usd",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/nvidia/349_airconditioner/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "22cf3bff009198924f98de6e41235cebb45f1344a3fbfb6dc3f83aa3634af3b5",
+          "size_bytes": 1846752,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "data/asset_library/_source/acq_349_airconditioner/ac_unit_04.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "0d005566703b7606d1201df0fb07da1e707e2b4a4a8caec066bd44765133f079",
+          "size_bytes": 15638,
+          "metadata": {
+            "origin_prefix": "acq_349_airconditioner"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "data/asset_library/nvidia/349_airconditioner/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "be37d3739926c777373412c53289093990feefe784acfd6c754b8b4b5d7626a4",
+          "size_bytes": 5094,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "acq_349_airconditioner",
+        "file": "ac_unit_04.usd",
+        "license": {
+          "spdx": null,
+          "status": "declared",
+          "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4)",
+          "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "checked_date": "2026-08-16",
+          "checked_by": "carry-forward of 2026-08-09 owner-directed audit (same source library, NVIDIA Isaac Assets 5.1 Props class)"
+        },
+        "retrieved_at": "2026-08-13",
+        "source_manifest_path": "data/asset_library/_source/acq_349_airconditioner/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-13T22:17:39",
+          "verified_digest": "7aee61ea12d5d5648e4f207cad45af8d71b096230055def1f414d4ab8bcbba19",
+          "report_path": "results/sweep_out/C_airconditioner/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:23",
+          "verified_digest": "6e82f4b803fcd504746dfbf9ca3a50c5b7eadf2841ba7f6ac003b16a23c14091"
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "white"
+        ],
+        "color_fractions": {
+          "white": 1.0
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "external_ids": {
+    "env_gen": "349_airconditioner"
+  }
+}

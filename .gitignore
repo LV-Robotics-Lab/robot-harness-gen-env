@@ -85,6 +85,12 @@ self_improving/asset_pipeline/active/data/asset_library/*
 !self_improving/asset_pipeline/active/data/asset_library/*/
 self_improving/asset_pipeline/active/data/asset_library/*/*
 !self_improving/asset_pipeline/active/data/asset_library/*/ledger.json
+# 库按来源分层后账本深了一级（<provider>/<asset>/ledger.json）。上面那组
+# 规则只放行到 */ledger.json；不补下面三行，65 份账本会在搬迁的瞬间静默
+# 掉出版本控制——而账本正是 2026-08-14 事故里唯一幸存的东西。
+!self_improving/asset_pipeline/active/data/asset_library/*/*/
+self_improving/asset_pipeline/active/data/asset_library/*/*/*
+!self_improving/asset_pipeline/active/data/asset_library/*/*/ledger.json
 !self_improving/asset_pipeline/active/data/upstream_ledgers/
 self_improving/asset_pipeline/active/data/upstream_ledgers/*
 !self_improving/asset_pipeline/active/data/upstream_ledgers/*/

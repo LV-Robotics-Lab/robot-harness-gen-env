@@ -1,0 +1,212 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_347_light",
+  "category": "light",
+  "kind": "rigid",
+  "profile": "cross_backend",
+  "semantics": {
+    "aliases": [
+      "light"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "results/sweep_out/C_light/acquire/identity_light.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.054714,
+          0.035492,
+          0.35
+        ],
+        "size_resolution": {
+          "mode": "category:0.35",
+          "actual_max_dim_m": 6.2238270677472585,
+          "scale": 0.05623549565085908,
+          "reference_max_dim_m": 0.35,
+          "reference_assets": [],
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/nvidia/347_light/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "0f6b98fe622e0a6216ac965c3eb273768f10e54ed15cfbfe1d2094304e44de79",
+          "size_bytes": 13212724,
+          "metadata": {
+            "derived_from": "streetlamp_02.usd",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/nvidia/347_light/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "dec9d22f9163aa028abc31627d25718e95260e00b9858c6de1cbc41bc57096cc",
+          "size_bytes": 13212724,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "data/asset_library/_source/acq_347_light/streetlamp_02.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "b5b690658018d23bf431d3086fe1265bcc83aa5401a8cba8b36bde0e9839ed90",
+          "size_bytes": 143130,
+          "metadata": {
+            "origin_prefix": "acq_347_light"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "data/asset_library/nvidia/347_light/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "4fea79be6c9350db69f2d759700cf6e83529d88262ae0224619ffcf33b21b5f4",
+          "size_bytes": 2675,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "acq_347_light",
+        "file": "streetlamp_02.usd",
+        "license": {
+          "spdx": null,
+          "status": "declared",
+          "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4)",
+          "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "checked_date": "2026-08-16",
+          "checked_by": "carry-forward of 2026-08-09 owner-directed audit (same source library, NVIDIA Isaac Assets 5.1 Props class)"
+        },
+        "retrieved_at": "2026-08-13",
+        "source_manifest_path": "data/asset_library/_source/acq_347_light/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-13T22:07:33",
+          "verified_digest": "0392118416c247504c9f49d51aa0724c0f8a78aabb654adbca6cb631fb6f3f94",
+          "report_path": "results/sweep_out/C_light/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:23",
+          "verified_digest": "8ea9302cffeccaf96bfd88aa08fc43fc32e9fd27c25a273577ccda1f88aac8b6"
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "black",
+          "brown"
+        ],
+        "color_fractions": {
+          "black": 0.537,
+          "brown": 0.354,
+          "white": 0.079
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "external_ids": {
+    "env_gen": "347_light"
+  }
+}

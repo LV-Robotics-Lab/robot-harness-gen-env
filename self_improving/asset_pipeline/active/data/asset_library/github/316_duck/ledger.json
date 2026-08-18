@@ -1,0 +1,222 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_316_duck",
+  "category": "duck",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "duck",
+      "rubber duck",
+      "toy duck"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "results/20260811_production_first_run/identity_post_render_316_duck_m0.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.12,
+          0.111706,
+          0.083578
+        ],
+        "size_resolution": {
+          "mode": "category:0.12",
+          "actual_max_dim_m": 1.6547839748535154,
+          "scale": 0.07251701842871824,
+          "reference_max_dim_m": 0.12,
+          "reference_assets": [],
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/github/316_duck/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "f4f18993bbe7fe5cda632cb9f8812d2e6db152cde3bf8526c62e4f53c635bed2",
+          "size_bytes": 148648,
+          "metadata": {
+            "derived_from": "Duck.glb",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": false
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/github/316_duck/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "f4f18993bbe7fe5cda632cb9f8812d2e6db152cde3bf8526c62e4f53c635bed2",
+          "size_bytes": 148648,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "results/20260811_production_first_run/webcache/bb50981c0e2c55f14702/Duck.glb",
+          "backend": "portable",
+          "role": "visual_and_collision",
+          "sha256": "65bf938f54d6073e619e76e007820bbf980cdc3dc0daec0d94830ffc4ae54ab5",
+          "size_bytes": 120484,
+          "metadata": {
+            "origin_prefix": "web_316_duck"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "data/asset_library/github/316_duck/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "b1b886e8463ff6aae8c189215e841a9dc7cf502db0ff1cf5fc9df7717766234a",
+          "size_bytes": 3740,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "web (github_tree)",
+        "group": "web_316_duck",
+        "file": "Duck.glb",
+        "url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Duck/glTF-Binary/Duck.glb",
+        "license": {
+          "spdx": "SCEA",
+          "status": "declared",
+          "terms_note": "SCEA Shared Source License 1.0, (c) 2006 Sony. Owner sign-off 2026-08-11: approved for production pool, internal R&D use; external redistribution must carry the license text (release license-gate applies).",
+          "evidence_url": "https://spdx.org/licenses/SCEA.html ; https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Duck/metadata.json",
+          "checked_date": "2026-08-11",
+          "checked_by": "owner sign-off 2026-08-11 (recorded in _license_evidence/20260811/decisions.json)"
+        },
+        "retrieved_at": "2026-08-11",
+        "source_manifest_path": "data/asset_library/_source/web_316_duck/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "20260811_production_first_run",
+          "timestamp": "2026-08-11T21:57:25",
+          "verified_digest": "0b075ae7911d356dee4d294bc6e0d02f0ec390a19da182886145eaeb367ade0d",
+          "report_path": "results/20260811_production_first_run/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:21:21",
+          "verified_digest": "0b075ae7911d356dee4d294bc6e0d02f0ec390a19da182886145eaeb367ade0d"
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "yellow"
+        ],
+        "color_fractions": {
+          "yellow": 0.901,
+          "orange": 0.091,
+          "black": 0.006,
+          "white": 0.002
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "external_ids": {
+    "env_gen": "316_duck"
+  }
+}
