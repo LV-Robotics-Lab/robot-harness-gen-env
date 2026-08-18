@@ -79,7 +79,7 @@
       "representations": [
         {
           "format": "urdf",
-          "uri": "data/robotwin_assets/objects/036_cabinet/46653/mobility.urdf",
+          "uri": "data/asset_library/robotwin/036_cabinet/46653/mobility.urdf",
           "backend": "sapien",
           "role": "visual_and_collision",
           "sha256": "3905eaebdce2c7bee60612ba30633d63a373f4cfbda33d27737c7abc9f2da209",
@@ -88,13 +88,13 @@
         },
         {
           "format": "usd",
-          "uri": "data/robotwin_assets/usd/036_cabinet/cabinet.usd",
+          "uri": "data/asset_library/robotwin/036_cabinet/usd/cabinet.usd",
           "backend": "isaacsim",
           "role": "visual_and_collision",
           "sha256": "b6e731d45222220c1f20043baab24ca6b6caf5116881172f2d4628850725b22c",
           "size_bytes": 1573,
           "metadata": {
-            "derived_from": "data/robotwin_assets/objects/036_cabinet/46653/mobility.urdf",
+            "derived_from": "data/asset_library/robotwin/036_cabinet/46653/mobility.urdf",
             "converter": "a_forward line converter (tool/version not tracked by backfill_upstream)",
             "conversion_params": {}
           }

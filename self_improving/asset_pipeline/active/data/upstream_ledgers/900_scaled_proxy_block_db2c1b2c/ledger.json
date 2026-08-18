@@ -72,7 +72,7 @@
       "representations": [
         {
           "format": "obj",
-          "uri": "data/robotwin_assets/objects/900_scaled_proxy_block_db2c1b2c/visual/textured0.obj",
+          "uri": "data/asset_library/robotwin/900_scaled_proxy_block_db2c1b2c/visual/textured0.obj",
           "backend": "sapien",
           "role": "visual",
           "sha256": "0686df0a0626ab9a20361ef9b5a3e5be47bc398f4efdf1e4faae4683c1685e5b",
@@ -81,7 +81,7 @@
         },
         {
           "format": "obj",
-          "uri": "data/robotwin_assets/objects/900_scaled_proxy_block_db2c1b2c/collision/textured0.obj",
+          "uri": "data/asset_library/robotwin/900_scaled_proxy_block_db2c1b2c/collision/textured0.obj",
           "backend": "sapien",
           "role": "collision",
           "sha256": "7cb6da0abb600417434fad90a3f3e8b726880d04872d6e8ded16d38c461c15eb",

@@ -73,7 +73,7 @@
       "representations": [
         {
           "format": "urdf",
-          "uri": "data/robotwin_assets/objects/015_laptop/10098/mobility.urdf",
+          "uri": "data/asset_library/robotwin/015_laptop/10098/mobility.urdf",
           "backend": "sapien",
           "role": "visual_and_collision",
           "sha256": "82ccd27a859ba3dd67d9d076e3b6cc450235804730040cdea8d1923cbabdf04b",

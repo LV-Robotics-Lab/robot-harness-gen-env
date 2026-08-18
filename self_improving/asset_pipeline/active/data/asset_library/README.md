@@ -5,9 +5,11 @@
 根、要么是可重建的索引缓存。**丢了它没有任何地方能恢复**——`storage_uri` 仍为
 null，凭据只在 `../../../receipts/` 记了哈希，哈希证明得了丢的是什么，找不回来。
 
-上游 RoboTwin 自带的资产**不在这里**，它们留在 `external/RoboTwin/assets/objects/`
-原地，由 s9 的影子根软链引用，账本另存 `../upstream_ledgers/`。入库的判据是
-**「从外部采购进来的」，不是「被用到了」**。
+上游 RoboTwin 自带的 131 个资产**也在这里**（2026-08-18 owner 决策），落在
+`robotwin/` 下。搬迁前逐字节校验过：`rsync -rcn` 与 `external/RoboTwin/assets/
+objects` 比对 **0 处差异**，所以管线从新家读它们不会静默换到另一份资产上。
+它们的账本仍在 `../upstream_ledgers/`（由上游 catalog 派生，与本目录内的账本
+所有权不同），资产目录内不放 `ledger.json`。
 
 ## 布局：按来源分一级
 
@@ -16,10 +18,13 @@ asset_library/
 ├── nvidia/      41  ← NVIDIA Isaac Assets 5.1（含 ycb_axis_aligned 那批）
 ├── objaverse/   21  ← Objaverse（检索 tier3）
 ├── github/       4  ← Khronos glTF-Sample-Models 等 github tree（tier4）
+├── robotwin/   131  ← 上游 RoboTwin 自带（+ LICENSE.upstream；账本在 ../upstream_ledgers/）
 └── _source/     92  ← 各采购组的源镜像 + SHA-256 清单（按 group 名，不按来源）
 ```
 
-每个资产夹 `<号>_<类目>/`：
+每个资产夹 `<号>_<类目>/`（`robotwin/` 下另有 5 个非数字命名的原生资产：
+`cube` `vis_box` `sapien-block1/2` `objaverse`，`iter_assets` 在来源夹下不做名字
+判断，正是为了认得它们）：
 
 | 内容 | 说明 | 进 git |
 |---|---|---|
@@ -90,13 +95,29 @@ asset_library/
 放行深度——账本每深一级就要补一组 `!*/`、`*/*`、`!*/ledger.json` 规则，漏了会
 在 `mv` 的瞬间静默掉出版本控制。做完跑 `ledger_audit` + 重建影子根验收。
 
+## 两个跟 `robotwin/` 有关的规则
+
+- **`900_*` 代理不进影子视图**。`900_gen_*` / `900_scaled_*` 是早期生成/派生的
+  代理件，s9 把它们排除出影子根——这条排除就是「先复用、再生成」的执行点。它们
+  自己是有账本的（`../upstream_ledgers/` 16 份里占 5 份），只是不参与场景生成。
+- **s9 装配是「库优先、上游补缺」**。同一个资产名两边都可能有，库先注册、上游只
+  补库里没有的（含 `same.json` 这类非目录条目）。顺序反过来会在第二遍
+  `symlink_to` 上抛 FileExistsError。这个写法在搬迁前后都成立。
+
+## external-only 视图的判据
+
+`asset_catalog_external_only.json`（s12 验收门读它）= **来源夹不是 `robotwin/`**
+的那些。搬迁前这条等价于「路径在库下」；搬迁后那个旧判据会匹配全部 191 条，
+把 s12 的前提（掩蔽上游、必须 ground 到我方资产）变成不可证伪。判据现在直接
+就是来源夹——这也是把来源做进路径的一个具体回报。
+
 ## 已知例外
 
 - **`303_boombox` 没有账本**。它的源已不可达，无法补齐 v3 必需字段；`ledger_audit`
   把它记在 `no_ledger` 里作为信息项，不算 violation。归入 `github/` 的依据是采购
   清单里的 group prefix `Models/BoomBox/glTF-Binary`，与三个已确认的 github 资产同形。
-- **`320_teddy_bear` 有一条 `file_missing`**：`representations[2].uri` 指向已被清空
-  的 `/tmp/teddy_acq2/webcache/...`。路径卫生（2026-08-16）刻意保留 `/tmp` 字符串
-  （不含用户名，是诚实的临时运行指针），所以这条要靠重新取源修，不是路径问题。
+- ~~`320_teddy_bear` 的 `/tmp` 悬空 uri~~ **已修**（2026-08-18）：同一文件早已镜像在
+  `_source/web_320_teddy_bear/`，sha256 与账本记录逐位相同，据此改指向。工具
+  `work/oneoff/rehome_uris.py` 是通用形态（仅当哈希相等才改写）。
 - **`_source/` 不按来源分**。它按采购 group 名组织（`acq_*` / `ycb_axis_aligned` /
   `web_*`），账本里 144 处 uri 指着它；分层迁移一处未动。

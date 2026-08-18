@@ -86,7 +86,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "data/robotwin_assets/objects/001_bottle/visual/base0.glb",
+          "uri": "data/asset_library/robotwin/001_bottle/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "32310f63a7de183e4c665c24681b7e1407b408241035a4d36c378507c1fd8373",
@@ -102,7 +102,7 @@
         },
         {
           "format": "glb",
-          "uri": "data/robotwin_assets/objects/001_bottle/collision/base0.glb",
+          "uri": "data/asset_library/robotwin/001_bottle/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "289a8a4b2c949f684c8277341b2a72ca1769a8354d83089915ddc3ac2a83720a",
@@ -118,13 +118,13 @@
         },
         {
           "format": "usd",
-          "uri": "data/robotwin_assets/usd/001_bottle/bottle.usd",
+          "uri": "data/asset_library/robotwin/001_bottle/usd/bottle.usd",
           "backend": "isaacsim",
           "role": "visual_and_collision",
           "sha256": "9e3c783911bb75fe5ea84c42f87e68cba5e65b5b8da0ff58ec46ad989a8ed506",
           "size_bytes": 1540,
           "metadata": {
-            "derived_from": "data/robotwin_assets/objects/001_bottle/visual/base0.glb",
+            "derived_from": "data/asset_library/robotwin/001_bottle/visual/base0.glb",
             "converter": "a_forward line converter (tool/version not tracked by backfill_upstream)",
             "conversion_params": {}
           }

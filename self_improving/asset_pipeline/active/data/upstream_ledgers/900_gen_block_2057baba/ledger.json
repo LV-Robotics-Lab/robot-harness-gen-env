@@ -71,7 +71,7 @@
       "representations": [
         {
           "format": "obj",
-          "uri": "data/robotwin_assets/objects/900_gen_block_2057baba/visual/textured0.obj",
+          "uri": "data/asset_library/robotwin/900_gen_block_2057baba/visual/textured0.obj",
           "backend": "sapien",
           "role": "visual",
           "sha256": "a189d1954f76d74b0e8c48944572d7fd9d90dcf9941f85cc883e127b162e25c7",
@@ -80,7 +80,7 @@
         },
         {
           "format": "obj",
-          "uri": "data/robotwin_assets/objects/900_gen_block_2057baba/collision/textured0.obj",
+          "uri": "data/asset_library/robotwin/900_gen_block_2057baba/collision/textured0.obj",
           "backend": "sapien",
           "role": "collision",
           "sha256": "3e995bf7f7d17cb0258645c33e33bc38ca81f4c53a7be9144cf3d7737d15351c",

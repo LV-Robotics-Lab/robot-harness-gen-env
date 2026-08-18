@@ -79,7 +79,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "data/robotwin_assets/objects/035_apple/visual/base0.glb",
+          "uri": "data/asset_library/robotwin/035_apple/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "80dcf0a725dd720073862af880e8830a52355b73050d5d6573712b41c17dcb8f",
@@ -95,7 +95,7 @@
         },
         {
           "format": "glb",
-          "uri": "data/robotwin_assets/objects/035_apple/collision/base0.glb",
+          "uri": "data/asset_library/robotwin/035_apple/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "a0025e1dad43b13ddae37fdc9f9575f193fc083690c4b07018b4a63562ae865c",

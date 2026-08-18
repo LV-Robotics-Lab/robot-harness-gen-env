@@ -88,7 +88,7 @@
       "representations": [
         {
           "format": "glb",
-          "uri": "data/robotwin_assets/objects/004_fluted-block/visual/base0.glb",
+          "uri": "data/asset_library/robotwin/004_fluted-block/visual/base0.glb",
           "backend": "sapien",
           "role": "visual",
           "sha256": "7fedfa5127b11c0df2ebbde7a9a70037f8e5530789e51b5650a0ad6a23f4efe9",
@@ -104,7 +104,7 @@
         },
         {
           "format": "glb",
-          "uri": "data/robotwin_assets/objects/004_fluted-block/collision/base0.glb",
+          "uri": "data/asset_library/robotwin/004_fluted-block/collision/base0.glb",
           "backend": "sapien",
           "role": "collision",
           "sha256": "7bed3686c15f83ae60562bc8c0d369da2e511613377f6e37a67019c2bc92117c",

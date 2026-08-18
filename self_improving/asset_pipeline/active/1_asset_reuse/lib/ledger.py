@@ -470,7 +470,12 @@ def iter_assets(library_dir):
             claim(entry)
             continue
         for sub in sorted(entry.iterdir()):
-            if sub.is_dir() and _is_asset_name(sub.name):
+            # No name test under a provider dir: depth already says "asset",
+            # and RoboTwin ships natives that are not `<digits>_<category>`
+            # at all (cube, vis_box, sapien-block1/2, objaverse). The name
+            # test is only needed at the root, where the flat legacy layout
+            # makes provider dirs and asset dirs siblings.
+            if sub.is_dir() and not sub.name.startswith("_"):
                 claim(sub)
     for name in sorted(found):
         yield found[name]

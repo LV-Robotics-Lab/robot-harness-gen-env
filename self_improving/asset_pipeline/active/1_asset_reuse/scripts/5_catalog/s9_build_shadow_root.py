@@ -63,25 +63,49 @@ for item in (real / "assets").iterdir():
     (shadow / "assets" / item.name).symlink_to(item)
 objects = shadow / "assets" / "objects"
 objects.mkdir()
-n_real = 0
+# Library FIRST, upstream fills the gaps. Since the RoboTwin natives were
+# moved into the library under robotwin/ (2026-08-18), both sources can offer
+# the same asset name; linking upstream first would raise FileExistsError on
+# the second pass. Ordering it this way also makes the library authoritative
+# for anything it holds, which is the point of having moved them in -- while
+# an upstream checkout that still carries assets the library lacks keeps
+# working unchanged, so this is correct in both the pre- and post-move state.
 n_skipped = 0
-for item in (real / "assets" / "objects").iterdir():
-    if item.name.startswith("900_"):
-        # residue of earlier generated/derived proxies (900_gen_*, 900_scaled_*):
-        # not canonical assets; keeping them out enforces reuse-before-generation
+
+
+def _is_proxy(name):
+    """900_gen_* / 900_scaled_* are earlier generated/derived proxies, not
+    canonical assets. They stay OUT of the shadow view (that exclusion is what
+    enforces reuse-before-generation) even though they do carry ledgers of
+    their own under data/upstream_ledgers/."""
+    return name.startswith("900_")
+
+
+# iter_assets, not iterdir: the library's direct children are provider dirs
+# (nvidia/ objaverse/ github/ robotwin/); symlinking THOSE would hand the
+# upstream scanner four bogus "assets" and hide every real one.
+n_ext = 0
+for item in ledger.iter_assets(lib):
+    if _is_proxy(item.name):
         n_skipped += 1
         continue
-    (objects / item.name).symlink_to(item)  # dirs AND plain files (same.json etc.)
-    n_real += 1
-n_ext = 0
-# iter_assets, not iterdir: with the library grouped by provider the direct
-# children are nvidia/ objaverse/ github/, and symlinking THOSE would hand the
-# upstream scanner three bogus "assets" and hide all 65 real ones.
-for item in ledger.iter_assets(lib):
     (objects / item.name).symlink_to(item)
     n_ext += 1
+n_real = 0
+for item in (real / "assets" / "objects").iterdir():
+    if _is_proxy(item.name):
+        n_skipped += 1
+        continue
+    # is_symlink(), not exists(): every entry here was just created as a
+    # symlink, and exists(follow_symlinks=False) needs py3.12 while this runs
+    # on the 3.10 env-gen-yuxin env.
+    if (objects / item.name).is_symlink():
+        continue  # the library already provides it
+    (objects / item.name).symlink_to(item)  # dirs AND plain files (same.json etc.)
+    n_real += 1
 print(
-    f"shadow root: {n_real} robotwin + {n_ext} external asset dirs (skipped {n_skipped} 900_* proxy residues)"
+    f"shadow root: {n_ext} from library + {n_real} only-in-upstream asset dirs "
+    f"(skipped {n_skipped} 900_* proxy residues)"
 )
 
 # ---- extended overrides (copy upstream + append ours) ----
@@ -545,12 +569,23 @@ if ok and args.admission:
 # also reflects whatever `--admission enforce` filtered out of the main view.
 if ok:
     _full = json.loads(cat_out.read_text())
-    _lib_prefix = str(lib.resolve()) + "/"
-    _ext_entries = [
-        e
-        for e in _full["entries"]
-        if str(Path(e["asset_path"]).resolve()).startswith(_lib_prefix)
-    ]
+    # "External" means acquired by us, NOT inherited from RoboTwin. Before the
+    # natives moved into the library (2026-08-18) "lives under the library" was
+    # the same statement; afterwards it silently matched all 191 entries and
+    # would have handed s12 a view where its own premise -- prompts must ground
+    # to OUR assets with the natives masked -- is unfalsifiable. The predicate
+    # is the source provider, which is exactly what the directory now records.
+    _UPSTREAM_PROVIDERS = {"robotwin"}
+    _lib_root = lib.resolve()
+    _ext_entries = []
+    for e in _full["entries"]:
+        p = Path(e["asset_path"]).resolve()
+        try:
+            provider = p.relative_to(_lib_root).parts[0]
+        except ValueError:
+            continue  # not in the library at all -> not ours
+        if provider not in _UPSTREAM_PROVIDERS:
+            _ext_entries.append(e)
     _ext_only_out = ext / "asset_catalog_external_only.json"
     with _ext_only_out.open("w", encoding="utf-8") as _s:
         json.dump({**_full, "entries": _ext_entries}, _s, indent=2, ensure_ascii=False)
