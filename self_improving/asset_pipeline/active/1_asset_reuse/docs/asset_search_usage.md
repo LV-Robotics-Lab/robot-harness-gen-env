@@ -53,13 +53,47 @@ $PY scripts/1_search/acquire_batch.py \
 
 ### 第 3 步 · 看结果
 
-| 看什么 | 在哪 |
+**输出逻辑**（一次批量运行的收尾顺序）：
+
+1. 逐条处理产出一条**决策记录**（单条抛异常也会被记成 `entry_error`，不影响其余条目）；
+2. 只要本批**有 ≥1 条成功引进**，就触发一次全局重建：从资产池**全部** ledger 重新派生
+   overrides（`<out>/overrides_ext_all.yml`，不是只合并本批的——账本是唯一真源），再调
+   s9 重建影子根 + 扩展 catalog（此后新资产就能被文字场景选中）；
+3. 全部决策记录连同**providers 配置快照**和**输入清单回显**写入
+   `<out>/selection_evidence.json`（可复现：当时用什么源、什么参数、请求了什么，全部冻结在证据里）；
+4. stdout 逐条打 `PASS/FAIL <类别> status=…`，最后一行 `SUMMARY PASS|FAIL imported=N`；
+   **退出码**：每条都是 `imported` 或 `reused_local` 才返回 0，出现任一 `exhausted`/`entry_error` 返回 1。
+
+**selection_evidence.json 结构**：
+
+| 字段 | 含义 |
 |---|---|
-| 每条的检索决策链 | `<out>/selection_evidence.json` —— 每类别一段：`status`（`imported` 成功 / `reused_local` 本地已有 / `exhausted` 搜遍没找到）、咨询过的 `tiers_consulted`、每个候选的 `verdict` 与拒绝码（如 `validation_failed:tilt` 物理不稳、`outranked` 被更优者压过） |
-| 新资产本体 | `$A/data/asset_library/<新编号>/`（模型 + `ledger.json` 账本 + `snapshots/` 快照） |
-| 质检截图 | `<out>/shots/` |
-| 引进台账（自动追加，勿手改） | `$A/data/acquired_manifest.json` |
-| 网页里浏览 | http://100.64.0.9:8811/#library 「最近引进」和各统计下钻 |
+| `run_id` / `providers_snapshot` / `categories_input` | 本次运行名 / 当时的检索源完整配置 / 你提交的清单原文 |
+| `categories[]` | 每条请求一段决策记录，字段如下 |
+| ├ `query` | 实际检索的类别与别名 |
+| ├ `entry_mode` | `searched` / `pinned` / `local` / `error` |
+| ├ `status` | **四种结局**：`imported` 引进成功 · `reused_local` 本地已有直接复用 · `exhausted` 搜遍所有层没有合格候选 · `entry_error` 该条目本身出错 |
+| ├ `tiers_consulted` | 实际问过哪几层（如 `[0,1,2,3]`＝一路搜到 Objaverse） |
+| ├ `attempts` | 实际尝试导入的候选数 |
+| ├ `candidates[]` | 每个候选的 `verdict` 与拒绝码：`selected` 选中 / `outranked` 被更优者压过 / `validation_failed:<门>`（如 `:tilt` 物理不稳）/ 许可、超大小、VLM 判非同类等 |
+| └ `selected` | 胜出候选的来源、URL、许可证、落到的资产编号 |
+
+**过程产物**（都在 `--out` 下，是证据不是最终品，可整目录删）：
+
+| 目录/文件 | 是什么 |
+|---|---|
+| `webcache/<hash>/` | 下载缓存 + 来源溯源（provenance.json） |
+| `staging_<资产>_m<N>/` | 转换暂存区 + staging_manifest.json（两阶段交接单） |
+| `physcheck/` | 物理质检用的碰撞/视觉网格 |
+| `shots/` | SAPIEN 质检截图（web 第④步展示的就是它） |
+| `bundles/` `fragments/` `rows/` | 逐模型的账本条目、catalog 片段、导入行记录 |
+| `import_matrix.json` | 逐模型 通过/淘汰 总表 |
+| `overrides_ext_all.yml` | 全池派生的 catalog 重建输入（有引进才生成） |
+
+**最终品（副作用，不在 --out 里）**：`data/asset_library/<新编号>/`（模型 + ledger.json +
+snapshots）、`data/acquired_manifest.json` 追加一条、`data/scene_gen_ext/` catalog 重建、
+`data/robotwin_shadow/` 影子根更新。网页 http://100.64.0.9:8811/#library 的
+「最近引进」与统计会随之变化。
 
 ## 行为要点（跑之前该知道的）
 
