@@ -1,0 +1,860 @@
+[
+  {
+    "scenario": "fixed_adversarial",
+    "fixed": true,
+    "basket_offset_m": [
+      -0.32,
+      -0.18
+    ],
+    "height_correction_m": 0.0,
+    "perturbation_velocity_xy_m_s": [
+      0.0,
+      0.0
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.9578800797462463
+    ],
+    "final_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.9578800797462463
+    ],
+    "translation_drift_m": 0.0,
+    "rotation_drift_deg": 0.0,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 0.0,
+    "terminal_unexpected_basket_contact_fraction": 1.0,
+    "max_penetration_point_count": 4,
+    "minimum_collision_bottom_z_m": 0.8428557515144348,
+    "pose_preserved": true,
+    "physical_table_support": false,
+    "no_unexpected_basket_contact": false,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": false,
+    "frame_count": 120
+  },
+  {
+    "scenario": "released_adversarial",
+    "fixed": false,
+    "basket_offset_m": [
+      -0.32,
+      -0.18
+    ],
+    "height_correction_m": 0.0,
+    "perturbation_velocity_xy_m_s": [
+      0.0,
+      0.0
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.9578800797462463
+    ],
+    "final_root_position_m": [
+      0.12679927051067352,
+      0.12964782118797302,
+      0.8560243844985962
+    ],
+    "translation_drift_m": 0.10941561445815227,
+    "rotation_drift_deg": 16.90950068130534,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 6,
+    "minimum_collision_bottom_z_m": 0.7409130930900574,
+    "pose_preserved": false,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": false,
+    "frame_count": 120
+  },
+  {
+    "scenario": "released_corrected_control",
+    "fixed": false,
+    "basket_offset_m": [
+      0.38,
+      0.0
+    ],
+    "height_correction_m": 0.10185575151443482,
+    "perturbation_velocity_xy_m_s": [
+      0.0,
+      0.0
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.8560243248939514
+    ],
+    "final_root_position_m": [
+      0.09999999403953552,
+      0.09999998658895493,
+      0.8560242652893066
+    ],
+    "translation_drift_m": 6.188917057900187e-08,
+    "rotation_drift_deg": 1.7745352001653195e-05,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 0,
+    "minimum_collision_bottom_z_m": 0.740999698638916,
+    "pose_preserved": true,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": true,
+    "frame_count": 120
+  },
+  {
+    "scenario": "perturb_adversarial_vx-0.020_vy-0.020",
+    "fixed": false,
+    "basket_offset_m": [
+      -0.32,
+      -0.18
+    ],
+    "height_correction_m": 0.0,
+    "perturbation_velocity_xy_m_s": [
+      -0.02,
+      -0.02
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.9578800797462463
+    ],
+    "final_root_position_m": [
+      0.1127871498465538,
+      0.11757266521453857,
+      0.8560243248939514
+    ],
+    "translation_drift_m": 0.10414847320048422,
+    "rotation_drift_deg": 14.697803539167557,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 6,
+    "minimum_collision_bottom_z_m": 0.7409689426422119,
+    "pose_preserved": false,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": false,
+    "frame_count": 0,
+    "placement_class": "adversarial"
+  },
+  {
+    "scenario": "perturb_adversarial_vx+0.000_vy-0.020",
+    "fixed": false,
+    "basket_offset_m": [
+      -0.32,
+      -0.18
+    ],
+    "height_correction_m": 0.0,
+    "perturbation_velocity_xy_m_s": [
+      0.0,
+      -0.02
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.9578800797462463
+    ],
+    "final_root_position_m": [
+      0.1175883486866951,
+      0.11948572099208832,
+      0.8560243248939514
+    ],
+    "translation_drift_m": 0.1051838296419547,
+    "rotation_drift_deg": 15.440400343571154,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 6,
+    "minimum_collision_bottom_z_m": 0.7409151792526245,
+    "pose_preserved": false,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": false,
+    "frame_count": 0,
+    "placement_class": "adversarial"
+  },
+  {
+    "scenario": "perturb_adversarial_vx+0.020_vy-0.020",
+    "fixed": false,
+    "basket_offset_m": [
+      -0.32,
+      -0.18
+    ],
+    "height_correction_m": 0.0,
+    "perturbation_velocity_xy_m_s": [
+      0.02,
+      -0.02
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.9578800797462463
+    ],
+    "final_root_position_m": [
+      0.11507802456617355,
+      0.11619493365287781,
+      0.8560243844985962
+    ],
+    "translation_drift_m": 0.10423149841588555,
+    "rotation_drift_deg": 18.141286491399587,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 6,
+    "minimum_collision_bottom_z_m": 0.7409406900405884,
+    "pose_preserved": false,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": false,
+    "frame_count": 0,
+    "placement_class": "adversarial"
+  },
+  {
+    "scenario": "perturb_adversarial_vx-0.020_vy+0.000",
+    "fixed": false,
+    "basket_offset_m": [
+      -0.32,
+      -0.18
+    ],
+    "height_correction_m": 0.0,
+    "perturbation_velocity_xy_m_s": [
+      -0.02,
+      0.0
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.9578800797462463
+    ],
+    "final_root_position_m": [
+      0.11250565201044083,
+      0.12311658263206482,
+      0.8560243844985962
+    ],
+    "translation_drift_m": 0.10519196867161949,
+    "rotation_drift_deg": 14.60018701189539,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 6,
+    "minimum_collision_bottom_z_m": 0.7409865856170654,
+    "pose_preserved": false,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": false,
+    "frame_count": 0,
+    "placement_class": "adversarial"
+  },
+  {
+    "scenario": "perturb_adversarial_vx+0.000_vy+0.000",
+    "fixed": false,
+    "basket_offset_m": [
+      -0.32,
+      -0.18
+    ],
+    "height_correction_m": 0.0,
+    "perturbation_velocity_xy_m_s": [
+      0.0,
+      0.0
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.9578800797462463
+    ],
+    "final_root_position_m": [
+      0.12679927051067352,
+      0.12964782118797302,
+      0.8560243844985962
+    ],
+    "translation_drift_m": 0.10941561445815227,
+    "rotation_drift_deg": 16.90950068130534,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 6,
+    "minimum_collision_bottom_z_m": 0.7409130930900574,
+    "pose_preserved": false,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": false,
+    "frame_count": 0,
+    "placement_class": "adversarial"
+  },
+  {
+    "scenario": "perturb_adversarial_vx+0.020_vy+0.000",
+    "fixed": false,
+    "basket_offset_m": [
+      -0.32,
+      -0.18
+    ],
+    "height_correction_m": 0.0,
+    "perturbation_velocity_xy_m_s": [
+      0.02,
+      0.0
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.9578800797462463
+    ],
+    "final_root_position_m": [
+      0.1202731728553772,
+      0.12332971394062042,
+      0.8560243248939514
+    ],
+    "translation_drift_m": 0.10644187031783714,
+    "rotation_drift_deg": 18.23988465337232,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 6,
+    "minimum_collision_bottom_z_m": 0.7409710884094238,
+    "pose_preserved": false,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": false,
+    "frame_count": 0,
+    "placement_class": "adversarial"
+  },
+  {
+    "scenario": "perturb_adversarial_vx-0.020_vy+0.020",
+    "fixed": false,
+    "basket_offset_m": [
+      -0.32,
+      -0.18
+    ],
+    "height_correction_m": 0.0,
+    "perturbation_velocity_xy_m_s": [
+      -0.02,
+      0.02
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.9578800797462463
+    ],
+    "final_root_position_m": [
+      0.12688666582107544,
+      0.13111279904842377,
+      0.8560243844985962
+    ],
+    "translation_drift_m": 0.10984298587134317,
+    "rotation_drift_deg": 15.376558014250714,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 6,
+    "minimum_collision_bottom_z_m": 0.7409160733222961,
+    "pose_preserved": false,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": false,
+    "frame_count": 0,
+    "placement_class": "adversarial"
+  },
+  {
+    "scenario": "perturb_adversarial_vx+0.000_vy+0.020",
+    "fixed": false,
+    "basket_offset_m": [
+      -0.32,
+      -0.18
+    ],
+    "height_correction_m": 0.0,
+    "perturbation_velocity_xy_m_s": [
+      0.0,
+      0.02
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.9578800797462463
+    ],
+    "final_root_position_m": [
+      0.11112821102142334,
+      0.13026529550552368,
+      0.8560243248939514
+    ],
+    "translation_drift_m": 0.1068382883883046,
+    "rotation_drift_deg": 17.295845601754507,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 6,
+    "minimum_collision_bottom_z_m": 0.7409265041351318,
+    "pose_preserved": false,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": false,
+    "frame_count": 0,
+    "placement_class": "adversarial"
+  },
+  {
+    "scenario": "perturb_adversarial_vx+0.020_vy+0.020",
+    "fixed": false,
+    "basket_offset_m": [
+      -0.32,
+      -0.18
+    ],
+    "height_correction_m": 0.0,
+    "perturbation_velocity_xy_m_s": [
+      0.02,
+      0.02
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.9578800797462463
+    ],
+    "final_root_position_m": [
+      0.11622656136751175,
+      0.12972894310951233,
+      0.856024444103241
+    ],
+    "translation_drift_m": 0.10733909691955136,
+    "rotation_drift_deg": 18.089469818709837,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 6,
+    "minimum_collision_bottom_z_m": 0.740960419178009,
+    "pose_preserved": false,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": false,
+    "frame_count": 0,
+    "placement_class": "adversarial"
+  },
+  {
+    "scenario": "perturb_corrected_control_vx-0.020_vy-0.020",
+    "fixed": false,
+    "basket_offset_m": [
+      0.38,
+      0.0
+    ],
+    "height_correction_m": 0.10185575151443482,
+    "perturbation_velocity_xy_m_s": [
+      -0.02,
+      -0.02
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.8560243248939514
+    ],
+    "final_root_position_m": [
+      0.09994154423475266,
+      0.09994348138570786,
+      0.8560243844985962
+    ],
+    "translation_drift_m": 8.131283084276455e-05,
+    "rotation_drift_deg": 0.0006285629792059847,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 0,
+    "minimum_collision_bottom_z_m": 0.7409998178482056,
+    "pose_preserved": true,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": true,
+    "frame_count": 0,
+    "placement_class": "corrected_control"
+  },
+  {
+    "scenario": "perturb_corrected_control_vx+0.000_vy-0.020",
+    "fixed": false,
+    "basket_offset_m": [
+      0.38,
+      0.0
+    ],
+    "height_correction_m": 0.10185575151443482,
+    "perturbation_velocity_xy_m_s": [
+      0.0,
+      -0.02
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.8560243248939514
+    ],
+    "final_root_position_m": [
+      0.09999984502792358,
+      0.09997155517339706,
+      0.856024444103241
+    ],
+    "translation_drift_m": 2.8446996786184763e-05,
+    "rotation_drift_deg": 0.00022565481358295355,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 0,
+    "minimum_collision_bottom_z_m": 0.740999698638916,
+    "pose_preserved": true,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": true,
+    "frame_count": 0,
+    "placement_class": "corrected_control"
+  },
+  {
+    "scenario": "perturb_corrected_control_vx+0.020_vy-0.020",
+    "fixed": false,
+    "basket_offset_m": [
+      0.38,
+      0.0
+    ],
+    "height_correction_m": 0.10185575151443482,
+    "perturbation_velocity_xy_m_s": [
+      0.02,
+      -0.02
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.8560243248939514
+    ],
+    "final_root_position_m": [
+      0.10005725175142288,
+      0.09994238615036011,
+      0.856024444103241
+    ],
+    "translation_drift_m": 8.122274315576898e-05,
+    "rotation_drift_deg": 0.001624136908281411,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 0,
+    "minimum_collision_bottom_z_m": 0.7409996390342712,
+    "pose_preserved": true,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": true,
+    "frame_count": 0,
+    "placement_class": "corrected_control"
+  },
+  {
+    "scenario": "perturb_corrected_control_vx-0.020_vy+0.000",
+    "fixed": false,
+    "basket_offset_m": [
+      0.38,
+      0.0
+    ],
+    "height_correction_m": 0.10185575151443482,
+    "perturbation_velocity_xy_m_s": [
+      -0.02,
+      0.0
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.8560243248939514
+    ],
+    "final_root_position_m": [
+      0.09996656328439713,
+      0.09999980032444,
+      0.8560243844985962
+    ],
+    "translation_drift_m": 3.3438863946741656e-05,
+    "rotation_drift_deg": 0.0008486544400779072,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 0,
+    "minimum_collision_bottom_z_m": 0.7409997582435608,
+    "pose_preserved": true,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": true,
+    "frame_count": 0,
+    "placement_class": "corrected_control"
+  },
+  {
+    "scenario": "perturb_corrected_control_vx+0.000_vy+0.000",
+    "fixed": false,
+    "basket_offset_m": [
+      0.38,
+      0.0
+    ],
+    "height_correction_m": 0.10185575151443482,
+    "perturbation_velocity_xy_m_s": [
+      0.0,
+      0.0
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.8560243248939514
+    ],
+    "final_root_position_m": [
+      0.09999999403953552,
+      0.09999998658895493,
+      0.8560242652893066
+    ],
+    "translation_drift_m": 6.188917057900187e-08,
+    "rotation_drift_deg": 1.7745352001653195e-05,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 0,
+    "minimum_collision_bottom_z_m": 0.740999698638916,
+    "pose_preserved": true,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": true,
+    "frame_count": 0,
+    "placement_class": "corrected_control"
+  },
+  {
+    "scenario": "perturb_corrected_control_vx+0.020_vy+0.000",
+    "fixed": false,
+    "basket_offset_m": [
+      0.38,
+      0.0
+    ],
+    "height_correction_m": 0.10185575151443482,
+    "perturbation_velocity_xy_m_s": [
+      0.02,
+      0.0
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.8560243248939514
+    ],
+    "final_root_position_m": [
+      0.10003293305635452,
+      0.09999950230121613,
+      0.8560243248939514
+    ],
+    "translation_drift_m": 3.2935349466374616e-05,
+    "rotation_drift_deg": 0.0008742908937830995,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 0,
+    "minimum_collision_bottom_z_m": 0.740999698638916,
+    "pose_preserved": true,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": true,
+    "frame_count": 0,
+    "placement_class": "corrected_control"
+  },
+  {
+    "scenario": "perturb_corrected_control_vx-0.020_vy+0.020",
+    "fixed": false,
+    "basket_offset_m": [
+      0.38,
+      0.0
+    ],
+    "height_correction_m": 0.10185575151443482,
+    "perturbation_velocity_xy_m_s": [
+      -0.02,
+      0.02
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.8560243248939514
+    ],
+    "final_root_position_m": [
+      0.09994324296712875,
+      0.1000576838850975,
+      0.8560242056846619
+    ],
+    "translation_drift_m": 8.092467382294762e-05,
+    "rotation_drift_deg": 0.0030223895785720925,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 0,
+    "minimum_collision_bottom_z_m": 0.7409996390342712,
+    "pose_preserved": true,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": true,
+    "frame_count": 0,
+    "placement_class": "corrected_control"
+  },
+  {
+    "scenario": "perturb_corrected_control_vx+0.000_vy+0.020",
+    "fixed": false,
+    "basket_offset_m": [
+      0.38,
+      0.0
+    ],
+    "height_correction_m": 0.10185575151443482,
+    "perturbation_velocity_xy_m_s": [
+      0.0,
+      0.02
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.8560243248939514
+    ],
+    "final_root_position_m": [
+      0.10000003129243851,
+      0.1000261902809143,
+      0.8560243248939514
+    ],
+    "translation_drift_m": 2.6188807755406454e-05,
+    "rotation_drift_deg": 0.00021686522867087534,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 0,
+    "minimum_collision_bottom_z_m": 0.7409997582435608,
+    "pose_preserved": true,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": true,
+    "frame_count": 0,
+    "placement_class": "corrected_control"
+  },
+  {
+    "scenario": "perturb_corrected_control_vx+0.020_vy+0.020",
+    "fixed": false,
+    "basket_offset_m": [
+      0.38,
+      0.0
+    ],
+    "height_correction_m": 0.10185575151443482,
+    "perturbation_velocity_xy_m_s": [
+      0.02,
+      0.02
+    ],
+    "steps": 750,
+    "timestep_s": 0.004,
+    "initial_root_position_m": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.8560243248939514
+    ],
+    "final_root_position_m": [
+      0.10005649924278259,
+      0.10005442053079605,
+      0.8560243844985962
+    ],
+    "translation_drift_m": 7.844381172278496e-05,
+    "rotation_drift_deg": 0.0015130873223384907,
+    "late_translation_m": 0.0,
+    "late_rotation_deg": 0.0,
+    "terminal_table_contact_fraction": 1.0,
+    "terminal_unexpected_basket_contact_fraction": 0.0,
+    "max_penetration_point_count": 0,
+    "minimum_collision_bottom_z_m": 0.740999698638916,
+    "pose_preserved": true,
+    "physical_table_support": true,
+    "no_unexpected_basket_contact": true,
+    "settled": true,
+    "dropped": false,
+    "dynamic_gate_pass": true,
+    "frame_count": 0,
+    "placement_class": "corrected_control"
+  }
+]

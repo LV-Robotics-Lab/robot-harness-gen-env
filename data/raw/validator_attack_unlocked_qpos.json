@@ -1,0 +1,21 @@
+{
+  "schema_version": "usg_env_quality_reproduction.validator_attack_unlocked.v1",
+  "protocol": "current loader behavior: fixed root, movable joints, no joint-limit lock",
+  "sample_steps": 60,
+  "target_qpos_m": 0.0675,
+  "initial_qpos_m": [
+    0.0675,
+    0.0675,
+    0.0675
+  ],
+  "final_qpos_m": [
+    0.07533612847328186,
+    0.06750000268220901,
+    0.06750000268220901
+  ],
+  "maximum_qpos_abs_error_m": 0.007836128473281856,
+  "qpos_error_above_validator_threshold": false,
+  "direct_active_contact_steps": 60,
+  "direct_penetration_steps": 60,
+  "joint_lock_applied": false
+}
