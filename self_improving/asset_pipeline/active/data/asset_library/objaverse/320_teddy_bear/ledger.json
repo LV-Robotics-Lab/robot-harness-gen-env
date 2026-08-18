@@ -125,7 +125,7 @@
         },
         {
           "format": "glb",
-          "uri": "/tmp/teddy_acq2/webcache/2a3489298c790e1f96e7/4934cddd48a04a3b9c9b1e9667e7470e.glb",
+          "uri": "data/asset_library/_source/web_320_teddy_bear/4934cddd48a04a3b9c9b1e9667e7470e.glb",
           "backend": "portable",
           "role": "visual_and_collision",
           "sha256": "494fb1f636d55dbeef4f149f2f3aba6cedb1d088e8f3903e198fd71e8f2dcd6f",

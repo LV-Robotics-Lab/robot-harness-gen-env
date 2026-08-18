@@ -535,5 +535,30 @@ if ok and args.admission:
         print(r.stderr[-400:])
         print("FAIL s9: admission step errored")
         ok = False
+# ---- external-only catalog view (s12's gate reads this) ----
+# Nothing used to write this file. It was produced by hand on 2026-08-03 and
+# then rotted silently: by 2026-08-14 it still carried the PREVIOUS machine's
+# absolute paths, so every s12 case failed its real_asset_files check while the
+# physics underneath was fine (runtime status=pass, drift ~1mm). Deriving it
+# here, unconditionally, from the catalog this run just built is the fix -- a
+# view regenerated with its source cannot drift from it. Derived last, so it
+# also reflects whatever `--admission enforce` filtered out of the main view.
+if ok:
+    _full = json.loads(cat_out.read_text())
+    _lib_prefix = str(lib.resolve()) + "/"
+    _ext_entries = [
+        e
+        for e in _full["entries"]
+        if str(Path(e["asset_path"]).resolve()).startswith(_lib_prefix)
+    ]
+    _ext_only_out = ext / "asset_catalog_external_only.json"
+    with _ext_only_out.open("w", encoding="utf-8") as _s:
+        json.dump({**_full, "entries": _ext_entries}, _s, indent=2, ensure_ascii=False)
+        _s.write("\n")
+    print(f"external-only catalog: {len(_ext_entries)} entries -> {_ext_only_out}")
+    if not _ext_entries:
+        print("FAIL s9: external-only view is empty (s12 would have nothing to ground)")
+        ok = False
+
 print("PASS s9" if ok else "FAIL s9")
 sys.exit(0 if ok else 1)
