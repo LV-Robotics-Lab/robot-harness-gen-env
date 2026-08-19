@@ -64,6 +64,21 @@ $PY scripts/1_search/acquire_batch.py \
 4. stdout 逐条打 `PASS/FAIL <类别> status=…`，最后一行 `SUMMARY PASS|FAIL imported=N`；
    **退出码**：每条都是 `imported` 或 `reused_local` 才返回 0，出现任一 `exhausted`/`entry_error` 返回 1。
 
+**匹配三档（每条请求必有 `match` 块）**：
+
+| grade | 含义 | `asset` 字段 |
+|---|---|---|
+| `exact` | 找到资产：类别命中且你声明的**全部**属性（颜色/材质）被确认满足；未声明属性=类别命中即 exact | 可直接复用的资产本体（编号/路径/账本/已知属性） |
+| `similar` | 找到相似资产：类别对但至少一项属性 `mismatch`（明确不符）或 `unverified`（库内未标注、无法确认），差距逐条列在 `unmet` | 最接近的资产本体——**照样返回给你复用**，将就与否你定 |
+| `none` | 完全没找到：本地与全部外部梯队均无类别级命中 | `null` |
+
+行为要点：带属性约束的请求会**先全梯队找 exact**（本地同类属性不符不再当场复用——
+按旧行为"库里有球就算找到"会把蓝球请求错报成功）；exact 落空才落 similar：
+优先本地同类（零成本），其次把「类别对、属性不符」的最优外部候选走完整引进链
+兜底（条目级开关 `"allow_similar": false` 可关掉，严格模式宁可 none）。
+stdout 逐条打 `MATCH <类别> grade=… asset=…` 可直接 grep；退出码：
+exact/similar 都算成功（拿到了可复用资产），仅 none/entry_error 计失败。
+
 **selection_evidence.json 结构**：
 
 | 字段 | 含义 |
