@@ -101,6 +101,83 @@ def allocate_asset(category, library_dir, manifest_path):
     return f"{n}_{category}", 0
 
 
+def _attr_gap(attr, want_list, known_list):
+    """逐值核对一个属性维度。want 不在 known → mismatch；known 为空 → unverified
+    （标注缺失 ≠ 满足——不伪造确认）。返回 unmet 差距列表。"""
+    unmet = []
+    known = [str(x).lower() for x in (known_list or []) if x]
+    for w in [str(x).lower() for x in (want_list or []) if x]:
+        if not known:
+            unmet.append({"attr": attr, "want": w, "got": [], "kind": "unverified"})
+        elif w not in known:
+            unmet.append({"attr": attr, "want": w, "got": known, "kind": "mismatch"})
+    return unmet
+
+
+def match_local(
+    catalog_path, category, *, want_colors=None, want_materials=None, library_dir=None
+):
+    """本地 catalog 内的同类匹配 → (payload, unmet)。
+
+    命中规则与 tier0 复用同一口径：请求类别 == 池侧 category 或落在池侧
+    aliases 里（池侧别名是 curated 身份声明；请求侧别名不参与，见
+    tiered_search 的 phrases 注释）。payload=None 表示类别级无命中。
+    unmet==[] 即 exact 候选；否则为 similar（差距逐条带 kind）。
+    排序：mismatch 数 → 总差距数 → available 优先 → 模型数多者。"""
+    try:
+        data = json.loads(Path(catalog_path).read_text())
+    except (OSError, ValueError):
+        return None, None
+    cat = str(category).strip().lower().replace(" ", "_")
+
+    def norm(s):
+        return str(s or "").strip().lower().replace(" ", "_")
+
+    best = None
+    for e in data.get("entries", []):
+        names = {norm(e.get("category"))} | {norm(a) for a in (e.get("aliases") or [])}
+        if cat not in names:
+            continue
+        unmet = _attr_gap("color", want_colors, e.get("colors")) + _attr_gap(
+            "material", want_materials, e.get("materials")
+        )
+        n_mis = sum(1 for u in unmet if u["kind"] == "mismatch")
+        key = (
+            n_mis,
+            len(unmet),
+            not e.get("available"),
+            -len(e.get("models") or []),
+            str(e.get("asset_id") or ""),
+        )
+        if best is None or key < best[0]:
+            best = (key, e, unmet)
+    if best is None:
+        return None, None
+    _, e, unmet = best
+    models = e.get("models") or []
+    m0 = models[0] if models else {}
+    payload = {
+        "asset_id": e.get("asset_id"),
+        "model_id": m0.get("model_id", 0),
+        "category": e.get("category"),
+        "available": bool(e.get("available")),
+        "asset_path": e.get("asset_path"),
+        "visual_path": m0.get("visual_path") or m0.get("model_path"),
+        "known_colors": e.get("colors") or [],
+        "known_materials": e.get("materials") or [],
+        "source": "local_catalog",
+        "ledger": None,
+    }
+    if library_dir:
+        lib = Path(library_dir)
+        aid = str(e.get("asset_id") or "")
+        for c in [lib / aid, *lib.glob(f"*/{aid}")]:
+            if (c / "ledger.json").is_file():
+                payload["ledger"] = str(c / "ledger.json")
+                break
+    return payload, unmet
+
+
 KNOWN_ENTRY_KEYS = {
     "category",
     "aliases",

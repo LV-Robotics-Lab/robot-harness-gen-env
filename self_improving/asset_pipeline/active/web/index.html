@@ -846,6 +846,32 @@ function stage1(st, stages) {
       <td class="mono">${escapeHtml(o.asset_id ?? "")}</td><td>${escapeHtml(o.score ?? "")}</td></tr>`).join("")}
   </tbody></table>` + rawDetails("coverage_report.json 原始数据", stages.coverage);
 }
+function matchBadgeHtml(m) {
+  if (!m) return "";
+  const map = {
+    exact: ["✓ 找到资产", "var(--done)"],
+    similar: ["≈ 相似资产", "var(--active)"],
+    none: ["✗ 未找到", "var(--rejected)"],
+  };
+  const [label, color] = map[m.grade] || map.none;
+  const a = m.asset || null;
+  const unmet = (m.unmet || [])
+    .map(u => {
+      const attr = u.attr === "color" ? "颜色" : u.attr === "material" ? "材质" : u.attr;
+      return u.kind === "unverified"
+        ? `${attr}:要${u.want}(库内未标注)`
+        : `${attr}:要${u.want}/是${(u.got || []).join("+") || "?"}`;
+    })
+    .join(" · ");
+  return `<div style="margin:2px 0 10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+    <span class="st-tag" style="color:${color};border-color:${color};font-weight:700;">${label}</span>
+    ${a && a.asset_id ? `<img src="/api/library/thumb/${encodeURIComponent(a.asset_id)}"
+        style="width:44px;height:44px;border-radius:8px;border:1px solid var(--border);object-fit:cover;"
+        onerror="this.style.display='none'"><span class="mono">${escapeHtml(a.asset_id)}</span>` : ""}
+    ${a && a.known_colors && a.known_colors.length ? `<span style="color:var(--text-dim);font-size:11.5px;">${escapeHtml(a.known_colors.join("/"))}</span>` : ""}
+    ${unmet ? `<span style="color:var(--text-dim);font-size:11.5px;">差距: ${escapeHtml(unmet)}</span>` : ""}
+  </div>`;
+}
 function stage2(st, stages, tl) {
   const cats = (stages.evidence && stages.evidence.categories) || [];
   if (!cats.length) {
@@ -857,6 +883,7 @@ function stage2(st, stages, tl) {
     <div style="margin-bottom:10px;">
       <strong>${escapeHtml(cat.category)}</strong>
       <span class="mono" style="color:var(--text-dim);"> status=${escapeHtml(cat.status)} · tiers=${escapeHtml(JSON.stringify(cat.tiers_consulted))} · attempts=${escapeHtml(cat.attempts ?? "")}</span>
+      ${matchBadgeHtml(cat.match)}
       <div class="chips">
         ${(cat.candidates || []).map(c => {
           const rejCode = c.rejection && c.rejection.code;

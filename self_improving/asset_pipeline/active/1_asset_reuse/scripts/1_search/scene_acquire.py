@@ -69,7 +69,9 @@ def main(argv=None, runner=None):
         (out / "asset_gap_blocker.json").write_text(
             json.dumps(blocker, indent=1, ensure_ascii=False)
         )
-        print(f"FAIL scene_acquire: malformed category {cat!r} (token {w!r}) -- 解析异常，已拒绝采购")
+        print(
+            f"FAIL scene_acquire: malformed category {cat!r} (token {w!r}) -- 解析异常，已拒绝采购"
+        )
         return 1
     oversize = [g for g in gaps if g.get("oversize_refusal")]
     if oversize:
@@ -123,6 +125,21 @@ def main(argv=None, runner=None):
     a4.write_coverage_report(out / "coverage_report.json", a.prompt, a.seed, records)
     remaining = [r for r in records if r["status"] == "gap"]
     if remaining:
+        # B5：阻塞不空手——每个未满足对象附「最接近的本地资产」（同类但
+        # 属性有差距），调用方可自行决定将就复用还是等人工补货。
+        from lib import a2_selection as a2
+
+        lib_dir = Path(a.dev_root) / "data" / "asset_library"
+        for r in remaining:
+            pay, unmet = a2.match_local(
+                catalog,
+                r.get("category"),
+                want_colors=[r["color"]] if r.get("color") else None,
+                want_materials=[r["material"]] if r.get("material") else None,
+                library_dir=lib_dir,
+            )
+            if pay is not None:
+                r["nearest_local"] = {"asset": pay, "unmet": unmet}
         (out / "asset_gap_blocker.json").write_text(
             json.dumps(
                 {

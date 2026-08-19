@@ -460,6 +460,9 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
     # and never consult the GitHub tiers that actually have one.
     verify_cfg = globals_cfg.get("identity_gate", {})
     gate_log = {"results": [], "outcome": None, "tier": None}
+    # B3 similar 候选池：VLM 判「类别对、但属性不符」(attribute_veto) 的候选。
+    # exact 全空时按 tier 信任顺序取第一个做兜底引进。
+    similar_pool = []
 
     def _accept(tier_no, viable_cands):
         if not verify_cfg.get("enabled", True):
@@ -481,6 +484,12 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         )
         gate_log["results"].extend({**r, "tier": tier_no} for r in vr["results"])
         gate_log["outcome"], gate_log["tier"] = vr["outcome"], tier_no
+        for r_ in vr["results"]:
+            if r_.get("attribute_veto"):
+                for c in viable_cands:
+                    if c.candidate_id == r_.get("candidate_id"):
+                        similar_pool.append({"tier": tier_no, "cand": c, "verify": r_})
+                        break
         if vr["outcome"] == "verified":
             return [vr["accepted"]]
         if vr["outcome"] == "unverifiable":
@@ -543,11 +552,38 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             "provider_stats", []
         )
         if res["tier0_hit"] is not None:
+            # B2 属性化复用判定：带约束的请求不再「库里有同类就算完」。
+            # 先对 catalog 做属性核对——全满足才当场复用(exact)；有差距则
+            # 压下这次复用、记作 similar 候补，判 exhausted 让外层循环继续
+            # 向更深 tier 找 exact（blue ball 案例的根修）。
+            payload = unmet = None
+            if paths.get("tier0_catalog"):
+                payload, unmet = a2.match_local(
+                    paths["tier0_catalog"],
+                    category,
+                    want_colors=entry.get("colors"),
+                    want_materials=entry.get("materials"),
+                    library_dir=paths.get("library"),
+                )
+            if (want_color or want_material) and payload is not None and unmet:
+                rec["_local_similar"] = {"asset": payload, "unmet": unmet}
+                rec["local_reuse_suppressed"] = {
+                    "asset_id": (res["tier0_hit"].metadata or {}).get("asset_id"),
+                    "reason": "attribute_gap",
+                }
+                rec["status"] = "exhausted"
+                return rec
             rec["status"] = "reused_local"
             rec["local_reuse"] = {
                 "asset_id": res["tier0_hit"].metadata.get("asset_id"),
                 "reason": a2.ALREADY,
             }
+            if payload is not None:
+                rec["_match"] = {
+                    "grade": "exact",
+                    "asset": payload,
+                    "unmet": unmet or [],
+                }
             return rec
         gated = a2.gate_candidates(res["candidates"], globals_cfg)
         viable = [r for r in gated if r["verdict"] == "viable"]
@@ -712,6 +748,62 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
     # acquisition ended "exhausted" while tier 3 (Objaverse) held 59 real
     # hammers it had never been allowed to offer. An exhausted attempt list is
     # a verdict on the CONSULTED tiers, not on the sources below them.
+    def _finish_searched(outr):
+        """B3 similar 兜底：exact 全梯队落空后，先取本地同类（零成本），
+        其次把「类别对、属性不符」的最优外部候选走完整引进链（下载/质检/
+        入库——其真实属性经 A2 回填账本，下次同类请求就能精确判定）。
+        条目级开关 allow_similar（默认开）。"""
+        if outr["status"] in ("imported", "reused_local"):
+            return outr
+        if not entry.get("allow_similar", True):
+            return outr  # 严格模式：不将就，宁可 none
+        if outr.get("_local_similar"):
+            outr["_match"] = {"grade": "similar", **outr.pop("_local_similar")}
+            return outr
+        if not similar_pool:
+            return outr
+        best = similar_pool[0]
+        gated = a2.gate_candidates([best["cand"]], globals_cfg)
+        if gated[0]["verdict"] != "viable":
+            return outr
+        ident = {
+            "basis": "requested_by_acquire",
+            "evidence": outr.get("identity_gate", {}).get("evidence"),
+        }
+        outr["similar_fallback"] = {
+            "candidate_id": best["cand"].candidate_id,
+            "tier": best["tier"],
+            "attribute_check": best["verify"].get("attribute_check"),
+        }
+        outr = _attempt_import(
+            outr,
+            [gated[0]],
+            entry,
+            category,
+            globals_cfg,
+            paths,
+            runner,
+            max_attempts=1,
+            identity=ident,
+        )
+        if outr["status"] == "imported":
+            got = {
+                "color": best["verify"].get("colors") or [],
+                "material": best["verify"].get("materials") or [],
+            }
+            want = {"color": want_color, "material": want_material}
+            outr["_similar_unmet"] = [
+                {
+                    "attr": k,
+                    "want": want.get(k),
+                    "got": got.get(k, []),
+                    "kind": v if v == "unknown" else "mismatch",
+                }
+                for k, v in (best["verify"].get("attribute_check") or {}).items()
+                if v != "ok" and want.get(k)
+            ]
+        return outr
+
     walk_pool = list(tiers)
     while True:
         out_rec = _walk_once(walk_pool)
@@ -723,13 +815,91 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             # aggregate story: candidates existed and every one died
             out_rec["status"] = "exhausted"
         if out_rec["status"] != "exhausted":
-            return out_rec
+            return _finish_searched(out_rec)
         walked = max(out_rec.get("tiers_consulted") or [0])
         deeper = [t for t in walk_pool if t.tier > walked]
         if not deeper:
-            return out_rec
+            return _finish_searched(out_rec)
         out_rec.setdefault("resumed_after_exhaustion", []).append(walked)
         walk_pool = deeper
+
+
+def _library_payload(paths, asset, model=0):
+    """引进成功后的资产 payload（供 match 块返回给调用方复用）。
+    asset_library 按来源分一级，所以两种深度都找。"""
+    if not asset:
+        return None
+    lib = Path(paths["library"])
+    adir = None
+    for c in [lib / asset, *lib.glob(f"*/{asset}")]:
+        if c.is_dir():
+            adir = c
+            break
+    payload = {
+        "asset_id": asset,
+        "model_id": model,
+        "category": None,
+        "available": True,
+        "asset_path": str(adir) if adir else None,
+        "visual_path": None,
+        "known_colors": [],
+        "known_materials": [],
+        "source": "imported",
+        "ledger": None,
+    }
+    if adir:
+        vis = sorted(adir.glob("visual/*.glb")) + sorted(adir.glob("*.glb"))
+        if vis:
+            payload["visual_path"] = str(vis[0])
+        lp = adir / "ledger.json"
+        if lp.is_file():
+            try:
+                led = json.loads(lp.read_text())
+                sem = led.get("semantics", {})
+                payload.update(
+                    category=led.get("category"),
+                    ledger=str(lp),
+                    known_colors=sem.get("colors", []),
+                    known_materials=sem.get("materials", []),
+                )
+            except (OSError, ValueError):
+                pass
+    return payload
+
+
+def _match_block(rec, paths):
+    """B4：把过程结局(status)折算成匹配质量三档(match)，附可复用的资产本体。
+    exact=类别+全部声明属性确认满足；similar=类别对但有差距(mismatch/unverified)；
+    none=类别级无命中。写回 rec['match']。"""
+    if rec.get("_match"):
+        rec["match"] = rec.pop("_match")
+        return rec
+    status = rec.get("status")
+    if status == "imported":
+        sel = rec.get("selected") or {}
+        rec["match"] = {
+            "grade": "similar" if rec.get("similar_fallback") else "exact",
+            "asset": _library_payload(paths, sel.get("asset"), sel.get("model", 0)),
+            "unmet": rec.pop("_similar_unmet", []),
+        }
+    elif status == "reused_local":
+        payload = None
+        unmet = []
+        if paths.get("tier0_catalog"):
+            payload, unmet = a2.match_local(
+                paths["tier0_catalog"],
+                (rec.get("query") or {}).get("category"),
+                library_dir=paths.get("library"),
+            )
+        if payload is None:
+            payload = {
+                "asset_id": (rec.get("local_reuse") or {}).get("asset_id"),
+                "source": "local_reuse",
+            }
+        rec["match"] = {"grade": "exact", "asset": payload, "unmet": unmet or []}
+    else:
+        rec["match"] = {"grade": "none", "asset": None, "unmet": []}
+    return rec
 
 
 def main(argv=None, runner=None, tiers=None):
@@ -749,6 +919,7 @@ def main(argv=None, runner=None, tiers=None):
     runner = runner or default_runner
     dev = Path(a.dev_root)
     cfg = json.loads(Path(a.providers).read_text())
+    tier0_catalog_path = Path(a.tier0_catalog).resolve() if a.tier0_catalog else None
     if tiers is None:
         tiers, globals_cfg = a1.load_providers(cfg)
         for t in tiers:
@@ -778,6 +949,7 @@ def main(argv=None, runner=None, tiers=None):
                 )
                 if a.tier0_catalog:
                     t.provider.catalog_path = Path(a.tier0_catalog).resolve()
+                tier0_catalog_path = t.provider.catalog_path
     else:
         globals_cfg = cfg.get("globals", {})
     paths = {
@@ -789,6 +961,7 @@ def main(argv=None, runner=None, tiers=None):
         "out": Path(a.out),
         "manifest": dev / "data" / "acquired_manifest.json",
         "fragment_dir": Path(a.out) / "fragments",
+        "tier0_catalog": tier0_catalog_path,
     }
     entries = json.loads(Path(a.categories).read_text())
     # A3 清单校验：不阻断，警告上 stderr 并随 evidence 留痕（此前未知字段完全静默）
@@ -838,6 +1011,9 @@ def main(argv=None, runner=None, tiers=None):
                 merged,
             ]
         )
+    # B4：过程结局 → 匹配三档（exact/similar/none），随 evidence 落盘
+    for r in results:
+        _match_block(r, paths)
     a2.write_evidence(
         Path(a.out) / "selection_evidence.json",
         run_id=Path(a.out).name,
@@ -846,14 +1022,27 @@ def main(argv=None, runner=None, tiers=None):
         categories_input=entries,
         input_warnings=input_warnings,
     )
+    # 退出语义（B4）：exact/similar 都算成功——调用方拿到了可复用的资产本体；
+    # 仅 none/entry_error 记失败。旧 PASS/FAIL 行保留但按新语义判。
     ok = True
+    grades = {"exact": 0, "similar": 0, "none": 0}
     for r in results:
-        good = r["status"] in {"imported", "reused_local"}
+        g = (r.get("match") or {}).get("grade", "none")
+        grades[g] = grades.get(g, 0) + 1
+        good = g in ("exact", "similar")
         ok = ok and good
+        aset = ((r.get("match") or {}).get("asset") or {}).get("asset_id")
+        print(
+            f"MATCH {r['query']['category']} grade={g}"
+            + (f" asset={aset}" if aset else "")
+        )
         print(
             f"{'PASS' if good else 'FAIL'} {r['query']['category']} status={r['status']}"
         )
-    print(f"SUMMARY {'PASS' if ok else 'FAIL'} imported={len(imported)}")
+    print(
+        f"SUMMARY {'PASS' if ok else 'FAIL'} imported={len(imported)}"
+        f" exact={grades['exact']} similar={grades['similar']} none={grades['none']}"
+    )
     return 0 if ok else 1
 
 

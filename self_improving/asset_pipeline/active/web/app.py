@@ -441,11 +441,14 @@ def _read_evidence(run_dir):
                 "attempts": cat.get("attempts"),
                 "candidates": candidates,
                 "selected": cat.get("selected"),
+                "match": cat.get("match"),
             }
         )
     result = {"categories": categories}
     if "categories_sha256" in raw:
         result["categories_sha256"] = raw["categories_sha256"]
+    if raw.get("input_warnings"):
+        result["input_warnings"] = raw["input_warnings"]
     return result
 
 

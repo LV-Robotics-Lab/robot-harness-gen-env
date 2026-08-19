@@ -213,3 +213,56 @@ def test_write_evidence_input_warnings(tmp_path):
     p2 = tmp_path / "e2.json"
     a2.write_evidence(p2, run_id="r", providers_snapshot={}, categories=[])
     assert "input_warnings" not in json.loads(p2.read_text())
+
+
+def _mini_match_catalog(tmp_path):
+    cat = {
+        "entries": [
+            {
+                "asset_id": "010_ball_y",
+                "category": "ball",
+                "aliases": ["ball"],
+                "colors": ["yellow"],
+                "materials": [],
+                "available": True,
+                "asset_path": "/x/010",
+                "models": [{"model_id": 0, "visual_path": "/x/010/v.glb"}],
+            },
+            {
+                "asset_id": "011_ball_b",
+                "category": "ball",
+                "aliases": ["ball"],
+                "colors": ["blue"],
+                "materials": ["rubber"],
+                "available": True,
+                "asset_path": "/x/011",
+                "models": [{"model_id": 0}],
+            },
+            {
+                "asset_id": "020_cup",
+                "category": "cup",
+                "aliases": ["mug"],
+                "colors": [],
+                "materials": [],
+                "available": False,
+                "asset_path": "/x/020",
+                "models": [{"model_id": 0}],
+            },
+        ]
+    }
+    p = tmp_path / "cat.json"
+    p.write_text(json.dumps(cat))
+    return p
+
+
+def test_match_local_exact_similar_none(tmp_path):
+    p = _mini_match_catalog(tmp_path)
+    pay, unmet = a2.match_local(p, "ball", want_colors=["blue"])
+    assert pay["asset_id"] == "011_ball_b" and unmet == []
+    pay, unmet = a2.match_local(p, "ball", want_colors=["red"])
+    assert pay is not None and unmet and unmet[0]["kind"] == "mismatch"
+    # 池侧别名命中（mug→020_cup）；颜色未标注 → unverified 而非 mismatch
+    pay, unmet = a2.match_local(p, "mug", want_colors=["red"])
+    assert pay["asset_id"] == "020_cup" and unmet[0]["kind"] == "unverified"
+    pay, unmet = a2.match_local(p, "sofa")
+    assert pay is None and unmet is None

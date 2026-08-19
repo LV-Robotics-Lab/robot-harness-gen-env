@@ -570,3 +570,103 @@ def test_malformed_entry_isolated_batch_completes(tmp_path, capsys):
     assert "FAIL <invalid> status=entry_error" in out
     assert "PASS cup status=reused_local" in out
     assert "categories_sha256" in evidence
+
+
+def _wants_catalog(tmp_path):
+    cat = {
+        "entries": [
+            {
+                "asset_id": "308_ball",
+                "category": "ball",
+                "aliases": ["ball"],
+                "colors": ["yellow"],
+                "materials": [],
+                "available": True,
+                "asset_path": str(tmp_path),
+                "models": [{"model_id": 0}],
+            }
+        ]
+    }
+    p = tmp_path / "cat0.json"
+    p.write_text(json.dumps(cat))
+    return p
+
+
+def test_wants_suppress_tier0_reuse_and_fall_back_to_local_similar(tmp_path):
+    # B2+B3：带颜色约束，本地只有黄球 → 不当场复用；外层无 exact →
+    # similar 兜底返回本地黄球 + unmet。
+    p = paths(tmp_path)
+    p["tier0_catalog"] = _wants_catalog(tmp_path)
+    tiers = [
+        Tier(0, FakeProvider("t0", [cand("ball")])),
+        Tier(1, FakeProvider("t1", [])),
+    ]
+    rec = ab.process_entry(
+        {"category": "ball", "colors": ["blue"]},
+        tiers,
+        {"identity_gate": {"enabled": False}},
+        p,
+        lambda cmd, env=None: 0,
+    )
+    ab._match_block(rec, p)
+    assert rec["status"] != "reused_local"
+    assert rec.get("local_reuse_suppressed", {}).get("reason") == "attribute_gap"
+    assert rec["match"]["grade"] == "similar"
+    assert rec["match"]["asset"]["asset_id"] == "308_ball"
+    assert rec["match"]["unmet"][0]["want"] == "blue"
+
+
+def test_wants_reuse_local_exact_when_attrs_match(tmp_path):
+    p = paths(tmp_path)
+    p["tier0_catalog"] = _wants_catalog(tmp_path)
+    tiers = [Tier(0, FakeProvider("t0", [cand("ball")]))]
+    rec = ab.process_entry(
+        {"category": "ball", "colors": ["yellow"]},
+        tiers,
+        {},
+        p,
+        lambda cmd, env=None: 0,
+    )
+    ab._match_block(rec, p)
+    assert rec["status"] == "reused_local"
+    assert rec["match"]["grade"] == "exact"
+    assert rec["match"]["asset"]["asset_id"] == "308_ball"
+    assert rec["match"]["unmet"] == []
+
+
+def test_no_local_no_external_grades_none(tmp_path):
+    p = paths(tmp_path)
+    p["tier0_catalog"] = _wants_catalog(tmp_path)
+    tiers = [
+        Tier(0, FakeProvider("t0", [])),
+        Tier(1, FakeProvider("t1", [])),
+    ]
+    rec = ab.process_entry(
+        {"category": "sofa"},
+        tiers,
+        {"identity_gate": {"enabled": False}},
+        p,
+        lambda cmd, env=None: 0,
+    )
+    ab._match_block(rec, p)
+    assert rec["match"]["grade"] == "none"
+    assert rec["match"]["asset"] is None
+
+
+def test_allow_similar_false_keeps_none(tmp_path):
+    # 关掉兜底：同样场景不返回本地相似资产
+    p = paths(tmp_path)
+    p["tier0_catalog"] = _wants_catalog(tmp_path)
+    tiers = [
+        Tier(0, FakeProvider("t0", [cand("ball")])),
+        Tier(1, FakeProvider("t1", [])),
+    ]
+    rec = ab.process_entry(
+        {"category": "ball", "colors": ["blue"], "allow_similar": False},
+        tiers,
+        {"identity_gate": {"enabled": False}},
+        p,
+        lambda cmd, env=None: 0,
+    )
+    ab._match_block(rec, p)
+    assert rec["match"]["grade"] == "none"
