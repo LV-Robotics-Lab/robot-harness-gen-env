@@ -72,7 +72,19 @@ def candidate_dict(c):
     }
 
 
-def allocate_asset(category, library_dir, manifest_path):
+def _asset_profile(library_dir, name):
+    lib = Path(library_dir)
+    for c in [lib / name, *lib.glob(f"*/{name}")]:
+        lp = c / "ledger.json"
+        if lp.is_file():
+            try:
+                return json.loads(lp.read_text()).get("profile")
+            except (OSError, ValueError):
+                return None
+    return None
+
+
+def allocate_asset(category, library_dir, manifest_path, profile=None):
     # Directory and asset_id come from this name, and the ledger requires an
     # IR-legal identifier -- "301_trash bin" (with the space) was a real
     # allocation before this normalisation.
@@ -96,6 +108,14 @@ def allocate_asset(category, library_dir, manifest_path):
                 note(i["asset"], i["model"] + 1)
     for name, count in sorted(model_counts.items()):
         if name.split("_", 1)[1] == category:
+            if profile is not None:
+                existing = _asset_profile(library_dir, name)
+                if existing is not None and existing != profile:
+                    # 跨来源 profile 冲突（如 NVIDIA cross_backend 资产 vs
+                    # web sapien_only 候选）：不往该资产追加模型——资产级
+                    # profile 是单一承诺，upsert 防漂移会正确拒绝。改为继续
+                    # 找兼容位，找不到则开新编号（2026-08-20 owner 决策 A）。
+                    continue
             return name, count
     n = max(numbers, default=300) + 1
     return f"{n}_{category}", 0

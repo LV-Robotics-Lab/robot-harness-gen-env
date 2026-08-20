@@ -132,8 +132,18 @@ def _attempt_import(
         if i == 0 and preallocated is not None:
             asset, model = preallocated
         else:
+            # 按候选来源声明 profile（web mesh 只能 sapien_only，Kit/USD 走
+            # cross_backend，与 materialize 的 is_web 判定同口径）——同类但
+            # profile 冲突时 allocate 会另开资产位而不是撞防漂移门。
             asset, model = a2.allocate_asset(
-                category, paths["library"], paths["manifest"]
+                category,
+                paths["library"],
+                paths["manifest"],
+                profile=(
+                    "sapien_only"
+                    if candidate.format.lower() in a2.WEB_FORMATS
+                    else "cross_backend"
+                ),
             )
         group = a2.build_manifest_group(candidate, asset, model, entry)
         out = Path(paths["out"])
@@ -276,7 +286,9 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             "tiers_consulted": [],
             "provider_errors": [],
         }
-        asset, model = a2.allocate_asset(category, paths["library"], paths["manifest"])
+        asset, model = a2.allocate_asset(
+            category, paths["library"], paths["manifest"], profile="cross_backend"
+        )
         if model > 0:
             rec["status"] = "reused_local"
             rec["local_reuse"] = {"asset_id": asset, "reason": a2.ALREADY}
@@ -316,7 +328,9 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         from lib import a3_webfetch as a3w
         from agenticsim.openxsim.assets import AssetCandidate
 
-        asset, model = a2.allocate_asset(category, paths["library"], paths["manifest"])
+        asset, model = a2.allocate_asset(
+            category, paths["library"], paths["manifest"], profile="sapien_only"
+        )
         if model > 0:
             rec["status"] = "reused_local"
             rec["local_reuse"] = {"asset_id": asset, "reason": a2.ALREADY}

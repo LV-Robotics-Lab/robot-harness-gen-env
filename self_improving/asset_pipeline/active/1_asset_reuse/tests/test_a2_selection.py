@@ -266,3 +266,24 @@ def test_match_local_exact_similar_none(tmp_path):
     assert pay["asset_id"] == "020_cup" and unmet[0]["kind"] == "unverified"
     pay, unmet = a2.match_local(p, "sofa")
     assert pay is None and unmet is None
+
+
+def test_allocate_asset_profile_conflict_opens_new_slot(tmp_path):
+    lib = tmp_path / "library"
+    a = lib / "301_ball"
+    a.mkdir(parents=True)
+    (a / "model_data0.json").write_text("{}")
+    (a / "ledger.json").write_text(json.dumps({"profile": "cross_backend"}))
+    man = tmp_path / "m.json"
+    # 无 profile：旧行为——同类续 model 位
+    assert a2.allocate_asset("ball", lib, man) == ("301_ball", 1)
+    # 相同 profile：照常复用
+    assert a2.allocate_asset("ball", lib, man, profile="cross_backend") == (
+        "301_ball",
+        1,
+    )
+    # 冲突 profile：另开新资产位（2026-08-20 owner 决策 A——防漂移契约不动）
+    assert a2.allocate_asset("ball", lib, man, profile="sapien_only") == (
+        "302_ball",
+        0,
+    )
