@@ -8,7 +8,7 @@
 | `script/` | CLI 入口：编译、回放、批量验收、矩阵、可选渲染评判、stage-5 报告。 | `generate_scene.py`、`run_scene_runtime.py`、`run_100_seed_acceptance.py`、`run_prompt_matrix.py` | 编排 `scene_gen`；流水线逻辑加进 `scene_gen`，不要加在这里 |
 | `demo/` | Flask 控制面，把 GPU 任务队列入队并按 id 暴露已注册产物。 | `app.py` | 复用同一 `scene_gen` 流水线；不是新流水线，只加队列 + 路由 |
 | `tests/` | pytest 套件 + committed fixture；为每个误报模式留攻击测试。 | `tests/scene_gen/test_<module>.py`、`tests/fixtures/{asset_catalog,golden_prompts,prompt_matrix}.json` | 锁住契约与失败分支；套件无需 RoboTwin checkout 即可跑 |
-| `self_improving/` | 平台编排、闭环诊断、资产复用、仿真适配、来源清单与只读历史。 | `registry.py`、`source_inventory.json`、`asset_pipeline/active/runtime_config.py`、各命名模块 | 消费稳定核心；平台改动不能降低 `scene_gen` 门控 |
+| `self_improving/` | Harness 对外契约、平台编排、闭环诊断、资产复用、仿真适配、来源清单与只读历史。 | `harness/schemas/`、`harness/schema_catalog.py`、`registry.py`、`source_inventory.json`、`asset_pipeline/active/runtime_config.py`、各命名模块 | Harness 只引用权威载荷，平台消费稳定核心；都不能降低 `scene_gen` 门控 |
 | `apps/pearl_evidence_portal/` | PEARL Self-Improving Agents 的独立证据门户、构建脚本、测试与已裁剪的浏览器报告子集。 | `app/page.tsx`、`scripts/build-hosted-report-subsets.mjs`、`tests/rendered-html.test.mjs` | 只呈现已有证据；不产出或修改核心验收结论 |
 | `external/` | 独立项目的 Git submodule。 | `OpenReal2Sim`、`digital-cousins` | 各自保留提交历史和发布周期；主仓只钉 commit |
 
@@ -71,6 +71,16 @@
 | `tests/fixtures/golden_prompts.json` | golden prompt fixture。 |—| 被 `test_parser.py` 用 |
 | `tests/fixtures/prompt_matrix.json` | 11 例中英 prompt × 3 seed，含 1 例预期 solver 拒绝。 | `infeasible_apple_plate_back_region`（`expect: reject`、`expected_failure_stage: solver`） | 被 `run_prompt_matrix.py` 与 `test_prompt_matrix.py` 用 |
 | `tests/demo/` | Flask API 测试，无真实 GPU；见下小节。 |—| 改 `demo/app.py` 先跑；`pytest -q tests/demo` |
+
+## `self_improving/harness/`
+
+| 重要代码 | 功能 | 关键符号 | 验证 |
+| --- | --- | --- | --- |
+| `schemas/base.py`、`schemas/common.py` | 严格 frozen 基类、Skill 标识/SemVer/SHA-256 原语，以及 Descriptor、Invocation、RunState、Event、ArtifactRef、Blocker、Qualification。 | `HarnessModel`、`SkillDescriptor`、`Invocation`、`RunState`、`derive_mcp_tool_name` | `tests/self_improving/harness/test_common_schemas.py`；详见 [Harness Schema Tranche](modules/harness-schema-tranche.md) |
+| `schemas/text2env.py` | compile/replay/validate 六个输入输出，以及对现有哈希绑定包的不可变引用；不复制 `scene_gen` 载荷。 | `EnvironmentPackage`、`Text2EnvCompileInput`、`Text2EnvReplayInput`、`Text2EnvValidateOutput` | `tests/self_improving/harness/test_text2env_schemas.py`；语句和分支覆盖均强制 100% |
+| `schema_catalog.py`、`json_schemas/` | 14 个公开 `$id` 到模型的不可变目录，以及可审阅的 JSON Schema 快照和漂移检测。 | `SCHEMA_MODELS`、`schema_documents`、`export_schema_snapshots` | `python script/export_harness_schemas.py --check`、`tests/self_improving/harness/test_schema_catalog.py`、[PR1 实现报告](../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md) |
+
+这批代码只完成 schema tranche；`SkillRegistry`、Text2Env handler 和 MCP adapter 尚未实现。契约文档仍是 `Status: Proposed`，不能从目录存在推断为已 Accepted。当前专项测试为 21 个；实现与验证明细见 [PR1 报告](../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)。
 
 ## `self_improving/asset_pipeline/`
 

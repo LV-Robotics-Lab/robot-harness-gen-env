@@ -1,0 +1,105 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "$id": "harness.artifact_ref.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "CompileConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "generate_missing_assets": {
+          "default": false,
+          "title": "Generate Missing Assets",
+          "type": "boolean"
+        }
+      },
+      "title": "CompileConfig",
+      "type": "object"
+    }
+  },
+  "$id": "harness.text2env_compile_input.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset_catalog": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "config": {
+      "$ref": "#/$defs/CompileConfig"
+    },
+    "request": {
+      "maxLength": 2000,
+      "minLength": 3,
+      "title": "Request",
+      "type": "string"
+    },
+    "seed": {
+      "maximum": 2147483647,
+      "minimum": 0,
+      "title": "Seed",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "request",
+    "seed",
+    "asset_catalog",
+    "config"
+  ],
+  "title": "Text2EnvCompileInput",
+  "type": "object"
+}
