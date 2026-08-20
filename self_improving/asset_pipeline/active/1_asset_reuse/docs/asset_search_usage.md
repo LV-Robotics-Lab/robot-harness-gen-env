@@ -61,8 +61,9 @@ $PY scripts/1_search/acquire_batch.py \
    s9 重建影子根 + 扩展 catalog（此后新资产就能被文字场景选中）；
 3. 全部决策记录连同**providers 配置快照**和**输入清单回显**写入
    `<out>/selection_evidence.json`（可复现：当时用什么源、什么参数、请求了什么，全部冻结在证据里）；
-4. stdout 逐条打 `PASS/FAIL <类别> status=…`，最后一行 `SUMMARY PASS|FAIL imported=N`；
-   **退出码**：每条都是 `imported` 或 `reused_local` 才返回 0，出现任一 `exhausted`/`entry_error` 返回 1。
+4. stdout 逐条打 `MATCH <类别> grade=…` 与 `PASS/FAIL <类别> status=…`，最后一行
+   `SUMMARY PASS|FAIL imported=N exact=A similar=B none=C`；**退出码**：每条拿到
+   可复用资产（exact/similar）才返回 0，出现任一 none/entry_error 返回 1。
 
 **匹配三档（每条请求必有 `match` 块）**：
 
