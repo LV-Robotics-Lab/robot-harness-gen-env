@@ -16,7 +16,7 @@
     ],
     "identity": {
       "basis": "upstream_catalog",
-      "evidence": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/results/20260818_upstream_ledger_backfill/upstream_catalog_scoped.json",
+      "evidence": "results/20260818_upstream_ledger_backfill/upstream_catalog_scoped.json",
       "verified": false
     }
   },
@@ -113,7 +113,7 @@
         "kind": "retrieved",
         "library": "RoboTwin (upstream)",
         "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
-        "file": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/071_can",
+        "file": "data/asset_library/robotwin/071_can",
         "license": {
           "spdx": null,
           "status": "unknown",
@@ -216,7 +216,7 @@
         "kind": "retrieved",
         "library": "RoboTwin (upstream)",
         "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
-        "file": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/071_can",
+        "file": "data/asset_library/robotwin/071_can",
         "license": {
           "spdx": null,
           "status": "unknown",
@@ -319,7 +319,7 @@
         "kind": "retrieved",
         "library": "RoboTwin (upstream)",
         "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
-        "file": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/071_can",
+        "file": "data/asset_library/robotwin/071_can",
         "license": {
           "spdx": null,
           "status": "unknown",
@@ -422,7 +422,7 @@
         "kind": "retrieved",
         "library": "RoboTwin (upstream)",
         "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
-        "file": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/071_can",
+        "file": "data/asset_library/robotwin/071_can",
         "license": {
           "spdx": null,
           "status": "unknown",
@@ -525,7 +525,7 @@
         "kind": "retrieved",
         "library": "RoboTwin (upstream)",
         "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
-        "file": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/071_can",
+        "file": "data/asset_library/robotwin/071_can",
         "license": {
           "spdx": null,
           "status": "unknown",
@@ -628,7 +628,7 @@
         "kind": "retrieved",
         "library": "RoboTwin (upstream)",
         "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
-        "file": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/071_can",
+        "file": "data/asset_library/robotwin/071_can",
         "license": {
           "spdx": null,
           "status": "unknown",

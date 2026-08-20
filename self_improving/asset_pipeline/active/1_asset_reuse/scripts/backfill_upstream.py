@@ -192,7 +192,11 @@ def _relative_to_root(path_str, root):
     try:
         return Path(path_str).relative_to(root).as_posix()
     except ValueError:
-        return path_str  # honest fallback: never fabricate a rebased path
+        # 不在 root 下（如 ext 模型住 asset_library）→ 走可移植契约兜底：
+        # active 树内给 active-relative，树外才保留绝对路径。此前直接回落
+        # 绝对路径，把 ~400 条个人 home 路径写进了 public 仓的 tracked
+        # 账本（2026-08-20 路径卫生排查）。
+        return ledger.to_portable_uri(path_str)
 
 
 def _derive_scale_applied(scale, report, note_key):
@@ -752,11 +756,13 @@ def main():
                 # unless one was registered by hand via --isaac-usd; the
                 # profile follows that evidence rather than an aspiration.
                 profile=(
-                    "cross_backend" if _has_isaac_rep(led, model_entry) else "sapien_only"
+                    "cross_backend"
+                    if _has_isaac_rep(led, model_entry)
+                    else "sapien_only"
                 ),
                 identity={
                     "basis": "upstream_catalog",
-                    "evidence": str(args.catalog),
+                    "evidence": ledger.to_portable_uri(args.catalog),
                     "verified": False,
                 },
                 aliases=aliases,
