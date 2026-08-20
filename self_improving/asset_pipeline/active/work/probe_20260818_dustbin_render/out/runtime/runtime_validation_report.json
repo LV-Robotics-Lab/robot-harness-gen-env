@@ -1,0 +1,158 @@
+{
+  "schema_version": "robotwin.scene_validation.v1",
+  "scene_id": "place_a_dustbin_on_the_table_f70e98a43e",
+  "resolved_scene_sha256": "580735c18609c93a7a9ac05adb4ee65d1370b0f622e640e12bc0bca38dc88af1",
+  "status": "fail",
+  "fail_count": 1,
+  "not_run_count": 0,
+  "checks": [
+    {
+      "name": "workspace_bounds:dustbin_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.11655420224107504,
+          0.18624482424107502,
+          -0.05241104622284011,
+          0.21908287022284012
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:dustbin_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.741,
+        "table_height_m": 0.741,
+        "support_relation": "on_table"
+      }
+    },
+    {
+      "name": "real_asset_files:dustbin_1",
+      "status": "pass",
+      "evidence": {
+        "paths": [
+          "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/objaverse/321_dustbin/collision/base0.glb",
+          "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/objaverse/321_dustbin/model_data0.json",
+          "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/objaverse/321_dustbin/visual/base0.glb"
+        ],
+        "exists": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "relation:on_table:dustbin_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "resolved_only_roundtrip",
+      "status": "pass",
+      "evidence": {
+        "before": "580735c18609c93a7a9ac05adb4ee65d1370b0f622e640e12bc0bca38dc88af1",
+        "after": "580735c18609c93a7a9ac05adb4ee65d1370b0f622e640e12bc0bca38dc88af1"
+      }
+    },
+    {
+      "name": "runtime_status",
+      "status": "pass",
+      "evidence": null
+    },
+    {
+      "name": "robot_initial_collision",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "observer_video_frame_count",
+      "status": "pass",
+      "evidence": {
+        "frames": 60,
+        "minimum": 3
+      }
+    },
+    {
+      "name": "observer_video_unique_frames",
+      "status": "pass",
+      "evidence": {
+        "unique_frames": 60,
+        "minimum": 30
+      }
+    },
+    {
+      "name": "translation_drift:dustbin_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_m": 0.008505352283820383,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "rotation_drift:dustbin_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_deg": 8.901258386642645,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_translation_error:dustbin_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_m": 0.008505355609704116,
+        "threshold_m": 0.02,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_rotation_error:dustbin_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_deg": 8.90125851560112,
+        "threshold_deg": 5.0,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "penetration:dustbin_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:dustbin_1",
+      "status": "fail",
+      "evidence": true
+    },
+    {
+      "name": "support_contact:dustbin_1",
+      "status": "pass",
+      "evidence": {
+        "raw_contact": true,
+        "mode": "on_table_contact",
+        "is_static": false,
+        "expected_target": "table",
+        "observed_target": "table",
+        "contact_fraction": 1.0,
+        "minimum_contact_fraction": 0.8
+      }
+    },
+    {
+      "name": "not_dropped:dustbin_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "head_visibility:dustbin_1",
+      "status": "pass",
+      "evidence": {
+        "pixels": 12295,
+        "threshold": 64
+      }
+    }
+  ]
+}

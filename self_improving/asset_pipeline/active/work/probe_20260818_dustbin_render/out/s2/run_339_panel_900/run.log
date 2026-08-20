@@ -1,0 +1,23 @@
+/home/yuhang/miniconda3/envs/env-gen-yuxin/lib/python3.10/site-packages/sapien/__init__.py:2: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/yuhang/workspace/robot-harness-gen-env/external/RoboTwin/envs/curobo/src/curobo/opt/opt_base.py:298: UserWarning: Sparse invariant checks are implicitly disabled. Memory errors (e.g. SEGFAULT) will occur when operating on a sparse tensor which violates the invariants, but checks incur performance overhead. To silence this warning, explicitly opt in or out. See `torch.sparse.check_sparse_tensor_invariants.__doc__` for guidance.  (Triggered internally at /pytorch/aten/src/ATen/Context.cpp:760.)
+  self.problem_kernel_ = torch.sparse_coo_tensor(
+[2026-08-19 15:15:15.025] [svulkan2] [error] OIDN Error: unsupported device type: CUDA
+[2026-08-19 15:15:15.048] [svulkan2] [error] OIDN Error: invalid handle
+[2026-08-19 15:15:15.068] [svulkan2] [error] OIDN Error: invalid handle
+[2026-08-19 15:15:15.083] [svulkan2] [error] OIDN Error: invalid handle
+[2026-08-19 15:15:15.102] [svulkan2] [error] OIDN Error: invalid handle
+[2026-08-19 15:15:15.117] [svulkan2] [error] OIDN Error: invalid handle
+[2026-08-19 15:15:15.136] [svulkan2] [error] OIDN Error: invalid handle
+[2026-08-19 15:15:15.150] [svulkan2] [error] OIDN Error: invalid handle
+[2026-08-19 15:15:15.169] [svulkan2] [error] OIDN Error: invalid handle
+[2026-08-19 15:15:15.184] [svulkan2] [error] OIDN Error: invalid handle
+[2026-08-19 15:15:15.203] [svulkan2] [error] OIDN Error: invalid handle
+[2026-08-19 15:15:15.282] [svulkan2] [error] OIDN Error: invalid handle
+[2026-08-19 15:15:15.320] [svulkan2] [error] OIDN Error: invalid handle
+[2026-08-19 15:15:15.351] [svulkan2] [error] OIDN Error: invalid handle
+[2026-08-19 15:15:15.405] [svulkan2] [error] OIDN Error: invalid handle
+[2026-08-19 15:15:15.471] [svulkan2] [error] OIDN Error: invalid handle
+missing pytorch3d
+Warp DeprecationWarning: The symbol `warp.torch.device_from_torch` will soon be removed from the public API. Use `warp.device_from_torch` instead.
+PASS scene=place_a_panel_on_the_table_2627c9086d fail=0 video_frames=12

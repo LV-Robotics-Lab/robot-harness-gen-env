@@ -3,6 +3,7 @@
   "asset_id": "robotwin_002_bowl",
   "category": "bowl",
   "kind": "rigid",
+  "profile": "sapien_only",
   "semantics": {
     "aliases": [
       "bowl"
@@ -14,7 +15,7 @@
     ],
     "identity": {
       "basis": "upstream_catalog",
-      "evidence": "external/env-gen-github/data/scene_gen/asset_catalog.json",
+      "evidence": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/results/20260818_upstream_ledger_backfill/upstream_catalog_scoped.json",
       "verified": false
     }
   },
@@ -43,17 +44,12 @@
             {
               "pose_id": "upright",
               "orientation_wxyz": [
-                1.0,
-                0.0,
+                0.7071067811865476,
+                0.7071067811865476,
                 0.0,
                 0.0
               ],
-              "is_default": true,
-              "measured_against": {
-                "backend": "sapien",
-                "run_id": "migrate-v3-20260815",
-                "note": "upstream catalog declaration (identity dialect)"
-              }
+              "is_default": true
             }
           ],
           "support_margin_m": 0.005,
@@ -62,18 +58,19 @@
         },
         "mass_kg": {
           "value": null,
-          "status": "unknown"
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
         },
         "friction": {
           "value": null,
           "status": "unknown"
         },
-        "placement": {
-          "verdict": "unsupportive",
-          "measured_against": {
-            "backend": "sapien",
-            "run_id": "probe-v4-20260815"
-          }
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
         }
       },
       "representations": [
@@ -89,8 +86,8 @@
             "up_axis": "Y"
           },
           "geometry_state": {
-            "scale_baked": false,
-            "origin": "bottom-center"
+            "origin": "bottom-center",
+            "scale_baked": false
           }
         },
         {
@@ -105,44 +102,644 @@
             "up_axis": "Y"
           },
           "geometry_state": {
-            "scale_baked": false,
-            "origin": "bottom-center"
+            "origin": "bottom-center",
+            "scale_baked": false
           }
         }
       ],
       "articulation": {},
       "source": {
+        "kind": "retrieved",
         "library": "RoboTwin (upstream)",
-        "group": "c3ddfa8b97d5519efa828b075999bd0006778e5e",
-        "file": "002_bowl",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/002_bowl",
         "license": {
           "spdx": null,
           "status": "unknown",
           "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
         },
         "retrieved_at": "2025-06-27",
-        "source_manifest_path": "data/upstream_ledgers/002_bowl/SOURCE_MANIFEST.json",
-        "kind": "retrieved"
+        "source_manifest_path": "data/upstream_ledgers/002_bowl/SOURCE_MANIFEST.json"
       },
-      "verification": [],
-      "appearance": {
-        "colors_measured": [
-          "white"
+      "verification": []
+    },
+    {
+      "model_id": 2,
+      "physical": {
+        "mesh_bbox_m": [
+          0.11974434113502502,
+          0.049,
+          0.11987781381607056
         ],
-        "color_fractions": {
-          "white": 0.795,
-          "black": 0.006
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 2.446485996246338,
+          "scale": 0.049,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
         },
-        "method": "4-view offscreen render, HSV per-pixel vote",
-        "measured_against": {
-          "backend": "sapien",
-          "run_id": "attr-20260814"
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.7087479368211486,
+                0.7054449371155829,
+                0.003524999685776254,
+                0.0033729996993257603
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
         }
-      }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/002_bowl/visual/base2.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "e9df137830f7be68ae2b769be80684e0462bd27896416df3624450dc288867dc",
+          "size_bytes": 1518276,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/002_bowl/collision/base2.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "abe0316bc575bbe9c0b8ce44fedd0c478833a707745d0d7ba9de6a23e523cd34",
+          "size_bytes": 879852,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/002_bowl",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/002_bowl/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    },
+    {
+      "model_id": 3,
+      "physical": {
+        "mesh_bbox_m": [
+          0.13340425491333008,
+          0.05,
+          0.13322575092315675
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 2.6680850982666016,
+          "scale": 0.05,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.7072097736264309,
+                0.7070037736923701,
+                -5.999998079436921e-06,
+                -5.999998079436921e-06
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/002_bowl/visual/base3.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "f99e9609f59b3a560dc3bef52551fb9346d291aaeea13e65e2af3f034029712b",
+          "size_bytes": 1537976,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/002_bowl/collision/base3.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "d52b74783637f4f86a40bc53d49c61e40464ee3d32279252b4a335414e82e9a4",
+          "size_bytes": 804568,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/002_bowl",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/002_bowl/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    },
+    {
+      "model_id": 4,
+      "physical": {
+        "mesh_bbox_m": [
+          0.13045361161231997,
+          0.07,
+          0.13055776953697207
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.8651109933853152,
+          "scale": 0.07,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.7066280061444837,
+                0.7075850061528054,
+                -0.0004000000034782,
+                0.0004000000034782
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/002_bowl/visual/base4.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "1391def4a0e2e50902611436c3f9d9ac8e32f45cc50c28d22dfdbeef0eddcf50",
+          "size_bytes": 1531140,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/002_bowl/collision/base4.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "8c0d3d874c755a986572c799a8c54fc516e1772e445e7e00b5a7c0deab3d67eb",
+          "size_bytes": 1283948,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/002_bowl",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/002_bowl/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    },
+    {
+      "model_id": 5,
+      "physical": {
+        "mesh_bbox_m": [
+          0.13075672578811645,
+          0.067,
+          0.1309586696624756
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.9546070098876955,
+          "scale": 0.067,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.7073319685640459,
+                0.7068809685840898,
+                0.0006249999722231269,
+                -0.0006259999721786838
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/002_bowl/visual/base5.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "a9317f8b05e06a95dece7ea4def3939a24f506a985adf4484e11c8a0eb8c2c0d",
+          "size_bytes": 1527288,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/002_bowl/collision/base5.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "bd27d6288d661e0195aa39fa78fb2fd3949ef2d09499750a91b9e298bc6c7fa0",
+          "size_bytes": 1291092,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/002_bowl",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/002_bowl/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    },
+    {
+      "model_id": 6,
+      "physical": {
+        "mesh_bbox_m": [
+          0.12006198463439943,
+          0.04810910263061524,
+          0.12002350082397462
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.8997149467468262,
+          "scale": 0.0632,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.7047508410959695,
+                0.7094548400353331,
+                0.00025499994250376693,
+                -0.0001299999706881949
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/002_bowl/visual/base6.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "c3032fc9d637824cd708a2174007598369a3443c5f85da921df492d18f110831",
+          "size_bytes": 6248588,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/002_bowl/collision/base6.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "2cb6eda3252a1604fba1cc7ba12b8adbead0ea87a214435c72a45fe5d50fd1c7",
+          "size_bytes": 1329284,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/002_bowl",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/002_bowl/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    },
+    {
+      "model_id": 7,
+      "physical": {
+        "mesh_bbox_m": [
+          0.12013751325607301,
+          0.04924683113098145,
+          0.12003323101997376
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.9009100198745728,
+          "scale": 0.0632,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.7070190271428145,
+                0.7070800271451564,
+                -0.009033000346781407,
+                -0.008963000344094071
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/002_bowl/visual/base7.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "a157175095119d732fee7e9dc5f1f5596b45b280b55e328644f7f5daeb070895",
+          "size_bytes": 5955912,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/002_bowl/collision/base7.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "75daeb9b9d9d80fdcdcc2515e1a26e304e433ea7f9a1ff98e43b60558bcf6f25",
+          "size_bytes": 1071992,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/002_bowl",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/002_bowl/SOURCE_MANIFEST.json"
+      },
+      "verification": []
     }
-  ],
-  "profile": "sapien_only",
-  "external_ids": {
-    "env_gen": "002_bowl"
-  }
+  ]
 }

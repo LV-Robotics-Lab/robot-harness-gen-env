@@ -3,19 +3,22 @@
   "asset_id": "robotwin_003_plate",
   "category": "plate",
   "kind": "rigid",
+  "profile": "sapien_only",
   "semantics": {
     "aliases": [
       "dish",
       "plate"
     ],
-    "colors": [],
+    "colors": [
+      "white"
+    ],
     "materials": [
       "ceramic",
       "plastic"
     ],
     "identity": {
       "basis": "upstream_catalog",
-      "evidence": "external/env-gen-github/data/scene_gen/asset_catalog.json",
+      "evidence": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/results/20260818_upstream_ledger_backfill/upstream_catalog_scoped.json",
       "verified": false
     }
   },
@@ -49,12 +52,7 @@
                 0.5,
                 0.5
               ],
-              "is_default": true,
-              "measured_against": {
-                "backend": "sapien",
-                "run_id": "migrate-v3-20260815",
-                "note": "upstream catalog declaration (identity dialect)"
-              }
+              "is_default": true
             }
           ],
           "support_margin_m": 0.008,
@@ -63,18 +61,19 @@
         },
         "mass_kg": {
           "value": null,
-          "status": "unknown"
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
         },
         "friction": {
           "value": null,
           "status": "unknown"
         },
-        "placement": {
-          "verdict": "unsupportive",
-          "measured_against": {
-            "backend": "sapien",
-            "run_id": "probe-v4-20260815"
-          }
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
         }
       },
       "representations": [
@@ -90,8 +89,8 @@
             "up_axis": "Y"
           },
           "geometry_state": {
-            "scale_baked": false,
-            "origin": "bottom-center"
+            "origin": "bottom-center",
+            "scale_baked": false
           }
         },
         {
@@ -106,43 +105,26 @@
             "up_axis": "Y"
           },
           "geometry_state": {
-            "scale_baked": false,
-            "origin": "bottom-center"
+            "origin": "bottom-center",
+            "scale_baked": false
           }
         }
       ],
       "articulation": {},
       "source": {
+        "kind": "retrieved",
         "library": "RoboTwin (upstream)",
-        "group": "c3ddfa8b97d5519efa828b075999bd0006778e5e",
-        "file": "003_plate",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/003_plate",
         "license": {
           "spdx": null,
           "status": "unknown",
           "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
         },
         "retrieved_at": "2025-06-27",
-        "source_manifest_path": "data/upstream_ledgers/003_plate/SOURCE_MANIFEST.json",
-        "kind": "retrieved"
+        "source_manifest_path": "data/upstream_ledgers/003_plate/SOURCE_MANIFEST.json"
       },
-      "verification": [],
-      "appearance": {
-        "colors_measured": [
-          "white"
-        ],
-        "color_fractions": {
-          "white": 1.0
-        },
-        "method": "4-view offscreen render, HSV per-pixel vote",
-        "measured_against": {
-          "backend": "sapien",
-          "run_id": "attr-20260814"
-        }
-      }
+      "verification": []
     }
-  ],
-  "profile": "sapien_only",
-  "external_ids": {
-    "env_gen": "003_plate"
-  }
+  ]
 }

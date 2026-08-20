@@ -1,0 +1,154 @@
+{
+  "schema_version": "robotwin.resolved_scene.v1",
+  "scene_id": "place_a_teddy_bear_on_the_table_71bdcfd0b6",
+  "request": "Place a teddy bear on the table.",
+  "frame": {
+    "name": "robotwin_world",
+    "x_axis": "right",
+    "y_axis": "front",
+    "z_axis": "up",
+    "handedness": "right_handed"
+  },
+  "unit": "m",
+  "seed": 42,
+  "workspace": {
+    "support_surface": "table",
+    "table_height_m": 0.741,
+    "x_bounds_m": [
+      -0.35,
+      0.35
+    ],
+    "y_bounds_m": [
+      -0.2,
+      0.3
+    ],
+    "robot_keepout_x_m": [
+      -0.16,
+      0.16
+    ],
+    "robot_keepout_y_m": [
+      -0.2,
+      -0.08
+    ]
+  },
+  "source_scene_spec_sha256": "dbdbc7c3f196bb3f0a6f6e09b6a244f90f6376475133109ea062c380404e9f9e",
+  "asset_catalog_sha256": "09b67ac2bda03a2ba3a80c11ebc51801b84f9291a331a10ceabfcecf1ebc61fa",
+  "compiler_version": "scene_gen.stage5_solver.v3",
+  "objects": [
+    {
+      "object_id": "teddy_bear_1",
+      "category": "teddy_bear",
+      "asset_id": "320_teddy_bear",
+      "model_id": 1,
+      "load_type": "rigid",
+      "stable_pose_id": "upright",
+      "stable_orientation_wxyz": [
+        0.7071067811865476,
+        0.7071067811865476,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.13050210667593828,
+        0.3,
+        0.25540574406586164
+      ],
+      "footprint_shape": "box",
+      "support_margin_m": 0.005,
+      "support_spawn_clearance_m": 0.003,
+      "z_policy": "origin_on_table",
+      "mesh_scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "collision_available": true,
+      "source_files": [
+        "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/objaverse/320_teddy_bear/collision/base1.glb",
+        "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/objaverse/320_teddy_bear/model_data1.json",
+        "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/objaverse/320_teddy_bear/visual/base1.glb"
+      ],
+      "grounding_score": 103.0,
+      "grounding_reasons": [
+        "exact category match",
+        "collision representation available",
+        "normalized dimensions available"
+      ],
+      "rejected_candidates": [],
+      "pose": {
+        "position_m": [
+          -0.050725335,
+          0.104622194,
+          0.741
+        ],
+        "orientation_wxyz": [
+          0.537730510378,
+          0.537730510378,
+          -0.459179592543,
+          -0.459179592543
+        ],
+        "yaw_rad": -1.413532481369
+      },
+      "is_static": false,
+      "support_relation": "on_table",
+      "support_target": "table",
+      "articulation_joint_names": [],
+      "articulation_joint_limits": [],
+      "articulation_qpos": [],
+      "asset_provenance": "robotwin_catalog"
+    }
+  ],
+  "relations": [
+    {
+      "relation": "on_table",
+      "source": "teddy_bear_1",
+      "target": "table"
+    }
+  ],
+  "solver_trace": {
+    "algorithm": "bounded_rejection_backtracking_v1",
+    "seed": 42,
+    "max_attempts_per_object": 96,
+    "total_attempts": 3,
+    "attempts": [
+      {
+        "attempt": 1,
+        "object_id": "teddy_bear_1",
+        "candidate_xy_m": [
+          0.0,
+          0.08
+        ],
+        "yaw_rad": 0.876044411498,
+        "accepted": false,
+        "reasons": [
+          "asset footprint does not fit selected region"
+        ]
+      },
+      {
+        "attempt": 2,
+        "object_id": "teddy_bear_1",
+        "candidate_xy_m": [
+          0.0,
+          0.08
+        ],
+        "yaw_rad": -2.984445443853,
+        "accepted": false,
+        "reasons": [
+          "asset footprint does not fit selected region"
+        ]
+      },
+      {
+        "attempt": 3,
+        "object_id": "teddy_bear_1",
+        "candidate_xy_m": [
+          -0.050725335,
+          0.104622194
+        ],
+        "yaw_rad": -1.413532481369,
+        "accepted": true,
+        "reasons": []
+      }
+    ],
+    "status": "pass"
+  }
+}

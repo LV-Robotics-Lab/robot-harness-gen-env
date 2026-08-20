@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/home/yuhang/workspace/robot-harness-gen-env/script/generate_scene.py", line 97, in <module>
+    raise SystemExit(main())
+  File "/home/yuhang/workspace/robot-harness-gen-env/script/generate_scene.py", line 77, in main
+    resolved = solve_scene(spec, catalog)
+  File "/home/yuhang/workspace/robot-harness-gen-env/scene_gen/solver.py", line 350, in solve_scene
+    grounded = ground_scene(spec.objects, catalog, seed=spec.seed)
+  File "/home/yuhang/workspace/robot-harness-gen-env/scene_gen/grounding.py", line 157, in ground_scene
+    return {
+  File "/home/yuhang/workspace/robot-harness-gen-env/scene_gen/grounding.py", line 158, in <dictcomp>
+    query.object_id: ground_object(query, catalog, seed=seed)
+  File "/home/yuhang/workspace/robot-harness-gen-env/scene_gen/grounding.py", line 130, in ground_object
+    raise SceneSpecError(
+scene_gen.schema.SceneSpecError: no usable catalog candidate for sleigh_1 category=sleigh color=None material=None

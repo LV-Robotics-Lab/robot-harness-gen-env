@@ -1,0 +1,158 @@
+{
+  "schema_version": "robotwin.scene_validation.v1",
+  "scene_id": "place_a_teddy_bear_on_the_table_71bdcfd0b6",
+  "resolved_scene_sha256": "aec55ec258549309cf61d97dfbe5c1203155e893d9d40fa5215db9469a8faac5",
+  "status": "pass",
+  "fail_count": 0,
+  "not_run_count": 0,
+  "checks": [
+    {
+      "name": "workspace_bounds:teddy_bear_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.20909364652982818,
+          0.10764297652982815,
+          0.016683909779124095,
+          0.1925604782208759
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:teddy_bear_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.741,
+        "table_height_m": 0.741,
+        "support_relation": "on_table"
+      }
+    },
+    {
+      "name": "real_asset_files:teddy_bear_1",
+      "status": "pass",
+      "evidence": {
+        "paths": [
+          "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/objaverse/320_teddy_bear/collision/base1.glb",
+          "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/objaverse/320_teddy_bear/model_data1.json",
+          "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/objaverse/320_teddy_bear/visual/base1.glb"
+        ],
+        "exists": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "relation:on_table:teddy_bear_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "resolved_only_roundtrip",
+      "status": "pass",
+      "evidence": {
+        "before": "aec55ec258549309cf61d97dfbe5c1203155e893d9d40fa5215db9469a8faac5",
+        "after": "aec55ec258549309cf61d97dfbe5c1203155e893d9d40fa5215db9469a8faac5"
+      }
+    },
+    {
+      "name": "runtime_status",
+      "status": "pass",
+      "evidence": null
+    },
+    {
+      "name": "robot_initial_collision",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "observer_video_frame_count",
+      "status": "pass",
+      "evidence": {
+        "frames": 12,
+        "minimum": 3
+      }
+    },
+    {
+      "name": "observer_video_unique_frames",
+      "status": "pass",
+      "evidence": {
+        "unique_frames": 12,
+        "minimum": 12
+      }
+    },
+    {
+      "name": "translation_drift:teddy_bear_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_m": 0.0009986758257477244,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "rotation_drift:teddy_bear_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_deg": 0.00637436346863689,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_translation_error:teddy_bear_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_m": 0.0009986791636009246,
+        "threshold_m": 0.02,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_rotation_error:teddy_bear_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_deg": 0.0,
+        "threshold_deg": 5.0,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "penetration:teddy_bear_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:teddy_bear_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "support_contact:teddy_bear_1",
+      "status": "pass",
+      "evidence": {
+        "raw_contact": true,
+        "mode": "on_table_contact",
+        "is_static": false,
+        "expected_target": "table",
+        "observed_target": "table",
+        "contact_fraction": 1.0,
+        "minimum_contact_fraction": 0.8
+      }
+    },
+    {
+      "name": "not_dropped:teddy_bear_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "head_visibility:teddy_bear_1",
+      "status": "pass",
+      "evidence": {
+        "pixels": 4703,
+        "threshold": 64
+      }
+    }
+  ]
+}

@@ -1,0 +1,158 @@
+{
+  "schema_version": "robotwin.scene_validation.v1",
+  "scene_id": "place_a_bowl_on_the_table_b1b1effc05",
+  "resolved_scene_sha256": "4bdbc96cd8a1be593cfaa9ac3f49a647e6a85140bce4e163f2d32b14d02e1fbb",
+  "status": "pass",
+  "fail_count": 0,
+  "not_run_count": 0,
+  "checks": [
+    {
+      "name": "workspace_bounds:bowl_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.24178154583794428,
+          -0.0703783621620557,
+          -0.030132691837944293,
+          0.1412704918379443
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:bowl_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.741,
+        "table_height_m": 0.741,
+        "support_relation": "on_table"
+      }
+    },
+    {
+      "name": "real_asset_files:bowl_1",
+      "status": "pass",
+      "evidence": {
+        "paths": [
+          "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/002_bowl/collision/base2.glb",
+          "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/002_bowl/model_data2.json",
+          "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/002_bowl/visual/base2.glb"
+        ],
+        "exists": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "relation:on_table:bowl_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "resolved_only_roundtrip",
+      "status": "pass",
+      "evidence": {
+        "before": "4bdbc96cd8a1be593cfaa9ac3f49a647e6a85140bce4e163f2d32b14d02e1fbb",
+        "after": "4bdbc96cd8a1be593cfaa9ac3f49a647e6a85140bce4e163f2d32b14d02e1fbb"
+      }
+    },
+    {
+      "name": "runtime_status",
+      "status": "pass",
+      "evidence": null
+    },
+    {
+      "name": "robot_initial_collision",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "observer_video_frame_count",
+      "status": "pass",
+      "evidence": {
+        "frames": 12,
+        "minimum": 3
+      }
+    },
+    {
+      "name": "observer_video_unique_frames",
+      "status": "pass",
+      "evidence": {
+        "unique_frames": 12,
+        "minimum": 12
+      }
+    },
+    {
+      "name": "translation_drift:bowl_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_m": 0.0010054111527160313,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "rotation_drift:bowl_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_deg": 0.3816837594327731,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_translation_error:bowl_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_m": 0.0010054144903217936,
+        "threshold_m": 0.02,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_rotation_error:bowl_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_deg": 0.3812296572028302,
+        "threshold_deg": 5.0,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "penetration:bowl_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:bowl_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "support_contact:bowl_1",
+      "status": "pass",
+      "evidence": {
+        "raw_contact": true,
+        "mode": "on_table_contact",
+        "is_static": false,
+        "expected_target": "table",
+        "observed_target": "table",
+        "contact_fraction": 1.0,
+        "minimum_contact_fraction": 0.8
+      }
+    },
+    {
+      "name": "not_dropped:bowl_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "head_visibility:bowl_1",
+      "status": "pass",
+      "evidence": {
+        "pixels": 2309,
+        "threshold": 64
+      }
+    }
+  ]
+}

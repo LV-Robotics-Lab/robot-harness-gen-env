@@ -1,0 +1,290 @@
+{
+  "schema_version": "robotwin.scene_runtime_evidence.v2",
+  "scene_id": "place_a_cup_on_the_table_a0da361e77",
+  "resolved_scene_sha256": "d0c4f046228cf00828053a2081e645e75158efc755c08c0dc98258c8cc4acbea",
+  "seed": 42,
+  "status": "pass",
+  "robot_initial_collision_count": 0,
+  "robot_initial_collision_pairs": [],
+  "robot_final_collision_count": 0,
+  "robot_final_collision_pairs": [],
+  "objects": {
+    "cup_1": {
+      "asset_id": "021_cup",
+      "entity_id": 66,
+      "entity_ids": [
+        66
+      ],
+      "initial_pose": {
+        "position_m": [
+          -0.1916573941707611,
+          0.03899184241890907,
+          0.7684500217437744
+        ],
+        "orientation_wxyz": [
+          -0.3289547562599182,
+          0.4587089717388153,
+          0.17862680554389954,
+          0.8058953285217285
+        ],
+        "qpos": []
+      },
+      "final_pose": {
+        "position_m": [
+          -0.19165964424610138,
+          0.03898860886693001,
+          0.7616625428199768
+        ],
+        "orientation_wxyz": [
+          -0.32897886633872986,
+          0.45866480469703674,
+          0.17865128815174103,
+          0.8059053421020508
+        ],
+        "qpos": []
+      },
+      "translation_drift_m": 0.006787480066983193,
+      "rotation_drift_deg": 0.0,
+      "resolved_translation_error_m": 0.0067874583233596695,
+      "loader_translation_offset_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "resolved_rotation_error_deg": 0.0,
+      "late_window_translation_m": 0.0,
+      "late_window_rotation_deg": 0.0,
+      "still_moving": false,
+      "visible_pixels": 925,
+      "penetration_count": 0,
+      "support_contact": true,
+      "support_contact_fraction": 1.0,
+      "support_contact_samples": 120,
+      "unexpected_contact_fraction": 0.0,
+      "unexpected_contact_targets": [],
+      "support_mode": "on_table_contact",
+      "support_target": "table",
+      "expected_support_target": "table",
+      "support_footprint_margin_m": null,
+      "inside_contained": null,
+      "dropped": false,
+      "articulation_target_qpos": [],
+      "articulation_final_qpos": [],
+      "articulation_max_abs_error": null
+    }
+  },
+  "relations": {},
+  "initial_contact_records": [],
+  "final_contact_records": [
+    {
+      "bodies": [
+        "cup_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.0046543520875275135,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 4,
+      "min_separation_m": -1.6792125734355068e-07,
+      "max_impulse_norm": 1.5211670168134522e-05,
+      "active": true
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.005142515059560537,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 3,
+      "min_separation_m": -7.713051104474289e-07,
+      "max_impulse_norm": 0.00029102626521623054,
+      "active": true
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.0037191365845501423,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.002815626561641693,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.0025177241768687963,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.00408119847998023,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 1,
+      "active_point_count": 0,
+      "min_separation_m": 0.013363608159124851,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.012588520534336567,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.014969977550208569,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 3,
+      "min_separation_m": 0.000415872986195609,
+      "max_impulse_norm": 0.0,
+      "active": true
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 3,
+      "min_separation_m": 3.1344836060043235e-08,
+      "max_impulse_norm": 8.615172039870908e-05,
+      "active": true
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.0037159507628530264,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "cup_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 4,
+      "min_separation_m": 9.868927008938044e-08,
+      "max_impulse_norm": 0.0,
+      "active": true
+    }
+  ],
+  "images": {
+    "head": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_2700/preview_head.png",
+    "world_left": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_2700/preview_world_left.png",
+    "world_right": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_2700/preview_world_right.png",
+    "segmentation": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_2700/preview_segmentation.png",
+    "observer_start": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_2700/observer_start.png",
+    "observer_mid": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_2700/observer_mid.png",
+    "observer_end": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_2700/observer_end.png"
+  },
+  "video": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_021_cup_2700/observer_runtime.mp4",
+  "video_frame_count": 12,
+  "unique_video_frame_count": 12,
+  "fps": 12,
+  "simulation_step_count": 2700,
+  "video_sample_step_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    2699
+  ],
+  "precheck_steps": 0,
+  "contact_window_steps": 120
+}

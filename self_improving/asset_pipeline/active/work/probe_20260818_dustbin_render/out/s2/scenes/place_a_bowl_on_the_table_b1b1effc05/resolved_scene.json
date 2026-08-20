@@ -1,0 +1,217 @@
+{
+  "schema_version": "robotwin.resolved_scene.v1",
+  "scene_id": "place_a_bowl_on_the_table_b1b1effc05",
+  "request": "Place a bowl on the table.",
+  "frame": {
+    "name": "robotwin_world",
+    "x_axis": "right",
+    "y_axis": "front",
+    "z_axis": "up",
+    "handedness": "right_handed"
+  },
+  "unit": "m",
+  "seed": 42,
+  "workspace": {
+    "support_surface": "table",
+    "table_height_m": 0.741,
+    "x_bounds_m": [
+      -0.35,
+      0.35
+    ],
+    "y_bounds_m": [
+      -0.2,
+      0.3
+    ],
+    "robot_keepout_x_m": [
+      -0.16,
+      0.16
+    ],
+    "robot_keepout_y_m": [
+      -0.2,
+      -0.08
+    ]
+  },
+  "source_scene_spec_sha256": "37bef2e3ae83e34dda8c78d3d7d37e11daf01fa83dfda41c22c7bf09092ee1ee",
+  "asset_catalog_sha256": "09b67ac2bda03a2ba3a80c11ebc51801b84f9291a331a10ceabfcecf1ebc61fa",
+  "compiler_version": "scene_gen.stage5_solver.v3",
+  "objects": [
+    {
+      "object_id": "bowl_1",
+      "category": "bowl",
+      "asset_id": "002_bowl",
+      "model_id": 2,
+      "load_type": "rigid",
+      "stable_pose_id": "measured_rest",
+      "stable_orientation_wxyz": [
+        0.7087479368211486,
+        0.7054449371155829,
+        0.003524999685776254,
+        0.0033729996993257603
+      ],
+      "dimensions_m": [
+        0.1217,
+        0.1217,
+        0.0509
+      ],
+      "footprint_shape": "box",
+      "support_margin_m": 0.005,
+      "support_spawn_clearance_m": 0.003,
+      "z_policy": "origin_on_table",
+      "mesh_scale": [
+        0.049,
+        0.049,
+        0.049
+      ],
+      "collision_available": true,
+      "source_files": [
+        "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/002_bowl/collision/base2.glb",
+        "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/002_bowl/model_data2.json",
+        "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/002_bowl/visual/base2.glb"
+      ],
+      "grounding_score": 103.0,
+      "grounding_reasons": [
+        "exact category match",
+        "collision representation available",
+        "normalized dimensions available"
+      ],
+      "rejected_candidates": [
+        {
+          "asset_id": "002_bowl",
+          "model_id": 1,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "002_bowl",
+          "model_id": 3,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "002_bowl",
+          "model_id": 4,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "002_bowl",
+          "model_id": 5,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "002_bowl",
+          "model_id": 6,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "002_bowl",
+          "model_id": 7,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "302_bowl",
+          "model_id": 0,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "305_bowl",
+          "model_id": 0,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        }
+      ],
+      "pose": {
+        "position_m": [
+          -0.156079954,
+          0.0555689,
+          0.741
+        ],
+        "orientation_wxyz": [
+          0.640406028779,
+          0.637350386958,
+          0.302406132824,
+          0.303669447555
+        ],
+        "yaw_rad": 0.876044411498
+      },
+      "is_static": false,
+      "support_relation": "on_table",
+      "support_target": "table",
+      "articulation_joint_names": [],
+      "articulation_joint_limits": [],
+      "articulation_qpos": [],
+      "asset_provenance": "robotwin_catalog"
+    }
+  ],
+  "relations": [
+    {
+      "relation": "on_table",
+      "source": "bowl_1",
+      "target": "table"
+    }
+  ],
+  "solver_trace": {
+    "algorithm": "bounded_rejection_backtracking_v1",
+    "seed": 42,
+    "max_attempts_per_object": 96,
+    "total_attempts": 1,
+    "attempts": [
+      {
+        "attempt": 1,
+        "object_id": "bowl_1",
+        "candidate_xy_m": [
+          -0.156079954,
+          0.0555689
+        ],
+        "yaw_rad": 0.876044411498,
+        "accepted": true,
+        "reasons": []
+      }
+    ],
+    "status": "pass"
+  }
+}
