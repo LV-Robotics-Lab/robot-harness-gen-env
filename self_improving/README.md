@@ -25,6 +25,7 @@ runtime assumptions into the core trust boundary.
 | `workspace_archives/20260716/` | provenance | Full-file SHA-256 manifest and the repository Release pointer for the consolidated Jingxiang workspaces. |
 | `workspace_archives/20260814/` | cleanup receipt | Student-workspace path disposition, local manifest hashes, RoboTwin checksum comparisons, completed checkpoint hash, and resolved runtime gate. |
 | `validation_evidence/student_workspace_20260814/` | current consolidation evidence | Real canonical-path RoboTwin/SAPIEN replay JSON, resolved scene, and exact evidence manifest. |
+| `studies/usg_env_quality_reproduction/` | active audit | Evidence-first reproduction of whether the released Universal Scene Graph project can close observed `/gen-env` physical-quality gaps. RoboTwin assets, SAPIEN/PhysX, the USG checkout, and the current validator are read-only inputs pinned by SHA-256 inventory; scripts and raw CSV/JSON evidence are committed. |
 
 Independent projects remain Git submodules in `external/`:
 

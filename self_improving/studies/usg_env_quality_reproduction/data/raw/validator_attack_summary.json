@@ -1,0 +1,81 @@
+{
+  "status": "pass",
+  "fail_count": 0,
+  "sample_steps": 60,
+  "direct_cabinet_basket_active_contact_steps": 60,
+  "direct_cabinet_basket_penetration_steps": 60,
+  "minimum_direct_separation_m": -0.007847476750612259,
+  "initial_robot_collision_count": 0,
+  "final_robot_collision_count": 0,
+  "final_direct_contact_records": 35,
+  "final_runtime_retained_contact_records": 0,
+  "measurement_protocol": "locked-ownership-isolation",
+  "joint_lock_applied": true,
+  "qpos_lock_tolerance_m": 1e-07,
+  "measured_initial_cabinet_qpos_m": [
+    0.06750000268220901,
+    0.06750000268220901,
+    0.06750000268220901
+  ],
+  "measured_final_cabinet_qpos_m": [
+    0.06750000268220901,
+    0.06750000268220901,
+    0.06750000268220901
+  ],
+  "measured_cabinet_qpos_max_abs_error_m": 2.682209010451686e-09,
+  "unlocked_production_probe": {
+    "schema_version": "usg_env_quality_reproduction.validator_attack_unlocked.v1",
+    "protocol": "current loader behavior: fixed root, movable joints, no joint-limit lock",
+    "sample_steps": 60,
+    "target_qpos_m": 0.0675,
+    "initial_qpos_m": [
+      0.0675,
+      0.0675,
+      0.0675
+    ],
+    "final_qpos_m": [
+      0.07533612847328186,
+      0.06750000268220901,
+      0.06750000268220901
+    ],
+    "maximum_qpos_abs_error_m": 0.007836128473281856,
+    "qpos_error_above_validator_threshold": false,
+    "direct_active_contact_steps": 60,
+    "direct_penetration_steps": 60,
+    "joint_lock_applied": false
+  },
+  "validator_checks_final_robot_collision": false,
+  "validator_on_table_unexpected_contact_checks": [],
+  "visibility_pixels": {
+    "cabinet_1": 13841,
+    "basket_1": 4691
+  },
+  "cabinet_physical_aabb_m": [
+    [
+      -0.11688001453876495,
+      -0.09318052977323532,
+      0.8428557515144348
+    ],
+    [
+      0.31903374195098877,
+      0.21700450778007507,
+      1.0735267400741577
+    ]
+  ],
+  "basket_physical_aabb_m": [
+    [
+      -0.33653968572616577,
+      -0.15551424026489258,
+      0.7389222383499146
+    ],
+    [
+      -0.1034579798579216,
+      -0.004343166947364807,
+      0.9154255986213684
+    ]
+  ],
+  "resolved_scene_sha256": "e9139b84791c7a5f919d93917139ef6a7826ded79f4c27ebc4dfcc270726e811",
+  "runtime_evidence_sha256": "8d2ea57cfa247efb02da731235aed71c5df8114e52749b1644f33b5e34779c89",
+  "validator_source_sha256": "40f4de25434d3ac40cc7a343f428962ab7b554a1cd479caa0e4bffe32f3bdb4c",
+  "runtime_source_sha256": "0525dded0ea38c9041fb0c8daac2ac98b7ab0ea26b11d27495ff53bed9941419"
+}
