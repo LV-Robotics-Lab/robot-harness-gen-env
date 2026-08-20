@@ -457,6 +457,14 @@ def main() -> int:
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--task-config", default="demo_clean")
     parser.add_argument("--settle-steps", type=int, default=900)
+    parser.add_argument(
+        "--settle-converge-max",
+        type=int,
+        default=0,
+        help="extra steps the settle phase may take, in blocks, while any "
+        "object still reads as moving. 0 (default) keeps the fixed horizon "
+        "and reproduces previous runs exactly.",
+    )
     parser.add_argument("--precheck-steps", type=int, default=0)
     parser.add_argument("--video-frames", type=int, default=120)
     parser.add_argument("--fps", type=int, default=12)
@@ -563,14 +571,77 @@ def main() -> int:
                     if targets:
                         unexpected_contact_hits[name] += 1
                         unexpected_contact_targets[name].update(targets)
-        final = {
-            name: {
-                "position_m": actor.get_pose().p.tolist(),
-                "orientation_wxyz": actor.get_pose().q.tolist(),
-                "qpos": actor_qpos(actor),
+        def _snapshot():
+            return {
+                name: {
+                    "position_m": actor.get_pose().p.tolist(),
+                    "orientation_wxyz": actor.get_pose().q.tolist(),
+                    "qpos": actor_qpos(actor),
+                }
+                for name, actor in task.generated_objects.items()
             }
-            for name, actor in task.generated_objects.items()
-        }
+
+        def _any_moving(window, now):
+            for name in task.generated_objects:
+                a, b = window[name], now[name]
+                trans = float(
+                    np.linalg.norm(
+                        np.asarray(b["position_m"]) - np.asarray(a["position_m"])
+                    )
+                )
+                rot = quaternion_angle_deg(b["orientation_wxyz"], a["orientation_wxyz"])
+                if trans > 0.001 or rot > 0.5:
+                    return True
+            return False
+
+        final = _snapshot()
+
+        # ---- adaptive settle extension (opt-in; default keeps old behaviour) ----
+        # A fixed horizon judges "is it moving" at one arbitrary instant, so an
+        # object that is merely SLOW to settle is condemned alongside one that
+        # never settles. Measured 2026-08-20, same scenes at 900 vs 2700 steps:
+        #   rescued  321_dustbin 0.586 -> 0.461 deg, 035_apple 99.00 -> 0.000
+        #   still caught  002_bowl 144.5 -> 37.9, 021_cup 168.3 -> 4.70,
+        #                 304_bottle 2.30 -> 6.62 (a limit cycle: it got worse)
+        # so a longer horizon separates "slow" from "never" -- which no
+        # threshold on the 900-step numbers can, because the two classes overlap
+        # on rotation (rotation-only failures span 0.54-1.71 deg, genuinely
+        # moving ones start at 1.07). Translation is what separates cleanly
+        # (<=0.00092 vs >=0.00232 m), and it is left untouched here.
+        settle_extra_steps = 0
+        if args.settle_converge_max > 0:
+            block = max(30, contact_window_steps)
+            while settle_extra_steps < args.settle_converge_max and _any_moving(
+                prior_window or initial, final
+            ):
+                step_count = min(block, args.settle_converge_max - settle_extra_steps)
+                # contact stats describe the FINAL window, so they are re-counted
+                # over each extension rather than carried over from the old one.
+                support_contact_hits = {name: 0 for name in generated_names}
+                unexpected_contact_hits = {name: 0 for name in generated_names}
+                unexpected_contact_targets = {name: set() for name in generated_names}
+                support_contact_samples = 0
+                for extra_index in range(step_count):
+                    task.scene.step()
+                    if extra_index == max(0, step_count - 30):
+                        prior_window = _snapshot()
+                    if extra_index >= step_count - contact_window_steps:
+                        contact_sample = summarize_contacts(
+                            list(task.scene.get_contacts()),
+                            generated_names,
+                            expected_support_targets,
+                        )
+                        support_contact_samples += 1
+                        for name in generated_names:
+                            if contact_sample["support_by_object"][name]:
+                                support_contact_hits[name] += 1
+                            targets = contact_sample["unexpected_targets_by_object"][name]
+                            if targets:
+                                unexpected_contact_hits[name] += 1
+                                unexpected_contact_targets[name].update(targets)
+                settle_extra_steps += step_count
+                final = _snapshot()
+
         head_rgb, actor_labels = head_camera_arrays(task)
         save_rgb(out_dir / "preview_head.png", head_rgb)
         save_rgb(out_dir / "preview_segmentation.png", segmentation_preview(actor_labels))
@@ -730,6 +801,8 @@ def main() -> int:
                 "video_sample_step_indices": list(video_steps),
                 "precheck_steps": args.precheck_steps,
                 "contact_window_steps": contact_window_steps,
+                "settle_extra_steps": settle_extra_steps,
+                "settle_converge_max": args.settle_converge_max,
             }
         )
         write_json(out_dir / "runtime_evidence.json", report)
