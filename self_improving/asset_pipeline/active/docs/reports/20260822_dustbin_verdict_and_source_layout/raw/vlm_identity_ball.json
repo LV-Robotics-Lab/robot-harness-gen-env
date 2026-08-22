@@ -1,0 +1,132 @@
+[
+  {
+    "schema_version": "identity_verification.v1",
+    "asked_category": "ball",
+    "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+    "image": null,
+    "verdict": "no_thumbnail",
+    "candidate_id": "github:KhronosGroup/glTF-Sample-Assets:Models/USDShaderBallForGltf/glTF-Binary/USDShaderBallForGltf.glb",
+    "name": "USDShaderBallForGltf.glb",
+    "thumbnail": null,
+    "tier": 2
+  },
+  {
+    "schema_version": "identity_verification.v1",
+    "asked_category": "ball",
+    "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+    "image": null,
+    "verdict": "no_thumbnail",
+    "candidate_id": "github:KhronosGroup/glTF-Sample-Assets:Models/USDShaderBallForGltf/glTF/USDShaderBallForGltf.gltf",
+    "name": "USDShaderBallForGltf.gltf",
+    "thumbnail": null,
+    "tier": 2
+  },
+  {
+    "schema_version": "identity_verification.v1",
+    "asked_category": "ball",
+    "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+    "image": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_index/objaverse/thumbs/068c79edea004cafa1ac4c1e501be333.jpg",
+    "verdict": "mismatch",
+    "seen_as": "ball",
+    "colors": [
+      "black",
+      "white"
+    ],
+    "materials": [
+      "marble"
+    ],
+    "confidence": "high",
+    "open_answer": "marble ball",
+    "candidate_id": "objaverse:068c79edea004cafa1ac4c1e501be333",
+    "name": "blue ball hahahahahaha (068c79ed.glb)",
+    "thumbnail": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_index/objaverse/thumbs/068c79edea004cafa1ac4c1e501be333.jpg",
+    "name_check": "supports",
+    "attribute_check": {
+      "color": "mismatch",
+      "material": "ok"
+    },
+    "attribute_veto": "attribute_mismatch",
+    "tier": 3
+  },
+  {
+    "schema_version": "identity_verification.v1",
+    "asked_category": "ball",
+    "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+    "image": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_index/objaverse/thumbs/08a4565073f747f1bdea2d46e04b4aa1.jpg",
+    "verdict": "mismatch",
+    "seen_as": "ball",
+    "colors": [
+      "blue"
+    ],
+    "materials": [
+      "smooth"
+    ],
+    "confidence": "high",
+    "open_answer": "blue button with bell",
+    "synonym_check": false,
+    "second_opinion_veto": true,
+    "candidate_id": "objaverse:08a4565073f747f1bdea2d46e04b4aa1",
+    "name": "Blue ball. (08a45650.glb)",
+    "thumbnail": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_index/objaverse/thumbs/08a4565073f747f1bdea2d46e04b4aa1.jpg",
+    "tier": 3
+  },
+  {
+    "schema_version": "identity_verification.v1",
+    "asked_category": "ball",
+    "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+    "image": null,
+    "verdict": "no_thumbnail",
+    "candidate_id": "objaverse:4d29df627d7c46e78debfcf99a723e24",
+    "name": "Blue ball (4d29df62.glb)",
+    "thumbnail": null,
+    "tier": 3
+  },
+  {
+    "schema_version": "identity_verification.v1",
+    "asked_category": "ball",
+    "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+    "image": null,
+    "verdict": "no_thumbnail",
+    "candidate_id": "objaverse:562b1a0ee2db4726bab5c6456af97fdd",
+    "name": "Fur Ball Blue/Kudłacz Niebieski (562b1a0e.glb)",
+    "thumbnail": null,
+    "tier": 3
+  },
+  {
+    "schema_version": "identity_verification.v1",
+    "asked_category": "ball",
+    "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+    "image": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_index/objaverse/thumbs/a15dc073cb8b4c569113f717838f53a0.jpg",
+    "verdict": "match",
+    "seen_as": "ball",
+    "colors": [
+      "blue",
+      "brown"
+    ],
+    "materials": [
+      "metallic"
+    ],
+    "confidence": "high",
+    "open_answer": "metal ball",
+    "candidate_id": "objaverse:a15dc073cb8b4c569113f717838f53a0",
+    "name": "Blue Ball (a15dc073.glb)",
+    "thumbnail": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_index/objaverse/thumbs/a15dc073cb8b4c569113f717838f53a0.jpg",
+    "name_check": "supports",
+    "attribute_check": {
+      "color": "ok",
+      "material": "ok"
+    },
+    "tier": 3
+  },
+  {
+    "schema_version": "identity_verification.v1",
+    "asked_category": "ball",
+    "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+    "image": null,
+    "verdict": "no_thumbnail",
+    "candidate_id": "objaverse:4d29df627d7c46e78debfcf99a723e24",
+    "name": "Blue ball (4d29df62.glb)",
+    "thumbnail": null,
+    "tier": "fallback"
+  }
+]

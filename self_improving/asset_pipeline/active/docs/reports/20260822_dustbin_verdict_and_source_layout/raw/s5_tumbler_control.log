@@ -1,0 +1,13 @@
+CTRL 20260812_200211_put_an_apple_inside_th steps=900 obj=apple_1 asset=035_apple late_rot=99.0026 late_trans=0.039586 still_moving=True
+CTRL 20260812_200211_put_an_apple_inside_th steps=900 obj=basket_1 asset=110_basket late_rot=0.0027 late_trans=0.000000 still_moving=False
+CTRL 20260812_200211_put_an_apple_inside_th steps=2700 obj=apple_1 asset=035_apple late_rot=0.0000 late_trans=0.000000 still_moving=False
+CTRL 20260812_200211_put_an_apple_inside_th steps=2700 obj=basket_1 asset=110_basket late_rot=0.0027 late_trans=0.000000 still_moving=False
+CTRL 20260812_200304_place_a_bottle_near_th steps=900 obj=bottle_1 asset=304_bottle late_rot=2.2984 late_trans=0.001546 still_moving=True
+CTRL 20260812_200304_place_a_bottle_near_th steps=900 obj=bowl_1 asset=002_bowl late_rot=144.5001 late_trans=0.147601 still_moving=True
+CTRL 20260812_200304_place_a_bottle_near_th steps=2700 obj=bottle_1 asset=304_bottle late_rot=6.6223 late_trans=0.003650 still_moving=True
+CTRL 20260812_200304_place_a_bottle_near_th steps=2700 obj=bowl_1 asset=002_bowl late_rot=37.8654 late_trans=0.041152 still_moving=True
+CTRL 20260812_195926_put_a_mug_on_the_lapto steps=900 obj=cup_1 asset=021_cup late_rot=168.3242 late_trans=0.235370 still_moving=True
+CTRL 20260812_195926_put_a_mug_on_the_lapto steps=900 obj=laptop_1 asset=015_laptop late_rot=0.0395 late_trans=0.000000 still_moving=False
+CTRL 20260812_195926_put_a_mug_on_the_lapto steps=2700 obj=cup_1 asset=021_cup late_rot=4.6981 late_trans=0.002672 still_moving=True
+CTRL 20260812_195926_put_a_mug_on_the_lapto steps=2700 obj=laptop_1 asset=015_laptop late_rot=0.0395 late_trans=0.000000 still_moving=False
+S5_DONE
