@@ -1,0 +1,128 @@
+{
+  "schema_version": "robotwin.resolved_scene.v1",
+  "scene_id": "place_a_panel_on_the_table_2627c9086d",
+  "request": "Place a panel on the table.",
+  "frame": {
+    "name": "robotwin_world",
+    "x_axis": "right",
+    "y_axis": "front",
+    "z_axis": "up",
+    "handedness": "right_handed"
+  },
+  "unit": "m",
+  "seed": 42,
+  "workspace": {
+    "support_surface": "table",
+    "table_height_m": 0.741,
+    "x_bounds_m": [
+      -0.35,
+      0.35
+    ],
+    "y_bounds_m": [
+      -0.2,
+      0.3
+    ],
+    "robot_keepout_x_m": [
+      -0.16,
+      0.16
+    ],
+    "robot_keepout_y_m": [
+      -0.2,
+      -0.08
+    ]
+  },
+  "source_scene_spec_sha256": "1b5964d2da57ea4e84eb4f71d75afbbbdc8643c8b9ba5b0536bae3b5108033c8",
+  "asset_catalog_sha256": "09b67ac2bda03a2ba3a80c11ebc51801b84f9291a331a10ceabfcecf1ebc61fa",
+  "compiler_version": "scene_gen.stage5_solver.v3",
+  "objects": [
+    {
+      "object_id": "panel_1",
+      "category": "panel",
+      "asset_id": "339_panel",
+      "model_id": 0,
+      "load_type": "rigid",
+      "stable_pose_id": "upright",
+      "stable_orientation_wxyz": [
+        0.7071067811865476,
+        0.7071067811865476,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.28966881485591767,
+        0.03867356104781491,
+        0.42
+      ],
+      "footprint_shape": "box",
+      "support_margin_m": 0.005,
+      "support_spawn_clearance_m": 0.003,
+      "z_policy": "origin_on_table",
+      "mesh_scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "collision_available": true,
+      "source_files": [
+        "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/nvidia/339_panel/collision/base0.glb",
+        "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/nvidia/339_panel/model_data0.json",
+        "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/nvidia/339_panel/visual/base0.glb"
+      ],
+      "grounding_score": 103.0,
+      "grounding_reasons": [
+        "exact category match",
+        "collision representation available",
+        "normalized dimensions available"
+      ],
+      "rejected_candidates": [],
+      "pose": {
+        "position_m": [
+          -0.135298783,
+          0.072640272,
+          0.741
+        ],
+        "orientation_wxyz": [
+          0.640350466044,
+          0.640350466044,
+          0.29991879007,
+          0.29991879007
+        ],
+        "yaw_rad": 0.876044411498
+      },
+      "is_static": false,
+      "support_relation": "on_table",
+      "support_target": "table",
+      "articulation_joint_names": [],
+      "articulation_joint_limits": [],
+      "articulation_qpos": [],
+      "asset_provenance": "robotwin_catalog"
+    }
+  ],
+  "relations": [
+    {
+      "relation": "on_table",
+      "source": "panel_1",
+      "target": "table"
+    }
+  ],
+  "solver_trace": {
+    "algorithm": "bounded_rejection_backtracking_v1",
+    "seed": 42,
+    "max_attempts_per_object": 96,
+    "total_attempts": 1,
+    "attempts": [
+      {
+        "attempt": 1,
+        "object_id": "panel_1",
+        "candidate_xy_m": [
+          -0.135298783,
+          0.072640272
+        ],
+        "yaw_rad": 0.876044411498,
+        "accepted": true,
+        "reasons": []
+      }
+    ],
+    "status": "pass"
+  }
+}

@@ -93,7 +93,15 @@ def resolve_size(
     }
     if policy in (None, "none"):
         return result
-    if isinstance(policy, str) and policy.startswith("absolute:"):
+    # category:<m> and capped:<m> (size-table plan C, 2026-08-15) resolve
+    # exactly like absolute -- the prefix is provenance, kept in `mode`:
+    # category = the class's typical real-world size; capped = the tabletop
+    # view shrank an over-envelope class and says so out loud.
+    if isinstance(policy, str) and policy.split(":", 1)[0] in (
+        "absolute",
+        "category",
+        "capped",
+    ):
         target = float(policy.split(":", 1)[1])
         result["reference_max_dim_m"] = target
         if abs(actual - target) / target > 0.05:

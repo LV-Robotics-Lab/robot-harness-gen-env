@@ -1,0 +1,1293 @@
+{
+  "rows": [
+    {
+      "tag": "C_red_cup",
+      "prompt": "Place a red cup on the table.",
+      "want_color": "red",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "301_cup"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "301_cup",
+          "model_id": 0,
+          "runtime_color": "red"
+        }
+      ],
+      "picked_measured_colors": [
+        "brown",
+        "red"
+      ],
+      "color_truth": "match",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 17.4
+    },
+    {
+      "tag": "C_red_bowl",
+      "prompt": "Place a red bowl on the table.",
+      "want_color": "red",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "002_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "002_bowl",
+          "model_id": 2,
+          "runtime_color": "red"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 17.0
+    },
+    {
+      "tag": "C_red_bottle",
+      "prompt": "Place a red bottle on the table.",
+      "want_color": "red",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bottle_1",
+          "covered",
+          "001_bottle"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bottle_1",
+          "asset_id": "001_bottle",
+          "model_id": 3,
+          "runtime_color": "red"
+        }
+      ],
+      "picked_measured_colors": [
+        "orange",
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "C_blue_cup",
+      "prompt": "Place a blue cup on the table.",
+      "want_color": "blue",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "021_cup"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "model_id": 6,
+          "runtime_color": "blue"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.7
+    },
+    {
+      "tag": "C_blue_bowl",
+      "prompt": "Place a blue bowl on the table.",
+      "want_color": "blue",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "002_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "002_bowl",
+          "model_id": 2,
+          "runtime_color": "blue"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "C_blue_bottle",
+      "prompt": "Place a blue bottle on the table.",
+      "want_color": "blue",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bottle_1",
+          "covered",
+          "001_bottle"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bottle_1",
+          "asset_id": "001_bottle",
+          "model_id": 3,
+          "runtime_color": "blue"
+        }
+      ],
+      "picked_measured_colors": [
+        "orange",
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "C_green_cup",
+      "prompt": "Place a green cup on the table.",
+      "want_color": "green",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "021_cup"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "model_id": 6,
+          "runtime_color": "green"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.7
+    },
+    {
+      "tag": "C_green_bowl",
+      "prompt": "Place a green bowl on the table.",
+      "want_color": "green",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "002_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "002_bowl",
+          "model_id": 2,
+          "runtime_color": "green"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "C_green_bottle",
+      "prompt": "Place a green bottle on the table.",
+      "want_color": "green",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bottle_1",
+          "covered",
+          "001_bottle"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bottle_1",
+          "asset_id": "001_bottle",
+          "model_id": 3,
+          "runtime_color": "green"
+        }
+      ],
+      "picked_measured_colors": [
+        "orange",
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "C_yellow_cup",
+      "prompt": "Place a yellow cup on the table.",
+      "want_color": "yellow",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "021_cup"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "model_id": 6,
+          "runtime_color": "yellow"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "C_yellow_bowl",
+      "prompt": "Place a yellow bowl on the table.",
+      "want_color": "yellow",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "002_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "002_bowl",
+          "model_id": 2,
+          "runtime_color": "yellow"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "C_yellow_bottle",
+      "prompt": "Place a yellow bottle on the table.",
+      "want_color": "yellow",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bottle_1",
+          "covered",
+          "001_bottle"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bottle_1",
+          "asset_id": "001_bottle",
+          "model_id": 3,
+          "runtime_color": "yellow"
+        }
+      ],
+      "picked_measured_colors": [
+        "orange",
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "C_white_cup",
+      "prompt": "Place a white cup on the table.",
+      "want_color": "white",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "021_cup"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "model_id": 6,
+          "runtime_color": "white"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "match",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.7
+    },
+    {
+      "tag": "C_white_bowl",
+      "prompt": "Place a white bowl on the table.",
+      "want_color": "white",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "002_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "002_bowl",
+          "model_id": 2,
+          "runtime_color": "white"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "match",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.5
+    },
+    {
+      "tag": "C_white_bottle",
+      "prompt": "Place a white bottle on the table.",
+      "want_color": "white",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bottle_1",
+          "covered",
+          "001_bottle"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bottle_1",
+          "asset_id": "001_bottle",
+          "model_id": 3,
+          "runtime_color": "white"
+        }
+      ],
+      "picked_measured_colors": [
+        "orange",
+        "white"
+      ],
+      "color_truth": "match",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.5
+    },
+    {
+      "tag": "C_black_cup",
+      "prompt": "Place a black cup on the table.",
+      "want_color": "black",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "021_cup"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "model_id": 6,
+          "runtime_color": "black"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "C_black_bowl",
+      "prompt": "Place a black bowl on the table.",
+      "want_color": "black",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "002_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "002_bowl",
+          "model_id": 2,
+          "runtime_color": "black"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "C_black_bottle",
+      "prompt": "Place a black bottle on the table.",
+      "want_color": "black",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bottle_1",
+          "covered",
+          "001_bottle"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bottle_1",
+          "asset_id": "001_bottle",
+          "model_id": 3,
+          "runtime_color": "black"
+        }
+      ],
+      "picked_measured_colors": [
+        "orange",
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.5
+    },
+    {
+      "tag": "C_brown_cup",
+      "prompt": "Place a brown cup on the table.",
+      "want_color": "brown",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "021_cup"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "model_id": 6,
+          "runtime_color": "brown"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "C_brown_bowl",
+      "prompt": "Place a brown bowl on the table.",
+      "want_color": "brown",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "302_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "302_bowl",
+          "model_id": 0,
+          "runtime_color": "brown"
+        }
+      ],
+      "picked_measured_colors": [
+        "brown"
+      ],
+      "color_truth": "match",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.9
+    },
+    {
+      "tag": "C_brown_bottle",
+      "prompt": "Place a brown bottle on the table.",
+      "want_color": "brown",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bottle_1",
+          "covered",
+          "001_bottle"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bottle_1",
+          "asset_id": "001_bottle",
+          "model_id": 3,
+          "runtime_color": "brown"
+        }
+      ],
+      "picked_measured_colors": [
+        "orange",
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.5
+    },
+    {
+      "tag": "C_orange_cup",
+      "prompt": "Place a orange cup on the table.",
+      "want_color": "orange",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "021_cup"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "model_id": 6,
+          "runtime_color": "orange"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "C_orange_bowl",
+      "prompt": "Place a orange bowl on the table.",
+      "want_color": "orange",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "002_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "002_bowl",
+          "model_id": 2,
+          "runtime_color": "orange"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "C_orange_bottle",
+      "prompt": "Place a orange bottle on the table.",
+      "want_color": "orange",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bottle_1",
+          "covered",
+          "001_bottle"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bottle_1",
+          "asset_id": "001_bottle",
+          "model_id": 3,
+          "runtime_color": "orange"
+        }
+      ],
+      "picked_measured_colors": [
+        "orange",
+        "white"
+      ],
+      "color_truth": "match",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "M_wood_cup",
+      "prompt": "Place a wood cup on the table.",
+      "want_color": null,
+      "want_material": "wood",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "301_cup"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "301_cup",
+          "model_id": 0,
+          "runtime_color": null
+        }
+      ],
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.9
+    },
+    {
+      "tag": "M_wood_bowl",
+      "prompt": "Place a wood bowl on the table.",
+      "want_color": null,
+      "want_material": "wood",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "302_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "302_bowl",
+          "model_id": 0,
+          "runtime_color": null
+        }
+      ],
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.8
+    },
+    {
+      "tag": "M_metal_cup",
+      "prompt": "Place a metal cup on the table.",
+      "want_color": null,
+      "want_material": "metal",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "021_cup"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "model_id": 6,
+          "runtime_color": null
+        }
+      ],
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.7
+    },
+    {
+      "tag": "M_metal_bowl",
+      "prompt": "Place a metal bowl on the table.",
+      "want_color": null,
+      "want_material": "metal",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "302_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "302_bowl",
+          "model_id": 0,
+          "runtime_color": null
+        }
+      ],
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.9
+    },
+    {
+      "tag": "M_plastic_cup",
+      "prompt": "Place a plastic cup on the table.",
+      "want_color": null,
+      "want_material": "plastic",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "021_cup"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "model_id": 6,
+          "runtime_color": null
+        }
+      ],
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "M_plastic_bowl",
+      "prompt": "Place a plastic bowl on the table.",
+      "want_color": null,
+      "want_material": "plastic",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "002_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "002_bowl",
+          "model_id": 2,
+          "runtime_color": null
+        }
+      ],
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "M_glass_cup",
+      "prompt": "Place a glass cup on the table.",
+      "want_color": null,
+      "want_material": "glass",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "301_cup"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "301_cup",
+          "model_id": 0,
+          "runtime_color": null
+        }
+      ],
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.9
+    },
+    {
+      "tag": "M_glass_bowl",
+      "prompt": "Place a glass bowl on the table.",
+      "want_color": null,
+      "want_material": "glass",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "302_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "302_bowl",
+          "model_id": 0,
+          "runtime_color": null
+        }
+      ],
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.9
+    },
+    {
+      "tag": "M_ceramic_cup",
+      "prompt": "Place a ceramic cup on the table.",
+      "want_color": null,
+      "want_material": "ceramic",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "021_cup"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "model_id": 6,
+          "runtime_color": null
+        }
+      ],
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "M_ceramic_bowl",
+      "prompt": "Place a ceramic bowl on the table.",
+      "want_color": null,
+      "want_material": "ceramic",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "002_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "002_bowl",
+          "model_id": 2,
+          "runtime_color": null
+        }
+      ],
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.5
+    },
+    {
+      "tag": "CM_red_plastic_cup",
+      "prompt": "Place a red plastic cup on the table.",
+      "want_color": "red",
+      "want_material": "plastic",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "021_cup"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "model_id": 6,
+          "runtime_color": "red"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.7
+    },
+    {
+      "tag": "CM_brown_wood_bowl",
+      "prompt": "Place a brown wood bowl on the table.",
+      "want_color": "brown",
+      "want_material": "wood",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "302_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "302_bowl",
+          "model_id": 0,
+          "runtime_color": "brown"
+        }
+      ],
+      "picked_measured_colors": [
+        "brown"
+      ],
+      "color_truth": "match",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.9
+    },
+    {
+      "tag": "CM_white_ceramic_bowl",
+      "prompt": "Place a white ceramic bowl on the table.",
+      "want_color": "white",
+      "want_material": "ceramic",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "002_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "002_bowl",
+          "model_id": 2,
+          "runtime_color": "white"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "match",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "CM_black_metal_box",
+      "prompt": "Place a black metal box on the table.",
+      "want_color": "black",
+      "want_material": "metal",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "box_1",
+          "covered",
+          "303_box"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "box_1",
+          "asset_id": "303_box",
+          "model_id": 0,
+          "runtime_color": "black"
+        }
+      ],
+      "picked_measured_colors": [
+        "red"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 17.1
+    },
+    {
+      "tag": "CM_blue_glass_bottle",
+      "prompt": "Place a blue glass bottle on the table.",
+      "want_color": "blue",
+      "want_material": "glass",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bottle_1",
+          "covered",
+          "001_bottle"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bottle_1",
+          "asset_id": "001_bottle",
+          "model_id": 3,
+          "runtime_color": "blue"
+        }
+      ],
+      "picked_measured_colors": [
+        "orange",
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.5
+    },
+    {
+      "tag": "ZH_red_cup",
+      "prompt": "把红色的杯子放在桌子上",
+      "want_color": "red",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "301_cup"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "301_cup",
+          "model_id": 0,
+          "runtime_color": "red"
+        }
+      ],
+      "picked_measured_colors": [
+        "brown",
+        "red"
+      ],
+      "color_truth": "match",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.9
+    },
+    {
+      "tag": "ZH_blue_bowl",
+      "prompt": "把蓝色的碗放在桌子上",
+      "want_color": "blue",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "002_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "002_bowl",
+          "model_id": 2,
+          "runtime_color": "blue"
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.6
+    },
+    {
+      "tag": "ZH_wood_wood",
+      "prompt": "把木质的碗放在桌子上",
+      "want_color": null,
+      "want_material": "wood",
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "bowl_1",
+          "covered",
+          "302_bowl"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "bowl_1",
+          "asset_id": "302_bowl",
+          "model_id": 0,
+          "runtime_color": null
+        }
+      ],
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 16.8
+    },
+    {
+      "tag": "REL_red_apple_bowl",
+      "prompt": "Put a red apple inside the bowl.",
+      "want_color": "red",
+      "want_material": null,
+      "acquire_rc": 1,
+      "coverage": [
+        [
+          "apple_1",
+          "covered",
+          "035_apple"
+        ],
+        [
+          "bowl_1",
+          "covered",
+          "002_bowl"
+        ]
+      ],
+      "acquired": [],
+      "seconds": 0.4
+    },
+    {
+      "tag": "REL_blue_cup_table",
+      "prompt": "Place a blue cup to the left of the plate.",
+      "want_color": "blue",
+      "want_material": null,
+      "acquire_rc": 0,
+      "coverage": [
+        [
+          "cup_1",
+          "covered",
+          "021_cup"
+        ],
+        [
+          "plate_1",
+          "covered",
+          "003_plate"
+        ]
+      ],
+      "acquired": [],
+      "picked": [
+        {
+          "object_id": "cup_1",
+          "asset_id": "021_cup",
+          "model_id": 6,
+          "runtime_color": "blue"
+        },
+        {
+          "object_id": "plate_1",
+          "asset_id": "003_plate",
+          "model_id": 0,
+          "runtime_color": null
+        }
+      ],
+      "picked_measured_colors": [
+        "white"
+      ],
+      "color_truth": "mismatch",
+      "runtime_fail": 0,
+      "failing": [],
+      "seconds": 17.1
+    }
+  ]
+}

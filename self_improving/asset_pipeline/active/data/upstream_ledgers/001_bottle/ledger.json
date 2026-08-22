@@ -1,0 +1,170 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "robotwin_001_bottle",
+  "category": "bottle",
+  "kind": "rigid",
+  "semantics": {
+    "aliases": [
+      "bottle"
+    ],
+    "colors": [],
+    "materials": [
+      "glass",
+      "metal",
+      "plastic"
+    ],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "external/env-gen-github/data/scene_gen/asset_catalog.json",
+      "verified": false
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.0719153208732605,
+          0.25031674003601073,
+          0.0711943302154541
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.8963389396667478,
+          "scale": 0.132,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "circle",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "upstream catalog declaration (identity dialect)"
+              }
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/001_bottle/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "32310f63a7de183e4c665c24681b7e1407b408241035a4d36c378507c1fd8373",
+          "size_bytes": 2375936,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": false,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/001_bottle/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "289a8a4b2c949f684c8277341b2a72ca1769a8354d83089915ddc3ac2a83720a",
+          "size_bytes": 274784,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": false,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "data/asset_library/robotwin/001_bottle/usd/bottle.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "9e3c783911bb75fe5ea84c42f87e68cba5e65b5b8da0ff58ec46ad989a8ed506",
+          "size_bytes": 1540,
+          "metadata": {
+            "derived_from": "data/asset_library/robotwin/001_bottle/visual/base0.glb",
+            "converter": "a_forward line converter (tool/version not tracked by backfill_upstream)",
+            "conversion_params": {}
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "RoboTwin (upstream)",
+        "group": "c3ddfa8b97d5519efa828b075999bd0006778e5e",
+        "file": "001_bottle",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/001_bottle/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
+      },
+      "verification": [],
+      "appearance": {
+        "colors_measured": [
+          "red"
+        ],
+        "color_fractions": {
+          "red": 0.793,
+          "yellow": 0.055,
+          "brown": 0.047,
+          "white": 0.021
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "profile": "cross_backend",
+  "external_ids": {
+    "env_gen": "001_bottle"
+  }
+}

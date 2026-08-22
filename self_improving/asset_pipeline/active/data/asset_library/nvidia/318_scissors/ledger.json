@@ -1,0 +1,205 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_318_scissors",
+  "category": "scissors",
+  "kind": "rigid",
+  "profile": "cross_backend",
+  "semantics": {
+    "aliases": [
+      "scissors"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "/tmp/campaign/single_scissors/acquire/identity_post_render_318_scissors_m0.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.088676,
+          0.015858,
+          0.2
+        ],
+        "size_resolution": {
+          "mode": "category:0.2",
+          "actual_max_dim_m": 0.19835088236529863,
+          "scale": 1.0083141431741365,
+          "reference_max_dim_m": 0.2,
+          "reference_assets": [],
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/nvidia/318_scissors/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "d8abf36c76d50f55721a4ae95ac79b0e80263520cdd30d2bc3368caa8bd1257b",
+          "size_bytes": 3959120,
+          "metadata": {
+            "derived_from": "037_scissors.usd",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/nvidia/318_scissors/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "f3be9cd5b95930cec9d1d717e487197813dffb647f5af292577b104437f25dd9",
+          "size_bytes": 3959120,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "data/asset_library/_source/acq_318_scissors/037_scissors.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "d6be2399b52bc88be16f2facf0d33844604d7d25544dca15d6d4363c10bec834",
+          "size_bytes": 468605,
+          "metadata": {
+            "origin_prefix": "acq_318_scissors"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "data/asset_library/nvidia/318_scissors/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "8dd507ff77d0f333caf341eb912170c5ee6b8cbc1942dce0ad6e73ee4c2ae7d3",
+          "size_bytes": 4037,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "acq_318_scissors",
+        "file": "037_scissors.usd",
+        "license": {
+          "spdx": "LicenseRef-NVIDIA-Isaac-Sim-Additional-Software-and-Materials",
+          "status": "declared",
+          "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4) [applied to new import 2026-08-13: same NVIDIA Isaac Assets source as the audited 2026-08-09 batch]",
+          "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "checked_date": "2026-08-13",
+          "checked_by": "carried forward from owner-directed audit 2026-08-09 (same source coordinates class)"
+        },
+        "retrieved_at": "2026-08-12",
+        "source_manifest_path": "data/asset_library/_source/acq_318_scissors/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-12T23:12:09",
+          "verified_digest": "7adf4b66117b07eaaa46713e399159345fe203947563edc51c478322e73fd0a7",
+          "report_path": "/tmp/campaign/single_scissors/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:16",
+          "verified_digest": "42034966d86651f78b80754038dbd26ead92c4bc62286d21daf2dac75a074795"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "fail",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:01",
+          "verified_digest": "ddfb822ac9b14c7f2fac1a219afb0af14c462f7fe467d98b276cd2686cdab971",
+          "report_path": "results/20260822_isaac_writeback/settle/318_scissors_m0/custom/settle_report.json"
+        }
+      ]
+    }
+  ],
+  "external_ids": {
+    "env_gen": "318_scissors"
+  }
+}

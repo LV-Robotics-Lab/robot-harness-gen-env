@@ -1,0 +1,158 @@
+{
+  "schema_version": "robotwin.scene_validation.v1",
+  "scene_id": "place_a_blue_hanger_on_the_table_a5a66b4e5b",
+  "resolved_scene_sha256": "2d094a017db5b18073c696be693a44cc868e01bda9d2bf70c2c185b4b65df51e",
+  "status": "pass",
+  "fail_count": 0,
+  "not_run_count": 0,
+  "checks": [
+    {
+      "name": "workspace_bounds:hanger_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.24161832448520915,
+          -0.07674116151479088,
+          -0.03691870079642562,
+          0.15915825079642562
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:hanger_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.741,
+        "table_height_m": 0.741,
+        "support_relation": "on_table"
+      }
+    },
+    {
+      "name": "real_asset_files:hanger_1",
+      "status": "pass",
+      "evidence": {
+        "paths": [
+          "self_improving/asset_pipeline/active/data/asset_library/364_hanger/collision/base0.glb",
+          "self_improving/asset_pipeline/active/data/asset_library/364_hanger/model_data0.json",
+          "self_improving/asset_pipeline/active/data/asset_library/364_hanger/visual/base0.glb"
+        ],
+        "exists": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "relation:on_table:hanger_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "resolved_only_roundtrip",
+      "status": "pass",
+      "evidence": {
+        "before": "2d094a017db5b18073c696be693a44cc868e01bda9d2bf70c2c185b4b65df51e",
+        "after": "2d094a017db5b18073c696be693a44cc868e01bda9d2bf70c2c185b4b65df51e"
+      }
+    },
+    {
+      "name": "runtime_status",
+      "status": "pass",
+      "evidence": null
+    },
+    {
+      "name": "robot_initial_collision",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "observer_video_frame_count",
+      "status": "pass",
+      "evidence": {
+        "frames": 12,
+        "minimum": 3
+      }
+    },
+    {
+      "name": "observer_video_unique_frames",
+      "status": "pass",
+      "evidence": {
+        "unique_frames": 12,
+        "minimum": 12
+      }
+    },
+    {
+      "name": "translation_drift:hanger_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_m": 0.0009999275213695594,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "rotation_drift:hanger_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_deg": 0.0,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_translation_error:hanger_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_m": 0.000999930859139198,
+        "threshold_m": 0.02,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_rotation_error:hanger_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_deg": 0.0,
+        "threshold_deg": 5.0,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "penetration:hanger_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:hanger_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "support_contact:hanger_1",
+      "status": "pass",
+      "evidence": {
+        "raw_contact": true,
+        "mode": "on_table_contact",
+        "is_static": false,
+        "expected_target": "table",
+        "observed_target": "table",
+        "contact_fraction": 1.0,
+        "minimum_contact_fraction": 0.8
+      }
+    },
+    {
+      "name": "not_dropped:hanger_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "head_visibility:hanger_1",
+      "status": "pass",
+      "evidence": {
+        "pixels": 939,
+        "threshold": 64
+      }
+    }
+  ]
+}

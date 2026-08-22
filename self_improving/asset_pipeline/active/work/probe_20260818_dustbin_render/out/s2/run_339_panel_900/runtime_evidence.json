@@ -1,0 +1,278 @@
+{
+  "schema_version": "robotwin.scene_runtime_evidence.v2",
+  "scene_id": "place_a_panel_on_the_table_2627c9086d",
+  "resolved_scene_sha256": "4e8f384ca0b6fefa4002f57131223ca244ed89ac0713e1e2d1a3a9d00c8583d2",
+  "seed": 42,
+  "status": "pass",
+  "robot_initial_collision_count": 0,
+  "robot_initial_collision_pairs": [],
+  "robot_final_collision_count": 0,
+  "robot_final_collision_pairs": [],
+  "objects": {
+    "panel_1": {
+      "asset_id": "339_panel",
+      "entity_id": 66,
+      "entity_ids": [
+        66
+      ],
+      "initial_pose": {
+        "position_m": [
+          -0.13529878854751587,
+          0.07264026999473572,
+          0.7409999966621399
+        ],
+        "orientation_wxyz": [
+          0.6403504610061646,
+          0.6403504610061646,
+          0.2999188005924225,
+          0.2999188005924225
+        ],
+        "qpos": []
+      },
+      "final_pose": {
+        "position_m": [
+          -0.13526171445846558,
+          0.07264165580272675,
+          0.7385900020599365
+        ],
+        "orientation_wxyz": [
+          0.6341593861579895,
+          0.646801769733429,
+          0.29414206743240356,
+          0.30490973591804504
+        ],
+        "qpos": []
+      },
+      "translation_drift_m": 0.002410280147864989,
+      "rotation_drift_deg": 1.3464945544213909,
+      "resolved_translation_error_m": 0.0024102833988540926,
+      "loader_translation_offset_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "resolved_rotation_error_deg": 1.3464930935588388,
+      "late_window_translation_m": 0.00041346053878056225,
+      "late_window_rotation_deg": 0.30010019588051884,
+      "still_moving": false,
+      "visible_pixels": 14580,
+      "penetration_count": 0,
+      "support_contact": true,
+      "support_contact_fraction": 1.0,
+      "support_contact_samples": 120,
+      "unexpected_contact_fraction": 0.0,
+      "unexpected_contact_targets": [],
+      "support_mode": "on_table_contact",
+      "support_target": "table",
+      "expected_support_target": "table",
+      "support_footprint_margin_m": null,
+      "inside_contained": null,
+      "dropped": false,
+      "articulation_target_qpos": [],
+      "articulation_final_qpos": [],
+      "articulation_max_abs_error": null
+    }
+  },
+  "relations": {},
+  "initial_contact_records": [],
+  "final_contact_records": [
+    {
+      "bodies": [
+        "panel_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 2,
+      "active_point_count": 0,
+      "min_separation_m": 0.018031205981969833,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "panel_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 1,
+      "active_point_count": 0,
+      "min_separation_m": 0.01803121715784073,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "panel_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.004986156709492207,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "panel_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.005050393752753735,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "panel_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.0028581595979630947,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "panel_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.003114403458312154,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "panel_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.004662584979087114,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "panel_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.004726853687316179,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "panel_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.0025345857720822096,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "panel_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.003068742575123906,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "panel_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 2,
+      "active_point_count": 0,
+      "min_separation_m": 0.018037782981991768,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "panel_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 1,
+      "active_point_count": 0,
+      "min_separation_m": 0.01838511787354946,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "panel_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 0,
+      "min_separation_m": 0.011843140237033367,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "panel_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 3,
+      "min_separation_m": 1.0819418250207491e-08,
+      "max_impulse_norm": 0.000391614038462407,
+      "active": true
+    }
+  ],
+  "images": {
+    "head": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_900/preview_head.png",
+    "world_left": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_900/preview_world_left.png",
+    "world_right": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_900/preview_world_right.png",
+    "segmentation": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_900/preview_segmentation.png",
+    "observer_start": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_900/observer_start.png",
+    "observer_mid": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_900/observer_mid.png",
+    "observer_end": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_900/observer_end.png"
+  },
+  "video": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_339_panel_900/observer_runtime.mp4",
+  "video_frame_count": 12,
+  "unique_video_frame_count": 12,
+  "fps": 12,
+  "simulation_step_count": 900,
+  "video_sample_step_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    899
+  ],
+  "precheck_steps": 0,
+  "contact_window_steps": 120
+}

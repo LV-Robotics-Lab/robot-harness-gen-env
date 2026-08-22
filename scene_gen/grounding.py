@@ -90,6 +90,27 @@ def ground_object(query: SceneObjectSpec, catalog: AssetCatalog, *, seed: int) -
                     )
                 )
                 continue
+            if query.color:
+                if query.color in model.colors:
+                    # a measured true-colour model outranks unknown-colour
+                    # candidates in EVERY entry, so "a red cup" finds the
+                    # actually-red cup instead of tinting the first cup
+                    # (measured 2026-08-15: true hits 9/44 -> 23/44)
+                    score += 4.0
+                    reasons.append(f"model color matches {query.color}")
+                elif model.colors:
+                    rejected.append(
+                        RejectedCandidate(
+                            asset_id=entry.asset_id,
+                            model_id=model.model_id,
+                            score=score,
+                            reasons=(
+                                f"model colors {list(model.colors)} lack "
+                                f"{query.color}",
+                            ),
+                        )
+                    )
+                    continue
             if model.collision_path or model.urdf_path:
                 score += 2.0
                 reasons.append("collision representation available")

@@ -314,3 +314,14 @@ def test_prompt_names_the_category_and_forbids_guessing():
     p = a6.build_prompt("mug", ["cup"])
     assert "mug" in p and "cup" in p
     assert "Judge only what you can see" in p
+
+
+def test_merge_observed_attributes_matrix():
+    # 声明优先、观察只填空；basis: manifest / vlm / mixed / None
+    assert a6.merge_observed_attributes(["red"], []) == (["red"], "manifest")
+    assert a6.merge_observed_attributes([], ["yellow"]) == (["yellow"], "vlm")
+    merged, basis = a6.merge_observed_attributes(["red"], ["white", "red"])
+    assert merged == ["red", "white"] and basis == "mixed"
+    assert a6.merge_observed_attributes([], []) == ([], None)
+    merged, basis = a6.merge_observed_attributes(["red"], ["red"])
+    assert merged == ["red"] and basis == "manifest"

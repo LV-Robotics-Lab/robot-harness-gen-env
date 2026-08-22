@@ -21,19 +21,27 @@ $PY script/generate_scene.py --prompt "$PROMPT" --seed 42 \
 SCENE=$(ls -t "$OUT/scenes" | head -1)
 echo "scene: $SCENE"
 
-echo "=== [s10.2] grounding check: did it pick 301_cup?"
-$PY - "$OUT/scenes/$SCENE" << 'EOF'
+echo "=== [s10.2] grounding check: red-measured model selected?"
+# Content-judged, not a frozen winner: the 08-03 criterion pinned 301_cup as
+# THE red mug, which went stale the day natives gained model-level measured
+# colors (039_mug m10 is 40.9% red and outranks an alias match -- correctly).
+# The prompt asks for a red mug; the check now verifies exactly that.
+$PY - "$OUT/scenes/$SCENE" "$DEV/data/scene_gen_ext/asset_attributes.json" << 'EOF'
 import json, sys
 from pathlib import Path
-scene = Path(sys.argv[1])
+scene, attrs_path = Path(sys.argv[1]), Path(sys.argv[2])
 resolved = json.loads((scene / "resolved_scene.json").read_text())
 objs = resolved.get("objects", resolved)
-picked = {o.get("object_id"): o.get("asset_id") for o in objs}
-print("picked:", picked)
-cup = [a for a in picked.values() if a == "301_cup"]
-print("PASS grounding: external mug selected" if cup
-      else "FAIL grounding: 301_cup not selected")
-sys.exit(0 if cup else 1)
+attrs = json.loads(attrs_path.read_text())["models"]
+ok = False
+for o in objs:
+    aid, mid = o.get("asset_id"), str(o.get("model_id"))
+    colors = ((attrs.get(aid) or {}).get(mid) or {}).get("colors") or []
+    print(f"picked: {o.get('object_id')} -> {aid} m{mid} measured={colors}")
+    ok = ok or "red" in colors
+print("PASS grounding: red-measured model selected" if ok
+      else "FAIL grounding: selected model not measured red")
+sys.exit(0 if ok else 1)
 EOF
 GROUND_OK=$?
 
@@ -47,6 +55,7 @@ CUDA_LAUNCH_BLOCKING=1 $PY script/run_scene_runtime.py \
   --asset-catalog "$CAT" \
   --out-dir "$OUT/runtime/$SCENE" \
   --settle-steps 900 --contact-window-steps 120 --video-frames 120 --fps 12 \
+  --settle-converge-max 1800 \
   2>/dev/null | grep -vE "svulkan2|OIDN" | tail -2
 
 echo "=== [s10.4] full validation"

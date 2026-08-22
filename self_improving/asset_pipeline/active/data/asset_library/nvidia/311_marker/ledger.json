@@ -1,0 +1,205 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_311_marker",
+  "category": "marker",
+  "kind": "rigid",
+  "semantics": {
+    "aliases": [
+      "marker",
+      "pen"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "manifest_human",
+      "evidence": "1_asset_reuse/configs/external_manifest.json",
+      "verified": false
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.01883413987977489,
+          0.12088643757507714,
+          0.019475929897816595
+        ],
+        "size_resolution": {
+          "mode": "match_category",
+          "actual_max_dim_m": 0.12088643757507714,
+          "scale": 1.0,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "no_precedent"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null,
+          "note": "no same-category precedent; conventions unverified"
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/nvidia/311_marker/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "4187f6045d711e00bd9f3037cbbf2e9f58244e9a819b31e9cdf95617bf9eef4f",
+          "size_bytes": 3992016,
+          "metadata": {
+            "derived_from": "040_large_marker.usd",
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/nvidia/311_marker/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "4187f6045d711e00bd9f3037cbbf2e9f58244e9a819b31e9cdf95617bf9eef4f",
+          "size_bytes": 3992016,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "data/asset_library/_source/ycb_axis_aligned/040_large_marker.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "73189a60294bda11af23ddfb00a43dda0e4b40ff661300034e8092480bc25634",
+          "size_bytes": 0,
+          "metadata": {
+            "converter": "unknown (pre-v1 import)",
+            "conversion_params": {}
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "ycb_axis_aligned",
+        "file": "040_large_marker.usd",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "Underlying YCB dataset CC BY 4.0 (attribution: Calli et al., doi:10.1109/MRA.2015.2448951 & doi:10.1109/ICAR.2015.7251504); NVIDIA USD conversion layer under NVIDIA Isaac Sim Additional Software and Materials License (internal R&D permitted; redistribution of converted USD unclear -- rebuild from upstream YCB data for clean redistribution)",
+          "evidence_url": "http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/ ; https://registry.opendata.aws/ycb-benchmarks/ ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "checked_date": "2026-08-09",
+          "checked_by": "owner-directed research 2026-08-09"
+        },
+        "retrieved_at": "2026-08-03",
+        "source_manifest_path": "data/asset_library/_source/ycb_axis_aligned/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "batch_v3",
+          "timestamp": "2026-08-03T00:00:00",
+          "verified_digest": "68649905069b3a4f59f8be8b1f5d5a3bf79c712160fe8a2bc67da96599135de8",
+          "report_path": "results/_test/20260803_smoke_usd2envgen/batch_v3/import_matrix.json"
+        },
+        {
+          "backend": "sapien",
+          "check": "runtime_load",
+          "verdict": "pass",
+          "run_id": "s11",
+          "timestamp": "2026-08-09T00:45:55",
+          "verified_digest": "68649905069b3a4f59f8be8b1f5d5a3bf79c712160fe8a2bc67da96599135de8",
+          "report_path": "results/20260809_ledger_v1_accept/s11"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "fail",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:01",
+          "verified_digest": "11be1f0562172d1296b1ded5d5156a3782ce1845db04f141834eaf3f8d5e1d7d",
+          "report_path": "results/20260822_isaac_writeback/settle/311_marker_m0/custom/settle_report.json"
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "black"
+        ],
+        "color_fractions": {
+          "black": 0.519,
+          "white": 0.136,
+          "brown": 0.001,
+          "blue": 0.001
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "profile": "cross_backend",
+  "external_ids": {
+    "env_gen": "311_marker"
+  }
+}

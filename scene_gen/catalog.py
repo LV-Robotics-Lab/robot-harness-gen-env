@@ -46,6 +46,11 @@ class CatalogModel(StrictModel):
     support_surface_z_offset_m: float | None = Field(default=None, ge=0.0)
     support_margin_m: float = Field(default=0.005, ge=0.0)
     support_spawn_clearance_m: float = Field(default=0.003, ge=0.0, le=0.02)
+    # Measured per-model colours (asset-pipeline appearance channel). Colour
+    # is a property of the MODEL, not the asset: 110_basket ships a yellow, a
+    # red and a white basket under one asset_id, and asset-level colours can
+    # only stay silent about all three. Empty = unmeasured (never a claim).
+    colors: tuple[str, ...] = ()
     stable_pose_id: str | None = None
     stable_orientation_wxyz: tuple[float, float, float, float] | None = None
     z_policy: Literal["origin_on_table", "center_on_table"] = "origin_on_table"
@@ -480,6 +485,7 @@ def _scan_model(
         ),
         support_margin_m=float(override.get("support_margin_m", 0.005)),
         support_spawn_clearance_m=float(override.get("support_spawn_clearance_m", 0.003)),
+        colors=_string_tuple(override.get("colors")),
         stable_pose_id=str(stable_pose_id) if stable_pose_id else None,
         stable_orientation_wxyz=stable_orientation_wxyz if stable_pose_id else None,
         z_policy=override.get("z_policy", "origin_on_table"),

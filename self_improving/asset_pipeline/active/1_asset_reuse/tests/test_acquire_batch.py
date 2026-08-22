@@ -115,7 +115,7 @@ def test_import_with_fallback_on_failed_materialize(tmp_path):
     tiers = [
         Tier(0, FakeProvider("t0", [])),
         Tier(
-            1, FakeProvider("t1", [cand("a/first.usd", 2.0), cand("a/second.usd", 1.0)])
+            1, FakeProvider("t1", [cand("a/pitcher_first.usd", 2.0), cand("a/pitcher_second.usd", 1.0)])
         ),
     ]
     rec = ab.process_entry(
@@ -123,7 +123,7 @@ def test_import_with_fallback_on_failed_materialize(tmp_path):
     )
     assert rec["status"] == "imported"
     assert rec["attempts"] == 2
-    assert rec["selected"]["candidate_id"].endswith("second.usd")
+    assert rec["selected"]["candidate_id"].endswith("pitcher_second.usd")
     failed = [c for c in rec["candidates"] if c["verdict"] == "rejected"]
     assert failed and failed[0]["rejection"]["code"].startswith("validation_failed")
     assert json.loads(p["manifest"].read_text())["groups"]
@@ -155,7 +155,7 @@ def test_exhausted_when_all_attempts_fail(tmp_path):
         Tier(0, FakeProvider("t0", [])),
         Tier(
             1,
-            FakeProvider("t1", [cand("a/x.usd", 2.0), cand("a/never_tried.usd", 1.0)]),
+            FakeProvider("t1", [cand("a/pitcher_x.usd", 2.0), cand("a/pitcher_never.usd", 1.0)]),
         ),
     ]
     rec = ab.process_entry(
@@ -167,7 +167,7 @@ def test_exhausted_when_all_attempts_fail(tmp_path):
     )
     assert rec["status"] == "exhausted"
     outranked = [c for c in rec["candidates"] if c["verdict"] == "outranked"]
-    assert outranked and outranked[0]["candidate_id"].endswith("never_tried.usd")
+    assert outranked and outranked[0]["candidate_id"].endswith("pitcher_never.usd")
     assert outranked[0]["rejection"]["code"] == a2.REJ_OUTRANKED
     assert (
         outranked[0]["rejection"]["detail"]
@@ -205,7 +205,7 @@ def test_github_candidate_uses_stage_web_candidate_not_fetch_convert(
 
 def test_github_fetch_failure_records_rejection_and_continues(tmp_path, monkeypatch):
     def fake_stage(candidate, *a, **k):
-        if candidate.name == "first.glb":
+        if candidate.name == "lantern_first.glb":
             raise RuntimeError("boom")
         fake_staged_ok(a[3])
         return {}
@@ -215,7 +215,7 @@ def test_github_fetch_failure_records_rejection_and_continues(tmp_path, monkeypa
         Tier(0, FakeProvider("t0", [])),
         Tier(
             1,
-            FakeProvider("t1", [gh_cand("first.glb", 2.0), gh_cand("second.glb", 1.0)]),
+            FakeProvider("t1", [gh_cand("lantern_first.glb", 2.0), gh_cand("lantern_second.glb", 1.0)]),
         ),
     ]
     rec = ab.process_entry(
@@ -230,8 +230,8 @@ def test_github_fetch_failure_records_rejection_and_continues(tmp_path, monkeypa
         c["candidate_id"].rsplit("/", 1)[-1]: c["rejection"]["code"]
         for c in rec["candidates"]
     }
-    assert codes["first.glb"] == a2.REJ_FETCH
-    assert codes["second.glb"] == "validation_failed:materialize"
+    assert codes["lantern_first.glb"] == a2.REJ_FETCH
+    assert codes["lantern_second.glb"] == "validation_failed:materialize"
 
 
 def test_github_convert_failure_records_convert_failed(tmp_path, monkeypatch):
@@ -241,7 +241,7 @@ def test_github_convert_failure_records_convert_failed(tmp_path, monkeypatch):
     monkeypatch.setattr(a3w, "stage_web_candidate", fake_stage)
     tiers = [
         Tier(0, FakeProvider("t0", [])),
-        Tier(1, FakeProvider("t1", [gh_cand("first.glb")])),
+        Tier(1, FakeProvider("t1", [gh_cand("lantern_first.glb")])),
     ]
     rec = ab.process_entry(
         {"category": "lantern"},
@@ -255,7 +255,7 @@ def test_github_convert_failure_records_convert_failed(tmp_path, monkeypatch):
         c["candidate_id"].rsplit("/", 1)[-1]: c["rejection"]["code"]
         for c in rec["candidates"]
     }
-    assert codes["first.glb"] == a2.REJ_CONVERT
+    assert codes["lantern_first.glb"] == a2.REJ_CONVERT
 
 
 def test_process_entry_copies_provider_stats_into_record(tmp_path):
@@ -570,3 +570,152 @@ def test_malformed_entry_isolated_batch_completes(tmp_path, capsys):
     assert "FAIL <invalid> status=entry_error" in out
     assert "PASS cup status=reused_local" in out
     assert "categories_sha256" in evidence
+
+
+def _wants_catalog(tmp_path):
+    cat = {
+        "entries": [
+            {
+                "asset_id": "308_ball",
+                "category": "ball",
+                "aliases": ["ball"],
+                "colors": ["yellow"],
+                "materials": [],
+                "available": True,
+                "asset_path": str(tmp_path),
+                "models": [{"model_id": 0}],
+            }
+        ]
+    }
+    p = tmp_path / "cat0.json"
+    p.write_text(json.dumps(cat))
+    return p
+
+
+def test_wants_suppress_tier0_reuse_and_fall_back_to_local_similar(tmp_path):
+    # B2+B3：带颜色约束，本地只有黄球 → 不当场复用；外层无 exact →
+    # similar 兜底返回本地黄球 + unmet。
+    p = paths(tmp_path)
+    p["tier0_catalog"] = _wants_catalog(tmp_path)
+    tiers = [
+        Tier(0, FakeProvider("t0", [cand("ball")])),
+        Tier(1, FakeProvider("t1", [])),
+    ]
+    rec = ab.process_entry(
+        {"category": "ball", "colors": ["blue"]},
+        tiers,
+        {"identity_gate": {"enabled": False}},
+        p,
+        lambda cmd, env=None: 0,
+    )
+    ab._match_block(rec, p)
+    assert rec["status"] != "reused_local"
+    assert rec.get("local_reuse_suppressed", {}).get("reason") == "attribute_gap"
+    assert rec["match"]["grade"] == "similar"
+    assert rec["match"]["asset"]["asset_id"] == "308_ball"
+    assert rec["match"]["unmet"][0]["want"] == "blue"
+
+
+def test_wants_reuse_local_exact_when_attrs_match(tmp_path):
+    p = paths(tmp_path)
+    p["tier0_catalog"] = _wants_catalog(tmp_path)
+    tiers = [Tier(0, FakeProvider("t0", [cand("ball")]))]
+    rec = ab.process_entry(
+        {"category": "ball", "colors": ["yellow"]},
+        tiers,
+        {},
+        p,
+        lambda cmd, env=None: 0,
+    )
+    ab._match_block(rec, p)
+    assert rec["status"] == "reused_local"
+    assert rec["match"]["grade"] == "exact"
+    assert rec["match"]["asset"]["asset_id"] == "308_ball"
+    assert rec["match"]["unmet"] == []
+
+
+def test_no_local_no_external_grades_none(tmp_path):
+    p = paths(tmp_path)
+    p["tier0_catalog"] = _wants_catalog(tmp_path)
+    tiers = [
+        Tier(0, FakeProvider("t0", [])),
+        Tier(1, FakeProvider("t1", [])),
+    ]
+    rec = ab.process_entry(
+        {"category": "sofa"},
+        tiers,
+        {"identity_gate": {"enabled": False}},
+        p,
+        lambda cmd, env=None: 0,
+    )
+    ab._match_block(rec, p)
+    assert rec["match"]["grade"] == "none"
+    assert rec["match"]["asset"] is None
+
+
+def test_allow_similar_false_keeps_none(tmp_path):
+    # 关掉兜底：同样场景不返回本地相似资产
+    p = paths(tmp_path)
+    p["tier0_catalog"] = _wants_catalog(tmp_path)
+    tiers = [
+        Tier(0, FakeProvider("t0", [cand("ball")])),
+        Tier(1, FakeProvider("t1", [])),
+    ]
+    rec = ab.process_entry(
+        {"category": "ball", "colors": ["blue"], "allow_similar": False},
+        tiers,
+        {"identity_gate": {"enabled": False}},
+        p,
+        lambda cmd, env=None: 0,
+    )
+    ab._match_block(rec, p)
+    assert rec["match"]["grade"] == "none"
+
+
+def test_local_similar_carries_candidate_list(tmp_path, monkeypatch):
+    # 视觉 seam 注入假分数：候选列表带 attr/visual 双分，similar 结论不变
+    monkeypatch.setattr(
+        ab, "_visual_scores", lambda entry, cat, ids, root, **kw: {"308_ball": 0.25}
+    )
+    p = paths(tmp_path)
+    p["tier0_catalog"] = _wants_catalog(tmp_path)
+    tiers = [
+        Tier(0, FakeProvider("t0", [cand("ball")])),
+        Tier(1, FakeProvider("t1", [])),
+    ]
+    rec = ab.process_entry(
+        {"category": "ball", "colors": ["blue"]},
+        tiers,
+        {"identity_gate": {"enabled": False}},
+        p,
+        lambda cmd, env=None: 0,
+    )
+    ab._match_block(rec, p)
+    m = rec["match"]
+    assert m["grade"] == "similar"
+    assert len(m["candidates"]) == 1
+    assert m["candidates"][0]["asset"]["asset_id"] == "308_ball"
+    assert m["candidates"][0]["visual_sim"] == 0.25
+    assert m["candidates"][0]["attr_score"] == 0.0
+
+
+def test_visual_gate_can_empty_the_similar_pool(tmp_path, monkeypatch):
+    # 视觉分低于门限且属性不符 → 本地池被筛空 → none（严格语义成立）
+    monkeypatch.setattr(
+        ab, "_visual_scores", lambda entry, cat, ids, root, **kw: {"308_ball": 0.05}
+    )
+    p = paths(tmp_path)
+    p["tier0_catalog"] = _wants_catalog(tmp_path)
+    tiers = [
+        Tier(0, FakeProvider("t0", [cand("ball")])),
+        Tier(1, FakeProvider("t1", [])),
+    ]
+    rec = ab.process_entry(
+        {"category": "ball", "colors": ["blue"]},
+        tiers,
+        {"identity_gate": {"enabled": False}},
+        p,
+        lambda cmd, env=None: 0,
+    )
+    ab._match_block(rec, p)
+    assert rec["match"]["grade"] == "none"

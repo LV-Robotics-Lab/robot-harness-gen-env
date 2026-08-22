@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>六项授权队列执行报告 · 2026-08-16</title>
+<style>
+:root{
+  --bg:#faf9f7; --panel:#ffffff; --ink:#1c1e21; --dim:#6b7280; --line:#e5e3de;
+  --accent:#0f6b5c; --accent-soft:#e7f2ef; --pass:#177245; --pass-bg:#e8f5ec;
+  --stop:#b3261e; --stop-bg:#fdecea; --warn:#8a6d1a; --warn-bg:#faf3d9;
+  --code-bg:#f3f2ee; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171a; --panel:#1d2024; --ink:#e8e6e3; --dim:#9aa0a6; --line:#33373d;
+    --accent:#4dbfab; --accent-soft:#1e312d; --pass:#5fbf87; --pass-bg:#1d2e24;
+    --stop:#e58a84; --stop-bg:#372220; --warn:#d4b45a; --warn-bg:#32301f;
+    --code-bg:#24272c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171a; --panel:#1d2024; --ink:#e8e6e3; --dim:#9aa0a6; --line:#33373d;
+  --accent:#4dbfab; --accent-soft:#1e312d; --pass:#5fbf87; --pass-bg:#1d2e24;
+  --stop:#e58a84; --stop-bg:#372220; --warn:#d4b45a; --warn-bg:#32301f;
+  --code-bg:#24272c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 -apple-system,"PingFang SC","Noto Sans CJK SC",sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 80px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{font-size:29px;line-height:1.28;margin:6px 0 4px;text-wrap:balance}
+.dek{color:var(--dim);margin:0 0 18px}
+h2{font-size:21px;margin:44px 0 10px;padding-top:10px;border-top:1px solid var(--line)}
+h3{font-size:16px;margin:22px 0 8px}
+p{margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-weight:600}
+.tblwrap{overflow-x:auto;margin:10px 0}
+.badge{display:inline-block;font:11px/1.6 var(--mono);padding:0 7px;border-radius:4px;font-weight:600;white-space:nowrap}
+.b-pass{color:var(--pass);background:var(--pass-bg)}
+.b-stop{color:var(--stop);background:var(--stop-bg)}
+.b-warn{color:var(--warn);background:var(--warn-bg)}
+.b-info{color:var(--accent);background:var(--accent-soft)}
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0;font-size:14px}
+.callout.red{border-left-color:var(--stop);background:var(--stop-bg)}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;font:12.5px/1.55 var(--mono);margin:8px 0}
+code{font-family:var(--mono);font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:4px}
+pre code{background:none;padding:0}
+.tabs{display:flex;gap:6px;margin:20px 0 0;border-bottom:2px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5;padding-top:6px}
+.tabs button{font:14px/1 inherit;font-weight:600;border:none;background:none;color:var(--dim);padding:10px 16px;cursor:pointer;border-radius:8px 8px 0 0}
+.tabs button[aria-selected="true"]{color:var(--accent);background:var(--panel);box-shadow:inset 0 -2px 0 var(--accent)}
+.pane{display:none}
+.pane.active{display:block}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.kpi .n{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12px;color:var(--dim)}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;align-items:center}
+.filters .lbl{font-size:12px;color:var(--dim);margin-right:2px}
+.filters button{font:12px/1.5 inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:14px;padding:2px 11px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.count{font-size:12px;color:var(--dim);margin:6px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0}
+.card.ok{border-left-color:var(--pass)}
+.card.bad{border-left-color:var(--stop)}
+.card h4{margin:0 0 4px;font-size:14px;font-family:var(--mono)}
+.card .meta{font-size:12.5px;color:var(--dim)}
+.card .why{font-size:13.5px;margin:6px 0 0}
+details{margin:6px 0}
+summary{cursor:pointer;color:var(--accent);font-size:13px}
+.small{font-size:12.5px;color:var(--dim)}
+.tag{display:inline-block;font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 6px;margin-left:6px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body><div class="wrap">
+
+<div class="eyebrow">env-gen-dev · 资产管线 · 批次执行报告 · 2026-08-15 夜批</div>
+<h1>从六项授权队列到全部落地：颜色选型进生产、尺寸真相回填、许可清零、Isaac 首验入账</h1>
+<p class="dek">你昨晚授权的「② 可直接执行的队列」六项全部执行完毕。本页所有数字来自真实运行，不需要读代码。</p>
+
+<div class="tabs" role="tablist">
+  <button role="tab" aria-selected="true" data-pane="p-main">全景</button>
+  <button role="tab" aria-selected="false" data-pane="p-review">样例审查</button>
+  <button role="tab" aria-selected="false" data-pane="p-stats">统计与性能</button>
+</div>
+
+<!-- ==================== 全景 ==================== -->
+<div class="pane active" id="p-main">
+
+<h2>1 · 这是什么</h2>
+<p><b>一句话</b>：六项授权任务全部完成——其中一项含一个诚实失败（卷帘路牌任何姿态都停不下来，保持剔除），其余全绿；产物已提交 hyx 三个 commit 并镜像推送到你的 GitHub 私仓。</p>
+<p><b>吃什么→吐什么</b>：输入 = 你昨晚拍板的六项队列 + 资产库 79 份账本 + lv-5090 真机。输出 = 3 个 hyx commit（<code>8789f33</code> 颜色 → <code>4212191</code> settle+许可 → <code>c54fec7</code> Isaac harness）、已镜像推送 <code>huyuxinn/env-gen-dev</code>（<code>eb1ebb5..ac910a8</code>）、账本内 69 条可逐条审的变更（样例审查 tab）、更新后的 v3 成果页（任务 5）。</p>
+
+<h2>2 · 验收矩阵：六项任务 × 真实结果</h2>
+<div class="tblwrap"><table>
+<tr><th>#</th><th>任务</th><th>判定</th><th>真实运行里发生了什么</th></tr>
+<tr><td>1</td><td>模型级颜色选型落生产</td><td><span class="badge b-pass">pass</span></td><td>上游 <code>CatalogModel.colors</code> + grounding 模型级加减分 + 账本投影全链贯通；实测 yellow basket→m1（m0/m2 因缺 yellow 被明示拒绝）；视图 72 个 model 中 62 个带模型级颜色</td></tr>
+<tr><td>2</td><td>isaacsim 验证回写义务</td><td><span class="badge b-pass">pass</span></td><td>唯一写回通道 <code>writeback_verification.py</code> 落地；首批 2 条 (isaacsim,settle) 记录入账（digest 锚定），幂等复跑验证 written=0 skipped=2——「全库 isaacsim 记录 0 条」清零</td></tr>
+<tr><td>3</td><td>23 个 model 许可回填</td><td><span class="badge b-pass">pass</span></td><td>23→0 unknown（片段统计实测 unknown_license_models=0）：22 个按 NVIDIA Isaac 附加条款落 wording（spdx 无对应码，如实留空）、1 个 Objaverse by-sa→CC-BY-SA-4.0</td></tr>
+<tr><td>4</td><td>4 个 settle 失败资产修复</td><td><span class="badge b-warn">3 复活 · 1 如实剔除</span></td><td>多起始姿态重试 + 末窗静止判据：cherry/tool/alarm 复活（默认姿态改实测静止姿态）；<b>ahead 卷帘路牌 5 种姿态 6 秒内都停不下来——保持剔除，这是判据在正确工作</b></td></tr>
+<tr><td>5</td><td>v3 成果页更新</td><td><span class="badge b-pass">pass</span></td><td>同 URL 重发布：增补 §1.5 尺寸方案 C（含 36 重定标实测）与 TV→沙发案四防线，附 Isaac 空洞清零注记</td></tr>
+<tr><td>6</td><td>Isaac 物理绑定 settle harness</td><td><span class="badge b-pass">pass 2/2</span></td><td>真物理（RigidBodyAPI + convexHull + 300 步@120Hz）：302_can m3 末窗位移 0.005mm/倾角 0.15°、303_box m0 末窗 0.0001mm/倾角 0.79°，均 pass；证据 JSON 里 <code>applied_schemas_before: []</code> 恰好自证了此前静态引用的空洞</td></tr>
+<tr><td>—</td><td>随批清账：362_tvon_the_table</td><td><span class="badge b-stop">移除 · 留痕</span></td><td>TV 案里以「tvon_the_table」入库的沙发移出资产库；acquired_manifest 保留采购史实记录不改写</td></tr>
+</table></div>
+<div class="callout"><b>这张表为什么重要</b>：批次的质量不只看绿了几项，更看失败时说了什么——ahead 的剔除与 362 的移除留痕都是「如实说不行」的正确行为，不是家丑。</div>
+
+<h2>3 · 任务→落点总览</h2>
+<div class="tblwrap"><table>
+<tr><th>任务</th><th>关键文件（新增★/修改）</th><th>commit</th></tr>
+<tr><td>1 颜色</td><td>上游 <code>scene_gen/catalog.py</code>+<code>grounding.py</code>；<code>scripts/ledger/gen_fragment.py</code>；<code>scripts/5_catalog/s9_build_shadow_root.py</code></td><td><code>8789f33</code></td></tr>
+<tr><td>2 写回</td><td>★<code>scripts/ledger/writeback_verification.py</code></td><td><code>c54fec7</code></td></tr>
+<tr><td>3 许可</td><td>23 份 <code>ledger.json</code> license 块</td><td><code>4212191</code></td></tr>
+<tr><td>4 settle</td><td>★<code>scripts/ledger/settle_repair.py</code>；4 份账本</td><td><code>4212191</code></td></tr>
+<tr><td>5 成果页</td><td>v3 页 §1.5 增补（同 URL）</td><td>—</td></tr>
+<tr><td>6 Isaac</td><td>★<code>2_sim_migration/scripts/isaac_settle_check.py</code>；302_can/303_box 账本</td><td><code>c54fec7</code></td></tr>
+</table></div>
+<pre class="small">hyx（lab 仓本地分支）  8789f33 → 4212191 → c54fec7  ──精确同步──▶  镜像仓 main  618b18f → 83c8e6f → ac910a8  ──已推送──▶  github.com/huyuxinn/env-gen-dev</pre>
+
+<h2>4 · 分任务详解</h2>
+
+<h3>任务 1 · 模型级颜色选型落生产 <span class="tag">commit 8789f33</span></h3>
+<p><b>问题</b>：110_basket 一个资产下有黄/红/白三个 model，资产级颜色标签永远「色盲」。E1 实验已证模型级选型把颜色真命中从 9 提到 23，但那是 /tmp 补丁——本任务把它变成生产代码。</p>
+<p><b>链路</b>：账本 <code>appearance.colors_measured</code> →（gen_fragment 投影）→ 视图片段模型级 <code>colors</code> →（s9 注入 + 上游 <code>CatalogModel.colors</code> 新字段）→ grounding 模型级判分：命中 +4.0，实测颜色明确缺失则整 model 拒绝，无颜色信息的按上游设计走着色回退。</p>
+<pre>$ ground_object(yellow basket / red basket / red cup)   # 生产目录实跑，seed=42
+yellow basket -> 110_basket m1  colors=['yellow']
+   rejected: 110_basket m0: model colors ['orange','red'] lack yellow
+             110_basket m2: model colors ['red'] lack yellow
+red basket    -> 110_basket m0  colors=['orange','red']
+red cup       -> 301_cup   m0  colors=['brown','red']</pre>
+<p class="small">三条生产选型的机读结果：<a href="../../../../validation_evidence/ledger_v3_20260815/color/">归档 coverage reports</a>。</p>
+<div class="callout"><b>why</b>：颜色是 model 的属性不是资产的属性——同资产三个篮子三种颜色。片段实测 72 个 model 里 62 个已带模型级颜色。</div>
+
+<h3>任务 2 · isaacsim 验证回写义务 <span class="tag">commit c54fec7</span></h3>
+<p><b>问题</b>：v3 辩证发现全库 isaacsim 验证记录为 0——包括 Isaac E2E 明明跑通过的资产。证据躺在 results/ 目录，账本从没听说过。契约条款：<b>不写回的 Isaac 运行不算完成</b>。</p>
+<p><b>落地</b>：<code>writeback_verification.py</code> 成为唯一写回通道——吃 facts JSON，追加 digest 锚定记录，按 (run_id, check, backend) 幂等，写盘前重校验账本。任务 6 的 harness 就是它的第一个真实客户：</p>
+<pre>ok   302_can m3: (isaacsim,settle)=pass
+ok   303_box m0: (isaacsim,settle)=pass
+written=2 skipped=0
+——幂等复跑——
+skip 302_can m3: run isaac-settle-20260816 already recorded
+skip 303_box m0: run isaac-settle-20260816 already recorded
+written=0 skipped=2</pre>
+
+<h3>任务 3 · 23 个 model 许可回填 <span class="tag">commit 4212191</span></h3>
+<p><b>做法</b>：不硬编 SPDX 码——22 个 NVIDIA Isaac Props 资产按判例落条款原文（无对应 SPDX 码，<code>spdx: null</code> 如实留空 + terms_note 记要点 + evidence_url），1 个 Objaverse 资产带机读 by-sa 标签，落 <code>CC-BY-SA-4.0</code>。回填后片段统计实测 <code>unknown_license_models: 0</code>。</p>
+<pre>// 314_cabinet 判例（22 个同源资产沿用）
+"spdx": null, "status": "declared",
+"terms_note": "NVIDIA Isaac Sim Additional Software and Materials License
+  (v. June 9, 2025): internal R&amp;D use permitted (License FAQ: free for
+  internal R&amp;D); modification/redistribution prohibited (Sec 2.2/2.4)"</pre>
+<div class="callout red"><b>要知道的边界</b>：这 22 个的条款是「内部研发可用、禁止再分发」。将来若要对外发布数据集/资产包，这 22 个不能随包分发——账本里查 spdx null + NVIDIA wording 即可全部筛出。</div>
+
+<h3>任务 4 · settle 失败资产修复 <span class="tag">commit 4212191</span></h3>
+<p><b>问题</b>：尺寸方案 C 重定标后 4 个 model settle 复检失败。旧判据看全程位移——但缩到真实 2.5cm 的樱桃<b>会滚</b>，滚不等于没停。</p>
+<p><b>做法</b>：换成「停没停」判据（1500 步后取末 100 步位移 &lt; 2mm，250Hz），并借标定战役的多起始姿态重试（默认姿态 + 单位四元数 + 4×90° 翻转）；成功后把默认稳定姿态改成<b>实测静止姿态</b>（pose_id=measured_rest），z_policy 按实测静止时原点高度重定。</p>
+<pre>333_cherry m0: pass (measured_rest, origin_on_table)   # 滚→停，正常物理
+341_tool   m0: pass (measured_rest, origin_on_table)
+345_alarm  m0: pass (measured_rest, center_on_table)
+356_ahead  m0: FAIL —— 5 种起始姿态末窗位移均 >2mm，保持剔除</pre>
+<div class="callout"><b>why</b>：判据换的是「测什么」不是「放多松」——ahead 在同一判据下照样死，说明它真的立不住（卷帘薄片永续晃动），不是判据放水。</div>
+
+<h3>任务 5 · v3 成果页更新</h3>
+<p>同 URL 重发布（<a href="https://claude.ai/code/artifact/cec62476-2f64-44ad-b814-ffe7fa044764">v3 成果页</a>）：新增 §1.5「定稿后 48 小时的两次实战增补」——尺寸方案 C（账本存世界的真、视图管桌子的取舍、三档裁决 + 36 重定标实测）与 TV→沙发案四防线；并附 2026-08-16 注记：isaacsim 记录空洞清零。</p>
+
+<h3>任务 6 · Isaac 物理绑定 settle harness <span class="tag">commit c54fec7</span></h3>
+<p><b>问题</b>：E2 已证静态引用产生空洞的 reset_ok/step_ok（没有物理，位移恒 0）。本任务建真物理链路：生产编译（import_env_gen→enrich_from_ledgers→IsaacSimCompiler）→ isaac-smoke python 里给目标 prim 施加 <code>RigidBodyAPI</code> + <code>convexHull</code> 碰撞 → 资产包围盒下放静态支撑面 → 300 步物理仿真（120Hz）→ 末窗 50 步位移 &lt;2mm 且倾角 &lt;15° 判 settle → facts 经任务 2 通道写回。</p>
+<div class="tblwrap"><table>
+<tr><th>案例</th><th>总位移</th><th>末窗位移</th><th>倾角</th><th>判定</th></tr>
+<tr><td>302_can m3（YCB 午餐肉罐）</td><td>0.192 mm</td><td>5.2e-6 m</td><td>0.154°</td><td><span class="badge b-pass">pass</span></td></tr>
+<tr><td>303_box m0（YCB 饼干盒）</td><td>1.605 mm</td><td>1.3e-7 m</td><td>0.794°</td><td><span class="badge b-pass">pass</span></td></tr>
+</table></div>
+<pre>// 302_can settle_report.json（节选）——绑定前后自证非空洞
+"binding": { "applied_schemas_before": [],          // ← E2 发现的空洞原状
+             "applied_schemas_after": ["PhysicsRigidBodyAPI"],
+             "collision_prims": [{ "path": ".../_10_potted_meat_can",
+                                   "approximation": "convexHull" }] },
+"pose_source": "SingleRigidPrim",                   // 物理视图读数，非静态 USD
+"metrics": { "total_displacement_m": 1.92e-4,
+             "window_last50_displacement_m": 5.24e-6, "up_tilt_deg": 0.154 }</pre>
+<div class="callout"><b>why</b>：两例位移量级小是合理结果不是空转——有真实下落佐证（can z 0.74032→0.74016、box z 0.74044→0.73981），且 convex hull 与视觉网格几乎重合、spawn 位姿本就是账本标定的稳定位姿。harness 还顺手修正了编译产物的重力编码（direction=(0,0,-9.81)+magnitude=1 → 规范化 direction=(0,0,-1)+magnitude=9.81，原值改值都记录在证据里）。</div>
+
+<h2>5 · 真实 case：302_can 从账本到 Isaac 验证记录的完整链路</h2>
+<p>一条端到端链路，四步都有真实产物：</p>
+<div class="tblwrap"><table>
+<tr><th>步</th><th>发生了什么</th><th>真实产物</th></tr>
+<tr><td>① 编译</td><td>生产链把 302_can m3 编进 Isaac 场景，无 monkeypatch</td><td><code>compile status=compiled, assets=['asset_302_can_m3'], blockers=[]</code></td></tr>
+<tr><td>② 绑定</td><td>目标 prim 施加刚体+碰撞（绑定前 schema 为空，自证原状）</td><td><code>settle_scene_bound.usda</code>（另存，不动编译产物）</td></tr>
+<tr><td>③ 仿真</td><td>300 步 @120Hz，末窗位移 5.2e-6 m，倾角 0.154°</td><td><a href="../../../../validation_evidence/ledger_v3_20260815/isaac/can_settle_report.json">归档 settle 报告</a></td></tr>
+<tr><td>④ 写回</td><td>facts 经唯一通道入账，digest 锚定</td><td>302_can 账本 verification[] 新增 <code>(isaacsim,settle)=pass, digest 83b4b34c…</code></td></tr>
+</table></div>
+<pre>// ④ 的账本记录原文（302_can/ledger.json，git diff 实录）
+{ "backend": "isaacsim", "check": "settle", "verdict": "pass",
+  "run_id": "isaac-settle-20260816", "timestamp": "2026-08-16T01:13:23",
+  "verified_digest": "83b4b34cdbe5d76da5528bcb7a8085627f0a5507edd588e1aee91a4382a0b6db",
+  "report_path": "results/isaac_settle_out/can/settle_report.json" }</pre>
+
+<h2>6 · 为什么不那样做</h2>
+<div class="tblwrap"><table>
+<tr><th>被否方案</th><th>实测死因</th></tr>
+<tr><td>settle 沿用全程位移判据</td><td>真实 2.5cm 樱桃会滚，全程位移判死好资产；末窗判据下它 pass、ahead 依旧 fail——判据区分度实测成立</td></tr>
+<tr><td>Isaac 验证继续用静态引用</td><td>E2 实测 hollow pass（位移恒 0）；本批证据 <code>applied_schemas_before: []</code> 把空洞拍在纸面上</td></tr>
+<tr><td>许可硬编一个近似 SPDX 码</td><td>NVIDIA 条款无对应 SPDX；硬编=伪造机读语义，将来自动化筛许可会漏掉「禁再分发」约束</td></tr>
+<tr><td>把 362 沙发就地改名成 sofa 复用</td><td>身份与采购史实不可改写；正确做法是移除 + manifest 留痕（TV 案已证身份混入的连锁代价）</td></tr>
+</table></div>
+
+<h2>7 · 如实记录</h2>
+<ul>
+<li><b>ahead（356）保持剔除</b>：5 种起始姿态 6 秒内都停不下来（卷帘薄片永续晃动），这是真实物理不是判据缺陷。</li>
+<li><b>上游改动只在本地 hyx</b>：<code>CatalogModel.colors</code>/grounding 改的是 lab 仓 scene_gen，两台机器身份都无推送权——等你拿到 LV-Robotics-Lab 写权限后 push。</li>
+<li><b>22 个许可仅限内部研发</b>：见任务 3 红框——将来对外发布要筛掉。</li>
+<li><b>各脚本 wall-clock 未逐一计时</b>：本批只有测试套件（10.68s）、Isaac 步数/频率、E2 的 SimulationApp 启动 ~10s 是实测；其余耗时暂无实测，不编。</li>
+<li><b>尺寸表 22 条低置信条目</b>待你抽查（172 类中 high 109 / medium 42 / low 22，实测 grep 计数）。</li>
+</ul>
+
+<h2>8 · 下一步路线</h2>
+<div class="tblwrap"><table>
+<tr><th>阶段</th><th>做什么</th><th>关键决策点 → 建议方案</th><th>前置 / 等谁拍板</th></tr>
+<tr><td>lab 仓推送</td><td>把 hyx（含上游颜色改动）推上 LV-Robotics-Lab</td><td>直接 push hyx 还是先 rebase main → 建议先 fetch 看 main 有无移动再定，无冲突直接 push</td><td>等你拿到写权限</td></tr>
+<tr><td>Isaac 验证放量</td><td>用任务 6 harness 批量跑视图内 72 个 model</td><td>全量还是分批 → 建议先 YCB 系 ~10 个（几何最可信）试放量，观察 GPU 时长后再全量</td><td>无，可直接执行</td></tr>
+<tr><td>运行时撤销写回</td><td>runtime_revocations 事实回流 verification[]</td><td>新工具还是复用通道 → 建议直接给 writeback_verification 加 revoke 类 check，不另起炉灶</td><td>无，可直接执行</td></tr>
+<tr><td>MuJoCo 后端</td><td>把 BACKENDS 里留位的 mujoco 编译链跑通</td><td>起步规模 → 建议 1 个 YCB 资产冒烟，先证链路再谈覆盖</td><td>你定优先级</td></tr>
+<tr><td>尺寸表复核</td><td>22 条低置信类目尺寸抽查</td><td>抽查方式 → 建议你只看 low 档 22 条（表内已标注 confidence），一条一秒</td><td>等你</td></tr>
+</table></div>
+
+<h2>9 · 收尾：术语与依赖</h2>
+<p class="small"><b>ledger（账本）</b>=每资产一份的 metadata 契约文件；<b>verification digest</b>=验证记录锚定的网格文件指纹，网格一变旧验证自动失效；<b>settle</b>=把资产放到支撑面上跑物理看它停不停得住；<b>convexHull</b>=用凸包近似碰撞体；<b>RigidBodyAPI</b>=USD 里声明「这是个受物理的刚体」的标记；<b>末窗判据</b>=只看最后一小段时间还动不动，容忍前期滚动；<b>hyx</b>=lab 仓的工作分支（本地）；<b>镜像仓</b>=huyuxinn/env-gen-dev，你自己的 GitHub 私仓。上游依赖：RoboTwin（SAPIEN 栈）、Isaac Sim 5.0（isaac-smoke conda env）、YCB/Objaverse/NVIDIA Isaac Props 资产源。局部细节见各目录 README 与 v3 成果页。</p>
+
+</div>
+
+<!-- ==================== 样例审查 ==================== -->
+<div class="pane" id="p-review">
+<h2>10 · 产出样例（本批全部 69 条账本变更，非抽样）</h2>
+<p class="small">本批体量允许<b>全量展示</b>：40 条重定标（含 4 条失败）、4 条 settle 修复（含 1 条如实剔除）、23 条许可回填、2 条 Isaac 首验。每条来自账本/证据文件原文，逐字未改写。</p>
+<div class="filters"><span class="lbl">任务</span>
+  <button data-f="task" data-v="all" aria-pressed="true">全部</button>
+  <button data-f="task" data-v="rescale" aria-pressed="false">重定标</button>
+  <button data-f="task" data-v="settle" aria-pressed="false">settle 修复</button>
+  <button data-f="task" data-v="license" aria-pressed="false">许可回填</button>
+  <button data-f="task" data-v="isaac" aria-pressed="false">Isaac 首验</button>
+</div>
+<div class="filters"><span class="lbl">状态</span>
+  <button data-f="st" data-v="all" aria-pressed="true">全部</button>
+  <button data-f="st" data-v="pass" aria-pressed="false">pass</button>
+  <button data-f="st" data-v="fail" aria-pressed="false">fail / 剔除</button>
+</div>
+<div class="count" id="rv-count"></div>
+<div id="rv-list"></div>
+<p class="small" id="rv-empty" style="display:none">没有匹配的条目——换个筛选组合。</p>
+</div>
+
+<!-- ==================== 统计与性能 ==================== -->
+<div class="pane" id="p-stats">
+<h2>11 · 数值统计</h2>
+<h3>运行画像</h3>
+<div class="kpis">
+<div class="kpi"><div class="n">40</div><div class="l">重定标 model（36 pass / 4 fail）</div></div>
+<div class="kpi"><div class="n">3 / 4</div><div class="l">settle 修复复活（1 如实剔除）</div></div>
+<div class="kpi"><div class="n">23 → 0</div><div class="l">许可 unknown（片段统计实测）</div></div>
+<div class="kpi"><div class="n">0 → 2</div><div class="l">isaacsim 验证记录</div></div>
+<div class="kpi"><div class="n">268</div><div class="l">测试全绿（10.68s 实测）</div></div>
+<div class="kpi"><div class="n">64 / 72</div><div class="l">视图片段资产 / model 数</div></div>
+<div class="kpi"><div class="n">3 + 3</div><div class="l">hyx commit + 镜像 commit（已推送）</div></div>
+</div>
+<h3>构成画像</h3>
+<div class="tblwrap"><table>
+<tr><th>维度</th><th>分布（计数 · 占比）</th></tr>
+<tr><td>重定标按裁决档</td><td>真实尺寸 category:&lt;m&gt; <b>28</b>（70%）· 压限 capped:0.42 <b>12</b>（30%）</td></tr>
+<tr><td>重定标按结局</td><td>一次 pass <b>36</b> · fail→修复复活 <b>3</b> · fail→剔除 <b>1</b></td></tr>
+<tr><td>许可按类型</td><td>NVIDIA Isaac 附加条款（spdx null + wording）<b>22</b>（96%）· CC-BY-SA-4.0 <b>1</b></td></tr>
+<tr><td>settle 修复后 z_policy</td><td>origin_on_table <b>2</b> · center_on_table <b>1</b>（均按实测静止原点高度重定）</td></tr>
+<tr><td>Isaac 首验来源</td><td>YCB 证据定标资产 <b>2/2</b>（can + box，几何最可信的一批先行）</td></tr>
+</table></div>
+<p class="small">尺寸裁决的类目级证据（生产函数实跑）：sofa→refuse（典型 2.0m）、television→capped:0.42（典型 0.6m）、basket→category:0.4、hanger→category:0.42。</p>
+
+<h2>12 · 性能与规模</h2>
+<div class="tblwrap"><table>
+<tr><th>环节</th><th>实测参数 / 耗时</th></tr>
+<tr><td>SAPIEN settle（重定标复检）</td><td>600 步 @250Hz，判据 tilt&lt;10° 且 xy 漂移&lt;0.05m</td></tr>
+<tr><td>SAPIEN settle 修复（末窗判据）</td><td>1500 步沉降 + 末 100 步窗口 &lt;2mm @250Hz，×最多 5 姿态</td></tr>
+<tr><td>Isaac settle</td><td>300 步 @120Hz（dt=1/120s）；SimulationApp 无头启动 ~10s（E2 实测）；复跑数字逐位一致（确定性）</td></tr>
+<tr><td>测试套件（1_asset_reuse）</td><td>268 条 10.68s</td></tr>
+<tr><td>各任务脚本 wall-clock</td><td>暂无实测（本批未逐一计时，不编数）</td></tr>
+</table></div>
+</div>
+
+<script>
+const DATA = [{"task": "rescale", "asset": "315_crate", "model": 0, "st": "pass", "category": "crate", "mode": "capped:0.42", "scale": 0.6983, "bbox": [0.42, 0.280559, 0.118716], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "316_duck", "model": 0, "st": "pass", "category": "duck", "mode": "category:0.12", "scale": 0.0725, "bbox": [0.12, 0.111706, 0.083578], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "317_tissuebox", "model": 0, "st": "pass", "category": "tissuebox", "mode": "category:0.24", "scale": 0.0077, "bbox": [0.24, 0.206514, 0.120204], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "318_scissors", "model": 0, "st": "pass", "category": "scissors", "mode": "category:0.2", "scale": 1.0083, "bbox": [0.088676, 0.015858, 0.2], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "319_snowman", "model": 0, "st": "pass", "category": "snowman", "mode": "category:0.3", "scale": 0.1136, "bbox": [0.248212, 0.3, 0.126995], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "320_teddy_bear", "model": 1, "st": "pass", "category": "teddy_bear", "mode": "category:0.3", "scale": 0.0025, "bbox": [0.130502, 0.255406, 0.3], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "321_dustbin", "model": 0, "st": "pass", "category": "dustbin", "mode": "capped:0.42", "scale": 0.02, "bbox": [0.248386, 0.42, 0.282731], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "322_raccoon", "model": 0, "st": "pass", "category": "raccoon", "mode": "category:0.3", "scale": 0.9838, "bbox": [0.3, 0.202674, 0.288523], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "324_knife", "model": 0, "st": "pass", "category": "knife", "mode": "category:0.3", "scale": 1.3839, "bbox": [0.3, 0.015616, 0.036778], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "325_hubcap", "model": 0, "st": "pass", "category": "hubcap", "mode": "category:0.4", "scale": 0.9946, "bbox": [0.4, 0.043618, 0.399984], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "327_sphere", "model": 0, "st": "pass", "category": "sphere", "mode": "category:0.1", "scale": 0.6656, "bbox": [0.099135, 0.098185, 0.1], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "328_fusebox", "model": 0, "st": "pass", "category": "fusebox", "mode": "category:0.35", "scale": 0.0146, "bbox": [0.315199, 0.35, 0.329123], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "329_tripod", "model": 0, "st": "pass", "category": "tripod", "mode": "capped:0.42", "scale": 0.0079, "bbox": [0.126784, 0.42, 0.388933], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "330_ball", "model": 0, "st": "pass", "category": "ball", "mode": "category:0.22", "scale": 1.704, "bbox": [0.22, 0.22, 0.22], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "331_vinyl", "model": 0, "st": "pass", "category": "vinyl", "mode": "category:0.31", "scale": 0.8595, "bbox": [0.31, 0.307741, 0.008824], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "333_cherry", "model": 0, "st": "fail", "category": "cherry", "mode": "category:0.025", "scale": 0.0772, "bbox": [0.019974, 0.025, 0.023398], "settle": "fail", "note": "后经任务4修复复活"}, {"task": "rescale", "asset": "334_exit", "model": 0, "st": "pass", "category": "exit", "mode": "category:0.35", "scale": 1.1357, "bbox": [0.35, 0.05048, 0.21346], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "335_gasoline", "model": 0, "st": "pass", "category": "gasoline", "mode": "category:0.35", "scale": 0.1003, "bbox": [0.292358, 0.35, 0.19011], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "337_caution", "model": 0, "st": "pass", "category": "caution", "mode": "capped:0.42", "scale": 0.5112, "bbox": [0.274927, 0.240137, 0.42], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "338_tank", "model": 0, "st": "pass", "category": "tank", "mode": "category:0.35", "scale": 0.1967, "bbox": [0.21511, 0.193599, 0.35], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "339_panel", "model": 0, "st": "pass", "category": "panel", "mode": "capped:0.42", "scale": 0.87, "bbox": [0.289669, 0.42, 0.038674], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "340_skull", "model": 0, "st": "pass", "category": "skull", "mode": "category:0.2", "scale": 0.8714, "bbox": [0.135701, 0.146059, 0.2], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "341_tool", "model": 0, "st": "fail", "category": "tool", "mode": "category:0.25", "scale": 0.322, "bbox": [0.25, 0.042753, 0.043161], "settle": "fail", "note": "后经任务4修复复活"}, {"task": "rescale", "asset": "343_ceiling", "model": 0, "st": "pass", "category": "ceiling", "mode": "capped:0.42", "scale": 0.0009, "bbox": [0.419866, 0.194154, 0.42], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "345_alarm", "model": 0, "st": "fail", "category": "alarm", "mode": "category:0.15", "scale": 1.5031, "bbox": [0.15, 0.15, 0.068894], "settle": "fail", "note": "后经任务4修复复活"}, {"task": "rescale", "asset": "346_taxi", "model": 0, "st": "pass", "category": "taxi", "mode": "category:0.3", "scale": 0.375, "bbox": [0.00075, 0.3, 0.3], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "347_light", "model": 0, "st": "pass", "category": "light", "mode": "category:0.35", "scale": 0.0562, "bbox": [0.054714, 0.035492, 0.35], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "349_airconditioner", "model": 0, "st": "pass", "category": "airconditioner", "mode": "capped:0.42", "scale": 0.0999, "bbox": [0.360203, 0.42, 0.198328], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "350_umbrella", "model": 0, "st": "pass", "category": "umbrella", "mode": "capped:0.42", "scale": 0.1634, "bbox": [0.387796, 0.358197, 0.42], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "351_grid", "model": 0, "st": "pass", "category": "grid", "mode": "category:0.4", "scale": 0.0036, "bbox": [0.309091, 0.4, 0.018182], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "352_handicap", "model": 0, "st": "pass", "category": "handicap", "mode": "category:0.4", "scale": 0.1999, "bbox": [0.4, 0.399596, 0.399452], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "354_stone", "model": 0, "st": "pass", "category": "stone", "mode": "category:0.15", "scale": 0.1428, "bbox": [0.149158, 0.15, 0.07142], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "355_television", "model": 0, "st": "pass", "category": "television", "mode": "capped:0.42", "scale": 0.5741, "bbox": [0.234703, 0.281565, 0.42], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "356_ahead", "model": 0, "st": "fail", "category": "ahead", "mode": "capped:0.42", "scale": 0.2503, "bbox": [0.175512, 0.224307, 0.42], "settle": "fail", "note": "后经任务4重试仍 fail，剔除"}, {"task": "rescale", "asset": "357_racks", "model": 0, "st": "pass", "category": "racks", "mode": "category:0.4", "scale": 0.0023, "bbox": [0.289979, 0.4, 0.091897], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "358_leaves", "model": 0, "st": "pass", "category": "leaves", "mode": "category:0.25", "scale": 1.4278, "bbox": [0.25, 0.02863, 0.115205], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "360_merge", "model": 0, "st": "pass", "category": "merge", "mode": "capped:0.42", "scale": 0.5701, "bbox": [0.00114, 0.42, 0.42], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "361_leaf", "model": 0, "st": "pass", "category": "leaf", "mode": "category:0.15", "scale": 0.8567, "bbox": [0.15, 0.017178, 0.069123], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "364_hanger", "model": 0, "st": "pass", "category": "hanger", "mode": "category:0.42", "scale": 0.0096, "bbox": [0.42, 0.187417, 0.010559], "settle": "pass", "note": ""}, {"task": "rescale", "asset": "365_tv", "model": 0, "st": "pass", "category": "tv", "mode": "capped:0.42", "scale": 0.0543, "bbox": [0.272606, 0.42, 0.175155], "settle": "pass", "note": ""}, {"task": "settle", "asset": "333_cherry", "model": 0, "st": "pass", "category": "cherry", "pose_id": "measured_rest", "z_policy": "origin_on_table"}, {"task": "settle", "asset": "341_tool", "model": 0, "st": "pass", "category": "tool", "pose_id": "measured_rest", "z_policy": "origin_on_table"}, {"task": "settle", "asset": "345_alarm", "model": 0, "st": "pass", "category": "alarm", "pose_id": "measured_rest", "z_policy": "center_on_table"}, {"task": "settle", "asset": "356_ahead", "model": 0, "st": "fail", "category": "ahead", "pose_id": "upright", "z_policy": "origin_on_table"}, {"task": "license", "asset": "325_hubcap", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "327_sphere", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "330_ball", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "334_exit", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "336_sleigh", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "337_caution", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "339_panel", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "340_skull", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "341_tool", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "342_workbench", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "345_alarm", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "346_taxi", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "347_light", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "348_omniverse", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "349_airconditioner", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "350_umbrella", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "351_grid", "model": 0, "st": "pass", "spdx": "CC-BY-SA-4.0", "note": "CC-BY-SA 4.0 (Objaverse per-object machine-readable license: by-sa); owner: Fence grid gate. ShareAlike: deriv"}, {"task": "license", "asset": "353_shelf", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "354_stone", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "356_ahead", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "358_leaves", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "360_merge", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "license", "asset": "361_leaf", "model": 0, "st": "pass", "spdx": null, "note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (Lice"}, {"task": "isaac", "asset": "302_can", "model": 3, "st": "pass", "backend": "isaacsim", "check": "settle", "digest": "83b4b34cdbe5", "win": "5.24e-6", "tilt": "0.154", "report_path": "results/isaac_settle_out/can/settle_report.json"}, {"task": "isaac", "asset": "303_box", "model": 0, "st": "pass", "backend": "isaacsim", "check": "settle", "digest": "281fcdf6e24e", "win": "1.26e-7", "tilt": "0.794", "report_path": "results/isaac_settle_out/box/settle_report.json"}];
+(function(){
+  // 顶层 tab
+  const tabs = document.querySelectorAll('.tabs button');
+  tabs.forEach(b => b.addEventListener('click', () => {
+    tabs.forEach(x => x.setAttribute('aria-selected', x===b ? 'true' : 'false'));
+    document.querySelectorAll('.pane').forEach(p =>
+      p.classList.toggle('active', p.id === b.dataset.pane));
+  }));
+  // 样例筛选
+  const state = {task:'all', st:'all'};
+  const list = document.getElementById('rv-list');
+  const cnt = document.getElementById('rv-count');
+  const empty = document.getElementById('rv-empty');
+  const TASKN = {rescale:'重定标', settle:'settle 修复', license:'许可回填', isaac:'Isaac 首验'};
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+  function card(it){
+    const ok = it.st === 'pass';
+    let body = '';
+    if (it.task==='rescale') body =
+      `<div class="meta">类目 ${esc(it.category)} · 裁决 <code>${esc(it.mode)}</code> · scale ${it.scale} · bbox [${it.bbox.map(v=>v.toFixed(3)).join(', ')}] m</div>`+
+      `<div class="why">重定标后 SAPIEN settle 复检：<b>${it.settle}</b>${it.note?' —— '+esc(it.note):''}</div>`;
+    if (it.task==='settle') body =
+      `<div class="meta">类目 ${esc(it.category)} · 修复后默认姿态 <code>${esc(it.pose_id)}</code> · z_policy <code>${esc(it.z_policy)}</code></div>`+
+      `<div class="why">${ok?'多起始姿态重试命中静止姿态，末窗 100 步位移 &lt;2mm':'5 种起始姿态末窗位移均 &gt;2mm——保持剔除（诚实失败）'}</div>`;
+    if (it.task==='license') body =
+      `<div class="meta">spdx: <code>${it.spdx===null?'null（无对应码，如实留空）':esc(it.spdx)}</code></div>`+
+      `<details><summary>条款要点原文</summary><pre>${esc(it.note)}</pre></details>`;
+    if (it.task==='isaac') body =
+      `<div class="meta">check <code>(${esc(it.backend)}, ${esc(it.check)})</code> · digest <code>${esc(it.digest)}…</code></div>`+
+      `<div class="why">末窗位移 ${it.win} m · 倾角 ${it.tilt}° · 证据 <code>${esc(it.report_path)}</code></div>`;
+    return `<div class="card ${ok?'ok':'bad'}"><h4>${esc(it.asset)} m${it.model}`+
+      `<span class="tag">${TASKN[it.task]}</span>`+
+      `<span class="badge ${ok?'b-pass':'b-stop'}" style="float:right">${ok?'pass':'fail'}</span></h4>${body}</div>`;
+  }
+  function render(){
+    const rows = DATA.filter(it =>
+      (state.task==='all' || it.task===state.task) &&
+      (state.st==='all' || it.st===state.st));
+    list.innerHTML = rows.map(card).join('');
+    cnt.textContent = `当前筛出 ${rows.length} 条 / 共 ${DATA.length} 条`;
+    empty.style.display = rows.length ? 'none' : 'block';
+  }
+  document.querySelectorAll('.filters button').forEach(b =>
+    b.addEventListener('click', () => {
+      state[b.dataset.f] = b.dataset.v;
+      document.querySelectorAll(`.filters button[data-f="${b.dataset.f}"]`).forEach(x =>
+        x.setAttribute('aria-pressed', x===b ? 'true' : 'false'));
+      render();
+    }));
+  render();
+})();
+</script>
+</div></body>
+</html>

@@ -474,3 +474,20 @@ def verify_candidates(
     looked = [r for r in results if r["verdict"] in (MATCH, MISMATCH)]
     outcome = "verified" if accepted else ("rejected" if looked else "unverifiable")
     return {"accepted": accepted, "outcome": outcome, "results": results}
+
+
+def merge_observed_attributes(declared, observed):
+    """合并「人声明的属性」与「VLM 看图观察到的属性」→ (merged, basis)。
+
+    声明优先、观察只填空不覆盖：declared 原顺序在前，observed 中未被声明
+    覆盖的值追加在后。basis 标记来源供账本 attribute_basis 记录：
+    "manifest"（全部来自声明）/ "vlm"（全部来自观察）/ "mixed"（两者都有）/
+    None（两边都空——语义栏保持空，不伪造）。"""
+    declared = [str(x).lower() for x in (declared or []) if x]
+    observed = [str(x).lower() for x in (observed or []) if x]
+    if declared:
+        extra = [x for x in observed if x not in declared]
+        return declared + extra, ("mixed" if extra else "manifest")
+    if observed:
+        return list(dict.fromkeys(observed)), "vlm"
+    return [], None

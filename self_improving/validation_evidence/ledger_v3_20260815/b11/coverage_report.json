@@ -1,0 +1,27 @@
+{
+  "schema": "envgen.scene_coverage.v1",
+  "prompt": "把积木放进篮子里",
+  "seed": 42,
+  "objects": [
+    {
+      "object_id": "block_1",
+      "category": "block",
+      "color": null,
+      "material": null,
+      "status": "covered",
+      "asset_id": "004_fluted-block",
+      "model_id": 0,
+      "score": 103.0
+    },
+    {
+      "object_id": "basket_1",
+      "category": "basket",
+      "color": null,
+      "material": null,
+      "status": "covered",
+      "asset_id": "110_basket",
+      "model_id": 3,
+      "score": 103.0
+    }
+  ]
+}

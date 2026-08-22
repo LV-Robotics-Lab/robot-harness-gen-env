@@ -1,0 +1,170 @@
+{
+  "schema_version": "robotwin.scene_runtime_evidence.v2",
+  "scene_id": "place_a_dustbin_on_the_table_f70e98a43e",
+  "resolved_scene_sha256": "580735c18609c93a7a9ac05adb4ee65d1370b0f622e640e12bc0bca38dc88af1",
+  "seed": 42,
+  "status": "pass",
+  "robot_initial_collision_count": 0,
+  "robot_initial_collision_pairs": [],
+  "robot_final_collision_count": 0,
+  "robot_final_collision_pairs": [],
+  "objects": {
+    "dustbin_1": {
+      "asset_id": "321_dustbin",
+      "entity_id": 66,
+      "entity_ids": [
+        66
+      ],
+      "initial_pose": {
+        "position_m": [
+          0.03484531119465828,
+          0.08333591371774673,
+          0.7409999966621399
+        ],
+        "orientation_wxyz": [
+          0.5207930207252502,
+          0.5207930207252502,
+          0.4783039093017578,
+          0.4783039093017578
+        ],
+        "qpos": []
+      },
+      "final_pose": {
+        "position_m": [
+          0.03546727076172829,
+          0.08325120061635971,
+          0.7325178384780884
+        ],
+        "orientation_wxyz": [
+          0.5620469450950623,
+          0.4764820337295532,
+          0.4424552619457245,
+          0.5111767649650574
+        ],
+        "qpos": []
+      },
+      "translation_drift_m": 0.008505352283820383,
+      "rotation_drift_deg": 8.901258386642645,
+      "resolved_translation_error_m": 0.008505355609704116,
+      "loader_translation_offset_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "resolved_rotation_error_deg": 8.90125851560112,
+      "late_window_translation_m": 0.00047556103416345846,
+      "late_window_rotation_deg": 0.5860579519067296,
+      "still_moving": true,
+      "visible_pixels": 12295,
+      "penetration_count": 0,
+      "support_contact": true,
+      "support_contact_fraction": 1.0,
+      "support_contact_samples": 120,
+      "unexpected_contact_fraction": 0.0,
+      "unexpected_contact_targets": [],
+      "support_mode": "on_table_contact",
+      "support_target": "table",
+      "expected_support_target": "table",
+      "support_footprint_margin_m": null,
+      "inside_contained": null,
+      "dropped": false,
+      "articulation_target_qpos": [],
+      "articulation_final_qpos": [],
+      "articulation_max_abs_error": null
+    }
+  },
+  "relations": {},
+  "initial_contact_records": [],
+  "final_contact_records": [
+    {
+      "bodies": [
+        "dustbin_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 4,
+      "active_point_count": 4,
+      "min_separation_m": -1.0339979894524731e-07,
+      "max_impulse_norm": 0.0003913789292992379,
+      "active": true
+    }
+  ],
+  "images": {
+    "head": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/runtime/preview_head.png",
+    "world_left": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/runtime/preview_world_left.png",
+    "world_right": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/runtime/preview_world_right.png",
+    "segmentation": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/runtime/preview_segmentation.png",
+    "observer_start": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/runtime/observer_start.png",
+    "observer_mid": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/runtime/observer_mid.png",
+    "observer_end": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/runtime/observer_end.png"
+  },
+  "video": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/runtime/observer_runtime.mp4",
+  "video_frame_count": 60,
+  "unique_video_frame_count": 60,
+  "fps": 12,
+  "simulation_step_count": 900,
+  "video_sample_step_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    899
+  ],
+  "precheck_steps": 0,
+  "contact_window_steps": 120
+}

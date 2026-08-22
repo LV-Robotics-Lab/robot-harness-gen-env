@@ -33,7 +33,11 @@ from agenticsim.openxsim.ir import (  # noqa: E402
     TaskSpec,
 )
 from lib import ledger  # noqa: E402
-from usd_enrich import _parse_ledger_asset_id, enrich_from_ledgers  # noqa: E402
+from usd_enrich import (  # noqa: E402
+    _parse_ledger_asset_id,
+    enrich_from_ledgers,
+    enrich_mujoco_from_ledgers,
+)
 
 
 def _pkg(asset_ids):
@@ -110,7 +114,10 @@ def _isaac_rep(uri):
         "role": "visual_and_collision",
         "sha256": "b" * 64,
         "size_bytes": 2048,
-        "metadata": {"note": "pre-existing"},
+        # v3: the fixture declares its USD baked -- neutralize-on-enrich now
+        # REQUIRES this declaration (E2: undeclared _source USDs are unbaked
+        # and neutralizing them compiled a cracker box 2.8527x too large)
+        "metadata": {"note": "pre-existing", "geometry_state": {"scale_baked": True}},
     }
 
 
@@ -234,6 +241,25 @@ def test_enrich_from_ledgers_classifies_and_registers(tmp_path):
     assert obj_by_asset["external_999_missing_m0"].scale == (2.0, 2.0, 2.0)
 
 
+def test_enrich_without_scale_baked_keeps_object_scale(tmp_path):
+    """An isaacsim rep that does NOT declare geometry_state.scale_baked must
+    keep the object's mesh_scale: E2 (2026-08-15) measured the unconditional
+    neutralize compiling a scale=0.3505 asset 2.8527x (=1/scale) too large in
+    Isaac, because the whole external pool's reps point at unbaked _source
+    originals."""
+    usd = tmp_path / "071_can.usd"
+    usd.write_text("#usda 1.0")
+    rep = _isaac_rep(str(usd))
+    rep["metadata"] = {"note": "pre-existing"}  # no geometry_state
+    root = tmp_path / "ledgers"
+    _write_ledger(root, "071_can", "robotwin", _model_entry(0, [_sapien_rep(), rep]))
+    pkg = _pkg(["robotwin_071_can_m0"])
+    enriched, report = enrich_from_ledgers(pkg, [str(root)])
+    assert report["enriched"] == ["robotwin_071_can_m0"]
+    obj = {o.asset_id: o for o in enriched.env.objects}["robotwin_071_can_m0"]
+    assert obj.scale == (2.0, 2.0, 2.0)
+
+
 def test_enrich_from_ledgers_no_verification_does_not_set_verified_flag(tmp_path):
     upstream_dir = tmp_path / "upstream_ledgers"
     usd_path = tmp_path / "071_can.usd"
@@ -300,3 +326,41 @@ def test_enrich_from_ledgers_ledger_dir_order_first_match_wins(tmp_path):
     assert report["enriched"] == ["robotwin_071_can_m0"]
     rep = enriched.assets[0].representation_for("isaacsim", ("usd",))
     assert rep.uri == str(usd_upstream)
+
+
+def test_enrich_mujoco_from_ledgers_registers_obj(tmp_path):
+    """Mirror of the isaac classify-and-register test for the mujoco sibling
+    (probe-validated 2026-08-22: a ledger-registered OBJ compiled with 0
+    blockers and ran a real 500-step rollout)."""
+    pool_dir = tmp_path / "asset_library"
+
+    obj_path = tmp_path / "base0.obj"
+    obj_path.write_text("v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n")
+    mujoco_rep = {
+        "backend": "mujoco",
+        "role": "collision",
+        "format": "obj",
+        "uri": str(obj_path),
+        "sha256": "0" * 64,
+        "size_bytes": obj_path.stat().st_size,
+    }
+    model_a = _model_entry(0, [_sapien_rep(), mujoco_rep])
+    _write_ledger(pool_dir, "304_bottle", "external", model_a)
+
+    # only a sapien rep -> skipped_no_mujoco_rep
+    model_b = _model_entry(0, [_sapien_rep()])
+    _write_ledger(pool_dir, "302_can", "external", model_b)
+
+    pkg = _pkg(["external_304_bottle_m0", "external_302_can_m0", "external_999_missing_m0"])
+    enriched, report = enrich_mujoco_from_ledgers(pkg, [str(pool_dir)])
+
+    assert report["enriched"] == ["external_304_bottle_m0"]
+    assert report["skipped_no_mujoco_rep"] == ["external_302_can_m0"]
+    assert report["skipped_no_ledger"] == ["external_999_missing_m0"]
+    assert report["warnings"] == []
+
+    by_id = {a.asset_id: a for a in enriched.assets}
+    rep = by_id["external_304_bottle_m0"].representation_for("mujoco", ("obj",))
+    assert rep is not None
+    assert rep.uri == str(obj_path)
+    assert by_id["external_302_can_m0"].representation_for("mujoco", ("obj",)) is None

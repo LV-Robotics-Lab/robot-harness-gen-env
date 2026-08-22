@@ -1,0 +1,211 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_350_umbrella",
+  "category": "umbrella",
+  "kind": "rigid",
+  "profile": "cross_backend",
+  "semantics": {
+    "aliases": [
+      "umbrella"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "results/sweep_out/C_umbrella/acquire/identity_post_render_350_umbrella_m0.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.387796,
+          0.358197,
+          0.42
+        ],
+        "size_resolution": {
+          "mode": "capped:0.42",
+          "actual_max_dim_m": 2.569730035557936,
+          "scale": 0.16344129312743555,
+          "reference_max_dim_m": 0.42,
+          "reference_assets": [],
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/nvidia/350_umbrella/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "414b3578260a9e0d1b638c4aa5d2ef12b5f8b2a6bdf1b0cb7a641b73cedb1ea1",
+          "size_bytes": 3930084,
+          "metadata": {
+            "derived_from": "patio_umbrella_01.usd",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/nvidia/350_umbrella/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "45f68ae3ad43c9a5d3b8425e14b25c43d7b9868606878530ef60b3620666bcc6",
+          "size_bytes": 3930084,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "data/asset_library/_source/acq_350_umbrella/patio_umbrella_01.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "a97a6f8f5ff75057204a318f7856067d128e305cb04ff67e39e802dc9a5e6890",
+          "size_bytes": 14889,
+          "metadata": {
+            "origin_prefix": "acq_350_umbrella"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "data/asset_library/nvidia/350_umbrella/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "535fdaa995011680c533310cfd7430916b04cc8987a72f2eeba413f3a9963cc5",
+          "size_bytes": 10702,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "acq_350_umbrella",
+        "file": "patio_umbrella_01.usd",
+        "license": {
+          "spdx": "LicenseRef-NVIDIA-Isaac-Sim-Additional-Software-and-Materials",
+          "status": "declared",
+          "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4)",
+          "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "checked_date": "2026-08-16",
+          "checked_by": "carry-forward of 2026-08-09 owner-directed audit (same source library, NVIDIA Isaac Assets 5.1 Props class)"
+        },
+        "retrieved_at": "2026-08-13",
+        "source_manifest_path": "data/asset_library/_source/acq_350_umbrella/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-13T22:18:56",
+          "verified_digest": "4a3004efbbea637b6ba2ae530fcc82cf951e0dab6e7e99564092ab8f2e3cfe92",
+          "report_path": "results/sweep_out/C_umbrella/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:24",
+          "verified_digest": "e6e41abf88977533c63e507e5d0eb7d8000230dc1266fe10e0abb6b768f9beea"
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "black"
+        ],
+        "color_fractions": {
+          "black": 0.555,
+          "brown": 0.007,
+          "white": 0.0
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "external_ids": {
+    "env_gen": "350_umbrella"
+  }
+}

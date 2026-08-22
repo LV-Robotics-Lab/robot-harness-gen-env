@@ -50,7 +50,7 @@ from runtime_config import ASSET_PIPELINE_ROOT  # noqa: E402
 DEV = ASSET_PIPELINE_ROOT
 
 # air kept under a spawned payload, on top of its measured resting height
-FLOOR_MARGIN = 0.008
+FLOOR_PAD = 0.005
 
 
 def main():
@@ -281,11 +281,21 @@ def main():
                         # grazes geometry here levers the container over
                         # there, so the published floor keeps real air under
                         # the payload.
-                        floor_pub = payload_floor + FLOOR_MARGIN
+                        # One floor serves TWO consumers with opposite
+                        # needs: the solver spawns AT floor+clearance (wants
+                        # it high), the containment check requires the
+                        # settled payload ABOVE it (wants it low -- payloads
+                        # genuinely sink a few mm into lattice gaps; B11 on
+                        # the consolidated stack rested 9 mm under the +8mm
+                        # spawn-margin floor and the check became
+                        # unsatisfiable). Split the roles: floor = payload
+                        # rest - FLOOR_PAD (check-safe); anti-wedging moves
+                        # to support_spawn_clearance_m, set by s9.
+                        floor_pub = payload_floor - FLOOR_PAD
                         if floor_pub > it["floor_z_offset_m"]:
                             it["floor_z_offset_m"] = round(floor_pub, 4)
                             it["dimensions_m"][2] = round(dz_ref - floor_pub - 0.005, 4)
-                            it["floor_basis"] = f"payload rest +{FLOOR_MARGIN}m margin"
+                            it["floor_basis"] = f"payload rest -{FLOOR_PAD}m pad"
                         if it["dimensions_m"][2] < 0.03:
                             sup = row.pop("interior")
                             sup["reason"] = "cavity under 3 cm once floor is honest"

@@ -297,3 +297,107 @@ class VisualProvider:
             "non_object": dropped,
         }
         return out
+
+
+# ---- 本地资产池视觉打分 ------------------------------------------------
+# 2026-08-22 经探针 work/probe_20260822_clip_local_sim 验证后并入：
+# 179 资产、AUC 0.949；同类池内用文本-图像余弦分排序/过滤，
+# 默认门限 0.18（同类召回 91% / 异类误入 17%，标定见探针 README）。
+
+LOCAL_ASSET_CACHE = "data/asset_index/local_asset_clip.npz"
+
+
+def _local_thumb_for(asset_id, active_root):
+    p = Path(active_root) / "results" / "web_thumbs" / f"{asset_id}.png"
+    if p.is_file():
+        return p
+    lib = Path(active_root) / "data" / "asset_library"
+    for c in [lib / asset_id, *lib.glob(f"*/{asset_id}")]:
+        s = c / "snapshots" / "m0_default.png"
+        if s.is_file():
+            return s
+    return None
+
+
+def build_or_load_local_asset_embeddings(
+    asset_ids, active_root, cache_path=None, model_name=DEFAULT_MODEL
+):
+    """本地资产图像嵌入 {asset_id: vec}，按 asset_id 集合+模型指纹缓存。
+    新资产入库改变指纹 → 全量重建（~190 图约半分钟，罕见事件）。
+    无缩略图的资产不入缓存——调用方拿不到分，按 None 处理不误杀。"""
+    import numpy as np
+
+    ids = sorted({str(a) for a in asset_ids if a})
+    fp = hashlib.sha256((model_name + "|" + "|".join(ids)).encode()).hexdigest()[:16]
+    cache = Path(cache_path or (Path(active_root) / LOCAL_ASSET_CACHE))
+    if cache.is_file():
+        try:
+            z = np.load(cache, allow_pickle=False)
+            if z["fingerprint"] == fp:
+                return dict(zip(z["ids"].tolist(), z["vecs"]))
+        except Exception:
+            pass
+    import torch
+    from PIL import Image
+    from transformers import CLIPModel, CLIPProcessor
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model = (
+        CLIPModel.from_pretrained(model_name, local_files_only=True).to(device).eval()
+    )
+    proc = CLIPProcessor.from_pretrained(model_name, local_files_only=True)
+    keep, vecs = [], []
+    for aid in ids:
+        t = _local_thumb_for(aid, active_root)
+        if t is None:
+            continue
+        with torch.no_grad():
+            inp = proc(images=Image.open(t).convert("RGB"), return_tensors="pt").to(
+                device
+            )
+            v = torch.nn.functional.normalize(model.get_image_features(**inp), dim=-1)[
+                0
+            ]
+        keep.append(aid)
+        vecs.append(v.cpu().numpy())
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    import numpy as _np
+
+    _np.savez(
+        cache,
+        fingerprint=fp,
+        ids=_np.array(keep),
+        vecs=_np.stack(vecs) if vecs else _np.zeros((0, 768), dtype="float32"),
+    )
+    return dict(zip(keep, vecs))
+
+
+def local_asset_scores(
+    query_text, asset_ids, active_root, model_name=DEFAULT_MODEL, cache_ids=None
+):
+    """{asset_id: CLIP 文本-图像余弦分}；缺缩略图的资产不在返回里。
+    cache_ids（如全 catalog 的 asset_id）用于建缓存——按全库指纹建一次、
+    跨类别复用；不传则退化为按本次 asset_ids 建（会随查询类别反复重建）。"""
+    import numpy as np
+    import torch
+    from transformers import CLIPModel, CLIPProcessor
+
+    embeds = build_or_load_local_asset_embeddings(
+        cache_ids or asset_ids, active_root, model_name=model_name
+    )
+    embeds = {a: v for a, v in embeds.items() if a in set(map(str, asset_ids))}
+    if not embeds:
+        return {}
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model = (
+        CLIPModel.from_pretrained(model_name, local_files_only=True).to(device).eval()
+    )
+    proc = CLIPProcessor.from_pretrained(model_name, local_files_only=True)
+    with torch.no_grad():
+        inp = proc(text=[query_text], return_tensors="pt", padding=True).to(device)
+        tv = (
+            torch.nn.functional.normalize(model.get_text_features(**inp), dim=-1)[0]
+            .cpu()
+            .numpy()
+        )
+    return {aid: float(np.dot(v, tv)) for aid, v in embeds.items()}

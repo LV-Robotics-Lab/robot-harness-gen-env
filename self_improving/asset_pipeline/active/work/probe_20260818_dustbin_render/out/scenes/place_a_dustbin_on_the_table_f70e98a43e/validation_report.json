@@ -1,0 +1,113 @@
+{
+  "schema_version": "robotwin.scene_validation.v1",
+  "scene_id": "place_a_dustbin_on_the_table_f70e98a43e",
+  "resolved_scene_sha256": "580735c18609c93a7a9ac05adb4ee65d1370b0f622e640e12bc0bca38dc88af1",
+  "status": "incomplete",
+  "fail_count": 0,
+  "not_run_count": 1,
+  "checks": [
+    {
+      "name": "workspace_bounds:dustbin_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.11655420224107504,
+          0.18624482424107502,
+          -0.05241104622284011,
+          0.21908287022284012
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:dustbin_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.741,
+        "table_height_m": 0.741,
+        "support_relation": "on_table"
+      }
+    },
+    {
+      "name": "real_asset_files:dustbin_1",
+      "status": "not_applicable",
+      "evidence": {
+        "paths": [
+          "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/objaverse/321_dustbin/collision/base0.glb",
+          "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/objaverse/321_dustbin/model_data0.json",
+          "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/objaverse/321_dustbin/visual/base0.glb"
+        ],
+        "exists": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "relation:on_table:dustbin_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "resolved_only_roundtrip",
+      "status": "pass",
+      "evidence": {
+        "before": "580735c18609c93a7a9ac05adb4ee65d1370b0f622e640e12bc0bca38dc88af1",
+        "after": "580735c18609c93a7a9ac05adb4ee65d1370b0f622e640e12bc0bca38dc88af1"
+      }
+    },
+    {
+      "name": "package_manifest",
+      "status": "pass",
+      "evidence": {
+        "schema_version": "robotwin.generated_scene_package_verification.v1",
+        "status": "pass",
+        "checks": [
+          {
+            "path": "request.txt",
+            "exists": true,
+            "expected_sha256": "9a77bb3c1536318058e0098245ab3f0d397b265f80d01cce4d677757c9061135",
+            "actual_sha256": "9a77bb3c1536318058e0098245ab3f0d397b265f80d01cce4d677757c9061135",
+            "pass": true
+          },
+          {
+            "path": "scene_spec.json",
+            "exists": true,
+            "expected_sha256": "d75eeddc56a1d749e2b39f6bcacba9a4d1dd73996f6dbca8cfb80675d328fd50",
+            "actual_sha256": "d75eeddc56a1d749e2b39f6bcacba9a4d1dd73996f6dbca8cfb80675d328fd50",
+            "pass": true
+          },
+          {
+            "path": "resolved_scene.json",
+            "exists": true,
+            "expected_sha256": "bfbb4a6689e1dcd8aec0bf769bb41445456554367b8099494b55fffcefed1cd9",
+            "actual_sha256": "bfbb4a6689e1dcd8aec0bf769bb41445456554367b8099494b55fffcefed1cd9",
+            "pass": true
+          },
+          {
+            "path": "generated_scene.py",
+            "exists": true,
+            "expected_sha256": "a028d2172ed7de3cb72f1edb35b4aa1f40a560826cf78e2f86b33a4768a17a4a",
+            "actual_sha256": "a028d2172ed7de3cb72f1edb35b4aa1f40a560826cf78e2f86b33a4768a17a4a",
+            "pass": true
+          },
+          {
+            "path": "resolved_scene.json#canonical_digest",
+            "expected_sha256": "580735c18609c93a7a9ac05adb4ee65d1370b0f622e640e12bc0bca38dc88af1",
+            "actual_sha256": "580735c18609c93a7a9ac05adb4ee65d1370b0f622e640e12bc0bca38dc88af1",
+            "pass": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "runtime_evidence",
+      "status": "not_run",
+      "evidence": {
+        "required": false
+      }
+    }
+  ]
+}

@@ -21,6 +21,7 @@ _sys.path.insert(0, str(_P(__file__).resolve().parents[1] / "ledger"))
 import gen_fragment as gen_fragment_mod  # noqa: E402
 
 from lib import a1_providers as a1  # noqa: E402
+from lib import ledger  # noqa: E402
 from lib import a2_selection as a2  # noqa: E402
 from runtime_config import ASSET_CATALOG, ISAAC_PYTHON, SAPIEN_PYTHON  # noqa: E402
 
@@ -43,7 +44,9 @@ def resolve_catalog_path(dev_root, catalog_cfg, fallback):
 
 
 def check_imported(library_dir, asset, model):
-    d = Path(library_dir) / asset
+    d = ledger.asset_dir(library_dir, asset)
+    if d is None:
+        return False
     return (d / f"model_data{model}.json").is_file() and (
         d / "visual" / f"base{model}.glb"
     ).is_file()
@@ -129,8 +132,18 @@ def _attempt_import(
         if i == 0 and preallocated is not None:
             asset, model = preallocated
         else:
+            # 按候选来源声明 profile（web mesh 只能 sapien_only，Kit/USD 走
+            # cross_backend，与 materialize 的 is_web 判定同口径）——同类但
+            # profile 冲突时 allocate 会另开资产位而不是撞防漂移门。
             asset, model = a2.allocate_asset(
-                category, paths["library"], paths["manifest"]
+                category,
+                paths["library"],
+                paths["manifest"],
+                profile=(
+                    "sapien_only"
+                    if candidate.format.lower() in a2.WEB_FORMATS
+                    else "cross_backend"
+                ),
             )
         group = a2.build_manifest_group(candidate, asset, model, entry)
         out = Path(paths["out"])
@@ -273,7 +286,9 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             "tiers_consulted": [],
             "provider_errors": [],
         }
-        asset, model = a2.allocate_asset(category, paths["library"], paths["manifest"])
+        asset, model = a2.allocate_asset(
+            category, paths["library"], paths["manifest"], profile="cross_backend"
+        )
         if model > 0:
             rec["status"] = "reused_local"
             rec["local_reuse"] = {"asset_id": asset, "reason": a2.ALREADY}
@@ -313,7 +328,9 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         from lib import a3_webfetch as a3w
         from agenticsim.openxsim.assets import AssetCandidate
 
-        asset, model = a2.allocate_asset(category, paths["library"], paths["manifest"])
+        asset, model = a2.allocate_asset(
+            category, paths["library"], paths["manifest"], profile="sapien_only"
+        )
         if model > 0:
             rec["status"] = "reused_local"
             rec["local_reuse"] = {"asset_id": asset, "reason": a2.ALREADY}
@@ -457,6 +474,9 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
     # and never consult the GitHub tiers that actually have one.
     verify_cfg = globals_cfg.get("identity_gate", {})
     gate_log = {"results": [], "outcome": None, "tier": None}
+    # B3 similar 候选池：VLM 判「类别对、但属性不符」(attribute_veto) 的候选。
+    # exact 全空时按 tier 信任顺序取第一个做兜底引进。
+    similar_pool = []
 
     def _accept(tier_no, viable_cands):
         if not verify_cfg.get("enabled", True):
@@ -478,13 +498,47 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         )
         gate_log["results"].extend({**r, "tier": tier_no} for r in vr["results"])
         gate_log["outcome"], gate_log["tier"] = vr["outcome"], tier_no
+        for r_ in vr["results"]:
+            if r_.get("attribute_veto"):
+                for c in viable_cands:
+                    if c.candidate_id == r_.get("candidate_id"):
+                        similar_pool.append({"tier": tier_no, "cand": c, "verify": r_})
+                        break
         if vr["outcome"] == "verified":
             return [vr["accepted"]]
         if vr["outcome"] == "unverifiable":
             # nothing to look at (web sources ship no thumbnail): proceed on
             # the weaker claim -- the ledger will say requested_by_acquire,
-            # verified=false, so the difference stays visible downstream
-            return viable_cands
+            # verified=false, so the difference stays visible downstream.
+            # v3 tightening: "weaker claim" still requires SOME evidence.
+            # With no picture the file name is the only channel left, so a
+            # candidate whose name shares not one meaningful token with the
+            # category/aliases is rejected here -- SheenWoodLeatherSofa
+            # sailed through this branch as "tvon_the_table" while the VLM
+            # was down (2026-08-15).
+            from lib import a6_verify as a6
+
+            stop = {"the", "a", "an", "on", "in", "of", "and"}
+            want = set()
+            for n in (category, *(entry.get("aliases") or [])):
+                want |= a6._name_words(n)
+            want -= stop
+            named = []
+            for c in viable_cands:
+                seen = a6._name_words(c.name) - stop
+                if want & seen:
+                    named.append(c)
+                else:
+                    gate_log["results"].append(
+                        {
+                            "candidate_id": c.candidate_id,
+                            "name": c.name,
+                            "tier": tier_no,
+                            "verdict": "mismatch",
+                            "name_check": "no_token_overlap_unverifiable",
+                        }
+                    )
+            return named
         return []  # looked, and every one was something else -> next tier
 
     def _walk_once(walk_tiers):
@@ -512,11 +566,43 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             "provider_stats", []
         )
         if res["tier0_hit"] is not None:
+            # B2 属性化复用判定：带约束的请求不再「库里有同类就算完」。
+            # 先对 catalog 做属性核对——全满足才当场复用(exact)；有差距则
+            # 压下这次复用、记作 similar 候补，判 exhausted 让外层循环继续
+            # 向更深 tier 找 exact（blue ball 案例的根修）。
+            cands = _local_candidates(entry, category, paths)
+            top = cands[0] if cands else None
+            if (
+                paths.get("tier0_catalog")
+                and (want_color or want_material)
+                and (top is None or top["unmet"])
+            ):
+                # 带约束且本地无「确认全符」候选（含被视觉门限筛空的情形）：
+                # 压下复用继续外层找 exact；有候选则记 similar 候补。
+                if top is not None:
+                    rec["_local_similar"] = {
+                        "asset": top["asset"],
+                        "unmet": top["unmet"],
+                        "candidates": cands,
+                    }
+                rec["local_reuse_suppressed"] = {
+                    "asset_id": (res["tier0_hit"].metadata or {}).get("asset_id"),
+                    "reason": "attribute_gap" if top is not None else "visual_gate",
+                }
+                rec["status"] = "exhausted"
+                return rec
             rec["status"] = "reused_local"
             rec["local_reuse"] = {
                 "asset_id": res["tier0_hit"].metadata.get("asset_id"),
                 "reason": a2.ALREADY,
             }
+            if top is not None:
+                rec["_match"] = {
+                    "grade": "exact",
+                    "asset": top["asset"],
+                    "unmet": top["unmet"],
+                    "candidates": cands,
+                }
             return rec
         gated = a2.gate_candidates(res["candidates"], globals_cfg)
         viable = [r for r in gated if r["verdict"] == "viable"]
@@ -681,6 +767,62 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
     # acquisition ended "exhausted" while tier 3 (Objaverse) held 59 real
     # hammers it had never been allowed to offer. An exhausted attempt list is
     # a verdict on the CONSULTED tiers, not on the sources below them.
+    def _finish_searched(outr):
+        """B3 similar 兜底：exact 全梯队落空后，先取本地同类（零成本），
+        其次把「类别对、属性不符」的最优外部候选走完整引进链（下载/质检/
+        入库——其真实属性经 A2 回填账本，下次同类请求就能精确判定）。
+        条目级开关 allow_similar（默认开）。"""
+        if outr["status"] in ("imported", "reused_local"):
+            return outr
+        if not entry.get("allow_similar", True):
+            return outr  # 严格模式：不将就，宁可 none
+        if outr.get("_local_similar"):
+            outr["_match"] = {"grade": "similar", **outr.pop("_local_similar")}
+            return outr
+        if not similar_pool:
+            return outr
+        best = similar_pool[0]
+        gated = a2.gate_candidates([best["cand"]], globals_cfg)
+        if gated[0]["verdict"] != "viable":
+            return outr
+        ident = {
+            "basis": "requested_by_acquire",
+            "evidence": outr.get("identity_gate", {}).get("evidence"),
+        }
+        outr["similar_fallback"] = {
+            "candidate_id": best["cand"].candidate_id,
+            "tier": best["tier"],
+            "attribute_check": best["verify"].get("attribute_check"),
+        }
+        outr = _attempt_import(
+            outr,
+            [gated[0]],
+            entry,
+            category,
+            globals_cfg,
+            paths,
+            runner,
+            max_attempts=1,
+            identity=ident,
+        )
+        if outr["status"] == "imported":
+            got = {
+                "color": best["verify"].get("colors") or [],
+                "material": best["verify"].get("materials") or [],
+            }
+            want = {"color": want_color, "material": want_material}
+            outr["_similar_unmet"] = [
+                {
+                    "attr": k,
+                    "want": want.get(k),
+                    "got": got.get(k, []),
+                    "kind": v if v == "unknown" else "mismatch",
+                }
+                for k, v in (best["verify"].get("attribute_check") or {}).items()
+                if v != "ok" and want.get(k)
+            ]
+        return outr
+
     walk_pool = list(tiers)
     while True:
         out_rec = _walk_once(walk_pool)
@@ -692,13 +834,159 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             # aggregate story: candidates existed and every one died
             out_rec["status"] = "exhausted"
         if out_rec["status"] != "exhausted":
-            return out_rec
+            return _finish_searched(out_rec)
         walked = max(out_rec.get("tiers_consulted") or [0])
         deeper = [t for t in walk_pool if t.tier > walked]
         if not deeper:
-            return out_rec
+            return _finish_searched(out_rec)
         out_rec.setdefault("resumed_after_exhaustion", []).append(walked)
         walk_pool = deeper
+
+
+def _visual_scores(entry, category, asset_ids, active_root, cache_ids=None):
+    """CLIP 文本-图像分（best-effort seam，测试可整体替换）。
+    失败一律返回 None → 排序退化为纯属性分，绝不因视觉通道故障拒答。"""
+    try:
+        from lib import a5_visual as a5v
+
+        q = " ".join(
+            [
+                "a photo of a",
+                *(entry.get("colors") or []),
+                *(entry.get("materials") or []),
+                str(category).replace("_", " "),
+            ]
+        )
+        return a5v.local_asset_scores(q, asset_ids, active_root, cache_ids=cache_ids)
+    except Exception:
+        return None
+
+
+def _local_candidates(entry, category, paths):
+    """本地同类候选全量列表（attr 分 + 尽力视觉分 + 门限过滤）。
+    两遍：先 attr-only 拿池子 → 有视觉分再带 min_visual 重排过滤
+    （门限 0.18 来自探针标定，条目级 similar_min_visual 可覆盖）。"""
+    if not paths.get("tier0_catalog"):
+        return None
+    kw = dict(
+        want_colors=entry.get("colors"),
+        want_materials=entry.get("materials"),
+        library_dir=paths.get("library"),
+    )
+    cands = a2.match_local_all(paths["tier0_catalog"], category, **kw)
+    if not cands:
+        return None
+    active_root = Path(paths["library"]).parents[1]
+    try:
+        all_ids = [
+            str(e.get("asset_id"))
+            for e in json.loads(Path(paths["tier0_catalog"]).read_text()).get(
+                "entries", []
+            )
+            if e.get("asset_id")
+        ]
+    except (OSError, ValueError):
+        all_ids = None  # 缓存退化为按本次候选建，功能不受影响
+    vis = _visual_scores(
+        entry,
+        category,
+        [c["asset"]["asset_id"] for c in cands],
+        active_root,
+        cache_ids=all_ids,
+    )
+    if vis:
+        cands = a2.match_local_all(
+            paths["tier0_catalog"],
+            category,
+            **kw,
+            visual_scores=vis,
+            min_visual=float(entry.get("similar_min_visual", 0.18)),
+        )
+    return cands
+
+
+def _library_payload(paths, asset, model=0):
+    """引进成功后的资产 payload（供 match 块返回给调用方复用）。
+    asset_library 按来源分一级，所以两种深度都找。"""
+    if not asset:
+        return None
+    lib = Path(paths["library"])
+    adir = None
+    for c in [lib / asset, *lib.glob(f"*/{asset}")]:
+        if c.is_dir():
+            adir = c
+            break
+    payload = {
+        "asset_id": asset,
+        "model_id": model,
+        "category": None,
+        "available": True,
+        "asset_path": str(adir) if adir else None,
+        "visual_path": None,
+        "known_colors": [],
+        "known_materials": [],
+        "source": "imported",
+        "ledger": None,
+    }
+    if adir:
+        vis = sorted(adir.glob("visual/*.glb")) + sorted(adir.glob("*.glb"))
+        if vis:
+            payload["visual_path"] = str(vis[0])
+        lp = adir / "ledger.json"
+        if lp.is_file():
+            try:
+                led = json.loads(lp.read_text())
+                sem = led.get("semantics", {})
+                payload.update(
+                    category=led.get("category"),
+                    ledger=str(lp),
+                    known_colors=sem.get("colors", []),
+                    known_materials=sem.get("materials", []),
+                )
+            except (OSError, ValueError):
+                pass
+    return payload
+
+
+def _match_block(rec, paths):
+    """B4：把过程结局(status)折算成匹配质量三档(match)，附可复用的资产本体。
+    exact=类别+全部声明属性确认满足；similar=类别对但有差距(mismatch/unverified)；
+    none=类别级无命中。写回 rec['match']。"""
+    if rec.get("_match"):
+        rec["match"] = rec.pop("_match")
+        return rec
+    status = rec.get("status")
+    if status == "imported":
+        sel = rec.get("selected") or {}
+        rec["match"] = {
+            "grade": "similar" if rec.get("similar_fallback") else "exact",
+            "asset": _library_payload(paths, sel.get("asset"), sel.get("model", 0)),
+            "unmet": rec.pop("_similar_unmet", []),
+        }
+    elif status == "reused_local":
+        cands = None
+        if paths.get("tier0_catalog"):
+            cands = a2.match_local_all(
+                paths["tier0_catalog"],
+                (rec.get("query") or {}).get("category"),
+                library_dir=paths.get("library"),
+            )
+        if not cands:
+            payload = {
+                "asset_id": (rec.get("local_reuse") or {}).get("asset_id"),
+                "source": "local_reuse",
+            }
+            rec["match"] = {"grade": "exact", "asset": payload, "unmet": []}
+        else:
+            rec["match"] = {
+                "grade": "exact",
+                "asset": cands[0]["asset"],
+                "unmet": cands[0]["unmet"],
+                "candidates": cands,
+            }
+    else:
+        rec["match"] = {"grade": "none", "asset": None, "unmet": []}
+    return rec
 
 
 def main(argv=None, runner=None, tiers=None):
@@ -718,6 +1006,7 @@ def main(argv=None, runner=None, tiers=None):
     runner = runner or default_runner
     dev = Path(a.dev_root)
     cfg = json.loads(Path(a.providers).read_text())
+    tier0_catalog_path = Path(a.tier0_catalog).resolve() if a.tier0_catalog else None
     if tiers is None:
         tiers, globals_cfg = a1.load_providers(cfg)
         for t in tiers:
@@ -747,6 +1036,7 @@ def main(argv=None, runner=None, tiers=None):
                 )
                 if a.tier0_catalog:
                     t.provider.catalog_path = Path(a.tier0_catalog).resolve()
+                tier0_catalog_path = t.provider.catalog_path
     else:
         globals_cfg = cfg.get("globals", {})
     paths = {
@@ -756,10 +1046,15 @@ def main(argv=None, runner=None, tiers=None):
         "library": dev / "data" / "asset_library",
         "source": dev / "data" / "asset_library" / "_source",
         "out": Path(a.out),
-        "manifest": dev / "1_asset_reuse" / "configs" / "acquired_manifest.json",
+        "manifest": dev / "data" / "acquired_manifest.json",
         "fragment_dir": Path(a.out) / "fragments",
+        "tier0_catalog": tier0_catalog_path,
     }
     entries = json.loads(Path(a.categories).read_text())
+    # A3 清单校验：不阻断，警告上 stderr 并随 evidence 留痕（此前未知字段完全静默）
+    input_warnings = a2.validate_entries(entries)
+    for w in input_warnings:
+        print(f"WARN {w}", file=sys.stderr)
     results = []
     for e in entries:
         try:
@@ -803,21 +1098,38 @@ def main(argv=None, runner=None, tiers=None):
                 merged,
             ]
         )
+    # B4：过程结局 → 匹配三档（exact/similar/none），随 evidence 落盘
+    for r in results:
+        _match_block(r, paths)
     a2.write_evidence(
         Path(a.out) / "selection_evidence.json",
         run_id=Path(a.out).name,
         providers_snapshot=cfg,
         categories=results,
         categories_input=entries,
+        input_warnings=input_warnings,
     )
+    # 退出语义（B4）：exact/similar 都算成功——调用方拿到了可复用的资产本体；
+    # 仅 none/entry_error 记失败。旧 PASS/FAIL 行保留但按新语义判。
     ok = True
+    grades = {"exact": 0, "similar": 0, "none": 0}
     for r in results:
-        good = r["status"] in {"imported", "reused_local"}
+        g = (r.get("match") or {}).get("grade", "none")
+        grades[g] = grades.get(g, 0) + 1
+        good = g in ("exact", "similar")
         ok = ok and good
+        aset = ((r.get("match") or {}).get("asset") or {}).get("asset_id")
+        print(
+            f"MATCH {r['query']['category']} grade={g}"
+            + (f" asset={aset}" if aset else "")
+        )
         print(
             f"{'PASS' if good else 'FAIL'} {r['query']['category']} status={r['status']}"
         )
-    print(f"SUMMARY {'PASS' if ok else 'FAIL'} imported={len(imported)}")
+    print(
+        f"SUMMARY {'PASS' if ok else 'FAIL'} imported={len(imported)}"
+        f" exact={grades['exact']} similar={grades['similar']} none={grades['none']}"
+    )
     return 0 if ok else 1
 
 

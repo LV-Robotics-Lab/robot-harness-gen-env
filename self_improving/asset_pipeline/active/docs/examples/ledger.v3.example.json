@@ -1,0 +1,127 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_302_bowl",
+  "external_ids": { "env_gen": "302_bowl" },
+  "category": "bowl",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": ["bowl", "dish"],
+    "colors": [],
+    "materials": ["ceramic"],
+    "identity": {
+      "basis": "requested_by_acquire",
+      "evidence": "acquire/identity_bowl.json",
+      "verified": true
+    },
+    "category_anchor": { "lvis": "bowl" }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "appearance": {
+        "colors_measured": ["brown"],
+        "color_fractions": { "brown": 0.791, "red": 0.207 },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": { "backend": "sapien", "run_id": "attr-20260814" }
+      },
+      "physical": {
+        "mesh_bbox_m": [0.1503, 0.1503, 0.0585],
+        "size_resolution": {
+          "mode": "reference",
+          "actual_max_dim_m": 0.1503,
+          "scale": 1.0,
+          "reference_max_dim_m": 0.16,
+          "reference_assets": ["002_bowl"],
+          "verdict": "ok"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "circle",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [0.7071067811865476, 0.7071067811865476, 0.0, 0.0],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "calib-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "placement": {
+          "verdict": "hollow",
+          "interior_dims_m": [0.11, 0.11, 0.035],
+          "interior_floor_z_offset_m": 0.012,
+          "floor_basis": "payload rest -0.005m pad",
+          "load_tilt_deg": 0.4,
+          "measured_against": { "backend": "sapien", "run_id": "probe-v4-20260815" }
+        },
+        "mass_kg": { "value": null, "status": "unknown" },
+        "friction": { "value": null, "status": "unknown", "static": null, "dynamic": null },
+        "restitution": { "value": null, "status": "unknown" },
+        "inertial": { "com_m": null, "inertia_diagonal_kgm2": null, "principal_axes_wxyz": null, "status": "unknown", "basis": "engine_derived" }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/302_bowl/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual_and_collision",
+          "sha256": "5d6a64c31f66d3b1388c28443cea60ec793c41cb0409cf4234b77461bd953fe7",
+          "frame": { "up_axis": "Y" },
+          "geometry_state": { "scale_baked": true, "origin": "bottom-center" },
+          "metadata": { "derived_from": "_source/ycb_024_bowl/textured.glb", "converter": "import_materialize v3" }
+        },
+        {
+          "format": "usd",
+          "uri": "data/asset_library/302_bowl/_source/024_bowl.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "aa11bb22cc33dd44ee55ff667788990011223344556677889900aabbccddeeff",
+          "frame": { "up_axis": "Z" },
+          "geometry_state": { "scale_baked": false, "origin": "native" }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "nvidia_isaac_assets",
+        "group": "ycb_024_bowl",
+        "file": "024_bowl.usd",
+        "retrieved_at": "2026-08-09",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "Underlying YCB dataset CC BY 4.0",
+          "attribution": "Calli et al., doi:10.1109/MRA.2015.2448951",
+          "evidence_url": "https://www.ycbbenchmarks.com/",
+          "checked_date": "2026-08-09",
+          "checked_by": "license audit 20260809"
+        }
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "batch3",
+          "timestamp": "2026-08-09T22:00:44",
+          "verified_digest": "5d6a64c31f66d3b1388c28443cea60ec793c41cb0409cf4234b77461bd953fe7"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "e2e",
+          "verdict": "pass",
+          "run_id": "isaac-e2e-20260815",
+          "timestamp": "2026-08-15T03:40:00",
+          "verified_digest": "aa11bb22cc33dd44ee55ff667788990011223344556677889900aabbccddeeff"
+        }
+      ]
+    }
+  ]
+}

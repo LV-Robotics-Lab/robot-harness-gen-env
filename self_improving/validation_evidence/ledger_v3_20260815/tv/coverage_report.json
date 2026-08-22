@@ -1,0 +1,17 @@
+{
+  "schema": "envgen.scene_coverage.v1",
+  "prompt": "Place a TV on the table.",
+  "seed": 42,
+  "objects": [
+    {
+      "object_id": "tv_1",
+      "category": "tv",
+      "color": null,
+      "material": null,
+      "status": "covered",
+      "asset_id": "365_tv",
+      "model_id": 0,
+      "score": 103.0
+    }
+  ]
+}

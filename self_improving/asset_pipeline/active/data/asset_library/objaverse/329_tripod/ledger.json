@@ -1,0 +1,221 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_329_tripod",
+  "category": "tripod",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "tripod"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "results/sweep_out/C_tripod/acquire/identity_post_render_329_tripod_m0.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.126784,
+          0.42,
+          0.388933
+        ],
+        "size_resolution": {
+          "mode": "capped:0.42",
+          "actual_max_dim_m": 53.07788395881652,
+          "scale": 0.007912900226502638,
+          "reference_max_dim_m": 0.42,
+          "reference_assets": [],
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/objaverse/329_tripod/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "00d64809bbfecf6010dd902357dea46b5216ec330a941e33ca222a9fe79045df",
+          "size_bytes": 2208460,
+          "metadata": {
+            "derived_from": "9279045ec7044e1889f17b02fbb013a5.glb",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": false
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/objaverse/329_tripod/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "3c9e8cbdb9f2c669d2ec4cfbba4f776a3d16abceb06b1f356226947e140f9442",
+          "size_bytes": 2208460,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/_source/web_329_tripod/9279045ec7044e1889f17b02fbb013a5.glb",
+          "backend": "portable",
+          "role": "visual_and_collision",
+          "sha256": "d5e8e3e7e10c6a2f3ae718818173f4f293583ff9beb41e85a805911546d49ebc",
+          "size_bytes": 2237424,
+          "metadata": {
+            "origin_prefix": "web_329_tripod"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "data/asset_library/objaverse/329_tripod/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "d56d16104a1d6f68101825524472929c1ce47dd27a9fe925266d4c10709b2032",
+          "size_bytes": 4820,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "web (objaverse)",
+        "group": "web_329_tripod",
+        "file": "9279045ec7044e1889f17b02fbb013a5.glb",
+        "url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-112/9279045ec7044e1889f17b02fbb013a5.glb",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "CC-BY-4.0 (Objaverse per-object metadata); owner: Gold telescope",
+          "evidence_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/metadata/000-112.json.gz",
+          "checked_date": "2026-08-13",
+          "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
+        },
+        "retrieved_at": "2026-08-13",
+        "source_manifest_path": "data/asset_library/_source/web_329_tripod/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-13T18:57:18",
+          "verified_digest": "36ce547d706d041a2923a39c68e61225b810642be80b37d1b3d3f6c04d6720c5",
+          "report_path": "results/sweep_out/C_tripod/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:19",
+          "verified_digest": "1d08448a156452203d7f4ae59a3e1117d7913a3a72940baadfe04e36cee5bb79"
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "brown",
+          "orange"
+        ],
+        "color_fractions": {
+          "brown": 0.461,
+          "orange": 0.322,
+          "black": 0.194,
+          "blue": 0.02
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "external_ids": {
+    "env_gen": "329_tripod"
+  }
+}

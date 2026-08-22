@@ -290,6 +290,11 @@ def test_library_endpoints(tmp_path, monkeypatch, roots):
     r = c.get("/api/library/stats").get_json()
     assert r["kpis"]["assets"] == 3 and "generated_at" in r
 
+    # 来源分层布局（asset_library/<source>/<id>/）同样能找到快照
+    nested = lib / "objaverse" / "n1" / "snapshots"
+    nested.mkdir(parents=True)
+    (nested / "m0_default.png").write_bytes(b"\x89PNGnested")
+    assert c.get("/api/library/thumb/n1").status_code == 200
     # thumb 解析顺序：web_thumbs 优先 → snapshots 兜底 → 404
     assert c.get("/api/library/thumb/b1").status_code == 200
     (thumbs / "b1.png").write_bytes(b"\x89PNGoverride")
@@ -297,6 +302,27 @@ def test_library_endpoints(tmp_path, monkeypatch, roots):
     assert r2.status_code == 200 and b"override" in r2.data
     assert c.get("/api/library/thumb/a1").status_code == 404
     assert c.get("/api/library/thumb/..%2Fcat").status_code == 404
+
+
+def test_tier_scale_dedup_and_objaverse(tmp_path, monkeypatch):
+    import gzip
+
+    monkeypatch.setattr(studio, "DEV", tmp_path)
+    (tmp_path / "idx.json").write_text(json.dumps({"a": [1, 2], "b": [3]}))
+    # 同层两个 provider 指向同一索引 → 只显示一次
+    scale = studio._tier_scale(
+        [("p1", {"index_path": "idx.json"}), ("p2", {"index_path": "idx.json"})], 5
+    )
+    assert scale == "索引 3"
+
+    obja = tmp_path / "obja"
+    obja.mkdir()
+    with gzip.open(obja / "lvis-annotations.json.gz", "wt") as f:
+        json.dump({"cat1": ["u1", "u2"], "cat2": ["u3"]}, f)
+    scale2 = studio._tier_scale(
+        [("objaverse", {"data_dir": "obja", "per_category_cap": 6})], 5
+    )
+    assert scale2 == "LVIS 3 物体 · 2 类 · 每类取 ≤6"
 
 
 def test_files_listing_and_py_whitelist(roots):
@@ -312,3 +338,32 @@ def test_files_listing_and_py_whitelist(roots):
     assert all(set(f) == {"p", "size", "mtime"} for f in files)
     r = c.get("/api/run/web/20260812_000000_demo/file?p=scenes/x/generated_scene.py")
     assert r.status_code == 200
+
+
+def test_live_stage34_reset_per_candidate(roots):
+    """② 进行中时，③④只反映当前候选：上一候选失败后回灰（即使它的
+    截图还在盘上），新候选的转换标记出现才重新点亮。"""
+    web, _ = roots
+    d = web / "20260820_000004_live"
+    d.mkdir()
+    (d / "run_meta.json").write_text(
+        json.dumps({"prompt": "x", "seed": 1, "started_at": "2026-08-20T00:00:01+08:00"})
+    )
+    (d / "run_state.json").write_text(json.dumps({"phase": "pipeline", "outcome": None}))
+    (d / "acquire_categories.json").write_text("[]")
+    shots = d / "acquire" / "shots"
+    shots.mkdir(parents=True)
+    (shots / "cand1.png").write_bytes(b"x")
+    (d / "run.log").write_text(
+        "Simulation App Startup Complete\naccepted 3xx m0 ok\nREJECTED 3xx m0 (bad)\n"
+    )
+    tl = timeline_of(d)
+    assert tl[1]["status"] == "active"
+    assert tl[2]["status"] == "pending"
+    assert tl[3]["status"] == "pending"
+    (d / "run.log").write_text((d / "run.log").read_text() + "app ready\n")
+    tl = timeline_of(d)
+    assert tl[2]["status"] == "active" and tl[3]["status"] == "pending"
+    (d / "run.log").write_text((d / "run.log").read_text() + "accepted 3xx m1 ok\n")
+    tl = timeline_of(d)
+    assert tl[3]["status"] == "active"

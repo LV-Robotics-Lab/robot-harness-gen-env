@@ -1,0 +1,49 @@
+{
+  "schema_version": "robotwin.scene_spec.v1",
+  "scene_id": "place_a_panel_on_the_table_2627c9086d",
+  "request": "Place a panel on the table.",
+  "language": "en",
+  "frame": {
+    "name": "robotwin_world",
+    "x_axis": "right",
+    "y_axis": "front",
+    "z_axis": "up",
+    "handedness": "right_handed"
+  },
+  "unit": "m",
+  "seed": 42,
+  "workspace": {
+    "support_surface": "table",
+    "table_height_m": 0.741,
+    "x_bounds_m": [
+      -0.35,
+      0.35
+    ],
+    "y_bounds_m": [
+      -0.2,
+      0.3
+    ],
+    "robot_keepout_x_m": [
+      -0.16,
+      0.16
+    ],
+    "robot_keepout_y_m": [
+      -0.2,
+      -0.08
+    ]
+  },
+  "objects": [
+    {
+      "object_id": "panel_1",
+      "category": "panel",
+      "region": "center"
+    }
+  ],
+  "relations": [
+    {
+      "relation": "on_table",
+      "source": "panel_1",
+      "target": "table"
+    }
+  ]
+}

@@ -1,0 +1,158 @@
+{
+  "schema_version": "robotwin.scene_validation.v1",
+  "scene_id": "place_a_cup_on_the_table_a0da361e77",
+  "resolved_scene_sha256": "d0c4f046228cf00828053a2081e645e75158efc755c08c0dc98258c8cc4acbea",
+  "status": "pass",
+  "fail_count": 0,
+  "not_run_count": 0,
+  "checks": [
+    {
+      "name": "workspace_bounds:cup_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.23990820002447866,
+          -0.14340659197552136,
+          -0.009867043959519026,
+          0.08785073195951902
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:cup_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.741,
+        "table_height_m": 0.741,
+        "support_relation": "on_table"
+      }
+    },
+    {
+      "name": "real_asset_files:cup_1",
+      "status": "pass",
+      "evidence": {
+        "paths": [
+          "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/021_cup/collision/base6.glb",
+          "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/021_cup/model_data6.json",
+          "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/021_cup/visual/base6.glb"
+        ],
+        "exists": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "relation:on_table:cup_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "resolved_only_roundtrip",
+      "status": "pass",
+      "evidence": {
+        "before": "d0c4f046228cf00828053a2081e645e75158efc755c08c0dc98258c8cc4acbea",
+        "after": "d0c4f046228cf00828053a2081e645e75158efc755c08c0dc98258c8cc4acbea"
+      }
+    },
+    {
+      "name": "runtime_status",
+      "status": "pass",
+      "evidence": null
+    },
+    {
+      "name": "robot_initial_collision",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "observer_video_frame_count",
+      "status": "pass",
+      "evidence": {
+        "frames": 12,
+        "minimum": 3
+      }
+    },
+    {
+      "name": "observer_video_unique_frames",
+      "status": "pass",
+      "evidence": {
+        "unique_frames": 12,
+        "minimum": 12
+      }
+    },
+    {
+      "name": "translation_drift:cup_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_m": 0.006787480066983193,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "rotation_drift:cup_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_deg": 0.0,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_translation_error:cup_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_m": 0.0067874583233596695,
+        "threshold_m": 0.02,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_rotation_error:cup_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_deg": 0.0,
+        "threshold_deg": 5.0,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "penetration:cup_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:cup_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "support_contact:cup_1",
+      "status": "pass",
+      "evidence": {
+        "raw_contact": true,
+        "mode": "on_table_contact",
+        "is_static": false,
+        "expected_target": "table",
+        "observed_target": "table",
+        "contact_fraction": 1.0,
+        "minimum_contact_fraction": 0.8
+      }
+    },
+    {
+      "name": "not_dropped:cup_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "head_visibility:cup_1",
+      "status": "pass",
+      "evidence": {
+        "pixels": 925,
+        "threshold": 64
+      }
+    }
+  ]
+}
