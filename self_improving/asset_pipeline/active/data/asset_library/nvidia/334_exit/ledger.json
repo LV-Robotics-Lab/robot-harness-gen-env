@@ -153,7 +153,7 @@
         "group": "acq_334_exit",
         "file": "PlasticHardwiredExitSign_A01_Green_01.usd",
         "license": {
-          "spdx": null,
+          "spdx": "LicenseRef-NVIDIA-Isaac-Sim-Additional-Software-and-Materials",
           "status": "declared",
           "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4)",
           "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
@@ -186,6 +186,15 @@
           "run_id": "rescale-planC-20260815",
           "timestamp": "2026-08-15T16:22:20",
           "verified_digest": "011447e786cb4cdccc9e445116c957c2321b313fb45549e0b512507733218ccc"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:01",
+          "verified_digest": "fb2f5f048bcc0832665df9ffb52ad9aeb7bfb8234ca61587ab7870565999c36f",
+          "report_path": "results/20260822_isaac_writeback/settle/334_exit_m0/custom/settle_report.json"
         }
       ]
     }

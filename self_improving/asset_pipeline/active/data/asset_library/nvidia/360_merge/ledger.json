@@ -153,7 +153,7 @@
         "group": "acq_360_merge",
         "file": "sign_w9_2l.usd",
         "license": {
-          "spdx": null,
+          "spdx": "LicenseRef-NVIDIA-Isaac-Sim-Additional-Software-and-Materials",
           "status": "declared",
           "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4)",
           "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
@@ -186,6 +186,15 @@
           "run_id": "rescale-planC-20260815",
           "timestamp": "2026-08-15T16:22:26",
           "verified_digest": "3e2114edc81dca47db073ec4ec5e48109eddaa0e17f0d91b9204f2c6cd59a314"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:02",
+          "verified_digest": "492b467f952f93d5b1c12029f34905d4faa08e74acdfae9739a65c542535f317",
+          "report_path": "results/20260822_isaac_writeback/settle/360_merge_m0/custom/settle_report.json"
         }
       ],
       "appearance": {

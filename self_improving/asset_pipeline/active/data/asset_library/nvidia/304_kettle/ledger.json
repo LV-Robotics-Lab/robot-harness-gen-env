@@ -175,6 +175,15 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:01",
+          "verified_digest": "c61225051703ab49660b15b157ef1ae6d9e374a98a0cdd2fb07580450e7a42d8",
+          "report_path": "results/20260822_isaac_writeback/settle/304_kettle_m0/custom/settle_report.json"
         }
       ],
       "appearance": {

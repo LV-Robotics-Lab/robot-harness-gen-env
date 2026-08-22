@@ -267,3 +267,78 @@ def enrich_from_ledgers(
 
     enriched_package = _apply_isaac_representations(package, enrichment)
     return enriched_package, report
+
+
+def enrich_mujoco_from_ledgers(
+    package,
+    ledger_dirs,
+):
+    """Mirror of :func:`enrich_from_ledgers` for ``backend=mujoco`` OBJ/STL
+    representations.
+
+    A deliberate sibling rather than a parameter on the isaac path: the isaac
+    function's skip/verified semantics are pinned by existing tests and by the
+    write-back contract, and entangling a second backend into its control flow
+    risks both for no gain. Probe-validated 2026-08-22: 304_bottle's
+    ledger-registered OBJ compiled (0 blockers) and ran a real 500-step MuJoCo
+    rollout (the object falls to the ground plane -- the MJCF scene carries no
+    table; a support-box settle harness like the Isaac one is the follow-on).
+    """
+    report = {"enriched": [], "skipped_no_ledger": [], "skipped_no_mujoco_rep": [], "warnings": []}
+    enrichment = {}
+    for asset in package.assets:
+        src_aid = (asset.source or {}).get("asset_id")
+        src_mid = (asset.source or {}).get("model_id")
+        if src_aid:
+            dir_name, model_id = str(src_aid), int(src_mid or 0)
+        else:
+            dir_name, model_id = _parse_ledger_asset_id(asset.asset_id)
+        ledger_data = None
+        for ledger_dir in ledger_dirs:
+            candidate = Path(ledger_dir) / dir_name / "ledger.json"
+            if candidate.is_file():
+                ledger_data = json.loads(candidate.read_text())
+                break
+        if ledger_data is None:
+            report["skipped_no_ledger"].append(asset.asset_id)
+            continue
+        model_entry = next(
+            (m for m in ledger_data.get("models", []) if m.get("model_id") == model_id),
+            None,
+        )
+        rep = None
+        if model_entry is not None:
+            rep = next(
+                (
+                    r
+                    for r in model_entry.get("representations", [])
+                    if r.get("backend") == "mujoco"
+                    and r.get("role") != "snapshot"
+                    and (r.get("format") or "").lower() in ("obj", "stl")
+                ),
+                None,
+            )
+        if rep is None:
+            report["skipped_no_mujoco_rep"].append(asset.asset_id)
+            continue
+        from lib import ledger  # noqa: PLC0415 -- see module-level comment
+
+        uri = rep.get("uri")
+        uri_path = ledger.resolve_uri(uri) if uri else None
+        if uri_path is None or not uri_path.is_file():
+            report["warnings"].append(
+                f"{asset.asset_id}: mujoco representation uri not found: {uri!r}"
+            )
+            continue
+        enrichment[asset.asset_id] = AssetRepresentation(
+            format=rep.get("format") or "obj",
+            uri=str(uri_path),
+            backend="mujoco",
+            role=rep.get("role") or "collision",
+            sha256=rep.get("sha256") or "",
+            size_bytes=rep.get("size_bytes") or 0,
+            metadata=dict(rep.get("metadata") or {}),
+        )
+        report["enriched"].append(asset.asset_id)
+    enriched_package = _apply_isaac_representations(package, enrichment)
+    return enriched_package, report

@@ -133,6 +133,22 @@
             "converter": "unknown (pre-v1 import)",
             "conversion_params": {}
           }
+        },
+        {
+          "backend": "mujoco",
+          "role": "collision",
+          "format": "obj",
+          "uri": "data/asset_library/nvidia/304_bottle/mujoco/base0.obj",
+          "sha256": "31adaf12fed089170d89bea8de7b1fe417ca871db871ab7171d422bb94131427",
+          "size_bytes": 316959,
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          },
+          "derived_from": "efc169e93a9c645c008299dccebab8d3fc195c78d6e9e070673f348250d69425"
         }
       ],
       "articulation": {},
@@ -170,6 +186,15 @@
           "timestamp": "2026-08-09T00:45:55",
           "verified_digest": "3a55f1b06c456946b244a96ca589600c5b3178565144aa812f51cbec97128055",
           "report_path": "results/20260809_ledger_v1_accept/s11"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "fail",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:01",
+          "verified_digest": "a129008253d4343d2739f5b39263c45f030b7381efef833b8ff6ddd809a635a0",
+          "report_path": "results/20260822_isaac_writeback/settle/304_bottle_m0/custom/settle_report.json"
         }
       ],
       "appearance": {

@@ -153,7 +153,7 @@
         "group": "acq_327_sphere",
         "file": "GeoSphere_Medium.usd",
         "license": {
-          "spdx": null,
+          "spdx": "LicenseRef-NVIDIA-Isaac-Sim-Additional-Software-and-Materials",
           "status": "declared",
           "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4)",
           "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
@@ -186,6 +186,15 @@
           "run_id": "rescale-planC-20260815",
           "timestamp": "2026-08-15T16:22:18",
           "verified_digest": "5b725a28d949966c2d1751097356817b5c2e98386371f1b4e6d9fa85e78088f6"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "fail",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:01",
+          "verified_digest": "cb0612c3036866fa440d559c4c34a9f9652b12d6c16ed655d95f9f553f16aeaa",
+          "report_path": "results/20260822_isaac_writeback/settle/327_sphere_m0/custom/settle_report.json"
         }
       ],
       "appearance": {

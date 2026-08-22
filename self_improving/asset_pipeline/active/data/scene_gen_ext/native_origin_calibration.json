@@ -18288,17 +18288,52 @@
     "start_orientation_attempt": 0
    }
   },
-  "333_cherry": {
+  "321_dustbin": {
    "0": {
     "declared_z_policy": "origin_on_table",
     "had_override": true,
     "declared_reverify": {
-     "verdict": "reverify_failed (drift=0.016, tilt=22.2)",
-     "reverify_drift_m": 0.0161,
-     "reverify_tilt_deg": 22.25,
-     "origin_height_m": 0.0134
+     "verdict": "ok",
+     "reverify_drift_m": 0.0084,
+     "reverify_tilt_deg": 2.58,
+     "origin_height_m": -0.0045
     },
-    "declared_trusted": false,
+    "declared_trusted": true,
+    "origin_height_m": -0.0045,
+    "dims_m": [
+     0.2886,
+     0.252,
+     0.3988
+    ],
+    "rest_orientation_wxyz": [
+     0.571529,
+     0.467683,
+     0.429751,
+     0.519559
+    ],
+    "center_offset_xy_m": [
+     -0.061,
+     0.0165
+    ],
+    "reverify_drift_m": 0.0084,
+    "reverify_tilt_deg": 2.58,
+    "tilt_vs_declared_deg": 3.84,
+    "verdict": "ok",
+    "z_policy": "origin_on_table",
+    "start_orientation_attempt": 0
+   }
+  },
+  "333_cherry": {
+   "0": {
+    "declared_z_policy": "center_on_table",
+    "had_override": true,
+    "declared_reverify": {
+     "verdict": "ok",
+     "reverify_drift_m": 0.0047,
+     "reverify_tilt_deg": 0.0,
+     "origin_height_m": 0.0082
+    },
+    "declared_trusted": true,
     "origin_height_m": 0.0082,
     "dims_m": [
      0.02,
@@ -18306,10 +18341,10 @@
      0.0239
     ],
     "rest_orientation_wxyz": [
-     0.985475,
-     0.124558,
-     -0.11441,
-     0.015345
+     0.985485,
+     0.124471,
+     -0.114413,
+     0.01534
     ],
     "center_offset_xy_m": [
      -0.0003,
@@ -18317,9 +18352,10 @@
     ],
     "reverify_drift_m": 0.0047,
     "reverify_tilt_deg": 0.0,
+    "tilt_vs_declared_deg": 0.0,
     "verdict": "ok",
     "z_policy": "center_on_table",
-    "start_orientation_attempt": 1
+    "start_orientation_attempt": 0
    }
   },
   "341_tool": {

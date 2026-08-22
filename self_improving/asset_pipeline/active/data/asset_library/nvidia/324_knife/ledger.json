@@ -153,7 +153,7 @@
         "group": "acq_324_knife",
         "file": "Knife.usd",
         "license": {
-          "spdx": null,
+          "spdx": "LicenseRef-NVIDIA-Isaac-Sim-Additional-Software-and-Materials",
           "status": "declared",
           "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4) [applied to new import 2026-08-13: same NVIDIA Isaac Assets source as the audited 2026-08-09 batch]",
           "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
@@ -186,6 +186,15 @@
           "run_id": "rescale-planC-20260815",
           "timestamp": "2026-08-15T16:22:17",
           "verified_digest": "f6c7168b00501e86ea20518dcf83cd208a71195ceb4acea7b7f2e8496ad6049a"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "fail",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:01",
+          "verified_digest": "03d921a335bc5bc5023ac66e5efa91ab841e3d77c1e4608bc6a396ef41cb43fe",
+          "report_path": "results/20260822_isaac_writeback/settle/324_knife_m0/custom/settle_report.json"
         }
       ]
     }

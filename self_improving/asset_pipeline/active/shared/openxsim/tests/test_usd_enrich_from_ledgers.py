@@ -33,7 +33,11 @@ from agenticsim.openxsim.ir import (  # noqa: E402
     TaskSpec,
 )
 from lib import ledger  # noqa: E402
-from usd_enrich import _parse_ledger_asset_id, enrich_from_ledgers  # noqa: E402
+from usd_enrich import (  # noqa: E402
+    _parse_ledger_asset_id,
+    enrich_from_ledgers,
+    enrich_mujoco_from_ledgers,
+)
 
 
 def _pkg(asset_ids):
@@ -322,3 +326,41 @@ def test_enrich_from_ledgers_ledger_dir_order_first_match_wins(tmp_path):
     assert report["enriched"] == ["robotwin_071_can_m0"]
     rep = enriched.assets[0].representation_for("isaacsim", ("usd",))
     assert rep.uri == str(usd_upstream)
+
+
+def test_enrich_mujoco_from_ledgers_registers_obj(tmp_path):
+    """Mirror of the isaac classify-and-register test for the mujoco sibling
+    (probe-validated 2026-08-22: a ledger-registered OBJ compiled with 0
+    blockers and ran a real 500-step rollout)."""
+    pool_dir = tmp_path / "asset_library"
+
+    obj_path = tmp_path / "base0.obj"
+    obj_path.write_text("v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n")
+    mujoco_rep = {
+        "backend": "mujoco",
+        "role": "collision",
+        "format": "obj",
+        "uri": str(obj_path),
+        "sha256": "0" * 64,
+        "size_bytes": obj_path.stat().st_size,
+    }
+    model_a = _model_entry(0, [_sapien_rep(), mujoco_rep])
+    _write_ledger(pool_dir, "304_bottle", "external", model_a)
+
+    # only a sapien rep -> skipped_no_mujoco_rep
+    model_b = _model_entry(0, [_sapien_rep()])
+    _write_ledger(pool_dir, "302_can", "external", model_b)
+
+    pkg = _pkg(["external_304_bottle_m0", "external_302_can_m0", "external_999_missing_m0"])
+    enriched, report = enrich_mujoco_from_ledgers(pkg, [str(pool_dir)])
+
+    assert report["enriched"] == ["external_304_bottle_m0"]
+    assert report["skipped_no_mujoco_rep"] == ["external_302_can_m0"]
+    assert report["skipped_no_ledger"] == ["external_999_missing_m0"]
+    assert report["warnings"] == []
+
+    by_id = {a.asset_id: a for a in enriched.assets}
+    rep = by_id["external_304_bottle_m0"].representation_for("mujoco", ("obj",))
+    assert rep is not None
+    assert rep.uri == str(obj_path)
+    assert by_id["external_302_can_m0"].representation_for("mujoco", ("obj",)) is None

@@ -45,7 +45,10 @@ def main():
     for f in facts:
         lp = None
         for root in (Path(a.library), Path(a.upstream)):
-            cand = root / f["asset_dir"] / "ledger.json"
+            # asset_dir()-based lookup: the library is grouped by source
+            # provider (2026-08-18), so <library>/<asset>/ misses everything.
+            found = L.asset_dir(root, f["asset_dir"])
+            cand = (found / "ledger.json") if found else root / f["asset_dir"] / "ledger.json"
             if cand.is_file():
                 lp = cand
                 break

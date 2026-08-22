@@ -152,7 +152,7 @@
         "group": "acq_348_omniverse",
         "file": "Book_IntroOmni.usd",
         "license": {
-          "spdx": null,
+          "spdx": "LicenseRef-NVIDIA-Isaac-Sim-Additional-Software-and-Materials",
           "status": "declared",
           "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4)",
           "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
@@ -177,6 +177,15 @@
             "tilt_deg": 15,
             "tilt_deg_flat": 45
           }
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:01",
+          "verified_digest": "702d172c32f0dcc63ecc13c923d92dd0a619fe40ff3ed83e409b7d2424238852",
+          "report_path": "results/20260822_isaac_writeback/settle/348_omniverse_m0/custom/settle_report.json"
         }
       ],
       "appearance": {

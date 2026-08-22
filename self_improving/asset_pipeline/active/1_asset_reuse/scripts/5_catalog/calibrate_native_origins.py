@@ -135,6 +135,13 @@ def main():
     def attempt(aid, mid, q0, zp_hint=None):
         scene = engine.create_scene()
         scene.set_timestep(1 / 250)
+        # Match the CONSUMING runtime's physical material exactly
+        # (_base_task.py:227 -- static 0.5 / dynamic 0.5 / restitution 0).
+        # This scene previously ran on SAPIEN's engine default, whose nonzero
+        # restitution bounces a 5 mm drop hard enough to topple assets that
+        # every real table scene keeps standing (the 321_dustbin mismatch,
+        # 2026-08-22). Set BEFORE add_ground so the ground shares it.
+        scene.default_physical_material = scene.create_physical_material(0.5, 0.5, 0)
         scene.add_ground(0.0)
         actor0 = create_actor(
             scene,

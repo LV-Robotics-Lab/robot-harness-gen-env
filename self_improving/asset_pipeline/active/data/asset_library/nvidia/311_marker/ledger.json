@@ -169,6 +169,15 @@
           "timestamp": "2026-08-09T00:45:55",
           "verified_digest": "68649905069b3a4f59f8be8b1f5d5a3bf79c712160fe8a2bc67da96599135de8",
           "report_path": "results/20260809_ledger_v1_accept/s11"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "fail",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:01",
+          "verified_digest": "11be1f0562172d1296b1ded5d5156a3782ce1845db04f141834eaf3f8d5e1d7d",
+          "report_path": "results/20260822_isaac_writeback/settle/311_marker_m0/custom/settle_report.json"
         }
       ],
       "appearance": {

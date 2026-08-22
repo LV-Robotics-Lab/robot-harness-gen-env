@@ -342,6 +342,15 @@
           "timestamp": "2026-08-09T00:45:55",
           "verified_digest": "9e893952b865c4273eb8d711603c5b4fdd5bfab68fa9b9666f67504550214ecd",
           "report_path": "results/20260809_ledger_v1_accept/s11"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:01",
+          "verified_digest": "3fba541de352bf0c226bc067a7db62712ea77cfd3b35c568e510a85fb1b5f2f1",
+          "report_path": "results/20260822_isaac_writeback/settle/306_block_m1/custom/settle_report.json"
         }
       ],
       "appearance": {

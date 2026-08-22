@@ -165,6 +165,11 @@ def pipeline_worker(run_id, run_dir, prompt, seed, catalog_used, providers_used)
                 str(run_dir / "runtime"),
                 "--settle-steps",
                 "600",
+                # our acceptance callers opt in to the adaptive horizon; the
+                # script default stays 0 so upstream behaviour is unchanged
+                # (s2/s5/s7 two-sided validation, 2026-08-20)
+                "--settle-converge-max",
+                "1800",
                 "--contact-window-steps",
                 "60",
                 "--video-frames",

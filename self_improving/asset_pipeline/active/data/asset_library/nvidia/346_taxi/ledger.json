@@ -153,7 +153,7 @@
         "group": "acq_346_taxi",
         "file": "sign_taxi_0.usd",
         "license": {
-          "spdx": null,
+          "spdx": "LicenseRef-NVIDIA-Isaac-Sim-Additional-Software-and-Materials",
           "status": "declared",
           "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4)",
           "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
@@ -186,6 +186,15 @@
           "run_id": "rescale-planC-20260815",
           "timestamp": "2026-08-15T16:22:23",
           "verified_digest": "5a070ff2b5a130d260e8f0e028bd5f59d7e1f374ac05e1b240fe76dad0b08061"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:01",
+          "verified_digest": "f64b2be8e6340ceafb4c8039b7d07faf36b6e43663220d5d5c2725a888820b24",
+          "report_path": "results/20260822_isaac_writeback/settle/346_taxi_m0/custom/settle_report.json"
         }
       ],
       "appearance": {

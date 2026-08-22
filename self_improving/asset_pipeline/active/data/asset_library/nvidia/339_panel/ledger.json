@@ -153,7 +153,7 @@
         "group": "acq_339_panel",
         "file": "Fiber_Patch_Panel_1U_A_inst.usd",
         "license": {
-          "spdx": null,
+          "spdx": "LicenseRef-NVIDIA-Isaac-Sim-Additional-Software-and-Materials",
           "status": "declared",
           "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4)",
           "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
@@ -186,6 +186,15 @@
           "run_id": "rescale-planC-20260815",
           "timestamp": "2026-08-15T16:22:21",
           "verified_digest": "a989d480ecfd1eeea93b71a1e15db21b7f879cd62e104e8820c49e584c7f35fd"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "fail",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:01",
+          "verified_digest": "36cdbdf5c3d4830abed23ca0ee3731859c4512c512bbbd316d107d743d8b95cd",
+          "report_path": "results/20260822_isaac_writeback/settle/339_panel_m0/custom/settle_report.json"
         }
       ],
       "appearance": {

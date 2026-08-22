@@ -153,7 +153,7 @@
         "group": "acq_345_alarm",
         "file": "SmokeDetector_A01_01.usd",
         "license": {
-          "spdx": null,
+          "spdx": "LicenseRef-NVIDIA-Isaac-Sim-Additional-Software-and-Materials",
           "status": "declared",
           "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4)",
           "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
@@ -194,6 +194,15 @@
           "run_id": "settle-repair-20260816",
           "timestamp": "2026-08-16T01:01:54",
           "verified_digest": "381ca953fe4d46496abe71c1c9fa40fe6fec50d29ca33d35b5a64dd0924aa421"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "fail",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:01",
+          "verified_digest": "c307f3053a237c21037939dd2fe424279c90a9e9bf7a2e071670514a53c9f8e8",
+          "report_path": "results/20260822_isaac_writeback/settle/345_alarm_m0/custom/settle_report.json"
         }
       ],
       "appearance": {

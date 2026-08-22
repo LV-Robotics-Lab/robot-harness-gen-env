@@ -55,6 +55,7 @@ CUDA_LAUNCH_BLOCKING=1 $PY script/run_scene_runtime.py \
   --asset-catalog "$CAT" \
   --out-dir "$OUT/runtime/$SCENE" \
   --settle-steps 900 --contact-window-steps 120 --video-frames 120 --fps 12 \
+  --settle-converge-max 1800 \
   2>/dev/null | grep -vE "svulkan2|OIDN" | tail -2
 
 echo "=== [s10.4] full validation"

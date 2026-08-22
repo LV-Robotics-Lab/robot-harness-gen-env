@@ -27,7 +27,7 @@ for PROMPT in "${PROMPTS[@]}"; do
   mkdir -p "$OUT/runtime/$SCENE"
   # CUDA_LAUNCH_BLOCKING: vendored curobo's planner warmup crashes on sm_120
   # under async launches (2026-08-13)
-  CUDA_LAUNCH_BLOCKING=1 $PY script/run_scene_runtime.py --robotwin-root "$SHADOW" --resolved-scene "$OUT/scenes/$SCENE/resolved_scene.json" --asset-catalog "$CAT" --out-dir "$OUT/runtime/$SCENE" --settle-steps 900 --contact-window-steps 120 --video-frames 120 --fps 12 > /tmp/rt.out 2>&1
+  CUDA_LAUNCH_BLOCKING=1 $PY script/run_scene_runtime.py --robotwin-root "$SHADOW" --resolved-scene "$OUT/scenes/$SCENE/resolved_scene.json" --asset-catalog "$CAT" --out-dir "$OUT/runtime/$SCENE" --settle-steps 900 --contact-window-steps 120 --video-frames 120 --fps 12 --settle-converge-max 1800 > /tmp/rt.out 2>&1
   RT=$(grep -oE "^PASS scene=[^ ]+ fail=0" /tmp/rt.out | head -1)
   $PY -m scene_gen.validator --resolved-scene "$OUT/scenes/$SCENE/resolved_scene.json" --asset-catalog "$CAT" --package-root "$OUT/scenes/$SCENE" --runtime-evidence "$OUT/runtime/$SCENE/runtime_evidence.json" --require-runtime --out "$OUT/runtime/$SCENE/validation_full.json" > /tmp/val.out 2>&1
   VAL=$(tail -1 /tmp/val.out)

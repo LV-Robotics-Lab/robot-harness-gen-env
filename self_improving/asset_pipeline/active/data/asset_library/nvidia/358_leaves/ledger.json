@@ -153,7 +153,7 @@
         "group": "acq_358_leaves",
         "file": "oakfall1.usd",
         "license": {
-          "spdx": null,
+          "spdx": "LicenseRef-NVIDIA-Isaac-Sim-Additional-Software-and-Materials",
           "status": "declared",
           "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4)",
           "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
@@ -186,6 +186,15 @@
           "run_id": "rescale-planC-20260815",
           "timestamp": "2026-08-15T16:21:32",
           "verified_digest": "aefda619737a27f2697014499ada6fe65520aab354a608504d7ca493bed6b5ca"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "fail",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:02",
+          "verified_digest": "599eebd1cf583c481195f02ec850ac864a21c101ef33c36802514e2c2c170888",
+          "report_path": "results/20260822_isaac_writeback/settle/358_leaves_m0/custom/settle_report.json"
         }
       ],
       "appearance": {

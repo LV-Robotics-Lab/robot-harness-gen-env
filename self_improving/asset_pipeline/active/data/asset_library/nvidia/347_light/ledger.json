@@ -153,7 +153,7 @@
         "group": "acq_347_light",
         "file": "streetlamp_02.usd",
         "license": {
-          "spdx": null,
+          "spdx": "LicenseRef-NVIDIA-Isaac-Sim-Additional-Software-and-Materials",
           "status": "declared",
           "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4)",
           "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
@@ -186,6 +186,15 @@
           "run_id": "rescale-planC-20260815",
           "timestamp": "2026-08-15T16:22:23",
           "verified_digest": "8ea9302cffeccaf96bfd88aa08fc43fc32e9fd27c25a273577ccda1f88aac8b6"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "fail",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:01",
+          "verified_digest": "f3b1521dfd78a89f53f4fcc86e96ea5cececb9678d8fd4f43bb0d080a992008b",
+          "report_path": "results/20260822_isaac_writeback/settle/347_light_m0/custom/settle_report.json"
         }
       ],
       "appearance": {

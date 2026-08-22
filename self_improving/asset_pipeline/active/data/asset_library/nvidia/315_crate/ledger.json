@@ -156,7 +156,7 @@
         "group": "acq_315_crate",
         "file": "SM_Crate_A07_Yellow_01.usd",
         "license": {
-          "spdx": null,
+          "spdx": "LicenseRef-NVIDIA-Isaac-Sim-Additional-Software-and-Materials",
           "status": "declared",
           "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4) [applied to new import 2026-08-11: same NVIDIA Isaac Assets source as the audited batch]",
           "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
@@ -189,6 +189,15 @@
           "run_id": "rescale-planC-20260815",
           "timestamp": "2026-08-15T16:22:16",
           "verified_digest": "1a57cb4b2544398a0aa07f476e6cb2864511c39ca5cf1c72aa4d6d6f53a4edbb"
+        },
+        {
+          "backend": "isaacsim",
+          "check": "settle",
+          "verdict": "fail",
+          "run_id": "isaac-writeback-20260822",
+          "timestamp": "2026-08-22T15:56:01",
+          "verified_digest": "36b793aa7570acf6d80f0c8dfaf00a53d9fade02ca5635d1694536d2446d7cf0",
+          "report_path": "results/20260822_isaac_writeback/settle/315_crate_m0/custom/settle_report.json"
         }
       ],
       "appearance": {

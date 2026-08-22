@@ -41,11 +41,29 @@ import sys
 import traceback
 from pathlib import Path
 
-DEV = Path("/home/jingxiang/yuxin/env-gen-dev")
+# Paths come from the shared runtime configuration, not a contributor
+# checkout: the previous literals pointed into /home/jingxiang/..., which the
+# 2026-08-17 machine migration removed -- this harness was dead on arrival on
+# the new box until re-homed (editable installs, /tmp artifacts and other
+# people's directories are reboot-mortal dependencies; so are their homes).
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from runtime_config import ASSET_PIPELINE_ROOT  # noqa: E402
+
+DEV = ASSET_PIPELINE_ROOT
 SCENES_DIR = DEV / "data/scene_gen_ext/_admission_work/scenes"
-LEDGER_DIRS = [DEV / "data/asset_library"]
-ISAAC_PYTHON = "/home/jingxiang/miniconda3/envs/isaac-smoke/bin/python"
-DEFAULT_OUT = Path("/home/jingxiang/isaac_settle_out")
+# usd_enrich looks up <dir>/<name>/ledger.json (flat); since the library is
+# grouped by source provider (2026-08-18) the lookup dirs are the provider
+# subdirectories, plus the upstream ledgers.
+LEDGER_DIRS = sorted(
+    p
+    for p in (DEV / "data/asset_library").iterdir()
+    if p.is_dir() and not p.name.startswith("_")
+) + [DEV / "data/upstream_ledgers"]
+ISAAC_PYTHON = os.environ.get(
+    "ISAAC_PYTHON",
+    str(Path.home() / "miniconda3/envs/isaac-smoke/bin/python"),
+)
+DEFAULT_OUT = DEV / "results" / "isaac_settle_out"
 
 # Built-in cases: scene -> (asset_dir, model_id) as resolved by the scene's
 # own grounding (verified against resolved_scene.json objects[0]).
