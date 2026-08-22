@@ -1,0 +1,97 @@
+{
+  "schema": "robot_harness.runtime_evidence_archive.v1",
+  "captured_on": "2026-08-22",
+  "source_host": "yuhang-B850M-C",
+  "files": [
+    {
+      "source": "matrix/baseline.json",
+      "archive": "matrix/baseline.json",
+      "source_sha256": "08b5dd0d344d7b4082ecbc66279cc5425ec085b9953267153e21a217558464e2",
+      "archive_sha256": "beb51fa290544cd0a158c6c0b85ad06b43b3561e88578ab8fa7cef955641ccf9",
+      "normalization": "strip historical host repo-root prefix from absolute paths",
+      "summary": {
+        "rows": 44,
+        "runtime_pass": 43,
+        "color_match": 9,
+        "color_mismatch": 23,
+        "acquire_fail": 1
+      }
+    },
+    {
+      "source": "matrix/model_color.json",
+      "archive": "matrix/model_color.json",
+      "source_sha256": "262fee6a9346f053fccd6aa836247dab3b8b63cba736262c6f1f17cf296cb428",
+      "archive_sha256": "07e2fa8ad86a40fda38da653b82dab7200aebdc5f8fa3db3ff696c8aee9308ae",
+      "normalization": "strip historical host repo-root prefix from absolute paths",
+      "summary": {
+        "rows": 44,
+        "runtime_pass": 43,
+        "color_match": 23,
+        "color_mismatch": 9,
+        "acquire_fail": 1
+      }
+    },
+    {
+      "source": "b11/coverage_report.json",
+      "archive": "b11/coverage_report.json",
+      "source_sha256": "310c10ad4bfde851e8f498a811a86aba15c180cac344be3396b7f2e7c3e725d3",
+      "archive_sha256": "95916b76cbade96e2e69b38a0074a3e925bc958c28be7976e72cf06284b782d4",
+      "normalization": "strip historical host repo-root prefix from absolute paths"
+    },
+    {
+      "source": "b11/runtime_validation_report.json",
+      "archive": "b11/runtime_validation_report.json",
+      "source_sha256": "2aaa38428324fc019ecec08b7a91ad3d1da5f16f7c7efce5bb63b94fee06162d",
+      "archive_sha256": "de8d208794fb3298b4d692b45b6476db600054c268764a33d546c31fe2fb2150",
+      "normalization": "strip historical host repo-root prefix from absolute paths"
+    },
+    {
+      "source": "hanger/runtime_validation_report.json",
+      "archive": "hanger/runtime_validation_report.json",
+      "source_sha256": "13bd0e793855b15c84dc413cad9f167e105aed064b50ee181fa8b9bb4d1f4808",
+      "archive_sha256": "c0aa5c48961a1f233342b3f8ccddf811fd225c729bafa670efce7a4f09f3a564",
+      "normalization": "strip historical host repo-root prefix from absolute paths"
+    },
+    {
+      "source": "tv/coverage_report.json",
+      "archive": "tv/coverage_report.json",
+      "source_sha256": "b6d335cad3f60f59befb2e46cef9af921733734e20cf08d42999aa5038ad2be6",
+      "archive_sha256": "9cf469ee23ea59c9640ccc8be9726a5d22dc0a7044d1cb3bb02d42a4e6a3b1bf",
+      "normalization": "strip historical host repo-root prefix from absolute paths"
+    },
+    {
+      "source": "tv/runtime_validation_report.json",
+      "archive": "tv/runtime_validation_report.json",
+      "source_sha256": "3b02559a7747133526c26df5fe4e464e52c705c84fa0436fcec1f8242e2f9437",
+      "archive_sha256": "86f5f8281890ab4c966528cc3259bd6789c2a77275c8ca03fdb5602e158fa63a",
+      "normalization": "strip historical host repo-root prefix from absolute paths"
+    },
+    {
+      "source": "isaac/can_settle_report.json",
+      "archive": "isaac/can_settle_report.json",
+      "source_sha256": "872c90e552dfa12a752c8e138879cd5e2233e3cdad7e88d1695027bd669a8b68",
+      "archive_sha256": "073ecf93dbb596b00171eb64a0aa63860c3604b418cdf0a9039420e205bcf4ae",
+      "normalization": "strip historical host repo-root prefix from absolute paths"
+    },
+    {
+      "source": "isaac/box_settle_report.json",
+      "archive": "isaac/box_settle_report.json",
+      "source_sha256": "c862554d11a0cc9414bfd5d13abe8b05969a31c291709b71d630683e00222829",
+      "archive_sha256": "430268fac5802e2537c1179b1e0edf8277f812789a108b8da88e6d50bdfd6040",
+      "normalization": "strip historical host repo-root prefix from absolute paths"
+    },
+    {
+      "source": "isaac/facts.json",
+      "archive": "isaac/facts.json",
+      "source_sha256": "d618f7517d67494c4fc1c6b0f87b54964e41af0bc8a664de8e446619cd53708c",
+      "archive_sha256": "562a17223488d7f26b0412b8635c342b8d1920a1bc1bfb5ec671ca17c7260e23",
+      "normalization": "strip historical host repo-root prefix from absolute paths"
+    }
+  ],
+  "excluded": [
+    "preview images and observer videos",
+    "generated GLB/USD and compiled scene packages",
+    "duplicate pre-fix E2E runs",
+    "host-bound one-off scripts and logs"
+  ]
+}

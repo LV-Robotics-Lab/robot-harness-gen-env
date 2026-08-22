@@ -192,7 +192,7 @@ E2 实跑：303_box 账本 scale=0.35054，源 USD bbox / GLB bbox 三轴比值
 
 <h2>9 · 收尾：术语与位置</h2>
 <p class="small"><b>账本(ledger)</b>=每资产一份的权威入库记录，git 管辖。<b>fragment</b>=账本派生的场景生成视图（yaml）。<b>catalog</b>=上游扫描 shadow 树产出的运行时目录。<b>grounding</b>=把 prompt 里的物体请求匹配到目录条目的上游模块。<b>IR</b>=openxsim 的后端中立中间表示。<b>measured_against</b>=实测数据必须携带的"在哪个栈上测的"戳。</p>
-<p class="small"><b>位置</b>：契约 <code>self_improving/asset_pipeline/active/1_asset_reuse/lib/ledger.py</code>（hyx 分支 0df4fb4 + fb0e014）；决策记录 <code>docs/2026-08-15-asset-ledger-v3-decision-record.md</code>；迁移脚本 <code>scripts/ledger/migrate_v3.py</code>；私有镜像 huyuxinn/env-gen-dev@329e0db。E1 产物 <code>~/e1_matrix_out/</code>、E2 产物 <code>/tmp/e2/</code>（lv-5090）。上游依赖：LV-Robotics-Lab/robot-harness-gen-env（scene_gen 上游只读）、RoboTwin canonical checkout（external/RoboTwin）。</p>
+<p class="small"><b>位置</b>：契约 <code>self_improving/asset_pipeline/active/1_asset_reuse/lib/ledger.py</code>（hyx 分支 0df4fb4 + fb0e014）；决策记录 <code>docs/2026-08-15-asset-ledger-v3-decision-record.md</code>；迁移脚本 <code>scripts/ledger/migrate_v3.py</code>；轻量运行证据归档在 <a href="../../../../validation_evidence/ledger_v3_20260815/"><code>self_improving/validation_evidence/ledger_v3_20260815/</code></a>。上游依赖：LV-Robotics-Lab/robot-harness-gen-env（scene_gen 上游只读）、RoboTwin canonical checkout（external/RoboTwin）。</p>
 </div>
 
 <!-- ==================== 样例审查 ==================== -->
@@ -249,10 +249,10 @@ E2 实跑：303_box 账本 scale=0.35054，源 USD bbox / GLB bbox 三轴比值
 <div class="tblwrap"><table>
 <tr><th>门/步骤</th><th>结果</th><th>出处</th></tr>
 <tr><td>四路辩证（并行 subagent）</td><td>成立主张 7+7+9+7 条；被自己推翻 6+5+若干条（如实入档）</td><td>决策记录 §一~六</td></tr>
-<tr><td>E1 矩阵重跑（44 条，含中文/组合/关系式）</td><td>真命中 9→23 · 错配 23→9 · 全绿 43/44 保持</td><td>e1_matrix_out/attr_matrix_report.json</td></tr>
+<tr><td>E1 矩阵重跑（44 条，含中文/组合/关系式）</td><td>真命中 9→23 · 错配 23→9 · 全绿 43/44 保持</td><td><a href="../../../../validation_evidence/ledger_v3_20260815/matrix/model_color.json">归档逐行结果</a></td></tr>
 <tr><td>E2 身份修复端到端</td><td>skipped_no_ledger: [asset_302_can_m3] → [] · compile partial→compiled（can/box 双场景）</td><td>/tmp/e2/e2e_results.json</td></tr>
 <tr><td>E2 尺寸漂移</td><td>三轴比值 = 2.8527170473137407 ≡ 1/scale（机器精度）；runtime 舞台同值复现</td><td>/tmp/e2/bbox_report.json · runtime_bbox.json</td></tr>
-<tr><td>迁移后回归</td><td>79/79 校验通过 · B11 端到端 fail=0 · 目录 156 可用</td><td>migrate_v3 输出 · e2e_v3/runtime</td></tr>
+<tr><td>迁移后回归</td><td>79/79 校验通过 · B11 端到端 fail=0 · 目录 156 可用</td><td><a href="../../../../validation_evidence/ledger_v3_20260815/b11/runtime_validation_report.json">B11 最终验证报告</a></td></tr>
 </table></div>
 
 <h2>构成画像（v3 契约本体）</h2>

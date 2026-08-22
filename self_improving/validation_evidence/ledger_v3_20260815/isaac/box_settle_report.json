@@ -1,0 +1,137 @@
+{
+  "run_id": "isaac-settle-rehome-20260822",
+  "case": "box",
+  "asset_dir": "303_box",
+  "model_id": 0,
+  "check": "settle",
+  "backend": "isaacsim",
+  "stage_usd": "self_improving/asset_pipeline/active/results/isaac_settle_out/box/compile/isaacsim/scene.usda",
+  "prim_path": "/World/Objects/box_1",
+  "physics": {
+    "dt_s": 0.008333333333333333,
+    "hz": 120.0,
+    "steps": 300,
+    "gravity_original": {
+      "direction": [
+        0.0,
+        0.0,
+        -9.8100004196167
+      ],
+      "magnitude": 1.0
+    },
+    "gravity_applied": {
+      "direction": [
+        0.0,
+        0.0,
+        -1.0
+      ],
+      "magnitude": 9.81
+    }
+  },
+  "criteria": {
+    "window_steps": 50,
+    "window_disp_lt_m": 0.002,
+    "up_tilt_lt_deg": 15.0
+  },
+  "binding": {
+    "applied_schemas_before": [],
+    "preexisting_physics_prims": [],
+    "support_box": {
+      "path": "/World/SettleSupport",
+      "top_z_m": 0.6337809853565288,
+      "size_m": [
+        1.0,
+        1.0,
+        0.05
+      ]
+    },
+    "applied_schemas_after": [
+      "PhysicsRigidBodyAPI"
+    ],
+    "collision_prims": [
+      {
+        "path": "/World/Objects/box_1/_03_cracker_box",
+        "approximation": "convexHull",
+        "applied_schemas": [
+          "PhysicsCollisionAPI",
+          "PhysicsMeshCollisionAPI",
+          "MaterialBindingAPI"
+        ]
+      }
+    ]
+  },
+  "bbox_before_m": {
+    "min": [
+      -0.2909115416996114,
+      -0.05541933505071739,
+      0.6342809853565288
+    ],
+    "max": [
+      -0.13073887430038852,
+      0.11656117105071741,
+      0.8477179942119755
+    ]
+  },
+  "bound_stage_export": "self_improving/asset_pipeline/active/results/isaac_settle_out/box/settle_scene_bound.usda",
+  "pose_source": "SingleRigidPrim",
+  "usd_pose_final_crosscheck_m": [
+    -0.2123195230960846,
+    0.03037511557340622,
+    0.7398130297660828
+  ],
+  "pose_initial": {
+    "position_m": [
+      -0.21085195243358612,
+      0.030528021976351738,
+      0.7404443621635437
+    ],
+    "quat_wxyz": [
+      0.6401953101158142,
+      0.640483021736145,
+      0.2997358441352844,
+      0.3001500368118286
+    ]
+  },
+  "pose_final": {
+    "position_m": [
+      -0.2123195230960846,
+      0.03037511557340622,
+      0.7398130297660828
+    ],
+    "quat_wxyz": [
+      0.6419317722320557,
+      0.6387879252433777,
+      0.2950603663921356,
+      0.30465251207351685
+    ]
+  },
+  "metrics": {
+    "total_displacement_m": 0.0016049064189452675,
+    "max_displacement_m": 0.0016270116007485176,
+    "window_last50_displacement_m": 1.2561466768449073e-07,
+    "up_tilt_deg": 0.7939593585527517,
+    "rel_rotation_deg": 0.7912426232569912
+  },
+  "fail_reasons": [],
+  "verdict": "pass",
+  "compile": {
+    "status": "compiled",
+    "blockers": [],
+    "warnings": [],
+    "artifact": "self_improving/asset_pipeline/active/results/isaac_settle_out/box/compile/isaacsim/scene.usda",
+    "enrich_report": {
+      "enriched": [
+        "asset_303_box_m0"
+      ],
+      "skipped_no_ledger": [],
+      "skipped_no_isaac_rep": [],
+      "warnings": []
+    },
+    "asset_ids": [
+      "asset_303_box_m0"
+    ],
+    "object_ids": [
+      "box_1"
+    ]
+  }
+}

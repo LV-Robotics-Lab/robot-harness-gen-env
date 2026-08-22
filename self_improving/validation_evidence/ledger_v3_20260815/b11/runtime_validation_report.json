@@ -1,0 +1,347 @@
+{
+  "schema_version": "robotwin.scene_validation.v1",
+  "scene_id": "scene_0f35cda76a",
+  "resolved_scene_sha256": "7d9d0029807316b0360f34d92457db3aad6d49ea51f20a370c416c08fb523e0b",
+  "status": "pass",
+  "fail_count": 0,
+  "not_run_count": 0,
+  "checks": [
+    {
+      "name": "workspace_bounds:basket_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.19985068093293482,
+          0.11780759693293483,
+          -0.051355752129386145,
+          0.18991740012938615
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:basket_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.741,
+        "table_height_m": 0.741,
+        "support_relation": "on_table"
+      }
+    },
+    {
+      "name": "real_asset_files:basket_1",
+      "status": "pass",
+      "evidence": {
+        "paths": [
+          "external/RoboTwin/assets/objects/110_basket/collision/base3.glb",
+          "external/RoboTwin/assets/objects/110_basket/model_data3.json",
+          "external/RoboTwin/assets/objects/110_basket/visual/base3.glb"
+        ],
+        "exists": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "workspace_bounds:block_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.09028540540787716,
+          0.006731981407877161,
+          0.01733052627487547,
+          0.11592095372512454
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:block_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.7768,
+        "table_height_m": 0.741,
+        "support_relation": "inside"
+      }
+    },
+    {
+      "name": "real_asset_files:block_1",
+      "status": "pass",
+      "evidence": {
+        "paths": [
+          "external/RoboTwin/assets/objects/004_fluted-block/collision/base0.glb",
+          "external/RoboTwin/assets/objects/004_fluted-block/model_data0.json",
+          "external/RoboTwin/assets/objects/004_fluted-block/visual/base0.glb"
+        ],
+        "exists": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "no_overlap:basket_1:block_1",
+      "status": "pass",
+      "evidence": {
+        "first_aabb_3d": [
+          -0.19985068093293482,
+          0.11780759693293483,
+          -0.051355752129386145,
+          0.18991740012938615,
+          0.741,
+          1.0046
+        ],
+        "second_aabb_3d": [
+          -0.09028540540787716,
+          0.006731981407877161,
+          0.01733052627487547,
+          0.11592095372512454,
+          0.7768,
+          0.8421000000000001
+        ],
+        "expected_support_pair": true
+      }
+    },
+    {
+      "name": "relation:on_table:basket_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "relation:inside:block_1:basket_1",
+      "status": "pass",
+      "evidence": {
+        "center_distance_m": 0.002760389968094365,
+        "source_aabb": [
+          -0.09028540540787716,
+          0.006731981407877161,
+          0.01733052627487547,
+          0.11592095372512454
+        ],
+        "target_aabb": [
+          -0.19985068093293482,
+          0.11780759693293483,
+          -0.051355752129386145,
+          0.18991740012938615
+        ],
+        "source_aabb_3d": [
+          -0.09028540540787716,
+          0.006731981407877161,
+          0.01733052627487547,
+          0.11592095372512454,
+          0.7768,
+          0.8421000000000001
+        ],
+        "target_aabb_3d": [
+          -0.19985068093293482,
+          0.11780759693293483,
+          -0.051355752129386145,
+          0.18991740012938615,
+          0.741,
+          1.0046
+        ],
+        "target_interior_aabb_3d": [
+          -0.11797296971906238,
+          0.03592988571906238,
+          -0.008003074341944194,
+          0.1465647223419442,
+          0.7568,
+          0.997
+        ],
+        "inside_footprint_margin_m": 0.015266409624609664
+      }
+    },
+    {
+      "name": "resolved_only_roundtrip",
+      "status": "pass",
+      "evidence": {
+        "before": "7d9d0029807316b0360f34d92457db3aad6d49ea51f20a370c416c08fb523e0b",
+        "after": "7d9d0029807316b0360f34d92457db3aad6d49ea51f20a370c416c08fb523e0b"
+      }
+    },
+    {
+      "name": "runtime_status",
+      "status": "pass",
+      "evidence": null
+    },
+    {
+      "name": "robot_initial_collision",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "observer_video_frame_count",
+      "status": "pass",
+      "evidence": {
+        "frames": 4,
+        "minimum": 3
+      }
+    },
+    {
+      "name": "observer_video_unique_frames",
+      "status": "pass",
+      "evidence": {
+        "unique_frames": 4,
+        "minimum": 4
+      }
+    },
+    {
+      "name": "translation_drift:basket_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_m": 0.0016142727932129037,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "rotation_drift:basket_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_deg": 0.01099586160067999,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_translation_error:basket_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_m": 0.0016142694560124294,
+        "threshold_m": 0.02,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_rotation_error:basket_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_deg": 0.0,
+        "threshold_deg": 5.0,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "penetration:basket_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:basket_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "support_contact:basket_1",
+      "status": "pass",
+      "evidence": {
+        "raw_contact": true,
+        "mode": "on_table_contact",
+        "is_static": false,
+        "expected_target": "table",
+        "observed_target": "table",
+        "contact_fraction": 1.0,
+        "minimum_contact_fraction": 0.8
+      }
+    },
+    {
+      "name": "not_dropped:basket_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "head_visibility:basket_1",
+      "status": "pass",
+      "evidence": {
+        "pixels": 12296,
+        "threshold": 64
+      }
+    },
+    {
+      "name": "translation_drift:block_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_m": 0.016153537532563045,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "rotation_drift:block_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_deg": 0.42427230538579397,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_translation_error:block_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_m": 0.016153560652030937,
+        "threshold_m": 0.02,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_rotation_error:block_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_deg": 0.4243198796576275,
+        "threshold_deg": 5.0,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "penetration:block_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:block_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "support_contact:block_1",
+      "status": "pass",
+      "evidence": {
+        "raw_contact": true,
+        "mode": "inside_contact",
+        "is_static": false,
+        "expected_target": "basket_1",
+        "observed_target": "basket_1",
+        "contact_fraction": 1.0,
+        "minimum_contact_fraction": 0.8
+      }
+    },
+    {
+      "name": "no_unexpected_support_contact:block_1",
+      "status": "pass",
+      "evidence": {
+        "contact_fraction": 0.0,
+        "targets": []
+      }
+    },
+    {
+      "name": "runtime_inside_containment:block_1",
+      "status": "pass",
+      "evidence": {
+        "inside_contained": true
+      }
+    },
+    {
+      "name": "not_dropped:block_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "head_visibility:block_1",
+      "status": "pass",
+      "evidence": {
+        "pixels": 1324,
+        "threshold": 64
+      }
+    }
+  ]
+}

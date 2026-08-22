@@ -187,7 +187,7 @@ written=0 skipped=2</pre>
 <tr><th>步</th><th>发生了什么</th><th>真实产物</th></tr>
 <tr><td>① 编译</td><td>生产链把 302_can m3 编进 Isaac 场景，无 monkeypatch</td><td><code>compile status=compiled, assets=['asset_302_can_m3'], blockers=[]</code></td></tr>
 <tr><td>② 绑定</td><td>目标 prim 施加刚体+碰撞（绑定前 schema 为空，自证原状）</td><td><code>settle_scene_bound.usda</code>（另存，不动编译产物）</td></tr>
-<tr><td>③ 仿真</td><td>300 步 @120Hz，末窗位移 5.2e-6 m，倾角 0.154°</td><td><code>results/isaac_settle_out/can/settle_report.json</code></td></tr>
+<tr><td>③ 仿真</td><td>300 步 @120Hz，末窗位移 5.2e-6 m，倾角 0.154°</td><td><a href="../../../../validation_evidence/ledger_v3_20260815/isaac/can_settle_report.json">归档 settle 报告</a></td></tr>
 <tr><td>④ 写回</td><td>facts 经唯一通道入账，digest 锚定</td><td>302_can 账本 verification[] 新增 <code>(isaacsim,settle)=pass, digest 83b4b34c…</code></td></tr>
 </table></div>
 <pre>// ④ 的账本记录原文（302_can/ledger.json，git diff 实录）

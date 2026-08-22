@@ -73,9 +73,9 @@
 
 ## 八、实验裁决结果（2026-08-15 实跑回填）
 
-- **E1 模型级颜色**：44 条属性矩阵重跑——颜色真命中 9→23、错配 23→9、全绿 43/44 保持。模型级 appearance 由此从提案升级为 v3 正式字段。
+- **E1 模型级颜色**：44 条属性矩阵重跑——颜色真命中 9→23、错配 23→9、全绿 43/44 保持。模型级 appearance 由此从提案升级为 v3 正式字段；逐行结果见 [`validation_evidence/ledger_v3_20260815/matrix/`](../../../validation_evidence/ledger_v3_20260815/matrix/)。
 - **E2 Isaac 迁移**：①身份修复（剥 asset_ 前缀/改走 source 键）后 skipped_no_ledger 清空、compile partial→compiled；②尺寸漂移 = 精确 1/scale（cracker box 2.8527×），30 model 命中——scale_baked 实证必需；③Isaac runtime 舞台实测同样 2.8527×（尺寸异常非仅编译期）；静态引用下 reset/step 通过是空洞证据——运行时验证须记录物理绑定状态。isaac-smoke 环境新机可用（OMNI_KIT_ACCEPT_EULA=YES 前提）。
-- **冗余回归**：v3 删除/降级全部落地后双套件 262+57 全绿、79 账本迁移零失败、目录 156 可用、B11 e2e fail=0——删的都真是死的。
+- **冗余回归**：v3 删除/降级全部落地后双套件 262+57 全绿、79 账本迁移零失败、目录 156 可用、B11 e2e fail=0；最终验证报告见 [`validation_evidence/ledger_v3_20260815/b11/`](../../../validation_evidence/ledger_v3_20260815/b11/)。
 
 ## 九、定稿状态
 
