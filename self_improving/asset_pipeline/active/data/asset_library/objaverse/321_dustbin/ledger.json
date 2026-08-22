@@ -42,16 +42,16 @@
             {
               "pose_id": "upright",
               "orientation_wxyz": [
-                0.7071067811865476,
-                0.7071067811865476,
-                0.0,
-                0.0
+                0.55464,
+                0.487252,
+                0.446167,
+                0.505861
               ],
               "is_default": true,
               "measured_against": {
                 "backend": "sapien",
-                "run_id": "migrate-v3-20260815",
-                "note": "import normalization chain (X90 dialect)"
+                "run_id": "scene-settle-2700-20260820",
+                "note": "runtime-measured rest: the import-chain X90 upright rocks ~8.9deg at spawn and needs >900 steps to calm (bag shifts the mass); this quat is the pose the CONSUMING table runtime itself settled into over 2700 steps (up-axis lean 7.3deg, standing; evidence work/probe_20260818_dustbin_render/out/s2/run_321_dustbin_2700). Spawn-at-rest eliminates the transient. Bare-ground calibration topples this asset (harsher surface) -- environment mismatch documented 2026-08-22."
               }
             }
           ],
