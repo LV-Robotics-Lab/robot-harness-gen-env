@@ -290,6 +290,11 @@ def test_library_endpoints(tmp_path, monkeypatch, roots):
     r = c.get("/api/library/stats").get_json()
     assert r["kpis"]["assets"] == 3 and "generated_at" in r
 
+    # 来源分层布局（asset_library/<source>/<id>/）同样能找到快照
+    nested = lib / "objaverse" / "n1" / "snapshots"
+    nested.mkdir(parents=True)
+    (nested / "m0_default.png").write_bytes(b"\x89PNGnested")
+    assert c.get("/api/library/thumb/n1").status_code == 200
     # thumb 解析顺序：web_thumbs 优先 → snapshots 兜底 → 404
     assert c.get("/api/library/thumb/b1").status_code == 200
     (thumbs / "b1.png").write_bytes(b"\x89PNGoverride")

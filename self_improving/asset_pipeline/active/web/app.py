@@ -1101,7 +1101,12 @@ def api_library_thumb(asset_id):
         abort(404)
     p = WEB_THUMBS / f"{asset_id}.png"
     if not p.is_file():
-        p = ASSET_LIB / asset_id / "snapshots" / "m0_default.png"
+        # asset_library 按来源分一级（nvidia/ objaverse/ …），平铺与嵌套都查
+        for c in [ASSET_LIB / asset_id, *ASSET_LIB.glob(f"*/{asset_id}")]:
+            s = c / "snapshots" / "m0_default.png"
+            if s.is_file():
+                p = s
+                break
     if not p.is_file():
         abort(404)
     return send_file(str(p), mimetype="image/png")
