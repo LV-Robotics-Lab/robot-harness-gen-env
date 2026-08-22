@@ -130,7 +130,7 @@ details>.body pre{border:none;background:none;padding:0;margin:0}
 <tr><td>s10 生产端到端</td><td>红杯场景：grounding 选中 red-measured model → SAPIEN 回放 fail=0 → 全量验证 fail=0 not_run=0</td><td><span class="badge b-pass">pass</span></td></tr>
 <tr><td>s12 external-only 验收门</td><td>曾 0/5（视图文件自 08-03 手工产出后腐烂，带旧机绝对路径）；s9 改为每次派生后恢复 <b>5/5</b></td><td><span class="badge b-pass">pass</span></td></tr>
 <tr><td>垃圾桶定论（本页第 6 节）</td><td>固定 900 步 late_rot 0.586°→0.0786°，渲染站立完整</td><td><span class="badge b-pass">pass</span></td></tr>
-<tr><td>真翻滚物体</td><td>002_bowl / 021_cup 延长到 4500 步仍在动（16.999° / 2.063°）——门如实拦住，不因延长视界放水</td><td><span class="badge b-stop">stop·如实</span></td></tr>
+<tr><td>真翻滚物体</td><td>002_bowl / 021_cup 延长到 4500 步仍在动——门如实拦住。<b>追加定论（08-22）</b>：两资产单放全静，历史失败是 08-12 旧位姿场景的弹射事故；今日重生成瓶+碗全静 PASS，杯上笔记本定位到求解器放置超边 2cm（支撑边距 −0.0199m，记上游对齐清单）</td><td><span class="badge b-pass">pass</span></td></tr>
 <tr><td>「声明无免检」扩到 3XX</td><td>55 资产 / 63 model 全测；333_cherry 声明复验漂移 22.2° 被拒（它会滚）——声明不给免检</td><td><span class="badge b-stop">stop·如实</span></td></tr>
 <tr><td colspan="3"><b>C · 检索身份门（VLM）</b></td></tr>
 <tr><td>候选不合身份即拒</td><td>要 blue ball，Objaverse 候选「blue ball hahahahahaha」开放问答出 <code>marble ball</code>（黑白大理石）→ mismatch 拒收</td><td><span class="badge b-stop">stop·如实</span></td></tr>
@@ -138,7 +138,7 @@ details>.body pre{border:none;background:none;padding:0;margin:0}
 <tr><td colspan="3"><b>D · 工具与测量自纠（本次战役）</b></td></tr>
 <tr><td>校准器 --only 整文件覆写 bug</td><td>范围战役静默抹掉 534 条原生行 → 从跑前备份恢复 + 修复（--only 现在=重测指名保留其余）</td><td><span class="badge b-pass">pass</span></td></tr>
 <tr><td>声明复验协议错位</td><td>落体 5mm 冲击比任何场景出生苛刻 → 改为按声明 z_policy 贴面出生复验</td><td><span class="badge b-pass">pass</span></td></tr>
-<tr><td>校准环境与运行时材质失配</td><td>同一资产贴面出生：裸地面翻倒、场景桌面站立——失配记档，根治开题</td><td><span class="badge b-warn">open</span></td></tr>
+<tr><td>校准环境与运行时材质失配</td><td>根因=校准场景用引擎默认材质（带弹性）；补 create_physical_material(0.5,0.5,0) 对齐运行时后，裸地面测得垃圾桶站立 11.1°（场景实测 11.5°）——失配闭合（2026-08-22 追加）</td><td><span class="badge b-pass">pass</span></td></tr>
 </table></div>
 
 <h2><span class="no">3</span>阶段总览</h2>
@@ -371,12 +371,12 @@ staging ──2_convert──▶ GLB/URDF ──3_materialize──▶ asset_lib
 <h2><span class="no">12</span>下一步路线</h2>
 <div class="tablewrap"><table>
 <tr><th>阶段</th><th>做什么</th><th>关键决策点 → 建议方案</th><th>前置/等谁拍板</th></tr>
-<tr><td>校准环境对齐</td><td>校准场景采用消费运行时的桌面摩擦/恢复系数</td><td>参数来源：直接读 RoboTwin 桌面材质定义注入 add_ground——建议做，消除唯一已知测量失配</td><td>无前置</td></tr>
-<tr><td>自适应静置接线</td><td>把 <code>--settle-converge-max 1800</code> 显式写进 s10/s12/web 调用（脚本默认保持 0）</td><td>接不接=生产口径变更——建议接（s7 双向证据已齐），等一句授权</td><td><b>等用户拍板</b></td></tr>
-<tr><td>真翻滚处置</td><td>002_bowl / 021_cup 多姿态重测或退役换购</td><td>建议先 settle_repair 重测，失败再走采购替代（有 314_cabinet 先例）</td><td>无前置</td></tr>
-<tr><td>许可细化</td><td>27 个 vendor-declared model 补条款级 spdx</td><td>建议按来源批量核（NVIDIA EULA / Khronos 逐模型页），开源前必做</td><td>开源时间点</td></tr>
+<tr><td>校准环境对齐</td><td>校准场景采用消费运行时的桌面摩擦/恢复系数</td><td>✅ 已完成（08-22）：create_physical_material(0.5,0.5,0) 对齐，失配闭合</td><td>—</td></tr>
+<tr><td>自适应静置接线</td><td>把 <code>--settle-converge-max 1800</code> 显式写进 s10/s12/web 调用（脚本默认保持 0）</td><td>✅ 已授权并接线（08-22）：s10/s12/web 显式 --settle-converge-max 1800，脚本默认仍 0；接线后 s10 PASS、s12 5/5</td><td>—</td></tr>
+<tr><td>真翻滚处置</td><td>002_bowl / 021_cup 多姿态重测或退役换购</td><td>✅ 定论（08-22）：资产无病（单放全静）；历史失败=旧位姿弹射；余项=求解器支撑边距（上游对齐清单）</td><td>—</td></tr>
+<tr><td>许可细化</td><td>27 个 vendor-declared model 补条款级 spdx</td><td>✅ 已回填（08-22）：27 个 NVIDIA model → LicenseRef-NVIDIA-Isaac-Sim-…；null spdx 归零</td><td>—</td></tr>
 <tr><td>同类选优</td><td>同类目多资产的择优机制</td><td>用户已点名调研的开放课题——维持 parked，不在本期内草率上机制</td><td>调研结论</td></tr>
-<tr><td>跨后端义务</td><td>MuJoCo 编译实跑 + isaacsim verification 回写义务落地</td><td>建议下一个跨后端里程碑一并做（v3 契约已留好字段）</td><td>Isaac/MuJoCo 环境排期</td></tr>
+<tr><td>跨后端义务</td><td>MuJoCo 编译实跑 + isaacsim verification 回写义务落地</td><td>✅ 半程落地（08-22）：Isaac sweep 25 份 facts 写回（13 pass/14 fail 诚实入册，19 如实跳过）；MuJoCo 首跑真滚落（304_bottle OBJ 表示+enrich_mujoco_from_ledgers+测试）。余项=MJCF 支撑盒 harness、grounding 走不到的 19 model</td><td>—</td></tr>
 </table></div>
 
 <h2><span class="no">13</span>术语与依赖</h2>
