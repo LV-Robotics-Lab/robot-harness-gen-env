@@ -355,9 +355,9 @@ def build_or_load_local_asset_embeddings(
             inp = proc(images=Image.open(t).convert("RGB"), return_tensors="pt").to(
                 device
             )
-            v = torch.nn.functional.normalize(
-                model.get_image_features(**inp), dim=-1
-            )[0]
+            v = torch.nn.functional.normalize(model.get_image_features(**inp), dim=-1)[
+                0
+            ]
         keep.append(aid)
         vecs.append(v.cpu().numpy())
     cache.parent.mkdir(parents=True, exist_ok=True)
@@ -372,15 +372,20 @@ def build_or_load_local_asset_embeddings(
     return dict(zip(keep, vecs))
 
 
-def local_asset_scores(query_text, asset_ids, active_root, model_name=DEFAULT_MODEL):
-    """{asset_id: CLIP 文本-图像余弦分}；缺缩略图的资产不在返回里。"""
+def local_asset_scores(
+    query_text, asset_ids, active_root, model_name=DEFAULT_MODEL, cache_ids=None
+):
+    """{asset_id: CLIP 文本-图像余弦分}；缺缩略图的资产不在返回里。
+    cache_ids（如全 catalog 的 asset_id）用于建缓存——按全库指纹建一次、
+    跨类别复用；不传则退化为按本次 asset_ids 建（会随查询类别反复重建）。"""
     import numpy as np
     import torch
     from transformers import CLIPModel, CLIPProcessor
 
     embeds = build_or_load_local_asset_embeddings(
-        asset_ids, active_root, model_name=model_name
+        cache_ids or asset_ids, active_root, model_name=model_name
     )
+    embeds = {a: v for a, v in embeds.items() if a in set(map(str, asset_ids))}
     if not embeds:
         return {}
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -390,7 +395,9 @@ def local_asset_scores(query_text, asset_ids, active_root, model_name=DEFAULT_MO
     proc = CLIPProcessor.from_pretrained(model_name, local_files_only=True)
     with torch.no_grad():
         inp = proc(text=[query_text], return_tensors="pt", padding=True).to(device)
-        tv = torch.nn.functional.normalize(model.get_text_features(**inp), dim=-1)[
-            0
-        ].cpu().numpy()
+        tv = (
+            torch.nn.functional.normalize(model.get_text_features(**inp), dim=-1)[0]
+            .cpu()
+            .numpy()
+        )
     return {aid: float(np.dot(v, tv)) for aid, v in embeds.items()}

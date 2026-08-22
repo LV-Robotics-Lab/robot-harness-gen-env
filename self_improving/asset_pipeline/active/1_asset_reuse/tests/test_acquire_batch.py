@@ -675,7 +675,7 @@ def test_allow_similar_false_keeps_none(tmp_path):
 def test_local_similar_carries_candidate_list(tmp_path, monkeypatch):
     # 视觉 seam 注入假分数：候选列表带 attr/visual 双分，similar 结论不变
     monkeypatch.setattr(
-        ab, "_visual_scores", lambda entry, cat, ids, root: {"308_ball": 0.25}
+        ab, "_visual_scores", lambda entry, cat, ids, root, **kw: {"308_ball": 0.25}
     )
     p = paths(tmp_path)
     p["tier0_catalog"] = _wants_catalog(tmp_path)
@@ -702,7 +702,7 @@ def test_local_similar_carries_candidate_list(tmp_path, monkeypatch):
 def test_visual_gate_can_empty_the_similar_pool(tmp_path, monkeypatch):
     # 视觉分低于门限且属性不符 → 本地池被筛空 → none（严格语义成立）
     monkeypatch.setattr(
-        ab, "_visual_scores", lambda entry, cat, ids, root: {"308_ball": 0.05}
+        ab, "_visual_scores", lambda entry, cat, ids, root, **kw: {"308_ball": 0.05}
     )
     p = paths(tmp_path)
     p["tier0_catalog"] = _wants_catalog(tmp_path)

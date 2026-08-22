@@ -843,7 +843,7 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         walk_pool = deeper
 
 
-def _visual_scores(entry, category, asset_ids, active_root):
+def _visual_scores(entry, category, asset_ids, active_root, cache_ids=None):
     """CLIP 文本-图像分（best-effort seam，测试可整体替换）。
     失败一律返回 None → 排序退化为纯属性分，绝不因视觉通道故障拒答。"""
     try:
@@ -857,7 +857,7 @@ def _visual_scores(entry, category, asset_ids, active_root):
                 str(category).replace("_", " "),
             ]
         )
-        return a5v.local_asset_scores(q, asset_ids, active_root)
+        return a5v.local_asset_scores(q, asset_ids, active_root, cache_ids=cache_ids)
     except Exception:
         return None
 
@@ -877,8 +877,22 @@ def _local_candidates(entry, category, paths):
     if not cands:
         return None
     active_root = Path(paths["library"]).parents[1]
+    try:
+        all_ids = [
+            str(e.get("asset_id"))
+            for e in json.loads(Path(paths["tier0_catalog"]).read_text()).get(
+                "entries", []
+            )
+            if e.get("asset_id")
+        ]
+    except (OSError, ValueError):
+        all_ids = None  # 缓存退化为按本次候选建，功能不受影响
     vis = _visual_scores(
-        entry, category, [c["asset"]["asset_id"] for c in cands], active_root
+        entry,
+        category,
+        [c["asset"]["asset_id"] for c in cands],
+        active_root,
+        cache_ids=all_ids,
     )
     if vis:
         cands = a2.match_local_all(
