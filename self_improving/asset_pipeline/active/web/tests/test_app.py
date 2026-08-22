@@ -333,3 +333,32 @@ def test_files_listing_and_py_whitelist(roots):
     assert all(set(f) == {"p", "size", "mtime"} for f in files)
     r = c.get("/api/run/web/20260812_000000_demo/file?p=scenes/x/generated_scene.py")
     assert r.status_code == 200
+
+
+def test_live_stage34_reset_per_candidate(roots):
+    """② 进行中时，③④只反映当前候选：上一候选失败后回灰（即使它的
+    截图还在盘上），新候选的转换标记出现才重新点亮。"""
+    web, _ = roots
+    d = web / "20260820_000004_live"
+    d.mkdir()
+    (d / "run_meta.json").write_text(
+        json.dumps({"prompt": "x", "seed": 1, "started_at": "2026-08-20T00:00:01+08:00"})
+    )
+    (d / "run_state.json").write_text(json.dumps({"phase": "pipeline", "outcome": None}))
+    (d / "acquire_categories.json").write_text("[]")
+    shots = d / "acquire" / "shots"
+    shots.mkdir(parents=True)
+    (shots / "cand1.png").write_bytes(b"x")
+    (d / "run.log").write_text(
+        "Simulation App Startup Complete\naccepted 3xx m0 ok\nREJECTED 3xx m0 (bad)\n"
+    )
+    tl = timeline_of(d)
+    assert tl[1]["status"] == "active"
+    assert tl[2]["status"] == "pending"
+    assert tl[3]["status"] == "pending"
+    (d / "run.log").write_text((d / "run.log").read_text() + "app ready\n")
+    tl = timeline_of(d)
+    assert tl[2]["status"] == "active" and tl[3]["status"] == "pending"
+    (d / "run.log").write_text((d / "run.log").read_text() + "accepted 3xx m1 ok\n")
+    tl = timeline_of(d)
+    assert tl[3]["status"] == "active"

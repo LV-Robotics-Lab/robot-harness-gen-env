@@ -632,6 +632,22 @@ def compute_stage_timeline(run_dir, meta, state, log_text):
     if live:
         if phase == "render":
             active_n = 7
+        elif gap_ran and stages[2][0] == "pending":
+            # ② 进行中：③④只反映「当前候选」的进度——上一个候选失败
+            # （REJECTED 行）后从灰重新开始，不因它留下的截图而常绿
+            # （2026-08-20 用户反馈：多候选重试时后面步骤不该保持绿色）。
+            tail = log_text or ""
+            last = None
+            for last in re.finditer(r"REJECTED \S+ m\d+ \(", tail):
+                pass
+            if last is not None:
+                tail = tail[last.end() :]
+            tl_low = tail.lower()
+            s4_seen = ("accepted " in tl_low) or ("rejected " in tl_low)
+            s3_seen = ("simulation app startup" in tl_low) or ("app ready" in tl_low)
+            stages[3] = ("active" if (s3_seen and not s4_seen) else "pending", None)
+            stages[4] = ("active" if s4_seen else "pending", None)
+            active_n = 2
         else:
             active_n = next((n for n in range(1, 8) if stages[n][0] == "pending"), None)
             best = None
