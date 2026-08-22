@@ -670,3 +670,52 @@ def test_allow_similar_false_keeps_none(tmp_path):
     )
     ab._match_block(rec, p)
     assert rec["match"]["grade"] == "none"
+
+
+def test_local_similar_carries_candidate_list(tmp_path, monkeypatch):
+    # 视觉 seam 注入假分数：候选列表带 attr/visual 双分，similar 结论不变
+    monkeypatch.setattr(
+        ab, "_visual_scores", lambda entry, cat, ids, root: {"308_ball": 0.25}
+    )
+    p = paths(tmp_path)
+    p["tier0_catalog"] = _wants_catalog(tmp_path)
+    tiers = [
+        Tier(0, FakeProvider("t0", [cand("ball")])),
+        Tier(1, FakeProvider("t1", [])),
+    ]
+    rec = ab.process_entry(
+        {"category": "ball", "colors": ["blue"]},
+        tiers,
+        {"identity_gate": {"enabled": False}},
+        p,
+        lambda cmd, env=None: 0,
+    )
+    ab._match_block(rec, p)
+    m = rec["match"]
+    assert m["grade"] == "similar"
+    assert len(m["candidates"]) == 1
+    assert m["candidates"][0]["asset"]["asset_id"] == "308_ball"
+    assert m["candidates"][0]["visual_sim"] == 0.25
+    assert m["candidates"][0]["attr_score"] == 0.0
+
+
+def test_visual_gate_can_empty_the_similar_pool(tmp_path, monkeypatch):
+    # 视觉分低于门限且属性不符 → 本地池被筛空 → none（严格语义成立）
+    monkeypatch.setattr(
+        ab, "_visual_scores", lambda entry, cat, ids, root: {"308_ball": 0.05}
+    )
+    p = paths(tmp_path)
+    p["tier0_catalog"] = _wants_catalog(tmp_path)
+    tiers = [
+        Tier(0, FakeProvider("t0", [cand("ball")])),
+        Tier(1, FakeProvider("t1", [])),
+    ]
+    rec = ab.process_entry(
+        {"category": "ball", "colors": ["blue"]},
+        tiers,
+        {"identity_gate": {"enabled": False}},
+        p,
+        lambda cmd, env=None: 0,
+    )
+    ab._match_block(rec, p)
+    assert rec["match"]["grade"] == "none"

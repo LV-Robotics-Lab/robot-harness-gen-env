@@ -131,15 +131,19 @@ def main(argv=None, runner=None):
 
         lib_dir = Path(a.dev_root) / "data" / "asset_library"
         for r in remaining:
-            pay, unmet = a2.match_local(
+            cands = a2.match_local_all(
                 catalog,
                 r.get("category"),
                 want_colors=[r["color"]] if r.get("color") else None,
                 want_materials=[r["material"]] if r.get("material") else None,
                 library_dir=lib_dir,
             )
-            if pay is not None:
-                r["nearest_local"] = {"asset": pay, "unmet": unmet}
+            if cands:
+                r["nearest_local"] = {
+                    "asset": cands[0]["asset"],
+                    "unmet": cands[0]["unmet"],
+                    "candidates": cands,
+                }
         (out / "asset_gap_blocker.json").write_text(
             json.dumps(
                 {

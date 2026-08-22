@@ -570,20 +570,24 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
             # 先对 catalog 做属性核对——全满足才当场复用(exact)；有差距则
             # 压下这次复用、记作 similar 候补，判 exhausted 让外层循环继续
             # 向更深 tier 找 exact（blue ball 案例的根修）。
-            payload = unmet = None
-            if paths.get("tier0_catalog"):
-                payload, unmet = a2.match_local(
-                    paths["tier0_catalog"],
-                    category,
-                    want_colors=entry.get("colors"),
-                    want_materials=entry.get("materials"),
-                    library_dir=paths.get("library"),
-                )
-            if (want_color or want_material) and payload is not None and unmet:
-                rec["_local_similar"] = {"asset": payload, "unmet": unmet}
+            cands = _local_candidates(entry, category, paths)
+            top = cands[0] if cands else None
+            if (
+                paths.get("tier0_catalog")
+                and (want_color or want_material)
+                and (top is None or top["unmet"])
+            ):
+                # 带约束且本地无「确认全符」候选（含被视觉门限筛空的情形）：
+                # 压下复用继续外层找 exact；有候选则记 similar 候补。
+                if top is not None:
+                    rec["_local_similar"] = {
+                        "asset": top["asset"],
+                        "unmet": top["unmet"],
+                        "candidates": cands,
+                    }
                 rec["local_reuse_suppressed"] = {
                     "asset_id": (res["tier0_hit"].metadata or {}).get("asset_id"),
-                    "reason": "attribute_gap",
+                    "reason": "attribute_gap" if top is not None else "visual_gate",
                 }
                 rec["status"] = "exhausted"
                 return rec
@@ -592,11 +596,12 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
                 "asset_id": res["tier0_hit"].metadata.get("asset_id"),
                 "reason": a2.ALREADY,
             }
-            if payload is not None:
+            if top is not None:
                 rec["_match"] = {
                     "grade": "exact",
-                    "asset": payload,
-                    "unmet": unmet or [],
+                    "asset": top["asset"],
+                    "unmet": top["unmet"],
+                    "candidates": cands,
                 }
             return rec
         gated = a2.gate_candidates(res["candidates"], globals_cfg)
@@ -838,6 +843,54 @@ def process_entry(entry, tiers, globals_cfg, paths, runner):
         walk_pool = deeper
 
 
+def _visual_scores(entry, category, asset_ids, active_root):
+    """CLIP 文本-图像分（best-effort seam，测试可整体替换）。
+    失败一律返回 None → 排序退化为纯属性分，绝不因视觉通道故障拒答。"""
+    try:
+        from lib import a5_visual as a5v
+
+        q = " ".join(
+            [
+                "a photo of a",
+                *(entry.get("colors") or []),
+                *(entry.get("materials") or []),
+                str(category).replace("_", " "),
+            ]
+        )
+        return a5v.local_asset_scores(q, asset_ids, active_root)
+    except Exception:
+        return None
+
+
+def _local_candidates(entry, category, paths):
+    """本地同类候选全量列表（attr 分 + 尽力视觉分 + 门限过滤）。
+    两遍：先 attr-only 拿池子 → 有视觉分再带 min_visual 重排过滤
+    （门限 0.18 来自探针标定，条目级 similar_min_visual 可覆盖）。"""
+    if not paths.get("tier0_catalog"):
+        return None
+    kw = dict(
+        want_colors=entry.get("colors"),
+        want_materials=entry.get("materials"),
+        library_dir=paths.get("library"),
+    )
+    cands = a2.match_local_all(paths["tier0_catalog"], category, **kw)
+    if not cands:
+        return None
+    active_root = Path(paths["library"]).parents[1]
+    vis = _visual_scores(
+        entry, category, [c["asset"]["asset_id"] for c in cands], active_root
+    )
+    if vis:
+        cands = a2.match_local_all(
+            paths["tier0_catalog"],
+            category,
+            **kw,
+            visual_scores=vis,
+            min_visual=float(entry.get("similar_min_visual", 0.18)),
+        )
+    return cands
+
+
 def _library_payload(paths, asset, model=0):
     """引进成功后的资产 payload（供 match 块返回给调用方复用）。
     asset_library 按来源分一级，所以两种深度都找。"""
@@ -897,20 +950,26 @@ def _match_block(rec, paths):
             "unmet": rec.pop("_similar_unmet", []),
         }
     elif status == "reused_local":
-        payload = None
-        unmet = []
+        cands = None
         if paths.get("tier0_catalog"):
-            payload, unmet = a2.match_local(
+            cands = a2.match_local_all(
                 paths["tier0_catalog"],
                 (rec.get("query") or {}).get("category"),
                 library_dir=paths.get("library"),
             )
-        if payload is None:
+        if not cands:
             payload = {
                 "asset_id": (rec.get("local_reuse") or {}).get("asset_id"),
                 "source": "local_reuse",
             }
-        rec["match"] = {"grade": "exact", "asset": payload, "unmet": unmet or []}
+            rec["match"] = {"grade": "exact", "asset": payload, "unmet": []}
+        else:
+            rec["match"] = {
+                "grade": "exact",
+                "asset": cands[0]["asset"],
+                "unmet": cands[0]["unmet"],
+                "candidates": cands,
+            }
     else:
         rec["match"] = {"grade": "none", "asset": None, "unmet": []}
     return rec

@@ -287,3 +287,44 @@ def test_allocate_asset_profile_conflict_opens_new_slot(tmp_path):
         "302_ball",
         0,
     )
+
+
+def test_match_local_all_list_scores_and_threshold(tmp_path):
+    p = _mini_match_catalog(tmp_path)
+    # 全量列表：ball 两个候选都返回，attr_score 排序
+    cands = a2.match_local_all(p, "ball", want_colors=["blue"])
+    assert [c["asset"]["asset_id"] for c in cands] == ["011_ball_b", "010_ball_y"]
+    assert cands[0]["attr_score"] == 1.0 and cands[0]["unmet"] == []
+    assert cands[1]["attr_score"] == 0.0
+    # 视觉分在同 attr 档内重排
+    cands = a2.match_local_all(
+        p, "ball", visual_scores={"010_ball_y": 0.30, "011_ball_b": 0.20}
+    )
+    assert [c["asset"]["asset_id"] for c in cands] == ["010_ball_y", "011_ball_b"]
+    assert cands[0]["visual_sim"] == 0.3
+    # 门限只筛相似（unmet 非空）者；exact 豁免
+    cands = a2.match_local_all(
+        p,
+        "ball",
+        want_colors=["blue"],
+        visual_scores={"010_ball_y": 0.05, "011_ball_b": 0.05},
+        min_visual=0.18,
+    )
+    ids = [c["asset"]["asset_id"] for c in cands]
+    assert "011_ball_b" in ids  # exact 留下
+    assert "010_ball_y" not in ids  # similar 低于门限被筛
+    # 无视觉分（缺缩略图）不误杀
+    cands = a2.match_local_all(
+        p, "ball", want_colors=["blue"], visual_scores={}, min_visual=0.18
+    )
+    assert len(cands) == 2 and all(c["visual_sim"] is None for c in cands)
+    # limit 生效
+    assert len(a2.match_local_all(p, "ball", limit=1)) == 1
+
+
+def test_attr_score_values():
+    assert a2._attr_score([], 0) == 1.0
+    assert a2._attr_score([], 2) == 1.0
+    assert a2._attr_score([{"kind": "unverified"}], 1) == 0.5
+    assert a2._attr_score([{"kind": "mismatch"}], 2) == 0.5
+    assert a2._attr_score([{"kind": "mismatch"}, {"kind": "unverified"}], 2) == 0.25

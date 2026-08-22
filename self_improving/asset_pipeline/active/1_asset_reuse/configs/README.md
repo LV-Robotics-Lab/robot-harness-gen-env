@@ -37,4 +37,5 @@ run 目录里机器写的 `acquire_categories.json` 即同一 schema 的运行�
 | `pinned: {prefix, usd}` | | 钉死 NVIDIA 服务器具体文件，跳过检索 |
 | `local: {path}` | | 验收本地文件入库，跳过检索下载 |
 | `allow_similar` | | 默认 `true`：exact 落空时允许返回/引进相似资产（similar 档）；`false`=严格模式，宁可 none |
+| `similar_min_visual` | | 相似候选的 CLIP 视觉分门限，默认 `0.18`（探针 2026-08-22 标定：同类召回 91%/异类误入 17%）；exact 豁免 |
 | `comment` | | 仅注释，代码忽略 |

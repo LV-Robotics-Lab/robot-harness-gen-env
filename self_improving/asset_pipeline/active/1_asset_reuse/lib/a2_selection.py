@@ -134,26 +134,50 @@ def _attr_gap(attr, want_list, known_list):
     return unmet
 
 
-def match_local(
-    catalog_path, category, *, want_colors=None, want_materials=None, library_dir=None
-):
-    """本地 catalog 内的同类匹配 → (payload, unmet)。
+def _attr_score(unmet, n_declared):
+    """属性满足度分：每个声明属性 ok=1.0 / unverified=0.5 / mismatch=0.0，
+    取平均；没有声明属性 → 同类即 1.0。"""
+    if not n_declared:
+        return 1.0
+    penalty = sum(1.0 if u["kind"] == "mismatch" else 0.5 for u in unmet)
+    return round(max(0.0, 1.0 - penalty / n_declared), 3)
 
-    命中规则与 tier0 复用同一口径：请求类别 == 池侧 category 或落在池侧
-    aliases 里（池侧别名是 curated 身份声明；请求侧别名不参与，见
-    tiered_search 的 phrases 注释）。payload=None 表示类别级无命中。
-    unmet==[] 即 exact 候选；否则为 similar（差距逐条带 kind）。
-    排序：mismatch 数 → 总差距数 → available 优先 → 模型数多者。"""
+
+def match_local_all(
+    catalog_path,
+    category,
+    *,
+    want_colors=None,
+    want_materials=None,
+    library_dir=None,
+    visual_scores=None,
+    min_visual=None,
+    limit=8,
+):
+    """本地 catalog 同类匹配的全量候选列表（2026-08-22 列表化）。
+
+    返回 [{"asset": payload, "unmet": [...], "attr_score": float,
+    "visual_sim": float|None}, ...]；None 表示类别级无命中。
+    排序：attr_score 降序 → mismatch 数 → 差距数 → visual_sim 降序
+    （None 排最后——缺缩略图不误杀）→ available → 模型数 → asset_id。
+    visual_scores: {asset_id: CLIP 文本-图像余弦分}，由调用方提供；
+    min_visual 只在该资产**有**分数时过滤（探针 2026-08-22 标定：
+    AUC 0.949，默认门限 0.18 ≈ 同类召回 91%/异类误入 17%，见
+    work/probe_20260822_clip_local_sim 结论，已随本注释留档）。
+    命中口径与 tier0 复用一致：池侧 aliases 算、请求侧别名不参与。"""
     try:
         data = json.loads(Path(catalog_path).read_text())
     except (OSError, ValueError):
-        return None, None
+        return None
     cat = str(category).strip().lower().replace(" ", "_")
 
     def norm(s):
         return str(s or "").strip().lower().replace(" ", "_")
 
-    best = None
+    n_declared = len([x for x in (want_colors or []) if x]) + len(
+        [x for x in (want_materials or []) if x]
+    )
+    out = []
     for e in data.get("entries", []):
         names = {norm(e.get("category"))} | {norm(a) for a in (e.get("aliases") or [])}
         if cat not in names:
@@ -161,41 +185,70 @@ def match_local(
         unmet = _attr_gap("color", want_colors, e.get("colors")) + _attr_gap(
             "material", want_materials, e.get("materials")
         )
-        n_mis = sum(1 for u in unmet if u["kind"] == "mismatch")
-        key = (
-            n_mis,
-            len(unmet),
-            not e.get("available"),
-            -len(e.get("models") or []),
-            str(e.get("asset_id") or ""),
-        )
-        if best is None or key < best[0]:
-            best = (key, e, unmet)
-    if best is None:
-        return None, None
-    _, e, unmet = best
-    models = e.get("models") or []
-    m0 = models[0] if models else {}
-    payload = {
-        "asset_id": e.get("asset_id"),
-        "model_id": m0.get("model_id", 0),
-        "category": e.get("category"),
-        "available": bool(e.get("available")),
-        "asset_path": e.get("asset_path"),
-        "visual_path": m0.get("visual_path") or m0.get("model_path"),
-        "known_colors": e.get("colors") or [],
-        "known_materials": e.get("materials") or [],
-        "source": "local_catalog",
-        "ledger": None,
-    }
-    if library_dir:
-        lib = Path(library_dir)
         aid = str(e.get("asset_id") or "")
-        for c in [lib / aid, *lib.glob(f"*/{aid}")]:
-            if (c / "ledger.json").is_file():
-                payload["ledger"] = str(c / "ledger.json")
-                break
-    return payload, unmet
+        vis = None if visual_scores is None else visual_scores.get(aid)
+        # 门限只筛「相似」候选；属性全符的 exact 豁免（不因缩略图怪异筛掉正主）
+        if min_visual is not None and vis is not None and vis < min_visual and unmet:
+            continue
+        models = e.get("models") or []
+        m0 = models[0] if models else {}
+        payload = {
+            "asset_id": e.get("asset_id"),
+            "model_id": m0.get("model_id", 0),
+            "category": e.get("category"),
+            "available": bool(e.get("available")),
+            "asset_path": e.get("asset_path"),
+            "visual_path": m0.get("visual_path") or m0.get("model_path"),
+            "known_colors": e.get("colors") or [],
+            "known_materials": e.get("materials") or [],
+            "models": len(models),
+            "source": "local_catalog",
+            "ledger": None,
+        }
+        if library_dir:
+            lib = Path(library_dir)
+            for c in [lib / aid, *lib.glob(f"*/{aid}")]:
+                if (c / "ledger.json").is_file():
+                    payload["ledger"] = str(c / "ledger.json")
+                    break
+        out.append(
+            {
+                "asset": payload,
+                "unmet": unmet,
+                "attr_score": _attr_score(unmet, n_declared),
+                "visual_sim": None if vis is None else round(float(vis), 4),
+            }
+        )
+    if not out:
+        return None
+    out.sort(
+        key=lambda c: (
+            -c["attr_score"],
+            sum(1 for u in c["unmet"] if u["kind"] == "mismatch"),
+            len(c["unmet"]),
+            -(c["visual_sim"] if c["visual_sim"] is not None else -1.0),
+            not c["asset"]["available"],
+            -c["asset"]["models"],
+            c["asset"]["asset_id"] or "",
+        )
+    )
+    return out[:limit]
+
+
+def match_local(
+    catalog_path, category, *, want_colors=None, want_materials=None, library_dir=None
+):
+    """top-1 兼容壳：match_local_all 的首位，返回 (payload, unmet)。"""
+    cands = match_local_all(
+        catalog_path,
+        category,
+        want_colors=want_colors,
+        want_materials=want_materials,
+        library_dir=library_dir,
+    )
+    if not cands:
+        return None, None
+    return cands[0]["asset"], cands[0]["unmet"]
 
 
 KNOWN_ENTRY_KEYS = {
@@ -212,6 +265,7 @@ KNOWN_ENTRY_KEYS = {
     "pinned",
     "local",
     "allow_similar",
+    "similar_min_visual",
     "comment",
 }
 

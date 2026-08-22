@@ -851,6 +851,28 @@ function stage1(st, stages) {
       <td class="mono">${escapeHtml(o.asset_id ?? "")}</td><td>${escapeHtml(o.score ?? "")}</td></tr>`).join("")}
   </tbody></table>` + rawDetails("coverage_report.json 原始数据", stages.coverage);
 }
+function candRowHtml(c) {
+  const a = c.asset || {};
+  const gaps = (c.unmet || []).map(u => {
+    const attr = u.attr === "color" ? "颜色" : u.attr === "material" ? "材质" : u.attr;
+    return u.kind === "unverified" ? `${attr}?` : `${attr}✗`;
+  }).join(" ");
+  return `<div style="display:flex;gap:8px;align-items:center;padding:3px 0;font-size:11.5px;">
+    <img src="/api/library/thumb/${encodeURIComponent(a.asset_id || "")}"
+         style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);object-fit:cover;"
+         onerror="this.style.display='none'">
+    <span class="mono">${escapeHtml(a.asset_id || "")}</span>
+    ${a.known_colors && a.known_colors.length ? `<span style="color:var(--text-dim);">${escapeHtml(a.known_colors.join("/"))}</span>` : ""}
+    <span style="color:var(--text-dim);">匹配 ${c.attr_score != null ? c.attr_score : "-"}${c.visual_sim != null ? ` · 视觉 ${c.visual_sim}` : ""}</span>
+    ${gaps ? `<span style="color:var(--text-dim);">${escapeHtml(gaps)}</span>` : `<span style="color:var(--done);">全符</span>`}
+  </div>`;
+}
+function candListHtml(cands) {
+  if (!cands || cands.length < 2) return "";
+  return `<details style="margin:2px 0 8px;">
+    <summary style="cursor:pointer;color:var(--text-dim);font-size:11.5px;">同类候选 ${cands.length} 个（按匹配度排序，视觉分≥门限）</summary>
+    ${cands.map(candRowHtml).join("")}</details>`;
+}
 function matchBadgeHtml(m) {
   if (!m) return "";
   const map = {
@@ -875,7 +897,7 @@ function matchBadgeHtml(m) {
         onerror="this.style.display='none'"><span class="mono">${escapeHtml(a.asset_id)}</span>` : ""}
     ${a && a.known_colors && a.known_colors.length ? `<span style="color:var(--text-dim);font-size:11.5px;">${escapeHtml(a.known_colors.join("/"))}</span>` : ""}
     ${unmet ? `<span style="color:var(--text-dim);font-size:11.5px;">差距: ${escapeHtml(unmet)}</span>` : ""}
-  </div>`;
+  </div>` + candListHtml(m.candidates);
 }
 function stage2(st, stages, tl) {
   const cats = (stages.evidence && stages.evidence.categories) || [];
@@ -947,7 +969,7 @@ function stage6(st, stages, tl) {
           ${a.known_colors && a.known_colors.length ? `<span style="color:var(--text-dim);font-size:11.5px;">${escapeHtml(a.known_colors.join("/"))}</span>` : ""}
           ${gaps ? `<span style="color:var(--text-dim);font-size:11.5px;">差距: ${escapeHtml(gaps)}</span>` : ""}
           <span style="color:var(--text-dim);font-size:11.5px;">详见第②步检索决策</span>
-        </div>`;
+        </div>` + candListHtml(u.nearest_local.candidates);
       }).join("")}
     </div>` + rawDetails("asset_gap_blocker.json 原始数据", stages.blocker);
   }

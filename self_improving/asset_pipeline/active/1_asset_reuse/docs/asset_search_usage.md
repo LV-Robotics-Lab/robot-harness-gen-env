@@ -77,6 +77,10 @@ $PY scripts/1_search/acquire_batch.py \
 按旧行为"库里有球就算找到"会把蓝球请求错报成功）；exact 落空才落 similar：
 优先本地同类（零成本），其次把「类别对、属性不符」的最优外部候选走完整引进链
 兜底（条目级开关 `"allow_similar": false` 可关掉，严格模式宁可 none）。
+`match` 还带 `candidates[]`——**所有**同类候选按匹配度排序的完整列表（不只 top-1），
+每个带 `attr_score`（属性满足度 0–1）与 `visual_sim`（CLIP 文本-图像相似分，
+探针标定 AUC 0.949；条目级 `similar_min_visual` 门限默认 0.18，属性全符者豁免；
+缺缩略图的资产分记 null 不误杀）。blocker 的 `nearest_local` 同样带 `candidates[]`。
 跨来源同类会**另开资产位**（如 NVIDIA 的 330_ball 与 web 引进的 366_ball 并存——
 资产级 profile 承诺不同，不互相追加模型）。
 stdout 逐条打 `MATCH <类别> grade=… asset=…` 可直接 grep；退出码：
