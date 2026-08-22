@@ -128,8 +128,9 @@ summary{cursor:pointer;color:var(--accent);font-size:13px}
 yellow basket -> 110_basket m1  colors=['yellow']
    rejected: 110_basket m0: model colors ['orange','red'] lack yellow
              110_basket m2: model colors ['red'] lack yellow
-red basket    -> 110_basket m2  colors=['red']
+red basket    -> 110_basket m0  colors=['orange','red']
 red cup       -> 301_cup   m0  colors=['brown','red']</pre>
+<p class="small">三条生产选型的机读结果：<a href="../../../../validation_evidence/ledger_v3_20260815/color/">归档 coverage reports</a>。</p>
 <div class="callout"><b>why</b>：颜色是 model 的属性不是资产的属性——同资产三个篮子三种颜色。片段实测 72 个 model 里 62 个已带模型级颜色。</div>
 
 <h3>任务 2 · isaacsim 验证回写义务 <span class="tag">commit c54fec7</span></h3>

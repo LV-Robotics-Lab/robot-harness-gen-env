@@ -4,6 +4,7 @@ This directory keeps the compact, machine-readable evidence behind the
 2026-08-15 ledger-v3 and 2026-08-16 follow-up reports:
 
 - the 44-row color-selection matrix before and after model-level color support;
+- the three production color-selection coverage reports;
 - the final B11 containment regression reports;
 - the final hanger and TV runtime validation reports;
 - the two Isaac settle reports and their write-back facts.

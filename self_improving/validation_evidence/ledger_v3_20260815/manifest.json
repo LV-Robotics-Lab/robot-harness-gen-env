@@ -32,6 +32,27 @@
       }
     },
     {
+      "source": "color/red_basket_coverage.json",
+      "archive": "color/red_basket_coverage.json",
+      "source_sha256": "4e57f1447423862136eb02bc64a369fbd5a898505ec103ae586fe0a26defdbb3",
+      "archive_sha256": "a722c27cdb575edd54b5617d7c8d766f0e75893cc271d1bce5b06d28bcb55f40",
+      "normalization": "strip historical host repo-root prefix from absolute paths"
+    },
+    {
+      "source": "color/red_cup_coverage.json",
+      "archive": "color/red_cup_coverage.json",
+      "source_sha256": "0ed434664e09ce6f90426cd737af483d6a69da4a760557a8fb612ebae91f8d29",
+      "archive_sha256": "08090af999621ec228e405cc6fa79792e469ef8817f77212f85b4bf3ec433de0",
+      "normalization": "strip historical host repo-root prefix from absolute paths"
+    },
+    {
+      "source": "color/yellow_basket_coverage.json",
+      "archive": "color/yellow_basket_coverage.json",
+      "source_sha256": "60ba4580897d15b33c8da284328475a137d1ba6440f77c85b5bbeb17e7fd8711",
+      "archive_sha256": "148c4a4d2433494b8034630422e7b2cbd52108d3818a791c6c19ca9260e6f20a",
+      "normalization": "strip historical host repo-root prefix from absolute paths"
+    },
+    {
       "source": "b11/coverage_report.json",
       "archive": "b11/coverage_report.json",
       "source_sha256": "310c10ad4bfde851e8f498a811a86aba15c180cac344be3396b7f2e7c3e725d3",
