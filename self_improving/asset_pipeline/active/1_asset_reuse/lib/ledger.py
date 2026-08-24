@@ -44,6 +44,20 @@ from pathlib import Path
 
 from lib import conventions
 
+# representations[].frame / geometry_state are OPTIONAL on purpose, and their
+# absence carries meaning -- do not "helpfully" backfill them:
+#   * GLBs this pipeline wrote -> both present (up_axis Y, scale baked,
+#     bottom-centre origin); import_materialize stamps them at write time
+#     (added 2026-08-24; before that only migrate_v3's 08-15 cohort had them,
+#     so every later import silently landed without).
+#   * NVIDIA _source USDs (49 as of 2026-08-24) -> both ABSENT. They are
+#     untouched third-party artifacts: their up axis is NVIDIA's fact, not
+#     ours, and no pxr/USD reader exists on this machine to measure it, so
+#     claiming one would be invention. Absent scale_baked is also the CORRECT
+#     value for them: usd_enrich neutralizes object scale only when
+#     scale_baked is True, and these reps are NOT pre-scaled -- asserting True
+#     would recreate the E2 bug (a cracker box compiled 2.8527x = exactly
+#     1/scale too large, 2026-08-15).
 SCHEMA_VERSION = "asset_ledger.v3"
 # v3 (2026-08-15, 四路辩证+实验裁决定稿), relative to v2:
 #   DELETED  semantic_name, tags (零决策消费者: semantic_name 79/79 恒等于

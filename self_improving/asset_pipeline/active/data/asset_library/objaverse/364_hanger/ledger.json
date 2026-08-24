@@ -81,6 +81,13 @@
             "conversion_params": {
               "rotated_z2y": false
             }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
           }
         },
         {
@@ -93,6 +100,13 @@
           "metadata": {
             "collision_mode": "copy",
             "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
           }
         },
         {
@@ -104,6 +118,13 @@
           "size_bytes": 2856064,
           "metadata": {
             "origin_prefix": "web_364_hanger"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
           }
         },
         {

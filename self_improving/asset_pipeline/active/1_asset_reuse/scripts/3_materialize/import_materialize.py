@@ -746,12 +746,24 @@ for idx, r in worker_records:
         colors = meta.get("colors", [])
         materials = meta.get("materials", [])
 
+        # v3 frame/geometry_state: facts this writer ALREADY knows and, until
+        # 2026-08-24, dropped on the floor. migrate_v3 backfilled them for the
+        # 08-15 cohort, so every asset acquired AFTER that batch landed without
+        # them (7 of them by 08-24) -- the gap grew by one per import. up_axis
+        # is Y because this converter normalizes to it (that is exactly what
+        # `rotated` records); the writer bakes scale into the GLB and places
+        # the origin at the footprint centre.
+        glb_frame = {"up_axis": "Y"}
+        glb_geometry_state = {"scale_baked": True, "origin": "bottom-center"}
+
         reps = [
             {
                 "format": "glb",
                 "uri": ledger_mod.to_portable_uri(vis),
                 "backend": "sapien",
                 "role": "visual",
+                "frame": dict(glb_frame),
+                "geometry_state": dict(glb_geometry_state),
                 "sha256": sha256(vis),
                 "size_bytes": vis.stat().st_size,
                 "metadata": {
@@ -765,6 +777,8 @@ for idx, r in worker_records:
                 "uri": ledger_mod.to_portable_uri(col),
                 "backend": "sapien",
                 "role": "collision",
+                "frame": dict(glb_frame),
+                "geometry_state": dict(glb_geometry_state),
                 "sha256": sha256(col),
                 "size_bytes": col.stat().st_size,
                 "metadata": {
@@ -799,6 +813,18 @@ for idx, r in worker_records:
                 "role": "visual_and_collision",
                 "sha256": r["usd_sha256"],
                 "size_bytes": Path(r["usd_local"]).stat().st_size,
+                # only the web branch gets the frame claim: that entry is the
+                # normalized GLB mirror this writer produced. The NVIDIA branch
+                # registers the UNTOUCHED source USD -- asserting our own
+                # normalization over someone else's artifact would be a lie.
+                **(
+                    {
+                        "frame": dict(glb_frame),
+                        "geometry_state": dict(glb_geometry_state),
+                    }
+                    if r["group"].startswith("web_")
+                    else {}
+                ),
                 "metadata": {"origin_prefix": r["group"]},
             },
         ]
