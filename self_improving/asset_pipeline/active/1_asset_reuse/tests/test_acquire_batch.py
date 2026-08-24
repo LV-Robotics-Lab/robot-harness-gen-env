@@ -719,3 +719,14 @@ def test_visual_gate_can_empty_the_similar_pool(tmp_path, monkeypatch):
     )
     ab._match_block(rec, p)
     assert rec["match"]["grade"] == "none"
+
+
+def test_tier_of_provider_maps_selected_source():
+    tiers = [
+        Tier(0, FakeProvider("robotwin_local", [])),
+        Tier(3, FakeProvider("objaverse", [])),
+    ]
+    assert ab._tier_of_provider(tiers, "objaverse") == 3
+    assert ab._tier_of_provider(tiers, "robotwin_local") == 0
+    assert ab._tier_of_provider(tiers, "unknown_provider") is None
+    assert ab._tier_of_provider(None, "objaverse") is None

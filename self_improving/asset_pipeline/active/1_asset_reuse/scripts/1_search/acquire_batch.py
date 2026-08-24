@@ -275,6 +275,15 @@ def _attempt_import(
     return rec
 
 
+def _tier_of_provider(tiers, provider_name):
+    """provider 名 → tier 号（选中候选的来源层，供 evidence/web 展示）。
+    provider 未在梯队里（pinned/local 形态的 stub）返回 None。"""
+    for t in tiers or []:
+        if getattr(t.provider, "name", None) == provider_name:
+            return t.tier
+    return None
+
+
 def process_entry(entry, tiers, globals_cfg, paths, runner):
     category = entry["category"]
     if "pinned" in entry:
@@ -958,9 +967,14 @@ def _match_block(rec, paths):
     status = rec.get("status")
     if status == "imported":
         sel = rec.get("selected") or {}
+        payload = _library_payload(paths, sel.get("asset"), sel.get("model", 0))
+        if payload is not None:
+            payload["source"] = "imported"
+            payload["source_tier"] = sel.get("tier")
+            payload["source_provider"] = sel.get("provider")
         rec["match"] = {
             "grade": "similar" if rec.get("similar_fallback") else "exact",
-            "asset": _library_payload(paths, sel.get("asset"), sel.get("model", 0)),
+            "asset": payload,
             "unmet": rec.pop("_similar_unmet", []),
         }
     elif status == "reused_local":
@@ -1098,6 +1112,11 @@ def main(argv=None, runner=None, tiers=None):
                 merged,
             ]
         )
+    # 选中候选补来源层号（provider→tier，evidence 与 web 展示用）
+    for r in results:
+        sel = r.get("selected")
+        if sel and sel.get("provider"):
+            sel["tier"] = _tier_of_provider(tiers, sel["provider"])
     # B4：过程结局 → 匹配三档（exact/similar/none），随 evidence 落盘
     for r in results:
         _match_block(r, paths)
