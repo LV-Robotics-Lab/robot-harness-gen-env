@@ -8,6 +8,11 @@
 [PR1 核心 Schema 实现报告](../../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)，
 规范来源是 [Harness MVP 契约](../../docs/contracts/HARNESS_MVP_CONTRACT_V1.zh-CN.md)。
 
+面向项目组成员的互动入口位于
+[三个 Skill Walkthrough](../../docs/harness-skill-walkthrough/README.md)。它用四种概念情景串起
+compile 的 reuse-first fallback、静态 `incomplete`、连续物理 replay 和最终 publishability；页面
+明确区分 PR1 已完成的 schema 与 PR2 尚待实现的 Registry、handler 和 MCP adapter。
+
 ## 先分清四层
 
 ```text

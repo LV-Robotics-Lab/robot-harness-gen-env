@@ -10,6 +10,7 @@
 | Directory | Purpose |
 |-----------|---------|
 | `evidence/` | 计算得到的物理验收笔记与 prompt-matrix 报告（见 `evidence/AGENTS.md`） |
+| `harness-skill-walkthrough/` | 面向项目组成员的 Harness compile/replay/validate 互动导览网站及其本地依赖 |
 
 ## For AI Agents（给 AI agent 的提示）
 
