@@ -35,6 +35,7 @@ assets/
 .DS_Store
 Thumbs.db
 .vscode/
+.agents/
 
 # Local generated scene experiments are reproducible run outputs.
 generated/
