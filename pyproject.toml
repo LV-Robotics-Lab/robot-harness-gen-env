@@ -28,7 +28,7 @@ vlm = [
   "qwen-vl-utils>=0.0.8,<0.1",
   "transformers>=4.49,<5",
 ]
-dev = ["pytest>=8.3,<9", "ruff>=0.9,<1"]
+dev = ["pytest>=8.3,<9", "pytest-cov>=6,<8", "ruff>=0.9,<1"]
 platform = [
   "jsonschema>=4.23,<5",
   "numpy>=1.26,<3",
@@ -36,10 +36,11 @@ platform = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["scene_gen*", "demo*", "self_improving"]
+include = ["scene_gen*", "demo*", "self_improving", "self_improving.harness*"]
 
 [tool.setuptools.package-data]
 scene_gen = ["asset_overrides.yml", "prompts/*.md"]
+"self_improving.harness" = ["json_schemas/*.json"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

@@ -13,8 +13,8 @@
 ```text
 total_steps = max(settle_steps, video_frames)            # 默认 max(900, 120)
 video_steps = video_sample_steps(total_steps, 120)      # 119 释放帧 + 1 终末帧
-contact_window_steps = min(max(1, contact_window_steps=120), total_steps)
-# 终末 120 步每步采一次 contact
+contact_window_steps = min(max(1, contact_window_steps=60), total_steps)
+# 独立 CLI 默认在终末 60 步逐步采 contact
 for index in range(total_steps):
     task.scene.step()
     if index in video_step_set: frames.append(get_observer_rgb())
@@ -26,7 +26,7 @@ for index in range(total_steps):
                 unexpected_contact_hits[name] += 1
 ```
 
-`--precheck-steps 0` 默认：不预步进。`check_stable` 仅跑 precheck_steps（即 0），不参与判 acceptance——这一步有意为之，避免把不稳初态躲到「正式记录」之前，那样记录的「释放帧」其实已经是稳态之后的假释放。
+`run_scene_runtime.py` 的独立 CLI 当前默认 `--contact-window-steps 60`；README、prompt matrix 和本指南跟踪的已验证命令都显式传入 120，因此那些证据采的是终末 120 步。`--precheck-steps 0` 默认：不预步进。`check_stable` 仅跑 precheck_steps（即 0），不参与判 acceptance——这一步有意为之，避免把不稳初态躲到「正式记录」之前，那样记录的「释放帧」其实已经是稳态之后的假释放。
 
 `head_camera_arrays(task)` 拿 head rgb + 分割标签；`world_camera1`/`world_camera2` 拿两个世界视角；最终还写 `preview_head.png`、`preview_segmentation.png`、`preview_world_left.png`、`preview_world_right.png`、`observer_start.png`、`observer_mid.png`、`observer_end.png`、`observer_runtime.mp4`。每段 mp4 的 `unique_video_frame_count` 用 `hashlib.sha256(frame.tobytes())` 去重。
 

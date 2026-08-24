@@ -111,3 +111,17 @@ Keep core changes scoped to `/gen-env` and platform changes scoped to named
 modules under `self_improving/`. Preserve upstream attribution and avoid
 rewriting published history. External projects belong in submodules, not copied
 vendor trees.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs are tracked in this repository's GitHub Issues using the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage roles use their default label names. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This repository uses a single-context layout. See `docs/agents/domain.md`.

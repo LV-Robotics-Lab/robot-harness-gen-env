@@ -6,7 +6,11 @@ PYTHON_BIN="${PYTHON_BIN:-python}"
 
 cd "$REPO_ROOT"
 "$PYTHON_BIN" -m self_improving --json
-"$PYTHON_BIN" -m pytest -q
+"$PYTHON_BIN" -m pytest -q \
+  --cov=self_improving.harness \
+  --cov-branch \
+  --cov-report=term-missing \
+  --cov-fail-under=100
 PYTHONPATH=.:self_improving/stage5 \
   "$PYTHON_BIN" -m pytest -q self_improving/stage5/tests
 PYTHONPATH=self_improving/alchedata:self_improving/alchedata/scripts \

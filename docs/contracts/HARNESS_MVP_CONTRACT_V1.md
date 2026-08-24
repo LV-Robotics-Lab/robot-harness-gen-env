@@ -5,6 +5,7 @@
 - Scope: minimal Harness registry and the existing Text2Env Stage 0-5 route
 - Authority: this contract defines the Harness-facing interface; existing `scene_gen` schemas,
   package manifests, and validation reports remain authoritative for their own payloads.
+- Implementation evidence: [PR1 core-schema report](HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)
 
 ## Decision And Boundary
 
