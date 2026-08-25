@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="独立研究：text、image、video 资产检索、物理属性重建，以及 VLA/WAM 隐式物理的可证伪复现路线。">
+  <title>从“长得像”到“动得像” · 独立研究</title>
+  <style>
+    :root {
+      --ink:#17201f; --muted:#5f6c68; --line:#d8dedb; --paper:#f4f6f3;
+      --white:#fff; --green:#087a5a; --green-soft:#dff3ea; --blue:#2857a8;
+      --blue-soft:#e9f0fb; --amber:#9a5b00; --amber-soft:#fff0d6;
+      --red:#a53b32; --red-soft:#fbe8e5; --dark:#111918;
+    }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; background:var(--paper); }
+    body { margin:0; color:var(--ink); background:var(--paper); font:15px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+    a { color:var(--blue); text-underline-offset:3px; }
+    code { padding:.08rem .3rem; border:1px solid var(--line); border-radius:4px; background:#f8faf9; font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace; overflow-wrap:anywhere; }
+    .shell { width:min(1160px,calc(100% - 40px)); margin:0 auto; }
+    .topbar { color:#dce8e4; background:var(--dark); border-bottom:1px solid #32423e; }
+    .topbar .shell { min-height:58px; display:flex; justify-content:space-between; align-items:center; gap:18px; }
+    .brand { color:#fff; font:700 12px ui-monospace,SFMono-Regular,monospace; letter-spacing:.05em; }
+    .topbar nav { display:flex; gap:20px; font-size:12px; }
+    .topbar a { color:inherit; text-decoration:none; }
+    .hero { color:#fff; background:linear-gradient(135deg,#15201e 0%,#1b3b32 58%,#0a6e52 100%); }
+    .hero .shell { padding:72px 0 66px; }
+    .kicker { margin:0 0 13px; color:#8ee0c1; font:700 11px ui-monospace,SFMono-Regular,monospace; letter-spacing:.1em; }
+    h1 { max-width:850px; margin:0; font-size:clamp(38px,6vw,68px); line-height:1.08; letter-spacing:-.04em; }
+    .lede { max-width:820px; margin:23px 0 0; color:rgba(255,255,255,.82); font-size:18px; }
+    .verdict { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1px; margin-top:40px; overflow:hidden; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.18); }
+    .verdict div { padding:18px; background:rgba(8,23,19,.45); }
+    .verdict strong { display:block; margin-bottom:6px; color:#fff; font-size:15px; }
+    .verdict span { color:rgba(255,255,255,.7); font-size:12px; }
+    main.shell { padding:22px 0 74px; }
+    .notice { margin:0 0 20px; padding:16px 18px; border:1px solid #e6c981; border-radius:7px; color:#684613; background:var(--amber-soft); font-size:13px; }
+    section { padding:54px 0; border-bottom:1px solid var(--line); }
+    .section-head { display:grid; grid-template-columns:minmax(0,1fr) minmax(280px,.68fr); gap:52px; align-items:end; margin-bottom:25px; }
+    h2 { margin:0; font-size:32px; line-height:1.2; letter-spacing:-.025em; }
+    h3 { margin:0 0 8px; font-size:18px; line-height:1.35; }
+    p { margin-top:0; }
+    .section-head p,.muted { margin:0; color:var(--muted); font-size:13px; }
+    .answer { max-width:940px; padding:24px 27px; border-left:5px solid var(--green); background:var(--white); box-shadow:0 1px 0 rgba(0,0,0,.04); font-size:18px; }
+    .answer strong { color:var(--green); }
+    .skip-link { position:absolute; left:12px; top:-80px; z-index:20; padding:9px 12px; color:#fff; background:var(--green); }
+    .skip-link:focus { top:10px; }
+    .pipeline { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; margin-top:22px; }
+    .step { position:relative; min-height:124px; padding:15px; border:1px solid var(--line); border-radius:7px; background:var(--white); }
+    .step:not(:last-child)::after { content:"›"; position:absolute; top:43px; right:-9px; z-index:2; color:var(--green); font-size:28px; font-weight:700; }
+    .step b { display:block; margin-bottom:7px; color:var(--green); font:700 11px ui-monospace,SFMono-Regular,monospace; }
+    .step span { color:var(--muted); font-size:12px; line-height:1.5; }
+    .table-wrap { max-width:100%; overflow:auto; border:1px solid var(--line); border-radius:7px; background:var(--white); }
+    table { width:100%; min-width:780px; border-collapse:collapse; }
+    th,td { padding:13px 14px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; font-size:12px; }
+    th { color:#4c5955; background:#edf1ef; font-size:10px; text-transform:uppercase; letter-spacing:.03em; }
+    tr:last-child td { border-bottom:0; }
+    .high { color:var(--red); font-weight:700; } .mid { color:var(--amber); font-weight:700; } .low { color:var(--green); font-weight:700; }
+    .cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:13px; }
+    .card { min-width:0; padding:19px; border:1px solid var(--line); border-radius:7px; background:var(--white); }
+    .card p { margin:0; color:var(--muted); font-size:13px; }
+    .card .tag { display:inline-flex; margin-bottom:12px; padding:3px 7px; border-radius:4px; color:var(--green); background:var(--green-soft); font:700 10px ui-monospace,SFMono-Regular,monospace; }
+    .myth { display:grid; grid-template-columns:1fr 1fr; gap:1px; overflow:hidden; border:1px solid var(--line); border-radius:7px; background:var(--line); }
+    .myth article { padding:23px; background:var(--white); }
+    .myth .wrong h3 { color:var(--red); } .myth .right h3 { color:var(--green); }
+    .callout { margin-top:16px; padding:16px 18px; border-radius:6px; color:#234b7f; background:var(--blue-soft); font-size:13px; }
+    .rank { display:grid; gap:11px; }
+    .rank article { display:grid; grid-template-columns:48px minmax(180px,.7fr) minmax(0,1.5fr) minmax(210px,1fr); gap:17px; align-items:start; padding:18px; border:1px solid var(--line); border-radius:7px; background:var(--white); }
+    .rank .n { display:grid; width:38px; height:38px; place-items:center; border-radius:50%; color:#fff; background:var(--green); font-weight:800; }
+    .rank h3 { margin:0; }
+    .rank p { margin:0; color:var(--muted); font-size:12px; }
+    .rank .deliver { color:var(--ink); }
+    .experiments { counter-reset:experiment; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:13px; }
+    .experiment { counter-increment:experiment; padding:20px; border:1px solid var(--line); border-top:4px solid var(--blue); border-radius:7px; background:var(--white); }
+    .experiment::before { content:"EXPERIMENT 0" counter(experiment); display:block; margin-bottom:12px; color:var(--blue); font:700 10px ui-monospace,SFMono-Regular,monospace; }
+    .experiment p,.experiment li { color:var(--muted); font-size:12px; }
+    .experiment ul { margin:10px 0 0; padding-left:18px; }
+    .architecture { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:1px; overflow:hidden; border:1px solid #32423e; border-radius:7px; background:#32423e; }
+    .architecture div { padding:20px 15px; color:#d7e2de; background:var(--dark); }
+    .architecture b { display:block; margin-bottom:7px; color:#8ee0c1; font-size:13px; }
+    .architecture span { font-size:11px; line-height:1.5; }
+    .gates { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:18px; }
+    .gate { padding:15px; border:1px solid var(--line); border-radius:6px; background:var(--white); }
+    .gate b { display:block; font-size:13px; } .gate span { color:var(--muted); font-size:11px; }
+    .source-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+    .source { padding:14px 15px; border:1px solid var(--line); border-radius:6px; background:var(--white); }
+    .source b { display:block; font-size:13px; }
+    .source span { display:block; margin:4px 0 7px; color:var(--muted); font-size:11px; }
+    .source a { margin-right:10px; font-size:11px; }
+    .boundary-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .boundary-card { padding:18px; border:1px solid #e8bbb5; border-radius:6px; background:var(--red-soft); }
+    .boundary-card b { display:block; margin-bottom:5px; color:var(--red); }
+    .boundary-card span { color:#71443f; font-size:12px; }
+    footer { padding:26px 0 10px; color:var(--muted); font-size:11px; }
+    footer .shell { display:flex; justify-content:space-between; gap:20px; }
+    @media(max-width:900px) {
+      .pipeline,.architecture { grid-template-columns:1fr 1fr; }
+      .step:not(:last-child)::after { display:none; }
+      .cards,.experiments,.gates { grid-template-columns:1fr 1fr; }
+      .rank article { grid-template-columns:44px 1fr; }
+      .rank article > :nth-child(n+3) { grid-column:2; }
+    }
+    @media(max-width:650px) {
+      .shell { width:min(100% - 22px,1160px); }
+      .topbar nav { display:none; }
+      .hero .shell { padding:52px 0 48px; }
+      .verdict,.section-head,.myth,.cards,.experiments,.architecture,.gates,.source-list,.boundary-grid { grid-template-columns:1fr; }
+      .section-head { gap:12px; }
+      section { padding:40px 0; }
+      .rank article { grid-template-columns:38px 1fr; gap:12px; }
+      footer .shell { flex-direction:column; }
+    }
+  </style>
+</head>
+<body id="top">
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="topbar">
+    <div class="shell">
+      <a class="brand" href="#top">PEARL / PHYSICAL ASSET RESEARCH</a>
+      <nav aria-label="页面目录">
+        <a href="#answer">结论</a><a href="#retrieval">检索复用</a><a href="#properties">物性</a>
+        <a href="#models">VLA / WAM</a><a href="#reproduce">复现</a><a href="#sources">来源</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="shell">
+      <p class="kicker">STANDALONE RESEARCH BRIEF · 2026-08-24 · 不是门户报告 · 不是已部署能力</p>
+      <h1>从“长得像”到“动得像”</h1>
+      <p class="lede">Text、image、video 如何检索并复用资产？能不能恢复质量、摩擦、关节和材料？VLA 抓得起来，是否就说明它真的“懂物理”？这份报告把三个问题拆开，并给出可以证伪、可以复现的工程路线。</p>
+      <div class="verdict" aria-label="三个核心结论">
+        <div><strong>可以恢复一部分</strong><span>但要靠先验 + 已知动作 + 交互轨迹，不是只看一张图。</span></div>
+        <div><strong>不必恢复全部</strong><span>只恢复任务会用到的“最小充分物理”。</span></div>
+        <div><strong>抓得起 ≠ 参数可读</strong><span>鲁棒策略可以成功，却未必知道质量是几公斤。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <main class="shell" id="content">
+    <p class="notice"><strong>先说明证据等级：</strong>本页是对一手论文、官方代码和本仓库接口的研究判断。文中“建议复现”均尚未在本仓库跑完；外部论文的结果不能算作 PEARL 自己的实验结果。</p>
+    <p class="notice" style="border-color:#b9cbe9;color:#234b7f;background:var(--blue-soft)"><strong>想看完整审计：</strong>本文件夹同时附带 <a href="research/physical-property-retrieval-reconstruction-benchmark.md">物理属性检索与重建笔记</a>，以及 <a href="research/vla-wam-implicit-physics.md">VLA / WAM 隐式物理笔记</a>。网页是面向决策的摘要，研究笔记保留逐项来源与限制。</p>
+
+    <section id="answer">
+      <div class="section-head"><h2>真正可行的“物理重建”是什么？</h2><p>不是让 LLM 对着外观报一个看似精确的小数，而是逐步缩小不确定性，并用新动作检验它。</p></div>
+      <div class="answer"><strong>推荐定义：</strong>先检索一个足够相似、可执行的资产；再为质量、质心、惯量、摩擦、关节和可供性给出有范围的先验；用安全探测动作或已有轨迹做系统辨识；最后只晋升通过任务回放的属性包。</div>
+      <div class="pipeline" aria-label="物理资产闭环">
+        <div class="step"><b>01 · 检索</b><strong>找数字近亲</strong><br><span>文字看语义，图片看形状，视频再看运动；记录候选和淘汰理由。</span></div>
+        <div class="step"><b>02 · 先验</b><strong>先报范围</strong><br><span>VLM、材料表和数据集只提供可能区间，不能直接叫真值。</span></div>
+        <div class="step"><b>03 · 探测</b><strong>轻推、抬、倾斜</strong><br><span>动作已知，观测位姿、关节、电流、接触或力矩。</span></div>
+        <div class="step"><b>04 · 拟合</b><strong>系统辨识</strong><br><span>让模拟轨迹贴近观测，并保留多解与置信区间。</span></div>
+        <div class="step"><b>05 · 验证</b><strong>换一个动作再考</strong><br><span>未参与拟合的任务能复现，才获得任务级物理资格。</span></div>
+      </div>
+    </section>
+
+    <section id="retrieval">
+      <div class="section-head"><h2>Text、image、video 怎么一起检索资产？</h2><p>不要为三种输入维护三套资产库。它们只是提供不同证据，最终都写进同一个查询和候选清单。</p></div>
+      <div class="table-wrap"><table>
+        <caption class="muted" style="padding:12px 14px;text-align:left">三种输入各自擅长提供什么检索信号</caption>
+        <thead><tr><th>输入</th><th>先提取什么</th><th>用来排除什么</th><th>物理信息边界</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Text</strong></td><td>类别、部件、任务动词、容纳/支撑关系、材料词和尺寸描述</td><td>语义不符、缺必要部件、许可证不允许、任务能力缺失</td><td>只给类别和材料先验；不能把“木制”直接变成确定密度或摩擦</td></tr>
+          <tr><td><strong>Image</strong></td><td>多尺度视觉特征、轮廓、长宽比、部件 mask、可供性；有标尺/深度时估尺度</td><td>外形、比例、部件布局或抓取区域差得太远</td><td>适合几何近亲；单图通常看不出内部质量、质心和接触参数</td></tr>
+          <tr><td><strong>Video</strong></td><td>在 image 特征上增加对象跟踪、关节轨迹、形变和动作—结果片段</td><td>关节轴/限位、运动方式、软硬属性或动态响应不符</td><td>被动视频只缩小范围；已知动作、标定尺度和力/本体感觉才支持系统辨识</td></tr>
+        </tbody>
+      </table></div>
+      <div class="pipeline" aria-label="统一检索与复用流程">
+        <div class="step"><b>01 · QUERY</b><strong>统一查询</strong><br><span>把三种输入归一为语义、几何、运动学、任务和物理覆盖需求。</span></div>
+        <div class="step"><b>02 · RECALL</b><strong>宽召回</strong><br><span>文本与视觉 embedding 找候选；类别/部件索引补充长尾召回。</span></div>
+        <div class="step"><b>03 · GATE</b><strong>先过硬门</strong><br><span>许可证、格式、可加载性、尺度、碰撞、必要关节缺一即淘汰。</span></div>
+        <div class="step"><b>04 · RERANK</b><strong>按任务重排</strong><br><span>语义、形状、部件、运动与 physical coverage 分开计分，禁止黑盒总分。</span></div>
+        <div class="step"><b>05 · RECEIPT</b><strong>留候选回执</strong><br><span>保存输入/表示 digest、模型版本、候选、许可证、各项分数和淘汰理由。</span></div>
+      </div>
+      <p class="callout"><strong>最关键的复用规则：</strong>候选资产只要满足任务所需的几何、运动学和物理资格，就可以复用，不必与输入长得一模一样；只有所有合格候选都耗尽，才进入生成。生成结果也必须回到同一套 manifest 和门禁，不能走旁路。</p>
+    </section>
+
+    <section id="properties">
+      <div class="section-head"><h2>先问任务，再问要重建什么</h2><p>很多“物理参数”从静态 RGB 根本不可唯一观察。诚实的未知值，比无来源的默认常数更有用。</p></div>
+      <div class="table-wrap"><table>
+        <caption class="muted" style="padding:12px 14px;text-align:left">属性的可观测性与更可信的证据</caption>
+        <thead><tr><th>属性</th><th>只看图能否恢复</th><th>什么时候重要</th><th>更可信的证据</th></tr></thead>
+        <tbody>
+          <tr><td><strong>几何与尺度</strong><br>尺寸、碰撞体、姿态</td><td><span class="mid">部分可以</span><br>单图有绝对尺度歧义</td><td>几乎所有任务</td><td>多视角、标尺、深度、碰撞与加载检查</td></tr>
+          <tr><td><strong>运动学</strong><br>部件、关节轴、限位</td><td><span class="mid">视频更强</span><br>遮挡时仍可能多解</td><td>开门、抽屉、容器</td><td>双状态图、关节 sweep、交互轨迹</td></tr>
+          <tr><td><strong>可供性</strong><br>抓取点、把手、支撑面</td><td><span class="low">可给好先验</span></td><td>抓取、放置、开合</td><td>部件标注 + 实际接触成功率</td></tr>
+          <tr><td><strong>质量 / 质心 / 惯量</strong></td><td><span class="high">通常不可唯一恢复</span></td><td>快速搬运、推、倾倒</td><td>抬起、推移、倾斜后的运动与力</td></tr>
+          <tr><td><strong>摩擦 / 弹性</strong></td><td><span class="high">外观几乎不够</span></td><td>推、滑、抓、堆叠</td><td>不同速度和法向力下的接触轨迹</td></tr>
+          <tr><td><strong>软体材料参数</strong></td><td><span class="high">单图远远不够</span></td><td>布料、海绵、液体</td><td>已知载荷下的压、拉、流动多视角视频</td></tr>
+        </tbody>
+      </table></div>
+      <div class="cards" style="margin-top:16px">
+        <article class="card"><span class="tag">VISUAL REUSE</span><h3>只要看起来对</h3><p>面向渲染、识别或非接触规划：外观、语义、尺度、可加载碰撞通过即可。</p></article>
+        <article class="card"><span class="tag">TASK PHYSICAL</span><h3>在某类任务里动得对</h3><p>声明相关参数范围，并让推、抓或开合回放通过；这应是第一阶段主目标。</p></article>
+        <article class="card"><span class="tag">CROSS BACKEND</span><h3>换模拟器仍然接近</h3><p>同一探测动作在 SAPIEN 与第二后端的端点、接触和稳定性落入预设容差。</p></article>
+      </div>
+    </section>
+
+    <section id="models">
+      <div class="section-head"><h2>VLA / WAM 会行动，不等于输出真实物性</h2><p>这里的 WAM 指 World Action Model（世界—动作模型）。主流模型通常给末端位姿、关节位置或夹爪命令；它们不是直接在说“施加 7 牛顿”，也没有用 SI 单位监督质量和摩擦。</p></div>
+      <div class="myth">
+        <article class="wrong"><h3>容易误读的说法</h3><p>“它在新物体上 zero-shot 抓取成功，所以内部一定有可提取的质量、摩擦和惯量变量。”</p></article>
+        <article class="right"><h3>证据支持的说法</h3><p>模型学到了足以闭环完成任务的规律；这些规律可能是类别先验、示教动作、反馈纠错、夹爪容错或纠缠的动态表征。</p></article>
+      </div>
+      <div class="table-wrap" style="margin-top:16px"><table>
+        <caption class="muted" style="padding:12px 14px;text-align:left">主流动作模型的输出与证据边界</caption>
+        <thead><tr><th>模型</th><th>典型动作输出</th><th>直接输出力 / 力矩？</th><th>能否据此声称恢复物性？</th></tr></thead>
+        <tbody>
+          <tr><td><strong>RT-2 / OpenVLA</strong></td><td>6-DoF 末端增量、夹爪、终止；或 7 维动作 token</td><td>否</td><td>否：证明动作泛化，不证明质量/摩擦可读</td></tr>
+          <tr><td><strong>Octo</strong></td><td>连续动作 chunk，可按机器人更换动作头</td><td>否；力矩可作为额外观察</td><td>否：没有物理参数标定头</td></tr>
+          <tr><td><strong>π0 / GR00T N1</strong></td><td>高频动作 chunk；关节或末端配置命令</td><td>论文未将其作为原生物性输出</td><td>否：接触任务成功仍可能来自示教和控制器</td></tr>
+          <tr><td><strong>DreamZero（WAM）</strong></td><td>联合预测未来视频与连续动作</td><td>否</td><td>未来看起来合理，不等于参数与模拟器一致</td></tr>
+        </tbody>
+      </table></div>
+      <p class="callout"><strong>为什么“只输入图片”也能做动作？</strong>训练标签并不只有图片：还有机器人动作，常常还有本体状态；这些数据本身由真实或模拟动力学生成。保守夹紧、慢速运动、位置控制器和每一步重新观察，都能让策略在不知道精确质量的情况下成功。</p>
+    </section>
+
+    <section id="backbone">
+      <div class="section-head"><h2>可以抽 backbone，但先把问题设计成可证伪</h2><p>不要先假设某个巨大 VLA 内部有一张“物性表”。先测试其表征里是否真的有跨对象、跨外观、跨控制器仍可读的信息。</p></div>
+      <div class="architecture">
+        <div><b>视觉 / 视频编码器</b><span>DINO、V-JEPA 2、DINO-WM 或 3DGSim；提供几何和动态先验。</span></div>
+        <div><b>属性分布头</b><span>输出材料族、质量与摩擦区间，不输出伪精确点值。</span></div>
+        <div><b>交互历史编码器</b><span>融合 RGB、关节、电流、接触与已知动作。</span></div>
+        <div><b>模拟器拟合层</b><span>将隐变量约束成有单位、可映射的参数 posterior。</span></div>
+        <div><b>任务验证器</b><span>用未参与拟合的反事实动作决定是否晋升。</span></div>
+      </div>
+      <div class="gates">
+        <div class="gate"><b>防视觉捷径</b><span>对象、材质、背景、类别分别留出，不能随机拆视频帧。</span></div>
+        <div class="gate"><b>和简单基线比</b><span>类别先验、静态帧、经典系统辨识、oracle 参数都要入场。</span></div>
+        <div class="gate"><b>测校准而非只测误差</b><span>报告区间覆盖率、负对数似然和反事实轨迹误差。</span></div>
+        <div class="gate"><b>允许多解</b><span>质量、摩擦、控制增益可能产生相近轨迹；posterior 必须保留不确定性。</span></div>
+        <div class="gate"><b>任务消融</b><span>若默认参数与 oracle 对某任务无差异，就不值得昂贵重建。</span></div>
+        <div class="gate"><b>跨后端复核</b><span>引擎参数名相同也不保证接触行为相同。</span></div>
+      </div>
+    </section>
+
+    <section id="reproduce">
+      <div class="section-head"><h2>最有价值的复现对象</h2><p>这里的排序看“能否回答我们的核心假设”，而不是只看论文名气。建议先做小而能证伪的实验，再扩大到生成系统。</p></div>
+      <div class="rank">
+        <article><span class="n">1</span><div><h3>Phys2Real</h3><p>刚体交互闭环 · P0</p></div><p><strong>为什么：</strong>最贴近“3DGS + VLM 先验 + 在线交互辨识”，能直接比较先验、探测后验和域随机化。</p><p class="deliver"><strong>首个交付：</strong>在平面推任务中随机化摩擦与质心，测 posterior 覆盖率、任务成功和探测次数。</p></article>
+        <article><span class="n">2</span><div><h3>PAC-NeRF</h3><p>视频到材料参数 · P0</p></div><p><strong>为什么：</strong>现有代码能从标定多视角视频联合优化几何与连续体材料参数，直接检验 video2env。</p><p class="deliver"><strong>首个交付：</strong>跑官方物体，导出 material sidecar，再用未拟合的落下/碰撞动作复核。</p></article>
+        <article><span class="n">3</span><div><h3>V-JEPA 2 / DINO-WM + Physion++</h3><p>backbone 可读性 · P0/P1</p></div><p><strong>为什么：</strong>低于 14B WAM 的算力风险，能回答视频表征是否含跨分布可读的质量、摩擦、弹性信息。</p><p class="deliver"><strong>首个交付：</strong>冻结表征做 probe，与 OpenVLA、DINOv2、静态图和从零训练基线比较。</p></article>
+        <article><span class="n">4</span><div><h3>PhysX-Anything / PhysX-3D</h3><p>image2env 结构资产 · P1</p></div><p><strong>为什么：</strong>从图像生成几何、关节与物理注释，并能转 URDF/XML；是最直接的 image2env 候选。</p><p class="deliver"><strong>首个交付：</strong>固定小样本导入 SAPIEN/MuJoCo，测尺度、关节轴、碰撞、settle 与任务回放。</p></article>
+        <article><span class="n">5</span><div><h3>PartNet-Mobility + GAPartNet + RBO</h3><p>关节与交互证据 · P1</p></div><p><strong>为什么：</strong>分别补齐“什么会动”“在哪里操作”和少见的 RGB-D + wrench 轨迹。</p><p class="deliver"><strong>首个交付：</strong>做一个抽屉或柜门的检索、轴/限位估计、把手动作和跨后端开合。</p></article>
+        <article><span class="n">6</span><div><h3>主动探测 + 可微拟合</h3><p>真实机器人标签闭环 · P1</p></div><p><strong>为什么：</strong>从根本上解决静态图不可观测，并可把高置信交互标签反哺 image2env。</p><p class="deliver"><strong>首个交付：</strong>安全的 lift / tilt / push / tap probe，用关节、电流与视频估计任务相关参数。</p></article>
+      </div>
+    </section>
+
+    <section id="experiments">
+      <div class="section-head"><h2>三个先做的证伪实验</h2><p>好的实验不只是展示成功案例，还应允许核心想法被否定。</p></div>
+      <div class="experiments">
+        <article class="experiment"><h3>成功抓取是否意味着参数可读？</h3><p>固定几何与纹理，独立随机化质量、质心、摩擦和控制增益；让 VLA 抓取，再从不同层训练小 probe。</p><ul><li>同时报告抓取成功率与 OOD 参数误差</li><li>换控制器后仍校准才算有力证据</li><li>可能结果：能抓，但读不出参数</li></ul></article>
+        <article class="experiment"><h3>哪种观察真正增加信息？</h3><p>同一对象依次给 text/image、被动视频、已知动作视频、主动 probe + 本体感觉。</p><ul><li>每一阶段输出 posterior</li><li>比较区间覆盖率和反事实轨迹误差</li><li>量化每次交互带来的信息增益</li></ul></article>
+        <article class="experiment"><h3>物理属性到底值不值得重建？</h3><p>对推、抓、开合、软体四类任务比较视觉网格、默认值、类别先验、标定值和 oracle。</p><ul><li>任务成功与标定成本画 Pareto 曲线</li><li>若默认值不输 oracle，就跳过该属性</li><li>把钱花在真正影响行为的参数上</li></ul></article>
+      </div>
+    </section>
+
+    <section id="integration">
+      <div class="section-head"><h2>在 PEARL 里怎么落地</h2><p>保留 <code>scene_gen/</code> 的稳定边界；物性先验、探测和晋升属于 self-improving 平台层。</p></div>
+      <div class="table-wrap"><table>
+        <caption class="muted" style="padding:12px 14px;text-align:left">物性侧车在 PEARL 各阶段的归属</caption>
+        <thead><tr><th>阶段</th><th>职责</th><th>必须留下的证据</th></tr></thead>
+        <tbody>
+          <tr><td><code>a1 / a2 retrieval</code></td><td>语义 + 几何 + 物理覆盖率排序；复用优先，候选耗尽才生成</td><td>输入 digest、候选、来源/许可证、分数、淘汰理由</td></tr>
+          <tr><td><code>/gen-env</code></td><td>产出 <code>asset_physical_posterior.v1</code> 先验 sidecar 和 probe 计划</td><td>值/区间/单位/状态、估计器版本、representation digest</td></tr>
+          <tr><td><code>/collect</code></td><td>执行安全 probe 或任务轨迹</td><td>动作、状态、时间戳、接触/力/关节、连续帧、fresh observation</td></tr>
+          <tr><td><code>/evaluate</code></td><td>系统辨识、matched-seed 回放、跨后端比较</td><td>校准、端点误差、接触稳定性、任务成功、置信区间</td></tr>
+          <tr><td><code>/diagnose</code></td><td>将失败变成 typed blocker</td><td><code>friction_identification_failed</code> 等诊断与补采建议</td></tr>
+          <tr><td><strong>promotion</strong></td><td>只有门禁全过才改活动资产目录</td><td>不可变 receipts、父版本、回归结果、rollback 指针</td></tr>
+        </tbody>
+      </table></div>
+      <p class="callout"><strong>与现有仓库契约兼容：</strong>继续用 <code>asset_ledger.v2</code> 的 <code>known | estimated | unknown</code> 和 append-only verification；完整 posterior 放 hash-bound sidecar，不复制进核心 <code>SceneSpec</code>。Digital Cousins 适合做“任务近亲”检索，但本仓库 wrapper 使用统一密度与关节摩擦，不能叫真实物性恢复。</p>
+    </section>
+
+    <section id="sources">
+      <div class="section-head"><h2>一手来源</h2><p>链接指向论文记录、项目页或作者代码。这里列最直接支撑判断的来源；完整审计保存在与页面分离的研究笔记目录。</p></div>
+      <div class="source-list">
+        <div class="source"><b>Phys2Real</b><span>3DGS、VLM 物性先验与在线交互适应</span><a href="https://arxiv.org/abs/2510.11689">论文</a><a href="https://github.com/phys2real/phys2real">代码</a></div>
+        <div class="source"><b>PAC-NeRF</b><span>多视角视频联合几何和连续体材料参数优化</span><a href="https://arxiv.org/abs/2303.05512">论文</a><a href="https://github.com/xuan-li/PAC-NeRF">代码</a></div>
+        <div class="source"><b>∇Sim</b><span>从视频像素反传到质量、摩擦、弹性等参数</span><a href="https://arxiv.org/abs/2104.02646">论文</a></div>
+        <div class="source"><b>V-JEPA 2</b><span>视频表征与 action-conditioned latent planning</span><a href="https://arxiv.org/abs/2506.09985">论文</a><a href="https://github.com/facebookresearch/vjepa2">代码</a></div>
+        <div class="source"><b>DINO-WM</b><span>冻结视觉特征上的 action-conditioned world model</span><a href="https://arxiv.org/abs/2411.04983">论文</a></div>
+        <div class="source"><b>Physion / Physion++</b><span>对象中心物理预测与潜在属性反事实测试</span><a href="https://arxiv.org/abs/2106.08261">Physion</a><a href="https://arxiv.org/abs/2306.15668">Physion++</a></div>
+        <div class="source"><b>PhysX-3D / PhysX-Anything</b><span>带尺度、材料、可供性和运动学的 sim-ready 候选</span><a href="https://github.com/ziangcao0312/PhysX-3D">PhysX-3D</a><a href="https://github.com/ziangcao0312/PhysX-Anything">Anything</a></div>
+        <div class="source"><b>Digital Cousins</b><span>视觉近亲检索和任务级 sim-to-real 思路</span><a href="https://arxiv.org/abs/2410.07408">论文</a><a href="https://github.com/cremebrule/digital-cousins">代码</a></div>
+        <div class="source"><b>PartNet-Mobility / GAPartNet</b><span>关节结构与可操作部件</span><a href="https://sapien.ucsd.edu/browse">PartNet-Mobility</a><a href="https://github.com/PKU-EPIC/GAPartNet">GAPartNet</a></div>
+        <div class="source"><b>RBO Articulated Objects</b><span>358 段 RGB-D 交互，含 78 段 wrench 测量</span><a href="https://arxiv.org/abs/1806.06465">论文</a><a href="https://tu-rbo.github.io/articulated-objects/">数据集</a></div>
+        <div class="source"><b>主流 VLA</b><span>用于核对其真实动作输出与声明边界</span><a href="https://arxiv.org/abs/2406.09246">OpenVLA</a><a href="https://arxiv.org/abs/2410.24164">π0</a><a href="https://arxiv.org/abs/2503.14734">GR00T N1</a></div>
+        <div class="source"><b>RMA</b><span>任务充分的在线适应不等于完美系统辨识</span><a href="https://arxiv.org/abs/2107.04034">论文</a></div>
+      </div>
+    </section>
+
+    <section id="boundaries">
+      <div class="section-head"><h2>目前绝对不能宣称什么</h2><p>这些边界是报告可信度的一部分。</p></div>
+      <div class="boundary-grid">
+        <div class="boundary-card"><b>不能把 LLM 小数叫测量值</b><span>VLM 只能先验初始化；没有交互或测量，质量、摩擦和内部质心常常不可辨识。</span></div>
+        <div class="boundary-card"><b>不能把漂亮渲染叫物理证据</b><span>3DGS、VLM 评分和端点截图不替代连续状态、接触、轨迹与任务 verifier。</span></div>
+        <div class="boundary-card"><b>不能把 VLA 成功叫参数恢复</b><span>鲁棒动作、反馈纠错和底层控制器都可能解释成功；要用 probe 和反事实实验区分。</span></div>
+        <div class="boundary-card"><b>不能把外部论文结果算成 PEARL 结果</b><span>所有候选复现当前仍是建议；在固定提交、数据、命令和报告落盘前状态是 not_run。</span></div>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="shell"><span>PEARL · Physical Asset Research · 独立研究报告，不是门户报告，也不是已部署闭环机器人系统</span><span><a href="#top">回到页首</a> · <a href="#answer">回到结论</a></span></div></footer>
+</body>
+</html>
