@@ -4,6 +4,7 @@
 - 契约版本：`1.0.0`
 - 范围：最小 Harness 注册表以及现有的 Text2Env Stage 0-5 路径
 - 权威性：本契约定义面向 Harness 的接口；现有的 `scene_gen` schema、包清单和验证报告仍是各自载荷的权威定义。
+- 实现证据：[PR1 核心 Schema 实现报告](HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)
 
 ## 决策与边界
 

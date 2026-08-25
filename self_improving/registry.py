@@ -21,6 +21,7 @@ class ModuleSpec:
 
 MODULES: tuple[ModuleSpec, ...] = (
     ModuleSpec("gen_env_core", "scene_gen", "core"),
+    ModuleSpec("harness_mvp", "self_improving/harness", "orchestration"),
     ModuleSpec("stage5", "self_improving/stage5", "orchestration"),
     ModuleSpec("alchedata", "self_improving/alchedata", "closed_loop"),
     ModuleSpec("asset_pipeline", "self_improving/asset_pipeline/active", "assets"),

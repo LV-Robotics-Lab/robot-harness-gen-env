@@ -1,0 +1,89 @@
+{
+  "$defs": {
+    "DependencyRef": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "sha256"
+      ],
+      "title": "DependencyRef",
+      "type": "object"
+    },
+    "JsonValue": {}
+  },
+  "$id": "harness.skill_invocation.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "dependencies": {
+      "items": {
+        "$ref": "#/$defs/DependencyRef"
+      },
+      "title": "Dependencies",
+      "type": "array"
+    },
+    "effective_parameters": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Effective Parameters",
+      "type": "object"
+    },
+    "invocation_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Invocation Digest",
+      "type": "string"
+    },
+    "max_attempts": {
+      "minimum": 1,
+      "title": "Max Attempts",
+      "type": "integer"
+    },
+    "run_id": {
+      "format": "uuid4",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "skill_id": {
+      "pattern": "^[a-z][a-z0-9_]{0,31}\\.[a-z][a-z0-9_]{0,31}$",
+      "title": "Skill Id",
+      "type": "string"
+    },
+    "skill_version": {
+      "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$",
+      "title": "Skill Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "run_id",
+    "skill_id",
+    "skill_version",
+    "effective_parameters",
+    "dependencies",
+    "max_attempts",
+    "invocation_digest"
+  ],
+  "title": "Invocation",
+  "type": "object"
+}

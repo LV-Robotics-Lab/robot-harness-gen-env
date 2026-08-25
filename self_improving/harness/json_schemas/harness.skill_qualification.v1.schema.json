@@ -1,0 +1,43 @@
+{
+  "$id": "harness.skill_qualification.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "deterministic_case_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Deterministic Case Id",
+      "type": "string"
+    },
+    "regression_command": {
+      "maxLength": 4096,
+      "minLength": 1,
+      "title": "Regression Command",
+      "type": "string"
+    },
+    "report_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Report Sha256",
+      "type": "string"
+    },
+    "skill_ref": {
+      "pattern": "^[a-z][a-z0-9_]{0,31}\\.[a-z][a-z0-9_]{0,31}@(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$",
+      "title": "Skill Ref",
+      "type": "string"
+    },
+    "status": {
+      "const": "pass",
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "skill_ref",
+    "status",
+    "deterministic_case_id",
+    "regression_command",
+    "report_sha256"
+  ],
+  "title": "SkillQualification",
+  "type": "object"
+}
