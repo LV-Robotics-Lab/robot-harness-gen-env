@@ -1,0 +1,137 @@
+{
+  "run_id": "isaac-settle-rehome-20260822",
+  "case": "can",
+  "asset_dir": "302_can",
+  "model_id": 3,
+  "check": "settle",
+  "backend": "isaacsim",
+  "stage_usd": "self_improving/asset_pipeline/active/results/isaac_settle_out/can/compile/isaacsim/scene.usda",
+  "prim_path": "/World/Objects/can_1",
+  "physics": {
+    "dt_s": 0.008333333333333333,
+    "hz": 120.0,
+    "steps": 300,
+    "gravity_original": {
+      "direction": [
+        0.0,
+        0.0,
+        -9.8100004196167
+      ],
+      "magnitude": 1.0
+    },
+    "gravity_applied": {
+      "direction": [
+        0.0,
+        0.0,
+        -1.0
+      ],
+      "magnitude": 9.81
+    }
+  },
+  "criteria": {
+    "window_steps": 50,
+    "window_disp_lt_m": 0.002,
+    "up_tilt_lt_deg": 15.0
+  },
+  "binding": {
+    "applied_schemas_before": [],
+    "preexisting_physics_prims": [],
+    "support_box": {
+      "path": "/World/SettleSupport",
+      "top_z_m": 0.6987280025282073,
+      "size_m": [
+        1.0,
+        1.0,
+        0.05
+      ]
+    },
+    "applied_schemas_after": [
+      "PhysicsRigidBodyAPI"
+    ],
+    "collision_prims": [
+      {
+        "path": "/World/Objects/can_1/_10_potted_meat_can",
+        "approximation": "convexHull",
+        "applied_schemas": [
+          "PhysicsCollisionAPI",
+          "PhysicsMeshCollisionAPI",
+          "MaterialBindingAPI"
+        ]
+      }
+    ]
+  },
+  "bbox_before_m": {
+    "min": [
+      -0.2647969426521767,
+      -0.027514682030603595,
+      0.6992280025282073
+    ],
+    "max": [
+      -0.15547342740026418,
+      0.08744748280832644,
+      0.7827710008821543
+    ]
+  },
+  "bound_stage_export": "self_improving/asset_pipeline/active/results/isaac_settle_out/can/settle_scene_bound.usda",
+  "pose_source": "SingleRigidPrim",
+  "usd_pose_final_crosscheck_m": [
+    -0.2100479155778885,
+    0.030035778880119324,
+    0.7401621341705322
+  ],
+  "pose_initial": {
+    "position_m": [
+      -0.21013480424880981,
+      0.029966726899147034,
+      0.7403190732002258
+    ],
+    "quat_wxyz": [
+      0.640350341796875,
+      0.6403505802154541,
+      0.29991886019706726,
+      0.2999188005924225
+    ]
+  },
+  "pose_final": {
+    "position_m": [
+      -0.2100479155778885,
+      0.030035778880119324,
+      0.7401621341705322
+    ],
+    "quat_wxyz": [
+      0.6405710577964783,
+      0.6401288509368896,
+      0.3008449375629425,
+      0.29899224638938904
+    ]
+  },
+  "metrics": {
+    "total_displacement_m": 0.0001922177833912401,
+    "max_displacement_m": 0.00019960015006096046,
+    "window_last50_displacement_m": 5.235510845249645e-06,
+    "up_tilt_deg": 0.15433749107807468,
+    "rel_rotation_deg": 0.14094215532684534
+  },
+  "fail_reasons": [],
+  "verdict": "pass",
+  "compile": {
+    "status": "compiled",
+    "blockers": [],
+    "warnings": [],
+    "artifact": "self_improving/asset_pipeline/active/results/isaac_settle_out/can/compile/isaacsim/scene.usda",
+    "enrich_report": {
+      "enriched": [
+        "asset_302_can_m3"
+      ],
+      "skipped_no_ledger": [],
+      "skipped_no_isaac_rep": [],
+      "warnings": []
+    },
+    "asset_ids": [
+      "asset_302_can_m3"
+    ],
+    "object_ids": [
+      "can_1"
+    ]
+  }
+}

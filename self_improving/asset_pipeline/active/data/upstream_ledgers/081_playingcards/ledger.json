@@ -1,0 +1,330 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "robotwin_081_playingcards",
+  "category": "playingcards",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "playingcards"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "results/20260818_upstream_ledger_backfill/upstream_catalog_scoped.json",
+      "verified": false
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.05842795073986054,
+          0.020008650422096253,
+          0.09499549865722656
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.8999099731445312,
+          "scale": 0.05,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "center_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.9999999766750008,
+                -3.9999999067000036e-05,
+                0.0002089999951250752,
+                3.699999913697503e-05
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/081_playingcards/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "36b6ebe2bf80c97a34d14e2707014e1694f20fb94229c0e093a36368bbfc72f8",
+          "size_bytes": 8445520,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/081_playingcards/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "a998fa3cb2bc321070132e88de66ad1da112ff04b236726011eb26921446754f",
+          "size_bytes": 80388,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "data/asset_library/robotwin/081_playingcards",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/081_playingcards/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    },
+    {
+      "model_id": 1,
+      "physical": {
+        "mesh_bbox_m": [
+          0.09509949982166291,
+          0.018752150237560272,
+          0.06511749923229218
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.901989996433258,
+          "scale": 0.05,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "center_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.9999818487097576,
+                0.00031299995264530173,
+                1.9999996974140686e-06,
+                -0.0060169990896702255
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/081_playingcards/visual/base1.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "7e631be493bfd74bf9287a79e846ac1ea5ca6c2cc2a88c5af24e2a4489de3287",
+          "size_bytes": 12314232,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/081_playingcards/collision/base1.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "e468199bc1962acb47f142b4d9f7d00cd30224d67398e0ecbe8c96439525c433",
+          "size_bytes": 42800,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "data/asset_library/robotwin/081_playingcards",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/081_playingcards/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    },
+    {
+      "model_id": 2,
+      "physical": {
+        "mesh_bbox_m": [
+          0.09501045048236847,
+          0.0182391494512558,
+          0.06257030069828033
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.9002090096473694,
+          "scale": 0.05,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "center_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.9999999168570104,
+                0.00040099996665966114,
+                -6.099999492827763e-05,
+                -4.199999650799444e-05
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/081_playingcards/visual/base2.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "e8e9491f5888cd079a9cd8c6be77d031e72624f965181d0daf188f0293dbd0bf",
+          "size_bytes": 10007008,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/081_playingcards/collision/base2.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "c411cf82b351df01c9f6dac8d6ad7d57ba0f7b5ecf53c533a3965dffb5a0cd83",
+          "size_bytes": 41788,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "data/asset_library/robotwin/081_playingcards",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/081_playingcards/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    }
+  ]
+}

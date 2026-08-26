@@ -1,0 +1,189 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_364_hanger",
+  "category": "hanger",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "hanger"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "results/web_runs/20260815_112333_place_a_hanger_on_the_table/acquire/identity_post_render_364_hanger_m0.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.42,
+          0.187417,
+          0.010559
+        ],
+        "size_resolution": {
+          "mode": "category:0.42",
+          "actual_max_dim_m": 43.75284767150879,
+          "scale": 0.009599375180178222,
+          "reference_max_dim_m": 0.42,
+          "reference_assets": [],
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/objaverse/364_hanger/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "3d5ec3c668fb4e99edfc5754450bf13e11008c2897e933a207465aa58d650ace",
+          "size_bytes": 2857404,
+          "metadata": {
+            "derived_from": "75d9725104b744e98cd3548104f7eace.glb",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": false
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/objaverse/364_hanger/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "a30ab7cfb139927bfc7d06fcf95d686680bd6a2ff022a1719c215358bb11550f",
+          "size_bytes": 2857404,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/_source/web_364_hanger/75d9725104b744e98cd3548104f7eace.glb",
+          "backend": "portable",
+          "role": "visual_and_collision",
+          "sha256": "55e99d079c6c6256a1c4432b42bb91a67c27a1105ff5e15c07e6199f749f8dc9",
+          "size_bytes": 2856064,
+          "metadata": {
+            "origin_prefix": "web_364_hanger"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "data/asset_library/objaverse/364_hanger/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "fd028c4b25211c551c5b0a9e7265e07b23c02c311794ed7a66d338549f1967c2",
+          "size_bytes": 2299,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "web (objaverse)",
+        "group": "web_364_hanger",
+        "file": "75d9725104b744e98cd3548104f7eace.glb",
+        "url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-128/75d9725104b744e98cd3548104f7eace.glb",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "CC-BY-4.0 (Objaverse per-object metadata); owner: Kleiderb\u00fcgel",
+          "evidence_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/metadata/000-128.json.gz",
+          "checked_date": "2026-08-15",
+          "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
+        },
+        "retrieved_at": "2026-08-15",
+        "source_manifest_path": "data/asset_library/_source/web_364_hanger/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-15T11:24:10",
+          "verified_digest": "5cd54cc99ee3809b0d384aa817d43fff93a385b49bbe5211336e2a83e625eeee",
+          "report_path": "results/web_runs/20260815_112333_place_a_hanger_on_the_table/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:26",
+          "verified_digest": "a21ee9d88cfe157b4ab941abc5c590c228250d2a2ae258269265a548e73783c4"
+        }
+      ]
+    }
+  ]
+}

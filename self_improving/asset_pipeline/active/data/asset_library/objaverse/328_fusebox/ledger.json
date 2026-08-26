@@ -1,0 +1,220 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_328_fusebox",
+  "category": "fusebox",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "fusebox"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "results/sweep_out/C_fusebox/acquire/identity_post_render_328_fusebox_m0.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.315199,
+          0.35,
+          0.329123
+        ],
+        "size_resolution": {
+          "mode": "category:0.35",
+          "actual_max_dim_m": 24.00836420059205,
+          "scale": 0.014578252690425652,
+          "reference_max_dim_m": 0.35,
+          "reference_assets": [],
+          "verdict": "scaled",
+          "rescaled_by": "rescale-planC-20260815"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "unsupportive",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/objaverse/328_fusebox/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "f7879a08ceec634b960ed22de53179484718da9de9305c648f1e017ae499b296",
+          "size_bytes": 42351268,
+          "metadata": {
+            "derived_from": "22d71a47f5744677b246ca9ed545a6df.glb",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": false
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/objaverse/328_fusebox/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "963a17ec0e9dc9a4a701d0cb99861c2d3a2baa289ac6fb2f9c808e37e6e8928c",
+          "size_bytes": 42351268,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/_source/web_328_fusebox/22d71a47f5744677b246ca9ed545a6df.glb",
+          "backend": "portable",
+          "role": "visual_and_collision",
+          "sha256": "c1257ca963bebb19b974c1bbe3b273f8252bf561f904fa528ae3319e21818bf3",
+          "size_bytes": 42342656,
+          "metadata": {
+            "origin_prefix": "web_328_fusebox"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "data/asset_library/objaverse/328_fusebox/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "00b4e533219074e9d70c380c758438905545baeee7386569132b1a615fffbf4e",
+          "size_bytes": 38911,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "web (objaverse)",
+        "group": "web_328_fusebox",
+        "file": "22d71a47f5744677b246ca9ed545a6df.glb",
+        "url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-122/22d71a47f5744677b246ca9ed545a6df.glb",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "CC-BY-4.0 (Objaverse per-object metadata); owner: Broken Fusebox (Raw Scan)",
+          "evidence_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/metadata/000-122.json.gz",
+          "checked_date": "2026-08-13",
+          "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
+        },
+        "retrieved_at": "2026-08-13",
+        "source_manifest_path": "data/asset_library/_source/web_328_fusebox/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-13T16:57:48",
+          "verified_digest": "41a6ba32df26a0103d283b6010e8d53781b8d25afbc9a286f8a3878e5343ad25",
+          "report_path": "results/sweep_out/C_fusebox/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        },
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "rescale-planC-20260815",
+          "timestamp": "2026-08-15T16:22:19",
+          "verified_digest": "4b07fbdb80a1ee1860a3d80becbc5a6ea8e089e33c949b982569e80bb4014ca0"
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "yellow"
+        ],
+        "color_fractions": {
+          "yellow": 0.917,
+          "brown": 0.051,
+          "orange": 0.024,
+          "black": 0.006
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "external_ids": {
+    "env_gen": "328_fusebox"
+  }
+}

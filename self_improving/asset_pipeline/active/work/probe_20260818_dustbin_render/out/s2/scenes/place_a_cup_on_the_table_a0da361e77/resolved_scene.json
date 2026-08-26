@@ -1,0 +1,272 @@
+{
+  "schema_version": "robotwin.resolved_scene.v1",
+  "scene_id": "place_a_cup_on_the_table_a0da361e77",
+  "request": "Place a cup on the table.",
+  "frame": {
+    "name": "robotwin_world",
+    "x_axis": "right",
+    "y_axis": "front",
+    "z_axis": "up",
+    "handedness": "right_handed"
+  },
+  "unit": "m",
+  "seed": 42,
+  "workspace": {
+    "support_surface": "table",
+    "table_height_m": 0.741,
+    "x_bounds_m": [
+      -0.35,
+      0.35
+    ],
+    "y_bounds_m": [
+      -0.2,
+      0.3
+    ],
+    "robot_keepout_x_m": [
+      -0.16,
+      0.16
+    ],
+    "robot_keepout_y_m": [
+      -0.2,
+      -0.08
+    ]
+  },
+  "source_scene_spec_sha256": "d2b381314c48a5cad8cb5829a567c162930d228b68db035d2a1c0e1bbe21d607",
+  "asset_catalog_sha256": "09b67ac2bda03a2ba3a80c11ebc51801b84f9291a331a10ceabfcecf1ebc61fa",
+  "compiler_version": "scene_gen.stage5_solver.v3",
+  "objects": [
+    {
+      "object_id": "cup_1",
+      "category": "cup",
+      "asset_id": "021_cup",
+      "model_id": 6,
+      "load_type": "rigid",
+      "stable_pose_id": "measured_rest",
+      "stable_orientation_wxyz": [
+        0.04392097662987416,
+        0.49116773865217167,
+        -0.03279798254836212,
+        0.869338537429434
+      ],
+      "dimensions_m": [
+        0.0737,
+        0.0642,
+        0.0549
+      ],
+      "footprint_shape": "box",
+      "support_margin_m": 0.005,
+      "support_spawn_clearance_m": 0.003,
+      "z_policy": "center_on_table",
+      "mesh_scale": [
+        0.04,
+        0.04,
+        0.04
+      ],
+      "collision_available": true,
+      "source_files": [
+        "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/021_cup/collision/base6.glb",
+        "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/021_cup/model_data6.json",
+        "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/robotwin/021_cup/visual/base6.glb"
+      ],
+      "grounding_score": 103.0,
+      "grounding_reasons": [
+        "exact category match",
+        "collision representation available",
+        "normalized dimensions available"
+      ],
+      "rejected_candidates": [
+        {
+          "asset_id": "021_cup",
+          "model_id": 0,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "021_cup",
+          "model_id": 1,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "021_cup",
+          "model_id": 2,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "021_cup",
+          "model_id": 3,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "021_cup",
+          "model_id": 4,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "021_cup",
+          "model_id": 5,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "021_cup",
+          "model_id": 7,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "021_cup",
+          "model_id": 8,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "021_cup",
+          "model_id": 9,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "021_cup",
+          "model_id": 10,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "021_cup",
+          "model_id": 11,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "021_cup",
+          "model_id": 12,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        },
+        {
+          "asset_id": "301_cup",
+          "model_id": 0,
+          "score": 103.0,
+          "reasons": [
+            "lower deterministic rank",
+            "exact category match",
+            "collision representation available",
+            "normalized dimensions available"
+          ]
+        }
+      ],
+      "pose": {
+        "position_m": [
+          -0.191657396,
+          0.038991844,
+          0.76845
+        ],
+        "orientation_wxyz": [
+          -0.328954764177,
+          0.458708967619,
+          0.178626812595,
+          0.805895345547
+        ],
+        "yaw_rad": 0.876044411498
+      },
+      "is_static": false,
+      "support_relation": "on_table",
+      "support_target": "table",
+      "articulation_joint_names": [],
+      "articulation_joint_limits": [],
+      "articulation_qpos": [],
+      "asset_provenance": "robotwin_catalog"
+    }
+  ],
+  "relations": [
+    {
+      "relation": "on_table",
+      "source": "cup_1",
+      "target": "table"
+    }
+  ],
+  "solver_trace": {
+    "algorithm": "bounded_rejection_backtracking_v1",
+    "seed": 42,
+    "max_attempts_per_object": 96,
+    "total_attempts": 1,
+    "attempts": [
+      {
+        "attempt": 1,
+        "object_id": "cup_1",
+        "candidate_xy_m": [
+          -0.191657396,
+          0.038991844
+        ],
+        "yaw_rad": 0.876044411498,
+        "accepted": true,
+        "reasons": []
+      }
+    ],
+    "status": "pass"
+  }
+}

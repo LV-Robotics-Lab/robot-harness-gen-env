@@ -699,7 +699,12 @@ function renderRunHeader() {
     badge = "⏳ 运行中 · " + (act ? STAGE_SHORT[act.n] : (state.phase === "render" ? "回放渲染" : "流水线"));
     bcls = "running";
   } else if (state.outcome === "scene") { badge = "✅ 场景生成成功"; bcls = "scene"; }
-  else if (state.outcome === "blocker") { badge = "⛔ 资产缺口阻塞"; bcls = "blocker"; }
+  else if (state.outcome === "blocker") {
+    const hasSimilar = ((st.stages && st.stages.evidence && st.stages.evidence.categories) || [])
+      .some(c => c.match && c.match.grade === "similar");
+    badge = hasSimilar ? "⛔ 缺口阻塞 · 有相似资产" : "⛔ 资产缺口阻塞";
+    bcls = "blocker";
+  }
   else if (state.outcome === "failed") { badge = `❌ 运行失败 (rc=${state.pipeline_rc})`; bcls = "failed"; }
   else if (tl[5] && tl[5].status === "blocked") { badge = "⛔ 资产缺口阻塞"; bcls = "blocker"; }
   else if (tl[5] && tl[5].status === "done") { badge = "历史 · 有场景"; bcls = "hist"; }
@@ -846,6 +851,56 @@ function stage1(st, stages) {
       <td class="mono">${escapeHtml(o.asset_id ?? "")}</td><td>${escapeHtml(o.score ?? "")}</td></tr>`).join("")}
   </tbody></table>` + rawDetails("coverage_report.json 原始数据", stages.coverage);
 }
+function candRowHtml(c) {
+  const a = c.asset || {};
+  const gaps = (c.unmet || []).map(u => {
+    const attr = u.attr === "color" ? "颜色" : u.attr === "material" ? "材质" : u.attr;
+    return u.kind === "unverified" ? `${attr}?` : `${attr}✗`;
+  }).join(" ");
+  return `<div style="display:flex;gap:8px;align-items:center;padding:3px 0;font-size:11.5px;">
+    <img src="/api/library/thumb/${encodeURIComponent(a.asset_id || "")}"
+         style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);object-fit:cover;"
+         onerror="this.style.display='none'">
+    <span class="mono">${escapeHtml(a.asset_id || "")}</span>
+    ${a.known_colors && a.known_colors.length ? `<span style="color:var(--text-dim);">${escapeHtml(a.known_colors.join("/"))}</span>` : ""}
+    <span style="color:var(--text-dim);">匹配 ${c.attr_score != null ? c.attr_score : "-"}${c.visual_sim != null ? ` · 视觉 ${c.visual_sim}` : ""}</span>
+    ${gaps ? `<span style="color:var(--text-dim);">${escapeHtml(gaps)}</span>` : `<span style="color:var(--done);">全符</span>`}
+  </div>`;
+}
+function candListHtml(cands) {
+  if (!cands || cands.length < 2) return "";
+  return `<details style="margin:2px 0 8px;">
+    <summary style="cursor:pointer;color:var(--text-dim);font-size:11.5px;">同类候选 ${cands.length} 个（按匹配度排序，视觉分≥门限）</summary>
+    ${cands.map(candRowHtml).join("")}</details>`;
+}
+function matchBadgeHtml(m) {
+  if (!m) return "";
+  const map = {
+    exact: ["✓ 找到资产", "var(--done)"],
+    similar: ["≈ 相似资产", "var(--active)"],
+    none: ["✗ 未找到", "var(--rejected)"],
+  };
+  const [label, color] = map[m.grade] || map.none;
+  const a = m.asset || null;
+  const unmet = (m.unmet || [])
+    .map(u => {
+      const attr = u.attr === "color" ? "颜色" : u.attr === "material" ? "材质" : u.attr;
+      return u.kind === "unverified"
+        ? `${attr}:要${u.want}(库内未标注)`
+        : `${attr}:要${u.want}/是${(u.got || []).join("+") || "?"}`;
+    })
+    .join(" · ");
+  return `<div style="margin:2px 0 10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+    <span class="st-tag" style="color:${color};border-color:${color};font-weight:700;">${label}</span>
+    ${a && a.asset_id ? `<img src="/api/library/thumb/${encodeURIComponent(a.asset_id)}"
+        style="width:44px;height:44px;border-radius:8px;border:1px solid var(--border);object-fit:cover;"
+        onerror="this.style.display='none'"><span class="mono">${escapeHtml(a.asset_id)}</span>` : ""}
+    ${a && a.known_colors && a.known_colors.length ? `<span style="color:var(--text-dim);font-size:11.5px;">${escapeHtml(a.known_colors.join("/"))}</span>` : ""}
+    ${a && a.source_tier != null ? `<span class="chip" style="border-color:var(--accent);color:var(--accent);">引进自 tier${a.source_tier} · ${escapeHtml(a.source_provider || "")}</span>` : ""}
+    ${a && a.source === "local_catalog" ? `<span style="color:var(--text-dim);font-size:11.5px;">库内已有</span>` : ""}
+    ${unmet ? `<span style="color:var(--text-dim);font-size:11.5px;">差距: ${escapeHtml(unmet)}</span>` : ""}
+  </div>` + candListHtml(m.candidates);
+}
 function stage2(st, stages, tl) {
   const cats = (stages.evidence && stages.evidence.categories) || [];
   if (!cats.length) {
@@ -856,12 +911,14 @@ function stage2(st, stages, tl) {
   return cats.map(cat => `
     <div style="margin-bottom:10px;">
       <strong>${escapeHtml(cat.category)}</strong>
-      <span class="mono" style="color:var(--text-dim);"> status=${escapeHtml(cat.status)} · tiers=${escapeHtml(JSON.stringify(cat.tiers_consulted))} · attempts=${escapeHtml(cat.attempts ?? "")}</span>
+      <span class="mono" style="color:var(--text-dim);"> status=${escapeHtml(cat.status)} · 咨询层 ${escapeHtml(JSON.stringify(cat.tiers_consulted))} · attempts=${escapeHtml(cat.attempts ?? "")}${cat.selected && cat.selected.tier != null ? ` · <b style="color:var(--accent);">选中 tier${escapeHtml(cat.selected.tier)}/${escapeHtml(cat.selected.provider || "")}</b>` : ""}</span>
+      ${matchBadgeHtml(cat.match)}
       <div class="chips">
         ${(cat.candidates || []).map(c => {
           const rejCode = c.rejection && c.rejection.code;
           const cls = c.verdict === "selected" ? "selected" : (rejCode ? "rejected" : "");
-          return `<span class="chip ${cls}" title="${escapeHtml(c.candidate_id)}">${escapeHtml(c.id)} · ${escapeHtml(c.verdict)}${rejCode ? " · " + escapeHtml(rejCode) : ""}</span>`;
+          const prov = (c.candidate_id || "").split(":")[0];
+          return `<span class="chip ${cls}" title="${escapeHtml(c.candidate_id)}">${prov ? escapeHtml(prov) + " · " : ""}${escapeHtml(c.id)} · ${escapeHtml(c.verdict)}${rejCode ? " · " + escapeHtml(rejCode) : ""}</span>`;
         }).join("")}
       </div>
     </div>`).join("") + rawDetails("selection_evidence.json 原始数据", stages.evidence);
@@ -900,6 +957,23 @@ function stage6(st, stages, tl) {
       <table><thead><tr><th>object_id</th><th>category</th><th>detail</th></tr></thead><tbody>
       ${(stages.blocker.unmet || []).map(u => `<tr><td class="mono">${escapeHtml(u.object_id)}</td><td>${escapeHtml(u.category)}</td><td>${escapeHtml(u.detail)}</td></tr>`).join("")}
       </tbody></table>
+      ${(stages.blocker.unmet || []).filter(u => u.nearest_local && u.nearest_local.asset).map(u => {
+        const a = u.nearest_local.asset;
+        const gaps = (u.nearest_local.unmet || []).map(x => {
+          const attr = x.attr === "color" ? "颜色" : x.attr === "material" ? "材质" : x.attr;
+          return x.kind === "unverified" ? `${attr}:要${x.want}(库内未标注)` : `${attr}:要${x.want}/是${(x.got || []).join("+") || "?"}`;
+        }).join(" · ");
+        return `<div style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <span class="st-tag" style="color:var(--active);border-color:var(--active);font-weight:700;">≈ 可将就的相似资产</span>
+          <img src="/api/library/thumb/${encodeURIComponent(a.asset_id || "")}"
+               style="width:44px;height:44px;border-radius:8px;border:1px solid var(--border);object-fit:cover;"
+               onerror="this.style.display='none'">
+          <span class="mono">${escapeHtml(a.asset_id || "")}</span>
+          ${a.known_colors && a.known_colors.length ? `<span style="color:var(--text-dim);font-size:11.5px;">${escapeHtml(a.known_colors.join("/"))}</span>` : ""}
+          ${gaps ? `<span style="color:var(--text-dim);font-size:11.5px;">差距: ${escapeHtml(gaps)}</span>` : ""}
+          <span style="color:var(--text-dim);font-size:11.5px;">详见第②步检索决策</span>
+        </div>` + candListHtml(u.nearest_local.candidates);
+      }).join("")}
     </div>` + rawDetails("asset_gap_blocker.json 原始数据", stages.blocker);
   }
   const sc = stages.scene;

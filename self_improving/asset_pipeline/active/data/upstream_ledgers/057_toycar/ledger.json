@@ -1,0 +1,639 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "robotwin_057_toycar",
+  "category": "toycar",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "toycar"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "results/20260818_upstream_ledger_backfill/upstream_catalog_scoped.json",
+      "verified": false
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.058076250553131106,
+          0.051304650306701664,
+          0.09495689868927003
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.8991379737854004,
+          "scale": 0.05,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.7069847650902112,
+                0.7072247650104665,
+                0.0017489994188600597,
+                0.001616999462719678
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/057_toycar/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "25b11744c1797aebc2ef2e3d14b35fda588708f24ec987f4ad73b120c6f61a7a",
+          "size_bytes": 8445868,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/057_toycar/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "1d2184f72e349195855b38184d4ecb1cd785ece0cf33cc5648b4e05cba2e783a",
+          "size_bytes": 960324,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "data/asset_library/robotwin/057_toycar",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/057_toycar/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    },
+    {
+      "model_id": 1,
+      "physical": {
+        "mesh_bbox_m": [
+          0.043562999367713934,
+          0.025761350989341736,
+          0.0945344477891922
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.890688955783844,
+          "scale": 0.05,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "center_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.9999980625348809,
+                -0.0017290001081230251,
+                -0.0009410000588454406,
+                -2.0000001250700118e-06
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/057_toycar/visual/base1.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "c862a97a33a13c373cd8e504f405e5163b4505ab004fdccb08723109c7aa21cc",
+          "size_bytes": 10507056,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/057_toycar/collision/base1.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "6d5972a15755a436f114563f3f0eb6afe67e1e07a59963ad0f66a50c89f5dc38",
+          "size_bytes": 304224,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "data/asset_library/robotwin/057_toycar",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/057_toycar/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    },
+    {
+      "model_id": 2,
+      "physical": {
+        "mesh_bbox_m": [
+          0.046100400388240814,
+          0.04442700147628784,
+          0.09489609897136689
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.8979219794273376,
+          "scale": 0.05,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.7074911210694285,
+                0.7067221209378333,
+                0.0002770000474016372,
+                0.0002840000485995125
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/057_toycar/visual/base2.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "0eeb0eb2c37ad70e2335cb4f75daa5c477405f76a574bb43864a7a3baf32d6d3",
+          "size_bytes": 8669148,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/057_toycar/collision/base2.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "70c46f60249cf384f52ad4e6c75ced7dced04e4e5f1e438a35c841e6dac5b1cd",
+          "size_bytes": 558500,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "data/asset_library/robotwin/057_toycar",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/057_toycar/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    },
+    {
+      "model_id": 3,
+      "physical": {
+        "mesh_bbox_m": [
+          0.044308549165725714,
+          0.0239828497171402,
+          0.09464894831180573
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.8929789662361145,
+          "scale": 0.05,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.7075511745971182,
+                0.706655174376019,
+                0.0021950005416438876,
+                0.002232000550774104
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/057_toycar/visual/base3.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "b0668ed0a78b9d321f8e36ec2bd67f6628fa0914e25c8446a5d869557afef809",
+          "size_bytes": 9284820,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/057_toycar/collision/base3.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "d4166dfd44bcb3eda95339d7045544c58931f62dadaefcb215721fec5b97cd8c",
+          "size_bytes": 301544,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "data/asset_library/robotwin/057_toycar",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/057_toycar/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    },
+    {
+      "model_id": 4,
+      "physical": {
+        "mesh_bbox_m": [
+          0.05198954939842224,
+          0.04797540009021759,
+          0.09462414979934693
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.8924829959869385,
+          "scale": 0.05,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.7069982727380693,
+                0.7072152728217812,
+                8.000003086153786e-06,
+                -1.3000005014999901e-05
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/057_toycar/visual/base4.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "4826fc3bc805bd88188e252afc67699764516e2a5313501e07f14f877eeade10",
+          "size_bytes": 8382756,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/057_toycar/collision/base4.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "8034c548947a7b36b2ddbf76e07052ff77bd13b4fc11456884d7c4aa88b2d693",
+          "size_bytes": 850580,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "data/asset_library/robotwin/057_toycar",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/057_toycar/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    },
+    {
+      "model_id": 5,
+      "physical": {
+        "mesh_bbox_m": [
+          0.050211501121521,
+          0.04088299870491028,
+          0.09490124881267548
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.8980249762535095,
+          "scale": 0.05,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.7070797804722676,
+                0.7071337804555021,
+                -1.899999410105375e-05,
+                1.4999995342937169e-05
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/057_toycar/visual/base5.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "7f14248ba2b298cd7e22caaafdd43da58741a3ae35f3503d1c79f83b7192034f",
+          "size_bytes": 9835652,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/057_toycar/collision/base5.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "4dd76276767e54136a1e1c63a4d412d676f8ef3ac04e23abbaf975a0853c4fa1",
+          "size_bytes": 747884,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "data/asset_library/robotwin/057_toycar",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/057_toycar/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    }
+  ]
+}

@@ -30,7 +30,7 @@ case "$RUN" in
   *) echo "REFUSED: SMOKE_RUN 必须落在 results/_test/ 下（当前: $RUN）"; exit 2 ;;
 esac
 
-MANIFEST=${SMOKE_MANIFEST:-$SPIKE/../configs/smoke_manifest.json}
+MANIFEST=${SMOKE_MANIFEST:-$SPIKE/../tests/fixtures/smoke_manifest.json}
 LIB=$RUN/asset_library
 SRC=$RUN/_source            # own source mirror -- production _source untouched
 SHADOW=$RUN/robotwin_shadow

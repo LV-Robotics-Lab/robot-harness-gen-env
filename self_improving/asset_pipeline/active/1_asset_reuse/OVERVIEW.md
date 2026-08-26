@@ -1,7 +1,8 @@
 # OVERVIEW — 资产复用管线（1_asset_reuse）
 
-> 一句话定位：让 RoboTwin 和 Isaac/USD 生态两边的资产互通，并且都能被 env-gen 的
-> 「文字 → 场景 → 物理验证」全流程复用的一条资产管线。
+> 一句话定位：面向不同仿真生态的资产检索与引进管线——文字需求/类目清单 →
+> 多源信任梯度检索 → 验货质检 → 入库注册 → 被 env-gen「文字 → 场景 → 物理验证」
+> 全流程真实选中。
 
 ## 1. 这是什么
 
@@ -30,7 +31,7 @@
 输入（只读）                                    输出
 ├─ RoboTwin 资产库（134 物体，jingxiang 处）     ├─ AssetBundle 账本 JSON（每资产一份，双后端表示+哈希+结构化未知）
 ├─ NVIDIA Isaac 资产服务器（HTTP，逐 prop 拉）   ├─ （线A 产物 bottle.usd / cabinet.usd 已随线 A 归档，见 archive/）
-├─ GitHub 公开仓库（tier2 检索源，逐仓声明许可）  ├─ ../data/asset_library/（外部资产池，RoboTwin 布局）
+├─ GitHub 公开仓库（tier2 检索源，逐仓声明许可）  ├─ ../data/asset_library/（外部资产池，按来源分夹）
 ├─ openxsim IR 库（AssetBundle 数据结构）        ├─ ../data/robotwin_shadow/（影子根）+ ../data/scene_gen_ext/（扩展 overrides+catalog）
 └─ env-gen 上游（catalog/场景编译/验证器）       ├─ 检索证据 selection_evidence / coverage_report / asset_gap_blocker
                                                └─ 双后端验证报告 / e2e 场景包 / 回放视频截图
@@ -113,7 +114,7 @@ coacd 碰撞体）。`run_smoke.sh` 已改走批量管线。`s7_probe_reverse` �
 
 - **目标**：证明 USD 生态资产能反向进 RoboTwin 布局并过 SAPIEN 验证（单件打样）。
 - **输入 → 输出**：NVIDIA 服务器 YCB 025_mug →
-  `../data/asset_library/301_cup/{visual,collision,model_data0.json}` + 账本。
+  `../data/asset_library/nvidia/301_cup/{visual,collision,model_data0.json}` + 账本。
 
 | 文件 | 功能 |
 |---|---|
@@ -129,14 +130,14 @@ coacd 碰撞体）。`run_smoke.sh` 已改走批量管线。`s7_probe_reverse` �
 
 - **目标**：一份 manifest 批量引入外部资产——一次 Kit 会话转全部，逐模型进程隔离验证，
   未过门的带原因淘汰、物理隔离出资产池。
-- **输入 → 输出**：`configs/external_manifest.json` → 资产池多模型目录 + 逐模型 bundle +
+- **输入 → 输出**：`archive/external_manifest.json` → 资产池多模型目录 + 逐模型 bundle +
   `import_matrix.json` + `external_overrides_fragment.yml`。
 
 | 文件 | 功能 |
 |---|---|
 | `import_fetch_convert.py` | 阶段 1（isaac-smoke）：镜像各组服务器目录（除 .thumbs，逐文件哈希）、读源 USD upAxis、单次 SimulationApp 会话全量转 GLB，写 `staging_manifest.json` |
 | `import_materialize.py` | 阶段 2（env-gen-yuxin）：GLB 规范化→物化→SAPIEN settle 硬门（位移<2mm、z>-2mm、倾角<15°/平躺物 45°）→账本+矩阵+fragment；惯例继承与尺寸策略在此落账 |
-| `configs/external_manifest.json` | 人工清单：组（服务器 prefix）+ 逐条 usd/asset/model/category/aliases/colors/footprint，可选 `collision: coacd`（离线精分解）、`size_policy` |
+| `archive/external_manifest.json` | 人工清单：组（服务器 prefix）+ 逐条 usd/asset/model/category/aliases/colors/footprint，可选 `collision: coacd`（离线精分解）、`size_policy` |
 
 **参数**：
 
@@ -204,7 +205,7 @@ s10/s12 无参数（路径写死在脚本头部变量）。**一键运行**：`r
 - **目标**：类目清单或场景 prompt 驱动，按信任梯度自动找资产、过门禁、复用批量管线
   引进，全程留决策证据；查缺补漏而非静默失败。
 - **输入 → 输出**：`acquire_categories.json` 或 prompt → 入库资产 +
-  `configs/acquired_manifest.json`（自动生成清单）+ `selection_evidence.json` /
+  `data/acquired_manifest.json`（自动生成清单）+ `selection_evidence.json` /
   `coverage_report.json` / `asset_gap_blocker.json`。
 
 | 文件 | 功能 |
@@ -217,7 +218,7 @@ s10/s12 无参数（路径写死在脚本头部变量）。**一键运行**：`r
 | `scripts/1_search/scene_acquire.py` | 场景驱动自适应：prompt→覆盖检查→缺口自动引进→重查→生成场景；仍未覆盖的写 `asset_gap_blocker.json`（生成式兜底的结构化输入） |
 | `configs/providers.json` | provider 开关/层级/源配置 + 全局 `top_k`/`max_fallback`/`max_size_bytes`/`license_gate` |
 | `configs/acquire_categories.json` | 类目需求清单（category + aliases） |
-| `configs/acquired_manifest.json` | acquire_batch 自动生成的已引进清单（与手写 external_manifest 同构） |
+| `data/acquired_manifest.json` | acquire_batch 自动生成的已引进清单（与手写 external_manifest 同构） |
 | `tests/`（7 文件 + fixtures） | 检索层单测：providers / selection / webfetch / coverage / acquire_batch / scene_acquire / 分层搜索（`fixtures/mini_catalog.json`） |
 
 **参数**：acquire_batch `--categories --providers --dev-root --out`，`--refresh-index`

@@ -1,0 +1,17 @@
+{
+  "schema": "envgen.scene_coverage.v1",
+  "prompt": "Place a red cup on the table.",
+  "seed": 42,
+  "objects": [
+    {
+      "object_id": "cup_1",
+      "category": "cup",
+      "color": "red",
+      "material": null,
+      "status": "covered",
+      "asset_id": "301_cup",
+      "model_id": 0,
+      "score": 112.0
+    }
+  ]
+}

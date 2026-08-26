@@ -1,0 +1,128 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "robotwin_117_whiteboard-eraser",
+  "category": "whiteboard_eraser",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "whiteboard eraser",
+      "whiteboard_eraser"
+    ],
+    "colors": [
+      "black",
+      "white"
+    ],
+    "materials": [],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "results/20260818_upstream_ledger_backfill/upstream_catalog_scoped.json",
+      "verified": false
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.15205440044403076,
+          0.056478080749511717,
+          0.07831007957458497
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.9006800055503845,
+          "scale": 0.08,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "center_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "measured_rest",
+              "orientation_wxyz": [
+                0.9999986399630545,
+                -0.001010999636002284,
+                0.0013029995308713907,
+                -1.1999995679552333e-05
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "global_constant"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/117_whiteboard-eraser/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "e833d4f786fa24dda67011dbfc4ef31e223376f8955733db25393bb2542119d9",
+          "size_bytes": 6996200,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/robotwin/117_whiteboard-eraser/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "b24c72ebb4633e65b70ae9fbca5c62a1502de12aff4d65393e67482926775242",
+          "size_bytes": 373288,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "origin": "bottom-center",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "data/asset_library/robotwin/117_whiteboard-eraser",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/117_whiteboard-eraser/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    }
+  ]
+}

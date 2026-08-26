@@ -1,0 +1,134 @@
+{
+  "schema_version": "robotwin.scene_runtime_evidence.v2",
+  "scene_id": "place_a_bottle_on_the_table_1829138cd7",
+  "resolved_scene_sha256": "e67693452b1f8830ccbb8c164e7114d21fd87c9bca2b49c2850aca005b7a27f5",
+  "seed": 42,
+  "status": "pass",
+  "robot_initial_collision_count": 0,
+  "robot_initial_collision_pairs": [],
+  "robot_final_collision_count": 0,
+  "robot_final_collision_pairs": [],
+  "objects": {
+    "bottle_1": {
+      "asset_id": "001_bottle",
+      "entity_id": 66,
+      "entity_ids": [
+        66
+      ],
+      "initial_pose": {
+        "position_m": [
+          -0.12179259955883026,
+          0.06661009043455124,
+          0.7781000137329102
+        ],
+        "orientation_wxyz": [
+          0.9055864810943604,
+          -0.0012933852849528193,
+          0.0033485377207398415,
+          0.42414647340774536
+        ],
+        "qpos": []
+      },
+      "final_pose": {
+        "position_m": [
+          -0.12178512662649155,
+          0.06661801785230637,
+          0.7770037651062012
+        ],
+        "orientation_wxyz": [
+          0.9055860042572021,
+          -0.001348116435110569,
+          0.0034858675207942724,
+          0.4241463243961334
+        ],
+        "qpos": []
+      },
+      "translation_drift_m": 0.0010963027593832541,
+      "rotation_drift_deg": 0.0,
+      "resolved_translation_error_m": 0.0010962890473503776,
+      "loader_translation_offset_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "resolved_rotation_error_deg": 0.0,
+      "late_window_translation_m": 0.0,
+      "late_window_rotation_deg": 0.0,
+      "still_moving": false,
+      "visible_pixels": 3155,
+      "penetration_count": 0,
+      "support_contact": true,
+      "support_contact_fraction": 1.0,
+      "support_contact_samples": 120,
+      "unexpected_contact_fraction": 0.0,
+      "unexpected_contact_targets": [],
+      "support_mode": "on_table_contact",
+      "support_target": "table",
+      "expected_support_target": "table",
+      "support_footprint_margin_m": null,
+      "inside_contained": null,
+      "dropped": false,
+      "articulation_target_qpos": [],
+      "articulation_final_qpos": [],
+      "articulation_max_abs_error": null
+    }
+  },
+  "relations": {},
+  "initial_contact_records": [],
+  "final_contact_records": [
+    {
+      "bodies": [
+        "bottle_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 0,
+      "min_separation_m": 0.007821333594620228,
+      "max_impulse_norm": 0.0,
+      "active": false
+    },
+    {
+      "bodies": [
+        "bottle_1",
+        "table"
+      ],
+      "penetration_points": 0,
+      "point_count": 3,
+      "active_point_count": 3,
+      "min_separation_m": -5.197654928679185e-08,
+      "max_impulse_norm": 0.00026069352730310845,
+      "active": true
+    }
+  ],
+  "images": {
+    "head": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_900/preview_head.png",
+    "world_left": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_900/preview_world_left.png",
+    "world_right": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_900/preview_world_right.png",
+    "segmentation": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_900/preview_segmentation.png",
+    "observer_start": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_900/observer_start.png",
+    "observer_mid": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_900/observer_mid.png",
+    "observer_end": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_900/observer_end.png"
+  },
+  "video": "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/work/probe_20260818_dustbin_render/out/s2/run_001_bottle_900/observer_runtime.mp4",
+  "video_frame_count": 12,
+  "unique_video_frame_count": 12,
+  "fps": 12,
+  "simulation_step_count": 900,
+  "video_sample_step_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    899
+  ],
+  "precheck_steps": 0,
+  "contact_window_steps": 120
+}

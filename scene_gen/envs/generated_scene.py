@@ -134,7 +134,15 @@ def _apply_color_override(actor: Any, color: str) -> int:
         components = getattr(entity, "components", ())
         for component in components:
             for shape in getattr(component, "render_shapes", ()):
-                candidates = [getattr(shape, "material", None)]
+                # A multi-material triangle mesh RAISES on the aggregate
+                # .material getter (SAPIEN C++ side throws RuntimeError, so
+                # getattr's default never applies) -- a hanger with mixed
+                # materials killed the whole render on a colour-tint request
+                # (2026-08-15). Its materials are reachable via .parts below.
+                try:
+                    candidates = [shape.material]
+                except (RuntimeError, AttributeError):
+                    candidates = []
                 candidates.extend(
                     getattr(part, "material", None)
                     for part in getattr(shape, "parts", ())

@@ -1,11 +1,11 @@
 {
  "schema": "envgen.top_support_survey.v1",
  "method": "3x3 probe-cube drop on static target, 250 steps each",
- "measured_at": "2026-08-13",
+ "measured_at": "2026-08-14",
  "counts": {
-  "flat": 17,
-  "hollow": 13,
-  "unsupportive": 441,
+  "flat": 25,
+  "hollow": 14,
+  "unsupportive": 469,
   "error": 0
  },
  "models": {
@@ -19,55 +19,55 @@
        -0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0011
+      "xy_drift": 0.0252
      },
      {
       "cell": [
        -0.3,
-       0.0
-      ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.123
-     },
-     {
-      "cell": [
-       -0.3,
-       0.3
-      ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.1842
-     },
-     {
-      "cell": [
-       0.0,
-       -0.3
-      ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0011
-     },
-     {
-      "cell": [
-       0.0,
        0.0
       ],
       "bottom_z": 0.0,
-      "xy_drift": 0.0893
+      "xy_drift": 0.0478
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0364
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0426
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0765
      },
      {
       "cell": [
        0.0,
        0.3
       ],
-      "bottom_z": 0.1638,
-      "xy_drift": 0.0025
+      "bottom_z": -0.0,
+      "xy_drift": 0.0451
      },
      {
       "cell": [
        0.3,
        -0.3
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0011
+      "bottom_z": 0.0,
+      "xy_drift": 0.0247
      },
      {
       "cell": [
@@ -75,7 +75,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.2061
+      "xy_drift": 0.0349
      },
      {
       "cell": [
@@ -83,10 +83,10 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.2324
+      "xy_drift": 0.028
      }
     ],
-    "dz_ref": 0.1638,
+    "dz_ref": 0.2548,
     "verdict": "unsupportive"
    },
    "1": {
@@ -1837,75 +1837,75 @@
        -0.3,
        -0.3
       ],
-      "bottom_z": 0.0,
-      "xy_drift": 0.0
+      "bottom_z": 0.0074,
+      "xy_drift": 0.0321
      },
      {
       "cell": [
        -0.3,
        0.0
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0139
+      "bottom_z": 0.0075,
+      "xy_drift": 0.0188
      },
      {
       "cell": [
        -0.3,
        0.3
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0798
+      "bottom_z": 0.0089,
+      "xy_drift": 0.0187
      },
      {
       "cell": [
        0.0,
        -0.3
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0
+      "bottom_z": 0.0077,
+      "xy_drift": 0.0193
      },
      {
       "cell": [
        0.0,
        0.0
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0611
+      "bottom_z": 0.0074,
+      "xy_drift": 0.0007
      },
      {
       "cell": [
        0.0,
        0.3
       ],
-      "bottom_z": 0.0558,
-      "xy_drift": 0.0028
+      "bottom_z": 0.0085,
+      "xy_drift": 0.003
      },
      {
       "cell": [
        0.3,
        -0.3
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0
+      "bottom_z": 0.0092,
+      "xy_drift": 0.0189
      },
      {
       "cell": [
        0.3,
        0.0
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0121
+      "bottom_z": 0.0087,
+      "xy_drift": 0.0037
      },
      {
       "cell": [
        0.3,
        0.3
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0506
+      "bottom_z": 0.0084,
+      "xy_drift": 0.0247
      }
     ],
-    "dz_ref": 0.0558,
+    "dz_ref": 0.0092,
     "verdict": "unsupportive"
    },
    "2": {
@@ -2466,14 +2466,14 @@
   },
   "004_fluted-block": {
    "0": {
-    "z_policy": "center_on_table",
+    "z_policy": "origin_on_table",
     "cells": [
      {
       "cell": [
        -0.3,
        -0.3
       ],
-      "bottom_z": -0.0,
+      "bottom_z": 0.0653,
       "xy_drift": 0.0
      },
      {
@@ -2481,15 +2481,15 @@
        -0.3,
        0.0
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0402
+      "bottom_z": 0.0284,
+      "xy_drift": 0.0178
      },
      {
       "cell": [
        -0.3,
        0.3
       ],
-      "bottom_z": 0.0779,
+      "bottom_z": 0.0653,
       "xy_drift": 0.0
      },
      {
@@ -2497,52 +2497,70 @@
        0.0,
        -0.3
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0
+      "bottom_z": 0.0285,
+      "xy_drift": 0.0167
      },
      {
       "cell": [
        0.0,
        0.0
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0517
+      "bottom_z": 0.0283,
+      "xy_drift": 0.0003
      },
      {
       "cell": [
        0.0,
        0.3
       ],
-      "bottom_z": 0.0779,
-      "xy_drift": 0.0
+      "bottom_z": 0.0282,
+      "xy_drift": 0.0199
      },
      {
       "cell": [
        0.3,
        -0.3
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0
+      "bottom_z": 0.0652,
+      "xy_drift": 0.0004
      },
      {
       "cell": [
        0.3,
        0.0
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0474
+      "bottom_z": 0.0281,
+      "xy_drift": 0.0172
      },
      {
       "cell": [
        0.3,
        0.3
       ],
-      "bottom_z": 0.078,
-      "xy_drift": 0.0
+      "bottom_z": 0.0653,
+      "xy_drift": 0.0001
      }
     ],
-    "dz_ref": 0.078,
-    "verdict": "unsupportive"
+    "dz_ref": 0.0653,
+    "verdict": "hollow",
+    "interior": {
+     "floor_z_offset_m": 0.028,
+     "dimensions_m": [
+      0.0558,
+      0.0536,
+      0.0323
+     ],
+     "cavity_span_raw": [
+      -0.0172,
+      0.0159,
+      -0.0148,
+      0.0163
+     ],
+     "method": "fine 5x5 in-cavity scan, symmetric inscription"
+    },
+    "load_half_size_m": 0.0214,
+    "load_tilt_deg": 2.08,
+    "payload_floor_z_m": 0.0286
    },
    "1": {
     "z_policy": "center_on_table",
@@ -2561,7 +2579,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0566
+      "xy_drift": 0.0516
      },
      {
       "cell": [
@@ -2584,8 +2602,8 @@
        0.0,
        0.0
       ],
-      "bottom_z": 0.0,
-      "xy_drift": 0.0512
+      "bottom_z": -0.0,
+      "xy_drift": 0.0353
      },
      {
       "cell": [
@@ -2609,7 +2627,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0578
+      "xy_drift": 0.0576
      },
      {
       "cell": [
@@ -3835,39 +3853,39 @@
        0.0
       ],
       "bottom_z": 0.0755,
-      "xy_drift": 0.046
+      "xy_drift": 0.0465
      },
      {
       "cell": [
        -0.3,
        0.3
       ],
-      "bottom_z": 0.0761,
-      "xy_drift": 0.0221
+      "bottom_z": 0.0756,
+      "xy_drift": 0.0276
      },
      {
       "cell": [
        0.0,
        -0.3
       ],
-      "bottom_z": 0.0955,
-      "xy_drift": 0.0347
+      "bottom_z": 0.0917,
+      "xy_drift": 0.0335
      },
      {
       "cell": [
        0.0,
        0.0
       ],
-      "bottom_z": 0.1565,
-      "xy_drift": 0.0282
+      "bottom_z": 0.1536,
+      "xy_drift": 0.0298
      },
      {
       "cell": [
        0.0,
        0.3
       ],
-      "bottom_z": 0.1392,
-      "xy_drift": 0.0296
+      "bottom_z": 0.1537,
+      "xy_drift": 0.0138
      },
      {
       "cell": [
@@ -3875,45 +3893,45 @@
        -0.3
       ],
       "bottom_z": 0.0757,
-      "xy_drift": 0.0295
+      "xy_drift": 0.0302
      },
      {
       "cell": [
        0.3,
        0.0
       ],
-      "bottom_z": 0.0758,
-      "xy_drift": 0.0347
+      "bottom_z": 0.0757,
+      "xy_drift": 0.0344
      },
      {
       "cell": [
        0.3,
        0.3
       ],
-      "bottom_z": 0.077,
-      "xy_drift": 0.0293
+      "bottom_z": 0.0771,
+      "xy_drift": 0.0308
      }
     ],
-    "dz_ref": 0.1565,
+    "dz_ref": 0.1537,
     "verdict": "hollow",
-    "load_half_size_m": 0.0349,
-    "load_tilt_deg": 129.97,
-    "payload_floor_z_m": -0.0,
+    "load_half_size_m": 0.0363,
+    "load_tilt_deg": 105.73,
+    "payload_floor_z_m": 0.0148,
     "interior_suppressed": {
      "floor_z_offset_m": 0.0755,
      "dimensions_m": [
-      0.0872,
-      0.1024,
-      0.076
+      0.0908,
+      0.0998,
+      0.0732
      ],
      "cavity_span_raw": [
-      -0.0321,
-      0.0316,
-      -0.0477,
-      0.0392
+      -0.0341,
+      0.0334,
+      -0.0427,
+      0.0379
      ],
      "method": "fine 5x5 in-cavity scan, symmetric inscription",
-     "reason": "load test tipped container 130.0 deg"
+     "reason": "load test tipped container 105.7 deg"
     }
    },
    "1": {
@@ -3933,7 +3951,7 @@
        0.0
       ],
       "bottom_z": 0.0084,
-      "xy_drift": 0.0257
+      "xy_drift": 0.0258
      },
      {
       "cell": [
@@ -3957,7 +3975,7 @@
        0.0
       ],
       "bottom_z": 0.0083,
-      "xy_drift": 0.0005
+      "xy_drift": 0.0008
      },
      {
       "cell": [
@@ -3973,7 +3991,7 @@
        -0.3
       ],
       "bottom_z": 0.0084,
-      "xy_drift": 0.0355
+      "xy_drift": 0.036
      },
      {
       "cell": [
@@ -3989,7 +4007,7 @@
        0.3
       ],
       "bottom_z": 0.0084,
-      "xy_drift": 0.0339
+      "xy_drift": 0.0335
      }
     ],
     "dz_ref": 0.0088,
@@ -4012,15 +4030,15 @@
        0.0
       ],
       "bottom_z": 0.0,
-      "xy_drift": 0.0675
+      "xy_drift": 0.0639
      },
      {
       "cell": [
        -0.3,
        0.3
       ],
-      "bottom_z": 0.0957,
-      "xy_drift": 0.0155
+      "bottom_z": 0.0956,
+      "xy_drift": 0.0151
      },
      {
       "cell": [
@@ -4028,7 +4046,7 @@
        -0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0986
+      "xy_drift": 0.1282
      },
      {
       "cell": [
@@ -4036,7 +4054,7 @@
        0.0
       ],
       "bottom_z": 0.0,
-      "xy_drift": 0.1416
+      "xy_drift": 0.1301
      },
      {
       "cell": [
@@ -4044,7 +4062,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0759
+      "xy_drift": 0.1284
      },
      {
       "cell": [
@@ -4052,7 +4070,7 @@
        -0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0699
+      "xy_drift": 0.0803
      },
      {
       "cell": [
@@ -4060,7 +4078,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0782
+      "xy_drift": 0.0816
      },
      {
       "cell": [
@@ -4068,7 +4086,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0392
+      "xy_drift": 0.0587
      }
     ],
     "dz_ref": 0.1051,
@@ -4083,7 +4101,7 @@
        -0.3
       ],
       "bottom_z": 0.0,
-      "xy_drift": 0.143
+      "xy_drift": 0.1424
      },
      {
       "cell": [
@@ -4091,7 +4109,7 @@
        0.0
       ],
       "bottom_z": 0.0,
-      "xy_drift": 0.1406
+      "xy_drift": 0.2139
      },
      {
       "cell": [
@@ -4107,7 +4125,7 @@
        -0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.1464
+      "xy_drift": 0.0964
      },
      {
       "cell": [
@@ -4115,7 +4133,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.1853
+      "xy_drift": 0.1804
      },
      {
       "cell": [
@@ -4123,7 +4141,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.1224
+      "xy_drift": 0.0897
      },
      {
       "cell": [
@@ -4131,7 +4149,7 @@
        -0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.1777
+      "xy_drift": 0.1761
      },
      {
       "cell": [
@@ -4139,7 +4157,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0987
+      "xy_drift": 0.0702
      },
      {
       "cell": [
@@ -4162,7 +4180,7 @@
        -0.3
       ],
       "bottom_z": 0.0202,
-      "xy_drift": 0.0229
+      "xy_drift": 0.0227
      },
      {
       "cell": [
@@ -4178,7 +4196,7 @@
        0.3
       ],
       "bottom_z": 0.0202,
-      "xy_drift": 0.0226
+      "xy_drift": 0.0232
      },
      {
       "cell": [
@@ -4186,7 +4204,7 @@
        -0.3
       ],
       "bottom_z": 0.0202,
-      "xy_drift": 0.0463
+      "xy_drift": 0.0448
      },
      {
       "cell": [
@@ -4202,7 +4220,7 @@
        0.3
       ],
       "bottom_z": 0.0202,
-      "xy_drift": 0.0397
+      "xy_drift": 0.043
      },
      {
       "cell": [
@@ -4210,7 +4228,7 @@
        -0.3
       ],
       "bottom_z": 0.0202,
-      "xy_drift": 0.0385
+      "xy_drift": 0.039
      },
      {
       "cell": [
@@ -4226,7 +4244,7 @@
        0.3
       ],
       "bottom_z": 0.0202,
-      "xy_drift": 0.0419
+      "xy_drift": 0.0408
      }
     ],
     "dz_ref": 0.0202,
@@ -13534,15 +13552,15 @@
        -0.3
       ],
       "bottom_z": 0.0067,
-      "xy_drift": 0.0411
+      "xy_drift": 0.0431
      },
      {
       "cell": [
        -0.3,
        0.0
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0288
+      "bottom_z": 0.0,
+      "xy_drift": 0.0339
      },
      {
       "cell": [
@@ -13565,8 +13583,8 @@
        0.0,
        0.0
       ],
-      "bottom_z": 0.0066,
-      "xy_drift": 0.043
+      "bottom_z": 0.0067,
+      "xy_drift": 0.045
      },
      {
       "cell": [
@@ -13582,7 +13600,7 @@
        -0.3
       ],
       "bottom_z": 0.0068,
-      "xy_drift": 0.0428
+      "xy_drift": 0.0431
      },
      {
       "cell": [
@@ -13590,7 +13608,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0336
+      "xy_drift": 0.0326
      },
      {
       "cell": [
@@ -13604,24 +13622,23 @@
     "dz_ref": 0.0567,
     "verdict": "hollow",
     "load_half_size_m": 0.02,
-    "load_tilt_deg": 90.97,
+    "load_tilt_deg": 108.44,
     "payload_floor_z_m": -0.0,
     "interior_suppressed": {
-     "floor_z_offset_m": 0.008,
+     "floor_z_offset_m": 0.0064,
      "dimensions_m": [
-      0.033,
-      0.0958,
-      0.0437
+      0.035,
+      0.0942,
+      0.0453
      ],
      "cavity_span_raw": [
-      -0.0045,
+      -0.0058,
       0.0055,
-      -0.0464,
-      -0.0359
+      -0.045,
+      -0.0351
      ],
      "method": "fine 5x5 in-cavity scan, symmetric inscription",
-     "floor_basis": "payload rest +0.008m margin",
-     "reason": "load test tipped container 91.0 deg"
+     "reason": "load test tipped container 108.4 deg"
     }
    },
    "4": {
@@ -13632,16 +13649,16 @@
        -0.3,
        -0.3
       ],
-      "bottom_z": 0.0,
-      "xy_drift": 0.0812
+      "bottom_z": -0.0,
+      "xy_drift": 0.0424
      },
      {
       "cell": [
        -0.3,
        0.0
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0322
+      "bottom_z": 0.0,
+      "xy_drift": 0.0415
      },
      {
       "cell": [
@@ -13656,16 +13673,16 @@
        0.0,
        -0.3
       ],
-      "bottom_z": 0.0199,
-      "xy_drift": 0.0262
+      "bottom_z": 0.0196,
+      "xy_drift": 0.0261
      },
      {
       "cell": [
        0.0,
        0.0
       ],
-      "bottom_z": 0.0168,
-      "xy_drift": 0.033
+      "bottom_z": 0.0164,
+      "xy_drift": 0.0298
      },
      {
       "cell": [
@@ -13673,7 +13690,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0893
+      "xy_drift": 0.0908
      },
      {
       "cell": [
@@ -13681,7 +13698,7 @@
        -0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0558
+      "xy_drift": 0.083
      },
      {
       "cell": [
@@ -13689,7 +13706,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0554
+      "xy_drift": 0.0401
      },
      {
       "cell": [
@@ -13700,7 +13717,7 @@
       "xy_drift": 0.0
      }
     ],
-    "dz_ref": 0.0199,
+    "dz_ref": 0.0196,
     "verdict": "unsupportive"
    },
    "5": {
@@ -13712,7 +13729,7 @@
        -0.3
       ],
       "bottom_z": 0.0052,
-      "xy_drift": 0.0508
+      "xy_drift": 0.0501
      },
      {
       "cell": [
@@ -13720,7 +13737,7 @@
        0.0
       ],
       "bottom_z": 0.0052,
-      "xy_drift": 0.0408
+      "xy_drift": 0.051
      },
      {
       "cell": [
@@ -13744,7 +13761,7 @@
        0.0
       ],
       "bottom_z": 0.0052,
-      "xy_drift": 0.0196
+      "xy_drift": 0.0193
      },
      {
       "cell": [
@@ -13752,7 +13769,7 @@
        0.3
       ],
       "bottom_z": 0.0631,
-      "xy_drift": 0.0139
+      "xy_drift": 0.0138
      },
      {
       "cell": [
@@ -13760,7 +13777,7 @@
        -0.3
       ],
       "bottom_z": 0.0052,
-      "xy_drift": 0.0486
+      "xy_drift": 0.0493
      },
      {
       "cell": [
@@ -13768,7 +13785,7 @@
        0.0
       ],
       "bottom_z": 0.0052,
-      "xy_drift": 0.0571
+      "xy_drift": 0.0555
      },
      {
       "cell": [
@@ -13781,25 +13798,24 @@
     ],
     "dz_ref": 0.0631,
     "verdict": "hollow",
-    "load_half_size_m": 0.0206,
-    "load_tilt_deg": 12.59,
+    "load_half_size_m": 0.02,
+    "load_tilt_deg": 16.69,
     "payload_floor_z_m": 0.0069,
     "interior_suppressed": {
-     "floor_z_offset_m": 0.0149,
+     "floor_z_offset_m": 0.0048,
      "dimensions_m": [
-      0.0522,
-      0.0516,
-      0.0432
+      0.0458,
+      0.0538,
+      0.0533
      ],
      "cavity_span_raw": [
       -0.0141,
-      0.0153,
-      -0.0423,
-      -0.0138
+      0.0109,
+      -0.0393,
+      -0.0149
      ],
      "method": "fine 5x5 in-cavity scan, symmetric inscription",
-     "floor_basis": "payload rest +0.008m margin",
-     "reason": "load test tipped container 12.6 deg"
+     "reason": "load test tipped container 16.7 deg"
     }
    },
    "6": {
@@ -13897,40 +13913,40 @@
        -0.3,
        0.0
       ],
-      "bottom_z": 0.0076,
-      "xy_drift": 0.049
+      "bottom_z": 0.0075,
+      "xy_drift": 0.0459
      },
      {
       "cell": [
        -0.3,
        0.3
       ],
-      "bottom_z": 0.0067,
-      "xy_drift": 0.0461
+      "bottom_z": 0.0072,
+      "xy_drift": 0.0387
      },
      {
       "cell": [
        0.0,
        -0.3
       ],
-      "bottom_z": 0.044,
-      "xy_drift": 0.0179
+      "bottom_z": 0.0445,
+      "xy_drift": 0.0178
      },
      {
       "cell": [
        0.0,
        0.0
       ],
-      "bottom_z": 0.007,
-      "xy_drift": 0.0312
+      "bottom_z": 0.0073,
+      "xy_drift": 0.0369
      },
      {
       "cell": [
        0.0,
        0.3
       ],
-      "bottom_z": 0.0076,
-      "xy_drift": 0.0247
+      "bottom_z": 0.0067,
+      "xy_drift": 0.0321
      },
      {
       "cell": [
@@ -13945,40 +13961,20 @@
        0.3,
        0.0
       ],
-      "bottom_z": 0.0074,
-      "xy_drift": 0.0468
+      "bottom_z": 0.0067,
+      "xy_drift": 0.0483
      },
      {
       "cell": [
        0.3,
        0.3
       ],
-      "bottom_z": 0.0066,
-      "xy_drift": 0.0425
+      "bottom_z": 0.0068,
+      "xy_drift": 0.0453
      }
     ],
-    "dz_ref": 0.044,
-    "verdict": "hollow",
-    "load_half_size_m": 0.02,
-    "load_tilt_deg": 9.12,
-    "payload_floor_z_m": 0.0166,
-    "interior_suppressed": {
-     "floor_z_offset_m": 0.0246,
-     "dimensions_m": [
-      0.0354,
-      0.0754,
-      0.0144
-     ],
-     "cavity_span_raw": [
-      -0.0057,
-      0.0078,
-      0.0257,
-      0.0357
-     ],
-     "method": "fine 5x5 in-cavity scan, symmetric inscription",
-     "floor_basis": "payload rest +0.008m margin",
-     "reason": "cavity under 3 cm once floor is honest"
-    }
+    "dz_ref": 0.0445,
+    "verdict": "unsupportive"
    }
   },
   "054_baguette": {
@@ -24955,7 +24951,7 @@
        0.0
       ],
       "bottom_z": 0.0,
-      "xy_drift": 0.067
+      "xy_drift": 0.0668
      },
      {
       "cell": [
@@ -24963,7 +24959,7 @@
        0.3
       ],
       "bottom_z": 0.0,
-      "xy_drift": 0.1026
+      "xy_drift": 0.0875
      },
      {
       "cell": [
@@ -24971,15 +24967,15 @@
        -0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0587
+      "xy_drift": 0.0402
      },
      {
       "cell": [
        0.0,
        0.0
       ],
-      "bottom_z": 0.0517,
-      "xy_drift": 0.0363
+      "bottom_z": 0.0513,
+      "xy_drift": 0.0361
      },
      {
       "cell": [
@@ -24987,7 +24983,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0441
+      "xy_drift": 0.082
      },
      {
       "cell": [
@@ -24995,7 +24991,7 @@
        -0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0
+      "xy_drift": 0.0183
      },
      {
       "cell": [
@@ -25003,7 +24999,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0711
+      "xy_drift": 0.075
      },
      {
       "cell": [
@@ -25011,7 +25007,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.068
+      "xy_drift": 0.0784
      }
     ],
     "dz_ref": 0.0989,
@@ -25033,8 +25029,8 @@
        -0.3,
        0.0
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0428
+      "bottom_z": 0.0,
+      "xy_drift": 0.0421
      },
      {
       "cell": [
@@ -25042,15 +25038,15 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0637
+      "xy_drift": 0.064
      },
      {
       "cell": [
        0.0,
        -0.3
       ],
-      "bottom_z": 0.0512,
-      "xy_drift": 0.0152
+      "bottom_z": 0.0513,
+      "xy_drift": 0.0154
      },
      {
       "cell": [
@@ -25058,15 +25054,15 @@
        0.0
       ],
       "bottom_z": 0.0805,
-      "xy_drift": 0.0036
+      "xy_drift": 0.0038
      },
      {
       "cell": [
        0.0,
        0.3
       ],
-      "bottom_z": 0.0822,
-      "xy_drift": 0.0084
+      "bottom_z": 0.0823,
+      "xy_drift": 0.0061
      },
      {
       "cell": [
@@ -25082,7 +25078,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0646
+      "xy_drift": 0.0378
      },
      {
       "cell": [
@@ -25090,22 +25086,22 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0636
+      "xy_drift": 0.0603
      }
     ],
-    "dz_ref": 0.0822,
+    "dz_ref": 0.0823,
     "verdict": "hollow",
     "load_half_size_m": 0.02,
     "load_tilt_deg": 0.0,
-    "payload_floor_z_m": 0.0822,
+    "payload_floor_z_m": 0.0823,
     "interior_suppressed": {
-     "floor_z_offset_m": 0.0902,
+     "floor_z_offset_m": 0.0773,
      "dimensions_m": [
       0.0478,
       0.1057,
-      -0.013
+      0.0
      ],
-     "floor_basis": "payload rest +0.008m margin",
+     "floor_basis": "payload rest -0.005m pad",
      "reason": "cavity under 3 cm once floor is honest"
     }
    },
@@ -25125,16 +25121,16 @@
        -0.3,
        0.0
       ],
-      "bottom_z": 0.0896,
-      "xy_drift": 0.0025
+      "bottom_z": 0.0,
+      "xy_drift": 0.1297
      },
      {
       "cell": [
        -0.3,
        0.3
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.05
+      "bottom_z": 0.0,
+      "xy_drift": 0.0426
      },
      {
       "cell": [
@@ -25142,7 +25138,7 @@
        -0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0543
+      "xy_drift": 0.0682
      },
      {
       "cell": [
@@ -25150,7 +25146,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.1825
+      "xy_drift": 0.1357
      },
      {
       "cell": [
@@ -25158,7 +25154,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0827
+      "xy_drift": 0.0872
      },
      {
       "cell": [
@@ -25174,7 +25170,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0358
+      "xy_drift": 0.0876
      },
      {
       "cell": [
@@ -25182,10 +25178,10 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0372
+      "xy_drift": 0.0264
      }
     ],
-    "dz_ref": 0.0896,
+    "dz_ref": 0.135,
     "verdict": "unsupportive"
    },
    "3": {
@@ -25196,8 +25192,8 @@
        -0.3,
        -0.3
       ],
-      "bottom_z": 0.0,
-      "xy_drift": 0.1631
+      "bottom_z": -0.0,
+      "xy_drift": 0.0939
      },
      {
       "cell": [
@@ -25205,7 +25201,7 @@
        0.0
       ],
       "bottom_z": 0.0,
-      "xy_drift": 0.1257
+      "xy_drift": 0.1025
      },
      {
       "cell": [
@@ -25220,16 +25216,16 @@
        0.0,
        -0.3
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0764
+      "bottom_z": 0.0,
+      "xy_drift": 0.0808
      },
      {
       "cell": [
        0.0,
        0.0
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0695
+      "bottom_z": 0.0724,
+      "xy_drift": 0.0302
      },
      {
       "cell": [
@@ -25237,7 +25233,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.1423
+      "xy_drift": 0.1354
      },
      {
       "cell": [
@@ -25245,7 +25241,7 @@
        -0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0989
+      "xy_drift": 0.1
      },
      {
       "cell": [
@@ -25253,7 +25249,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.1818
+      "xy_drift": 0.1234
      },
      {
       "cell": [
@@ -25261,7 +25257,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0555
+      "xy_drift": 0.0556
      }
     ],
     "dz_ref": 0.1318,
@@ -25307,8 +25303,8 @@
        0.0,
        0.0
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0683
+      "bottom_z": 0.0,
+      "xy_drift": 0.0757
      },
      {
       "cell": [
@@ -25323,16 +25319,16 @@
        0.3,
        -0.3
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0799
+      "bottom_z": 0.0,
+      "xy_drift": 0.0958
      },
      {
       "cell": [
        0.3,
        0.0
       ],
-      "bottom_z": 0.0742,
-      "xy_drift": 0.0009
+      "bottom_z": 0.0751,
+      "xy_drift": 0.0002
      },
      {
       "cell": [
@@ -25340,10 +25336,10 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0365
+      "xy_drift": 0.0471
      }
     ],
-    "dz_ref": 0.0742,
+    "dz_ref": 0.0751,
     "verdict": "unsupportive"
    },
    "5": {
@@ -25363,7 +25359,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0569
+      "xy_drift": 0.0571
      },
      {
       "cell": [
@@ -25371,7 +25367,7 @@
        0.3
       ],
       "bottom_z": 0.0,
-      "xy_drift": 0.0515
+      "xy_drift": 0.0557
      },
      {
       "cell": [
@@ -25387,7 +25383,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0773
+      "xy_drift": 0.0775
      },
      {
       "cell": [
@@ -25395,7 +25391,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.1197
+      "xy_drift": 0.1088
      },
      {
       "cell": [
@@ -25442,7 +25438,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.082
+      "xy_drift": 0.0919
      },
      {
       "cell": [
@@ -25450,15 +25446,15 @@
        0.3
       ],
       "bottom_z": 0.0,
-      "xy_drift": 0.0855
+      "xy_drift": 0.0859
      },
      {
       "cell": [
        0.0,
        -0.3
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0466
+      "bottom_z": 0.088,
+      "xy_drift": 0.0161
      },
      {
       "cell": [
@@ -25466,7 +25462,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0697
+      "xy_drift": 0.0606
      },
      {
       "cell": [
@@ -25474,7 +25470,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.104
+      "xy_drift": 0.0998
      },
      {
       "cell": [
@@ -25490,7 +25486,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0706
+      "xy_drift": 0.0687
      },
      {
       "cell": [
@@ -25498,10 +25494,10 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.1222
+      "xy_drift": 0.1251
      }
     ],
-    "dz_ref": 0.1444,
+    "dz_ref": 0.088,
     "verdict": "unsupportive"
    },
    "7": {
@@ -25529,7 +25525,7 @@
        0.3
       ],
       "bottom_z": 0.0,
-      "xy_drift": 0.0773
+      "xy_drift": 0.0768
      },
      {
       "cell": [
@@ -25537,7 +25533,7 @@
        -0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0586
+      "xy_drift": 0.0624
      },
      {
       "cell": [
@@ -25545,7 +25541,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0566
+      "xy_drift": 0.0959
      },
      {
       "cell": [
@@ -25553,7 +25549,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0833
+      "xy_drift": 0.0937
      },
      {
       "cell": [
@@ -25569,7 +25565,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0733
+      "xy_drift": 0.0731
      },
      {
       "cell": [
@@ -25577,7 +25573,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.1174
+      "xy_drift": 0.0946
      }
     ],
     "dz_ref": 0.1349,
@@ -26071,16 +26067,16 @@
        -0.3,
        -0.3
       ],
-      "bottom_z": 0.0,
-      "xy_drift": 0.1234
+      "bottom_z": -0.0,
+      "xy_drift": 0.1201
      },
      {
       "cell": [
        -0.3,
        0.0
       ],
-      "bottom_z": 0.1166,
-      "xy_drift": 0.0502
+      "bottom_z": 0.1179,
+      "xy_drift": 0.0498
      },
      {
       "cell": [
@@ -26095,8 +26091,8 @@
        0.0,
        -0.3
       ],
-      "bottom_z": 0.1177,
-      "xy_drift": 0.0336
+      "bottom_z": 0.1186,
+      "xy_drift": 0.0338
      },
      {
       "cell": [
@@ -26111,8 +26107,8 @@
        0.0,
        0.3
       ],
-      "bottom_z": 0.1168,
-      "xy_drift": 0.0278
+      "bottom_z": 0.1167,
+      "xy_drift": 0.028
      },
      {
       "cell": [
@@ -26120,15 +26116,15 @@
        -0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.1039
+      "xy_drift": 0.1123
      },
      {
       "cell": [
        0.3,
        0.0
       ],
-      "bottom_z": 0.1163,
-      "xy_drift": 0.0432
+      "bottom_z": 0.1168,
+      "xy_drift": 0.0426
      },
      {
       "cell": [
@@ -26136,7 +26132,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.1045
+      "xy_drift": 0.1025
      }
     ],
     "dz_ref": 0.1169,
@@ -26151,7 +26147,7 @@
        -0.3
       ],
       "bottom_z": 0.0,
-      "xy_drift": 0.0263
+      "xy_drift": 0.0262
      },
      {
       "cell": [
@@ -26159,39 +26155,39 @@
        0.0
       ],
       "bottom_z": 0.1917,
-      "xy_drift": 0.0025
+      "xy_drift": 0.0026
      },
      {
       "cell": [
        -0.3,
        0.3
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0444
+      "bottom_z": 0.0,
+      "xy_drift": 0.0088
      },
      {
       "cell": [
        0.0,
        -0.3
       ],
-      "bottom_z": 0.0845,
-      "xy_drift": 0.0265
+      "bottom_z": 0.0835,
+      "xy_drift": 0.0257
      },
      {
       "cell": [
        0.0,
        0.0
       ],
-      "bottom_z": 0.085,
-      "xy_drift": 0.004
+      "bottom_z": 0.0851,
+      "xy_drift": 0.0029
      },
      {
       "cell": [
        0.0,
        0.3
       ],
-      "bottom_z": 0.0831,
-      "xy_drift": 0.0256
+      "bottom_z": 0.0833,
+      "xy_drift": 0.0244
      },
      {
       "cell": [
@@ -26199,7 +26195,7 @@
        -0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0688
+      "xy_drift": 0.0569
      },
      {
       "cell": [
@@ -26207,7 +26203,7 @@
        0.0
       ],
       "bottom_z": 0.1916,
-      "xy_drift": 0.0027
+      "xy_drift": 0.0026
      },
      {
       "cell": [
@@ -26215,29 +26211,30 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.034
+      "xy_drift": 0.0318
      }
     ],
     "dz_ref": 0.1917,
     "verdict": "hollow",
     "load_half_size_m": 0.02,
-    "load_tilt_deg": 164.74,
-    "payload_floor_z_m": -0.0,
+    "load_tilt_deg": 8.7,
+    "payload_floor_z_m": 0.13,
     "interior_suppressed": {
-     "floor_z_offset_m": 0.0823,
+     "floor_z_offset_m": 0.125,
      "dimensions_m": [
-      0.0258,
-      0.0266,
-      0.1044
+      0.0244,
+      0.0268,
+      0.0617
      ],
      "cavity_span_raw": [
-      -0.0009,
-      0.0039,
-      -0.0019,
-      0.0013
+      -0.0002,
+      0.0029,
+      -0.0018,
+      0.0014
      ],
      "method": "fine 5x5 in-cavity scan, symmetric inscription",
-     "reason": "load test tipped container 164.7 deg"
+     "floor_basis": "payload rest -0.005m pad",
+     "reason": "load test tipped container 8.7 deg"
     }
    },
    "2": {
@@ -26256,8 +26253,8 @@
        -0.3,
        0.0
       ],
-      "bottom_z": 0.0,
-      "xy_drift": 0.0799
+      "bottom_z": -0.0,
+      "xy_drift": 0.07
      },
      {
       "cell": [
@@ -26281,15 +26278,15 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0579
+      "xy_drift": 0.0694
      },
      {
       "cell": [
        0.0,
        0.3
       ],
-      "bottom_z": 0.0675,
-      "xy_drift": 0.0223
+      "bottom_z": 0.0674,
+      "xy_drift": 0.0218
      },
      {
       "cell": [
@@ -26316,7 +26313,7 @@
       "xy_drift": 0.0001
      }
     ],
-    "dz_ref": 0.0675,
+    "dz_ref": 0.0674,
     "verdict": "unsupportive"
    },
    "3": {
@@ -26336,7 +26333,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0532
+      "xy_drift": 0.043
      },
      {
       "cell": [
@@ -26344,7 +26341,7 @@
        0.3
       ],
       "bottom_z": 0.0,
-      "xy_drift": 0.0165
+      "xy_drift": 0.0174
      },
      {
       "cell": [
@@ -26359,8 +26356,8 @@
        0.0,
        0.0
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.0507
+      "bottom_z": 0.0,
+      "xy_drift": 0.0522
      },
      {
       "cell": [
@@ -26368,7 +26365,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0513
+      "xy_drift": 0.0491
      },
      {
       "cell": [
@@ -26422,8 +26419,8 @@
        -0.3,
        0.3
       ],
-      "bottom_z": 0.0,
-      "xy_drift": 0.0143
+      "bottom_z": -0.0,
+      "xy_drift": 0.0141
      },
      {
       "cell": [
@@ -26446,8 +26443,8 @@
        0.0,
        0.3
       ],
-      "bottom_z": 0.0224,
-      "xy_drift": 0.0272
+      "bottom_z": 0.0223,
+      "xy_drift": 0.027
      },
      {
       "cell": [
@@ -26463,7 +26460,7 @@
        0.0
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.0501
+      "xy_drift": 0.081
      },
      {
       "cell": [
@@ -26474,7 +26471,7 @@
       "xy_drift": 0.014
      }
     ],
-    "dz_ref": 0.0224,
+    "dz_ref": 0.0223,
     "verdict": "unsupportive"
    }
   },
@@ -30934,7 +30931,7 @@
        -0.3
       ],
       "bottom_z": 0.0062,
-      "xy_drift": 0.0283
+      "xy_drift": 0.0284
      },
      {
       "cell": [
@@ -30966,14 +30963,14 @@
        0.0
       ],
       "bottom_z": 0.0062,
-      "xy_drift": 0.0335
+      "xy_drift": 0.0321
      },
      {
       "cell": [
        0.0,
        0.3
       ],
-      "bottom_z": 0.0346,
+      "bottom_z": 0.0345,
       "xy_drift": 0.0017
      },
      {
@@ -30982,7 +30979,7 @@
        -0.3
       ],
       "bottom_z": 0.0062,
-      "xy_drift": 0.029
+      "xy_drift": 0.0289
      },
      {
       "cell": [
@@ -31012,7 +31009,7 @@
        -0.3,
        -0.3
       ],
-      "bottom_z": 0.0068,
+      "bottom_z": 0.0069,
       "xy_drift": 0.0266
      },
      {
@@ -31020,8 +31017,8 @@
        -0.3,
        0.0
       ],
-      "bottom_z": 0.006,
-      "xy_drift": 0.0229
+      "bottom_z": 0.0061,
+      "xy_drift": 0.0232
      },
      {
       "cell": [
@@ -31036,8 +31033,8 @@
        0.0,
        -0.3
       ],
-      "bottom_z": 0.0059,
-      "xy_drift": 0.0239
+      "bottom_z": 0.0067,
+      "xy_drift": 0.0069
      },
      {
       "cell": [
@@ -31052,8 +31049,8 @@
        0.0,
        0.3
       ],
-      "bottom_z": 0.0432,
-      "xy_drift": 0.0278
+      "bottom_z": 0.0431,
+      "xy_drift": 0.0277
      },
      {
       "cell": [
@@ -31069,7 +31066,7 @@
        0.0
       ],
       "bottom_z": 0.0061,
-      "xy_drift": 0.0389
+      "xy_drift": 0.0395
      },
      {
       "cell": [
@@ -31080,28 +31077,26 @@
       "xy_drift": 0.0
      }
     ],
-    "dz_ref": 0.0432,
+    "dz_ref": 0.0431,
     "verdict": "hollow",
-    "load_half_size_m": 0.02,
-    "load_tilt_deg": 1.02,
-    "payload_floor_z_m": 0.0086,
-    "interior_suppressed": {
-     "floor_z_offset_m": 0.0166,
+    "interior": {
+     "floor_z_offset_m": 0.0055,
      "dimensions_m": [
-      0.0874,
+      0.0856,
       0.024,
-      0.0216
+      0.0326
      ],
      "cavity_span_raw": [
-      -0.0321,
+      -0.0308,
       0.0317,
-      -0.0572,
+      -0.0704,
       -0.0
      ],
-     "method": "fine 5x5 in-cavity scan, symmetric inscription",
-     "floor_basis": "payload rest +0.008m margin",
-     "reason": "cavity under 3 cm once floor is honest"
-    }
+     "method": "fine 5x5 in-cavity scan, symmetric inscription"
+    },
+    "load_half_size_m": 0.02,
+    "load_tilt_deg": 1.54,
+    "payload_floor_z_m": 0.0085
    },
    "2": {
     "z_policy": "origin_on_table",
@@ -31111,8 +31106,8 @@
        -0.3,
        -0.3
       ],
-      "bottom_z": 0.0101,
-      "xy_drift": 0.0446
+      "bottom_z": 0.01,
+      "xy_drift": 0.0497
      },
      {
       "cell": [
@@ -31120,7 +31115,7 @@
        0.0
       ],
       "bottom_z": 0.0098,
-      "xy_drift": 0.0258
+      "xy_drift": 0.041
      },
      {
       "cell": [
@@ -31135,8 +31130,8 @@
        0.0,
        -0.3
       ],
-      "bottom_z": 0.0112,
-      "xy_drift": 0.0007
+      "bottom_z": 0.0108,
+      "xy_drift": 0.0002
      },
      {
       "cell": [
@@ -31144,31 +31139,31 @@
        0.0
       ],
       "bottom_z": 0.0097,
-      "xy_drift": 0.0005
+      "xy_drift": 0.0002
      },
      {
       "cell": [
        0.0,
        0.3
       ],
-      "bottom_z": 0.0471,
-      "xy_drift": 0.0148
+      "bottom_z": 0.0465,
+      "xy_drift": 0.026
      },
      {
       "cell": [
        0.3,
        -0.3
       ],
-      "bottom_z": 0.0103,
-      "xy_drift": 0.0448
+      "bottom_z": 0.0106,
+      "xy_drift": 0.0226
      },
      {
       "cell": [
        0.3,
        0.0
       ],
-      "bottom_z": 0.0104,
-      "xy_drift": 0.0543
+      "bottom_z": 0.01,
+      "xy_drift": 0.0592
      },
      {
       "cell": [
@@ -31179,28 +31174,26 @@
       "xy_drift": 0.0
      }
     ],
-    "dz_ref": 0.0471,
+    "dz_ref": 0.0465,
     "verdict": "hollow",
-    "load_half_size_m": 0.02,
-    "load_tilt_deg": 0.71,
-    "payload_floor_z_m": 0.0109,
-    "interior_suppressed": {
-     "floor_z_offset_m": 0.0189,
+    "interior": {
+     "floor_z_offset_m": 0.0096,
      "dimensions_m": [
-      0.1004,
-      0.0248,
-      0.0232
+      0.0982,
+      0.0242,
+      0.0319
      ],
      "cavity_span_raw": [
-      -0.0382,
-      0.0418,
-      -0.0883,
-      -0.0004
+      -0.0371,
+      0.0452,
+      -0.0886,
+      -0.0001
      ],
-     "method": "fine 5x5 in-cavity scan, symmetric inscription",
-     "floor_basis": "payload rest +0.008m margin",
-     "reason": "cavity under 3 cm once floor is honest"
-    }
+     "method": "fine 5x5 in-cavity scan, symmetric inscription"
+    },
+    "load_half_size_m": 0.02,
+    "load_tilt_deg": 0.86,
+    "payload_floor_z_m": 0.0109
    },
    "3": {
     "z_policy": "origin_on_table",
@@ -31219,7 +31212,7 @@
        0.0
       ],
       "bottom_z": 0.0065,
-      "xy_drift": 0.047
+      "xy_drift": 0.0468
      },
      {
       "cell": [
@@ -31258,8 +31251,8 @@
        0.3,
        -0.3
       ],
-      "bottom_z": 0.0092,
-      "xy_drift": 0.0201
+      "bottom_z": 0.0065,
+      "xy_drift": 0.0501
      },
      {
       "cell": [
@@ -31267,7 +31260,7 @@
        0.0
       ],
       "bottom_z": 0.0064,
-      "xy_drift": 0.0309
+      "xy_drift": 0.0308
      },
      {
       "cell": [
@@ -31284,20 +31277,19 @@
     "load_tilt_deg": 0.0,
     "payload_floor_z_m": 0.0086,
     "interior_suppressed": {
-     "floor_z_offset_m": 0.0166,
+     "floor_z_offset_m": 0.0063,
      "dimensions_m": [
       0.0722,
       0.0242,
-      0.0149
+      0.0252
      ],
      "cavity_span_raw": [
       -0.0241,
-      0.031,
+      0.0311,
       -0.0656,
       0.0001
      ],
      "method": "fine 5x5 in-cavity scan, symmetric inscription",
-     "floor_basis": "payload rest +0.008m margin",
      "reason": "cavity under 3 cm once floor is honest"
     }
    }
@@ -31947,32 +31939,32 @@
        -0.3,
        -0.3
       ],
-      "bottom_z": 0.0161,
-      "xy_drift": 0.1127
+      "bottom_z": 0.016,
+      "xy_drift": 0.0995
      },
      {
       "cell": [
        -0.3,
        0.0
       ],
-      "bottom_z": 0.0161,
-      "xy_drift": 0.0429
+      "bottom_z": 0.016,
+      "xy_drift": 0.0728
      },
      {
       "cell": [
        -0.3,
        0.3
       ],
-      "bottom_z": 0.0161,
-      "xy_drift": 0.0725
+      "bottom_z": 0.016,
+      "xy_drift": 0.0648
      },
      {
       "cell": [
        0.0,
        -0.3
       ],
-      "bottom_z": -0.0,
-      "xy_drift": 0.1287
+      "bottom_z": 0.0,
+      "xy_drift": 0.1285
      },
      {
       "cell": [
@@ -31988,7 +31980,7 @@
        0.3
       ],
       "bottom_z": -0.0,
-      "xy_drift": 0.1251
+      "xy_drift": 0.1382
      },
      {
       "cell": [
@@ -31996,7 +31988,7 @@
        -0.3
       ],
       "bottom_z": 0.0161,
-      "xy_drift": 0.0616
+      "xy_drift": 0.0646
      },
      {
       "cell": [
@@ -32004,7 +31996,7 @@
        0.0
       ],
       "bottom_z": 0.0164,
-      "xy_drift": 0.017
+      "xy_drift": 0.0169
      },
      {
       "cell": [
@@ -32012,30 +32004,29 @@
        0.3
       ],
       "bottom_z": 0.016,
-      "xy_drift": 0.076
+      "xy_drift": 0.0754
      }
     ],
     "dz_ref": 0.173,
     "verdict": "hollow",
     "interior": {
-     "floor_z_offset_m": 0.0264,
+     "floor_z_offset_m": 0.0159,
      "dimensions_m": [
       0.1026,
-      0.0894,
-      0.1416
+      0.088,
+      0.1521
      ],
      "cavity_span_raw": [
       -0.0393,
-      0.0423,
-      -0.0327,
-      0.0328
+      0.0402,
+      -0.032,
+      0.0332
      ],
-     "method": "fine 5x5 in-cavity scan, symmetric inscription",
-     "floor_basis": "payload rest +0.008m margin"
+     "method": "fine 5x5 in-cavity scan, symmetric inscription"
     },
-    "load_half_size_m": 0.0358,
-    "load_tilt_deg": 2.56,
-    "payload_floor_z_m": 0.0184
+    "load_half_size_m": 0.0352,
+    "load_tilt_deg": 4.83,
+    "payload_floor_z_m": 0.0182
    },
    "1": {
     "z_policy": "origin_on_table",
@@ -32119,11 +32110,11 @@
     "load_tilt_deg": 6.56,
     "payload_floor_z_m": 0.0152,
     "interior_suppressed": {
-     "floor_z_offset_m": 0.0232,
+     "floor_z_offset_m": 0.0122,
      "dimensions_m": [
       0.1464,
       0.102,
-      0.1462
+      0.1572
      ],
      "cavity_span_raw": [
       -0.0612,
@@ -32132,7 +32123,6 @@
       0.039
      ],
      "method": "fine 5x5 in-cavity scan, symmetric inscription",
-     "floor_basis": "payload rest +0.008m margin",
      "reason": "load test tipped container 6.6 deg"
     }
    },
@@ -32145,7 +32135,7 @@
        -0.3
       ],
       "bottom_z": 0.0104,
-      "xy_drift": 0.0399
+      "xy_drift": 0.0398
      },
      {
       "cell": [
@@ -32161,7 +32151,7 @@
        0.3
       ],
       "bottom_z": 0.0105,
-      "xy_drift": 0.0642
+      "xy_drift": 0.0638
      },
      {
       "cell": [
@@ -32185,7 +32175,7 @@
        0.3
       ],
       "bottom_z": 0.01,
-      "xy_drift": 0.0197
+      "xy_drift": 0.0252
      },
      {
       "cell": [
@@ -32193,7 +32183,7 @@
        -0.3
       ],
       "bottom_z": 0.0102,
-      "xy_drift": 0.0591
+      "xy_drift": 0.059
      },
      {
       "cell": [
@@ -32215,24 +32205,23 @@
     "dz_ref": 0.1746,
     "verdict": "hollow",
     "interior": {
-     "floor_z_offset_m": 0.0206,
+     "floor_z_offset_m": 0.01,
      "dimensions_m": [
-      0.1094,
+      0.0986,
       0.0914,
-      0.149
+      0.1596
      ],
      "cavity_span_raw": [
       -0.0517,
-      0.0427,
+      0.0373,
       -0.0402,
       0.0337
      ],
-     "method": "fine 5x5 in-cavity scan, symmetric inscription",
-     "floor_basis": "payload rest +0.008m margin"
+     "method": "fine 5x5 in-cavity scan, symmetric inscription"
     },
     "load_half_size_m": 0.0366,
-    "load_tilt_deg": 1.12,
-    "payload_floor_z_m": 0.0126
+    "load_tilt_deg": 0.79,
+    "payload_floor_z_m": 0.0127
    },
    "3": {
     "z_policy": "origin_on_table",
@@ -32242,8 +32231,8 @@
        -0.3,
        -0.3
       ],
-      "bottom_z": 0.019,
-      "xy_drift": 0.0024
+      "bottom_z": 0.0191,
+      "xy_drift": 0.0016
      },
      {
       "cell": [
@@ -32251,7 +32240,7 @@
        0.0
       ],
       "bottom_z": 0.2609,
-      "xy_drift": 0.0046
+      "xy_drift": 0.0038
      },
      {
       "cell": [
@@ -32259,15 +32248,15 @@
        0.3
       ],
       "bottom_z": 0.0157,
-      "xy_drift": 0.0412
+      "xy_drift": 0.036
      },
      {
       "cell": [
        0.0,
        -0.3
       ],
-      "bottom_z": 0.0167,
-      "xy_drift": 0.0391
+      "bottom_z": 0.0172,
+      "xy_drift": 0.0265
      },
      {
       "cell": [
@@ -32282,8 +32271,8 @@
        0.0,
        0.3
       ],
-      "bottom_z": 0.0161,
-      "xy_drift": 0.0499
+      "bottom_z": 0.016,
+      "xy_drift": 0.0522
      },
      {
       "cell": [
@@ -32291,46 +32280,46 @@
        -0.3
       ],
       "bottom_z": 0.0166,
-      "xy_drift": 0.0744
+      "xy_drift": 0.0757
      },
      {
       "cell": [
        0.3,
        0.0
       ],
-      "bottom_z": 0.2601,
-      "xy_drift": 0.0138
+      "bottom_z": 0.2609,
+      "xy_drift": 0.0026
      },
      {
       "cell": [
        0.3,
        0.3
       ],
-      "bottom_z": 0.0166,
-      "xy_drift": 0.0539
+      "bottom_z": 0.0165,
+      "xy_drift": 0.0536
      }
     ],
     "dz_ref": 0.261,
     "verdict": "hollow",
     "interior": {
-     "floor_z_offset_m": 0.0287,
+     "floor_z_offset_m": 0.0158,
      "dimensions_m": [
-      0.1218,
-      0.1214,
-      0.2273
+      0.1344,
+      0.1352,
+      0.2402
      ],
      "cavity_span_raw": [
-      -0.0702,
-      0.0489,
-      -0.0487,
-      0.0582
+      -0.0552,
+      0.0909,
+      -0.0556,
+      0.0575
      ],
      "method": "fine 5x5 in-cavity scan, symmetric inscription",
-     "floor_basis": "payload rest +0.008m margin"
+     "floor_basis": "payload rest -0.005m pad"
     },
-    "load_half_size_m": 0.0486,
-    "load_tilt_deg": 0.82,
-    "payload_floor_z_m": 0.0207
+    "load_half_size_m": 0.0538,
+    "load_tilt_deg": 2.23,
+    "payload_floor_z_m": 0.0208
    }
   },
   "111_callbell": {
@@ -37693,7 +37682,3003 @@
     "dz_ref": 0.0123,
     "verdict": "unsupportive"
    }
+  },
+  "325_hubcap": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0266,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0267,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0268,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.0269,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.027,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.0271,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0272,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": 0.0273,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": 0.0274,
+      "xy_drift": 0.0
+     }
+    ],
+    "dz_ref": 0.0274,
+    "verdict": "flat"
+   }
+  },
+  "326_window": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.2451,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.2451,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.2451,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0696
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0411
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1803
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0217
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": 0.2451,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0143
+     }
+    ],
+    "dz_ref": 0.2451,
+    "verdict": "unsupportive"
+   }
+  },
+  "327_sphere": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1328
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1419
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.108
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.2442
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.2402,
+      "xy_drift": 0.0171
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1457
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.2067
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1176
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1413
+     }
+    ],
+    "dz_ref": 0.2402,
+    "verdict": "unsupportive"
+   }
+  },
+  "328_fusebox": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0296
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0002
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0503
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     }
+    ],
+    "dz_ref": 0.25,
+    "verdict": "unsupportive"
+   }
+  },
+  "329_tripod": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.119
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0684
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0992
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1562
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1349
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.102
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0221
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0285
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.021
+     }
+    ],
+    "dz_ref": 0.25,
+    "verdict": "unsupportive"
+   }
+  },
+  "330_ball": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.173
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1564
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1843
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1252
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.2481,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1257
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1669
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.2059
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1585
+     }
+    ],
+    "dz_ref": 0.2481,
+    "verdict": "unsupportive"
+   }
+  },
+  "331_vinyl": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.16
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1157
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.162
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0413
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.2482,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0413
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1601
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1329
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1875
+     }
+    ],
+    "dz_ref": 0.2482,
+    "verdict": "unsupportive"
+   }
+  },
+  "332_curtain": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0423
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0601
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0329
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0438
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.058
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.031
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0436
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0722
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0315
+     }
+    ],
+    "dz_ref": 0.25,
+    "verdict": "unsupportive"
+   }
+  },
+  "333_cherry": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0979
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1548
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1403
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1247
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.187,
+      "xy_drift": 0.0232
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1214
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1244
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0911
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1873
+     }
+    ],
+    "dz_ref": 0.187,
+    "verdict": "unsupportive"
+   }
+  },
+  "334_exit": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0359,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0359,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0359,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.0359,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.0359,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.0359,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0358,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": 0.0358,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": 0.0358,
+      "xy_drift": 0.0
+     }
+    ],
+    "dz_ref": 0.0359,
+    "verdict": "flat"
+   }
+  },
+  "335_gasoline": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.2492,
+      "xy_drift": 0.0073
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.2383,
+      "xy_drift": 0.0333
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1506
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1253
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.2473,
+      "xy_drift": 0.0027
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1167
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0555
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": 0.2325,
+      "xy_drift": 0.0275
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0859
+     }
+    ],
+    "dz_ref": 0.2492,
+    "verdict": "unsupportive"
+   }
+  },
+  "336_sleigh": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0716,
+      "xy_drift": 0.0072
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0694,
+      "xy_drift": 0.0086
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0508
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.0717,
+      "xy_drift": 0.0076
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.0692,
+      "xy_drift": 0.0109
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0501
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0279
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0736
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0252
+     }
+    ],
+    "dz_ref": 0.0717,
+    "verdict": "unsupportive"
+   }
+  },
+  "337_caution": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1167
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.078
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1328
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0876
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0621
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1015
+     }
+    ],
+    "dz_ref": 0.1559,
+    "verdict": "unsupportive"
+   }
+  },
+  "338_tank": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.102
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.054
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1562
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.101,
+      "xy_drift": 0.0231
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.101,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.102
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0607
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0
+     }
+    ],
+    "dz_ref": 0.101,
+    "verdict": "unsupportive"
+   }
+  },
+  "339_panel": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.2401,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.2401,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.2401,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.2401,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.2401,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.2401,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": 0.2401,
+      "xy_drift": 0.0219
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0636
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1137
+     }
+    ],
+    "dz_ref": 0.2401,
+    "verdict": "flat"
+   }
+  },
+  "340_skull": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1201
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1052
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.181
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.248
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.256
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1281
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0433
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.203
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1512
+     }
+    ],
+    "dz_ref": 0.2059,
+    "verdict": "unsupportive"
+   }
+  },
+  "341_tool": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0468
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0448
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0064
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0637
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0547
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0177
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0781
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0693
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0457
+     }
+    ],
+    "dz_ref": 0.0428,
+    "verdict": "unsupportive"
+   }
+  },
+  "342_workbench": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0723,
+      "xy_drift": 0.0004
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0732,
+      "xy_drift": 0.0001
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0741,
+      "xy_drift": 0.0017
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.0723,
+      "xy_drift": 0.0004
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.0732,
+      "xy_drift": 0.0001
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.0741,
+      "xy_drift": 0.0018
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0723,
+      "xy_drift": 0.0004
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": 0.0732,
+      "xy_drift": 0.0002
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": 0.0741,
+      "xy_drift": 0.0017
+     }
+    ],
+    "dz_ref": 0.0741,
+    "verdict": "flat"
+   }
+  },
+  "343_ceiling": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0509
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1201
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0403
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.119
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.1156,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1181
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0505
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.122
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0534
+     }
+    ],
+    "dz_ref": 0.1156,
+    "verdict": "unsupportive"
+   }
+  },
+  "344_scaffold": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.2171,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.2171,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.2171,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.2171,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.2171,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.2171,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": 0.2171,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": 0.2171,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": 0.2171,
+      "xy_drift": 0.0
+     }
+    ],
+    "dz_ref": 0.2171,
+    "verdict": "flat"
+   }
+  },
+  "345_alarm": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1799
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1865
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1577
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.103
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.2755
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.2499,
+      "xy_drift": 0.0012
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1052
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1052
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1472
+     }
+    ],
+    "dz_ref": 0.2499,
+    "verdict": "unsupportive"
+   }
+  },
+  "346_taxi": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0438
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0432
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0441
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     }
+    ],
+    "dz_ref": 0.25,
+    "verdict": "unsupportive"
+   }
+  },
+  "347_light": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0342
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0221
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0304
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0405
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.0195,
+      "xy_drift": 0.0079
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.0156,
+      "xy_drift": 0.0044
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0371
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0408
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0286
+     }
+    ],
+    "dz_ref": 0.0195,
+    "verdict": "unsupportive"
+   }
+  },
+  "348_omniverse": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0185,
+      "xy_drift": 0.0002
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0184,
+      "xy_drift": 0.0002
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0184,
+      "xy_drift": 0.0001
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.0183,
+      "xy_drift": 0.007
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.0184,
+      "xy_drift": 0.0046
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.0183,
+      "xy_drift": 0.0001
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0182,
+      "xy_drift": 0.0002
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": 0.0182,
+      "xy_drift": 0.0001
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": 0.0181,
+      "xy_drift": 0.0001
+     }
+    ],
+    "dz_ref": 0.0185,
+    "verdict": "flat"
+   }
+  },
+  "349_airconditioner": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.2496,
+      "xy_drift": 0.0046
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.2492,
+      "xy_drift": 0.0001
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.2487,
+      "xy_drift": 0.0002
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.2496,
+      "xy_drift": 0.0019
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.2492,
+      "xy_drift": 0.0001
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.2487,
+      "xy_drift": 0.0002
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0813
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0847
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0975
+     }
+    ],
+    "dz_ref": 0.2496,
+    "verdict": "unsupportive"
+   }
+  },
+  "350_umbrella": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0306
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1828
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1158
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1059
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.243
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1331
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0003
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.155
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1033
+     }
+    ],
+    "dz_ref": 0.2043,
+    "verdict": "unsupportive"
+   }
+  },
+  "351_grid": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1305
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.2397,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.041
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0428
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.2397,
+      "xy_drift": 0.0001
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0655
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1167
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": 0.2397,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1253
+     }
+    ],
+    "dz_ref": 0.2397,
+    "verdict": "unsupportive"
+   }
+  },
+  "352_handicap": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1367
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.18
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.1961
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1713
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.2483,
+      "xy_drift": 0.0151
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0972
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1711
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1797
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1984
+     }
+    ],
+    "dz_ref": 0.2483,
+    "verdict": "unsupportive"
+   }
+  },
+  "353_shelf": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.1605,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.1605,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.1605,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.1605,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.1605,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.1605,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": 0.1604,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": 0.1604,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": 0.1604,
+      "xy_drift": 0.0
+     }
+    ],
+    "dz_ref": 0.1605,
+    "verdict": "flat"
+   }
+  },
+  "354_stone": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.2454,
+      "xy_drift": 0.0033
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.2457,
+      "xy_drift": 0.0005
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.2428,
+      "xy_drift": 0.0079
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.2498,
+      "xy_drift": 0.0022
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.2476,
+      "xy_drift": 0.0064
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.2427,
+      "xy_drift": 0.0107
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": 0.2443,
+      "xy_drift": 0.0075
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": 0.2459,
+      "xy_drift": 0.0078
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": 0.2418,
+      "xy_drift": 0.0166
+     }
+    ],
+    "dz_ref": 0.2498,
+    "verdict": "flat"
+   }
+  },
+  "355_television": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0531
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0642
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0564
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.1676,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.1676,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.1676,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": 0.1676,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": 0.1676,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": 0.1676,
+      "xy_drift": 0.0
+     }
+    ],
+    "dz_ref": 0.1676,
+    "verdict": "unsupportive"
+   }
+  },
+  "356_ahead": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0965
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.0895,
+      "xy_drift": 0.0251
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.089,
+      "xy_drift": 0.0887
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0774
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0692
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0
+     }
+    ],
+    "dz_ref": 0.0895,
+    "verdict": "unsupportive"
+   }
+  },
+  "357_racks": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0914
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0561
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0638
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0002
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0002
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0002
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0829
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0001
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0362
+     }
+    ],
+    "dz_ref": 0.25,
+    "verdict": "unsupportive"
+   }
+  },
+  "358_leaves": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0419
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.001,
+      "xy_drift": 0.0601
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0413
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0409
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.0159,
+      "xy_drift": 0.0343
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0513
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0396
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0441
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.026
+     }
+    ],
+    "dz_ref": 0.0287,
+    "verdict": "unsupportive"
+   }
+  },
+  "359_solar": {
+   "0": {
+    "z_policy": "center_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0018
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1563
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0018
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0018
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1425
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0505
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0018
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.1164
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0018
+     }
+    ],
+    "dz_ref": 0.2293,
+    "verdict": "unsupportive"
+   }
+  },
+  "360_merge": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0442
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0296
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0401
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": 0.25,
+      "xy_drift": 0.0
+     }
+    ],
+    "dz_ref": 0.25,
+    "verdict": "unsupportive"
+   }
+  },
+  "361_leaf": {
+   "0": {
+    "z_policy": "origin_on_table",
+    "cells": [
+     {
+      "cell": [
+       -0.3,
+       -0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0419
+     },
+     {
+      "cell": [
+       -0.3,
+       0.0
+      ],
+      "bottom_z": 0.001,
+      "xy_drift": 0.0601
+     },
+     {
+      "cell": [
+       -0.3,
+       0.3
+      ],
+      "bottom_z": 0.0,
+      "xy_drift": 0.0413
+     },
+     {
+      "cell": [
+       0.0,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0409
+     },
+     {
+      "cell": [
+       0.0,
+       0.0
+      ],
+      "bottom_z": 0.0159,
+      "xy_drift": 0.0343
+     },
+     {
+      "cell": [
+       0.0,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0513
+     },
+     {
+      "cell": [
+       0.3,
+       -0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0396
+     },
+     {
+      "cell": [
+       0.3,
+       0.0
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.0441
+     },
+     {
+      "cell": [
+       0.3,
+       0.3
+      ],
+      "bottom_z": -0.0,
+      "xy_drift": 0.026
+     }
+    ],
+    "dz_ref": 0.0287,
+    "verdict": "unsupportive"
+   }
   }
- },
- "load_test": "payload-sized cube; floor = payload rest + 0.008 m"
+ }
 }

@@ -1,0 +1,158 @@
+{
+  "schema_version": "robotwin.scene_validation.v1",
+  "scene_id": "place_a_tv_on_the_table_5047bfcef1",
+  "resolved_scene_sha256": "df79aa8379b959468b74463f439eceaa063d7d540c458d05068915e30e0d5370",
+  "status": "pass",
+  "fail_count": 0,
+  "not_run_count": 0,
+  "checks": [
+    {
+      "name": "workspace_bounds:tv_1",
+      "status": "pass",
+      "evidence": {
+        "aabb": [
+          -0.19407524046860714,
+          0.10258367646860712,
+          -0.04563850342919759,
+          0.1700209674291976
+        ]
+      }
+    },
+    {
+      "name": "table_support_height:tv_1",
+      "status": "pass",
+      "evidence": {
+        "bottom_z_m": 0.741,
+        "table_height_m": 0.741,
+        "support_relation": "on_table"
+      }
+    },
+    {
+      "name": "real_asset_files:tv_1",
+      "status": "pass",
+      "evidence": {
+        "paths": [
+          "self_improving/asset_pipeline/active/data/asset_library/365_tv/collision/base0.glb",
+          "self_improving/asset_pipeline/active/data/asset_library/365_tv/model_data0.json",
+          "self_improving/asset_pipeline/active/data/asset_library/365_tv/visual/base0.glb"
+        ],
+        "exists": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "relation:on_table:tv_1",
+      "status": "pass",
+      "evidence": {
+        "target": "table"
+      }
+    },
+    {
+      "name": "resolved_only_roundtrip",
+      "status": "pass",
+      "evidence": {
+        "before": "df79aa8379b959468b74463f439eceaa063d7d540c458d05068915e30e0d5370",
+        "after": "df79aa8379b959468b74463f439eceaa063d7d540c458d05068915e30e0d5370"
+      }
+    },
+    {
+      "name": "runtime_status",
+      "status": "pass",
+      "evidence": null
+    },
+    {
+      "name": "robot_initial_collision",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "observer_video_frame_count",
+      "status": "pass",
+      "evidence": {
+        "frames": 6,
+        "minimum": 3
+      }
+    },
+    {
+      "name": "observer_video_unique_frames",
+      "status": "pass",
+      "evidence": {
+        "unique_frames": 6,
+        "minimum": 6
+      }
+    },
+    {
+      "name": "translation_drift:tv_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_m": 0.0009991526605087687,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "rotation_drift:tv_1",
+      "status": "not_applicable",
+      "evidence": {
+        "drift_deg": 0.0,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_translation_error:tv_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_m": 0.0009991559983891876,
+        "threshold_m": 0.02,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "resolved_rotation_error:tv_1",
+      "status": "not_applicable",
+      "evidence": {
+        "error_deg": 0.0,
+        "threshold_deg": 5.0,
+        "exact_pose_required": false
+      }
+    },
+    {
+      "name": "penetration:tv_1",
+      "status": "pass",
+      "evidence": 0
+    },
+    {
+      "name": "settled:tv_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "support_contact:tv_1",
+      "status": "pass",
+      "evidence": {
+        "raw_contact": true,
+        "mode": "on_table_contact",
+        "is_static": false,
+        "expected_target": "table",
+        "observed_target": "table",
+        "contact_fraction": 1.0,
+        "minimum_contact_fraction": 0.8
+      }
+    },
+    {
+      "name": "not_dropped:tv_1",
+      "status": "pass",
+      "evidence": false
+    },
+    {
+      "name": "head_visibility:tv_1",
+      "status": "pass",
+      "evidence": {
+        "pixels": 11018,
+        "threshold": 64
+      }
+    }
+  ]
+}

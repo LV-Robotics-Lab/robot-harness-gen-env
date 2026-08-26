@@ -165,6 +165,11 @@ def pipeline_worker(run_id, run_dir, prompt, seed, catalog_used, providers_used)
                 str(run_dir / "runtime"),
                 "--settle-steps",
                 "600",
+                # our acceptance callers opt in to the adaptive horizon; the
+                # script default stays 0 so upstream behaviour is unchanged
+                # (s2/s5/s7 two-sided validation, 2026-08-20)
+                "--settle-converge-max",
+                "1800",
                 "--contact-window-steps",
                 "60",
                 "--video-frames",
@@ -441,11 +446,14 @@ def _read_evidence(run_dir):
                 "attempts": cat.get("attempts"),
                 "candidates": candidates,
                 "selected": cat.get("selected"),
+                "match": cat.get("match"),
             }
         )
     result = {"categories": categories}
     if "categories_sha256" in raw:
         result["categories_sha256"] = raw["categories_sha256"]
+    if raw.get("input_warnings"):
+        result["input_warnings"] = raw["input_warnings"]
     return result
 
 
@@ -629,6 +637,22 @@ def compute_stage_timeline(run_dir, meta, state, log_text):
     if live:
         if phase == "render":
             active_n = 7
+        elif gap_ran and stages[2][0] == "pending":
+            # ② 进行中：③④只反映「当前候选」的进度——上一个候选失败
+            # （REJECTED 行）后从灰重新开始，不因它留下的截图而常绿
+            # （2026-08-20 用户反馈：多候选重试时后面步骤不该保持绿色）。
+            tail = log_text or ""
+            last = None
+            for last in re.finditer(r"REJECTED \S+ m\d+ \(", tail):
+                pass
+            if last is not None:
+                tail = tail[last.end() :]
+            tl_low = tail.lower()
+            s4_seen = ("accepted " in tl_low) or ("rejected " in tl_low)
+            s3_seen = ("simulation app startup" in tl_low) or ("app ready" in tl_low)
+            stages[3] = ("active" if (s3_seen and not s4_seen) else "pending", None)
+            stages[4] = ("active" if s4_seen else "pending", None)
+            active_n = 2
         else:
             active_n = next((n for n in range(1, 8) if stages[n][0] == "pending"), None)
             best = None
@@ -891,11 +915,31 @@ def _tier_scale(providers_in_tier, n_assets):
         if td and (DEV / td).is_dir():
             n = sum(1 for f in (DEV / td).iterdir() if f.is_file())
             parts.append(f"视觉语料 {n:,} 张")
+        dd = p.get("data_dir")
+        if dd:
+            # Objaverse LVIS 子集：物体/类别数取自注解文件
+            try:
+                import gzip
+
+                with gzip.open(DEV / dd / "lvis-annotations.json.gz", "rt") as f:
+                    lvis = json.load(f)
+                if isinstance(lvis, dict) and lvis:
+                    parts.append(
+                        f"LVIS {sum(len(v) for v in lvis.values()):,} 物体"
+                        f" · {len(lvis):,} 类"
+                    )
+            except Exception:
+                pass
+        if p.get("per_category_cap"):
+            parts.append(f"每类取 ≤{p['per_category_cap']}")
         for r in p.get("repositories") or []:
             parts.append(r.get("repository", "?").split("/")[-1])
         if "repository_limit" in p:
             parts.append(f"动态发现 ≤{p['repository_limit']} repo")
-    return " · ".join(parts)
+    # 同层多个 provider 可能指向同一索引 —— 去重并保持顺序
+    seen = set()
+    deduped = [x for x in parts if not (x in seen or seen.add(x))]
+    return " · ".join(deduped)
 
 
 def compute_library_stats(catalog_path, asset_lib, providers_path):
@@ -1057,7 +1101,12 @@ def api_library_thumb(asset_id):
         abort(404)
     p = WEB_THUMBS / f"{asset_id}.png"
     if not p.is_file():
-        p = ASSET_LIB / asset_id / "snapshots" / "m0_default.png"
+        # asset_library 按来源分一级（nvidia/ objaverse/ …），平铺与嵌套都查
+        for c in [ASSET_LIB / asset_id, *ASSET_LIB.glob(f"*/{asset_id}")]:
+            s = c / "snapshots" / "m0_default.png"
+            if s.is_file():
+                p = s
+                break
     if not p.is_file():
         abort(404)
     return send_file(str(p), mimetype="image/png")

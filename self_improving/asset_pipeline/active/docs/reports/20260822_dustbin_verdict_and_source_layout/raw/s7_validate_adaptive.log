@@ -1,0 +1,15 @@
+V7 dustbin      off obj=dustbin_1  asset=321_dustbin      late_rot=   0.5861 late_trans=0.000476 moving=True  extra=0
+V7 dustbin      on  obj=dustbin_1  asset=321_dustbin      late_rot=   0.3620 late_trans=0.000939 moving=False extra=360
+V7 apple_basket off obj=apple_1    asset=035_apple        late_rot=  99.0026 late_trans=0.039586 moving=True  extra=0
+V7 apple_basket off obj=basket_1   asset=110_basket       late_rot=   0.0027 late_trans=0.000000 moving=False extra=0
+V7 apple_basket on  obj=apple_1    asset=035_apple        late_rot=   0.0000 late_trans=0.000000 moving=False extra=1800
+V7 apple_basket on  obj=basket_1   asset=110_basket       late_rot=   0.0027 late_trans=0.000000 moving=False extra=1800
+V7 bottle_bowl  off obj=bottle_1   asset=304_bottle       late_rot=   2.2984 late_trans=0.001546 moving=True  extra=0
+V7 bottle_bowl  off obj=bowl_1     asset=002_bowl         late_rot= 144.5001 late_trans=0.147601 moving=True  extra=0
+V7 bottle_bowl  on  obj=bottle_1   asset=304_bottle       late_rot=   0.1572 late_trans=0.000097 moving=False extra=3600
+V7 bottle_bowl  on  obj=bowl_1     asset=002_bowl         late_rot=  16.9985 late_trans=0.015971 moving=True  extra=3600
+V7 mug_laptop   off obj=cup_1      asset=021_cup          late_rot= 168.3242 late_trans=0.235370 moving=True  extra=0
+V7 mug_laptop   off obj=laptop_1   asset=015_laptop       late_rot=   0.0395 late_trans=0.000000 moving=False extra=0
+V7 mug_laptop   on  obj=cup_1      asset=021_cup          late_rot=   2.0630 late_trans=0.001172 moving=True  extra=3600
+V7 mug_laptop   on  obj=laptop_1   asset=015_laptop       late_rot=   0.0395 late_trans=0.000000 moving=False extra=3600
+S7_DONE

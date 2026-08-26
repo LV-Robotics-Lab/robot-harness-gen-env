@@ -1,0 +1,159 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "robotwin_036_cabinet",
+  "category": "cabinet",
+  "kind": "articulated",
+  "semantics": {
+    "aliases": [
+      "cabinet",
+      "drawer cabinet"
+    ],
+    "colors": [],
+    "materials": [
+      "metal",
+      "wood"
+    ],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "external/env-gen-github/data/scene_gen/asset_catalog.json",
+      "verified": false
+    }
+  },
+  "models": [
+    {
+      "model_id": 46653,
+      "physical": {
+        "mesh_bbox_m": [
+          0.23067099000000002,
+          0.24268491,
+          0.43591365
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.6144949999999998,
+          "scale": 0.27,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": true,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "robotwin_cabinet_upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "upstream catalog declaration (identity dialect)"
+              }
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "urdf_inertial"
+        }
+      },
+      "representations": [
+        {
+          "format": "urdf",
+          "uri": "data/asset_library/robotwin/036_cabinet/46653/mobility.urdf",
+          "backend": "sapien",
+          "role": "visual_and_collision",
+          "sha256": "3905eaebdce2c7bee60612ba30633d63a373f4cfbda33d27737c7abc9f2da209",
+          "size_bytes": 14530,
+          "metadata": {}
+        },
+        {
+          "format": "usd",
+          "uri": "data/asset_library/robotwin/036_cabinet/usd/cabinet.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "b6e731d45222220c1f20043baab24ca6b6caf5116881172f2d4628850725b22c",
+          "size_bytes": 1573,
+          "metadata": {
+            "derived_from": "data/asset_library/robotwin/036_cabinet/46653/mobility.urdf",
+            "converter": "a_forward line converter (tool/version not tracked by backfill_upstream)",
+            "conversion_params": {}
+          }
+        }
+      ],
+      "articulation": {
+        "joint_names": [
+          "joint_1",
+          "joint_2",
+          "joint_3"
+        ],
+        "joint_types": [
+          "prismatic",
+          "prismatic",
+          "prismatic"
+        ],
+        "limits": [
+          [
+            0.0,
+            0.17820000000000005
+          ],
+          [
+            0.0,
+            0.17820000000000005
+          ],
+          [
+            0.0,
+            0.17820000000000005
+          ]
+        ],
+        "closed_qpos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "open_qpos": [
+          0.135,
+          0.135,
+          0.135
+        ]
+      },
+      "source": {
+        "library": "RoboTwin (upstream)",
+        "group": "c3ddfa8b97d5519efa828b075999bd0006778e5e",
+        "file": "036_cabinet/46653",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/036_cabinet/SOURCE_MANIFEST.json",
+        "kind": "retrieved"
+      },
+      "verification": []
+    }
+  ],
+  "profile": "cross_backend",
+  "external_ids": {
+    "env_gen": "036_cabinet"
+  }
+}

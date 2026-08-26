@@ -118,7 +118,7 @@ def test_violations_block_ledger_write_but_snapshot_stays(tmp_path):
     # the asset-level fields have to agree or upsert_model raises on drift
     # before the run ever reaches the schema gate this test is about.
     seed_ledger = {
-        "schema_version": "asset_ledger.v2",
+        "schema_version": "asset_ledger.v3",
         "asset_id": f"external_{asset}",
         "category": "cabinet",
         "semantic_name": "cabinet",

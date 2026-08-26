@@ -48,10 +48,16 @@ def _project_model(model):
     }
     if conv.get("is_static") is True:
         out["is_static"] = True
+    # v3 appearance -> per-MODEL colours in the view (CatalogModel.colors):
+    # the model-level truth the asset-level union cannot carry (a yellow, a
+    # red and a white basket under one asset_id)
+    measured = (model.get("appearance") or {}).get("colors_measured")
+    if measured:
+        out["colors"] = list(measured)
     return out
 
 
-def _project_asset(led, models_out):
+def _project_asset(led, models_out, measured_colors):
     out = {
         "category": led["category"],
         "aliases": list(led["semantics"]["aliases"]),
@@ -60,7 +66,35 @@ def _project_asset(led, models_out):
     colors = led["semantics"].get("colors") or []
     if colors:
         out["colors"] = list(colors)
+    elif measured_colors is not None:
+        # v3: measured appearance is the authority for colour when no hand
+        # declaration exists. Same publication rule the shadow build used
+        # when this fact lived in a sidecar file: publish only when every
+        # projected model agrees -- entry.colors is asset-level upstream and
+        # a non-empty value REJECTS mismatching queries, so a multi-colour
+        # asset claiming one colour would hide its other models forever.
+        out["colors"] = list(measured_colors)
+    # materials: projected since v3. Through v2 this line was missing -- the
+    # upstream grounder consults entry.materials for material queries, so a
+    # "wooden bowl" could never match ANY external asset (measured
+    # 2026-08-15, dialectic round).
+    materials = led["semantics"].get("materials") or []
+    if materials:
+        out["materials"] = list(materials)
     return out
+
+
+def _agreed_measured_colors(led, model_ids):
+    """The colour every projected model agrees on, else None."""
+    seen = []
+    for model in led.get("models", []):
+        if str(model.get("model_id")) not in model_ids:
+            continue
+        colors = (model.get("appearance") or {}).get("colors_measured")
+        seen.append(tuple(colors) if colors else None)
+    if not seen or any(c is None for c in seen):
+        return None
+    return list(seen[0]) if len(set(seen)) == 1 else None
 
 
 def generate(library_dir, *, license_gate=False):
@@ -78,8 +112,11 @@ def generate(library_dir, *, license_gate=False):
     frag = {}
     stats = {"unknown_license_models": 0}
 
-    for ledger_file in sorted(library_dir.glob("*/ledger.json")):
-        asset_key = ledger_file.parent.name
+    for asset_path in ledger.iter_assets(library_dir):
+        ledger_file = asset_path / "ledger.json"
+        if not ledger_file.is_file():
+            continue
+        asset_key = asset_path.name
         led = json.loads(ledger_file.read_text())
         check = "joint_sweep" if led.get("kind") == "articulated" else "settle"
         models_out = {}
@@ -94,7 +131,8 @@ def generate(library_dir, *, license_gate=False):
                 continue
             models_out[str(model["model_id"])] = _project_model(model)
         if models_out:
-            frag[asset_key] = _project_asset(led, models_out)
+            measured = _agreed_measured_colors(led, set(models_out))
+            frag[asset_key] = _project_asset(led, models_out, measured)
 
     return frag, stats
 
@@ -125,6 +163,8 @@ def write_yaml(frag, path):
         lines.append(f"    aliases: {_fmt_flow_list(entry['aliases'])}")
         if entry.get("colors"):
             lines.append(f"    colors: {_fmt_flow_list(entry['colors'])}")
+        if entry.get("materials"):
+            lines.append(f"    materials: {_fmt_flow_list(entry['materials'])}")
         lines.append("    models:")
         for model_id in sorted(entry["models"], key=int):
             m = entry["models"][model_id]
@@ -138,6 +178,8 @@ def write_yaml(frag, path):
             lines.append(f"        footprint_shape: {m['footprint_shape']}")
             if m.get("is_static"):
                 lines.append("        is_static: true")
+            if m.get("colors"):
+                lines.append(f"        colors: {_fmt_flow_list(m['colors'])}")
 
     text = "\n".join(lines) + ("\n" if lines else "")
     Path(path).write_text(text)

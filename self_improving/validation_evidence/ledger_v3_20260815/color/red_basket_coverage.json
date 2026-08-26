@@ -1,0 +1,17 @@
+{
+  "schema": "envgen.scene_coverage.v1",
+  "prompt": "Place a red basket on the table.",
+  "seed": 42,
+  "objects": [
+    {
+      "object_id": "basket_1",
+      "category": "basket",
+      "color": "red",
+      "material": null,
+      "status": "covered",
+      "asset_id": "110_basket",
+      "model_id": 0,
+      "score": 107.0
+    }
+  ]
+}

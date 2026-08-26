@@ -16,7 +16,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from runtime_config import GEN_ENV_ROOT, ROBOTWIN_ROOT  # noqa: E402
+from lib import ledger  # noqa: E402
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -61,23 +63,49 @@ for item in (real / "assets").iterdir():
     (shadow / "assets" / item.name).symlink_to(item)
 objects = shadow / "assets" / "objects"
 objects.mkdir()
-n_real = 0
+# Library FIRST, upstream fills the gaps. Since the RoboTwin natives were
+# moved into the library under robotwin/ (2026-08-18), both sources can offer
+# the same asset name; linking upstream first would raise FileExistsError on
+# the second pass. Ordering it this way also makes the library authoritative
+# for anything it holds, which is the point of having moved them in -- while
+# an upstream checkout that still carries assets the library lacks keeps
+# working unchanged, so this is correct in both the pre- and post-move state.
 n_skipped = 0
-for item in (real / "assets" / "objects").iterdir():
-    if item.name.startswith("900_"):
-        # residue of earlier generated/derived proxies (900_gen_*, 900_scaled_*):
-        # not canonical assets; keeping them out enforces reuse-before-generation
+
+
+def _is_proxy(name):
+    """900_gen_* / 900_scaled_* are earlier generated/derived proxies, not
+    canonical assets. They stay OUT of the shadow view (that exclusion is what
+    enforces reuse-before-generation) even though they do carry ledgers of
+    their own under data/upstream_ledgers/."""
+    return name.startswith("900_")
+
+
+# iter_assets, not iterdir: the library's direct children are provider dirs
+# (nvidia/ objaverse/ github/ robotwin/); symlinking THOSE would hand the
+# upstream scanner four bogus "assets" and hide every real one.
+n_ext = 0
+for item in ledger.iter_assets(lib):
+    if _is_proxy(item.name):
         n_skipped += 1
         continue
+    (objects / item.name).symlink_to(item)
+    n_ext += 1
+n_real = 0
+for item in (real / "assets" / "objects").iterdir():
+    if _is_proxy(item.name):
+        n_skipped += 1
+        continue
+    # is_symlink(), not exists(): every entry here was just created as a
+    # symlink, and exists(follow_symlinks=False) needs py3.12 while this runs
+    # on the 3.10 env-gen-yuxin env.
+    if (objects / item.name).is_symlink():
+        continue  # the library already provides it
     (objects / item.name).symlink_to(item)  # dirs AND plain files (same.json etc.)
     n_real += 1
-n_ext = 0
-for item in lib.iterdir():
-    if item.is_dir() and not item.name.startswith("_"):
-        (objects / item.name).symlink_to(item)
-        n_ext += 1
 print(
-    f"shadow root: {n_real} robotwin + {n_ext} external asset dirs (skipped {n_skipped} 900_* proxy residues)"
+    f"shadow root: {n_ext} from library + {n_real} only-in-upstream asset dirs "
+    f"(skipped {n_skipped} 900_* proxy residues)"
 )
 
 # ---- extended overrides (copy upstream + append ours) ----
@@ -248,6 +276,9 @@ if survey_path.exists():
                 # paper and refused x4608 in practice, 2026-08-13)
                 entry["interior_dimensions_m"] = measured_int["dimensions_m"]
                 entry["interior_floor_z_offset_m"] = measured_int["floor_z_offset_m"]
+                # the floor is published check-safe (payload rest MINUS
+                # pad); anti-wedging at spawn time is this clearance's job
+                entry["support_spawn_clearance_m"] = 0.02
                 n_int += 1
             if "support_surface_dimensions_m" not in entry and top_z:
                 entry["support_surface_dimensions_m"] = [0.002, 0.002]
@@ -298,6 +329,15 @@ if attr_path.exists():
         else:
             _entry_a["colors_disagree"] = [list(s) for s in sorted(set(_sets))]
             _n_split += 1
+        # model-level colours regardless of asset-level agreement: the
+        # grounder's model loop consumes CatalogModel.colors, which is what
+        # lets "a yellow basket" pick basket m1 (yellow) out of an asset
+        # whose other models are red and white (2026-08-16)
+        for _mid_a, _row_a in _models.items():
+            if _row_a.get("error") or not _row_a.get("colors"):
+                continue
+            _m_entry = _entry_a.setdefault("models", {}).setdefault(str(_mid_a), {})
+            _m_entry.setdefault("colors", list(_row_a["colors"]))
     ext_overrides.write_text(
         "# GENERATED (see calibration header above)\n"
         + yaml.safe_dump(_data_a, sort_keys=False, allow_unicode=True)
@@ -336,6 +376,48 @@ if revoke_path.exists():
             + yaml.safe_dump(_data_r, sort_keys=False, allow_unicode=True)
         )
     print(f"runtime revocations: {_n_rev} models revoked")
+
+# ---- tabletop-view category exclusions (size-table plan C) ----
+# The size table records each category's typical REAL size -- an
+# environment-neutral fact. Whether that fits a 0.70x0.50 m table is THIS
+# view's ruling, so categories whose typical size exceeds the view's refuse
+# threshold lose their placement declarations HERE, in the generated view,
+# not in the ledger: the asset keeps its real-size semantics for future
+# non-tabletop environments (born from "everything looks basket-sized",
+# 2026-08-15 -- a 2 m sofa served as a 25 cm miniature is a lie, and
+# deleting the sofa would be waste; the view just declines to serve it).
+_cs_path = Path(__file__).resolve().parents[2] / "configs" / "category_sizes.yml"
+if _cs_path.is_file():
+    import yaml as _yaml_cs
+
+    _cs = _yaml_cs.safe_load(_cs_path.read_text()) or {}
+    _refuse_over = float(
+        ((_cs.get("views") or {}).get("tabletop") or {}).get("refuse_over_m", 0.84)
+    )
+    _oversize_cats = {
+        c for c, r in (_cs.get("sizes") or {}).items()
+        if float(r.get("size_m", 0)) > _refuse_over
+    }
+    _data_cs = _yaml_cs.safe_load(ext_overrides.read_text()) or {}
+    _n_view = 0
+    for _aid, _asset_cs in (_data_cs.get("assets") or {}).items():
+        if (_asset_cs or {}).get("category") not in _oversize_cats:
+            continue
+        for _mid, _entry_cs in (_asset_cs.get("models") or {}).items():
+            if isinstance(_entry_cs, dict) and "stable_pose_id" in _entry_cs:
+                del _entry_cs["stable_pose_id"]
+                _entry_cs["placement_infeasible"] = (
+                    "typical real size exceeds tabletop view "
+                    f"(category {_asset_cs.get('category')!r} > {_refuse_over} m); "
+                    "asset retained for non-tabletop environments"
+                )
+                _n_view += 1
+    if _n_view:
+        ext_overrides.write_text(
+            "# GENERATED (see calibration header above)\n"
+            + _yaml_cs.safe_dump(_data_cs, sort_keys=False, allow_unicode=True)
+        )
+    print(f"tabletop-view exclusions: {_n_view} models across {len(_oversize_cats)} oversize categories")
 
 # ---- final envelope + consistency pass over ALL declared entries ----
 # The per-branch feasibility check missed the replace path: 034_knife's
@@ -477,5 +559,41 @@ if ok and args.admission:
         print(r.stderr[-400:])
         print("FAIL s9: admission step errored")
         ok = False
+# ---- external-only catalog view (s12's gate reads this) ----
+# Nothing used to write this file. It was produced by hand on 2026-08-03 and
+# then rotted silently: by 2026-08-14 it still carried the PREVIOUS machine's
+# absolute paths, so every s12 case failed its real_asset_files check while the
+# physics underneath was fine (runtime status=pass, drift ~1mm). Deriving it
+# here, unconditionally, from the catalog this run just built is the fix -- a
+# view regenerated with its source cannot drift from it. Derived last, so it
+# also reflects whatever `--admission enforce` filtered out of the main view.
+if ok:
+    _full = json.loads(cat_out.read_text())
+    # "External" means acquired by us, NOT inherited from RoboTwin. Before the
+    # natives moved into the library (2026-08-18) "lives under the library" was
+    # the same statement; afterwards it silently matched all 191 entries and
+    # would have handed s12 a view where its own premise -- prompts must ground
+    # to OUR assets with the natives masked -- is unfalsifiable. The predicate
+    # is the source provider, which is exactly what the directory now records.
+    _UPSTREAM_PROVIDERS = {"robotwin"}
+    _lib_root = lib.resolve()
+    _ext_entries = []
+    for e in _full["entries"]:
+        p = Path(e["asset_path"]).resolve()
+        try:
+            provider = p.relative_to(_lib_root).parts[0]
+        except ValueError:
+            continue  # not in the library at all -> not ours
+        if provider not in _UPSTREAM_PROVIDERS:
+            _ext_entries.append(e)
+    _ext_only_out = ext / "asset_catalog_external_only.json"
+    with _ext_only_out.open("w", encoding="utf-8") as _s:
+        json.dump({**_full, "entries": _ext_entries}, _s, indent=2, ensure_ascii=False)
+        _s.write("\n")
+    print(f"external-only catalog: {len(_ext_entries)} entries -> {_ext_only_out}")
+    if not _ext_entries:
+        print("FAIL s9: external-only view is empty (s12 would have nothing to ground)")
+        ok = False
+
 print("PASS s9" if ok else "FAIL s9")
 sys.exit(0 if ok else 1)

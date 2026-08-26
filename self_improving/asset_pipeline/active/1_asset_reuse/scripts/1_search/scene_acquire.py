@@ -42,6 +42,59 @@ def main(argv=None, runner=None):
     spec, _ = a4.extract_needs(prompt, a.seed)
     records = a4.check_coverage(spec, a.catalog)
     gaps = a4.gaps_to_entries(records, extra_aliases=compound_aliases)
+    # Parse-sanity guard: a gap category containing an article/preposition
+    # means the parser fused a broken phrase into a "category" -- the whole
+    # rest of a sentence, usually. Buying an asset for it launders a typo
+    # into a pool entry: "Place a TVon the table" (an eaten space) became
+    # category "tvon_the_table" and imported a sofa (2026-08-15). Refuse
+    # loudly instead; the message names the suspect token.
+    _STOP = {"the", "a", "an", "on", "in", "at", "of", "into", "onto"}
+    bad = [
+        (g["category"], w)
+        for g in gaps
+        for w in g["category"].replace("-", "_").split("_")
+        if w in _STOP
+    ]
+    if bad:
+        cat, w = bad[0]
+        blocker = {
+            "reason": "malformed_category_from_parse",
+            "category": cat,
+            "suspect_token": w,
+            "hint": (
+                "解析出的类目里含虚词，通常是 prompt 空格丢失或短语未被词表"
+                "识别（如 'TVon the table'）。请检查空格/拼写后重试。"
+            ),
+        }
+        (out / "asset_gap_blocker.json").write_text(
+            json.dumps(blocker, indent=1, ensure_ascii=False)
+        )
+        print(
+            f"FAIL scene_acquire: malformed category {cat!r} (token {w!r}) -- 解析异常，已拒绝采购"
+        )
+        return 1
+    oversize = [g for g in gaps if g.get("oversize_refusal")]
+    if oversize:
+        g = oversize[0]
+        d = g.get("size_decision") or {}
+        blocker = {
+            "reason": "oversize_for_tabletop_view",
+            "category": g["category"],
+            "typical_size_m": d.get("typical_m"),
+            "hint": (
+                f"该类目真实典型尺寸约 {d.get('typical_m')} m，超出桌面工作区"
+                "（0.70x0.50m）的可用范围——桌面视图诚实拒绝，而不是缩成"
+                "玩具。资产库保留真实尺寸语义，未来非桌面环境可直接采购。"
+            ),
+        }
+        (out / "asset_gap_blocker.json").write_text(
+            json.dumps(blocker, indent=1, ensure_ascii=False)
+        )
+        print(
+            f"FAIL scene_acquire: category {g['category']!r} typical size "
+            f"{d.get('typical_m')}m exceeds tabletop view -- 真实尺寸放不上桌"
+        )
+        return 1
     catalog = a.catalog
     if gaps:
         before = records
@@ -72,6 +125,25 @@ def main(argv=None, runner=None):
     a4.write_coverage_report(out / "coverage_report.json", a.prompt, a.seed, records)
     remaining = [r for r in records if r["status"] == "gap"]
     if remaining:
+        # B5：阻塞不空手——每个未满足对象附「最接近的本地资产」（同类但
+        # 属性有差距），调用方可自行决定将就复用还是等人工补货。
+        from lib import a2_selection as a2
+
+        lib_dir = Path(a.dev_root) / "data" / "asset_library"
+        for r in remaining:
+            cands = a2.match_local_all(
+                catalog,
+                r.get("category"),
+                want_colors=[r["color"]] if r.get("color") else None,
+                want_materials=[r["material"]] if r.get("material") else None,
+                library_dir=lib_dir,
+            )
+            if cands:
+                r["nearest_local"] = {
+                    "asset": cands[0]["asset"],
+                    "unmet": cands[0]["unmet"],
+                    "candidates": cands,
+                }
         (out / "asset_gap_blocker.json").write_text(
             json.dumps(
                 {

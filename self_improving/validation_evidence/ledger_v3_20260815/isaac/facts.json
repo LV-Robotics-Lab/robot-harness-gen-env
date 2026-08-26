@@ -1,0 +1,18 @@
+[
+  {
+    "asset_dir": "302_can",
+    "model_id": 3,
+    "check": "settle",
+    "verdict": "pass",
+    "run_id": "isaac-settle-rehome-20260822",
+    "report_path": "self_improving/asset_pipeline/active/results/isaac_settle_out/can/settle_report.json"
+  },
+  {
+    "asset_dir": "303_box",
+    "model_id": 0,
+    "check": "settle",
+    "verdict": "pass",
+    "run_id": "isaac-settle-rehome-20260822",
+    "report_path": "self_improving/asset_pipeline/active/results/isaac_settle_out/box/settle_report.json"
+  }
+]

@@ -192,7 +192,11 @@ def _relative_to_root(path_str, root):
     try:
         return Path(path_str).relative_to(root).as_posix()
     except ValueError:
-        return path_str  # honest fallback: never fabricate a rebased path
+        # 不在 root 下（如 ext 模型住 asset_library）→ 走可移植契约兜底：
+        # active 树内给 active-relative，树外才保留绝对路径。此前直接回落
+        # 绝对路径，把 ~400 条个人 home 路径写进了 public 仓的 tracked
+        # 账本（2026-08-20 路径卫生排查）。
+        return ledger.to_portable_uri(path_str)
 
 
 def _derive_scale_applied(scale, report, note_key):
@@ -286,7 +290,7 @@ def _rigid_representations(model):
     return [
         {
             "format": _format_from_uri(visual),
-            "uri": str(visual),
+            "uri": ledger.to_portable_uri(visual),
             "backend": "sapien",
             "role": "visual",
             "sha256": _sha256_file(visual),
@@ -295,7 +299,7 @@ def _rigid_representations(model):
         },
         {
             "format": _format_from_uri(collision),
-            "uri": str(collision),
+            "uri": ledger.to_portable_uri(collision),
             "backend": "sapien",
             "role": "collision",
             "sha256": _sha256_file(collision),
@@ -314,7 +318,7 @@ def _articulated_representations(model):
     return [
         {
             "format": _format_from_uri(urdf),
-            "uri": str(urdf),
+            "uri": ledger.to_portable_uri(urdf),
             "backend": "sapien",
             "role": "visual_and_collision",
             "sha256": _sha256_file(urdf),
@@ -338,7 +342,7 @@ def _articulation(model):
 def _isaac_representation(usd_path, derived_from):
     return {
         "format": _format_from_uri(usd_path),
-        "uri": str(usd_path),
+        "uri": ledger.to_portable_uri(usd_path),
         "backend": "isaacsim",
         "role": "visual_and_collision",
         "sha256": _sha256_file(usd_path),
@@ -386,6 +390,17 @@ def _build_model_entry(
         if kind == "articulated"
         else _rigid_representations(model)
     )
+    # v3: the measured up-axis/origin describe the FILES this backfill just
+    # measured, so they live on those representations (frame/geometry_state),
+    # not as per-model fields -- the same model's other-backend files can and
+    # do disagree (a Y-up baked GLB next to a Z-up unbaked USD).
+    for rp in representations:
+        rp.setdefault("frame", {})["up_axis"] = up_axis
+        gs = rp.setdefault("geometry_state", {})
+        gs.setdefault("origin", origin_convention)
+        # upstream RoboTwin files are loaded WITH model_data scale at
+        # create_actor time -- the file itself does not carry it
+        gs.setdefault("scale_baked", False)
 
     # Incremental layer: carry forward any previously-registered non-sapien
     # representation (e.g. an earlier --isaac-usd registration) untouched,
@@ -414,7 +429,7 @@ def _build_model_entry(
         "file": _relative_to_root(model["model_path"], relbase),
         "license": DEFAULT_LICENSE,
         "retrieved_at": retrieved_at,
-        "source_manifest_path": str(source_manifest_path),
+        "source_manifest_path": ledger.to_portable_uri(source_manifest_path),
     }
     existing_license = (existing_model or {}).get("source", {}).get("license")
     if existing_license and existing_license.get("status") == "declared":
@@ -741,11 +756,13 @@ def main():
                 # unless one was registered by hand via --isaac-usd; the
                 # profile follows that evidence rather than an aspiration.
                 profile=(
-                    "cross_backend" if _has_isaac_rep(led, model_entry) else "sapien_only"
+                    "cross_backend"
+                    if _has_isaac_rep(led, model_entry)
+                    else "sapien_only"
                 ),
                 identity={
                     "basis": "upstream_catalog",
-                    "evidence": str(args.catalog),
+                    "evidence": ledger.to_portable_uri(args.catalog),
                     "verified": False,
                 },
                 aliases=aliases,

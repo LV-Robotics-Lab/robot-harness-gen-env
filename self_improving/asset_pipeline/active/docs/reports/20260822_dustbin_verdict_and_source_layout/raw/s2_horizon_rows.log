@@ -1,0 +1,15 @@
+ROW 321_dustbin steps=900 late_rot=0.5861 late_trans=0.000476 total_rot=8.901 still_moving=True
+ROW 321_dustbin steps=2700 late_rot=0.4607 late_trans=0.000424 total_rot=7.305 still_moving=False
+ROW 001_bottle steps=900 late_rot=0.0000 late_trans=0.000000 total_rot=0.000 still_moving=False
+ROW 001_bottle steps=2700 late_rot=0.0000 late_trans=0.000000 total_rot=0.000 still_moving=False
+GEN_FAIL Place a sleigh on the table.
+ROW 320_teddy_bear steps=900 late_rot=0.0000 late_trans=0.000000 total_rot=0.006 still_moving=False
+ROW 320_teddy_bear steps=2700 late_rot=0.0000 late_trans=0.000000 total_rot=0.006 still_moving=False
+ROW 339_panel steps=900 late_rot=0.3001 late_trans=0.000413 total_rot=1.346 still_moving=False
+ROW 339_panel steps=2700 late_rot=0.1361 late_trans=0.000084 total_rot=1.876 still_moving=False
+GEN_FAIL Place a ceiling fan on the table.
+ROW 021_cup steps=900 late_rot=0.0000 late_trans=0.000000 total_rot=0.000 still_moving=False
+ROW 021_cup steps=2700 late_rot=0.0000 late_trans=0.000000 total_rot=0.000 still_moving=False
+ROW 002_bowl steps=900 late_rot=0.0000 late_trans=0.000000 total_rot=0.382 still_moving=False
+ROW 002_bowl steps=2700 late_rot=0.0000 late_trans=0.000000 total_rot=0.382 still_moving=False
+S2_DONE

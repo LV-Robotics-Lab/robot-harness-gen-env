@@ -1,0 +1,131 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "robotwin_015_laptop",
+  "category": "laptop",
+  "kind": "articulated",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "laptop",
+      "notebook computer"
+    ],
+    "colors": [],
+    "materials": [
+      "metal",
+      "plastic"
+    ],
+    "identity": {
+      "basis": "upstream_catalog",
+      "evidence": "results/20260818_upstream_ledger_backfill/upstream_catalog_scoped.json",
+      "verified": false
+    }
+  },
+  "models": [
+    {
+      "model_id": 10098,
+      "physical": {
+        "mesh_bbox_m": [
+          0.2038767,
+          0.14564385,
+          0.13019895
+        ],
+        "size_resolution": {
+          "mode": "upstream_catalog",
+          "actual_max_dim_m": 1.359178,
+          "scale": 0.15,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "upstream_authored"
+        },
+        "conventions": {
+          "is_static": true,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "robotwin_laptop_base_flat",
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "is_default": true
+            }
+          ],
+          "support_margin_m": 0.005,
+          "support_spawn_clearance_m": 0.003,
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown",
+          "runtime_default_kg": 0.1,
+          "runtime_default_basis": "urdf_inertial"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "urdf_inertial"
+        }
+      },
+      "representations": [
+        {
+          "format": "urdf",
+          "uri": "data/asset_library/robotwin/015_laptop/10098/mobility.urdf",
+          "backend": "sapien",
+          "role": "visual_and_collision",
+          "sha256": "82ccd27a859ba3dd67d9d076e3b6cc450235804730040cdea8d1923cbabdf04b",
+          "size_bytes": 25316,
+          "metadata": {},
+          "frame": {
+            "up_axis": "Z"
+          },
+          "geometry_state": {
+            "origin": "base-at-floor",
+            "scale_baked": false
+          }
+        }
+      ],
+      "articulation": {
+        "joint_names": [
+          "joint_1"
+        ],
+        "joint_types": [
+          "revolute"
+        ],
+        "limits": [
+          [
+            -1.5833626974092556,
+            1.1184069846779672
+          ]
+        ],
+        "closed_qpos": [
+          -1.45
+        ],
+        "open_qpos": [
+          -0.16
+        ]
+      },
+      "source": {
+        "kind": "retrieved",
+        "library": "RoboTwin (upstream)",
+        "group": "266f3aadf505a4f7fe9af0faa41a20f5f47cd123+ext301",
+        "file": "data/asset_library/robotwin/015_laptop/10098",
+        "license": {
+          "spdx": null,
+          "status": "unknown",
+          "terms_note": "RoboTwin asset library; mixed origins, unaudited (upstream)"
+        },
+        "retrieved_at": "2025-06-27",
+        "source_manifest_path": "data/upstream_ledgers/015_laptop/SOURCE_MANIFEST.json"
+      },
+      "verification": []
+    }
+  ]
+}

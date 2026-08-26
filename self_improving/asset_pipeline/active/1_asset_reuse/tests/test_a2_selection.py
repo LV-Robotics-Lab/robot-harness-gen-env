@@ -178,3 +178,153 @@ def test_write_evidence_categories_sha256_stable_and_changes(tmp_path):
     assert "categories_sha256" in d1
     assert d1["categories_sha256"] == d2["categories_sha256"]
     assert d1["categories_sha256"] != d3["categories_sha256"]
+
+
+def test_manifest_group_carries_materials():
+    g = a2.build_manifest_group(
+        cand(),
+        "310_kettle",
+        0,
+        {"category": "kettle", "materials": ["metal"], "colors": ["white"]},
+    )
+    assert g["items"][0]["materials"] == ["metal"]
+    assert g["items"][0]["colors"] == ["white"]
+
+
+def test_validate_entries_flags_unknown_and_missing():
+    warns = a2.validate_entries(
+        [
+            {"category": "cup", "colour": ["red"]},
+            {"aliases": ["x"]},
+            {"category": "ok", "comment": "fine"},
+        ]
+    )
+    assert any("colour" in w for w in warns)
+    assert any("category" in w for w in warns)
+    assert len(warns) == 2
+
+
+def test_write_evidence_input_warnings(tmp_path):
+    p = tmp_path / "e.json"
+    a2.write_evidence(
+        p, run_id="r", providers_snapshot={}, categories=[], input_warnings=["w1"]
+    )
+    assert json.loads(p.read_text())["input_warnings"] == ["w1"]
+    p2 = tmp_path / "e2.json"
+    a2.write_evidence(p2, run_id="r", providers_snapshot={}, categories=[])
+    assert "input_warnings" not in json.loads(p2.read_text())
+
+
+def _mini_match_catalog(tmp_path):
+    cat = {
+        "entries": [
+            {
+                "asset_id": "010_ball_y",
+                "category": "ball",
+                "aliases": ["ball"],
+                "colors": ["yellow"],
+                "materials": [],
+                "available": True,
+                "asset_path": "/x/010",
+                "models": [{"model_id": 0, "visual_path": "/x/010/v.glb"}],
+            },
+            {
+                "asset_id": "011_ball_b",
+                "category": "ball",
+                "aliases": ["ball"],
+                "colors": ["blue"],
+                "materials": ["rubber"],
+                "available": True,
+                "asset_path": "/x/011",
+                "models": [{"model_id": 0}],
+            },
+            {
+                "asset_id": "020_cup",
+                "category": "cup",
+                "aliases": ["mug"],
+                "colors": [],
+                "materials": [],
+                "available": False,
+                "asset_path": "/x/020",
+                "models": [{"model_id": 0}],
+            },
+        ]
+    }
+    p = tmp_path / "cat.json"
+    p.write_text(json.dumps(cat))
+    return p
+
+
+def test_match_local_exact_similar_none(tmp_path):
+    p = _mini_match_catalog(tmp_path)
+    pay, unmet = a2.match_local(p, "ball", want_colors=["blue"])
+    assert pay["asset_id"] == "011_ball_b" and unmet == []
+    pay, unmet = a2.match_local(p, "ball", want_colors=["red"])
+    assert pay is not None and unmet and unmet[0]["kind"] == "mismatch"
+    # 池侧别名命中（mug→020_cup）；颜色未标注 → unverified 而非 mismatch
+    pay, unmet = a2.match_local(p, "mug", want_colors=["red"])
+    assert pay["asset_id"] == "020_cup" and unmet[0]["kind"] == "unverified"
+    pay, unmet = a2.match_local(p, "sofa")
+    assert pay is None and unmet is None
+
+
+def test_allocate_asset_profile_conflict_opens_new_slot(tmp_path):
+    lib = tmp_path / "library"
+    a = lib / "301_ball"
+    a.mkdir(parents=True)
+    (a / "model_data0.json").write_text("{}")
+    (a / "ledger.json").write_text(json.dumps({"profile": "cross_backend"}))
+    man = tmp_path / "m.json"
+    # 无 profile：旧行为——同类续 model 位
+    assert a2.allocate_asset("ball", lib, man) == ("301_ball", 1)
+    # 相同 profile：照常复用
+    assert a2.allocate_asset("ball", lib, man, profile="cross_backend") == (
+        "301_ball",
+        1,
+    )
+    # 冲突 profile：另开新资产位（2026-08-20 owner 决策 A——防漂移契约不动）
+    assert a2.allocate_asset("ball", lib, man, profile="sapien_only") == (
+        "302_ball",
+        0,
+    )
+
+
+def test_match_local_all_list_scores_and_threshold(tmp_path):
+    p = _mini_match_catalog(tmp_path)
+    # 全量列表：ball 两个候选都返回，attr_score 排序
+    cands = a2.match_local_all(p, "ball", want_colors=["blue"])
+    assert [c["asset"]["asset_id"] for c in cands] == ["011_ball_b", "010_ball_y"]
+    assert cands[0]["attr_score"] == 1.0 and cands[0]["unmet"] == []
+    assert cands[1]["attr_score"] == 0.0
+    # 视觉分在同 attr 档内重排
+    cands = a2.match_local_all(
+        p, "ball", visual_scores={"010_ball_y": 0.30, "011_ball_b": 0.20}
+    )
+    assert [c["asset"]["asset_id"] for c in cands] == ["010_ball_y", "011_ball_b"]
+    assert cands[0]["visual_sim"] == 0.3
+    # 门限只筛相似（unmet 非空）者；exact 豁免
+    cands = a2.match_local_all(
+        p,
+        "ball",
+        want_colors=["blue"],
+        visual_scores={"010_ball_y": 0.05, "011_ball_b": 0.05},
+        min_visual=0.18,
+    )
+    ids = [c["asset"]["asset_id"] for c in cands]
+    assert "011_ball_b" in ids  # exact 留下
+    assert "010_ball_y" not in ids  # similar 低于门限被筛
+    # 无视觉分（缺缩略图）不误杀
+    cands = a2.match_local_all(
+        p, "ball", want_colors=["blue"], visual_scores={}, min_visual=0.18
+    )
+    assert len(cands) == 2 and all(c["visual_sim"] is None for c in cands)
+    # limit 生效
+    assert len(a2.match_local_all(p, "ball", limit=1)) == 1
+
+
+def test_attr_score_values():
+    assert a2._attr_score([], 0) == 1.0
+    assert a2._attr_score([], 2) == 1.0
+    assert a2._attr_score([{"kind": "unverified"}], 1) == 0.5
+    assert a2._attr_score([{"kind": "mismatch"}], 2) == 0.5
+    assert a2._attr_score([{"kind": "mismatch"}, {"kind": "unverified"}], 2) == 0.25

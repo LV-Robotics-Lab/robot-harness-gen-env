@@ -1,0 +1,190 @@
+{
+  "schema_version": "robotwin.resolved_scene.v1",
+  "scene_id": "place_a_dustbin_on_the_table_f70e98a43e",
+  "request": "Place a dustbin on the table.",
+  "frame": {
+    "name": "robotwin_world",
+    "x_axis": "right",
+    "y_axis": "front",
+    "z_axis": "up",
+    "handedness": "right_handed"
+  },
+  "unit": "m",
+  "seed": 42,
+  "workspace": {
+    "support_surface": "table",
+    "table_height_m": 0.741,
+    "x_bounds_m": [
+      -0.35,
+      0.35
+    ],
+    "y_bounds_m": [
+      -0.2,
+      0.3
+    ],
+    "robot_keepout_x_m": [
+      -0.16,
+      0.16
+    ],
+    "robot_keepout_y_m": [
+      -0.2,
+      -0.08
+    ]
+  },
+  "source_scene_spec_sha256": "ad45dae59dc9ee61f594361cec42d6b4927599f7b2f86671a303fa01caccaa18",
+  "asset_catalog_sha256": "09b67ac2bda03a2ba3a80c11ebc51801b84f9291a331a10ceabfcecf1ebc61fa",
+  "compiler_version": "scene_gen.stage5_solver.v3",
+  "objects": [
+    {
+      "object_id": "dustbin_1",
+      "category": "dustbin",
+      "asset_id": "321_dustbin",
+      "model_id": 0,
+      "load_type": "rigid",
+      "stable_pose_id": "upright",
+      "stable_orientation_wxyz": [
+        0.7071067811865476,
+        0.7071067811865476,
+        0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.24838641626673477,
+        0.28273148345513965,
+        0.42
+      ],
+      "footprint_shape": "box",
+      "support_margin_m": 0.005,
+      "support_spawn_clearance_m": 0.003,
+      "z_policy": "origin_on_table",
+      "mesh_scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "collision_available": true,
+      "source_files": [
+        "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/objaverse/321_dustbin/collision/base0.glb",
+        "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/objaverse/321_dustbin/model_data0.json",
+        "/home/yuhang/workspace/robot-harness-gen-env/self_improving/asset_pipeline/active/data/asset_library/objaverse/321_dustbin/visual/base0.glb"
+      ],
+      "grounding_score": 103.0,
+      "grounding_reasons": [
+        "exact category match",
+        "collision representation available",
+        "normalized dimensions available"
+      ],
+      "rejected_candidates": [
+        {
+          "asset_id": "011_dustbin",
+          "score": 100.0,
+          "reasons": [
+            "asset unavailable",
+            "stable_pose"
+          ]
+        }
+      ],
+      "pose": {
+        "position_m": [
+          0.034845311,
+          0.083335912,
+          0.741
+        ],
+        "orientation_wxyz": [
+          0.520793034041,
+          0.520793034041,
+          0.478303894709,
+          0.478303894709
+        ],
+        "yaw_rad": 1.485792458406
+      },
+      "is_static": false,
+      "support_relation": "on_table",
+      "support_target": "table",
+      "articulation_joint_names": [],
+      "articulation_joint_limits": [],
+      "articulation_qpos": [],
+      "asset_provenance": "robotwin_catalog"
+    }
+  ],
+  "relations": [
+    {
+      "relation": "on_table",
+      "source": "dustbin_1",
+      "target": "table"
+    }
+  ],
+  "solver_trace": {
+    "algorithm": "bounded_rejection_backtracking_v1",
+    "seed": 42,
+    "max_attempts_per_object": 96,
+    "total_attempts": 5,
+    "attempts": [
+      {
+        "attempt": 1,
+        "object_id": "dustbin_1",
+        "candidate_xy_m": [
+          0.0,
+          0.08
+        ],
+        "yaw_rad": 0.876044411498,
+        "accepted": false,
+        "reasons": [
+          "asset footprint does not fit selected region",
+          "robot initial keepout overlap"
+        ]
+      },
+      {
+        "attempt": 2,
+        "object_id": "dustbin_1",
+        "candidate_xy_m": [
+          0.0,
+          0.08
+        ],
+        "yaw_rad": -2.984445443853,
+        "accepted": false,
+        "reasons": [
+          "asset footprint does not fit selected region"
+        ]
+      },
+      {
+        "attempt": 3,
+        "object_id": "dustbin_1",
+        "candidate_xy_m": [
+          0.0,
+          0.08
+        ],
+        "yaw_rad": -1.413532481369,
+        "accepted": false,
+        "reasons": [
+          "asset footprint does not fit selected region"
+        ]
+      },
+      {
+        "attempt": 4,
+        "object_id": "dustbin_1",
+        "candidate_xy_m": [
+          0.0,
+          0.08
+        ],
+        "yaw_rad": -1.739118223248,
+        "accepted": false,
+        "reasons": [
+          "asset footprint does not fit selected region"
+        ]
+      },
+      {
+        "attempt": 5,
+        "object_id": "dustbin_1",
+        "candidate_xy_m": [
+          0.034845311,
+          0.083335912
+        ],
+        "yaw_rad": 1.485792458406,
+        "accepted": true,
+        "reasons": []
+      }
+    ],
+    "status": "pass"
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_344_scaffold",
+  "category": "scaffold",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "scaffold"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "results/sweep_out/C_scaffold/acquire/identity_post_render_344_scaffold_m0.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.19254885686807308,
+          0.21707950689827907,
+          0.25
+        ],
+        "size_resolution": {
+          "mode": "absolute:0.25",
+          "actual_max_dim_m": 6.118724822998049,
+          "scale": 0.040858186506499104,
+          "reference_max_dim_m": 0.25,
+          "reference_assets": [],
+          "verdict": "scaled"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "flat",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/objaverse/344_scaffold/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "999c28e3e4f7a76d7a297af99f909cf94ce3d850e9fd11aceede2c761f53b0d0",
+          "size_bytes": 2564680,
+          "metadata": {
+            "derived_from": "04a0f88aa7cb49b687a51f8666a6464f.glb",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": false
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/objaverse/344_scaffold/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "999c28e3e4f7a76d7a297af99f909cf94ce3d850e9fd11aceede2c761f53b0d0",
+          "size_bytes": 2564680,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/_source/web_344_scaffold/04a0f88aa7cb49b687a51f8666a6464f.glb",
+          "backend": "portable",
+          "role": "visual_and_collision",
+          "sha256": "c79ba39420f36bb4d10580798d3a3b066ddac79185411e809d23e6450a47a1a6",
+          "size_bytes": 2534604,
+          "metadata": {
+            "origin_prefix": "web_344_scaffold"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "data/asset_library/objaverse/344_scaffold/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "58584e758ff6ca49125e5dd1ea9bd550dc278030c4219c4148fb40a95ffeebc6",
+          "size_bytes": 22955,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "web (objaverse)",
+        "group": "web_344_scaffold",
+        "file": "04a0f88aa7cb49b687a51f8666a6464f.glb",
+        "url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-081/04a0f88aa7cb49b687a51f8666a6464f.glb",
+        "license": {
+          "spdx": "CC-BY-4.0",
+          "status": "declared",
+          "terms_note": "CC-BY-4.0 (Objaverse per-object metadata); owner: Scaffold Game Asset",
+          "evidence_url": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/metadata/000-081.json.gz",
+          "checked_date": "2026-08-13",
+          "checked_by": "auto-declared from repo metadata.json (allowlisted permissive SPDX)"
+        },
+        "retrieved_at": "2026-08-13",
+        "source_manifest_path": "data/asset_library/_source/web_344_scaffold/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-13T20:36:19",
+          "verified_digest": "9ae6a203905e88f5b40b853afa89f5fd9761a75a879ad97296e97b1eaf250927",
+          "report_path": "results/sweep_out/C_scaffold/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        }
+      ]
+    }
+  ],
+  "external_ids": {
+    "env_gen": "344_scaffold"
+  }
+}

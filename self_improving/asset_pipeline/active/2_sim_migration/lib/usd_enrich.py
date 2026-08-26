@@ -53,18 +53,26 @@ def _apply_isaac_representations(
     place.
     """
     enriched_asset_ids: set[str] = set()
+    neutralize_ids: set[str] = set()
     new_assets = []
     for asset in package.assets:
         rep = enrichment.get(asset.asset_id)
         if rep is not None:
             asset = replace(asset, representations=asset.representations + (rep,))
             enriched_asset_ids.add(asset.asset_id)
+            # v3: neutralize ONLY when the representation declares its scale
+            # baked. The old unconditional neutralize assumed every attached
+            # USD carried the RoboTwin scale -- measured false for the whole
+            # external pool, whose isaacsim reps point at _source originals:
+            # a cracker box compiled 2.8527x (= exactly 1/scale) too large
+            # (E2, 2026-08-15). An undeclared rep keeps the object scale.
+            gs = (rep.metadata or {}).get("geometry_state") or {}
+            if gs.get("scale_baked") is True:
+                neutralize_ids.add(asset.asset_id)
         new_assets.append(asset)
 
     new_objects = tuple(
-        replace(obj, scale=(1.0, 1.0, 1.0))
-        if obj.asset_id in enriched_asset_ids
-        else obj
+        replace(obj, scale=(1.0, 1.0, 1.0)) if obj.asset_id in neutralize_ids else obj
         for obj in package.env.objects
     )
     return replace(
@@ -100,6 +108,9 @@ def enrich_isaac_usd(
                 uri=str(usd),
                 backend="isaacsim",
                 role="visual_and_collision",
+                # this path's contract has always been "caller hands a baked
+                # USD"; state it so the neutralize rule stays uniform
+                metadata={"geometry_state": {"scale_baked": True}},
             )
     return _apply_isaac_representations(package, enrichment)
 
@@ -112,7 +123,7 @@ def enrich_isaac_usd(
 # (upstream asset, same shape via to_ir_bundles) -- see
 # lib/ledger.py:upsert_model's asset_id_prefix and to_ir_bundles' "_m<N>"
 # suffix, which this parser inverts.
-_LEDGER_ID_PREFIXES = ("robotwin_", "external_")
+_LEDGER_ID_PREFIXES = ("asset_", "robotwin_", "external_")
 _MODEL_SUFFIX_RE = re.compile(r"^(.*)_m(\d+)$")
 
 
@@ -185,7 +196,18 @@ def enrich_from_ledgers(
     }
 
     for asset in package.assets:
-        dir_name, model_id = _parse_ledger_asset_id(asset.asset_id)
+        # v3 junction rule: the importer preserves the original env-gen
+        # identity in AssetBundle.source; that is the lookup key. The string
+        # parse of asset_id is only a fallback -- the sanitizer prefixes
+        # numeric-leading ids with "asset_", which silently zeroed ledger
+        # coverage until E2 (skipped_no_ledger on the first real external
+        # asset, 2026-08-15).
+        src_aid = (asset.source or {}).get("asset_id")
+        src_mid = (asset.source or {}).get("model_id")
+        if src_aid:
+            dir_name, model_id = str(src_aid), int(src_mid or 0)
+        else:
+            dir_name, model_id = _parse_ledger_asset_id(asset.asset_id)
 
         ledger_data = None
         for ledger_dir in ledger_dirs:
@@ -215,12 +237,18 @@ def enrich_from_ledgers(
             report["skipped_no_isaac_rep"].append(asset.asset_id)
             continue
 
+        from lib import ledger  # noqa: PLC0415 -- see module-level comment
+
+        # ledgers store portable (ACTIVE_ROOT-relative) uris since the path
+        # hygiene pass; resolve here and hand the compiler an absolute path.
         uri = isaac_rep.get("uri")
-        if not uri or not Path(uri).is_file():
+        uri_path = ledger.resolve_uri(uri) if uri else None
+        if uri_path is None or not uri_path.is_file():
             report["warnings"].append(
                 f"{asset.asset_id}: isaacsim representation uri not found: {uri!r}"
             )
             continue
+        uri = str(uri_path)
 
         metadata = dict(isaac_rep.get("metadata") or {})
         if _latest_isaac_pass(model_entry):
@@ -237,5 +265,80 @@ def enrich_from_ledgers(
         )
         report["enriched"].append(asset.asset_id)
 
+    enriched_package = _apply_isaac_representations(package, enrichment)
+    return enriched_package, report
+
+
+def enrich_mujoco_from_ledgers(
+    package,
+    ledger_dirs,
+):
+    """Mirror of :func:`enrich_from_ledgers` for ``backend=mujoco`` OBJ/STL
+    representations.
+
+    A deliberate sibling rather than a parameter on the isaac path: the isaac
+    function's skip/verified semantics are pinned by existing tests and by the
+    write-back contract, and entangling a second backend into its control flow
+    risks both for no gain. Probe-validated 2026-08-22: 304_bottle's
+    ledger-registered OBJ compiled (0 blockers) and ran a real 500-step MuJoCo
+    rollout (the object falls to the ground plane -- the MJCF scene carries no
+    table; a support-box settle harness like the Isaac one is the follow-on).
+    """
+    report = {"enriched": [], "skipped_no_ledger": [], "skipped_no_mujoco_rep": [], "warnings": []}
+    enrichment = {}
+    for asset in package.assets:
+        src_aid = (asset.source or {}).get("asset_id")
+        src_mid = (asset.source or {}).get("model_id")
+        if src_aid:
+            dir_name, model_id = str(src_aid), int(src_mid or 0)
+        else:
+            dir_name, model_id = _parse_ledger_asset_id(asset.asset_id)
+        ledger_data = None
+        for ledger_dir in ledger_dirs:
+            candidate = Path(ledger_dir) / dir_name / "ledger.json"
+            if candidate.is_file():
+                ledger_data = json.loads(candidate.read_text())
+                break
+        if ledger_data is None:
+            report["skipped_no_ledger"].append(asset.asset_id)
+            continue
+        model_entry = next(
+            (m for m in ledger_data.get("models", []) if m.get("model_id") == model_id),
+            None,
+        )
+        rep = None
+        if model_entry is not None:
+            rep = next(
+                (
+                    r
+                    for r in model_entry.get("representations", [])
+                    if r.get("backend") == "mujoco"
+                    and r.get("role") != "snapshot"
+                    and (r.get("format") or "").lower() in ("obj", "stl")
+                ),
+                None,
+            )
+        if rep is None:
+            report["skipped_no_mujoco_rep"].append(asset.asset_id)
+            continue
+        from lib import ledger  # noqa: PLC0415 -- see module-level comment
+
+        uri = rep.get("uri")
+        uri_path = ledger.resolve_uri(uri) if uri else None
+        if uri_path is None or not uri_path.is_file():
+            report["warnings"].append(
+                f"{asset.asset_id}: mujoco representation uri not found: {uri!r}"
+            )
+            continue
+        enrichment[asset.asset_id] = AssetRepresentation(
+            format=rep.get("format") or "obj",
+            uri=str(uri_path),
+            backend="mujoco",
+            role=rep.get("role") or "collision",
+            sha256=rep.get("sha256") or "",
+            size_bytes=rep.get("size_bytes") or 0,
+            metadata=dict(rep.get("metadata") or {}),
+        )
+        report["enriched"].append(asset.asset_id)
     enriched_package = _apply_isaac_representations(package, enrichment)
     return enriched_package, report

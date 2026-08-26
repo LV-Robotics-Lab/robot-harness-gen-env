@@ -132,9 +132,16 @@ def main():
                 return True
         return False
 
-    def attempt(aid, mid, q0):
+    def attempt(aid, mid, q0, zp_hint=None):
         scene = engine.create_scene()
         scene.set_timestep(1 / 250)
+        # Match the CONSUMING runtime's physical material exactly
+        # (_base_task.py:227 -- static 0.5 / dynamic 0.5 / restitution 0).
+        # This scene previously ran on SAPIEN's engine default, whose nonzero
+        # restitution bounces a 5 mm drop hard enough to topple assets that
+        # every real table scene keeps standing (the 321_dustbin mismatch,
+        # 2026-08-22). Set BEFORE add_ground so the ground shares it.
+        scene.default_physical_material = scene.create_physical_material(0.5, 0.5, 0)
         scene.add_ground(0.0)
         actor0 = create_actor(
             scene,
@@ -147,14 +154,37 @@ def main():
             raise RuntimeError("create_actor returned None")
         act = actor0.actor
         lo, _hi = world_aabb(act)
-        act.set_pose(sapien.Pose([0, 0, -float(lo[2]) + 0.005], q0))
+        if zp_hint is not None:
+            # Declared attempt = reproduce the SOLVER's spawn exactly: at the
+            # declared z_policy height, in contact, zero velocity. The default
+            # 5 mm drop is a strictly harsher perturbation than any scene ever
+            # applies (impact ~0.31 m/s) -- it knocked 321_dustbin out of an
+            # upright basin that every real scene run stays inside (s2: 2700
+            # steps late_rot 0.46; s7 adaptive: settled at +360), so the
+            # campaign replaced a runtime-valid upright with a lying pose.
+            # Measurements must face the consuming runtime, not a tougher one.
+            half0 = float(_hi[2] - lo[2]) / 2
+            spawn0 = 0.001 - float(lo[2]) if zp_hint == "origin_on_table" else half0 + 0.001 - (float(lo[2]) + half0)
+            act.set_pose(sapien.Pose([0, 0, float(act.get_pose().p[2]) + spawn0], q0))
+        else:
+            act.set_pose(sapien.Pose([0, 0, -float(lo[2]) + 0.005], q0))
         settle(scene, act, 2000)
         p, q_rest = act.get_pose().p, act.get_pose().q
         lo, hi = world_aabb(act)
         dims = [float(hi[i] - lo[i]) for i in range(3)]
         h = float(p[2])
         half = dims[2] / 2
-        if abs(h) < 0.008:
+        if zp_hint is not None:
+            # Declared attempt: the question is not "which policy explains the
+            # rest height" but "does the DECLARED policy hold up physically".
+            # Height-classification is a proxy that fails for tilted-rest
+            # assets: 321_dustbin rests upright +2.8 deg (its bag shifts the
+            # mass), lifting the origin 1.1 cm -- outside the 8 mm
+            # origin_on_table window, inside no other -- so a correct
+            # declaration was rejected and a semantically-wrong lying pose
+            # won (2026-08-22). The spawn-reverify below is the real test.
+            zp = zp_hint
+        elif abs(h) < 0.008:
             zp = "origin_on_table"
         elif abs(h - half) < max(0.008, 0.15 * half):
             zp = "center_on_table"
@@ -189,6 +219,21 @@ def main():
         drift = float(np.linalg.norm(np.asarray(p2) - [0, 0, spawn_z]))
         tilt = quat_angle_deg(q2, q_rest)
         row.update(reverify_drift_m=round(drift, 4), reverify_tilt_deg=round(tilt, 2))
+        if zp_hint is not None:
+            tilt_declared = quat_angle_deg(q_rest, q0)
+            row["tilt_vs_declared_deg"] = round(tilt_declared, 2)
+            # 20 deg, justified by runtime-facing measurement rather than
+            # taste: 321_dustbin rocks up to 17.3 deg TRANSIENTLY on this bare
+            # ground plane yet converges upright in the consuming table
+            # runtime (s2: 2700 steps -> late_rot 0.46 deg; s7 adaptive:
+            # settled at +360 steps). A declared pose is "lost" only when the
+            # settle walks clearly out of its basin, not when a harsher
+            # measurement surface exaggerates the transient.
+            if tilt_declared > 20.0:
+                row["verdict"] = (
+                    f"declared_pose_lost (tilt_vs_declared={tilt_declared:.1f})"
+                )
+                return row
         if drift < 0.02 and tilt < 3.0:
             row.update(verdict="ok", z_policy=zp)
         else:
@@ -212,12 +257,19 @@ def main():
     # 耗尽，进程必须能分批重启接着跑，否则一小时的实测一次报废。
     done = {}
     outp = Path(a.out)
-    if outp.exists() and not a.only:
+    # ALWAYS seed from the existing file. Guarding this load behind
+    # `not a.only` made a scoped run rewrite the whole file with only its own
+    # entries -- a 2026-08-22 --only campaign over the externals silently
+    # dropped all 534 native rows (recovered from a pre-run backup). --only
+    # now means "re-measure the named assets, keep everything else": named
+    # entries skip the resume filter so they genuinely re-run.
+    if outp.exists():
         try:
             done = json.loads(outp.read_text()).get("models", {})
         except Exception:  # noqa: BLE001
             done = {}
-    todo = [t for t in todo if str(t[1]) not in done.get(t[0], {})]
+    if not a.only:
+        todo = [t for t in todo if str(t[1]) not in done.get(t[0], {})]
     if done:
         print(f"续测：沿用 {sum(len(v) for v in done.values())} 条，剩 {len(todo)}", flush=True)
 
@@ -241,7 +293,9 @@ def main():
             # toppled at runtime while the declaration was trusted
             # (measured 2026-08-13, prompt-matrix campaign).
             if decl.get("z_policy"):
-                dr = attempt(aid, mid, declared_q or [1, 0, 0, 0])
+                dr = attempt(
+                    aid, mid, declared_q or [1, 0, 0, 0], zp_hint=decl.get("z_policy")
+                )
                 row["declared_reverify"] = {
                     k: dr.get(k)
                     for k in (
@@ -256,7 +310,10 @@ def main():
                 ) == decl.get("z_policy")
 
             for i, q0 in enumerate(tries):
-                r = attempt(aid, mid, q0)
+                r = attempt(
+                    aid, mid, q0,
+                    zp_hint=decl.get("z_policy") if q0 == declared_q else None,
+                )
                 if best is None:
                     best = r
                 if r.get("verdict") == "ok":

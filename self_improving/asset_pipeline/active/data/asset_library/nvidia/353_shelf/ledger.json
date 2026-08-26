@@ -1,0 +1,200 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "external_353_shelf",
+  "category": "shelf",
+  "kind": "rigid",
+  "profile": "cross_backend",
+  "semantics": {
+    "aliases": [
+      "shelf"
+    ],
+    "colors": [],
+    "materials": [],
+    "identity": {
+      "basis": "vlm",
+      "evidence": "results/sweep_out/C_shelf/acquire/identity_shelf.json",
+      "verified": true
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.25,
+          0.16057468586136528,
+          0.1897700412498255
+        ],
+        "size_resolution": {
+          "mode": "absolute:0.25",
+          "actual_max_dim_m": 0.8700003027915955,
+          "scale": 0.2873562218286795,
+          "reference_max_dim_m": 0.25,
+          "reference_assets": [],
+          "verdict": "scaled"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "upright",
+              "orientation_wxyz": [
+                0.7071067811865476,
+                0.7071067811865476,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "sapien",
+                "run_id": "migrate-v3-20260815",
+                "note": "import normalization chain (X90 dialect)"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        },
+        "inertial": {
+          "com_m": null,
+          "inertia_diagonal_kgm2": null,
+          "status": "unknown",
+          "basis": "engine_derived"
+        },
+        "placement": {
+          "verdict": "flat",
+          "measured_against": {
+            "backend": "sapien",
+            "run_id": "probe-v4-20260815"
+          }
+        }
+      },
+      "representations": [
+        {
+          "format": "glb",
+          "uri": "data/asset_library/nvidia/353_shelf/visual/base0.glb",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "4c25fc95c16359189d34a888c0275bc8ef5cece95f9d9fcbaf51667a1600f5d5",
+          "size_bytes": 7051344,
+          "metadata": {
+            "derived_from": "Contemporary_OpenStorage.usd",
+            "converter": "omni.kit.asset_converter@isaac-5.1",
+            "conversion_params": {
+              "rotated_z2y": true
+            }
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "glb",
+          "uri": "data/asset_library/nvidia/353_shelf/collision/base0.glb",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "4c25fc95c16359189d34a888c0275bc8ef5cece95f9d9fcbaf51667a1600f5d5",
+          "size_bytes": 7051344,
+          "metadata": {
+            "collision_mode": "copy",
+            "note": "copy of visual; convex decomposition at load"
+          },
+          "frame": {
+            "up_axis": "Y"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          }
+        },
+        {
+          "format": "usd",
+          "uri": "data/asset_library/_source/acq_353_shelf/Contemporary_OpenStorage.usd",
+          "backend": "isaacsim",
+          "role": "visual_and_collision",
+          "sha256": "7048e868cb4bacc31d94779bdc0eb0ad83da7a70136b555fceb4b50a596a5451",
+          "size_bytes": 3807639,
+          "metadata": {
+            "origin_prefix": "acq_353_shelf"
+          }
+        },
+        {
+          "format": "png",
+          "uri": "data/asset_library/nvidia/353_shelf/snapshots/m0_default.png",
+          "backend": "portable",
+          "role": "snapshot",
+          "sha256": "f9e8ffc0eb26a22d151cbe6b6f7e63f2f53718181e60bf8a4df54e0fdd3eaf7b",
+          "size_bytes": 3103,
+          "metadata": {
+            "yaw_deg": 0,
+            "camera": "front-default",
+            "renderer": "sapien-3.0.0b1"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "retrieved",
+        "library": "NVIDIA Isaac Assets 5.1",
+        "group": "acq_353_shelf",
+        "file": "Contemporary_OpenStorage.usd",
+        "license": {
+          "spdx": "LicenseRef-NVIDIA-Isaac-Sim-Additional-Software-and-Materials",
+          "status": "declared",
+          "terms_note": "NVIDIA Isaac Sim Additional Software and Materials License (v. June 9, 2025): internal R&D use permitted (License FAQ: free for internal R&D); modification/redistribution prohibited (Sec 2.2/2.4)",
+          "evidence_url": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-isaac-sim-additional.html ; https://docs.isaacsim.omniverse.nvidia.com/6.0.0/common/license-faq.html",
+          "checked_date": "2026-08-16",
+          "checked_by": "carry-forward of 2026-08-09 owner-directed audit (same source library, NVIDIA Isaac Assets 5.1 Props class)"
+        },
+        "retrieved_at": "2026-08-13",
+        "source_manifest_path": "data/asset_library/_source/acq_353_shelf/SOURCE_MANIFEST.json"
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "settle",
+          "verdict": "pass",
+          "run_id": "acquire",
+          "timestamp": "2026-08-13T22:41:19",
+          "verified_digest": "a86bb6ae21c2bd9493664af7819cbb085df883ab3bce1d71c5bcc6086f01ad63",
+          "report_path": "results/sweep_out/C_shelf/acquire/import_matrix.json",
+          "thresholds": {
+            "settle_disp_m": 0.002,
+            "z_min_m": -0.005,
+            "tilt_deg": 15,
+            "tilt_deg_flat": 45
+          }
+        }
+      ],
+      "appearance": {
+        "colors_measured": [
+          "white"
+        ],
+        "color_fractions": {
+          "white": 1.0
+        },
+        "method": "4-view offscreen render, HSV per-pixel vote",
+        "measured_against": {
+          "backend": "sapien",
+          "run_id": "attr-20260814"
+        }
+      }
+    }
+  ],
+  "external_ids": {
+    "env_gen": "353_shelf"
+  }
+}
