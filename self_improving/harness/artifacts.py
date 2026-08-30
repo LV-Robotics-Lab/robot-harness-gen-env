@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,6 +26,8 @@ class ArtifactResolver(Protocol):
     """Resolve a content identity to a verified local artifact."""
 
     def resolve(self, ref: ArtifactRef) -> ResolvedArtifact: ...
+
+    def resolve_digest(self, sha256: str) -> Path: ...
 
 
 class ArtifactResolutionError(ValueError):
@@ -104,7 +107,7 @@ class LocalArtifactStore:
                     "uri_digest_mismatch",
                     "artifact URI digest does not match ArtifactRef.sha256",
                 )
-            path = self._content_path(sha256)
+            path = self.resolve_digest(sha256)
         else:
             raise ArtifactResolutionError(
                 "unsupported_uri",
@@ -123,6 +126,21 @@ class LocalArtifactStore:
                 "artifact content does not match ArtifactRef.sha256",
             )
         return ResolvedArtifact(ref=ref, path=path)
+
+    def resolve_digest(self, sha256: str) -> Path:
+        """Resolve content already present in this CAS when only its digest is declared."""
+
+        if re.fullmatch(r"[0-9a-f]{64}", sha256) is None:
+            raise ArtifactResolutionError("invalid_digest", "SHA-256 must be 64 lowercase hex")
+        path = self._content_path(sha256)
+        if not path.is_file():
+            raise ArtifactResolutionError("not_found", f"artifact not found: {path}")
+        if _sha256(path) != sha256:
+            raise ArtifactResolutionError(
+                "sha256_mismatch",
+                "artifact content does not match the requested SHA-256",
+            )
+        return path
 
 
 def _sha256(path: Path) -> str:

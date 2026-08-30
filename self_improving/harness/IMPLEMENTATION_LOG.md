@@ -335,3 +335,17 @@
   对象若被篡改则返回稳定 `cas_object_corrupt`，不静默复用或覆盖证据。
 - 攻击用例：覆盖旧版 pre-hash/copy 窗口和同 digest 路径已被投毒两种情况；常规内容去重仍保持。
 - 验证：artifact store 与全 Harness `76 passed`，statement + branch coverage `100%`。
+
+### 2026-08-31 / A018：qualification receipt 必须能找到它声称通过的报告
+
+- 反例：Registry 过去只解析 `SkillQualification` 并比对 `skill_ref`，即使 `report_sha256` 是 CAS 中
+  不存在的任意 64 位字符串也能注册；测试用匹配 Skill 的缺报告 receipt 证明旧实现会静默接受。
+- 实现：`ArtifactResolver` 增加按内容摘要解析的最小 Interface；`LocalArtifactStore.resolve_digest`
+  拒绝非法摘要、缺内容和 digest 路径被篡改。Registry 在 schema/Skill 身份通过后必须解析报告摘要，
+  否则以 `RegistryRegistrationError` 拒绝注册。
+- 边界：这一切片只证明“receipt 指向的原始报告 bytes 确实存在且匹配”；生产装配还必须从固定的
+  packaged locator 加载严格 qualification bundle，并对账报告中的 implementation/source manifest，
+  不能把临时测试报告当生产资格。
+- 测试迁移：所有 Registry/compile 测试先将真实小报告放入 CAS 再构造 receipt；新增缺报告攻击，
+  并覆盖按 digest 解析的非法、缺失和篡改分支。
+- 验证：全 Harness `76 passed`，statement + branch coverage `100%`；ruff 与 diff check 通过。

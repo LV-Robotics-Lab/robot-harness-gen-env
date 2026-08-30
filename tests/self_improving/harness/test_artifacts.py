@@ -34,6 +34,7 @@ def test_local_artifact_store_round_trips_content_by_digest(tmp_path: Path) -> N
     assert artifact.bytes == len(payload)
     assert resolved.path.read_bytes() == payload
     assert resolved.ref == artifact
+    assert store.resolve_digest(artifact.sha256) == resolved.path
     assert reused.sha256 == artifact.sha256
     assert reused.uri == artifact.uri
 
@@ -82,6 +83,17 @@ def test_resolver_fails_closed_for_locator_and_content_mismatches(tmp_path: Path
         store.resolve(ref)
     assert digest_error.value.reason == "sha256_mismatch"
 
+    bad_external_digest = ref.model_copy(
+        update={
+            "uri": source.resolve().as_uri(),
+            "sha256": "0" * 64,
+            "bytes": source.stat().st_size,
+        }
+    )
+    with pytest.raises(ArtifactResolutionError) as external_digest_error:
+        store.resolve(bad_external_digest)
+    assert external_digest_error.value.reason == "sha256_mismatch"
+
     unsupported = ref.model_copy(update={"uri": "https://example.invalid/payload.json"})
     with pytest.raises(ArtifactResolutionError) as scheme_error:
         store.resolve(unsupported)
@@ -91,6 +103,10 @@ def test_resolver_fails_closed_for_locator_and_content_mismatches(tmp_path: Path
     with pytest.raises(ArtifactResolutionError) as missing_error:
         store.resolve(missing)
     assert missing_error.value.reason == "not_found"
+
+    with pytest.raises(ArtifactResolutionError) as invalid_digest_error:
+        store.resolve_digest("../not-a-digest")
+    assert invalid_digest_error.value.reason == "invalid_digest"
 
 
 def test_put_file_copies_and_hashes_one_coherent_snapshot(

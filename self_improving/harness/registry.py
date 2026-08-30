@@ -145,6 +145,12 @@ class SkillRegistry:
             raise RegistryRegistrationError(
                 "qualification skill_ref does not match descriptor identity"
             )
+        try:
+            self._artifact_resolver.resolve_digest(qualification.report_sha256)
+        except ArtifactResolutionError as error:
+            raise RegistryRegistrationError(
+                f"qualification report is unavailable or corrupt: {error}"
+            ) from error
         input_model = schema_model(descriptor.input_schema)
         output_model = schema_model(descriptor.output_schema)
         key = (descriptor.skill_id, descriptor.version)

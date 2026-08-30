@@ -128,6 +128,12 @@ def _registry(
         json.dumps({"case": "fixture-can-on-plate", "status": "pass"}, sort_keys=True),
         encoding="utf-8",
     )
+    qualification_report_ref = store.put_file(
+        qualification_report,
+        name="text2env_compile_qualification_report",
+        media_type="application/json",
+        schema_version="harness.skill_qualification_report.v1",
+    )
     qualification = _put_json(
         store,
         tmp_path / "qualification.json",
@@ -138,7 +144,7 @@ def _registry(
             "regression_command": (
                 "pytest -q tests/self_improving/harness/test_text2env_compile_handler.py"
             ),
-            "report_sha256": hashlib.sha256(qualification_report.read_bytes()).hexdigest(),
+            "report_sha256": qualification_report_ref.sha256,
         },
         name="text2env_compile_qualification",
         schema_version="harness.skill_qualification.v1",

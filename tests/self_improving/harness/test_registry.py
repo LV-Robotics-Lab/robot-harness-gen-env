@@ -62,6 +62,13 @@ def test_registry_invokes_exact_skill_with_content_identity_and_real_events(
     tmp_path: Path,
 ) -> None:
     store = LocalArtifactStore(tmp_path / "cas")
+    report = _put_json(
+        store,
+        tmp_path,
+        name="qualification_report",
+        schema_version="harness.skill_qualification_report.v1",
+        payload={"case": "echo-v1", "status": "pass"},
+    )
     qualification = _put_json(
         store,
         tmp_path,
@@ -72,7 +79,7 @@ def test_registry_invokes_exact_skill_with_content_identity_and_real_events(
             "status": "pass",
             "deterministic_case_id": "echo-v1",
             "regression_command": "pytest -q tests/self_improving/harness/test_registry.py",
-            "report_sha256": "b" * 64,
+            "report_sha256": report.sha256,
         },
     )
     descriptor = SkillDescriptor(
@@ -164,6 +171,13 @@ def _registered_echo(
 ):
     store = LocalArtifactStore(tmp_path / "cas")
     skill_ref = f"{skill_id}@1.0.0"
+    report = _put_json(
+        store,
+        tmp_path,
+        name=f"{skill_id.replace('.', '_')}_qualification_report",
+        schema_version="harness.skill_qualification_report.v1",
+        payload={"case": "case-v1", "status": "pass"},
+    )
     qualification = _put_json(
         store,
         tmp_path,
@@ -174,7 +188,7 @@ def _registered_echo(
             "status": "pass",
             "deterministic_case_id": "case-v1",
             "regression_command": "pytest -q tests/self_improving/harness/test_registry.py",
-            "report_sha256": "b" * 64,
+            "report_sha256": report.sha256,
         },
     )
     descriptor = SkillDescriptor(
@@ -253,6 +267,29 @@ def test_registration_is_qualified_idempotent_and_immutable(tmp_path: Path) -> N
             ),
             handler,
         )
+
+    missing_report_qualification = _put_json(
+        store,
+        tmp_path,
+        name="missing_report_qualification",
+        schema_version="harness.skill_qualification.v1",
+        payload={
+            "skill_ref": "test.missing@1.0.0",
+            "status": "pass",
+            "deterministic_case_id": "missing-report",
+            "regression_command": "pytest -q",
+            "report_sha256": "e" * 64,
+        },
+    )
+    missing_report_descriptor = descriptor.model_copy(
+        update={
+            "skill_id": "test.missing",
+            "mcp_tool_name": "test_missing_v1_0_0",
+            "qualification_artifact": missing_report_qualification,
+        }
+    )
+    with pytest.raises(RegistryRegistrationError, match="qualification report"):
+        registry.register(missing_report_descriptor, handler)
 
 
 def test_registry_returns_typed_preflight_blockers_instead_of_raising(
