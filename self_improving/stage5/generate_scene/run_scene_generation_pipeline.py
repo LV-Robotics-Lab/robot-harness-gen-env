@@ -137,6 +137,46 @@ def _mark_review_candidate(
     return candidate
 
 
+def _mark_static_candidate(
+    *,
+    spec: dict[str, Any],
+    scene_critic_review: dict[str, Any],
+    attempt: int,
+) -> dict[str, Any]:
+    candidate = copy.deepcopy(spec)
+    candidate["schema_version"] = "robotwin.tabletop_placement.v0"
+    candidate["stage"] = "static_scene_candidate"
+    name = str(candidate.get("placement_name", "placement"))
+    if "static_scene_candidate" not in name:
+        name = name.replace("designer_initial", "static_scene_candidate")
+        if "static_scene_candidate" not in name:
+            name += "_static_scene_candidate"
+    candidate["placement_name"] = name
+    candidate["source_scene_critic_review"] = "scene_critic_review.json"
+    candidate["orchestrator_decision"] = {
+        "decision": "render_next",
+        "reason": scene_critic_review.get(
+            "summary",
+            "Static preflight passed; smoke and visual review have not run.",
+        ),
+        "static_attempt": attempt,
+        "remaining_uncertainties": [
+            "RoboTwin smoke has not run.",
+            "Semantic visual review has not run.",
+            "This candidate is not publishable or physical evidence.",
+        ],
+    }
+    candidate.setdefault("validation", {})
+    candidate["validation"].update(
+        {
+            "scene_critic": "pass_preflight",
+            "robotwin_load_check": "not_run",
+            "render_visibility": "not_run",
+        }
+    )
+    return candidate
+
+
 def _pipeline_exit_code(status: str) -> int:
     if status in {"pass", "pass_static_scene_module"}:
         return 0
@@ -347,19 +387,24 @@ def main() -> int:
                     attempt=attempt,
                 )
                 write_json(out_dir / "scene_critic_review.json", preflight_scene_critic)
-                final_spec = _mark_final_spec(
+                static_candidate = _mark_static_candidate(
                     spec=working_spec,
                     scene_critic_review=preflight_scene_critic,
                     attempt=attempt,
                 )
-                final_path = out_dir / "final_placement.json"
-                write_json(final_path, final_spec)
-                scene_report = generate_scene_module(placement_path=final_path, out_path=scene_module_path)
+                candidate_path = out_dir / "static_scene_candidate_placement.json"
+                write_json(candidate_path, static_candidate)
+                scene_report = generate_scene_module(
+                    placement_path=candidate_path,
+                    out_path=scene_module_path,
+                )
                 write_json(out_dir / "scene_codegen_report.json", scene_report)
-                write_json(out_dir / "validation_plan.json", validation_plan_for(final_spec))
+                candidate_plan = validation_plan_for(static_candidate)
+                candidate_plan["target_placement"] = "static_scene_candidate_placement.json"
+                write_json(out_dir / "validation_plan.json", candidate_plan)
                 summary["artifacts"].update(
                     {
-                        "final_placement": _rel(final_path),
+                        "static_scene_candidate_placement": _rel(candidate_path),
                         "generated_scene_module": _rel(scene_module_path),
                         "scene_codegen_report": _rel(out_dir / "scene_codegen_report.json"),
                         "validation_plan": _rel(out_dir / "validation_plan.json"),

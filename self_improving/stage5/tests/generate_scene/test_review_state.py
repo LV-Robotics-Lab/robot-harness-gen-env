@@ -183,6 +183,47 @@ def test_pipeline_writes_pending_review_as_candidate(
     assert candidate["orchestrator_decision"]["decision"] == "hold_for_review"
 
 
+def test_pipeline_static_only_is_an_explicit_nonfinal_candidate(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    stage5_root = Path(__file__).resolve().parents[2]
+    out_dir = tmp_path / "static-only"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_scene_generation_pipeline.py",
+            "--prompt",
+            "an apple and a plate on the table",
+            "--master-catalog",
+            str(stage5_root / "asset_catalogs" / "robotwin_tabletop_assets_master.json"),
+            "--prompt-case",
+            str(stage5_root / "asset_catalogs" / "prompt_cases" / "apple_plate.json"),
+            "--robotwin-root",
+            str(tmp_path / "robotwin"),
+            "--out-dir",
+            str(out_dir),
+            "--generated-scene-dir",
+            str(tmp_path / "generated"),
+        ],
+    )
+
+    assert pipeline.main() == 0
+    summary = json.loads((out_dir / "scene_generation_summary.json").read_text())
+    candidate = json.loads((out_dir / "static_scene_candidate_placement.json").read_text())
+    plan = json.loads((out_dir / "validation_plan.json").read_text())
+    assert summary["status"] == "pass_static_scene_module"
+    assert "static_scene_candidate_placement" in summary["artifacts"]
+    assert "final_placement" not in summary["artifacts"]
+    assert not (out_dir / "final_placement.json").exists()
+    assert candidate["stage"] == "static_scene_candidate"
+    assert candidate["orchestrator_decision"]["decision"] == "render_next"
+    assert candidate["validation"]["robotwin_load_check"] == "not_run"
+    assert candidate["validation"]["render_visibility"] == "not_run"
+    assert plan["target_placement"] == "static_scene_candidate_placement.json"
+
+
 def test_legacy_placement_pipeline_writes_pending_review_as_candidate(
     tmp_path: Path,
     monkeypatch,
