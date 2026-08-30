@@ -175,6 +175,14 @@ def build_scene_critic_report(
     }
 
 
+def _critic_exit_code(status: str) -> int:
+    if status in {"pass", "pass_preflight"}:
+        return 0
+    if status == "pending_visual_review":
+        return 2
+    return 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build a unified Scene Critic report.")
     parser.add_argument("--prompt", required=True)
@@ -198,7 +206,7 @@ def main() -> int:
     )
     write_json(Path(args.out), report)
     print(f"{report['overall_status'].upper()} {args.out}")
-    return 0 if report["overall_status"] in {"pass", "pass_preflight", "pending_visual_review"} else 1
+    return _critic_exit_code(report["overall_status"])
 
 
 if __name__ == "__main__":

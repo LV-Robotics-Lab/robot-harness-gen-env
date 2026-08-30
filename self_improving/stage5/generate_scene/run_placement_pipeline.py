@@ -31,6 +31,14 @@ def _rel(path: Path) -> str:
         return str(path.resolve())
 
 
+def _pipeline_exit_code(status: str) -> int:
+    if status in {"pass", "pass_static_only"}:
+        return 0
+    if status == "pending_visual_review":
+        return 2
+    return 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run a placement prompt to RoboTwin preview.")
     parser.add_argument("--prompt", required=True)
@@ -177,7 +185,7 @@ def main() -> int:
         else:
             label = "FAIL"
         print(f"{label} {out_dir / 'pipeline_summary.json'}")
-        return 0 if summary["status"] in ["pass", "pending_visual_review", "pass_static_only"] else 1
+        return _pipeline_exit_code(summary["status"])
     except Exception as exc:
         summary["status"] = "fail_exception"
         summary["error"] = repr(exc)

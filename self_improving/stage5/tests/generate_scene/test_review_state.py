@@ -5,12 +5,19 @@ import sys
 from pathlib import Path
 
 from generate_scene import run_scene_generation_pipeline as pipeline
-from generate_scene.run_scene_batch import _completed_for_acceptance
+from generate_scene.run_placement_pipeline import _pipeline_exit_code as _placement_exit_code
+from generate_scene.run_scene_batch import (
+    _aggregate_status,
+    _batch_exit_code,
+    _completed_for_acceptance,
+    _scene_counts,
+)
 from generate_scene.run_scene_generation_pipeline import (
     _mark_final_spec,
     _mark_review_candidate,
     _pipeline_exit_code,
 )
+from generate_scene.scene_critic import _critic_exit_code
 
 
 def _spec() -> dict:
@@ -80,6 +87,33 @@ def test_batch_requires_explicit_pending_review_policy() -> None:
         status="pass",
         allow_pending_visual=False,
     )
+
+
+def test_pending_review_never_aggregates_to_batch_pass() -> None:
+    pending = [{"status": "pending_visual_review"}]
+    passed = [{"status": "pass"}]
+
+    assert _aggregate_status(pending, 1, complete=False) == "review_required"
+    assert _aggregate_status(pending, 1, complete=True) == "review_required"
+    assert _batch_exit_code("review_required") == 2
+    assert _scene_counts(pending) == {"publishable_count": 0, "review_required_count": 1}
+    assert _aggregate_status(passed, 1, complete=True) == "pass"
+    assert _batch_exit_code("pass") == 0
+    assert _scene_counts(passed) == {"publishable_count": 1, "review_required_count": 0}
+    assert _aggregate_status([], 1, complete=False) == "running"
+    assert _aggregate_status([], 1, complete=True) == "partial"
+    assert _batch_exit_code("partial") == 1
+
+
+def test_pending_review_exit_codes_are_review_required() -> None:
+    assert _critic_exit_code("pending_visual_review") == 2
+    assert _placement_exit_code("pending_visual_review") == 2
+    assert _critic_exit_code("pass") == 0
+    assert _critic_exit_code("pass_preflight") == 0
+    assert _placement_exit_code("pass") == 0
+    assert _placement_exit_code("pass_static_only") == 0
+    assert _critic_exit_code("repair_required") == 1
+    assert _placement_exit_code("fail_smoke") == 1
 
 
 def test_pipeline_writes_pending_review_as_candidate(

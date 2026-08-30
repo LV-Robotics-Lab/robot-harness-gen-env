@@ -58,6 +58,36 @@ def _completed_for_acceptance(
     return returncode == expected_returncode and _accepted(status, allow_pending_visual)
 
 
+def _aggregate_status(
+    accepted_scenes: list[dict[str, Any]],
+    requested_scenes: int,
+    *,
+    complete: bool,
+) -> str:
+    if len(accepted_scenes) < requested_scenes:
+        return "partial" if complete else "running"
+    if any(scene.get("status") == "pending_visual_review" for scene in accepted_scenes):
+        return "review_required"
+    return "pass"
+
+
+def _batch_exit_code(status: str) -> int:
+    if status == "pass":
+        return 0
+    if status == "review_required":
+        return 2
+    return 1
+
+
+def _scene_counts(accepted_scenes: list[dict[str, Any]]) -> dict[str, int]:
+    return {
+        "publishable_count": sum(scene.get("status") == "pass" for scene in accepted_scenes),
+        "review_required_count": sum(
+            scene.get("status") == "pending_visual_review" for scene in accepted_scenes
+        ),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Generate a diverse batch of RoboTwin tabletop scenes.")
     parser.add_argument("--prompt", required=True)
@@ -80,7 +110,11 @@ def main() -> int:
     parser.add_argument("--python-executable")
     parser.add_argument("--visual-review-mode", choices=["required", "artifact_only", "moonshot", "openai"], default="required")
     parser.add_argument("--visual-repair-attempts", type=int, default=0)
-    parser.add_argument("--allow-pending-visual", action="store_true")
+    parser.add_argument(
+        "--allow-pending-visual",
+        action="store_true",
+        help="Collect pending review candidates; the batch remains review_required, not pass.",
+    )
     args = parser.parse_args()
 
     batch_name = args.batch_name or slugify_prompt(args.prompt)
@@ -188,13 +222,18 @@ def main() -> int:
             "requested_scenes": args.num_scenes,
             "accepted_count": len(accepted_scenes),
             "candidate_count": len(candidates),
-            "status": "pass" if len(accepted_scenes) >= args.num_scenes else "running",
+            "status": _aggregate_status(
+                accepted_scenes,
+                args.num_scenes,
+                complete=False,
+            ),
+            **_scene_counts(accepted_scenes),
             "accepted_scenes": accepted_scenes,
             "candidates": candidates,
         }
         write_json(batch_summary_path, batch_summary)
 
-    status = "pass" if len(accepted_scenes) >= args.num_scenes else "partial"
+    status = _aggregate_status(accepted_scenes, args.num_scenes, complete=True)
     batch_summary = {
         "schema_version": "robotwin.tabletop_scene_batch.v0",
         "prompt": args.prompt,
@@ -203,12 +242,13 @@ def main() -> int:
         "accepted_count": len(accepted_scenes),
         "candidate_count": len(candidates),
         "status": status,
+        **_scene_counts(accepted_scenes),
         "accepted_scenes": accepted_scenes,
         "candidates": candidates,
     }
     write_json(batch_summary_path, batch_summary)
     print(f"{status.upper()} {batch_summary_path}")
-    return 0 if status == "pass" else 1
+    return _batch_exit_code(status)
 
 
 if __name__ == "__main__":
