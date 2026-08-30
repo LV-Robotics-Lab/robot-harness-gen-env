@@ -44,6 +44,8 @@ def run_probe() -> dict:
         summary = json.loads((out_dir / "scene_generation_summary.json").read_text())
         candidate_path = out_dir / "static_scene_candidate_placement.json"
         legacy_final_path = out_dir / "final_placement.json"
+        candidate_exists = candidate_path.exists()
+        final_exists = legacy_final_path.exists()
         artifact_path = candidate_path if candidate_path.exists() else legacy_final_path
         artifact = json.loads(artifact_path.read_text())
 
@@ -51,8 +53,8 @@ def run_probe() -> dict:
         "exit_code_is_stage_success": exit_code == 0,
         "status_is_explicit_static_only": summary["status"] == "pass_static_scene_module",
         "no_final_artifact_key": "final_placement" not in summary["artifacts"],
-        "no_final_artifact_file": not legacy_final_path.exists(),
-        "candidate_artifact_exists": candidate_path.exists(),
+        "no_final_artifact_file": not final_exists,
+        "candidate_artifact_exists": candidate_exists,
         "stage_is_nonfinal": artifact.get("stage") == "static_scene_candidate",
         "decision_is_render_next": artifact.get("orchestrator_decision", {}).get("decision")
         == "render_next",
