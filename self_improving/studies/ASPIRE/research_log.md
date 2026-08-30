@@ -125,3 +125,12 @@ branch. Work remains on `worktree/bingsheng`.
    reactive trace use, and development-validated trigger-specific memory on
    held-out contract families.  The keep rules prohibit unsafe publication,
    clean regression, render-based success, and held-out memory updates.
+
+## 2026-08-31T02:30+08:00 — E1 pre-change measurement
+
+Ran the frozen `runtime_binding_probe.py` at commit `113e54b` before touching the
+validator.  The valid control passed, but all four missing/mismatched identity
+mutations also passed: 1/5 correct decisions (accuracy 0.20), four unsafe
+accepts, and no binding checks in the report.  Artifact:
+`artifacts/runtime_binding_before.json`.  This is a direct local reproduction of
+the audit finding and satisfies the E1 condition for attempting a minimal fix.

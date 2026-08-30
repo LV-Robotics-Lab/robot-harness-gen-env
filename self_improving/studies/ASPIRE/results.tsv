@@ -1,1 +1,2 @@
 experiment	commit	metric	status	description
+E1-runtime-binding-baseline	113e54b	accuracy=0.200;unsafe_accepts=4/4	baseline	Valid control passed; all four missing or mismatched identity mutations were unsafely accepted.
