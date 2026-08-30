@@ -88,6 +88,25 @@ replay is also required.  If the host cannot execute one, the code result is not
 reported as fully verified until an existing compatible environment or replay
 path is found and run.
 
+## E1b — pending-review state integrity
+
+Protocol extension frozen after the harness audit and before changing Stage 5.
+The critic already distinguishes `pending_visual_review` from `pass`; the
+pipeline must preserve that state rather than minting final-pass fields.
+
+Use one fixed placement-shaped input and a fixed pending critic report.  Measure
+five decisions: the derived artifact must not use stage
+`final_render_accepted`, decision `accept_final`, validation `scene_critic=pass`,
+or `render_visibility=pass_visual_review`; and the pipeline exit policy must not
+return success code 0 for pending review.  The valid-pass control must retain
+all four final-pass fields and exit 0.
+
+Keep only if all pending decisions are correct, the pass control is unchanged,
+batch code can distinguish the explicit review-required exit from failure, and
+the full platform guard remains green.  A review candidate may be retained for
+human/VLM work, but it must not be exposed under the `final_placement` artifact
+key.
+
 ## E2 — held-out diagnosis and validated-memory benchmark
 
 ### Failure families

@@ -170,3 +170,13 @@ the audit finding and satisfies the E1 condition for attempting a minimal fix.
 Decision: E1 satisfies every preregistered keep rule and is retained.  This is a
 concrete ASPIRE-aligned provenance improvement (trace evidence is now tied to
 the exact state), not evidence that an LLM repair policy itself improved.
+
+## 2026-08-31T02:51+08:00 — E1b protocol extension
+
+The harness audit also found a state-integrity defect independent of E1:
+`pending_visual_review` enters the same finalization helper as a passing review,
+which writes `accept_final`, `scene_critic=pass`, and `pass_visual_review`.
+Because ASPIRE's validated-skill promotion is useful only when pending and pass
+cannot collapse, added and froze E1b before modifying Stage 5.  Its probe
+isolates four artifact-state decisions and the CLI exit decision, with a valid
+pass control.
