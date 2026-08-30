@@ -423,3 +423,20 @@
   `RunStoreCorruptionError`。重复完全相同的并发写入幂等，不同内容不可覆盖。
 - 验证：run-store + journal `21 passed`；run-store statement + branch coverage `100%`；ruff、format 与
   diff check 通过。当前切片提供持久化 Adapter；Registry 的精确写入时序在下一切片接入。
+
+### 2026-08-31 / A024：Registry 的持久化顺序就是运行契约
+
+- 红灯：新增顺序测试要求成功调用严格产生 `Invocation -> start/progress/terminal events -> RunState`；
+  attempt-0 预检则是 `start/terminal events -> RunState`，且不能伪造不存在的 Invocation。旧 Registry
+  只更新内存，两个断言均失败。
+- 实现：Registry 可注入统一 `RunStore`。类型化输入、依赖和 invocation digest 完成后，先 durable
+  `put_invocation`，成功后才把 Invocation 放入内存并发布首事件；每条成功、blocked、failed 与 preflight
+  路径都在 terminal event 已 durable 后构造并写入最终 RunState。`invocation(run_id)` 在进程重装后可从
+  store 恢复。
+- 失败语义：Invocation 写失败时抛出带 run_id 的 `RunPersistenceError`，不调用 handler、不发布假事件；
+  terminal state 写失败时错误携带已经完成的 RunState，且不会把既有 succeeded terminal 再伪装成第二条
+  failed terminal。调用方可以据此明确区分执行失败与持久层失效。
+- 集成实证：同一个 SQLite 文件同时作为 EventJournal 与 RunStore，完整成功调用在重新装配 Registry 后
+  仍可读回 Invocation/RunState；attempt-0 的 missing-Skill 终态也可独立恢复。
+- 验证：Registry/run-store/journal `33 passed`；Registry statement + branch coverage `100%`；ruff、format
+  与 diff check 通过。

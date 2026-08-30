@@ -14,6 +14,7 @@ from pydantic import BaseModel, ValidationError
 
 from .artifacts import ArtifactResolutionError, ArtifactResolver
 from .events import EventSink, RunRecorder
+from .run_store import RunStore
 from .schema_catalog import schema_model
 from .schemas import (
     ArtifactRef,
@@ -113,6 +114,24 @@ class SkillBlocked(RuntimeError):
         super().__init__(blocker.message)
 
 
+class RunPersistenceError(RuntimeError):
+    """A durable run record could not be committed at its required boundary."""
+
+    def __init__(
+        self,
+        *,
+        operation: str,
+        run_id: UUID,
+        state: RunState | None,
+        cause: Exception,
+    ) -> None:
+        self.operation = operation
+        self.run_id = run_id
+        self.state = state
+        self.cause = cause
+        super().__init__(f"failed to persist {operation} for run {run_id}: {cause}")
+
+
 class SkillRegistry:
     """Own exact versions, validation, content digests, invocation, and audit state."""
 
@@ -124,20 +143,20 @@ class SkillRegistry:
         event_sink: EventSink,
         clock: Callable[[], datetime],
         run_id_factory: Callable[[], UUID],
+        run_store: RunStore | None = None,
     ) -> None:
         self._artifact_resolver = artifact_resolver
         self._dependency_resolver = dependency_resolver
         self._event_sink = event_sink
         self._clock = clock
         self._run_id_factory = run_id_factory
+        self._run_store = run_store
         self._registrations: dict[tuple[str, str], _Registration] = {}
         self._invocations: dict[UUID, Invocation] = {}
 
     def register(self, descriptor: SkillDescriptor, handler: SkillHandler) -> None:
         skill_ref = f"{descriptor.skill_id}@{descriptor.version}"
-        qualification_path = self._artifact_resolver.resolve(
-            descriptor.qualification_artifact
-        ).path
+        qualification_path = self._artifact_resolver.resolve(descriptor.qualification_artifact).path
         qualification = SkillQualification.model_validate_json(
             qualification_path.read_text(encoding="utf-8")
         )
@@ -168,15 +187,17 @@ class SkillRegistry:
 
     def list(self) -> tuple[SkillDescriptor, ...]:
         return tuple(
-            registration.descriptor
-            for _, registration in sorted(self._registrations.items())
+            registration.descriptor for _, registration in sorted(self._registrations.items())
         )
 
     def resolve(self, skill_id: str, exact_version: str) -> SkillDescriptor:
         return self._registration(skill_id, exact_version).descriptor
 
     def invocation(self, run_id: UUID) -> Invocation | None:
-        return self._invocations.get(run_id)
+        invocation = self._invocations.get(run_id)
+        if invocation is not None or self._run_store is None:
+            return invocation
+        return self._run_store.read_invocation(run_id)
 
     def invoke(
         self,
@@ -267,6 +288,7 @@ class SkillRegistry:
             max_attempts=descriptor.max_attempts,
             invocation_digest=invocation_digest,
         )
+        self._persist_invocation(invocation)
         self._invocations[run_id] = invocation
         recorder = RunRecorder(
             run_id=run_id,
@@ -290,9 +312,7 @@ class SkillRegistry:
                     ),
                 )
                 typed_output = registration.output_model.model_validate(result.output)
-                candidate_artifacts = (
-                    (*collected, *_artifact_refs(typed_output), *result.artifacts)
-                )
+                candidate_artifacts = (*collected, *_artifact_refs(typed_output), *result.artifacts)
                 for artifact in candidate_artifacts:
                     self._artifact_resolver.resolve(artifact)
                 artifacts = _unique_artifacts(candidate_artifacts)
@@ -301,12 +321,14 @@ class SkillRegistry:
                     stage="complete",
                     artifact_refs=artifacts,
                 )
-                return recorder.build_state(
-                    invocation_digest=invocation_digest,
-                    max_attempts=descriptor.max_attempts,
-                    artifacts=artifacts,
-                    output=typed_output.model_dump(mode="json"),
-                    blocker=None,
+                return self._persist_terminal(
+                    recorder.build_state(
+                        invocation_digest=invocation_digest,
+                        max_attempts=descriptor.max_attempts,
+                        artifacts=artifacts,
+                        output=typed_output.model_dump(mode="json"),
+                        blocker=None,
+                    )
                 )
             except SkillBlocked as error:
                 blocker = error.blocker
@@ -334,13 +356,17 @@ class SkillRegistry:
                     stage=blocker.stage,
                     artifact_refs=blocker.artifact_refs,
                 )
-                return recorder.build_state(
-                    invocation_digest=invocation_digest,
-                    max_attempts=descriptor.max_attempts,
-                    artifacts=collected,
-                    output=None,
-                    blocker=blocker,
+                return self._persist_terminal(
+                    recorder.build_state(
+                        invocation_digest=invocation_digest,
+                        max_attempts=descriptor.max_attempts,
+                        artifacts=collected,
+                        output=None,
+                        blocker=blocker,
+                    )
                 )
+            except RunPersistenceError:
+                raise
             except Exception as error:
                 return self._internal_failure(
                     recorder=recorder,
@@ -376,12 +402,14 @@ class SkillRegistry:
             stage="invoke",
             artifact_refs=artifacts,
         )
-        return recorder.build_state(
-            invocation_digest=invocation_digest,
-            max_attempts=descriptor.max_attempts,
-            artifacts=artifacts,
-            output=None,
-            blocker=blocker,
+        return self._persist_terminal(
+            recorder.build_state(
+                invocation_digest=invocation_digest,
+                max_attempts=descriptor.max_attempts,
+                artifacts=artifacts,
+                output=None,
+                blocker=blocker,
+            )
         )
 
     def _registration(self, skill_id: str, exact_version: str) -> _Registration:
@@ -429,13 +457,42 @@ class SkillRegistry:
             stage="preflight",
             artifact_refs=artifact_refs,
         )
-        return recorder.build_state(
-            invocation_digest=None,
-            max_attempts=0,
-            artifacts=artifact_refs,
-            output=None,
-            blocker=blocker,
+        return self._persist_terminal(
+            recorder.build_state(
+                invocation_digest=None,
+                max_attempts=0,
+                artifacts=artifact_refs,
+                output=None,
+                blocker=blocker,
+            )
         )
+
+    def _persist_invocation(self, invocation: Invocation) -> None:
+        if self._run_store is None:
+            return
+        try:
+            self._run_store.put_invocation(invocation)
+        except Exception as error:
+            raise RunPersistenceError(
+                operation="invocation",
+                run_id=invocation.run_id,
+                state=None,
+                cause=error,
+            ) from error
+
+    def _persist_terminal(self, state: RunState) -> RunState:
+        if self._run_store is None:
+            return state
+        try:
+            self._run_store.put_run_state(state)
+        except Exception as error:
+            raise RunPersistenceError(
+                operation="terminal state",
+                run_id=state.run_id,
+                state=state,
+                cause=error,
+            ) from error
+        return state
 
 
 def _invocation_digest(
@@ -471,8 +528,7 @@ def _content_identity(value: Any) -> Any:
         }
     if isinstance(value, BaseModel):
         return {
-            name: _content_identity(getattr(value, name))
-            for name in value.__class__.model_fields
+            name: _content_identity(getattr(value, name)) for name in value.__class__.model_fields
         }
     if isinstance(value, Mapping):
         return {str(key): _content_identity(item) for key, item in value.items()}

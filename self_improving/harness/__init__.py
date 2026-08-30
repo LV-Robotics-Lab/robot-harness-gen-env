@@ -22,6 +22,12 @@ from .events import (
     RunRecordingError,
 )
 from .package_store import PackageStore, PackageStoreError, PublishedPackage
+from .qualification import (
+    LoadedQualification,
+    QualificationBundleError,
+    QualificationReportV1,
+    load_qualification_bundle,
+)
 from .registry import (
     DependencyResolutionError,
     DependencyResolver,
@@ -29,9 +35,18 @@ from .registry import (
     RegistryLookupError,
     RegistryRegistrationError,
     RunContext,
+    RunPersistenceError,
     SkillBlocked,
     SkillRegistry,
     StaticDependencyResolver,
+)
+from .run_store import (
+    InvocationSink,
+    RunStateSink,
+    RunStore,
+    RunStoreConflictError,
+    RunStoreCorruptionError,
+    SQLiteRunStore,
 )
 from .schema_catalog import SCHEMA_MODELS, schema_documents, schema_model
 from .schemas import (
@@ -75,28 +90,38 @@ __all__ = [
     "EventPage",
     "EventSink",
     "Invocation",
+    "InvocationSink",
     "GeneratedAssetAdmitter",
     "HandlerResult",
     "LocalArtifactStore",
+    "LoadedQualification",
     "PackageStore",
     "PackageStoreError",
     "PublishedPackage",
+    "QualificationBundleError",
+    "QualificationReportV1",
     "RecordingEventSink",
     "RegistryLookupError",
     "RegistryRegistrationError",
     "ResolvedArtifact",
     "RunEvent",
     "RunContext",
+    "RunPersistenceError",
     "RunRecorder",
     "RunRecordingError",
     "RunState",
+    "RunStateSink",
     "RunStatus",
+    "RunStore",
+    "RunStoreConflictError",
+    "RunStoreCorruptionError",
     "RuntimeConfig",
     "SkillDescriptor",
     "SkillBlocked",
     "SkillRegistry",
     "SkillQualification",
     "SQLiteEventJournal",
+    "SQLiteRunStore",
     "StoredRunEvent",
     "Text2EnvCompileInput",
     "Text2EnvCompileOutput",
@@ -107,6 +132,7 @@ __all__ = [
     "StaticDependencyResolver",
     "UnknownField",
     "ValidationStatus",
+    "load_qualification_bundle",
     "schema_documents",
     "schema_model",
 ]
