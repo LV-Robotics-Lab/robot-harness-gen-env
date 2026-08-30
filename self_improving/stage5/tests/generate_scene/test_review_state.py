@@ -246,3 +246,103 @@ def test_legacy_placement_pipeline_writes_pending_review_as_candidate(
     assert candidate["orchestrator_decision"]["decision"] == "hold_for_review"
     assert candidate["validation"]["render_visibility"] == "pending_visual_review"
     assert plan["target_placement"] == "review_candidate_placement.json"
+
+
+def test_legacy_placement_pipeline_never_exposes_transient_final_before_review(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    stage5_root = Path(__file__).resolve().parents[2]
+    out_dir = tmp_path / "legacy-crash"
+
+    def fake_smoke(**kwargs):
+        smoke_dir = kwargs["out_dir"]
+        smoke_dir.mkdir(parents=True, exist_ok=True)
+        report = {"status": "pass", "returncode": 0}
+        (smoke_dir / "smoke_report.json").write_text(json.dumps(report), encoding="utf-8")
+        return report
+
+    def crash_before_review(*_args, **_kwargs):
+        raise RuntimeError("probe crash before visual decision")
+
+    monkeypatch.setattr(placement_pipeline, "run_robotwin_smoke", fake_smoke)
+    monkeypatch.setattr(placement_pipeline, "visual_review", crash_before_review)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_placement_pipeline.py",
+            "--prompt",
+            "an apple and a plate on the table",
+            "--asset-catalog",
+            str(stage5_root / "asset_catalogs" / "prompt_cases" / "apple_plate.json"),
+            "--robotwin-root",
+            str(tmp_path / "robotwin"),
+            "--out-dir",
+            str(out_dir),
+            "--run-smoke",
+        ],
+    )
+
+    try:
+        placement_pipeline.main()
+    except RuntimeError as error:
+        assert str(error) == "probe crash before visual decision"
+    else:
+        raise AssertionError("expected visual-review crash")
+
+    summary = json.loads((out_dir / "pipeline_summary.json").read_text())
+    assert summary["status"] == "fail_exception"
+    assert "final_placement" not in summary["artifacts"]
+    assert (out_dir / "candidate_placement.json").is_file()
+    assert not (out_dir / "final_placement.json").exists()
+
+
+def test_legacy_placement_pipeline_atomically_promotes_only_visual_pass(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    stage5_root = Path(__file__).resolve().parents[2]
+    out_dir = tmp_path / "legacy-pass"
+    visual_report = tmp_path / "pass_visual_review.json"
+    visual_report.write_text(
+        json.dumps({"status": "pass", "issues": [], "summary": "Visual review passed."}),
+        encoding="utf-8",
+    )
+
+    def fake_smoke(**kwargs):
+        smoke_dir = kwargs["out_dir"]
+        smoke_dir.mkdir(parents=True, exist_ok=True)
+        report = {"status": "pass", "returncode": 0}
+        (smoke_dir / "smoke_report.json").write_text(json.dumps(report), encoding="utf-8")
+        return report
+
+    monkeypatch.setattr(placement_pipeline, "run_robotwin_smoke", fake_smoke)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_placement_pipeline.py",
+            "--prompt",
+            "an apple and a plate on the table",
+            "--asset-catalog",
+            str(stage5_root / "asset_catalogs" / "prompt_cases" / "apple_plate.json"),
+            "--robotwin-root",
+            str(tmp_path / "robotwin"),
+            "--out-dir",
+            str(out_dir),
+            "--run-smoke",
+            "--visual-review-report",
+            str(visual_report),
+        ],
+    )
+
+    assert placement_pipeline.main() == 0
+    summary = json.loads((out_dir / "pipeline_summary.json").read_text())
+    final_spec = json.loads((out_dir / "final_placement.json").read_text())
+    assert summary["status"] == "pass"
+    assert "final_placement" in summary["artifacts"]
+    assert "candidate_placement" not in summary["artifacts"]
+    assert not (out_dir / "candidate_placement.json").exists()
+    assert final_spec["stage"] == "final_render_accepted"
+    assert final_spec["orchestrator_decision"]["decision"] == "accept_final"
