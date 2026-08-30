@@ -104,6 +104,80 @@ class RuntimeCapabilitySnapshot:
 
 
 @dataclass(frozen=True, slots=True)
+class RuntimeExecutorIdentity:
+    """Path-free identity of the host supervisor bytes and bounded policy."""
+
+    interpreter_sha256: str
+    interpreter_bytes: int
+    runner_sha256: str
+    runner_bytes: int
+    implementation_sha256: str
+    implementation_bytes: int
+    timeout_seconds: float
+    capability_timeout_seconds: float
+    terminate_grace_seconds: float
+    max_stdout_bytes: int
+    max_stderr_bytes: int
+    max_event_bytes: int
+    max_transcript_bytes: int
+    max_capability_bytes: int
+    schema_version: str = "harness.runtime_executor_identity.v1"
+
+    @property
+    def canonical_bytes(self) -> bytes:
+        """Return the canonical dependency document used by Invocation receipts."""
+
+        document = {
+            "schema_version": self.schema_version,
+            "interpreter": {
+                "sha256": self.interpreter_sha256,
+                "bytes": self.interpreter_bytes,
+            },
+            "runner": {
+                "sha256": self.runner_sha256,
+                "bytes": self.runner_bytes,
+            },
+            "implementation": {
+                "sha256": self.implementation_sha256,
+                "bytes": self.implementation_bytes,
+            },
+            "timeouts": {
+                "worker_seconds": self.timeout_seconds,
+                "capability_seconds": self.capability_timeout_seconds,
+                "terminate_grace_seconds": self.terminate_grace_seconds,
+            },
+            "limits": {
+                "max_stdout_bytes": self.max_stdout_bytes,
+                "max_stderr_bytes": self.max_stderr_bytes,
+                "max_event_bytes": self.max_event_bytes,
+                "max_transcript_bytes": self.max_transcript_bytes,
+                "max_capability_bytes": self.max_capability_bytes,
+            },
+            "event_protocol": {
+                "schema_version": RUNTIME_EVENT_SCHEMA,
+                "artifact_paths": sorted(RUNTIME_ARTIFACT_PATHS),
+            },
+            "environment_allowlist": sorted(RUNTIME_ENVIRONMENT_ALLOWLIST),
+        }
+        return (
+            json.dumps(
+                document,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=True,
+                allow_nan=False,
+            )
+            + "\n"
+        ).encode("ascii")
+
+    @property
+    def sha256(self) -> str:
+        """Return the canonical executor dependency digest."""
+
+        return hashlib.sha256(self.canonical_bytes).hexdigest()
+
+
+@dataclass(frozen=True, slots=True)
 class RuntimeOutputFile:
     """Symlink-safe, content-bound output retained for later CAS publication."""
 
@@ -162,6 +236,9 @@ class RuntimeExecution:
 
 class RuntimeExecutor(Protocol):
     """Replay execution seam used by harness handlers."""
+
+    @property
+    def identity(self) -> RuntimeExecutorIdentity: ...
 
     def execute(
         self,
@@ -351,6 +428,31 @@ class SubprocessRoboTwinRuntimeExecutor:
             max_event_bytes=max_event_bytes,
             max_transcript_bytes=max_transcript_bytes,
         )
+        implementation = _fixed_file(
+            Path(__file__).resolve(), label="implementation", executable=False
+        )
+        self._identity = RuntimeExecutorIdentity(
+            interpreter_sha256=self.interpreter_sha256,
+            interpreter_bytes=self.interpreter.stat().st_size,
+            runner_sha256=self.runner_sha256,
+            runner_bytes=self.runner.stat().st_size,
+            implementation_sha256=_sha256_file(implementation),
+            implementation_bytes=implementation.stat().st_size,
+            timeout_seconds=self.timeout_seconds,
+            capability_timeout_seconds=self.capability_timeout_seconds,
+            terminate_grace_seconds=self.terminate_grace_seconds,
+            max_stdout_bytes=self.max_stdout_bytes,
+            max_stderr_bytes=self.max_stderr_bytes,
+            max_event_bytes=self.codec.max_event_bytes,
+            max_transcript_bytes=self.codec.max_transcript_bytes,
+            max_capability_bytes=self.max_capability_bytes,
+        )
+
+    @property
+    def identity(self) -> RuntimeExecutorIdentity:
+        """Return the immutable supervisor policy identity for dependencies."""
+
+        return self._identity
 
     def execute(
         self,

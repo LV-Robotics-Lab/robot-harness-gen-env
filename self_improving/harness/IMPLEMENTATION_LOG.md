@@ -680,3 +680,17 @@
   `bundle_digest_mismatch` 失效。干净 `607b15e` 上重新执行三轮 generator 后仍为
   admitted→reused→reused；新 implementation `88f6cb42…72599`、report `b73b3bbc…edb26`，scene-gen
   tree 保持 `e2fe9fd6…ec330`。刷新没有改变 static incomplete / pending-settle 边界。
+
+### 2026-08-31 / A038：replay 的调度策略必须进入依赖身份
+
+- RED：同一 interpreter、runner 和公开 replay input 下，只改 worker timeout、event/output
+  上限就会改变可接受的执行边界；旧 `RuntimeExecutor` 却没有公开身份，dependency
+  resolver 无法把这些生产配置纳入 Invocation。新测试先以缺失 `identity` 的
+  `AttributeError` 失败。
+- GREEN：新增 `RuntimeExecutorIdentity` canonical 文档，绑定 interpreter、runner 和 executor
+  实现字节的 SHA/bytes，worker/capability timeout、terminate grace，stdout/stderr/event/
+  transcript/capability 上限，以及事件 schema、artifact allowlist 与运行环境键
+  allowlist。文档不包含 work root 等可迁移 locator；只换运行目录时身份稳定，
+  改 timeout 时摘要必然变化。
+- 验证：executor 专项 `131 passed`，`runtime_executor.py` statement `667/667`、branch
+  `214/214`；该身份只建立待 resolver 消费的信任面，不单独宣称 replay 已获资格。

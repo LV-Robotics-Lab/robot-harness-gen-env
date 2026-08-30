@@ -1269,6 +1269,50 @@ def test_constructor_rejects_missing_or_nonregular_fixed_files(tmp_path: Path) -
         SubprocessRoboTwinRuntimeExecutor(interpreter=nonexecutable, **common)
 
 
+def test_executor_identity_binds_policy_but_not_work_locator(tmp_path: Path) -> None:
+    case = _case(tmp_path)
+    identity = case.executor.identity
+    document = json.loads(identity.canonical_bytes)
+
+    assert identity.schema_version == "harness.runtime_executor_identity.v1"
+    assert identity.sha256 == hashlib.sha256(identity.canonical_bytes).hexdigest()
+    assert document["event_protocol"]["schema_version"] == "harness.runtime_event.v1"
+    assert document["limits"]["max_event_bytes"] == case.executor.codec.max_event_bytes
+    assert str(tmp_path).encode() not in identity.canonical_bytes
+
+    relocated = SubprocessRoboTwinRuntimeExecutor(
+        interpreter=Path(sys.executable),
+        runner=case.runner,
+        module_root=tmp_path,
+        work_root=tmp_path / "relocated-runs",
+        timeout_seconds=3,
+        capability_timeout_seconds=2,
+        terminate_grace_seconds=0.1,
+        max_stdout_bytes=4096,
+        max_stderr_bytes=4096,
+        max_event_bytes=2048,
+        max_transcript_bytes=4096,
+        max_capability_bytes=16_384,
+    )
+    changed_policy = SubprocessRoboTwinRuntimeExecutor(
+        interpreter=Path(sys.executable),
+        runner=case.runner,
+        module_root=tmp_path,
+        work_root=tmp_path / "changed-policy-runs",
+        timeout_seconds=4,
+        capability_timeout_seconds=2,
+        terminate_grace_seconds=0.1,
+        max_stdout_bytes=4096,
+        max_stderr_bytes=4096,
+        max_event_bytes=2048,
+        max_transcript_bytes=4096,
+        max_capability_bytes=16_384,
+    )
+
+    assert relocated.identity == identity
+    assert changed_policy.identity.sha256 != identity.sha256
+
+
 def test_capability_spawn_failure_is_returned_without_running_worker(tmp_path: Path) -> None:
     case = _case(tmp_path)
     temporary_interpreter = tmp_path / "temporary-python"
