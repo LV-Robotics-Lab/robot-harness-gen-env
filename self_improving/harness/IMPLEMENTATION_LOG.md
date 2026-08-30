@@ -189,3 +189,17 @@
   `47 passed`；ruff 与 diff check 通过。
 - 产物：`self_improving/harness/event_journal.py`、
   `tests/self_improving/harness/test_event_journal.py`。
+
+### 2026-08-31 / A009：compile 真实进入/完成边界与 catalog typed failure
+
+- 问题：原 compiler 只在阶段结束后回调；耗时步骤执行中工作台看不到“已经进入”，失败时也无法
+  区分尚未开始还是开始后中断。catalog 缺失/损坏还会冒泡成未分类异常。
+- 红灯：真实 fixture 测试先要求 parse→catalog→solve→package→static validation 每段都有
+  started/completed；旧实现首条回调直接是 `parse.completed`。另加 catalog 缺失截断测试。
+- 实现：`CompileEvent.phase` 扩为 `started|completed`，回调分别紧贴实际函数调用前后；条件分支的
+  asset generation/admission 同样只在真正执行时产生事件。失败阶段只保留 started，后续阶段绝不
+  伪造。
+- 失败分类：catalog 文件不存在、不可读或 schema/JSON 无效统一映射为
+  `T2E_CATALOG_INVALID@catalog`，并保留输入路径、异常类型和消息供诊断。
+- 验证：真实 compile、生成资产准入共 `10 passed`；compiler statement + branch coverage
+  `100%`；ruff 与 diff check 通过。

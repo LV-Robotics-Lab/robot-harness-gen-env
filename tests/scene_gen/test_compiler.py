@@ -34,10 +34,15 @@ def test_compile_scene_runs_one_explicit_pipeline_and_reports_real_stages(
     assert outcome.output_dir == (tmp_path / "runs" / outcome.scene_spec.scene_id).resolve()
     assert (outcome.output_dir / "package_manifest.json").is_file()
     assert [(event.stage, event.phase) for event in observed] == [
+        ("parse", "started"),
         ("parse", "completed"),
+        ("catalog", "started"),
         ("catalog", "completed"),
+        ("solve", "started"),
         ("solve", "completed"),
+        ("package", "started"),
         ("package", "completed"),
+        ("static_validation", "started"),
         ("static_validation", "completed"),
     ]
 
@@ -96,6 +101,31 @@ def test_compile_scene_maps_bounded_request_rejection_without_creating_a_run(
     assert error.value.code == "T2E_REQUEST_REJECTED"
     assert error.value.stage == "parse"
     assert not (tmp_path / "runs").exists()
+
+
+def test_compile_scene_emits_entered_stage_then_stops_on_typed_catalog_failure(
+    tmp_path: Path,
+) -> None:
+    observed = []
+
+    with pytest.raises(CompileFailure) as error:
+        compile_scene(
+            CompileRequest(
+                request="Place a can on top of a plate.",
+                seed=42,
+                asset_catalog_path=tmp_path / "missing.json",
+                out_root=tmp_path / "runs",
+            ),
+            observer=observed.append,
+        )
+
+    assert error.value.code == "T2E_CATALOG_INVALID"
+    assert error.value.stage == "catalog"
+    assert [(event.stage, event.phase) for event in observed] == [
+        ("parse", "started"),
+        ("parse", "completed"),
+        ("catalog", "started"),
+    ]
 
 
 def test_compile_scene_distinguishes_asset_miss_from_solver_exhaustion(

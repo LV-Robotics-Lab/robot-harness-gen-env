@@ -33,10 +33,10 @@ class CompileRequest:
 
 @dataclass(frozen=True)
 class CompileEvent:
-    """A callback emitted only after an actual compiler stage completes."""
+    """A callback emitted exactly when an actual compiler stage starts or completes."""
 
     stage: str
-    phase: Literal["completed"]
+    phase: Literal["started", "completed"]
     artifact_paths: tuple[Path, ...] = ()
 
 
@@ -95,6 +95,7 @@ def compile_scene(
     """Compile once without CLI parsing, output discovery, or prompt reparsing."""
 
     notify = observer or (lambda event: None)
+    notify(CompileEvent(stage="parse", phase="started"))
     try:
         spec = parse_rule_based(request.request, seed=request.seed)
     except (SceneSpecError, ValidationError) as error:
@@ -111,7 +112,20 @@ def compile_scene(
         ) from error
     notify(CompileEvent(stage="parse", phase="completed"))
 
-    catalog = load_catalog(request.asset_catalog_path)
+    notify(CompileEvent(stage="catalog", phase="started"))
+    try:
+        catalog = load_catalog(request.asset_catalog_path)
+    except (OSError, ValueError) as error:
+        raise CompileFailure(
+            code="T2E_CATALOG_INVALID",
+            stage="catalog",
+            message=str(error),
+            details={
+                "catalog_path": str(request.asset_catalog_path.expanduser().resolve()),
+                "error_type": type(error).__name__,
+                "error": str(error),
+            },
+        ) from error
     notify(
         CompileEvent(
             stage="catalog",
@@ -125,6 +139,7 @@ def compile_scene(
     generation_report: dict[str, Any] | None = None
     admission_report: dict[str, Any] | None = None
     if request.generate_missing_assets:
+        notify(CompileEvent(stage="asset_generation", phase="started"))
         try:
             catalog, generation_report = ensure_assets_for_scene(
                 spec,
@@ -148,6 +163,7 @@ def compile_scene(
             )
         )
         if asset_admitter is not None:
+            notify(CompileEvent(stage="asset_admission", phase="started"))
             catalog, admission_report = asset_admitter.admit(
                 scene_spec=spec,
                 asset_catalog=catalog,
@@ -166,6 +182,7 @@ def compile_scene(
                 )
             )
 
+    notify(CompileEvent(stage="solve", phase="started"))
     try:
         resolved = solve_scene(spec, catalog)
     except SceneSpecError as error:
@@ -184,6 +201,7 @@ def compile_scene(
         ) from error
     notify(CompileEvent(stage="solve", phase="completed"))
 
+    notify(CompileEvent(stage="package", phase="started"))
     manifest = build_scene_package(spec, resolved, output_dir)
     notify(
         CompileEvent(
@@ -193,6 +211,7 @@ def compile_scene(
         )
     )
 
+    notify(CompileEvent(stage="static_validation", phase="started"))
     report = validate_resolved_scene(
         resolved,
         package_root=output_dir,
