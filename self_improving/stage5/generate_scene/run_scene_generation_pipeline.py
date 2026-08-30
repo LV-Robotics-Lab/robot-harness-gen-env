@@ -97,6 +97,54 @@ def _mark_final_spec(
     return final_spec
 
 
+def _mark_review_candidate(
+    *,
+    spec: dict[str, Any],
+    scene_critic_review: dict[str, Any],
+    attempt: int,
+) -> dict[str, Any]:
+    candidate = copy.deepcopy(spec)
+    candidate["schema_version"] = "robotwin.tabletop_placement.v0"
+    candidate["stage"] = "render_review_required"
+    name = str(candidate.get("placement_name", "placement"))
+    if "render_review_required" not in name:
+        name = name.replace("designer_initial", "render_review_required")
+        if "render_review_required" not in name:
+            name += "_render_review_required"
+    candidate["placement_name"] = name
+    candidate["source_scene_critic_review"] = "scene_critic_review.json"
+    candidate["orchestrator_decision"] = {
+        "decision": "hold_for_review",
+        "reason": scene_critic_review.get(
+            "summary",
+            "Semantic visual review is still required.",
+        ),
+        "review_attempt": attempt,
+        "remaining_uncertainties": [
+            "Semantic visual review has not passed; this candidate is not publishable.",
+            "This scene is a tabletop background/placement artifact, not a generated play_once() task policy.",
+            "Downstream manipulation tasks must still define play_once() and check_success().",
+        ],
+    }
+    candidate.setdefault("validation", {})
+    candidate["validation"].update(
+        {
+            "scene_critic": "pending_visual_review",
+            "robotwin_load_check": "pass_smoke",
+            "render_visibility": "pending_visual_review",
+        }
+    )
+    return candidate
+
+
+def _pipeline_exit_code(status: str) -> int:
+    if status in {"pass", "pass_static_scene_module"}:
+        return 0
+    if status == "pending_visual_review":
+        return 2
+    return 1
+
+
 def _copy_if_exists(src: Path, dst: Path) -> None:
     if src.exists():
         dst.parent.mkdir(parents=True, exist_ok=True)
@@ -377,15 +425,42 @@ def main() -> int:
             attempt_record["status"] = scene_critic_review["overall_status"]
             summary["attempts"].append(attempt_record)
 
-            if scene_critic_review["overall_status"] in {"pass", "pending_visual_review"}:
-                final_spec = _mark_final_spec(spec=working_spec, scene_critic_review=scene_critic_review, attempt=attempt)
-                final_path = out_dir / "final_placement.json"
-                write_json(final_path, final_spec)
-                final_validation = validate_placement_spec(final_spec, catalog, robotwin_root=args.robotwin_root)
-                write_json(out_dir / "static_validation_final.json", final_validation)
-                scene_report = generate_scene_module(placement_path=final_path, out_path=scene_module_path)
+            critic_status = scene_critic_review["overall_status"]
+            if critic_status in {"pass", "pending_visual_review"}:
+                if critic_status == "pass":
+                    terminal_spec = _mark_final_spec(
+                        spec=working_spec,
+                        scene_critic_review=scene_critic_review,
+                        attempt=attempt,
+                    )
+                    placement_path = out_dir / "final_placement.json"
+                    placement_artifact = "final_placement"
+                    validation_path = out_dir / "static_validation_final.json"
+                    validation_artifact = "static_validation_final"
+                else:
+                    terminal_spec = _mark_review_candidate(
+                        spec=working_spec,
+                        scene_critic_review=scene_critic_review,
+                        attempt=attempt,
+                    )
+                    placement_path = out_dir / "review_candidate_placement.json"
+                    placement_artifact = "review_candidate_placement"
+                    validation_path = out_dir / "static_validation_review_candidate.json"
+                    validation_artifact = "static_validation_review_candidate"
+
+                write_json(placement_path, terminal_spec)
+                terminal_validation = validate_placement_spec(
+                    terminal_spec,
+                    catalog,
+                    robotwin_root=args.robotwin_root,
+                )
+                write_json(validation_path, terminal_validation)
+                scene_report = generate_scene_module(
+                    placement_path=placement_path,
+                    out_path=scene_module_path,
+                )
                 write_json(out_dir / "scene_codegen_report.json", scene_report)
-                write_json(out_dir / "validation_plan.json", validation_plan_for(final_spec))
+                write_json(out_dir / "validation_plan.json", validation_plan_for(terminal_spec))
 
                 write_json(out_dir / "scene_critic_review.json", scene_critic_review)
                 write_json(out_dir / "visual_review.json", visual_review_report)
@@ -398,8 +473,8 @@ def main() -> int:
 
                 summary["artifacts"].update(
                     {
-                        "final_placement": _rel(final_path),
-                        "static_validation_final": _rel(out_dir / "static_validation_final.json"),
+                        placement_artifact: _rel(placement_path),
+                        validation_artifact: _rel(validation_path),
                         "generated_scene_module": _rel(scene_module_path),
                         "scene_codegen_report": _rel(out_dir / "scene_codegen_report.json"),
                         "validation_plan": _rel(out_dir / "validation_plan.json"),
@@ -410,7 +485,7 @@ def main() -> int:
                         "preview": get_smoke_artifacts(out_dir / "smoke"),
                     }
                 )
-                summary["status"] = "pass" if scene_critic_review["overall_status"] == "pass" else "pending_visual_review"
+                summary["status"] = critic_status
                 accepted = True
                 break
 
@@ -447,7 +522,7 @@ def main() -> int:
         else:
             label = "FAIL"
         print(f"{label} {out_dir / 'scene_generation_summary.json'}")
-        return 0 if summary["status"] in {"pass", "pending_visual_review", "pass_static_scene_module"} else 1
+        return _pipeline_exit_code(summary["status"])
     except Exception as exc:
         summary["status"] = "fail_exception"
         summary["error"] = repr(exc)

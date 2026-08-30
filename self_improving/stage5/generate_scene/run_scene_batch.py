@@ -19,8 +19,13 @@ from generate_scene.schemas import read_json, write_json
 from generate_scene.tools import get_smoke_artifacts
 
 
-def _placement_summary(scene_dir: Path) -> dict[str, Any]:
-    placement_path = scene_dir / "final_placement.json"
+def _placement_summary(scene_dir: Path, status: str) -> dict[str, Any]:
+    filename = (
+        "review_candidate_placement.json"
+        if status == "pending_visual_review"
+        else "final_placement.json"
+    )
+    placement_path = scene_dir / filename
     placement = read_json(placement_path)
     return {
         "scene_dir": str(scene_dir),
@@ -41,6 +46,16 @@ def _placement_summary(scene_dir: Path) -> dict[str, Any]:
 
 def _accepted(status: str, allow_pending_visual: bool) -> bool:
     return status == "pass" or (allow_pending_visual and status == "pending_visual_review")
+
+
+def _completed_for_acceptance(
+    *,
+    returncode: int,
+    status: str,
+    allow_pending_visual: bool,
+) -> bool:
+    expected_returncode = 2 if status == "pending_visual_review" else 0
+    return returncode == expected_returncode and _accepted(status, allow_pending_visual)
 
 
 def main() -> int:
@@ -149,7 +164,11 @@ def main() -> int:
             candidate_record["artifacts"] = scene_summary.get("artifacts", {})
         candidates.append(candidate_record)
 
-        if completed.returncode == 0 and _accepted(status, args.allow_pending_visual):
+        if _completed_for_acceptance(
+            returncode=completed.returncode,
+            status=status,
+            allow_pending_visual=args.allow_pending_visual,
+        ):
             accepted_record = {
                 "accepted_index": len(accepted_scenes),
                 "candidate_index": candidate_idx,
@@ -158,7 +177,7 @@ def main() -> int:
                 "status": status,
                 "summary": str(summary_path),
                 "preview": get_smoke_artifacts(scene_dir / "smoke"),
-                "placement_summary": _placement_summary(scene_dir),
+                "placement_summary": _placement_summary(scene_dir, status),
             }
             accepted_scenes.append(accepted_record)
 
