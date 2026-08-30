@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import json
+import sys
+from pathlib import Path
+
+from generate_scene import run_scene_generation_pipeline as pipeline
 from generate_scene.run_scene_batch import _completed_for_acceptance
 from generate_scene.run_scene_generation_pipeline import (
     _mark_final_spec,
@@ -75,3 +80,69 @@ def test_batch_requires_explicit_pending_review_policy() -> None:
         status="pass",
         allow_pending_visual=False,
     )
+
+
+def test_pipeline_writes_pending_review_as_candidate(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    stage5_root = Path(__file__).resolve().parents[2]
+    out_dir = tmp_path / "out"
+    generated_dir = tmp_path / "generated"
+    visual_report = tmp_path / "pending_visual_review.json"
+    visual_report.write_text(
+        json.dumps(
+            {
+                "schema_version": "robotwin.visual_review.v0",
+                "status": "pending_semantic_review",
+                "checks": [],
+                "issues": [],
+                "repair_suggestions": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def fake_smoke(**kwargs):
+        smoke_dir = kwargs["out_dir"]
+        smoke_dir.mkdir(parents=True, exist_ok=True)
+        report = {"status": "pass", "returncode": 0}
+        (smoke_dir / "smoke_report.json").write_text(
+            json.dumps(report),
+            encoding="utf-8",
+        )
+        return report
+
+    monkeypatch.setattr(pipeline, "run_robotwin_smoke", fake_smoke)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_scene_generation_pipeline.py",
+            "--prompt",
+            "an apple and a plate on the table",
+            "--master-catalog",
+            str(stage5_root / "asset_catalogs" / "robotwin_tabletop_assets_master.json"),
+            "--prompt-case",
+            str(stage5_root / "asset_catalogs" / "prompt_cases" / "apple_plate.json"),
+            "--robotwin-root",
+            str(tmp_path / "robotwin"),
+            "--out-dir",
+            str(out_dir),
+            "--generated-scene-dir",
+            str(generated_dir),
+            "--run-smoke",
+            "--visual-review-report",
+            str(visual_report),
+        ],
+    )
+
+    assert pipeline.main() == 2
+    summary = json.loads((out_dir / "scene_generation_summary.json").read_text())
+    candidate = json.loads((out_dir / "review_candidate_placement.json").read_text())
+    assert summary["status"] == "pending_visual_review"
+    assert "review_candidate_placement" in summary["artifacts"]
+    assert "final_placement" not in summary["artifacts"]
+    assert not (out_dir / "final_placement.json").exists()
+    assert candidate["stage"] == "render_review_required"
+    assert candidate["orchestrator_decision"]["decision"] == "hold_for_review"
