@@ -570,3 +570,27 @@
 - RED：默认 `pytest -q` 在 collection 阶段报上述冲突，执行 0 tests。GREEN：同一默认
   命令现在能收集并执行整套测试；具体通过数随同时进行的 replay 切片在各自提交后
   再冻结。
+
+### 2026-08-31 / A033：replay worker 只能从可验证的运行能力启动
+
+- 反例：旧预检只查六个 Python 包和一份 task YAML。`robotwin-smoke` 环境因此看似
+  满足清单，真实导入 `Base_Task` 却立即因缺 `curobo` 失败；RoboTwin 又把 embodiment
+  资源排除在 git 踪迹之外，只记 commit 也无法发现 URDF/curobo/mesh 漂移。
+- 单一深模块：新增 `runtime_capability.py`，worker 和 executor 共用同一份严格协议。
+  canonical 文档绑定解释器、16 个必需 distribution 的 version/RECORD/direct-url 摘要、
+  实际 FFmpeg 二进制、GPU/driver/nvidia-smi、26 个真实传入 worker 的环境键摘要、
+  RoboTwin commit+工作树、task/registry/import resources、selected embodiment 整树以及 Harness
+  runner/scene-gen/event/capability 源码。文档不含时间戳、主机路径或明文环境值。
+- 真实 bootstrap：describe 用有界、超时、进程组可终止的 `python -I -B` 子进程实际
+  导入 `Base_Task`；`-B` 确保 probe 不产生 pycache 或改写 checkout。所有 git/GPU 命令都边读
+  边限量，不再无界 `communicate/read_bytes`。
+- 真实回调：preflight、scene loaded、simulation started/checkpoint/completed、media、evidence
+  和 worker close 均在真实代码边界向专用 FD 发严格 JSONL。precheck 在 simulation started
+  之后执行并计入 `total_physics_step_count`；总步整除 checkpoint 时保留最后一个
+  checkpoint，再发 completed。输出目录要求事先为空且终态与 allowlist 精确相等；
+  evidence 仅记相对媒体 locator，`--evidence-only` 只调整物理 gate fail 的退出码，不伪造证据。
+- 实证：正确 `robotwin-5090` 在 4.50 秒内生成 12,411-byte capability，绑定 84 个
+  embodiment 文件/779,882,426 bytes；缺 `curobo` 的 `robotwin-smoke` 在 3.02 秒内
+  fail closed，未写假 capability，两次 probe 前后 checkout 不变。capability+worker
+  `176 passed`，新模块 statement `577/577`、branch `238/238`；scene-gen `160 passed`，
+  ruff、format、compileall 与 diff check 通过。
