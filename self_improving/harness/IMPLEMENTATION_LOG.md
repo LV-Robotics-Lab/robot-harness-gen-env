@@ -139,3 +139,23 @@
   active ledger/audit 回归 `92 passed`，ruff 与 diff check 通过。
 - 产物：`self_improving/harness/assets.py`、
   `tests/self_improving/harness/test_asset_admission.py`、compiler 的 admission Seam。
+
+### 2026-08-31 / A006：版本化 Skill Registry 与唯一调用入口
+
+- 红灯：公共 schema 虽定义了 `SkillDescriptor`、`Invocation` 和 `RunState`，但没有实现可调用的
+  Registry；任意脚本都能绕过资格报告、精确版本、输入校验与事件生命周期。
+- 实现：`SkillRegistry` 只注册具备可解析 `SkillQualification` 的精确版本；同一身份不可变，调用时
+  依次完成严格输入校验、所有输入制品摘要复核、runtime 依赖解析、content-identity invocation
+  digest、真实 handler 执行、严格输出校验和 RunState 归档。
+- 错误边界：未知 Skill、版本不支持、非法输入或依赖缺失在 attempt 0 返回 typed blocker；handler
+  只能用 `SkillBlocked` 报告可预期领域失败，且仅 `retryable=true` 能消耗下一次 attempt；未预期异常
+  被隔离成 `HARN_INTERNAL/failed`，不能伪装业务拒绝或成功。
+- 身份决策：制品的 URI/name/机器路径不参与 invocation digest，内容摘要、媒体类型和 schema 才是
+  身份；同内容换位置仍得到相同 digest。依赖记录按名字排序，避免解析顺序影响回执。
+- 真实进度：handler 只拿到 `RunContext.emit()`，所有阶段通过同一个 `RunRecorder/EventSink` 发布；
+  Registry 不扫描文件或日志推断状态。
+- 攻击用例：覆盖资格身份错配、重复身份替换、错误 exact version、非法输入、CAS 缺失、runtime
+  dependency 缺失、可重试恢复、不可重试拒绝和实现异常。
+- 验证：Registry statement coverage `100%`；Harness + compiler `41 passed`；ruff 与 diff check 通过。
+- 产物：`self_improving/harness/registry.py`、
+  `tests/self_improving/harness/test_registry.py`。
