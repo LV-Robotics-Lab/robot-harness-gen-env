@@ -134,3 +134,39 @@ mutations also passed: 1/5 correct decisions (accuracy 0.20), four unsafe
 accepts, and no binding checks in the report.  Artifact:
 `artifacts/runtime_binding_before.json`.  This is a direct local reproduction of
 the audit finding and satisfies the E1 condition for attempting a minimal fix.
+
+## 2026-08-31T02:31–02:50+08:00 — E1 fix, regression, and real replay
+
+1. At commit `795273f`, added two consumer-side checks before any runtime result
+   can pass: exact `scene_id` equality and exact canonical resolved-scene digest
+   equality.  Added attacks for missing and mismatched values and updated
+   positive root fixtures to carry producer-shaped provenance.
+2. Re-ran the unchanged five-case probe.  It moved from 1/5 to 5/5 correct
+   decisions (accuracy 1.00) and from four to zero unsafe accepts while the
+   valid control remained passing.  Artifact: `artifacts/runtime_binding_after.json`.
+3. The focused validator file produced 11/11 passes and the root suite produced
+   125/125.  A first run of the complete platform guard exposed three historical
+   Stage 5 positive fixtures that omitted identity fields; it produced 3 failures
+   and 59 passes in that tranche.  This compatibility failure was not hidden.
+   Commit `00e4ae9` updated only those historical test inputs (including their
+   negative controls), not Stage 5 execution behavior.
+4. Re-ran `script/run_self_improving_tests.sh`: 591 passed, 6 skipped, with the
+   Harness Schema Tranche still at 100% statement and branch coverage.  The E1
+   regression guard now passes.
+5. Located the existing `robotwin-5090` environment (SAPIEN 3.0.0b1) and ran a
+   fresh real RoboTwin/SAPIEN replay of can-on-plate seed 7 using 900 settle
+   steps, a 120-step contact window, and 120 requested sequential video frames.
+   The command exited 0 and the authoritative report passed with 0 failures and
+   0 not-run checks.  It retained 120 frames / 100 unique frames; `can_1`
+   contacted only `plate_1` for fraction 1.0 and had 9.69 mm target-local support
+   margin against the 8 mm minimum.  Both new binding checks passed on digest
+   `96e995144468707f0f6e169341ce13e2330b1f42a8acaf73d9c126925e4be3ee`.
+   Artifact directory: `artifacts/real_replay_can_on_plate_seed7`.
+6. The renderer printed repeated OIDN CUDA-device/invalid-handle diagnostics,
+   but generated nonempty PNG/MP4 artifacts and the simulator/validator exited
+   successfully.  They are recorded as renderer warnings, not silently treated
+   as physical failures or omitted.
+
+Decision: E1 satisfies every preregistered keep rule and is retained.  This is a
+concrete ASPIRE-aligned provenance improvement (trace evidence is now tied to
+the exact state), not evidence that an LLM repair policy itself improved.

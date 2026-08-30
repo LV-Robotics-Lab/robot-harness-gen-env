@@ -1,2 +1,4 @@
 experiment	commit	metric	status	description
 E1-runtime-binding-baseline	113e54b	accuracy=0.200;unsafe_accepts=4/4	baseline	Valid control passed; all four missing or mismatched identity mutations were unsafely accepted.
+E1-runtime-binding	795273f	accuracy=1.000;unsafe_accepts=0/4	keep	Exact scene-id and resolved-digest checks; valid control retained; focused and root regressions pass.
+E1-real-sapien-replay	00e4ae9	pass=1/1;fail_checks=0;video=120/100_unique	keep	Fresh can-on-plate seed-7 RoboTwin/SAPIEN replay consumed by the new binding gates.
