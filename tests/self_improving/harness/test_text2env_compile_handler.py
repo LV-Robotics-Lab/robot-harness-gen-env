@@ -267,6 +267,7 @@ def test_compile_handler_executes_the_cas_snapshot_after_external_catalog_mutati
     store = LocalArtifactStore(tmp_path / "cas")
     catalog_path = _materialized_fixture_catalog(tmp_path)
     original_bytes = catalog_path.read_bytes()
+    original_digest = AssetCatalog.model_validate_json(original_bytes).digest()
     catalog = ArtifactRef(
         name="mutable_catalog",
         uri=catalog_path.resolve().as_uri(),
@@ -301,10 +302,7 @@ def test_compile_handler_executes_the_cas_snapshot_after_external_catalog_mutati
     effective_catalog = load_catalog(
         store.resolve(output.environment_package.asset_catalog).path
     )
-    assert {entry.asset_id for entry in effective_catalog.entries} == {
-        "071_can",
-        "087_plate",
-    }
+    assert effective_catalog.digest() == original_digest
     assert catalog_path.read_bytes() != original_bytes
 
 

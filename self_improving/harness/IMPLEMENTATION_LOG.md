@@ -310,3 +310,16 @@
   symlink escape。
 - 验证：新增依赖模块与全 Harness 的 statement + branch coverage 均为 `100%`；`72 passed`，
   diff check 通过。
+
+### 2026-08-31 / A016：compile 必须执行已经冻结的 catalog 快照
+
+- 反例：handler 虽把外部 `file://` catalog 复制进 CAS，但 trust check 和 `compile_scene` 继续读取
+  原始路径。攻击测试在 trust check 返回后立刻改写原文件；旧实现随即读到另一份 catalog 并 blocked，
+  证明 RunState 中的 CAS ref 与实际执行输入发生分叉。
+- 修复：`_ArtifactCollector` 在核对 snapshot digest 后立即解析 CAS ref，并把后续 trust check、parse/
+  solve/package 的唯一 `input_catalog_path` 切换到内容寻址文件；原 locator 只作为同一 snapshot 的别名
+  留在 collector 映射中，不再参与执行。
+- 实证：外部 catalog 在 check/use 窗口被替换成无效 JSON 后，compile 仍从 CAS 中的原始 bytes 成功
+  解析 can-on-plate；effective catalog digest 等于攻击前 digest，外部文件确已变化。
+- 验证：新增 TOCTOU 攻击测试通过；全 Harness `74 passed`，statement + branch coverage `100%`；
+  ruff 与 diff check 通过。

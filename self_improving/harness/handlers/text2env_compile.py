@@ -224,16 +224,20 @@ class _ArtifactCollector:
     input_catalog_path: Path
 
     def __post_init__(self) -> None:
+        source_path = self.input_catalog_path.expanduser().resolve()
         snapshot = self.store.put_file(
-            self.input_catalog_path,
+            source_path,
             name="input_asset_catalog",
             media_type="application/json",
             schema_version=self.input_catalog.schema_version,
         )
         if snapshot.sha256 != self.input_catalog.sha256:
             raise RuntimeError("input catalog CAS snapshot changed content identity")
+        snapshot_path = self.store.resolve(snapshot).path
+        self.input_catalog_path = snapshot_path
         self._by_path: dict[Path, ArtifactRef] = {
-            self.input_catalog_path.resolve(): snapshot
+            source_path: snapshot,
+            snapshot_path.resolve(): snapshot,
         }
         self._ordered: list[ArtifactRef] = [snapshot]
 
