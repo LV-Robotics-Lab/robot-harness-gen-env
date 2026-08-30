@@ -6,6 +6,13 @@ from .artifacts import (
     LocalArtifactStore,
     ResolvedArtifact,
 )
+from .events import (
+    EventSink,
+    RecordingEventSink,
+    RunEvent,
+    RunRecorder,
+    RunRecordingError,
+)
 from .schema_catalog import SCHEMA_MODELS, schema_documents, schema_model
 from .schemas import (
     ArtifactRef,
@@ -40,9 +47,14 @@ __all__ = [
     "DependencyRef",
     "EnvironmentPackage",
     "Event",
+    "EventSink",
     "Invocation",
     "LocalArtifactStore",
+    "RecordingEventSink",
     "ResolvedArtifact",
+    "RunEvent",
+    "RunRecorder",
+    "RunRecordingError",
     "RunState",
     "RunStatus",
     "RuntimeConfig",

@@ -72,3 +72,17 @@
 - 验证：Harness `24 passed`；新模块 statement coverage `100%`；ruff 与 diff check 通过。
 - 产物：`self_improving/harness/artifacts.py`、
   `tests/self_improving/harness/test_artifacts.py`。
+
+### 2026-08-31 / A002：真实执行事件记录器
+
+- 红灯：公共包没有 `RunRecorder` / `RecordingEventSink`，事件测试在导入时失败。
+- 实现：增加内部 `RunEvent` envelope，为既有公共 `Event` 补上 run/skill 身份；
+  `RunRecorder` 独占 seq、attempt、时间、状态转换与 `RunState` 组装，handler 只报告真实阶段。
+- 决策：不修改冻结的 `harness.event.v1`；运行身份属于内部传输 envelope。前端只能消费
+  `EventSink`，不能根据 sleep、文件 mtime 或日志关键词推演进度。
+- 攻击用例：拒绝开始前 progress、重复 start、用 running 伪装 finish、终态后 retry、未开始
+  build state 和时钟倒退；所有非法事件都在进入 sink 前被拒绝。
+- 验证：事件模块 statement coverage `100%`；完整成功/进度/重试/终态序列能通过既有
+  `RunState` 不变量校验。
+- 产物：`self_improving/harness/events.py`、
+  `tests/self_improving/harness/test_events.py`。
