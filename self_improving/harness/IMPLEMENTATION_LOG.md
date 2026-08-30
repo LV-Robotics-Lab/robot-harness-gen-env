@@ -488,3 +488,21 @@
   进程异常时 partial transcript 可以没有 worker.completed，监督器必须结合退出码判断，不能伪造完成。
 - 验证：runtime-event 专项 `57 passed`，statement `288/288`、branch `126/126`；ruff、format 与 diff
   check 通过。
+
+### 2026-08-31 / A028：validate 只复核证据，绝不偷偷再跑一次仿真
+
+- 模块边界：新增 `Text2EnvValidateHandler`，只从 CAS 安全 materialize package、读取 canonical catalog
+  与 runtime evidence，再调用确定性的 `validate_resolved_scene(require_runtime=True)`；模块没有
+  RuntimeExecutor/SAPIEN seam，因而一次 validate 不会产生第二次物理轨迹。
+- 绑定门禁：逐项对账 EnvironmentPackage、SceneSpec、ResolvedSceneSpec、manifest、catalog 的 scene/
+  seed/canonical digests；坏 package、CAS 漂移、错误 evidence schema 或不可重建 JSON 在没有权威报告时
+  以 run blocker `T2E_PACKAGE_INVALID` fail closed。每个 attempt 使用不可复用目录，拒绝覆盖旧证据。
+- 结果语义：物理 `fail`/`incomplete` 是成功产出的 typed validate output，不是 handler 崩溃；对应 blocker
+  精确列出 fail/not_run checks。物理 pass 后才调用独立 EligibilityVerifier。默认 verifier 因公开输入尚
+  缺 compile/replay receipts、三项 qualification 和 request provenance，保持 `publishable=false`；测试用
+  完整 verifier 才能令 pass 发布。
+- 证据身份：CAS validation report 内嵌 `harness_binding`，绑定 package id、manifest/catalog/runtime
+  evidence SHA 与 gate profile；输出 blocker 也引用同一报告。validator 若返回错误 identity、空/坏 checks、
+  计数或 status 自相矛盾，视为实现 defect 而非伪造 typed gate failure。
+- 验证：validate handler `27 passed`，statement + branch coverage `100%`；ruff、format 与 diff check
+  通过。

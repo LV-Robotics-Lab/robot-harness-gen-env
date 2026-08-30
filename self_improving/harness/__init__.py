@@ -28,6 +28,12 @@ from .events import (
     RunRecorder,
     RunRecordingError,
 )
+from .handlers import (
+    EligibilityVerifier,
+    RequirePromotionEvidence,
+    Text2EnvValidateHandler,
+    text2env_validate_descriptor,
+)
 from .package_store import PackageStore, PackageStoreError, PublishedPackage
 from .qualification import (
     LoadedQualification,
@@ -109,6 +115,7 @@ __all__ = [
     "EventJournalCorruptionError",
     "EventPage",
     "EventSink",
+    "EligibilityVerifier",
     "ExternalCatalogError",
     "Invocation",
     "InvocationSink",
@@ -123,6 +130,7 @@ __all__ = [
     "QualificationCheckV1",
     "QualificationReportV1",
     "RecordingEventSink",
+    "RequirePromotionEvidence",
     "RegistryLookupError",
     "RegistryRegistrationError",
     "ResolvedArtifact",
@@ -157,12 +165,14 @@ __all__ = [
     "Text2EnvReplayInput",
     "Text2EnvReplayOutput",
     "Text2EnvValidateInput",
+    "Text2EnvValidateHandler",
     "Text2EnvValidateOutput",
     "StaticDependencyResolver",
     "UnknownField",
     "ValidationStatus",
     "create_compile_application",
     "load_qualification_bundle",
+    "text2env_validate_descriptor",
     "schema_documents",
     "schema_model",
 ]
