@@ -201,3 +201,63 @@ state-machine fix; it does not require a simulator or model call.
    no-service harness mechanisms.  It does not exercise ASPIRE's trace logger,
    simulator, model actors, evolutionary search quality, or paper metrics.
    `reproduction_report.md` records the exact boundary and receipts.
+
+## 2026-08-31T03:00–03:12+08:00 — E1b state-machine result
+
+1. Commit `fa9121f` separated the two terminal artifact types.  A passing
+   review still uses `final_placement`, `final_render_accepted`, `accept_final`,
+   and exit 0.  Pending review now uses `review_candidate_placement`, stage
+   `render_review_required`, decision `hold_for_review`, pending validation
+   fields, and explicit review-required exit code 2.  Batch acceptance handles
+   code 2 only when `--allow-pending-visual` is set.
+2. The unchanged E1b probe moved pending accuracy from 0/5 to 5/5 while the pass
+   control remained 5/5.  Artifact: `artifacts/pending_review_after.json`.
+3. Added an end-to-end state test that runs the pipeline with deterministic
+   mocked smoke evidence and a pending review receipt.  It verifies exit 2,
+   absence of `final_placement`, and presence/content of
+   `review_candidate_placement`; the focused file produced 4/4 passes.
+4. A separate attempt to drive the same branch through the legacy Stage 5 real
+   smoke failed before visual review because that script looks for
+   `RoboTwin/task_config/demo_smoke.yml`, while the available current RoboTwin
+   checkout uses `env_cfg/task_config/`.  Artifact:
+   `artifacts/stage5_pending_review_e2e`.  This is recorded as an upstream-layout
+   compatibility blocker, not replaced by or conflated with the mocked state
+   test.  The project's authoritative runtime path was already verified by the
+   independent real SAPIEN E1 replay.
+5. The complete platform guard after E1b produced 594 passed, 6 skipped; Harness
+   schema coverage remained 100% statement and branch.
+
+Decision: E1b satisfies its keep rule and is retained.  It improves publication
+safety and state integrity; it does not improve physical success rate.
+
+## 2026-08-31T03:12–03:25+08:00 — E2 held-out validated-memory experiment
+
+1. Committed the preregistered offline benchmark at `9540dd3`, then ran it twice
+   with byte-identical output.  Result receipt:
+   `58b7fe73b6cef35d8259a0fae165648046ba49385e126a329aafd1c5420f2c99`.
+2. The promotion split contained 12 fault + 12 clean development cases (two per
+   family).  Held-out contained 120 fault + 120 clean cases (20 per family),
+   with zero case-id intersection.  Six trigger-specific actions passed every
+   relevant development case and all development clean controls; library hash
+   `0b76621e6327a6fd9f9a0a8f59260aa6b60caaa03addda8abcb83dfb339b1792`
+   was unchanged before and after held-out evaluation.
+3. Under the same one-action/two-validation budget, macro held-out robust
+   completion was 0.00 for frozen retry, 0.50 for reactive trace/no memory, and
+   1.00 for validated trigger memory.  The memory arm's worst-family rate was
+   1.00.  Every arm had zero unsafe publications, zero clean regression, zero
+   budget violations, and identity-binding accuracy 1.00.
+4. The matched memory-minus-reactive effect was +0.50.  A fixed-seed, 10,000
+   resample family-stratified paired bootstrap gave 95% CI [0.50, 0.50], with 60
+   improved, 0 regressed, and 60 tied cases.  The interval is degenerate because
+   paired differences are identical within these fixed synthetic families; it
+   does not estimate simulator or deployment-distribution uncertainty.
+5. Eight benchmark self-tests passed; ruff and format checks passed.  All
+   machine keep gates passed, but the verdict is deliberately scoped to
+   `keep_synthetic_harness_mechanism_candidate`.  The result itself marks both
+   paper-scale ASPIRE support and simulator-physics improvement as false.
+
+Decision: H2 is supported at the deterministic contract-mechanism layer: a
+development-validated, trigger-specific frozen memory transfers across unseen
+seeds/variants better than current-trace-only behavior without relaxing the
+validator.  No LLM, real rollout, policy-learning, or physics-robustness
+superiority follows from E2.
