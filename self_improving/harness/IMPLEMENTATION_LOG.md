@@ -33,10 +33,10 @@
 
 | 阶段 | 状态 | 完成证据 |
 |---|---|---|
-| 0. 基线、架构和追溯主账 | 进行中 | 本文件、代码接线图、环境能力审计 |
+| 0. 基线、架构和追溯主账 | 完成 | 本文件、代码接线图、环境能力审计 |
 | 1. 资产与 runtime 证据完整性 | 待开始 | 攻击测试、迁移报告、最终帧/步数一致性 |
 | 2. Harness 核心 | 进行中 | Registry、resolver、receipt、事件流单元测试 |
-| 3. compile → 资产入库 | 待开始 | 真实 fixture 端到端运行与入库 ledger/receipt |
+| 3. compile → 资产入库 | 进行中 | 真实 fixture 端到端运行与入库 ledger/receipt |
 | 4. replay → validate | 待开始 | 实际播放调用、连续帧、哈希绑定验证报告 |
 | 5. VLM fallback 研究 | 待开始 | baseline、逐次实验 TSV/JSONL、消融与总结 |
 | 6. LLM System 2 | 待开始 | agent 计划、上下文包、工具回执、回归晋升 |
@@ -86,3 +86,35 @@
   `RunState` 不变量校验。
 - 产物：`self_improving/harness/events.py`、
   `tests/self_improving/harness/test_events.py`。
+
+### 2026-08-31 / A003：把 compile 从 CLI 提炼成深 Module
+
+- 红灯：仓库没有可导入的 `scene_gen.compiler`；测试只能复刻 CLI 步骤。
+- 实现：`compile_scene(CompileRequest) -> CompileOutcome` 现在一次完成 parse、catalog load、
+  可选确定性 proxy、solve、package 与 static validation；不扫描输出目录、不打印、也不二次
+  解析 prompt。原 `generate_scene.py` 已变成参数/错误呈现 Adapter。
+- 真实回调：每个阶段完成后才产生 `CompileEvent`，包括真实产物路径；没有基于时间或日志猜测。
+- 失败分类：请求边界、资产缺失、资产生成拒绝与 bounded solver exhausted 分别保存稳定 code、
+  stage 和 details，供 Harness 映射 blocker。
+- 实证：fixture can-on-plate CLI 成功，package manifest 和 resolved digest 一致，静态验证为预期
+  `incomplete`；非法短请求写入结构化失败报告并退出 2；缺失 hexagonal pedestal 在显式
+  workspace 中生成、复用并进入 effective catalog。
+- 验证：compiler 模块 statement coverage `100%`；相关 compiler/builder/asset-generator
+  `20 passed`；ruff 与 diff check 通过。
+- 边界：这一切片完成“生成并进入有效 catalog”，但还没有通过 `asset_ledger.v3` 准入；不能把
+  proxy 目录称为正式资产入库。下一切片补 ledger、selection/admission receipt 与原子 promote。
+- 产物：`scene_gen/compiler.py`、`tests/scene_gen/test_compiler.py`、变薄后的
+  `script/generate_scene.py`。
+
+### 2026-08-31 / A004：本机运行环境能力审计（只读）
+
+- compile：Py3.11 环境可立即运行。
+- RoboTwin replay：唯一完整环境为 `robotwin-5090`；短 2-step smoke 已真实加载 `071_can`、
+  物理步进、渲染 4 相机、输出 2 帧 MP4 与 digest-bound evidence。它只因正式门要求 120 帧
+  而 validation fail；已有同场景 900-step/120-frame 历史 PASS，可作为首条正式回归。
+- VLM：本地 Qwen2.5-VL-3B 已对真实 render 运行，约 9.7 秒且输出 5 项 hash-bound checks；
+  CLIP 检索也已用 10,696 thumbnails/缓存真实运行。远程 OpenAI/Moonshot 当前无 key。
+- Isaac：引擎可 headless 启动，但旧绝对资产路径阻断 resolved→USD→settle。
+- MuJoCo：primitive transfer + 20-step smoke 可跑；真实资产 OBJ 与 table/support settle 仍缺。
+- 决策：正式 replay 先选可实跑的 RoboTwin `071_can on table`；Isaac/MuJoCo 不用假替身冒充
+  闭环，分别等 portable asset resolver 和真实 support gate 后再晋升。
