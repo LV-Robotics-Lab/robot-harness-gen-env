@@ -14,6 +14,7 @@ from typing import Any
 import pytest
 
 from self_improving.harness import runtime_capability
+from self_improving.harness.runtime_assets import RUNTIME_ASSET_SNAPSHOT_PROTOCOL
 
 
 def _git(root: Path, *arguments: str) -> str:
@@ -166,6 +167,11 @@ def test_description_binds_full_dependency_and_selected_embodiment_closures(
     )
 
     assert set(document["packages"]) == set(runtime_capability.REQUIRED_RUNTIME_DISTRIBUTIONS)
+    assert document["supported"]["asset_snapshot"] == RUNTIME_ASSET_SNAPSHOT_PROTOCOL
+    assert (
+        document["supported"]["asset_snapshot"]["limits"]
+        is not RUNTIME_ASSET_SNAPSHOT_PROTOCOL["limits"]
+    )
     assert "imageio-ffmpeg" in document["packages"]
     assert document["packages"]["nvidia-curobo"] == {
         "version": "nvidia-curobo-1.0",
@@ -373,6 +379,7 @@ def _set_path(document: dict[str, Any], path: str, value: Any) -> None:
         ("supported.validation_report_schemas", []),
         ("supported.parameters", {}),
         ("supported.event_protocol", {}),
+        ("supported.asset_snapshot", {}),
     ],
 )
 def test_validator_rejects_closed_shape_and_identity_attacks(

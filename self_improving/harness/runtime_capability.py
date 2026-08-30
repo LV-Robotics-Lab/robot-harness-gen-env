@@ -34,6 +34,10 @@ import scene_gen
 from scene_gen.catalog import CATALOG_SCHEMA_VERSION
 from scene_gen.schema import RESOLVED_SCHEMA_VERSION
 
+from .runtime_assets import (
+    RUNTIME_ASSET_SNAPSHOT_PROTOCOL,
+    canonical_runtime_asset_manifest_bytes,
+)
 from .runtime_events import RUNTIME_EVENT_SCHEMA, RuntimeEventCodec, RuntimeEventKind
 
 RUNTIME_CAPABILITY_SCHEMA = "harness.robotwin_runtime_capability.v1"
@@ -92,6 +96,9 @@ EXPECTED_RUNTIME_PARAMETERS: dict[str, dict[str, Any]] = {
 SCENE_GEN_SOURCE_ROOT = Path(scene_gen.__file__).absolute().parent
 RUNTIME_EVENTS_SOURCE_PATH = Path(sys.modules[RuntimeEventCodec.__module__].__file__).absolute()
 RUNTIME_CAPABILITY_SOURCE_PATH = Path(__file__).absolute()
+RUNTIME_ASSETS_SOURCE_PATH = Path(
+    sys.modules[canonical_runtime_asset_manifest_bytes.__module__].__file__
+).absolute()
 PYTHON_EXECUTABLE_PATH = Path(sys.executable).resolve()
 
 RUNTIME_ENVIRONMENT_ALLOWLIST = frozenset(
@@ -270,6 +277,12 @@ def describe_runtime_capability(
                     label="runtime capability source",
                 ),
             },
+            "runtime_assets": {
+                "sha256": _regular_file_sha256(
+                    RUNTIME_ASSETS_SOURCE_PATH,
+                    label="runtime asset snapshot source",
+                ),
+            },
         },
         "robotwin": _robotwin_identity(root),
         "task_config": task,
@@ -284,6 +297,11 @@ def describe_runtime_capability(
                 "transport": "dedicated_fd_jsonl",
                 "kinds": [kind.value for kind in RuntimeEventKind],
                 "artifact_paths": list(RUNTIME_ARTIFACT_PATHS),
+            },
+            "asset_snapshot": {
+                **RUNTIME_ASSET_SNAPSHOT_PROTOCOL,
+                "failure_exit_codes": dict(RUNTIME_ASSET_SNAPSHOT_PROTOCOL["failure_exit_codes"]),
+                "limits": dict(RUNTIME_ASSET_SNAPSHOT_PROTOCOL["limits"]),
             },
         },
     }
@@ -346,7 +364,7 @@ def validate_runtime_capability_document(value: object) -> Mapping[str, Any]:
 
     source_modules = _exact_mapping(
         document["source_modules"],
-        frozenset({"scene_gen", "runtime_events", "runtime_capability"}),
+        frozenset({"scene_gen", "runtime_events", "runtime_capability", "runtime_assets"}),
         label="source_modules",
     )
     scene_gen_source = _exact_mapping(
@@ -364,9 +382,15 @@ def validate_runtime_capability_document(value: object) -> Mapping[str, Any]:
         frozenset({"sha256"}),
         label="source_modules.runtime_capability",
     )
+    runtime_assets_source = _exact_mapping(
+        source_modules["runtime_assets"],
+        frozenset({"sha256"}),
+        label="source_modules.runtime_assets",
+    )
     _digest(scene_gen_source["tree_sha256"], label="scene_gen.tree_sha256")
     _digest(event_source["sha256"], label="runtime_events.sha256")
     _digest(capability_source["sha256"], label="runtime_capability.sha256")
+    _digest(runtime_assets_source["sha256"], label="runtime_assets.sha256")
 
     robotwin = _exact_mapping(document["robotwin"], _ROBOTWIN_FIELDS, label="robotwin")
     if (
@@ -1079,6 +1103,7 @@ def _validate_supported(value: object) -> None:
                 "validation_report_schemas",
                 "parameters",
                 "event_protocol",
+                "asset_snapshot",
             }
         ),
         label="supported",
@@ -1103,6 +1128,8 @@ def _validate_supported(value: object) -> None:
     }
     if event_protocol != expected_event_protocol:
         raise RuntimeCapabilityError("capability runtime event protocol is unsupported")
+    if supported["asset_snapshot"] != RUNTIME_ASSET_SNAPSHOT_PROTOCOL:
+        raise RuntimeCapabilityError("capability runtime asset snapshot protocol is unsupported")
 
 
 def _yaml_mapping(path: Path, *, label: str) -> Mapping[str, Any]:

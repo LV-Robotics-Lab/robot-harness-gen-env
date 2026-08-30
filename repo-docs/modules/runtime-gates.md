@@ -8,7 +8,8 @@
 
 ## 回放怎么采、采什么
 
-`script/run_scene_runtime.py` 的轨迹：
+`script/run_scene_runtime.py` 的主 settle 轨迹如下；通过 Harness worker 运行时，precheck 另在
+`simulation.started` 真实回调之后执行，并计入 `total_physics_step_count` 和 checkpoint 序列：
 
 ```text
 total_steps = max(settle_steps, video_frames)            # 默认 max(900, 120)
@@ -26,11 +27,30 @@ for index in range(total_steps):
                 unexpected_contact_hits[name] += 1
 ```
 
-`run_scene_runtime.py` 的独立 CLI 当前默认 `--contact-window-steps 60`；README、prompt matrix 和本指南跟踪的已验证命令都显式传入 120，因此那些证据采的是终末 120 步。`--precheck-steps 0` 默认：不预步进。`check_stable` 仅跑 precheck_steps（即 0），不参与判 acceptance——这一步有意为之，避免把不稳初态躲到「正式记录」之前，那样记录的「释放帧」其实已经是稳态之后的假释放。
+`run_scene_runtime.py` 的独立 CLI 当前默认 `--contact-window-steps 60`；README、prompt matrix 和本指南跟踪的已验证命令都显式传入 120，因此那些证据采的是终末 120 步。`--precheck-steps 0` 默认：不预步进。`check_stable` 固定以 0 步执行；显式 precheck 由 worker 在 `scene.loaded`、`simulation.started` 之后逐步推进，所以前端能看到它，也不会把已发生的物理步藏在“正式记录”之前。`simulation_step_count` 仍表示主 settle（含 adaptive extra），`total_physics_step_count = precheck_steps + simulation_step_count`。
 
 `head_camera_arrays(task)` 拿 head rgb + 分割标签；`world_camera1`/`world_camera2` 拿两个世界视角；最终还写 `preview_head.png`、`preview_segmentation.png`、`preview_world_left.png`、`preview_world_right.png`、`observer_start.png`、`observer_mid.png`、`observer_end.png`、`observer_runtime.mp4`。每段 mp4 的 `unique_video_frame_count` 用 `hashlib.sha256(frame.tobytes())` 去重。
 
 为什么 900 步：仓库根 `README.md` 给了具体证据——apple-in-basket 在 300 步时仍在动，900 步是为该 asset pair 测下来的「真的稳了」阈值。这不是通用物理参数，是实测值。
+
+## Harness 怎样证明它跑的是哪一份资产
+
+Harness replay 不再把 catalog 中的绝对路径直接当成不可变输入。`RuntimeAssetStore` 先核对
+resolved scene 与 catalog digest，再把选中资产的完整目录树（包括空目录）、每个文件摘要和
+catalog loader roots 写进 canonical manifest 并存入 CAS。它还解析 URDF、OBJ、MTL、glTF、GLB 与
+COLLADA 的外部引用；绝对路径、网络 URI、越出资产树或缺失的 mesh/material/texture/buffer 会在
+仿真前拒绝，无法证明依赖闭包的 opaque 格式也不会被当作可信输入。
+
+worker 只读取 attempt-local 的只读重物化树：第一条事件前验证一次，关闭仿真后再验证一次。
+URDF 使用 catalog 精确选中的 model root，不再把 `model_id` 交给 RoboTwin 按目录顺序猜。
+CAS 自身的 shard 目录会用操作期持有的 directory fd 完成读取、安装和同步；校验后瞬时换成 symlink
+也不能把对象写到声明根之外，超大或等长损坏的既有对象在复用前 fail closed。
+运行中资产漂移使用独立失败类型 `runtime_asset_drift`；它不是可重试的普通物理失败。capability
+文档同时绑定 snapshot 协议、实现源码、解释器/依赖、RoboTwin/task/embodiment 和 GPU 环境；
+stdout/stderr 只作诊断，阶段状态只认专用 FD 的严格事件。
+
+这仍不等于发布成功：2-step smoke 可以证明“真实加载、步进、回调、收证据”接线成功，却会因
+settle horizon 不足而在 validation 失败。正式发布仍须 900 settle / 120 video 等既定门禁全过。
 
 ## contact 怎么分类
 

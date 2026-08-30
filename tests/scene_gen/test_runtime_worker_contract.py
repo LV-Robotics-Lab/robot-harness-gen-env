@@ -18,8 +18,14 @@ import pytest
 
 from scene_gen.catalog import load_catalog
 from scene_gen.parser import parse_rule_based
+from scene_gen.schema import ResolvedSceneSpec
 from scene_gen.solver import solve_scene
 from self_improving.harness import runtime_capability
+from self_improving.harness.runtime_assets import (
+    RUNTIME_ASSET_SNAPSHOT_SCHEMA,
+    RuntimeAssetSnapshotError,
+    canonical_runtime_asset_manifest_bytes,
+)
 from self_improving.harness.runtime_events import (
     RuntimeEventCodec,
     RuntimeEventProtocolError,
@@ -640,6 +646,12 @@ def test_harness_execution_rejects_runner_drift_before_import_or_event(
                     str(write_fd),
                     "--expected-capability-sha256",
                     expected,
+                    "--runtime-asset-root",
+                    str(tmp_path / "must-not-be-read-assets"),
+                    "--runtime-asset-manifest",
+                    str(tmp_path / "must-not-be-read-manifest.json"),
+                    "--expected-runtime-asset-snapshot-sha256",
+                    "0" * 64,
                 ],
                 base_task_class=ForbiddenBaseTask,
             )
@@ -781,7 +793,13 @@ def _fake_runtime(
                 on_close()
             self.closed = True
 
-    def load_scene(task: Any, resolved: Any) -> dict[str, _Actor]:
+    def load_scene(
+        task: Any,
+        resolved: Any,
+        *,
+        asset_roots: dict[str, Path] | None = None,
+    ) -> dict[str, _Actor]:
+        task.runtime_asset_roots = asset_roots
         return {
             item.object_id: _Actor(
                 identifier=index,
@@ -809,6 +827,7 @@ def _runtime_arguments(
     event_fd: int,
     evidence_only: bool = True,
     expected_capability_sha256: str | None = None,
+    asset_catalog_path: Path | None = None,
 ) -> list[str]:
     expected_capability_sha256 = expected_capability_sha256 or _capability_sha256(
         runtime,
@@ -838,9 +857,138 @@ def _runtime_arguments(
         "--expected-capability-sha256",
         expected_capability_sha256,
     ]
+    arguments.extend(
+        _runtime_asset_arguments(
+            resolved_path=resolved_path,
+            out_dir=out_dir,
+            asset_catalog_path=asset_catalog_path,
+        )
+    )
+    if asset_catalog_path is not None:
+        arguments.extend(("--asset-catalog", str(asset_catalog_path)))
     if evidence_only:
         arguments.append("--evidence-only")
     return arguments
+
+
+def _runtime_loader_payload(asset_id: str, relative: str) -> bytes:
+    suffix = Path(relative).suffix.lower()
+    if suffix == ".glb":
+        document = b'{"asset":{"version":"2.0"}}'
+        document += b" " * (-len(document) % 4)
+        json_chunk = len(document).to_bytes(4, "little") + b"JSON" + document
+        return (
+            b"glTF"
+            + (2).to_bytes(4, "little")
+            + (12 + len(json_chunk)).to_bytes(4, "little")
+            + json_chunk
+        )
+    if suffix == ".gltf":
+        return b'{"asset":{"version":"2.0"}}\n'
+    if suffix == ".urdf":
+        return b'<robot name="fixture"/>\n'
+    if suffix == ".obj":
+        return b"o fixture\n"
+    if suffix == ".mtl":
+        return b"newmtl fixture\n"
+    if suffix == ".dae":
+        return b'<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema"/>\n'
+    return f"loader-input:{asset_id}:{relative}\n".encode()
+
+
+def _runtime_asset_arguments(
+    *,
+    resolved_path: Path,
+    out_dir: Path,
+    asset_catalog_path: Path | None = None,
+) -> list[str]:
+    resolved = ResolvedSceneSpec.model_validate_json(resolved_path.read_text(encoding="utf-8"))
+    staging = out_dir.parent / f".{out_dir.name}-runtime-assets"
+    root = staging / "objects"
+    root.mkdir(parents=True)
+    assets = []
+    selected: dict[str, set[int]] = {}
+    for item in resolved.objects:
+        selected.setdefault(item.asset_id, set()).add(item.model_id)
+    catalog = load_catalog(asset_catalog_path) if asset_catalog_path is not None else None
+    for asset_id, model_ids in sorted(selected.items()):
+        asset_root = root / asset_id
+        asset_root.mkdir()
+        required_files = ["loader.bin"]
+        if catalog is not None:
+            entry = next(value for value in catalog.entries if value.asset_id == asset_id)
+            required_files = sorted(
+                {
+                    Path(source).relative_to(entry.asset_path).as_posix()
+                    for model in entry.models
+                    if model.model_id in model_ids
+                    for source in (
+                        model.metadata_path,
+                        model.visual_path,
+                        model.collision_path,
+                        model.urdf_path,
+                    )
+                    if source is not None
+                }
+            )
+        files = []
+        for relative in required_files:
+            payload = _runtime_loader_payload(asset_id, relative)
+            destination = asset_root / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(payload)
+            files.append(
+                {
+                    "path": relative,
+                    "sha256": hashlib.sha256(payload).hexdigest(),
+                    "bytes": len(payload),
+                }
+            )
+        directories = ["."] + sorted(
+            {
+                parent.as_posix()
+                for relative in required_files
+                for parent in Path(relative).parents
+                if parent.as_posix() != "."
+            }
+        )
+        files.sort(key=lambda value: value["path"])
+        assets.append(
+            {
+                "asset_id": asset_id,
+                "selected_model_ids": sorted(model_ids),
+                "tree_sha256": hashlib.sha256(
+                    canonical_runtime_asset_manifest_bytes(
+                        {
+                            "directories": directories,
+                            "files": files,
+                        }
+                    )
+                ).hexdigest(),
+                "file_count": len(files),
+                "bytes": sum(value["bytes"] for value in files),
+                "directories": directories,
+                "required_files": required_files,
+                "files": files,
+            }
+        )
+    catalog_sha256 = catalog.digest() if catalog is not None else resolved.asset_catalog_sha256
+    manifest = {
+        "schema_version": RUNTIME_ASSET_SNAPSHOT_SCHEMA,
+        "resolved_scene_sha256": resolved.digest(),
+        "asset_catalog_sha256": catalog_sha256,
+        "assets": assets,
+    }
+    manifest_path = staging / "runtime_asset_snapshot.json"
+    manifest_path.write_bytes(canonical_runtime_asset_manifest_bytes(manifest))
+    return [
+        "--runtime-asset-root",
+        str(root),
+        "--runtime-asset-manifest",
+        str(manifest_path),
+        "--expected-runtime-asset-snapshot-sha256",
+        hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+    ]
 
 
 def test_worker_events_follow_real_boundaries_counts_and_exact_artifact_allowlist(
@@ -879,6 +1027,15 @@ def test_worker_events_follow_real_boundaries_counts_and_exact_artifact_allowlis
         monkeypatch,
         on_close=assert_terminal_not_yet_emitted,
     )
+    verification_states: list[bool | None] = []
+    original_verify = runtime.verify_runtime_asset_snapshot
+
+    def trace_verification(**kwargs: Any) -> Any:
+        verified = original_verify(**kwargs)
+        verification_states.append(tasks[-1].closed if tasks else None)
+        return verified
+
+    monkeypatch.setattr(runtime, "verify_runtime_asset_snapshot", trace_verification)
     try:
         exit_code = runtime.main(
             _runtime_arguments(
@@ -937,14 +1094,421 @@ def test_worker_events_follow_real_boundaries_counts_and_exact_artifact_allowlis
     )
     assert all(path in EVENT_ARTIFACT_PATHS for event in events for path in event.artifact_paths)
     assert len(tasks) == 1 and tasks[0].closed is True
+    assert verification_states == [None, True]
     assert tasks[0].scene.step_count == 8
     evidence = json.loads((out_dir / "runtime_evidence.json").read_bytes())
     assert evidence["resolved_scene_sha256"] == resolved.digest()
+    manifest_path = tmp_path / ".output-runtime-assets" / "runtime_asset_snapshot.json"
+    assert (
+        evidence["runtime_asset_snapshot_sha256"]
+        == hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+    )
+    assert tasks[0].runtime_asset_roots == {
+        item.object_id: tmp_path / ".output-runtime-assets" / "objects" / item.asset_id
+        for item in resolved.objects
+    }
     assert evidence["simulation_step_count"] == 8
     assert evidence["settle_extra_steps"] == 3
     assert json.loads((out_dir / "runtime_validation_report.json").read_bytes())["status"] == (
         "fail"
     )
+
+
+def test_event_mode_requires_complete_runtime_asset_snapshot_before_any_event(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    resolved_path = tmp_path / "resolved.json"
+    _resolved_scene(resolved_path)
+    robotwin_root = _runtime_checkout(tmp_path / "robotwin")
+    base_task, tasks = _fake_runtime(monkeypatch)
+    read_fd, write_fd = os.pipe()
+    arguments = _runtime_arguments(
+        robotwin_root=robotwin_root,
+        resolved_path=resolved_path,
+        out_dir=tmp_path / "output",
+        event_fd=write_fd,
+    )
+    index = arguments.index("--runtime-asset-manifest")
+    del arguments[index : index + 2]
+    try:
+        with pytest.raises(SystemExit) as error:
+            runtime.main(arguments, base_task_class=base_task)
+        os.close(write_fd)
+        write_fd = -1
+        transcript = os.read(read_fd, 64 * 1024)
+    finally:
+        os.close(read_fd)
+        if write_fd >= 0:
+            os.close(write_fd)
+
+    assert error.value.code == 2
+    assert transcript == b""
+    assert tasks == []
+
+
+def test_event_mode_rejects_legacy_invocation_without_any_asset_snapshot_argument(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    resolved_path = tmp_path / "resolved.json"
+    _resolved_scene(resolved_path)
+    robotwin_root = _runtime_checkout(tmp_path / "robotwin")
+    base_task, tasks = _fake_runtime(monkeypatch)
+    read_fd, write_fd = os.pipe()
+    arguments = _runtime_arguments(
+        robotwin_root=robotwin_root,
+        resolved_path=resolved_path,
+        out_dir=tmp_path / "output",
+        event_fd=write_fd,
+    )
+    for flag in (
+        "--runtime-asset-root",
+        "--runtime-asset-manifest",
+        "--expected-runtime-asset-snapshot-sha256",
+    ):
+        index = arguments.index(flag)
+        del arguments[index : index + 2]
+    try:
+        with pytest.raises(SystemExit) as error:
+            runtime.main(arguments, base_task_class=base_task)
+        os.close(write_fd)
+        write_fd = -1
+        transcript = os.read(read_fd, 64 * 1024)
+    finally:
+        os.close(read_fd)
+        if write_fd >= 0:
+            os.close(write_fd)
+
+    assert error.value.code == 2
+    assert transcript == b""
+    assert tasks == []
+
+
+def test_runtime_asset_manifest_tamper_fails_before_any_event(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    resolved_path = tmp_path / "resolved.json"
+    _resolved_scene(resolved_path)
+    robotwin_root = _runtime_checkout(tmp_path / "robotwin")
+    out_dir = tmp_path / "output"
+    base_task, tasks = _fake_runtime(monkeypatch)
+    read_fd, write_fd = os.pipe()
+    arguments = _runtime_arguments(
+        robotwin_root=robotwin_root,
+        resolved_path=resolved_path,
+        out_dir=out_dir,
+        event_fd=write_fd,
+    )
+    manifest = tmp_path / ".output-runtime-assets" / "runtime_asset_snapshot.json"
+    manifest.write_bytes(b'{"tampered":true}\n')
+    try:
+        with pytest.raises(RuntimeError, match="manifest"):
+            runtime.main(arguments, base_task_class=base_task)
+        os.close(write_fd)
+        write_fd = -1
+        transcript = os.read(read_fd, 64 * 1024)
+    finally:
+        os.close(read_fd)
+        if write_fd >= 0:
+            os.close(write_fd)
+
+    assert transcript == b""
+    assert tasks == []
+
+
+def test_runtime_asset_drift_during_close_prevents_terminal_event(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    resolved_path = tmp_path / "resolved.json"
+    _resolved_scene(resolved_path)
+    robotwin_root = _runtime_checkout(tmp_path / "robotwin")
+    out_dir = tmp_path / "output"
+    read_fd, write_fd = os.pipe()
+
+    def drift_snapshot() -> None:
+        file_path = next((tmp_path / ".output-runtime-assets" / "objects").rglob("loader.bin"))
+        file_path.write_bytes(b"drift-after-evidence\n")
+
+    base_task, tasks = _fake_runtime(monkeypatch, on_close=drift_snapshot)
+    try:
+        with pytest.raises(RuntimeError, match="tree differs"):
+            runtime.main(
+                _runtime_arguments(
+                    robotwin_root=robotwin_root,
+                    resolved_path=resolved_path,
+                    out_dir=out_dir,
+                    event_fd=write_fd,
+                ),
+                base_task_class=base_task,
+            )
+        os.close(write_fd)
+        write_fd = -1
+        transcript = os.read(read_fd, 64 * 1024)
+    finally:
+        os.close(read_fd)
+        if write_fd >= 0:
+            os.close(write_fd)
+
+    events = RuntimeEventCodec(allowed_artifact_paths=EVENT_ARTIFACT_PATHS).parse_transcript(
+        transcript
+    )
+    assert events[-1].kind.value == "evidence.completed"
+    assert all(event.kind.value != "worker.completed" for event in events)
+    assert len(tasks) == 1 and tasks[0].closed is True
+
+
+def test_runtime_asset_drift_is_primary_even_when_simulation_also_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    resolved_path = tmp_path / "resolved.json"
+    _resolved_scene(resolved_path)
+    robotwin_root = _runtime_checkout(tmp_path / "robotwin")
+    out_dir = tmp_path / "output"
+    read_fd, write_fd = os.pipe()
+
+    def drift_snapshot() -> None:
+        file_path = next((tmp_path / ".output-runtime-assets" / "objects").rglob("loader.bin"))
+        file_path.write_bytes(b"drift-plus-runtime-failure\n")
+
+    base_task, tasks = _fake_runtime(
+        monkeypatch,
+        fail_at_step=1,
+        on_close=drift_snapshot,
+    )
+    try:
+        with pytest.raises(RuntimeAssetSnapshotError) as captured:
+            runtime.main(
+                _runtime_arguments(
+                    robotwin_root=robotwin_root,
+                    resolved_path=resolved_path,
+                    out_dir=out_dir,
+                    event_fd=write_fd,
+                ),
+                base_task_class=base_task,
+            )
+        os.close(write_fd)
+        write_fd = -1
+        transcript = os.read(read_fd, 64 * 1024)
+    finally:
+        os.close(read_fd)
+        if write_fd >= 0:
+            os.close(write_fd)
+
+    assert captured.value.reason == "runtime_asset_tree_drift"
+    assert isinstance(captured.value.__cause__, RuntimeError)
+    assert "injected acquisition failure" in str(captured.value.__cause__)
+    events = RuntimeEventCodec(allowed_artifact_paths=EVENT_ARTIFACT_PATHS).parse_transcript(
+        transcript
+    )
+    assert [event.kind.value for event in events] == [
+        "preflight.completed",
+        "scene.loaded",
+        "simulation.started",
+    ]
+    assert len(tasks) == 1 and tasks[0].closed is True
+
+
+def test_runtime_asset_drift_dominates_close_failure_and_retains_it_as_cause(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    resolved_path = tmp_path / "resolved.json"
+    _resolved_scene(resolved_path)
+    robotwin_root = _runtime_checkout(tmp_path / "robotwin")
+    out_dir = tmp_path / "output"
+    read_fd, write_fd = os.pipe()
+
+    def drift_and_fail_close() -> None:
+        file_path = next((tmp_path / ".output-runtime-assets" / "objects").rglob("loader.bin"))
+        file_path.write_bytes(b"drift-plus-close-failure\n")
+        raise RuntimeError("injected close failure after drift")
+
+    base_task, tasks = _fake_runtime(monkeypatch, on_close=drift_and_fail_close)
+    try:
+        with pytest.raises(RuntimeAssetSnapshotError) as captured:
+            runtime.main(
+                _runtime_arguments(
+                    robotwin_root=robotwin_root,
+                    resolved_path=resolved_path,
+                    out_dir=out_dir,
+                    event_fd=write_fd,
+                ),
+                base_task_class=base_task,
+            )
+        os.close(write_fd)
+        write_fd = -1
+        transcript = os.read(read_fd, 64 * 1024)
+    finally:
+        os.close(read_fd)
+        if write_fd >= 0:
+            os.close(write_fd)
+
+    assert captured.value.reason == "runtime_asset_tree_drift"
+    assert isinstance(captured.value.__cause__, RuntimeError)
+    assert "injected close failure after drift" in str(captured.value.__cause__)
+    assert any("runtime close also failed" in note for note in captured.value.__notes__)
+    events = RuntimeEventCodec(allowed_artifact_paths=EVENT_ARTIFACT_PATHS).parse_transcript(
+        transcript
+    )
+    assert events[-1].kind.value == "evidence.completed"
+    assert all(event.kind.value != "worker.completed" for event in events)
+    assert len(tasks) == 1 and tasks[0].closed is False
+
+
+def test_runtime_failure_dominates_close_failure_when_snapshot_remains_trusted(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    resolved_path = tmp_path / "resolved.json"
+    _resolved_scene(resolved_path)
+    robotwin_root = _runtime_checkout(tmp_path / "robotwin")
+    out_dir = tmp_path / "output"
+    read_fd, write_fd = os.pipe()
+
+    def fail_close() -> None:
+        raise RuntimeError("injected secondary close failure")
+
+    base_task, tasks = _fake_runtime(monkeypatch, fail_at_step=1, on_close=fail_close)
+    try:
+        with pytest.raises(RuntimeError, match="injected acquisition failure") as captured:
+            runtime.main(
+                _runtime_arguments(
+                    robotwin_root=robotwin_root,
+                    resolved_path=resolved_path,
+                    out_dir=out_dir,
+                    event_fd=write_fd,
+                ),
+                base_task_class=base_task,
+            )
+        os.close(write_fd)
+        write_fd = -1
+        transcript = os.read(read_fd, 64 * 1024)
+    finally:
+        os.close(read_fd)
+        if write_fd >= 0:
+            os.close(write_fd)
+
+    assert isinstance(captured.value.__cause__, RuntimeError)
+    assert "injected secondary close failure" in str(captured.value.__cause__)
+    events = RuntimeEventCodec(allowed_artifact_paths=EVENT_ARTIFACT_PATHS).parse_transcript(
+        transcript
+    )
+    assert [event.kind.value for event in events] == [
+        "preflight.completed",
+        "scene.loaded",
+        "simulation.started",
+    ]
+    assert len(tasks) == 1 and tasks[0].closed is False
+
+
+def test_failure_evidence_write_error_still_closes_and_postverifies_snapshot(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    resolved_path = tmp_path / "resolved.json"
+    _resolved_scene(resolved_path)
+    robotwin_root = _runtime_checkout(tmp_path / "robotwin")
+    out_dir = tmp_path / "output"
+    read_fd, write_fd = os.pipe()
+    base_task, tasks = _fake_runtime(monkeypatch, fail_at_step=1)
+    verification_states: list[bool | None] = []
+    original_verify = runtime.verify_runtime_asset_snapshot
+
+    def trace_verification(**kwargs: Any) -> Any:
+        verified = original_verify(**kwargs)
+        verification_states.append(tasks[-1].closed if tasks else None)
+        return verified
+
+    def fail_evidence_write(_path: Path, _value: Any) -> None:
+        raise RuntimeError("injected failure-evidence write failure")
+
+    monkeypatch.setattr(runtime, "verify_runtime_asset_snapshot", trace_verification)
+    monkeypatch.setattr(runtime, "write_json", fail_evidence_write)
+    try:
+        with pytest.raises(RuntimeError, match="failure-evidence write failure") as captured:
+            runtime.main(
+                _runtime_arguments(
+                    robotwin_root=robotwin_root,
+                    resolved_path=resolved_path,
+                    out_dir=out_dir,
+                    event_fd=write_fd,
+                ),
+                base_task_class=base_task,
+            )
+        os.close(write_fd)
+        write_fd = -1
+        transcript = os.read(read_fd, 64 * 1024)
+    finally:
+        os.close(read_fd)
+        if write_fd >= 0:
+            os.close(write_fd)
+
+    assert any("original runtime failure" in note for note in captured.value.__notes__)
+    assert verification_states == [None, True]
+    events = RuntimeEventCodec(allowed_artifact_paths=EVENT_ARTIFACT_PATHS).parse_transcript(
+        transcript
+    )
+    assert [event.kind.value for event in events] == [
+        "preflight.completed",
+        "scene.loaded",
+        "simulation.started",
+    ]
+    assert len(tasks) == 1 and tasks[0].closed is True
+
+
+def test_base_exception_during_close_still_postverifies_snapshot(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    resolved_path = tmp_path / "resolved.json"
+    _resolved_scene(resolved_path)
+    robotwin_root = _runtime_checkout(tmp_path / "robotwin")
+    out_dir = tmp_path / "output"
+    read_fd, write_fd = os.pipe()
+
+    def interrupt_close() -> None:
+        raise KeyboardInterrupt("injected close interrupt")
+
+    base_task, tasks = _fake_runtime(monkeypatch, on_close=interrupt_close)
+    verification_states: list[bool | None] = []
+    original_verify = runtime.verify_runtime_asset_snapshot
+
+    def trace_verification(**kwargs: Any) -> Any:
+        verified = original_verify(**kwargs)
+        verification_states.append(tasks[-1].closed if tasks else None)
+        return verified
+
+    monkeypatch.setattr(runtime, "verify_runtime_asset_snapshot", trace_verification)
+    try:
+        with pytest.raises(KeyboardInterrupt, match="injected close interrupt"):
+            runtime.main(
+                _runtime_arguments(
+                    robotwin_root=robotwin_root,
+                    resolved_path=resolved_path,
+                    out_dir=out_dir,
+                    event_fd=write_fd,
+                ),
+                base_task_class=base_task,
+            )
+        os.close(write_fd)
+        write_fd = -1
+        transcript = os.read(read_fd, 64 * 1024)
+    finally:
+        os.close(read_fd)
+        if write_fd >= 0:
+            os.close(write_fd)
+
+    assert verification_states == [None, False]
+    events = RuntimeEventCodec(allowed_artifact_paths=EVENT_ARTIFACT_PATHS).parse_transcript(
+        transcript
+    )
+    assert events[-1].kind.value == "evidence.completed"
+    assert all(event.kind.value != "worker.completed" for event in events)
+    assert len(tasks) == 1 and tasks[0].closed is False
 
 
 def test_precheck_steps_are_visible_physics_and_final_checkpoint_is_not_hidden(
@@ -1315,7 +1879,7 @@ def test_scene_loaded_event_requires_successful_asset_setup(
     monkeypatch.setattr(
         runtime,
         "load_resolved_scene",
-        lambda *_: (_ for _ in ()).throw(RuntimeError("asset setup failed")),
+        lambda *_, **__: (_ for _ in ()).throw(RuntimeError("asset setup failed")),
     )
     read_fd, write_fd = os.pipe()
     try:
@@ -1443,28 +2007,26 @@ def test_video_disabled_publishes_only_files_that_exist_and_keeps_real_step_coun
     base_task, tasks = _fake_runtime(monkeypatch)
     read_fd, write_fd = os.pipe()
     try:
-        exit_code = runtime.main(
-            [
-                "--robotwin-root",
-                str(robotwin_root),
-                "--resolved-scene",
-                str(resolved_path),
-                "--asset-catalog",
-                str(ROOT / "tests" / "fixtures" / "asset_catalog.json"),
-                "--out-dir",
-                str(out_dir),
+        arguments = _runtime_arguments(
+            robotwin_root=robotwin_root,
+            resolved_path=resolved_path,
+            out_dir=out_dir,
+            event_fd=write_fd,
+            asset_catalog_path=ROOT / "tests" / "fixtures" / "asset_catalog.json",
+        )
+        arguments.extend(
+            (
                 "--settle-steps",
                 "2",
+                "--settle-converge-max",
+                "0",
                 "--video-frames",
                 "0",
-                "--event-fd",
-                str(write_fd),
-                "--expected-capability-sha256",
-                _capability_sha256(runtime, robotwin_root),
-                "--evidence-only",
-            ],
-            base_task_class=base_task,
+                "--checkpoint-steps",
+                "120",
+            )
         )
+        exit_code = runtime.main(arguments, base_task_class=base_task)
         os.close(write_fd)
         write_fd = -1
         transcript = os.read(read_fd, 64 * 1024)
@@ -1582,6 +2144,12 @@ def test_invalid_event_transport_fails_closed_before_simulation(
     ]
     if event_fd is not None:
         arguments.extend(("--event-fd", str(event_fd)))
+        arguments.extend(
+            _runtime_asset_arguments(
+                resolved_path=resolved_path,
+                out_dir=tmp_path / "output",
+            )
+        )
 
     with pytest.raises(error_type):
         runtime.main(arguments, base_task_class=base_task)

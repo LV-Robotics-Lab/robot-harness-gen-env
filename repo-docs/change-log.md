@@ -2,6 +2,11 @@
 
 ## 2026-08-31
 
+- 增加 replay 的 CAS runtime-asset snapshot：绑定 resolved/catalog、selected model、空目录与全文件
+  identity，解析 URDF/OBJ/MTL/glTF/GLB/COLLADA 引用闭包，运行前后逐树复验；修复 URDF model
+  目录错选、CAS 子目录 symlink/rename race、损坏 CAS 无界读取和资产漂移失败类型。专项 100%
+  statement/branch，真实 2-step
+  RoboTwin/SAPIEN acquisition pass；短 horizon validation fail，未冒充 900/120 发布通过。
 - 固定官方 ASPIRE 源码为 `external/ASPIRE@7ba73d3` 子模块，并在
   `self_improving/studies/ASPIRE/` 保存论文/官方资料、源码审计、宿主 harness 审计、复现边界、
   预注册实验、逐步日志和机读结果；明确本机只复现无服务机制测试，未复现论文尺度基准。

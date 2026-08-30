@@ -29,6 +29,11 @@ from scene_gen.support_geometry import (
     support_surface_shape,
 )
 from scene_gen.validator import validate_resolved_scene
+from self_improving.harness.runtime_assets import (
+    RuntimeAssetSnapshotError,
+    RuntimeAssetWorkerError,
+    verify_runtime_asset_snapshot,
+)
 from self_improving.harness.runtime_capability import (
     RUNTIME_ARTIFACT_PATHS,
     RUNTIME_EVIDENCE_ARTIFACT_PATHS,
@@ -632,6 +637,12 @@ def main(
     parser.add_argument("--checkpoint-steps", type=_positive_int, default=120)
     parser.add_argument("--event-fd", type=int)
     parser.add_argument("--expected-capability-sha256", type=_sha256_argument)
+    parser.add_argument("--runtime-asset-root")
+    parser.add_argument("--runtime-asset-manifest")
+    parser.add_argument(
+        "--expected-runtime-asset-snapshot-sha256",
+        type=_sha256_argument,
+    )
     parser.add_argument(
         "--event-protocol",
         choices=(RUNTIME_EVENT_SCHEMA,),
@@ -657,6 +668,17 @@ def main(
         return 0
     if args.event_fd is not None and args.expected_capability_sha256 is None:
         parser.error("--expected-capability-sha256 is required with --event-fd")
+    runtime_asset_values = (
+        args.runtime_asset_root,
+        args.runtime_asset_manifest,
+        args.expected_runtime_asset_snapshot_sha256,
+    )
+    if any(value is not None for value in runtime_asset_values) and not all(
+        value is not None for value in runtime_asset_values
+    ):
+        parser.error("runtime asset root, manifest, and expected digest must be provided together")
+    if args.event_fd is not None and not all(value is not None for value in runtime_asset_values):
+        parser.error("a complete runtime asset snapshot is required with --event-fd")
     if args.expected_capability_sha256 is not None:
         current_capability = describe_runtime_capabilities(
             robotwin_root=robotwin_root,
@@ -679,6 +701,26 @@ def main(
     out_dir = Path(args.out_dir).expanduser().absolute()
     _prepare_output_root(out_dir)
     resolved = ResolvedSceneSpec.model_validate_json(resolved_path.read_text(encoding="utf-8"))
+    catalog = None
+    if catalog_path:
+        from scene_gen.catalog import load_catalog
+
+        catalog = load_catalog(catalog_path)
+    verified_runtime_assets = None
+    if all(value is not None for value in runtime_asset_values):
+        assert args.runtime_asset_root is not None
+        assert args.runtime_asset_manifest is not None
+        assert args.expected_runtime_asset_snapshot_sha256 is not None
+        try:
+            verified_runtime_assets = verify_runtime_asset_snapshot(
+                root=Path(args.runtime_asset_root).expanduser().absolute(),
+                manifest_path=Path(args.runtime_asset_manifest).expanduser().absolute(),
+                expected_sha256=args.expected_runtime_asset_snapshot_sha256,
+                resolved=resolved,
+                catalog=catalog,
+            )
+        except RuntimeAssetSnapshotError as error:
+            raise RuntimeAssetWorkerError("preflight", error) from error
     event_emitter = _runtime_event_emitter(
         event_fd=args.event_fd,
         event_protocol=args.event_protocol,
@@ -695,13 +737,22 @@ def main(
         def __init__(self, scene: ResolvedSceneSpec):
             super().__init__()
             self.resolved_scene = scene
+            self.runtime_asset_roots = (
+                verified_runtime_assets.object_roots
+                if verified_runtime_assets is not None
+                else None
+            )
             self.generated_objects: dict[str, Any] = {}
 
         def setup_demo(self, **kwargs: Any) -> None:
             super()._init_task_env_(**kwargs)
 
         def load_actors(self) -> None:
-            self.generated_objects = load_resolved_scene(self, self.resolved_scene)
+            self.generated_objects = load_resolved_scene(
+                self,
+                self.resolved_scene,
+                asset_roots=self.runtime_asset_roots,
+            )
 
         def check_stable(self):
             return True, []
@@ -719,15 +770,13 @@ def main(
         "seed": resolved.seed,
         "status": "started",
     }
+    if verified_runtime_assets is not None:
+        report["runtime_asset_snapshot_sha256"] = verified_runtime_assets.manifest_sha256
     task: GeneratedSceneRuntime | None = None
+    runtime_error: BaseException | None = None
     try:
         runtime_args = load_robotwin_args(robotwin_root, args.task_config)
         runtime_args["save_path"] = str(out_dir)
-        catalog = None
-        if catalog_path:
-            from scene_gen.catalog import load_catalog
-
-            catalog = load_catalog(catalog_path)
         _emit_runtime_event(
             event_emitter,
             kind=RuntimeEventKind.PREFLIGHT_COMPLETED,
@@ -1110,13 +1159,60 @@ def main(
             f"fail={validation['fail_count']} video_frames={len(frames)}"
         )
         exit_code = 0 if args.evidence_only or validation["status"] == "pass" else 2
-    except Exception as error:
+    except BaseException as error:
         report.update({"status": "fail", "error": repr(error)})
-        write_json(out_dir / "runtime_evidence.json", report)
-        print(f"FAIL {out_dir / 'runtime_evidence.json'}")
-        raise
-    finally:
+        try:
+            write_json(out_dir / "runtime_evidence.json", report)
+            print(f"FAIL {out_dir / 'runtime_evidence.json'}")
+        except BaseException as reporting_error:
+            reporting_error.add_note(f"original runtime failure: {error!r}")
+            runtime_error = reporting_error
+        else:
+            runtime_error = error
+
+    close_error: BaseException | None = None
+    try:
         _close_runtime_task(task)
+    except BaseException as error:
+        close_error = error
+
+    snapshot_error: BaseException | None = None
+    if verified_runtime_assets is not None:
+        assert args.runtime_asset_root is not None
+        assert args.runtime_asset_manifest is not None
+        assert args.expected_runtime_asset_snapshot_sha256 is not None
+        try:
+            verify_runtime_asset_snapshot(
+                root=Path(args.runtime_asset_root).expanduser().absolute(),
+                manifest_path=Path(args.runtime_asset_manifest).expanduser().absolute(),
+                expected_sha256=args.expected_runtime_asset_snapshot_sha256,
+                resolved=resolved,
+                catalog=catalog,
+            )
+        except BaseException as error:
+            snapshot_error = error
+
+    # Trust-boundary failures dominate execution failures. A simulator crash
+    # must not hide the fact that the loader tree changed while it was in use.
+    if snapshot_error is not None:
+        effective_snapshot_error = (
+            RuntimeAssetWorkerError("postflight", snapshot_error)
+            if isinstance(snapshot_error, RuntimeAssetSnapshotError)
+            else snapshot_error
+        )
+        if close_error is not None:
+            effective_snapshot_error.add_note(f"runtime close also failed: {close_error!r}")
+        if runtime_error is not None:
+            raise effective_snapshot_error from runtime_error
+        if close_error is not None:
+            raise effective_snapshot_error from close_error
+        raise effective_snapshot_error
+    if runtime_error is not None:
+        if close_error is not None:
+            raise runtime_error from close_error
+        raise runtime_error
+    if close_error is not None:
+        raise close_error
     _emit_runtime_event(
         event_emitter,
         kind=RuntimeEventKind.WORKER_COMPLETED,
@@ -1125,4 +1221,7 @@ def main(
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except RuntimeAssetWorkerError as error:
+        raise SystemExit(error.exit_code) from None

@@ -81,13 +81,16 @@
 | `schema_catalog.py`、`json_schemas/` | 14 个公开 `$id` 到模型的不可变目录，以及可审阅的 JSON Schema 快照和漂移检测。 | `SCHEMA_MODELS`、`schema_documents`、`export_schema_snapshots` | `python script/export_harness_schemas.py --check`、`tests/self_improving/harness/test_schema_catalog.py`、[PR1 实现报告](../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md) |
 | `artifacts.py`、`events.py`、`event_journal.py`、`registry.py` | 本地摘要复核、callback 事件记录、SQLite append-only 持久主账、通用 exact-version Skill 注册/调用。 | `LocalArtifactStore`、`RunRecorder`、`SQLiteEventJournal`、`SkillRegistry` | 对应 `tests/self_improving/harness/` 测试；安全/回归边界见 [Harness Schema Tranche](modules/harness-schema-tranche.md) |
 | `package_store.py` | 按 manifest 把 package members 发布到 CAS，并在隔离 staging 中重物化、复核后逐目录晋升。 | `PackageStore`、`PublishedPackage`、`PackageStoreError` | `tests/self_improving/harness/test_package_store.py`；它解决 package bytes 重建，不解决完整 run/media receipt |
+| `runtime_events.py`、`runtime_capability.py`、`runtime_executor.py`、`runtime_assets.py` | 用专用事件 FD、双 capability 探测和 CAS 资产快照监督隔离的 RoboTwin replay；运行前后复验完整 loader 树。 | `RuntimeEventCodec`、`describe_runtime_capability`、`SubprocessRoboTwinRuntimeExecutor`、`RuntimeAssetStore` | 对应四组 Harness 测试；真实 2-step can-on-plate smoke 只证明接线，不能替代 900/120 validation |
 | `handlers/text2env_compile.py`、`text2env_compile_dependencies.py` | 显式组装后的 compile adapter：从 CAS catalog 调权威 `compile_scene`、发事件、收集制品、复核 package，并记录可变依赖。 | `Text2EnvCompileHandler`、`Text2EnvCompileDependencyResolver`、`text2env_compile_descriptor` | `test_text2env_compile_handler.py`；`ef5e29e`/`910ccb1` 锁住 catalog mutation，外部 asset payload 本身仍非执行 snapshot |
 | `qualification.py` | 严格加载一份预制 pass bundle，核 receipt/report/manifest、manifest 已列实现文件及 source-tree 摘要，再发布 CAS snapshot。 | `load_qualification_bundle`、`QualificationReportV1`、`ImplementationManifestV1` | `test_qualification.py`；截至 `ab03859` 无 Registry callsite，不执行资格案例，也不是 promotion transaction |
 | `run_store.py` | 以 SQLite 保存 immutable Invocation 与 terminal RunState，并在读写时对账 event journal。 | `SQLiteRunStore`、`RunStoreConflictError`、`RunStoreCorruptionError` | `test_run_store.py`；截至 `ab03859` 未接入 Registry、无 resume、不会重验 artifact bytes 或导出完整 EvaluationRun identity |
 
 PR1 只完成 schema tranche；后续已增加通用 `SkillRegistry`、PackageStore、compile adapter、静态
 qualification bundle verifier 与 RunStore adapter，但
-replay/validate、自动 composition 和 MCP adapter 尚未实现。契约文档仍是 `Status: Proposed`，不能
+固定 `ab03859` 当时 replay/validate、自动 composition 和 MCP adapter 尚未实现。后续已加入独立
+validate handler，以及 replay 的 event/capability/executor/immutable-asset 底座；截至 A035，正式
+replay handler 仍在接线，不能把这些底座写成端到端 Skill 已晋升。契约文档仍是 `Status: Proposed`，不能
 从这些构件推断三个 Skill 已接通、输入冻结、资产晋升具事务性、EvaluationRun 身份闭合或 RFC 已
 Accepted。
 PR1 的 21 个专项测试是历史基线；当前验证边界见模块页与

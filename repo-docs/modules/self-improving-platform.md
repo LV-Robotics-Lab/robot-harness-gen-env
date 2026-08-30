@@ -48,6 +48,12 @@ post-close `ab03859` clean archive 上 Harness 为 133 passed / 99.91% coverage�
 同一 coverage branch 仍失败。qualification/packaging/RunStore 是独立 prerequisites，不执行
 development/clean qualification，不具原子 promotion/rollback，也不闭合 replay media identity。
 
+2026-08-31 的后续切片已把 compile qualification/production CLI、独立 validate handler、严格 replay
+event、runtime capability、subprocess executor 和 CAS runtime-asset snapshot 分别落地。runtime asset
+层会闭合 selected tree 与 URDF/OBJ/MTL/glTF/GLB/COLLADA loader 引用，worker 在首事件前与 close 后复验；真实
+can-on-plate 2-step smoke 已取得 acquisition pass，但物理 validation 因短 horizon 失败。正式 replay
+handler、900/120 发布门、VLM fallback、LLM orchestration 和工作台仍不能从这些底座推断为完成。
+
 Stage 5 的视觉评审状态是三态而非布尔值。在 `--run-smoke`/视觉评审路径中，只有 visual pass
 才把 candidate 原子晋升为 `final_placement.json` 并退出 0；`pending_visual_review` 只写
 `review_candidate_placement.json`，保留 `hold_for_review`/pending 字段并退出 2。batch 只有显式

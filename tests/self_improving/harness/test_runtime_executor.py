@@ -8,9 +8,11 @@ import sys
 import time
 from dataclasses import dataclass, replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+from self_improving.harness import runtime_executor
 from self_improving.harness.runtime_capability import RUNTIME_ENVIRONMENT_ALLOWLIST
 from self_improving.harness.runtime_executor import (
     RUNTIME_ARTIFACT_PATHS,
@@ -80,6 +82,9 @@ parser.add_argument("--checkpoint-steps")
 parser.add_argument("--event-fd", type=int)
 parser.add_argument("--event-protocol")
 parser.add_argument("--expected-capability-sha256")
+parser.add_argument("--runtime-asset-root")
+parser.add_argument("--runtime-asset-manifest")
+parser.add_argument("--expected-runtime-asset-snapshot-sha256")
 parser.add_argument("--evidence-only", action="store_true")
 args = parser.parse_args()
 
@@ -144,6 +149,7 @@ capability = {
         "scene_gen": {"tree_sha256": "5" * 64},
         "runtime_events": {"sha256": "6" * 64},
         "runtime_capability": {"sha256": "7" * 64},
+        "runtime_assets": {"sha256": "8" * 64},
     },
     "task_config": {
         "path": f"task_config/{args.task_config}.yml",
@@ -202,6 +208,21 @@ capability = {
             "transport": "dedicated_fd_jsonl",
             "kinds": EVENT_KINDS,
             "artifact_paths": ARTIFACTS,
+        },
+        "asset_snapshot": {
+            "manifest_schema": "harness.runtime_asset_snapshot.v1",
+            "tree_strategy": "selected_asset_complete_tree.v1",
+            "transport": "cas_materialized_read_only_tree",
+            "required_with_event_fd": True,
+            "verification": "whole_tree_before_first_event_and_after_runtime_close",
+            "failure_exit_codes": {"preflight": 86, "postflight_drift": 87},
+            "limits": {
+                "max_assets": 256,
+                "max_directories": 100000,
+                "max_files": 100000,
+                "max_single_file_bytes": 2147483648,
+                "max_total_bytes": 8589934592,
+            },
         },
     },
 }
@@ -324,11 +345,27 @@ if args.describe_capabilities:
 actual_capability_sha = hashlib.sha256(canonical.encode()).hexdigest()
 if args.expected_capability_sha256 != actual_capability_sha:
     raise SystemExit(13)
+if not all([
+    args.runtime_asset_root,
+    args.runtime_asset_manifest,
+    args.expected_runtime_asset_snapshot_sha256,
+]):
+    raise SystemExit(14)
+runtime_asset_manifest = Path(args.runtime_asset_manifest)
+if (
+    not Path(args.runtime_asset_root).is_dir()
+    or not runtime_asset_manifest.is_file()
+    or hashlib.sha256(runtime_asset_manifest.read_bytes()).hexdigest()
+    != args.expected_runtime_asset_snapshot_sha256
+):
+    raise SystemExit(15)
 mode = json.loads(Path(args.resolved_scene).read_text())["mode"]
 out = Path(args.out_dir)
 if mode == "preflight_crash":
     print("missing runtime dependency", file=sys.stderr)
     raise SystemExit(8)
+if mode == "asset_preflight_failure":
+    raise SystemExit(86)
 if mode == "capability_drift":
     (root / "runtime-drift").write_text("changed\\n")
 if mode == "postflight_exit":
@@ -444,6 +481,8 @@ elif mode == "event_after_terminal":
     })
 elif mode in {"partial", "crash", "crash_postflight_bad"}:
     events = events[:3]
+elif mode == "asset_postflight_drift":
+    events = events[:-1]
 
 if mode == "output_symlink":
     (out / "preview_head.png").unlink()
@@ -477,6 +516,8 @@ print("diagnostic only", file=sys.stderr)
 if mode == "env":
     print("secret=" + os.environ.get("RUNTIME_EXECUTOR_SECRET", "absent"))
     print("pythonpath=" + os.environ["PYTHONPATH"])
+if mode == "asset_postflight_drift":
+    raise SystemExit(87)
 raise SystemExit(7 if mode in {"crash", "crash_postflight_bad"} else 0)
 """,
         encoding="utf-8",
@@ -543,6 +584,14 @@ def _case(
     resolved.write_text(json.dumps({"mode": mode}) + "\n", encoding="utf-8")
     catalog = tmp_path / "catalog.json"
     catalog.write_text("{}\n", encoding="utf-8")
+    runtime_asset_root = tmp_path / "runtime assets"
+    runtime_asset_root.mkdir()
+    (runtime_asset_root / "fixture").write_bytes(b"asset")
+    runtime_asset_manifest = tmp_path / "runtime asset manifest.json"
+    runtime_asset_manifest.write_bytes(b'{"fixture":"runtime-assets"}\n')
+    expected_runtime_asset_snapshot_sha256 = hashlib.sha256(
+        runtime_asset_manifest.read_bytes()
+    ).hexdigest()
     expected = _capability_digest(runner, robotwin)
     executor = SubprocessRoboTwinRuntimeExecutor(
         interpreter=Path(sys.executable),
@@ -564,6 +613,9 @@ def _case(
         resolved_scene=resolved,
         asset_catalog=catalog,
         expected_capability_sha256=expected,
+        runtime_asset_root=runtime_asset_root,
+        runtime_asset_manifest=runtime_asset_manifest,
+        expected_runtime_asset_snapshot_sha256=expected_runtime_asset_snapshot_sha256,
         settle_steps=3,
         video_frames=video_frames,
         checkpoint_steps=2,
@@ -607,6 +659,56 @@ def test_execute_uses_only_dedicated_event_fd_and_snapshots_outputs(tmp_path: Pa
         environment["PYTHONPATH"]["value_sha256"]
         == hashlib.sha256(str(case.runner.parent).encode()).hexdigest()
     )
+
+
+def test_execute_rejects_runtime_asset_manifest_drift_before_spawning_worker(
+    tmp_path: Path,
+) -> None:
+    case = _case(tmp_path)
+    case.job.runtime_asset_manifest.write_bytes(b"changed-after-job-construction\n")
+
+    with pytest.raises(RuntimeExecutorConfigurationError, match="runtime asset snapshot"):
+        case.run()
+
+
+def test_execute_rejects_runtime_asset_manifest_race_before_creating_attempt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    case = _case(tmp_path)
+    original_fstat = runtime_executor.os.fstat
+    calls = 0
+
+    def raced_fstat(descriptor: int):
+        nonlocal calls
+        value = original_fstat(descriptor)
+        try:
+            opened = Path(os.readlink(f"/proc/self/fd/{descriptor}"))
+        except OSError:
+            return value
+        if opened == case.job.runtime_asset_manifest:
+            calls += 1
+            if calls == 2:
+                fields = {
+                    name: getattr(value, name)
+                    for name in (
+                        "st_dev",
+                        "st_ino",
+                        "st_mode",
+                        "st_size",
+                        "st_mtime_ns",
+                        "st_ctime_ns",
+                    )
+                }
+                fields["st_mtime_ns"] += 1
+                return SimpleNamespace(**fields)
+        return value
+
+    monkeypatch.setattr(runtime_executor.os, "fstat", raced_fstat)
+
+    with pytest.raises(RuntimeExecutorConfigurationError, match="changed while being read"):
+        case.run()
+    assert not case.executor.work_root.exists()
 
 
 def test_execute_requires_all_requested_video_artifacts(tmp_path: Path) -> None:
@@ -698,6 +800,23 @@ def test_exit_before_first_event_is_typed_as_runtime_preflight_failure(tmp_path:
     _assert_failure(result, RuntimeFailureCode.RUNTIME_PREFLIGHT_FAILED)
     assert result.events == ()
     assert b"missing runtime dependency" in result.stderr
+
+
+def test_runtime_asset_preflight_failure_is_typed_before_any_event(tmp_path: Path) -> None:
+    result = _case(tmp_path, mode="asset_preflight_failure").run()
+
+    _assert_failure(result, RuntimeFailureCode.RUNTIME_PREFLIGHT_FAILED)
+    assert result.events == ()
+
+
+def test_runtime_asset_postflight_drift_retains_dedicated_trust_failure(
+    tmp_path: Path,
+) -> None:
+    result = _case(tmp_path, mode="asset_postflight_drift").run()
+
+    _assert_failure(result, RuntimeFailureCode.RUNTIME_ASSET_DRIFT)
+    assert result.events
+    assert all(event.kind.value != "worker.completed" for event in result.events)
 
 
 @pytest.mark.parametrize("mode", ["stdout_limit", "stderr_limit", "transcript_limit"])
@@ -1027,6 +1146,14 @@ def test_observer_must_be_callable(tmp_path: Path) -> None:
         ({"task_config": "a..b"}, "task_config"),
         ({"expected_capability_sha256": "ABC"}, "expected_capability"),
         ({"expected_capability_sha256": None}, "expected_capability"),
+        (
+            {"expected_runtime_asset_snapshot_sha256": "ABC"},
+            "expected_runtime_asset_snapshot",
+        ),
+        (
+            {"expected_runtime_asset_snapshot_sha256": None},
+            "expected_runtime_asset_snapshot",
+        ),
         ({"precheck_steps": -1}, "precheck_steps"),
         ({"video_frames": True}, "video_frames"),
         ({"min_visible_pixels": -1}, "min_visible_pixels"),

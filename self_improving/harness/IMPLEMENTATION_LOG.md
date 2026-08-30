@@ -614,3 +614,40 @@
   steps 产生严格 9 事件（包含 checkpoint 1/2 + completed 2）、6 份 allowlisted artifacts，
   validation PASS。四模块联合 `406 passed`；executor `124 passed`，statement `614/614`、
   branch `204/204`；当前模块 ruff、format、compileall 与 diff check 通过。
+
+### 2026-08-31 / A035：replay 只能从 CAS 固化的完整 loader 资产树执行
+
+- RED 与独立审查：旧 replay 只哈希 catalog 顶层 `source_files`，不能证明 URDF→mesh、
+  OBJ→MTL→texture、GLTF 外部 buffer/image 的传递闭包；catalog 与 resolved digest 也未对账。
+  真实 `009_kettle` 有 13 个会被 loader 消费、却不在旧收据里的下游字节。另复现了
+  RoboTwin 对 URDF `model_id` 按子目录排序索引而加载错目录、`cas/sha256` symlink 把对象写出
+  声明根、损坏 CAS 先读完 8 MiB 才拒绝，以及 postflight 漂移被降格为普通 worker crash。
+- 深模块：新增 `RuntimeAssetStore`，把 resolved/catalog identity、selected asset/model、完整目录
+  （含空目录）、每个文件的 SHA/bytes、catalog loader roots 和传递引用闭包写成 path-free canonical
+  manifest；只从 CAS 重物化 attempt-local 只读树。URDF/OBJ/MTL/glTF/GLB/COLLADA 引用必须是树内
+  相对路径；绝对、网络、package、反斜杠、百分号编码、越根、缺成员和不合法文档全部 fail closed；
+  无可审计依赖语义的 FBX 等格式保守拒绝。
+- loader 接线：worker 第一条事件前校验 manifest、resolved/catalog、精确树和 loader graph；运行时
+  rigid/URDF 都只接收 snapshot object root。URDF 直接接收 catalog 选中的 model root 且
+  `modelid=None`，不再让 RoboTwin 用排序索引猜目录；close 后再次逐名、逐类型、逐大小、逐摘要
+  复验。成功和仿真失败路径都执行 postverify，漂移优先成为 reserved exit 87。
+- 资源与进程边界：协议钉住 asset/file/directory/single/total bytes 上限；CAS namespace 逐层
+  `dir_fd + O_NOFOLLOW`，并把 shard directory fd 持有到 read/install/stat/fsync/replace 整个操作结束，
+  即使校验后目录被换成 symlink 也不会把对象写出 CAS。复用对象先 `fstat` 精确大小，超大损坏对象
+  在读取 0 bytes 时拒绝；materialize 最多读取声明 bytes+1，verify 先比精确名字和大小再哈希。
+  capability 同时绑定 snapshot 协议与实现源码；executor 把 exit 86 映射为无事件 preflight
+  failure，把事件后的 exit 87 映射为 `runtime_asset_drift`，矛盾组合视为协议错误。
+- 攻击覆盖：catalog hash chain、错 model root、GLB chunk/隐式 BIN、COLLADA 外部引用、opaque format、
+  外部/循环/内嵌引用、空目录、CAS symlink/FIFO/rename race、同长度漂移、文件/目录互换、读取中增长、
+  TOCTOU、资源上限和 structured exit 均有回归。`runtime_assets.py` 专项 `237 passed`，statement
+  `1114/1114`、branch `488/488`；五模块联合 `568 passed`，ruff、format 与 diff check 通过；独立
+  复审在 substrate 范围未发现新的 P0/P1。
+- 真机尝试留痕：第一次资格脚本在 capability 已探测后，因把 `MappingProxyType` 直接交给 JSON
+  编码器而退出，未进仿真；第二次真实 SAPIEN 已完成，但收尾脚本误读 validation 为嵌套
+  `summary` 而在证据落盘后 `KeyError`；第三次修正后命令整体退出 0。随后 GLB/COLLADA 与 CAS
+  descriptor-lifetime 收紧改变 capability identity，因此又从最新源码重跑一次。最终证据目录
+  `/tmp/runtime-assets-acceptance-final.0tezhu02`：resolved `96e99514…be3ee`、catalog
+  `6d25cb28…b2a7`、snapshot `43df3780…b43d4`（23 members）、capability
+  `9558ac68…000d5`，真实 9 事件、6 个白名单输出，runtime acquisition `pass` 且 evidence 内同一
+  snapshot digest。该 smoke 只有 2 physics steps，因此 validation 诚实为 `fail`（2 failed、0
+  not-run）；它证明不可变资产接线与真实回调，不冒充 900/120 发布门禁。

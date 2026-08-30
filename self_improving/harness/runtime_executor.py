@@ -24,6 +24,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Protocol
 
+from .runtime_assets import RUNTIME_ASSET_DRIFT_EXIT_CODE, RUNTIME_ASSET_PREFLIGHT_EXIT_CODE
 from .runtime_capability import (
     RUNTIME_ARTIFACT_PATHS,
     RUNTIME_ENVIRONMENT_ALLOWLIST,
@@ -67,6 +68,7 @@ class RuntimeFailureCode(str, Enum):
     INCOMPLETE_TRANSCRIPT = "incomplete_transcript"
     WORKER_TIMEOUT = "worker_timeout"
     RUNTIME_PREFLIGHT_FAILED = "runtime_preflight_failed"
+    RUNTIME_ASSET_DRIFT = "runtime_asset_drift"
     WORKER_CRASH = "worker_crash"
     STREAM_LIMIT_EXCEEDED = "stream_limit_exceeded"
     OBSERVER_FAILED = "observer_failed"
@@ -120,6 +122,9 @@ class RuntimeJob:
     robotwin_root: Path
     resolved_scene: Path
     expected_capability_sha256: str
+    runtime_asset_root: Path
+    runtime_asset_manifest: Path
+    expected_runtime_asset_snapshot_sha256: str
     asset_catalog: Path | None = None
     task_config: str = "demo_clean"
     precheck_steps: int = 0
@@ -589,6 +594,12 @@ class SubprocessRoboTwinRuntimeExecutor:
             RUNTIME_EVENT_SCHEMA,
             "--expected-capability-sha256",
             job.expected_capability_sha256,
+            "--runtime-asset-root",
+            str(job.runtime_asset_root),
+            "--runtime-asset-manifest",
+            str(job.runtime_asset_manifest),
+            "--expected-runtime-asset-snapshot-sha256",
+            job.expected_runtime_asset_snapshot_sha256,
             "--evidence-only",
         ]
         if job.asset_catalog is not None:
@@ -770,11 +781,24 @@ def _capture_worker(
 
     transcript_complete = lifecycle.complete and failure is None
     if failure is None and process.returncode != 0:
-        failure_code = (
-            RuntimeFailureCode.WORKER_CRASH
-            if events
-            else RuntimeFailureCode.RUNTIME_PREFLIGHT_FAILED
-        )
+        if process.returncode == RUNTIME_ASSET_PREFLIGHT_EXIT_CODE:
+            failure_code = (
+                RuntimeFailureCode.EVENT_PROTOCOL_ERROR
+                if events
+                else RuntimeFailureCode.RUNTIME_PREFLIGHT_FAILED
+            )
+        elif process.returncode == RUNTIME_ASSET_DRIFT_EXIT_CODE:
+            failure_code = (
+                RuntimeFailureCode.RUNTIME_ASSET_DRIFT
+                if events
+                else RuntimeFailureCode.EVENT_PROTOCOL_ERROR
+            )
+        else:
+            failure_code = (
+                RuntimeFailureCode.WORKER_CRASH
+                if events
+                else RuntimeFailureCode.RUNTIME_PREFLIGHT_FAILED
+            )
         failure = RuntimeFailure(
             failure_code,
             f"runtime worker exited with code {process.returncode}",
@@ -956,8 +980,29 @@ def _validate_job(job: RuntimeJob) -> RuntimeJob:
         raise RuntimeExecutorConfigurationError(
             "expected_capability_sha256 must be 64 lowercase hexadecimal characters"
         )
+    if not isinstance(job.expected_runtime_asset_snapshot_sha256, str) or not _SHA256.fullmatch(
+        job.expected_runtime_asset_snapshot_sha256
+    ):
+        raise RuntimeExecutorConfigurationError(
+            "expected_runtime_asset_snapshot_sha256 must be 64 lowercase hexadecimal characters"
+        )
     robotwin_root = _safe_directory(job.robotwin_root, label="robotwin_root")
     resolved_scene = _safe_input_file(job.resolved_scene, label="resolved_scene")
+    runtime_asset_root = _safe_directory(job.runtime_asset_root, label="runtime_asset_root")
+    runtime_asset_manifest = _safe_input_file(
+        job.runtime_asset_manifest,
+        label="runtime_asset_manifest",
+    )
+    try:
+        manifest_sha256, _ = _open_file_snapshot(runtime_asset_manifest)
+    except (OSError, ValueError) as error:
+        raise RuntimeExecutorConfigurationError(
+            f"runtime asset snapshot manifest {error}"
+        ) from error
+    if manifest_sha256 != job.expected_runtime_asset_snapshot_sha256:
+        raise RuntimeExecutorConfigurationError(
+            "runtime asset snapshot manifest does not match its expected digest"
+        )
     asset_catalog = (
         _safe_input_file(job.asset_catalog, label="asset_catalog")
         if job.asset_catalog is not None
@@ -977,6 +1022,9 @@ def _validate_job(job: RuntimeJob) -> RuntimeJob:
         robotwin_root=robotwin_root,
         resolved_scene=resolved_scene,
         expected_capability_sha256=job.expected_capability_sha256,
+        runtime_asset_root=runtime_asset_root,
+        runtime_asset_manifest=runtime_asset_manifest,
+        expected_runtime_asset_snapshot_sha256=job.expected_runtime_asset_snapshot_sha256,
         asset_catalog=asset_catalog,
         task_config=job.task_config,
         precheck_steps=job.precheck_steps,
@@ -1130,8 +1178,8 @@ def _open_file_snapshot(path: Path) -> tuple[str, int]:
     digest = hashlib.sha256()
     size = 0
     try:
-        file_stat = os.fstat(descriptor)
-        if not stat.S_ISREG(file_stat.st_mode):
+        before = os.fstat(descriptor)
+        if not stat.S_ISREG(before.st_mode):
             raise ValueError("runtime output changed type while being read")
         while True:
             chunk = os.read(descriptor, 1024 * 1024)
@@ -1139,9 +1187,23 @@ def _open_file_snapshot(path: Path) -> tuple[str, int]:
                 break
             digest.update(chunk)
             size += len(chunk)
+        after = os.fstat(descriptor)
     finally:
         os.close(descriptor)
+    if _snapshot_file_identity(before) != _snapshot_file_identity(after) or size != before.st_size:
+        raise ValueError("changed while being read")
     return digest.hexdigest(), size
+
+
+def _snapshot_file_identity(value: os.stat_result) -> tuple[int, int, int, int, int, int]:
+    return (
+        value.st_dev,
+        value.st_ino,
+        value.st_mode,
+        value.st_size,
+        value.st_mtime_ns,
+        value.st_ctime_ns,
+    )
 
 
 def _unique_json_object(pairs: list[tuple[str, object]]) -> dict[str, object]:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import stat
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -25,9 +27,7 @@ def _runtime_modelname(item: Any) -> str:
         return item.asset_id
 
     metadata_name = (
-        "model_data.json"
-        if item.model_id is None
-        else f"model_data{item.model_id}.json"
+        "model_data.json" if item.model_id is None else f"model_data{item.model_id}.json"
     )
     source_paths = tuple(Path(path).resolve() for path in item.source_files)
     metadata_paths = [path for path in source_paths if path.name == metadata_name]
@@ -39,12 +39,49 @@ def _runtime_modelname(item: Any) -> str:
         return item.asset_id
 
     sources_are_valid = all(
-        path.is_file() and path.is_relative_to(asset_directory)
-        for path in source_paths
+        path.is_file() and path.is_relative_to(asset_directory) for path in source_paths
     )
     if not sources_are_valid:
         return item.asset_id
     return str(asset_directory)
+
+
+def _validated_asset_roots(
+    scene: ResolvedSceneSpec,
+    asset_roots: Mapping[str, Path] | None,
+) -> dict[str, Path] | None:
+    if asset_roots is None:
+        return None
+    if not isinstance(asset_roots, Mapping):
+        raise ValueError("asset_roots must be a mapping from object_id to Path")
+    expected = {item.object_id for item in scene.objects}
+    if set(asset_roots) != expected:
+        raise ValueError("asset_roots must exactly cover every resolved object_id")
+    result: dict[str, Path] = {}
+    for item in scene.objects:
+        raw_root = asset_roots[item.object_id]
+        if not isinstance(raw_root, Path) or not raw_root.is_absolute():
+            raise ValueError("snapshot asset root must be an absolute Path")
+        root = raw_root.absolute()
+        try:
+            root_stat = root.lstat()
+        except OSError as error:
+            raise ValueError("snapshot asset root is unavailable") from error
+        if stat.S_ISLNK(root_stat.st_mode) or not stat.S_ISDIR(root_stat.st_mode):
+            raise ValueError("snapshot asset root must be a real directory")
+        if item.load_type == "urdf":
+            try:
+                urdf_stat = (root / "mobility.urdf").lstat()
+            except OSError as error:
+                raise ValueError(
+                    "snapshot URDF model root does not contain mobility.urdf"
+                ) from error
+            if stat.S_ISLNK(urdf_stat.st_mode) or not stat.S_ISREG(urdf_stat.st_mode):
+                raise ValueError("snapshot mobility.urdf must be a real regular file")
+        elif root.name != item.asset_id:
+            raise ValueError("snapshot asset root basename for a rigid object must equal asset_id")
+        result[item.object_id] = root
+    return result
 
 
 def _collision_shapes(actor: Any) -> list[Any]:
@@ -91,9 +128,7 @@ def _apply_physical_material(task: Any, actor: Any, item: Any) -> int:
     scene = getattr(task, "scene", None)
     material_creator = getattr(scene, "create_physical_material", None)
     if not callable(material_creator):
-        raise RuntimeError(
-            f"RoboTwin task cannot create physical material for {item.object_id}"
-        )
+        raise RuntimeError(f"RoboTwin task cannot create physical material for {item.object_id}")
 
     physical_material = material_creator(
         float(item.static_friction),
@@ -102,9 +137,7 @@ def _apply_physical_material(task: Any, actor: Any, item: Any) -> int:
     )
     shapes = _collision_shapes(actor)
     if not shapes:
-        raise RuntimeError(
-            f"RoboTwin actor {item.object_id} exposes no collision shapes"
-        )
+        raise RuntimeError(f"RoboTwin actor {item.object_id} exposes no collision shapes")
 
     for shape in shapes:
         setter = getattr(shape, "set_physical_material", None)
@@ -144,8 +177,7 @@ def _apply_color_override(actor: Any, color: str) -> int:
                 except (RuntimeError, AttributeError):
                     candidates = []
                 candidates.extend(
-                    getattr(part, "material", None)
-                    for part in getattr(shape, "parts", ())
+                    getattr(part, "material", None) for part in getattr(shape, "parts", ())
                 )
                 for material in candidates:
                     if material is None or id(material) in material_ids:
@@ -155,18 +187,26 @@ def _apply_color_override(actor: Any, color: str) -> int:
     return len(material_ids)
 
 
-def load_resolved_scene(task: Any, resolved: ResolvedSceneSpec | dict[str, Any] | str | Path) -> dict[str, Any]:
+def load_resolved_scene(
+    task: Any,
+    resolved: ResolvedSceneSpec | dict[str, Any] | str | Path,
+    *,
+    asset_roots: Mapping[str, Path] | None = None,
+) -> dict[str, Any]:
     """Instantiate only compiler-resolved assets; no user code is executed."""
 
+    scene = _coerce_resolved(resolved)
+    snapshot_roots = _validated_asset_roots(scene, asset_roots)
     import sapien.core as sapien
     from envs.utils import create_actor, create_sapien_urdf_obj
 
-    scene = _coerce_resolved(resolved)
     actors: dict[str, Any] = {}
     for item in scene.objects:
         pose = sapien.Pose(item.pose.position_m, item.pose.orientation_wxyz)
         modelname = (
-            item.asset_id
+            str(snapshot_roots[item.object_id])
+            if snapshot_roots is not None
+            else item.asset_id
             if item.load_type == "urdf"
             else _runtime_modelname(item)
         )
@@ -175,7 +215,10 @@ def load_resolved_scene(task: Any, resolved: ResolvedSceneSpec | dict[str, Any] 
                 task,
                 pose=pose,
                 modelname=modelname,
-                modelid=item.model_id,
+                # The snapshot mapping already names the catalog-selected model
+                # directory. Passing the catalog model id would make RoboTwin
+                # reinterpret it as a positional index among child directories.
+                modelid=None if snapshot_roots is not None else item.model_id,
                 fix_root_link=item.is_static,
             )
         else:
@@ -192,9 +235,7 @@ def load_resolved_scene(task: Any, resolved: ResolvedSceneSpec | dict[str, Any] 
         if item.mass_kg is not None:
             mass_setter = getattr(actor, "set_mass", None)
             if not callable(mass_setter):
-                raise RuntimeError(
-                    f"RoboTwin actor {item.object_id} does not expose set_mass"
-                )
+                raise RuntimeError(f"RoboTwin actor {item.object_id} does not expose set_mass")
             mass_setter(float(item.mass_kg))
         _apply_physical_material(task, actor, item)
         if item.color and _apply_color_override(actor, item.color) == 0:
@@ -223,5 +264,7 @@ def load_resolved_scene(task: Any, resolved: ResolvedSceneSpec | dict[str, Any] 
         if hasattr(task, "prohibited_area"):
             width, depth, _ = item.dimensions_m
             x, y, _ = item.pose.position_m
-            task.prohibited_area.append([x - width / 2.0, y - depth / 2.0, x + width / 2.0, y + depth / 2.0])
+            task.prohibited_area.append(
+                [x - width / 2.0, y - depth / 2.0, x + width / 2.0, y + depth / 2.0]
+            )
     return actors
