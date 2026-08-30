@@ -10,6 +10,7 @@ from uuid import UUID
 import pytest
 
 import self_improving.harness.handlers.text2env_compile as handler_module
+import self_improving.harness.handlers.text2env_compile_dependencies as dependency_module
 from scene_gen import CompileFailure
 from scene_gen.catalog import AssetCatalog, load_catalog
 from scene_gen.schema import ResolvedSceneSpec
@@ -18,16 +19,21 @@ from self_improving.harness import (
     AssetAdmissionError,
     CompileConfig,
     DependencyRef,
+    DependencyResolutionError,
     LocalArtifactStore,
     RunStatus,
     SkillRegistry,
     SQLiteEventJournal,
     StaticDependencyResolver,
+    Text2EnvCompileInput,
     Text2EnvCompileOutput,
 )
 from self_improving.harness.handlers.text2env_compile import (
     Text2EnvCompileHandler,
     text2env_compile_descriptor,
+)
+from self_improving.harness.handlers.text2env_compile_dependencies import (
+    Text2EnvCompileDependencyResolver,
 )
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -113,6 +119,8 @@ def _registry(
     *,
     store: LocalArtifactStore,
     handler: Text2EnvCompileHandler,
+    dependency_resolver=None,
+    run_ids=None,
 ) -> tuple[SkillRegistry, SQLiteEventJournal]:
     tmp_path.mkdir(parents=True, exist_ok=True)
     qualification_report = tmp_path / "qualification_report.json"
@@ -142,9 +150,13 @@ def _registry(
         ).hexdigest(),
     )
     journal = SQLiteEventJournal(tmp_path / "events.sqlite3")
+    selected_run_ids = run_ids or iter(
+        (UUID("12345678-1234-4234-9234-123456789abc"),)
+    )
     registry = SkillRegistry(
         artifact_resolver=store,
-        dependency_resolver=StaticDependencyResolver(
+        dependency_resolver=dependency_resolver
+        or StaticDependencyResolver(
             {
                 "text2env.compile@1.0.0": (
                     DependencyRef(
@@ -157,7 +169,7 @@ def _registry(
         ),
         event_sink=journal,
         clock=SequenceClock(),
-        run_id_factory=lambda: UUID("12345678-1234-4234-9234-123456789abc"),
+        run_id_factory=lambda: next(selected_run_ids),
     )
     registry.register(descriptor, handler)
     return registry, journal
@@ -617,3 +629,181 @@ def test_compile_artifact_classifier_rejects_untyped_json_and_handles_binary(
     binary = tmp_path / "mesh.glb"
     binary.write_bytes(b"mesh")
     assert handler_module._artifact_type(binary) == ("application/octet-stream", None)
+
+
+def test_compile_dependencies_bind_asset_library_state_and_stabilize_after_reuse(
+    tmp_path: Path,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    catalog = _put_json(
+        store,
+        tmp_path / "empty_catalog.json",
+        AssetCatalog(
+            robotwin_root=str(tmp_path / "RoboTwin"),
+            objects_root=str(tmp_path / "objects"),
+            entries=(),
+        ).canonical_dict(),
+        name="empty_catalog",
+        schema_version="robotwin.asset_catalog.v1",
+    )
+    handler = _handler(tmp_path, store)
+    resolver = Text2EnvCompileDependencyResolver(
+        artifact_store=store,
+        handler=handler,
+        scene_gen_root=ROOT / "scene_gen",
+        ledger_contract_root=(
+            ROOT
+            / "self_improving/asset_pipeline/active/1_asset_reuse/lib"
+        ),
+    )
+    run_ids = iter(
+        (
+            UUID("12345678-1234-4234-9234-123456789abc"),
+            UUID("22345678-1234-4234-9234-123456789abc"),
+            UUID("32345678-1234-4234-9234-123456789abc"),
+        )
+    )
+    registry, _ = _registry(
+        tmp_path,
+        store=store,
+        handler=handler,
+        dependency_resolver=resolver,
+        run_ids=run_ids,
+    )
+    parameters = {
+        "request": "Place a purple hexagonal pedestal on the table.",
+        "seed": 77,
+        "asset_catalog": catalog.model_dump(mode="json"),
+        "config": {"generate_missing_assets": True},
+    }
+
+    first = registry.invoke("text2env.compile", "1.0.0", parameters)
+    second = registry.invoke("text2env.compile", "1.0.0", parameters)
+    third = registry.invoke("text2env.compile", "1.0.0", parameters)
+
+    assert first.status == second.status == third.status == RunStatus.SUCCEEDED
+    assert first.output == second.output == third.output
+    assert first.invocation_digest != second.invocation_digest
+    assert second.invocation_digest == third.invocation_digest
+    first_invocation = registry.invocation(first.run_id)
+    second_invocation = registry.invocation(second.run_id)
+    assert first_invocation is not None
+    assert second_invocation is not None
+    assert [dependency.name for dependency in first_invocation.dependencies] == [
+        "asset-library-state",
+        "catalog-selected-assets",
+        "ledger-contract",
+        "scene-gen",
+        "text2env-compile-config",
+    ]
+    assert first_invocation.dependencies[0].sha256 != second_invocation.dependencies[0].sha256
+
+
+def test_compile_dependencies_detect_selected_asset_byte_changes(tmp_path: Path) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    catalog_path = _materialized_fixture_catalog(tmp_path)
+    catalog = store.put_file(
+        catalog_path,
+        name="catalog",
+        media_type="application/json",
+        schema_version="robotwin.asset_catalog.v1",
+    )
+    handler = _handler(tmp_path, store)
+    resolver = Text2EnvCompileDependencyResolver(
+        artifact_store=store,
+        handler=handler,
+        scene_gen_root=ROOT / "scene_gen",
+        ledger_contract_root=(
+            ROOT
+            / "self_improving/asset_pipeline/active/1_asset_reuse/lib"
+        ),
+    )
+    registry, _ = _registry(
+        tmp_path,
+        store=store,
+        handler=handler,
+        dependency_resolver=resolver,
+        run_ids=iter(
+            (
+                UUID("12345678-1234-4234-9234-123456789abc"),
+                UUID("22345678-1234-4234-9234-123456789abc"),
+            )
+        ),
+    )
+    parameters = {
+        "request": "Place a can on top of a plate.",
+        "seed": 42,
+        "asset_catalog": catalog.model_dump(mode="json"),
+        "config": {"generate_missing_assets": False},
+    }
+
+    first = registry.invoke("text2env.compile", "1.0.0", parameters)
+    visual = tmp_path / "fixture_assets/071_can/visual/base0.glb"
+    visual.write_bytes(visual.read_bytes() + b" changed")
+    second = registry.invoke("text2env.compile", "1.0.0", parameters)
+
+    assert first.status == second.status == RunStatus.SUCCEEDED
+    assert first.output == second.output
+    assert first.invocation_digest != second.invocation_digest
+
+
+def test_compile_dependency_resolver_rejects_wrong_inputs_and_wraps_artifact_errors(
+    tmp_path: Path,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    catalog = _put_json(
+        store,
+        tmp_path / "empty_catalog.json",
+        AssetCatalog(
+            robotwin_root=str(tmp_path / "RoboTwin"),
+            objects_root=str(tmp_path / "objects"),
+            entries=(),
+        ).canonical_dict(),
+        name="empty_catalog",
+        schema_version="robotwin.asset_catalog.v1",
+    )
+    handler = _handler(tmp_path, store)
+    resolver = Text2EnvCompileDependencyResolver(
+        artifact_store=store,
+        handler=handler,
+        scene_gen_root=ROOT / "scene_gen",
+        ledger_contract_root=(
+            ROOT / "self_improving/asset_pipeline/active/1_asset_reuse/lib"
+        ),
+    )
+
+    assert resolver.resolve("text2env.replay@1.0.0", CompileConfig()) == ()
+    with pytest.raises(DependencyResolutionError, match="require Text2EnvCompileInput"):
+        resolver.resolve("text2env.compile@1.0.0", CompileConfig())
+
+    parameters = {
+        "request": "Place a can on the table.",
+        "seed": 42,
+        "asset_catalog": catalog.model_copy(update={"sha256": "0" * 64}),
+        "config": {"generate_missing_assets": False},
+    }
+    with pytest.raises(DependencyResolutionError, match="dependency resolution failed"):
+        resolver.resolve(
+            "text2env.compile@1.0.0",
+            Text2EnvCompileInput.model_validate(parameters),
+        )
+
+
+def test_dependency_tree_digest_rejects_missing_non_directory_and_symlink_escape(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(DependencyResolutionError, match="root is missing"):
+        dependency_module._tree_digest(tmp_path / "missing", allow_missing=False)
+
+    plain_file = tmp_path / "plain.txt"
+    plain_file.write_text("not a directory", encoding="utf-8")
+    with pytest.raises(DependencyResolutionError, match="not a directory"):
+        dependency_module._tree_digest(plain_file, allow_missing=False)
+
+    root = tmp_path / "tree"
+    root.mkdir()
+    outside = tmp_path / "outside.txt"
+    outside.write_text("external bytes", encoding="utf-8")
+    (root / "escape.txt").symlink_to(outside)
+    with pytest.raises(DependencyResolutionError, match="symlink escapes root"):
+        dependency_module._tree_digest(root, allow_missing=False)

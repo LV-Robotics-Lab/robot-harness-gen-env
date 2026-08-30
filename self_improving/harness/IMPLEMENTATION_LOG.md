@@ -289,3 +289,24 @@
 - 失败边界：预期缺依赖继续返回 `HARN_DEPENDENCY_UNAVAILABLE/blocked`；resolver 实现自身异常现在
   返回 attempt 0 的 `HARN_INTERNAL/failed`，不再把裸异常抛出审计链。
 - 验证：Registry statement + branch coverage `100%`，`7 passed`；ruff 与 diff check 通过。
+
+### 2026-08-31 / A015：compile 调用身份绑定真实可变依赖
+
+- 反例：即使 prompt、seed 和 catalog ref 完全相同，catalog 指向的资产文件、生成资产库内容、
+  admission 日期或 allowed roots 仍可能在两次调用间变化；旧静态依赖会给它们相同 invocation
+  digest，导致错误重放与缓存命中。
+- 实现：新增 parameter-aware `Text2EnvCompileDependencyResolver`，在 handler 执行前生成五类稳定
+  receipt：实际 `scene_gen` 源码树、v3 ledger contract 源码树、canonical handler config、当前
+  generated asset pool 状态，以及本次 parse/solve 真正选中的资产目录内容。目录 receipt 逐文件记录
+  相对路径、bytes 和 SHA-256，并忽略 Python 缓存。
+- 身份边界：catalog JSON 自身仍由类型化输入的 ArtifactRef 绑定；selected-assets receipt 额外绑定
+  catalog 外部引用的真实 bytes。生成资产首次准入会合理改变 library-state digest；入库稳定后第二、
+  第三次重跑获得相同 invocation digest 和相同 typed output。
+- 失败边界：依赖根缺失、不是目录、CAS 摘要不符或 symlink 逃出根目录均在 attempt 0 fail closed，
+  不进入 compile；parse/solve 尚不能选资产时使用明确的空选集 receipt，让正常 typed failure 仍由
+  handler 负责分类。
+- 攻击用例：同一 catalog ref 下直接篡改已选 `071_can` visual bytes，typed compile output 保持相同，
+  但 invocation digest 必须变化；另覆盖错误参数类型、伪造 catalog digest、缺根、普通文件根和
+  symlink escape。
+- 验证：新增依赖模块与全 Harness 的 statement + branch coverage 均为 `100%`；`72 passed`，
+  diff check 通过。
