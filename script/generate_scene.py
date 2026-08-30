@@ -39,6 +39,16 @@ def main() -> int:
     except CompileFailure as error:
         failure_id = hashlib.sha256(f"{args.seed}\0{args.prompt}".encode("utf-8")).hexdigest()[:16]
         scene_id = error.details.get("scene_id")
+        report_stage = (
+            "scene_spec_validation"
+            if error.code == "T2E_REQUEST_REJECTED" and error.stage == "parse"
+            else error.stage
+        )
+        report_blocker = (
+            "request rejected before grounding"
+            if error.code == "T2E_REQUEST_REJECTED" and error.stage == "parse"
+            else str(error)
+        )
         failure_path = (
             out_root / str(scene_id) / "failure_report.json"
             if scene_id
@@ -50,9 +60,9 @@ def main() -> int:
                 {
                     "schema_version": "robotwin.scene_generation_failure.v1",
                     "status": "fail",
-                    "stage": error.stage,
+                    "stage": report_stage,
                     "code": error.code,
-                    "blocker": str(error),
+                    "blocker": report_blocker,
                     "error_type": type(error).__name__,
                     "request": args.prompt,
                     "seed": args.seed,

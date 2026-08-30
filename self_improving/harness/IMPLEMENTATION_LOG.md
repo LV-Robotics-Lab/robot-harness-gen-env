@@ -366,3 +366,13 @@
   `30+30` 仍为 3 帧但尾索引 59、MP4 解码也是 3 帧、timeline 与整体 validator PASS，两个
   `observer_end` SHA 不同。精确命令、版本、摘要和边界见
   `docs/evidence/replay-timeline-20260831.{md,json}`；这只是时间线 smoke，不冒充正式 900/120 qualification。
+
+### 2026-08-31 / A020：importable compiler 不得破坏旧 CLI failure report 字段
+
+- 回归：把 `generate_scene.py` 收薄为 compiler Adapter 后，module 的 typed parse stage 原样流入旧
+  `failure_report.json`，把稳定 CLI 值从 `scene_spec_validation` 改成 `parse`；全 scene_gen 回归因此
+  `114 passed / 1 failed`。
+- 修复：只在 CLI 投影层把 `T2E_REQUEST_REJECTED@parse` 映射回历史
+  `stage=scene_spec_validation`；importable compiler、Harness blocker 和真实 callback 仍保留更精确的
+  `parse` stage，不反向污染核心接口。
+- 验证：既有结构化非法 prompt CLI 攻击测试恢复通过；全 `tests/scene_gen` `115 passed`。
