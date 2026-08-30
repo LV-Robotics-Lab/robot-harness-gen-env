@@ -21,6 +21,7 @@ from .events import (
     RunRecorder,
     RunRecordingError,
 )
+from .package_store import PackageStore, PackageStoreError, PublishedPackage
 from .registry import (
     DependencyResolutionError,
     DependencyResolver,
@@ -77,6 +78,9 @@ __all__ = [
     "GeneratedAssetAdmitter",
     "HandlerResult",
     "LocalArtifactStore",
+    "PackageStore",
+    "PackageStoreError",
+    "PublishedPackage",
     "RecordingEventSink",
     "RegistryLookupError",
     "RegistryRegistrationError",

@@ -259,3 +259,20 @@
   coverage `100%`；ruff 与 diff check 通过。
 - 剩余确定性债：下一切片要让 DependencyResolver 把 asset-library 当前状态、handler trust config、
   ledger contract 与实际 scene_gen source digest 纳入 invocation digest；目前测试仍用静态依赖记录。
+
+### 2026-08-31 / A013：package 的 CAS 发布与安全重物化
+
+- 问题：`EnvironmentPackage` 只有 manifest 与 catalog ref，不持有原 run 目录；replay 若依赖目录
+  仍在原机器，就不是真正的 Harness 接线。
+- 实现：`PackageStore.publish` 校验 manifest 的每个相对 member、bytes、sha 和 canonical resolved
+  binding 后，把原始文件逐项放入 CAS；`materialize` 只凭 manifest ref 和成员摘要在隔离 staging 中
+  重建，`verify_package=pass` 后才原子 rename 成目标目录。
+- 路径安全：拒绝绝对路径、Windows drive/backslash、`..`、重复 member、symlink escape；目标已存在
+  时不覆盖。manifest/member 缺失、schema 不符、size/digest 错误或 CAS 不可用都带稳定 reason
+  fail closed，失败 staging 自动清理。
+- 实证：compile 后删除完整原目录，仅从 CAS 成功恢复 request、scene_spec、resolved、generated
+  module 和 manifest，所有 bytes 与原始值一致且 `verify_package=pass`。
+- 攻击用例：覆盖三类路径逃逸、重复/缺失/篡改/symlink member、坏 JSON、manifest 形状与身份字段
+  组合、缺 CAS、已存在目标，以及 verifier exception/fail 两种路径。
+- 验证：PackageStore statement + branch coverage `100%`；全 Harness `68 passed` 且 statement +
+  branch coverage `100%`；ruff 与 diff check 通过。
