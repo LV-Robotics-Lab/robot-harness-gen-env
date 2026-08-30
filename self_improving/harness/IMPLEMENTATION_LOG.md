@@ -594,3 +594,23 @@
   fail closed，未写假 capability，两次 probe 前后 checkout 不变。capability+worker
   `176 passed`，新模块 statement `577/577`、branch `238/238`；scene-gen `160 passed`，
   ruff、format、compileall 与 diff check 通过。
+
+### 2026-08-31 / A034：executor 用专用事件通道监督一次真实仿真
+
+- 边界：新增 `SubprocessRoboTwinRuntimeExecutor`；handler 只提交一份 immutable `RuntimeJob`
+  并接收完整 `RuntimeExecution`，不看见 Popen、FD、超时和输出目录细节。子进程使用
+  固定解释器/runner、argv list、`shell=False`、受限环境、独立进程组和 attempt 目录。
+- 真实状态：stdout/stderr 仅作有界诊断；进度只从专用 FD 的严格 JSONL 读取。
+  Executor 另校验阶段顺序、完整 checkpoint 序列、precheck+主步总数、终态事件和声明的
+  artifact allowlist；总步整除 checkpoint 时要求 final checkpoint 和 completed 两个真实边界。
+- 双向信任：启动前和 worker 结束后都用 A033 同一 capability 协议 probe，输入 worker
+  的 expected digest 也在第一条事件前核验。capability 文件用 `lstat + O_NOFOLLOW`
+  且最多读 `limit+1`；probe 的 stdout/stderr/capability raw bytes、截断标志与退出码均保留。
+  postflight trust failure 为主故障时，worker 原故障仍以 typed secondary failure 留存，不被覆盖。
+- 失败语义：子进程非零且 0 accepted events 是 `runtime_preflight_failed`；已见真实事件后
+  崩溃才是 `worker_crash`。事件 gap/额外字段/越界路径、observer 失败、超时、流超限、
+  capability 漂移、输出 symlink/额外文件均有攻击测试。
+- 实证：使用 `robotwin-5090` 和真实 RoboTwin/SAPIEN 执行 can+basket，2 个 physics
+  steps 产生严格 9 事件（包含 checkpoint 1/2 + completed 2）、6 份 allowlisted artifacts，
+  validation PASS。四模块联合 `406 passed`；executor `124 passed`，statement `614/614`、
+  branch `204/204`；当前模块 ruff、format、compileall 与 diff check 通过。
