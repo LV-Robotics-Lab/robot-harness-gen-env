@@ -180,3 +180,9 @@ Because ASPIRE's validated-skill promotion is useful only when pending and pass
 cannot collapse, added and froze E1b before modifying Stage 5.  Its probe
 isolates four artifact-state decisions and the CLI exit decision, with a valid
 pass control.
+
+Ran the frozen probe at commit `bbfa19d`.  Pending review scored 0/5: it was
+rewritten to final stage, `accept_final`, both pass validation labels, and exit
+code 0.  The genuine-pass control scored 5/5.  Artifact:
+`artifacts/pending_review_before.json`.  The isolated result justifies a bounded
+state-machine fix; it does not require a simulator or model call.
