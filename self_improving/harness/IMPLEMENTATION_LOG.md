@@ -558,3 +558,15 @@
   `generation_qc_only/pending_settle`；本切片不声称 simulator replay 或 publishable。完整命令、摘要、
   run id、三次后处理检查偏差及修正均冻结在
   `docs/evidence/compile-production-qualification-20260831.{md,json}`。
+
+### 2026-08-31 / A032：整仓验证不应被重名测试模块挡在收集阶段
+
+- 反例：标准 `pytest -q` 同时收集 `tests/self_improving/test_registry.py` 与
+  `tests/self_improving/harness/test_registry.py` 时，默认 prepend 导入模式把两者都命名为
+  `test_registry`，因而在 0 个测试执行前就以 import-file mismatch 终止。这不是业务
+  失败，但会让贡献者无法履行仓库明文要求的默认验证命令。
+- 修复：在唯一 pytest 配置中启用官方 `--import-mode=importlib`，使测试按完整路径隔离
+  导入；不改测试文件、不隐藏或筛掉任何用例。
+- RED：默认 `pytest -q` 在 collection 阶段报上述冲突，执行 0 tests。GREEN：同一默认
+  命令现在能收集并执行整套测试；具体通过数随同时进行的 replay 切片在各自提交后
+  再冻结。

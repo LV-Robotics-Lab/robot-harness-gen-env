@@ -53,6 +53,7 @@ scene_gen = ["asset_overrides.yml", "prompts/*.md"]
 ]
 
 [tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
 pythonpath = ["."]
 testpaths = ["tests"]
 
