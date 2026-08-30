@@ -406,3 +406,20 @@
   使用 `python -I` 清除源码树影响后，实际导入 ledger/conventions 并通过 `importlib.resources` 读取三份
   核心模块。配置修改前测试真实 RED（wheel 缺三文件），修改后 GREEN。
 - 验证：packaging 专项 `2 passed`；ruff、format 与 diff check 通过。
+
+### 2026-08-31 / A023：终态必须能由同一份 Invocation 与完整事件日志重建
+
+- 问题：SQLite event journal 已能持久化实时事件，但 Invocation 与最终 RunState 仍只活在 Registry 内存；
+  重启后无法回答“为什么执行”和“最终产物是什么”。单独保存终态也不够，因为一份声称含两条 events
+  的 RunState 可能对应磁盘上只有首事件的残缺 journal。
+- 实现：新增 `SQLiteRunStore`，以 canonical UTF-8 JSON BLOB、payload SHA、不可变元数据保存
+  Invocation 和 terminal RunState。Invocation 必须在首事件之前写入；终态写入时在同一 SQLite 事务
+  视图逐条比对 journal 的完整数量、顺序、Skill/version、Event 字段和 artifact refs。preflight 终态可以
+  没有 Invocation，但同样必须有完整 journal。
+- 读取信任边界：`read_run_state` 在一个一致快照中重读终态、Invocation 和完整 journal；终态额外锚定
+  写入时 Invocation canonical payload SHA，所以攻击者即使同步改写 Invocation payload 与其自身 checksum，
+  仍会被识别为跨表漂移。
+- 失败语义：不完整或生命周期错误的首次写入是 `RunStoreConflictError`；已接受的三表记录后来不一致是
+  `RunStoreCorruptionError`。重复完全相同的并发写入幂等，不同内容不可覆盖。
+- 验证：run-store + journal `21 passed`；run-store statement + branch coverage `100%`；ruff、format 与
+  diff check 通过。当前切片提供持久化 Adapter；Registry 的精确写入时序在下一切片接入。
