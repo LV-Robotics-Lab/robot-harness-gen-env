@@ -72,6 +72,11 @@ def test_generated_asset_is_ledger_validated_and_atomically_admitted(
     )
     assert model["verification"][0]["check"] == "generation_qc"
     assert outcome.resolved_scene.objects[0].source_files[0].startswith(str(asset_dir))
+    assert next(
+        check
+        for check in outcome.static_validation["checks"]
+        if check["name"].startswith("real_asset_files:")
+    )["status"] == "pass"
     assert not list((library / ".incoming").glob("*"))
 
     repeated = compile_scene(

@@ -214,6 +214,7 @@ def compile_scene(
     notify(CompileEvent(stage="static_validation", phase="started"))
     report = validate_resolved_scene(
         resolved,
+        catalog=catalog,
         package_root=output_dir,
         require_runtime=False,
     )

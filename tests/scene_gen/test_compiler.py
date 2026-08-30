@@ -30,7 +30,12 @@ def test_compile_scene_runs_one_explicit_pipeline_and_reports_real_stages(
     assert outcome.scene_spec.request == "Place a can on top of a plate."
     assert outcome.resolved_scene.source_scene_spec_sha256 == outcome.scene_spec.digest()
     assert outcome.manifest["resolved_scene_sha256"] == outcome.resolved_scene.digest()
-    assert outcome.static_validation["status"] == "incomplete"
+    assert outcome.static_validation["status"] == "fail"
+    source_checks = {
+        check["name"]: check["status"] for check in outcome.static_validation["checks"]
+    }
+    assert source_checks["real_asset_files:can_1"] == "fail"
+    assert source_checks["real_asset_files:plate_1"] == "fail"
     assert outcome.output_dir == (tmp_path / "runs" / outcome.scene_spec.scene_id).resolve()
     assert (outcome.output_dir / "package_manifest.json").is_file()
     assert [(event.stage, event.phase) for event in observed] == [

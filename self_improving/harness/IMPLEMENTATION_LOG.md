@@ -203,3 +203,17 @@
   `T2E_CATALOG_INVALID@catalog`，并保留输入路径、异常类型和消息供诊断。
 - 验证：真实 compile、生成资产准入共 `10 passed`；compiler statement + branch coverage
   `100%`；ruff 与 diff check 通过。
+
+### 2026-08-31 / A010：静态验证必须实际核 catalog 中的资产文件
+
+- 反例：compiler 已经持有 effective catalog，却调用 `validate_resolved_scene` 时没有传入；因此
+  `real_asset_files:*` 一律为 `not_applicable`，静态报告无法区分可加载资产与陈旧绝对路径。
+- 红灯：committed fixture 的 `/opt/robotwin-fixture/...` 文件实际不存在，但旧报告仍是
+  `incomplete`；测试要求这两项明确 fail。
+- 修复：compiler 将 solve 使用的同一份 effective catalog 传给静态 validator。fixture 现在诚实
+  报告 `real_asset_files:can_1/plate_1=fail`；生成并正式入库的 hexagonal pedestal 对应检查为
+  `pass`，其整体仍因未跑 runtime 而 `incomplete`。
+- 边界：compile 产出 typed output 不等于 publishable；静态 fail 被保留为证据，后续 Agent 应路由
+  到资产定位/重物化，而不能用 VLM 或改 prompt 掩盖。
+- 验证：compiler + admission `10 passed`；compiler statement + branch coverage `100%`；ruff
+  与 diff check 通过。
