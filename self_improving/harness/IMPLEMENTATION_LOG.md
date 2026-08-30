@@ -472,3 +472,19 @@
   bundle 验证装配，不能冒充 production 资质。catalog 缺失、目录冒充文件、越 trusted root，以及配置
   根缺失/非目录均有拒绝测试。
 - 验证：application `16 passed`，statement + branch coverage `100%`；ruff、format 与 diff check 通过。
+
+### 2026-08-31 / A027：replay 进度只能来自专用、严格、可重放的事件协议
+
+- 问题：前端若解析 stdout/stderr、日志关键字或定时器来猜阶段，就无法证明 UI 状态对应真实代码边界；
+  子进程还可以用乱序、额外字段或越界路径把未完成产物伪装成已发布 artifact。
+- 协议：新增 `harness.runtime_event.v1` canonical JSONL codec，字段名统一为 `schema_version`；序号必须
+  从 1 连续递增，kind 是八项闭集。只有 simulation checkpoint/completed 能且必须报告非负实际步数，
+  只有 media/evidence completed 能且必须报告非空、无重复、精确 allowlist 的相对 artifact paths；
+  `worker.completed` 一旦出现就是最后一条。
+- 传输边界：Emitter 只接受大于 2 的专用 FD，持锁管理 sequence，处理 interrupted/partial write；发生
+  含糊写失败后永久 poison。Streaming decoder 跨任意 chunk/UTF-8 边界工作，并限制单事件及 transcript
+  总 bytes；拒绝重复 JSON key、NaN、CR、多物理行、非 canonical/越界路径、seq gap 和终态后事件。
+- 已知边界：路径层只能证明词法安全；Executor 仍须在 attempt output root 下做 symlink-safe materialize。
+  进程异常时 partial transcript 可以没有 worker.completed，监督器必须结合退出码判断，不能伪造完成。
+- 验证：runtime-event 专项 `57 passed`，statement `288/288`、branch `126/126`；ruff、format 与 diff
+  check 通过。

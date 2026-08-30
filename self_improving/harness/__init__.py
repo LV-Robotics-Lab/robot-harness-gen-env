@@ -56,6 +56,15 @@ from .run_store import (
     RunStoreCorruptionError,
     SQLiteRunStore,
 )
+from .runtime_events import (
+    RUNTIME_EVENT_SCHEMA,
+    RuntimeEvent,
+    RuntimeEventCodec,
+    RuntimeEventEmitter,
+    RuntimeEventKind,
+    RuntimeEventProtocolError,
+    RuntimeEventStreamDecoder,
+)
 from .schema_catalog import SCHEMA_MODELS, schema_documents, schema_model
 from .schemas import (
     ArtifactRef,
@@ -128,6 +137,13 @@ __all__ = [
     "RunStore",
     "RunStoreConflictError",
     "RunStoreCorruptionError",
+    "RUNTIME_EVENT_SCHEMA",
+    "RuntimeEventCodec",
+    "RuntimeEvent",
+    "RuntimeEventEmitter",
+    "RuntimeEventKind",
+    "RuntimeEventProtocolError",
+    "RuntimeEventStreamDecoder",
     "RuntimeConfig",
     "SkillDescriptor",
     "SkillBlocked",
