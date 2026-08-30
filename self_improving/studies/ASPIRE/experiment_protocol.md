@@ -107,6 +107,25 @@ the full platform guard remains green.  A review candidate may be retained for
 human/VLM work, but it must not be exposed under the `final_placement` artifact
 key.
 
+## E1c — pending-review exit and aggregate integrity
+
+Protocol extension frozen after the final source audit exposed two active-path
+exceptions not covered by E1b.  It is evaluated before changing either CLI.
+
+Use deterministic pending and pass controls for the standalone Scene Critic and
+the batch runner.  A pending critic report must retain
+`pending_visual_review` and return review-required exit code 2.  A batch that
+explicitly collects pending candidates may retain them for review, but its
+aggregate status must be `review_required` and its exit code 2; it must never
+mint batch `pass`.  Both genuine-pass controls must retain status `pass` and
+exit 0.
+
+Keep only if all eight status/exit decisions are correct, the focused Stage 5
+tests and complete platform guard pass, and reader-facing workflow docs state
+that `--allow-pending-visual` collects review candidates rather than publishing
+them.  The older `run_placement_pipeline.py` artifact naming is audited
+separately; it is not silently treated as covered unless a direct test is added.
+
 ## E2 — held-out diagnosis and validated-memory benchmark
 
 ### Failure families
