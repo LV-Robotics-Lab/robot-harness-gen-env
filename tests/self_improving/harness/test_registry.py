@@ -378,6 +378,83 @@ def test_registry_maps_terminal_domain_and_unexpected_failures(tmp_path: Path) -
     assert failed_state.output is None
 
 
+def test_registry_verifies_every_reference_before_content_deduplication(
+    tmp_path: Path,
+) -> None:
+    invalid_ref = None
+
+    def smuggle(value: ArtifactRef, context: RunContext) -> HandlerResult:
+        assert invalid_ref is not None
+        return HandlerResult(output=value, artifacts=(invalid_ref,))
+
+    registry, _, _, _, payload, _ = _registered_echo(
+        tmp_path / "output",
+        skill_id="test.smuggle",
+        handler=smuggle,
+    )
+    invalid_ref = payload.model_copy(update={"bytes": payload.bytes + 1})
+
+    state = registry.invoke("test.smuggle", "1.0.0", payload.model_dump(mode="json"))
+
+    assert state.status == RunStatus.FAILED
+    assert state.blocker is not None
+    assert state.blocker.code == "HARN_INTERNAL"
+    assert state.blocker.details["error_type"] == "ArtifactResolutionError"
+
+    blocker_ref = None
+
+    def smuggle_in_blocker(value: ArtifactRef, context: RunContext) -> HandlerResult:
+        assert blocker_ref is not None
+        raise SkillBlocked(
+            Blocker(
+                code="T2E_ASSET_UNAVAILABLE",
+                message="refused with unverified evidence",
+                stage="compile",
+                retryable=False,
+                details={},
+                unknowns=(),
+                artifact_refs=(blocker_ref,),
+            )
+        )
+
+    blocker_registry, _, _, _, blocker_payload, _ = _registered_echo(
+        tmp_path / "blocker",
+        skill_id="test.blocker_ref",
+        handler=smuggle_in_blocker,
+    )
+    blocker_ref = blocker_payload.model_copy(update={"uri": "file:///missing/evidence.json"})
+
+    blocker_state = blocker_registry.invoke(
+        "test.blocker_ref",
+        "1.0.0",
+        blocker_payload.model_dump(mode="json"),
+    )
+    assert blocker_state.status == RunStatus.FAILED
+    assert blocker_state.blocker is not None
+    assert blocker_state.blocker.code == "HARN_INTERNAL"
+
+    progress_ref = None
+
+    def smuggle_in_progress(value: ArtifactRef, context: RunContext) -> HandlerResult:
+        assert progress_ref is not None
+        context.emit("malicious.progress", artifact_refs=(progress_ref,))
+        return HandlerResult(output=value)
+
+    progress_registry, _, _, _, progress_payload, progress_sink = _registered_echo(
+        tmp_path / "progress",
+        skill_id="test.progress_ref",
+        handler=smuggle_in_progress,
+    )
+    progress_ref = progress_payload.model_copy(update={"sha256": "f" * 64})
+    progress_state = progress_registry.invoke(
+        "test.progress_ref",
+        "1.0.0",
+        progress_payload.model_dump(mode="json"),
+    )
+    assert progress_state.status == RunStatus.FAILED
+    assert [event.event.stage for event in progress_sink.events] == ["preflight", "invoke"]
+
+
 def test_registry_recursively_projects_content_and_artifact_references(tmp_path: Path) -> None:
     store = LocalArtifactStore(tmp_path / "cas")
     artifact = _put_json(

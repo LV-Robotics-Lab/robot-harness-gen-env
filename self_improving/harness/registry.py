@@ -43,6 +43,7 @@ class RunContext:
     run_id: UUID
     attempt: int
     _recorder: RunRecorder
+    _artifact_resolver: ArtifactResolver
 
     def emit(
         self,
@@ -50,6 +51,8 @@ class RunContext:
         *,
         artifact_refs: tuple[ArtifactRef, ...] = (),
     ) -> None:
+        for artifact in artifact_refs:
+            self._artifact_resolver.resolve(artifact)
         self._recorder.progress(stage=stage, artifact_refs=artifact_refs)
 
 
@@ -253,14 +256,20 @@ class SkillRegistry:
             try:
                 result = registration.handler(
                     typed_input,
-                    RunContext(run_id=run_id, attempt=attempt, _recorder=recorder),
+                    RunContext(
+                        run_id=run_id,
+                        attempt=attempt,
+                        _recorder=recorder,
+                        _artifact_resolver=self._artifact_resolver,
+                    ),
                 )
                 typed_output = registration.output_model.model_validate(result.output)
-                artifacts = _unique_artifacts(
+                candidate_artifacts = (
                     (*collected, *_artifact_refs(typed_output), *result.artifacts)
                 )
-                for artifact in artifacts:
+                for artifact in candidate_artifacts:
                     self._artifact_resolver.resolve(artifact)
+                artifacts = _unique_artifacts(candidate_artifacts)
                 recorder.finish(
                     status=RunStatus.SUCCEEDED,
                     stage="complete",
@@ -275,6 +284,17 @@ class SkillRegistry:
                 )
             except SkillBlocked as error:
                 blocker = error.blocker
+                try:
+                    for artifact in blocker.artifact_refs:
+                        self._artifact_resolver.resolve(artifact)
+                except Exception as verification_error:
+                    return self._internal_failure(
+                        recorder=recorder,
+                        descriptor=descriptor,
+                        invocation_digest=invocation_digest,
+                        artifacts=collected,
+                        error=verification_error,
+                    )
                 collected = _unique_artifacts((*collected, *blocker.artifact_refs))
                 if blocker.retryable and attempt < descriptor.max_attempts:
                     attempt += 1
@@ -296,30 +316,47 @@ class SkillRegistry:
                     blocker=blocker,
                 )
             except Exception as error:
-                blocker = Blocker(
-                    code="HARN_INTERNAL",
-                    message="Skill implementation failed unexpectedly",
-                    stage="invoke",
-                    retryable=False,
-                    details={
-                        "error_type": type(error).__name__,
-                        "error": str(error),
-                    },
-                    unknowns=(),
-                    artifact_refs=collected,
-                )
-                recorder.finish(
-                    status=RunStatus.FAILED,
-                    stage="invoke",
-                    artifact_refs=collected,
-                )
-                return recorder.build_state(
+                return self._internal_failure(
+                    recorder=recorder,
+                    descriptor=descriptor,
                     invocation_digest=invocation_digest,
-                    max_attempts=descriptor.max_attempts,
                     artifacts=collected,
-                    output=None,
-                    blocker=blocker,
+                    error=error,
                 )
+
+    def _internal_failure(
+        self,
+        *,
+        recorder: RunRecorder,
+        descriptor: SkillDescriptor,
+        invocation_digest: str,
+        artifacts: tuple[ArtifactRef, ...],
+        error: Exception,
+    ) -> RunState:
+        blocker = Blocker(
+            code="HARN_INTERNAL",
+            message="Skill implementation failed unexpectedly",
+            stage="invoke",
+            retryable=False,
+            details={
+                "error_type": type(error).__name__,
+                "error": str(error),
+            },
+            unknowns=(),
+            artifact_refs=artifacts,
+        )
+        recorder.finish(
+            status=RunStatus.FAILED,
+            stage="invoke",
+            artifact_refs=artifacts,
+        )
+        return recorder.build_state(
+            invocation_digest=invocation_digest,
+            max_attempts=descriptor.max_attempts,
+            artifacts=artifacts,
+            output=None,
+            blocker=blocker,
+        )
 
     def _registration(self, skill_id: str, exact_version: str) -> _Registration:
         registration = self._registrations.get((skill_id, exact_version))

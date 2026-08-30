@@ -217,3 +217,15 @@
   到资产定位/重物化，而不能用 VLM 或改 prompt 掩盖。
 - 验证：compiler + admission `10 passed`；compiler statement + branch coverage `100%`；ruff
   与 diff check 通过。
+
+### 2026-08-31 / A011：所有 artifact ref 必须先验真、后去重
+
+- 攻击：恶意 handler 同时返回一个合法 ref 和一个“媒体/schema/sha 相同、但 URI 或 bytes 错误”
+  的 ref。旧 Registry 先按内容身份去重，坏 ref 被合法 ref 遮住，run 会错误 succeeded。
+- 红灯：攻击测试在旧实现中确实得到 `succeeded`，证明不是理论风险。
+- 修复：typed output、supplementary artifacts 的每个原始 ref 都先经 resolver 逐一校验，全部通过后
+  才按内容身份压缩进 RunState。`SkillBlocked.artifact_refs` 也执行同样验证；伪造的 blocker 证据
+  不能进入终态。
+- 进度事件：`RunContext.emit` 在交给 durable EventSink 前逐一解析 ref；无效 ref 导致
+  `HARN_INTERNAL/failed`，journal 只留下真实 preflight 与 invoke 终态，不会持久化恶意阶段。
+- 验证：Registry statement + branch coverage `100%`，`7 passed`；ruff 与 diff check 通过。
