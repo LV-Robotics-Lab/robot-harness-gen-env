@@ -186,3 +186,18 @@ rewritten to final stage, `accept_final`, both pass validation labels, and exit
 code 0.  The genuine-pass control scored 5/5.  Artifact:
 `artifacts/pending_review_before.json`.  The isolated result justifies a bounded
 state-machine fix; it does not require a simulator or model call.
+
+## 2026-08-31T02:52–03:00+08:00 — pinned upstream mechanism reproduction
+
+1. Re-ran the exact selected upstream test set and emitted a JUnit receipt.  The
+   current environment reproduced the earlier 18 pass / 4 skip / 2 exact-version
+   failures.
+2. Created a research-artifact-only Python 3.12 environment with ASPIRE's locked
+   NumPy 1.26.4 and SciPy 1.15.3 plus pytest.  The unchanged test set then
+   produced 20 passed and 4 explicit skips.  The skips were missing PyRoKi,
+   missing Contact-GraspNet, and the two simulator integrations gated by
+   `ASPIRE_INTEGRATION_REAL=1`.
+3. Decision: classify this as a successful partial reproduction of the
+   no-service harness mechanisms.  It does not exercise ASPIRE's trace logger,
+   simulator, model actors, evolutionary search quality, or paper metrics.
+   `reproduction_report.md` records the exact boundary and receipts.

@@ -3,3 +3,4 @@ E1-runtime-binding-baseline	113e54b	accuracy=0.200;unsafe_accepts=4/4	baseline	V
 E1-runtime-binding	795273f	accuracy=1.000;unsafe_accepts=0/4	keep	Exact scene-id and resolved-digest checks; valid control retained; focused and root regressions pass.
 E1-real-sapien-replay	00e4ae9	pass=1/1;fail_checks=0;video=120/100_unique	keep	Fresh can-on-plate seed-7 RoboTwin/SAPIEN replay consumed by the new binding gates.
 E1b-pending-review-baseline	bbfa19d	pending_accuracy=0.000;pass_control=1.000	baseline	Pending review was mislabeled final/pass on all four fields and returned exit code 0.
+E3-upstream-mechanism-tests	7ba73d3	20_passed;4_skipped;0_failed	partial_reproduction	Pinned NumPy/SciPy environment; simulator/perception integrations remain explicitly skipped.
