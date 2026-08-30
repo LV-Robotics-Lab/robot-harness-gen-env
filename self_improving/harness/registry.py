@@ -60,7 +60,11 @@ SkillHandler = Callable[[HarnessModel, RunContext], HandlerResult]
 
 
 class DependencyResolver(Protocol):
-    def resolve(self, skill_ref: str) -> tuple[DependencyRef, ...]: ...
+    def resolve(
+        self,
+        skill_ref: str,
+        effective_parameters: HarnessModel,
+    ) -> tuple[DependencyRef, ...]: ...
 
 
 @dataclass(frozen=True)
@@ -69,7 +73,11 @@ class StaticDependencyResolver:
 
     dependencies: Mapping[str, tuple[DependencyRef, ...]]
 
-    def resolve(self, skill_ref: str) -> tuple[DependencyRef, ...]:
+    def resolve(
+        self,
+        skill_ref: str,
+        effective_parameters: HarnessModel,
+    ) -> tuple[DependencyRef, ...]:
         return tuple(sorted(self.dependencies.get(skill_ref, ()), key=lambda item: item.name))
 
 
@@ -210,7 +218,7 @@ class SkillRegistry:
         try:
             dependencies = tuple(
                 sorted(
-                    self._dependency_resolver.resolve(skill_ref),
+                    self._dependency_resolver.resolve(skill_ref, typed_input),
                     key=lambda item: item.name,
                 )
             )
@@ -222,6 +230,18 @@ class SkillRegistry:
                 code="HARN_DEPENDENCY_UNAVAILABLE",
                 message=str(error),
                 details={},
+            )
+        except Exception as error:
+            return self._preflight_terminal(
+                skill_id=skill_id,
+                skill_version=exact_version,
+                status=RunStatus.FAILED,
+                code="HARN_INTERNAL",
+                message="dependency resolver failed unexpectedly",
+                details={
+                    "error_type": type(error).__name__,
+                    "error": str(error),
+                },
             )
         effective_parameters = typed_input.model_dump(mode="json")
         invocation_digest = _invocation_digest(

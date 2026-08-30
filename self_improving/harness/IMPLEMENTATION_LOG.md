@@ -276,3 +276,16 @@
   组合、缺 CAS、已存在目标，以及 verifier exception/fail 两种路径。
 - 验证：PackageStore statement + branch coverage `100%`；全 Harness `68 passed` 且 statement +
   branch coverage `100%`；ruff 与 diff check 通过。
+
+### 2026-08-31 / A014：依赖解析必须看到展开后的类型化输入
+
+- 问题：旧 `DependencyResolver.resolve(skill_ref)` 看不到参数，只能返回进程启动时的静态记录；
+  因而无法把某次 compile 实际引用的 catalog 资产内容或当前 asset-library 状态纳入 invocation
+  identity。
+- 红灯：测试增加 parameter-aware resolver，要求收到 Registry 已校验、已展开默认值的
+  `ArtifactRef`；旧调用因缺第二参数直接 TypeError。
+- 修复：内部 Interface 改为 `resolve(skill_ref, effective_parameters)`；Static Adapter 忽略第二参数，
+  动态 Adapter 可以按输入计算真实依赖。Registry 仍在依赖解析成功后才创建 Invocation。
+- 失败边界：预期缺依赖继续返回 `HARN_DEPENDENCY_UNAVAILABLE/blocked`；resolver 实现自身异常现在
+  返回 attempt 0 的 `HARN_INTERNAL/failed`，不再把裸异常抛出审计链。
+- 验证：Registry statement + branch coverage `100%`，`7 passed`；ruff 与 diff check 通过。

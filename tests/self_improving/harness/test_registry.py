@@ -96,6 +96,18 @@ def test_registry_invokes_exact_skill_with_content_identity_and_real_events(
         payload={"value": 1},
     )
     sink = RecordingEventSink()
+    resolved_inputs: list[ArtifactRef] = []
+
+    class ParameterAwareResolver:
+        def resolve(
+            self,
+            skill_ref: str,
+            effective_parameters: ArtifactRef,
+        ) -> tuple[DependencyRef, ...]:
+            assert skill_ref == "test.echo@1.0.0"
+            resolved_inputs.append(effective_parameters)
+            return (DependencyRef(name="echo-runtime", version="1", sha256="d" * 64),)
+
     run_ids = iter(
         (
             UUID("12345678-1234-4234-9234-123456789abc"),
@@ -104,13 +116,7 @@ def test_registry_invokes_exact_skill_with_content_identity_and_real_events(
     )
     registry = SkillRegistry(
         artifact_resolver=store,
-        dependency_resolver=StaticDependencyResolver(
-            {
-                "test.echo@1.0.0": (
-                    DependencyRef(name="echo-runtime", version="1", sha256="d" * 64),
-                )
-            }
-        ),
+        dependency_resolver=ParameterAwareResolver(),
         event_sink=sink,
         clock=SequenceClock(),
         run_id_factory=lambda: next(run_ids),
@@ -137,12 +143,14 @@ def test_registry_invokes_exact_skill_with_content_identity_and_real_events(
     assert invocation is not None
     assert invocation.effective_parameters == payload.model_dump(mode="json")
     assert invocation.dependencies[0].name == "echo-runtime"
+    assert resolved_inputs == [payload]
 
     alternate = tmp_path / "alternate.json"
     alternate.write_bytes(store.resolve(payload).path.read_bytes())
     relocated = payload.model_copy(update={"name": "renamed", "uri": alternate.as_uri()})
     second = registry.invoke("test.echo", "1.0.0", relocated.model_dump(mode="json"))
     assert second.invocation_digest == first.invocation_digest
+    assert resolved_inputs == [payload, relocated]
     assert len(sink.events) == 6
 
 
@@ -278,7 +286,11 @@ def test_registry_returns_typed_preflight_blockers_instead_of_raising(
     assert unavailable.blocker.artifact_refs == (payload,)
 
     class MissingRuntime:
-        def resolve(self, skill_ref: str) -> tuple[DependencyRef, ...]:
+        def resolve(
+            self,
+            skill_ref: str,
+            effective_parameters: ArtifactRef,
+        ) -> tuple[DependencyRef, ...]:
             raise DependencyResolutionError(f"runtime missing for {skill_ref}")
 
     dependency_registry, _, _, _, dependency_payload, _ = _registered_echo(
@@ -293,6 +305,29 @@ def test_registry_returns_typed_preflight_blockers_instead_of_raising(
     )
     assert dependency_unavailable.blocker is not None
     assert dependency_unavailable.blocker.code == "HARN_DEPENDENCY_UNAVAILABLE"
+
+    class BrokenResolver:
+        def resolve(
+            self,
+            skill_ref: str,
+            effective_parameters: ArtifactRef,
+        ) -> tuple[DependencyRef, ...]:
+            raise RuntimeError("resolver implementation failed")
+
+    broken_registry, _, _, _, broken_payload, _ = _registered_echo(
+        tmp_path / "broken_dependency",
+        skill_id="test.broken_dependency",
+        dependency_resolver=BrokenResolver(),
+    )
+    broken = broken_registry.invoke(
+        "test.broken_dependency",
+        "1.0.0",
+        broken_payload.model_dump(mode="json"),
+    )
+    assert broken.status == RunStatus.FAILED
+    assert broken.blocker is not None
+    assert broken.blocker.code == "HARN_INTERNAL"
+    assert broken.attempt == 0
 
 
 def test_registry_retries_only_retryable_handler_blockers(tmp_path: Path) -> None:
