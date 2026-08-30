@@ -42,7 +42,10 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from lib import conventions
+try:
+    from . import conventions
+except ImportError:  # Direct script/PYTHONPATH entry points retain ``lib`` imports.
+    from lib import conventions
 
 # representations[].frame / geometry_state are OPTIONAL on purpose, and their
 # absence carries meaning -- do not "helpfully" backfill them:

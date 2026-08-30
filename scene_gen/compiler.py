@@ -6,7 +6,7 @@ import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, Protocol
 
 from pydantic import ValidationError
 
@@ -51,9 +51,22 @@ class CompileOutcome:
     manifest: dict[str, Any]
     static_validation: dict[str, Any]
     asset_generation_report: dict[str, Any] | None
+    asset_admission_report: dict[str, Any] | None
 
 
 CompileObserver = Callable[[CompileEvent], None]
+
+
+class AssetAdmitter(Protocol):
+    """Optional platform Adapter that promotes generated assets before solve."""
+
+    def admit(
+        self,
+        *,
+        scene_spec: SceneSpec,
+        asset_catalog: AssetCatalog,
+        generation_report: dict[str, Any],
+    ) -> tuple[AssetCatalog, dict[str, Any]]: ...
 
 
 class CompileFailure(RuntimeError):
@@ -77,6 +90,7 @@ def compile_scene(
     request: CompileRequest,
     *,
     observer: CompileObserver | None = None,
+    asset_admitter: AssetAdmitter | None = None,
 ) -> CompileOutcome:
     """Compile once without CLI parsing, output discovery, or prompt reparsing."""
 
@@ -109,6 +123,7 @@ def compile_scene(
     output_dir = (request.out_root / spec.scene_id).expanduser().resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     generation_report: dict[str, Any] | None = None
+    admission_report: dict[str, Any] | None = None
     if request.generate_missing_assets:
         try:
             catalog, generation_report = ensure_assets_for_scene(
@@ -124,16 +139,32 @@ def compile_scene(
                 details={"scene_id": spec.scene_id, "error": str(error)},
             ) from error
         generation_path = output_dir / "asset_generation_report.json"
-        catalog_path = output_dir / "effective_asset_catalog.json"
         _write_json(generation_path, generation_report)
-        _write_json(catalog_path, catalog.canonical_dict())
         notify(
             CompileEvent(
                 stage="asset_generation",
                 phase="completed",
-                artifact_paths=(generation_path, catalog_path),
+                artifact_paths=(generation_path,),
             )
         )
+        if asset_admitter is not None:
+            catalog, admission_report = asset_admitter.admit(
+                scene_spec=spec,
+                asset_catalog=catalog,
+                generation_report=generation_report,
+            )
+        catalog_path = output_dir / "effective_asset_catalog.json"
+        _write_json(catalog_path, catalog.canonical_dict())
+        if admission_report is not None:
+            admission_path = output_dir / "asset_admission_report.json"
+            _write_json(admission_path, admission_report)
+            notify(
+                CompileEvent(
+                    stage="asset_admission",
+                    phase="completed",
+                    artifact_paths=(admission_path, catalog_path),
+                )
+            )
 
     try:
         resolved = solve_scene(spec, catalog)
@@ -184,6 +215,7 @@ def compile_scene(
         manifest=manifest,
         static_validation=report,
         asset_generation_report=generation_report,
+        asset_admission_report=admission_report,
     )
 
 

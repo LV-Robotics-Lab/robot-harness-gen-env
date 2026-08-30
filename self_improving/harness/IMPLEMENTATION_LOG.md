@@ -118,3 +118,24 @@
 - MuJoCo：primitive transfer + 20-step smoke 可跑；真实资产 OBJ 与 table/support settle 仍缺。
 - 决策：正式 replay 先选可实跑的 RoboTwin `071_can on table`；Isaac/MuJoCo 不用假替身冒充
   闭环，分别等 portable asset resolver 和真实 support gate 后再晋升。
+
+### 2026-08-31 / A005：生成资产的 v3 ledger 准入与原子提升
+
+- 红灯：compile 的 proxy 只有 OBJ/metadata/provenance 文件，没有正式账本；新增端到端测试时
+  `GeneratedAssetAdmitter` 不存在。
+- 实现：compiler 新增通用 `AssetAdmitter` Seam；平台 Adapter 将 run staging 中的生成资产复制
+  到 `.incoming`，构建并校验完整 `asset_ledger.v3`，再用单次原子 rename 提升到
+  `asset_library/generated/<asset_id>`。solve 只使用提升后的路径。
+- 账本事实：`external_ids.env_gen`、每个 representation 的 `frame`、`geometry_state`、`files`、
+  collision representation 的 `collision_meta`、stable pose 的 `measured_against`、完整生成器
+  prompt/seed/version/params/license 均已保留；不写 v3 已删除的 runtime defaults。
+- 资格边界：当前只写 `generation_qc=pass`，回执明确 `physical_qualification=pending_settle`；
+  未经过 SAPIEN settle 的资产虽然已经可审计入库，但不会冒充物理晋升通过。
+- 原子性与幂等：同内容重跑为 `reused`；结构校验失败时 pool 不出现目标目录；提升后文件校验
+  失败时移到 `.rejected`；缺账本、文件篡改或 ledger 身份错配都 fail closed。
+- 实证：hexagonal pedestal 从自然语言输入生成，ledger `check_files=True` 为零 violations，
+  effective catalog 和 resolved scene 都引用正式 pool 路径；第二次运行 ledger digest 不变。
+- 验证：admission + compiler 两个新模块合计 statement coverage `100%`，端到端 `9 passed`；
+  active ledger/audit 回归 `92 passed`，ruff 与 diff check 通过。
+- 产物：`self_improving/harness/assets.py`、
+  `tests/self_improving/harness/test_asset_admission.py`、compiler 的 admission Seam。

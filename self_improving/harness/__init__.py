@@ -6,6 +6,7 @@ from .artifacts import (
     LocalArtifactStore,
     ResolvedArtifact,
 )
+from .assets import AssetAdmissionError, GeneratedAssetAdmitter
 from .events import (
     EventSink,
     RecordingEventSink,
@@ -42,6 +43,7 @@ __all__ = [
     "ArtifactRef",
     "ArtifactResolutionError",
     "ArtifactResolver",
+    "AssetAdmissionError",
     "Blocker",
     "CompileConfig",
     "DependencyRef",
@@ -49,6 +51,7 @@ __all__ = [
     "Event",
     "EventSink",
     "Invocation",
+    "GeneratedAssetAdmitter",
     "LocalArtifactStore",
     "RecordingEventSink",
     "ResolvedArtifact",

@@ -1,6 +1,7 @@
 """Constrained natural-language scene compiler for RoboTwin."""
 
 from .compiler import (
+    AssetAdmitter,
     CompileEvent,
     CompileFailure,
     CompileOutcome,
@@ -15,6 +16,7 @@ from .schema import (
 )
 
 __all__ = [
+    "AssetAdmitter",
     "CompileEvent",
     "CompileFailure",
     "CompileOutcome",
