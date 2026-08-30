@@ -7,6 +7,13 @@ from .artifacts import (
     ResolvedArtifact,
 )
 from .assets import AssetAdmissionError, GeneratedAssetAdmitter
+from .event_journal import (
+    EventJournalConflictError,
+    EventJournalCorruptionError,
+    EventPage,
+    SQLiteEventJournal,
+    StoredRunEvent,
+)
 from .events import (
     EventSink,
     RecordingEventSink,
@@ -62,6 +69,9 @@ __all__ = [
     "DependencyResolver",
     "EnvironmentPackage",
     "Event",
+    "EventJournalConflictError",
+    "EventJournalCorruptionError",
+    "EventPage",
     "EventSink",
     "Invocation",
     "GeneratedAssetAdmitter",
@@ -82,6 +92,8 @@ __all__ = [
     "SkillBlocked",
     "SkillRegistry",
     "SkillQualification",
+    "SQLiteEventJournal",
+    "StoredRunEvent",
     "Text2EnvCompileInput",
     "Text2EnvCompileOutput",
     "Text2EnvReplayInput",

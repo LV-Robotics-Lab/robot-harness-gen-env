@@ -171,3 +171,21 @@
 - 实证：四种写失败后 seq、attempt、status、ended_at 均未前进；恢复写入后的最终事件序列仍是
   连续的 `1..4`，且内存事件和 sink 完全一致。
 - 验证：events 模块 statement coverage `100%`；ruff 与 diff check 通过。
+
+### 2026-08-31 / A008：SQLite append-only 事件主账与可续传游标
+
+- 决策：live authority 只保留一份 SQLite WAL 主账；不同时双写 JSONL，避免崩溃时出现两套
+  不一致真相。终态 JSONL 若需要，只能由主账重建导出。
+- 实现：`SQLiteEventJournal` 实现 `EventSink.publish`，以全局自增 `event_id` 作为 REST/SSE
+  续传游标，以 `(run_id, seq)` 作为每条 run 的唯一键；支持按全局或单 run 分页读取、重启重放
+  和基于条件通知的无轮询等待。
+- 写入门禁：相同 run/seq 且 canonical envelope 完全相同为幂等复用；内容不同、seq 跳号、Skill
+  身份变化、状态链断裂、时间倒退、attempt 跳变或终态后追加都 fail closed。
+- 线程与持久性：每次操作创建并关闭独立 connection，开启 WAL、FULL synchronous、busy timeout；
+  `BEGIN IMMEDIATE` 串行化同 run 并发写，commit 后才唤醒消费者。
+- 攻击用例：覆盖重启、run filter、分页、并发重复、内容冲突、五类生命周期破坏、非法查询和
+  数据库 payload 篡改；等待测试用条件信号协调，不用 sleep 或定时假进度。
+- 验证：整个 `self_improving.harness` 当前 statement + branch coverage 均为 `100%`，
+  `47 passed`；ruff 与 diff check 通过。
+- 产物：`self_improving/harness/event_journal.py`、
+  `tests/self_improving/harness/test_event_journal.py`。

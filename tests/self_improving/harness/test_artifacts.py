@@ -21,12 +21,20 @@ def test_local_artifact_store_round_trips_content_by_digest(tmp_path: Path) -> N
         schema_version="robotwin.asset_catalog.v1",
     )
     resolved = store.resolve(artifact)
+    reused = store.put_file(
+        source,
+        name="same_content_new_name",
+        media_type="application/json",
+        schema_version="robotwin.asset_catalog.v1",
+    )
 
     assert artifact.sha256 == hashlib.sha256(payload).hexdigest()
     assert artifact.uri == f"artifact://sha256/{artifact.sha256}"
     assert artifact.bytes == len(payload)
     assert resolved.path.read_bytes() == payload
     assert resolved.ref == artifact
+    assert reused.sha256 == artifact.sha256
+    assert reused.uri == artifact.uri
 
 
 def test_resolver_accepts_a_verified_file_uri_for_external_input(tmp_path: Path) -> None:
