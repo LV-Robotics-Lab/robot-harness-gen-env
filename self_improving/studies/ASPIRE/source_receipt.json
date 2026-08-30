@@ -1,0 +1,53 @@
+{
+  "schema_version": "robot_harness.aspire_study.source_receipt.v1",
+  "captured_at": "2026-08-31T01:24:43+08:00",
+  "study_branch": "worktree/bingsheng",
+  "study_start_commit": "732e190",
+  "sources": {
+    "paper": {
+      "url": "https://arxiv.org/abs/2607.00272",
+      "version": "v1",
+      "submitted": "2026-06-30"
+    },
+    "project_page": {
+      "url": "https://research.nvidia.com/labs/gear/aspire/"
+    },
+    "repository": {
+      "url": "https://github.com/NVlabs/ASPIRE.git",
+      "local_path": "external/ASPIRE",
+      "commit": "7ba73d3bcac8f6b6d4a7d67ed4040988f768d282",
+      "integration": "git_submodule"
+    }
+  },
+  "host_preflight": {
+    "gpu_count": 1,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "gpu_memory_mib": 32607,
+    "driver": "580.159.03",
+    "nvcc": "missing",
+    "uv": "0.12.3",
+    "disk_free_gib_approx": 710,
+    "aspire_venvs_present": [],
+    "aspire_submodules_initialized": false,
+    "perception_ports_8114_8116": "down",
+    "nvidia_api_key_present": false,
+    "hugging_face_token_present": false
+  },
+  "unmodified_project_baselines": {
+    "root_pytest": {
+      "command": "pytest -q",
+      "passed": 125,
+      "failed": 0,
+      "elapsed_seconds": 0.79
+    },
+    "self_improving_matrix": {
+      "command": "script/run_self_improving_tests.sh",
+      "passed": 591,
+      "skipped": 6,
+      "failed": 0,
+      "harness_statement_coverage_percent": 100,
+      "harness_branch_coverage_percent": 100
+    }
+  }
+}
+

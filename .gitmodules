@@ -9,3 +9,6 @@
 [submodule "external/MetaSim"]
 	path = external/MetaSim
 	url = https://github.com/RoboVerseOrg/MetaSim.git
+[submodule "external/ASPIRE"]
+	path = external/ASPIRE
+	url = https://github.com/NVlabs/ASPIRE.git
