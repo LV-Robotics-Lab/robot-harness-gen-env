@@ -82,6 +82,8 @@ def test_runtime_validator_requires_each_object_visibility_and_physics() -> None
     _, _, resolved = solved_case()
     evidence = {
         "schema_version": "robotwin.scene_runtime_evidence.v1",
+        "scene_id": resolved.scene_id,
+        "resolved_scene_sha256": resolved.digest(),
         "status": "pass",
         "robot_initial_collision_count": 0,
         "objects": {
@@ -144,6 +146,8 @@ def test_runtime_v2_validates_dynamic_relations_instead_of_exact_spawn_pose() ->
     }
     evidence = {
         "schema_version": "robotwin.scene_runtime_evidence.v2",
+        "scene_id": resolved.scene_id,
+        "resolved_scene_sha256": resolved.digest(),
         "status": "pass",
         "robot_initial_collision_count": 0,
         "relations": relations,
@@ -193,6 +197,8 @@ def test_runtime_validator_accepts_explicit_fixed_static_support_only_for_static
     _, _, resolved = solved_case()
     evidence = {
         "schema_version": "robotwin.scene_runtime_evidence.v1",
+        "scene_id": resolved.scene_id,
+        "resolved_scene_sha256": resolved.digest(),
         "status": "pass",
         "robot_initial_collision_count": 0,
         "objects": {},
@@ -314,6 +320,8 @@ def test_runtime_validator_rejects_static_contact_free_nested_support() -> None:
         }
     )
     evidence = {
+        "scene_id": attacked.scene_id,
+        "resolved_scene_sha256": attacked.digest(),
         "status": "pass",
         "robot_initial_collision_count": 0,
         "objects": {},
@@ -346,6 +354,8 @@ def test_runtime_validator_rejects_static_contact_free_nested_support() -> None:
 def test_runtime_validator_rejects_intermittent_nested_contact() -> None:
     _, _, resolved = stacked_case()
     evidence = {
+        "scene_id": resolved.scene_id,
+        "resolved_scene_sha256": resolved.digest(),
         "status": "pass",
         "robot_initial_collision_count": 0,
         "objects": {},
@@ -378,6 +388,8 @@ def test_runtime_validator_rejects_intermittent_nested_contact() -> None:
 def test_runtime_validator_rejects_nested_source_contacting_table() -> None:
     _, _, resolved = stacked_case()
     evidence = {
+        "scene_id": resolved.scene_id,
+        "resolved_scene_sha256": resolved.digest(),
         "status": "pass",
         "robot_initial_collision_count": 0,
         "objects": {},
