@@ -14,13 +14,14 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any, Literal, TypeVar
 
-from pydantic import Field, TypeAdapter, ValidationError
+from pydantic import Field, TypeAdapter, ValidationError, model_validator
 
 from .artifacts import LocalArtifactStore
 from .schemas import ArtifactRef, SkillQualification
 from .schemas.base import (
     CanonicalSkillRef,
     HarnessModel,
+    JsonObject,
     NonEmptyString,
     NonNegativeInt,
     Sha256,
@@ -31,6 +32,14 @@ QUALIFICATION_SCHEMA_ID = "harness.skill_qualification.v1"
 QUALIFICATION_REPORT_SCHEMA_ID = "harness.skill_qualification_report.v1"
 IMPLEMENTATION_MANIFEST_SCHEMA_ID = "harness.skill_implementation_manifest.v1"
 _BUNDLE_DOCUMENTS = frozenset({"qualification.json", "report.json", "manifest.json"})
+
+
+class QualificationCheckV1(HarnessModel):
+    """One named acceptance gate and its report-bound observed values."""
+
+    name: ShortString
+    status: Literal["pass"]
+    evidence: JsonObject
 
 
 class QualificationReportV1(HarnessModel):
@@ -44,6 +53,16 @@ class QualificationReportV1(HarnessModel):
     implementation_sha256: Sha256
     scene_gen_tree_sha256: Sha256
     ledger_contract_tree_sha256: Sha256
+    checks: tuple[QualificationCheckV1, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def check_names_are_sorted_and_unique(self) -> "QualificationReportV1":
+        names = [check.name for check in self.checks]
+        if names != sorted(names):
+            raise ValueError("qualification check names must be sorted")
+        if len(names) != len(set(names)):
+            raise ValueError("qualification check names must be unique")
+        return self
 
 
 class ImplementationFileV1(HarnessModel):

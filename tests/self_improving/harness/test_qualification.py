@@ -121,6 +121,18 @@ def _make_bundle(tmp_path: Path, *, reverse_files: bool = False) -> tuple[Path, 
         "implementation_sha256": manifest["bundle_sha256"],
         "scene_gen_tree_sha256": manifest["scene_gen_tree_sha256"],
         "ledger_contract_tree_sha256": manifest["ledger_contract_tree_sha256"],
+        "checks": [
+            {
+                "name": "compile.output",
+                "status": "pass",
+                "evidence": {"package_id": "package-42", "run_count": 3},
+            },
+            {
+                "name": "ledger.validation",
+                "status": "pass",
+                "evidence": {"violations": 0},
+            },
+        ],
     }
     _write_json(bundle / "report.json", report)
     report_sha = _sha((bundle / "report.json").read_bytes())
@@ -243,6 +255,31 @@ def test_rejects_receipt_report_hash_mismatch(tmp_path: Path) -> None:
     qualification["report_sha256"] = "f" * 64
     _write_json(bundle / "qualification.json", qualification)
     with pytest.raises(QualificationBundleError, match="report_sha256"):
+        _load(tmp_path, bundle, scene_gen, ledger)
+
+
+@pytest.mark.parametrize("mutation", ["missing", "empty", "unsorted", "duplicate"])
+def test_rejects_missing_empty_or_ambiguous_report_checks(
+    tmp_path: Path,
+    mutation: str,
+) -> None:
+    bundle, scene_gen, ledger = _make_bundle(tmp_path)
+    report_path = bundle / "report.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    if mutation == "missing":
+        report.pop("checks")
+    elif mutation == "empty":
+        report["checks"] = []
+    elif mutation == "unsorted":
+        report["checks"].reverse()
+    else:
+        report["checks"][1]["name"] = report["checks"][0]["name"]
+    _write_json(report_path, report)
+    qualification = json.loads((bundle / "qualification.json").read_text(encoding="utf-8"))
+    qualification["report_sha256"] = _sha(report_path.read_bytes())
+    _write_json(bundle / "qualification.json", qualification)
+
+    with pytest.raises(QualificationBundleError, match="invalid report"):
         _load(tmp_path, bundle, scene_gen, ledger)
 
 

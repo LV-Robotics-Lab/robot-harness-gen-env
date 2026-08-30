@@ -25,6 +25,7 @@ from .package_store import PackageStore, PackageStoreError, PublishedPackage
 from .qualification import (
     LoadedQualification,
     QualificationBundleError,
+    QualificationCheckV1,
     QualificationReportV1,
     load_qualification_bundle,
 )
@@ -99,6 +100,7 @@ __all__ = [
     "PackageStoreError",
     "PublishedPackage",
     "QualificationBundleError",
+    "QualificationCheckV1",
     "QualificationReportV1",
     "RecordingEventSink",
     "RegistryLookupError",

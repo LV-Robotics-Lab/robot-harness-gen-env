@@ -440,3 +440,17 @@
   仍可读回 Invocation/RunState；attempt-0 的 missing-Skill 终态也可独立恢复。
 - 验证：Registry/run-store/journal `33 passed`；Registry statement + branch coverage `100%`；ruff、format
   与 diff check 通过。
+
+### 2026-08-31 / A025：qualification 的 pass 必须携带可审计的门禁观测值
+
+- 问题：初版严格报告只绑定 Skill、命令与源码摘要，仍可能写出一个没有任何验收观测值的空壳
+  `status=pass`；这不满足“每一步尝试有证据”，也无法区分真正跑过三次 compile 与手写结论。
+- 契约：`QualificationReportV1` 现在至少包含一个 `QualificationCheckV1`；每项给出稳定名称、只能为
+  `pass` 的状态和 JSON-only evidence。check 名称必须排序且唯一，整个 checks 随 report 原始 bytes 被
+  receipt SHA 与 CAS 一起绑定，不另造一份可能漂移的旁路真相。
+- 边界：这一改动没有生成 production pass。后续 qualification runner 必须把三次 run 的 dependency/
+  output/package/admission/ledger/static-validation 实测摘要写进这些 checks，固定 bundle 才能进入装配。
+- 攻击测试：缺 checks、空列表、乱序和重名全部 fail closed；既有报告替换、源码漂移和 CAS 绑定测试
+  保持通过。
+- 验证：qualification + application fixture `63 passed`；两个模块 statement + branch coverage
+  `100%`。
