@@ -80,3 +80,48 @@ branch. Work remains on `worktree/bingsheng`.
   `scene_gen/` schemas or physical thresholds. This remains a hypothesis until
   the current-harness audit and experiments finish.
 
+## 2026-08-31T01:25–02:10+08:00 — upstream mechanism check and static headroom
+
+1. Ran the upstream tests that do not require simulator services with
+   `PYTHONPATH=../..`.  Of 24 selected outcomes, 18 passed, 4 skipped, and 2
+   failed.  Both failures were exact environment-pin checks: this host has
+   NumPy 2.4.4 rather than 1.26.4 and SciPy 1.17.1 rather than 1.15.3.  The
+   generation-progress, LIBERO fix-loop, skill-promotion receipt, suite helper,
+   and setup-helper tests otherwise executed.  This is a partial mechanism
+   reproduction, not a simulator or paper-result reproduction.
+2. An initial 33-case prompt-matrix invocation used the committed fixture
+   catalog.  It produced 3/33 because its deliberately fake `/opt/robotwin-fixture`
+   source paths do not exist on this host.  This was a precondition error, not a
+   generator failure; the artifact is retained as
+   `artifacts/prompt_matrix_fixture_invalid` so the failed attempt is not hidden.
+3. Located the real RoboTwin checkout at commit
+   `266f3aadf505a4f7fe9af0faa41a20f5f47cd123` and built a catalog from it:
+   127 catalog entries, 15 currently available, catalog digest
+   `6d25cbda4d4e9d203d97cf872171027331449048cfa2db17ec02b1a282564433e`.
+4. Re-ran the same committed prompt matrix against that catalog: 33/33 static
+   cases passed; runtime was intentionally not requested (0/0).
+5. Ran deterministic 100-seed static acceptance sweeps for both `Place a can on
+   top of a plate.` and `Put an apple inside a basket.`.  Each produced 100/100.
+   Decision: this supplies no static-success headroom for an agent loop and does
+   not establish physics robustness.  H0 is supported only at the static layer.
+
+## 2026-08-31T02:10–02:30+08:00 — harness audit and experiment freeze
+
+1. Audited the current harness, historical Stage 5 loop, validator, failure
+   memory, and existing quantitative studies.  The typed Harness Schema Tranche
+   is a contract layer, not yet a registry/handler/retry executor.  Stage 5 is a
+   bounded historical prototype whose defaults are one attempt and zero repair.
+2. Found a consumer-side provenance gap: the runtime runner emits both
+   `scene_id` and `resolved_scene_sha256`, but `validate_resolved_scene` did not
+   compare either field with the `ResolvedSceneSpec`.  Existing positive unit
+   fixtures omit both and still pass.  This directly falsifies the assumption
+   that emitted provenance is automatically enforced.
+3. Found that the existing 12-case failure-score study has Spearman
+   `r=-0.2545, p=.7273`; it is not supported as a selector truth signal.  The
+   existing failure memory is also one RGB/checkpoint-specific adapter example,
+   so no broad transfer claim is justified.
+4. Froze `experiment_protocol.md` before production changes.  E1 isolates the
+   provenance fields in five matched cases.  E2 compares a frozen policy,
+   reactive trace use, and development-validated trigger-specific memory on
+   held-out contract families.  The keep rules prohibit unsafe publication,
+   clean regression, render-based success, and held-out memory updates.
