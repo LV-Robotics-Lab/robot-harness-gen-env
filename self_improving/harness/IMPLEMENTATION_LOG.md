@@ -454,3 +454,21 @@
   保持通过。
 - 验证：qualification + application fixture `63 passed`；两个模块 statement + branch coverage
   `100%`。
+
+### 2026-08-31 / A026：固定装配把 compile 从模块变成可恢复的本地应用
+
+- 公开边界：新增唯一 factory `create_compile_application(settings)`，固定注册
+  `text2env.compile@1.0.0`、固定 packaged qualification locator、真实 handler 与 parameter-aware
+  dependency resolver；调用者只能选择 state/trust roots、admission date 和业务输入，不能注入
+  qualification、descriptor 或 handler 绕过晋升门禁。
+- 运行闭环：外部 catalog 必须在显式 trusted roots 内，并先原子快照进 CAS；同一个 state root 承载
+  work、generated staging、asset library、CAS，以及共用 `harness.sqlite3` 的 EventJournal + RunStore。
+  重启应用后可按 run_id 恢复 Invocation、完整 events 与交叉校验后的 terminal RunState。
+- 三次真实验收：空 catalog + generate-on-miss 首次真实生成并 `admitted`，第二、三次均 `reused`；首次
+  library-state dependency 合理改变 invocation digest，第二、三次 invocation/output 身份完全一致；
+  生成 ledger 用随 wheel 分发的 v3 contract 做 `check_files=True`，违规数为 0；所有 RunState artifact
+  都从 CAS 重新解析成功。
+- 安全边界：生产 fixed qualification 尚未生成时 factory 必须 fail closed；单测使用明确 fixture-only
+  bundle 验证装配，不能冒充 production 资质。catalog 缺失、目录冒充文件、越 trusted root，以及配置
+  根缺失/非目录均有拒绝测试。
+- 验证：application `16 passed`，statement + branch coverage `100%`；ruff、format 与 diff check 通过。

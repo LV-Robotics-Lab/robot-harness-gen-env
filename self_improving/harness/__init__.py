@@ -1,5 +1,12 @@
 """Harness MVP public schemas and their immutable catalog."""
 
+from .application import (
+    CompileApplication,
+    CompileApplicationConfigurationError,
+    CompileApplicationSettings,
+    ExternalCatalogError,
+    create_compile_application,
+)
 from .artifacts import (
     ArtifactResolutionError,
     ArtifactResolver,
@@ -81,6 +88,9 @@ __all__ = [
     "AssetAdmissionError",
     "Blocker",
     "CompileConfig",
+    "CompileApplication",
+    "CompileApplicationConfigurationError",
+    "CompileApplicationSettings",
     "DependencyRef",
     "DependencyResolutionError",
     "DependencyResolver",
@@ -90,6 +100,7 @@ __all__ = [
     "EventJournalCorruptionError",
     "EventPage",
     "EventSink",
+    "ExternalCatalogError",
     "Invocation",
     "InvocationSink",
     "GeneratedAssetAdmitter",
@@ -134,6 +145,7 @@ __all__ = [
     "StaticDependencyResolver",
     "UnknownField",
     "ValidationStatus",
+    "create_compile_application",
     "load_qualification_bundle",
     "schema_documents",
     "schema_model",
