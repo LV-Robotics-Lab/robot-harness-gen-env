@@ -297,6 +297,7 @@ def _run_once(
             RunContext(
                 run_id=run_id,
                 attempt=1,
+                dependencies=dependencies,
                 _recorder=recorder,
                 _artifact_resolver=store,
             ),

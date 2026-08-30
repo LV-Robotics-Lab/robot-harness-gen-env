@@ -39,10 +39,11 @@ class HandlerResult:
 
 @dataclass(frozen=True)
 class RunContext:
-    """The only progress callback surface exposed to a Skill handler."""
+    """The immutable invocation facts and progress surface exposed to a handler."""
 
     run_id: UUID
     attempt: int
+    dependencies: tuple[DependencyRef, ...]
     _recorder: RunRecorder
     _artifact_resolver: ArtifactResolver
 
@@ -307,6 +308,7 @@ class SkillRegistry:
                     RunContext(
                         run_id=run_id,
                         attempt=attempt,
+                        dependencies=dependencies,
                         _recorder=recorder,
                         _artifact_resolver=self._artifact_resolver,
                     ),

@@ -104,6 +104,7 @@ def test_registry_invokes_exact_skill_with_content_identity_and_real_events(
     )
     sink = RecordingEventSink()
     resolved_inputs: list[ArtifactRef] = []
+    handler_dependencies: list[tuple[DependencyRef, ...]] = []
 
     class ParameterAwareResolver:
         def resolve(
@@ -130,6 +131,7 @@ def test_registry_invokes_exact_skill_with_content_identity_and_real_events(
     )
 
     def echo(value: ArtifactRef, context: RunContext) -> HandlerResult:
+        handler_dependencies.append(context.dependencies)
         context.emit("echo.copy", artifact_refs=(value,))
         return HandlerResult(output=value, artifacts=(value,))
 
@@ -150,6 +152,7 @@ def test_registry_invokes_exact_skill_with_content_identity_and_real_events(
     assert invocation is not None
     assert invocation.effective_parameters == payload.model_dump(mode="json")
     assert invocation.dependencies[0].name == "echo-runtime"
+    assert handler_dependencies == [invocation.dependencies]
     assert resolved_inputs == [payload]
 
     alternate = tmp_path / "alternate.json"
@@ -157,6 +160,7 @@ def test_registry_invokes_exact_skill_with_content_identity_and_real_events(
     relocated = payload.model_copy(update={"name": "renamed", "uri": alternate.as_uri()})
     second = registry.invoke("test.echo", "1.0.0", relocated.model_dump(mode="json"))
     assert second.invocation_digest == first.invocation_digest
+    assert handler_dependencies == [invocation.dependencies, invocation.dependencies]
     assert resolved_inputs == [payload, relocated]
     assert len(sink.events) == 6
 

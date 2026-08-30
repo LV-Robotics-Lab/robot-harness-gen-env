@@ -665,3 +665,14 @@
 - 新身份：implementation `6947fe8d…94210`，scene-gen tree `e2fe9fd6…ec330`，ledger contract
   `3f73617c…62570`，report `a843b154…faaef`。三份固定文档由 generator 在全部门禁通过后原子发布；
   旧 A031 摘要保留为当时运行的历史证据，不再代表当前 packaged bundle。
+
+### 2026-08-31 / A037：handler 必须拿到 Invocation 声明的同一份依赖
+
+- RED：Registry 已在解析 handler 前生成、排序并持久化 `DependencyRef`，但 `RunContext` 只暴露
+  run id、attempt 和 event callback。新增测试中的 handler 读取 `context.dependencies` 时使 run 进入
+  failed，证明 replay 无法把实际 asset/media/runtime identity 与 Invocation 对账。
+- GREEN：`RunContext.dependencies` 是同一份只读 tuple；Registry 每个 retry attempt 都传入创建
+  Invocation 时的精确 dependencies，不重算、不走共享 mutable side channel。直接执行 candidate 的
+  compile qualification runner 也显式传入它刚解析并用于 invocation digest 的同一 tuple。
+- 验证：Registry + durable persistence `12 passed`，`registry.py` statement `232/232`、branch
+  `52/52`。这一步只建立可信传递面；replay dependency resolver 和 handler 的逐项核验在后续切片接线。
