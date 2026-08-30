@@ -141,6 +141,26 @@ Keep only if all nine frozen decisions pass, visual-pass/pending controls remain
 correct, the focused Stage 5 suite passes, and docs call static-only a nonphysical
 intermediate result.
 
+## E1e — compile catalog snapshot/use integrity
+
+Protocol extension frozen after a post-study source audit reproduced a
+check/use race in the newly added `Text2EnvCompileHandler`.  The attack starts
+with a digest-valid catalog and all selected asset paths inside the configured
+allowed root.  After the handler has copied/checked that input but immediately
+before the real compiler consumes it, replace only the original locator with a
+second valid catalog whose selected asset files live outside the allowed root.
+
+The authoritative decision is made from the resolved output, not from whether
+the handler raised: every resolved `source_file` must remain under the allowed
+root represented by the originally validated bytes.  The original mutable
+locator may change without changing the compile input identity.  Keep a fix
+only if the frozen mutation test changes from outside-root consumption to
+snapshot-only consumption, the existing compile-handler suite remains green,
+and no artifact/package binding is weakened.  This experiment does not cover
+generated-asset transactionality; admission-before-solve rollback remains a
+separate P1 design problem and must not be “fixed” by deleting shared library
+directories in an exception handler.
+
 ## E2 — held-out diagnosis and validated-memory benchmark
 
 ### Failure families

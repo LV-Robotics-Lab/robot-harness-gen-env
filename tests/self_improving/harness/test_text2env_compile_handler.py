@@ -260,6 +260,54 @@ def test_registry_compile_handler_runs_real_pipeline_into_cas_and_event_journal(
     assert [item.envelope.event for item in replayed.events] == list(state.events)
 
 
+def test_compile_handler_executes_the_cas_snapshot_after_external_catalog_mutation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    catalog_path = _materialized_fixture_catalog(tmp_path)
+    original_bytes = catalog_path.read_bytes()
+    catalog = ArtifactRef(
+        name="mutable_catalog",
+        uri=catalog_path.resolve().as_uri(),
+        media_type="application/json",
+        sha256=hashlib.sha256(original_bytes).hexdigest(),
+        bytes=len(original_bytes),
+        schema_version="robotwin.asset_catalog.v1",
+    )
+    real_validate = handler_module._validate_catalog_trust
+
+    def validate_then_mutate(value, *, allowed_roots):
+        real_validate(value, allowed_roots=allowed_roots)
+        catalog_path.write_text('{"not":"the verified catalog"}', encoding="utf-8")
+
+    monkeypatch.setattr(handler_module, "_validate_catalog_trust", validate_then_mutate)
+    handler = _handler(tmp_path, store)
+    registry, _ = _registry(tmp_path, store=store, handler=handler)
+
+    state = registry.invoke(
+        "text2env.compile",
+        "1.0.0",
+        {
+            "request": "Place a can on top of a plate.",
+            "seed": 42,
+            "asset_catalog": catalog.model_dump(mode="json"),
+            "config": {"generate_missing_assets": False},
+        },
+    )
+
+    assert state.status == RunStatus.SUCCEEDED
+    output = Text2EnvCompileOutput.model_validate(state.output)
+    effective_catalog = load_catalog(
+        store.resolve(output.environment_package.asset_catalog).path
+    )
+    assert {entry.asset_id for entry in effective_catalog.entries} == {
+        "071_can",
+        "087_plate",
+    }
+    assert catalog_path.read_bytes() != original_bytes
+
+
 def test_compile_handler_generates_and_admits_missing_asset_with_honest_receipt(
     tmp_path: Path,
 ) -> None:
@@ -617,6 +665,66 @@ def test_compile_handler_enforces_catalog_roots_and_usable_model_files(
             (tmp_path.resolve(),),
             require="directory",
         )
+
+
+def test_compile_handler_consumes_catalog_snapshot_after_original_locator_changes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    allowed_root = tmp_path / "allowed"
+    outside_root = tmp_path / "outside"
+    allowed_catalog = _materialized_fixture_catalog(allowed_root)
+    outside_catalog = _materialized_fixture_catalog(outside_root)
+    store = LocalArtifactStore(tmp_path / "cas")
+    payload = allowed_catalog.read_bytes()
+    catalog_ref = ArtifactRef(
+        name="mutable_catalog",
+        uri=allowed_catalog.resolve().as_uri(),
+        media_type="application/json",
+        sha256=hashlib.sha256(payload).hexdigest(),
+        bytes=len(payload),
+        schema_version="robotwin.asset_catalog.v1",
+    )
+    handler = Text2EnvCompileHandler(
+        artifact_store=store,
+        work_root=tmp_path / "runs",
+        generated_staging_root=tmp_path / "generated_staging",
+        asset_library_root=tmp_path / "asset_library",
+        admission_date=date(2026, 8, 31),
+        allowed_asset_roots=(allowed_root,),
+    )
+    registry, _ = _registry(tmp_path, store=store, handler=handler)
+    real_compile = handler_module.compile_scene
+
+    def mutate_original_then_compile(request, **kwargs):
+        allowed_catalog.write_bytes(outside_catalog.read_bytes())
+        return real_compile(request, **kwargs)
+
+    monkeypatch.setattr(handler_module, "compile_scene", mutate_original_then_compile)
+    state = registry.invoke(
+        "text2env.compile",
+        "1.0.0",
+        {
+            "request": "Place a can on top of a plate.",
+            "seed": 42,
+            "asset_catalog": catalog_ref.model_dump(mode="json"),
+            "config": {"generate_missing_assets": False},
+        },
+    )
+
+    assert state.status == RunStatus.SUCCEEDED
+    output = Text2EnvCompileOutput.model_validate(state.output)
+    resolved = ResolvedSceneSpec.model_validate_json(
+        store.resolve(output.resolved_scene).path.read_text(encoding="utf-8")
+    )
+    source_files = [
+        Path(path).resolve()
+        for item in resolved.objects
+        for path in item.source_files
+    ]
+    assert source_files
+    assert all(path.is_relative_to(allowed_root.resolve()) for path in source_files)
+    assert not any(path.is_relative_to(outside_root.resolve()) for path in source_files)
 
 
 def test_compile_artifact_classifier_rejects_untyped_json_and_handles_binary(
