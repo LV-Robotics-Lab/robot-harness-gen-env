@@ -33,6 +33,12 @@
   投影契约。固定 `148001d` archive 的 importlib 根测试为 201 passed / 0 failed；默认 collection 与
   Harness 99.88% coverage 仍未闭合，所以仍不记为完整绿色快照，也不把 replay follow-on 算作
   ASPIRE matched repair 结果。
+- 封存后固定审计 `4836ebf` qualification loader、`38518e5` wheel packaging 与 `ab03859` RunStore：
+  它们是预制 bundle verifier、packaging prerequisite 和 immutable terminal-record adapter，固定树无
+  Registry 接线，也未闭合 qualification transaction、resumable EvaluationRun 或 package→run→media。
+  clean Harness 为 133 passed / 99.91% coverage，默认 collection 仍失败。
+- 审计完成后共享分支继续出现 `c365874`、`8d9a01c`、`587b49f`、`0e6716a`；本轮不追逐移动 HEAD，
+  所有 post-close “open/未接线”表述明确固定到 `ab03859`，后续提交须另做 clean-archive 复核。
 - 增加六类、开发/held-out 隔离的 ASPIRE 风格 harness 机制基准。固定合成故障集上 validated
   trigger memory 的 mHRC 为 1.00，reactive 为 0.50；该结果不支持物理鲁棒性、LLM 学习或论文
   尺度主张。把 595 passed、6 skipped 明确钉到 E0–E2 快照 `1180aef`，不冒充后续提交的当前

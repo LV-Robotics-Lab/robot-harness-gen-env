@@ -623,3 +623,52 @@ Decision: close the ASPIRE autoresearch task.  The retained production changes,
 negative findings, reproduction limits, fixed synthetic benchmark, latest clean
 source diagnostics, and dashboard failure are all traceable without treating
 concurrent uncommitted work as evidence.
+
+## 2026-08-31 — post-close concurrent Harness boundary at `ab03859`
+
+1. Three independently authored commits landed around the report/seal commits:
+   `4836ebf5a7ee757219b7c40d1730e81909876ed0` added a production qualification
+   bundle loader, `38518e5b423abf69bf59d737e51e93209b69d0c5` fixed ledger wheel packaging,
+   and `ab0385967531737b4ae075f65af1fd9d224e03dc` added a SQLite RunStore.  They
+   were frozen at `ab03859`; later untracked application/runtime-events TDD was
+   not followed or treated as committed behavior.
+2. A clean archive of `ab03859` ran 133 Harness tests successfully.  The 100%
+   gate still failed at 99.91%: 1673 statements / 1 miss and 436 branches /
+   1 partial, again the bytecode/cache exclusion at
+   `text2env_compile_dependencies.py:154`.  Default root pytest still exited 2
+   on the duplicate `test_registry.py` collection mismatch.
+3. Source review found no production callsite for `load_qualification_bundle`
+   at this commit.  The loader verifies an already packaged pass receipt/report,
+   a manifest's listed implementation files and two source trees; it does not
+   execute its regression command or a development/clean qualification suite.
+   Its two sequential CAS writes are not an atomic promotion transaction, and
+   implementation-root helpers omitted from the manifest are not rejected.
+4. The packaging fix includes the runtime ledger namespace and declares a
+   future `qualified_skills/**/*.json` resource glob, but the fixed tree contains
+   no actual qualification bundle.  Its packaging test proves the ledger wheel
+   path; the glob assertion does not prove an installable pass bundle.
+5. RunStore durably stores Invocation and terminal RunState and cross-checks the
+   event journal, but the fixed tree has no Registry callsite.  It accepts the
+   caller's invocation digest instead of deriving the complete candidate/spec/
+   simulator/split/gate identity, stores no running state for resume, and does
+   not resolve artifact bytes.  ReplayOutput still lacks package/run reverse
+   bindings and permits media refs without a payload schema.
+
+Decision: retain all three modules as independently authored prerequisites, but
+do not revise the final P0 gaps to “closed.”  Qualification/promotion transaction,
+identity-frozen resumable EvaluationRun, and complete package→run→media binding
+remain open at the fixed post-close snapshot.  This addendum does not change any
+ASPIRE keep rule, E1/E2 metric, or physical-robustness conclusion.
+
+## 2026-08-31 — moving-branch cutoff after the post-close audit
+
+While the fixed `ab03859` source audit was being written, the shared branch
+advanced through `c365874`, `8d9a01c`, `587b49f`, and `0e6716a`, with additional
+uncommitted compile-CLI TDD visible afterward.  These states arrived after the
+frozen archive and were not read into, tested by, or credited to this study.
+
+Decision: stop the moving-target chase at `ab03859`.  Every P0 statement in the
+post-close addendum is explicitly scoped to that immutable commit; later commits
+may change implementation status and require their own clean archive review.
+This cutoff preserves empirical reproducibility instead of continuously
+rewriting conclusions from a concurrently mutating worktree.

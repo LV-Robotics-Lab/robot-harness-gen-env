@@ -4,6 +4,13 @@
   "study_closed_at": "2026-08-31T03:34:17+08:00",
   "study_report_commit": "4f289a15e06c609adf1b13879dc38e88d842dec5",
   "study_close_source_commit": "148001dd4049346b9deadca1fec3bb8f588fc8d5",
+  "post_close_concurrent_snapshot_commit": "ab0385967531737b4ae075f65af1fd9d224e03dc",
+  "observed_after_post_close_cutoff": [
+    "c365874afdc3cce3623897490ff99f414a4dc36e",
+    "8d9a01c610df76ad55353751fea5cfd0773d1f7a",
+    "587b49f8ba4fe3c43622899108765164e69cf1e7",
+    "0e6716a7d6fd71cb87fdc4526534db8b51f47b6d"
+  ],
   "study_branch": "worktree/bingsheng",
   "study_start_commit": "732e190",
   "experiment_snapshot_commit": "1180aef33936fcf1955923ed2a270e5a775029fb",
@@ -325,6 +332,51 @@
     ],
     "independent_follow_on_boundary": "e6ed0ff replay-timeline evidence was not rerun as the study's matched physical repair trial",
     "claim_scope": "final fixed clean committed-source diagnosis; independent of E0-E2 and not a claim about later or uncommitted concurrent work"
+  },
+  "post_close_concurrent_verification": {
+    "commit": "ab0385967531737b4ae075f65af1fd9d224e03dc",
+    "included_commits": {
+      "qualification_bundle_loader": "4836ebf5a7ee757219b7c40d1730e81909876ed0",
+      "ledger_wheel_packaging": "38518e5b423abf69bf59d737e51e93209b69d0c5",
+      "sqlite_run_store": "ab0385967531737b4ae075f65af1fd9d224e03dc"
+    },
+    "default_root_pytest": {
+      "status": "collection_error",
+      "exit_code": 2,
+      "reason": "duplicate test_registry module names across two non-package test directories"
+    },
+    "directed_harness_coverage": {
+      "tests_passed": 133,
+      "test_failures": 0,
+      "command_exit_code": 1,
+      "statements_total": 1673,
+      "statements_missed": 1,
+      "branches_total": 436,
+      "partial_branches": 1,
+      "coverage_percent": 99.91,
+      "coverage_gate_passed": false,
+      "missing_path": "self_improving/harness/handlers/text2env_compile_dependencies.py:154 bytecode/cache exclusion branch"
+    },
+    "focused_component_receipts_from_fixed_source": {
+      "qualification_tests_passed": 43,
+      "packaging_tests_passed": 2,
+      "run_store_and_journal_tests_passed": 21
+    },
+    "p0_claims": {
+      "qualification_promotion_transaction_closed": false,
+      "identity_frozen_resumable_evaluation_run_closed": false,
+      "package_run_media_binding_closed": false
+    },
+    "source_boundaries": [
+      "qualification loader verifies a prepackaged pass bundle but has no committed Registry callsite and does not execute qualification cases",
+      "qualification report and receipt CAS publications are sequential, not an atomic promotion or rollback transaction",
+      "implementation files omitted from the implementation manifest are not proven absent from the implementation root",
+      "packaging declares a future qualification resource glob but the fixed tree contains no real qualification bundle",
+      "RunStore is a persistence adapter with no committed Registry callsite, no resume state, no artifact-byte resolution, and no complete run identity derivation",
+      "Text2Env ReplayOutput has no package/run reverse binding and allows media references without a payload schema"
+    ],
+    "full_repository_green": false,
+    "claim_scope": "post-study concurrent prerequisites only; does not modify E0-E2, E1e, or physical-robustness conclusions"
   },
   "dashboard_sync": {
     "attempted_at": "2026-08-31T03:34:17+08:00",

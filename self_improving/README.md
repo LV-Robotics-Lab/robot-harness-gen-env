@@ -58,8 +58,13 @@ python script/export_harness_schemas.py --check
 
 The Harness contract remains `Status: Proposed`. Follow-on modules now provide
 `LocalArtifactStore`/`ArtifactResolver`, `RunRecorder`/`EventSink`,
-`SQLiteEventJournal`, `PackageStore`, a generic `SkillRegistry`, and one
-explicitly assembled `Text2EnvCompileHandler`. Replay/validate, automatic
+`SQLiteEventJournal`, `PackageStore`, a generic `SkillRegistry`, one
+explicitly assembled `Text2EnvCompileHandler`, a strict prepackaged
+qualification-bundle verifier, and an immutable terminal `SQLiteRunStore`.
+At fixed commit `ab03859`, the verifier and RunStore are not wired into the
+Registry; they do not execute qualification cases, provide promotion rollback,
+derive a complete resumable EvaluationRun identity, or revalidate media bytes.
+Replay/validate, automatic
 composition, promotion transaction, and MCP remain absent. Generic `file://`
 resolution has no allowed-root confinement and returns a mutable source path;
 the compile adapter's original check/use race was frozen in `ef5e29e` and fixed
@@ -71,6 +76,10 @@ CAS capture itself uses one streaming hash+copy and atomic rename as of
 `50e8f18`. Registry qualification now requires the claimed report digest to be
 present in CAS (`51447da`), but it does not yet validate that report's domain
 content or reconcile actual handler/source bytes with the descriptor.
+This status paragraph is pinned to clean commit `ab03859`. Later concurrent
+commits `c365874`, `8d9a01c`, `587b49f`, and `0e6716a` were observed after the
+study cutoff and are not certified here; consult their own clean verification
+before treating any of the open integration boundaries as closed.
 See the [detailed PR1 implementation report](../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)
 for the schema inventory, invariants, validation evidence, and follow-up boundary.
 

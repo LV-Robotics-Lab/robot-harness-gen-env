@@ -11,7 +11,8 @@ E0–E2 行为快照：`1180aef33936fcf1955923ed2a270e5a775029fb`
 后续历史诊断快照：`f9d6ad5c844f51b34c882e8d563f99e19208bd07`、
 `28333dee6871ac6a217973c78ad691ea4ffabcf1`
 研究收尾 Harness 验证快照：`910ccb127eb5d2564caac42f1cd5cca3c3ec2d29`
-最新独立源码诊断快照：`148001dd4049346b9deadca1fec3bb8f588fc8d5`
+研究收尾固定源码诊断：`148001dd4049346b9deadca1fec3bb8f588fc8d5`
+封存后并发固定审计：`ab0385967531737b4ae075f65af1fd9d224e03dc`
 
 ## 1. 结论先行
 
@@ -377,6 +378,26 @@ submodule 初始化后的平台脚本都仍在两个同名 `test_registry.py` �
 说明 CLI 行为漂移已闭合；Harness 仍是 76 tests 通过但 coverage 99.88%，同一 branch gate 未闭合。
 所以最新固定源码诊断还剩两个 blocker，而不是三个。`e6ed0ff` 提交中的 SAPIEN timeline smoke 属于
 独立实现轨道，本研究没有把它重算成 N1 matched repair trial，也不据此改变 ASPIRE 结论。
+
+报告封存过程中，另一个并发轨道又落地 `4836ebf` 的 qualification bundle loader、`38518e5` 的
+wheel packaging 修正和 `ab03859` 的 SQLite RunStore。固定 `ab03859` clean archive 上，Harness
+133 tests 通过，但 1673 statements 缺 1、436 branches 有 1 partial，总 coverage 99.91%，默认根
+pytest 仍因同名 `test_registry.py` collection error；因此这个 post-close 快照也不是绿色全仓。
+
+源码审计把三项 P0 继续标为 **OPEN**：qualification loader 会严格复核一份预制 `pass` bundle 的
+receipt/report/manifest、已列 implementation files 与两个源码树，但不执行 development fault + clean
+controls，Registry 在该提交还没有调用 loader，两个 CAS publish 也不是带 rollback 的 promotion
+transaction；implementation root 中未被 manifest 列出的 helper 完整性尚未证明。`38518e5` 只修复
+ledger wheel 依赖并声明未来资源 glob，树中没有真实 qualification bundle。RunStore 能不可变、幂等地
+保存 Invocation 与 terminal RunState 并对账 event journal，但未接入 Registry，接受调用者提供的
+invocation digest，不支持 resume，也不重验 artifact bytes。ReplayOutput 仍没有 package/run 反向
+绑定，媒体甚至可无 schema。因此这些是可复用前置构件，不是 identity-frozen EvaluationRun、
+qualification/promotion transaction 或 package→run→media spine 已完成。
+
+共享分支在该固定审计之后继续前进；封存时只观察到 `c365874`、`8d9a01c`、`587b49f`、`0e6716a`
+四个后续 Harness commit 及尚未提交的 compile-CLI TDD。本研究没有追逐、测试或解释这些后来状态，
+所以“OPEN”结论精确限定在 `ab03859`，既不把移动 HEAD 冒充已验证，也不声称后来提交必然没有关闭
+缺口。
 
 ## 9. 对三类问题的最终回答
 

@@ -4,12 +4,22 @@ PR1 schema tranche 先回答“进程内到底用什么类型说话”，还没�
 `self_improving/harness/` 把 Text2Env compile、replay、validate 的边界冻结为严格模型；
 `scene_gen/` 仍拥有 SceneSpec、resolved scene、包 manifest、运行时证据和验证报告的内部格式。
 
+本页对 qualification/RunStore 的执行状态固定到 `ab03859`；之后观察到的并发 Harness commits
+`c365874`、`8d9a01c`、`587b49f`、`0e6716a` 未纳入这次 clean-archive 审计。以下“未接线”边界
+只对固定快照负责，不冒充移动 HEAD 的现状认证。
+
 PR1 之后又增加相邻执行 seam：`LocalArtifactStore`/`ArtifactResolver` 会读取本地 bytes 并核对
 SHA-256/大小；`RunRecorder`/`EventSink` 由 callback 生成连续事件和 RunState；
 `SQLiteEventJournal` 以 SQLite WAL 持久化 append-only events；`PackageStore` 可把 manifest members
 发布到 CAS 并安全重物化；通用 `SkillRegistry` 按 exact version 注册有 qualification receipt 的
 descriptor，再调用注入 handler。`284ffb` 已接入首个 `Text2EnvCompileHandler`，但 replay、validate、
 跨 run promotion transaction 与 MCP 仍没有实现。
+
+固定 follow-on `ab03859` 又包含两个独立 adapter：`qualification.py` 严格核一份预制 pass bundle，
+`run_store.py` 保存 immutable Invocation/terminal RunState 并对账 event journal。前者在该树没有
+Registry callsite、不执行 qualification cases、两个 CAS publish 也不是 promotion transaction；后者
+同样未接 Registry，只接受调用者提供的 digest、没有 running/resume 状态，也不解引用 artifact bytes。
+所以两者是 P0 前置构件，不是 identity-frozen EvaluationRun 或资格晋升闭环。
 
 Registry 的“qualified”边界也要精确：注册会解引用并按 digest 读取 qualification artifact、校验其
 schema/status/`skill_ref`；`51447da` 又要求 `report_sha256` 对应的 CAS bytes 确实存在且摘要匹配。
@@ -249,3 +259,8 @@ pytest 与平台脚本也仍有同名测试 collection error；它不是完整�
 `148001d` clean archive 已把 importlib 诊断推进到 201 passed / 0 failed，证明历史 CLI
 failure-stage 漂移闭合；默认 collection error 仍在，Harness 仍为 76 passed / 99.88% coverage。
 因此最新固定诊断剩下 collection 与 coverage 两个 blocker，依然不是完整平台绿灯。
+
+封存后 `ab03859` clean archive 的 Harness 增至 133 passed，但 1673 statements 缺 1、436 branches
+有 1 partial，总 coverage 99.91%，同一 coverage gate 仍失败；默认 collection error 也仍在。该
+快照新增 qualification loader/RunStore 均有 focused tests，但三项 P0 spine 仍未接线，不能只凭
+模块存在改写为 closed。

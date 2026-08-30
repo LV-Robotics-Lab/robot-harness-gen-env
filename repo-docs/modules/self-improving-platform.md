@@ -20,7 +20,11 @@
 
 `python -m self_improving --json` 只检查这些源码是否到位以及子模块是否初始化，不导入 GPU 框架、不启动仿真器。来源工作区、提交、归档分支和排除项在 `self_improving/source_inventory.json`，它是清理旧副本前的审计入口。
 
-Harness 当前公开 14 个以 `$id` 标识的 JSON Schema：六个通用运行/审计记录、Qualification、EnvironmentPackage 和 compile/replay/validate 六个输入输出。`ArtifactRef.schema_version` 指向既有 `robotwin.*` 权威载荷，Harness 不重新定义其内部格式。schema 之外已有本地 digest-checking artifact resolver、callback-driven `RunRecorder`、SQLite WAL append-only `SQLiteEventJournal`、CAS `PackageStore`、通用 qualified-version `SkillRegistry` 与首个 `Text2EnvCompileHandler`；replay/validate 与 MCP 尚未接通。Registry 会读 qualification receipt，校验 digest/schema/status/`skill_ref`，并从 `51447da` 起要求 `report_sha256` 对应的 CAS bytes 存在且匹配；它仍不解释报告领域内容、不对账 source manifest 或实际 handler bytes。通用 resolver 的任意 `file://` 无 allowed-root 且返回可变原路径，不能当 sandbox；`50e8f18` 已让 CAS `put_file` 用单次流式 hash+copy 与原子 rename 捕获一致 bytes。compile adapter 的 catalog check/use TOCTOU 已由 `ef5e29e` 攻击与 `910ccb1` 修复，实际 compiler 只读 digest-verified CAS catalog。`5915315` 另记录 selected asset bytes 等依赖，但外部 asset payload 尚未重物化为执行 snapshot。`python script/export_harness_schemas.py --check` 锁住 committed snapshot；统一测试入口对 `self_improving.harness` 强制 100% 语句与分支覆盖。compile 的 asset admission 还发生在 solve 前且失败不回滚；跨 run qualification/promotion transaction 与 MCP adapter 仍未实现，`docs/contracts/HARNESS_MVP_CONTRACT_V1.md` 保持 `Status: Proposed`。
+下面的 Harness 集成状态固定到 clean commit `ab03859`。之后观察到的并发 commits `c365874`、
+`8d9a01c`、`587b49f`、`0e6716a` 未进入本研究复核；“当前/未接线”均只描述这个固定快照，不认证
+移动 HEAD。
+
+Harness 当前公开 14 个以 `$id` 标识的 JSON Schema：六个通用运行/审计记录、Qualification、EnvironmentPackage 和 compile/replay/validate 六个输入输出。`ArtifactRef.schema_version` 指向既有 `robotwin.*` 权威载荷，Harness 不重新定义其内部格式。schema 之外已有本地 digest-checking artifact resolver、callback-driven `RunRecorder`、SQLite WAL append-only `SQLiteEventJournal`、CAS `PackageStore`、通用 qualified-version `SkillRegistry` 与首个 `Text2EnvCompileHandler`；`ab03859` 还加入静态 qualification bundle verifier 与 immutable RunStore adapter。replay/validate 与 MCP 尚未接通。Registry 会读 qualification receipt，校验 digest/schema/status/`skill_ref`，并从 `51447da` 起要求 `report_sha256` 对应的 CAS bytes 存在且匹配；固定 `ab03859` 仍没有调用 bundle loader 或 RunStore，也没有把实际 handler bytes 纳入 invocation identity。通用 resolver 的任意 `file://` 无 allowed-root 且返回可变原路径，不能当 sandbox；`50e8f18` 已让 CAS `put_file` 用单次流式 hash+copy 与原子 rename 捕获一致 bytes。compile adapter 的 catalog check/use TOCTOU 已由 `ef5e29e` 攻击与 `910ccb1` 修复，实际 compiler 只读 digest-verified CAS catalog。`5915315` 另记录 selected asset bytes 等依赖，但外部 asset payload 尚未重物化为执行 snapshot。`python script/export_harness_schemas.py --check` 锁住 committed snapshot；统一测试入口对 `self_improving.harness` 强制 100% 语句与分支覆盖。compile 的 asset admission 还发生在 solve 前且失败不回滚；跨 run qualification/promotion transaction、identity-frozen resumable EvaluationRun、package→run→media binding 与 MCP adapter 仍未实现，`docs/contracts/HARNESS_MVP_CONTRACT_V1.md` 保持 `Status: Proposed`。
 
 字段边界、状态机、快照与未实现范围见 [Harness Schema Tranche](harness-schema-tranche.md)；
 逐项实现和验证证据见 [PR1 实现报告](../../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)。
@@ -39,6 +43,10 @@ error。这些是分时快照证据，不等于重新跑通默认全仓/平台�
 
 `148001d` clean archive 上 importlib 根测试为 201 passed / 0 failed，说明 CLI failure-stage 漂移已
 闭合；默认 collection error 与 Harness 99.88% coverage gate 仍未闭合，所以该快照仍非全绿。
+
+post-close `ab03859` clean archive 上 Harness 为 133 passed / 99.91% coverage；默认 collection 与
+同一 coverage branch 仍失败。qualification/packaging/RunStore 是独立 prerequisites，不执行
+development/clean qualification，不具原子 promotion/rollback，也不闭合 replay media identity。
 
 Stage 5 的视觉评审状态是三态而非布尔值。在 `--run-smoke`/视觉评审路径中，只有 visual pass
 才把 candidate 原子晋升为 `final_placement.json` 并退出 0；`pending_visual_review` 只写
