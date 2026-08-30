@@ -506,3 +506,19 @@
   计数或 status 自相矛盾，视为实现 defect 而非伪造 typed gate failure。
 - 验证：validate handler `27 passed`，statement + branch coverage `100%`；ruff、format 与 diff check
   通过。
+
+### 2026-08-31 / A029：compile CLI 只暴露业务输入，不暴露信任绕过开关
+
+- 接口：新增可安装命令 `robot-harness-compile`，只接受 state root、可重复 trusted catalog/allowed asset
+  roots、admission date、catalog、request、seed 和 generate-missing；没有 qualification、descriptor、
+  handler 或 implementation override。标量在装配前做同 public schema 一致的日期、请求长度和 seed 边界。
+- 输出：只有得到 terminal RunState 才向 stdout 写一行 canonical JSON；succeeded/blocked/failed 分别返回
+  `0/10/20`。缺参数、配置、trust 或 fixed qualification 错误返回 78；durable persistence、storage 或
+  adapter defect 返回 74；argparse help/exit 不以 SystemExit 泄出 library caller。
+- 诊断安全：typed domain 结果完整保留在 stdout RunState；配置/内部 stderr 只写错误类别。特别是
+  `RunPersistenceError` 保留 operation、run_id 和 cause type 以便运维定位，但不输出可能带 token 或私有
+  路径的 exception text。
+- 攻击测试：覆盖所有退出码、running/非 RunState 拒绝、上下界、缺参数、help 固定 surface、异常文本
+  脱敏，以及真实 `python -m` 无 traceback 入口；distribution script 指向同一 `main`。
+- 验证：CLI 专项 `22 passed`，module statement + branch coverage `100%`；全 Harness 回归另行在本轮
+  收口统一执行。
