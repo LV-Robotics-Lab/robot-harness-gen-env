@@ -159,3 +159,15 @@
 - 验证：Registry statement coverage `100%`；Harness + compiler `41 passed`；ruff 与 diff check 通过。
 - 产物：`self_improving/harness/registry.py`、
   `tests/self_improving/harness/test_registry.py`。
+
+### 2026-08-31 / A007：事件持久化失败时不允许内存状态偷跑
+
+- 反例：原 `RunRecorder._append()` 先修改 `_events/_status` 再调用 sink，`retry()` 还会先增加
+  attempt；一旦后续 SQLite/SSE authority 写失败，后端内存会比可重放日志领先一步。
+- 红灯：加入对 start、progress、retry、finish 四个边界逐次注入 sink 写失败的攻击测试；旧实现
+  在第一次 start 失败后仍能构造出 running state，测试如预期失败。
+- 修复：每次转换改为“构造并校验候选 Event → `EventSink.publish` 成功 → 原子提交本地
+  events/status/attempt”。sink 异常原样返回给调用者，recorder 保持上一个已持久化状态，可安全重试。
+- 实证：四种写失败后 seq、attempt、status、ended_at 均未前进；恢复写入后的最终事件序列仍是
+  连续的 `1..4`，且内存事件和 sink 完全一致。
+- 验证：events 模块 statement coverage `100%`；ruff 与 diff check 通过。

@@ -23,7 +23,7 @@ class RunEvent:
 
 
 class EventSink(Protocol):
-    """Receive an event after the recorder has validated its lifecycle position."""
+    """Durably accept a validated event before recorder state is committed."""
 
     def publish(self, event: RunEvent) -> None: ...
 
@@ -66,8 +66,11 @@ class RunRecorder:
     def start(self, *, stage: str, attempt: int) -> Event:
         if self._events:
             raise RunRecordingError("run already started")
-        self._attempt = attempt
-        return self._append(stage=stage, to_status=RunStatus.RUNNING)
+        return self._append(
+            stage=stage,
+            to_status=RunStatus.RUNNING,
+            proposed_attempt=attempt,
+        )
 
     def progress(
         self,
@@ -90,11 +93,11 @@ class RunRecorder:
     ) -> Event:
         self._require_running()
         assert self._attempt is not None
-        self._attempt += 1
         return self._append(
             stage=stage,
             to_status=RunStatus.RUNNING,
             artifact_refs=artifact_refs,
+            proposed_attempt=self._attempt + 1,
         )
 
     def finish(
@@ -151,8 +154,10 @@ class RunRecorder:
         stage: str,
         to_status: RunStatus,
         artifact_refs: tuple[ArtifactRef, ...] = (),
+        proposed_attempt: int | None = None,
     ) -> Event:
-        assert self._attempt is not None
+        attempt = self._attempt if proposed_attempt is None else proposed_attempt
+        assert attempt is not None
         timestamp = self._clock()
         if self._events and timestamp < self._events[-1].timestamp:
             raise RunRecordingError("event clock moved backwards")
@@ -160,13 +165,11 @@ class RunRecorder:
             seq=len(self._events) + 1,
             timestamp=timestamp,
             stage=stage,
-            attempt=self._attempt,
+            attempt=attempt,
             from_status=self._status,
             to_status=to_status,
             artifact_refs=artifact_refs,
         )
-        self._events.append(event)
-        self._status = to_status
         self._sink.publish(
             RunEvent(
                 run_id=self.run_id,
@@ -175,4 +178,7 @@ class RunRecorder:
                 event=event,
             )
         )
+        self._events.append(event)
+        self._status = to_status
+        self._attempt = attempt
         return event
