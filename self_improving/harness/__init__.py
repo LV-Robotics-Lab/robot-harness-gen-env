@@ -42,6 +42,12 @@ from .qualification import (
     QualificationReportV1,
     load_qualification_bundle,
 )
+from .qualify_compile import (
+    CompileQualificationError,
+    CompileQualificationResult,
+    CompileQualificationSettings,
+    generate_compile_qualification,
+)
 from .registry import (
     DependencyResolutionError,
     DependencyResolver,
@@ -106,6 +112,9 @@ __all__ = [
     "CompileApplication",
     "CompileApplicationConfigurationError",
     "CompileApplicationSettings",
+    "CompileQualificationError",
+    "CompileQualificationResult",
+    "CompileQualificationSettings",
     "DependencyRef",
     "DependencyResolutionError",
     "DependencyResolver",
@@ -171,6 +180,7 @@ __all__ = [
     "UnknownField",
     "ValidationStatus",
     "create_compile_application",
+    "generate_compile_qualification",
     "load_qualification_bundle",
     "text2env_validate_descriptor",
     "schema_documents",

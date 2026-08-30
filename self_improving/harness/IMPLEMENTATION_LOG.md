@@ -522,3 +522,21 @@
   脱敏，以及真实 `python -m` 无 traceback 入口；distribution script 指向同一 `main`。
 - 验证：CLI 专项 `22 passed`，module statement + branch coverage `100%`；全 Harness 回归另行在本轮
   收口统一执行。
+
+### 2026-08-31 / A030：compile 的 production pass 只能由真实三轮候选执行生成
+
+- 资格生成：新增固定 `text2env.compile@1.0.0` qualification generator。它绕开尚未获准的 Registry
+  admission，只直接运行待测 handler 与参数感知 dependency resolver 三次；因此不能拿一份旧 pass
+  反过来证明当前候选。测试请求会真实生成紫色六棱柱资产，观测 `admitted -> reused -> reused`。
+- 确定性门禁：首轮只允许 `asset-library-state` dependency 发生预期变化；第二、三轮参数、依赖、
+  invocation、typed output 和 package identity 必须完全一致，三轮 asset id 也必须稳定。每份 artifact
+  都从 CAS 重读并复算摘要，package manifest 的所有成员必须能由 CAS 重建。
+- 信任边界：生成 ledger 必须通过 v3 `check_files=True` 且每个 representation 都带文件记录；admission
+  只能声明 `generation_qc_only/pending_settle`，static validation 只能是无 fail 的 `incomplete`，不能把
+  渲染或编译冒充物理通过。详细观测值写入报告 checks，并由 qualification receipt SHA 绑定。
+- 源码绑定：资格前后分别复算 11 份真实 Harness 实现文件、`scene_gen` 树和 ledger contract 树；路径中
+  任一 symlink、目录冒充文件或执行期间漂移都会拒绝。manifest 使用 loader 同一套 tree/hash 算法，
+  以后实际实现变更会令旧 bundle fail closed。
+- 发布语义：只有所有门禁通过后才在同一目录原子发布 qualification/report/manifest 三文档；不覆盖
+  已有目录，rename 或父目录 fsync 失败会清理不确定产物。专项及相关回归 `97 passed`，generator
+  statement + branch coverage `100%`；ruff、format 与 diff check 通过。
