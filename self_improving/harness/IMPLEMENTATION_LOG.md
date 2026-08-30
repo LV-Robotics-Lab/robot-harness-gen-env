@@ -229,3 +229,33 @@
 - 进度事件：`RunContext.emit` 在交给 durable EventSink 前逐一解析 ref；无效 ref 导致
   `HARN_INTERNAL/failed`，journal 只留下真实 preflight 与 invoke 终态，不会持久化恶意阶段。
 - 验证：Registry statement + branch coverage `100%`，`7 passed`；ruff 与 diff check 通过。
+
+### 2026-08-31 / A012：`text2env.compile@1.0.0` 首条 Harness 竖切
+
+- 红灯：Registry 有了通用调用入口，但没有 Text2Env handler；端到端测试最初在导入
+  `self_improving.harness.handlers` 时失败。
+- 实现：`Text2EnvCompileHandler` 从严格 `Text2EnvCompileInput` 调用唯一 `compile_scene` Module，
+  将真实 started/completed 回调转成 RunEvent；每个 completed 制品先进入 CAS 再写 SQLite journal。
+- 输入冻结：即使调用方提供经摘要验证的 `file://` catalog，handler 也先复制为
+  `artifact://sha256/...` 快照；Invocation 保留原请求 locator 供审计，Event/RunState 只传播不可变
+  CAS ref。
+- 资产边界：handler 配置非空 allowed roots；catalog 内 objects/asset/model/visual/collision/URDF 路径
+  必须 resolve 后仍在根内，symlink escape、可用模型缺文件或目录缺失均在 solve 前以
+  `HARN_DEPENDENCY_UNAVAILABLE@catalog` 拒绝。
+- 生成与入库：空 catalog + `generate_missing_assets=true` 已从自然语言生成 hexagonal pedestal、
+  写完整 v3 ledger、原子提升到 library，并在 supplementary admission artifact 中诚实保留
+  `physical_qualification=pending_settle`。
+- 摘要语义：scene/resolved ref 保留 builder 原始文件字节摘要；EnvironmentPackage 保存它们的
+  canonical semantic digest。catalog 特例写 compact canonical bytes，使
+  `asset_catalog ArtifactRef.sha256 == AssetCatalog.digest()`；manifest 的每个原始 member 都进入
+  CAS，便于 replay 重物化。
+- 包门禁：成功前同时核 scene、resolved、catalog 三条 manifest binding，static report 的 resolved
+  binding 和 `verify_package`；任一不符映射既有 `T2E_PACKAGE_INVALID`。catalog 内部错误映射既有
+  `HARN_DEPENDENCY_UNAVAILABLE`，admission 拒绝映射既有 `T2E_ASSET_UNAVAILABLE`，不偷偷给
+  1.0.0 添加新 code。
+- 攻击用例：覆盖外部 locator、malformed catalog、root escape、缺 model/file、URDF/unusable 分支、
+  admission 拒绝、五种 package 篡改、CAS 身份撒谎和无 schema JSON。
+- 验证：真实 handler `10 passed`；Harness + compiler `63 passed`；全 Harness statement + branch
+  coverage `100%`；ruff 与 diff check 通过。
+- 剩余确定性债：下一切片要让 DependencyResolver 把 asset-library 当前状态、handler trust config、
+  ledger contract 与实际 scene_gen source digest 纳入 invocation digest；目前测试仍用静态依赖记录。
