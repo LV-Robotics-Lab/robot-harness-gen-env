@@ -1,5 +1,11 @@
 """Harness MVP public schemas and their immutable catalog."""
 
+from .artifacts import (
+    ArtifactResolutionError,
+    ArtifactResolver,
+    LocalArtifactStore,
+    ResolvedArtifact,
+)
 from .schema_catalog import SCHEMA_MODELS, schema_documents, schema_model
 from .schemas import (
     ArtifactRef,
@@ -27,12 +33,16 @@ from .schemas import (
 __all__ = [
     "SCHEMA_MODELS",
     "ArtifactRef",
+    "ArtifactResolutionError",
+    "ArtifactResolver",
     "Blocker",
     "CompileConfig",
     "DependencyRef",
     "EnvironmentPackage",
     "Event",
     "Invocation",
+    "LocalArtifactStore",
+    "ResolvedArtifact",
     "RunState",
     "RunStatus",
     "RuntimeConfig",
