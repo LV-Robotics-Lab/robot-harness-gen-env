@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import sys
 from pathlib import Path
@@ -37,6 +38,39 @@ def _pipeline_exit_code(status: str) -> int:
     if status == "pending_visual_review":
         return 2
     return 1
+
+
+def _mark_review_candidate(
+    *,
+    spec: dict[str, Any],
+    visual_review_report: dict[str, Any],
+) -> dict[str, Any]:
+    candidate = copy.deepcopy(spec)
+    candidate["stage"] = "render_review_required"
+    name = str(candidate.get("placement_name", "placement"))
+    if "render_review_required" not in name:
+        name += "_render_review_required"
+    candidate["placement_name"] = name
+    candidate["source_visual_review"] = "visual_review.json"
+    candidate["orchestrator_decision"] = {
+        "decision": "hold_for_review",
+        "reason": visual_review_report.get(
+            "summary",
+            "Semantic visual review has not passed.",
+        ),
+        "remaining_uncertainties": [
+            "Semantic visual review has not passed; this candidate is not publishable.",
+            "RoboTwin smoke is load/render evidence, not authoritative physics evidence.",
+        ],
+    }
+    candidate.setdefault("validation", {})
+    candidate["validation"].update(
+        {
+            "robotwin_load_check": "pass_smoke",
+            "render_visibility": "pending_visual_review",
+        }
+    )
+    return candidate
 
 
 def main() -> int:
@@ -172,6 +206,28 @@ def main() -> int:
                 summary["status"] = "fail_visual_review"
             else:
                 summary["status"] = "pending_visual_review"
+                review_candidate = _mark_review_candidate(
+                    spec=final_spec,
+                    visual_review_report=visual_review_report,
+                )
+                review_candidate_path = out_dir / "review_candidate_placement.json"
+                write_json(review_candidate_path, review_candidate)
+                final_path.unlink()
+
+                review_validation_path = out_dir / "static_validation_review_candidate.json"
+                final_validation_path.replace(review_validation_path)
+                review_plan = validation_plan_for(review_candidate)
+                review_plan["target_placement"] = "review_candidate_placement.json"
+                write_json(validation_plan_path, review_plan)
+
+                summary["artifacts"].pop("final_placement")
+                summary["artifacts"].pop("static_validation_final")
+                summary["artifacts"].update(
+                    {
+                        "review_candidate_placement": _rel(review_candidate_path),
+                        "static_validation_review_candidate": _rel(review_validation_path),
+                    }
+                )
         else:
             summary["status"] = "pass_static_only"
 
