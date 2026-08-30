@@ -5,6 +5,8 @@ import json
 import math
 from pathlib import Path
 
+import pytest
+
 from scene_gen.builder import build_scene_package, verify_package
 from scene_gen.catalog import load_catalog
 from scene_gen.parser import parse_rule_based
@@ -31,6 +33,35 @@ def contained_case(seed: int = 32):
     catalog = load_catalog(ROOT / "tests" / "fixtures" / "asset_catalog.json")
     spec = parse_rule_based("Put an apple inside a basket.", seed=seed)
     return catalog, spec, solve_scene(spec, catalog)
+
+
+def passing_runtime_evidence(resolved: ResolvedSceneSpec) -> dict[str, object]:
+    return {
+        "schema_version": "robotwin.scene_runtime_evidence.v1",
+        "scene_id": resolved.scene_id,
+        "resolved_scene_sha256": resolved.digest(),
+        "status": "pass",
+        "robot_initial_collision_count": 0,
+        "objects": {
+            item.object_id: {
+                "translation_drift_m": 0.001,
+                "rotation_drift_deg": 0.2,
+                "resolved_translation_error_m": 0.001,
+                "resolved_rotation_error_deg": 0.2,
+                "penetration_count": 0,
+                "still_moving": False,
+                "support_contact": not item.is_static,
+                "support_contact_fraction": 1.0 if not item.is_static else 0.0,
+                "unexpected_contact_fraction": 0.0,
+                "unexpected_contact_targets": [],
+                "support_mode": "fixed_static_pose" if item.is_static else "on_table_contact",
+                "support_target": None if item.is_static else "table",
+                "dropped": False,
+                "visible_pixels": 512,
+            }
+            for item in resolved.objects
+        },
+    }
 
 
 def test_builder_writes_hash_bound_resolved_only_replay_package(tmp_path: Path) -> None:
@@ -163,6 +194,203 @@ def test_runtime_validator_requires_each_object_visibility_and_physics() -> None
     )
     assert unique_frames["status"] == "fail"
     assert unique_frames["evidence"]["minimum"] == 30
+
+
+def test_runtime_validator_accepts_a_complete_video_timeline() -> None:
+    _, _, resolved = solved_case()
+    evidence = passing_runtime_evidence(resolved)
+    evidence.update(
+        {
+            "video_frame_count": 3,
+            "unique_video_frame_count": 3,
+            "base_simulation_step_count": 900,
+            "simulation_step_count": 960,
+            "settle_extra_steps": 60,
+            "video_sample_step_indices": [0, 1, 959],
+        }
+    )
+
+    report = validate_resolved_scene(resolved, runtime_evidence=evidence, require_runtime=True)
+    timeline = next(
+        item for item in report["checks"] if item["name"] == "observer_video_timeline"
+    )
+
+    assert timeline["status"] == "pass"
+    assert report["status"] == "pass"
+
+
+@pytest.mark.parametrize(
+    ("case", "updates", "failed_signal"),
+    [
+        (
+            "frame_count_does_not_match_indices",
+            {"video_frame_count": 4},
+            "frame_count_matches_indices",
+        ),
+        (
+            "indices_are_not_json_integers",
+            {"video_sample_step_indices": [0, "1", 959]},
+            "indices_are_integers",
+        ),
+        (
+            "indices_repeat",
+            {"video_sample_step_indices": [0, 0, 959]},
+            "indices_strictly_increasing",
+        ),
+        (
+            "index_is_negative",
+            {"video_sample_step_indices": [-1, 1, 959]},
+            "indices_in_simulation_range",
+        ),
+        (
+            "final_index_is_not_the_simulation_endpoint",
+            {"video_sample_step_indices": [0, 1, 958]},
+            "final_index_matches_simulation_end",
+        ),
+    ],
+)
+def test_runtime_validator_rejects_malformed_video_timelines(
+    case: str,
+    updates: dict[str, object],
+    failed_signal: str,
+) -> None:
+    _, _, resolved = solved_case()
+    evidence = passing_runtime_evidence(resolved)
+    evidence.update(
+        {
+            "video_frame_count": 3,
+            "unique_video_frame_count": 3,
+            "base_simulation_step_count": 900,
+            "simulation_step_count": 960,
+            "settle_extra_steps": 60,
+            "video_sample_step_indices": [0, 1, 959],
+            **updates,
+        }
+    )
+
+    report = validate_resolved_scene(resolved, runtime_evidence=evidence, require_runtime=True)
+    timeline = next(
+        item for item in report["checks"] if item["name"] == "observer_video_timeline"
+    )
+
+    assert timeline["status"] == "fail", case
+    assert timeline["evidence"][failed_signal] is False, case
+    assert report["status"] == "fail", case
+
+
+def test_runtime_validator_rejects_pre_fix_adaptive_video_evidence() -> None:
+    _, _, resolved = solved_case()
+    evidence = passing_runtime_evidence(resolved)
+    evidence.update(
+        {
+            "video_frame_count": 3,
+            "unique_video_frame_count": 3,
+            "simulation_step_count": 900,
+            "settle_extra_steps": 60,
+            "video_sample_step_indices": [0, 1, 899],
+        }
+    )
+
+    report = validate_resolved_scene(resolved, runtime_evidence=evidence, require_runtime=True)
+    timeline = next(
+        item for item in report["checks"] if item["name"] == "observer_video_timeline"
+    )
+
+    assert timeline["status"] == "fail"
+    assert timeline["evidence"]["step_counts_consistent"] is False
+
+
+def test_runtime_validator_keeps_legacy_fixed_horizon_video_compatible() -> None:
+    _, _, resolved = solved_case()
+    evidence = passing_runtime_evidence(resolved)
+    evidence.update(
+        {
+            "video_frame_count": 3,
+            "unique_video_frame_count": 3,
+            "simulation_step_count": 900,
+            "video_sample_step_indices": [0, 1, 899],
+        }
+    )
+
+    report = validate_resolved_scene(resolved, runtime_evidence=evidence, require_runtime=True)
+    timeline = next(
+        item for item in report["checks"] if item["name"] == "observer_video_timeline"
+    )
+
+    assert timeline["status"] == "pass"
+    assert report["status"] == "pass"
+
+
+def test_runtime_validator_accepts_an_explicit_no_video_timeline() -> None:
+    _, _, resolved = solved_case()
+    evidence = passing_runtime_evidence(resolved)
+    evidence.update(
+        {
+            "video_frame_count": 0,
+            "unique_video_frame_count": 0,
+            "base_simulation_step_count": 900,
+            "simulation_step_count": 930,
+            "settle_extra_steps": 30,
+            "video_sample_step_indices": [],
+        }
+    )
+
+    report = validate_resolved_scene(resolved, runtime_evidence=evidence, require_runtime=True)
+    timeline = next(
+        item for item in report["checks"] if item["name"] == "observer_video_timeline"
+    )
+
+    assert timeline["status"] == "pass"
+    assert report["status"] == "pass"
+
+
+def test_runtime_validator_rejects_inconsistent_no_video_step_counts() -> None:
+    _, _, resolved = solved_case()
+    evidence = passing_runtime_evidence(resolved)
+    evidence.update(
+        {
+            "video_frame_count": 0,
+            "unique_video_frame_count": 0,
+            "base_simulation_step_count": 900,
+            "simulation_step_count": 900,
+            "settle_extra_steps": 30,
+            "video_sample_step_indices": [],
+        }
+    )
+
+    report = validate_resolved_scene(resolved, runtime_evidence=evidence, require_runtime=True)
+    timeline = next(
+        item for item in report["checks"] if item["name"] == "observer_video_timeline"
+    )
+
+    assert timeline["status"] == "fail"
+    assert timeline["evidence"]["step_counts_consistent"] is False
+
+
+def test_runtime_validator_accepts_one_frame_timeline_at_the_real_endpoint() -> None:
+    _, _, resolved = solved_case()
+    evidence = passing_runtime_evidence(resolved)
+    evidence.update(
+        {
+            "video_frame_count": 1,
+            "unique_video_frame_count": 1,
+            "base_simulation_step_count": 900,
+            "simulation_step_count": 930,
+            "settle_extra_steps": 30,
+            "video_sample_step_indices": [929],
+        }
+    )
+
+    report = validate_resolved_scene(resolved, runtime_evidence=evidence, require_runtime=True)
+    timeline = next(
+        item for item in report["checks"] if item["name"] == "observer_video_timeline"
+    )
+    minimum_frame_check = next(
+        item for item in report["checks"] if item["name"] == "observer_video_frame_count"
+    )
+
+    assert timeline["status"] == "pass"
+    assert minimum_frame_check["status"] == "fail"
 
 
 def test_runtime_v2_validates_dynamic_relations_instead_of_exact_spawn_pose() -> None:

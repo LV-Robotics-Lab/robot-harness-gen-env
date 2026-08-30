@@ -10,7 +10,7 @@ import math
 import os
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import imageio.v2 as imageio
 import numpy as np
@@ -37,6 +37,39 @@ def write_json(path: Path, value: Any) -> None:
 def save_rgb(path: Path, value: np.ndarray) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(value.astype(np.uint8)).save(path)
+
+
+def synchronize_video_timeline(
+    frames: list[np.ndarray],
+    sample_step_indices: tuple[int, ...],
+    *,
+    base_simulation_step_count: int,
+    settle_extra_steps: int,
+    capture_final_frame: Callable[[], np.ndarray],
+) -> tuple[list[np.ndarray], tuple[int, ...]]:
+    """Bind the final video slot to the actual adaptive-settle endpoint."""
+
+    if settle_extra_steps <= 0 or not frames:
+        return frames, sample_step_indices
+    synchronized_frames = [*frames]
+    synchronized_frames[-1] = np.asarray(capture_final_frame()).copy()
+    actual_final_step = base_simulation_step_count + settle_extra_steps - 1
+    return synchronized_frames, (*sample_step_indices[:-1], actual_final_step)
+
+
+def runtime_timeline_evidence(
+    *,
+    base_simulation_step_count: int,
+    settle_extra_steps: int,
+    video_sample_step_indices: tuple[int, ...],
+) -> dict[str, Any]:
+    """Return the step-count fields that bind evidence to its real timeline."""
+
+    return {
+        "base_simulation_step_count": base_simulation_step_count,
+        "simulation_step_count": base_simulation_step_count + settle_extra_steps,
+        "video_sample_step_indices": list(video_sample_step_indices),
+    }
 
 
 def _robotwin_task_config_path(
@@ -642,6 +675,17 @@ def main() -> int:
                 settle_extra_steps += step_count
                 final = _snapshot()
 
+        def _capture_final_observer_frame() -> np.ndarray:
+            task.scene.update_render()
+            return task.cameras.get_observer_rgb()
+
+        frames, video_steps = synchronize_video_timeline(
+            frames,
+            video_steps,
+            base_simulation_step_count=total_steps,
+            settle_extra_steps=settle_extra_steps,
+            capture_final_frame=_capture_final_observer_frame,
+        )
         head_rgb, actor_labels = head_camera_arrays(task)
         save_rgb(out_dir / "preview_head.png", head_rgb)
         save_rgb(out_dir / "preview_segmentation.png", segmentation_preview(actor_labels))
@@ -797,8 +841,11 @@ def main() -> int:
                 "video_frame_count": len(frames),
                 "unique_video_frame_count": unique_video_frame_count,
                 "fps": args.fps,
-                "simulation_step_count": total_steps,
-                "video_sample_step_indices": list(video_steps),
+                **runtime_timeline_evidence(
+                    base_simulation_step_count=total_steps,
+                    settle_extra_steps=settle_extra_steps,
+                    video_sample_step_indices=video_steps,
+                ),
                 "precheck_steps": args.precheck_steps,
                 "contact_window_steps": contact_window_steps,
                 "settle_extra_steps": settle_extra_steps,

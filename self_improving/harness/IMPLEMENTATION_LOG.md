@@ -349,3 +349,20 @@
 - 测试迁移：所有 Registry/compile 测试先将真实小报告放入 CAS 再构造 receipt；新增缺报告攻击，
   并覆盖按 digest 解析的非法、缺失和篡改分支。
 - 验证：全 Harness `76 passed`，statement + branch coverage `100%`；ruff 与 diff check 通过。
+
+### 2026-08-31 / A019：adaptive settle 的视频尾帧必须等于真实物理终态
+
+- 反例：旧 runtime 先在固定 horizon 采完视频，再额外推进物理；final pose/contact/preview 来自延长
+  后状态，但 MP4、`observer_end.png`、`simulation_step_count` 和最后 sample index 仍停在旧终点。
+- 修复：extension 大于零且有视频时，在真实延长循环结束后重新 render/capture，只替换最后一个 frame
+  slot，不增加请求帧数；报告同时保留 `base_simulation_step_count`，并把
+  `simulation_step_count=base+extra`、最后索引更新为实际终点。无 extension 或无视频不调用 capture。
+- 新门禁：validator 增加 `observer_video_timeline`，核 frame 数与 indices 数量、JSON int、严格递增、
+  范围、尾索引以及 base/extra/actual 一致性；旧 adaptive 分叉证据 fail closed，缺新字段的固定 horizon
+  历史证据仍兼容。即使禁用视频，显式声明的步数也不能互相矛盾。
+- 单测：覆盖 0/1/多帧、无 extension、无视频、重复/负数/非整数/越界/旧尾索引和步数矛盾；相关
+  `29 passed`，三个新增函数 statement + branch coverage `100%`。
+- 真机实证：RoboTwin/SAPIEN can-on-plate 基线 `30+0` 为 3 帧、尾索引 29、still-moving；adaptive
+  `30+30` 仍为 3 帧但尾索引 59、MP4 解码也是 3 帧、timeline 与整体 validator PASS，两个
+  `observer_end` SHA 不同。精确命令、版本、摘要和边界见
+  `docs/evidence/replay-timeline-20260831.{md,json}`；这只是时间线 smoke，不冒充正式 900/120 qualification。
