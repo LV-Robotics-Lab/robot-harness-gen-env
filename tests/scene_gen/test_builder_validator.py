@@ -82,6 +82,8 @@ def test_runtime_validator_requires_each_object_visibility_and_physics() -> None
     _, _, resolved = solved_case()
     evidence = {
         "schema_version": "robotwin.scene_runtime_evidence.v1",
+        "scene_id": resolved.scene_id,
+        "resolved_scene_sha256": resolved.digest(),
         "status": "pass",
         "robot_initial_collision_count": 0,
         "objects": {
@@ -106,6 +108,36 @@ def test_runtime_validator_requires_each_object_visibility_and_physics() -> None
     }
     report = validate_resolved_scene(resolved, runtime_evidence=evidence, require_runtime=True)
     assert report["status"] == "pass"
+
+    invalid_identity_cases = {
+        "missing_scene_id": ("scene_id", None),
+        "mismatched_scene_id": ("scene_id", f"{resolved.scene_id}-other"),
+        "missing_digest": ("resolved_scene_sha256", None),
+        "mismatched_digest": ("resolved_scene_sha256", "0" * 64),
+    }
+    for case, (field, value) in invalid_identity_cases.items():
+        invalid = json.loads(json.dumps(evidence))
+        if value is None:
+            invalid.pop(field)
+        else:
+            invalid[field] = value
+        invalid_report = validate_resolved_scene(
+            resolved,
+            runtime_evidence=invalid,
+            require_runtime=True,
+        )
+        assert invalid_report["status"] == "fail", case
+        binding_check = {
+            item["name"]: item
+            for item in invalid_report["checks"]
+            if item["name"] in {"runtime_scene_identity", "runtime_resolved_scene_binding"}
+        }
+        expected_check = (
+            "runtime_scene_identity"
+            if field == "scene_id"
+            else "runtime_resolved_scene_binding"
+        )
+        assert binding_check[expected_check]["status"] == "fail", case
 
     failed = json.loads(json.dumps(evidence))
     failed["objects"][resolved.objects[0].object_id]["visible_pixels"] = 1
@@ -144,6 +176,8 @@ def test_runtime_v2_validates_dynamic_relations_instead_of_exact_spawn_pose() ->
     }
     evidence = {
         "schema_version": "robotwin.scene_runtime_evidence.v2",
+        "scene_id": resolved.scene_id,
+        "resolved_scene_sha256": resolved.digest(),
         "status": "pass",
         "robot_initial_collision_count": 0,
         "relations": relations,
@@ -193,6 +227,8 @@ def test_runtime_validator_accepts_explicit_fixed_static_support_only_for_static
     _, _, resolved = solved_case()
     evidence = {
         "schema_version": "robotwin.scene_runtime_evidence.v1",
+        "scene_id": resolved.scene_id,
+        "resolved_scene_sha256": resolved.digest(),
         "status": "pass",
         "robot_initial_collision_count": 0,
         "objects": {},
@@ -314,6 +350,8 @@ def test_runtime_validator_rejects_static_contact_free_nested_support() -> None:
         }
     )
     evidence = {
+        "scene_id": attacked.scene_id,
+        "resolved_scene_sha256": attacked.digest(),
         "status": "pass",
         "robot_initial_collision_count": 0,
         "objects": {},
@@ -346,6 +384,8 @@ def test_runtime_validator_rejects_static_contact_free_nested_support() -> None:
 def test_runtime_validator_rejects_intermittent_nested_contact() -> None:
     _, _, resolved = stacked_case()
     evidence = {
+        "scene_id": resolved.scene_id,
+        "resolved_scene_sha256": resolved.digest(),
         "status": "pass",
         "robot_initial_collision_count": 0,
         "objects": {},
@@ -378,6 +418,8 @@ def test_runtime_validator_rejects_intermittent_nested_contact() -> None:
 def test_runtime_validator_rejects_nested_source_contacting_table() -> None:
     _, _, resolved = stacked_case()
     evidence = {
+        "scene_id": resolved.scene_id,
+        "resolved_scene_sha256": resolved.digest(),
         "status": "pass",
         "robot_initial_collision_count": 0,
         "objects": {},

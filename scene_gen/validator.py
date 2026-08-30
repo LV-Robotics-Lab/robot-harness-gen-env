@@ -282,6 +282,27 @@ def validate_resolved_scene(
     if runtime_evidence is None:
         _check(checks, "runtime_evidence", "fail" if require_runtime else "not_run", {"required": require_runtime})
     else:
+        evidence_scene_id = runtime_evidence.get("scene_id")
+        expected_digest = resolved.digest()
+        evidence_digest = runtime_evidence.get("resolved_scene_sha256")
+        _check(
+            checks,
+            "runtime_scene_identity",
+            "pass" if evidence_scene_id == resolved.scene_id else "fail",
+            {
+                "expected_scene_id": resolved.scene_id,
+                "evidence_scene_id": evidence_scene_id,
+            },
+        )
+        _check(
+            checks,
+            "runtime_resolved_scene_binding",
+            "pass" if evidence_digest == expected_digest else "fail",
+            {
+                "expected_sha256": expected_digest,
+                "evidence_sha256": evidence_digest,
+            },
+        )
         runtime_status = runtime_evidence.get("status") == "pass"
         _check(checks, "runtime_status", "pass" if runtime_status else "fail", runtime_evidence.get("error"))
         _check(
