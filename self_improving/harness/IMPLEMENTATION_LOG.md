@@ -651,3 +651,17 @@
   `9558ac68…000d5`，真实 9 事件、6 个白名单输出，runtime acquisition `pass` 且 evidence 内同一
   snapshot digest。该 smoke 只有 2 physics steps，因此 validation 诚实为 `fail`（2 failed、0
   not-run）；它证明不可变资产接线与真实回调，不冒充 900/120 发布门禁。
+
+### 2026-08-31 / A036：源码树变化必须重新取得 compile 资格，不能沿用旧 pass
+
+- 触发：A035 为真实 replay 增加 loader snapshot 接线时修改了 `scene_gen/envs/generated_scene.py`。
+  在 commit `7766fee` 的干净 worktree 上运行标准 `pytest -q`，987 项通过，唯一失败是 production
+  compile qualification 的 `source_tree_mismatch`；旧证书因此按设计 fail closed，没有静默放行。
+- 执行：在同一干净 commit 上重新运行固定 generator。它从全新 scratch/library 直接执行候选三次，
+  再次观测 `admitted -> reused -> reused`；三轮各 18 个真实 callback event、11 个可重读 CAS artifact，
+  第二/三轮 parameters、dependencies、Invocation、typed output 与 package identity 全部一致。
+- 边界：新报告仍要求 static validation 为 `incomplete`（每轮 0 fail / 1 not-run），资产仍为
+  `generation_qc_only / pending_settle`；这次刷新只恢复 compile 资格，不把 A035 的短 replay 冒充物理晋升。
+- 新身份：implementation `6947fe8d…94210`，scene-gen tree `e2fe9fd6…ec330`，ledger contract
+  `3f73617c…62570`，report `a843b154…faaef`。三份固定文档由 generator 在全部门禁通过后原子发布；
+  旧 A031 摘要保留为当时运行的历史证据，不再代表当前 packaged bundle。

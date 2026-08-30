@@ -2,6 +2,9 @@
 
 ## 2026-08-31
 
+- A035 改变 scene-gen 执行字节后，旧 compile qualification 被 source-tree 门禁拒绝；在干净
+  `7766fee` 上重新执行三轮真实 generator，仍得到 admitted→reused→reused，并以新 source/report
+  摘要原子刷新 packaged bundle。static validation 仍为 incomplete，未扩大物理声明。
 - 增加 replay 的 CAS runtime-asset snapshot：绑定 resolved/catalog、selected model、空目录与全文件
   identity，解析 URDF/OBJ/MTL/glTF/GLB/COLLADA 引用闭包，运行前后逐树复验；修复 URDF model
   目录错选、CAS 子目录 symlink/rename race、损坏 CAS 无界读取和资产漂移失败类型。专项 100%
