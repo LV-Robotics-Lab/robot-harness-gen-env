@@ -15,6 +15,8 @@ from self_improving.harness.qualification import (
 SKILL_REF = "text2env.compile@1.0.0"
 REPORT_SCHEMA = "harness.skill_qualification_report.v1"
 MANIFEST_SCHEMA = "harness.skill_implementation_manifest.v1"
+ROOT = Path(__file__).resolve().parents[3]
+PRODUCTION_BUNDLE = ROOT / "self_improving/harness/qualified_skills/text2env.compile/1.0.0"
 
 
 def _sha(payload: bytes) -> str:
@@ -169,6 +171,35 @@ def _load(
         scene_gen_root=scene_gen,
         ledger_contract_root=ledger_contract,
     )
+
+
+def test_checked_in_compile_qualification_matches_current_implementation(
+    tmp_path: Path,
+) -> None:
+    loaded = load_qualification_bundle(
+        PRODUCTION_BUNDLE,
+        skill_ref=SKILL_REF,
+        artifact_store=LocalArtifactStore(tmp_path / "cas"),
+        implementation_root=ROOT,
+        scene_gen_root=ROOT / "scene_gen",
+        ledger_contract_root=(ROOT / "self_improving/asset_pipeline/active/1_asset_reuse/lib"),
+    )
+
+    assert loaded.implementation_sha256 == (
+        "2a90206b0aae52dd38021b6bb3f9b3172aeb711e75b78b449db188e9edabba29"
+    )
+    assert loaded.qualification.report_sha256 == (
+        "bc31879efd1150ef67d2be2660e02a122d4104a454a08030cc9e1119ea7223bd"
+    )
+    assert [check.name for check in loaded.report.checks] == [
+        "admission.lifecycle",
+        "artifacts.cas_resolution",
+        "invocation.stability",
+        "ledger.v3_files",
+        "package.binding",
+        "source.stability",
+        "static_validation.boundary",
+    ]
 
 
 def test_loads_verified_bundle_publishes_report_before_receipt_and_is_order_stable(

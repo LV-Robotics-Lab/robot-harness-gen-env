@@ -540,3 +540,21 @@
 - 发布语义：只有所有门禁通过后才在同一目录原子发布 qualification/report/manifest 三文档；不覆盖
   已有目录，rename 或父目录 fsync 失败会清理不确定产物。专项及相关回归 `97 passed`，generator
   statement + branch coverage `100%`；ruff、format 与 diff check 通过。
+
+### 2026-08-31 / A031：固定 qualification 入包后，production CLI 真实生成并复用资产
+
+- 固定资质：用 A030 generator 从 commit `9b7258f` 的实际源码生成 packaged
+  `text2env.compile@1.0.0` 三文档；implementation identity 为
+  `2a90206b…abba29`，report SHA 为 `bc31879e…223bd`。新增回归会用当前源码、scene-gen tree 和 ledger
+  contract tree 重载这份 bundle，任一受约束字节漂移都会令 CI fail closed。
+- Production smoke：从空 catalog 和业务请求“Place a purple hexagonal pedestal on the table.”启动三次
+  独立 CLI 进程。首轮真实生成并入库 `900_gen_hexagonal_pedestal_5695f4e5`，后两轮均复用；三轮终态
+  succeeded、各 18 条真实事件、11 个 CAS artifacts，typed output identity 全部为
+  `803f5997…6e30`。首轮 library dependency 合理变化，第二/三轮 Invocation identity 稳定。
+- 持久恢复：重新装配 application 后从 SQLite 交叉校验并恢复三份 Invocation、54 条事件和三份终态；
+  所有 RunState artifact 均能从 CAS 重读。入库 ledger v3 使用 `check_files=True` 为 0 violations，五份
+  关键资产/来源文件都有独立 SHA。
+- 诚实边界：static validation 是 `incomplete`（0 fail、1 not-run），资产仍为
+  `generation_qc_only/pending_settle`；本切片不声称 simulator replay 或 publishable。完整命令、摘要、
+  run id、三次后处理检查偏差及修正均冻结在
+  `docs/evidence/compile-production-qualification-20260831.{md,json}`。

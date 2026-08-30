@@ -13,6 +13,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 LEDGER_PACKAGE = Path("self_improving/asset_pipeline/active/1_asset_reuse/lib")
 LEDGER_MEMBERS = ("__init__.py", "conventions.py", "ledger.py")
+QUALIFICATION_PACKAGE = Path("self_improving/harness/qualified_skills/text2env.compile/1.0.0")
+QUALIFICATION_MEMBERS = ("manifest.json", "qualification.json", "report.json")
 
 
 def _copy_build_fixture(destination: Path) -> Path:
@@ -25,7 +27,9 @@ def _copy_build_fixture(destination: Path) -> Path:
     for relative_path in (
         Path("self_improving/__init__.py"),
         Path("self_improving/registry.py"),
+        Path("self_improving/harness/__init__.py"),
         *(LEDGER_PACKAGE / name for name in LEDGER_MEMBERS),
+        *(QUALIFICATION_PACKAGE / name for name in QUALIFICATION_MEMBERS),
     ):
         target = source / relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -77,8 +81,14 @@ def test_wheel_installs_asset_ledger_contract(tmp_path: Path) -> None:
     )
     wheel = next(wheelhouse.glob("*.whl"))
     expected_members = {(LEDGER_PACKAGE / name).as_posix() for name in LEDGER_MEMBERS}
+    expected_qualification = {
+        (QUALIFICATION_PACKAGE / name).as_posix() for name in QUALIFICATION_MEMBERS
+    }
     with zipfile.ZipFile(wheel) as archive:
         assert expected_members <= set(archive.namelist())
+        assert expected_qualification <= set(archive.namelist())
+        for member in expected_qualification:
+            assert archive.read(member) == (REPO_ROOT / member).read_bytes()
 
     installed = tmp_path / "installed"
     _run(
@@ -113,9 +123,11 @@ for resource_name in {LEDGER_MEMBERS!r}:
     assert resources.joinpath(resource_name).is_file()
 """
     _run([sys.executable, "-I", "-c", probe], cwd=installed)
+    for member in expected_qualification:
+        assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
 
 
-def test_packaging_declares_future_qualified_skill_resources() -> None:
+def test_packaging_declares_qualified_skill_resources() -> None:
     configuration = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
 
     package_data = configuration["tool"]["setuptools"]["package-data"]
