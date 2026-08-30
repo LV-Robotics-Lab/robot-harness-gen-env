@@ -376,3 +376,21 @@
   `stage=scene_spec_validation`；importable compiler、Harness blocker 和真实 callback 仍保留更精确的
   `parse` stage，不反向污染核心接口。
 - 验证：既有结构化非法 prompt CLI 攻击测试恢复通过；全 `tests/scene_gen` `115 passed`。
+
+### 2026-08-31 / A021：生产 Skill 资格必须绑定正在运行的源码
+
+- 反例：Registry 能确认 qualification receipt 与报告 bytes 存在，却仍无法证明报告测试过的就是当前
+  handler。把一份通过时的实现副本塞进 qualification 目录、随后修改真实运行源码，旧式 bundle 校验
+  仍可能放行。
+- 实现：新增 fail-closed qualification loader。固定 bundle 只允许 `qualification.json`、
+  `report.json`、`manifest.json` 三份严格文档；manifest 中每个实现文件都相对显式
+  `implementation_root` 解析，逐文件核 bytes/SHA，并拒绝绝对路径、`..`、非规范路径、重复项、
+  symlink 和 root escape。descriptor 使用的 implementation digest 由 canonical manifest、
+  `scene_gen` 源码树和 ledger contract 源码树共同导出。
+- 证据链：报告原始 bytes 的 SHA 必须等于公开 receipt；报告、receipt、manifest 的精确 Skill 身份和
+  deterministic case 必须一致；当前源码树摘要必须等于报告与 manifest；先把报告快照写入 CAS，再写
+  receipt，使 Registry 的 report lookup 可以独立复核。
+- 攻击用例：在三份 bundle 文档完全不变时只修改真实 `handler.py`，loader 必须拒绝；另覆盖报告替换、
+  源码漂移、未声明文件、文档/实现/source symlink、读写竞态、发布失败与 CAS snapshot 不一致。
+- 验证：qualification 专项 `43 passed`，statement + branch coverage `100%`；ruff、format 与 diff check
+  通过。此提交只提供可信加载边界；固定生产 bundle 必须由后续真实 acceptance 生成，不能手写 pass。
