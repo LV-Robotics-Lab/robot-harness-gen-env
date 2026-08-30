@@ -676,3 +676,7 @@
   compile qualification runner 也显式传入它刚解析并用于 invocation digest 的同一 tuple。
 - 验证：Registry + durable persistence `12 passed`，`registry.py` statement `232/232`、branch
   `52/52`。这一步只建立可信传递面；replay dependency resolver 和 handler 的逐项核验在后续切片接线。
+- 资格联动：Registry/qualification runner 属于 compile implementation manifest；旧 packaged pass 因
+  `bundle_digest_mismatch` 失效。干净 `607b15e` 上重新执行三轮 generator 后仍为
+  admitted→reused→reused；新 implementation `88f6cb42…72599`、report `b73b3bbc…edb26`，scene-gen
+  tree 保持 `e2fe9fd6…ec330`。刷新没有改变 static incomplete / pending-settle 边界。

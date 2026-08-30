@@ -6,8 +6,9 @@
 
 > 当前 bundle 刷新：A035 修改了 scene-gen loader 接线后，旧 source-tree 摘要立即 fail closed。
 > 在干净 commit `7766fee` 上重新运行下述三轮 generator，仍观测
-> `admitted -> reused -> reused`；当前 implementation / scene-gen / report 摘要分别为
-> `6947fe8d…94210`、`e2fe9fd6…ec330`、`a843b154…faaef`。下文 CLI run id 与 output 摘要是 A031
+> `admitted -> reused -> reused`；A037 又把 Invocation dependencies 交给 handler，因此在干净
+> `607b15e` 上再次按同样门禁刷新。当前 implementation / scene-gen / report 摘要分别为
+> `88f6cb42…72599`、`e2fe9fd6…ec330`、`b73b3bbc…edb26`。下文 CLI run id 与 output 摘要是 A031
 > 当时的历史运行证据；当前资格门禁的逐项观测值以 packaged `report.json` 为准。
 
 ## 复现方法

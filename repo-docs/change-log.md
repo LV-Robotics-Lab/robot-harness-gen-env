@@ -2,6 +2,8 @@
 
 ## 2026-08-31
 
+- Registry 的 handler context 现在携带 Invocation 已冻结的同一组只读 dependencies，供 replay
+  在真实执行时核对资产/运行时身份；这一实现字节变化也触发并完成了 compile 三轮资格刷新。
 - A035 改变 scene-gen 执行字节后，旧 compile qualification 被 source-tree 门禁拒绝；在干净
   `7766fee` 上重新执行三轮真实 generator，仍得到 admitted→reused→reused，并以新 source/report
   摘要原子刷新 packaged bundle。static validation 仍为 incomplete，未扩大物理声明。
