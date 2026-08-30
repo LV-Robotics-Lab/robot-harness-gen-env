@@ -596,3 +596,30 @@ Decision: use `148001d` as the final fixed source-diagnosis snapshot.  The CLI
 drift blocker is removed; default collection and the Harness 100% coverage gate
 remain.  Do not reinterpret the independently green E1e receipt at `910ccb1` or
 the time-pinned E0–E2 snapshot through these later commits.
+
+## 2026-08-31 — study closure and control-plane receipt
+
+1. Commit `4f289a15e06c609adf1b13879dc38e88d842dec5` froze the final report, research
+   ledger, machine receipt, reader-facing repo docs, and the source-boundary
+   corrections above on the existing `worktree/bingsheng` branch.  No new branch
+   was created.
+2. Final structural checks before that commit passed: staged diff check; JSON
+   parse; five-column TSV shape; all 17 inspected local Markdown link sets;
+   ASPIRE submodule pin/clean status; held-out artifact file SHA and canonical
+   result SHA.  The official arXiv, NVIDIA project, and GitHub pages were also
+   reachable during final source refresh.
+3. The mandatory dashboard preflight was repeated at
+   `2026-08-31T03:34:17+08:00`.  All three configured public JSON endpoints
+   (`portfolio`, `tasks`, project `umi-world-model`) returned HTTP 404; the
+   `clawcross-harness-agent dashboard` wrapper returned the same tasks endpoint
+   404.  Therefore no dashboard/TODO state update is claimed.
+4. Immediately after the report commit, the shared worktree contained one
+   untracked concurrent test, `tests/self_improving/harness/test_runtime_events.py`.
+   It was not authored, staged, tested, or committed by this study.  Its presence
+   does not change the fixed-source receipts and prevents claiming a globally
+   clean moving worktree.
+
+Decision: close the ASPIRE autoresearch task.  The retained production changes,
+negative findings, reproduction limits, fixed synthetic benchmark, latest clean
+source diagnostics, and dashboard failure are all traceable without treating
+concurrent uncommitted work as evidence.

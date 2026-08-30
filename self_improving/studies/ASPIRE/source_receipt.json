@@ -1,6 +1,9 @@
 {
   "schema_version": "robot_harness.aspire_study.source_receipt.v1",
   "preflight_captured_at": "2026-08-31T01:24:43+08:00",
+  "study_closed_at": "2026-08-31T03:34:17+08:00",
+  "study_report_commit": "4f289a15e06c609adf1b13879dc38e88d842dec5",
+  "study_close_source_commit": "148001dd4049346b9deadca1fec3bb8f588fc8d5",
   "study_branch": "worktree/bingsheng",
   "study_start_commit": "732e190",
   "experiment_snapshot_commit": "1180aef33936fcf1955923ed2a270e5a775029fb",
@@ -322,5 +325,14 @@
     ],
     "independent_follow_on_boundary": "e6ed0ff replay-timeline evidence was not rerun as the study's matched physical repair trial",
     "claim_scope": "final fixed clean committed-source diagnosis; independent of E0-E2 and not a claim about later or uncommitted concurrent work"
+  },
+  "dashboard_sync": {
+    "attempted_at": "2026-08-31T03:34:17+08:00",
+    "portfolio_http_status": 404,
+    "tasks_http_status": 404,
+    "project_http_status": 404,
+    "clawcross_wrapper_status": "HTTP 404 for dashboard/state/tasks.json",
+    "task_state_updated": false,
+    "claim_scope": "dashboard control plane was unavailable; no TODO status update is claimed"
   }
 }
