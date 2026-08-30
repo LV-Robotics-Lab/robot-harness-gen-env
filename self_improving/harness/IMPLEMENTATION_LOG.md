@@ -323,3 +323,15 @@
   解析 can-on-plate；effective catalog digest 等于攻击前 digest，外部文件确已变化。
 - 验证：新增 TOCTOU 攻击测试通过；全 Harness `74 passed`，statement + branch coverage `100%`；
   ruff 与 diff check 通过。
+
+### 2026-08-31 / A017：CAS 写入必须对同一份字节同时复制与计算摘要
+
+- 反例：旧 `put_file` 先完整读取源文件算 SHA，随后第二次打开并复制，最后再读取 size。若源文件在
+  三次读取之间变化，CAS 路径、实际 bytes 和 `ArtifactRef` 会互相矛盾；攻击测试在 pre-hash 后换掉
+  源文件，旧 ref 随即无法被自身 resolver 验证。
+- 修复：CAS 写入改为一次流式读取，同时向同文件系统临时文件写入、累计 bytes 和 SHA-256，`fsync`
+  后按该次快照的 digest 原子 rename。后续源路径变化不会改变已捕获快照的身份。
+- 污染边界：目标 digest 已存在时，复核它必须是普通文件且 size/SHA 与刚捕获的快照一致；现有 CAS
+  对象若被篡改则返回稳定 `cas_object_corrupt`，不静默复用或覆盖证据。
+- 攻击用例：覆盖旧版 pre-hash/copy 窗口和同 digest 路径已被投毒两种情况；常规内容去重仍保持。
+- 验证：artifact store 与全 Harness `76 passed`，statement + branch coverage `100%`。

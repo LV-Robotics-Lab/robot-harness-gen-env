@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+import self_improving.harness.artifacts as artifact_module
 from self_improving.harness import ArtifactRef, ArtifactResolutionError, LocalArtifactStore
 
 
@@ -90,3 +91,56 @@ def test_resolver_fails_closed_for_locator_and_content_mismatches(tmp_path: Path
     with pytest.raises(ArtifactResolutionError) as missing_error:
         store.resolve(missing)
     assert missing_error.value.reason == "not_found"
+
+
+def test_put_file_copies_and_hashes_one_coherent_snapshot(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = tmp_path / "mutable.bin"
+    original = b"original artifact bytes"
+    source.write_bytes(original)
+    real_sha256 = artifact_module._sha256
+
+    def swap_after_pre_hash(path: Path) -> str:
+        digest = real_sha256(path)
+        if path == source.resolve():
+            source.write_bytes(b"bytes swapped after the pre-hash")
+        return digest
+
+    monkeypatch.setattr(artifact_module, "_sha256", swap_after_pre_hash)
+    store = LocalArtifactStore(tmp_path / "artifacts")
+
+    artifact = store.put_file(
+        source,
+        name="mutable",
+        media_type="application/octet-stream",
+        schema_version=None,
+    )
+
+    assert store.resolve(artifact).path.read_bytes() == original
+    assert artifact.sha256 == hashlib.sha256(original).hexdigest()
+    assert artifact.bytes == len(original)
+
+
+def test_put_file_rejects_an_existing_corrupt_cas_object(tmp_path: Path) -> None:
+    source = tmp_path / "payload.bin"
+    source.write_bytes(b"trusted bytes")
+    store = LocalArtifactStore(tmp_path / "artifacts")
+    artifact = store.put_file(
+        source,
+        name="payload",
+        media_type="application/octet-stream",
+        schema_version=None,
+    )
+    store.resolve(artifact).path.write_bytes(b"poisoned CAS")
+
+    with pytest.raises(ArtifactResolutionError) as error:
+        store.put_file(
+            source,
+            name="payload",
+            media_type="application/octet-stream",
+            schema_version=None,
+        )
+
+    assert error.value.reason == "cas_object_corrupt"

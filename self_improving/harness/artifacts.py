@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import os
-import shutil
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -54,23 +53,37 @@ class LocalArtifactStore:
         schema_version: str | None,
     ) -> ArtifactRef:
         source_path = source.expanduser().resolve()
-        payload_sha256 = _sha256(source_path)
-        destination = self._content_path(payload_sha256)
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        if not destination.exists():
-            file_descriptor, temporary_name = tempfile.mkstemp(
-                dir=destination.parent,
-                prefix=f".{payload_sha256}.",
-            )
-            try:
-                with os.fdopen(file_descriptor, "wb") as target, source_path.open("rb") as stream:
-                    shutil.copyfileobj(stream, target)
-                    target.flush()
-                    os.fsync(target.fileno())
-                os.replace(temporary_name, destination)
-            finally:
-                Path(temporary_name).unlink(missing_ok=True)
-        size = source_path.stat().st_size
+        incoming = self.root / ".incoming"
+        incoming.mkdir(parents=True, exist_ok=True)
+        file_descriptor, temporary_name = tempfile.mkstemp(dir=incoming, prefix=".artifact.")
+        temporary_path = Path(temporary_name)
+        digest = hashlib.sha256()
+        size = 0
+        try:
+            with os.fdopen(file_descriptor, "wb") as target, source_path.open("rb") as stream:
+                for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                    digest.update(chunk)
+                    size += len(chunk)
+                    target.write(chunk)
+                target.flush()
+                os.fsync(target.fileno())
+            payload_sha256 = digest.hexdigest()
+            destination = self._content_path(payload_sha256)
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            if destination.exists():
+                if (
+                    not destination.is_file()
+                    or destination.stat().st_size != size
+                    or _sha256(destination) != payload_sha256
+                ):
+                    raise ArtifactResolutionError(
+                        "cas_object_corrupt",
+                        f"existing CAS object is corrupt: {destination}",
+                    )
+            else:
+                os.replace(temporary_path, destination)
+        finally:
+            temporary_path.unlink(missing_ok=True)
         return ArtifactRef(
             name=name,
             uri=f"artifact://sha256/{payload_sha256}",
