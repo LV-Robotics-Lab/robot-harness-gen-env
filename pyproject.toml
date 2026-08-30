@@ -36,11 +36,20 @@ platform = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["scene_gen*", "demo*", "self_improving", "self_improving.harness*"]
+include = [
+  "scene_gen*",
+  "demo*",
+  "self_improving",
+  "self_improving.harness*",
+  "self_improving.asset_pipeline.active.1_asset_reuse.lib*",
+]
 
 [tool.setuptools.package-data]
 scene_gen = ["asset_overrides.yml", "prompts/*.md"]
-"self_improving.harness" = ["json_schemas/*.json"]
+"self_improving.harness" = [
+  "json_schemas/*.json",
+  "qualified_skills/**/*.json",
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

@@ -394,3 +394,15 @@
   源码漂移、未声明文件、文档/实现/source symlink、读写竞态、发布失败与 CAS snapshot 不一致。
 - 验证：qualification 专项 `43 passed`，statement + branch coverage `100%`；ruff、format 与 diff check
   通过。此提交只提供可信加载边界；固定生产 bundle 必须由后续真实 acceptance 生成，不能手写 pass。
+
+### 2026-08-31 / A022：wheel 必须携带运行时真正导入的 ledger contract
+
+- 反例：源码 checkout 中的 generated-asset admission 能动态导入 v3 ledger validator，但此前构建出的
+  wheel 没有 `self_improving.asset_pipeline.active.1_asset_reuse.lib`；安装后直到首次资产入库才会以
+  `ModuleNotFoundError` 崩溃。
+- 修复：包发现显式纳入该 namespace package，并为 Harness 声明未来固定 qualification bundle 的
+  JSON package-data 路径；没有凭空创建或伪造任何 qualification pass 资源。
+- 实证测试：在临时最小真实源码副本中离线构建 wheel，先检查 ZIP 成员，再隔离 `pip --target` 安装；
+  使用 `python -I` 清除源码树影响后，实际导入 ledger/conventions 并通过 `importlib.resources` 读取三份
+  核心模块。配置修改前测试真实 RED（wheel 缺三文件），修改后 GREEN。
+- 验证：packaging 专项 `2 passed`；ruff、format 与 diff check 通过。
