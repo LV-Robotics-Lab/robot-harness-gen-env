@@ -1,8 +1,20 @@
 # Harness Schema Tranche
 
-这一批 Harness 代码先回答“进程内到底用什么类型说话”，还没有回答“谁来执行 Skill”。
+PR1 schema tranche 先回答“进程内到底用什么类型说话”，还没有回答“谁来执行 Skill”。
 `self_improving/harness/` 把 Text2Env compile、replay、validate 的边界冻结为严格模型；
 `scene_gen/` 仍拥有 SceneSpec、resolved scene、包 manifest、运行时证据和验证报告的内部格式。
+
+PR1 之后又增加相邻执行 seam：`LocalArtifactStore`/`ArtifactResolver` 会读取本地 bytes 并核对
+SHA-256/大小；`RunRecorder`/`EventSink` 由 callback 生成连续事件和 RunState；
+`SQLiteEventJournal` 以 SQLite WAL 持久化 append-only events；`PackageStore` 可把 manifest members
+发布到 CAS 并安全重物化；通用 `SkillRegistry` 按 exact version 注册有 qualification receipt 的
+descriptor，再调用注入 handler。`284ffb` 已接入首个 `Text2EnvCompileHandler`，但 replay、validate、
+跨 run promotion transaction 与 MCP 仍没有实现。
+
+Registry 的“qualified”边界也要精确：注册会解引用并按 digest 读取 qualification artifact、校验其
+schema/status/`skill_ref`；`51447da` 又要求 `report_sha256` 对应的 CAS bytes 确实存在且摘要匹配。
+它仍不解析该 report 的领域内容、对账 source manifest，也不会把实际 handler bytes 与 descriptor 的
+`implementation_sha256` 对账；因此还不是完整代码/资格 attestation。
 
 完整、逐字段的实现记录在
 [PR1 核心 Schema 实现报告](../../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)，
@@ -11,7 +23,8 @@
 面向项目组成员的互动入口位于
 [三个 Skill Walkthrough](../../docs/harness-skill-walkthrough/README.md)。它用四种概念情景串起
 compile 的 reuse-first fallback、静态 `incomplete`、连续物理 replay 和最终 publishability；页面
-明确区分 PR1 已完成的 schema 与 PR2 尚待实现的 Registry、handler 和 MCP adapter。
+按 PR1 当时状态区分 schema 与尚待实现的 Registry/handler/MCP；它是历史 walkthrough，当前
+Registry follow-on 以本页和 `self_improving/harness/IMPLEMENTATION_LOG.md` 为准。
 
 ## 先分清四层
 
@@ -19,18 +32,19 @@ compile 的 reuse-first fallback、静态 `incomplete`、连续物理 replay 和
 调用方 / 未来 MCP
         |
         v
-未来 SkillRegistry：版本、默认值、依赖、摘要、attempt、审计
+当前通用 SkillRegistry：exact version、qualification、类型、依赖、摘要、attempt、审计
         |
         v
-本次 schema tranche：输入输出和运行记录的形状 + 跨字段自洽
+当前 Compile handler；待实现 Replay / Validate handlers
         |
         v
-现有 scene_gen：解析、grounding、求解、包、回放、物理验证
+现有 schema + scene_gen：类型、解析、grounding、求解、包、回放、物理验证
 ```
 
-MCP 未来只能把已注册 descriptor 映射成工具；它不能再发明类型或默认值。Registry 未来
-负责执行与审计；它不能把 Text2Env 分支写进通用核心。PR1 只实现第三层，并通过
-`ArtifactRef` 与 `EnvironmentPackage` 指向第四层已有载荷。
+MCP 未来只能把已注册 descriptor 映射成工具；它不能再发明类型或默认值。Registry 已负责通用
+执行与审计，但不把 Text2Env 分支写进通用核心。PR1 schema 通过 `ArtifactRef` 与
+`EnvironmentPackage` 指向 `scene_gen` 已有载荷；compile 已由专用 adapter 组装，完整发布闭环仍
+需要 replay/validate adapters。
 
 ## 14 个公共入口怎么分组
 
@@ -84,12 +98,26 @@ code 不应被旧消费者吞掉或改写成普通异常文本。
 media_type + schema_version + sha256
 ```
 
-`uri` 只负责定位。PR1 能校验摘要和 schema version 的形状，但不会打开 URI。后续 Registry
-必须读取内容、重算 SHA-256，并把 URI 换成内容身份后再计算 invocation digest。
+`uri` 只负责定位。PR1 schema 本身只校验形状；后续 `LocalArtifactStore.resolve()` 已能打开本地
+`artifact://sha256/...` 或 `file://`、重算 SHA-256 并核对 bytes。它还不是安全 capability：
+`file://` 没有 allowed-root，校验后返回可变原路径，存在 trusted-input/TOCTOU 边界；CAS 文件也
+没有 OS 级只读保证。`50e8f18` 已把 `put_file` 改为单次流式 hash+copy、fsync、同文件系统原子
+rename，并拒绝已污染的同 digest 目标；生产 handler 仍应只消费重验后的 CAS snapshot。
+
+首个 compile handler 在 `284ffb` 只完成了“复制”而没有闭合“消费 snapshot”：定向 mutation 可在
+precheck 后替换原 catalog，让 root 外资产进入 resolved 输出。冻结攻击与协议先进入 `ef5e29e`，
+`910ccb1` 再把 trust check 与 `compile_scene` 的唯一输入切到 digest-verified CAS path；同一攻击通过，
+完整 Harness 74 passed、statement/branch 100%。通用 resolver 的任意 `file://` 边界仍只适合 trusted
+orchestrator，但这个 compile adapter 已不再回读其原始 locator。
 
 `EnvironmentPackage` 同理：它只保存 resolved scene、catalog 和 manifest 的摘要/引用，
 不是另造一个包格式。`package_id` 必须等于 `resolved_scene_sha256`；catalog 摘要是否真的与
 resolved scene 和 manifest 内部一致，要由 handler 读内容后核对。
+
+相邻的稳定核心现在会在直接消费 `runtime_evidence` 时核对证据自声明的 `scene_id` 与
+`resolved_scene_sha256`。这会拒绝缺失/未改写错值，但不签名完整 evidence/media/run receipt。
+Harness schema 本身仍不解引用 URI；resolver 只解决单个本地 artifact equality，未来 handler 仍
+必须核对完整 package→run→media 链。
 
 ## RunState：成功不等于通过
 
@@ -160,6 +188,11 @@ Pydantic 校验为准。这符合“Registry 是唯一类型和执行权威”�
 | Text2Env 字段和默认值 | `schemas/text2env.py` | `test_text2env_schemas.py` |
 | 公共 `$id` 或导出 | `schema_catalog.py` | `test_schema_catalog.py` |
 | committed snapshot | `json_schemas/` | export `--check` |
+| 本地 artifact 解引用 | `artifacts.py` | `test_artifacts.py` |
+| 事件生命周期与持久主账 | `events.py`、`event_journal.py` | `test_events.py`、`test_event_journal.py` |
+| 通用 Skill 注册/调用 | `registry.py` | `tests/self_improving/harness/test_registry.py` |
+| package CAS 发布/重物化 | `package_store.py` | `test_package_store.py` |
+| Text2Env compile 竖切 | `handlers/text2env_compile.py` | `test_text2env_compile_handler.py` |
 | 安装包内容 | `pyproject.toml` | wheel 内容检查 |
 
 统一入口同时强制 Harness 语句和分支覆盖率 100%：
@@ -168,25 +201,51 @@ Pydantic 校验为准。这符合“Registry 是唯一类型和执行权威”�
 script/run_self_improving_tests.sh
 ```
 
-PR1 基线是 21 个 Harness 专项测试、顶层 125 passed、完整平台矩阵 564 passed/6 skipped，
-Harness 为 350/350 statements、74/74 branches。
+PR1 基线是 21 个 Harness 专项测试、顶层 125 passed；ASPIRE E0–E2 快照 `1180aef` 的完整平台
+矩阵为 595 passed/6 skipped，Harness 为 350/350 statements、74/74 branches。
+
+这里的 `595/6` 与 `350/74` 是 ASPIRE 研究快照 `1180aef` 的完整回归，不是后续 Registry/compiler/
+asset follow-on 的当前绿灯。后续提交必须重新通过默认 collection、行为契约与 100% coverage gate；
+不能沿用旧计数。
+
+只读源码快照 `28333de` 的 archive 验证进一步显示：默认 pytest 仍因两个同名
+`test_registry.py` collection error；诊断性 `--import-mode=importlib` 为 155 passed / 1 failed，
+唯一行为失败是非法 prompt 的 stage=`parse` 与历史 `scene_spec_validation` 期望不一致。该快照
+Harness 自身为 895/895 statements、196/196 branches（100%）；所以全仓不绿不能再归因于 Harness
+coverage，而是 collection 与行为契约仍未闭合。
 
 ## 现在还不能做什么
 
-当前代码不能执行 `text2env.compile@1.0.0`。它还缺：
+通用 Registry 已能调用注入的、资格身份匹配的 `text2env.compile@1.0.0` handler；但这只是一条
+compile 竖切，不是可信的三 Skill spine。它还缺：
 
-- 三份精确 descriptor 和 `max_attempts=1/2/1` 的静态组装；
-- qualification 内容读取和报告摘要验证；
-- 默认值展开后的 invocation digest；
-- 依赖和 artifact 内容解析；
-- retryable replay 的第二次 attempt；
-- compile/replay/validate handlers；
+- asset admission 与 solve/package failure 间的 rollback/transaction；当前 solve blocked 后已入库
+  资产仍会留下；
+- replay/validate handlers 与 `max_attempts=1/2/1` 的完整静态组装；
+- 完整 package→run→media 内容复核；
+- `5915315` 已把 asset-library、selected asset bytes、ledger contract、scene_gen 与 trust config 记入
+  invocation dependencies；但 referenced asset files 仍从外部目录消费，receipt 不能自动把这些
+  payload bytes 变成 CAS snapshot；
+- 跨 run 的 qualification/promotion transaction；
 - MCP 工具生成与调用适配。
 
-因此看到 `self_improving/harness/` 存在，只能得出“接口已冻结到 PR1 候选实现”，不能得出
-“Harness 已可执行”或“RFC 已 Accepted”。
+因此看到 `SkillRegistry` 与 compile handler 存在，只能得出“compile 竖切可调用、catalog JSON
+snapshot 已用于执行”，不能得出“Text2Env 三个 Skill 已接通”“所有引用资产 bytes 已冻结”
+“资产晋升具事务性”“物理发布闭环已完成”或“RFC 已 Accepted”。
 
 要回到平台总边界，读 [Self-Improving 平台](self-improving-platform.md)；要审计具体实现和
 验证结果，读 [PR1 实现报告](../../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)。
 
-证据状态：基于实现 commit `9b72090` 与 PR #7 的本地/CI 验证结果确认。
+证据状态：PR1 schema 基于 commit `9b72090` 与 PR #7；follow-on resolver/recorder/journal/Registry/
+compiler 基于 `f5d1bab`、`5ccf779`、`568c3b6`、`f9d6ad5`、`315524f`、`9af9db5` 与 `28333de`
+源码审计；compile/package/dependency follow-on 锚为 `284ffb`、`1a1f3d8`、`e98e8c1`、`5915315`，
+snapshot-use 攻击/修复为 `ef5e29e`/`910ccb1`，CAS/qualification follow-on 为 `50e8f18`/`51447da`，
+后续 replay/CLI follow-on 为 `e6ed0ff`/`148001d`。
+完整平台绿色计数只钉在 `1180aef`；`28333de` 是明确不绿的诊断快照。`51447da` 的实现日志只另
+报告 Harness 专项 76 passed、statement/branch 100%，但独立 clean-archive 复核是 76 passed、
+1313 statements 缺 1、322 branches 有 1 partial、总计 99.88%，coverage gate 失败。该快照默认
+pytest 与平台脚本也仍有同名测试 collection error；它不是完整平台绿色计数。
+
+`148001d` clean archive 已把 importlib 诊断推进到 201 passed / 0 failed，证明历史 CLI
+failure-stage 漂移闭合；默认 collection error 仍在，Harness 仍为 76 passed / 99.88% coverage。
+因此最新固定诊断剩下 collection 与 coverage 两个 blocker，依然不是完整平台绿灯。

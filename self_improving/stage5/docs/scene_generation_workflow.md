@@ -80,7 +80,13 @@ Each accepted scene must preserve the prompt semantics while varying valid x/y p
 | 7. Visual review | smoke images | `generate_scene/observation_agent.py`, `prompts/observation_vlm_agent.md` | `attempt_N_visual_review.json` |
 | 8. Scene Critic | placement + static + smoke + visual | `generate_scene/scene_critic.py` | `attempt_N_scene_critic_review.json`, `scene_critic_review.json` |
 | 9. Orchestrator repair loop | Scene Critic failure | `generate_scene/gpt_agent.py`, `prompts/visual_repair_agent.md` | `attempt_N+1_placement.json`, rerun codegen/smoke/review |
-| 10. Final accepted scene | Scene Critic pass/pending | `generate_scene/run_scene_generation_pipeline.py` | `final_placement.json`, final scene module, `scene_generation_summary.json` |
+| 10a. Final accepted scene | Scene Critic `pass` | `generate_scene/run_scene_generation_pipeline.py` | `final_placement.json`, final scene module, status `pass`, exit 0 |
+| 10b. Review candidate | Scene Critic `pending_visual_review` | `generate_scene/run_scene_generation_pipeline.py` | `review_candidate_placement.json`, status pending, exit 2；不得写 final/pass |
+| 10c. Static candidate | no `--run-smoke` | `generate_scene/run_scene_generation_pipeline.py` | `static_scene_candidate_placement.json`, smoke/visual `not_run`, exit 0 仅表示静态阶段完成 |
+
+`run_scene_batch.py --allow-pending-visual` 只表示收集 pending 候选供后续评审；如果所收集场景中
+有 pending，batch aggregate 是 `review_required`、退出 2，而不是 `pass`。不跑 smoke 的
+`pass_static_scene_module`/`pass_static_only` 只表示静态阶段完成，不是物理或视觉 acceptance。
 
 ## Core Files
 
@@ -123,7 +129,7 @@ Once an object is physically flat, different in-plane yaw angles are acceptable 
 
 ## Outputs To Review
 
-For each run:
+Common outputs for each run, followed by one state-specific placement artifact:
 
 ```text
 runs/<case>/scene_generation_summary.json
@@ -133,7 +139,6 @@ runs/<case>/attempt_0_placement.json
 runs/<case>/attempt_0_static_validation.json
 runs/<case>/attempt_0_visual_review.json
 runs/<case>/attempt_0_scene_critic_review.json
-runs/<case>/final_placement.json
 runs/<case>/scene_critic_review.json
 runs/<case>/visual_review.json
 runs/<case>/smoke/head_camera.png
@@ -141,6 +146,17 @@ runs/<case>/smoke/observer_camera.png
 generated_scenes/<case>_scene.py
 ```
 
-`final_placement.json` now means: the PlacementSpec accepted by the render-in-the-loop Scene Critic, not merely the static/orchestrator result.
+The placement artifact is conditional:
+
+```text
+visual pass                  -> final_placement.json
+pending visual review        -> review_candidate_placement.json
+default no-smoke/static-only -> static_scene_candidate_placement.json
+```
+
+`final_placement.json` now means the PlacementSpec accepted by the render-in-the-loop Scene Critic,
+not merely the static/orchestrator result. The two candidate files are explicitly nonfinal; the static-only
+candidate carries smoke/visual `not_run`. Even a visual pass is not a replacement for the core runtime
+physics gate.
 
 For GitHub, keep only small curated examples under `previews/` and generated scene examples under `generated_scenes/`. Do not commit full `runs/`, HDF5 data, checkpoints, logs, or real API keys.

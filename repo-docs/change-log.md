@@ -1,5 +1,43 @@
 # Change Log
 
+## 2026-08-31
+
+- 固定官方 ASPIRE 源码为 `external/ASPIRE@7ba73d3` 子模块，并在
+  `self_improving/studies/ASPIRE/` 保存论文/官方资料、源码审计、宿主 harness 审计、复现边界、
+  预注册实验、逐步日志和机读结果；明确本机只复现无服务机制测试，未复现论文尺度基准。
+- 为核心 runtime validator 增加自声明 `scene_id` 与 `resolved_scene_sha256` equality check 及四个
+  缺失/错配攻击用例；runner 产生的一次真实 SAPIEN evidence 通过。该门不签名完整 run/media，
+  不能防 producer relabel，也不称完整 provenance。
+- 修复 Stage 5 main/legacy/critic/batch 的状态错误：视觉前只写 candidate，visual pass 才 per-file
+  atomic rename 为 final；pending/review aggregate 退出 2，默认 static-only 明确写 not_run/nonfinal。
+- 同步并发 follow-on：Harness 已有本地 artifact resolver、callback `RunRecorder`、SQLite append-only
+  event journal、通用 qualified-version `SkillRegistry` 与 deterministic compiler module，但
+  `28333de` 仍无 Text2Env handlers/MCP。
+  resolver 的 `file://` 无 allowed-root 且返回可变原路径，因此不是 sandbox 或不可变 CAS
+  capability；生成资产 ledger 把未跑 settle 的 QC 标成 `sapien/pass`，不得作物理资格证据。
+- follow-on 源码锚包括 `315524f` 的 SQLite journal、`9af9db5` 的 compiler started/completed 事件、
+  `28333de` 的 effective-catalog 文件校验。`28333de` archive 的 Harness coverage 为 100%，但默认
+  pytest 仍有同名 test collection error，importlib 诊断为 155 passed / 1 behavior-contract failure。
+- `284ffb` 提交可显式组装的 `Text2EnvCompileHandler`，`1a1f3d8` 增加 CAS PackageStore，
+  `e98e8c1`/`5915315` 接通 parameter-aware compile dependencies。攻击审计证明旧 handler 的 input
+  catalog CAS copy 未成为实际 compiler 输入；`ef5e29e` 先冻结 mutation test，`910ccb1` 再切到
+  snapshot-only execution，攻击转绿且 Harness 74 passed/100% statement+branch coverage。生成 asset
+  admission 仍先于 solve 且 blocked 不回滚，所以不称原子晋升或完整 Text2Env/物理发布闭环。
+- `50e8f18` 进一步把 CAS capture 改成单次流式 hash+copy/fsync/原子 rename，并拒绝已污染的同摘要
+  对象；`51447da` 要求 qualification `report_sha256` 的 CAS bytes 存在且匹配。后者仍不解释报告
+  领域内容或把实际 handler/source manifest 与 descriptor 对账，不能称完整 attestation。
+- 在 clean `51447da` archive/checkout 独立复核实现日志：Harness 76 tests 通过但 coverage 99.88%，
+  100% 门失败；默认 pytest 与 canonical 平台脚本仍有同名 `test_registry.py` collection error，
+  importlib 诊断为 184 passed / 1 CLI behavior-contract failure。因此不把该提交记为绿色快照。
+- 后续 `e6ed0ff` 绑定 adaptive replay 的视频尾帧与真实延长终点，`148001d` 恢复旧 CLI failure-stage
+  投影契约。固定 `148001d` archive 的 importlib 根测试为 201 passed / 0 failed；默认 collection 与
+  Harness 99.88% coverage 仍未闭合，所以仍不记为完整绿色快照，也不把 replay follow-on 算作
+  ASPIRE matched repair 结果。
+- 增加六类、开发/held-out 隔离的 ASPIRE 风格 harness 机制基准。固定合成故障集上 validated
+  trigger memory 的 mHRC 为 1.00，reactive 为 0.50；该结果不支持物理鲁棒性、LLM 学习或论文
+  尺度主张。把 595 passed、6 skipped 明确钉到 E0–E2 快照 `1180aef`，不冒充后续提交的当前
+  绿灯；并纠正文档中 rotation drift 3° / resolved rotation error 5° 的混写。
+
 ## 2026-08-18
 
 - 为 Harness MVP PR1 增加正式中文实现报告，逐项记录 14 个公共 schema、Pydantic/JSON Schema 分工、状态机、Text2Env 边界、100% 覆盖率证据、兼容性风险和 PR2 前置清单。
@@ -40,4 +78,4 @@
 | --- | --- | --- | --- | --- |
 | 2026-07-29 10:55 +08:00 | 用 `repo-docs-zh` 为 `robot-harness-gen-env` 首次构建中文 repo-docs 包 | 读完父 `repo-docs` 三个核心规则文件（SKILL/REFERENCE/PAGE_RULES/WRITING/QUALITY_RULES/EXAMPLES）。在 `repo-docs/` 下新建：`README.md`（中文开场 + 阅读路径表）、`walkthroughs/one-real-run.md`（一条 prompt → resolved 包 → SAPIEN 回放 → 运行时门控，8 步）、`code-map.md`（`scene_gen/`/`script/`/`demo/`/`tests/` 四区目录职责 + 关键符号 + 主路径关系 + 排除项）、`modules/` 下 7 页（bounded-parser、scene-contract、target-local-geometry、solver、derived-proxy、replay-package、runtime-gates）、`references/source-evidence.md`（两轮 traversal + claim/evidence/confidence/caveat/used-by 表）、`references/quality-review.md`（Reader Simulation + 可理解性 review + 残余风险）、`glossary.md`（17 行术语）、本 change-log。在仓库根 `AGENTS.md` 末尾追加 `Repo docs` 路由句与中文 overlay 指明。 | `$env:PYTHONIOENCODING = "utf-8"; python "C:\Users\SatelluS\.agents\skills\repo-docs\scripts\validate_repo_docs.py" repo-docs --repo-root .` → 初轮 0 errors / 32 warnings（含 walkthrough 难点触发句、code-map 目录/Header/Coverage 形态、source locator 前缀、证伪检查、5 个高频术语缺 glossary 行），按 warning 逐项修了 5 轮后到 0 errors / 0 warnings。`pytest -q` 在本机未能跑——当前 Python 3.12 解释器没装 pytest、本地无 `.venv`，仓库要求 Python 3.11 + 装了 `dev` extra 才有 pytest；但本次改动只动了 `AGENTS.md` 文范畴路由段与新建 `repo-docs/*.md`，没动任何 Python 源码或 `tests/fixtures/`，故测试集状态不受影响。真机 SAPIEN/RoboTwin 回放另按根 `AGENTS.md` 在支持机器上验证。`git rev-parse HEAD` = `60a25971738e0cd4c64615e4455cc2b4098aaa43`，与 sync anchor 一致。 | build：通过；validator 0 errors / 0 warnings；测试集本机未跑（环境缺 pytest），仅改文档不影响契约层。 |
 
-Synced through 9b720900ff1c3c1b5a6587f7bc5d78359d3af81b.
+Synced through behavior commit 1180aef33936fcf1955923ed2a270e5a775029fb.

@@ -84,7 +84,7 @@ ASPIRE LIBERO/Robosuite/BEHAVIOR 任务复现。对应证据在
 | --- | --- | --- |
 | 官方源码/协议获取 | 完成 | 可审计固定提交与 runbook |
 | 无服务 harness 单测 | 完成（20 pass / 4 explicit skip） | 部分机制代码可在锁定环境复现 |
-| 本项目真实 SAPIEN integration | 完成（1/1） | 本项目新 provenance gate 可消费真实 evidence |
+| 本项目真实 SAPIEN integration | 完成（1/1） | producer-declared identity equality gate 可消费 runner 自声明字段；非完整 provenance |
 | ASPIRE perception/planning services | 未运行 | 无服务/权重/完整 GPU 拓扑 |
 | 官方 simulator benchmark | 未运行 | 不支持本地成功率比较 |
 | 论文表格/消融独立重算 | 不可完成 | 官方仓库无原始输出，且完整设施未满足 |

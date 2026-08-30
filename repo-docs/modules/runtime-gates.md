@@ -52,12 +52,19 @@ for index in range(total_steps):
 
 `scene_gen/validator.py:validate_resolved_scene` 接 `runtime_evidence` 关键字，转换为 bug-by-bug checks。状态机：fail（任一 check fail）> incomplete（有 not_run）> pass（全 pass）。
 
+在读取任何物理结果前，validator 先做两条 producer-declared identity equality check：证据中的 `scene_id` 必须等于
+`ResolvedSceneSpec.scene_id`，`resolved_scene_sha256` 必须等于当前 resolved scene 的 canonical
+digest。缺字段或未改写的错值都会 fail。它不对整份 evidence、视频、命令或环境签名；producer
+若搬运另一次回放的物理字段并重写这两项声明，validator 仍无法识别。因此这是输入声明一致性门，
+不是不可伪造的 run provenance，也不替代下面的物理门控。完整实现还需要 consumer 重验
+package→run→media manifest。
+
 每物体的门控按 `is_static` 分两种模式：
 
 | Check | 静态物体（`is_static=True`）| 动态物体（`is_static=False`）|
 | --- | --- | --- |
 | translation_drift | ≤ 20 mm | not_applicable |
-| rotation_drift | ≤ 5° | not_applicable |
+| rotation_drift | ≤ 3° | not_applicable |
 | resolved_translation_error | ≤ 20 mm | not_applicable |
 | resolved_rotation_error | ≤ 5° | not_applicable |
 | support_contact | 走 `fixed_static_pose` 模式：`is_static ∧ on_table ∧ support_mode=fixed_static_pose ∧ not_dropped`，否则须 physical_support | 须 `support_contact ∧ target == support_target ∧ contact_fraction ≥ 0.8` |
@@ -79,6 +86,7 @@ for index in range(total_steps):
 | 攻击用例 | 它锁什么 |
 | --- | --- |
 | `test_runtime_validator_rejects_static_contact_free_nested_support` | 静态物体被钉在 nested support 但不实际接触目标，曾经 allowed 的假阳性——现拒 |
+| `test_runtime_validator_requires_each_object_visibility_and_physics` 的四个 identity mutation | 缺失/错误 `scene_id` 或 resolved digest 的运行时证据不能借壳通过 |
 | `test_runtime_validator_rejects_intermittent_nested_contact` | 嵌套源只在终末窗口一部分帧碰 target fraction 仍 ≥ 0.8 → 拒 |
 | `test_runtime_validator_rejects_nested_source_contacting_table` | 嵌套源接触桌子（应是接触 nested target）→ 拒 |
 | `test_static_validator_rejects_edge_placement_even_inside_outer_plate_bounds` | source 中心在 plate 外缘内但 `support_footprint_margin` < 8 mm → 静态就拒 |

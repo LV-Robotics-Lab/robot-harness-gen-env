@@ -5,6 +5,8 @@
 > `self_improving/stage5/`、`scene_gen/` 及对应测试和 `repo-docs/`。
 > 约束：本文件只陈述本地仓库可复核事实；不根据名称猜测 ASPIRE 的实现。
 > 下文的“ASPIRE 接入点”只是待论文与外部代码轨道验证的接口假设，不是 ASPIRE 能力结论。
+> 时间锚：§0–§10 描述研究起点 `732e190` 到实验快照 `1180aef` 的 point-in-time 状态；
+> 后续同分支实现与本研究处置只在 §11 追加，不能倒灌改写基线。
 
 ## 0. 结论先行
 
@@ -17,7 +19,7 @@
    视频互异帧逐项判定。证据：`scene_gen/builder.py:39-71`、
    `scene_gen/builder.py:74-105`、`scene_gen/validator.py:282-315`、
    `scene_gen/validator.py:315-525`。
-2. `self_improving/harness/` 当前是严格的 **schema tranche**，不是可执行 agent harness。
+2. 在研究起点，`self_improving/harness/` 是严格的 **schema tranche**，不是可执行 agent harness。
    它冻结了 14 个公共 schema、运行状态机、artifact 引用和 Text2Env
    compile/replay/validate 边界，但 Registry、handler、MCP adapter 和真实 retry 尚未实现。
    证据：`repo-docs/modules/harness-schema-tranche.md:1-14`、
@@ -84,7 +86,7 @@ Alchedata evaluator 也做了同样分离：`pass_generated_act_evaluate_executi
 | 层 | 当前真实职责 | 已实现的闭环部分 | 明确不拥有的权力 |
 | --- | --- | --- | --- |
 | `scene_gen/` | 受限文本到 resolved scene、包、真实回放与物理 gate | compile、replay、validate | policy 训练、agent repair、promotion orchestration |
-| `self_improving/harness/` | 严格、冻结、可审计的公共类型 | 状态/事件/attempt/artifact/publishability 的形状 | Skill 执行、URI 内容验证、retry controller、MCP |
+| `self_improving/harness/`（研究起点） | 严格、冻结、可审计的公共类型 | 状态/事件/attempt/artifact/publishability 的形状 | Skill 执行、URI 内容验证、retry controller、MCP |
 | `self_improving/stage5/` | designer/critic/orchestrator 原型与 render-in-loop | 有界 placement 修复循环 | 核心物理验收的替代实现 |
 | `self_improving/alchedata/` | collect/train/evaluate/diagnose/transfer 证据、记忆与 promotion gate | 若干任务特定闭环和消融 | 未经匹配实验的通用 self-improvement 结论 |
 
@@ -94,7 +96,7 @@ Alchedata 闭环分别归属上述目录，平台消费者不得绕过 `scene_ge
 
 ## 3. 现有状态机与闭环
 
-### 3.1 公共 Harness：严格记录状态机，但还没有执行引擎
+### 3.1 公共 Harness 基线：严格记录状态机，但还没有执行引擎
 
 `RunState` 的合法生命周期是：
 
@@ -535,3 +537,35 @@ pytest -q -p no:cacheprovider \
 缺失；它不能单独确定 ASPIRE 是否优于当前 baseline。只有外部复现轨道把论文方法映射到 §7
 接口，并按 §8 的 matched protocol 产生 held-out、hash-bound、core-runtime 证据后，才可以回答
 “ASPIRE 是否提升本项目”。
+
+## 11. 后续实验处置（2026-08-31）
+
+本节不改写前面的 point-in-time 审计事实，而是记录同一研究随后如何处理其高风险缺口：
+
+- G3 runtime evidence 声明一致性已在 `795273f` 修复。validator 现在要求 evidence `scene_id` 与
+  `resolved_scene_sha256` 精确匹配当前 `ResolvedSceneSpec`；同一冻结攻击探针从 accuracy 0.20、
+  4/4 unsafe accepts 变为 accuracy 1.00、0/4 unsafe accepts。新的门还消费了一次真实
+  RoboTwin/SAPIEN can-on-plate 回放并通过。该门只比较 producer 自声明字段；搬运别次 payload
+  后重写两字段仍可能过门，因此不是完整 evidence/media/run provenance。
+- G4 pending review 状态已在 `fa9121f` 修复。`pending_visual_review` 现在写独立 review candidate、
+  保留 pending/hold 字段并退出 2；真实 pass 控制仍写 final 并退出 0。冻结探针从 0/5 变为 5/5。
+- G4 的 follow-on 覆盖在 `bd4f64f` 扩到 standalone critic 与 batch aggregate，在 `fda13b8` 扩到
+  legacy candidate-first/pass-only promotion；E1c probe 从 0.625 变为 1.00。默认 static-only
+  另在 `72b35c4` 修复：不跑 smoke/visual 时写 nonfinal candidate 与 `not_run`，E1d 从 2/9 变为
+  9/9。它们都是独立预注册结果，不能回填进原 E1b 的 5/5。
+- G8 reader-facing rotation 阈值已同步为 rotation drift 3°、resolved rotation error 5°。
+- 并发实现轨道在快照后增加了 artifact resolver、callback-driven recorder、compiler、生成资产准入、
+  通用 `SkillRegistry`、PackageStore 与首个 compile adapter；因此“Registry/handler 未实现”只属于
+  研究起点。replay/validate 与 MCP 仍缺。resolver 的 unrestricted `file://` 不是 sandbox；compile
+  adapter 的 catalog check/use mutation 已由 `ef5e29e`/`910ccb1` 冻结并修复为 CAS-only input，但
+  referenced asset payload 仍不是同一 snapshot。生成资产 ledger 还把未运行 settle 的 generation QC 写成 `sapien/pass`，admission 在 solve blocked
+  后不回滚，不能当物理资格或原子 promotion。G5/G6/G7 的多相机 memory 绑定、
+  failure-score 外部效度和检索负迁移仍未由真实 rollout 解决。
+- `595 passed、6 skipped；Harness 350/350 statements、74/74 branches` 只属于 E0–E2 快照
+  `1180aef`。后续并发提交必须用各自当前-HEAD 回归，不得沿用该绿色数字。
+
+E2 只回答一个更窄问题：在六个固定合成契约故障家族的 120 个 held-out cases 中，开发集验证后
+冻结的 trigger-specific memory completion 为 1.00，只看当前 trace 的 bounded action policy 为
+0.50。退化 bootstrap 不支持统计总体 superiority 主张；这既不是物理环境生成成功率，也不是
+LLM 自我学习或论文 ASPIRE 全系统复现。完整边界见
+`final_report.md` 与 `artifacts/heldout_harness_benchmark.json`。

@@ -179,7 +179,9 @@ pending --Stage 1 actor--> stage1-done --Stage 2 script--> done
 
 **[O]** Fix Loop 的 held-out runner 以 `(suite, task, code SHA-256, config SHA-256, exact seeds)` 计算 run identity；不同 identity 不混合，resume 只能继续同一 manifest。manifest 还保存 git commit、每 seed evidence path、exit code、reward、task completion，并原子更新。来源：[validation runner 第 1–10 行](https://github.com/NVlabs/ASPIRE/blob/7ba73d3bcac8f6b6d4a7d67ed4040988f768d282/aspire/sim/scripts/libero/run_fix_loop_validation.py#L1-L10)、[identity 第 32–62 行](https://github.com/NVlabs/ASPIRE/blob/7ba73d3bcac8f6b6d4a7d67ed4040988f768d282/aspire/sim/scripts/libero/run_fix_loop_validation.py#L32-L62)、[manifest 第 148–184 行](https://github.com/NVlabs/ASPIRE/blob/7ba73d3bcac8f6b6d4a7d67ed4040988f768d282/aspire/sim/scripts/libero/run_fix_loop_validation.py#L148-L184)、[per-seed update 第 193–258 行](https://github.com/NVlabs/ASPIRE/blob/7ba73d3bcac8f6b6d4a7d67ed4040988f768d282/aspire/sim/scripts/libero/run_fix_loop_validation.py#L193-L258)。
 
-**[I]** 这一“程序/配置/种子哈希绑定 + 不可变 manifest + skill patch ledger”是 ASPIRE 最直接可迁移到 agent harness 的工程思想；它解决的是证据归属和并行知识写入问题，而不是机器人算法本身。
+**[I]** 这一“程序/配置/种子 identity 冻结 + 原子更新、可续跑的 manifest + skill patch ledger”
+是 ASPIRE 最直接可迁移到 agent harness 的工程思想；它改善实验身份隔离与并行知识写入审计，
+而不是机器人算法本身。manifest bytes 会按 seed 追加结果，并非整体不可变。
 
 ## 5. 训练目标、奖励与验证协议
 
@@ -205,7 +207,10 @@ pending --Stage 1 actor--> stage1-done --Stage 2 script--> done
 | BEHAVIOR-1K | seeds 26–35 | 未另述 | seeds 1–25；incremental block execution | [Figure 4](https://arxiv.org/html/2607.00272#S3.F4)、[§3.3](https://arxiv.org/html/2607.00272#S3.SS3) |
 | LIBERO-Pro Long zero-shot | skill 来源为 LIBERO-90 的 N 个任务 | 无 task-specific debugging/retry/library update | held-out long-horizon tasks；每任务一个程序 | [§3.5](https://arxiv.org/html/2607.00272#S3.SS5)、[Table 5](https://arxiv.org/html/2607.00272#A3.T5) |
 
-**[F]** CaP-Agent0 会为每个 evaluation seed 重新生成程序并使用 test-time reasoning/retries；ASPIRE 在 LIBERO-Pro/Robosuite 用一个生成程序跨所有 held-out seeds。这一比较协议对 ASPIRE 更严格，但也表示两者计算分配不同，不能把成功率差异解释为“等推理预算下”的结论。来源：[§3.3](https://arxiv.org/html/2607.00272#S3.SS3)。
+**[F]** CaP-Agent0 会为每个 evaluation seed 重新生成程序并使用 test-time reasoning/retries；ASPIRE 在 LIBERO-Pro/Robosuite 用一个生成程序跨所有 held-out seeds。来源：[§3.3](https://arxiv.org/html/2607.00272#S3.SS3)。
+
+**[I]** 前者得到 per-seed test-time compute，后者复用单一程序；可把后者理解为更少 test-time
+适配，但两者计算分配不同，不能把成功率差异解释为“等推理预算下”的结论。
 
 **[F]** real-robot evaluation 的问题不是直接部署 simulation policy，而是把 simulation skill 作为 in-context guidance，仍由 real-robot coding agent 在不同 embodiment/API 上执行与调试；token 计到第一次成功，之后对生成程序做 20 次评估。来源：[§3.6](https://arxiv.org/html/2607.00272#S3.SS6)、[Table 1](https://arxiv.org/html/2607.00272#S3.T1)。
 
@@ -259,9 +264,11 @@ pending --Stage 1 actor--> stage1-done --Stage 2 script--> done
 
 **[O]** 这三个总数可由 Appendix D 两个 axis 的 overall mean 算出：base `(0.20+0.09)/2=0.145`，engine `(0.62+0.61)/2=0.615`，final `(0.77+0.67)/2=0.72`。
 
-**[O]** 但 Appendix D 对中间项的精确定义是“Robot Execution Engine repaired program（Execution engine + skill library）”，而 base 是带 15 个示例程序的 zero-shot Claude；因此 14%→62% 是 trace-rich repair/skill package 的联合效应，不能从该消融单独识别“trace logger 本身”的因果增益。来源仍为 [Table 7 caption](https://arxiv.org/html/2607.00272#A4.T7) 与 [Table 8 caption](https://arxiv.org/html/2607.00272#A4.T8)。
+**[O]** 但 Appendix D 对中间项的精确定义是“Robot Execution Engine repaired program（Execution engine + skill library）”，而 base 是带 15 个示例程序的 zero-shot Claude；因此 14%→62% 是 trace-rich repair 与 skill library 联合路径的效应，不能从该消融单独识别“trace logger 本身”的因果增益。来源仍为 [Table 7 caption](https://arxiv.org/html/2607.00272#A4.T7) 与 [Table 8 caption](https://arxiv.org/html/2607.00272#A4.T8)。
 
-**[F]** evo 并不逐轮单调；例如 Bowl→plate 在 Table 9 为 0.62、0.60、0.60、0.18、0.86，说明种群搜索需要保留历史 best，而不能把“最新候选”当“当前最优”。来源：[Table 9](https://arxiv.org/html/2607.00272#A4.T9)。
+**[F]** evo 并不逐轮单调；例如 Bowl→plate 在 Table 9 为 0.62、0.60、0.60、0.18、0.86。来源：[Table 9](https://arxiv.org/html/2607.00272#A4.T9)。
+
+**[I]** 对移植设计，这支持显式保留历史 best，而不是把“最新候选”自动当“当前最优”。
 
 ### 6.5 Skill library 的 zero-shot scaling
 
@@ -286,7 +293,7 @@ pending --Stage 1 actor--> stage1-done --Stage 2 script--> done
 
 来源：[Table 1](https://arxiv.org/html/2607.00272#S3.T1)。
 
-**[F]** bowl 任务主要降低调试成本而没有提高最终成功率；can 同时显著降 token 并提高成功；drawer 在无 skill 条件下没有找到成功程序，有 skill 后达到 11/20。论文准确措辞是“initial evidence”，样本只覆盖 3 个被选择的 skill/任务，不足以推出普遍 sim-to-real transfer。
+**[F]** bowl 任务主要降低调试成本而没有提高最终成功率；can 的表内 token 大幅下降并提高成功；drawer 在无 skill 条件下没有找到成功程序，有 skill 后达到 11/20。论文准确措辞是“initial evidence”，样本只覆盖 3 个被选择的 skill/任务，不足以推出普遍 sim-to-real transfer。
 
 ## 7. 论文明确承认的限制
 
@@ -295,7 +302,7 @@ pending --Stage 1 actor--> stage1-done --Stage 2 script--> done
 1. **未闭合真实世界 lifelong loop**：真实部署仍缺 robust success detection、safe reset、safety monitoring 与 calibration maintenance。
 2. **依赖 frontier LLM**：simulation 使用冻结的 Claude Opus 4.6；未验证小/弱模型能否维持相同 debug loop。
 3. **表达能力受 predefined primitive API 限制**：安全、可调试性更高，但 primitive 不包含的 sensing/control/interaction 无法自然表达。
-4. **长期记忆管理未解决**：skill 会 stale、过度具体、重复或误导，需要 retrieval、pruning、ranking、re-validation。
+4. **长期记忆管理未解决**：skill 可能 stale、过度具体、重复或误导，需要 retrieval、pruning、ranking、re-validation。
 5. **计算昂贵**：每任务需要大量 LLM calls 与 simulator/robot rollouts；扩大任务集需要更便宜推理或更高 sample efficiency。
 
 ## 8. 公开实现的复现审计
@@ -305,7 +312,8 @@ pending --Stage 1 actor--> stage1-done --Stage 2 script--> done
 ### 8.1 强项
 
 - 安装说明固定 suite-specific venv、submodule revisions、gated weights、感知服务、GPU topology，并要求 paper-scale launch 前做 preflight。来源：[simulation README](https://github.com/NVlabs/ASPIRE/blob/7ba73d3bcac8f6b6d4a7d67ed4040988f768d282/aspire/sim/README.md)、[Quick Start 第 54–71 行](https://github.com/NVlabs/ASPIRE/blob/7ba73d3bcac8f6b6d4a7d67ed4040988f768d282/aspire/sim/.claude/libero/fix-loop/QUICKSTART.md#L54-L71)。
-- 开发/held-out seed lockout 在 agent prompts、runner 参数和 immutable manifest 三处重复约束。
+- 开发/held-out seed lockout 在 agent prompts、runner 参数和 identity-frozen、原子更新的 manifest
+  三处重复约束。
 - trial 证据细到 primitive，最终评估又用 code/config/seed hash 绑定；共享 skill 更新有 serialized writer 和 exact patch ledger。
 - evaluator 保存每个候选的 per-seed result、pass rate、mean reward、error count 与跨候选 leaderboard。来源：[evosearch evaluator 第 559–609 行](https://github.com/NVlabs/ASPIRE/blob/7ba73d3bcac8f6b6d4a7d67ed4040988f768d282/aspire/sim/scripts/libero/evosearch_eval.py#L559-L609)。
 
@@ -326,12 +334,12 @@ pending --Stage 1 actor--> stage1-done --Stage 2 script--> done
 1. **Trace-granularity hypothesis**：若当前失败反馈仅到 scene/episode 级，把证据提升到 primitive 调用级应减少错误修复和达到首个通过程序所需的迭代数。最小消融是 `coarse outcome` 对 `outcome + structured primitive traces`，固定 agent、任务、预算与种子。
 2. **Validated-repair memory hypothesis**：只有同时记录 failure signature、applicability guard、repair、跨 seed 证据与 negative cases 的 skill，才有机会跨任务提高 sample efficiency；仅保存成功脚本可能造成更强负迁移。
 3. **Serialized-admission hypothesis**：并行 actors 负责产出 findings、单 writer 负责 library admission，可在不共享完整历史的前提下降低写冲突和上下文成本；promotion patch ledger 应成为可回滚/可审计的知识 checkpoint。
-4. **Evidence-binding hypothesis**：对 resolved task/program、sim config、seed set、validator version 和 runtime evidence 建立统一内容哈希，可防止“程序变了但沿用旧成功证据”。ASPIRE 的 held-out manifest 已验证这类工程模式可落地。
+4. **Evidence-binding hypothesis**：对 resolved task/program、sim config、seed set、validator version 和 runtime evidence 建立统一内容哈希，可防止“程序变了但沿用旧成功证据”。ASPIRE 的 held-out manifest 只为 code/config/suite/task/seed identity 冻结与 evidence path 记录提供部分工程先例；它没有实现这里提出的 validator/runtime-evidence 统一内容绑定。
 5. **Diverse-program-search hypothesis**：当失败能被可靠归因且 validator 可信时，K 个机制不同的候选优于对单一路线连续微调；若 validator 有 false positive，evolutionary search 反而会放大 reward hacking。因此必须先强化验证器，再扩大搜索。
 6. **Memory-scaling caveat**：总库规模不是单调收益变量。检索质量、冲突解析、失效重验证和 negative skill 同样重要；应同时报告 aggregate transfer、per-task regressions 和 retrieval precision。
 7. **Do-not-copy hypothesis**：ASPIRE 的 full-import in-process executor 不应原样移植到面向不可信 agent 的 harness；应保留 trace/provenance 思想，同时使用真正的进程/容器隔离、资源限额、网络/文件权限与强制 API capability boundary。
 
-**[U]** ASPIRE 官方材料没有证明它能直接提升“仿真环境生成”的物理正确性、场景编译器的 deterministic validity、support/containment contract 或 world-model 参数学习。它直接支持的结论是：在既有 simulator、task success checker 和 predefined robot APIs 之上，agentic debugging、程序搜索和经验库能提高机器人程序鲁棒性。能否帮助本项目的 robust environment generation，必须把“生成器/validator failure trace → repair skill → held-out scene success”具体化后再做本地实验。
+**[U]** ASPIRE 官方材料没有证明它能直接提升“仿真环境生成”的物理正确性、场景编译器的 deterministic validity、support/containment contract 或 world-model 参数学习。作者报告的结果支持：在既有 simulator、task success checker 和 predefined robot APIs 之上，agentic debugging、程序搜索和经验库提高了其实验中的机器人程序成功率。能否帮助本项目的 robust environment generation，必须把“生成器/validator failure trace → repair skill → held-out scene success”具体化后再做本地实验。
 
 ## 10. 本次研究操作留痕
 

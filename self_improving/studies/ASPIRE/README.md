@@ -19,13 +19,18 @@ The study follows four non-negotiable rules:
 
 ## Study map
 
+- `final_report.md` — integrated Chinese conclusion, evidence table, retained
+  changes, claim boundaries, and recommended next architecture.
 - `research_log.md` — chronological decisions, commands, observations, and
   deviations; this is the main audit trail.
 - `preflight.md` — ASPIRE upstream reproduction requirements versus this host.
 - `source_receipt.json` — machine-readable upstream source and local baseline
   receipt.
 - `paper_and_official_sources.md` — primary-source paper/project/code reading.
+- `upstream_source_audit.md` — pinned-code harness and security/reliability audit.
 - `current_harness_audit.md` — current-project harness boundary and gap audit.
+- `reproduction_report.md` — exact upstream/local reproduction boundary.
+- `experiment_protocol.md` — preregistered hypotheses, metrics, and keep rules.
 - `results.tsv` — autoresearch experiment ledger.
 - `experiments/` — benchmark code, fixtures, and experiment descriptions.
 - `artifacts/` — generated, reviewable result bundles.
@@ -33,10 +38,17 @@ The study follows four non-negotiable rules:
 
 ## Current status
 
-Research is in progress. Full paper-scale LIBERO-Pro reproduction is not being
-claimed: the official protocol requires eight GPUs, gated perception weights,
-three services, and dedicated environments, while this host currently exposes
-one GPU and none of those services or environments. The study continues with
-upstream source/unit reproduction and a project-native, held-out harness
-experiment rather than weakening or silently changing the official protocol.
+Research is complete for the preregistered local scope. The retained outcomes
+are producer-declared runtime scene/digest equality, nonfinal pending-review and
+static-only semantics, and a development-validated trigger-memory candidate
+that reached mHRC 1.00 versus 0.50 for reactive/no-memory on 120 fixed synthetic
+fault cases. One fresh RoboTwin/SAPIEN replay passed the declared-equality gates,
+but no matched physical rollout
+experiment tested memory-driven scene repair; therefore no simulator-robustness,
+policy-learning, or paper-scale superiority claim is made.
 
+Full LIBERO-Pro reproduction remains an explicit infrastructure boundary: the
+official protocol requires eight GPUs, gated perception weights, three services,
+dedicated environments, fixed splits, and model access, while this host exposes
+one GPU and lacks that complete identity. The unchanged pinned no-service test
+subset reproduced as 20 passed / 4 explicit skips in a locked environment.
