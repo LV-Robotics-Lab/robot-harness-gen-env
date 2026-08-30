@@ -126,6 +126,21 @@ that `--allow-pending-visual` collects review candidates rather than publishing
 them.  The older `run_placement_pipeline.py` artifact naming is audited
 separately; it is not silently treated as covered unless a direct test is added.
 
+## E1d — default static-only state integrity
+
+Protocol extension frozen after source review found that the default
+no-`--run-smoke` path called the final-pass helper.  Run the unchanged main CLI
+with a deterministic prompt/catalog and no smoke.  It may return exit 0 to mean
+the static stage completed, and may retain the existing
+`pass_static_scene_module` compatibility status, but it must write an explicit
+nonfinal candidate: no `final_placement` key/file, stage
+`static_scene_candidate`, decision `render_next`, and smoke/visual fields
+`not_run` rather than pass.
+
+Keep only if all nine frozen decisions pass, visual-pass/pending controls remain
+correct, the focused Stage 5 suite passes, and docs call static-only a nonphysical
+intermediate result.
+
 ## E2 — held-out diagnosis and validated-memory benchmark
 
 ### Failure families
