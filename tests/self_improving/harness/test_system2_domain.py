@@ -356,6 +356,22 @@ def test_apply_state_delta_rejects_blind_overwrite() -> None:
         apply_state_delta(state, delta)
 
 
+def test_apply_state_delta_rechecks_retained_state_after_nested_mutation() -> None:
+    original = _fact("scene.pose", {"z": 0.1})
+    state = build_world_state((original,), as_of=_T0)
+    assert isinstance(state.facts[0].value, dict)
+    state.facts[0].value["z"] = 9.9
+    delta = StateDelta(
+        base_state_sha256=state.state_sha256,
+        effective_at=_T0 + timedelta(seconds=1),
+        receipt=_receipt(),
+        mutations=(),
+    )
+
+    with pytest.raises(ValueError, match="integrity"):
+        apply_state_delta(state, delta)
+
+
 def test_tool_result_carries_typed_delta_receipt_diagnostics_and_fresh_observation() -> None:
     state = build_world_state((), as_of=_T0)
     observation = _fact(

@@ -238,9 +238,13 @@ class StateDelta(HarnessModel):
 def apply_state_delta(state: TrustedWorldState, delta: StateDelta) -> TrustedWorldState:
     """Apply a delta only when every prior fact identity still matches."""
 
-    if delta.base_state_sha256 != state.state_sha256:
+    try:
+        trusted_state = TrustedWorldState.model_validate(state.model_dump(mode="python"))
+    except ValueError as exc:
+        raise ValueError("current world state failed its canonical integrity check") from exc
+    if delta.base_state_sha256 != trusted_state.state_sha256:
         raise ValueError("state delta base does not match current world state")
-    current = {fact.key: fact for fact in state.facts}
+    current = {fact.key: fact for fact in trusted_state.facts}
     for mutation in delta.mutations:
         existing = current.get(mutation.key)
         if mutation.expected_fact_sha256 is None:
@@ -256,8 +260,8 @@ def apply_state_delta(state: TrustedWorldState, delta: StateDelta) -> TrustedWor
     return _build_world_state_version(
         tuple(current.values()),
         as_of=delta.effective_at,
-        version=state.version + 1,
-        predecessor_state_sha256=state.state_sha256,
+        version=trusted_state.version + 1,
+        predecessor_state_sha256=trusted_state.state_sha256,
     )
 
 
