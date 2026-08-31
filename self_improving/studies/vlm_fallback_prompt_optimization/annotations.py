@@ -9,9 +9,15 @@ operator.  This module never runs a model or opens sealed test gold.
 from __future__ import annotations
 
 import argparse
+import ctypes
+import errno
 import hashlib
 import hmac
 import json
+import os
+import shutil
+import stat
+import tempfile
 from dataclasses import asdict, dataclass
 from decimal import ROUND_HALF_UP, Decimal, localcontext
 from fractions import Fraction
@@ -20,13 +26,13 @@ from typing import Any, Mapping, Sequence
 
 from self_improving.studies.vlm_fallback_prompt_optimization import protocol
 
-ASSIGNMENT_SCHEMA = "vlm_fallback.blinded_assignment.v1"
+ASSIGNMENT_SCHEMA = "vlm_fallback.blinded_assignment.v2"
 RATING_SCHEMA = "vlm_fallback.blinded_rating.v1"
-PRIVATE_MAP_SCHEMA = "vlm_fallback.private_assignment_map.v1"
-ADJUDICATION_MAP_SCHEMA = "vlm_fallback.private_adjudication_map.v1"
+PRIVATE_MAP_SCHEMA = "vlm_fallback.private_assignment_map.v2"
+ADJUDICATION_MAP_SCHEMA = "vlm_fallback.private_adjudication_map.v2"
 TRAIN_GOLD_SCHEMA = "vlm_fallback.visible_train_gold.v1"
 DEV_GOLD_SCHEMA = "vlm_fallback.visible_dev_gold.v1"
-TEST_PAYLOAD_SCHEMA = "vlm_fallback.test_annotation_payload.v1"
+TEST_PAYLOAD_SCHEMA = "vlm_fallback.test_annotation_payload.v2"
 GOLD_SEAL_SCHEMA = "vlm_fallback.visible_gold_seal.v1"
 SEALED_MANIFEST_SCHEMA = "vlm_fallback.sealed_test_annotation_manifest.v2"
 FROZEN_SPEC_SHA256 = "ad19d38204f20c42d8070785994fe749b8db41364e002e382e938cb92ae5bf6c"
@@ -37,6 +43,14 @@ IMAGE_SUFFIXES = frozenset({".bmp", ".jpeg", ".jpg", ".png", ".webp"})
 
 class AnnotationIntegrityError(RuntimeError):
     """Raised when blinding, response completeness, or binding is invalid."""
+
+
+class _PublicationRollbackError(OSError):
+    """Raised when a drifted publication cannot be removed through its pinned parent."""
+
+    def __init__(self, relocated_parent: str) -> None:
+        super().__init__(errno.EIO, "atomic publication rollback failed", relocated_parent)
+        self.relocated_parent = relocated_parent
 
 
 @dataclass(frozen=True)
@@ -56,6 +70,10 @@ class AdjudicationReceipt:
 @dataclass(frozen=True)
 class SealReceipt:
     disagreement_count: int
+    annotation_source_sha256: str
+    protocol_source_sha256: str
+    implementation_sha256: str
+    train_gold_manifest_sha256: str
     dev_gold_manifest_sha256: str
     test_annotation_payload_sha256: str
     annotation_manifest_sha256: str
@@ -70,11 +88,212 @@ def sha256_bytes(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
-def _tool_source_sha256() -> str:
+def _pinned_parent_location(parent_fd: int) -> str:
+    try:
+        return os.readlink(f"/proc/self/fd/{parent_fd}")
+    except OSError:
+        return "<unresolved-pinned-output-parent>"
+
+
+def _open_pinned_output_parent(parent: Path) -> int:
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    parent_fd = os.open(parent, flags)
+    try:
+        current = os.stat(parent, follow_symlinks=False)
+        pinned = os.fstat(parent_fd)
+        if (current.st_dev, current.st_ino) != (pinned.st_dev, pinned.st_ino):
+            raise OSError(errno.ESTALE, "sealed output parent changed while opening")
+    except BaseException:
+        try:
+            os.close(parent_fd)
+        except OSError:
+            pass
+        raise
+    return parent_fd
+
+
+def _rename_directory_noreplace(
+    source: Path,
+    destination: Path,
+    *,
+    parent_fd: int | None = None,
+) -> None:
+    """Atomically publish one sibling directory without replacing a peer."""
+
+    if (
+        source.parent != destination.parent
+        or source.name in {"", ".", ".."}
+        or destination.name
+        in {
+            "",
+            ".",
+            "..",
+        }
+    ):
+        raise OSError(errno.EINVAL, "atomic publication paths are invalid")
+    try:
+        libc = ctypes.CDLL(None, use_errno=True)
+        renameat2 = libc.renameat2
+    except (AttributeError, OSError) as error:
+        raise OSError(errno.ENOSYS, "renameat2(RENAME_NOREPLACE) is unavailable") from error
+    renameat2.argtypes = (
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_uint,
+    )
+    renameat2.restype = ctypes.c_int
+    owns_parent_fd = parent_fd is None
+    if parent_fd is None:
+        parent_fd = _open_pinned_output_parent(source.parent)
+    try:
+        before = os.stat(source.parent, follow_symlinks=False)
+        pinned = os.fstat(parent_fd)
+        if (before.st_dev, before.st_ino) != (pinned.st_dev, pinned.st_ino):
+            raise OSError(errno.ESTALE, "atomic publication parent changed")
+        ctypes.set_errno(0)
+        result = renameat2(
+            parent_fd,
+            os.fsencode(source.name),
+            parent_fd,
+            os.fsencode(destination.name),
+            1,  # RENAME_NOREPLACE
+        )
+        if result != 0:
+            error_number = ctypes.get_errno() or errno.EIO
+            raise OSError(error_number, os.strerror(error_number), os.fspath(destination))
+        try:
+            after = os.stat(source.parent, follow_symlinks=False)
+        except OSError as error:
+            try:
+                shutil.rmtree(destination.name, dir_fd=parent_fd)
+            except OSError as cleanup_error:
+                raise _PublicationRollbackError(
+                    _pinned_parent_location(parent_fd)
+                ) from cleanup_error
+            raise OSError(
+                errno.ESTALE,
+                "atomic publication parent changed",
+                os.fspath(destination),
+            ) from error
+        if (after.st_dev, after.st_ino) != (pinned.st_dev, pinned.st_ino):
+            try:
+                shutil.rmtree(destination.name, dir_fd=parent_fd)
+            except OSError as cleanup_error:
+                raise _PublicationRollbackError(
+                    _pinned_parent_location(parent_fd)
+                ) from cleanup_error
+            raise OSError(
+                errno.ESTALE,
+                "atomic publication parent changed",
+                os.fspath(destination),
+            )
+    finally:
+        if owns_parent_fd:
+            # Once renameat2 has committed, a close error cannot safely turn
+            # the operation back into a reported failure. The descriptor is no
+            # longer used, so preserve the publication outcome.
+            try:
+                os.close(parent_fd)
+            except OSError:
+                pass
+
+
+def _annotation_source_sha256() -> str:
     try:
         return sha256_bytes(Path(__file__).resolve(strict=True).read_bytes())
     except OSError as error:
         raise AnnotationIntegrityError("annotation tool source cannot be hashed") from error
+
+
+def _require_private_output_parent(parent: Path) -> None:
+    try:
+        metadata = os.stat(parent, follow_symlinks=False)
+    except OSError as error:
+        raise AnnotationIntegrityError("sealed output parent cannot be inspected") from error
+    if (
+        not stat.S_ISDIR(metadata.st_mode)
+        or metadata.st_uid != os.geteuid()
+        or stat.S_IMODE(metadata.st_mode) & 0o077
+    ):
+        raise AnnotationIntegrityError(
+            "sealed output parent must be an owner-only directory owned by this process user"
+        )
+    for ancestor in parent.parents:
+        try:
+            ancestor_metadata = os.stat(ancestor, follow_symlinks=False)
+        except OSError as error:
+            raise AnnotationIntegrityError(
+                "sealed output parent ancestry cannot be inspected"
+            ) from error
+        ancestor_mode = stat.S_IMODE(ancestor_metadata.st_mode)
+        if ancestor_metadata.st_uid not in {0, os.geteuid()}:
+            raise AnnotationIntegrityError(
+                "sealed output parent has an ancestor with an untrusted owner"
+            )
+        if not stat.S_ISDIR(ancestor_metadata.st_mode) or (
+            ancestor_mode & 0o022 and not ancestor_mode & stat.S_ISVTX
+        ):
+            raise AnnotationIntegrityError(
+                "sealed output parent has an untrusted writable ancestor"
+            )
+
+
+def _pinned_parent_matches_path(parent_fd: int, parent: Path) -> bool:
+    try:
+        current = os.stat(parent, follow_symlinks=False)
+        pinned = os.fstat(parent_fd)
+    except OSError:
+        return False
+    return (current.st_dev, current.st_ino) == (pinned.st_dev, pinned.st_ino)
+
+
+def _cleanup_pinned_staging(parent_fd: int, parent: Path, staging_name: str) -> None:
+    try:
+        shutil.rmtree(staging_name, dir_fd=parent_fd)
+    except FileNotFoundError:
+        return
+    except OSError as error:
+        if not _pinned_parent_matches_path(parent_fd, parent):
+            raise AnnotationIntegrityError(
+                "sealed output rollback failed after publication parent drift; "
+                f"quarantine required at {_pinned_parent_location(parent_fd)}"
+            ) from error
+        raise AnnotationIntegrityError("sealed output staging cleanup failed") from error
+
+
+def _close_fd_preserving_outcome(parent_fd: int | None) -> None:
+    if parent_fd is None:
+        return
+    try:
+        os.close(parent_fd)
+    except OSError:
+        pass
+
+
+def _protocol_source_sha256() -> str:
+    try:
+        source = Path(protocol.__file__).resolve(strict=True)
+        return sha256_bytes(source.read_bytes())
+    except (OSError, TypeError) as error:
+        raise AnnotationIntegrityError("annotation protocol source cannot be hashed") from error
+
+
+def _implementation_identity() -> dict[str, str]:
+    annotation_sha = _annotation_source_sha256()
+    protocol_sha = _protocol_source_sha256()
+    identity = {
+        "annotation_source_sha256": annotation_sha,
+        "protocol_source_sha256": protocol_sha,
+    }
+    return {
+        "annotation_source_sha256": annotation_sha,
+        "protocol_source_sha256": protocol_sha,
+        "implementation_sha256": sha256_bytes(canonical_json_bytes(identity)),
+    }
 
 
 def _require_blind_key(blind_key: bytes) -> None:
@@ -220,8 +439,9 @@ def _load_authenticated_mapping(
         raise AnnotationIntegrityError("private mapping schema mismatch")
     if mapping.get("blind_key_sha256") != sha256_bytes(blind_key):
         raise AnnotationIntegrityError("private mapping blind key mismatch")
-    if mapping.get("tool_source_sha256") != _tool_source_sha256():
-        raise AnnotationIntegrityError("annotation tool source digest mismatch")
+    implementation_identity = _implementation_identity()
+    if any(mapping.get(field) != expected for field, expected in implementation_identity.items()):
+        raise AnnotationIntegrityError("annotation implementation source digest mismatch")
     supplied = mapping.get("mapping_hmac_sha256")
     unsigned = dict(mapping)
     unsigned.pop("mapping_hmac_sha256", None)
@@ -292,7 +512,7 @@ def export_blinded_assignments(
 
     public_root.mkdir(parents=True, mode=0o755)
     contracts = _annotation_contract_digests(spec)
-    tool_source_sha256 = _tool_source_sha256()
+    implementation_identity = _implementation_identity()
     assignment_digests: dict[str, str] = {}
     mapping_entries: list[dict[str, Any]] = []
     by_case = {item["case_id"]: item for item in planned}
@@ -335,7 +555,7 @@ def export_blinded_assignments(
             "schema_version": ASSIGNMENT_SCHEMA,
             "study_id": spec["study_id"],
             "spec_sha256": spec_sha256,
-            "tool_source_sha256": tool_source_sha256,
+            **implementation_identity,
             "assignment_id": assignment_id,
             "rater_slot": slot,
             "label_contract_sha256": contracts["label_contract_sha256"],
@@ -386,7 +606,7 @@ def export_blinded_assignments(
         "study_id": spec["study_id"],
         "spec_sha256": spec_sha256,
         "blind_key_sha256": sha256_bytes(blind_key),
-        "tool_source_sha256": tool_source_sha256,
+        **implementation_identity,
         **contracts,
         "checks": list(checks),
         "statuses": list(statuses),
@@ -412,6 +632,49 @@ def _load_assignment(
     ):
         raise AnnotationIntegrityError("assignment contract mismatch")
     return assignment, raw
+
+
+def _verify_views_under_root(*, assignment_root: Path, assignment: Mapping[str, Any]) -> None:
+    try:
+        root = assignment_root.resolve(strict=True)
+    except OSError as error:
+        raise AnnotationIntegrityError("assignment root cannot be read") from error
+    items = assignment.get("items")
+    if not isinstance(items, list):
+        raise AnnotationIntegrityError("assignment items are invalid")
+    for item in items:
+        if not isinstance(item, Mapping) or not isinstance(item.get("views"), list):
+            raise AnnotationIntegrityError("assignment views are invalid")
+        for view in item["views"]:
+            if not isinstance(view, Mapping):
+                raise AnnotationIntegrityError("assignment view is invalid")
+            raw_path = view.get("path")
+            if not isinstance(raw_path, str):
+                raise AnnotationIntegrityError("assignment view path is invalid")
+            relative = PurePosixPath(raw_path)
+            if relative.is_absolute() or ".." in relative.parts:
+                raise AnnotationIntegrityError("assignment view path is unsafe")
+            try:
+                source = (root / Path(*relative.parts)).resolve(strict=True)
+            except OSError as error:
+                raise AnnotationIntegrityError("assignment view cannot be read") from error
+            if not source.is_relative_to(root) or not source.is_file():
+                raise AnnotationIntegrityError("assignment view escapes public pack")
+            try:
+                data = source.read_bytes()
+            except OSError as error:
+                raise AnnotationIntegrityError("assignment view cannot be read") from error
+            if sha256_bytes(data) != view.get("sha256") or len(data) != view.get("size_bytes"):
+                raise AnnotationIntegrityError("assignment view digest mismatch")
+
+
+def _verify_assignment_views(
+    *, public_root: Path, slot: str, assignment: Mapping[str, Any]
+) -> None:
+    _verify_views_under_root(
+        assignment_root=public_root / _assignment_directory(slot),
+        assignment=assignment,
+    )
 
 
 def _validate_rating(
@@ -470,6 +733,11 @@ def _load_bound_rating_record(
         public_root=public_root,
         slot=rater_slot,
         expected_sha256=assignment_sha,
+    )
+    _verify_assignment_views(
+        public_root=public_root,
+        slot=rater_slot,
+        assignment=assignment,
     )
     expected_checks = {
         item["item_id"]: tuple(item["checks"])
@@ -627,7 +895,7 @@ def prepare_adjudication(
         "schema_version": ASSIGNMENT_SCHEMA,
         "study_id": mapping["study_id"],
         "spec_sha256": mapping["spec_sha256"],
-        "tool_source_sha256": _tool_source_sha256(),
+        **_implementation_identity(),
         "assignment_id": _blind_digest(blind_key, STUDY_ID, "adjudicator", "assignment"),
         "rater_slot": "adjudicator",
         "label_contract_sha256": mapping["label_contract_sha256"],
@@ -661,7 +929,7 @@ def prepare_adjudication(
         "study_id": mapping["study_id"],
         "spec_sha256": mapping["spec_sha256"],
         "blind_key_sha256": sha256_bytes(blind_key),
-        "tool_source_sha256": _tool_source_sha256(),
+        **_implementation_identity(),
         "parent_mapping_sha256": sha256_bytes(mapping_raw),
         "assignment_sha256": assignment_sha,
         "rater_1_rating_sha256": first_rating_sha,
@@ -708,6 +976,10 @@ def _load_adjudication_ratings(
     assignment_raw = (adjudication_root / "assignment.json").read_bytes()
     if sha256_bytes(assignment_raw) != adj_map.get("assignment_sha256"):
         raise AnnotationIntegrityError("adjudication assignment digest mismatch")
+    _verify_views_under_root(
+        assignment_root=adjudication_root,
+        assignment=assignment,
+    )
     expected = {
         item["item_id"]: tuple(item["checks"])
         for item in assignment.get("items", [])
@@ -746,7 +1018,8 @@ def _agreement_report(
     matching = sum(
         first[case_id][check] == second[case_id][check] for case_id in cases for check in checks
     )
-    kappas = {}
+    kappas: dict[str, str | None] = {}
+    undefined_reasons: dict[str, str] = {}
     for check in checks:
         agreement = sum(first[case][check] == second[case][check] for case in cases)
         observed = Fraction(agreement, len(cases))
@@ -759,14 +1032,16 @@ def _agreement_report(
             for status in statuses
         )
         if expected == 1:
-            kappa = Fraction(1 if observed == 1 else 0, 1)
+            kappas[check] = None
+            undefined_reasons[check] = "expected_agreement_is_one"
         else:
             kappa = (observed - expected) / (1 - expected)
-        kappas[check] = _decimal_fraction(kappa)
+            kappas[check] = _decimal_fraction(kappa)
     return {
         "raw_agreement": _decimal_fraction(Fraction(matching, total)),
         "disagreement_count": total - matching,
         "cohen_kappa_per_check": kappas,
+        "cohen_kappa_undefined_reason_per_check": undefined_reasons,
     }
 
 
@@ -787,6 +1062,54 @@ def _gold_manifest(
     }
 
 
+def _validate_seal_output_isolated(
+    *,
+    public_root: Path,
+    output_root: Path,
+    adjudication_root: Path | None,
+) -> Path:
+    try:
+        public_lexical = public_root.expanduser().absolute()
+        output_lexical = output_root.expanduser().absolute()
+        adjudication_lexical = (
+            adjudication_root.expanduser().absolute() if adjudication_root is not None else None
+        )
+        public = public_root.expanduser().resolve(strict=True)
+        adjudication = (
+            adjudication_root.expanduser().resolve(strict=True)
+            if adjudication_root is not None
+            else None
+        )
+        output_prefixes = (output_lexical, *output_lexical.parents)
+        resolved_output_prefixes = tuple(prefix.resolve(strict=False) for prefix in output_prefixes)
+    except (OSError, RuntimeError) as error:
+        raise AnnotationIntegrityError("sealed output path cannot be resolved") from error
+
+    def enters_tree(*, lexical: Path, resolved: Path) -> bool:
+        return any(
+            prefix == lexical or prefix.is_relative_to(lexical) for prefix in output_prefixes
+        ) or any(
+            prefix == resolved or prefix.is_relative_to(resolved)
+            for prefix in resolved_output_prefixes
+        )
+
+    if enters_tree(lexical=public_lexical, resolved=public):
+        raise AnnotationIntegrityError(
+            "sealed output must remain outside the public assignment tree"
+        )
+    if (
+        adjudication is not None
+        and adjudication_lexical is not None
+        and enters_tree(lexical=adjudication_lexical, resolved=adjudication)
+    ):
+        raise AnnotationIntegrityError(
+            "sealed output must remain outside the adjudication assignment tree"
+        )
+    if output_root.is_symlink() or output_lexical.exists():
+        raise AnnotationIntegrityError("sealed annotation output already exists")
+    return resolved_output_prefixes[0]
+
+
 def seal_annotations(
     *,
     private_map_path: Path,
@@ -805,8 +1128,11 @@ def seal_annotations(
     keep the output root outside model-visible inputs until prompt freeze.
     """
 
-    if output_root.exists():
-        raise AnnotationIntegrityError("sealed annotation output already exists")
+    output_root = _validate_seal_output_isolated(
+        public_root=public_root,
+        output_root=output_root,
+        adjudication_root=adjudication_root,
+    )
     mapping, mapping_raw = _load_authenticated_mapping(
         private_map_path, blind_key, schema=PRIVATE_MAP_SCHEMA
     )
@@ -879,45 +1205,160 @@ def seal_annotations(
             "adjudication_rating_sha256": adjudication_rating_sha,
         }
     )
-    output_root.mkdir(parents=True, mode=0o700)
-    output_root.chmod(0o700)
-    train = _gold_manifest(schema=TRAIN_GOLD_SCHEMA, mapping=mapping, rows=rows_by_split["train"])
-    dev = _gold_manifest(schema=DEV_GOLD_SCHEMA, mapping=mapping, rows=rows_by_split["dev"])
-    test_payload = {
-        **_gold_manifest(schema=TEST_PAYLOAD_SCHEMA, mapping=mapping, rows=rows_by_split["test"]),
-        "tool_source_sha256": mapping["tool_source_sha256"],
-        "agreement": agreement,
-    }
-    _canonical_file(output_root / "train_gold_manifest.json", train, private=True)
-    dev_sha = _canonical_file(output_root / "dev_gold_manifest.json", dev, private=True)
-    test_sha = _canonical_file(
-        output_root / "test_annotation_payload.json", test_payload, private=True
-    )
-    candidate = {
-        "adjudication_contract_sha256": mapping["adjudication_contract_sha256"],
-        "case_ids": sorted(row["case_id"] for row in rows_by_split["test"]),
-        "dev_gold_manifest_sha256": dev_sha,
-        "label_contract_sha256": mapping["label_contract_sha256"],
-        "rater_contract_sha256": mapping["rater_contract_sha256"],
-        "schema_version": SEALED_MANIFEST_SCHEMA,
-        "spec_sha256": mapping["spec_sha256"],
-        "state": "sealed",
-        "study_id": mapping["study_id"],
-        "test_annotation_payload_sha256": test_sha,
-    }
-    candidate_path = output_root / "sealed_test_annotation_manifest.candidate.json"
-    candidate_sha = _canonical_file(candidate_path, candidate, private=True)
-    gold_seal = {
-        "schema_version": GOLD_SEAL_SCHEMA,
-        "study_id": mapping["study_id"],
-        "spec_sha256": mapping["spec_sha256"],
-        "state": "sealed",
-        "test_gold_opened": False,
-        "annotation_manifest_sha256": candidate_sha,
-    }
-    gold_seal_sha = _canonical_file(output_root / "visible_gold_seal.json", gold_seal, private=True)
+    parent_fd: int | None = None
+    staging_name: str | None = None
+    staging_root: Path | None = None
+    try:
+        output_root.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        _require_private_output_parent(output_root.parent)
+        parent_fd = _open_pinned_output_parent(output_root.parent)
+        staging_root = Path(
+            tempfile.mkdtemp(
+                prefix=f".{output_root.name}.staging-",
+                dir=f"/proc/self/fd/{parent_fd}",
+            )
+        )
+        staging_name = staging_root.name
+        staging_root.chmod(0o700)
+    except (AnnotationIntegrityError, OSError) as error:
+        try:
+            if parent_fd is not None and staging_name is not None:
+                _cleanup_pinned_staging(parent_fd, output_root.parent, staging_name)
+        except AnnotationIntegrityError:
+            raise
+        finally:
+            _close_fd_preserving_outcome(parent_fd)
+        if isinstance(error, AnnotationIntegrityError):
+            raise
+        raise AnnotationIntegrityError("sealed output staging cannot be created") from error
+    assert parent_fd is not None
+    assert staging_name is not None
+    assert staging_root is not None
+    published = False
+    try:
+        train = _gold_manifest(
+            schema=TRAIN_GOLD_SCHEMA,
+            mapping=mapping,
+            rows=rows_by_split["train"],
+        )
+        dev = _gold_manifest(schema=DEV_GOLD_SCHEMA, mapping=mapping, rows=rows_by_split["dev"])
+        train_sha = _canonical_file(
+            staging_root / "train_gold_manifest.json",
+            train,
+            private=True,
+        )
+        dev_sha = _canonical_file(staging_root / "dev_gold_manifest.json", dev, private=True)
+        test_payload = {
+            **_gold_manifest(
+                schema=TEST_PAYLOAD_SCHEMA,
+                mapping=mapping,
+                rows=rows_by_split["test"],
+            ),
+            "annotation_source_sha256": mapping["annotation_source_sha256"],
+            "implementation_identity": {
+                "annotation_source_sha256": mapping["annotation_source_sha256"],
+                "protocol_source_sha256": mapping["protocol_source_sha256"],
+                "implementation_sha256": mapping["implementation_sha256"],
+            },
+            "train_gold_manifest_sha256": train_sha,
+            "agreement": agreement,
+        }
+        test_sha = _canonical_file(
+            staging_root / "test_annotation_payload.json", test_payload, private=True
+        )
+        candidate = {
+            "adjudication_contract_sha256": mapping["adjudication_contract_sha256"],
+            "case_ids": sorted(row["case_id"] for row in rows_by_split["test"]),
+            "dev_gold_manifest_sha256": dev_sha,
+            "label_contract_sha256": mapping["label_contract_sha256"],
+            "rater_contract_sha256": mapping["rater_contract_sha256"],
+            "schema_version": SEALED_MANIFEST_SCHEMA,
+            "spec_sha256": mapping["spec_sha256"],
+            "state": "sealed",
+            "study_id": mapping["study_id"],
+            "test_annotation_payload_sha256": test_sha,
+        }
+        candidate_path = staging_root / "sealed_test_annotation_manifest.candidate.json"
+        candidate_sha = _canonical_file(candidate_path, candidate, private=True)
+        gold_seal = {
+            "schema_version": GOLD_SEAL_SCHEMA,
+            "study_id": mapping["study_id"],
+            "spec_sha256": mapping["spec_sha256"],
+            "state": "sealed",
+            "test_gold_opened": False,
+            "annotation_manifest_sha256": candidate_sha,
+        }
+        gold_seal_sha = _canonical_file(
+            staging_root / "visible_gold_seal.json",
+            gold_seal,
+            private=True,
+        )
+        for slot in RATER_SLOTS:
+            assignment, _ = _load_assignment(
+                public_root=public_root,
+                slot=slot,
+                expected_sha256=mapping["public_assignments"][slot],
+            )
+            _verify_assignment_views(
+                public_root=public_root,
+                slot=slot,
+                assignment=assignment,
+            )
+        if disagreements:
+            assert adjudication_map_path is not None
+            assert adjudication_root is not None
+            adjudication_map, _ = _load_authenticated_mapping(
+                adjudication_map_path,
+                blind_key,
+                schema=ADJUDICATION_MAP_SCHEMA,
+            )
+            adjudication_assignment, adjudication_assignment_raw = _load_json(
+                adjudication_root / "assignment.json",
+                label="adjudication assignment",
+            )
+            if sha256_bytes(adjudication_assignment_raw) != adjudication_map.get(
+                "assignment_sha256"
+            ):
+                raise AnnotationIntegrityError("adjudication assignment digest mismatch")
+            _verify_views_under_root(
+                assignment_root=adjudication_root,
+                assignment=adjudication_assignment,
+            )
+        try:
+            os.stat(output_root.name, dir_fd=parent_fd, follow_symlinks=False)
+        except FileNotFoundError:
+            pass
+        else:
+            raise AnnotationIntegrityError("sealed annotation output already exists")
+        _require_private_output_parent(output_root.parent)
+        try:
+            _rename_directory_noreplace(
+                output_root.parent / staging_name,
+                output_root,
+                parent_fd=parent_fd,
+            )
+        except FileExistsError as error:
+            raise AnnotationIntegrityError("sealed annotation output already exists") from error
+        except _PublicationRollbackError as error:
+            raise AnnotationIntegrityError(
+                "sealed output rollback failed after publication parent drift; "
+                f"quarantine required at {error.relocated_parent}"
+            ) from error
+        except OSError as error:
+            raise AnnotationIntegrityError("sealed output atomic publication failed") from error
+        published = True
+    finally:
+        try:
+            if not published:
+                _cleanup_pinned_staging(parent_fd, output_root.parent, staging_name)
+        finally:
+            _close_fd_preserving_outcome(parent_fd)
     return SealReceipt(
         disagreement_count=agreement["disagreement_count"],
+        annotation_source_sha256=mapping["annotation_source_sha256"],
+        protocol_source_sha256=mapping["protocol_source_sha256"],
+        implementation_sha256=mapping["implementation_sha256"],
+        train_gold_manifest_sha256=train_sha,
         dev_gold_manifest_sha256=dev_sha,
         test_annotation_payload_sha256=test_sha,
         annotation_manifest_sha256=candidate_sha,

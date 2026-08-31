@@ -6,8 +6,9 @@ test gold 自动交给实验运行器。
 ## 1. 准备私钥
 
 在仓库和模型可见目录之外生成一个至少 32 字节、权限为 `0600` 的文件。这个文件只交给标注
-管理员，不能交给两位标注者或模型进程。工具会把自身源码 SHA、冻结 spec SHA、公开 assignment
-SHA 和私有 mapping HMAC 一起写入回执；中途换工具源码或换私钥都会失败关闭。
+管理员，不能交给两位标注者或模型进程。工具会分别绑定 `annotations.py`、`protocol.py` 的源码
+SHA，并计算组合 implementation SHA；冻结 spec SHA、公开 assignment SHA 和私有 mapping HMAC 也会
+进入同一承诺链。中途换任一实现源码或私钥都会失败关闭。
 
 ## 2. 导出两份盲标包
 
@@ -66,7 +67,22 @@ python -m self_improving.studies.vlm_fallback_prompt_optimization.annotations se
 
 密封目录权限为 `0700`，其中 gold 文件为 `0600`。工具会输出 train、dev、test 三个不同载荷，
 逐 check Cohen's kappa、raw agreement、分歧数、三份回答 SHA、候选 annotation manifest 和尚未
-打开 test gold 的 `visible_gold_seal.json`。
+打开 test gold 的 `visible_gold_seal.json`。当 Cohen's kappa 因期望一致率为 1 而没有定义时，值为
+`null`，并在 `cohen_kappa_undefined_reason_per_check` 中记录原因，不能解释为 1.0。test payload
+显式绑定 train gold SHA；候选 manifest 再绑定 test payload SHA，因此 train gold 也处在最终承诺链中。
+
+工具在接受每一份回答前会重新读取并核对 assignment 中的每个媒体视图，并在发布边界再次完成同样
+检查（包括仲裁包）。assignment、私有 mapping 和 test payload 的 v2 schema 固定了新增的实现身份与
+摘要链字段；旧 v1 文档不会被静默当作 v2 接受。`--output-root` 必须同时与公开 rater assignment 树和
+adjudication assignment 树隔离：不能等于、位于或经符号链接进入任一共享树，即使路径随后再逸出也会
+拒绝。输出父目录必须由当前进程用户拥有且权限仅限 owner；每一级祖先必须由 root 或当前进程用户
+拥有，且不能对 group/other 可写（由上述受信任主体拥有的标准 sticky 临时目录除外）。同一系统身份
+是受信任的单写者，在 seal 期间不得并发改名或移动该父目录及其祖先。所有文件先写到目标同一文件
+系统上的私有 staging 目录，
+全部检查通过后才用 no-replace 原子改名发布；工具会在提交后再次核对 pinned 父目录，发现漂移时回滚。
+在上述单写者边界内，写入、复验或发布失败会清理 staging，目标目录不会以半成品状态发布，可安全
+重试。若越界的同身份并发移动与回滚 I/O 失败同时发生，工具会明确报告 `quarantine required` 并且
+不会签发 SealReceipt；操作员必须先隔离错误中指出的目录，不能把该次调用当作普通可重试失败。
 
 test payload **只是权限隔离，不是加密文件**。在 A1 prompt SHA 和模型 / processor 回执写入
 append-only run log 之前，必须把整个密封目录保留在仓库、provider readable paths 和模型可见目录
@@ -75,5 +91,7 @@ runner 中的固定 SHA；不能由本工具自动改源码或自动解封。
 
 ## 当前状态
 
-工具和真实 39 样本导出烟测已完成；两位真实独立标注者和第三位仲裁者尚未执行。因此当前
-`sealed_test_annotation_manifest.json` 仍必须保持 `pending_blinded_annotation`，昂贵推理仍不得开始。
+旧版流程曾完成真实 39 样本导出；当前 v2 contract 的 CPU/攻击测试已完成，但真实 39 样本 v2 重跑
+因工作树缺少一份冻结的 portal 图像而尚未完成，不能沿用旧烟测冒充 v2 证据。两位真实独立标注者和
+第三位仲裁者也尚未执行。因此当前 `sealed_test_annotation_manifest.json` 仍必须保持
+`pending_blinded_annotation`，昂贵推理仍不得开始。
