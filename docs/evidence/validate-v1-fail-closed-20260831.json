@@ -1,0 +1,24 @@
+{
+  "schema_version": "harness.validate_v1_fail_closed_evidence.v1",
+  "recorded_date": "2026-08-31",
+  "skill_ref": "text2env.validate@1.0.0",
+  "counterexample_before_patch": {
+    "physical_validation_status": "pass",
+    "eligibility_policy_blockers": 0,
+    "promotion_receipts_bound": false,
+    "observed_publishable": true
+  },
+  "behavior_after_patch": {
+    "physical_report_still_produced": true,
+    "publishable": false,
+    "blocker_code": "T2E_VALIDATION_INCOMPLETE",
+    "blocker_reason": "validate_v1_cannot_bind_promotion_evidence",
+    "claim_boundary": "v1 is a non-promotion validation-report adapter; trusted publication requires a receipt-bound v2 input and policy."
+  },
+  "verification": {
+    "tests": "27 passed",
+    "statements": "129/129",
+    "branches": "30/30"
+  },
+  "host_paths_present": false
+}

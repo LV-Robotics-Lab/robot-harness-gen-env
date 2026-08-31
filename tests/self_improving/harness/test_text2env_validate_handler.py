@@ -237,7 +237,7 @@ def test_physical_pass_stays_nonpublishable_without_promotion_receipts(
     assert output.blockers[0].artifact_refs == (output.validation_report,)
 
 
-def test_complete_eligibility_can_mark_a_physical_pass_publishable(
+def test_v1_custom_eligibility_cannot_mark_a_physical_pass_publishable(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -260,8 +260,11 @@ def test_complete_eligibility_can_mark_a_physical_pass_publishable(
     output = Text2EnvValidateOutput.model_validate(handler(value, RecordingContext()).output)
 
     assert output.validation_status == ValidationStatus.PASS
-    assert output.publishable is True
-    assert output.blockers == ()
+    assert output.publishable is False
+    assert [blocker.code for blocker in output.blockers] == ["T2E_VALIDATION_INCOMPLETE"]
+    assert output.blockers[0].stage == "promotion_evidence"
+    assert output.blockers[0].details["reason"] == "validate_v1_cannot_bind_promotion_evidence"
+    assert output.blockers[0].artifact_refs == (output.validation_report,)
     assert len(verifier.calls) == 1
     package, evidence, report = verifier.calls[0]
     assert package == value.environment_package

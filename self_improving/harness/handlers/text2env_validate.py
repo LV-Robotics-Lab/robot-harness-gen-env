@@ -31,7 +31,11 @@ _VALIDATION_REPORT_SCHEMA = "robotwin.scene_validation.v1"
 
 
 class EligibilityVerifier(Protocol):
-    """Decide publication eligibility after deterministic physical gates pass."""
+    """Contribute promotion blockers after physical gates pass.
+
+    The v1 input cannot bind the receipts needed to authorize publication, so
+    an empty policy result is diagnostic only and never grants eligibility.
+    """
 
     def verify(
         self,
@@ -61,6 +65,7 @@ class RequirePromotionEvidence:
                 stage="promotion_evidence",
                 retryable=False,
                 details={
+                    "reason": "validate_v1_cannot_bind_promotion_evidence",
                     "missing": [
                         "compile_run_receipt",
                         "replay_run_receipt",
@@ -68,7 +73,7 @@ class RequirePromotionEvidence:
                         "replay_qualification",
                         "validate_qualification",
                         "request_provenance",
-                    ]
+                    ],
                 },
                 unknowns=(),
                 artifact_refs=(),
@@ -87,7 +92,7 @@ class _ValidationInputs:
 
 @dataclass(frozen=True)
 class Text2EnvValidateHandler:
-    """Recompute validation once without invoking a simulator."""
+    """Recompute a non-publishable v1 validation report without a simulator."""
 
     artifact_store: LocalArtifactStore
     package_store: PackageStore
@@ -135,11 +140,24 @@ class Text2EnvValidateHandler:
 
         status = ValidationStatus(report["status"])
         if status == ValidationStatus.PASS:
-            blockers = self.eligibility_verifier.verify(
+            policy_blockers = self.eligibility_verifier.verify(
                 environment_package=value.environment_package,
                 runtime_evidence=inputs.runtime_evidence,
                 validation_report=report,
             )
+            blockers = tuple(policy_blockers)
+            if not any(
+                blocker.details.get("reason") == "validate_v1_cannot_bind_promotion_evidence"
+                for blocker in blockers
+            ):
+                blockers = (
+                    *blockers,
+                    *RequirePromotionEvidence().verify(
+                        environment_package=value.environment_package,
+                        runtime_evidence=inputs.runtime_evidence,
+                        validation_report=report,
+                    ),
+                )
         else:
             blockers = (_gate_blocker(report, report_ref),)
         bound_blockers = tuple(_bind_report(blocker, report_ref) for blocker in blockers)
@@ -247,7 +265,7 @@ def text2env_validate_descriptor(
     qualification_artifact: ArtifactRef,
     implementation_sha256: str,
 ) -> SkillDescriptor:
-    """Build the exact immutable descriptor for deterministic validation."""
+    """Build the descriptor for deterministic, non-promotion v1 validation."""
 
     return SkillDescriptor(
         skill_id="text2env.validate",
