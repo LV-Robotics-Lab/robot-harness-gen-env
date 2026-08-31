@@ -112,6 +112,14 @@ modules under `self_improving/`. Preserve upstream attribution and avoid
 rewriting published history. External projects belong in submodules, not copied
 vendor trees.
 
+## OpenAI Safety Escalation
+
+- If OpenAI reports that a cybersecurity-related request requires additional
+  safety protection or refuses it on that basis, stop that request immediately
+  and tell the user.
+- Do not retry, rephrase, split, delegate, or otherwise attempt to bypass that
+  safety protection. Wait for explicit user direction before doing more work.
+
 ## Agent skills
 
 ### Issue tracker
