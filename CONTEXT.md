@@ -39,3 +39,51 @@ _Avoid_: run success、validation completeness
 **Self-Improving Loop（自改进闭环）**:
 把复用选择、拒绝原因、生成、回放和验证结果沉淀为可追溯证据，并用这些证据改进后续检索、选择、诊断和资产晋升的循环。
 _Avoid_: one-shot generation、untracked fallback
+
+## System 2 执行语言
+
+**Trusted World State（受信世界状态）**:
+规划器可以据此决策的当前世界事实集合；每项事实都来自类型化输入、新鲜观测或可验证回执，并带明确时效和来源。
+_Avoid_: chat context、unchecked memory、scene description
+
+**System 2 Planner（系统二规划器）**:
+根据受信世界状态选择下一项版本化 Skill，并在失败后决定重试、修复、回放或停止的推理角色；它不直接冒充低层控制器。
+_Avoid_: monolithic VLA、free-form chatbot、skill executor
+
+**Skill（技能）**:
+具有精确版本、类型化输入输出、资格证据和稳定执行契约的能力单元；它可以由解析器、控制器、VLA、仿真器或适配器实现。
+_Avoid_: arbitrary function、prompt snippet、unversioned tool
+
+**Skill Invocation（技能调用）**:
+一次由精确 Skill 版本、规范参数和全部依赖身份共同确定的执行请求。
+_Avoid_: tool name only、best-effort call
+
+**Tool Result（工具结果）**:
+一次 Skill 调用的类型化结果包，至少区分输出、状态增量、诊断、可信回执和新鲜观测；失败也必须产生可分类证据。
+_Avoid_: raw text answer、exit code only
+
+**State Delta（状态增量）**:
+Tool Result 对受信世界状态提出的显式变化；只有通过绑定与新鲜度检查后才能提交到下一版世界状态。
+_Avoid_: implicit memory mutation、log side effect
+
+**Trusted Receipt（可信回执）**:
+把调用、实现与依赖身份、实际执行事实、输出闭包和证据摘要交叉绑定的不可变记录。
+_Avoid_: success flag、mutable report path、operator note
+
+**Fresh Observation（新鲜观测）**:
+在当前调用的真实执行边界之后采集、并与该调用和世界状态版本绑定的传感或仿真观测。
+_Avoid_: cached screenshot、prior-run observation
+
+## 自改进语言
+
+**Failure Evidence（失败证据）**:
+失败调用留下的类型化 blocker、诊断、部分产物、观测和回执闭包；它是后续聚类与修复的输入，不是可丢弃异常文本。
+_Avoid_: stack trace only、silent retry
+
+**Repair Candidate（修复候选）**:
+由一组失败证据驱动、对 Harness、Skill、路由、prompt 或评估集提出的版本化变更，并带可重放假设和预期改进范围。
+_Avoid_: live patch、untracked prompt tweak
+
+**Promotion Gate（晋升门禁）**:
+比较候选与当前基线的固定回归决策；只有证据闭包完整、目标指标改善且保护性指标不退化时才允许候选成为新基线。
+_Avoid_: one successful demo、manual approval alone
