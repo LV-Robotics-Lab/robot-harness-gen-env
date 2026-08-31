@@ -2,6 +2,14 @@
 
 ## 2026-08-31
 
+- 落地 Workbench Event Timeline v1：`demo/` 通过注入式只读 feed 和
+  `GET /api/harness/events` 消费 SQLite journal 的 committed `RunEvent`，支持 global cursor、run
+  filter、分页与 reload 恢复；浏览器严格校验事件页，明确区分未配置、历史损坏和响应不自洽。
+  轮询只读取事件、不伪造阶段，artifact 只显示 metadata。缓存事件须从当前 journal 重新确认，在途
+  请求以代际隔离，64 位 cursor 以十进制字符串传输；SQLite 文件损坏稳定返回 503。`tests/demo`
+  36 passed（含 12 项真 Flask + headless Chrome），feed statement/branch 100%；本切片不含 Skill
+  submit、System 2、artifact viewer
+  或拖拽编排，完整四页面工作台仍在进行中。
 - 接通 System 2 → production compile 的可信调度边界：同一 CAS 内重读 planner、base state/context、
   qualification、Invocation/RunState、effective catalog 与 package，重跑 solver 和 static validator；
   完整 history authority 绑定每次状态迁移，成功才产生 receipt-backed delta，blocked/failed 无 delta。

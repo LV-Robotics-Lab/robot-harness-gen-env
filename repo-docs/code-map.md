@@ -6,7 +6,7 @@
 | --- | --- | --- | --- |
 | `scene_gen/` | 编译器核心库：契约、解析、grounding、求解、builder、validator、绘制代理、acceptance。 | `schema.py`、`parser.py`、`grounding.py`、`solver.py`、`builder.py`、`validator.py`、`scene_gen/envs/generated_scene.py` | 主流程每一阶段都住在这里；CLI 与 demo 只是薄入口 |
 | `script/` | CLI 入口：编译、回放、批量验收、矩阵、可选渲染评判、stage-5 报告。 | `generate_scene.py`、`run_scene_runtime.py`、`run_100_seed_acceptance.py`、`run_prompt_matrix.py` | 编排 `scene_gen`；流水线逻辑加进 `scene_gen`，不要加在这里 |
-| `demo/` | Flask 控制面，把 GPU 任务队列入队并按 id 暴露已注册产物。 | `app.py` | 复用同一 `scene_gen` 流水线；不是新流水线，只加队列 + 路由 |
+| `demo/` | Flask 控制面：保留旧 GPU job 流水线，并可注入只读 Harness 事件 feed。 | `app.py`、`harness_feed.py`、`static/` | job 入口仍调用旧脚本；事件工作台只消费已提交 journal，不执行或推演 Skill |
 | `tests/` | pytest 套件 + committed fixture；为每个误报模式留攻击测试。 | `tests/scene_gen/test_<module>.py`、`tests/fixtures/{asset_catalog,golden_prompts,prompt_matrix}.json` | 锁住契约与失败分支；套件无需 RoboTwin checkout 即可跑 |
 | `self_improving/` | Harness 对外契约、平台编排、闭环诊断、资产复用、仿真适配、来源清单与只读历史。 | `harness/schemas/`、`harness/schema_catalog.py`、`harness/registry.py`、`harness/package_store.py`、`harness/handlers/text2env_compile.py`、`source_inventory.json`、各命名模块 | Harness 只引用权威载荷，平台消费稳定核心；都不能降低 `scene_gen` 门控 |
 | `apps/pearl_evidence_portal/` | PEARL Self-Improving Agents 的独立证据门户、构建脚本、测试与已裁剪的浏览器报告子集。 | `app/page.tsx`、`scripts/build-hosted-report-subsets.mjs`、`tests/rendered-html.test.mjs` | 只呈现已有证据；不产出或修改核心验收结论 |
@@ -48,7 +48,9 @@
 
 | 重要代码 | 功能 | 关键符号 | 调用方 / 使用方 |
 | --- | --- | --- | --- |
-| `demo/app.py` | Flask 控制面：text2env 编译 + 运行时 + VLM 评审端点 + 任务存储 + 已注册资产服务。 | `app`、各 endpoint、由环境变量配置 `ROBOTWIN_ROOT`/`ROBOTWIN_PYTHON`/`SCENE_ASSET_CATALOG`/`SCENE_DEMO_JOBS_ROOT` | 仓库 README「Browser Demo」配方；流水线逻辑仍来自 `scene_gen` |
+| `demo/app.py` | Flask 控制面：旧 text2env job/已注册资产端点，加可选的只读 Harness 事件页。 | `create_app`、`GET /api/harness/events`、配置注入 `HARNESS_EVENT_FEED` | feed 未配置或历史损坏时 503；非法 cursor/run/limit 为 400；不会退回日志或文件 mtime 推演 |
+| `demo/harness_feed.py` | 把 `SQLiteEventJournal` 的 `EventPage` 投影成浏览器可消费、可恢复的全局 cursor 页。 | `HarnessEventFeed.page`、`HarnessEventFeedCorruptionError` | 只读 seam；保留 run/Skill/Event 信封与 artifact metadata，不增加任意路径读取 |
+| `demo/static/` | 无构建步骤的 Harness Event Timeline v1：轮询已提交页、按 run 过滤、缓存 cursor 并校验响应。 | `harness-event-list`、`loadHarnessEvents`、`validateHarnessPage` | 定时器只触发读取；终态来自 `Event.to_status`，不是 elapsed time |
 | `demo/__init__.py` | 包标记使 `demo` 可被导入。 | — | `python -m demo.app` |
 
 ## `tests/`
@@ -118,7 +120,8 @@ PR1 的 21 个专项测试是历史基线；当前验证边界见模块页与
 
 | 重要代码 | 功能 | 关键符号 | 调用方 / 使用方 |
 | --- | --- | --- | --- |
-| `tests/demo/test_app.py` | Flask 控制面 API 单元测试；不启用真实 GPU 运行时。 |—| 改 `demo/app.py` 先跑这里；`pytest -q tests/demo` |
+| `tests/demo/test_app.py`、`test_harness_feed.py` | Flask 与 feed 公共 seam：真实临时 journal、cursor/filter、非法输入和损坏历史。 |—| 不启用 GPU；feed statement/branch 100% |
+| `tests/demo/test_workbench_browser.py` | 真 Flask + 本机 headless Chrome 的事件工作台端到端门。 |—| 覆盖提交后推进、缓存重确认、并发 filter、64 位 cursor、无 localStorage、未配置/损坏/不自洽响应；`pytest -q tests/demo` 当前 36 passed |
 
 ## 覆盖范围
 

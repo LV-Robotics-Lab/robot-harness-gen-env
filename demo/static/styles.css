@@ -50,7 +50,8 @@ button { cursor: pointer; }
 
 .brand-block, .system-state, .section-heading, .section-heading > div,
 .form-row, .run-summary, .run-actions, .seed-control, .pipeline li,
-.history-item, .history-meta { display: flex; align-items: center; }
+.history-item, .history-meta, .harness-actions, .event-heading,
+.event-details, .event-feed-meta { display: flex; align-items: center; }
 
 .brand-block { gap: 12px; }
 .brand-mark {
@@ -160,6 +161,36 @@ button svg { width: 17px; height: 17px; stroke-width: 1.8; }
 .artifact-tabs { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
 .json-view { min-height: 220px; max-height: 520px; margin: 10px 0 0; padding: 15px; overflow: auto; color: var(--code-text); background: var(--code); font: 11px/1.55 ui-monospace, "SFMono-Regular", Consolas, monospace; }
 
+.harness-actions { gap: 8px; }
+.feed-status {
+  padding: 5px 8px;
+  color: var(--muted);
+  background: #eceee9;
+  border: 1px solid var(--line);
+  font: 700 10px/1 ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+.feed-status.ready { color: #fff; background: var(--signal); border-color: var(--signal); }
+.feed-status.failed { color: #fff; background: var(--danger); border-color: var(--danger); }
+.feed-note { margin: -6px 0 14px; color: var(--muted); font-size: 12px; }
+.harness-filter { margin-bottom: 10px; display: grid; grid-template-columns: auto minmax(220px, 1fr) auto auto; align-items: center; gap: 8px; }
+.harness-filter label { color: var(--muted); font: 700 10px/1 ui-monospace, "SFMono-Regular", Consolas, monospace; text-transform: uppercase; }
+.harness-filter input { min-width: 0; height: 38px; padding: 7px 9px; font: 11px/1 ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.event-feed-meta { justify-content: space-between; padding: 8px 10px; color: var(--muted); background: #eff0eb; border: 1px solid var(--line); font-size: 11px; }
+.event-feed-meta code, .event-details code { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.event-timeline { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-top: 0; }
+.event-item { padding: 12px 14px; border-bottom: 1px solid var(--line); border-left: 3px solid var(--warning); }
+.event-item:last-child { border-bottom: 0; }
+.event-item.succeeded { border-left-color: var(--signal); }
+.event-item.blocked, .event-item.failed { border-left-color: var(--danger); }
+.event-heading { gap: 10px; }
+.event-heading strong { min-width: 0; flex: 1; overflow-wrap: anywhere; font: 700 12px/1.35 ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.event-cursor { color: var(--signal); font: 700 10px/1 ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.event-status { padding: 4px 6px; color: #3d2c00; background: #facc15; font: 700 9px/1 ui-monospace, "SFMono-Regular", Consolas, monospace; text-transform: uppercase; }
+.event-status.succeeded { color: #fff; background: var(--signal); }
+.event-status.blocked, .event-status.failed { color: #fff; background: var(--danger); }
+.event-details { flex-wrap: wrap; gap: 7px 14px; margin-top: 7px; color: var(--muted); font-size: 10px; }
+.event-empty { padding: 24px 14px; color: var(--muted); text-align: center; }
+
 .history-list { display: grid; border-top: 1px solid var(--line); }
 .history-item { width: 100%; min-height: 58px; justify-content: space-between; gap: 16px; padding: 10px 4px; color: inherit; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--line); }
 .history-item:hover { color: var(--signal); background: #f0f4ef; }
@@ -186,6 +217,10 @@ button svg { width: 17px; height: 17px; stroke-width: 1.8; }
   .pipeline li:last-child { border-bottom: 0; }
   .history-item { align-items: flex-start; flex-direction: column; }
   .history-copy strong { white-space: normal; }
+  .event-heading { align-items: flex-start; flex-wrap: wrap; }
+  .event-heading strong { flex-basis: calc(100% - 54px); }
+  .harness-filter { grid-template-columns: 1fr 1fr; }
+  .harness-filter label, .harness-filter input { grid-column: 1 / -1; }
 }
 
 @media (prefers-reduced-motion: no-preference) {

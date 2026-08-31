@@ -3,10 +3,42 @@ const state = {
   pollTimer: null,
   mediaKey: null,
   artifactKey: null,
+  harnessCursor: '0',
+  harnessEvents: [],
+  harnessPendingCache: null,
+  harnessPollTimer: null,
+  harnessRequestGeneration: 0,
+  harnessRunId: '',
 };
 
 const $ = (selector) => document.querySelector(selector);
 const artifactUrl = (job, path) => `/api/jobs/${job.job_id}/artifacts/${path.split('/').map(encodeURIComponent).join('/')}`;
+const harnessCachePrefix = 'robot-harness.workbench-event-cache.v1';
+const harnessCacheKey = () => `${harnessCachePrefix}:${state.harnessRunId || 'all'}`;
+const sqliteCursorMaximum = BigInt('9223372036854775807');
+
+function isCanonicalHarnessCursor(value) {
+  return typeof value === 'string'
+    && /^(0|[1-9][0-9]*)$/.test(value)
+    && BigInt(value) <= sqliteCursorMaximum;
+}
+
+function harnessCursorIsAfter(value, preceding) {
+  return BigInt(value) > BigInt(preceding);
+}
+
+function precedingHarnessCursor(value) {
+  if (!isCanonicalHarnessCursor(value) || value === '0') invalidHarnessPage();
+  return (BigInt(value) - 1n).toString();
+}
+
+function removeHarnessCache() {
+  try {
+    window.localStorage.removeItem(harnessCacheKey());
+  } catch (_error) {
+    // Storage is optional; the authoritative journal remains available without it.
+  }
+}
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -14,12 +46,255 @@ async function api(path, options = {}) {
     ...options,
   });
   const value = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(value.error?.message || `HTTP ${response.status}`);
+  if (!response.ok) {
+    const error = new Error(value.error?.message || `HTTP ${response.status}`);
+    error.code = value.error?.code;
+    error.status = response.status;
+    throw error;
+  }
   return value;
 }
 
 function refreshIcons() {
   if (window.lucide) window.lucide.createIcons({ attrs: { 'aria-hidden': 'true' } });
+}
+
+function restoreHarnessCache() {
+  state.harnessPendingCache = null;
+  try {
+    const cached = JSON.parse(window.localStorage.getItem(harnessCacheKey()));
+    if (!cached) return;
+    if (cached.schema_version !== 'harness.workbench_event_cache.v1'
+      || !isCanonicalHarnessCursor(cached.cursor)
+      || !Array.isArray(cached.events)
+      || cached.events.length > 200
+      || (!cached.events.length && cached.cursor !== '0')) throw new Error('invalid cache');
+    const firstEventId = cached.events[0]?.event_id;
+    const precedingCursor = firstEventId ? precedingHarnessCursor(firstEventId) : '0';
+    validateHarnessPage({
+      schema_version: 'harness.workbench_event_page.v1',
+      events: cached.events,
+      last_event_id: cached.cursor,
+      has_more: false,
+    }, precedingCursor);
+    if (cached.events.length) state.harnessPendingCache = cached;
+  } catch (_error) {
+    removeHarnessCache();
+    state.harnessCursor = '0';
+    state.harnessEvents = [];
+    state.harnessPendingCache = null;
+  }
+}
+
+function saveHarnessCache() {
+  state.harnessEvents = state.harnessEvents.slice(-200);
+  try {
+    window.localStorage.setItem(harnessCacheKey(), JSON.stringify({
+      schema_version: 'harness.workbench_event_cache.v1',
+      cursor: state.harnessCursor,
+      events: state.harnessEvents,
+    }));
+  } catch (_error) {
+    // The live journal remains authoritative when browser storage is unavailable.
+  }
+}
+
+function initializeHarnessFilter() {
+  state.harnessRunId = new URL(window.location.href).searchParams.get('harness_run')?.trim() || '';
+  const input = $('#harness-run-filter');
+  input.value = state.harnessRunId;
+  if (state.harnessRunId) input.setAttribute('value', state.harnessRunId);
+  else input.removeAttribute('value');
+}
+
+function selectHarnessRun(runId) {
+  clearTimeout(state.harnessPollTimer);
+  state.harnessRequestGeneration += 1;
+  state.harnessRunId = runId.trim();
+  state.harnessCursor = '0';
+  state.harnessEvents = [];
+  state.harnessPendingCache = null;
+  const input = $('#harness-run-filter');
+  input.value = state.harnessRunId;
+  if (state.harnessRunId) input.setAttribute('value', state.harnessRunId);
+  else input.removeAttribute('value');
+  const url = new URL(window.location.href);
+  if (state.harnessRunId) url.searchParams.set('harness_run', state.harnessRunId);
+  else url.searchParams.delete('harness_run');
+  window.history.replaceState({}, '', url);
+  restoreHarnessCache();
+  renderHarnessEvents();
+  loadHarnessEvents();
+}
+
+function invalidHarnessPage() {
+  const error = new Error('Harness event page failed integrity checks');
+  error.code = 'harness_event_page_invalid';
+  throw error;
+}
+
+function validateHarnessPage(page, afterEventId, expectedRunId = state.harnessRunId) {
+  if (!page
+    || page.schema_version !== 'harness.workbench_event_page.v1'
+    || !Array.isArray(page.events)
+    || !isCanonicalHarnessCursor(page.last_event_id)
+    || BigInt(page.last_event_id) < BigInt(afterEventId)
+    || typeof page.has_more !== 'boolean') invalidHarnessPage();
+  const statuses = new Set(['running', 'succeeded', 'blocked', 'failed']);
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+  let previousEventId = afterEventId;
+  page.events.forEach((envelope) => {
+    const event = envelope?.event;
+    if (!isCanonicalHarnessCursor(envelope?.event_id)
+      || envelope.event_id === '0'
+      || !harnessCursorIsAfter(envelope.event_id, previousEventId)
+      || typeof envelope.skill_id !== 'string'
+      || !envelope.skill_id
+      || typeof envelope.skill_version !== 'string'
+      || !envelope.skill_version
+      || typeof envelope.run_id !== 'string'
+      || !uuidPattern.test(envelope.run_id)
+      || (expectedRunId && envelope.run_id !== expectedRunId)
+      || !event
+      || !Number.isInteger(event.seq)
+      || event.seq < 1
+      || !Number.isInteger(event.attempt)
+      || event.attempt < 0
+      || typeof event.stage !== 'string'
+      || !event.stage
+      || typeof event.timestamp !== 'string'
+      || !statuses.has(event.to_status)
+      || (event.from_status !== null && !statuses.has(event.from_status))
+      || !Array.isArray(event.artifact_refs)) invalidHarnessPage();
+    previousEventId = envelope.event_id;
+  });
+  if (page.last_event_id !== previousEventId || (page.has_more && !page.events.length)) {
+    invalidHarnessPage();
+  }
+  return page;
+}
+
+function renderHarnessEvents() {
+  const list = $('#harness-event-list');
+  list.replaceChildren();
+  state.harnessEvents.forEach((envelope) => {
+    const event = envelope.event;
+    const item = document.createElement('li');
+    item.dataset.eventId = String(envelope.event_id);
+    item.className = `event-item ${event.to_status}`;
+
+    const heading = document.createElement('div');
+    heading.className = 'event-heading';
+    const cursor = document.createElement('span');
+    cursor.className = 'event-cursor';
+    cursor.textContent = `#${envelope.event_id}`;
+    const stage = document.createElement('strong');
+    stage.textContent = event.stage;
+    const status = document.createElement('span');
+    status.className = `event-status ${event.to_status}`;
+    status.textContent = event.to_status;
+    heading.append(cursor, stage, status);
+
+    const details = document.createElement('div');
+    details.className = 'event-details';
+    const skill = document.createElement('span');
+    skill.textContent = `${envelope.skill_id}@${envelope.skill_version}`;
+    const run = document.createElement('code');
+    run.textContent = envelope.run_id;
+    const attempt = document.createElement('span');
+    attempt.textContent = `attempt ${event.attempt} · seq ${event.seq}`;
+    details.append(skill, run, attempt);
+    if (event.artifact_refs.length) {
+      const artifacts = document.createElement('span');
+      artifacts.textContent = `${event.artifact_refs.length} artifact${event.artifact_refs.length === 1 ? '' : 's'}`;
+      details.appendChild(artifacts);
+    }
+    item.append(heading, details);
+    list.appendChild(item);
+  });
+  if (!state.harnessEvents.length) {
+    const empty = document.createElement('li');
+    empty.className = 'event-empty';
+    empty.textContent = '暂无已提交事件';
+    list.appendChild(empty);
+  }
+  $('#harness-cursor').textContent = String(state.harnessCursor);
+}
+
+async function loadHarnessEvents() {
+  clearTimeout(state.harnessPollTimer);
+  const requestGeneration = ++state.harnessRequestGeneration;
+  const requestedRunId = state.harnessRunId;
+  const status = $('#harness-feed-status');
+  const message = $('#harness-feed-message');
+  try {
+    const pendingCache = state.harnessPendingCache;
+    const requestedCursor = pendingCache?.events.length
+      ? precedingHarnessCursor(pendingCache.events[0].event_id)
+      : state.harnessCursor;
+    const query = new URLSearchParams({
+      after: requestedCursor,
+      limit: pendingCache?.events.length ? String(pendingCache.events.length) : '100',
+    });
+    if (requestedRunId) query.set('run_id', requestedRunId);
+    const page = validateHarnessPage(
+      await api(`/api/harness/events?${query}`),
+      requestedCursor,
+      requestedRunId,
+    );
+    if (requestGeneration !== state.harnessRequestGeneration
+      || requestedRunId !== state.harnessRunId) return;
+    if (pendingCache) {
+      if (pendingCache !== state.harnessPendingCache
+        || page.last_event_id !== pendingCache.cursor
+        || JSON.stringify(page.events) !== JSON.stringify(pendingCache.events)) {
+        invalidHarnessPage();
+      }
+      state.harnessCursor = pendingCache.cursor;
+      state.harnessEvents = pendingCache.events;
+      state.harnessPendingCache = null;
+    } else {
+      page.events.forEach((envelope) => {
+        if (harnessCursorIsAfter(envelope.event_id, state.harnessCursor)) {
+          state.harnessEvents.push(envelope);
+        }
+      });
+      state.harnessCursor = page.last_event_id;
+    }
+    saveHarnessCache();
+    status.textContent = '已连接';
+    status.className = 'feed-status ready';
+    message.textContent = '只显示执行代码已经提交到 Harness journal 的真实事件。';
+    renderHarnessEvents();
+    if (page.has_more) {
+      await loadHarnessEvents();
+      return;
+    }
+    state.harnessPollTimer = setTimeout(loadHarnessEvents, 1500);
+  } catch (error) {
+    if (requestGeneration !== state.harnessRequestGeneration
+      || requestedRunId !== state.harnessRunId) return;
+    const labels = {
+      harness_event_feed_corrupt: '历史损坏',
+      harness_event_feed_unavailable: '未配置',
+      harness_event_page_invalid: '响应损坏',
+      invalid_harness_event_query: '筛选无效',
+    };
+    status.textContent = labels[error.code] || '不可用';
+    status.className = 'feed-status failed';
+    message.textContent = error.message;
+    const failClosedCodes = ['harness_event_feed_corrupt', 'harness_event_feed_unavailable',
+      'harness_event_page_invalid', 'invalid_harness_event_query'];
+    const failClosed = failClosedCodes.includes(error.code);
+    if (failClosed) {
+      removeHarnessCache();
+      state.harnessCursor = '0';
+      state.harnessEvents = [];
+      state.harnessPendingCache = null;
+    }
+    renderHarnessEvents();
+    if (!failClosed) state.harnessPollTimer = setTimeout(loadHarnessEvents, 5000);
+  }
 }
 
 function statusClass(status, verdict) {
@@ -285,15 +560,24 @@ $('#example-select').addEventListener('change', (event) => {
   if (event.target.value) $('#prompt').value = event.target.value;
 });
 $('#refresh-button').addEventListener('click', () => state.activeJob && loadJob(state.activeJob.job_id));
+$('#harness-refresh-button').addEventListener('click', loadHarnessEvents);
+$('#harness-filter-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  selectHarnessRun($('#harness-run-filter').value);
+});
+$('#harness-filter-clear').addEventListener('click', () => selectHarnessRun(''));
 $('#open-result-button').addEventListener('click', () => {
   if (state.activeJob) window.open(`/?job=${encodeURIComponent(state.activeJob.job_id)}`, '_blank', 'noopener');
 });
 
 async function start() {
   refreshIcons();
-  await Promise.all([checkHealth(), loadHistory()]);
+  await Promise.all([checkHealth(), loadHistory(), loadHarnessEvents()]);
   const jobId = new URL(window.location.href).searchParams.get('job');
   if (jobId) await loadJob(jobId);
 }
 
+initializeHarnessFilter();
+restoreHarnessCache();
+renderHarnessEvents();
 start();

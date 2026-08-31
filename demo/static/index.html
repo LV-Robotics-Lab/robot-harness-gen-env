@@ -92,10 +92,37 @@
       </div>
     </section>
 
-    <section class="evidence-band" id="evidence-band" aria-labelledby="evidence-title" hidden>
+    <section class="harness-band" aria-labelledby="harness-title">
       <div class="section-heading">
         <div>
           <span class="section-index">03</span>
+          <h2 id="harness-title">Harness 事件流</h2>
+        </div>
+        <div class="harness-actions">
+          <span class="feed-status" id="harness-feed-status">连接中</span>
+          <button class="icon-button" id="harness-refresh-button" type="button" title="刷新事件" aria-label="刷新事件">
+            <i data-lucide="refresh-cw" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+      <p class="feed-note" id="harness-feed-message">只显示执行代码已经提交到 Harness journal 的真实事件。</p>
+      <form class="harness-filter" id="harness-filter-form">
+        <label for="harness-run-filter">Run ID</label>
+        <input id="harness-run-filter" name="harness_run" type="text" autocomplete="off" spellcheck="false" placeholder="全部 run，或输入 UUID">
+        <button class="secondary-button" type="submit">筛选</button>
+        <button class="secondary-button" id="harness-filter-clear" type="button">全部</button>
+      </form>
+      <div class="event-feed-meta">
+        <span>全局游标</span>
+        <code id="harness-cursor">0</code>
+      </div>
+      <ol class="event-timeline" id="harness-event-list" aria-live="polite"></ol>
+    </section>
+
+    <section class="evidence-band" id="evidence-band" aria-labelledby="evidence-title" hidden>
+      <div class="section-heading">
+        <div>
+          <span class="section-index">04</span>
           <h2 id="evidence-title">仿真证据</h2>
         </div>
         <span class="verdict" id="verdict"></span>
@@ -109,7 +136,7 @@
     <section class="history-band" aria-labelledby="history-title">
       <div class="section-heading">
         <div>
-          <span class="section-index">04</span>
+          <span class="section-index">05</span>
           <h2 id="history-title">作业记录</h2>
         </div>
       </div>

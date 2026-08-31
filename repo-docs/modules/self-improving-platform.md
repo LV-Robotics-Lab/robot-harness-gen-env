@@ -80,6 +80,15 @@ generator 与 production application 会重读完整 CAS evidence closure，但�
 也没有新的真实 900/120 handler receipt。VLM fallback、LLM orchestration 和工作台不能从这些
 候选底座推断为完成。
 
+A044 只完成前端工作台的第一个竖切：`demo/` 可注入只读 `HarnessEventFeed`，通过
+`GET /api/harness/events` 按 global cursor/run 读取已经提交的 `SQLiteEventJournal` 事件。浏览器保存
+每个 run 视图的 cursor，严格校验响应并区分未配置、历史损坏与响应不自洽；轮询只发起读取，终态只取
+`Event.to_status`。这一切片没有 Harness submit、System 2 调度、artifact 内容解析或拖拽编排；四页面
+工作台仍是进行中。缓存只在当前 journal 重读完全一致后才进入 DOM，在途请求由 view generation
+隔离，SQLite 64 位 cursor 以十进制字符串传输；localStorage 不可用时直接回到 journal。`tests/demo`
+当前 36 passed，其中 12 项用真 Flask +
+headless Chrome 覆盖提交后推进、缓存重确认、并发 filter、reload 与 fail-closed 状态。
+
 Stage 5 的视觉评审状态是三态而非布尔值。在 `--run-smoke`/视觉评审路径中，只有 visual pass
 才把 candidate 原子晋升为 `final_placement.json` 并退出 0；`pending_visual_review` 只写
 `review_candidate_placement.json`，保留 `hold_for_review`/pending 字段并退出 2。batch 只有显式

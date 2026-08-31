@@ -16,6 +16,8 @@ from typing import Any
 
 from flask import Flask, jsonify, request, send_from_directory
 
+from demo.harness_feed import HarnessEventFeedCorruptionError
+
 DEFAULT_SETTLE_STEPS = 900
 
 
@@ -340,6 +342,101 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
             "catalog": catalog.is_file(),
         }
         return jsonify({"status": "ready" if all(paths.values()) else "not_ready", "paths": paths})
+
+    @app.get("/api/harness/events")
+    def harness_events():
+        feed = app.config.get("HARNESS_EVENT_FEED")
+        if feed is None:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_event_feed_unavailable",
+                            "message": "Harness event feed is not configured",
+                        }
+                    }
+                ),
+                503,
+            )
+        after_value = request.args.get("after")
+        if after_value is not None and not (
+            after_value.isascii()
+            and after_value.isdecimal()
+            and len(after_value) <= 19
+            and int(after_value) <= 2**63 - 1
+        ):
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_harness_event_query",
+                            "message": "after must be a nonnegative integer",
+                        }
+                    }
+                ),
+                400,
+            )
+        after_event_id = int(after_value) if after_value is not None else 0
+        limit_value = request.args.get("limit")
+        if limit_value is not None and not (
+            limit_value.isascii()
+            and limit_value.isdecimal()
+            and len(limit_value) <= 3
+            and 1 <= int(limit_value) <= 500
+        ):
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_harness_event_query",
+                            "message": "limit must be an integer from 1 to 500",
+                        }
+                    }
+                ),
+                400,
+            )
+        limit = int(limit_value) if limit_value is not None else 200
+        run_id_value = request.args.get("run_id")
+        run_id = None
+        invalid_run_id = False
+        if run_id_value is not None:
+            try:
+                run_id = uuid.UUID(run_id_value)
+            except ValueError:
+                invalid_run_id = True
+            else:
+                invalid_run_id = str(run_id) != run_id_value
+        if invalid_run_id:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_harness_event_query",
+                            "message": "run_id must be a UUID",
+                        }
+                    }
+                ),
+                400,
+            )
+        try:
+            page = feed.page(
+                after_event_id=after_event_id,
+                run_id=run_id,
+                limit=limit,
+            )
+        except HarnessEventFeedCorruptionError:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_event_feed_corrupt",
+                            "message": "Harness event history failed integrity checks",
+                        }
+                    }
+                ),
+                503,
+            )
+        return jsonify(page)
 
     @app.get("/api/jobs")
     def list_jobs():

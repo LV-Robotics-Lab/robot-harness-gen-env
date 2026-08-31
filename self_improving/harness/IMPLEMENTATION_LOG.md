@@ -40,7 +40,7 @@
 | 4. replay → validate | 进行中 | 实际播放调用、连续帧、哈希绑定验证报告 |
 | 5. VLM fallback 研究 | 待开始 | baseline、逐次实验 TSV/JSONL、消融与总结 |
 | 6. LLM System 2 | 待开始 | agent 计划、上下文包、工具回执、回归晋升 |
-| 7. 前端工作台 | 待开始 | 四页面、真实事件流、浏览器端到端测试 |
+| 7. 前端工作台 | 进行中 | Event Timeline v1 已接 committed journal；其余页面与编排仍缺 |
 | 8. 总验收与文档同步 | 待开始 | 全量测试/覆盖率/真实回放/repo-docs 审计 |
 
 ## 决策与尝试记录
@@ -754,3 +754,28 @@
   新的 900/120 handler 真跑。A035 的 2-step 真机结果只证明 substrate；descriptor 的
   `deterministic=True` 与物理/媒体/资源输出不保证 bitwise identity 的语义仍须先版本化解决，因此
   当前状态只能是 candidate vertical slice，不能登记为已晋升 Skill。
+
+### 2026-08-31 / A044：工作台进度只能来自已提交的 Harness 事件
+
+- RED：既有 `demo/` 只轮询自己的 `job.json`，资产 Web Studio 又从文件 mtime 与日志关键词推断阶段；
+  浏览器没有消费 `SQLiteEventJournal` 的公开 seam。首个 feed 测试因模块不存在而 collection fail，
+  首个 Chrome 测试也看不到任何 committed Harness event。
+- 只读 seam：新增 `HarnessEventFeed.page(after_event_id, run_id, limit)`，把 journal `EventPage` 投影为
+  `harness.workbench_event_page.v1`，保留 global `event_id`、run/Skill 身份、完整 `Event` 与 artifact
+  metadata。`GET /api/harness/events` 只接受注入的 feed；未配置/历史损坏为 503，非法或越界
+  cursor、非 canonical UUID 和 limit 为 400，没有路径参数或任意文件服务。
+- 浏览器：Event Timeline 按 global cursor 增量读取、按 run 过滤，并把每个视图最近 200 条信封与
+  cursor 存入本地缓存；reload 时必须从当前 journal 重读同一窗口并逐项一致，确认前不进 DOM。
+  64 位 cursor 用规范十进制字符串传输，在途请求以 view generation 隔离；响应 schema、cursor
+  单调性、run 身份、Event 状态和顺序在渲染前再次校验。轮询 timer 只触发读取，阶段和终态分别来自
+  committed `stage`/`to_status`。
+- fail closed：真实 SQLite 行篡改显示“历史损坏”，feed 缺失显示“未配置”，HTTP 200 但 cursor 与
+  信封不自洽显示“响应损坏”；三类情况都不把未验证事件加入 DOM。artifact 只有数量 metadata，尚无
+  resolver-backed viewer。
+- 验证：`tests/demo` 36 passed，其中 12 项以真 Flask + 本机 headless Chrome 覆盖提交后推进、缓存
+  重确认、并发 filter、64 位 cursor、localStorage 禁用、reload 去重与三类失败状态；cursor 分页另由
+  Flask client 覆盖。`demo/harness_feed.py` statement/branch 100%。Harness events/journal 回归 12 passed，
+  JS syntax 与 diff check 通过。`demo/app.py`/旧测试原有 12 个 E501 基线未扩大；新增 Python 文件
+  ruff/format clean。
+- 边界：这是四页面工作台的第一竖切，不提供 Harness submit、System 2 调度、依赖/操作拖拽板或
+  artifact 内容 viewer；阶段 7 仍为进行中，不能把旧 job 提交路径写成 Harness 已接通。
