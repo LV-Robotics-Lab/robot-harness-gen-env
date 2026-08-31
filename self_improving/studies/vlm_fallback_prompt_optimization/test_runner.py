@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 from dataclasses import replace
 from pathlib import Path
 
@@ -9,7 +10,11 @@ import pytest
 
 from scene_gen.rendered_critic import build_critic_prompt
 from scene_gen.schema import ResolvedSceneSpec
-from self_improving.studies.vlm_fallback_prompt_optimization import protocol, runner
+from self_improving.studies.vlm_fallback_prompt_optimization import (
+    amendment_bundle,
+    protocol,
+    runner,
+)
 
 STUDY_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = STUDY_ROOT.parents[2]
@@ -28,41 +33,48 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _checked_in_log_prefix() -> bytes:
+    lines = (STUDY_ROOT / "run_log.jsonl").read_bytes().splitlines(keepends=True)
+    assert len(lines) >= runner.FROZEN_LOG_PREFIX_LINES
+    return b"".join(lines[: runner.FROZEN_LOG_PREFIX_LINES])
+
+
 def _write_source_manifest(path: Path) -> str:
+    source_paths = (
+        "scene_gen/rendered_critic.py",
+        "scene_gen/schema.py",
+        "self_improving/studies/vlm_fallback_prompt_optimization/amendment.py",
+        "self_improving/studies/vlm_fallback_prompt_optimization/amendment_bundle.py",
+        "self_improving/studies/vlm_fallback_prompt_optimization/annotations.py",
+        "self_improving/studies/vlm_fallback_prompt_optimization/model_content.py",
+        "self_improving/studies/vlm_fallback_prompt_optimization/protocol.py",
+        "self_improving/studies/vlm_fallback_prompt_optimization/runner.py",
+    )
     entries = [
         {
-            "path": "self_improving/studies/vlm_fallback_prompt_optimization/runner.py",
-            "sha256": _sha256(STUDY_ROOT / "runner.py"),
-        },
-        {
-            "path": "self_improving/studies/vlm_fallback_prompt_optimization/protocol.py",
-            "sha256": _sha256(STUDY_ROOT / "protocol.py"),
-        },
-        {
-            "path": "scene_gen/rendered_critic.py",
-            "sha256": _sha256(REPO_ROOT / "scene_gen/rendered_critic.py"),
-        },
-        {
-            "path": "scene_gen/schema.py",
-            "sha256": _sha256(REPO_ROOT / "scene_gen/schema.py"),
-        },
+            "path": source_path,
+            "sha256": _sha256(REPO_ROOT / source_path),
+            "size_bytes": (REPO_ROOT / source_path).stat().st_size,
+        }
+        for source_path in source_paths
     ]
     value = {
-        "schema_version": "vlm_fallback.runner_source_manifest.v1",
+        "schema_version": "vlm_fallback.runner_source_manifest.v2",
         "study_id": protocol.STUDY_ID,
+        "amendment_root_manifest_sha256": amendment_bundle.EXPECTED_ROOT_SHA256,
         "entries": entries,
     }
     path.write_bytes(protocol.canonical_json_bytes(value) + b"\n")
     return _sha256(path)
 
 
-def _config(tmp_path: Path) -> runner.RunnerConfig:
+def _config(tmp_path: Path, *, setup_prelude: bool = True) -> runner.RunnerConfig:
     tmp_path.mkdir(parents=True, exist_ok=True)
     log_path = tmp_path / "run_log.jsonl"
-    log_path.write_bytes((STUDY_ROOT / "run_log.jsonl").read_bytes())
+    log_path.write_bytes(_checked_in_log_prefix())
     source_manifest = tmp_path / "runner_source_manifest.json"
     source_manifest_sha256 = _write_source_manifest(source_manifest)
-    return runner.RunnerConfig(
+    config = runner.RunnerConfig(
         spec_path=STUDY_ROOT / "experiment_spec.json",
         repo_root=REPO_ROOT,
         log_path=log_path,
@@ -74,10 +86,14 @@ def _config(tmp_path: Path) -> runner.RunnerConfig:
         # The shared worktree intentionally lacks unrelated frozen evidence
         # files. Individual execution tests still rebind their selected case.
         verify_artifacts=False,
+        verify_models=False,
         allow_test_providers=True,
         execution_mode="test",
         routing_provider_mode="in_process_test",
     )
+    if setup_prelude:
+        _append_synthetic_setup_prelude(config)
+    return config
 
 
 @pytest.fixture(autouse=True)
@@ -153,10 +169,44 @@ def _rehash_event(event: dict, *, previous: str | None = None) -> dict:
 
 
 def _write_event_lines(config: runner.RunnerConfig, events: list[dict]) -> None:
-    prefix = (STUDY_ROOT / "run_log.jsonl").read_bytes()
+    prefix = b"".join(
+        config.log_path.read_bytes().splitlines(keepends=True)[: runner.FROZEN_LOG_PREFIX_LINES + 2]
+    )
     config.log_path.write_bytes(
         prefix + b"".join(protocol.canonical_json_bytes(event) + b"\n" for event in events)
     )
+
+
+def _append_synthetic_setup_prelude(config: runner.RunnerConfig) -> tuple[dict, dict]:
+    line7 = {
+        "schema_version": "vlm_fallback.amendment_commitment.v1",
+        "event_id": "amendment-01-root-commitment",
+        "study_id": protocol.STUDY_ID,
+        "decision": "amendment_root_committed",
+        "input_bindings": {
+            "amendment_id": "01",
+            "amendment_root_manifest_sha256": amendment_bundle.EXPECTED_ROOT_SHA256,
+            "base_spec_sha256": runner.FROZEN_SPEC_SHA256,
+        },
+        "previous_event_sha256": runner.FROZEN_LOG_PREFIX_SHA256,
+    }
+    line7["event_sha256"] = protocol.canonical_sha256(line7)
+    line8 = {
+        "schema_version": "vlm_fallback.runner_source_commitment.v2",
+        "event_id": "runner-source-manifest-v2-commitment",
+        "study_id": protocol.STUDY_ID,
+        "decision": "runner_source_manifest_committed",
+        "input_bindings": {
+            "amendment_root_manifest_sha256": amendment_bundle.EXPECTED_ROOT_SHA256,
+            "runner_source_manifest_sha256": config.expected_source_manifest_sha256,
+        },
+        "previous_event_sha256": line7["event_sha256"],
+    }
+    line8["event_sha256"] = protocol.canonical_sha256(line8)
+    with config.log_path.open("ab") as stream:
+        stream.write(protocol.canonical_json_bytes(line7) + b"\n")
+        stream.write(protocol.canonical_json_bytes(line8) + b"\n")
+    return line7, line8
 
 
 def _pending_fixture(tmp_path: Path) -> tuple[runner.RunnerConfig, bytes, dict, dict, dict]:
@@ -187,6 +237,17 @@ def _config_with_spec(tmp_path: Path, mutate) -> runner.RunnerConfig:
     spec_path = tmp_path / "custom_experiment_spec.json"
     spec_path.write_bytes(protocol.canonical_json_bytes(spec) + b"\n")
     return replace(config, spec_path=spec_path)
+
+
+def _install_visible_execution_spec(
+    session: runner.ExperimentRunner,
+    monkeypatch: pytest.MonkeyPatch,
+    mutate,
+) -> None:
+    spec = amendment_bundle.load_verified_bundle().parse_spec()
+    mutate(spec)
+    session._spec = runner._immutable_json_snapshot(spec)
+    monkeypatch.setattr(session, "_refresh_execution_snapshot", lambda: None)
 
 
 def _config_with_test_gold_commitment(tmp_path: Path) -> runner.RunnerConfig:
@@ -408,6 +469,55 @@ def test_pending_annotations_stop_routing_before_provider_with_durable_evidence(
     assert session._journal.events[-1]["expensive_execution_started"] is False
 
 
+@pytest.mark.parametrize("kind", ["visible", "format_repair", "routing", "oracle"])
+def test_pending_v3_gate_precedes_every_provider_reservation_kind(
+    tmp_path: Path,
+    checked_in_pending_annotation_contract: None,
+    kind: str,
+) -> None:
+    visible = _VisibleProvider()
+    routing = _RoutingProvider()
+    oracle_instances: list[_RoutingProvider] = []
+
+    def oracle_factory(_arm: str) -> _RoutingProvider:
+        provider = _RoutingProvider()
+        oracle_instances.append(provider)
+        return provider
+
+    session = runner.ExperimentRunner.open(
+        _config(tmp_path / kind),
+        visible_provider=visible,
+        routing_provider=routing,
+        oracle_routing_provider_factory=oracle_factory,
+        oracle_capability=runner.OracleRoutingCapability(
+            study_id=protocol.STUDY_ID,
+            spec_sha256=runner.FROZEN_EFFECTIVE_SPEC_SHA256,
+            purpose="descriptive_ceiling_only",
+        ),
+    )
+    if kind == "visible":
+        invocation = _a0_invocation()
+    elif kind == "format_repair":
+        invocation = _a0_invocation(
+            repair_index=1,
+            repair_of="f" * 64,
+            repair_source_prompt="source",
+            repair_source_response="response",
+        )
+    elif kind == "routing":
+        invocation = _routing_invocation()
+    else:
+        invocation = _routing_invocation(arm="B3_oracle_route_ceiling")
+
+    with pytest.raises(runner.StudyStoppedError, match="sealed blinded annotations"):
+        session.execute(invocation)
+
+    assert visible.requests == []
+    assert routing.requests == []
+    assert oracle_instances == []
+    assert all(event["decision"] != "provider_call_reserved" for event in session._journal.events)
+
+
 def test_open_validates_frozen_inputs_and_anchors_the_existing_log(tmp_path: Path) -> None:
     config = _config(tmp_path)
     progress: list[runner.ProgressUpdate] = []
@@ -416,15 +526,209 @@ def test_open_validates_frozen_inputs_and_anchors_the_existing_log(tmp_path: Pat
 
     assert session.identity.study_id == protocol.STUDY_ID
     assert session.identity.verified_artifact_count == 0
-    assert session.identity.model_identity_matches == 2
+    assert session.identity.model_identity_matches == 0
     assert progress[-1].stage == "runner.validated"
     anchor = json.loads(config.anchor_path.read_text(encoding="utf-8"))
-    assert anchor["line_count"] == 6
+    assert anchor["line_count"] == 8
+    assert anchor["setup_event_count"] == 2
     assert anchor["log_sha256"] == _sha256(config.log_path)
     assert anchor["genesis_blob_sha256"] == runner.FROZEN_LOG_PREFIX_SHA256
     assert anchor["genesis_line_count"] == runner.FROZEN_LOG_PREFIX_LINES
     assert anchor["execution_mode"] == "test"
     assert anchor["verification_profile_sha256"] == session.identity.verification_profile_sha256
+
+
+def test_open_uses_the_fixed_effective_v2_bundle_as_execution_authority(
+    tmp_path: Path,
+) -> None:
+    config = replace(_config(tmp_path), verify_models=False)
+    loaded = amendment_bundle.load_verified_bundle()
+
+    session = runner.ExperimentRunner.open(config)
+
+    assert session.spec["schema_version"] == protocol.EFFECTIVE_SPEC_SCHEMA_VERSION
+    assert session.identity.amendment_root_sha256 == loaded.root_sha256
+    assert session.identity.spec_sha256 == loaded.child_sha256["experiment_spec.v2.json"]
+    assert dict(session.identity.model_content_manifest_sha256) == {
+        "confirmatory_model_size_ceiling": (
+            "9686327d73f5f373917d25577fc06244c69b132927af1c586fbcbc23f3301208"
+        ),
+        "primary_local_vlm": ("dd904e42c13f7a47296e1aff8ce8a78090a86451d24b5ccd0d2807d29e6e4cad"),
+    }
+    assert dict(session.identity.model_roster_sha256) == {
+        "confirmatory_model_size_ceiling": None,
+        "primary_local_vlm": None,
+    }
+
+
+def test_open_fully_verifies_models_and_refreshes_rosters_before_provider(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    verified: list[str] = []
+    refreshed: list[str] = []
+
+    def fake_verify(_snapshot_path: Path, manifest: dict):
+        verified.append(manifest["model_id"])
+        return runner.model_content.ModelContentSnapshot(
+            manifest_sha256=runner.model_content.manifest_sha256(manifest),
+            roster_sha256="1" * 64,
+            _roster=(),
+        )
+
+    def fake_refresh(_snapshot_path: Path, manifest: dict, _baseline):
+        refreshed.append(manifest["model_id"])
+        return runner.model_content.ModelContentSnapshot(
+            manifest_sha256=runner.model_content.manifest_sha256(manifest),
+            roster_sha256="2" * 64,
+            _roster=(),
+        )
+
+    monkeypatch.setattr(runner.model_content, "verify_model_content", fake_verify)
+    monkeypatch.setattr(runner.model_content, "refresh_model_content", fake_refresh)
+    provider = _VisibleProvider()
+    session = runner.ExperimentRunner.open(
+        replace(_config(tmp_path), verify_models=True),
+        visible_provider=provider,
+    )
+
+    receipt = session.execute(_a0_invocation())
+
+    assert sorted(verified) == [
+        "Qwen/Qwen2.5-VL-3B-Instruct",
+        "Qwen/Qwen2.5-VL-7B-Instruct",
+    ]
+    assert len(refreshed) >= 2
+    assert provider.requests[0].model.model_roster_sha256 == "2" * 64
+    assert receipt.event["model_receipt"]["model_roster_sha256"] == "2" * 64
+    assert dict(session.identity.model_roster_sha256)["primary_local_vlm"] == "2" * 64
+
+
+def test_model_roster_refresh_failure_stops_before_provider_reservation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_verify(_snapshot_path: Path, manifest: dict):
+        return runner.model_content.ModelContentSnapshot(
+            manifest_sha256=runner.model_content.manifest_sha256(manifest),
+            roster_sha256="1" * 64,
+            _roster=(),
+        )
+
+    monkeypatch.setattr(runner.model_content, "verify_model_content", fake_verify)
+    monkeypatch.setattr(
+        runner.model_content,
+        "refresh_model_content",
+        lambda *_args: (_ for _ in ()).throw(ValueError("roster drift")),
+    )
+    provider = _VisibleProvider()
+    session = runner.ExperimentRunner.open(
+        replace(_config(tmp_path), verify_models=True),
+        visible_provider=provider,
+    )
+
+    with pytest.raises(runner.StudyStoppedError, match="model content verification failed"):
+        session.execute(_a0_invocation())
+
+    assert provider.requests == []
+    assert all(event["decision"] != "provider_call_reserved" for event in session._journal.events)
+    assert session._journal.events[-1]["expensive_execution_started"] is False
+
+
+def test_each_execution_boundary_reloads_the_fixed_bundle_without_a_caller_handle(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixed_loader = amendment_bundle.load_verified_bundle
+    loads = 0
+
+    def counted_fixed_loader():
+        nonlocal loads
+        loads += 1
+        return fixed_loader()
+
+    monkeypatch.setattr(amendment_bundle, "load_verified_bundle", counted_fixed_loader)
+    session = runner.ExperimentRunner.open(
+        _config(tmp_path),
+        visible_provider=_VisibleProvider(),
+    )
+
+    session.execute(_a0_invocation())
+
+    assert loads >= 3
+
+
+def test_missing_anchor_accepts_only_the_exact_two_setup_events(tmp_path: Path) -> None:
+    config = _config(tmp_path, setup_prelude=False)
+    _line7, line8 = _append_synthetic_setup_prelude(config)
+
+    session = runner.ExperimentRunner.open(config)
+
+    assert _line7["event_sha256"] == runner.FROZEN_AMENDMENT_COMMITMENT_EVENT_SHA256
+    assert session._journal.events == []
+    assert session._journal.anchor["line_count"] == 8
+    assert session._journal.anchor["last_event_sha256"] == line8["event_sha256"]
+
+
+def test_missing_anchor_rejects_any_event_after_the_setup_prelude(tmp_path: Path) -> None:
+    config = _config(tmp_path, setup_prelude=False)
+    _line7, line8 = _append_synthetic_setup_prelude(config)
+    extra = {
+        "schema_version": "vlm_fallback.run_event.v1",
+        "event_id": "unanchored-business-event",
+        "decision": "unexpected_execution",
+        "input_bindings": {},
+        "previous_event_sha256": line8["event_sha256"],
+    }
+    extra["event_sha256"] = protocol.canonical_sha256(extra)
+    with config.log_path.open("ab") as stream:
+        stream.write(protocol.canonical_json_bytes(extra) + b"\n")
+
+    with pytest.raises(runner.RunnerIntegrityError, match="missing.*execution events"):
+        runner.ExperimentRunner.open(config)
+
+
+@pytest.mark.parametrize(
+    ("attack", "match"),
+    [
+        ("line7_only", "exactly two"),
+        ("line7_root", "amendment commitment event mismatch"),
+        ("line8_source", "runner source commitment event mismatch"),
+        ("third_setup", "exactly two"),
+    ],
+)
+def test_setup_prelude_attacks_fail_closed(
+    tmp_path: Path,
+    attack: str,
+    match: str,
+) -> None:
+    config = _config(tmp_path, setup_prelude=False)
+    line7, line8 = _append_synthetic_setup_prelude(config)
+    events = [line7, line8]
+    if attack == "line7_only":
+        events.pop()
+    elif attack == "line7_root":
+        line7["input_bindings"]["amendment_root_manifest_sha256"] = "0" * 64
+        line7 = _rehash_event(line7)
+        line8 = _rehash_event(line8, previous=line7["event_sha256"])
+        events = [line7, line8]
+    elif attack == "line8_source":
+        line8["input_bindings"]["runner_source_manifest_sha256"] = "0" * 64
+        events[1] = _rehash_event(line8)
+    else:
+        third = {
+            **line8,
+            "event_id": "duplicate-setup-kind",
+            "previous_event_sha256": line8["event_sha256"],
+        }
+        events.append(_rehash_event(third))
+    base = _checked_in_log_prefix()
+    config.log_path.write_bytes(
+        base + b"".join(protocol.canonical_json_bytes(event) + b"\n" for event in events)
+    )
+
+    with pytest.raises(runner.RunnerIntegrityError, match=match):
+        runner.ExperimentRunner.open(config)
 
 
 def test_production_mode_cannot_disable_integrity_verification(tmp_path: Path) -> None:
@@ -459,6 +763,62 @@ def test_production_mode_cannot_disable_integrity_verification(tmp_path: Path) -
     for config in attacks:
         with pytest.raises(runner.RunnerIntegrityError, match="production mode requires"):
             runner.ExperimentRunner.open(config)
+
+
+@pytest.mark.parametrize(
+    ("mutation", "match"),
+    [
+        (lambda value, tmp: replace(value, repo_root=tmp), "repo_root"),
+        (lambda value, tmp: replace(value, spec_path=STUDY_ROOT / "experiment_spec.json"), "spec"),
+        (lambda value, tmp: replace(value, log_path=tmp / "test/run_log.jsonl"), "run log"),
+        (lambda value, tmp: replace(value, anchor_path=tmp / "test/run_state.json"), "anchor"),
+        (lambda value, tmp: replace(value, pending_path=tmp / "test/run_pending.json"), "pending"),
+        (lambda value, tmp: replace(value, lock_path=tmp / "test/run.lock"), "lock"),
+        (
+            lambda value, tmp: replace(
+                value,
+                source_manifest_path=tmp / "test/runner_source_manifest.json",
+            ),
+            "source manifest",
+        ),
+        (
+            lambda value, tmp: replace(value, expected_log_prefix_sha256="0" * 64),
+            "runner-pinned",
+        ),
+    ],
+)
+def test_production_paths_and_log_prefix_are_runner_owned(
+    tmp_path: Path,
+    mutation,
+    match: str,
+) -> None:
+    test_config = _config(tmp_path / "test")
+    production = replace(
+        test_config,
+        spec_path=runner.FROZEN_EFFECTIVE_SPEC_PATH,
+        repo_root=runner.FROZEN_REPO_ROOT,
+        log_path=runner.FROZEN_RUN_LOG_PATH,
+        anchor_path=runner.FROZEN_RUN_ANCHOR_PATH,
+        pending_path=runner.FROZEN_RUN_PENDING_PATH,
+        lock_path=runner.FROZEN_RUN_LOCK_PATH,
+        source_manifest_path=runner.FROZEN_RUNNER_SOURCE_MANIFEST_PATH,
+        verify_artifacts=True,
+        verify_models=True,
+        allow_test_providers=False,
+        execution_mode="production",
+        routing_provider_mode="sandboxed_subprocess",
+    )
+
+    with pytest.raises(runner.RunnerIntegrityError, match=match):
+        runner.ExperimentRunner.open(mutation(production, tmp_path))
+
+
+def test_production_runtime_state_uses_the_ignored_study_runs_directory() -> None:
+    state_root = STUDY_ROOT / "runs" / "runtime_state"
+
+    assert runner.FROZEN_RUN_ANCHOR_PATH == state_root / "run_state.json"
+    assert runner.FROZEN_RUN_PENDING_PATH == state_root / "run_pending.json"
+    assert runner.FROZEN_RUN_LOCK_PATH == state_root / "run.lock"
 
 
 def test_isolated_routing_profile_rejects_an_in_process_provider(tmp_path: Path) -> None:
@@ -557,6 +917,47 @@ def test_checked_in_runner_source_manifest_is_canonical_and_complete(tmp_path: P
     assert session.identity.source_manifest_sha256 == _sha256(manifest_path)
 
 
+def test_checked_in_source_and_setup_prefix_match_the_final_commitments() -> None:
+    source_payload = runner.FROZEN_RUNNER_SOURCE_MANIFEST_PATH.read_bytes()
+    assert hashlib.sha256(source_payload).hexdigest() == (
+        "b042924de77f2eb0be1a935f8d97dd0e9052c0e719f3b88e545363078529f9fe"
+    )
+    assert len(source_payload) == 1551
+
+    lines = runner.FROZEN_RUN_LOG_PATH.read_bytes().splitlines(keepends=True)
+    assert len(lines) == runner.FROZEN_LOG_PREFIX_LINES + 2
+    original_prefix = b"".join(lines[: runner.FROZEN_LOG_PREFIX_LINES])
+    assert hashlib.sha256(original_prefix).hexdigest() == runner.FROZEN_LOG_PREFIX_SHA256
+    committed_prefix = b"".join(lines)
+    assert hashlib.sha256(committed_prefix).hexdigest() == (
+        "039a5cd6fbf82619cbb96c01773c7e5a78043c77da23676791a901d173fbd5ae"
+    )
+    assert len(committed_prefix) == 7888
+
+    line7 = json.loads(lines[6])
+    line8 = json.loads(lines[7])
+    assert protocol.canonical_json_bytes(line7) + b"\n" == lines[6]
+    assert protocol.canonical_json_bytes(line8) + b"\n" == lines[7]
+    assert line7["event_sha256"] == runner.FROZEN_AMENDMENT_COMMITMENT_EVENT_SHA256
+    assert line7["previous_event_sha256"] == runner.FROZEN_LOG_PREFIX_SHA256
+    unhashed_line7 = {key: value for key, value in line7.items() if key != "event_sha256"}
+    assert protocol.canonical_sha256(unhashed_line7) == line7["event_sha256"]
+    assert line8 == {
+        "schema_version": runner.RUNNER_SOURCE_COMMITMENT_SCHEMA,
+        "event_id": "runner-source-manifest-v2-commitment",
+        "study_id": protocol.STUDY_ID,
+        "decision": "runner_source_manifest_committed",
+        "input_bindings": {
+            "amendment_root_manifest_sha256": runner.FROZEN_AMENDMENT_ROOT_SHA256,
+            "runner_source_manifest_sha256": hashlib.sha256(source_payload).hexdigest(),
+        },
+        "previous_event_sha256": line7["event_sha256"],
+        "event_sha256": "b338f685c66aeddc7d03cacf5f2fddf97714ffef7afa6c3f6803645b5a38a5d8",
+    }
+    unhashed_line8 = {key: value for key, value in line8.items() if key != "event_sha256"}
+    assert protocol.canonical_sha256(unhashed_line8) == line8["event_sha256"]
+
+
 def test_visible_call_writes_hash_bound_receipt_and_exact_resume_is_idempotent(
     tmp_path: Path,
 ) -> None:
@@ -592,18 +993,29 @@ def test_visible_call_writes_hash_bound_receipt_and_exact_resume_is_idempotent(
         == hashlib.sha256(invocation.prompt.encode("utf-8")).hexdigest()
     )
     assert first.event["model_receipt"]["model_revision"] == provider.requests[0].model.revision
+    assert first.event["model_receipt"]["model_content_manifest_sha256"] == (
+        "dd904e42c13f7a47296e1aff8ce8a78090a86451d24b5ccd0d2807d29e6e4cad"
+    )
+    assert first.event["model_receipt"]["model_roster_sha256"] is None
+    assert (
+        provider.requests[0].model.model_content_manifest_sha256
+        == (first.event["model_receipt"]["model_content_manifest_sha256"])
+    )
+    assert first.event["receipt_promotion_authority"] is False
+    assert first.event["receipt_scope"] == "test_only_non_promotion"
     assert first.event["model_receipt"]["input_tokens"] == 27
     assert first.event["outputs"]["abstain"] is False
     assert first.event["gate_results"]["render_used_as_physics_evidence"] is False
     reservation = next(
         event for event in session._journal.events if event["decision"] == "provider_call_reserved"
     )
-    assert reservation["previous_event_sha256"] == runner.FROZEN_LOG_PREFIX_SHA256
+    setup_line8 = json.loads(config.log_path.read_bytes().splitlines()[7])
+    assert reservation["previous_event_sha256"] == setup_line8["event_sha256"]
     assert first.event["previous_event_sha256"] == reservation["event_sha256"]
     assert progress[-1].stage == "invocation.resumed"
     assert [item.stage for item in progress].count("provider.images_encoded") == 1
     anchor = json.loads(config.anchor_path.read_text(encoding="utf-8"))
-    assert anchor["line_count"] == 8
+    assert anchor["line_count"] == 10
     assert anchor["last_event_sha256"] == first.event["event_sha256"]
 
 
@@ -625,7 +1037,7 @@ def test_stale_runner_refreshes_before_provider_boundary_and_does_not_duplicate(
     assert resumed.event == committed.event
     assert len(first_provider.requests) == 1
     assert stale_provider.requests == []
-    assert json.loads(config.anchor_path.read_text(encoding="utf-8"))["line_count"] == 8
+    assert json.loads(config.anchor_path.read_text(encoding="utf-8"))["line_count"] == 10
 
 
 def test_typed_route_call_hides_gold_and_binds_route_result(tmp_path: Path) -> None:
@@ -693,7 +1105,7 @@ def test_routing_arm_context_projection_prevents_treatment_leakage(tmp_path: Pat
         oracle_routing_provider_factory=oracle_factory,
         oracle_capability=runner.OracleRoutingCapability(
             study_id=protocol.STUDY_ID,
-            spec_sha256=runner.FROZEN_SPEC_SHA256,
+            spec_sha256=runner.FROZEN_EFFECTIVE_SPEC_SHA256,
             purpose="descriptive_ceiling_only",
         ),
     )
@@ -929,7 +1341,7 @@ def test_pending_receipt_is_recovered_without_reinvoking_provider(tmp_path: Path
     assert resumed.event == completed.event
     assert resumed_provider.requests == []
     assert not config.pending_path.exists()
-    assert json.loads(config.anchor_path.read_text(encoding="utf-8"))["line_count"] == 8
+    assert json.loads(config.anchor_path.read_text(encoding="utf-8"))["line_count"] == 10
 
 
 def test_budget_violation_is_receipted_and_stops_future_execution(tmp_path: Path) -> None:
@@ -1387,14 +1799,27 @@ def test_sealed_visible_test_fails_closed_when_deleted_evidence_is_selected(tmp_
     [
         (lambda value: value.update(schema_version="wrong"), "source manifest must use"),
         (lambda value: value.update(study_id="wrong"), "study_id mismatch"),
+        (
+            lambda value: value.update(amendment_root_manifest_sha256="0" * 64),
+            "amendment root mismatch",
+        ),
+        (lambda value: value.update(extra="forbidden"), "source manifest must use"),
         (lambda value: value.update(entries=[]), "entries must be non-empty"),
         (lambda value: value.update(entries={}), "entries must be non-empty"),
         (lambda value: value["entries"].__setitem__(0, "bad"), "entry must be an object"),
-        (lambda value: value["entries"][0].update(path=7), "path/sha256 must be strings"),
+        (lambda value: value["entries"][0].update(path=7), "path/sha256/size"),
+        (lambda value: value["entries"][0].update(size_bytes=-1), "path/sha256/size"),
+        (
+            lambda value: value["entries"][0].update(
+                size_bytes=value["entries"][0]["size_bytes"] + 1
+            ),
+            "source size mismatch",
+        ),
         (lambda value: value["entries"][0].update(path="../escape.py"), "unsafe or duplicate"),
         (lambda value: value["entries"].append(dict(value["entries"][0])), "unsafe or duplicate"),
         (lambda value: value["entries"][0].update(path="missing-source.py"), "missing or escapes"),
-        (lambda value: value["entries"].pop(), "missing required entries"),
+        (lambda value: value["entries"].pop(), "exactly match required sources"),
+        (lambda value: value["entries"].reverse(), "UTF-8 path sorted"),
     ],
 )
 def test_source_manifest_structure_attacks_fail_closed(
@@ -1513,7 +1938,9 @@ def test_journal_structure_attacks_fail_closed(tmp_path: Path, attack: str, matc
     invocation = _a0_invocation(seed=12)
     event = dict(session.execute(invocation).event)
     reservation = dict(session._journal.events[-2])
-    prefix = (STUDY_ROOT / "run_log.jsonl").read_bytes()
+    prefix = b"".join(
+        config.log_path.read_bytes().splitlines(keepends=True)[: runner.FROZEN_LOG_PREFIX_LINES + 2]
+    )
     if attack == "short_prefix":
         config.log_path.write_bytes(prefix.splitlines(keepends=True)[0])
     elif attack == "prefix_digest":
@@ -1672,7 +2099,7 @@ def test_pending_recovery_accepts_log_appended_with_old_or_new_anchor(tmp_path: 
 
         runner.ExperimentRunner.open(config)
 
-        assert json.loads(config.anchor_path.read_text(encoding="utf-8"))["line_count"] == 8
+        assert json.loads(config.anchor_path.read_text(encoding="utf-8"))["line_count"] == 10
         assert not config.pending_path.exists()
 
 
@@ -1924,6 +2351,10 @@ def test_routing_invocation_validation_and_gold_isolation(tmp_path: Path) -> Non
             _routing_invocation(untyped_failure_summary=7),  # type: ignore[arg-type]
             "must be text or null",
         ),
+        (
+            _routing_invocation(resource_reservation=runner.ResourceUsage(network_calls=-1)),
+            "non-negative integer counters",
+        ),
         (_routing_invocation(arm="unknown"), "unknown routing arm"),
         (_routing_invocation(case_id="unknown"), "unknown routing case"),
         (_routing_invocation(original_prompt="changed"), "exactly match"),
@@ -1953,6 +2384,70 @@ def test_routing_invocation_validation_and_gold_isolation(tmp_path: Path) -> Non
         with pytest.raises(ValueError, match=match):
             session.execute(invocation)
     assert provider.requests == []
+
+
+def test_routing_inner_refresh_stops_on_between_boundary_source_drift(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = _config(tmp_path)
+    provider = _RoutingProvider()
+    session = runner.ExperimentRunner.open(config, routing_provider=provider)
+    original_refresh = session._refresh_execution_snapshot
+    source_bytes = config.source_manifest_path.read_bytes()
+    refresh_count = 0
+
+    def refresh_then_drift() -> None:
+        nonlocal refresh_count
+        refresh_count += 1
+        if refresh_count == 2:
+            config.source_manifest_path.write_bytes(b"{}\n")
+        original_refresh()
+
+    monkeypatch.setattr(session, "_refresh_execution_snapshot", refresh_then_drift)
+    try:
+        with pytest.raises(runner.StudyStoppedError, match="frozen input drift"):
+            session.execute(_routing_invocation())
+    finally:
+        config.source_manifest_path.write_bytes(source_bytes)
+
+    assert refresh_count == 2
+    assert provider.requests == []
+
+
+def test_routing_rejects_bundle_drift_and_duplicate_logical_requests(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    drift_provider = _RoutingProvider()
+    drift = runner.ExperimentRunner.open(
+        _config(tmp_path / "bundle"),
+        routing_provider=drift_provider,
+    )
+    drifted_spec = amendment_bundle.load_verified_bundle().parse_spec()
+    sample = next(
+        item
+        for item in drifted_spec["experiments"][1]["samples"]
+        if item["case_id"] == _routing_invocation().case_id
+    )
+    sample["bundle_sha256"] = "0" * 64
+    drift._spec = runner._immutable_json_snapshot(drifted_spec)
+    monkeypatch.setattr(drift, "_refresh_execution_snapshot", lambda: None)
+
+    with pytest.raises(runner.RunnerIntegrityError, match="artifact bundle drift"):
+        drift.execute(_routing_invocation())
+    assert drift_provider.requests == []
+
+    provider = _RoutingProvider()
+    session = runner.ExperimentRunner.open(
+        _config(tmp_path / "duplicate"),
+        routing_provider=provider,
+    )
+    invocation = _routing_invocation()
+    session.execute(invocation)
+    with pytest.raises(runner.DuplicateInvocationError, match="different request digest"):
+        session.execute(replace(invocation, seed=invocation.seed + 1))
+    assert len(provider.requests) == 1
 
 
 def test_routing_provider_configuration_and_oracle_seam(tmp_path: Path) -> None:
@@ -1996,7 +2491,7 @@ def test_routing_provider_configuration_and_oracle_seam(tmp_path: Path) -> None:
         _config(tmp_path / "missing-oracle-factory"),
         oracle_capability=runner.OracleRoutingCapability(
             study_id=protocol.STUDY_ID,
-            spec_sha256=runner.FROZEN_SPEC_SHA256,
+            spec_sha256=runner.FROZEN_EFFECTIVE_SPEC_SHA256,
             purpose="descriptive_ceiling_only",
         ),
     )
@@ -2008,7 +2503,7 @@ def test_routing_provider_configuration_and_oracle_seam(tmp_path: Path) -> None:
         oracle_routing_provider_factory=lambda arm: oracle_provider,
         oracle_capability=runner.OracleRoutingCapability(
             study_id=protocol.STUDY_ID,
-            spec_sha256=runner.FROZEN_SPEC_SHA256,
+            spec_sha256=runner.FROZEN_EFFECTIVE_SPEC_SHA256,
             purpose="descriptive_ceiling_only",
         ),
     )
@@ -2345,6 +2840,26 @@ def test_visible_invocation_count_reservation_and_outcome_are_exactly_one(
     assert len(postcall_provider.requests) == 1
 
 
+def test_visible_reservation_rejects_exhausted_and_external_call_budgets(
+    tmp_path: Path,
+) -> None:
+    provider = _VisibleProvider()
+    session = runner.ExperimentRunner.open(_config(tmp_path), visible_provider=provider)
+    reservation = runner.ResourceUsage(
+        visible_vlm_invocations=10_000,
+        network_calls=1,
+        remote_paid_calls=1,
+    )
+
+    with pytest.raises(runner.StudyStoppedError) as stopped:
+        session.execute(_a0_invocation(seed=1805, resource_reservation=reservation))
+
+    assert provider.requests == []
+    assert "visible VLM invocation budget exhausted" in stopped.value.reason
+    assert "network access cannot be reserved" in stopped.value.reason
+    assert "remote_paid_calls cannot be reserved" in stopped.value.reason
+
+
 def test_all_routing_resource_stop_rules_are_reported_together(tmp_path: Path) -> None:
     class ViolatingRouter(_RoutingProvider):
         def invoke(self, request, progress):
@@ -2390,6 +2905,34 @@ def test_all_routing_resource_stop_rules_are_reported_together(tmp_path: Path) -
         "network access",
         "remote_paid_calls",
         "physical pass",
+    ):
+        assert marker in stopped.value.reason
+
+
+def test_routing_reservation_rejects_impossible_replay_and_external_budgets(
+    tmp_path: Path,
+) -> None:
+    provider = _RoutingProvider()
+    session = runner.ExperimentRunner.open(_config(tmp_path), routing_provider=provider)
+    reservation = runner.ResourceUsage(
+        fresh_physical_replays=1,
+        runtime_steps=901,
+        contact_window_steps=121,
+        gpu_time_ms=12 * 60 * 60 * 1000 + 1,
+        network_calls=1,
+        remote_paid_calls=1,
+    )
+
+    with pytest.raises(runner.StudyStoppedError) as stopped:
+        session.execute(_routing_invocation(resource_reservation=reservation))
+
+    assert provider.requests == []
+    for marker in (
+        "max_runtime_steps_per_replay exhausted",
+        "contact_window_steps exhausted",
+        "max_gpu_hours exhausted",
+        "network access cannot be reserved",
+        "remote_paid_calls cannot be reserved",
     ):
         assert marker in stopped.value.reason
 
@@ -2509,6 +3052,181 @@ def test_custom_spec_visible_fail_closed_guards(tmp_path: Path) -> None:
         runner.ExperimentRunner.open(base_budget_config, visible_provider=_VisibleProvider())
 
 
+@pytest.mark.parametrize(
+    ("attack", "match"),
+    [
+        ("no_images", "has no frozen images"),
+        ("image_budget", "exceeds image budget"),
+    ],
+)
+def test_visible_execution_snapshot_enforces_image_guards(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    attack: str,
+    match: str,
+) -> None:
+    provider = _VisibleProvider()
+    session = runner.ExperimentRunner.open(_config(tmp_path), visible_provider=provider)
+
+    def mutate(spec: dict) -> None:
+        experiment = spec["experiments"][0]
+        sample = next(
+            item for item in experiment["samples"] if item["case_id"] == _a0_invocation().case_id
+        )
+        if attack == "no_images":
+            sample["artifacts"] = [sample["artifacts"][-1]]
+            sample["bundle_sha256"] = protocol.canonical_sha256(
+                protocol.build_bundle_manifest(REPO_ROOT, sample["artifacts"])
+            )
+        else:
+            experiment["budget"]["max_input_images_per_case"] = 5
+
+    _install_visible_execution_spec(session, monkeypatch, mutate)
+
+    with pytest.raises(runner.RunnerIntegrityError, match=match):
+        session.execute(_a0_invocation(seed=1806))
+    assert provider.requests == []
+
+
+def test_visible_inner_refresh_stops_on_between_boundary_source_drift(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = _config(tmp_path)
+    provider = _VisibleProvider()
+    session = runner.ExperimentRunner.open(config, visible_provider=provider)
+    original_refresh = session._refresh_execution_snapshot
+    source_bytes = config.source_manifest_path.read_bytes()
+    refresh_count = 0
+
+    def refresh_then_drift() -> None:
+        nonlocal refresh_count
+        refresh_count += 1
+        if refresh_count == 2:
+            config.source_manifest_path.write_bytes(b"{}\n")
+        original_refresh()
+
+    monkeypatch.setattr(session, "_refresh_execution_snapshot", refresh_then_drift)
+    try:
+        with pytest.raises(runner.StudyStoppedError, match="frozen input drift"):
+            session.execute(_a0_invocation(seed=1807))
+    finally:
+        config.source_manifest_path.write_bytes(source_bytes)
+
+    assert refresh_count == 2
+    assert provider.requests == []
+
+
+def test_visible_test_split_requires_and_binds_the_selected_prompt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def mark_a0_sample_as_test(spec: dict) -> None:
+        sample = next(
+            item
+            for item in spec["experiments"][0]["samples"]
+            if item["case_id"] == _a0_invocation().case_id
+        )
+        sample["split"] = "test"
+
+    missing_provider = _VisibleProvider()
+    missing = runner.ExperimentRunner.open(
+        _config(tmp_path / "missing"),
+        visible_provider=missing_provider,
+    )
+    _install_visible_execution_spec(missing, monkeypatch, mark_a0_sample_as_test)
+    with pytest.raises(runner.StudyStoppedError, match="before selected prompt freeze"):
+        missing.execute(_a0_invocation(seed=1808))
+    assert missing_provider.requests == []
+
+    provider = _VisibleProvider()
+    bound = runner.ExperimentRunner.open(
+        _config(tmp_path / "bound"),
+        visible_provider=provider,
+    )
+    baseline_invocation = _a0_invocation(seed=1809)
+    baseline = bound.execute(baseline_invocation)
+    _install_visible_execution_spec(bound, monkeypatch, mark_a0_sample_as_test)
+    selected_event = json.loads(json.dumps(baseline.event))
+    selected_event["event_id"] = "fixture-selected-visible-prompt"
+    selected_event["decision"] = "selected_prompt_frozen"
+    selected_event["model_receipt"].update(
+        prompt_sha256=hashlib.sha256(b"frozen prompt").hexdigest(),
+        prompt_template_version="frozen-template-v1",
+        processor_config_sha256=protocol.canonical_sha256({}),
+    )
+    selected_event["input_bindings"]["logical_key"] = protocol.canonical_sha256(
+        {"kind": "fixture-selected-visible-prompt"}
+    )
+    selected_event["input_bindings"]["request_sha256"] = protocol.canonical_sha256(
+        {"kind": "fixture-selected-visible-prompt-request"}
+    )
+    selected_event.pop("previous_event_sha256", None)
+    selected_event.pop("event_sha256", None)
+    bound._journal.append(selected_event)
+
+    with pytest.raises(runner.DuplicateInvocationError, match="different request digest"):
+        bound.execute(baseline_invocation)
+    with pytest.raises(runner.StudyStoppedError, match="differs from selected prompt freeze"):
+        bound.execute(
+            runner.VisibleInvocation(
+                case_id=baseline_invocation.case_id,
+                arm="A1_typed_abstaining_critic_3b",
+                prompt="different prompt",
+                prompt_template_version="typed-visible-v1",
+                processor_config={},
+                seed=1810,
+                attempt=1,
+            )
+        )
+    assert len(provider.requests) == 1
+
+
+def test_visible_base_invocation_budget_stops_before_a_second_call(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    provider = _VisibleProvider()
+    session = runner.ExperimentRunner.open(_config(tmp_path), visible_provider=provider)
+    session.execute(_a0_invocation(seed=1811))
+    _install_visible_execution_spec(
+        session,
+        monkeypatch,
+        lambda spec: spec["experiments"][0]["budget"].update(max_base_vlm_invocations=1),
+    )
+
+    with pytest.raises(runner.StudyStoppedError, match="max_base_vlm_invocations exhausted"):
+        session.execute(_a0_invocation(seed=1812, attempt=2))
+    assert len(provider.requests) == 1
+
+
+def test_visible_provider_identity_drift_overrides_the_original_provider_error(
+    tmp_path: Path,
+) -> None:
+    class FailingIdentitySwitchingVisible(_VisibleProvider):
+        def invoke(self, request, progress):
+            self.requests.append(request)
+            self.identity = replace(
+                self.identity,
+                revision="switched-on-error",
+                implementation_sha256="9" * 64,
+            )
+            raise RuntimeError("original provider failure")
+
+    provider = FailingIdentitySwitchingVisible()
+    original_identity = provider.identity
+    session = runner.ExperimentRunner.open(_config(tmp_path), visible_provider=provider)
+
+    with pytest.raises(runner.StudyStoppedError, match="resource usage is unknown"):
+        session.execute(_a0_invocation(seed=1813))
+
+    failed = session._journal.events[-1]
+    assert failed["decision"] == "provider_call_failed"
+    assert failed["error"]["code"] == "provider_contract_error"
+    assert failed["error"]["exception_type"] == "ProviderContractError"
+    assert failed["model_receipt"]["provider_revision"] == original_identity.revision
+
+
 def test_visible_ceiling_and_frozen_prompt_mismatch_stop(tmp_path: Path) -> None:
     base = runner.VisibleInvocation(
         case_id="asset_probe_dustbin_legacy_900",
@@ -2567,7 +3285,7 @@ def test_prompt_freeze_commits_only_with_a_sealed_runner_owned_evidence_fixture(
     dev_gold = {
         "schema_version": runner.VISIBLE_DEV_GOLD_SCHEMA,
         "study_id": protocol.STUDY_ID,
-        "spec_sha256": runner.FROZEN_SPEC_SHA256,
+        "spec_sha256": runner.FROZEN_EFFECTIVE_SPEC_SHA256,
         **runner._annotation_contract_digests(frozen_spec),
         "rows": [{"case_id": case_id, "gold": gold_by_case[case_id]} for case_id in dev_cases],
     }
@@ -2749,6 +3467,107 @@ def test_prompt_freeze_commits_only_with_a_sealed_runner_owned_evidence_fixture(
         dev_gold_manifest_path=dev_gold_path,
     )
 
+    def write_bound_json(name: str, value: dict) -> tuple[Path, str]:
+        path = tmp_path / name
+        path.write_bytes(protocol.canonical_json_bytes(value) + b"\n")
+        return path, _sha256(path)
+
+    gold_attacks = (
+        ({**gold_seal, "state": "open"}, "gold seal contract mismatch"),
+        (
+            {**gold_seal, "annotation_manifest_sha256": "z" * 64},
+            "annotation digest is invalid",
+        ),
+        (
+            {**gold_seal, "annotation_manifest_sha256": "A" * 64},
+            "annotation digest is invalid",
+        ),
+        (
+            {**gold_seal, "annotation_manifest_sha256": "0" * 64},
+            "not spec-committed",
+        ),
+    )
+    for index, (attacked_gold, match) in enumerate(gold_attacks):
+        attacked_path, attacked_sha = write_bound_json(f"gold_attack_{index}.json", attacked_gold)
+        with pytest.raises(runner.RunnerIntegrityError, match=match):
+            session.freeze_visible_prompt(
+                replace(
+                    freeze,
+                    gold_seal_path=attacked_path,
+                    gold_seal_sha256=attacked_sha,
+                )
+            )
+
+    with pytest.raises(runner.RunnerIntegrityError, match="sealed dev gold manifest"):
+        session.freeze_visible_prompt(replace(freeze, dev_gold_manifest_path=None))
+
+    pending_annotation = {
+        **annotation,
+        "state": "pending_blinded_annotation",
+        "dev_gold_manifest_sha256": None,
+        "test_annotation_payload_sha256": None,
+    }
+    pending_path, pending_sha = write_bound_json("pending_annotation.json", pending_annotation)
+    pending_gold = {**gold_seal, "annotation_manifest_sha256": pending_sha}
+    pending_gold_path, pending_gold_sha = write_bound_json("pending_gold.json", pending_gold)
+    with monkeypatch.context() as patch:
+        patch.setattr(runner, "SEALED_TEST_ANNOTATION_MANIFEST_PATH", pending_path)
+        patch.setattr(runner, "SEALED_TEST_ANNOTATION_MANIFEST_SHA256", pending_sha)
+        with pytest.raises(runner.RunnerIntegrityError, match="not available for execution"):
+            session.freeze_visible_prompt(
+                replace(
+                    freeze,
+                    gold_seal_path=pending_gold_path,
+                    gold_seal_sha256=pending_gold_sha,
+                )
+            )
+
+    dev_gold_attacks = (
+        ({**dev_gold, "schema_version": "wrong"}, "dev gold manifest contract mismatch"),
+        ({**dev_gold, "rows": []}, "dev gold manifest rows are incomplete"),
+    )
+    for index, (attacked_dev_gold, match) in enumerate(dev_gold_attacks):
+        attacked_dev_path, attacked_dev_sha = write_bound_json(
+            f"dev_gold_attack_{index}.json",
+            attacked_dev_gold,
+        )
+        attacked_annotation = {
+            **annotation,
+            "dev_gold_manifest_sha256": attacked_dev_sha,
+        }
+        attacked_annotation_path, attacked_annotation_sha = write_bound_json(
+            f"annotation_for_dev_attack_{index}.json",
+            attacked_annotation,
+        )
+        attacked_gold = {
+            **gold_seal,
+            "annotation_manifest_sha256": attacked_annotation_sha,
+        }
+        attacked_gold_path, attacked_gold_sha = write_bound_json(
+            f"gold_for_dev_attack_{index}.json",
+            attacked_gold,
+        )
+        with monkeypatch.context() as patch:
+            patch.setattr(
+                runner,
+                "SEALED_TEST_ANNOTATION_MANIFEST_PATH",
+                attacked_annotation_path,
+            )
+            patch.setattr(
+                runner,
+                "SEALED_TEST_ANNOTATION_MANIFEST_SHA256",
+                attacked_annotation_sha,
+            )
+            with pytest.raises(runner.RunnerIntegrityError, match=match):
+                session.freeze_visible_prompt(
+                    replace(
+                        freeze,
+                        dev_gold_manifest_path=attacked_dev_path,
+                        gold_seal_path=attacked_gold_path,
+                        gold_seal_sha256=attacked_gold_sha,
+                    )
+                )
+
     def replace_required_abstention_with_a_claim(value: dict) -> None:
         candidate = value["candidate_evaluations"][0]
         candidate["dev_event_ids"][0] = non_abstaining_event["event_id"]
@@ -2760,6 +3579,44 @@ def test_prompt_freeze_commits_only_with_a_sealed_runner_owned_evidence_fixture(
         candidate["dev_rows"][0] = json.loads(json.dumps(candidate["dev_rows"][1]))
 
     attacks = (
+        (
+            lambda value: value.update(schema_version="wrong"),
+            "selection evidence contract mismatch",
+        ),
+        (
+            lambda value: value.update(candidate_evaluations=[]),
+            "candidate set is invalid",
+        ),
+        (
+            lambda value: value.update(train_revision_set_sha256="0" * 64),
+            "train revisions are incomplete",
+        ),
+        (
+            lambda value: value["candidate_evaluations"][0].pop("dev_metrics"),
+            "candidate contract mismatch",
+        ),
+        (
+            lambda value: value["candidate_evaluations"][0].update(dev_event_ids=[]),
+            "lacks complete frozen dev evidence",
+        ),
+        (
+            lambda value: value["candidate_evaluations"][0]["dev_event_ids"].__setitem__(
+                0, "missing-dev-event"
+            ),
+            "lacks complete frozen dev evidence",
+        ),
+        (
+            lambda value: value["candidate_evaluations"][0]["dev_event_ids"].__setitem__(
+                1, non_abstaining_event["event_id"]
+            ),
+            "lacks complete frozen dev evidence",
+        ),
+        (
+            lambda value: value["candidate_evaluations"][0].update(
+                dev_wall_time_ms=value["candidate_evaluations"][0]["dev_wall_time_ms"] + 1
+            ),
+            "cost evidence mismatch",
+        ),
         (
             lambda value: value["candidate_evaluations"][0]["dev_metrics"].update(coverage=0.0),
             "dev metrics mismatch",
@@ -2803,11 +3660,72 @@ def test_prompt_freeze_commits_only_with_a_sealed_runner_owned_evidence_fixture(
                 )
             )
 
+    unselected_prompt = "This prompt was never evaluated on the frozen dev split."
+    unselected = json.loads(json.dumps(selection))
+    unselected["selected_prompt_sha256"] = hashlib.sha256(
+        unselected_prompt.encode("utf-8")
+    ).hexdigest()
+    unselected_path, unselected_sha = write_bound_json(
+        "unselected_prompt_selection.json",
+        unselected,
+    )
+    with pytest.raises(runner.RunnerIntegrityError, match="frozen selection rule"):
+        session.freeze_visible_prompt(
+            replace(
+                freeze,
+                prompt=unselected_prompt,
+                selection_evidence_path=unselected_path,
+                selection_evidence_sha256=unselected_sha,
+            )
+        )
+
+    mismatched_template = "claimed-but-unevaluated-template-v2"
+    mismatched_binding = json.loads(json.dumps(selection))
+    mismatched_binding["prompt_template_version"] = mismatched_template
+    mismatched_binding_path, mismatched_binding_sha = write_bound_json(
+        "mismatched_candidate_binding.json",
+        mismatched_binding,
+    )
+    with pytest.raises(runner.RunnerIntegrityError, match="candidate binding mismatch"):
+        session.freeze_visible_prompt(
+            replace(
+                freeze,
+                prompt_template_version=mismatched_template,
+                selection_evidence_path=mismatched_binding_path,
+                selection_evidence_sha256=mismatched_binding_sha,
+            )
+        )
+
     committed = session.freeze_visible_prompt(freeze)
     resumed = session.freeze_visible_prompt(freeze)
 
     assert committed.event["decision"] == "selected_prompt_frozen"
     assert resumed.resumed is True
+
+    reordered_selection = json.loads(json.dumps(selection))
+    reordered_selection["candidate_evaluations"][0]["dev_event_ids"].reverse()
+    reordered_path, reordered_sha = write_bound_json(
+        "reordered_selection.json",
+        reordered_selection,
+    )
+    with pytest.raises(runner.DuplicateInvocationError, match="already frozen"):
+        session.freeze_visible_prompt(
+            replace(
+                freeze,
+                selection_evidence_path=reordered_path,
+                selection_evidence_sha256=reordered_sha,
+            )
+        )
+
+    source_manifest_path = session.config.source_manifest_path
+    source_manifest_bytes = source_manifest_path.read_bytes()
+    source_manifest_path.write_bytes(b"{}\n")
+    try:
+        with pytest.raises(runner.StudyStoppedError, match="frozen input drift") as stopped:
+            session.freeze_visible_prompt(freeze)
+    finally:
+        source_manifest_path.write_bytes(source_manifest_bytes)
+    assert stopped.value.event_id is not None
 
 
 def test_selected_case_bundle_drift_is_rejected_even_when_inventory_scan_is_disabled(
@@ -3050,7 +3968,7 @@ def test_oracle_uses_a_separate_capability_factory_and_blinded_provider_ids(
     config = _config(tmp_path)
     capability = runner.OracleRoutingCapability(
         study_id=protocol.STUDY_ID,
-        spec_sha256=runner.FROZEN_SPEC_SHA256,
+        spec_sha256=runner.FROZEN_EFFECTIVE_SPEC_SHA256,
         purpose="descriptive_ceiling_only",
     )
     session = runner.ExperimentRunner.open(
@@ -3531,7 +4449,7 @@ def test_b2_and_b3_reject_shared_provider_authority(tmp_path: Path) -> None:
         oracle_routing_provider_factory=oracle_factory,
         oracle_capability=runner.OracleRoutingCapability(
             study_id=protocol.STUDY_ID,
-            spec_sha256=runner.FROZEN_SPEC_SHA256,
+            spec_sha256=runner.FROZEN_EFFECTIVE_SPEC_SHA256,
             purpose="descriptive_ceiling_only",
         ),
     )
@@ -3555,7 +4473,7 @@ def test_b2_and_b3_authority_separation_survives_runner_reopen(tmp_path: Path) -
         oracle_routing_provider_factory=lambda _arm: oracle,
         oracle_capability=runner.OracleRoutingCapability(
             study_id=protocol.STUDY_ID,
-            spec_sha256=runner.FROZEN_SPEC_SHA256,
+            spec_sha256=runner.FROZEN_EFFECTIVE_SPEC_SHA256,
             purpose="descriptive_ceiling_only",
         ),
     )
@@ -3723,3 +4641,909 @@ def test_natural_language_physics_claim_stops_in_the_receipt_transaction(tmp_pat
     event = session._journal.events[-1]
     assert event["decision"] == "provider_call_failed"
     assert event["gate_results"]["study_stopped"] is True
+
+
+@pytest.mark.parametrize(
+    ("mutation", "match"),
+    [
+        (lambda value: value.update(state="wrong"), "contract mismatch"),
+        (lambda value: value.update(label_contract_sha256="Z" * 64), "digest is invalid"),
+        (
+            lambda value: value.update(
+                state="pending_blinded_annotation",
+                dev_gold_manifest_sha256="d" * 64,
+            ),
+            "cannot claim sealed payloads",
+        ),
+        (lambda value: value.update(dev_gold_manifest_sha256=None), "payload digest is invalid"),
+    ],
+)
+def test_sealed_annotation_manifest_contract_branches_fail_closed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    mutation,
+    match: str,
+) -> None:
+    manifest = json.loads(runner.SEALED_TEST_ANNOTATION_MANIFEST_PATH.read_text())
+    mutation(manifest)
+    path = tmp_path / "attacked_annotation.json"
+    path.write_bytes(protocol.canonical_json_bytes(manifest) + b"\n")
+    monkeypatch.setattr(runner, "SEALED_TEST_ANNOTATION_MANIFEST_PATH", path)
+    monkeypatch.setattr(runner, "SEALED_TEST_ANNOTATION_MANIFEST_SHA256", _sha256(path))
+
+    with pytest.raises(runner.RunnerIntegrityError, match=match):
+        runner._load_sealed_test_annotation_manifest()
+
+
+@pytest.mark.parametrize(
+    ("changes", "match"),
+    [
+        ({"execution_mode": "unknown"}, "execution_mode"),
+        ({"routing_provider_mode": "unknown"}, "routing_provider_mode"),
+        ({"verify_artifacts": 1}, "flags must be booleans"),
+    ],
+)
+def test_verification_profile_rejects_invalid_public_modes(
+    tmp_path: Path,
+    changes: dict,
+    match: str,
+) -> None:
+    with pytest.raises(runner.RunnerIntegrityError, match=match):
+        runner._verification_profile(replace(_config(tmp_path), **changes))
+
+
+@pytest.mark.parametrize(
+    ("mutation", "match"),
+    [
+        (lambda value: value.update(state="sealed"), "contract mismatch"),
+        (lambda value: value.update(label_contract_sha256="0" * 64), "contract digest"),
+        (lambda value: value.update(dev_gold_manifest_sha256="1" * 64), "cannot contain evidence"),
+    ],
+)
+def test_pending_v3_validation_branches_fail_closed(mutation, match: str) -> None:
+    loaded = amendment_bundle.load_verified_bundle()
+    spec = loaded.parse_spec()
+    pending = loaded.parse_pending_annotation_manifest()
+    mutation(pending)
+
+    with pytest.raises(runner.RunnerIntegrityError, match=match):
+        runner._validate_pending_annotation_v3(
+            pending,
+            spec=spec,
+            spec_sha256=runner.FROZEN_EFFECTIVE_SPEC_SHA256,
+        )
+
+
+def test_model_content_binding_shape_and_baseline_guards_fail_closed() -> None:
+    spec = amendment_bundle.load_verified_bundle().parse_spec()
+
+    malformed_models = json.loads(json.dumps(spec))
+    malformed_models["models"] = 7
+    with pytest.raises(runner.RunnerIntegrityError, match="models are malformed"):
+        runner._verify_model_content_bindings(
+            malformed_models,
+            verify_content=False,
+            baselines=None,
+        )
+
+    with pytest.raises(runner.RunnerIntegrityError, match="baseline roles changed"):
+        runner._verify_model_content_bindings(
+            spec,
+            verify_content=False,
+            baselines={},
+        )
+
+    malformed_model = json.loads(json.dumps(spec))
+    malformed_model["models"] = [7]
+    with pytest.raises(runner.RunnerIntegrityError, match="model is malformed"):
+        runner._verify_model_content_bindings(
+            malformed_model,
+            verify_content=False,
+            baselines=None,
+        )
+
+    escaping_manifest = json.loads(json.dumps(spec))
+    escaping_manifest["models"][0]["content_manifest"]["path"] = "../escape.json"
+    with pytest.raises(runner.RunnerIntegrityError, match="escapes amendment root"):
+        runner._verify_model_content_bindings(
+            escaping_manifest,
+            verify_content=False,
+            baselines=None,
+        )
+
+
+def test_model_content_refresh_requires_a_verified_snapshot_baseline() -> None:
+    spec = amendment_bundle.load_verified_bundle().parse_spec()
+    baselines = {
+        model["role"]: runner._VerifiedModelBinding(manifest={}, snapshot=None)
+        for model in spec["models"]
+    }
+
+    with pytest.raises(runner.RunnerIntegrityError, match="model content verification failed"):
+        runner._verify_model_content_bindings(
+            spec,
+            verify_content=True,
+            baselines=baselines,
+        )
+
+
+def test_production_profile_wraps_an_unresolvable_frozen_path(tmp_path: Path) -> None:
+    test_config = _config(tmp_path / "test")
+    production = replace(
+        test_config,
+        spec_path=runner.FROZEN_EFFECTIVE_SPEC_PATH,
+        repo_root=tmp_path / "missing-repository",
+        log_path=runner.FROZEN_RUN_LOG_PATH,
+        anchor_path=runner.FROZEN_RUN_ANCHOR_PATH,
+        pending_path=runner.FROZEN_RUN_PENDING_PATH,
+        lock_path=runner.FROZEN_RUN_LOCK_PATH,
+        source_manifest_path=runner.FROZEN_RUNNER_SOURCE_MANIFEST_PATH,
+        verify_artifacts=True,
+        verify_models=True,
+        allow_test_providers=False,
+        execution_mode="production",
+        routing_provider_mode="sandboxed_subprocess",
+    )
+
+    with pytest.raises(runner.RunnerIntegrityError, match="cannot be resolved"):
+        runner._verification_profile(production)
+
+
+def test_fixed_bundle_loader_and_runner_pins_fail_closed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = _config(tmp_path)
+    with monkeypatch.context() as patch:
+        patch.setattr(
+            amendment_bundle,
+            "load_verified_bundle",
+            lambda: (_ for _ in ()).throw(ValueError("bundle unavailable")),
+        )
+        with pytest.raises(runner.RunnerIntegrityError, match="bundle verification failed"):
+            runner._verify_frozen_inputs(config)
+
+    loaded = amendment_bundle.load_verified_bundle()
+    with monkeypatch.context() as patch:
+        patch.setattr(
+            amendment_bundle,
+            "load_verified_bundle",
+            lambda: replace(loaded, root_sha256="0" * 64),
+        )
+        with pytest.raises(runner.RunnerIntegrityError, match="bundle identity mismatch"):
+            runner._verify_frozen_inputs(config)
+
+
+def test_test_annotation_case_and_contract_bindings_fail_closed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manifest = runner._load_sealed_test_annotation_manifest()
+    attacks = (
+        ({**manifest, "case_ids": []}, "case binding mismatch"),
+        ({**manifest, "label_contract_sha256": "0" * 64}, "contract digest mismatch"),
+    )
+    for index, (attacked, match) in enumerate(attacks):
+        with monkeypatch.context() as patch:
+            patch.setattr(runner, "_load_sealed_test_annotation_manifest", lambda: attacked)
+            with pytest.raises(runner.RunnerIntegrityError, match=match):
+                runner._verify_frozen_inputs(_config(tmp_path / str(index)))
+
+
+def test_production_frozen_input_projection_uses_pending_v3_without_state_writes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    test_config = _config(tmp_path)
+    production = replace(
+        test_config,
+        spec_path=runner.FROZEN_EFFECTIVE_SPEC_PATH,
+        repo_root=runner.FROZEN_REPO_ROOT,
+        log_path=runner.FROZEN_RUN_LOG_PATH,
+        anchor_path=runner.FROZEN_RUN_ANCHOR_PATH,
+        pending_path=runner.FROZEN_RUN_PENDING_PATH,
+        lock_path=runner.FROZEN_RUN_LOCK_PATH,
+        source_manifest_path=runner.FROZEN_RUNNER_SOURCE_MANIFEST_PATH,
+        verify_artifacts=True,
+        verify_models=True,
+        allow_test_providers=False,
+        execution_mode="production",
+        routing_provider_mode="sandboxed_subprocess",
+    )
+    monkeypatch.setattr(
+        runner.protocol,
+        "validate_effective_spec_v2",
+        lambda *_args, **_kwargs: {
+            "study_id": protocol.STUDY_ID,
+            "verified_artifact_count": 213,
+        },
+    )
+    monkeypatch.setattr(runner, "_verify_model_content_bindings", lambda *_args, **_kwargs: {})
+
+    frozen = runner._verify_frozen_inputs(production)
+
+    assert frozen.annotation_manifest["state"] == "pending_blinded_annotation"
+    assert frozen.annotation_manifest_sha256 == runner.FROZEN_PENDING_ANNOTATION_V3_SHA256
+
+
+def test_setup_prelude_mode_and_digest_branches_are_explicit(tmp_path: Path) -> None:
+    config = _config(tmp_path, setup_prelude=False)
+    identity = runner._verify_frozen_inputs(config).identity
+    journal = object.__new__(runner._Journal)
+    journal._config = config
+    journal._identity = identity
+    assert journal._validate_setup_prelude([]) == 0
+    assert journal._validate_setup_prelude([{"decision": "business"}]) == 0
+
+    journal._identity = replace(identity, execution_mode="production")
+    with pytest.raises(runner.RunnerIntegrityError, match="missing the two-event"):
+        journal._validate_setup_prelude([])
+    with pytest.raises(runner.RunnerIntegrityError, match="missing the two-event"):
+        journal._validate_setup_prelude([{"decision": "business"}])
+    with pytest.raises(runner.RunnerIntegrityError, match="must be the first two"):
+        journal._validate_setup_prelude(
+            [{"decision": "business"}, {"decision": "amendment_root_committed"}]
+        )
+
+    line7, line8 = _append_synthetic_setup_prelude(config)
+    bad_line7 = {**line7, "event_sha256": "0" * 64}
+    with pytest.raises(runner.RunnerIntegrityError, match="digest is not runner-pinned"):
+        journal._validate_setup_prelude([bad_line7, line8])
+    bad_line8 = {**line8, "event_sha256": "0" * 64}
+    with pytest.raises(runner.RunnerIntegrityError, match="source commitment digest mismatch"):
+        journal._validate_setup_prelude([line7, bad_line8])
+
+
+def test_runner_refresh_rejects_static_identity_drift(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = _config(tmp_path)
+    session = runner.ExperimentRunner.open(config)
+    frozen = runner._verify_frozen_inputs(config)
+    attacked = replace(
+        frozen,
+        identity=replace(frozen.identity, amendment_root_sha256="0" * 64),
+    )
+    monkeypatch.setattr(runner, "_verify_frozen_inputs", lambda *_args, **_kwargs: attacked)
+
+    with pytest.raises(runner.RunnerIntegrityError, match="identity changed"):
+        session._refresh_execution_snapshot()
+
+
+def test_provider_identity_read_and_type_guards_fail_closed() -> None:
+    with pytest.raises(runner.RunnerIntegrityError, match="must use ProviderIdentity"):
+        runner.ExperimentRunner._validate_provider_identity(object())  # type: ignore[arg-type]
+    invalid_bool = runner.ProviderIdentity(
+        provider_id="provider",
+        revision="v1",
+        implementation_sha256="a" * 64,
+        kind="test",
+        production_eligible=1,  # type: ignore[arg-type]
+    )
+    with pytest.raises(runner.RunnerIntegrityError, match="must be a boolean"):
+        runner.ExperimentRunner._validate_provider_identity(invalid_bool)
+
+    class UnreadableIdentity:
+        @property
+        def identity(self):
+            raise RuntimeError("unreadable")
+
+    provider = UnreadableIdentity()
+    with pytest.raises(runner.RunnerIntegrityError, match="cannot be read"):
+        runner.ExperimentRunner._snapshot_provider_identity(provider)
+    with pytest.raises(runner.ProviderContractError, match="changed during invocation"):
+        runner.ExperimentRunner._verify_provider_identity_unchanged(
+            provider,
+            runner.ProviderIdentity("provider", "v1", "a" * 64, "test", False),
+        )
+    assert runner.ExperimentRunner._contains_physical_claim("runtime_pass") is True
+
+
+def test_durable_routing_authority_history_rejects_incomplete_and_overlap(
+    tmp_path: Path,
+) -> None:
+    session = runner.ExperimentRunner.open(_config(tmp_path))
+    base = {
+        "experiment_id": "B_typed_failure_prompt_fallback",
+        "decision": "provider_call_reserved",
+        "model_receipt": {
+            "provider_id": "router",
+            "provider_revision": "v1",
+            "provider_implementation_sha256": "a" * 64,
+        },
+    }
+    session._journal.events = [{**base, "model_receipt": {}}]
+    with pytest.raises(runner.RunnerIntegrityError, match="complete provider authority"):
+        session._restore_routing_authorities()
+
+    session._deployable_routing_authorities.clear()
+    session._oracle_routing_authorities.clear()
+    session._journal.events = [
+        {**base, "arm": "B2_typed_route_and_prompt_repair"},
+        {**base, "arm": "B3_oracle_route_ceiling"},
+    ]
+    with pytest.raises(runner.RunnerIntegrityError, match="history is not disjoint"):
+        session._restore_routing_authorities()
+
+
+@pytest.mark.parametrize(
+    ("attack", "match"),
+    [
+        ("model", "model role is missing"),
+        ("content", "model content role is missing"),
+        ("bundle", "artifact bundle drift"),
+    ],
+)
+def test_visible_context_model_and_bundle_guards(
+    tmp_path: Path,
+    attack: str,
+    match: str,
+) -> None:
+    session = runner.ExperimentRunner.open(_config(tmp_path))
+    spec = amendment_bundle.load_verified_bundle().parse_spec()
+    if attack == "model":
+        spec["models"] = []
+        session._spec = runner._immutable_json_snapshot(spec)
+    elif attack == "content":
+        session._model_bindings.clear()
+    else:
+        sample = next(
+            item
+            for item in spec["experiments"][0]["samples"]
+            if item["case_id"] == _a0_invocation().case_id
+        )
+        sample["bundle_sha256"] = "0" * 64
+        session._spec = runner._immutable_json_snapshot(spec)
+
+    with pytest.raises(runner.RunnerIntegrityError, match=match):
+        session._visible_context(_a0_invocation())
+
+
+def test_routing_intent_verifier_shape_and_consistency_guards(tmp_path: Path) -> None:
+    session = runner.ExperimentRunner.open(_config(tmp_path))
+    result = {
+        "route": "repair_visible_prompt",
+        "revised_prompt": "revised",
+        "intent_sha256_before": "0" * 64,
+        "intent_sha256_after": "0" * 64,
+    }
+    outcome = runner.ProviderOutcome(
+        decision="route_selected",
+        result=result,
+        raw_response=b"{}",
+        parsed_response=result,
+        abstained=False,
+        resource=runner.ResourceUsage(),
+    )
+
+    class InvalidVerifier:
+        def verify(self, _original: str, _revised: str):
+            return object()
+
+    session._intent_verifier = InvalidVerifier()
+    with pytest.raises(runner.ProviderContractError, match="invalid result"):
+        session._verify_routing_intent(
+            outcome=outcome,
+            original_prompt="original",
+            revised_prompt="revised",
+        )
+
+    class InconsistentVerifier:
+        def verify(self, _original: str, _revised: str):
+            return runner.IntentVerification(
+                before_sha256="0" * 64,
+                after_sha256="0" * 64,
+                preserved=False,
+                verifier_id="test",
+                verifier_implementation_sha256="1" * 64,
+            )
+
+    session._intent_verifier = InconsistentVerifier()
+    with pytest.raises(runner.ProviderContractError, match="internally inconsistent"):
+        session._verify_routing_intent(
+            outcome=outcome,
+            original_prompt="original",
+            revised_prompt="revised",
+        )
+
+
+def test_runner_owned_intent_verifier_preserves_coordinated_relation_reordering() -> None:
+    verifier = runner._ProductionIntentPreservationVerifier()
+
+    verification = verifier.verify(
+        "The can is left of and behind the basket.",
+        "The can is behind and left of the basket.",
+    )
+
+    assert verification.preserved is True
+    assert verification.before_sha256 == verification.after_sha256
+
+
+@pytest.mark.parametrize(
+    ("invocation", "match"),
+    [
+        (_a0_invocation(repair_source_prompt="unexpected"), "cannot declare repair source"),
+        (
+            _a0_invocation(
+                repair_index=1,
+                repair_of="a" * 64,
+                repair_source_prompt="source",
+                repair_source_response=7,
+            ),
+            "bind exact source prompt",
+        ),
+        (_a0_invocation(resource_reservation={}), "non-negative integer counters"),
+    ],
+)
+def test_visible_invocation_remaining_shape_guards(invocation, match: str) -> None:
+    with pytest.raises(ValueError, match=match):
+        runner.ExperimentRunner._validate_visible_invocation(invocation)
+
+
+def _sandbox_request() -> runner.RoutingProviderRequest:
+    return runner.RoutingProviderRequest(
+        invocation_id="c" * 64,
+        case_id="case",
+        arm="B2_typed_route_and_prompt_repair",
+        original_prompt="put the can on the plate",
+        routing_instruction="choose one typed route",
+        prompt_template_version="typed-route-v1",
+        failure_code="missing_task_api",
+        untyped_failure_summary=None,
+        typed_failure={"code": "missing_task_api"},
+        trusted_state={},
+        asset_availability={},
+        visible_report=None,
+        seed=1,
+        attempt=1,
+        allowed_routes=("abstain_unsupported_task_api",),
+        gold_route=None,
+        resource_reservation=runner.ResourceUsage(),
+    )
+
+
+def _sandbox_provider(tmp_path: Path) -> runner.SandboxedRoutingProvider:
+    launcher = tmp_path / "launcher"
+    executable = tmp_path / "provider"
+    readable = tmp_path / "input.json"
+    for path in (launcher, executable, readable):
+        path.write_bytes(b"fixture\n")
+    return runner.SandboxedRoutingProvider(
+        identity=runner.ProviderIdentity(
+            provider_id="sandbox-router",
+            revision="v1",
+            implementation_sha256="a" * 64,
+            kind="sandboxed_subprocess",
+            production_eligible=True,
+        ),
+        executable=executable,
+        arguments=("--fixture",),
+        readable_paths=(readable,),
+        bubblewrap_path=launcher,
+        timeout_seconds=3,
+        output_limit_bytes=4096,
+    )
+
+
+def _sandbox_routing_output(invocation: runner.RoutingInvocation) -> dict:
+    intent_sha = hashlib.sha256(invocation.original_prompt.encode("utf-8")).hexdigest()
+    result = {
+        "route": "abstain_unsupported_task_api",
+        "revised_prompt": None,
+        "intent_sha256_before": intent_sha,
+        "intent_sha256_after": intent_sha,
+    }
+    return {
+        "schema_version": runner.SANDBOXED_ROUTING_OUTPUT_SCHEMA,
+        "decision": "typed_route_complete",
+        "result": result,
+        "raw_response": protocol.canonical_json_bytes(result).decode("utf-8"),
+        "parsed_response": result,
+        "abstained": True,
+        "resource": runner.asdict(runner.ResourceUsage()),
+        "claims_physical_pass": False,
+    }
+
+
+def test_sandboxed_routing_profile_is_stable_through_a_successful_call(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = replace(
+        _config(tmp_path),
+        routing_provider_mode="sandboxed_subprocess",
+    )
+    provider = _sandbox_provider(tmp_path)
+    invocation = _routing_invocation()
+    payload = _sandbox_routing_output(invocation)
+    _, expected_profile_sha = provider.isolation_profile(REPO_ROOT)
+    monkeypatch.setattr(
+        runner,
+        "_run_bounded_provider",
+        lambda command, **_kwargs: subprocess.CompletedProcess(
+            command,
+            0,
+            protocol.canonical_json_bytes(payload) + b"\n",
+            b"",
+        ),
+    )
+    session = runner.ExperimentRunner.open(config, routing_provider=provider)
+
+    receipt = session.execute(invocation)
+
+    assert receipt.event["decision"] == "provider_call_completed"
+    assert receipt.event["model_receipt"]["provider_sandbox_profile_sha256"] == (
+        expected_profile_sha
+    )
+
+
+def test_sandboxed_routing_detects_executable_drift_during_a_call(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = replace(
+        _config(tmp_path),
+        routing_provider_mode="sandboxed_subprocess",
+    )
+    provider = _sandbox_provider(tmp_path)
+    invocation = _routing_invocation()
+    payload = _sandbox_routing_output(invocation)
+
+    def complete_after_drift(command, **_kwargs):
+        provider.executable.write_bytes(b"changed executable fixture\n")
+        return subprocess.CompletedProcess(
+            command,
+            0,
+            protocol.canonical_json_bytes(payload) + b"\n",
+            b"",
+        )
+
+    monkeypatch.setattr(runner, "_run_bounded_provider", complete_after_drift)
+    session = runner.ExperimentRunner.open(config, routing_provider=provider)
+
+    receipt = session.execute(invocation)
+
+    assert receipt.event["decision"] == "provider_call_failed"
+    assert receipt.event["error"]["code"] == "provider_contract_error"
+    assert receipt.event["error"]["exception_type"] == "ProviderContractError"
+
+
+def test_sandboxed_routing_rechecks_a_stable_profile_after_provider_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = replace(
+        _config(tmp_path),
+        routing_provider_mode="sandboxed_subprocess",
+    )
+    provider = _sandbox_provider(tmp_path)
+    monkeypatch.setattr(
+        runner,
+        "_run_bounded_provider",
+        lambda command, **_kwargs: subprocess.CompletedProcess(command, 9, b"", b"failed"),
+    )
+    session = runner.ExperimentRunner.open(config, routing_provider=provider)
+
+    with pytest.raises(runner.StudyStoppedError, match="resource usage is unknown"):
+        session.execute(_routing_invocation())
+
+    failed = session._journal.events[-1]
+    assert failed["decision"] == "provider_call_failed"
+    assert failed["error"]["code"] == "provider_contract_error"
+
+
+@pytest.mark.parametrize(
+    ("mutation", "match"),
+    [
+        (lambda value, tmp: replace(value, executable=tmp / "missing"), "input is missing"),
+        (lambda value, tmp: replace(value, executable=tmp), "must be files"),
+        (lambda value, tmp: replace(value, timeout_seconds=0), "timeout_seconds"),
+        (lambda value, tmp: replace(value, output_limit_bytes=0), "output_limit_bytes"),
+        (lambda value, tmp: replace(value, arguments=(7,)), "NUL-free strings"),
+        (lambda value, tmp: replace(value, arguments=("bad\x00arg",)), "NUL-free strings"),
+    ],
+)
+def test_sandbox_profile_remaining_guards(
+    tmp_path: Path,
+    mutation,
+    match: str,
+) -> None:
+    provider = _sandbox_provider(tmp_path)
+
+    with pytest.raises(runner.RunnerIntegrityError, match=match):
+        mutation(provider, tmp_path).isolation_profile(REPO_ROOT)
+
+
+def test_sandbox_invoke_output_contract_matrix(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    provider = _sandbox_provider(tmp_path)
+    request = _sandbox_request()
+    valid = {
+        "schema_version": runner.SANDBOXED_ROUTING_OUTPUT_SCHEMA,
+        "decision": "route_selected",
+        "result": {"route": "abstain_unsupported_task_api"},
+        "raw_response": "{}",
+        "parsed_response": {"route": "abstain_unsupported_task_api"},
+        "abstained": True,
+        "resource": runner.asdict(runner.ResourceUsage()),
+        "claims_physical_pass": False,
+    }
+
+    cases = (
+        (1, protocol.canonical_json_bytes(valid) + b"\n", "exited unsuccessfully"),
+        (0, b"not-json\n", "output is not JSON"),
+        (0, json.dumps(valid).encode() + b"\n", "must be canonical JSON"),
+        (0, protocol.canonical_json_bytes({}) + b"\n", "output contract mismatch"),
+        (
+            0,
+            protocol.canonical_json_bytes({**valid, "resource": []}) + b"\n",
+            "resource contract mismatch",
+        ),
+    )
+    for returncode, stdout, match in cases:
+        monkeypatch.setattr(
+            runner,
+            "_run_bounded_provider",
+            lambda *_args, _code=returncode, _stdout=stdout, **_kwargs: subprocess.CompletedProcess(
+                [], _code, _stdout, b""
+            ),
+        )
+        with pytest.raises(runner.ProviderContractError, match=match):
+            provider.invoke(request, lambda _stage: None)
+
+    captured: dict[str, object] = {}
+
+    def completed(command, **kwargs):
+        captured["command"] = command
+        captured["input"] = kwargs["input_bytes"]
+        return subprocess.CompletedProcess(
+            command,
+            0,
+            protocol.canonical_json_bytes(valid) + b"\n",
+            b"",
+        )
+
+    monkeypatch.setattr(runner, "_run_bounded_provider", completed)
+    original_exists = Path.exists
+    monkeypatch.setattr(
+        Path,
+        "exists",
+        lambda path: False if str(path) == "/lib64" else original_exists(path),
+    )
+    progress: list[str] = []
+
+    outcome = provider.invoke(request, progress.append)
+
+    assert outcome.decision == "route_selected"
+    assert progress == ["sandbox_started", "sandbox_completed"]
+    assert "/inputs/0" in captured["command"]
+    assert b"sandboxed_routing_request" in captured["input"]
+
+
+def test_bounded_provider_start_success_and_timeout_paths(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with monkeypatch.context() as patch:
+        patch.setattr(
+            runner.subprocess,
+            "Popen",
+            lambda *_args, **_kwargs: (_ for _ in ()).throw(OSError("cannot start")),
+        )
+        with pytest.raises(runner.ProviderContractError, match="could not start"):
+            runner._run_bounded_provider(
+                ["/bin/true"],
+                input_bytes=b"\n",
+                timeout_seconds=1,
+                output_limit_bytes=1024,
+            )
+
+    completed = runner._run_bounded_provider(
+        ["/bin/sh", "-c", "read value; printf '%s' \"$value\"; printf err >&2"],
+        input_bytes=b"hello\n",
+        timeout_seconds=2,
+        output_limit_bytes=1024,
+    )
+    assert completed.returncode == 0
+    assert completed.stdout == b"hello"
+    assert completed.stderr == b"err"
+
+    with pytest.raises(runner.ProviderContractError, match="timed out"):
+        runner._run_bounded_provider(
+            ["/bin/sh", "-c", "sleep 1"],
+            input_bytes=b"\n",
+            timeout_seconds=0,
+            output_limit_bytes=1024,
+        )
+
+
+def test_bounded_provider_handles_broken_pipe_and_transient_read(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original_write = runner.os.write
+    write_calls = 0
+
+    def break_first_write(fd: int, value: bytes) -> int:
+        nonlocal write_calls
+        write_calls += 1
+        if write_calls == 1:
+            raise BrokenPipeError
+        return original_write(fd, value)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(runner.os, "write", break_first_write)
+        completed = runner._run_bounded_provider(
+            ["/bin/true"],
+            input_bytes=b"payload\n",
+            timeout_seconds=2,
+            output_limit_bytes=1024,
+        )
+    assert completed.returncode == 0
+    assert write_calls >= 1
+
+    original_read = runner.os.read
+    read_calls = 0
+
+    def block_first_read(fd: int, size: int) -> bytes:
+        nonlocal read_calls
+        read_calls += 1
+        if read_calls == 1:
+            raise BlockingIOError
+        return original_read(fd, size)
+
+    with monkeypatch.context() as patch:
+        original_popen = subprocess.Popen
+
+        def start_then_block_first_read(*args, **kwargs):
+            process = original_popen(*args, **kwargs)
+            patch.setattr(runner.os, "read", block_first_read)
+            return process
+
+        patch.setattr(runner.subprocess, "Popen", start_then_block_first_read)
+        completed = runner._run_bounded_provider(
+            ["/bin/sh", "-c", "cat >/dev/null; printf output"],
+            input_bytes=b"payload\n",
+            timeout_seconds=2,
+            output_limit_bytes=1024,
+        )
+    assert completed.stdout == b"output"
+    assert read_calls >= 2
+
+
+def test_bounded_provider_wraps_completion_failure_and_cleans_up(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original_popen = subprocess.Popen
+    proxy_holder: list[object] = []
+
+    class WaitFailsOnce:
+        def __init__(self, process) -> None:
+            self._process = process
+            self.wait_calls = 0
+
+        def __getattr__(self, name):
+            return getattr(self._process, name)
+
+        def wait(self, *args, **kwargs):
+            self.wait_calls += 1
+            if self.wait_calls == 1:
+                raise subprocess.TimeoutExpired(["/bin/true"], 0.1)
+            return self._process.wait(*args, **kwargs)
+
+    def start(*args, **kwargs):
+        proxy = WaitFailsOnce(original_popen(*args, **kwargs))
+        proxy_holder.append(proxy)
+        return proxy
+
+    monkeypatch.setattr(runner.subprocess, "Popen", start)
+
+    with pytest.raises(runner.ProviderContractError, match="could not complete"):
+        runner._run_bounded_provider(
+            ["/bin/true"],
+            input_bytes=b"\n",
+            timeout_seconds=2,
+            output_limit_bytes=1024,
+        )
+
+    assert proxy_holder[0].wait_calls == 2
+
+
+def test_bounded_provider_retries_partial_stdin_write(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original_write = runner.os.write
+    write_calls = 0
+
+    def write_one_byte_first(fd: int, value: bytes) -> int:
+        nonlocal write_calls
+        write_calls += 1
+        if write_calls == 1 and len(value) > 1:
+            return original_write(fd, value[:1])
+        return original_write(fd, value)
+
+    monkeypatch.setattr(runner.os, "write", write_one_byte_first)
+
+    completed = runner._run_bounded_provider(
+        ["/bin/cat"],
+        input_bytes=b"partial-write\n",
+        timeout_seconds=2,
+        output_limit_bytes=1024,
+    )
+
+    assert completed.stdout == b"partial-write\n"
+    assert write_calls >= 2
+
+
+def test_bounded_provider_rechecks_eof_after_child_exit_without_events(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original_popen = subprocess.Popen
+    original_selector = runner.selectors.DefaultSelector
+    processes: list[subprocess.Popen] = []
+
+    def start(*args, **kwargs):
+        process = original_popen(*args, **kwargs)
+        processes.append(process)
+        return process
+
+    class EmptyOnceAfterExit:
+        def __init__(self) -> None:
+            self._selector = original_selector()
+            self._returned_empty = False
+
+        def __getattr__(self, name):
+            return getattr(self._selector, name)
+
+        def select(self, timeout=None):
+            events = self._selector.select(timeout)
+            if not self._returned_empty:
+                processes[0].wait(timeout=1)
+                self._returned_empty = True
+                return []
+            return events
+
+    monkeypatch.setattr(runner.subprocess, "Popen", start)
+    monkeypatch.setattr(runner.selectors, "DefaultSelector", EmptyOnceAfterExit)
+
+    completed = runner._run_bounded_provider(
+        ["/bin/true"],
+        input_bytes=b"\n",
+        timeout_seconds=2,
+        output_limit_bytes=1024,
+    )
+
+    assert completed.returncode == 0
+
+
+@pytest.mark.parametrize(
+    ("source_prompt", "source_response", "match"),
+    [
+        ("", "response", "source_prompt"),
+        ("prompt", 7, "source_response"),
+    ],
+)
+def test_format_repair_prompt_rejects_unbound_source_types(
+    source_prompt,
+    source_response,
+    match: str,
+) -> None:
+    with pytest.raises(ValueError, match=match):
+        runner.build_format_only_repair_prompt(source_prompt, source_response)
+
+
+def test_production_annotation_authorization_flags_are_required_before_dispatch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    provider = _VisibleProvider()
+    session = runner.ExperimentRunner.open(_config(tmp_path), visible_provider=provider)
+    session.config = replace(session.config, execution_mode="production")
+    monkeypatch.setattr(session, "_refresh_execution_snapshot", lambda: None)
+
+    with pytest.raises(runner.StudyStoppedError, match="sealed blinded annotations"):
+        session.execute(_a0_invocation())
+
+    assert provider.requests == []
+    assert all(event["decision"] != "provider_call_reserved" for event in session._journal.events)

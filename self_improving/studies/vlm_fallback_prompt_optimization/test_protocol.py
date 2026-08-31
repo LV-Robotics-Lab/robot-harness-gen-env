@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -9,6 +10,19 @@ from self_improving.studies.vlm_fallback_prompt_optimization import protocol
 
 STUDY_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = STUDY_ROOT.parents[2]
+
+
+def _rebind_all_artifacts_to_temp_file(spec: dict, root: Path) -> int:
+    artifact = root / "artifact.bin"
+    artifact.write_bytes(b"artifact\n")
+    bundle_sha256 = protocol.canonical_sha256(protocol.build_bundle_manifest(root, [artifact.name]))
+    sample_count = 0
+    for experiment in spec["experiments"]:
+        for sample in experiment["samples"]:
+            sample["artifacts"] = [artifact.name]
+            sample["bundle_sha256"] = bundle_sha256
+            sample_count += 1
+    return sample_count
 
 
 def test_frozen_spec_and_inventory_are_valid() -> None:
@@ -25,6 +39,76 @@ def test_frozen_spec_and_inventory_are_valid() -> None:
         },
         "verified_artifact_count": 213,
     }
+
+
+def test_effective_spec_v2_preserves_v1_cases_and_binds_content_receipts() -> None:
+    spec = protocol.load_spec(STUDY_ROOT / "amendments/01/experiment_spec.v2.json")
+
+    summary = protocol.validate_effective_spec_v2(
+        spec,
+        repo_root=REPO_ROOT,
+        verify_files=False,
+    )
+
+    assert summary["study_id"] == protocol.STUDY_ID
+    assert summary["amendment_id"] == "01"
+    assert summary["model_content_manifest_count"] == 2
+    assert summary["sample_counts"] == {
+        "A_visible_semantic_correction": {"train": 13, "dev": 12, "test": 14},
+        "B_typed_failure_prompt_fallback": {"train": 12, "dev": 10, "test": 14},
+    }
+
+
+@pytest.mark.parametrize(
+    ("mutation", "match"),
+    [
+        (lambda value: value.update(schema_version="wrong"), "schema_version"),
+        (lambda value: value.update(status="executed"), "status"),
+        (lambda value: value.update(amendment={}), "amendment 01"),
+        (
+            lambda value: value.update(content_manifest_digest_definition={}),
+            "content digest definition",
+        ),
+        (lambda value: value.update(models=[]), "exactly the local 3B and 7B"),
+        (lambda value: value["models"].__setitem__(0, "not-a-model"), "mappings"),
+        (
+            lambda value: value["models"][0].update(content_manifest={}),
+            "content manifest binding",
+        ),
+        (
+            lambda value: value["models"][0]["content_manifest"].update(path="../escape.json"),
+            "path is unsafe",
+        ),
+        (
+            lambda value: value["models"][0]["content_manifest"].update(canonical_sha256="0"),
+            "canonical_sha256",
+        ),
+        (
+            lambda value: value["models"][1].update(role=value["models"][0]["role"]),
+            "unique",
+        ),
+        (
+            lambda value: value["logging_contract"]["invocation_receipt_fields"].remove(
+                "model_roster_sha256"
+            ),
+            "receipts",
+        ),
+        (
+            lambda value: value["experiments"][0].update(samples=[]),
+            "samples",
+        ),
+    ],
+)
+def test_effective_spec_v2_validation_fails_closed(mutation, match: str) -> None:
+    spec = protocol.load_spec(STUDY_ROOT / "amendments/01/experiment_spec.v2.json")
+    mutation(spec)
+
+    with pytest.raises(ValueError, match=match):
+        protocol.validate_effective_spec_v2(
+            spec,
+            repo_root=REPO_ROOT,
+            verify_files=False,
+        )
 
 
 @pytest.mark.parametrize(
@@ -94,6 +178,15 @@ def test_spec_validation_fails_closed(mutation, match: str) -> None:
 
     with pytest.raises(ValueError, match=match):
         protocol.validate_spec(spec, repo_root=REPO_ROOT, verify_files=True)
+
+
+def test_spec_file_verification_counts_a_valid_synthetic_inventory(tmp_path: Path) -> None:
+    spec = protocol.load_spec(STUDY_ROOT / "experiment_spec.json")
+    sample_count = _rebind_all_artifacts_to_temp_file(spec, tmp_path)
+
+    summary = protocol.validate_spec(spec, repo_root=tmp_path, verify_files=True)
+
+    assert summary["verified_artifact_count"] == sample_count
 
 
 def test_bundle_manifest_rejects_missing_and_escaping_paths(tmp_path: Path) -> None:
@@ -230,6 +323,10 @@ def test_visible_metrics_weight_groups_equally_instead_of_correlated_rows() -> N
 def test_visible_metrics_reject_malformed_or_empty_rows() -> None:
     with pytest.raises(ValueError, match="at least one row"):
         protocol.visible_metrics([])
+    with pytest.raises(ValueError, match="non-empty case_id"):
+        protocol.visible_metrics(
+            [{"group_id": "group", "gold": {"presence": "pass"}, "prediction": {}}]
+        )
     with pytest.raises(ValueError, match="non-empty group_id"):
         protocol.visible_metrics(
             [
@@ -391,6 +488,8 @@ def test_routing_accuracy_weights_frozen_groups_equally() -> None:
 def test_routing_metrics_reject_empty_rows() -> None:
     with pytest.raises(ValueError, match="at least one row"):
         protocol.routing_metrics([])
+    with pytest.raises(ValueError, match="non-empty case_id"):
+        protocol.routing_metrics([{"group_id": "group"}])
     with pytest.raises(ValueError, match="non-empty group_id"):
         protocol.routing_metrics(
             [
@@ -515,6 +614,27 @@ def test_cli_validate_and_inventory(capsys) -> None:
         == "b0f4cf794ec552f5e23de019107801e5adfec633d3b5c74564cdf6b65e9f1cad"
     )
     assert inventory_result["expensive_execution_started"] is False
+
+
+def test_cli_paths_with_a_synthetic_inventory(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    spec = protocol.load_spec(STUDY_ROOT / "experiment_spec.json")
+    sample_count = _rebind_all_artifacts_to_temp_file(spec, tmp_path)
+    spec_path = tmp_path / "spec.json"
+    spec_path.write_text(json.dumps(spec), encoding="utf-8")
+
+    assert protocol.main(["validate", str(spec_path), "--repo-root", str(tmp_path)]) == 0
+    assert json.loads(capsys.readouterr().out)["verified_artifact_count"] == sample_count
+
+    assert protocol.main(["inventory", str(spec_path)]) == 0
+    assert json.loads(capsys.readouterr().out)["expensive_execution_started"] is False
+
+    monkeypatch.setattr(sys, "argv", ["protocol", "inventory", str(spec_path)])
+    assert protocol.main() == 0
+    assert json.loads(capsys.readouterr().out)["study_id"] == protocol.STUDY_ID
 
 
 def test_inventory_reports_missing_model_without_guessing(tmp_path: Path) -> None:

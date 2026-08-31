@@ -16,6 +16,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Iterable, Sequence
 
 SPEC_SCHEMA_VERSION = "vlm_fallback.experiment_spec.v1"
+EFFECTIVE_SPEC_SCHEMA_VERSION = "vlm_fallback.experiment_spec.v2"
 STUDY_ID = "vlm-fallback-prompt-optimization-2026-08-31"
 EXPERIMENT_IDS = (
     "A_visible_semantic_correction",
@@ -181,6 +182,97 @@ def validate_spec(
         "experiment_ids": list(EXPERIMENT_IDS),
         "sample_counts": sample_counts,
         "verified_artifact_count": verified_artifact_count,
+    }
+
+
+def validate_effective_spec_v2(
+    spec: dict[str, Any],
+    *,
+    repo_root: Path,
+    verify_files: bool,
+) -> dict[str, Any]:
+    """Validate the full amendment-01 spec while preserving the v1 sample contract.
+
+    The fixed amendment-bundle loader owns byte authority.  This validator owns
+    the execution-facing shape: the complete v1 experiment roster must still be
+    valid and each model must carry a content manifest that is required in
+    invocation receipts.
+    """
+
+    if not isinstance(spec, dict) or spec.get("schema_version") != (EFFECTIVE_SPEC_SCHEMA_VERSION):
+        raise ValueError(f"schema_version must be {EFFECTIVE_SPEC_SCHEMA_VERSION}")
+    if spec.get("status") != "preregistered_pre_execution":
+        raise ValueError("effective spec status must remain preregistered_pre_execution")
+    amendment_value = spec.get("amendment")
+    if not isinstance(amendment_value, dict) or amendment_value.get("amendment_id") != "01":
+        raise ValueError("effective spec must bind amendment 01")
+
+    content_definition = spec.get("content_manifest_digest_definition")
+    if (
+        not isinstance(content_definition, dict)
+        or content_definition.get("schema_version") != "vlm_fallback.model_content_manifest.v2"
+        or content_definition.get("authority")
+        != "required normative model identity for v2 execution and receipts"
+    ):
+        raise ValueError("effective spec model content digest definition mismatch")
+
+    models = spec.get("models")
+    if not isinstance(models, list) or len(models) != 2:
+        raise ValueError("models must freeze exactly the local 3B and 7B candidates")
+    model_roles: set[str] = set()
+    for model in models:
+        if not isinstance(model, dict):
+            raise ValueError("models must be mappings")
+        role = model.get("role")
+        if not isinstance(role, str) or not role or role in model_roles:
+            raise ValueError("models must use unique non-empty roles")
+        model_roles.add(role)
+        content_manifest = model.get("content_manifest")
+        if (
+            not isinstance(content_manifest, dict)
+            or set(content_manifest) != {"path", "schema_version", "canonical_sha256"}
+            or content_manifest.get("schema_version") != "vlm_fallback.model_content_manifest.v2"
+        ):
+            raise ValueError(f"model content manifest binding mismatch for role: {role}")
+        path = content_manifest.get("path")
+        if (
+            not isinstance(path, str)
+            or PurePosixPath(path).is_absolute()
+            or ".." in PurePosixPath(path).parts
+        ):
+            raise ValueError(f"model content manifest path is unsafe for role: {role}")
+        _require_hex(
+            content_manifest.get("canonical_sha256"),
+            length=64,
+            field=f"models.{role}.content_manifest.canonical_sha256",
+        )
+
+    logging_contract = spec.get("logging_contract")
+    receipt_fields = (
+        logging_contract.get("invocation_receipt_fields")
+        if isinstance(logging_contract, dict)
+        else None
+    )
+    if (
+        not isinstance(receipt_fields, list)
+        or receipt_fields.count("model_content_manifest_sha256") != 1
+        or receipt_fields.count("model_roster_sha256") != 1
+    ):
+        raise ValueError("effective spec receipts must bind model content manifest and roster")
+
+    # Reuse the established v1 roster/artifact validator on a detached
+    # projection.  Amendment-only fields cannot weaken those checks.
+    legacy = json.loads(canonical_json_bytes(spec))
+    legacy["schema_version"] = SPEC_SCHEMA_VERSION
+    legacy.pop("amendment", None)
+    legacy.pop("content_manifest_digest_definition", None)
+    for model in legacy["models"]:
+        model.pop("content_manifest", None)
+    summary = validate_spec(legacy, repo_root=repo_root, verify_files=verify_files)
+    return {
+        **summary,
+        "amendment_id": "01",
+        "model_content_manifest_count": len(models),
     }
 
 

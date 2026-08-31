@@ -18,7 +18,7 @@ import selectors
 import subprocess
 import time
 from contextlib import contextmanager
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from types import MappingProxyType
@@ -26,21 +26,39 @@ from typing import Any, Callable, Iterator, Mapping, Protocol, Sequence
 
 from scene_gen.rendered_critic import build_critic_prompt
 from scene_gen.schema import ResolvedSceneSpec
-from self_improving.studies.vlm_fallback_prompt_optimization import protocol
+from self_improving.studies.vlm_fallback_prompt_optimization import (
+    amendment_bundle,
+    model_content,
+    protocol,
+)
 
-RUNNER_SOURCE_SCHEMA = "vlm_fallback.runner_source_manifest.v1"
+RUNNER_SOURCE_SCHEMA = "vlm_fallback.runner_source_manifest.v2"
 REQUIRED_RUNNER_SOURCES = frozenset(
     {
         "self_improving/studies/vlm_fallback_prompt_optimization/runner.py",
         "self_improving/studies/vlm_fallback_prompt_optimization/protocol.py",
+        "self_improving/studies/vlm_fallback_prompt_optimization/amendment.py",
+        "self_improving/studies/vlm_fallback_prompt_optimization/amendment_bundle.py",
+        "self_improving/studies/vlm_fallback_prompt_optimization/model_content.py",
+        "self_improving/studies/vlm_fallback_prompt_optimization/annotations.py",
         "scene_gen/rendered_critic.py",
         "scene_gen/schema.py",
     }
 )
 ANCHOR_SCHEMA = "vlm_fallback.run_anchor.v1"
 FROZEN_SPEC_SHA256 = "ad19d38204f20c42d8070785994fe749b8db41364e002e382e938cb92ae5bf6c"
+FROZEN_AMENDMENT_ROOT_SHA256 = "5276894e83f3412f287b7e1b00e39f2eeb71cf51c52d55dafe49d7950a007dff"
+FROZEN_EFFECTIVE_SPEC_SHA256 = "d8de1b0aa40f5337e9801f8b34941689fd3267c9bb7277908c83cc899e0dcfda"
+FROZEN_PENDING_ANNOTATION_V3_SHA256 = (
+    "1826c7633ddeacb5f43cbc4bfae540b409d2b50cf97f06275809b57d43e72bcf"
+)
 FROZEN_LOG_PREFIX_SHA256 = "141bc995ba391a11cea3461180f51936f5829aca0c13ef44e10b48d3ef27f6a4"
 FROZEN_LOG_PREFIX_LINES = 6
+AMENDMENT_COMMITMENT_SCHEMA = "vlm_fallback.amendment_commitment.v1"
+RUNNER_SOURCE_COMMITMENT_SCHEMA = "vlm_fallback.runner_source_commitment.v2"
+FROZEN_AMENDMENT_COMMITMENT_EVENT_SHA256 = (
+    "933a504bb63913f4aab8a0badc63f7f2dee43275547a52f7095f93835e9a936b"
+)
 VISIBLE_SELECTION_SCHEMA = "vlm_fallback.visible_prompt_selection.v2"
 VISIBLE_GOLD_SEAL_SCHEMA = "vlm_fallback.visible_gold_seal.v1"
 VISIBLE_DEV_GOLD_SCHEMA = "vlm_fallback.visible_dev_gold.v1"
@@ -50,6 +68,18 @@ _FORMAT_ONLY_REPAIR_INSTRUCTION = (
     "using the required JSON schema. Do not add, delete, reinterpret, or infer facts."
 )
 FROZEN_SPEC_PATH = Path(__file__).with_name("experiment_spec.json").resolve()
+FROZEN_EFFECTIVE_SPEC_PATH = (
+    Path(__file__).with_name("amendments") / "01" / "experiment_spec.v2.json"
+).resolve()
+FROZEN_REPO_ROOT = Path(__file__).resolve().parents[3]
+FROZEN_RUN_LOG_PATH = Path(__file__).with_name("run_log.jsonl").resolve()
+FROZEN_RUNTIME_STATE_ROOT = Path(__file__).resolve().parent / "runs" / "runtime_state"
+FROZEN_RUN_ANCHOR_PATH = FROZEN_RUNTIME_STATE_ROOT / "run_state.json"
+FROZEN_RUN_PENDING_PATH = FROZEN_RUNTIME_STATE_ROOT / "run_pending.json"
+FROZEN_RUN_LOCK_PATH = FROZEN_RUNTIME_STATE_ROOT / "run.lock"
+FROZEN_RUNNER_SOURCE_MANIFEST_PATH = (
+    Path(__file__).with_name("runner_source_manifest.json").resolve()
+)
 SEALED_TEST_ANNOTATION_MANIFEST_PATH = (
     Path(__file__).with_name("sealed_test_annotation_manifest.json").resolve()
 )
@@ -175,6 +205,24 @@ class RunnerIdentity:
     model_identity_matches: int
     execution_mode: str
     verification_profile_sha256: str
+    amendment_root_sha256: str
+    model_content_manifest_sha256: tuple[tuple[str, str], ...]
+    model_roster_sha256: tuple[tuple[str, str | None], ...]
+
+
+@dataclass(frozen=True)
+class _VerifiedModelBinding:
+    manifest: dict[str, Any]
+    snapshot: model_content.ModelContentSnapshot | None
+
+
+@dataclass(frozen=True)
+class _FrozenInputs:
+    spec: dict[str, Any]
+    identity: RunnerIdentity
+    annotation_manifest: dict[str, Any]
+    annotation_manifest_sha256: str
+    model_bindings: Mapping[str, _VerifiedModelBinding]
 
 
 @dataclass(frozen=True)
@@ -376,6 +424,8 @@ class ModelBinding:
     model_id: str
     revision: str
     snapshot_manifest_sha256: str
+    model_content_manifest_sha256: str
+    model_roster_sha256: str | None
     local_snapshot_path: Path
     max_new_tokens: int
 
@@ -668,20 +718,15 @@ class SandboxedRoutingProvider:
         resource = value.get("resource")
         if not isinstance(resource, dict) or set(resource) != set(asdict(ResourceUsage())):
             raise ProviderContractError("sandboxed routing provider resource contract mismatch")
-        try:
-            outcome = ProviderOutcome(
-                decision=value["decision"],
-                result=value["result"],
-                raw_response=value["raw_response"],
-                parsed_response=value["parsed_response"],
-                abstained=value["abstained"],
-                resource=ResourceUsage(**resource),
-                claims_physical_pass=value["claims_physical_pass"],
-            )
-        except (TypeError, ValueError) as error:
-            raise ProviderContractError(
-                "sandboxed routing provider output contract mismatch"
-            ) from error
+        outcome = ProviderOutcome(
+            decision=value["decision"],
+            result=value["result"],
+            raw_response=value["raw_response"],
+            parsed_response=value["parsed_response"],
+            abstained=value["abstained"],
+            resource=ResourceUsage(**resource),
+            claims_physical_pass=value["claims_physical_pass"],
+        )
         progress("sandbox_completed")
         return outcome
 
@@ -950,13 +995,25 @@ def _annotation_contract_digests(spec: Mapping[str, Any]) -> dict[str, str]:
     }
 
 
-def _load_source_manifest(config: RunnerConfig) -> tuple[dict[str, Any], str]:
+def _load_source_manifest(
+    config: RunnerConfig,
+    *,
+    amendment_root_sha256: str,
+) -> tuple[dict[str, Any], str]:
+    manifest_path = (
+        FROZEN_RUNNER_SOURCE_MANIFEST_PATH
+        if config.execution_mode == "production"
+        else config.source_manifest_path
+    )
     try:
-        raw_manifest = config.source_manifest_path.read_bytes()
+        raw_manifest = manifest_path.read_bytes()
     except OSError as error:
         raise RunnerIntegrityError("runner source manifest cannot be read") from error
     observed_manifest_sha = _sha256_bytes(raw_manifest)
-    if observed_manifest_sha != config.expected_source_manifest_sha256:
+    if (
+        config.execution_mode == "test"
+        and observed_manifest_sha != config.expected_source_manifest_sha256
+    ):
         raise RunnerIntegrityError(
             "runner source manifest digest mismatch: "
             f"expected {config.expected_source_manifest_sha256}, observed {observed_manifest_sha}"
@@ -967,41 +1024,67 @@ def _load_source_manifest(config: RunnerConfig) -> tuple[dict[str, Any], str]:
         raise RunnerIntegrityError("runner source manifest is not valid JSON") from error
     if protocol.canonical_json_bytes(manifest) + b"\n" != raw_manifest:
         raise RunnerIntegrityError("runner source manifest must be canonical JSON")
-    if not isinstance(manifest, dict) or manifest.get("schema_version") != RUNNER_SOURCE_SCHEMA:
+    if (
+        not isinstance(manifest, dict)
+        or set(manifest)
+        != {
+            "schema_version",
+            "study_id",
+            "amendment_root_manifest_sha256",
+            "entries",
+        }
+        or manifest.get("schema_version") != RUNNER_SOURCE_SCHEMA
+    ):
         raise RunnerIntegrityError(f"runner source manifest must use {RUNNER_SOURCE_SCHEMA}")
     if manifest.get("study_id") != protocol.STUDY_ID:
         raise RunnerIntegrityError("runner source manifest study_id mismatch")
+    if manifest.get("amendment_root_manifest_sha256") != amendment_root_sha256:
+        raise RunnerIntegrityError("runner source manifest amendment root mismatch")
     entries = manifest.get("entries")
     if not isinstance(entries, list) or not entries:
         raise RunnerIntegrityError("runner source manifest entries must be non-empty")
     root = config.repo_root.expanduser().resolve(strict=True)
     seen: set[str] = set()
+    ordered_paths: list[str] = []
     for entry in entries:
-        if not isinstance(entry, dict):
+        if not isinstance(entry, dict) or set(entry) != {"path", "sha256", "size_bytes"}:
             raise RunnerIntegrityError("runner source manifest entry must be an object")
         raw_path = entry.get("path")
         expected_sha = entry.get("sha256")
-        if not isinstance(raw_path, str) or not isinstance(expected_sha, str):
-            raise RunnerIntegrityError("runner source manifest entry path/sha256 must be strings")
+        expected_size = entry.get("size_bytes")
+        if (
+            not isinstance(raw_path, str)
+            or not isinstance(expected_sha, str)
+            or type(expected_size) is not int
+            or expected_size < 0
+        ):
+            raise RunnerIntegrityError(
+                "runner source manifest entry path/sha256/size must be valid"
+            )
         relative = PurePosixPath(raw_path)
         if relative.is_absolute() or ".." in relative.parts or raw_path in seen:
             raise RunnerIntegrityError(f"unsafe or duplicate runner source path: {raw_path}")
         seen.add(raw_path)
+        ordered_paths.append(raw_path)
         source_path = (root / Path(*relative.parts)).resolve(strict=False)
         if not source_path.is_relative_to(root) or not source_path.is_file():
             raise RunnerIntegrityError(
                 f"runner source is missing or escapes repository: {raw_path}"
             )
         observed_sha = _sha256_file(source_path)
+        if source_path.stat().st_size != expected_size:
+            raise RunnerIntegrityError(f"runner source size mismatch for {raw_path}")
         if observed_sha != expected_sha:
             raise RunnerIntegrityError(
                 f"runner source digest mismatch for {raw_path}: "
                 f"expected {expected_sha}, observed {observed_sha}"
             )
-    missing_sources = REQUIRED_RUNNER_SOURCES - seen
-    if missing_sources:
+    if ordered_paths != sorted(ordered_paths, key=lambda value: value.encode("utf-8")):
+        raise RunnerIntegrityError("runner source manifest entries must be UTF-8 path sorted")
+    if seen != REQUIRED_RUNNER_SOURCES:
         raise RunnerIntegrityError(
-            f"runner source manifest is missing required entries: {sorted(missing_sources)}"
+            "runner source manifest entries must exactly match required sources: "
+            f"{sorted(REQUIRED_RUNNER_SOURCES)}"
         )
     return manifest, observed_manifest_sha
 
@@ -1041,73 +1124,262 @@ def _verification_profile(config: RunnerConfig) -> tuple[dict[str, Any], str]:
         raise RunnerIntegrityError(
             "production mode requires artifact/model verification and forbids test providers"
         )
+    if config.execution_mode == "production":
+        try:
+            repo_root = config.repo_root.expanduser().resolve(strict=True)
+            log_path = config.log_path.expanduser().resolve(strict=True)
+            source_path = config.source_manifest_path.expanduser().resolve(strict=True)
+            # Runtime state may not exist before the first production open, so
+            # compare its normalized lexical location without letting a caller
+            # relocate authority through an alternate state file.
+            anchor_path = Path(os.path.abspath(config.anchor_path.expanduser()))
+            pending_path = Path(os.path.abspath(config.pending_path.expanduser()))
+            lock_path = Path(os.path.abspath(config.lock_path.expanduser()))
+        except OSError as error:
+            raise RunnerIntegrityError("production frozen paths cannot be resolved") from error
+        if repo_root != FROZEN_REPO_ROOT:
+            raise RunnerIntegrityError("production repo_root must be the checked-in repository")
+        if log_path != FROZEN_RUN_LOG_PATH:
+            raise RunnerIntegrityError("production run log must be the checked-in append-only log")
+        if anchor_path != FROZEN_RUN_ANCHOR_PATH:
+            raise RunnerIntegrityError("production anchor must use the runner-owned state path")
+        if pending_path != FROZEN_RUN_PENDING_PATH:
+            raise RunnerIntegrityError("production pending receipt must use the runner-owned path")
+        if lock_path != FROZEN_RUN_LOCK_PATH:
+            raise RunnerIntegrityError("production lock must use the runner-owned path")
+        if source_path != FROZEN_RUNNER_SOURCE_MANIFEST_PATH:
+            raise RunnerIntegrityError(
+                "production source manifest must be the checked-in fixed manifest"
+            )
+        if (
+            config.expected_log_prefix_sha256 != FROZEN_LOG_PREFIX_SHA256
+            or config.expected_log_prefix_lines != FROZEN_LOG_PREFIX_LINES
+        ):
+            raise RunnerIntegrityError("production run log prefix is runner-pinned")
     return profile, protocol.canonical_sha256(profile)
 
 
-def _verify_frozen_inputs(config: RunnerConfig) -> tuple[dict[str, Any], RunnerIdentity]:
-    _, verification_profile_sha256 = _verification_profile(config)
-    try:
-        configured_path = config.spec_path.expanduser().resolve(strict=True)
-    except OSError as error:
-        raise RunnerIntegrityError("experiment spec cannot be read") from error
-    if configured_path != FROZEN_SPEC_PATH:
-        raise RunnerIntegrityError("experiment spec path must be the checked-in frozen spec")
-    try:
-        raw_spec = FROZEN_SPEC_PATH.read_bytes()
-    except OSError as error:
-        raise RunnerIntegrityError("experiment spec cannot be read") from error
-    observed_spec_sha = _sha256_bytes(raw_spec)
-    if observed_spec_sha != FROZEN_SPEC_SHA256:
-        raise RunnerIntegrityError(
-            f"experiment spec digest mismatch: expected {FROZEN_SPEC_SHA256}, "
-            f"observed {observed_spec_sha}"
-        )
-    try:
-        spec = json.loads(raw_spec)
-    except (UnicodeDecodeError, json.JSONDecodeError) as error:
-        raise RunnerIntegrityError("experiment spec is not valid JSON") from error
-    if not isinstance(spec, dict):
-        raise RunnerIntegrityError("experiment spec must be a JSON object")
-    summary = protocol.validate_spec(
-        spec,
-        repo_root=config.repo_root,
-        verify_files=config.verify_artifacts,
-    )
-    _, source_manifest_sha = _load_source_manifest(config)
-    annotation_manifest = _load_sealed_test_annotation_manifest()
-    expected_test_cases = {
+def _validate_pending_annotation_v3(
+    manifest: Mapping[str, Any],
+    *,
+    spec: Mapping[str, Any],
+    spec_sha256: str,
+) -> dict[str, Any]:
+    required = {
+        "schema_version",
+        "study_id",
+        "amendment_id",
+        "state",
+        "base_spec_sha256",
+        "effective_spec_v2",
+        "case_ids",
+        "label_contract_sha256",
+        "rater_contract_sha256",
+        "adjudication_contract_sha256",
+        "dev_gold_manifest_sha256",
+        "test_annotation_payload_sha256",
+        "typed_correction_blind_adjudication_manifest_sha256",
+        "typed_correction_adjudication_roster_sha256",
+        "execution_authorized",
+        "provider_execution_allowed_now",
+    }
+    expected_cases = [
         sample["case_id"]
         for experiment in spec["experiments"]
         if experiment["experiment_id"] == "A_visible_semantic_correction"
         for sample in experiment["samples"]
         if sample["split"] == "test"
-    }
-    if set(annotation_manifest["case_ids"]) != expected_test_cases:
-        raise RunnerIntegrityError("sealed test annotation manifest case binding mismatch")
-    if any(
-        annotation_manifest.get(field) != digest
-        for field, digest in _annotation_contract_digests(spec).items()
+    ]
+    if (
+        set(manifest) != required
+        or manifest.get("schema_version") != "vlm_fallback.pending_annotation_manifest.v3"
+        or manifest.get("study_id") != protocol.STUDY_ID
+        or manifest.get("amendment_id") != "01"
+        or manifest.get("state") != "pending_blinded_annotation"
+        or manifest.get("base_spec_sha256") != FROZEN_SPEC_SHA256
+        or manifest.get("effective_spec_v2")
+        != {"path": "experiment_spec.v2.json", "sha256": spec_sha256}
+        or manifest.get("case_ids") != expected_cases
+        or manifest.get("execution_authorized") is not False
+        or manifest.get("provider_execution_allowed_now") is not False
     ):
-        raise RunnerIntegrityError("sealed test annotation contract digest mismatch")
-    identity_matches = 0
-    if config.verify_models:
-        inventory = protocol.inventory_summary(spec)
-        mismatches = [
-            model["model_id"] for model in inventory["models"] if not model["identity_match"]
+        raise RunnerIntegrityError("pending annotation manifest v3 contract mismatch")
+    for field, digest in _annotation_contract_digests(spec).items():
+        if manifest.get(field) != digest:
+            raise RunnerIntegrityError("pending annotation manifest v3 contract digest mismatch")
+    for field in (
+        "dev_gold_manifest_sha256",
+        "test_annotation_payload_sha256",
+        "typed_correction_blind_adjudication_manifest_sha256",
+        "typed_correction_adjudication_roster_sha256",
+    ):
+        if manifest.get(field) is not None:
+            raise RunnerIntegrityError("pending annotation manifest v3 cannot contain evidence")
+    return json.loads(protocol.canonical_json_bytes(manifest))
+
+
+def _verify_model_content_bindings(
+    spec: Mapping[str, Any],
+    *,
+    verify_content: bool,
+    baselines: Mapping[str, _VerifiedModelBinding] | None,
+) -> dict[str, _VerifiedModelBinding]:
+    models = spec.get("models")
+    if not isinstance(models, Sequence):
+        raise RunnerIntegrityError("effective spec models are malformed")
+    expected_roles = {model.get("role") for model in models if isinstance(model, Mapping)}
+    if baselines is not None and set(baselines) != expected_roles:
+        raise RunnerIntegrityError("model content baseline roles changed")
+    verified: dict[str, _VerifiedModelBinding] = {}
+    amendment_root = (amendment_bundle.DEFAULT_STUDY_ROOT / "amendments" / "01").resolve()
+    for model in models:
+        if not isinstance(model, Mapping):
+            raise RunnerIntegrityError("effective spec model is malformed")
+        role = model["role"]
+        binding = model["content_manifest"]
+        manifest_path = (amendment_root / binding["path"]).resolve(strict=False)
+        if not manifest_path.is_relative_to(amendment_root):
+            raise RunnerIntegrityError("model content manifest escapes amendment root")
+        try:
+            manifest = model_content.load_model_content_manifest(
+                manifest_path,
+                binding["canonical_sha256"],
+                model_id=model["model_id"],
+                revision=model["revision"],
+            )
+            snapshot: model_content.ModelContentSnapshot | None = None
+            if verify_content:
+                snapshot_path = Path(model["local_snapshot_path"])
+                prior = baselines.get(role) if baselines is not None else None
+                if prior is None:
+                    snapshot = model_content.verify_model_content(snapshot_path, manifest)
+                else:
+                    if prior.snapshot is None:
+                        raise ValueError("verified model baseline is missing its snapshot")
+                    snapshot = model_content.refresh_model_content(
+                        snapshot_path,
+                        manifest,
+                        prior.snapshot,
+                    )
+        except (OSError, TypeError, ValueError) as error:
+            raise RunnerIntegrityError(
+                f"model content verification failed for role: {role}"
+            ) from error
+        verified[role] = _VerifiedModelBinding(
+            manifest=json.loads(protocol.canonical_json_bytes(manifest)),
+            snapshot=snapshot,
+        )
+    return verified
+
+
+def _verify_frozen_inputs(
+    config: RunnerConfig,
+    *,
+    model_baselines: Mapping[str, _VerifiedModelBinding] | None = None,
+) -> _FrozenInputs:
+    _, verification_profile_sha256 = _verification_profile(config)
+    try:
+        configured_path = config.spec_path.expanduser().resolve(strict=True)
+    except OSError as error:
+        raise RunnerIntegrityError("experiment spec cannot be read") from error
+    expected_configured_path = (
+        FROZEN_EFFECTIVE_SPEC_PATH if config.execution_mode == "production" else FROZEN_SPEC_PATH
+    )
+    if configured_path != expected_configured_path:
+        raise RunnerIntegrityError("experiment spec path must be the checked-in frozen spec")
+    try:
+        loaded_bundle = amendment_bundle.load_verified_bundle()
+        spec = loaded_bundle.parse_spec()
+        pending_v3 = loaded_bundle.parse_pending_annotation_manifest()
+    except (OSError, ValueError) as error:
+        raise RunnerIntegrityError("fixed amendment bundle verification failed") from error
+    observed_spec_sha = loaded_bundle.child_sha256["experiment_spec.v2.json"]
+    if (
+        loaded_bundle.root_sha256 != FROZEN_AMENDMENT_ROOT_SHA256
+        or observed_spec_sha != FROZEN_EFFECTIVE_SPEC_SHA256
+        or loaded_bundle.child_sha256["pending_annotation_manifest.v3.json"]
+        != FROZEN_PENDING_ANNOTATION_V3_SHA256
+    ):
+        raise RunnerIntegrityError("runner-pinned amendment bundle identity mismatch")
+    summary = protocol.validate_effective_spec_v2(
+        spec,
+        repo_root=config.repo_root,
+        verify_files=config.verify_artifacts,
+    )
+    _, source_manifest_sha = _load_source_manifest(
+        config,
+        amendment_root_sha256=loaded_bundle.root_sha256,
+    )
+    pending_v3 = _validate_pending_annotation_v3(
+        pending_v3,
+        spec=spec,
+        spec_sha256=observed_spec_sha,
+    )
+    if config.execution_mode == "test":
+        annotation_manifest = _load_sealed_test_annotation_manifest()
+        expected_test_cases = {
+            sample["case_id"]
+            for experiment in spec["experiments"]
+            if experiment["experiment_id"] == "A_visible_semantic_correction"
+            for sample in experiment["samples"]
+            if sample["split"] == "test"
+        }
+        if set(annotation_manifest["case_ids"]) != expected_test_cases:
+            raise RunnerIntegrityError("sealed test annotation manifest case binding mismatch")
+        if any(
+            annotation_manifest.get(field) != digest
+            for field, digest in _annotation_contract_digests(spec).items()
+        ):
+            raise RunnerIntegrityError("sealed test annotation contract digest mismatch")
+        annotation_manifest_sha256 = SEALED_TEST_ANNOTATION_MANIFEST_SHA256
+    else:
+        annotation_manifest = pending_v3
+        annotation_manifest_sha256 = loaded_bundle.child_sha256[
+            "pending_annotation_manifest.v3.json"
         ]
-        if mismatches:
-            raise RunnerIntegrityError(f"local model snapshot identity mismatch: {mismatches}")
-        identity_matches = len(inventory["models"])
+    model_bindings = _verify_model_content_bindings(
+        spec,
+        verify_content=config.verify_models,
+        baselines=model_baselines,
+    )
+    identity_matches = sum(binding.snapshot is not None for binding in model_bindings.values())
+    manifest_receipts = tuple(
+        sorted(
+            (
+                role,
+                model_content.manifest_sha256(binding.manifest),
+            )
+            for role, binding in model_bindings.items()
+        )
+    )
+    roster_receipts = tuple(
+        sorted(
+            (
+                role,
+                binding.snapshot.roster_sha256 if binding.snapshot is not None else None,
+            )
+            for role, binding in model_bindings.items()
+        )
+    )
     # Reparse a fresh canonical snapshot on every boundary.  No mutable object
     # from the caller or a previous invocation is used for execution.
-    return json.loads(protocol.canonical_json_bytes(spec)), RunnerIdentity(
-        study_id=summary["study_id"],
-        spec_sha256=observed_spec_sha,
-        source_manifest_sha256=source_manifest_sha,
-        verified_artifact_count=summary["verified_artifact_count"],
-        model_identity_matches=identity_matches,
-        execution_mode=config.execution_mode,
-        verification_profile_sha256=verification_profile_sha256,
+    return _FrozenInputs(
+        spec=json.loads(protocol.canonical_json_bytes(spec)),
+        identity=RunnerIdentity(
+            study_id=summary["study_id"],
+            spec_sha256=observed_spec_sha,
+            source_manifest_sha256=source_manifest_sha,
+            verified_artifact_count=summary["verified_artifact_count"],
+            model_identity_matches=identity_matches,
+            execution_mode=config.execution_mode,
+            verification_profile_sha256=verification_profile_sha256,
+            amendment_root_sha256=loaded_bundle.root_sha256,
+            model_content_manifest_sha256=manifest_receipts,
+            model_roster_sha256=roster_receipts,
+        ),
+        annotation_manifest=annotation_manifest,
+        annotation_manifest_sha256=annotation_manifest_sha256,
+        model_bindings=MappingProxyType(dict(model_bindings)),
     )
 
 
@@ -1160,7 +1432,7 @@ class _Journal:
         if _sha256_bytes(prefix) != self._config.expected_log_prefix_sha256:
             raise RunnerIntegrityError("run log preregistration prefix digest mismatch")
         previous_sha = self._config.expected_log_prefix_sha256
-        events: list[dict[str, Any]] = []
+        parsed_events: list[dict[str, Any]] = []
         event_ids: set[str] = set()
         logical_keys: set[str] = set()
         stopped = False
@@ -1212,8 +1484,10 @@ class _Journal:
                 stopped = True
                 reason = event.get("outputs", {}).get("stop_reason")
                 stop_reason = str(reason) if reason is not None else "unspecified"
-            events.append(event)
+            parsed_events.append(event)
             previous_sha = str(event_sha)
+        setup_event_count = self._validate_setup_prelude(parsed_events)
+        events = parsed_events[setup_event_count:]
         anchor = {
             "schema_version": ANCHOR_SCHEMA,
             "study_id": self._identity.study_id,
@@ -1223,6 +1497,7 @@ class _Journal:
             "verification_profile_sha256": self._identity.verification_profile_sha256,
             "genesis_blob_sha256": self._config.expected_log_prefix_sha256,
             "genesis_line_count": self._config.expected_log_prefix_lines,
+            "setup_event_count": setup_event_count,
             "log_sha256": _sha256_bytes(payload),
             "log_size_bytes": len(payload),
             "line_count": len(lines),
@@ -1231,6 +1506,73 @@ class _Journal:
             "stop_reason": stop_reason,
         }
         return anchor, events
+
+    def _validate_setup_prelude(self, events: Sequence[Mapping[str, Any]]) -> int:
+        """Return two only for the exact amendment/source commitment prelude."""
+
+        setup_decisions = {
+            "amendment_root_committed",
+            "runner_source_manifest_committed",
+        }
+        if not events:
+            if self._identity.execution_mode == "production":
+                raise RunnerIntegrityError("run log is missing the two-event setup prelude")
+            return 0
+        first_decision = events[0].get("decision")
+        if first_decision not in setup_decisions:
+            if any(event.get("decision") in setup_decisions for event in events):
+                raise RunnerIntegrityError(
+                    "run log setup events must be the first two suffix lines"
+                )
+            if self._identity.execution_mode == "production":
+                raise RunnerIntegrityError("run log is missing the two-event setup prelude")
+            return 0
+        if len(events) < 2:
+            raise RunnerIntegrityError("run log setup prelude must contain exactly two events")
+
+        line7 = dict(events[0])
+        line8 = dict(events[1])
+        line7_sha = line7.pop("event_sha256", None)
+        line8_sha = line8.pop("event_sha256", None)
+        expected_line7 = {
+            "schema_version": AMENDMENT_COMMITMENT_SCHEMA,
+            "event_id": "amendment-01-root-commitment",
+            "study_id": self._identity.study_id,
+            "decision": "amendment_root_committed",
+            "input_bindings": {
+                "amendment_id": "01",
+                "amendment_root_manifest_sha256": self._identity.amendment_root_sha256,
+                "base_spec_sha256": FROZEN_SPEC_SHA256,
+            },
+            "previous_event_sha256": self._config.expected_log_prefix_sha256,
+        }
+        if line7 != expected_line7:
+            raise RunnerIntegrityError("run log amendment commitment event mismatch")
+        if (
+            self._identity.execution_mode == "production"
+            and line7_sha != FROZEN_AMENDMENT_COMMITMENT_EVENT_SHA256
+        ):
+            raise RunnerIntegrityError("run log amendment commitment digest is not runner-pinned")
+        expected_line8 = {
+            "schema_version": RUNNER_SOURCE_COMMITMENT_SCHEMA,
+            "event_id": "runner-source-manifest-v2-commitment",
+            "study_id": self._identity.study_id,
+            "decision": "runner_source_manifest_committed",
+            "input_bindings": {
+                "amendment_root_manifest_sha256": self._identity.amendment_root_sha256,
+                "runner_source_manifest_sha256": self._identity.source_manifest_sha256,
+            },
+            "previous_event_sha256": line7_sha,
+        }
+        if line8 != expected_line8:
+            raise RunnerIntegrityError("run log runner source commitment event mismatch")
+        if line8_sha != protocol.canonical_sha256(line8):
+            # The generic chain parser already verifies this.  Keeping the
+            # assertion here makes the two-event contract self-contained.
+            raise RunnerIntegrityError("run log runner source commitment digest mismatch")
+        if any(event.get("decision") in setup_decisions for event in events[2:]):
+            raise RunnerIntegrityError("run log setup prelude must contain exactly two events")
+        return 2
 
     @staticmethod
     def _anchors_match(expected: Mapping[str, Any], observed: Mapping[str, Any]) -> None:
@@ -1243,6 +1585,7 @@ class _Journal:
             "verification_profile_sha256",
             "genesis_blob_sha256",
             "genesis_line_count",
+            "setup_event_count",
             "log_sha256",
             "log_size_bytes",
             "line_count",
@@ -1357,6 +1700,16 @@ class _Journal:
             self._recover_pending()
             self.anchor = self._open_anchor()
             event = dict(body)
+            model_receipt = dict(event.get("model_receipt", {}))
+            model_receipt.setdefault("model_content_manifest_sha256", None)
+            model_receipt.setdefault("model_roster_sha256", None)
+            event["model_receipt"] = model_receipt
+            event["receipt_promotion_authority"] = False
+            event["receipt_scope"] = (
+                "test_only_non_promotion"
+                if self._identity.execution_mode == "test"
+                else "production_preregistration_non_promotion"
+            )
             event["previous_event_sha256"] = self.anchor["last_event_sha256"]
             event["event_sha256"] = protocol.canonical_sha256(event)
             encoded = protocol.canonical_json_bytes(event) + b"\n"
@@ -1397,6 +1750,9 @@ class ExperimentRunner:
         config: RunnerConfig,
         spec: dict[str, Any],
         identity: RunnerIdentity,
+        annotation_manifest: dict[str, Any],
+        annotation_manifest_sha256: str,
+        model_bindings: Mapping[str, _VerifiedModelBinding],
         journal: _Journal,
         progress: ProgressCallback | None,
         visible_provider: VisibleCriticProvider | None,
@@ -1408,6 +1764,9 @@ class ExperimentRunner:
         self.config = config
         self._spec = _immutable_json_snapshot(json.loads(protocol.canonical_json_bytes(spec)))
         self.identity = identity
+        self._annotation_manifest = _immutable_json_snapshot(annotation_manifest)
+        self._annotation_manifest_sha256 = annotation_manifest_sha256
+        self._model_bindings = dict(model_bindings)
         self._journal = journal
         self._progress = progress
         self._visible_provider = visible_provider
@@ -1448,12 +1807,15 @@ class ExperimentRunner:
             and routing_provider_factory is oracle_routing_provider_factory
         ):
             raise ValueError("oracle and deployable routing factories must be distinct")
-        spec, identity = _verify_frozen_inputs(config)
-        journal = _Journal(config, identity)
+        frozen = _verify_frozen_inputs(config)
+        journal = _Journal(config, frozen.identity)
         runner = cls(
             config=config,
-            spec=spec,
-            identity=identity,
+            spec=frozen.spec,
+            identity=frozen.identity,
+            annotation_manifest=frozen.annotation_manifest,
+            annotation_manifest_sha256=frozen.annotation_manifest_sha256,
+            model_bindings=frozen.model_bindings,
             journal=journal,
             progress=progress,
             visible_provider=visible_provider,
@@ -1470,10 +1832,21 @@ class ExperimentRunner:
     def _refresh_execution_snapshot(self) -> None:
         """Use a newly parsed, verified checked-in spec at each call boundary."""
 
-        spec, identity = _verify_frozen_inputs(self.config)
-        if identity != self.identity:
+        frozen = _verify_frozen_inputs(
+            self.config,
+            model_baselines=self._model_bindings,
+        )
+        static_identity = replace(
+            frozen.identity,
+            model_roster_sha256=self.identity.model_roster_sha256,
+        )
+        if static_identity != self.identity:
             raise RunnerIntegrityError("frozen execution identity changed after runner open")
-        self._spec = _immutable_json_snapshot(spec)
+        self.identity = frozen.identity
+        self._spec = _immutable_json_snapshot(frozen.spec)
+        self._annotation_manifest = _immutable_json_snapshot(frozen.annotation_manifest)
+        self._annotation_manifest_sha256 = frozen.annotation_manifest_sha256
+        self._model_bindings = dict(frozen.model_bindings)
 
     def _emit(self, stage: str, **fields: Any) -> None:
         self._progress_sequence += 1
@@ -1721,11 +2094,21 @@ class ExperimentRunner:
         )
         if model_value is None:
             raise RunnerIntegrityError(f"model role is missing: {arm['model_role']}")
+        verified_model = self._model_bindings.get(model_value["role"])
+        if verified_model is None:
+            raise RunnerIntegrityError(f"model content role is missing: {model_value['role']}")
+        content_manifest_sha256 = model_content.manifest_sha256(verified_model.manifest)
         model = ModelBinding(
             role=model_value["role"],
             model_id=model_value["model_id"],
             revision=model_value["revision"],
             snapshot_manifest_sha256=model_value["snapshot_manifest_sha256"],
+            model_content_manifest_sha256=content_manifest_sha256,
+            model_roster_sha256=(
+                verified_model.snapshot.roster_sha256
+                if verified_model.snapshot is not None
+                else None
+            ),
             local_snapshot_path=Path(model_value["local_snapshot_path"]).expanduser().resolve(),
             max_new_tokens=int(model_value["generation"]["max_new_tokens"]),
         )
@@ -2143,8 +2526,14 @@ class ExperimentRunner:
                     attempt=invocation.attempt,
                     triggering_event_id=None,
                 )
-            annotation_manifest = _load_sealed_test_annotation_manifest()
-            if annotation_manifest["state"] != "sealed":
+            annotation_manifest = self._annotation_manifest
+            annotation_ready = annotation_manifest["state"] == "sealed"
+            if self.config.execution_mode == "production":
+                annotation_ready = annotation_ready and (
+                    annotation_manifest.get("execution_authorized") is True
+                    and annotation_manifest.get("provider_execution_allowed_now") is True
+                )
+            if not annotation_ready:
                 self._record_stop(
                     reason="sealed blinded annotations are required before any arm execution",
                     experiment_id=experiment_id,
@@ -2153,7 +2542,7 @@ class ExperimentRunner:
                     attempt=invocation.attempt,
                     triggering_event_id=None,
                     extra_input_bindings={
-                        "annotation_manifest_sha256": (SEALED_TEST_ANNOTATION_MANIFEST_SHA256),
+                        "annotation_manifest_sha256": self._annotation_manifest_sha256,
                         "annotation_state": annotation_manifest["state"],
                     },
                     extra_gate_results={"sealed_annotation_contract": "fail"},
@@ -2161,9 +2550,7 @@ class ExperimentRunner:
             try:
                 if isinstance(invocation, VisibleInvocation):
                     return self._execute_visible(invocation)
-                if isinstance(invocation, RoutingInvocation):
-                    return self._execute_routing(invocation)
-                raise AssertionError("validated invocation kind became unreachable")
+                return self._execute_routing(invocation)
             except BaseException:
                 # SystemExit/KeyboardInterrupt bypass normal provider exception
                 # handling.  Close any durable reservation as unknown and stop;
@@ -2243,9 +2630,7 @@ class ExperimentRunner:
             raise RunnerIntegrityError("sealed test annotations are not available for execution")
         if freeze.dev_gold_manifest_path is None:
             raise RunnerIntegrityError("selected prompt requires a sealed dev gold manifest")
-        dev_gold_sha256 = annotation_manifest.get("dev_gold_manifest_sha256")
-        if not isinstance(dev_gold_sha256, str):
-            raise RunnerIntegrityError("sealed annotation manifest lacks dev gold manifest")
+        dev_gold_sha256 = annotation_manifest["dev_gold_manifest_sha256"]
         dev_gold = _load_canonical_bound_json(
             freeze.dev_gold_manifest_path,
             expected_sha256=dev_gold_sha256,
@@ -2538,6 +2923,11 @@ class ExperimentRunner:
         model_value = next(
             item for item in self.spec["models"] if item["role"] == "primary_local_vlm"
         )
+        verified_model = self._model_bindings["primary_local_vlm"]
+        content_manifest_sha256 = model_content.manifest_sha256(verified_model.manifest)
+        roster_sha256 = (
+            verified_model.snapshot.roster_sha256 if verified_model.snapshot is not None else None
+        )
         logical_key = protocol.canonical_sha256(
             {"kind": "selected_visible_prompt", "arm": "A1_typed_abstaining_critic_3b"}
         )
@@ -2555,6 +2945,8 @@ class ExperimentRunner:
                 selection["candidate_evaluations"]
             ),
             "model_revision": model_value["revision"],
+            "model_content_manifest_sha256": content_manifest_sha256,
+            "model_roster_sha256": roster_sha256,
             "spec_sha256": self.identity.spec_sha256,
             "source_manifest_sha256": self.identity.source_manifest_sha256,
         }
@@ -2604,6 +2996,8 @@ class ExperimentRunner:
                     "model_id": model_value["model_id"],
                     "model_revision": model_value["revision"],
                     "snapshot_manifest_sha256": model_value["snapshot_manifest_sha256"],
+                    "model_content_manifest_sha256": content_manifest_sha256,
+                    "model_roster_sha256": roster_sha256,
                     "processor_config_sha256": processor_sha,
                     "input_image_sha256": None,
                     "resolved_scene_sha256": None,
@@ -3132,6 +3526,8 @@ class ExperimentRunner:
                 "model_id": model.model_id,
                 "revision": model.revision,
                 "snapshot_manifest_sha256": model.snapshot_manifest_sha256,
+                "model_content_manifest_sha256": model.model_content_manifest_sha256,
+                "model_roster_sha256": model.model_roster_sha256,
             },
             "bundle_sha256": sample["bundle_sha256"],
             "source_manifest_sha256": self.identity.source_manifest_sha256,
@@ -3310,6 +3706,8 @@ class ExperimentRunner:
                 "model_id": model.model_id,
                 "model_revision": model.revision,
                 "snapshot_manifest_sha256": model.snapshot_manifest_sha256,
+                "model_content_manifest_sha256": model.model_content_manifest_sha256,
+                "model_roster_sha256": model.model_roster_sha256,
                 "processor_config_sha256": processor_sha,
                 "input_image_sha256": protocol.canonical_sha256(image_receipts),
                 "input_images": image_receipts,
@@ -3460,6 +3858,8 @@ class ExperimentRunner:
                     "model_id": model.model_id,
                     "model_revision": model.revision,
                     "snapshot_manifest_sha256": model.snapshot_manifest_sha256,
+                    "model_content_manifest_sha256": model.model_content_manifest_sha256,
+                    "model_roster_sha256": model.model_roster_sha256,
                     "processor_config_sha256": processor_sha,
                     "input_image_sha256": protocol.canonical_sha256(image_receipts),
                     "input_images": image_receipts,
@@ -3542,6 +3942,8 @@ class ExperimentRunner:
             "model_id": model.model_id,
             "model_revision": model.revision,
             "snapshot_manifest_sha256": model.snapshot_manifest_sha256,
+            "model_content_manifest_sha256": model.model_content_manifest_sha256,
+            "model_roster_sha256": model.model_roster_sha256,
             "processor_config_sha256": processor_sha,
             "input_image_sha256": protocol.canonical_sha256(image_receipts),
             "input_images": image_receipts,
