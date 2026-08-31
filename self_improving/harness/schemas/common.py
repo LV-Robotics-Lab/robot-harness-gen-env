@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Literal
+from typing import Literal, TypeAlias
 
 from pydantic import UUID4, AwareDatetime, Field, StrictBool, model_validator
 
@@ -26,6 +26,7 @@ from .base import (
 )
 
 SKILL_DESCRIPTOR_SCHEMA_ID = "harness.skill_descriptor.v1"
+SKILL_DESCRIPTOR_V2_SCHEMA_ID = "harness.skill_descriptor.v2"
 SKILL_INVOCATION_SCHEMA_ID = "harness.skill_invocation.v1"
 RUN_STATE_SCHEMA_ID = "harness.run_state.v1"
 EVENT_SCHEMA_ID = "harness.event.v1"
@@ -45,6 +46,20 @@ class ValidationStatus(str, Enum):
     PASS = "pass"
     INCOMPLETE = "incomplete"
     FAIL = "fail"
+
+
+class ExecutionReproducibility(str, Enum):
+    """The exact repeatability claim made by a v2 Skill descriptor.
+
+    ``content_bitwise_deterministic`` promises identical typed output and artifact
+    content for the same input and dependency identities.
+    ``evidence_invariant_repeatable`` permits physical, media, and resource bytes
+    to vary while requiring a fixed qualification case to re-satisfy its named
+    evidence invariants.
+    """
+
+    CONTENT_BITWISE_DETERMINISTIC = "content_bitwise_deterministic"
+    EVIDENCE_INVARIANT_REPEATABLE = "evidence_invariant_repeatable"
 
 
 class UnknownField(HarnessModel):
@@ -126,10 +141,41 @@ class SkillDescriptor(HarnessModel):
             raise ValueError(f"mcp_tool_name must be {expected_name!r}")
         if self.qualification_artifact.schema_version != SKILL_QUALIFICATION_SCHEMA_ID:
             raise ValueError(
-                "qualification_artifact.schema_version must be "
-                f"{SKILL_QUALIFICATION_SCHEMA_ID!r}"
+                f"qualification_artifact.schema_version must be {SKILL_QUALIFICATION_SCHEMA_ID!r}"
             )
         return self
+
+
+class SkillDescriptorV2(HarnessModel):
+    """A Skill descriptor with an explicit, non-boolean repeatability claim."""
+
+    model_config = public_schema_config(SKILL_DESCRIPTOR_V2_SCHEMA_ID)
+
+    skill_id: SkillId
+    version: StableSemVer
+    mcp_tool_name: McpToolName
+    input_schema: SchemaId
+    output_schema: SchemaId
+    implementation_name: ShortString
+    implementation_version: ShortString
+    implementation_sha256: Sha256
+    reproducibility: ExecutionReproducibility
+    max_attempts: PositiveInt
+    qualification_artifact: ArtifactRef
+
+    @model_validator(mode="after")
+    def descriptor_is_self_consistent(self) -> "SkillDescriptorV2":
+        expected_name = derive_mcp_tool_name(self.skill_id, self.version)
+        if self.mcp_tool_name != expected_name:
+            raise ValueError(f"mcp_tool_name must be {expected_name!r}")
+        if self.qualification_artifact.schema_version != SKILL_QUALIFICATION_SCHEMA_ID:
+            raise ValueError(
+                f"qualification_artifact.schema_version must be {SKILL_QUALIFICATION_SCHEMA_ID!r}"
+            )
+        return self
+
+
+RegisteredSkillDescriptor: TypeAlias = SkillDescriptor | SkillDescriptorV2
 
 
 class Invocation(HarnessModel):

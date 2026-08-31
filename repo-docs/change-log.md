@@ -2,6 +2,12 @@
 
 ## 2026-08-31
 
+- 新增 `harness.skill_descriptor.v2`，用 `content_bitwise_deterministic` 与
+  `evidence_invariant_repeatable` 取代含糊 boolean；v1 snapshot 字节完全不变且仍只允许
+  `deterministic=true`。compile 保持 v1，replay 以 v2 声明 evidence-invariant repeatability；
+  replay 的固定资格加载器/生成器与 production registration policy 会重读完整 CAS evidence closure，
+  不把可构造 inspection 对象当发布权限。核心五模块 2,306 statements / 510 branches 全覆盖；这没有
+  生成 checked-in pass bundle，也没有运行真实 900/120 replay。
 - 将 production compile 的可复用生成资产从一次运行的 `state_root/asset-library` 分离：
   `CompileApplicationSettings.asset_library_root` 与 CLI `--asset-library-root` 现在显式指定持久资产库，
   默认落到项目内 `self_improving/asset_pipeline/active/data/asset_library`；qualification、测试与实验

@@ -1,16 +1,22 @@
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 from pathlib import Path
 
 import pytest
 
+import self_improving.harness.qualification as module
 from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.qualification import (
     QualificationBundleError,
     load_qualification_bundle,
+    publish_qualification_bundle,
+    verify_qualification_bundle,
+    verify_qualification_documents,
 )
+from self_improving.harness.schemas import ArtifactRef
 
 SKILL_REF = "text2env.compile@1.0.0"
 REPORT_SCHEMA = "harness.skill_qualification_report.v1"
@@ -204,28 +210,23 @@ def test_checked_in_compile_qualification_matches_current_implementation(
 
 def test_loads_verified_bundle_publishes_report_before_receipt_and_is_order_stable(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    class TrackingStore(LocalArtifactStore):
-        def __init__(self, root: Path) -> None:
-            super().__init__(root)
-            self.names: list[str] = []
-
-        def put_file(self, source: Path, *, name: str, media_type: str, schema_version: str | None):
-            self.names.append(name)
-            return super().put_file(
-                source,
-                name=name,
-                media_type=media_type,
-                schema_version=schema_version,
-            )
-
     bundle, scene_gen, ledger_contract = _make_bundle(tmp_path / "one")
-    store = TrackingStore(tmp_path / "cas")
+    store = LocalArtifactStore(tmp_path / "cas")
+    real_link = module._link_qualification_snapshot
+    linked_digests: list[str] = []
+
+    def track_link(source: Path, destination: Path) -> None:
+        linked_digests.append(destination.name)
+        real_link(source, destination)
+
+    monkeypatch.setattr(module, "_link_qualification_snapshot", track_link)
     loaded = _load(tmp_path, bundle, scene_gen, ledger_contract, store=store)
 
-    assert store.names == [
-        "text2env_compile_qualification_report",
-        "text2env_compile_qualification",
+    assert linked_digests == [
+        loaded.report_artifact.sha256,
+        loaded.qualification_artifact.sha256,
     ]
     assert loaded.qualification.skill_ref == SKILL_REF
     assert loaded.report.skill_ref == SKILL_REF
@@ -247,6 +248,80 @@ def test_loads_verified_bundle_publishes_report_before_receipt_and_is_order_stab
     other, other_scene_gen, other_ledger = _make_bundle(tmp_path / "two", reverse_files=True)
     reordered = _load(tmp_path, other, other_scene_gen, other_ledger)
     assert reordered.implementation_sha256 == loaded.implementation_sha256
+
+
+def test_verification_is_cas_pure_until_explicit_final_publication(tmp_path: Path) -> None:
+    bundle, scene_gen, ledger_contract = _make_bundle(tmp_path)
+    store = LocalArtifactStore(tmp_path / "cas")
+
+    verified = verify_qualification_bundle(
+        bundle,
+        skill_ref=SKILL_REF,
+        implementation_root=_implementation_root(bundle),
+        scene_gen_root=scene_gen,
+        ledger_contract_root=ledger_contract,
+    )
+
+    assert not store.root.exists()
+    loaded = publish_qualification_bundle(
+        bundle,
+        skill_ref=SKILL_REF,
+        artifact_store=store,
+        implementation_root=_implementation_root(bundle),
+        scene_gen_root=scene_gen,
+        ledger_contract_root=ledger_contract,
+    )
+    assert store.resolve(loaded.report_artifact).path.read_bytes() == verified.report_bytes
+    assert (
+        store.resolve(loaded.qualification_artifact).path.read_bytes()
+        == verified.qualification_bytes
+    )
+
+
+def test_public_publisher_accepts_raw_bundle_not_a_constructible_verification_token() -> None:
+    assert not hasattr(module, "VerifiedQualificationBundle")
+    assert not hasattr(module, "publish_verified_qualification")
+    assert tuple(inspect.signature(module.publish_qualification_bundle).parameters) == (
+        "bundle_root",
+        "skill_ref",
+        "artifact_store",
+        "implementation_root",
+        "scene_gen_root",
+        "ledger_contract_root",
+    )
+
+
+def test_in_memory_verification_never_creates_a_publishable_temporary_receipt(
+    tmp_path: Path,
+) -> None:
+    bundle, scene_gen, ledger_contract = _make_bundle(tmp_path)
+    documents = {path.name: path.read_bytes() for path in bundle.iterdir()}
+    store = LocalArtifactStore(tmp_path / "cas")
+
+    verified = verify_qualification_documents(
+        documents,
+        skill_ref=SKILL_REF,
+        implementation_root=_implementation_root(bundle),
+        scene_gen_root=scene_gen,
+        ledger_contract_root=ledger_contract,
+    )
+
+    assert verified.qualification_path is None
+    assert verified.report_path is None
+    assert not store.root.exists()
+    with pytest.raises(QualificationBundleError) as captured:
+        module._publish_qualification_inspection(verified, artifact_store=store)
+    assert captured.value.reason == "unpublished_document_snapshot"
+
+    with pytest.raises(QualificationBundleError) as captured:
+        verify_qualification_documents(
+            {"qualification.json": documents["qualification.json"]},
+            skill_ref=SKILL_REF,
+            implementation_root=_implementation_root(bundle),
+            scene_gen_root=scene_gen,
+            ledger_contract_root=ledger_contract,
+        )
+    assert captured.value.reason == "document_set_mismatch"
 
 
 @pytest.mark.parametrize("missing", ["qualification.json", "report.json", "manifest.json"])
@@ -618,24 +693,320 @@ def test_rejects_invalid_roots(tmp_path: Path, root_kind: str) -> None:
         )
 
 
-def test_rejects_invalid_requested_skill_ref_and_publish_failure(tmp_path: Path) -> None:
+def test_rejects_invalid_requested_skill_ref_and_publish_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     bundle, scene_gen, ledger = _make_bundle(tmp_path / "invalid")
     with pytest.raises(QualificationBundleError, match="requested skill_ref"):
         _load(tmp_path, bundle, scene_gen, ledger, skill_ref="text2env.compile@latest")
 
-    class FailingStore(LocalArtifactStore):
-        def put_file(self, source: Path, *, name: str, media_type: str, schema_version: str | None):
-            raise OSError("disk full")
-
     bundle, scene_gen, ledger = _make_bundle(tmp_path / "publish")
+    monkeypatch.setattr(
+        module,
+        "_link_qualification_snapshot",
+        lambda _source, _destination: (_ for _ in ()).throw(OSError("disk full")),
+    )
     with pytest.raises(QualificationBundleError, match="publish"):
         _load(
             tmp_path,
             bundle,
             scene_gen,
             ledger,
-            store=FailingStore(tmp_path / "cas"),
+            store=LocalArtifactStore(tmp_path / "cas"),
         )
+
+
+def test_second_pass_document_failure_leaves_only_uncommitted_report_content(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    bundle, scene_gen, ledger = _make_bundle(tmp_path)
+    store = LocalArtifactStore(tmp_path / "cas")
+    real_link = module._link_qualification_snapshot
+    calls = 0
+
+    def second_link_fails(source: Path, destination: Path) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise OSError("second CAS link failed")
+        real_link(source, destination)
+
+    monkeypatch.setattr(module, "_link_qualification_snapshot", second_link_fails)
+
+    with pytest.raises(QualificationBundleError, match="publish"):
+        _load(tmp_path, bundle, scene_gen, ledger, store=store)
+
+    report_sha256 = _sha((bundle / "report.json").read_bytes())
+    qualification_sha256 = _sha((bundle / "qualification.json").read_bytes())
+    assert {path.name for path in module._cas_object_paths(store)} == {report_sha256}
+    assert store.resolve_digest(report_sha256).is_file()
+    with pytest.raises(ValueError, match="not found"):
+        store.resolve_digest(qualification_sha256)
+
+
+def test_failed_publication_never_deletes_a_concurrent_cas_writer_object(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    concurrent_source = tmp_path / "concurrent.json"
+    concurrent_source.write_text('{"owner":"concurrent"}\n', encoding="utf-8")
+    concurrent_refs: list[ArtifactRef] = []
+
+    bundle, scene_gen, ledger = _make_bundle(tmp_path)
+    store = LocalArtifactStore(tmp_path / "cas")
+    real_link = module._link_qualification_snapshot
+    calls = 0
+
+    def concurrent_write_then_second_link_fails(source: Path, destination: Path) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            concurrent_refs.append(
+                store.put_file(
+                    concurrent_source,
+                    name="concurrent",
+                    media_type="application/json",
+                    schema_version="test.concurrent.v1",
+                )
+            )
+            raise OSError("second CAS link failed after concurrent writer")
+        real_link(source, destination)
+
+    monkeypatch.setattr(
+        module,
+        "_link_qualification_snapshot",
+        concurrent_write_then_second_link_fails,
+    )
+
+    with pytest.raises(QualificationBundleError, match="publish"):
+        _load(tmp_path, bundle, scene_gen, ledger, store=store)
+
+    assert len(concurrent_refs) == 1
+    assert store.resolve(concurrent_refs[0]).path.read_bytes() == concurrent_source.read_bytes()
+
+
+def test_failed_publication_preserves_same_digest_when_concurrent_writer_wins(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    concurrent_refs: list[ArtifactRef] = []
+    bundle, scene_gen, ledger = _make_bundle(tmp_path)
+    store = LocalArtifactStore(tmp_path / "cas")
+    real_link = module._link_qualification_snapshot
+    calls = 0
+
+    def same_digest_writer_wins(source: Path, destination: Path) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            concurrent_refs.append(
+                LocalArtifactStore(store.root).put_file(
+                    source,
+                    name="concurrent_same_digest",
+                    media_type="application/json",
+                    schema_version=REPORT_SCHEMA,
+                )
+            )
+        if calls == 2:
+            raise OSError("second CAS link failed")
+        real_link(source, destination)
+
+    monkeypatch.setattr(module, "_link_qualification_snapshot", same_digest_writer_wins)
+
+    with pytest.raises(QualificationBundleError, match="publish"):
+        _load(tmp_path, bundle, scene_gen, ledger, store=store)
+
+    assert len(concurrent_refs) == 1
+    assert store.resolve(concurrent_refs[0]).path.is_file()
+
+
+def test_failed_creator_cannot_break_a_concurrent_successful_adopter(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    bundle, scene_gen, ledger = _make_bundle(tmp_path)
+    store = LocalArtifactStore(tmp_path / "cas")
+    real_link = module._link_qualification_snapshot
+    adopter_results = []
+    outer_links = 0
+    inside_adopter = False
+
+    def creator_fails_after_adopter_finishes(source: Path, destination: Path) -> None:
+        nonlocal inside_adopter, outer_links
+        if inside_adopter:
+            real_link(source, destination)
+            return
+        outer_links += 1
+        if outer_links == 2:
+            inside_adopter = True
+            try:
+                adopter_results.append(
+                    publish_qualification_bundle(
+                        bundle,
+                        skill_ref=SKILL_REF,
+                        artifact_store=store,
+                        implementation_root=_implementation_root(bundle),
+                        scene_gen_root=scene_gen,
+                        ledger_contract_root=ledger,
+                    )
+                )
+            finally:
+                inside_adopter = False
+            raise OSError("creator failed after adopter committed")
+        real_link(source, destination)
+
+    monkeypatch.setattr(
+        module,
+        "_link_qualification_snapshot",
+        creator_fails_after_adopter_finishes,
+    )
+    with pytest.raises(QualificationBundleError, match="publish"):
+        publish_qualification_bundle(
+            bundle,
+            skill_ref=SKILL_REF,
+            artifact_store=store,
+            implementation_root=_implementation_root(bundle),
+            scene_gen_root=scene_gen,
+            ledger_contract_root=ledger,
+        )
+
+    assert len(adopter_results) == 1
+    adopter = adopter_results[0]
+    assert store.resolve(adopter.report_artifact).path.is_file()
+    assert store.resolve(adopter.qualification_artifact).path.is_file()
+
+
+def test_cleanup_failure_after_commit_marker_does_not_turn_success_into_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    bundle, scene_gen, ledger = _make_bundle(tmp_path)
+    store = LocalArtifactStore(tmp_path / "cas")
+    original_unlink = Path.unlink
+    staging_cleanup_calls = 0
+
+    def fail_second_staging_cleanup(self: Path, *args, **kwargs) -> None:
+        nonlocal staging_cleanup_calls
+        if self.name.startswith(".qualification."):
+            staging_cleanup_calls += 1
+            if staging_cleanup_calls == 2:
+                raise OSError("staging cleanup failed after commit")
+        original_unlink(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", fail_second_staging_cleanup)
+
+    loaded = publish_qualification_bundle(
+        bundle,
+        skill_ref=SKILL_REF,
+        artifact_store=store,
+        implementation_root=_implementation_root(bundle),
+        scene_gen_root=scene_gen,
+        ledger_contract_root=ledger,
+    )
+
+    assert store.resolve(loaded.report_artifact).path.is_file()
+    assert store.resolve(loaded.qualification_artifact).path.is_file()
+
+
+def test_atomic_snapshot_staging_and_existing_object_failures_are_closed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = tmp_path / "source.json"
+    source.write_bytes(b"{}")
+    raw_bytes = source.read_bytes()
+
+    empty_store = LocalArtifactStore(tmp_path / "empty-cas")
+    assert module._cas_object_paths(empty_store) == frozenset()
+    with monkeypatch.context() as scoped:
+        scoped.setattr(
+            Path,
+            "read_bytes",
+            lambda self: (_ for _ in ()).throw(OSError("source unavailable")),
+        )
+        with pytest.raises(QualificationBundleError, match="snapshot failed"):
+            module._publish_verified_snapshot(
+                empty_store,
+                source,
+                raw_bytes=raw_bytes,
+                name="snapshot",
+                schema_version="test.snapshot.v1",
+                label="snapshot",
+            )
+
+    with monkeypatch.context() as scoped:
+        scoped.setattr(
+            module.tempfile,
+            "mkstemp",
+            lambda **_kwargs: (_ for _ in ()).throw(OSError("staging unavailable")),
+        )
+        with pytest.raises(QualificationBundleError, match="publish failed"):
+            module._publish_verified_snapshot(
+                LocalArtifactStore(tmp_path / "staging-cas"),
+                source,
+                raw_bytes=raw_bytes,
+                name="snapshot",
+                schema_version="test.snapshot.v1",
+                label="snapshot",
+            )
+
+    expected = module._expected_artifact_ref(
+        raw_bytes,
+        name="snapshot",
+        schema_version="test.snapshot.v1",
+    )
+    corrupt_store = LocalArtifactStore(tmp_path / "corrupt-cas")
+    corrupt_path = corrupt_store.root / "sha256" / expected.sha256[:2] / expected.sha256
+    corrupt_path.parent.mkdir(parents=True)
+    corrupt_path.write_bytes(b"corrupt")
+    with pytest.raises(QualificationBundleError, match="CAS object is corrupt"):
+        module._publish_verified_snapshot(
+            corrupt_store,
+            source,
+            raw_bytes=raw_bytes,
+            name="snapshot",
+            schema_version="test.snapshot.v1",
+            label="snapshot",
+        )
+
+    unreadable_store = LocalArtifactStore(tmp_path / "unreadable-cas")
+    unreadable_path = unreadable_store.root / "sha256" / expected.sha256[:2] / expected.sha256
+    unreadable_path.parent.mkdir(parents=True)
+    unreadable_path.write_bytes(raw_bytes)
+    with monkeypatch.context() as scoped:
+        scoped.setattr(
+            module,
+            "_file_snapshot",
+            lambda _path: (_ for _ in ()).throw(OSError("cannot reread")),
+        )
+        with pytest.raises(QualificationBundleError, match="cannot be verified"):
+            module._publish_verified_snapshot(
+                unreadable_store,
+                source,
+                raw_bytes=raw_bytes,
+                name="snapshot",
+                schema_version="test.snapshot.v1",
+                label="snapshot",
+            )
+
+    successful_store = LocalArtifactStore(tmp_path / "successful-cas")
+    with monkeypatch.context() as scoped:
+        scoped.setattr(
+            Path,
+            "rmdir",
+            lambda self: (_ for _ in ()).throw(OSError("directory is busy")),
+        )
+        artifact = module._publish_verified_snapshot(
+            successful_store,
+            source,
+            raw_bytes=raw_bytes,
+            name="snapshot",
+            schema_version="test.snapshot.v1",
+            label="snapshot",
+        )
+    assert successful_store.resolve(artifact).path.is_file()
 
 
 @pytest.mark.parametrize(
@@ -645,24 +1016,91 @@ def test_rejects_invalid_requested_skill_ref_and_publish_failure(tmp_path: Path)
 def test_rejects_bundle_bytes_changed_during_artifact_publish(
     tmp_path: Path,
     mutated_name: str,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    class MutatingStore(LocalArtifactStore):
-        def put_file(self, source: Path, *, name: str, media_type: str, schema_version: str | None):
-            if name == mutated_name:
-                source.write_text("{}", encoding="utf-8")
-            return super().put_file(
-                source,
-                name=name,
-                media_type=media_type,
-                schema_version=schema_version,
-            )
-
     bundle, scene_gen, ledger = _make_bundle(tmp_path)
+    target = (
+        bundle / "report.json"
+        if mutated_name.endswith("qualification_report")
+        else bundle / "qualification.json"
+    )
+    original_read = Path.read_bytes
+    target_reads = 0
+
+    def changed_after_verification(self: Path) -> bytes:
+        nonlocal target_reads
+        payload = original_read(self)
+        if self == target:
+            target_reads += 1
+            if target_reads == 2:
+                return b"{}"
+        return payload
+
+    monkeypatch.setattr(Path, "read_bytes", changed_after_verification)
     with pytest.raises(QualificationBundleError, match="published .* does not match"):
         _load(
             tmp_path,
             bundle,
             scene_gen,
             ledger,
-            store=MutatingStore(tmp_path / "cas"),
+            store=LocalArtifactStore(tmp_path / "cas"),
         )
+
+
+def test_publish_rejects_ref_identity_drift_after_individual_snapshots(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    bundle, scene_gen, ledger = _make_bundle(tmp_path)
+    verified = verify_qualification_bundle(
+        bundle,
+        skill_ref=SKILL_REF,
+        implementation_root=_implementation_root(bundle),
+        scene_gen_root=scene_gen,
+        ledger_contract_root=ledger,
+    )
+    expected = verified.expected_report_artifact
+    monkeypatch.setattr(
+        module,
+        "_publish_verified_snapshot",
+        lambda *args, **kwargs: expected.model_copy(update={"name": "wrong"}),
+    )
+
+    with pytest.raises(QualificationBundleError) as captured:
+        publish_qualification_bundle(
+            bundle,
+            skill_ref=SKILL_REF,
+            artifact_store=LocalArtifactStore(tmp_path / "cas"),
+            implementation_root=_implementation_root(bundle),
+            scene_gen_root=scene_gen,
+            ledger_contract_root=ledger,
+        )
+
+    assert captured.value.reason == "artifact_snapshot_mismatch"
+
+
+def test_document_read_and_nonbytes_failures_are_normalized(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    path = tmp_path / "qualification.json"
+    path.write_bytes(b"{}")
+    original_read = Path.read_bytes
+
+    def fail_read(self: Path) -> bytes:
+        if self == path:
+            raise OSError("unavailable")
+        return original_read(self)
+
+    monkeypatch.setattr(Path, "read_bytes", fail_read)
+    with pytest.raises(QualificationBundleError) as captured:
+        module._load_document(path, module.SkillQualification, label="qualification")
+    assert captured.value.reason == "invalid_qualification"
+
+    with pytest.raises(QualificationBundleError) as captured:
+        module._load_document_bytes(
+            "not-bytes",  # type: ignore[arg-type]
+            module.SkillQualification,
+            label="qualification",
+        )
+    assert captured.value.reason == "invalid_qualification"

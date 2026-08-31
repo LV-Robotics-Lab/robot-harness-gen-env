@@ -14,10 +14,13 @@ from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.events import RecordingEventSink
 from self_improving.harness.handlers.text2env_replay import (
     build_text2env_replay_wiring,
-    text2env_replay_descriptor,
 )
 from self_improving.harness.package_store import PackageStore
-from self_improving.harness.registry import DependencyResolutionError, SkillRegistry
+from self_improving.harness.registry import (
+    DependencyResolutionError,
+    QualificationCandidate,
+    SkillRegistry,
+)
 from self_improving.harness.replay_dependencies import (
     REPLAY_DEPENDENCY_NAMES,
     Text2EnvReplayDependencyResolver,
@@ -57,23 +60,6 @@ def _resolver(tmp_path: Path):
         work_root=tmp_path / "dependency-work",
     )
     return fixture, executor, verifier, resolver
-
-
-def _put_json(
-    store: LocalArtifactStore,
-    path: Path,
-    *,
-    name: str,
-    schema_version: str,
-    payload: dict[str, object],
-):
-    path.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
-    return store.put_file(
-        path,
-        name=name,
-        media_type="application/json",
-        schema_version=schema_version,
-    )
 
 
 def test_resolver_configuration_rejects_mixed_stores_and_invalid_identities(
@@ -197,32 +183,6 @@ def test_production_wiring_carries_one_dependency_set_through_registry_context(
         expected_capability_sha256=executor.capability_sha256,
         checkpoint_steps=4,
     )
-    report = _put_json(
-        fixture.store,
-        tmp_path / "qualification-report.json",
-        name="replay_qualification_report",
-        schema_version="harness.skill_qualification_report.v1",
-        payload={"case": "registry-chain", "status": "pass"},
-    )
-    qualification = _put_json(
-        fixture.store,
-        tmp_path / "qualification.json",
-        name="replay_qualification",
-        schema_version="harness.skill_qualification.v1",
-        payload={
-            "skill_ref": "text2env.replay@1.0.0",
-            "status": "pass",
-            "deterministic_case_id": "registry-chain",
-            "regression_command": (
-                "pytest -q tests/self_improving/harness/test_replay_dependencies.py"
-            ),
-            "report_sha256": report.sha256,
-        },
-    )
-    descriptor = text2env_replay_descriptor(
-        qualification_artifact=qualification,
-        implementation_sha256="d" * 64,
-    )
     registry = SkillRegistry(
         artifact_resolver=fixture.store,
         dependency_resolver=wiring.dependency_resolver,
@@ -230,16 +190,23 @@ def test_production_wiring_carries_one_dependency_set_through_registry_context(
         clock=lambda: datetime(2026, 8, 31, tzinfo=timezone.utc),
         run_id_factory=lambda: UUID("12345678-1234-4234-9234-123456789abc"),
     )
-    registry.register(descriptor, wiring.handler)
-
-    state = registry.invoke(
-        "text2env.replay",
-        "1.0.0",
+    evaluation = registry.evaluate_candidate(
+        QualificationCandidate(
+            skill_id="text2env.replay",
+            version="1.0.0",
+            input_schema="harness.text2env_replay_input.v1",
+            output_schema="harness.text2env_replay_output.v1",
+            max_attempts=2,
+        ),
+        wiring.handler,
         fixture.value.model_dump(mode="json"),
     )
+    state = evaluation.state
 
     assert state.status is RunStatus.SUCCEEDED
-    invocation = registry.invocation(state.run_id)
+    assert evaluation.mode == "qualification_candidate"
+    assert registry.list() == ()
+    invocation = evaluation.invocation
     assert invocation is not None
     assert tuple(item.name for item in invocation.dependencies) == tuple(
         sorted(REPLAY_DEPENDENCY_NAMES)

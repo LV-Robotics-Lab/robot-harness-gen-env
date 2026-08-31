@@ -39,6 +39,7 @@ Skill SemVer 独立于 Python 包版本、`robotwin.*.v1` schema 标识符、包
 | 记录 | 必填字段 |
 | --- | --- |
 | `SkillDescriptor` (`harness.skill_descriptor.v1`) | `skill_id`, `version`, `mcp_tool_name`, `input_schema`, `output_schema`, `implementation_name`, `implementation_version`, `implementation_sha256`, `deterministic=true`, `max_attempts`, `qualification_artifact` |
+| `SkillDescriptorV2` (`harness.skill_descriptor.v2`) | 标识、实现、输入输出 schema、attempt 与资格字段不变，以必填 `reproducibility` 取代 `deterministic` |
 | `Invocation` (`harness.skill_invocation.v1`) | `run_id`, `skill_id`, `skill_version`, `effective_parameters`, `dependencies`, `max_attempts`, `invocation_digest` |
 | `RunState` (`harness.run_state.v1`) | `run_id`, `invocation_digest`, `skill_id`, `skill_version`, `status`, `attempt`, `max_attempts`, `started_at`, `ended_at`, `events`, `artifacts`, `output`, `blocker` |
 | `Event` (`harness.event.v1`) | `seq`, `timestamp`, `stage`, `attempt`, `from_status`, `to_status`, `artifact_refs` |
@@ -48,6 +49,20 @@ Skill SemVer 独立于 Python 包版本、`robotwin.*.v1` schema 标识符、包
 `run_id` 是审计标识符，不是内容标识。`ArtifactRef.uri` 是定位符，不能作为可信的标识依据；消费者必须验证 `sha256`。对于类型化制品，`schema_version` 是字符串；对于无类型媒体则为 `null`。`unknowns` 包含字段严格限定为 `field`、`reason` 和 `source` 的记录。
 
 可空字段仍须存在：运行期间 `ended_at=null`；首个事件中 `Event.from_status=null`；预检阶段出现 Skill/版本/输入/依赖 blocker 时 `invocation_digest=null`；在类型化输出存在之前 `output=null`；除非运行被阻止或失败，否则 `RunState.blocker=null`。只有在预检已解析出精确描述符、有效参数和依赖之后，才创建 `Invocation` 记录。`qualification_artifact.schema_version` 必须为 `harness.skill_qualification.v1`；其载荷严格包含 `skill_ref`、`status="pass"`、`deterministic_case_id`、`regression_command` 和 `report_sha256`。
+
+描述符 v1 已冻结，并严格按既有形式保持可读：它只接受 `deterministic=true`，拒绝
+`reproducibility`，也绝不会被静默转换成 v2。描述符 v2 拒绝旧的 `deterministic` 字段，
+并要求 `reproducibility` 严格取以下一个值：
+
+- `content_bitwise_deterministic`：在类型化输入及所有依赖身份完全相同的前提下，类型化
+  输出和制品内容逐字节一致。compile 继续通过 v1 的 `deterministic=true` 声明这一语义。
+- `evidence_invariant_repeatable`：物理、媒体、耗时和资源字节可以变化，但固定资格案例必须
+  重新满足每一个具名证据不变量。replay 声明这一语义，不声明执行结果逐字节一致。
+
+两个描述符版本都继续引用 `harness.skill_qualification.v1`。遗留字段名
+`deterministic_case_id` 只标识固定资格案例；对于 v2 的
+`evidence_invariant_repeatable` 描述符，它不表示字节身份相同。Registry 的 `register`、
+`list` 和 `resolve` 保留传入的精确描述符模型，不在两个版本之间改写。
 
 `dependencies` 按 `name` 排序；每个条目严格包含 `name`、`version` 和 `sha256`。计算哈希前展开默认值。`invocation_digest` 为：
 
@@ -89,7 +104,7 @@ sha256(canonical_json({
 2. `verify_package` 通过，并且每个引用制品的摘要都匹配。
 3. 运行时证据绑定到包的 `resolved_scene_sha256`。
 4. 物理、碰撞、稳定性、可见性和视频检查的最终验证状态均为 `pass`。
-5. 已注册的 Skill 描述符具有针对确定性测试和回归测试的通过资格制品。
+5. 已注册的 Skill 描述符具有针对其所声明的内容确定性或证据不变量可复验检查，以及回归测试的通过资格制品。
 6. 请求来源、版本、seed、依赖摘要和求解器 trace 均存在。
 
 任何不成立的条件都会产生 `publishable=false`，并至少产生一个结构化 blocker；该 blocker 位于 validate 输出中，或在无法生成类型化输出时位于 `RunState.blocker` 中。本契约只定义发布资格；不定义 `published` 状态或外部发布副作用。
@@ -107,7 +122,7 @@ sha256(canonical_json({
 | `T2E_REPLAY_FAILED` | RoboTwin/SAPIEN 回放未生成完整证据 | 运行 blocker：`blocked` | `true` |
 | `T2E_VALIDATION_INCOMPLETE` | 未运行所需的运行时检查 | validate 输出 blocker | `false` |
 | `T2E_VALIDATION_FAILED` | 一个或多个必需的验证检查失败 | validate 输出 blocker | `false` |
-| `T2E_REGRESSION_FAILED` | 注册资格验证或确定性回归未通过 | 注册 blocker | `false` |
+| `T2E_REGRESSION_FAILED` | 注册资格验证或所声明的可复现语义回归未通过 | 注册 blocker | `false` |
 | `HARN_INTERNAL` | Registry、适配器或 handler 出现意外缺陷 | 运行 blocker：`failed` | `false` |
 
 异常文本是诊断细节，绝不是错误码。现有的 `SceneSpecError`、pydantic 验证错误、`SceneSolveError` 报告、包验证、replay 退出状态和验证报告，根据阶段和恢复操作映射到上表。

@@ -14,6 +14,7 @@ from .schemas import (
     EVENT_SCHEMA_ID,
     RUN_STATE_SCHEMA_ID,
     SKILL_DESCRIPTOR_SCHEMA_ID,
+    SKILL_DESCRIPTOR_V2_SCHEMA_ID,
     SKILL_INVOCATION_SCHEMA_ID,
     SKILL_QUALIFICATION_SCHEMA_ID,
     TEXT2ENV_COMPILE_INPUT_SCHEMA_ID,
@@ -29,6 +30,7 @@ from .schemas import (
     Invocation,
     RunState,
     SkillDescriptor,
+    SkillDescriptorV2,
     SkillQualification,
     Text2EnvCompileInput,
     Text2EnvCompileOutput,
@@ -48,6 +50,7 @@ _SCHEMA_MODELS: dict[str, type[HarnessModel]] = {
     EVENT_SCHEMA_ID: Event,
     RUN_STATE_SCHEMA_ID: RunState,
     SKILL_DESCRIPTOR_SCHEMA_ID: SkillDescriptor,
+    SKILL_DESCRIPTOR_V2_SCHEMA_ID: SkillDescriptorV2,
     SKILL_INVOCATION_SCHEMA_ID: Invocation,
     SKILL_QUALIFICATION_SCHEMA_ID: SkillQualification,
     TEXT2ENV_COMPILE_INPUT_SCHEMA_ID: Text2EnvCompileInput,
@@ -111,9 +114,7 @@ def export_schema_snapshots(
         existing_names = {path.name for path in root.glob("*.schema.json")}
         expected_names = set(expected)
         problems = [f"missing {name}" for name in sorted(expected_names - existing_names)]
-        problems.extend(
-            f"unexpected {name}" for name in sorted(existing_names - expected_names)
-        )
+        problems.extend(f"unexpected {name}" for name in sorted(existing_names - expected_names))
         for name in sorted(expected_names & existing_names):
             if (root / name).read_text(encoding="utf-8") != expected[name]:
                 problems.append(f"changed {name}")

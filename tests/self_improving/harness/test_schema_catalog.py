@@ -16,7 +16,7 @@ from self_improving.harness.schema_catalog import (
     schema_model,
     schema_snapshot_name,
 )
-from self_improving.harness.schemas.common import ArtifactRef
+from self_improving.harness.schemas.common import ArtifactRef, SkillDescriptorV2
 
 EXPECTED_SCHEMA_IDS = {
     "harness.artifact_ref.v1",
@@ -25,6 +25,7 @@ EXPECTED_SCHEMA_IDS = {
     "harness.event.v1",
     "harness.run_state.v1",
     "harness.skill_descriptor.v1",
+    "harness.skill_descriptor.v2",
     "harness.skill_invocation.v1",
     "harness.skill_qualification.v1",
     "harness.text2env_compile_input.v1",
@@ -39,6 +40,7 @@ EXPECTED_SCHEMA_IDS = {
 def test_schema_catalog_is_exact_and_immutable() -> None:
     assert set(SCHEMA_MODELS) == EXPECTED_SCHEMA_IDS
     assert schema_model("harness.artifact_ref.v1") is ArtifactRef
+    assert schema_model("harness.skill_descriptor.v2") is SkillDescriptorV2
     with pytest.raises(KeyError):
         schema_model("harness.missing.v1")
     with pytest.raises(TypeError):
@@ -76,6 +78,22 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
     runtime = runtime_input["$defs"]["RuntimeConfig"]
     assert runtime["properties"]["contact_window_steps"]["default"] == 120
 
+    descriptor_v2 = documents["harness.skill_descriptor.v2"]
+    assert descriptor_v2["required"] == [
+        "skill_id",
+        "version",
+        "mcp_tool_name",
+        "input_schema",
+        "output_schema",
+        "implementation_name",
+        "implementation_version",
+        "implementation_sha256",
+        "reproducibility",
+        "max_attempts",
+        "qualification_artifact",
+    ]
+    assert "deterministic" not in descriptor_v2["properties"]
+
 
 def test_schema_rendering_and_snapshot_names_are_canonical() -> None:
     name = schema_snapshot_name("harness.artifact_ref.v1")
@@ -84,9 +102,7 @@ def test_schema_rendering_and_snapshot_names_are_canonical() -> None:
     assert rendered == '{\n  "a": "值",\n  "z": 1\n}\n'
 
     snapshots = expected_schema_snapshots()
-    assert set(snapshots) == {
-        f"{schema_id}.schema.json" for schema_id in EXPECTED_SCHEMA_IDS
-    }
+    assert set(snapshots) == {f"{schema_id}.schema.json" for schema_id in EXPECTED_SCHEMA_IDS}
     for content in snapshots.values():
         assert content.endswith("\n")
         assert json.loads(content)["$id"] in EXPECTED_SCHEMA_IDS

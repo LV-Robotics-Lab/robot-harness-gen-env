@@ -1,0 +1,46 @@
+{
+  "schema_version": "harness.skill_descriptor_versioning_evidence.v1",
+  "recorded_date": "2026-08-31",
+  "status": "implemented",
+  "legacy_contract": {
+    "schema_id": "harness.skill_descriptor.v1",
+    "deterministic_must_equal": true,
+    "snapshot_sha256_before": "271ddb20c81954a29295b8cbc5488d53f7a6abcafc27fde7e8ae17ae6b878ea2",
+    "snapshot_sha256_after": "271ddb20c81954a29295b8cbc5488d53f7a6abcafc27fde7e8ae17ae6b878ea2",
+    "silently_converted_to_v2": false
+  },
+  "new_contract": {
+    "schema_id": "harness.skill_descriptor.v2",
+    "snapshot_sha256": "2e0bd92c3312b174e84c4c92561f3bb956ba8ce77b1148eb22809c56c180fa90",
+    "field": "reproducibility",
+    "values": [
+      "content_bitwise_deterministic",
+      "evidence_invariant_repeatable"
+    ],
+    "legacy_deterministic_field_rejected": true
+  },
+  "production_claims": {
+    "text2env.compile": "v1 deterministic=true",
+    "text2env.replay": "v2 evidence_invariant_repeatable"
+  },
+  "registry": {
+    "accepted_models": [
+      "SkillDescriptor",
+      "SkillDescriptorV2"
+    ],
+    "preserves_exact_model_without_conversion": true,
+    "qualification_artifact_schema": "harness.skill_qualification.v1"
+  },
+  "verification": {
+    "focused_result": "209 passed",
+    "covered_modules": {
+      "schemas.common": "190 statements / 56 branches / 100%",
+      "schema_catalog": "42 statements / 10 branches / 100%",
+      "registry": "232 statements / 52 branches / 100%",
+      "text2env_replay_handler": "663 statements / 240 branches / 100%"
+    },
+    "schema_snapshots_verified": 15
+  },
+  "claim_boundary": "Evidence-invariant repeatability permits physical, media, timing, and resource bytes to differ; it requires a fixed qualification case to re-satisfy named invariants. This descriptor change does not itself qualify replay.",
+  "host_paths_present": false
+}

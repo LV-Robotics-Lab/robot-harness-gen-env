@@ -62,8 +62,9 @@ from ..schemas import (
     Blocker,
     DependencyRef,
     EnvironmentPackage,
+    ExecutionReproducibility,
     RuntimeConfig,
-    SkillDescriptor,
+    SkillDescriptorV2,
     Text2EnvReplayInput,
     Text2EnvReplayOutput,
 )
@@ -1914,10 +1915,10 @@ def text2env_replay_descriptor(
     *,
     qualification_artifact: ArtifactRef,
     implementation_sha256: str,
-) -> SkillDescriptor:
+) -> SkillDescriptorV2:
     """Build the exact immutable descriptor for the replay Adapter."""
 
-    return SkillDescriptor(
+    return SkillDescriptorV2(
         skill_id="text2env.replay",
         version="1.0.0",
         mcp_tool_name="text2env_replay_v1_0_0",
@@ -1926,7 +1927,7 @@ def text2env_replay_descriptor(
         implementation_name="self_improving.harness.handlers.text2env_replay",
         implementation_version="1",
         implementation_sha256=implementation_sha256,
-        deterministic=True,
+        reproducibility=ExecutionReproducibility.EVIDENCE_INVARIANT_REPEATABLE,
         max_attempts=2,
         qualification_artifact=qualification_artifact,
     )

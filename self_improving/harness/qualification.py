@@ -10,6 +10,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import tempfile
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any, Literal, TypeVar
@@ -96,6 +99,42 @@ class LoadedQualification:
     implementation_sha256: str
 
 
+@dataclass(frozen=True)
+class _QualificationInspection:
+    """Pure verification data; never accepted as publication authority."""
+
+    qualification: SkillQualification
+    report: QualificationReportV1
+    manifest: ImplementationManifestV1
+    qualification_path: Path | None
+    report_path: Path | None
+    qualification_bytes: bytes
+    report_bytes: bytes
+    implementation_sha256: str
+
+    @property
+    def expected_report_artifact(self) -> ArtifactRef:
+        """Content reference the final publication must produce."""
+
+        prefix = self.qualification.skill_ref.split("@", maxsplit=1)[0].replace(".", "_")
+        return _expected_artifact_ref(
+            self.report_bytes,
+            name=f"{prefix}_qualification_report",
+            schema_version=QUALIFICATION_REPORT_SCHEMA_ID,
+        )
+
+    @property
+    def expected_qualification_artifact(self) -> ArtifactRef:
+        """Content reference the final publication must produce."""
+
+        prefix = self.qualification.skill_ref.split("@", maxsplit=1)[0].replace(".", "_")
+        return _expected_artifact_ref(
+            self.qualification_bytes,
+            name=f"{prefix}_qualification",
+            schema_version=QUALIFICATION_SCHEMA_ID,
+        )
+
+
 class QualificationBundleError(ValueError):
     """A qualification bundle failed schema, path, or content verification."""
 
@@ -123,10 +162,51 @@ def load_qualification_bundle(
 ) -> LoadedQualification:
     """Verify a fixed bundle and publish its report then receipt to local CAS.
 
-    No result is synthesized here: both ``status=pass`` records must already be
-    packaged, strict, and bound to the implementation and source bytes supplied
-    by the caller.
+    This compatibility composition preserves the compile loader's public
+    behavior.  Replay qualification uses the two explicit phases below so its
+    deeper evidence checks run before either generic pass document is published.
     """
+
+    return publish_qualification_bundle(
+        bundle_root,
+        skill_ref=skill_ref,
+        artifact_store=artifact_store,
+        implementation_root=implementation_root,
+        scene_gen_root=scene_gen_root,
+        ledger_contract_root=ledger_contract_root,
+    )
+
+
+def publish_qualification_bundle(
+    bundle_root: Path,
+    *,
+    skill_ref: str,
+    artifact_store: LocalArtifactStore,
+    implementation_root: Path,
+    scene_gen_root: Path,
+    ledger_contract_root: Path,
+) -> LoadedQualification:
+    """Reverify raw bundle/source inputs and atomically publish both pass documents."""
+
+    inspected = verify_qualification_bundle(
+        bundle_root,
+        skill_ref=skill_ref,
+        implementation_root=implementation_root,
+        scene_gen_root=scene_gen_root,
+        ledger_contract_root=ledger_contract_root,
+    )
+    return _publish_qualification_inspection(inspected, artifact_store=artifact_store)
+
+
+def verify_qualification_bundle(
+    bundle_root: Path,
+    *,
+    skill_ref: str,
+    implementation_root: Path,
+    scene_gen_root: Path,
+    ledger_contract_root: Path,
+) -> _QualificationInspection:
+    """Verify bundle and source bytes without reading or mutating any CAS."""
 
     expected_skill_ref = _validate_requested_skill_ref(skill_ref)
     root = _checked_root(bundle_root, label="qualification bundle")
@@ -154,6 +234,88 @@ def load_qualification_bundle(
         label="manifest",
     )
 
+    _reject_non_document_bundle_entries(root)
+    return _verify_qualification_content(
+        expected_skill_ref=expected_skill_ref,
+        qualification=qualification,
+        report=report,
+        manifest=manifest,
+        qualification_bytes=qualification_bytes,
+        report_bytes=report_bytes,
+        qualification_path=qualification_path,
+        report_path=report_path,
+        implementation_root=actual_implementation_root,
+        scene_gen_root=scene_gen_root,
+        ledger_contract_root=ledger_contract_root,
+    )
+
+
+def verify_qualification_documents(
+    documents: Mapping[str, bytes],
+    *,
+    skill_ref: str,
+    implementation_root: Path,
+    scene_gen_root: Path,
+    ledger_contract_root: Path,
+) -> _QualificationInspection:
+    """Verify the exact three documents from memory without publishing or staging them."""
+
+    if type(documents) is not dict or set(documents) != _BUNDLE_DOCUMENTS:
+        raise QualificationBundleError(
+            "document_set_mismatch",
+            "qualification documents must be the exact three-document bundle",
+        )
+    expected_skill_ref = _validate_requested_skill_ref(skill_ref)
+    actual_implementation_root = _checked_root(
+        implementation_root,
+        label="implementation source",
+    )
+    qualification, qualification_bytes = _load_document_bytes(
+        documents["qualification.json"],
+        SkillQualification,
+        label="qualification",
+    )
+    report, report_bytes = _load_document_bytes(
+        documents["report.json"],
+        QualificationReportV1,
+        label="report",
+    )
+    manifest, _ = _load_document_bytes(
+        documents["manifest.json"],
+        ImplementationManifestV1,
+        label="manifest",
+    )
+    return _verify_qualification_content(
+        expected_skill_ref=expected_skill_ref,
+        qualification=qualification,
+        report=report,
+        manifest=manifest,
+        qualification_bytes=qualification_bytes,
+        report_bytes=report_bytes,
+        qualification_path=None,
+        report_path=None,
+        implementation_root=actual_implementation_root,
+        scene_gen_root=scene_gen_root,
+        ledger_contract_root=ledger_contract_root,
+    )
+
+
+def _verify_qualification_content(
+    *,
+    expected_skill_ref: str,
+    qualification: SkillQualification,
+    report: QualificationReportV1,
+    manifest: ImplementationManifestV1,
+    qualification_bytes: bytes,
+    report_bytes: bytes,
+    qualification_path: Path | None,
+    report_path: Path | None,
+    implementation_root: Path,
+    scene_gen_root: Path,
+    ledger_contract_root: Path,
+) -> _QualificationInspection:
+    """Apply source and identity gates shared by path and in-memory inputs."""
+
     report_sha256 = hashlib.sha256(report_bytes).hexdigest()
     if qualification.report_sha256 != report_sha256:
         raise QualificationBundleError(
@@ -176,8 +338,7 @@ def load_qualification_bundle(
             "qualification identity does not match the qualification report",
         )
 
-    _verify_implementation_files(actual_implementation_root, manifest.files)
-    _reject_non_document_bundle_entries(root)
+    _verify_implementation_files(implementation_root, manifest.files)
     implementation_sha256 = _implementation_bundle_sha256(manifest)
     if manifest.bundle_sha256 != implementation_sha256:
         raise QualificationBundleError(
@@ -206,31 +367,85 @@ def load_qualification_bundle(
             "qualification source tree digest does not match current source tree bytes",
         )
 
-    artifact_prefix = expected_skill_ref.split("@", maxsplit=1)[0].replace(".", "_")
-    report_artifact = _publish_verified_snapshot(
-        artifact_store,
-        report_path,
-        raw_bytes=report_bytes,
-        name=f"{artifact_prefix}_qualification_report",
-        schema_version=QUALIFICATION_REPORT_SCHEMA_ID,
-        label="qualification report",
-    )
-    qualification_artifact = _publish_verified_snapshot(
-        artifact_store,
-        qualification_path,
-        raw_bytes=qualification_bytes,
-        name=f"{artifact_prefix}_qualification",
-        schema_version=QUALIFICATION_SCHEMA_ID,
-        label="qualification receipt",
-    )
-
-    return LoadedQualification(
+    return _QualificationInspection(
         qualification=qualification,
         report=report,
         manifest=manifest,
+        qualification_path=qualification_path,
+        report_path=report_path,
+        qualification_bytes=qualification_bytes,
+        report_bytes=report_bytes,
+        implementation_sha256=implementation_sha256,
+    )
+
+
+def _publish_qualification_inspection(
+    inspected: _QualificationInspection,
+    *,
+    artifact_store: LocalArtifactStore,
+) -> LoadedQualification:
+    """Publish report content, then expose the qualification receipt as commit marker."""
+
+    if inspected.report_path is None or inspected.qualification_path is None:
+        raise QualificationBundleError(
+            "unpublished_document_snapshot",
+            "in-memory qualification verification cannot be published before final files exist",
+        )
+    expected_report = inspected.expected_report_artifact
+    report_artifact = _publish_verified_snapshot(
+        artifact_store,
+        inspected.report_path,
+        raw_bytes=inspected.report_bytes,
+        name=expected_report.name,
+        schema_version=QUALIFICATION_REPORT_SCHEMA_ID,
+        label="qualification report",
+    )
+    expected_qualification = inspected.expected_qualification_artifact
+    qualification_artifact = _publish_verified_snapshot(
+        artifact_store,
+        inspected.qualification_path,
+        raw_bytes=inspected.qualification_bytes,
+        name=expected_qualification.name,
+        schema_version=QUALIFICATION_SCHEMA_ID,
+        label="qualification receipt",
+    )
+    if report_artifact != expected_report or qualification_artifact != expected_qualification:
+        raise QualificationBundleError(
+            "artifact_snapshot_mismatch",
+            "published qualification ArtifactRefs differ from verified content identities",
+        )
+
+    return LoadedQualification(
+        qualification=inspected.qualification,
+        report=inspected.report,
+        manifest=inspected.manifest,
         qualification_artifact=qualification_artifact,
         report_artifact=report_artifact,
-        implementation_sha256=implementation_sha256,
+        implementation_sha256=inspected.implementation_sha256,
+    )
+
+
+def _cas_object_paths(artifact_store: LocalArtifactStore) -> frozenset[Path]:
+    root = artifact_store.root / "sha256"
+    if not root.exists():
+        return frozenset()
+    return frozenset(path for path in root.glob("*/*") if path.is_file())
+
+
+def _expected_artifact_ref(
+    payload: bytes,
+    *,
+    name: str,
+    schema_version: str,
+) -> ArtifactRef:
+    sha256 = hashlib.sha256(payload).hexdigest()
+    return ArtifactRef(
+        name=name,
+        uri=f"artifact://sha256/{sha256}",
+        media_type="application/json",
+        sha256=sha256,
+        bytes=len(payload),
+        schema_version=schema_version,
     )
 
 
@@ -290,8 +505,28 @@ def _load_document(
 ) -> tuple[_DocumentModel, bytes]:
     try:
         payload = path.read_bytes()
+    except OSError as error:
+        raise QualificationBundleError(
+            f"invalid_{label}",
+            f"invalid {label} document: {error}",
+        ) from error
+    return _load_document_bytes(payload, model, label=label)
+
+
+def _load_document_bytes(
+    payload: bytes,
+    model: type[_DocumentModel],
+    *,
+    label: str,
+) -> tuple[_DocumentModel, bytes]:
+    if type(payload) is not bytes:
+        raise QualificationBundleError(
+            f"invalid_{label}",
+            f"invalid {label} document: payload must be bytes",
+        )
+    try:
         return model.model_validate_json(payload), payload
-    except (OSError, ValidationError) as error:
+    except ValidationError as error:
         raise QualificationBundleError(
             f"invalid_{label}",
             f"invalid {label} document: {error}",
@@ -308,24 +543,76 @@ def _publish_verified_snapshot(
     label: str,
 ) -> ArtifactRef:
     try:
-        artifact = artifact_store.put_file(
-            path,
-            name=name,
-            media_type="application/json",
-            schema_version=schema_version,
-        )
-    except Exception as error:
+        current_bytes = path.read_bytes()
+    except OSError as error:
         raise QualificationBundleError(
             "artifact_publish_failed",
-            f"qualification artifact publish failed: {error}",
+            f"qualification artifact snapshot failed: {error}",
         ) from error
-    expected_sha256 = hashlib.sha256(raw_bytes).hexdigest()
-    if artifact.sha256 != expected_sha256 or artifact.bytes != len(raw_bytes):
+    if current_bytes != raw_bytes:
         raise QualificationBundleError(
             "artifact_snapshot_mismatch",
             f"published {label} does not match the bytes that were verified",
         )
+    artifact = _expected_artifact_ref(
+        raw_bytes,
+        name=name,
+        schema_version=schema_version,
+    )
+    incoming = artifact_store.root / ".incoming"
+    temporary_path: Path | None = None
+    try:
+        incoming.mkdir(parents=True, exist_ok=True)
+        file_descriptor, temporary_name = tempfile.mkstemp(
+            dir=incoming,
+            prefix=".qualification.",
+        )
+        temporary_path = Path(temporary_name)
+        with os.fdopen(file_descriptor, "wb") as stream:
+            stream.write(raw_bytes)
+            stream.flush()
+            os.fsync(stream.fileno())
+        destination = artifact_store.root / "sha256" / artifact.sha256[:2] / artifact.sha256
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            _link_qualification_snapshot(temporary_path, destination)
+        except FileExistsError:
+            try:
+                size, sha256 = _file_snapshot(destination)
+            except OSError as error:
+                raise QualificationBundleError(
+                    "artifact_publish_failed",
+                    f"existing qualification CAS object cannot be verified: {error}",
+                ) from error
+            if size != artifact.bytes or sha256 != artifact.sha256:
+                raise QualificationBundleError(
+                    "artifact_snapshot_mismatch",
+                    f"existing {label} CAS object is corrupt",
+                )
+    except QualificationBundleError:
+        raise
+    except OSError as error:
+        raise QualificationBundleError(
+            "artifact_publish_failed",
+            f"qualification artifact publish failed: {error}",
+        ) from error
+    finally:
+        if temporary_path is not None:
+            try:
+                temporary_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+        try:
+            incoming.rmdir()
+        except OSError:
+            pass
     return artifact
+
+
+def _link_qualification_snapshot(source: Path, destination: Path) -> None:
+    """Atomically claim one CAS directory entry without replacing another writer."""
+
+    os.link(source, destination)
 
 
 def _verify_skill_identity(

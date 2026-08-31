@@ -60,6 +60,7 @@ guessed, and JSON uses UTF-8 with sorted keys and compact separators for canonic
 | Record | Required fields |
 | --- | --- |
 | `SkillDescriptor` (`harness.skill_descriptor.v1`) | `skill_id`, `version`, `mcp_tool_name`, `input_schema`, `output_schema`, `implementation_name`, `implementation_version`, `implementation_sha256`, `deterministic=true`, `max_attempts`, `qualification_artifact` |
+| `SkillDescriptorV2` (`harness.skill_descriptor.v2`) | the same identity, implementation, schema, attempt, and qualification fields, with `reproducibility` replacing `deterministic` |
 | `Invocation` (`harness.skill_invocation.v1`) | `run_id`, `skill_id`, `skill_version`, `effective_parameters`, `dependencies`, `max_attempts`, `invocation_digest` |
 | `RunState` (`harness.run_state.v1`) | `run_id`, `invocation_digest`, `skill_id`, `skill_version`, `status`, `attempt`, `max_attempts`, `started_at`, `ended_at`, `events`, `artifacts`, `output`, `blocker` |
 | `Event` (`harness.event.v1`) | `seq`, `timestamp`, `stage`, `attempt`, `from_status`, `to_status`, `artifact_refs` |
@@ -78,6 +79,23 @@ failed. An `Invocation` record is created only after preflight has resolved the 
 effective parameters, and dependencies. `qualification_artifact.schema_version` must be
 `harness.skill_qualification.v1`; its payload contains exactly `skill_ref`, `status="pass"`,
 `deterministic_case_id`, `regression_command`, and `report_sha256`.
+
+Descriptor v1 is frozen and remains readable exactly as published: it accepts only
+`deterministic=true`, rejects `reproducibility`, and is never silently converted to v2. Descriptor
+v2 rejects the legacy `deterministic` field and requires exactly one `reproducibility` value:
+
+- `content_bitwise_deterministic`: with the same typed input and exact dependency identities,
+  typed output and artifact content are byte-identical. Compile continues to make this claim
+  through its v1 `deterministic=true` descriptor.
+- `evidence_invariant_repeatable`: physical, media, timing, and resource bytes may vary, but the
+  fixed qualification case must re-satisfy every named evidence invariant. Replay makes this
+  claim and does not claim byte-identical execution.
+
+Both descriptor versions continue to point to `harness.skill_qualification.v1`. The legacy field
+name `deterministic_case_id` identifies the fixed qualification case; for a v2
+`evidence_invariant_repeatable` descriptor it does not imply byte identity. Registry
+`register`, `list`, and `resolve` preserve the exact descriptor model and never rewrite one
+version as the other.
 
 `dependencies` is sorted by `name`; each entry contains exactly `name`, `version`, and `sha256`.
 Defaults are expanded before hashing. `invocation_digest` is:
@@ -147,8 +165,8 @@ is introduced. `publishable=true` if and only if all of the following hold:
 3. Runtime evidence is bound to the package's `resolved_scene_sha256`.
 4. The final validation status is `pass` for physical, collision, stability, visibility, and video
    checks.
-5. The registered Skill descriptors have passing qualification artifacts for their deterministic
-   and regression tests.
+5. The registered Skill descriptors have passing qualification artifacts for their declared
+   content-deterministic or evidence-invariant repeatability checks and regression tests.
 6. Request provenance, versions, seed, dependency digests, and solver trace are present.
 
 Any false condition yields `publishable=false` and at least one structured blocker in either the
@@ -169,7 +187,7 @@ effect.
 | `T2E_REPLAY_FAILED` | RoboTwin/SAPIEN replay did not produce complete evidence | run blocker: `blocked` | `true` |
 | `T2E_VALIDATION_INCOMPLETE` | Required runtime checks were not run | validate-output blocker | `false` |
 | `T2E_VALIDATION_FAILED` | One or more required validation checks failed | validate-output blocker | `false` |
-| `T2E_REGRESSION_FAILED` | Registered qualification or deterministic regression did not pass | registration blocker | `false` |
+| `T2E_REGRESSION_FAILED` | Registered qualification or declared reproducibility regression did not pass | registration blocker | `false` |
 | `HARN_INTERNAL` | Unexpected Registry, adapter, or handler defect | run blocker: `failed` | `false` |
 
 Exception text is diagnostic detail, never an error code. Existing `SceneSpecError`, pydantic

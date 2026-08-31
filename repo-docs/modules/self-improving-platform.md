@@ -24,7 +24,17 @@
 `8d9a01c`、`587b49f`、`0e6716a` 未进入本研究复核；“当前/未接线”均只描述这个固定快照，不认证
 移动 HEAD。
 
-Harness 当前公开 14 个以 `$id` 标识的 JSON Schema：六个通用运行/审计记录、Qualification、EnvironmentPackage 和 compile/replay/validate 六个输入输出。`ArtifactRef.schema_version` 指向既有 `robotwin.*` 权威载荷，Harness 不重新定义其内部格式。schema 之外已有本地 digest-checking artifact resolver、callback-driven `RunRecorder`、SQLite WAL append-only `SQLiteEventJournal`、CAS `PackageStore`、通用 qualified-version `SkillRegistry` 与首个 `Text2EnvCompileHandler`；`ab03859` 还加入静态 qualification bundle verifier 与 immutable RunStore adapter。replay/validate 与 MCP 尚未接通。Registry 会读 qualification receipt，校验 digest/schema/status/`skill_ref`，并从 `51447da` 起要求 `report_sha256` 对应的 CAS bytes 存在且匹配；固定 `ab03859` 仍没有调用 bundle loader 或 RunStore，也没有把实际 handler bytes 纳入 invocation identity。通用 resolver 的任意 `file://` 无 allowed-root 且返回可变原路径，不能当 sandbox；`50e8f18` 已让 CAS `put_file` 用单次流式 hash+copy 与原子 rename 捕获一致 bytes。compile adapter 的 catalog check/use TOCTOU 已由 `ef5e29e` 攻击与 `910ccb1` 修复，实际 compiler 只读 digest-verified CAS catalog。`5915315` 另记录 selected asset bytes 等依赖，但外部 asset payload 尚未重物化为执行 snapshot。`python script/export_harness_schemas.py --check` 锁住 committed snapshot；统一测试入口对 `self_improving.harness` 强制 100% 语句与分支覆盖。compile 的 asset admission 还发生在 solve 前且失败不回滚；跨 run qualification/promotion transaction、identity-frozen resumable EvaluationRun、package→run→media binding 与 MCP adapter 仍未实现，`docs/contracts/HARNESS_MVP_CONTRACT_V1.md` 保持 `Status: Proposed`。
+Harness 当前公开 15 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，另加
+`harness.skill_descriptor.v2`，明确区分内容位级确定性与证据不变量可复验。descriptor v1 保持冻结，
+compile 仍用 v1，replay 用 v2；两版不能静默转换。`ArtifactRef.schema_version` 仍指向既有
+`robotwin.*` 权威载荷，Harness 不重新定义其内部格式。schema 之外已有本地 digest-checking artifact
+resolver、callback-driven `RunRecorder`、SQLite WAL append-only `SQLiteEventJournal`、CAS
+`PackageStore`、通用 qualified-version `SkillRegistry` 与 `Text2EnvCompileHandler`。固定 `ab03859`
+关于 replay/validate 未接通的描述只是历史快照；当前 replay 已有 candidate handler、固定资格深验证与
+production-only registration policy，但尚无 checked-in pass bundle 或真实 900/120 replay。
+`python script/export_harness_schemas.py --check` 锁住 committed snapshot；核心资格模块强制 100%
+语句与分支覆盖。compile 的 asset admission 仍发生在 solve 前且失败不回滚；跨 run promotion、
+identity-frozen resumable EvaluationRun 与 MCP adapter 仍未闭合，契约保持 `Status: Proposed`。
 
 字段边界、状态机、快照与未实现范围见 [Harness Schema Tranche](harness-schema-tranche.md)；
 逐项实现和验证证据见 [PR1 实现报告](../../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)。
@@ -57,9 +67,10 @@ can-on-plate 2-step smoke 已取得 acquisition pass，但物理 validation 因�
 Invocation 必须精确带 capability、executor、handler config、media verifier、input-specific runtime
 assets 五项依赖，worker 输出先作为 untrusted bytes 保存，只有 evidence 与媒体（含固定
 MP4/H.264/8bit-420/SAR 语义）复核后才晋升 typed artifacts。两组专项为 185 passed 且两个模块
-statement/branch 100%；但仍无固定 replay qualification、production application、新的 900/120
-handler receipt 或完整 promotion evidence，descriptor 的 `deterministic=True` 语义也待版本化。VLM
-fallback、LLM orchestration 和工作台不能从这些候选底座推断为完成。
+statement/branch 100%。descriptor 已用 v2 诚实声明 `evidence_invariant_repeatable`；固定 loader、
+generator 与 production application 会重读完整 CAS evidence closure，但仍没有生成 pass bundle，
+也没有新的真实 900/120 handler receipt。VLM fallback、LLM orchestration 和工作台不能从这些
+候选底座推断为完成。
 
 Stage 5 的视觉评审状态是三态而非布尔值。在 `--run-smoke`/视觉评审路径中，只有 visual pass
 才把 candidate 原子晋升为 `final_placement.json` 并退出 0；`pending_visual_review` 只写

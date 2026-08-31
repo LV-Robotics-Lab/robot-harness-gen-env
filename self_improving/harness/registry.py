@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
@@ -20,13 +21,23 @@ from .schemas import (
     ArtifactRef,
     Blocker,
     DependencyRef,
+    ExecutionReproducibility,
     Invocation,
+    RegisteredSkillDescriptor,
     RunState,
     RunStatus,
     SkillDescriptor,
+    SkillDescriptorV2,
     SkillQualification,
 )
-from .schemas.base import HarnessModel, JsonObject
+from .schemas.base import (
+    HarnessModel,
+    JsonObject,
+    PositiveInt,
+    SchemaId,
+    SkillId,
+    StableSemVer,
+)
 
 
 @dataclass(frozen=True)
@@ -46,6 +57,7 @@ class RunContext:
     dependencies: tuple[DependencyRef, ...]
     _recorder: RunRecorder
     _artifact_resolver: ArtifactResolver
+    _stage_prefix: str = ""
 
     def emit(
         self,
@@ -55,10 +67,55 @@ class RunContext:
     ) -> None:
         for artifact in artifact_refs:
             self._artifact_resolver.resolve(artifact)
-        self._recorder.progress(stage=stage, artifact_refs=artifact_refs)
+        self._recorder.progress(
+            stage=f"{self._stage_prefix}{stage}",
+            artifact_refs=artifact_refs,
+        )
 
 
 SkillHandler = Callable[[HarnessModel, RunContext], HandlerResult]
+
+
+@dataclass(frozen=True, slots=True)
+class _EvidenceInvariantRegistration:
+    """One policy result consumed immediately; never an authority token."""
+
+    descriptor: SkillDescriptorV2
+    handler: SkillHandler
+    dependency_resolver: DependencyResolver
+    qualification_bytes: bytes
+    report_bytes: bytes
+
+
+class EvidenceInvariantRegistrationPolicy(Protocol):
+    """Configured authority that re-verifies raw evidence and builds live wiring."""
+
+    def verify_and_build(
+        self,
+        request: object,
+        *,
+        artifact_resolver: ArtifactResolver,
+    ) -> _EvidenceInvariantRegistration: ...
+
+
+class QualificationCandidate(HarnessModel):
+    """Executable Skill identity that deliberately has no qualification receipt."""
+
+    skill_id: SkillId
+    version: StableSemVer
+    input_schema: SchemaId
+    output_schema: SchemaId
+    max_attempts: PositiveInt
+
+
+@dataclass(frozen=True, slots=True)
+class QualificationCandidateEvaluation:
+    """Auditable production-kernel result for an unregistered candidate."""
+
+    candidate: QualificationCandidate
+    invocation: Invocation | None
+    state: RunState
+    mode: Literal["qualification_candidate"] = "qualification_candidate"
 
 
 class DependencyResolver(Protocol):
@@ -85,7 +142,7 @@ class StaticDependencyResolver:
 
 @dataclass(frozen=True)
 class _Registration:
-    descriptor: SkillDescriptor
+    descriptor: RegisteredSkillDescriptor | QualificationCandidate
     handler: SkillHandler
     input_model: type[HarnessModel]
     output_model: type[HarnessModel]
@@ -140,11 +197,12 @@ class SkillRegistry:
         self,
         *,
         artifact_resolver: ArtifactResolver,
-        dependency_resolver: DependencyResolver,
+        dependency_resolver: DependencyResolver | None,
         event_sink: EventSink,
         clock: Callable[[], datetime],
         run_id_factory: Callable[[], UUID],
         run_store: RunStore | None = None,
+        evidence_invariant_policy: EvidenceInvariantRegistrationPolicy | None = None,
     ) -> None:
         self._artifact_resolver = artifact_resolver
         self._dependency_resolver = dependency_resolver
@@ -152,10 +210,98 @@ class SkillRegistry:
         self._clock = clock
         self._run_id_factory = run_id_factory
         self._run_store = run_store
+        self._evidence_invariant_policy = evidence_invariant_policy
         self._registrations: dict[tuple[str, str], _Registration] = {}
         self._invocations: dict[UUID, Invocation] = {}
 
     def register(self, descriptor: SkillDescriptor, handler: SkillHandler) -> None:
+        if isinstance(descriptor, SkillDescriptorV2):
+            raise RegistryRegistrationError(
+                "v2 descriptors require a verified evidence-invariant registration"
+            )
+        if type(descriptor) is not SkillDescriptor:
+            raise RegistryRegistrationError("ordinary registration requires a v1 descriptor")
+        self._verify_descriptor_qualification(descriptor)
+        self._install_registration(descriptor, handler)
+
+    def register_evidence_invariant(self, request: object) -> SkillDescriptorV2:
+        """Reverify through the configured policy and atomically install its exact wiring."""
+
+        policy = self._evidence_invariant_policy
+        if policy is None:
+            raise RegistryRegistrationError("no evidence-invariant registration policy configured")
+        try:
+            registration = policy.verify_and_build(
+                request,
+                artifact_resolver=self._artifact_resolver,
+            )
+        except RegistryRegistrationError:
+            raise
+        except Exception as error:
+            raise RegistryRegistrationError(
+                f"evidence-invariant policy verification failed: {error}"
+            ) from error
+        if type(registration) is not _EvidenceInvariantRegistration:
+            raise RegistryRegistrationError("registration policy returned an invalid result")
+        descriptor = registration.descriptor
+        if (
+            type(descriptor) is not SkillDescriptorV2
+            or descriptor.reproducibility
+            is not ExecutionReproducibility.EVIDENCE_INVARIANT_REPEATABLE
+            or not callable(registration.handler)
+            or inspect.isfunction(registration.handler)
+            or inspect.ismethod(registration.handler)
+            or not callable(getattr(registration.dependency_resolver, "resolve", None))
+        ):
+            raise RegistryRegistrationError("invalid evidence-invariant registration semantics")
+        self._verify_policy_qualification(
+            descriptor,
+            qualification_bytes=registration.qualification_bytes,
+            report_bytes=registration.report_bytes,
+        )
+        resolver = self._dependency_resolver
+        if resolver is not None and resolver is not registration.dependency_resolver:
+            raise RegistryRegistrationError(
+                "registration policy dependency resolver differs from the Registry resolver"
+            )
+        self._install_registration(descriptor, registration.handler)
+        if resolver is None:
+            self._dependency_resolver = registration.dependency_resolver
+        return descriptor
+
+    @staticmethod
+    def _verify_policy_qualification(
+        descriptor: SkillDescriptorV2,
+        *,
+        qualification_bytes: bytes,
+        report_bytes: bytes,
+    ) -> None:
+        if type(qualification_bytes) is not bytes or type(report_bytes) is not bytes:
+            raise RegistryRegistrationError("registration policy documents must be exact bytes")
+        try:
+            qualification = SkillQualification.model_validate_json(qualification_bytes)
+        except ValidationError as error:
+            raise RegistryRegistrationError(
+                "registration policy qualification is invalid"
+            ) from error
+        skill_ref = f"{descriptor.skill_id}@{descriptor.version}"
+        qualification_sha256 = hashlib.sha256(qualification_bytes).hexdigest()
+        report_sha256 = hashlib.sha256(report_bytes).hexdigest()
+        ref = descriptor.qualification_artifact
+        if (
+            qualification.skill_ref != skill_ref
+            or qualification.report_sha256 != report_sha256
+            or ref.uri != f"artifact://sha256/{qualification_sha256}"
+            or ref.media_type != "application/json"
+            or ref.sha256 != qualification_sha256
+            or ref.bytes != len(qualification_bytes)
+            or ref.schema_version != "harness.skill_qualification.v1"
+        ):
+            raise RegistryRegistrationError(
+                "registration policy qualification does not bind descriptor and report bytes"
+            )
+
+    def _verify_descriptor_qualification(self, descriptor: RegisteredSkillDescriptor) -> None:
         skill_ref = f"{descriptor.skill_id}@{descriptor.version}"
         qualification_path = self._artifact_resolver.resolve(descriptor.qualification_artifact).path
         qualification = SkillQualification.model_validate_json(
@@ -171,6 +317,13 @@ class SkillRegistry:
             raise RegistryRegistrationError(
                 f"qualification report is unavailable or corrupt: {error}"
             ) from error
+
+    def _install_registration(
+        self,
+        descriptor: RegisteredSkillDescriptor,
+        handler: SkillHandler,
+    ) -> None:
+        skill_ref = f"{descriptor.skill_id}@{descriptor.version}"
         input_model = schema_model(descriptor.input_schema)
         output_model = schema_model(descriptor.output_schema)
         key = (descriptor.skill_id, descriptor.version)
@@ -186,12 +339,12 @@ class SkillRegistry:
             output_model=output_model,
         )
 
-    def list(self) -> tuple[SkillDescriptor, ...]:
+    def list(self) -> tuple[RegisteredSkillDescriptor, ...]:
         return tuple(
             registration.descriptor for _, registration in sorted(self._registrations.items())
         )
 
-    def resolve(self, skill_id: str, exact_version: str) -> SkillDescriptor:
+    def resolve(self, skill_id: str, exact_version: str) -> RegisteredSkillDescriptor:
         return self._registration(skill_id, exact_version).descriptor
 
     def invocation(self, run_id: UUID) -> Invocation | None:
@@ -199,6 +352,36 @@ class SkillRegistry:
         if invocation is not None or self._run_store is None:
             return invocation
         return self._run_store.read_invocation(run_id)
+
+    def evaluate_candidate(
+        self,
+        candidate: QualificationCandidate,
+        handler: SkillHandler,
+        parameters: Mapping[str, Any],
+    ) -> QualificationCandidateEvaluation:
+        """Execute without registration or a qualification receipt.
+
+        The candidate path uses the same typed execution kernel as ``invoke``.
+        Its only semantic difference is an explicit event-stage namespace and
+        the immutable evaluation envelope returned to the qualification caller.
+        """
+
+        registration = _Registration(
+            descriptor=candidate,
+            handler=handler,
+            input_model=schema_model(candidate.input_schema),
+            output_model=schema_model(candidate.output_schema),
+        )
+        state = self._execute(
+            registration,
+            parameters,
+            stage_prefix="qualification_candidate.",
+        )
+        return QualificationCandidateEvaluation(
+            candidate=candidate,
+            invocation=self.invocation(state.run_id),
+            state=state,
+        )
 
     def invoke(
         self,
@@ -217,7 +400,18 @@ class SkillRegistry:
                 message=str(error.args[0]),
                 details={},
             )
+        return self._execute(registration, parameters, stage_prefix="")
+
+    def _execute(
+        self,
+        registration: _Registration,
+        parameters: Mapping[str, Any],
+        *,
+        stage_prefix: str,
+    ) -> RunState:
         descriptor = registration.descriptor
+        skill_id = descriptor.skill_id
+        exact_version = descriptor.version
         try:
             typed_input = registration.input_model.model_validate(parameters)
         except ValidationError as error:
@@ -228,6 +422,7 @@ class SkillRegistry:
                 code="HARN_INPUT_INVALID",
                 message="Skill input failed strict schema validation",
                 details={"errors": _json_safe(error.errors())},
+                stage_prefix=stage_prefix,
             )
         for artifact in _artifact_refs(typed_input):
             try:
@@ -241,6 +436,7 @@ class SkillRegistry:
                     message=str(error),
                     details={"reason": error.reason},
                     artifact_refs=(artifact,),
+                    stage_prefix=stage_prefix,
                 )
         skill_ref = f"{skill_id}@{exact_version}"
         try:
@@ -258,6 +454,7 @@ class SkillRegistry:
                 code="HARN_DEPENDENCY_UNAVAILABLE",
                 message=str(error),
                 details={},
+                stage_prefix=stage_prefix,
             )
         except Exception as error:
             return self._preflight_terminal(
@@ -270,6 +467,7 @@ class SkillRegistry:
                     "error_type": type(error).__name__,
                     "error": str(error),
                 },
+                stage_prefix=stage_prefix,
             )
         effective_parameters = typed_input.model_dump(mode="json")
         invocation_digest = _invocation_digest(
@@ -298,7 +496,7 @@ class SkillRegistry:
             clock=self._clock,
             sink=self._event_sink,
         )
-        recorder.start(stage="preflight", attempt=1)
+        recorder.start(stage=f"{stage_prefix}preflight", attempt=1)
         attempt = 1
         collected: tuple[ArtifactRef, ...] = ()
         while True:
@@ -311,6 +509,7 @@ class SkillRegistry:
                         dependencies=dependencies,
                         _recorder=recorder,
                         _artifact_resolver=self._artifact_resolver,
+                        _stage_prefix=stage_prefix,
                     ),
                 )
                 typed_output = registration.output_model.model_validate(result.output)
@@ -320,7 +519,7 @@ class SkillRegistry:
                 artifacts = _unique_artifacts(candidate_artifacts)
                 recorder.finish(
                     status=RunStatus.SUCCEEDED,
-                    stage="complete",
+                    stage=f"{stage_prefix}complete",
                     artifact_refs=artifacts,
                 )
                 return self._persist_terminal(
@@ -344,18 +543,19 @@ class SkillRegistry:
                         invocation_digest=invocation_digest,
                         artifacts=collected,
                         error=verification_error,
+                        stage_prefix=stage_prefix,
                     )
                 collected = _unique_artifacts((*collected, *blocker.artifact_refs))
                 if blocker.retryable and attempt < descriptor.max_attempts:
                     attempt += 1
                     recorder.retry(
-                        stage=f"{blocker.stage}.retry",
+                        stage=f"{stage_prefix}{blocker.stage}.retry",
                         artifact_refs=blocker.artifact_refs,
                     )
                     continue
                 recorder.finish(
                     status=RunStatus.BLOCKED,
-                    stage=blocker.stage,
+                    stage=f"{stage_prefix}{blocker.stage}",
                     artifact_refs=blocker.artifact_refs,
                 )
                 return self._persist_terminal(
@@ -376,16 +576,18 @@ class SkillRegistry:
                     invocation_digest=invocation_digest,
                     artifacts=collected,
                     error=error,
+                    stage_prefix=stage_prefix,
                 )
 
     def _internal_failure(
         self,
         *,
         recorder: RunRecorder,
-        descriptor: SkillDescriptor,
+        descriptor: RegisteredSkillDescriptor | QualificationCandidate,
         invocation_digest: str,
         artifacts: tuple[ArtifactRef, ...],
         error: Exception,
+        stage_prefix: str,
     ) -> RunState:
         blocker = Blocker(
             code="HARN_INTERNAL",
@@ -401,7 +603,7 @@ class SkillRegistry:
         )
         recorder.finish(
             status=RunStatus.FAILED,
-            stage="invoke",
+            stage=f"{stage_prefix}invoke",
             artifact_refs=artifacts,
         )
         return self._persist_terminal(
@@ -435,6 +637,7 @@ class SkillRegistry:
         message: str,
         details: JsonObject,
         artifact_refs: tuple[ArtifactRef, ...] = (),
+        stage_prefix: str = "",
     ) -> RunState:
         run_id = self._run_id_factory()
         recorder = RunRecorder(
@@ -444,7 +647,7 @@ class SkillRegistry:
             clock=self._clock,
             sink=self._event_sink,
         )
-        recorder.start(stage="preflight", attempt=0)
+        recorder.start(stage=f"{stage_prefix}preflight", attempt=0)
         blocker = Blocker(
             code=code,
             message=message,
@@ -456,7 +659,7 @@ class SkillRegistry:
         )
         recorder.finish(
             status=status,
-            stage="preflight",
+            stage=f"{stage_prefix}preflight",
             artifact_refs=artifact_refs,
         )
         return self._persist_terminal(
