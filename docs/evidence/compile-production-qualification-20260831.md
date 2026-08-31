@@ -39,6 +39,7 @@ PY
 ```bash
 python -m self_improving.harness.compile_cli \
   --state-root /tmp/robot-harness-compile-production-smoke-a031 \
+  --asset-library-root self_improving/asset_pipeline/active/data/asset_library \
   --trusted-catalog-root /tmp/robot-harness-compile-qualification-20260831-a030 \
   --allowed-asset-root /tmp/robot-harness-compile-qualification-20260831-a030 \
   --admission-date 2026-08-31 \
@@ -47,6 +48,9 @@ python -m self_improving.harness.compile_cli \
   --seed 77 \
   --generate-missing
 ```
+
+`--asset-library-root` 现已与一次运行的 `--state-root` 分离；省略时默认就是上面的项目内生产库。
+qualification、测试或实验运行必须显式传自己的 scratch 库，避免把实验资产混进生产库。
 
 ## 实测结果
 

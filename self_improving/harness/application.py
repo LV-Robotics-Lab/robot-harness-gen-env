@@ -47,6 +47,9 @@ _SCENE_GEN_ROOT = _DISTRIBUTION_ROOT / "scene_gen"
 _LEDGER_CONTRACT_ROOT = (
     _DISTRIBUTION_ROOT / "self_improving" / "asset_pipeline" / "active" / "1_asset_reuse" / "lib"
 )
+DEFAULT_PRODUCTION_ASSET_LIBRARY_ROOT = (
+    _DISTRIBUTION_ROOT / "self_improving" / "asset_pipeline" / "active" / "data" / "asset_library"
+)
 _COMPILE_SKILL_ID = "text2env.compile"
 _COMPILE_VERSION = "1.0.0"
 _ASSET_CATALOG_SCHEMA = "robotwin.asset_catalog.v1"
@@ -60,6 +63,7 @@ class CompileApplicationSettings:
     external_catalog_roots: tuple[Path, ...]
     allowed_asset_roots: tuple[Path, ...]
     admission_date: date
+    asset_library_root: Path = DEFAULT_PRODUCTION_ASSET_LIBRARY_ROOT
 
 
 class CompileApplicationConfigurationError(ValueError):
@@ -88,8 +92,10 @@ class CompileApplication:
         run_store: SQLiteRunStore,
         registry: SkillRegistry,
         external_catalog_roots: tuple[Path, ...],
+        asset_library_root: Path,
     ) -> None:
         self._state_root = state_root
+        self._asset_library_root = Path(asset_library_root).expanduser().resolve()
         self._artifact_store = artifact_store
         self._event_journal = event_journal
         self._run_store = run_store
@@ -109,6 +115,12 @@ class CompileApplication:
     @property
     def journal_path(self) -> Path:
         return self._event_journal.path.resolve()
+
+    @property
+    def asset_library_root(self) -> Path:
+        """Return the production library that owns admitted reusable assets."""
+
+        return self._asset_library_root
 
     def snapshot_asset_catalog(self, source: Path) -> ArtifactRef:
         """Freeze one explicitly trusted external catalog into application CAS."""
@@ -222,6 +234,7 @@ def create_compile_application(
     """Assemble the fixed, packaged, qualified production compile application."""
 
     state_root = _prepare_state_root(settings.state_root)
+    asset_library_root = _prepare_asset_library_root(settings.asset_library_root)
     external_catalog_roots = _checked_trust_roots(
         settings.external_catalog_roots,
         label="external_catalog_roots",
@@ -245,8 +258,7 @@ def create_compile_application(
 
     work_root = state_root / "work"
     generated_staging_root = state_root / "generated-staging"
-    asset_library_root = state_root / "asset-library"
-    for directory in (work_root, generated_staging_root, asset_library_root):
+    for directory in (work_root, generated_staging_root):
         directory.mkdir(parents=True, exist_ok=True)
     handler = Text2EnvCompileHandler(
         artifact_store=artifact_store,
@@ -287,6 +299,7 @@ def create_compile_application(
         run_store=run_store,
         registry=registry,
         external_catalog_roots=external_catalog_roots,
+        asset_library_root=asset_library_root,
     )
 
 
@@ -294,6 +307,16 @@ def _prepare_state_root(value: Path) -> Path:
     root = Path(value).expanduser().resolve()
     if root.exists() and not root.is_dir():
         raise CompileApplicationConfigurationError(f"state_root must be a directory: {root}")
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+def _prepare_asset_library_root(value: Path) -> Path:
+    root = Path(value).expanduser().resolve()
+    if root.exists() and not root.is_dir():
+        raise CompileApplicationConfigurationError(
+            f"asset_library_root must be a directory: {root}"
+        )
     root.mkdir(parents=True, exist_ok=True)
     return root
 

@@ -164,6 +164,7 @@ def test_success_forwards_explicit_configuration_and_writes_one_canonical_run_st
     catalogs_b = tmp_path / "catalogs-b"
     assets_a = tmp_path / "assets-a"
     assets_b = tmp_path / "assets-b"
+    production_assets = tmp_path / "project" / "production-assets"
     catalog_path = catalogs_b / "catalog.json"
 
     exit_code = cli.main(
@@ -178,6 +179,8 @@ def test_success_forwards_explicit_configuration_and_writes_one_canonical_run_st
             str(assets_a),
             "--allowed-asset-root",
             str(assets_b),
+            "--asset-library-root",
+            str(production_assets),
             "--admission-date",
             "2026-08-31",
             "--catalog-path",
@@ -198,6 +201,7 @@ def test_success_forwards_explicit_configuration_and_writes_one_canonical_run_st
             external_catalog_roots=(catalogs_a, catalogs_b),
             allowed_asset_roots=(assets_a, assets_b),
             admission_date=date(2026, 8, 31),
+            asset_library_root=production_assets,
         ),
         "compile": {
             "request": "put the can on the plate",
@@ -512,6 +516,7 @@ def test_help_is_returned_without_system_exit_and_exposes_only_the_fixed_surface
     assert set(re.findall(r"--[a-z-]+", captured.out)) == {
         "--admission-date",
         "--allowed-asset-root",
+        "--asset-library-root",
         "--catalog-path",
         "--generate-missing",
         "--help",

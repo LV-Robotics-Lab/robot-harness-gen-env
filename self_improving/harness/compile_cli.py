@@ -10,6 +10,7 @@ from datetime import date
 from pathlib import Path
 
 from .application import (
+    DEFAULT_PRODUCTION_ASSET_LIBRARY_ROOT,
     CompileApplicationConfigurationError,
     CompileApplicationSettings,
     ExternalCatalogError,
@@ -59,6 +60,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 external_catalog_roots=tuple(arguments.trusted_catalog_roots),
                 allowed_asset_roots=tuple(arguments.allowed_asset_roots),
                 admission_date=arguments.admission_date,
+                asset_library_root=arguments.asset_library_root,
             )
         )
         state = application.compile(
@@ -107,6 +109,15 @@ def _parser() -> argparse.ArgumentParser:
         description="Invoke the fixed qualified text2env.compile Skill.",
     )
     parser.add_argument("--state-root", required=True, type=Path)
+    parser.add_argument(
+        "--asset-library-root",
+        type=Path,
+        default=DEFAULT_PRODUCTION_ASSET_LIBRARY_ROOT,
+        help=(
+            "persistent reusable-asset library; defaults to the project-local "
+            "self_improving asset library"
+        ),
+    )
     parser.add_argument(
         "--trusted-catalog-root",
         action="append",

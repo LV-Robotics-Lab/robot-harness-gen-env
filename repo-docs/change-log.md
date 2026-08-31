@@ -2,6 +2,11 @@
 
 ## 2026-08-31
 
+- 将 production compile 的可复用生成资产从一次运行的 `state_root/asset-library` 分离：
+  `CompileApplicationSettings.asset_library_root` 与 CLI `--asset-library-root` 现在显式指定持久资产库，
+  默认落到项目内 `self_improving/asset_pipeline/active/data/asset_library`；qualification、测试与实验
+  必须传自己的 scratch 库。45 项干净检出专项通过；这只改变资产所有权边界，不把 generation QC
+  写成 SAPIEN settle 或物理资格。
 - 接出 replay handler/resolver 候选竖切：Invocation 只接受 capability、executor、handler config、
   media verifier、input-specific runtime assets 五项精确依赖，handler 独立重物化/快照并在执行前后
   对账；失败制品保留为 untrusted diagnostics，JSON/PNG/MP4 经事件、evidence、validation 与固定

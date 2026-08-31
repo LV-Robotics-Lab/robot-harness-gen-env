@@ -142,6 +142,7 @@ def _settings(tmp_path: Path) -> CompileApplicationSettings:
         external_catalog_roots=(catalogs,),
         allowed_asset_roots=(assets,),
         admission_date=date(2026, 8, 31),
+        asset_library_root=tmp_path / "production-asset-library",
     )
 
 
@@ -182,6 +183,42 @@ def test_factory_exposes_only_the_fixed_qualified_compile_skill_and_real_authori
     assert app.durable_run_state is True
     assert "qualification" not in inspect.signature(create_compile_application).parameters
     assert "handler" not in inspect.signature(create_compile_application).parameters
+
+
+def test_factory_persists_generated_assets_in_explicit_production_library(
+    tmp_path: Path,
+    fixed_qualification: Path,
+) -> None:
+    settings = _settings(tmp_path)
+    production_library = tmp_path / "project" / "production-asset-library"
+    settings = CompileApplicationSettings(
+        state_root=settings.state_root,
+        external_catalog_roots=settings.external_catalog_roots,
+        allowed_asset_roots=settings.allowed_asset_roots,
+        admission_date=settings.admission_date,
+        asset_library_root=production_library,
+    )
+    catalog_path = _empty_catalog(
+        settings.external_catalog_roots[0] / "empty.json",
+        settings.allowed_asset_roots[0] / "objects",
+    )
+
+    app = create_compile_application(settings)
+    state = app.compile(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+        asset_catalog_path=catalog_path,
+        generate_missing_assets=True,
+    )
+
+    output = Text2EnvCompileOutput.model_validate(state.output)
+    assert state.status is RunStatus.SUCCEEDED
+    assert app.asset_library_root == production_library.resolve()
+    assert output.environment_package.asset_catalog.uri.startswith("artifact://sha256/")
+    asset_directories = tuple((production_library / "generated").iterdir())
+    assert len(asset_directories) == 1
+    assert (asset_directories[0] / "ledger.json").is_file()
+    assert not (settings.state_root / "asset-library").exists()
 
 
 def test_compile_application_runs_admit_reuse_reuse_and_replays_real_events(
@@ -228,7 +265,7 @@ def test_compile_application_runs_admit_reuse_reuse_and_replays_real_events(
         "reused",
     ]
     asset_id = admission_records[0]["assets"][0]["asset_id"]
-    ledger_path = settings.state_root / "asset-library/generated" / asset_id / "ledger.json"
+    ledger_path = settings.asset_library_root / "generated" / asset_id / "ledger.json"
     ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
     contract = importlib.import_module(
         "self_improving.asset_pipeline.active.1_asset_reuse.lib.ledger"
@@ -410,6 +447,7 @@ def test_settings_require_explicit_nonempty_trust_roots(
         "external_catalog_roots": (tmp_path,),
         "allowed_asset_roots": (tmp_path,),
         "admission_date": date(2026, 8, 31),
+        "asset_library_root": tmp_path / "production-asset-library",
     }
     values[field] = ()
     with pytest.raises(CompileApplicationConfigurationError, match="must not be empty"):
@@ -433,6 +471,7 @@ def test_settings_reject_missing_or_non_directory_trust_roots(
         "external_catalog_roots": settings.external_catalog_roots,
         "allowed_asset_roots": settings.allowed_asset_roots,
         "admission_date": settings.admission_date,
+        "asset_library_root": settings.asset_library_root,
     }
     values[field] = (invalid,)
     with pytest.raises(CompileApplicationConfigurationError, match="missing|directory"):
@@ -449,6 +488,19 @@ def test_settings_reject_state_root_that_is_a_file(
         create_compile_application(settings)
 
 
+def test_settings_reject_asset_library_root_that_is_a_file(
+    tmp_path: Path,
+    fixed_qualification: Path,
+) -> None:
+    """The production asset library is a directory authority, never a file locator."""
+
+    settings = _settings(tmp_path)
+    settings.asset_library_root.write_text("not a directory", encoding="utf-8")
+
+    with pytest.raises(CompileApplicationConfigurationError, match="asset_library_root"):
+        create_compile_application(settings)
+
+
 def test_settings_reject_non_date_admission_value(
     tmp_path: Path,
     fixed_qualification: Path,
@@ -459,6 +511,7 @@ def test_settings_reject_non_date_admission_value(
         external_catalog_roots=settings.external_catalog_roots,
         allowed_asset_roots=settings.allowed_asset_roots,
         admission_date="2026-08-31",  # type: ignore[arg-type]
+        asset_library_root=settings.asset_library_root,
     )
 
     with pytest.raises(CompileApplicationConfigurationError, match="admission_date"):

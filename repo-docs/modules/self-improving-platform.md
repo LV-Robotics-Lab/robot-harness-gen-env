@@ -74,6 +74,12 @@ acceptance。
 `backend=sapien/verdict=pass`，并未运行 SAPIEN settle。读者应以 pending 为准；该矛盾修复前，
 ledger 项不是 runtime verification receipt。
 
+生产 compile 的资产所有权已经与一次运行状态分开：默认的可复用生成资产库是项目内
+`self_improving/asset_pipeline/active/data/asset_library`，也可由
+`CompileApplicationSettings.asset_library_root` / `--asset-library-root` 显式指定；`state_root` 只持有
+SQLite/CAS、工作目录与生成 staging。qualification、测试和实验必须提供独立 scratch 库。这一变化
+不改变上面的物理边界：generation QC 仍不是 SAPIEN settle。
+
 `self_improving/studies/ASPIRE/` 保存 2026-08-31 的 ASPIRE 一手资料、固定上游子模块、完整
 实验日志和 held-out harness benchmark。该研究支持“经开发集验证、按触发条件检索的冻结技能
 记忆”作为合成契约层候选机制；它不支持论文尺度复现、策略学习或仿真物理成功率提升主张。
