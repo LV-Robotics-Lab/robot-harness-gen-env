@@ -83,6 +83,7 @@
 | `package_store.py` | 按 manifest 把 package members 发布到 CAS，并在隔离 staging 中重物化、复核后逐目录晋升。 | `PackageStore`、`PublishedPackage`、`PackageStoreError` | `tests/self_improving/harness/test_package_store.py`；它解决 package bytes 重建，不解决完整 run/media receipt |
 | `runtime_events.py`、`runtime_capability.py`、`runtime_executor.py`、`runtime_assets.py` | 用专用事件 FD、双 capability 探测和 CAS 资产快照监督隔离的 RoboTwin replay；运行前后复验完整 loader 树，并把 executor 字节与超时/输出上限等策略编入无路径依赖身份。 | `RuntimeEventCodec`、`RuntimeExecutorIdentity`、`describe_runtime_capability`、`SubprocessRoboTwinRuntimeExecutor`、`RuntimeAssetStore` | 对应四组 Harness 测试；真实 2-step can-on-plate smoke 只证明接线，不能替代 900/120 validation |
 | `media_sandbox.py`、`native/media_sandbox.c`、`media_verifier.py` | 在 delegated cgroup、Landlock/seccomp/rlimit 中用静态 FFmpeg 从 held FD 完整解码 replay PNG/MP4；复核帧数、fps、尺寸、SAR、互异帧并记录资源指标，缺沙箱不降级。 | `MediaSandbox`、`NativeCgroupSandbox`、`ReplayMediaVerifier`、`SubprocessReplayMediaVerifier` | `test_media_sandbox.py`、`test_media_verifier.py`；真实历史录像 120/114 frames，但这不是物理 gate 或正式 replay qualification |
+| `handlers/text2env_replay.py`、`replay_dependencies.py` | 候选 replay adapter：精确绑定 capability、executor、handler config、media verifier、input-specific runtime assets 五项 Invocation 依赖；只执行一次，先保留 untrusted diagnostics，再经 evidence/media consumer 复核晋升 typed artifacts。 | `Text2EnvReplayHandler`、`Text2EnvReplayDependencyResolver`、`build_text2env_replay_wiring`、`text2env_replay_descriptor` | 两组专项 `185 passed`，两个模块 statement/branch 100%；尚无固定 qualification/application 或新的 900/120 handler 真跑，descriptor 的确定性语义仍 open |
 | `handlers/text2env_compile.py`、`text2env_compile_dependencies.py` | 显式组装后的 compile adapter：从 CAS catalog 调权威 `compile_scene`、发事件、收集制品、复核 package，并记录可变依赖。 | `Text2EnvCompileHandler`、`Text2EnvCompileDependencyResolver`、`text2env_compile_descriptor` | `test_text2env_compile_handler.py`；`ef5e29e`/`910ccb1` 锁住 catalog mutation，外部 asset payload 本身仍非执行 snapshot |
 | `qualification.py` | 严格加载一份预制 pass bundle，核 receipt/report/manifest、manifest 已列实现文件及 source-tree 摘要，再发布 CAS snapshot。 | `load_qualification_bundle`、`QualificationReportV1`、`ImplementationManifestV1` | `test_qualification.py`；截至 `ab03859` 无 Registry callsite，不执行资格案例，也不是 promotion transaction |
 | `run_store.py` | 以 SQLite 保存 immutable Invocation 与 terminal RunState，并在读写时对账 event journal。 | `SQLiteRunStore`、`RunStoreConflictError`、`RunStoreCorruptionError` | `test_run_store.py`；截至 `ab03859` 未接入 Registry、无 resume、不会重验 artifact bytes 或导出完整 EvaluationRun identity |
@@ -91,8 +92,9 @@ PR1 只完成 schema tranche；后续已增加通用 `SkillRegistry`、PackageSt
 qualification bundle verifier 与 RunStore adapter，但
 固定 `ab03859` 当时 replay/validate、自动 composition 和 MCP adapter 尚未实现。后续已加入独立
 validate handler，以及 replay 的 event/capability/executor/immutable-asset/media-verification 底座；
-截至 A039，正式 replay handler、固定 production qualification 与 900/120 receipt 仍在后续接线，
-不能把这些底座写成端到端 Skill 已晋升。契约文档仍是 `Status: Proposed`，不能
+A040 又接出精确消费五项 Invocation 依赖的 replay handler/resolver 候选，但固定 production
+qualification/application、新的 900/120 handler receipt 与 descriptor 确定性语义仍未闭合，不能把
+这个候选写成端到端 Skill 已晋升。契约文档仍是 `Status: Proposed`，不能
 从这些构件推断三个 Skill 已接通、输入冻结、资产晋升具事务性、EvaluationRun 身份闭合或 RFC 已
 Accepted。
 PR1 的 21 个专项测试是历史基线；当前验证边界见模块页与

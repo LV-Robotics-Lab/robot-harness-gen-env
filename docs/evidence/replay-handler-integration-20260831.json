@@ -1,0 +1,96 @@
+{
+  "schema_version": "harness.replay_handler_integration_evidence.v1",
+  "recorded_date": "2026-08-31",
+  "status": "candidate_vertical_slice",
+  "purpose": "Record the consumer-side Text2Env replay handler and parameter-aware dependency resolver integration.",
+  "claim_boundary": "The candidate handler/resolver vertical slice is unit-qualified. This is not a replay production qualification, a new 900/120 real handler run, an independent validation promotion receipt, or a publication decision.",
+  "components": [
+    "self_improving/harness/handlers/text2env_replay.py",
+    "self_improving/harness/replay_dependencies.py"
+  ],
+  "invocation_dependency_contract": {
+    "cardinality": 5,
+    "ordering": "sorted by dependency name",
+    "comparison": "exact record equality; missing, extra, duplicate, or changed records fail closed",
+    "dependencies": [
+      {
+        "name": "text2env.replay.capability",
+        "binds": "expected runtime capability digest"
+      },
+      {
+        "name": "text2env.replay.executor",
+        "binds": "canonical runtime executor and supervision policy identity"
+      },
+      {
+        "name": "text2env.replay.handler_config",
+        "binds": "canonical handler configuration digest"
+      },
+      {
+        "name": "text2env.replay.media_verifier",
+        "binds": "canonical media verifier and sandbox identity"
+      },
+      {
+        "name": "text2env.replay.runtime_assets",
+        "binds": "input-specific immutable runtime loader-tree snapshot manifest"
+      }
+    ],
+    "resolver_handler_side_channel": false,
+    "handler_independently_recomputes_runtime_asset_snapshot": true,
+    "handler_rechecks_after_execution": true
+  },
+  "execution_contract": {
+    "executor_calls_per_attempt": 1,
+    "unverified_runtime_outputs_enter_cas_as": "application/octet-stream",
+    "typed_promotion_requires": [
+      "capability and lifecycle consistency",
+      "allowlisted output identity",
+      "runtime evidence binding and timeline consistency",
+      "runtime validation report consistency",
+      "complete media decode and identity verification"
+    ],
+    "failed_execution_diagnostics_are_retained_untrusted": true,
+    "physical_validation_failure_can_be_a_valid_replay_acquisition": true,
+    "physical_validation_failure_is_publication_success": false
+  },
+  "video_metadata_gate": {
+    "format_name": "iso-bmff/mp4",
+    "codec_name": "h264",
+    "pixel_format": "8bit-420",
+    "accepted_sample_aspect_ratios": [
+      "0/1",
+      "1/1"
+    ],
+    "default_flag_rule": "square_sample_aspect_ratio_defaulted is true exactly when sample_aspect_ratio is 0/1",
+    "minimum_decoded_unique_frames": "min(frame_count, 30)"
+  },
+  "verification": {
+    "command": "pytest -q tests/self_improving/harness/test_replay_dependencies.py tests/self_improving/harness/test_text2env_replay_handler.py --cov=self_improving.harness.handlers.text2env_replay --cov=self_improving.harness.replay_dependencies --cov-branch --cov-fail-under=100 --cov-report=term-missing",
+    "result": "185 passed",
+    "coverage": {
+      "self_improving.harness.handlers.text2env_replay": {
+        "statements": "663/663",
+        "branches": "240/240"
+      },
+      "self_improving.harness.replay_dependencies": {
+        "statements": "157/157",
+        "branches": "46/46"
+      }
+    }
+  },
+  "historical_substrate": {
+    "implementation_log_entry": "A035",
+    "real_robotwin_simulation_steps": 2,
+    "runtime_acquisition_status": "pass",
+    "validation_status": "fail",
+    "relation_to_this_claim": "Substrate evidence only; it is not a current handler qualification or a 900/120 run."
+  },
+  "open_gates": [
+    "replay qualification generator",
+    "fixed replay qualification bundle",
+    "production replay application",
+    "direct candidate and Registry execution of the fixed 900/120 case",
+    "independent validation and promotion receipt",
+    "versioned semantics for descriptor deterministic=true versus non-bitwise-identical physical execution"
+  ],
+  "host_paths_present": false
+}

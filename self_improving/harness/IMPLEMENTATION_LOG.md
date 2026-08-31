@@ -727,3 +727,30 @@
 - 证据：`docs/evidence/replay-media-verifier-qualification-20260831.{md,json}`。这只资格化媒体
   consumer 边界；handler/dependency 接线、正式 900/120 replay、独立 validate 和 promotion
   evidence 尚未因此完成。
+
+### 2026-08-31 / A040：replay handler 只能消费 Invocation 冻结的五项依赖
+
+- RED：仅有 executor、asset snapshot 和媒体 verifier 时，Registry 仍没有一条可执行的 replay
+  adapter；若 handler 接受缺项、额外项、重复项或 resolver 留在内存里的 snapshot，就可能让实际
+  执行边界与已持久化 Invocation 分叉。攻击测试先覆盖五依赖的所有不精确集合、source asset 变化、
+  package/catalog 解绑和 resolver 跨输入 side channel。
+- 依赖闭包：`Text2EnvReplayDependencyResolver` 每次从 CAS 重物化 package 并独立计算 runtime asset
+  snapshot，只返回 capability、executor、handler config、media verifier、runtime assets 五项
+  `DependencyRef`。handler 不接收 resolver 的 snapshot 对象；它重新物化、重新快照，并在 executor
+  前后与 `RunContext.dependencies` 做 exact-record 对账。
+- 一次执行与诊断：handler 每 attempt 只提交一个 `RuntimeJob`、调用 executor 一次。capability、严格
+  事件 transcript、stdout/stderr、probe 和可安全捕获的 partial output 在失败时继续作为 untrusted
+  diagnostics；dependency failure、可重试 acquisition failure 与内部 protocol defect 保留不同 typed
+  taxonomy，不把失败输出晋升。
+- consumer 晋升：成功 worker 输出先以 `application/octet-stream` 入 CAS，再复核 package/scene/
+  catalog/asset identity、事件/checkpoint、runtime evidence timeline、validation report 与完整媒体
+  decode。视频 metadata 还必须精确为 `iso-bmff/mp4`、`h264`、`8bit-420`，SAR 只能是 `1/1` 或
+  带一致 default flag 的 `0/1`；通过后才重新发布 typed JSON/PNG/MP4 与 path-free replay receipt。
+  validation `fail` 仍是可交给独立 validate 的有效 acquisition，不会被改写为物理通过。
+- 回归：resolver + handler 专项 `185 passed`；handler `663/663` statements、`240/240` branches，
+  resolver `157/157` statements、`46/46` branches。证据冻结在
+  `docs/evidence/replay-handler-integration-20260831.{md,json}`。
+- 边界：本切片没有 replay qualification generator、固定 bundle 或 production application，也没有
+  新的 900/120 handler 真跑。A035 的 2-step 真机结果只证明 substrate；descriptor 的
+  `deterministic=True` 与物理/媒体/资源输出不保证 bitwise identity 的语义仍须先版本化解决，因此
+  当前状态只能是 candidate vertical slice，不能登记为已晋升 Skill。

@@ -2,6 +2,12 @@
 
 ## 2026-08-31
 
+- 接出 replay handler/resolver 候选竖切：Invocation 只接受 capability、executor、handler config、
+  media verifier、input-specific runtime assets 五项精确依赖，handler 独立重物化/快照并在执行前后
+  对账；失败制品保留为 untrusted diagnostics，JSON/PNG/MP4 经事件、evidence、validation 与固定
+  MP4/H.264/8bit-420/SAR 复核后才 typed promotion。专项 185 passed、两个模块 statement/branch
+  100%；尚无固定 replay qualification/application 或新的 900/120 handler 真跑，descriptor 确定性
+  语义仍 open，因此状态只记 candidate vertical slice。
 - 增加 replay 媒体的 consumer-side 真解码边界：PNG/MP4 先作为不受信任 bytes 入 CAS，再由
   delegated cgroup + Landlock/seccomp/rlimit 中的最小静态 FFmpeg 通过 held FD 完整解码；帧数、
   帧率、尺寸、SAR 与解码后互异帧不再信 worker JSON 或扩展名。真实历史 120 帧录像解出 114 个

@@ -52,10 +52,14 @@ development/clean qualification，不具原子 promotion/rollback，也不闭合
 event、runtime capability、subprocess executor 和 CAS runtime-asset snapshot 分别落地。runtime asset
 层会闭合 selected tree 与 URDF/OBJ/MTL/glTF/GLB/COLLADA loader 引用，worker 在首事件前与 close 后复验；真实
 can-on-plate 2-step smoke 已取得 acquisition pass，但物理 validation 因短 horizon 失败。A039 新增
-可供 handler 使用的媒体 consumer：在 delegated cgroup/Landlock/seccomp 边界中由静态 FFmpeg 从
-held FD 完整解码，真实历史录像观测为 120 帧 / 114 个 decoded unique。正式 replay handler、固定
-qualification、900/120 handler receipt 与完整 promotion evidence 仍未完成；VLM fallback、LLM
-orchestration 和工作台也不能从这些底座推断为完成。
+媒体 consumer：在 delegated cgroup/Landlock/seccomp 边界中由静态 FFmpeg 从 held FD 完整解码，
+真实历史录像观测为 120 帧 / 114 个 decoded unique。A040 再把 replay handler/resolver 接成候选竖切：
+Invocation 必须精确带 capability、executor、handler config、media verifier、input-specific runtime
+assets 五项依赖，worker 输出先作为 untrusted bytes 保存，只有 evidence 与媒体（含固定
+MP4/H.264/8bit-420/SAR 语义）复核后才晋升 typed artifacts。两组专项为 185 passed 且两个模块
+statement/branch 100%；但仍无固定 replay qualification、production application、新的 900/120
+handler receipt 或完整 promotion evidence，descriptor 的 `deterministic=True` 语义也待版本化。VLM
+fallback、LLM orchestration 和工作台不能从这些候选底座推断为完成。
 
 Stage 5 的视觉评审状态是三态而非布尔值。在 `--run-smoke`/视觉评审路径中，只有 visual pass
 才把 candidate 原子晋升为 `final_placement.json` 并退出 0；`pending_visual_review` 只写

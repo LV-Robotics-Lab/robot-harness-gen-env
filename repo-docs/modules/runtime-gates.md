@@ -97,8 +97,10 @@ promotion evidence 时，不能由一段可解码视频推出物理通过或 `pu
 `ResolvedSceneSpec.scene_id`，`resolved_scene_sha256` 必须等于当前 resolved scene 的 canonical
 digest。缺字段或未改写的错值都会 fail。它不对整份 evidence、视频、命令或环境签名；producer
 若搬运另一次回放的物理字段并重写这两项声明，validator 仍无法识别。因此这是输入声明一致性门，
-不是不可伪造的 run provenance，也不替代下面的物理门控。完整实现还需要 consumer 重验
-package→run→media manifest。
+不是不可伪造的 run provenance，也不替代下面的物理门控。A040 的候选 replay handler 已在 consumer
+侧重验 package/catalog/runtime-assets、运行事件、evidence 配置/时间线与完整媒体身份，并把五项
+Invocation 依赖写入 path-free receipt；但固定 qualification、独立 validate/promotion 和新的 900/120
+handler 真跑仍缺，所以这条候选链也不能被写成已晋升的跨 run provenance。
 
 每物体的门控按 `is_static` 分两种模式：
 
