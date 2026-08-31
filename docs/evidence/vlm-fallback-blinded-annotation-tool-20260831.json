@@ -1,0 +1,37 @@
+{
+  "schema_version": "vlm_fallback.annotation_tool_verification.v1",
+  "study_id": "vlm-fallback-prompt-optimization-2026-08-31",
+  "verified_at": "2026-08-31",
+  "status": "tool_verified_human_annotation_not_started",
+  "source_sha256": "73bec3af72e393226fc6b23f3bfd598931d9f3f9982c2251c70abd99720e8291",
+  "tests": {
+    "clean_worktree_passed": 190,
+    "clean_worktree_failed": 0,
+    "annotation_unit_passed": 11,
+    "annotation_statement_coverage_percent": 85
+  },
+  "production_smoke": {
+    "visible_case_count": 39,
+    "views_per_rater": 114,
+    "public_file_count": 232,
+    "distinct_assignment_digests": true,
+    "public_metadata_leak_scan": "pass",
+    "input_images_with_exif_or_text_metadata": 0
+  },
+  "security_contract": {
+    "minimum_blind_key_bytes": 32,
+    "blind_key_file_mode": "0600",
+    "private_mapping_file_mode": "0600",
+    "sealed_output_directory_mode": "0700",
+    "sealed_payload_file_mode": "0600",
+    "mapping_authentication": "HMAC-SHA256",
+    "tool_source_bound": true
+  },
+  "claims_not_made": [
+    "no human gold labels collected",
+    "no sealed test payload committed",
+    "no VLM inference started",
+    "no simulator or physical validation",
+    "no measured improvement or promotion"
+  ]
+}
