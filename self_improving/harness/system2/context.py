@@ -16,6 +16,7 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, Field, JsonValue, ValidationError, model_validator
 
+from ..schema_catalog import SCHEMA_MODELS, schema_model
 from ..schemas import ArtifactRef, RunStatus
 from ..schemas.base import (
     CanonicalSkillRef,
@@ -226,9 +227,19 @@ def verify_planner_context(context: PlannerContext) -> PlannerContext:
     """Recheck a possibly retained context and return a validated snapshot."""
 
     try:
-        return PlannerContext.model_validate(context.model_dump(mode="python"))
+        trusted = PlannerContext.model_validate(context.model_dump(mode="python"))
     except (ValidationError, ValueError) as exc:
         raise ContextCompilationError("planner context failed its integrity check") from exc
+    _require_registered_skill_schemas(trusted.skills)
+    return trusted
+
+
+def _require_registered_skill_schemas(skills: tuple[PlannerSkillCard, ...]) -> None:
+    for skill in skills:
+        if skill.input_schema not in SCHEMA_MODELS or skill.output_schema not in SCHEMA_MODELS:
+            raise ContextCompilationError(
+                f"Skill {skill.skill_ref} is not bound to the public schema catalog"
+            )
 
 
 def _fact_rank(fact: WorldFact) -> tuple[int, float, str]:
@@ -322,6 +333,7 @@ def compile_planner_context(
     if not skills or len(skill_refs) != len(set(skill_refs)):
         raise ContextCompilationError("qualified Skill cards must be non-empty and unique")
     ordered_skills = tuple(sorted(skills, key=lambda skill: skill.skill_ref))
+    _require_registered_skill_schemas(ordered_skills)
     ordered_history = tuple(sorted(history, key=_history_sort_key))
     run_ids = [entry.run_id for entry in ordered_history]
     receipts = [entry.receipt.sha256 for entry in ordered_history]
@@ -374,6 +386,47 @@ def build_planner_prompt(context: PlannerContext) -> bytes:
     """Build the exact JSON prompt document consumed by a planner provider."""
 
     trusted_context = verify_planner_context(context)
+    required_keys = [
+        "schema_version",
+        "base_state_sha256",
+        "context_sha256",
+        "action",
+        "skill_ref",
+        "parameters",
+        "observation_keys",
+        "stop_reason",
+        "summary",
+    ]
+    action_contracts = {
+        "invoke_skill": {
+            "skill_ref": {
+                "enum": [skill.skill_ref for skill in trusted_context.skills],
+            },
+            "parameters": {
+                "type": "object",
+                "must_validate_against": ("skill_parameter_contracts[skill_ref].json_schema"),
+            },
+            "observation_keys": {"const": []},
+            "stop_reason": {"const": None},
+        },
+        "request_observation": {
+            "skill_ref": {"const": None},
+            "parameters": {"const": None},
+            "observation_keys": {
+                "type": "array",
+                "items": {"type": "string", "format": "fact-key"},
+                "min_items": 1,
+                "sorted_unique": True,
+            },
+            "stop_reason": {"const": None},
+        },
+        "stop": {
+            "skill_ref": {"const": None},
+            "parameters": {"const": None},
+            "observation_keys": {"const": []},
+            "stop_reason": {"type": "string", "min_length": 1},
+        },
+    }
     contract = {
         "schema_version": "harness.planner_prompt.v1",
         "role": (
@@ -382,20 +435,39 @@ def build_planner_prompt(context: PlannerContext) -> bytes:
         ),
         "rules": [
             "Return exactly one JSON object and no markdown.",
+            "Return every required key, including keys whose value is null or an empty list.",
             "Bind base_state_sha256 and context_sha256 exactly as supplied.",
             "Invoke only a skill_ref listed in context.skills.",
+            (
+                "For invoke_skill, return a complete parameters object that validates against "
+                "the selected skill_parameter_contract; never copy placeholder text."
+            ),
             "Never claim execution, validation, physical success, or publication.",
             "Request a fresh observation when trusted state is insufficient.",
             "Use summary only for a short auditable decision explanation.",
         ],
         "context": trusted_context.model_dump(mode="json"),
+        "skill_parameter_contracts": {
+            skill.skill_ref: {
+                "input_schema": skill.input_schema,
+                "json_schema": schema_model(skill.input_schema).model_json_schema(
+                    mode="validation"
+                ),
+            }
+            for skill in trusted_context.skills
+        },
         "output_schema": {
             "schema_version": PLANNER_DECISION_SCHEMA,
             "base_state_sha256": trusted_context.world_state_sha256,
             "context_sha256": trusted_context.context_sha256,
             "action": ["invoke_skill", "request_observation", "stop"],
+            "required_keys": required_keys,
+            "action_contracts": action_contracts,
             "skill_ref": "listed exact skill_ref or null",
-            "parameters": "JSON object for invoke_skill, otherwise null",
+            "parameters": (
+                "JSON object for invoke_skill using only the selected Skill purpose/input_schema; "
+                "otherwise null"
+            ),
             "observation_keys": "sorted fact keys for request_observation, otherwise []",
             "stop_reason": "non-empty string for stop, otherwise null",
             "summary": "short auditable explanation",
@@ -498,9 +570,24 @@ def parse_planner_decision(
     if decision.context_sha256 != trusted_context.context_sha256:
         raise ValueError("planner decision is bound to a different context")
     if decision.action == "invoke_skill":
-        advertised = {skill.skill_ref for skill in trusted_context.skills}
-        if decision.skill_ref not in advertised:
+        advertised = {skill.skill_ref: skill for skill in trusted_context.skills}
+        selected_skill = advertised.get(decision.skill_ref)
+        if selected_skill is None:
             raise ValueError("planner selected a Skill that was not advertised")
+        try:
+            typed_parameters = schema_model(selected_skill.input_schema).model_validate(
+                decision.parameters
+            )
+        except (KeyError, ValidationError, ValueError) as exc:
+            raise ValueError(
+                "planner Skill parameters violate the advertised typed input contract"
+            ) from exc
+        decision = PlannerDecision.model_validate(
+            {
+                **decision.model_dump(mode="python"),
+                "parameters": typed_parameters.model_dump(mode="json"),
+            }
+        )
     return decision
 
 

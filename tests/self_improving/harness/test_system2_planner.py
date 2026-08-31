@@ -61,8 +61,8 @@ def _context():
             PlannerSkillCard(
                 skill_ref="text2env.compile@1.0.0",
                 purpose="Compile a typed environment package.",
-                input_schema="text2env.compile_input.v1",
-                output_schema="text2env.compile_output.v1",
+                input_schema="harness.text2env_compile_input.v1",
+                output_schema="harness.text2env_compile_output.v1",
                 qualification_sha256="2" * 64,
                 max_attempts=1,
             ),
@@ -95,7 +95,16 @@ def _decision_bytes(context) -> bytes:
                 "context_sha256": context.context_sha256,
                 "action": "invoke_skill",
                 "skill_ref": "text2env.compile@1.0.0",
-                "parameters": {"request": "put a can on a plate", "seed": 7},
+                "parameters": {
+                    "request": "put a can on a plate",
+                    "seed": 7,
+                    "asset_catalog": _artifact(
+                        "asset_catalog",
+                        "a" * 64,
+                        "robotwin.asset_catalog.v1",
+                    ).model_dump(mode="json"),
+                    "config": {"generate_missing_assets": False},
+                },
                 "observation_keys": [],
                 "stop_reason": None,
                 "summary": "Compile before replay.",

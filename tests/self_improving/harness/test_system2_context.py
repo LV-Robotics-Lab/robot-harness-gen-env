@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timedelta, timezone
+from typing import cast
 from uuid import UUID
 
 import pytest
@@ -57,14 +58,28 @@ def _fact(
 
 
 def _skill(name: str, digest: str = "2" * 64) -> PlannerSkillCard:
+    route = name.split("@", maxsplit=1)[0].split(".", maxsplit=1)[1]
     return PlannerSkillCard(
         skill_ref=name,
         purpose=f"Use {name} for its exact typed operation.",
-        input_schema="text2env.compile_input.v1",
-        output_schema="text2env.compile_output.v1",
+        input_schema=f"harness.text2env_{route}_input.v1",
+        output_schema=f"harness.text2env_{route}_output.v1",
         qualification_sha256=digest,
         max_attempts=1,
     )
+
+
+def _compile_parameters() -> dict[str, object]:
+    return {
+        "request": "put a can on a plate",
+        "seed": 7,
+        "asset_catalog": _artifact(
+            "asset_catalog",
+            "a" * 64,
+            "robotwin.asset_catalog.v1",
+        ).model_dump(mode="json"),
+        "config": {"generate_missing_assets": False},
+    }
 
 
 def _history(
@@ -183,6 +198,22 @@ def test_compile_context_rejects_missing_authority_or_ambiguous_skills(attack: s
             history=(),
             required_fact_keys=required,
             budget=ContextBudget(max_facts=2, max_history=0, max_context_bytes=8_000),
+        )
+
+
+@pytest.mark.parametrize("field", ["input_schema", "output_schema"])
+def test_compile_context_rejects_unregistered_skill_schemas(field: str) -> None:
+    state = build_world_state((_fact("task.objective", "task"),), as_of=_T0)
+    payload = _skill("text2env.compile@1.0.0").model_dump(mode="python")
+    payload[field] = f"harness.unregistered_{field}.v1"
+
+    with pytest.raises(ContextCompilationError, match="public schema catalog"):
+        compile_planner_context(
+            state=state,
+            skills=(PlannerSkillCard.model_validate(payload),),
+            history=(),
+            required_fact_keys=(),
+            budget=ContextBudget(max_facts=1, max_history=0, max_context_bytes=8_000),
         )
 
 
@@ -454,6 +485,36 @@ def test_planner_prompt_is_stable_and_contains_only_one_decision_contract() -> N
     assert parsed["rules"][0] == "Return exactly one JSON object and no markdown."
     assert "chain of thought" not in prompt.decode("utf-8").lower()
     assert set(parsed["output_schema"]["action"]) == {"invoke_skill", "request_observation", "stop"}
+    assert parsed["output_schema"]["required_keys"] == [
+        "schema_version",
+        "base_state_sha256",
+        "context_sha256",
+        "action",
+        "skill_ref",
+        "parameters",
+        "observation_keys",
+        "stop_reason",
+        "summary",
+    ]
+    invoke = parsed["output_schema"]["action_contracts"]["invoke_skill"]
+    assert invoke["skill_ref"] == {"enum": ["text2env.compile@1.0.0", "text2env.replay@1.0.0"]}
+    assert invoke["parameters"] == {
+        "must_validate_against": "skill_parameter_contracts[skill_ref].json_schema",
+        "type": "object",
+    }
+    assert invoke["observation_keys"] == {"const": []}
+    assert invoke["stop_reason"] == {"const": None}
+    assert "COPY_" not in prompt.decode("utf-8")
+    assert "SORTED_REQUIRED_FACT_KEY" not in prompt.decode("utf-8")
+    assert any("complete parameters object" in rule for rule in parsed["rules"])
+    contract = parsed["skill_parameter_contracts"]["text2env.compile@1.0.0"]
+    assert contract["input_schema"] == "harness.text2env_compile_input.v1"
+    assert set(contract["json_schema"]["required"]) == {
+        "request",
+        "seed",
+        "asset_catalog",
+        "config",
+    }
 
 
 @pytest.mark.parametrize("consumer", ["verify", "prompt", "decision"])
@@ -490,7 +551,7 @@ def test_parse_invoke_decision_binds_context_and_advertised_skill() -> None:
         "context_sha256": context.context_sha256,
         "action": "invoke_skill",
         "skill_ref": "text2env.compile@1.0.0",
-        "parameters": {"request": "put a can on a plate", "seed": 7},
+        "parameters": _compile_parameters(),
         "observation_keys": [],
         "stop_reason": None,
         "summary": "Compile before replay.",
@@ -500,6 +561,7 @@ def test_parse_invoke_decision_binds_context_and_advertised_skill() -> None:
 
     assert isinstance(decision, PlannerDecision)
     assert decision.skill_ref == "text2env.compile@1.0.0"
+    assert decision.parameters == _compile_parameters()
     assert decision_sha256(decision) == decision_sha256(decision)
 
 
@@ -600,7 +662,7 @@ def test_parse_decision_fails_closed_on_untrusted_model_output(attack: str) -> N
         "context_sha256": context.context_sha256,
         "action": "invoke_skill",
         "skill_ref": "text2env.compile@1.0.0",
-        "parameters": {"request": "task"},
+        "parameters": _compile_parameters(),
         "observation_keys": [],
         "stop_reason": None,
         "summary": "Compile.",
@@ -639,3 +701,39 @@ def test_parse_decision_fails_closed_on_untrusted_model_output(attack: str) -> N
 
     with pytest.raises((ValueError, ValidationError)):
         parse_planner_decision(raw, context=context, max_response_bytes=65_536)
+
+
+@pytest.mark.parametrize(
+    "parameters",
+    [
+        {},
+        {"request": "task"},
+        {**_compile_parameters(), "seed": -1},
+        {**_compile_parameters(), "unknown": True},
+        {
+            **_compile_parameters(),
+            "asset_catalog": {
+                **cast(dict[str, object], _compile_parameters()["asset_catalog"]),
+                "schema_version": "wrong.catalog.v1",
+            },
+        },
+    ],
+)
+def test_parse_invoke_decision_requires_the_advertised_typed_input_contract(
+    parameters: dict[str, object],
+) -> None:
+    state, context = _context()
+    payload = {
+        "schema_version": "harness.planner_decision.v1",
+        "base_state_sha256": state.state_sha256,
+        "context_sha256": context.context_sha256,
+        "action": "invoke_skill",
+        "skill_ref": "text2env.compile@1.0.0",
+        "parameters": parameters,
+        "observation_keys": [],
+        "stop_reason": None,
+        "summary": "Compile.",
+    }
+
+    with pytest.raises(ValueError, match="typed input contract"):
+        parse_planner_decision(json.dumps(payload).encode(), context=context)
