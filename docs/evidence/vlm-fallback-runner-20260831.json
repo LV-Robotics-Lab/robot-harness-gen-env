@@ -1,0 +1,47 @@
+{
+  "schema_version": "vlm_fallback.runner_verification.v1",
+  "study_id": "vlm-fallback-prompt-optimization-2026-08-31",
+  "verified_at": "2026-08-31",
+  "status": "runner_verified_expensive_execution_not_started",
+  "scope": {
+    "visible_semantic_correction_samples": 39,
+    "typed_prompt_fallback_samples": 36,
+    "sealed_test_state": "pending_blinded_annotation"
+  },
+  "verification": {
+    "clean_worktree": {
+      "passed": 179,
+      "failed": 0,
+      "duration_seconds": 2.31
+    },
+    "current_worktree": {
+      "passed": 177,
+      "deselected": 2,
+      "deselection_reason": "PEARL portal evidence is being removed by an unrelated concurrent task"
+    },
+    "coverage_percent": {
+      "protocol": 93,
+      "runner": 92,
+      "combined": 92
+    },
+    "checks": {
+      "ruff": "pass",
+      "ruff_format": "pass",
+      "compileall": "pass",
+      "provider_output_flood_regression": "pass"
+    }
+  },
+  "hashes": {
+    "runner_sha256": "6ecdbcf2916351a29273416cba08682db3a464cf6f32cf492145eea2963a76ad",
+    "runner_source_manifest_sha256": "e74c66216270f5b22a2d647b56f75a14c59c1e458f8818219f18594f7eb6a2fe",
+    "experiment_spec_sha256": "ad19d38204f20c42d8070785994fe749b8db41364e002e382e938cb92ae5bf6c",
+    "frozen_log_prefix_sha256": "141bc995ba391a11cea3461180f51936f5829aca0c13ef44e10b48d3ef27f6a4",
+    "sealed_test_annotation_manifest_sha256": "fba3590f5acde490c2ddbe803f785dba54f037a00207f1e8c149166a3ea15114"
+  },
+  "claims_not_made": [
+    "no measured VLM improvement",
+    "no prompt fallback promotion",
+    "no simulator validation",
+    "no physical robot validation"
+  ]
+}
