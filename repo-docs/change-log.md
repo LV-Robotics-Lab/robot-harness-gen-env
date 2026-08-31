@@ -16,6 +16,12 @@
   独立复审发现的 history 省略、非 canonical evidence closure 与不可应用空 delta 均已转成攻击测试；
   261 项通过，application/dispatcher/domain/history 的 statement/branch 均为 100%。这只证明本地
   compile 编排和两个非物理事实，不声明 SAPIEN/真机或已刷新 production qualification。
+- 实现 `text2env.validate@2.0.0` 的第一切片：新增 12 项 typed CAS evidence 输入、决定输出与
+  `StrictValidateV2CasReader`。reader 在读文件前重验完整输入，固定单一 CAS、逐 raw ref 验证后按
+  digest 去重，并拒绝 symlink/FIFO、内容漂移与资源越界；JSON/NDJSON 留给后续权威 typed parser。
+  这避免在 byte-authority 层展开泛型树。两模块 statement/branch 100%。当前只建立 byte
+  authority，尚未交叉绑定证据语义、
+  生成物理决定、注册 Skill 或声明 publishable。
 - 新增 `harness.skill_descriptor.v2`，用 `content_bitwise_deterministic` 与
   `evidence_invariant_repeatable` 取代含糊 boolean；v1 snapshot 字节完全不变且仍只允许
   `deterministic=true`。compile 保持 v1，replay 以 v2 声明 evidence-invariant repeatability；

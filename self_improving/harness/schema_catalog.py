@@ -23,6 +23,8 @@ from .schemas import (
     TEXT2ENV_REPLAY_OUTPUT_SCHEMA_ID,
     TEXT2ENV_VALIDATE_INPUT_SCHEMA_ID,
     TEXT2ENV_VALIDATE_OUTPUT_SCHEMA_ID,
+    TEXT2ENV_VALIDATE_V2_INPUT_SCHEMA_ID,
+    TEXT2ENV_VALIDATE_V2_OUTPUT_SCHEMA_ID,
     ArtifactRef,
     Blocker,
     EnvironmentPackage,
@@ -38,6 +40,8 @@ from .schemas import (
     Text2EnvReplayOutput,
     Text2EnvValidateInput,
     Text2EnvValidateOutput,
+    Text2EnvValidateV2Input,
+    Text2EnvValidateV2Output,
 )
 from .schemas.base import HarnessModel
 
@@ -59,6 +63,8 @@ _SCHEMA_MODELS: dict[str, type[HarnessModel]] = {
     TEXT2ENV_REPLAY_OUTPUT_SCHEMA_ID: Text2EnvReplayOutput,
     TEXT2ENV_VALIDATE_INPUT_SCHEMA_ID: Text2EnvValidateInput,
     TEXT2ENV_VALIDATE_OUTPUT_SCHEMA_ID: Text2EnvValidateOutput,
+    TEXT2ENV_VALIDATE_V2_INPUT_SCHEMA_ID: Text2EnvValidateV2Input,
+    TEXT2ENV_VALIDATE_V2_OUTPUT_SCHEMA_ID: Text2EnvValidateV2Output,
 }
 SCHEMA_MODELS: Mapping[str, type[HarnessModel]] = MappingProxyType(_SCHEMA_MODELS)
 

@@ -56,12 +56,13 @@ MCP 未来只能把已注册 descriptor 映射成工具；它不能再发明类�
 `EnvironmentPackage` 指向 `scene_gen` 已有载荷；compile 已由专用 adapter 组装，完整发布闭环仍
 需要 replay/validate adapters。
 
-## PR1 的 14 个公共入口与当前第 15 个版本化入口
+## PR1 的 14 个公共入口与当前 17 个版本化入口
 
 下表是 PR1 冻结的 14 个入口。A042 没有修改其中的 `SkillDescriptor` v1，而是新增第 15 个
 `SkillDescriptorV2`：v1 只允许 `deterministic=true`；v2 用
 `content_bitwise_deterministic` / `evidence_invariant_repeatable` 明确声明可复现语义。Registry
-保留精确模型、不在两版之间转换。
+保留精确模型、不在两版之间转换。validate v2 的 input/output 是第 16、17 个入口；它们另起 major
+version，不放宽既有 validate v1。
 
 | 分组 | Schema | 读者模型 |
 | --- | --- | --- |
@@ -69,10 +70,10 @@ MCP 未来只能把已注册 descriptor 映射成工具；它不能再发明类�
 | 调用审计 | `Invocation` | 默认值展开后到底调用了什么、依赖和摘要是什么 |
 | 运行生命周期 | `RunState`、`Event`、`Blocker` | run 怎么开始、attempt 怎么推进、为何终止 |
 | 制品引用 | `ArtifactRef`、`EnvironmentPackage` | 位置不是身份；包引用不复制包内容 |
-| Text2Env 边界 | compile/replay/validate 六个输入输出 | 三个 Skill 各收什么、产什么、谁能表达 publishable |
+| Text2Env 边界 | compile/replay/validate v1 六个输入输出 + validate v2 输入输出 | 三个 Skill 各收什么、产什么；v2 先表达完整 CAS evidence 和 decision receipt 边界 |
 
 `CompileConfig`、`RuntimeConfig`、`DependencyRef` 和 `UnknownField` 是嵌套 `$defs`，不是新的
-公共 `$id`，所以 PR1 总数是 14；计入 A042 的 descriptor v2 后，当前总数是 15。
+公共 `$id`，所以 PR1 总数是 14；计入 descriptor v2 与 validate v2 两份文档后，当前总数是 17。
 
 ## 严格不只是“不多字段”
 
@@ -183,7 +184,8 @@ replay、qualification、包验证和全部物理 gate 的最终“当且仅当�
 
 ## JSON Schema 快照能锁什么
 
-`schema_catalog.py` 当前从 Pydantic 模型生成 15 份 Draft 2020-12 文档（PR1 14 份 + descriptor v2），
+`schema_catalog.py` 当前从 Pydantic 模型生成 17 份 Draft 2020-12 文档（PR1 14 份 + descriptor v2 +
+validate v2 input/output），
 committed snapshot 让字段、
 required/default、正则和范围的变化进入普通 code review：
 
@@ -191,8 +193,9 @@ required/default、正则和范围的变化进入普通 code review：
 python script/export_harness_schemas.py --check
 ```
 
-missing、changed、unexpected 任一出现都会失败。但 `model_validator` 的跨字段程序逻辑不会
-完整变成 JSON Schema 条件；MCP 名称、RunState 事件链、包绑定和发布自洽仍以进程内
+missing、changed、unexpected 任一出现都会失败。validate v2 每项 evidence 的 CAS URI 形状、
+media type 和 schema version 已写入 snapshot；URI digest 与 `sha256` 相等、发布自洽等
+`model_validator` 跨字段逻辑仍不能完整变成 JSON Schema 条件。MCP 名称、RunState 事件链和包绑定以进程内
 Pydantic 校验为准。这符合“Registry 是唯一类型和执行权威”的总边界。
 
 ## 改哪里，跑什么

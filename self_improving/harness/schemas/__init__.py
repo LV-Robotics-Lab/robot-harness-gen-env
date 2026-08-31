@@ -42,6 +42,14 @@ from .text2env import (
     Text2EnvValidateInput,
     Text2EnvValidateOutput,
 )
+from .text2env_validate_v2 import (
+    TEXT2ENV_VALIDATE_V2_INPUT_SCHEMA_ID,
+    TEXT2ENV_VALIDATE_V2_OUTPUT_SCHEMA_ID,
+    VALIDATE_V2_GATE_PROFILE,
+    VALIDATION_DECISION_SCHEMA_VERSION,
+    Text2EnvValidateV2Input,
+    Text2EnvValidateV2Output,
+)
 
 __all__ = [
     "ARTIFACT_REF_SCHEMA_ID",
@@ -59,6 +67,10 @@ __all__ = [
     "TEXT2ENV_REPLAY_OUTPUT_SCHEMA_ID",
     "TEXT2ENV_VALIDATE_INPUT_SCHEMA_ID",
     "TEXT2ENV_VALIDATE_OUTPUT_SCHEMA_ID",
+    "TEXT2ENV_VALIDATE_V2_INPUT_SCHEMA_ID",
+    "TEXT2ENV_VALIDATE_V2_OUTPUT_SCHEMA_ID",
+    "VALIDATE_V2_GATE_PROFILE",
+    "VALIDATION_DECISION_SCHEMA_VERSION",
     "ArtifactRef",
     "Blocker",
     "CompileConfig",
@@ -80,6 +92,8 @@ __all__ = [
     "Text2EnvReplayOutput",
     "Text2EnvValidateInput",
     "Text2EnvValidateOutput",
+    "Text2EnvValidateV2Input",
+    "Text2EnvValidateV2Output",
     "UnknownField",
     "ValidationStatus",
 ]

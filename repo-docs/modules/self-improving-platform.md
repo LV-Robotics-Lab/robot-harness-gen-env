@@ -24,8 +24,9 @@
 `8d9a01c`、`587b49f`、`0e6716a` 未进入本研究复核；“当前/未接线”均只描述这个固定快照，不认证
 移动 HEAD。
 
-Harness 当前公开 15 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，另加
-`harness.skill_descriptor.v2`，明确区分内容位级确定性与证据不变量可复验。descriptor v1 保持冻结，
+Harness 当前公开 17 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，另加
+`harness.skill_descriptor.v2`，本切片再加 validate v2 input/output 两项；descriptor v2 明确区分
+内容位级确定性与证据不变量可复验。descriptor v1 保持冻结，
 compile 仍用 v1，replay 用 v2；两版不能静默转换。`ArtifactRef.schema_version` 仍指向既有
 `robotwin.*` 权威载荷，Harness 不重新定义其内部格式。schema 之外已有本地 digest-checking artifact
 resolver、callback-driven `RunRecorder`、SQLite WAL append-only `SQLiteEventJournal`、CAS

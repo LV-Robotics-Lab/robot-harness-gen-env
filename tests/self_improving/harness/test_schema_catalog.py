@@ -17,6 +17,10 @@ from self_improving.harness.schema_catalog import (
     schema_snapshot_name,
 )
 from self_improving.harness.schemas.common import ArtifactRef, SkillDescriptorV2
+from self_improving.harness.schemas.text2env_validate_v2 import (
+    Text2EnvValidateV2Input,
+    Text2EnvValidateV2Output,
+)
 
 EXPECTED_SCHEMA_IDS = {
     "harness.artifact_ref.v1",
@@ -33,7 +37,9 @@ EXPECTED_SCHEMA_IDS = {
     "harness.text2env_replay_input.v1",
     "harness.text2env_replay_output.v1",
     "harness.text2env_validate_input.v1",
+    "harness.text2env_validate_input.v2",
     "harness.text2env_validate_output.v1",
+    "harness.text2env_validate_output.v2",
 }
 
 
@@ -41,6 +47,8 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert set(SCHEMA_MODELS) == EXPECTED_SCHEMA_IDS
     assert schema_model("harness.artifact_ref.v1") is ArtifactRef
     assert schema_model("harness.skill_descriptor.v2") is SkillDescriptorV2
+    assert schema_model("harness.text2env_validate_input.v2") is Text2EnvValidateV2Input
+    assert schema_model("harness.text2env_validate_output.v2") is Text2EnvValidateV2Output
     with pytest.raises(KeyError):
         schema_model("harness.missing.v1")
     with pytest.raises(TypeError):
@@ -77,6 +85,79 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
     runtime_input = documents["harness.text2env_replay_input.v1"]
     runtime = runtime_input["$defs"]["RuntimeConfig"]
     assert runtime["properties"]["contact_window_steps"]["default"] == 120
+
+    validate_v2_input = documents["harness.text2env_validate_input.v2"]
+    assert validate_v2_input["properties"]["gate_profile"]["default"] == (
+        "robotwin.scene_validation.v1"
+    )
+    assert set(validate_v2_input["required"]) == {
+        "environment_package",
+        "compile_run_receipt",
+        "compile_qualification",
+        "replay_run_receipt",
+        "replay_qualification",
+        "replay_execution_receipt",
+        "runtime_evidence",
+        "runtime_validation_report",
+        "runtime_asset_snapshot_manifest",
+        "media_verification_receipt",
+        "request_provenance",
+        "runtime_event_transcript",
+    }
+    validate_v2_contracts = {
+        "environment_package": ("application/json", "harness.environment_package.v1"),
+        "compile_run_receipt": ("application/json", "harness.portable_run_receipt.v1"),
+        "compile_qualification": ("application/json", "harness.skill_qualification.v1"),
+        "replay_run_receipt": ("application/json", "harness.portable_run_receipt.v1"),
+        "replay_qualification": ("application/json", "harness.skill_qualification.v1"),
+        "replay_execution_receipt": (
+            "application/json",
+            "harness.text2env_replay_receipt.v1",
+        ),
+        "runtime_evidence": ("application/json", "robotwin.scene_runtime_evidence.v2"),
+        "runtime_validation_report": ("application/json", "robotwin.scene_validation.v1"),
+        "runtime_asset_snapshot_manifest": (
+            "application/json",
+            "harness.runtime_asset_snapshot.v1",
+        ),
+        "media_verification_receipt": (
+            "application/json",
+            "harness.replay_media_verification.v1",
+        ),
+        "request_provenance": (
+            "application/json",
+            "harness.text2env_request_provenance.v1",
+        ),
+        "runtime_event_transcript": (
+            "application/x-ndjson",
+            "harness.runtime_event_transcript.v1",
+        ),
+    }
+    for field_name, (media_type, schema_version) in validate_v2_contracts.items():
+        constraints = validate_v2_input["properties"][field_name]["allOf"][1]["properties"]
+        assert constraints == {
+            "uri": {
+                "maxLength": 82,
+                "minLength": 82,
+                "pattern": r"^artifact://sha256/[0-9a-f]{64}$",
+            },
+            "media_type": {"const": media_type},
+            "schema_version": {"const": schema_version},
+        }
+
+    validate_v2_output = documents["harness.text2env_validate_output.v2"]
+    for field_name, schema_version in {
+        "validation_report": "robotwin.scene_validation.v1",
+        "validation_decision_receipt": "harness.text2env_validation_decision.v2",
+    }.items():
+        constraints = validate_v2_output["properties"][field_name]["allOf"][1]["properties"]
+        assert constraints["uri"] == {
+            "maxLength": 82,
+            "minLength": 82,
+            "pattern": r"^artifact://sha256/[0-9a-f]{64}$",
+        }
+        assert constraints["media_type"] == {"const": "application/json"}
+        assert constraints["schema_version"] == {"const": schema_version}
 
     descriptor_v2 = documents["harness.skill_descriptor.v2"]
     assert descriptor_v2["required"] == [

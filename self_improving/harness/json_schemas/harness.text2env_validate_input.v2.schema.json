@@ -1,0 +1,366 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "$id": "harness.artifact_ref.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.text2env_validate_input.v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "The complete named evidence set required before validation can begin.",
+  "properties": {
+    "compile_qualification": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "properties": {
+            "media_type": {
+              "const": "application/json"
+            },
+            "schema_version": {
+              "const": "harness.skill_qualification.v1"
+            },
+            "uri": {
+              "maxLength": 82,
+              "minLength": 82,
+              "pattern": "^artifact://sha256/[0-9a-f]{64}$"
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "compile_run_receipt": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "properties": {
+            "media_type": {
+              "const": "application/json"
+            },
+            "schema_version": {
+              "const": "harness.portable_run_receipt.v1"
+            },
+            "uri": {
+              "maxLength": 82,
+              "minLength": 82,
+              "pattern": "^artifact://sha256/[0-9a-f]{64}$"
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "environment_package": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "properties": {
+            "media_type": {
+              "const": "application/json"
+            },
+            "schema_version": {
+              "const": "harness.environment_package.v1"
+            },
+            "uri": {
+              "maxLength": 82,
+              "minLength": 82,
+              "pattern": "^artifact://sha256/[0-9a-f]{64}$"
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "gate_profile": {
+      "const": "robotwin.scene_validation.v1",
+      "default": "robotwin.scene_validation.v1",
+      "title": "Gate Profile",
+      "type": "string"
+    },
+    "media_verification_receipt": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "properties": {
+            "media_type": {
+              "const": "application/json"
+            },
+            "schema_version": {
+              "const": "harness.replay_media_verification.v1"
+            },
+            "uri": {
+              "maxLength": 82,
+              "minLength": 82,
+              "pattern": "^artifact://sha256/[0-9a-f]{64}$"
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "replay_execution_receipt": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "properties": {
+            "media_type": {
+              "const": "application/json"
+            },
+            "schema_version": {
+              "const": "harness.text2env_replay_receipt.v1"
+            },
+            "uri": {
+              "maxLength": 82,
+              "minLength": 82,
+              "pattern": "^artifact://sha256/[0-9a-f]{64}$"
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "replay_qualification": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "properties": {
+            "media_type": {
+              "const": "application/json"
+            },
+            "schema_version": {
+              "const": "harness.skill_qualification.v1"
+            },
+            "uri": {
+              "maxLength": 82,
+              "minLength": 82,
+              "pattern": "^artifact://sha256/[0-9a-f]{64}$"
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "replay_run_receipt": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "properties": {
+            "media_type": {
+              "const": "application/json"
+            },
+            "schema_version": {
+              "const": "harness.portable_run_receipt.v1"
+            },
+            "uri": {
+              "maxLength": 82,
+              "minLength": 82,
+              "pattern": "^artifact://sha256/[0-9a-f]{64}$"
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "request_provenance": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "properties": {
+            "media_type": {
+              "const": "application/json"
+            },
+            "schema_version": {
+              "const": "harness.text2env_request_provenance.v1"
+            },
+            "uri": {
+              "maxLength": 82,
+              "minLength": 82,
+              "pattern": "^artifact://sha256/[0-9a-f]{64}$"
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "runtime_asset_snapshot_manifest": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "properties": {
+            "media_type": {
+              "const": "application/json"
+            },
+            "schema_version": {
+              "const": "harness.runtime_asset_snapshot.v1"
+            },
+            "uri": {
+              "maxLength": 82,
+              "minLength": 82,
+              "pattern": "^artifact://sha256/[0-9a-f]{64}$"
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "runtime_event_transcript": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "properties": {
+            "media_type": {
+              "const": "application/x-ndjson"
+            },
+            "schema_version": {
+              "const": "harness.runtime_event_transcript.v1"
+            },
+            "uri": {
+              "maxLength": 82,
+              "minLength": 82,
+              "pattern": "^artifact://sha256/[0-9a-f]{64}$"
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "runtime_evidence": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "properties": {
+            "media_type": {
+              "const": "application/json"
+            },
+            "schema_version": {
+              "const": "robotwin.scene_runtime_evidence.v2"
+            },
+            "uri": {
+              "maxLength": 82,
+              "minLength": 82,
+              "pattern": "^artifact://sha256/[0-9a-f]{64}$"
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "runtime_validation_report": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "properties": {
+            "media_type": {
+              "const": "application/json"
+            },
+            "schema_version": {
+              "const": "robotwin.scene_validation.v1"
+            },
+            "uri": {
+              "maxLength": 82,
+              "minLength": 82,
+              "pattern": "^artifact://sha256/[0-9a-f]{64}$"
+            }
+          },
+          "type": "object"
+        }
+      ]
+    }
+  },
+  "required": [
+    "environment_package",
+    "compile_run_receipt",
+    "compile_qualification",
+    "replay_run_receipt",
+    "replay_qualification",
+    "replay_execution_receipt",
+    "runtime_evidence",
+    "runtime_validation_report",
+    "runtime_asset_snapshot_manifest",
+    "media_verification_receipt",
+    "request_provenance",
+    "runtime_event_transcript"
+  ],
+  "title": "Text2EnvValidateV2Input",
+  "type": "object"
+}

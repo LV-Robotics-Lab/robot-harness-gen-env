@@ -70,6 +70,6 @@ MCP adapter 也未闭合，不能从一个 compile seam、一段可解码视频�
 
 ## 证伪检查
 
-若 `python script/run_prompt_matrix.py --matrix tests/fixtures/prompt_matrix.json --runtime --robotwin-root /path/to/RoboTwin --out-root data/prompt_matrix --report data/prompt_matrix/report.json` 在某次主路径改动后不再 33/33 编译 + 10/10 SAPIEN 通过，本指南中「真实路径」字面通过率就不再对应当前源码——重跑该命令即可证伪。若 `pytest -q` 在改 `scene_gen/schema.py` / `parser.py` / `solver.py` 后出现新 fail，对应步骤里描述的契约已不准确，需回到主路径或对应模块同步源码反证。又一层反证：根 `AGENTS.md` 显式列出已被攻击测试锁住的误报模式（通过 `is_static` 堆叠、无接触 pose、外层 AABB 重叠、起止截图验收），若任一在 validator 改动后通过，则该误报保护已被反转，本指南 [运行时门控](../modules/runtime-gates.md) 攻击表也需同步更新。Harness 侧，`python script/export_harness_schemas.py --check` 的任何漂移或 Harness 覆盖率门失败，都会直接证伪“当前 15 个 committed schema 与 100% 语句/分支覆盖”的声明。
+若 `python script/run_prompt_matrix.py --matrix tests/fixtures/prompt_matrix.json --runtime --robotwin-root /path/to/RoboTwin --out-root data/prompt_matrix --report data/prompt_matrix/report.json` 在某次主路径改动后不再 33/33 编译 + 10/10 SAPIEN 通过，本指南中「真实路径」字面通过率就不再对应当前源码——重跑该命令即可证伪。若 `pytest -q` 在改 `scene_gen/schema.py` / `parser.py` / `solver.py` 后出现新 fail，对应步骤里描述的契约已不准确，需回到主路径或对应模块同步源码反证。又一层反证：根 `AGENTS.md` 显式列出已被攻击测试锁住的误报模式（通过 `is_static` 堆叠、无接触 pose、外层 AABB 重叠、起止截图验收），若任一在 validator 改动后通过，则该误报保护已被反转，本指南 [运行时门控](../modules/runtime-gates.md) 攻击表也需同步更新。Harness 侧，`python script/export_harness_schemas.py --check` 的任何漂移或 Harness 覆盖率门失败，都会直接证伪“当前 17 个 committed schema 与 100% 语句/分支覆盖”的声明。
 
 证据状态：除特别标注外，本页基于当前源码已确认。
