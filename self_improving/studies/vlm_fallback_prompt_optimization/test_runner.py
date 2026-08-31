@@ -20,6 +20,8 @@ A0_RESOLVED_PATH = (
 )
 A0_RESOLVED = ResolvedSceneSpec.model_validate_json(A0_RESOLVED_PATH.read_text(encoding="utf-8"))
 A0_PROMPT = build_critic_prompt(A0_RESOLVED)
+CHECKED_IN_ANNOTATION_MANIFEST_PATH = runner.SEALED_TEST_ANNOTATION_MANIFEST_PATH
+CHECKED_IN_ANNOTATION_MANIFEST_SHA256 = runner.SEALED_TEST_ANNOTATION_MANIFEST_SHA256
 
 
 def _sha256(path: Path) -> str:
@@ -75,6 +77,54 @@ def _config(tmp_path: Path) -> runner.RunnerConfig:
         allow_test_providers=True,
         execution_mode="test",
         routing_provider_mode="in_process_test",
+    )
+
+
+@pytest.fixture(autouse=True)
+def _sealed_annotation_contract(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> Path:
+    """Give execution tests a complete runner-bound annotation prerequisite."""
+
+    spec = json.loads((STUDY_ROOT / "experiment_spec.json").read_text(encoding="utf-8"))
+    manifest = {
+        "schema_version": "vlm_fallback.sealed_test_annotation_manifest.v2",
+        "study_id": protocol.STUDY_ID,
+        "spec_sha256": runner.FROZEN_SPEC_SHA256,
+        "state": "sealed",
+        "case_ids": [
+            sample["case_id"]
+            for sample in spec["experiments"][0]["samples"]
+            if sample["split"] == "test"
+        ],
+        **runner._annotation_contract_digests(spec),
+        "dev_gold_manifest_sha256": "d" * 64,
+        "test_annotation_payload_sha256": "e" * 64,
+    }
+    manifest_path = tmp_path / "sealed_annotation_contract.json"
+    manifest_path.write_bytes(protocol.canonical_json_bytes(manifest) + b"\n")
+    monkeypatch.setattr(runner, "SEALED_TEST_ANNOTATION_MANIFEST_PATH", manifest_path)
+    monkeypatch.setattr(runner, "SEALED_TEST_ANNOTATION_MANIFEST_SHA256", _sha256(manifest_path))
+    return manifest_path
+
+
+@pytest.fixture
+def checked_in_pending_annotation_contract(
+    _sealed_annotation_contract: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Restore the reviewed pending commitment for fail-closed tests."""
+
+    monkeypatch.setattr(
+        runner,
+        "SEALED_TEST_ANNOTATION_MANIFEST_PATH",
+        CHECKED_IN_ANNOTATION_MANIFEST_PATH,
+    )
+    monkeypatch.setattr(
+        runner,
+        "SEALED_TEST_ANNOTATION_MANIFEST_SHA256",
+        CHECKED_IN_ANNOTATION_MANIFEST_SHA256,
     )
 
 
@@ -274,7 +324,12 @@ class _VisibleProvider:
             raw_response=protocol.canonical_json_bytes(result),
             parsed_response=result,
             abstained=False,
-            resource=runner.ResourceUsage(input_tokens=27, output_tokens=4, peak_vram_mib=32),
+            resource=runner.ResourceUsage(
+                input_tokens=27,
+                output_tokens=4,
+                peak_vram_mib=32,
+                visible_vlm_invocations=1,
+            ),
         )
 
 
@@ -308,6 +363,49 @@ class _RoutingProvider:
             abstained=True,
             resource=runner.ResourceUsage(input_tokens=18, output_tokens=3),
         )
+
+
+def test_pending_annotations_stop_visible_before_provider_with_durable_evidence(
+    tmp_path: Path,
+    checked_in_pending_annotation_contract: None,
+) -> None:
+    provider = _VisibleProvider()
+    session = runner.ExperimentRunner.open(
+        _config(tmp_path),
+        visible_provider=provider,
+    )
+
+    with pytest.raises(runner.StudyStoppedError, match="sealed blinded annotations") as raised:
+        session.execute(_a0_invocation())
+
+    assert provider.requests == []
+    event = session._journal.events[-1]
+    assert raised.value.event_id == event["event_id"]
+    assert event["decision"] == "protocol_stopped"
+    assert event["input_bindings"]["annotation_manifest_sha256"] == (
+        CHECKED_IN_ANNOTATION_MANIFEST_SHA256
+    )
+    assert event["input_bindings"]["annotation_state"] == "pending_blinded_annotation"
+    assert event["gate_results"]["sealed_annotation_contract"] == "fail"
+    assert event["expensive_execution_started"] is False
+    assert event["resource_receipt"]["gpu_time_ms"] == 0
+
+
+def test_pending_annotations_stop_routing_before_provider_with_durable_evidence(
+    tmp_path: Path,
+    checked_in_pending_annotation_contract: None,
+) -> None:
+    provider = _RoutingProvider()
+    session = runner.ExperimentRunner.open(
+        _config(tmp_path),
+        routing_provider=provider,
+    )
+
+    with pytest.raises(runner.StudyStoppedError, match="sealed blinded annotations"):
+        session.execute(_routing_invocation())
+
+    assert provider.requests == []
+    assert session._journal.events[-1]["expensive_execution_started"] is False
 
 
 def test_open_validates_frozen_inputs_and_anchors_the_existing_log(tmp_path: Path) -> None:
@@ -679,7 +777,9 @@ def test_provider_request_mutation_cannot_change_bound_routing_inputs(tmp_path: 
     )
 
 
-def test_provider_failure_is_terminal_receipted_sanitized_and_resumable(tmp_path: Path) -> None:
+def test_provider_exception_with_unknown_usage_stops_and_charges_reservation(
+    tmp_path: Path,
+) -> None:
     class FailingProvider(_VisibleProvider):
         def __init__(self) -> None:
             super().__init__()
@@ -693,20 +793,26 @@ def test_provider_failure_is_terminal_receipted_sanitized_and_resumable(tmp_path
     config = _config(tmp_path)
     provider = FailingProvider()
     session = runner.ExperimentRunner.open(config, visible_provider=provider)
-    invocation = _a0_invocation(seed=7)
+    reservation = runner.ResourceUsage(gpu_time_ms=1234, visible_vlm_invocations=1)
+    invocation = _a0_invocation(seed=7, resource_reservation=reservation)
 
-    failed = session.execute(invocation)
-    resumed = session.execute(invocation)
+    with pytest.raises(runner.StudyStoppedError, match="resource usage is unknown"):
+        session.execute(invocation)
+    with pytest.raises(runner.StudyStoppedError):
+        session.execute(replace(invocation, attempt=2))
 
     assert provider.calls == 1
-    assert failed.event["decision"] == "provider_call_failed"
-    assert failed.event["outputs"]["abstain"] is True
-    assert failed.event["error"]["code"] == "provider_exception"
-    assert failed.event["error"]["exception_type"] == "RuntimeError"
-    assert "message_sha256" in failed.event["error"]
+    failed = session._journal.events[-1]
+    assert failed["decision"] == "provider_call_failed"
+    assert failed["outputs"]["abstain"] is True
+    assert failed["error"]["code"] == "provider_exception"
+    assert failed["error"]["exception_type"] == "RuntimeError"
+    assert "message_sha256" in failed["error"]
+    assert failed["resource_receipt"]["usage_known"] is False
+    assert failed["resource_receipt"]["gpu_time_ms"] == reservation.gpu_time_ms
+    assert failed["resource_receipt"]["visible_vlm_invocations"] == 1
+    assert failed["gate_results"]["study_stopped"] is True
     assert "secret-token" not in config.log_path.read_text(encoding="utf-8")
-    assert resumed.resumed is True
-    assert resumed.event == failed.event
 
 
 def test_open_rejects_replacement_spec_and_source_drift(tmp_path: Path) -> None:
@@ -887,7 +993,9 @@ def test_fourth_train_prompt_revision_stops_before_provider_call(tmp_path: Path)
     assert json.loads(config.anchor_path.read_text(encoding="utf-8"))["stopped"] is True
 
 
-def test_routing_provider_failure_is_terminal_and_cannot_be_overwritten(tmp_path: Path) -> None:
+def test_routing_provider_exception_with_unknown_usage_stops_and_charges_reservation(
+    tmp_path: Path,
+) -> None:
     class FailingRouter(_RoutingProvider):
         def __init__(self) -> None:
             super().__init__()
@@ -921,24 +1029,25 @@ def test_routing_provider_failure_is_terminal_and_cannot_be_overwritten(tmp_path
         visible_report=None,
         seed=5,
         attempt=1,
+        resource_reservation=runner.ResourceUsage(
+            gpu_time_ms=4321,
+            visible_vlm_invocations=1,
+        ),
     )
 
-    failed = session.execute(invocation)
-    resumed = session.execute(invocation)
+    with pytest.raises(runner.StudyStoppedError, match="resource usage is unknown"):
+        session.execute(invocation)
+    with pytest.raises(runner.StudyStoppedError):
+        session.execute(replace(invocation, attempt=2))
 
     assert sum(provider.calls for provider in providers) == 1
-    assert failed.event["decision"] == "provider_call_failed"
-    assert failed.event["error"]["exception_type"] == "TimeoutError"
-    assert resumed.resumed is True
-    with pytest.raises(runner.DuplicateInvocationError):
-        session.execute(replace(invocation, routing_instruction="changed under same logical key"))
-    assert sum(provider.calls for provider in providers) == 1
-
-    explicit_retry = session.execute(replace(invocation, attempt=2))
-
-    assert explicit_retry.event["decision"] == "provider_call_failed"
-    assert explicit_retry.invocation_id != failed.invocation_id
-    assert sum(provider.calls for provider in providers) == 2
+    failed = session._journal.events[-1]
+    assert failed["decision"] == "provider_call_failed"
+    assert failed["error"]["exception_type"] == "TimeoutError"
+    assert failed["resource_receipt"]["usage_known"] is False
+    assert failed["resource_receipt"]["gpu_time_ms"] == 4321
+    assert failed["resource_receipt"]["visible_vlm_invocations"] == 1
+    assert failed["gate_results"]["study_stopped"] is True
 
 
 def test_routing_resource_violation_stops_after_preserving_call_receipt(tmp_path: Path) -> None:
@@ -994,6 +1103,7 @@ def test_analysis_entrypoints_delegate_to_the_frozen_protocol() -> None:
     visible_rows = [
         {
             "case_id": "case",
+            "group_id": "case",
             "gold": {"presence": "fail"},
             "prediction": {"presence": "fail"},
         }
@@ -1001,6 +1111,7 @@ def test_analysis_entrypoints_delegate_to_the_frozen_protocol() -> None:
     routing_rows = [
         {
             "case_id": "case",
+            "group_id": "case",
             "gold_route": "accept_existing_compile",
             "predicted_route": "accept_existing_compile",
             "recoverable": True,
@@ -1079,7 +1190,7 @@ def test_format_repair_is_single_hash_bound_child_of_base_invocation(tmp_path: P
                     raw_response=source_response,
                     parsed_response=result,
                     abstained=False,
-                    resource=runner.ResourceUsage(),
+                    resource=runner.ResourceUsage(visible_vlm_invocations=1),
                 )
             return super().invoke(request, progress)
 
@@ -1217,7 +1328,7 @@ def test_invalid_provider_output_is_a_terminal_failure_with_partial_receipt(tmp_
                 raw_response=object(),  # type: ignore[arg-type]
                 parsed_response=None,
                 abstained=True,
-                resource=runner.ResourceUsage(),
+                resource=runner.ResourceUsage(visible_vlm_invocations=1),
             )
 
     visible_config = _config(tmp_path / "visible")
@@ -1625,7 +1736,7 @@ def test_provider_identity_validation_fails_before_call(
             "raw",
             None,
             True,
-            runner.ResourceUsage(),
+            runner.ResourceUsage(visible_vlm_invocations=1),
         ),
         runner.ProviderOutcome(
             "decision",
@@ -1633,7 +1744,7 @@ def test_provider_identity_validation_fails_before_call(
             "raw",
             None,
             True,
-            runner.ResourceUsage(),
+            runner.ResourceUsage(visible_vlm_invocations=1),
         ),
         runner.ProviderOutcome(
             "decision",
@@ -1641,7 +1752,7 @@ def test_provider_identity_validation_fails_before_call(
             "raw",
             [],  # type: ignore[arg-type]
             True,
-            runner.ResourceUsage(),
+            runner.ResourceUsage(visible_vlm_invocations=1),
         ),
         runner.ProviderOutcome(
             "decision",
@@ -1649,7 +1760,7 @@ def test_provider_identity_validation_fails_before_call(
             "raw",
             None,
             1,  # type: ignore[arg-type]
-            runner.ResourceUsage(),
+            runner.ResourceUsage(visible_vlm_invocations=1),
         ),
         runner.ProviderOutcome(
             "decision",
@@ -1665,7 +1776,7 @@ def test_provider_identity_validation_fails_before_call(
             "raw",
             None,
             True,
-            runner.ResourceUsage(input_tokens=True),
+            runner.ResourceUsage(input_tokens=True, visible_vlm_invocations=1),
         ),
         runner.ProviderOutcome(
             "decision",
@@ -1673,7 +1784,7 @@ def test_provider_identity_validation_fails_before_call(
             "raw",
             None,
             True,
-            runner.ResourceUsage(input_tokens=-1),
+            runner.ResourceUsage(input_tokens=-1, visible_vlm_invocations=1),
         ),
         runner.ProviderOutcome(
             "decision",
@@ -1681,7 +1792,7 @@ def test_provider_identity_validation_fails_before_call(
             "raw",
             None,
             True,
-            runner.ResourceUsage(),
+            runner.ResourceUsage(visible_vlm_invocations=1),
         ),
         runner.ProviderOutcome(
             "decision",
@@ -1689,7 +1800,7 @@ def test_provider_identity_validation_fails_before_call(
             "raw",
             {"bad": object()},
             True,
-            runner.ResourceUsage(),
+            runner.ResourceUsage(visible_vlm_invocations=1),
         ),
     ],
     ids=[
@@ -1715,10 +1826,24 @@ def test_visible_provider_contract_failures_are_receipted(tmp_path: Path, outcom
     session = runner.ExperimentRunner.open(_config(tmp_path), visible_provider=provider)
     invocation = _a0_invocation(seed=15)
 
-    receipt = session.execute(invocation)
+    usage_known = (
+        isinstance(outcome, runner.ProviderOutcome)
+        and isinstance(outcome.resource, runner.ResourceUsage)
+        and all(
+            type(getattr(outcome.resource, field)) is int and getattr(outcome.resource, field) >= 0
+            for field in runner.ResourceUsage.__dataclass_fields__
+        )
+    )
+    if usage_known:
+        event = session.execute(invocation).event
+    else:
+        with pytest.raises(runner.StudyStoppedError, match="resource usage is unknown"):
+            session.execute(invocation)
+        event = session._journal.events[-1]
 
-    assert receipt.event["decision"] == "provider_call_failed"
-    assert receipt.event["error"]["code"] == "provider_contract_error"
+    assert event["decision"] == "provider_call_failed"
+    assert event["error"]["code"] == "provider_contract_error"
+    assert event["resource_receipt"]["usage_known"] is usage_known
 
 
 def test_visible_invocation_and_plan_input_validation(tmp_path: Path) -> None:
@@ -2116,6 +2241,110 @@ def test_all_visible_resource_stop_rules_are_reported_together(tmp_path: Path) -
     assert call_event["expensive_execution_started"] is True
 
 
+def test_visible_gpu_budget_is_reserved_before_a_second_provider_call(tmp_path: Path) -> None:
+    max_gpu_ms = 3 * 60 * 60 * 1000
+
+    class ExhaustingProvider(_VisibleProvider):
+        def invoke(self, request, progress):
+            outcome = super().invoke(request, progress)
+            return replace(
+                outcome,
+                resource=replace(outcome.resource, gpu_time_ms=max_gpu_ms),
+            )
+
+    provider = ExhaustingProvider()
+    session = runner.ExperimentRunner.open(_config(tmp_path), visible_provider=provider)
+    first = _a0_invocation(
+        seed=1801,
+        resource_reservation=runner.ResourceUsage(
+            gpu_time_ms=max_gpu_ms,
+            visible_vlm_invocations=1,
+        ),
+    )
+
+    session.execute(first)
+    with pytest.raises(runner.StudyStoppedError, match="max_gpu_hours exhausted") as raised:
+        session.execute(
+            replace(
+                first,
+                attempt=2,
+                resource_reservation=runner.ResourceUsage(
+                    gpu_time_ms=1,
+                    visible_vlm_invocations=1,
+                ),
+            )
+        )
+
+    assert len(provider.requests) == 1
+    assert provider.requests[0].resource_reservation == first.resource_reservation
+    stop = session._journal.events[-1]
+    assert raised.value.event_id == stop["event_id"]
+    assert stop["decision"] == "protocol_stopped"
+    assert stop["gate_results"]["resource_reservation"] == "fail"
+    assert stop["resource_receipt"]["gpu_time_ms"] == 0
+    assert stop["expensive_execution_started"] is False
+
+
+def test_production_visible_provider_requires_positive_gpu_reservation_before_call(
+    tmp_path: Path,
+) -> None:
+    class ProductionVisibleProvider(_VisibleProvider):
+        identity = runner.ProviderIdentity(
+            provider_id="production-visible-provider",
+            revision="production-revision-1",
+            implementation_sha256="d" * 64,
+            kind="local_qwen",
+            production_eligible=True,
+        )
+
+    provider = ProductionVisibleProvider()
+    session = runner.ExperimentRunner.open(_config(tmp_path), visible_provider=provider)
+
+    with pytest.raises(runner.StudyStoppedError, match="positive GPU reservation"):
+        session.execute(_a0_invocation(seed=1804))
+
+    assert provider.requests == []
+    stop = session._journal.events[-1]
+    assert stop["decision"] == "protocol_stopped"
+    assert stop["expensive_execution_started"] is False
+
+
+def test_visible_invocation_count_reservation_and_outcome_are_exactly_one(
+    tmp_path: Path,
+) -> None:
+    precall_provider = _VisibleProvider()
+    precall = runner.ExperimentRunner.open(
+        _config(tmp_path / "precall"),
+        visible_provider=precall_provider,
+    )
+    with pytest.raises(runner.StudyStoppedError, match="exactly one visible VLM invocation"):
+        precall.execute(
+            _a0_invocation(
+                seed=1802,
+                resource_reservation=runner.ResourceUsage(visible_vlm_invocations=2),
+            )
+        )
+    assert precall_provider.requests == []
+    assert precall._journal.events[-1]["expensive_execution_started"] is False
+
+    class HiddenMultiCallProvider(_VisibleProvider):
+        def invoke(self, request, progress):
+            outcome = super().invoke(request, progress)
+            return replace(
+                outcome,
+                resource=replace(outcome.resource, visible_vlm_invocations=2),
+            )
+
+    postcall_provider = HiddenMultiCallProvider()
+    postcall = runner.ExperimentRunner.open(
+        _config(tmp_path / "postcall"),
+        visible_provider=postcall_provider,
+    )
+    with pytest.raises(runner.StudyStoppedError, match="visible_vlm_invocations"):
+        postcall.execute(_a0_invocation(seed=1803))
+    assert len(postcall_provider.requests) == 1
+
+
 def test_all_routing_resource_stop_rules_are_reported_together(tmp_path: Path) -> None:
     class ViolatingRouter(_RoutingProvider):
         def invoke(self, request, progress):
@@ -2325,13 +2554,22 @@ def test_prompt_freeze_commits_only_with_a_sealed_runner_owned_evidence_fixture(
     dev_cases = [
         sample["case_id"] for sample in experiment_value["samples"] if sample["split"] == "dev"
     ]
+    dev_groups = {
+        sample["case_id"]: sample["group_id"]
+        for sample in experiment_value["samples"]
+        if sample["split"] == "dev"
+    }
     all_pass = {name: "pass" for name in experiment_value["visible_checks"]}
+    gold_by_case = {case_id: dict(all_pass) for case_id in dev_cases}
+    prediction_by_case = {case_id: dict(all_pass) for case_id in dev_cases}
+    gold_by_case[dev_cases[0]]["orientation"] = "insufficient_view"
+    prediction_by_case[dev_cases[0]]["orientation"] = "abstain"
     dev_gold = {
         "schema_version": runner.VISIBLE_DEV_GOLD_SCHEMA,
         "study_id": protocol.STUDY_ID,
         "spec_sha256": runner.FROZEN_SPEC_SHA256,
         **runner._annotation_contract_digests(frozen_spec),
-        "rows": [{"case_id": case_id, "gold": all_pass} for case_id in dev_cases],
+        "rows": [{"case_id": case_id, "gold": gold_by_case[case_id]} for case_id in dev_cases],
     }
     dev_gold_path = tmp_path / "sealed_dev_gold.json"
     dev_gold_path.write_bytes(protocol.canonical_json_bytes(dev_gold) + b"\n")
@@ -2392,6 +2630,7 @@ def test_prompt_freeze_commits_only_with_a_sealed_runner_owned_evidence_fixture(
     train_receipt.pop("event_sha256", None)
     session._journal.append(train_receipt)
     dev_event_ids: list[str] = []
+    dev_receipts_by_case: dict[str, dict] = {}
     for index, case_id in enumerate(dev_cases):
         receipt = json.loads(json.dumps(base.event))
         receipt["event_id"] = f"sealed-dev-receipt-{index}"
@@ -2410,11 +2649,28 @@ def test_prompt_freeze_commits_only_with_a_sealed_runner_owned_evidence_fixture(
             processor_config_sha256=protocol.canonical_sha256(processor_config),
         )
         receipt["gate_results"]["resource_budget"] = "pass"
-        receipt["outputs"]["result"] = typed_result
+        receipt["outputs"]["result"] = {
+            **typed_result,
+            "checks": prediction_by_case[case_id],
+            "overall": (
+                "review_required" if "abstain" in prediction_by_case[case_id].values() else "pass"
+            ),
+        }
         receipt.pop("previous_event_sha256", None)
         receipt.pop("event_sha256", None)
         session._journal.append(receipt)
         dev_event_ids.append(receipt["event_id"])
+        dev_receipts_by_case[case_id] = receipt
+    non_abstaining_event = json.loads(json.dumps(dev_receipts_by_case[dev_cases[0]]))
+    non_abstaining_event["event_id"] = "sealed-dev-non-abstaining-receipt"
+    non_abstaining_event["input_bindings"]["logical_key"] = protocol.canonical_sha256(
+        {"kind": "sealed-dev-non-abstaining-fixture", "case_id": dev_cases[0]}
+    )
+    non_abstaining_event["outputs"]["result"]["checks"]["orientation"] = "fail"
+    non_abstaining_event["outputs"]["result"]["overall"] = "fail"
+    non_abstaining_event.pop("previous_event_sha256", None)
+    non_abstaining_event.pop("event_sha256", None)
+    session._journal.append(non_abstaining_event)
 
     gold_seal = {
         "schema_version": runner.VISIBLE_GOLD_SEAL_SCHEMA,
@@ -2443,12 +2699,22 @@ def test_prompt_freeze_commits_only_with_a_sealed_runner_owned_evidence_fixture(
                 "train_event_ids": [train_receipt["event_id"]],
                 "dev_event_ids": dev_event_ids,
                 "dev_rows": [
-                    {"case_id": case_id, "gold": all_pass, "prediction": all_pass}
+                    {
+                        "case_id": case_id,
+                        "group_id": dev_groups[case_id],
+                        "gold": gold_by_case[case_id],
+                        "prediction": prediction_by_case[case_id],
+                    }
                     for case_id in dev_cases
                 ],
                 "dev_metrics": protocol.visible_metrics(
                     [
-                        {"case_id": case_id, "gold": all_pass, "prediction": all_pass}
+                        {
+                            "case_id": case_id,
+                            "group_id": dev_groups[case_id],
+                            "gold": gold_by_case[case_id],
+                            "prediction": prediction_by_case[case_id],
+                        }
                         for case_id in dev_cases
                     ]
                 ),
@@ -2483,6 +2749,16 @@ def test_prompt_freeze_commits_only_with_a_sealed_runner_owned_evidence_fixture(
         dev_gold_manifest_path=dev_gold_path,
     )
 
+    def replace_required_abstention_with_a_claim(value: dict) -> None:
+        candidate = value["candidate_evaluations"][0]
+        candidate["dev_event_ids"][0] = non_abstaining_event["event_id"]
+        candidate["dev_rows"][0]["prediction"]["orientation"] = "fail"
+        candidate["dev_metrics"] = protocol.visible_metrics(candidate["dev_rows"])
+
+    def duplicate_one_dev_case_and_omit_another(value: dict) -> None:
+        candidate = value["candidate_evaluations"][0]
+        candidate["dev_rows"][0] = json.loads(json.dumps(candidate["dev_rows"][1]))
+
     attacks = (
         (
             lambda value: value["candidate_evaluations"][0]["dev_metrics"].update(coverage=0.0),
@@ -2497,6 +2773,20 @@ def test_prompt_freeze_commits_only_with_a_sealed_runner_owned_evidence_fixture(
                 gold={name: "fail" for name in experiment["visible_checks"]}
             ),
             "dev rows are not receipt-bound",
+        ),
+        (
+            lambda value: value["candidate_evaluations"][0]["dev_rows"][0].update(
+                group_id="attacker-selected-group"
+            ),
+            "dev rows are not receipt-bound",
+        ),
+        (
+            duplicate_one_dev_case_and_omit_another,
+            "dev rows are not receipt-bound",
+        ),
+        (
+            replace_required_abstention_with_a_claim,
+            "insufficient_view gold requires model abstention",
         ),
     )
     for index, (mutate, match) in enumerate(attacks):
@@ -2860,7 +3150,7 @@ def test_typed_visible_arm_rejects_incomplete_output_and_stops_physical_claim(
                 raw_response=protocol.canonical_json_bytes(result),
                 parsed_response=result,
                 abstained=False,
-                resource=runner.ResourceUsage(),
+                resource=runner.ResourceUsage(visible_vlm_invocations=1),
             )
 
     incomplete_config = _config(tmp_path / "incomplete")
@@ -2892,7 +3182,7 @@ def test_typed_visible_arm_rejects_incomplete_output_and_stops_physical_claim(
                 raw_response='{"physical_pass":true}',
                 parsed_response={"physical_pass": True},
                 abstained=False,
-                resource=runner.ResourceUsage(),
+                resource=runner.ResourceUsage(visible_vlm_invocations=1),
                 claims_physical_pass=False,
             )
 
@@ -3170,6 +3460,7 @@ def test_runner_rejects_caller_rehashed_replacement_spec(tmp_path: Path) -> None
 
 def test_checked_in_pending_annotation_manifest_is_hash_bound_and_blocks_test_unlock(
     tmp_path: Path,
+    checked_in_pending_annotation_contract: None,
 ) -> None:
     manifest = json.loads(runner.SEALED_TEST_ANNOTATION_MANIFEST_PATH.read_text())
     assert _sha256(runner.SEALED_TEST_ANNOTATION_MANIFEST_PATH) == (

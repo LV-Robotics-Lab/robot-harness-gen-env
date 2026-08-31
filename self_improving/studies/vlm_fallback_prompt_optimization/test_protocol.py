@@ -134,11 +134,13 @@ def test_visible_metrics_treat_abstention_as_coverage_not_a_pass() -> None:
     rows = [
         {
             "case_id": "one",
+            "group_id": "one",
             "gold": {"presence": "pass", "relation": "fail", "orientation": "not_applicable"},
             "prediction": {"presence": "pass", "relation": "fail", "orientation": "abstain"},
         },
         {
             "case_id": "two",
+            "group_id": "two",
             "gold": {"presence": "fail", "relation": "pass", "orientation": "pass"},
             "prediction": {"presence": "pass", "relation": "abstain", "orientation": "pass"},
         },
@@ -156,12 +158,106 @@ def test_visible_metrics_treat_abstention_as_coverage_not_a_pass() -> None:
     assert result["macro_f1_fail"] == pytest.approx(0.5)
 
 
+def test_visible_metrics_exclude_insufficient_view_and_require_abstention() -> None:
+    rows = [
+        {
+            "case_id": "unobservable-abstain",
+            "group_id": "unobservable-abstain",
+            "gold": {"presence": "insufficient_view"},
+            "prediction": {"presence": "abstain"},
+        },
+        {
+            "case_id": "unobservable-overclaim",
+            "group_id": "unobservable-overclaim",
+            "gold": {"presence": "insufficient_view"},
+            "prediction": {"presence": "pass"},
+        },
+        {
+            "case_id": "unobservable-negative-claim",
+            "group_id": "unobservable-negative-claim",
+            "gold": {"presence": "insufficient_view"},
+            "prediction": {"presence": "fail"},
+        },
+        {
+            "case_id": "observable",
+            "group_id": "observable",
+            "gold": {"presence": "pass"},
+            "prediction": {"presence": "pass"},
+        },
+    ]
+
+    result = protocol.visible_metrics(rows)
+
+    assert result["eligible_decisions"] == 1
+    assert result["covered_decisions"] == 1
+    assert result["coverage"] == pytest.approx(1.0)
+    assert result["selective_accuracy"] == pytest.approx(1.0)
+    assert result["insufficient_view_count"] == 3
+    assert result["insufficient_view_abstain_count"] == 1
+    assert result["insufficient_view_non_abstain_count"] == 2
+    assert result["insufficient_view_overclaim_count"] == 1
+    assert result["unsafe_visible_pass_count"] == 1
+
+
+def test_visible_metrics_weight_groups_equally_instead_of_correlated_rows() -> None:
+    dense_correct = [
+        {
+            "case_id": f"dense-{index}",
+            "group_id": "dense",
+            "gold": {"presence": "fail"},
+            "prediction": {"presence": "fail"},
+        }
+        for index in range(3)
+    ]
+    sparse_incorrect = {
+        "case_id": "sparse",
+        "group_id": "sparse",
+        "gold": {"presence": "fail"},
+        "prediction": {"presence": "pass"},
+    }
+
+    result = protocol.visible_metrics([*dense_correct, sparse_incorrect])
+    same_group_extra = {**dense_correct[0], "case_id": "dense-extra"}
+    duplicated = protocol.visible_metrics([*dense_correct, same_group_extra, sparse_incorrect])
+
+    assert result["group_count"] == 2
+    assert result["selective_accuracy"] == pytest.approx(0.5)
+    assert result["macro_f1_fail"] == pytest.approx(2 / 3)
+    assert duplicated["selective_accuracy"] == pytest.approx(result["selective_accuracy"])
+    assert duplicated["macro_f1_fail"] == pytest.approx(result["macro_f1_fail"])
+
+
 def test_visible_metrics_reject_malformed_or_empty_rows() -> None:
     with pytest.raises(ValueError, match="at least one row"):
         protocol.visible_metrics([])
+    with pytest.raises(ValueError, match="non-empty group_id"):
+        protocol.visible_metrics(
+            [
+                {
+                    "case_id": "ungrouped",
+                    "gold": {"presence": "pass"},
+                    "prediction": {"presence": "pass"},
+                }
+            ]
+        )
+    duplicate = {
+        "case_id": "duplicate",
+        "group_id": "group",
+        "gold": {"presence": "pass"},
+        "prediction": {"presence": "pass"},
+    }
+    with pytest.raises(ValueError, match="unique case_id"):
+        protocol.visible_metrics([duplicate, dict(duplicate)])
     with pytest.raises(ValueError, match="same checks"):
         protocol.visible_metrics(
-            [{"case_id": "bad", "gold": {"presence": "pass"}, "prediction": {}}]
+            [
+                {
+                    "case_id": "bad",
+                    "group_id": "bad",
+                    "gold": {"presence": "pass"},
+                    "prediction": {},
+                }
+            ]
         )
 
 
@@ -170,6 +266,7 @@ def test_visible_metrics_handle_only_not_applicable_or_no_fail_gold() -> None:
         [
             {
                 "case_id": "na",
+                "group_id": "na",
                 "gold": {"presence": "not_applicable"},
                 "prediction": {"presence": "not_applicable"},
             }
@@ -183,6 +280,7 @@ def test_visible_metrics_handle_only_not_applicable_or_no_fail_gold() -> None:
         [
             {
                 "case_id": "pass-abstain",
+                "group_id": "pass-abstain",
                 "gold": {"presence": "pass"},
                 "prediction": {"presence": "abstain"},
             }
@@ -195,6 +293,7 @@ def test_visible_metrics_handle_only_not_applicable_or_no_fail_gold() -> None:
             [
                 {
                     "case_id": "bad",
+                    "group_id": "bad",
                     "gold": {"presence": "maybe"},
                     "prediction": {"presence": "pass"},
                 }
@@ -205,6 +304,7 @@ def test_visible_metrics_handle_only_not_applicable_or_no_fail_gold() -> None:
             [
                 {
                     "case_id": "bad",
+                    "group_id": "bad",
                     "gold": {"presence": "pass"},
                     "prediction": {"presence": "maybe"},
                 }
@@ -216,6 +316,7 @@ def test_routing_metrics_keep_safe_blockers_separate_from_completion() -> None:
     rows = [
         {
             "case_id": "feasible-ok",
+            "group_id": "feasible-ok",
             "gold_route": "compile",
             "predicted_route": "compile",
             "recoverable": True,
@@ -224,6 +325,7 @@ def test_routing_metrics_keep_safe_blockers_separate_from_completion() -> None:
         },
         {
             "case_id": "feasible-miss",
+            "group_id": "feasible-miss",
             "gold_route": "repair_prompt",
             "predicted_route": "compile",
             "recoverable": True,
@@ -232,6 +334,7 @@ def test_routing_metrics_keep_safe_blockers_separate_from_completion() -> None:
         },
         {
             "case_id": "blocked",
+            "group_id": "blocked",
             "gold_route": "abstain_blocked",
             "predicted_route": "abstain_blocked",
             "recoverable": False,
@@ -243,6 +346,7 @@ def test_routing_metrics_keep_safe_blockers_separate_from_completion() -> None:
     result = protocol.routing_metrics(rows)
 
     assert result == {
+        "group_count": 3,
         "case_count": 3,
         "route_accuracy": pytest.approx(2 / 3),
         "recoverable_case_count": 2,
@@ -253,9 +357,64 @@ def test_routing_metrics_keep_safe_blockers_separate_from_completion() -> None:
     }
 
 
+def test_routing_accuracy_weights_frozen_groups_equally() -> None:
+    rows = [
+        {
+            "case_id": f"dense-{index}",
+            "group_id": "dense",
+            "gold_route": "compile",
+            "predicted_route": "compile",
+            "recoverable": True,
+            "robust_completion": True,
+            "unsafe_publication": False,
+        }
+        for index in range(3)
+    ]
+    rows.append(
+        {
+            "case_id": "sparse",
+            "group_id": "sparse",
+            "gold_route": "compile",
+            "predicted_route": "repair_prompt",
+            "recoverable": True,
+            "robust_completion": False,
+            "unsafe_publication": False,
+        }
+    )
+
+    result = protocol.routing_metrics(rows)
+
+    assert result["group_count"] == 2
+    assert result["route_accuracy"] == pytest.approx(0.5)
+
+
 def test_routing_metrics_reject_empty_rows() -> None:
     with pytest.raises(ValueError, match="at least one row"):
         protocol.routing_metrics([])
+    with pytest.raises(ValueError, match="non-empty group_id"):
+        protocol.routing_metrics(
+            [
+                {
+                    "case_id": "ungrouped",
+                    "gold_route": "compile",
+                    "predicted_route": "compile",
+                    "recoverable": True,
+                    "robust_completion": True,
+                    "unsafe_publication": False,
+                }
+            ]
+        )
+    duplicate = {
+        "case_id": "duplicate",
+        "group_id": "group",
+        "gold_route": "compile",
+        "predicted_route": "compile",
+        "recoverable": True,
+        "robust_completion": True,
+        "unsafe_publication": False,
+    }
+    with pytest.raises(ValueError, match="unique case_id"):
+        protocol.routing_metrics([duplicate, dict(duplicate)])
 
 
 def test_routing_metrics_handle_single_class_denominators() -> None:
@@ -263,6 +422,7 @@ def test_routing_metrics_handle_single_class_denominators() -> None:
         [
             {
                 "case_id": "r",
+                "group_id": "r",
                 "gold_route": "compile",
                 "predicted_route": "compile",
                 "recoverable": True,
@@ -277,6 +437,7 @@ def test_routing_metrics_handle_single_class_denominators() -> None:
         [
             {
                 "case_id": "u",
+                "group_id": "u",
                 "gold_route": "abstain_blocked",
                 "predicted_route": "wrong",
                 "recoverable": False,

@@ -22,7 +22,7 @@ EXPERIMENT_IDS = (
     "B_typed_failure_prompt_fallback",
 )
 SPLITS = {"train", "dev", "test"}
-GOLD_VISIBLE_STATUSES = {"pass", "fail", "not_applicable"}
+GOLD_VISIBLE_STATUSES = {"pass", "fail", "not_applicable", "insufficient_view"}
 PREDICTED_VISIBLE_STATUSES = GOLD_VISIBLE_STATUSES | {"abstain"}
 
 
@@ -192,15 +192,34 @@ def load_spec(path: Path) -> dict[str, Any]:
 
 
 def visible_metrics(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
-    """Score visible checks; abstention reduces coverage and can never mint a pass."""
+    """Score visible checks; unobservable gold requires abstention and is not scorable."""
 
     if not rows:
         raise ValueError("visible metrics require at least one row")
-    counters: dict[str, dict[str, int]] = defaultdict(
+    case_ids: list[str] = []
+    group_ids: list[str] = []
+    for row in rows:
+        case_id = row.get("case_id")
+        if not isinstance(case_id, str) or not case_id:
+            raise ValueError("visible metric rows require a non-empty case_id")
+        case_ids.append(case_id)
+        group_id = row.get("group_id")
+        if not isinstance(group_id, str) or not group_id:
+            raise ValueError("visible metric rows require a non-empty group_id")
+        group_ids.append(group_id)
+    if len(set(case_ids)) != len(case_ids):
+        raise ValueError("visible metric rows require a unique case_id per row")
+    group_sizes: dict[str, int] = defaultdict(int)
+    for group_id in group_ids:
+        group_sizes[group_id] += 1
+    counters: dict[str, dict[str, float]] = defaultdict(
         lambda: {"tp": 0, "fp": 0, "fn": 0, "eligible": 0}
     )
-    eligible = covered = correct = unsafe_passes = 0
-    for row in rows:
+    eligible = covered = correct = unsafe_passes = 0.0
+    insufficient = insufficient_abstains = insufficient_non_abstains = 0.0
+    insufficient_overclaims = 0.0
+    for row, group_id in zip(rows, group_ids):
+        weight = 1.0 / group_sizes[group_id]
         gold = row["gold"]
         prediction = row["prediction"]
         if set(gold) != set(prediction):
@@ -211,18 +230,31 @@ def visible_metrics(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
                 raise ValueError(f"invalid gold status for {check_name}: {gold_status}")
             if predicted_status not in PREDICTED_VISIBLE_STATUSES:
                 raise ValueError(f"invalid prediction status for {check_name}: {predicted_status}")
+            if gold_status == "insufficient_view":
+                insufficient += weight
+                insufficient_abstains += weight * int(predicted_status == "abstain")
+                insufficient_non_abstains += weight * int(predicted_status != "abstain")
+                insufficient_overclaims += weight * int(predicted_status == "pass")
+                unsafe_passes += weight * int(predicted_status == "pass")
+                continue
             if gold_status == "not_applicable":
                 continue
-            eligible += 1
-            counters[check_name]["eligible"] += 1
+            eligible += weight
+            counters[check_name]["eligible"] += weight
             predicted_decision = predicted_status in {"pass", "fail"}
             if predicted_decision:
-                covered += 1
-                correct += int(predicted_status == gold_status)
-            unsafe_passes += int(gold_status == "fail" and predicted_status == "pass")
-            counters[check_name]["tp"] += int(gold_status == "fail" and predicted_status == "fail")
-            counters[check_name]["fp"] += int(gold_status == "pass" and predicted_status == "fail")
-            counters[check_name]["fn"] += int(gold_status == "fail" and predicted_status != "fail")
+                covered += weight
+                correct += weight * int(predicted_status == gold_status)
+            unsafe_passes += weight * int(gold_status == "fail" and predicted_status == "pass")
+            counters[check_name]["tp"] += weight * int(
+                gold_status == "fail" and predicted_status == "fail"
+            )
+            counters[check_name]["fp"] += weight * int(
+                gold_status == "pass" and predicted_status == "fail"
+            )
+            counters[check_name]["fn"] += weight * int(
+                gold_status == "fail" and predicted_status != "fail"
+            )
 
     per_check: dict[str, dict[str, float | int]] = {}
     f1_values: list[float] = []
@@ -242,11 +274,16 @@ def visible_metrics(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
         if recall_denominator:
             f1_values.append(f1)
     return {
+        "group_count": len(group_sizes),
         "eligible_decisions": eligible,
         "covered_decisions": covered,
         "coverage": covered / eligible if eligible else 0.0,
         "selective_accuracy": correct / covered if covered else 0.0,
         "unsafe_visible_pass_count": unsafe_passes,
+        "insufficient_view_count": insufficient,
+        "insufficient_view_abstain_count": insufficient_abstains,
+        "insufficient_view_non_abstain_count": insufficient_non_abstains,
+        "insufficient_view_overclaim_count": insufficient_overclaims,
         "macro_f1_fail": sum(f1_values) / len(f1_values) if f1_values else 0.0,
         "per_check": per_check,
     }
@@ -257,17 +294,34 @@ def routing_metrics(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
 
     if not rows:
         raise ValueError("routing metrics require at least one row")
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    case_ids: list[str] = []
+    for row in rows:
+        case_id = row.get("case_id")
+        if not isinstance(case_id, str) or not case_id:
+            raise ValueError("routing metric rows require a non-empty case_id")
+        case_ids.append(case_id)
+        group_id = row.get("group_id")
+        if not isinstance(group_id, str) or not group_id:
+            raise ValueError("routing metric rows require a non-empty group_id")
+        grouped[group_id].append(row)
+    if len(set(case_ids)) != len(case_ids):
+        raise ValueError("routing metric rows require a unique case_id per row")
     recoverable = [row for row in rows if row["recoverable"]]
     unrecoverable = [row for row in rows if not row["recoverable"]]
-    route_correct = sum(row["gold_route"] == row["predicted_route"] for row in rows)
+    group_route_accuracy = [
+        sum(row["gold_route"] == row["predicted_route"] for row in group_rows) / len(group_rows)
+        for group_rows in grouped.values()
+    ]
     safe_abstentions = sum(
         row["gold_route"] == row["predicted_route"]
         and str(row["predicted_route"]).startswith("abstain_")
         for row in unrecoverable
     )
     return {
+        "group_count": len(grouped),
         "case_count": len(rows),
-        "route_accuracy": route_correct / len(rows),
+        "route_accuracy": sum(group_route_accuracy) / len(group_route_accuracy),
         "recoverable_case_count": len(recoverable),
         "robust_completion_rate": (
             sum(bool(row["robust_completion"]) for row in recoverable) / len(recoverable)

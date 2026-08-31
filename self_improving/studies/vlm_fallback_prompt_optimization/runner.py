@@ -402,6 +402,7 @@ class VisibleInvocation:
     repair_of: str | None = None
     repair_source_prompt: str | None = None
     repair_source_response: str | bytes | None = None
+    resource_reservation: ResourceUsage = ResourceUsage(visible_vlm_invocations=1)
 
 
 @dataclass(frozen=True)
@@ -433,6 +434,7 @@ class VisibleProviderRequest:
     model: ModelBinding
     image_paths: tuple[Path, ...]
     artifacts: tuple[ArtifactBinding, ...]
+    resource_reservation: ResourceUsage
 
 
 ProviderProgress = Callable[[str], None]
@@ -2102,6 +2104,11 @@ class ExperimentRunner:
             raise ValueError("prompt and prompt_template_version must be non-empty")
         if not isinstance(invocation.processor_config, Mapping):
             raise ValueError("processor_config must be a mapping")
+        if not isinstance(invocation.resource_reservation, ResourceUsage) or any(
+            type(value) is not int or value < 0
+            for value in asdict(invocation.resource_reservation).values()
+        ):
+            raise ValueError("resource_reservation must contain non-negative integer counters")
         if invocation.resolved_scene_sha256 is not None:
             value = invocation.resolved_scene_sha256
             try:
@@ -2118,12 +2125,45 @@ class ExperimentRunner:
                 raise StudyStoppedError(
                     str(self._journal.anchor.get("stop_reason") or "study stopped")
                 )
+            if not isinstance(invocation, (VisibleInvocation, RoutingInvocation)):
+                raise TypeError("invocation must be VisibleInvocation or RoutingInvocation")
+            experiment_id = (
+                "A_visible_semantic_correction"
+                if isinstance(invocation, VisibleInvocation)
+                else "B_typed_failure_prompt_fallback"
+            )
+            try:
+                self._refresh_execution_snapshot()
+            except RunnerIntegrityError as error:
+                self._record_stop(
+                    reason=f"frozen input drift: {error}",
+                    experiment_id=experiment_id,
+                    case_id=invocation.case_id,
+                    arm=invocation.arm,
+                    attempt=invocation.attempt,
+                    triggering_event_id=None,
+                )
+            annotation_manifest = _load_sealed_test_annotation_manifest()
+            if annotation_manifest["state"] != "sealed":
+                self._record_stop(
+                    reason="sealed blinded annotations are required before any arm execution",
+                    experiment_id=experiment_id,
+                    case_id=invocation.case_id,
+                    arm=invocation.arm,
+                    attempt=invocation.attempt,
+                    triggering_event_id=None,
+                    extra_input_bindings={
+                        "annotation_manifest_sha256": (SEALED_TEST_ANNOTATION_MANIFEST_SHA256),
+                        "annotation_state": annotation_manifest["state"],
+                    },
+                    extra_gate_results={"sealed_annotation_contract": "fail"},
+                )
             try:
                 if isinstance(invocation, VisibleInvocation):
                     return self._execute_visible(invocation)
                 if isinstance(invocation, RoutingInvocation):
                     return self._execute_routing(invocation)
-                raise TypeError("invocation must be VisibleInvocation or RoutingInvocation")
+                raise AssertionError("validated invocation kind became unreachable")
             except BaseException:
                 # SystemExit/KeyboardInterrupt bypass normal provider exception
                 # handling.  Close any durable reservation as unknown and stop;
@@ -2214,6 +2254,11 @@ class ExperimentRunner:
         experiment = self.spec["experiments"][0]
         expected_dev_cases = {
             sample["case_id"] for sample in experiment["samples"] if sample["split"] == "dev"
+        }
+        expected_dev_groups = {
+            sample["case_id"]: sample["group_id"]
+            for sample in experiment["samples"]
+            if sample["split"] == "dev"
         }
         required_dev_gold = {
             "schema_version",
@@ -2376,13 +2421,23 @@ class ExperimentRunner:
                     "visible prompt selection lacks complete frozen dev evidence"
                 )
             rows = candidate.get("dev_rows")
+            row_case_ids = (
+                [row.get("case_id") for row in rows if isinstance(row, Mapping)]
+                if isinstance(rows, list)
+                else []
+            )
             if (
                 not isinstance(rows, list)
                 or len(rows) != len(expected_dev_cases)
+                or len(row_case_ids) != len(rows)
+                or any(not isinstance(case_id, str) for case_id in row_case_ids)
+                or len(set(row_case_ids)) != len(row_case_ids)
+                or set(row_case_ids) != expected_dev_cases
                 or any(
                     not isinstance(row, Mapping)
-                    or set(row) != {"case_id", "gold", "prediction"}
+                    or set(row) != {"case_id", "group_id", "gold", "prediction"}
                     or row.get("case_id") not in candidate_events
+                    or row.get("group_id") != expected_dev_groups.get(str(row.get("case_id")))
                     or row.get("gold") != gold_by_case.get(str(row.get("case_id")))
                     or row.get("prediction")
                     != candidate_events[str(row.get("case_id"))]
@@ -2398,6 +2453,10 @@ class ExperimentRunner:
             observed_metrics = protocol.visible_metrics([dict(row) for row in rows])
             if candidate.get("dev_metrics") != observed_metrics:
                 raise RunnerIntegrityError("visible prompt selection dev metrics mismatch")
+            if float(observed_metrics["insufficient_view_non_abstain_count"]) != 0.0:
+                raise RunnerIntegrityError(
+                    "insufficient_view gold requires model abstention before prompt freeze"
+                )
             wall_time_ms = sum(
                 int(event.get("resource_receipt", {}).get("wall_time_ms", 0))
                 for event in candidate_events.values()
@@ -2601,6 +2660,8 @@ class ExperimentRunner:
         arm: str | None,
         attempt: int,
         triggering_event_id: str | None,
+        extra_input_bindings: Mapping[str, Any] | None = None,
+        extra_gate_results: Mapping[str, Any] | None = None,
     ) -> None:
         stop_identity = protocol.canonical_sha256(
             {
@@ -2646,6 +2707,7 @@ class ExperimentRunner:
                     "spec_sha256": self.identity.spec_sha256,
                     "source_manifest_sha256": self.identity.source_manifest_sha256,
                     "triggering_event_id": triggering_event_id,
+                    **dict(extra_input_bindings or {}),
                 },
                 "model_receipt": empty_model_receipt,
                 "resource_receipt": {"wall_time_ms": 0, **asdict(ResourceUsage())},
@@ -2663,6 +2725,7 @@ class ExperimentRunner:
                     "physical_gate_authority": self.spec["physical_gate_authority"],
                     "render_used_as_physics_evidence": False,
                     "receipt_hash_bound": True,
+                    **dict(extra_gate_results or {}),
                 },
                 "error": {"code": "protocol_stopped", "reason": reason},
                 "expensive_execution_started": False,
@@ -2695,6 +2758,8 @@ class ExperimentRunner:
         *,
         model: ModelBinding,
         budget: Mapping[str, Any],
+        reservation: ResourceUsage,
+        enforce_invocation_count: bool = True,
     ) -> list[str]:
         violations: list[str] = []
         if outcome.resource.output_tokens > model.max_new_tokens:
@@ -2716,8 +2781,46 @@ class ExperimentRunner:
             violations.append("network access is forbidden during model execution")
         if outcome.resource.remote_paid_calls:
             violations.append("remote_paid_calls must remain zero")
+        if enforce_invocation_count:
+            if outcome.resource.visible_vlm_invocations != 1:
+                violations.append("visible_vlm_invocations must equal one per provider event")
+            if outcome.resource.visible_vlm_invocations > reservation.visible_vlm_invocations:
+                violations.append("visible_vlm_invocations exceeded the pre-call reservation")
+        if outcome.resource.gpu_time_ms > reservation.gpu_time_ms:
+            violations.append("gpu_time_ms exceeded the pre-call reservation")
         if outcome.claims_physical_pass:
             violations.append("VLM provider attempted to claim physical pass")
+        return violations
+
+    def _visible_reservation_violations(
+        self,
+        *,
+        reservation: ResourceUsage,
+        budget: Mapping[str, Any],
+    ) -> list[str]:
+        prior = [
+            event.get("resource_receipt", {})
+            for event in self._journal.events
+            if event.get("experiment_id") == "A_visible_semantic_correction"
+            and event.get("decision") in {"provider_call_completed", "provider_call_failed"}
+        ]
+        violations: list[str] = []
+        if reservation.visible_vlm_invocations != 1:
+            violations.append("each provider call must reserve exactly one visible VLM invocation")
+        prior_gpu_ms = sum(int(receipt.get("gpu_time_ms", 0)) for receipt in prior)
+        max_gpu_ms = int(float(budget["max_gpu_hours"]) * 60 * 60 * 1000)
+        if prior_gpu_ms + reservation.gpu_time_ms > max_gpu_ms:
+            violations.append("max_gpu_hours exhausted before provider call")
+        max_total_invocations = int(budget["max_base_vlm_invocations"]) * (
+            1 + int(budget["max_format_only_repairs_per_invocation"])
+        )
+        prior_invocations = sum(int(receipt.get("visible_vlm_invocations", 0)) for receipt in prior)
+        if prior_invocations + reservation.visible_vlm_invocations > max_total_invocations:
+            violations.append("visible VLM invocation budget exhausted before provider call")
+        if reservation.network_calls:
+            violations.append("network access cannot be reserved")
+        if reservation.remote_paid_calls:
+            violations.append("remote_paid_calls cannot be reserved")
         return violations
 
     def _routing_outcome_violations(
@@ -3036,6 +3139,7 @@ class ExperimentRunner:
             "selected_prompt_event_id": (
                 selected_prompt_event["event_id"] if sample["split"] == "test" else None
             ),
+            "resource_reservation": asdict(invocation.resource_reservation),
         }
         request_sha = protocol.canonical_sha256(request_value)
         invocation_id = request_sha
@@ -3107,6 +3211,23 @@ class ExperimentRunner:
                     attempt=invocation.attempt,
                     triggering_event_id=parent.get("event_id") if parent is not None else None,
                 )
+        reservation_violations = self._visible_reservation_violations(
+            reservation=invocation.resource_reservation,
+            budget=budget,
+        )
+        if reservation_violations:
+            self._record_stop(
+                reason="; ".join(reservation_violations),
+                experiment_id="A_visible_semantic_correction",
+                case_id=invocation.case_id,
+                arm=invocation.arm,
+                attempt=invocation.attempt,
+                triggering_event_id=None,
+                extra_input_bindings={
+                    "resource_reservation": asdict(invocation.resource_reservation)
+                },
+                extra_gate_results={"resource_reservation": "fail"},
+            )
         provider = self._visible_provider
         if provider is None:
             raise RunnerIntegrityError("no visible critic provider is configured")
@@ -3114,6 +3235,23 @@ class ExperimentRunner:
         if not provider_identity.production_eligible and not self.config.allow_test_providers:
             raise RunnerIntegrityError(
                 "non-production provider is forbidden by runner configuration"
+            )
+        if (
+            provider_identity.production_eligible
+            and provider_identity.kind in {"local_qwen", "local_llm"}
+            and invocation.resource_reservation.gpu_time_ms <= 0
+        ):
+            self._record_stop(
+                reason="production visible provider requires a positive GPU reservation",
+                experiment_id="A_visible_semantic_correction",
+                case_id=invocation.case_id,
+                arm=invocation.arm,
+                attempt=invocation.attempt,
+                triggering_event_id=None,
+                extra_input_bindings={
+                    "resource_reservation": asdict(invocation.resource_reservation)
+                },
+                extra_gate_results={"resource_reservation": "fail"},
             )
         image_paths = tuple(self.config.repo_root / item["path"] for item in image_artifacts)
         request = VisibleProviderRequest(
@@ -3132,6 +3270,7 @@ class ExperimentRunner:
             model=model,
             image_paths=image_paths,
             artifacts=artifact_bindings,
+            resource_reservation=invocation.resource_reservation,
         )
         progress_fields = {
             "experiment_id": "A_visible_semantic_correction",
@@ -3163,6 +3302,7 @@ class ExperimentRunner:
                 "selected_prompt_event_id": (
                     selected_prompt_event["event_id"] if sample["split"] == "test" else None
                 ),
+                "resource_reservation": asdict(invocation.resource_reservation),
             },
             model_receipt={
                 "prompt_sha256": prompt_sha,
@@ -3215,14 +3355,15 @@ class ExperimentRunner:
             except ProviderContractError as identity_error:
                 provider_error = identity_error
             wall_time_ms = max(0, (time.monotonic_ns() - start_ns) // 1_000_000)
-            reported_usage = (
-                outcome.resource
-                if isinstance(outcome, ProviderOutcome)
+            reported_usage_is_valid = (
+                isinstance(outcome, ProviderOutcome)
                 and isinstance(outcome.resource, ResourceUsage)
                 and all(
                     type(value) is int and value >= 0 for value in asdict(outcome.resource).values()
                 )
-                else ResourceUsage()
+            )
+            reported_usage = (
+                outcome.resource if reported_usage_is_valid else invocation.resource_reservation
             )
             partial_resource = asdict(reported_usage)
             partial_raw_sha: str | None = None
@@ -3256,8 +3397,10 @@ class ExperimentRunner:
                 if isinstance(provider_error, ProviderContractError)
                 else "provider_exception"
             )
-            format_repair_eligible = invocation.repair_index == 0 and isinstance(
-                provider_error, ProviderFormatError
+            format_repair_eligible = (
+                reported_usage_is_valid
+                and invocation.repair_index == 0
+                and isinstance(provider_error, ProviderFormatError)
             )
             provider_claimed_physical_pass = (
                 (outcome.claims_physical_pass or self._contains_physical_claim(outcome.result))
@@ -3278,7 +3421,11 @@ class ExperimentRunner:
                 failure_outcome,
                 model=model,
                 budget=budget,
+                reservation=invocation.resource_reservation,
+                enforce_invocation_count=reported_usage_is_valid,
             )
+            if not reported_usage_is_valid:
+                violations.append("provider resource usage is unknown after invocation")
             event_body = {
                 "schema_version": self.spec["logging_contract"]["schema_version"],
                 "event_id": f"call-{invocation_id}",
@@ -3332,6 +3479,7 @@ class ExperimentRunner:
                 "resource_receipt": {
                     "wall_time_ms": wall_time_ms,
                     **partial_resource,
+                    "usage_known": reported_usage_is_valid,
                 },
                 "outputs": {
                     "decision": error_code,
@@ -3359,9 +3507,7 @@ class ExperimentRunner:
                     "exception_type": type(provider_error).__name__,
                     "message_sha256": _sha256_bytes(str(provider_error).encode("utf-8")),
                 },
-                "expensive_execution_started": bool(
-                    partial_resource.get("gpu_time_ms", 0) or provider_identity.kind == "local_qwen"
-                ),
+                "expensive_execution_started": True,
             }
             event = self._journal.append(event_body)
             self._emit("receipt.fsynced", durable_event_id=event["event_id"], **progress_fields)
@@ -3384,7 +3530,12 @@ class ExperimentRunner:
             if outcome.parsed_response is not None
             else None
         )
-        violations = self._visible_outcome_violations(outcome, model=model, budget=budget)
+        violations = self._visible_outcome_violations(
+            outcome,
+            model=model,
+            budget=budget,
+            reservation=invocation.resource_reservation,
+        )
         model_receipt = {
             "prompt_sha256": prompt_sha,
             "prompt_template_version": invocation.prompt_template_version,
@@ -3897,14 +4048,15 @@ class ExperimentRunner:
                     )
                     provider_error.__cause__ = sandbox_error
             wall_time_ms = max(0, (time.monotonic_ns() - start_ns) // 1_000_000)
-            reported_usage = (
-                outcome.resource
-                if isinstance(outcome, ProviderOutcome)
+            reported_usage_is_valid = (
+                isinstance(outcome, ProviderOutcome)
                 and isinstance(outcome.resource, ResourceUsage)
                 and all(
                     type(value) is int and value >= 0 for value in asdict(outcome.resource).values()
                 )
-                else ResourceUsage()
+            )
+            reported_usage = (
+                outcome.resource if reported_usage_is_valid else invocation.resource_reservation
             )
             partial_resource = asdict(reported_usage)
             partial_raw_sha: str | None = None
@@ -3970,6 +4122,8 @@ class ExperimentRunner:
             violations.extend(
                 self._unreserved_routing_usage(reported_usage, invocation.resource_reservation)
             )
+            if not reported_usage_is_valid:
+                violations.append("provider resource usage is unknown after invocation")
             event_body = {
                 "schema_version": self.spec["logging_contract"]["schema_version"],
                 "event_id": f"call-{invocation_id}",
@@ -4024,6 +4178,7 @@ class ExperimentRunner:
                 "resource_receipt": {
                     "wall_time_ms": wall_time_ms,
                     **partial_resource,
+                    "usage_known": reported_usage_is_valid,
                 },
                 "outputs": {
                     "decision": error_code,
@@ -4051,10 +4206,7 @@ class ExperimentRunner:
                     "exception_type": type(provider_error).__name__,
                     "message_sha256": _sha256_bytes(str(provider_error).encode("utf-8")),
                 },
-                "expensive_execution_started": bool(
-                    partial_resource.get("gpu_time_ms", 0)
-                    or provider_identity.kind in {"local_qwen", "local_llm"}
-                ),
+                "expensive_execution_started": True,
             }
             event = self._journal.append(event_body)
             self._emit("receipt.fsynced", durable_event_id=event["event_id"], **progress_fields)
