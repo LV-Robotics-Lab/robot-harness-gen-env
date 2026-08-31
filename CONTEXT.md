@@ -50,6 +50,14 @@ _Avoid_: chat context、unchecked memory、scene description
 根据受信世界状态选择下一项版本化 Skill，并在失败后决定重试、修复、回放或停止的推理角色；它不直接冒充低层控制器。
 _Avoid_: monolithic VLA、free-form chatbot、skill executor
 
+**Planner Context（规划上下文）**:
+从受信世界状态、已资格化 Skill 和回执绑定的近期历史中按固定预算编译出的只读投影；它记录被省略信息的集合摘要，并与源状态摘要绑定。
+_Avoid_: chat transcript、whole repository dump、mutable memory
+
+**Planner Decision（规划决策）**:
+LLM 对单个下一步的类型化提议，只能选择上下文列出的精确 Skill、请求新鲜观测或停止；Harness 必须重新校验状态与上下文摘要后才能执行。
+_Avoid_: executable model output、free-form tool name、self-reported success
+
 **Skill（技能）**:
 具有精确版本、类型化输入输出、资格证据和稳定执行契约的能力单元；它可以由解析器、控制器、VLA、仿真器或适配器实现。
 _Avoid_: arbitrary function、prompt snippet、unversioned tool
