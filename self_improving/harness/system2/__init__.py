@@ -14,6 +14,15 @@ from .context import (
     planner_context_sha256,
     verify_planner_context,
 )
+from .dispatcher import (
+    CompileSystem2Application,
+    ReceiptDerivedFactClaim,
+    SkillExecutionIdentity,
+    System2Dispatcher,
+    System2DispatchError,
+    System2SkillApplication,
+    TrustedToolReceipt,
+)
 from .domain import (
     StateDelta,
     StateMutation,
@@ -21,8 +30,10 @@ from .domain import (
     TrustedWorldState,
     WorldFact,
     apply_state_delta,
+    build_state_delta,
     build_world_state,
     fact_sha256,
+    state_delta_sha256,
 )
 from .planner import (
     LocalPlannerArtifactPublisher,
@@ -51,6 +62,7 @@ from .qwen_local import (
 __all__ = [
     "ContextBudget",
     "ContextCompilationError",
+    "CompileSystem2Application",
     "LocalPlannerArtifactPublisher",
     "LocalQwenPlannerProvider",
     "PlannerContext",
@@ -69,17 +81,24 @@ __all__ = [
     "QwenLocalSettings",
     "QwenRuntimeIdentity",
     "QwenSnapshotAttestation",
+    "ReceiptDerivedFactClaim",
+    "SkillExecutionIdentity",
     "StateDelta",
     "StateMutation",
     "System2ToolResult",
+    "System2Dispatcher",
+    "System2DispatchError",
+    "System2SkillApplication",
     "System2Planner",
     "SnapshotIntegrityError",
     "TransformersQwenBackend",
     "TrustedWorldState",
+    "TrustedToolReceipt",
     "WorldFact",
     "apply_state_delta",
     "attest_hf_snapshot",
     "build_planner_prompt",
+    "build_state_delta",
     "build_world_state",
     "compile_planner_context",
     "decision_sha256",
@@ -87,5 +106,6 @@ __all__ = [
     "parse_planner_decision",
     "planner_context_sha256",
     "provider_identity_sha256",
+    "state_delta_sha256",
     "verify_planner_context",
 ]

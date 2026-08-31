@@ -2,6 +2,12 @@
 
 ## 2026-08-31
 
+- 接通 System 2 → production compile 的可信调度边界：同一 CAS 内重读 planner、base state/context、
+  qualification、Invocation/RunState、effective catalog 与 package，重跑 solver 和 static validator；
+  完整 history authority 绑定每次状态迁移，成功才产生 receipt-backed delta，blocked/failed 无 delta。
+  独立复审发现的 history 省略、非 canonical evidence closure 与不可应用空 delta 均已转成攻击测试；
+  261 项通过，application/dispatcher/domain/history 的 statement/branch 均为 100%。这只证明本地
+  compile 编排和两个非物理事实，不声明 SAPIEN/真机或已刷新 production qualification。
 - 新增 `harness.skill_descriptor.v2`，用 `content_bitwise_deterministic` 与
   `evidence_invariant_repeatable` 取代含糊 boolean；v1 snapshot 字节完全不变且仍只允许
   `deterministic=true`。compile 保持 v1，replay 以 v2 声明 evidence-invariant repeatability；

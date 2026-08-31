@@ -94,37 +94,142 @@ class CompileApplication:
         external_catalog_roots: tuple[Path, ...],
         asset_library_root: Path,
     ) -> None:
-        self._state_root = state_root
+        self._state_root = Path(state_root).expanduser().resolve()
         self._asset_library_root = Path(asset_library_root).expanduser().resolve()
         self._artifact_store = artifact_store
         self._event_journal = event_journal
         self._run_store = run_store
         self._registry = registry
-        self._external_catalog_roots = external_catalog_roots
+        self._external_catalog_roots = tuple(
+            Path(root).expanduser().resolve() for root in external_catalog_roots
+        )
+        self._assembly_identity: tuple[object, ...] | None = None
+        self._assert_production_assembly()
+
+    def _assert_production_assembly(self) -> None:
+        """Recheck that every authority belongs to this fixed production assembly."""
+
+        def invalid(detail: str) -> None:
+            raise CompileApplicationConfigurationError(
+                f"compile production assembly is invalid: {detail}"
+            )
+
+        if not self._state_root.is_dir():
+            invalid("state_root is not an existing directory")
+        if not self._asset_library_root.is_dir():
+            invalid("asset_library_root is not an existing directory")
+        if type(self._artifact_store) is not LocalArtifactStore:
+            invalid("artifact store is not the exact local CAS")
+        if self._artifact_store.root != (self._state_root / "cas").resolve():
+            invalid("artifact store is not rooted under state_root")
+        if type(self._event_journal) is not SQLiteEventJournal:
+            invalid("event journal is not the exact SQLite authority")
+        if type(self._run_store) is not SQLiteRunStore:
+            invalid("run store is not the exact SQLite authority")
+        database_path = (self._state_root / "harness.sqlite3").resolve()
+        if (
+            self._event_journal.path.resolve() != database_path
+            or self._run_store.path.resolve() != database_path
+        ):
+            invalid("event journal and run store do not share the state database")
+        if type(self._registry) is not SkillRegistry:
+            invalid("registry is not the exact production Registry")
+        registry = self._registry
+        if (
+            registry._artifact_resolver is not self._artifact_store
+            or registry._event_sink is not self._event_journal
+            or registry._run_store is not self._run_store
+            or registry._clock is not _utc_now
+            or registry._run_id_factory is not uuid4
+            or registry._evidence_invariant_policy is not None
+        ):
+            invalid("Registry authorities are not the production authority set")
+        resolver = registry._dependency_resolver
+        if type(resolver) is not Text2EnvCompileDependencyResolver:
+            invalid("Registry dependency resolver is not text2env.compile")
+        handler = resolver.handler
+        if type(handler) is not Text2EnvCompileHandler:
+            invalid("compile handler is not the exact production handler")
+        if (
+            resolver.artifact_store is not self._artifact_store
+            or handler.artifact_store is not self._artifact_store
+        ):
+            invalid("handler and dependency resolver do not share application CAS")
+        if (
+            resolver.scene_gen_root.expanduser().resolve() != _SCENE_GEN_ROOT.resolve()
+            or resolver.ledger_contract_root.expanduser().resolve()
+            != _LEDGER_CONTRACT_ROOT.resolve()
+        ):
+            invalid("dependency source roots differ from the qualified production roots")
+        if (
+            handler.work_root.expanduser().resolve() != (self._state_root / "work").resolve()
+            or handler.generated_staging_root.expanduser().resolve()
+            != (self._state_root / "generated-staging").resolve()
+            or handler.asset_library_root.expanduser().resolve() != self._asset_library_root
+        ):
+            invalid("compile handler mutable roots differ from application settings")
+        registrations = registry._registrations
+        registration = registrations.get((_COMPILE_SKILL_ID, _COMPILE_VERSION))
+        if len(registrations) != 1 or registration is None or registration.handler is not handler:
+            invalid("Registry does not contain the one exact compile handler")
+        descriptor = registration.descriptor
+        if (
+            type(descriptor) is not SkillDescriptor
+            or descriptor.skill_id != _COMPILE_SKILL_ID
+            or descriptor.version != _COMPILE_VERSION
+            or descriptor.input_schema != "harness.text2env_compile_input.v1"
+            or descriptor.output_schema != "harness.text2env_compile_output.v1"
+            or descriptor.max_attempts != 1
+        ):
+            invalid("Registry descriptor differs from the fixed compile contract")
+        if not self._external_catalog_roots:
+            invalid("external catalog roots are empty")
+        if any(not root.is_dir() for root in self._external_catalog_roots):
+            invalid("external catalog root is not a directory")
+        live_identity: tuple[object, ...] = (
+            str(self._state_root),
+            tuple(str(root) for root in self._external_catalog_roots),
+            handler.admission_date.isoformat(),
+            tuple(str(path.expanduser().resolve()) for path in handler.allowed_asset_roots),
+            str(handler.work_root.expanduser().resolve()),
+            str(handler.generated_staging_root.expanduser().resolve()),
+            str(handler.asset_library_root.expanduser().resolve()),
+            descriptor.implementation_sha256,
+            descriptor.qualification_artifact.sha256,
+        )
+        if self._assembly_identity is None:
+            self._assembly_identity = live_identity
+        elif self._assembly_identity != live_identity:
+            invalid("production handler or trust policy changed after assembly")
 
     @property
     def skills(self) -> tuple[SkillDescriptor, ...]:
         """Return the sole immutable descriptor admitted by this assembly."""
 
+        self._assert_production_assembly()
         return self._registry.list()
 
     @property
     def artifact_root(self) -> Path:
+        self._assert_production_assembly()
         return self._artifact_store.root
 
     @property
     def journal_path(self) -> Path:
+        self._assert_production_assembly()
         return self._event_journal.path.resolve()
 
     @property
     def asset_library_root(self) -> Path:
         """Return the production library that owns admitted reusable assets."""
 
+        self._assert_production_assembly()
         return self._asset_library_root
 
     def snapshot_asset_catalog(self, source: Path) -> ArtifactRef:
         """Freeze one explicitly trusted external catalog into application CAS."""
 
+        self._assert_production_assembly()
         candidate = Path(source).expanduser()
         try:
             resolved = candidate.resolve(strict=True)
@@ -172,6 +277,7 @@ class CompileApplication:
         those locators at lower-trust integration boundaries.
         """
 
+        self._assert_production_assembly()
         if type(parameters) is not Text2EnvCompileInput:
             raise CompileApplicationInputError(
                 "typed compile input is invalid: expected Text2EnvCompileInput"
@@ -200,6 +306,7 @@ class CompileApplication:
     def resolve_artifact(self, artifact: ArtifactRef) -> Path:
         """Resolve and reverify a compile artifact from application CAS."""
 
+        self._assert_production_assembly()
         return self._artifact_store.resolve(artifact).path
 
     def events(
@@ -211,6 +318,7 @@ class CompileApplication:
     ) -> EventPage:
         """Replay committed progress events for workbench and audit consumers."""
 
+        self._assert_production_assembly()
         return self._event_journal.read(
             after_event_id=after_event_id,
             run_id=run_id,
@@ -220,11 +328,13 @@ class CompileApplication:
     def invocation(self, run_id: UUID) -> Invocation | None:
         """Recover the immutable request identity for one started execution."""
 
+        self._assert_production_assembly()
         return self._run_store.read_invocation(run_id)
 
     def run_state(self, run_id: UUID) -> RunState | None:
         """Recover one terminal result after verifying Invocation and journal binding."""
 
+        self._assert_production_assembly()
         return self._run_store.read_run_state(run_id)
 
 

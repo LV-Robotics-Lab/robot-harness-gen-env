@@ -19,6 +19,7 @@ from self_improving.harness.application import (
     ExternalCatalogError,
     create_compile_application,
 )
+from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.schemas import (
     ArtifactRef,
     CompileConfig,
@@ -501,6 +502,32 @@ def test_settings_reject_asset_library_root_that_is_a_file(
         create_compile_application(settings)
 
 
+def test_application_rechecks_that_its_asset_library_authority_still_exists(
+    tmp_path: Path,
+    fixed_qualification: Path,
+) -> None:
+    """A facade must fail closed if its mutable asset authority disappears after assembly."""
+
+    app = create_compile_application(_settings(tmp_path))
+    app.asset_library_root.rmdir()
+
+    with pytest.raises(CompileApplicationConfigurationError, match="asset_library_root"):
+        _ = app.skills
+
+
+def test_application_rechecks_that_its_state_authority_still_exists(
+    tmp_path: Path,
+    fixed_qualification: Path,
+) -> None:
+    """An already-created facade cannot silently continue after its state root is replaced."""
+
+    app = create_compile_application(_settings(tmp_path))
+    app._state_root = tmp_path / "missing-state-root"
+
+    with pytest.raises(CompileApplicationConfigurationError, match="state_root"):
+        _ = app.skills
+
+
 def test_settings_reject_non_date_admission_value(
     tmp_path: Path,
     fixed_qualification: Path,
@@ -551,3 +578,81 @@ def test_factory_fails_closed_when_fixed_qualification_is_absent(
 
     with pytest.raises(ValueError, match="qualification bundle"):
         create_compile_application(settings)
+
+
+@pytest.mark.parametrize(
+    "drift",
+    [
+        "artifact_type",
+        "artifact_root",
+        "event_journal",
+        "run_store",
+        "database_path",
+        "registry_type",
+        "registry_artifact_store",
+        "resolver_type",
+        "dependency_handler",
+        "shared_cas",
+        "source_roots",
+        "mutable_roots",
+        "registration",
+        "descriptor",
+        "catalog_roots_empty",
+        "catalog_root_missing",
+        "handler_policy",
+    ],
+)
+def test_application_rechecks_the_complete_production_assembly_before_use(
+    tmp_path: Path,
+    fixed_qualification: Path,
+    drift: str,
+) -> None:
+    app = create_compile_application(_settings(tmp_path))
+    resolver = app._registry._dependency_resolver
+    assert resolver is not None
+    if drift == "artifact_type":
+        app._artifact_store = object()  # type: ignore[assignment]
+    elif drift == "artifact_root":
+        app._artifact_store = LocalArtifactStore(tmp_path / "foreign-cas")
+    elif drift == "event_journal":
+        app._event_journal = object()  # type: ignore[assignment]
+    elif drift == "run_store":
+        app._run_store = object()  # type: ignore[assignment]
+    elif drift == "database_path":
+        app._event_journal.path = tmp_path / "foreign.sqlite3"
+    elif drift == "registry_type":
+        app._registry = object()  # type: ignore[assignment]
+    elif drift == "registry_artifact_store":
+        app._registry._artifact_resolver = LocalArtifactStore(tmp_path / "foreign-cas")
+    elif drift == "resolver_type":
+        app._registry._dependency_resolver = object()
+    elif drift == "dependency_handler":
+        object.__setattr__(resolver, "handler", object())
+    elif drift == "shared_cas":
+        object.__setattr__(resolver, "artifact_store", LocalArtifactStore(tmp_path / "other"))
+    elif drift == "source_roots":
+        object.__setattr__(resolver, "scene_gen_root", tmp_path / "other-scene-gen")
+    elif drift == "mutable_roots":
+        object.__setattr__(resolver.handler, "work_root", tmp_path / "other-work")
+    elif drift == "registration":
+        app._registry._registrations.clear()
+    elif drift == "descriptor":
+        registration = next(iter(app._registry._registrations.values()))
+        object.__setattr__(
+            registration,
+            "descriptor",
+            registration.descriptor.model_copy(update={"max_attempts": 2}),
+        )
+    elif drift == "catalog_roots_empty":
+        app._external_catalog_roots = ()
+    elif drift == "catalog_root_missing":
+        app._external_catalog_roots = (tmp_path / "missing-catalog-root",)
+    else:
+        object.__setattr__(
+            resolver.handler,
+            "allowed_asset_roots",
+            (tmp_path / "changed-policy",),
+        )
+
+    with pytest.raises(CompileApplicationConfigurationError, match="production assembly"):
+        _ = app.skills

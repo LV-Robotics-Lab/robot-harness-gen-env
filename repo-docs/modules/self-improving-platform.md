@@ -36,6 +36,14 @@ production-only registration policy，但尚无 checked-in pass bundle 或真实
 语句与分支覆盖。compile 的 asset admission 仍发生在 solve 前且失败不回滚；跨 run promotion、
 identity-frozen resumable EvaluationRun 与 MCP adapter 仍未闭合，契约保持 `Status: Proposed`。
 
+System 2 的 compile 竖切不再只信模型自报或 artifact 外形：planner prompt/raw decision/receipt、
+精确 base world state、PlannerContext、Skill qualification、Invocation/RunState、effective catalog、
+solver 结果、package 四成员与静态 validator 都由 dispatcher 从同一 CAS 重读并交叉重算。
+version 2 及后续 state 必须携带从 version 1 开始的完整 history authority；成功 receipt 才能产生
+`StateDelta`，blocked/failed 明确为 `state_delta=null`。这条路径只晋升 catalog/package 非物理事实；
+它没有把 compile static pass 写成接触、稳定性或可见性证据。当前测试含真实 production compile
+assembly 的本地生成资产路径，但使用临时 qualification，不能替代 checked-in 资格或 SAPIEN replay。
+
 字段边界、状态机、快照与未实现范围见 [Harness Schema Tranche](harness-schema-tranche.md)；
 逐项实现和验证证据见 [PR1 实现报告](../../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)。
 
