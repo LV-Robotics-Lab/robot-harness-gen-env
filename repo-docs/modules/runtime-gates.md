@@ -52,6 +52,27 @@ stdout/stderr 只作诊断，阶段状态只认专用 FD 的严格事件。
 这仍不等于发布成功：2-step smoke 可以证明“真实加载、步进、回调、收证据”接线成功，却会因
 settle horizon 不足而在 validation 失败。正式发布仍须 900 settle / 120 video 等既定门禁全过。
 
+## Harness 怎样证明媒体不是伪扩展名
+
+worker 声明 `video_frame_count` 或把任意 bytes 命名为 `.mp4` 都不是 consumer 证据。Harness 先把
+allowlisted 输出作为不受信任的 octet-stream 保存；`ReplayMediaVerifier` 再把父进程持有的 regular
+file descriptor 交给最小静态 FFmpeg，完整解码 PNG/MP4，复核帧数、帧率、尺寸、sample aspect
+ratio 与解码后互异帧。只有这些事实与 runtime contract 一致时，handler 才把制品晋升为
+`image/png` / `video/mp4`。worker 报告的 source unique 与编码后 decoded unique 分开保留，不能
+强行相等；但 120 帧视频仍须至少 30 个解码后互异帧。
+
+decoder 运行在显式 delegated cgroup 的 per-run job 中，并由 native launcher 施加 Landlock、
+seccomp、`no_new_privs`、rlimit 及 memory/swap/pids/CPU/wall/output 上限。媒体只走 held FD，decoder
+没有媒体 pathname；缺 delegated root、tool identity 漂移或 sandbox setup 失败都按 dependency
+fail closed，不退回宿主 Pillow/动态 FFmpeg。资格化工具链使用最小静态 FFmpeg 7.0.2；identity
+绑定 launcher/source、FFmpeg bytes、policy、kernel/ABI 与精确命令。真实历史录像观测为
+120 frames / 114 decoded unique / 12 fps / 320×240。framemd5 只能证明 `8bit-420`，指南不把它
+夸大成具体 yuv420p layout。完整尝试链、摘要、资源峰值和攻击结果见
+[`docs/evidence/replay-media-verifier-qualification-20260831.md`](../../docs/evidence/replay-media-verifier-qualification-20260831.md)。
+
+这仍只证明媒体 consumer 边界；没有正式 replay qualification、900/120 receipt、独立 validate 与
+promotion evidence 时，不能由一段可解码视频推出物理通过或 `publishable=true`。
+
 ## contact 怎么分类
 
 `summarize_contacts` 把每条 SAPIEN contact 按 body 名解析：

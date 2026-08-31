@@ -2,6 +2,11 @@
 
 ## 2026-08-31
 
+- 增加 replay 媒体的 consumer-side 真解码边界：PNG/MP4 先作为不受信任 bytes 入 CAS，再由
+  delegated cgroup + Landlock/seccomp/rlimit 中的最小静态 FFmpeg 通过 held FD 完整解码；帧数、
+  帧率、尺寸、SAR 与解码后互异帧不再信 worker JSON 或扩展名。真实历史 120 帧录像解出 114 个
+  互异帧；Python 3.11/3.13 delegated 各 211 tests 通过、两模块 statement/branch 100%。这只
+  qualification media consumer，不把尚未完成的 900/120 handler/validate/promotion 写成已发布。
 - Registry 的 handler context 现在携带 Invocation 已冻结的同一组只读 dependencies，供 replay
   在真实执行时核对资产/运行时身份；这一实现字节变化也触发并完成了 compile 三轮资格刷新。
 - A035 改变 scene-gen 执行字节后，旧 compile qualification 被 source-tree 门禁拒绝；在干净

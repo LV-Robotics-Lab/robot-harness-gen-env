@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import os
 import shutil
 import subprocess
@@ -15,6 +16,11 @@ LEDGER_PACKAGE = Path("self_improving/asset_pipeline/active/1_asset_reuse/lib")
 LEDGER_MEMBERS = ("__init__.py", "conventions.py", "ledger.py")
 QUALIFICATION_PACKAGE = Path("self_improving/harness/qualified_skills/text2env.compile/1.0.0")
 QUALIFICATION_MEMBERS = ("manifest.json", "qualification.json", "report.json")
+MEDIA_NATIVE_PACKAGE = Path("self_improving/harness/native")
+MEDIA_NATIVE_MEMBERS = ("media_sandbox.c",)
+MEDIA_NATIVE_SHA256 = hashlib.sha256(
+    (REPO_ROOT / MEDIA_NATIVE_PACKAGE / MEDIA_NATIVE_MEMBERS[0]).read_bytes()
+).hexdigest()
 
 
 def _copy_build_fixture(destination: Path) -> Path:
@@ -30,6 +36,7 @@ def _copy_build_fixture(destination: Path) -> Path:
         Path("self_improving/harness/__init__.py"),
         *(LEDGER_PACKAGE / name for name in LEDGER_MEMBERS),
         *(QUALIFICATION_PACKAGE / name for name in QUALIFICATION_MEMBERS),
+        *(MEDIA_NATIVE_PACKAGE / name for name in MEDIA_NATIVE_MEMBERS),
     ):
         target = source / relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -84,10 +91,16 @@ def test_wheel_installs_asset_ledger_contract(tmp_path: Path) -> None:
     expected_qualification = {
         (QUALIFICATION_PACKAGE / name).as_posix() for name in QUALIFICATION_MEMBERS
     }
+    expected_media_native = {
+        (MEDIA_NATIVE_PACKAGE / name).as_posix() for name in MEDIA_NATIVE_MEMBERS
+    }
     with zipfile.ZipFile(wheel) as archive:
         assert expected_members <= set(archive.namelist())
         assert expected_qualification <= set(archive.namelist())
+        assert expected_media_native <= set(archive.namelist())
         for member in expected_qualification:
+            assert archive.read(member) == (REPO_ROOT / member).read_bytes()
+        for member in expected_media_native:
             assert archive.read(member) == (REPO_ROOT / member).read_bytes()
 
     installed = tmp_path / "installed"
@@ -109,6 +122,7 @@ def test_wheel_installs_asset_ledger_contract(tmp_path: Path) -> None:
     probe = f"""
 import importlib
 import importlib.resources
+import hashlib
 import pathlib
 import sys
 
@@ -121,9 +135,15 @@ for module_name in ("conventions", "ledger"):
 resources = importlib.resources.files(package)
 for resource_name in {LEDGER_MEMBERS!r}:
     assert resources.joinpath(resource_name).is_file()
+distribution_resources = importlib.resources.files("self_improving")
+native_source = distribution_resources.joinpath("harness", "native", "media_sandbox.c")
+assert native_source.is_file()
+assert hashlib.sha256(native_source.read_bytes()).hexdigest() == {MEDIA_NATIVE_SHA256!r}
 """
     _run([sys.executable, "-I", "-c", probe], cwd=installed)
     for member in expected_qualification:
+        assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
+    for member in expected_media_native:
         assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
 
 
@@ -132,3 +152,4 @@ def test_packaging_declares_qualified_skill_resources() -> None:
 
     package_data = configuration["tool"]["setuptools"]["package-data"]
     assert "qualified_skills/**/*.json" in package_data["self_improving.harness"]
+    assert "native/*.c" in package_data["self_improving.harness"]

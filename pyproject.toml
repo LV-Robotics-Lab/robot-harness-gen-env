@@ -49,6 +49,7 @@ include = [
 scene_gen = ["asset_overrides.yml", "prompts/*.md"]
 "self_improving.harness" = [
   "json_schemas/*.json",
+  "native/*.c",
   "qualified_skills/**/*.json",
 ]
 

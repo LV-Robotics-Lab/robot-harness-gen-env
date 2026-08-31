@@ -34,10 +34,10 @@
 | 阶段 | 状态 | 完成证据 |
 |---|---|---|
 | 0. 基线、架构和追溯主账 | 完成 | 本文件、代码接线图、环境能力审计 |
-| 1. 资产与 runtime 证据完整性 | 待开始 | 攻击测试、迁移报告、最终帧/步数一致性 |
+| 1. 资产与 runtime 证据完整性 | 进行中 | 攻击测试、迁移报告、最终帧/步数一致性 |
 | 2. Harness 核心 | 进行中 | Registry、resolver、receipt、事件流单元测试 |
-| 3. compile → 资产入库 | 进行中 | 真实 fixture 端到端运行与入库 ledger/receipt |
-| 4. replay → validate | 待开始 | 实际播放调用、连续帧、哈希绑定验证报告 |
+| 3. compile → 资产入库 | 完成 | 真实三轮 admitted→reused→reused 与固定 qualification/CLI |
+| 4. replay → validate | 进行中 | 实际播放调用、连续帧、哈希绑定验证报告 |
 | 5. VLM fallback 研究 | 待开始 | baseline、逐次实验 TSV/JSONL、消融与总结 |
 | 6. LLM System 2 | 待开始 | agent 计划、上下文包、工具回执、回归晋升 |
 | 7. 前端工作台 | 待开始 | 四页面、真实事件流、浏览器端到端测试 |
@@ -694,3 +694,36 @@
   改 timeout 时摘要必然变化。
 - 验证：executor 专项 `131 passed`，`runtime_executor.py` statement `667/667`、branch
   `214/214`；该身份只建立待 resolver 消费的信任面，不单独宣称 replay 已获资格。
+
+### 2026-08-31 / A039：replay 媒体必须真实解码后才能晋升
+
+- RED：旧 handler 只按扩展名把任意 bytes 标为 `image/png` / `video/mp4`；测试替身实际写入
+  `b"image:<filename>"` 仍会成功。worker JSON 声称的 frame/unique/fps 也没有被 consumer 解码
+  复核，因此损坏视频或重复帧可取得看似可信的 receipt。
+- 第一性原理边界：新增 `MediaSandbox` 与 `ReplayMediaVerifier`。媒体先以 untrusted octet-stream
+  入 CAS，再通过父进程持有的 seekable regular-file FD 交给静态 FFmpeg；decoder 不接收媒体
+  pathname。native launcher 在 release 前进入 delegated cgroup，并施加 Landlock、seccomp、
+  `no_new_privs` 与 rlimit；输出、wall time、memory/swap、pids 和 CPU 都有硬上限及 typed failure。
+- 被否决的尝试：动态 FFmpeg 的 ELF 摘要不能绑定 loader/DSO/cache；主进程 Pillow 会污染全局
+  bomb policy 且没有资源隔离；普通 session scope 无法把 child 迁入 user-owned cgroup；通用静态
+  imageio FFmpeg 会在启动时重开随机设备。没有放宽 `/dev/urandom`，而是从 FFmpeg 7.0.2 source
+  构建只启 fd/pipe、MOV/PNG/H.264/rawvideo/framemd5 的最小静态 binary。
+- 诚实性修正：真实 full-range H.264 证明 framemd5 raw size 只能确认 8-bit 4:2:0 sample layout，
+  不能区分 yuv420p/nv12/yuvj420p；最终 receipt 只写 `8bit-420`。SAR `0/1` 记录为“未声明、默认
+  方形”，真实 2:1 仍 fail closed。
+- 真数据：对历史 can-on-plate 7 PNG + 120-frame MP4 完整解码，观测 `120` 帧、`114` 个解码后
+  互异帧、`12 fps`、`320×240`；8 次 invocation 峰值 memory `11,485,184` bytes、pids `22`、
+  CPU 合计 `113,549 µs`，OOM/OOM-kill/pids.max 均为 0。AVI、MPEG4、yuv444、SAR 2:1、额外
+  stream、bitflip、timeout/output flood/OOM/pids/CPU/SIGSYS/TOCTOU 均有真实或攻击回归。
+- 独立复审修正：Landlock 只要求 ABI ≥ 6，不把向后兼容的未来 ABI 9+ 误判为不可用；先增加
+  ABI 9 RED 反例再修复 Python/native 两层。
+- 身份：qualified static FFmpeg SHA
+  `fe08d0f5…ef02e`；sandbox `dc03f7db…fd223`；verifier `aca09b20…bd699`。binary/source tree不入库；
+  production 必须显式提供摘要一致的 binary 与 delegated root，缺少时返回 dependency blocker，
+  不降级到宿主 decoder。
+- 安装态：`native/media_sandbox.c` 已加入 wheel package-data；真实离线 wheel + isolated install
+  逐字节复核资源存在且 `2 passed`。Python 3.13 delegated `211 passed` 且两模块
+  statement/branch 100%；Python 3.11 delegated `211 passed`。
+- 证据：`docs/evidence/replay-media-verifier-qualification-20260831.{md,json}`。这只资格化媒体
+  consumer 边界；handler/dependency 接线、正式 900/120 replay、独立 validate 和 promotion
+  evidence 尚未因此完成。

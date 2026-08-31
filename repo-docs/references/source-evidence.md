@@ -21,6 +21,7 @@ commit `9b72090` 补充。
 | Pass 8 | 在干净固定源码上反查实现日志与移动工作树，避免环境残留制造绿色覆盖率。 | `git archive 51447da` 的 root/importlib/Harness pytest，以及同提交 detached clone 的 canonical platform script。 | 默认 collection error；importlib 184/1；Harness 76 pass 但 99.88% coverage，未覆盖 bytecode/cache 排除分支。实现日志的 100% 不能作为 clean receipt。 |
 | Pass 9 | 检查 CLI 契约修复后的最终固定源码，而不把独立 replay follow-on 倒灌为 ASPIRE 结果。 | `e6ed0ff`、`148001d` 与 `git archive 148001d` 的 root/importlib/Harness pytest。 | importlib 201/0，旧 CLI 漂移已闭合；默认 collection 与 Harness 99.88% coverage 仍阻断全绿。replay timeline receipt 未作为 matched repair trial 重跑。 |
 | Pass 10 | 审计封存期间并发落地的 qualification、packaging 与 RunStore，挑战“前置构件存在即 P0 闭环”的误读。 | 固定 `4836ebf`、`38518e5`、`ab03859` 源码/tests/log，以及 `git archive ab03859` Harness/root pytest。 | 三者分别是预制 bundle verifier、wheel prerequisite、immutable terminal-record adapter；固定树无 Registry callsite，三项 P0 均 open。Harness 133 pass/99.91%，默认 collection 仍失败。 |
+| Pass 11 | 挑战“扩展名、worker JSON 或可播放 preview 即可信 replay media”的误读。 | `media_sandbox.py`、`native/media_sandbox.c`、`media_verifier.py`、对应攻击测试与 `docs/evidence/replay-media-verifier-qualification-20260831.*`。 | 媒体 consumer 在 delegated cgroup/Landlock/seccomp/rlimit 中以静态 FFmpeg 从 held FD 完整解码；真实历史 MP4 为 120 frames / 114 decoded unique。该证据只资格化 consumer，handler 接线与正式 900/120 replay/validate/promotion 仍 open。 |
 
 Coverage note：本证据图覆盖在范围内的 `scene_gen/`、`script/`、`demo/`、`tests/`
 主路径，以及 `self_improving/harness/` 的 PR1 schema tranche。已检查但不追踪的相邻路径——
@@ -29,9 +30,10 @@ Coverage note：本证据图覆盖在范围内的 `scene_gen/`、`script/`、`de
 runner（主路径之上的薄编排）、`script/build_stage5_report.py` 的报告聚合、`demo/app.py` 的
 Flask 控制面（消费同一 `scene_gen` 流水线但不是编译路径本体）——都在
 [代码地图](../code-map.md) 里登记为在范围但只摘要，不重复追踪。artifact resolver、run recorder、
-PackageStore、通用 Registry 与 compile adapter 已有实现；replay/validate handler、跨 run
-qualification/promotion transaction 与 MCP adapter 仍没有可追踪实现，不能从一个 compile seam
-反推完整 Text2Env 执行或物理发布行为。
+PackageStore、通用 Registry、compile adapter、独立 validate handler 与媒体 consumer 已有实现；
+replay handler 接线、固定 production qualification 与正式 900/120 receipt 仍未完成，跨 run
+qualification/promotion transaction 与 MCP adapter 也未闭合，不能从一个 compile seam 或一段
+可解码视频反推完整 Text2Env 执行或物理发布行为。
 
 | Claim | Evidence | Confidence | Caveat | Used by |
 | --- | --- | --- | --- | --- |
