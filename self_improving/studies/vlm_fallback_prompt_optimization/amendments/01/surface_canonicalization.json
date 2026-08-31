@@ -1,0 +1,247 @@
+{
+  "schema_version": "vlm_fallback.surface_canonicalization.v1",
+  "languages": [
+    "en",
+    "zh-Hans"
+  ],
+  "normalization": {
+    "unicode_form": "NFKC",
+    "case_handling": "Unicode casefold",
+    "whitespace": "trim and collapse Unicode whitespace",
+    "matching": "longest registered surface first; English uses token boundaries and zh-Hans uses code-point substrings"
+  },
+  "protected_dimensions": [
+    "entity",
+    "count",
+    "color",
+    "relation",
+    "articulation",
+    "region"
+  ],
+  "vocabulary": {
+    "entity": [
+      {
+        "canonical": "apple",
+        "en": ["apple"],
+        "zh-Hans": ["苹果"]
+      },
+      {
+        "canonical": "basket",
+        "en": ["basket"],
+        "zh-Hans": ["篮子"]
+      },
+      {
+        "canonical": "block",
+        "en": ["block"],
+        "zh-Hans": ["方块", "积木"]
+      },
+      {
+        "canonical": "cabinet",
+        "en": ["cabinet"],
+        "zh-Hans": ["柜子", "橱柜"]
+      },
+      {
+        "canonical": "can",
+        "en": ["can"],
+        "zh-Hans": ["罐子", "罐头"]
+      },
+      {
+        "canonical": "cup",
+        "en": ["cup"],
+        "zh-Hans": ["杯子"]
+      },
+      {
+        "canonical": "drawer",
+        "en": ["drawer"],
+        "zh-Hans": ["抽屉"]
+      },
+      {
+        "canonical": "geometry",
+        "en": ["accepted geometry", "geometry"],
+        "zh-Hans": ["已验收几何", "几何"]
+      },
+      {
+        "canonical": "material_sidecar",
+        "en": ["material sidecar"],
+        "zh-Hans": ["材质附属文件"]
+      },
+      {
+        "canonical": "mug",
+        "en": ["mug"],
+        "zh-Hans": ["马克杯"]
+      },
+      {
+        "canonical": "multiview_inputs",
+        "en": ["calibrated multiview inputs", "multiview inputs"],
+        "zh-Hans": ["已标定多视图输入", "多视图输入"]
+      },
+      {
+        "canonical": "plate",
+        "en": ["plate"],
+        "zh-Hans": ["盘子", "餐盘"]
+      },
+      {
+        "canonical": "source_capture",
+        "en": ["source capture"],
+        "zh-Hans": ["源采集", "源捕获"]
+      },
+      {
+        "canonical": "table",
+        "en": ["table"],
+        "zh-Hans": ["桌子", "台面"]
+      }
+    ],
+    "count": [
+      {
+        "canonical": "1",
+        "en": ["a", "an", "one", "single", "1"],
+        "zh-Hans": ["一个", "一只", "一件", "一", "1"]
+      },
+      {
+        "canonical": "2",
+        "en": ["two", "both", "2"],
+        "zh-Hans": ["两个", "两只", "两件", "两", "二", "2"]
+      },
+      {
+        "canonical": "3",
+        "en": ["three", "3"],
+        "zh-Hans": ["三个", "三只", "三件", "三", "3"]
+      }
+    ],
+    "color": [
+      {
+        "canonical": "black",
+        "en": ["black"],
+        "zh-Hans": ["黑色", "黑"]
+      },
+      {
+        "canonical": "blue",
+        "en": ["blue"],
+        "zh-Hans": ["蓝色", "蓝"]
+      },
+      {
+        "canonical": "brown",
+        "en": ["brown"],
+        "zh-Hans": ["棕色", "棕"]
+      },
+      {
+        "canonical": "green",
+        "en": ["green"],
+        "zh-Hans": ["绿色", "绿"]
+      },
+      {
+        "canonical": "red",
+        "en": ["red"],
+        "zh-Hans": ["红色", "红"]
+      },
+      {
+        "canonical": "white",
+        "en": ["white"],
+        "zh-Hans": ["白色", "白"]
+      },
+      {
+        "canonical": "yellow",
+        "en": ["yellow"],
+        "zh-Hans": ["黄色", "黄"]
+      }
+    ],
+    "relation": [
+      {
+        "canonical": "above",
+        "en": ["above"],
+        "zh-Hans": ["上方"]
+      },
+      {
+        "canonical": "behind",
+        "en": ["behind"],
+        "zh-Hans": ["后面", "后方"]
+      },
+      {
+        "canonical": "in_front_of",
+        "en": ["in front of", "front of"],
+        "zh-Hans": ["前面", "前方"]
+      },
+      {
+        "canonical": "inside",
+        "en": ["inside", "into", "within"],
+        "zh-Hans": ["放进", "放入", "在里面"]
+      },
+      {
+        "canonical": "left_of",
+        "en": ["to the left of", "left of"],
+        "zh-Hans": ["左边", "左侧"]
+      },
+      {
+        "canonical": "near",
+        "en": ["near each other", "near", "beside"],
+        "zh-Hans": ["互相靠近", "附近", "旁边"]
+      },
+      {
+        "canonical": "on_top_of",
+        "en": ["on top of", "on"],
+        "zh-Hans": ["叠在", "放在上面", "置于上面"]
+      },
+      {
+        "canonical": "right_of",
+        "en": ["to the right of", "right of"],
+        "zh-Hans": ["右边", "右侧"]
+      },
+      {
+        "canonical": "under",
+        "en": ["under", "below"],
+        "zh-Hans": ["下面", "下方"]
+      }
+    ],
+    "articulation": [
+      {
+        "canonical": "closed",
+        "en": ["closed", "close"],
+        "zh-Hans": ["关闭", "关上"]
+      },
+      {
+        "canonical": "half_open",
+        "en": ["half-open", "half open"],
+        "zh-Hans": ["半开", "开启一半"]
+      },
+      {
+        "canonical": "open",
+        "en": ["opened", "open"],
+        "zh-Hans": ["打开", "开启"]
+      }
+    ],
+    "region": [
+      {
+        "canonical": "back",
+        "en": ["back region", "rear region"],
+        "zh-Hans": ["后方区域", "后部区域"]
+      },
+      {
+        "canonical": "center",
+        "en": ["center region", "near the center", "center"],
+        "zh-Hans": ["中心区域", "靠近中心", "中心"]
+      },
+      {
+        "canonical": "front",
+        "en": ["front region"],
+        "zh-Hans": ["前方区域", "前部区域"]
+      },
+      {
+        "canonical": "left_front",
+        "en": ["left-front region", "left front region"],
+        "zh-Hans": ["左前方区域", "左前区域"]
+      },
+      {
+        "canonical": "right_front",
+        "en": ["right-front region", "right front region"],
+        "zh-Hans": ["右前方区域", "右前区域"]
+      }
+    ]
+  },
+  "preservation": {
+    "comparison_input": "trusted typed intent projections after registered surface substitution",
+    "equality": "canonical JSON equality for every protected dimension including multiplicity, entity roles, relation direction, articulation target, and region target",
+    "deletion_allowed": false,
+    "insertion_allowed": false,
+    "unknown_surface_policy": "abstain_unsupported_language_surface"
+  }
+}

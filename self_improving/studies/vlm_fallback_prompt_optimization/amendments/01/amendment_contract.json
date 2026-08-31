@@ -1,0 +1,1004 @@
+{
+  "schema_version": "vlm_fallback.amendment.v1",
+  "amendment_id": "01",
+  "study_id": "vlm-fallback-prompt-optimization-2026-08-31",
+  "status": "preregistered_pre_execution",
+  "claim_boundary": {
+    "phase": "pre_execution_protocol_amendment",
+    "results_generated": false,
+    "model_loaded": false,
+    "provider_or_inference_invoked": false,
+    "study_execution_network_calls": 0,
+    "simulator_invoked": false,
+    "physical_gate_authority": "deterministic_runtime_and_typed_geometry_only"
+  },
+  "source_bindings": {
+    "digest_algorithm": "sha256",
+    "canonical_json": {
+      "encoding": "UTF-8",
+      "ensure_ascii": false,
+      "sort_keys": true,
+      "separators": [",", ":"]
+    },
+    "original_spec": {
+      "path": "../../experiment_spec.json",
+      "sha256": "ad19d38204f20c42d8070785994fe749b8db41364e002e382e938cb92ae5bf6c"
+    },
+    "original_run_log_prefix": {
+      "path": "../../run_log.jsonl",
+      "line_count": 6,
+      "sha256": "141bc995ba391a11cea3461180f51936f5829aca0c13ef44e10b48d3ef27f6a4"
+    },
+    "model_content_manifests": [
+      {
+        "role": "primary_local_vlm",
+        "path": "model_content_3b.json",
+        "schema_version": "vlm_fallback.model_content_manifest.v2",
+        "model_id": "Qwen/Qwen2.5-VL-3B-Instruct",
+        "revision": "66285546d2b821cf421d4f5eb2576359d3770cd3",
+        "canonical_sha256": "dd904e42c13f7a47296e1aff8ce8a78090a86451d24b5ccd0d2807d29e6e4cad"
+      },
+      {
+        "role": "confirmatory_model_size_ceiling",
+        "path": "model_content_7b.json",
+        "schema_version": "vlm_fallback.model_content_manifest.v2",
+        "model_id": "Qwen/Qwen2.5-VL-7B-Instruct",
+        "revision": "cc594898137f460bfe9f0759e9844b3ce807cfb5",
+        "canonical_sha256": "9686327d73f5f373917d25577fc06244c69b132927af1c586fbcbc23f3301208"
+      }
+    ],
+    "surface_canonicalization": {
+      "path": "surface_canonicalization.json",
+      "canonical_sha256": "fdc8116af6f158253f44f4fda2ba3c6bc624b442addab2bcb97ae1c6077d5ce0"
+    },
+    "routing_case_inputs": {
+      "path": "routing_case_inputs.json",
+      "canonical_sha256": "05d7e2fc66a162bbeeebf2e2c08200f7e57d91005c18f6a9a37b08f883811cbf",
+      "case_count": 36
+    },
+    "digest_exclusions": [
+      "amendment_contract.json self digest",
+      "amendment root manifest",
+      "implementation source",
+      "test source",
+      "derived full effective experiment spec v2",
+      "append-only run log bytes after the frozen six-line prefix"
+    ]
+  },
+  "experiment_a": {
+    "arms": {
+      "A0_current_critic_3b": {
+        "check_domain": [
+          "object_presence",
+          "support_relation",
+          "penetration_or_floating",
+          "articulation_state",
+          "overall_prompt_match"
+        ],
+        "within_arm_only_checks": [
+          "support_relation",
+          "articulation_state"
+        ]
+      },
+      "A1_typed_abstaining_critic_3b": {
+        "check_domain": [
+          "object_presence",
+          "object_identity",
+          "object_count",
+          "orientation",
+          "table_contact",
+          "visible_penetration_or_floating",
+          "spatial_relation",
+          "overall_prompt_match"
+        ],
+        "within_arm_only_checks": [
+          "object_identity",
+          "object_count",
+          "orientation",
+          "table_contact",
+          "spatial_relation"
+        ],
+        "prompt_contract": "selected_A1_prompt_bytes_bound_by_authoritative_evaluation_closure",
+        "input_projection_contract": "sealed_case_input_projection_bound_by_authoritative_evaluation_closure",
+        "processor_identity_contract": "processor_identity_bound_by_authoritative_evaluation_closure",
+        "model_role": "primary_local_vlm",
+        "resource_profile": "primary_3b"
+      },
+      "A2_typed_abstaining_critic_7b": {
+        "check_domain": [
+          "object_presence",
+          "object_identity",
+          "object_count",
+          "orientation",
+          "table_contact",
+          "visible_penetration_or_floating",
+          "spatial_relation",
+          "overall_prompt_match"
+        ],
+        "within_arm_only_checks": [
+          "object_identity",
+          "object_count",
+          "orientation",
+          "table_contact",
+          "spatial_relation"
+        ],
+        "prompt_contract": "selected_A1_prompt_bytes_bound_by_authoritative_evaluation_closure",
+        "input_projection_contract": "sealed_case_input_projection_bound_by_authoritative_evaluation_closure",
+        "processor_identity_contract": "processor_identity_bound_by_authoritative_evaluation_closure",
+        "model_role": "confirmatory_model_size_ceiling",
+        "resource_profile": "confirmatory_7b"
+      }
+    },
+    "a2_inheritance": {
+      "base_arm": "A1_typed_abstaining_critic_3b",
+      "identical_fields": [
+        "check_domain",
+        "within_arm_only_checks",
+        "status_mapping",
+        "prompt_sha256",
+        "input_projection_sha256",
+        "processor_identity_sha256",
+        "sealed_case_roster_sha256",
+        "scorer_source_identity_sha256"
+      ],
+      "allowed_differences": [
+        "model_role",
+        "model_id",
+        "model_revision",
+        "model_content_manifest_sha256",
+        "model_roster_sha256",
+        "resource_reservation"
+      ],
+      "all_other_differences_forbidden": true
+    },
+    "cross_arm_comparison": {
+      "scope": "mapped_intersection_only",
+      "mapping": [
+        {
+          "A0": "object_presence",
+          "A1": "object_presence",
+          "A2": "object_presence"
+        },
+        {
+          "A0": "penetration_or_floating",
+          "A1": "visible_penetration_or_floating",
+          "A2": "visible_penetration_or_floating"
+        },
+        {
+          "A0": "overall_prompt_match",
+          "A1": "overall_prompt_match",
+          "A2": "overall_prompt_match"
+        }
+      ],
+      "paired_contrasts": [
+        "A1_minus_A0",
+        "A2_minus_A0",
+        "A2_minus_A1"
+      ],
+      "mapping_cardinality": 3,
+      "unmapped_policy": "arm_internal_reporting_only_never_impute",
+      "missing_mapped_value_policy": "mark_pair_not_comparable_never_impute"
+    },
+    "status_mapping": {
+      "A0_current_critic_3b": [
+        {"source": "pass", "target": "pass"},
+        {"source": "fail", "target": "fail"},
+        {"source": "warning", "target": "abstain"},
+        {"source": "not_applicable", "target": "not_applicable"}
+      ],
+      "A1_typed_abstaining_critic_3b": [
+        {"source": "pass", "target": "pass"},
+        {"source": "fail", "target": "fail"},
+        {"source": "abstain", "target": "abstain"},
+        {"source": "not_applicable", "target": "not_applicable"}
+      ],
+      "A2_typed_abstaining_critic_7b": [
+        {"source": "pass", "target": "pass"},
+        {"source": "fail", "target": "fail"},
+        {"source": "abstain", "target": "abstain"},
+        {"source": "not_applicable", "target": "not_applicable"}
+      ]
+    },
+    "schema_validity": {
+      "denominator": "sealed_test_terminal_response_roster_per_arm",
+      "sealed_test_case_count_per_arm": 14,
+      "arm_count": 3,
+      "required_terminal_row_count": 42,
+      "missing_or_failed_response_policy": "retain_terminal_row_and_count_schema_invalid",
+      "provider_call_accounting": "separate_from_terminal_response_denominator",
+      "base_valid_rate": {
+        "numerator": "base_response_schema_valid_count_before_any_format_repair",
+        "report_required": true,
+        "promotion_gate": false
+      },
+      "final_valid_rate": {
+        "numerator": "final_response_schema_valid_count_after_zero_or_one_format_only_repair",
+        "max_format_only_repairs_per_base_invocation": 1,
+        "report_required": true,
+        "promotion_gate": true
+      },
+      "repair_may_change_visible_facts": false,
+      "promotion_rate": "final_valid_rate"
+    },
+    "typed_correction_precision": {
+      "numerator": "blindly_adjudicated_correct_typed_correction_count",
+      "denominator": "blindly_adjudicated_typed_correction_prediction_count",
+      "arithmetic": "exact rational numerator/denominator; compare to Decimal threshold by integer cross-multiplication without rounded quotient authority",
+      "zero_denominator": {
+        "metric_value": null,
+        "promotion_gate": "fail"
+      }
+    },
+    "bootstrap": {
+      "method": "paired_group_cluster_percentile_bootstrap",
+      "resampling_unit": "group_id",
+      "resamples": 10000,
+      "seed": 20260831,
+      "confidence": "0.95",
+      "per_resample_computation": "for each paired contrast A1-A0, A2-A0, and A2-A1, resample group_id clusters with replacement, reconstruct both arms' raw mapped common-three-check rows, recompute both arm group-weighted failure macro-F1 values, then subtract the named baseline arm from the named candidate arm",
+      "forbidden_shortcut": "do not bootstrap or average precomputed scalar, case-level, or group-level metric deltas"
+    }
+  },
+  "experiment_b": {
+    "route_vocabulary": [
+      "accept_existing_compile",
+      "repair_visible_prompt",
+      "canonicalize_language_preserving_intent",
+      "reuse_asset",
+      "generate_asset_on_catalog_miss",
+      "repair_typed_placement_or_asset",
+      "replay_or_rematerialize_evidence",
+      "abstain_infeasible_geometry",
+      "abstain_unsupported_task_api",
+      "abstain_missing_capture_inputs",
+      "abstain_missing_multiview_and_geometry_inputs"
+    ],
+    "common_runner_owned_fields": [
+      "original_prompt",
+      "blinded_case_id",
+      "invocation_id",
+      "routing_instruction",
+      "prompt_template_version",
+      "seed",
+      "attempt",
+      "allowed_routes",
+      "resource_reservation"
+    ],
+    "forbidden_common_fields": [
+      "gold_route",
+      "gold_annotation",
+      "annotation_state",
+      "artifact_path",
+      "repository_path"
+    ],
+    "recursive_forbidden_projection_fields": [
+      "gold_route",
+      "gold_annotation",
+      "gold_label",
+      "oracle_route",
+      "expected_route",
+      "annotation_state",
+      "artifact_path",
+      "repository_path"
+    ],
+    "prompt_contracts": {
+      "B0_retry_unchanged": {
+        "prompt_template_version": null,
+        "routing_instruction_utf8": null,
+        "input_serialization_schema": {
+          "schema_version": "vlm_fallback.runner_owned_no_provider_control.v1",
+          "ordered_fields": [],
+          "field_contracts": {},
+          "additional_properties": false
+        },
+        "ordered_routes": [],
+        "output_schema_ref": null,
+        "decoding_parameters": null,
+        "provider_allowed": false
+      },
+      "B1_generic_prompt_repair": {
+        "prompt_template_version": "B1_generic_preserve_intent_v1",
+        "routing_instruction_utf8": "Preserve the original task intent. Using only the supplied untyped failure summary, choose exactly one route from allowed_routes and return one canonical JSON object matching the frozen output schema. Do not infer or expose gold labels.",
+        "input_serialization_schema": {
+          "schema_version": "vlm_fallback.B1_generic_routing_input.v1",
+          "ordered_fields": ["invocation_id","case_id","arm","original_prompt","routing_instruction","prompt_template_version","untyped_failure_summary","seed","attempt","allowed_routes","resource_reservation"],
+          "field_contracts": {
+            "invocation_id": "non-empty UTF-8 string; runner generated",
+            "case_id": "non-empty UTF-8 blinded case id; runner generated",
+            "arm": "literal B1_generic_prompt_repair",
+            "original_prompt": "non-empty UTF-8 string; exact frozen task_context",
+            "routing_instruction": "exact routing_instruction_utf8 from this prompt contract",
+            "prompt_template_version": "exact prompt_template_version from this prompt contract",
+            "untyped_failure_summary": "non-empty UTF-8 string; no typed or gold fields",
+            "seed": "non-negative JSON integer; boolean forbidden",
+            "attempt": "positive JSON integer; boolean forbidden",
+            "allowed_routes": "exact ordered_routes from this prompt contract",
+            "resource_reservation": "canonical JSON object of non-negative integer counters"
+          },
+          "additional_properties": false
+        },
+        "ordered_routes": [
+          "accept_existing_compile",
+          "repair_visible_prompt",
+          "canonicalize_language_preserving_intent",
+          "reuse_asset",
+          "generate_asset_on_catalog_miss",
+          "repair_typed_placement_or_asset",
+          "replay_or_rematerialize_evidence",
+          "abstain_infeasible_geometry",
+          "abstain_unsupported_task_api",
+          "abstain_missing_capture_inputs",
+          "abstain_missing_multiview_and_geometry_inputs"
+        ],
+        "output_schema_ref": "experiment_b.routing_output_schema",
+        "decoding_parameters": {
+          "do_sample": false,
+          "temperature": "0",
+          "top_p": "1",
+          "max_output_tokens": 512
+        },
+        "provider_allowed": false
+      },
+      "B2_typed_route_and_prompt_repair": {
+        "prompt_template_version": "B2_typed_trusted_context_v1",
+        "routing_instruction_utf8": "Choose exactly one frozen route from trusted typed context. Preserve the original task intent and return one canonical JSON object matching the frozen output schema. Do not infer or expose gold labels.",
+        "input_serialization_schema": {
+          "schema_version": "vlm_fallback.B2_typed_routing_input.v1",
+          "ordered_fields": ["invocation_id","case_id","arm","original_prompt","routing_instruction","prompt_template_version","typed_failure","trusted_state","asset_availability","visible_report","seed","attempt","allowed_routes","resource_reservation"],
+          "field_contracts": {
+            "invocation_id": "non-empty UTF-8 string; runner generated",
+            "case_id": "non-empty UTF-8 blinded case id; runner generated",
+            "arm": "literal B2_typed_route_and_prompt_repair",
+            "original_prompt": "non-empty UTF-8 string; exact frozen task_context",
+            "routing_instruction": "exact routing_instruction_utf8 from this prompt contract",
+            "prompt_template_version": "exact prompt_template_version from this prompt contract",
+            "typed_failure": "non-empty canonical JSON object; recursive gold fields forbidden",
+            "trusted_state": "canonical JSON object; recursive gold fields forbidden",
+            "asset_availability": "canonical JSON object; recursive gold fields forbidden",
+            "visible_report": "literal null in amendment 01",
+            "seed": "non-negative JSON integer; boolean forbidden",
+            "attempt": "positive JSON integer; boolean forbidden",
+            "allowed_routes": "exact ordered_routes from this prompt contract",
+            "resource_reservation": "canonical JSON object of non-negative integer counters"
+          },
+          "additional_properties": false
+        },
+        "ordered_routes": [
+          "accept_existing_compile",
+          "repair_visible_prompt",
+          "canonicalize_language_preserving_intent",
+          "reuse_asset",
+          "generate_asset_on_catalog_miss",
+          "repair_typed_placement_or_asset",
+          "replay_or_rematerialize_evidence",
+          "abstain_infeasible_geometry",
+          "abstain_unsupported_task_api",
+          "abstain_missing_capture_inputs",
+          "abstain_missing_multiview_and_geometry_inputs"
+        ],
+        "output_schema_ref": "experiment_b.routing_output_schema",
+        "decoding_parameters": {
+          "do_sample": false,
+          "temperature": "0",
+          "top_p": "1",
+          "max_output_tokens": 512
+        },
+        "provider_allowed": false
+      },
+      "B3_oracle_route_ceiling": {
+        "prompt_template_version": "B3_disjoint_oracle_ceiling_v1",
+        "routing_instruction_utf8": "Oracle ceiling only. Using the supplied gold_route and typed context, return that route and at most one intent-preserving revised prompt as one canonical JSON object matching the frozen output schema.",
+        "input_serialization_schema": {
+          "schema_version": "vlm_fallback.B3_oracle_routing_input.v1",
+          "ordered_fields": ["invocation_id","case_id","arm","original_prompt","routing_instruction","prompt_template_version","typed_failure","trusted_state","asset_availability","visible_report","gold_route","seed","attempt","allowed_routes","resource_reservation"],
+          "field_contracts": {
+            "invocation_id": "non-empty UTF-8 string; runner generated by disjoint oracle path",
+            "case_id": "non-empty UTF-8 blinded case id; runner generated",
+            "arm": "literal B3_oracle_route_ceiling",
+            "original_prompt": "non-empty UTF-8 string; exact frozen task_context",
+            "routing_instruction": "exact routing_instruction_utf8 from this prompt contract",
+            "prompt_template_version": "exact prompt_template_version from this prompt contract",
+            "typed_failure": "non-empty canonical JSON object",
+            "trusted_state": "canonical JSON object",
+            "asset_availability": "canonical JSON object",
+            "visible_report": "literal null in amendment 01",
+            "gold_route": "non-null enum from exact ordered_routes; oracle-only",
+            "seed": "non-negative JSON integer; boolean forbidden",
+            "attempt": "positive JSON integer; boolean forbidden",
+            "allowed_routes": "exact ordered_routes from this prompt contract",
+            "resource_reservation": "canonical JSON object of non-negative integer counters"
+          },
+          "additional_properties": false
+        },
+        "ordered_routes": [
+          "accept_existing_compile",
+          "repair_visible_prompt",
+          "canonicalize_language_preserving_intent",
+          "reuse_asset",
+          "generate_asset_on_catalog_miss",
+          "repair_typed_placement_or_asset",
+          "replay_or_rematerialize_evidence",
+          "abstain_infeasible_geometry",
+          "abstain_unsupported_task_api",
+          "abstain_missing_capture_inputs",
+          "abstain_missing_multiview_and_geometry_inputs"
+        ],
+        "output_schema_ref": "experiment_b.routing_output_schema",
+        "decoding_parameters": {
+          "do_sample": false,
+          "temperature": "0",
+          "top_p": "1",
+          "max_output_tokens": 512
+        },
+        "provider_allowed": false
+      }
+    },
+    "routing_output_schema": {
+      "schema_version": "vlm_fallback.sandboxed_routing_output.v1",
+      "top_level_type": "object",
+      "ordered_fields": ["route","revised_prompt","intent_before","intent_after"],
+      "field_contracts": {
+        "route": "non-null string enum from exact arm ordered_routes",
+        "revised_prompt": "UTF-8 string or null; at most one intent-preserving revision",
+        "intent_before": "non-null canonical typed-intent object with entity,count,color,relation,articulation,region",
+        "intent_after": "non-null canonical typed-intent object exactly equal to intent_before"
+      },
+      "additional_properties": false
+    },
+    "arm_projections": {
+      "B0_retry_unchanged": {
+        "failure_context_fields": ["failure_code"],
+        "visible_report_effective_value": null,
+        "execution_mode": "deterministic_unchanged_retry",
+        "gold_route_access": "forbidden",
+        "oracle_only": false,
+        "deployable": true,
+        "promotion_eligible": false
+      },
+      "B1_generic_prompt_repair": {
+        "failure_context_fields": ["untyped_failure_summary"],
+        "visible_report_effective_value": null,
+        "execution_mode": "provider_generic_preserve_intent_repair",
+        "gold_route_access": "forbidden",
+        "oracle_only": false,
+        "deployable": true,
+        "promotion_eligible": false
+      },
+      "B2_typed_route_and_prompt_repair": {
+        "failure_context_fields": [
+          "typed_failure",
+          "trusted_state",
+          "asset_availability",
+          "visible_report"
+        ],
+        "visible_report_effective_value": null,
+        "execution_mode": "provider_typed_route",
+        "gold_route_access": "forbidden",
+        "oracle_only": false,
+        "deployable": true,
+        "promotion_eligible": true
+      },
+      "B3_oracle_route_ceiling": {
+        "failure_context_fields": [
+          "typed_failure",
+          "trusted_state",
+          "asset_availability",
+          "visible_report",
+          "gold_route"
+        ],
+        "visible_report_effective_value": null,
+        "execution_mode": "disjoint_oracle_provider",
+        "gold_route_access": "oracle_only",
+        "oracle_only": true,
+        "deployable": false,
+        "promotion_eligible": false
+      }
+    },
+    "visible_report_unlock": {
+      "non_null_allowed_by_this_amendment": false,
+      "requires_future_amendment": true,
+      "requires_journal_bound_A1_evidence": true,
+      "B0_and_B1_exposure": "never",
+      "B2_and_B3_current_value": null
+    },
+    "routing_roster": {
+      "source": "routing_case_inputs.json",
+      "caller_supplied_cases_allowed": false,
+      "clean_control_count": 30,
+      "recoverable_baseline_failure_count": 0,
+      "unrecoverable_failure_count": 6,
+      "clean_control_B0_B1_B2_action": "runner_noop_accept_existing_compile_without_provider_or_retry",
+      "completion_denominator_class": "recoverable_baseline_failure",
+      "zero_completion_denominator": {
+        "metric_value": null,
+        "reason": "insufficient_recoverable_failure_groups",
+        "completion_superiority_claim_allowed": false,
+        "promotion_gate": "fail"
+      }
+    },
+    "repeatability_audit": {
+      "audit_id": "B2_repeatability_audit",
+      "source_roster": "routing_case_inputs.json",
+      "case_count": 6,
+      "audit_group_count": 4,
+      "repeat_indices": [1, 2, 3],
+      "same_typed_input_required": true,
+      "typed_input_digest_projection": [
+        "case_id",
+        "group_id",
+        "original_prompt",
+        "seed",
+        "routing_instruction=Choose exactly one frozen route from trusted typed context.",
+        "allowed_routes=frozen_route_vocabulary",
+        "failure.typed_failure",
+        "failure.trusted_state",
+        "failure.asset_availability",
+        "visible_report=null"
+      ],
+      "required_equal_outputs": ["route", "revised_prompt_sha256"],
+      "journal_event_schema": "vlm_fallback.B2_repeatability_journal_event.v1",
+      "journal_manifest_schema": "vlm_fallback.B2_repeatability_journal_manifest.v1",
+      "route_evaluation_budget": 18,
+      "compile_attempt_budget": 0,
+      "physical_replay_budget": 0,
+      "counts_against_regular_recovery_attempt_budget": false
+    }
+  },
+  "authoritative_evaluation_contract": {
+    "current_state": "not_bound_by_amendment_01",
+    "current_result_artifacts": [],
+    "current_promotion_authority": false,
+    "future_closure": {
+      "schema_version": "vlm_fallback.authoritative_evaluation_closure.v1",
+      "binding_direction": {
+        "result_closure_references_prior_inputs": true,
+        "prior_amendment_root_references_result_closure": false,
+        "journal_event_references_completed_result_closure": true,
+        "cycles_allowed": false
+      },
+      "reverse_bindings": {
+        "required_sha256_fields": [
+          "amendment_01_root_manifest_sha256",
+          "effective_experiment_spec_v2_sha256",
+          "amendment_01_contract_canonical_sha256",
+          "runner_source_manifest_v2_sha256",
+          "sealed_annotation_manifest_v3_sha256",
+          "provider_qualification_journal_manifest_sha256",
+          "selected_A1_prompt_selection_manifest_sha256"
+        ],
+        "model_content_manifest_sha256_by_role": [
+          "primary_local_vlm",
+          "confirmatory_model_size_ceiling"
+        ]
+      },
+      "visible_evaluation": {
+        "sealed_split": "test",
+        "case_roster_source": "full_effective_experiment_spec_v2.A_visible_semantic_correction.samples",
+        "case_count": 14,
+        "case_ids": [
+          "sceneagent_official_open_laptop",
+          "sceneagent_official_place_container_plate",
+          "sceneagent_official_place_mouse_pad",
+          "sceneagent_can_basket_heldout",
+          "openxsim_can_left_seed0",
+          "openxsim_can_left_seed17",
+          "openxsim_can_left_seed99",
+          "openxsim_can_left_representative",
+          "openxsim_can_left_600_300",
+          "openxsim_can_left_upright",
+          "usg_fixed_adversarial",
+          "usg_released_adversarial",
+          "usg_released_corrected_control",
+          "usg_fixed_vs_released_comparison"
+        ],
+        "case_binding_fields": [
+          "case_id",
+          "group_id",
+          "bundle_sha256",
+          "artifacts"
+        ],
+        "arms": [
+          "A0_current_critic_3b",
+          "A1_typed_abstaining_critic_3b",
+          "A2_typed_abstaining_critic_7b"
+        ],
+        "row_primary_key": ["arm", "case_id"],
+        "expected_terminal_row_count": 42,
+        "terminal_response_states": [
+          "success",
+          "missing_response",
+          "schema_invalid",
+          "provider_exception",
+          "provider_timeout",
+          "no_response"
+        ],
+        "invalid_terminal_states": [
+          "missing_response",
+          "schema_invalid",
+          "provider_exception",
+          "provider_timeout",
+          "no_response"
+        ],
+        "missing_primary_key_policy": "reject_authoritative_closure",
+        "per_arm_schema_validity_denominator": 14,
+        "provider_invocation_subset_denominator_allowed": false,
+        "provider_call_accounting": "separate_bound_event_roster_including_base_calls_and_format_only_repairs",
+        "row_requires_raw_journal_event_ref": true,
+        "exact_row_fields": [
+          "arm",
+          "case_id",
+          "group_id",
+          "bundle_sha256",
+          "artifacts",
+          "terminal_response_state",
+          "base_response_schema_valid",
+          "final_response_schema_valid",
+          "format_only_repair_count",
+          "raw_response_sha256",
+          "parsed_response_sha256",
+          "latency_ms",
+          "common_three_check_rows",
+          "within_arm_check_rows",
+          "typed_correction_predictions",
+          "physical_authority_violation_count",
+          "provider_invocation_event_sha256s",
+          "terminal_journal_event_sha256"
+        ],
+        "exact_row_schema": {
+          "additional_properties": false,
+          "field_contracts": {
+            "arm": "non-null enum A0_current_critic_3b|A1_typed_abstaining_critic_3b|A2_typed_abstaining_critic_7b",
+            "case_id": "non-null enum from exact case_ids",
+            "group_id": "non-empty UTF-8 string exactly equal to sealed spec case",
+            "bundle_sha256": "64 lowercase hex exactly equal to sealed spec case",
+            "artifacts": "non-empty ordered array of repository-relative UTF-8 paths exactly equal to sealed spec case",
+            "terminal_response_state": "non-null enum success|missing_response|schema_invalid|provider_exception|provider_timeout|no_response",
+            "base_response_schema_valid": "JSON boolean; false for every invalid_terminal_state",
+            "final_response_schema_valid": "JSON boolean; false for every invalid_terminal_state",
+            "format_only_repair_count": "JSON integer enum 0|1; boolean forbidden",
+            "raw_response_sha256": "64 lowercase hex or null when no response bytes exist",
+            "parsed_response_sha256": "64 lowercase hex or null unless final_response_schema_valid=true",
+            "latency_ms": "non-negative JSON integer; boolean forbidden; includes terminal failure latency",
+            "common_three_check_rows": "array of exact common_three_check_row objects; empty only when terminal response is invalid",
+            "within_arm_check_rows": "array of exact within_arm_check_row objects; empty only when terminal response is invalid",
+            "typed_correction_predictions": "array of exact typed_correction_prediction objects; empty allowed",
+            "physical_authority_violation_count": "non-negative JSON integer; boolean forbidden",
+            "provider_invocation_event_sha256s": "ordered array of unique 64-lowercase-hex event refs including base call and optional format repair; empty only for retained missing pre-call terminal row",
+            "terminal_journal_event_sha256": "non-null 64 lowercase hex raw terminal event ref"
+          },
+          "nested_schemas": {
+            "common_three_check_row": {
+              "ordered_fields": ["check_name","gold_status","predicted_status","scorable","abstained"],
+              "field_contracts": {
+                "check_name": "enum object_presence|penetration_or_floating|overall_prompt_match using frozen cross-arm mapping",
+                "gold_status": "enum pass|fail|not_applicable|insufficient_view",
+                "predicted_status": "enum pass|fail|abstain|not_applicable",
+                "scorable": "JSON boolean derived from gold_status",
+                "abstained": "JSON boolean exactly equal to predicted_status==abstain"
+              },
+              "additional_properties": false
+            },
+            "within_arm_check_row": {
+              "ordered_fields": ["check_name","gold_status","predicted_status","scorable","abstained"],
+              "field_contracts": {
+                "check_name": "non-null enum from the row arm within_arm_only_checks",
+                "gold_status": "enum pass|fail|not_applicable|insufficient_view",
+                "predicted_status": "enum pass|fail|abstain|not_applicable",
+                "scorable": "JSON boolean derived from gold_status",
+                "abstained": "JSON boolean exactly equal to predicted_status==abstain"
+              },
+              "additional_properties": false
+            },
+            "typed_correction_prediction": {
+              "ordered_fields": ["prediction_id","check_name","proposed_status","prediction_event_sha256","blind_adjudication_row_sha256"],
+              "field_contracts": {
+                "prediction_id": "non-empty UTF-8 string unique within arm and case",
+                "check_name": "non-null enum from the row arm check_domain",
+                "proposed_status": "enum pass|fail|abstain|not_applicable",
+                "prediction_event_sha256": "non-null 64 lowercase hex raw prediction event ref",
+                "blind_adjudication_row_sha256": "non-null 64 lowercase hex blind adjudication row ref"
+              },
+              "additional_properties": false
+            }
+          }
+        },
+        "A1_A2_identity_requirements": {
+          "selected_prompt_sha256_equal": true,
+          "case_input_projection_sha256_equal": true,
+          "processor_identity_sha256_equal": true,
+          "sealed_case_roster_sha256_equal": true,
+          "scorer_source_identity_sha256_equal": true,
+          "selection_manifest_schema": "vlm_fallback.A1_prompt_selection_manifest.v1",
+          "selection_manifest_must_be_journal_bound_before_test_unseal": true
+        }
+      },
+      "routing_evaluation": {
+        "case_roster_source": "routing_case_inputs.json",
+        "case_count": 36,
+        "class_counts": {
+          "clean_control": 30,
+          "recoverable_baseline_failure": 0,
+          "unrecoverable_failure": 6
+        },
+        "arms": [
+          "B0_retry_unchanged",
+          "B1_generic_prompt_repair",
+          "B2_typed_route_and_prompt_repair",
+          "B3_oracle_route_ceiling"
+        ],
+        "row_primary_key": ["arm", "case_id"],
+        "expected_terminal_row_count": 144,
+        "clean_control_no_provider_arms": [
+          "B0_retry_unchanged",
+          "B1_generic_prompt_repair",
+          "B2_typed_route_and_prompt_repair"
+        ],
+        "clean_control_action": "runner_noop_accept_existing_compile_without_provider_or_retry",
+        "B3_clean_control_policy": "disjoint_oracle_ceiling_result_never_promotion_eligible",
+        "future_manifest_required_sha256_bindings": [
+          "prompt_template_sha256_by_provider_arm",
+          "ordered_route_vocabulary_sha256",
+          "output_schema_sha256_by_provider_arm",
+          "decoding_parameters_sha256_by_provider_arm"
+        ],
+        "future_manifest_binding_derivations": {
+          "prompt_template_sha256_by_provider_arm": "canonical_sha256(experiment_b.prompt_contracts[arm].prompt_template_version and routing_instruction_utf8)",
+          "ordered_route_vocabulary_sha256": "canonical_sha256(experiment_b.route_vocabulary)",
+          "output_schema_sha256_by_provider_arm": "canonical_sha256(experiment_b.routing_output_schema) with each provider arm binding output_schema_ref=experiment_b.routing_output_schema",
+          "decoding_parameters_sha256_by_provider_arm": "canonical_sha256(experiment_b.prompt_contracts[arm].decoding_parameters)"
+        },
+        "row_requires_raw_journal_event_ref": true,
+        "exact_row_fields": [
+          "arm",
+          "case_id",
+          "group_id",
+          "baseline_class",
+          "bundle_sha256",
+          "artifacts",
+          "terminal_response_state",
+          "predicted_route",
+          "gold_route_ref_sha256",
+          "revised_prompt_sha256",
+          "compile_outcome_ref_sha256",
+          "physical_replay_outcome_ref_sha256",
+          "intent_preserved",
+          "unsafe_publication",
+          "provider_invocation_count",
+          "provider_invocation_event_sha256s",
+          "terminal_journal_event_sha256"
+        ],
+        "exact_row_schema": {
+          "additional_properties": false,
+          "field_contracts": {
+            "arm": "non-null enum B0_retry_unchanged|B1_generic_prompt_repair|B2_typed_route_and_prompt_repair|B3_oracle_route_ceiling",
+            "case_id": "non-null enum from exact routing_case_inputs.json roster",
+            "group_id": "non-empty UTF-8 string exactly equal to routing roster case",
+            "baseline_class": "enum clean_control|recoverable_baseline_failure|unrecoverable_failure exactly equal to routing roster case",
+            "bundle_sha256": "64 lowercase hex exactly equal to routing roster case",
+            "artifacts": "non-empty ordered array of repository-relative UTF-8 paths exactly equal to routing roster case",
+            "terminal_response_state": "non-null enum runner_noop_success|success|missing_response|schema_invalid|provider_exception|provider_timeout|no_response",
+            "predicted_route": "route vocabulary enum or null only for non-success terminal provider states",
+            "gold_route_ref_sha256": "non-null 64 lowercase hex ref to sealed gold row; gold value never copied into non-oracle provider input",
+            "revised_prompt_sha256": "64 lowercase hex or null when no revision is emitted",
+            "compile_outcome_ref_sha256": "64 lowercase hex or null when compile is not attempted",
+            "physical_replay_outcome_ref_sha256": "64 lowercase hex or null when replay is not attempted",
+            "intent_preserved": "JSON boolean derived by exact protected typed-intent equality",
+            "unsafe_publication": "JSON boolean derived from bound publication and physical-authority events",
+            "provider_invocation_count": "non-negative JSON integer; exactly 0 for B0 and B1/B2 clean controls",
+            "provider_invocation_event_sha256s": "ordered array of unique 64-lowercase-hex raw provider event refs; length equals provider_invocation_count",
+            "terminal_journal_event_sha256": "non-null 64 lowercase hex raw terminal event ref"
+          },
+          "nested_schemas": {},
+          "additional_properties_for_nested_values": "governed only by bound referenced event schemas; never caller aggregate objects"
+        }
+      },
+      "metric_authority": {
+        "caller_supplied_core_decimal_or_integer_authoritative": false,
+        "all_core_metrics_recomputed_from_bound_rows": true,
+        "required_source_identity_sha256_fields": [
+          "scorer_executable_sha256",
+          "scorer_source_manifest_sha256"
+        ],
+        "required_bootstrap_receipt_sha256_fields": [
+          "visible_pairwise_group_cluster_bootstrap_receipt_sha256",
+          "routing_group_cluster_bootstrap_receipt_sha256"
+        ],
+        "row_and_event_references_required": true
+      },
+      "gate_derivations": {
+        "A1_minus_A0_common_three_macro_f1_fail": {"source_rows":"visible_terminal_rows","source_fields":["arm","case_id","group_id","common_three_check_rows"],"recompute_function":"recompute_group_weighted_common_three_macro_f1_difference(A1,A0)"},
+        "A1_minus_A0_common_three_bootstrap_ci_lower": {"source_rows":"visible_terminal_rows","source_fields":["arm","case_id","group_id","common_three_check_rows"],"recompute_function":"recompute_paired_group_cluster_percentile_bootstrap_ci_lower(A1,A0,10000,20260831,0.95)"},
+        "A1_common_three_coverage": {"source_rows":"visible_terminal_rows","source_fields":["arm","case_id","common_three_check_rows"],"recompute_function":"recompute_common_three_coverage(A1)"},
+        "A1_unsafe_visible_pass_count": {"source_rows":"visible_terminal_rows","source_fields":["arm","case_id","common_three_check_rows","physical_authority_violation_count"],"recompute_function":"count_unsafe_visible_passes(A1)"},
+        "A1_final_schema_valid_rate": {"source_rows":"visible_terminal_rows","source_fields":["arm","case_id","terminal_response_state","final_response_schema_valid"],"recompute_function":"count_final_schema_valid_rows(A1)/14"},
+        "A1_typed_correction_precision": {"source_rows":"visible_terminal_rows_and_blind_adjudication_rows","source_fields":["arm","case_id","typed_correction_predictions","adjudicated_correct"],"recompute_function":"exact_blind_adjudicated_correct_count/exact_prediction_count"},
+        "A1_physical_authority_violation_count": {"source_rows":"visible_terminal_rows","source_fields":["arm","case_id","physical_authority_violation_count"],"recompute_function":"sum_physical_authority_violations(A1)"},
+        "A2_minus_A0_common_three_macro_f1_fail": {"source_rows":"visible_terminal_rows","source_fields":["arm","case_id","group_id","common_three_check_rows"],"recompute_function":"recompute_group_weighted_common_three_macro_f1_difference(A2,A0)"},
+        "A2_minus_A0_common_three_bootstrap_ci_lower": {"source_rows":"visible_terminal_rows","source_fields":["arm","case_id","group_id","common_three_check_rows"],"recompute_function":"recompute_paired_group_cluster_percentile_bootstrap_ci_lower(A2,A0,10000,20260831,0.95)"},
+        "A2_common_three_coverage": {"source_rows":"visible_terminal_rows","source_fields":["arm","case_id","common_three_check_rows"],"recompute_function":"recompute_common_three_coverage(A2)"},
+        "A2_unsafe_visible_pass_count": {"source_rows":"visible_terminal_rows","source_fields":["arm","case_id","common_three_check_rows","physical_authority_violation_count"],"recompute_function":"count_unsafe_visible_passes(A2)"},
+        "A2_final_schema_valid_rate": {"source_rows":"visible_terminal_rows","source_fields":["arm","case_id","terminal_response_state","final_response_schema_valid"],"recompute_function":"count_final_schema_valid_rows(A2)/14"},
+        "A2_typed_correction_precision": {"source_rows":"visible_terminal_rows_and_blind_adjudication_rows","source_fields":["arm","case_id","typed_correction_predictions","adjudicated_correct"],"recompute_function":"exact_blind_adjudicated_correct_count/exact_prediction_count"},
+        "A2_physical_authority_violation_count": {"source_rows":"visible_terminal_rows","source_fields":["arm","case_id","physical_authority_violation_count"],"recompute_function":"sum_physical_authority_violations(A2)"},
+        "A2_minus_A1_common_three_macro_f1_fail": {"source_rows":"visible_terminal_rows","source_fields":["arm","case_id","group_id","common_three_check_rows"],"recompute_function":"recompute_group_weighted_common_three_macro_f1_difference(A2,A1)"},
+        "A2_mean_latency_ratio_over_A1": {"source_rows":"visible_terminal_rows","source_fields":["arm","case_id","latency_ms"],"recompute_function":"exact_mean_latency(A2)/exact_mean_latency(A1)"},
+        "B2_minus_B1_group_weighted_exact_route_accuracy": {"source_rows":"routing_terminal_rows","source_fields":["arm","case_id","group_id","predicted_route","gold_route_ref_sha256"],"recompute_function":"recompute_group_weighted_exact_route_accuracy_difference(B2,B1)"},
+        "B2_vs_B1_exact_mcnemar_p": {"source_rows":"routing_terminal_rows","source_fields":["arm","case_id","predicted_route","gold_route_ref_sha256"],"recompute_function":"recompute_exact_paired_mcnemar_p(B2,B1)"},
+        "independent_recoverable_failure_groups": {"source_rows":"routing_terminal_rows","source_fields":["case_id","group_id","baseline_class"],"recompute_function":"count_distinct_group_id_where_baseline_class_is_recoverable_failure"},
+        "conditional_B2_minus_B1_robust_completion": {"source_rows":"routing_terminal_rows","source_fields":["arm","case_id","group_id","baseline_class","compile_outcome_ref_sha256","physical_replay_outcome_ref_sha256"],"recompute_function":"recompute_group_weighted_robust_completion_difference(B2,B1)"},
+        "conditional_B2_minus_B1_completion_bootstrap_ci_lower": {"source_rows":"routing_terminal_rows","source_fields":["arm","case_id","group_id","baseline_class","compile_outcome_ref_sha256","physical_replay_outcome_ref_sha256"],"recompute_function":"recompute_routing_group_cluster_percentile_bootstrap_ci_lower(B2,B1)"},
+        "B2_clean_control_non_regression_rate": {"source_rows":"routing_terminal_rows","source_fields":["arm","case_id","baseline_class","predicted_route","provider_invocation_count"],"recompute_function":"count_clean_control_noop_accepts_without_provider(B2)/30"},
+        "B2_safe_abstention_on_unrecoverable_rate": {"source_rows":"routing_terminal_rows","source_fields":["arm","case_id","baseline_class","predicted_route"],"recompute_function":"count_safe_abstentions_on_unrecoverable(B2)/6"},
+        "B2_intent_preservation_rate": {"source_rows":"routing_terminal_rows","source_fields":["arm","case_id","intent_preserved"],"recompute_function":"count_intent_preserved(B2)/36"},
+        "B2_unsafe_publication_count": {"source_rows":"routing_terminal_rows","source_fields":["arm","case_id","unsafe_publication"],"recompute_function":"count_unsafe_publications(B2)"},
+        "B2_repeatability_cases_3_of_3": {"source_rows":"repeatability_journal_rows","source_fields":["case_id","repeat_index","typed_input_sha256","predicted_route","revised_prompt_sha256"],"recompute_function":"count_cases_with_three_identical_bound_outputs"},
+        "B2_repeatability_required_cases": {"source_rows":"routing_case_roster","source_fields":["case_id","baseline_class","repeatability_audit_group_id"],"recompute_function":"count_frozen_repeatability_cases"},
+        "B2_physical_authority_violation_count": {"source_rows":"routing_terminal_rows","source_fields":["arm","case_id","physical_replay_outcome_ref_sha256","unsafe_publication"],"recompute_function":"count_physical_authority_violations(B2)"}
+      }
+    }
+  },
+  "canonicalization_contract": {
+    "surface_table": "surface_canonicalization.json",
+    "supported_languages": ["en", "zh-Hans"],
+    "protected_dimensions": [
+      "entity",
+      "count",
+      "color",
+      "relation",
+      "articulation",
+      "region"
+    ],
+    "allowed_rewrite": "registered surface substitution with exact typed-intent preservation",
+    "comparison": "canonical JSON equality of trusted typed projections for every protected dimension",
+    "preserve_multiplicity_and_roles": true,
+    "deletion_allowed": false,
+    "insertion_allowed": false,
+    "unknown_surface_policy": "abstain_unsupported_language_surface"
+  },
+  "promotion_contract": {
+    "numeric_semantics": {
+      "decimal": {
+        "json_type": "string",
+        "parser": "decimal.Decimal",
+        "grammar": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+        "finite_only": true,
+        "binary_float_conversion_allowed": false
+      },
+      "integer": {
+        "json_type": "integer",
+        "booleans_allowed": false,
+        "minimum": 0
+      },
+      "comparison": "Decimal thresholds and integer metrics are exact; ratio gates use exact rational comparison and no rounded quotient controls a gate"
+    },
+    "evidence_binding_validation": {
+      "digest_algorithm": "sha256",
+      "bound_documents_field": "bound_evidence_documents",
+      "digest_only_claims_allowed": false,
+      "extra_bound_documents_allowed": false,
+      "provider_qualification_event_schema": "vlm_fallback.provider_qualification_journal_event.v1",
+      "blind_adjudication_manifest_schema": "vlm_fallback.blind_typed_correction_adjudication_manifest.v1",
+      "blind_adjudication_roster_schema": "vlm_fallback.blind_typed_correction_adjudication_roster.v1",
+      "repeatability_event_schema": "vlm_fallback.B2_repeatability_journal_event.v1",
+      "repeatability_journal_manifest_schema": "vlm_fallback.B2_repeatability_journal_manifest.v1",
+      "current_authority": "content_integrity_only; execution and production evidence authority remain forbidden until a later amendment and root-bound journal qualify them"
+    },
+    "candidates": {
+      "A1_typed_abstaining_critic_3b": {
+        "all_gates_required": true,
+        "gates": [
+          {"gate_type":"threshold","metric":"A1_minus_A0_common_three_macro_f1_fail","value_type":"decimal","operator":"gte","threshold":"0.10"},
+          {"gate_type":"threshold","metric":"A1_minus_A0_common_three_bootstrap_ci_lower","value_type":"decimal","operator":"gt","threshold":"0"},
+          {"gate_type":"threshold","metric":"A1_common_three_coverage","value_type":"decimal","operator":"gte","threshold":"0.80"},
+          {"gate_type":"threshold","metric":"A1_unsafe_visible_pass_count","value_type":"integer","operator":"eq","threshold":0},
+          {"gate_type":"threshold","metric":"A1_final_schema_valid_rate","value_type":"decimal","operator":"gte","threshold":"0.98"},
+          {"gate_type":"ratio","metric":"A1_typed_correction_precision","numerator_metric":"A1_typed_correction_correct_count","denominator_metric":"A1_typed_correction_prediction_count","value_type":"decimal","operator":"gte","threshold":"0.80","zero_denominator":"fail_promotion_with_null_metric"},
+          {"gate_type":"threshold","metric":"A1_physical_authority_violation_count","value_type":"integer","operator":"eq","threshold":0}
+        ],
+        "required_disclosures": [
+          "A1_base_schema_valid_rate",
+          "A1_final_schema_valid_rate",
+          "A1_typed_correction_correct_count",
+          "A1_typed_correction_prediction_count"
+        ],
+        "required_evidence_bindings": [
+          "A1_typed_correction_blind_adjudication_manifest_sha256",
+          "A1_typed_correction_adjudication_roster_sha256"
+        ]
+      },
+      "A2_typed_abstaining_critic_7b": {
+        "all_gates_required": true,
+        "gates": [
+          {"gate_type":"threshold","metric":"A2_minus_A0_common_three_macro_f1_fail","value_type":"decimal","operator":"gte","threshold":"0.10"},
+          {"gate_type":"threshold","metric":"A2_minus_A0_common_three_bootstrap_ci_lower","value_type":"decimal","operator":"gt","threshold":"0"},
+          {"gate_type":"threshold","metric":"A2_common_three_coverage","value_type":"decimal","operator":"gte","threshold":"0.80"},
+          {"gate_type":"threshold","metric":"A2_unsafe_visible_pass_count","value_type":"integer","operator":"eq","threshold":0},
+          {"gate_type":"threshold","metric":"A2_final_schema_valid_rate","value_type":"decimal","operator":"gte","threshold":"0.98"},
+          {"gate_type":"ratio","metric":"A2_typed_correction_precision","numerator_metric":"A2_typed_correction_correct_count","denominator_metric":"A2_typed_correction_prediction_count","value_type":"decimal","operator":"gte","threshold":"0.80","zero_denominator":"fail_promotion_with_null_metric"},
+          {"gate_type":"threshold","metric":"A2_physical_authority_violation_count","value_type":"integer","operator":"eq","threshold":0},
+          {"gate_type":"threshold","metric":"A2_minus_A1_common_three_macro_f1_fail","value_type":"decimal","operator":"gte","threshold":"0.05"},
+          {"gate_type":"threshold","metric":"A2_mean_latency_ratio_over_A1","value_type":"decimal","operator":"lte","threshold":"2.00"}
+        ],
+        "required_disclosures": [
+          "A2_base_schema_valid_rate",
+          "A2_final_schema_valid_rate",
+          "A2_typed_correction_correct_count",
+          "A2_typed_correction_prediction_count"
+        ],
+        "required_evidence_bindings": [
+          "A2_typed_correction_blind_adjudication_manifest_sha256",
+          "A2_typed_correction_adjudication_roster_sha256"
+        ]
+      },
+      "B2_typed_route_and_prompt_repair": {
+        "all_gates_required": true,
+        "gates": [
+          {"gate_type":"threshold","metric":"B2_minus_B1_group_weighted_exact_route_accuracy","value_type":"decimal","operator":"gte","threshold":"0.15"},
+          {"gate_type":"threshold","metric":"B2_vs_B1_exact_mcnemar_p","value_type":"decimal","operator":"lt","threshold":"0.05"},
+          {"gate_type":"threshold","metric":"independent_recoverable_failure_groups","value_type":"integer","operator":"gte","threshold":8},
+          {"gate_type":"conditional_threshold","metric":"conditional_B2_minus_B1_robust_completion","value_type":"decimal","operator":"gte","threshold":"0.10","condition_metric":"independent_recoverable_failure_groups","condition_value_type":"integer","condition_operator":"gte","condition_threshold":8,"condition_false":"fail_promotion_and_forbid_superiority_claim"},
+          {"gate_type":"conditional_threshold","metric":"conditional_B2_minus_B1_completion_bootstrap_ci_lower","value_type":"decimal","operator":"gt","threshold":"0","condition_metric":"independent_recoverable_failure_groups","condition_value_type":"integer","condition_operator":"gte","condition_threshold":8,"condition_false":"fail_promotion_and_forbid_superiority_claim"},
+          {"gate_type":"threshold","metric":"B2_clean_control_non_regression_rate","value_type":"decimal","operator":"eq","threshold":"1.0"},
+          {"gate_type":"threshold","metric":"B2_safe_abstention_on_unrecoverable_rate","value_type":"decimal","operator":"eq","threshold":"1.0"},
+          {"gate_type":"threshold","metric":"B2_intent_preservation_rate","value_type":"decimal","operator":"eq","threshold":"1.0"},
+          {"gate_type":"threshold","metric":"B2_unsafe_publication_count","value_type":"integer","operator":"eq","threshold":0},
+          {"gate_type":"threshold","metric":"B2_repeatability_cases_3_of_3","value_type":"integer","operator":"eq","threshold":6},
+          {"gate_type":"threshold","metric":"B2_repeatability_required_cases","value_type":"integer","operator":"eq","threshold":6},
+          {"gate_type":"threshold","metric":"B2_physical_authority_violation_count","value_type":"integer","operator":"eq","threshold":0}
+        ],
+        "derived_evidence": {
+          "B2_repeatability_cases_3_of_3": "derive from journal-bound repeat_index 1..3 route and revised_prompt_sha256 receipts for every six-case routing roster entry",
+          "caller_supplied_repeatability_aggregate_allowed": false,
+          "journal_bound_receipts_required": true,
+          "typed_input_bound_to_frozen_roster": true
+        },
+        "current_preregistered_outcome": "promotion_impossible_until_a_future_amendment_adds_at_least_eight_independent_recoverable_baseline_failure_groups"
+      }
+    },
+    "excluded_arms": {
+      "B0_retry_unchanged": "baseline_only",
+      "B1_generic_prompt_repair": "baseline_only",
+      "B3_oracle_route_ceiling": "oracle_only_never_deployable_or_promotion_eligible"
+    },
+    "production_evidence": {
+      "injected_test_provider_counts_as_production": false,
+      "self_reported_ProviderIdentity_production_eligible_is_sufficient": false,
+      "journal_bound_qualified_provider_identity_required": true
+    }
+  },
+  "execution_gate": {
+    "annotation_manifest": "pending_annotation_manifest.v3.json",
+    "current_annotation_state": "pending_blinded_annotation",
+    "production_provider_state": "not_yet_qualified",
+    "provider_execution_allowed_now": false,
+    "execution_authorized": false,
+    "provider_or_inference_operations": [
+      "visible_provider_call",
+      "routing_provider_call",
+      "oracle_provider_call",
+      "format_repair_provider_call",
+      "model_inference"
+    ],
+    "pending_annotation_policy": "forbid_every_provider_and_inference_operation",
+    "self_reported_provider_identity_is_authority": false,
+    "future_unlock_requires": [
+      "sealed amendment-local annotation manifest v3",
+      "later amendment binding exact visible provider adapter or executable and processor identity",
+      "later amendment binding exact routing sandbox provider identity",
+      "journal event binding those identities to the qualified model content manifests",
+      "later amendment root-binding an exact experiment B prompt contract manifest derived from amendment 01",
+      "later amendment binding a complete authoritative evaluation closure conforming to amendment 01 and a journal event binding the completed result closure"
+    ],
+    "test_provider_may_supply_production_evidence": false,
+    "unknown_state_policy": "fail_closed"
+  },
+  "integration_contract": {
+    "full_effective_spec_v2_required": true,
+    "overlay_spec_allowed": false,
+    "v2_must_preserve_all_v1_cases_and_artifact_bindings": true,
+    "v2_must_bind_model_content_surface_and_routing_manifests": true,
+    "v2_must_include_all_amended_A_B_execution_and_promotion_semantics": true,
+    "this_contract_binds_spec_v2_digest": false,
+    "reason_spec_v2_not_bound": "the current amendment root manifest binds the full effective spec v2 without creating a digest cycle"
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "schema_version": "vlm_fallback.routing_case_inputs.v1",
+  "study_id": "vlm-fallback-prompt-optimization-2026-08-31",
+  "base_spec_sha256": "ad19d38204f20c42d8070785994fe749b8db41364e002e382e938cb92ae5bf6c",
+  "counts": {
+    "total": 36,
+    "clean_control": 30,
+    "recoverable_baseline_failure": 0,
+    "unrecoverable_failure": 6,
+    "analysis_groups": 13,
+    "repeatability_audit_cases": 6,
+    "repeatability_audit_groups": 4,
+    "repeatability_route_evaluations": 18
+  },
+  "class_contract": {
+    "clean_control": {
+      "failure_must_be_null": true,
+      "deployable_arm_action": "runner_noop_accept_existing_compile",
+      "provider_call_allowed": false,
+      "retry_allowed": false,
+      "counts_as_recoverable_baseline_failure": false
+    },
+    "recoverable_baseline_failure": {
+      "failure_must_be_non_null": true,
+      "deployable_arm_action": "matched_route_then_optional_recovery",
+      "provider_call_allowed_after_execution_unlock": true,
+      "counts_in_completion_denominator": true
+    },
+    "unrecoverable_failure": {
+      "failure_must_be_non_null": true,
+      "deployable_arm_action": "exact_typed_noncompletion",
+      "provider_call_allowed_after_execution_unlock": true,
+      "counts_in_completion_denominator": false
+    }
+  },
+  "repeatability_audit": {
+    "audit_id": "B2_repeatability_audit",
+    "arms": ["B2_typed_route_and_prompt_repair"],
+    "case_selection": "all six frozen non-control cases",
+    "case_count": 6,
+    "audit_group_count": 4,
+    "repeat_indices": [1, 2, 3],
+    "same_typed_input_required": true,
+    "typed_input_digest_projection": [
+      "case_id",
+      "group_id",
+      "original_prompt",
+      "seed",
+      "routing_instruction=Choose exactly one frozen route from trusted typed context.",
+      "allowed_routes=frozen_route_vocabulary",
+      "failure.typed_failure",
+      "failure.trusted_state",
+      "failure.asset_availability",
+      "visible_report=null"
+    ],
+    "required_equal_outputs": ["route", "revised_prompt_sha256"],
+    "journal_event_schema": "vlm_fallback.B2_repeatability_journal_event.v1",
+    "journal_manifest_schema": "vlm_fallback.B2_repeatability_journal_manifest.v1",
+    "route_evaluation_budget": 18,
+    "compile_attempt_budget": 0,
+    "physical_replay_budget": 0,
+    "counts_against_regular_recovery_attempt_budget": false,
+    "provider_execution_requires_global_unlock": true
+  },
+  "cases": [
+    {"case_id":"prompt_matrix:red_block_on_plate:seed_7","split":"train","group_id":"prompt:red_block_on_plate","seed":7,"original_prompt":"Place a red block on top of a plate.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:red_block_on_plate:seed_31","split":"train","group_id":"prompt:red_block_on_plate","seed":31,"original_prompt":"Place a red block on top of a plate.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:red_block_on_plate:seed_73","split":"train","group_id":"prompt:red_block_on_plate","seed":73,"original_prompt":"Place a red block on top of a plate.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:can_on_plate:seed_7","split":"train","group_id":"prompt:can_on_plate","seed":7,"original_prompt":"Place a can on top of a plate.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:can_on_plate:seed_31","split":"train","group_id":"prompt:can_on_plate","seed":31,"original_prompt":"Place a can on top of a plate.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:can_on_plate:seed_73","split":"train","group_id":"prompt:can_on_plate","seed":73,"original_prompt":"Place a can on top of a plate.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:apple_in_basket:seed_7","split":"train","group_id":"prompt:apple_in_basket","seed":7,"original_prompt":"Put an apple inside a basket.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:apple_in_basket:seed_31","split":"train","group_id":"prompt:apple_in_basket","seed":31,"original_prompt":"Put an apple inside a basket.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:apple_in_basket:seed_73","split":"train","group_id":"prompt:apple_in_basket","seed":73,"original_prompt":"Put an apple inside a basket.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:cup_in_basket:seed_7","split":"train","group_id":"prompt:cup_in_basket","seed":7,"original_prompt":"Put a cup inside a basket.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:cup_in_basket:seed_31","split":"train","group_id":"prompt:cup_in_basket","seed":31,"original_prompt":"Put a cup inside a basket.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:cup_in_basket:seed_73","split":"train","group_id":"prompt:cup_in_basket","seed":73,"original_prompt":"Put a cup inside a basket.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:red_can_left_of_basket:seed_7","split":"dev","group_id":"prompt:red_can_left_of_basket","seed":7,"original_prompt":"Place a red can to the left of a plastic basket near the center.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:red_can_left_of_basket:seed_31","split":"dev","group_id":"prompt:red_can_left_of_basket","seed":31,"original_prompt":"Place a red can to the left of a plastic basket near the center.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:red_can_left_of_basket:seed_73","split":"dev","group_id":"prompt:red_can_left_of_basket","seed":73,"original_prompt":"Place a red can to the left of a plastic basket near the center.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:blue_cup_front_of_block:seed_7","split":"dev","group_id":"prompt:blue_cup_front_of_block","seed":7,"original_prompt":"A blue cup is in front of a wooden block and both objects are near each other.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:blue_cup_front_of_block:seed_31","split":"dev","group_id":"prompt:blue_cup_front_of_block","seed":31,"original_prompt":"A blue cup is in front of a wooden block and both objects are near each other.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:blue_cup_front_of_block:seed_73","split":"dev","group_id":"prompt:blue_cup_front_of_block","seed":73,"original_prompt":"A blue cup is in front of a wooden block and both objects are near each other.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:apple_right_of_plate:seed_7","split":"dev","group_id":"prompt:apple_right_of_plate","seed":7,"original_prompt":"Put an apple to the right of a ceramic plate.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:apple_right_of_plate:seed_31","split":"dev","group_id":"prompt:apple_right_of_plate","seed":31,"original_prompt":"Put an apple to the right of a ceramic plate.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:apple_right_of_plate:seed_73","split":"dev","group_id":"prompt:apple_right_of_plate","seed":73,"original_prompt":"Put an apple to the right of a ceramic plate.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:infeasible_apple_plate_back_region:seed_7","split":"test","group_id":"prompt:infeasible_apple_plate_back_region","seed":7,"original_prompt":"Put an apple to the right of a ceramic plate in the back region.","baseline_class":"unrecoverable_failure","failure":{"failure_code":"SCENE_SOLVE_ERROR","untyped_failure_summary":"The bounded scene solver exhausted without satisfying the requested right-of and back-region constraints.","typed_failure":{"failure_type":"infeasible_geometry","stage":"scene_solver","reason":"bounded_solver_exhausted","requested_constraints":["right_of","back_region"],"recoverable":false},"trusted_state":{"compile_status":"expected_rejection","runtime_status":"not_requested","authoritative_error_type":"SceneSolveError"},"asset_availability":{"relevant":false,"catalog_status":"not_evaluated"}},"gold_route":"abstain_infeasible_geometry","repeatability_audit_group_id":"repeatability:infeasible_geometry"},
+    {"case_id":"prompt_matrix:infeasible_apple_plate_back_region:seed_31","split":"test","group_id":"prompt:infeasible_apple_plate_back_region","seed":31,"original_prompt":"Put an apple to the right of a ceramic plate in the back region.","baseline_class":"unrecoverable_failure","failure":{"failure_code":"SCENE_SOLVE_ERROR","untyped_failure_summary":"The bounded scene solver exhausted without satisfying the requested right-of and back-region constraints.","typed_failure":{"failure_type":"infeasible_geometry","stage":"scene_solver","reason":"bounded_solver_exhausted","requested_constraints":["right_of","back_region"],"recoverable":false},"trusted_state":{"compile_status":"expected_rejection","runtime_status":"not_requested","authoritative_error_type":"SceneSolveError"},"asset_availability":{"relevant":false,"catalog_status":"not_evaluated"}},"gold_route":"abstain_infeasible_geometry","repeatability_audit_group_id":"repeatability:infeasible_geometry"},
+    {"case_id":"prompt_matrix:infeasible_apple_plate_back_region:seed_73","split":"test","group_id":"prompt:infeasible_apple_plate_back_region","seed":73,"original_prompt":"Put an apple to the right of a ceramic plate in the back region.","baseline_class":"unrecoverable_failure","failure":{"failure_code":"SCENE_SOLVE_ERROR","untyped_failure_summary":"The bounded scene solver exhausted without satisfying the requested right-of and back-region constraints.","typed_failure":{"failure_type":"infeasible_geometry","stage":"scene_solver","reason":"bounded_solver_exhausted","requested_constraints":["right_of","back_region"],"recoverable":false},"trusted_state":{"compile_status":"expected_rejection","runtime_status":"not_requested","authoritative_error_type":"SceneSolveError"},"asset_availability":{"relevant":false,"catalog_status":"not_evaluated"}},"gold_route":"abstain_infeasible_geometry","repeatability_audit_group_id":"repeatability:infeasible_geometry"},
+    {"case_id":"prompt_matrix:half_open_cabinet:seed_7","split":"test","group_id":"prompt:half_open_cabinet","seed":7,"original_prompt":"Place a half-open cabinet on the table.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:half_open_cabinet:seed_31","split":"test","group_id":"prompt:half_open_cabinet","seed":31,"original_prompt":"Place a half-open cabinet on the table.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:half_open_cabinet:seed_73","split":"test","group_id":"prompt:half_open_cabinet","seed":73,"original_prompt":"Place a half-open cabinet on the table.","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:zh_red_block_on_plate:seed_7","split":"test","group_id":"prompt:zh_red_block_on_plate","seed":7,"original_prompt":"把红色方块叠在盘子上。","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:zh_red_block_on_plate:seed_31","split":"test","group_id":"prompt:zh_red_block_on_plate","seed":31,"original_prompt":"把红色方块叠在盘子上。","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:zh_red_block_on_plate:seed_73","split":"test","group_id":"prompt:zh_red_block_on_plate","seed":73,"original_prompt":"把红色方块叠在盘子上。","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:zh_apple_in_basket:seed_7","split":"test","group_id":"prompt:zh_apple_in_basket","seed":7,"original_prompt":"把苹果放进篮子里。","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:zh_apple_in_basket:seed_31","split":"test","group_id":"prompt:zh_apple_in_basket","seed":31,"original_prompt":"把苹果放进篮子里。","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"prompt_matrix:zh_apple_in_basket:seed_73","split":"test","group_id":"prompt:zh_apple_in_basket","seed":73,"original_prompt":"把苹果放进篮子里。","baseline_class":"clean_control","failure":null,"gold_route":"accept_existing_compile","repeatability_audit_group_id":null},
+    {"case_id":"selection2env_drawer_mug_task_api_blocker","split":"dev","group_id":"fallback:drawer_mug","seed":null,"original_prompt":"Open the drawer and place the mug inside.","baseline_class":"unrecoverable_failure","failure":{"failure_code":"ARTICULATED_CONTAINER_TASK_API_UNSUPPORTED","untyped_failure_summary":"The drawer-opening and interior-placement task interface is not verified for the available cabinet and mug assets.","typed_failure":{"failure_type":"unsupported_task_api","stage":"task_adapter","missing_capabilities":["drawer_open","interior_placement_verifier","executable_task_program"],"recoverable":false},"trusted_state":{"selection_status":"unsupported_blocker","task_api_verified":false,"selected_asset_count":0},"asset_availability":{"drawer_candidate_available":true,"mug_available":true,"executable_pair_available":false}},"gold_route":"abstain_unsupported_task_api","repeatability_audit_group_id":"repeatability:unsupported_task_api"},
+    {"case_id":"forge_drawer_mug_missing_capture","split":"test","group_id":"fallback:drawer_mug","seed":null,"original_prompt":"Open the drawer and place the mug inside using generate-on-miss only when source capture exists.","baseline_class":"unrecoverable_failure","failure":{"failure_code":"FORGE_CAPTURE_SOURCE_MISSING","untyped_failure_summary":"No reference video, RGB-D capture, masks, or object-prompt package is available for drawer and mug generation.","typed_failure":{"failure_type":"missing_capture_inputs","stage":"asset_generation","missing_inputs":["reference_video_or_rgbd","object_prompts","segmentation_masks"],"recoverable":false},"trusted_state":{"fallback_status":"blocked_missing_inputs","capture_source_present":false,"forge_artifact_present":false},"asset_availability":{"catalog_gap":["drawer","mug"],"generated_asset_available":false}},"gold_route":"abstain_missing_capture_inputs","repeatability_audit_group_id":"repeatability:missing_capture_inputs"},
+    {"case_id":"neumatex_missing_material_inputs","split":"test","group_id":"fallback:material_sidecar","seed":null,"original_prompt":"Generate and validate a material sidecar only when accepted geometry and calibrated multiview inputs exist.","baseline_class":"unrecoverable_failure","failure":{"failure_code":"MATERIAL_MULTIVIEW_INPUT_MISSING","untyped_failure_summary":"No accepted geometry or calibrated multi-view input is available for material-sidecar extraction.","typed_failure":{"failure_type":"missing_multiview_and_geometry_inputs","stage":"material_generation","missing_inputs":["accepted_geometry","calibrated_multiview_images"],"recoverable":false},"trusted_state":{"fallback_status":"blocked_missing_inputs","accepted_geometry_present":false,"calibrated_multiview_present":false},"asset_availability":{"candidate_asset_status":"pending_material_review","accepted_geometry_available":false}},"gold_route":"abstain_missing_multiview_and_geometry_inputs","repeatability_audit_group_id":"repeatability:missing_multiview_and_geometry_inputs"}
+  ]
+}
