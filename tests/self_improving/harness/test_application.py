@@ -14,11 +14,18 @@ import self_improving.harness.application as application_module
 from scene_gen.catalog import AssetCatalog
 from self_improving.harness.application import (
     CompileApplicationConfigurationError,
+    CompileApplicationInputError,
     CompileApplicationSettings,
     ExternalCatalogError,
     create_compile_application,
 )
-from self_improving.harness.schemas import RunStatus, Text2EnvCompileOutput
+from self_improving.harness.schemas import (
+    ArtifactRef,
+    CompileConfig,
+    RunStatus,
+    Text2EnvCompileInput,
+    Text2EnvCompileOutput,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 SKILL_REF = "text2env.compile@1.0.0"
@@ -277,6 +284,120 @@ def test_external_catalog_is_snapshotted_before_use(
     assert resolved.read_bytes() == original
     assert snapshot.sha256 == _sha(original)
     assert snapshot.schema_version == "robotwin.asset_catalog.v1"
+
+
+def test_typed_compile_input_invokes_only_from_the_application_cas(
+    tmp_path: Path,
+    fixed_qualification: Path,
+) -> None:
+    settings = _settings(tmp_path)
+    catalog_path = _empty_catalog(
+        settings.external_catalog_roots[0] / "typed.json",
+        settings.allowed_asset_roots[0] / "objects",
+    )
+    app = create_compile_application(settings)
+    snapshot = app.snapshot_asset_catalog(catalog_path)
+    parameters = Text2EnvCompileInput(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+        asset_catalog=snapshot,
+        config=CompileConfig(generate_missing_assets=True),
+    )
+
+    state = app.invoke_typed(parameters)
+
+    assert state.status is RunStatus.SUCCEEDED
+    invocation = app.invocation(state.run_id)
+    assert invocation is not None
+    assert invocation.effective_parameters == parameters.model_dump(mode="json")
+    assert app.resolve_artifact(snapshot).is_relative_to(app.artifact_root)
+
+
+def test_typed_compile_input_rejects_file_locator_even_when_bytes_match(
+    tmp_path: Path,
+    fixed_qualification: Path,
+) -> None:
+    settings = _settings(tmp_path)
+    catalog_path = _empty_catalog(
+        settings.external_catalog_roots[0] / "file-ref.json",
+        settings.allowed_asset_roots[0] / "objects",
+    )
+    payload = catalog_path.read_bytes()
+    app = create_compile_application(settings)
+    parameters = Text2EnvCompileInput(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+        asset_catalog=ArtifactRef(
+            name="mutable_catalog",
+            uri=catalog_path.resolve().as_uri(),
+            media_type="application/json",
+            sha256=_sha(payload),
+            bytes=len(payload),
+            schema_version="robotwin.asset_catalog.v1",
+        ),
+        config=CompileConfig(generate_missing_assets=False),
+    )
+
+    with pytest.raises(CompileApplicationInputError, match="application CAS"):
+        app.invoke_typed(parameters)
+
+
+def test_typed_compile_input_rejects_missing_foreign_cas_object(
+    tmp_path: Path,
+    fixed_qualification: Path,
+) -> None:
+    settings = _settings(tmp_path)
+    app = create_compile_application(settings)
+    missing_sha = "f" * 64
+    parameters = Text2EnvCompileInput(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+        asset_catalog=ArtifactRef(
+            name="foreign_catalog",
+            uri=f"artifact://sha256/{missing_sha}",
+            media_type="application/json",
+            sha256=missing_sha,
+            bytes=2,
+            schema_version="robotwin.asset_catalog.v1",
+        ),
+        config=CompileConfig(generate_missing_assets=False),
+    )
+
+    with pytest.raises(CompileApplicationInputError, match="unavailable or corrupt"):
+        app.invoke_typed(parameters)
+
+
+def test_typed_compile_input_revalidates_a_retained_model_before_execution(
+    tmp_path: Path,
+    fixed_qualification: Path,
+) -> None:
+    settings = _settings(tmp_path)
+    catalog_path = _empty_catalog(
+        settings.external_catalog_roots[0] / "retained.json",
+        settings.allowed_asset_roots[0] / "objects",
+    )
+    app = create_compile_application(settings)
+    snapshot = app.snapshot_asset_catalog(catalog_path)
+    parameters = Text2EnvCompileInput(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+        asset_catalog=snapshot,
+        config=CompileConfig(generate_missing_assets=False),
+    )
+    object.__setattr__(parameters, "request", "")
+
+    with pytest.raises(CompileApplicationInputError, match="invalid"):
+        app.invoke_typed(parameters)
+
+
+def test_typed_compile_input_rejects_an_untyped_mapping(
+    tmp_path: Path,
+    fixed_qualification: Path,
+) -> None:
+    app = create_compile_application(_settings(tmp_path))
+
+    with pytest.raises(CompileApplicationInputError, match="Text2EnvCompileInput"):
+        app.invoke_typed({})  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize("field", ["external_catalog_roots", "allowed_asset_roots"])

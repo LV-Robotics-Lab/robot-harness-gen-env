@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import ClassVar, Literal
 from uuid import UUID, uuid4
 
-from .artifacts import LocalArtifactStore
+from .artifacts import ArtifactResolutionError, LocalArtifactStore
 from .event_journal import EventPage, SQLiteEventJournal
 from .handlers.text2env_compile import (
     Text2EnvCompileHandler,
@@ -29,7 +29,14 @@ from .handlers.text2env_compile_dependencies import (
 from .qualification import load_qualification_bundle
 from .registry import SkillRegistry
 from .run_store import SQLiteRunStore
-from .schemas import ArtifactRef, Invocation, RunState, SkillDescriptor
+from .schemas import (
+    ArtifactRef,
+    CompileConfig,
+    Invocation,
+    RunState,
+    SkillDescriptor,
+    Text2EnvCompileInput,
+)
 
 _DISTRIBUTION_ROOT = Path(__file__).resolve().parents[2]
 _COMPILE_QUALIFICATION_ROOT = (
@@ -61,6 +68,10 @@ class CompileApplicationConfigurationError(ValueError):
 
 class ExternalCatalogError(ValueError):
     """An external catalog is missing, not a file, or outside configured roots."""
+
+
+class CompileApplicationInputError(ValueError):
+    """Typed compile input is invalid or not wholly available in application CAS."""
 
 
 class CompileApplication:
@@ -131,15 +142,47 @@ class CompileApplication:
         """Snapshot external input and invoke the exact qualified compile Skill."""
 
         catalog = self.snapshot_asset_catalog(asset_catalog_path)
+        return self.invoke_typed(
+            Text2EnvCompileInput(
+                request=request,
+                seed=seed,
+                asset_catalog=catalog,
+                config=CompileConfig(generate_missing_assets=generate_missing_assets),
+            )
+        )
+
+    def invoke_typed(self, parameters: Text2EnvCompileInput) -> RunState:
+        """Invoke compile from an exact typed input whose catalog is already in this CAS.
+
+        This is the application boundary used by a System 2 dispatcher.  It does
+        not accept mutable ``file://`` locators or content identities from a
+        different store, even though the generic artifact resolver can support
+        those locators at lower-trust integration boundaries.
+        """
+
+        if type(parameters) is not Text2EnvCompileInput:
+            raise CompileApplicationInputError(
+                "typed compile input is invalid: expected Text2EnvCompileInput"
+            )
+        try:
+            trusted = Text2EnvCompileInput.model_validate(parameters.model_dump(mode="python"))
+        except (TypeError, ValueError) as error:
+            raise CompileApplicationInputError("typed compile input is invalid") from error
+        catalog = trusted.asset_catalog
+        if catalog.uri != f"artifact://sha256/{catalog.sha256}":
+            raise CompileApplicationInputError(
+                "typed compile input is invalid: asset catalog must be in the application CAS"
+            )
+        try:
+            self._artifact_store.resolve(catalog)
+        except ArtifactResolutionError as error:
+            raise CompileApplicationInputError(
+                "typed compile input asset catalog is unavailable or corrupt in application CAS"
+            ) from error
         return self._registry.invoke(
             _COMPILE_SKILL_ID,
             _COMPILE_VERSION,
-            {
-                "request": request,
-                "seed": seed,
-                "asset_catalog": catalog.model_dump(mode="json"),
-                "config": {"generate_missing_assets": generate_missing_assets},
-            },
+            trusted.model_dump(mode="json"),
         )
 
     def resolve_artifact(self, artifact: ArtifactRef) -> Path:
