@@ -96,6 +96,7 @@ select { min-height: 34px; padding: 5px 34px 5px 10px; }
 .scene-form > label { display: block; margin-bottom: 8px; color: var(--muted); font: 700 11px/1 ui-monospace, "SFMono-Regular", Consolas, monospace; text-transform: uppercase; }
 textarea { width: 100%; min-height: 112px; resize: vertical; padding: 14px; font-size: 16px; line-height: 1.55; }
 .form-row { justify-content: space-between; gap: 16px; margin-top: 14px; }
+.form-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
 .seed-control { gap: 10px; color: var(--muted); font-size: 12px; }
 .seed-control input { width: 132px; height: 38px; padding: 7px 9px; font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; }
 .primary-button, .secondary-button, .icon-button, .media-button, .artifact-button {
@@ -116,6 +117,9 @@ textarea { width: 100%; min-height: 112px; resize: vertical; padding: 14px; font
 .icon-button:hover { border-color: var(--signal); color: var(--signal); }
 button svg { width: 17px; height: 17px; stroke-width: 1.8; }
 .form-error { margin: 12px 0 0; color: var(--danger); font-size: 13px; }
+.form-status { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
+.form-status.ready { color: var(--signal-dark); }
+.form-status.failed { color: var(--danger); }
 
 .empty-run { min-height: 76px; display: grid; place-items: center; color: var(--muted); border: 1px dashed var(--line-strong); }
 .run-summary { justify-content: space-between; align-items: flex-start; gap: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }

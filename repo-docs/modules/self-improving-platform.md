@@ -90,6 +90,21 @@ A044 只完成前端工作台的第一个竖切：`demo/` 可注入只读 `Harne
 当前 36 passed，其中 12 项用真 Flask +
 headless Chrome 覆盖提交后推进、缓存重确认、并发 filter、reload 与 fail-closed 状态。
 
+A047 在这个只读面上增加 compile-only 写入口。配置了同一个 `HARNESS_WORKBENCH` 后，浏览器的
+`POST /api/harness/compile` 只发送精确 `{request, seed}`；catalog、资产根、是否生成缺失资产、
+qualification、Registry 与 CAS 都由 operator 在 `WorkbenchCompile` 构造时固定。接口同步执行已有
+qualified `CompileApplication`，再从共享 SQLite authority 重读 terminal `RunState` 与完整 committed
+history；两者一致后才返回 run/Skill、终态、attempt、terminal cursor 和精简 blocker。UI 不从 POST
+摘要生成阶段，而是把 timeline 切到新 run、从 cursor 0 重放，并要求最后一条 committed event 与
+摘要的 run/Skill/status/cursor 一致。未配置、历史损坏、摘要夹带 progress 或对账失败都会 fail
+closed。
+
+这仍不是完整 Stage 7：接口是同步 compile，不是异步 durable queue；没有 replay、validate、System
+2、artifact 内容 viewer 或拖拽编排。compile `succeeded` 也不表示物理 validation、资产 settle 或
+publishable。A047 的 `harness.workbench_compile_submission.v1` 是工作台投影，不新增 Harness 公共
+schema snapshot；当前 17 份 schema 计数不变。`tests/demo` 当前 84 passed，其中 18 项使用真 Flask +
+headless Chrome。
+
 Stage 5 的视觉评审状态是三态而非布尔值。在 `--run-smoke`/视觉评审路径中，只有 visual pass
 才把 candidate 原子晋升为 `final_placement.json` 并退出 0；`pending_visual_review` 只写
 `review_candidate_placement.json`，保留 `hold_for_review`/pending 字段并退出 2。batch 只有显式

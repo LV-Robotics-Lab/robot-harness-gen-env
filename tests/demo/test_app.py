@@ -9,6 +9,11 @@ from uuid import UUID
 import pytest
 
 from demo.app import DEFAULT_SETTLE_STEPS, create_app, utc_now
+from demo.harness_compile import (
+    WorkbenchCompileAuthorityError,
+    WorkbenchCompileInputError,
+    WorkbenchCompileUnavailableError,
+)
 from demo.harness_feed import HarnessEventFeed
 from self_improving.harness import RunRecorder, SQLiteEventJournal
 
@@ -89,6 +94,196 @@ def test_harness_events_fail_closed_when_feed_is_not_configured(
             "message": "Harness event feed is not configured",
         }
     }
+
+
+class _StubWorkbench:
+    def __init__(self) -> None:
+        self.submissions: list[tuple[str, int]] = []
+
+    def submit(self, *, request: object, seed: object):
+        if type(request) is not str or type(seed) is not int:
+            raise WorkbenchCompileInputError("invalid business input")
+        self.submissions.append((request, seed))
+        return {
+            "schema_version": "harness.workbench_compile_submission.v1",
+            "run_id": "12345678-1234-4234-9234-123456789abc",
+            "skill_id": "text2env.compile",
+            "skill_version": "1.0.0",
+            "status": "succeeded",
+            "attempt": 1,
+            "max_attempts": 1,
+            "terminal_event_id": "7",
+            "blocker": None,
+        }
+
+    def page(self, **_kwargs):
+        return {
+            "schema_version": "harness.workbench_event_page.v1",
+            "events": [],
+            "last_event_id": "0",
+            "has_more": False,
+        }
+
+
+def test_harness_compile_submits_only_business_input_to_the_configured_authority(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+
+    class WrongReadAuthority:
+        def page(self, **_kwargs):
+            raise AssertionError("a separate feed must not override the submission authority")
+
+    app = configured_app(
+        tmp_path,
+        monkeypatch,
+        {
+            "HARNESS_WORKBENCH": workbench,
+            "HARNESS_EVENT_FEED": WrongReadAuthority(),
+        },
+    )
+
+    response = app.test_client().post(
+        "/api/harness/compile",
+        json={"request": "Place a can on top of a plate.", "seed": 9},
+    )
+
+    assert response.status_code == 200
+    assert response.json["run_id"] == "12345678-1234-4234-9234-123456789abc"
+    assert response.json["status"] == "succeeded"
+    assert workbench.submissions == [("Place a can on top of a plate.", 9)]
+    assert app.test_client().get("/api/harness/events").status_code == 200
+
+
+def test_harness_compile_fails_closed_when_submission_is_not_configured(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    response = (
+        configured_app(tmp_path, monkeypatch)
+        .test_client()
+        .post(
+            "/api/harness/compile",
+            json={"request": "Place a can on top of a plate.", "seed": 9},
+        )
+    )
+
+    assert response.status_code == 503
+    assert response.json == {
+        "error": {
+            "code": "harness_compile_unavailable",
+            "message": "Harness compile submission is not configured",
+        }
+    }
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        [],
+        {},
+        {"request": "Place a can on a plate."},
+        {"seed": 9},
+        {"request": "Place a can on a plate.", "seed": 9, "catalog": "/tmp/catalog"},
+        {"request": 7, "seed": 9},
+        {"request": "Place a can on a plate.", "seed": True},
+    ],
+)
+def test_harness_compile_rejects_any_payload_outside_request_and_seed(
+    payload: object,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().post("/api/harness/compile", json=payload)
+
+    assert response.status_code == 400
+    assert response.json == {
+        "error": {
+            "code": "invalid_harness_compile_request",
+            "message": "Compile request must contain only request and seed",
+        }
+    }
+    assert workbench.submissions == []
+
+
+def test_harness_compile_rejects_duplicate_json_members(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().post(
+        "/api/harness/compile",
+        data=b'{"request":"first prompt","request":"second prompt","seed":9}',
+        content_type="application/json",
+    )
+
+    assert response.status_code == 400
+    assert response.json["error"]["code"] == "invalid_harness_compile_request"
+    assert workbench.submissions == []
+
+
+def test_harness_compile_rejects_json_that_exceeds_the_decoder_depth(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+    depth = 50_000
+    payload = b'{"request":' + (b'{"x":' * depth) + b"0" + (b"}" * depth) + b',"seed":9}'
+
+    response = app.test_client().post(
+        "/api/harness/compile",
+        data=payload,
+        content_type="application/json",
+    )
+
+    assert response.status_code == 400
+    assert response.is_json
+    assert response.json["error"]["code"] == "invalid_harness_compile_request"
+    assert workbench.submissions == []
+
+
+@pytest.mark.parametrize(
+    ("error", "code"),
+    [
+        (
+            WorkbenchCompileUnavailableError("secret path: /tmp/catalog"),
+            "harness_compile_unavailable",
+        ),
+        (
+            WorkbenchCompileAuthorityError("secret database: /tmp/harness.sqlite3"),
+            "harness_compile_authority_corrupt",
+        ),
+    ],
+)
+def test_harness_compile_projects_stable_errors_without_internal_details(
+    error: Exception,
+    code: str,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+
+    def fail(**_kwargs):
+        raise error
+
+    monkeypatch.setattr(workbench, "submit", fail)
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().post(
+        "/api/harness/compile",
+        json={"request": "Place a can on a plate.", "seed": 9},
+    )
+
+    assert response.status_code == 503
+    assert response.json["error"]["code"] == code
+    assert "/tmp" not in response.get_data(as_text=True)
 
 
 def test_harness_events_resume_from_the_requested_global_cursor(

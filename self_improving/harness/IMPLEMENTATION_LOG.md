@@ -40,7 +40,7 @@
 | 4. replay → validate | 进行中 | 实际播放调用、连续帧、哈希绑定验证报告 |
 | 5. VLM fallback 研究 | 待开始 | baseline、逐次实验 TSV/JSONL、消融与总结 |
 | 6. LLM System 2 | 待开始 | agent 计划、上下文包、工具回执、回归晋升 |
-| 7. 前端工作台 | 进行中 | Event Timeline v1 已接 committed journal；其余页面与编排仍缺 |
+| 7. 前端工作台 | 进行中 | Event Timeline v1 + qualified compile submit；replay/validate/viewer/编排仍缺 |
 | 8. 总验收与文档同步 | 待开始 | 全量测试/覆盖率/真实回放/repo-docs 审计 |
 
 ## 决策与尝试记录
@@ -854,3 +854,26 @@
   文件合计 `223 passed`。
 - 边界：样例仍为 `pending_settle`，不声明物理、replay 或 publishable。完整证据见
   `docs/evidence/production-generated-asset-portability-20260901.{md,json}`。
+
+### 2026-09-01 / A047：工作台 compile 提交必须返回可重读的 Harness 终态
+
+- RED：工作台只有只读 Event Timeline；新增公开测试时 `demo.harness_compile` 不存在，HTTP 仍为
+  404，真 Chrome 也没有 Harness 提交按钮。进一步攻击在 terminal state 写入后删除 RunState 或最后
+  一条 journal event，并让 HTTP 摘要夹带伪造 progress，证明返回值必须独立重读与前端再对账。
+- 深 Module：`WorkbenchCompile` 只接受 `request`/`seed`，catalog locator、生成缺失资产策略、资格、
+  Registry、CAS 与资产根均由 operator 在构造时固定。它同步调用唯一的 `CompileApplication`，随后从
+  同一 SQLite authority 重读 terminal `RunState` 和完整 committed history；两者逐项一致后才返回
+  `harness.workbench_compile_submission.v1`。摘要只有 run/Skill、终态、attempt、terminal cursor 和
+  精简 blocker，不带 output、artifacts 或 events。
+- HTTP/UI：`POST /api/harness/compile` 严格拒绝额外字段和 caller locator；成功、blocked、failed 都是
+  HTTP 200 的持久化业务终态，未配置或 authority 损坏为脱敏 503。独立“仅 Harness Compile”按钮不
+  替换旧 runtime/critic 作业；浏览器严格解析摘要后，把 timeline 切到该 run 并从 cursor 0 重放，
+  最后一条 committed event 的 run/Skill/status/cursor 必须与摘要一致。摘要夹带 progress 或没有对应
+  history 都 fail closed；DOM 不凭 POST 返回或等待状态合成 queued/running，journal 中已提交的
+  running 事件仍可显示。
+- 验证：`tests/demo` 84 passed，其中 18 项为真 Flask + headless Chrome；Application/Event journal
+  相邻回归 51 passed。`demo/harness_compile.py` 为 79 statements / 28 branches，statement/branch
+  100%；Python/JS syntax、ruff check/format 与 diff check 均通过。
+- 边界：这是同步 compile-only 接口，不冒充 durable async queue。它没有接 replay、validate、System
+  2、artifact 内容 viewer 或拖拽编排；compile succeeded 也不是物理 validation、publishability 或
+  资产 settle。阶段 7 仍为进行中。

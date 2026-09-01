@@ -2,6 +2,13 @@
 
 ## 2026-09-01
 
+- 在只读 Event Timeline 上增加 compile-only Workbench 提交：HTTP 只接收 `{request, seed}`，operator
+  固定 catalog、生成策略和 qualified `CompileApplication`；同步执行后重读同一 SQLite authority 的
+  terminal RunState 与完整 committed events 才返回精简摘要。独立浏览器按钮不伪造阶段，只从
+  cursor 0 回放目标 run，并对账终态 cursor/status；摘要夹带 progress、缺 RunState/event、未配置或
+  authority 损坏均 fail closed。84 项 demo 测试通过（18 项真 Chrome），新 compile module
+  statement/branch 100%。Stage 7 仍不含 replay/validate、异步队列、artifact viewer、System 2 或物理
+  publishability。
 - 收口 production generated-asset 数据边界：发布前把已验证 provenance locator 改为资产内相对路径，
   严格闭合 v1 顶层、file identity、derived compatibility 与所有值类型，在输入门后重验精确
   staging tree，derived 语义文本也必须 locator-free，并拒绝旧库绝对 locator 继续 reuse；项目样例

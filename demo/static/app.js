@@ -9,6 +9,8 @@ const state = {
   harnessPollTimer: null,
   harnessRequestGeneration: 0,
   harnessRunId: '',
+  harnessSubmissionGeneration: 0,
+  harnessTerminalExpectation: null,
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -16,6 +18,7 @@ const artifactUrl = (job, path) => `/api/jobs/${job.job_id}/artifacts/${path.spl
 const harnessCachePrefix = 'robot-harness.workbench-event-cache.v1';
 const harnessCacheKey = () => `${harnessCachePrefix}:${state.harnessRunId || 'all'}`;
 const sqliteCursorMaximum = BigInt('9223372036854775807');
+const canonicalUuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 function isCanonicalHarnessCursor(value) {
   return typeof value === 'string'
@@ -107,10 +110,11 @@ function initializeHarnessFilter() {
   else input.removeAttribute('value');
 }
 
-function selectHarnessRun(runId) {
+function selectHarnessRun(runId, terminalExpectation = null) {
   clearTimeout(state.harnessPollTimer);
   state.harnessRequestGeneration += 1;
   state.harnessRunId = runId.trim();
+  state.harnessTerminalExpectation = terminalExpectation;
   state.harnessCursor = '0';
   state.harnessEvents = [];
   state.harnessPendingCache = null;
@@ -131,6 +135,65 @@ function invalidHarnessPage() {
   const error = new Error('Harness event page failed integrity checks');
   error.code = 'harness_event_page_invalid';
   throw error;
+}
+
+function hasExactKeys(value, expected) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const actual = Object.keys(value).sort();
+  return actual.length === expected.length
+    && actual.every((key, index) => key === [...expected].sort()[index]);
+}
+
+function invalidHarnessSubmission() {
+  const error = new Error('Harness compile response failed integrity checks');
+  error.code = 'harness_compile_response_invalid';
+  throw error;
+}
+
+function validateHarnessSubmission(submission) {
+  const fields = ['attempt', 'blocker', 'max_attempts', 'run_id', 'schema_version', 'skill_id',
+    'skill_version', 'status', 'terminal_event_id'];
+  const terminalStatuses = new Set(['succeeded', 'blocked', 'failed']);
+  const attemptContract = (submission?.attempt === 0
+      && submission?.max_attempts === 0
+      && submission?.status !== 'succeeded')
+    || (submission?.attempt === 1 && submission?.max_attempts === 1);
+  if (!hasExactKeys(submission, fields)
+    || submission.schema_version !== 'harness.workbench_compile_submission.v1'
+    || !canonicalUuidPattern.test(submission.run_id)
+    || submission.skill_id !== 'text2env.compile'
+    || submission.skill_version !== '1.0.0'
+    || !terminalStatuses.has(submission.status)
+    || !Number.isInteger(submission.attempt)
+    || !Number.isInteger(submission.max_attempts)
+    || !attemptContract
+    || !isCanonicalHarnessCursor(submission.terminal_event_id)
+    || submission.terminal_event_id === '0') invalidHarnessSubmission();
+  if (submission.status === 'succeeded') {
+    if (submission.blocker !== null) invalidHarnessSubmission();
+  } else if (!hasExactKeys(submission.blocker, ['code', 'retryable'])
+    || typeof submission.blocker.code !== 'string'
+    || !/^[A-Z][A-Z0-9_]{1,63}$/.test(submission.blocker.code)
+    || typeof submission.blocker.retryable !== 'boolean') invalidHarnessSubmission();
+  return submission;
+}
+
+function verifyHarnessTerminalExpectation() {
+  const expected = state.harnessTerminalExpectation;
+  if (!expected) return;
+  const terminal = state.harnessEvents.at(-1);
+  if (state.harnessRunId !== expected.run_id
+    || state.harnessCursor !== expected.terminal_event_id
+    || !terminal
+    || terminal.run_id !== expected.run_id
+    || terminal.skill_id !== expected.skill_id
+    || terminal.skill_version !== expected.skill_version
+    || terminal.event.to_status !== expected.status
+    || terminal.event.attempt !== expected.attempt) invalidHarnessPage();
+  state.harnessTerminalExpectation = null;
+  const status = $('#harness-submit-status');
+  status.textContent = `Harness Compile 已持久化为 ${expected.status} · ${expected.run_id}`;
+  status.className = 'form-status ready';
 }
 
 function validateHarnessPage(page, afterEventId, expectedRunId = state.harnessRunId) {
@@ -270,6 +333,7 @@ async function loadHarnessEvents() {
       await loadHarnessEvents();
       return;
     }
+    verifyHarnessTerminalExpectation();
     state.harnessPollTimer = setTimeout(loadHarnessEvents, 1500);
   } catch (error) {
     if (requestGeneration !== state.harnessRequestGeneration
@@ -291,6 +355,16 @@ async function loadHarnessEvents() {
       state.harnessCursor = '0';
       state.harnessEvents = [];
       state.harnessPendingCache = null;
+    }
+    if (state.harnessTerminalExpectation && failClosed) {
+      state.harnessTerminalExpectation = null;
+      const submissionStatus = $('#harness-submit-status');
+      submissionStatus.textContent = 'Harness Compile 摘要与 committed journal 无法对账。';
+      submissionStatus.className = 'form-status failed';
+    } else if (state.harnessTerminalExpectation) {
+      const submissionStatus = $('#harness-submit-status');
+      submissionStatus.textContent = 'committed journal 暂时不可用；保留摘要并等待重试。';
+      submissionStatus.className = 'form-status';
     }
     renderHarnessEvents();
     if (!failClosed) state.harnessPollTimer = setTimeout(loadHarnessEvents, 5000);
@@ -553,6 +627,34 @@ $('#scene-form').addEventListener('submit', async (event) => {
     error.hidden = false;
   } finally {
     button.disabled = false;
+  }
+});
+
+$('#harness-compile-button').addEventListener('click', async () => {
+  const button = $('#harness-compile-button');
+  const status = $('#harness-submit-status');
+  const submissionGeneration = ++state.harnessSubmissionGeneration;
+  clearTimeout(state.harnessPollTimer);
+  state.harnessRequestGeneration += 1;
+  state.harnessTerminalExpectation = null;
+  button.disabled = true;
+  status.textContent = 'Harness Compile 请求处理中；尚未显示任何执行阶段。';
+  status.className = 'form-status';
+  try {
+    const submission = validateHarnessSubmission(await api('/api/harness/compile', {
+      method: 'POST',
+      body: JSON.stringify({ request: $('#prompt').value, seed: Number($('#seed').value) }),
+    }));
+    if (submissionGeneration !== state.harnessSubmissionGeneration) return;
+    status.textContent = '已收到终态摘要，正在从 committed journal 重放。';
+    selectHarnessRun(submission.run_id, submission);
+  } catch (error) {
+    if (submissionGeneration !== state.harnessSubmissionGeneration) return;
+    status.textContent = error.message;
+    status.className = 'form-status failed';
+    loadHarnessEvents();
+  } finally {
+    if (submissionGeneration === state.harnessSubmissionGeneration) button.disabled = false;
   }
 });
 

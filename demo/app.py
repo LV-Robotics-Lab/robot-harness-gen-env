@@ -16,6 +16,11 @@ from typing import Any
 
 from flask import Flask, jsonify, request, send_from_directory
 
+from demo.harness_compile import (
+    WorkbenchCompileAuthorityError,
+    WorkbenchCompileInputError,
+    WorkbenchCompileUnavailableError,
+)
 from demo.harness_feed import HarnessEventFeedCorruptionError
 
 DEFAULT_SETTLE_STEPS = 900
@@ -23,6 +28,31 @@ DEFAULT_SETTLE_STEPS = 900
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _strict_json_value() -> Any:
+    if not request.is_json:
+        return None
+
+    def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        value: dict[str, Any] = {}
+        for key, item in pairs:
+            if key in value:
+                raise ValueError("duplicate JSON member")
+            value[key] = item
+        return value
+
+    def reject_constant(_value: str) -> None:
+        raise ValueError("nonstandard JSON constant")
+
+    try:
+        return json.loads(
+            request.get_data(cache=True),
+            object_pairs_hook=unique_object,
+            parse_constant=reject_constant,
+        )
+    except (RecursionError, UnicodeDecodeError, ValueError):
+        return None
 
 
 class JobError(RuntimeError):
@@ -345,7 +375,8 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
 
     @app.get("/api/harness/events")
     def harness_events():
-        feed = app.config.get("HARNESS_EVENT_FEED")
+        workbench = app.config.get("HARNESS_WORKBENCH")
+        feed = workbench if workbench is not None else app.config.get("HARNESS_EVENT_FEED")
         if feed is None:
             return (
                 jsonify(
@@ -437,6 +468,77 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
                 503,
             )
         return jsonify(page)
+
+    @app.post("/api/harness/compile")
+    def harness_compile():
+        workbench = app.config.get("HARNESS_WORKBENCH")
+        if workbench is None:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_compile_unavailable",
+                            "message": "Harness compile submission is not configured",
+                        }
+                    }
+                ),
+                503,
+            )
+        payload = _strict_json_value()
+        if type(payload) is not dict or set(payload) != {"request", "seed"}:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_harness_compile_request",
+                            "message": "Compile request must contain only request and seed",
+                        }
+                    }
+                ),
+                400,
+            )
+        try:
+            submission = workbench.submit(
+                request=payload["request"],
+                seed=payload["seed"],
+            )
+        except WorkbenchCompileInputError:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_harness_compile_request",
+                            "message": "Compile request must contain only request and seed",
+                        }
+                    }
+                ),
+                400,
+            )
+        except WorkbenchCompileAuthorityError:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_compile_authority_corrupt",
+                            "message": "Harness compile authority failed integrity checks",
+                        }
+                    }
+                ),
+                503,
+            )
+        except WorkbenchCompileUnavailableError:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_compile_unavailable",
+                            "message": "Harness compile is unavailable",
+                        }
+                    }
+                ),
+                503,
+            )
+        return jsonify(submission)
 
     @app.get("/api/jobs")
     def list_jobs():

@@ -49,12 +49,21 @@
             <span>Seed</span>
             <input id="seed" name="seed" type="number" min="0" max="2147483647" step="1" value="42">
           </label>
-          <button class="primary-button" id="generate-button" type="submit">
-            <i data-lucide="play" aria-hidden="true"></i>
-            <span>生成并运行</span>
-          </button>
+          <div class="form-actions">
+            <button class="primary-button" id="generate-button" type="submit">
+              <i data-lucide="play" aria-hidden="true"></i>
+              <span>生成并运行</span>
+            </button>
+            <button class="secondary-button" id="harness-compile-button" type="button">
+              <i data-lucide="git-commit-horizontal" aria-hidden="true"></i>
+              <span>仅 Harness Compile</span>
+            </button>
+          </div>
         </div>
         <p class="form-error" id="form-error" role="alert" hidden></p>
+        <p class="form-status" id="harness-submit-status" role="status">
+          Harness Compile 同步返回持久化终态；阶段只从 journal 显示。
+        </p>
       </form>
     </section>
 
