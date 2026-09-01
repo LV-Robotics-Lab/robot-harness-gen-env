@@ -13,6 +13,8 @@ from demo.harness_compile import (
     WorkbenchCompileAuthorityError,
     WorkbenchCompileInputError,
     WorkbenchCompileRunNotFoundError,
+    WorkbenchCompileSceneNotPreviewableError,
+    WorkbenchCompileSceneTooLargeError,
     WorkbenchCompileUnavailableError,
 )
 from demo.harness_feed import HarnessEventFeed
@@ -101,6 +103,7 @@ class _StubWorkbench:
     def __init__(self) -> None:
         self.submissions: list[tuple[str, int]] = []
         self.audit_runs: list[UUID] = []
+        self.scene_preview_runs: list[UUID] = []
 
     def submit(self, *, request: object, seed: object):
         if type(request) is not str or type(seed) is not int:
@@ -149,6 +152,37 @@ class _StubWorkbench:
                 "dependencies": [{"name": "scene_gen", "version": "1", "sha256": "b" * 64}],
             },
             "artifacts": [],
+        }
+
+    def scene_preview(self, *, run_id: UUID):
+        self.scene_preview_runs.append(run_id)
+        return {
+            "schema_version": "harness.workbench_compile_scene_preview.v1",
+            "run": {"run_id": str(run_id), "terminal_event_id": "7"},
+            "artifact": {
+                "name": "scene_spec",
+                "media_type": "application/json",
+                "schema_version": "robotwin.scene_spec.v1",
+                "sha256": "c" * 64,
+                "bytes": "99",
+                "bindings": [{"direction": "output", "role": "scene_spec"}],
+            },
+            "scene": {
+                "schema_version": "robotwin.scene_spec.v1",
+                "scene_id": "can_on_plate",
+                "language": "en",
+                "frame": {
+                    "name": "robotwin_world",
+                    "x_axis": "right",
+                    "y_axis": "front",
+                    "z_axis": "up",
+                    "handedness": "right_handed",
+                },
+                "unit": "m",
+                "seed": 9,
+                "objects": [],
+                "relations": [],
+            },
         }
 
 
@@ -429,6 +463,307 @@ def test_harness_compile_audit_projects_stable_errors_without_internal_details(
 
     assert response.status_code == status
     assert response.json["error"]["code"] == code
+    assert "/tmp" not in response.get_data(as_text=True)
+
+
+def test_harness_compile_scene_preview_projects_the_configured_authority(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+    run_id = "12345678-1234-4234-9234-123456789abc"
+
+    response = app.test_client().get(f"/api/harness/compile-runs/{run_id}/scene-preview")
+
+    assert response.status_code == 200
+    assert response.json["schema_version"] == "harness.workbench_compile_scene_preview.v1"
+    assert response.json["run"]["run_id"] == run_id
+    assert response.headers["Cache-Control"] == "no-store"
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert "ETag" not in response.headers
+    assert "Accept-Ranges" not in response.headers
+    assert "Content-Disposition" not in response.headers
+    assert workbench.scene_preview_runs == [UUID(run_id)]
+
+
+@pytest.mark.parametrize(
+    "suffix",
+    [
+        "not-a-uuid/scene-preview",
+        "12345678-1234-1234-9234-123456789abc/scene-preview",
+        "12345678-1234-4234-9234-123456789ABC/scene-preview",
+        "12345678123442349234123456789abc/scene-preview",
+        "12345678-1234-4234-9234-123456789abc/scene-preview?selector=scene_spec",
+        "12345678-1234-4234-9234-123456789abc/scene-preview?&&",
+    ],
+)
+def test_harness_compile_scene_preview_rejects_noncanonical_or_ambiguous_requests(
+    suffix: str,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().get(f"/api/harness/compile-runs/{suffix}")
+
+    assert response.status_code == 400
+    assert response.json == {
+        "error": {
+            "code": "invalid_harness_compile_scene_preview_request",
+            "message": (
+                "request must use GET with a canonical version 4 UUID and no query, body, or "
+                "Range header"
+            ),
+        }
+    }
+    assert workbench.scene_preview_runs == []
+
+
+def test_harness_compile_scene_preview_rejects_range_requests(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().get(
+        "/api/harness/compile-runs/12345678-1234-4234-9234-123456789abc/scene-preview",
+        headers={"Range": "bytes=0-9"},
+    )
+
+    assert response.status_code == 400
+    assert response.json["error"] == {
+        "code": "invalid_harness_compile_scene_preview_request",
+        "message": (
+            "request must use GET with a canonical version 4 UUID and no query, body, or "
+            "Range header"
+        ),
+    }
+    assert workbench.scene_preview_runs == []
+
+
+@pytest.mark.parametrize(
+    ("method", "data"),
+    [("GET", b"{}"), ("HEAD", None)],
+)
+def test_harness_compile_scene_preview_rejects_a_body_or_non_get_method(
+    method: str,
+    data: bytes | None,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().open(
+        "/api/harness/compile-runs/12345678-1234-4234-9234-123456789abc/scene-preview",
+        method=method,
+        data=data,
+    )
+
+    assert response.status_code == 400
+    if method == "GET":
+        assert response.json["error"]["code"] == "invalid_harness_compile_scene_preview_request"
+    assert workbench.scene_preview_runs == []
+
+
+def test_harness_compile_scene_preview_rejects_a_chunked_body_without_content_length(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().open(
+        "/api/harness/compile-runs/12345678-1234-4234-9234-123456789abc/scene-preview",
+        method="GET",
+        data=b"{}",
+        environ_overrides={
+            "CONTENT_LENGTH": "",
+            "HTTP_TRANSFER_ENCODING": "chunked",
+            "wsgi.input_terminated": True,
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json["error"]["code"] == "invalid_harness_compile_scene_preview_request"
+    assert workbench.scene_preview_runs == []
+
+
+def test_harness_compile_scene_preview_rejects_a_terminated_body_without_length_headers(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().open(
+        "/api/harness/compile-runs/12345678-1234-4234-9234-123456789abc/scene-preview",
+        method="GET",
+        data=b"{}",
+        environ_overrides={
+            "CONTENT_LENGTH": "",
+            "wsgi.input_terminated": 1,
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json["error"]["code"] == "invalid_harness_compile_scene_preview_request"
+    assert workbench.scene_preview_runs == []
+
+
+def test_harness_compile_scene_preview_fails_closed_when_not_configured(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    response = (
+        configured_app(tmp_path, monkeypatch)
+        .test_client()
+        .get("/api/harness/compile-runs/12345678-1234-4234-9234-123456789abc/scene-preview")
+    )
+
+    assert response.status_code == 503
+    assert response.json == {
+        "error": {
+            "code": "harness_compile_scene_preview_unavailable",
+            "message": "Harness compile scene preview is not configured",
+        }
+    }
+    assert response.headers["Cache-Control"] == "no-store"
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+
+
+def test_harness_compile_scene_preview_maps_invalid_business_input_to_the_public_boundary(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+
+    def fail(**_kwargs):
+        raise WorkbenchCompileInputError("secret selector: /tmp/scene.json")
+
+    monkeypatch.setattr(workbench, "scene_preview", fail)
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().get(
+        "/api/harness/compile-runs/12345678-1234-4234-9234-123456789abc/scene-preview"
+    )
+
+    assert response.status_code == 400
+    assert response.json["error"] == {
+        "code": "invalid_harness_compile_scene_preview_request",
+        "message": (
+            "request must use GET with a canonical version 4 UUID and no query, body, or "
+            "Range header"
+        ),
+    }
+    assert "/tmp" not in response.get_data(as_text=True)
+
+
+def test_harness_compile_scene_preview_maps_a_missing_run_without_internal_details(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+
+    def fail(**_kwargs):
+        raise WorkbenchCompileRunNotFoundError("secret database: /tmp/harness.sqlite3")
+
+    monkeypatch.setattr(workbench, "scene_preview", fail)
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().get(
+        "/api/harness/compile-runs/12345678-1234-4234-9234-123456789abc/scene-preview"
+    )
+
+    assert response.status_code == 404
+    assert response.json["error"] == {
+        "code": "harness_compile_run_not_found",
+        "message": "Terminal compile run was not found",
+    }
+    assert "/tmp" not in response.get_data(as_text=True)
+
+
+@pytest.mark.parametrize(
+    ("error", "code", "message"),
+    [
+        (
+            WorkbenchCompileAuthorityError("secret database: /tmp/harness.sqlite3"),
+            "harness_compile_scene_preview_authority_corrupt",
+            "Harness compile authority failed integrity checks",
+        ),
+        (
+            WorkbenchCompileUnavailableError("secret path: /tmp/catalog"),
+            "harness_compile_scene_preview_unavailable",
+            "Harness compile scene preview is unavailable",
+        ),
+    ],
+)
+def test_harness_compile_scene_preview_projects_stable_service_errors(
+    error: Exception,
+    code: str,
+    message: str,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+
+    def fail(**_kwargs):
+        raise error
+
+    monkeypatch.setattr(workbench, "scene_preview", fail)
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().get(
+        "/api/harness/compile-runs/12345678-1234-4234-9234-123456789abc/scene-preview"
+    )
+
+    assert response.status_code == 503
+    assert response.json["error"] == {"code": code, "message": message}
+    assert "/tmp" not in response.get_data(as_text=True)
+
+
+@pytest.mark.parametrize(
+    ("error", "status", "code", "message"),
+    [
+        (
+            WorkbenchCompileSceneNotPreviewableError("secret blocker: /tmp/run.json"),
+            409,
+            "harness_compile_scene_not_previewable",
+            "Terminal compile run has no previewable scene",
+        ),
+        (
+            WorkbenchCompileSceneTooLargeError("secret artifact: /tmp/scene.json"),
+            422,
+            "harness_compile_scene_too_large",
+            "Terminal SceneSpec exceeds the fixed preview size",
+        ),
+    ],
+)
+def test_harness_compile_scene_preview_projects_stable_preview_policy_errors(
+    error: Exception,
+    status: int,
+    code: str,
+    message: str,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+
+    def fail(**_kwargs):
+        raise error
+
+    monkeypatch.setattr(workbench, "scene_preview", fail)
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().get(
+        "/api/harness/compile-runs/12345678-1234-4234-9234-123456789abc/scene-preview"
+    )
+
+    assert response.status_code == status
+    assert response.json["error"] == {"code": code, "message": message}
     assert "/tmp" not in response.get_data(as_text=True)
 
 

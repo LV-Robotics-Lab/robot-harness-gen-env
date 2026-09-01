@@ -220,6 +220,27 @@ button svg { width: 17px; height: 17px; stroke-width: 1.8; }
 .compile-artifact-list span { color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
 .compile-artifact-list .compile-artifact-bindings { color: var(--ink); }
 .compile-artifact-list .empty { color: var(--muted); font-size: 11px; }
+.scene-preview-actions { margin-top: 14px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; }
+.scene-preview-message { margin: 0; color: var(--muted); font-size: 11px; }
+.scene-preview {
+  margin-top: 14px;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 1px;
+}
+.scene-preview-heading, .scene-preview-heading > div { display: flex; align-items: flex-start; }
+.scene-preview-heading { justify-content: space-between; gap: 16px; }
+.scene-preview-heading > div { gap: 10px; }
+.scene-preview-heading h4 { margin: 2px 0 0; font-size: 14px; }
+.scene-preview-heading .secondary-button { min-height: 32px; padding: 5px 10px; }
+.scene-preview-summary { margin: 14px 0 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 12px; }
+.scene-preview-summary dt { color: var(--muted); font: 700 9px/1.4 ui-monospace, "SFMono-Regular", Consolas, monospace; text-transform: uppercase; }
+.scene-preview-summary dd { margin: 0; overflow-wrap: anywhere; font: 11px/1.45 ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.scene-preview-group { margin-top: 14px; }
+.scene-preview-group h5 { margin: 0; font-size: 11px; }
+.scene-preview-list { margin: 7px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.scene-preview-list li { padding: 8px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; font: 11px/1.45 ui-monospace, "SFMono-Regular", Consolas, monospace; }
 
 .history-list { display: grid; border-top: 1px solid var(--line); }
 .history-item { width: 100%; min-height: 58px; justify-content: space-between; gap: 16px; padding: 10px 4px; color: inherit; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--line); }
@@ -253,6 +274,8 @@ button svg { width: 17px; height: 17px; stroke-width: 1.8; }
   .harness-filter label, .harness-filter input { grid-column: 1 / -1; }
   .compile-audit-summary { grid-template-columns: 1fr; gap: 3px; }
   .compile-audit-summary dd { margin-bottom: 7px; }
+  .scene-preview-summary { grid-template-columns: 1fr; gap: 3px; }
+  .scene-preview-summary dd { margin-bottom: 7px; }
 }
 
 @media (prefers-reduced-motion: no-preference) {

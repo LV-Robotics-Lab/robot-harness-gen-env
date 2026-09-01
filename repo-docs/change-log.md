@@ -2,6 +2,17 @@
 
 ## 2026-09-01
 
+- 为 succeeded `text2env.compile@1.0.0` 增加固定、按需的 SceneSpec 结构预览：只有
+  `GET /api/harness/compile-runs/<canonical-v4-uuid>/scene-preview` 可进入，先重建 A049 的完整终态
+  authority，再要求类型化 output 的 `scene_spec` 为精确 JSON/schema binding。声明大小超过 65,536
+  bytes 会在定位 CAS 前拒绝；读取固定 CAS leaf 时以 `O_NOFOLLOW|O_NONBLOCK` 打开同一 FD，执行
+  regular-file、前后 `fstat`、有界读取、精确大小与 SHA-256 复核，随后严格验证 UTF-8、无 BOM/重复键/
+  非有限数、canonical `SceneSpec` 及 request/seed/package digest 语义绑定，最后再次读取 authority。
+  浏览器只在 audit v2 已验证并由用户点击后请求，响应必须与当前 run/audit/artifact 精确绑定；切换或
+  关闭会 abort/清空，不缓存、不自动重试，只以 `textContent` 显示字段投影。`tests/demo` 232 passed
+  （47 项真 Chrome），相邻 Application/Event journal 51 passed；`demo/harness_compile.py` 374
+  statements / 156 branches 全覆盖。响应不含 request、原始 JSON、path、URI 或下载能力；这不是通用
+  artifact viewer、replay/validate、物理验证或 publishability。
 - 将 terminal compile audit 升为 `harness.workbench_compile_audit.v2`：在原有 RunState、Invocation 与
   committed EventPage 双读闭包内，从权威 typed input/output 重建 artifact bindings，并把终态
   ArtifactRef 与 terminal event 的精确顺序、完整 event identity 集及应用 CAS 当前 bytes 逐项重验。

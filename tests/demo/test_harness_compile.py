@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import inspect
 import json
+import os
 import sqlite3
 from contextlib import closing
 from dataclasses import replace
@@ -11,22 +13,27 @@ from uuid import UUID
 
 import pytest
 
+import demo.harness_compile as harness_compile_module
 from demo.app import create_app
 from demo.harness_compile import (
     WorkbenchCompile,
     WorkbenchCompileAuthorityError,
     WorkbenchCompileInputError,
     WorkbenchCompileRunNotFoundError,
+    WorkbenchCompileSceneNotPreviewableError,
+    WorkbenchCompileSceneTooLargeError,
     WorkbenchCompileUnavailableError,
 )
 from demo.harness_feed import HarnessEventFeedCorruptionError
 from scene_gen.catalog import AssetCatalog
+from scene_gen.schema import SceneSpec
 from self_improving.harness.application import (
     CompileApplication,
     CompileApplicationSettings,
     create_compile_application,
 )
 from self_improving.harness.schemas import (
+    ArtifactRef,
     RunStatus,
     Text2EnvCompileInput,
     Text2EnvCompileOutput,
@@ -1579,3 +1586,658 @@ def test_http_submission_and_event_replay_share_one_real_compile_authority(
     assert audit.json["invocation"]["dependencies"]
     assert "artifact://" not in audit.get_data(as_text=True)
     assert str(tmp_path) not in audit.get_data(as_text=True)
+
+
+def test_scene_preview_projects_only_the_verified_typed_scene_structure(
+    tmp_path: Path,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    request_value = "Place a purple hexagonal pedestal on the table."
+    submission = workbench.submit(request=request_value, seed=77)
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    invocation = application.invocation(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    assert invocation is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+
+    preview = workbench.scene_preview(run_id=run_id)
+
+    assert set(preview) == {"artifact", "run", "scene", "schema_version"}
+    assert preview["schema_version"] == "harness.workbench_compile_scene_preview.v1"
+    assert preview["run"] == {
+        "run_id": str(run_id),
+        "invocation_digest": invocation.invocation_digest,
+        "event_count": len(persisted.events),
+        "terminal_event_id": str(history.last_event_id),
+    }
+    assert preview["artifact"] == {
+        "name": output.scene_spec.name,
+        "media_type": "application/json",
+        "schema_version": "robotwin.scene_spec.v1",
+        "sha256": output.scene_spec.sha256,
+        "bytes": str(output.scene_spec.bytes),
+        "bindings": [{"direction": "output", "role": "scene_spec"}],
+    }
+    assert set(preview["scene"]) == {
+        "frame",
+        "language",
+        "objects",
+        "relations",
+        "scene_id",
+        "seed",
+        "unit",
+        "workspace",
+    }
+    assert preview["scene"]["seed"] == 77
+    assert preview["scene"]["objects"]
+    assert preview["scene"]["relations"]
+    serialized = json.dumps(preview, sort_keys=True, ensure_ascii=False)
+    assert request_value not in serialized
+    assert "request" not in preview["scene"]
+    assert "artifact://" not in serialized
+    assert str(tmp_path) not in serialized
+
+
+def test_scene_preview_exposes_only_the_fixed_run_selector() -> None:
+    assert tuple(inspect.signature(WorkbenchCompile.scene_preview).parameters) == (
+        "self",
+        "run_id",
+    )
+
+
+def test_scene_preview_does_not_use_the_unbounded_application_resolver(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    calls: list[ArtifactRef] = []
+
+    def reject_unbounded_resolution(artifact: ArtifactRef) -> Path:
+        calls.append(artifact)
+        raise AssertionError("scene preview must use its bounded descriptor reader")
+
+    monkeypatch.setattr(application, "resolve_artifact", reject_unbounded_resolution)
+
+    preview = workbench.scene_preview(run_id=UUID(submission["run_id"]))
+
+    assert preview["scene"]["seed"] == 77
+    assert calls == []
+
+
+def _install_scene_payload_authority(
+    *,
+    application: CompileApplication,
+    run_id: UUID,
+    payload: bytes,
+    monkeypatch: pytest.MonkeyPatch,
+    package_scene_digest: str | None = None,
+    package_seed: int | None = None,
+    ref_updates: dict[str, object] | None = None,
+) -> Path:
+    persisted = application.run_state(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    original = output.scene_spec
+    digest = hashlib.sha256(payload).hexdigest()
+    forged = original.model_copy(
+        update={
+            "sha256": digest,
+            "uri": f"artifact://sha256/{digest}",
+            "bytes": len(payload),
+            **(ref_updates or {}),
+        }
+    )
+    package_updates = {}
+    if package_scene_digest is not None:
+        package_updates["scene_spec_sha256"] = package_scene_digest
+    if package_seed is not None:
+        package_updates["seed"] = package_seed
+    package = output.environment_package.model_copy(update=package_updates)
+    forged_output = output.model_copy(
+        update={
+            "scene_spec": forged,
+            "environment_package": package,
+        }
+    )
+
+    def replace_ref(ref):
+        return forged if ref == original else ref
+
+    forged_events = tuple(
+        event.model_copy(
+            update={"artifact_refs": tuple(replace_ref(ref) for ref in event.artifact_refs)}
+        )
+        for event in persisted.events
+    )
+    forged_state = persisted.model_copy(
+        update={
+            "output": forged_output.model_dump(mode="json"),
+            "artifacts": tuple(replace_ref(ref) for ref in persisted.artifacts),
+            "events": forged_events,
+        }
+    )
+    forged_history = replace(
+        history,
+        events=tuple(
+            replace(stored, envelope=replace(stored.envelope, event=event))
+            for stored, event in zip(history.events, forged_events, strict=True)
+        ),
+    )
+    target = application.artifact_root / "sha256" / digest[:2] / digest
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    monkeypatch.setattr(application, "run_state", lambda _run_id: forged_state)
+    monkeypatch.setattr(application, "events", lambda **_kwargs: forged_history)
+    return target
+
+
+def test_scene_preview_rejects_a_real_non_success_terminal(
+    tmp_path: Path,
+) -> None:
+    workbench, _ = _workbench(tmp_path, generate_missing_assets=False)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+
+    with pytest.raises(WorkbenchCompileSceneNotPreviewableError, match="no previewable"):
+        workbench.scene_preview(run_id=UUID(submission["run_id"]))
+
+
+def test_scene_preview_rejects_an_unknown_or_non_uuid_run(tmp_path: Path) -> None:
+    workbench, _ = _workbench(tmp_path)
+
+    with pytest.raises(WorkbenchCompileRunNotFoundError, match="not found"):
+        workbench.scene_preview(run_id=UUID("12345678-1234-4234-9234-123456789abc"))
+    with pytest.raises(WorkbenchCompileInputError, match="UUID"):
+        workbench.scene_preview(  # type: ignore[arg-type]
+            run_id="12345678-1234-4234-9234-123456789abc"
+        )
+
+
+def test_scene_preview_rejects_declared_oversize_before_resolving_cas(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    _install_scene_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=b"x" * 65_537,
+        monkeypatch=monkeypatch,
+    )
+
+    def must_not_resolve(_artifact):
+        raise AssertionError("oversized SceneSpec must be rejected before CAS resolution")
+
+    monkeypatch.setattr(application, "resolve_artifact", must_not_resolve)
+
+    with pytest.raises(WorkbenchCompileSceneTooLargeError, match="exceeds"):
+        workbench.scene_preview(run_id=run_id)
+
+
+@pytest.mark.parametrize("mutation", ["missing", "same_size", "symlink", "fifo"])
+def test_scene_preview_fails_closed_for_an_unavailable_or_replaced_cas_object(
+    mutation: str,
+    tmp_path: Path,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    path = application.resolve_artifact(output.scene_spec)
+    original = path.read_bytes()
+    if mutation == "missing":
+        path.unlink()
+    elif mutation == "same_size":
+        path.write_bytes(bytes(byte ^ 0xFF for byte in original))
+    elif mutation == "symlink":
+        target = path.with_name(f"{path.name}.verified")
+        path.rename(target)
+        path.symlink_to(target)
+    else:
+        path.unlink()
+        os.mkfifo(path)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.scene_preview(run_id=run_id)
+
+
+def test_scene_preview_rechecks_the_same_file_descriptor_during_read(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    path = application.resolve_artifact(output.scene_spec)
+    original = path.read_bytes()
+    real_read = os.read
+    changed = False
+
+    def change_after_first_read(descriptor: int, size: int) -> bytes:
+        nonlocal changed
+        chunk = real_read(descriptor, size)
+        if chunk and not changed:
+            changed = True
+            path.write_bytes(original + b" " * (65_537 - len(original)))
+        return chunk
+
+    monkeypatch.setattr("demo.harness_compile.os.read", change_after_first_read)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.scene_preview(run_id=run_id)
+    assert changed is True
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "non_utf8",
+        "bom",
+        "duplicate",
+        "nan",
+        "overflow",
+        "non_object",
+        "forbidden",
+        "wrong_schema",
+        "deep",
+    ],
+)
+def test_scene_preview_rejects_non_strict_or_invalid_scene_json(
+    mutation: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    original = application.resolve_artifact(output.scene_spec).read_bytes()
+    document = json.loads(original)
+    if mutation == "non_utf8":
+        payload = b"\xff"
+    elif mutation == "bom":
+        payload = b"\xef\xbb\xbf" + original
+    elif mutation == "duplicate":
+        payload = b'{"schema_version":"robotwin.scene_spec.v1",' + original.lstrip()[1:]
+    elif mutation == "nan":
+        document["workspace"]["table_height_m"] = float("nan")
+        payload = json.dumps(document, allow_nan=True).encode("utf-8")
+    elif mutation == "overflow":
+        document["workspace"]["table_height_m"] = "NUMBER"
+        payload = json.dumps(document).replace('"NUMBER"', "1e400").encode("utf-8")
+    elif mutation == "non_object":
+        payload = b"[]"
+    elif mutation == "forbidden":
+        document["asset_path"] = "/tmp/private-scene"
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "wrong_schema":
+        document["schema_version"] = "robotwin.scene_spec.v999"
+        payload = json.dumps(document).encode("utf-8")
+    else:
+        nested: object = "leaf"
+        for _ in range(70):
+            nested = [nested]
+        document["extra"] = nested
+        payload = json.dumps(document).encode("utf-8")
+    _install_scene_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=payload,
+        monkeypatch=monkeypatch,
+    )
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.scene_preview(run_id=run_id)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ["request", "request_array", "seed", "seed_float", "semantic_digest"],
+)
+def test_scene_preview_rejects_a_scene_that_is_not_bound_to_the_invocation_and_package(
+    mutation: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    document = json.loads(application.resolve_artifact(output.scene_spec).read_bytes())
+    package_digest = None
+    package_seed = None
+    if mutation == "request":
+        document["request"] = "Place a blue sphere on the table."
+        package_digest = SceneSpec.model_validate(document).digest()
+    elif mutation == "request_array":
+        document["request"] = [document["request"]]
+        package_digest = SceneSpec.model_validate(
+            {**document, "request": document["request"][0]}
+        ).digest()
+    elif mutation == "seed":
+        document["seed"] = 78
+        scene = SceneSpec.model_validate(document)
+        package_digest = scene.digest()
+        package_seed = scene.seed
+    elif mutation == "seed_float":
+        document["seed"] = 77.0
+        package_digest = SceneSpec.model_validate(document).digest()
+    else:
+        document["workspace"]["table_height_m"] = 0.742
+    payload = json.dumps(document, indent=2, ensure_ascii=False).encode("utf-8") + b"\n"
+    _install_scene_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=payload,
+        monkeypatch=monkeypatch,
+        package_scene_digest=package_digest,
+        package_seed=package_seed,
+    )
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.scene_preview(run_id=run_id)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("media_type", "text/plain"),
+        ("schema_version", "robotwin.scene_spec.v999"),
+    ],
+)
+def test_scene_preview_rejects_a_typed_output_with_the_wrong_content_contract(
+    field: str,
+    value: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    payload = application.resolve_artifact(output.scene_spec).read_bytes()
+    _install_scene_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=payload,
+        monkeypatch=monkeypatch,
+        ref_updates={field: value},
+    )
+    real_read = harness_compile_module._read_verified_scene_bytes  # noqa: SLF001
+    reads = 0
+
+    def observe_read(*, path: Path, ref: ArtifactRef) -> bytes:
+        nonlocal reads
+        reads += 1
+        return real_read(path=path, ref=ref)
+
+    monkeypatch.setattr("demo.harness_compile._read_verified_scene_bytes", observe_read)
+
+    with pytest.raises(WorkbenchCompileAuthorityError):
+        workbench.scene_preview(run_id=run_id)
+    assert reads == 0
+
+
+def test_scene_preview_reader_rejects_oversize_even_when_called_directly(
+    tmp_path: Path,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    persisted = application.run_state(UUID(submission["run_id"]))
+    assert persisted is not None
+    ref = Text2EnvCompileOutput.model_validate(persisted.output).scene_spec
+    path = application.resolve_artifact(ref)
+    oversize = ref.model_copy(update={"bytes": 65_537})
+
+    with pytest.raises(WorkbenchCompileSceneTooLargeError):
+        harness_compile_module._read_verified_scene_bytes(  # noqa: SLF001
+            path=path,
+            ref=oversize,
+        )
+
+
+@pytest.mark.parametrize("flag", ["O_NOFOLLOW", "O_NONBLOCK"])
+def test_scene_preview_reader_fails_closed_without_required_descriptor_flags(
+    flag: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    persisted = application.run_state(UUID(submission["run_id"]))
+    assert persisted is not None
+    ref = Text2EnvCompileOutput.model_validate(persisted.output).scene_spec
+    path = application.resolve_artifact(ref)
+    monkeypatch.delattr(harness_compile_module.os, flag)
+
+    with pytest.raises(ValueError, match="required descriptor flags are unavailable"):
+        harness_compile_module._read_verified_scene_bytes(  # noqa: SLF001
+            path=path,
+            ref=ref,
+        )
+
+
+@pytest.mark.parametrize("replacement", ["directory", "wrong_size", "wrong_digest"])
+def test_scene_preview_rejects_a_cas_leaf_that_is_not_the_verified_object(
+    replacement: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    persisted = application.run_state(UUID(submission["run_id"]))
+    assert persisted is not None
+    ref = Text2EnvCompileOutput.model_validate(persisted.output).scene_spec
+    original = application.resolve_artifact(ref).read_bytes()
+    replacement_path = tmp_path / "replacement"
+    if replacement == "directory":
+        replacement_path.mkdir()
+    elif replacement == "wrong_size":
+        replacement_path.write_bytes(b"x")
+    else:
+        replacement_path.write_bytes(bytes(byte ^ 0xFF for byte in original))
+    monkeypatch.setattr(
+        "demo.harness_compile._scene_cas_path",
+        lambda **_kwargs: replacement_path,
+    )
+
+    with pytest.raises(WorkbenchCompileAuthorityError):
+        workbench.scene_preview(run_id=UUID(submission["run_id"]))
+
+
+def test_scene_preview_rejects_a_short_read_even_when_file_metadata_is_stable(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, _ = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    monkeypatch.setattr("demo.harness_compile.os.read", lambda _descriptor, _size: b"")
+
+    with pytest.raises(WorkbenchCompileAuthorityError):
+        workbench.scene_preview(run_id=UUID(submission["run_id"]))
+
+
+def test_scene_preview_rejects_a_coherent_authority_change_after_read(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, _ = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    stable = workbench._terminal_authority(run_id)  # noqa: SLF001
+    drifted = replace(
+        stable,
+        persisted=stable.persisted.model_copy(update={"started_at": stable.persisted.ended_at}),
+    )
+    reads = iter((stable, drifted))
+    monkeypatch.setattr(workbench, "_terminal_authority", lambda _run_id: next(reads))
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="changed during preview"):
+        workbench.scene_preview(run_id=run_id)
+
+
+def test_scene_preview_treats_post_read_run_deletion_as_authority_corruption(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, _ = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    stable = workbench._terminal_authority(run_id)  # noqa: SLF001
+    reads = iter((stable, WorkbenchCompileRunNotFoundError("terminal compile run was not found")))
+
+    def authority_then_deleted(_run_id: UUID):
+        result = next(reads)
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+    monkeypatch.setattr(workbench, "_terminal_authority", authority_then_deleted)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="changed during preview"):
+        workbench.scene_preview(run_id=run_id)
+
+
+def test_scene_preview_accepts_the_exact_size_limit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    original = application.resolve_artifact(output.scene_spec).read_bytes()
+    assert len(original) < 65_536
+    payload = original + b" " * (65_536 - len(original))
+    _install_scene_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=payload,
+        monkeypatch=monkeypatch,
+    )
+
+    preview = workbench.scene_preview(run_id=run_id)
+
+    assert preview["artifact"]["bytes"] == "65536"
+
+
+def test_scene_preview_reconfirms_the_terminal_authority_after_the_cas_read(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    stable = application.run_state(run_id)
+    assert stable is not None
+    drifted = stable.model_copy(update={"attempt": 0})
+    real_run_state = application.run_state
+    real_read = harness_compile_module._read_verified_scene_bytes  # noqa: SLF001
+    state_reads = 0
+    reads = 0
+
+    def drift_after_first_authority(_run_id):
+        nonlocal state_reads
+        state_reads += 1
+        return stable if state_reads <= 2 else drifted
+
+    def observe_read(*, path: Path, ref: ArtifactRef) -> bytes:
+        nonlocal reads
+        reads += 1
+        return real_read(path=path, ref=ref)
+
+    monkeypatch.setattr(application, "run_state", drift_after_first_authority)
+    monkeypatch.setattr("demo.harness_compile._read_verified_scene_bytes", observe_read)
+
+    with pytest.raises(WorkbenchCompileAuthorityError):
+        workbench.scene_preview(run_id=run_id)
+    assert reads == 1
+    assert real_run_state(run_id) == stable
+
+
+def test_scene_preview_never_reuses_content_after_the_cas_object_changes(
+    tmp_path: Path,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+
+    assert workbench.scene_preview(run_id=run_id)["scene"]["seed"] == 77
+    path = application.resolve_artifact(output.scene_spec)
+    original = path.read_bytes()
+    path.write_bytes(bytes(byte ^ 0xFF for byte in original))
+
+    with pytest.raises(WorkbenchCompileAuthorityError):
+        workbench.scene_preview(run_id=run_id)

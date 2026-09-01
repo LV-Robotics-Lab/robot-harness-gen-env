@@ -8,6 +8,9 @@ const state = {
   harnessAuditGeneration: 0,
   harnessAuditKey: null,
   harnessAuditRetryTimer: null,
+  harnessScenePreviewController: null,
+  harnessScenePreviewGeneration: 0,
+  harnessVerifiedAudit: null,
   harnessPendingCache: null,
   harnessPollTimer: null,
   harnessRequestGeneration: 0,
@@ -51,6 +54,13 @@ const artifactMediaTypePattern = /^[A-Za-z0-9][A-Za-z0-9.+_-]{0,63}\/[A-Za-z0-9]
 const artifactSchemaPattern = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 const artifactDigestPattern = /^[0-9a-f]{64}$/;
 const artifactByteCountPattern = /^(0|[1-9][0-9]*)$/;
+const scenePreviewArtifactMaximumBytes = 65_536n;
+const scenePreviewResponseMaximumBytes = 262_144;
+const scenePreviewSceneIdPattern = /^[a-z][a-z0-9_-]{0,95}$/;
+const scenePreviewObjectIdPattern = /^[a-z][a-z0-9_]{0,63}$/;
+const scenePreviewTargetPattern = /^(table|[a-z][a-z0-9_]{0,63})$/;
+const scenePreviewCategoryPattern = /^[a-z][a-z0-9_-]{0,63}$/;
+const scenePreviewAttributePattern = /^[a-z][a-z0-9_-]{0,31}$/;
 
 function isCanonicalHarnessCursor(value) {
   return typeof value === 'string'
@@ -221,6 +231,12 @@ function invalidHarnessAudit() {
   throw error;
 }
 
+function invalidHarnessScenePreview() {
+  const error = new Error('Harness compile scene preview failed integrity checks');
+  error.code = 'harness_compile_scene_preview_invalid';
+  throw error;
+}
+
 function validateHarnessEventArtifact(artifact, invalid = invalidHarnessPage) {
   if (!hasExactKeys(artifact, ['bytes', 'media_type', 'name', 'schema_version', 'sha256', 'uri'])
     || typeof artifact.name !== 'string'
@@ -332,7 +348,31 @@ function validateHarnessPage(page, afterEventId, expectedRunId = state.harnessRu
   return page;
 }
 
+function resetHarnessScenePreview({ forgetAudit = true, message = '', returnFocus = false } = {}) {
+  if (state.harnessScenePreviewController) state.harnessScenePreviewController.abort();
+  state.harnessScenePreviewController = null;
+  state.harnessScenePreviewGeneration += 1;
+  const button = $('#harness-scene-preview-button');
+  const panel = $('#harness-scene-preview-panel');
+  const contents = $('#harness-scene-preview-content');
+  const status = $('#harness-scene-preview-message');
+  if (button) {
+    button.disabled = false;
+    button.setAttribute('aria-expanded', 'false');
+    if (forgetAudit) button.hidden = true;
+  }
+  if (panel) {
+    panel.hidden = true;
+    panel.setAttribute('aria-busy', 'false');
+  }
+  if (contents) contents.replaceChildren();
+  if (status) status.textContent = message;
+  if (forgetAudit) state.harnessVerifiedAudit = null;
+  if (returnFocus && button && !button.hidden) button.focus();
+}
+
 function resetHarnessAudit(message = '筛选一个已终止的 Compile run 后显示依赖与终态对账。') {
+  resetHarnessScenePreview();
   clearTimeout(state.harnessAuditRetryTimer);
   state.harnessAuditRetryTimer = null;
   state.harnessAuditGeneration += 1;
@@ -554,6 +594,439 @@ function validateHarnessAudit(audit, runId, events, cursor) {
   return audit;
 }
 
+function validateScenePreviewString(
+  value,
+  { nullable = false, maximum = 4096, pattern = null } = {},
+) {
+  if (nullable && value === null) return value;
+  if (typeof value !== 'string'
+    || !value.length
+    || value.length > maximum
+    || (pattern && !pattern.test(value))) {
+    invalidHarnessScenePreview();
+  }
+  return value;
+}
+
+function validateScenePreviewNumber(value, { nullable = false } = {}) {
+  if (nullable && value === null) return value;
+  if (typeof value !== 'number' || !Number.isFinite(value)) invalidHarnessScenePreview();
+  return value;
+}
+
+function validateScenePreviewPair(value) {
+  if (!Array.isArray(value) || value.length !== 2) invalidHarnessScenePreview();
+  value.forEach((item) => validateScenePreviewNumber(item));
+  if (value[0] >= value[1]) invalidHarnessScenePreview();
+  return value;
+}
+
+function scenePreviewHasCycle(nodes, edges) {
+  const graph = new Map([...nodes].map((node) => [node, []]));
+  edges.forEach(([source, target]) => graph.get(source).push(target));
+  const visiting = new Set();
+  const visited = new Set();
+  const visit = (node) => {
+    if (visiting.has(node)) return true;
+    if (visited.has(node)) return false;
+    visiting.add(node);
+    if (graph.get(node).some((target) => visit(target))) return true;
+    visiting.delete(node);
+    visited.add(node);
+    return false;
+  };
+  return [...nodes].some((node) => visit(node));
+}
+
+function validateSceneProjection(scene) {
+  if (!hasExactKeys(
+    scene,
+    ['frame', 'language', 'objects', 'relations', 'scene_id', 'seed', 'unit', 'workspace'],
+  )) invalidHarnessScenePreview();
+  validateScenePreviewString(scene.scene_id, {
+    maximum: 96,
+    pattern: scenePreviewSceneIdPattern,
+  });
+  if (!['en', 'zh', 'mixed'].includes(scene.language)
+    || scene.unit !== 'm'
+    || !Number.isSafeInteger(scene.seed)
+    || scene.seed < 0
+    || scene.seed > 2_147_483_647) invalidHarnessScenePreview();
+  if (!hasExactKeys(scene.frame, ['handedness', 'name', 'x_axis', 'y_axis', 'z_axis'])
+    || scene.frame.name !== 'robotwin_world'
+    || scene.frame.x_axis !== 'right'
+    || scene.frame.y_axis !== 'front'
+    || scene.frame.z_axis !== 'up'
+    || scene.frame.handedness !== 'right_handed') invalidHarnessScenePreview();
+  if (!hasExactKeys(
+    scene.workspace,
+    ['robot_keepout_x_m', 'robot_keepout_y_m', 'support_surface', 'table_height_m',
+      'x_bounds_m', 'y_bounds_m'],
+  ) || scene.workspace.support_surface !== 'table') invalidHarnessScenePreview();
+  validateScenePreviewNumber(scene.workspace.table_height_m);
+  if (scene.workspace.table_height_m < 0.5 || scene.workspace.table_height_m > 1.2) {
+    invalidHarnessScenePreview();
+  }
+  validateScenePreviewPair(scene.workspace.x_bounds_m);
+  validateScenePreviewPair(scene.workspace.y_bounds_m);
+  validateScenePreviewPair(scene.workspace.robot_keepout_x_m);
+  validateScenePreviewPair(scene.workspace.robot_keepout_y_m);
+  if (!Array.isArray(scene.objects) || !scene.objects.length || scene.objects.length > 12) {
+    invalidHarnessScenePreview();
+  }
+  const objectIds = new Set();
+  scene.objects.forEach((object) => {
+    if (!hasExactKeys(
+      object,
+      ['articulation', 'category', 'color', 'material', 'object_id', 'region'],
+    )) invalidHarnessScenePreview();
+    validateScenePreviewString(object.object_id, {
+      maximum: 64,
+      pattern: scenePreviewObjectIdPattern,
+    });
+    validateScenePreviewString(object.category, {
+      maximum: 64,
+      pattern: scenePreviewCategoryPattern,
+    });
+    validateScenePreviewString(object.color, {
+      nullable: true,
+      maximum: 32,
+      pattern: scenePreviewAttributePattern,
+    });
+    validateScenePreviewString(object.material, {
+      nullable: true,
+      maximum: 32,
+      pattern: scenePreviewAttributePattern,
+    });
+    if (objectIds.has(object.object_id)) invalidHarnessScenePreview();
+    objectIds.add(object.object_id);
+    if (!['left', 'right', 'front', 'back', 'center'].includes(object.region)) {
+      invalidHarnessScenePreview();
+    }
+    if (object.articulation !== null) {
+      if (!hasExactKeys(
+        object.articulation,
+        ['joint_selector', 'open_fraction', 'state'],
+      )
+        || !['closed', 'open', 'partially_open'].includes(object.articulation.state)
+        || !['all_movable', 'first_movable'].includes(object.articulation.joint_selector)) {
+        invalidHarnessScenePreview();
+      }
+      validateScenePreviewNumber(object.articulation.open_fraction);
+      if (object.articulation.open_fraction < 0 || object.articulation.open_fraction > 1) {
+        invalidHarnessScenePreview();
+      }
+      if ((object.articulation.state === 'closed' && object.articulation.open_fraction !== 0)
+        || (object.articulation.state === 'open' && object.articulation.open_fraction !== 1)
+        || (object.articulation.state === 'partially_open'
+          && (object.articulation.open_fraction <= 0
+            || object.articulation.open_fraction >= 1))) invalidHarnessScenePreview();
+    }
+  });
+  const relationKinds = ['on_table', 'on_top_of', 'inside', 'left_of', 'right_of',
+    'front_of', 'behind', 'near', 'distance_at_least'];
+  if (!Array.isArray(scene.relations)
+    || !scene.relations.length
+    || scene.relations.length > 64) invalidHarnessScenePreview();
+  const supportSources = new Set();
+  const supportEdges = [];
+  const horizontalEdges = [];
+  const verticalEdges = [];
+  const relationKeys = new Set();
+  const distanceBounds = new Map();
+  scene.relations.forEach((relation) => {
+    if (!hasExactKeys(
+      relation,
+      ['max_distance_m', 'min_distance_m', 'relation', 'source', 'target'],
+    ) || !relationKinds.includes(relation.relation)) invalidHarnessScenePreview();
+    validateScenePreviewString(relation.source, {
+      maximum: 64,
+      pattern: scenePreviewObjectIdPattern,
+    });
+    validateScenePreviewString(relation.target, {
+      maximum: 64,
+      pattern: scenePreviewTargetPattern,
+    });
+    validateScenePreviewNumber(relation.max_distance_m, { nullable: true });
+    validateScenePreviewNumber(relation.min_distance_m, { nullable: true });
+    if (!objectIds.has(relation.source)
+      || (relation.target !== 'table' && !objectIds.has(relation.target))
+      || relation.source === relation.target
+      || (relation.max_distance_m !== null
+        && (relation.max_distance_m <= 0 || relation.max_distance_m > 1))
+      || (relation.min_distance_m !== null
+        && (relation.min_distance_m <= 0 || relation.min_distance_m > 1))) {
+      invalidHarnessScenePreview();
+    }
+    const relationKey = JSON.stringify([
+      relation.relation,
+      relation.source,
+      relation.target,
+      relation.max_distance_m,
+      relation.min_distance_m,
+    ]);
+    if (relationKeys.has(relationKey)) invalidHarnessScenePreview();
+    relationKeys.add(relationKey);
+    if (relation.relation === 'on_table') {
+      if (relation.target !== 'table'
+        || relation.max_distance_m !== null
+        || relation.min_distance_m !== null) invalidHarnessScenePreview();
+    } else if (relation.target === 'table') {
+      invalidHarnessScenePreview();
+    }
+    if (relation.relation === 'near') {
+      if (relation.min_distance_m !== null) invalidHarnessScenePreview();
+    } else if (relation.max_distance_m !== null) invalidHarnessScenePreview();
+    if (relation.relation === 'distance_at_least') {
+      if (relation.min_distance_m === null) invalidHarnessScenePreview();
+    } else if (relation.min_distance_m !== null) invalidHarnessScenePreview();
+    if (['on_table', 'on_top_of', 'inside'].includes(relation.relation)) {
+      if (supportSources.has(relation.source)) invalidHarnessScenePreview();
+      supportSources.add(relation.source);
+      if (relation.target !== 'table') supportEdges.push([relation.source, relation.target]);
+    } else if (relation.relation === 'left_of') {
+      horizontalEdges.push([relation.source, relation.target]);
+    } else if (relation.relation === 'right_of') {
+      horizontalEdges.push([relation.target, relation.source]);
+    } else if (relation.relation === 'behind') {
+      verticalEdges.push([relation.source, relation.target]);
+    } else if (relation.relation === 'front_of') {
+      verticalEdges.push([relation.target, relation.source]);
+    } else {
+      const pair = [relation.source, relation.target].sort().join('\u0000');
+      const bounds = distanceBounds.get(pair) || {};
+      if (relation.relation === 'near') bounds.maximum = relation.max_distance_m ?? 0.18;
+      else bounds.minimum = relation.min_distance_m;
+      distanceBounds.set(pair, bounds);
+    }
+  });
+  if (supportSources.size !== objectIds.size
+    || scenePreviewHasCycle(objectIds, supportEdges)
+    || scenePreviewHasCycle(objectIds, horizontalEdges)
+    || scenePreviewHasCycle(objectIds, verticalEdges)
+    || [...distanceBounds.values()].some(
+      (bounds) => (bounds.minimum ?? 0) > (bounds.maximum ?? Number.POSITIVE_INFINITY),
+    )) invalidHarnessScenePreview();
+  return scene;
+}
+
+function previewableSceneArtifact(audit) {
+  if (audit.run.status !== 'succeeded' || audit.invocation.status !== 'bound') return null;
+  const candidates = audit.artifacts.filter((artifact) => (
+    artifact.name === 'scene_spec'
+      && artifact.media_type === 'application/json'
+      && artifact.schema_version === 'robotwin.scene_spec.v1'
+      && artifact.bindings.length === 1
+      && artifact.bindings[0].direction === 'output'
+      && artifact.bindings[0].role === 'scene_spec'
+      && BigInt(artifact.bytes) <= scenePreviewArtifactMaximumBytes
+  ));
+  return candidates.length === 1 ? candidates[0] : null;
+}
+
+function validateHarnessScenePreview(preview, authority) {
+  if (!hasExactKeys(preview, ['artifact', 'run', 'scene', 'schema_version'])
+    || preview.schema_version !== 'harness.workbench_compile_scene_preview.v1'
+    || !hasExactKeys(
+      preview.run,
+      ['event_count', 'invocation_digest', 'run_id', 'terminal_event_id'],
+    )
+    || preview.run.run_id !== authority.run_id
+    || preview.run.invocation_digest !== authority.invocation_digest
+    || preview.run.event_count !== authority.event_count
+    || preview.run.terminal_event_id !== authority.terminal_event_id) {
+    invalidHarnessScenePreview();
+  }
+  try {
+    validateHarnessAuditArtifact(preview.artifact);
+  } catch (_error) {
+    invalidHarnessScenePreview();
+  }
+  const artifact = authority.artifact;
+  if (preview.artifact.name !== artifact.name
+    || preview.artifact.media_type !== artifact.media_type
+    || preview.artifact.schema_version !== artifact.schema_version
+    || preview.artifact.sha256 !== artifact.sha256
+    || preview.artifact.bytes !== artifact.bytes
+    || preview.artifact.bindings.length !== 1
+    || preview.artifact.bindings[0].direction !== 'output'
+    || preview.artifact.bindings[0].role !== 'scene_spec') invalidHarnessScenePreview();
+  validateSceneProjection(preview.scene);
+  return preview;
+}
+
+async function readBoundedScenePreviewResponse(response) {
+  const contentType = response.headers.get('Content-Type')?.split(';', 1)[0].trim().toLowerCase();
+  if (contentType !== 'application/json' || !response.body) invalidHarnessScenePreview();
+  const reader = response.body.getReader();
+  const chunks = [];
+  let length = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    length += value.byteLength;
+    if (length > scenePreviewResponseMaximumBytes) {
+      await reader.cancel();
+      invalidHarnessScenePreview();
+    }
+    chunks.push(value);
+  }
+  const payload = new Uint8Array(length);
+  let offset = 0;
+  chunks.forEach((chunk) => {
+    payload.set(chunk, offset);
+    offset += chunk.byteLength;
+  });
+  if (payload.length >= 3 && payload[0] === 0xef && payload[1] === 0xbb && payload[2] === 0xbf) {
+    invalidHarnessScenePreview();
+  }
+  let text;
+  try {
+    text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(payload);
+  } catch (_error) {
+    invalidHarnessScenePreview();
+  }
+  let value;
+  try {
+    value = JSON.parse(text);
+  } catch (_error) {
+    invalidHarnessScenePreview();
+  }
+  if (!response.ok) invalidHarnessScenePreview();
+  return value;
+}
+
+function appendScenePreviewSummary(summary, label, value) {
+  const term = document.createElement('dt');
+  term.textContent = label;
+  const description = document.createElement('dd');
+  description.textContent = value;
+  summary.append(term, description);
+}
+
+function appendScenePreviewGroup(contents, title, values) {
+  const group = document.createElement('div');
+  group.className = 'scene-preview-group';
+  const heading = document.createElement('h5');
+  heading.textContent = title;
+  const list = document.createElement('ol');
+  list.className = 'scene-preview-list';
+  values.forEach((value) => {
+    const item = document.createElement('li');
+    item.textContent = value;
+    list.appendChild(item);
+  });
+  group.append(heading, list);
+  contents.appendChild(group);
+}
+
+function renderHarnessScenePreview(preview) {
+  const scene = preview.scene;
+  const contents = $('#harness-scene-preview-content');
+  contents.replaceChildren();
+  const summary = document.createElement('dl');
+  summary.className = 'scene-preview-summary';
+  appendScenePreviewSummary(summary, 'Scene', scene.scene_id);
+  appendScenePreviewSummary(summary, 'Language', scene.language);
+  appendScenePreviewSummary(summary, 'Seed', String(scene.seed));
+  appendScenePreviewSummary(summary, 'Unit', scene.unit);
+  appendScenePreviewSummary(
+    summary,
+    'Frame',
+    `${scene.frame.name} · ${scene.frame.x_axis}/${scene.frame.y_axis}/${scene.frame.z_axis} · ${scene.frame.handedness}`,
+  );
+  appendScenePreviewSummary(
+    summary,
+    'Workspace',
+    `${scene.workspace.support_surface} · height ${scene.workspace.table_height_m} m · x [${scene.workspace.x_bounds_m.join(', ')}] · y [${scene.workspace.y_bounds_m.join(', ')}]`,
+  );
+  contents.appendChild(summary);
+  appendScenePreviewGroup(
+    contents,
+    `Objects · ${scene.objects.length}`,
+    scene.objects.map((object) => {
+      const fields = [object.object_id, object.category];
+      if (object.color !== null) fields.push(object.color);
+      if (object.material !== null) fields.push(object.material);
+      fields.push(object.region);
+      if (object.articulation !== null) {
+        fields.push(
+          `${object.articulation.state} ${object.articulation.open_fraction} · ${object.articulation.joint_selector}`,
+        );
+      }
+      return fields.join(' · ');
+    }),
+  );
+  appendScenePreviewGroup(
+    contents,
+    `Relations · ${scene.relations.length}`,
+    scene.relations.map((relation) => {
+      const distances = [];
+      if (relation.max_distance_m !== null) distances.push(`max ${relation.max_distance_m} m`);
+      if (relation.min_distance_m !== null) distances.push(`min ${relation.min_distance_m} m`);
+      return `${relation.source} ${relation.relation} ${relation.target}${distances.length ? ` · ${distances.join(' · ')}` : ''}`;
+    }),
+  );
+}
+
+function scenePreviewAuthorityIsCurrent(authority) {
+  return state.harnessVerifiedAudit === authority
+    && state.harnessRunId === authority.run_id
+    && state.harnessCursor === authority.terminal_event_id
+    && state.harnessEvents.length === authority.event_count;
+}
+
+async function loadHarnessScenePreview() {
+  const authority = state.harnessVerifiedAudit;
+  const button = $('#harness-scene-preview-button');
+  if (!authority || button.hidden || !scenePreviewAuthorityIsCurrent(authority)) return;
+  resetHarnessScenePreview({ forgetAudit: false, message: '正在读取并验证场景结构…' });
+  const generation = state.harnessScenePreviewGeneration;
+  const controller = new AbortController();
+  state.harnessScenePreviewController = controller;
+  button.disabled = true;
+  $('#harness-scene-preview-panel').setAttribute('aria-busy', 'true');
+  try {
+    const response = await fetch(
+      `/api/harness/compile-runs/${encodeURIComponent(authority.run_id)}/scene-preview`,
+      {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        cache: 'no-store',
+        credentials: 'same-origin',
+        signal: controller.signal,
+      },
+    );
+    const preview = await readBoundedScenePreviewResponse(response);
+    if (generation !== state.harnessScenePreviewGeneration
+      || controller !== state.harnessScenePreviewController
+      || !scenePreviewAuthorityIsCurrent(authority)) return;
+    validateHarnessScenePreview(preview, authority);
+    if (generation !== state.harnessScenePreviewGeneration
+      || !scenePreviewAuthorityIsCurrent(authority)) return;
+    state.harnessScenePreviewController = null;
+    button.disabled = false;
+    button.setAttribute('aria-expanded', 'true');
+    const panel = $('#harness-scene-preview-panel');
+    panel.setAttribute('aria-busy', 'false');
+    renderHarnessScenePreview(preview);
+    panel.hidden = false;
+    $('#harness-scene-preview-message').textContent = '场景结构已验证；内容按字段投影显示。';
+    $('#harness-scene-preview-title').focus();
+  } catch (_error) {
+    if (generation !== state.harnessScenePreviewGeneration
+      || controller !== state.harnessScenePreviewController) return;
+    state.harnessScenePreviewController = null;
+    button.disabled = false;
+    button.setAttribute('aria-expanded', 'false');
+    const panel = $('#harness-scene-preview-panel');
+    panel.hidden = true;
+    panel.setAttribute('aria-busy', 'false');
+    $('#harness-scene-preview-content').replaceChildren();
+    $('#harness-scene-preview-message').textContent = '场景结构预览无法验证。';
+  }
+}
+
 function appendAuditSummary(summary, label, value) {
   const term = document.createElement('dt');
   term.textContent = label;
@@ -563,6 +1036,7 @@ function appendAuditSummary(summary, label, value) {
 }
 
 function renderHarnessAudit(audit) {
+  resetHarnessScenePreview();
   const summary = $('#harness-audit-run-summary');
   summary.replaceChildren();
   appendAuditSummary(summary, 'Run', audit.run.run_id);
@@ -622,6 +1096,22 @@ function renderHarnessAudit(audit) {
   }
   $('#harness-audit-message').textContent = '摘要已与完整 committed journal 对账；artifact metadata 已复核。';
   $('#harness-audit-panel').hidden = false;
+  const sceneArtifact = previewableSceneArtifact(audit);
+  if (sceneArtifact) {
+    state.harnessVerifiedAudit = {
+      run_id: audit.run.run_id,
+      invocation_digest: audit.invocation.digest,
+      event_count: audit.run.event_count,
+      terminal_event_id: audit.run.terminal_event_id,
+      artifact: {
+        ...sceneArtifact,
+        bindings: sceneArtifact.bindings.map((binding) => ({ ...binding })),
+      },
+    };
+    const button = $('#harness-scene-preview-button');
+    button.hidden = false;
+    $('#harness-scene-preview-message').textContent = '可按需读取已提交的 SceneSpec 结构。';
+  }
 }
 
 async function loadHarnessAuditIfEligible() {
@@ -643,6 +1133,7 @@ async function loadHarnessAuditIfEligible() {
   if (state.harnessAuditKey === auditKey) return;
   state.harnessAuditKey = auditKey;
   const generation = ++state.harnessAuditGeneration;
+  resetHarnessScenePreview();
   $('#harness-audit-panel').hidden = true;
   $('#harness-audit-message').textContent = '正在与 committed journal 对账…';
   try {
@@ -723,6 +1214,7 @@ async function loadHarnessEvents() {
   clearTimeout(state.harnessPollTimer);
   const requestGeneration = ++state.harnessRequestGeneration;
   const requestedRunId = state.harnessRunId;
+  const previousAuthorityKey = `${state.harnessCursor}:${state.harnessEvents.length}`;
   const status = $('#harness-feed-status');
   const message = $('#harness-feed-message');
   try {
@@ -760,6 +1252,9 @@ async function loadHarnessEvents() {
         }
       });
       state.harnessCursor = page.last_event_id;
+    }
+    if (previousAuthorityKey !== `${state.harnessCursor}:${state.harnessEvents.length}`) {
+      resetHarnessAudit('committed journal 已变化；正在重新对账。');
     }
     saveHarnessCache();
     status.textContent = '已连接';
@@ -1111,6 +1606,10 @@ $('#harness-filter-form').addEventListener('submit', (event) => {
   selectHarnessRun($('#harness-run-filter').value);
 });
 $('#harness-filter-clear').addEventListener('click', () => selectHarnessRun(''));
+$('#harness-scene-preview-button').addEventListener('click', loadHarnessScenePreview);
+$('#harness-scene-preview-close').addEventListener('click', () => {
+  resetHarnessScenePreview({ forgetAudit: false, returnFocus: true });
+});
 $('#open-result-button').addEventListener('click', () => {
   if (state.activeJob) window.open(`/?job=${encodeURIComponent(state.activeJob.job_id)}`, '_blank', 'noopener');
 });

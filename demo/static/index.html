@@ -153,6 +153,46 @@
             id="harness-artifact-list"
             aria-label="已提交 Artifact 元数据"
           ></ol>
+          <div class="scene-preview-actions">
+            <button
+              class="secondary-button"
+              id="harness-scene-preview-button"
+              type="button"
+              aria-controls="harness-scene-preview-panel"
+              aria-describedby="harness-scene-preview-message"
+              aria-expanded="false"
+              hidden
+            >
+              查看场景结构
+            </button>
+            <p
+              class="scene-preview-message"
+              id="harness-scene-preview-message"
+              role="status"
+              aria-live="polite"
+            ></p>
+          </div>
+          <section
+            class="scene-preview"
+            id="harness-scene-preview-panel"
+            aria-labelledby="harness-scene-preview-title"
+            aria-busy="false"
+            hidden
+          >
+            <div class="scene-preview-heading">
+              <div>
+                <span class="section-index">SCENE</span>
+                <h4 id="harness-scene-preview-title" tabindex="-1">已验证场景结构</h4>
+              </div>
+              <button
+                class="secondary-button"
+                id="harness-scene-preview-close"
+                type="button"
+                aria-label="关闭场景结构预览"
+              >关闭</button>
+            </div>
+            <div id="harness-scene-preview-content"></div>
+          </section>
         </section>
       </div>
     </section>

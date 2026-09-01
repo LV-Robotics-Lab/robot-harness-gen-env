@@ -125,12 +125,31 @@ event identity 集不得多/少，随后每项再经同一 `CompileApplication` 
 `textContent` 渲染；不生成链接或内容请求。当前 `tests/demo` 为 161 passed，其中 34 项真 Chrome；
 相邻 Application/Event journal 为 51 passed；审计模块 213 statements / 100 branches 全覆盖。
 
+A050 只为其中一个已验证 binding 增加窄化内容投影：
+`GET /api/harness/compile-runs/<canonical-v4-uuid>/scene-preview` 仅接受 succeeded
+`text2env.compile@1.0.0` 的类型化 `Text2EnvCompileOutput.scene_spec`，且 media/schema 必须精确为
+`application/json` / `robotwin.scene_spec.v1`。服务端先重建上述终态 authority；声明超过 65,536 bytes
+会在定位 CAS 前拒绝，随后直接打开固定 CAS leaf，以同一 FD 的 `O_NOFOLLOW|O_NONBLOCK`、regular
+`fstat`、最多 cap+1 的读取、前后 stat identity、精确大小和 SHA-256 证明当次 bytes。内容还必须是
+严格 UTF-8、无 BOM/重复键/非有限数、深度有界且 canonical 的 `SceneSpec`，其中 request/seed 必须
+等于类型化 input，seed 和语义 digest 还须分别等于 EnvironmentPackage；解析完成后再读一次完整终态
+authority。返回 `harness.workbench_compile_scene_preview.v1`，只含 run/artifact binding 与去掉 request
+和 schema_version 的场景字段，不回传原始 JSON、path 或 URI。
+
+浏览器只有在 audit v2 已对完整成功 run 和唯一 `output/scene_spec`（且声明大小不超过 cap）验真后才
+显示按钮，也只在用户点击时请求；响应有独立大小上限，并与当前 run、Invocation digest、event
+count/cursor 和 artifact metadata 精确对账。切换 run/filter、刷新 feed、重做 audit 或关闭面板会
+abort/递增 generation 并清空内容；预览不进缓存、不自动重试，字段以 `textContent` 构造。当前
+`tests/demo` 为 232 passed，其中 47 项真 Chrome；相邻 Application/Event journal 为 51 passed；
+`demo/harness_compile.py` 374 statements / 156 branches 全覆盖。
+
 这仍不是完整 Stage 7：Event Timeline 仍是唯一 operations authority，审计面板不复制或推演操作，也
-不是 artifact 内容 viewer、下载接口或可编辑依赖图；CAS 解析是当次大小/摘要复核，不声称文件系统
-不可变。没有拖拽、重排、重试、replay、validate 或 System 2。
+没有通用 artifact 内容 viewer、下载接口或可编辑依赖图；唯一内容入口只是上述成功 SceneSpec 的固定
+字段投影。CAS 读取是当次大小/摘要复核，不声称文件系统不可变。没有拖拽、重排、预览自动重试、
+replay、validate 或 System 2。
 compile `succeeded` 仍不表示物理 validation、资产 settle 或 publishable。A047/A048 的两份
-`harness.workbench_*`（含 A049 的 audit v2）都是工作台投影，不新增 Harness 公共 schema snapshot；
-当前 17 份计数不变。
+`harness.workbench_*`（含 A049 audit v2 与 A050 scene preview v1）都是工作台投影，不新增 Harness
+公共 schema snapshot；当前 17 份计数不变。
 
 Stage 5 的视觉评审状态是三态而非布尔值。在 `--run-smoke`/视觉评审路径中，只有 visual pass
 才把 candidate 原子晋升为 `final_placement.json` 并退出 0；`pending_visual_review` 只写

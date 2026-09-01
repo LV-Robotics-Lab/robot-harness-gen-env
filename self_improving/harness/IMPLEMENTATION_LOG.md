@@ -925,3 +925,35 @@
 - 边界：这是当前 CAS bytes 的重验，不声称 OS 或同用户路径不可变。它不是 artifact 内容 viewer、下载
   接口、依赖编辑、replay、validate、System 2、物理 validation、settle 或 publishability；工作台
   projection v2 也不新增 Harness 公共 schema snapshot。
+
+### 2026-09-01 / A050：SceneSpec 结构预览必须是固定投影，不能演变成通用 artifact viewer
+
+- RED：A049 只能展示 metadata；首个测试因 `WorkbenchCompile.scene_preview` 不存在而失败。后续反例
+  覆盖非成功/错 media 或 schema、声明超限后仍解析、symlink/FIFO、同 FD 读中漂移、短读/错大小/SHA、
+  非 UTF-8/BOM/重复 JSON member/非有限数/过深或非 canonical JSON、request/seed/package digest 重绑、
+  读后 authority 漂移/删除、无长度终止请求体，以及浏览器自动请求、迟到响应、额外字段、locator/XSS
+  与关闭后复用旧内容。
+- 固定 seam：唯一公共调用是 `WorkbenchCompile.scene_preview(*, run_id: UUID)`，HTTP 只暴露
+  `GET /api/harness/compile-runs/<canonical-v4-uuid>/scene-preview` 并拒绝 query/body/Range。它先复用 A049
+  的 RunState/Invocation/完整 EventPage/typed input-output closure，只允许 succeeded
+  `text2env.compile@1.0.0` 的唯一 `output/scene_spec`，media/schema 精确为
+  `application/json` / `robotwin.scene_spec.v1`。
+- byte authority：ArtifactRef 声明超过 65,536 bytes 会在 CAS 定位前拒绝；服务端直接定位固定 digest
+  leaf，以 `O_NOFOLLOW|O_NONBLOCK` 打开同一 FD，要求 regular file，执行 cap+1 有界读取、前后
+  `fstat` identity、精确 length 和 SHA-256 复核。随后严格解码 UTF-8，拒绝 BOM、重复 key、NaN/
+  Infinity、非 object、过深嵌套与 Pydantic coercion/default，并以 canonical `SceneSpec` 对账类型。
+- semantic authority：场景内 request/seed 必须等于 typed compile input，seed 与 semantic digest 还分别
+  绑定 EnvironmentPackage；全部字节/语义检查后再次读取完整终态 authority。返回
+  `harness.workbench_compile_scene_preview.v1` 的 run/artifact/scene 字段投影，主动排除 request、
+  schema_version、原始 JSON、path、URI 与 download/content locator。
+- browser：只有 audit v2 已与当前完整 succeeded history 及唯一、未超限 SceneSpec artifact 精确对账后
+  才显示按钮，也只在用户点击时发请求。响应读取有独立上限并严格核 exact shape、run/Invocation/
+  event cursor/count 与 artifact metadata；run/filter/feed/audit 变化或关闭面板都会 abort、递增 generation
+  并清空 DOM。预览不缓存、不自动重试，所有字段经 `textContent` 构建，关闭后重开会重新读取。
+- 验证：`tests/demo` 232 passed，其中 47 项为真 Flask + headless Chrome；
+  `test_harness_compile.py` 119 passed，`test_app.py` 59 passed，相邻 Application/Event journal 51 passed。
+  `demo/harness_compile.py` 为 374 statements / 156 branches，statement/branch 100%。Python/JS syntax、
+  ruff check/format 与 diff check 均通过。
+- 边界：这是成功 compile 的窄化 SceneSpec 字段投影，不是 raw 或通用 artifact viewer，也没有下载、
+  replay、validate、System 2、物理 validation、settle 或 publishability；工作台 projection 不新增
+  Harness 公共 schema snapshot。

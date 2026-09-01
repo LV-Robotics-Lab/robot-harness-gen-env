@@ -106,6 +106,81 @@ def _compile_artifact_refs(marker: str | None = None) -> tuple[ArtifactRef, ...]
     )
 
 
+def _scene_preview_payload(
+    *,
+    run_id: UUID,
+    event_count: int,
+    terminal_event_id: str,
+    invocation_digest: str = "a" * 64,
+    scene_id: str = "stacked_can_preview",
+) -> dict[str, object]:
+    return {
+        "schema_version": "harness.workbench_compile_scene_preview.v1",
+        "run": {
+            "run_id": str(run_id),
+            "invocation_digest": invocation_digest,
+            "event_count": event_count,
+            "terminal_event_id": terminal_event_id,
+        },
+        "artifact": _compile_artifact_rows()[0],
+        "scene": {
+            "scene_id": scene_id,
+            "language": "en",
+            "frame": {
+                "name": "robotwin_world",
+                "x_axis": "right",
+                "y_axis": "front",
+                "z_axis": "up",
+                "handedness": "right_handed",
+            },
+            "unit": "m",
+            "seed": 42,
+            "workspace": {
+                "support_surface": "table",
+                "table_height_m": 0.741,
+                "x_bounds_m": [-0.35, 0.35],
+                "y_bounds_m": [-0.2, 0.3],
+                "robot_keepout_x_m": [-0.16, 0.16],
+                "robot_keepout_y_m": [-0.2, -0.08],
+            },
+            "objects": [
+                {
+                    "object_id": "plate",
+                    "category": "plate",
+                    "color": None,
+                    "material": None,
+                    "region": "center",
+                    "articulation": None,
+                },
+                {
+                    "object_id": "can",
+                    "category": "can",
+                    "color": "red",
+                    "material": None,
+                    "region": "center",
+                    "articulation": None,
+                },
+            ],
+            "relations": [
+                {
+                    "relation": "on_table",
+                    "source": "plate",
+                    "target": "table",
+                    "max_distance_m": None,
+                    "min_distance_m": None,
+                },
+                {
+                    "relation": "on_top_of",
+                    "source": "can",
+                    "target": "plate",
+                    "max_distance_m": None,
+                    "min_distance_m": None,
+                },
+            ],
+        },
+    }
+
+
 def _configured_app(
     tmp_path: Path,
     monkeypatch,
@@ -143,6 +218,7 @@ class _JournalSubmittingWorkbench:
         self.feed = HarnessEventFeed.from_journal(journal)
         self.submissions: list[tuple[str, int]] = []
         self.audit_runs: list[UUID] = []
+        self.preview_runs: list[UUID] = []
 
     def page(self, **kwargs):
         return self.feed.page(**kwargs)
@@ -205,6 +281,16 @@ class _JournalSubmittingWorkbench:
             },
             "artifacts": _compile_artifact_rows(),
         }
+
+    def scene_preview(self, *, run_id: UUID):
+        assert run_id == self.run_id
+        self.preview_runs.append(run_id)
+        page = self.page(run_id=run_id, limit=500)
+        return _scene_preview_payload(
+            run_id=run_id,
+            event_count=len(page["events"]),
+            terminal_event_id=page["last_event_id"],
+        )
 
 
 class _UnboundSubmittingWorkbench:
@@ -539,6 +625,538 @@ def test_browser_renders_dependency_and_artifact_audit_after_the_terminal_journa
     assert "output · scene_spec" in dom
     assert "artifact://" not in dom
     assert "operations" not in dom
+
+
+def test_browser_offers_scene_preview_after_audit_without_fetching_it_automatically(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+    preview_paths: list[str] = []
+
+    @app.before_request
+    def observe_preview_requests():
+        if request.path.endswith("/scene-preview"):
+            preview_paths.append(request.path)
+
+    @app.after_request
+    def compile_and_wait_for_the_preview_offer(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const preview = document.querySelector('#harness-scene-preview-button');
+                      while (preview.hidden) await pause();
+                      document.body.dataset.scenePreviewOffered = 'true';
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=4_000)
+
+    assert 'data-scene-preview-offered="true"' in dom
+    assert 'id="harness-scene-preview-button"' in dom
+    assert 'aria-expanded="false"' in dom
+    assert preview_paths == []
+    assert workbench.preview_runs == []
+
+
+def test_browser_fetches_and_renders_a_verified_scene_preview_only_after_click(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def compile_and_open_the_scene_preview(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const button = document.querySelector('#harness-scene-preview-button');
+                      while (button.hidden) await pause();
+                      button.click();
+                      const panel = document.querySelector('#harness-scene-preview-panel');
+                      while (panel.hidden || button.disabled) await pause();
+                      document.body.dataset.scenePreviewRendered = 'true';
+                      document.body.dataset.scenePreviewOmittedRequest = String(
+                        !panel.textContent.includes('request')
+                      );
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=4_000)
+
+    assert workbench.preview_runs == [workbench.run_id]
+    assert 'data-scene-preview-rendered="true"' in dom
+    assert 'id="harness-scene-preview-panel"' in dom
+    assert 'id="harness-scene-preview-panel"' in dom and (
+        'id="harness-scene-preview-panel" hidden' not in dom
+    )
+    assert 'aria-expanded="true"' in dom
+    assert "stacked_can_preview" in dom
+    assert "plate · plate · center" in dom
+    assert "can · can · red · center" in dom
+    assert "can on_top_of plate" in dom
+    assert "场景结构已验证；内容按字段投影显示。" in dom
+    assert 'data-scene-preview-omitted-request="true"' in dom
+    assert "artifact://" not in dom
+
+
+def test_browser_scene_preview_rejects_hostile_text_smuggled_into_an_allowed_field(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    hostile = (
+        '</dd><img id="scene-preview-xss" src="x" '
+        "onerror=\"document.body.dataset.scenePreviewXssExecuted='true'\">"
+        "/tmp/private-preview"
+    )
+    original_preview = workbench.scene_preview
+
+    def hostile_preview(*, run_id: UUID):
+        preview = original_preview(run_id=run_id)
+        case = len(workbench.preview_runs) - 1
+        if case == 0:
+            preview["scene"]["scene_id"] = hostile
+        elif case == 1:
+            preview["scene"]["objects"][0]["object_id"] = "../private_plate"
+        elif case == 2:
+            preview["scene"]["relations"][0]["source"] = "/tmp/private_source"
+        elif case == 3:
+            preview["scene"]["relations"][0]["target"] = "file:///tmp/private_target"
+        elif case == 4:
+            preview["scene"]["objects"][0]["category"] = "<img>"
+        elif case == 5:
+            preview["scene"]["objects"][0]["color"] = "file:///tmp/private_color"
+        else:
+            preview["scene"]["objects"][0]["material"] = "red<script>"
+        return preview
+
+    monkeypatch.setattr(workbench, "scene_preview", hostile_preview)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def compile_and_reject_the_hostile_preview(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const button = document.querySelector('#harness-scene-preview-button');
+                      while (button.hidden) await pause();
+                      const panel = document.querySelector('#harness-scene-preview-panel');
+                      const message = document.querySelector('#harness-scene-preview-message');
+                      let rejected = 0;
+                      for (let index = 0; index < 7; index += 1) {
+                        button.click();
+                        while (button.disabled) await pause();
+                        if (panel.hidden
+                            && message.textContent === '场景结构预览无法验证。'
+                            && document.querySelector('#scene-preview-xss') === null) {
+                          rejected += 1;
+                        }
+                      }
+                      document.body.dataset.hostilePreviewRejected = String(rejected);
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=4_000)
+
+    assert workbench.preview_runs == [workbench.run_id] * 7
+    assert 'data-hostile-preview-rejected="7"' in dom
+    assert "&lt;img" not in dom
+    assert "/tmp/private-preview" not in dom
+    assert "data-scene-preview-xss-executed" not in dom
+
+
+@pytest.mark.parametrize(
+    "wire_case",
+    [
+        "oversized",
+        "wrong_content_type",
+        "utf8_bom",
+        "invalid_utf8",
+        "invalid_json",
+        "non_2xx",
+    ],
+)
+def test_browser_scene_preview_fails_closed_on_malformed_wire_responses(
+    wire_case: str,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+    preview_path = f"/api/harness/compile-runs/{workbench.run_id}/scene-preview"
+    observed_preview_requests: list[tuple[str, str, bytes]] = []
+
+    @app.before_request
+    def observe_preview_request_boundary():
+        if request.path.endswith("/scene-preview"):
+            observed_preview_requests.append((request.method, request.path, request.query_string))
+
+    @app.after_request
+    def corrupt_the_scene_preview_wire_response(response):
+        if request.path != preview_path or response.status_code != 200:
+            return response
+        response.direct_passthrough = False
+        valid_payload = response.get_data()
+        status_code = 200
+        content_type = "application/json"
+        payload = valid_payload
+        if wire_case == "oversized":
+            payload = b'{"injected":"/tmp/private-wire","padding":"' + b"x" * 262_200 + b'"}'
+        elif wire_case == "wrong_content_type":
+            content_type = "text/plain; charset=utf-8"
+        elif wire_case == "utf8_bom":
+            payload = b"\xef\xbb\xbf" + valid_payload
+        elif wire_case == "invalid_utf8":
+            payload = b"\xff" + valid_payload
+        elif wire_case == "invalid_json":
+            payload = b'{"injected":"/tmp/private-wire"'
+        else:
+            status_code = 503
+        response.set_data(payload)
+        response.status_code = status_code
+        response.headers["Content-Type"] = content_type
+        return response
+
+    @app.after_request
+    def compile_and_request_the_corrupt_preview(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const button = document.querySelector('#harness-scene-preview-button');
+                      const panel = document.querySelector('#harness-scene-preview-panel');
+                      const contents = document.querySelector('#harness-scene-preview-content');
+                      const message = document.querySelector('#harness-scene-preview-message');
+                      while (button.hidden) await pause();
+                      button.click();
+                      while (button.disabled) await pause();
+                      document.body.dataset.malformedWireRejected = String(
+                        panel.hidden
+                          && contents.childElementCount === 0
+                          && message.textContent === '场景结构预览无法验证。'
+                      );
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=4_000)
+
+    assert observed_preview_requests == [("GET", preview_path, b"")]
+    assert workbench.preview_runs == [workbench.run_id]
+    assert 'data-malformed-wire-rejected="true"' in dom
+    assert "场景结构预览无法验证。" in dom
+    assert "stacked_can_preview" not in dom
+    assert "/tmp/private-wire" not in dom
+
+
+def test_browser_rejects_scene_preview_responses_that_do_not_match_the_live_audit(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    original_preview = workbench.scene_preview
+
+    def mismatched_preview(*, run_id: UUID):
+        preview = original_preview(run_id=run_id)
+        case = len(workbench.preview_runs) - 1
+        if case == 0:
+            preview["artifact"]["sha256"] = "7" * 64
+        elif case == 1:
+            preview["run"]["run_id"] = "82345678-1234-4234-9234-123456789abc"
+        elif case == 2:
+            preview["run"]["terminal_event_id"] = "999"
+        elif case == 3:
+            preview["run"]["invocation_digest"] = "8" * 64
+        else:
+            preview["scene"]["raw"] = "/tmp/private-scene.json"
+        return preview
+
+    monkeypatch.setattr(workbench, "scene_preview", mismatched_preview)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def compile_and_try_each_mismatched_preview(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const button = document.querySelector('#harness-scene-preview-button');
+                      const panel = document.querySelector('#harness-scene-preview-panel');
+                      const message = document.querySelector('#harness-scene-preview-message');
+                      while (button.hidden) await pause();
+                      let rejected = 0;
+                      for (let index = 0; index < 5; index += 1) {
+                        button.click();
+                        while (button.disabled) await pause();
+                        if (panel.hidden && message.textContent === '场景结构预览无法验证。') {
+                          rejected += 1;
+                        }
+                      }
+                      document.body.dataset.rejectedPreviewCount = String(rejected);
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=5_000)
+
+    assert workbench.preview_runs == [workbench.run_id] * 5
+    assert 'data-rejected-preview-count="5"' in dom
+    assert "场景结构预览无法验证。" in dom
+    assert "/tmp/private-scene.json" not in dom
+
+
+def test_browser_aborts_and_discards_a_late_scene_preview_after_the_run_filter_changes(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+    preview_started = threading.Event()
+    release_preview = threading.Event()
+
+    @app.before_request
+    def delay_scene_preview():
+        if request.path.endswith("/scene-preview"):
+            preview_started.set()
+            assert release_preview.wait(timeout=5)
+
+    @app.get("/__test__/wait-scene-preview")
+    def wait_for_scene_preview():
+        assert preview_started.wait(timeout=5)
+        return "", 204
+
+    @app.get("/__test__/release-scene-preview")
+    def release_scene_preview_response():
+        release_preview.set()
+        return "", 204
+
+    @app.after_request
+    def compile_then_change_filter_during_preview(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const button = document.querySelector('#harness-scene-preview-button');
+                      while (button.hidden) await pause();
+                      button.click();
+                      await fetch('/__test__/wait-scene-preview');
+                      selectHarnessRun('');
+                      await fetch('/__test__/release-scene-preview');
+                      await pause();
+                      const panel = document.querySelector('#harness-scene-preview-panel');
+                      const contents = document.querySelector('#harness-scene-preview-content');
+                      document.body.dataset.stalePreviewDiscarded = String(
+                        panel.hidden && button.hidden && contents.childElementCount === 0
+                      );
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=5_000)
+
+    assert preview_started.is_set()
+    assert release_preview.is_set()
+    assert workbench.preview_runs == [workbench.run_id]
+    assert 'data-stale-preview-discarded="true"' in dom
+    assert "stacked_can_preview" not in dom
+
+
+def test_browser_close_clears_scene_preview_and_reopen_refetches_without_cache(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def compile_open_close_and_reopen_preview(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const button = document.querySelector('#harness-scene-preview-button');
+                      const close = document.querySelector('#harness-scene-preview-close');
+                      const panel = document.querySelector('#harness-scene-preview-panel');
+                      const contents = document.querySelector('#harness-scene-preview-content');
+                      while (button.hidden) await pause();
+                      button.click();
+                      while (panel.hidden || button.disabled) await pause();
+                      close.click();
+                      document.body.dataset.previewCloseCleared = String(
+                        panel.hidden && contents.childElementCount === 0
+                          && button.getAttribute('aria-expanded') === 'false'
+                      );
+                      document.body.dataset.previewCloseFocusedSource = String(
+                        document.activeElement === button
+                      );
+                      button.click();
+                      while (panel.hidden || button.disabled) await pause();
+                      document.body.dataset.previewReopened = 'true';
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=5_000)
+
+    assert workbench.preview_runs == [workbench.run_id, workbench.run_id]
+    assert 'data-preview-close-cleared="true"' in dom
+    assert 'data-preview-close-focused-source="true"' in dom
+    assert 'data-preview-reopened="true"' in dom
+    assert "stacked_can_preview" in dom
+
+
+def test_browser_does_not_offer_preview_for_an_oversized_scene_spec(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    original_page = workbench.page
+    original_audit = workbench.audit
+
+    def oversized_page(**kwargs):
+        page = original_page(**kwargs)
+        for envelope in page["events"]:
+            for artifact in envelope["event"]["artifact_refs"]:
+                if artifact["sha256"] == "1" * 64:
+                    artifact["bytes"] = 65_537
+        return page
+
+    def oversized_audit(*, run_id: UUID):
+        audit = original_audit(run_id=run_id)
+        audit["artifacts"][0]["bytes"] = "65537"
+        return audit
+
+    monkeypatch.setattr(workbench, "page", oversized_page)
+    monkeypatch.setattr(workbench, "audit", oversized_audit)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def compile_and_wait_for_the_oversized_audit(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const panel = document.querySelector('#harness-audit-panel');
+                      while (panel.hidden) await pause();
+                      document.body.dataset.oversizedAuditReady = 'true';
+                      document.body.dataset.oversizedPreviewHidden = String(
+                        document.querySelector('#harness-scene-preview-button').hidden
+                      );
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=4_000)
+
+    assert 'data-oversized-audit-ready="true"' in dom
+    assert 'data-oversized-preview-hidden="true"' in dom
+    assert "65537 bytes" in dom
+    assert workbench.preview_runs == []
 
 
 def test_browser_accepts_an_authorized_input_alias_for_the_same_committed_content(
@@ -1072,8 +1690,20 @@ def test_browser_accepts_a_committed_preflight_terminal_summary(
             response.set_data(
                 response.get_data(as_text=True).replace(
                     "</body>",
-                    '<script>document.querySelector("#harness-compile-button").click();</script>'
-                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const panel = document.querySelector('#harness-audit-panel');
+                      while (panel.hidden) await pause();
+                      document.body.dataset.preflightPreviewHidden = String(
+                        document.querySelector('#harness-scene-preview-button').hidden
+                      );
+                    })();
+                    </script>
+                    </body>
+                    """,
                 )
             )
         return response
@@ -1091,6 +1721,7 @@ def test_browser_accepts_a_committed_preflight_terminal_summary(
     assert 'id="harness-artifact-list"' in dom
     assert '<li class="empty">预检终止前未产出 artifact。' in dom
     assert "预检终止前未产出 artifact" in dom
+    assert 'data-preflight-preview-hidden="true"' in dom
 
 
 def test_browser_new_submission_invalidates_an_older_terminal_read(
