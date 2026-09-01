@@ -12,7 +12,9 @@ import pytest
 
 import self_improving.harness.assets as assets_module
 from scene_gen import CompileRequest, compile_scene
+from scene_gen.asset_generator import ensure_assets_for_scene
 from scene_gen.catalog import AssetCatalog
+from scene_gen.parser import parse_rule_based
 from self_improving.harness import AssetAdmissionError, GeneratedAssetAdmitter
 
 
@@ -40,6 +42,52 @@ def _generated_fixture(tmp_path: Path):
     )
     assert outcome.asset_generation_report is not None
     return outcome
+
+
+def _catalog_with_local_block_meshes(tmp_path: Path) -> AssetCatalog:
+    catalog = AssetCatalog.model_validate_json(
+        (Path(__file__).resolve().parents[2] / "fixtures" / "asset_catalog.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    asset_dir = tmp_path / "RoboTwin" / "assets" / "objects" / "004_fluted-block"
+    visual = asset_dir / "visual" / "base0.glb"
+    collision = asset_dir / "collision" / "base0.glb"
+    visual.parent.mkdir(parents=True)
+    collision.parent.mkdir(parents=True)
+    visual.write_bytes(b"test visual mesh")
+    collision.write_bytes(b"test collision mesh")
+    metadata = asset_dir / "model_data0.json"
+    metadata.write_text(
+        json.dumps(
+            {
+                "extents": [0.20505566895008087, 0.16323167085647583, 0.20139166712760928],
+                "scale": [0.45, 0.4, 0.45],
+            }
+        ),
+        encoding="utf-8",
+    )
+    entries = []
+    for entry in catalog.entries:
+        if entry.asset_id != "004_fluted-block":
+            entries.append(entry)
+            continue
+        model = entry.models[0].model_copy(
+            update={
+                "model_path": str(asset_dir),
+                "metadata_path": str(metadata),
+                "visual_path": str(visual),
+                "collision_path": str(collision),
+            }
+        )
+        entries.append(entry.model_copy(update={"asset_path": str(asset_dir), "models": (model,)}))
+    return catalog.model_copy(
+        update={
+            "robotwin_root": str(tmp_path / "RoboTwin"),
+            "objects_root": str(tmp_path / "RoboTwin" / "assets" / "objects"),
+            "entries": tuple(entries),
+        }
+    )
 
 
 def test_generated_asset_is_ledger_validated_and_atomically_admitted(
@@ -131,6 +179,159 @@ def test_generated_asset_is_ledger_validated_and_atomically_admitted(
     )
 
 
+def test_derived_scaled_provenance_shape_remains_admissible(tmp_path: Path) -> None:
+    scene_spec = parse_rule_based("Place a red block on top of a plate.", seed=31)
+    effective_catalog, generation_report = ensure_assets_for_scene(
+        scene_spec,
+        _catalog_with_local_block_meshes(tmp_path),
+        objects_root=tmp_path / "generated-staging",
+    )
+    assert generation_report["generated"][0]["generation_kind"] == "derived_scaled_proxy"
+
+    library = tmp_path / "asset_library"
+    admitter = GeneratedAssetAdmitter(library, date(2026, 8, 31))
+    _, admission_report = admitter.admit(
+        scene_spec=scene_spec,
+        asset_catalog=effective_catalog,
+        generation_report=generation_report,
+    )
+    _, reuse_report = admitter.admit(
+        scene_spec=scene_spec,
+        asset_catalog=effective_catalog,
+        generation_report=generation_report,
+    )
+
+    assert admission_report["status"] == "admitted"
+    assert reuse_report["status"] == "reused"
+    asset_id = generation_report["generated"][0]["asset_id"]
+    installed = json.loads(
+        (library / "generated" / asset_id / "generation_provenance.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert all(not Path(record["path"]).is_absolute() for record in installed["files"].values())
+
+
+def test_nested_asset_named_table_remains_admissible(tmp_path: Path) -> None:
+    scene_spec = parse_rule_based("Place a red block on top of a plate.", seed=31)
+    catalog = _catalog_with_local_block_meshes(tmp_path)
+    catalog = catalog.model_copy(
+        update={
+            "entries": tuple(
+                entry.model_copy(update={"asset_id": "table"})
+                if entry.asset_id == "003_plate"
+                else entry
+                for entry in catalog.entries
+            )
+        }
+    )
+    effective_catalog, generation_report = ensure_assets_for_scene(
+        scene_spec,
+        catalog,
+        objects_root=tmp_path / "generated-staging",
+    )
+    provenance = generation_report["generated"][0]
+    assert provenance["compatibility"]["target_asset_id"] == "table"
+    assert provenance["compatibility"]["target_model_id"] == 0
+
+    _, admission_report = GeneratedAssetAdmitter(
+        tmp_path / "asset_library", date(2026, 8, 31)
+    ).admit(
+        scene_spec=scene_spec,
+        asset_catalog=effective_catalog,
+        generation_report=generation_report,
+    )
+
+    assert admission_report["status"] == "admitted"
+
+
+def test_admission_rejects_extra_derived_compatibility_locator(tmp_path: Path) -> None:
+    scene_spec = parse_rule_based("Place a red block on top of a plate.", seed=31)
+    effective_catalog, generation_report = ensure_assets_for_scene(
+        scene_spec,
+        _catalog_with_local_block_meshes(tmp_path),
+        objects_root=tmp_path / "generated-staging",
+    )
+    provenance = generation_report["generated"][0]
+    provenance["compatibility"]["staging_path"] = str(tmp_path / "hidden-stage")
+    source = Path(
+        next(
+            entry.asset_path
+            for entry in effective_catalog.entries
+            if entry.asset_id == provenance["asset_id"]
+        )
+    )
+    (source / "generation_provenance.json").write_text(
+        json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AssetAdmissionError, match="invalid compatibility fields"):
+        GeneratedAssetAdmitter(tmp_path / "asset_library", date(2026, 8, 31)).admit(
+            scene_spec=scene_spec,
+            asset_catalog=effective_catalog,
+            generation_report=generation_report,
+        )
+
+
+def test_admission_rejects_absolute_locator_in_derived_semantic_list(tmp_path: Path) -> None:
+    scene_spec = parse_rule_based("Place a red block on top of a plate.", seed=31)
+    effective_catalog, generation_report = ensure_assets_for_scene(
+        scene_spec,
+        _catalog_with_local_block_meshes(tmp_path),
+        objects_root=tmp_path / "generated-staging",
+    )
+    provenance = generation_report["generated"][0]
+    provenance["aliases"] = [str(tmp_path / "hidden-staging")]
+    source = Path(
+        next(
+            entry.asset_path
+            for entry in effective_catalog.entries
+            if entry.asset_id == provenance["asset_id"]
+        )
+    )
+    (source / "generation_provenance.json").write_text(
+        json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AssetAdmissionError, match="aliases"):
+        GeneratedAssetAdmitter(tmp_path / "asset_library", date(2026, 8, 31)).admit(
+            scene_spec=scene_spec,
+            asset_catalog=effective_catalog,
+            generation_report=generation_report,
+        )
+
+
+def test_admission_rejects_absolute_locator_in_derived_semantic_name(tmp_path: Path) -> None:
+    scene_spec = parse_rule_based("Place a red block on top of a plate.", seed=31)
+    effective_catalog, generation_report = ensure_assets_for_scene(
+        scene_spec,
+        _catalog_with_local_block_meshes(tmp_path),
+        objects_root=tmp_path / "generated-staging",
+    )
+    provenance = generation_report["generated"][0]
+    provenance["semantic_name"] = str(tmp_path / "hidden-staging")
+    source = Path(
+        next(
+            entry.asset_path
+            for entry in effective_catalog.entries
+            if entry.asset_id == provenance["asset_id"]
+        )
+    )
+    (source / "generation_provenance.json").write_text(
+        json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AssetAdmissionError, match="semantic_name"):
+        GeneratedAssetAdmitter(tmp_path / "asset_library", date(2026, 8, 31)).admit(
+            scene_spec=scene_spec,
+            asset_catalog=effective_catalog,
+            generation_report=generation_report,
+        )
+
+
 def test_generated_ledger_uses_portable_uris_inside_the_active_asset_tree(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -168,6 +369,243 @@ def test_generated_ledger_uses_portable_uris_inside_the_active_asset_tree(
     assert all(not Path(uri).is_absolute() for uri in uris)
     assert all(contract.resolve_uri(uri).is_file() for uri in uris)
     assert contract.validate_ledger(document, check_files=True) == []
+
+
+def test_admitted_generation_provenance_replaces_staging_paths_with_asset_relative_paths(
+    tmp_path: Path,
+) -> None:
+    library = tmp_path / "asset_library"
+    outcome = compile_scene(
+        CompileRequest(
+            request="Place a purple hexagonal pedestal on the table.",
+            seed=77,
+            asset_catalog_path=_empty_catalog(tmp_path),
+            out_root=tmp_path / "runs",
+            generate_missing_assets=True,
+            generated_objects_root=tmp_path / "staging",
+        ),
+        asset_admitter=GeneratedAssetAdmitter(
+            library_root=library,
+            admission_date=date(2026, 8, 31),
+        ),
+    )
+
+    assert outcome.asset_admission_report is not None
+    asset_id = outcome.asset_admission_report["assets"][0]["asset_id"]
+    provenance = json.loads(
+        (library / "generated" / asset_id / "generation_provenance.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert {key: record["path"] for key, record in provenance["files"].items()} == {
+        "collision": "collision/textured0.obj",
+        "material": "visual/material.mtl",
+        "metadata": "model_data0.json",
+        "visual": "visual/textured0.obj",
+    }
+
+
+def test_reuse_rejects_existing_provenance_with_absolute_staging_locators(
+    tmp_path: Path,
+) -> None:
+    base = _generated_fixture(tmp_path)
+    library = tmp_path / "asset_library"
+    admitter = GeneratedAssetAdmitter(library, date(2026, 8, 31))
+    assert base.asset_generation_report is not None
+    admitter.admit(
+        scene_spec=base.scene_spec,
+        asset_catalog=base.asset_catalog,
+        generation_report=base.asset_generation_report,
+    )
+    entry = base.asset_catalog.entries[0]
+    destination = library / "generated" / entry.asset_id
+    provenance_path = destination / "generation_provenance.json"
+    installed = json.loads(provenance_path.read_text(encoding="utf-8"))
+    for record in installed["files"].values():
+        record["path"] = str(tmp_path / "deleted-staging" / record["path"])
+    provenance_path.write_text(
+        json.dumps(installed, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    contract = importlib.import_module(
+        "self_improving.asset_pipeline.active.1_asset_reuse.lib.ledger"
+    )
+    legacy_ledger = assets_module._build_ledger(
+        scene_spec=base.scene_spec,
+        entry=entry,
+        provenance=installed,
+        destination=destination,
+        source_root=destination,
+        admission_date=date(2026, 8, 31),
+        contract=contract,
+    )
+    (destination / "ledger.json").write_text(
+        json.dumps(legacy_ledger, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    assert contract.validate_ledger(legacy_ledger, check_files=True) == []
+
+    with pytest.raises(AssetAdmissionError, match="path mismatch"):
+        admitter.admit(
+            scene_spec=base.scene_spec,
+            asset_catalog=base.asset_catalog,
+            generation_report=base.asset_generation_report,
+        )
+
+
+def test_admission_rejects_unbound_extra_provenance_file_identity(tmp_path: Path) -> None:
+    base = _generated_fixture(tmp_path)
+    entry = base.asset_catalog.entries[0]
+    source = Path(entry.asset_path)
+    provenance = json.loads(json.dumps(base.asset_generation_report["generated"][0]))
+    provenance["files"]["debug"] = {
+        "path": str(tmp_path / "outside-debug.bin"),
+        "sha256": "0" * 64,
+    }
+    (source / "generation_provenance.json").write_text(
+        json.dumps(provenance),
+        encoding="utf-8",
+    )
+    report = json.loads(json.dumps(base.asset_generation_report))
+    report["generated"][0] = provenance
+
+    with pytest.raises(AssetAdmissionError, match="unexpected payload identities"):
+        GeneratedAssetAdmitter(tmp_path / "library", date(2026, 8, 31)).admit(
+            scene_spec=base.scene_spec,
+            asset_catalog=base.asset_catalog,
+            generation_report=report,
+        )
+
+
+def test_admission_rejects_unbound_fields_inside_provenance_file_identity(
+    tmp_path: Path,
+) -> None:
+    base = _generated_fixture(tmp_path)
+    entry = base.asset_catalog.entries[0]
+    source = Path(entry.asset_path)
+    provenance = json.loads(json.dumps(base.asset_generation_report["generated"][0]))
+    provenance["files"]["visual"]["staging_path"] = str(tmp_path / "hidden-stage.obj")
+    (source / "generation_provenance.json").write_text(
+        json.dumps(provenance),
+        encoding="utf-8",
+    )
+    report = json.loads(json.dumps(base.asset_generation_report))
+    report["generated"][0] = provenance
+
+    with pytest.raises(AssetAdmissionError, match="unexpected fields"):
+        GeneratedAssetAdmitter(tmp_path / "library", date(2026, 8, 31)).admit(
+            scene_spec=base.scene_spec,
+            asset_catalog=base.asset_catalog,
+            generation_report=report,
+        )
+
+
+def test_admission_rejects_unbound_top_level_provenance_locator(tmp_path: Path) -> None:
+    base = _generated_fixture(tmp_path)
+    entry = base.asset_catalog.entries[0]
+    source = Path(entry.asset_path)
+    provenance = json.loads(json.dumps(base.asset_generation_report["generated"][0]))
+    provenance["staging_path"] = str(tmp_path / "hidden-stage")
+    (source / "generation_provenance.json").write_text(
+        json.dumps(provenance),
+        encoding="utf-8",
+    )
+    report = json.loads(json.dumps(base.asset_generation_report))
+    report["generated"][0] = provenance
+
+    with pytest.raises(AssetAdmissionError, match="unexpected provenance fields"):
+        GeneratedAssetAdmitter(tmp_path / "library", date(2026, 8, 31)).admit(
+            scene_spec=base.scene_spec,
+            asset_catalog=base.asset_catalog,
+            generation_report=report,
+        )
+
+
+def test_admission_rejects_nested_locator_in_typed_provenance_field(tmp_path: Path) -> None:
+    base = _generated_fixture(tmp_path)
+    entry = base.asset_catalog.entries[0]
+    source = Path(entry.asset_path)
+    provenance = json.loads(json.dumps(base.asset_generation_report["generated"][0]))
+    provenance["requested_material"] = {"staging_path": str(tmp_path / "hidden-stage")}
+    (source / "generation_provenance.json").write_text(
+        json.dumps(provenance),
+        encoding="utf-8",
+    )
+    report = json.loads(json.dumps(base.asset_generation_report))
+    report["generated"][0] = provenance
+
+    with pytest.raises(AssetAdmissionError, match="requested_material"):
+        GeneratedAssetAdmitter(tmp_path / "library", date(2026, 8, 31)).admit(
+            scene_spec=base.scene_spec,
+            asset_catalog=base.asset_catalog,
+            generation_report=report,
+        )
+
+
+def test_admission_rechecks_provenance_digests_after_the_input_gate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    base = _generated_fixture(tmp_path)
+    source = Path(base.asset_catalog.entries[0].asset_path)
+    real_tree_manifest = assets_module._tree_manifest
+    source_reads = 0
+
+    def drift_before_staging_manifest(root: Path, *args, **kwargs):
+        nonlocal source_reads
+        if Path(root) == source:
+            source_reads += 1
+            if source_reads == 2:
+                visual = source / "visual" / "textured0.obj"
+                visual.write_text(
+                    visual.read_text(encoding="utf-8") + "\n# drift after input gate\n",
+                    encoding="utf-8",
+                )
+        return real_tree_manifest(root, *args, **kwargs)
+
+    monkeypatch.setattr(assets_module, "_tree_manifest", drift_before_staging_manifest)
+
+    with pytest.raises(AssetAdmissionError, match="visual digest mismatch"):
+        GeneratedAssetAdmitter(tmp_path / "library", date(2026, 8, 31)).admit(
+            scene_spec=base.scene_spec,
+            asset_catalog=base.asset_catalog,
+            generation_report=base.asset_generation_report,
+        )
+
+
+@pytest.mark.parametrize("attack", ["provenance-tamper", "unexpected-file"])
+def test_admission_rechecks_the_complete_private_tree_after_the_input_gate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    attack: str,
+) -> None:
+    base = _generated_fixture(tmp_path)
+    real_tree_manifest = assets_module._tree_manifest
+    private_reads = 0
+
+    def mutate_before_second_private_snapshot(root: Path, *args, **kwargs):
+        nonlocal private_reads
+        resolved = Path(root).resolve()
+        if ".incoming" in resolved.parts:
+            private_reads += 1
+            if private_reads == 2:
+                if attack == "provenance-tamper":
+                    (resolved / "generation_provenance.json").write_text(
+                        '{"tampered":true}\n', encoding="utf-8"
+                    )
+                else:
+                    (resolved / "unexpected.bin").write_bytes(b"unbound")
+        return real_tree_manifest(root, *args, **kwargs)
+
+    monkeypatch.setattr(assets_module, "_tree_manifest", mutate_before_second_private_snapshot)
+
+    with pytest.raises(AssetAdmissionError, match="provenance changed|missing or unexpected files"):
+        GeneratedAssetAdmitter(tmp_path / "library", date(2026, 8, 31)).admit(
+            scene_spec=base.scene_spec,
+            asset_catalog=base.asset_catalog,
+            generation_report=base.asset_generation_report,
+        )
 
 
 def test_admission_reports_noop_mixed_and_missing_catalog_entry(tmp_path: Path) -> None:

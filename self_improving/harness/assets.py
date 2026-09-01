@@ -5,7 +5,9 @@ from __future__ import annotations
 import hashlib
 import importlib
 import json
+import math
 import os
+import re
 import secrets
 import shutil
 import stat
@@ -16,8 +18,13 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
+from scene_gen.asset_generator import (
+    PROXY_GENERATOR_VERSION,
+    SCALE_GENERATOR_VERSION,
+    SCALE_HEADROOM,
+)
 from scene_gen.catalog import AssetCatalog, CatalogEntry, CatalogModel
-from scene_gen.schema import SceneSpec
+from scene_gen.schema import RelationType, SceneSpec
 
 
 class AssetAdmissionError(RuntimeError):
@@ -26,6 +33,70 @@ class AssetAdmissionError(RuntimeError):
 
 _PROVENANCE_SCHEMA = "robotwin.generated_asset_provenance.v1"
 _GENERATION_REPORT_SCHEMA = "robotwin.asset_generation_report.v1"
+_COMMON_PROVENANCE_FIELDS = frozenset(
+    {
+        "asset_id",
+        "dimensions_m",
+        "files",
+        "generated_license",
+        "generation_kind",
+        "generator",
+        "geometry_family",
+        "geometry_fidelity",
+        "requested_color",
+        "requested_material",
+        "schema_version",
+        "semantic_category",
+    }
+)
+_DERIVED_PROVENANCE_FIELDS = frozenset(
+    {
+        "adaptation_reasons",
+        "aliases",
+        "compatibility",
+        "materials",
+        "semantic_name",
+        "source_asset_id",
+        "source_dimensions_m",
+        "source_model_id",
+        "uniform_scale_factor",
+    }
+)
+_COMPATIBILITY_FIELDS = frozenset(
+    {
+        "headroom_fraction",
+        "relation",
+        "source_runtime_probe",
+        "target_asset_id",
+        "target_model_id",
+    }
+)
+_GENERATOR_BY_KIND = {
+    "procedural_proxy": PROXY_GENERATOR_VERSION,
+    "derived_scaled_proxy": SCALE_GENERATOR_VERSION,
+}
+_GEOMETRY_FIDELITY_BY_KIND = {
+    "procedural_proxy": "semantic_shape_when_recognized_otherwise_bounded_proxy",
+    "derived_scaled_proxy": "primitive_proxy_preserving_uniform_source_dimensions",
+}
+_GEOMETRY_FAMILIES = frozenset(
+    {
+        "bounded_box_proxy",
+        "cylindrical_proxy",
+        "hexagonal_prism",
+        "octagonal_prism",
+        "rectangular_pedestal",
+    }
+)
+_DERIVED_ADAPTATION_REASONS = frozenset(
+    {"nested_geometry_incompatible", "source_runtime_instability"}
+)
+_DERIVED_RELATIONS = frozenset(
+    {RelationType.ON_TABLE.value, RelationType.ON_TOP_OF.value, RelationType.INSIDE.value}
+)
+_SEMANTIC_TOKEN = re.compile(r"^[a-z][a-z0-9_-]{0,63}$")
+_REQUEST_TOKEN = re.compile(r"^[a-z][a-z0-9_-]{0,31}$")
+_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _EXPECTED_GENERATED_FILES = frozenset(
     {
         "collision/textured0.obj",
@@ -202,9 +273,30 @@ class GeneratedAssetAdmitter:
             try:
                 source_manifest = _tree_manifest(source)
                 shutil.copytree(source, temporary, dirs_exist_ok=True)
-                staged_manifest = _tree_manifest(temporary)
-                if staged_manifest != source_manifest:
+                copied_manifest = _tree_manifest(temporary)
+                if copied_manifest != source_manifest:
                     raise AssetAdmissionError("generated source changed while it was staged")
+                published_provenance = _publishable_provenance(provenance)
+                _write_json_object(
+                    temporary / "generation_provenance.json",
+                    published_provenance,
+                )
+                staged_manifest = _tree_manifest(temporary)
+                if frozenset(staged_manifest) != _EXPECTED_GENERATED_FILES:
+                    raise AssetAdmissionError(
+                        "generated asset tree has missing or unexpected files"
+                    )
+                if (
+                    _load_json_object(temporary / "generation_provenance.json")
+                    != published_provenance
+                ):
+                    raise AssetAdmissionError("staged generation provenance changed after rewrite")
+                _validate_provenance_files(
+                    published_provenance,
+                    temporary,
+                    staged_manifest,
+                    relocated=True,
+                )
                 # Run the expensive file/closure gate against the private staging
                 # tree.  The asset must not become visible in the library and then
                 # be moved aside on failure: even a short publication window lets
@@ -212,7 +304,7 @@ class GeneratedAssetAdmitter:
                 staged_ledger = _build_ledger(
                     scene_spec=scene_spec,
                     entry=entry,
-                    provenance=provenance,
+                    provenance=published_provenance,
                     destination=temporary,
                     source_root=temporary,
                     admission_date=self.admission_date,
@@ -571,6 +663,7 @@ def _verify_existing(
     if ledger.get("external_ids", {}).get("env_gen") != provenance["asset_id"]:
         raise AssetAdmissionError("existing ledger identity does not match generated asset")
     installed_provenance = _load_json_object(destination / "generation_provenance.json")
+    _require_provenance_shape(installed_provenance)
     installed_manifest = _tree_manifest(destination, ignore={"ledger.json", "ledger.lock"})
     _validate_provenance_files(
         installed_provenance,
@@ -627,6 +720,29 @@ def _provenance_identity(provenance: dict[str, Any]) -> dict[str, Any]:
     return normalized
 
 
+def _publishable_provenance(provenance: dict[str, Any]) -> dict[str, Any]:
+    """Replace validated staging locators with paths inside the published asset."""
+    normalized = json.loads(json.dumps(provenance))
+    files = normalized["files"]
+    relative_paths = {
+        "collision": "collision/textured0.obj",
+        "material": "visual/material.mtl",
+        "metadata": "model_data0.json",
+        "visual": "visual/textured0.obj",
+    }
+    for key, relative_path in relative_paths.items():
+        files[key]["path"] = relative_path
+    return normalized
+
+
+def _write_json_object(path: Path, value: dict[str, Any]) -> None:
+    with path.open("w", encoding="utf-8") as stream:
+        json.dump(value, stream, ensure_ascii=False, indent=2, sort_keys=True)
+        stream.write("\n")
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
 def _ledger_without_verification(document: dict[str, Any]) -> dict[str, Any]:
     normalized = json.loads(json.dumps(document))
     for model in normalized.get("models", []):
@@ -643,6 +759,212 @@ def _require_generation_report(report: dict[str, Any], scene_spec: SceneSpec) ->
     generated = report.get("generated")
     if not isinstance(generated, list) or not all(isinstance(item, dict) for item in generated):
         raise AssetAdmissionError("generation report generated must be a list of objects")
+
+
+def _require_provenance_shape(provenance: dict[str, Any]) -> None:
+    if type(provenance) is not dict:
+        raise AssetAdmissionError("generation provenance must be an exact object")
+    generation_kind = provenance.get("generation_kind")
+    if type(generation_kind) is not str:
+        raise AssetAdmissionError("unsupported generation provenance kind")
+    if generation_kind == "procedural_proxy":
+        expected_fields = _COMMON_PROVENANCE_FIELDS
+    elif generation_kind == "derived_scaled_proxy":
+        expected_fields = _COMMON_PROVENANCE_FIELDS | _DERIVED_PROVENANCE_FIELDS
+    else:
+        raise AssetAdmissionError("unsupported generation provenance kind")
+    if any(type(key) is not str for key in provenance) or set(provenance) != expected_fields:
+        raise AssetAdmissionError("generation provenance has unexpected provenance fields")
+    if (
+        type(provenance.get("schema_version")) is not str
+        or provenance["schema_version"] != _PROVENANCE_SCHEMA
+    ):
+        raise AssetAdmissionError("unsupported generation provenance schema")
+    if (
+        type(provenance.get("generator")) is not str
+        or provenance["generator"] != _GENERATOR_BY_KIND[generation_kind]
+    ):
+        raise AssetAdmissionError("generation provenance generator mismatch")
+    _require_nonempty_string(provenance.get("asset_id"), "asset_id")
+    semantic_category = _require_nonempty_string(
+        provenance.get("semantic_category"), "semantic_category"
+    )
+    if _SEMANTIC_TOKEN.fullmatch(semantic_category) is None:
+        raise AssetAdmissionError("generation provenance semantic_category is invalid")
+    for field in ("requested_color", "requested_material"):
+        value = provenance.get(field)
+        if value is not None and (
+            type(value) is not str or _REQUEST_TOKEN.fullmatch(value) is None
+        ):
+            raise AssetAdmissionError(f"generation provenance {field} must be a token or null")
+    geometry_family = _require_nonempty_string(provenance.get("geometry_family"), "geometry_family")
+    if geometry_family not in _GEOMETRY_FAMILIES:
+        raise AssetAdmissionError("generation provenance geometry_family is invalid")
+    geometry_fidelity = _require_nonempty_string(
+        provenance.get("geometry_fidelity"), "geometry_fidelity"
+    )
+    if geometry_fidelity != _GEOMETRY_FIDELITY_BY_KIND[generation_kind]:
+        raise AssetAdmissionError("generation provenance geometry_fidelity mismatch")
+    generated_license = _require_nonempty_string(
+        provenance.get("generated_license"), "generated_license"
+    )
+    if generated_license != "project_generated_academic_artifact":
+        raise AssetAdmissionError("generation provenance generated_license mismatch")
+    _require_positive_vector(provenance.get("dimensions_m"), "dimensions_m")
+    _require_payload_identity_shape(provenance.get("files"))
+    if generation_kind == "derived_scaled_proxy":
+        compatibility = provenance.get("compatibility")
+        if (
+            type(compatibility) is not dict
+            or any(type(key) is not str for key in compatibility)
+            or set(compatibility) != _COMPATIBILITY_FIELDS
+        ):
+            raise AssetAdmissionError("generation provenance has invalid compatibility fields")
+        _require_derived_provenance_shape(provenance, compatibility)
+
+
+def _require_nonempty_string(value: Any, field: str) -> str:
+    if type(value) is not str or not value:
+        raise AssetAdmissionError(f"generation provenance {field} must be a non-empty string")
+    return value
+
+
+def _require_locator_free_string(value: Any, field: str) -> str:
+    normalized = _require_nonempty_string(value, field)
+    if (
+        "/" in normalized
+        or "\\" in normalized
+        or any(ord(character) < 32 for character in normalized)
+    ):
+        raise AssetAdmissionError(f"generation provenance {field} must be a locator-free string")
+    return normalized
+
+
+def _require_string_list(value: Any, field: str, *, nonempty: bool = False) -> list[str]:
+    if type(value) is not list or (nonempty and not value):
+        raise AssetAdmissionError(
+            f"generation provenance {field} must be a locator-free string list"
+        )
+    try:
+        for item in value:
+            _require_locator_free_string(item, field)
+    except AssetAdmissionError as exc:
+        raise AssetAdmissionError(
+            f"generation provenance {field} must be a locator-free string list"
+        ) from exc
+    return value
+
+
+def _require_finite_number(value: Any, field: str, *, positive: bool = False) -> float:
+    if type(value) not in {int, float}:
+        raise AssetAdmissionError(f"generation provenance {field} must be finite")
+    try:
+        normalized = float(value)
+    except (OverflowError, ValueError) as exc:
+        raise AssetAdmissionError(f"generation provenance {field} must be finite") from exc
+    if not math.isfinite(normalized):
+        raise AssetAdmissionError(f"generation provenance {field} must be finite")
+    if positive and normalized <= 0.0:
+        raise AssetAdmissionError(f"generation provenance {field} must be positive")
+    return normalized
+
+
+def _require_nonnegative_integer_or_none(value: Any, field: str) -> int | None:
+    if value is None:
+        return None
+    if type(value) is not int or value < 0:
+        raise AssetAdmissionError(
+            f"generation provenance {field} must be a non-negative integer or null"
+        )
+    return value
+
+
+def _require_positive_vector(value: Any, field: str) -> tuple[float, float, float]:
+    if type(value) is not list or len(value) != 3:
+        raise AssetAdmissionError(f"generation provenance {field} must have three values")
+    return tuple(_require_finite_number(item, field, positive=True) for item in value)
+
+
+def _require_payload_identity_shape(files: Any) -> None:
+    expected_file_keys = {"visual", "collision", "material", "metadata"}
+    if (
+        type(files) is not dict
+        or any(type(key) is not str for key in files)
+        or set(files) != expected_file_keys
+    ):
+        raise AssetAdmissionError("generation provenance has unexpected payload identities")
+    for key in sorted(expected_file_keys):
+        record = files.get(key)
+        if (
+            type(record) is not dict
+            or any(type(field) is not str for field in record)
+            or set(record) != {"path", "sha256"}
+        ):
+            raise AssetAdmissionError(f"generation provenance {key} identity has unexpected fields")
+        if type(record.get("path")) is not str or not record["path"]:
+            raise AssetAdmissionError(f"generation provenance {key} path mismatch")
+        if type(record.get("sha256")) is not str or _SHA256.fullmatch(record["sha256"]) is None:
+            raise AssetAdmissionError(f"generation provenance {key} digest is invalid")
+
+
+def _require_derived_provenance_shape(
+    provenance: dict[str, Any], compatibility: dict[str, Any]
+) -> None:
+    scale = _require_finite_number(
+        provenance.get("uniform_scale_factor"), "uniform_scale_factor", positive=True
+    )
+    if scale > 1.0:
+        raise AssetAdmissionError("generation provenance uniform_scale_factor exceeds one")
+    source_asset_id = _require_nonempty_string(provenance.get("source_asset_id"), "source_asset_id")
+    _require_safe_asset_id(source_asset_id)
+    source_model_id = provenance.get("source_model_id")
+    if type(source_model_id) is not int or source_model_id < 0:
+        raise AssetAdmissionError(
+            "generation provenance source_model_id must be a non-negative integer"
+        )
+    _require_positive_vector(provenance.get("source_dimensions_m"), "source_dimensions_m")
+    reasons = _require_string_list(
+        provenance.get("adaptation_reasons"), "adaptation_reasons", nonempty=True
+    )
+    if not set(reasons).issubset(_DERIVED_ADAPTATION_REASONS):
+        raise AssetAdmissionError("generation provenance adaptation_reasons are invalid")
+    _require_locator_free_string(provenance.get("semantic_name"), "semantic_name")
+    _require_string_list(provenance.get("aliases"), "aliases")
+    _require_string_list(provenance.get("materials"), "materials")
+
+    relation = _require_nonempty_string(compatibility.get("relation"), "compatibility.relation")
+    if relation not in _DERIVED_RELATIONS:
+        raise AssetAdmissionError("generation provenance compatibility.relation is invalid")
+    target_asset_id = _require_nonempty_string(
+        compatibility.get("target_asset_id"), "compatibility.target_asset_id"
+    )
+    target_model_id = _require_nonnegative_integer_or_none(
+        compatibility.get("target_model_id"), "compatibility.target_model_id"
+    )
+    if relation == RelationType.ON_TABLE.value:
+        if target_asset_id != "table" or target_model_id is not None:
+            raise AssetAdmissionError("generation provenance table compatibility is invalid")
+    else:
+        if target_model_id is None:
+            raise AssetAdmissionError("generation provenance target compatibility is invalid")
+        _require_safe_asset_id(target_asset_id)
+    headroom = _require_finite_number(
+        compatibility.get("headroom_fraction"),
+        "compatibility.headroom_fraction",
+        positive=True,
+    )
+    if headroom != SCALE_HEADROOM:
+        raise AssetAdmissionError("generation provenance compatibility headroom mismatch")
+    expected_probe = (
+        "catalog collision unstable; primitive proxy required"
+        if "source_runtime_instability" in reasons
+        else "not_run"
+    )
+    source_runtime_probe = _require_nonempty_string(
+        compatibility.get("source_runtime_probe"), "compatibility.source_runtime_probe"
+    )
+    if source_runtime_probe != expected_probe:
+        raise AssetAdmissionError("generation provenance source_runtime_probe mismatch")
 
 
 def _require_safe_asset_id(asset_id: Any) -> None:
@@ -664,6 +986,7 @@ def _validate_generation_inputs(
     _require_safe_asset_id(entry.asset_id)
     if provenance.get("schema_version") != _PROVENANCE_SCHEMA:
         raise AssetAdmissionError("unsupported generation provenance schema")
+    _require_provenance_shape(provenance)
     if provenance.get("asset_id") != entry.asset_id:
         raise AssetAdmissionError("generation provenance/catalog asset identity mismatch")
     source = Path(entry.asset_path).absolute()
@@ -716,14 +1039,21 @@ def _validate_provenance_files(
         "material": source / "visual" / "material.mtl",
         "metadata": source / "model_data0.json",
     }
+    if set(files) != set(expected_file_keys):
+        raise AssetAdmissionError("generation provenance has unexpected payload identities")
     for key, expected in expected_file_keys.items():
         record = files.get(key)
         if not isinstance(record, dict):
             raise AssetAdmissionError(f"generation provenance is missing {key} identity")
-        recorded_path = Path(str(record.get("path")))
+        if set(record) != {"path", "sha256"}:
+            raise AssetAdmissionError(f"generation provenance {key} identity has unexpected fields")
+        recorded_value = record.get("path")
+        if type(recorded_value) is not str:
+            raise AssetAdmissionError(f"generation provenance {key} path mismatch")
+        recorded_path = Path(recorded_value)
         expected_relative = expected.relative_to(source)
         path_matches = (
-            tuple(recorded_path.parts[-len(expected_relative.parts) :]) == expected_relative.parts
+            recorded_value == expected_relative.as_posix()
             if relocated
             else recorded_path.resolve() == expected.resolve()
         )

@@ -1,0 +1,181 @@
+{
+  "schema_version": "asset_ledger.v3",
+  "asset_id": "generated_900_gen_hexagonal_pedestal_5695f4e5",
+  "external_ids": {
+    "env_gen": "900_gen_hexagonal_pedestal_5695f4e5"
+  },
+  "category": "hexagonal_pedestal",
+  "kind": "rigid",
+  "profile": "sapien_only",
+  "semantics": {
+    "aliases": [
+      "hexagonal pedestal",
+      "hexagonal_pedestal"
+    ],
+    "colors": [
+      "purple"
+    ],
+    "materials": [],
+    "identity": {
+      "basis": "requested_by_acquire",
+      "verified": false,
+      "evidence": "generation_provenance.json"
+    }
+  },
+  "models": [
+    {
+      "model_id": 0,
+      "physical": {
+        "mesh_bbox_m": [
+          0.09,
+          0.09,
+          0.075
+        ],
+        "size_resolution": {
+          "mode": "generated_exact",
+          "actual_max_dim_m": 0.09,
+          "scale": 1.0,
+          "reference_max_dim_m": null,
+          "reference_assets": [],
+          "verdict": "generated"
+        },
+        "conventions": {
+          "is_static": false,
+          "z_policy": "origin_on_table",
+          "footprint_shape": "box",
+          "stable_poses": [
+            {
+              "pose_id": "procedural_flat_base",
+              "orientation_wxyz": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "is_default": true,
+              "measured_against": {
+                "backend": "portable",
+                "run_id": "scene_gen.procedural_proxy.v3",
+                "note": "analytic flat base from deterministic generator geometry",
+                "evidence_schema": "robotwin.generated_asset_provenance.v1",
+                "evidence_sha256": "47055f5969416dd06b5d19020ccb35d8892a5568821e0255886f599fda718116"
+              }
+            }
+          ],
+          "inherited_from": null
+        },
+        "mass_kg": {
+          "value": null,
+          "status": "unknown"
+        },
+        "friction": {
+          "value": null,
+          "status": "unknown"
+        }
+      },
+      "representations": [
+        {
+          "format": "obj",
+          "uri": "data/asset_library/generated/900_gen_hexagonal_pedestal_5695f4e5/visual/textured0.obj",
+          "backend": "sapien",
+          "role": "visual",
+          "sha256": "a3517e0da28a2e44bb33981c0f91f3b92d2e4bee3a20a1d3a1d041d6d6176495",
+          "metadata": {
+            "generator_owned": true
+          },
+          "frame": {
+            "up_axis": "Z"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          },
+          "files": [
+            {
+              "uri": "data/asset_library/generated/900_gen_hexagonal_pedestal_5695f4e5/visual/material.mtl",
+              "sha256": "b2f39d95affbd58fa63ad649dd579a22737de7dab61ec40cabe60562a4321f61",
+              "bytes": 129
+            },
+            {
+              "uri": "data/asset_library/generated/900_gen_hexagonal_pedestal_5695f4e5/visual/textured0.obj",
+              "sha256": "a3517e0da28a2e44bb33981c0f91f3b92d2e4bee3a20a1d3a1d041d6d6176495",
+              "bytes": 662
+            }
+          ]
+        },
+        {
+          "format": "obj",
+          "uri": "data/asset_library/generated/900_gen_hexagonal_pedestal_5695f4e5/collision/textured0.obj",
+          "backend": "sapien",
+          "role": "collision",
+          "sha256": "73628bac5120cd41520410d7e6404aa04fd377a126c18af1a75361c7775704c9",
+          "metadata": {
+            "generator_owned": true
+          },
+          "frame": {
+            "up_axis": "Z"
+          },
+          "geometry_state": {
+            "scale_baked": true,
+            "origin": "bottom-center"
+          },
+          "files": [
+            {
+              "uri": "data/asset_library/generated/900_gen_hexagonal_pedestal_5695f4e5/collision/textured0.obj",
+              "sha256": "73628bac5120cd41520410d7e6404aa04fd377a126c18af1a75361c7775704c9",
+              "bytes": 616
+            }
+          ],
+          "collision_meta": {
+            "mode": "explicit_mesh"
+          }
+        }
+      ],
+      "articulation": {},
+      "source": {
+        "kind": "generated",
+        "generator": {
+          "tool": "scene_gen.asset_generator",
+          "tool_version": "scene_gen.procedural_proxy.v3",
+          "model": "deterministic_procedural_proxy",
+          "model_version": "scene_gen.procedural_proxy.v3",
+          "input": {
+            "type": "text",
+            "prompt": "Place a purple hexagonal pedestal on the table."
+          },
+          "seed": 77,
+          "params": {
+            "generation_kind": "procedural_proxy",
+            "geometry_family": "hexagonal_prism",
+            "dimensions_m": [
+              0.09,
+              0.09,
+              0.075
+            ],
+            "generation_provenance_schema": "robotwin.generated_asset_provenance.v1",
+            "generation_provenance_sha256": "47055f5969416dd06b5d19020ccb35d8892a5568821e0255886f599fda718116"
+          },
+          "generated_at": "2026-08-31"
+        },
+        "license": {
+          "spdx": "Apache-2.0",
+          "status": "declared",
+          "terms_note": "deterministic geometry generated by this Apache-2.0 project"
+        }
+      },
+      "verification": [
+        {
+          "backend": "sapien",
+          "check": "generation_qc",
+          "verdict": "pass",
+          "run_id": "place_a_purple_hexagonal_pedestal_on_the_table_d38c3bf3d4",
+          "timestamp": "2026-08-31T00:00:00",
+          "verified_digest": "d6bb6c2c9106a907d2628486ddbe5feb752b13fa5e0112a5bfe022ec3ee5a316",
+          "report_path": "data/asset_library/generated/900_gen_hexagonal_pedestal_5695f4e5/generation_provenance.json",
+          "report_sha256": "47055f5969416dd06b5d19020ccb35d8892a5568821e0255886f599fda718116",
+          "report_schema": "robotwin.generated_asset_provenance.v1"
+        }
+      ]
+    }
+  ]
+}

@@ -833,3 +833,24 @@
   generation / admission / reuse / package-CAS / source-stability 资格，不声称 SAPIEN settle、replay
   qualification 或资产 publishability。完整绑定见
   `docs/evidence/compile-qualification-refresh-20260901.{md,json}`。
+
+### 2026-09-01 / A046：production generated asset 不能携带 staging locator
+
+- RED：A043 待提交样例的 ledger 仍含本机绝对 URI，provenance 仍含已删除 pytest staging path；公开
+  admission 还接受额外 file identity、identity 内的额外 locator 字段，以及输入门后被改写的
+  payload；既有资产的自洽 ledger 还可掩护绝对 locator 继续 `reused`；顶层、derived compatibility
+  和合法字段内的嵌套对象、语义名称或字符串列表也可藏 locator。十二条攻击均先证明旧实现会发布
+  或接受未绑定路径/内容。
+- GREEN：source tree 精确复制后，只在 private incoming inode 中把四个已验证 locator 改为
+  asset-relative POSIX path；fsync 后重算完整 manifest，再构造 ledger 和执行 `check_files=True`。
+  staging tree、provenance 顶层/file identity/derived compatibility 均为精确闭包，所有 v1 值按内建
+  类型与冻结值域解析，derived 语义文本必须 locator-free；改写后重新读取 provenance 并与 staged
+  payload 对账，reuse 也只接受精确资产内相对 POSIX locator。
+- 数据：通过公开 compile/admission 重新生成项目样例，首轮 `admitted`、次轮 `reused`；ledger SHA
+  `fe52c79a…41ae2`、provenance SHA `47055f59…8116`，3 个 file records、0 violation、generation-QC
+  receipt current，目录中无 host/tmp locator。
+- 资格联动：最终格式化后的 `assets.py` 使旧 compile bundle RED；全新三轮 generator 与 production
+  loader 重新通过，新 implementation `07501791…b5e2d`、report `eb3282cb…8fdb9`。六个相关测试
+  文件合计 `223 passed`。
+- 边界：样例仍为 `pending_settle`，不声明物理、replay 或 publishable。完整证据见
+  `docs/evidence/production-generated-asset-portability-20260901.{md,json}`。

@@ -2,6 +2,12 @@
 
 ## 2026-09-01
 
+- 收口 production generated-asset 数据边界：发布前把已验证 provenance locator 改为资产内相对路径，
+  严格闭合 v1 顶层、file identity、derived compatibility 与所有值类型，在输入门后重验精确
+  staging tree，derived 语义文本也必须 locator-free，并拒绝旧库绝对 locator 继续 reuse；项目样例
+  重新通过公开 admission→reuse，ledger 3 个 file records、0 violation，且不含主机或 staging
+  locator。源码身份变化后 compile 资格也从 RED 重新生成并由正式 loader 通过。样例仍是
+  `pending_settle`，不扩大为物理或 replay 资格。
 - A041 改变 generated admission 与 ledger contract 实现身份后，旧 `text2env.compile@1.0.0`
   checked-in qualification 按设计被 production loader 拒绝。使用全新 scratch/library 重跑固定三轮
   generator 后，`admitted -> reused -> reused`、七项门禁与严格 ledger closure 重新通过；三文档及
