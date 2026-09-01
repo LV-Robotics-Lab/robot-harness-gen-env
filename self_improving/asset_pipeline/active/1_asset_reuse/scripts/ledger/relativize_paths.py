@@ -28,6 +28,7 @@ DEV = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(DEV / "1_asset_reuse"))
 
 from lib import ledger as L  # noqa: E402
+from lib import ledger_writes  # noqa: E402
 
 # Historical roots this migration recognizes. Assembled by concatenation on
 # purpose: test_active_sources_do_not_embed_personal_home_paths greps sources
@@ -106,12 +107,32 @@ def walk(node, path, stats, problems):
 
 def main():
     n_changed = n_fail = 0
+    seen_models = set()
     for root in ("data/asset_library", "data/upstream_ledgers"):
-        for asset_path in L.iter_assets(DEV / root):
-            lp = asset_path / "ledger.json"
-            if not lp.is_file():
+        library_root = DEV / root
+        for asset_path in L.iter_assets(library_root):
+            try:
+                loaded = L.load_asset_ledger(library_root, asset_path.name)
+            except FileNotFoundError:
                 continue
-            led = json.loads(lp.read_text())
+            except (OSError, ValueError, json.JSONDecodeError) as exc:
+                print(f"FAIL {asset_path.name}: unsafe or invalid ledger ({exc})")
+                n_fail += 1
+                continue
+            lp = loaded.ledger_path
+            led = loaded.document
+            try:
+                for model in led.get("models", []):
+                    L.claim_asset_model(seen_models, loaded.asset_key, model.get("model_id"))
+            except (
+                L.UnsafeAssetKeyError,
+                L.InvalidModelIdError,
+                L.DuplicateAssetModelError,
+            ) as exc:
+                print(f"FAIL {loaded.asset_key}: {exc}")
+                n_fail += 1
+                continue
+            expected = json.loads(json.dumps(led))
             before = json.dumps(led)
             stats = {"stripped": 0, "relocated": 0, "copied": 0}
             problems = []
@@ -123,16 +144,12 @@ def main():
                 continue
             if json.dumps(led) == before:
                 continue
-            hard = [
-                v
-                for v in L.validate_ledger(led, check_files=False)
-                if v.code != "profile_requirement_unmet"
-            ]
+            hard = L.validate_ledger(led, check_files=True)
             if hard:
                 n_fail += 1
                 print(f"FAIL {lp.parent.name}: invalid after rewrite ({hard[0].code})")
                 continue
-            lp.write_text(json.dumps(led, indent=2) + "\n")
+            ledger_writes.write_validated(lp, led, expected=expected)
             n_changed += 1
             print(
                 f"ok   {lp.parent.name}: stripped={stats['stripped']} "

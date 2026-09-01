@@ -202,7 +202,7 @@ def test_real_candidate_emits_loadable_three_document_bundle_with_detailed_evide
     assert checks["ledger.v3_files"] == {
         "schema_version": "asset_ledger.v3",
         "sha256": checks["admission.lifecycle"]["reports"][-1]["ledger_sha256"],
-        "file_record_count": 2,
+        "file_record_count": 3,
         "check_files": True,
         "violation_count": 0,
     }
@@ -598,7 +598,7 @@ def test_rejects_invalid_ledger_missing_files_and_receipt_drift(tmp_path: Path) 
     no_files = _rewrite_ledger_receipts(no_files, tmp_path / "no-files-receipts")
     with pytest.raises(CompileQualificationError) as captured:
         module._acceptance_checks(no_files)
-    assert captured.value.reason == "ledger_files_missing"
+    assert captured.value.reason == "ledger_invalid"
 
     mismatch = _execution(tmp_path / "mismatch")
     ledger = _ledger_path(mismatch)

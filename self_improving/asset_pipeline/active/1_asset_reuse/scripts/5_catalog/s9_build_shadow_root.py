@@ -15,10 +15,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml as _yaml
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from runtime_config import GEN_ENV_ROOT, ROBOTWIN_ROOT  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ledger"))
+import gen_fragment  # noqa: E402
 from lib import ledger  # noqa: E402
+from runtime_config import GEN_ENV_ROOT, ROBOTWIN_ROOT  # noqa: E402
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -33,7 +37,10 @@ parser.add_argument(
     "--admission",
     choices=["report", "enforce"],
     default=None,
-    help="run s14 catalog-view admission after build; enforce filters not_admitted externals from THIS view",
+    help=(
+        "run s14 catalog-view admission after build; enforce filters "
+        "not_admitted externals from THIS view"
+    ),
 )
 parser.add_argument(
     "--extra-overrides",
@@ -71,6 +78,7 @@ objects.mkdir()
 # an upstream checkout that still carries assets the library lacks keeps
 # working unchanged, so this is correct in both the pre- and post-move state.
 n_skipped = 0
+qualified_projection = gen_fragment.qualified_execution_projection(lib)
 
 
 def _is_proxy(name):
@@ -87,6 +95,9 @@ def _is_proxy(name):
 n_ext = 0
 for item in ledger.iter_assets(lib):
     if _is_proxy(item.name):
+        n_skipped += 1
+        continue
+    if not qualified_projection.get(item.name, {}).get("models"):
         n_skipped += 1
         continue
     (objects / item.name).symlink_to(item)
@@ -158,9 +169,7 @@ if calib_path.exists():
         for mid, row in models.items():
             asset = root.setdefault(aid, {})
             entry = asset.setdefault("models", {}).setdefault(str(mid), {})
-            declared_bad = (
-                row.get("had_override") and row.get("declared_trusted") is False
-            )
+            declared_bad = row.get("had_override") and row.get("declared_trusted") is False
             if row.get("verdict") != "ok":
                 # Declarations get no free pass either: if placing the model
                 # exactly as declared failed its own reverify AND no reliable
@@ -171,9 +180,7 @@ if calib_path.exists():
                 # declaration was trusted -- prompt-matrix 2026-08-13.)
                 if declared_bad and "stable_pose_id" in entry:
                     del entry["stable_pose_id"]
-                    entry["placement_revoked"] = (
-                        "declared pose failed reverify; no measured pose"
-                    )
+                    entry["placement_revoked"] = "declared pose failed reverify; no measured pose"
                     n_revoke += 1
                 continue
             dims = row.get("dims_m") or []
@@ -216,9 +223,7 @@ if calib_path.exists():
         "# + env-gen-dev extensions + native origin calibration patches\n"
         "# (native_origin_calibration.json). Do not edit by hand.\n"
     )
-    ext_overrides.write_text(
-        header + yaml.safe_dump(data, sort_keys=False, allow_unicode=True)
-    )
+    ext_overrides.write_text(header + yaml.safe_dump(data, sort_keys=False, allow_unicode=True))
     print(
         f"calibration patch: {n_patch} z_policy corrected, {n_add} added, "
         f"{n_replace} untrusted declarations replaced, {n_revoke} revoked, "
@@ -249,11 +254,7 @@ if survey_path.exists():
         for mid, row in models.items():
             if row.get("verdict") != "hollow":
                 continue
-            entry = (
-                root.setdefault(aid, {})
-                .setdefault("models", {})
-                .setdefault(str(mid), {})
-            )
+            entry = root.setdefault(aid, {}).setdefault("models", {}).setdefault(str(mid), {})
             if "stable_pose_id" not in entry:
                 continue  # only annotate otherwise-declared models
             dims = entry.get("dimensions_m")
@@ -289,9 +290,7 @@ if survey_path.exists():
         "# GENERATED (see calibration header above)\n"
         + yaml.safe_dump(data, sort_keys=False, allow_unicode=True)
     )
-    print(
-        f"top-support patch: {n_int} interiors measured, {n_closed} hollow tops closed"
-    )
+    print(f"top-support patch: {n_int} interiors measured, {n_closed} hollow tops closed")
 # ---- measured appearance attributes (colors) ----
 # Upstream has supported colour-qualified retrieval all along (parser lifts
 # "red"/"红色" into query.color, grounding matches it against entry.colors,
@@ -314,9 +313,7 @@ if attr_path.exists():
     _root_a = _data_a.setdefault("assets", {})
     _n_col = _n_split = 0
     for _aid, _models in _attrs.get("models", {}).items():
-        _sets = [
-            tuple(r.get("colors") or ()) for r in _models.values() if not r.get("error")
-        ]
+        _sets = [tuple(r.get("colors") or ()) for r in _models.values() if not r.get("error")]
         _sets = [s for s in _sets if s]
         if not _sets:
             continue
@@ -363,9 +360,7 @@ if revoke_path.exists():
     _root_r = _data_r.get("assets") or {}
     _n_rev = 0
     for _row in _rev.get("models", []):
-        _e = (_root_r.get(_row["asset_id"], {}).get("models") or {}).get(
-            str(_row["model_id"])
-        )
+        _e = (_root_r.get(_row["asset_id"], {}).get("models") or {}).get(str(_row["model_id"]))
         if isinstance(_e, dict) and "stable_pose_id" in _e:
             del _e["stable_pose_id"]
             _e["placement_revoked"] = _row.get("reason", "runtime verification failed")
@@ -395,8 +390,7 @@ if _cs_path.is_file():
         ((_cs.get("views") or {}).get("tabletop") or {}).get("refuse_over_m", 0.84)
     )
     _oversize_cats = {
-        c for c, r in (_cs.get("sizes") or {}).items()
-        if float(r.get("size_m", 0)) > _refuse_over
+        c for c, r in (_cs.get("sizes") or {}).items() if float(r.get("size_m", 0)) > _refuse_over
     }
     _data_cs = _yaml_cs.safe_load(ext_overrides.read_text()) or {}
     _n_view = 0
@@ -417,7 +411,10 @@ if _cs_path.is_file():
             "# GENERATED (see calibration header above)\n"
             + _yaml_cs.safe_dump(_data_cs, sort_keys=False, allow_unicode=True)
         )
-    print(f"tabletop-view exclusions: {_n_view} models across {len(_oversize_cats)} oversize categories")
+    print(
+        f"tabletop-view exclusions: {_n_view} models across "
+        f"{len(_oversize_cats)} oversize categories"
+    )
 
 # ---- final envelope + consistency pass over ALL declared entries ----
 # The per-branch feasibility check missed the replace path: 034_knife's
@@ -426,8 +423,6 @@ if _cs_path.is_file():
 # x2496, 2026-08-13). One final sweep over every entry closes every path in;
 # it also repairs upstream declarations that carry interior dims with a null
 # floor offset (003_plate), which the solver consumes as numbers.
-import yaml as _yaml
-
 _data = _yaml.safe_load(ext_overrides.read_text()) or {}
 _root = _data.get("assets") or {}
 # override entries do not always carry dimensions (fragment entries leave
@@ -458,10 +453,7 @@ for _aid, _asset in _root.items():
                 " exceeds tabletop envelope"
             )
             _n_env += 1
-        if (
-            _entry.get("interior_dimensions_m")
-            and _entry.get("interior_floor_z_offset_m") is None
-        ):
+        if _entry.get("interior_dimensions_m") and _entry.get("interior_floor_z_offset_m") is None:
             _entry["interior_floor_z_offset_m"] = 0.005
             _n_floor += 1
 if _n_env or _n_floor:
@@ -502,15 +494,70 @@ if res.returncode != 0:
     print("FAIL s9: catalog scan failed")
     sys.exit(1)
 
+# The scanner enumerates every model directory under a linked asset.  Linking
+# was asset-level, so enforce the same projection again at model granularity
+# before any catalog consumer can observe the result.  Native paths are left
+# untouched: an unqualified library directory must not mask a valid upstream
+# asset with the same name.
+sys.path.insert(0, str(Path(args.upstream)))
+from scene_gen.catalog import AssetCatalog, write_json  # noqa: E402
+
+
+def _missing_report(catalog):
+    entries = list(catalog.entries)
+    return {
+        "schema_version": "robotwin.asset_catalog_missing.v1",
+        "asset_catalog_sha256": catalog.digest(),
+        "entry_count": len(entries),
+        "available_entry_count": sum(entry.available for entry in entries),
+        "unavailable_entry_count": sum(not entry.available for entry in entries),
+        "entries": [
+            {
+                "asset_id": entry.asset_id,
+                "available": entry.available,
+                "load_type": entry.load_type,
+                "reasons": list(entry.availability_reasons),
+                "models": [
+                    {
+                        "model_id": model.model_id,
+                        "usable": model.usable,
+                        "missing": list(model.missing),
+                    }
+                    for model in entry.models
+                ],
+            }
+            for entry in entries
+            if entry.availability_reasons or not entry.available
+        ],
+    }
+
+
+_scanned = json.loads(cat_out.read_text())
+# The scanner may be long-running and verification receipts are append-only.
+# Rebuild the authority after it returns so a newer failure cannot be masked
+# by the projection that was used only to construct the temporary shadow.
+qualified_projection = gen_fragment.qualified_execution_projection(lib)
+_execution_document = gen_fragment.filter_catalog_execution_view(
+    _scanned,
+    lib,
+    qualified_projection,
+    shadow_objects=objects,
+)
+_execution_catalog = AssetCatalog.model_validate(_execution_document)
+write_json(cat_out, _execution_catalog.canonical_dict())
+write_json(ext / "missing_assets.json", _missing_report(_execution_catalog))
+print(
+    "execution trust filter: "
+    f"{len(_execution_catalog.entries)} entries sha256={_execution_catalog.digest()}"
+)
+
 # ---- verify injected entries ----
 cat = json.loads(cat_out.read_text())
 if args.extra_overrides:
     wanted = [
         line.strip().rstrip(":")
         for line in Path(args.extra_overrides).read_text().splitlines()
-        if line.startswith("  ")
-        and not line.startswith("    ")
-        and line.strip().endswith(":")
+        if line.startswith("  ") and not line.startswith("    ") and line.strip().endswith(":")
     ]
 else:
     wanted = ["301_cup"]
@@ -587,9 +634,8 @@ if ok:
         if provider not in _UPSTREAM_PROVIDERS:
             _ext_entries.append(e)
     _ext_only_out = ext / "asset_catalog_external_only.json"
-    with _ext_only_out.open("w", encoding="utf-8") as _s:
-        json.dump({**_full, "entries": _ext_entries}, _s, indent=2, ensure_ascii=False)
-        _s.write("\n")
+    _ext_catalog = AssetCatalog.model_validate({**_full, "entries": _ext_entries})
+    write_json(_ext_only_out, _ext_catalog.canonical_dict())
     print(f"external-only catalog: {len(_ext_entries)} entries -> {_ext_only_out}")
     if not _ext_entries:
         print("FAIL s9: external-only view is empty (s12 would have nothing to ground)")

@@ -755,6 +755,44 @@
   `deterministic=True` 与物理/媒体/资源输出不保证 bitwise identity 的语义仍须先版本化解决，因此
   当前状态只能是 candidate vertical slice，不能登记为已晋升 Skill。
 
+### 2026-08-31 / A041：ledger v3 必须证明内容完整，不能只相信版本标签
+
+- RED 审计：162/162 份活动 ledger 都自称 v3，旧 validator 却返回 clean；实际共有 4,082 条内容
+  缺口，包括 1,101 个缺失 `files`、563 个缺失 `collision_meta`、410 个 stable pose 缺
+  `measured_against`，以及 1,915 个已删除字段。根因是旧 migrator 看见 v3 即早退，backfill 与多个
+  active writer 仍主动写旧形状，而 validator 只核作者自报的主文件。
+- 内容契约：v3 现在解析 URDF/OBJ/MTL/glTF/GLB/DAE/USDA 引用闭包，拒绝越根、网络、绝对、缺失、
+  格式混淆和 symlink；每个 member 的 URI/SHA/bytes、collision metadata、pose provenance、deleted
+  fields 和 portable identifier 都 fail closed。`asset-representation-set.v2` 摘要绑定一个 backend 的
+  全部非 snapshot representation 及其几何/坐标/collision/files 内容。
+- receipt 与写入：verification 必须是当前 v2 representation digest 上的结构化事实；malformed 或
+  同时间歧义 receipt 不再可用。新增共享 `ledger_writes.py`，materialize、runtime/articulated sweep、
+  backfill、migrate、fragment、retire、relativize、settle repair 与 writeback 在写前统一执行
+  `check_files=True`，无闭包或无真实证据即 typed debt/no-write。rescale apply 仍禁用；migrate apply
+  只接单 ledger；writeback 当前只接封闭 SAPIEN issuer。backfill pair 以 pinned dirfd、双锁和 durable
+  journal 做崩溃恢复，不再用“所有批处理都可回滚”概括不同写协议。
+- generated admission：发布前后都重验完整生成树、provenance 和 catalog binding；复用允许保留
+  合法的后续 settle/runtime receipts，但仍精确要求原始 generation-QC 和非 verification 内容一致。
+  `ledger.lock` 不再误算 payload；gate 后篡改、ID 越径、复用/新发布 destination 换靶与旧 receipt
+  重签都有攻击测试。admission report 的 ledger 摘要来自 pinned staging inode，不回读可换靶的公开
+  路径。
+- 边界：evidence 是 cooperative runtime 的 pre/post samefile+hash snapshot，不是 opened-FD 或同用户
+  任意 Python 的 OS 防伪；runtime capability 不覆盖 ELF `DT_NEEDED`、任意 `dlopen`、驱动或 preload。
+  ledger 原子替换也不把独立 representation 文件变成一个原子事务；可信 reader 必须再跑
+  `check_files=True`，不能把 raw `load_asset_ledger` 当资格。实现依赖 POSIX/Linux dirfd、`fcntl` 与
+  `/proc/self/fd`，只有 asset-key namespace 是 portable。
+- 验证：带本地 OpenXSim import root 的 asset-reuse 全套 `902 passed, 2 skipped`；两个 skip 是基础
+  Python 无 SAPIEN。真实 `env-gen-yuxin` SAPIEN 环境单独运行同两个 articulated 节点为 `2 passed`，
+  最终字节上的公共 S13b→S11 还用真实 RoboTwin `create_actor`、SAPIEN 3.0.0b1 与 native modules
+  完成 `SWEEP 1/1`，两项 receipt current、ledger 0 violation；catalog pose 篡改会在 loader 前拒绝。
+  rigid settle 的 collision-component tight-AABB 兼容路径也真实通过，但只做函数级验证、未写 ledger。
+  其余 synthetic runtime 不替代这些验收。generated admission、compile qualification、application、CLI
+  与 handler 跨边界 `164 passed`。核心三模块合计 2,391 statements / 1,148 branches，实际覆盖 94%
+  （分模块 94% / 90% / 100%），不宣称全覆盖或完整资产库已回放。
+- 数据边界：本切片没有改 162 份 ledger。完整 audit 报告摘要与字段计数写入
+  `docs/evidence/asset-ledger-v3-integrity-20260831.{md,json}`；能从现有 bytes 证明的字段才允许迁移，
+  缺物理 pose/settle 证据的项继续 blocked，绝不由 source commit 或迁移日期猜测。
+
 ### 2026-08-31 / A044：工作台进度只能来自已提交的 Harness 事件
 
 - RED：既有 `demo/` 只轮询自己的 `job.json`，资产 Web Studio 又从文件 mtime 与日志关键词推断阶段；

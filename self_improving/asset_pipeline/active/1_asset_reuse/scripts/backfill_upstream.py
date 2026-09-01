@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Backfill: map upstream RoboTwin asset_catalog.json entries into per-asset
-v1 ledgers under --out (data/upstream_ledgers/<asset>/ledger.json).
+v3 ledgers under --out (data/upstream_ledgers/<asset>/ledger.json).
 
 Architecture (spec §9, docs/2026-08-08-asset-ingest-metadata-contract-design.md):
   derived core   -- identity/semantics/geometry/placement mapped straight off
                      the upstream catalog entry. Owned by the catalog; every
-                     rerun overwrites these fields (that's the point: pull
-                     upstream, rerun, stay in sync).
+                     rerun refreshes these fields, except measurement receipts:
+                     a catalog declaration is not a simulator measurement and
+                     a newer existing stable-pose receipt is preserved.
   incremental layer -- non-sapien representations (e.g. an isaacsim USD
                      registered via --isaac-usd), verification[], and a
                      license once it has been hand-audited to status
@@ -26,16 +27,19 @@ import it.
 """
 
 import argparse
+import base64
 import datetime
 import hashlib
 import json
+import os
+import secrets
 import sys
 from pathlib import Path
 
 import trimesh
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from lib import ledger
+from lib import ledger, ledger_writes, writer_paths
 
 ASSET_ID_PREFIX = "robotwin"
 SOURCE_LIBRARY = "RoboTwin (upstream)"
@@ -50,9 +54,16 @@ DEFAULT_LICENSE = {
 # used -- naming a specific converter here would be fabricating provenance
 # this script never observed (same "don't invent it" rule as ledger.py's
 # other converter fields).
-ISAAC_USD_CONVERTER = (
-    "a_forward line converter (tool/version not tracked by backfill_upstream)"
-)
+ISAAC_USD_CONVERTER = "a_forward line converter (tool/version not tracked by backfill_upstream)"
+
+_PAIR_TRANSACTION_JOURNAL_NAME = ".SOURCE_MANIFEST.ledger.transaction.json"
+_PAIR_TRANSACTION_SCHEMA = "asset_manifest_ledger_transaction.v1"
+_PAIR_TRANSACTION_TOMBSTONE_SCHEMA = "asset_manifest_ledger_transaction_pending.v1"
+
+
+class PairTransactionRecoveryError(RuntimeError):
+    """A durable manifest/ledger transaction cannot be recovered safely."""
+
 
 # mesh_up_axis / origin_convention (round 4, review fix-round-1 C1+C2):
 # rounds 1-3 all inferred this from stable_orientation_wxyz in one way or
@@ -72,10 +83,11 @@ ISAAC_USD_CONVERTER = (
 #     articulated) -- a file-format fact, never inferred from a placement
 #     quaternion.
 #   - stable_orientation_wxyz stays exactly where it always was, feeding
-#     ONLY physical.conventions.stable_poses (_stable_poses, unchanged
-#     across every round) -- it's catalog-authored task/placement data, not
-#     mesh-geometry evidence. 036_cabinet's X90 stable pose is real upstream
-#     data and is kept verbatim in stable_poses; it no longer has any
+#     ONLY physical.conventions.stable_poses -- it's catalog-authored
+#     task/placement data, not mesh-geometry evidence. Its measured_against
+#     block is copied only from an explicit measurement handle or a matching
+#     existing real receipt; source_commit is never disguised as a run id.
+#     036_cabinet's X90 stable pose is kept verbatim and no longer has any
 #     bearing on mesh_up_axis, which resolves the round-2/3 apparent
 #     contradiction (same asset, two "disagreeing" signals) by recognizing
 #     the two signals were never answering the same question.
@@ -136,7 +148,7 @@ def _measure_rigid_geometry(visual_path, report, note_key):
     except Exception:
         report["notes"]["up_axis_ambiguous"].append(note_key)
         return None
-    extents = [float(h - l) for l, h in zip(lo, hi)]
+    extents = [float(high - low) for low, high in zip(lo, hi)]
     max_extent = max(extents) or 1.0
     near_zero = [i for i in range(3) if abs(lo[i]) <= _FLOOR_REL_TOL * max_extent]
     axis = {1: "Y", 2: "Z"}.get(near_zero[0]) if len(near_zero) == 1 else None
@@ -170,9 +182,7 @@ def _latest_file_mtime_date(dir_path):
     files = [p for p in dir_path.rglob("*") if p.is_file()]
     if not files:
         return None
-    return datetime.date.fromtimestamp(
-        max(p.stat().st_mtime for p in files)
-    ).isoformat()
+    return datetime.date.fromtimestamp(max(p.stat().st_mtime for p in files)).isoformat()
 
 
 def _build_source_manifest(asset_dir):
@@ -213,30 +223,57 @@ def _derive_scale_applied(scale, report, note_key):
     return scale[0]
 
 
-def _stable_poses(model):
-    return [
-        {
-            "pose_id": model["stable_pose_id"],
-            "orientation_wxyz": model["stable_orientation_wxyz"],
-            "is_default": True,
-        }
-    ]
+def _existing_pose_measurement(model, existing_model, representations, asset_key):
+    """Return only a pose handle backed by a current settle/pass receipt.
+
+    Catalog ``run_id`` fields are declarations, not replay evidence.  A
+    backfill rerun may preserve a prior handle only when the same existing
+    model also carries the exact current v2 representation-set digest; the
+    receipt is copied byte-for-byte and never re-signed here.
+    """
+    if not isinstance(existing_model, dict):
+        return None
+    expected_digest = ledger.reps_digest({"representations": representations}, "sapien")
+    latest = ledger.latest_trusted_verification(existing_model, "sapien", "settle", asset_key)
+    if (
+        latest is None
+        or latest.get("verdict") != "pass"
+        or latest.get("verified_digest") != expected_digest
+    ):
+        return None
+    conventions = (existing_model.get("physical") or {}).get("conventions") or {}
+    for pose in conventions.get("stable_poses") or []:
+        if not isinstance(pose, dict):
+            continue
+        if pose.get("pose_id") != model.get("stable_pose_id"):
+            continue
+        if pose.get("orientation_wxyz") != model.get("stable_orientation_wxyz"):
+            continue
+        provenance = pose.get("measured_against")
+        if not isinstance(provenance, dict):
+            continue
+        backend = provenance.get("backend")
+        run_id = provenance.get("run_id")
+        if (
+            backend == "sapien"
+            and latest.get("run_id") == run_id
+            and isinstance(run_id, str)
+            and bool(run_id.strip())
+        ):
+            return json.loads(json.dumps(provenance))
+    return None
 
 
-def _has_isaac_rep(led, model_entry):
-    """True iff every model this ledger will hold owns a non-snapshot
-    isaacsim representation -- the same rule migrate_ledger_v2 applied, kept
-    identical so a rerun of this backfill cannot silently reclassify."""
-    models = list((led or {}).get("models") or [])
-    models = [m for m in models if m.get("model_id") != model_entry.get("model_id")]
-    models.append(model_entry)
-    return bool(models) and all(
-        any(
-            r.get("backend") == "isaacsim" and r.get("role") != "snapshot"
-            for r in m.get("representations") or []
-        )
-        for m in models
-    )
+def _stable_poses(model, existing_model, representations, asset_key):
+    pose = {
+        "pose_id": model["stable_pose_id"],
+        "orientation_wxyz": model["stable_orientation_wxyz"],
+        "is_default": True,
+    }
+    provenance = _existing_pose_measurement(model, existing_model, representations, asset_key)
+    if provenance is not None:
+        pose["measured_against"] = provenance
+    return [pose]
 
 
 def _size_resolution(mesh_bbox_m, scale_applied):
@@ -261,12 +298,12 @@ def _size_resolution(mesh_bbox_m, scale_applied):
     }
 
 
-def _conventions(model):
+def _conventions(model, existing_model, representations, asset_key):
     return {
         "is_static": model["is_static"],
         "z_policy": model["z_policy"],
         "footprint_shape": model["footprint_shape"],
-        "stable_poses": _stable_poses(model),
+        "stable_poses": _stable_poses(model, existing_model, representations, asset_key),
         "support_margin_m": model.get("support_margin_m"),
         "support_spawn_clearance_m": model.get("support_spawn_clearance_m"),
         "inherited_from": None,
@@ -274,14 +311,23 @@ def _conventions(model):
 
 
 def _mass_override(kind):
+    del kind
+    return {"value": None, "status": "unknown"}
+
+
+def _file_record(path, uri=None):
+    path = Path(path)
     return {
-        "value": None,
-        "status": "unknown",
-        "runtime_default_kg": 0.1,
-        "runtime_default_basis": "urdf_inertial"
-        if kind == "articulated"
-        else "global_constant",
+        "uri": uri if uri is not None else ledger.to_portable_uri(path),
+        "sha256": _sha256_file(path),
+        "bytes": path.stat().st_size,
     }
+
+
+def _representation_files(primary):
+    """Record exactly the recursive files reachable from one loader primary."""
+
+    return ledger_writes.representation_files(primary)
 
 
 def _rigid_representations(model):
@@ -294,7 +340,7 @@ def _rigid_representations(model):
             "backend": "sapien",
             "role": "visual",
             "sha256": _sha256_file(visual),
-            "size_bytes": visual.stat().st_size,
+            "files": _representation_files(visual),
             "metadata": {},
         },
         {
@@ -303,7 +349,11 @@ def _rigid_representations(model):
             "backend": "sapien",
             "role": "collision",
             "sha256": _sha256_file(collision),
-            "size_bytes": collision.stat().st_size,
+            "files": _representation_files(collision),
+            # The file is explicitly selected as the collision mesh.  Whether
+            # its faces form a convex body is a geometric measurement this
+            # catalog backfill did not perform, so do not invent that fact.
+            "collision_meta": {"mode": "explicit_mesh"},
             "metadata": {},
         },
     ]
@@ -322,7 +372,11 @@ def _articulated_representations(model):
             "backend": "sapien",
             "role": "visual_and_collision",
             "sha256": _sha256_file(urdf),
-            "size_bytes": urdf.stat().st_size,
+            "files": _representation_files(urdf),
+            "collision_meta": {
+                "mode": "unknown",
+                "unknown_reason": "upstream URDF collision authoring was not probed",
+            },
             "metadata": {},
         }
     ]
@@ -346,7 +400,11 @@ def _isaac_representation(usd_path, derived_from):
         "backend": "isaacsim",
         "role": "visual_and_collision",
         "sha256": _sha256_file(usd_path),
-        "size_bytes": usd_path.stat().st_size,
+        "files": _representation_files(usd_path),
+        "collision_meta": {
+            "mode": "unknown",
+            "unknown_reason": "registered USD collision authoring was not probed",
+        },
         "metadata": {
             "derived_from": derived_from,
             "converter": ISAAC_USD_CONVERTER,
@@ -364,12 +422,37 @@ def _existing_model(existing_ledger, model_id):
     return None
 
 
+def _normalize_preserved_representation(representation):
+    """Upgrade an incremental-layer representation without inventing facts."""
+    representation = json.loads(json.dumps(representation))
+    representation.pop("size_bytes", None)
+    if not representation.get("files"):
+        uri = representation.get("uri")
+        sha = representation.get("sha256")
+        path = ledger.resolve_uri(uri) if isinstance(uri, str) and uri else None
+        if path is not None and path.is_file() and _sha256_file(path) == sha:
+            representation["files"] = [_file_record(path, uri=uri)]
+    files = representation.get("files")
+    if isinstance(files, list) and all(
+        isinstance(member, dict) and isinstance(member.get("uri"), str) for member in files
+    ):
+        representation["files"] = sorted(files, key=lambda member: member["uri"])
+    role = representation.get("role")
+    if role in ("collision", "visual_and_collision") and not representation.get("collision_meta"):
+        representation["collision_meta"] = {
+            "mode": "unknown",
+            "unknown_reason": "legacy representation carried no collision provenance",
+        }
+    return representation
+
+
 def _build_model_entry(
     entry,
     model,
     kind,
     retrieved_at,
     source_manifest_path,
+    source_manifest_sha256,
     group,
     relbase,
     existing_model,
@@ -407,15 +490,13 @@ def _build_model_entry(
     # unless this run supplies a fresh --isaac-usd for this exact model, in
     # which case that one entry is upserted (replaced, not duplicated).
     preserved = [
-        rp
+        _normalize_preserved_representation(rp)
         for rp in (existing_model or {}).get("representations", [])
         if rp.get("backend") != "sapien"
     ]
     if isaac_usd_path is not None:
         preserved = [rp for rp in preserved if rp.get("backend") != "isaacsim"]
-        preserved.append(
-            _isaac_representation(isaac_usd_path, representations[0]["uri"])
-        )
+        preserved.append(_isaac_representation(isaac_usd_path, representations[0]["uri"]))
         report["notes"]["isaac_usd_registered"].append(note_key)
     representations = representations + preserved
 
@@ -430,6 +511,7 @@ def _build_model_entry(
         "license": DEFAULT_LICENSE,
         "retrieved_at": retrieved_at,
         "source_manifest_path": ledger.to_portable_uri(source_manifest_path),
+        "source_manifest_sha256": source_manifest_sha256,
     }
     existing_license = (existing_model or {}).get("source", {}).get("license")
     if existing_license and existing_license.get("status") == "declared":
@@ -444,7 +526,7 @@ def _build_model_entry(
         mesh_up_axis=up_axis,
         origin_convention=origin_convention,
         size_resolution=_size_resolution(mesh_bbox_m, scale_applied),
-        conventions=_conventions(model),
+        conventions=_conventions(model, existing_model, representations, entry["asset_id"]),
         source=source,
         verification=verification,
         articulation=_articulation(model) if kind == "articulated" else None,
@@ -500,9 +582,7 @@ def _resolve_models(entry, kind, report):
         if measured is None:
             continue
         axis, origin_convention, extents = measured
-        mesh_bbox_m = [
-            e * (scale_applied if scale_applied is not None else 1.0) for e in extents
-        ]
+        mesh_bbox_m = [e * (scale_applied if scale_applied is not None else 1.0) for e in extents]
         resolved.append((m, axis, origin_convention, mesh_bbox_m, scale_applied))
     return resolved
 
@@ -515,7 +595,7 @@ def _parse_isaac_usd(raw_list):
     out = {}
     for raw in raw_list:
         asset, sep, path_str = raw.partition("=")
-        if not sep or not path_str:
+        if not sep or not asset or not path_str:
             raise ValueError(f"--isaac-usd must be ASSET=PATH, got {raw!r}")
         path = Path(path_str)
         if not path.exists():
@@ -600,6 +680,386 @@ def _empty_report():
     }
 
 
+def _require_safe_asset_id(value):
+    try:
+        return ledger.canonical_asset_key(value)
+    except ledger.UnsafeAssetKeyError as exc:
+        raise ValueError(f"unsafe asset_id: {value!r}") from exc
+
+
+def _entries_by_asset(catalog, *, objects_root=None):
+    entries = catalog.get("entries") if isinstance(catalog, dict) else None
+    if not isinstance(entries, list):
+        raise ValueError("catalog entries must be a list")
+    indexed = {}
+    seen_models = set()
+    objects_root = Path(objects_root or str(catalog.get("objects_root"))).absolute()
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise ValueError("catalog entry must be an object")
+        asset = _require_safe_asset_id(entry.get("asset_id"))
+        if asset in indexed:
+            raise ValueError(f"catalog duplicates asset_id: {asset}")
+        models = entry.get("models")
+        if not isinstance(models, list):
+            raise ValueError(f"catalog asset {asset} models must be a list")
+        try:
+            for model in models:
+                if not isinstance(model, dict):
+                    raise ledger.InvalidModelIdError("model entry must be an object")
+                ledger.claim_asset_model(seen_models, asset, model.get("model_id"))
+        except (ledger.InvalidModelIdError, ledger.DuplicateAssetModelError) as exc:
+            raise ValueError(f"catalog asset {asset} has duplicate or malformed model_id") from exc
+        asset_root = Path(str(entry.get("asset_path"))).absolute()
+        expected_asset_root = (objects_root / asset).absolute()
+        if not asset_root.is_relative_to(expected_asset_root):
+            raise ValueError(f"catalog asset_path escapes objects_root asset key: {asset}")
+        writer_paths.contained_path(objects_root, asset_root)
+        for model in models:
+            for field in _REMAP_FIELDS_MODEL:
+                value = model.get(field)
+                if value is None:
+                    continue
+                path = Path(str(value)).absolute()
+                try:
+                    writer_paths.contained_path(asset_root, path)
+                except writer_paths.UnsafeWriterPathError:
+                    raise ValueError(f"catalog {asset} {field} escapes asset_path")
+        indexed[asset] = entry
+    return indexed
+
+
+def _read_bytes_at(directory_fd, name):
+    flags = os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0)
+    try:
+        fd = os.open(name, flags, dir_fd=directory_fd)
+    except FileNotFoundError:
+        return None
+    try:
+        with os.fdopen(fd, "rb") as stream:
+            fd = -1
+            return stream.read()
+    finally:
+        if fd >= 0:
+            os.close(fd)
+
+
+def _atomic_write_bytes_at(directory_fd, name, payload):
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0)
+    temporary = None
+    fd = -1
+    try:
+        for _attempt in range(100):
+            candidate = f"{name}.{secrets.token_hex(8)}.tmp"
+            try:
+                fd = os.open(candidate, flags, 0o600, dir_fd=directory_fd)
+            except FileExistsError:
+                continue
+            temporary = candidate
+            break
+        else:
+            raise FileExistsError("could not allocate a unique manifest temporary file")
+        with os.fdopen(fd, "wb") as stream:
+            fd = -1
+            stream.write(payload)
+            stream.flush()
+            os.fchmod(stream.fileno(), 0o644)
+            os.fsync(stream.fileno())
+        os.replace(temporary, name, src_dir_fd=directory_fd, dst_dir_fd=directory_fd)
+        temporary = None
+        os.fsync(directory_fd)
+    finally:
+        if fd >= 0:
+            os.close(fd)
+        if temporary is not None:
+            try:
+                os.unlink(temporary, dir_fd=directory_fd)
+            except FileNotFoundError:
+                pass
+
+
+def _atomic_write_bytes(path, payload, *, locked=None):
+    path = Path(path)
+    if locked is not None:
+        _atomic_write_bytes_at(locked.directory_fd, locked.ledger_name, payload)
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with ledger._open_parent_directory(path) as (directory_fd, name):
+        _atomic_write_bytes_at(directory_fd, name, payload)
+
+
+def _restore_bytes_at(directory_fd, name, previous):
+    if previous is None:
+        try:
+            os.unlink(name, dir_fd=directory_fd)
+        except FileNotFoundError:
+            return
+        os.fsync(directory_fd)
+    else:
+        _atomic_write_bytes_at(directory_fd, name, previous)
+
+
+def _require_pinned_asset_directory(path, directory_fd):
+    try:
+        current = os.stat(Path(path).parent, follow_symlinks=False)
+    except FileNotFoundError as exc:
+        raise OSError("asset directory changed during manifest/ledger commit") from exc
+    pinned = os.fstat(directory_fd)
+    if current.st_dev != pinned.st_dev or current.st_ino != pinned.st_ino:
+        raise OSError("asset directory changed during manifest/ledger commit")
+
+
+def _unlink_at(directory_fd, name):
+    try:
+        os.unlink(name, dir_fd=directory_fd)
+    except FileNotFoundError:
+        return
+    os.fsync(directory_fd)
+
+
+def _json_bytes(document):
+    return (json.dumps(document, indent=2) + "\n").encode()
+
+
+def _encode_optional_bytes(payload):
+    if payload is None:
+        return None
+    return base64.b64encode(payload).decode("ascii")
+
+
+def _decode_optional_bytes(payload, field):
+    if payload is None:
+        return None
+    if not isinstance(payload, str):
+        raise PairTransactionRecoveryError(f"transaction journal {field} is malformed")
+    try:
+        return base64.b64decode(payload.encode("ascii"), validate=True)
+    except (UnicodeEncodeError, ValueError) as exc:
+        raise PairTransactionRecoveryError(f"transaction journal {field} is malformed") from exc
+
+
+def _transaction_journal(prior_manifest, prior_ledger, manifest_bytes, document):
+    body = {
+        "schema": _PAIR_TRANSACTION_SCHEMA,
+        "prior_manifest_b64": _encode_optional_bytes(prior_manifest),
+        "prior_ledger_b64": _encode_optional_bytes(prior_ledger),
+        "next_manifest_b64": _encode_optional_bytes(manifest_bytes),
+        "next_ledger": document,
+    }
+    transaction_id = hashlib.sha256(ledger.canonical_json_bytes(body)).hexdigest()
+    return {**body, "transaction_id": transaction_id}
+
+
+def _parse_transaction_journal(payload):
+    try:
+        document = json.loads(payload)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise PairTransactionRecoveryError("transaction journal is not valid JSON") from exc
+    if not isinstance(document, dict) or document.get("schema") != _PAIR_TRANSACTION_SCHEMA:
+        raise PairTransactionRecoveryError("transaction journal has an unsupported schema")
+    transaction_id = document.get("transaction_id")
+    if not isinstance(transaction_id, str):
+        raise PairTransactionRecoveryError("transaction journal has no transaction id")
+    body = {key: value for key, value in document.items() if key != "transaction_id"}
+    if transaction_id != hashlib.sha256(ledger.canonical_json_bytes(body)).hexdigest():
+        raise PairTransactionRecoveryError("transaction journal checksum does not match")
+    if not isinstance(document.get("next_ledger"), dict):
+        raise PairTransactionRecoveryError("transaction journal next ledger is malformed")
+    prior_manifest = _decode_optional_bytes(
+        document.get("prior_manifest_b64"), "prior_manifest_b64"
+    )
+    prior_ledger = _decode_optional_bytes(document.get("prior_ledger_b64"), "prior_ledger_b64")
+    next_manifest = _decode_optional_bytes(document.get("next_manifest_b64"), "next_manifest_b64")
+    if next_manifest is None:
+        raise PairTransactionRecoveryError("transaction journal next manifest is missing")
+    return {
+        "transaction_id": transaction_id,
+        "prior_manifest": prior_manifest,
+        "prior_ledger": prior_ledger,
+        "next_manifest": next_manifest,
+        "next_ledger": document["next_ledger"],
+    }
+
+
+def _read_json_if_possible(payload):
+    if payload is None:
+        return None
+    try:
+        value = json.loads(payload)
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return object()
+    return value
+
+
+def _transaction_tombstone(transaction_id):
+    return {
+        "schema": _PAIR_TRANSACTION_TOMBSTONE_SCHEMA,
+        "transaction_id": transaction_id,
+    }
+
+
+def _transaction_state(manifest_locked, ledger_locked, transaction):
+    manifest_bytes = _read_bytes_at(manifest_locked.directory_fd, manifest_locked.ledger_name)
+    ledger_bytes = _read_bytes_at(ledger_locked.directory_fd, ledger_locked.ledger_name)
+    ledger_document = _read_json_if_possible(ledger_bytes)
+    return manifest_bytes, ledger_bytes, ledger_document
+
+
+def _restore_prior_pair(manifest_locked, ledger_locked, transaction):
+    _restore_bytes_at(
+        manifest_locked.directory_fd,
+        manifest_locked.ledger_name,
+        transaction["prior_manifest"],
+    )
+    _restore_bytes_at(
+        ledger_locked.directory_fd,
+        ledger_locked.ledger_name,
+        transaction["prior_ledger"],
+    )
+    _unlink_at(manifest_locked.directory_fd, _PAIR_TRANSACTION_JOURNAL_NAME)
+
+
+def _rollback_pair_transaction(manifest_locked, ledger_locked, transaction):
+    manifest_bytes, ledger_bytes, ledger_document = _transaction_state(
+        manifest_locked, ledger_locked, transaction
+    )
+    recognized_manifest = manifest_bytes in {
+        transaction["prior_manifest"],
+        transaction["next_manifest"],
+    }
+    prior_ledger_matches = ledger_bytes == transaction["prior_ledger"]
+    recognized_ledger = (
+        prior_ledger_matches
+        or ledger_document == transaction["next_ledger"]
+        or ledger_document == _transaction_tombstone(transaction["transaction_id"])
+    )
+    if not recognized_manifest or not recognized_ledger:
+        raise PairTransactionRecoveryError(
+            "manifest/ledger changed outside the locked transaction; refusing rollback"
+        )
+    _restore_prior_pair(manifest_locked, ledger_locked, transaction)
+
+
+def _recover_pair_transaction(manifest_locked, ledger_locked):
+    journal_bytes = _read_bytes_at(manifest_locked.directory_fd, _PAIR_TRANSACTION_JOURNAL_NAME)
+    if journal_bytes is None:
+        return
+    transaction = _parse_transaction_journal(journal_bytes)
+    manifest_bytes, ledger_bytes, ledger_document = _transaction_state(
+        manifest_locked, ledger_locked, transaction
+    )
+    old_manifest = manifest_bytes == transaction["prior_manifest"]
+    new_manifest = manifest_bytes == transaction["next_manifest"]
+    old_ledger = ledger_bytes == transaction["prior_ledger"]
+    new_ledger = ledger_document == transaction["next_ledger"]
+    tombstone = ledger_document == _transaction_tombstone(transaction["transaction_id"])
+
+    if new_manifest and new_ledger:
+        _unlink_at(manifest_locked.directory_fd, _PAIR_TRANSACTION_JOURNAL_NAME)
+        return
+    if old_manifest and old_ledger:
+        _unlink_at(manifest_locked.directory_fd, _PAIR_TRANSACTION_JOURNAL_NAME)
+        return
+    if tombstone and (old_manifest or new_manifest):
+        _restore_prior_pair(manifest_locked, ledger_locked, transaction)
+        return
+    if new_ledger and old_manifest:
+        _atomic_write_bytes_at(
+            manifest_locked.directory_fd,
+            manifest_locked.ledger_name,
+            transaction["next_manifest"],
+        )
+        _unlink_at(manifest_locked.directory_fd, _PAIR_TRANSACTION_JOURNAL_NAME)
+        return
+    if old_ledger and new_manifest:
+        _restore_prior_pair(manifest_locked, ledger_locked, transaction)
+        return
+    raise PairTransactionRecoveryError(
+        "transaction journal does not match the current manifest/ledger pair"
+    )
+
+
+def _commit_manifest_and_ledger(manifest_path, manifest_bytes, ledger_path, document, *, expected):
+    """Durably CAS one source-manifest/ledger pair in a pinned asset directory.
+
+    A checksummed journal preserves both prior files.  The ledger becomes an
+    identity-invalid tombstone before the manifest changes, so a process death
+    cannot expose an old ledger beside a new manifest as an accepted asset.
+    The next pair writer rolls an incomplete transaction back, or recognizes a
+    fully published pair and only removes its leftover journal.  Pair and
+    ledger locks stay held throughout normal rollback, preventing restoration
+    from overwriting a cooperative receipt writer.
+    """
+
+    manifest_path = Path(manifest_path)
+    ledger_path = Path(ledger_path)
+    with ledger._locked_ledger(manifest_path) as manifest_locked:
+        _require_pinned_asset_directory(manifest_path, manifest_locked.directory_fd)
+        with ledger._locked_ledger_at(manifest_locked.directory_fd) as ledger_locked:
+            _require_pinned_asset_directory(manifest_path, manifest_locked.directory_fd)
+            _recover_pair_transaction(manifest_locked, ledger_locked)
+            prior_manifest = _read_bytes_at(
+                manifest_locked.directory_fd, manifest_locked.ledger_name
+            )
+            prior_ledger = _read_bytes_at(ledger_locked.directory_fd, ledger_locked.ledger_name)
+            ledger_writes.validate_for_write(document)
+            if prior_ledger is None:
+                if expected is not None:
+                    raise ledger_writes.ConcurrentLedgerUpdateError(
+                        "expected ledger disappeared before validated write"
+                    )
+            else:
+                if expected is None:
+                    raise ledger_writes.ConcurrentLedgerUpdateError(
+                        "replacing an existing ledger requires the expected prior document"
+                    )
+                try:
+                    current = json.loads(prior_ledger)
+                except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                    raise ledger_writes.ConcurrentLedgerUpdateError(
+                        "ledger changed before validated write"
+                    ) from exc
+                if current != expected:
+                    raise ledger_writes.ConcurrentLedgerUpdateError(
+                        "ledger changed before validated write"
+                    )
+            transaction_document = _transaction_journal(
+                prior_manifest,
+                prior_ledger,
+                manifest_bytes,
+                document,
+            )
+            transaction = _parse_transaction_journal(_json_bytes(transaction_document))
+            _atomic_write_bytes_at(
+                manifest_locked.directory_fd,
+                _PAIR_TRANSACTION_JOURNAL_NAME,
+                _json_bytes(transaction_document),
+            )
+            try:
+                ledger._atomic_write_json(
+                    ledger_path,
+                    _transaction_tombstone(transaction["transaction_id"]),
+                    locked=ledger_locked,
+                )
+                _atomic_write_bytes(
+                    manifest_path,
+                    manifest_bytes,
+                    locked=manifest_locked,
+                )
+                ledger._atomic_write_json(
+                    ledger_path,
+                    document,
+                    locked=ledger_locked,
+                    pre_replace=lambda: ledger_writes.validate_for_write(document),
+                )
+                _require_pinned_asset_directory(manifest_path, manifest_locked.directory_fd)
+            except Exception:
+                _rollback_pair_transaction(manifest_locked, ledger_locked, transaction)
+                raise
+            _unlink_at(manifest_locked.directory_fd, _PAIR_TRANSACTION_JOURNAL_NAME)
+            _require_pinned_asset_directory(manifest_path, manifest_locked.directory_fd)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--catalog", required=True)
@@ -644,7 +1104,14 @@ def main():
     # raw, host-specific absolute one (see _apply_root_remap's docstring).
     relbase = Path(root_remap[1]) if root_remap else robotwin_root
 
-    entries_by_asset = {e["asset_id"]: e for e in catalog["entries"]}
+    try:
+        entries_by_asset = _entries_by_asset(
+            catalog,
+            objects_root=(root_remap[1] if root_remap else None),
+        )
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        sys.exit(2)
     unknown_isaac_usd = set(isaac_usd_map) - set(entries_by_asset)
     if unknown_isaac_usd:
         print(
@@ -667,9 +1134,7 @@ def main():
         kind = "articulated" if entry.get("load_type") == "urdf" else "rigid"
         resolved_by_asset[asset] = (kind, _resolve_models(entry, kind, report))
 
-    unresolvable_isaac_usd = {
-        asset for asset in isaac_usd_map if not resolved_by_asset[asset][1]
-    }
+    unresolvable_isaac_usd = {asset for asset in isaac_usd_map if not resolved_by_asset[asset][1]}
     if unresolvable_isaac_usd:
         print(
             "ERROR: --isaac-usd asset(s) have no ingestible model (all "
@@ -677,6 +1142,9 @@ def main():
             file=sys.stderr,
         )
         sys.exit(2)
+
+    if args.apply:
+        out_dir.mkdir(parents=True, exist_ok=True)
 
     # Phase 2: build + (if --apply) write one ledger per asset that has at
     # least one resolved model, reusing phase 1's resolution unchanged.
@@ -686,27 +1154,44 @@ def main():
             continue
 
         category = entry["category"]
-        semantic_name = entry.get("semantic_name") or category
         aliases = list(entry.get("aliases") or [])
         if not aliases:
             aliases = [category]
             report["aliases_defaulted"].append(asset)
         colors = list(entry.get("colors") or [])
         materials = list(entry.get("materials") or [])
-        tags = ["upstream", "robotwin", kind]
 
         asset_dir = Path(entry["asset_path"])
         retrieved_at = _latest_file_mtime_date(asset_dir)
         if retrieved_at is None:
-            retrieved_at = datetime.date.fromtimestamp(
-                asset_dir.stat().st_mtime
-            ).isoformat()
+            retrieved_at = datetime.date.fromtimestamp(asset_dir.stat().st_mtime).isoformat()
             report["notes"].setdefault("retrieved_at_empty_asset_dir", []).append(asset)
 
-        lp = ledger.ledger_path(out_dir, asset)
-        existing_ledger = json.loads(lp.read_text()) if lp.exists() else None
+        try:
+            loaded = ledger.load_asset_ledger(out_dir, asset)
+        except FileNotFoundError:
+            loaded = None
+            lp = ledger.ledger_path(out_dir, asset)
+            existing_ledger = None
+            output_asset_dir = lp.parent
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            report["violations"][asset] = [
+                {
+                    "path": "external_ids.env_gen",
+                    "code": "unsafe_asset_location",
+                    "message": str(exc),
+                }
+            ]
+            continue
+        else:
+            lp = loaded.ledger_path
+            existing_ledger = loaded.document
+            output_asset_dir = loaded.asset_dir
 
-        source_manifest_path = (out_dir / asset / "SOURCE_MANIFEST.json").resolve()
+        source_manifest_path = (output_asset_dir / "SOURCE_MANIFEST.json").resolve()
+        source_manifest = _build_source_manifest(asset_dir)
+        source_manifest_bytes = (json.dumps(source_manifest, indent=2) + "\n").encode()
+        source_manifest_sha256 = hashlib.sha256(source_manifest_bytes).hexdigest()
 
         first_usable_model_id = resolved_models[0][0]["model_id"]
 
@@ -715,7 +1200,7 @@ def main():
         # derived-core rebuild always regenerates asset-level fields fresh
         # from the catalog) and let each upsert_model call below re-attach
         # models[] one at a time.
-        led = None
+        model_entries = []
         for (
             m,
             up_axis,
@@ -736,6 +1221,7 @@ def main():
                 kind,
                 retrieved_at,
                 source_manifest_path,
+                source_manifest_sha256,
                 source_commit,
                 relbase,
                 existing_model,
@@ -747,6 +1233,27 @@ def main():
                 mesh_bbox_m,
                 scale_applied,
             )
+            model_entries.append(model_entry)
+
+        # Profile is one asset-level promise.  Decide it once from the final
+        # complete model set; computing it incrementally makes a two-model
+        # asset oscillate between cross_backend and sapien_only and causes the
+        # upsert contract to crash instead of returning typed evidence.
+        profile = (
+            "cross_backend"
+            if model_entries
+            and all(
+                any(
+                    representation.get("backend") == "isaacsim"
+                    and representation.get("role") != "snapshot"
+                    for representation in model_entry.get("representations", [])
+                )
+                for model_entry in model_entries
+            )
+            else "sapien_only"
+        )
+        led = None
+        for model_entry in model_entries:
             led = ledger.upsert_model(
                 led,
                 asset=asset,
@@ -755,11 +1262,7 @@ def main():
                 # Upstream RoboTwin assets carry no isaacsim representation
                 # unless one was registered by hand via --isaac-usd; the
                 # profile follows that evidence rather than an aspiration.
-                profile=(
-                    "cross_backend"
-                    if _has_isaac_rep(led, model_entry)
-                    else "sapien_only"
-                ),
+                profile=profile,
                 identity={
                     "basis": "upstream_catalog",
                     "evidence": ledger.to_portable_uri(args.catalog),
@@ -768,26 +1271,34 @@ def main():
                 aliases=aliases,
                 colors=colors,
                 materials=materials,
-                tags=tags,
+                tags=(),
                 model_entry=model_entry,
-                semantic_name=semantic_name,
                 asset_id_prefix=ASSET_ID_PREFIX,
             )
 
         violations = ledger.validate_ledger(led, check_files=True)
         if violations:
             report["violations"][asset] = [
-                {"path": v.path, "code": v.code, "message": v.message}
-                for v in violations
+                {"path": v.path, "code": v.code, "message": v.message} for v in violations
             ]
+            # Validation is the admission gate, not report-only telemetry.
+            # Never replace a previously valid ledger with a known-invalid
+            # candidate merely because --apply was supplied.
+            continue
 
         report["written"].append(asset)
 
         if args.apply:
-            lp.parent.mkdir(parents=True, exist_ok=True)
-            ledger.write_ledger(lp, led)
-            manifest = _build_source_manifest(asset_dir)
-            source_manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+            output_asset_dir = ledger.ensure_asset_directory(out_dir, asset)
+            lp = output_asset_dir / "ledger.json"
+            source_manifest_path = output_asset_dir / "SOURCE_MANIFEST.json"
+            _commit_manifest_and_ledger(
+                source_manifest_path,
+                source_manifest_bytes,
+                lp,
+                led,
+                expected=existing_ledger,
+            )
 
     if root_remap:
         report["notes"]["root_remap"] = {
@@ -797,9 +1308,7 @@ def main():
         }
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "backfill_upstream_report.json").write_text(
-        json.dumps(report, indent=2) + "\n"
-    )
+    (out_dir / "backfill_upstream_report.json").write_text(json.dumps(report, indent=2) + "\n")
 
     sys.exit(1 if report["violations"] else 0)
 

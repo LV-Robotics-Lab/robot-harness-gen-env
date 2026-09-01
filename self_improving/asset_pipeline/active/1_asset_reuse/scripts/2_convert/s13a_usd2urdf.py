@@ -9,6 +9,7 @@ sits at z=0 (origin_on_table convention). Units scaled by metersPerUnit.
 """
 
 import argparse
+import hashlib
 import json
 import math
 import sys
@@ -19,22 +20,27 @@ from runtime_config import ASSET_CATALOG  # noqa: E402
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--usd", required=True)
-parser.add_argument(
-    "--out-dir", required=True, help="instance dir, e.g. .../314_cabinet/0"
-)
+parser.add_argument("--out-dir", required=True, help="instance dir, e.g. .../314_cabinet/0")
 parser.add_argument("--robot-name", default="imported_articulation")
-parser.add_argument("--size-policy", default=None,
-                    help="match_category | absolute:<m>; needs --category for match mode")
+parser.add_argument(
+    "--size-policy",
+    default=None,
+    help="match_category | absolute:<m>; needs --category for match mode",
+)
 parser.add_argument("--category", default=None)
 parser.add_argument(
     "--reference-catalog",
     default=str(ASSET_CATALOG),
 )
-parser.add_argument("--scale", type=float, default=1.0,
-                    help="uniform sizing scale on top of metersPerUnit (recorded)")
+parser.add_argument(
+    "--scale",
+    type=float,
+    default=1.0,
+    help="uniform sizing scale on top of metersPerUnit (recorded)",
+)
 args = parser.parse_args()
 
-from isaacsim import SimulationApp
+from isaacsim import SimulationApp  # noqa: E402
 
 app = SimulationApp({"headless": True})
 code = 1
@@ -57,7 +63,8 @@ try:
         import conventions as conv_lib
 
         size_resolution = conv_lib.resolve_size(
-            args.category or "unknown", raw, args.reference_catalog, args.size_policy)
+            args.category or "unknown", raw, args.reference_catalog, args.size_policy
+        )
         scale = size_resolution["scale"]
         print(f"size policy: {size_resolution}")
     mpu = mpu_base * scale
@@ -67,9 +74,7 @@ try:
         return np.array([[m[i][j] for j in range(4)] for i in range(4)], dtype=float)
 
     def world(prim):
-        return to_np(
-            xc.GetLocalToWorldTransform(prim)
-        )  # row-major, row-vector convention
+        return to_np(xc.GetLocalToWorldTransform(prim))  # row-major, row-vector convention
 
     def quat_to_np(q):
         # Gf.Quatf/Quatd -> rotation matrix (3x3), acting on column vectors
@@ -154,9 +159,7 @@ try:
             bucket = "col" if is_collision_mesh(p) else "vis"
             buckets[bucket].append((v, triangulate(counts, idx)))
             if bucket == "vis":
-                wv = (np.array([[q[0], q[1], q[2], 1.0] for q in pts]) @ world(p))[
-                    :, :3
-                ] * mpu
+                wv = (np.array([[q[0], q[1], q[2], 1.0] for q in pts]) @ world(p))[:, :3] * mpu
                 global_min = np.minimum(global_min, wv.min(axis=0))
                 global_max = np.maximum(global_max, wv.max(axis=0))
         if not buckets["col"]:
@@ -174,9 +177,9 @@ try:
                     off += len(v)
             files[kind] = fname
         link_meshes[path] = files
-        print(
-            f"link {link_name[path]}: vis_parts={len(buckets['vis'])} col_parts={len(buckets['col'])}"
-        )
+        visual_count = len(buckets["vis"])
+        collision_count = len(buckets["col"])
+        print(f"link {link_name[path]}: vis_parts={visual_count} col_parts={collision_count}")
 
     lift = -float(global_min[2])
     size = [float(a - b) for a, b in zip(global_max, global_min)]
@@ -212,11 +215,7 @@ try:
     def joint_xml(rec, idx):
         p_link = link_name.get(rec["body0"], "base") if rec["body0"] else "base"
         c_link = link_name[rec["body1"]]
-        Wp = (
-            world(bodies[rec["body0"]])
-            if rec["body0"] and rec["body0"] in bodies
-            else np.eye(4)
-        )
+        Wp = world(bodies[rec["body0"]]) if rec["body0"] and rec["body0"] in bodies else np.eye(4)
         Wc = world(bodies[rec["body1"]])
         T = Wc @ np.linalg.inv(Wp)  # child in parent frame (row-vector convention)
         t = T[3, :3] * mpu
@@ -262,27 +261,25 @@ try:
         urdf.append(joint_xml(rec, i))
         seen_children.add(rec["body1"])
     for path in bodies:  # any body not attached by a joint gets fixed to base
-        if path not in seen_children and not any(
-            j["body0"] == path and j["body1"] for j in joints
-        ):
+        if path not in seen_children and not any(j["body0"] == path and j["body1"] for j in joints):
             pass
     urdf.append("</robot>\n")
     (out / "mobility.urdf").write_text("".join(urdf))
 
     movable = [j for j in joints if j["type"] != "fixed"]
+    source_usd_sha256 = hashlib.sha256(Path(args.usd).read_bytes()).hexdigest()
     (out / "export_report.json").write_text(
         json.dumps(
             {
                 "source_usd": args.usd,
+                "source_usd_sha256": source_usd_sha256,
                 "scale_applied": scale,
                 "size_resolution": size_resolution,
                 "mpu": mpu,
                 "links": len(bodies),
                 "joints_total": len(joints),
                 "joints_movable": len(movable),
-                "movable": [
-                    {k: v for k, v in j.items() if k != "rot1"} for j in movable
-                ],
+                "movable": [{k: v for k, v in j.items() if k != "rot1"} for j in movable],
                 "bbox_m": size,
                 "lift_m": lift,
             },

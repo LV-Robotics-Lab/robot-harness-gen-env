@@ -111,7 +111,7 @@ PR1 的 21 个专项测试是历史基线；当前验证边界见模块页与
 | 重要代码 | 功能 | 关键符号 / 配置 | 验证 |
 | --- | --- | --- | --- |
 | `active/runtime_config.py` | 把仓库、RoboTwin、shadow、catalog、override、运行解释器统一成可迁移默认值和环境变量。 | `ASSET_PIPELINE_ROOT`、`GEN_ENV_ROOT`、`ROBOTWIN_ROOT`、`ROBOTWIN_SHADOW_ROOT`、`ASSET_CATALOG`、`ASSET_OVERRIDES` | `active/1_asset_reuse/tests/test_runtime_config.py` |
-| `active/1_asset_reuse/` | 资产发现、采购、转换、实测属性、ledger、catalog 接入与物理验收。 | `acquire_batch.py`、`measure_asset_attributes.py`、`s9_build_shadow_root.py` | 模块内 264 passed、1 skipped |
+| `active/1_asset_reuse/` | 资产发现、采购、转换、实测属性、ledger、catalog 接入与物理验收；v3 gate 解析完整 loader closure，并由共享 writer 边界在发布前复核 files/provenance/receipt。 | `lib/ledger.py`、`lib/ledger_writes.py`、`migrate_v3.py`、`backfill_upstream.py` | asset-reuse 基础环境 `902 passed, 2 skipped`，真实 SAPIEN 对应节点另 `2 passed`；最终公共 S13b→S11 用真实 loader/native modules 完成 `SWEEP 1/1`。跨 Harness `164 passed`；边界是 cooperative POSIX/Linux pre/post snapshot，不是 opened-FD/同用户防伪。既有 162 份 ledger 的数据债务仍 open，见 `docs/evidence/asset-ledger-v3-integrity-20260831.*` |
 | `active/web/` | 本地资产流水线 Web Studio。 | `app.py` | 11 passed |
 | `active/shared/openxsim/` | 跨仿真 IR、adapter、导入/导出与 conformance。 | `agenticsim.openxsim` | 56 passed |
 | `receipts/` | 外部资产的选择、ledger/model metadata 与全文件摘要；不含 mesh/texture/render。 | `asset_library_manifest.json`、`asset_library_301_361.sha256` | JSON 解析、manifest 摘要回读 |

@@ -39,12 +39,15 @@ disk is touched.
 
 import argparse
 import json
+import os
+import secrets
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from lib import ledger
+from lib import ledger, ledger_writes, writer_paths
 
 
 def _containment_error(lib, asset):
@@ -65,8 +68,7 @@ def _containment_error(lib, asset):
     raw = lib / asset
     if raw.is_symlink():
         return (
-            f"{asset!r} resolves to a symlink under {lib} -- refusing "
-            "(possible shadow-root escape)"
+            f"{asset!r} resolves to a symlink under {lib} -- refusing (possible shadow-root escape)"
         )
     resolved = raw.resolve()
     if resolved.parent != lib.resolve():
@@ -74,7 +76,29 @@ def _containment_error(lib, asset):
     return None
 
 
-def _model_files(lib, asset, model_id):
+def _recorded_files(models):
+    files = set()
+    for model in models:
+        for representation in model.get("representations", []):
+            for member in representation.get("files", []):
+                uri = member.get("uri") if isinstance(member, dict) else None
+                if isinstance(uri, str) and uri:
+                    files.add(ledger.resolve_uri(uri).resolve())
+    return files
+
+
+def _check_nested_paths(asset_dir, files=()):
+    """Reject symlinks in every retirement-owned subtree and planned path."""
+
+    asset_dir = Path(asset_dir)
+    writer_paths.contained_path(asset_dir, asset_dir)
+    for name in ("visual", "collision", "snapshots"):
+        writer_paths.contained_path(asset_dir, asset_dir / name)
+    for path in files:
+        writer_paths.contained_path(asset_dir, path)
+
+
+def _model_files(lib, asset, model_id, model=None, protected=()):
     """Every file/dir one model's retirement should remove: the rigid-layout
     triple (visual/collision mesh + model_data<N>.json, same naming
     convention as import_materialize's own quarantine loop), its snapshot(s),
@@ -94,7 +118,22 @@ def _model_files(lib, asset, model_id):
     inst_dir = asset_dir / str(model_id)
     if inst_dir.is_dir():
         paths.append(inst_dir)
-    return paths
+    if model is not None:
+        asset_root = asset_dir.resolve()
+        for recorded in _recorded_files([model]):
+            if recorded.is_file() and recorded.is_relative_to(asset_root):
+                paths.append(recorded)
+    protected = set(protected)
+    unique = []
+    for path in paths:
+        resolved = path.resolve()
+        if resolved in protected:
+            continue
+        if path.is_dir() and any(item.is_relative_to(resolved) for item in protected):
+            continue
+        if path not in unique:
+            unique.append(path)
+    return unique
 
 
 def plan(library_dir, asset, model_id=None):
@@ -111,6 +150,10 @@ def plan(library_dir, asset, model_id=None):
         return {"error": containment_error, "exit_code": 2}
 
     asset_dir = lib / asset
+    try:
+        _check_nested_paths(asset_dir)
+    except writer_paths.UnsafeWriterPathError as exc:
+        return {"error": str(exc), "exit_code": 2}
     lp = asset_dir / "ledger.json"
     if not lp.exists():
         return {
@@ -127,7 +170,7 @@ def plan(library_dir, asset, model_id=None):
     if model_id is None:
         files = []
         for m in models:
-            files += _model_files(lib, asset, m.get("model_id"))
+            files += _model_files(lib, asset, m.get("model_id"), m)
         return {
             "error": None,
             "asset_dir": asset_dir,
@@ -143,17 +186,27 @@ def plan(library_dir, asset, model_id=None):
         }
 
     remaining = [m for m in models if m.get("model_id") != model_id]
+    retired = next(m for m in models if m.get("model_id") == model_id)
     return {
         "error": None,
         "asset_dir": asset_dir,
         "whole_asset": len(remaining) == 0,
-        "files": _model_files(lib, asset, model_id),
+        "files": _model_files(
+            lib,
+            asset,
+            model_id,
+            retired,
+            protected=_recorded_files(remaining),
+        ),
         "remaining_models": remaining,
         "led": led,
     }
 
 
 def execute(asset_dir, p):
+    # Repeat at the mutation boundary so replacing a checked directory with a
+    # symlink after ``plan`` cannot redirect an os.replace/rmtree operation.
+    _check_nested_paths(asset_dir, p["files"])
     if p["whole_asset"]:
         if asset_dir.exists():
             # M-2 (review round 1): informational only, not a second gate --
@@ -165,24 +218,66 @@ def execute(asset_dir, p):
             # earlier run -- that this rmtree will also remove).
             actual = [f for f in asset_dir.rglob("*") if f.is_file()]
             print(
-                f"deleting {len(actual)} file(s) under {asset_dir} "
+                f"retiring {len(actual)} file(s) under {asset_dir} "
                 "(includes any untracked leftovers not listed above)"
             )
-            shutil.rmtree(asset_dir)
+            retired_root = asset_dir.parent / "_retired"
+            writer_paths.contained_path(asset_dir.parent, retired_root)
+            try:
+                retired_root.mkdir(mode=0o755)
+            except FileExistsError:
+                pass
+            writer_paths.contained_path(asset_dir.parent, retired_root)
+            for _attempt in range(100):
+                destination = retired_root / f"{asset_dir.name}.{secrets.token_hex(8)}"
+                writer_paths.contained_path(asset_dir.parent, destination)
+                if destination.exists():
+                    continue
+                os.replace(asset_dir, destination)
+                for directory in (asset_dir.parent, retired_root):
+                    fd = os.open(
+                        directory,
+                        os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0),
+                    )
+                    try:
+                        os.fsync(fd)
+                    finally:
+                        os.close(fd)
+                print(f"quarantined intact at {destination}")
+                break
+            else:
+                raise FileExistsError("could not allocate whole-asset retirement target")
         return
 
-    # Files first, ledger second: a crash between the two leaves a dangling
-    # (file_missing) ledger entry, not a silent orphan file with no ledger
-    # trace at all -- the former is what ledger_audit.py's next sweep is
-    # designed to catch, the latter isn't.
-    for f in p["files"]:
-        if f.is_dir():
-            shutil.rmtree(f)
-        else:
-            f.unlink()
-    led = p["led"]
-    led["models"] = p["remaining_models"]
-    ledger.write_ledger(asset_dir / "ledger.json", led)
+    candidate = json.loads(json.dumps(p["led"]))
+    candidate["models"] = p["remaining_models"]
+    # Prove the surviving models before deleting anything.  Otherwise a
+    # pre-existing stale sibling can turn a retirement into a destructive
+    # write of an invalid ledger, with the requested model's files already
+    # gone by the time the failure is discovered.
+    ledger_writes.validate_for_write(candidate)
+
+    quarantine = Path(tempfile.mkdtemp(prefix=".retire-", dir=asset_dir))
+    moved = []
+    try:
+        for source in p["files"]:
+            relative = source.relative_to(asset_dir)
+            destination = quarantine / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            os.replace(source, destination)
+            moved.append((source, destination))
+        ledger_writes.write_validated(
+            asset_dir / "ledger.json",
+            candidate,
+            expected=p["led"],
+        )
+    except BaseException:
+        for source, destination in reversed(moved):
+            source.parent.mkdir(parents=True, exist_ok=True)
+            os.replace(destination, source)
+        shutil.rmtree(quarantine, ignore_errors=True)
+        raise
+    shutil.rmtree(quarantine)
 
 
 def _print_plan(asset, model_id, p):
@@ -225,7 +320,18 @@ def main():
         print("(dry-run -- pass --apply to execute)")
         sys.exit(0)
 
-    execute(p["asset_dir"], p)
+    try:
+        execute(p["asset_dir"], p)
+    except ledger_writes.LedgerWriteError as exc:
+        violation = exc.violations[0]
+        print(
+            f"ERROR: refusing retirement: {violation.path} [{violation.code}] {violation.message}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    except writer_paths.UnsafeWriterPathError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        sys.exit(2)
     print("done")
     sys.exit(0)
 

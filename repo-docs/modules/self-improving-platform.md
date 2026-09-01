@@ -98,16 +98,30 @@ static-only 写 `static_scene_candidate_placement.json`，smoke/visual 均为 `n
 `pass_static_scene_module`/`pass_static_only` 与 exit 0 只表示非物理静态阶段完成，不应读成完整
 acceptance。
 
-生成资产 follow-on 目前也不能被当作物理晋升：admission report 明确写
-`physical_qualification=pending_settle`，但 ledger 的 generation-QC 项仍标作
-`backend=sapien/verdict=pass`，并未运行 SAPIEN settle。读者应以 pending 为准；该矛盾修复前，
-ledger 项不是 runtime verification receipt。
+生成资产 follow-on 仍不能被当作物理晋升：admission report 明确写
+`physical_qualification=pending_settle`。A041 已让 generation-QC receipt 绑定最终 provenance 与
+`asset-representation-set.v2`，并让全部活动 writer 在发布前验证完整文件闭包；但这个
+`backend=sapien/check=generation_qc` 仍只是确定性生成器的 analytic QC，不是 SAPIEN settle。
+后续真实 settle/runtime receipt 可以保留且不妨碍同资产复用，发布资格仍必须由独立物理门决定。
 
 生产 compile 的资产所有权已经与一次运行状态分开：默认的可复用生成资产库是项目内
 `self_improving/asset_pipeline/active/data/asset_library`，也可由
 `CompileApplicationSettings.asset_library_root` / `--asset-library-root` 显式指定；`state_root` 只持有
 SQLite/CAS、工作目录与生成 staging。qualification、测试和实验必须提供独立 scratch 库。这一变化
 不改变上面的物理边界：generation QC 仍不是 SAPIEN settle。
+
+A041 的“可信”范围是 cooperative POSIX/Linux runtime：运行前后 snapshot 复核 samefile/hash，
+generated admission 用 pinned dirfd 拒绝复用和发布换靶，backfill pair 用 durable journal 恢复；但它
+不证明 loader 打开的 FD，不约束同用户任意 Python，也不枚举传递 ELF/驱动/preload。ledger 文件与
+representation 文件不是一个原子对象，所以 consumer 必须在使用时重新执行 `check_files=True`，不能
+把 raw ledger path 当作资格。rescale apply 仍禁用，migrate apply 只允许单 ledger，writeback 当前只
+有 SAPIEN issuer。这些限制与 902 passed/2 base-environment skips、真实 SAPIEN 两节点 2 passed、
+最终公共 S13b→S11 的真实 loader/native `SWEEP 1/1`、跨 Harness 164 passed 一起记录在
+`docs/evidence/asset-ledger-v3-integrity-20260831.*`。
+
+同一切片的只读数据审计也表明，仓库里 162/162 份既有 ledger 都不满足收紧后的 v3 内容契约，
+共 4,082 条 deleted/missing/pose-provenance violation。代码与新写入面已通过，旧数据没有被批量
+重写；无法从现有 bytes 或可信 receipt 证明的 pose 继续作为 typed debt，而不是由迁移器猜值。
 
 `self_improving/studies/ASPIRE/` 保存 2026-08-31 的 ASPIRE 一手资料、固定上游子模块、完整
 实验日志和 held-out harness benchmark。该研究支持“经开发集验证、按触发条件检索的冻结技能

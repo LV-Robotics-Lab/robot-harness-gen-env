@@ -5,20 +5,21 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from lib import ledger  # noqa: E402  -- for SCHEMA_VERSION, so this fixture
-# tracks the contract instead of pinning a version literal that goes stale.
+# Use SCHEMA_VERSION so this fixture tracks the contract instead of pinning a
+# version literal that goes stale.
+from lib import ledger  # noqa: E402
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "ledger" / "ledger_audit.py"
 
 
 def _write_clean_asset(lib, asset, category="widget"):
-    """A minimal but genuinely valid v2 ledger, with a real on-disk file
-    (correct sha256/size_bytes) so validate_ledger(check_files=True) passes
+    """A minimal but genuinely valid v3 ledger, with a real on-disk file
+    (correct files[].sha256/bytes) so validate_ledger(check_files=True) passes
     cleanly -- same field shape as tests/test_ledger.py's make_model/
     make_valid, just pointed at real tmp files instead of /tmp/x/ stubs."""
     adir = lib / asset
     (adir / "visual").mkdir(parents=True)
-    vis = adir / "visual" / "base0.glb"
+    vis = adir / "visual" / "base0.stl"
     vis.write_bytes(b"VISUAL_BYTES")
     sha = hashlib.sha256(b"VISUAL_BYTES").hexdigest()
 
@@ -26,8 +27,6 @@ def _write_clean_asset(lib, asset, category="widget"):
         "model_id": 0,
         "physical": {
             "mesh_bbox_m": [0.1, 0.1, 0.1],
-            "mesh_up_axis": "Y",
-            "origin_convention": "bottom-center",
             "size_resolution": {
                 "mode": "match_category",
                 "actual_max_dim_m": 0.1,
@@ -45,31 +44,25 @@ def _write_clean_asset(lib, asset, category="widget"):
                         "pose_id": "upright",
                         "orientation_wxyz": [1.0, 0.0, 0.0, 0.0],
                         "is_default": True,
+                        "measured_against": {
+                            "backend": "sapien",
+                            "run_id": "fixture-settle-1",
+                        },
                     }
                 ],
                 "inherited_from": None,
             },
-            "mass_kg": {
-                "value": None,
-                "status": "unknown",
-                "runtime_default_kg": 0.1,
-                "runtime_default_basis": "global_constant",
-            },
-            "friction": {
-                "value": None,
-                "status": "unknown",
-                "runtime_default": None,
-                "runtime_default_basis": "none",
-            },
+            "mass_kg": {"value": None, "status": "unknown"},
+            "friction": {"value": None, "status": "unknown"},
         },
         "representations": [
             {
-                "format": "glb",
+                "format": "stl",
                 "uri": str(vis),
                 "backend": "sapien",
                 "role": "visual",
                 "sha256": sha,
-                "size_bytes": vis.stat().st_size,
+                "files": [{"uri": str(vis), "sha256": sha, "bytes": vis.stat().st_size}],
                 "metadata": {},
             }
         ],
@@ -78,7 +71,7 @@ def _write_clean_asset(lib, asset, category="widget"):
             "kind": "retrieved",
             "library": "test",
             "group": "test_group",
-            "file": "base0.glb",
+            "file": "base0.stl",
             "license": {"spdx": None, "status": "unknown", "terms_note": None},
             "retrieved_at": "2026-08-08",
             "source_manifest_path": str(adir / "SOURCE_MANIFEST.json"),
@@ -89,10 +82,9 @@ def _write_clean_asset(lib, asset, category="widget"):
         "schema_version": ledger.SCHEMA_VERSION,
         "profile": "sapien_only",
         "asset_id": f"external_{asset}",
+        "external_ids": {"env_gen": asset},
         "category": category,
-        "semantic_name": category,
         "kind": "rigid",
-        "tags": ["rigid", "external", "batch"],
         "semantics": {
             "aliases": [category],
             "colors": [],

@@ -1,15 +1,37 @@
 import hashlib
+import importlib.util
 import json
+import os
+import stat
 import subprocess
 import sys
+import threading
+from contextlib import contextmanager
 from pathlib import Path
 
+import pytest
 import trimesh
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "backfill_upstream.py"
+USD_MANUAL_901 = b'#usda 1.0\ndef Xform "Manual901" {}\n'
+USD_CONTENT_901 = b'#usda 1.0\ndef Xform "Asset901" {}\n'
+USD_CONTENT_902 = b'#usda 1.0\ndef Xform "Asset902" {}\n'
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from lib import ledger  # noqa: E402
+from lib import ledger, ledger_writes  # noqa: E402
+
+from tests.trusted_fixtures import qualified_runtime_capability  # noqa: E402
+
+
+@pytest.fixture(scope="module")
+def backfill_module():
+    name = "asset_backfill_upstream_under_test"
+    spec = importlib.util.spec_from_file_location(name, SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
 
 
 def _sha(data):
@@ -101,6 +123,10 @@ def _mini_catalog(tmp_path):
                 "support_spawn_clearance_m": 0.003,
                 "stable_pose_id": "upright",
                 "stable_orientation_wxyz": [1.0, 0.0, 0.0, 0.0],
+                "stable_pose_measured_against": {
+                    "backend": "sapien",
+                    "run_id": "fixture-settle-901-0",
+                },
                 "z_policy": "origin_on_table",
                 "is_static": False,
                 "articulation_joints": [],
@@ -125,6 +151,10 @@ def _mini_catalog(tmp_path):
                 # not incidentally because some other field is missing.
                 "stable_pose_id": "upright",
                 "stable_orientation_wxyz": [1.0, 0.0, 0.0, 0.0],
+                "stable_pose_measured_against": {
+                    "backend": "sapien",
+                    "run_id": "fixture-settle-901-1",
+                },
                 "z_policy": "origin_on_table",
                 "is_static": False,
                 "articulation_joints": [],
@@ -165,6 +195,10 @@ def _mini_catalog(tmp_path):
                 "support_spawn_clearance_m": 0.003,
                 "stable_pose_id": "flat",
                 "stable_orientation_wxyz": [1.0, 0.0, 0.0, 0.0],
+                "stable_pose_measured_against": {
+                    "backend": "sapien",
+                    "run_id": "fixture-settle-902-10001",
+                },
                 "z_policy": "origin_on_table",
                 "is_static": True,
                 "articulation_joints": [
@@ -201,7 +235,12 @@ def _mini_catalog(tmp_path):
     }
 
 
-def _run(catalog_path, out_dir, apply=False, extra_args=()):
+def _run(catalog_path, out_dir, apply=False, extra_args=(), *, seed_receipts=True):
+    seeded = (
+        _seed_existing_pose_receipts(catalog_path, out_dir, extra_args=extra_args)
+        if seed_receipts
+        else {}
+    )
     cmd = [
         sys.executable,
         str(SCRIPT),
@@ -213,7 +252,158 @@ def _run(catalog_path, out_dir, apply=False, extra_args=()):
     if apply:
         cmd.append("--apply")
     cmd += list(extra_args)
-    return subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    for path, original in seeded.items():
+        if path.is_file() and path.read_text() == original:
+            path.unlink()
+            try:
+                path.parent.rmdir()
+            except OSError:
+                pass
+    return result
+
+
+def _seed_existing_pose_receipts(catalog_path, out_dir, *, extra_args=()):
+    """Give success-path fixtures an actual prior settle receipt.
+
+    Production no longer trusts the catalog's run_id.  These tests still use
+    that convenient field as fixture input, but turn it into the only shape
+    production accepts: an existing ledger pose plus settle/pass receipt bound
+    to the current representation-set digest.
+    """
+    spec = importlib.util.spec_from_file_location("backfill_seed_helper", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    catalog = json.loads(Path(catalog_path).read_text())
+    remap_arg = next(
+        (
+            value.removeprefix("--root-remap=")
+            for value in extra_args
+            if value.startswith("--root-remap=")
+        ),
+        None,
+    )
+    if remap_arg is not None:
+        catalog, _ = module._apply_root_remap(catalog, module._parse_root_remap(remap_arg))
+    seeded = {}
+    report = module._empty_report()
+    for entry in catalog["entries"]:
+        kind = "articulated" if entry.get("load_type") == "urdf" else "rigid"
+        resolved = module._resolve_models(entry, kind, report)
+        models = []
+        for model, up_axis, origin, _bbox, _scale in resolved:
+            provenance = model.get("stable_pose_measured_against")
+            if not isinstance(provenance, dict):
+                continue
+            representations = (
+                module._articulated_representations(model)
+                if kind == "articulated"
+                else module._rigid_representations(model)
+            )
+            for representation in representations:
+                representation["frame"] = {"up_axis": up_axis}
+                representation["geometry_state"] = {
+                    "origin": origin,
+                    "scale_baked": False,
+                }
+            digest = ledger.reps_digest({"representations": representations}, "sapien")
+            path = Path(out_dir) / entry["asset_id"] / "ledger.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            model_entry = {
+                "model_id": model["model_id"],
+                "physical": {
+                    "conventions": {
+                        "is_static": model["is_static"],
+                        "z_policy": model["z_policy"],
+                        "stable_poses": [
+                            {
+                                "pose_id": model["stable_pose_id"],
+                                "orientation_wxyz": model["stable_orientation_wxyz"],
+                                "is_default": True,
+                                "measured_against": provenance,
+                            }
+                        ],
+                    }
+                },
+                "representations": representations,
+            }
+            try:
+                snapshot = ledger_writes.publish_execution_snapshot(
+                    path.parent / "execution_snapshots",
+                    source_asset_dir=entry["asset_path"],
+                    asset_key=entry["asset_id"],
+                    model_entry=model_entry,
+                )
+                capability = qualified_runtime_capability(
+                    path.parent / "runtime",
+                    "asset.settle_repair.v1",
+                    ledger,
+                    ledger_writes,
+                )
+                payload = ledger_writes.issue_qualified_verification(
+                    issuer="asset.settle_repair.v1",
+                    asset_key=entry["asset_id"],
+                    model_id=model["model_id"],
+                    run_id=provenance["run_id"],
+                    timestamp="2026-08-31T00:00:00",
+                    reps_digest=digest,
+                    inputs={
+                        "catalog": ledger_writes.provenance_file_record(catalog_path),
+                        "task": {
+                            "asset_key": entry["asset_id"],
+                            "model_id": model["model_id"],
+                        },
+                    },
+                    thresholds={
+                        "max_late_drift_m": 0.002,
+                        "min_support_z_m": -0.005,
+                        "max_tilt_deg": 181.0,
+                    },
+                    result={
+                        "schema": "asset_settle_result.v2",
+                        "finite": True,
+                        "late_drift_m": 0.0,
+                        "support_z_m": 0.01,
+                        "tilt_deg": 0.0,
+                        "rest_orientation_wxyz": model["stable_orientation_wxyz"],
+                        "origin_z_m": 0.0,
+                        "derived_z_policy": "origin_on_table",
+                        "details": {"fixture": "backfill-settle-v1"},
+                    },
+                    model_entry=model_entry,
+                    execution_snapshot=snapshot,
+                    runtime_capability=capability,
+                )
+            except ledger_writes.VerificationEvidenceError:
+                # Malformed catalog attack cases must reach the production
+                # parser without this positive-path fixture fabricating a
+                # receipt for an asset path it cannot snapshot safely.
+                continue
+            artifact = ledger_writes.publish_verification_evidence(
+                path.parent / "verification_evidence", payload
+            )
+            models.append(
+                {
+                    "model_id": model["model_id"],
+                    "physical": model_entry["physical"],
+                    "representations": representations,
+                    "verification": [ledger_writes.receipt_from_evidence(payload, artifact)],
+                }
+            )
+        if not models:
+            continue
+        path = Path(out_dir) / entry["asset_id"] / "ledger.json"
+        if path.exists():
+            continue
+        path.parent.mkdir(parents=True, exist_ok=True)
+        original = (
+            json.dumps({"external_ids": {"env_gen": entry["asset_id"]}, "models": models}, indent=2)
+            + "\n"
+        )
+        path.write_text(original)
+        seeded[path] = original
+    return seeded
 
 
 def test_apply_writes_expected_ledgers_and_report(tmp_path):
@@ -243,6 +433,27 @@ def test_asset_id_has_robotwin_prefix(tmp_path):
     assert led2["asset_id"] == "robotwin_902_gadget"
 
 
+def test_backfill_writes_complete_v3_identity_and_no_deleted_fields(tmp_path):
+    catalog_path, _ = _mini_catalog(tmp_path)
+    out = tmp_path / "out"
+    result = _run(catalog_path, out, apply=True)
+    assert result.returncode == 0, result.stderr
+
+    document = json.loads((out / "901_widget/ledger.json").read_text())
+    assert document["external_ids"] == {"env_gen": "901_widget"}
+    assert "semantic_name" not in document
+    assert "tags" not in document
+    for model in document["models"]:
+        physical = model["physical"]
+        assert "mesh_up_axis" not in physical
+        assert "origin_convention" not in physical
+        assert not any(
+            field.startswith("runtime_default")
+            for envelope in (physical["mass_kg"], physical["friction"])
+            for field in envelope
+        )
+
+
 def test_aliases_default_to_category_when_empty(tmp_path):
     catalog_path, _ = _mini_catalog(tmp_path)
     out = tmp_path / "out"
@@ -264,8 +475,65 @@ def test_stable_pose_shape(tmp_path):
             "pose_id": "upright",
             "orientation_wxyz": [1.0, 0.0, 0.0, 0.0],
             "is_default": True,
+            "measured_against": {
+                "backend": "sapien",
+                "run_id": "fixture-settle-901-0",
+            },
         }
     ]
+
+
+def test_missing_pose_measurement_is_reported_not_fabricated(tmp_path):
+    catalog_path, _ = _mini_catalog(tmp_path)
+    catalog = json.loads(catalog_path.read_text())
+    del catalog["entries"][0]["models"][0]["stable_pose_measured_against"]
+    catalog_path.write_text(json.dumps(catalog, indent=2))
+    out = tmp_path / "out"
+
+    result = _run(catalog_path, out, apply=True)
+
+    assert result.returncode == 1
+    report = json.loads((out / "backfill_upstream_report.json").read_text())
+    assert "901_widget" not in report["written"]
+    assert any(
+        violation["code"] == "measured_against_required"
+        for violation in report["violations"]["901_widget"]
+    )
+    assert not (out / "901_widget/ledger.json").exists()
+
+
+def test_rerun_refuses_legacy_pose_receipt_without_trusted_evidence(tmp_path):
+    catalog_path, _ = _mini_catalog(tmp_path)
+    out = tmp_path / "out"
+    first = _run(catalog_path, out, apply=True)
+    assert first.returncode == 0, first.stderr
+    ledger_path = out / "901_widget/ledger.json"
+    document = json.loads(ledger_path.read_text())
+    pose = document["models"][0]["physical"]["conventions"]["stable_poses"][0]
+    pose["measured_against"] = {
+        "backend": "sapien",
+        "run_id": "real-settle-receipt-42",
+        "note": "900-step replay",
+    }
+    document["models"][0]["verification"] = [
+        {
+            "backend": "sapien",
+            "check": "settle",
+            "verdict": "pass",
+            "run_id": "real-settle-receipt-42",
+            "timestamp": "2026-08-31T00:00:00",
+            "verified_digest": ledger.reps_digest(document["models"][0], "sapien"),
+        }
+    ]
+    ledger_path.write_text(json.dumps(document, indent=2) + "\n")
+    before = ledger_path.read_bytes()
+
+    second = _run(catalog_path, out, apply=True)
+
+    assert second.returncode != 0
+    assert ledger_path.read_bytes() == before
+    report = json.loads((out / "backfill_upstream_report.json").read_text())
+    assert report["violations"]["901_widget"][0]["code"] == "measured_against_required"
 
 
 def test_source_manifest_generated_and_referenced(tmp_path):
@@ -282,8 +550,421 @@ def test_source_manifest_generated_and_referenced(tmp_path):
 
     led = json.loads((out / "901_widget/ledger.json").read_text())
     src_manifest_path = led["models"][0]["source"]["source_manifest_path"]
+    src_manifest_sha256 = led["models"][0]["source"]["source_manifest_sha256"]
     assert Path(src_manifest_path).exists()
     assert Path(src_manifest_path).read_text() == manifest_path.read_text()
+    assert src_manifest_sha256 == hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+
+
+def test_manifest_and_ledger_commit_rolls_back_both_on_ledger_failure(
+    tmp_path, monkeypatch, backfill_module
+):
+    catalog_path, _files = _mini_catalog(tmp_path)
+    catalog = json.loads(catalog_path.read_text())
+    catalog["entries"] = catalog["entries"][:1]
+    catalog_path.write_text(json.dumps(catalog, indent=2))
+    out = tmp_path / "out"
+    result = _run(catalog_path, out, apply=True)
+    assert result.returncode == 0, result.stderr
+
+    manifest_path = out / "901_widget/SOURCE_MANIFEST.json"
+    ledger_path = out / "901_widget/ledger.json"
+    prior_manifest = manifest_path.read_bytes()
+    prior_ledger = ledger_path.read_bytes()
+    expected = json.loads(prior_ledger)
+    next_manifest = b'{"writer":"ordinary-failure"}\n'
+    candidate = json.loads(json.dumps(expected))
+    candidate["semantics"]["aliases"] = ["ordinary-failure"]
+    for model in candidate["models"]:
+        model["source"]["source_manifest_sha256"] = hashlib.sha256(next_manifest).hexdigest()
+
+    real_atomic_json = backfill_module.ledger._atomic_write_json
+
+    def fail_candidate_write(path, document, **kwargs):
+        if document == candidate:
+            raise OSError("injected ledger failure")
+        return real_atomic_json(path, document, **kwargs)
+
+    monkeypatch.setattr(backfill_module.ledger, "_atomic_write_json", fail_candidate_write)
+
+    with pytest.raises(OSError, match="injected ledger failure"):
+        backfill_module._commit_manifest_and_ledger(
+            manifest_path,
+            next_manifest,
+            ledger_path,
+            candidate,
+            expected=expected,
+        )
+
+    assert manifest_path.read_bytes() == prior_manifest
+    assert ledger_path.read_bytes() == prior_ledger
+    assert not (manifest_path.parent / backfill_module._PAIR_TRANSACTION_JOURNAL_NAME).exists()
+
+
+def test_manifest_commit_preserves_receipt_waiting_on_the_pair_transaction(
+    tmp_path, monkeypatch, backfill_module
+):
+    catalog_path, _files = _mini_catalog(tmp_path)
+    catalog = json.loads(catalog_path.read_text())
+    catalog["entries"] = catalog["entries"][:1]
+    catalog_path.write_text(json.dumps(catalog, indent=2))
+    out = tmp_path / "out"
+    result = _run(catalog_path, out, apply=True)
+    assert result.returncode == 0, result.stderr
+
+    manifest_path = out / "901_widget/SOURCE_MANIFEST.json"
+    ledger_path = out / "901_widget/ledger.json"
+    expected = json.loads(ledger_path.read_text())
+    next_manifest = b'{"writer":"pair-before-receipt"}\n'
+    candidate = json.loads(json.dumps(expected))
+    for model in candidate["models"]:
+        model["source"]["source_manifest_sha256"] = hashlib.sha256(next_manifest).hexdigest()
+    receipt = {
+        "backend": "sapien",
+        "check": "runtime_load",
+        "verdict": "pass",
+        "run_id": "concurrent-runtime-check",
+        "timestamp": "2026-08-31T12:00:00",
+        "verified_digest": ledger.reps_digest(expected["models"][0], "sapien"),
+    }
+    real_atomic_write = backfill_module._atomic_write_bytes
+    append_attempted = threading.Event()
+    append_finished = threading.Event()
+    worker = None
+
+    def append_receipt():
+        append_attempted.set()
+        try:
+            ledger.append_verification(ledger_path, 0, receipt)
+        finally:
+            append_finished.set()
+
+    def start_receipt_waiter_after_manifest(path, payload, *, locked=None):
+        nonlocal worker
+        real_atomic_write(path, payload, locked=locked)
+        if Path(path) == manifest_path and payload == next_manifest and worker is None:
+            worker = threading.Thread(target=append_receipt)
+            worker.start()
+            assert append_attempted.wait(timeout=5)
+
+    monkeypatch.setattr(
+        backfill_module,
+        "_atomic_write_bytes",
+        start_receipt_waiter_after_manifest,
+    )
+
+    backfill_module._commit_manifest_and_ledger(
+        manifest_path,
+        next_manifest,
+        ledger_path,
+        candidate,
+        expected=expected,
+    )
+    assert worker is not None
+    worker.join(timeout=5)
+    assert not worker.is_alive()
+    assert append_finished.is_set()
+
+    current = json.loads(ledger_path.read_text())
+    assert current["models"][0]["verification"][-1] == receipt
+    assert manifest_path.read_bytes() == next_manifest
+
+
+def test_manifest_and_ledger_commit_keeps_the_same_concurrent_winner(
+    tmp_path, monkeypatch, backfill_module
+):
+    catalog_path, _files = _mini_catalog(tmp_path)
+    catalog = json.loads(catalog_path.read_text())
+    catalog["entries"] = catalog["entries"][:1]
+    catalog_path.write_text(json.dumps(catalog, indent=2))
+    out = tmp_path / "out"
+    result = _run(catalog_path, out, apply=True)
+    assert result.returncode == 0, result.stderr
+
+    manifest_path = out / "901_widget/SOURCE_MANIFEST.json"
+    ledger_path = out / "901_widget/ledger.json"
+    assert manifest_path.is_file()
+    assert ledger_path.is_file()
+    expected = json.loads(ledger_path.read_text())
+    original_manifest = json.loads(manifest_path.read_text())
+
+    manifests = {}
+    candidates = {}
+    for writer in ("outer", "concurrent"):
+        manifest = {**original_manifest, "writer": writer}
+        payload = (json.dumps(manifest, indent=2) + "\n").encode()
+        candidate = json.loads(json.dumps(expected))
+        candidate["semantics"]["aliases"] = [writer]
+        for model in candidate["models"]:
+            model["source"]["source_manifest_sha256"] = hashlib.sha256(payload).hexdigest()
+        manifests[writer] = payload
+        candidates[writer] = candidate
+
+    outer_ident = threading.get_ident()
+    outer_holds_lock = threading.Event()
+    concurrent_attempted_lock = threading.Event()
+    concurrent_holds_lock = threading.Event()
+    concurrent_finished = threading.Event()
+    outcomes = {}
+    worker = None
+    real_locked_ledger = backfill_module.ledger._locked_ledger
+    real_atomic_write = backfill_module._atomic_write_bytes
+
+    @contextmanager
+    def observe_real_lock(path):
+        is_outer = threading.get_ident() == outer_ident
+        if not is_outer:
+            concurrent_attempted_lock.set()
+        with real_locked_ledger(path) as locked:
+            if is_outer:
+                outer_holds_lock.set()
+            else:
+                concurrent_holds_lock.set()
+            yield locked
+
+    monkeypatch.setattr(backfill_module.ledger, "_locked_ledger", observe_real_lock)
+
+    def commit(writer):
+        try:
+            backfill_module._commit_manifest_and_ledger(
+                manifest_path,
+                manifests[writer],
+                ledger_path,
+                candidates[writer],
+                expected=expected,
+            )
+        except BaseException as exc:  # assertions below verify the typed losing outcome
+            outcomes[writer] = exc
+        else:
+            outcomes[writer] = None
+        finally:
+            if writer == "concurrent":
+                concurrent_finished.set()
+
+    def start_competitor_after_outer_manifest(path, payload, *, locked=None):
+        nonlocal worker
+        real_atomic_write(path, payload, locked=locked)
+        if (
+            threading.get_ident() != outer_ident
+            or Path(path) != manifest_path
+            or payload != manifests["outer"]
+            or worker is not None
+        ):
+            return
+        worker = threading.Thread(target=commit, args=("concurrent",))
+        worker.start()
+        assert concurrent_attempted_lock.wait(timeout=5)
+        if not outer_holds_lock.is_set():
+            assert concurrent_holds_lock.wait(timeout=5)
+            assert concurrent_finished.wait(timeout=5)
+
+    monkeypatch.setattr(
+        backfill_module,
+        "_atomic_write_bytes",
+        start_competitor_after_outer_manifest,
+    )
+
+    commit("outer")
+    assert worker is not None
+    worker.join(timeout=5)
+    assert not worker.is_alive()
+
+    failures = [outcome for outcome in outcomes.values() if outcome is not None]
+    assert len(failures) == 1
+    assert isinstance(failures[0], ledger_writes.ConcurrentLedgerUpdateError)
+
+    published_manifest = json.loads(manifest_path.read_text())
+    winner = published_manifest.get("writer")
+    assert winner in candidates
+    published_ledger = json.loads(ledger_path.read_text())
+    assert published_ledger == candidates[winner]
+    assert (
+        published_ledger["models"][0]["source"]["source_manifest_sha256"]
+        == hashlib.sha256(manifests[winner]).hexdigest()
+    )
+
+
+def test_manifest_pair_commit_never_reopens_a_replaced_asset_directory(
+    tmp_path, monkeypatch, backfill_module
+):
+    catalog_path, _files = _mini_catalog(tmp_path)
+    catalog = json.loads(catalog_path.read_text())
+    catalog["entries"] = catalog["entries"][:1]
+    catalog_path.write_text(json.dumps(catalog, indent=2))
+    out = tmp_path / "out"
+    result = _run(catalog_path, out, apply=True)
+    assert result.returncode == 0, result.stderr
+
+    asset_dir = out / "901_widget"
+    manifest_path = asset_dir / "SOURCE_MANIFEST.json"
+    ledger_path = asset_dir / "ledger.json"
+    expected = json.loads(ledger_path.read_text())
+    next_manifest = b'{"writer":"pinned"}\n'
+    candidate = json.loads(json.dumps(expected))
+    candidate["semantics"]["aliases"] = ["pinned"]
+    for model in candidate["models"]:
+        model["source"]["source_manifest_sha256"] = hashlib.sha256(next_manifest).hexdigest()
+
+    detached = out / "901_widget-detached"
+    replacement_manifest = b'{"writer":"replacement"}\n'
+    replacement_ledger = (json.dumps(expected, indent=2) + "\n").encode()
+    real_locked_ledger = backfill_module.ledger._locked_ledger
+    replaced = False
+
+    @contextmanager
+    def replace_directory_after_lock(path):
+        nonlocal replaced
+        with real_locked_ledger(path) as locked:
+            if not replaced and Path(path) == manifest_path:
+                replaced = True
+                os.rename(asset_dir, detached)
+                asset_dir.mkdir()
+                manifest_path.write_bytes(replacement_manifest)
+                ledger_path.write_bytes(replacement_ledger)
+            yield locked
+
+    monkeypatch.setattr(backfill_module.ledger, "_locked_ledger", replace_directory_after_lock)
+
+    with pytest.raises(OSError, match="asset directory changed"):
+        backfill_module._commit_manifest_and_ledger(
+            manifest_path,
+            next_manifest,
+            ledger_path,
+            candidate,
+            expected=expected,
+        )
+
+    assert manifest_path.read_bytes() == replacement_manifest
+    assert ledger_path.read_bytes() == replacement_ledger
+    assert (detached / "SOURCE_MANIFEST.json").read_bytes() != next_manifest
+    assert json.loads((detached / "ledger.json").read_text()) == expected
+
+
+def test_manifest_pair_commit_recovers_a_crash_before_publishing_the_ledger(
+    tmp_path, monkeypatch, backfill_module
+):
+    catalog_path, _files = _mini_catalog(tmp_path)
+    catalog = json.loads(catalog_path.read_text())
+    catalog["entries"] = catalog["entries"][:1]
+    catalog_path.write_text(json.dumps(catalog, indent=2))
+    out = tmp_path / "out"
+    result = _run(catalog_path, out, apply=True)
+    assert result.returncode == 0, result.stderr
+
+    asset_dir = out / "901_widget"
+    manifest_path = asset_dir / "SOURCE_MANIFEST.json"
+    ledger_path = asset_dir / "ledger.json"
+    expected = json.loads(ledger_path.read_text())
+    next_manifest = b'{"writer":"after-recovery"}\n'
+    candidate = json.loads(json.dumps(expected))
+    candidate["semantics"]["aliases"] = ["after-recovery"]
+    for model in candidate["models"]:
+        model["source"]["source_manifest_sha256"] = hashlib.sha256(next_manifest).hexdigest()
+
+    real_atomic_write = backfill_module._atomic_write_bytes
+
+    def crash_after_manifest_replace(path, payload, *, locked=None):
+        real_atomic_write(path, payload, locked=locked)
+        if Path(path) == manifest_path and payload == next_manifest:
+            raise SystemExit("simulated process death after manifest replace")
+
+    monkeypatch.setattr(backfill_module, "_atomic_write_bytes", crash_after_manifest_replace)
+
+    with pytest.raises(SystemExit, match="simulated process death"):
+        backfill_module._commit_manifest_and_ledger(
+            manifest_path,
+            next_manifest,
+            ledger_path,
+            candidate,
+            expected=expected,
+        )
+
+    journal_path = asset_dir / backfill_module._PAIR_TRANSACTION_JOURNAL_NAME
+    assert journal_path.is_file()
+    with pytest.raises(ledger.LedgerIdentityError):
+        ledger.load_asset_ledger(out, "901_widget")
+
+    monkeypatch.setattr(backfill_module, "_atomic_write_bytes", real_atomic_write)
+    backfill_module._commit_manifest_and_ledger(
+        manifest_path,
+        next_manifest,
+        ledger_path,
+        candidate,
+        expected=expected,
+    )
+
+    assert not journal_path.exists()
+    assert manifest_path.read_bytes() == next_manifest
+    assert json.loads(ledger_path.read_text()) == candidate
+    assert ledger.validate_ledger(candidate, check_files=True) == []
+
+
+def test_manifest_replace_is_parent_fsynced_before_the_ledger_is_published(
+    tmp_path, monkeypatch, backfill_module
+):
+    catalog_path, _files = _mini_catalog(tmp_path)
+    catalog = json.loads(catalog_path.read_text())
+    catalog["entries"] = catalog["entries"][:1]
+    catalog_path.write_text(json.dumps(catalog, indent=2))
+    out = tmp_path / "out"
+    result = _run(catalog_path, out, apply=True)
+    assert result.returncode == 0, result.stderr
+
+    manifest_path = out / "901_widget/SOURCE_MANIFEST.json"
+    ledger_path = out / "901_widget/ledger.json"
+    expected = json.loads(ledger_path.read_text())
+    next_manifest = b'{"writer":"durable"}\n'
+    candidate = json.loads(json.dumps(expected))
+    candidate["semantics"]["aliases"] = ["durable"]
+    for model in candidate["models"]:
+        model["source"]["source_manifest_sha256"] = hashlib.sha256(next_manifest).hexdigest()
+
+    real_replace = backfill_module.os.replace
+    real_fsync = backfill_module.os.fsync
+    real_atomic_json = backfill_module.ledger._atomic_write_json
+    awaiting_parent_sync = False
+    saw_manifest_replace = False
+    saw_manifest_parent_sync = False
+
+    def observe_replace(source, destination, *args, **kwargs):
+        nonlocal awaiting_parent_sync, saw_manifest_replace
+        result = real_replace(source, destination, *args, **kwargs)
+        if destination == manifest_path.name:
+            saw_manifest_replace = True
+            awaiting_parent_sync = True
+        return result
+
+    def observe_fsync(fd):
+        nonlocal awaiting_parent_sync, saw_manifest_parent_sync
+        if awaiting_parent_sync and stat.S_ISDIR(os.fstat(fd).st_mode):
+            awaiting_parent_sync = False
+            saw_manifest_parent_sync = True
+        return real_fsync(fd)
+
+    def require_manifest_durability_before_ledger(path, document, **kwargs):
+        if document == candidate:
+            assert not awaiting_parent_sync
+            assert saw_manifest_parent_sync
+        return real_atomic_json(path, document, **kwargs)
+
+    monkeypatch.setattr(backfill_module.os, "replace", observe_replace)
+    monkeypatch.setattr(backfill_module.os, "fsync", observe_fsync)
+    monkeypatch.setattr(
+        backfill_module.ledger,
+        "_atomic_write_json",
+        require_manifest_durability_before_ledger,
+    )
+
+    backfill_module._commit_manifest_and_ledger(
+        manifest_path,
+        next_manifest,
+        ledger_path,
+        candidate,
+        expected=expected,
+    )
+
+    assert saw_manifest_replace
+    assert saw_manifest_parent_sync
 
 
 def test_representation_sha256_and_size_are_real(tmp_path):
@@ -294,9 +975,25 @@ def test_representation_sha256_and_size_are_real(tmp_path):
     led = json.loads((out / "901_widget/ledger.json").read_text())
     reps = {rep["role"]: rep for rep in led["models"][0]["representations"]}
     assert reps["visual"]["sha256"] == files["vis0_sha"]
-    assert reps["visual"]["size_bytes"] == files["vis0"].stat().st_size
     assert reps["collision"]["sha256"] == files["col0_sha"]
-    assert reps["collision"]["size_bytes"] == files["col0"].stat().st_size
+    assert reps["visual"]["files"] == [
+        {
+            "uri": ledger.to_portable_uri(files["vis0"]),
+            "sha256": files["vis0_sha"],
+            "bytes": files["vis0"].stat().st_size,
+        }
+    ]
+    assert reps["collision"]["files"] == [
+        {
+            "uri": ledger.to_portable_uri(files["col0"]),
+            "sha256": files["col0_sha"],
+            "bytes": files["col0"].stat().st_size,
+        }
+    ]
+    assert reps["collision"]["collision_meta"] == {
+        "mode": "explicit_mesh",
+    }
+    assert all("size_bytes" not in representation for representation in reps.values())
     assert reps["visual"]["backend"] == "sapien"
     assert reps["visual"]["format"] == "glb"
 
@@ -313,6 +1010,9 @@ def test_articulated_representation_is_single_urdf_entry(tmp_path):
     assert sapien_reps[0]["role"] == "visual_and_collision"
     assert sapien_reps[0]["format"] == "urdf"
     assert sapien_reps[0]["sha256"] == _sha(b"<robot name='g'></robot>")
+    assert sapien_reps[0]["collision_meta"]["mode"] == "unknown"
+    assert sapien_reps[0]["collision_meta"]["unknown_reason"]
+    assert {Path(item["uri"]).name for item in sapien_reps[0]["files"]} == {"mobility.urdf"}
 
 
 def test_articulation_mapping(tmp_path):
@@ -396,14 +1096,14 @@ def test_incremental_layer_preserved_across_rerun(tmp_path):
     led = json.loads(lp.read_text())
     model0 = led["models"][0]
     fake_usd = tmp_path / "manual_isaac/901_widget.usd"
-    _write(fake_usd, b"USD-MANUAL-901")
+    _write(fake_usd, USD_MANUAL_901)
     fake_isaac_rep = {
         "format": "usd",
         "uri": str(fake_usd),
         "backend": "isaacsim",
         "role": "visual_and_collision",
-        "sha256": _sha(b"USD-MANUAL-901"),
-        "size_bytes": len(b"USD-MANUAL-901"),
+        "sha256": _sha(USD_MANUAL_901),
+        "size_bytes": len(USD_MANUAL_901),
         "metadata": {
             "derived_from": model0["representations"][0]["uri"],
             "converter": "manual-test-injection",
@@ -416,17 +1116,58 @@ def test_incremental_layer_preserved_across_rerun(tmp_path):
         "status": "declared",
         "terms_note": "hand-audited for this test",
     }
-    model0["verification"].append(
-        {
-            "backend": "sapien",
-            "check": "settle",
-            "verdict": "pass",
-            "run_id": "manual_test_run",
-            "timestamp": "2026-08-08T10:00:00",
-            "verified_digest": ledger.reps_digest(model0, "sapien"),
-            "report_path": "/tmp/fake/report.json",
-        }
+    model0["physical"]["conventions"]["stable_poses"][0]["measured_against"] = {
+        "backend": "sapien",
+        "run_id": "manual_test_run",
+    }
+    digest = ledger.reps_digest(model0, "sapien")
+    snapshot = ledger_writes.publish_execution_snapshot(
+        lp.parent / "execution_snapshots",
+        source_asset_dir=json.loads(catalog_path.read_text())["entries"][0]["asset_path"],
+        asset_key="901_widget",
+        model_entry=model0,
     )
+    capability = qualified_runtime_capability(
+        lp.parent / "runtime",
+        "asset.settle_repair.v1",
+        ledger,
+        ledger_writes,
+    )
+    payload = ledger_writes.issue_qualified_verification(
+        issuer="asset.settle_repair.v1",
+        asset_key="901_widget",
+        model_id=model0["model_id"],
+        run_id="manual_test_run",
+        timestamp="2026-08-08T10:00:00",
+        reps_digest=digest,
+        inputs={
+            "fixture": ledger_writes.provenance_file_record(__file__),
+            "task": {"asset_key": "901_widget", "model_id": 0},
+        },
+        thresholds={
+            "max_late_drift_m": 0.002,
+            "min_support_z_m": -0.005,
+            "max_tilt_deg": 181.0,
+        },
+        result={
+            "schema": "asset_settle_result.v2",
+            "finite": True,
+            "late_drift_m": 0.0,
+            "support_z_m": 0.01,
+            "tilt_deg": 0.0,
+            "rest_orientation_wxyz": [1.0, 0.0, 0.0, 0.0],
+            "origin_z_m": 0.0,
+            "derived_z_policy": "origin_on_table",
+            "details": {"fixture": "incremental-settle-v1"},
+        },
+        model_entry=model0,
+        execution_snapshot=snapshot,
+        runtime_capability=capability,
+    )
+    artifact = ledger_writes.publish_verification_evidence(
+        lp.parent / "verification_evidence", payload
+    )
+    model0["verification"] = [ledger_writes.receipt_from_evidence(payload, artifact)]
     lp.write_text(json.dumps(led, indent=2))
 
     r2 = _run(catalog_path, out, apply=True)
@@ -434,20 +1175,16 @@ def test_incremental_layer_preserved_across_rerun(tmp_path):
 
     led2 = json.loads(lp.read_text())
     model0_2 = led2["models"][0]
-    isaac_reps = [
-        rp for rp in model0_2["representations"] if rp["backend"] == "isaacsim"
-    ]
+    isaac_reps = [rp for rp in model0_2["representations"] if rp["backend"] == "isaacsim"]
     assert len(isaac_reps) == 1
-    assert isaac_reps[0]["sha256"] == _sha(b"USD-MANUAL-901")
+    assert isaac_reps[0]["sha256"] == _sha(USD_MANUAL_901)
     assert model0_2["source"]["license"]["status"] == "declared"
     assert model0_2["source"]["license"]["spdx"] == "MIT"
     assert len(model0_2["verification"]) == 1
     assert model0_2["verification"][0]["run_id"] == "manual_test_run"
 
     # derived core still refreshed: sapien reps still present & correct
-    sapien_reps = [
-        rp for rp in model0_2["representations"] if rp["backend"] == "sapien"
-    ]
+    sapien_reps = [rp for rp in model0_2["representations"] if rp["backend"] == "sapien"]
     assert len(sapien_reps) == 2
 
 
@@ -455,7 +1192,7 @@ def test_isaac_usd_registration(tmp_path):
     catalog_path, _ = _mini_catalog(tmp_path)
     out = tmp_path / "out"
     usd_path = tmp_path / "901_widget.usd"
-    usd_path.write_bytes(b"USD-CONTENT-901")
+    usd_path.write_bytes(USD_CONTENT_901)
 
     r = _run(
         catalog_path,
@@ -472,8 +1209,15 @@ def test_isaac_usd_registration(tmp_path):
     rep = isaac_reps[0]
     assert rep["role"] == "visual_and_collision"
     assert rep["format"] == "usd"
-    assert rep["sha256"] == _sha(b"USD-CONTENT-901")
-    assert rep["size_bytes"] == len(b"USD-CONTENT-901")
+    assert rep["sha256"] == _sha(USD_CONTENT_901)
+    assert rep["files"] == [
+        {
+            "uri": ledger.to_portable_uri(usd_path),
+            "sha256": _sha(USD_CONTENT_901),
+            "bytes": len(USD_CONTENT_901),
+        }
+    ]
+    assert rep["collision_meta"]["mode"] == "unknown"
     assert rep["metadata"]["derived_from"] == model0["representations"][0]["uri"]
     assert rep["metadata"]["converter"]
 
@@ -486,9 +1230,7 @@ def test_isaac_usd_registration(tmp_path):
     )
     assert r2.returncode == 0, r2.stderr
     led2 = json.loads((out / "901_widget/ledger.json").read_text())
-    isaac_reps2 = [
-        rp for rp in led2["models"][0]["representations"] if rp["backend"] == "isaacsim"
-    ]
+    isaac_reps2 = [rp for rp in led2["models"][0]["representations"] if rp["backend"] == "isaacsim"]
     assert len(isaac_reps2) == 1
 
 
@@ -515,7 +1257,7 @@ def test_isaac_usd_registration_articulated_first_usable_model(tmp_path):
     catalog_path, _ = _mini_catalog(tmp_path)
     out = tmp_path / "out"
     usd_path = tmp_path / "902_gadget.usd"
-    usd_path.write_bytes(b"USD-CONTENT-902")
+    usd_path.write_bytes(USD_CONTENT_902)
 
     r = _run(
         catalog_path,
@@ -532,8 +1274,15 @@ def test_isaac_usd_registration_articulated_first_usable_model(tmp_path):
     assert len(isaac_reps) == 1
     rep = isaac_reps[0]
     assert rep["role"] == "visual_and_collision"
-    assert rep["sha256"] == _sha(b"USD-CONTENT-902")
-    assert rep["size_bytes"] == len(b"USD-CONTENT-902")
+    assert rep["sha256"] == _sha(USD_CONTENT_902)
+    assert rep["files"] == [
+        {
+            "uri": ledger.to_portable_uri(usd_path),
+            "sha256": _sha(USD_CONTENT_902),
+            "bytes": len(USD_CONTENT_902),
+        }
+    ]
+    assert rep["collision_meta"]["mode"] == "unknown"
     assert rep["metadata"]["derived_from"] == model0["representations"][0]["uri"]
 
 
@@ -600,6 +1349,10 @@ def _mini_catalog_rigid_zup(tmp_path):
                 "support_spawn_clearance_m": 0.003,
                 "stable_pose_id": "upright",
                 "stable_orientation_wxyz": [1.0, 0.0, 0.0, 0.0],
+                "stable_pose_measured_against": {
+                    "backend": "sapien",
+                    "run_id": "fixture-settle-801-0",
+                },
                 "z_policy": "origin_on_table",
                 "is_static": False,
                 "articulation_joints": [],
@@ -628,7 +1381,6 @@ def test_rigid_up_axis_measured_z_up(tmp_path):
     r = _run(catalog_path, out, apply=True)
     assert r.returncode == 0, r.stderr
     led = json.loads((out / "806_zblock/ledger.json").read_text())
-    physical = led["models"][0]["physical"]
     rep0 = led["models"][0]["representations"][0]
     assert rep0["frame"]["up_axis"] == "Z"
     assert rep0["geometry_state"]["origin"] == "base-at-floor"
@@ -747,6 +1499,10 @@ def test_articulated_axis_fixed_regardless_of_stable_orientation(tmp_path):
                 "support_spawn_clearance_m": 0.003,
                 "stable_pose_id": "upright",
                 "stable_orientation_wxyz": list(ledger.X90_WXYZ),
+                "stable_pose_measured_against": {
+                    "backend": "sapien",
+                    "run_id": "fixture-settle-804-500",
+                },
                 "z_policy": "origin_on_table",
                 "is_static": False,
                 "articulation_joints": [
@@ -783,9 +1539,7 @@ def test_articulated_axis_fixed_regardless_of_stable_orientation(tmp_path):
     assert rep0["frame"]["up_axis"] == "Z"
     assert rep0["geometry_state"]["origin"] == "base-at-floor"
     # the X90 stable-pose data itself is preserved verbatim, unaffected.
-    assert physical["conventions"]["stable_poses"][0]["orientation_wxyz"] == list(
-        ledger.X90_WXYZ
-    )
+    assert physical["conventions"]["stable_poses"][0]["orientation_wxyz"] == list(ledger.X90_WXYZ)
     assert ledger.validate_ledger(led, check_files=True) == []
 
 
@@ -840,6 +1594,10 @@ def test_format_derived_from_uri_suffix(tmp_path):
                 "support_spawn_clearance_m": 0.003,
                 "stable_pose_id": "procedural_flat_base",
                 "stable_orientation_wxyz": [1.0, 0.0, 0.0, 0.0],
+                "stable_pose_measured_against": {
+                    "backend": "sapien",
+                    "run_id": "fixture-settle-900-0",
+                },
                 "z_policy": "origin_on_table",
                 "is_static": False,
                 "articulation_joints": [],
@@ -929,6 +1687,10 @@ def _mini_catalog_for_remap(tmp_path):
                 "support_spawn_clearance_m": 0.003,
                 "stable_pose_id": "upright",
                 "stable_orientation_wxyz": [1.0, 0.0, 0.0, 0.0],
+                "stable_pose_measured_against": {
+                    "backend": "sapien",
+                    "run_id": "fixture-settle-802-0",
+                },
                 "z_policy": "origin_on_table",
                 "is_static": False,
                 "articulation_joints": [],
@@ -1026,6 +1788,10 @@ def _mini_catalog_for_remap_articulated(tmp_path):
                 "support_spawn_clearance_m": 0.003,
                 "stable_pose_id": "upright",
                 "stable_orientation_wxyz": [1.0, 0.0, 0.0, 0.0],
+                "stable_pose_measured_against": {
+                    "backend": "sapien",
+                    "run_id": "fixture-settle-803-7",
+                },
                 "z_policy": "origin_on_table",
                 "is_static": False,
                 "articulation_joints": [
@@ -1089,3 +1855,473 @@ def test_root_remap_absent_by_default(tmp_path):
     assert r.returncode == 0, r.stderr
     report = json.loads((out / "backfill_upstream_report.json").read_text())
     assert report["notes"]["root_remap"] is None
+
+
+def test_helper_fail_closed_edges_are_typed_and_deterministic(tmp_path, backfill_module):
+    report = backfill_module._empty_report()
+    missing_mesh = tmp_path / "missing.glb"
+    assert backfill_module._measure_rigid_geometry(missing_mesh, report, "901_widget:m0") is None
+    assert report["notes"]["up_axis_ambiguous"] == ["901_widget:m0"]
+
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    assert backfill_module._latest_file_mtime_date(empty) is None
+
+    outside = tmp_path / "outside" / "asset.obj"
+    sidecar = outside.parent / "payload.mtl"
+    _write(outside, b"mtllib payload.mtl\nv 0 0 0\n")
+    _write(sidecar, b"newmtl fixture\n")
+    assert backfill_module._relative_to_root(outside, empty) == ledger.to_portable_uri(outside)
+
+    assert backfill_module._derive_scale_applied([], report, "empty-scale") is None
+    assert backfill_module._derive_scale_applied([1.0, 2.0, 1.0], report, "non-uniform") == 1.0
+    assert report["notes"]["non_uniform_scale"] == ["non-uniform"]
+
+    records = backfill_module._representation_files(outside)
+    assert [record["uri"] for record in records] == sorted(
+        [ledger.to_portable_uri(outside), ledger.to_portable_uri(sidecar)]
+    )
+
+    assert backfill_module._existing_model(None, 0) is None
+    assert (
+        backfill_module._existing_model({"models": [{"model_id": 1}, {"model_id": 2}]}, 3) is None
+    )
+
+
+def test_catalog_pose_run_id_is_not_measurement_evidence(backfill_module):
+    model = {
+        "stable_pose_id": "upright",
+        "stable_orientation_wxyz": [1.0, 0.0, 0.0, 0.0],
+        "stable_pose_measured_against": {"backend": "sapien", "run_id": "catalog-claim"},
+    }
+
+    pose = backfill_module._stable_poses(model, None, [], "901_widget")
+
+    assert "measured_against" not in pose[0]
+
+
+def test_pose_measurement_helper_only_reuses_matching_trusted_pose(tmp_path, backfill_module):
+    model = {
+        "stable_pose_id": "upright",
+        "stable_orientation_wxyz": [1.0, 0.0, 0.0, 0.0],
+    }
+    provenance = {"backend": "sapien", "run_id": "real-settle-42"}
+    primary = tmp_path / "asset" / "model.stl"
+    _write(primary, b"model")
+    representations = [
+        {
+            "format": "stl",
+            "uri": str(primary),
+            "backend": "sapien",
+            "role": "visual",
+            "sha256": _sha(b"model"),
+            "files": [{"uri": str(primary), "sha256": _sha(b"model"), "bytes": 5}],
+        }
+    ]
+    digest = ledger.reps_digest({"representations": representations}, "sapien")
+    existing = {
+        "model_id": 0,
+        "representations": representations,
+        "physical": {
+            "conventions": {
+                "z_policy": "origin_on_table",
+                "stable_poses": [
+                    "opaque",
+                    {
+                        "pose_id": "flat",
+                        "orientation_wxyz": model["stable_orientation_wxyz"],
+                        "measured_against": provenance,
+                    },
+                    {
+                        "pose_id": "upright",
+                        "orientation_wxyz": [0.0, 1.0, 0.0, 0.0],
+                        "measured_against": provenance,
+                    },
+                    {
+                        "pose_id": "upright",
+                        "orientation_wxyz": model["stable_orientation_wxyz"],
+                        "measured_against": {
+                            "backend": "sapien",
+                            "run_id": "upstream-catalog-old",
+                        },
+                    },
+                    {
+                        "pose_id": "upright",
+                        "orientation_wxyz": model["stable_orientation_wxyz"],
+                        "measured_against": None,
+                    },
+                    {
+                        "pose_id": "upright",
+                        "orientation_wxyz": model["stable_orientation_wxyz"],
+                        "is_default": True,
+                        "measured_against": provenance,
+                    },
+                ],
+            }
+        },
+        "verification": [],
+    }
+    snapshot = ledger_writes.publish_execution_snapshot(
+        tmp_path / "execution-snapshots",
+        source_asset_dir=primary.parent,
+        asset_key="901_widget",
+        model_entry=existing,
+    )
+    capability = qualified_runtime_capability(
+        tmp_path / "runtime",
+        "asset.settle_repair.v1",
+        ledger,
+        ledger_writes,
+    )
+    payload = ledger_writes.issue_qualified_verification(
+        issuer="asset.settle_repair.v1",
+        asset_key="901_widget",
+        model_id=0,
+        run_id="real-settle-42",
+        timestamp="2026-08-31T00:00:00",
+        reps_digest=digest,
+        inputs={
+            "fixture": ledger_writes.provenance_file_record(__file__),
+            "task": {"asset_key": "901_widget", "model_id": 0},
+        },
+        thresholds={
+            "max_late_drift_m": 0.002,
+            "min_support_z_m": -0.005,
+            "max_tilt_deg": 181.0,
+        },
+        result={
+            "schema": "asset_settle_result.v2",
+            "finite": True,
+            "late_drift_m": 0.0,
+            "support_z_m": 0.01,
+            "tilt_deg": 0.0,
+            "rest_orientation_wxyz": model["stable_orientation_wxyz"],
+            "origin_z_m": 0.0,
+            "derived_z_policy": "origin_on_table",
+            "details": {"fixture": "pose-reuse-settle-v1"},
+        },
+        model_entry=existing,
+        execution_snapshot=snapshot,
+        runtime_capability=capability,
+    )
+    artifact = ledger_writes.publish_verification_evidence(tmp_path / "evidence", payload)
+    existing["verification"] = [ledger_writes.receipt_from_evidence(payload, artifact)]
+
+    reused = backfill_module._stable_poses(model, existing, representations, "901_widget")
+
+    assert reused[0]["measured_against"] == provenance
+    provenance["run_id"] = "mutated-after-call"
+    assert reused[0]["measured_against"]["run_id"] == "real-settle-42"
+    assert (
+        backfill_module._existing_pose_measurement(
+            model,
+            {**existing, "verification": {}},
+            representations,
+            "901_widget",
+        )
+        is None
+    )
+    assert (
+        backfill_module._existing_pose_measurement(
+            model,
+            {**existing, "verification": [{}]},
+            representations,
+            "901_widget",
+        )
+        is None
+    )
+
+
+def test_preserved_representation_sorting_never_invents_missing_files(tmp_path, backfill_module):
+    primary = tmp_path / "primary.usd"
+    primary.write_bytes(b"primary")
+    primary_sha = _sha(b"primary")
+    representation = {
+        "uri": str(primary),
+        "sha256": primary_sha,
+        "role": "visual_and_collision",
+        "files": [
+            {"uri": "z.usd", "sha256": "a" * 64, "bytes": 1},
+            {"uri": "a.usd", "sha256": "b" * 64, "bytes": 1},
+        ],
+        "collision_meta": {"mode": "explicit_mesh", "convex": False},
+    }
+
+    normalized = backfill_module._normalize_preserved_representation(representation)
+
+    assert [member["uri"] for member in normalized["files"]] == ["a.usd", "z.usd"]
+    assert normalized["collision_meta"] == representation["collision_meta"]
+
+    wrong_digest = {
+        "uri": str(primary),
+        "sha256": "0" * 64,
+        "role": "visual",
+    }
+    normalized_wrong = backfill_module._normalize_preserved_representation(wrong_digest)
+    assert "files" not in normalized_wrong
+    assert "collision_meta" not in normalized_wrong
+
+    missing = {
+        "uri": str(tmp_path / "missing.usd"),
+        "sha256": "0" * 64,
+        "role": "collision",
+    }
+    normalized_missing = backfill_module._normalize_preserved_representation(missing)
+    assert "files" not in normalized_missing
+    assert normalized_missing["collision_meta"]["mode"] == "unknown"
+
+
+@pytest.mark.parametrize("raw", ["asset", "=path", "asset="])
+def test_invalid_cli_mapping_syntax_is_rejected(backfill_module, raw):
+    with pytest.raises(ValueError):
+        backfill_module._parse_isaac_usd([raw])
+    with pytest.raises(ValueError):
+        backfill_module._parse_root_remap(raw)
+
+
+def test_root_remap_ignores_nonmatching_and_non_string_fields(backfill_module):
+    catalog = {
+        "entries": [
+            {
+                "asset_path": 7,
+                "models": [
+                    {
+                        "model_path": "/other/model",
+                        "visual_path": None,
+                    }
+                ],
+            },
+            {"asset_path": "/old/asset", "models": []},
+        ]
+    }
+
+    remapped, hits = backfill_module._apply_root_remap(catalog, ("/old", "/new"))
+
+    assert hits == 1
+    assert remapped["entries"][1]["asset_path"] == "/new/asset"
+    assert catalog["entries"][1]["asset_path"] == "/old/asset"
+
+
+@pytest.mark.parametrize(
+    "attack",
+    [
+        "catalog_shape",
+        "entries_shape",
+        "entry_shape",
+        "unsafe_asset",
+        "duplicate_asset",
+        "models_shape",
+        "model_shape",
+        "asset_escape",
+        "asset_symlink",
+        "model_escape",
+    ],
+)
+def test_catalog_index_helper_rejects_malformed_or_escaping_content(
+    tmp_path, backfill_module, attack
+):
+    objects = tmp_path / "objects"
+    asset = objects / "901_widget"
+    asset.mkdir(parents=True)
+    catalog = {
+        "objects_root": str(objects),
+        "entries": [
+            {
+                "asset_id": "901_widget",
+                "asset_path": str(asset),
+                "models": [{"model_id": 0, "model_path": str(asset)}],
+            }
+        ],
+    }
+    if attack == "catalog_shape":
+        catalog = []
+    elif attack == "entries_shape":
+        catalog["entries"] = {}
+    elif attack == "entry_shape":
+        catalog["entries"] = ["bad"]
+    elif attack == "unsafe_asset":
+        catalog["entries"][0]["asset_id"] = "../escape"
+    elif attack == "duplicate_asset":
+        catalog["entries"].append(json.loads(json.dumps(catalog["entries"][0])))
+    elif attack == "models_shape":
+        catalog["entries"][0]["models"] = {}
+    elif attack == "model_shape":
+        catalog["entries"][0]["models"] = ["bad"]
+    elif attack == "asset_escape":
+        catalog["entries"][0]["asset_path"] = str(tmp_path / "outside")
+    elif attack == "asset_symlink":
+        relocated = objects / "nested" / "901_widget"
+        relocated.parent.mkdir()
+        asset.rename(relocated)
+        asset.symlink_to(relocated, target_is_directory=True)
+    elif attack == "model_escape":
+        catalog["entries"][0]["models"][0]["model_path"] = str(tmp_path / "outside")
+
+    with pytest.raises(ValueError):
+        backfill_module._entries_by_asset(catalog)
+
+
+def test_catalog_index_helper_accepts_contained_safe_asset(tmp_path, backfill_module):
+    objects = tmp_path / "objects"
+    asset = objects / "901_widget"
+    asset.mkdir(parents=True)
+    entry = {
+        "asset_id": "901_widget",
+        "asset_path": str(asset),
+        "models": [{"model_id": 0, "model_path": str(asset)}],
+    }
+
+    assert backfill_module._entries_by_asset(
+        {"objects_root": str(objects), "entries": [entry]}
+    ) == {"901_widget": entry}
+
+
+def test_unknown_isaac_asset_fails_before_writing(tmp_path):
+    catalog_path, _ = _mini_catalog(tmp_path)
+    usd_path = tmp_path / "unknown.usd"
+    usd_path.write_bytes(b"usd")
+
+    result = _run(
+        catalog_path,
+        tmp_path / "out",
+        apply=True,
+        extra_args=[f"--isaac-usd=999_unknown={usd_path}"],
+    )
+
+    assert result.returncode == 2
+    assert "not found in catalog" in result.stderr
+    assert not (tmp_path / "out" / "backfill_upstream_report.json").exists()
+
+
+def test_catalog_asset_path_cannot_escape_its_asset_key(tmp_path):
+    catalog_path, _ = _mini_catalog(tmp_path)
+    catalog = json.loads(catalog_path.read_text())
+    empty_asset_dir = tmp_path / "empty-articulated-asset"
+    empty_asset_dir.mkdir()
+    catalog["entries"][1]["asset_path"] = str(empty_asset_dir)
+    catalog_path.write_text(json.dumps(catalog, indent=2))
+
+    result = _run(catalog_path, tmp_path / "out", apply=True)
+
+    assert result.returncode == 2
+    assert "asset_path escapes objects_root asset key" in result.stderr
+    assert not (tmp_path / "out" / "backfill_upstream_report.json").exists()
+
+
+def test_main_records_validator_violations_and_exits_nonzero(
+    tmp_path, monkeypatch, backfill_module
+):
+    catalog_path, _ = _mini_catalog(tmp_path)
+    out = tmp_path / "out"
+    monkeypatch.setattr(
+        backfill_module.ledger,
+        "validate_ledger",
+        lambda document, check_files: [
+            ledger.Violation("models.0", "injected_failure", "coverage fixture")
+        ],
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            str(SCRIPT),
+            "--catalog",
+            str(catalog_path),
+            "--out",
+            str(out),
+            "--apply",
+        ],
+    )
+
+    with pytest.raises(SystemExit) as exc_info:
+        backfill_module.main()
+
+    assert exc_info.value.code == 1
+    report = json.loads((out / "backfill_upstream_report.json").read_text())
+    assert report["violations"]["901_widget"][0]["code"] == "injected_failure"
+    assert report["written"] == []
+    assert not (out / "901_widget" / "ledger.json").exists()
+
+
+@pytest.mark.parametrize("asset_id", ["../escape", "bad/name", "bad\\name", "bad\x00id", "x" * 129])
+def test_catalog_asset_keys_must_be_safe_bounded_basenames(tmp_path, asset_id):
+    catalog_path, _ = _mini_catalog(tmp_path)
+    catalog = json.loads(catalog_path.read_text())
+    catalog["entries"][0]["asset_id"] = asset_id
+    catalog_path.write_text(json.dumps(catalog))
+
+    result = _run(catalog_path, tmp_path / "out", apply=True, seed_receipts=False)
+
+    assert result.returncode == 2
+    assert "unsafe asset_id" in result.stderr
+    assert not (tmp_path / "out").exists()
+
+
+@pytest.mark.parametrize("attack", ["duplicate_asset", "duplicate_model"])
+def test_catalog_duplicate_identities_are_rejected_before_output(tmp_path, attack):
+    catalog_path, _ = _mini_catalog(tmp_path)
+    catalog = json.loads(catalog_path.read_text())
+    if attack == "duplicate_asset":
+        catalog["entries"].append(json.loads(json.dumps(catalog["entries"][0])))
+    else:
+        catalog["entries"][0]["models"].append(
+            json.loads(json.dumps(catalog["entries"][0]["models"][0]))
+        )
+    catalog_path.write_text(json.dumps(catalog))
+
+    result = _run(catalog_path, tmp_path / "out", apply=True, seed_receipts=False)
+
+    assert result.returncode == 2
+    assert "duplicate" in result.stderr
+    assert not (tmp_path / "out").exists()
+
+
+def test_two_model_asset_uses_one_asset_level_profile_without_upsert_crash(tmp_path):
+    catalog_path, _ = _mini_catalog(tmp_path)
+    catalog = json.loads(catalog_path.read_text())
+    catalog["entries"][0]["models"][1]["usable"] = True
+    catalog["entries"][0]["models"][1]["missing"] = []
+    catalog_path.write_text(json.dumps(catalog, indent=2))
+    usd = tmp_path / "first-model.usd"
+    usd.write_bytes(USD_CONTENT_901)
+
+    result = _run(
+        catalog_path,
+        tmp_path / "out",
+        apply=True,
+        extra_args=[f"--isaac-usd=901_widget={usd}"],
+    )
+
+    assert result.returncode == 0, result.stderr
+    document = json.loads((tmp_path / "out" / "901_widget" / "ledger.json").read_text())
+    assert [model["model_id"] for model in document["models"]] == [0, 1]
+    assert document["profile"] == "sapien_only"
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("verified_digest", "0" * 64),
+        ("check", "runtime_load"),
+        ("verdict", "fail"),
+        ("backend", "isaacsim"),
+        ("run_id", "different-run"),
+    ],
+)
+def test_stale_or_nonsettle_pose_receipt_is_not_resigned_or_written(tmp_path, field, value):
+    catalog_path, _ = _mini_catalog(tmp_path)
+    out = tmp_path / "out"
+    assert _run(catalog_path, out, apply=True).returncode == 0
+    ledger_path = out / "901_widget" / "ledger.json"
+    document = json.loads(ledger_path.read_text())
+    document["models"][0]["verification"][0][field] = value
+    attacked = json.dumps(document, indent=2) + "\n"
+    ledger_path.write_text(attacked)
+
+    result = _run(catalog_path, out, apply=True)
+
+    assert result.returncode == 1
+    assert ledger_path.read_text() == attacked
+    report = json.loads((out / "backfill_upstream_report.json").read_text())
+    codes = {item["code"] for item in report["violations"]["901_widget"]}
+    assert "measured_against_required" in codes

@@ -1,0 +1,129 @@
+{
+  "schema_version": "asset_ledger.integrity_evidence.v1",
+  "recorded_date": "2026-08-31",
+  "last_verified_date": "2026-09-01",
+  "status": "implementation_pass_data_debt_open",
+  "contract": {
+    "schema_version": "asset_ledger.v3",
+    "representation_digest_version": "asset-representation-set.v2",
+    "files_are_exact_dependency_closure": true,
+    "file_and_parent_symlinks_rejected": true,
+    "stable_pose_requires_measured_against": true,
+    "verification_requires_current_representation_digest": true,
+    "empty_backend_digest_rejected": true,
+    "conflicting_receipt_identity_rejected": true,
+    "nofollow_lock_required": true,
+    "read_validate_write_is_lock_scoped": true,
+    "unknown_physical_measurements_are_not_inferred": true
+  },
+  "write_boundary": {
+    "shared_module": "self_improving/asset_pipeline/active/1_asset_reuse/lib/ledger_writes.py",
+    "pre_publish_file_validation": true,
+    "active_writers_audited": true,
+    "generated_asset_reuse_preserves_valid_follow_up_receipts": true,
+    "generated_asset_reuse_requires_original_generation_qc": true,
+    "generated_asset_reuse_and_publish_target_swaps_rejected": true,
+    "backfill_pair_commit": "pinned_dirfd_dual_lock_durable_journal_recovery",
+    "migrate_apply": "single_ledger_only_multi_ledger_rejected_before_first_write",
+    "rescale_apply": "disabled",
+    "writeback_qualified_backends": [
+      "sapien"
+    ],
+    "path_component_symlinks_rejected": true
+  },
+  "trust_boundary": {
+    "threat_model": "cooperative_runtime_no_concurrent_host_mutator",
+    "runtime_input_attestation": "immutable_snapshot_pre_post.v1",
+    "opened_file_attested": false,
+    "same_user_arbitrary_code_is_out_of_scope": true,
+    "transitive_native_dependencies_drivers_and_preload_are_not_bound": true,
+    "raw_ledger_path_is_not_a_trusted_read": true,
+    "trusted_consumers_revalidate_files": true,
+    "multi_file_invisibility_against_host_mutation": false,
+    "runtime_platform": "posix_linux"
+  },
+  "verification": {
+    "asset_reuse": {
+      "result": "902 passed, 2 skipped",
+      "skip_reason": "The base Python environment has no SAPIEN, so the two real articulated paths are skipped there."
+    },
+    "real_sapien_articulated_nodes": {
+      "result": "2 passed",
+      "environment": "env-gen-yuxin",
+      "synthetic_runtime_used": false
+    },
+    "real_sapien_public_runtime_replay": {
+      "result": "pass",
+      "environment": "env-gen-yuxin",
+      "sapien_version": "3.0.0b1",
+      "runtime": "real RoboTwin envs.utils.create_actor with real pysapien native modules",
+      "s13b_joint_sweep_evidence_sha256": "ae122f2eb645241d949113f5f25aab88dfee59a0878b8edd7a2216bd1b9cf33a",
+      "s11_runtime_load_evidence_sha256": "6a1541d6a18455dd2f59b8f2791fe8917d6ba2d5f67bea201ce65debfc80fe0a",
+      "s11_script_sha256": "0b7faa560be5d5bdb9519555c7c3d84b5c00447d5263df0c8135bce5e81e28f8",
+      "receipts_current": true,
+      "ledger_violations": 0,
+      "catalog_pose_tamper_rejected_before_loader": true,
+      "synthetic_runtime_used": false,
+      "scope": "one minimal articulated integration asset, not the complete production library"
+    },
+    "real_sapien_rigid_settle_aabb": {
+      "result": "pass",
+      "late_drift_m": 0.0,
+      "aabb_source": "collision component compute_global_aabb_tight",
+      "ledger_or_evidence_written": false,
+      "scope": "function-level real-engine compatibility and in-memory pose promotion"
+    },
+    "harness_cross_boundary": {
+      "result": "164 passed",
+      "scope": "generated admission, compile qualification, application, CLI, and compile handler"
+    },
+    "core_ledger_and_writer_statement_and_branch_coverage": {
+      "result": "94%",
+      "statements": 2391,
+      "branches": 1148,
+      "by_module": {
+        "ledger.py": "94%",
+        "ledger_writes.py": "90%",
+        "writer_paths.py": "100%"
+      }
+    }
+  },
+  "checked_in_data_audit": {
+    "ledgers": 162,
+    "clean": 0,
+    "violating": 162,
+    "violations": 4082,
+    "by_code": {
+      "deleted_field": 1915,
+      "missing": 1757,
+      "measured_against_required": 410
+    },
+    "by_field": {
+      "representations.size_bytes_deleted": 1101,
+      "representations.files_missing": 1101,
+      "representations.collision_meta_missing": 563,
+      "models.runtime_default_kg_deleted": 407,
+      "models.runtime_default_basis_deleted": 407,
+      "external_ids.env_gen_missing": 93,
+      "stable_poses.measured_against_missing": 410
+    },
+    "audit_reports": [
+      {
+        "scope": "upstream_ledgers",
+        "bytes": 679892,
+        "sha256": "881d2f8485f15be48be8ceef0a06337359b76a98377b7a107aa283b3437b8a98",
+        "committed": false
+      },
+      {
+        "scope": "asset_library",
+        "bytes": 133108,
+        "sha256": "52592a69f173017acd6bd0b4a040ae266c5db21754b0fa345bae2a47cc2dea37",
+        "committed": false
+      }
+    ],
+    "data_files_mutated": 0,
+    "migration_policy": "A ledger is written only when closure, file bytes, provenance, and physical evidence are complete; otherwise typed debt remains open."
+  },
+  "claim_boundary": "Within the declared cooperative POSIX/Linux runtime, the validator, supported writer paths, and generated admission fail closed and trusted consumers revalidate file bytes. This is not opened-file, same-user-code, or transitive-native attestation. Existing ledgers have not been declared v3-complete or bulk rewritten; missing physical pose evidence must be replayed rather than guessed.",
+  "host_paths_present": false
+}

@@ -35,6 +35,16 @@
   默认落到项目内 `self_improving/asset_pipeline/active/data/asset_library`；qualification、测试与实验
   必须传自己的 scratch 库。45 项干净检出专项通过；这只改变资产所有权边界，不把 generation QC
   写成 SAPIEN settle 或物理资格。
+- 收紧 asset-ledger v3 为内容契约：验证完整 loader 文件闭包、collision metadata、stable-pose
+  provenance、portable ID 与 digest-bound receipts，`asset-representation-set.v2` 绑定全部 backend
+  representation 内容；generated admission、migrator/backfill 及全部 ACTIVE writer 在写前统一
+  `check_files=True`。generated admission 的复用与新发布都固定目录 inode 并拒绝换靶；backfill pair
+  使用 durable journal 恢复。asset-reuse 在基础环境为 902 passed/2 SAPIEN skips，真实 SAPIEN 对应
+  两节点另为 2 passed；最终公共 S13b→S11 也以真实 RoboTwin loader/native modules 完成 `SWEEP
+  1/1`，catalog pose 篡改在 loader 前拒绝。跨 Harness 164 passed。证据只覆盖 cooperative
+  POSIX/Linux runtime：不是 opened-FD、同用户任意代码或传递 ELF/驱动防伪，raw ledger reader 仍须
+  重验 files。只读审计发现 162/162 份既有 ledger 共 4,082 条债务；本切片未批量改数据，缺物理证据
+  的项目继续 blocked。
 - 接出 replay handler/resolver 候选竖切：Invocation 只接受 capability、executor、handler config、
   media verifier、input-specific runtime assets 五项精确依赖，handler 独立重物化/快照并在执行前后
   对账；失败制品保留为 untrusted diagnostics，JSON/PNG/MP4 经事件、evidence、validation 与固定
