@@ -817,3 +817,19 @@
   ruff/format clean。
 - 边界：这是四页面工作台的第一竖切，不提供 Harness submit、System 2 调度、依赖/操作拖拽板或
   artifact 内容 viewer；阶段 7 仍为进行中，不能把旧 job 提交路径写成 Harness 已接通。
+
+### 2026-09-01 / A045：compile 资格必须随实现身份重跑，不能只改摘要
+
+- RED：A041 的 `db24ea9` 收紧 generated admission 与 ledger v3 后，正式 loader 立即以
+  `implementation_file_mismatch` 拒绝旧 checked-in bundle，首个漂移文件为
+  `self_improving/harness/assets.py`。这证明资格证书没有把旧 pass 静默沿用到新实现。
+- GREEN：在全新 scratch 与临时 asset library 中重新执行固定资格 generator 三轮，生命周期仍为
+  `admitted -> reused -> reused`，三次 asset id 相同。新 bundle 再由 production loader 重读三份
+  canonical 文档、11 个实现文件、`scene_gen` tree 与 ledger contract tree，不接受手填摘要。
+- 结果：七项具名门全部 pass；严格 ledger closure 为 3 个 file records、`check_files=True` 为
+  0 violation。implementation SHA 为 `cd57e549…ef3e7`，report SHA 为 `a0ebc959…0971`；资格与
+  generator 两个公开 seam 合计 `93 passed`。
+- 边界：static validation 仍为 `incomplete`，生成资产仍为 `pending_settle`。本次只刷新 compile
+  generation / admission / reuse / package-CAS / source-stability 资格，不声称 SAPIEN settle、replay
+  qualification 或资产 publishability。完整绑定见
+  `docs/evidence/compile-qualification-refresh-20260901.{md,json}`。

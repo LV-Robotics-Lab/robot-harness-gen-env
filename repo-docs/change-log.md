@@ -1,5 +1,13 @@
 # Change Log
 
+## 2026-09-01
+
+- A041 改变 generated admission 与 ledger contract 实现身份后，旧 `text2env.compile@1.0.0`
+  checked-in qualification 按设计被 production loader 拒绝。使用全新 scratch/library 重跑固定三轮
+  generator 后，`admitted -> reused -> reused`、七项门禁与严格 ledger closure 重新通过；三文档及
+  实现/source-tree 摘要已刷新并由正式 loader 复核。static validation 仍为 `incomplete`、资产仍为
+  `pending_settle`，没有扩大成物理或 replay 资格。
+
 ## 2026-08-31
 
 - 落地 Workbench Event Timeline v1：`demo/` 通过注入式只读 feed 和
