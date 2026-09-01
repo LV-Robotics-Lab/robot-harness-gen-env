@@ -171,6 +171,23 @@
               role="status"
               aria-live="polite"
             ></p>
+            <button
+              class="secondary-button"
+              id="harness-static-validation-button"
+              type="button"
+              aria-controls="harness-static-validation-panel"
+              aria-describedby="harness-static-validation-message"
+              aria-expanded="false"
+              hidden
+            >
+              查看编译期检查
+            </button>
+            <p
+              class="scene-preview-message"
+              id="harness-static-validation-message"
+              role="status"
+              aria-live="polite"
+            ></p>
           </div>
           <section
             class="scene-preview"
@@ -192,6 +209,39 @@
               >关闭</button>
             </div>
             <div id="harness-scene-preview-content"></div>
+          </section>
+          <section
+            class="scene-preview static-validation-preview"
+            id="harness-static-validation-panel"
+            aria-labelledby="harness-static-validation-title"
+            aria-describedby="harness-static-validation-boundary"
+            aria-busy="false"
+            hidden
+          >
+            <div class="scene-preview-heading">
+              <div>
+                <span class="section-index">STATIC</span>
+                <h4 id="harness-static-validation-title" tabindex="-1">已提交的编译期检查</h4>
+              </div>
+              <button
+                class="secondary-button"
+                id="harness-static-validation-close"
+                type="button"
+                aria-label="关闭编译期检查预览"
+              >关闭</button>
+            </div>
+            <p class="static-validation-boundary" id="harness-static-validation-boundary">
+              只核对已提交报告的内容身份、结构与绑定；未重跑 validator，未使用物理回放，不作发布判断。
+            </p>
+            <dl
+              class="scene-preview-summary"
+              id="harness-static-validation-summary"
+            ></dl>
+            <ol
+              class="static-validation-checks"
+              id="harness-static-validation-checks"
+              aria-label="已提交的编译期检查项目"
+            ></ol>
           </section>
         </section>
       </div>

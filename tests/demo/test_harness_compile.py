@@ -22,6 +22,8 @@ from demo.harness_compile import (
     WorkbenchCompileRunNotFoundError,
     WorkbenchCompileSceneNotPreviewableError,
     WorkbenchCompileSceneTooLargeError,
+    WorkbenchCompileStaticValidationNotPreviewableError,
+    WorkbenchCompileStaticValidationTooLargeError,
     WorkbenchCompileUnavailableError,
 )
 from demo.harness_feed import HarnessEventFeedCorruptionError
@@ -1640,6 +1642,68 @@ def test_scene_preview_projects_only_the_verified_typed_scene_structure(
     assert str(tmp_path) not in serialized
 
 
+def test_static_validation_preview_projects_only_the_committed_summary(
+    tmp_path: Path,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    request_value = "Place a purple hexagonal pedestal on the table."
+    submission = workbench.submit(request=request_value, seed=77)
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    invocation = application.invocation(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    assert invocation is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+
+    preview = workbench.static_validation_preview(run_id=run_id)
+
+    assert set(preview) == {"artifact", "run", "schema_version", "validation"}
+    assert preview["schema_version"] == "harness.workbench_compile_static_validation_preview.v1"
+    assert preview["run"] == {
+        "run_id": str(run_id),
+        "invocation_digest": invocation.invocation_digest,
+        "event_count": len(persisted.events),
+        "terminal_event_id": str(history.last_event_id),
+    }
+    assert preview["artifact"] == {
+        "name": output.static_validation.name,
+        "media_type": "application/json",
+        "schema_version": "robotwin.scene_validation.v1",
+        "sha256": output.static_validation.sha256,
+        "bytes": str(output.static_validation.bytes),
+        "bindings": [{"direction": "output", "role": "static_validation"}],
+    }
+    assert preview["validation"] == {
+        "claim_scope": "committed_report_content_and_binding_only",
+        "mode": "compile_static_without_runtime_evidence",
+        "scene_id": "place_a_purple_hexagonal_pedestal_on_the_table_d38c3bf3d4",
+        "resolved_scene_sha256": output.environment_package.resolved_scene_sha256,
+        "status": "incomplete",
+        "counts": {"checks": 7, "pass": 6, "fail": 0, "not_run": 1},
+        "checks": [
+            {"name": "workspace_bounds:hexagonal_pedestal_1", "status": "pass"},
+            {
+                "name": "table_support_height:hexagonal_pedestal_1",
+                "status": "pass",
+            },
+            {"name": "real_asset_files:hexagonal_pedestal_1", "status": "pass"},
+            {
+                "name": "relation:on_table:hexagonal_pedestal_1",
+                "status": "pass",
+            },
+            {"name": "resolved_only_roundtrip", "status": "pass"},
+            {"name": "package_manifest", "status": "pass"},
+            {"name": "runtime_evidence", "status": "not_run"},
+        ],
+    }
+    serialized = json.dumps(preview, sort_keys=True, ensure_ascii=False)
+    assert request_value not in serialized
+    assert all(set(item) == {"name", "status"} for item in preview["validation"]["checks"])
+    assert "artifact://" not in serialized
+    assert str(tmp_path) not in serialized
+
+
 def test_scene_preview_exposes_only_the_fixed_run_selector() -> None:
     assert tuple(inspect.signature(WorkbenchCompile.scene_preview).parameters) == (
         "self",
@@ -1706,6 +1770,116 @@ def _install_scene_payload_authority(
             "environment_package": package,
         }
     )
+
+    def replace_ref(ref):
+        return forged if ref == original else ref
+
+    forged_events = tuple(
+        event.model_copy(
+            update={"artifact_refs": tuple(replace_ref(ref) for ref in event.artifact_refs)}
+        )
+        for event in persisted.events
+    )
+    forged_state = persisted.model_copy(
+        update={
+            "output": forged_output.model_dump(mode="json"),
+            "artifacts": tuple(replace_ref(ref) for ref in persisted.artifacts),
+            "events": forged_events,
+        }
+    )
+    forged_history = replace(
+        history,
+        events=tuple(
+            replace(stored, envelope=replace(stored.envelope, event=event))
+            for stored, event in zip(history.events, forged_events, strict=True)
+        ),
+    )
+    target = application.artifact_root / "sha256" / digest[:2] / digest
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    monkeypatch.setattr(application, "run_state", lambda _run_id: forged_state)
+    monkeypatch.setattr(application, "events", lambda **_kwargs: forged_history)
+    return target
+
+
+def _install_static_validation_payload_authority(
+    *,
+    application: CompileApplication,
+    run_id: UUID,
+    payload: bytes,
+    monkeypatch: pytest.MonkeyPatch,
+    ref_updates: dict[str, object] | None = None,
+) -> Path:
+    persisted = application.run_state(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    original = output.static_validation
+    digest = hashlib.sha256(payload).hexdigest()
+    forged = original.model_copy(
+        update={
+            "sha256": digest,
+            "uri": f"artifact://sha256/{digest}",
+            "bytes": len(payload),
+            **(ref_updates or {}),
+        }
+    )
+    forged_output = output.model_copy(update={"static_validation": forged})
+
+    def replace_ref(ref):
+        return forged if ref == original else ref
+
+    forged_events = tuple(
+        event.model_copy(
+            update={"artifact_refs": tuple(replace_ref(ref) for ref in event.artifact_refs)}
+        )
+        for event in persisted.events
+    )
+    forged_state = persisted.model_copy(
+        update={
+            "output": forged_output.model_dump(mode="json"),
+            "artifacts": tuple(replace_ref(ref) for ref in persisted.artifacts),
+            "events": forged_events,
+        }
+    )
+    forged_history = replace(
+        history,
+        events=tuple(
+            replace(stored, envelope=replace(stored.envelope, event=event))
+            for stored, event in zip(history.events, forged_events, strict=True)
+        ),
+    )
+    target = application.artifact_root / "sha256" / digest[:2] / digest
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    monkeypatch.setattr(application, "run_state", lambda _run_id: forged_state)
+    monkeypatch.setattr(application, "events", lambda **_kwargs: forged_history)
+    return target
+
+
+def _install_resolved_scene_payload_authority(
+    *,
+    application: CompileApplication,
+    run_id: UUID,
+    payload: bytes,
+    monkeypatch: pytest.MonkeyPatch,
+    ref_updates: dict[str, object] | None = None,
+) -> Path:
+    persisted = application.run_state(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    original = output.resolved_scene
+    digest = hashlib.sha256(payload).hexdigest()
+    forged = original.model_copy(
+        update={
+            "sha256": digest,
+            "uri": f"artifact://sha256/{digest}",
+            "bytes": len(payload),
+            **(ref_updates or {}),
+        }
+    )
+    forged_output = output.model_copy(update={"resolved_scene": forged})
 
     def replace_ref(ref):
         return forged if ref == original else ref
@@ -2241,3 +2415,924 @@ def test_scene_preview_never_reuses_content_after_the_cas_object_changes(
 
     with pytest.raises(WorkbenchCompileAuthorityError):
         workbench.scene_preview(run_id=run_id)
+
+
+def test_static_validation_preview_exposes_only_the_fixed_run_selector() -> None:
+    assert tuple(inspect.signature(WorkbenchCompile.static_validation_preview).parameters) == (
+        "self",
+        "run_id",
+    )
+
+
+def test_static_validation_preview_does_not_use_the_unbounded_application_resolver(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    calls: list[ArtifactRef] = []
+
+    def reject_unbounded_resolution(artifact: ArtifactRef) -> Path:
+        calls.append(artifact)
+        raise AssertionError("static preview must use bounded descriptor readers")
+
+    monkeypatch.setattr(application, "resolve_artifact", reject_unbounded_resolution)
+
+    preview = workbench.static_validation_preview(run_id=UUID(submission["run_id"]))
+
+    assert preview["validation"]["status"] == "incomplete"
+    assert calls == []
+
+
+def test_static_validation_preview_rejects_a_real_non_success_terminal(
+    tmp_path: Path,
+) -> None:
+    workbench, _ = _workbench(tmp_path, generate_missing_assets=False)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+
+    with pytest.raises(
+        WorkbenchCompileStaticValidationNotPreviewableError,
+        match="no previewable",
+    ):
+        workbench.static_validation_preview(run_id=UUID(submission["run_id"]))
+
+
+def test_static_validation_preview_rejects_an_unknown_or_non_uuid_run(
+    tmp_path: Path,
+) -> None:
+    workbench, _ = _workbench(tmp_path)
+
+    with pytest.raises(WorkbenchCompileRunNotFoundError, match="not found"):
+        workbench.static_validation_preview(run_id=UUID("12345678-1234-4234-9234-123456789abc"))
+    with pytest.raises(WorkbenchCompileInputError, match="UUID"):
+        workbench.static_validation_preview(  # type: ignore[arg-type]
+            run_id="12345678-1234-4234-9234-123456789abc"
+        )
+
+
+def test_static_validation_preview_rejects_declared_oversize_before_cas_access(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    _install_static_validation_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=b"x" * 262_145,
+        monkeypatch=monkeypatch,
+    )
+
+    def must_not_locate(**_kwargs):
+        raise AssertionError("oversized static report must be rejected before CAS access")
+
+    monkeypatch.setattr(
+        "demo.harness_compile._static_validation_cas_path",
+        must_not_locate,
+    )
+
+    with pytest.raises(WorkbenchCompileStaticValidationTooLargeError, match="exceeds"):
+        workbench.static_validation_preview(run_id=run_id)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "non_utf8",
+        "bom",
+        "duplicate_member",
+        "nan",
+        "overflow",
+        "non_object",
+        "extra_root_field",
+        "missing_root_field",
+        "wrong_schema",
+        "unsafe_scene_id",
+        "wrong_digest",
+        "pass_status",
+        "boolean_fail_count",
+        "float_not_run_count",
+        "checks_object",
+        "deep",
+        "too_many_checks",
+        "check_non_object",
+        "extra_check_field",
+        "unsafe_check_name",
+        "duplicate_check_name",
+        "bad_check_status",
+        "runtime_status",
+        "runtime_evidence_extra",
+        "runtime_required",
+        "missing_package_manifest",
+        "failed_package_manifest",
+        "missing_roundtrip",
+        "failed_roundtrip",
+        "wrong_fail_count",
+        "wrong_not_run_count",
+        "wrong_derived_status",
+    ],
+)
+def test_static_validation_preview_rejects_non_strict_or_inconsistent_reports(
+    mutation: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    original = application.resolve_artifact(output.static_validation).read_bytes()
+    document = json.loads(original)
+    if mutation == "non_utf8":
+        payload = b"\xff"
+    elif mutation == "bom":
+        payload = b"\xef\xbb\xbf" + original
+    elif mutation == "duplicate_member":
+        payload = b'{"schema_version":"robotwin.scene_validation.v1",' + original.lstrip()[1:]
+    elif mutation == "nan":
+        document["checks"][0]["evidence"]["aabb"][0] = float("nan")
+        payload = json.dumps(document, allow_nan=True).encode("utf-8")
+    elif mutation == "overflow":
+        document["checks"][0]["evidence"]["aabb"][0] = "NUMBER"
+        payload = json.dumps(document).replace('"NUMBER"', "1e400").encode("utf-8")
+    elif mutation == "non_object":
+        payload = b"[]"
+    elif mutation == "extra_root_field":
+        document["evidence"] = {"path": "/tmp/private"}
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "missing_root_field":
+        del document["scene_id"]
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "wrong_schema":
+        document["schema_version"] = "robotwin.scene_validation.v2"
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "unsafe_scene_id":
+        document["scene_id"] = "../private-scene"
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "wrong_digest":
+        document["resolved_scene_sha256"] = "not-a-digest"
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "pass_status":
+        document["status"] = "pass"
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "boolean_fail_count":
+        document["fail_count"] = False
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "float_not_run_count":
+        document["not_run_count"] = 1.0
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "checks_object":
+        document["checks"] = {}
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "deep":
+        nested: object = "leaf"
+        for _ in range(70):
+            nested = [nested]
+        document["checks"][0]["evidence"]["nested"] = nested
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "too_many_checks":
+        document["checks"].extend(
+            {
+                "name": f"extra_check_{index:03d}",
+                "status": "pass",
+                "evidence": None,
+            }
+            for index in range(163)
+        )
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "check_non_object":
+        document["checks"][0] = []
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "extra_check_field":
+        document["checks"][0]["detail"] = "private"
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "unsafe_check_name":
+        document["checks"][0]["name"] = "../../private"
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "duplicate_check_name":
+        document["checks"][1]["name"] = document["checks"][0]["name"]
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "bad_check_status":
+        document["checks"][0]["status"] = "not_applicable"
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "runtime_status":
+        document["checks"][-1]["status"] = "pass"
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "runtime_evidence_extra":
+        document["checks"][-1]["evidence"]["path"] = "/tmp/private"
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "runtime_required":
+        document["checks"][-1]["evidence"]["required"] = True
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "missing_package_manifest":
+        document["checks"] = [
+            item for item in document["checks"] if item["name"] != "package_manifest"
+        ]
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "failed_package_manifest":
+        item = next(item for item in document["checks"] if item["name"] == "package_manifest")
+        item["status"] = "fail"
+        document["fail_count"] = 1
+        document["status"] = "fail"
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "missing_roundtrip":
+        document["checks"] = [
+            item for item in document["checks"] if item["name"] != "resolved_only_roundtrip"
+        ]
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "failed_roundtrip":
+        item = next(
+            item for item in document["checks"] if item["name"] == "resolved_only_roundtrip"
+        )
+        item["status"] = "fail"
+        document["fail_count"] = 1
+        document["status"] = "fail"
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "wrong_fail_count":
+        document["fail_count"] = 1
+        payload = json.dumps(document).encode("utf-8")
+    elif mutation == "wrong_not_run_count":
+        document["not_run_count"] = 0
+        payload = json.dumps(document).encode("utf-8")
+    else:
+        document["status"] = "fail"
+        payload = json.dumps(document).encode("utf-8")
+    _install_static_validation_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=payload,
+        monkeypatch=monkeypatch,
+    )
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.static_validation_preview(run_id=run_id)
+
+
+def test_static_validation_preview_accepts_a_derived_fail_summary_and_keeps_order(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    document = json.loads(application.resolve_artifact(output.static_validation).read_bytes())
+    document["checks"][0]["status"] = "fail"
+    document["fail_count"] = 1
+    document["status"] = "fail"
+    payload = json.dumps(document).encode("utf-8")
+    _install_static_validation_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=payload,
+        monkeypatch=monkeypatch,
+    )
+
+    validation = workbench.static_validation_preview(run_id=run_id)["validation"]
+
+    assert validation["status"] == "fail"
+    assert validation["counts"] == {"checks": 7, "pass": 5, "fail": 1, "not_run": 1}
+    assert [item["name"] for item in validation["checks"]] == [
+        item["name"] for item in document["checks"]
+    ]
+
+
+def test_static_validation_preview_rejects_a_second_not_run_check(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    document = json.loads(application.resolve_artifact(output.static_validation).read_bytes())
+    document["checks"][0]["status"] = "not_run"
+    document["not_run_count"] = 2
+    _install_static_validation_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=json.dumps(document).encode("utf-8"),
+        monkeypatch=monkeypatch,
+    )
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.static_validation_preview(run_id=run_id)
+
+
+@pytest.mark.parametrize("binding", ["scene_id", "resolved_scene_sha256"])
+def test_static_validation_preview_rejects_report_bindings_outside_the_typed_package(
+    binding: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    document = json.loads(application.resolve_artifact(output.static_validation).read_bytes())
+    document[binding] = "forged_scene" if binding == "scene_id" else "f" * 64
+    _install_static_validation_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=json.dumps(document).encode("utf-8"),
+        monkeypatch=monkeypatch,
+    )
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.static_validation_preview(run_id=run_id)
+
+
+def test_static_validation_preview_rejects_an_unverified_scene_binding(
+    tmp_path: Path,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    scene_ref = Text2EnvCompileOutput.model_validate(persisted.output).scene_spec
+    path = application.resolve_artifact(scene_ref)
+    original = path.read_bytes()
+    path.write_bytes(bytes(byte ^ 0xFF for byte in original))
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.static_validation_preview(run_id=run_id)
+
+
+def test_static_validation_preview_rejects_a_rebound_resolved_scene_artifact(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    resolved_ref = Text2EnvCompileOutput.model_validate(persisted.output).resolved_scene
+    document = json.loads(application.resolve_artifact(resolved_ref).read_bytes())
+    document["compiler_version"] = "coherently-rebound-but-unrelated"
+    _install_resolved_scene_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=json.dumps(document, indent=2, ensure_ascii=False).encode("utf-8") + b"\n",
+        monkeypatch=monkeypatch,
+    )
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.static_validation_preview(run_id=run_id)
+
+
+@pytest.mark.parametrize(
+    ("ref_updates", "expected_reads"),
+    [
+        ({"media_type": "text/plain"}, 0),
+        ({"bytes": 1_048_577}, 0),
+    ],
+)
+def test_static_validation_preview_rejects_invalid_resolved_content_contract_before_reading(
+    ref_updates: dict[str, object],
+    expected_reads: int,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    resolved_ref = Text2EnvCompileOutput.model_validate(persisted.output).resolved_scene
+    payload = application.resolve_artifact(resolved_ref).read_bytes()
+    _install_resolved_scene_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=payload,
+        monkeypatch=monkeypatch,
+        ref_updates=ref_updates,
+    )
+    reads = 0
+
+    def observe_read(**_kwargs):
+        nonlocal reads
+        reads += 1
+        raise AssertionError("invalid resolved content contract must be rejected before reading")
+
+    monkeypatch.setattr(
+        "demo.harness_compile._read_verified_resolved_scene_bytes",
+        observe_read,
+    )
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.static_validation_preview(run_id=run_id)
+    assert reads == expected_reads
+
+
+@pytest.mark.parametrize(
+    "payload_case",
+    [
+        "bom",
+        "duplicate_member",
+        "nonfinite_float",
+        "nonstandard_constant",
+        "non_object",
+        "too_deep",
+        "noncanonical_default",
+    ],
+)
+def test_static_validation_preview_rejects_non_strict_resolved_scene_json(
+    payload_case: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    resolved_ref = Text2EnvCompileOutput.model_validate(persisted.output).resolved_scene
+    document = json.loads(application.resolve_artifact(resolved_ref).read_bytes())
+    valid_payload = json.dumps(document, ensure_ascii=False).encode("utf-8")
+    if payload_case == "bom":
+        payload = b"\xef\xbb\xbf" + valid_payload
+    elif payload_case == "duplicate_member":
+        payload = b'{"schema_version":"robotwin.resolved_scene.v1",' + valid_payload[1:]
+    elif payload_case == "nonfinite_float":
+        payload = b'{"x":1e309}'
+    elif payload_case == "nonstandard_constant":
+        payload = b'{"x":NaN}'
+    elif payload_case == "non_object":
+        payload = b"[]"
+    elif payload_case == "too_deep":
+        nested: object = 0
+        for _ in range(65):
+            nested = {"x": nested}
+        payload = json.dumps(nested).encode("utf-8")
+    else:
+        document.pop("unit")
+        payload = json.dumps(document, ensure_ascii=False).encode("utf-8")
+    _install_resolved_scene_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=payload,
+        monkeypatch=monkeypatch,
+    )
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.static_validation_preview(run_id=run_id)
+
+
+def test_static_validation_preview_rejects_a_non_json_typed_scene_before_reading_it(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    payload = application.resolve_artifact(output.scene_spec).read_bytes()
+    _install_scene_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=payload,
+        monkeypatch=monkeypatch,
+        ref_updates={"media_type": "text/plain"},
+    )
+    reads = 0
+
+    def observe_read(**_kwargs):
+        nonlocal reads
+        reads += 1
+        raise AssertionError("non-JSON SceneSpec must be rejected before reading")
+
+    monkeypatch.setattr("demo.harness_compile._read_verified_scene_bytes", observe_read)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.static_validation_preview(run_id=run_id)
+    assert reads == 0
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("media_type", "text/plain"),
+        ("schema_version", "robotwin.scene_validation.v2"),
+    ],
+)
+def test_static_validation_preview_rejects_the_wrong_content_contract_before_reading(
+    field: str,
+    value: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    payload = application.resolve_artifact(output.static_validation).read_bytes()
+    _install_static_validation_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=payload,
+        monkeypatch=monkeypatch,
+        ref_updates={field: value},
+    )
+    reads = 0
+
+    def observe_read(**_kwargs):
+        nonlocal reads
+        reads += 1
+        raise AssertionError("invalid content contract must be rejected before reading")
+
+    monkeypatch.setattr(
+        "demo.harness_compile._read_verified_static_validation_bytes",
+        observe_read,
+    )
+
+    with pytest.raises(WorkbenchCompileAuthorityError):
+        workbench.static_validation_preview(run_id=run_id)
+    assert reads == 0
+
+
+@pytest.mark.parametrize("mutation", ["missing", "same_size", "symlink", "fifo"])
+def test_static_validation_preview_fails_closed_for_a_replaced_cas_object(
+    mutation: str,
+    tmp_path: Path,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    report_ref = Text2EnvCompileOutput.model_validate(persisted.output).static_validation
+    path = application.resolve_artifact(report_ref)
+    original = path.read_bytes()
+    if mutation == "missing":
+        path.unlink()
+    elif mutation == "same_size":
+        path.write_bytes(bytes(byte ^ 0xFF for byte in original))
+    elif mutation == "symlink":
+        target = path.with_name(f"{path.name}.verified")
+        path.rename(target)
+        path.symlink_to(target)
+    else:
+        path.unlink()
+        os.mkfifo(path)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.static_validation_preview(run_id=run_id)
+
+
+def test_static_validation_preview_rechecks_the_same_descriptor_during_read(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    report_ref = Text2EnvCompileOutput.model_validate(persisted.output).static_validation
+    path = application.resolve_artifact(report_ref)
+    original = path.read_bytes()
+    real_read = os.read
+    changed = False
+
+    def change_after_first_read(descriptor: int, size: int) -> bytes:
+        nonlocal changed
+        chunk = real_read(descriptor, size)
+        if chunk and not changed:
+            changed = True
+            path.write_bytes(original + b" " * (262_145 - len(original)))
+        return chunk
+
+    monkeypatch.setattr("demo.harness_compile.os.read", change_after_first_read)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.static_validation_preview(run_id=run_id)
+    assert changed is True
+
+
+def test_static_validation_reader_rejects_oversize_even_when_called_directly(
+    tmp_path: Path,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    persisted = application.run_state(UUID(submission["run_id"]))
+    assert persisted is not None
+    ref = Text2EnvCompileOutput.model_validate(persisted.output).static_validation
+    path = application.resolve_artifact(ref)
+    oversize = ref.model_copy(update={"bytes": 262_145})
+
+    with pytest.raises(WorkbenchCompileStaticValidationTooLargeError):
+        harness_compile_module._read_verified_static_validation_bytes(  # noqa: SLF001
+            path=path,
+            ref=oversize,
+        )
+
+
+@pytest.mark.parametrize("flag", ["O_NOFOLLOW", "O_NONBLOCK"])
+def test_static_validation_reader_fails_closed_without_required_descriptor_flags(
+    flag: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    persisted = application.run_state(UUID(submission["run_id"]))
+    assert persisted is not None
+    ref = Text2EnvCompileOutput.model_validate(persisted.output).static_validation
+    path = application.resolve_artifact(ref)
+    monkeypatch.delattr(harness_compile_module.os, flag)
+
+    with pytest.raises(ValueError, match="required descriptor flags are unavailable"):
+        harness_compile_module._read_verified_static_validation_bytes(  # noqa: SLF001
+            path=path,
+            ref=ref,
+        )
+
+
+@pytest.mark.parametrize("replacement", ["directory", "wrong_size", "wrong_digest"])
+def test_static_validation_preview_rejects_a_non_verified_cas_leaf(
+    replacement: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    persisted = application.run_state(UUID(submission["run_id"]))
+    assert persisted is not None
+    ref = Text2EnvCompileOutput.model_validate(persisted.output).static_validation
+    original = application.resolve_artifact(ref).read_bytes()
+    replacement_path = tmp_path / "replacement-static-validation"
+    if replacement == "directory":
+        replacement_path.mkdir()
+    elif replacement == "wrong_size":
+        replacement_path.write_bytes(b"x")
+    else:
+        replacement_path.write_bytes(bytes(byte ^ 0xFF for byte in original))
+    monkeypatch.setattr(
+        "demo.harness_compile._static_validation_cas_path",
+        lambda **_kwargs: replacement_path,
+    )
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.static_validation_preview(run_id=UUID(submission["run_id"]))
+
+
+def test_static_validation_preview_rejects_a_short_read_with_stable_metadata(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, _ = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    monkeypatch.setattr("demo.harness_compile.os.read", lambda _descriptor, _size: b"")
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.static_validation_preview(run_id=UUID(submission["run_id"]))
+
+
+def test_static_validation_preview_rejects_coherent_authority_drift_after_read(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, _ = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    stable = workbench._terminal_authority(run_id)  # noqa: SLF001
+    drifted = replace(
+        stable,
+        persisted=stable.persisted.model_copy(update={"started_at": stable.persisted.ended_at}),
+    )
+    reads = iter((stable, drifted))
+    monkeypatch.setattr(workbench, "_terminal_authority", lambda _run_id: next(reads))
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="changed during"):
+        workbench.static_validation_preview(run_id=run_id)
+
+
+def test_static_validation_preview_normalizes_post_read_run_deletion(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, _ = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    stable = workbench._terminal_authority(run_id)  # noqa: SLF001
+    reads = iter((stable, WorkbenchCompileRunNotFoundError("run deleted")))
+
+    def authority_then_deleted(_run_id: UUID):
+        result = next(reads)
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+    monkeypatch.setattr(workbench, "_terminal_authority", authority_then_deleted)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="changed during"):
+        workbench.static_validation_preview(run_id=run_id)
+
+
+def test_static_validation_preview_accepts_the_exact_byte_and_check_limits(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    document = json.loads(application.resolve_artifact(output.static_validation).read_bytes())
+    document["checks"].extend(
+        {
+            "name": f"boundary_check_{index:03d}",
+            "status": "pass",
+            "evidence": None,
+        }
+        for index in range(162)
+    )
+    encoded = json.dumps(document).encode("utf-8")
+    assert len(encoded) < 262_144
+    payload = encoded + b" " * (262_144 - len(encoded))
+    _install_static_validation_payload_authority(
+        application=application,
+        run_id=run_id,
+        payload=payload,
+        monkeypatch=monkeypatch,
+    )
+
+    preview = workbench.static_validation_preview(run_id=run_id)
+
+    assert preview["artifact"]["bytes"] == "262144"
+    assert preview["validation"]["counts"] == {
+        "checks": 169,
+        "pass": 168,
+        "fail": 0,
+        "not_run": 1,
+    }
+
+
+def test_static_validation_preview_reconfirms_authority_after_all_cas_reads(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    stable = application.run_state(run_id)
+    assert stable is not None
+    drifted = stable.model_copy(update={"attempt": 0})
+    real_run_state = application.run_state
+    real_report_read = harness_compile_module._read_verified_static_validation_bytes  # noqa: SLF001
+    real_scene_read = harness_compile_module._read_verified_scene_bytes  # noqa: SLF001
+    real_resolved_read = harness_compile_module._read_verified_resolved_scene_bytes  # noqa: SLF001
+    state_reads = 0
+    report_reads = 0
+    scene_reads = 0
+    resolved_reads = 0
+
+    def drift_after_first_authority(_run_id):
+        nonlocal state_reads
+        state_reads += 1
+        return stable if state_reads <= 2 else drifted
+
+    def observe_report_read(*, path: Path, ref: ArtifactRef) -> bytes:
+        nonlocal report_reads
+        report_reads += 1
+        return real_report_read(path=path, ref=ref)
+
+    def observe_scene_read(*, path: Path, ref: ArtifactRef) -> bytes:
+        nonlocal scene_reads
+        scene_reads += 1
+        return real_scene_read(path=path, ref=ref)
+
+    def observe_resolved_read(*, path: Path, ref: ArtifactRef) -> bytes:
+        nonlocal resolved_reads
+        resolved_reads += 1
+        return real_resolved_read(path=path, ref=ref)
+
+    monkeypatch.setattr(application, "run_state", drift_after_first_authority)
+    monkeypatch.setattr(
+        "demo.harness_compile._read_verified_static_validation_bytes",
+        observe_report_read,
+    )
+    monkeypatch.setattr(
+        "demo.harness_compile._read_verified_scene_bytes",
+        observe_scene_read,
+    )
+    monkeypatch.setattr(
+        "demo.harness_compile._read_verified_resolved_scene_bytes",
+        observe_resolved_read,
+    )
+
+    with pytest.raises(WorkbenchCompileAuthorityError):
+        workbench.static_validation_preview(run_id=run_id)
+    assert report_reads == 1
+    assert scene_reads == 1
+    assert resolved_reads == 1
+    assert real_run_state(run_id) == stable
+
+
+def test_static_validation_preview_never_reuses_changed_cas_content(
+    tmp_path: Path,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    report_ref = Text2EnvCompileOutput.model_validate(persisted.output).static_validation
+
+    assert workbench.static_validation_preview(run_id=run_id)["validation"]["status"] == (
+        "incomplete"
+    )
+    path = application.resolve_artifact(report_ref)
+    original = path.read_bytes()
+    path.write_bytes(bytes(byte ^ 0xFF for byte in original))
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
+        workbench.static_validation_preview(run_id=run_id)

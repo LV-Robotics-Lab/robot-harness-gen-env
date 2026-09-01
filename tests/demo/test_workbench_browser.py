@@ -219,6 +219,7 @@ class _JournalSubmittingWorkbench:
         self.submissions: list[tuple[str, int]] = []
         self.audit_runs: list[UUID] = []
         self.preview_runs: list[UUID] = []
+        self.static_validation_preview_runs: list[UUID] = []
 
     def page(self, **kwargs):
         return self.feed.page(**kwargs)
@@ -291,6 +292,38 @@ class _JournalSubmittingWorkbench:
             event_count=len(page["events"]),
             terminal_event_id=page["last_event_id"],
         )
+
+    def static_validation_preview(self, *, run_id: UUID):
+        assert run_id == self.run_id
+        self.static_validation_preview_runs.append(run_id)
+        page = self.page(run_id=run_id, limit=500)
+        return {
+            "schema_version": "harness.workbench_compile_static_validation_preview.v1",
+            "run": {
+                "run_id": str(run_id),
+                "invocation_digest": "a" * 64,
+                "event_count": len(page["events"]),
+                "terminal_event_id": page["last_event_id"],
+            },
+            "artifact": _compile_artifact_rows()[4],
+            "validation": {
+                "claim_scope": "committed_report_content_and_binding_only",
+                "mode": "compile_static_without_runtime_evidence",
+                "scene_id": "stacked_can_preview",
+                "resolved_scene_sha256": "9" * 64,
+                "status": "incomplete",
+                "counts": {"checks": 7, "pass": 6, "fail": 0, "not_run": 1},
+                "checks": [
+                    {"name": "workspace_bounds:plate", "status": "pass"},
+                    {"name": "table_support_height:plate", "status": "pass"},
+                    {"name": "real_asset_files:plate", "status": "pass"},
+                    {"name": "relation:on_table:plate", "status": "pass"},
+                    {"name": "resolved_only_roundtrip", "status": "pass"},
+                    {"name": "package_manifest", "status": "pass"},
+                    {"name": "runtime_evidence", "status": "not_run"},
+                ],
+            },
+        }
 
 
 class _UnboundSubmittingWorkbench:
@@ -672,6 +705,721 @@ def test_browser_offers_scene_preview_after_audit_without_fetching_it_automatica
     assert 'aria-expanded="false"' in dom
     assert preview_paths == []
     assert workbench.preview_runs == []
+
+
+def test_browser_offers_static_validation_preview_without_fetching_it_automatically(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+    preview_paths: list[str] = []
+
+    @app.before_request
+    def observe_static_validation_preview_requests():
+        if request.path.endswith("/static-validation-preview"):
+            preview_paths.append(request.path)
+
+    @app.after_request
+    def compile_and_wait_for_the_static_validation_offer(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const preview = document.querySelector(
+                        '#harness-static-validation-button'
+                      );
+                      while (!preview || preview.hidden) await pause();
+                      document.body.dataset.staticValidationOffered = 'true';
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=4_000)
+
+    assert 'data-static-validation-offered="true"' in dom
+    assert 'id="harness-static-validation-button"' in dom
+    assert 'aria-expanded="false"' in dom
+    assert preview_paths == []
+    assert workbench.static_validation_preview_runs == []
+
+
+def test_browser_renders_an_accessible_incomplete_static_validation_preview_after_click(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def compile_and_open_the_static_validation_preview(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const button = document.querySelector(
+                        '#harness-static-validation-button'
+                      );
+                      while (button.hidden) await pause();
+                      button.click();
+                      const panel = document.querySelector(
+                        '#harness-static-validation-panel'
+                      );
+                      while (panel.hidden || button.disabled) await pause();
+                      document.body.dataset.staticValidationRendered = 'true';
+                      document.body.dataset.staticValidationFocused = String(
+                        document.activeElement
+                          === document.querySelector('#harness-static-validation-title')
+                      );
+                      document.body.dataset.staticValidationAccessible = String(
+                        button.getAttribute('aria-expanded') === 'true'
+                          && panel.getAttribute('aria-busy') === 'false'
+                          && panel.getAttribute('aria-describedby')
+                            === 'harness-static-validation-boundary'
+                      );
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=4_000)
+
+    assert workbench.static_validation_preview_runs == [workbench.run_id]
+    assert 'data-static-validation-rendered="true"' in dom
+    assert 'data-static-validation-focused="true"' in dom
+    assert 'data-static-validation-accessible="true"' in dom
+    assert 'id="harness-static-validation-panel"' in dom
+    assert 'id="harness-static-validation-panel" hidden' not in dom
+    assert "stacked_can_preview" in dom
+    assert "workspace_bounds:plate" in dom
+    assert "通过" in dom
+    assert "runtime_evidence" in dom
+    assert "未运行" in dom
+    assert "incomplete" in dom
+    assert "未重跑 validator" in dom
+    assert "未使用物理回放" in dom
+    assert "不作发布判断" in dom
+    assert '"evidence"' not in dom
+    assert "artifact://" not in dom
+
+
+def test_browser_accepts_the_full_server_valid_static_validation_check_budget(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    original_preview = workbench.static_validation_preview
+
+    def full_budget_preview(*, run_id: UUID):
+        preview = original_preview(run_id=run_id)
+        additional = [
+            {"name": f"future_check_{index:03d}", "status": "pass"} for index in range(166)
+        ]
+        preview["validation"]["counts"] = {
+            "checks": 169,
+            "pass": 168,
+            "fail": 0,
+            "not_run": 1,
+        }
+        preview["validation"]["checks"] = [
+            {"name": "runtime_evidence", "status": "not_run"},
+            *additional[:83],
+            {"name": "package_manifest", "status": "pass"},
+            *additional[83:],
+            {"name": "resolved_only_roundtrip", "status": "pass"},
+        ]
+        return preview
+
+    monkeypatch.setattr(workbench, "static_validation_preview", full_budget_preview)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def compile_and_open_the_full_budget_static_validation(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const button = document.querySelector(
+                        '#harness-static-validation-button'
+                      );
+                      const panel = document.querySelector(
+                        '#harness-static-validation-panel'
+                      );
+                      const checks = document.querySelector(
+                        '#harness-static-validation-checks'
+                      );
+                      while (button.hidden) await pause();
+                      button.click();
+                      while (button.disabled) await pause();
+                      const names = [...checks.querySelectorAll('strong')]
+                        .map((element) => element.textContent);
+                      document.body.dataset.fullBudgetStaticValidationAccepted = String(
+                        !panel.hidden
+                          && checks.childElementCount === 169
+                          && names[0] === 'runtime_evidence'
+                          && names[84] === 'package_manifest'
+                          && names[168] === 'resolved_only_roundtrip'
+                      );
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=5_000)
+
+    assert workbench.static_validation_preview_runs == [workbench.run_id]
+    assert 'data-full-budget-static-validation-accepted="true"' in dom
+    assert "future_check_165" in dom
+    assert "编译期检查预览无法验证。" not in dom
+
+
+def test_browser_renders_a_failed_committed_static_validation_without_overclaiming(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    original_preview = workbench.static_validation_preview
+
+    def failed_preview(*, run_id: UUID):
+        preview = original_preview(run_id=run_id)
+        preview["validation"]["status"] = "fail"
+        preview["validation"]["counts"] = {
+            "checks": 7,
+            "pass": 5,
+            "fail": 1,
+            "not_run": 1,
+        }
+        preview["validation"]["checks"][0]["status"] = "fail"
+        return preview
+
+    monkeypatch.setattr(workbench, "static_validation_preview", failed_preview)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def compile_and_open_the_failed_static_validation(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const button = document.querySelector(
+                        '#harness-static-validation-button'
+                      );
+                      while (button.hidden) await pause();
+                      button.click();
+                      const panel = document.querySelector(
+                        '#harness-static-validation-panel'
+                      );
+                      while (panel.hidden || button.disabled) await pause();
+                      document.body.dataset.staticValidationFailRendered = String(
+                        panel.textContent.includes('fail')
+                          && panel.textContent.includes('失败')
+                          && panel.textContent.includes('workspace_bounds:plate')
+                      );
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=4_000)
+
+    assert workbench.static_validation_preview_runs == [workbench.run_id]
+    assert 'data-static-validation-fail-rendered="true"' in dom
+    assert "检测到 1 项失败" in dom
+    assert "报告内容身份、结构及与当前审计的绑定已核对" in dom
+    assert "未重跑 validator" in dom
+    assert "未执行物理回放" in dom
+    assert "不作发布判断" in dom
+
+
+def test_browser_rejects_hostile_or_mismatched_static_validation_previews(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    original_preview = workbench.static_validation_preview
+    hostile = (
+        '</strong><img id="static-validation-xss" src="x" '
+        "onerror=\"document.body.dataset.staticValidationXssExecuted='true'\">"
+        "/tmp/private-validation"
+    )
+
+    def hostile_preview(*, run_id: UUID):
+        preview = original_preview(run_id=run_id)
+        case = len(workbench.static_validation_preview_runs) - 1
+        if case == 0:
+            preview["evidence"] = {"path": "/tmp/private-evidence"}
+        elif case == 1:
+            preview["run"]["run_id"] = "82345678-1234-4234-9234-123456789abc"
+        elif case == 2:
+            preview["run"]["terminal_event_id"] = "999"
+        elif case == 3:
+            preview["artifact"]["sha256"] = "7" * 64
+        elif case == 4:
+            preview["artifact"]["bindings"][0]["role"] = "scene_spec"
+        elif case == 5:
+            preview["validation"]["claim_scope"] = "validator_rerun"
+        elif case == 6:
+            preview["validation"]["mode"] = "physical_replay"
+        elif case == 7:
+            preview["validation"]["checks"][0]["name"] = hostile
+        elif case == 8:
+            preview["validation"]["checks"][1]["name"] = "workspace_bounds:plate"
+        elif case == 9:
+            preview["validation"]["counts"]["checks"] = True
+        elif case == 10:
+            preview["validation"]["counts"]["pass"] = 5
+        elif case == 11:
+            preview["validation"]["checks"][5]["name"] = "package_manifest_v2"
+        elif case == 12:
+            preview["validation"]["checks"] = [
+                {"name": f"check_{index}", "status": "pass"} for index in range(170)
+            ]
+            preview["validation"]["counts"] = {
+                "checks": 170,
+                "pass": 169,
+                "fail": 0,
+                "not_run": 1,
+            }
+        elif case == 13:
+            preview["validation"]["checks"][-1]["status"] = "pass"
+            preview["validation"]["counts"] = {
+                "checks": 7,
+                "pass": 7,
+                "fail": 0,
+                "not_run": 0,
+            }
+        elif case == 14:
+            preview["validation"]["resolved_scene_sha256"] = "file:///tmp/resolved"
+        else:
+            preview["validation"]["unexpected"] = "/tmp/private-field"
+        return preview
+
+    monkeypatch.setattr(workbench, "static_validation_preview", hostile_preview)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def compile_and_reject_each_hostile_static_validation(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const button = document.querySelector(
+                        '#harness-static-validation-button'
+                      );
+                      const panel = document.querySelector(
+                        '#harness-static-validation-panel'
+                      );
+                      const message = document.querySelector(
+                        '#harness-static-validation-message'
+                      );
+                      const summary = document.querySelector(
+                        '#harness-static-validation-summary'
+                      );
+                      const checks = document.querySelector(
+                        '#harness-static-validation-checks'
+                      );
+                      while (button.hidden) await pause();
+                      let rejected = 0;
+                      for (let index = 0; index < 16; index += 1) {
+                        button.click();
+                        while (button.disabled) await pause();
+                        if (panel.hidden
+                            && summary.childElementCount === 0
+                            && checks.childElementCount === 0
+                            && message.textContent === '编译期检查预览无法验证。'
+                            && document.querySelector('#static-validation-xss') === null) {
+                          rejected += 1;
+                        }
+                      }
+                      document.body.dataset.hostileStaticValidationRejected = String(rejected);
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=6_000)
+
+    assert workbench.static_validation_preview_runs == [workbench.run_id] * 16
+    assert 'data-hostile-static-validation-rejected="16"' in dom
+    assert "/tmp/private-validation" not in dom
+    assert "/tmp/private-evidence" not in dom
+    assert "data-static-validation-xss-executed" not in dom
+
+
+@pytest.mark.parametrize(
+    "wire_case",
+    [
+        "oversized",
+        "wrong_content_type",
+        "utf8_bom",
+        "invalid_utf8",
+        "invalid_json",
+        "non_2xx",
+    ],
+)
+def test_browser_static_validation_fails_closed_on_malformed_wire_responses(
+    wire_case: str,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+    preview_path = f"/api/harness/compile-runs/{workbench.run_id}/static-validation-preview"
+    observed_requests: list[tuple[str, str, bytes, str | None]] = []
+
+    @app.before_request
+    def observe_static_validation_request_boundary():
+        if request.path.endswith("/static-validation-preview"):
+            observed_requests.append(
+                (request.method, request.path, request.query_string, request.headers.get("Accept"))
+            )
+
+    @app.after_request
+    def corrupt_the_static_validation_wire_response(response):
+        if request.path != preview_path or response.status_code != 200:
+            return response
+        response.direct_passthrough = False
+        valid_payload = response.get_data()
+        status_code = 200
+        content_type = "application/json"
+        payload = valid_payload
+        if wire_case == "oversized":
+            payload = b'{"injected":"/tmp/private-wire","padding":"' + b"x" * 262_200 + b'"}'
+        elif wire_case == "wrong_content_type":
+            content_type = "text/plain; charset=utf-8"
+        elif wire_case == "utf8_bom":
+            payload = b"\xef\xbb\xbf" + valid_payload
+        elif wire_case == "invalid_utf8":
+            payload = b"\xff" + valid_payload
+        elif wire_case == "invalid_json":
+            payload = b'{"injected":"/tmp/private-wire"'
+        else:
+            status_code = 503
+        response.set_data(payload)
+        response.status_code = status_code
+        response.headers["Content-Type"] = content_type
+        return response
+
+    @app.after_request
+    def compile_and_request_the_corrupt_static_validation(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const button = document.querySelector(
+                        '#harness-static-validation-button'
+                      );
+                      const panel = document.querySelector(
+                        '#harness-static-validation-panel'
+                      );
+                      const summary = document.querySelector(
+                        '#harness-static-validation-summary'
+                      );
+                      const checks = document.querySelector(
+                        '#harness-static-validation-checks'
+                      );
+                      const message = document.querySelector(
+                        '#harness-static-validation-message'
+                      );
+                      while (button.hidden) await pause();
+                      button.click();
+                      while (button.disabled) await pause();
+                      document.body.dataset.malformedStaticValidationRejected = String(
+                        panel.hidden
+                          && summary.childElementCount === 0
+                          && checks.childElementCount === 0
+                          && message.textContent === '编译期检查预览无法验证。'
+                      );
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=4_000)
+
+    assert observed_requests == [("GET", preview_path, b"", "application/json")]
+    assert workbench.static_validation_preview_runs == [workbench.run_id]
+    assert 'data-malformed-static-validation-rejected="true"' in dom
+    assert "编译期检查预览无法验证。" in dom
+    assert "stacked_can_preview" not in dom
+    assert "/tmp/private-wire" not in dom
+
+
+def test_browser_aborts_and_discards_late_static_validation_after_filter_change(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+    preview_started = threading.Event()
+    release_preview = threading.Event()
+
+    @app.before_request
+    def delay_static_validation_preview():
+        if request.path.endswith("/static-validation-preview"):
+            preview_started.set()
+            assert release_preview.wait(timeout=5)
+
+    @app.get("/__test__/wait-static-validation-preview")
+    def wait_for_static_validation_preview():
+        assert preview_started.wait(timeout=5)
+        return "", 204
+
+    @app.get("/__test__/release-static-validation-preview")
+    def release_static_validation_preview_response():
+        release_preview.set()
+        return "", 204
+
+    @app.after_request
+    def compile_then_change_filter_during_static_validation(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const button = document.querySelector(
+                        '#harness-static-validation-button'
+                      );
+                      while (button.hidden) await pause();
+                      button.click();
+                      await fetch('/__test__/wait-static-validation-preview');
+                      selectHarnessRun('');
+                      await fetch('/__test__/release-static-validation-preview');
+                      await pause();
+                      const panel = document.querySelector(
+                        '#harness-static-validation-panel'
+                      );
+                      const summary = document.querySelector(
+                        '#harness-static-validation-summary'
+                      );
+                      const checks = document.querySelector(
+                        '#harness-static-validation-checks'
+                      );
+                      document.body.dataset.staleStaticValidationDiscarded = String(
+                        panel.hidden
+                          && button.hidden
+                          && summary.childElementCount === 0
+                          && checks.childElementCount === 0
+                      );
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=5_000)
+
+    assert preview_started.is_set()
+    assert release_preview.is_set()
+    assert workbench.static_validation_preview_runs == [workbench.run_id]
+    assert 'data-stale-static-validation-discarded="true"' in dom
+    assert "stacked_can_preview" not in dom
+
+
+def test_browser_close_clears_static_validation_and_reopen_refetches_without_cache(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def compile_open_close_and_reopen_static_validation(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const button = document.querySelector(
+                        '#harness-static-validation-button'
+                      );
+                      const close = document.querySelector(
+                        '#harness-static-validation-close'
+                      );
+                      const panel = document.querySelector(
+                        '#harness-static-validation-panel'
+                      );
+                      const summary = document.querySelector(
+                        '#harness-static-validation-summary'
+                      );
+                      const checks = document.querySelector(
+                        '#harness-static-validation-checks'
+                      );
+                      while (button.hidden) await pause();
+                      button.click();
+                      while (panel.hidden || button.disabled) await pause();
+                      close.click();
+                      document.body.dataset.staticValidationCloseCleared = String(
+                        panel.hidden
+                          && summary.childElementCount === 0
+                          && checks.childElementCount === 0
+                          && button.getAttribute('aria-expanded') === 'false'
+                      );
+                      document.body.dataset.staticValidationCloseFocusedSource = String(
+                        document.activeElement === button
+                      );
+                      button.click();
+                      while (panel.hidden || button.disabled) await pause();
+                      document.body.dataset.staticValidationReopened = 'true';
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=5_000)
+
+    assert workbench.static_validation_preview_runs == [workbench.run_id, workbench.run_id]
+    assert 'data-static-validation-close-cleared="true"' in dom
+    assert 'data-static-validation-close-focused-source="true"' in dom
+    assert 'data-static-validation-reopened="true"' in dom
+    assert "stacked_can_preview" in dom
+
+
+def test_browser_does_not_offer_an_oversized_static_validation_artifact(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    original_page = workbench.page
+    original_audit = workbench.audit
+
+    def oversized_page(**kwargs):
+        page = original_page(**kwargs)
+        for envelope in page["events"]:
+            for artifact in envelope["event"]["artifact_refs"]:
+                if artifact["sha256"] == "5" * 64:
+                    artifact["bytes"] = 262_145
+        return page
+
+    def oversized_audit(*, run_id: UUID):
+        audit = original_audit(run_id=run_id)
+        audit["artifacts"][4]["bytes"] = "262145"
+        return audit
+
+    monkeypatch.setattr(workbench, "page", oversized_page)
+    monkeypatch.setattr(workbench, "audit", oversized_audit)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def compile_and_wait_for_the_oversized_static_validation_audit(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    """
+                    <script>
+                    (async () => {
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      document.querySelector('#harness-compile-button').click();
+                      const panel = document.querySelector('#harness-audit-panel');
+                      while (panel.hidden) await pause();
+                      document.body.dataset.oversizedStaticValidationAuditReady = 'true';
+                      document.body.dataset.oversizedStaticValidationHidden = String(
+                        document.querySelector('#harness-static-validation-button').hidden
+                      );
+                    })();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile", virtual_time_budget_ms=4_000)
+
+    assert 'data-oversized-static-validation-audit-ready="true"' in dom
+    assert 'data-oversized-static-validation-hidden="true"' in dom
+    assert "262145 bytes" in dom
+    assert workbench.static_validation_preview_runs == []
 
 
 def test_browser_fetches_and_renders_a_verified_scene_preview_only_after_click(

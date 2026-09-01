@@ -143,12 +143,37 @@ abort/递增 generation 并清空内容；预览不进缓存、不自动重试�
 `tests/demo` 为 232 passed，其中 47 项真 Chrome；相邻 Application/Event journal 为 51 passed；
 `demo/harness_compile.py` 374 statements / 156 branches 全覆盖。
 
+A051 把同一模式收紧后用于唯一 `output/static_validation`：
+`WorkbenchCompile.static_validation_preview(run_id)` 与固定
+`GET /api/harness/compile-runs/<canonical-v4-uuid>/static-validation-preview` 只接受 succeeded compile
+中 media/schema 精确为 `application/json` / `robotwin.scene_validation.v1` 的 binding。声明超过
+262,144 bytes 会在 CAS 定位前拒绝；用于内容绑定的 ResolvedSceneSpec 也必须是 JSON 且不超过
+1,048,576 bytes。两份固定 digest leaf 都通过同 FD 的 `O_NOFOLLOW|O_NONBLOCK`、regular `fstat`、
+cap+1 读取、前后 identity、精确大小和 SHA-256 复核。报告必须是严格 UTF-8、无 BOM/重复键/非有限
+数、深度有界且 exact shape；ResolvedSceneSpec 同样严格解析，并与 canonical typed model 精确一致。
+服务端限制 checks 最多 169 项，要求唯一安全名称、严格 status 并重算状态/计数；恰有一个
+`runtime_evidence:not_run`（`required=false`），`package_manifest` 与 `resolved_only_roundtrip` 均为
+pass。服务端重算 resolved digest 并与报告、EnvironmentPackage 的 package/resolved digest 精确相等；
+resolved 的 request、scene、seed、frame、unit、workspace、relations 和 source SceneSpec digest 还
+逐项绑定已验真的 SceneSpec。三份固定 CAS 内容读完后再读一次 terminal authority。读取过程只验证
+既有报告，不重跑 validator。
+
+响应只投影 claim scope/mode、scene id、resolved digest、状态/计数及 check name/status；报告里的
+`evidence`、request、原始 JSON、path、URI 和 locator 都不进入浏览器。入口只有在 audit v2 精确绑定
+唯一且未超限的 static-validation artifact 后才显示，并只响应用户点击；run/filter/feed/audit 变化或
+关闭面板会 abort、递增 generation 并清空，预览不缓存、不自动重试，所有字段以 `textContent` 构建。
+checks 可按任意满足 ≤169、名称唯一和状态/计数/必需检查自洽的顺序到达，浏览器保持 wire 顺序显示，
+不耦合 validator 当前实现顺序。
+界面明确显示 `runtime_evidence:not_run` 意味着没有物理 replay，因此这份 compile-time 摘要不表示
+validate pass 或 publishable。
+
 这仍不是完整 Stage 7：Event Timeline 仍是唯一 operations authority，审计面板不复制或推演操作，也
-没有通用 artifact 内容 viewer、下载接口或可编辑依赖图；唯一内容入口只是上述成功 SceneSpec 的固定
-字段投影。CAS 读取是当次大小/摘要复核，不声称文件系统不可变。没有拖拽、重排、预览自动重试、
+没有通用 artifact 内容 viewer、下载接口或可编辑依赖图；内容入口只有上述成功 SceneSpec 与静态验证
+报告的固定字段投影。CAS 读取是当次大小/摘要复核，不声称文件系统不可变。没有拖拽、重排、预览自动重试、
 replay、validate 或 System 2。
 compile `succeeded` 仍不表示物理 validation、资产 settle 或 publishable。A047/A048 的两份
-`harness.workbench_*`（含 A049 audit v2 与 A050 scene preview v1）都是工作台投影，不新增 Harness
+`harness.workbench_*`（含 A049 audit v2、A050 scene preview v1 与 A051 static-validation preview v1）
+都是工作台投影，不新增 Harness
 公共 schema snapshot；当前 17 份计数不变。
 
 Stage 5 的视觉评审状态是三态而非布尔值。在 `--run-smoke`/视觉评审路径中，只有 visual pass

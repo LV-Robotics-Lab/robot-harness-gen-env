@@ -241,6 +241,15 @@ button svg { width: 17px; height: 17px; stroke-width: 1.8; }
 .scene-preview-group h5 { margin: 0; font-size: 11px; }
 .scene-preview-list { margin: 7px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
 .scene-preview-list li { padding: 8px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; font: 11px/1.45 ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.static-validation-preview { border-left: 3px solid var(--signal); }
+.static-validation-boundary { margin: 12px 0 0; padding: 9px 10px; color: var(--muted); background: #f0f4ef; border: 1px solid var(--line); font-size: 11px; line-height: 1.5; }
+.static-validation-checks { margin: 14px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.static-validation-checks li { min-height: 36px; padding: 8px 0; display: grid; grid-template-columns: minmax(0, 1fr) max-content; align-items: center; gap: 12px; border-bottom: 1px solid var(--line); }
+.static-validation-checks strong { overflow-wrap: anywhere; font: 11px/1.45 ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.static-validation-status { font: 700 10px/1.4 ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.static-validation-status.pass { color: var(--signal-dark); }
+.static-validation-status.fail { color: var(--danger); }
+.static-validation-status.not_run { color: var(--warning); }
 
 .history-list { display: grid; border-top: 1px solid var(--line); }
 .history-item { width: 100%; min-height: 58px; justify-content: space-between; gap: 16px; padding: 10px 4px; color: inherit; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--line); }

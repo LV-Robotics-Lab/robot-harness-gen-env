@@ -15,7 +15,7 @@ from typing import Any, cast
 from uuid import UUID
 
 from demo.harness_feed import HarnessEventFeed, HarnessEventFeedCorruptionError
-from scene_gen.schema import SceneSpec
+from scene_gen.schema import ResolvedSceneSpec, SceneSpec
 from self_improving.harness.application import CompileApplication
 from self_improving.harness.event_journal import EventPage
 from self_improving.harness.registry import _invocation_digest
@@ -31,9 +31,16 @@ from self_improving.harness.schemas import (
 _SUBMISSION_SCHEMA = "harness.workbench_compile_submission.v1"
 _AUDIT_SCHEMA = "harness.workbench_compile_audit.v2"
 _SCENE_PREVIEW_SCHEMA = "harness.workbench_compile_scene_preview.v1"
+_STATIC_VALIDATION_PREVIEW_SCHEMA = "harness.workbench_compile_static_validation_preview.v1"
 _SCENE_SPEC_SCHEMA = "robotwin.scene_spec.v1"
+_STATIC_VALIDATION_SCHEMA = "robotwin.scene_validation.v1"
 _SCENE_PREVIEW_MAX_BYTES = 65_536
 _SCENE_PREVIEW_MAX_DEPTH = 64
+_RESOLVED_SCENE_BINDING_MAX_BYTES = 1_048_576
+_RESOLVED_SCENE_BINDING_MAX_DEPTH = 64
+_STATIC_VALIDATION_PREVIEW_MAX_BYTES = 262_144
+_STATIC_VALIDATION_PREVIEW_MAX_DEPTH = 64
+_STATIC_VALIDATION_PREVIEW_MAX_CHECKS = 169
 _COMPILE_SKILL_ID = "text2env.compile"
 _COMPILE_SKILL_VERSION = "1.0.0"
 _COMPILE_DEPENDENCY_VERSIONS = (
@@ -48,6 +55,9 @@ _SAFE_ARTIFACT_MEDIA_TYPE = re.compile(
     r"[A-Za-z0-9][A-Za-z0-9.+_-]{0,63}/[A-Za-z0-9][A-Za-z0-9.+_-]{0,63}"
 )
 _SAFE_ARTIFACT_SCHEMA = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}")
+_SAFE_SCENE_ID = re.compile(r"[a-z][a-z0-9_-]{0,95}")
+_SAFE_VALIDATION_CHECK_NAME = re.compile(r"[a-z][a-z0-9_]{0,63}(?::[a-z][a-z0-9_]{0,63}){0,3}")
+_SHA256 = re.compile(r"[0-9a-f]{64}")
 _JAVASCRIPT_SAFE_INTEGER_MAX = 9_007_199_254_740_991
 
 
@@ -75,6 +85,14 @@ class WorkbenchCompileSceneTooLargeError(ValueError):
     """The committed SceneSpec is outside the fixed preview size policy."""
 
 
+class WorkbenchCompileStaticValidationNotPreviewableError(LookupError):
+    """The terminal compile run has no successful static-validation output."""
+
+
+class WorkbenchCompileStaticValidationTooLargeError(ValueError):
+    """The committed static-validation report exceeds the preview size policy."""
+
+
 @dataclass(frozen=True)
 class _ArtifactAuthority:
     ref: ArtifactRef
@@ -89,6 +107,14 @@ class _TerminalCompileAuthority:
     typed_input: Text2EnvCompileInput | None
     typed_output: Text2EnvCompileOutput | None
     artifacts: tuple[_ArtifactAuthority, ...]
+
+
+@dataclass(frozen=True)
+class _StaticValidationReport:
+    scene_id: str
+    resolved_scene_sha256: str
+    status: str
+    checks: tuple[tuple[str, str], ...]
 
 
 class WorkbenchCompile:
@@ -270,6 +296,124 @@ class WorkbenchCompile:
                     )
                 ),
                 "scene": scene_projection,
+            }
+
+    def static_validation_preview(self, *, run_id: UUID) -> dict[str, Any]:
+        """Project a bounded committed static report without its raw evidence."""
+
+        if type(run_id) is not UUID:
+            raise WorkbenchCompileInputError("run_id must be a UUID")
+        with self._submit_lock:
+            authority = self._terminal_authority(run_id)
+            if (
+                authority.persisted.status is not RunStatus.SUCCEEDED
+                or authority.typed_input is None
+                or authority.typed_output is None
+                or authority.invocation is None
+            ):
+                raise WorkbenchCompileStaticValidationNotPreviewableError(
+                    "terminal compile run has no previewable static validation"
+                )
+            report_ref = authority.typed_output.static_validation
+            if (
+                report_ref.media_type != "application/json"
+                or report_ref.schema_version != _STATIC_VALIDATION_SCHEMA
+            ):
+                raise WorkbenchCompileAuthorityError(
+                    "terminal static validation failed integrity checks"
+                )
+            if report_ref.bytes > _STATIC_VALIDATION_PREVIEW_MAX_BYTES:
+                raise WorkbenchCompileStaticValidationTooLargeError(
+                    "terminal static validation exceeds the fixed preview size"
+                )
+            try:
+                report_path = _static_validation_cas_path(
+                    application=self._application,
+                    ref=report_ref,
+                )
+                payload = _read_verified_static_validation_bytes(
+                    path=report_path,
+                    ref=report_ref,
+                )
+                report = _parse_static_validation_report(payload)
+
+                scene_ref = authority.typed_output.scene_spec
+                if scene_ref.media_type != "application/json":
+                    raise ValueError("terminal SceneSpec content contract is invalid")
+                scene_path = _scene_cas_path(application=self._application, ref=scene_ref)
+                scene_payload = _read_verified_scene_bytes(path=scene_path, ref=scene_ref)
+                scene = _parse_scene_spec(scene_payload)
+                _verify_scene_bindings(
+                    scene=scene,
+                    typed_input=authority.typed_input,
+                    typed_output=authority.typed_output,
+                )
+
+                resolved_ref = authority.typed_output.resolved_scene
+                if (
+                    resolved_ref.media_type != "application/json"
+                    or resolved_ref.bytes > _RESOLVED_SCENE_BINDING_MAX_BYTES
+                ):
+                    raise ValueError("terminal ResolvedSceneSpec content contract is invalid")
+                resolved_path = _resolved_scene_cas_path(
+                    application=self._application,
+                    ref=resolved_ref,
+                )
+                resolved_payload = _read_verified_resolved_scene_bytes(
+                    path=resolved_path,
+                    ref=resolved_ref,
+                )
+                resolved = _parse_resolved_scene(resolved_payload)
+                _verify_static_validation_bindings(
+                    report=report,
+                    scene=scene,
+                    resolved=resolved,
+                    typed_output=authority.typed_output,
+                )
+            except Exception as error:
+                raise WorkbenchCompileAuthorityError(
+                    "terminal static validation failed integrity checks"
+                ) from error
+
+            try:
+                confirmed = self._terminal_authority(run_id)
+            except WorkbenchCompileRunNotFoundError as error:
+                raise WorkbenchCompileAuthorityError(
+                    "terminal compile authority changed during static-validation preview"
+                ) from error
+            if not _same_terminal_authority(authority, confirmed):
+                raise WorkbenchCompileAuthorityError(
+                    "terminal compile authority changed during static-validation preview"
+                )
+            checks = [{"name": name, "status": status} for name, status in report.checks]
+            return {
+                "schema_version": _STATIC_VALIDATION_PREVIEW_SCHEMA,
+                "run": {
+                    "run_id": str(authority.persisted.run_id),
+                    "invocation_digest": authority.invocation.invocation_digest,
+                    "event_count": len(authority.persisted.events),
+                    "terminal_event_id": str(authority.history.last_event_id),
+                },
+                "artifact": _artifact_projection(
+                    _ArtifactAuthority(
+                        ref=report_ref,
+                        bindings=(("output", "static_validation"),),
+                    )
+                ),
+                "validation": {
+                    "claim_scope": "committed_report_content_and_binding_only",
+                    "mode": "compile_static_without_runtime_evidence",
+                    "scene_id": report.scene_id,
+                    "resolved_scene_sha256": report.resolved_scene_sha256,
+                    "status": report.status,
+                    "counts": {
+                        "checks": len(checks),
+                        "pass": sum(item["status"] == "pass" for item in checks),
+                        "fail": sum(item["status"] == "fail" for item in checks),
+                        "not_run": sum(item["status"] == "not_run" for item in checks),
+                    },
+                    "checks": checks,
+                },
             }
 
     def _terminal_authority(self, run_id: UUID) -> _TerminalCompileAuthority:
@@ -634,6 +778,43 @@ def _read_verified_scene_bytes(*, path: Path, ref: ArtifactRef) -> bytes:
         raise WorkbenchCompileSceneTooLargeError(
             "terminal SceneSpec exceeds the fixed preview size"
         )
+    return _read_verified_artifact_bytes(
+        path=path,
+        ref=ref,
+        maximum_bytes=_SCENE_PREVIEW_MAX_BYTES,
+        label="SceneSpec",
+    )
+
+
+def _read_verified_resolved_scene_bytes(*, path: Path, ref: ArtifactRef) -> bytes:
+    return _read_verified_artifact_bytes(
+        path=path,
+        ref=ref,
+        maximum_bytes=_RESOLVED_SCENE_BINDING_MAX_BYTES,
+        label="ResolvedSceneSpec",
+    )
+
+
+def _read_verified_static_validation_bytes(*, path: Path, ref: ArtifactRef) -> bytes:
+    if ref.bytes > _STATIC_VALIDATION_PREVIEW_MAX_BYTES:
+        raise WorkbenchCompileStaticValidationTooLargeError(
+            "terminal static validation exceeds the fixed preview size"
+        )
+    return _read_verified_artifact_bytes(
+        path=path,
+        ref=ref,
+        maximum_bytes=_STATIC_VALIDATION_PREVIEW_MAX_BYTES,
+        label="static validation",
+    )
+
+
+def _read_verified_artifact_bytes(
+    *,
+    path: Path,
+    ref: ArtifactRef,
+    maximum_bytes: int,
+    label: str,
+) -> bytes:
     try:
         required_flags = os.O_NOFOLLOW | os.O_NONBLOCK
     except AttributeError as error:
@@ -643,11 +824,11 @@ def _read_verified_scene_bytes(*, path: Path, ref: ArtifactRef) -> bytes:
     try:
         before = os.fstat(descriptor)
         if not stat.S_ISREG(before.st_mode):
-            raise ValueError("terminal SceneSpec is not a regular CAS object")
-        if before.st_size != ref.bytes or before.st_size > _SCENE_PREVIEW_MAX_BYTES:
-            raise ValueError("terminal SceneSpec byte count changed before preview")
+            raise ValueError(f"terminal {label} is not a regular CAS object")
+        if before.st_size != ref.bytes or before.st_size > maximum_bytes:
+            raise ValueError(f"terminal {label} byte count changed before preview")
         chunks: list[bytes] = []
-        remaining = _SCENE_PREVIEW_MAX_BYTES + 1
+        remaining = maximum_bytes + 1
         while remaining:
             chunk = os.read(descriptor, min(64 * 1024, remaining))
             if not chunk:
@@ -673,11 +854,11 @@ def _read_verified_scene_bytes(*, path: Path, ref: ArtifactRef) -> bytes:
             after.st_ctime_ns,
         )
         if before_identity != after_identity:
-            raise ValueError("terminal SceneSpec changed during preview")
-        if len(payload) != ref.bytes or len(payload) > _SCENE_PREVIEW_MAX_BYTES:
-            raise ValueError("terminal SceneSpec byte count changed during preview")
+            raise ValueError(f"terminal {label} changed during preview")
+        if len(payload) != ref.bytes or len(payload) > maximum_bytes:
+            raise ValueError(f"terminal {label} byte count changed during preview")
         if hashlib.sha256(payload).hexdigest() != ref.sha256:
-            raise ValueError("terminal SceneSpec digest changed during preview")
+            raise ValueError(f"terminal {label} digest changed during preview")
         return payload
     finally:
         os.close(descriptor)
@@ -685,6 +866,18 @@ def _read_verified_scene_bytes(*, path: Path, ref: ArtifactRef) -> bytes:
 
 def _scene_cas_path(*, application: CompileApplication, ref: ArtifactRef) -> Path:
     """Locate the fixed CAS leaf without invoking the unbounded legacy resolver."""
+
+    return application.artifact_root / "sha256" / ref.sha256[:2] / ref.sha256
+
+
+def _static_validation_cas_path(*, application: CompileApplication, ref: ArtifactRef) -> Path:
+    """Locate the fixed static-report CAS leaf without a legacy resolver."""
+
+    return application.artifact_root / "sha256" / ref.sha256[:2] / ref.sha256
+
+
+def _resolved_scene_cas_path(*, application: CompileApplication, ref: ArtifactRef) -> Path:
+    """Locate the fixed resolved-scene CAS leaf without a legacy resolver."""
 
     return application.artifact_root / "sha256" / ref.sha256[:2] / ref.sha256
 
@@ -730,6 +923,158 @@ def _parse_scene_spec(payload: bytes) -> SceneSpec:
         raise ValueError("terminal SceneSpec is invalid") from error
 
 
+def _parse_resolved_scene(payload: bytes) -> ResolvedSceneSpec:
+    text = payload.decode("utf-8")
+    if text.startswith("\ufeff"):
+        raise ValueError("terminal ResolvedSceneSpec must not contain a byte-order mark")
+
+    def object_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        value: dict[str, Any] = {}
+        for key, item in pairs:
+            if key in value:
+                raise ValueError("terminal ResolvedSceneSpec contains a duplicate JSON member")
+            value[key] = item
+        return value
+
+    def finite_float(value: str) -> float:
+        parsed = float(value)
+        if not math.isfinite(parsed):
+            raise ValueError("terminal ResolvedSceneSpec contains a non-finite number")
+        return parsed
+
+    def reject_constant(_value: str) -> None:
+        raise ValueError("terminal ResolvedSceneSpec contains a non-standard JSON constant")
+
+    try:
+        document = json.loads(
+            text,
+            object_pairs_hook=object_pairs,
+            parse_float=finite_float,
+            parse_constant=reject_constant,
+        )
+        if type(document) is not dict:
+            raise ValueError("terminal ResolvedSceneSpec root must be an object")
+        if _json_depth(document) > _RESOLVED_SCENE_BINDING_MAX_DEPTH:
+            raise ValueError("terminal ResolvedSceneSpec nesting is too deep")
+        resolved = ResolvedSceneSpec.model_validate(document)
+        if not _same_strict_json_value(document, resolved.canonical_dict()):
+            raise ValueError("terminal ResolvedSceneSpec JSON types or defaults are not canonical")
+        return resolved
+    except (RecursionError, TypeError, ValueError) as error:
+        raise ValueError("terminal ResolvedSceneSpec is invalid") from error
+
+
+def _parse_static_validation_report(payload: bytes) -> _StaticValidationReport:
+    text = payload.decode("utf-8")
+    if text.startswith("\ufeff"):
+        raise ValueError("terminal static validation must not contain a byte-order mark")
+
+    def object_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        value: dict[str, Any] = {}
+        for key, item in pairs:
+            if key in value:
+                raise ValueError("terminal static validation contains a duplicate JSON member")
+            value[key] = item
+        return value
+
+    def finite_float(value: str) -> float:
+        parsed = float(value)
+        if not math.isfinite(parsed):
+            raise ValueError("terminal static validation contains a non-finite number")
+        return parsed
+
+    def reject_constant(_value: str) -> None:
+        raise ValueError("terminal static validation contains a non-standard JSON constant")
+
+    try:
+        document = json.loads(
+            text,
+            object_pairs_hook=object_pairs,
+            parse_float=finite_float,
+            parse_constant=reject_constant,
+        )
+        if type(document) is not dict or set(document) != {
+            "schema_version",
+            "scene_id",
+            "resolved_scene_sha256",
+            "status",
+            "fail_count",
+            "not_run_count",
+            "checks",
+        }:
+            raise ValueError("terminal static validation root fields are invalid")
+        if _json_depth(document) > _STATIC_VALIDATION_PREVIEW_MAX_DEPTH:
+            raise ValueError("terminal static validation nesting is too deep")
+        if (
+            type(document["schema_version"]) is not str
+            or document["schema_version"] != _STATIC_VALIDATION_SCHEMA
+            or type(document["scene_id"]) is not str
+            or _SAFE_SCENE_ID.fullmatch(document["scene_id"]) is None
+            or type(document["resolved_scene_sha256"]) is not str
+            or _SHA256.fullmatch(document["resolved_scene_sha256"]) is None
+            or type(document["status"]) is not str
+            or document["status"] not in {"fail", "incomplete"}
+            or type(document["fail_count"]) is not int
+            or type(document["not_run_count"]) is not int
+            or type(document["checks"]) is not list
+            or len(document["checks"]) > _STATIC_VALIDATION_PREVIEW_MAX_CHECKS
+        ):
+            raise ValueError("terminal static validation field values are invalid")
+
+        checks: list[tuple[str, str]] = []
+        evidence_by_name: dict[str, Any] = {}
+        for item in document["checks"]:
+            if type(item) is not dict or set(item) != {"name", "status", "evidence"}:
+                raise ValueError("terminal static validation check fields are invalid")
+            name = item["name"]
+            status = item["status"]
+            if (
+                type(name) is not str
+                or _SAFE_VALIDATION_CHECK_NAME.fullmatch(name) is None
+                or type(status) is not str
+                or status not in {"pass", "fail", "not_run"}
+                or not _is_exact_json_value(item["evidence"])
+                or name in evidence_by_name
+            ):
+                raise ValueError("terminal static validation check is invalid")
+            checks.append((name, status))
+            evidence_by_name[name] = item["evidence"]
+
+        fail_count = sum(status == "fail" for _, status in checks)
+        not_run_count = sum(status == "not_run" for _, status in checks)
+        expected_status = "fail" if fail_count else "incomplete"
+        runtime_checks = [item for item in checks if item[0] == "runtime_evidence"]
+        if (
+            document["fail_count"] != fail_count
+            or document["not_run_count"] != not_run_count
+            or not_run_count != 1
+            or document["status"] != expected_status
+            or runtime_checks != [("runtime_evidence", "not_run")]
+            or type(evidence_by_name.get("runtime_evidence")) is not dict
+            or evidence_by_name["runtime_evidence"].keys() != {"required"}
+            or evidence_by_name["runtime_evidence"]["required"] is not False
+            or ("package_manifest", "pass") not in checks
+            or ("resolved_only_roundtrip", "pass") not in checks
+        ):
+            raise ValueError("terminal static validation summary is inconsistent")
+        return _StaticValidationReport(
+            scene_id=document["scene_id"],
+            resolved_scene_sha256=document["resolved_scene_sha256"],
+            status=document["status"],
+            checks=tuple(checks),
+        )
+    except (KeyError, RecursionError, TypeError, ValueError) as error:
+        raise ValueError("terminal static validation is invalid") from error
+
+
+def _is_exact_json_value(value: Any) -> bool:
+    if type(value) is dict:
+        return all(type(key) is str and _is_exact_json_value(item) for key, item in value.items())
+    if type(value) is list:
+        return all(_is_exact_json_value(item) for item in value)
+    return type(value) in {str, int, float, bool, type(None)}
+
+
 def _json_depth(value: Any, depth: int = 1) -> int:
     if isinstance(value, dict):
         return max((depth, *(_json_depth(item, depth + 1) for item in value.values())))
@@ -767,6 +1112,35 @@ def _verify_scene_bindings(
         or scene.digest() != package.scene_spec_sha256
     ):
         raise ValueError("terminal SceneSpec semantic bindings are invalid")
+
+
+def _verify_static_validation_bindings(
+    *,
+    report: _StaticValidationReport,
+    scene: SceneSpec,
+    resolved: ResolvedSceneSpec,
+    typed_output: Text2EnvCompileOutput,
+) -> None:
+    package = typed_output.environment_package
+    resolved_digests = {
+        report.resolved_scene_sha256,
+        package.package_id,
+        package.resolved_scene_sha256,
+        resolved.digest(),
+    }
+    if (
+        len(resolved_digests) != 1
+        or report.scene_id != scene.scene_id
+        or resolved.scene_id != scene.scene_id
+        or resolved.request != scene.request
+        or resolved.seed != scene.seed
+        or resolved.frame != scene.frame
+        or resolved.unit != scene.unit
+        or resolved.workspace != scene.workspace
+        or resolved.relations != scene.relations
+        or resolved.source_scene_spec_sha256 != scene.digest()
+    ):
+        raise ValueError("terminal static validation bindings are invalid")
 
 
 def _same_terminal_authority(

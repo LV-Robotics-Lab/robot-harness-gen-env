@@ -15,6 +15,8 @@ from demo.harness_compile import (
     WorkbenchCompileRunNotFoundError,
     WorkbenchCompileSceneNotPreviewableError,
     WorkbenchCompileSceneTooLargeError,
+    WorkbenchCompileStaticValidationNotPreviewableError,
+    WorkbenchCompileStaticValidationTooLargeError,
     WorkbenchCompileUnavailableError,
 )
 from demo.harness_feed import HarnessEventFeed
@@ -104,6 +106,7 @@ class _StubWorkbench:
         self.submissions: list[tuple[str, int]] = []
         self.audit_runs: list[UUID] = []
         self.scene_preview_runs: list[UUID] = []
+        self.static_validation_preview_runs: list[UUID] = []
 
     def submit(self, *, request: object, seed: object):
         if type(request) is not str or type(seed) is not int:
@@ -182,6 +185,39 @@ class _StubWorkbench:
                 "seed": 9,
                 "objects": [],
                 "relations": [],
+            },
+        }
+
+    def static_validation_preview(self, *, run_id: UUID):
+        self.static_validation_preview_runs.append(run_id)
+        return {
+            "schema_version": "harness.workbench_compile_static_validation_preview.v1",
+            "run": {
+                "run_id": str(run_id),
+                "invocation_digest": "a" * 64,
+                "event_count": 3,
+                "terminal_event_id": "7",
+            },
+            "artifact": {
+                "name": "validation_report",
+                "media_type": "application/json",
+                "schema_version": "robotwin.scene_validation.v1",
+                "sha256": "d" * 64,
+                "bytes": "321",
+                "bindings": [{"direction": "output", "role": "static_validation"}],
+            },
+            "validation": {
+                "claim_scope": "committed_report_content_and_binding_only",
+                "mode": "compile_static_without_runtime_evidence",
+                "scene_id": "can_on_plate",
+                "resolved_scene_sha256": "e" * 64,
+                "status": "incomplete",
+                "counts": {"checks": 3, "pass": 2, "fail": 0, "not_run": 1},
+                "checks": [
+                    {"name": "package_manifest", "status": "pass"},
+                    {"name": "resolved_only_roundtrip", "status": "pass"},
+                    {"name": "runtime_evidence", "status": "not_run"},
+                ],
             },
         }
 
@@ -485,6 +521,244 @@ def test_harness_compile_scene_preview_projects_the_configured_authority(
     assert "Accept-Ranges" not in response.headers
     assert "Content-Disposition" not in response.headers
     assert workbench.scene_preview_runs == [UUID(run_id)]
+
+
+def test_harness_compile_static_validation_preview_projects_the_configured_authority(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+    run_id = "12345678-1234-4234-9234-123456789abc"
+
+    response = app.test_client().get(
+        f"/api/harness/compile-runs/{run_id}/static-validation-preview"
+    )
+
+    assert response.status_code == 200
+    assert (
+        response.json["schema_version"] == "harness.workbench_compile_static_validation_preview.v1"
+    )
+    assert response.json["run"]["run_id"] == run_id
+    assert response.json["validation"]["status"] == "incomplete"
+    assert response.headers["Cache-Control"] == "no-store"
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert "ETag" not in response.headers
+    assert "Accept-Ranges" not in response.headers
+    assert "Content-Disposition" not in response.headers
+    assert workbench.static_validation_preview_runs == [UUID(run_id)]
+
+
+@pytest.mark.parametrize(
+    "suffix",
+    [
+        "not-a-uuid/static-validation-preview",
+        "12345678-1234-1234-9234-123456789abc/static-validation-preview",
+        "12345678-1234-4234-9234-123456789ABC/static-validation-preview",
+        "12345678123442349234123456789abc/static-validation-preview",
+        (
+            "12345678-1234-4234-9234-123456789abc/static-validation-preview"
+            "?selector=validation_report"
+        ),
+        "12345678-1234-4234-9234-123456789abc/static-validation-preview?&&",
+    ],
+)
+def test_harness_compile_static_validation_preview_rejects_ambiguous_requests(
+    suffix: str,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().get(f"/api/harness/compile-runs/{suffix}")
+
+    assert response.status_code == 400
+    assert response.json == {
+        "error": {
+            "code": "invalid_harness_compile_static_validation_preview_request",
+            "message": (
+                "request must use GET with a canonical version 4 UUID and no query, body, or "
+                "Range header"
+            ),
+        }
+    }
+    assert workbench.static_validation_preview_runs == []
+
+
+@pytest.mark.parametrize(
+    "request_kwargs",
+    [
+        {"headers": {"Range": "bytes=0-9"}},
+        {"data": b"{}"},
+        {"method": "HEAD"},
+        {
+            "data": b"{}",
+            "environ_overrides": {
+                "CONTENT_LENGTH": "",
+                "HTTP_TRANSFER_ENCODING": "chunked",
+                "wsgi.input_terminated": True,
+            },
+        },
+        {
+            "data": b"{}",
+            "environ_overrides": {
+                "CONTENT_LENGTH": "",
+                "wsgi.input_terminated": 1,
+            },
+        },
+    ],
+)
+def test_harness_compile_static_validation_preview_rejects_nonempty_get_grammar(
+    request_kwargs: dict,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+    request_options = dict(request_kwargs)
+    method = request_options.pop("method", "GET")
+
+    response = app.test_client().open(
+        (
+            "/api/harness/compile-runs/"
+            "12345678-1234-4234-9234-123456789abc/static-validation-preview"
+        ),
+        method=method,
+        **request_options,
+    )
+
+    assert response.status_code == 400
+    if method == "GET":
+        assert response.json["error"]["code"] == (
+            "invalid_harness_compile_static_validation_preview_request"
+        )
+    assert workbench.static_validation_preview_runs == []
+
+
+def test_harness_compile_static_validation_preview_fails_closed_when_not_configured(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    response = (
+        configured_app(tmp_path, monkeypatch)
+        .test_client()
+        .get(
+            (
+                "/api/harness/compile-runs/"
+                "12345678-1234-4234-9234-123456789abc/static-validation-preview"
+            )
+        )
+    )
+
+    assert response.status_code == 503
+    assert response.json == {
+        "error": {
+            "code": "harness_compile_static_validation_preview_unavailable",
+            "message": "Harness compile static validation preview is not configured",
+        }
+    }
+    assert response.headers["Cache-Control"] == "no-store"
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+
+
+@pytest.mark.parametrize(
+    ("error", "status", "code", "message"),
+    [
+        (
+            WorkbenchCompileInputError("secret selector: /tmp/validation.json"),
+            400,
+            "invalid_harness_compile_static_validation_preview_request",
+            (
+                "request must use GET with a canonical version 4 UUID and no query, body, or "
+                "Range header"
+            ),
+        ),
+        (
+            WorkbenchCompileRunNotFoundError("secret database: /tmp/harness.sqlite3"),
+            404,
+            "harness_compile_run_not_found",
+            "Terminal compile run was not found",
+        ),
+        (
+            WorkbenchCompileAuthorityError("secret database: /tmp/harness.sqlite3"),
+            503,
+            "harness_compile_static_validation_preview_authority_corrupt",
+            "Harness compile authority failed integrity checks",
+        ),
+        (
+            WorkbenchCompileUnavailableError("secret path: /tmp/catalog"),
+            503,
+            "harness_compile_static_validation_preview_unavailable",
+            "Harness compile static validation preview is unavailable",
+        ),
+    ],
+)
+def test_harness_compile_static_validation_preview_projects_stable_service_errors(
+    error: Exception,
+    status: int,
+    code: str,
+    message: str,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+
+    def fail(**_kwargs):
+        raise error
+
+    monkeypatch.setattr(workbench, "static_validation_preview", fail)
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().get(
+        ("/api/harness/compile-runs/12345678-1234-4234-9234-123456789abc/static-validation-preview")
+    )
+
+    assert response.status_code == status
+    assert response.json["error"] == {"code": code, "message": message}
+    assert "/tmp" not in response.get_data(as_text=True)
+
+
+@pytest.mark.parametrize(
+    ("error", "status", "code", "message"),
+    [
+        (
+            WorkbenchCompileStaticValidationNotPreviewableError("secret blocker: /tmp/run.json"),
+            409,
+            "harness_compile_static_validation_not_previewable",
+            "Terminal compile run has no previewable static validation report",
+        ),
+        (
+            WorkbenchCompileStaticValidationTooLargeError("secret artifact: /tmp/validation.json"),
+            422,
+            "harness_compile_static_validation_too_large",
+            "Terminal static validation report exceeds the fixed preview size",
+        ),
+    ],
+)
+def test_harness_compile_static_validation_preview_projects_stable_policy_errors(
+    error: Exception,
+    status: int,
+    code: str,
+    message: str,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+
+    def fail(**_kwargs):
+        raise error
+
+    monkeypatch.setattr(workbench, "static_validation_preview", fail)
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().get(
+        ("/api/harness/compile-runs/12345678-1234-4234-9234-123456789abc/static-validation-preview")
+    )
+
+    assert response.status_code == status
+    assert response.json["error"] == {"code": code, "message": message}
+    assert "/tmp" not in response.get_data(as_text=True)
 
 
 @pytest.mark.parametrize(

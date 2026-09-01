@@ -22,6 +22,8 @@ from demo.harness_compile import (
     WorkbenchCompileRunNotFoundError,
     WorkbenchCompileSceneNotPreviewableError,
     WorkbenchCompileSceneTooLargeError,
+    WorkbenchCompileStaticValidationNotPreviewableError,
+    WorkbenchCompileStaticValidationTooLargeError,
     WorkbenchCompileUnavailableError,
 )
 from demo.harness_feed import HarnessEventFeedCorruptionError
@@ -759,6 +761,144 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
                         "error": {
                             "code": "harness_compile_scene_preview_unavailable",
                             "message": "Harness compile scene preview is unavailable",
+                        }
+                    }
+                ),
+                503,
+            )
+        return jsonify(preview)
+
+    @app.get("/api/harness/compile-runs/<run_id_value>/static-validation-preview")
+    def harness_compile_static_validation_preview(run_id_value: str):
+        workbench = app.config.get("HARNESS_WORKBENCH")
+        if workbench is None:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_compile_static_validation_preview_unavailable",
+                            "message": (
+                                "Harness compile static validation preview is not configured"
+                            ),
+                        }
+                    }
+                ),
+                503,
+            )
+        run_id = None
+        try:
+            candidate = uuid.UUID(run_id_value)
+        except ValueError:
+            pass
+        else:
+            if candidate.version == 4 and str(candidate) == run_id_value:
+                run_id = candidate
+        has_transfer_encoding = "Transfer-Encoding" in request.headers
+        terminated_body_present = (
+            request.content_length in {None, 0}
+            and not has_transfer_encoding
+            and "wsgi.input_terminated" in request.environ
+            and request.stream.read(1) != b""
+        )
+        if (
+            request.method != "GET"
+            or run_id is None
+            or request.query_string
+            or request.content_length not in {None, 0}
+            or has_transfer_encoding
+            or terminated_body_present
+            or "Range" in request.headers
+        ):
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": ("invalid_harness_compile_static_validation_preview_request"),
+                            "message": (
+                                "request must use GET with a canonical version 4 UUID and no "
+                                "query, body, or Range header"
+                            ),
+                        }
+                    }
+                ),
+                400,
+            )
+        try:
+            preview = workbench.static_validation_preview(run_id=run_id)
+        except WorkbenchCompileInputError:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": ("invalid_harness_compile_static_validation_preview_request"),
+                            "message": (
+                                "request must use GET with a canonical version 4 UUID and no "
+                                "query, body, or Range header"
+                            ),
+                        }
+                    }
+                ),
+                400,
+            )
+        except WorkbenchCompileRunNotFoundError:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_compile_run_not_found",
+                            "message": "Terminal compile run was not found",
+                        }
+                    }
+                ),
+                404,
+            )
+        except WorkbenchCompileStaticValidationNotPreviewableError:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_compile_static_validation_not_previewable",
+                            "message": (
+                                "Terminal compile run has no previewable static validation report"
+                            ),
+                        }
+                    }
+                ),
+                409,
+            )
+        except WorkbenchCompileStaticValidationTooLargeError:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_compile_static_validation_too_large",
+                            "message": (
+                                "Terminal static validation report exceeds the fixed preview size"
+                            ),
+                        }
+                    }
+                ),
+                422,
+            )
+        except WorkbenchCompileAuthorityError:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": ("harness_compile_static_validation_preview_authority_corrupt"),
+                            "message": "Harness compile authority failed integrity checks",
+                        }
+                    }
+                ),
+                503,
+            )
+        except WorkbenchCompileUnavailableError:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_compile_static_validation_preview_unavailable",
+                            "message": ("Harness compile static validation preview is unavailable"),
                         }
                     }
                 ),

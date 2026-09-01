@@ -10,6 +10,8 @@ const state = {
   harnessAuditRetryTimer: null,
   harnessScenePreviewController: null,
   harnessScenePreviewGeneration: 0,
+  harnessStaticValidationController: null,
+  harnessStaticValidationGeneration: 0,
   harnessVerifiedAudit: null,
   harnessPendingCache: null,
   harnessPollTimer: null,
@@ -56,6 +58,10 @@ const artifactDigestPattern = /^[0-9a-f]{64}$/;
 const artifactByteCountPattern = /^(0|[1-9][0-9]*)$/;
 const scenePreviewArtifactMaximumBytes = 65_536n;
 const scenePreviewResponseMaximumBytes = 262_144;
+const staticValidationArtifactMaximumBytes = 262_144n;
+const staticValidationResponseMaximumBytes = 262_144;
+const staticValidationMaximumChecks = 169;
+const staticValidationCheckNamePattern = /^[a-z][a-z0-9_]{0,63}(?::[a-z][a-z0-9_]{0,63}){0,3}$/;
 const scenePreviewSceneIdPattern = /^[a-z][a-z0-9_-]{0,95}$/;
 const scenePreviewObjectIdPattern = /^[a-z][a-z0-9_]{0,63}$/;
 const scenePreviewTargetPattern = /^(table|[a-z][a-z0-9_]{0,63})$/;
@@ -237,6 +243,12 @@ function invalidHarnessScenePreview() {
   throw error;
 }
 
+function invalidHarnessStaticValidationPreview() {
+  const error = new Error('Harness compile static validation preview failed integrity checks');
+  error.code = 'harness_compile_static_validation_preview_invalid';
+  throw error;
+}
+
 function validateHarnessEventArtifact(artifact, invalid = invalidHarnessPage) {
   if (!hasExactKeys(artifact, ['bytes', 'media_type', 'name', 'schema_version', 'sha256', 'uri'])
     || typeof artifact.name !== 'string'
@@ -371,8 +383,40 @@ function resetHarnessScenePreview({ forgetAudit = true, message = '', returnFocu
   if (returnFocus && button && !button.hidden) button.focus();
 }
 
+function resetHarnessStaticValidationPreview({
+  forgetAudit = true,
+  message = '',
+  returnFocus = false,
+} = {}) {
+  if (state.harnessStaticValidationController) {
+    state.harnessStaticValidationController.abort();
+  }
+  state.harnessStaticValidationController = null;
+  state.harnessStaticValidationGeneration += 1;
+  const button = $('#harness-static-validation-button');
+  const panel = $('#harness-static-validation-panel');
+  const summary = $('#harness-static-validation-summary');
+  const checks = $('#harness-static-validation-checks');
+  const status = $('#harness-static-validation-message');
+  if (button) {
+    button.disabled = false;
+    button.setAttribute('aria-expanded', 'false');
+    if (forgetAudit) button.hidden = true;
+  }
+  if (panel) {
+    panel.hidden = true;
+    panel.setAttribute('aria-busy', 'false');
+  }
+  if (summary) summary.replaceChildren();
+  if (checks) checks.replaceChildren();
+  if (status) status.textContent = message;
+  if (forgetAudit) state.harnessVerifiedAudit = null;
+  if (returnFocus && button) button.focus();
+}
+
 function resetHarnessAudit(message = '筛选一个已终止的 Compile run 后显示依赖与终态对账。') {
   resetHarnessScenePreview();
+  resetHarnessStaticValidationPreview();
   clearTimeout(state.harnessAuditRetryTimer);
   state.harnessAuditRetryTimer = null;
   state.harnessAuditGeneration += 1;
@@ -824,6 +868,19 @@ function previewableSceneArtifact(audit) {
   return candidates.length === 1 ? candidates[0] : null;
 }
 
+function previewableStaticValidationArtifact(audit) {
+  if (audit.run.status !== 'succeeded' || audit.invocation.status !== 'bound') return null;
+  const candidates = audit.artifacts.filter((artifact) => (
+    artifact.media_type === 'application/json'
+      && artifact.schema_version === 'robotwin.scene_validation.v1'
+      && artifact.bindings.length === 1
+      && artifact.bindings[0].direction === 'output'
+      && artifact.bindings[0].role === 'static_validation'
+      && BigInt(artifact.bytes) <= staticValidationArtifactMaximumBytes
+  ));
+  return candidates.length === 1 ? candidates[0] : null;
+}
+
 function validateHarnessScenePreview(preview, authority) {
   if (!hasExactKeys(preview, ['artifact', 'run', 'scene', 'schema_version'])
     || preview.schema_version !== 'harness.workbench_compile_scene_preview.v1'
@@ -893,6 +950,131 @@ async function readBoundedScenePreviewResponse(response) {
     invalidHarnessScenePreview();
   }
   if (!response.ok) invalidHarnessScenePreview();
+  return value;
+}
+
+function validateHarnessStaticValidationPreview(preview, authority) {
+  if (!hasExactKeys(preview, ['artifact', 'run', 'schema_version', 'validation'])
+    || preview.schema_version
+      !== 'harness.workbench_compile_static_validation_preview.v1'
+    || !hasExactKeys(
+      preview.run,
+      ['event_count', 'invocation_digest', 'run_id', 'terminal_event_id'],
+    )
+    || preview.run.run_id !== authority.run_id
+    || preview.run.invocation_digest !== authority.invocation_digest
+    || preview.run.event_count !== authority.event_count
+    || preview.run.terminal_event_id !== authority.terminal_event_id) {
+    invalidHarnessStaticValidationPreview();
+  }
+  try {
+    validateHarnessAuditArtifact(preview.artifact);
+  } catch (_error) {
+    invalidHarnessStaticValidationPreview();
+  }
+  const artifact = authority.staticValidationArtifact;
+  if (!artifact
+    || preview.artifact.name !== artifact.name
+    || preview.artifact.media_type !== artifact.media_type
+    || preview.artifact.schema_version !== artifact.schema_version
+    || preview.artifact.sha256 !== artifact.sha256
+    || preview.artifact.bytes !== artifact.bytes
+    || preview.artifact.bindings.length !== 1
+    || preview.artifact.bindings[0].direction !== 'output'
+    || preview.artifact.bindings[0].role !== 'static_validation') {
+    invalidHarnessStaticValidationPreview();
+  }
+  const validation = preview.validation;
+  if (!hasExactKeys(
+    validation,
+    ['checks', 'claim_scope', 'counts', 'mode', 'resolved_scene_sha256', 'scene_id', 'status'],
+  )
+    || validation.claim_scope !== 'committed_report_content_and_binding_only'
+    || validation.mode !== 'compile_static_without_runtime_evidence'
+    || typeof validation.scene_id !== 'string'
+    || !scenePreviewSceneIdPattern.test(validation.scene_id)
+    || typeof validation.resolved_scene_sha256 !== 'string'
+    || !artifactDigestPattern.test(validation.resolved_scene_sha256)
+    || !['fail', 'incomplete'].includes(validation.status)
+    || !hasExactKeys(validation.counts, ['checks', 'fail', 'not_run', 'pass'])
+    || !Array.isArray(validation.checks)
+    || validation.checks.length < 1
+    || validation.checks.length > staticValidationMaximumChecks) {
+    invalidHarnessStaticValidationPreview();
+  }
+  const countValues = Object.values(validation.counts);
+  if (countValues.some((value) => !Number.isSafeInteger(value) || value < 0)
+    || validation.counts.checks !== validation.checks.length
+    || validation.counts.not_run !== 1
+    || validation.counts.pass + validation.counts.fail + validation.counts.not_run
+      !== validation.counts.checks) invalidHarnessStaticValidationPreview();
+  const statuses = new Set(['pass', 'fail', 'not_run']);
+  const names = new Set();
+  const observed = { pass: 0, fail: 0, not_run: 0 };
+  validation.checks.forEach((check) => {
+    if (!hasExactKeys(check, ['name', 'status'])
+      || typeof check.name !== 'string'
+      || !staticValidationCheckNamePattern.test(check.name)
+      || names.has(check.name)
+      || !statuses.has(check.status)) invalidHarnessStaticValidationPreview();
+    names.add(check.name);
+    observed[check.status] += 1;
+  });
+  if (observed.pass !== validation.counts.pass
+    || observed.fail !== validation.counts.fail
+    || observed.not_run !== validation.counts.not_run
+    || validation.status !== (observed.fail ? 'fail' : 'incomplete')
+    || validation.checks.find((check) => check.name === 'runtime_evidence')?.status
+      !== 'not_run'
+    || validation.checks.find((check) => check.name === 'package_manifest')?.status
+      !== 'pass'
+    || validation.checks.find((check) => check.name === 'resolved_only_roundtrip')?.status
+      !== 'pass') {
+    invalidHarnessStaticValidationPreview();
+  }
+  return preview;
+}
+
+async function readBoundedStaticValidationResponse(response) {
+  const contentType = response.headers.get('Content-Type')?.split(';', 1)[0].trim().toLowerCase();
+  if (contentType !== 'application/json' || !response.body) {
+    invalidHarnessStaticValidationPreview();
+  }
+  const reader = response.body.getReader();
+  const chunks = [];
+  let length = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    length += value.byteLength;
+    if (length > staticValidationResponseMaximumBytes) {
+      await reader.cancel();
+      invalidHarnessStaticValidationPreview();
+    }
+    chunks.push(value);
+  }
+  const payload = new Uint8Array(length);
+  let offset = 0;
+  chunks.forEach((chunk) => {
+    payload.set(chunk, offset);
+    offset += chunk.byteLength;
+  });
+  if (payload.length >= 3 && payload[0] === 0xef && payload[1] === 0xbb && payload[2] === 0xbf) {
+    invalidHarnessStaticValidationPreview();
+  }
+  let text;
+  try {
+    text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(payload);
+  } catch (_error) {
+    invalidHarnessStaticValidationPreview();
+  }
+  let value;
+  try {
+    value = JSON.parse(text);
+  } catch (_error) {
+    invalidHarnessStaticValidationPreview();
+  }
+  if (!response.ok) invalidHarnessStaticValidationPreview();
   return value;
 }
 
@@ -969,8 +1151,46 @@ function renderHarnessScenePreview(preview) {
   );
 }
 
+function renderHarnessStaticValidationPreview(preview) {
+  const validation = preview.validation;
+  const summary = $('#harness-static-validation-summary');
+  const checks = $('#harness-static-validation-checks');
+  summary.replaceChildren();
+  checks.replaceChildren();
+  appendScenePreviewSummary(summary, 'Scene', validation.scene_id);
+  appendScenePreviewSummary(summary, 'Status', validation.status);
+  appendScenePreviewSummary(summary, 'Checks', String(validation.counts.checks));
+  appendScenePreviewSummary(summary, 'Pass', String(validation.counts.pass));
+  appendScenePreviewSummary(summary, 'Fail', String(validation.counts.fail));
+  appendScenePreviewSummary(summary, 'Not run', String(validation.counts.not_run));
+  appendScenePreviewSummary(summary, 'Resolved SHA-256', validation.resolved_scene_sha256);
+  const statusLabels = {
+    pass: '通过',
+    fail: '失败',
+    not_run: '未运行',
+  };
+  validation.checks.forEach((check) => {
+    const item = document.createElement('li');
+    const name = document.createElement('strong');
+    name.textContent = check.name;
+    const status = document.createElement('span');
+    status.className = `static-validation-status ${check.status}`;
+    status.textContent = statusLabels[check.status];
+    item.append(name, status);
+    checks.appendChild(item);
+  });
+}
+
 function scenePreviewAuthorityIsCurrent(authority) {
   return state.harnessVerifiedAudit === authority
+    && state.harnessRunId === authority.run_id
+    && state.harnessCursor === authority.terminal_event_id
+    && state.harnessEvents.length === authority.event_count;
+}
+
+function staticValidationAuthorityIsCurrent(authority) {
+  return state.harnessVerifiedAudit === authority
+    && authority.staticValidationArtifact !== null
     && state.harnessRunId === authority.run_id
     && state.harnessCursor === authority.terminal_event_id
     && state.harnessEvents.length === authority.event_count;
@@ -980,6 +1200,7 @@ async function loadHarnessScenePreview() {
   const authority = state.harnessVerifiedAudit;
   const button = $('#harness-scene-preview-button');
   if (!authority || button.hidden || !scenePreviewAuthorityIsCurrent(authority)) return;
+  resetHarnessStaticValidationPreview({ forgetAudit: false });
   resetHarnessScenePreview({ forgetAudit: false, message: '正在读取并验证场景结构…' });
   const generation = state.harnessScenePreviewGeneration;
   const controller = new AbortController();
@@ -1027,6 +1248,65 @@ async function loadHarnessScenePreview() {
   }
 }
 
+async function loadHarnessStaticValidationPreview() {
+  const authority = state.harnessVerifiedAudit;
+  const button = $('#harness-static-validation-button');
+  if (!authority || button.hidden || !staticValidationAuthorityIsCurrent(authority)) return;
+  resetHarnessScenePreview({ forgetAudit: false });
+  resetHarnessStaticValidationPreview({
+    forgetAudit: false,
+    message: '正在读取并核对编译期检查…',
+  });
+  const generation = state.harnessStaticValidationGeneration;
+  const controller = new AbortController();
+  state.harnessStaticValidationController = controller;
+  button.disabled = true;
+  $('#harness-static-validation-panel').setAttribute('aria-busy', 'true');
+  try {
+    const response = await fetch(
+      `/api/harness/compile-runs/${encodeURIComponent(authority.run_id)}/static-validation-preview`,
+      {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        cache: 'no-store',
+        credentials: 'same-origin',
+        signal: controller.signal,
+      },
+    );
+    const preview = await readBoundedStaticValidationResponse(response);
+    if (generation !== state.harnessStaticValidationGeneration
+      || controller !== state.harnessStaticValidationController
+      || !staticValidationAuthorityIsCurrent(authority)) return;
+    validateHarnessStaticValidationPreview(preview, authority);
+    if (generation !== state.harnessStaticValidationGeneration
+      || !staticValidationAuthorityIsCurrent(authority)) return;
+    state.harnessStaticValidationController = null;
+    button.disabled = false;
+    button.setAttribute('aria-expanded', 'true');
+    const panel = $('#harness-static-validation-panel');
+    panel.setAttribute('aria-busy', 'false');
+    renderHarnessStaticValidationPreview(preview);
+    panel.hidden = false;
+    const outcome = preview.validation.status === 'fail'
+      ? `检测到 ${preview.validation.counts.fail} 项失败；`
+      : '报告状态为 incomplete；';
+    $('#harness-static-validation-message').textContent = `报告内容身份、结构及与当前审计的绑定已核对；${outcome}validator 未重跑，未执行物理回放，不作发布判断。`;
+    $('#harness-static-validation-title').focus();
+  } catch (_error) {
+    if (generation !== state.harnessStaticValidationGeneration
+      || controller !== state.harnessStaticValidationController) return;
+    state.harnessStaticValidationController = null;
+    button.disabled = false;
+    button.setAttribute('aria-expanded', 'false');
+    const panel = $('#harness-static-validation-panel');
+    panel.hidden = true;
+    panel.setAttribute('aria-busy', 'false');
+    $('#harness-static-validation-summary').replaceChildren();
+    $('#harness-static-validation-checks').replaceChildren();
+    $('#harness-static-validation-message').textContent = '编译期检查预览无法验证。';
+  }
+}
+
 function appendAuditSummary(summary, label, value) {
   const term = document.createElement('dt');
   term.textContent = label;
@@ -1037,6 +1317,7 @@ function appendAuditSummary(summary, label, value) {
 
 function renderHarnessAudit(audit) {
   resetHarnessScenePreview();
+  resetHarnessStaticValidationPreview();
   const summary = $('#harness-audit-run-summary');
   summary.replaceChildren();
   appendAuditSummary(summary, 'Run', audit.run.run_id);
@@ -1097,20 +1378,32 @@ function renderHarnessAudit(audit) {
   $('#harness-audit-message').textContent = '摘要已与完整 committed journal 对账；artifact metadata 已复核。';
   $('#harness-audit-panel').hidden = false;
   const sceneArtifact = previewableSceneArtifact(audit);
-  if (sceneArtifact) {
+  const staticValidationArtifact = previewableStaticValidationArtifact(audit);
+  if (sceneArtifact || staticValidationArtifact) {
     state.harnessVerifiedAudit = {
       run_id: audit.run.run_id,
       invocation_digest: audit.invocation.digest,
       event_count: audit.run.event_count,
       terminal_event_id: audit.run.terminal_event_id,
-      artifact: {
+      artifact: sceneArtifact ? {
         ...sceneArtifact,
         bindings: sceneArtifact.bindings.map((binding) => ({ ...binding })),
-      },
+      } : null,
+      staticValidationArtifact: staticValidationArtifact ? {
+        ...staticValidationArtifact,
+        bindings: staticValidationArtifact.bindings.map((binding) => ({ ...binding })),
+      } : null,
     };
+  }
+  if (sceneArtifact) {
     const button = $('#harness-scene-preview-button');
     button.hidden = false;
     $('#harness-scene-preview-message').textContent = '可按需读取已提交的 SceneSpec 结构。';
+  }
+  if (staticValidationArtifact) {
+    const button = $('#harness-static-validation-button');
+    button.hidden = false;
+    $('#harness-static-validation-message').textContent = '可按需读取已提交的编译期检查报告。';
   }
 }
 
@@ -1134,6 +1427,7 @@ async function loadHarnessAuditIfEligible() {
   state.harnessAuditKey = auditKey;
   const generation = ++state.harnessAuditGeneration;
   resetHarnessScenePreview();
+  resetHarnessStaticValidationPreview();
   $('#harness-audit-panel').hidden = true;
   $('#harness-audit-message').textContent = '正在与 committed journal 对账…';
   try {
@@ -1609,6 +1903,13 @@ $('#harness-filter-clear').addEventListener('click', () => selectHarnessRun(''))
 $('#harness-scene-preview-button').addEventListener('click', loadHarnessScenePreview);
 $('#harness-scene-preview-close').addEventListener('click', () => {
   resetHarnessScenePreview({ forgetAudit: false, returnFocus: true });
+});
+$('#harness-static-validation-button').addEventListener(
+  'click',
+  loadHarnessStaticValidationPreview,
+);
+$('#harness-static-validation-close').addEventListener('click', () => {
+  resetHarnessStaticValidationPreview({ forgetAudit: false, returnFocus: true });
 });
 $('#open-result-button').addEventListener('click', () => {
   if (state.activeJob) window.open(`/?job=${encodeURIComponent(state.activeJob.job_id)}`, '_blank', 'noopener');

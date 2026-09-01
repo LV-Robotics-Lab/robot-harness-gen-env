@@ -40,7 +40,7 @@
 | 4. replay → validate | 进行中 | 实际播放调用、连续帧、哈希绑定验证报告 |
 | 5. VLM fallback 研究 | 待开始 | baseline、逐次实验 TSV/JSONL、消融与总结 |
 | 6. LLM System 2 | 待开始 | agent 计划、上下文包、工具回执、回归晋升 |
-| 7. 前端工作台 | 进行中 | Event Timeline v1 + qualified compile submit；replay/validate/viewer/编排仍缺 |
+| 7. 前端工作台 | 进行中 | Event Timeline + qualified compile submit/audit + 两个固定内容投影；replay/validate/编排仍缺 |
 | 8. 总验收与文档同步 | 待开始 | 全量测试/覆盖率/真实回放/repo-docs 审计 |
 
 ## 决策与尝试记录
@@ -957,3 +957,42 @@
 - 边界：这是成功 compile 的窄化 SceneSpec 字段投影，不是 raw 或通用 artifact viewer，也没有下载、
   replay、validate、System 2、物理 validation、settle 或 publishability；工作台 projection 不新增
   Harness 公共 schema snapshot。
+
+### 2026-09-01 / A051：静态验证预览必须保持 compile-time 声明，不能冒充物理门禁
+
+- 固定 seam：唯一公共调用是
+  `WorkbenchCompile.static_validation_preview(*, run_id: UUID)`；HTTP 只暴露
+  `GET /api/harness/compile-runs/<canonical-v4-uuid>/static-validation-preview`，并拒绝 query、body、
+  `Transfer-Encoding` 与 `Range`。它与 SceneSpec 预览一样先重建 A049 的完整 terminal authority，只
+  允许 succeeded `text2env.compile@1.0.0` 的唯一
+  `output/static_validation`，并要求 media/schema 精确为 `application/json` /
+  `robotwin.scene_validation.v1`。
+- byte/JSON authority：报告 ArtifactRef 声明超过 262,144 bytes 会在定位 CAS 前拒绝；用于绑定的
+  ResolvedSceneSpec 也必须是 JSON 且不超过 1,048,576 bytes。两者的固定 digest leaf 都以
+  `O_NOFOLLOW|O_NONBLOCK` 打开同一 FD，要求 regular file，并以 cap+1 有界读取、前后 `fstat`、精确
+  length 与 SHA-256 闭合当次 bytes。报告严格拒绝 BOM、重复 key、NaN/Infinity、非 object、过深
+  嵌套、额外字段和类型替换；`checks` 最多 169 项，名称唯一且受限，status 只接受
+  `pass`/`fail`/`not_run`，所有计数和整体状态均由服务端重算。ResolvedSceneSpec 也须严格 UTF-8/JSON、
+  深度有界，并与其 canonical typed model 精确一致。
+- compile-time 语义：报告必须恰有一个 `runtime_evidence:not_run` 且声明 `required=false`，因此整体
+  status 只能是 `fail` 或 `incomplete`；`package_manifest` 与 `resolved_only_roundtrip` 必须存在且
+  pass。服务端重算 canonical ResolvedSceneSpec digest，并把它同时绑定报告的
+  `resolved_scene_sha256`、EnvironmentPackage 的 package/resolved digest；resolved 的 request、scene、
+  seed、frame、unit、workspace、relations 与 `source_scene_spec_sha256` 还必须逐项绑定已验真的
+  SceneSpec。三份固定 CAS 内容完成后再重读完整 terminal authority。这里验证既有报告及其绑定，
+  不重新运行 validator。
+- 安全投影：响应只保留 run/artifact binding，以及 validation 的 claim scope、mode、scene id、
+  resolved digest、状态/计数和每项 check 的 name/status；`evidence`、原始 JSON、request、path、URI、
+  locator 与下载能力均不进入响应。
+- browser：只有 audit v2 已与当前完整 succeeded history 及唯一、未超限 static-validation artifact
+  精确对账后才显示入口，也只在用户点击时请求。独立 generation/abort 让 run/filter/feed/audit
+  变化、关闭面板和迟到响应都不能复用旧内容；预览不缓存、不自动重试，字段以 `textContent` 构建。
+  浏览器接受任意满足 ≤169、名称唯一、状态/计数/必需检查自洽的 check 顺序，并按 wire 顺序显示，
+  不把当前 validator 的实现顺序升级成接口契约。
+- 验证：`tests/demo` 338 passed；其中 `test_workbench_browser.py` 61 passed，
+  `test_harness_compile.py` 192 passed，`test_app.py` 78 passed；相邻 `test_application.py` +
+  `test_event_journal.py` 51 passed。`demo/harness_compile.py` 为 531 statements / 214 branches，
+  statement/branch 100%。
+- 边界：这只是 compile 时静态检查报告的窄化投影；`runtime_evidence:not_run` 明确表示未运行物理
+  replay。页面和接口均不据此声明 validate pass、asset settle 或 publishable，也不新增 Harness 公共
+  schema snapshot。

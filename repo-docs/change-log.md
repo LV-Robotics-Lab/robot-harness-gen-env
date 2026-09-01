@@ -2,6 +2,16 @@
 
 ## 2026-09-01
 
+- 为 succeeded compile 增加固定 static-validation 预览：
+  `WorkbenchCompile.static_validation_preview(run_id)` 与唯一 GET 路由先复用完整 terminal authority，
+  以同一 FD 分别有界读取最多 262,144-byte 报告与 1,048,576-byte ResolvedSceneSpec，严格核 JSON
+  形状、canonical resolved 内容、最多 169 项 checks、精确一个 `runtime_evidence:not_run` 及重算后的
+  状态/计数。resolved digest 同时绑定报告与 EnvironmentPackage，request/scene/seed/frame/unit/
+  workspace/relations/source SceneSpec digest 则绑定已验真的 SceneSpec。响应只投影 claim scope/mode、
+  scene/resolved identity、状态/计数和 check name/status，不返回 evidence、request、原始 JSON、path
+  或 URI；既有 validator 不会在读取时重跑。浏览器仅在 audit v2 通过后由用户点击请求，接受任意
+  契约有效、≤169 且名称唯一的 check 顺序，不依赖 validator 当前实现顺序；切换上下文会 abort/清空且
+  不缓存、不自动重试。该预览明确表示没有物理 replay，不能作为 validate pass 或 publishability。
 - 修复 `run_scene_runtime.main()` 在进程内调用后遗留 RoboTwin 工作目录和导入路径的问题：公开入口
   现在无论正常返回还是异常退出都会恢复调用者的 `cwd` 与 `sys.path`。最小跨模块顺序反例由
   System2 fixture 读取失败转为通过，完整本地套件为 2,345 passed / 19 skipped；运行中的物理采样、
