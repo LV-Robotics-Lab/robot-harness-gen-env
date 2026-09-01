@@ -30,6 +30,27 @@ const compileDependencyVersions = [
   ['scene-gen', '0.1.0'],
   ['text2env-compile-config', '1'],
 ];
+const compileArtifactBindings = [
+  ['input', 'asset_catalog'],
+  ['output', 'scene_spec'],
+  ['output', 'resolved_scene'],
+  ['output', 'environment_package.asset_catalog'],
+  ['output', 'environment_package.package_manifest'],
+  ['output', 'static_validation'],
+];
+const compileArtifactBindingMetadata = [
+  ['application/json', 'robotwin.asset_catalog.v1'],
+  ['application/json', 'robotwin.scene_spec.v1'],
+  ['application/json', 'robotwin.resolved_scene.v1'],
+  ['application/json', 'robotwin.asset_catalog.v1'],
+  ['application/json', 'robotwin.generated_scene_package.v1'],
+  ['application/json', 'robotwin.scene_validation.v1'],
+];
+const artifactNamePattern = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
+const artifactMediaTypePattern = /^[A-Za-z0-9][A-Za-z0-9.+_-]{0,63}\/[A-Za-z0-9][A-Za-z0-9.+_-]{0,63}$/;
+const artifactSchemaPattern = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
+const artifactDigestPattern = /^[0-9a-f]{64}$/;
+const artifactByteCountPattern = /^(0|[1-9][0-9]*)$/;
 
 function isCanonicalHarnessCursor(value) {
   return typeof value === 'string'
@@ -200,6 +221,27 @@ function invalidHarnessAudit() {
   throw error;
 }
 
+function validateHarnessEventArtifact(artifact, invalid = invalidHarnessPage) {
+  if (!hasExactKeys(artifact, ['bytes', 'media_type', 'name', 'schema_version', 'sha256', 'uri'])
+    || typeof artifact.name !== 'string'
+    || !artifactNamePattern.test(artifact.name)
+    || typeof artifact.media_type !== 'string'
+    || !artifactMediaTypePattern.test(artifact.media_type)
+    || (artifact.schema_version !== null
+      && (typeof artifact.schema_version !== 'string'
+        || !artifactSchemaPattern.test(artifact.schema_version)))
+    || typeof artifact.sha256 !== 'string'
+    || !artifactDigestPattern.test(artifact.sha256)
+    || !Number.isSafeInteger(artifact.bytes)
+    || artifact.bytes < 0
+    || artifact.uri !== `artifact://sha256/${artifact.sha256}`) invalid();
+  return artifact;
+}
+
+function harnessArtifactIdentity(artifact) {
+  return `${artifact.media_type}\u0000${artifact.schema_version || ''}\u0000${artifact.sha256}`;
+}
+
 function validateHarnessSubmission(submission) {
   const fields = ['attempt', 'blocker', 'max_attempts', 'run_id', 'schema_version', 'skill_id',
     'skill_version', 'status', 'terminal_event_id'];
@@ -298,9 +340,13 @@ function resetHarnessAudit(message = '筛选一个已终止的 Compile run 后�
   const panel = $('#harness-audit-panel');
   const summary = $('#harness-audit-run-summary');
   const dependencies = $('#harness-dependency-list');
+  const artifacts = $('#harness-artifact-list');
   if (panel) panel.hidden = true;
   if (summary) summary.replaceChildren();
   if (dependencies) dependencies.replaceChildren();
+  if (artifacts) artifacts.replaceChildren();
+  const artifactCount = $('#harness-artifact-count');
+  if (artifactCount) artifactCount.textContent = '';
   const invocationStatus = $('#harness-invocation-status');
   const invocationDigest = $('#harness-invocation-digest');
   if (invocationStatus) invocationStatus.textContent = '';
@@ -337,15 +383,50 @@ function selectedTerminalCompileHistory() {
   return terminal.event.to_status === 'running' ? null : terminal;
 }
 
+function validateHarnessAuditArtifact(artifact) {
+  if (!hasExactKeys(
+    artifact,
+    ['bindings', 'bytes', 'media_type', 'name', 'schema_version', 'sha256'],
+  )
+    || typeof artifact.name !== 'string'
+    || !artifactNamePattern.test(artifact.name)
+    || typeof artifact.media_type !== 'string'
+    || !artifactMediaTypePattern.test(artifact.media_type)
+    || (artifact.schema_version !== null
+      && (typeof artifact.schema_version !== 'string'
+        || !artifactSchemaPattern.test(artifact.schema_version)))
+    || typeof artifact.sha256 !== 'string'
+    || !artifactDigestPattern.test(artifact.sha256)
+    || typeof artifact.bytes !== 'string'
+    || !artifactByteCountPattern.test(artifact.bytes)
+    || !Array.isArray(artifact.bindings)) invalidHarnessAudit();
+  let previousBindingIndex = -1;
+  artifact.bindings.forEach((binding) => {
+    if (!hasExactKeys(binding, ['direction', 'role'])) invalidHarnessAudit();
+    const bindingIndex = compileArtifactBindings.findIndex(
+      ([direction, role]) => binding.direction === direction && binding.role === role,
+    );
+    if (bindingIndex <= previousBindingIndex
+      || artifact.media_type !== compileArtifactBindingMetadata[bindingIndex]?.[0]
+      || artifact.schema_version !== compileArtifactBindingMetadata[bindingIndex]?.[1]) {
+      invalidHarnessAudit();
+    }
+    previousBindingIndex = bindingIndex;
+  });
+  return artifact;
+}
+
 function validateHarnessAudit(audit, runId, events, cursor) {
   const runFields = ['attempt', 'blocker', 'ended_at', 'event_count', 'max_attempts', 'run_id',
     'skill_id', 'skill_version', 'started_at', 'status', 'terminal_event_id'];
   const invocationFields = ['dependencies', 'digest', 'status'];
   const terminalStatuses = new Set(['succeeded', 'blocked', 'failed']);
-  if (!hasExactKeys(audit, ['invocation', 'run', 'schema_version'])
-    || audit.schema_version !== 'harness.workbench_compile_audit.v1'
+  if (!hasExactKeys(audit, ['artifacts', 'invocation', 'run', 'schema_version'])
+    || audit.schema_version !== 'harness.workbench_compile_audit.v2'
     || !hasExactKeys(audit.run, runFields)
-    || !hasExactKeys(audit.invocation, invocationFields)) invalidHarnessAudit();
+    || !hasExactKeys(audit.invocation, invocationFields)
+    || !Array.isArray(audit.artifacts)
+    || audit.artifacts.length > 500) invalidHarnessAudit();
   const run = audit.run;
   const invocation = audit.invocation;
   if (run.run_id !== runId
@@ -369,6 +450,11 @@ function validateHarnessAudit(audit, runId, events, cursor) {
     || typeof run.blocker.retryable !== 'boolean') invalidHarnessAudit();
   const first = events[0];
   const terminal = events.at(-1);
+  events.forEach((event) => {
+    event.event.artifact_refs.forEach(
+      (artifact) => validateHarnessEventArtifact(artifact, invalidHarnessAudit),
+    );
+  });
   if (terminal.event_id !== cursor
     || terminal.run_id !== runId
     || terminal.skill_id !== run.skill_id
@@ -381,7 +467,10 @@ function validateHarnessAudit(audit, runId, events, cursor) {
   if (invocation.status === 'not_created_preflight') {
     if (run.attempt !== 0 || run.max_attempts !== 0 || run.status === 'succeeded'
       || invocation.digest !== null || invocation.dependencies.length
-      || events.some((event) => event.event.attempt !== 0)) invalidHarnessAudit();
+      || audit.artifacts.length
+      || events.some((event) => event.event.attempt !== 0 || event.event.artifact_refs.length)) {
+      invalidHarnessAudit();
+    }
   } else if (invocation.status === 'bound') {
     if (run.attempt !== 1 || run.max_attempts !== 1
       || typeof invocation.digest !== 'string'
@@ -407,6 +496,61 @@ function validateHarnessAudit(audit, runId, events, cursor) {
   if (invocation.status === 'bound'
     && (JSON.stringify(dependencyVersions) !== JSON.stringify(compileDependencyVersions)
       || dependencyNames.length !== compileDependencyVersions.length)) invalidHarnessAudit();
+  const artifactIdentities = new Set();
+  const observedBindings = [];
+  audit.artifacts.forEach((artifact) => {
+    validateHarnessAuditArtifact(artifact);
+    const identity = harnessArtifactIdentity(artifact);
+    if (artifactIdentities.has(identity)) invalidHarnessAudit();
+    artifactIdentities.add(identity);
+    artifact.bindings.forEach((binding) => {
+      const pair = [binding.direction, binding.role];
+      if (observedBindings.some((existing) => JSON.stringify(existing) === JSON.stringify(pair))) {
+        invalidHarnessAudit();
+      }
+      observedBindings.push(pair);
+    });
+  });
+  if (invocation.status === 'bound') {
+    const terminalArtifacts = events.at(-1).event.artifact_refs;
+    if (terminalArtifacts.length !== audit.artifacts.length) invalidHarnessAudit();
+    audit.artifacts.forEach((artifact, index) => {
+      const terminalArtifact = terminalArtifacts[index];
+      if (artifact.name !== terminalArtifact.name
+        || artifact.media_type !== terminalArtifact.media_type
+        || artifact.schema_version !== terminalArtifact.schema_version
+        || artifact.sha256 !== terminalArtifact.sha256
+        || artifact.bytes !== String(terminalArtifact.bytes)) invalidHarnessAudit();
+    });
+    events.forEach((event) => {
+      event.event.artifact_refs.forEach((artifact) => {
+        const auditArtifact = audit.artifacts.find(
+          (candidate) => harnessArtifactIdentity(candidate) === harnessArtifactIdentity(artifact),
+        );
+        if (!auditArtifact
+          || auditArtifact.media_type !== artifact.media_type
+          || auditArtifact.schema_version !== artifact.schema_version
+          || auditArtifact.sha256 !== artifact.sha256
+          || auditArtifact.bytes !== String(artifact.bytes)) invalidHarnessAudit();
+      });
+    });
+    if (run.status === 'succeeded') {
+      const normalizedBindings = [...observedBindings].sort((left, right) => {
+        const leftIndex = compileArtifactBindings.findIndex(
+          ([direction, role]) => left[0] === direction && left[1] === role,
+        );
+        const rightIndex = compileArtifactBindings.findIndex(
+          ([direction, role]) => right[0] === direction && right[1] === role,
+        );
+        return leftIndex - rightIndex;
+      });
+      if (JSON.stringify(normalizedBindings) !== JSON.stringify(compileArtifactBindings)) {
+        invalidHarnessAudit();
+      }
+    } else if (observedBindings.some(([direction]) => direction === 'output')) {
+      invalidHarnessAudit();
+    }
+  }
   return audit;
 }
 
@@ -448,7 +592,35 @@ function renderHarnessAudit(audit) {
     empty.textContent = '预检终止前未解析依赖。';
     dependencies.appendChild(empty);
   }
-  $('#harness-audit-message').textContent = '摘要已与完整 committed journal 对账。';
+  const artifacts = $('#harness-artifact-list');
+  artifacts.replaceChildren();
+  $('#harness-artifact-count').textContent = `${audit.artifacts.length}`;
+  audit.artifacts.forEach((artifact) => {
+    const item = document.createElement('li');
+    item.className = 'compile-artifact-item';
+    const name = document.createElement('strong');
+    name.textContent = artifact.name;
+    const metadata = document.createElement('span');
+    metadata.textContent = `${artifact.media_type} · ${artifact.schema_version || 'untyped'} · ${artifact.bytes} bytes`;
+    const bindings = document.createElement('span');
+    bindings.className = 'compile-artifact-bindings';
+    bindings.textContent = artifact.bindings.length
+      ? artifact.bindings.map((binding) => `${binding.direction} · ${binding.role}`).join(' | ')
+      : 'supporting artifact';
+    const digest = document.createElement('code');
+    digest.textContent = artifact.sha256;
+    item.append(name, metadata, bindings, digest);
+    artifacts.appendChild(item);
+  });
+  if (!audit.artifacts.length) {
+    const empty = document.createElement('li');
+    empty.className = 'empty';
+    empty.textContent = audit.invocation.status === 'not_created_preflight'
+      ? '预检终止前未产出 artifact。'
+      : '此终态没有 committed artifact metadata。';
+    artifacts.appendChild(empty);
+  }
+  $('#harness-audit-message').textContent = '摘要已与完整 committed journal 对账；artifact metadata 已复核。';
   $('#harness-audit-panel').hidden = false;
 }
 

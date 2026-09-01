@@ -206,11 +206,20 @@ button svg { width: 17px; height: 17px; stroke-width: 1.8; }
 .compile-audit-summary dd { margin: 0; overflow-wrap: anywhere; font: 11px/1.4 ui-monospace, "SFMono-Regular", Consolas, monospace; }
 .compile-audit-invocation { margin-top: 16px; display: grid; gap: 7px; }
 .compile-audit-invocation span { color: var(--muted); font-size: 11px; }
-.compile-audit-invocation code, .compile-dependency-list code { overflow-wrap: anywhere; font: 10px/1.45 ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.compile-audit-invocation code, .compile-dependency-list code, .compile-artifact-list code { overflow-wrap: anywhere; font: 10px/1.45 ui-monospace, "SFMono-Regular", Consolas, monospace; }
 .compile-dependency-list { margin: 16px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
 .compile-dependency-list li { padding: 10px 0; display: grid; gap: 5px; border-bottom: 1px solid var(--line); }
 .compile-dependency-list strong { font-size: 12px; }
 .compile-dependency-list .empty { color: var(--muted); font-size: 11px; }
+.compile-artifact-heading { margin-top: 18px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.compile-artifact-heading h4 { margin: 0; font-size: 12px; }
+.compile-artifact-heading span { color: var(--muted); font: 10px/1.4 ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.compile-artifact-list { margin: 8px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.compile-artifact-list li { padding: 10px 0; display: grid; gap: 4px; border-bottom: 1px solid var(--line); }
+.compile-artifact-list strong { font-size: 12px; }
+.compile-artifact-list span { color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+.compile-artifact-list .compile-artifact-bindings { color: var(--ink); }
+.compile-artifact-list .empty { color: var(--muted); font-size: 11px; }
 
 .history-list { display: grid; border-top: 1px solid var(--line); }
 .history-item { width: 100%; min-height: 58px; justify-content: space-between; gap: 16px; padding: 10px 4px; color: inherit; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--line); }

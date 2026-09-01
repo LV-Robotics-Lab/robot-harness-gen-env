@@ -903,3 +903,25 @@
 - 边界：Event Timeline 仍是唯一 operations authority；audit schema 只是 UI projection，不新增 Harness
   公共 schema snapshot。面板不复制/推演操作，不服务 artifact/URI/path，不提供依赖图编辑、拖拽、
   重排、重试、replay、validate 或 System 2，也不构成物理 validation、settle 或 publishability。
+
+### 2026-09-01 / A049：终态 artifact metadata 必须加入同一 audit closure，不能从 event stage 猜
+
+- 设计：比较了独立 `/artifacts` endpoint、generic run inspector 与扩展现有 compile audit。选择把工作台
+  投影显式升为 `harness.workbench_compile_audit.v2`：RunState、Invocation、完整 EventPage 与 artifact
+  metadata 在同一锁和同一轮双读里一起对账，避免第二个 endpoint 形成不同快照或暗示尚不存在的
+  replay/validate generic authority。
+- authority closure：服务端从类型化 `Text2EnvCompileInput` 与 `Text2EnvCompileOutput` 重建 input
+  asset_catalog 和五个 output bindings，不信任 stage/role 字符串。terminal event 的 ArtifactRef 必须与
+  RunState 精确同序，完整 event identity 集不得多/少，output/blocker binding 必须在终态集合内；每项
+  再经同一 `CompileApplication.resolve_artifact` 重验 CAS 当前 bytes 与 SHA。固定 preflight 必须空，
+  bound internal failure 不把 Invocation input 虚构成已提交 artifact。
+- 安全投影：只返回 `name/media_type/schema_version/sha256/bytes/bindings`，拒绝 unsafe metadata、重复
+  identity、非 CAS URI 和超过 JavaScript 安全整数的 bytes；wire 上 bytes 使用十进制字符串。浏览器
+  只在选中的完整 terminal compile history 上核 exact v2、终态 metadata 顺序与固定 success binding
+  roster，再用 `textContent` 显示；没有 URI、path、链接或内容请求。
+- 验证：`tests/demo` 161 passed，其中 34 项为真 Flask + headless Chrome；Application/Event journal
+  相邻回归 51 passed。`demo/harness_compile.py` 为 213 statements / 100 branches，statement/branch
+  100%；Python/JS syntax、ruff check/format 与 diff check 均通过。
+- 边界：这是当前 CAS bytes 的重验，不声称 OS 或同用户路径不可变。它不是 artifact 内容 viewer、下载
+  接口、依赖编辑、replay、validate、System 2、物理 validation、settle 或 publishability；工作台
+  projection v2 也不新增 Harness 公共 schema snapshot。

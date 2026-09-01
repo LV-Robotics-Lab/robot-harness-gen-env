@@ -2,6 +2,13 @@
 
 ## 2026-09-01
 
+- 将 terminal compile audit 升为 `harness.workbench_compile_audit.v2`：在原有 RunState、Invocation 与
+  committed EventPage 双读闭包内，从权威 typed input/output 重建 artifact bindings，并把终态
+  ArtifactRef 与 terminal event 的精确顺序、完整 event identity 集及应用 CAS 当前 bytes 逐项重验。
+  浏览器只显示安全的 name/media/schema/SHA/十进制 bytes 与 input/output role；预检固定为空，失败
+  运行不虚构未提交的输入 artifact。161 项 demo 测试通过（34 项真 Chrome），相邻回归 51 passed，
+  compile module 213 statements / 100 branches 全覆盖。它不是内容 viewer 或下载接口，也不提供 URI、
+  path、不可变存储、replay/validate、物理验证或 publishability 承诺。
 - 为 terminal compile run 增加只读依赖与终态审计：同一 Workbench authority 两次重读 RunState、
   Invocation 与完整 committed history，只有三者全空才返回 not found，partial/drift/cursor/binding
   不精确均 fail closed；Invocation digest 从类型化参数、依赖和 attempt 上限重算，固定执行/预检历史

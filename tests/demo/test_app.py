@@ -129,7 +129,7 @@ class _StubWorkbench:
     def audit(self, *, run_id: UUID):
         self.audit_runs.append(run_id)
         return {
-            "schema_version": "harness.workbench_compile_audit.v1",
+            "schema_version": "harness.workbench_compile_audit.v2",
             "run": {
                 "run_id": str(run_id),
                 "skill_id": "text2env.compile",
@@ -148,6 +148,7 @@ class _StubWorkbench:
                 "digest": "a" * 64,
                 "dependencies": [{"name": "scene_gen", "version": "1", "sha256": "b" * 64}],
             },
+            "artifacts": [],
         }
 
 
@@ -323,7 +324,7 @@ def test_harness_compile_audit_accepts_only_one_canonical_v4_run_id(
     response = app.test_client().get(f"/api/harness/compile-runs/{run_id}/audit")
 
     assert response.status_code == 200
-    assert response.json["schema_version"] == "harness.workbench_compile_audit.v1"
+    assert response.json["schema_version"] == "harness.workbench_compile_audit.v2"
     assert response.json["run"]["run_id"] == run_id
     assert workbench.audit_runs == [UUID(run_id)]
 

@@ -18,7 +18,7 @@ from werkzeug.serving import make_server
 from demo.app import create_app
 from demo.harness_compile import WorkbenchCompileUnavailableError
 from demo.harness_feed import HarnessEventFeed
-from self_improving.harness import RunRecorder, RunStatus, SQLiteEventJournal
+from self_improving.harness import ArtifactRef, RunRecorder, RunStatus, SQLiteEventJournal
 
 
 def _compile_dependency_rows() -> list[dict[str, str]]:
@@ -29,6 +29,81 @@ def _compile_dependency_rows() -> list[dict[str, str]]:
         {"name": "scene-gen", "version": "0.1.0", "sha256": "e" * 64},
         {"name": "text2env-compile-config", "version": "1", "sha256": "f" * 64},
     ]
+
+
+def _compile_artifact_rows(marker: str | None = None) -> list[dict[str, object]]:
+    rows = [
+        {
+            "name": "scene_spec",
+            "media_type": "application/json",
+            "schema_version": "robotwin.scene_spec.v1",
+            "sha256": "1" * 64,
+            "bytes": "975",
+            "bindings": [{"direction": "output", "role": "scene_spec"}],
+        },
+        {
+            "name": "resolved_scene",
+            "media_type": "application/json",
+            "schema_version": "robotwin.resolved_scene.v1",
+            "sha256": "2" * 64,
+            "bytes": "3663",
+            "bindings": [{"direction": "output", "role": "resolved_scene"}],
+        },
+        {
+            "name": "effective_asset_catalog",
+            "media_type": "application/json",
+            "schema_version": "robotwin.asset_catalog.v1",
+            "sha256": "3" * 64,
+            "bytes": "1528",
+            "bindings": [
+                {"direction": "input", "role": "asset_catalog"},
+                {"direction": "output", "role": "environment_package.asset_catalog"},
+            ],
+        },
+        {
+            "name": "package_manifest",
+            "media_type": "application/json",
+            "schema_version": "robotwin.generated_scene_package.v1",
+            "sha256": "4" * 64,
+            "bytes": "1240",
+            "bindings": [{"direction": "output", "role": "environment_package.package_manifest"}],
+        },
+        {
+            "name": "validation_report",
+            "media_type": "application/json",
+            "schema_version": "robotwin.scene_validation.v1",
+            "sha256": "5" * 64,
+            "bytes": "3885",
+            "bindings": [{"direction": "output", "role": "static_validation"}],
+        },
+        {
+            "name": "request",
+            "media_type": "text/plain",
+            "schema_version": None,
+            "sha256": "6" * 64,
+            "bytes": "48",
+            "bindings": [],
+        },
+    ]
+    if marker is not None:
+        first = int(marker[0], 16)
+        for index, row in enumerate(rows):
+            row["sha256"] = f"{(first + index) % 16:x}" * 64
+    return rows
+
+
+def _compile_artifact_refs(marker: str | None = None) -> tuple[ArtifactRef, ...]:
+    return tuple(
+        ArtifactRef(
+            name=row["name"],
+            uri=f"artifact://sha256/{row['sha256']}",
+            media_type=row["media_type"],
+            schema_version=row["schema_version"],
+            sha256=row["sha256"],
+            bytes=int(row["bytes"]),
+        )
+        for row in _compile_artifact_rows(marker)
+    )
 
 
 def _configured_app(
@@ -85,7 +160,11 @@ class _JournalSubmittingWorkbench:
         )
         recorder.start(stage="invoke.started", attempt=1)
         recorder.progress(stage="compile.parse.started")
-        recorder.finish(status=RunStatus.SUCCEEDED, stage="invoke.succeeded")
+        recorder.finish(
+            status=RunStatus.SUCCEEDED,
+            stage="invoke.succeeded",
+            artifact_refs=_compile_artifact_refs(),
+        )
         page = self.page(run_id=self.run_id)
         return {
             "schema_version": "harness.workbench_compile_submission.v1",
@@ -105,7 +184,7 @@ class _JournalSubmittingWorkbench:
         page = self.page(run_id=run_id, limit=500)
         events = page["events"]
         return {
-            "schema_version": "harness.workbench_compile_audit.v1",
+            "schema_version": "harness.workbench_compile_audit.v2",
             "run": {
                 "run_id": str(run_id),
                 "skill_id": "text2env.compile",
@@ -124,6 +203,7 @@ class _JournalSubmittingWorkbench:
                 "digest": "a" * 64,
                 "dependencies": _compile_dependency_rows(),
             },
+            "artifacts": _compile_artifact_rows(),
         }
 
 
@@ -194,7 +274,7 @@ class _PreflightSubmittingWorkbench:
         page = self.page(run_id=run_id, limit=500)
         events = page["events"]
         return {
-            "schema_version": "harness.workbench_compile_audit.v1",
+            "schema_version": "harness.workbench_compile_audit.v2",
             "run": {
                 "run_id": str(run_id),
                 "skill_id": "text2env.compile",
@@ -213,6 +293,7 @@ class _PreflightSubmittingWorkbench:
                 "digest": None,
                 "dependencies": [],
             },
+            "artifacts": [],
         }
 
 
@@ -230,7 +311,16 @@ class _ReadonlyAuditWorkbench:
         self.audit_runs: list[UUID] = []
 
     def page(self, **kwargs):
-        return self.feed.page(**kwargs)
+        page = self.feed.page(**kwargs)
+        run_id = kwargs.get("run_id")
+        if run_id in self.digests and page["events"]:
+            terminal = page["events"][-1]["event"]
+            if terminal["to_status"] == "succeeded":
+                terminal["artifact_refs"] = [
+                    ref.model_dump(mode="json")
+                    for ref in _compile_artifact_refs(self.digests[run_id])
+                ]
+        return page
 
     def audit(self, *, run_id: UUID):
         self.audit_runs.append(run_id)
@@ -238,7 +328,7 @@ class _ReadonlyAuditWorkbench:
         events = page["events"]
         terminal = events[-1]["event"]
         return {
-            "schema_version": "harness.workbench_compile_audit.v1",
+            "schema_version": "harness.workbench_compile_audit.v2",
             "run": {
                 "run_id": str(run_id),
                 "skill_id": "text2env.compile",
@@ -257,6 +347,7 @@ class _ReadonlyAuditWorkbench:
                 "digest": self.digests[run_id],
                 "dependencies": _compile_dependency_rows(),
             },
+            "artifacts": _compile_artifact_rows(self.digests[run_id]),
         }
 
 
@@ -395,7 +486,7 @@ def test_browser_harness_compile_replays_only_committed_events(
     assert "Harness Compile 已持久化为 succeeded" in dom
 
 
-def test_browser_renders_dependency_audit_only_after_the_terminal_journal_matches(
+def test_browser_renders_dependency_and_artifact_audit_after_the_terminal_journal_matches(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
@@ -440,7 +531,56 @@ def test_browser_renders_dependency_audit_only_after_the_terminal_journal_matche
     assert "a" * 64 in dom
     assert "b" * 64 in dom
     assert "c" * 64 in dom
+    assert "scene_spec" in dom
+    assert "robotwin.scene_spec.v1" in dom
+    assert "application/json" in dom
+    assert "975 bytes" in dom
+    assert "1" * 64 in dom
+    assert "output · scene_spec" in dom
+    assert "artifact://" not in dom
     assert "operations" not in dom
+
+
+def test_browser_accepts_an_authorized_input_alias_for_the_same_committed_content(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    original_page = workbench.page
+
+    def page_with_input_alias(**kwargs):
+        page = original_page(**kwargs)
+        if kwargs.get("run_id") == workbench.run_id and len(page["events"]) >= 2:
+            canonical = _compile_artifact_refs()[2]
+            alias = canonical.model_copy(update={"name": "input_asset_catalog"})
+            page["events"][1]["event"]["artifact_refs"] = [alias.model_dump(mode="json")]
+        return page
+
+    monkeypatch.setattr(workbench, "page", page_with_input_alias)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def click_compile_after_the_application_script(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    '<script>document.querySelector("#harness-compile-button").click();</script>'
+                    "</body>",
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile")
+
+    assert "摘要已与完整 committed journal 对账" in dom
+    assert "effective_asset_catalog" in dom
+    assert "input · asset_catalog" in dom
+    assert "input_asset_catalog" not in dom
+    assert "终态与 committed journal 无法对账" not in dom
 
 
 @pytest.mark.parametrize("view", ["all", "running_compile", "terminal_replay"])
@@ -518,6 +658,61 @@ def test_browser_rejects_audit_fields_that_could_smuggle_a_local_path(
     assert "终态与 committed journal 无法对账" in dom
     assert "/tmp/private-staging" not in dom
     assert "asset-library-state@1" not in dom
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ["locator_name", "numeric_bytes", "uri_key", "swapped_typed_roles"],
+)
+def test_browser_rejects_malformed_compile_artifact_metadata(
+    mutation: str,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    original_audit = workbench.audit
+
+    def corrupt_audit(*, run_id: UUID):
+        audit = original_audit(run_id=run_id)
+        artifact = audit["artifacts"][0]
+        if mutation == "locator_name":
+            artifact["name"] = "/tmp/private-staging"
+        elif mutation == "numeric_bytes":
+            artifact["bytes"] = 975
+        elif mutation == "swapped_typed_roles":
+            audit["artifacts"][0]["bindings"], audit["artifacts"][1]["bindings"] = (
+                audit["artifacts"][1]["bindings"],
+                audit["artifacts"][0]["bindings"],
+            )
+        else:
+            artifact["uri"] = f"artifact://sha256/{artifact['sha256']}"
+        return audit
+
+    monkeypatch.setattr(workbench, "audit", corrupt_audit)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def click_compile_after_the_application_script(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    '<script>document.querySelector("#harness-compile-button").click();</script>'
+                    "</body>",
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / f"chrome-{mutation}")
+
+    assert "终态与 committed journal 无法对账" in dom
+    assert "/tmp/private-staging" not in dom
+    assert "artifact://" not in dom
+    assert "scene_spec" not in dom
+    assert "摘要已与完整 committed journal 对账" not in dom
 
 
 def test_browser_rejects_microsecond_drift_in_the_audit_timestamps(
@@ -893,6 +1088,9 @@ def test_browser_accepts_a_committed_preflight_terminal_summary(
     assert "未创建 Invocation" in dom
     assert 'id="harness-dependency-list"><li class="empty">' in dom
     assert "预检终止前未解析依赖" in dom
+    assert 'id="harness-artifact-list"' in dom
+    assert '<li class="empty">预检终止前未产出 artifact。' in dom
+    assert "预检终止前未产出 artifact" in dom
 
 
 def test_browser_new_submission_invalidates_an_older_terminal_read(

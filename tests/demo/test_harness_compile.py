@@ -26,7 +26,11 @@ from self_improving.harness.application import (
     CompileApplicationSettings,
     create_compile_application,
 )
-from self_improving.harness.schemas import RunStatus
+from self_improving.harness.schemas import (
+    RunStatus,
+    Text2EnvCompileInput,
+    Text2EnvCompileOutput,
+)
 
 
 def _write_json(path: Path, value: object) -> None:
@@ -129,33 +133,668 @@ def test_audit_reconstructs_dependencies_and_terminal_binding_from_one_authority
 
     audit = workbench.audit(run_id=run_id)
 
-    assert audit == {
-        "schema_version": "harness.workbench_compile_audit.v1",
-        "run": {
-            "run_id": str(run_id),
-            "skill_id": "text2env.compile",
-            "skill_version": "1.0.0",
-            "status": "succeeded",
-            "attempt": 1,
-            "max_attempts": 1,
-            "started_at": serialized_state["started_at"],
-            "ended_at": serialized_state["ended_at"],
-            "event_count": len(persisted.events),
-            "terminal_event_id": str(history.last_event_id),
-            "blocker": None,
-        },
-        "invocation": {
-            "status": "bound",
-            "digest": invocation.invocation_digest,
-            "dependencies": [
-                dependency.model_dump(mode="json") for dependency in invocation.dependencies
-            ],
-        },
+    assert set(audit) == {"schema_version", "run", "invocation", "artifacts"}
+    assert audit["schema_version"] == "harness.workbench_compile_audit.v2"
+    assert audit["run"] == {
+        "run_id": str(run_id),
+        "skill_id": "text2env.compile",
+        "skill_version": "1.0.0",
+        "status": "succeeded",
+        "attempt": 1,
+        "max_attempts": 1,
+        "started_at": serialized_state["started_at"],
+        "ended_at": serialized_state["ended_at"],
+        "event_count": len(persisted.events),
+        "terminal_event_id": str(history.last_event_id),
+        "blocker": None,
+    }
+    assert audit["invocation"] == {
+        "status": "bound",
+        "digest": invocation.invocation_digest,
+        "dependencies": [
+            dependency.model_dump(mode="json") for dependency in invocation.dependencies
+        ],
     }
     serialized = json.dumps(audit, sort_keys=True)
     assert "effective_parameters" not in serialized
     assert "artifact://" not in serialized
     assert str(tmp_path) not in serialized
+
+
+def test_audit_projects_reverified_artifact_metadata_without_locators(
+    tmp_path: Path,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    invocation = application.invocation(run_id)
+    assert persisted is not None
+    assert invocation is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+
+    audit = workbench.audit(run_id=run_id)
+
+    assert audit["schema_version"] == "harness.workbench_compile_audit.v2"
+    assert len(audit["artifacts"]) == len(persisted.artifacts) == 11
+    assert [
+        {key: item[key] for key in ("name", "media_type", "schema_version", "sha256")}
+        for item in audit["artifacts"]
+    ] == [
+        {
+            "name": ref.name,
+            "media_type": ref.media_type,
+            "schema_version": ref.schema_version,
+            "sha256": ref.sha256,
+        }
+        for ref in persisted.artifacts
+    ]
+    assert [item["bytes"] for item in audit["artifacts"]] == [
+        str(ref.bytes) for ref in persisted.artifacts
+    ]
+    by_digest = {item["sha256"]: item for item in audit["artifacts"]}
+    assert by_digest[invocation.effective_parameters["asset_catalog"]["sha256"]]["bindings"] == [
+        {"direction": "input", "role": "asset_catalog"},
+    ]
+    assert by_digest[output.scene_spec.sha256]["bindings"] == [
+        {"direction": "output", "role": "scene_spec"}
+    ]
+    assert (
+        next(item for item in audit["artifacts"] if item["name"] == "asset_generation_report")[
+            "bindings"
+        ]
+        == []
+    )
+    assert all(application.resolve_artifact(ref).is_file() for ref in persisted.artifacts)
+    serialized = json.dumps(audit, sort_keys=True)
+    assert "artifact://" not in serialized
+    assert "uri" not in serialized
+    assert str(tmp_path) not in serialized
+
+
+@pytest.mark.parametrize("mutation", ["missing", "same_size_corrupt"])
+def test_audit_rejects_a_missing_or_corrupt_application_cas_object(
+    mutation: str,
+    tmp_path: Path,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    target = next(artifact for artifact in persisted.artifacts if artifact.name == "request")
+    cas_path = application.resolve_artifact(target)
+    if mutation == "missing":
+        cas_path.unlink()
+    else:
+        original = cas_path.read_bytes()
+        replacement = bytes(byte ^ 0xFF for byte in original)
+        assert len(replacement) == len(original)
+        cas_path.write_bytes(replacement)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="artifact inventory") as captured:
+        workbench.audit(run_id=run_id)
+
+    assert str(tmp_path) not in str(captured.value)
+
+
+def test_audit_allows_a_bound_internal_failure_without_inventing_input_artifacts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    registry = application._registry  # noqa: SLF001 - production failure fixture setup
+    registration = next(iter(registry._registrations.values()))  # noqa: SLF001
+
+    def fail_handler(_self, _parameters, _context):
+        raise RuntimeError("fixture compile failure")
+
+    monkeypatch.setattr(type(registration.handler), "__call__", fail_handler)
+
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    assert persisted is not None
+    assert persisted.status is RunStatus.FAILED
+    assert persisted.invocation_digest is not None
+    assert persisted.artifacts == ()
+
+    audit = workbench.audit(run_id=run_id)
+
+    assert audit["invocation"]["status"] == "bound"
+    assert audit["artifacts"] == []
+
+
+def test_audit_binds_a_committed_blocked_input_by_content_identity(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path, generate_missing_assets=False)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    invocation = application.invocation(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    assert invocation is not None
+    assert persisted.status is RunStatus.BLOCKED
+    assert persisted.blocker is not None
+    target = Text2EnvCompileInput.model_validate(invocation.effective_parameters).asset_catalog
+    forged = target.model_copy(update={"name": "safe_but_not_the_typed_input_name"})
+
+    def replace_target(ref):
+        return forged if ref == target else ref
+
+    forged_events = tuple(
+        event.model_copy(
+            update={"artifact_refs": tuple(replace_target(ref) for ref in event.artifact_refs)}
+        )
+        for event in persisted.events
+    )
+    forged_blocker = persisted.blocker.model_copy(
+        update={
+            "artifact_refs": tuple(replace_target(ref) for ref in persisted.blocker.artifact_refs)
+        }
+    )
+    forged_state = persisted.model_copy(
+        update={
+            "artifacts": tuple(replace_target(ref) for ref in persisted.artifacts),
+            "events": forged_events,
+            "blocker": forged_blocker,
+        }
+    )
+    forged_history = replace(
+        history,
+        events=tuple(
+            replace(stored, envelope=replace(stored.envelope, event=event))
+            for stored, event in zip(history.events, forged_events, strict=True)
+        ),
+    )
+    monkeypatch.setattr(application, "run_state", lambda _run_id: forged_state)
+    monkeypatch.setattr(application, "events", lambda **_kwargs: forged_history)
+
+    audit = workbench.audit(run_id=run_id)
+
+    item = next(artifact for artifact in audit["artifacts"] if artifact["sha256"] == forged.sha256)
+    assert item["name"] == "safe_but_not_the_typed_input_name"
+    assert item["bindings"] == [{"direction": "input", "role": "asset_catalog"}]
+
+
+def test_audit_accepts_a_real_reuse_compile_with_distinct_input_and_output_aliases(
+    tmp_path: Path,
+) -> None:
+    generating_workbench, application = _workbench(tmp_path)
+    generated_submission = generating_workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    generated = application.run_state(UUID(generated_submission["run_id"]))
+    assert generated is not None
+    generated_output = Text2EnvCompileOutput.model_validate(generated.output)
+    reusable_catalog = tmp_path / "catalogs" / "reusable.json"
+    reusable_catalog.write_bytes(
+        application.resolve_artifact(
+            generated_output.environment_package.asset_catalog
+        ).read_bytes()
+    )
+    reuse_workbench = WorkbenchCompile(
+        application=application,
+        asset_catalog_path=reusable_catalog,
+        generate_missing_assets=False,
+    )
+
+    submission = reuse_workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    invocation = application.invocation(run_id)
+    assert persisted is not None
+    assert invocation is not None
+    assert persisted.status is RunStatus.SUCCEEDED
+    typed_input = Text2EnvCompileInput.model_validate(invocation.effective_parameters)
+    state_alias = next(
+        artifact
+        for artifact in persisted.artifacts
+        if artifact.sha256 == typed_input.asset_catalog.sha256
+    )
+    assert typed_input.asset_catalog.name == "input_asset_catalog"
+    assert state_alias.name == "effective_asset_catalog"
+
+    audit = reuse_workbench.audit(run_id=run_id)
+
+    item = next(
+        artifact
+        for artifact in audit["artifacts"]
+        if artifact["sha256"] == typed_input.asset_catalog.sha256
+    )
+    assert item["name"] == "effective_asset_catalog"
+    assert item["bindings"] == [
+        {"direction": "input", "role": "asset_catalog"},
+        {"direction": "output", "role": "environment_package.asset_catalog"},
+    ]
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("name", "/tmp/private-staging"),
+        ("media_type", "/tmp/private-staging"),
+        ("schema_version", "/tmp/private-staging"),
+        ("bytes", True),
+        ("bytes", -1),
+        ("sha256", "A" * 64),
+        ("uri", "file:///tmp/private-staging"),
+    ],
+)
+def test_audit_rejects_unsafe_artifact_metadata(
+    field: str,
+    value: object,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    target = next(ref for ref in persisted.artifacts if ref.name == "asset_generation_report")
+    forged = target.model_copy(update={field: value})
+    forged_events = tuple(
+        event.model_copy(
+            update={
+                "artifact_refs": tuple(
+                    forged if ref == target else ref for ref in event.artifact_refs
+                )
+            }
+        )
+        for event in persisted.events
+    )
+    forged_state = persisted.model_copy(
+        update={
+            "artifacts": tuple(forged if ref == target else ref for ref in persisted.artifacts),
+            "events": forged_events,
+        }
+    )
+    forged_history = replace(
+        history,
+        events=tuple(
+            replace(stored, envelope=replace(stored.envelope, event=event))
+            for stored, event in zip(history.events, forged_events, strict=True)
+        ),
+    )
+    monkeypatch.setattr(application, "run_state", lambda _run_id: forged_state)
+    monkeypatch.setattr(application, "events", lambda **_kwargs: forged_history)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="artifact inventory"):
+        workbench.audit(run_id=run_id)
+
+
+def test_audit_rejects_an_artifact_byte_count_that_javascript_cannot_represent(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    target = next(ref for ref in persisted.artifacts if ref.name == "asset_generation_report")
+    forged = target.model_copy(update={"bytes": 9_007_199_254_740_992})
+
+    def replace_target(ref):
+        return forged if ref == target else ref
+
+    forged_events = tuple(
+        event.model_copy(
+            update={"artifact_refs": tuple(replace_target(ref) for ref in event.artifact_refs)}
+        )
+        for event in persisted.events
+    )
+    forged_state = persisted.model_copy(
+        update={
+            "artifacts": tuple(replace_target(ref) for ref in persisted.artifacts),
+            "events": forged_events,
+        }
+    )
+    forged_history = replace(
+        history,
+        events=tuple(
+            replace(stored, envelope=replace(stored.envelope, event=event))
+            for stored, event in zip(history.events, forged_events, strict=True)
+        ),
+    )
+    monkeypatch.setattr(application, "run_state", lambda _run_id: forged_state)
+    monkeypatch.setattr(application, "events", lambda **_kwargs: forged_history)
+    monkeypatch.setattr(application, "resolve_artifact", lambda _artifact: tmp_path)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="artifact inventory"):
+        workbench.audit(run_id=run_id)
+
+
+def test_audit_rejects_an_unauthorized_alias_in_an_earlier_committed_event(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    original = persisted.artifacts[-1]
+    injected = original.model_copy(update={"name": "unauthorized_event_alias"})
+    forged_first = persisted.events[0].model_copy(
+        update={"artifact_refs": (*persisted.events[0].artifact_refs, injected)}
+    )
+    forged_state = persisted.model_copy(update={"events": (forged_first, *persisted.events[1:])})
+    forged_history = replace(
+        history,
+        events=(
+            replace(
+                history.events[0], envelope=replace(history.events[0].envelope, event=forged_first)
+            ),
+            *history.events[1:],
+        ),
+    )
+    monkeypatch.setattr(application, "run_state", lambda _run_id: forged_state)
+    monkeypatch.setattr(application, "events", lambda **_kwargs: forged_history)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="artifact inventory"):
+        workbench.audit(run_id=run_id)
+
+
+def test_audit_rejects_an_output_artifact_removed_from_the_terminal_closure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    removed_identity = (
+        output.scene_spec.media_type,
+        output.scene_spec.schema_version,
+        output.scene_spec.sha256,
+    )
+
+    def keep(ref) -> bool:
+        return (ref.media_type, ref.schema_version, ref.sha256) != removed_identity
+
+    forged_events = tuple(
+        event.model_copy(update={"artifact_refs": tuple(filter(keep, event.artifact_refs))})
+        for event in persisted.events
+    )
+    forged_state = persisted.model_copy(
+        update={
+            "artifacts": tuple(filter(keep, persisted.artifacts)),
+            "events": forged_events,
+        }
+    )
+    forged_history = replace(
+        history,
+        events=tuple(
+            replace(
+                stored,
+                envelope=replace(stored.envelope, event=event),
+            )
+            for stored, event in zip(history.events, forged_events, strict=True)
+        ),
+    )
+    monkeypatch.setattr(application, "run_state", lambda _run_id: forged_state)
+    monkeypatch.setattr(application, "events", lambda **_kwargs: forged_history)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="artifact inventory"):
+        workbench.audit(run_id=run_id)
+
+
+def test_audit_rejects_a_succeeded_run_missing_its_input_content_identity(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    invocation = application.invocation(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    assert invocation is not None
+    input_ref = Text2EnvCompileInput.model_validate(invocation.effective_parameters).asset_catalog
+    input_identity = (input_ref.media_type, input_ref.schema_version, input_ref.sha256)
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    assert output.environment_package.asset_catalog.sha256 != input_ref.sha256
+
+    def keep(ref) -> bool:
+        return (ref.media_type, ref.schema_version, ref.sha256) != input_identity
+
+    forged_events = tuple(
+        event.model_copy(update={"artifact_refs": tuple(filter(keep, event.artifact_refs))})
+        for event in persisted.events
+    )
+    forged_state = persisted.model_copy(
+        update={
+            "artifacts": tuple(filter(keep, persisted.artifacts)),
+            "events": forged_events,
+        }
+    )
+    forged_history = replace(
+        history,
+        events=tuple(
+            replace(stored, envelope=replace(stored.envelope, event=event))
+            for stored, event in zip(history.events, forged_events, strict=True)
+        ),
+    )
+    monkeypatch.setattr(application, "run_state", lambda _run_id: forged_state)
+    monkeypatch.setattr(application, "events", lambda **_kwargs: forged_history)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="artifact inventory"):
+        workbench.audit(run_id=run_id)
+
+
+def test_audit_rejects_safe_metadata_drift_on_a_typed_output_binding(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    output = Text2EnvCompileOutput.model_validate(persisted.output)
+    target = output.scene_spec
+    forged = target.model_copy(update={"name": "safe_but_not_the_typed_output_name"})
+
+    def replace_target(ref):
+        return forged if ref == target else ref
+
+    forged_events = tuple(
+        event.model_copy(
+            update={"artifact_refs": tuple(replace_target(ref) for ref in event.artifact_refs)}
+        )
+        for event in persisted.events
+    )
+    forged_state = persisted.model_copy(
+        update={
+            "artifacts": tuple(replace_target(ref) for ref in persisted.artifacts),
+            "events": forged_events,
+        }
+    )
+    forged_history = replace(
+        history,
+        events=tuple(
+            replace(stored, envelope=replace(stored.envelope, event=event))
+            for stored, event in zip(history.events, forged_events, strict=True)
+        ),
+    )
+    monkeypatch.setattr(application, "run_state", lambda _run_id: forged_state)
+    monkeypatch.setattr(application, "events", lambda **_kwargs: forged_history)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="artifact inventory"):
+        workbench.audit(run_id=run_id)
+
+
+def test_audit_rejects_a_terminal_event_artifact_order_that_differs_from_state(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    reordered = (persisted.artifacts[1], persisted.artifacts[0], *persisted.artifacts[2:])
+    forged_terminal = persisted.events[-1].model_copy(update={"artifact_refs": reordered})
+    forged_state = persisted.model_copy(
+        update={
+            "events": (*persisted.events[:-1], forged_terminal),
+        }
+    )
+    stored_terminal = history.events[-1]
+    forged_history = replace(
+        history,
+        events=(
+            *history.events[:-1],
+            replace(
+                stored_terminal, envelope=replace(stored_terminal.envelope, event=forged_terminal)
+            ),
+        ),
+    )
+    monkeypatch.setattr(application, "run_state", lambda _run_id: forged_state)
+    monkeypatch.setattr(application, "events", lambda **_kwargs: forged_history)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="artifact inventory"):
+        workbench.audit(run_id=run_id)
+
+
+def test_audit_rejects_duplicate_terminal_artifact_identities(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    duplicate = persisted.artifacts[-1]
+    duplicated = (*persisted.artifacts, duplicate)
+    forged_terminal = persisted.events[-1].model_copy(update={"artifact_refs": duplicated})
+    forged_state = persisted.model_copy(
+        update={
+            "artifacts": duplicated,
+            "events": (*persisted.events[:-1], forged_terminal),
+        }
+    )
+    stored_terminal = history.events[-1]
+    forged_history = replace(
+        history,
+        events=(
+            *history.events[:-1],
+            replace(
+                stored_terminal, envelope=replace(stored_terminal.envelope, event=forged_terminal)
+            ),
+        ),
+    )
+    monkeypatch.setattr(application, "run_state", lambda _run_id: forged_state)
+    monkeypatch.setattr(application, "events", lambda **_kwargs: forged_history)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="artifact inventory"):
+        workbench.audit(run_id=run_id)
+
+
+def test_audit_rejects_an_unbounded_terminal_artifact_inventory(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    template = persisted.artifacts[-1]
+    extras = tuple(
+        template.model_copy(
+            update={
+                "name": f"supporting_artifact_{index}",
+                "sha256": f"{index:064x}",
+                "uri": f"artifact://sha256/{index:064x}",
+            }
+        )
+        for index in range(1, 502 - len(persisted.artifacts))
+    )
+    oversized = (*persisted.artifacts, *extras)
+    assert len(oversized) == 501
+    forged_terminal = persisted.events[-1].model_copy(update={"artifact_refs": oversized})
+    forged_state = persisted.model_copy(
+        update={
+            "artifacts": oversized,
+            "events": (*persisted.events[:-1], forged_terminal),
+        }
+    )
+    stored_terminal = history.events[-1]
+    forged_history = replace(
+        history,
+        events=(
+            *history.events[:-1],
+            replace(
+                stored_terminal, envelope=replace(stored_terminal.envelope, event=forged_terminal)
+            ),
+        ),
+    )
+    monkeypatch.setattr(application, "run_state", lambda _run_id: forged_state)
+    monkeypatch.setattr(application, "events", lambda **_kwargs: forged_history)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="artifact inventory"):
+        workbench.audit(run_id=run_id)
 
 
 def test_audit_marks_a_real_preflight_terminal_without_inventing_an_invocation(
@@ -185,6 +824,52 @@ def test_audit_marks_a_real_preflight_terminal_without_inventing_an_invocation(
         "digest": None,
         "dependencies": [],
     }
+    assert audit["artifacts"] == []
+
+
+def test_audit_rejects_an_artifact_coordinated_into_a_fixed_preflight_terminal(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    succeeded = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    succeeded_state = application.run_state(UUID(succeeded["run_id"]))
+    assert succeeded_state is not None
+    injected = succeeded_state.artifacts[0]
+    preflight = application._registry.invoke(  # noqa: SLF001 - production fixture setup
+        "text2env.compile",
+        "1.0.0",
+        {},
+    )
+    history = application.events(run_id=preflight.run_id, limit=500)
+    assert preflight.blocker is not None
+    forged_blocker = preflight.blocker.model_copy(update={"artifact_refs": (injected,)})
+    forged_terminal = preflight.events[-1].model_copy(update={"artifact_refs": (injected,)})
+    forged_state = preflight.model_copy(
+        update={
+            "artifacts": (injected,),
+            "blocker": forged_blocker,
+            "events": (*preflight.events[:-1], forged_terminal),
+        }
+    )
+    stored_terminal = history.events[-1]
+    forged_history = replace(
+        history,
+        events=(
+            *history.events[:-1],
+            replace(
+                stored_terminal, envelope=replace(stored_terminal.envelope, event=forged_terminal)
+            ),
+        ),
+    )
+    monkeypatch.setattr(application, "run_state", lambda _run_id: forged_state)
+    monkeypatch.setattr(application, "events", lambda **_kwargs: forged_history)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="artifact inventory"):
+        workbench.audit(run_id=preflight.run_id)
 
 
 def test_audit_rejects_non_uuid_and_unknown_runs_before_projecting_history(

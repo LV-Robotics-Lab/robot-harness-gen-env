@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import threading
 from pathlib import Path
 from typing import Any, cast
@@ -12,10 +13,16 @@ from demo.harness_feed import HarnessEventFeed, HarnessEventFeedCorruptionError
 from self_improving.harness.application import CompileApplication
 from self_improving.harness.event_journal import EventPage
 from self_improving.harness.registry import _invocation_digest
-from self_improving.harness.schemas import RunState, RunStatus, Text2EnvCompileInput
+from self_improving.harness.schemas import (
+    ArtifactRef,
+    RunState,
+    RunStatus,
+    Text2EnvCompileInput,
+    Text2EnvCompileOutput,
+)
 
 _SUBMISSION_SCHEMA = "harness.workbench_compile_submission.v1"
-_AUDIT_SCHEMA = "harness.workbench_compile_audit.v1"
+_AUDIT_SCHEMA = "harness.workbench_compile_audit.v2"
 _COMPILE_SKILL_ID = "text2env.compile"
 _COMPILE_SKILL_VERSION = "1.0.0"
 _COMPILE_DEPENDENCY_VERSIONS = (
@@ -25,6 +32,12 @@ _COMPILE_DEPENDENCY_VERSIONS = (
     ("scene-gen", "0.1.0"),
     ("text2env-compile-config", "1"),
 )
+_SAFE_ARTIFACT_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}")
+_SAFE_ARTIFACT_MEDIA_TYPE = re.compile(
+    r"[A-Za-z0-9][A-Za-z0-9.+_-]{0,63}/[A-Za-z0-9][A-Za-z0-9.+_-]{0,63}"
+)
+_SAFE_ARTIFACT_SCHEMA = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}")
+_JAVASCRIPT_SAFE_INTEGER_MAX = 9_007_199_254_740_991
 
 
 class WorkbenchCompileInputError(ValueError):
@@ -195,6 +208,7 @@ class WorkbenchCompile:
                 raise WorkbenchCompileAuthorityError("event history changed during audit")
             _verify_terminal_history(persisted=persisted, history=history)
 
+            input_artifacts: tuple[ArtifactRef, ...] = ()
             if persisted.invocation_digest is None:
                 if invocation is not None:
                     raise WorkbenchCompileAuthorityError(
@@ -242,6 +256,7 @@ class WorkbenchCompile:
                     raise WorkbenchCompileAuthorityError(
                         "terminal Invocation content identity is invalid"
                     )
+                input_artifacts = (typed_parameters.asset_catalog,)
                 invocation_projection = {
                     "status": "bound",
                     "digest": invocation.invocation_digest,
@@ -250,6 +265,11 @@ class WorkbenchCompile:
                     ],
                 }
 
+            artifacts = _project_artifacts(
+                application=self._application,
+                persisted=persisted,
+                input_artifacts=input_artifacts,
+            )
             serialized_state = persisted.model_dump(mode="json")
             return {
                 "schema_version": _AUDIT_SCHEMA,
@@ -267,6 +287,7 @@ class WorkbenchCompile:
                     "blocker": _project_blocker(persisted),
                 },
                 "invocation": invocation_projection,
+                "artifacts": artifacts,
             }
 
 
@@ -345,6 +366,136 @@ def _project_blocker(state: RunState) -> dict[str, Any] | None:
         "code": state.blocker.code,
         "retryable": state.blocker.retryable,
     }
+
+
+def _project_artifacts(
+    *,
+    application: CompileApplication,
+    persisted: RunState,
+    input_artifacts: tuple[ArtifactRef, ...],
+) -> list[dict[str, Any]]:
+    try:
+        if persisted.status is RunStatus.SUCCEEDED:
+            output = Text2EnvCompileOutput.model_validate(persisted.output)
+            output_artifacts = (
+                output.scene_spec,
+                output.resolved_scene,
+                output.environment_package.asset_catalog,
+                output.environment_package.package_manifest,
+                output.static_validation,
+            )
+            output_bindings = (
+                (output.scene_spec, {"direction": "output", "role": "scene_spec"}),
+                (output.resolved_scene, {"direction": "output", "role": "resolved_scene"}),
+                (
+                    output.environment_package.asset_catalog,
+                    {"direction": "output", "role": "environment_package.asset_catalog"},
+                ),
+                (
+                    output.environment_package.package_manifest,
+                    {"direction": "output", "role": "environment_package.package_manifest"},
+                ),
+                (
+                    output.static_validation,
+                    {"direction": "output", "role": "static_validation"},
+                ),
+            )
+        else:
+            output_artifacts = ()
+            output_bindings = ()
+        event_artifacts = tuple(
+            artifact for event in persisted.events for artifact in event.artifact_refs
+        )
+        blocker_artifacts = persisted.blocker.artifact_refs if persisted.blocker is not None else ()
+        if persisted.invocation_digest is None and (
+            persisted.artifacts or event_artifacts or blocker_artifacts
+        ):
+            raise ValueError("fixed compile preflight cannot publish artifacts")
+        if len(persisted.artifacts) > 500:
+            raise ValueError("terminal compile artifact inventory is too large")
+        event_identities = {_artifact_identity(artifact) for artifact in event_artifacts}
+        state_identities = [_artifact_identity(artifact) for artifact in persisted.artifacts]
+        state_identity_set = set(state_identities)
+        if len(state_identities) != len(state_identity_set):
+            raise ValueError("terminal compile artifact identities are duplicated")
+        if persisted.status is RunStatus.SUCCEEDED and any(
+            _artifact_identity(artifact) not in state_identity_set for artifact in input_artifacts
+        ):
+            raise ValueError("terminal compile input artifact identity is missing")
+        bindings_by_identity: dict[tuple[str, str | None, str], list[dict[str, str]]] = {}
+        for artifact in input_artifacts:
+            identity = _artifact_identity(artifact)
+            if identity in state_identity_set:
+                bindings_by_identity.setdefault(identity, []).append(
+                    {"direction": "input", "role": "asset_catalog"}
+                )
+        for artifact, binding in output_bindings:
+            bindings_by_identity.setdefault(_artifact_identity(artifact), []).append(binding)
+        if persisted.events[-1].artifact_refs != persisted.artifacts:
+            raise ValueError("terminal event artifacts differ from terminal compile artifacts")
+        authorized_event_refs = (
+            *persisted.artifacts,
+            *input_artifacts,
+            *output_artifacts,
+            *blocker_artifacts,
+        )
+        if event_identities != state_identity_set or any(
+            artifact not in authorized_event_refs for artifact in event_artifacts
+        ):
+            raise ValueError("terminal compile artifacts differ from committed event artifacts")
+        required_artifacts = (*output_artifacts, *blocker_artifacts)
+        if any(artifact not in persisted.artifacts for artifact in required_artifacts):
+            raise ValueError("terminal compile artifact bindings are incomplete")
+        for artifact in dict.fromkeys((*persisted.artifacts, *event_artifacts)):
+            _require_safe_artifact_metadata(artifact)
+            application.resolve_artifact(artifact)
+        projected = []
+        for artifact in persisted.artifacts:
+            identity = _artifact_identity(artifact)
+            projected.append(
+                {
+                    "name": artifact.name,
+                    "media_type": artifact.media_type,
+                    "schema_version": artifact.schema_version,
+                    "sha256": artifact.sha256,
+                    "bytes": str(artifact.bytes),
+                    "bindings": bindings_by_identity.get(identity, []),
+                }
+            )
+        return projected
+    except Exception as error:
+        raise WorkbenchCompileAuthorityError(
+            "terminal compile artifact inventory failed integrity checks"
+        ) from error
+
+
+def _artifact_identity(artifact: ArtifactRef) -> tuple[str, str | None, str]:
+    return artifact.media_type, artifact.schema_version, artifact.sha256
+
+
+def _require_safe_artifact_metadata(artifact: ArtifactRef) -> None:
+    if type(artifact.name) is not str or _SAFE_ARTIFACT_NAME.fullmatch(artifact.name) is None:
+        raise ValueError("compile artifact name is not safe to project")
+    if (
+        type(artifact.media_type) is not str
+        or _SAFE_ARTIFACT_MEDIA_TYPE.fullmatch(artifact.media_type) is None
+    ):
+        raise ValueError("compile artifact media type is not safe to project")
+    if artifact.schema_version is not None and (
+        type(artifact.schema_version) is not str
+        or _SAFE_ARTIFACT_SCHEMA.fullmatch(artifact.schema_version) is None
+    ):
+        raise ValueError("compile artifact schema version is not safe to project")
+    if (
+        type(artifact.bytes) is not int
+        or artifact.bytes < 0
+        or artifact.bytes > _JAVASCRIPT_SAFE_INTEGER_MAX
+    ):
+        raise ValueError("compile artifact byte count is invalid")
+    if type(artifact.sha256) is not str or re.fullmatch(r"[0-9a-f]{64}", artifact.sha256) is None:
+        raise ValueError("compile artifact digest is invalid")
+    if artifact.uri != f"artifact://sha256/{artifact.sha256}":
+        raise ValueError("compile artifact is not in the application CAS")
 
 
 def _empty_event_page(page: EventPage) -> bool:

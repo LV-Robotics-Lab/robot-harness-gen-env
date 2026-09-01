@@ -49,9 +49,9 @@
 | 重要代码 | 功能 | 关键符号 | 调用方 / 使用方 |
 | --- | --- | --- | --- |
 | `demo/app.py` | Flask 控制面：保留旧 text2env job，并增加可选的 Harness compile submit、event replay 与 terminal audit。 | `create_app`、`POST /api/harness/compile`、两个 `GET /api/harness/*` 路由、`HARNESS_WORKBENCH` | submit 只收 request/seed；audit 只收 canonical v4 run id 且无 query；同一 Workbench 优先拥有写入与读取 |
-| `demo/harness_compile.py` | 把固定 qualified `CompileApplication` 隐藏在同步工作台 seam 后，并重读 terminal closure 与 Invocation 依赖。 | `WorkbenchCompile.submit`、`audit`、`page`、`WorkbenchCompileAuthorityError` | audit 双读 RunState/Invocation/EventPage，重算 Invocation content digest 并核固定 attempt 历史；partial/drift 拒绝，只投影依赖 name/version/SHA 与精简终态 |
+| `demo/harness_compile.py` | 把固定 qualified `CompileApplication` 隐藏在同步工作台 seam 后，并重读 terminal closure、Invocation 依赖与 compile artifact metadata。 | `WorkbenchCompile.submit`、`audit`、`page`、`WorkbenchCompileAuthorityError` | audit 双读 RunState/Invocation/EventPage，重算 Invocation digest；artifact inventory 绑定 typed input/output、event/state closure 与 CAS 当前 bytes，只投影 locator-free metadata |
 | `demo/harness_feed.py` | 把 `SQLiteEventJournal` 的 `EventPage` 投影成浏览器可消费、可恢复的全局 cursor 页。 | `HarnessEventFeed.page`、`HarnessEventFeedCorruptionError` | 只读 seam；保留 run/Skill/Event 信封与 artifact metadata，不增加任意路径读取 |
-| `demo/static/` | 无构建步骤的 Event Timeline + compile-only 提交与只读依赖审计 UI。 | `harness-compile-button`、`loadHarnessEvents`、`loadHarnessAuditIfEligible` | POST 不生成阶段；audit 不缓存，只在完整 terminal journal 与摘要逐项一致后显示 |
+| `demo/static/` | 无构建步骤的 Event Timeline + compile-only 提交、依赖与 artifact metadata 审计 UI。 | `harness-compile-button`、`loadHarnessEvents`、`loadHarnessAuditIfEligible` | POST 不生成阶段；audit 不缓存，只在完整 terminal journal、摘要与 metadata 逐项一致后以纯文本显示，不生成 artifact 链接 |
 | `demo/__init__.py` | 包标记使 `demo` 可被导入。 | — | `python -m demo.app` |
 
 ## `tests/`
@@ -123,7 +123,7 @@ PR1 的 21 个专项测试是历史基线；当前验证边界见模块页与
 | 重要代码 | 功能 | 关键符号 | 调用方 / 使用方 |
 | --- | --- | --- | --- |
 | `tests/demo/test_harness_compile.py`、`test_app.py`、`test_harness_feed.py` | 真实 qualified compile application、SQLite terminal/Invocation closure、Flask exact payload 与 feed 公共 seam。 |—| 删除 terminal state/event、partial authority、双读漂移、caller path 字段与脱敏 503 攻击；compile module statement/branch 100% |
-| `tests/demo/test_workbench_browser.py` | 真 Flask + 本机 headless Chrome 的事件/提交/依赖审计工作台端到端门。 |—| 覆盖 committed-only replay、畸形/迟到 audit、微秒时间漂移、瞬时失败重试、缓存不恢复、201-event 完整重放；`pytest -q tests/demo` 当前 134 passed（29 Chrome） |
+| `tests/demo/test_workbench_browser.py` | 真 Flask + 本机 headless Chrome 的事件/提交/依赖与 artifact metadata 审计工作台端到端门。 |—| 覆盖 committed-only replay、畸形/迟到 audit、metadata locator/type/extra-key、预检空库存、微秒时间漂移、瞬时失败重试、缓存不恢复、201-event 完整重放；`pytest -q tests/demo` 当前 161 passed（34 Chrome） |
 
 ## 覆盖范围
 
