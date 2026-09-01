@@ -760,6 +760,59 @@ def test_dispatch_rejects_context_that_cannot_be_reprojected_from_current_state(
     assert raised.value.reason == "planner_evidence_invalid"
 
 
+def test_dispatch_rejects_compile_request_unbound_from_current_objective_before_execution(
+    tmp_path: Path,
+) -> None:
+    fixture = _fixture(tmp_path)
+    objective_value = "Open the laptop on the table."
+    source = _put(
+        fixture.store,
+        tmp_path,
+        name="different_objective",
+        schema="harness.world_fact_evidence.v1",
+        value={
+            "schema_version": "harness.world_fact_evidence.v1",
+            "source_kind": "user_input",
+            "key": "task.objective",
+            "value": objective_value,
+            "observed_at": _T0.isoformat(),
+            "valid_until": None,
+        },
+    )
+    state = build_world_state(
+        (
+            WorldFact(
+                key="task.objective",
+                value=objective_value,
+                source_kind="user_input",
+                source_artifact=source,
+                observed_at=_T0,
+                valid_until=None,
+            ),
+        ),
+        as_of=_T0,
+    )
+    context = compile_planner_context(
+        state=state,
+        skills=fixture.context.skills,
+        history=(),
+        required_fact_keys=(),
+        budget=fixture.context.budget,
+    )
+    planning = _replan_for_context(
+        fixture,
+        tmp_path / "different-objective-plan",
+        context,
+        request=str(fixture.planning.decision.parameters["request"]),
+    )
+
+    with pytest.raises(System2DispatchError) as raised:
+        fixture.dispatcher.dispatch(planning=planning, context=context, state=state)
+
+    assert raised.value.reason == "planner_evidence_invalid"
+    assert fixture.app.calls == []
+
+
 def test_dispatch_rejects_unrecomputable_derived_facts_and_redundant_history(
     tmp_path: Path,
 ) -> None:
@@ -1023,10 +1076,12 @@ def test_dispatch_rejects_receipt_backed_state_without_its_lineage_authority(
     assert raised.value.reason == "planner_evidence_invalid"
 
 
+@pytest.mark.parametrize("blocked_preflight", [False, True])
 def test_trusted_receipt_reloads_its_exact_base_state_and_planner_context(
     tmp_path: Path,
+    blocked_preflight: bool,
 ) -> None:
-    fixture = _fixture(tmp_path)
+    fixture = _fixture(tmp_path, blocked_preflight=blocked_preflight)
     result = fixture.dispatcher.dispatch(
         planning=fixture.planning,
         context=fixture.context,
@@ -1069,6 +1124,20 @@ def test_trusted_receipt_reloads_its_exact_base_state_and_planner_context(
         history=(),
         required_fact_keys=(),
         budget=fixture.context.budget,
+    )
+    other_state_ref = _put(
+        fixture.store,
+        tmp_path,
+        name="other_base_state",
+        schema="harness.trusted_world_state.v1",
+        value=other_state.model_dump(mode="json"),
+    )
+    other_context_ref = _put(
+        fixture.store,
+        tmp_path,
+        name="other_planner_context",
+        schema="harness.planner_context.v1",
+        value=other_context.model_dump(mode="json"),
     )
     rebound_decision = fixture.planning.decision.model_copy(
         update={
@@ -1121,10 +1190,12 @@ def test_trusted_receipt_reloads_its_exact_base_state_and_planner_context(
     rebound_receipt = receipt.model_copy(
         update={
             "planner_context_sha256": other_context.context_sha256,
+            "planner_context": other_context_ref,
             "planner_receipt": planner_receipt_ref,
             "planner_decision": decision_ref,
             "planner_decision_sha256": rebound_digest,
             "base_state_sha256": other_state.state_sha256,
+            "base_state": other_state_ref,
         }
     )
     rebound_receipt_ref = _put(
@@ -1135,8 +1206,32 @@ def test_trusted_receipt_reloads_its_exact_base_state_and_planner_context(
         value=rebound_receipt.model_dump(mode="json"),
     )
 
-    with pytest.raises(ValueError, match="base state|planner context"):
+    with pytest.raises(ValueError, match="objective"):
         verify_trusted_tool_receipt(fixture.store, rebound_receipt_ref)
+
+
+def test_trusted_receipt_rejects_a_base_state_digest_without_matching_cas_bytes(
+    tmp_path: Path,
+) -> None:
+    fixture = _fixture(tmp_path)
+    result = fixture.dispatcher.dispatch(
+        planning=fixture.planning,
+        context=fixture.context,
+        state=fixture.state,
+    )
+    receipt = TrustedToolReceipt.model_validate_json(
+        fixture.store.resolve(result.trusted_receipt).path.read_bytes()
+    )
+    rebound = _put(
+        fixture.store,
+        tmp_path,
+        name="receipt_with_unbound_base_digest",
+        schema="harness.trusted_tool_receipt.v1",
+        value=receipt.model_copy(update={"base_state_sha256": "f" * 64}).model_dump(mode="json"),
+    )
+
+    with pytest.raises(ValueError, match="base state and planner context"):
+        verify_trusted_tool_receipt(fixture.store, rebound)
 
 
 def test_trusted_receipt_rejects_noncanonical_json_bytes(tmp_path: Path) -> None:

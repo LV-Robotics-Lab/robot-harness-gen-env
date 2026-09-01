@@ -27,6 +27,9 @@ descriptor 与 qualification，再将模型给出的参数解析为公开的 typ
 - receipt 与其 base state、planner context、qualification/report、planner receipt/decision、
   `RunState`、`Invocation`、history lineage 和 world-fact evidence 都必须是严格、排序、紧凑
   的 canonical JSON；pretty JSON、重复键、NaN、非法 UTF-8 与非对象载荷均拒绝。
+- compile 的 typed `request` 必须与当前受信 `PlannerContext` 的 `task.objective` 精确一致；即使
+  base state、context、prompt、decision 与 planner receipt 被整组重建为另一条自洽闭包，也不能把
+  旧 compile 的 catalog/package facts 重绑到语义无关的新任务。
 - version 2 及以后、含 receipt-derived fact、或发生 retained/omitted history 的 state 必须带
   完整 CAS history authority；它从 version 1 开始逐状态、逐 transition receipt 重建，不能
   省略一次状态迁移或只应用同一 receipt 的部分 claims。
@@ -55,16 +58,18 @@ python -m pytest -q \
   --cov-branch --cov-report=term-missing --cov-fail-under=100
 ```
 
-结果：261 tests passed；四个实现模块合计 1,333/1,333 statements、550/550 branches，
+结果：264 tests passed；四个实现模块合计 1,340/1,340 statements、552/552 branches，
 均为 100%。Ruff、格式检查、`py_compile` 与 `git diff --check` 同时通过。独立只读复审
-先复现 history authority 省略、非 canonical closure 与 blocked 空 delta 三类 P1；这些反例
+先复现 history authority 省略、非 canonical closure、blocked 空 delta 与完整协调重绑四类 P1；这些反例
 转为攻击测试并修复后，复审结论为无剩余 P0/P1。
 
 攻击测试覆盖 retained state/delta 改写、planner artifact 或事件漂移、Skill/qualification
 错配、foreign/missing/corrupt CAS、参数 schema 绕过、应用 CAS 不同、Invocation digest
 错配、非终态/矛盾 RunState、typed output 与 supporting artifact closure 漂移、solver/static
 报告伪造、catalog/path/package 错绑、history 缺 transition/缺 claims/跨 branch，以及 canonical
-JSON 的 pretty/duplicate/nonfinite/malformed/UTF-8/nonobject 绕过。
+JSON 的 pretty/duplicate/nonfinite/malformed/UTF-8/nonobject 绕过；另覆盖合法新 context 中的
+旧 compile request 在 application 零调用前停止，以及 succeeded/blocked 两种完整 receipt closure
+重绑后的离线拒绝。
 
 ## 诚实边界
 

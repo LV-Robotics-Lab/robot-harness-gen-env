@@ -13,8 +13,10 @@
 - 接通 System 2 → production compile 的可信调度边界：同一 CAS 内重读 planner、base state/context、
   qualification、Invocation/RunState、effective catalog 与 package，重跑 solver 和 static validator；
   完整 history authority 绑定每次状态迁移，成功才产生 receipt-backed delta，blocked/failed 无 delta。
-  独立复审发现的 history 省略、非 canonical evidence closure 与不可应用空 delta 均已转成攻击测试；
-  261 项通过，application/dispatcher/domain/history 的 statement/branch 均为 100%。这只证明本地
+  compile request 还必须等于受信 `task.objective`，完整协调替换 state/context/planner closure 也不能
+  把旧结果重绑给新任务；无 Invocation 的 blocked preflight receipt 也走同一门。独立复审发现的
+  四类 P1 与该审计缺口均已转成攻击测试；264 项通过，
+  application/dispatcher/domain/history 的 statement/branch 均为 100%。这只证明本地
   compile 编排和两个非物理事实，不声明 SAPIEN/真机或已刷新 production qualification。
 - 实现 `text2env.validate@2.0.0` 的第一切片：新增 12 项 typed CAS evidence 输入、决定输出与
   `StrictValidateV2CasReader`。reader 在读文件前重验完整输入，固定单一 CAS、逐 raw ref 验证后按

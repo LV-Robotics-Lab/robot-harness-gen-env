@@ -142,6 +142,14 @@ def _json_equal(left: object, right: object) -> bool:
     return _canonical_json_bytes(left) == _canonical_json_bytes(right)
 
 
+def _require_compile_request_matches_objective(
+    context: PlannerContext,
+    typed_input: Text2EnvCompileInput,
+) -> None:
+    if not _json_equal(context.objective.value, typed_input.request):
+        raise ValueError("compile request does not match the trusted planner objective")
+
+
 def _read_verified_ref(store: LocalArtifactStore, ref: ArtifactRef) -> bytes:
     _require_cas(ref, label=ref.name)
     resolved = store.resolve(ref)
@@ -767,6 +775,10 @@ def verify_trusted_tool_receipt(
         planner_context
     ):
         raise ValueError("trusted receipt planner prompt differs from its planner context")
+    _require_compile_request_matches_objective(
+        planner_context,
+        Text2EnvCompileInput.model_validate(decision.parameters),
+    )
 
     run_state = _parse_canonical_model(
         RunState,
@@ -817,6 +829,7 @@ def verify_trusted_tool_receipt(
         typed_input = schema_model(receipt.skill.input_schema).model_validate(
             invocation.effective_parameters
         )
+        assert type(typed_input) is Text2EnvCompileInput
         if (
             invocation.run_id != run_state.run_id
             or f"{invocation.skill_id}@{invocation.skill_version}" != receipt.skill.skill_ref
@@ -1065,6 +1078,11 @@ class System2Dispatcher:
                 history_authority=history_authority,
             )
             decision = self._verify_planning(planning, trusted_context, trusted_state)
+            assert decision.parameters is not None
+            _require_compile_request_matches_objective(
+                trusted_context,
+                Text2EnvCompileInput.model_validate(decision.parameters),
+            )
         except Exception as error:
             raise System2DispatchError(
                 reason="planner_evidence_invalid",
