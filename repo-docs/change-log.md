@@ -2,6 +2,10 @@
 
 ## 2026-09-01
 
+- 修复 `run_scene_runtime.main()` 在进程内调用后遗留 RoboTwin 工作目录和导入路径的问题：公开入口
+  现在无论正常返回还是异常退出都会恢复调用者的 `cwd` 与 `sys.path`。最小跨模块顺序反例由
+  System2 fixture 读取失败转为通过，完整本地套件为 2,345 passed / 19 skipped；运行中的物理采样、
+  事件、证据与 CLI 参数未改变。
 - 为 succeeded `text2env.compile@1.0.0` 增加固定、按需的 SceneSpec 结构预览：只有
   `GET /api/harness/compile-runs/<canonical-v4-uuid>/scene-preview` 可进入，先重建 A049 的完整终态
   authority，再要求类型化 output 的 `scene_spec` 为精确 JSON/schema binding。声明大小超过 65,536

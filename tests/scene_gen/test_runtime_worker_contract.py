@@ -1840,6 +1840,8 @@ def test_preflight_event_requires_successful_runtime_configuration(
         "load_robotwin_args",
         lambda *_: (_ for _ in ()).throw(RuntimeError("invalid runtime config")),
     )
+    original_cwd = Path.cwd()
+    original_sys_path = sys.path.copy()
     read_fd, write_fd = os.pipe()
     try:
         with pytest.raises(RuntimeError, match="invalid runtime config"):
@@ -1865,6 +1867,8 @@ def test_preflight_event_requires_successful_runtime_configuration(
     evidence = json.loads((out_dir / "runtime_evidence.json").read_bytes())
     assert evidence["status"] == "fail"
     assert "invalid runtime config" in evidence["error"]
+    assert Path.cwd() == original_cwd
+    assert sys.path == original_sys_path
 
 
 def test_scene_loaded_event_requires_successful_asset_setup(
@@ -2088,6 +2092,8 @@ def test_legacy_cli_without_event_fd_still_returns_zero_for_a_passing_validation
             "fail_count": 0,
         },
     )
+    original_cwd = Path.cwd()
+    original_sys_path = sys.path.copy()
 
     exit_code = runtime.main(
         [
@@ -2109,6 +2115,8 @@ def test_legacy_cli_without_event_fd_still_returns_zero_for_a_passing_validation
     assert json.loads((out_dir / "runtime_validation_report.json").read_bytes())["status"] == (
         "pass"
     )
+    assert Path.cwd() == original_cwd
+    assert sys.path == original_sys_path
 
 
 @pytest.mark.parametrize(

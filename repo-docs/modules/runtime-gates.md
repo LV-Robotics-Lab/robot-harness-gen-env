@@ -29,6 +29,11 @@ for index in range(total_steps):
 
 `run_scene_runtime.py` 的独立 CLI 当前默认 `--contact-window-steps 60`；README、prompt matrix 和本指南跟踪的已验证命令都显式传入 120，因此那些证据采的是终末 120 步。`--precheck-steps 0` 默认：不预步进。`check_stable` 固定以 0 步执行；显式 precheck 由 worker 在 `scene.loaded`、`simulation.started` 之后逐步推进，所以前端能看到它，也不会把已发生的物理步藏在“正式记录”之前。`simulation_step_count` 仍表示主 settle（含 adaptive extra），`total_physics_step_count = precheck_steps + simulation_step_count`。
 
+测试或嵌入式调用方会在同一 Python 进程里调用公开 `main()`。这个入口只在执行期间临时借用
+RoboTwin 工作目录和导入路径，并在正常返回或异常退出时恢复调用者原有的 `cwd` 与 `sys.path`；
+生产 Harness 仍以独立 worker 进程运行。该恢复边界不把进程全局 `chdir` 变成线程安全能力，因此不要
+在同一进程并发执行多个 runtime worker。
+
 `head_camera_arrays(task)` 拿 head rgb + 分割标签；`world_camera1`/`world_camera2` 拿两个世界视角；最终还写 `preview_head.png`、`preview_segmentation.png`、`preview_world_left.png`、`preview_world_right.png`、`observer_start.png`、`observer_mid.png`、`observer_end.png`、`observer_runtime.mp4`。每段 mp4 的 `unique_video_frame_count` 用 `hashlib.sha256(frame.tobytes())` 去重。
 
 为什么 900 步：仓库根 `README.md` 给了具体证据——apple-in-basket 在 300 步时仍在动，900 步是为该 asset pair 测下来的「真的稳了」阈值。这不是通用物理参数，是实测值。

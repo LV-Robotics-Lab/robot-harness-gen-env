@@ -613,6 +613,20 @@ def main(
     *,
     base_task_class: type[Any] | None = None,
 ) -> int:
+    original_cwd = Path.cwd()
+    original_sys_path = sys.path.copy()
+    try:
+        return _main(argv, base_task_class=base_task_class)
+    finally:
+        sys.path[:] = original_sys_path
+        os.chdir(original_cwd)
+
+
+def _main(
+    argv: Sequence[str] | None = None,
+    *,
+    base_task_class: type[Any] | None = None,
+) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--robotwin-root", required=True)
     parser.add_argument("--resolved-scene")
