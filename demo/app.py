@@ -19,6 +19,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from demo.harness_compile import (
     WorkbenchCompileAuthorityError,
     WorkbenchCompileInputError,
+    WorkbenchCompileRunNotFoundError,
     WorkbenchCompileUnavailableError,
 )
 from demo.harness_feed import HarnessEventFeedCorruptionError
@@ -539,6 +540,97 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
                 503,
             )
         return jsonify(submission)
+
+    @app.get("/api/harness/compile-runs/<run_id_value>/audit")
+    def harness_compile_audit(run_id_value: str):
+        workbench = app.config.get("HARNESS_WORKBENCH")
+        if workbench is None:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_compile_audit_unavailable",
+                            "message": "Harness compile audit is not configured",
+                        }
+                    }
+                ),
+                503,
+            )
+        run_id = None
+        try:
+            candidate = uuid.UUID(run_id_value)
+        except ValueError:
+            pass
+        else:
+            if candidate.version == 4 and str(candidate) == run_id_value:
+                run_id = candidate
+        if run_id is None or request.args:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_harness_compile_audit_request",
+                            "message": (
+                                "run_id must be a canonical version 4 UUID with no query parameters"
+                            ),
+                        }
+                    }
+                ),
+                400,
+            )
+        try:
+            audit = workbench.audit(run_id=run_id)
+        except WorkbenchCompileInputError:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_harness_compile_audit_request",
+                            "message": (
+                                "run_id must be a canonical version 4 UUID with no query parameters"
+                            ),
+                        }
+                    }
+                ),
+                400,
+            )
+        except WorkbenchCompileRunNotFoundError:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_compile_run_not_found",
+                            "message": "Terminal compile run was not found",
+                        }
+                    }
+                ),
+                404,
+            )
+        except WorkbenchCompileAuthorityError:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_compile_audit_authority_corrupt",
+                            "message": "Harness compile authority failed integrity checks",
+                        }
+                    }
+                ),
+                503,
+            )
+        except WorkbenchCompileUnavailableError:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "harness_compile_audit_unavailable",
+                            "message": "Harness compile audit is unavailable",
+                        }
+                    }
+                ),
+                503,
+            )
+        return jsonify(audit)
 
     @app.get("/api/jobs")
     def list_jobs():

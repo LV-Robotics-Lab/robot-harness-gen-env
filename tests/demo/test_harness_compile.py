@@ -16,6 +16,7 @@ from demo.harness_compile import (
     WorkbenchCompile,
     WorkbenchCompileAuthorityError,
     WorkbenchCompileInputError,
+    WorkbenchCompileRunNotFoundError,
     WorkbenchCompileUnavailableError,
 )
 from demo.harness_feed import HarnessEventFeedCorruptionError
@@ -25,6 +26,7 @@ from self_improving.harness.application import (
     CompileApplicationSettings,
     create_compile_application,
 )
+from self_improving.harness.schemas import RunStatus
 
 
 def _write_json(path: Path, value: object) -> None:
@@ -107,6 +109,446 @@ def test_submit_returns_only_a_durable_terminal_summary_and_its_committed_events
     )
     assert "output" not in submission
     assert "artifacts" not in submission
+
+
+def test_audit_reconstructs_dependencies_and_terminal_binding_from_one_authority(
+    tmp_path: Path,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    invocation = application.invocation(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    assert invocation is not None
+    serialized_state = persisted.model_dump(mode="json")
+
+    audit = workbench.audit(run_id=run_id)
+
+    assert audit == {
+        "schema_version": "harness.workbench_compile_audit.v1",
+        "run": {
+            "run_id": str(run_id),
+            "skill_id": "text2env.compile",
+            "skill_version": "1.0.0",
+            "status": "succeeded",
+            "attempt": 1,
+            "max_attempts": 1,
+            "started_at": serialized_state["started_at"],
+            "ended_at": serialized_state["ended_at"],
+            "event_count": len(persisted.events),
+            "terminal_event_id": str(history.last_event_id),
+            "blocker": None,
+        },
+        "invocation": {
+            "status": "bound",
+            "digest": invocation.invocation_digest,
+            "dependencies": [
+                dependency.model_dump(mode="json") for dependency in invocation.dependencies
+            ],
+        },
+    }
+    serialized = json.dumps(audit, sort_keys=True)
+    assert "effective_parameters" not in serialized
+    assert "artifact://" not in serialized
+    assert str(tmp_path) not in serialized
+
+
+def test_audit_marks_a_real_preflight_terminal_without_inventing_an_invocation(
+    tmp_path: Path,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    preflight = application._registry.invoke(  # noqa: SLF001 - production fixture setup
+        "text2env.compile",
+        "1.0.0",
+        {},
+    )
+    assert preflight.attempt == 0
+    assert preflight.invocation_digest is None
+    assert application.invocation(preflight.run_id) is None
+
+    audit = workbench.audit(run_id=preflight.run_id)
+
+    assert audit["run"]["status"] == "blocked"
+    assert audit["run"]["attempt"] == 0
+    assert audit["run"]["max_attempts"] == 0
+    assert audit["run"]["blocker"] == {
+        "code": "HARN_INPUT_INVALID",
+        "retryable": False,
+    }
+    assert audit["invocation"] == {
+        "status": "not_created_preflight",
+        "digest": None,
+        "dependencies": [],
+    }
+
+
+def test_audit_rejects_non_uuid_and_unknown_runs_before_projecting_history(
+    tmp_path: Path,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+
+    with pytest.raises(WorkbenchCompileInputError, match="UUID"):
+        workbench.audit(run_id="12345678-1234-4234-9234-123456789abc")  # type: ignore[arg-type]
+    assert application.events().events == ()
+
+    with pytest.raises(WorkbenchCompileRunNotFoundError, match="not found"):
+        workbench.audit(run_id=UUID("12345678-1234-4234-9234-123456789abc"))
+
+
+def test_audit_treats_a_partial_persisted_run_as_corrupt_not_missing(
+    tmp_path: Path,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    with closing(sqlite3.connect(application.journal_path)) as connection, connection:
+        connection.execute("DELETE FROM harness_run_states WHERE run_id = ?", (str(run_id),))
+    assert application.run_state(run_id) is None
+    assert application.invocation(run_id) is not None
+    assert application.events(run_id=run_id).events
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="partial run authority"):
+        workbench.audit(run_id=run_id)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ["preflight_attempts", "preflight_status", "execution_attempts"],
+)
+def test_audit_rejects_terminal_shapes_outside_the_fixed_compile_contract(
+    mutation: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    if mutation.startswith("preflight"):
+        state = application._registry.invoke(  # noqa: SLF001 - production fixture setup
+            "text2env.compile",
+            "1.0.0",
+            {},
+        )
+        state = state.model_copy(
+            update=(
+                {"max_attempts": 1}
+                if mutation == "preflight_attempts"
+                else {"status": RunStatus.SUCCEEDED}
+            )
+        )
+        monkeypatch.setattr(application, "run_state", lambda _run_id: state)
+    else:
+        submission = workbench.submit(
+            request="Place a purple hexagonal pedestal on the table.",
+            seed=77,
+        )
+        run_id = UUID(submission["run_id"])
+        state = application.run_state(run_id)
+        invocation = application.invocation(run_id)
+        assert state is not None
+        assert invocation is not None
+        drifted_state = state.model_copy(update={"max_attempts": 2})
+        drifted_invocation = invocation.model_copy(update={"max_attempts": 2})
+        monkeypatch.setattr(application, "run_state", lambda _run_id: drifted_state)
+        monkeypatch.setattr(application, "invocation", lambda _run_id: drifted_invocation)
+        state = drifted_state
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="fixed compile"):
+        workbench.audit(run_id=state.run_id)
+
+
+@pytest.mark.parametrize("mutation", ["requested_run", "state", "invocation"])
+def test_audit_rejects_authority_identity_or_second_read_drift(
+    mutation: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    real_run_id = UUID(submission["run_id"])
+    requested_run_id = real_run_id
+    read_state = application.run_state
+    read_invocation = application.invocation
+
+    if mutation == "requested_run":
+        requested_run_id = UUID("12345678-1234-4234-9234-123456789abc")
+
+        def return_other_state(_run_id):
+            return read_state(real_run_id)
+
+        monkeypatch.setattr(application, "run_state", return_other_state)
+    elif mutation == "state":
+        state_reads = 0
+
+        def return_drifted_state(run_id):
+            nonlocal state_reads
+            state_reads += 1
+            state = read_state(run_id)
+            assert state is not None
+            return state if state_reads == 1 else state.model_copy(update={"attempt": 0})
+
+        monkeypatch.setattr(application, "run_state", return_drifted_state)
+    else:
+        invocation_reads = 0
+
+        def return_drifted_invocation(run_id):
+            nonlocal invocation_reads
+            invocation_reads += 1
+            invocation = read_invocation(run_id)
+            assert invocation is not None
+            return (
+                invocation
+                if invocation_reads == 1
+                else invocation.model_copy(update={"max_attempts": 2})
+            )
+
+        monkeypatch.setattr(application, "invocation", return_drifted_invocation)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="changed"):
+        workbench.audit(run_id=requested_run_id)
+
+
+def test_audit_sanitizes_an_unexpected_authority_read_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+
+    def fail_history(**_kwargs):
+        raise RuntimeError("secret database: /tmp/operator/harness.sqlite3")
+
+    monkeypatch.setattr(application, "events", fail_history)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks") as captured:
+        workbench.audit(run_id=UUID(submission["run_id"]))
+
+    assert "/tmp" not in str(captured.value)
+
+
+def test_audit_rejects_event_history_that_changes_between_authority_reads(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    read_events = application.events
+    reads = 0
+
+    def drift_on_second_read(**kwargs):
+        nonlocal reads
+        reads += 1
+        page = read_events(**kwargs)
+        return page if reads == 1 else replace(page, has_more=True)
+
+    monkeypatch.setattr(application, "events", drift_on_second_read)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="history changed"):
+        workbench.audit(run_id=UUID(submission["run_id"]))
+
+
+def test_audit_rejects_an_invocation_attached_to_a_preflight_terminal(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    invocation = application.invocation(UUID(submission["run_id"]))
+    assert invocation is not None
+    preflight = application._registry.invoke(  # noqa: SLF001 - production fixture setup
+        "text2env.compile",
+        "1.0.0",
+        {},
+    )
+    monkeypatch.setattr(application, "invocation", lambda _run_id: invocation)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="preflight terminal state"):
+        workbench.audit(run_id=preflight.run_id)
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["missing", "run_id", "skill_id", "skill_version", "invocation_digest", "max_attempts"],
+)
+def test_audit_rejects_a_consistently_invalid_bound_invocation(
+    field: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    invocation = application.invocation(run_id)
+    assert invocation is not None
+    updates = {
+        "run_id": UUID("12345678-1234-4234-9234-123456789abc"),
+        "skill_id": "text2env.replay",
+        "skill_version": "2.0.0",
+        "invocation_digest": "0" * 64,
+        "max_attempts": 2,
+    }
+    invalid = None if field == "missing" else invocation.model_copy(update={field: updates[field]})
+    monkeypatch.setattr(application, "invocation", lambda _run_id: invalid)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="invalid Invocation binding"):
+        workbench.audit(run_id=run_id)
+
+
+@pytest.mark.parametrize("mutation", ["reordered", "duplicate", "locator"])
+def test_audit_rejects_a_malformed_dependency_order_instead_of_repairing_it(
+    mutation: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    invocation = application.invocation(run_id)
+    assert invocation is not None
+    assert len(invocation.dependencies) > 1
+    dependencies = list(invocation.dependencies)
+    if mutation == "reordered":
+        dependencies.reverse()
+    elif mutation == "duplicate":
+        dependencies[1] = dependencies[1].model_copy(update={"name": dependencies[0].name})
+    else:
+        dependencies[0] = dependencies[0].model_copy(update={"name": "/tmp/private-state"})
+    invalid = invocation.model_copy(update={"dependencies": tuple(dependencies)})
+    monkeypatch.setattr(application, "invocation", lambda _run_id: invalid)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="dependency order"):
+        workbench.audit(run_id=run_id)
+
+
+@pytest.mark.parametrize("mutation", ["dependency_sha", "effective_parameters"])
+def test_audit_recomputes_the_invocation_digest_before_exposing_dependencies(
+    mutation: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    invocation = application.invocation(run_id)
+    assert invocation is not None
+    if mutation == "dependency_sha":
+        dependencies = list(invocation.dependencies)
+        dependencies[0] = dependencies[0].model_copy(update={"sha256": "0" * 64})
+        forged = invocation.model_copy(update={"dependencies": tuple(dependencies)})
+    else:
+        forged = invocation.model_copy(
+            update={"effective_parameters": {"request": "incomplete forged parameters"}}
+        )
+    assert forged.invocation_digest == invocation.invocation_digest
+    monkeypatch.setattr(application, "invocation", lambda _run_id: forged)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="content identity"):
+        workbench.audit(run_id=run_id)
+
+
+def test_audit_rejects_attempt_zero_events_inside_a_bound_execution_history(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    persisted = application.run_state(run_id)
+    history = application.events(run_id=run_id, limit=500)
+    assert persisted is not None
+    first_event = persisted.events[0].model_copy(update={"attempt": 0})
+    forged_state = persisted.model_copy(update={"events": (first_event, *persisted.events[1:])})
+    first_stored = history.events[0]
+    forged_envelope = replace(first_stored.envelope, event=first_event)
+    forged_history = replace(
+        history,
+        events=(replace(first_stored, envelope=forged_envelope), *history.events[1:]),
+    )
+    monkeypatch.setattr(application, "run_state", lambda _run_id: forged_state)
+    monkeypatch.setattr(application, "events", lambda **_kwargs: forged_history)
+
+    with pytest.raises(WorkbenchCompileAuthorityError, match="event attempts"):
+        workbench.audit(run_id=run_id)
+
+
+@pytest.mark.parametrize("mutation", ["has_more", "event", "cursor", "event_id"])
+def test_audit_rejects_an_incomplete_or_drifted_event_projection(
+    mutation: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbench, application = _workbench(tmp_path)
+    submission = workbench.submit(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+    )
+    run_id = UUID(submission["run_id"])
+    read_events = application.events
+
+    def return_drifted_history(**kwargs):
+        page = read_events(**kwargs)
+        if mutation == "has_more":
+            return replace(page, has_more=True)
+        if mutation == "cursor":
+            return replace(page, last_event_id=page.last_event_id + 1)
+        if mutation == "event_id":
+            assert len(page.events) > 1
+            return replace(
+                page,
+                events=(
+                    page.events[0],
+                    replace(page.events[1], event_id=page.events[0].event_id),
+                    *page.events[2:],
+                ),
+            )
+        first = page.events[0]
+        drifted_event = first.envelope.event.model_copy(update={"stage": "forged.stage"})
+        drifted_envelope = replace(first.envelope, event=drifted_event)
+        return replace(
+            page,
+            events=(replace(first, envelope=drifted_envelope), *page.events[1:]),
+        )
+
+    monkeypatch.setattr(application, "events", return_drifted_history)
+
+    expected = {
+        "has_more": "incomplete",
+        "cursor": "incomplete",
+        "event": "differs",
+        "event_id": "strictly increasing",
+    }[mutation]
+    with pytest.raises(WorkbenchCompileAuthorityError, match=expected):
+        workbench.audit(run_id=run_id)
 
 
 @pytest.mark.parametrize(
@@ -444,3 +886,11 @@ def test_http_submission_and_event_replay_share_one_real_compile_authority(
         event.model_dump(mode="json") for event in persisted.events
     ]
     assert page.json["last_event_id"] == response.json["terminal_event_id"]
+    audit = client.get(f"/api/harness/compile-runs/{run_id}/audit")
+    assert audit.status_code == 200
+    assert audit.json["run"]["terminal_event_id"] == response.json["terminal_event_id"]
+    assert audit.json["run"]["event_count"] == len(persisted.events)
+    assert audit.json["invocation"]["status"] == "bound"
+    assert audit.json["invocation"]["dependencies"]
+    assert "artifact://" not in audit.get_data(as_text=True)
+    assert str(tmp_path) not in audit.get_data(as_text=True)

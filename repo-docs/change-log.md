@@ -2,6 +2,14 @@
 
 ## 2026-09-01
 
+- 为 terminal compile run 增加只读依赖与终态审计：同一 Workbench authority 两次重读 RunState、
+  Invocation 与完整 committed history，只有三者全空才返回 not found，partial/drift/cursor/binding
+  不精确均 fail closed；Invocation digest 从类型化参数、依赖和 attempt 上限重算，固定执行/预检历史
+  分别只允许 attempt 1/0。HTTP 只接 canonical v4 run id；浏览器仅在单 run 的完整终态事件链与微秒
+  时间戳精确对账后显示 Invocation digest 与依赖 name/version/SHA，不缓存审计，且以独立 generation
+  丢弃迟到响应。134 项 demo 测试通过（29 项真 Chrome），相邻回归 51 passed，审计模块 144
+  statements / 62 branches 全覆盖。这不是 artifact viewer、依赖图编辑、operations 编排、replay、
+  validate 或物理发布门。
 - 在只读 Event Timeline 上增加 compile-only Workbench 提交：HTTP 只接收 `{request, seed}`，operator
   固定 catalog、生成策略和 qualified `CompileApplication`；同步执行后重读同一 SQLite authority 的
   terminal RunState 与完整 committed events 才返回精简摘要。独立浏览器按钮不伪造阶段，只从

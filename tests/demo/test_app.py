@@ -12,6 +12,7 @@ from demo.app import DEFAULT_SETTLE_STEPS, create_app, utc_now
 from demo.harness_compile import (
     WorkbenchCompileAuthorityError,
     WorkbenchCompileInputError,
+    WorkbenchCompileRunNotFoundError,
     WorkbenchCompileUnavailableError,
 )
 from demo.harness_feed import HarnessEventFeed
@@ -99,6 +100,7 @@ def test_harness_events_fail_closed_when_feed_is_not_configured(
 class _StubWorkbench:
     def __init__(self) -> None:
         self.submissions: list[tuple[str, int]] = []
+        self.audit_runs: list[UUID] = []
 
     def submit(self, *, request: object, seed: object):
         if type(request) is not str or type(seed) is not int:
@@ -122,6 +124,30 @@ class _StubWorkbench:
             "events": [],
             "last_event_id": "0",
             "has_more": False,
+        }
+
+    def audit(self, *, run_id: UUID):
+        self.audit_runs.append(run_id)
+        return {
+            "schema_version": "harness.workbench_compile_audit.v1",
+            "run": {
+                "run_id": str(run_id),
+                "skill_id": "text2env.compile",
+                "skill_version": "1.0.0",
+                "status": "succeeded",
+                "attempt": 1,
+                "max_attempts": 1,
+                "started_at": "2026-09-01T00:00:00+00:00",
+                "ended_at": "2026-09-01T00:00:01+00:00",
+                "event_count": 3,
+                "terminal_event_id": "7",
+                "blocker": None,
+            },
+            "invocation": {
+                "status": "bound",
+                "digest": "a" * 64,
+                "dependencies": [{"name": "scene_gen", "version": "1", "sha256": "b" * 64}],
+            },
         }
 
 
@@ -282,6 +308,125 @@ def test_harness_compile_projects_stable_errors_without_internal_details(
     )
 
     assert response.status_code == 503
+    assert response.json["error"]["code"] == code
+    assert "/tmp" not in response.get_data(as_text=True)
+
+
+def test_harness_compile_audit_accepts_only_one_canonical_v4_run_id(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+    run_id = "12345678-1234-4234-9234-123456789abc"
+
+    response = app.test_client().get(f"/api/harness/compile-runs/{run_id}/audit")
+
+    assert response.status_code == 200
+    assert response.json["schema_version"] == "harness.workbench_compile_audit.v1"
+    assert response.json["run"]["run_id"] == run_id
+    assert workbench.audit_runs == [UUID(run_id)]
+
+
+@pytest.mark.parametrize(
+    "suffix",
+    [
+        "not-a-uuid",
+        "12345678-1234-1234-9234-123456789abc",
+        "12345678-1234-4234-9234-123456789ABC",
+        "12345678123442349234123456789abc",
+    ],
+)
+def test_harness_compile_audit_rejects_noncanonical_or_ambiguous_requests(
+    suffix: str,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().get(f"/api/harness/compile-runs/{suffix}/audit")
+
+    assert response.status_code == 400
+    assert response.json == {
+        "error": {
+            "code": "invalid_harness_compile_audit_request",
+            "message": "run_id must be a canonical version 4 UUID with no query parameters",
+        }
+    }
+    assert workbench.audit_runs == []
+
+
+def test_harness_compile_audit_rejects_query_parameters(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().get(
+        "/api/harness/compile-runs/12345678-1234-4234-9234-123456789abc/audit?extra=1"
+    )
+
+    assert response.status_code == 400
+    assert response.json["error"]["code"] == "invalid_harness_compile_audit_request"
+    assert workbench.audit_runs == []
+
+
+def test_harness_compile_audit_fails_closed_when_not_configured(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    response = (
+        configured_app(tmp_path, monkeypatch)
+        .test_client()
+        .get("/api/harness/compile-runs/12345678-1234-4234-9234-123456789abc/audit")
+    )
+
+    assert response.status_code == 503
+    assert response.json["error"]["code"] == "harness_compile_audit_unavailable"
+
+
+@pytest.mark.parametrize(
+    ("error", "status", "code"),
+    [
+        (
+            WorkbenchCompileRunNotFoundError("secret database: /tmp/harness.sqlite3"),
+            404,
+            "harness_compile_run_not_found",
+        ),
+        (
+            WorkbenchCompileAuthorityError("secret database: /tmp/harness.sqlite3"),
+            503,
+            "harness_compile_audit_authority_corrupt",
+        ),
+        (
+            WorkbenchCompileUnavailableError("secret path: /tmp/catalog"),
+            503,
+            "harness_compile_audit_unavailable",
+        ),
+    ],
+)
+def test_harness_compile_audit_projects_stable_errors_without_internal_details(
+    error: Exception,
+    status: int,
+    code: str,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    workbench = _StubWorkbench()
+
+    def fail(**_kwargs):
+        raise error
+
+    monkeypatch.setattr(workbench, "audit", fail)
+    app = configured_app(tmp_path, monkeypatch, {"HARNESS_WORKBENCH": workbench})
+
+    response = app.test_client().get(
+        "/api/harness/compile-runs/12345678-1234-4234-9234-123456789abc/audit"
+    )
+
+    assert response.status_code == status
     assert response.json["error"]["code"] == code
     assert "/tmp" not in response.get_data(as_text=True)
 

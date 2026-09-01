@@ -5,6 +5,9 @@ const state = {
   artifactKey: null,
   harnessCursor: '0',
   harnessEvents: [],
+  harnessAuditGeneration: 0,
+  harnessAuditKey: null,
+  harnessAuditRetryTimer: null,
   harnessPendingCache: null,
   harnessPollTimer: null,
   harnessRequestGeneration: 0,
@@ -19,6 +22,14 @@ const harnessCachePrefix = 'robot-harness.workbench-event-cache.v1';
 const harnessCacheKey = () => `${harnessCachePrefix}:${state.harnessRunId || 'all'}`;
 const sqliteCursorMaximum = BigInt('9223372036854775807');
 const canonicalUuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+const canonicalTimestampPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?(Z|[+-](\d{2}):(\d{2}))$/;
+const compileDependencyVersions = [
+  ['asset-library-state', '1'],
+  ['catalog-selected-assets', '1'],
+  ['ledger-contract', '1'],
+  ['scene-gen', '0.1.0'],
+  ['text2env-compile-config', '1'],
+];
 
 function isCanonicalHarnessCursor(value) {
   return typeof value === 'string'
@@ -28,6 +39,33 @@ function isCanonicalHarnessCursor(value) {
 
 function harnessCursorIsAfter(value, preceding) {
   return BigInt(value) > BigInt(preceding);
+}
+
+function harnessTimestampKey(value) {
+  if (typeof value !== 'string') return null;
+  const match = canonicalTimestampPattern.exec(value);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6]);
+  const offsetHour = match[8] === 'Z' ? 0 : Number(match[9]);
+  const offsetMinute = match[8] === 'Z' ? 0 : Number(match[10]);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (year < 1 || month < 1 || month > 12 || day < 1 || day > daysInMonth[month - 1]
+    || hour > 23 || minute > 59 || second > 59
+    || offsetHour > 23 || offsetMinute > 59) return null;
+  const milliseconds = Date.parse(value);
+  if (!Number.isFinite(milliseconds)) return null;
+  const subMillisecond = (match[7] || '').padEnd(6, '0').slice(3);
+  return BigInt(milliseconds) * 1000n + BigInt(subMillisecond || '0');
+}
+
+function isCanonicalHarnessTimestamp(value) {
+  return harnessTimestampKey(value) !== null;
 }
 
 function precedingHarnessCursor(value) {
@@ -64,6 +102,7 @@ function refreshIcons() {
 
 function restoreHarnessCache() {
   state.harnessPendingCache = null;
+  if (state.harnessRunId) return;
   try {
     const cached = JSON.parse(window.localStorage.getItem(harnessCacheKey()));
     if (!cached) return;
@@ -90,6 +129,10 @@ function restoreHarnessCache() {
 }
 
 function saveHarnessCache() {
+  if (state.harnessRunId) {
+    removeHarnessCache();
+    return;
+  }
   state.harnessEvents = state.harnessEvents.slice(-200);
   try {
     window.localStorage.setItem(harnessCacheKey(), JSON.stringify({
@@ -118,6 +161,7 @@ function selectHarnessRun(runId, terminalExpectation = null) {
   state.harnessCursor = '0';
   state.harnessEvents = [];
   state.harnessPendingCache = null;
+  resetHarnessAudit();
   const input = $('#harness-run-filter');
   input.value = state.harnessRunId;
   if (state.harnessRunId) input.setAttribute('value', state.harnessRunId);
@@ -147,6 +191,12 @@ function hasExactKeys(value, expected) {
 function invalidHarnessSubmission() {
   const error = new Error('Harness compile response failed integrity checks');
   error.code = 'harness_compile_response_invalid';
+  throw error;
+}
+
+function invalidHarnessAudit() {
+  const error = new Error('Harness compile audit failed integrity checks');
+  error.code = 'harness_compile_audit_invalid';
   throw error;
 }
 
@@ -197,7 +247,7 @@ function verifyHarnessTerminalExpectation() {
 }
 
 function validateHarnessPage(page, afterEventId, expectedRunId = state.harnessRunId) {
-  if (!page
+  if (!hasExactKeys(page, ['events', 'has_more', 'last_event_id', 'schema_version'])
     || page.schema_version !== 'harness.workbench_event_page.v1'
     || !Array.isArray(page.events)
     || !isCanonicalHarnessCursor(page.last_event_id)
@@ -208,7 +258,10 @@ function validateHarnessPage(page, afterEventId, expectedRunId = state.harnessRu
   let previousEventId = afterEventId;
   page.events.forEach((envelope) => {
     const event = envelope?.event;
-    if (!isCanonicalHarnessCursor(envelope?.event_id)
+    if (!hasExactKeys(envelope, ['event', 'event_id', 'run_id', 'skill_id', 'skill_version'])
+      || !hasExactKeys(event, ['artifact_refs', 'attempt', 'from_status', 'seq', 'stage',
+        'timestamp', 'to_status'])
+      || !isCanonicalHarnessCursor(envelope?.event_id)
       || envelope.event_id === '0'
       || !harnessCursorIsAfter(envelope.event_id, previousEventId)
       || typeof envelope.skill_id !== 'string'
@@ -225,7 +278,7 @@ function validateHarnessPage(page, afterEventId, expectedRunId = state.harnessRu
       || event.attempt < 0
       || typeof event.stage !== 'string'
       || !event.stage
-      || typeof event.timestamp !== 'string'
+      || !isCanonicalHarnessTimestamp(event.timestamp)
       || !statuses.has(event.to_status)
       || (event.from_status !== null && !statuses.has(event.from_status))
       || !Array.isArray(event.artifact_refs)) invalidHarnessPage();
@@ -235,6 +288,216 @@ function validateHarnessPage(page, afterEventId, expectedRunId = state.harnessRu
     invalidHarnessPage();
   }
   return page;
+}
+
+function resetHarnessAudit(message = '筛选一个已终止的 Compile run 后显示依赖与终态对账。') {
+  clearTimeout(state.harnessAuditRetryTimer);
+  state.harnessAuditRetryTimer = null;
+  state.harnessAuditGeneration += 1;
+  state.harnessAuditKey = null;
+  const panel = $('#harness-audit-panel');
+  const summary = $('#harness-audit-run-summary');
+  const dependencies = $('#harness-dependency-list');
+  if (panel) panel.hidden = true;
+  if (summary) summary.replaceChildren();
+  if (dependencies) dependencies.replaceChildren();
+  const invocationStatus = $('#harness-invocation-status');
+  const invocationDigest = $('#harness-invocation-digest');
+  if (invocationStatus) invocationStatus.textContent = '';
+  if (invocationDigest) invocationDigest.textContent = '';
+  const auditMessage = $('#harness-audit-message');
+  if (auditMessage) auditMessage.textContent = message;
+}
+
+function selectedTerminalCompileHistory() {
+  if (!canonicalUuidPattern.test(state.harnessRunId) || !state.harnessEvents.length) return null;
+  let previousEvent = null;
+  let previousTimestamp = null;
+  state.harnessEvents.forEach((envelope, index) => {
+    const event = envelope.event;
+    const timestamp = harnessTimestampKey(event.timestamp);
+    if (envelope.run_id !== state.harnessRunId
+      || event.seq !== index + 1
+      || timestamp === null
+      || (previousTimestamp !== null && timestamp < previousTimestamp)) invalidHarnessPage();
+    if (index === 0) {
+      if (event.from_status !== null || event.to_status !== 'running') invalidHarnessPage();
+    } else if (event.from_status !== previousEvent.to_status
+      || previousEvent.to_status !== 'running'
+      || event.attempt < previousEvent.attempt
+      || event.attempt > previousEvent.attempt + 1) invalidHarnessPage();
+    if (index > 0 && (envelope.skill_id !== state.harnessEvents[0].skill_id
+      || envelope.skill_version !== state.harnessEvents[0].skill_version)) invalidHarnessPage();
+    previousEvent = event;
+    previousTimestamp = timestamp;
+  });
+  const first = state.harnessEvents[0];
+  if (first.skill_id !== 'text2env.compile' || first.skill_version !== '1.0.0') return null;
+  const terminal = state.harnessEvents.at(-1);
+  return terminal.event.to_status === 'running' ? null : terminal;
+}
+
+function validateHarnessAudit(audit, runId, events, cursor) {
+  const runFields = ['attempt', 'blocker', 'ended_at', 'event_count', 'max_attempts', 'run_id',
+    'skill_id', 'skill_version', 'started_at', 'status', 'terminal_event_id'];
+  const invocationFields = ['dependencies', 'digest', 'status'];
+  const terminalStatuses = new Set(['succeeded', 'blocked', 'failed']);
+  if (!hasExactKeys(audit, ['invocation', 'run', 'schema_version'])
+    || audit.schema_version !== 'harness.workbench_compile_audit.v1'
+    || !hasExactKeys(audit.run, runFields)
+    || !hasExactKeys(audit.invocation, invocationFields)) invalidHarnessAudit();
+  const run = audit.run;
+  const invocation = audit.invocation;
+  if (run.run_id !== runId
+    || run.skill_id !== 'text2env.compile'
+    || run.skill_version !== '1.0.0'
+    || !terminalStatuses.has(run.status)
+    || !Number.isInteger(run.attempt)
+    || !Number.isInteger(run.max_attempts)
+    || !Number.isInteger(run.event_count)
+    || run.event_count !== events.length
+    || run.event_count < 1
+    || run.terminal_event_id !== cursor
+    || !isCanonicalHarnessCursor(run.terminal_event_id)
+    || !isCanonicalHarnessTimestamp(run.started_at)
+    || !isCanonicalHarnessTimestamp(run.ended_at)) invalidHarnessAudit();
+  if (run.status === 'succeeded') {
+    if (run.blocker !== null) invalidHarnessAudit();
+  } else if (!hasExactKeys(run.blocker, ['code', 'retryable'])
+    || typeof run.blocker.code !== 'string'
+    || !/^[A-Z][A-Z0-9_]{1,63}$/.test(run.blocker.code)
+    || typeof run.blocker.retryable !== 'boolean') invalidHarnessAudit();
+  const first = events[0];
+  const terminal = events.at(-1);
+  if (terminal.event_id !== cursor
+    || terminal.run_id !== runId
+    || terminal.skill_id !== run.skill_id
+    || terminal.skill_version !== run.skill_version
+    || terminal.event.to_status !== run.status
+    || terminal.event.attempt !== run.attempt
+    || first.event.timestamp !== run.started_at
+    || terminal.event.timestamp !== run.ended_at) invalidHarnessAudit();
+  if (!Array.isArray(invocation.dependencies)) invalidHarnessAudit();
+  if (invocation.status === 'not_created_preflight') {
+    if (run.attempt !== 0 || run.max_attempts !== 0 || run.status === 'succeeded'
+      || invocation.digest !== null || invocation.dependencies.length
+      || events.some((event) => event.event.attempt !== 0)) invalidHarnessAudit();
+  } else if (invocation.status === 'bound') {
+    if (run.attempt !== 1 || run.max_attempts !== 1
+      || typeof invocation.digest !== 'string'
+      || !/^[0-9a-f]{64}$/.test(invocation.digest)
+      || events.some((event) => event.event.attempt !== 1)) invalidHarnessAudit();
+  } else {
+    invalidHarnessAudit();
+  }
+  const dependencyNames = [];
+  invocation.dependencies.forEach((dependency) => {
+    if (!hasExactKeys(dependency, ['name', 'sha256', 'version'])
+      || typeof dependency.name !== 'string'
+      || !dependency.name
+      || typeof dependency.version !== 'string'
+      || !dependency.version
+      || typeof dependency.sha256 !== 'string'
+      || !/^[0-9a-f]{64}$/.test(dependency.sha256)) invalidHarnessAudit();
+    dependencyNames.push(dependency.name);
+  });
+  const dependencyVersions = invocation.dependencies.map(
+    (dependency) => [dependency.name, dependency.version],
+  );
+  if (invocation.status === 'bound'
+    && (JSON.stringify(dependencyVersions) !== JSON.stringify(compileDependencyVersions)
+      || dependencyNames.length !== compileDependencyVersions.length)) invalidHarnessAudit();
+  return audit;
+}
+
+function appendAuditSummary(summary, label, value) {
+  const term = document.createElement('dt');
+  term.textContent = label;
+  const description = document.createElement('dd');
+  description.textContent = value;
+  summary.append(term, description);
+}
+
+function renderHarnessAudit(audit) {
+  const summary = $('#harness-audit-run-summary');
+  summary.replaceChildren();
+  appendAuditSummary(summary, 'Run', audit.run.run_id);
+  appendAuditSummary(summary, 'Status', audit.run.status);
+  appendAuditSummary(summary, 'Attempt', `${audit.run.attempt}/${audit.run.max_attempts}`);
+  appendAuditSummary(summary, 'Events', `${audit.run.event_count} · #${audit.run.terminal_event_id}`);
+  appendAuditSummary(summary, 'Started', audit.run.started_at);
+  appendAuditSummary(summary, 'Ended', audit.run.ended_at);
+  $('#harness-invocation-status').textContent = audit.invocation.status === 'bound'
+    ? 'Invocation 已绑定'
+    : '未创建 Invocation（预检终止）';
+  $('#harness-invocation-digest').textContent = audit.invocation.digest || '';
+  const dependencies = $('#harness-dependency-list');
+  dependencies.replaceChildren();
+  audit.invocation.dependencies.forEach((dependency) => {
+    const item = document.createElement('li');
+    const name = document.createElement('strong');
+    name.textContent = `${dependency.name}@${dependency.version}`;
+    const digest = document.createElement('code');
+    digest.textContent = dependency.sha256;
+    item.append(name, digest);
+    dependencies.appendChild(item);
+  });
+  if (!audit.invocation.dependencies.length) {
+    const empty = document.createElement('li');
+    empty.className = 'empty';
+    empty.textContent = '预检终止前未解析依赖。';
+    dependencies.appendChild(empty);
+  }
+  $('#harness-audit-message').textContent = '摘要已与完整 committed journal 对账。';
+  $('#harness-audit-panel').hidden = false;
+}
+
+async function loadHarnessAuditIfEligible() {
+  const terminal = selectedTerminalCompileHistory();
+  if (!terminal) {
+    if (!state.harnessRunId) resetHarnessAudit();
+    else if (!canonicalUuidPattern.test(state.harnessRunId)) {
+      resetHarnessAudit('Run ID 无效；未请求审计。');
+    } else if (state.harnessEvents.length
+      && state.harnessEvents[0].skill_id !== 'text2env.compile') {
+      resetHarnessAudit('当前 run 不是 text2env.compile@1.0.0。');
+    } else {
+      resetHarnessAudit('等待 committed 终态后再显示审计。');
+    }
+    return;
+  }
+  const runId = state.harnessRunId;
+  const auditKey = `${runId}:${state.harnessCursor}:${state.harnessEvents.length}`;
+  if (state.harnessAuditKey === auditKey) return;
+  state.harnessAuditKey = auditKey;
+  const generation = ++state.harnessAuditGeneration;
+  $('#harness-audit-panel').hidden = true;
+  $('#harness-audit-message').textContent = '正在与 committed journal 对账…';
+  try {
+    const audit = await api(`/api/harness/compile-runs/${encodeURIComponent(runId)}/audit`);
+    if (generation !== state.harnessAuditGeneration
+      || runId !== state.harnessRunId
+      || auditKey !== `${state.harnessRunId}:${state.harnessCursor}:${state.harnessEvents.length}`) {
+      return;
+    }
+    renderHarnessAudit(validateHarnessAudit(
+      audit,
+      runId,
+      state.harnessEvents,
+      state.harnessCursor,
+    ));
+  } catch (error) {
+    if (generation !== state.harnessAuditGeneration || runId !== state.harnessRunId) return;
+    $('#harness-audit-panel').hidden = true;
+    $('#harness-audit-message').textContent = '终态与 committed journal 无法对账。';
+    if (!error.code || error.code === 'harness_compile_audit_unavailable') {
+      state.harnessAuditRetryTimer = setTimeout(() => {
+        if (generation !== state.harnessAuditGeneration || runId !== state.harnessRunId) return;
+        state.harnessAuditKey = null;
+        loadHarnessAuditIfEligible();
+      }, 5000);
+    }
+  }
 }
 
 function renderHarnessEvents() {
@@ -297,7 +560,9 @@ async function loadHarnessEvents() {
       : state.harnessCursor;
     const query = new URLSearchParams({
       after: requestedCursor,
-      limit: pendingCache?.events.length ? String(pendingCache.events.length) : '100',
+      limit: pendingCache?.events.length
+        ? String(pendingCache.events.length)
+        : (requestedRunId ? '500' : '100'),
     });
     if (requestedRunId) query.set('run_id', requestedRunId);
     const page = validateHarnessPage(
@@ -334,6 +599,7 @@ async function loadHarnessEvents() {
       return;
     }
     verifyHarnessTerminalExpectation();
+    await loadHarnessAuditIfEligible();
     state.harnessPollTimer = setTimeout(loadHarnessEvents, 1500);
   } catch (error) {
     if (requestGeneration !== state.harnessRequestGeneration
@@ -356,6 +622,7 @@ async function loadHarnessEvents() {
       state.harnessEvents = [];
       state.harnessPendingCache = null;
     }
+    resetHarnessAudit('终态与 committed journal 无法对账。');
     if (state.harnessTerminalExpectation && failClosed) {
       state.harnessTerminalExpectation = null;
       const submissionStatus = $('#harness-submit-status');
@@ -637,6 +904,7 @@ $('#harness-compile-button').addEventListener('click', async () => {
   clearTimeout(state.harnessPollTimer);
   state.harnessRequestGeneration += 1;
   state.harnessTerminalExpectation = null;
+  resetHarnessAudit('等待新的 Compile run 完成并写入 committed journal。');
   button.disabled = true;
   status.textContent = 'Harness Compile 请求处理中；尚未显示任何执行阶段。';
   status.className = 'form-status';
@@ -662,7 +930,10 @@ $('#example-select').addEventListener('change', (event) => {
   if (event.target.value) $('#prompt').value = event.target.value;
 });
 $('#refresh-button').addEventListener('click', () => state.activeJob && loadJob(state.activeJob.job_id));
-$('#harness-refresh-button').addEventListener('click', loadHarnessEvents);
+$('#harness-refresh-button').addEventListener('click', () => {
+  resetHarnessAudit('正在重新读取 committed journal。');
+  loadHarnessEvents();
+});
 $('#harness-filter-form').addEventListener('submit', (event) => {
   event.preventDefault();
   selectHarnessRun($('#harness-run-filter').value);
@@ -682,4 +953,5 @@ async function start() {
 initializeHarnessFilter();
 restoreHarnessCache();
 renderHarnessEvents();
+resetHarnessAudit();
 start();

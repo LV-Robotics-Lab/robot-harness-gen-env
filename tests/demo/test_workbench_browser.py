@@ -21,6 +21,16 @@ from demo.harness_feed import HarnessEventFeed
 from self_improving.harness import RunRecorder, RunStatus, SQLiteEventJournal
 
 
+def _compile_dependency_rows() -> list[dict[str, str]]:
+    return [
+        {"name": "asset-library-state", "version": "1", "sha256": "b" * 64},
+        {"name": "catalog-selected-assets", "version": "1", "sha256": "c" * 64},
+        {"name": "ledger-contract", "version": "1", "sha256": "d" * 64},
+        {"name": "scene-gen", "version": "0.1.0", "sha256": "e" * 64},
+        {"name": "text2env-compile-config", "version": "1", "sha256": "f" * 64},
+    ]
+
+
 def _configured_app(
     tmp_path: Path,
     monkeypatch,
@@ -57,6 +67,7 @@ class _JournalSubmittingWorkbench:
         self.journal = journal
         self.feed = HarnessEventFeed.from_journal(journal)
         self.submissions: list[tuple[str, int]] = []
+        self.audit_runs: list[UUID] = []
 
     def page(self, **kwargs):
         return self.feed.page(**kwargs)
@@ -86,6 +97,33 @@ class _JournalSubmittingWorkbench:
             "max_attempts": 1,
             "terminal_event_id": page["last_event_id"],
             "blocker": None,
+        }
+
+    def audit(self, *, run_id: UUID):
+        assert run_id == self.run_id
+        self.audit_runs.append(run_id)
+        page = self.page(run_id=run_id, limit=500)
+        events = page["events"]
+        return {
+            "schema_version": "harness.workbench_compile_audit.v1",
+            "run": {
+                "run_id": str(run_id),
+                "skill_id": "text2env.compile",
+                "skill_version": "1.0.0",
+                "status": "succeeded",
+                "attempt": 1,
+                "max_attempts": 1,
+                "started_at": events[0]["event"]["timestamp"],
+                "ended_at": events[-1]["event"]["timestamp"],
+                "event_count": len(events),
+                "terminal_event_id": page["last_event_id"],
+                "blocker": None,
+            },
+            "invocation": {
+                "status": "bound",
+                "digest": "a" * 64,
+                "dependencies": _compile_dependency_rows(),
+            },
         }
 
 
@@ -122,6 +160,7 @@ class _PreflightSubmittingWorkbench:
     def __init__(self, journal: SQLiteEventJournal) -> None:
         self.feed = HarnessEventFeed.from_journal(journal)
         self.journal = journal
+        self.audit_runs: list[UUID] = []
 
     def page(self, **kwargs):
         return self.feed.page(**kwargs)
@@ -149,12 +188,76 @@ class _PreflightSubmittingWorkbench:
             "blocker": {"code": "HARN_DEPENDENCY_UNAVAILABLE", "retryable": False},
         }
 
+    def audit(self, *, run_id: UUID):
+        assert run_id == self.run_id
+        self.audit_runs.append(run_id)
+        page = self.page(run_id=run_id, limit=500)
+        events = page["events"]
+        return {
+            "schema_version": "harness.workbench_compile_audit.v1",
+            "run": {
+                "run_id": str(run_id),
+                "skill_id": "text2env.compile",
+                "skill_version": "1.0.0",
+                "status": "blocked",
+                "attempt": 0,
+                "max_attempts": 0,
+                "started_at": events[0]["event"]["timestamp"],
+                "ended_at": events[-1]["event"]["timestamp"],
+                "event_count": len(events),
+                "terminal_event_id": page["last_event_id"],
+                "blocker": {"code": "HARN_DEPENDENCY_UNAVAILABLE", "retryable": False},
+            },
+            "invocation": {
+                "status": "not_created_preflight",
+                "digest": None,
+                "dependencies": [],
+            },
+        }
+
 
 class _SecondSubmissionFailsWorkbench(_JournalSubmittingWorkbench):
     def submit(self, *, request: object, seed: object):
         if self.submissions:
             raise WorkbenchCompileUnavailableError("second submission unavailable")
         return super().submit(request=request, seed=seed)
+
+
+class _ReadonlyAuditWorkbench:
+    def __init__(self, journal: SQLiteEventJournal, digests: dict[UUID, str]) -> None:
+        self.feed = HarnessEventFeed.from_journal(journal)
+        self.digests = digests
+        self.audit_runs: list[UUID] = []
+
+    def page(self, **kwargs):
+        return self.feed.page(**kwargs)
+
+    def audit(self, *, run_id: UUID):
+        self.audit_runs.append(run_id)
+        page = self.page(run_id=run_id, limit=500)
+        events = page["events"]
+        terminal = events[-1]["event"]
+        return {
+            "schema_version": "harness.workbench_compile_audit.v1",
+            "run": {
+                "run_id": str(run_id),
+                "skill_id": "text2env.compile",
+                "skill_version": "1.0.0",
+                "status": terminal["to_status"],
+                "attempt": terminal["attempt"],
+                "max_attempts": 1,
+                "started_at": events[0]["event"]["timestamp"],
+                "ended_at": terminal["timestamp"],
+                "event_count": len(events),
+                "terminal_event_id": page["last_event_id"],
+                "blocker": None,
+            },
+            "invocation": {
+                "status": "bound",
+                "digest": self.digests[run_id],
+                "dependencies": _compile_dependency_rows(),
+            },
+        }
 
 
 @contextmanager
@@ -292,6 +395,412 @@ def test_browser_harness_compile_replays_only_committed_events(
     assert "Harness Compile 已持久化为 succeeded" in dom
 
 
+def test_browser_renders_dependency_audit_only_after_the_terminal_journal_matches(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+    observed_paths: list[str] = []
+
+    @app.before_request
+    def observe_audit_request():
+        observed_paths.append(request.path)
+
+    @app.after_request
+    def click_compile_after_the_application_script(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    '<script>document.querySelector("#harness-compile-button").click();</script>'
+                    "</body>",
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile")
+
+    audit_path = f"/api/harness/compile-runs/{workbench.run_id}/audit"
+    assert workbench.audit_runs == [workbench.run_id]
+    assert audit_path in observed_paths
+    audit_index = observed_paths.index(audit_path)
+    assert any(
+        path == "/api/harness/events"
+        for path in observed_paths[observed_paths.index("/api/harness/compile") + 1 : audit_index]
+    )
+    assert 'id="harness-audit-panel"' in dom
+    assert 'id="harness-audit-panel"' in dom and 'id="harness-audit-panel" hidden' not in dom
+    assert "asset-library-state@1" in dom
+    assert "ledger-contract@1" in dom
+    assert "scene-gen@0.1.0" in dom
+    assert "a" * 64 in dom
+    assert "b" * 64 in dom
+    assert "c" * 64 in dom
+    assert "operations" not in dom
+
+
+@pytest.mark.parametrize("view", ["all", "running_compile", "terminal_replay"])
+def test_browser_never_requests_compile_audit_for_an_ineligible_view(
+    view: str,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    compile_run = UUID("62345678-1234-4234-9234-123456789abc")
+    replay_run = UUID("72345678-1234-4234-9234-123456789abc")
+    RunRecorder(
+        run_id=compile_run,
+        skill_id="text2env.compile",
+        skill_version="1.0.0",
+        clock=lambda: datetime(2026, 9, 1, 5, 0, tzinfo=timezone.utc),
+        sink=journal,
+    ).start(stage="compile.started", attempt=1)
+    replay = RunRecorder(
+        run_id=replay_run,
+        skill_id="text2env.replay",
+        skill_version="1.0.0",
+        clock=lambda: datetime(2026, 9, 1, 5, 0, tzinfo=timezone.utc),
+        sink=journal,
+    )
+    replay.start(stage="replay.started", attempt=1)
+    replay.finish(status=RunStatus.SUCCEEDED, stage="replay.succeeded")
+    workbench = _ReadonlyAuditWorkbench(journal, {compile_run: "d" * 64})
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+    selected = {
+        "all": "",
+        "running_compile": f"?harness_run={compile_run}",
+        "terminal_replay": f"?harness_run={replay_run}",
+    }[view]
+
+    with _served(app) as url:
+        dom = _rendered_dom(f"{url}{selected}", tmp_path / f"chrome-{view}")
+
+    assert workbench.audit_runs == []
+    assert "摘要已与完整 committed journal 对账" not in dom
+
+
+def test_browser_rejects_audit_fields_that_could_smuggle_a_local_path(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    original_audit = workbench.audit
+
+    def corrupt_audit(*, run_id: UUID):
+        audit = original_audit(run_id=run_id)
+        audit["invocation"]["dependencies"][0]["version"] = "/tmp/private-staging"
+        return audit
+
+    monkeypatch.setattr(workbench, "audit", corrupt_audit)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def click_compile_after_the_application_script(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    '<script>document.querySelector("#harness-compile-button").click();</script>'
+                    "</body>",
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile")
+
+    assert "终态与 committed journal 无法对账" in dom
+    assert "/tmp/private-staging" not in dom
+    assert "asset-library-state@1" not in dom
+
+
+def test_browser_rejects_microsecond_drift_in_the_audit_timestamps(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    original_audit = workbench.audit
+
+    def drift_audit_timestamp(*, run_id: UUID):
+        audit = original_audit(run_id=run_id)
+        audit["run"]["started_at"] = "2026-09-01T05:00:00.000999+00:00"
+        return audit
+
+    monkeypatch.setattr(workbench, "audit", drift_audit_timestamp)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def click_compile_after_the_application_script(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    '<script>document.querySelector("#harness-compile-button").click();</script>'
+                    "</body>",
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile")
+
+    assert "终态与 committed journal 无法对账" in dom
+    assert ".000999" not in dom
+    assert "摘要已与完整 committed journal 对账" not in dom
+
+
+def test_browser_rejects_attempt_zero_inside_a_bound_execution_history(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def corrupt_the_first_execution_attempt(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    '<script>document.querySelector("#harness-compile-button").click();</script>'
+                    "</body>",
+                )
+            )
+        if (
+            request.path == "/api/harness/events"
+            and request.args.get("run_id") == str(workbench.run_id)
+            and response.status_code == 200
+        ):
+            page = response.get_json()
+            if page["events"]:
+                page["events"][0]["event"]["attempt"] = 0
+                response.set_data(json.dumps(page))
+                response.content_type = "application/json"
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile")
+
+    assert workbench.audit_runs == [workbench.run_id]
+    assert "终态与 committed journal 无法对账" in dom
+    assert "a" * 64 not in dom
+    assert "摘要已与完整 committed journal 对账" not in dom
+
+
+def test_browser_retries_a_transient_compile_audit_failure(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+    audit_requests = 0
+
+    @app.before_request
+    def fail_the_first_audit_request():
+        nonlocal audit_requests
+        if request.path == f"/api/harness/compile-runs/{workbench.run_id}/audit":
+            audit_requests += 1
+            if audit_requests == 1:
+                return (
+                    jsonify(
+                        {
+                            "error": {
+                                "code": "harness_compile_audit_unavailable",
+                                "message": "Harness compile audit is unavailable",
+                            }
+                        }
+                    ),
+                    503,
+                )
+        return None
+
+    @app.after_request
+    def click_compile_after_the_application_script(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    '<script>document.querySelector("#harness-compile-button").click();</script>'
+                    "</body>",
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(
+            url,
+            tmp_path / "chrome-profile",
+            virtual_time_budget_ms=7_500,
+        )
+
+    assert audit_requests == 2
+    assert workbench.audit_runs == [workbench.run_id]
+    assert "摘要已与完整 committed journal 对账" in dom
+    assert "asset-library-state@1" in dom
+
+
+def test_browser_discards_a_late_audit_response_from_the_previous_run(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    run_a = UUID("82345678-1234-4234-9234-123456789abc")
+    run_b = UUID("92345678-1234-4234-9234-123456789abc")
+    for run_id in (run_a, run_b):
+        recorder = RunRecorder(
+            run_id=run_id,
+            skill_id="text2env.compile",
+            skill_version="1.0.0",
+            clock=lambda: datetime(2026, 9, 1, 5, 0, tzinfo=timezone.utc),
+            sink=journal,
+        )
+        recorder.start(stage="compile.started", attempt=1)
+        recorder.finish(status=RunStatus.SUCCEEDED, stage="compile.succeeded")
+    workbench = _ReadonlyAuditWorkbench(journal, {run_a: "1" * 64, run_b: "2" * 64})
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+    audit_a_started = threading.Event()
+    release_a = threading.Event()
+
+    @app.get("/__test__/wait-audit-a")
+    def wait_for_audit_a():
+        assert audit_a_started.wait(timeout=5)
+        return "", 204
+
+    @app.before_request
+    def delay_audit_a():
+        if request.path == f"/api/harness/compile-runs/{run_a}/audit":
+            audit_a_started.set()
+            assert release_a.wait(timeout=5)
+
+    @app.after_request
+    def switch_runs_and_release_the_old_audit(response):
+        if request.path == f"/api/harness/compile-runs/{run_b}/audit":
+            release_a.set()
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    f"""
+                    <script>
+                    (async () => {{
+                      await fetch('/__test__/wait-audit-a');
+                      selectHarnessRun('{run_b}');
+                    }})();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(
+            f"{url}?harness_run={run_a}",
+            tmp_path / "chrome-profile",
+            virtual_time_budget_ms=4_000,
+        )
+
+    assert audit_a_started.is_set()
+    assert release_a.is_set()
+    assert run_a in workbench.audit_runs
+    assert run_b in workbench.audit_runs
+    assert "2" * 64 in dom
+    assert "1" * 64 not in dom
+    assert f'value="{run_b}"' in dom
+
+
+def test_browser_never_restores_a_previous_audit_from_local_storage(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    workbench = _JournalSubmittingWorkbench(journal)
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+
+    @app.after_request
+    def click_compile_after_the_application_script(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    '<script>document.querySelector("#harness-compile-button").click();</script>'
+                    "</body>",
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        profile = tmp_path / "chrome-profile"
+        first_dom = _rendered_dom(url, profile)
+
+        def fail_audit(**_kwargs):
+            raise WorkbenchCompileUnavailableError("secret path: /tmp/private-audit")
+
+        monkeypatch.setattr(workbench, "audit", fail_audit)
+        second_dom = _rendered_dom(f"{url}?harness_run={workbench.run_id}", profile)
+
+    assert "a" * 64 in first_dom
+    assert "摘要已与完整 committed journal 对账" in first_dom
+    assert "a" * 64 not in second_dom
+    assert "/tmp/private-audit" not in second_dom
+    assert "终态与 committed journal 无法对账" in second_dom
+
+
+def test_browser_replays_more_than_the_cache_window_before_auditing(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    run_id = UUID("a2345678-1234-4234-9234-123456789abc")
+    recorder = RunRecorder(
+        run_id=run_id,
+        skill_id="text2env.compile",
+        skill_version="1.0.0",
+        clock=lambda: datetime(2026, 9, 1, 5, 0, tzinfo=timezone.utc),
+        sink=journal,
+    )
+    recorder.start(stage="compile.started", attempt=1)
+    for index in range(199):
+        recorder.progress(stage=f"compile.progress.{index:03d}")
+    recorder.finish(status=RunStatus.SUCCEEDED, stage="compile.succeeded")
+    workbench = _ReadonlyAuditWorkbench(journal, {run_id: "f" * 64})
+    app = _configured_app(tmp_path, monkeypatch, None, workbench=workbench)
+    observed_limits: list[str] = []
+
+    @app.before_request
+    def observe_selected_page_size():
+        if request.path == "/api/harness/events" and request.args.get("run_id") == str(run_id):
+            observed_limits.append(request.args["limit"])
+
+    with _served(app) as url:
+        dom = _rendered_dom(
+            f"{url}?harness_run={run_id}",
+            tmp_path / "chrome-profile",
+            virtual_time_budget_ms=4_000,
+        )
+
+    assert observed_limits[0] == "500"
+    assert workbench.audit_runs == [run_id]
+    assert dom.count("data-event-id=") == 201
+    assert 'data-event-id="201"' in dom
+    assert '<code id="harness-cursor">201</code>' in dom
+    assert "摘要已与完整 committed journal 对账" in dom
+
+
 def test_browser_rejects_compile_summary_without_matching_committed_history(
     tmp_path: Path,
     monkeypatch,
@@ -380,6 +889,10 @@ def test_browser_accepts_a_committed_preflight_terminal_summary(
     assert "Harness Compile 已持久化为 blocked" in dom
     assert "Harness compile response failed integrity checks" not in dom
     assert "preflight" in dom
+    assert workbench.audit_runs == [workbench.run_id]
+    assert "未创建 Invocation" in dom
+    assert 'id="harness-dependency-list"><li class="empty">' in dom
+    assert "预检终止前未解析依赖" in dom
 
 
 def test_browser_new_submission_invalidates_an_older_terminal_read(

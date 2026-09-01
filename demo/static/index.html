@@ -126,6 +126,26 @@
         <code id="harness-cursor">0</code>
       </div>
       <ol class="event-timeline" id="harness-event-list" aria-live="polite"></ol>
+      <div class="compile-audit-shell">
+        <p class="feed-note" id="harness-audit-message" role="status">
+          筛选一个已终止的 Compile run 后显示依赖与终态对账。
+        </p>
+        <section class="compile-audit" id="harness-audit-panel" aria-labelledby="harness-audit-title" hidden>
+          <div class="compile-audit-heading">
+            <div>
+              <span class="section-index">AUDIT</span>
+              <h3 id="harness-audit-title">依赖与终态对账</h3>
+            </div>
+            <span class="feed-status ready">已对账</span>
+          </div>
+          <dl class="compile-audit-summary" id="harness-audit-run-summary"></dl>
+          <div class="compile-audit-invocation">
+            <span id="harness-invocation-status"></span>
+            <code id="harness-invocation-digest"></code>
+          </div>
+          <ul class="compile-dependency-list" id="harness-dependency-list"></ul>
+        </section>
+      </div>
     </section>
 
     <section class="evidence-band" id="evidence-band" aria-labelledby="evidence-title" hidden>

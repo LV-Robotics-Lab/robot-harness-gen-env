@@ -194,6 +194,23 @@ button svg { width: 17px; height: 17px; stroke-width: 1.8; }
 .event-status.blocked, .event-status.failed { color: #fff; background: var(--danger); }
 .event-details { flex-wrap: wrap; gap: 7px 14px; margin-top: 7px; color: var(--muted); font-size: 10px; }
 .event-empty { padding: 24px 14px; color: var(--muted); text-align: center; }
+.compile-audit-shell { margin-top: 16px; }
+.compile-audit-shell > .feed-note { margin: 0; }
+.compile-audit { margin-top: 10px; padding: 16px; background: #f5f6f2; border: 1px solid var(--line); }
+.compile-audit-heading, .compile-audit-heading > div { display: flex; align-items: flex-start; }
+.compile-audit-heading { justify-content: space-between; gap: 16px; }
+.compile-audit-heading > div { gap: 12px; }
+.compile-audit-heading h3 { margin: 4px 0 0; font-size: 16px; }
+.compile-audit-summary { margin: 16px 0 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 7px 14px; }
+.compile-audit-summary dt { color: var(--muted); font: 700 9px/1.4 ui-monospace, "SFMono-Regular", Consolas, monospace; text-transform: uppercase; }
+.compile-audit-summary dd { margin: 0; overflow-wrap: anywhere; font: 11px/1.4 ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.compile-audit-invocation { margin-top: 16px; display: grid; gap: 7px; }
+.compile-audit-invocation span { color: var(--muted); font-size: 11px; }
+.compile-audit-invocation code, .compile-dependency-list code { overflow-wrap: anywhere; font: 10px/1.45 ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.compile-dependency-list { margin: 16px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.compile-dependency-list li { padding: 10px 0; display: grid; gap: 5px; border-bottom: 1px solid var(--line); }
+.compile-dependency-list strong { font-size: 12px; }
+.compile-dependency-list .empty { color: var(--muted); font-size: 11px; }
 
 .history-list { display: grid; border-top: 1px solid var(--line); }
 .history-item { width: 100%; min-height: 58px; justify-content: space-between; gap: 16px; padding: 10px 4px; color: inherit; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--line); }
@@ -225,6 +242,8 @@ button svg { width: 17px; height: 17px; stroke-width: 1.8; }
   .event-heading strong { flex-basis: calc(100% - 54px); }
   .harness-filter { grid-template-columns: 1fr 1fr; }
   .harness-filter label, .harness-filter input { grid-column: 1 / -1; }
+  .compile-audit-summary { grid-template-columns: 1fr; gap: 3px; }
+  .compile-audit-summary dd { margin-bottom: 7px; }
 }
 
 @media (prefers-reduced-motion: no-preference) {

@@ -6,7 +6,7 @@
 | --- | --- | --- | --- |
 | `scene_gen/` | 编译器核心库：契约、解析、grounding、求解、builder、validator、绘制代理、acceptance。 | `schema.py`、`parser.py`、`grounding.py`、`solver.py`、`builder.py`、`validator.py`、`scene_gen/envs/generated_scene.py` | 主流程每一阶段都住在这里；CLI 与 demo 只是薄入口 |
 | `script/` | CLI 入口：编译、回放、批量验收、矩阵、可选渲染评判、stage-5 报告。 | `generate_scene.py`、`run_scene_runtime.py`、`run_100_seed_acceptance.py`、`run_prompt_matrix.py` | 编排 `scene_gen`；流水线逻辑加进 `scene_gen`，不要加在这里 |
-| `demo/` | Flask 控制面：保留旧 GPU job 流水线，并可注入只读 Harness 事件 feed。 | `app.py`、`harness_feed.py`、`static/` | job 入口仍调用旧脚本；事件工作台只消费已提交 journal，不执行或推演 Skill |
+| `demo/` | Flask 控制面：保留旧 GPU job 流水线，并可注入 Harness compile submit、只读事件与终态依赖审计。 | `app.py`、`harness_compile.py`、`harness_feed.py`、`static/` | job 入口仍调用旧脚本；审计只投影同一 compile authority，不执行 replay/validate 或推演操作 |
 | `tests/` | pytest 套件 + committed fixture；为每个误报模式留攻击测试。 | `tests/scene_gen/test_<module>.py`、`tests/fixtures/{asset_catalog,golden_prompts,prompt_matrix}.json` | 锁住契约与失败分支；套件无需 RoboTwin checkout 即可跑 |
 | `self_improving/` | Harness 对外契约、平台编排、闭环诊断、资产复用、仿真适配、来源清单与只读历史。 | `harness/schemas/`、`harness/schema_catalog.py`、`harness/registry.py`、`harness/package_store.py`、`harness/handlers/text2env_compile.py`、`source_inventory.json`、各命名模块 | Harness 只引用权威载荷，平台消费稳定核心；都不能降低 `scene_gen` 门控 |
 | `apps/pearl_evidence_portal/` | PEARL Self-Improving Agents 的独立证据门户、构建脚本、测试与已裁剪的浏览器报告子集。 | `app/page.tsx`、`scripts/build-hosted-report-subsets.mjs`、`tests/rendered-html.test.mjs` | 只呈现已有证据；不产出或修改核心验收结论 |
@@ -48,10 +48,10 @@
 
 | 重要代码 | 功能 | 关键符号 | 调用方 / 使用方 |
 | --- | --- | --- | --- |
-| `demo/app.py` | Flask 控制面：保留旧 text2env job，并增加可选的 Harness compile submit + event replay。 | `create_app`、`POST /api/harness/compile`、`GET /api/harness/events`、`HARNESS_WORKBENCH` | submit 只收 request/seed；同一 Workbench 优先拥有写入与读取，纯只读部署才回退 `HARNESS_EVENT_FEED` |
-| `demo/harness_compile.py` | 把固定 qualified `CompileApplication` 隐藏在同步工作台提交 seam 后，并在返回前重读 terminal closure。 | `WorkbenchCompile.submit`、`WorkbenchCompile.page`、`WorkbenchCompileAuthorityError` | operator 固定 catalog/生成策略；摘要无 output/artifacts/events，RunState 与完整 journal 不一致即拒绝 |
+| `demo/app.py` | Flask 控制面：保留旧 text2env job，并增加可选的 Harness compile submit、event replay 与 terminal audit。 | `create_app`、`POST /api/harness/compile`、两个 `GET /api/harness/*` 路由、`HARNESS_WORKBENCH` | submit 只收 request/seed；audit 只收 canonical v4 run id 且无 query；同一 Workbench 优先拥有写入与读取 |
+| `demo/harness_compile.py` | 把固定 qualified `CompileApplication` 隐藏在同步工作台 seam 后，并重读 terminal closure 与 Invocation 依赖。 | `WorkbenchCompile.submit`、`audit`、`page`、`WorkbenchCompileAuthorityError` | audit 双读 RunState/Invocation/EventPage，重算 Invocation content digest 并核固定 attempt 历史；partial/drift 拒绝，只投影依赖 name/version/SHA 与精简终态 |
 | `demo/harness_feed.py` | 把 `SQLiteEventJournal` 的 `EventPage` 投影成浏览器可消费、可恢复的全局 cursor 页。 | `HarnessEventFeed.page`、`HarnessEventFeedCorruptionError` | 只读 seam；保留 run/Skill/Event 信封与 artifact metadata，不增加任意路径读取 |
-| `demo/static/` | 无构建步骤的 Event Timeline + 独立 compile-only 提交 UI。 | `harness-compile-button`、`loadHarnessEvents`、`validateHarnessSubmission` | POST 不生成阶段；只在摘要与该 run 的 terminal committed event 对账后显示终态 |
+| `demo/static/` | 无构建步骤的 Event Timeline + compile-only 提交与只读依赖审计 UI。 | `harness-compile-button`、`loadHarnessEvents`、`loadHarnessAuditIfEligible` | POST 不生成阶段；audit 不缓存，只在完整 terminal journal 与摘要逐项一致后显示 |
 | `demo/__init__.py` | 包标记使 `demo` 可被导入。 | — | `python -m demo.app` |
 
 ## `tests/`
@@ -122,8 +122,8 @@ PR1 的 21 个专项测试是历史基线；当前验证边界见模块页与
 
 | 重要代码 | 功能 | 关键符号 | 调用方 / 使用方 |
 | --- | --- | --- | --- |
-| `tests/demo/test_harness_compile.py`、`test_app.py`、`test_harness_feed.py` | 真实 qualified compile application、SQLite terminal closure、Flask exact payload 与 feed 公共 seam。 |—| 删除 terminal state/event、caller path 字段与脱敏 503 攻击；compile module statement/branch 100% |
-| `tests/demo/test_workbench_browser.py` | 真 Flask + 本机 headless Chrome 的事件/提交工作台端到端门。 |—| 覆盖 committed-only submit replay、伪 progress/缺 history、缓存重确认、并发 filter 与损坏状态；`pytest -q tests/demo` 当前 84 passed（18 Chrome） |
+| `tests/demo/test_harness_compile.py`、`test_app.py`、`test_harness_feed.py` | 真实 qualified compile application、SQLite terminal/Invocation closure、Flask exact payload 与 feed 公共 seam。 |—| 删除 terminal state/event、partial authority、双读漂移、caller path 字段与脱敏 503 攻击；compile module statement/branch 100% |
+| `tests/demo/test_workbench_browser.py` | 真 Flask + 本机 headless Chrome 的事件/提交/依赖审计工作台端到端门。 |—| 覆盖 committed-only replay、畸形/迟到 audit、微秒时间漂移、瞬时失败重试、缓存不恢复、201-event 完整重放；`pytest -q tests/demo` 当前 134 passed（29 Chrome） |
 
 ## 覆盖范围
 

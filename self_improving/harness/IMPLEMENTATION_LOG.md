@@ -877,3 +877,29 @@
 - 边界：这是同步 compile-only 接口，不冒充 durable async queue。它没有接 replay、validate、System
   2、artifact 内容 viewer 或拖拽编排；compile succeeded 也不是物理 validation、publishability 或
   资产 settle。阶段 7 仍为进行中。
+
+### 2026-09-01 / A048：依赖面板必须从同一 compile authority 重建，不能相信浏览器缓存
+
+- RED：工作台已有提交和 Event Timeline，但没有读取 terminal Invocation/依赖的公共 seam；首个测试
+  因 `WorkbenchCompile.audit` 不存在而失败，真 Chrome 也不会请求审计。后续攻击覆盖终态行删除但
+  Invocation/Event 仍在、0/0 预检与 1/1 执行形状漂移、二次读取变化、非单调 event cursor、畸形依赖
+  中夹带本机路径、旧 run 迟到响应和 localStorage 旧审计恢复。
+- authority closure：`WorkbenchCompile.audit(run_id)` 在同一锁内两次读取 terminal `RunState`、
+  `Invocation` 与完整 filtered `EventPage`。三者全空才是 not found；只有部分记录、两次读取不等、
+  event/history/invocation binding 不精确都归为 authority corruption。bound execution 的全部事件必须
+  是 attempt 1，preflight 全部是 attempt 0；Invocation 还会从类型化参数、依赖与 attempt 上限重新计算
+  content digest。返回只含终态摘要、Invocation digest 与按权威顺序保存的依赖
+  `name/version/sha256`；预检没有 Invocation 时显式标 `not_created_preflight`。
+- HTTP/UI：`GET /api/harness/compile-runs/<canonical-v4-uuid>/audit` 不接受 query、locator 或 caller
+  trust 配置，400/404/503 都是固定脱敏响应。浏览器只在单个 `text2env.compile@1.0.0` run 已从
+  cursor 0 完整重放且最后一条为 committed terminal 后请求审计，再逐项对账 run/Skill、attempt、
+  status、event count/cursor 与首末时间；时间戳按完整微秒字符串对账，不经毫秒精度归一化。审计不进
+  localStorage；run 切换用独立 generation 丢弃迟到响应，瞬时 unavailable 会本地重试，201–500 条
+  事件也不经过 200 条全局视图缓存截断。
+- 验证：`tests/demo` 134 passed，其中 29 项为真 Flask + headless Chrome；Application/Event journal
+  相邻回归 51 passed。`demo/harness_compile.py` 为 144 statements / 62 branches，statement/branch
+  100%。Python/JS syntax、
+  ruff check/format 与 diff check 均通过。
+- 边界：Event Timeline 仍是唯一 operations authority；audit schema 只是 UI projection，不新增 Harness
+  公共 schema snapshot。面板不复制/推演操作，不服务 artifact/URI/path，不提供依赖图编辑、拖拽、
+  重排、重试、replay、validate 或 System 2，也不构成物理 validation、settle 或 publishability。

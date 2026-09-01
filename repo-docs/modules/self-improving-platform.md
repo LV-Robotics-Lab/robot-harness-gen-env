@@ -102,8 +102,25 @@ closed。
 这仍不是完整 Stage 7：接口是同步 compile，不是异步 durable queue；没有 replay、validate、System
 2、artifact 内容 viewer 或拖拽编排。compile `succeeded` 也不表示物理 validation、资产 settle 或
 publishable。A047 的 `harness.workbench_compile_submission.v1` 是工作台投影，不新增 Harness 公共
-schema snapshot；当前 17 份 schema 计数不变。`tests/demo` 当前 84 passed，其中 18 项使用真 Flask +
-headless Chrome。
+schema snapshot；当前 17 份 schema 计数不变。A047 切片当时 `tests/demo` 为 84 passed，其中 18 项
+使用真 Flask + headless Chrome。
+
+A048 在此之上增加 terminal compile 的只读依赖审计。`WorkbenchCompile.audit(run_id)` 从同一
+SQLite authority 两次读取 RunState、Invocation 与完整 filtered EventPage；三者全空才是 not found，
+partial authority、两次读取漂移、非单调 cursor 或固定 0/0 preflight、1/1 execution binding 不精确都
+拒绝；固定执行/预检的每条事件还必须分别是 attempt 1/0，Invocation digest 从类型化参数、依赖与
+attempt 上限重新计算。`GET /api/harness/compile-runs/<canonical-v4-uuid>/audit` 只投影终态摘要、Invocation digest 与
+依赖 `name/version/sha256`，不返回 URI、path、effective parameters、output、artifacts 或 events。
+浏览器只在单个 compile run 从 cursor 0 完整重放到 terminal 后请求审计，再绑定 run/Skill、attempt、
+status、event count/cursor 与微秒级首末时间；审计不进 localStorage，切换 run 会丢弃迟到响应，瞬时
+unavailable 会本地重试，最多 500 条的单 run 历史不受全局视图 200 条缓存窗口截断。当前
+`tests/demo` 为 134 passed，其中 29 项真 Chrome；相邻 Application/Event journal 为 51 passed；审计
+模块 144 statements / 62 branches 全覆盖。
+
+这仍不是完整 Stage 7：Event Timeline 仍是唯一 operations authority，审计面板不复制或推演操作，也
+不是 artifact 内容 viewer 或可编辑依赖图；没有拖拽、重排、重试、replay、validate 或 System 2。
+compile `succeeded` 仍不表示物理 validation、资产 settle 或 publishable。A047/A048 的两份
+`harness.workbench_*` 都是工作台投影，不新增 Harness 公共 schema snapshot；当前 17 份计数不变。
 
 Stage 5 的视觉评审状态是三态而非布尔值。在 `--run-smoke`/视觉评审路径中，只有 visual pass
 才把 candidate 原子晋升为 `final_placement.json` 并退出 0；`pending_visual_review` 只写
