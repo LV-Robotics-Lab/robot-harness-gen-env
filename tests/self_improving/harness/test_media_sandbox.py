@@ -1417,3 +1417,215 @@ def test_descriptor_cleanup_tolerates_already_closed_and_unknown_fds(tmp_path: P
     media_sandbox_module._close_descriptor(descriptor, descriptors)
     media_sandbox_module._close_descriptor(descriptor, descriptors)
     assert descriptors == set()
+
+
+@pytest.mark.parametrize(
+    ("exit_code", "expected_reason"),
+    (
+        (0, None),
+        (-signal.SIGXCPU, SandboxReason.RESOURCE_CPU),
+    ),
+)
+def test_run_returns_a_bounded_capture_or_preserves_resource_metrics(
+    exit_code: int,
+    expected_reason: SandboxReason | None,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sandbox = object.__new__(NativeCgroupSandbox)
+    sandbox._policy = SandboxPolicy()  # type: ignore[attr-defined]
+    sandbox._launcher = object()  # type: ignore[attr-defined]
+    sandbox._ffmpeg = object()  # type: ignore[attr-defined]
+    sandbox._launcher_source = object()  # type: ignore[attr-defined]
+    sandbox._implementation = object()  # type: ignore[attr-defined]
+    sandbox._delegated_cgroup_root = tmp_path  # type: ignore[attr-defined]
+    job = tmp_path / "job"
+    job.mkdir()
+
+    class FinishedProcess:
+        pid = 1234
+
+        def poll(self) -> int:
+            return 0
+
+        def wait(self, timeout: float) -> int:
+            del timeout
+            return exit_code
+
+    monkeypatch.setattr(media_sandbox_module, "_validate_delegated_topology", lambda root: None)
+    monkeypatch.setattr(media_sandbox_module, "_create_job", lambda jobs, policy: job)
+    monkeypatch.setattr(
+        media_sandbox_module,
+        "_open_bound_file",
+        lambda expected: os.open(os.devnull, os.O_RDONLY | os.O_CLOEXEC),
+    )
+    monkeypatch.setattr(
+        media_sandbox_module.subprocess,
+        "Popen",
+        lambda *args, **kwargs: FinishedProcess(),
+    )
+    monkeypatch.setattr(media_sandbox_module, "_await_ready", lambda *args: None)
+    monkeypatch.setattr(media_sandbox_module, "_attach_process", lambda *args: None)
+    monkeypatch.setattr(media_sandbox_module.os, "write", lambda fd, value: len(value))
+    monkeypatch.setattr(
+        media_sandbox_module,
+        "_capture_process",
+        lambda *args, **kwargs: (exit_code, b"stdout", b"stderr"),
+    )
+    monkeypatch.setattr(media_sandbox_module, "_wait_unpopulated", lambda *args, **kwargs: None)
+    monkeypatch.setattr(media_sandbox_module, "_read_metrics", lambda target: _test_metrics())
+    monkeypatch.setattr(media_sandbox_module, "_require_bound_path_unchanged", lambda bound: None)
+
+    media = tmp_path / "media"
+    media.write_bytes(b"media")
+    descriptor = os.open(media, os.O_RDONLY | os.O_CLOEXEC)
+    try:
+        if expected_reason is None:
+            capture = sandbox.run(descriptor, ())
+            assert capture == SandboxCapture(
+                exit_code=0,
+                stdout=b"stdout",
+                stderr=b"stderr",
+                metrics=_test_metrics(),
+            )
+        else:
+            with pytest.raises(SandboxError) as caught:
+                sandbox.run(descriptor, ())
+            assert caught.value.reason is expected_reason
+            assert caught.value.metrics == _test_metrics()
+    finally:
+        os.close(descriptor)
+
+    assert not job.exists()
+
+
+def test_ready_handshake_accepts_the_exact_live_protocol_byte() -> None:
+    read_fd, write_fd = os.pipe2(os.O_CLOEXEC)
+    try:
+        os.write(write_fd, b"R")
+        media_sandbox_module._await_ready(
+            _PollProcess(None),  # type: ignore[arg-type]
+            read_fd,
+            time.monotonic() + 1,
+        )
+    finally:
+        os.close(read_fd)
+        os.close(write_fd)
+
+
+def test_cgroup_attachment_accepts_confirmed_membership(tmp_path: Path) -> None:
+    (tmp_path / "cgroup.procs").write_text("")
+    (tmp_path / "cgroup.events").write_text("populated 1\n")
+
+    media_sandbox_module._attach_process(tmp_path, 123)
+
+    assert (tmp_path / "cgroup.procs").read_text() == "123\n"
+
+
+@pytest.mark.parametrize(
+    ("max_output_bytes", "expected"),
+    (
+        (3, (7, b"abc", b"")),
+        (2, SandboxReason.OUTPUT_LIMIT),
+    ),
+)
+def test_capture_enforces_the_exact_combined_output_boundary(
+    max_output_bytes: int,
+    expected: tuple[int, bytes, bytes] | SandboxReason,
+) -> None:
+    stdout_read, stdout_write = os.pipe2(os.O_CLOEXEC)
+    stderr_read, stderr_write = os.pipe2(os.O_CLOEXEC)
+    status_read, status_write = os.pipe2(os.O_CLOEXEC)
+    os.write(stdout_write, b"abc")
+    for descriptor in (stdout_write, stderr_write, status_write):
+        os.close(descriptor)
+
+    class CompletedProcess:
+        stdout = os.fdopen(stdout_read, "rb", buffering=0)
+        stderr = os.fdopen(stderr_read, "rb", buffering=0)
+
+        def wait(self, timeout: float) -> int:
+            del timeout
+            return 7
+
+    try:
+        if isinstance(expected, SandboxReason):
+            with pytest.raises(SandboxError) as caught:
+                media_sandbox_module._capture_process(
+                    CompletedProcess(),  # type: ignore[arg-type]
+                    status_read=status_read,
+                    deadline=time.monotonic() + 1,
+                    max_output_bytes=max_output_bytes,
+                )
+            assert caught.value.reason is expected
+        else:
+            assert (
+                media_sandbox_module._capture_process(
+                    CompletedProcess(),  # type: ignore[arg-type]
+                    status_read=status_read,
+                    deadline=time.monotonic() + 1,
+                    max_output_bytes=max_output_bytes,
+                )
+                == expected
+            )
+    finally:
+        os.close(status_read)
+
+
+def test_unpopulated_wait_observes_a_transition_before_deadline(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    observations = iter(
+        (
+            (("populated", 1),),
+            (("populated", 0),),
+        )
+    )
+    monkeypatch.setattr(media_sandbox_module, "_read_key_values", lambda path: next(observations))
+    monkeypatch.setattr(media_sandbox_module.time, "sleep", lambda seconds: None)
+
+    media_sandbox_module._wait_unpopulated(Path("unused"), timeout_seconds=1)
+
+
+def test_metric_collection_returns_all_valid_cgroup_values(tmp_path: Path) -> None:
+    (tmp_path / "memory.peak").write_text("4096\n")
+    (tmp_path / "pids.peak").write_text("2\n")
+    (tmp_path / "memory.events.local").write_text("oom 0\noom_kill 0\n")
+    (tmp_path / "pids.events.local").write_text("max 0\n")
+    (tmp_path / "cpu.stat").write_text("usage_usec 17\n")
+
+    assert media_sandbox_module._read_metrics(tmp_path) == media_sandbox_module.SandboxMetrics(
+        memory_peak_bytes=4096,
+        memory_events=(("oom", 0), ("oom_kill", 0)),
+        pids_peak=2,
+        pids_events=(("max", 0),),
+        cpu_stats=(("usage_usec", 17),),
+    )
+
+
+def test_current_cgroup_parser_accepts_a_unified_absolute_record(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original_read = Path.read_text
+
+    def unified_record(path: Path, **kwargs: object) -> str:
+        if path == Path("/proc/self/cgroup"):
+            return "0::/supervisor/worker\n"
+        return original_read(path, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", unified_record)
+
+    assert media_sandbox_module._current_cgroup() == Path("/sys/fs/cgroup/supervisor/worker")
+
+
+def test_delegated_topology_uses_the_current_cgroup_by_default(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    supervisor, _ = _fake_delegated_topology(tmp_path)
+    current = supervisor / "worker"
+    current.mkdir()
+    monkeypatch.setattr(media_sandbox_module, "_current_cgroup", lambda: current)
+    monkeypatch.setattr(media_sandbox_module.os, "access", lambda *args: True)
+
+    media_sandbox_module._validate_delegated_topology(tmp_path)

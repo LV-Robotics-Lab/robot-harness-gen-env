@@ -1533,3 +1533,332 @@ def test_reuse_rejects_structurally_valid_ledger_metadata_drift(tmp_path: Path) 
             asset_catalog=base.asset_catalog,
             generation_report=base.asset_generation_report,
         )
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("generation_kind", 1, "unsupported generation provenance kind"),
+        ("generation_kind", "unknown", "unsupported generation provenance kind"),
+        ("generator", "other", "generation provenance generator mismatch"),
+        ("semantic_category", "", "semantic_category must be a non-empty string"),
+        ("semantic_category", "Not-A-Token", "semantic_category is invalid"),
+        ("geometry_family", "sphere", "geometry_family is invalid"),
+        ("geometry_fidelity", "other", "geometry_fidelity mismatch"),
+        ("generated_license", "unknown", "generated_license mismatch"),
+        ("dimensions_m", [1.0, 2.0], "dimensions_m must have three values"),
+        ("dimensions_m", [1.0, "2", 3.0], "dimensions_m must be finite"),
+        ("dimensions_m", [1.0, 10**10_000, 3.0], "dimensions_m must be finite"),
+        ("dimensions_m", [1.0, float("nan"), 3.0], "dimensions_m must be finite"),
+        ("dimensions_m", [1.0, 0.0, 3.0], "dimensions_m must be positive"),
+    ),
+)
+def test_admission_rejects_each_invalid_common_provenance_value(
+    tmp_path: Path,
+    field: str,
+    value: object,
+    message: str,
+) -> None:
+    base = _generated_fixture(tmp_path)
+    provenance = dict(base.asset_generation_report["generated"][0])
+    provenance[field] = value
+    report = {**base.asset_generation_report, "generated": [provenance]}
+
+    with pytest.raises(AssetAdmissionError, match=message):
+        GeneratedAssetAdmitter(tmp_path / "library", date(2026, 8, 31)).admit(
+            scene_spec=base.scene_spec,
+            asset_catalog=base.asset_catalog,
+            generation_report=report,
+        )
+
+
+def test_admission_requires_an_exact_provenance_object(tmp_path: Path) -> None:
+    base = _generated_fixture(tmp_path)
+
+    class ProvenanceSubclass(dict):
+        pass
+
+    provenance = ProvenanceSubclass(base.asset_generation_report["generated"][0])
+    report = {**base.asset_generation_report, "generated": [provenance]}
+
+    with pytest.raises(AssetAdmissionError, match="must be an exact object"):
+        GeneratedAssetAdmitter(tmp_path / "library", date(2026, 8, 31)).admit(
+            scene_spec=base.scene_spec,
+            asset_catalog=base.asset_catalog,
+            generation_report=report,
+        )
+
+
+def test_provenance_shape_rejects_a_wrong_schema_after_dispatch(tmp_path: Path) -> None:
+    provenance = dict(_generated_fixture(tmp_path).asset_generation_report["generated"][0])
+    provenance["schema_version"] = "unknown"
+
+    with pytest.raises(AssetAdmissionError, match="unsupported generation provenance schema"):
+        assets_module._require_provenance_shape(provenance)
+
+
+@pytest.mark.parametrize(
+    ("member", "value", "message"),
+    (
+        ("path", "", "visual path mismatch"),
+        ("sha256", "not-a-digest", "visual digest is invalid"),
+    ),
+)
+def test_admission_rejects_malformed_payload_identity_values(
+    tmp_path: Path,
+    member: str,
+    value: str,
+    message: str,
+) -> None:
+    base = _generated_fixture(tmp_path)
+    provenance = json.loads(json.dumps(base.asset_generation_report["generated"][0]))
+    provenance["files"]["visual"][member] = value
+
+    with pytest.raises(AssetAdmissionError, match=message):
+        GeneratedAssetAdmitter(tmp_path / "library", date(2026, 8, 31)).admit(
+            scene_spec=base.scene_spec,
+            asset_catalog=base.asset_catalog,
+            generation_report={**base.asset_generation_report, "generated": [provenance]},
+        )
+
+
+@pytest.mark.parametrize(
+    ("attack", "message"),
+    (
+        ("scale_too_large", "uniform_scale_factor exceeds one"),
+        ("source_model", "source_model_id must be a non-negative integer"),
+        ("target_model", "target_model_id must be a non-negative integer or null"),
+        ("reasons_type", "adaptation_reasons must be a locator-free string list"),
+        ("reasons_empty", "adaptation_reasons must be a locator-free string list"),
+        ("reasons_value", "adaptation_reasons are invalid"),
+        ("relation", "compatibility.relation is invalid"),
+        ("table_asset", "table compatibility is invalid"),
+        ("table_model", "table compatibility is invalid"),
+        ("nested_model", "target compatibility is invalid"),
+        ("headroom", "compatibility headroom mismatch"),
+        ("runtime_probe", "source_runtime_probe mismatch"),
+    ),
+)
+def test_admission_rejects_each_invalid_derived_provenance_value(
+    tmp_path: Path,
+    attack: str,
+    message: str,
+) -> None:
+    scene_spec = parse_rule_based("Place a red block on top of a plate.", seed=31)
+    catalog, report = ensure_assets_for_scene(
+        scene_spec,
+        _catalog_with_local_block_meshes(tmp_path),
+        objects_root=tmp_path / "generated-staging",
+    )
+    provenance = json.loads(json.dumps(report["generated"][0]))
+    compatibility = provenance["compatibility"]
+    if attack == "scale_too_large":
+        provenance["uniform_scale_factor"] = 1.1
+    elif attack == "source_model":
+        provenance["source_model_id"] = -1
+    elif attack == "target_model":
+        compatibility["target_model_id"] = -1
+    elif attack == "reasons_type":
+        provenance["adaptation_reasons"] = "reason"
+    elif attack == "reasons_empty":
+        provenance["adaptation_reasons"] = []
+    elif attack == "reasons_value":
+        provenance["adaptation_reasons"] = ["unknown"]
+    elif attack == "relation":
+        compatibility["relation"] = "beside"
+    elif attack == "table_asset":
+        compatibility.update(relation="on_table", target_asset_id="plate", target_model_id=None)
+    elif attack == "table_model":
+        compatibility.update(relation="on_table", target_asset_id="table", target_model_id=0)
+    elif attack == "nested_model":
+        compatibility["target_model_id"] = None
+    elif attack == "headroom":
+        compatibility["headroom_fraction"] = 0.5
+    else:
+        compatibility["source_runtime_probe"] = "unexpected"
+
+    with pytest.raises(AssetAdmissionError, match=message):
+        GeneratedAssetAdmitter(tmp_path / "library", date(2026, 8, 31)).admit(
+            scene_spec=scene_spec,
+            asset_catalog=catalog,
+            generation_report={**report, "generated": [provenance]},
+        )
+
+
+def test_valid_table_compatibility_accepts_a_null_target_model(tmp_path: Path) -> None:
+    scene_spec = parse_rule_based("Place a red block on top of a plate.", seed=31)
+    catalog, report = ensure_assets_for_scene(
+        scene_spec,
+        _catalog_with_local_block_meshes(tmp_path),
+        objects_root=tmp_path / "generated-staging",
+    )
+    provenance = json.loads(json.dumps(report["generated"][0]))
+    provenance["compatibility"].update(
+        relation="on_table",
+        target_asset_id="table",
+        target_model_id=None,
+    )
+
+    assets_module._require_provenance_shape(provenance)
+
+
+@pytest.mark.parametrize(
+    ("attack", "message"),
+    (
+        ("files", "has no payload identities"),
+        ("keys", "unexpected payload identities"),
+        ("record", "is missing visual identity"),
+        ("fields", "visual identity has unexpected fields"),
+        ("path", "visual path mismatch"),
+    ),
+)
+def test_payload_file_validation_rejects_each_malformed_defensive_input(
+    tmp_path: Path,
+    attack: str,
+    message: str,
+) -> None:
+    source = tmp_path / "asset"
+    (source / "visual").mkdir(parents=True)
+    (source / "collision").mkdir()
+    for relative in (
+        "visual/textured0.obj",
+        "collision/textured0.obj",
+        "visual/material.mtl",
+        "model_data0.json",
+    ):
+        (source / relative).write_bytes(relative.encode("ascii"))
+    manifest = assets_module._tree_manifest(source)
+    files: object = {
+        "visual": {
+            "path": str((source / "visual/textured0.obj").resolve()),
+            "sha256": manifest["visual/textured0.obj"]["sha256"],
+        },
+        "collision": {
+            "path": str((source / "collision/textured0.obj").resolve()),
+            "sha256": manifest["collision/textured0.obj"]["sha256"],
+        },
+        "material": {
+            "path": str((source / "visual/material.mtl").resolve()),
+            "sha256": manifest["visual/material.mtl"]["sha256"],
+        },
+        "metadata": {
+            "path": str((source / "model_data0.json").resolve()),
+            "sha256": manifest["model_data0.json"]["sha256"],
+        },
+    }
+    if attack == "files":
+        files = []
+    elif attack == "keys":
+        files.pop("metadata")
+    elif attack == "record":
+        files["visual"] = []
+    elif attack == "fields":
+        files["visual"]["extra"] = "value"
+    else:
+        files["visual"]["path"] = 7
+
+    with pytest.raises(AssetAdmissionError, match=message):
+        assets_module._validate_provenance_files({"files": files}, source, manifest)
+
+
+def test_admission_rejects_a_non_directory_destination(tmp_path: Path) -> None:
+    base = _generated_fixture(tmp_path)
+    asset_id = base.asset_generation_report["generated"][0]["asset_id"]
+    destination = tmp_path / "library" / "generated" / asset_id
+    destination.parent.mkdir(parents=True)
+    destination.write_bytes(b"not a directory")
+
+    with pytest.raises(AssetAdmissionError, match="destination is not a safe directory"):
+        GeneratedAssetAdmitter(tmp_path / "library", date(2026, 8, 31)).admit(
+            scene_spec=base.scene_spec,
+            asset_catalog=base.asset_catalog,
+            generation_report=base.asset_generation_report,
+        )
+
+
+def test_second_post_publish_identity_change_is_rejected_and_cleaned(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    base = _generated_fixture(tmp_path)
+    library = tmp_path / "library"
+    asset_id = base.asset_generation_report["generated"][0]["asset_id"]
+    destination = library / "generated" / asset_id
+    original = assets_module._require_directory_identity
+    destination_checks = 0
+
+    def fail_second_destination_check(path: Path, descriptor: int) -> None:
+        nonlocal destination_checks
+        if path == destination:
+            destination_checks += 1
+            if destination_checks == 2:
+                raise AssetAdmissionError("changed")
+        original(path, descriptor)
+
+    monkeypatch.setattr(
+        assets_module,
+        "_require_directory_identity",
+        fail_second_destination_check,
+    )
+
+    with pytest.raises(AssetAdmissionError, match="published destination identity changed"):
+        GeneratedAssetAdmitter(library, date(2026, 8, 31)).admit(
+            scene_spec=base.scene_spec,
+            asset_catalog=base.asset_catalog,
+            generation_report=base.asset_generation_report,
+        )
+
+    assert destination_checks == 2
+    assert not destination.exists()
+
+
+def test_directory_identity_and_cleanup_tolerate_missing_paths(tmp_path: Path) -> None:
+    descriptor = os.open(tmp_path, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
+    try:
+        with pytest.raises(AssetAdmissionError, match="changed during admission"):
+            assets_module._require_directory_identity(tmp_path / "missing", descriptor)
+        assets_module._remove_child_directory_if_identity(descriptor, "missing", expected_fd=-1)
+    finally:
+        os.close(descriptor)
+
+
+def test_private_incoming_name_exhaustion_is_fail_closed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    base = _generated_fixture(tmp_path)
+    library = tmp_path / "library"
+    asset_id = base.asset_generation_report["generated"][0]["asset_id"]
+    collision = library / ".incoming" / f"{asset_id}.fixed"
+    collision.mkdir(parents=True)
+    monkeypatch.setattr(assets_module.secrets, "token_hex", lambda count: "fixed")
+
+    with pytest.raises(AssetAdmissionError, match="could not create private incoming directory"):
+        GeneratedAssetAdmitter(library, date(2026, 8, 31)).admit(
+            scene_spec=base.scene_spec,
+            asset_catalog=base.asset_catalog,
+            generation_report=base.asset_generation_report,
+        )
+
+
+def test_generation_input_rejects_a_directory_that_changes_type(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    base = _generated_fixture(tmp_path)
+    source = Path(base.asset_catalog.entries[0].asset_path)
+    original = Path.is_dir
+
+    def report_not_a_directory(path: Path) -> bool:
+        if path == source:
+            return False
+        return original(path)
+
+    monkeypatch.setattr(Path, "is_dir", report_not_a_directory)
+    with pytest.raises(AssetAdmissionError, match="not a regular directory"):
+        assets_module._validate_generation_inputs(
+            scene_spec=base.scene_spec,
+            entry=base.asset_catalog.entries[0],
+            provenance=base.asset_generation_report["generated"][0],
+            catalog_root=Path(base.asset_catalog.objects_root),
+        )

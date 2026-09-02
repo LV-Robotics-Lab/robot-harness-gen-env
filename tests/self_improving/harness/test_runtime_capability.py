@@ -1043,3 +1043,106 @@ def test_yaml_and_contained_path_helpers_reject_unsafe_inputs(
         runtime_capability._real_file_inside(root, tmp_path / "outside", label="file")
     with pytest.raises(runtime_capability.RuntimeCapabilityError, match="file is missing"):
         runtime_capability._real_file_inside(root, root / "missing", label="file")
+
+
+def test_capability_hash_uses_the_canonical_jsonl_document() -> None:
+    assert (
+        runtime_capability.runtime_capability_sha256({"a": 1})
+        == "e346432021b04179518d9614f3560ccd71354a4ee101ddcb893d6959a9d6301c"
+    )
+
+
+def test_bounded_command_allows_stderr_at_its_exact_limit() -> None:
+    result = _bounded_command(
+        (sys.executable, "-c", "import sys;sys.stderr.buffer.write(b'x')"),
+        max_stderr_bytes=1,
+    )
+
+    assert result.stdout == b""
+    assert result.stdout_bytes == 0
+
+
+@pytest.mark.parametrize("attack", ("commit", "repository_root"))
+def test_robotwin_identity_rejects_ambiguous_repository_identity(
+    attack: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = tmp_path.resolve()
+
+    def git_bytes(_root: Path, *arguments: str) -> bytes:
+        if arguments == ("rev-parse", "HEAD"):
+            return b"not-a-commit\n" if attack == "commit" else b"0" * 40 + b"\n"
+        return os.fsencode(tmp_path / "different-root") + b"\n"
+
+    monkeypatch.setattr(runtime_capability, "_git_bytes", git_bytes)
+    message = "HEAD is not" if attack == "commit" else "must be the git repository root"
+
+    with pytest.raises(runtime_capability.RuntimeCapabilityError, match=message):
+        runtime_capability._robotwin_identity(root)
+
+
+def test_untracked_manifest_binds_regular_files_and_symlink_targets(
+    tmp_path: Path,
+) -> None:
+    regular = tmp_path / "regular"
+    regular.write_bytes(b"payload")
+    link = tmp_path / "link"
+    link.symlink_to("regular")
+
+    first = runtime_capability._untracked_manifest(tmp_path, b"regular\0link\0")
+    second = runtime_capability._untracked_manifest(tmp_path, b"link\0regular\0")
+
+    assert first == second
+    assert len(first) == 64
+
+    (tmp_path / "directory").mkdir()
+    with pytest.raises(runtime_capability.RuntimeCapabilityError, match="not a regular file"):
+        runtime_capability._untracked_manifest(tmp_path, b"directory\0")
+
+
+def test_git_query_errors_are_wrapped_with_the_logical_command(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        runtime_capability,
+        "_bounded_command",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            runtime_capability.RuntimeCapabilityError("failed")
+        ),
+    )
+
+    with pytest.raises(
+        runtime_capability.RuntimeCapabilityError,
+        match="cannot attest RoboTwin git state with git rev-parse HEAD",
+    ):
+        runtime_capability._git_bytes(tmp_path, "rev-parse", "HEAD")
+
+
+@pytest.mark.parametrize("kind", ("directory_symlink", "file_symlink", "missing_file"))
+def test_contained_path_hashing_rejects_symlinks_and_missing_files(
+    kind: str,
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    real = root / "real"
+    real.mkdir()
+    regular = real / "file"
+    regular.write_bytes(b"payload")
+
+    if kind == "directory_symlink":
+        candidate = root / "linked"
+        candidate.symlink_to(real, target_is_directory=True)
+        with pytest.raises(runtime_capability.RuntimeCapabilityError, match="contains a symlink"):
+            runtime_capability._real_directory_inside(root, "linked", label="directory")
+    else:
+        candidate = root / "file-link" if kind == "file_symlink" else root / "missing"
+        if kind == "file_symlink":
+            candidate.symlink_to(regular)
+        with pytest.raises(
+            runtime_capability.RuntimeCapabilityError,
+            match="must be a real regular file",
+        ):
+            runtime_capability._regular_file_sha256(candidate, label="runtime")
