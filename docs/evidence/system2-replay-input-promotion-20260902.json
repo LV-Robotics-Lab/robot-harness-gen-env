@@ -1,0 +1,146 @@
+{
+  "schema_version": "harness.system2_replay_input_promotion_evidence.v1",
+  "recorded_on": "2026-09-02",
+  "scope": "system2_replay_input_package_only_local_cas_promotion",
+  "public_interface": "self_improving.system2_replay_input_promotion.System2ReplayInputPromoter.promote",
+  "files": [
+    {
+      "bytes": 14062,
+      "lines": 335,
+      "path": "self_improving/system2_replay_input_promotion.py",
+      "sha256": "0d6d82e021b06a8db7eb50ec3650c73ce701ea99d9be5a8908cc17f95ad3f1f2"
+    },
+    {
+      "bytes": 38378,
+      "lines": 1025,
+      "path": "tests/self_improving/test_system2_replay_input_promotion.py",
+      "sha256": "c86836c3a03b2caf70ec94a23c2df7cc92d040039122c5fbc5920692fc9e6b80"
+    }
+  ],
+  "contract": {
+    "inputs": [
+      "System2CompileTurnResult",
+      "PreparedSystem2Replay"
+    ],
+    "output": "PromotedSystem2ReplayInput",
+    "source_authority": {
+      "prepared_exact_match_required": true,
+      "system2_replay_handoff_reexecuted": true
+    },
+    "source_staging": {
+      "canonical_environment_package_rechecked": true,
+      "catalog_digest_rechecked": true,
+      "package_materialized": true,
+      "package_republished_to_source_store": true,
+      "republished_manifest_exact_match_required": true,
+      "stable_before_first_destination_write": true
+    },
+    "promoted_logical_refs": [
+      "canonical EnvironmentPackage JSON",
+      "asset catalog",
+      "package manifest",
+      "request.txt",
+      "scene_spec.json",
+      "resolved_scene.json",
+      "generated_scene.py"
+    ],
+    "promoted_logical_ref_count": 7,
+    "destination_write_order": [
+      "package manifest and its four exact members",
+      "asset catalog",
+      "canonical EnvironmentPackage JSON"
+    ],
+    "environment_package_json_commit_last": true,
+    "destination_verification": {
+      "artifact_refs_exact_match_source": true,
+      "environment_package_and_catalog_reread": true,
+      "package_rematerialized": true,
+      "typed_replay_input_reconstructed": true
+    }
+  },
+  "semantics": {
+    "additive": true,
+    "idempotent": true,
+    "destination_complete_after_source_unavailable": true,
+    "failure_may_leave_immutable_prefix_without_success_authority": true,
+    "partial_success_result_returned": false,
+    "shared_cas_objects_rolled_back": false
+  },
+  "artifact_root_integrity": {
+    "caller_store_roots_rechecked_between_stages": true,
+    "caller_store_root_drift_fails_closed": true,
+    "private_stores_use_construction_time_canonical_roots": true,
+    "source_and_destination_roots_must_be_disjoint": true,
+    "scratch_root_must_be_disjoint_and_non_symlinked": true
+  },
+  "filesystem_trust_boundary": {
+    "trusted_same_host_local_filesystem_required": true,
+    "active_same_uid_concurrent_path_replacement_resisted": false,
+    "directory_fd_or_filesystem_lease_held_across_operation": false
+  },
+  "claim_boundary": {
+    "package_closure_only": true,
+    "request_provenance_copied": false,
+    "compile_receipt_copied": false,
+    "history_authority_copied": false,
+    "qualification_evidence_copied": false,
+    "full_authority_closure_copied": false,
+    "runtime_assets_copied": false,
+    "replay_application_executed": false,
+    "simulator_started": false,
+    "validate_executed": false,
+    "physical_pass_claimed": false,
+    "publishable_claimed": false,
+    "catalog_locators_still_require_allowed_asset_roots": true,
+    "future_validate_v2_requires_formal_provenance_and_portable_receipt_closure": true
+  },
+  "verification": {
+    "identity": {
+      "commands": [
+        "sha256sum self_improving/system2_replay_input_promotion.py tests/self_improving/test_system2_replay_input_promotion.py",
+        "wc -l self_improving/system2_replay_input_promotion.py tests/self_improving/test_system2_replay_input_promotion.py",
+        "wc -c self_improving/system2_replay_input_promotion.py tests/self_improving/test_system2_replay_input_promotion.py"
+      ],
+      "status": "pass"
+    },
+    "targeted": {
+      "command": "pytest -q -p no:cacheprovider tests/self_improving/test_system2_replay_input_promotion.py --cov=self_improving.system2_replay_input_promotion --cov-branch --cov-report=term-missing --cov-fail-under=100",
+      "failed": 0,
+      "passed": 47
+    },
+    "coverage": {
+      "branches": 36,
+      "branch_percent": 100,
+      "module": "self_improving/system2_replay_input_promotion.py",
+      "statements": 169,
+      "statement_percent": 100
+    },
+    "adjacent_system2": {
+      "command": "pytest -q -p no:cacheprovider tests/self_improving/test_system2_compile_turn.py tests/self_improving/test_system2_replay_handoff.py tests/self_improving/test_system2_replay_input_promotion.py",
+      "failed": 0,
+      "passed": 77
+    },
+    "cas_package_store_and_replay_dependencies": {
+      "command": "pytest -q -p no:cacheprovider tests/self_improving/harness/test_artifacts.py tests/self_improving/harness/test_package_store.py tests/self_improving/harness/test_replay_dependencies.py tests/self_improving/test_system2_replay_input_promotion.py",
+      "failed": 0,
+      "passed": 89
+    },
+    "ruff": {
+      "command": "ruff check self_improving/system2_replay_input_promotion.py tests/self_improving/test_system2_replay_input_promotion.py",
+      "status": "pass"
+    },
+    "format": {
+      "command": "ruff format --check self_improving/system2_replay_input_promotion.py tests/self_improving/test_system2_replay_input_promotion.py",
+      "status": "pass"
+    },
+    "diff_check": {
+      "commands": [
+        "git diff --no-index --check /dev/null self_improving/system2_replay_input_promotion.py",
+        "git diff --no-index --check /dev/null tests/self_improving/test_system2_replay_input_promotion.py"
+      ],
+      "expected_exit_code": 1,
+      "status": "pass",
+      "whitespace_diagnostics": 0
+    }
+  }
+}
