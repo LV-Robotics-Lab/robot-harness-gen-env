@@ -82,6 +82,10 @@ _Avoid_: success flag、mutable report path、operator note
 在当前调用的真实执行边界之后采集、并与该调用和世界状态版本绑定的传感或仿真观测。
 _Avoid_: cached screenshot、prior-run observation
 
+**Local Snapshot Assessment（本地快照评估）**:
+对一次已在同一本地 CAS 中对账的 replay 证据所做的确定性重算记录；它不是新鲜观测、可移植权威或世界状态更新。
+_Avoid_: fresh observation、validation decision、trusted receipt
+
 ## 自改进语言
 
 **Failure Evidence（失败证据）**:

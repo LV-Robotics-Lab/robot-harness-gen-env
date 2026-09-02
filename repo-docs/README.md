@@ -23,6 +23,7 @@
 | 理解如何把受信 System 2 replay input 的 package closure 复制到独立 CAS | [System 2 Replay-Input Package Promotion](modules/system2-replay-input-promotion.md) | source authority 重验、七个 logical refs、commit-last、幂等失败语义与本地文件系统边界 |
 | 理解如何执行并对账一次动态 System 2 replay | [System 2 Replay Evidence Acquisition](modules/system2-replay-evidence-acquisition.md) | qualified factory wiring、动态输入、持久终态/Event/CAS 对账与仍缺的部署条件 |
 | 理解如何从成功动态 replay 的本地 CAS 重算 snapshot validation | [System 2 Replay Snapshot Validation](modules/system2-replay-snapshot-validation.md) | Invocation/终态/依赖绑定、真实 snapshot adapter、PASS/FAIL/INCOMPLETE 与非发布边界 |
+| 理解如何把本地 snapshot 重算写成 canonical assessment | [System 2 Replay Snapshot Assessment](modules/system2-replay-snapshot-assessment.md) | acquisition-only recorder、同 CAS 内容寻址记录、固定失败语义与非观测/非状态推进边界 |
 | 理解本地 typed Qwen 如何受限地执行可见语义评审 | [Local typed Qwen 可见 Provider](modules/vlm-visible-provider.md) | A1/A2 映射、严格离线 backend、内容绑定、零实跑预检与未授权边界 |
 | 理解 Workbench 如何浏览已提交的运行活动 | [Workbench 运行活动板](modules/workbench-run-activity.md) | validated current feed 的四栏只读投影、run 筛选重读、焦点保留与 identity drift fail-closed 边界 |
 | 理解平台层如何组合旧工作区与外部项目 | [Self-Improving 平台](modules/self-improving-platform.md) | 稳定核心、编排层、资产层、适配层、历史层与子模块的边界 |
