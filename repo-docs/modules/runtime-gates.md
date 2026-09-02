@@ -101,6 +101,11 @@ FD，在 application 交接前及终态摘要前复核路径身份。state claim
 输入、配置、信任或资格错误返回 78，持久化、终态漂移或内部错误返回 74。该摘要不是 validate
 decision、portable receipt 或 publishability 证明。
 
+2026-09-02 的真实入口验收先用漂移的 allowlisted `PATH` 摘要触发 durable exit 10，再在恢复资格
+环境后以新 state root 完成 900 步 / 120 帧 / 100 互异帧，19 个事件、43 个 artifacts，validation
+为 pass 且 fail/not-run 均为 0；摘要和边界见
+[`docs/evidence/replay-fixed-qualified-cli-20260902.md`](../../docs/evidence/replay-fixed-qualified-cli-20260902.md)。
+
 ## contact 怎么分类
 
 `summarize_contacts` 把每条 SAPIEN contact 按 body 名解析：
