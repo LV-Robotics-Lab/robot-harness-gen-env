@@ -1,0 +1,176 @@
+{
+  "schema_version": "harness.system2_replay_snapshot_validation_evidence.v1",
+  "recorded_on": "2026-09-02",
+  "baseline_commit": "b515a3ace08f5c6d7aa7bc395c1a78f78de6c948",
+  "scope": "system2_replay_local_snapshot_validation_recomputation",
+  "status": "local_typed_fixture_contract_verified_deployed_replay_not_run",
+  "public_interface": "self_improving.system2_replay_snapshot_validation.System2ReplaySnapshotValidator.recompute",
+  "files": [
+    {
+      "bytes": 13062,
+      "lines": 332,
+      "path": "self_improving/system2_replay_snapshot_validation.py",
+      "sha256": "d8ef7492ac8bec864738dcf180c455e76d32b2a58953527c253a4d6fdd6612c7"
+    },
+    {
+      "bytes": 39990,
+      "lines": 1069,
+      "path": "tests/self_improving/test_system2_replay_snapshot_validation.py",
+      "sha256": "646502da12593f3735fbaa9daf2ceecde307cb9b62d7526e3e589a30b39a174d"
+    }
+  ],
+  "contract": {
+    "constructor_input": "scratch_parent: Path",
+    "method_input": "System2ReplayEvidenceAcquisitionResult",
+    "output": "System2ReplaySnapshotValidationResult",
+    "output_fields": [
+      "replay_run_id",
+      "replay_invocation_digest",
+      "runtime_evidence",
+      "runtime_asset_snapshot_manifest",
+      "snapshot_validation"
+    ],
+    "replay_input_reconstructed_from": "acquisition.invocation.effective_parameters",
+    "promoted_input_supplied_separately": false,
+    "required_replay_status": "succeeded",
+    "blocked_or_failed_error_reason": "replay_not_succeeded",
+    "factory_owned_shape": {
+      "skill_ref": "text2env.replay@1.0.0",
+      "max_attempts": 2,
+      "dependency_names_source": "REPLAY_DEPENDENCY_NAMES",
+      "dependency_count": 5,
+      "dependency_version": "1",
+      "runtime_asset_dependency_sha256_matches_selected_snapshot": true,
+      "other_dependency_digests_recomputed": false
+    },
+    "cross_bindings": {
+      "invocation_run_id_matches_terminal_state": true,
+      "invocation_digest_matches_terminal_state": true,
+      "invocation_parameters_round_trip_to_text2env_replay_input": true,
+      "terminal_output_matches_typed_output": true,
+      "runtime_evidence_is_terminal_artifact": true,
+      "runtime_asset_snapshot_is_terminal_artifact": true
+    },
+    "runtime_evidence_ref": {
+      "name": "runtime_evidence",
+      "schema_version": "robotwin.scene_runtime_evidence.v2",
+      "media_type": "application/json",
+      "canonical_cas_uri_required": true
+    },
+    "runtime_asset_snapshot_ref": {
+      "name": "runtime_asset_snapshot",
+      "schema_version": "harness.runtime_asset_snapshot.v1",
+      "media_type": "application/json",
+      "canonical_cas_uri_required": true,
+      "exactly_one_in_replay_artifacts": true
+    },
+    "filesystem": {
+      "artifact_root_is_canonical_existing_local_cas": true,
+      "scratch_parent_is_canonical_existing_directory": true,
+      "scratch_parent_and_artifact_root_are_disjoint": true,
+      "adapter_attempt_directory_removed_after_result_or_error": true
+    },
+    "adapter": {
+      "implementation": "self_improving.validate_v2_snapshot.ValidateV2SnapshotAdapter",
+      "committed_adapter_called": true,
+      "request_type": "SnapshotValidationRequest",
+      "report_ref_resolved_from_same_cas": true,
+      "result_report_fields_cross_checked": [
+        "schema_version",
+        "status",
+        "fail_count",
+        "not_run_count"
+      ],
+      "full_report_policy_duplicated_by_bridge": false
+    }
+  },
+  "validation_semantics": {
+    "pass_is_normal_result": true,
+    "fail_is_normal_result": true,
+    "incomplete_with_nonzero_not_run_count_is_normal_result": true,
+    "pass_and_fail_use_unmodified_committed_adapter_path": true,
+    "incomplete_uses_committed_adapter_with_controlled_raw_validator_not_run_branch": true,
+    "two_independent_cas_copies_produce_same_report_sha256_and_bytes": true,
+    "snapshot_validation_binding_uses_invocation_package_and_selected_output_refs": true
+  },
+  "test_fixture": {
+    "kind": "local_typed_semantic_cas_fixture",
+    "uses_protected_run_receipts": false,
+    "real_deployed_dynamic_replay_run": false,
+    "simulator_started_by_this_test_slice": false
+  },
+  "tdd": {
+    "initial_red": "ModuleNotFoundError on the public module import",
+    "ordinary_red_green_categories": [
+      "public recompute tracer",
+      "complete replay dependency shape and runtime snapshot digest binding",
+      "canonical scratch and exact max-attempt contract",
+      "Invocation, RunState, typed output, and terminal artifact reconciliation",
+      "runtime evidence and snapshot name, schema, media, URI, uniqueness, and terminal membership",
+      "same-CAS availability and adapter error mapping",
+      "PASS, FAIL, and INCOMPLETE result semantics",
+      "SnapshotValidationResult and report-reference reconciliation",
+      "independent-CAS deterministic report identity"
+    ]
+  },
+  "verification": {
+    "targeted": {
+      "command": "pytest -q -p no:cacheprovider tests/self_improving/test_system2_replay_snapshot_validation.py --cov=self_improving.system2_replay_snapshot_validation --cov-branch --cov-report=term-missing --cov-fail-under=100",
+      "failed": 0,
+      "passed": 48
+    },
+    "coverage": {
+      "branches": 40,
+      "branch_percent": 100,
+      "module": "self_improving/system2_replay_snapshot_validation.py",
+      "statements": 139,
+      "statement_percent": 100
+    },
+    "adjacent_five_file_regression": {
+      "command": "pytest -q -p no:cacheprovider tests/self_improving/test_system2_replay_snapshot_validation.py tests/self_improving/test_system2_replay_evidence_acquisition.py tests/self_improving/test_system2_replay_input_promotion.py tests/self_improving/test_system2_replay_handoff.py tests/self_improving/test_validate_v2_snapshot.py",
+      "failed": 0,
+      "passed": 290
+    },
+    "ruff": {
+      "command": "ruff check self_improving/system2_replay_snapshot_validation.py tests/self_improving/test_system2_replay_snapshot_validation.py",
+      "status": "pass"
+    },
+    "format": {
+      "command": "ruff format --check self_improving/system2_replay_snapshot_validation.py tests/self_improving/test_system2_replay_snapshot_validation.py",
+      "status": "pass"
+    },
+    "diff_check": {
+      "commands": [
+        "git diff --no-index --check /dev/null self_improving/system2_replay_snapshot_validation.py",
+        "git diff --no-index --check /dev/null tests/self_improving/test_system2_replay_snapshot_validation.py"
+      ],
+      "expected_exit_code": 1,
+      "status": "pass",
+      "whitespace_diagnostics": 0
+    }
+  },
+  "source_locator_boundary": {
+    "cas_is_content_authority_for_recomputation": true,
+    "legacy_source_locators_may_receive_metadata_stat": true,
+    "zero_filesystem_lookup_claimed": false
+  },
+  "qualification_relationship": {
+    "fixed_case_qualifies_factory_wiring": true,
+    "fixed_case_qualifies_dynamic_input": false,
+    "fixed_case_qualifies_dynamic_acquisition": false,
+    "fixed_case_qualifies_dynamic_report": false
+  },
+  "claim_boundary": {
+    "local_snapshot_recomputation_only": true,
+    "complete_validate_v2_executed": false,
+    "portable_run_receipt_emitted": false,
+    "compile_or_replay_portable_receipt_present": false,
+    "provenance_closure_present": false,
+    "standalone_media_receipt_present": false,
+    "runtime_config_receipt_present": false,
+    "validation_decision_emitted": false,
+    "publishable_claimed": false,
+    "system2_world_state_advanced": false,
+    "deployed_replay_or_new_physical_measurement_claimed": false
+  }
+}
