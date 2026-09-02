@@ -1,0 +1,125 @@
+{
+  "schema_version": "harness.replay_production_qualification_evidence.v1",
+  "recorded_date": "2026-09-02",
+  "status": "qualified_deployment_local",
+  "purpose": "Record a fixed two-execution replay qualification bundle and one fresh production ReplayApplication run.",
+  "claim_boundary": "This evidence qualifies text2env.replay@1.0.0 for the recorded source and deployment-local dependencies. It does not qualify text2env.validate@2, MCP integration, publication, or a portable installation.",
+  "source": {
+    "commit": "a28fb7d6b1f4a223bc71bc24f856a36282af9dc2",
+    "qualification_source_commit": "a28fb7d6b1f4a223bc71bc24f856a36282af9dc2",
+    "skill_ref": "text2env.replay@1.0.0",
+    "harness_tree_sha256": "313d7214683c9bbb9c8bb550d154fe832e5bed255c6ca1c282fb48d4d7941f21",
+    "implementation_sha256": "3ad6aff715baade429e2315d6a1f53ccc432affe57610a1a3653ef51587a0379",
+    "scene_gen_tree_sha256": "e2fe9fd66d917dc6dea40e8990248206e180e3a086c1619b9f40558c3efec330",
+    "ledger_contract_tree_sha256": "1d52584d44ca5f5d759f5e72d327fed282f0bdb4adaf763387b2fda2467ef489",
+    "changed_during_qualification": false
+  },
+  "qualification_bundle": {
+    "repository_path": "self_improving/harness/qualified_skills/text2env.replay/1.0.0",
+    "status": "pass",
+    "files": {
+      "manifest.json": {
+        "bytes": 9560,
+        "sha256": "0bc3815ecb939b8488f4541ea4343ed5f332f5f130fcb47ea240a5a7f15a9e83"
+      },
+      "qualification.json": {
+        "bytes": 315,
+        "sha256": "ae2b4ee1fe9304382805dc8447828758247be4a47364cae22bd9b03418b399be"
+      },
+      "report.json": {
+        "bytes": 13535,
+        "sha256": "0690d305a794b23b3b701379540394f998c06a34d43eb019fc05cdf521dbef53"
+      }
+    },
+    "checks": [
+      "01.case_binding",
+      "02.exact_dependencies",
+      "03.event_lifecycle",
+      "04.runtime_asset_snapshot",
+      "05.media_decode",
+      "06.physics_validation",
+      "07.source_stability",
+      "08.candidate_kernel_executions"
+    ],
+    "passed_check_count": 8,
+    "evidence_closure_ref_count": 63,
+    "cas_reread_verified": true
+  },
+  "qualification_case": {
+    "case_id": "can-on-plate-seed-7-900-120-120-12",
+    "seed": 7,
+    "settle_steps": 900,
+    "contact_window_steps": 120,
+    "video_frame_count": 120,
+    "source_unique_video_frame_count": 100,
+    "fps": 12,
+    "validation_status": "pass",
+    "validation_fail_count": 0,
+    "validation_not_run_count": 0
+  },
+  "qualification_executions": [
+    {
+      "mode": "candidate_direct",
+      "run_id": "71000000-0000-4000-8000-000000000001",
+      "attempt_count": 1,
+      "status": "succeeded",
+      "runtime_event_count": 14,
+      "all_artifacts_verified": true,
+      "cas_reread_verified": true
+    },
+    {
+      "mode": "qualification_candidate",
+      "run_id": "71000000-0000-4000-8000-000000000002",
+      "attempt_count": 1,
+      "status": "succeeded",
+      "runtime_event_count": 14,
+      "all_artifacts_verified": true,
+      "cas_reread_verified": true
+    }
+  ],
+  "media_verifier": {
+    "current_ffmpeg": {
+      "bytes": 4337384,
+      "sha256": "74f0443e5d684e051726fc39546c77b18b031395c30a5d5764b95af8e3a86780",
+      "bound_by_this_replay_qualification": true
+    },
+    "historical_20260831_ffmpeg": {
+      "sha256": "fe08d0f51873874056abe5be5eb1d1047a1cc3eb3da0c41907047be5581ef02e",
+      "bound_by_this_replay_qualification": false,
+      "relationship": "Separate immutable historical media-verifier evidence; it does not qualify the current binary."
+    }
+  },
+  "production_replay_application_run": {
+    "run_id": "79f58ee8-0d22-4abf-a14e-2c65c4d8a663",
+    "status": "succeeded",
+    "attempt": 1,
+    "event_count": 19,
+    "artifact_count": 43,
+    "simulation_step_count": 900,
+    "contact_window_steps": 120,
+    "video_frame_count": 120,
+    "unique_video_frame_count": 100,
+    "validation_status": "pass",
+    "validation_pass_count": 29,
+    "validation_not_applicable_count": 8,
+    "validation_fail_count": 0,
+    "validation_not_run_count": 0,
+    "runtime_evidence_sha256": "711096539921bce4cabb08311af3b5216398cc332a668285cf01cf4c2f8c6589",
+    "resolved_scene_sha256": "96e995144468707f0f6e169341ce13e2330b1f42a8acaf73d9c126925e4be3ee"
+  },
+  "retention_and_portability": {
+    "bulk_media_committed": false,
+    "robotwin_assets_committed": false,
+    "external_cas_required": true,
+    "operator_locators_are_deployment_absolute": true,
+    "source_roots_are_deployment_absolute": true,
+    "private_absolute_paths_committed": false,
+    "external_evidence_contains_deployment_absolute_paths": true,
+    "portable_install_complete": false
+  },
+  "open_gates": [
+    "text2env.validate@2 production qualification and replay-to-validate promotion",
+    "MCP integration",
+    "portable tool, asset, and CAS provisioning on a fresh machine"
+  ]
+}
