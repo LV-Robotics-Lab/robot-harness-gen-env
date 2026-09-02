@@ -106,6 +106,22 @@ decision、portable receipt 或 publishability 证明。
 为 pass 且 fail/not-run 均为 0；摘要和边界见
 [`docs/evidence/replay-fixed-qualified-cli-20260902.md`](../../docs/evidence/replay-fixed-qualified-cli-20260902.md)。
 
+## CAS snapshot 怎样重新计算 validation report
+
+`self_improving.validate_v2_snapshot.ValidateV2SnapshotAdapter` 从一个本地 CAS 读取精确的
+EnvironmentPackage、runtime evidence 和 runtime asset snapshot，临时重物化只读资产后重新调用
+validator，并把 canonical、path-free 的 `robotwin.scene_validation.v1` 报告写回同一 CAS。两个独立
+CAS 副本和 scratch root 的真实复算得到相同的 8,788-byte 报告、`pass` 与 0 fail / 0 not-run；原始
+资产文件没有被打开，但 legacy validator 仍对六个原始 source path 做 metadata-only 查询，所以这里不主张
+zero lookup。精确输入、报告摘要、访问边界与复核模板见
+[`docs/evidence/validate-v2-snapshot-recompute-20260902.md`](../../docs/evidence/validate-v2-snapshot-recompute-20260902.md)。
+
+这个 adapter 只是 report recomputer，不是 `text2env.validate@2` handler/output，也不生成 decision、
+publishability、run provenance、qualification 或 promotion。输入没有独立 RuntimeConfig receipt，因此
+报告中的 900/120/120/100 只能证明 runtime evidence 的观测，不能证明 requested-video contract。
+它直接核对 SceneSpec 与已提交 ResolvedSceneSpec 的稳定语义字段，不重新执行 solver；因此也不证明
+grounding、solver 执行或 compile provenance。
+
 ## contact 怎么分类
 
 `summarize_contacts` 把每条 SAPIEN contact 按 body 名解析：

@@ -8,6 +8,7 @@ cd "$REPO_ROOT"
 "$PYTHON_BIN" -m self_improving --json
 "$PYTHON_BIN" -m pytest -q \
   --cov=self_improving.harness \
+  --cov=self_improving.validate_v2_snapshot \
   --cov-branch \
   --cov-report=term-missing \
   --cov-fail-under=100

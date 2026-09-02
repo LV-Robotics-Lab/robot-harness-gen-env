@@ -16,6 +16,7 @@
 | `run_prompt_matrix.py` | CLI：跨 seed 跑 committed prompt 矩阵，可选 SAPIEN 运行时 |
 | `run_rendered_critic.py` | CLI：对 resolved 场景 + 预览图跑可选 VLM 渲染评判 |
 | `build_stage5_report.py` | CLI：构建 stage-5 验收报告 |
+| `run_self_improving_tests.sh` | 统一测试入口：对 Harness 与 snapshot-aware validation adapter 强制 100% 语句及分支覆盖 |
 
 ## Subdirectories（子目录）
 无。
@@ -30,6 +31,7 @@
 
 ### Testing Requirements（测试要求）
 - 场景脚本覆盖来自 `tests/scene_gen/`；固定资格 replay 入口由 `tests/self_improving/test_qualified_replay_cli.py` 的公开 CLI 与攻击测试覆盖。
+- `run_self_improving_tests.sh` 同时覆盖 `self_improving.harness` 与 `self_improving.validate_v2_snapshot`，两者合并后的语句与分支覆盖率必须保持 100%。
 - 改动后用 `--help` 校验脚本的 CLI 表面。
 
 ### Common Patterns（常见模式）
