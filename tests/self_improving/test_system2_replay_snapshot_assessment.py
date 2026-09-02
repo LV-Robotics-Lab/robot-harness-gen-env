@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
+from pydantic import ValidationError
 
 import self_improving.validate_v2_snapshot as snapshot_module
 from scene_gen.builder import build_scene_package
@@ -41,10 +42,14 @@ from self_improving.system2_replay_evidence_acquisition import (
     System2ReplayEvidenceAcquisitionResult,
 )
 from self_improving.system2_replay_snapshot_assessment import (
+    System2ReplaySnapshotAssessment,
     System2ReplaySnapshotAssessmentError,
     System2ReplaySnapshotAssessmentRecorder,
     System2ReplaySnapshotAssessmentResult,
+    System2ReplaySnapshotAssessmentVerifier,
+    VerifiedSystem2ReplaySnapshotAssessment,
 )
+from self_improving.validate_v2_snapshot import SnapshotValidationResult
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -379,8 +384,13 @@ def _replace_runtime_evidence(
 def test_public_record_seam_is_exposed(tmp_path: Path) -> None:
     scratch_parent = tmp_path / "scratch"
     scratch_parent.mkdir()
+    store = LocalArtifactStore(tmp_path / "cas")
 
     recorder = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    )
+    verifier = System2ReplaySnapshotAssessmentVerifier(
+        artifact_store=store,
         scratch_parent=scratch_parent,
     )
 
@@ -388,6 +398,13 @@ def test_public_record_seam_is_exposed(tmp_path: Path) -> None:
     assert tuple(signature(recorder.record).parameters) == ("acquisition",)
     assert tuple(field.name for field in fields(System2ReplaySnapshotAssessmentResult)) == (
         "assessment",
+        "snapshot_validation",
+    )
+    assert callable(verifier.verify)
+    assert tuple(signature(verifier.verify).parameters) == ("assessment",)
+    assert tuple(field.name for field in fields(VerifiedSystem2ReplaySnapshotAssessment)) == (
+        "assessment",
+        "record",
         "snapshot_validation",
     )
 
@@ -668,6 +685,10 @@ def test_committed_adapter_fail_is_recorded_as_a_normal_local_assessment(
     result = System2ReplaySnapshotAssessmentRecorder(
         scratch_parent=scratch_parent,
     ).record(acquisition=acquisition)
+    verified = System2ReplaySnapshotAssessmentVerifier(
+        artifact_store=store,
+        scratch_parent=scratch_parent,
+    ).verify(assessment=result.assessment)
 
     assessment = json.loads(store.resolve(result.assessment).path.read_bytes())
     assert result.snapshot_validation.snapshot_validation.validation_status is ValidationStatus.FAIL
@@ -677,6 +698,10 @@ def test_committed_adapter_fail_is_recorded_as_a_normal_local_assessment(
     assert assessment["fail_count"] == 1
     assert assessment["not_run_count"] == 0
     assert assessment["runtime_evidence"] == replacement.model_dump(mode="json")
+    assert verified.record.validation_status is ValidationStatus.FAIL
+    assert verified.snapshot_validation.validation_status is ValidationStatus.FAIL
+    assert verified.snapshot_validation.fail_count == 1
+    assert verified.snapshot_validation.not_run_count == 0
     assert list(scratch_parent.iterdir()) == []
 
 
@@ -705,6 +730,10 @@ def test_committed_adapter_incomplete_is_recorded_as_a_normal_local_assessment(
     result = System2ReplaySnapshotAssessmentRecorder(
         scratch_parent=scratch_parent,
     ).record(acquisition=acquisition)
+    verified = System2ReplaySnapshotAssessmentVerifier(
+        artifact_store=store,
+        scratch_parent=scratch_parent,
+    ).verify(assessment=result.assessment)
 
     assessment = json.loads(store.resolve(result.assessment).path.read_bytes())
     assert (
@@ -716,4 +745,517 @@ def test_committed_adapter_incomplete_is_recorded_as_a_normal_local_assessment(
     assert assessment["validation_status"] == "incomplete"
     assert assessment["fail_count"] == 0
     assert assessment["not_run_count"] == 1
+    assert verified.record.validation_status is ValidationStatus.INCOMPLETE
+    assert verified.snapshot_validation.validation_status is ValidationStatus.INCOMPLETE
+    assert verified.snapshot_validation.fail_count == 0
+    assert verified.snapshot_validation.not_run_count == 1
+    assert list(scratch_parent.iterdir()) == []
+
+
+def test_assessment_ref_alone_recomputes_and_verifies_the_recorded_snapshot(
+    tmp_path: Path,
+) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    ).record(acquisition=acquisition)
+    assessment_ref = recorded.assessment
+    del acquisition
+
+    verified = System2ReplaySnapshotAssessmentVerifier(
+        artifact_store=store,
+        scratch_parent=scratch_parent,
+    ).verify(assessment=assessment_ref)
+
+    assert type(verified) is VerifiedSystem2ReplaySnapshotAssessment
+    assert verified.assessment == assessment_ref
+    assert type(verified.record) is System2ReplaySnapshotAssessment
+    assert type(verified.snapshot_validation) is SnapshotValidationResult
+    assert verified.record.validation_report == verified.snapshot_validation.validation_report
+    assert verified.record.validation_status is verified.snapshot_validation.validation_status
+    assert verified.record.validation_status is ValidationStatus.PASS
+    assert verified.record.fail_count == verified.snapshot_validation.fail_count
+    assert verified.record.not_run_count == verified.snapshot_validation.not_run_count
+    assert list(scratch_parent.iterdir()) == []
+
+
+def test_repeated_artifact_only_verification_is_deterministic(tmp_path: Path) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    ).record(acquisition=acquisition)
+    verifier = System2ReplaySnapshotAssessmentVerifier(
+        artifact_store=store,
+        scratch_parent=scratch_parent,
+    )
+
+    first = verifier.verify(assessment=recorded.assessment)
+    second = verifier.verify(assessment=recorded.assessment)
+
+    assert second == first
+    assert second.assessment == recorded.assessment
+    assert list(scratch_parent.iterdir()) == []
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("name", "wrong_assessment"),
+        ("media_type", "text/plain"),
+        ("schema_version", "harness.wrong.v1"),
+        ("uri", f"artifact://sha256/{'0' * 64}"),
+    ),
+)
+def test_verifier_rejects_an_assessment_ref_with_the_wrong_header(
+    tmp_path: Path,
+    field: str,
+    value: str,
+) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    ).record(acquisition=acquisition)
+    wrong_header = recorded.assessment.model_copy(update={field: value})
+
+    with pytest.raises(System2ReplaySnapshotAssessmentError) as raised:
+        System2ReplaySnapshotAssessmentVerifier(
+            artifact_store=store,
+            scratch_parent=scratch_parent,
+        ).verify(assessment=wrong_header)
+
+    assert raised.value.reason == "assessment_invalid"
+    assert list(scratch_parent.iterdir()) == []
+
+
+def test_verifier_rejects_noncanonical_assessment_bytes(tmp_path: Path) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    ).record(acquisition=acquisition)
+    document = json.loads(store.resolve(recorded.assessment).path.read_bytes())
+    source = tmp_path / "noncanonical-assessment.json"
+    source.write_text(json.dumps(document, indent=2), encoding="utf-8")
+    noncanonical = store.put_file(
+        source,
+        name="system2_replay_snapshot_assessment",
+        media_type="application/json",
+        schema_version="harness.system2_replay_snapshot_assessment.v1",
+    )
+
+    with pytest.raises(System2ReplaySnapshotAssessmentError) as raised:
+        System2ReplaySnapshotAssessmentVerifier(
+            artifact_store=store,
+            scratch_parent=scratch_parent,
+        ).verify(assessment=noncanonical)
+
+    assert raised.value.reason == "assessment_invalid"
+    assert list(scratch_parent.iterdir()) == []
+
+
+def test_verifier_rejects_a_payload_that_fails_strict_model_validation(
+    tmp_path: Path,
+) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    ).record(acquisition=acquisition)
+    document = json.loads(store.resolve(recorded.assessment).path.read_bytes())
+    document["fail_count"] = True
+    invalid = _put_json(
+        store,
+        tmp_path / "strict-invalid-assessment",
+        name="system2_replay_snapshot_assessment",
+        schema_version="harness.system2_replay_snapshot_assessment.v1",
+        value=document,
+    )
+
+    with pytest.raises(System2ReplaySnapshotAssessmentError) as raised:
+        System2ReplaySnapshotAssessmentVerifier(
+            artifact_store=store,
+            scratch_parent=scratch_parent,
+        ).verify(assessment=invalid)
+
+    assert raised.value.reason == "assessment_invalid"
+    assert list(scratch_parent.iterdir()) == []
+
+
+def test_verifier_rejects_an_incomplete_recorded_dependency_closure(tmp_path: Path) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    ).record(acquisition=acquisition)
+    document = json.loads(store.resolve(recorded.assessment).path.read_bytes())
+    document["dependencies"] = document["dependencies"][:-1]
+    incomplete = _put_json(
+        store,
+        tmp_path / "incomplete-assessment",
+        name="system2_replay_snapshot_assessment",
+        schema_version="harness.system2_replay_snapshot_assessment.v1",
+        value=document,
+    )
+
+    with pytest.raises(System2ReplaySnapshotAssessmentError) as raised:
+        System2ReplaySnapshotAssessmentVerifier(
+            artifact_store=store,
+            scratch_parent=scratch_parent,
+        ).verify(assessment=incomplete)
+
+    assert raised.value.reason == "assessment_invalid"
+    assert list(scratch_parent.iterdir()) == []
+
+
+def test_verifier_requires_the_recorded_report_to_remain_in_the_local_cas(
+    tmp_path: Path,
+) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    ).record(acquisition=acquisition)
+    report = recorded.snapshot_validation.snapshot_validation.validation_report
+    store.resolve(report).path.unlink()
+
+    with pytest.raises(System2ReplaySnapshotAssessmentError) as raised:
+        System2ReplaySnapshotAssessmentVerifier(
+            artifact_store=store,
+            scratch_parent=scratch_parent,
+        ).verify(assessment=recorded.assessment)
+
+    assert raised.value.reason == "assessment_recompute_failed"
+    assert list(scratch_parent.iterdir()) == []
+
+
+@pytest.mark.parametrize("missing", ("package", "runtime", "snapshot"))
+def test_verifier_maps_a_missing_recomputation_input_to_one_stable_reason(
+    tmp_path: Path,
+    missing: str,
+) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    ).record(acquisition=acquisition)
+    record = System2ReplaySnapshotAssessment.model_validate_json(
+        store.resolve(recorded.assessment).path.read_bytes(),
+        strict=True,
+    )
+    refs = {
+        "package": record.replay_input.environment_package.package_manifest,
+        "runtime": record.runtime_evidence,
+        "snapshot": record.runtime_asset_snapshot_manifest,
+    }
+    store.resolve(refs[missing]).path.unlink()
+
+    with pytest.raises(System2ReplaySnapshotAssessmentError) as raised:
+        System2ReplaySnapshotAssessmentVerifier(
+            artifact_store=store,
+            scratch_parent=scratch_parent,
+        ).verify(assessment=recorded.assessment)
+
+    assert raised.value.reason == "assessment_recompute_failed"
+    assert str(raised.value) == (
+        "System 2 replay snapshot assessment stopped: assessment_recompute_failed"
+    )
+    assert list(scratch_parent.iterdir()) == []
+
+
+def test_verifier_maps_adapter_configuration_failure_to_recompute_failed(
+    tmp_path: Path,
+) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    recorder_scratch = tmp_path / "recorder-scratch"
+    recorder_scratch.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=recorder_scratch,
+    ).record(acquisition=acquisition)
+
+    with pytest.raises(System2ReplaySnapshotAssessmentError) as raised:
+        System2ReplaySnapshotAssessmentVerifier(
+            artifact_store=store,
+            scratch_parent=tmp_path / "missing-verifier-scratch",
+        ).verify(assessment=recorded.assessment)
+
+    assert raised.value.reason == "assessment_recompute_failed"
+    assert list(recorder_scratch.iterdir()) == []
+
+
+@pytest.mark.parametrize("relation", ("same", "scratch_ancestor", "scratch_descendant"))
+def test_verifier_rejects_overlapping_scratch_and_cas_roots(
+    tmp_path: Path,
+    relation: str,
+) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    recorder_scratch = tmp_path / "recorder-scratch"
+    recorder_scratch.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=recorder_scratch,
+    ).record(acquisition=acquisition)
+    if relation == "same":
+        verifier_scratch = store.root
+    elif relation == "scratch_ancestor":
+        verifier_scratch = store.root.parent
+    else:
+        verifier_scratch = store.root / "verifier-scratch"
+        verifier_scratch.mkdir()
+
+    with pytest.raises(System2ReplaySnapshotAssessmentError) as raised:
+        System2ReplaySnapshotAssessmentVerifier(
+            artifact_store=store,
+            scratch_parent=verifier_scratch,
+        ).verify(assessment=recorded.assessment)
+
+    assert raised.value.reason == "assessment_recompute_failed"
+    assert list(recorder_scratch.iterdir()) == []
+
+
+@pytest.mark.parametrize(
+    "drift",
+    ("validation_report", "validation_status", "fail_count", "not_run_count"),
+)
+def test_verifier_maps_recorded_snapshot_summary_drift_to_assessment_mismatch(
+    tmp_path: Path,
+    drift: str,
+) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    ).record(acquisition=acquisition)
+    document = json.loads(store.resolve(recorded.assessment).path.read_bytes())
+    if drift == "validation_report":
+        report = json.loads(
+            store.resolve(
+                recorded.snapshot_validation.snapshot_validation.validation_report
+            ).path.read_bytes()
+        )
+        report["status"] = "fail"
+        report["fail_count"] = 1
+        changed_report = _put_json(
+            store,
+            tmp_path / "changed-report",
+            name="snapshot_validation_report",
+            schema_version="robotwin.scene_validation.v1",
+            value=report,
+        )
+        document["validation_report"] = changed_report.model_dump(mode="json")
+        document["validation_status"] = "fail"
+        document["fail_count"] = 1
+    elif drift == "validation_status":
+        document["validation_status"] = "fail"
+    else:
+        document[drift] = 1
+    changed_assessment = _put_json(
+        store,
+        tmp_path / f"{drift}-assessment",
+        name="system2_replay_snapshot_assessment",
+        schema_version="harness.system2_replay_snapshot_assessment.v1",
+        value=document,
+    )
+
+    with pytest.raises(System2ReplaySnapshotAssessmentError) as raised:
+        System2ReplaySnapshotAssessmentVerifier(
+            artifact_store=store,
+            scratch_parent=scratch_parent,
+        ).verify(assessment=changed_assessment)
+
+    assert raised.value.reason == "assessment_mismatch"
+    assert str(raised.value) == ("System 2 replay snapshot assessment stopped: assessment_mismatch")
+    assert list(scratch_parent.iterdir()) == []
+
+
+def test_verifier_rejects_reversed_recorded_replay_times(tmp_path: Path) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    ).record(acquisition=acquisition)
+    document = json.loads(store.resolve(recorded.assessment).path.read_bytes())
+    document["replay_started_at"] = "2026-09-02T06:02:00Z"
+    reversed_times = _put_json(
+        store,
+        tmp_path / "reversed-times-assessment",
+        name="system2_replay_snapshot_assessment",
+        schema_version="harness.system2_replay_snapshot_assessment.v1",
+        value=document,
+    )
+
+    with pytest.raises(System2ReplaySnapshotAssessmentError) as raised:
+        System2ReplaySnapshotAssessmentVerifier(
+            artifact_store=store,
+            scratch_parent=scratch_parent,
+        ).verify(assessment=reversed_times)
+
+    assert raised.value.reason == "assessment_invalid"
+    assert list(scratch_parent.iterdir()) == []
+
+
+def test_public_assessment_model_rejects_reversed_replay_times(tmp_path: Path) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    ).record(acquisition=acquisition)
+    document = json.loads(store.resolve(recorded.assessment).path.read_bytes())
+    document["replay_started_at"] = "2026-09-02T06:02:00Z"
+
+    with pytest.raises(ValidationError, match="replay times"):
+        System2ReplaySnapshotAssessment.model_validate_json(
+            _canonical_json_bytes(document),
+            strict=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "case",
+    ("non_utc_times", "dependency_order", "dependency_version", "runtime_asset_digest"),
+)
+def test_public_assessment_model_rejects_other_contradictory_metadata(
+    tmp_path: Path,
+    case: str,
+) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    ).record(acquisition=acquisition)
+    document = json.loads(store.resolve(recorded.assessment).path.read_bytes())
+    if case == "non_utc_times":
+        document["replay_started_at"] = "2026-09-02T14:00:00+08:00"
+        document["replay_ended_at"] = "2026-09-02T14:01:00+08:00"
+    elif case == "dependency_order":
+        document["dependencies"] = list(reversed(document["dependencies"]))
+    elif case == "dependency_version":
+        document["dependencies"][0]["version"] = "2"
+    else:
+        runtime_assets = next(
+            dependency
+            for dependency in document["dependencies"]
+            if dependency["name"] == "text2env.replay.runtime_assets"
+        )
+        runtime_assets["sha256"] = "f" * 64
+
+    with pytest.raises(ValidationError):
+        System2ReplaySnapshotAssessment.model_validate_json(
+            _canonical_json_bytes(document),
+            strict=True,
+        )
+
+
+def test_public_assessment_model_rejects_boolean_counts_without_strict_call_mode(
+    tmp_path: Path,
+) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    ).record(acquisition=acquisition)
+    record = System2ReplaySnapshotAssessment.model_validate_json(
+        store.resolve(recorded.assessment).path.read_bytes(),
+        strict=True,
+    )
+    invalid = record.model_dump(mode="python")
+    invalid["fail_count"] = True
+
+    with pytest.raises(ValidationError):
+        System2ReplaySnapshotAssessment.model_validate(invalid)
+
+
+def test_verifier_rejects_a_record_with_the_wrong_runtime_header(tmp_path: Path) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    ).record(acquisition=acquisition)
+    document = json.loads(store.resolve(recorded.assessment).path.read_bytes())
+    document["runtime_evidence"]["name"] = "wrong_runtime"
+    wrong_runtime = _put_json(
+        store,
+        tmp_path / "wrong-runtime-assessment",
+        name="system2_replay_snapshot_assessment",
+        schema_version="harness.system2_replay_snapshot_assessment.v1",
+        value=document,
+    )
+
+    with pytest.raises(System2ReplaySnapshotAssessmentError) as raised:
+        System2ReplaySnapshotAssessmentVerifier(
+            artifact_store=store,
+            scratch_parent=scratch_parent,
+        ).verify(assessment=wrong_runtime)
+
+    assert raised.value.reason == "assessment_invalid"
+    assert list(scratch_parent.iterdir()) == []
+
+
+def test_verifier_constructor_rejects_wrong_dependency_types(tmp_path: Path) -> None:
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+
+    with pytest.raises(TypeError, match="artifact_store must be LocalArtifactStore"):
+        System2ReplaySnapshotAssessmentVerifier(
+            artifact_store=object(),  # type: ignore[arg-type]
+            scratch_parent=scratch_parent,
+        )
+    derived_store_type = type("DerivedStore", (LocalArtifactStore,), {})
+    with pytest.raises(TypeError, match="artifact_store must be LocalArtifactStore"):
+        System2ReplaySnapshotAssessmentVerifier(
+            artifact_store=derived_store_type(tmp_path / "derived-cas"),
+            scratch_parent=scratch_parent,
+        )
+    with pytest.raises(TypeError, match="scratch_parent must be Path"):
+        System2ReplaySnapshotAssessmentVerifier(
+            artifact_store=LocalArtifactStore(tmp_path / "cas"),
+            scratch_parent="wrong",  # type: ignore[arg-type]
+        )
+
+
+def test_verifier_accepts_the_compile_producers_effective_catalog_name(
+    tmp_path: Path,
+) -> None:
+    acquisition, store = _successful_acquisition(tmp_path)
+    scratch_parent = tmp_path / "assessment-scratch"
+    scratch_parent.mkdir()
+    recorded = System2ReplaySnapshotAssessmentRecorder(
+        scratch_parent=scratch_parent,
+    ).record(acquisition=acquisition)
+    document = json.loads(store.resolve(recorded.assessment).path.read_bytes())
+    document["replay_input"]["environment_package"]["asset_catalog"]["name"] = (
+        "effective_asset_catalog"
+    )
+    producer_shaped = _put_json(
+        store,
+        tmp_path / "producer-shaped-assessment",
+        name="system2_replay_snapshot_assessment",
+        schema_version="harness.system2_replay_snapshot_assessment.v1",
+        value=document,
+    )
+
+    verified = System2ReplaySnapshotAssessmentVerifier(
+        artifact_store=store,
+        scratch_parent=scratch_parent,
+    ).verify(assessment=producer_shaped)
+
+    assert verified.assessment == producer_shaped
+    assert verified.record.replay_input.environment_package.asset_catalog.name == (
+        "effective_asset_catalog"
+    )
     assert list(scratch_parent.iterdir()) == []

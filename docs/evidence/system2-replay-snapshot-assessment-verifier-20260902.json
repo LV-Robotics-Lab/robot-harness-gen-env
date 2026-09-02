@@ -1,0 +1,328 @@
+{
+  "schema_version": "harness.system2_replay_snapshot_assessment_verifier_evidence.v1",
+  "recorded_on": "2026-09-02",
+  "baseline_commit": "cbeb12d3b61a3439778dee05cb68a406f13d41c1",
+  "scope": "system2_replay_local_snapshot_assessment_artifact_only_verification",
+  "status": "local_typed_fixture_record_and_artifact_only_verification_contract_verified_deployed_replay_not_run",
+  "public_interfaces": {
+    "recorder": "self_improving.system2_replay_snapshot_assessment.System2ReplaySnapshotAssessmentRecorder.record",
+    "verifier": "self_improving.system2_replay_snapshot_assessment.System2ReplaySnapshotAssessmentVerifier.verify"
+  },
+  "files": [
+    {
+      "bytes": 16526,
+      "lines": 413,
+      "path": "self_improving/system2_replay_snapshot_assessment.py",
+      "sha256": "2e309456be122590fb9aff1dbd4056b044061bb7aa61bda2c47a586e42f23bbb"
+    },
+    {
+      "bytes": 47566,
+      "lines": 1261,
+      "path": "tests/self_improving/test_system2_replay_snapshot_assessment.py",
+      "sha256": "c10907aab03dbbab46059018f281c915b604e7eef74692c0b8ca8feacb0f408e"
+    }
+  ],
+  "contract": {
+    "recorder": {
+      "constructor_input": "scratch_parent: Path",
+      "method_input": "acquisition: System2ReplayEvidenceAcquisitionResult",
+      "method_accepts_acquisition_only": true,
+      "caller_supplied_validation_result": false,
+      "output": "System2ReplaySnapshotAssessmentResult",
+      "output_fields": [
+        "assessment",
+        "snapshot_validation"
+      ],
+      "snapshot_validator": {
+        "implementation": "self_improving.system2_replay_snapshot_validation.System2ReplaySnapshotValidator",
+        "constructed_internally": true,
+        "called_with_same_acquisition": true,
+        "adapter_or_verifier_injection_surface": false,
+        "policy_changed_by_recorder": false
+      }
+    },
+    "artifact_only_verifier": {
+      "constructor_inputs": [
+        "artifact_store: LocalArtifactStore",
+        "scratch_parent: Path"
+      ],
+      "method_input": "assessment: ArtifactRef",
+      "method_accepts_assessment_ref_only": true,
+      "acquisition_input": false,
+      "caller_supplied_validation_result": false,
+      "adapter_injection_surface": false,
+      "output": "VerifiedSystem2ReplaySnapshotAssessment",
+      "output_fields": [
+        "assessment",
+        "record",
+        "snapshot_validation"
+      ],
+      "record_type": "System2ReplaySnapshotAssessment",
+      "snapshot_validation_type": "validate_v2_snapshot.SnapshotValidationResult",
+      "snapshot_validation_is_bare_result": true,
+      "snapshot_validation_is_acquisition_wrapper": false,
+      "same_local_artifact_store_resolves_assessment_and_recomputation_closure": true,
+      "recorded_validation_report_must_preexist_in_same_cas": true,
+      "snapshot_adapter": {
+        "implementation": "self_improving.validate_v2_snapshot.ValidateV2SnapshotAdapter",
+        "constructed_internally": true,
+        "uses_same_artifact_store": true,
+        "uses_constructor_scratch_parent": true,
+        "request_fields_derived_from_record": [
+          "replay_input.environment_package",
+          "runtime_evidence",
+          "runtime_asset_snapshot_manifest"
+        ]
+      },
+      "scratch_cas_overlap_rejected": [
+        "same_path",
+        "scratch_is_cas_ancestor",
+        "scratch_is_cas_descendant"
+      ],
+      "exact_recomputed_summary_match": [
+        "validation_report",
+        "validation_status",
+        "fail_count",
+        "not_run_count"
+      ]
+    },
+    "assessment_artifact": {
+      "name": "system2_replay_snapshot_assessment",
+      "schema_version": "harness.system2_replay_snapshot_assessment.v1",
+      "scope": "local_cas_snapshot_recomputation",
+      "media_type": "application/json",
+      "canonical_cas_uri_required": true,
+      "written_to_acquisition_local_cas": true,
+      "canonical_json_bytes": true,
+      "exact_bytes_read_back_by_recorder": true,
+      "strict_typed_readback": true,
+      "path_free_payload": true
+    },
+    "assessment_payload_fields": [
+      "schema_version",
+      "scope",
+      "replay_run_id",
+      "replay_invocation_digest",
+      "replay_skill_ref",
+      "max_attempts",
+      "replay_started_at",
+      "replay_ended_at",
+      "replay_input",
+      "dependencies",
+      "runtime_evidence",
+      "runtime_asset_snapshot_manifest",
+      "validation_report",
+      "validation_status",
+      "fail_count",
+      "not_run_count"
+    ],
+    "strict_record_invariants": {
+      "canonical_bytes_required_by_verifier": true,
+      "strict_model_validation_required": true,
+      "replay_times_must_be_utc": true,
+      "replay_started_at_must_not_follow_replay_ended_at": true,
+      "dependency_count": 5,
+      "dependency_names": [
+        "text2env.replay.capability",
+        "text2env.replay.executor",
+        "text2env.replay.handler_config",
+        "text2env.replay.media_verifier",
+        "text2env.replay.runtime_assets"
+      ],
+      "dependencies_sorted_by_name": true,
+      "dependency_version": "1",
+      "runtime_asset_dependency_digest_matches_snapshot_manifest": true,
+      "package_catalog_json_schema_ref_required": true,
+      "package_manifest_json_schema_ref_required": true,
+      "runtime_evidence_exact_ref_header_required": true,
+      "runtime_asset_snapshot_exact_ref_header_required": true,
+      "validation_report_exact_ref_header_required": true
+    },
+    "bindings_recorded": {
+      "replay_run_and_invocation_identity": true,
+      "full_text2env_replay_input": true,
+      "replay_skill_ref": "text2env.replay@1.0.0",
+      "max_attempts": 2,
+      "runtime_evidence_ref": true,
+      "runtime_asset_snapshot_manifest_ref": true,
+      "snapshot_validation_report_ref_and_summary": true
+    },
+    "excluded_payload_concepts": [
+      "source_kind",
+      "world_state",
+      "state_delta",
+      "receipt",
+      "decision",
+      "publishable"
+    ]
+  },
+  "verified_claim": {
+    "only_snapshot_summary_is_verified": true,
+    "same_cas_package_runtime_snapshot_closure_recomputed": true,
+    "verified_summary_fields": [
+      "validation_report",
+      "validation_status",
+      "fail_count",
+      "not_run_count"
+    ],
+    "metadata_not_independently_verified_against_origin": [
+      "replay_run_id",
+      "replay_invocation_digest",
+      "replay_started_at",
+      "replay_ended_at",
+      "text2env.replay.capability dependency identity",
+      "text2env.replay.executor dependency identity",
+      "text2env.replay.handler_config dependency identity",
+      "text2env.replay.media_verifier dependency identity"
+    ],
+    "metadata_remains_typed": true,
+    "time_and_dependency_shape_are_self_consistent": true,
+    "runtime_asset_dependency_is_bound_to_snapshot_manifest": true,
+    "origin_authority_established": false
+  },
+  "validation_semantics": {
+    "pass_is_normal_record_and_verification_result": true,
+    "fail_is_normal_record_and_verification_result": true,
+    "incomplete_is_normal_record_and_verification_result": true,
+    "pass_and_fail_use_unmodified_committed_snapshot_adapter_path": true,
+    "incomplete_uses_committed_adapter_with_controlled_raw_validator_not_run_branch": true,
+    "assessment_module_is_not_a_validation_policy_owner": true
+  },
+  "failure_semantics": {
+    "recorder_fixed_reasons": [
+      "snapshot_validation_failed",
+      "assessment_publish_failed",
+      "assessment_verification_failed"
+    ],
+    "verifier_fixed_reasons": [
+      "assessment_invalid",
+      "assessment_recompute_failed",
+      "assessment_mismatch"
+    ],
+    "recorder_mapping": {
+      "unsuccessful_replay": "snapshot_validation_failed",
+      "assessment_cas_write_failure": "assessment_publish_failed",
+      "assessment_readback_ref_or_exact_bytes_failure": "assessment_verification_failed"
+    },
+    "verifier_mapping": {
+      "invalid_ref_read_strict_canonical_or_record_invariant": "assessment_invalid",
+      "missing_preexisting_report_or_recomputation_input": "assessment_recompute_failed",
+      "invalid_scratch_or_scratch_cas_overlap": "assessment_recompute_failed",
+      "snapshot_adapter_failure": "assessment_recompute_failed",
+      "report_status_or_count_drift": "assessment_mismatch"
+    },
+    "adapter_attempt_directory_not_left_after_tested_adapter_paths": true,
+    "overlap_or_missing_scratch_not_claimed_empty": true
+  },
+  "determinism": {
+    "recording_is_content_addressed": true,
+    "same_acquisition_produces_same_assessment_ref": true,
+    "same_acquisition_produces_same_assessment_bytes": true,
+    "same_acquisition_produces_same_snapshot_validation_result": true,
+    "same_ref_store_and_scratch_produces_equal_verified_result": true,
+    "portable_authority_implied": false
+  },
+  "test_fixture": {
+    "kind": "local_typed_semantic_cas_fixture",
+    "same_local_cas_used_for_assessment_and_snapshot_recomputation": true,
+    "real_snapshot_adapter_executed": true,
+    "real_deployed_dynamic_replay_run": false,
+    "simulator_started_by_this_test_slice": false,
+    "new_physical_measurement_performed": false
+  },
+  "tdd": {
+    "inherited_recorder_initial_red": "ModuleNotFoundError on the original public recorder module import",
+    "verifier_initial_red": "ImportError for the missing public artifact-only verifier",
+    "ordinary_red_green_categories": [
+      "public acquisition-only recorder and ref-only artifact verifier seams",
+      "three-field verified result with a bare SnapshotValidationResult",
+      "recorder snapshot, publish, and readback failure mappings",
+      "strict assessment ref, model, canonical-byte, and artifact-ref validation",
+      "UTC order, exact five-dependency shape and version, and runtime-asset digest binding",
+      "pre-existing report and package/runtime/snapshot same-CAS closure",
+      "real committed snapshot adapter recomputation without injection",
+      "exact report, status, fail-count, and not-run-count mismatch mapping",
+      "missing scratch and scratch/CAS same, ancestor, or descendant rejection",
+      "PASS, FAIL, and INCOMPLETE normal record and verification semantics",
+      "content-addressed recording and repeated artifact-only verification idempotency",
+      "strict constructor types and effective_asset_catalog producer-name compatibility"
+    ]
+  },
+  "verification": {
+    "targeted": {
+      "command": "pytest -q -p no:cacheprovider tests/self_improving/test_system2_replay_snapshot_assessment.py --cov=self_improving.system2_replay_snapshot_assessment --cov-branch --cov-report=term-missing --cov-fail-under=100",
+      "failed": 0,
+      "passed": 41
+    },
+    "coverage": {
+      "branches": 22,
+      "branch_percent": 100,
+      "module": "self_improving/system2_replay_snapshot_assessment.py",
+      "statements": 143,
+      "statement_percent": 100
+    },
+    "adjacent_six_file_regression": {
+      "command": "pytest -q -p no:cacheprovider tests/self_improving/test_system2_replay_snapshot_assessment.py tests/self_improving/test_system2_replay_snapshot_validation.py tests/self_improving/test_system2_replay_evidence_acquisition.py tests/self_improving/test_system2_replay_input_promotion.py tests/self_improving/test_system2_replay_handoff.py tests/self_improving/test_validate_v2_snapshot.py",
+      "failed": 0,
+      "passed": 331
+    },
+    "ruff": {
+      "command": "ruff check self_improving/system2_replay_snapshot_assessment.py tests/self_improving/test_system2_replay_snapshot_assessment.py",
+      "status": "pass"
+    },
+    "format": {
+      "command": "ruff format --check self_improving/system2_replay_snapshot_assessment.py tests/self_improving/test_system2_replay_snapshot_assessment.py",
+      "status": "pass"
+    },
+    "source_diff_check": {
+      "command": "git diff --check -- self_improving/system2_replay_snapshot_assessment.py tests/self_improving/test_system2_replay_snapshot_assessment.py",
+      "expected_exit_code": 0,
+      "status": "pass",
+      "whitespace_diagnostics": 0
+    },
+    "documentation_diff_check": {
+      "command": "git diff --check -- repo-docs/modules/system2-replay-snapshot-assessment.md repo-docs/README.md",
+      "status": "pass",
+      "whitespace_diagnostics": 0
+    },
+    "evidence_no_index_diff_check": {
+      "commands": [
+        "git diff --no-index --check /dev/null docs/evidence/system2-replay-snapshot-assessment-verifier-20260902.md",
+        "git diff --no-index --check /dev/null docs/evidence/system2-replay-snapshot-assessment-verifier-20260902.json"
+      ],
+      "expected_exit_code": 1,
+      "status": "pass",
+      "whitespace_diagnostics": 0
+    },
+    "review_findings": {
+      "independent_final_review_count": 2,
+      "p0": 0,
+      "p1": 0,
+      "p2": 0
+    }
+  },
+  "qualification_relationship": {
+    "fixed_case_qualifies_factory_wiring": true,
+    "fixed_case_qualifies_dynamic_input": false,
+    "fixed_case_qualifies_dynamic_acquisition": false,
+    "fixed_case_qualifies_dynamic_report": false,
+    "fixed_case_qualifies_dynamic_outcome": false
+  },
+  "claim_boundary": {
+    "recording_and_artifact_verification_only": true,
+    "local_cas_snapshot_summary_only": true,
+    "fresh_observation_emitted": false,
+    "world_fact_evidence_emitted": false,
+    "physical_success_claimed": false,
+    "complete_validate_v2_executed": false,
+    "receipt_emitted": false,
+    "trusted_or_portable_receipt_emitted": false,
+    "validation_decision_emitted": false,
+    "publishable_claimed": false,
+    "portable_authority_claimed": false,
+    "system2_world_state_transitioned": false,
+    "deployed_replay_claimed": false,
+    "run_origin_independently_verified": false,
+    "non_runtime_dependency_origin_independently_verified": false
+  }
+}
