@@ -657,6 +657,46 @@ def _completed_fixture(
         media_type="application/octet-stream",
         schema_version=None,
     )
+    probe_records: list[dict[str, object]] = []
+    probe_diagnostics: list[ArtifactRef] = []
+    if capability_artifact is not None:
+        for phase in ("preflight", "postflight"):
+            streams: dict[str, dict[str, object]] = {}
+            for label, artifact in (
+                ("stdout", stdout),
+                ("stderr", stderr),
+                ("capability_output", capability_artifact),
+            ):
+                identity = {
+                    key: value
+                    for key, value in artifact.model_dump(mode="json").items()
+                    if key not in {"name", "uri"}
+                }
+                streams[label] = {**identity, "truncated": False}
+                probe_records.append({"name": f"{phase}_probe_{label}", **identity})
+            phase_diagnostics = _put_json(
+                store,
+                root,
+                name=f"{phase}_probe_diagnostics",
+                value={
+                    "schema_version": "harness.runtime_probe_diagnostics.v1",
+                    "phase": phase,
+                    "exit_code": 0,
+                    "streams": streams,
+                },
+                schema_version="harness.runtime_probe_diagnostics.v1",
+            )
+            probe_diagnostics.append(phase_diagnostics)
+            probe_records.append(
+                {
+                    "name": phase_diagnostics.name,
+                    **{
+                        key: value
+                        for key, value in phase_diagnostics.model_dump(mode="json").items()
+                        if key not in {"name", "uri"}
+                    },
+                }
+            )
     diagnostics = _put_json(
         store,
         root,
@@ -695,7 +735,7 @@ def _completed_fixture(
                 },
                 "truncated": False,
             },
-            "probe_artifacts": [],
+            "probe_artifacts": probe_records,
         },
         schema_version="harness.runtime_execution_diagnostics.v1",
     )
@@ -957,6 +997,7 @@ def _completed_fixture(
         runtime_member,
         validation,
         stdout,
+        *probe_diagnostics,
         *pngs,
         video,
     )

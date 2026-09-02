@@ -838,7 +838,6 @@ def test_complete_replay_publishes_bound_receipt_and_keeps_physical_failure(
     assert {"runtime_stdout", "runtime_stderr"}.issubset(result_names)
     assert {
         "preflight_probe_diagnostics",
-        "preflight_probe_capability_output",
         "postflight_probe_diagnostics",
         "runtime_execution_diagnostics",
     }.issubset(result_names)
@@ -849,13 +848,17 @@ def test_complete_replay_publishes_bound_receipt_and_keeps_physical_failure(
         fixture.store.resolve(preflight_probe_ref).path.read_text(encoding="utf-8")
     )
     assert preflight_probe["schema_version"] == "harness.runtime_probe_diagnostics.v1"
-    capability_output_ref = next(
-        ref for ref in result.artifacts if ref.name == "preflight_probe_capability_output"
+    postflight_probe_ref = next(
+        ref for ref in result.artifacts if ref.name == "postflight_probe_diagnostics"
     )
-    assert capability_output_ref.sha256 == executor.capability_sha256
-    assert preflight_probe["streams"]["capability_output"]["sha256"] == (
-        capability_output_ref.sha256
+    postflight_probe = json.loads(
+        fixture.store.resolve(postflight_probe_ref).path.read_text(encoding="utf-8")
     )
+    for probe in (preflight_probe, postflight_probe):
+        capability_output = probe["streams"]["capability_output"]
+        assert capability_output["sha256"] == executor.capability_sha256
+        assert capability_output["media_type"] == "application/json"
+        assert capability_output["schema_version"] == RUNTIME_CAPABILITY_SCHEMA
     receipt_ref = next(
         ref for ref in output.replay_artifacts if ref.name == "replay_execution_receipt"
     )
@@ -923,15 +926,47 @@ def test_complete_replay_publishes_bound_receipt_and_keeps_physical_failure(
     assert context.events[0][1]
     assert all(not refs for _, refs in context.events[1:9])
     assert context.events[9][1]
-    assert {
-        "preflight_probe_capability_output",
-        "postflight_probe_capability_output",
-    }.issubset({ref.name for ref in context.events[9][1]})
+    diagnostic_names = {ref.name for ref in context.events[9][1]}
+    assert "runtime_capability" in diagnostic_names
+    assert "preflight_probe_capability_output" not in diagnostic_names
+    assert "postflight_probe_capability_output" not in diagnostic_names
     assert context.events[-1][0] == "replay.artifacts.published"
     assert set(context.events[-1][1]) == {
         output.runtime_evidence,
         *output.replay_artifacts,
     }
+
+
+@pytest.mark.parametrize("mutation", ["payload", "truncated", "exit-code"])
+def test_unvalidated_capability_probe_output_remains_raw(
+    tmp_path: Path,
+    mutation: str,
+) -> None:
+    fixture = _fixture(tmp_path)
+    executor = RecordingExecutor(tmp_path / "runtime", _capability_document())
+
+    def mutate(execution: RuntimeExecution) -> RuntimeExecution:
+        assert execution.preflight_probe is not None
+        updates: dict[str, object]
+        if mutation == "payload":
+            updates = {"capability_output": b"unvalidated capability bytes"}
+        elif mutation == "truncated":
+            updates = {"capability_output_truncated": True}
+        else:
+            updates = {"exit_code": 1}
+        return replace(
+            execution,
+            preflight_probe=replace(execution.preflight_probe, **updates),
+        )
+
+    executor.execution_mutation = mutate
+    result = _invoke(_handler(tmp_path, fixture, executor), fixture.value, RecordingContext())
+    probe_ref = next(ref for ref in result.artifacts if ref.name == "preflight_probe_diagnostics")
+    probe = json.loads(fixture.store.resolve(probe_ref).path.read_text(encoding="utf-8"))
+
+    capability_output = probe["streams"]["capability_output"]
+    assert capability_output["media_type"] == "application/octet-stream"
+    assert capability_output["schema_version"] is None
 
 
 def test_public_replay_output_is_content_deterministic_across_run_contexts(
@@ -1774,6 +1809,9 @@ def test_failed_capability_probe_without_snapshot_still_persists_all_available_b
 
     refs = captured.value.blocker.artifact_refs
     assert "runtime_capability" not in {ref.name for ref in refs}
+    raw_capability = next(ref for ref in refs if ref.name == "preflight_probe_capability_output")
+    assert raw_capability.media_type == "application/octet-stream"
+    assert raw_capability.schema_version is None
     diagnostic_ref = next(ref for ref in refs if ref.name == "runtime_execution_diagnostics")
     diagnostic = json.loads(fixture.store.resolve(diagnostic_ref).path.read_text(encoding="utf-8"))
     assert diagnostic["failure"]["code"] == "capability_process_failed"

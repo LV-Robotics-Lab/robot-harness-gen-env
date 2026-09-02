@@ -1186,7 +1186,7 @@ def _sandbox_metrics() -> dict[str, object]:
     }
 
 
-def test_sandbox_diagnostic_and_probe_fact_helpers_are_strict() -> None:
+def test_sandbox_diagnostic_and_probe_fact_helpers_are_strict(tmp_path: Path) -> None:
     valid = _sandbox_metrics()
     assert replay_qualification_module._valid_sandbox_metrics(valid)
     attacks: list[object] = [None, {}, {**valid, "extra": True}]
@@ -1235,23 +1235,232 @@ def test_sandbox_diagnostic_and_probe_fact_helpers_are_strict() -> None:
     )
     assert not replay_qualification_module._diagnostic_stream_identity_is_bound(identity, {})
 
-    probe = {"name": artifact.name, **{k: v for k, v in identity.items() if k != "truncated"}}
-    assert replay_qualification_module._probe_artifact_records_are_bound(
-        [probe],
-        {artifact.sha256: artifact},
+    store = LocalArtifactStore(tmp_path / "probe-cas")
+    shared_stream = _put_evidence_bytes(
+        store,
+        tmp_path,
+        name="shared_probe_stream",
+        payload=b"",
+        media_type="application/octet-stream",
+        schema_version=None,
     )
+    capability = _put_evidence_bytes(
+        store,
+        tmp_path,
+        name="runtime_capability",
+        payload=b'{"schema_version":"harness.robotwin_runtime_capability.v1"}\n',
+        schema_version="harness.robotwin_runtime_capability.v1",
+    )
+    probe_records: list[dict[str, object]] = []
+    by_digest = {
+        shared_stream.sha256: shared_stream,
+        capability.sha256: capability,
+    }
+    for phase in ("preflight", "postflight"):
+        streams: dict[str, dict[str, object]] = {}
+        for label, stream_artifact in (
+            ("stdout", shared_stream),
+            ("stderr", shared_stream),
+            ("capability_output", capability),
+        ):
+            stream_identity = {
+                key: nested
+                for key, nested in stream_artifact.model_dump(mode="json").items()
+                if key not in {"name", "uri"}
+            }
+            streams[label] = {**stream_identity, "truncated": False}
+            probe_records.append({"name": f"{phase}_probe_{label}", **stream_identity})
+        diagnostics_payload = (
+            json.dumps(
+                {
+                    "schema_version": "harness.runtime_probe_diagnostics.v1",
+                    "phase": phase,
+                    "exit_code": 0,
+                    "streams": streams,
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            + "\n"
+        ).encode()
+        diagnostics = _put_evidence_bytes(
+            store,
+            tmp_path,
+            name=f"{phase}_probe_diagnostics",
+            payload=diagnostics_payload,
+            schema_version="harness.runtime_probe_diagnostics.v1",
+        )
+        by_digest[diagnostics.sha256] = diagnostics
+        probe_records.append(
+            {
+                "name": diagnostics.name,
+                **{
+                    key: nested
+                    for key, nested in diagnostics.model_dump(mode="json").items()
+                    if key not in {"name", "uri"}
+                },
+            }
+        )
+    assert replay_qualification_module._probe_artifact_records_are_bound(
+        probe_records,
+        by_digest,
+        store=store,
+        expected_capability_sha256=capability.sha256,
+    )
+    swapped_diagnostics = json.loads(json.dumps(probe_records))
+    preflight_diagnostics = next(
+        item for item in swapped_diagnostics if item["name"] == "preflight_probe_diagnostics"
+    )
+    postflight_diagnostics = next(
+        item for item in swapped_diagnostics if item["name"] == "postflight_probe_diagnostics"
+    )
+    for key in ("sha256", "bytes", "media_type", "schema_version"):
+        preflight_diagnostics[key], postflight_diagnostics[key] = (
+            postflight_diagnostics[key],
+            preflight_diagnostics[key],
+        )
+    swapped_streams = json.loads(json.dumps(probe_records))
+    preflight_stdout = next(
+        item for item in swapped_streams if item["name"] == "preflight_probe_stdout"
+    )
+    preflight_capability = next(
+        item for item in swapped_streams if item["name"] == "preflight_probe_capability_output"
+    )
+    for key in ("sha256", "bytes", "media_type", "schema_version"):
+        preflight_stdout[key], preflight_capability[key] = (
+            preflight_capability[key],
+            preflight_stdout[key],
+        )
     for records in (
+        [],
         [None],
         [{"sha256": artifact.sha256}],
-        [{**probe, "name": "wrong"}],
-        [{**probe, "bytes": 2}],
-        [probe, probe],
-        [{**probe, "sha256": 1}],
+        [{**probe_records[0], "name": "wrong"}, *probe_records[1:]],
+        [{**probe_records[0], "bytes": 2}, *probe_records[1:]],
+        [probe_records[0], *probe_records],
+        [{**probe_records[0], "sha256": 1}, *probe_records[1:]],
+        probe_records[:-1],
+        swapped_diagnostics,
+        swapped_streams,
     ):
         assert not replay_qualification_module._probe_artifact_records_are_bound(
             records,
-            {artifact.sha256: artifact},
+            by_digest,
+            store=store,
+            expected_capability_sha256=capability.sha256,
         )
+
+    preflight_record = next(
+        item for item in probe_records if item["name"] == "preflight_probe_diagnostics"
+    )
+    preflight_ref = by_digest[str(preflight_record["sha256"])]
+    wrong_type_by_digest = {
+        **by_digest,
+        preflight_ref.sha256: preflight_ref.model_copy(
+            update={"media_type": "application/octet-stream", "schema_version": None}
+        ),
+    }
+    assert not replay_qualification_module._probe_artifact_records_are_bound(
+        probe_records,
+        wrong_type_by_digest,
+        store=store,
+        expected_capability_sha256=capability.sha256,
+    )
+    wrong_schema_by_digest = {
+        **by_digest,
+        preflight_ref.sha256: preflight_ref.model_copy(update={"schema_version": None}),
+    }
+    wrong_schema_records = json.loads(json.dumps(probe_records))
+    next(item for item in wrong_schema_records if item["name"] == "preflight_probe_diagnostics")[
+        "schema_version"
+    ] = None
+    assert not replay_qualification_module._probe_artifact_records_are_bound(
+        wrong_schema_records,
+        wrong_schema_by_digest,
+        store=store,
+        expected_capability_sha256=capability.sha256,
+    )
+    assert not replay_qualification_module._probe_artifact_records_are_bound(
+        probe_records,
+        by_digest,
+        store=LocalArtifactStore(tmp_path / "missing-probe-cas"),
+        expected_capability_sha256=capability.sha256,
+    )
+    assert not replay_qualification_module._probe_artifact_records_are_bound(
+        probe_records,
+        by_digest,
+        store=store,
+        expected_capability_sha256=SHA_F,
+    )
+
+    coordinated_records = json.loads(json.dumps(probe_records))
+    coordinated_stdout = next(
+        item for item in coordinated_records if item["name"] == "preflight_probe_stdout"
+    )
+    coordinated_capability = next(
+        item for item in coordinated_records if item["name"] == "preflight_probe_capability_output"
+    )
+    for key in ("sha256", "bytes", "media_type", "schema_version"):
+        coordinated_stdout[key], coordinated_capability[key] = (
+            coordinated_capability[key],
+            coordinated_stdout[key],
+        )
+    coordinated_diagnostics = json.loads(store.resolve(preflight_ref).path.read_text())
+    (
+        coordinated_diagnostics["streams"]["stdout"],
+        coordinated_diagnostics["streams"]["capability_output"],
+    ) = (
+        coordinated_diagnostics["streams"]["capability_output"],
+        coordinated_diagnostics["streams"]["stdout"],
+    )
+    coordinated_ref = _put_evidence_bytes(
+        store,
+        tmp_path,
+        name="coordinated_preflight_probe_diagnostics",
+        payload=(
+            json.dumps(coordinated_diagnostics, sort_keys=True, separators=(",", ":")) + "\n"
+        ).encode(),
+        schema_version="harness.runtime_probe_diagnostics.v1",
+    )
+    coordinated_record = next(
+        item for item in coordinated_records if item["name"] == "preflight_probe_diagnostics"
+    )
+    for key, nested in coordinated_ref.model_dump(mode="json").items():
+        if key not in {"name", "uri"}:
+            coordinated_record[key] = nested
+    assert not replay_qualification_module._probe_artifact_records_are_bound(
+        coordinated_records,
+        {**by_digest, coordinated_ref.sha256: coordinated_ref},
+        store=store,
+        expected_capability_sha256=capability.sha256,
+    )
+
+    invalid_stream_records = json.loads(json.dumps(probe_records))
+    invalid_stream_diagnostics = json.loads(
+        store.resolve(preflight_ref).path.read_text(encoding="utf-8")
+    )
+    invalid_stream_diagnostics["streams"] = {}
+    invalid_stream_ref = _put_evidence_bytes(
+        store,
+        tmp_path,
+        name="invalid_stream_probe_diagnostics",
+        payload=(
+            json.dumps(invalid_stream_diagnostics, sort_keys=True, separators=(",", ":")) + "\n"
+        ).encode(),
+        schema_version="harness.runtime_probe_diagnostics.v1",
+    )
+    invalid_stream_record = next(
+        item for item in invalid_stream_records if item["name"] == "preflight_probe_diagnostics"
+    )
+    for key, nested in invalid_stream_ref.model_dump(mode="json").items():
+        if key not in {"name", "uri"}:
+            invalid_stream_record[key] = nested
+    assert not replay_qualification_module._probe_artifact_records_are_bound(
+        invalid_stream_records,
+        {**by_digest, invalid_stream_ref.sha256: invalid_stream_ref},
+        store=store,
+        expected_capability_sha256=capability.sha256,
+    )
 
     with pytest.raises(ReplayQualificationError):
         replay_qualification_module._one_schema_artifact(

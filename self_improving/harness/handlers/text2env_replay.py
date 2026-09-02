@@ -723,9 +723,17 @@ class Text2EnvReplayHandler:
             schema_version=None,
         )
         probes: list[ArtifactRef] = []
-        for phase, probe in (
-            ("preflight", execution.preflight_probe),
-            ("postflight", execution.postflight_probe),
+        for phase, probe, validated_capability_sha256 in (
+            (
+                "preflight",
+                execution.preflight_probe,
+                execution.capability.sha256 if execution.capability is not None else None,
+            ),
+            (
+                "postflight",
+                execution.postflight_probe,
+                execution.postflight_capability_sha256,
+            ),
         ):
             if probe is not None:
                 probes.extend(
@@ -733,6 +741,7 @@ class Text2EnvReplayHandler:
                         phase=phase,
                         probe=probe,
                         records_root=records_root,
+                        validated_capability_sha256=validated_capability_sha256,
                     )
                 )
         execution_snapshot = {
@@ -780,6 +789,7 @@ class Text2EnvReplayHandler:
         phase: str,
         probe: RuntimeProbeDiagnostics,
         records_root: Path,
+        validated_capability_sha256: str | None,
     ) -> tuple[ArtifactRef, ...]:
         raw = (
             (
@@ -801,13 +811,21 @@ class Text2EnvReplayHandler:
         refs: list[ArtifactRef] = []
         stream_records: dict[str, Any] = {}
         for label, payload, truncated in raw:
+            is_validated_capability = label == "capability_output" and (
+                probe.exit_code == 0
+                and validated_capability_sha256 is not None
+                and not truncated
+                and hashlib.sha256(payload).hexdigest() == validated_capability_sha256
+            )
             artifact = _put_bytes(
                 self.artifact_store,
                 records_root / f"{phase}_probe_{label}.bin",
                 payload,
                 name=f"{phase}_probe_{label}",
-                media_type="application/octet-stream",
-                schema_version=None,
+                media_type=(
+                    "application/json" if is_validated_capability else "application/octet-stream"
+                ),
+                schema_version=(RUNTIME_CAPABILITY_SCHEMA if is_validated_capability else None),
             )
             refs.append(artifact)
             stream_records[label] = {**_identity(artifact), "truncated": truncated}
@@ -1769,13 +1787,15 @@ def _published_typed_refs(published: _PublishedExecution) -> tuple[ArtifactRef, 
 
 def _diagnostic_refs(published: _PublishedDiagnostics) -> tuple[ArtifactRef, ...]:
     capability = (published.capability,) if published.capability is not None else ()
-    return (
-        *capability,
-        published.transcript,
-        published.stdout,
-        published.stderr,
-        *published.probe_artifacts,
-        *published.partial_outputs,
+    return _unique_refs(
+        (
+            *capability,
+            published.transcript,
+            published.stdout,
+            published.stderr,
+            *published.probe_artifacts,
+            *published.partial_outputs,
+        )
     )
 
 

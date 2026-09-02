@@ -46,6 +46,7 @@ from .replay_dependencies import (
 from .runtime_assets import canonical_runtime_asset_manifest_bytes
 from .runtime_capability import (
     RUNTIME_ARTIFACT_PATHS,
+    RUNTIME_CAPABILITY_SCHEMA,
     RUNTIME_MEDIA_ARTIFACT_PATHS,
     RuntimeCapabilityError,
     canonical_capability_bytes,
@@ -103,6 +104,11 @@ _EVENT_KINDS = (
     "media.completed",
     "evidence.completed",
     "worker.completed",
+)
+_PROBE_ARTIFACT_NAMES = frozenset(
+    f"{phase}_probe_{label}"
+    for phase in ("preflight", "postflight")
+    for label in ("stdout", "stderr", "capability_output", "diagnostics")
 )
 _ReplayClaim = TypeVar("_ReplayClaim", bound=HarnessModel)
 
@@ -1717,7 +1723,12 @@ def _verify_run_evidence(
         or not _diagnostic_stream_identity_is_bound(diagnostic_stderr, by_digest)
         or diagnostic_stdout.get("truncated") is not False
         or diagnostic_stderr.get("truncated") is not False
-        or not _probe_artifact_records_are_bound(probe_records, by_digest)
+        or not _probe_artifact_records_are_bound(
+            probe_records,
+            by_digest,
+            store=store,
+            expected_capability_sha256=(dependencies_by_name[REPLAY_CAPABILITY_DEPENDENCY].sha256),
+        )
     ):
         _evidence_mismatch("runtime diagnostics do not bind the complete delivery transcript")
     runtime_assets = _require_object(
@@ -2392,8 +2403,12 @@ def _diagnostic_stream_identity_is_bound(
 def _probe_artifact_records_are_bound(
     values: list[Any],
     by_digest: dict[str, ArtifactRef],
+    *,
+    store: LocalArtifactStore,
+    expected_capability_sha256: str,
 ) -> bool:
-    seen: set[str] = set()
+    seen_names: set[str] = set()
+    records_by_name: dict[str, dict[str, Any]] = {}
     for value in values:
         if not isinstance(value, dict) or set(value) != {
             "name",
@@ -2404,19 +2419,79 @@ def _probe_artifact_records_are_bound(
         }:
             return False
         digest = value.get("sha256")
+        name = value.get("name")
         artifact = by_digest.get(digest)
         if (
             not isinstance(digest, str)
-            or digest in seen
+            or not isinstance(name, str)
+            or name not in _PROBE_ARTIFACT_NAMES
+            or name in seen_names
             or artifact is None
-            or value.get("name") != artifact.name
             or not _artifact_identity_matches(
                 {key: nested for key, nested in value.items() if key != "name"},
                 artifact,
             )
         ):
             return False
-        seen.add(digest)
+        seen_names.add(name)
+        records_by_name[name] = value
+    if seen_names != _PROBE_ARTIFACT_NAMES:
+        return False
+    for phase in ("preflight", "postflight"):
+        diagnostics_record = records_by_name[f"{phase}_probe_diagnostics"]
+        diagnostics_ref = by_digest[diagnostics_record["sha256"]]
+        if (
+            diagnostics_ref.media_type != "application/json"
+            or diagnostics_ref.schema_version != "harness.runtime_probe_diagnostics.v1"
+        ):
+            return False
+        try:
+            diagnostics = _load_strict_json(
+                _resolve_evidence_ref(
+                    store,
+                    diagnostics_ref,
+                    label=f"{phase} runtime probe diagnostics",
+                ),
+                label=f"{phase} runtime probe diagnostics",
+            )
+        except ReplayQualificationError:
+            return False
+        if (
+            set(diagnostics) != {"schema_version", "phase", "exit_code", "streams"}
+            or diagnostics.get("schema_version") != "harness.runtime_probe_diagnostics.v1"
+            or diagnostics.get("phase") != phase
+            or type(diagnostics.get("exit_code")) is not int
+            or diagnostics.get("exit_code") != 0
+        ):
+            return False
+        streams = diagnostics.get("streams")
+        if not isinstance(streams, dict) or set(streams) != {
+            "stdout",
+            "stderr",
+            "capability_output",
+        }:
+            return False
+        for label in ("stdout", "stderr", "capability_output"):
+            stream = streams.get(label)
+            aggregate = records_by_name[f"{phase}_probe_{label}"]
+            expected_type = (
+                ("application/json", RUNTIME_CAPABILITY_SCHEMA)
+                if label == "capability_output"
+                else ("application/octet-stream", None)
+            )
+            if (
+                not isinstance(stream, dict)
+                or set(stream) != {"sha256", "bytes", "media_type", "schema_version", "truncated"}
+                or stream.get("truncated") is not False
+                or (stream.get("media_type"), stream.get("schema_version")) != expected_type
+                or (
+                    label == "capability_output"
+                    and stream.get("sha256") != expected_capability_sha256
+                )
+                or {key: nested for key, nested in stream.items() if key != "truncated"}
+                != {key: nested for key, nested in aggregate.items() if key != "name"}
+            ):
+                return False
     return True
 
 
