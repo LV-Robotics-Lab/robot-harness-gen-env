@@ -1,0 +1,64 @@
+{
+  "schema_version": "harness.system2_compile_turn_evidence.v1",
+  "recorded_on": "2026-09-02",
+  "baseline_commit": "5b5100526ef967dd98513358b224c23a5cdf6dd5",
+  "public_interface": "self_improving.system2_compile_turn.System2CompileTurn.execute",
+  "files": [
+    {
+      "bytes": 10053,
+      "path": "self_improving/system2_compile_turn.py",
+      "sha256": "7f8e89ba78a44d052dc53b68d5f331590e9b246adab678dae90e2c75a9896d31"
+    },
+    {
+      "bytes": 9752,
+      "path": "tests/self_improving/test_system2_compile_turn.py",
+      "sha256": "fcbf916f96a67b1a54deeffb4e7473de451a152f02c135cc78212699318e39c0"
+    }
+  ],
+  "verified_path": {
+    "planner_provider": "fixture_local",
+    "compile_application": "production factory and packaged qualification",
+    "compile_execution": "real Registry and text2env.compile handler",
+    "success": {
+      "terminal_status": "succeeded",
+      "world_state_version": 2,
+      "history_authority": "published and independently reverified"
+    },
+    "non_success": {
+      "terminal_statuses_exercised": [
+        "blocked"
+      ],
+      "world_state": "unchanged",
+      "history_authority": null
+    }
+  },
+  "tests": {
+    "public_seam": {
+      "passed": 6,
+      "failed": 0
+    },
+    "related_system2_compile": {
+      "passed": 462,
+      "failed": 0
+    },
+    "coverage": {
+      "module": "self_improving/system2_compile_turn.py",
+      "statements": 85,
+      "branches": 6,
+      "statement_percent": 100,
+      "branch_percent": 100
+    },
+    "ruff": "pass",
+    "format": "pass",
+    "diff_check": "pass",
+    "isolated_replay_qualification_identity": "pass"
+  },
+  "boundaries": {
+    "initial_compile_turn_only": true,
+    "planner_model_qualified": false,
+    "replay_or_validate_dispatched": false,
+    "blocked_or_failed_history_resume_supported": false,
+    "publishability_decision_emitted": false,
+    "replay_qualification_source_identity_changed": false
+  }
+}
