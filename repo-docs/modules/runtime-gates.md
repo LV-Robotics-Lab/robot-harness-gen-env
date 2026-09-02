@@ -75,8 +75,31 @@ fail closed，不退回宿主 Pillow/动态 FFmpeg。资格化工具链使用最
 夸大成具体 yuv420p layout。完整尝试链、摘要、资源峰值和攻击结果见
 [`docs/evidence/replay-media-verifier-qualification-20260831.md`](../../docs/evidence/replay-media-verifier-qualification-20260831.md)。
 
-这仍只证明媒体 consumer 边界；没有正式 replay qualification、900/120 receipt、独立 validate 与
-promotion evidence 时，不能由一段可解码视频推出物理通过或 `publishable=true`。
+媒体工具资格本身仍只证明 consumer 边界。当前 checked-in `text2env.replay@1.0.0` 另有正式的
+900 settle / 120 video 固定案例资格：direct 与 Registry candidate 各执行一次，8 项资格检查全过，
+并把 63 个精确 artifact refs 闭合在部署侧 CAS；精确摘要见
+[`docs/evidence/replay-production-qualification-20260902.md`](../../docs/evidence/replay-production-qualification-20260902.md)。
+它仍不替代独立 validate 与 promotion evidence，不能由 replay 成功推出 `publishable=true`。
+
+## 固定资格回放怎样启动
+
+`script/run_qualified_replay.py` 是薄适配器，深实现位于
+`self_improving.qualified_replay_cli`。命令只接受一次精确拼写的 `--settings`；设置文件只给部署侧
+CAS、资产根、解释器、capability、媒体工具、delegated cgroup、全新 state root 与 timeout，不能
+覆盖 Skill、版本、资格 bundle、源码根、runner 或 replay input。执行输入只从已验证资格中固定的
+kernel Invocation 重建，因此这是一个 operator-only 固定案例入口，不是通用 replay 命令。
+
+设置以同一 FD 做最多 64 KiB 的稳定读取；state leaf 由 `mkdirat` 线性化竞争，并持有父目录与目录
+FD，在 application 交接前及终态摘要前复核路径身份。state claim 成功后的后续失败会把该 root
+作为 one-shot failure evidence 保留，CLI 自身不做路径删除。这个 claim 是 cooperative launcher 的检测/占用 guard，
+不是 pathname lease：既有 `ReplayApplication` 仍按路径访问和回滚，交接后主动进行的同 UID rename
+不在该接口的防护主张内。
+
+只有 returned state、两次持久化 RunState/Invocation 读取和完整 EventPage 全部对账，并且 `succeeded`
+分支的类型化 output 或 `blocked` / `failed` 分支的 null output + 类型化 blocker 通过后，stdout 才输出
+一行 locator-free 摘要。终态 `succeeded` / `blocked` / `failed` 分别返回 0 / 10 / 20；
+输入、配置、信任或资格错误返回 78，持久化、终态漂移或内部错误返回 74。该摘要不是 validate
+decision、portable receipt 或 publishability 证明。
 
 ## contact 怎么分类
 
@@ -102,10 +125,10 @@ promotion evidence 时，不能由一段可解码视频推出物理通过或 `pu
 `ResolvedSceneSpec.scene_id`，`resolved_scene_sha256` 必须等于当前 resolved scene 的 canonical
 digest。缺字段或未改写的错值都会 fail。它不对整份 evidence、视频、命令或环境签名；producer
 若搬运另一次回放的物理字段并重写这两项声明，validator 仍无法识别。因此这是输入声明一致性门，
-不是不可伪造的 run provenance，也不替代下面的物理门控。A040 的候选 replay handler 已在 consumer
-侧重验 package/catalog/runtime-assets、运行事件、evidence 配置/时间线与完整媒体身份，并把五项
-Invocation 依赖写入 path-free receipt；但固定 qualification、独立 validate/promotion 和新的 900/120
-handler 真跑仍缺，所以这条候选链也不能被写成已晋升的跨 run provenance。
+不是不可伪造的 run provenance，也不替代下面的物理门控。Replay handler 已在 consumer 侧重验
+package/catalog/runtime-assets、运行事件、evidence 配置/时间线与完整媒体身份，并把五项 Invocation
+依赖写入 path-free receipt；随后固定 qualification 与新的 900/120 handler 真跑也已完成。独立
+validate/promotion 仍缺，所以这条链仍不能被写成已晋升或 `publishable` 的跨 run provenance。
 
 每物体的门控按 `is_static` 分两种模式：
 
