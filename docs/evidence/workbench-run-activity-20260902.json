@@ -1,0 +1,114 @@
+{
+  "schema_version": "robot_harness.workbench_run_activity_evidence.v1",
+  "recorded_on": "2026-09-02",
+  "public_seam": {
+    "mount": "HarnessRunBoard.mount({root,onInspect})",
+    "mounted_api": [
+      "render({events,selectedRunId})",
+      "clear()"
+    ]
+  },
+  "files": [
+    {
+      "bytes": 5712,
+      "path": "demo/static/workbench_run_board.js",
+      "sha256": "57463977ab315eff88aa81b052987e128eb75328f0a24361e22ce9bf889d35dc"
+    },
+    {
+      "bytes": 80049,
+      "path": "demo/static/app.js",
+      "sha256": "2167a388e6df02c9bcbea51ccb5309d83d217abb6c209ffc0fab2d180b354e40"
+    },
+    {
+      "bytes": 13157,
+      "path": "demo/static/index.html",
+      "sha256": "59287c5e016a4f19e3f7b1dd3a5292633fcfb5f84fc888f59c8312305e536e40"
+    },
+    {
+      "bytes": 19831,
+      "path": "demo/static/styles.css",
+      "sha256": "4f208521185eff6958b139d87f9c76cc5f2efc4d2bd96d62ca2db0dcb0e4bab8"
+    },
+    {
+      "bytes": 128364,
+      "path": "tests/demo/test_workbench_browser.py",
+      "sha256": "d052d7b3cd761794d53c39b4559eae2e918db8653717f64dd06bb68dfdddbb94"
+    }
+  ],
+  "projection": {
+    "source": "current configured Harness event feed",
+    "validated_by": "validateHarnessPage",
+    "committed_events_only": true,
+    "default_all_run_visible_event_cap": 200,
+    "direct_backend_reads": false,
+    "lanes": {
+      "compile": "text2env.compile",
+      "replay": "text2env.replay",
+      "validate": "text2env.validate",
+      "other": "every other skill_id"
+    }
+  },
+  "interaction": {
+    "card_selection_reuses_existing_run_filter": true,
+    "journal_reread_after_cursor": "0",
+    "merges_all_run_and_selected_run_state_roots": false,
+    "keyed_dom_by_run_id": true,
+    "preserves_focused_card_across_render": true,
+    "reclaims_focus_after_user_blur": false
+  },
+  "integrity": {
+    "same_run_skill_id_and_version_must_remain_stable": true,
+    "identity_drift_result": "harness_event_page_invalid",
+    "identity_drift_fail_closed": true
+  },
+  "verification": {
+    "demo_suite": {
+      "command": "pytest -q tests/demo",
+      "passed": 342,
+      "failed": 0
+    },
+    "browser_suite": {
+      "command": "pytest -q tests/demo/test_workbench_browser.py",
+      "passed": 65,
+      "failed": 0
+    },
+    "targeted_chrome_cases": {
+      "command": "pytest -q tests/demo/test_workbench_browser.py -k 'groups_committed_compile_replay_and_validate_run_activity or run_activity_card_selects_and_replays_that_committed_run or run_activity_preserves_focus_without_stealing_it_after_blur or run_activity_fails_closed_when_one_run_changes_skill_identity or revalidates_cached_events_before_rendering_them'",
+      "passed": 5,
+      "failed": 0,
+      "cases": [
+        "test_browser_groups_committed_compile_replay_and_validate_run_activity",
+        "test_browser_run_activity_card_selects_and_replays_that_committed_run",
+        "test_browser_run_activity_preserves_focus_without_stealing_it_after_blur",
+        "test_browser_run_activity_fails_closed_when_one_run_changes_skill_identity",
+        "test_browser_revalidates_cached_events_before_rendering_them"
+      ]
+    },
+    "node_check": {
+      "commands": [
+        "node --check demo/static/workbench_run_board.js",
+        "node --check demo/static/app.js"
+      ],
+      "status": "pass"
+    },
+    "ruff": {
+      "commands": [
+        "ruff check tests/demo/test_workbench_browser.py",
+        "ruff format --check tests/demo/test_workbench_browser.py"
+      ],
+      "status": "pass"
+    },
+    "diff_check": {
+      "command": "git diff --check",
+      "status": "pass"
+    }
+  },
+  "claim_boundary": {
+    "executes_text2env_replay": false,
+    "executes_text2env_validate": false,
+    "renders_full_event_or_unprojected_fields": false,
+    "renders_artifact_refs_or_contents": false,
+    "emits_physical_validation_decision": false,
+    "emits_publishability_decision": false
+  }
+}

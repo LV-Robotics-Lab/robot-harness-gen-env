@@ -541,6 +541,253 @@ def test_browser_renders_committed_harness_events(tmp_path: Path, monkeypatch) -
     assert "succeeded" in dom
 
 
+def test_browser_groups_committed_compile_replay_and_validate_run_activity(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    compile_run = UUID("12345678-1234-4234-9234-123456789abc")
+    replay_run = UUID("22345678-1234-4234-9234-123456789abc")
+    validate_run = UUID("32345678-1234-4234-9234-123456789abc")
+
+    def clock() -> datetime:
+        return datetime(2026, 9, 2, 5, 0, tzinfo=timezone.utc)
+
+    RunRecorder(
+        run_id=compile_run,
+        skill_id="text2env.compile",
+        skill_version="1.0.0",
+        clock=clock,
+        sink=journal,
+    ).start(stage="compile.started", attempt=1)
+    replay = RunRecorder(
+        run_id=replay_run,
+        skill_id="text2env.replay",
+        skill_version="1.0.0",
+        clock=clock,
+        sink=journal,
+    )
+    replay.start(stage="replay.started", attempt=1)
+    RunRecorder(
+        run_id=validate_run,
+        skill_id="text2env.validate",
+        skill_version="1.0.0",
+        clock=clock,
+        sink=journal,
+    ).start(stage="validate.started", attempt=1)
+    replay.progress(stage="replay.artifacts.published")
+    replay.finish(status=RunStatus.SUCCEEDED, stage="replay.succeeded")
+
+    app = _configured_app(tmp_path, monkeypatch, HarnessEventFeed.from_journal(journal))
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile")
+
+    assert 'id="harness-run-board"' in dom
+    assert 'data-run-lane="compile"' in dom
+    assert 'data-run-lane="replay"' in dom
+    assert 'data-run-lane="validate"' in dom
+    assert dom.count(f'data-run-id="{compile_run}"') == 1
+    assert dom.count(f'data-run-id="{replay_run}"') == 1
+    assert dom.count(f'data-run-id="{validate_run}"') == 1
+    assert (
+        f'data-run-id="{replay_run}" data-latest-event-id="5" data-visible-event-count="3"'
+    ) in dom
+    assert "text2env.replay@1.0.0" in dom
+    assert "replay.succeeded" in dom
+    assert "3 个可见事件" in dom
+
+
+def test_browser_run_activity_card_selects_and_replays_that_committed_run(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    replay_run = UUID("22345678-1234-4234-9234-123456789abc")
+    RunRecorder(
+        run_id=replay_run,
+        skill_id="text2env.replay",
+        skill_version="1.0.0",
+        clock=lambda: datetime(2026, 9, 2, 5, 0, tzinfo=timezone.utc),
+        sink=journal,
+    ).start(stage="replay.started", attempt=1)
+    app = _configured_app(tmp_path, monkeypatch, HarnessEventFeed.from_journal(journal))
+    observed_run_filters: list[str | None] = []
+
+    @app.before_request
+    def observe_event_filters():
+        if request.path == "/api/harness/events":
+            observed_run_filters.append(request.args.get("run_id"))
+
+    @app.after_request
+    def click_the_replay_card(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    f"""
+                    <script>
+                    (async () => {{
+                      const pause = () => new Promise((resolve) => setTimeout(resolve, 10));
+                      let card;
+                      while (!(card = document.querySelector(
+                        '[data-run-id="{replay_run}"]'
+                      ))) await pause();
+                      card.focus();
+                      card.click();
+                      while (!(card = document.querySelector(
+                        '[data-run-id="{replay_run}"][aria-current="true"]'
+                      ))) await pause();
+                      document.body.dataset.runCardSearch = window.location.search;
+                      document.body.dataset.runCardSelected = 'true';
+                      document.body.dataset.runCardFocusPreserved = String(
+                        document.activeElement === card
+                      );
+                      document.body.dataset.runCardFocusOutline = getComputedStyle(
+                        card
+                      ).outlineStyle;
+                    }})();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile")
+
+    assert observed_run_filters[0] is None
+    assert str(replay_run) in observed_run_filters
+    assert f'data-run-card-search="?harness_run={replay_run}"' in dom
+    assert 'data-run-card-selected="true"' in dom
+    assert 'data-run-card-focus-preserved="true"' in dom
+    assert 'data-run-card-focus-outline="solid"' in dom
+    assert (
+        f'data-run-id="{replay_run}" data-latest-event-id="1" '
+        'data-visible-event-count="1" aria-current="true"'
+    ) in dom
+
+
+def test_browser_run_activity_preserves_focus_without_stealing_it_after_blur(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    replay_run = UUID("22345678-1234-4234-9234-123456789abc")
+    RunRecorder(
+        run_id=replay_run,
+        skill_id="text2env.replay",
+        skill_version="1.0.0",
+        clock=lambda: datetime(2026, 9, 2, 5, 0, tzinfo=timezone.utc),
+        sink=journal,
+    ).start(stage="replay.started", attempt=1)
+    app = _configured_app(tmp_path, monkeypatch, HarnessEventFeed.from_journal(journal))
+
+    @app.after_request
+    def focus_the_replay_card_across_one_render(response):
+        if request.path == "/" and response.status_code == 200:
+            response.direct_passthrough = False
+            response.set_data(
+                response.get_data(as_text=True).replace(
+                    "</body>",
+                    f"""
+                    <script>
+                    (() => {{
+                      try {{
+                        const fixture = document.createElement('section');
+                        ['compile', 'replay', 'validate', 'other'].forEach((lane) => {{
+                          const list = document.createElement('ol');
+                          list.dataset.runLaneList = lane;
+                          fixture.appendChild(list);
+                        }});
+                        document.body.appendChild(fixture);
+                        const board = window.HarnessRunBoard.mount({{
+                          root: fixture,
+                          onInspect: () => {{}},
+                        }});
+                        const replayEvent = {{
+                            event_id: '1',
+                            run_id: '{replay_run}',
+                            skill_id: 'text2env.replay',
+                            skill_version: '1.0.0',
+                            event: {{
+                              stage: 'replay.started',
+                              to_status: 'running',
+                            }},
+                          }};
+                        const compileEvent = {{
+                          event_id: '2',
+                          run_id: '12345678-1234-4234-9234-123456789abc',
+                          skill_id: 'text2env.compile',
+                          skill_version: '1.0.0',
+                          event: {{
+                            stage: 'compile.started',
+                            to_status: 'running',
+                          }},
+                        }};
+                        const view = {{
+                          events: [replayEvent, compileEvent],
+                          selectedRunId: '',
+                        }};
+                        board.render(view);
+                        const card = fixture.querySelector('[data-run-id="{replay_run}"]');
+                        card.focus();
+                        const compileProgress = JSON.parse(JSON.stringify(compileEvent));
+                        compileProgress.event_id = '3';
+                        compileProgress.event.stage = 'compile.progress';
+                        board.render({{
+                          events: [replayEvent, compileEvent, compileProgress],
+                          selectedRunId: '',
+                        }});
+                        const current = fixture.querySelector('[data-run-id="{replay_run}"]');
+                        document.body.dataset.runCardNodePreserved = String(current === card);
+                        document.body.dataset.runCardFocusPreserved = String(
+                          document.activeElement === card
+                        );
+                        card.blur();
+                        const compileMoreProgress = JSON.parse(
+                          JSON.stringify(compileProgress)
+                        );
+                        compileMoreProgress.event_id = '4';
+                        compileMoreProgress.event.stage = 'compile.more_progress';
+                        board.render({{
+                          events: [
+                            replayEvent,
+                            compileEvent,
+                            compileProgress,
+                            compileMoreProgress,
+                          ],
+                          selectedRunId: '',
+                        }});
+                        document.body.dataset.runCardBlurPreserved = String(
+                          document.activeElement !== card
+                        );
+                      }} catch (error) {{
+                        document.body.dataset.runCardError = String(error);
+                      }}
+                    }})();
+                    </script>
+                    </body>
+                    """,
+                )
+            )
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(
+            url,
+            tmp_path / "chrome-profile",
+            virtual_time_budget_ms=2_500,
+        )
+
+    body_tag = dom[dom.index("<body") : dom.index(">", dom.index("<body"))]
+    assert "data-run-card-error" not in body_tag, body_tag
+    assert 'data-run-card-node-preserved="true"' in body_tag, body_tag
+    assert 'data-run-card-focus-preserved="true"' in body_tag, body_tag
+    assert 'data-run-card-blur-preserved="true"' in body_tag, body_tag
+
+
 def test_browser_harness_compile_replays_only_committed_events(
     tmp_path: Path,
     monkeypatch,
@@ -2814,6 +3061,41 @@ def test_browser_rejects_an_inconsistent_event_page(tmp_path: Path, monkeypatch)
     assert '<code id="harness-cursor">0</code>' in dom
 
 
+def test_browser_run_activity_fails_closed_when_one_run_changes_skill_identity(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    journal = SQLiteEventJournal(tmp_path / "harness.sqlite3")
+    run_id = UUID("12345678-1234-4234-9234-123456789abc")
+    recorder = RunRecorder(
+        run_id=run_id,
+        skill_id="text2env.compile",
+        skill_version="1.0.0",
+        clock=lambda: datetime(2026, 9, 2, 5, 0, tzinfo=timezone.utc),
+        sink=journal,
+    )
+    recorder.start(stage="compile.started", attempt=1)
+    recorder.progress(stage="compile.parsed")
+    app = _configured_app(tmp_path, monkeypatch, HarnessEventFeed.from_journal(journal))
+
+    @app.after_request
+    def change_the_second_visible_skill(response):
+        if request.path == "/api/harness/events" and response.status_code == 200:
+            payload = response.get_json()
+            if len(payload["events"]) == 2:
+                payload["events"][1]["skill_id"] = "text2env.validate"
+                response.set_data(json.dumps(payload))
+                response.content_type = "application/json"
+        return response
+
+    with _served(app) as url:
+        dom = _rendered_dom(url, tmp_path / "chrome-profile")
+
+    assert ">响应损坏</span>" in dom
+    assert f'data-run-id="{run_id}"' not in dom
+    assert '<code id="harness-cursor">0</code>' in dom
+
+
 def test_browser_revalidates_cached_events_before_rendering_them(
     tmp_path: Path,
     monkeypatch,
@@ -2840,8 +3122,10 @@ def test_browser_revalidates_cached_events_before_rendering_them(
         second_dom = _rendered_dom(url, profile)
 
     assert 'data-event-id="1"' in first_dom
+    assert 'data-run-id="12345678-1234-4234-9234-123456789abc"' in first_dom
     assert ">历史损坏</span>" in second_dom
     assert 'data-event-id="1"' not in second_dom
+    assert 'data-run-id="12345678-1234-4234-9234-123456789abc"' not in second_dom
 
 
 def test_browser_does_not_treat_an_empty_cache_as_authoritative_history(

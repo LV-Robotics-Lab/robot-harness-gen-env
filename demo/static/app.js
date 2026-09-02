@@ -22,6 +22,10 @@ const state = {
 };
 
 const $ = (selector) => document.querySelector(selector);
+const harnessRunBoard = window.HarnessRunBoard.mount({
+  root: $('#harness-run-board'),
+  onInspect: (runId) => selectHarnessRun(runId),
+});
 const artifactUrl = (job, path) => `/api/jobs/${job.job_id}/artifacts/${path.split('/').map(encodeURIComponent).join('/')}`;
 const harnessCachePrefix = 'robot-harness.workbench-event-cache.v1';
 const harnessCacheKey = () => `${harnessCachePrefix}:${state.harnessRunId || 'all'}`;
@@ -1502,6 +1506,10 @@ function renderHarnessEvents() {
     list.appendChild(empty);
   }
   $('#harness-cursor').textContent = String(state.harnessCursor);
+  harnessRunBoard.render({
+    events: state.harnessEvents,
+    selectedRunId: state.harnessRunId,
+  });
 }
 
 async function loadHarnessEvents() {

@@ -115,6 +115,30 @@
         </div>
       </div>
       <p class="feed-note" id="harness-feed-message">只显示执行代码已经提交到 Harness journal 的真实事件。</p>
+      <section class="run-activity-board" id="harness-run-board" aria-labelledby="harness-run-board-title">
+        <div class="run-activity-heading">
+          <h3 id="harness-run-board-title">最近已提交活动</h3>
+          <span>卡片只投影当前可见事件；选择后从 journal 重放该 run</span>
+        </div>
+        <div class="run-activity-lanes">
+          <section data-run-lane="compile" aria-labelledby="harness-run-lane-compile">
+            <h4 id="harness-run-lane-compile">Compile</h4>
+            <ol data-run-lane-list="compile"></ol>
+          </section>
+          <section data-run-lane="replay" aria-labelledby="harness-run-lane-replay">
+            <h4 id="harness-run-lane-replay">Replay</h4>
+            <ol data-run-lane-list="replay"></ol>
+          </section>
+          <section data-run-lane="validate" aria-labelledby="harness-run-lane-validate">
+            <h4 id="harness-run-lane-validate">Validate</h4>
+            <ol data-run-lane-list="validate"></ol>
+          </section>
+          <section data-run-lane="other" aria-labelledby="harness-run-lane-other">
+            <h4 id="harness-run-lane-other">Other</h4>
+            <ol data-run-lane-list="other"></ol>
+          </section>
+        </div>
+      </section>
       <form class="harness-filter" id="harness-filter-form">
         <label for="harness-run-filter">Run ID</label>
         <input id="harness-run-filter" name="harness_run" type="text" autocomplete="off" spellcheck="false" placeholder="全部 run，或输入 UUID">
@@ -273,6 +297,7 @@
   </main>
 
   <script src="/static/vendor/lucide.min.js"></script>
+  <script src="/static/workbench_run_board.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>

@@ -180,6 +180,23 @@ button svg { width: 17px; height: 17px; stroke-width: 1.8; }
 .harness-filter label { color: var(--muted); font: 700 10px/1 ui-monospace, "SFMono-Regular", Consolas, monospace; text-transform: uppercase; }
 .harness-filter input { min-width: 0; height: 38px; padding: 7px 9px; font: 11px/1 ui-monospace, "SFMono-Regular", Consolas, monospace; }
 .event-feed-meta { justify-content: space-between; padding: 8px 10px; color: var(--muted); background: #eff0eb; border: 1px solid var(--line); font-size: 11px; }
+.run-activity-board { margin: 16px 0; padding: 14px; border: 1px solid var(--line); background: #f8f8f4; }
+.run-activity-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.run-activity-heading h3 { margin: 0; font-size: 13px; }
+.run-activity-heading span { color: var(--muted); font-size: 10px; }
+.run-activity-lanes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.run-activity-lanes > section { min-width: 0; margin-top: 0; padding: 0; background: transparent; border: 0; }
+.run-activity-lanes h4 { margin: 0 0 7px; font-size: 11px; text-transform: uppercase; }
+.run-activity-lanes ol { margin: 0; padding: 0; list-style: none; }
+.run-activity-lanes li + li { margin-top: 7px; }
+.run-activity-card { width: 100%; padding: 9px; display: grid; gap: 4px; color: var(--ink); text-align: left; background: #fff; border: 1px solid var(--line); cursor: pointer; }
+.run-activity-card:hover, .run-activity-card[aria-current="true"] { border-color: var(--signal); }
+.run-activity-card:focus { border-color: var(--signal); outline: 2px solid var(--signal); outline-offset: 2px; }
+.run-activity-card strong, .run-activity-card span, .run-activity-card small { overflow-wrap: anywhere; }
+.run-activity-card strong { font: 700 10px/1.4 ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.run-activity-card span { font-size: 11px; }
+.run-activity-card small, .run-activity-empty { color: var(--muted); font-size: 9px; }
+.run-activity-empty { padding: 8px; border: 1px dashed var(--line); }
 .event-feed-meta code, .event-details code { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; }
 .event-timeline { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-top: 0; }
 .event-item { padding: 12px 14px; border-bottom: 1px solid var(--line); border-left: 3px solid var(--warning); }
@@ -277,6 +294,8 @@ button svg { width: 17px; height: 17px; stroke-width: 1.8; }
   .pipeline li:last-child { border-bottom: 0; }
   .history-item { align-items: flex-start; flex-direction: column; }
   .history-copy strong { white-space: normal; }
+  .run-activity-heading { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .run-activity-lanes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .event-heading { align-items: flex-start; flex-wrap: wrap; }
   .event-heading strong { flex-basis: calc(100% - 54px); }
   .harness-filter { grid-template-columns: 1fr 1fr; }
