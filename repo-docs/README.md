@@ -26,6 +26,7 @@
 | 理解如何记录并仅凭 artifact 复核本地 snapshot summary | [System 2 Replay Snapshot Assessment](modules/system2-replay-snapshot-assessment.md) | acquisition-only recorder、同 CAS ref-only verifier、exact summary 对账与非来源权威/非状态推进边界 |
 | 理解本地 typed Qwen 如何受限地执行可见语义评审 | [Local typed Qwen 可见 Provider](modules/vlm-visible-provider.md) | A1/A2 映射、严格离线 backend、内容绑定、零实跑预检与未授权边界 |
 | 理解 Workbench 如何浏览已提交的运行活动 | [Workbench 运行活动板](modules/workbench-run-activity.md) | validated current feed 的四栏只读投影、run 筛选重读、焦点保留与 identity drift fail-closed 边界 |
+| 理解 Workbench 如何持久索引并在重启后重验 replay assessment | [Workbench Replay Assessment 持久索引](modules/workbench-replay-assessment-index.md) | 深 `record(acquisition)` / `inspect(run_id)` seam、SQLite/CAS 绑定、frozen view 与尚无 route/UI 的边界 |
 | 理解平台层如何组合旧工作区与外部项目 | [Self-Improving 平台](modules/self-improving-platform.md) | 稳定核心、编排层、资产层、适配层、历史层与子模块的边界 |
 | 在 Jingxiang 仿真机上开发与协作 | [仿真组工作区协作](workspace-collaboration.md) | 个人目录、`worktree/<人名>` 分支、共享 `main` 与本地大文件的边界 |
 | 审计本指南每条主张背后的源码证据 | [证据底座](references/source-evidence.md) | 三轮遍历、claim/evidence/confidence/caveat 与被消费者 |

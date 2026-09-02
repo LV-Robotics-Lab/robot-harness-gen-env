@@ -1,0 +1,297 @@
+{
+  "schema_version": "harness.workbench_replay_assessment_index_evidence.v1",
+  "recorded_on": "2026-09-03",
+  "baseline_commit": "e046731ef3017b4aa3e646927105df30640bf2b7",
+  "scope": "workbench_local_replay_snapshot_assessment_index",
+  "status": "local_typed_fixture_index_contract_verified_route_and_ui_not_implemented",
+  "frozen_files": [
+    {
+      "bytes": 27005,
+      "lines": 674,
+      "path": "demo/harness_replay_assessment.py",
+      "sha256": "7bb72c5fef033e52570249918dd957d721cd8a239802faa55dec57922421ffe2"
+    },
+    {
+      "bytes": 63971,
+      "lines": 1860,
+      "path": "tests/demo/test_harness_replay_assessment.py",
+      "sha256": "4a2068a58bb9268422f21416fb43883f6075119ea4fa0c167d9ae087f347a64c"
+    }
+  ],
+  "workspace_boundary": {
+    "worktree_clean": false,
+    "scoped_files": [
+      "demo/harness_replay_assessment.py",
+      "tests/demo/test_harness_replay_assessment.py",
+      "docs/evidence/workbench-replay-assessment-index-20260903.md",
+      "docs/evidence/workbench-replay-assessment-index-20260903.json",
+      "repo-docs/modules/workbench-replay-assessment-index.md",
+      "repo-docs/README.md"
+    ],
+    "unrelated_preexisting_or_parallel_changes_present": true,
+    "unrelated_changes_preserved": true,
+    "verification_observed_on_shared_dirty_worktree_snapshot": true,
+    "verification_attributed_to_clean_baseline_plus_slice": false,
+    "full_repository_cleanliness_claimed": false,
+    "full_repository_test_suite_claimed": false
+  },
+  "public_interface": {
+    "type": "demo.harness_replay_assessment.WorkbenchReplayAssessment",
+    "constructor_inputs": [
+      "journal_path: Path",
+      "artifact_root: Path",
+      "scratch_parent: Path",
+      "busy_timeout_ms: int = 5000"
+    ],
+    "record": {
+      "signature": "record(*, acquisition: System2ReplayEvidenceAcquisitionResult) -> WorkbenchReplayAssessmentView",
+      "accepts_exact_acquisition_type": true,
+      "owns_recorder_then_verifier_orchestration": true
+    },
+    "inspect": {
+      "signature": "inspect(*, run_id: UUID) -> WorkbenchReplayAssessmentView",
+      "requires_acquisition": false,
+      "works_after_process_restart": true
+    },
+    "http_route_implemented": false,
+    "browser_ui_implemented": false
+  },
+  "deep_module": {
+    "record_sequence": [
+      "canonicalize configured SQLite journal, CAS root, and scratch parent",
+      "require the acquisition locators and exact typed fields to match that configured authority",
+      "read Invocation, terminal RunState, and complete EventPage from the shared SQLite authority",
+      "compare the durable authority and strict Text2EnvReplayOutput with the supplied acquisition before CAS writes",
+      "call the public System2ReplaySnapshotAssessmentRecorder",
+      "call the public artifact-only System2ReplaySnapshotAssessmentVerifier against the same CAS",
+      "re-read and exactly compare the durable authority immediately before index commit",
+      "bind assessment run metadata and runtime/snapshot refs to Invocation, RunState, and terminal output",
+      "project the narrow public view and commit the immutable SQLite index row last"
+    ],
+    "inspect_sequence": [
+      "read and strictly decode the canonical index row",
+      "re-read Invocation, terminal RunState, and complete EventPage from SQLite",
+      "compare their canonical identities with the private frozen digests",
+      "reconstruct the exact assessment ref from the indexed digest and byte count",
+      "call the public artifact-only verifier against the same CAS",
+      "repeat the assessment-to-run and runtime/snapshot bindings",
+      "re-project the current view and require exact equality with the frozen view"
+    ],
+    "duplicates_snapshot_validation_policy": false,
+    "recorder_or_verifier_injection_surface": false
+  },
+  "durable_index": {
+    "storage": "shared SQLite journal database",
+    "table": "workbench_replay_snapshot_assessments",
+    "row_key": "run_id",
+    "payload_schema": "harness.workbench_replay_snapshot_assessment_index.v1",
+    "payload_is_canonical_json_blob": true,
+    "payload_sha256_verified_on_read": true,
+    "private_fields": [
+      "view",
+      "invocation_sha256",
+      "run_state_sha256",
+      "event_page_sha256"
+    ],
+    "invocation_model_sha256_covers_exact_typed_model": true,
+    "run_state_digest_covers_exact_typed_model": true,
+    "event_page_digest_covers_events_and_page_cursor": true,
+    "persists_host_paths": false,
+    "commit_last": true,
+    "cross_store_transaction_or_rollback_claimed": false,
+    "same_run_same_index_is_idempotent": true,
+    "same_run_different_index_is_conflict": true
+  },
+  "public_view": {
+    "type": "WorkbenchReplayAssessmentView",
+    "schema_version": "harness.workbench_replay_snapshot_assessment.v1",
+    "path_free": true,
+    "fields": [
+      "schema_version",
+      "run_id",
+      "invocation_digest",
+      "run_status",
+      "terminal_event_count",
+      "terminal_last_event_id",
+      "assessment_sha256",
+      "assessment_bytes",
+      "validation_report_sha256",
+      "validation_report_bytes",
+      "validation_status",
+      "fail_count",
+      "not_run_count"
+    ],
+    "run_status_is_successful_terminal_harness_status": true,
+    "terminal_event_cap": 200,
+    "terminal_last_event_id_is_canonical_decimal_string": true,
+    "artifact_byte_counts_are_canonical_decimal_strings": true,
+    "validation_counts_are_browser_exact_nonnegative_integers": true,
+    "validation_status_and_counts_must_agree": true,
+    "exposes_raw_event_payloads": false,
+    "exposes_artifact_uris_or_contents": false
+  },
+  "authority_bindings": {
+    "configured_journal_and_cas_must_match_acquisition": true,
+    "scratch_and_cas_must_be_disjoint": true,
+    "journal_must_be_outside_cas": true,
+    "requires_one_complete_successful_text2env_replay_history": true,
+    "acquisition_must_equal_persisted_invocation_state_and_event_page": true,
+    "assessment_metadata_bound_to_invocation_and_run_state": [
+      "run_id",
+      "invocation_digest",
+      "skill_id_and_version",
+      "max_attempts",
+      "started_at",
+      "ended_at",
+      "effective_parameters",
+      "dependencies"
+    ],
+    "assessment_artifacts_bound_to_terminal_output": [
+      "runtime_evidence",
+      "runtime_asset_snapshot_manifest"
+    ],
+    "all_terminal_output_refs_must_be_run_state_artifacts": true,
+    "same_cas_assessment_recomputation_required_on_record_and_inspect": true
+  },
+  "validation_semantics": {
+    "pass_is_normal_view": true,
+    "fail_is_normal_view": true,
+    "incomplete_is_normal_view": true,
+    "run_succeeded_does_not_imply_validation_pass": true,
+    "validation_policy_owner": "self_improving.validate_v2_snapshot.ValidateV2SnapshotAdapter",
+    "assessment_verifier_role": "orchestrate adapter recomputation and require an exact report/status/count match"
+  },
+  "failure_taxonomy": {
+    "WorkbenchReplayAssessmentInputError": "invalid fixed interface input or storage-layout configuration",
+    "WorkbenchReplayAssessmentNotFoundError": "no index row exists for the requested run",
+    "WorkbenchReplayAssessmentAuthorityError": "typed SQLite, CAS, acquisition, assessment, or immutable-index identities disagree",
+    "WorkbenchReplayAssessmentUnavailableError": "a required local SQLite or CAS operation cannot complete"
+  },
+  "test_fixture": {
+    "kind": "local_typed_semantic_sqlite_and_cas_fixture",
+    "uses_public_recorder": true,
+    "uses_public_artifact_only_verifier": true,
+    "uses_real_snapshot_adapter_for_pass_and_fail": true,
+    "incomplete_uses_controlled_raw_validator_not_run_branch": true,
+    "real_deployed_dynamic_replay_run": false,
+    "simulator_started": false,
+    "new_physical_measurement_performed": false
+  },
+  "verification": {
+    "targeted": {
+      "command": "pytest -q tests/demo/test_harness_replay_assessment.py --cov=demo.harness_replay_assessment --cov-branch --cov-report=term-missing -W error::ResourceWarning",
+      "passed": 74,
+      "failed": 0,
+      "resource_warning_error_gate": "clean"
+    },
+    "coverage": {
+      "module": "demo/harness_replay_assessment.py",
+      "statements": 259,
+      "statements_missed": 0,
+      "statement_percent": 100,
+      "branches": 68,
+      "partial_branches": 0,
+      "branch_percent": 100
+    },
+    "adjacent_eight_file_regression": {
+      "command": "pytest -q tests/demo/test_harness_replay_assessment.py tests/demo/test_harness_feed.py tests/demo/test_harness_compile.py tests/self_improving/test_system2_replay_snapshot_assessment.py tests/self_improving/test_system2_replay_snapshot_validation.py tests/self_improving/test_system2_replay_evidence_acquisition.py tests/self_improving/harness/test_run_store.py tests/self_improving/harness/test_event_journal.py -W error::ResourceWarning",
+      "passed": 454,
+      "failed": 0,
+      "resource_warning_error_gate": "clean"
+    },
+    "full_demo_suite": {
+      "command": "pytest -q tests/demo",
+      "successful_run_passed": 416,
+      "successful_run_failed": 0,
+      "normal_warnings_allowed": true
+    },
+    "full_demo_resource_warning_probe": {
+      "command": "pytest -q tests/demo -W error::ResourceWarning",
+      "passed": 416,
+      "failed": 0,
+      "warnings": 1,
+      "full_suite_warning_clean_claimed": false,
+      "caveat": {
+        "warning_class": "PytestUnraisableExceptionWarning wrapping ResourceWarning",
+        "source": "tests/demo/test_app.py::test_artifact_route_serves_only_registered_job_files",
+        "detail": "pre-existing preview.png file-response reader warning outside the frozen two-file slice"
+      }
+    },
+    "ruff": {
+      "command": "ruff check demo/harness_replay_assessment.py tests/demo/test_harness_replay_assessment.py",
+      "status": "pass"
+    },
+    "format": {
+      "command": "ruff format --check demo/harness_replay_assessment.py tests/demo/test_harness_replay_assessment.py",
+      "status": "pass"
+    },
+    "source_no_index_diff_check": {
+      "commands": [
+        "git diff --no-index --check /dev/null demo/harness_replay_assessment.py",
+        "git diff --no-index --check /dev/null tests/demo/test_harness_replay_assessment.py"
+      ],
+      "expected_exit_code": 1,
+      "status": "pass",
+      "whitespace_diagnostics": 0
+    },
+    "frozen_code_and_test_pair_independent_reviews": {
+      "scope": "demo/harness_replay_assessment.py and tests/demo/test_harness_replay_assessment.py",
+      "count": 2,
+      "p0": 0,
+      "p1": 0,
+      "p2": 0
+    },
+    "documentation": {
+      "json_parse": {
+        "command": "python -m json.tool docs/evidence/workbench-replay-assessment-index-20260903.json",
+        "status": "pass"
+      },
+      "privacy_scan": {
+        "command": "rg -n -i -e '/h[o]me/' -e '/U[s]ers/' -e 'jingxiang[@]' -e '100[.]112[.]' -e 'api[_-]?[k]ey' -e 'authorization[:]' -e 'bearer[[:space:]]+[A-Za-z0-9]' -e 'to[k]en' -e 'pass[w]ord' -e 'sec[r]et' -e 'session[_ -]?[i]d' -e 'remote[-]control' docs/evidence/workbench-replay-assessment-index-20260903.md docs/evidence/workbench-replay-assessment-index-20260903.json repo-docs/modules/workbench-replay-assessment-index.md repo-docs/README.md",
+        "scope": [
+          "docs/evidence/workbench-replay-assessment-index-20260903.md",
+          "docs/evidence/workbench-replay-assessment-index-20260903.json",
+          "repo-docs/modules/workbench-replay-assessment-index.md",
+          "repo-docs/README.md"
+        ],
+        "expected_exit_code": 1,
+        "findings": 0,
+        "status": "pass"
+      },
+      "readme_tracked_diff_check": {
+        "command": "git diff --check -- repo-docs/README.md",
+        "added_rows": 1,
+        "status": "pass",
+        "whitespace_diagnostics": 0
+      },
+      "new_document_no_index_diff_check": {
+        "commands": [
+          "git diff --no-index --check /dev/null docs/evidence/workbench-replay-assessment-index-20260903.md",
+          "git diff --no-index --check /dev/null docs/evidence/workbench-replay-assessment-index-20260903.json",
+          "git diff --no-index --check /dev/null repo-docs/modules/workbench-replay-assessment-index.md"
+        ],
+        "expected_exit_code": 1,
+        "status": "pass",
+        "whitespace_diagnostics": 0
+      }
+    }
+  },
+  "claim_boundary": {
+    "local_typed_fixture_only": true,
+    "same_local_sqlite_and_cas_binding_only": true,
+    "deployed_replay_executed": false,
+    "physical_measurement_performed": false,
+    "fresh_observation_emitted": false,
+    "world_fact_evidence_emitted": false,
+    "run_event_added": false,
+    "run_state_or_invocation_mutated": false,
+    "receipt_emitted": false,
+    "complete_validate_v2_executed": false,
+    "validation_decision_emitted": false,
+    "publishable_claimed": false,
+    "portable_authority_claimed": false,
+    "dynamic_input_qualified": false,
+    "fixed_factory_qualification_authorizes_dynamic_run": false,
+    "route_or_browser_surface_added": false
+  }
+}
