@@ -21,6 +21,7 @@ dependencies = [
 [project.scripts]
 self-improving-audit = "self_improving.__main__:main"
 robot-harness-compile = "self_improving.harness.compile_cli:main"
+robot-harness-run-qualified-replay = "self_improving.qualified_replay_cli:main"
 
 [project.optional-dependencies]
 demo = ["Flask>=3.0,<4"]

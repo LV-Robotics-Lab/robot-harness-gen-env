@@ -25,6 +25,10 @@ QUALIFICATION_PACKAGES = (
 QUALIFICATION_MEMBERS = ("manifest.json", "qualification.json", "report.json")
 MEDIA_NATIVE_PACKAGE = Path("self_improving/harness/native")
 MEDIA_NATIVE_MEMBERS = ("media_sandbox.c",)
+QUALIFIED_REPLAY_CLI = Path("self_improving/qualified_replay_cli.py")
+QUALIFIED_REPLAY_ENTRY = (
+    "robot-harness-run-qualified-replay = self_improving.qualified_replay_cli:main"
+)
 MEDIA_NATIVE_SHA256 = hashlib.sha256(
     (REPO_ROOT / MEDIA_NATIVE_PACKAGE / MEDIA_NATIVE_MEMBERS[0]).read_bytes()
 ).hexdigest()
@@ -39,6 +43,7 @@ def _copy_build_fixture(destination: Path) -> Path:
         shutil.copy2(REPO_ROOT / relative_path, source / relative_path)
     for relative_path in (
         Path("self_improving/__init__.py"),
+        QUALIFIED_REPLAY_CLI,
         Path("self_improving/registry.py"),
         Path("self_improving/harness/__init__.py"),
         Path("scene_gen/__init__.py"),
@@ -114,11 +119,22 @@ def test_wheel_installs_runtime_source_and_qualification_resources(tmp_path: Pat
         (MEDIA_NATIVE_PACKAGE / name).as_posix() for name in MEDIA_NATIVE_MEMBERS
     }
     with zipfile.ZipFile(wheel) as archive:
-        assert expected_members <= set(archive.namelist())
-        assert expected_harness_resources <= set(archive.namelist())
-        assert expected_scene_gen_resources <= set(archive.namelist())
-        assert expected_qualifications <= set(archive.namelist())
-        assert expected_media_native <= set(archive.namelist())
+        members = set(archive.namelist())
+        assert expected_members <= members
+        assert expected_harness_resources <= members
+        assert expected_scene_gen_resources <= members
+        assert expected_qualifications <= members
+        assert expected_media_native <= members
+        assert (
+            archive.read(QUALIFIED_REPLAY_CLI.as_posix())
+            == (REPO_ROOT / QUALIFIED_REPLAY_CLI).read_bytes()
+        )
+        entry_points_member = next(
+            name for name in members if name.endswith(".dist-info/entry_points.txt")
+        )
+        assert (
+            QUALIFIED_REPLAY_ENTRY in archive.read(entry_points_member).decode("utf-8").splitlines()
+        )
         for member in expected_qualifications:
             assert archive.read(member) == (REPO_ROOT / member).read_bytes()
         for member in expected_harness_resources:
@@ -174,6 +190,9 @@ assert hashlib.sha256(native_source.read_bytes()).hexdigest() == {MEDIA_NATIVE_S
         assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
     for member in expected_media_native:
         assert (installed / member).read_bytes() == (REPO_ROOT / member).read_bytes()
+    assert (installed / QUALIFIED_REPLAY_CLI).read_bytes() == (
+        REPO_ROOT / QUALIFIED_REPLAY_CLI
+    ).read_bytes()
 
 
 def test_packaging_declares_qualified_skill_resources() -> None:
@@ -186,3 +205,7 @@ def test_packaging_declares_qualified_skill_resources() -> None:
     assert "asset_pipeline/active/1_asset_reuse/lib/README.md" in package_data["self_improving"]
     assert "qualified_skills/**/*.json" in package_data["self_improving.harness"]
     assert "native/*.c" in package_data["self_improving.harness"]
+    assert (
+        configuration["project"]["scripts"]["robot-harness-run-qualified-replay"]
+        == "self_improving.qualified_replay_cli:main"
+    )

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import json
 import os
 import re
@@ -7,6 +8,7 @@ import runpy
 import stat
 import subprocess
 import sys
+import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
@@ -321,6 +323,15 @@ def test_wrapper_import_is_inert_and_exposes_the_deep_main() -> None:
     namespace = runpy.run_path(str(SCRIPT), run_name="qualified_replay_wrapper")
 
     assert namespace["main"] is cli.main
+
+
+def test_console_entry_maps_to_the_same_deep_main() -> None:
+    configuration = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    target = configuration["project"]["scripts"]["robot-harness-run-qualified-replay"]
+    module_name, attribute = target.split(":", maxsplit=1)
+
+    assert target == "self_improving.qualified_replay_cli:main"
+    assert getattr(importlib.import_module(module_name), attribute) is cli.main
 
 
 def test_checkout_bootstrap_precedes_a_conflicting_pythonpath_package(
