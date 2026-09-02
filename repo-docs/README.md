@@ -19,6 +19,7 @@
 | 理解运行时物理通过到底验了什么 | [运行时门控](modules/runtime-gates.md) | 接触 fraction、drift、可见性、视频互异帧、嵌套未声明接触等门控 |
 | 理解 Harness 对外记录与 Text2Env Skill 边界 | [Harness Schema Tranche](modules/harness-schema-tranche.md) | 14 个严格 schema、状态机、权威载荷引用、快照漂移门与尚未实现的 Registry/MCP 边界 |
 | 理解 System 2 如何完成一次真实 compile 回合 | [System 2 Compile 回合](modules/system2-compile-turn.md) | 受信输入、planner 证据、qualified compile、ToolResult、状态增量与 history authority 的闭环及失败边界 |
+| 理解 System 2 如何把成功 compile 安全交给 replay | [System 2 Compile → Replay 交接](modules/system2-replay-handoff.md) | history/receipt/state 交叉绑定、canonical 环境包与请求 provenance，以及 prepare-only 边界 |
 | 理解本地 typed Qwen 如何受限地执行可见语义评审 | [Local typed Qwen 可见 Provider](modules/vlm-visible-provider.md) | A1/A2 映射、严格离线 backend、内容绑定、零实跑预检与未授权边界 |
 | 理解 Workbench 如何浏览已提交的运行活动 | [Workbench 运行活动板](modules/workbench-run-activity.md) | validated current feed 的四栏只读投影、run 筛选重读、焦点保留与 identity drift fail-closed 边界 |
 | 理解平台层如何组合旧工作区与外部项目 | [Self-Improving 平台](modules/self-improving-platform.md) | 稳定核心、编排层、资产层、适配层、历史层与子模块的边界 |
