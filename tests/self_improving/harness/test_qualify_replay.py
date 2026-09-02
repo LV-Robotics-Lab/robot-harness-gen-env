@@ -853,9 +853,27 @@ def _completed_fixture(
         ),
     )
     media_records = [
-        {"locator": f"{item.name}.png", **item.model_dump(mode="json")} for item in pngs
+        {
+            "locator": f"{item.name}.png",
+            **{
+                key: value
+                for key, value in item.model_dump(mode="json").items()
+                if key not in {"name", "uri"}
+            },
+        }
+        for item in pngs
     ]
-    media_records.append({"locator": "observer_runtime.mp4", **video.model_dump(mode="json")})
+    media_records.append(
+        {
+            "locator": "observer_runtime.mp4",
+            **{
+                key: value
+                for key, value in video.model_dump(mode="json").items()
+                if key not in {"name", "uri"}
+            },
+        }
+    )
+    media_records.sort(key=lambda item: item["locator"])
     receipt = _put_json(
         store,
         root,
@@ -934,8 +952,18 @@ def _completed_fixture(
                 "expected_sha256": None,
                 "dependency_enforced": True,
                 "configured_snapshot_pin_enforced": False,
-                "manifest": runtime_asset.model_dump(mode="json"),
-                "members": [runtime_member.model_dump(mode="json")],
+                "manifest": {
+                    key: value
+                    for key, value in runtime_asset.model_dump(mode="json").items()
+                    if key != "uri"
+                },
+                "members": [
+                    {
+                        key: value
+                        for key, value in runtime_member.model_dump(mode="json").items()
+                        if key != "uri"
+                    }
+                ],
             },
             "media": media_records,
             "media_verification": {
@@ -1093,11 +1121,12 @@ def _inspection_case(
     resolved_model = ResolvedSceneSpec.model_validate_json(
         store.resolve_digest(resolved_record["sha256"]).read_bytes()
     )
+    runtime_member_payload = b"asset member"
     runtime_member = _put_bytes(
         store,
         tmp_path / "source",
-        name="runtime_asset_member",
-        payload=b"asset member",
+        name=f"runtime_asset_{hashlib.sha256(runtime_member_payload).hexdigest()[:16]}",
+        payload=runtime_member_payload,
         media_type="application/octet-stream",
         schema_version=None,
     )
@@ -2049,7 +2078,14 @@ def test_strict_evidence_deep_failure_branches_are_all_fail_closed(
 
     real_load_json = replay_qualification_module._load_strict_json
 
-    def reject_handler_json(mutator, *, label="handler execution receipt") -> None:
+    def reject_handler_json(
+        mutator,
+        *,
+        label="handler execution receipt",
+        attacked_receipt=receipt,
+    ) -> None:
+        target_label = label
+
         def attacked(path, *, label: str):
             value = real_load_json(path, label=label)
             if label == target_label:
@@ -2057,10 +2093,9 @@ def test_strict_evidence_deep_failure_branches_are_all_fail_closed(
                 mutator(value)
             return value
 
-        target_label = label
         with monkeypatch.context() as scoped:
             scoped.setattr(replay_qualification_module, "_load_strict_json", attacked)
-            reject_run()
+            reject_run(attacked_receipt=attacked_receipt)
 
     reject_handler_json(lambda value: value.update(extra=True))
     reject_handler_json(lambda value: value.update(exit_code=1))
@@ -2077,12 +2112,39 @@ def test_strict_evidence_deep_failure_branches_are_all_fail_closed(
         label="runtime execution diagnostics",
     )
     reject_handler_json(
+        lambda value: value["stdout"].update(bytes=False),
+        label="runtime execution diagnostics",
+    )
+    reject_handler_json(
         lambda value: value["runtime_assets"]["members"][0].update(sha256="invalid")
     )
+    reject_handler_json(
+        lambda value: value["runtime_assets"]["members"][0].update(uri="cas://forbidden")
+    )
+    reject_handler_json(lambda value: value["runtime_assets"]["members"][0].update(name="wrong"))
+    reject_handler_json(lambda value: value["runtime_assets"]["members"][0].update(bytes=True))
+    reject_handler_json(lambda value: value["runtime_assets"]["members"][0].update(media_type=1))
+    reject_handler_json(
+        lambda value: value["runtime_assets"]["members"][0].update(schema_version=1)
+    )
+    reject_handler_json(lambda value: value["runtime_assets"]["members"][0].update(name=1))
+    reject_handler_json(lambda value: value["runtime_assets"]["members"][0].update(sha256=1))
+    reject_handler_json(
+        lambda value: value["runtime_assets"]["manifest"].update(uri="cas://forbidden")
+    )
+    reject_handler_json(lambda value: value["runtime_assets"]["members"].__setitem__(0, None))
+    reject_handler_json(lambda value: value["runtime_assets"].update(dependency={}))
     reject_handler_json(lambda value: value["runtime_assets"].update(self_contained=False))
     reject_handler_json(lambda value: value["media_verification"]["video"].update(frame_count=119))
     reject_handler_json(lambda value: value["media"][0].update(sha256="invalid"))
     reject_handler_json(lambda value: value["media"][0].update(locator="wrong.png"))
+    reject_handler_json(lambda value: value["media"][0].update(uri="cas://forbidden"))
+    reject_handler_json(lambda value: value["media"][0].update(name="forbidden"))
+    reject_handler_json(lambda value: value["media"][0].update(bytes=True))
+    reject_handler_json(lambda value: value["media"][0].update(media_type=1))
+    reject_handler_json(lambda value: value["media"][0].update(schema_version=1))
+    reject_handler_json(lambda value: value["media"][0].update(locator=1))
+    reject_handler_json(lambda value: value.update(media=list(reversed(value["media"]))))
     reject_handler_json(lambda value: value["media_verification"].update(pngs=[]))
     reject_handler_json(lambda value: value["media_verification"]["pngs"][0].update(format="JPEG"))
     reject_handler_json(lambda value: value["media_verification"]["video"].update(bytes=0))
@@ -2288,7 +2350,11 @@ def test_strict_evidence_deep_failure_branches_are_all_fail_closed(
         label="handler execution receipt",
     )
     runtime_assets = handler_receipt["runtime_assets"]
-    runtime_manifest_ref = ArtifactRef.model_validate(runtime_assets["manifest"])
+    runtime_manifest_ref = next(
+        item
+        for item in receipt.artifact_closure
+        if item.sha256 == runtime_assets["manifest"]["sha256"]
+    )
     resolved_scene = replay_qualification_module._verify_environment_package(
         store,
         package=package,
@@ -2303,6 +2369,43 @@ def test_strict_evidence_deep_failure_branches_are_all_fail_closed(
             resolved_scene=resolved_scene,
             asset_catalog_sha256=package.asset_catalog.sha256,
         )
+
+    runtime_member_digest = runtime_assets["members"][0]["sha256"]
+    renamed_runtime_member_closure = tuple(
+        item.model_copy(update={"name": "coordinated_runtime_member"})
+        if item.sha256 == runtime_member_digest
+        else item
+        for item in receipt.artifact_closure
+    )
+    renamed_runtime_member_receipt = receipt.model_copy(
+        update={
+            "artifact_closure": renamed_runtime_member_closure,
+            "run_state": receipt.run_state.model_copy(
+                update={"artifacts": renamed_runtime_member_closure}
+            ),
+        }
+    )
+    reject_handler_json(
+        lambda value: value["runtime_assets"]["members"][0].update(
+            name="coordinated_runtime_member"
+        ),
+        attacked_receipt=renamed_runtime_member_receipt,
+    )
+
+    media_digest = handler_receipt["media"][0]["sha256"]
+    renamed_media_closure = tuple(
+        item.model_copy(update={"name": "coordinated_media"})
+        if item.sha256 == media_digest
+        else item
+        for item in receipt.artifact_closure
+    )
+    renamed_media_receipt = receipt.model_copy(
+        update={
+            "artifact_closure": renamed_media_closure,
+            "run_state": receipt.run_state.model_copy(update={"artifacts": renamed_media_closure}),
+        }
+    )
+    reject_handler_json(lambda value: None, attacked_receipt=renamed_media_receipt)
 
 
 def test_real_check_builder_rereads_receipts_transcripts_media_physics_and_cas(

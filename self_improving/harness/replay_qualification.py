@@ -1741,14 +1741,25 @@ def _verify_run_evidence(
         label="runtime asset manifest",
     )
     try:
-        member_refs = tuple(ArtifactRef.model_validate(item) for item in member_records)
-        runtime_asset_manifest_ref = ArtifactRef.model_validate(manifest_record)
         runtime_asset_dependency = DependencyRef.model_validate(runtime_assets.get("dependency"))
     except ValidationError as error:
         raise ReplayQualificationError(
             "invalid_replay_evidence",
-            "runtime asset receipt identities are not typed",
+            "runtime asset receipt dependency is not typed",
         ) from error
+    runtime_asset_manifest_ref = _closure_ref_from_named_identity(
+        manifest_record,
+        by_digest,
+        label="runtime asset manifest",
+    )
+    member_refs = tuple(
+        _closure_ref_from_named_identity(
+            _require_object(item, label="runtime asset member"),
+            by_digest,
+            label="runtime asset member",
+        )
+        for item in member_records
+    )
     if (
         set(runtime_assets)
         != {
@@ -1765,8 +1776,16 @@ def _verify_run_evidence(
         or runtime_assets.get("expected_sha256") is not None
         or runtime_assets.get("configured_snapshot_pin_enforced") is not False
         or runtime_asset_manifest_ref != by_digest[execution.runtime_asset_manifest_sha256]
+        or runtime_asset_manifest_ref.name != "runtime_asset_snapshot"
+        or runtime_asset_manifest_ref.media_type != "application/json"
+        or runtime_asset_manifest_ref.schema_version != "harness.runtime_asset_snapshot.v1"
         or runtime_asset_dependency != dependencies_by_name[REPLAY_RUNTIME_ASSET_DEPENDENCY]
-        or any(item.sha256 not in by_digest for item in member_refs)
+        or any(
+            item.name != f"runtime_asset_{item.sha256[:16]}"
+            or item.media_type != "application/octet-stream"
+            or item.schema_version is not None
+            for item in member_refs
+        )
         or len(member_refs) != runtime_asset_snapshot.member_count
     ):
         _evidence_mismatch("runtime asset manifest and members are not closure-bound")
@@ -1827,23 +1846,22 @@ def _verify_run_evidence(
     for record in media_records:
         value = _require_object(record, label="receipt media record")
         locator = value.get("locator")
-        try:
-            ref = ArtifactRef.model_validate(
-                {key: nested for key, nested in value.items() if key != "locator"}
-            )
-        except ValidationError as error:
-            raise ReplayQualificationError(
-                "invalid_replay_evidence",
-                "receipt media record is not a typed artifact identity",
-            ) from error
+        ref = _closure_ref_from_artifact_identity(
+            {key: nested for key, nested in value.items() if key != "locator"},
+            by_digest,
+            label="receipt media artifact",
+        )
+        expected_media_type = "video/mp4" if locator == "observer_runtime.mp4" else "image/png"
         if (
-            not isinstance(locator, str)
+            type(locator) is not str
             or locator in media_by_locator
-            or ref.sha256 not in by_digest
+            or ref.name != Path(locator).stem
+            or ref.media_type != expected_media_type
+            or ref.schema_version is not None
         ):
             _evidence_mismatch("receipt media artifacts are not uniquely closure-bound")
         media_by_locator[locator] = ref
-    if tuple(media_by_locator) != RUNTIME_MEDIA_ARTIFACT_PATHS:
+    if tuple(media_by_locator) != tuple(sorted(RUNTIME_MEDIA_ARTIFACT_PATHS)):
         _evidence_mismatch("receipt media artifact set is not the exact runtime output set")
     png_facts = _require_array(media_verification.get("pngs"), label="decoded PNG facts")
     if len(png_facts) != len(RUNTIME_MEDIA_ARTIFACT_PATHS) - 1:
@@ -2342,12 +2360,58 @@ def _identity_document_sha256(value: Any) -> str:
 
 
 def _artifact_identity_matches(value: dict[str, Any], artifact: ArtifactRef) -> bool:
-    return set(value) == {"sha256", "bytes", "media_type", "schema_version"} and value == {
-        "sha256": artifact.sha256,
-        "bytes": artifact.bytes,
-        "media_type": artifact.media_type,
-        "schema_version": artifact.schema_version,
-    }
+    return (
+        set(value) == {"sha256", "bytes", "media_type", "schema_version"}
+        and type(value.get("sha256")) is str
+        and type(value.get("bytes")) is int
+        and type(value.get("media_type")) is str
+        and (value.get("schema_version") is None or type(value.get("schema_version")) is str)
+        and value
+        == {
+            "sha256": artifact.sha256,
+            "bytes": artifact.bytes,
+            "media_type": artifact.media_type,
+            "schema_version": artifact.schema_version,
+        }
+    )
+
+
+def _closure_ref_from_artifact_identity(
+    value: dict[str, Any],
+    by_digest: dict[str, ArtifactRef],
+    *,
+    label: str,
+) -> ArtifactRef:
+    if (
+        set(value) != {"sha256", "bytes", "media_type", "schema_version"}
+        or type(value.get("sha256")) is not str
+    ):
+        _evidence_mismatch(f"{label} identity has an open or invalid shape")
+    artifact = by_digest.get(value["sha256"])
+    if artifact is None or not _artifact_identity_matches(value, artifact):
+        _evidence_mismatch(f"{label} identity is not bound to the run artifact closure")
+    return artifact
+
+
+def _closure_ref_from_named_identity(
+    value: dict[str, Any],
+    by_digest: dict[str, ArtifactRef],
+    *,
+    label: str,
+) -> ArtifactRef:
+    if (
+        set(value) != {"name", "sha256", "bytes", "media_type", "schema_version"}
+        or type(value.get("name")) is not str
+    ):
+        _evidence_mismatch(f"{label} identity has an open or invalid shape")
+    artifact = _closure_ref_from_artifact_identity(
+        {key: nested for key, nested in value.items() if key != "name"},
+        by_digest,
+        label=label,
+    )
+    if value["name"] != artifact.name:
+        _evidence_mismatch(f"{label} identity is not bound to the run artifact closure")
+    return artifact
 
 
 def _valid_sandbox_metrics(value: Any) -> bool:

@@ -885,7 +885,38 @@ def test_complete_replay_publishes_bound_receipt_and_keeps_physical_failure(
     assert receipt["runtime_assets"]["manifest"]["sha256"] == (
         job.expected_runtime_asset_snapshot_sha256
     )
+    locator_free_named_identity_fields = {
+        "name",
+        "sha256",
+        "bytes",
+        "media_type",
+        "schema_version",
+    }
+    assert set(receipt["runtime_assets"]["manifest"]) == locator_free_named_identity_fields
+    assert receipt["runtime_assets"]["manifest"]["name"] == "runtime_asset_snapshot"
+    assert receipt["runtime_assets"]["manifest"]["media_type"] == "application/json"
+    assert (
+        receipt["runtime_assets"]["manifest"]["schema_version"]
+        == "harness.runtime_asset_snapshot.v1"
+    )
     assert receipt["runtime_assets"]["members"]
+    assert all(
+        set(item) == locator_free_named_identity_fields
+        for item in receipt["runtime_assets"]["members"]
+    )
+    assert all(
+        item["name"] == f"runtime_asset_{item['sha256'][:16]}"
+        and item["media_type"] == "application/octet-stream"
+        and item["schema_version"] is None
+        for item in receipt["runtime_assets"]["members"]
+    )
+    assert all(
+        set(item) == {"locator", "sha256", "bytes", "media_type", "schema_version"}
+        for item in receipt["media"]
+    )
+    receipt_media_locators = [item["locator"] for item in receipt["media"]]
+    assert receipt_media_locators == sorted(receipt_media_locators)
+    assert set(receipt_media_locators).issubset(RUNTIME_MEDIA_ARTIFACT_PATHS)
     assert receipt["handler_configuration"]["dependency"] == (
         _handler(tmp_path / "identity", fixture, executor).dependency_identity.model_dump(
             mode="json"
