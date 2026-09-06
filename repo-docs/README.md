@@ -9,6 +9,8 @@
 | 读者目标 | 从这里开始 | 读完后获得什么 |
 | --- | --- | --- |
 | 一气走通编译 + 回放主路径 | [一条真实路径](walkthroughs/one-real-run.md) | 一条 prompt 从入口到 `runtime_validation_report.json` 的行为模型，含真实失败分支 |
+| 实际调用 compile、配置参数和查找输出 | [Text2Env compile 使用手册](compile-api-guide.md) | catalog 构建、CLI/Python API、输出目录、失败语义，以及 replay/validate 复现命令 |
+| 查看 20 条完整环境 compile 实跑 | [2026-09-06 v3 验收报告](../docs/evidence/compile-environment-acceptance-20260906-v3.md) | 10 条生成、5 条精确复用、5 条本地候选复用的环境/CAS/媒体证据，以及上游 ACDC 未运行的边界 |
 | 按目录找改动入口与验证点 | [代码地图](code-map.md) | 在范围内每个源码目录的职责、关键符号、与主路径的关系、攻击测试所在 |
 | 理解为什么解析器有界、能带什么不能带什么 | [受限解析](modules/bounded-parser.md) | 词典 + 正则的提取规则、prompt 边界拒绝、与 schema 的衔接 |
 | 理解类型化契约如何门控下游 | [类型化场景契约](modules/scene-contract.md) | `SceneSpec`/`ResolvedSceneSpec` 的 frozen 严格模型、跨字段不变量、digest |
