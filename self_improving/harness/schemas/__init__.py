@@ -50,6 +50,13 @@ from .text2env_validate_v2 import (
     Text2EnvValidateV2Input,
     Text2EnvValidateV2Output,
 )
+from .replay_vlm import (
+    REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID,
+    REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID,
+    REPLAY_VLM_ASSESSMENT_SCHEMA_VERSION,
+    ReplayVlmAssessmentInput,
+    ReplayVlmAssessmentOutput,
+)
 
 __all__ = [
     "ARTIFACT_REF_SCHEMA_ID",
@@ -57,6 +64,9 @@ __all__ = [
     "ENVIRONMENT_PACKAGE_SCHEMA_ID",
     "EVENT_SCHEMA_ID",
     "RUN_STATE_SCHEMA_ID",
+    "REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID",
+    "REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID",
+    "REPLAY_VLM_ASSESSMENT_SCHEMA_VERSION",
     "SKILL_DESCRIPTOR_SCHEMA_ID",
     "SKILL_DESCRIPTOR_V2_SCHEMA_ID",
     "SKILL_INVOCATION_SCHEMA_ID",
@@ -82,6 +92,8 @@ __all__ = [
     "RegisteredSkillDescriptor",
     "RunState",
     "RunStatus",
+    "ReplayVlmAssessmentInput",
+    "ReplayVlmAssessmentOutput",
     "RuntimeConfig",
     "SkillDescriptor",
     "SkillDescriptorV2",

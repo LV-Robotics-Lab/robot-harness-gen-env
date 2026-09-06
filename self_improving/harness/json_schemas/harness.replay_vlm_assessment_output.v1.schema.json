@@ -1,0 +1,99 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "$id": "harness.artifact_ref.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.replay_vlm_assessment_output.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Point to the immutable advisory receipt produced by the VLM.",
+  "properties": {
+    "advisory_status": {
+      "enum": [
+        "pass",
+        "fail",
+        "abstain",
+        "format_invalid"
+      ],
+      "title": "Advisory Status",
+      "type": "string"
+    },
+    "assessment": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "claims_physical_pass": {
+      "const": false,
+      "default": false,
+      "title": "Claims Physical Pass",
+      "type": "boolean"
+    },
+    "replay_run_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "title": "Replay Run Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "replay_run_id",
+    "assessment",
+    "advisory_status"
+  ],
+  "title": "ReplayVlmAssessmentOutput",
+  "type": "object"
+}

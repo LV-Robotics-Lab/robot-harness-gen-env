@@ -27,6 +27,8 @@ EXPECTED_SCHEMA_IDS = {
     "harness.blocker.v1",
     "harness.environment_package.v1",
     "harness.event.v1",
+    "harness.replay_vlm_assessment_input.v1",
+    "harness.replay_vlm_assessment_output.v1",
     "harness.run_state.v1",
     "harness.skill_descriptor.v1",
     "harness.skill_descriptor.v2",
