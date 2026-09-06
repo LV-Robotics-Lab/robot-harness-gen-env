@@ -29,6 +29,7 @@ EXPECTED_SCHEMA_IDS = {
     "harness.event.v1",
     "harness.replay_vlm_assessment_input.v1",
     "harness.replay_vlm_assessment_output.v1",
+    "harness.replay_vlm_assessment_output.v2",
     "harness.run_state.v1",
     "harness.skill_descriptor.v1",
     "harness.skill_descriptor.v2",

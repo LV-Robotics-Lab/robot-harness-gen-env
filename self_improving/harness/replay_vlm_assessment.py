@@ -30,7 +30,7 @@ from .schemas import (
     DependencyRef,
     Invocation,
     ReplayVlmAssessmentInput,
-    ReplayVlmAssessmentOutput,
+    ReplayVlmAssessmentOutputV2,
     RunState,
     RunStatus,
     Text2EnvReplayInput,
@@ -38,11 +38,11 @@ from .schemas import (
 )
 from .schemas.replay_vlm import (
     REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID,
-    REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID,
-    REPLAY_VLM_ASSESSMENT_SCHEMA_VERSION,
+    REPLAY_VLM_ASSESSMENT_OUTPUT_V2_SCHEMA_ID,
+    REPLAY_VLM_ASSESSMENT_V2_SCHEMA_VERSION,
 )
 
-REPLAY_VLM_SKILL_REF = "text2env.replay_vlm@0.1.0"
+REPLAY_VLM_SKILL_REF = "text2env.replay_vlm@0.2.0"
 REPLAY_VLM_PROMPT_VERSION = "replay_visible_advisory_v1"
 REPLAY_VLM_PROMPT = """You are reviewing four time-ordered images from one robot simulation replay.
 Use only visible evidence. Do not claim a physical validation pass. Check whether the requested
@@ -69,14 +69,86 @@ class ReplayVlmProviderRequest:
 
 
 @dataclass(frozen=True, slots=True)
-class ReplayVlmProviderResult:
+class ReplayVlmProviderAttempt:
+    attempt: Literal[1, 2]
     advisory_status: Literal["pass", "fail", "abstain", "format_invalid"]
+    prompt_version: str
+    prompt_sha256: str
+    repair_of_sha256: str | None
     raw_response: bytes
     parsed_response: Mapping[str, Any] | None
+    resource_receipt: Mapping[str, Any]
+    format_preservation_receipt: Mapping[str, Any] | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ReplayVlmProviderResult:
+    attempts: tuple[ReplayVlmProviderAttempt, ...]
+    format_repair_prompt: bytes | None
     provider_receipt: Mapping[str, Any]
     model_receipt: Mapping[str, Any]
     resource_receipt: Mapping[str, Any]
     claims_physical_pass: Literal[False] = False
+
+    def __post_init__(self) -> None:
+        if len(self.attempts) not in {1, 2}:
+            raise ValueError("provider must return one or two attempts")
+        if tuple(item.attempt for item in self.attempts) != tuple(
+            range(1, len(self.attempts) + 1)
+        ):
+            raise ValueError("provider attempt numbers must be consecutive from one")
+        first = self.attempts[0]
+        if first.repair_of_sha256 is not None:
+            raise ValueError("the first provider attempt cannot repair an earlier response")
+        if first.format_preservation_receipt is not None:
+            raise ValueError("the first provider attempt cannot have a preservation receipt")
+        if not first.raw_response:
+            raise ValueError("provider attempt raw response must not be empty")
+        if len(self.attempts) == 1:
+            if self.format_repair_prompt is not None:
+                raise ValueError("one provider attempt cannot have a format repair prompt")
+        else:
+            second = self.attempts[1]
+            if first.advisory_status != "format_invalid":
+                raise ValueError(
+                    "a second provider attempt requires a format-invalid first attempt"
+                )
+            if not second.raw_response:
+                raise ValueError("provider attempt raw response must not be empty")
+            if not self.format_repair_prompt:
+                raise ValueError("two provider attempts require one format repair prompt")
+            first_sha256 = hashlib.sha256(first.raw_response).hexdigest()
+            if second.repair_of_sha256 != first_sha256:
+                raise ValueError("format repair is not bound to the first raw response")
+            prompt_sha256 = hashlib.sha256(self.format_repair_prompt).hexdigest()
+            if second.prompt_sha256 != prompt_sha256:
+                raise ValueError("format repair prompt digest does not match its bytes")
+            preservation = second.format_preservation_receipt
+            if (
+                not isinstance(preservation, Mapping)
+                or type(preservation.get("preserved")) is not bool
+            ):
+                raise ValueError("format repair requires a preservation receipt")
+            if not preservation["preserved"] and (
+                second.advisory_status != "format_invalid" or second.parsed_response is not None
+            ):
+                raise ValueError("semantic drift must fail closed as format_invalid")
+        if self.resource_receipt.get("visible_vlm_invocations") != len(self.attempts):
+            raise ValueError("aggregate VLM invocation count does not match attempts")
+        if self.resource_receipt.get("network_calls") != 0:
+            raise ValueError("replay VLM provider must remain offline")
+
+    @property
+    def advisory_status(self) -> Literal["pass", "fail", "abstain", "format_invalid"]:
+        return self.attempts[-1].advisory_status
+
+    @property
+    def raw_response(self) -> bytes:
+        return self.attempts[-1].raw_response
+
+    @property
+    def parsed_response(self) -> Mapping[str, Any] | None:
+        return self.attempts[-1].parsed_response
 
 
 class ReplayVlmProvider(Protocol):
@@ -117,9 +189,9 @@ class ReplayVlmAssessmentApplication:
         self._provider = provider
         self._candidate = QualificationCandidate(
             skill_id="text2env.replay_vlm",
-            version="0.1.0",
+            version="0.2.0",
             input_schema=REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID,
-            output_schema=REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID,
+            output_schema=REPLAY_VLM_ASSESSMENT_OUTPUT_V2_SCHEMA_ID,
             max_attempts=1,
         )
         self._registry = SkillRegistry(
@@ -215,15 +287,63 @@ class ReplayVlmAssessmentApplication:
                 "VLM provider attempted to claim physical validation authority",
                 stage="vlm.inference",
             )
-        raw = _put_bytes(
-            self._artifact_store,
-            result.raw_response,
-            name="replay_vlm_raw_response",
-            media_type="application/json",
-            schema_version=None,
+        first = result.attempts[0]
+        if (
+            first.prompt_version != request.prompt_version
+            or first.prompt_sha256 != request.prompt_sha256
+        ):
+            raise ValueError("provider first attempt does not match the bound prompt")
+        raw_artifacts = tuple(
+            _put_bytes(
+                self._artifact_store,
+                attempt.raw_response,
+                name=f"replay_vlm_raw_response_attempt_{attempt.attempt}",
+                media_type="text/plain",
+                schema_version=None,
+            )
+            for attempt in result.attempts
         )
+        repair_prompt = (
+            _put_bytes(
+                self._artifact_store,
+                result.format_repair_prompt,
+                name="replay_vlm_format_repair_prompt",
+                media_type="text/plain",
+                schema_version="harness.replay_vlm_format_repair_prompt.v1",
+            )
+            if result.format_repair_prompt is not None
+            else None
+        )
+        attempts = []
+        for attempt, raw in zip(result.attempts, raw_artifacts, strict=True):
+            attempts.append(
+                {
+                    "attempt": attempt.attempt,
+                    "advisory_status": attempt.advisory_status,
+                    "prompt_version": attempt.prompt_version,
+                    "prompt_sha256": attempt.prompt_sha256,
+                    "repair_of_sha256": attempt.repair_of_sha256,
+                    "raw_response": raw.model_dump(mode="json"),
+                    "parsed_response": (
+                        _json_copy(attempt.parsed_response, "parsed_response")
+                        if attempt.parsed_response is not None
+                        else None
+                    ),
+                    "resource_receipt": _json_copy(
+                        attempt.resource_receipt, "attempt resource_receipt"
+                    ),
+                    "format_preservation_receipt": (
+                        _json_copy(
+                            attempt.format_preservation_receipt,
+                            "format_preservation_receipt",
+                        )
+                        if attempt.format_preservation_receipt is not None
+                        else None
+                    ),
+                }
+            )
         receipt = {
-            "schema_version": REPLAY_VLM_ASSESSMENT_SCHEMA_VERSION,
+            "schema_version": REPLAY_VLM_ASSESSMENT_V2_SCHEMA_VERSION,
             "assessment_run_id": str(context.run_id),
             "source_replay": {
                 "run_id": value.replay_run_id,
@@ -241,11 +361,9 @@ class ReplayVlmAssessmentApplication:
             "provider_receipt": _json_copy(result.provider_receipt, "provider_receipt"),
             "model_receipt": _json_copy(result.model_receipt, "model_receipt"),
             "resource_receipt": _json_copy(result.resource_receipt, "resource_receipt"),
-            "raw_response": raw.model_dump(mode="json"),
-            "parsed_response": (
-                _json_copy(result.parsed_response, "parsed_response")
-                if result.parsed_response is not None
-                else None
+            "attempts": attempts,
+            "format_repair_prompt": (
+                repair_prompt.model_dump(mode="json") if repair_prompt is not None else None
             ),
             "advisory_status": result.advisory_status,
             "physical_gate_authority": "deterministic_runtime_only",
@@ -256,12 +374,15 @@ class ReplayVlmAssessmentApplication:
             _canonical_json_bytes(receipt),
             name="replay_vlm_assessment",
             media_type="application/json",
-            schema_version=REPLAY_VLM_ASSESSMENT_SCHEMA_VERSION,
+            schema_version=REPLAY_VLM_ASSESSMENT_V2_SCHEMA_VERSION,
         )
-        artifacts = (assessment, raw)
+        trailing_artifacts = raw_artifacts + ((repair_prompt,) if repair_prompt is not None else ())
+        artifacts = (assessment, *trailing_artifacts)
+        if len(result.attempts) == 2:
+            context.emit("vlm.format_fallback.completed", artifact_refs=trailing_artifacts)
         context.emit("vlm.assessment.published", artifact_refs=artifacts)
         return HandlerResult(
-            output=ReplayVlmAssessmentOutput(
+            output=ReplayVlmAssessmentOutputV2(
                 replay_run_id=value.replay_run_id,
                 assessment=assessment,
                 advisory_status=result.advisory_status,
@@ -492,6 +613,7 @@ __all__ = [
     "REPLAY_VLM_SKILL_REF",
     "ReplayVlmAssessmentApplication",
     "ReplayVlmProvider",
+    "ReplayVlmProviderAttempt",
     "ReplayVlmProviderRequest",
     "ReplayVlmProviderResult",
 ]

@@ -15,16 +15,33 @@ from typing import Protocol
 from .replay_vlm_assessment import (
     REPLAY_VLM_PROMPT,
     REPLAY_VLM_PROMPT_VERSION,
+    ReplayVlmProviderAttempt,
     ReplayVlmProviderRequest,
     ReplayVlmProviderResult,
 )
+from .replay_vlm_worker import build_format_preservation_receipt, parse_advisory_response
 from .schemas import DependencyRef
 
 _SHA256 = re.compile(r"[0-9a-f]{64}")
 _REVISION = re.compile(r"[0-9a-f]{40}")
-_WORKER_RESPONSE_SCHEMA = "harness.replay_vlm_worker_response.v1"
+_WORKER_RESPONSE_SCHEMA = "harness.replay_vlm_worker_response.v2"
+_FORMAT_REPAIR_PROMPT_VERSION = "replay_visible_format_repair_v1"
 _MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 _MAX_RAW_RESPONSE_BYTES = 1024 * 1024
+_RESOURCE_FIELDS = (
+    "gpu_time_ms",
+    "peak_vram_mib",
+    "input_tokens",
+    "output_tokens",
+    "network_calls",
+    "remote_paid_calls",
+    "compile_attempts",
+    "fresh_physical_replays",
+    "runtime_steps",
+    "contact_window_steps",
+    "prompt_rewrites",
+    "visible_vlm_invocations",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -180,7 +197,7 @@ class SubprocessQwenReplayVlmProvider:
                     ),
                     DependencyRef(
                         name="replay_vlm.provider",
-                        version="subprocess-qwen-v1",
+                        version="subprocess-qwen-v2",
                         sha256=provider_identity,
                     ),
                     DependencyRef(
@@ -248,12 +265,12 @@ class SubprocessQwenReplayVlmProvider:
             response = json.loads(response_path.read_bytes())
         except json.JSONDecodeError as error:
             raise RuntimeError("Qwen worker response is not valid JSON") from error
-        return _parse_response(response, settings=self._settings)
+        return _parse_response(response, settings=self._settings, request=request)
 
     def _request_document(self, request: ReplayVlmProviderRequest) -> dict[str, object]:
         settings = self._settings
         return {
-            "schema_version": "harness.replay_vlm_worker_request.v1",
+            "schema_version": "harness.replay_vlm_worker_request.v2",
             "assessment_run_id": str(request.assessment_run_id),
             "replay_run_id": str(request.replay_run_id),
             "replay_invocation_digest": request.replay_invocation_digest,
@@ -291,24 +308,104 @@ def _parse_response(
     value: object,
     *,
     settings: QwenReplayVlmProviderSettings,
+    request: ReplayVlmProviderRequest,
 ) -> ReplayVlmProviderResult:
     if not isinstance(value, dict) or value.get("schema_version") != _WORKER_RESPONSE_SCHEMA:
         raise RuntimeError("Qwen worker response schema is invalid")
-    status = value.get("advisory_status")
-    if status not in {"pass", "fail", "abstain", "format_invalid"}:
-        raise RuntimeError("Qwen worker advisory status is invalid")
-    try:
-        raw = base64.b64decode(value.get("raw_response_base64", ""), validate=True)
-    except (TypeError, ValueError) as error:
-        raise RuntimeError("Qwen worker raw response encoding is invalid") from error
-    if not raw or len(raw) > _MAX_RAW_RESPONSE_BYTES:
-        raise RuntimeError("Qwen worker raw response byte count is invalid")
     claims = value.get("claims_physical_pass")
     if claims is not False:
         raise RuntimeError("Qwen worker attempted to claim physical authority")
-    parsed = value.get("parsed_response")
-    if parsed is not None and not isinstance(parsed, dict):
-        raise RuntimeError("Qwen worker parsed response must be an object or null")
+    raw_attempts = value.get("attempts")
+    if not isinstance(raw_attempts, list) or len(raw_attempts) not in {1, 2}:
+        raise RuntimeError("Qwen worker must return one or two attempts")
+    try:
+        repair_prompt = (
+            base64.b64decode(value["format_repair_prompt_base64"], validate=True)
+            if value.get("format_repair_prompt_base64") is not None
+            else None
+        )
+    except (TypeError, ValueError) as error:
+        raise RuntimeError("Qwen worker repair prompt encoding is invalid") from error
+    attempts: list[ReplayVlmProviderAttempt] = []
+    attempt_resources: list[dict[str, object]] = []
+    raw_interpretations: list[tuple[str, dict[str, object] | None]] = []
+    for index, item in enumerate(raw_attempts, start=1):
+        if not isinstance(item, dict) or item.get("attempt") != index:
+            raise RuntimeError("Qwen worker attempt order is invalid")
+        status = item.get("advisory_status")
+        if status not in {"pass", "fail", "abstain", "format_invalid"}:
+            raise RuntimeError("Qwen worker advisory status is invalid")
+        try:
+            raw = base64.b64decode(item.get("raw_response_base64", ""), validate=True)
+        except (TypeError, ValueError) as error:
+            raise RuntimeError("Qwen worker raw response encoding is invalid") from error
+        if not raw or len(raw) > _MAX_RAW_RESPONSE_BYTES:
+            raise RuntimeError("Qwen worker raw response byte count is invalid")
+        parsed = item.get("parsed_response")
+        if parsed is not None and not isinstance(parsed, dict):
+            raise RuntimeError("Qwen worker parsed response must be an object or null")
+        preservation = item.get("format_preservation_receipt")
+        if preservation is not None and not isinstance(preservation, dict):
+            raise RuntimeError("Qwen worker format preservation receipt is invalid")
+        prompt_version = item.get("prompt_version")
+        prompt_sha256 = item.get("prompt_sha256")
+        repair_of_sha256 = item.get("repair_of_sha256")
+        resource = item.get("resource_receipt")
+        if (
+            not isinstance(prompt_version, str)
+            or _SHA256.fullmatch(prompt_sha256 or "") is None
+            or not isinstance(resource, dict)
+        ):
+            raise RuntimeError("Qwen worker attempt receipt is invalid")
+        _validate_resource(resource, expected_invocations=1)
+        attempt_resources.append(resource)
+        raw_interpretations.append(parse_advisory_response(raw))
+        attempts.append(
+            ReplayVlmProviderAttempt(
+                attempt=index,  # type: ignore[arg-type]
+                advisory_status=status,
+                prompt_version=prompt_version,
+                prompt_sha256=prompt_sha256,
+                repair_of_sha256=repair_of_sha256,
+                raw_response=raw,
+                parsed_response=parsed,
+                resource_receipt=resource,
+                format_preservation_receipt=preservation,
+            )
+        )
+    first = attempts[0]
+    if (
+        first.prompt_version != request.prompt_version
+        or first.prompt_sha256 != request.prompt_sha256
+        or first.repair_of_sha256 is not None
+        or first.format_preservation_receipt is not None
+        or (first.advisory_status, first.parsed_response) != raw_interpretations[0]
+    ):
+        raise RuntimeError("Qwen worker first attempt is not bound to the requested prompt")
+    if len(attempts) == 1:
+        if repair_prompt is not None:
+            raise RuntimeError("Qwen worker returned an unused format repair prompt")
+    else:
+        second = attempts[1]
+        expected_preservation = build_format_preservation_receipt(
+            source_raw=first.raw_response,
+            repaired_raw=second.raw_response,
+            repaired=raw_interpretations[1][1],
+        )
+        if expected_preservation["preserved"]:
+            expected_second = raw_interpretations[1]
+        else:
+            expected_second = ("format_invalid", None)
+        if (
+            first.advisory_status != "format_invalid"
+            or not repair_prompt
+            or second.prompt_version != _FORMAT_REPAIR_PROMPT_VERSION
+            or second.repair_of_sha256 != hashlib.sha256(first.raw_response).hexdigest()
+            or second.prompt_sha256 != hashlib.sha256(repair_prompt).hexdigest()
+            or second.format_preservation_receipt != expected_preservation
+            or (second.advisory_status, second.parsed_response) != expected_second
+        ):
+            raise RuntimeError("Qwen worker format repair binding is invalid")
     mappings = []
     for name in ("provider_receipt", "model_receipt", "resource_receipt"):
         item = value.get(name)
@@ -332,17 +429,45 @@ def _parse_response(
     }
     if model_receipt != expected_model_receipt:
         raise RuntimeError("Qwen worker model receipt does not match configured model")
-    if resource.get("visible_vlm_invocations") != 1 or resource.get("network_calls") != 0:
-        raise RuntimeError("Qwen worker resource receipt violates the offline one-call contract")
+    _validate_resource(resource, expected_invocations=len(attempts))
+    expected_resource = {
+        name: (
+            max(_resource_integer(item, name) for item in attempt_resources)
+            if name == "peak_vram_mib"
+            else sum(_resource_integer(item, name) for item in attempt_resources)
+        )
+        for name in _RESOURCE_FIELDS
+    }
+    if resource != expected_resource:
+        raise RuntimeError("Qwen worker aggregate resource receipt does not match attempts")
     return ReplayVlmProviderResult(
-        advisory_status=status,
-        raw_response=raw,
-        parsed_response=parsed,
+        attempts=tuple(attempts),
+        format_repair_prompt=repair_prompt,
         provider_receipt=provider_receipt,
         model_receipt=model_receipt,
         resource_receipt=resource,
         claims_physical_pass=False,
     )
+
+
+def _resource_integer(value: dict[str, object], name: str) -> int:
+    item = value.get(name)
+    if type(item) is not int or item < 0:
+        raise RuntimeError(f"Qwen worker resource {name} must be a nonnegative integer")
+    return item
+
+
+def _validate_resource(value: dict[str, object], *, expected_invocations: int) -> None:
+    if set(value) != set(_RESOURCE_FIELDS):
+        raise RuntimeError("Qwen worker resource receipt fields are invalid")
+    for name in _RESOURCE_FIELDS:
+        _resource_integer(value, name)
+    if (
+        value["visible_vlm_invocations"] != expected_invocations
+        or value["network_calls"] != 0
+        or value["remote_paid_calls"] != 0
+    ):
+        raise RuntimeError("Qwen worker resource receipt violates the offline call contract")
 
 
 def _canonical_json_bytes(value: object) -> bytes:

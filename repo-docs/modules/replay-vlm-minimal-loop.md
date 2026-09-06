@@ -14,13 +14,19 @@ scene。
 
 Qwen 在单独 Python 进程中运行。进程固定 `HF_HUB_OFFLINE=1`、`TRANSFORMERS_OFFLINE=1`，模型
 revision、snapshot manifest、content manifest、roster、prompt 与执行源码都进入 Invocation dependency
-闭包。成功调用后，原始回答和 `harness.replay_vlm_assessment.v1` 收据进入 CAS；事件流依次记录证据
-绑定、推理启动、收据发布和完成。
+闭包。首答符合严格 JSON 时只调用一次；只有首答为 `format_invalid` 才允许一次格式修复。修复提示
+哈希绑定首答原文，并连同两次回答、逐次/汇总资源收据进入 CAS。第二次之后一定停止。
 
-当前版本是 `text2env.replay_vlm@0.1.0` qualification candidate，不是 production Skill。输出字段
-`claims_physical_pass` 被固定为 false；即使模型返回 “pass”，它也只是视觉建议。2026-09-06 的真实
-can-on-plate 调用完成了一次离线 3B 推理，但模型输出带 Markdown fence 且 checks 形状不合约，系统
-如实保存为 `format_invalid`。这证明接线和失败留痕已通，同时说明 prompt fallback 仍是下一项工作。
+当前版本是 `text2env.replay_vlm@0.2.0` qualification candidate，不是 production Skill。输出字段
+`claims_physical_pass` 被固定为 false；即使模型返回 “pass”，它也只是视觉建议。格式修复还有一道
+确定性保持门：不得把首答里的 fail/abstain/review_required 改成 pass，不能证明只改格式就继续记为
+`format_invalid`。
+
+2026-09-06 的真实 can-on-plate 调用恰好走了两次：首答不合约，第二答仍保留嵌套 checks；系统停止
+重试并发布 v2 失败收据，网络调用为 0。这个结果证明重试上限和失败留痕有效，但不证明 3B 模型已经
+稳定学会格式修复。
 
 实跑编号、CAS 路径、模型收据、资源用量和完整命令见
 [`docs/evidence/replay-vlm-minimal-loop-20260906.md`](../../docs/evidence/replay-vlm-minimal-loop-20260906.md)。
+一次格式修复的实现与实跑证据见
+[`docs/evidence/replay-vlm-format-fallback-20260906.md`](../../docs/evidence/replay-vlm-format-fallback-20260906.md)。

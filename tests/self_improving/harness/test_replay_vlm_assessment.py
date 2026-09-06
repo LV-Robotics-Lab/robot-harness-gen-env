@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -19,6 +20,7 @@ from self_improving.harness.package_store import PackageStore
 from self_improving.harness.registry import HandlerResult, SkillRegistry, StaticDependencyResolver
 from self_improving.harness.replay_vlm_assessment import (
     ReplayVlmAssessmentApplication,
+    ReplayVlmProviderAttempt,
     ReplayVlmProviderRequest,
     ReplayVlmProviderResult,
 )
@@ -29,6 +31,7 @@ from self_improving.harness.schemas import (
     EnvironmentPackage,
     ReplayVlmAssessmentInput,
     ReplayVlmAssessmentOutput,
+    ReplayVlmAssessmentOutputV2,
     RunStatus,
     RuntimeConfig,
     SkillDescriptor,
@@ -91,9 +94,19 @@ class _FakeProvider:
     def assess(self, request: ReplayVlmProviderRequest) -> ReplayVlmProviderResult:
         self.requests.append(request)
         return ReplayVlmProviderResult(
-            advisory_status="pass",
-            raw_response=b'{"overall":"pass"}',
-            parsed_response={"overall": "pass"},
+            attempts=(
+                ReplayVlmProviderAttempt(
+                    attempt=1,
+                    advisory_status="pass",
+                    prompt_version=request.prompt_version,
+                    prompt_sha256=request.prompt_sha256,
+                    repair_of_sha256=None,
+                    raw_response=b'{"overall":"pass"}',
+                    parsed_response={"overall": "pass"},
+                    resource_receipt={"visible_vlm_invocations": 1, "network_calls": 0},
+                ),
+            ),
+            format_repair_prompt=None,
             provider_receipt={
                 "provider_id": "tests.fake_visible_provider",
                 "provider_revision": "v1",
@@ -113,13 +126,75 @@ class _AuthorityViolatingProvider(_FakeProvider):
     def assess(self, request: ReplayVlmProviderRequest) -> ReplayVlmProviderResult:
         result = super().assess(request)
         return ReplayVlmProviderResult(
-            advisory_status=result.advisory_status,
-            raw_response=result.raw_response,
-            parsed_response=result.parsed_response,
+            attempts=result.attempts,
+            format_repair_prompt=result.format_repair_prompt,
             provider_receipt=result.provider_receipt,
             model_receipt=result.model_receipt,
             resource_receipt=result.resource_receipt,
             claims_physical_pass=True,  # type: ignore[arg-type]
+        )
+
+
+class _FormatFallbackProvider(_FakeProvider):
+    def assess(self, request: ReplayVlmProviderRequest) -> ReplayVlmProviderResult:
+        self.requests.append(request)
+        repair_prompt = b"Return the previous answer as exact JSON only."
+        first_raw = b"```json\n{bad}\n```"
+        final_parsed = {
+            "checks": {
+                "object_presence": "pass",
+                "penetration_or_floating": "abstain",
+                "overall_prompt_match": "pass",
+            },
+            "overall": "review_required",
+            "explanation": "Objects are visible; physics is not visually certain.",
+        }
+        return ReplayVlmProviderResult(
+            attempts=(
+                ReplayVlmProviderAttempt(
+                    attempt=1,
+                    advisory_status="format_invalid",
+                    prompt_version="replay_visible_advisory_v1",
+                    prompt_sha256=request.prompt_sha256,
+                    repair_of_sha256=None,
+                    raw_response=first_raw,
+                    parsed_response=None,
+                    resource_receipt={
+                        "visible_vlm_invocations": 1,
+                        "network_calls": 0,
+                    },
+                ),
+                ReplayVlmProviderAttempt(
+                    attempt=2,
+                    advisory_status="abstain",
+                    prompt_version="replay_visible_format_repair_v1",
+                    prompt_sha256=hashlib.sha256(repair_prompt).hexdigest(),
+                    repair_of_sha256=hashlib.sha256(first_raw).hexdigest(),
+                    raw_response=json.dumps(final_parsed).encode(),
+                    parsed_response=final_parsed,
+                    resource_receipt={
+                        "visible_vlm_invocations": 1,
+                        "network_calls": 0,
+                    },
+                    format_preservation_receipt={
+                        "verifier_id": "replay_vlm.format_only_preservation.v1",
+                        "preserved": True,
+                    },
+                ),
+            ),
+            format_repair_prompt=repair_prompt,
+            provider_receipt={
+                "provider_id": "tests.fake_visible_provider",
+                "provider_revision": "v1",
+                "production_eligible": False,
+            },
+            model_receipt={
+                "model_id": "Qwen/Qwen2.5-VL-3B-Instruct",
+                "revision": "e" * 40,
+                "model_roster_sha256": "f" * 64,
+            },
+            resource_receipt={"visible_vlm_invocations": 2, "network_calls": 0},
+            claims_physical_pass=False,
         )
 
 
@@ -299,7 +374,7 @@ def test_assessment_reads_verified_replay_images_and_publishes_bound_cas_receipt
     state = application.assess(ReplayVlmAssessmentInput(replay_run_id=str(replay_run_id)))
 
     assert state.status is RunStatus.SUCCEEDED
-    output = ReplayVlmAssessmentOutput.model_validate(state.output)
+    output = ReplayVlmAssessmentOutputV2.model_validate(state.output)
     assert output.replay_run_id == str(replay_run_id)
     assert output.advisory_status == "pass"
     assert output.claims_physical_pass is False
@@ -323,6 +398,8 @@ def test_assessment_reads_verified_replay_images_and_publishes_bound_cas_receipt
     assert receipt["claims_physical_pass"] is False
     assert receipt["resource_receipt"]["visible_vlm_invocations"] == 1
     assert receipt["resource_receipt"]["network_calls"] == 0
+    assert len(receipt["attempts"]) == 1
+    assert receipt["format_repair_prompt"] is None
     assert len(provider.requests) == 1
     assert tuple(item.ref for item in provider.requests[0].images) == replay_output.replay_artifacts
     assert [event.stage for event in state.events] == [
@@ -335,6 +412,60 @@ def test_assessment_reads_verified_replay_images_and_publishes_bound_cas_receipt
     assert state.events[-2].artifact_refs == tuple(state.artifacts)
     assert application.run_state(state.run_id) == state
     assert application.invocation(state.run_id) is not None
+
+
+def test_assessment_v2_preserves_both_answers_and_one_bound_format_repair_prompt(
+    tmp_path: Path,
+) -> None:
+    database = tmp_path / "harness.sqlite3"
+    store = LocalArtifactStore(tmp_path / "cas")
+    journal = SQLiteEventJournal(database)
+    run_store = SQLiteRunStore(database)
+    replay_run_id, _replay_input, _replay_output = _seed_successful_replay(
+        tmp_path, store=store, journal=journal, run_store=run_store
+    )
+    provider = _FormatFallbackProvider()
+    application = ReplayVlmAssessmentApplication(
+        artifact_store=store,
+        event_journal=journal,
+        run_store=run_store,
+        provider=provider,
+        clock=lambda: datetime(2026, 9, 6, 2, tzinfo=timezone.utc),
+        run_id_factory=lambda: UUID("87000000-0000-4000-8000-000000000001"),
+    )
+
+    state = application.assess(ReplayVlmAssessmentInput(replay_run_id=str(replay_run_id)))
+
+    assert state.status is RunStatus.SUCCEEDED
+    assert state.skill_version == "0.2.0"
+    output = ReplayVlmAssessmentOutputV2.model_validate(state.output)
+    assert output.advisory_status == "abstain"
+    assert output.assessment.schema_version == "harness.replay_vlm_assessment.v2"
+    receipt = json.loads(store.resolve(output.assessment).path.read_bytes())
+    assert receipt["schema_version"] == "harness.replay_vlm_assessment.v2"
+    assert [item["attempt"] for item in receipt["attempts"]] == [1, 2]
+    assert [item["advisory_status"] for item in receipt["attempts"]] == [
+        "format_invalid",
+        "abstain",
+    ]
+    assert receipt["attempts"][1]["repair_of_sha256"] == receipt["attempts"][0][
+        "raw_response"
+    ]["sha256"]
+    assert receipt["attempts"][1]["format_preservation_receipt"]["preserved"] is True
+    repair_prompt = receipt["format_repair_prompt"]
+    assert repair_prompt["sha256"] == receipt["attempts"][1]["prompt_sha256"]
+    assert store.resolve_digest(repair_prompt["sha256"]).read_bytes() == (
+        b"Return the previous answer as exact JSON only."
+    )
+    assert receipt["resource_receipt"]["visible_vlm_invocations"] == 2
+    assert [event.stage for event in state.events] == [
+        "qualification_candidate.preflight",
+        "qualification_candidate.vlm.replay_evidence.bound",
+        "qualification_candidate.vlm.inference.started",
+        "qualification_candidate.vlm.format_fallback.completed",
+        "qualification_candidate.vlm.assessment.published",
+        "qualification_candidate.complete",
+    ]
 
 
 def test_assessment_blocks_before_inference_when_replay_does_not_exist(tmp_path: Path) -> None:

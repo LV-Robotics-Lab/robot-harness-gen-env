@@ -24,6 +24,16 @@ from .common import (
     UnknownField,
     ValidationStatus,
 )
+from .replay_vlm import (
+    REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID,
+    REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID,
+    REPLAY_VLM_ASSESSMENT_OUTPUT_V2_SCHEMA_ID,
+    REPLAY_VLM_ASSESSMENT_SCHEMA_VERSION,
+    REPLAY_VLM_ASSESSMENT_V2_SCHEMA_VERSION,
+    ReplayVlmAssessmentInput,
+    ReplayVlmAssessmentOutput,
+    ReplayVlmAssessmentOutputV2,
+)
 from .text2env import (
     ENVIRONMENT_PACKAGE_SCHEMA_ID,
     TEXT2ENV_COMPILE_INPUT_SCHEMA_ID,
@@ -50,13 +60,6 @@ from .text2env_validate_v2 import (
     Text2EnvValidateV2Input,
     Text2EnvValidateV2Output,
 )
-from .replay_vlm import (
-    REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID,
-    REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID,
-    REPLAY_VLM_ASSESSMENT_SCHEMA_VERSION,
-    ReplayVlmAssessmentInput,
-    ReplayVlmAssessmentOutput,
-)
 
 __all__ = [
     "ARTIFACT_REF_SCHEMA_ID",
@@ -66,7 +69,9 @@ __all__ = [
     "RUN_STATE_SCHEMA_ID",
     "REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID",
     "REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID",
+    "REPLAY_VLM_ASSESSMENT_OUTPUT_V2_SCHEMA_ID",
     "REPLAY_VLM_ASSESSMENT_SCHEMA_VERSION",
+    "REPLAY_VLM_ASSESSMENT_V2_SCHEMA_VERSION",
     "SKILL_DESCRIPTOR_SCHEMA_ID",
     "SKILL_DESCRIPTOR_V2_SCHEMA_ID",
     "SKILL_INVOCATION_SCHEMA_ID",
@@ -94,6 +99,7 @@ __all__ = [
     "RunStatus",
     "ReplayVlmAssessmentInput",
     "ReplayVlmAssessmentOutput",
+    "ReplayVlmAssessmentOutputV2",
     "RuntimeConfig",
     "SkillDescriptor",
     "SkillDescriptorV2",

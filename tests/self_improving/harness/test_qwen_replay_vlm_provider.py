@@ -41,13 +41,49 @@ class _FakeProcessRunner:
         request_path = Path(command[command.index("--request") + 1])
         response_path = Path(command[command.index("--response") + 1])
         self.request = json.loads(request_path.read_bytes())
+        resource = {
+            "gpu_time_ms": 0,
+            "peak_vram_mib": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "network_calls": 0,
+            "remote_paid_calls": 0,
+            "compile_attempts": 0,
+            "fresh_physical_replays": 0,
+            "runtime_steps": 0,
+            "contact_window_steps": 0,
+            "prompt_rewrites": 0,
+            "visible_vlm_invocations": 1,
+        }
+        parsed = {
+            "checks": {
+                "object_presence": "pass",
+                "penetration_or_floating": "pass",
+                "overall_prompt_match": "pass",
+            },
+            "overall": "pass",
+            "explanation": "The can is on the plate.",
+        }
         response_path.write_text(
             json.dumps(
                 {
-                    "schema_version": "harness.replay_vlm_worker_response.v1",
-                    "advisory_status": "pass",
-                    "raw_response_base64": base64.b64encode(b'{"overall":"pass"}').decode(),
-                    "parsed_response": {"overall": "pass"},
+                    "schema_version": "harness.replay_vlm_worker_response.v2",
+                    "attempts": [
+                        {
+                            "attempt": 1,
+                            "advisory_status": "pass",
+                            "prompt_version": self.request["prompt_version"],
+                            "prompt_sha256": self.request["prompt_sha256"],
+                            "repair_of_sha256": None,
+                            "raw_response_base64": base64.b64encode(
+                                json.dumps(parsed, sort_keys=True).encode()
+                            ).decode(),
+                            "parsed_response": parsed,
+                            "resource_receipt": resource,
+                            "format_preservation_receipt": None,
+                        }
+                    ],
+                    "format_repair_prompt_base64": None,
                     "provider_receipt": {
                         "provider_id": "vlm_fallback.local_qwen_visible",
                         "production_eligible": False,
@@ -63,10 +99,7 @@ class _FakeProcessRunner:
                         "model_roster_sha256": "8" * 64,
                         "max_new_tokens": 768,
                     },
-                    "resource_receipt": {
-                        "visible_vlm_invocations": 1,
-                        "network_calls": 0,
-                    },
+                    "resource_receipt": resource,
                     "claims_physical_pass": False,
                 },
                 sort_keys=True,
@@ -130,7 +163,7 @@ def test_subprocess_provider_runs_fixed_offline_worker_and_returns_typed_receipt
     result = provider.assess(request)
 
     assert result.advisory_status == "pass"
-    assert result.raw_response == b'{"overall":"pass"}'
+    assert json.loads(result.raw_response) == result.parsed_response
     assert result.claims_physical_pass is False
     assert runner.command is not None
     assert runner.command[:3] == (
@@ -142,6 +175,7 @@ def test_subprocess_provider_runs_fixed_offline_worker_and_returns_typed_receipt
     assert runner.environment["HF_HUB_OFFLINE"] == "1"
     assert runner.environment["TRANSFORMERS_OFFLINE"] == "1"
     assert runner.request is not None
+    assert runner.request["schema_version"] == "harness.replay_vlm_worker_request.v2"
     assert runner.request["network_allowed"] is False
     assert runner.request["prompt_sha256"] == request.prompt_sha256
     assert [item["sha256"] for item in runner.request["images"]] == [

@@ -12,6 +12,8 @@ from .common import ArtifactRef
 REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID = "harness.replay_vlm_assessment_input.v1"
 REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID = "harness.replay_vlm_assessment_output.v1"
 REPLAY_VLM_ASSESSMENT_SCHEMA_VERSION = "harness.replay_vlm_assessment.v1"
+REPLAY_VLM_ASSESSMENT_OUTPUT_V2_SCHEMA_ID = "harness.replay_vlm_assessment_output.v2"
+REPLAY_VLM_ASSESSMENT_V2_SCHEMA_VERSION = "harness.replay_vlm_assessment.v2"
 ReplayRunId = Annotated[
     str,
     Field(
@@ -47,5 +49,25 @@ class ReplayVlmAssessmentOutput(HarnessModel):
         if self.assessment.schema_version != REPLAY_VLM_ASSESSMENT_SCHEMA_VERSION:
             raise ValueError(
                 f"assessment.schema_version must be {REPLAY_VLM_ASSESSMENT_SCHEMA_VERSION!r}"
+            )
+        return self
+
+
+class ReplayVlmAssessmentOutputV2(HarnessModel):
+    """Point to the v2 receipt that preserves one optional format repair."""
+
+    model_config = public_schema_config(REPLAY_VLM_ASSESSMENT_OUTPUT_V2_SCHEMA_ID)
+
+    replay_run_id: ReplayRunId
+    assessment: ArtifactRef
+    advisory_status: Literal["pass", "fail", "abstain", "format_invalid"]
+    claims_physical_pass: Literal[False] = False
+
+    @model_validator(mode="after")
+    def assessment_is_typed(self) -> "ReplayVlmAssessmentOutputV2":
+        if self.assessment.schema_version != REPLAY_VLM_ASSESSMENT_V2_SCHEMA_VERSION:
+            raise ValueError(
+                "assessment.schema_version must be "
+                f"{REPLAY_VLM_ASSESSMENT_V2_SCHEMA_VERSION!r}"
             )
         return self
