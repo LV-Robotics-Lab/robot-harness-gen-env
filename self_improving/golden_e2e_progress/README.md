@@ -10,8 +10,12 @@
 - `TODO.md`：当前 doing/next/blocked/done。
 - `DECISIONS.md`：已经接受的稳定架构决定。
 - `AUDIT.md`：Bingsheng、Gujie、资产债务和 Codex/MCP 的只读审计结论。
+- `DESIGN_OPTIONS.md`：三套 interface 的 depth/locality/seam 比较和推荐混合方案。
+- `SKILL_CONTRACTS.md`：九个 x2env Skills、共享 IR、Genesis profile 和错误合同草案。
 - `SEAMS.md`：TDD 公共 seam；确认前不写功能测试。
 - `AUTORESEARCH_SETUP.md`：实验目标、指标、范围、预算和隔离策略。
+- `ACCEPTANCE.md`：E0–E4 证据等级和最终验收门。
+- `IMPLEMENTATION_PLAN.md`：按 TDD 和独立提交组织的纵向实施顺序。
 - `RESULTS.md`：命令、通过/失败数字、运行证据和不可扩张主张。
 
 ## 每次工作顺序
@@ -26,7 +30,7 @@
 
 ## 当前阶段
 
-`discovery_and_contract_design`
+`contract_confirmation`
 
-当前只允许调研、进度账本和契约设计工作。功能测试与实现须在 `SEAMS.md` 和
-`AUTORESEARCH_SETUP.md` 经用户确认后开始。
+只读审计和第一版契约设计已经完成。当前只允许审阅反馈和契约修订；功能测试与实现须在
+`SEAMS.md` 经用户确认后开始，路由优化循环还须单独确认 `AUTORESEARCH_SETUP.md`。

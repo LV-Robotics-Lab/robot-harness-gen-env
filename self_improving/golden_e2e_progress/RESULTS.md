@@ -59,3 +59,14 @@
 - RoboTwin 827 个 representation primary 中 825 个可按 SHA-256 从本机源恢复，2 个 USD 缺失；
   第三方旧副本只有 27 个资产 cohort 可进入 exact-byte staging。
 - 详细 claim/evidence/caveat 见 `AUDIT.md`。本次审计未修改 Gujie workspace、ledger 或资产字节。
+
+## 2026-09-09 Codex 自动化可用性预检
+
+- 本机：`codex-cli 0.153.4`，提供 `codex mcp`、`codex exec --json` 和 `--output-schema`。
+- 只读、无工具、`--ephemeral` 最小真实 Codex 调用 exit 0，在 6.22 秒内返回精确 JSON
+  `{"codex_preflight":true}`；JSONL 包含 start/turn/agent-message/completion 事件。
+- 此预检只证明当前身份可启动真实 Codex 非交互回合和取得 usage，不证明 MCP 工具调用、视觉理解、
+  路由、Genesis 或 golden E2E。会话 identity 不写入公开进度或 dashboard。
+- 官方 Codex MCP 文档确认 STDIO/Streamable HTTP、server instructions、项目级 config、tool timeout 和
+  per-tool approval 配置；正式证据仍须由当前仓库 MCP server 的 negotiated clientInfo 与 tool-call
+  receipts 对账。
