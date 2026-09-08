@@ -4,15 +4,15 @@
 
 ## Doing
 
-- 调研 `worktree/gujie` x2env 的真实输入、输出、Genesis 接口和运行证据。
-- 调研 162 项历史 ledger 债务及可执行修复路径。
-- 调研 Codex 中枢替换、compile/replay/validate 合链和 MCP adapter seam。
+- 并行形成三套 radically different Skill/MCP interface 设计。
+- 主线程比较接口 depth、locality、证据权威和未来 robot-policy 扩展成本。
+- 细化公共 TDD seam、x2env Skill 合同和 autoresearch 冻结参数。
 
 ## Next
 
-- 汇总三路调研，明确可复用代码与不可接受主张。
-- 并行形成三套 radically different Skill interface 设计。
-- 提交公共 TDD seam 与 autoresearch setup 给用户确认。
+- 把三路调研与三套设计综合成单一实施 spec。
+- 提交公共 TDD seam、资产 staging seam 与 autoresearch setup 给用户确认。
+- 确认后从 workflow identity/receipt tracer bullet 开始逐切片 RED→GREEN。
 
 ## Blocked
 
@@ -25,3 +25,6 @@
 
 - 接受 Codex 同时承担中枢 agent 与视觉判读职责的稳定架构决定。
 - 建立本进度目录和根 `AGENTS.md` 触发入口。
+- 完成 Gujie committed/dirty/runtime 三层 x2env 与 Genesis 审计。
+- 完成历史 162 份 ledger、4,082 条违规和可恢复字节审计。
+- 完成现有 compile/replay/validate、System 2、Codex/MCP 同-run 断点审计。

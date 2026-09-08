@@ -4,9 +4,9 @@
 
 - [x] 记录 Codex 取代独立 System 2 中枢和独立 VLM 的架构决定。
 - [x] 创建持久进度账本并从根 `AGENTS.md` 建立入口。
-- [ ] 审计 `worktree/gujie` 的 x2env 输入、输出、Genesis 资产/场景格式和可运行证据。
-- [ ] 审计历史资产债务、可迁移数据、真实 settle 缺口和现有修复工具。
-- [ ] 审计当前 compile/replay/validate、System 2、MCP、observation、diagnosis 和 promotion seam。
+- [x] 审计 `worktree/gujie` 的 x2env 输入、输出、Genesis 资产/场景格式和可运行证据。
+- [x] 审计历史资产债务、可迁移数据、真实 settle 缺口和现有修复工具。
+- [x] 审计当前 compile/replay/validate、System 2、MCP、observation、diagnosis 和 promotion seam。
 
 ## G1：契约与测试 seam
 

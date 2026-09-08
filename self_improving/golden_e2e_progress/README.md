@@ -4,6 +4,16 @@
 任务、待办、稳定决策、测试 seam、实验参数和已复核结果；不替代 `docs/evidence/` 的不可变运行
 证据，也不把 render 当成物理验证。
 
+## 文件地图
+
+- `TASKS.md`：阶段验收清单。
+- `TODO.md`：当前 doing/next/blocked/done。
+- `DECISIONS.md`：已经接受的稳定架构决定。
+- `AUDIT.md`：Bingsheng、Gujie、资产债务和 Codex/MCP 的只读审计结论。
+- `SEAMS.md`：TDD 公共 seam；确认前不写功能测试。
+- `AUTORESEARCH_SETUP.md`：实验目标、指标、范围、预算和隔离策略。
+- `RESULTS.md`：命令、通过/失败数字、运行证据和不可扩张主张。
+
 ## 每次工作顺序
 
 1. 先读 `DECISIONS.md`、`TASKS.md` 和 `TODO.md`。
