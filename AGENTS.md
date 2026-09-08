@@ -42,6 +42,12 @@ Repo-docs sync triggers（在最终回复前先跑 sync gate）：仓库问题�
 
 This repo's `repo-docs/` guide is reader-facing Chinese documentation. When updating reader-facing guide pages, use `repo-docs-zh` when available; keep Chinese reader handles in the prose and preserve exact source identifiers for lookup.
 
+## Golden E2E workstream
+
+When working on x2env Skills, Codex orchestration, MCP adaptation, asset-debt repair, or the
+Genesis golden line, read `self_improving/golden_e2e_progress/README.md` first and update its live
+task, TODO, decision, and result ledgers before reporting progress.
+
 ## For AI Agents（给 AI agent 的提示）
 
 ### Working In This Directory（在本目录工作）
