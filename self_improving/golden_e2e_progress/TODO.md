@@ -4,13 +4,13 @@
 
 ## Doing
 
-- P0：分类旧 `text2env.replay@1.0.0` qualification 的 clean-source 漂移；最终只能由新真实运行重签，
-  不能改 hash 装绿。
-- P1：复核 actor-neutral workflow identity/receipt 的第一个 `GoldenRunHarness.start()` tracer。
+- P1：继续 `GoldenRunHarness.start()` 的幂等重试、冲突 key 与持久化恢复 tracer；首个 actor-neutral
+  workflow identity/receipt 纵切已完成。
 
 ## Next
 
-- 完成 P0 后，从 P1 workflow identity/receipt tracer bullet 开始逐切片 RED→GREEN。
+- P2：在 actor-neutral v2 receipt/state-delta 上接入 exact qualified compile → replay 两步调度；不得复用
+  planner-specific v1 receipt 字段冒充外部 Codex/MCP 调用。
 - 在 P4 前冻结官方 MCP dependency/runtime lock，不在实验循环中安装依赖。
 
 ## Blocked
@@ -37,3 +37,8 @@
 - 已确认领域语言写入 `CONTEXT.md`，并建立 external Codex/deep aggregate/exact MCP 的 ADR。
 - 建立 `docs/integration-provenance/`，按功能固定 Bingsheng、Gujie、Yuxin 的来源、版本、整合责任、
   第三方上游与验证状态，并从根 `AGENTS.md` 建立强制更新入口。
+- P0 clean baseline 已完成分类：根套件唯一红项来自旧 replay qualification 把整个 Harness 树当作
+  source closure；最终在实现树稳定后真实重签或撤销，不能用更新 expected hash 伪修复。
+- P1 首个 S1 纵切：从 canonical CAS user-input evidence 构建可信世界状态、actor-neutral start receipt
+  与父 workflow snapshot；3 份公共 schema 已导出，focused 19 tests 通过，两个新增模块语句/分支
+  覆盖率均为 100%。

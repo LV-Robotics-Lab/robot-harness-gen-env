@@ -1,0 +1,187 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "$id": "harness.artifact_ref.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "WorkflowStatus": {
+      "description": "Lifecycle of one parent Golden Workflow.",
+      "enum": [
+        "active",
+        "waiting_input",
+        "promoted",
+        "cancelled",
+        "failed"
+      ],
+      "title": "WorkflowStatus",
+      "type": "string"
+    }
+  },
+  "$id": "harness.run_snapshot.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Current authoritative head of one parent Golden Workflow.",
+  "properties": {
+    "active_operation": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Active Operation"
+    },
+    "child_runs": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "title": "Child Runs",
+      "type": "array"
+    },
+    "principal_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Principal Id",
+      "type": "string"
+    },
+    "receipt_head": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "registry_snapshot": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "requested_profile": {
+      "maxLength": 255,
+      "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+@(?:0|[1-9][0-9]*)$",
+      "title": "Requested Profile",
+      "type": "string"
+    },
+    "revision": {
+      "minimum": 0,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "harness.run_snapshot.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "state_ref": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "state_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "State Sha256",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/WorkflowStatus"
+    },
+    "turn_seq": {
+      "minimum": 0,
+      "title": "Turn Seq",
+      "type": "integer"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    },
+    "workflow_run_id": {
+      "format": "uuid",
+      "title": "Workflow Run Id",
+      "type": "string"
+    },
+    "workspace": {
+      "enum": [
+        "ephemeral",
+        "production"
+      ],
+      "title": "Workspace",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "workflow_run_id",
+    "principal_id",
+    "workspace",
+    "requested_profile",
+    "revision",
+    "status",
+    "turn_seq",
+    "state_sha256",
+    "state_ref",
+    "registry_snapshot",
+    "receipt_head",
+    "active_operation",
+    "child_runs",
+    "started_at",
+    "updated_at"
+  ],
+  "title": "RunSnapshot",
+  "type": "object"
+}

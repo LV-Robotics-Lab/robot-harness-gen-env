@@ -60,6 +60,16 @@ from .text2env_validate_v2 import (
     Text2EnvValidateV2Input,
     Text2EnvValidateV2Output,
 )
+from .workflow import (
+    RUN_SNAPSHOT_SCHEMA_ID,
+    RUN_START_REQUEST_SCHEMA_ID,
+    WORKFLOW_START_RECEIPT_SCHEMA_ID,
+    CapabilityProfileRef,
+    RunSnapshot,
+    RunStartRequest,
+    WorkflowStartReceipt,
+    WorkflowStatus,
+)
 
 __all__ = [
     "ARTIFACT_REF_SCHEMA_ID",
@@ -67,6 +77,8 @@ __all__ = [
     "ENVIRONMENT_PACKAGE_SCHEMA_ID",
     "EVENT_SCHEMA_ID",
     "RUN_STATE_SCHEMA_ID",
+    "RUN_SNAPSHOT_SCHEMA_ID",
+    "RUN_START_REQUEST_SCHEMA_ID",
     "REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID",
     "REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID",
     "REPLAY_VLM_ASSESSMENT_OUTPUT_V2_SCHEMA_ID",
@@ -86,9 +98,11 @@ __all__ = [
     "TEXT2ENV_VALIDATE_V2_OUTPUT_SCHEMA_ID",
     "VALIDATE_V2_GATE_PROFILE",
     "VALIDATION_DECISION_SCHEMA_VERSION",
+    "WORKFLOW_START_RECEIPT_SCHEMA_ID",
     "ArtifactRef",
     "Blocker",
     "CompileConfig",
+    "CapabilityProfileRef",
     "DependencyRef",
     "EnvironmentPackage",
     "Event",
@@ -96,6 +110,8 @@ __all__ = [
     "Invocation",
     "RegisteredSkillDescriptor",
     "RunState",
+    "RunSnapshot",
+    "RunStartRequest",
     "RunStatus",
     "ReplayVlmAssessmentInput",
     "ReplayVlmAssessmentOutput",
@@ -114,4 +130,6 @@ __all__ = [
     "Text2EnvValidateV2Output",
     "UnknownField",
     "ValidationStatus",
+    "WorkflowStartReceipt",
+    "WorkflowStatus",
 ]

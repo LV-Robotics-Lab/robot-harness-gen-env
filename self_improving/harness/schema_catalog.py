@@ -15,6 +15,8 @@ from .schemas import (
     REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID,
     REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID,
     REPLAY_VLM_ASSESSMENT_OUTPUT_V2_SCHEMA_ID,
+    RUN_SNAPSHOT_SCHEMA_ID,
+    RUN_START_REQUEST_SCHEMA_ID,
     RUN_STATE_SCHEMA_ID,
     SKILL_DESCRIPTOR_SCHEMA_ID,
     SKILL_DESCRIPTOR_V2_SCHEMA_ID,
@@ -28,6 +30,7 @@ from .schemas import (
     TEXT2ENV_VALIDATE_OUTPUT_SCHEMA_ID,
     TEXT2ENV_VALIDATE_V2_INPUT_SCHEMA_ID,
     TEXT2ENV_VALIDATE_V2_OUTPUT_SCHEMA_ID,
+    WORKFLOW_START_RECEIPT_SCHEMA_ID,
     ArtifactRef,
     Blocker,
     EnvironmentPackage,
@@ -36,6 +39,8 @@ from .schemas import (
     ReplayVlmAssessmentInput,
     ReplayVlmAssessmentOutput,
     ReplayVlmAssessmentOutputV2,
+    RunSnapshot,
+    RunStartRequest,
     RunState,
     SkillDescriptor,
     SkillDescriptorV2,
@@ -48,6 +53,7 @@ from .schemas import (
     Text2EnvValidateOutput,
     Text2EnvValidateV2Input,
     Text2EnvValidateV2Output,
+    WorkflowStartReceipt,
 )
 from .schemas.base import HarnessModel
 
@@ -59,6 +65,8 @@ _SCHEMA_MODELS: dict[str, type[HarnessModel]] = {
     ENVIRONMENT_PACKAGE_SCHEMA_ID: EnvironmentPackage,
     EVENT_SCHEMA_ID: Event,
     RUN_STATE_SCHEMA_ID: RunState,
+    RUN_SNAPSHOT_SCHEMA_ID: RunSnapshot,
+    RUN_START_REQUEST_SCHEMA_ID: RunStartRequest,
     REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID: ReplayVlmAssessmentInput,
     REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID: ReplayVlmAssessmentOutput,
     REPLAY_VLM_ASSESSMENT_OUTPUT_V2_SCHEMA_ID: ReplayVlmAssessmentOutputV2,
@@ -74,6 +82,7 @@ _SCHEMA_MODELS: dict[str, type[HarnessModel]] = {
     TEXT2ENV_VALIDATE_OUTPUT_SCHEMA_ID: Text2EnvValidateOutput,
     TEXT2ENV_VALIDATE_V2_INPUT_SCHEMA_ID: Text2EnvValidateV2Input,
     TEXT2ENV_VALIDATE_V2_OUTPUT_SCHEMA_ID: Text2EnvValidateV2Output,
+    WORKFLOW_START_RECEIPT_SCHEMA_ID: WorkflowStartReceipt,
 }
 SCHEMA_MODELS: Mapping[str, type[HarnessModel]] = MappingProxyType(_SCHEMA_MODELS)
 

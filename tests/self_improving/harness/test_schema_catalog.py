@@ -21,6 +21,11 @@ from self_improving.harness.schemas.text2env_validate_v2 import (
     Text2EnvValidateV2Input,
     Text2EnvValidateV2Output,
 )
+from self_improving.harness.schemas.workflow import (
+    RunSnapshot,
+    RunStartRequest,
+    WorkflowStartReceipt,
+)
 
 EXPECTED_SCHEMA_IDS = {
     "harness.artifact_ref.v1",
@@ -31,6 +36,8 @@ EXPECTED_SCHEMA_IDS = {
     "harness.replay_vlm_assessment_output.v1",
     "harness.replay_vlm_assessment_output.v2",
     "harness.run_state.v1",
+    "harness.run_snapshot.v1",
+    "harness.run_start_request.v1",
     "harness.skill_descriptor.v1",
     "harness.skill_descriptor.v2",
     "harness.skill_invocation.v1",
@@ -43,6 +50,7 @@ EXPECTED_SCHEMA_IDS = {
     "harness.text2env_validate_input.v2",
     "harness.text2env_validate_output.v1",
     "harness.text2env_validate_output.v2",
+    "harness.workflow_start_receipt.v1",
 }
 
 
@@ -52,6 +60,9 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert schema_model("harness.skill_descriptor.v2") is SkillDescriptorV2
     assert schema_model("harness.text2env_validate_input.v2") is Text2EnvValidateV2Input
     assert schema_model("harness.text2env_validate_output.v2") is Text2EnvValidateV2Output
+    assert schema_model("harness.run_start_request.v1") is RunStartRequest
+    assert schema_model("harness.run_snapshot.v1") is RunSnapshot
+    assert schema_model("harness.workflow_start_receipt.v1") is WorkflowStartReceipt
     with pytest.raises(KeyError):
         schema_model("harness.missing.v1")
     with pytest.raises(TypeError):
@@ -65,7 +76,14 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
         assert document["$id"] == schema_id
         assert document["$schema"] == "https://json-schema.org/draft/2020-12/schema"
         assert document["additionalProperties"] is False
-        if schema_id != "harness.artifact_ref.v1":
+        if schema_id in {
+            "harness.run_start_request.v1",
+            "harness.run_snapshot.v1",
+            "harness.workflow_start_receipt.v1",
+        }:
+            assert document["properties"]["schema_version"]["const"] == schema_id
+            assert "schema_version" in document["required"]
+        elif schema_id != "harness.artifact_ref.v1":
             assert "schema_version" not in document["properties"]
 
     assert documents["harness.artifact_ref.v1"]["required"] == [

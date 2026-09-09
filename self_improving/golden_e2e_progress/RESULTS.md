@@ -103,3 +103,21 @@
 - 当前没有任何新条目标为 `runtime_pass`：资产 ledger 债务、Codex/MCP 同-run 闭环和当前 Harness
   内的真实 Genesis 最终能力门均尚未完成。
 - 根 `AGENTS.md` 已要求后续每个来源整合切片与台账更新同一提交，防止最终集中补写造成来源漂移。
+
+## 2026-09-09 P1 S1 workflow-start 纵切
+
+- 首个 RED：公共测试导入 `self_improving.harness.golden_run.GoldenRunHarness` 时得到
+  `ModuleNotFoundError`；随后只实现 S1 的 `start()`，没有预先实现 submit/read/dispatch。
+- 安全边界：调用方提交的是按 SHA-256 绑定的 `harness.world_fact_evidence.v1` 与 registry snapshot，
+  不能直接提交或自称 `TrustedWorldState`；Harness 解析 canonical bytes、校验 `user_input` provenance
+  和 `request.*` namespace 后自行构建可信状态。
+- 输出同时保留逻辑 `state_sha256` 与状态 JSON 的 CAS `state_ref`，并产生不含 planner/provider/model
+  身份字段的 `harness.workflow_start_receipt.v1` 及 revision 0 父快照。
+- schema catalog RED：新增测试要求 23 个精确 schema 时为 `5 failed, 1 passed`；接线并导出 3 份新
+  schema snapshot 后变绿。
+- focused 验证：`19 passed in 0.53s`；`golden_run.py` 52/52 statements、8/8 branches，
+  `schemas/workflow.py` 100/100 statements、14/14 branches，均为 100%。
+- 攻击测试覆盖非 canonical JSON、伪装 fresh observation、错误 namespace、非 UTC clock、非 CAS/错
+  digest URI、错误 media/schema、重复或乱序 initial evidence，以及非法 snapshot 时间序。
+- 本切片只证明可信父 workflow 的启动证据链；尚不证明幂等恢复、compile/replay/validate 调度、MCP
+  transport、Genesis 或最终晋升。
