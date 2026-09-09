@@ -141,3 +141,42 @@
 - 审阅仍发现两个下一切片 blocker：RegistrySnapshot 目前只被 resolve、未 strict parse/资格闭包验证；
   start receipt 还没有 canonical request ArtifactRef，且 RunSnapshot receipt-head 仍锁死为 start receipt。
   因此本切片不声称完整可重放 workflow 或 exact qualified dispatch。
+
+## 2026-09-09 P1 Registry/request 审计闭包纵切
+
+- RED：把内容为非 JSON 的 CAS 对象伪标为 `harness.registry_snapshot.v1` 时，旧 `start()` 只做
+  artifact resolve 便成功；同时 start receipt 只保存 request digest 而无 request ArtifactRef，且
+  `RunSnapshot.receipt_head` 永久限定为 start receipt schema。后续契约复核又以 5 个 schema-catalog
+  失败锁定 qualification report 已被 Registry 引用、却没有公共 schema identity/snapshot 的遗漏。
+- GREEN：新增正式 `RegistrySnapshot`，只含按 MCP tool name 排序且 skill/tool 唯一的 qualified entries；
+  每项 strict-canonical 解析 descriptor、qualification、qualification report，并交叉绑定 exact skill、
+  MCP tool、implementation、case、regression command、status 与 schema catalog。缺 CAS、坏 canonical
+  bytes、伪造版本绑定和未知 schema 分别给出稳定的 unavailable/input-invalid/unqualified/drift 错误。
+- 当前真实 fixture 只列 `text2env.compile@1.0.0`；旧 replay qualification 有 source drift，目标
+  text2env v2、image/video 和 Genesis Skills 尚未 qualification，因此没有被提前列入可用目录。
+- canonical `RunStartRequest` 现在先入 CAS；start receipt 和 parent snapshot 都保存其 ArtifactRef，恢复时
+  重算并核对 request、state、registry 与 receipt 全闭包。receipt head 接受精确
+  `harness.workflow_<name>_receipt.v1` family，为后续 operation/transition 留出版本化演进空间。
+- 验证：`48 passed in 0.94s`；`golden_run.py` 147/147 statements、28/28 branches，
+  `schemas/registry_snapshot.py` 45/45 statements、12/12 branches，`schemas/workflow.py` 112/112
+  statements、20/20 branches，公共 qualification-report schema projection 7/7 statements，均为
+  100%；25 份 Harness schema snapshot、Ruff 与 `git diff --check` 全部通过。projection 没有修改
+  已合格 compile 所绑定的 `qualification.py` 源码，compile qualification loader 仍通过。Harness 全域
+  排除已单独记录的 stale replay qualification 身份门后为
+  `2045 passed, 19 skipped, 1 deselected in 51.35s`。
+- 限定：该闭包能拒绝不一致或损坏的调用方快照，但还没有与运行中 Registry/handler 的安装身份取交集；
+  P2/P4 必须补这层生产 trust root 后，才可把 snapshot entry 暴露成 exact callable MCP Skill。
+
+## 2026-09-09 P4 官方 MCP 2.2 隔离 spike
+
+- 项目环境未安装 MCP；在隔离临时环境验证 `mcp==2.2.0`，没有修改项目依赖或 lock。官方 v2
+  low-level `Server` 与 `Client` 的进程内和真实 stdio 两条最小路径均协商协议 `2026-07-28`，并完成
+  exact tool list/call；这只证明 SDK seam，不证明项目 Harness MCP 已实现。
+- 选择 low-level Server：adapter 只做 SDK type 与 S1 public type 映射，所有 schema/canonical/receipt/
+  idempotency 校验仍由 Harness 负责；不提供 generic `skill.invoke`、alias、latest 或版本范围，也不在
+  MCP server 内调用 Codex。
+- SDK server 只广告 input schema，不替项目执行入参验证；timeout/cancel 后 durable operation 也不能
+  假定回滚，caller 必须凭 command/idempotency identity 从 workflow resource 恢复。
+- `uv lock --check` 当前已因历史 metadata 漂移失败，CI 的 editable pip 安装也没有消费 lock。P4 加入
+  optional `mcp>=2.2,<3` 时必须同时更新 frozen runtime/CI lane，并记录 mcp、mcp-types 与 negotiated
+  protocol 的精确身份；在 S1 `submit/read` 和真实 Registry trust root 完成前不写假 adapter。

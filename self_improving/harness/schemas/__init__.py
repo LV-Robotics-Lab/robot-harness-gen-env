@@ -24,6 +24,11 @@ from .common import (
     UnknownField,
     ValidationStatus,
 )
+from .registry_snapshot import (
+    REGISTRY_SNAPSHOT_SCHEMA_ID,
+    QualifiedSkillSnapshot,
+    RegistrySnapshot,
+)
 from .replay_vlm import (
     REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID,
     REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID,
@@ -84,6 +89,7 @@ __all__ = [
     "REPLAY_VLM_ASSESSMENT_OUTPUT_V2_SCHEMA_ID",
     "REPLAY_VLM_ASSESSMENT_SCHEMA_VERSION",
     "REPLAY_VLM_ASSESSMENT_V2_SCHEMA_VERSION",
+    "REGISTRY_SNAPSHOT_SCHEMA_ID",
     "SKILL_DESCRIPTOR_SCHEMA_ID",
     "SKILL_DESCRIPTOR_V2_SCHEMA_ID",
     "SKILL_INVOCATION_SCHEMA_ID",
@@ -108,7 +114,9 @@ __all__ = [
     "Event",
     "ExecutionReproducibility",
     "Invocation",
+    "QualifiedSkillSnapshot",
     "RegisteredSkillDescriptor",
+    "RegistrySnapshot",
     "RunState",
     "RunSnapshot",
     "RunStartRequest",

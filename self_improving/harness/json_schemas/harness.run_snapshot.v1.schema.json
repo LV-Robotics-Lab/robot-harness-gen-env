@@ -124,6 +124,9 @@
       "title": "Schema Version",
       "type": "string"
     },
+    "start_request_ref": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
     "started_at": {
       "format": "date-time",
       "title": "Started At",
@@ -175,6 +178,7 @@
     "turn_seq",
     "state_sha256",
     "state_ref",
+    "start_request_ref",
     "registry_snapshot",
     "receipt_head",
     "active_operation",

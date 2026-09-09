@@ -57,81 +57,64 @@
       ],
       "title": "ArtifactRef",
       "type": "object"
+    },
+    "QualifiedSkillSnapshot": {
+      "additionalProperties": false,
+      "description": "Exact portable evidence closure for one Registry entry.",
+      "properties": {
+        "descriptor_ref": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "mcp_tool_name": {
+          "pattern": "^[a-z][a-z0-9_]{0,127}$",
+          "title": "Mcp Tool Name",
+          "type": "string"
+        },
+        "qualification_ref": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "qualification_report_ref": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "skill_ref": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}\\.[a-z][a-z0-9_]{0,31}@(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$",
+          "title": "Skill Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "skill_ref",
+        "mcp_tool_name",
+        "descriptor_ref",
+        "qualification_ref",
+        "qualification_report_ref"
+      ],
+      "title": "QualifiedSkillSnapshot",
+      "type": "object"
     }
   },
-  "$id": "harness.workflow_start_receipt.v1",
+  "$id": "harness.registry_snapshot.v1",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
-  "description": "Immutable head receipt for parent workflow creation.",
+  "description": "Frozen exact Skill catalog consumed by a Golden Workflow and MCP.",
   "properties": {
-    "principal_id": {
-      "maxLength": 255,
-      "minLength": 1,
-      "title": "Principal Id",
-      "type": "string"
-    },
-    "registry_snapshot": {
-      "$ref": "#/$defs/ArtifactRef"
-    },
-    "request_ref": {
-      "$ref": "#/$defs/ArtifactRef"
-    },
-    "request_sha256": {
-      "pattern": "^[0-9a-f]{64}$",
-      "title": "Request Sha256",
-      "type": "string"
-    },
-    "requested_profile": {
-      "maxLength": 255,
-      "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+@(?:0|[1-9][0-9]*)$",
-      "title": "Requested Profile",
-      "type": "string"
+    "qualified_skills": {
+      "items": {
+        "$ref": "#/$defs/QualifiedSkillSnapshot"
+      },
+      "title": "Qualified Skills",
+      "type": "array"
     },
     "schema_version": {
-      "const": "harness.workflow_start_receipt.v1",
+      "const": "harness.registry_snapshot.v1",
       "title": "Schema Version",
-      "type": "string"
-    },
-    "started_at": {
-      "format": "date-time",
-      "title": "Started At",
-      "type": "string"
-    },
-    "state_ref": {
-      "$ref": "#/$defs/ArtifactRef"
-    },
-    "state_sha256": {
-      "pattern": "^[0-9a-f]{64}$",
-      "title": "State Sha256",
-      "type": "string"
-    },
-    "workflow_run_id": {
-      "format": "uuid4",
-      "title": "Workflow Run Id",
-      "type": "string"
-    },
-    "workspace": {
-      "enum": [
-        "ephemeral",
-        "production"
-      ],
-      "title": "Workspace",
       "type": "string"
     }
   },
   "required": [
     "schema_version",
-    "workflow_run_id",
-    "principal_id",
-    "workspace",
-    "requested_profile",
-    "request_sha256",
-    "request_ref",
-    "state_sha256",
-    "state_ref",
-    "registry_snapshot",
-    "started_at"
+    "qualified_skills"
   ],
-  "title": "WorkflowStartReceipt",
+  "title": "RegistrySnapshot",
   "type": "object"
 }

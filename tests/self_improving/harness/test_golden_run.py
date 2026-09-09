@@ -18,6 +18,14 @@ from self_improving.harness.golden_run import (
     GoldenRunConflictError,
     GoldenRunCorruptionError,
     GoldenRunHarness,
+    GoldenRunRegistryError,
+)
+from self_improving.harness.handlers.text2env_compile import text2env_compile_descriptor
+from self_improving.harness.qualification import ImplementationManifestV1
+from self_improving.harness.schemas.common import SkillDescriptor
+from self_improving.harness.schemas.registry_snapshot import (
+    QualifiedSkillSnapshot,
+    RegistrySnapshot,
 )
 from self_improving.harness.schemas.workflow import (
     RunSnapshot,
@@ -27,16 +35,12 @@ from self_improving.harness.schemas.workflow import (
 
 NOW = datetime(2026, 9, 9, tzinfo=timezone.utc)
 WORKFLOW_ID = UUID("10000000-0000-4000-8000-000000000001")
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 OBJECTIVE_EVIDENCE = (
     b'{"key":"request.objective","observed_at":"2026-09-09T00:00:00Z",'
     b'"schema_version":"harness.world_fact_evidence.v1",'
     b'"source_kind":"user_input","valid_until":null,'
     b'"value":"Place a can on a plate."}\n'
-)
-REGISTRY_SNAPSHOT = (
-    b'{"qualified_skill_refs":["text2env.compile@2.0.0"],'
-    b'"schema_version":"harness.registry_snapshot.v1",'
-    b'"snapshot_id":"registry-20260909"}\n'
 )
 ALTERNATE_OBJECTIVE_EVIDENCE = OBJECTIVE_EVIDENCE.replace(
     b"Place a can on a plate.",
@@ -89,6 +93,89 @@ def _canonical_bytes(model) -> bytes:
     ).encode()
 
 
+def _qualified_registry(store: LocalArtifactStore, root: Path):
+    bundle = (
+        PROJECT_ROOT
+        / "self_improving"
+        / "harness"
+        / "qualified_skills"
+        / "text2env.compile"
+        / "1.0.0"
+    )
+    qualification_ref = _put(
+        store,
+        root,
+        name="compile-qualification.json",
+        payload=(bundle / "qualification.json").read_bytes(),
+        schema_version="harness.skill_qualification.v1",
+    )
+    report_ref = _put(
+        store,
+        root,
+        name="compile-qualification-report.json",
+        payload=(bundle / "report.json").read_bytes(),
+        schema_version="harness.skill_qualification_report.v1",
+    )
+    manifest_payload = (bundle / "manifest.json").read_bytes()
+    manifest = ImplementationManifestV1.model_validate_json(manifest_payload)
+    descriptor = text2env_compile_descriptor(
+        qualification_artifact=qualification_ref,
+        implementation_sha256=manifest.bundle_sha256,
+    )
+    descriptor_ref = _put(
+        store,
+        root,
+        name="compile-descriptor.json",
+        payload=_canonical_bytes(descriptor),
+        schema_version="harness.skill_descriptor.v1",
+    )
+    snapshot = RegistrySnapshot(
+        schema_version="harness.registry_snapshot.v1",
+        qualified_skills=(
+            QualifiedSkillSnapshot(
+                skill_ref="text2env.compile@1.0.0",
+                mcp_tool_name="text2env_compile_v1_0_0",
+                descriptor_ref=descriptor_ref,
+                qualification_ref=qualification_ref,
+                qualification_report_ref=report_ref,
+            ),
+        ),
+    )
+    return _put(
+        store,
+        root,
+        name="registry.json",
+        payload=_canonical_bytes(snapshot),
+        schema_version="harness.registry_snapshot.v1",
+    )
+
+
+def _load_registry(store: LocalArtifactStore, registry_ref) -> RegistrySnapshot:
+    return RegistrySnapshot.model_validate_json(
+        store.resolve(registry_ref).path.read_bytes()
+    )
+
+
+def _publish_registry_entry(
+    store: LocalArtifactStore,
+    root: Path,
+    entry: QualifiedSkillSnapshot,
+    *,
+    name: str,
+):
+    snapshot = RegistrySnapshot(
+        schema_version="harness.registry_snapshot.v1",
+        qualified_skills=(entry,),
+    )
+    return _put(
+        store,
+        root,
+        name=name,
+        payload=_canonical_bytes(snapshot),
+        schema_version="harness.registry_snapshot.v1",
+    )
+
+
 def _replace_persisted_snapshot(store: LocalArtifactStore, payload: bytes) -> None:
     database = store.root / "golden-workflows.sqlite3"
     with closing(sqlite3.connect(database)) as connection, connection:
@@ -112,20 +199,15 @@ def test_start_builds_trusted_state_and_receipt_chain_from_cas_inputs(tmp_path: 
         payload=OBJECTIVE_EVIDENCE,
         schema_version="harness.world_fact_evidence.v1",
     )
-    registry = _put(
-        store,
-        tmp_path,
-        name="registry.json",
-        payload=REGISTRY_SNAPSHOT,
-        schema_version="harness.registry_snapshot.v1",
-    )
+    registry = _qualified_registry(store, tmp_path)
     harness = GoldenRunHarness(
         artifact_store=store,
         clock=lambda: NOW,
         workflow_id_factory=lambda: WORKFLOW_ID,
     )
+    request = _request(objective, registry)
 
-    snapshot = harness.start(_request(objective, registry))
+    snapshot = harness.start(request)
 
     assert set(snapshot.model_dump(mode="json")) == {
         "schema_version",
@@ -138,6 +220,7 @@ def test_start_builds_trusted_state_and_receipt_chain_from_cas_inputs(tmp_path: 
         "turn_seq",
         "state_sha256",
         "state_ref",
+        "start_request_ref",
         "registry_snapshot",
         "receipt_head",
         "active_operation",
@@ -159,9 +242,18 @@ def test_start_builds_trusted_state_and_receipt_chain_from_cas_inputs(tmp_path: 
         "25e338adaaa0609e47512ebd833a933a9f048fb486c1974a2ad9567f0a0fc52a"
     )
     assert snapshot.state_ref.schema_version == "harness.trusted_world_state.v1"
+    assert snapshot.start_request_ref.sha256 == (
+        "2d464fc29e42dfd14d38104fca9811270c875351e2a42dfeb79b1963dd1f232e"
+    )
+    assert snapshot.start_request_ref.schema_version == "harness.run_start_request.v1"
+    assert store.resolve(snapshot.start_request_ref).path.read_bytes() == _canonical_bytes(request)
     assert snapshot.registry_snapshot == registry
+    start_receipt = WorkflowStartReceipt.model_validate_json(
+        store.resolve(snapshot.receipt_head).path.read_bytes()
+    )
+    assert start_receipt.request_ref == snapshot.start_request_ref
     assert snapshot.receipt_head.sha256 == (
-        "75a6a58929964c2aa7aba3c1c0bdda208aa36f7a21e17b8b3fafbbb43a647929"
+        "4979e9073562e71b76276264a024114ed0d7f57bf7a1c62dab61d118fb7ea18d"
     )
     assert snapshot.receipt_head.schema_version == "harness.workflow_start_receipt.v1"
     assert snapshot.active_operation is None
@@ -179,8 +271,10 @@ def test_golden_workflow_contracts_are_available_from_the_public_harness_facade(
     assert public_harness.GoldenRunHarness is GoldenRunHarness
     assert public_harness.GoldenRunConflictError is GoldenRunConflictError
     assert public_harness.GoldenRunCorruptionError is GoldenRunCorruptionError
+    assert public_harness.GoldenRunRegistryError is GoldenRunRegistryError
     assert public_harness.RunStartRequest is RunStartRequest
     assert public_harness.RunSnapshot is RunSnapshot
+    assert public_harness.RegistrySnapshot is RegistrySnapshot
     assert public_harness.WorkflowStartReceipt is WorkflowStartReceipt
 
 
@@ -193,13 +287,7 @@ def test_start_is_durably_idempotent_across_harness_restart(tmp_path: Path) -> N
         payload=OBJECTIVE_EVIDENCE,
         schema_version="harness.world_fact_evidence.v1",
     )
-    registry = _put(
-        store,
-        tmp_path,
-        name="registry.json",
-        payload=REGISTRY_SNAPSHOT,
-        schema_version="harness.registry_snapshot.v1",
-    )
+    registry = _qualified_registry(store, tmp_path)
     request = _request(objective, registry)
     first = GoldenRunHarness(
         artifact_store=store,
@@ -240,13 +328,7 @@ def test_start_rejects_same_principal_and_idempotency_key_with_changed_request(
         payload=ALTERNATE_OBJECTIVE_EVIDENCE,
         schema_version="harness.world_fact_evidence.v1",
     )
-    registry = _put(
-        store,
-        tmp_path,
-        name="registry.json",
-        payload=REGISTRY_SNAPSHOT,
-        schema_version="harness.registry_snapshot.v1",
-    )
+    registry = _qualified_registry(store, tmp_path)
     harness = GoldenRunHarness(
         artifact_store=store,
         clock=lambda: NOW,
@@ -271,13 +353,7 @@ def test_start_retry_rejects_noncanonical_persisted_snapshot(tmp_path: Path) -> 
         payload=OBJECTIVE_EVIDENCE,
         schema_version="harness.world_fact_evidence.v1",
     )
-    registry = _put(
-        store,
-        tmp_path,
-        name="registry.json",
-        payload=REGISTRY_SNAPSHOT,
-        schema_version="harness.registry_snapshot.v1",
-    )
+    registry = _qualified_registry(store, tmp_path)
     request = _request(objective, registry)
     harness = GoldenRunHarness(
         artifact_store=store,
@@ -317,13 +393,7 @@ def test_start_retry_rejects_snapshot_swapped_between_idempotency_records(
         payload=ALTERNATE_OBJECTIVE_EVIDENCE,
         schema_version="harness.world_fact_evidence.v1",
     )
-    registry = _put(
-        store,
-        tmp_path,
-        name="registry.json",
-        payload=REGISTRY_SNAPSHOT,
-        schema_version="harness.registry_snapshot.v1",
-    )
+    registry = _qualified_registry(store, tmp_path)
     workflow_ids = iter(
         (
             WORKFLOW_ID,
@@ -373,13 +443,7 @@ def test_start_retry_reverifies_cas_closure(tmp_path: Path) -> None:
         payload=OBJECTIVE_EVIDENCE,
         schema_version="harness.world_fact_evidence.v1",
     )
-    registry = _put(
-        store,
-        tmp_path,
-        name="registry.json",
-        payload=REGISTRY_SNAPSHOT,
-        schema_version="harness.registry_snapshot.v1",
-    )
+    registry = _qualified_registry(store, tmp_path)
     request = _request(objective, registry)
     snapshot = GoldenRunHarness(
         artifact_store=store,
@@ -403,13 +467,7 @@ def test_start_retry_rejects_invalid_or_inconsistent_snapshot_authority(
         payload=OBJECTIVE_EVIDENCE,
         schema_version="harness.world_fact_evidence.v1",
     )
-    registry = _put(
-        store,
-        tmp_path,
-        name="registry.json",
-        payload=REGISTRY_SNAPSHOT,
-        schema_version="harness.registry_snapshot.v1",
-    )
+    registry = _qualified_registry(store, tmp_path)
     request = _request(objective, registry)
     snapshot = GoldenRunHarness(
         artifact_store=store,
@@ -440,13 +498,7 @@ def test_start_retry_rejects_noncanonical_json_inside_hash_bound_cas(
         payload=OBJECTIVE_EVIDENCE,
         schema_version="harness.world_fact_evidence.v1",
     )
-    registry = _put(
-        store,
-        tmp_path,
-        name="registry.json",
-        payload=REGISTRY_SNAPSHOT,
-        schema_version="harness.registry_snapshot.v1",
-    )
+    registry = _qualified_registry(store, tmp_path)
     request = _request(objective, registry)
     snapshot = GoldenRunHarness(
         artifact_store=store,
@@ -513,13 +565,7 @@ def test_start_rejects_untrusted_initial_fact_evidence(
         payload=payload,
         schema_version="harness.world_fact_evidence.v1",
     )
-    registry = _put(
-        store,
-        tmp_path,
-        name="registry.json",
-        payload=REGISTRY_SNAPSHOT,
-        schema_version="harness.registry_snapshot.v1",
-    )
+    registry = _qualified_registry(store, tmp_path)
 
     with pytest.raises(ValueError, match=message):
         GoldenRunHarness(
@@ -529,7 +575,7 @@ def test_start_rejects_untrusted_initial_fact_evidence(
         ).start(_request(objective, registry))
 
 
-def test_start_rejects_a_non_utc_execution_clock(tmp_path: Path) -> None:
+def test_start_rejects_unparseable_registry_snapshot(tmp_path: Path) -> None:
     store = LocalArtifactStore(tmp_path / "cas")
     objective = _put(
         store,
@@ -542,9 +588,175 @@ def test_start_rejects_a_non_utc_execution_clock(tmp_path: Path) -> None:
         store,
         tmp_path,
         name="registry.json",
-        payload=REGISTRY_SNAPSHOT,
+        payload=b"not json at all",
         schema_version="harness.registry_snapshot.v1",
     )
+
+    with pytest.raises(GoldenRunRegistryError, match="registry snapshot") as raised:
+        GoldenRunHarness(
+            artifact_store=store,
+            clock=lambda: NOW,
+            workflow_id_factory=lambda: WORKFLOW_ID,
+        ).start(_request(objective, registry))
+    assert raised.value.code == "HARN_INPUT_SCHEMA_INVALID"
+
+
+def test_start_rejects_a_target_skill_claim_not_bound_by_qualified_descriptor(
+    tmp_path: Path,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    objective = _put(
+        store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry_ref = _qualified_registry(store, tmp_path)
+    registry = RegistrySnapshot.model_validate_json(
+        store.resolve(registry_ref).path.read_bytes()
+    )
+    entry = registry.qualified_skills[0].model_copy(
+        update={
+            "skill_ref": "text2env.compile@2.0.0",
+            "mcp_tool_name": "text2env_compile_v2_0_0",
+        }
+    )
+    forged_registry = registry.model_copy(update={"qualified_skills": (entry,)})
+    forged_ref = _put(
+        store,
+        tmp_path,
+        name="forged-registry.json",
+        payload=_canonical_bytes(forged_registry),
+        schema_version="harness.registry_snapshot.v1",
+    )
+
+    with pytest.raises(GoldenRunRegistryError, match="qualification closure") as raised:
+        GoldenRunHarness(
+            artifact_store=store,
+            clock=lambda: NOW,
+            workflow_id_factory=lambda: WORKFLOW_ID,
+        ).start(_request(objective, forged_ref))
+    assert raised.value.code == "HARN_SKILL_UNQUALIFIED"
+
+
+def test_start_rejects_an_unavailable_registry_or_qualification_artifact(
+    tmp_path: Path,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    objective = _put(
+        store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry_ref = _qualified_registry(store, tmp_path)
+    registry_path = store.resolve(registry_ref).path
+    registry_path.unlink()
+    with pytest.raises(GoldenRunRegistryError) as missing_registry:
+        GoldenRunHarness(artifact_store=store).start(_request(objective, registry_ref))
+    assert missing_registry.value.code == "HARN_ARTIFACT_UNAVAILABLE"
+
+    registry_ref = _qualified_registry(store, tmp_path)
+    registry = _load_registry(store, registry_ref)
+    store.resolve(registry.qualified_skills[0].descriptor_ref).path.unlink()
+    with pytest.raises(GoldenRunRegistryError) as missing_descriptor:
+        GoldenRunHarness(artifact_store=store).start(_request(objective, registry_ref))
+    assert missing_descriptor.value.code == "HARN_ARTIFACT_UNAVAILABLE"
+
+
+def test_start_rejects_invalid_nested_qualification_json(tmp_path: Path) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    objective = _put(
+        store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry_ref = _qualified_registry(store, tmp_path)
+    entry = _load_registry(store, registry_ref).qualified_skills[0]
+    descriptor = SkillDescriptor.model_validate_json(
+        store.resolve(entry.descriptor_ref).path.read_bytes()
+    )
+    invalid_qualification = _put(
+        store,
+        tmp_path,
+        name="invalid-qualification.json",
+        payload=b"not json",
+        schema_version="harness.skill_qualification.v1",
+    )
+    changed_descriptor = descriptor.model_copy(
+        update={"qualification_artifact": invalid_qualification}
+    )
+    changed_descriptor_ref = _put(
+        store,
+        tmp_path,
+        name="changed-descriptor.json",
+        payload=_canonical_bytes(changed_descriptor),
+        schema_version="harness.skill_descriptor.v1",
+    )
+    invalid_registry = _publish_registry_entry(
+        store,
+        tmp_path,
+        entry.model_copy(
+            update={
+                "descriptor_ref": changed_descriptor_ref,
+                "qualification_ref": invalid_qualification,
+            }
+        ),
+        name="invalid-nested-registry.json",
+    )
+
+    with pytest.raises(GoldenRunRegistryError) as raised:
+        GoldenRunHarness(artifact_store=store).start(_request(objective, invalid_registry))
+    assert raised.value.code == "HARN_INPUT_SCHEMA_INVALID"
+
+
+def test_start_rejects_a_qualified_descriptor_with_unknown_schema(tmp_path: Path) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    objective = _put(
+        store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry_ref = _qualified_registry(store, tmp_path)
+    entry = _load_registry(store, registry_ref).qualified_skills[0]
+    descriptor = SkillDescriptor.model_validate_json(
+        store.resolve(entry.descriptor_ref).path.read_bytes()
+    ).model_copy(update={"input_schema": "harness.unavailable_input.v1"})
+    changed_descriptor_ref = _put(
+        store,
+        tmp_path,
+        name="unknown-schema-descriptor.json",
+        payload=_canonical_bytes(descriptor),
+        schema_version="harness.skill_descriptor.v1",
+    )
+    invalid_registry = _publish_registry_entry(
+        store,
+        tmp_path,
+        entry.model_copy(update={"descriptor_ref": changed_descriptor_ref}),
+        name="unknown-schema-registry.json",
+    )
+
+    with pytest.raises(GoldenRunRegistryError) as raised:
+        GoldenRunHarness(artifact_store=store).start(_request(objective, invalid_registry))
+    assert raised.value.code == "HARN_DEPENDENCY_DRIFT"
+
+
+def test_start_rejects_a_non_utc_execution_clock(tmp_path: Path) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    objective = _put(
+        store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(store, tmp_path)
 
     with pytest.raises(ValueError, match="clock must return a UTC datetime"):
         GoldenRunHarness(
@@ -565,13 +777,7 @@ def test_start_requires_uuid4_identity_and_rolls_back_failed_reservation(
         payload=OBJECTIVE_EVIDENCE,
         schema_version="harness.world_fact_evidence.v1",
     )
-    registry = _put(
-        store,
-        tmp_path,
-        name="registry.json",
-        payload=REGISTRY_SNAPSHOT,
-        schema_version="harness.registry_snapshot.v1",
-    )
+    registry = _qualified_registry(store, tmp_path)
     request = _request(objective, registry)
 
     with pytest.raises(ValidationError, match="UUID version 4"):
@@ -616,13 +822,7 @@ def test_start_request_rejects_unbound_registry_refs(
         payload=OBJECTIVE_EVIDENCE,
         schema_version="harness.world_fact_evidence.v1",
     )
-    registry = _put(
-        store,
-        tmp_path,
-        name="registry.json",
-        payload=REGISTRY_SNAPSHOT,
-        schema_version="harness.registry_snapshot.v1",
-    )
+    registry = _qualified_registry(store, tmp_path)
     invalid_registry = registry.model_copy(update=changes)
 
     with pytest.raises(ValidationError, match=message):
@@ -649,13 +849,7 @@ def test_start_request_rejects_ambiguous_initial_evidence(
         payload=OBJECTIVE_EVIDENCE.replace(b"Place a can", b"Place the can"),
         schema_version="harness.world_fact_evidence.v1",
     )
-    registry = _put(
-        store,
-        tmp_path,
-        name="registry.json",
-        payload=REGISTRY_SNAPSHOT,
-        schema_version="harness.registry_snapshot.v1",
-    )
+    registry = _qualified_registry(store, tmp_path)
     ordered = tuple(sorted((first, second), key=lambda item: item.sha256))
     evidence = (first, first) if attack == "duplicate" else tuple(reversed(ordered))
 
@@ -689,13 +883,7 @@ def test_run_snapshot_rejects_temporal_attacks(
         payload=OBJECTIVE_EVIDENCE,
         schema_version="harness.world_fact_evidence.v1",
     )
-    registry = _put(
-        store,
-        tmp_path,
-        name="registry.json",
-        payload=REGISTRY_SNAPSHOT,
-        schema_version="harness.registry_snapshot.v1",
-    )
+    registry = _qualified_registry(store, tmp_path)
     snapshot = GoldenRunHarness(
         artifact_store=store,
         clock=lambda: NOW,
@@ -703,6 +891,73 @@ def test_run_snapshot_rejects_temporal_attacks(
     ).start(_request(objective, registry))
     payload = snapshot.model_dump(mode="python")
     payload.update(changes)
+
+    with pytest.raises(ValidationError, match=message):
+        RunSnapshot.model_validate(payload)
+
+
+def test_run_snapshot_accepts_a_versioned_workflow_operation_receipt_head(
+    tmp_path: Path,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    objective = _put(
+        store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(store, tmp_path)
+    snapshot = GoldenRunHarness(
+        artifact_store=store,
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    ).start(_request(objective, registry))
+    operation_receipt = snapshot.receipt_head.model_copy(
+        update={"schema_version": "harness.workflow_operation_receipt.v1"}
+    )
+    payload = snapshot.model_dump(mode="python")
+    payload.update({"receipt_head": operation_receipt, "revision": 1})
+
+    advanced = RunSnapshot.model_validate(payload)
+
+    assert advanced.receipt_head.schema_version == "harness.workflow_operation_receipt.v1"
+    assert advanced.revision == 1
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"uri": "file:///tmp/receipt.json"}, "content-addressed artifact URI"),
+        ({"media_type": "text/plain"}, "media_type='application/json'"),
+        (
+            {"schema_version": "harness.trusted_tool_receipt.v1"},
+            "versioned workflow receipt schema",
+        ),
+        ({"schema_version": None}, "versioned workflow receipt schema"),
+    ],
+)
+def test_run_snapshot_rejects_unbound_receipt_heads(
+    tmp_path: Path,
+    changes: dict[str, str | None],
+    message: str,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    objective = _put(
+        store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(store, tmp_path)
+    snapshot = GoldenRunHarness(
+        artifact_store=store,
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    ).start(_request(objective, registry))
+    payload = snapshot.model_dump(mode="python")
+    payload["receipt_head"] = snapshot.receipt_head.model_copy(update=changes)
 
     with pytest.raises(ValidationError, match=message):
         RunSnapshot.model_validate(payload)

@@ -12,6 +12,7 @@ from .schemas import (
     BLOCKER_SCHEMA_ID,
     ENVIRONMENT_PACKAGE_SCHEMA_ID,
     EVENT_SCHEMA_ID,
+    REGISTRY_SNAPSHOT_SCHEMA_ID,
     REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID,
     REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID,
     REPLAY_VLM_ASSESSMENT_OUTPUT_V2_SCHEMA_ID,
@@ -36,6 +37,7 @@ from .schemas import (
     EnvironmentPackage,
     Event,
     Invocation,
+    RegistrySnapshot,
     ReplayVlmAssessmentInput,
     ReplayVlmAssessmentOutput,
     ReplayVlmAssessmentOutputV2,
@@ -56,6 +58,10 @@ from .schemas import (
     WorkflowStartReceipt,
 )
 from .schemas.base import HarnessModel
+from .schemas.qualification_report import (
+    QUALIFICATION_REPORT_SCHEMA_ID,
+    PublicQualificationReportV1,
+)
 
 DEFAULT_SCHEMA_ROOT = Path(__file__).with_name("json_schemas")
 
@@ -70,10 +76,12 @@ _SCHEMA_MODELS: dict[str, type[HarnessModel]] = {
     REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID: ReplayVlmAssessmentInput,
     REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID: ReplayVlmAssessmentOutput,
     REPLAY_VLM_ASSESSMENT_OUTPUT_V2_SCHEMA_ID: ReplayVlmAssessmentOutputV2,
+    REGISTRY_SNAPSHOT_SCHEMA_ID: RegistrySnapshot,
     SKILL_DESCRIPTOR_SCHEMA_ID: SkillDescriptor,
     SKILL_DESCRIPTOR_V2_SCHEMA_ID: SkillDescriptorV2,
     SKILL_INVOCATION_SCHEMA_ID: Invocation,
     SKILL_QUALIFICATION_SCHEMA_ID: SkillQualification,
+    QUALIFICATION_REPORT_SCHEMA_ID: PublicQualificationReportV1,
     TEXT2ENV_COMPILE_INPUT_SCHEMA_ID: Text2EnvCompileInput,
     TEXT2ENV_COMPILE_OUTPUT_SCHEMA_ID: Text2EnvCompileOutput,
     TEXT2ENV_REPLAY_INPUT_SCHEMA_ID: Text2EnvReplayInput,

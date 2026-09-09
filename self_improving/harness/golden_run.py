@@ -15,7 +15,15 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ValidationError
 
 from .artifacts import ArtifactResolutionError, LocalArtifactStore
-from .schemas.common import ArtifactRef
+from .qualification import QualificationReportV1
+from .schema_catalog import schema_model
+from .schemas.common import (
+    ArtifactRef,
+    SkillDescriptor,
+    SkillDescriptorV2,
+    SkillQualification,
+)
+from .schemas.registry_snapshot import RegistrySnapshot
 from .schemas.workflow import RunSnapshot, RunStartRequest, WorkflowStartReceipt
 from .system2.domain import (
     TrustedWorldState,
@@ -35,6 +43,14 @@ class GoldenRunCorruptionError(RuntimeError):
     """Persisted workflow authority or its immutable CAS closure is corrupt."""
 
     code = "HARN_PERSISTENCE_CONFLICT"
+
+
+class GoldenRunRegistryError(ValueError):
+    """A submitted Registry snapshot is malformed, unavailable, or unqualified."""
+
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        super().__init__(message)
 
 
 class GoldenRunHarness:
@@ -78,7 +94,7 @@ class GoldenRunHarness:
         if started_at.utcoffset() != timezone.utc.utcoffset(started_at):
             raise ValueError("clock must return a UTC datetime")
         workflow_run_id = self._workflow_id_factory()
-        self._artifact_store.resolve(request.registry_snapshot)
+        self._verify_registry_snapshot(request.registry_snapshot)
 
         facts = tuple(
             self._fact_from_user_evidence(artifact)
@@ -90,6 +106,11 @@ class GoldenRunHarness:
             name="trusted_world_state.json",
             schema_version="harness.trusted_world_state.v1",
         )
+        request_ref = self._publish_model(
+            request,
+            name="run_start_request.json",
+            schema_version="harness.run_start_request.v1",
+        )
         receipt = WorkflowStartReceipt(
             schema_version="harness.workflow_start_receipt.v1",
             workflow_run_id=workflow_run_id,
@@ -97,6 +118,7 @@ class GoldenRunHarness:
             workspace=request.workspace,
             requested_profile=request.requested_profile,
             request_sha256=request_sha256,
+            request_ref=request_ref,
             state_sha256=state.state_sha256,
             state_ref=state_ref,
             registry_snapshot=request.registry_snapshot,
@@ -118,6 +140,7 @@ class GoldenRunHarness:
             turn_seq=0,
             state_sha256=state.state_sha256,
             state_ref=state_ref,
+            start_request_ref=request_ref,
             registry_snapshot=request.registry_snapshot,
             receipt_head=receipt_ref,
             active_operation=None,
@@ -167,7 +190,7 @@ class GoldenRunHarness:
                 "persisted workflow start failed its request receipt binding"
             )
         try:
-            self._artifact_store.resolve(snapshot.registry_snapshot)
+            self._verify_registry_snapshot(snapshot.registry_snapshot)
             state = self._resolve_canonical_model(
                 snapshot.state_ref,
                 TrustedWorldState,
@@ -176,9 +199,19 @@ class GoldenRunHarness:
                 snapshot.receipt_head,
                 WorkflowStartReceipt,
             )
+            persisted_request = self._resolve_canonical_model(
+                snapshot.start_request_ref,
+                RunStartRequest,
+            )
             for fact in state.facts:
                 self._artifact_store.resolve(fact.source_artifact)
-        except (ArtifactResolutionError, ValidationError, TypeError, ValueError) as error:
+        except (
+            ArtifactResolutionError,
+            GoldenRunRegistryError,
+            ValidationError,
+            TypeError,
+            ValueError,
+        ) as error:
             raise GoldenRunCorruptionError(
                 f"persisted workflow start failed its CAS closure: {error}"
             ) from error
@@ -188,11 +221,13 @@ class GoldenRunHarness:
             != hashlib.sha256(_canonical_model_bytes(state)).hexdigest()
             or tuple(fact.source_artifact for fact in state.facts)
             != request.initial_fact_evidence
+            or persisted_request != request
             or receipt.workflow_run_id != snapshot.workflow_run_id
             or receipt.principal_id != snapshot.principal_id
             or receipt.workspace != snapshot.workspace
             or receipt.requested_profile != snapshot.requested_profile
             or receipt.request_sha256 != request_sha256
+            or receipt.request_ref != snapshot.start_request_ref
             or receipt.state_sha256 != snapshot.state_sha256
             or receipt.state_ref != snapshot.state_ref
             or receipt.registry_snapshot != snapshot.registry_snapshot
@@ -201,6 +236,78 @@ class GoldenRunHarness:
             raise GoldenRunCorruptionError(
                 "persisted workflow start failed its request receipt binding"
             )
+
+    def _verify_registry_snapshot(
+        self,
+        artifact: ArtifactRef,
+    ) -> RegistrySnapshot:
+        try:
+            snapshot = self._resolve_canonical_model(artifact, RegistrySnapshot)
+        except ArtifactResolutionError as error:
+            raise GoldenRunRegistryError(
+                "HARN_ARTIFACT_UNAVAILABLE",
+                f"registry snapshot is unavailable: {error}",
+            ) from error
+        except (ValidationError, TypeError, ValueError) as error:
+            raise GoldenRunRegistryError(
+                "HARN_INPUT_SCHEMA_INVALID",
+                f"registry snapshot is not strict canonical JSON: {error}",
+            ) from error
+        for entry in snapshot.qualified_skills:
+            try:
+                descriptor_model = (
+                    SkillDescriptor
+                    if entry.descriptor_ref.schema_version == "harness.skill_descriptor.v1"
+                    else SkillDescriptorV2
+                )
+                descriptor = self._resolve_canonical_model(
+                    entry.descriptor_ref,
+                    descriptor_model,
+                )
+                qualification = self._resolve_canonical_model(
+                    entry.qualification_ref,
+                    SkillQualification,
+                )
+                report = self._resolve_canonical_model(
+                    entry.qualification_report_ref,
+                    QualificationReportV1,
+                )
+            except ArtifactResolutionError as error:
+                raise GoldenRunRegistryError(
+                    "HARN_ARTIFACT_UNAVAILABLE",
+                    f"registry qualification artifact is unavailable: {entry.skill_ref}",
+                ) from error
+            except (ValidationError, TypeError, ValueError) as error:
+                raise GoldenRunRegistryError(
+                    "HARN_INPUT_SCHEMA_INVALID",
+                    f"registry qualification artifact is invalid: {entry.skill_ref}: {error}",
+                ) from error
+            descriptor_skill_ref = f"{descriptor.skill_id}@{descriptor.version}"
+            if (
+                descriptor_skill_ref != entry.skill_ref
+                or descriptor.mcp_tool_name != entry.mcp_tool_name
+                or descriptor.qualification_artifact != entry.qualification_ref
+                or qualification.skill_ref != entry.skill_ref
+                or qualification.report_sha256 != entry.qualification_report_ref.sha256
+                or report.skill_ref != entry.skill_ref
+                or report.status != qualification.status
+                or report.deterministic_case_id != qualification.deterministic_case_id
+                or report.regression_command != qualification.regression_command
+                or report.implementation_sha256 != descriptor.implementation_sha256
+            ):
+                raise GoldenRunRegistryError(
+                    "HARN_SKILL_UNQUALIFIED",
+                    f"registry snapshot has an unbound qualification closure: {entry.skill_ref}",
+                )
+            try:
+                schema_model(descriptor.input_schema)
+                schema_model(descriptor.output_schema)
+            except KeyError as error:
+                raise GoldenRunRegistryError(
+                    "HARN_DEPENDENCY_DRIFT",
+                    f"registry descriptor references an unavailable schema: {entry.skill_ref}",
+                ) from error
+        return snapshot
 
     def _resolve_canonical_model(
         self,
@@ -341,4 +448,5 @@ __all__ = [
     "GoldenRunConflictError",
     "GoldenRunCorruptionError",
     "GoldenRunHarness",
+    "GoldenRunRegistryError",
 ]

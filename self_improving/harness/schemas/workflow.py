@@ -20,6 +20,9 @@ _CAPABILITY_PROFILE_PATTERN = (
     r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+@(?:0|[1-9][0-9]*)$"
 )
 _CAS_URI = re.compile(r"^artifact://sha256/([0-9a-f]{64})$")
+_WORKFLOW_RECEIPT_SCHEMA = re.compile(
+    r"^harness\.workflow_[a-z][a-z0-9_]*_receipt\.v1$"
+)
 
 CapabilityProfileRef = Annotated[
     str,
@@ -85,6 +88,7 @@ class WorkflowStartReceipt(HarnessModel):
     workspace: Literal["ephemeral", "production"]
     requested_profile: CapabilityProfileRef
     request_sha256: Sha256
+    request_ref: ArtifactRef
     state_sha256: Sha256
     state_ref: ArtifactRef
     registry_snapshot: ArtifactRef
@@ -93,6 +97,11 @@ class WorkflowStartReceipt(HarnessModel):
     @model_validator(mode="after")
     def receipt_is_bound(self) -> "WorkflowStartReceipt":
         _require_utc(self.started_at, label="started_at")
+        _require_cas_ref(
+            self.request_ref,
+            label="request_ref",
+            schema_version=RUN_START_REQUEST_SCHEMA_ID,
+        )
         _require_cas_ref(
             self.state_ref,
             label="state_ref",
@@ -121,6 +130,7 @@ class RunSnapshot(HarnessModel):
     turn_seq: NonNegativeInt
     state_sha256: Sha256
     state_ref: ArtifactRef
+    start_request_ref: ArtifactRef
     registry_snapshot: ArtifactRef
     receipt_head: ArtifactRef
     active_operation: UUID4 | None
@@ -140,15 +150,16 @@ class RunSnapshot(HarnessModel):
             schema_version="harness.trusted_world_state.v1",
         )
         _require_cas_ref(
+            self.start_request_ref,
+            label="start_request_ref",
+            schema_version=RUN_START_REQUEST_SCHEMA_ID,
+        )
+        _require_cas_ref(
             self.registry_snapshot,
             label="registry_snapshot",
             schema_version="harness.registry_snapshot.v1",
         )
-        _require_cas_ref(
-            self.receipt_head,
-            label="receipt_head",
-            schema_version=WORKFLOW_START_RECEIPT_SCHEMA_ID,
-        )
+        _require_workflow_receipt_ref(self.receipt_head)
         return self
 
 
@@ -170,6 +181,19 @@ def _require_cas_ref(
         raise ValueError(f"{label} must use media_type='application/json'")
     if artifact.schema_version != schema_version:
         raise ValueError(f"{label} must have schema_version={schema_version}")
+
+
+def _require_workflow_receipt_ref(artifact: ArtifactRef) -> None:
+    match = _CAS_URI.fullmatch(artifact.uri)
+    if match is None or match.group(1) != artifact.sha256:
+        raise ValueError("receipt_head must use its content-addressed artifact URI")
+    if artifact.media_type != "application/json":
+        raise ValueError("receipt_head must use media_type='application/json'")
+    if (
+        artifact.schema_version is None
+        or _WORKFLOW_RECEIPT_SCHEMA.fullmatch(artifact.schema_version) is None
+    ):
+        raise ValueError("receipt_head must use a versioned workflow receipt schema")
 
 
 __all__ = [

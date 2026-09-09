@@ -4,20 +4,25 @@
 
 ## Doing
 
-- P1：补正式 `RegistrySnapshot`、canonical request CAS/ref 与可演进 receipt-head；workflow start 与
-  重启幂等已完成，但在这些审计闭包修复前不进入 P2 dispatch。
+- P1：在已完成的 canonical start/Registry 闭包上补公共 `read` 与可注入的 durable aggregate store，
+  再以单条 RED→GREEN tracer 进入 submit/operation 生命周期。
+- P6：审阅并整合首个只读资产债务 repair-plan tracer；它只覆盖冻结的 2-ledger 样本，不能冒充
+  162-ledger 全量修复。
 
 ## Next
 
 - P2：在 actor-neutral v2 receipt/state-delta 上接入 exact qualified compile → replay 两步调度；不得复用
   planner-specific v1 receipt 字段冒充外部 Codex/MCP 调用。
-- 在 P4 前冻结官方 MCP dependency/runtime lock，不在实验循环中安装依赖。
+- P4：S1 的 `submit/read`、OperationSnapshot 和真实 Registry handler 绑定完成后，接入 MCP 2.2 的
+  low-level Server/Client；在同一切片冻结 dependency/runtime lock，不在实验循环中安装依赖。
 
 ## Blocked
 
 - ClawCross/dashboard 的 portfolio、tasks、project 三个状态 URL 均返回 HTTP 404；无法同步 TODO
   控制面，也没有可用 task id 写回进度。
 - Autoresearch 的 benchmark/真实 MCP/Genesis 前置尚未实现；设置已确认但尚不能建立诚实 baseline。
+- exact MCP adapter 仍缺 `submit/read` 和真实 Registry handler 交集；caller 提供的内部一致
+  `RegistrySnapshot` 目前不能单独作为生产 trust root。
 - clean root suite 的旧 replay qualification source identity 仍有 1 个失败；原始真实 qualification
   settings/CAS 尚在，但旧 delegated cgroup 已不存在，且后续 Harness 实现还会继续改变源码身份。
 
@@ -42,3 +47,8 @@
 - P1 首个 S1 纵切：从 canonical CAS user-input evidence 构建可信世界状态、actor-neutral start receipt
   与父 workflow snapshot；3 份公共 schema 已导出，focused 19 tests 通过，两个新增模块语句/分支
   覆盖率均为 100%。
+- P1 durable start/idempotency 纵切：跨实例 retry、冲突拒绝和 CAS/SQLite 恢复校验已完成；focused
+  29 tests 通过，相关新增模块语句/分支覆盖率 100%。
+- P1 Registry/request 闭包纵切：正式 `RegistrySnapshot` strict canonical 解析并交叉绑定 descriptor、
+  qualification、report；start request 进入 CAS，receipt head 改为可演进的 versioned workflow receipt
+  family。focused 48 tests 通过，3 个相关模块语句/分支覆盖率 100%，25 份 schema snapshot 通过。

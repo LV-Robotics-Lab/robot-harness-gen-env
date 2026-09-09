@@ -17,6 +17,8 @@ from self_improving.harness.schema_catalog import (
     schema_snapshot_name,
 )
 from self_improving.harness.schemas.common import ArtifactRef, SkillDescriptorV2
+from self_improving.harness.schemas.qualification_report import PublicQualificationReportV1
+from self_improving.harness.schemas.registry_snapshot import RegistrySnapshot
 from self_improving.harness.schemas.text2env_validate_v2 import (
     Text2EnvValidateV2Input,
     Text2EnvValidateV2Output,
@@ -35,6 +37,7 @@ EXPECTED_SCHEMA_IDS = {
     "harness.replay_vlm_assessment_input.v1",
     "harness.replay_vlm_assessment_output.v1",
     "harness.replay_vlm_assessment_output.v2",
+    "harness.registry_snapshot.v1",
     "harness.run_state.v1",
     "harness.run_snapshot.v1",
     "harness.run_start_request.v1",
@@ -42,6 +45,7 @@ EXPECTED_SCHEMA_IDS = {
     "harness.skill_descriptor.v2",
     "harness.skill_invocation.v1",
     "harness.skill_qualification.v1",
+    "harness.skill_qualification_report.v1",
     "harness.text2env_compile_input.v1",
     "harness.text2env_compile_output.v1",
     "harness.text2env_replay_input.v1",
@@ -63,6 +67,11 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert schema_model("harness.run_start_request.v1") is RunStartRequest
     assert schema_model("harness.run_snapshot.v1") is RunSnapshot
     assert schema_model("harness.workflow_start_receipt.v1") is WorkflowStartReceipt
+    assert schema_model("harness.registry_snapshot.v1") is RegistrySnapshot
+    assert (
+        schema_model("harness.skill_qualification_report.v1")
+        is PublicQualificationReportV1
+    )
     with pytest.raises(KeyError):
         schema_model("harness.missing.v1")
     with pytest.raises(TypeError):
@@ -79,6 +88,8 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
         if schema_id in {
             "harness.run_start_request.v1",
             "harness.run_snapshot.v1",
+            "harness.registry_snapshot.v1",
+            "harness.skill_qualification_report.v1",
             "harness.workflow_start_receipt.v1",
         }:
             assert document["properties"]["schema_version"]["const"] == schema_id
