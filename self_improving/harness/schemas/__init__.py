@@ -8,6 +8,14 @@ from .asset_repair import (
     AssetRepairPlan,
     AssetRepairPlanRequest,
 )
+from .asset_staging import (
+    ASSET_SOURCE_SNAPSHOT_MANIFEST_SCHEMA_ID,
+    ASSET_STAGE_REQUEST_SCHEMA_ID,
+    ASSET_STAGE_RESULT_SCHEMA_ID,
+    AssetSourceSnapshotManifest,
+    AssetStageRequest,
+    AssetStageResult,
+)
 from .common import (
     ARTIFACT_REF_SCHEMA_ID,
     BLOCKER_SCHEMA_ID,
@@ -91,6 +99,9 @@ __all__ = [
     "ASSET_DEBT_INVENTORY_SCHEMA_ID",
     "ASSET_REPAIR_PLAN_REQUEST_SCHEMA_ID",
     "ASSET_REPAIR_PLAN_SCHEMA_ID",
+    "ASSET_SOURCE_SNAPSHOT_MANIFEST_SCHEMA_ID",
+    "ASSET_STAGE_REQUEST_SCHEMA_ID",
+    "ASSET_STAGE_RESULT_SCHEMA_ID",
     "BLOCKER_SCHEMA_ID",
     "ENVIRONMENT_PACKAGE_SCHEMA_ID",
     "EVENT_SCHEMA_ID",
@@ -123,6 +134,9 @@ __all__ = [
     "AssetDebtInventory",
     "AssetRepairPlan",
     "AssetRepairPlanRequest",
+    "AssetSourceSnapshotManifest",
+    "AssetStageRequest",
+    "AssetStageResult",
     "Blocker",
     "CompileConfig",
     "CapabilityProfileRef",

@@ -14,6 +14,7 @@ from .artifacts import (
     ResolvedArtifact,
 )
 from .asset_repair import AssetRepairApplication, AssetRepairError
+from .asset_staging import AssetStageError, LocalAssetSourceSnapshotBinding
 from .assets import AssetAdmissionError, GeneratedAssetAdmitter
 from .event_journal import (
     EventJournalConflictError,
@@ -127,6 +128,9 @@ from .schemas import (
     AssetDebtInventory,
     AssetRepairPlan,
     AssetRepairPlanRequest,
+    AssetSourceSnapshotManifest,
+    AssetStageRequest,
+    AssetStageResult,
     Blocker,
     CompileConfig,
     DependencyRef,
@@ -167,6 +171,10 @@ __all__ = [
     "AssetRepairError",
     "AssetRepairPlan",
     "AssetRepairPlanRequest",
+    "AssetSourceSnapshotManifest",
+    "AssetStageError",
+    "AssetStageRequest",
+    "AssetStageResult",
     "AssetAdmissionError",
     "Blocker",
     "CompileConfig",
@@ -200,6 +208,7 @@ __all__ = [
     "GoldenRunRegistryError",
     "HandlerResult",
     "LocalArtifactStore",
+    "LocalAssetSourceSnapshotBinding",
     "LoadedPortableRunReceipt",
     "LoadedQualification",
     "LoadedReplayQualification",

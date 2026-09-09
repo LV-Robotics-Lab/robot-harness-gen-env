@@ -8,6 +8,11 @@ from collections import Counter
 from pydantic import BaseModel, ValidationError
 
 from .artifacts import ArtifactResolutionError, LocalArtifactStore
+from .asset_staging import (
+    LocalAssetSourceSnapshotBinding,
+    stage_asset_repair,
+    validate_source_snapshot_bindings,
+)
 from .schemas.asset_repair import (
     AssetDebtEntry,
     AssetDebtInventory,
@@ -19,6 +24,7 @@ from .schemas.asset_repair import (
     RepresentationRecoveryProbe,
     RepresentationRepairPlan,
 )
+from .schemas.asset_staging import AssetStageRequest, AssetStageResult
 from .schemas.common import ArtifactRef
 
 _REQUIRED_FOLLOWUP = (
@@ -46,11 +52,13 @@ class AssetRepairApplication:
         *,
         artifact_store: LocalArtifactStore,
         trusted_inventory_refs: tuple[ArtifactRef, ...],
+        source_snapshots: tuple[LocalAssetSourceSnapshotBinding, ...] = (),
     ) -> None:
         if type(artifact_store) is not LocalArtifactStore:
             raise TypeError("artifact_store must be the exact LocalArtifactStore")
         self._artifact_store = artifact_store
         self._trusted_inventory_refs = frozenset(trusted_inventory_refs)
+        self._source_snapshots = validate_source_snapshot_bindings(source_snapshots)
 
     def plan(self, request: AssetRepairPlanRequest) -> AssetRepairPlan:
         """Classify the selected debt inventory; never stage or publish bytes."""
@@ -138,6 +146,16 @@ class AssetRepairApplication:
             probe_bytes_in_cas=False,
             runtime_qualification_executed=False,
             writes_performed=False,
+        )
+
+    def stage(self, request: AssetStageRequest) -> AssetStageResult:
+        """Copy an exact, manifest-bound loader closure into CAS without promotion."""
+
+        return stage_asset_repair(
+            artifact_store=self._artifact_store,
+            source_snapshots=self._source_snapshots,
+            request=request,
+            rebuild_plan=self.plan,
         )
 
     def _plan_entry(self, entry: AssetDebtEntry) -> AssetRepairEntryPlan:

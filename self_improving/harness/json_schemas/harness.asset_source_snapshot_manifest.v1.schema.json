@@ -1,0 +1,197 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "$id": "harness.artifact_ref.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "AssetSourceSnapshotAsset": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_id": {
+          "pattern": "^[a-z][a-z0-9_]{0,127}$",
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "logical_root": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "pattern": "^(?![A-Za-z]:)(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+)*$",
+          "title": "Logical Root",
+          "type": "string"
+        },
+        "members": {
+          "items": {
+            "$ref": "#/$defs/AssetSourceSnapshotMember"
+          },
+          "maxItems": 4096,
+          "minItems": 1,
+          "title": "Members",
+          "type": "array"
+        }
+      },
+      "required": [
+        "asset_id",
+        "logical_root",
+        "members"
+      ],
+      "title": "AssetSourceSnapshotAsset",
+      "type": "object"
+    },
+    "AssetSourceSnapshotMember": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 1,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "logical_path": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "pattern": "^(?![A-Za-z]:)(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+)*$",
+          "title": "Logical Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logical_path",
+        "sha256",
+        "bytes"
+      ],
+      "title": "AssetSourceSnapshotMember",
+      "type": "object"
+    }
+  },
+  "$id": "harness.asset_source_snapshot_manifest.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "assets": {
+      "items": {
+        "$ref": "#/$defs/AssetSourceSnapshotAsset"
+      },
+      "maxItems": 256,
+      "minItems": 1,
+      "title": "Assets",
+      "type": "array"
+    },
+    "capture_method": {
+      "const": "exact_byte_manifest.v1",
+      "title": "Capture Method",
+      "type": "string"
+    },
+    "inventory_ref": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "properties": {
+            "media_type": {
+              "const": "application/json"
+            },
+            "schema_version": {
+              "const": "harness.asset_debt_inventory.v1"
+            },
+            "uri": {
+              "maxLength": 82,
+              "minLength": 82,
+              "pattern": "^artifact://sha256/[0-9a-f]{64}$"
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "schema_version": {
+      "const": "harness.asset_source_snapshot_manifest.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "pattern": "^[a-z][a-z0-9_]{0,127}$",
+      "title": "Snapshot Id",
+      "type": "string"
+    },
+    "source_kind": {
+      "const": "local_unversioned_robotwin_assets",
+      "title": "Source Kind",
+      "type": "string"
+    },
+    "source_revision": {
+      "const": null,
+      "title": "Source Revision",
+      "type": "null"
+    }
+  },
+  "required": [
+    "schema_version",
+    "snapshot_id",
+    "inventory_ref",
+    "source_kind",
+    "source_revision",
+    "capture_method",
+    "assets"
+  ],
+  "title": "AssetSourceSnapshotManifest",
+  "type": "object"
+}

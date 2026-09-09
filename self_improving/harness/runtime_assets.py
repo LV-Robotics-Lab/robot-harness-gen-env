@@ -857,6 +857,15 @@ def _loader_references(suffix: str, payload: bytes) -> tuple[str, ...]:
         raise RuntimeAssetSnapshotError("loader_document_invalid") from error
 
 
+def loader_document_references(logical_path: str, payload: bytes) -> tuple[str, ...]:
+    """Enumerate references from one supported loader document."""
+
+    suffix = PurePosixPath(logical_path).suffix.lower()
+    if suffix not in _LOADER_DOCUMENT_SUFFIXES:
+        return ()
+    return _loader_references(suffix, payload)
+
+
 def _glb_document(payload: bytes) -> tuple[object, bool]:
     if len(payload) < 20 or payload[:4] != b"glTF":
         raise ValueError("GLB header is invalid")
@@ -959,6 +968,12 @@ def _normalize_loader_reference(source: str, reference: str) -> str:
     if not parts:
         raise RuntimeAssetSnapshotError("loader_reference_unsafe")
     return PurePosixPath(*parts).as_posix()
+
+
+def normalize_loader_reference(source: str, reference: str) -> str:
+    """Normalize a loader reference without allowing URI or filesystem escape syntax."""
+
+    return _normalize_loader_reference(source, reference)
 
 
 def _verified_object_roots(

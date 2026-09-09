@@ -45,7 +45,7 @@
 - Autoresearch 的 benchmark/真实 MCP/Genesis 前置尚未实现；设置已确认但尚不能建立诚实 baseline。
 - exact MCP adapter 仍缺 `submit/read` 和真实 Registry handler 交集；caller 提供的内部一致
   `RegistrySnapshot` 目前不能单独作为生产 trust root。
-- 三份 reader-facing repo-docs 仍把 Harness schema 数写成 17；本切片后实际为 29。文件已有用户修改，
+- 三份 reader-facing repo-docs 仍把 Harness schema 数写成 17；本 feature checkout 当前实际为 31。文件已有用户修改，
   本切片不覆盖或暂存，P14 必须在可安全协调时同步。
 - clean root suite 的旧 replay qualification source identity 仍有 1 个失败；原始真实 qualification
   settings/CAS 尚在，但旧 delegated cgroup 已不存在，且后续 Harness 实现还会继续改变源码身份。
@@ -93,3 +93,8 @@
   `probe_bytes_in_cas=false`、`writes_performed=false`、`runtime_qualification_executed=false`。这只是
   2/162 的 E0 tracer，来源总体与 inventory/selection totals 已分层绑定，不能改 scope 冒充全量；尚未
   覆盖 4,082 条全量清单或建立 portable byte closure。
+- P6 第二个 S5 exact-stage 纵切：以 trusted inventory + rebuilt canonical plan + path-free source
+  manifest + deployment-only local-root binding，从本机未版本化 RoboTwin 来源逐 member 重算 hash/bytes，
+  把 `003_plate`/`071_can` 的 14 个 GLB（57,226,572 bytes）写入新 CAS，并枚举每个 representation 的
+  loader closure。结果 hash-bind 三个输入 ref，且明确 simulator/runtime qualification/promotion/
+  authoritative-ledger-write 均为 false；未改历史 ledger 或来源资产。
