@@ -37,10 +37,10 @@ The old AgenticSim checkout was a sparse historical TacHarness state. Its four
 unique Awesome-Isaac audit files were archived in TacHarness before that local
 checkout was deleted; it is not a dependency here.
 
-The PEARL presentation layer lives in `apps/pearl_evidence_portal/`. Its source
-history and bounded hosted-report subset are versioned together so the portal
-build remains self-contained; build output and dependency caches remain
-excluded. It presents platform evidence but does not define acceptance gates.
+The PEARL presentation layer was removed from the active tree in `d8b3787`.
+Its source history remains traceable through Git and `source_inventory.json`, but
+the portal is no longer a required platform capability or a runnable app at the
+current HEAD. Historical presentation output never defined acceptance gates.
 
 ## Harness schema tranche
 
@@ -154,9 +154,9 @@ The completed diffusion-policy `600.ckpt` is handled the same way: its local
 size and SHA-256 are recorded in the 2026-08-14 cleanup receipt, while
 `storage_uri` remains null and therefore no remote backup is claimed.
 
-The PEARL portal is the narrow exception for already curated, browser-served
-report media under `apps/pearl_evidence_portal/public/reports/`; raw runs and
-the portal's generated `dist/` tree are still excluded.
+The former PEARL browser subset is retained only in repository history; the
+current tree keeps bulk report media, raw runs, and generated presentation output
+excluded. Small evidence samples remain governed by the root contribution rules.
 
 The 2026-07-16 OpenXSim acceptance workspaces are preserved without sibling
 checkouts: compact reviewable evidence is tracked under `validation_evidence/`,

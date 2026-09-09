@@ -36,7 +36,7 @@ self_improving/validation_evidence/
                                    compact recovered simulator acceptance records
 self_improving/workspace_archives/
                                    full-file manifests and Release archive pointers
-apps/pearl_evidence_portal/        PEARL evidence portal and hosted subset
+apps/                              reserved presentation root; no active app at current HEAD
 external/OpenReal2Sim/             independent Git submodule
 external/digital-cousins/          independent Git submodule
 external/MetaSim/                  pinned validation dependency submodule

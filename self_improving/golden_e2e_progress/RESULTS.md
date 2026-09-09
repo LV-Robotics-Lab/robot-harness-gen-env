@@ -80,6 +80,20 @@
   `/metrics/closed_loop_success_rate`（higher is better），以及最多 30 次或 12 小时的首轮预算。
 - 这表示允许开始 TDD，实现完成前仍不能声称 MCP、Genesis robot-policy 或 golden E2E 已通过。
 
+## 2026-09-09 P0 readiness 修复与 clean baseline
+
+- RED：删除 PEARL portal 后，公共 `python -m self_improving --json` 仍把它当 required module，退出 1。
+- GREEN：保留历史 module identity 供旧消费者发现，但设为 `required=false`；其他 required modules
+  不变。focused registry tests `3 passed`，当前共享 checkout 的真实 audit 为
+  `ready=true/required_failures=[]`，portal 明确为 `missing`。
+- Feature commit：`5ac9108 fix(platform): align readiness after portal removal`。
+- Detached clean worktree 根套件：`3016 passed, 19 skipped, 1 failed in 143.26s`。唯一失败仍是
+  `text2env.replay@1.0.0` 的 checked-in qualification source identity；clean tree 首个漂移文件是
+  `self_improving/harness/__init__.py`，证明问题早于共享工作树的未提交 IMPLEMENTATION_LOG 变化。
+- 原 2026-09-02 qualification settings、CAS、解释器、资产和媒体工具仍在本机，但其 delegated cgroup
+  已不存在。不能复写三份资格文档或更新期望 hash；最终在实现树稳定后用新隔离 scope 跑真实固定案例
+  并重签，或者显式撤销旧 Skill 资格。
+
 ## 2026-09-09 三方整合来源台账
 
 - 新建 `docs/integration-provenance/`，以功能级 `integration_id` 分别记录 Bingsheng、Gujie、Yuxin
