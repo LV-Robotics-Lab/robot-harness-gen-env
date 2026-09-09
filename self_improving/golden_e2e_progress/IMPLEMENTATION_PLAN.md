@@ -1,6 +1,6 @@
 # Golden E2E 实施计划
 
-状态：`planned_pending_contract_confirmation`
+状态：`active`
 
 每个切片遵循：更新 TODO → 通过公共 seam 写 RED → 记录失败 → 最小 GREEN → focused tests + 100%
 新模块 statement/branch coverage → full regression/必要真实 runtime → 更新证据和 repo-docs → 只暂存本

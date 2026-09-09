@@ -26,3 +26,31 @@
 - 决策：compile success、Codex/VLM judgement、媒体可见和 replay process success 均不能单独给出
   publishability。只有哈希闭包完整、真实 Genesis replay/validate 通过且 promotion gate 接受的候选
   才能晋升。
+
+## D004 — Deep aggregate 与 exact Skill MCP
+
+- 日期：2026-09-09
+- 状态：accepted
+- 决策：workflow 业务通过 S1 `GoldenRunHarness.start/submit/read` 聚合；外部 Codex、benchmark 与
+  frontend 使用同一 S2 MCP adapter。MCP 公开精确版本、已资格的 x2env tools，而不是通用
+  `skill.invoke`；耗时执行以 durable operation/resource 呈现。
+- 边界：Codex 位于 MCP seam 外。它的 route、视觉判断和诊断是 advisory，Harness 对状态、执行、
+  validate 和 promotion 保持唯一权威。
+
+## D005 — Genesis 最终能力门
+
+- 日期：2026-09-09
+- 状态：accepted
+- 决策：最终 golden case 必须满足 `genesis.robot_policy@1`，包括版本化 robot profile、reset、typed
+  action/observation/termination、bounded nonzero action probe 与 trajectory；仅 load/build/step 的
+  `genesis.rigid_scene@1` 是中间门。
+- 边界：该能力不声明训练 policy 成功或真机可用。
+
+## D006 — Autoresearch 冻结设置
+
+- 日期：2026-09-09
+- 状态：accepted
+- 决策：路由 suite 为 36 cases、执行 suite 为 12 cases；primary metric 是
+  `closed_loop_success_rate`，higher is better。首轮独立 worktree 最多 30 次或 12 小时，保持已确认的
+  in/out scope、保护门和简单性优先策略。
+- 前置：真实 benchmark command、MCP、Codex 与 Genesis 基线全部可执行后才开始实验计数。

@@ -14,8 +14,8 @@
 - [x] 起草 text/image/video/multimodal 输入归一化合同，等待确认冻结。
 - [x] 起草 image2env 与 video2env 的三个 Skill 命名、输入、输出、资格和失败合同，等待确认冻结。
 - [x] 起草 Codex external-agent/advisory 与 MCP adapter 合同，等待确认冻结。
-- [ ] 用户确认 `SEAMS.md` 中的公共测试 seam。
-- [ ] 用户确认 `AUTORESEARCH_SETUP.md` 的指标、范围、约束和实验预算。
+- [x] 用户确认 `SEAMS.md` 中的公共测试 seam。
+- [x] 用户确认 `AUTORESEARCH_SETUP.md` 的指标、范围、约束和实验预算。
 
 ## G2：Codex 中枢与 MCP 证据链
 

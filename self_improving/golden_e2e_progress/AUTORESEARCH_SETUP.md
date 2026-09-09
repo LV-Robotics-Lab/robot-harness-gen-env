@@ -1,6 +1,6 @@
 # Autoresearch Setup 草案
 
-状态：`pending_user_confirmation`
+状态：`accepted_2026-09-09`
 
 按 `autoresearch` skill，以下参数在循环开始前必须由用户整体确认。功能/物理 bug 先按普通 TDD 修复；
 只有基线可执行后才启动评分实验，避免把“修到能跑”误计成模型路由提升。
@@ -109,7 +109,7 @@ branch 修复、全量验证并重建 baseline；该修复不作为一次 prompt
 
 ## 待确认事项
 
-- [ ] 确认 Goal、两个 suite 的规模与 split。
-- [ ] 确认 metric command、primary extraction 和 higher-is-better。
-- [ ] 确认 in/out scope 与保护门。
-- [ ] 确认 30 次 / 12 小时首轮预算和独立 worktree。
+- [x] 确认 Goal、两个 suite 的规模与 split。
+- [x] 确认 metric command、primary extraction 和 higher-is-better。
+- [x] 确认 in/out scope 与保护门。
+- [x] 确认 30 次 / 12 小时首轮预算和独立 worktree。

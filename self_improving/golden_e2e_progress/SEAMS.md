@@ -1,9 +1,9 @@
 # TDD 公共 seam 草案
 
-状态：`pending_user_confirmation`
+状态：`accepted_2026-09-09`
 
-按仓库 `tdd` skill，以下是功能测试唯一允许跨越的公共 seam。用户确认前不写功能测试；确认后每个
-切片先从这些 seam 观察 RED，再做最小 GREEN，不围绕 private helper 建测试。
+按仓库 `tdd` skill，以下是功能测试唯一允许跨越的公共 seam。每个切片先从这些 seam 观察 RED，
+再做最小 GREEN，不围绕 private helper 建测试。
 
 ## S1 — Workflow aggregate
 
@@ -88,7 +88,7 @@ scripted MCP client 可用于 deterministic integration；只有 `agent_mode=cod
 
 ## 待确认事项
 
-- [ ] 接受 S1–S6 为公共测试 seam。
-- [ ] 接受 exact Skill MCP tools，而不是 public generic `skill.invoke`。
-- [ ] 接受 `genesis.robot_policy@1` 作为最终完成指标，`genesis.rigid_scene@1` 只作中间门。
-- [ ] 允许新增 optional dependency `mcp>=2.2,<3`，并用官方 Python client/server 做真协议测试。
+- [x] 接受 S1–S6 为公共测试 seam。
+- [x] 接受 exact Skill MCP tools，而不是 public generic `skill.invoke`。
+- [x] 接受 `genesis.robot_policy@1` 作为最终完成指标，`genesis.rigid_scene@1` 只作中间门。
+- [x] 允许新增 optional dependency `mcp>=2.2,<3`，并用官方 Python client/server 做真协议测试。

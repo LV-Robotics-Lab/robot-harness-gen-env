@@ -1,6 +1,6 @@
 # Golden E2E 验收合同草案
 
-状态：`pending_user_confirmation`
+状态：`accepted_2026-09-09`
 
 ## 证据等级
 

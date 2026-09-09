@@ -1,6 +1,6 @@
 # X2Env Skill 合同草案
 
-状态：`pending_user_confirmation`
+状态：`accepted_2026-09-09`
 
 本页冻结公共语义；具体 Pydantic 字段在 RED 测试切片中按此实现。现有
 `text2env.compile/replay@1.0.0` 保持兼容，不原地改变其 SAPIEN 语义。

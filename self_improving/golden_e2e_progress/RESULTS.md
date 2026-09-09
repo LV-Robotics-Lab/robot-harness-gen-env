@@ -70,3 +70,12 @@
 - 官方 Codex MCP 文档确认 STDIO/Streamable HTTP、server instructions、项目级 config、tool timeout 和
   per-tool approval 配置；正式证据仍须由当前仓库 MCP server 的 negotiated clientInfo 与 tool-call
   receipts 对账。
+
+## 2026-09-09 契约与实验设置确认
+
+- 用户确认 S1–S6 公共 TDD seam、exact qualified Skill MCP 和 `genesis.robot_policy@1` 最终门。
+- 用户允许新增 optional dependency `mcp>=2.2,<3`，但依赖只能在 P4 的正常 feature 切片中冻结；
+  autoresearch 循环本身不安装或升级依赖。
+- Autoresearch 已确认 36 个 routing cases、12 个 execution cases、primary
+  `/metrics/closed_loop_success_rate`（higher is better），以及最多 30 次或 12 小时的首轮预算。
+- 这表示允许开始 TDD，实现完成前仍不能声称 MCP、Genesis robot-policy 或 golden E2E 已通过。

@@ -30,7 +30,8 @@
 
 ## 当前阶段
 
-`contract_confirmation`
+`p0_p1_implementation`
 
-只读审计和第一版契约设计已经完成。当前只允许审阅反馈和契约修订；功能测试与实现须在
-`SEAMS.md` 经用户确认后开始，路由优化循环还须单独确认 `AUTORESEARCH_SETUP.md`。
+只读审计和第一版契约设计已经完成；用户于 2026-09-09 确认公共 seam、exact Skill MCP、
+`genesis.robot_policy@1` 最终门、MCP optional dependency 与 autoresearch 设置。当前按 P0/P1 的
+纵向 TDD 切片实施；autoresearch 只在其冻结 benchmark 可以真实运行后开始。
