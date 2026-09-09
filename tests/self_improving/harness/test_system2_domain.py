@@ -22,6 +22,7 @@ from self_improving.harness.system2.domain import (
     TrustedWorldState,
     WorldFact,
     WorldFactEvidence,
+    advance_trusted_world_state,
     apply_state_delta,
     build_state_delta,
     build_world_state,
@@ -248,6 +249,34 @@ def test_build_world_state_is_canonical_and_order_independent() -> None:
     assert state.predecessor_state_sha256 is None
     assert tuple(fact.key for fact in state.facts) == ("scene.left", "scene.right")
     assert state.state_sha256 == repeated.state_sha256
+
+
+def test_public_trusted_state_kernel_applies_one_validated_cas_transition() -> None:
+    original = _fact("scene.object", {"asset": "can"}, digest="1" * 64)
+    state = build_world_state((original,), as_of=_T0)
+    replacement = _fact(
+        "scene.object",
+        {"asset": "plate"},
+        digest="2" * 64,
+        observed_at=_T0 + timedelta(seconds=1),
+    )
+
+    advanced = advance_trusted_world_state(
+        state,
+        effective_at=_T0 + timedelta(seconds=1),
+        mutations=(
+            StateMutation(
+                operation="upsert",
+                key="scene.object",
+                expected_fact_sha256=fact_sha256(original),
+                fact=replacement,
+            ),
+        ),
+    )
+
+    assert advanced.version == 2
+    assert advanced.predecessor_state_sha256 == state.state_sha256
+    assert advanced.facts == (replacement,)
 
 
 @pytest.mark.parametrize(
