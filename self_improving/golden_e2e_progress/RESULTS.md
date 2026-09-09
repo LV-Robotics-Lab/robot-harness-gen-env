@@ -79,3 +79,13 @@
 - Autoresearch 已确认 36 个 routing cases、12 个 execution cases、primary
   `/metrics/closed_loop_success_rate`（higher is better），以及最多 30 次或 12 小时的首轮预算。
 - 这表示允许开始 TDD，实现完成前仍不能声称 MCP、Genesis robot-policy 或 golden E2E 已通过。
+
+## 2026-09-09 三方整合来源台账
+
+- 新建 `docs/integration-provenance/`，以功能级 `integration_id` 分别记录 Bingsheng、Gujie、Yuxin
+  的原始来源、第三方上游、Harness 整合责任、固定 commit、dirty snapshot、目标路径和验证状态。
+- 初始台账只把当前 Harness/合同和 Yuxin 历史 active tree 标为 `integrated`；Gujie x2env/Genesis
+  以及 Yuxin 面向新 Skills 的复用能力仍为 `candidate`。
+- 当前没有任何新条目标为 `runtime_pass`：资产 ledger 债务、Codex/MCP 同-run 闭环和当前 Harness
+  内的真实 Genesis 最终能力门均尚未完成。
+- 根 `AGENTS.md` 已要求后续每个来源整合切片与台账更新同一提交，防止最终集中补写造成来源漂移。

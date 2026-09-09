@@ -48,6 +48,11 @@ When working on x2env Skills, Codex orchestration, MCP adaptation, asset-debt re
 Genesis golden line, read `self_improving/golden_e2e_progress/README.md` first and update its live
 task, TODO, decision, and result ledgers before reporting progress.
 
+When incorporating behavior from Bingsheng, Gujie, or Yuxin, also read
+`docs/integration-provenance/README.md` and update `docs/integration-provenance/LEDGER.md` in the
+same feature commit. Keep origin ownership, third-party upstream ownership, integration ownership,
+fixed source refs, and runtime verification as separate fields.
+
 ## For AI Agents（给 AI agent 的提示）
 
 ### Working In This Directory（在本目录工作）

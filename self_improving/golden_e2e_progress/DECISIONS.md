@@ -54,3 +54,13 @@
   `closed_loop_success_rate`，higher is better。首轮独立 worktree 最多 30 次或 12 小时，保持已确认的
   in/out scope、保护门和简单性优先策略。
 - 前置：真实 benchmark command、MCP、Codex 与 Genesis 基线全部可执行后才开始实验计数。
+
+## D007 — 功能级来源与整合责任必须分账
+
+- 日期：2026-09-09
+- 状态：accepted
+- 决策：以 `docs/integration-provenance/LEDGER.md` 作为 Bingsheng、Gujie、Yuxin 工作进入 Golden
+  E2E 的核对清单。每项能力分别记录原始来源、第三方上游、Harness 整合责任、固定 ref、目标路径、
+  合同和验证状态；功能切片与台账更新必须同一提交。
+- 边界：目录所有者或整合者不自动成为被整合代码的原作者；`integrated` 不等于
+  `runtime_pass`；未固定的 dirty workspace 字节不能计入完成来源。

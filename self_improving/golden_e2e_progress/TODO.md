@@ -31,3 +31,5 @@
 - 推荐 A 内核 + C 外观 + B 最小共享模型，并起草 Skill/验收/实施合同。
 - 用户确认 S1–S6、exact Skill MCP、`genesis.robot_policy@1` 最终门、`mcp>=2.2,<3` 与
   36/12 cases、30 次或 12 小时的 autoresearch 设置。
+- 建立 `docs/integration-provenance/`，按功能固定 Bingsheng、Gujie、Yuxin 的来源、版本、整合责任、
+  第三方上游与验证状态，并从根 `AGENTS.md` 建立强制更新入口。

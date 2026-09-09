@@ -7,6 +7,7 @@
 - [x] 审计 `worktree/gujie` 的 x2env 输入、输出、Genesis 资产/场景格式和可运行证据。
 - [x] 审计历史资产债务、可迁移数据、真实 settle 缺口和现有修复工具。
 - [x] 审计当前 compile/replay/validate、System 2、MCP、observation、diagnosis 和 promotion seam。
+- [x] 建立 Bingsheng、Gujie、Yuxin 功能级整合来源与验证状态台账。
 
 ## G1：契约与测试 seam
 

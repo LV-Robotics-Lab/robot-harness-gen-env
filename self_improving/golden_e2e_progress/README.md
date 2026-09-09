@@ -17,6 +17,7 @@
 - `ACCEPTANCE.md`：E0–E4 证据等级和最终验收门。
 - `IMPLEMENTATION_PLAN.md`：按 TDD 和独立提交组织的纵向实施顺序。
 - `RESULTS.md`：命令、通过/失败数字、运行证据和不可扩张主张。
+- `../../docs/integration-provenance/LEDGER.md`：三方能力来源、固定版本、整合责任和验证状态台账。
 
 ## 每次工作顺序
 
@@ -27,6 +28,8 @@
    `docs/evidence/` 页面并从这里链接。
 5. 公共测试 seam 以 `SEAMS.md` 为准；未确认的 seam 不开始 TDD 功能实现。
 6. 路由优化实验遵守 `AUTORESEARCH_SETUP.md`，每次尝试先提交、后测量，并保留失败记录。
+7. 从 Bingsheng、Gujie 或 Yuxin 整合功能时，同一提交更新来源台账；dirty workspace 只有在固定
+   内容 manifest/hash 后才能成为来源证据。
 
 ## 当前阶段
 
