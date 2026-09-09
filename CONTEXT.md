@@ -40,15 +40,43 @@ _Avoid_: run success、validation completeness
 把复用选择、拒绝原因、生成、回放和验证结果沉淀为可追溯证据，并用这些证据改进后续检索、选择、诊断和资产晋升的循环。
 _Avoid_: one-shot generation、untracked fallback
 
+## Golden E2E 语言
+
+**Golden Workflow（黄金工作流）**:
+把一次文本、图像、视频或组合请求，与其全部 Skill 尝试、状态推进、证据和晋升决定关联在
+同一父级身份下的可恢复闭环。
+_Avoid_: single Skill run、chat session、one-shot demo
+
+**Genesis Rigid Scene（Genesis 刚体场景）**:
+能由 Genesis 原生加载，并在启用碰撞的非零物理步进中通过冻结的刚体物理门与连续媒体门的
+环境；它不承诺机器人接口或策略测试能力。
+_Avoid_: render-only scene、robot-policy ready、successful process exit
+
+**Genesis Robot-Policy Ready（Genesis 机器人策略就绪）**:
+在 Genesis Rigid Scene 之上，提供可重复 reset、受约束 action、与 step 绑定的
+observation/termination 及可重读 trajectory 的环境能力；它不表示训练策略成功或真机能力。
+_Avoid_: rigid replay、trained-policy success、real-robot ready
+
+**Promoted Golden（已晋升黄金产物）**:
+已经达到 Genesis Robot-Policy Ready、由 validate 判定 publishable、通过晋升门并能从可移植
+证据闭包重启回放的最终 golden 产物。
+_Avoid_: successful demo、validated render、unpromoted candidate
+
 ## System 2 执行语言
 
 **Trusted World State（受信世界状态）**:
 规划器可以据此决策的当前世界事实集合；每项事实都来自类型化输入、新鲜观测或可验证回执，并带明确时效和来源。
 _Avoid_: chat context、unchecked memory、scene description
 
+**External Codex Agent（外部 Codex Agent）**:
+位于 Harness 受信边界之外，读取资格化能力与受信证据并提出规划、诊断和视觉判断的认知
+参与者；其输出是不受信建议，不能授予物理通过或发布资格。
+_Avoid_: internal model provider、Qwen planner、VLM authority、trusted executor
+
 **System 2 Planner（系统二规划器）**:
-根据受信世界状态选择下一项版本化 Skill，并在失败后决定重试、修复、回放或停止的推理角色；它不直接冒充低层控制器。
-_Avoid_: monolithic VLA、free-form chatbot、skill executor
+根据受信世界状态选择下一项版本化 Skill，并在失败后提议重试、修复、回放或停止的推理角色；
+在目标架构中该角色由 External Codex Agent 承担，而不是 Harness 内部的模型 provider。
+_Avoid_: internal Qwen planner、monolithic VLA、free-form chatbot、skill executor
 
 **Planner Context（规划上下文）**:
 从受信世界状态、已资格化 Skill 和回执绑定的近期历史中按固定预算编译出的只读投影；它记录被省略信息的集合摘要，并与源状态摘要绑定。
