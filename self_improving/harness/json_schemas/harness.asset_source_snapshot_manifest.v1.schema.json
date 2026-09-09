@@ -81,12 +81,22 @@
           "minItems": 1,
           "title": "Members",
           "type": "array"
+        },
+        "model_sidecars": {
+          "items": {
+            "$ref": "#/$defs/AssetSourceSnapshotModelSidecar"
+          },
+          "maxItems": 2048,
+          "minItems": 1,
+          "title": "Model Sidecars",
+          "type": "array"
         }
       },
       "required": [
         "asset_id",
         "logical_root",
-        "members"
+        "members",
+        "model_sidecars"
       ],
       "title": "AssetSourceSnapshotAsset",
       "type": "object"
@@ -118,6 +128,50 @@
         "bytes"
       ],
       "title": "AssetSourceSnapshotMember",
+      "type": "object"
+    },
+    "AssetSourceSnapshotModelSidecar": {
+      "additionalProperties": false,
+      "properties": {
+        "logical_path": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "pattern": "^(?![A-Za-z]:)(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+)*$",
+          "title": "Logical Path",
+          "type": "string"
+        },
+        "model_id": {
+          "minimum": 0,
+          "title": "Model Id",
+          "type": "integer"
+        },
+        "scale": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            }
+          ],
+          "title": "Scale",
+          "type": "array"
+        }
+      },
+      "required": [
+        "model_id",
+        "logical_path",
+        "scale"
+      ],
+      "title": "AssetSourceSnapshotModelSidecar",
       "type": "object"
     }
   },

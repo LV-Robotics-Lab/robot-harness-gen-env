@@ -196,6 +196,12 @@ def _stage_case(
             else plate_payload
         ),
         "objects/071_can/visual/base0.glb": _glb(binary=b"can!"),
+        "objects/003_plate/model_data0.json": _canonical_bytes(
+            {"scale": [0.025, 0.025, 0.025]}
+        ),
+        "objects/071_can/model_data0.json": _canonical_bytes(
+            {"scale": [0.05, 0.05, 0.05]}
+        ),
     }
     if include_mesh:
         files["objects/003_plate/visual/mesh.bin"] = b"mesh"
@@ -239,6 +245,17 @@ def _stage_case(
                     }
                     for path in sorted(files)
                     if path.startswith(logical_root + "/")
+                ],
+                "model_sidecars": [
+                    {
+                        "logical_path": f"{logical_root}/model_data0.json",
+                        "model_id": 0,
+                        "scale": (
+                            [0.025, 0.025, 0.025]
+                            if asset_id == "robotwin_003_plate"
+                            else [0.05, 0.05, 0.05]
+                        ),
+                    }
                 ],
             }
             for asset_id, logical_root in (
@@ -312,6 +329,149 @@ def _with_plan(
     return replace(case, plan_ref=plan_ref)
 
 
+def test_stage_includes_the_canonical_model_sidecar_in_each_loader_closure(
+    tmp_path: Path,
+) -> None:
+    case = _stage_case(tmp_path)
+
+    result = case.application().stage(case.request())
+
+    assert result.staged_member_count == 5
+    assert result.assets[0].loader_closures[0].member_logical_paths == (
+        "objects/003_plate/model_data0.json",
+        "objects/003_plate/visual/base0.glb",
+        "objects/003_plate/visual/mesh.bin",
+    )
+    assert result.assets[1].loader_closures[0].member_logical_paths == (
+        "objects/071_can/model_data0.json",
+        "objects/071_can/visual/base0.glb",
+    )
+    sidecars = [
+        member
+        for asset in result.assets
+        for member in asset.members
+        if member.logical_path.endswith(".json")
+    ]
+    assert all(member.artifact_ref.media_type == "application/json" for member in sidecars)
+    assert all(member.artifact_ref.schema_version is None for member in sidecars)
+
+
+@pytest.mark.parametrize(
+    ("attack", "code", "message"),
+    [
+        ("undeclared", "HARN_INPUT_SCHEMA_INVALID", "model_sidecars"),
+        ("duplicate_sidecars", "HARN_INPUT_SCHEMA_INVALID", "sorted and unique"),
+        ("not_a_member", "HARN_INPUT_SCHEMA_INVALID", "sidecar must be a member"),
+        ("wrong_path_model", "HARN_INPUT_SCHEMA_INVALID", "canonical model_data path"),
+        ("wrong_plan_model", "HARN_ASSET_SOURCE_MANIFEST_MISMATCH", "model selection"),
+        ("scale", "HARN_ASSET_MODEL_SIDECAR_INVALID", "scale does not match"),
+        ("bad_json", "HARN_ASSET_MODEL_SIDECAR_INVALID", "invalid model sidecar"),
+        ("duplicate_scale", "HARN_ASSET_MODEL_SIDECAR_INVALID", "model_sidecar_invalid"),
+        ("nan", "HARN_ASSET_MODEL_SIDECAR_INVALID", "model_sidecar_invalid"),
+        ("infinity", "HARN_ASSET_MODEL_SIDECAR_INVALID", "model_sidecar_invalid"),
+        ("overflow", "HARN_ASSET_MODEL_SIDECAR_INVALID", "model_sidecar_scale_invalid"),
+        ("zero", "HARN_ASSET_MODEL_SIDECAR_INVALID", "model_sidecar_scale_invalid"),
+        ("negative", "HARN_ASSET_MODEL_SIDECAR_INVALID", "model_sidecar_scale_invalid"),
+        ("bool", "HARN_ASSET_MODEL_SIDECAR_INVALID", "model_sidecar_scale_invalid"),
+        ("swapped_sidecar", "HARN_ASSET_MODEL_SIDECAR_INVALID", "scale does not match"),
+        (
+            "json_model_id",
+            "HARN_ASSET_MODEL_SIDECAR_INVALID",
+            "model_sidecar_model_mismatch",
+        ),
+    ],
+)
+def test_stage_rejects_missing_or_inconsistent_model_sidecar_contracts(
+    tmp_path: Path,
+    attack: str,
+    code: str,
+    message: str,
+) -> None:
+    case = _stage_case(tmp_path)
+    manifest = deepcopy(case.source_manifest)
+    plate = manifest["assets"][0]
+    sidecar = plate["model_sidecars"][0]
+    path = sidecar["logical_path"]
+    if attack == "undeclared":
+        del plate["model_sidecars"]
+    elif attack == "duplicate_sidecars":
+        plate["model_sidecars"].append(deepcopy(sidecar))
+    elif attack == "not_a_member":
+        plate["members"] = [member for member in plate["members"] if member["logical_path"] != path]
+    elif attack == "wrong_path_model":
+        sidecar["model_id"] = 1
+    elif attack == "wrong_plan_model":
+        new_path = "objects/003_plate/model_data1.json"
+        payload = case.files[path]
+        _write(case.root / new_path, payload)
+        plate["members"] = [member for member in plate["members"] if member["logical_path"] != path]
+        plate["members"].append(
+            {"bytes": len(payload), "logical_path": new_path, "sha256": _sha256(payload)}
+        )
+        plate["members"].sort(key=lambda member: member["logical_path"])
+        sidecar["logical_path"] = new_path
+        sidecar["model_id"] = 1
+    elif attack == "scale":
+        sidecar["scale"] = [0.5, 0.5, 0.5]
+    else:
+        payloads = {
+            "bad_json": b'{"scale":',
+            "duplicate_scale": b'{"scale":[0.025,0.025,0.025],"scale":[0.05,0.05,0.05]}',
+            "nan": b'{"scale":[NaN,0.025,0.025]}',
+            "infinity": b'{"scale":[Infinity,0.025,0.025]}',
+            "overflow": b'{"scale":[1e999,0.025,0.025]}',
+            "zero": b'{"scale":[0,0.025,0.025]}',
+            "negative": b'{"scale":[-0.025,0.025,0.025]}',
+            "bool": b'{"scale":[true,0.025,0.025]}',
+            "json_model_id": _canonical_bytes(
+                {"model_id": 1, "scale": [0.025, 0.025, 0.025]}
+            ),
+            "swapped_sidecar": case.files["objects/071_can/model_data0.json"],
+        }
+        payload = payloads[attack]
+        _write(case.root / path, payload)
+        member = next(member for member in plate["members"] if member["logical_path"] == path)
+        member.update(bytes=len(payload), sha256=_sha256(payload))
+    case = _with_manifest(case, tmp_path, manifest)
+
+    with pytest.raises(AssetStageError, match=message) as caught:
+        case.application().stage(case.request())
+
+    assert caught.value.code == code
+
+
+@pytest.mark.parametrize(
+    ("attack", "code"),
+    [
+        ("missing", "HARN_ASSET_SOURCE_UNAVAILABLE"),
+        ("changed", "HARN_DEPENDENCY_DRIFT"),
+        ("symlink", "HARN_ASSET_SOURCE_UNSAFE"),
+    ],
+)
+def test_stage_fails_closed_when_model_sidecar_bytes_are_unavailable_or_drift(
+    tmp_path: Path,
+    attack: str,
+    code: str,
+) -> None:
+    case = _stage_case(tmp_path)
+    sidecar = case.root / "objects/003_plate/model_data0.json"
+    if attack == "missing":
+        sidecar.unlink()
+    elif attack == "changed":
+        payload = sidecar.read_bytes()
+        sidecar.write_bytes(payload[:-1] + bytes([payload[-1] ^ 1]))
+    else:
+        outside = tmp_path / "outside-model-data.json"
+        outside.write_bytes(sidecar.read_bytes())
+        sidecar.unlink()
+        sidecar.symlink_to(outside)
+
+    with pytest.raises(AssetStageError) as caught:
+        case.application().stage(case.request())
+
+    assert caught.value.code == code
+
+
 def test_stage_copies_exact_bytes_and_enumerates_each_loader_closure(tmp_path: Path) -> None:
     case = _stage_case(tmp_path)
 
@@ -323,7 +483,7 @@ def test_stage_copies_exact_bytes_and_enumerates_each_loader_closure(tmp_path: P
     assert result.source_snapshot_manifest_ref == case.source_manifest_ref
     assert result.selected_asset_ids == ("robotwin_003_plate", "robotwin_071_can")
     assert result.staged_asset_count == 2
-    assert result.staged_member_count == 3
+    assert result.staged_member_count == 5
     assert result.staged_total_bytes == sum(map(len, case.files.values()))
     assert result.exact_source_bytes_staged is True
     assert result.loader_closure_enumerated is True
@@ -333,10 +493,12 @@ def test_stage_copies_exact_bytes_and_enumerates_each_loader_closure(tmp_path: P
     assert len(result.stage_binding_sha256) == 64
     plate, can = result.assets
     assert plate.loader_closures[0].member_logical_paths == (
+        "objects/003_plate/model_data0.json",
         "objects/003_plate/visual/base0.glb",
         "objects/003_plate/visual/mesh.bin",
     )
     assert can.loader_closures[0].member_logical_paths == (
+        "objects/071_can/model_data0.json",
         "objects/071_can/visual/base0.glb",
     )
     for asset in result.assets:
@@ -554,6 +716,7 @@ def test_stage_rejects_ambiguous_or_escaping_source_manifests(
     else:
         assets[1]["logical_root"] = "objects/003_plate"
         assets[1]["members"] = [deepcopy(assets[0]["members"][0])]
+        assets[1]["model_sidecars"] = deepcopy(assets[0]["model_sidecars"])
     case = _with_manifest(case, tmp_path, manifest)
 
     with pytest.raises(AssetStageError, match=message) as caught:
@@ -597,10 +760,19 @@ def test_stage_binds_each_primary_loader_to_its_observed_inventory_identity(
     case = _stage_case(tmp_path)
     manifest = deepcopy(case.source_manifest)
     if attack == "missing_primary":
-        manifest["assets"][0]["members"] = manifest["assets"][0]["members"][1:]
+        manifest["assets"][0]["members"] = [
+            member
+            for member in manifest["assets"][0]["members"]
+            if member["logical_path"] != "objects/003_plate/visual/base0.glb"
+        ]
         message = "omits primary loader file"
     else:
-        manifest["assets"][0]["members"][0]["sha256"] = "f" * 64
+        primary = next(
+            member
+            for member in manifest["assets"][0]["members"]
+            if member["logical_path"] == "objects/003_plate/visual/base0.glb"
+        )
+        primary["sha256"] = "f" * 64
         message = "changes primary identity"
     case = _with_manifest(case, tmp_path, manifest)
 
@@ -715,7 +887,7 @@ def test_stage_detects_a_source_change_during_its_single_read(
         result = original_fstat(file_descriptor)
         if not changed:
             changed = True
-            source = case.root / "objects/003_plate/visual/base0.glb"
+            source = Path(os.readlink(f"/proc/self/fd/{file_descriptor}"))
             os.utime(source, ns=(result.st_atime_ns, result.st_mtime_ns + 1_000_000_000))
         return result
 
@@ -725,6 +897,23 @@ def test_stage_detects_a_source_change_during_its_single_read(
         case.application().stage(case.request())
 
     assert caught.value.code == "HARN_DEPENDENCY_DRIFT"
+
+
+def test_stage_reports_source_read_failure_without_blaming_the_destination(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    case = _stage_case(tmp_path)
+
+    def unreadable(_file_descriptor: int, _byte_count: int) -> bytes:
+        raise OSError(5, "source read failed")
+
+    monkeypatch.setattr(os, "read", unreadable)
+
+    with pytest.raises(AssetStageError, match="source snapshot member cannot be read") as caught:
+        case.application().stage(case.request())
+
+    assert caught.value.code == "HARN_ASSET_SOURCE_UNAVAILABLE"
 
 
 @pytest.mark.parametrize("attack", ["missing", "symlink"])
@@ -754,7 +943,11 @@ def test_stage_rejects_a_missing_loader_dependency_even_if_the_source_file_exist
 ) -> None:
     case = _stage_case(tmp_path)
     manifest = deepcopy(case.source_manifest)
-    manifest["assets"][0]["members"] = manifest["assets"][0]["members"][:1]
+    manifest["assets"][0]["members"] = [
+        member
+        for member in manifest["assets"][0]["members"]
+        if member["logical_path"] != "objects/003_plate/visual/mesh.bin"
+    ]
     case = _with_manifest(case, tmp_path, manifest)
 
     with pytest.raises(AssetStageError, match="dependency is absent") as caught:
@@ -823,6 +1016,7 @@ def test_stage_deduplicates_repeated_loader_references(tmp_path: Path) -> None:
     result = case.application().stage(case.request())
 
     assert result.assets[0].loader_closures[0].member_logical_paths == (
+        "objects/003_plate/model_data0.json",
         "objects/003_plate/visual/base0.glb",
         "objects/003_plate/visual/mesh.bin",
     )
@@ -834,6 +1028,7 @@ def test_stage_enumeration_terminates_on_a_loader_reference_cycle(tmp_path: Path
     result = case.application().stage(case.request())
 
     assert result.assets[0].loader_closures[0].member_logical_paths == (
+        "objects/003_plate/model_data0.json",
         "objects/003_plate/visual/base0.glb",
     )
 
@@ -848,6 +1043,7 @@ def test_stage_treats_an_embedded_data_uri_as_part_of_the_glb(tmp_path: Path) ->
     result = case.application().stage(case.request())
 
     assert result.assets[0].loader_closures[0].member_logical_paths == (
+        "objects/003_plate/model_data0.json",
         "objects/003_plate/visual/base0.glb",
     )
 
@@ -865,7 +1061,27 @@ def test_stage_failure_does_not_publish_a_partial_success_result(tmp_path: Path)
     assert caught.value.code == "HARN_ASSET_STAGE_WRITE_FAILED"
     corrupt.unlink()
     result = case.application().stage(case.request())
-    assert result.staged_member_count == 3
+    assert result.staged_member_count == 5
+
+
+@pytest.mark.parametrize("write_errno", [13, 28])
+def test_stage_reports_destination_write_failure_without_blaming_the_source(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    write_errno: int,
+) -> None:
+    case = _stage_case(tmp_path)
+
+    def no_space(_file_descriptor: int) -> None:
+        raise OSError(write_errno, "destination write refused")
+
+    monkeypatch.setattr(os, "fsync", no_space)
+
+    with pytest.raises(AssetStageError) as caught:
+        case.application().stage(case.request())
+
+    assert caught.value.code == "HARN_ASSET_STAGE_WRITE_FAILED"
+    assert "destination" in str(caught.value)
 
 
 def _result_payload(tmp_path: Path) -> dict[str, object]:
@@ -892,6 +1108,7 @@ def _rehash_result(result: dict[str, object]) -> None:
         ({"uri": "artifact://sha256/" + "f" * 64}, "exact source content"),
         ({"sha256": "f" * 64, "uri": "artifact://sha256/" + "f" * 64}, "exact source"),
         ({"bytes": 999}, "exact source content"),
+        ({"media_type": "application/octet-stream"}, "exact source content"),
         ({"schema_version": "harness.other.v1"}, "exact source content"),
     ],
 )
@@ -913,6 +1130,8 @@ def test_public_stage_result_rejects_member_identity_forgery(
     [
         ("duplicate_member", "sorted and unique"),
         ("missing_root", "contain its root"),
+        ("wrong_sidecar", "sidecar must match"),
+        ("missing_sidecar", "contain its model sidecar"),
         ("digest", "digest is inconsistent"),
     ],
 )
@@ -926,7 +1145,19 @@ def test_public_stage_result_rejects_loader_closure_forgery(
     if attack == "duplicate_member":
         closure["member_logical_paths"].append(closure["member_logical_paths"][0])
     elif attack == "missing_root":
-        closure["member_logical_paths"] = closure["member_logical_paths"][1:]
+        closure["member_logical_paths"] = [
+            path
+            for path in closure["member_logical_paths"]
+            if path != closure["root_logical_path"]
+        ]
+    elif attack == "wrong_sidecar":
+        closure["model_sidecar_logical_path"] = "objects/003_plate/model_data1.json"
+    elif attack == "missing_sidecar":
+        closure["member_logical_paths"] = [
+            path
+            for path in closure["member_logical_paths"]
+            if path != closure["model_sidecar_logical_path"]
+        ]
     else:
         closure["closure_sha256"] = "f" * 64
 
@@ -957,7 +1188,7 @@ def test_public_stage_result_rejects_asset_closure_forgery(
         asset["loader_closures"].append(duplicate)
     elif attack == "closure_union":
         closure = asset["loader_closures"][0]
-        closure["member_logical_paths"] = closure["member_logical_paths"][:1]
+        closure["member_logical_paths"] = closure["member_logical_paths"][:2]
         closure["closure_sha256"] = canonical_sha256(closure["member_logical_paths"])
     else:
         asset["asset_closure_sha256"] = "f" * 64
@@ -1002,9 +1233,9 @@ def test_public_stage_result_rejects_top_level_forgery(
 
 @pytest.mark.skipif(
     REAL_ROBOTWIN_ASSET_ROOT is None,
-    reason="set ROBOTWIN_ASSET_ROOT to opt into the real 14-GLB staging tracer",
+    reason="set ROBOTWIN_ASSET_ROOT to opt into the real 21-member staging tracer",
 )
-def test_real_plate_and_can_source_snapshot_stages_all_exact_glb_bytes(
+def test_real_plate_and_can_source_snapshot_stages_exact_loader_closures(
     tmp_path: Path,
 ) -> None:
     store = LocalArtifactStore(tmp_path / "cas")
@@ -1024,7 +1255,7 @@ def test_real_plate_and_can_source_snapshot_stages_all_exact_glb_bytes(
         schema_version="harness.asset_source_snapshot_manifest.v1",
     )
     assert source_manifest_ref.sha256 == (
-        "66793edf4e1e479caf5df64f33648e6567ff5973d2e45e5dda7d582229666aa2"
+        "f463dbe36b8d31881a2a326bbff87f662aafea754502d261e8b908d0c2e5d388"
     )
     planner = AssetRepairApplication(
         artifact_store=store,
@@ -1066,15 +1297,23 @@ def test_real_plate_and_can_source_snapshot_stages_all_exact_glb_bytes(
     )
 
     assert result.staged_asset_count == 2
-    assert result.staged_member_count == 14
-    assert result.staged_total_bytes == 57_226_572
+    assert result.staged_member_count == 21
+    assert result.staged_total_bytes == 57_290_434
     assert result.stage_binding_sha256 == (
-        "31370d894d0ab7ecd4d33b069eec82db2685dc441d024d7b4a05e8bde17bb0a0"
+        "c80e81bdd8f39daaccf2fbd77a8f3dd89eba7cfb03daf729bcf76b5fd5cd053f"
     )
     assert all(
-        closure.member_logical_paths == (closure.root_logical_path,)
+        closure.member_logical_paths
+        == tuple(sorted((closure.root_logical_path, closure.model_sidecar_logical_path)))
         for asset in result.assets
         for closure in asset.loader_closures
+    )
+    assert all(
+        member.artifact_ref.media_type == "application/json"
+        and member.artifact_ref.schema_version is None
+        for asset in result.assets
+        for member in asset.members
+        if member.logical_path.endswith(".json")
     )
     assert result.simulator_executed is False
     assert result.runtime_qualification_executed is False

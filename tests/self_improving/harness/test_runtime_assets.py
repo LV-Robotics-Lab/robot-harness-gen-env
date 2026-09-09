@@ -23,10 +23,33 @@ from self_improving.harness.runtime_assets import (
     RuntimeAssetSnapshotError,
     RuntimeAssetStore,
     RuntimeAssetWorkerError,
+    robotwin_rigid_model_sidecar_scale,
     verify_runtime_asset_snapshot,
 )
 
 ROOT = Path(__file__).resolve().parents[3]
+
+
+@pytest.mark.parametrize(
+    ("logical_path", "payload", "reason"),
+    [
+        (
+            "objects/003_plate/model_data1.json",
+            b'{"scale":[1,1,1]}',
+            "model_sidecar_model_mismatch",
+        ),
+        ("objects/003_plate/model_data0.json", b"[]", "model_sidecar_invalid"),
+    ],
+)
+def test_robotwin_rigid_model_sidecar_parser_rejects_wrong_identity_or_shape(
+    logical_path: str,
+    payload: bytes,
+    reason: str,
+) -> None:
+    with pytest.raises(RuntimeAssetSnapshotError) as caught:
+        robotwin_rigid_model_sidecar_scale(logical_path, payload, expected_model_id=0)
+
+    assert caught.value.reason == reason
 
 
 def _asset_fixture(

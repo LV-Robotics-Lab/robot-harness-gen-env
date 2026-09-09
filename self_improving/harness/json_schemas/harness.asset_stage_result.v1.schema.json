@@ -66,6 +66,26 @@
           "title": "Closure Sha256",
           "type": "string"
         },
+        "loader_scale": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            }
+          ],
+          "title": "Loader Scale",
+          "type": "array"
+        },
         "member_logical_paths": {
           "items": {
             "maxLength": 1024,
@@ -83,6 +103,13 @@
           "title": "Model Id",
           "type": "integer"
         },
+        "model_sidecar_logical_path": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "pattern": "^(?![A-Za-z]:)(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+)*$",
+          "title": "Model Sidecar Logical Path",
+          "type": "string"
+        },
         "role": {
           "$ref": "#/$defs/RepresentationRole"
         },
@@ -98,6 +125,8 @@
         "model_id",
         "role",
         "root_logical_path",
+        "model_sidecar_logical_path",
+        "loader_scale",
         "member_logical_paths",
         "closure_sha256"
       ],

@@ -5,7 +5,8 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from typing import Any, Literal
+from pathlib import PurePosixPath
+from typing import Annotated, Any, Literal
 
 from pydantic import Field, GetJsonSchemaHandler, model_validator
 
@@ -20,6 +21,8 @@ ASSET_STAGE_RESULT_SCHEMA_ID = "harness.asset_stage_result.v1"
 _CAS_URI = re.compile(r"^artifact://sha256/([0-9a-f]{64})$")
 _CAS_URI_PATTERN = r"^artifact://sha256/[0-9a-f]{64}$"
 _CAS_URI_LENGTH = len("artifact://sha256/") + 64
+PositiveFiniteFloat = Annotated[float, Field(strict=True, gt=0, allow_inf_nan=False)]
+LoaderScale = tuple[PositiveFiniteFloat, PositiveFiniteFloat, PositiveFiniteFloat]
 
 
 def _require_json_ref(ref: ArtifactRef, *, field: str, schema_version: str) -> None:
@@ -77,10 +80,20 @@ class AssetSourceSnapshotMember(HarnessModel):
     bytes: PositiveInt
 
 
+class AssetSourceSnapshotModelSidecar(HarnessModel):
+    model_id: int = Field(strict=True, ge=0)
+    logical_path: LogicalPath
+    scale: LoaderScale
+
+
 class AssetSourceSnapshotAsset(HarnessModel):
     asset_id: AssetId
     logical_root: LogicalPath
     members: tuple[AssetSourceSnapshotMember, ...] = Field(min_length=1, max_length=4096)
+    model_sidecars: tuple[AssetSourceSnapshotModelSidecar, ...] = Field(
+        min_length=1,
+        max_length=2048,
+    )
 
     @model_validator(mode="after")
     def members_are_an_exact_canonical_tree(self) -> "AssetSourceSnapshotAsset":
@@ -90,6 +103,15 @@ class AssetSourceSnapshotAsset(HarnessModel):
         prefix = self.logical_root + "/"
         if any(not path.startswith(prefix) for path in paths):
             raise ValueError("source snapshot members must stay beneath logical_root")
+        sidecar_ids = tuple(sidecar.model_id for sidecar in self.model_sidecars)
+        if sidecar_ids != tuple(sorted(set(sidecar_ids))):
+            raise ValueError("model_sidecars must be sorted and unique by model_id")
+        for sidecar in self.model_sidecars:
+            expected_path = f"{self.logical_root}/model_data{sidecar.model_id}.json"
+            if sidecar.logical_path != expected_path:
+                raise ValueError("model sidecar must use its canonical model_data path")
+            if sidecar.logical_path not in paths:
+                raise ValueError("model sidecar must be a member of the source snapshot")
         return self
 
 
@@ -180,11 +202,17 @@ class StagedAssetMember(HarnessModel):
     @model_validator(mode="after")
     def artifact_is_the_exact_source_content(self) -> "StagedAssetMember":
         match = _CAS_URI.fullmatch(self.artifact_ref.uri)
+        suffix = PurePosixPath(self.logical_path).suffix.lower()
+        expected_media_type = {
+            ".glb": "model/gltf-binary",
+            ".json": "application/json",
+        }.get(suffix, "application/octet-stream")
         if (
             match is None
             or match.group(1) != self.artifact_ref.sha256
             or self.artifact_ref.sha256 != self.source_sha256
             or self.artifact_ref.bytes != self.source_bytes
+            or self.artifact_ref.media_type != expected_media_type
             or self.artifact_ref.schema_version is not None
         ):
             raise ValueError("staged artifact must be the exact source content in CAS")
@@ -195,6 +223,8 @@ class AssetLoaderClosure(HarnessModel):
     model_id: int = Field(strict=True, ge=0)
     role: RepresentationRole
     root_logical_path: LogicalPath
+    model_sidecar_logical_path: LogicalPath
+    loader_scale: LoaderScale
     member_logical_paths: tuple[LogicalPath, ...] = Field(min_length=1, max_length=4096)
     closure_sha256: Sha256
 
@@ -204,6 +234,14 @@ class AssetLoaderClosure(HarnessModel):
             raise ValueError("loader closure members must be sorted and unique")
         if self.root_logical_path not in self.member_logical_paths:
             raise ValueError("loader closure must contain its root")
+        expected_sidecar = (
+            PurePosixPath(self.root_logical_path).parents[1]
+            / f"model_data{self.model_id}.json"
+        ).as_posix()
+        if self.model_sidecar_logical_path != expected_sidecar:
+            raise ValueError("loader closure sidecar must match its model id and asset root")
+        if self.model_sidecar_logical_path not in self.member_logical_paths:
+            raise ValueError("loader closure must contain its model sidecar")
         if self.closure_sha256 != _canonical_sha256(list(self.member_logical_paths)):
             raise ValueError("loader closure digest is inconsistent")
         return self

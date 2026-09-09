@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 import secrets
@@ -864,6 +865,47 @@ def loader_document_references(logical_path: str, payload: bytes) -> tuple[str, 
     if suffix not in _LOADER_DOCUMENT_SUFFIXES:
         return ()
     return _loader_references(suffix, payload)
+
+
+def robotwin_rigid_model_sidecar_scale(
+    logical_path: str,
+    payload: bytes,
+    *,
+    expected_model_id: int,
+) -> tuple[float, float, float]:
+    """Parse the scale that RoboTwin ``create_actor`` consumes from model_dataN.json."""
+
+    expected_name = f"model_data{expected_model_id}.json"
+    if PurePosixPath(logical_path).name != expected_name:
+        raise RuntimeAssetSnapshotError("model_sidecar_model_mismatch")
+    try:
+        value = json.loads(
+            payload.decode("utf-8", errors="strict"),
+            object_pairs_hook=_unique_json_object,
+            parse_constant=_reject_json_constant,
+        )
+    except (UnicodeError, json.JSONDecodeError, ValueError) as error:
+        raise RuntimeAssetSnapshotError("model_sidecar_invalid") from error
+    if not isinstance(value, dict):
+        raise RuntimeAssetSnapshotError("model_sidecar_invalid")
+    declared_model_id = value.get("model_id")
+    if declared_model_id is not None and (
+        type(declared_model_id) is not int or declared_model_id != expected_model_id
+    ):
+        raise RuntimeAssetSnapshotError("model_sidecar_model_mismatch")
+    scale = value.get("scale")
+    if (
+        not isinstance(scale, list)
+        or len(scale) != 3
+        or any(
+            type(component) not in {int, float}
+            or not math.isfinite(component)
+            or component <= 0
+            for component in scale
+        )
+    ):
+        raise RuntimeAssetSnapshotError("model_sidecar_scale_invalid")
+    return (float(scale[0]), float(scale[1]), float(scale[2]))
 
 
 def _glb_document(payload: bytes) -> tuple[object, bool]:

@@ -20,6 +20,7 @@ from .runtime_assets import (
     RuntimeAssetSnapshotError,
     loader_document_references,
     normalize_loader_reference,
+    robotwin_rigid_model_sidecar_scale,
 )
 from .schemas.asset_repair import (
     AssetRepairPlan,
@@ -146,6 +147,13 @@ def stage_asset_repair(
     for item in plan.items:
         source_asset = manifest_assets[item.asset_id]
         source_members = {member.logical_path: member for member in source_asset.members}
+        selected_model_ids = tuple(sorted({value.model_id for value in item.representations}))
+        sidecar_model_ids = tuple(value.model_id for value in source_asset.model_sidecars)
+        if sidecar_model_ids != selected_model_ids:
+            raise AssetStageError(
+                "HARN_ASSET_SOURCE_MANIFEST_MISMATCH",
+                f"source model sidecars must equal the plan model selection for {item.asset_id}",
+            )
         for representation in item.representations:
             if representation.disposition != RepairDisposition.OBSERVED_DIGEST_MATCH:
                 raise AssetStageError(
@@ -182,14 +190,48 @@ def stage_asset_repair(
                 )
                 captures[member.logical_path] = capture
 
+        sidecars: dict[tuple[str, int], tuple[str, tuple[float, float, float]]] = {}
+        for source_asset in source_manifest.assets:
+            for sidecar in source_asset.model_sidecars:
+                capture = captures[sidecar.logical_path]
+                try:
+                    scale = robotwin_rigid_model_sidecar_scale(
+                        sidecar.logical_path,
+                        capture.temporary_path.read_bytes(),
+                        expected_model_id=sidecar.model_id,
+                    )
+                except (OSError, RuntimeAssetSnapshotError) as error:
+                    reason = (
+                        error.reason
+                        if isinstance(error, RuntimeAssetSnapshotError)
+                        else type(error).__name__
+                    )
+                    raise AssetStageError(
+                        "HARN_ASSET_MODEL_SIDECAR_INVALID",
+                        f"invalid model sidecar for "
+                        f"{source_asset.asset_id}/model{sidecar.model_id}: {reason}",
+                    ) from error
+                if scale != sidecar.scale:
+                    raise AssetStageError(
+                        "HARN_ASSET_MODEL_SIDECAR_INVALID",
+                        f"model sidecar scale does not match the manifest for "
+                        f"{source_asset.asset_id}/model{sidecar.model_id}",
+                    )
+                sidecars[(source_asset.asset_id, sidecar.model_id)] = (
+                    sidecar.logical_path,
+                    scale,
+                )
+
         closure_paths: dict[tuple[str, int, str, str], tuple[str, ...]] = {}
         for item in plan.items:
             source_asset = manifest_assets[item.asset_id]
             allowed_paths = frozenset(member.logical_path for member in source_asset.members)
             used: set[str] = set()
             for representation in item.representations:
+                sidecar_path, _ = sidecars[(item.asset_id, representation.model_id)]
                 closure = _enumerate_glb_loader_closure(
                     root_logical_path=representation.logical_path,
+                    model_sidecar_logical_path=sidecar_path,
                     asset_logical_root=source_asset.logical_root,
                     allowed_paths=allowed_paths,
                     captures=captures,
@@ -216,11 +258,7 @@ def stage_asset_repair(
                 ref = artifact_store.put_file(
                     capture.temporary_path,
                     name=f"asset_stage_{capture.sha256[:16]}",
-                    media_type=(
-                        "model/gltf-binary"
-                        if PurePosixPath(logical_path).suffix.lower() == ".glb"
-                        else "application/octet-stream"
-                    ),
+                    media_type=_staged_member_media_type(logical_path),
                     schema_version=None,
                 )
             except (ArtifactResolutionError, OSError) as error:
@@ -257,6 +295,10 @@ def stage_asset_repair(
                         "model_id": representation.model_id,
                         "role": representation.role.value,
                         "root_logical_path": representation.logical_path,
+                        "model_sidecar_logical_path": sidecars[
+                            (item.asset_id, representation.model_id)
+                        ][0],
+                        "loader_scale": sidecars[(item.asset_id, representation.model_id)][1],
                         "member_logical_paths": paths,
                         "closure_sha256": canonical_sha256(list(paths)),
                     }
@@ -373,17 +415,12 @@ def _capture_source_member(
                 f"source snapshot member is not a regular file: {logical_path}",
             )
         digest = hashlib.sha256()
-        size = 0
-        with destination.open("xb") as output:
-            while True:
-                chunk = os.read(source_fd, _READ_CHUNK_BYTES)
-                if not chunk:
-                    break
-                digest.update(chunk)
-                size += len(chunk)
-                output.write(chunk)
-            output.flush()
-            os.fsync(output.fileno())
+        size = _copy_source_fd_to_destination(
+            source_fd=source_fd,
+            destination=destination,
+            digest=digest,
+            logical_path=logical_path,
+        )
         after = os.fstat(source_fd)
     except AssetStageError:
         raise
@@ -445,9 +482,54 @@ def _capture_source_member(
     )
 
 
+def _copy_source_fd_to_destination(
+    *,
+    source_fd: int,
+    destination: Path,
+    digest: Any,
+    logical_path: str,
+) -> int:
+    size = 0
+    try:
+        with destination.open("xb") as output:
+            while True:
+                try:
+                    chunk = os.read(source_fd, _READ_CHUNK_BYTES)
+                except OSError as error:
+                    raise AssetStageError(
+                        "HARN_ASSET_SOURCE_UNAVAILABLE",
+                        f"source snapshot member cannot be read: {logical_path}",
+                    ) from error
+                if not chunk:
+                    break
+                digest.update(chunk)
+                size += len(chunk)
+                output.write(chunk)
+            output.flush()
+            os.fsync(output.fileno())
+    except AssetStageError:
+        raise
+    except OSError as error:
+        raise AssetStageError(
+            "HARN_ASSET_STAGE_WRITE_FAILED",
+            f"staging destination cannot store source member: {logical_path}",
+        ) from error
+    return size
+
+
+def _staged_member_media_type(logical_path: str) -> str:
+    suffix = PurePosixPath(logical_path).suffix.lower()
+    if suffix == ".glb":
+        return "model/gltf-binary"
+    if suffix == ".json":
+        return "application/json"
+    return "application/octet-stream"
+
+
 def _enumerate_glb_loader_closure(
     *,
     root_logical_path: str,
+    model_sidecar_logical_path: str,
     asset_logical_root: str,
     allowed_paths: frozenset[str],
     captures: dict[str, _CapturedMember],
@@ -457,7 +539,7 @@ def _enumerate_glb_loader_closure(
             "HARN_ASSET_LOADER_CLOSURE_INVALID",
             f"exact staging currently requires a GLB loader root: {root_logical_path}",
         )
-    pending = [root_logical_path]
+    pending = [root_logical_path, model_sidecar_logical_path]
     visited: set[str] = set()
     while pending:
         logical_path = pending.pop(0)
