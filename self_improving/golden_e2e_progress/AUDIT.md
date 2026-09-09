@@ -1,8 +1,9 @@
 # Golden E2E 只读审计
 
 审计日期：2026-09-09
-审计基线：`worktree/bingsheng@c88a19b` 以及 Gujie 独立克隆
-`/home/jingxiang/gujie/gen-env@a8ced27`。本页把 committed source、dirty workspace 和 ignored
+审计基线：`worktree/bingsheng@c88a19b` 以及 Gujie 独立克隆最初的
+`/home/jingxiang/gujie/gen-env@a8ced27`；2026-09-10 主窗口又复核其已提交增量
+`eb0b710`。本页把 committed source、dirty workspace 和 ignored
 runtime output 分开陈述。
 
 ## 1. Gujie x2env / Genesis
@@ -11,6 +12,11 @@ runtime output 分开陈述。
   prunable；它不是当前 x2env 实现。
 - Gujie 当前实现位于独立克隆。其两个大提交 `9e8d28c`、`a8ced27` 合计约 40K 新增行，另有大量
   未提交 Genesis/SimFoundry 变更；不能整块 cherry-pick，也不能把 dirty 行为写成分支能力。
+- 独立克隆随后把一批物理验收工作固定为 `eb0b710`（70 files，约 7,232 additions）：增加 scene
+  physics graph、position solver、baseline/half-dt workflow、判据分类、有界 numerics repair、地面平面
+  fixed-root 和媒体恢复检查。该提交自报常规回归 `1125 passed / 56 skipped` 与真实非凸网格 6 pass，
+  但同时明确保留一个 1 mm 穿透门不可满足的既有失败，依赖落体证据的资产入库路径仍关闭；因此不能把
+  提交信息里的局部通过扩张为完整 x2env qualification。
 - `gujie-x2env-design.md` 自称架构设计稿。真正实现使用 `genenv.*` JSON、URDF closure 和 Python
   Genesis adapter，并没有设计稿里的完整 SceneIR/portable bundle。
 - 可复用实现包括媒体 hash/逐帧完整性、标准 URDF closure、SimFoundry asset/scene import、场景图与
@@ -26,6 +32,9 @@ runtime output 分开陈述。
   OmniGibson，不是 Genesis。
 - 当前输出绑定绝对路径；没有 image/video qualified Skills、MCP、Codex 路由、多模态融合、统一资产
   Registry，亦没有 robot/reset/action/observation/reward/policy/data-collection contract。
+- `eb0b710` 改善的是 Genesis 刚体场景物理验收与受限修复，并未补上述 Harness/CAS/receipt/MCP 或
+  robot-policy 合同；其最新 dirty workspace 仍包含 SimFoundry 子模块变化、Genesis 单资产 validator
+  修改和未跟踪 physics-completion/WorldComposer 内容，必须继续与 committed 能力分开。
 
 结论：Gujie 提供了“Genesis 原生加载与有限刚体物理回放”的重要底座，尚不是本任务要求的
 policy-ready golden X2Env。接入应通过 anti-corruption adapter，把 `genenv.*` 映射到 Harness schema、
