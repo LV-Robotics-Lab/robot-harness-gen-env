@@ -57,4 +57,5 @@
 - P6 首个 S5 只读纵切：从显式受信、strict-canonical 的 debt-inventory CAS 对 `003_plate`、
   `071_can` 分类，确认 2 份 ledger 的 58 条结构违规与 14 个本机 observed digest matches；输出明确
   `probe_bytes_in_cas=false`、`writes_performed=false`、`runtime_qualification_executed=false`。这只是
-  2/162 的 E0 tracer，尚未覆盖 4,082 条全量清单或建立 portable byte closure。
+  2/162 的 E0 tracer，来源总体与 inventory/selection totals 已分层绑定，不能改 scope 冒充全量；尚未
+  覆盖 4,082 条全量清单或建立 portable byte closure。

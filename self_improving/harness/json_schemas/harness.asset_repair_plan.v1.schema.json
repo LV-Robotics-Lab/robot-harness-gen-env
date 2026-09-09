@@ -192,7 +192,7 @@
         "logical_path": {
           "maxLength": 1024,
           "minLength": 1,
-          "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*\\\\).+$",
+          "pattern": "^(?![A-Za-z]:)(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+)*$",
           "title": "Logical Path",
           "type": "string"
         },
@@ -262,6 +262,16 @@
       "title": "Full Baseline Evaluated",
       "type": "boolean"
     },
+    "inventory_ledger_count": {
+      "minimum": 1,
+      "title": "Inventory Ledger Count",
+      "type": "integer"
+    },
+    "inventory_primary_probe_count": {
+      "minimum": 1,
+      "title": "Inventory Primary Probe Count",
+      "type": "integer"
+    },
     "inventory_ref": {
       "allOf": [
         {
@@ -287,6 +297,11 @@
     },
     "inventory_scope": {
       "$ref": "#/$defs/InventoryScope"
+    },
+    "inventory_violation_count": {
+      "minimum": 1,
+      "title": "Inventory Violation Count",
+      "type": "integer"
     },
     "items": {
       "items": {
@@ -335,6 +350,21 @@
       "title": "Selected Asset Ids",
       "type": "array"
     },
+    "source_population_ledger_count": {
+      "minimum": 1,
+      "title": "Source Population Ledger Count",
+      "type": "integer"
+    },
+    "source_population_primary_probe_count": {
+      "minimum": 1,
+      "title": "Source Population Primary Probe Count",
+      "type": "integer"
+    },
+    "source_population_violation_count": {
+      "minimum": 1,
+      "title": "Source Population Violation Count",
+      "type": "integer"
+    },
     "writes_performed": {
       "const": false,
       "title": "Writes Performed",
@@ -345,6 +375,12 @@
     "schema_version",
     "inventory_ref",
     "inventory_scope",
+    "source_population_ledger_count",
+    "source_population_violation_count",
+    "source_population_primary_probe_count",
+    "inventory_ledger_count",
+    "inventory_violation_count",
+    "inventory_primary_probe_count",
     "selected_asset_ids",
     "planned_ledger_count",
     "planned_violation_count",

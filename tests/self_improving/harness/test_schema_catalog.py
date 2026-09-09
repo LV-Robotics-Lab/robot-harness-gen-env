@@ -149,7 +149,9 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "schema_version": {"const": "harness.asset_debt_inventory.v1"},
         }
     portable_path_pattern = (
-        r"^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\.{1,2}(?:/|$))(?!.*\\).+$"
+        r"^(?![A-Za-z]:)(?!\.{1,2}(?:/|$))"
+        r"[^/\\\u0000-\u001f\u007f\u2028\u2029]+"
+        r"(?:/(?!\.{1,2}(?:/|$))[^/\\\u0000-\u001f\u007f\u2028\u2029]+)*$"
     )
     inventory_defs = documents["harness.asset_debt_inventory.v1"]["$defs"]
     assert inventory_defs["AssetDebtEntry"]["properties"]["ledger_path"][

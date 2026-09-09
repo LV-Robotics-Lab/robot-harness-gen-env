@@ -21,7 +21,9 @@ _CAS_URI = re.compile(r"^artifact://sha256/([0-9a-f]{64})$")
 _CAS_URI_PATTERN = r"^artifact://sha256/[0-9a-f]{64}$"
 _CAS_URI_LENGTH = len("artifact://sha256/") + 64
 _PORTABLE_PATH_SCHEMA_PATTERN = (
-    r"^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\.{1,2}(?:/|$))(?!.*\\).+$"
+    r"^(?![A-Za-z]:)(?!\.{1,2}(?:/|$))"
+    r"[^/\\\u0000-\u001f\u007f\u2028\u2029]+"
+    r"(?:/(?!\.{1,2}(?:/|$))[^/\\\u0000-\u001f\u007f\u2028\u2029]+)*$"
 )
 
 AssetId = Annotated[
@@ -37,6 +39,10 @@ def _portable_posix_path(value: str) -> str:
         value == "."
         or value.startswith("/")
         or "\\" in value
+        or any(
+            ord(character) < 32 or ord(character) in {127, 0x2028, 0x2029}
+            for character in value
+        )
         or PureWindowsPath(value).drive != ""
         or any(part in {"", ".", ".."} for part in path.parts)
         or path.as_posix() != value
@@ -197,6 +203,9 @@ class AssetDebtInventory(HarnessModel):
     source_ledger_commit: GitCommit
     byte_probe_source: Literal["local_unversioned_robotwin_assets"]
     byte_probe_revision: Literal[None]
+    source_population_ledger_count: PositiveInt
+    source_population_violation_count: PositiveInt
+    source_population_primary_probe_count: PositiveInt
     entries: tuple[AssetDebtEntry, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -204,6 +213,24 @@ class AssetDebtInventory(HarnessModel):
         asset_ids = tuple(entry.asset_id for entry in self.entries)
         if asset_ids != tuple(sorted(set(asset_ids))):
             raise ValueError("entries must be sorted and unique by asset_id")
+        inventory_totals = (
+            len(self.entries),
+            sum(
+                violation.count
+                for entry in self.entries
+                for violation in entry.violation_counts
+            ),
+            sum(len(entry.recovery_probes) for entry in self.entries),
+        )
+        source_totals = (
+            self.source_population_ledger_count,
+            self.source_population_violation_count,
+            self.source_population_primary_probe_count,
+        )
+        if any(inventory > source for inventory, source in zip(inventory_totals, source_totals)):
+            raise ValueError("inventory totals must not exceed source population")
+        if self.scope == InventoryScope.FULL_BASELINE and inventory_totals != source_totals:
+            raise ValueError("full_baseline inventory must cover the entire source population")
         return self
 
 
@@ -313,6 +340,12 @@ class AssetRepairPlan(HarnessModel):
     schema_version: Literal["harness.asset_repair_plan.v1"]
     inventory_ref: ArtifactRef
     inventory_scope: InventoryScope
+    source_population_ledger_count: PositiveInt
+    source_population_violation_count: PositiveInt
+    source_population_primary_probe_count: PositiveInt
+    inventory_ledger_count: PositiveInt
+    inventory_violation_count: PositiveInt
+    inventory_primary_probe_count: PositiveInt
     selected_asset_ids: tuple[AssetId, ...] = Field(min_length=1)
     planned_ledger_count: PositiveInt
     planned_violation_count: PositiveInt
@@ -348,9 +381,38 @@ class AssetRepairPlan(HarnessModel):
         }
         if self.disposition_counts.model_dump() != expected_counts:
             raise ValueError("plan disposition-count binding is inconsistent")
-        expected_full_baseline = self.inventory_scope == InventoryScope.FULL_BASELINE
+        inventory_totals = (
+            self.inventory_ledger_count,
+            self.inventory_violation_count,
+            self.inventory_primary_probe_count,
+        )
+        source_totals = (
+            self.source_population_ledger_count,
+            self.source_population_violation_count,
+            self.source_population_primary_probe_count,
+        )
+        planned_totals = (
+            self.planned_ledger_count,
+            self.planned_violation_count,
+            self.planned_representation_count,
+        )
+        if any(planned > inventory for planned, inventory in zip(planned_totals, inventory_totals)):
+            raise ValueError("planned totals must not exceed inventory totals")
+        if any(inventory > source for inventory, source in zip(inventory_totals, source_totals)):
+            raise ValueError("inventory totals must not exceed source population")
+        if (
+            self.inventory_scope == InventoryScope.FULL_BASELINE
+            and inventory_totals != source_totals
+        ):
+            raise ValueError("full_baseline plan inventory must cover the source population")
+        expected_full_baseline = (
+            self.inventory_scope == InventoryScope.FULL_BASELINE
+            and planned_totals == inventory_totals
+        )
         if self.full_baseline_evaluated is not expected_full_baseline:
-            raise ValueError("full_baseline_evaluated must match inventory_scope")
+            raise ValueError(
+                "full_baseline_evaluated requires full inventory and complete selection"
+            )
         return self
 
     @classmethod

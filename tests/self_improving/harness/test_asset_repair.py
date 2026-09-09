@@ -6,12 +6,14 @@ import json
 from pathlib import Path
 
 import pytest
+from jsonschema import Draft202012Validator
 from pydantic import ValidationError
 
 from self_improving.harness import AssetRepairApplication as PublicAssetRepairApplication
 from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.asset_repair import AssetRepairApplication, AssetRepairError
 from self_improving.harness.schemas.asset_repair import (
+    AssetDebtInventory,
     AssetRepairPlan,
     AssetRepairPlanRequest,
 )
@@ -59,9 +61,9 @@ def test_plan_classifies_real_plate_and_can_debt_without_writing(tmp_path: Path)
         schema_version="harness.asset_debt_inventory.v1",
     )
     assert inventory_ref.sha256 == (
-        "8e54c0d52d16ed5d9de19c55aa37e81012cb28ca6b25443a4285ce1b0daf94e2"
+        "d19dc71323a7c94de129f5217efc158a9076fd70c762dece6b7c7395825d4afa"
     )
-    assert inventory_ref.bytes == 5736
+    assert inventory_ref.bytes == 5859
     before = tuple(path.relative_to(store.root) for path in sorted(store.root.rglob("*")))
     request = AssetRepairPlanRequest(
         schema_version="harness.asset_repair_plan_request.v1",
@@ -74,6 +76,12 @@ def test_plan_classifies_real_plate_and_can_debt_without_writing(tmp_path: Path)
     assert plan.schema_version == "harness.asset_repair_plan.v1"
     assert plan.inventory_ref == inventory_ref
     assert plan.inventory_scope == "structural_tracer"
+    assert plan.source_population_ledger_count == 162
+    assert plan.source_population_violation_count == 4082
+    assert plan.source_population_primary_probe_count == 1101
+    assert plan.inventory_ledger_count == 2
+    assert plan.inventory_violation_count == 58
+    assert plan.inventory_primary_probe_count == 14
     assert plan.selected_asset_ids == ("robotwin_003_plate", "robotwin_071_can")
     assert plan.planned_ledger_count == 2
     assert plan.planned_violation_count == 58
@@ -327,6 +335,13 @@ def test_plan_rejects_internally_conflicting_recovery_probes(
         ("ledger", "self_improving/../ledger.json"),
         ("probe", "/tmp/base0.glb"),
         ("probe", "objects/003_plate/../../base0.glb"),
+        ("probe", "objects//base0.glb"),
+        ("probe", "objects/base0.glb/"),
+        ("probe", "objects/base\n0.glb"),
+        ("probe", "objects/\x00base0.glb"),
+        ("probe", "objects/\x7fbase0.glb"),
+        ("probe", "objects/base\u20280.glb"),
+        ("probe", "objects/base\u20290.glb"),
         ("probe", r"C:\\assets\\base0.glb"),
         ("probe", "C:/assets/base0.glb"),
         ("probe", "C:base0.glb"),
@@ -356,7 +371,34 @@ def test_plan_rejects_nonportable_inventory_paths(
         _application(store, inventory_ref).plan(request)
 
 
-def test_plan_can_represent_a_trusted_full_baseline_without_runtime_claims(
+@pytest.mark.parametrize(
+    "value",
+    [
+        "objects//base0.glb",
+        "objects/base0.glb/",
+        "a\n/../b",
+        "objects/base\n0.glb",
+        "objects/\x00base0.glb",
+        "objects/\x7fbase0.glb",
+        "a\u2028/../b",
+        "a\u2029/../b",
+        "objects/base\u20280.glb",
+        "objects/base\u20290.glb",
+    ],
+)
+def test_inventory_json_schema_rejects_paths_rejected_by_runtime(value: str) -> None:
+    payload = _single_plate_inventory()
+    payload["entries"][0]["recovery_probes"][0]["logical_path"] = value
+
+    errors = tuple(
+        Draft202012Validator(AssetDebtInventory.model_json_schema()).iter_errors(payload)
+    )
+
+    assert len(errors) == 1
+    assert list(errors[0].absolute_path)[-1] == "logical_path"
+
+
+def test_plan_rejects_a_tracer_relabelled_as_a_full_baseline(
     tmp_path: Path,
 ) -> None:
     store = LocalArtifactStore(tmp_path / "cas")
@@ -369,12 +411,102 @@ def test_plan_can_represent_a_trusted_full_baseline_without_runtime_claims(
         selected_asset_ids=("robotwin_003_plate",),
     )
 
+    with pytest.raises(AssetRepairError, match="full_baseline inventory must cover") as caught:
+        _application(store, inventory_ref).plan(request)
+    assert caught.value.code == "HARN_INPUT_SCHEMA_INVALID"
+
+
+def test_plan_rejects_inventory_totals_larger_than_the_claimed_population(
+    tmp_path: Path,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    payload = _single_plate_inventory()
+    payload["source_population_violation_count"] = 8
+    inventory_ref = _put_inventory(store, tmp_path, payload)
+    request = AssetRepairPlanRequest(
+        schema_version="harness.asset_repair_plan_request.v1",
+        inventory_ref=inventory_ref,
+        selected_asset_ids=("robotwin_003_plate",),
+    )
+
+    with pytest.raises(AssetRepairError, match="inventory totals must not exceed") as caught:
+        _application(store, inventory_ref).plan(request)
+    assert caught.value.code == "HARN_INPUT_SCHEMA_INVALID"
+
+
+def test_plan_marks_only_a_complete_full_inventory_selection_as_evaluated(
+    tmp_path: Path,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    payload.update(
+        scope="full_baseline",
+        source_population_ledger_count=2,
+        source_population_violation_count=58,
+        source_population_primary_probe_count=14,
+    )
+    inventory_ref = _put_inventory(store, tmp_path, payload)
+    request = AssetRepairPlanRequest(
+        schema_version="harness.asset_repair_plan_request.v1",
+        inventory_ref=inventory_ref,
+        selected_asset_ids=("robotwin_003_plate", "robotwin_071_can"),
+    )
+
     plan = _application(store, inventory_ref).plan(request)
 
     assert plan.inventory_scope == "full_baseline"
     assert plan.full_baseline_evaluated is True
     assert plan.runtime_qualification_executed is False
     assert plan.writes_performed is False
+
+
+def test_plan_does_not_call_a_partial_selection_a_full_baseline_evaluation(
+    tmp_path: Path,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    payload.update(
+        scope="full_baseline",
+        source_population_ledger_count=2,
+        source_population_violation_count=58,
+        source_population_primary_probe_count=14,
+    )
+    inventory_ref = _put_inventory(store, tmp_path, payload)
+    request = AssetRepairPlanRequest(
+        schema_version="harness.asset_repair_plan_request.v1",
+        inventory_ref=inventory_ref,
+        selected_asset_ids=("robotwin_003_plate",),
+    )
+
+    plan = _application(store, inventory_ref).plan(request)
+
+    assert plan.inventory_ledger_count == 2
+    assert plan.planned_ledger_count == 1
+    assert plan.full_baseline_evaluated is False
+
+
+def test_public_plan_rejects_a_full_scope_with_incomplete_inventory_totals(
+    tmp_path: Path,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    payload.update(
+        scope="full_baseline",
+        source_population_ledger_count=2,
+        source_population_violation_count=58,
+        source_population_primary_probe_count=14,
+    )
+    inventory_ref = _put_inventory(store, tmp_path, payload)
+    request = AssetRepairPlanRequest(
+        schema_version="harness.asset_repair_plan_request.v1",
+        inventory_ref=inventory_ref,
+        selected_asset_ids=("robotwin_003_plate", "robotwin_071_can"),
+    )
+    forged = _application(store, inventory_ref).plan(request).model_dump(mode="json")
+    forged["source_population_ledger_count"] = 3
+
+    with pytest.raises(ValidationError, match="must cover the source population"):
+        AssetRepairPlan.model_validate(forged)
 
 
 def test_plan_rejects_untrusted_inventory_even_when_it_is_valid_cas_json(
@@ -452,9 +584,15 @@ def test_application_rejects_artifact_store_lookalikes() -> None:
 @pytest.mark.parametrize(
     ("path", "value"),
     [
-        ("planned_ledger_count", 2),
+        ("planned_ledger_count", 3),
         ("planned_violation_count", 10),
         ("planned_representation_count", 3),
+        ("inventory_ledger_count", 1),
+        ("inventory_violation_count", 57),
+        ("inventory_primary_probe_count", 13),
+        ("source_population_ledger_count", 1),
+        ("source_population_violation_count", 57),
+        ("source_population_primary_probe_count", 13),
         ("selected_asset_ids", ("robotwin_999_missing",)),
         ("full_baseline_evaluated", True),
         (
@@ -468,24 +606,28 @@ def test_application_rejects_artifact_store_lookalikes() -> None:
         ),
     ],
 )
-def test_public_plan_rejects_forged_aggregate_claims(
+def test_public_plan_rejects_locally_inconsistent_aggregate_claims(
     tmp_path: Path,
     path: str,
     value: object,
 ) -> None:
     store = LocalArtifactStore(tmp_path / "cas")
-    inventory_ref = _put_inventory(store, tmp_path, _single_plate_inventory())
+    inventory_ref = _put_inventory(
+        store,
+        tmp_path,
+        json.loads(FIXTURE.read_text(encoding="utf-8")),
+    )
     request = AssetRepairPlanRequest(
         schema_version="harness.asset_repair_plan_request.v1",
         inventory_ref=inventory_ref,
-        selected_asset_ids=("robotwin_003_plate",),
+        selected_asset_ids=("robotwin_003_plate", "robotwin_071_can"),
     )
     valid = _application(store, inventory_ref).plan(request).model_dump(mode="json")
     valid[path] = value
 
     with pytest.raises(
         ValidationError,
-        match="plan .* binding|full_baseline_evaluated",
+        match="plan .* binding|planned totals|inventory totals|full_baseline_evaluated",
     ):
         AssetRepairPlan.model_validate(valid)
 

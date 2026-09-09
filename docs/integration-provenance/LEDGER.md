@@ -92,15 +92,17 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
   `self_improving/harness/asset_repair.py` 与 `self_improving/harness/schemas/asset_repair.py`
 - `integration_method`：保留来源历史后整合；active tree 为当前规范落点。首个 P6 切片只从组装时
   显式受信且 strict-canonical 的 inventory CAS 分类 observation disposition，不修改历史 ledger，也不
-  放松 validator
+  放松 validator；source population、inventory sample、planned selection 三层 totals 分别绑定，只有
+  full scope + 完整 inventory + 完整 selection 才产生 `full_baseline_evaluated=true`
 - `contract_spec`：`self_improving/source_inventory.json`、资产管线内合同与 README
 - `verification_evidence`：`self_improving/golden_e2e_progress/AUDIT.md`、`RESULTS.md`；
   `tests/fixtures/asset_repair_tracer_inventory.json`；
   `tests/self_improving/harness/test_asset_repair.py`（2-ledger E0 tracer）
 - `golden_run`：`none`
 - `known_gaps`：只完成 2/162 ledger 的只读 classification；14 份本机 probe bytes 尚未入 CAS 且没有
-  fixed dataset revision。历史全量仍有 4,082 条 v3 违规，stage、loader closure、collision/settle/
-  Genesis qualification 和原子 promotion 均未实现
+  fixed dataset revision。162/4,082/1,101 虽已独立扫描复核，但还没有 scanner/manifest attestation；
+  历史全量仍有 4,082 条 v3 违规，stage、loader closure、collision/settle/Genesis qualification 和
+  原子 promotion 均未实现
 - `last_verified`：`2026-09-09`
 
 ### 核对结论

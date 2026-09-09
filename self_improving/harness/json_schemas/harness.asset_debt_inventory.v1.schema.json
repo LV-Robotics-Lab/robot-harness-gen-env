@@ -16,7 +16,7 @@
         "ledger_path": {
           "maxLength": 1024,
           "minLength": 1,
-          "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*\\\\).+$",
+          "pattern": "^(?![A-Za-z]:)(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+)*$",
           "title": "Ledger Path",
           "type": "string"
         },
@@ -113,7 +113,7 @@
         "logical_path": {
           "maxLength": 1024,
           "minLength": 1,
-          "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*\\\\).+$",
+          "pattern": "^(?![A-Za-z]:)(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+)*$",
           "title": "Logical Path",
           "type": "string"
         },
@@ -219,6 +219,21 @@
       "pattern": "^[0-9a-f]{40}$",
       "title": "Source Ledger Commit",
       "type": "string"
+    },
+    "source_population_ledger_count": {
+      "minimum": 1,
+      "title": "Source Population Ledger Count",
+      "type": "integer"
+    },
+    "source_population_primary_probe_count": {
+      "minimum": 1,
+      "title": "Source Population Primary Probe Count",
+      "type": "integer"
+    },
+    "source_population_violation_count": {
+      "minimum": 1,
+      "title": "Source Population Violation Count",
+      "type": "integer"
     }
   },
   "required": [
@@ -228,6 +243,9 @@
     "source_ledger_commit",
     "byte_probe_source",
     "byte_probe_revision",
+    "source_population_ledger_count",
+    "source_population_violation_count",
+    "source_population_primary_probe_count",
     "entries"
   ],
   "title": "AssetDebtInventory",

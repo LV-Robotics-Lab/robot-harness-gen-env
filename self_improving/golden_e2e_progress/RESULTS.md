@@ -88,8 +88,8 @@
   public plan 的 totals/disposition/next-step/followup 不自洽、Windows drive 与 `.` 可通过、missing 被错误
   导向 reacquire，且 v1 不能表达未来 full baseline。修正后的 focused RED 曾为 import error，随后在第一轮
   GREEN 后以 31 个失败暴露 canonical fixture 和旧错误预期，均保留在本次过程记录中。
-- 冻结 canonical fixture：`tests/fixtures/asset_repair_tracer_inventory.json`，5,736 bytes，SHA-256
-  `8e54c0d52d16ed5d9de19c55aa37e81012cb28ca6b25443a4285ce1b0daf94e2`。两份 ledger 的 hash/bytes 与
+- 冻结 canonical fixture：`tests/fixtures/asset_repair_tracer_inventory.json`，5,859 bytes，SHA-256
+  `d19dc71323a7c94de129f5217efc158a9076fd70c762dece6b7c7395825d4afa`。两份 ledger 的 hash/bytes 与
   9/49 violation 已独立复算；主线程也对本机先前 replay materialization 的 14 份 visual/collision GLB
   重算 SHA-256/bytes，全部与 fixture 的 observed fields 一致。
 - 证据限定：这些 GLB 没有 committed dataset revision，也尚未由本切片复制进 CAS；inventory 因而明确
@@ -100,21 +100,28 @@
   12/12 observed digest matches。合计 `planned_ledger_count=2`、`planned_violation_count=58`、
   `planned_representation_count=14`，下一步均为 `stage_and_rehash_observed_primary`。
 - hash 相同但旧 size 错时进入 stage/rehash + remeasure；hash mismatch 或 missing 都只能
-  `build_new_identity_or_retire_asset`。public model 重新推导 disposition、next-step、固定 followup、
-  item/selection、三层 totals 与 full-baseline flag，伪造任一绑定均 fail closed；v1 可表达受信的
-  `full_baseline`，但本切片没有声称已运行全量。
+  `build_new_identity_or_retire_asset`。inventory 显式冻结来源总体 `162/4,082/1,101`，public plan 同时
+  记录 source population、inventory sample、planned selection 三层 totals；只有 scope 为
+  `full_baseline`、inventory totals 等于来源总体、且本次完整选择 inventory 时，才允许
+  `full_baseline_evaluated=true`。把 2-entry tracer 改标签冒充全量、选择部分 inventory 或单字段篡改
+  totals 都 fail closed。Pydantic document 只验证语法和本地可重算不变量；协调篡改整份 plan 仍可能
+  形成内部一致文档，跨文档真实性必须由 exact trusted `AssetRepairApplication` 解析 `inventory_ref`
+  重建，后续再由 S1 receipt 绑定，不能把裸 plan 当成独立证明。
 - 其他攻击覆盖：untrusted/missing/non-canonical/duplicate-key inventory，非 CAS ref、错误 media/schema、
   未知/重复/乱序 asset、重复/乱序 debt detail、availability/observed identity 冲突、绝对/逃逸/反斜杠/
-  Windows-drive/`.` path；portable path pattern 同时导出到 JSON Schema。
+  Windows-drive/`.`/重复分隔符/尾随分隔符/C0/DEL/U+2028/U+2029 path，以及 line-separator 绕过
+  dot-segment 检查；portable path runtime 与 JSON Schema 已用同一攻击样本对齐。另用 Node
+  ECMA-262 `RegExp(..., "u")` 读取 committed schema，确认四个 Unicode line-separator 攻击均被拒绝。
 - focused gate：
   `pytest -q tests/self_improving/harness/test_asset_repair.py tests/self_improving/harness/test_schema_catalog.py --cov=self_improving.harness.asset_repair --cov=self_improving.harness.schemas.asset_repair --cov-branch --cov-report=term-missing --cov-fail-under=100`
-  为 `52 passed in 0.73s`，两个新增模块 statement/branch 均为 `100%`；28 份 schema snapshot、Ruff
+  为 `79 passed in 0.85s`，两个新增模块 statement/branch 均为 `100%`；28 份 schema snapshot、Ruff
   和 `git diff --check` 通过。Harness 全域排除已单独记录的 stale replay identity 门后为
-  `2091 passed, 19 skipped, 1 deselected in 61.41s`；根套件以同样的单项显式排除运行，为
-  `3104 passed, 19 skipped, 1 deselected in 172.43s`。本切片没有改 expected hash 或伪造重签。
+  `2118 passed, 19 skipped in 56.89s`；根套件以同样的单项显式排除运行，为
+  `3131 passed, 19 skipped in 155.31s`。本切片没有改 expected hash 或伪造重签。
 - 主张边界：fixture 只覆盖 2/162 ledgers、58/4,082 violations、14/1,101 primary probes；它没有
   重放全量 scanner，也没有把资产字节入 CAS、写 ledger、枚举 loader closure、执行 settle/Genesis 或
-  产生 qualification/promotion receipt，因此只能算 E0 contract-tested + local-observation tracer。
+  产生 qualification/promotion receipt。`162/4,082/1,101` 也只是 trusted inventory producer 声明，尚无
+  scanner/manifest attestation，因此本切片只能算 E0 contract-tested + local-observation tracer。
 
 ## 2026-09-09 P0 readiness 修复与 clean baseline
 

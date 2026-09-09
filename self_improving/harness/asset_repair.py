@@ -98,6 +98,20 @@ class AssetRepairApplication:
             schema_version="harness.asset_repair_plan.v1",
             inventory_ref=request.inventory_ref,
             inventory_scope=inventory.scope,
+            source_population_ledger_count=inventory.source_population_ledger_count,
+            source_population_violation_count=inventory.source_population_violation_count,
+            source_population_primary_probe_count=(
+                inventory.source_population_primary_probe_count
+            ),
+            inventory_ledger_count=len(inventory.entries),
+            inventory_violation_count=sum(
+                violation.count
+                for entry in inventory.entries
+                for violation in entry.violation_counts
+            ),
+            inventory_primary_probe_count=sum(
+                len(entry.recovery_probes) for entry in inventory.entries
+            ),
             selected_asset_ids=request.selected_asset_ids,
             planned_ledger_count=len(plans),
             planned_violation_count=sum(item.violation_count for item in plans),
@@ -117,7 +131,10 @@ class AssetRepairApplication:
                 ],
             ),
             items=plans,
-            full_baseline_evaluated=inventory.scope == "full_baseline",
+            full_baseline_evaluated=(
+                inventory.scope == "full_baseline"
+                and len(entries) == len(inventory.entries)
+            ),
             probe_bytes_in_cas=False,
             runtime_qualification_executed=False,
             writes_performed=False,
