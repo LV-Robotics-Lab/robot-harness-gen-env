@@ -13,6 +13,7 @@ from .artifacts import (
     LocalArtifactStore,
     ResolvedArtifact,
 )
+from .asset_repair import AssetRepairApplication, AssetRepairError
 from .assets import AssetAdmissionError, GeneratedAssetAdmitter
 from .event_journal import (
     EventJournalConflictError,
@@ -121,6 +122,9 @@ from .runtime_events import (
 from .schema_catalog import SCHEMA_MODELS, schema_documents, schema_model
 from .schemas import (
     ArtifactRef,
+    AssetDebtInventory,
+    AssetRepairPlan,
+    AssetRepairPlanRequest,
     Blocker,
     CompileConfig,
     DependencyRef,
@@ -155,6 +159,11 @@ __all__ = [
     "ArtifactRef",
     "ArtifactResolutionError",
     "ArtifactResolver",
+    "AssetDebtInventory",
+    "AssetRepairApplication",
+    "AssetRepairError",
+    "AssetRepairPlan",
+    "AssetRepairPlanRequest",
     "AssetAdmissionError",
     "Blocker",
     "CompileConfig",

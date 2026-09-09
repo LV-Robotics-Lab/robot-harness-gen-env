@@ -9,6 +9,9 @@ from typing import Mapping
 
 from .schemas import (
     ARTIFACT_REF_SCHEMA_ID,
+    ASSET_DEBT_INVENTORY_SCHEMA_ID,
+    ASSET_REPAIR_PLAN_REQUEST_SCHEMA_ID,
+    ASSET_REPAIR_PLAN_SCHEMA_ID,
     BLOCKER_SCHEMA_ID,
     ENVIRONMENT_PACKAGE_SCHEMA_ID,
     EVENT_SCHEMA_ID,
@@ -33,6 +36,9 @@ from .schemas import (
     TEXT2ENV_VALIDATE_V2_OUTPUT_SCHEMA_ID,
     WORKFLOW_START_RECEIPT_SCHEMA_ID,
     ArtifactRef,
+    AssetDebtInventory,
+    AssetRepairPlan,
+    AssetRepairPlanRequest,
     Blocker,
     EnvironmentPackage,
     Event,
@@ -67,6 +73,9 @@ DEFAULT_SCHEMA_ROOT = Path(__file__).with_name("json_schemas")
 
 _SCHEMA_MODELS: dict[str, type[HarnessModel]] = {
     ARTIFACT_REF_SCHEMA_ID: ArtifactRef,
+    ASSET_DEBT_INVENTORY_SCHEMA_ID: AssetDebtInventory,
+    ASSET_REPAIR_PLAN_REQUEST_SCHEMA_ID: AssetRepairPlanRequest,
+    ASSET_REPAIR_PLAN_SCHEMA_ID: AssetRepairPlan,
     BLOCKER_SCHEMA_ID: Blocker,
     ENVIRONMENT_PACKAGE_SCHEMA_ID: EnvironmentPackage,
     EVENT_SCHEMA_ID: Event,

@@ -16,6 +16,11 @@ from self_improving.harness.schema_catalog import (
     schema_model,
     schema_snapshot_name,
 )
+from self_improving.harness.schemas.asset_repair import (
+    AssetDebtInventory,
+    AssetRepairPlan,
+    AssetRepairPlanRequest,
+)
 from self_improving.harness.schemas.common import ArtifactRef, SkillDescriptorV2
 from self_improving.harness.schemas.qualification_report import PublicQualificationReportV1
 from self_improving.harness.schemas.registry_snapshot import RegistrySnapshot
@@ -30,6 +35,9 @@ from self_improving.harness.schemas.workflow import (
 )
 
 EXPECTED_SCHEMA_IDS = {
+    "harness.asset_debt_inventory.v1",
+    "harness.asset_repair_plan.v1",
+    "harness.asset_repair_plan_request.v1",
     "harness.artifact_ref.v1",
     "harness.blocker.v1",
     "harness.environment_package.v1",
@@ -72,6 +80,9 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
         schema_model("harness.skill_qualification_report.v1")
         is PublicQualificationReportV1
     )
+    assert schema_model("harness.asset_debt_inventory.v1") is AssetDebtInventory
+    assert schema_model("harness.asset_repair_plan_request.v1") is AssetRepairPlanRequest
+    assert schema_model("harness.asset_repair_plan.v1") is AssetRepairPlan
     with pytest.raises(KeyError):
         schema_model("harness.missing.v1")
     with pytest.raises(TypeError):
@@ -86,6 +97,9 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
         assert document["$schema"] == "https://json-schema.org/draft/2020-12/schema"
         assert document["additionalProperties"] is False
         if schema_id in {
+            "harness.asset_debt_inventory.v1",
+            "harness.asset_repair_plan.v1",
+            "harness.asset_repair_plan_request.v1",
             "harness.run_start_request.v1",
             "harness.run_snapshot.v1",
             "harness.registry_snapshot.v1",
@@ -106,6 +120,47 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
         "schema_version",
     ]
     assert "from_status" in documents["harness.event.v1"]["required"]
+    assert documents["harness.asset_repair_plan.v1"]["properties"][
+        "writes_performed"
+    ]["const"] is False
+    assert documents["harness.asset_repair_plan.v1"]["properties"][
+        "runtime_qualification_executed"
+    ]["const"] is False
+    assert documents["harness.asset_repair_plan.v1"]["properties"][
+        "full_baseline_evaluated"
+    ]["type"] == "boolean"
+    assert documents["harness.asset_repair_plan.v1"]["properties"][
+        "probe_bytes_in_cas"
+    ]["const"] is False
+    for schema_id in {
+        "harness.asset_repair_plan.v1",
+        "harness.asset_repair_plan_request.v1",
+    }:
+        constraints = documents[schema_id]["properties"]["inventory_ref"]["allOf"][1][
+            "properties"
+        ]
+        assert constraints == {
+            "uri": {
+                "maxLength": 82,
+                "minLength": 82,
+                "pattern": r"^artifact://sha256/[0-9a-f]{64}$",
+            },
+            "media_type": {"const": "application/json"},
+            "schema_version": {"const": "harness.asset_debt_inventory.v1"},
+        }
+    portable_path_pattern = (
+        r"^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\.{1,2}(?:/|$))(?!.*\\).+$"
+    )
+    inventory_defs = documents["harness.asset_debt_inventory.v1"]["$defs"]
+    assert inventory_defs["AssetDebtEntry"]["properties"]["ledger_path"][
+        "pattern"
+    ] == portable_path_pattern
+    assert inventory_defs["RepresentationRecoveryProbe"]["properties"][
+        "logical_path"
+    ]["pattern"] == portable_path_pattern
+    assert documents["harness.asset_repair_plan.v1"]["$defs"][
+        "RepresentationRepairPlan"
+    ]["properties"]["logical_path"]["pattern"] == portable_path_pattern
     run_required = documents["harness.run_state.v1"]["required"]
     assert {"invocation_digest", "ended_at", "output", "blocker"} <= set(run_required)
 

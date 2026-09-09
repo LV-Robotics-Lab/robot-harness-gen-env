@@ -77,18 +77,28 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
 - `dirty_snapshot`：归档快照身份由 `self_improving/source_inventory.json` 固定
 - `source_paths`：资产 provider、selection gate、fetch、coverage、conversion、materialization、ledger、
   catalog admission 与 simulator verification 历史
-- `target_paths`：`self_improving/asset_pipeline/active/` 及其 archive/overlay 记录
-- `integration_method`：保留来源历史后整合；active tree 为当前规范落点
+- `target_paths`：`self_improving/asset_pipeline/active/` 及其 archive/overlay 记录；只读修复规划落点
+  `self_improving/harness/asset_repair.py` 与 `self_improving/harness/schemas/asset_repair.py`
+- `integration_method`：保留来源历史后整合；active tree 为当前规范落点。首个 P6 切片只从组装时
+  显式受信且 strict-canonical 的 inventory CAS 分类 observation disposition，不修改历史 ledger，也不
+  放松 validator
 - `contract_spec`：`self_improving/source_inventory.json`、资产管线内合同与 README
-- `verification_evidence`：`self_improving/golden_e2e_progress/AUDIT.md`、`RESULTS.md`
+- `verification_evidence`：`self_improving/golden_e2e_progress/AUDIT.md`、`RESULTS.md`；
+  `tests/fixtures/asset_repair_tracer_inventory.json`；
+  `tests/self_improving/harness/test_asset_repair.py`（2-ledger E0 tracer）
 - `golden_run`：`none`
-- `known_gaps`：历史 162 份 ledger 恰有 4,082 条 v3 违规；migration/settle 存在 bootstrap deadlock
+- `known_gaps`：只完成 2/162 ledger 的只读 classification；14 份本机 probe bytes 尚未入 CAS 且没有
+  fixed dataset revision。历史全量仍有 4,082 条 v3 违规，stage、loader closure、collision/settle/
+  Genesis qualification 和原子 promotion 均未实现
 - `last_verified`：`2026-09-09`
 
 ### 核对结论
 
 Yuxin 的资产检索与复用工作已经保留并整合，但历史资产证据债务使其不能整体获得 runtime
-qualification。原工作区已不再作为可读取的当前来源，后续核对应以 source inventory 和归档 ref 为准。
+qualification。Bingsheng 新增的 read-only plan adapter 只把受信 audit observations 映射为 Harness
+repair disposition；它不是 Yuxin 原始字节，也没有改变任何权威 ledger，更不证明 probe bytes 已形成
+portable CAS closure。原工作区已不再作为可读取的当前来源，后续核对应以 source inventory 和归档 ref
+为准。
 
 ## INT-YX-002 — 新 x2env Skills 的资产检索与复用能力
 

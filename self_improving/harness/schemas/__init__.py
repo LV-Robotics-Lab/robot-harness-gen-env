@@ -1,5 +1,13 @@
 """Public model exports for Harness MVP v1."""
 
+from .asset_repair import (
+    ASSET_DEBT_INVENTORY_SCHEMA_ID,
+    ASSET_REPAIR_PLAN_REQUEST_SCHEMA_ID,
+    ASSET_REPAIR_PLAN_SCHEMA_ID,
+    AssetDebtInventory,
+    AssetRepairPlan,
+    AssetRepairPlanRequest,
+)
 from .common import (
     ARTIFACT_REF_SCHEMA_ID,
     BLOCKER_SCHEMA_ID,
@@ -78,6 +86,9 @@ from .workflow import (
 
 __all__ = [
     "ARTIFACT_REF_SCHEMA_ID",
+    "ASSET_DEBT_INVENTORY_SCHEMA_ID",
+    "ASSET_REPAIR_PLAN_REQUEST_SCHEMA_ID",
+    "ASSET_REPAIR_PLAN_SCHEMA_ID",
     "BLOCKER_SCHEMA_ID",
     "ENVIRONMENT_PACKAGE_SCHEMA_ID",
     "EVENT_SCHEMA_ID",
@@ -106,6 +117,9 @@ __all__ = [
     "VALIDATION_DECISION_SCHEMA_VERSION",
     "WORKFLOW_START_RECEIPT_SCHEMA_ID",
     "ArtifactRef",
+    "AssetDebtInventory",
+    "AssetRepairPlan",
+    "AssetRepairPlanRequest",
     "Blocker",
     "CompileConfig",
     "CapabilityProfileRef",
