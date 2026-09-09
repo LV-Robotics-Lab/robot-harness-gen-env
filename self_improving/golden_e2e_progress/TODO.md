@@ -1,14 +1,17 @@
 # 当前 TODO
 
-更新时间：2026-09-09
+更新时间：2026-09-10
 
 ## Doing
 
-- P1：在已完成的 canonical start/Registry 闭包上补公共 `read` 与可注入的 durable aggregate store，
-  再以单条 RED→GREEN tracer 进入 submit/operation 生命周期。
+- P1：公共 revision-0 durable `read` 与显式注入的 SQLite aggregate store 已在独立 feature 分支完成
+  验证，等待主线程审阅/整合；本切片没有进入 submit/operation 生命周期，也不声称可恢复未来
+  operation head。
 
 ## Next
 
+- P1：以单条 RED→GREEN tracer 进入 submit/operation 生命周期，新增 OperationSnapshot 前先冻结其
+  command/idempotency/revision 原子提交契约。
 - P2：在 actor-neutral v2 receipt/state-delta 上接入 exact qualified compile → replay 两步调度；不得复用
   planner-specific v1 receipt 字段冒充外部 Codex/MCP 调用。
 - P4：S1 的 `submit/read`、OperationSnapshot 和真实 Registry handler 绑定完成后，接入 MCP 2.2 的
@@ -23,7 +26,7 @@
 - Autoresearch 的 benchmark/真实 MCP/Genesis 前置尚未实现；设置已确认但尚不能建立诚实 baseline。
 - exact MCP adapter 仍缺 `submit/read` 和真实 Registry handler 交集；caller 提供的内部一致
   `RegistrySnapshot` 目前不能单独作为生产 trust root。
-- 三份 reader-facing repo-docs 仍把 Harness schema 数写成 17；当前实际为 28。文件已有用户修改，
+- 三份 reader-facing repo-docs 仍把 Harness schema 数写成 17；本切片后实际为 29。文件已有用户修改，
   本切片不覆盖或暂存，P14 必须在可安全协调时同步。
 - clean root suite 的旧 replay qualification source identity 仍有 1 个失败；原始真实 qualification
   settings/CAS 尚在，但旧 delegated cgroup 已不存在，且后续 Harness 实现还会继续改变源码身份。
@@ -54,6 +57,10 @@
 - P1 Registry/request 闭包纵切：正式 `RegistrySnapshot` strict canonical 解析并交叉绑定 descriptor、
   qualification、report；start request 进入 CAS，receipt head 改为可演进的 versioned workflow receipt
   family。focused 48 tests 通过，3 个相关模块语句/分支覆盖率 100%，25 份 schema snapshot 通过。
+- P1 durable read/store 纵切：公开 `RunReadRequest`、`SQLiteGoldenRunStore` 与
+  `GoldenRunHarness.read`；SQLite 路径由调用方显式选择，revision-0 start 的跨实例/真实子进程恢复、
+  principal 隔离、已知旧表迁移、并发 bootstrap/start、SQLite/CAS 损坏拒绝和原有 start/idempotency
+  均通过，未实现 submit/operation/current operation head。
 - P6 首个 S5 只读纵切：从显式受信、strict-canonical 的 debt-inventory CAS 对 `003_plate`、
   `071_can` 分类，确认 2 份 ledger 的 58 条结构违规与 14 个本机 observed digest matches；输出明确
   `probe_bytes_in_cas=false`、`writes_performed=false`、`runtime_qualification_executed=false`。这只是

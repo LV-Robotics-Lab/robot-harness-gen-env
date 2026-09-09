@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-import sqlite3
 import tempfile
 from collections.abc import Callable
-from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID, uuid4
@@ -15,6 +13,11 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ValidationError
 
 from .artifacts import ArtifactResolutionError, LocalArtifactStore
+from .golden_store import (
+    GoldenRunConflictError,
+    GoldenRunCorruptionError,
+    SQLiteGoldenRunStore,
+)
 from .qualification import QualificationReportV1
 from .schema_catalog import schema_model
 from .schemas.common import (
@@ -24,25 +27,18 @@ from .schemas.common import (
     SkillQualification,
 )
 from .schemas.registry_snapshot import RegistrySnapshot
-from .schemas.workflow import RunSnapshot, RunStartRequest, WorkflowStartReceipt
+from .schemas.workflow import (
+    RunReadRequest,
+    RunSnapshot,
+    RunStartRequest,
+    WorkflowStartReceipt,
+)
 from .system2.domain import (
     TrustedWorldState,
     WorldFact,
     WorldFactEvidence,
     build_world_state,
 )
-
-
-class GoldenRunConflictError(RuntimeError):
-    """A caller reused an immutable workflow identity for different input."""
-
-    code = "HARN_IDEMPOTENCY_CONFLICT"
-
-
-class GoldenRunCorruptionError(RuntimeError):
-    """Persisted workflow authority or its immutable CAS closure is corrupt."""
-
-    code = "HARN_PERSISTENCE_CONFLICT"
 
 
 class GoldenRunRegistryError(ValueError):
@@ -53,39 +49,82 @@ class GoldenRunRegistryError(ValueError):
         super().__init__(message)
 
 
+class GoldenRunNotFoundError(LookupError):
+    """No workflow is visible to the requesting principal."""
+
+    code = "HARN_WORKFLOW_NOT_FOUND"
+
+
 class GoldenRunHarness:
-    """Create and evolve auditable parent workflows through the S1 seam."""
+    """Create and recover auditable revision-zero workflows through the S1 seam."""
 
     def __init__(
         self,
         *,
         artifact_store: LocalArtifactStore,
+        workflow_store: SQLiteGoldenRunStore,
         clock: Callable[[], datetime] = lambda: datetime.now(timezone.utc),
         workflow_id_factory: Callable[[], UUID] = uuid4,
     ) -> None:
         if type(artifact_store) is not LocalArtifactStore:
             raise TypeError("artifact_store must be the exact LocalArtifactStore")
+        if type(workflow_store) is not SQLiteGoldenRunStore:
+            raise TypeError("workflow_store must be the exact SQLiteGoldenRunStore")
         self._artifact_store = artifact_store
+        self._workflow_store = workflow_store
         self._clock = clock
         self._workflow_id_factory = workflow_id_factory
-        self._start_store = _SQLiteWorkflowStartStore(
-            self._artifact_store.root / "golden-workflows.sqlite3"
-        )
 
     def start(self, request: RunStartRequest) -> RunSnapshot:
         """Build the first trusted state and its actor-neutral receipt head."""
 
         request_sha256 = _request_sha256(request)
-        snapshot = self._start_store.get_or_create(
+        stored = self._workflow_store.get_or_create_start(
             principal_id=request.principal_id,
             idempotency_key=request.idempotency_key,
             request_sha256=request_sha256,
+            start_request_sha256=hashlib.sha256(
+                _canonical_model_bytes(request)
+            ).hexdigest(),
             factory=lambda: self._create_start(request, request_sha256=request_sha256),
         )
+        snapshot = stored.snapshot
         self._verify_start_snapshot(
             snapshot,
             request=request,
             request_sha256=request_sha256,
+            persisted_idempotency_key=stored.idempotency_key,
+            persisted_request_sha256=stored.request_sha256,
+        )
+        return snapshot
+
+    def read(self, request: RunReadRequest) -> RunSnapshot:
+        """Recover an authorized revision-zero start and reverify its closure."""
+
+        stored = self._workflow_store.read_snapshot(
+            principal_id=request.principal_id,
+            workflow_run_id=request.workflow_run_id,
+        )
+        if stored is None:
+            raise GoldenRunNotFoundError(
+                "golden workflow was not found for this principal"
+            )
+        snapshot = stored.snapshot
+        try:
+            start_request = self._resolve_canonical_model(
+                snapshot.start_request_ref,
+                RunStartRequest,
+            )
+        except (ArtifactResolutionError, ValidationError, TypeError, ValueError) as error:
+            raise GoldenRunCorruptionError(
+                f"persisted workflow start failed its CAS closure: {error}"
+            ) from error
+        self._verify_start_snapshot(
+            snapshot,
+            request=start_request,
+            request_sha256=_request_sha256(start_request),
+            persisted_idempotency_key=stored.idempotency_key,
+            persisted_request_sha256=stored.request_sha256,
         )
         return snapshot
 
@@ -173,7 +212,17 @@ class GoldenRunHarness:
         *,
         request: RunStartRequest,
         request_sha256: str,
+        persisted_idempotency_key: str,
+        persisted_request_sha256: str,
     ) -> None:
+        if persisted_idempotency_key != request.idempotency_key:
+            raise GoldenRunCorruptionError(
+                "persisted workflow has inconsistent idempotency metadata"
+            )
+        if persisted_request_sha256 != request_sha256:
+            raise GoldenRunCorruptionError(
+                "persisted workflow has inconsistent logical request identity"
+            )
         if (
             snapshot.principal_id != request.principal_id
             or snapshot.workspace != request.workspace
@@ -371,82 +420,10 @@ def _request_sha256(request: RunStartRequest) -> str:
     ).hexdigest()
 
 
-class _SQLiteWorkflowStartStore:
-    def __init__(self, path: Path) -> None:
-        self._path = path
-        self._path.parent.mkdir(parents=True, exist_ok=True)
-        with closing(sqlite3.connect(self._path)) as connection, connection:
-            connection.execute("PRAGMA journal_mode = WAL")
-            connection.execute("PRAGMA synchronous = FULL")
-            connection.execute(
-                """
-                CREATE TABLE IF NOT EXISTS golden_workflow_starts (
-                    principal_id TEXT NOT NULL,
-                    idempotency_key TEXT NOT NULL,
-                    request_sha256 TEXT NOT NULL,
-                    snapshot_json BLOB NOT NULL,
-                    PRIMARY KEY (principal_id, idempotency_key)
-                )
-                """
-            )
-
-    def get_or_create(
-        self,
-        *,
-        principal_id: str,
-        idempotency_key: str,
-        request_sha256: str,
-        factory: Callable[[], RunSnapshot],
-    ) -> RunSnapshot:
-        with closing(sqlite3.connect(self._path)) as connection, connection:
-            connection.execute("PRAGMA synchronous = FULL")
-            connection.execute("BEGIN IMMEDIATE")
-            existing = connection.execute(
-                """
-                SELECT request_sha256, snapshot_json
-                FROM golden_workflow_starts
-                WHERE principal_id = ? AND idempotency_key = ?
-                """,
-                (principal_id, idempotency_key),
-            ).fetchone()
-            if existing is not None:
-                if existing[0] != request_sha256:
-                    raise GoldenRunConflictError(
-                        "idempotency key is already bound to a different request"
-                    )
-                payload = existing[1]
-                try:
-                    snapshot = RunSnapshot.model_validate_json(payload)
-                except (ValidationError, TypeError, ValueError) as error:
-                    raise GoldenRunCorruptionError(
-                        f"cannot reconstruct persisted workflow start: {error}"
-                    ) from error
-                if type(payload) is not bytes or payload != _canonical_model_bytes(snapshot):
-                    raise GoldenRunCorruptionError(
-                        "persisted workflow start does not use canonical snapshot bytes"
-                    )
-                return snapshot
-
-            snapshot = factory()
-            connection.execute(
-                """
-                INSERT INTO golden_workflow_starts (
-                    principal_id, idempotency_key, request_sha256, snapshot_json
-                ) VALUES (?, ?, ?, ?)
-                """,
-                (
-                    principal_id,
-                    idempotency_key,
-                    request_sha256,
-                    _canonical_model_bytes(snapshot),
-                ),
-            )
-            return snapshot
-
-
 __all__ = [
     "GoldenRunConflictError",
     "GoldenRunCorruptionError",
     "GoldenRunHarness",
+    "GoldenRunNotFoundError",
     "GoldenRunRegistryError",
 ]

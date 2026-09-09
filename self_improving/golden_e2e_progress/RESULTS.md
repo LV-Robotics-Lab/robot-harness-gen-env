@@ -226,3 +226,48 @@
 - `uv lock --check` 当前已因历史 metadata 漂移失败，CI 的 editable pip 安装也没有消费 lock。P4 加入
   optional `mcp>=2.2,<3` 时必须同时更新 frozen runtime/CI lane，并记录 mcp、mcp-types 与 negotiated
   protocol 的精确身份；在 S1 `submit/read` 和真实 Registry trust root 完成前不写假 adapter。
+
+## 2026-09-09 P1 durable workflow read/store 纵切
+
+- public seam 保持 S1：新增 strict `RunReadRequest(schema_version, principal_id, workflow_run_id UUID4)`，
+  `GoldenRunHarness.read(request) -> RunSnapshot`，以及调用方显式构造/注入的
+  `SQLiteGoldenRunStore(path, busy_timeout_ms=5000)`。Harness 不再从 CAS root 隐式创建私有数据库；
+  当前 `read` 明确只恢复 revision-0 start head；原有 `start`、跨实例幂等和 request/receipt/CAS
+  复核语义保持通过，未来 operation head 不在本切片能力声明内。
+- TDD RED 依次为：`RunReadRequest` import 不存在；公开 SQLite store module 不存在；Harness 不接受
+  `workflow_store`；有效 64 位 SQLite start-request identity 被篡改后 `read` 仍静默成功；旧私有四列表
+  无法由新 store 读取；旧 logical request digest 被迁移丢弃；只篡改 idempotency lookup key 能创建第二个
+  workflow；两个线程并发 bootstrap 新库偶发 `database is locked`。这些 RED 分别由双 request identity
+  binding、单一旧布局事务迁移、lookup metadata 反向绑定和无竞态初始化修复；receipt 中的
+  domain-separated logical `request_sha256` 保持原定义。
+- SQLite authority 不在并发 bootstrap 中切换 `journal_mode`；新库沿用 SQLite 默认 rollback journal，
+  同时使用 `synchronous=FULL`、`BEGIN IMMEDIATE`、snapshot canonical bytes 与独立 payload checksum。
+  `workflow_run_id` 为主键，`(principal_id, idempotency_key)` 与 canonical start-request digest 分别唯一。
+  已知旧私有四列表可事务迁移并保留 logical digest；未知 layout、坏旧行、principal 不一致、合法 UUID
+  碰撞、非 canonical/非 BLOB/不可解析 snapshot、无效或不匹配 checksum、row/snapshot identity swap、
+  request/idempotency metadata 篡改和损坏数据库均 fail closed。
+- `read` 只按 `(principal_id, workflow_run_id)` 返回，因此不存在与其他 principal 使用同 UUID 时的
+  可观察差异；missing 与 wrong-principal 都给出同一个
+  `GoldenRunNotFoundError(code=HARN_WORKFLOW_NOT_FOUND)`。恢复后重新解析 canonical start request，
+  再复核 registry、trusted state、receipt、初始 evidence 与全部 CAS 内容闭包；删除 start-request CAS
+  对象会给出 `HARN_PERSISTENCE_CONFLICT`，不会返回仅有 SQLite 的快照。
+- 同一测试先用第二个 Harness/ArtifactStore/SQLite store 实例恢复，再启动真实 Python 子进程从相同
+  SQLite 与 CAS 调用公开 `read`，两次结果都与起始快照完全相同；显式数据库位于 CAS 外，且确认
+  Harness 没有在 CAS root 偷建 `golden-workflows.sqlite3`。另有 40 个 fresh database × 2 线程的有界
+  并发 constructor 测试，以及两个 Harness 同时 start 同一 request 只落一个 aggregate 的测试。
+- focused gate：
+  `pytest -q tests/self_improving/harness/test_golden_run.py tests/self_improving/harness/test_schema_catalog.py --cov=self_improving.harness.golden_run --cov=self_improving.harness.golden_store --cov=self_improving.harness.schemas.workflow --cov-branch --cov-fail-under=100`
+  为 `65 passed`；`golden_run.py`、`golden_store.py`、`schemas/workflow.py` 的 statement/branch 均为
+  `100%`。29 份 Harness JSON Schema snapshot check 与 Ruff 通过。
+- Harness 全域为 `2117 passed, 19 skipped, 1 failed in 124.67s`；唯一失败仍是已登记的
+  `text2env.replay@1.0.0` qualification source identity 漂移（首个漂移文件为本切片正常修改的公共
+  `self_improving/harness/__init__.py`）。不改 expected hash、不伪重签后，显式排除该单项为
+  `2117 passed, 19 skipped, 1 deselected in 119.73s`。
+- 根套件保留同一个显式排除项后为 `3130 passed, 19 skipped, 1 deselected in 149.87s`；没有第二个
+  回归失败。本结果不是 Genesis runtime 验证，也不替代最终资格重签。
+- 独立 Standards/spec reviewer 结论为 `APPROVE / NO BLOCKER`；其在 Python 3.11.15 隔离环境复跑
+  focused `65 passed`、405 statements/86 branches 100%，并补做 40 个 fresh database × 2 独立进程
+  constructor 攻击，结果 0 failure/0 hang。该补充探针是只读复审证据，不冒充 committed test。
+- 边界：本切片没有定义 `RunCommandRequest`、`OperationSnapshot`、`submit`、handler dispatch、MCP、
+  Genesis 或 promotion，也没有把 caller 提供的 RegistrySnapshot 提升为生产 trust root；这些仍属于
+  P1 后续与 P2/P4。纯持久化切片不产生真实仿真或真机能力主张。

@@ -12,6 +12,7 @@ from pydantic import UUID4, AwareDatetime, Field, StrictStr, model_validator
 from .base import HarnessModel, NonNegativeInt, Sha256, public_schema_config
 from .common import ArtifactRef
 
+RUN_READ_REQUEST_SCHEMA_ID = "harness.run_read_request.v1"
 RUN_START_REQUEST_SCHEMA_ID = "harness.run_start_request.v1"
 RUN_SNAPSHOT_SCHEMA_ID = "harness.run_snapshot.v1"
 WORKFLOW_START_RECEIPT_SCHEMA_ID = "harness.workflow_start_receipt.v1"
@@ -40,6 +41,16 @@ class WorkflowStatus(str, Enum):
     PROMOTED = "promoted"
     CANCELLED = "cancelled"
     FAILED = "failed"
+
+
+class RunReadRequest(HarnessModel):
+    """Read one parent workflow without disclosing another principal's runs."""
+
+    model_config = public_schema_config(RUN_READ_REQUEST_SCHEMA_ID)
+
+    schema_version: Literal["harness.run_read_request.v1"]
+    principal_id: PrincipalId
+    workflow_run_id: UUID4
 
 
 class RunStartRequest(HarnessModel):
@@ -197,10 +208,12 @@ def _require_workflow_receipt_ref(artifact: ArtifactRef) -> None:
 
 
 __all__ = [
+    "RUN_READ_REQUEST_SCHEMA_ID",
     "RUN_SNAPSHOT_SCHEMA_ID",
     "RUN_START_REQUEST_SCHEMA_ID",
     "WORKFLOW_START_RECEIPT_SCHEMA_ID",
     "CapabilityProfileRef",
+    "RunReadRequest",
     "RunSnapshot",
     "RunStartRequest",
     "WorkflowStartReceipt",

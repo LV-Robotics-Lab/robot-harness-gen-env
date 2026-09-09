@@ -29,6 +29,7 @@ from self_improving.harness.schemas.text2env_validate_v2 import (
     Text2EnvValidateV2Output,
 )
 from self_improving.harness.schemas.workflow import (
+    RunReadRequest,
     RunSnapshot,
     RunStartRequest,
     WorkflowStartReceipt,
@@ -46,6 +47,7 @@ EXPECTED_SCHEMA_IDS = {
     "harness.replay_vlm_assessment_output.v1",
     "harness.replay_vlm_assessment_output.v2",
     "harness.registry_snapshot.v1",
+    "harness.run_read_request.v1",
     "harness.run_state.v1",
     "harness.run_snapshot.v1",
     "harness.run_start_request.v1",
@@ -76,6 +78,7 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert schema_model("harness.run_snapshot.v1") is RunSnapshot
     assert schema_model("harness.workflow_start_receipt.v1") is WorkflowStartReceipt
     assert schema_model("harness.registry_snapshot.v1") is RegistrySnapshot
+    assert schema_model("harness.run_read_request.v1") is RunReadRequest
     assert (
         schema_model("harness.skill_qualification_report.v1")
         is PublicQualificationReportV1
@@ -103,6 +106,7 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.run_start_request.v1",
             "harness.run_snapshot.v1",
             "harness.registry_snapshot.v1",
+            "harness.run_read_request.v1",
             "harness.skill_qualification_report.v1",
             "harness.workflow_start_receipt.v1",
         }:
@@ -165,6 +169,11 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
     ]["properties"]["logical_path"]["pattern"] == portable_path_pattern
     run_required = documents["harness.run_state.v1"]["required"]
     assert {"invocation_digest", "ended_at", "output", "blocker"} <= set(run_required)
+    assert documents["harness.run_read_request.v1"]["required"] == [
+        "schema_version",
+        "principal_id",
+        "workflow_run_id",
+    ]
 
     compile_input = documents["harness.text2env_compile_input.v1"]
     assert "config" in compile_input["required"]

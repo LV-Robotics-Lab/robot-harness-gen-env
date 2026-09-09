@@ -1,0 +1,31 @@
+{
+  "$id": "harness.run_read_request.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Read one parent workflow without disclosing another principal's runs.",
+  "properties": {
+    "principal_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Principal Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.run_read_request.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "workflow_run_id": {
+      "format": "uuid4",
+      "title": "Workflow Run Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "principal_id",
+    "workflow_run_id"
+  ],
+  "title": "RunReadRequest",
+  "type": "object"
+}

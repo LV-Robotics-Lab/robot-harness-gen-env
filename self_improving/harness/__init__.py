@@ -33,8 +33,10 @@ from .golden_run import (
     GoldenRunConflictError,
     GoldenRunCorruptionError,
     GoldenRunHarness,
+    GoldenRunNotFoundError,
     GoldenRunRegistryError,
 )
+from .golden_store import SQLiteGoldenRunStore
 from .handlers import (
     EligibilityVerifier,
     RequirePromotionEvidence,
@@ -135,6 +137,7 @@ from .schemas import (
     QualifiedSkillSnapshot,
     RegisteredSkillDescriptor,
     RegistrySnapshot,
+    RunReadRequest,
     RunSnapshot,
     RunStartRequest,
     RunState,
@@ -193,6 +196,7 @@ __all__ = [
     "GoldenRunConflictError",
     "GoldenRunCorruptionError",
     "GoldenRunHarness",
+    "GoldenRunNotFoundError",
     "GoldenRunRegistryError",
     "HandlerResult",
     "LocalArtifactStore",
@@ -224,6 +228,7 @@ __all__ = [
     "RegistryRegistrationError",
     "RegistrySnapshot",
     "ResolvedArtifact",
+    "RunReadRequest",
     "RunEvent",
     "RunEventTranscript",
     "RunEvidenceSource",
@@ -252,6 +257,7 @@ __all__ = [
     "SkillBlocked",
     "SkillRegistry",
     "SkillQualification",
+    "SQLiteGoldenRunStore",
     "SQLiteEventJournal",
     "SQLiteRunStore",
     "StoredRunEvent",

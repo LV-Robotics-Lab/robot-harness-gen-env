@@ -3,10 +3,16 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
+import subprocess
+import sys
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
+from hashlib import sha256
 from pathlib import Path
+from threading import Barrier
 from uuid import UUID
 
 import pytest
@@ -18,8 +24,10 @@ from self_improving.harness.golden_run import (
     GoldenRunConflictError,
     GoldenRunCorruptionError,
     GoldenRunHarness,
+    GoldenRunNotFoundError,
     GoldenRunRegistryError,
 )
+from self_improving.harness.golden_store import SQLiteGoldenRunStore
 from self_improving.harness.handlers.text2env_compile import text2env_compile_descriptor
 from self_improving.harness.qualification import ImplementationManifestV1
 from self_improving.harness.schemas.common import SkillDescriptor
@@ -28,6 +36,7 @@ from self_improving.harness.schemas.registry_snapshot import (
     RegistrySnapshot,
 )
 from self_improving.harness.schemas.workflow import (
+    RunReadRequest,
     RunSnapshot,
     RunStartRequest,
     WorkflowStartReceipt,
@@ -180,14 +189,67 @@ def _replace_persisted_snapshot(store: LocalArtifactStore, payload: bytes) -> No
     database = store.root / "golden-workflows.sqlite3"
     with closing(sqlite3.connect(database)) as connection, connection:
         connection.execute(
-            "UPDATE golden_workflow_starts SET snapshot_json = ?",
-            (payload,),
+            """
+            UPDATE golden_workflow_starts
+            SET snapshot_json = ?, snapshot_sha256 = ?
+            """,
+            (payload, sha256(payload).hexdigest()),
+        )
+
+
+def _replace_with_legacy_start_table(
+    database: Path,
+    *,
+    request_sha256: str,
+) -> None:
+    with closing(sqlite3.connect(database)) as connection, connection:
+        row = connection.execute(
+            """
+            SELECT principal_id, idempotency_key, snapshot_json
+            FROM golden_workflow_starts
+            """
+        ).fetchone()
+        connection.execute("DROP TABLE golden_workflow_starts")
+        connection.execute(
+            """
+            CREATE TABLE golden_workflow_starts (
+                principal_id TEXT NOT NULL,
+                idempotency_key TEXT NOT NULL,
+                request_sha256 TEXT NOT NULL,
+                snapshot_json BLOB NOT NULL,
+                PRIMARY KEY (principal_id, idempotency_key)
+            )
+            """
+        )
+        connection.execute(
+            """
+            INSERT INTO golden_workflow_starts (
+                principal_id, idempotency_key, request_sha256, snapshot_json
+            ) VALUES (?, ?, ?, ?)
+            """,
+            (row[0], row[1], request_sha256, row[2]),
         )
 
 
 class _ArtifactStoreLookalike:
     def __init__(self, root: Path) -> None:
         self.root = root
+
+
+def _golden_harness(
+    *,
+    artifact_store: LocalArtifactStore,
+    workflow_store: SQLiteGoldenRunStore | None = None,
+    **kwargs: object,
+) -> GoldenRunHarness:
+    selected_store = workflow_store or SQLiteGoldenRunStore(
+        artifact_store.root / "golden-workflows.sqlite3"
+    )
+    return GoldenRunHarness(
+        artifact_store=artifact_store,
+        workflow_store=selected_store,
+        **kwargs,  # type: ignore[arg-type]
+    )
 
 
 def test_start_builds_trusted_state_and_receipt_chain_from_cas_inputs(tmp_path: Path) -> None:
@@ -200,7 +262,7 @@ def test_start_builds_trusted_state_and_receipt_chain_from_cas_inputs(tmp_path: 
         schema_version="harness.world_fact_evidence.v1",
     )
     registry = _qualified_registry(store, tmp_path)
-    harness = GoldenRunHarness(
+    harness = _golden_harness(
         artifact_store=store,
         clock=lambda: NOW,
         workflow_id_factory=lambda: WORKFLOW_ID,
@@ -264,18 +326,65 @@ def test_start_builds_trusted_state_and_receipt_chain_from_cas_inputs(tmp_path: 
 
 def test_harness_requires_the_exact_local_cas_authority(tmp_path: Path) -> None:
     with pytest.raises(TypeError, match="artifact_store must be the exact LocalArtifactStore"):
-        GoldenRunHarness(artifact_store=_ArtifactStoreLookalike(tmp_path))  # type: ignore[arg-type]
+        _golden_harness(artifact_store=_ArtifactStoreLookalike(tmp_path))  # type: ignore[arg-type]
+
+
+def test_harness_requires_an_explicit_durable_workflow_authority(tmp_path: Path) -> None:
+    with pytest.raises(TypeError, match="workflow_store"):
+        GoldenRunHarness(  # type: ignore[call-arg]
+            artifact_store=LocalArtifactStore(tmp_path / "cas")
+        )
+
+
+def test_harness_rejects_a_workflow_store_lookalike(tmp_path: Path) -> None:
+    with pytest.raises(
+        TypeError,
+        match="workflow_store must be the exact SQLiteGoldenRunStore",
+    ):
+        GoldenRunHarness(
+            artifact_store=LocalArtifactStore(tmp_path / "cas"),
+            workflow_store=object(),  # type: ignore[arg-type]
+        )
 
 
 def test_golden_workflow_contracts_are_available_from_the_public_harness_facade() -> None:
     assert public_harness.GoldenRunHarness is GoldenRunHarness
+    assert public_harness.GoldenRunNotFoundError is GoldenRunNotFoundError
     assert public_harness.GoldenRunConflictError is GoldenRunConflictError
     assert public_harness.GoldenRunCorruptionError is GoldenRunCorruptionError
     assert public_harness.GoldenRunRegistryError is GoldenRunRegistryError
+    assert public_harness.RunReadRequest is RunReadRequest
     assert public_harness.RunStartRequest is RunStartRequest
     assert public_harness.RunSnapshot is RunSnapshot
     assert public_harness.RegistrySnapshot is RegistrySnapshot
+    assert public_harness.SQLiteGoldenRunStore is SQLiteGoldenRunStore
     assert public_harness.WorkflowStartReceipt is WorkflowStartReceipt
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"principal_id": ""}, "at least 1 character"),
+        (
+            {"workflow_run_id": UUID("10000000-0000-1000-8000-000000000001")},
+            "UUID version 4",
+        ),
+        ({"unexpected": True}, "Extra inputs are not permitted"),
+    ],
+)
+def test_run_read_request_rejects_ambiguous_identity(
+    changes: dict[str, object],
+    message: str,
+) -> None:
+    values: dict[str, object] = {
+        "schema_version": "harness.run_read_request.v1",
+        "principal_id": "tests/golden-e2e",
+        "workflow_run_id": WORKFLOW_ID,
+    }
+    values.update(changes)
+
+    with pytest.raises(ValidationError, match=message):
+        RunReadRequest.model_validate(values)
 
 
 def test_start_is_durably_idempotent_across_harness_restart(tmp_path: Path) -> None:
@@ -289,7 +398,7 @@ def test_start_is_durably_idempotent_across_harness_restart(tmp_path: Path) -> N
     )
     registry = _qualified_registry(store, tmp_path)
     request = _request(objective, registry)
-    first = GoldenRunHarness(
+    first = _golden_harness(
         artifact_store=store,
         clock=lambda: NOW,
         workflow_id_factory=lambda: WORKFLOW_ID,
@@ -301,13 +410,621 @@ def test_start_is_durably_idempotent_across_harness_restart(tmp_path: Path) -> N
     def unexpected_workflow_id() -> UUID:
         pytest.fail("an idempotent retry must not allocate another workflow identity")
 
-    retry = GoldenRunHarness(
+    retry = _golden_harness(
         artifact_store=LocalArtifactStore(tmp_path / "cas"),
         clock=unexpected_clock,
         workflow_id_factory=unexpected_workflow_id,
     ).start(request)
 
     assert retry == first
+
+
+def test_start_retry_rejects_tampered_idempotency_lookup_metadata(tmp_path: Path) -> None:
+    artifact_store = LocalArtifactStore(tmp_path / "cas")
+    database = tmp_path / "workflow-authority.sqlite3"
+    objective = _put(
+        artifact_store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(artifact_store, tmp_path)
+    request = _request(objective, registry)
+    _golden_harness(
+        artifact_store=artifact_store,
+        workflow_store=SQLiteGoldenRunStore(database),
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    ).start(request)
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.execute(
+            "UPDATE golden_workflow_starts SET idempotency_key = 'tampered-key'"
+        )
+
+    with pytest.raises(
+        GoldenRunCorruptionError,
+        match="idempotency metadata",
+    ):
+        _golden_harness(
+            artifact_store=artifact_store,
+            workflow_store=SQLiteGoldenRunStore(database),
+        ).read(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id=request.principal_id,
+                workflow_run_id=WORKFLOW_ID,
+            )
+        )
+
+    with pytest.raises(
+        GoldenRunCorruptionError,
+        match="idempotency metadata",
+    ) as raised:
+        _golden_harness(
+            artifact_store=artifact_store,
+            workflow_store=SQLiteGoldenRunStore(database),
+            clock=lambda: NOW,
+            workflow_id_factory=lambda: UUID("20000000-0000-4000-8000-000000000002"),
+        ).start(request)
+    assert raised.value.code == "HARN_PERSISTENCE_CONFLICT"
+
+
+def test_legacy_private_start_store_is_migrated_for_retry_and_read(tmp_path: Path) -> None:
+    artifact_store = LocalArtifactStore(tmp_path / "cas")
+    database = tmp_path / "legacy-workflow-authority.sqlite3"
+    objective = _put(
+        artifact_store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(artifact_store, tmp_path)
+    request = _request(objective, registry)
+    snapshot = _golden_harness(
+        artifact_store=artifact_store,
+        workflow_store=SQLiteGoldenRunStore(database),
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    ).start(request)
+    receipt = WorkflowStartReceipt.model_validate_json(
+        artifact_store.resolve(snapshot.receipt_head).path.read_bytes()
+    )
+    _replace_with_legacy_start_table(
+        database,
+        request_sha256=receipt.request_sha256,
+    )
+
+    def unexpected_clock() -> datetime:
+        pytest.fail("legacy idempotency recovery must not execute the start again")
+
+    def unexpected_workflow_id() -> UUID:
+        pytest.fail("legacy idempotency recovery must retain the workflow identity")
+
+    migrated = _golden_harness(
+        artifact_store=LocalArtifactStore(tmp_path / "cas"),
+        workflow_store=SQLiteGoldenRunStore(database),
+        clock=unexpected_clock,
+        workflow_id_factory=unexpected_workflow_id,
+    )
+
+    assert migrated.start(request) == snapshot
+    assert migrated.read(
+        RunReadRequest(
+            schema_version="harness.run_read_request.v1",
+            principal_id="tests/golden-e2e",
+            workflow_run_id=WORKFLOW_ID,
+        )
+    ) == snapshot
+
+
+def test_legacy_migration_preserves_a_corrupt_logical_request_identity(
+    tmp_path: Path,
+) -> None:
+    artifact_store = LocalArtifactStore(tmp_path / "cas")
+    database = tmp_path / "legacy-workflow-authority.sqlite3"
+    objective = _put(
+        artifact_store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(artifact_store, tmp_path)
+    request = _request(objective, registry)
+    snapshot = _golden_harness(
+        artifact_store=artifact_store,
+        workflow_store=SQLiteGoldenRunStore(database),
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    ).start(request)
+    _replace_with_legacy_start_table(database, request_sha256="f" * 64)
+
+    migrated = _golden_harness(
+        artifact_store=artifact_store,
+        workflow_store=SQLiteGoldenRunStore(database),
+    )
+
+    with pytest.raises(
+        GoldenRunCorruptionError,
+        match="logical request identity",
+    ):
+        migrated.read(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id="tests/golden-e2e",
+                workflow_run_id=snapshot.workflow_run_id,
+            )
+        )
+    with pytest.raises(
+        GoldenRunCorruptionError,
+        match="logical request identity",
+    ):
+        migrated.start(request)
+
+
+def test_read_recovers_the_workflow_head_across_harness_restart(tmp_path: Path) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    database = tmp_path / "workflow-authority.sqlite3"
+    objective = _put(
+        store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(store, tmp_path)
+    snapshot = _golden_harness(
+        artifact_store=store,
+        workflow_store=SQLiteGoldenRunStore(database),
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    ).start(_request(objective, registry))
+
+    recovered = _golden_harness(
+        artifact_store=LocalArtifactStore(tmp_path / "cas"),
+        workflow_store=SQLiteGoldenRunStore(database),
+    ).read(
+        RunReadRequest(
+            schema_version="harness.run_read_request.v1",
+            principal_id="tests/golden-e2e",
+            workflow_run_id=WORKFLOW_ID,
+        )
+    )
+
+    assert recovered == snapshot
+    assert not (store.root / "golden-workflows.sqlite3").exists()
+
+    child = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            """
+import json
+import sys
+from pathlib import Path
+from uuid import UUID
+
+from self_improving.harness import (
+    GoldenRunHarness,
+    LocalArtifactStore,
+    RunReadRequest,
+    SQLiteGoldenRunStore,
+)
+
+snapshot = GoldenRunHarness(
+    artifact_store=LocalArtifactStore(Path(sys.argv[1])),
+    workflow_store=SQLiteGoldenRunStore(Path(sys.argv[2])),
+).read(
+    RunReadRequest(
+        schema_version="harness.run_read_request.v1",
+        principal_id=sys.argv[3],
+        workflow_run_id=UUID(sys.argv[4]),
+    )
+)
+print(json.dumps(snapshot.model_dump(mode="json"), sort_keys=True))
+""",
+            str(store.root),
+            str(database),
+            "tests/golden-e2e",
+            str(WORKFLOW_ID),
+        ],
+        cwd=PROJECT_ROOT,
+        env={
+            **os.environ,
+            "PYTHONPATH": str(PROJECT_ROOT)
+            + os.pathsep
+            + os.environ.get("PYTHONPATH", ""),
+        },
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert child.returncode == 0, child.stderr
+    assert json.loads(child.stdout) == snapshot.model_dump(mode="json")
+
+
+def test_read_hides_missing_and_other_principal_workflows(tmp_path: Path) -> None:
+    artifact_store = LocalArtifactStore(tmp_path / "cas")
+    workflow_store = SQLiteGoldenRunStore(tmp_path / "workflow-authority.sqlite3")
+    objective = _put(
+        artifact_store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(artifact_store, tmp_path)
+    harness = _golden_harness(
+        artifact_store=artifact_store,
+        workflow_store=workflow_store,
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    )
+    harness.start(_request(objective, registry))
+
+    requests = (
+        RunReadRequest(
+            schema_version="harness.run_read_request.v1",
+            principal_id="tests/another-principal",
+            workflow_run_id=WORKFLOW_ID,
+        ),
+        RunReadRequest(
+            schema_version="harness.run_read_request.v1",
+            principal_id="tests/golden-e2e",
+            workflow_run_id=UUID("20000000-0000-4000-8000-000000000002"),
+        ),
+    )
+    for request in requests:
+        with pytest.raises(
+            GoldenRunNotFoundError,
+            match="golden workflow was not found for this principal",
+        ) as raised:
+            harness.read(request)
+        assert raised.value.code == "HARN_WORKFLOW_NOT_FOUND"
+
+
+def test_read_rejects_a_tampered_start_request_database_identity(tmp_path: Path) -> None:
+    artifact_store = LocalArtifactStore(tmp_path / "cas")
+    database = tmp_path / "workflow-authority.sqlite3"
+    objective = _put(
+        artifact_store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(artifact_store, tmp_path)
+    harness = _golden_harness(
+        artifact_store=artifact_store,
+        workflow_store=SQLiteGoldenRunStore(database),
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    )
+    harness.start(_request(objective, registry))
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.execute(
+            "UPDATE golden_workflow_starts SET start_request_sha256 = ?",
+            ("f" * 64,),
+        )
+
+    with pytest.raises(
+        GoldenRunCorruptionError,
+        match="start request identity",
+    ) as raised:
+        harness.read(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id="tests/golden-e2e",
+                workflow_run_id=WORKFLOW_ID,
+            )
+        )
+    assert raised.value.code == "HARN_PERSISTENCE_CONFLICT"
+
+
+def test_read_rejects_a_missing_start_request_cas_object(tmp_path: Path) -> None:
+    artifact_store = LocalArtifactStore(tmp_path / "cas")
+    database = tmp_path / "workflow-authority.sqlite3"
+    objective = _put(
+        artifact_store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(artifact_store, tmp_path)
+    harness = _golden_harness(
+        artifact_store=artifact_store,
+        workflow_store=SQLiteGoldenRunStore(database),
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    )
+    snapshot = harness.start(_request(objective, registry))
+    artifact_store.resolve(snapshot.start_request_ref).path.unlink()
+
+    with pytest.raises(GoldenRunCorruptionError, match="CAS closure") as raised:
+        harness.read(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id="tests/golden-e2e",
+                workflow_run_id=WORKFLOW_ID,
+            )
+        )
+    assert raised.value.code == "HARN_PERSISTENCE_CONFLICT"
+
+
+@pytest.mark.parametrize(
+    ("attack", "message"),
+    [
+        ("text_payload", "canonical JSON bytes"),
+        ("invalid_checksum", "invalid payload checksum"),
+        ("mismatched_checksum", "failed its payload checksum"),
+        ("invalid_authority_digest", "invalid authority metadata"),
+    ],
+)
+def test_read_rejects_corrupt_sqlite_snapshot_storage(
+    tmp_path: Path,
+    attack: str,
+    message: str,
+) -> None:
+    artifact_store = LocalArtifactStore(tmp_path / "cas")
+    database = tmp_path / "workflow-authority.sqlite3"
+    objective = _put(
+        artifact_store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(artifact_store, tmp_path)
+    harness = _golden_harness(
+        artifact_store=artifact_store,
+        workflow_store=SQLiteGoldenRunStore(database),
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    )
+    harness.start(_request(objective, registry))
+    statements = {
+        "text_payload": "UPDATE golden_workflow_starts "
+        "SET snapshot_json = CAST(snapshot_json AS TEXT)",
+        "invalid_checksum": "UPDATE golden_workflow_starts SET snapshot_sha256 = 'broken'",
+        "mismatched_checksum": "UPDATE golden_workflow_starts SET snapshot_sha256 = '"
+        + "f" * 64
+        + "'",
+        "invalid_authority_digest": (
+            "UPDATE golden_workflow_starts SET request_sha256 = 'broken'"
+        ),
+    }
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.execute(statements[attack])
+
+    with pytest.raises(GoldenRunCorruptionError, match=message) as raised:
+        harness.read(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id="tests/golden-e2e",
+                workflow_run_id=WORKFLOW_ID,
+            )
+        )
+    assert raised.value.code == "HARN_PERSISTENCE_CONFLICT"
+
+
+def test_sqlite_golden_run_store_fails_closed_for_invalid_authority(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(ValueError, match="busy_timeout_ms"):
+        SQLiteGoldenRunStore(tmp_path / "invalid-timeout.sqlite3", busy_timeout_ms=0)
+    with pytest.raises(GoldenRunCorruptionError, match="unavailable or corrupt"):
+        SQLiteGoldenRunStore(tmp_path)
+
+    corrupt = tmp_path / "corrupt.sqlite3"
+    corrupt.write_bytes(b"not a sqlite database")
+    with pytest.raises(GoldenRunCorruptionError, match="unavailable or corrupt"):
+        SQLiteGoldenRunStore(corrupt)
+
+
+def test_sqlite_golden_run_store_rejects_an_unknown_table_layout(tmp_path: Path) -> None:
+    database = tmp_path / "unknown-layout.sqlite3"
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.execute("CREATE TABLE golden_workflow_starts (unknown TEXT)")
+
+    with pytest.raises(GoldenRunCorruptionError, match="unsupported table layout"):
+        SQLiteGoldenRunStore(database)
+
+
+@pytest.mark.parametrize("attack", ["principal", "start_request"])
+def test_sqlite_golden_run_store_rejects_a_factory_outside_its_reservation(
+    tmp_path: Path,
+    attack: str,
+) -> None:
+    artifact_store = LocalArtifactStore(tmp_path / "cas")
+    objective = _put(
+        artifact_store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(artifact_store, tmp_path)
+    snapshot = _golden_harness(
+        artifact_store=artifact_store,
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    ).start(_request(objective, registry))
+    receipt = WorkflowStartReceipt.model_validate_json(
+        artifact_store.resolve(snapshot.receipt_head).path.read_bytes()
+    )
+    principal_id = (
+        "tests/another-principal" if attack == "principal" else snapshot.principal_id
+    )
+    start_request_sha256 = (
+        snapshot.start_request_ref.sha256 if attack == "principal" else "f" * 64
+    )
+    target = SQLiteGoldenRunStore(tmp_path / f"factory-{attack}.sqlite3")
+
+    with pytest.raises(GoldenRunCorruptionError, match="authority metadata"):
+        target.get_or_create_start(
+            principal_id=principal_id,
+            idempotency_key="factory-attack",
+            request_sha256=receipt.request_sha256,
+            start_request_sha256=start_request_sha256,
+            factory=lambda: snapshot,
+        )
+
+
+@pytest.mark.parametrize(
+    ("attack", "message"),
+    [
+        ("invalid_row", "cannot migrate legacy"),
+        ("principal_mismatch", "inconsistent principal metadata"),
+    ],
+)
+def test_sqlite_golden_run_store_rejects_corrupt_legacy_authority(
+    tmp_path: Path,
+    attack: str,
+    message: str,
+) -> None:
+    artifact_store = LocalArtifactStore(tmp_path / "cas")
+    database = tmp_path / "legacy-workflow-authority.sqlite3"
+    objective = _put(
+        artifact_store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(artifact_store, tmp_path)
+    snapshot = _golden_harness(
+        artifact_store=artifact_store,
+        workflow_store=SQLiteGoldenRunStore(database),
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    ).start(_request(objective, registry))
+    receipt = WorkflowStartReceipt.model_validate_json(
+        artifact_store.resolve(snapshot.receipt_head).path.read_bytes()
+    )
+    _replace_with_legacy_start_table(
+        database,
+        request_sha256=receipt.request_sha256,
+    )
+    statements = {
+        "invalid_row": "UPDATE golden_workflow_starts SET request_sha256 = 'broken'",
+        "principal_mismatch": (
+            "UPDATE golden_workflow_starts SET principal_id = 'tests/another-principal'"
+        ),
+    }
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.execute(statements[attack])
+
+    with pytest.raises(GoldenRunCorruptionError, match=message):
+        SQLiteGoldenRunStore(database)
+
+
+def test_sqlite_golden_run_store_bootstraps_concurrently_without_lock_errors(
+    tmp_path: Path,
+) -> None:
+    for attempt in range(40):
+        database = tmp_path / f"concurrent-bootstrap-{attempt}.sqlite3"
+        ready = Barrier(2)
+
+        def construct_store() -> SQLiteGoldenRunStore:
+            ready.wait(timeout=2)
+            return SQLiteGoldenRunStore(database, busy_timeout_ms=1_000)
+
+        with ThreadPoolExecutor(max_workers=2) as workers:
+            futures = tuple(workers.submit(construct_store) for _ in range(2))
+            stores = tuple(future.result(timeout=3) for future in futures)
+
+        assert all(store.path == database for store in stores)
+
+
+def test_concurrent_start_is_one_durable_idempotent_transition(tmp_path: Path) -> None:
+    artifact_store = LocalArtifactStore(tmp_path / "cas")
+    database = tmp_path / "workflow-authority.sqlite3"
+    objective = _put(
+        artifact_store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(artifact_store, tmp_path)
+    request = _request(objective, registry)
+    ready = Barrier(2)
+    harnesses = (
+        _golden_harness(
+            artifact_store=artifact_store,
+            workflow_store=SQLiteGoldenRunStore(database),
+            clock=lambda: NOW,
+            workflow_id_factory=lambda: WORKFLOW_ID,
+        ),
+        _golden_harness(
+            artifact_store=artifact_store,
+            workflow_store=SQLiteGoldenRunStore(database),
+            clock=lambda: NOW + timedelta(seconds=1),
+            workflow_id_factory=lambda: UUID("20000000-0000-4000-8000-000000000002"),
+        ),
+    )
+
+    def start(harness: GoldenRunHarness) -> RunSnapshot:
+        ready.wait(timeout=2)
+        return harness.start(request)
+
+    with ThreadPoolExecutor(max_workers=2) as workers:
+        futures = tuple(workers.submit(start, harness) for harness in harnesses)
+        snapshots = tuple(future.result(timeout=5) for future in futures)
+
+    assert snapshots[0] == snapshots[1]
+    assert snapshots[0].workflow_run_id in {
+        WORKFLOW_ID,
+        UUID("20000000-0000-4000-8000-000000000002"),
+    }
+    with closing(sqlite3.connect(database)) as connection:
+        assert connection.execute(
+            "SELECT COUNT(*) FROM golden_workflow_starts"
+        ).fetchone()[0] == 1
+
+
+def test_start_rejects_a_workflow_identity_collision_across_principals(
+    tmp_path: Path,
+) -> None:
+    artifact_store = LocalArtifactStore(tmp_path / "cas")
+    workflow_store = SQLiteGoldenRunStore(tmp_path / "workflow-authority.sqlite3")
+    objective = _put(
+        artifact_store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(artifact_store, tmp_path)
+    first = _golden_harness(
+        artifact_store=artifact_store,
+        workflow_store=workflow_store,
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    )
+    first.start(_request(objective, registry))
+    second = _golden_harness(
+        artifact_store=artifact_store,
+        workflow_store=workflow_store,
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    )
+
+    with pytest.raises(
+        GoldenRunConflictError,
+        match="workflow identity is already bound",
+    ) as raised:
+        second.start(
+            _request(
+                objective,
+                registry,
+                principal_id="tests/another-principal",
+            )
+        )
+    assert raised.value.code == "HARN_IDEMPOTENCY_CONFLICT"
 
 
 def test_start_rejects_same_principal_and_idempotency_key_with_changed_request(
@@ -329,7 +1046,7 @@ def test_start_rejects_same_principal_and_idempotency_key_with_changed_request(
         schema_version="harness.world_fact_evidence.v1",
     )
     registry = _qualified_registry(store, tmp_path)
-    harness = GoldenRunHarness(
+    harness = _golden_harness(
         artifact_store=store,
         clock=lambda: NOW,
         workflow_id_factory=lambda: WORKFLOW_ID,
@@ -355,24 +1072,21 @@ def test_start_retry_rejects_noncanonical_persisted_snapshot(tmp_path: Path) -> 
     )
     registry = _qualified_registry(store, tmp_path)
     request = _request(objective, registry)
-    harness = GoldenRunHarness(
+    harness = _golden_harness(
         artifact_store=store,
         clock=lambda: NOW,
         workflow_id_factory=lambda: WORKFLOW_ID,
     )
     harness.start(request)
     database = store.root / "golden-workflows.sqlite3"
-    with closing(sqlite3.connect(database)) as connection, connection:
+    with closing(sqlite3.connect(database)) as connection:
         payload = connection.execute(
             "SELECT snapshot_json FROM golden_workflow_starts"
         ).fetchone()[0]
-        connection.execute(
-            "UPDATE golden_workflow_starts SET snapshot_json = ?",
-            (payload.replace(b"{", b"{ ", 1),),
-        )
+    _replace_persisted_snapshot(store, payload.replace(b"{", b"{ ", 1))
 
-    with pytest.raises(GoldenRunCorruptionError, match="canonical snapshot bytes"):
-        GoldenRunHarness(artifact_store=store).start(request)
+    with pytest.raises(GoldenRunCorruptionError, match="canonical JSON bytes"):
+        _golden_harness(artifact_store=store).start(request)
 
 
 def test_start_retry_rejects_snapshot_swapped_between_idempotency_records(
@@ -400,7 +1114,7 @@ def test_start_retry_rejects_snapshot_swapped_between_idempotency_records(
             UUID("20000000-0000-4000-8000-000000000002"),
         )
     )
-    harness = GoldenRunHarness(
+    harness = _golden_harness(
         artifact_store=store,
         clock=lambda: NOW,
         workflow_id_factory=lambda: next(workflow_ids),
@@ -418,20 +1132,21 @@ def test_start_retry_rejects_snapshot_swapped_between_idempotency_records(
     with closing(sqlite3.connect(database)) as connection, connection:
         swapped = connection.execute(
             """
-            SELECT snapshot_json FROM golden_workflow_starts
+            SELECT snapshot_json, snapshot_sha256 FROM golden_workflow_starts
             WHERE idempotency_key = 'start-text-002'
             """
-        ).fetchone()[0]
+        ).fetchone()
         connection.execute(
             """
-            UPDATE golden_workflow_starts SET snapshot_json = ?
+            UPDATE golden_workflow_starts
+            SET snapshot_json = ?, snapshot_sha256 = ?
             WHERE idempotency_key = 'start-text-001'
             """,
-            (swapped,),
+            swapped,
         )
 
-    with pytest.raises(GoldenRunCorruptionError, match="request receipt binding"):
-        GoldenRunHarness(artifact_store=store).start(first_request)
+    with pytest.raises(GoldenRunCorruptionError, match="identity metadata"):
+        _golden_harness(artifact_store=store).start(first_request)
 
 
 def test_start_retry_reverifies_cas_closure(tmp_path: Path) -> None:
@@ -445,7 +1160,7 @@ def test_start_retry_reverifies_cas_closure(tmp_path: Path) -> None:
     )
     registry = _qualified_registry(store, tmp_path)
     request = _request(objective, registry)
-    snapshot = GoldenRunHarness(
+    snapshot = _golden_harness(
         artifact_store=store,
         clock=lambda: NOW,
         workflow_id_factory=lambda: WORKFLOW_ID,
@@ -453,7 +1168,50 @@ def test_start_retry_reverifies_cas_closure(tmp_path: Path) -> None:
     store.resolve(snapshot.state_ref).path.write_bytes(b'{"tampered":true}\n')
 
     with pytest.raises(GoldenRunCorruptionError, match="CAS closure"):
-        GoldenRunHarness(artifact_store=store).start(request)
+        _golden_harness(artifact_store=store).start(request)
+
+
+def test_read_rejects_a_valid_receipt_with_inconsistent_snapshot_binding(
+    tmp_path: Path,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    objective = _put(
+        store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(store, tmp_path)
+    harness = _golden_harness(
+        artifact_store=store,
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    )
+    snapshot = harness.start(_request(objective, registry))
+    receipt = WorkflowStartReceipt.model_validate_json(
+        store.resolve(snapshot.receipt_head).path.read_bytes()
+    ).model_copy(update={"started_at": NOW + timedelta(seconds=1)})
+    changed_receipt = _put(
+        store,
+        tmp_path,
+        name="changed-start-receipt.json",
+        payload=_canonical_bytes(receipt),
+        schema_version="harness.workflow_start_receipt.v1",
+    )
+    _replace_persisted_snapshot(
+        store,
+        _canonical_bytes(snapshot.model_copy(update={"receipt_head": changed_receipt})),
+    )
+
+    with pytest.raises(GoldenRunCorruptionError, match="request receipt binding"):
+        harness.read(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id="tests/golden-e2e",
+                workflow_run_id=WORKFLOW_ID,
+            )
+        )
 
 
 def test_start_retry_rejects_invalid_or_inconsistent_snapshot_authority(
@@ -469,7 +1227,7 @@ def test_start_retry_rejects_invalid_or_inconsistent_snapshot_authority(
     )
     registry = _qualified_registry(store, tmp_path)
     request = _request(objective, registry)
-    snapshot = GoldenRunHarness(
+    snapshot = _golden_harness(
         artifact_store=store,
         clock=lambda: NOW,
         workflow_id_factory=lambda: WORKFLOW_ID,
@@ -477,14 +1235,14 @@ def test_start_retry_rejects_invalid_or_inconsistent_snapshot_authority(
 
     _replace_persisted_snapshot(store, b"{")
     with pytest.raises(GoldenRunCorruptionError, match="cannot reconstruct"):
-        GoldenRunHarness(artifact_store=store).start(request)
+        _golden_harness(artifact_store=store).start(request)
 
     _replace_persisted_snapshot(
         store,
         _canonical_bytes(snapshot.model_copy(update={"revision": 1})),
     )
     with pytest.raises(GoldenRunCorruptionError, match="request receipt binding"):
-        GoldenRunHarness(artifact_store=store).start(request)
+        _golden_harness(artifact_store=store).start(request)
 
 
 def test_start_retry_rejects_noncanonical_json_inside_hash_bound_cas(
@@ -500,7 +1258,7 @@ def test_start_retry_rejects_noncanonical_json_inside_hash_bound_cas(
     )
     registry = _qualified_registry(store, tmp_path)
     request = _request(objective, registry)
-    snapshot = GoldenRunHarness(
+    snapshot = _golden_harness(
         artifact_store=store,
         clock=lambda: NOW,
         workflow_id_factory=lambda: WORKFLOW_ID,
@@ -532,7 +1290,7 @@ def test_start_retry_rejects_noncanonical_json_inside_hash_bound_cas(
     _replace_persisted_snapshot(store, _canonical_bytes(changed_snapshot))
 
     with pytest.raises(GoldenRunCorruptionError, match="canonical JSON bytes"):
-        GoldenRunHarness(artifact_store=store).start(request)
+        _golden_harness(artifact_store=store).start(request)
 
 
 @pytest.mark.parametrize(
@@ -568,7 +1326,7 @@ def test_start_rejects_untrusted_initial_fact_evidence(
     registry = _qualified_registry(store, tmp_path)
 
     with pytest.raises(ValueError, match=message):
-        GoldenRunHarness(
+        _golden_harness(
             artifact_store=store,
             clock=lambda: NOW,
             workflow_id_factory=lambda: WORKFLOW_ID,
@@ -593,7 +1351,7 @@ def test_start_rejects_unparseable_registry_snapshot(tmp_path: Path) -> None:
     )
 
     with pytest.raises(GoldenRunRegistryError, match="registry snapshot") as raised:
-        GoldenRunHarness(
+        _golden_harness(
             artifact_store=store,
             clock=lambda: NOW,
             workflow_id_factory=lambda: WORKFLOW_ID,
@@ -632,7 +1390,7 @@ def test_start_rejects_a_target_skill_claim_not_bound_by_qualified_descriptor(
     )
 
     with pytest.raises(GoldenRunRegistryError, match="qualification closure") as raised:
-        GoldenRunHarness(
+        _golden_harness(
             artifact_store=store,
             clock=lambda: NOW,
             workflow_id_factory=lambda: WORKFLOW_ID,
@@ -655,14 +1413,14 @@ def test_start_rejects_an_unavailable_registry_or_qualification_artifact(
     registry_path = store.resolve(registry_ref).path
     registry_path.unlink()
     with pytest.raises(GoldenRunRegistryError) as missing_registry:
-        GoldenRunHarness(artifact_store=store).start(_request(objective, registry_ref))
+        _golden_harness(artifact_store=store).start(_request(objective, registry_ref))
     assert missing_registry.value.code == "HARN_ARTIFACT_UNAVAILABLE"
 
     registry_ref = _qualified_registry(store, tmp_path)
     registry = _load_registry(store, registry_ref)
     store.resolve(registry.qualified_skills[0].descriptor_ref).path.unlink()
     with pytest.raises(GoldenRunRegistryError) as missing_descriptor:
-        GoldenRunHarness(artifact_store=store).start(_request(objective, registry_ref))
+        _golden_harness(artifact_store=store).start(_request(objective, registry_ref))
     assert missing_descriptor.value.code == "HARN_ARTIFACT_UNAVAILABLE"
 
 
@@ -710,7 +1468,7 @@ def test_start_rejects_invalid_nested_qualification_json(tmp_path: Path) -> None
     )
 
     with pytest.raises(GoldenRunRegistryError) as raised:
-        GoldenRunHarness(artifact_store=store).start(_request(objective, invalid_registry))
+        _golden_harness(artifact_store=store).start(_request(objective, invalid_registry))
     assert raised.value.code == "HARN_INPUT_SCHEMA_INVALID"
 
 
@@ -743,7 +1501,7 @@ def test_start_rejects_a_qualified_descriptor_with_unknown_schema(tmp_path: Path
     )
 
     with pytest.raises(GoldenRunRegistryError) as raised:
-        GoldenRunHarness(artifact_store=store).start(_request(objective, invalid_registry))
+        _golden_harness(artifact_store=store).start(_request(objective, invalid_registry))
     assert raised.value.code == "HARN_DEPENDENCY_DRIFT"
 
 
@@ -759,7 +1517,7 @@ def test_start_rejects_a_non_utc_execution_clock(tmp_path: Path) -> None:
     registry = _qualified_registry(store, tmp_path)
 
     with pytest.raises(ValueError, match="clock must return a UTC datetime"):
-        GoldenRunHarness(
+        _golden_harness(
             artifact_store=store,
             clock=lambda: NOW.astimezone(timezone(timedelta(hours=8))),
             workflow_id_factory=lambda: WORKFLOW_ID,
@@ -781,7 +1539,7 @@ def test_start_requires_uuid4_identity_and_rolls_back_failed_reservation(
     request = _request(objective, registry)
 
     with pytest.raises(ValidationError, match="UUID version 4"):
-        GoldenRunHarness(
+        _golden_harness(
             artifact_store=store,
             clock=lambda: NOW,
             workflow_id_factory=lambda: UUID(
@@ -789,7 +1547,7 @@ def test_start_requires_uuid4_identity_and_rolls_back_failed_reservation(
             ),
         ).start(request)
 
-    snapshot = GoldenRunHarness(
+    snapshot = _golden_harness(
         artifact_store=store,
         clock=lambda: NOW,
         workflow_id_factory=lambda: WORKFLOW_ID,
@@ -884,7 +1642,7 @@ def test_run_snapshot_rejects_temporal_attacks(
         schema_version="harness.world_fact_evidence.v1",
     )
     registry = _qualified_registry(store, tmp_path)
-    snapshot = GoldenRunHarness(
+    snapshot = _golden_harness(
         artifact_store=store,
         clock=lambda: NOW,
         workflow_id_factory=lambda: WORKFLOW_ID,
@@ -908,7 +1666,7 @@ def test_run_snapshot_accepts_a_versioned_workflow_operation_receipt_head(
         schema_version="harness.world_fact_evidence.v1",
     )
     registry = _qualified_registry(store, tmp_path)
-    snapshot = GoldenRunHarness(
+    snapshot = _golden_harness(
         artifact_store=store,
         clock=lambda: NOW,
         workflow_id_factory=lambda: WORKFLOW_ID,
@@ -951,7 +1709,7 @@ def test_run_snapshot_rejects_unbound_receipt_heads(
         schema_version="harness.world_fact_evidence.v1",
     )
     registry = _qualified_registry(store, tmp_path)
-    snapshot = GoldenRunHarness(
+    snapshot = _golden_harness(
         artifact_store=store,
         clock=lambda: NOW,
         workflow_id_factory=lambda: WORKFLOW_ID,
