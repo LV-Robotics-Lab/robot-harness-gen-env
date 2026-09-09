@@ -49,6 +49,7 @@ MODULES: tuple[ModuleSpec, ...] = (
         "pearl_evidence_portal",
         "apps/pearl_evidence_portal",
         "presentation",
+        required=False,
     ),
     ModuleSpec(
         "openreal2sim",

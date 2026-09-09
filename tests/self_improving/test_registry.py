@@ -1,3 +1,6 @@
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 from self_improving import MODULES, audit_repository
@@ -35,3 +38,37 @@ def test_audit_is_read_only_and_reports_uninitialized_submodules(tmp_path: Path)
     statuses = {module["name"]: module["status"] for module in report["modules"]}
     assert statuses["gen_env_core"] == "ready"
     assert statuses["openreal2sim"] == "uninitialized"
+
+
+def test_cli_keeps_removed_portal_discoverable_without_requiring_it(tmp_path: Path) -> None:
+    for module in MODULES:
+        if not module.required or module.name == "pearl_evidence_portal":
+            continue
+        target = tmp_path / module.path
+        target.mkdir(parents=True)
+        if module.kind == "submodule":
+            (target / ".git").touch()
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "self_improving",
+            "--repo-root",
+            str(tmp_path),
+            "--json",
+        ],
+        cwd=Path(__file__).resolve().parents[2],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    report = json.loads(completed.stdout)
+    portal = next(
+        module for module in report["modules"] if module["name"] == "pearl_evidence_portal"
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert report["ready"] is True
+    assert report["required_failures"] == []
+    assert (portal["required"], portal["status"]) == (False, "missing")
