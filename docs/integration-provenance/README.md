@@ -7,9 +7,11 @@
 3. 哪些内容只是参考或候选，哪些已经进入当前分支？
 4. 当前结论通过了合同测试、真实运行门，还是仍被某个已知问题阻塞？
 
-这里记录的是可审计的整合事实，不是以目录归属推断个人原创。三类责任必须分开：
+这里记录的是可审计的整合事实，不是以目录归属推断个人原创。责任标签与 git 身份也必须分开：
 
 - `origin_owner`：原始能力或候选实现的来源责任人；
+- `recorded_git_authors`：固定源提交实际记录的 author identity；若与团队使用的人名映射尚未确认，
+  两者并列保留，不自行推断为同一个人；
 - `upstream_owner`：Genesis、SimFoundry、RoboTwin 等第三方项目；
 - `integration_owner`：把能力映射到 Harness schema、CAS、receipt、测试和文档的人，当前总体由
   Bingsheng 负责。
@@ -21,6 +23,9 @@
 - [Bingsheng 来源档案](sources/bingsheng.md)：Harness 与总体整合。
 - [Gujie 来源档案](sources/gujie.md)：x2env、Genesis/SimFoundry adapter 候选实现。
 - [Yuxin 来源档案](sources/yuxin.md)：资产检索、复用、入库与历史 ledger。
+
+三份来源档案中的“具体模块与功能”矩阵是人员分工的权威说明；`LEDGER.md` 负责记录这些能力进入
+当前分支的生命周期和验证状态。人员档案回答“谁做了什么”，Ledger 回答“哪些已经接入并通过”。
 
 ## 状态词汇
 

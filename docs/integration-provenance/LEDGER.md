@@ -3,6 +3,10 @@
 本文件是 Bingsheng、Gujie、Yuxin 三方工作进入 Golden E2E 的核对清单。状态定义与更新规则见
 [README](README.md)。以下是建账时已核实的基线，不把候选实现或历史测试扩大为完成主张。
 
+具体人员工作已精确到模块与功能，分别见 [Bingsheng](sources/bingsheng.md)、
+[Gujie](sources/gujie.md) 和 [Yuxin](sources/yuxin.md)。本 Ledger 不重复整张模块矩阵，只跟踪每组
+能力是否已接入、验证和晋升。
+
 ## 汇总
 
 | ID | 能力 | 原始来源 | 生命周期 | 验证 | 当前结论 |
@@ -20,10 +24,13 @@
 - `lifecycle`：`integrated`
 - `verification`：`blocked`
 - `origin_owner`：Bingsheng 及仓库历史中已归属的原作者
+- `recorded_git_authors`：Bingsheng Xie；早期基础与被整合模块按各自提交保留
+  LV-Robotics Lab、BorisGuo、huyuxin、yuhang5090 等 identity
 - `upstream_owner`：RoboTwin、SAPIEN 及各被适配项目分别保留自身归属
 - `integration_owner`：Bingsheng
 - `source_repository`：本仓库历史
-- `source_ref`：建账前锚点 `5ac910897542bf78f9f0ed9e269bcf600347abd2`
+- `source_ref`：首次台账 `bf9f24a`；本次模块归属复核所覆盖的实现锚点
+  `0f787d0c4d7779dde24a0be68505a304e014e153`
 - `dirty_snapshot`：共享工作树有用户修改；不作为固定来源
 - `source_paths`：`scene_gen/`、`self_improving/harness/`、相关 `script/`、`tests/`
 - `target_paths`：同上
@@ -31,7 +38,8 @@
 - `contract_spec`：`docs/contracts/`、`self_improving/golden_e2e_progress/CONTRACTS.md`
 - `verification_evidence`：`self_improving/golden_e2e_progress/RESULTS.md`
 - `golden_run`：`none`
-- `known_gaps`：当前共享工作树测试为 3015 passed、19 skipped、1 failed；clean baseline 待重跑
+- `known_gaps`：detached clean baseline 为 3016 passed、19 skipped、1 failed；唯一失败仍是旧 replay
+  qualification source identity，须在实现树稳定后真实重签或撤销
 - `last_verified`：`2026-09-09`
 
 ### 核对结论
@@ -44,6 +52,7 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
 - `lifecycle`：`integrated`
 - `verification`：`contract_pass`
 - `origin_owner`：Bingsheng
+- `recorded_git_authors`：Bingsheng Xie `<xieziyin_shangshu@outlook.com>`
 - `upstream_owner`：`none`
 - `integration_owner`：Bingsheng
 - `source_repository`：本仓库
@@ -68,6 +77,8 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
 - `lifecycle`：`integrated`
 - `verification`：`blocked`
 - `origin_owner`：Yuxin（历史别名 HYX、huyuxinn）
+- `recorded_git_authors`：原来源含 huyuxin `<huyuxin346@gmail.com>`；合并后相关模块还包含
+  yuhang5090、BorisGuo、Bingsheng Xie
 - `upstream_owner`：各资产源及 RoboTwin 保留自身许可与归属
 - `integration_owner`：Bingsheng
 - `source_repository`：已移除的原工作区 `/home/jingxiang/yuxin/env-gen-dev` 的归档历史
@@ -105,6 +116,7 @@ portable CAS closure。原工作区已不再作为可读取的当前来源，后
 - `lifecycle`：`candidate`
 - `verification`：`not_run`
 - `origin_owner`：Yuxin
+- `recorded_git_authors`：huyuxin；当前 active 复合实现另含 yuhang5090、BorisGuo、Bingsheng Xie
 - `upstream_owner`：各资产源
 - `integration_owner`：Bingsheng
 - `source_repository`：本仓库已整合历史
@@ -130,6 +142,8 @@ portable CAS closure。原工作区已不再作为可读取的当前来源，后
 - `lifecycle`：`candidate`
 - `verification`：`not_run`
 - `origin_owner`：Gujie
+- `recorded_git_authors`：yuhang5090 `<1205492990@qq.com>`、LV-Robotics Lab
+  `<lv.robotics.lab@gmail.com>`；与自然人 Gujie 的 identity 映射未由仓库证据确认
 - `upstream_owner`：媒体解码依赖各自上游
 - `integration_owner`：Bingsheng
 - `source_repository`：`/home/jingxiang/gujie/gen-env`
@@ -156,6 +170,7 @@ ToolResult 与晋升边界。未固定的 dirty workspace 内容不能在完成�
 - `lifecycle`：`candidate`
 - `verification`：`not_run`
 - `origin_owner`：Gujie（adapter/integration）
+- `recorded_git_authors`：yuhang5090、LV-Robotics Lab；与自然人 Gujie 的 identity 映射未确认
 - `upstream_owner`：SimFoundry 及资产原作者
 - `integration_owner`：Bingsheng
 - `source_repository`：`/home/jingxiang/gujie/gen-env`
@@ -181,6 +196,7 @@ Bingsheng。任何进入 Harness 的资产必须单独固定来源、许可和�
 - `lifecycle`：`candidate`
 - `verification`：`not_run`
 - `origin_owner`：Gujie（adapter/workflow）
+- `recorded_git_authors`：yuhang5090、LV-Robotics Lab；与自然人 Gujie 的 identity 映射未确认
 - `upstream_owner`：Genesis World
 - `integration_owner`：Bingsheng
 - `source_repository`：`/home/jingxiang/gujie/gen-env`

@@ -7,6 +7,7 @@
 - `lifecycle`：`reference_only | candidate | integrating | integrated | retired`
 - `verification`：`not_run | contract_pass | runtime_pass | blocked | superseded`
 - `origin_owner`：原始能力或候选实现责任人
+- `recorded_git_authors`：固定源提交中实际出现的 author name/email；未确认身份映射时原样保留
 - `upstream_owner`：第三方项目；没有则写 `none`
 - `integration_owner`：当前分支适配、验证和交付责任人
 - `source_repository`：源仓库绝对身份或公开 URL

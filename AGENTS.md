@@ -51,7 +51,8 @@ task, TODO, decision, and result ledgers before reporting progress.
 When incorporating behavior from Bingsheng, Gujie, or Yuxin, also read
 `docs/integration-provenance/README.md` and update `docs/integration-provenance/LEDGER.md` in the
 same feature commit. Keep origin ownership, third-party upstream ownership, integration ownership,
-fixed source refs, and runtime verification as separate fields.
+recorded git author identities, fixed source refs, and runtime verification as separate fields. Do not infer
+a natural-person identity mapping from a branch, directory, or git email alone.
 
 ## For AI Agents（给 AI agent 的提示）
 

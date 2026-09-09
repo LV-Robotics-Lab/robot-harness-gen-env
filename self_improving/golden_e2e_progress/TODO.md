@@ -42,8 +42,8 @@
 - 修复 portal 删除后的 required-capability 漂移；当前共享 checkout 的
   `python -m self_improving --json` 返回 `ready=true`，portal 为 `required=false/status=missing`。
 - 已确认领域语言写入 `CONTEXT.md`，并建立 external Codex/deep aggregate/exact MCP 的 ADR。
-- 建立 `docs/integration-provenance/`，按功能固定 Bingsheng、Gujie、Yuxin 的来源、版本、整合责任、
-  第三方上游与验证状态，并从根 `AGENTS.md` 建立强制更新入口。
+- 建立 `docs/integration-provenance/`，以逐人模块/功能矩阵固定 Bingsheng、Gujie、Yuxin 的具体工作、
+  来源版本、整合责任、第三方上游与验证状态，并从根 `AGENTS.md` 建立强制更新入口。
 - P0 clean baseline 已完成分类：根套件唯一红项来自旧 replay qualification 把整个 Harness 树当作
   source closure；最终在实现树稳定后真实重签或撤销，不能用更新 expected hash 伪修复。
 - P1 首个 S1 纵切：从 canonical CAS user-input evidence 构建可信世界状态、actor-neutral start receipt

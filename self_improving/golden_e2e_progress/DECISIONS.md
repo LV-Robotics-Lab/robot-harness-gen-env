@@ -60,7 +60,8 @@
 - 日期：2026-09-09
 - 状态：accepted
 - 决策：以 `docs/integration-provenance/LEDGER.md` 作为 Bingsheng、Gujie、Yuxin 工作进入 Golden
-  E2E 的核对清单。每项能力分别记录原始来源、第三方上游、Harness 整合责任、固定 ref、目标路径、
-  合同和验证状态；功能切片与台账更新必须同一提交。
+  E2E 的核对清单，并以 `sources/*.md` 的逐人模块/功能矩阵回答“谁具体做了什么”。每项能力分别
+  记录原始来源、第三方上游、Harness 整合责任、固定 ref、目标路径、合同和验证状态；功能切片与
+  台账更新必须同一提交。
 - 边界：目录所有者或整合者不自动成为被整合代码的原作者；`integrated` 不等于
   `runtime_pass`；未固定的 dirty workspace 字节不能计入完成来源。

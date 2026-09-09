@@ -139,6 +139,9 @@
 - 当前没有任何新条目标为 `runtime_pass`：资产 ledger 债务、Codex/MCP 同-run 闭环和当前 Harness
   内的真实 Genesis 最终能力门均尚未完成。
 - 根 `AGENTS.md` 已要求后续每个来源整合切片与台账更新同一提交，防止最终集中补写造成来源漂移。
+- 三份人员档案已扩展为模块/功能矩阵：Bingsheng 细分 Text2Env 加固、Harness schema/CAS/Registry、
+  compile/replay/validate、可信状态、Golden workflow、资产修复、Codex/MCP 与总体整合；Gujie 细分
+  x2env/URDF/SimFoundry/Genesis adapter；Yuxin 细分检索、筛选、转换、ledger、catalog 与跨仿真验证。
 
 ## 2026-09-09 P1 S1 workflow-start 纵切
 

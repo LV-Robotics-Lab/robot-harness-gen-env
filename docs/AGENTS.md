@@ -19,7 +19,8 @@
 - 这里的文件是验收契约的证据，非一般性叙述。不要在此添加叙事文档——把架构/fixture 文档放在它们所描述的代码旁边。
 - 证据笔记与某次真实运行按哈希和时间戳绑定；不要回溯编辑历史笔记，应另起一份带日期的新笔记。
 - 整合 Bingsheng、Gujie 或 Yuxin 的能力时，在同一功能提交中更新
-  `integration-provenance/LEDGER.md`；区分原始来源、第三方上游与 Harness 整合责任。
+  `integration-provenance/LEDGER.md`；区分团队责任名、实际 git author、第三方上游与 Harness
+  整合责任，未经证据确认不推断 identity 映射。
 
 ### Testing Requirements（测试要求）
 - 本目录不跑测试。若某证据笔记被测试或 README 断言引用，编辑时保持被引用的事实不变。
