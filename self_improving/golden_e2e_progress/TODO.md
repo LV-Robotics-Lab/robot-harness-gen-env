@@ -5,16 +5,21 @@
 ## Doing
 
 - P0：把 `text2env.replay@1.0.0` qualification 从过宽的整棵 Harness source snapshot 收窄为显式、
-  完备、fail-closed 的 replay 实现闭包；任何资格刷新都必须重新执行真实固定案例，不能只改 expected
-  hash。当前由独立 TDD 切片处理根套件唯一已知红项。
+  完备、fail-closed 的 replay 实现闭包；候选实现已固定在 `d664b04`，真实装配/资格生成 trace 仅加载
+  common/text2env schema 家族，旧资格包仍按预期 fail-closed。当前等待 fixed-diff 双轴审查；最终资格刷新
+  必须等 P2 的 Registry/Application 固定后重新执行真实固定案例，不能只改 expected hash。
 - P2：以单条 RED→GREEN tracer 实现 actor-neutral `submit`，让同一 S1 run 调用真实 qualified compile
-  并原子提交 ToolResult、StateDelta、operation receipt、revision/state head；当前公开测试已运行到
-  `GoldenRunHarness` 尚不接受 compile application 的预期 RED。
+  并原子提交 ToolResult、StateDelta、operation receipt、revision/state head。actor-neutral trusted-state
+  kernel 已独立提交为 `6570c82`；签名前审查已复现不同输入产生相同 preflight blocker 时错误复用保留
+  child identity 的 RED，正在以 canonical ControlledRunIntent、原子 reserve 与并发攻击补齐。operation
+  evidence correlation 和 child-terminal/live-unavailable 恢复矩阵未绿前不得重签或提交 aggregate。
 - P6：14 个 GLB + 7 个 `model_data*.json` 已组成 21-member、57,290,434-byte CAS closure，且真实
   RoboTwin `create_actor` 已从 staged-only bytes 对 7 个模型各执行 900 个 SAPIEN steps。fixed-commit
   双轴审查仍拒绝合入：探针尚可因弱 JSON/self-hash 验证造成 ledger/input 解绑与路径逃逸，per-
   representation closure hash 也未绑定成员字节，零写回执存在 symlink/TOCTOU 缺口。正在先补攻击测试、
   共享深验证、nofollow materialization/attestation 和实际 loader helper 源码闭包，再重跑真实探针。
+  当前修复候选的 166 个 focused cases 已达到相关 3 个模块 100% statement/branch；统一回归、固定提交、
+  固定 SHA 后的 7×900-step 重跑与新一轮双轴审查仍是合入前硬门。
 
 ## Next
 
