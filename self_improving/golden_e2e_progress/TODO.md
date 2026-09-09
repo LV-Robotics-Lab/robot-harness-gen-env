@@ -4,15 +4,20 @@
 
 ## Doing
 
-- P6：修复 exact-byte staging 的真实 RoboTwin loader closure。当前 14 个 GLB 已完成本机逐字节
-  复核，但 RoboTwin `create_actor` 还会按 model id 隐式读取 7 个 `model_data*.json` 缩放 sidecar；
-  sidecar 未进入同一 CAS manifest 前，不能把该结果称为 portable 或 runtime-qualified。修复后必须
-  只从 staged/CAS 物化闭包完成真实无渲染 SAPIEN 900-step replay，并分别保留失败与成功证据。
+- P0：把 `text2env.replay@1.0.0` qualification 从过宽的整棵 Harness source snapshot 收窄为显式、
+  完备、fail-closed 的 replay 实现闭包；任何资格刷新都必须重新执行真实固定案例，不能只改 expected
+  hash。当前由独立 TDD 切片处理根套件唯一已知红项。
+- P2：以单条 RED→GREEN tracer 实现 actor-neutral `submit`，让同一 S1 run 调用真实 qualified compile
+  并原子提交 ToolResult、StateDelta、operation receipt、revision/state head；当前公开测试已运行到
+  `GoldenRunHarness` 尚不接受 compile application 的预期 RED。
+- P6：14 个 GLB + 7 个 `model_data*.json` 已组成 21-member、57,290,434-byte CAS closure，且真实
+  RoboTwin `create_actor` 已从 staged-only bytes 对 7 个模型各执行 900 个 SAPIEN steps。fixed-commit
+  双轴审查仍拒绝合入：探针尚可因弱 JSON/self-hash 验证造成 ledger/input 解绑与路径逃逸，per-
+  representation closure hash 也未绑定成员字节，零写回执存在 symlink/TOCTOU 缺口。正在先补攻击测试、
+  共享深验证、nofollow materialization/attestation 和实际 loader helper 源码闭包，再重跑真实探针。
 
 ## Next
 
-- P2：以单条 RED→GREEN tracer 进入 submit/operation 生命周期，新增 OperationSnapshot 前先冻结其
-  command/idempotency/revision 原子提交契约。
 - P2：在 actor-neutral v2 receipt/state-delta 上接入 exact qualified compile → replay 两步调度；不得复用
   planner-specific v1 receipt 字段冒充外部 Codex/MCP 调用。
 - P4：S1 的 `submit/read`、OperationSnapshot 和真实 Registry handler 绑定完成后，接入 MCP 2.2 的
@@ -31,6 +36,9 @@
   本切片不覆盖或暂存，P14 必须在可安全协调时同步。
 - clean root suite 的旧 replay qualification source identity 仍有 1 个失败；原始真实 qualification
   settings/CAS 尚在，但旧 delegated cgroup 已不存在，且后续 Harness 实现还会继续改变源码身份。
+- P6 第一版 sidecar fixed commit `292d09b7775f75576063f40969c2de078d1c45ab` 的 7×900-step
+  headless 物理探针是真实运行，但其 attestation/portable-path/closure identity 尚未通过双轴审查；该
+  report 只能作为被拒绝迭代的运行记录，修复并复审前不得升级为最终 stage 证据或合入主分支。
 - 2026-09-10 的完整相机 replay 第一次因本机 GPU 被无关训练进程占满，在 observer camera 创建 buffer
   时失败；第二次强制 Lavapipe 因 Vulkan 扩展缺失失败。两次都不是 runtime pass，且不得终止不属于
   本任务的 GPU 进程；当前用无渲染真实 SAPIEN probe 验证 loader/physics，媒体门留待资源可用时补跑。
