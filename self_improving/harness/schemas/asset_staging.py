@@ -219,6 +219,16 @@ class StagedAssetMember(HarnessModel):
         return self
 
 
+def loader_closure_sha256(members: tuple[StagedAssetMember, ...]) -> str:
+    """Bind a loader closure to every exact staged member identity."""
+
+    if type(members) is not tuple or any(
+        type(member) is not StagedAssetMember for member in members
+    ):
+        raise TypeError("loader closure members must be an exact StagedAssetMember tuple")
+    return _canonical_sha256([member.model_dump(mode="json") for member in members])
+
+
 class AssetLoaderClosure(HarnessModel):
     model_id: int = Field(strict=True, ge=0)
     role: RepresentationRole
@@ -242,8 +252,6 @@ class AssetLoaderClosure(HarnessModel):
             raise ValueError("loader closure sidecar must match its model id and asset root")
         if self.model_sidecar_logical_path not in self.member_logical_paths:
             raise ValueError("loader closure must contain its model sidecar")
-        if self.closure_sha256 != _canonical_sha256(list(self.member_logical_paths)):
-            raise ValueError("loader closure digest is inconsistent")
         return self
 
 
@@ -270,6 +278,13 @@ class StagedAsset(HarnessModel):
         }
         if closure_members != set(member_paths):
             raise ValueError("staged members must equal the enumerated loader closure")
+        members_by_path = {member.logical_path: member for member in self.members}
+        for closure in self.loader_closures:
+            exact_members = tuple(
+                members_by_path[path] for path in closure.member_logical_paths
+            )
+            if closure.closure_sha256 != loader_closure_sha256(exact_members):
+                raise ValueError("loader closure digest is inconsistent")
         digest_payload = self.model_dump(mode="json", exclude={"asset_closure_sha256"})
         if self.asset_closure_sha256 != _canonical_sha256(digest_payload):
             raise ValueError("asset closure digest is inconsistent")
@@ -352,4 +367,6 @@ __all__ = [
     "AssetSourceSnapshotManifest",
     "AssetStageRequest",
     "AssetStageResult",
+    "StagedAssetMember",
+    "loader_closure_sha256",
 ]

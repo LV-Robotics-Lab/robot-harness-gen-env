@@ -31,7 +31,9 @@ from .schemas.asset_staging import (
     AssetSourceSnapshotManifest,
     AssetStageRequest,
     AssetStageResult,
+    StagedAssetMember,
     canonical_sha256,
+    loader_closure_sha256,
 )
 from .schemas.common import ArtifactRef
 
@@ -280,6 +282,10 @@ def stage_asset_repair(
                 }
                 for member in source_asset.members
             ]
+            member_models = {
+                member.logical_path: member
+                for member in (StagedAssetMember.model_validate(value) for value in members)
+            }
             loader_closures = []
             for representation in item.representations:
                 paths = closure_paths[
@@ -300,7 +306,9 @@ def stage_asset_repair(
                         ][0],
                         "loader_scale": sidecars[(item.asset_id, representation.model_id)][1],
                         "member_logical_paths": paths,
-                        "closure_sha256": canonical_sha256(list(paths)),
+                        "closure_sha256": loader_closure_sha256(
+                            tuple(member_models[path] for path in paths)
+                        ),
                     }
                 )
             asset_payload: dict[str, Any] = {

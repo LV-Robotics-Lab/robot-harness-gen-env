@@ -9,10 +9,12 @@ import struct
 from copy import deepcopy
 from dataclasses import dataclass, replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
 
+import self_improving.harness.asset_stage_verification as stage_verification
 from self_improving.harness import (
     AssetRepairApplication,
     AssetStageError,
@@ -20,10 +22,17 @@ from self_improving.harness import (
     LocalAssetSourceSnapshotBinding,
 )
 from self_improving.harness.artifacts import LocalArtifactStore
+from self_improving.harness.asset_stage_verification import (
+    AssetStageVerificationError,
+    materialize_verified_asset_stage,
+    verify_asset_stage_result_authority,
+)
 from self_improving.harness.schemas.asset_repair import AssetRepairPlan, AssetRepairPlanRequest
 from self_improving.harness.schemas.asset_staging import (
     AssetStageResult,
+    StagedAssetMember,
     canonical_sha256,
+    loader_closure_sha256,
 )
 from self_improving.harness.schemas.common import ArtifactRef
 
@@ -1101,6 +1110,776 @@ def _rehash_result(result: dict[str, object]) -> None:
     )
 
 
+def _rehash_loader_closure(asset: dict[str, object], closure: dict[str, object]) -> None:
+    members = {member["logical_path"]: member for member in asset["members"]}
+    closure["closure_sha256"] = loader_closure_sha256(
+        tuple(
+            StagedAssetMember.model_validate(members[path])
+            for path in closure["member_logical_paths"]
+        )
+    )
+
+
+def _verify_result(case: _StageCase, result: dict[str, object]):
+    payload = _canonical_bytes(result)
+    return verify_asset_stage_result_authority(
+        artifact_store=case.store,
+        result_payload=payload,
+        expected_result_sha256=_sha256(payload),
+        expected_stage_binding_sha256=result["stage_binding_sha256"],
+        expected_inventory_sha256=case.inventory_ref.sha256,
+        expected_repair_plan_sha256=case.plan_ref.sha256,
+        expected_source_snapshot_manifest_sha256=case.source_manifest_ref.sha256,
+    )
+
+
+def _verifier_arguments(
+    case: _StageCase,
+    result: dict[str, object],
+) -> dict[str, object]:
+    payload = _canonical_bytes(result)
+    return {
+        "artifact_store": case.store,
+        "result_payload": payload,
+        "expected_result_sha256": _sha256(payload),
+        "expected_stage_binding_sha256": result["stage_binding_sha256"],
+        "expected_inventory_sha256": case.inventory_ref.sha256,
+        "expected_repair_plan_sha256": case.plan_ref.sha256,
+        "expected_source_snapshot_manifest_sha256": case.source_manifest_ref.sha256,
+    }
+
+
+def test_loader_closure_digest_commits_member_content_identity(tmp_path: Path) -> None:
+    result = _result_payload(tmp_path)
+    plate = result["assets"][0]
+    can = result["assets"][1]
+    plate_root = next(
+        member
+        for member in plate["members"]
+        if member["logical_path"] == plate["loader_closures"][0]["root_logical_path"]
+    )
+    can_root = next(member for member in can["members"] if member["logical_path"].endswith(".glb"))
+    plate_root.update(
+        source_sha256=can_root["source_sha256"],
+        source_bytes=can_root["source_bytes"],
+        artifact_ref=deepcopy(can_root["artifact_ref"]),
+    )
+    _rehash_asset(plate)
+    _rehash_result(result)
+
+    with pytest.raises(ValidationError, match="closure digest is inconsistent"):
+        AssetStageResult.model_validate(result)
+
+
+@pytest.mark.parametrize("members", [[], (object(),)])
+def test_loader_closure_digest_requires_exact_typed_member_tuple(members: object) -> None:
+    with pytest.raises(TypeError, match="exact StagedAssetMember tuple"):
+        loader_closure_sha256(members)
+
+
+@pytest.mark.parametrize(
+    ("argument", "replacement"),
+    [
+        ("artifact_store", object()),
+        ("result_payload", bytearray(b"not exact bytes")),
+    ],
+)
+def test_stage_authority_verifier_requires_exact_dependency_types(
+    tmp_path: Path,
+    argument: str,
+    replacement: object,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    arguments = _verifier_arguments(case, result)
+    arguments[argument] = replacement
+
+    with pytest.raises(TypeError, match="must be"):
+        verify_asset_stage_result_authority(**arguments)
+
+
+@pytest.mark.parametrize("invalid_digest", [None, "a" * 63, "A" * 64])
+def test_stage_authority_verifier_requires_lowercase_sha256_trust_inputs(
+    tmp_path: Path,
+    invalid_digest: object,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    arguments = _verifier_arguments(case, result)
+    arguments["expected_stage_binding_sha256"] = invalid_digest
+
+    with pytest.raises(TypeError, match="lowercase SHA-256"):
+        verify_asset_stage_result_authority(**arguments)
+
+
+@pytest.mark.parametrize(
+    "trust_input",
+    [
+        "expected_result_sha256",
+        "expected_stage_binding_sha256",
+        "expected_inventory_sha256",
+        "expected_repair_plan_sha256",
+        "expected_source_snapshot_manifest_sha256",
+    ],
+)
+def test_stage_authority_verifier_rejects_each_explicit_trust_mismatch(
+    tmp_path: Path,
+    trust_input: str,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    arguments = _verifier_arguments(case, result)
+    arguments[trust_input] = "0" * 64
+
+    with pytest.raises(AssetStageVerificationError) as caught:
+        verify_asset_stage_result_authority(**arguments)
+
+    assert caught.value.code == "HARN_ASSET_STAGE_TRUST_MISMATCH"
+
+
+@pytest.mark.parametrize("encoding", ["invalid", "noncanonical"])
+def test_stage_authority_verifier_requires_strict_canonical_result_bytes(
+    tmp_path: Path,
+    encoding: str,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    arguments = _verifier_arguments(case, result)
+    payload = (
+        b'{"not":"an asset stage result"}\n'
+        if encoding == "invalid"
+        else arguments["result_payload"].replace(b'{"assets"', b'{ "assets"', 1)
+    )
+    arguments["result_payload"] = payload
+    arguments["expected_result_sha256"] = _sha256(payload)
+
+    with pytest.raises(AssetStageVerificationError) as caught:
+        verify_asset_stage_result_authority(**arguments)
+
+    assert caught.value.code == "HARN_ASSET_STAGE_RESULT_INVALID"
+
+
+@pytest.mark.parametrize("attack", ["asset_id", "ledger", "closure", "counts"])
+def test_stage_authority_verifier_rejects_rehashed_cross_contract_forgery(
+    tmp_path: Path,
+    attack: str,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    asset = result["assets"][0]
+    if attack == "asset_id":
+        asset["asset_id"] = "robotwin_004_plate"
+        result["selected_asset_ids"][0] = "robotwin_004_plate"
+    elif attack == "ledger":
+        asset["source_ledger_sha256"] = "f" * 64
+    elif attack == "closure":
+        asset["loader_closures"][0]["loader_scale"] = [0.5, 0.5, 0.5]
+    else:
+        removed = next(
+            member
+            for member in asset["members"]
+            if member["logical_path"].endswith("mesh.bin")
+        )
+        asset["members"].remove(removed)
+        closure = asset["loader_closures"][0]
+        closure["member_logical_paths"].remove(removed["logical_path"])
+        _rehash_loader_closure(asset, closure)
+        result["staged_member_count"] -= 1
+        result["staged_total_bytes"] -= removed["source_bytes"]
+    _rehash_asset(asset)
+    _rehash_result(result)
+
+    with pytest.raises(AssetStageVerificationError, match="authority"):
+        _verify_result(case, result)
+
+
+def test_stage_authority_verifier_rejects_a_plan_not_derived_from_inventory(
+    tmp_path: Path,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    plan = case.plan.model_dump(mode="json")
+    plan["source_population_ledger_count"] += 1
+    case = _with_plan(case, tmp_path, plan)
+    result["repair_plan_ref"] = case.plan_ref.model_dump(mode="json")
+    _rehash_result(result)
+
+    with pytest.raises(AssetStageVerificationError, match="repair plan"):
+        _verify_result(case, result)
+
+
+def test_stage_authority_verifier_rejects_plan_bound_to_another_inventory(
+    tmp_path: Path,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    other_inventory = _inventory_payload(case.files)
+    other_inventory["inventory_id"] = "other_inventory"
+    other_inventory_ref = _put_json(
+        case.store,
+        tmp_path,
+        name="other_inventory",
+        schema_version="harness.asset_debt_inventory.v1",
+        value=other_inventory,
+    )
+    plan = case.plan.model_dump(mode="json")
+    plan["inventory_ref"] = other_inventory_ref.model_dump(mode="json")
+    case = _with_plan(case, tmp_path, plan)
+    result["repair_plan_ref"] = case.plan_ref.model_dump(mode="json")
+    _rehash_result(result)
+
+    with pytest.raises(AssetStageVerificationError, match="another inventory"):
+        _verify_result(case, result)
+
+
+def test_stage_authority_verifier_rejects_manifest_bound_to_another_inventory(
+    tmp_path: Path,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    other_inventory = _inventory_payload(case.files)
+    other_inventory["inventory_id"] = "other_inventory"
+    other_inventory_ref = _put_json(
+        case.store,
+        tmp_path,
+        name="other_inventory",
+        schema_version="harness.asset_debt_inventory.v1",
+        value=other_inventory,
+    )
+    manifest = deepcopy(case.source_manifest)
+    manifest["inventory_ref"] = other_inventory_ref.model_dump(mode="json")
+    case = _with_manifest(case, tmp_path, manifest)
+    result["source_snapshot_manifest_ref"] = case.source_manifest_ref.model_dump(mode="json")
+    _rehash_result(result)
+
+    with pytest.raises(AssetStageVerificationError, match="another inventory"):
+        _verify_result(case, result)
+
+
+def test_stage_authority_verifier_rejects_manifest_selection_omission(
+    tmp_path: Path,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    manifest = deepcopy(case.source_manifest)
+    manifest["assets"] = manifest["assets"][:1]
+    case = _with_manifest(case, tmp_path, manifest)
+    result["source_snapshot_manifest_ref"] = case.source_manifest_ref.model_dump(mode="json")
+    _rehash_result(result)
+
+    with pytest.raises(AssetStageVerificationError, match="selection differs"):
+        _verify_result(case, result)
+
+
+def test_stage_authority_verifier_rejects_loader_role_not_in_the_plan(
+    tmp_path: Path,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    asset = result["assets"][0]
+    asset["loader_closures"][0]["role"] = "collision"
+    _rehash_asset(asset)
+    _rehash_result(result)
+
+    with pytest.raises(AssetStageVerificationError, match="loader closures differ"):
+        _verify_result(case, result)
+
+
+@pytest.mark.parametrize(
+    "sidecar_payload",
+    [
+        b'{"scale":',
+        _canonical_bytes({"scale": [0.5, 0.5, 0.5]}),
+    ],
+)
+def test_stage_authority_verifier_reparses_exact_cas_sidecar_semantics(
+    tmp_path: Path,
+    sidecar_payload: bytes,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    manifest = deepcopy(case.source_manifest)
+    logical_path = "objects/003_plate/model_data0.json"
+    sidecar_path = tmp_path / "forged-model-data0.json"
+    sidecar_path.write_bytes(sidecar_payload)
+    sidecar_ref = case.store.put_file(
+        sidecar_path,
+        name="forged-model-data0.json",
+        media_type="application/json",
+        schema_version=None,
+    )
+    manifest_member = next(
+        member
+        for member in manifest["assets"][0]["members"]
+        if member["logical_path"] == logical_path
+    )
+    manifest_member.update(sha256=sidecar_ref.sha256, bytes=sidecar_ref.bytes)
+    case = _with_manifest(case, tmp_path, manifest)
+    result["source_snapshot_manifest_ref"] = case.source_manifest_ref.model_dump(mode="json")
+    asset = result["assets"][0]
+    result_member = next(
+        member for member in asset["members"] if member["logical_path"] == logical_path
+    )
+    original_bytes = result_member["source_bytes"]
+    result_member.update(
+        source_sha256=sidecar_ref.sha256,
+        source_bytes=sidecar_ref.bytes,
+        artifact_ref=sidecar_ref.model_dump(mode="json"),
+    )
+    result["staged_total_bytes"] += sidecar_ref.bytes - original_bytes
+    _rehash_loader_closure(asset, asset["loader_closures"][0])
+    _rehash_asset(asset)
+    _rehash_result(result)
+
+    with pytest.raises(AssetStageVerificationError, match="sidecar"):
+        _verify_result(case, result)
+
+
+def test_stage_authority_verifier_requires_a_sidecar_for_each_planned_model(
+    tmp_path: Path,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    manifest = deepcopy(case.source_manifest)
+    logical_path = "objects/003_plate/model_data1.json"
+    payload = _canonical_bytes({"model_id": 1, "scale": [0.025, 0.025, 0.025]})
+    source = tmp_path / "model_data1.json"
+    source.write_bytes(payload)
+    ref = case.store.put_file(
+        source,
+        name="model_data1.json",
+        media_type="application/json",
+        schema_version=None,
+    )
+    manifest_asset = manifest["assets"][0]
+    manifest_asset["members"].append(
+        {"logical_path": logical_path, "sha256": ref.sha256, "bytes": ref.bytes}
+    )
+    manifest_asset["members"].sort(key=lambda value: value["logical_path"])
+    manifest_asset["model_sidecars"] = [
+        {
+            "model_id": 1,
+            "logical_path": logical_path,
+            "scale": [0.025, 0.025, 0.025],
+        }
+    ]
+    case = _with_manifest(case, tmp_path, manifest)
+    result["source_snapshot_manifest_ref"] = case.source_manifest_ref.model_dump(mode="json")
+    asset = result["assets"][0]
+    asset["members"].append(
+        {
+            "logical_path": logical_path,
+            "source_sha256": ref.sha256,
+            "source_bytes": ref.bytes,
+            "artifact_ref": ref.model_dump(mode="json"),
+        }
+    )
+    asset["members"].sort(key=lambda value: value["logical_path"])
+    closure = asset["loader_closures"][0]
+    closure["member_logical_paths"].append(logical_path)
+    closure["member_logical_paths"].sort()
+    _rehash_loader_closure(asset, closure)
+    _rehash_asset(asset)
+    result["staged_member_count"] += 1
+    result["staged_total_bytes"] += ref.bytes
+    _rehash_result(result)
+
+    with pytest.raises(AssetStageVerificationError, match="absent"):
+        _verify_result(case, result)
+
+
+def test_stage_authority_verifier_cross_checks_loader_root_identity(
+    tmp_path: Path,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    manifest = deepcopy(case.source_manifest)
+    plate_asset = result["assets"][0]
+    can_asset = result["assets"][1]
+    plate_root_path = plate_asset["loader_closures"][0]["root_logical_path"]
+    plate_root = next(
+        member for member in plate_asset["members"] if member["logical_path"] == plate_root_path
+    )
+    can_root = next(
+        member for member in can_asset["members"] if member["logical_path"].endswith(".glb")
+    )
+    original_bytes = plate_root["source_bytes"]
+    plate_root.update(
+        source_sha256=can_root["source_sha256"],
+        source_bytes=can_root["source_bytes"],
+        artifact_ref=deepcopy(can_root["artifact_ref"]),
+    )
+    manifest_root = next(
+        member
+        for member in manifest["assets"][0]["members"]
+        if member["logical_path"] == plate_root_path
+    )
+    manifest_root.update(sha256=can_root["source_sha256"], bytes=can_root["source_bytes"])
+    case = _with_manifest(case, tmp_path, manifest)
+    result["source_snapshot_manifest_ref"] = case.source_manifest_ref.model_dump(mode="json")
+    result["staged_total_bytes"] += can_root["source_bytes"] - original_bytes
+    _rehash_loader_closure(plate_asset, plate_asset["loader_closures"][0])
+    _rehash_asset(plate_asset)
+    _rehash_result(result)
+
+    with pytest.raises(AssetStageVerificationError, match="loader root identity"):
+        _verify_result(case, result)
+
+
+@pytest.mark.parametrize(
+    ("attack", "expected_code"),
+    [
+        ("missing", "HARN_ASSET_STAGE_ARTIFACT_UNAVAILABLE"),
+        ("changed", "HARN_ASSET_STAGE_AUTHORITY_MISMATCH"),
+    ],
+)
+def test_stage_authority_verifier_rehashes_every_cas_member(
+    tmp_path: Path,
+    attack: str,
+    expected_code: str,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request())
+    member = next(
+        value
+        for value in result.assets[0].members
+        if value.logical_path.endswith("mesh.bin")
+    )
+    cas_path = case.store.resolve(member.artifact_ref).path
+    cas_path.unlink()
+    if attack == "changed":
+        cas_path.write_bytes(b"mash")
+
+    with pytest.raises(AssetStageVerificationError) as caught:
+        _verify_result(case, result.model_dump(mode="json"))
+
+    assert caught.value.code == expected_code
+
+
+def test_stage_authority_verifier_rejects_unavailable_canonical_input(
+    tmp_path: Path,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    inventory_path = case.store.resolve(case.inventory_ref).path
+    inventory_path.unlink()
+
+    with pytest.raises(AssetStageVerificationError) as caught:
+        _verify_result(case, result)
+
+    assert caught.value.code == "HARN_ASSET_STAGE_ARTIFACT_UNAVAILABLE"
+
+
+def test_stage_authority_verifier_rejects_input_ref_size_forgery(tmp_path: Path) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    result["inventory_ref"]["bytes"] += 1
+    _rehash_result(result)
+
+    with pytest.raises(AssetStageVerificationError) as caught:
+        _verify_result(case, result)
+
+    assert caught.value.code == "HARN_ASSET_STAGE_ARTIFACT_UNAVAILABLE"
+
+
+@pytest.mark.parametrize("unsafe_path", ["/tmp/escaped.glb", "objects/../escaped.glb"])
+def test_stage_authority_verifier_rejects_unsafe_result_paths(
+    tmp_path: Path,
+    unsafe_path: str,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    result["assets"][0]["members"][0]["logical_path"] = unsafe_path
+    _rehash_result(result)
+
+    with pytest.raises(AssetStageVerificationError, match="invalid"):
+        _verify_result(case, result)
+
+
+@pytest.mark.parametrize("attack", ["symlink", "rename"])
+def test_materializer_rechecks_cas_after_authority_precheck(
+    tmp_path: Path,
+    attack: str,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request())
+    authority = _verify_result(case, result.model_dump(mode="json"))
+    member = result.assets[0].members[0]
+    cas_path = case.store.resolve(member.artifact_ref).path
+    saved = cas_path.with_name(cas_path.name + ".saved")
+    cas_path.rename(saved)
+    if attack == "symlink":
+        cas_path.symlink_to(saved)
+    else:
+        cas_path.write_bytes(b"forged after authority verification")
+
+    with pytest.raises(AssetStageVerificationError, match="materialization"):
+        materialize_verified_asset_stage(
+            artifact_store=case.store,
+            authority=authority,
+            destination_root=tmp_path / "runtime-assets",
+        )
+
+
+def test_rooted_attestor_streams_one_stable_regular_file(tmp_path: Path) -> None:
+    payload = b"a" * (1024 * 1024 + 7)
+    _write(tmp_path / "nested/member.bin", payload)
+
+    observed, read_attestation = stage_verification.read_rooted_regular_file(
+        root=tmp_path,
+        logical_path="nested/member.bin",
+    )
+    hash_attestation = stage_verification.attest_rooted_regular_file(
+        root=tmp_path,
+        logical_path="nested/member.bin",
+    )
+
+    assert observed == payload
+    assert read_attestation.sha256 == _sha256(payload)
+    assert hash_attestation.sha256 == read_attestation.sha256
+    assert hash_attestation.bytes == len(payload)
+
+
+@pytest.mark.parametrize(
+    "unsafe_path",
+    [None, "", ".", "/absolute", "C:/windows", "a\\b", "a/../b", "a//b", "a\n/b"],
+)
+def test_rooted_attestor_rejects_nonportable_logical_paths(
+    tmp_path: Path,
+    unsafe_path: object,
+) -> None:
+    with pytest.raises(AssetStageVerificationError, match="logical path|unsafe"):
+        stage_verification.attest_rooted_regular_file(
+            root=tmp_path,
+            logical_path=unsafe_path,
+        )
+
+
+def test_rooted_attestor_requires_a_path_root(tmp_path: Path) -> None:
+    with pytest.raises(TypeError, match="root must be a Path"):
+        stage_verification.attest_rooted_regular_file(
+            root=os.fspath(tmp_path),
+            logical_path="member.bin",
+        )
+
+
+@pytest.mark.parametrize("attack", ["missing", "file_symlink", "directory", "fifo"])
+def test_rooted_attestor_rejects_unavailable_or_unsafe_targets(
+    tmp_path: Path,
+    attack: str,
+) -> None:
+    logical_path = "tree/member.bin"
+    if attack == "file_symlink":
+        _write(tmp_path / "outside.bin", b"outside")
+        (tmp_path / "tree").mkdir()
+        (tmp_path / logical_path).symlink_to(tmp_path / "outside.bin")
+    elif attack == "directory":
+        (tmp_path / logical_path).mkdir(parents=True)
+    elif attack == "fifo":
+        (tmp_path / "tree").mkdir()
+        os.mkfifo(tmp_path / logical_path)
+
+    with pytest.raises(AssetStageVerificationError) as caught:
+        stage_verification.attest_rooted_regular_file(
+            root=tmp_path,
+            logical_path=logical_path,
+        )
+
+    assert caught.value.code.startswith("HARN_ASSET_STAGE_ATTESTATION_")
+
+
+@pytest.mark.parametrize("attack", ["signature", "short_read"])
+def test_rooted_attestor_rejects_in_read_drift(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    attack: str,
+) -> None:
+    _write(tmp_path / "member.bin", b"stable bytes")
+    if attack == "signature":
+        real_fstat = os.fstat
+        calls = 0
+
+        def drifting_fstat(file_descriptor: int):
+            nonlocal calls
+            calls += 1
+            status = real_fstat(file_descriptor)
+            if calls == 2:
+                return SimpleNamespace(
+                    st_mode=status.st_mode,
+                    st_dev=status.st_dev,
+                    st_ino=status.st_ino,
+                    st_size=status.st_size,
+                    st_mtime_ns=status.st_mtime_ns + 1,
+                    st_ctime_ns=status.st_ctime_ns,
+                )
+            return status
+
+        monkeypatch.setattr(stage_verification.os, "fstat", drifting_fstat)
+    else:
+        monkeypatch.setattr(stage_verification.os, "read", lambda _fd, _size: b"")
+
+    with pytest.raises(AssetStageVerificationError) as caught:
+        stage_verification.read_rooted_regular_file(
+            root=tmp_path,
+            logical_path="member.bin",
+        )
+
+    assert caught.value.code == "HARN_ASSET_STAGE_ATTESTATION_DRIFT"
+
+
+def test_materializer_copies_every_member_into_a_new_contained_root(tmp_path: Path) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request())
+    authority = _verify_result(case, result.model_dump(mode="json"))
+    destination = tmp_path / "runtime-assets"
+
+    materialized = materialize_verified_asset_stage(
+        artifact_store=case.store,
+        authority=authority,
+        destination_root=destination,
+    )
+
+    assert tuple(value.logical_path for value in materialized) == tuple(
+        member.logical_path for asset in result.assets for member in asset.members
+    )
+    for member in materialized:
+        assert (destination / member.logical_path).read_bytes() == case.files[member.logical_path]
+
+
+@pytest.mark.parametrize(
+    ("argument", "replacement"),
+    [
+        ("artifact_store", object()),
+        ("authority", object()),
+        ("destination_root", "not-a-path"),
+    ],
+)
+def test_materializer_requires_exact_authority_dependencies(
+    tmp_path: Path,
+    argument: str,
+    replacement: object,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request())
+    authority = _verify_result(case, result.model_dump(mode="json"))
+    arguments = {
+        "artifact_store": case.store,
+        "authority": authority,
+        "destination_root": tmp_path / "runtime-assets",
+    }
+    arguments[argument] = replacement
+
+    with pytest.raises(TypeError, match="must be"):
+        materialize_verified_asset_stage(**arguments)
+
+
+def test_materializer_rejects_an_existing_destination_root(tmp_path: Path) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request())
+    authority = _verify_result(case, result.model_dump(mode="json"))
+    destination = tmp_path / "runtime-assets"
+    destination.mkdir()
+
+    with pytest.raises(AssetStageVerificationError) as caught:
+        materialize_verified_asset_stage(
+            artifact_store=case.store,
+            authority=authority,
+            destination_root=destination,
+        )
+
+    assert caught.value.code == "HARN_ASSET_STAGE_MATERIALIZATION_FAILED"
+
+
+@pytest.mark.parametrize("unsafe_path", ["/absolute/member.glb", "objects/../member.glb"])
+def test_materializer_independently_rejects_unsafe_member_paths(
+    tmp_path: Path,
+    unsafe_path: str,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request())
+    authority = _verify_result(case, result.model_dump(mode="json"))
+    asset = result.assets[0]
+    forged_member = asset.members[0].model_copy(update={"logical_path": unsafe_path})
+    forged_asset = asset.model_copy(update={"members": (forged_member, *asset.members[1:])})
+    forged_result = result.model_copy(update={"assets": (forged_asset, *result.assets[1:])})
+    forged_authority = replace(authority, result=forged_result)
+
+    with pytest.raises(AssetStageVerificationError, match="unsafe"):
+        materialize_verified_asset_stage(
+            artifact_store=case.store,
+            authority=forged_authority,
+            destination_root=tmp_path / "runtime-assets",
+        )
+
+
+@pytest.mark.parametrize(
+    "attack",
+    [
+        "directory",
+        "short_write",
+        "short_write_cleanup_failure",
+        "source_drift",
+        "source_drift_cleanup_failure",
+    ],
+)
+def test_materializer_rejects_nonregular_partial_or_drifting_cas_source(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    attack: str,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request())
+    authority = _verify_result(case, result.model_dump(mode="json"))
+    member = result.assets[0].members[0]
+    cas_path = case.store.resolve(member.artifact_ref).path
+    if attack == "directory":
+        saved = cas_path.with_name(cas_path.name + ".saved")
+        cas_path.rename(saved)
+        cas_path.mkdir()
+    elif attack.startswith("short_write"):
+        monkeypatch.setattr(stage_verification.os, "write", lambda _fd, _payload: 0)
+    else:
+        real_fstat = os.fstat
+        source_fd: int | None = None
+
+        def drifting_fstat(file_descriptor: int):
+            nonlocal source_fd
+            status = real_fstat(file_descriptor)
+            if source_fd is None:
+                source_fd = file_descriptor
+                return status
+            if file_descriptor == source_fd:
+                return SimpleNamespace(
+                    st_mode=status.st_mode,
+                    st_dev=status.st_dev,
+                    st_ino=status.st_ino,
+                    st_size=status.st_size,
+                    st_mtime_ns=status.st_mtime_ns + 1,
+                    st_ctime_ns=status.st_ctime_ns,
+                )
+            return status
+
+        monkeypatch.setattr(stage_verification.os, "fstat", drifting_fstat)
+    if attack.endswith("cleanup_failure"):
+        def refuse_cleanup(*_args: object, **_kwargs: object) -> None:
+            raise OSError("cleanup refused")
+
+        monkeypatch.setattr(
+            stage_verification.os,
+            "unlink",
+            refuse_cleanup,
+        )
+
+    with pytest.raises(AssetStageVerificationError) as caught:
+        materialize_verified_asset_stage(
+            artifact_store=case.store,
+            authority=authority,
+            destination_root=tmp_path / "runtime-assets",
+        )
+
+    assert caught.value.code == "HARN_ASSET_STAGE_MATERIALIZATION_FAILED"
+
+
 @pytest.mark.parametrize(
     ("changes", "message"),
     [
@@ -1189,7 +1968,7 @@ def test_public_stage_result_rejects_asset_closure_forgery(
     elif attack == "closure_union":
         closure = asset["loader_closures"][0]
         closure["member_logical_paths"] = closure["member_logical_paths"][:2]
-        closure["closure_sha256"] = canonical_sha256(closure["member_logical_paths"])
+        _rehash_loader_closure(asset, closure)
     else:
         asset["asset_closure_sha256"] = "f" * 64
 
@@ -1300,7 +2079,7 @@ def test_real_plate_and_can_source_snapshot_stages_exact_loader_closures(
     assert result.staged_member_count == 21
     assert result.staged_total_bytes == 57_290_434
     assert result.stage_binding_sha256 == (
-        "c80e81bdd8f39daaccf2fbd77a8f3dd89eba7cfb03daf729bcf76b5fd5cd053f"
+        "fcf73ec7851e42654a2264d818bfcc60d091ad3669429ecee7f5b7ccd7e0eb89"
     )
     assert all(
         closure.member_logical_paths
