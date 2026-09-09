@@ -6,9 +6,8 @@ import re
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Annotated, Literal
-from uuid import UUID
 
-from pydantic import AwareDatetime, Field, StrictStr, model_validator
+from pydantic import UUID4, AwareDatetime, Field, StrictStr, model_validator
 
 from .base import HarnessModel, NonNegativeInt, Sha256, public_schema_config
 from .common import ArtifactRef
@@ -81,7 +80,7 @@ class WorkflowStartReceipt(HarnessModel):
     model_config = public_schema_config(WORKFLOW_START_RECEIPT_SCHEMA_ID)
 
     schema_version: Literal["harness.workflow_start_receipt.v1"]
-    workflow_run_id: UUID
+    workflow_run_id: UUID4
     principal_id: PrincipalId
     workspace: Literal["ephemeral", "production"]
     requested_profile: CapabilityProfileRef
@@ -113,7 +112,7 @@ class RunSnapshot(HarnessModel):
     model_config = public_schema_config(RUN_SNAPSHOT_SCHEMA_ID)
 
     schema_version: Literal["harness.run_snapshot.v1"]
-    workflow_run_id: UUID
+    workflow_run_id: UUID4
     principal_id: PrincipalId
     workspace: Literal["ephemeral", "production"]
     requested_profile: CapabilityProfileRef
@@ -124,8 +123,8 @@ class RunSnapshot(HarnessModel):
     state_ref: ArtifactRef
     registry_snapshot: ArtifactRef
     receipt_head: ArtifactRef
-    active_operation: UUID | None
-    child_runs: tuple[UUID, ...]
+    active_operation: UUID4 | None
+    child_runs: tuple[UUID4, ...]
     started_at: AwareDatetime
     updated_at: AwareDatetime
 

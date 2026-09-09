@@ -121,3 +121,23 @@
   digest URI、错误 media/schema、重复或乱序 initial evidence，以及非法 snapshot 时间序。
 - 本切片只证明可信父 workflow 的启动证据链；尚不证明幂等恢复、compile/replay/validate 调度、MCP
   transport、Genesis 或最终晋升。
+
+## 2026-09-09 P1 durable start/idempotency 纵切
+
+- RED：跨 Harness 实例重复 `start()` 时原实现没有 durable idempotency authority，且公共
+  `GoldenRunConflictError` 不存在；随后以 `(principal_id, idempotency_key)` 为唯一键，在 SQLite
+  `BEGIN IMMEDIATE` 事务内执行 query-or-create。
+- 相同 canonical request digest 返回原 snapshot，测试用会主动失败的 clock/UUID factory 证明 retry
+  没有重新取时钟或分配 identity；同 key 异 request 在新 CAS/identity 前以
+  `HARN_IDEMPOTENCY_CONFLICT` 拒绝。
+- 恢复路径重验 canonical SQLite snapshot、registry/state/receipt/input CAS closure、逻辑 state digest
+  与 start receipt/request binding；非 canonical DB bytes、跨记录 swap、CAS bytes 漂移和不一致 revision
+  均 fail closed。workflow/operation identities 同步收紧为 UUID4。
+- `GoldenRunHarness` 只接受 exact `LocalArtifactStore`，并已从 `self_improving.harness` 公共 façade 导出；
+  protocol lookalike 不能绕过 CAS authority。
+- focused 验证：workflow + schema catalog `29 passed in 0.68s`；`golden_run.py` 112/112 statements、
+  24/24 branches，`schemas/workflow.py` 99/99 statements、14/14 branches，均为 100%；23 份 schema
+  snapshot check 与 Ruff 通过。
+- 审阅仍发现两个下一切片 blocker：RegistrySnapshot 目前只被 resolve、未 strict parse/资格闭包验证；
+  start receipt 还没有 canonical request ArtifactRef，且 RunSnapshot receipt-head 仍锁死为 start receipt。
+  因此本切片不声称完整可重放 workflow 或 exact qualified dispatch。

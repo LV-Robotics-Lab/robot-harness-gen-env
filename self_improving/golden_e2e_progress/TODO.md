@@ -4,8 +4,8 @@
 
 ## Doing
 
-- P1：继续 `GoldenRunHarness.start()` 的幂等重试、冲突 key 与持久化恢复 tracer；首个 actor-neutral
-  workflow identity/receipt 纵切已完成。
+- P1：补正式 `RegistrySnapshot`、canonical request CAS/ref 与可演进 receipt-head；workflow start 与
+  重启幂等已完成，但在这些审计闭包修复前不进入 P2 dispatch。
 
 ## Next
 

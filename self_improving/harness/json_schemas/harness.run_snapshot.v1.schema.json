@@ -79,7 +79,7 @@
     "active_operation": {
       "anyOf": [
         {
-          "format": "uuid",
+          "format": "uuid4",
           "type": "string"
         },
         {
@@ -90,7 +90,7 @@
     },
     "child_runs": {
       "items": {
-        "format": "uuid",
+        "format": "uuid4",
         "type": "string"
       },
       "title": "Child Runs",
@@ -151,7 +151,7 @@
       "type": "string"
     },
     "workflow_run_id": {
-      "format": "uuid",
+      "format": "uuid4",
       "title": "Workflow Run Id",
       "type": "string"
     },

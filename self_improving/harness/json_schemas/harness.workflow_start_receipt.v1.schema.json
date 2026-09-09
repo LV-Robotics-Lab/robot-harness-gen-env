@@ -103,7 +103,7 @@
       "type": "string"
     },
     "workflow_run_id": {
-      "format": "uuid",
+      "format": "uuid4",
       "title": "Workflow Run Id",
       "type": "string"
     },
