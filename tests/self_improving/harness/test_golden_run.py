@@ -231,6 +231,40 @@ def _replace_with_legacy_start_table(
         )
 
 
+def _current_store_layout_ddl(
+    *,
+    workflow_run_id: str = "TEXT NOT NULL PRIMARY KEY",
+    principal_id: str = "TEXT NOT NULL",
+    request_sha256: str = "TEXT NOT NULL",
+    start_request_sha256: str = "TEXT NOT NULL",
+    snapshot_json: str = "BLOB NOT NULL",
+    snapshot_sha256: str = "TEXT NOT NULL",
+    principal_lookup: bool = True,
+    start_request_lookup: bool = True,
+    extra_definitions: tuple[str, ...] = (),
+    table_suffix: str = "",
+) -> str:
+    definitions = [
+        f"workflow_run_id {workflow_run_id}",
+        f"principal_id {principal_id}",
+        "idempotency_key TEXT NOT NULL",
+        f"request_sha256 {request_sha256}",
+        f"start_request_sha256 {start_request_sha256}",
+        f"snapshot_json {snapshot_json}",
+        f"snapshot_sha256 {snapshot_sha256}",
+        *extra_definitions,
+    ]
+    if principal_lookup:
+        definitions.append("UNIQUE (principal_id, idempotency_key)")
+    if start_request_lookup:
+        definitions.append("UNIQUE (start_request_sha256)")
+    body = ",\n                ".join(definitions)
+    return (
+        "CREATE TABLE golden_workflow_starts "
+        f"(\n                {body}\n            ){table_suffix}"
+    )
+
+
 class _ArtifactStoreLookalike:
     def __init__(self, root: Path) -> None:
         self.root = root
@@ -831,6 +865,205 @@ def test_sqlite_golden_run_store_rejects_an_unknown_table_layout(tmp_path: Path)
 
     with pytest.raises(GoldenRunCorruptionError, match="unsupported table layout"):
         SQLiteGoldenRunStore(database)
+
+
+@pytest.mark.parametrize(
+    "ddl",
+    [
+        _current_store_layout_ddl(workflow_run_id="TEXT NOT NULL"),
+        _current_store_layout_ddl(principal_lookup=False),
+        _current_store_layout_ddl(start_request_lookup=False),
+        _current_store_layout_ddl(request_sha256="TEXT"),
+        _current_store_layout_ddl(request_sha256="VARCHAR NOT NULL"),
+        _current_store_layout_ddl(snapshot_json="TEXT NOT NULL"),
+        _current_store_layout_ddl(snapshot_sha256="TEXT NOT NULL DEFAULT ''"),
+        _current_store_layout_ddl(
+            extra_definitions=(
+                "hidden_copy TEXT GENERATED ALWAYS AS (principal_id) VIRTUAL",
+            )
+        ),
+    ],
+    ids=[
+        "missing-workflow-primary-key",
+        "missing-principal-idempotency-unique",
+        "missing-start-request-unique",
+        "nullable-column",
+        "wrong-declared-type-same-affinity",
+        "wrong-type-affinity",
+        "column-default",
+        "hidden-generated-column",
+    ],
+)
+def test_sqlite_golden_run_store_rejects_forged_current_column_constraints(
+    tmp_path: Path,
+    ddl: str,
+) -> None:
+    database = tmp_path / "forged-current-layout.sqlite3"
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.executescript(ddl)
+
+    with pytest.raises(GoldenRunCorruptionError, match="unsupported table layout") as raised:
+        SQLiteGoldenRunStore(database)
+    assert raised.value.code == "HARN_PERSISTENCE_CONFLICT"
+
+
+@pytest.mark.parametrize(
+    "ddl",
+    [
+        _current_store_layout_ddl()
+        + "; CREATE INDEX extra_lookup ON golden_workflow_starts (principal_id)",
+        _current_store_layout_ddl(start_request_lookup=False)
+        + "; CREATE UNIQUE INDEX duplicate_lookup "
+        "ON golden_workflow_starts (principal_id, idempotency_key)",
+        _current_store_layout_ddl(start_request_lookup=False)
+        + "; CREATE UNIQUE INDEX partial_lookup "
+        "ON golden_workflow_starts (start_request_sha256) "
+        "WHERE principal_id = 'tests/golden-e2e'",
+        _current_store_layout_ddl(start_request_lookup=False)
+        + "; CREATE UNIQUE INDEX expression_lookup "
+        "ON golden_workflow_starts (lower(start_request_sha256))",
+        _current_store_layout_ddl(start_request_sha256="TEXT NOT NULL COLLATE NOCASE"),
+    ],
+    ids=["extra", "duplicate", "partial", "expression", "collation"],
+)
+def test_sqlite_golden_run_store_rejects_forged_current_indexes(
+    tmp_path: Path,
+    ddl: str,
+) -> None:
+    database = tmp_path / "forged-current-indexes.sqlite3"
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.executescript(ddl)
+
+    with pytest.raises(GoldenRunCorruptionError, match="unsupported table layout") as raised:
+        SQLiteGoldenRunStore(database)
+    assert raised.value.code == "HARN_PERSISTENCE_CONFLICT"
+
+
+def test_sqlite_golden_run_store_rejects_a_forged_legacy_layout(tmp_path: Path) -> None:
+    database = tmp_path / "forged-legacy-layout.sqlite3"
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.execute(
+            """
+            CREATE TABLE golden_workflow_starts (
+                principal_id TEXT NOT NULL,
+                idempotency_key TEXT NOT NULL,
+                request_sha256 TEXT NOT NULL,
+                snapshot_json BLOB NOT NULL
+            )
+            """
+        )
+
+    with pytest.raises(GoldenRunCorruptionError, match="unsupported table layout") as raised:
+        SQLiteGoldenRunStore(database)
+    assert raised.value.code == "HARN_PERSISTENCE_CONFLICT"
+
+
+@pytest.mark.parametrize(
+    "ddl",
+    [
+        _current_store_layout_ddl()
+        + """; CREATE TRIGGER rewrite_workflow_authority
+        AFTER INSERT ON golden_workflow_starts
+        BEGIN
+            UPDATE golden_workflow_starts
+            SET request_sha256 = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+        END""",
+        "CREATE TABLE principals (principal_id TEXT PRIMARY KEY); "
+        + _current_store_layout_ddl(
+            principal_id="TEXT NOT NULL REFERENCES principals(principal_id)"
+        ),
+        _current_store_layout_ddl(table_suffix=" STRICT"),
+        _current_store_layout_ddl(table_suffix=" WITHOUT ROWID"),
+        _current_store_layout_ddl(
+            workflow_run_id="TEXT NOT NULL PRIMARY KEY ON CONFLICT REPLACE"
+        ),
+        _current_store_layout_ddl().replace(
+            "UNIQUE (principal_id, idempotency_key)",
+            "UNIQUE (principal_id, idempotency_key) ON/**/CONFLICT REPLACE",
+        ),
+        _current_store_layout_ddl().replace(
+            "UNIQUE (start_request_sha256)",
+            "UNIQUE (start_request_sha256) ON CONFLICT REPLACE",
+        ),
+    ],
+    ids=[
+        "trigger",
+        "foreign-key",
+        "strict",
+        "without-rowid",
+        "primary-key-replace",
+        "principal-idempotency-replace",
+        "start-request-replace",
+    ],
+)
+def test_sqlite_golden_run_store_rejects_forged_current_table_semantics(
+    tmp_path: Path,
+    ddl: str,
+) -> None:
+    database = tmp_path / "forged-current-table.sqlite3"
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.executescript(ddl)
+
+    with pytest.raises(GoldenRunCorruptionError, match="unsupported table layout") as raised:
+        SQLiteGoldenRunStore(database)
+    assert raised.value.code == "HARN_PERSISTENCE_CONFLICT"
+
+
+@pytest.mark.parametrize(
+    ("trigger_body", "message"),
+    [
+        (
+            """
+            UPDATE golden_workflow_starts
+            SET request_sha256 =
+                'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+            """,
+            "logical request identity",
+        ),
+        (
+            "UPDATE golden_workflow_starts SET idempotency_key = 'tampered-key';",
+            "inconsistent authority metadata",
+        ),
+        ("DELETE FROM golden_workflow_starts;", "disappeared from durable authority"),
+    ],
+    ids=["rewrite-logical-digest", "rewrite-metadata", "delete"],
+)
+def test_start_rejects_authority_tampered_by_a_late_insert_trigger(
+    tmp_path: Path,
+    trigger_body: str,
+    message: str,
+) -> None:
+    artifact_store = LocalArtifactStore(tmp_path / "cas")
+    database = tmp_path / "workflow-authority.sqlite3"
+    objective = _put(
+        artifact_store,
+        tmp_path,
+        name="objective.json",
+        payload=OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(artifact_store, tmp_path)
+    workflow_store = SQLiteGoldenRunStore(database)
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.executescript(
+            f"""
+            CREATE TRIGGER rewrite_workflow_authority
+            AFTER INSERT ON golden_workflow_starts
+            BEGIN
+                {trigger_body}
+            END
+            """
+        )
+    harness = _golden_harness(
+        artifact_store=artifact_store,
+        workflow_store=workflow_store,
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+    )
+
+    with pytest.raises(GoldenRunCorruptionError, match=message) as raised:
+        harness.start(_request(objective, registry))
+    assert raised.value.code == "HARN_PERSISTENCE_CONFLICT"
 
 
 @pytest.mark.parametrize("attack", ["principal", "start_request"])

@@ -6,6 +6,7 @@ import hashlib
 import json
 import re
 import sqlite3
+from collections import Counter
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -17,25 +18,69 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from .schemas.base import Sha256
 from .schemas.workflow import IdempotencyKey, PrincipalId, RunSnapshot
 
-_CURRENT_COLUMNS = frozenset(
-    {
-        "workflow_run_id",
-        "principal_id",
-        "idempotency_key",
-        "request_sha256",
-        "start_request_sha256",
-        "snapshot_json",
-        "snapshot_sha256",
-    }
+_CURRENT_COLUMNS = (
+    (0, "workflow_run_id", "TEXT", 1, None, 1, 0),
+    (1, "principal_id", "TEXT", 1, None, 0, 0),
+    (2, "idempotency_key", "TEXT", 1, None, 0, 0),
+    (3, "request_sha256", "TEXT", 1, None, 0, 0),
+    (4, "start_request_sha256", "TEXT", 1, None, 0, 0),
+    (5, "snapshot_json", "BLOB", 1, None, 0, 0),
+    (6, "snapshot_sha256", "TEXT", 1, None, 0, 0),
 )
-_LEGACY_COLUMNS = frozenset(
-    {
-        "principal_id",
-        "idempotency_key",
-        "request_sha256",
-        "snapshot_json",
-    }
+_LEGACY_COLUMNS = (
+    (0, "principal_id", "TEXT", 1, None, 1, 0),
+    (1, "idempotency_key", "TEXT", 1, None, 2, 0),
+    (2, "request_sha256", "TEXT", 1, None, 0, 0),
+    (3, "snapshot_json", "BLOB", 1, None, 0, 0),
 )
+_CURRENT_INDEXES = (
+    (
+        "pk",
+        1,
+        0,
+        (
+            (0, 0, "workflow_run_id", 0, "BINARY", 1),
+            (1, -1, None, 0, "BINARY", 0),
+        ),
+    ),
+    (
+        "u",
+        1,
+        0,
+        (
+            (0, 1, "principal_id", 0, "BINARY", 1),
+            (1, 2, "idempotency_key", 0, "BINARY", 1),
+            (2, -1, None, 0, "BINARY", 0),
+        ),
+    ),
+    (
+        "u",
+        1,
+        0,
+        (
+            (0, 4, "start_request_sha256", 0, "BINARY", 1),
+            (1, -1, None, 0, "BINARY", 0),
+        ),
+    ),
+)
+_LEGACY_INDEXES = (
+    (
+        "pk",
+        1,
+        0,
+        (
+            (0, 0, "principal_id", 0, "BINARY", 1),
+            (1, 1, "idempotency_key", 0, "BINARY", 1),
+            (2, -1, None, 0, "BINARY", 0),
+        ),
+    ),
+)
+_SQL_QUOTED_OR_COMMENT = re.compile(
+    r"'(?:''|[^'])*'|\"(?:\"\"|[^\"])*\"|`(?:``|[^`])*`|\[(?:\]\]|[^\]])*\]|"
+    r"--[^\r\n]*|/\*.*?\*/",
+    re.DOTALL,
+)
+_TABLE_CONFLICT_POLICY = re.compile(r"\bON\s+CONFLICT\b", re.IGNORECASE)
 
 
 class _LegacyWorkflowStart(BaseModel):
@@ -154,7 +199,7 @@ class SQLiteGoldenRunStore:
             try:
                 connection.execute(
                     """
-                    INSERT INTO golden_workflow_starts (
+                    INSERT OR ABORT INTO golden_workflow_starts (
                         workflow_run_id, principal_id, idempotency_key,
                         request_sha256, start_request_sha256, snapshot_json,
                         snapshot_sha256
@@ -174,13 +219,35 @@ class SQLiteGoldenRunStore:
                 raise GoldenRunConflictError(
                     "workflow identity is already bound to another aggregate"
                 ) from error
-            return _StoredStart(
-                snapshot=snapshot,
-                principal_id=principal_id,
-                idempotency_key=idempotency_key,
-                request_sha256=request_sha256,
-                start_request_sha256=start_request_sha256,
-            )
+            persisted = connection.execute(
+                """
+                SELECT workflow_run_id, principal_id, idempotency_key,
+                       request_sha256, start_request_sha256, snapshot_json,
+                       snapshot_sha256
+                FROM golden_workflow_starts
+                WHERE workflow_run_id = ?
+                """,
+                (str(snapshot.workflow_run_id),),
+            ).fetchone()
+            if persisted is None:
+                raise GoldenRunCorruptionError(
+                    "new workflow start disappeared from durable authority"
+                )
+            stored = _decode_start(persisted)
+            if stored.request_sha256 != request_sha256:
+                raise GoldenRunCorruptionError(
+                    "new workflow start has inconsistent logical request identity"
+                )
+            if (
+                stored.snapshot != snapshot
+                or stored.principal_id != principal_id
+                or stored.idempotency_key != idempotency_key
+                or stored.start_request_sha256 != start_request_sha256
+            ):
+                raise GoldenRunCorruptionError(
+                    "new workflow start has inconsistent authority metadata"
+                )
+            return stored
 
     def read_snapshot(
         self,
@@ -226,17 +293,37 @@ class SQLiteGoldenRunStore:
     def _initialize(self) -> None:
         with self._connection() as connection:
             connection.execute("BEGIN IMMEDIATE")
-            columns = frozenset(
-                row["name"]
-                for row in connection.execute(
-                    "PRAGMA table_info(golden_workflow_starts)"
-                ).fetchall()
-            )
+            columns = _read_column_layout(connection)
             if not columns:
                 _create_current_table(connection)
-            elif columns == _LEGACY_COLUMNS:
+                _require_table_layout(
+                    connection,
+                    columns=_CURRENT_COLUMNS,
+                    indexes=_CURRENT_INDEXES,
+                )
+            elif frozenset(row[1] for row in columns) == frozenset(
+                row[1] for row in _LEGACY_COLUMNS
+            ):
+                _require_table_layout(
+                    connection,
+                    columns=_LEGACY_COLUMNS,
+                    indexes=_LEGACY_INDEXES,
+                )
                 _migrate_legacy_table(connection)
-            elif columns != _CURRENT_COLUMNS:
+                _require_table_layout(
+                    connection,
+                    columns=_CURRENT_COLUMNS,
+                    indexes=_CURRENT_INDEXES,
+                )
+            elif frozenset(row[1] for row in columns) == frozenset(
+                row[1] for row in _CURRENT_COLUMNS
+            ):
+                _require_table_layout(
+                    connection,
+                    columns=_CURRENT_COLUMNS,
+                    indexes=_CURRENT_INDEXES,
+                )
+            else:
                 raise GoldenRunCorruptionError(
                     "golden workflow database has an unsupported table layout"
                 )
@@ -323,6 +410,86 @@ def _create_current_table(connection: sqlite3.Connection) -> None:
     )
 
 
+def _read_column_layout(connection: sqlite3.Connection) -> tuple[tuple[object, ...], ...]:
+    return tuple(
+        tuple(row[key] for key in ("cid", "name", "type", "notnull", "dflt_value", "pk", "hidden"))
+        for row in connection.execute(
+            "PRAGMA table_xinfo(golden_workflow_starts)"
+        ).fetchall()
+    )
+
+
+def _read_index_layouts(connection: sqlite3.Connection) -> tuple[tuple[object, ...], ...]:
+    indexes = []
+    for row in connection.execute("PRAGMA index_list(golden_workflow_starts)").fetchall():
+        columns = tuple(
+            tuple(
+                column[key]
+                for key in ("seqno", "cid", "name", "desc", "coll", "key")
+            )
+            for column in connection.execute(
+                """
+                SELECT seqno, cid, name, desc, coll, key
+                FROM pragma_index_xinfo(?)
+                ORDER BY seqno
+                """,
+                (row["name"],),
+            ).fetchall()
+        )
+        indexes.append((row["origin"], row["unique"], row["partial"], columns))
+    return tuple(indexes)
+
+
+def _require_table_layout(
+    connection: sqlite3.Connection,
+    *,
+    columns: tuple[tuple[object, ...], ...],
+    indexes: tuple[tuple[object, ...], ...],
+) -> None:
+    table_metadata = tuple(
+        tuple(row[key] for key in ("schema", "name", "type", "ncol", "wr", "strict"))
+        for row in connection.execute(
+            "PRAGMA table_list(golden_workflow_starts)"
+        ).fetchall()
+    )
+    expected_table_metadata = (
+        ("main", "golden_workflow_starts", "table", len(columns), 0, 0),
+    )
+    if table_metadata != expected_table_metadata:
+        raise GoldenRunCorruptionError(
+            "golden workflow database has an unsupported table layout"
+        )
+    table_sql = connection.execute(
+        """
+        SELECT sql
+        FROM sqlite_schema
+        WHERE type = 'table' AND name = 'golden_workflow_starts'
+        """
+    ).fetchone()["sql"]
+    foreign_keys = connection.execute(
+        "PRAGMA foreign_key_list(golden_workflow_starts)"
+    ).fetchall()
+    triggers = connection.execute(
+        """
+        SELECT name
+        FROM sqlite_schema
+        WHERE type = 'trigger' AND tbl_name = 'golden_workflow_starts'
+        """
+    ).fetchall()
+    if (
+        _read_column_layout(connection) != columns
+        or Counter(_read_index_layouts(connection)) != Counter(indexes)
+        or _TABLE_CONFLICT_POLICY.search(
+            _SQL_QUOTED_OR_COMMENT.sub(" ", table_sql)
+        )
+        or foreign_keys
+        or triggers
+    ):
+        raise GoldenRunCorruptionError(
+            "golden workflow database has an unsupported table layout"
+        )
+
+
 def _migrate_legacy_table(connection: sqlite3.Connection) -> None:
     rows = connection.execute(
         """
@@ -364,7 +531,7 @@ def _migrate_legacy_table(connection: sqlite3.Connection) -> None:
     _create_current_table(connection)
     connection.executemany(
         """
-        INSERT INTO golden_workflow_starts (
+        INSERT OR ABORT INTO golden_workflow_starts (
             workflow_run_id, principal_id, idempotency_key,
             request_sha256, start_request_sha256, snapshot_json,
             snapshot_sha256

@@ -246,6 +246,19 @@
   已知旧私有四列表可事务迁移并保留 logical digest；未知 layout、坏旧行、principal 不一致、合法 UUID
   碰撞、非 canonical/非 BLOB/不可解析 snapshot、无效或不匹配 checksum、row/snapshot identity swap、
   request/idempotency metadata 篡改和损坏数据库均 fail closed。
+- 后续主审以同名七列表攻击发现：原构造器只比列名，会接受缺主键、缺任一 UNIQUE、可空列、错误
+  declared type/affinity、默认值、隐藏生成列和附加索引；正确列/索引还可附带 `AFTER INSERT` trigger，
+  让首个 `start` 返回内存成功而持久 authority 已被改写。新增 RED 覆盖上述结构，以及 duplicate/
+  partial/expression/collation index、foreign key、STRICT/WITHOUT ROWID 和构造后插入/删除 trigger。
+- 表级 `PRIMARY KEY/UNIQUE ... ON CONFLICT REPLACE` 在 PRAGMA 中与默认 ABORT 同形，却会静默替换
+  authority；三类约束的 RED 均复现原构造器接受。布局检查现在忽略 SQL 引号/注释后拒绝显式
+  `ON CONFLICT` policy（包括 `ON/**/CONFLICT`），生产 start 与 legacy migration 的写入同时固定为
+  `INSERT OR ABORT`，避免表级 policy 改写冲突语义。
+- GREEN 以 `table_xinfo` 精确验证 cid/name/type/notnull/default/pk/hidden，以 `index_list` +
+  `index_xinfo` 验证 unique/origin/partial、顺序 key、collation、expression/extra key 与辅助 rowid；比较
+  语义而不写死 SQLite autoindex 名。同时验证 `table_list` flags、零 foreign key/trigger；已知四列
+  legacy 先验完整旧 layout，迁移后再验完整 current layout。INSERT 后在同一事务重读并对账全部
+  authority metadata，因而晚注入 trigger 也不能造成首调假成功。
 - `read` 只按 `(principal_id, workflow_run_id)` 返回，因此不存在与其他 principal 使用同 UUID 时的
   可观察差异；missing 与 wrong-principal 都给出同一个
   `GoldenRunNotFoundError(code=HARN_WORKFLOW_NOT_FOUND)`。恢复后重新解析 canonical start request，
@@ -257,17 +270,16 @@
   并发 constructor 测试，以及两个 Harness 同时 start 同一 request 只落一个 aggregate 的测试。
 - focused gate：
   `pytest -q tests/self_improving/harness/test_golden_run.py tests/self_improving/harness/test_schema_catalog.py --cov=self_improving.harness.golden_run --cov=self_improving.harness.golden_store --cov=self_improving.harness.schemas.workflow --cov-branch --cov-fail-under=100`
-  为 `65 passed`；`golden_run.py`、`golden_store.py`、`schemas/workflow.py` 的 statement/branch 均为
-  `100%`。29 份 Harness JSON Schema snapshot check 与 Ruff 通过。
-- Harness 全域为 `2117 passed, 19 skipped, 1 failed in 124.67s`；唯一失败仍是已登记的
-  `text2env.replay@1.0.0` qualification source identity 漂移（首个漂移文件为本切片正常修改的公共
-  `self_improving/harness/__init__.py`）。不改 expected hash、不伪重签后，显式排除该单项为
-  `2117 passed, 19 skipped, 1 deselected in 119.73s`。
-- 根套件保留同一个显式排除项后为 `3130 passed, 19 skipped, 1 deselected in 149.87s`；没有第二个
+  为 `89 passed`；三个模块合计 440 statements、98 branches，均为 `100%`。29 份 Harness JSON
+  Schema snapshot check 与 Ruff 通过。
+- Harness 全域显式排除已登记的 `text2env.replay@1.0.0` qualification source-identity 单项后为
+  `2141 passed, 19 skipped, 1 deselected in 53.37s`；本修复不改 expected hash 或伪造重签。
+- 根套件保留同一个显式排除项后为 `3154 passed, 19 skipped, 1 deselected in 148.28s`；没有第二个
   回归失败。本结果不是 Genesis runtime 验证，也不替代最终资格重签。
-- 独立 Standards/spec reviewer 结论为 `APPROVE / NO BLOCKER`；其在 Python 3.11.15 隔离环境复跑
-  focused `65 passed`、405 statements/86 branches 100%，并补做 40 个 fresh database × 2 独立进程
-  constructor 攻击，结果 0 failure/0 hang。该补充探针是只读复审证据，不冒充 committed test。
+- 早期 e1cc853 Standards/spec reviewer 曾在 Python 3.11.15 隔离环境复跑 focused `65 passed`、
+  405 statements/86 branches 100%，并补做 40 个 fresh database × 2 独立进程 constructor 攻击；
+  随后主审仍发现上述 layout/trigger blocker，因此旧 `NO BLOCKER` 不能作为最终审阅结论。当前修复由
+  主线程复跑 focused 89 tests 并检查结构/trigger/post-insert 路径，未发现新的同级 blocker。
 - 边界：本切片没有定义 `RunCommandRequest`、`OperationSnapshot`、`submit`、handler dispatch、MCP、
   Genesis 或 promotion，也没有把 caller 提供的 RegistrySnapshot 提升为生产 trust root；这些仍属于
   P1 后续与 P2/P4。纯持久化切片不产生真实仿真或真机能力主张。
