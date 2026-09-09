@@ -4,20 +4,21 @@
 
 ## Doing
 
-- P1：公共 revision-0 durable `read` 与显式注入的 SQLite aggregate store 已在独立 feature 分支完成
-  验证，等待主线程审阅/整合；本切片没有进入 submit/operation 生命周期，也不声称可恢复未来
-  operation head。
+- P6：修复 exact-byte staging 的真实 RoboTwin loader closure。当前 14 个 GLB 已完成本机逐字节
+  复核，但 RoboTwin `create_actor` 还会按 model id 隐式读取 7 个 `model_data*.json` 缩放 sidecar；
+  sidecar 未进入同一 CAS manifest 前，不能把该结果称为 portable 或 runtime-qualified。修复后必须
+  只从 staged/CAS 物化闭包完成真实无渲染 SAPIEN 900-step replay，并分别保留失败与成功证据。
 
 ## Next
 
-- P1：以单条 RED→GREEN tracer 进入 submit/operation 生命周期，新增 OperationSnapshot 前先冻结其
+- P2：以单条 RED→GREEN tracer 进入 submit/operation 生命周期，新增 OperationSnapshot 前先冻结其
   command/idempotency/revision 原子提交契约。
 - P2：在 actor-neutral v2 receipt/state-delta 上接入 exact qualified compile → replay 两步调度；不得复用
   planner-specific v1 receipt 字段冒充外部 Codex/MCP 调用。
 - P4：S1 的 `submit/read`、OperationSnapshot 和真实 Registry handler 绑定完成后，接入 MCP 2.2 的
   low-level Server/Client；在同一切片冻结 dependency/runtime lock，不在实验循环中安装依赖。
-- P6：以已分类的 `003_plate`、`071_can` 继续 exact-byte staging 纵切；先建立 loader closure，仍不得
-  就地修改历史 ledger 或把 byte match 写成 runtime qualification。
+- P6：sidecar closure + staged-only SAPIEN replay 通过并完成 fixed-commit 双轴复审后才可合入；仍不得
+  就地修改历史 ledger，也不得把 headless physics probe 写成媒体或 Genesis qualification。
 
 ## Blocked
 
@@ -30,6 +31,9 @@
   本切片不覆盖或暂存，P14 必须在可安全协调时同步。
 - clean root suite 的旧 replay qualification source identity 仍有 1 个失败；原始真实 qualification
   settings/CAS 尚在，但旧 delegated cgroup 已不存在，且后续 Harness 实现还会继续改变源码身份。
+- 2026-09-10 的完整相机 replay 第一次因本机 GPU 被无关训练进程占满，在 observer camera 创建 buffer
+  时失败；第二次强制 Lavapipe 因 Vulkan 扩展缺失失败。两次都不是 runtime pass，且不得终止不属于
+  本任务的 GPU 进程；当前用无渲染真实 SAPIEN probe 验证 loader/physics，媒体门留待资源可用时补跑。
 
 ## Done
 
@@ -60,7 +64,9 @@
 - P1 durable read/store 纵切：公开 `RunReadRequest`、`SQLiteGoldenRunStore` 与
   `GoldenRunHarness.read`；SQLite 路径由调用方显式选择，revision-0 start 的跨实例/真实子进程恢复、
   principal 隔离、已知旧表迁移、并发 bootstrap/start、SQLite/CAS 损坏拒绝和原有 start/idempotency
-  均通过，未实现 submit/operation/current operation head。
+  均通过；随后补齐 SQLite table/index/constraint/trigger/`ON CONFLICT` 权威布局和 late mutation 攻击，
+  focused 89 tests、440 statements/98 branches 均为 100%。未实现 submit/operation/current operation
+  head。
 - P6 首个 S5 只读纵切：从显式受信、strict-canonical 的 debt-inventory CAS 对 `003_plate`、
   `071_can` 分类，确认 2 份 ledger 的 58 条结构违规与 14 个本机 observed digest matches；输出明确
   `probe_bytes_in_cas=false`、`writes_performed=false`、`runtime_qualification_executed=false`。这只是
