@@ -3,8 +3,10 @@ from __future__ import annotations
 import hashlib
 import inspect
 import json
+import sqlite3
 import subprocess
 import sys
+import threading
 from contextlib import ExitStack
 from dataclasses import replace
 from datetime import timezone
@@ -659,6 +661,70 @@ def test_controlled_terminal_recovers_in_a_fresh_process(tmp_path: Path) -> None
         "run_id": str(run_id),
         "status": "succeeded",
     }
+
+
+def test_concurrent_factory_failure_cannot_delete_successful_authority(tmp_path: Path) -> None:
+    _source, _value, settings, stack, _executors = _controlled_factory_fixture(tmp_path)
+    settings.state_root.mkdir()
+    for name in ("replay-handler", "replay-dependencies"):
+        (settings.state_root / name).mkdir()
+    original_validate = module._validate_reopenable_state_root
+    both_snapshotted = threading.Barrier(2)
+    winner_done = threading.Event()
+    applications: dict[str, ReplayApplication] = {}
+    errors: dict[str, Exception] = {}
+
+    def synchronized_validate(root: Path) -> None:
+        try:
+            both_snapshotted.wait(timeout=0.25)
+        except threading.BrokenBarrierError:
+            pass
+        original_validate(root)
+
+    def publish(*_args, **_kwargs) -> None:
+        if threading.current_thread().name == "winner":
+            return
+        assert winner_done.wait(timeout=5)
+        raise QualificationBundleError("deliberate_loser", "second factory publication failed")
+
+    def assemble(name: str) -> None:
+        try:
+            applications[name] = create_replay_application(settings)
+        except Exception as error:
+            errors[name] = error
+        finally:
+            if name == "winner":
+                winner_done.set()
+
+    with stack:
+        with patch.object(module, "_validate_reopenable_state_root", synchronized_validate):
+            with patch.object(module, "publish_replay_qualification_bundle", publish):
+                winner = threading.Thread(target=assemble, args=("winner",), name="winner")
+                loser = threading.Thread(target=assemble, args=("loser",), name="loser")
+                winner.start()
+                loser.start()
+                winner.join(timeout=10)
+                loser.join(timeout=10)
+
+    assert not winner.is_alive() and not loser.is_alive()
+    assert "winner" in applications
+    assert type(errors.get("loser")) is QualificationBundleError
+    assert (settings.state_root / "harness.sqlite3").is_file()
+    assert applications["winner"].skills[0].skill_id == "text2env.replay"
+
+
+def test_corrupt_reopened_sqlite_is_one_application_configuration_error(tmp_path: Path) -> None:
+    _source, _value, settings, stack, _executors = _controlled_factory_fixture(tmp_path)
+    settings.state_root.mkdir()
+    database = settings.state_root / "harness.sqlite3"
+    database.write_bytes(b"not a sqlite database")
+
+    with stack:
+        with pytest.raises(ReplayApplicationConfigurationError, match="SQLite authority") as caught:
+            create_replay_application(settings)
+
+    assert isinstance(caught.value.__cause__, sqlite3.DatabaseError)
+    assert database.read_bytes() == b"not a sqlite database"
 
 
 def test_application_path_timeout_and_capability_helpers_fail_closed(
