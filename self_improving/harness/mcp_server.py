@@ -36,6 +36,15 @@ def create_harness_mcp_server(adapter: HarnessMCPAdapter) -> Server:
             ]
         )
 
+    async def list_resources(_context, _params) -> types.ListResourcesResult:
+        return types.ListResourcesResult(resources=[])
+
+    async def list_resource_templates(
+        _context,
+        _params,
+    ) -> types.ListResourceTemplatesResult:
+        return types.ListResourceTemplatesResult(resource_templates=[])
+
     async def call_tool(_context, params) -> types.CallToolResult:
         try:
             result = adapter.call_tool(
@@ -108,6 +117,8 @@ def create_harness_mcp_server(adapter: HarnessMCPAdapter) -> Server:
         ),
         on_list_tools=list_tools,
         on_call_tool=call_tool,
+        on_list_resources=list_resources,
+        on_list_resource_templates=list_resource_templates,
         on_read_resource=read_resource,
     )
 

@@ -86,6 +86,8 @@ def test_official_client_lists_and_calls_the_exact_tool_in_process(tmp_path: Pat
 
     async def exercise() -> None:
         async with Client(server, raise_exceptions=True, cache=None) as client:
+            assert (await client.list_resources()).resources == []
+            assert (await client.list_resource_templates()).resource_templates == []
             listed = await client.list_tools()
             assert tuple(tool.name for tool in listed.tools) == (
                 "harness_workflow_create_v1",
