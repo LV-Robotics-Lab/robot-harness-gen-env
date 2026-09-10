@@ -21,6 +21,25 @@ class GoldenRunHarness:
 qualified Skill execution、ToolResult、fresh observations、advisory、prompt revision、promotion 和 crash
 recovery。compile/replay/validate 内部实现可替换而不改调用者。
 
+### Fresh observation 受控纵切
+
+`genesis.observe@1.0.0` 继续穿过同一个 `GoldenRunHarness.submit/read` seam，不新增旁路写接口。首个
+受控 tracer 必须逐项闭合以下唯一链条：
+
+```text
+FreshObservationReceipt
+  → ToolResult.fresh_observations
+  → TrustedToolReceipt.derived_fact_claims
+  → StateDelta.mutations
+  → resulting TrustedWorldState
+```
+
+五处的 observation key、value、capture time 与 `valid_until` 必须按合同逐项相等；原始 observation 的
+`source_artifact` 指向 FreshObservationReceipt，写入可信状态的 mutation 则指向闭合该原始 receipt 的
+外层 TrustedToolReceipt。任何缺项、额外项、重排或漂移都不能推进 workflow revision。受控 test adapter 必须显式记录
+`simulator_executed=false`，只证明 aggregate/receipt/state 行为，不证明 Genesis capture。真实
+Genesis runtime、production qualification 和 production MCP exposure 仍须分别通过后续运行门。
+
 ## S2 — Registry-backed MCP adapter
 
 ```python
@@ -47,6 +66,10 @@ class GenesisRuntime:
 可观察行为：从 portable package 新根 materialize、原生 Genesis load/build/step、collision、物理检查、
 robot reset/action/observation、trajectory、图片/连续视频、runtime attestation 与全部 hashes。测试 adapter
 只验证 Harness 行为；真实验收必须使用 Gujie-derived production adapter 和真实 Genesis。
+
+Observe 的新鲜度时间区间冻结为闭区间 `[captured_at, valid_until]`，请求 TTL 为 `1..300` 秒且
+`valid_until == captured_at + TTL`。capture timestamp 由 runtime 生成；已存在的 replay 图片或历史截图
+只能作为旧 supporting artifact，不能重新包装成 FreshObservationReceipt。
 
 ## S4 — Legacy Gujie anti-corruption import
 

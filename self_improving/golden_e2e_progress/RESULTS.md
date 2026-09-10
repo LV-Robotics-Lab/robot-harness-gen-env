@@ -1,5 +1,21 @@
 # 进度与结果
 
+## 2026-09-11 P10 fresh observation 受控合同冻结
+
+- 冻结 exact `genesis.observe@1.0.0`，复用既有 Golden command envelope 与 S1
+  `GoldenRunHarness.submit/read`；不新增通用 invoke 或旁路状态写接口。
+- 受控纵切的完成条件是 FreshObservationReceipt、`ToolResult.fresh_observations`、
+  `TrustedToolReceipt.derived_fact_claims`、StateDelta mutations 与 resulting TrustedWorldState 对
+  key/value/source/capture time/TTL 逐项闭合。缺少、额外、重排或漂移均不得推进 revision。
+- TTL 冻结为 `1..300` 秒闭区间 `[captured_at, valid_until]`，且
+  `valid_until == captured_at + ttl_seconds`。过期 receipt 仍作为审计资源可读，但不能被后续操作作为
+  fresh 输入；在 terminal commit 前已经过期的 observe 只能产生 blocker。
+- 历史 replay PNG、旧截图和既有媒体 receipt 只能作为历史 supporting artifacts，重新贴标签不构成
+  fresh capture。首轮 test adapter 必须记录 `simulator_executed=false`。
+- 本节只记录合同与 public seam 冻结，没有修改或运行 observe 代码/测试，也没有执行 Genesis。
+  production qualification、production Registry entry 和 `genesis_observe_v1_0_0` MCP exposure 均未完成，
+  不声明 fresh observation 已实现或 runtime pass。
+
 ## 2026-09-11 P5 真实 MCP compile→replay→validate
 
 - 固定提交 `b6f779659606fb3b91b7a6a2c98ff6a03970c83c` 的正式 runner 使用官方

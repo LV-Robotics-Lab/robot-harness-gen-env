@@ -221,6 +221,48 @@ collision、实际调用非零 `Scene.step()`；请求视频时保存真实顺�
 child replay run、媒体 hash、capture time 与 TTL。历史截图重新贴标签不算 fresh observation。MCP 可把小
 图作为 ImageContent 返回；structured result 始终保留 CAS ArtifactRef。
 
+### `genesis.observe@1.0.0` 受控合同
+
+首个受控纵切使用既有 workflow command envelope；`parameters` 最小包含：
+
+```text
+- source_replay_tool_receipt
+- source_replay_run_state
+- source_environment_package
+- source_checkpoint
+- requested_observation_keys[]       # 非空、排序、唯一
+- capture_plan
+- ttl_seconds                        # 1..300
+```
+
+caller 不能提供 principal/workflow/operation/child identity、capture timestamp、`valid_until` 或 runtime
+attestation。handler/runtime 产生的 `FreshObservationReceipt` 最小绑定 source replay/package/checkpoint、
+capture plan、child run、`captured_at`、`valid_until`、逐 observation key/value 与 payload ArtifactRef；
+typed output 返回 receipt ref 与 payload refs，不以裸路径作为证据。
+
+TTL 使用闭区间 `[captured_at, valid_until]`，并满足
+`valid_until == captured_at + ttl_seconds`。因此恰好在 `valid_until` 的消费仍有效，之后即 stale；
+receipt 与 payload 作为不可变审计资源在过期后仍可读取，但后续 diagnosis/validate 必须在自身执行时刻
+拒绝把 stale observation 当作 fresh 输入。observe operation 在 terminal commit 前已经过期时只能返回
+typed blocker，不能推进可信状态。
+
+成功纵切必须逐项证明：
+
+```text
+FreshObservationReceipt.observations
+== ToolResult.fresh_observations
+== TrustedToolReceipt.derived_fact_claims
+== StateDelta.mutations
+```
+
+等号表示 key/value/capture time/TTL 集合完全相同，并由 resulting state 重新应用验证。原始
+`fresh_observations[*].source_artifact` 指向 FreshObservationReceipt；StateDelta 中对应 fact 的
+`source_artifact` 指向外层 TrustedToolReceipt，而该外层 receipt 的 supporting closure 必须包含前者。
+只删除旧的 observation/delta 不重叠限制不构成证据。首轮受控 test adapter 必须写明
+`simulator_executed=false`，不得把 fixture 或既有 replay 图片称为 Genesis observation。只有真实 Genesis
+从 sealed checkpoint 重新 capture、qualification 通过并进入 production Registry 后，production MCP
+才能列出 `genesis_observe_v1_0_0`；在此之前该 exact tool 只允许出现在隔离测试 Registry。
+
 validate 只从同一 portable CAS closure 重读并重算：
 
 - package/asset/runtime/qualification/receipt lineage；

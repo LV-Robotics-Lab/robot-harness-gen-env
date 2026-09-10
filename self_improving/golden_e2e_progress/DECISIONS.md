@@ -102,3 +102,18 @@
   Genesis replay/validate。
 - 边界：合同与旧输出中的 `passed`、render、文件格式或 process success 均不授予 simulator-ready、
   physical pass 或 publishable。External Codex 提供 proposal/advisory，不在 exact Skill 内调用模型。
+
+## D011 — Fresh observation 先闭合受控证据链，再开放 production tool
+
+- 日期：2026-09-11
+- 状态：accepted_by_existing_skill_contract
+- 决策：fresh observation 的 exact Skill 固定为 `genesis.observe@1.0.0`。首个受控纵切复用 S1
+  `GoldenRunHarness.submit/read`，并要求 FreshObservationReceipt、`ToolResult.fresh_observations`、
+  `TrustedToolReceipt.derived_fact_claims`、StateDelta 与 resulting state 对 key/value/capture time/TTL
+  逐项绑定。原始 observation 指向 FreshObservationReceipt，可信状态 fact 指向闭合它的外层
+  TrustedToolReceipt。TTL 取 `1..300` 秒，使用闭区间 `[captured_at, valid_until]`。
+- 新鲜度：capture timestamp 由 runtime 产生，`valid_until == captured_at + TTL`；历史截图、旧 replay
+  media 或旧 observation receipt 只能作为历史证据，重新包装不获得 fresh 身份。
+- 边界：受控 test adapter 必须记录 `simulator_executed=false`。真实 Genesis sealed-checkpoint capture、
+  production qualification 与 production Registry/MCP exposure 未通过前，不得把受控结果写成 Genesis
+  runtime pass，也不得在 production MCP 目录列出 `genesis_observe_v1_0_0`。

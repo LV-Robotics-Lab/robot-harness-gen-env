@@ -4,15 +4,17 @@
 
 ## Doing
 
-- P5 exact MCP adapter：固定 `b6f7796` 已通过官方 `mcp==2.2.0` stdio Client，在真实
-  RoboTwin/SAPIEN 上从 raw inline text 完成 revision 0→1→2→3，并在重启后恢复同一 validate
-  operation。当前转向 external Codex/observation/diagnosis 纵切。Harness 仍是唯一状态权威，
-  不提供 generic `skill.invoke`。
+- P10 fresh observation：已冻结 exact `genesis.observe@1.0.0` 的受控合同和下一条 S1 RED：
+  FreshObservationReceipt、`ToolResult.fresh_observations`、trusted receipt claims、StateDelta 与
+  resulting state 必须逐项绑定；TTL 为 `1..300` 秒闭区间。当前尚未实现 application/handler、运行
+  测试或 qualification，`simulator_executed=false`。
 
 ## Next
 
-- P5 下一纵切：真实 external Codex 只经 exact MCP 完成同一 text workflow；在此之前补 operation
-  polling/cancel 与 observation/diagnosis 所需 seam，同一切片冻结 dependency/runtime lock。
+- P10：先通过 S1 public seam 写受控 observation RED/GREEN，覆盖回执、TTL、StateDelta、重启幂等与
+  workflow-scoped resource；test adapter 始终标注 `simulator_executed=false`。
+- P5：受控 observation 与 diagnosis seam 闭合后，真实 external Codex 只经 exact MCP 完成同一 text
+  workflow；operation polling/cancel 仍单独实现。
 - P6：在已合入的 exact-byte staging 后，单独实现 collision provenance、settle 与 Genesis
   qualification；stage result 仍不得直接触发历史 ledger promotion，也不得把 headless ground-contact
   probe 写成 can-on-plate、媒体或 Genesis 证据。
@@ -25,10 +27,16 @@
   规则已立即停止该审查，未重试、改写或重新委派；用户随后允许继续其余工作。该具体审查永久保留
   为 blocked，不作为通过结论，也不妨碍修复主窗口已经独立复现的功能阻断。
 - Autoresearch 的 benchmark/真实 MCP/Genesis 前置尚未实现；设置已确认但尚不能建立诚实 baseline。
+- 当前没有 qualified Genesis observe runtime 或 sealed checkpoint capture 证据；历史 replay 图片不能作为
+  fresh observation。production qualification 与 `genesis_observe_v1_0_0` MCP exposure 因此前置未完成。
 - MCP 尚无 image/video media ingest 或公开 operation polling/cancel seam；当前 text-only 三 Skill
   已通过真实 MCP simulator 闭合，但 external Codex planner 回合仍待执行。
 
 ## Done
+
+- 冻结 fresh observation 受控合同：exact Skill 为 `genesis.observe@1.0.0`；TTL 为 `1..300` 秒闭区间；
+  FreshObservationReceipt → fresh ToolResult → trusted claim → StateDelta → resulting state 必须逐项绑定。
+  本项是合同/实施 seam 完成，不含代码、测试、Genesis simulator、qualification 或 production MCP tool。
 
 - 最终 revision-3 integration 已完成：固定实现 `eec1976bdd71578e43b606ef3b88f3bd7d5975e9`
   的 compile/replay/validate 资格报告分别 7/7、8/8、6/6 通过；同一 bundle 在另一绝对
