@@ -40,6 +40,7 @@ commit `9b72090` 补充。
 | Pass 27 | 检查同一 replay qualification bundle 与 exact source tree 能否跨代码安装绝对路径 strict load，并从第二路径真实执行 production Golden compile→replay。 | `replay_qualification.py`、`qualify_replay.py`、`replay_application.py`、`runtime_capability.py`、`run_scene_runtime.py`、四份 replay/capability 测试与 `docs/evidence/golden-portable-replay-20260910.*`。 | source identity 改为逻辑根 + 50 个 relative exact-byte members + tree hash，caller local root 仍做三轮 nofollow closure；runner/module 与部署文件分账。新 direct/kernel 资格 0/900/120/120/12 均 pass；同一 bundle 在 A/B strict load，B 路径 Golden 0→1→2 成功，MP4 独立解码 120/114 帧，重启同 terminal。外部 runtime/operator 仍部署绑定；不含 validate、Genesis、promotion 或跨机器 provisioning。 |
 | Pass 28 | 逐固定来源核对 Gujie image/video→Genesis 入口，并反证“legacy output 或 contract metadata 已经是可执行 exact Skill”。 | `/home/jingxiang/gujie/gen-env@eb0b710` 的 `reconstruct_media.py`、`media_support.py`、`task_output.py`、`standard_urdf.py`、`import_simfoundry_scene.py`、`validate_imported_scene.py`、`scene_physics_workflow.py`、来源 tests/evidence；当前 `schemas/x2env.py`、`x2env_contracts.py`、55 份 schema snapshot 与两份正式合同。 | 来源真实提供媒体 hash/尺寸/完整计帧/framemd5/FPS/时长/unique 与 sampled 交叉检查，以及 URDF/scene/Genesis 物理候选实现；但 full frame hashes 未持久化、task 输出含绝对路径、原 pipeline 内调模型且旧 status 不属于 Harness。当前新增 16 个 schema 和六项 contract-only metadata；legacy package 固定 non-ready，未有 handler/qualification/Registry/MCP/runtime。 |
 | Pass 29 | 检查 legacy validate 能否只从 revision-2 受信 lineage 重新验证，并在同一 Golden workflow 推进 revision 3。 | `handlers/text2env_validate_v2.py`、`validate_application.py`、`golden_validate_{policy,execution}.py`、`test_golden_validate_submit.py` 与 `docs/evidence/golden-compile-replay-validate-p4-20260910.*`。 | policy 在 child intent 前闭合 compile/replay receipts、package/catalog、runtime/report/assets、媒体、事件与 provenance；handler 从 snapshot 重算物理报告，只提交 `environment.validation` 且 fresh observations 为空。真实 production run 完成 0→1→2→3，187 CAS files / 3,735 ArtifactRef occurrences 全闭合，MP4 120/114 decoded-unique，无 live application 重启返回同一 terminal operation。`publishable=true` 只适用于 legacy RoboTwin/SAPIEN profile，不表示 promotion、Genesis 或 robot-policy。 |
+| Pass 30 | 在 portable replay、x2env contracts 与 validate v2 合并后，检查最终固定实现是否重签资格并从另一代码路径真实闭合 revision 3。 | `eec1976`、replay/validate checked qualification 三文档、`run_golden_compile_replay_validate.py`、四个 SQLite authority、终局 CAS 与 `docs/evidence/golden-revision3-integration-20260910.*`。 | compile/replay/validate 资格 7/7、8/8、6/6 pass；同一 Harness/RegistrySnapshot 真实完成 0→1→2→3。159 CAS objects 和 3,407 个 ArtifactRef occurrence 全闭合，validate 重算物理报告，MP4 独立解码 120/114 帧，重启重提不产生第四 child。operator 仍为本机部署绑定，temporary delegated scope 消失后 deep gate 按合同拒绝；仅证明 legacy publishability。 |
 
 Coverage note：本证据图覆盖在范围内的 `scene_gen/`、`script/`、`demo/`、`tests/`
 主路径，以及 `self_improving/harness/` 的 PR1 schema tranche。已检查但不追踪的相邻路径——
@@ -51,10 +52,11 @@ Flask 控制面（消费同一 `scene_gen` 流水线但不是编译路径本体�
 PackageStore、通用 Registry、compile adapter、独立 validate handler、媒体 consumer 与 replay
 handler/resolver 候选已有实现；当前 replay closure 已用 direct/kernel 真实 0/900/120/120/12 重签，
 源码 identity 以逻辑根 + relative exact bytes/tree 跨代码安装路径复用，同一 bundle 已从第二路径完成
-production Golden 0→1→2。P4 另已闭合一次 legacy compile/replay/validate lineage。外部
-runtime/operator 仍为部署绑定。当前证据见
-[`docs/evidence/golden-portable-replay-20260910.md`](../../docs/evidence/golden-portable-replay-20260910.md)。跨 run
-qualification/promotion transaction 与 MCP adapter 仍未闭合；不能从 P4 的 `publishable=true`、一段
+production Golden 0→1→2。最终 integration 已在固定实现上重新生成 replay/validate 资格，
+并从另一代码安装路径闭合 legacy compile/replay/validate 0→1→2→3。外部 runtime/operator
+仍为部署绑定，临时 delegated scope 需运行前显式 provision。当前证据见
+[`docs/evidence/golden-revision3-integration-20260910.md`](../../docs/evidence/golden-revision3-integration-20260910.md)。
+promotion transaction 与 MCP adapter 仍未闭合；不能从 `publishable=true`、一段
 可解码视频或单元绿灯反推 promotion、Genesis 或最终 Text2Env robot-policy 行为。
 
 | Claim | Evidence | Confidence | Caveat | Used by |

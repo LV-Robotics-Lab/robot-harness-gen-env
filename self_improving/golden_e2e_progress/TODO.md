@@ -4,19 +4,14 @@
 
 ## Doing
 
-- portable replay 已通过两轴独立功能验收：第三绝对源码路径、fresh CAS、真实 production
-  compile→replay、证据闭包、MP4、物理、重启幂等与三个完整性失效模式均通过。
-- P4 validate v2 候选已完成真实 revision 0→1→2→3 与新增五模块 statement/branch 100% 门；等待
-  integration 固定实现后重新生成 replay/validate qualification 并重跑 relocated revision 3。
-- portable replay、x2env contracts 与 validate v2 已进入干净的 revision-3 integration worktree；最终
-  固定实现的 replay/validate qualification 已真实重签并跨 archive 安装路径 strict load；下一步重跑
-  relocated revision 3。x2env runtime handlers/qualification 尚未开始。
+- P5 exact MCP adapter：以已独立验收的 integrated revision-3 提交为基线，用
+  `mcp>=2.2,<3` 的真实进程内 client 和 stdio client 暴露 exact qualified tools；不提供
+  generic `skill.invoke`，Harness 仍是唯一状态权威。
 
 ## Next
 
-- P4 integration：以已独立验收的 portable replay HEAD 为基线，接入 x2env contracts 与 validate v2，
-  重新资格化并完成 relocated revision-3 真跑后，再接 MCP 2.2 low-level Server/Client；同一切片冻结
-  dependency/runtime lock，不在实验循环中安装依赖。
+- P5 完成 MCP submit/read 的类型化错误、exact tool schema、进程内和 stdio 恢复/幂等门；
+  同一切片冻结 dependency/runtime lock，不在实验循环中变更依赖。
 - P6：在已合入的 exact-byte staging 后，单独实现 collision provenance、settle 与 Genesis
   qualification；stage result 仍不得直接触发历史 ledger promotion，也不得把 headless ground-contact
   probe 写成 can-on-plate、媒体或 Genesis 证据。
@@ -33,6 +28,18 @@
   `RegistrySnapshot` 目前不能单独作为生产 trust root。
 
 ## Done
+
+- 最终 revision-3 integration 已完成：固定实现 `eec1976bdd71578e43b606ef3b88f3bd7d5975e9`
+  的 compile/replay/validate 资格报告分别 7/7、8/8、6/6 通过；同一 bundle 在另一绝对
+  代码路径中真实执行 exact qualified revision `0→1→2→3`。独立验收核对 159 个 CAS
+  对象、3,407 个递归 ArtifactRef、23 个 runtime asset members、重算物理报告、SQLite/回执/
+  状态链与 120 帧/114 decoded-unique MP4，全部闭合。无 live application 重提 validate
+  返回同一 terminal，未产生第四个 child。该证据仅表达 legacy RoboTwin/SAPIEN
+  `publishable=true`；Genesis profile、promotion、robot-policy 均为 false。详见
+  `docs/evidence/golden-revision3-integration-20260910.{md,json}`。
+- replay 源码 identity 已跨代码安装路径验证，但 qualified operator 仍包含本机部署绑定。
+  exact delegated cgroup scope 消失后，deep verifier 会按合同 fail-closed；运行前需显式重新
+  provision 该 scope，未证明跨机器自动 provisioning。
 
 - replay qualification 与 production replay 已跨代码安装绝对路径：源码身份改为逻辑
   `replay_distribution` 根 + 50 个 relative exact-byte members + tree hash，loader 在调用方映射本地根后

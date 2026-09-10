@@ -1,0 +1,111 @@
+{
+  "schema_version": "golden.revision3_integration_evidence.v1",
+  "date": "2026-09-10",
+  "implementation_commit": "eec1976bdd71578e43b606ef3b88f3bd7d5975e9",
+  "qualification": {
+    "compile": {
+      "manifest_sha256": "0da43faa711d265ecd78c55170a583c6500f159afd346e5fdad4aab599d85f90",
+      "qualification_sha256": "f8685f3258fb0953969b09a62b0d584f97572ea87200b7e4224ecf1f218665d7",
+      "report_sha256": "d3232f1aa28520c3aebd47b67cb0eab88e078af580d6b95e0f8f7d1bee1d2c66",
+      "checks": "7/7 pass"
+    },
+    "replay": {
+      "root": "/home/jingxiang/bingsheng/golden-r3-qualification-20260910.H6Ng8i",
+      "manifest_sha256": "f76ebd64957dee804afc5bf448a575da3ea3a1bc083553554fcfe262440560b5",
+      "qualification_sha256": "3bafdfc907c409ba3e6ef51ec024cb275b366c0f12388d64d884d1a6c7d27bf0",
+      "report_sha256": "64506f6099149cb587a16a7d2976ffb4c8120297b6aee623e027d143c90c16e5",
+      "implementation_sha256": "2f8f28795f4f58b0908b13d514ec340f5ce498d13bd97738e1c098e3d2f0974a",
+      "harness_tree_sha256": "4dfd035c1f7dfd00ecec9d0528b68f9eb23a174ee3e9fcf16b53ef481f10dbe5",
+      "closure_refs": 62,
+      "fresh_cas_objects": 68,
+      "checks": "8/8 pass",
+      "real_candidates": ["direct", "production-kernel"],
+      "runtime_config": "0/900/120/120/12",
+      "source_roots_verified": [
+        "/home/jingxiang/bingsheng/worktrees/golden-revision3-integration",
+        "/home/jingxiang/bingsheng/golden-r3-relocated-20260910.ZjLUfl/worktree"
+      ]
+    },
+    "validate": {
+      "manifest_sha256": "fa324e584bdadf68d12fecb20db28df6bd61b5cd1c6765bbc6c3ed959d4dc8fe",
+      "qualification_sha256": "86aa8c4f6d6ad853fa840a11a690255da25e9f76dc31555e9669a943e3c95842",
+      "report_sha256": "2f3ef5d8993a5d33ee762c99f569b13c062139c81e88bd5d8526ce910e1818d6",
+      "implementation_sha256": "a36fb7d9940e126d3c260c87c3e5aec9625f8f472b01850750ceb6f121c7a683",
+      "fresh_cas_objects": 110,
+      "checks": "6/6 pass",
+      "source_roots_verified": [
+        "/home/jingxiang/bingsheng/worktrees/golden-revision3-integration",
+        "/home/jingxiang/bingsheng/golden-r3-relocated-20260910.ZjLUfl/worktree"
+      ]
+    }
+  },
+  "relocated_workflow": {
+    "source_root": "/home/jingxiang/bingsheng/worktrees/golden-revision3-final-relocated-20260910",
+    "evidence_root": "/home/jingxiang/bingsheng/golden-r3-final-evidence-staging-20260910.2zNmNN/evidence",
+    "summary_sha256": "446f2c206f6e0e74f11c0d782b3e6594a9da4e39efd5299d300cf905d534067d",
+    "registry_snapshot_sha256": "f723d8be740d859e91cef1b37bbf01d528a596a58ae22f7f476be7b4cea2aa8b",
+    "revisions": [0, 1, 2, 3],
+    "operations": [
+      {"skill_ref": "text2env.compile@1.0.0", "status": "succeeded", "base": 0, "committed": 1},
+      {"skill_ref": "text2env.replay@1.0.0", "status": "succeeded", "base": 1, "committed": 2},
+      {"skill_ref": "text2env.validate@2.0.0", "status": "succeeded", "base": 2, "committed": 3}
+    ],
+    "state_delta_keys": [
+      ["assets.catalog", "environment.package"],
+      ["replay.runtime_evidence"],
+      ["environment.validation"]
+    ],
+    "fresh_observations": [0, 0, 0],
+    "package_id": "96e995144468707f0f6e169341ce13e2330b1f42a8acaf73d9c126925e4be3ee",
+    "asset_catalog_sha256": "6d25cb2816e725e5cc4f2232ba6a3ce9dea89cf6cb8853a13e2eb1942ba8b2a7",
+    "runtime_evidence_sha256": "82317c09c39b8bbf51f5e2a13e5eb3374bb43780633f149727156d24cfb9072c",
+    "runtime_validation_report_sha256": "01e85c898631343c46df50ecb2fb26dd0b4e9c2e424424553004f19b2ef09d75",
+    "recomputed_validation_report_sha256": "054bb51927c95308a182773870cb2ccd68e07eb47233a0d031b8a989b94c713b",
+    "validation_decision_sha256": "1e63e034d9be59c172a868df23134c905d91ac7dea2f371e4acd74360b2ca46e",
+    "final_state_sha256": "d4bf073243eb1d947d0ac892ad21ad1e59916b1c471babdf61595546948fb9d7",
+    "publishable": true,
+    "restart_resubmit_same_operation": true
+  },
+  "independent_integrity": {
+    "cas_objects": 159,
+    "cas_bytes": 61441212,
+    "artifact_ref_occurrences": 3407,
+    "unique_artifact_identities": 152,
+    "asset_members": 23,
+    "asset_bytes": 57291124,
+    "sqlite": "1 start; 3 operations; each child has 1 intent, 1 invocation and 1 terminal state",
+    "media": {
+      "sha256": "a41d05366050ba0c2af635e69299a12a4b2a0e78ed27490517d27b122fa12a4e",
+      "bytes": 61285,
+      "codec": "H.264",
+      "width": 320,
+      "height": 240,
+      "fps": 12,
+      "frames": 120,
+      "decoded_unique": 114
+    }
+  },
+  "gates": {
+    "validate_new_core_coverage": "614 statements / 188 branches, 100%",
+    "harness": "2743 passed, 20 skipped",
+    "root": "3756 passed, 20 skipped",
+    "schemas": 55,
+    "ruff": "pass",
+    "diff_check": "pass"
+  },
+  "operator_boundary": {
+    "delegated_scope": "golden-r3-q-h6ng8i.scope",
+    "when_scope_exists": "deep replay verify/load passes on both source roots",
+    "when_scope_is_absent": "deep replay verification fails closed because the qualified operator directory is unavailable",
+    "claim": "source installation-path portability only; no automatic provisioning or cross-machine portability"
+  },
+  "limits": {
+    "profile": "legacy RoboTwin/SAPIEN validation",
+    "genesis_native": false,
+    "promotion_executed": false,
+    "robot_policy_ready": false,
+    "image2env_runtime": false,
+    "video2env_runtime": false,
+    "mcp_adapter": false
+  }
+}

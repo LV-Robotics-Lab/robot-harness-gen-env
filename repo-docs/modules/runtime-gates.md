@@ -151,6 +151,14 @@ legacy profile pass 时表达 `publishable=true`。真实 revision 0→1→2→3
 它不重新执行 solver，也不执行 promotion；`publishable=true` 仍不表示 Genesis profile 或
 `genesis.robot_policy@1` 已满足。
 
+随后的最终 integration 在合并 portable replay、x2env contracts 与 validate v2 后重新生成
+replay/validate qualification，并从另一绝对代码路径真实执行同一 0→1→2→3 workflow。
+独立验收闭合 159 个 CAS objects、3,407 个 ArtifactRef occurrence、受信回执/状态链、
+23-member runtime assets 与 120/114 decoded-unique 媒体；见
+[`docs/evidence/golden-revision3-integration-20260910.md`](../../docs/evidence/golden-revision3-integration-20260910.md)。
+资格中的源码 identity 能跨代码安装路径，但 operator 仍绑定本机环境；temporary delegated
+cgroup 消失后 deep verifier 会 fail-closed，运行前须显式重新 provision。
+
 ## contact 怎么分类
 
 `summarize_contacts` 把每条 SAPIEN contact 按 body 名解析：

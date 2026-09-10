@@ -1,5 +1,36 @@
 # 进度与结果
 
+## 2026-09-10 integrated revision 3 最终真实闭环
+
+- 固定实现 commit `eec1976bdd71578e43b606ef3b88f3bd7d5975e9`。官方 generator 在该
+  implementation 上重新生成 replay/validate qualification，报告分别 8/8 与 6/6 pass；
+  compile checked report 为 7/7 pass。同一 replay bundle 在 integration 与独立 archive 代码路径
+  strict load pass，源码 manifest 是 50 个逻辑相对 exact-byte members。
+- 独立 relocated checkout
+  `/home/jingxiang/bingsheng/worktrees/golden-revision3-final-relocated-20260910` 在新 evidence
+  root 真实完成 `text2env.compile@1.0.0` revision 0→1、`text2env.replay@1.0.0`
+  revision 1→2 和 `text2env.validate@2.0.0` revision 2→3。三段共用同一 Harness 与
+  RegistrySnapshot `f723d8be…aa8b`，StateDelta keys 分别只是
+  `[assets.catalog,environment.package]`、`[replay.runtime_evidence]`、
+  `[environment.validation]`，三段 `fresh_observations=[]`。
+- 三个独立功能验收轴通过。终局 CAS 有 159 个对象/61,441,212 bytes；3,407 个递归
+  ArtifactRef occurrence/152 个唯一内容身份的 URI、字节数、摘要和 CAS 对象全一致。
+  compile package/catalog 精确成为 replay input，runtime evidence 精确成为 validate input；所有
+  operation/trusted receipt/ToolResult/StateDelta/child receipt/world state 前件和重算链闭合。
+- replay 原物理报告 `01e85c89…9d75` 与 validate 独立重算报告 `054bb519…713b`
+  均为 pass/0 fail/0 not-run；23-member runtime assets 共 57,291,124 bytes 全闭包。MP4
+  `a41d0536…12a4e` 独立完整解码为 H.264 320×240、12 fps、120 帧、114 个
+  decoded-unique frames，8 份 view 媒体全部与 CAS 字节一致。
+- 无 live application 的恢复 Harness 重提 validate command 返回同一 terminal operation；SQLite
+  仍只有 1 个 workflow start、3 个 parent operations 与各 1 个 child invocation/terminal。最终 Harness
+  `2743 passed, 20 skipped`，root `3756 passed, 20 skipped`，55-schema、变更 Python Ruff 与
+  diff check 通过；validate 五模块 614 statements/188 branches 为 100%。
+- 正式证据：`docs/evidence/golden-revision3-integration-20260910.{md,json}`。运行得出的
+  `publishable=true` 仅属 legacy RoboTwin/SAPIEN profile；`genesis_profile_satisfied=false`、
+  `promotion_executed=false`，不存在 robot-policy 事实。replay 源码身份可跨安装路径，但
+  operator 仍为本机部署绑定；temporary delegated cgroup 消失后 deep verify 正确拒绝，
+  运行前须显式 provision，未证明跨机器自动 provisioning。
+
 ## 2026-09-10 revision-3 integration replay 重新资格化
 
 - 固定 integration implementation `b020be3182a7d0d264a633a91c3cbc7fdddc5212` 上重新探测 capability，
@@ -17,7 +48,8 @@
   `a36fb7d9…a683`。将 108 个资格 CAS 对象逐摘要导入新的 CAS 后共 110 个对象；integration 与 relocated
   两个源码根的 public loader 均为 pass。新增 checked validate bundle gate 固定三文档、实现摘要和六个
   无排除通过的 qualification checks。
-- 本条已完成最终树上的 replay/validate 重新资格化；完整 relocated revision 0→1→2→3 仍须随后执行。
+- 本条已完成最终树上的 replay/validate 重新资格化；随后的完整 relocated
+  revision 0→1→2→3 已完成，见上述最终闭环。
 
 ## 2026-09-10 Golden portable replay
 

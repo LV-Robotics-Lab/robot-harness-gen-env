@@ -1,5 +1,18 @@
 # Change Log
 
+## 2026-09-10 integrated revision 3
+
+- 在 portable replay、x2env contract 与 validate v2 的最终合并实现上重新生成 replay/validate
+  qualification，compile/replay/validate 报告分别 7/7、8/8、6/6 pass；同一资格源码
+  closure 在两个绝对代码路径 strict load。
+- 从独立 relocated checkout 用同一 Harness/RegistrySnapshot 真实执行 exact qualified
+  compile→replay→validate revision 0→1→2→3。终局 159 个 CAS objects、3,407 个递归
+  ArtifactRef occurrence、receipt/state/SQLite 链、23-member runtime assets、重算物理报告和
+  120/114 decoded-unique MP4 经三轴功能验收闭合；重启重提不产生第四 child。
+- 这里的 `publishable=true` 仅属 legacy RoboTwin/SAPIEN profile。operator identity 仍是本机
+  部署绑定；temporary delegated scope 消失后 deep gate 按合同拒绝，不表示跨机器自动
+  provisioning。Genesis、promotion、robot-policy、x2env runtime 和 MCP 均未完成。
+
 ## 2026-09-10 Image2Env / Video2Env contract tranche
 
 - 新增 image2env/video2env 六个 `@1.0.0` exact Skill 的严格 Pydantic 与 committed JSON Schema，

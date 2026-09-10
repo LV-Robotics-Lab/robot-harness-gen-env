@@ -43,13 +43,15 @@ start/read 与第一个 exact compile operation；P3 候选又在同一 actor-ne
 qualified replay operation，并以真实 RoboTwin/SAPIEN 把 revision 推进为 0→1→2。该结果仍不是
 Genesis 或 promotion。replay qualification 现进一步以逻辑源码根与 exact relative
 bytes/tree identity 跨代码安装路径复用：同一 bundle 在第二个绝对路径 strict load 后又真实完成一次
-0→1→2；外部 runtime/operator 依赖仍为部署绑定。P4 候选现已在
+0→1→2；外部 runtime/operator 依赖仍为部署绑定。最终 revision-3 integration 现已在
 同一 workflow、同一 Harness 与同一冻结 RegistrySnapshot 中调用 exact qualified
 `text2env.validate@2.0.0`，从 revision 2 的受信 replay lineage 独立重算物理报告并推进至 revision 3；
-真实 can-on-plate 运行和无 live application 重启幂等均通过。该结果仍只是 legacy RoboTwin/SAPIEN
+最终固定实现已重新生成 replay/validate 资格，并在另一代码安装路径真实完成 can-on-plate
+revision 0→1→2→3 和无 live application 重启幂等。该结果仍只是 legacy RoboTwin/SAPIEN
 publishability，不是 promotion、Genesis 或 robot-policy。新增 validate execution/policy/handler/
 application/dependency 五模块的 statement/branch 门均已达到 100%。Image2Env/Video2Env 的六个合同
 已经过两轴功能验收；55 份公共
 schema 现在既能整目录注册，也能逐文件独立校验。Gujie 现存 evidence 仍只证明 image-derived
 existing reconstruction 的 legacy Genesis 候选，不证明 fresh image、video 或 Harness runtime。
-P6 继续修复资产 staging；autoresearch 只在其冻结 benchmark 可以真实运行后开始。
+P5 下一步接 exact MCP adapter；P6 继续修复资产 staging；autoresearch 只在其冻结
+benchmark 可以真实运行后开始。
