@@ -43,8 +43,10 @@
   分模块，compile policy digest 只覆盖自身稳定闭包；operation 幂等域为
   `(workflow_run_id, exact skill_ref, idempotency_key)`；ToolResult 与 workflow receipt 指向同一份
   StateDelta CAS。四个公开重启窗口均已锁定：reservation-before-intent 可安全继续；intent-only 与
-  invocation-only 保守保持 running、不重复 handler；child terminal 可只提交父 head。focused 179
-  tests，1,354 statements / 392 branches 均为 100%；39 份 schema snapshot 和 compile/replay/application
+  invocation-only 保守保持 running、不重复 handler；child terminal 可只提交父 head。binding 是
+  opaque factory product，catalog 消费时重验完整交叉绑定；evidence policy 只能规范化 parameters，
+  aggregate 保有 command identity。focused 194 tests，1,386 statements / 402 branches 均为 100%；
+  当前 checkout 绑定的 39 份 schema snapshot 和 compile/replay/application
   三个资格身份节点通过。该结果不声称 exactly-once 外部副作用，也不证明 replay、MCP、Genesis、
   promotion 或真机能力。
 

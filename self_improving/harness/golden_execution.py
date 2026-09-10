@@ -13,7 +13,6 @@ from pydantic import BaseModel
 from .run_store import SQLiteRunStore
 from .schema_catalog import schema_model
 from .schemas.common import ArtifactRef, Invocation, RegisteredSkillDescriptor, RunState
-from .schemas.workflow import RunCommandRequest
 from .schemas.workflow_operation import ReceiptDerivedFactClaimV2, ToolResultV2
 from .trusted_state import TrustedWorldState
 
@@ -33,7 +32,7 @@ class SkillEvidencePolicy(Protocol):
     @property
     def evidence_policy_implementation_sha256(self) -> str: ...
 
-    def normalize(self, request: RunCommandRequest) -> tuple[RunCommandRequest, BaseModel]: ...
+    def normalize_parameters(self, parameters: Mapping[str, object]) -> BaseModel: ...
 
     def authorize(self, state: TrustedWorldState, parameters: BaseModel) -> None: ...
 
@@ -84,15 +83,103 @@ _CATALOG_TOKEN = object()
 _BINDING_TOKEN = object()
 
 
-@dataclass(frozen=True)
-class GoldenExecutionBinding:
-    """Sealed exact Skill binding assembled by one Skill-owned factory."""
+class GoldenExecutionBinding(Protocol):
+    """Read-only public view of an opaque Skill-owned execution binding."""
 
-    _token: object
-    skill_ref: str
-    policy: SkillEvidencePolicy
-    application: QualifiedApplicationAdapter | None
-    child_authority: SQLiteRunStore | None
+    @property
+    def skill_ref(self) -> str: ...
+
+    @property
+    def policy(self) -> SkillEvidencePolicy: ...
+
+    @property
+    def application(self) -> QualifiedApplicationAdapter | None: ...
+
+    @property
+    def child_authority(self) -> SQLiteRunStore | None: ...
+
+
+class _SealedGoldenExecutionBinding:
+    """Opaque concrete binding accepted only after factory and consumption checks."""
+
+    __slots__ = ("_application", "_child_authority", "_policy", "_skill_ref", "_token")
+
+    def __init__(
+        self,
+        *,
+        _token: object,
+        skill_ref: str,
+        policy: SkillEvidencePolicy,
+        application: QualifiedApplicationAdapter | None,
+        child_authority: SQLiteRunStore | None,
+    ) -> None:
+        if _token is not _BINDING_TOKEN:
+            raise TypeError("execution bindings must be created by an exact Skill factory")
+        object.__setattr__(self, "_token", _token)
+        object.__setattr__(self, "_skill_ref", skill_ref)
+        object.__setattr__(self, "_policy", policy)
+        object.__setattr__(self, "_application", application)
+        object.__setattr__(self, "_child_authority", child_authority)
+
+    def __setattr__(self, name: str, value: object) -> None:
+        raise AttributeError("execution bindings are immutable")
+
+    @property
+    def skill_ref(self) -> str:
+        return self._skill_ref
+
+    @property
+    def policy(self) -> SkillEvidencePolicy:
+        return self._policy
+
+    @property
+    def application(self) -> QualifiedApplicationAdapter | None:
+        return self._application
+
+    @property
+    def child_authority(self) -> SQLiteRunStore | None:
+        return self._child_authority
+
+    def _is_factory_binding(self) -> bool:
+        return self._token is _BINDING_TOKEN
+
+
+def _validate_binding_components(
+    *,
+    skill_ref: str,
+    policy: SkillEvidencePolicy,
+    application: QualifiedApplicationAdapter | None,
+    child_authority: SQLiteRunStore | None,
+    require_application_authority: bool,
+) -> SQLiteRunStore | None:
+    if child_authority is not None and type(child_authority) is not SQLiteRunStore:
+        raise TypeError("child_authority must be the exact SQLiteRunStore")
+    if skill_ref != policy.skill_ref:
+        raise ValueError("binding and evidence policy are not exactly bound")
+    input_model = policy.input_model
+    if not isinstance(input_model, type) or not issubclass(input_model, BaseModel):
+        raise TypeError("evidence policy input model must be a BaseModel type")
+    if application is None:
+        return child_authority
+    if application.skill_ref != skill_ref or application.policy is not policy:
+        raise ValueError("application and evidence policy are not exactly bound")
+    matching = tuple(
+        descriptor
+        for descriptor in application.skills
+        if f"{descriptor.skill_id}@{descriptor.version}" == skill_ref
+    )
+    if len(matching) != 1:
+        raise ValueError("application does not expose its one exact live descriptor")
+    if schema_model(matching[0].input_schema) is not input_model:
+        raise ValueError("application live descriptor and policy input model are not exactly bound")
+    application_authority = SQLiteRunStore(application.authority_path)
+    if child_authority is None:
+        if require_application_authority:
+            raise ValueError("application and child authority are not exactly bound")
+        return application_authority
+    if child_authority.path.resolve() != application_authority.path.resolve():
+        raise ValueError("application and child authority do not match")
+    return application_authority
 
 
 def _create_golden_execution_binding(
@@ -103,27 +190,14 @@ def _create_golden_execution_binding(
 ) -> GoldenExecutionBinding:
     """Validate one Skill-owned binding without knowing its concrete application type."""
 
-    if child_authority is not None and type(child_authority) is not SQLiteRunStore:
-        raise TypeError("child_authority must be the exact SQLiteRunStore")
-    if application is not None:
-        if application.skill_ref != policy.skill_ref or application.policy is not policy:
-            raise ValueError("application and evidence policy are not exactly bound")
-        matching = tuple(
-            descriptor
-            for descriptor in application.skills
-            if f"{descriptor.skill_id}@{descriptor.version}" == policy.skill_ref
-        )
-        if len(matching) != 1:
-            raise ValueError("application does not expose its one exact Skill")
-        if schema_model(matching[0].input_schema) is not policy.input_model:
-            raise ValueError("application and evidence policy are not exactly bound")
-        application_authority = SQLiteRunStore(application.authority_path)
-        if child_authority is not None and (
-            child_authority.path.resolve() != application_authority.path.resolve()
-        ):
-            raise ValueError("application and child authority do not match")
-        child_authority = application_authority
-    return GoldenExecutionBinding(
+    child_authority = _validate_binding_components(
+        skill_ref=policy.skill_ref,
+        policy=policy,
+        application=application,
+        child_authority=child_authority,
+        require_application_authority=False,
+    )
+    return _SealedGoldenExecutionBinding(
         _token=_BINDING_TOKEN,
         skill_ref=policy.skill_ref,
         policy=policy,
@@ -181,8 +255,15 @@ def create_golden_execution_catalog(
         raise TypeError("bindings must be an exact tuple")
     entries: dict[str, _CatalogEntry] = {}
     for binding in bindings:
-        if type(binding) is not GoldenExecutionBinding or binding._token is not _BINDING_TOKEN:
+        if type(binding) is not _SealedGoldenExecutionBinding or not binding._is_factory_binding():
             raise TypeError("bindings must come from an exact Skill binding factory")
+        _validate_binding_components(
+            skill_ref=binding.skill_ref,
+            policy=binding.policy,
+            application=binding.application,
+            child_authority=binding.child_authority,
+            require_application_authority=True,
+        )
         if binding.skill_ref in entries:
             raise ValueError(f"duplicate Golden execution binding: {binding.skill_ref}")
         entries[binding.skill_ref] = _CatalogEntry(

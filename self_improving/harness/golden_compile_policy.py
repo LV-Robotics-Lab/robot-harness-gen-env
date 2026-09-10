@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -10,7 +11,6 @@ from pydantic import BaseModel
 
 from .schemas.common import ArtifactRef, RunState, RunStatus
 from .schemas.text2env import Text2EnvCompileInput, Text2EnvCompileOutput
-from .schemas.workflow import RunCommandRequest
 from .schemas.workflow_operation import ReceiptDerivedFactClaimV2, ToolResultV2
 from .trusted_state import TrustedWorldState
 
@@ -34,17 +34,8 @@ class Text2EnvCompileEvidencePolicy:
     def evidence_policy_implementation_sha256(self) -> str:
         return hashlib.sha256(_POLICY_DIGEST_DOMAIN + Path(__file__).read_bytes()).hexdigest()
 
-    def normalize(self, request: RunCommandRequest) -> tuple[RunCommandRequest, BaseModel]:
-        if request.skill_ref != self.skill_ref:
-            raise ValueError(f"policy does not own {request.skill_ref}")
-        typed = Text2EnvCompileInput.model_validate(request.parameters)
-        normalized = RunCommandRequest.model_validate(
-            {
-                **request.model_dump(mode="python"),
-                "parameters": typed.model_dump(mode="json"),
-            }
-        )
-        return normalized, typed
+    def normalize_parameters(self, parameters: Mapping[str, object]) -> BaseModel:
+        return Text2EnvCompileInput.model_validate(parameters)
 
     def authorize(self, state: TrustedWorldState, parameters: BaseModel) -> None:
         if type(parameters) is not Text2EnvCompileInput:

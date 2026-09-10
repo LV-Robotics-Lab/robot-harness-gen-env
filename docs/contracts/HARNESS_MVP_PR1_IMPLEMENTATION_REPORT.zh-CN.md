@@ -205,8 +205,8 @@ runtime evidence 必须是 `robotwin.scene_runtime_evidence.v2`；回放媒体�
 canonical JSON 是两个不同用途。
 
 ```bash
-python script/export_harness_schemas.py --check
-python script/export_harness_schemas.py
+PYTHONPATH=. python -m script.export_harness_schemas --check
+PYTHONPATH=. python -m script.export_harness_schemas
 ```
 
 第一条命令对 missing、changed、unexpected 三类漂移故障关闭。第二条命令是显式更新动作；

@@ -44,7 +44,8 @@ production-only registration policy。仓库保留 2026-09-02 的历史 checked-
 全新外部资源真实重签，并通过 direct/kernel 0/900/120/120/12、14-schema exact gate 与 fresh-CAS
 strict reload。证据与 deployment-local 边界见
 [`docs/evidence/replay-qualification-refresh-20260910.md`](../../docs/evidence/replay-qualification-refresh-20260910.md)。
-`python script/export_harness_schemas.py --check` 锁住 committed snapshot；核心资格模块强制 100%
+从 repo root 执行 `PYTHONPATH=. python -m script.export_harness_schemas --check`，显式绑定当前
+checkout 并锁住 committed snapshot；核心资格模块强制 100%
 语句与分支覆盖。compile 的 asset admission 仍发生在 solve 前且失败不回滚；跨 run promotion、
 identity-frozen resumable EvaluationRun 与 MCP adapter 仍未闭合，契约保持 `Status: Proposed`。
 
@@ -52,7 +53,9 @@ P2 的公共 `GoldenRunHarness.submit` 当前只调度 exact qualified `text2env
 RegistrySnapshot、live production descriptor/qualification 和 Skill-owned evidence policy 冻结执行；
 command、controlled child、ToolResult、唯一 StateDelta、workflow receipt 与 revision 0→1 head 都进入
 同一 CAS/SQLite closure。generic execution catalog 不含 compile 分支，compile binding 与 policy 各自拥有
-模块和稳定 identity。operation 幂等域包含 exact Skill；ToolResult 与 workflow receipt 只引用同一份
+模块和稳定 identity；public binding 是只读 Protocol，opaque factory product 在 catalog 消费时重验
+skill/policy/application/input model/live descriptor/child authority。policy 只接收 parameters，command
+identity 始终由 aggregate 保留。operation 幂等域包含 exact Skill；ToolResult 与 workflow receipt 只引用同一份
 StateDelta CAS。parent reservation 后且 child intent 前可以继续执行；只有 intent 或只有 invocation 时
 保守保持 running；已有 child terminal 时只提交 parent。这些边界不证明任意外部副作用 exactly-once，
 也没有接通 replay/validate、MCP、Genesis 或 promotion。

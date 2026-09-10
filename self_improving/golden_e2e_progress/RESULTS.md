@@ -10,6 +10,9 @@
 - actor-neutral catalog kernel 与 compile-owned binding/adapter/policy 已分离。generic factory 不导入或
   硬编码 `CompileApplication`；compile evidence-policy digest 使用独立稳定源码闭包，所以后续新增
   replay binding 不会只因修改中央 catalog 而改变既有 compile operation 的 frozen policy identity。
+  public binding 只暴露只读 Protocol，factory 返回非 dataclass 的 opaque concrete；catalog 消费时重验
+  skill/policy/application/input model/live descriptor/child authority。policy 只规范化 parameters，完整
+  `RunCommandRequest` 的 command/CAS 身份由 aggregate 原样保留。
 - operation SQLite authority 显式持久化 `skill_ref`，lookup/唯一域改为
   `(workflow_run_id, skill_ref, idempotency_key)`，decode 再与 OperationSnapshot 交叉对账；同一 workflow
   的不同 exact Skill 可复用同一 key，同一 Skill/key 的不同 command 仍拒绝。
@@ -21,11 +24,13 @@
   invocation-only 因无法证明 handler 外部副作用边界而保守保持 running；child terminal 后、parent
   commit 前可只重建 CAS closure 并提交父 head，不再次调用 handler。这里只声明持久边界已证明的恢复
   语义，不扩大为跨任意外部副作用的 exactly-once。
-- focused：`test_golden_run.py` + `test_golden_submit.py` 为 `179 passed`；7 个相关模块共
-  1,354 statements / 392 branches，语句与分支均为 100%。39 份 Harness schema snapshot 通过；compile
+- focused：`test_golden_run.py` + `test_golden_submit.py` + `test_schema_catalog.py` 为 `194 passed`；
+  7 个相关模块共 1,386 statements / 402 branches，语句与分支均为 100%。从 repo root 以
+  `PYTHONPATH=. python -m script.export_harness_schemas --check` 验证 39 份 Harness schema snapshot；
+  direct-script 回归另行证明入口不会解析到其他 checkout。compile
   checked qualification、replay checked qualification 与 production compile application 三个固定身份
-  节点为 `3 passed`。Harness 全套为 `2601 passed, 20 skipped`，完整 root 为
-  `3614 passed, 20 skipped`。Dashboard 三个约定入口仍返回 HTTP 404，无法同步控制面。
+  节点为 `3 passed`。Harness 全套为 `2609 passed, 20 skipped`，完整 root 为
+  `3622 passed, 20 skipped`。Dashboard 三个约定入口仍返回 HTTP 404，无法同步控制面。
 - 明确边界：本切片没有接 replay/observe/validate dispatch、MCP、System 2 model loop、Genesis、
   promotion、VLM fallback 或真机；compile 的 succeeded 也不等于物理 validation 或 publishable。
 
@@ -212,7 +217,8 @@
   真实运行通过。
 - `python -m self_improving --json`：`ready=false`，因为 HEAD 已删除
   `apps/pearl_evidence_portal`，但 registry 仍把它列为 required；统一平台门当前在测试前失败。
-- `python script/export_harness_schemas.py --check`：20 份 Harness schema snapshot 全部通过。
+- 当时的 20 份 Harness schema snapshot gate 全部通过；当前从 repo root 使用
+  `PYTHONPATH=. python -m script.export_harness_schemas --check` 复核当前 checkout。
 - 当前默认 Python 不含 Genesis。Gujie 独立克隆已有隔离环境
   `/home/jingxiang/gujie/gen-env/venv/genesis`，可导入 Genesis `1.3.3`，源码绑定到该克隆的
   `external/genesis-world`；这只证明依赖可导入，不证明任何 golden case 已运行。

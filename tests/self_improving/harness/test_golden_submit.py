@@ -30,6 +30,7 @@ from self_improving.harness.golden_execution import (
     GoldenExecutionCatalog,
     QualifiedApplicationRunPendingError,
     _create_golden_execution_binding,
+    _SealedGoldenExecutionBinding,
     create_golden_execution_catalog,
 )
 from self_improving.harness.golden_run import (
@@ -313,6 +314,10 @@ def test_generic_catalog_admits_only_sealed_independent_skill_bindings(
     unsealed = object()
     with pytest.raises(TypeError, match="exact Skill binding factory"):
         create_golden_execution_catalog(bindings=(unsealed,))  # type: ignore[arg-type]
+    unsealed_exact_type = object.__new__(_SealedGoldenExecutionBinding)
+    object.__setattr__(unsealed_exact_type, "_token", object())
+    with pytest.raises(TypeError, match="exact Skill binding factory"):
+        create_golden_execution_catalog(bindings=(unsealed_exact_type,))
     with pytest.raises(ValueError, match="duplicate"):
         create_golden_execution_catalog(bindings=(compile_binding, compile_binding))
     with pytest.raises(TypeError, match="exact SQLiteRunStore"):
@@ -334,6 +339,16 @@ def test_opaque_execution_binding_rejects_dataclass_field_replacement(
     golden_case: GoldenCase,
 ) -> None:
     binding = create_text2env_compile_execution_binding(application=golden_case.application)
+    with pytest.raises(TypeError, match="exact Skill factory"):
+        _SealedGoldenExecutionBinding(
+            _token=object(),
+            skill_ref=binding.skill_ref,
+            policy=binding.policy,
+            application=binding.application,
+            child_authority=binding.child_authority,
+        )
+    with pytest.raises(AttributeError, match="immutable"):
+        binding._skill_ref = "text2env.replay@1.0.0"  # type: ignore[attr-defined]
     replacements = (
         {"skill_ref": "text2env.replay@1.0.0"},
         {"policy": Text2EnvCompileEvidencePolicy()},
@@ -373,6 +388,13 @@ def test_catalog_revalidates_an_opaque_binding_at_consumption(
     with pytest.raises(ValueError, match="application and child authority"):
         create_golden_execution_catalog(bindings=(authority_binding,))
 
+    missing_authority_binding = create_text2env_compile_execution_binding(
+        application=golden_case.application
+    )
+    object.__setattr__(missing_authority_binding, "_child_authority", None)
+    with pytest.raises(ValueError, match="application and child authority"):
+        create_golden_execution_catalog(bindings=(missing_authority_binding,))
+
 
 def test_catalog_revalidates_policy_input_model_and_application_policy(
     golden_case: GoldenCase,
@@ -391,6 +413,17 @@ def test_catalog_revalidates_policy_input_model_and_application_policy(
     )
     with pytest.raises(ValueError, match="application and evidence policy"):
         create_golden_execution_catalog(bindings=(policy_binding,))
+
+
+@pytest.mark.parametrize("invalid_input_model", [object(), str])
+def test_binding_factory_rejects_a_non_model_policy_input(invalid_input_model: object) -> None:
+    policy = replace(Text2EnvCompileEvidencePolicy(), input_model=invalid_input_model)
+    with pytest.raises(TypeError, match="input model"):
+        _create_golden_execution_binding(
+            policy=policy,
+            application=None,
+            child_authority=None,
+        )
 
 
 @pytest.mark.parametrize("field", ["application", "child_authority"])
@@ -776,6 +809,20 @@ def test_compile_policy_accepts_only_parameters_and_rejects_wrong_state_and_resu
             result=result.model_copy(update={"diagnostics": (result.run_state,)}),
             supporting=supporting,
         )
+
+
+def test_submit_rejects_a_policy_returning_the_wrong_input_model(
+    golden_case: GoldenCase,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        Text2EnvCompileEvidencePolicy,
+        "normalize_parameters",
+        lambda self, parameters: build_world_state((), as_of=base.NOW),
+    )
+    with pytest.raises(GoldenRunRegistryError, match="wrong input model") as raised:
+        golden_case.harness.submit(golden_case.command)
+    assert raised.value.code == "HARN_INPUT_SCHEMA_INVALID"
 
 
 def test_compile_policy_rejects_diagnostic_not_in_supporting_evidence(

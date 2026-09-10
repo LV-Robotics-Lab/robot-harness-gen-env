@@ -201,8 +201,11 @@ committed snapshot 让字段、
 required/default、正则和范围的变化进入普通 code review：
 
 ```bash
-python script/export_harness_schemas.py --check
+PYTHONPATH=. python -m script.export_harness_schemas --check
 ```
+
+该命令须从 repo root 执行；显式 `PYTHONPATH=.` 让校验绑定当前 checkout，而不是另一个 editable
+installation。direct-script 入口另有回归测试锁住同一归属。
 
 missing、changed、unexpected 任一出现都会失败。validate v2 每项 evidence 的 CAS URI 形状、
 media type 和 schema version 已写入 snapshot；URI digest 与 `sha256` 相等、发布自洽等

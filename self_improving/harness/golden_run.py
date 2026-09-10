@@ -383,7 +383,16 @@ class GoldenRunHarness:
         request: RunCommandRequest,
     ) -> tuple[RunCommandRequest, BaseModel]:
         try:
-            return policy.normalize(request)
+            parameters = policy.normalize_parameters(request.parameters)
+            if type(parameters) is not policy.input_model:
+                raise TypeError("evidence policy returned the wrong input model")
+            normalized = RunCommandRequest.model_validate(
+                {
+                    **request.model_dump(mode="python"),
+                    "parameters": parameters.model_dump(mode="json"),
+                }
+            )
+            return normalized, parameters
         except (TypeError, ValueError, ValidationError) as error:
             raise GoldenRunRegistryError(
                 "HARN_INPUT_SCHEMA_INVALID",
