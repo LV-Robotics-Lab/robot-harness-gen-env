@@ -9,7 +9,7 @@ import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from hashlib import sha256
 from pathlib import Path
 from threading import Barrier
@@ -19,6 +19,11 @@ import pytest
 from pydantic import ValidationError
 
 import self_improving.harness as public_harness
+from scene_gen.catalog import AssetCatalog
+from self_improving.harness.application import (
+    CompileApplicationSettings,
+    create_compile_application,
+)
 from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.golden_run import (
     GoldenRunConflictError,
@@ -35,12 +40,14 @@ from self_improving.harness.schemas.registry_snapshot import (
     QualifiedSkillSnapshot,
     RegistrySnapshot,
 )
+from self_improving.harness.schemas.text2env import CompileConfig, Text2EnvCompileInput
 from self_improving.harness.schemas.workflow import (
     RunReadRequest,
     RunSnapshot,
     RunStartRequest,
     WorkflowStartReceipt,
 )
+from self_improving.harness.system2.domain import TrustedWorldState
 
 NOW = datetime(2026, 9, 9, tzinfo=timezone.utc)
 WORKFLOW_ID = UUID("10000000-0000-4000-8000-000000000001")
@@ -54,6 +61,13 @@ OBJECTIVE_EVIDENCE = (
 ALTERNATE_OBJECTIVE_EVIDENCE = OBJECTIVE_EVIDENCE.replace(
     b"Place a can on a plate.",
     b"Place a bottle on a plate.",
+)
+GENERATED_OBJECTIVE = "Place a purple hexagonal pedestal on the table."
+GENERATED_OBJECTIVE_EVIDENCE = (
+    b'{"key":"request.objective","observed_at":"2026-09-09T00:00:00Z",'
+    b'"schema_version":"harness.world_fact_evidence.v1",'
+    b'"source_kind":"user_input","valid_until":null,'
+    b'"value":"Place a purple hexagonal pedestal on the table."}\n'
 )
 
 
@@ -156,6 +170,37 @@ def _qualified_registry(store: LocalArtifactStore, root: Path):
         name="registry.json",
         payload=_canonical_bytes(snapshot),
         schema_version="harness.registry_snapshot.v1",
+    )
+
+
+def _compile_settings(tmp_path: Path) -> CompileApplicationSettings:
+    catalogs = tmp_path / "catalogs"
+    external_assets = tmp_path / "external-assets"
+    catalogs.mkdir(parents=True)
+    external_assets.mkdir(parents=True)
+    return CompileApplicationSettings(
+        state_root=tmp_path / "compile-state",
+        external_catalog_roots=(catalogs,),
+        allowed_asset_roots=(external_assets,),
+        admission_date=date(2026, 9, 10),
+        asset_library_root=tmp_path / "asset-library",
+    )
+
+
+def _empty_catalog(path: Path, *, objects_root: Path) -> None:
+    catalog = AssetCatalog(
+        robotwin_root=str(objects_root.parent / "RoboTwin"),
+        objects_root=str(objects_root),
+        entries=(),
+    )
+    path.write_text(
+        json.dumps(
+            catalog.canonical_dict(),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ),
+        encoding="utf-8",
     )
 
 
@@ -356,6 +401,120 @@ def test_start_builds_trusted_state_and_receipt_chain_from_cas_inputs(tmp_path: 
     assert snapshot.child_runs == ()
     assert snapshot.started_at == NOW
     assert snapshot.updated_at == NOW
+
+
+def test_submit_exact_qualified_compile_advances_one_durable_workflow_revision(
+    tmp_path: Path,
+) -> None:
+    """A public S1 call executes and recovers one real qualified compile."""
+
+    settings = _compile_settings(tmp_path)
+    application = create_compile_application(settings)
+    store = LocalArtifactStore(application.artifact_root)
+    objective = _put(
+        store,
+        tmp_path,
+        name="generated-objective.json",
+        payload=GENERATED_OBJECTIVE_EVIDENCE,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    registry = _qualified_registry(store, tmp_path)
+    catalog_path = settings.external_catalog_roots[0] / "empty.json"
+    _empty_catalog(catalog_path, objects_root=settings.allowed_asset_roots[0] / "objects")
+    asset_catalog = application.snapshot_asset_catalog(catalog_path)
+    operation_id = UUID("20000000-0000-4000-8000-000000000001")
+    child_run_id = UUID("30000000-0000-4000-8000-000000000001")
+    workflow_store = SQLiteGoldenRunStore(tmp_path / "golden.sqlite3")
+    harness = GoldenRunHarness(
+        artifact_store=store,
+        workflow_store=workflow_store,
+        execution_catalog=public_harness.create_golden_execution_catalog(
+            compile_application=application
+        ),
+        clock=lambda: NOW,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+        operation_id_factory=lambda: operation_id,
+        child_run_id_factory=lambda: child_run_id,
+    )
+    started = harness.start(_request(objective, registry))
+    command = public_harness.RunCommandRequest(
+        schema_version="harness.run_command_request.v1",
+        principal_id=started.principal_id,
+        workflow_run_id=started.workflow_run_id,
+        idempotency_key="compile-001",
+        expected_revision=started.revision,
+        expected_state_sha256=started.state_sha256,
+        expected_receipt_head=started.receipt_head,
+        skill_ref="text2env.compile@1.0.0",
+        parameters=Text2EnvCompileInput(
+            request=GENERATED_OBJECTIVE,
+            seed=77,
+            asset_catalog=asset_catalog,
+            config=CompileConfig(generate_missing_assets=True),
+        ).model_dump(mode="json"),
+    )
+
+    operation = harness.submit(command)
+
+    assert isinstance(operation, public_harness.OperationSnapshot)
+    assert operation.operation_id == operation_id
+    assert operation.child_run_id == child_run_id
+    assert operation.status.value == "succeeded"
+    assert operation.base_revision == 0
+    assert operation.committed_revision == 1
+    assert operation.tool_result is not None
+    assert operation.trusted_receipt is not None
+    assert operation.state_delta is not None
+    assert operation.receipt is not None
+    result = public_harness.ToolResultV2.model_validate_json(
+        store.resolve(operation.tool_result).path.read_bytes()
+    )
+    delta = public_harness.StateDeltaV2.model_validate_json(
+        store.resolve(operation.state_delta).path.read_bytes()
+    )
+    assert result.state_delta == delta
+    assert result.fresh_observations == ()
+    assert result.diagnostics == ()
+    assert tuple(mutation.key for mutation in delta.mutations) == (
+        "assets.catalog",
+        "environment.package",
+    )
+    current = harness.read(
+        RunReadRequest(
+            schema_version="harness.run_read_request.v1",
+            principal_id=started.principal_id,
+            workflow_run_id=started.workflow_run_id,
+        )
+    )
+    assert current.revision == 1
+    assert current.turn_seq == 1
+    assert current.active_operation is None
+    assert current.child_runs == (child_run_id,)
+    assert current.receipt_head == operation.receipt
+    trusted_state = TrustedWorldState.model_validate_json(
+        store.resolve(current.state_ref).path.read_bytes()
+    )
+    assert trusted_state.version == 2
+    assert tuple(fact.key for fact in trusted_state.facts) == (
+        "assets.catalog",
+        "environment.package",
+        "request.objective",
+    )
+
+    recovered_application = create_compile_application(settings)
+
+    def unexpected_clock() -> datetime:
+        pytest.fail("terminal operation recovery must not read the execution clock")
+
+    recovered = GoldenRunHarness(
+        artifact_store=LocalArtifactStore(recovered_application.artifact_root),
+        workflow_store=SQLiteGoldenRunStore(tmp_path / "golden.sqlite3"),
+        execution_catalog=public_harness.create_golden_execution_catalog(
+            compile_application=recovered_application
+        ),
+        clock=unexpected_clock,
+    ).submit(command)
+    assert recovered == operation
 
 
 def test_harness_requires_the_exact_local_cas_authority(tmp_path: Path) -> None:
