@@ -1030,6 +1030,7 @@ def _tool_result_schema(operation_schema: Mapping[str, object]) -> dict[str, obj
     return {
         "$id": "harness.mcp_exact_tool_result.v1",
         "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
         "oneOf": [
             deepcopy(dict(operation_schema)),
             {

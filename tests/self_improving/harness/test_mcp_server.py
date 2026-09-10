@@ -126,4 +126,15 @@ def test_official_client_lists_and_calls_the_exact_tool_in_process(tmp_path: Pat
             with pytest.raises(MCPError, match="unknown Harness resource"):
                 await client.read_resource("harness://workflows/not-a-uuid")
 
+        async with Client(server, mode="legacy", raise_exceptions=True, cache=None) as client:
+            assert client.protocol_version == "2025-11-25"
+            legacy_tools = await client.list_tools()
+            assert tuple(tool.name for tool in legacy_tools.tools) == (
+                "harness_workflow_create_v1",
+                "harness_advisory_record_v1",
+                "harness_prompt_revision_record_v1",
+                "text2env_compile_v1_0_0",
+            )
+            assert all(tool.output_schema.get("type") == "object" for tool in legacy_tools.tools)
+
     anyio.run(exercise)
