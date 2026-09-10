@@ -79,6 +79,14 @@ _EXPORT_GROUPS = (
             "text2env_validate_descriptor",
         ),
     ),
+    (
+        ".image_ingest",
+        (
+            "ImageMediaConsumerVerifier",
+            "ImageMediaIngestError",
+            "ImageMediaIngestor",
+        ),
+    ),
     (".package_store", ("PackageStore", "PackageStoreError", "PublishedPackage")),
     (
         ".qualification",
@@ -313,6 +321,9 @@ _PUBLIC_NAMES = (
     "Image2EnvReplayOutput",
     "Image2EnvValidateInput",
     "Image2EnvValidateOutput",
+    "ImageMediaConsumerVerifier",
+    "ImageMediaIngestError",
+    "ImageMediaIngestor",
     "ImageMediaProbeV1",
     "ImageSourceMedia",
     "InitialCompileAttemptV1",

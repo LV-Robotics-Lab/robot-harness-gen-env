@@ -61,6 +61,8 @@ class ImageMediaProbeV1(HarnessModel):
         )
         if self.canonical_image.schema_version is not None:
             raise ValueError("canonical_image must be raw media without a schema version")
+        if self.source.media_type != self.declared_media_type:
+            raise ValueError("source media type must equal the declared media type")
         if self.declared_media_type != _FORMAT_MEDIA_TYPES[self.detected_format]:
             raise ValueError("declared media type does not match the detected image format")
         return self

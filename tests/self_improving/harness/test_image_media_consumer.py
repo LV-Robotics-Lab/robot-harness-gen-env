@@ -11,6 +11,7 @@ import pytest
 from PIL import Image, PngImagePlugin
 from pydantic import ValidationError
 
+from self_improving.harness import ImageMediaConsumerVerifier as PublicImageMediaConsumerVerifier
 from self_improving.harness import image_ingest as image_ingest_module
 from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.image_ingest import ImageMediaIngestError, ImageMediaIngestor
@@ -162,6 +163,7 @@ def test_image_probe_binds_source_artifact_media_type_to_declared_media_type() -
 
 def test_read_only_image_media_consumer_verifier_is_public() -> None:
     assert ImageMediaConsumerVerifier is not None
+    assert PublicImageMediaConsumerVerifier is ImageMediaConsumerVerifier
 
 
 @_requires_consumer
@@ -253,6 +255,75 @@ def test_image_media_consumer_requires_canonical_probe_json_with_one_terminal_ne
 
     assert captured.value.code == "HARN_IMAGE_EVIDENCE_MISMATCH"
     assert _cas_manifest(store) == before
+
+
+@_requires_consumer
+def test_image_media_consumer_rejects_invalid_typed_probe_and_unavailable_evidence(
+    tmp_path: Path,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    source = _put(
+        store,
+        tmp_path,
+        name="source.png",
+        payload=_png_source("RGB", "invalid-probe"),
+        media_type="image/png",
+    )
+    media = _ingestor(store).ingest(source)
+    invalid_probe = _put(
+        store,
+        tmp_path,
+        name="invalid-probe.json",
+        payload=b"{}\n",
+        media_type="application/json",
+        schema_version="harness.image_media_probe.v1",
+    )
+
+    with pytest.raises(ImageMediaIngestError) as invalid:
+        _consumer(store).verify(media.model_copy(update={"probe": invalid_probe}))
+    missing_sha = "0" * 64
+    with pytest.raises(ImageMediaIngestError) as unavailable:
+        _consumer(store).verify(
+            media.model_copy(
+                update={
+                    "canonical_image": media.canonical_image.model_copy(
+                        update={
+                            "sha256": missing_sha,
+                            "uri": f"artifact://sha256/{missing_sha}",
+                        }
+                    )
+                }
+            )
+        )
+
+    assert invalid.value.code == "HARN_IMAGE_EVIDENCE_MISMATCH"
+    assert unavailable.value.code == "HARN_ARTIFACT_UNAVAILABLE"
+
+
+@_requires_consumer
+def test_image_media_consumer_requires_exact_media_and_its_own_source_bound(
+    tmp_path: Path,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    source = _put(
+        store,
+        tmp_path,
+        name="source.png",
+        payload=_png_source("RGB", "bounds"),
+        media_type="image/png",
+    )
+    media = _ingestor(store).ingest(source)
+
+    with pytest.raises(TypeError, match="exact ImageSourceMedia"):
+        _consumer(store).verify(media.model_dump(mode="python"))  # type: ignore[arg-type]
+    with pytest.raises(ImageMediaIngestError) as captured:
+        ImageMediaConsumerVerifier(
+            artifact_store=store,
+            max_source_bytes=source.bytes - 1,
+            max_decoded_pixels=1024,
+        ).verify(media)
+
+    assert captured.value.code == "HARN_IMAGE_LIMIT_EXCEEDED"
 
 
 @pytest.mark.parametrize("mode", ("L", "RGB", "RGBA"))
