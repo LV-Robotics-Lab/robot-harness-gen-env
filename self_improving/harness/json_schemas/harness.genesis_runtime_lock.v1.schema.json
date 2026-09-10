@@ -1,0 +1,102 @@
+{
+  "$defs": {
+    "DependencyRef": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "sha256"
+      ],
+      "title": "DependencyRef",
+      "type": "object"
+    },
+    "RequestedGenesisProfile": {
+      "enum": [
+        "genesis.rigid_scene@1",
+        "genesis.robot_policy@1"
+      ],
+      "title": "RequestedGenesisProfile",
+      "type": "string"
+    }
+  },
+  "$id": "harness.genesis_runtime_lock.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "backend": {
+      "const": "genesis",
+      "title": "Backend",
+      "type": "string"
+    },
+    "backend_version": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Backend Version",
+      "type": "string"
+    },
+    "dependencies": {
+      "items": {
+        "$ref": "#/$defs/DependencyRef"
+      },
+      "maxItems": 64,
+      "minItems": 1,
+      "title": "Dependencies",
+      "type": "array"
+    },
+    "loader_contract": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Loader Contract",
+      "type": "string"
+    },
+    "requested_profile": {
+      "$ref": "#/$defs/RequestedGenesisProfile"
+    },
+    "runtime_implementation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Runtime Implementation Sha256",
+      "type": "string"
+    },
+    "runtime_lock_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Runtime Lock Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.genesis_runtime_lock.v1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "runtime_lock_sha256",
+    "backend",
+    "backend_version",
+    "runtime_implementation_sha256",
+    "loader_contract",
+    "requested_profile",
+    "dependencies"
+  ],
+  "title": "GenesisRuntimeLockV1",
+  "type": "object"
+}

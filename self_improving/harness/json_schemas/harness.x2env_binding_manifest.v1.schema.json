@@ -1,0 +1,259 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "AssetModelSubjectV1": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_key": {
+          "pattern": "^[a-z0-9][a-z0-9_.-]{0,127}$",
+          "title": "Asset Key",
+          "type": "string"
+        },
+        "backend": {
+          "const": "genesis",
+          "title": "Backend",
+          "type": "string"
+        },
+        "ledger_asset_id": {
+          "pattern": "^[a-z0-9][a-z0-9_]{0,127}$",
+          "title": "Ledger Asset Id",
+          "type": "string"
+        },
+        "model_id": {
+          "minimum": 0,
+          "title": "Model Id",
+          "type": "integer"
+        },
+        "namespace": {
+          "pattern": "^[a-z][a-z0-9_.-]{0,63}$",
+          "title": "Namespace",
+          "type": "string"
+        },
+        "source_record_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Record Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "namespace",
+        "asset_key",
+        "ledger_asset_id",
+        "model_id",
+        "backend",
+        "source_record_sha256"
+      ],
+      "title": "AssetModelSubjectV1",
+      "type": "object"
+    },
+    "QualifiedAssetSubjectV1": {
+      "additionalProperties": false,
+      "properties": {
+        "loader_closure_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Loader Closure Sha256",
+          "type": "string"
+        },
+        "model_subject": {
+          "$ref": "#/$defs/AssetModelSubjectV1"
+        },
+        "representation_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Representation Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "model_subject",
+        "representation_sha256",
+        "loader_closure_sha256"
+      ],
+      "title": "QualifiedAssetSubjectV1",
+      "type": "object"
+    },
+    "X2EnvObjectBindingV1": {
+      "additionalProperties": false,
+      "properties": {
+        "orientation_wxyz": {
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Orientation Wxyz",
+          "type": "array"
+        },
+        "position_m": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Position M",
+          "type": "array"
+        },
+        "qualification": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "qualified_subject": {
+          "$ref": "#/$defs/QualifiedAssetSubjectV1"
+        },
+        "representation": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "root_logical_path": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "pattern": "^(?![A-Za-z]:)(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+)*$",
+          "title": "Root Logical Path",
+          "type": "string"
+        },
+        "scene_object_id": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "title": "Scene Object Id",
+          "type": "string"
+        },
+        "selection": {
+          "$ref": "#/$defs/ArtifactRef"
+        }
+      },
+      "required": [
+        "scene_object_id",
+        "selection",
+        "qualified_subject",
+        "representation",
+        "qualification",
+        "root_logical_path",
+        "position_m",
+        "orientation_wxyz"
+      ],
+      "title": "X2EnvObjectBindingV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.x2env_binding_manifest.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset_catalog": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "asset_closure_manifest": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "binding_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Binding Sha256",
+      "type": "string"
+    },
+    "bindings": {
+      "items": {
+        "$ref": "#/$defs/X2EnvObjectBindingV1"
+      },
+      "maxItems": 64,
+      "minItems": 1,
+      "title": "Bindings",
+      "type": "array"
+    },
+    "runtime_lock": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "scene_ir": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.x2env_binding_manifest.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "task_ir": {
+      "$ref": "#/$defs/ArtifactRef"
+    }
+  },
+  "required": [
+    "schema_version",
+    "binding_sha256",
+    "scene_ir",
+    "task_ir",
+    "asset_catalog",
+    "asset_closure_manifest",
+    "runtime_lock",
+    "bindings"
+  ],
+  "title": "X2EnvBindingManifestV1",
+  "type": "object"
+}

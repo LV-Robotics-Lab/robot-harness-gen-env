@@ -1,0 +1,215 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "ProposedSceneObjectV1": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "dimensions_m": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            }
+          ],
+          "title": "Dimensions M",
+          "type": "array"
+        },
+        "object_id": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "title": "Object Id",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "dynamic",
+            "support_surface"
+          ],
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "object_id",
+        "category",
+        "role",
+        "dimensions_m"
+      ],
+      "title": "ProposedSceneObjectV1",
+      "type": "object"
+    },
+    "SceneRelationV1": {
+      "additionalProperties": false,
+      "properties": {
+        "relation": {
+          "enum": [
+            "on_table",
+            "on_top_of",
+            "inside",
+            "near"
+          ],
+          "title": "Relation",
+          "type": "string"
+        },
+        "source": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "pattern": "^(table|[a-z][a-z0-9_]{0,63})$",
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "relation",
+        "source",
+        "target"
+      ],
+      "title": "SceneRelationV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.scene_interpretation_proposal.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "effective_prompt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "objects": {
+      "items": {
+        "$ref": "#/$defs/ProposedSceneObjectV1"
+      },
+      "maxItems": 64,
+      "minItems": 1,
+      "title": "Objects",
+      "type": "array"
+    },
+    "proposal_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Proposal Sha256",
+      "type": "string"
+    },
+    "relations": {
+      "items": {
+        "$ref": "#/$defs/SceneRelationV1"
+      },
+      "maxItems": 256,
+      "minItems": 1,
+      "title": "Relations",
+      "type": "array"
+    },
+    "route_id": {
+      "enum": [
+        "image2env",
+        "video2env"
+      ],
+      "title": "Route Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.scene_interpretation_proposal.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_media_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Media Sha256",
+      "type": "string"
+    },
+    "unknowns": {
+      "items": {
+        "maxLength": 255,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 64,
+      "title": "Unknowns",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "proposal_sha256",
+    "route_id",
+    "source_media_sha256",
+    "effective_prompt",
+    "objects",
+    "relations",
+    "unknowns"
+  ],
+  "title": "SceneInterpretationProposalV1",
+  "type": "object"
+}

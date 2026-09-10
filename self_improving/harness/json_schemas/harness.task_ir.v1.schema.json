@@ -1,0 +1,172 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "RequestedGenesisProfile": {
+      "enum": [
+        "genesis.rigid_scene@1",
+        "genesis.robot_policy@1"
+      ],
+      "title": "RequestedGenesisProfile",
+      "type": "string"
+    },
+    "SceneRelationV1": {
+      "additionalProperties": false,
+      "properties": {
+        "relation": {
+          "enum": [
+            "on_table",
+            "on_top_of",
+            "inside",
+            "near"
+          ],
+          "title": "Relation",
+          "type": "string"
+        },
+        "source": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "pattern": "^(table|[a-z][a-z0-9_]{0,63})$",
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "relation",
+        "source",
+        "target"
+      ],
+      "title": "SceneRelationV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.task_ir.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action_contract": {
+      "enum": [
+        "none",
+        "robot_control"
+      ],
+      "title": "Action Contract",
+      "type": "string"
+    },
+    "goal_relations": {
+      "items": {
+        "$ref": "#/$defs/SceneRelationV1"
+      },
+      "maxItems": 256,
+      "minItems": 1,
+      "title": "Goal Relations",
+      "type": "array"
+    },
+    "observation_keys": {
+      "items": {
+        "maxLength": 255,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 64,
+      "minItems": 1,
+      "title": "Observation Keys",
+      "type": "array"
+    },
+    "requested_profile": {
+      "$ref": "#/$defs/RequestedGenesisProfile"
+    },
+    "reset_required": {
+      "const": true,
+      "title": "Reset Required",
+      "type": "boolean"
+    },
+    "scene_ir": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.task_ir.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "task_ir_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Task Ir Sha256",
+      "type": "string"
+    },
+    "termination_steps": {
+      "minimum": 1,
+      "title": "Termination Steps",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "task_ir_sha256",
+    "scene_ir",
+    "requested_profile",
+    "goal_relations",
+    "reset_required",
+    "action_contract",
+    "observation_keys",
+    "termination_steps"
+  ],
+  "title": "TaskIRV1",
+  "type": "object"
+}

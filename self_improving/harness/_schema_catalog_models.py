@@ -110,6 +110,48 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
             "ImageMediaProbeV1",
         ),
         "harness.image_source_media.v1": (".schemas.x2env", "ImageSourceMedia"),
+        "harness.asset_closure_manifest.v1": (
+            ".schemas.x2env_compile_evidence",
+            "AssetClosureManifestV1",
+        ),
+        "harness.asset_qualification.v1": (
+            ".schemas.x2env_compile_evidence",
+            "GenesisAssetQualificationV1",
+        ),
+        "harness.asset_representation.v1": (
+            ".schemas.x2env_compile_evidence",
+            "AssetRepresentationV1",
+        ),
+        "harness.genesis_runtime_lock.v1": (
+            ".schemas.x2env_compile_evidence",
+            "GenesisRuntimeLockV1",
+        ),
+        "harness.portable_asset_catalog.v1": (
+            ".schemas.x2env_compile_evidence",
+            "PortableAssetCatalogV1",
+        ),
+        "harness.scene_interpretation_proposal.v1": (
+            ".schemas.x2env_compile_evidence",
+            "SceneInterpretationProposalV1",
+        ),
+        "harness.scene_ir.v1": (".schemas.x2env_compile_evidence", "SceneIRV1"),
+        "harness.task_ir.v1": (".schemas.x2env_compile_evidence", "TaskIRV1"),
+        "harness.x2env_asset_selection.v1": (
+            ".schemas.x2env_compile_evidence",
+            "X2EnvAssetSelectionV1",
+        ),
+        "harness.x2env_binding_manifest.v1": (
+            ".schemas.x2env_compile_evidence",
+            "X2EnvBindingManifestV1",
+        ),
+        "harness.x2env_compile_receipt.v1": (
+            ".schemas.x2env_compile_evidence",
+            "X2EnvCompileReceiptV1",
+        ),
+        "harness.x2env_static_validation.v1": (
+            ".schemas.x2env_compile_evidence",
+            "X2EnvStaticValidationV1",
+        ),
         "harness.operation_snapshot.v1": (".schemas.workflow", "OperationSnapshot"),
         "harness.qualified_skill_execution.v2": (
             ".schemas.workflow_operation",

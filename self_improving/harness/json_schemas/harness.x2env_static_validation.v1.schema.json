@@ -1,0 +1,288 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "Blocker": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "title": "Artifact Refs",
+          "type": "array"
+        },
+        "code": {
+          "pattern": "^[A-Z][A-Z0-9_]{1,63}$",
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Details",
+          "type": "object"
+        },
+        "message": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "stage": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Stage",
+          "type": "string"
+        },
+        "unknowns": {
+          "items": {
+            "$ref": "#/$defs/UnknownField"
+          },
+          "title": "Unknowns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "stage",
+        "retryable",
+        "details",
+        "unknowns",
+        "artifact_refs"
+      ],
+      "title": "Blocker",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "UnknownField": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Field",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "source": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "reason",
+        "source"
+      ],
+      "title": "UnknownField",
+      "type": "object"
+    },
+    "ValidationStatus": {
+      "enum": [
+        "pass",
+        "incomplete",
+        "fail"
+      ],
+      "title": "ValidationStatus",
+      "type": "string"
+    },
+    "X2EnvStaticValidationCheckV1": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "maxItems": 64,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "pass",
+            "incomplete",
+            "fail"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "status",
+        "evidence"
+      ],
+      "title": "X2EnvStaticValidationCheckV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.x2env_static_validation.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset_catalog": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "asset_closure_manifest": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "asset_selections": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "maxItems": 64,
+      "minItems": 1,
+      "title": "Asset Selections",
+      "type": "array"
+    },
+    "binding_manifest": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "blockers": {
+      "items": {
+        "$ref": "#/$defs/Blocker"
+      },
+      "title": "Blockers",
+      "type": "array"
+    },
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/X2EnvStaticValidationCheckV1"
+      },
+      "maxItems": 256,
+      "minItems": 1,
+      "title": "Checks",
+      "type": "array"
+    },
+    "physical_validation_claimed": {
+      "const": false,
+      "title": "Physical Validation Claimed",
+      "type": "boolean"
+    },
+    "publishable": {
+      "const": false,
+      "title": "Publishable",
+      "type": "boolean"
+    },
+    "runtime_lock": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "scene_ir": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.x2env_static_validation.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "simulator_executed": {
+      "const": false,
+      "title": "Simulator Executed",
+      "type": "boolean"
+    },
+    "status": {
+      "$ref": "#/$defs/ValidationStatus"
+    },
+    "task_ir": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "validation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Validation Sha256",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "validation_sha256",
+    "scene_ir",
+    "task_ir",
+    "asset_catalog",
+    "asset_selections",
+    "asset_closure_manifest",
+    "binding_manifest",
+    "runtime_lock",
+    "status",
+    "checks",
+    "blockers",
+    "simulator_executed",
+    "physical_validation_claimed",
+    "publishable"
+  ],
+  "title": "X2EnvStaticValidationV1",
+  "type": "object"
+}

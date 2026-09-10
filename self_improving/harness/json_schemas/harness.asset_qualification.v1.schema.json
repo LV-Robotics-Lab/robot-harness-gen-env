@@ -1,0 +1,247 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "AssetModelSubjectV1": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_key": {
+          "pattern": "^[a-z0-9][a-z0-9_.-]{0,127}$",
+          "title": "Asset Key",
+          "type": "string"
+        },
+        "backend": {
+          "const": "genesis",
+          "title": "Backend",
+          "type": "string"
+        },
+        "ledger_asset_id": {
+          "pattern": "^[a-z0-9][a-z0-9_]{0,127}$",
+          "title": "Ledger Asset Id",
+          "type": "string"
+        },
+        "model_id": {
+          "minimum": 0,
+          "title": "Model Id",
+          "type": "integer"
+        },
+        "namespace": {
+          "pattern": "^[a-z][a-z0-9_.-]{0,63}$",
+          "title": "Namespace",
+          "type": "string"
+        },
+        "source_record_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Record Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "namespace",
+        "asset_key",
+        "ledger_asset_id",
+        "model_id",
+        "backend",
+        "source_record_sha256"
+      ],
+      "title": "AssetModelSubjectV1",
+      "type": "object"
+    },
+    "AssetQualificationCheckV1": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "maxItems": 64,
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "status": {
+          "const": "pass",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "status",
+        "evidence"
+      ],
+      "title": "AssetQualificationCheckV1",
+      "type": "object"
+    },
+    "QualifiedAssetSubjectV1": {
+      "additionalProperties": false,
+      "properties": {
+        "loader_closure_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Loader Closure Sha256",
+          "type": "string"
+        },
+        "model_subject": {
+          "$ref": "#/$defs/AssetModelSubjectV1"
+        },
+        "representation_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Representation Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "model_subject",
+        "representation_sha256",
+        "loader_closure_sha256"
+      ],
+      "title": "QualifiedAssetSubjectV1",
+      "type": "object"
+    },
+    "RequestedGenesisProfile": {
+      "enum": [
+        "genesis.rigid_scene@1",
+        "genesis.robot_policy@1"
+      ],
+      "title": "RequestedGenesisProfile",
+      "type": "string"
+    }
+  },
+  "$id": "harness.asset_qualification.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "backend_load_executed": {
+      "const": true,
+      "title": "Backend Load Executed",
+      "type": "boolean"
+    },
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/AssetQualificationCheckV1"
+      },
+      "maxItems": 128,
+      "minItems": 1,
+      "title": "Checks",
+      "type": "array"
+    },
+    "collision_probe_executed": {
+      "const": true,
+      "title": "Collision Probe Executed",
+      "type": "boolean"
+    },
+    "issuer_implementation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Issuer Implementation Sha256",
+      "type": "string"
+    },
+    "qualification_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Qualification Sha256",
+      "type": "string"
+    },
+    "qualified": {
+      "const": true,
+      "title": "Qualified",
+      "type": "boolean"
+    },
+    "representation": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "requested_profile": {
+      "$ref": "#/$defs/RequestedGenesisProfile"
+    },
+    "runtime_lock": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.asset_qualification.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "const": "pass",
+      "title": "Status",
+      "type": "string"
+    },
+    "subject": {
+      "$ref": "#/$defs/QualifiedAssetSubjectV1"
+    }
+  },
+  "required": [
+    "schema_version",
+    "qualification_sha256",
+    "subject",
+    "representation",
+    "runtime_lock",
+    "requested_profile",
+    "issuer_implementation_sha256",
+    "checks",
+    "status",
+    "backend_load_executed",
+    "collision_probe_executed",
+    "qualified"
+  ],
+  "title": "GenesisAssetQualificationV1",
+  "type": "object"
+}

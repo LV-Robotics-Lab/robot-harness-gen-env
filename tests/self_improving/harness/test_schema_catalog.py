@@ -94,6 +94,20 @@ from self_improving.harness.schemas.x2env import (
     X2EnvAssetDecision,
     X2EnvEnvironmentPackage,
 )
+from self_improving.harness.schemas.x2env_compile_evidence import (
+    AssetClosureManifestV1,
+    AssetRepresentationV1,
+    GenesisAssetQualificationV1,
+    GenesisRuntimeLockV1,
+    PortableAssetCatalogV1,
+    SceneInterpretationProposalV1,
+    SceneIRV1,
+    TaskIRV1,
+    X2EnvAssetSelectionV1,
+    X2EnvBindingManifestV1,
+    X2EnvCompileReceiptV1,
+    X2EnvStaticValidationV1,
+)
 
 EXPECTED_SCHEMA_IDS = {
     "harness.advisory_record_command.v1",
@@ -103,6 +117,9 @@ EXPECTED_SCHEMA_IDS = {
     "harness.asset_source_snapshot_manifest.v1",
     "harness.asset_stage_request.v1",
     "harness.asset_stage_result.v1",
+    "harness.asset_closure_manifest.v1",
+    "harness.asset_qualification.v1",
+    "harness.asset_representation.v1",
     "harness.artifact_ref.v1",
     "harness.blocker.v1",
     "harness.control_commit_snapshot.v1",
@@ -112,6 +129,7 @@ EXPECTED_SCHEMA_IDS = {
     "harness.genesis_observation_receipt.v1",
     "harness.genesis_observe_input.v1",
     "harness.genesis_observe_output.v1",
+    "harness.genesis_runtime_lock.v1",
     "harness.image2env_compile_input.v1",
     "harness.image2env_compile_input.v2",
     "harness.image2env_compile_output.v1",
@@ -126,6 +144,7 @@ EXPECTED_SCHEMA_IDS = {
     "harness.prompt_revision.v1",
     "harness.prompt_revision_compile_attempt.v1",
     "harness.prompt_revision_command.v1",
+    "harness.portable_asset_catalog.v1",
     "harness.qualified_skill_execution.v2",
     "harness.replay_vlm_assessment_input.v1",
     "harness.replay_vlm_assessment_output.v1",
@@ -142,6 +161,8 @@ EXPECTED_SCHEMA_IDS = {
     "harness.skill_invocation.v1",
     "harness.skill_qualification.v1",
     "harness.skill_qualification_report.v1",
+    "harness.scene_interpretation_proposal.v1",
+    "harness.scene_ir.v1",
     "harness.state_delta.v2",
     "harness.text2env_compile_input.v1",
     "harness.text2env_compile_output.v1",
@@ -151,6 +172,7 @@ EXPECTED_SCHEMA_IDS = {
     "harness.text2env_validate_input.v2",
     "harness.text2env_validate_output.v1",
     "harness.text2env_validate_output.v2",
+    "harness.task_ir.v1",
     "harness.tool_result.v2",
     "harness.video2env_compile_input.v1",
     "harness.video2env_compile_input.v2",
@@ -167,7 +189,11 @@ EXPECTED_SCHEMA_IDS = {
     "harness.workflow_operation_receipt.v2",
     "harness.workflow_start_receipt.v1",
     "harness.x2env_asset_decision.v1",
+    "harness.x2env_asset_selection.v1",
+    "harness.x2env_binding_manifest.v1",
+    "harness.x2env_compile_receipt.v1",
     "harness.x2env_environment_package.v1",
+    "harness.x2env_static_validation.v1",
 }
 
 
@@ -219,6 +245,18 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert schema_model("harness.video_source_media.v2") is VideoSourceMediaV2
     assert schema_model("harness.x2env_asset_decision.v1") is X2EnvAssetDecision
     assert schema_model("harness.x2env_environment_package.v1") is X2EnvEnvironmentPackage
+    assert schema_model("harness.scene_interpretation_proposal.v1") is SceneInterpretationProposalV1
+    assert schema_model("harness.scene_ir.v1") is SceneIRV1
+    assert schema_model("harness.task_ir.v1") is TaskIRV1
+    assert schema_model("harness.asset_representation.v1") is AssetRepresentationV1
+    assert schema_model("harness.asset_closure_manifest.v1") is AssetClosureManifestV1
+    assert schema_model("harness.genesis_runtime_lock.v1") is GenesisRuntimeLockV1
+    assert schema_model("harness.asset_qualification.v1") is GenesisAssetQualificationV1
+    assert schema_model("harness.portable_asset_catalog.v1") is PortableAssetCatalogV1
+    assert schema_model("harness.x2env_asset_selection.v1") is X2EnvAssetSelectionV1
+    assert schema_model("harness.x2env_binding_manifest.v1") is X2EnvBindingManifestV1
+    assert schema_model("harness.x2env_static_validation.v1") is X2EnvStaticValidationV1
+    assert schema_model("harness.x2env_compile_receipt.v1") is X2EnvCompileReceiptV1
     assert schema_model("harness.image2env_compile_input.v1") is Image2EnvCompileInput
     assert schema_model("harness.image2env_compile_input.v2") is Image2EnvCompileV2Input
     assert schema_model("harness.image2env_compile_output.v1") is Image2EnvCompileOutput
@@ -268,6 +306,9 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.asset_source_snapshot_manifest.v1",
             "harness.asset_stage_request.v1",
             "harness.asset_stage_result.v1",
+            "harness.asset_closure_manifest.v1",
+            "harness.asset_qualification.v1",
+            "harness.asset_representation.v1",
             "harness.run_start_request.v1",
             "harness.run_command_request.v1",
             "harness.run_snapshot.v1",
@@ -285,6 +326,7 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.genesis_observation_receipt.v1",
             "harness.genesis_observe_input.v1",
             "harness.genesis_observe_output.v1",
+            "harness.genesis_runtime_lock.v1",
             "harness.advisory_record_command.v1",
             "harness.control_commit_snapshot.v1",
             "harness.external_agent_advisory_receipt.v1",
@@ -292,6 +334,10 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.prompt_revision.v1",
             "harness.initial_compile_attempt.v1",
             "harness.prompt_revision_compile_attempt.v1",
+            "harness.portable_asset_catalog.v1",
+            "harness.scene_interpretation_proposal.v1",
+            "harness.scene_ir.v1",
+            "harness.task_ir.v1",
             "harness.image_source_media.v1",
             "harness.image_media_probe.v1",
             "harness.video_source_media.v1",
@@ -299,7 +345,11 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.video_decoded_frame_sequence.v1",
             "harness.video_media_probe.v1",
             "harness.x2env_asset_decision.v1",
+            "harness.x2env_asset_selection.v1",
+            "harness.x2env_binding_manifest.v1",
+            "harness.x2env_compile_receipt.v1",
             "harness.x2env_environment_package.v1",
+            "harness.x2env_static_validation.v1",
             "harness.image2env_compile_input.v1",
             "harness.image2env_compile_input.v2",
             "harness.image2env_compile_output.v1",

@@ -1,0 +1,242 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "AssetModelSubjectV1": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_key": {
+          "pattern": "^[a-z0-9][a-z0-9_.-]{0,127}$",
+          "title": "Asset Key",
+          "type": "string"
+        },
+        "backend": {
+          "const": "genesis",
+          "title": "Backend",
+          "type": "string"
+        },
+        "ledger_asset_id": {
+          "pattern": "^[a-z0-9][a-z0-9_]{0,127}$",
+          "title": "Ledger Asset Id",
+          "type": "string"
+        },
+        "model_id": {
+          "minimum": 0,
+          "title": "Model Id",
+          "type": "integer"
+        },
+        "namespace": {
+          "pattern": "^[a-z][a-z0-9_.-]{0,63}$",
+          "title": "Namespace",
+          "type": "string"
+        },
+        "source_record_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Record Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "namespace",
+        "asset_key",
+        "ledger_asset_id",
+        "model_id",
+        "backend",
+        "source_record_sha256"
+      ],
+      "title": "AssetModelSubjectV1",
+      "type": "object"
+    },
+    "AssetRepresentationMemberV1": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "logical_path": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "pattern": "^(?![A-Za-z]:)(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+)*$",
+          "title": "Logical Path",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "collision",
+            "metadata",
+            "urdf",
+            "visual"
+          ],
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logical_path",
+        "role",
+        "artifact"
+      ],
+      "title": "AssetRepresentationMemberV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.asset_representation.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "collision_member_paths": {
+      "items": {
+        "maxLength": 1024,
+        "minLength": 1,
+        "pattern": "^(?![A-Za-z]:)(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+)*$",
+        "type": "string"
+      },
+      "maxItems": 4096,
+      "minItems": 1,
+      "title": "Collision Member Paths",
+      "type": "array"
+    },
+    "loader_closure_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Loader Closure Sha256",
+      "type": "string"
+    },
+    "loader_scale": {
+      "maxItems": 3,
+      "minItems": 3,
+      "prefixItems": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        }
+      ],
+      "title": "Loader Scale",
+      "type": "array"
+    },
+    "members": {
+      "items": {
+        "$ref": "#/$defs/AssetRepresentationMemberV1"
+      },
+      "maxItems": 4096,
+      "minItems": 1,
+      "title": "Members",
+      "type": "array"
+    },
+    "representation_kind": {
+      "enum": [
+        "rigid_mesh",
+        "urdf"
+      ],
+      "title": "Representation Kind",
+      "type": "string"
+    },
+    "representation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Representation Sha256",
+      "type": "string"
+    },
+    "root_logical_path": {
+      "maxLength": 1024,
+      "minLength": 1,
+      "pattern": "^(?![A-Za-z]:)(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+)*$",
+      "title": "Root Logical Path",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.asset_representation.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "subject": {
+      "$ref": "#/$defs/AssetModelSubjectV1"
+    },
+    "visual_member_paths": {
+      "items": {
+        "maxLength": 1024,
+        "minLength": 1,
+        "pattern": "^(?![A-Za-z]:)(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+)*$",
+        "type": "string"
+      },
+      "maxItems": 4096,
+      "minItems": 1,
+      "title": "Visual Member Paths",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "representation_sha256",
+    "subject",
+    "representation_kind",
+    "root_logical_path",
+    "loader_scale",
+    "loader_closure_sha256",
+    "members",
+    "collision_member_paths",
+    "visual_member_paths"
+  ],
+  "title": "AssetRepresentationV1",
+  "type": "object"
+}

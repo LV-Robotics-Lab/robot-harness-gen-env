@@ -24,6 +24,31 @@ _Avoid_: exact asset、unverified look-alike
 当受允许的复用层都无法满足请求时，产生带完整来源记录并须经过准入验证的新资产。
 _Avoid_: asset reuse、unbounded text-to-3D
 
+**Scene IR（场景中间表示）**:
+把源媒体解释规范化为坐标系、实体、变换、物理属性要求和实体关系的后端可核语义；它不选择具体
+资产，也不表示场景已经可被仿真器加载。
+_Avoid_: asset binding、resolved simulator scene、render layout
+
+**Task IR（任务中间表示）**:
+与 Scene IR 实体对齐的任务目标、成功条件、reset/action/observation 需求和终止条件；缺少这些能力时
+只能表达刚体场景目标，不能宣称机器人策略就绪。
+_Avoid_: free-form prompt、policy implementation、trajectory
+
+**Asset Qualification（资产资格）**:
+把一个精确资产模型、表示字节闭包与指定仿真后端/能力 profile 的已核证据绑定起来的不可变结论。
+它不同于 Skill qualification，也不能从目录命中或相似度分数推断。
+_Avoid_: Skill qualification、catalog membership、visual similarity
+
+**Asset Closure（资产闭包）**:
+物化选定资产表示所需的完整、可移植、内容寻址成员集合；逻辑路径与字节身份属于闭包，本地主机路径
+不属于闭包。
+_Avoid_: asset directory path、partial manifest、download hint
+
+**Asset Binding（资产绑定）**:
+把每个 Scene IR 实体一一映射到选定且已资格化的资产表示、闭包和场景角色的显式清单；它是语义场景
+与可物化环境包之间的桥梁。
+_Avoid_: asset selection alone、implicit catalog lookup、runtime materialization path
+
 **Source Media Identity（源媒体身份）**:
 由原始媒体字节摘要、解码后可核事实和规范化产物共同确定的图像或视频身份；图像与视频是不同
 类型，视频身份包含完整有序帧序列而不只是抽帧。

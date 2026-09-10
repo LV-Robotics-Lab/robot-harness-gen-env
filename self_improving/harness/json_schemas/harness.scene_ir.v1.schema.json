@@ -1,0 +1,228 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "GenesisFrameV1": {
+      "additionalProperties": false,
+      "properties": {
+        "handedness": {
+          "const": "right_handed",
+          "title": "Handedness",
+          "type": "string"
+        },
+        "name": {
+          "const": "genesis_world",
+          "title": "Name",
+          "type": "string"
+        },
+        "unit": {
+          "const": "m",
+          "title": "Unit",
+          "type": "string"
+        },
+        "up_axis": {
+          "const": "z",
+          "title": "Up Axis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "handedness",
+        "up_axis",
+        "unit"
+      ],
+      "title": "GenesisFrameV1",
+      "type": "object"
+    },
+    "SceneIREntityV1": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "collision_required": {
+          "const": true,
+          "title": "Collision Required",
+          "type": "boolean"
+        },
+        "dimensions_m": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            }
+          ],
+          "title": "Dimensions M",
+          "type": "array"
+        },
+        "dynamic": {
+          "title": "Dynamic",
+          "type": "boolean"
+        },
+        "object_id": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "title": "Object Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "object_id",
+        "category",
+        "dynamic",
+        "collision_required",
+        "dimensions_m"
+      ],
+      "title": "SceneIREntityV1",
+      "type": "object"
+    },
+    "SceneRelationV1": {
+      "additionalProperties": false,
+      "properties": {
+        "relation": {
+          "enum": [
+            "on_table",
+            "on_top_of",
+            "inside",
+            "near"
+          ],
+          "title": "Relation",
+          "type": "string"
+        },
+        "source": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "pattern": "^(table|[a-z][a-z0-9_]{0,63})$",
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "relation",
+        "source",
+        "target"
+      ],
+      "title": "SceneRelationV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.scene_ir.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "frame": {
+      "$ref": "#/$defs/GenesisFrameV1"
+    },
+    "interpretation_proposal": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "objects": {
+      "items": {
+        "$ref": "#/$defs/SceneIREntityV1"
+      },
+      "maxItems": 64,
+      "minItems": 1,
+      "title": "Objects",
+      "type": "array"
+    },
+    "relations": {
+      "items": {
+        "$ref": "#/$defs/SceneRelationV1"
+      },
+      "maxItems": 256,
+      "minItems": 1,
+      "title": "Relations",
+      "type": "array"
+    },
+    "scene_ir_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Scene Ir Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.scene_ir.v1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "scene_ir_sha256",
+    "interpretation_proposal",
+    "frame",
+    "objects",
+    "relations"
+  ],
+  "title": "SceneIRV1",
+  "type": "object"
+}
