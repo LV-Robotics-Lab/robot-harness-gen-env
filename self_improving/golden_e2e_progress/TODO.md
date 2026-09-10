@@ -14,13 +14,13 @@
   child identity 的 RED，正在以 canonical ControlledRunIntent、原子 reserve 与并发攻击补齐。operation
   evidence correlation 和 child-terminal/live-unavailable 恢复矩阵未绿前不得重签或提交 aggregate。
 - P6：14 个 GLB + 7 个 `model_data*.json` 已组成 21-member、57,290,434-byte CAS closure，且真实
-  RoboTwin `create_actor` 已从 staged-only bytes 对 7 个模型各执行 900 个 SAPIEN steps。候选
-  `bd61a9e1504b1462c1bb24799a38e76f5cdf26e4` 已补 strict typed authority、成员字节 closure、nofollow
-  materialization 与 loader/helper source closure；固定 SHA 后的真实重跑为 21 members、7×900 steps，
-  每个模型均 finite/contact/nonzero impulse。主窗口随后又复现两个 P1 阻断：失败清理仍可在 parent
-  rename/replacement 竞态下删除替换路径并遗留 partial，且 deep verifier 尚未从 CAS GLB bytes 重新推导
-  document dependency closure，内部一致的遗漏依赖伪造仍可通过。当前只针对这两个已冻结攻击做
-  RED→GREEN；修复、固定 SHA 真实重跑和完整审查通过前仍不合入或升级证据等级。
+  RoboTwin `create_actor` 已从 staged-only bytes 对 7 个模型各执行 900 个 SAPIEN steps。候选链
+  `9760a03` → `292d09b` → `bd61a9e` → `8c1c94a` 现已补 strict typed authority、成员字节 closure、
+  sidecar、从 exact CAS loader bytes 重建 document dependency closure、nofollow materialization，以及
+  对成功/失败 report publication 都适用的稳定 parent-dirfd containment/cleanup。最后两个主窗口 P1
+  反例已 RED→GREEN；固定 `8c1c94a` 后的真实重跑仍为 21 members、7×900 steps，全部 finite/contact/
+  nonzero impulse。当前等待新增 fixed diff 的合入审阅、来源/证据文档同步和主分支回归；完成前不合入或
+  升级为 qualification/Genesis 证据。
 
 ## Next
 
