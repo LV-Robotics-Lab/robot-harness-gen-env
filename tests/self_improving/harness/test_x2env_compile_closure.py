@@ -78,6 +78,10 @@ def _build(model: type[object], digest_field: str, value: dict[str, object]) -> 
     return model.model_validate(value)  # type: ignore[attr-defined]
 
 
+def _sorted_refs(*refs: ArtifactRef) -> list[ArtifactRef]:
+    return sorted(refs, key=lambda item: (item.sha256, item.bytes, item.media_type))
+
+
 @dataclass(frozen=True, slots=True)
 class _Case:
     store: LocalArtifactStore
@@ -377,7 +381,20 @@ def _case(tmp_path: Path) -> _Case:
             "binding_manifest": binding_ref,
             "runtime_lock": runtime_ref,
             "status": "pass",
-            "checks": [{"code": "binding_complete", "status": "pass", "evidence": [binding_ref]}],
+            "checks": [
+                {
+                    "code": "asset_closure_complete",
+                    "status": "pass",
+                    "evidence": _sorted_refs(selection_ref, closure_ref),
+                },
+                {"code": "binding_complete", "status": "pass", "evidence": [binding_ref]},
+                {"code": "runtime_lock_bound", "status": "pass", "evidence": [runtime_ref]},
+                {
+                    "code": "scene_task_consistent",
+                    "status": "pass",
+                    "evidence": _sorted_refs(scene_ref, task_ref),
+                },
+            ],
             "blockers": [],
             "simulator_executed": False,
             "physical_validation_claimed": False,
@@ -657,8 +674,44 @@ def test_input_source_and_semantic_drift_are_rejected_before_acceptance(tmp_path
             ),
         ),
     )
-    with pytest.raises(X2EnvCompileClosureError, match="qualification is not trusted"):
+    with pytest.raises(X2EnvCompileClosureError, match="not backed by trusted"):
         verifier.verify(untrusted.compile_input, untrusted.compile_output)
+
+    missing_selected_representation = _case(tmp_path / "missing-selected-representation")
+    selection = evidence.X2EnvAssetSelectionV1.model_validate_json(
+        missing_selected_representation.store.resolve(
+            missing_selected_representation.refs["selection"]
+        ).path.read_bytes()
+    ).model_dump(mode="json")
+    selection["representation"] = ArtifactRef(
+        name="unbound-representation",
+        uri="artifact://sha256/" + "f" * 64,
+        media_type="application/json",
+        sha256="f" * 64,
+        bytes=99,
+        schema_version="harness.asset_representation.v1",
+    ).model_dump(mode="json")
+    selection["selection_sha256"] = evidence.canonical_evidence_sha256(
+        selection, "selection_sha256"
+    )
+    selection_ref = _put(
+        missing_selected_representation.store,
+        tmp_path / "missing-selected-representation" / "mutations",
+        name="selection-unbound-representation.json",
+        payload=_canonical_json(selection),
+        media_type="application/json",
+        schema_version="harness.x2env_asset_selection.v1",
+    )
+    decision = missing_selected_representation.compile_output.asset_decisions[0].model_copy(
+        update={"decision_evidence": selection_ref}
+    )
+    changed_output = missing_selected_representation.compile_output.model_copy(
+        update={"asset_decisions": (decision,)}
+    )
+    with pytest.raises(X2EnvCompileClosureError, match="absent from the trusted graph"):
+        missing_selected_representation.verifier.verify(
+            missing_selected_representation.compile_input, changed_output
+        )
 
     missing_catalog_subject = _case(tmp_path / "missing-catalog-subject")
     catalog = evidence.PortableAssetCatalogV1.model_validate_json(
@@ -704,7 +757,7 @@ def test_input_source_and_semantic_drift_are_rejected_before_acceptance(tmp_path
     changed_output = missing_catalog_subject.compile_output.model_copy(
         update={"asset_decisions": (decision,)}
     )
-    with pytest.raises(X2EnvCompileClosureError, match="absent from the catalog"):
+    with pytest.raises(X2EnvCompileClosureError, match="catalog entry is not backed by trusted"):
         missing_catalog_subject.verifier.verify(changed_input, changed_output)
 
 

@@ -205,12 +205,12 @@ class ExactReuseCompileClosureVerifier:
             self._read(ref, X2EnvAssetSelectionV1, X2ENV_ASSET_SELECTION_SCHEMA_ID)
             for ref in selection_refs
         )
-        representation_refs = _unique_refs(item.representation for item in selections)
+        representation_refs = _unique_refs(item.representation for item in asset_catalog.entries)
         representations = tuple(
             self._read(ref, AssetRepresentationV1, ASSET_REPRESENTATION_SCHEMA_ID)
             for ref in representation_refs
         )
-        qualification_refs = _unique_refs(item.qualification for item in selections)
+        qualification_refs = _unique_refs(item.qualification for item in asset_catalog.entries)
         qualifications = tuple(
             self._read(ref, GenesisAssetQualificationV1, ASSET_QUALIFICATION_SCHEMA_ID)
             for ref in qualification_refs
@@ -390,6 +390,47 @@ class ExactReuseCompileClosureVerifier:
         representation_by_ref = dict(zip(representation_refs, representations, strict=True))
         qualification_by_ref = dict(zip(qualification_refs, qualifications, strict=True))
         catalog_by_subject = {item.subject: item for item in asset_catalog.entries}
+        for entry in asset_catalog.entries:
+            representation = _required(
+                representation_by_ref,
+                entry.representation,
+                "catalog representation is absent from the trusted graph",
+            )
+            qualification = _required(
+                qualification_by_ref,
+                entry.qualification,
+                "catalog qualification is absent from the trusted graph",
+            )
+            _require_equal(
+                (
+                    representation.subject,
+                    representation.representation_sha256,
+                    representation.loader_closure_sha256,
+                    qualification.subject,
+                    qualification.representation,
+                    qualification.runtime_lock,
+                    qualification.requested_profile,
+                    qualification.issuer_implementation_sha256,
+                    entry.qualification in self.trusted_asset_qualifications,
+                ),
+                (
+                    entry.subject,
+                    entry.representation_sha256,
+                    entry.qualified_subject.loader_closure_sha256,
+                    entry.qualified_subject,
+                    entry.representation,
+                    self.expected_runtime_lock,
+                    compile_input.requested_profile,
+                    self.trusted_qualification_issuer_sha256,
+                    True,
+                ),
+                "catalog entry is not backed by trusted complete asset evidence",
+            )
+            for member in representation.members:
+                self._verify_artifact(member.artifact, "catalog asset representation member")
+            for check in qualification.checks:
+                for check_evidence in check.evidence:
+                    self._verify_artifact(check_evidence, "catalog qualification check evidence")
         closure_by_subject = {item.subject: item for item in asset_closure.assets}
         selection_by_object = {item.scene_object_id: item for item in selections}
         selection_ref_by_object = dict(
@@ -621,6 +662,22 @@ class ExactReuseCompileClosureVerifier:
                 ValidationStatus.PASS,
             ),
             "static validation does not bind the complete compile graph",
+        )
+        expected_static_checks = {
+            "asset_closure_complete": frozenset(
+                (*expected_selection_refs, environment_package.asset_closure_manifest)
+            ),
+            "binding_complete": frozenset((environment_package.binding_manifest,)),
+            "runtime_lock_bound": frozenset((self.expected_runtime_lock,)),
+            "scene_task_consistent": frozenset((compile_output.scene_ir, compile_output.task_ir)),
+        }
+        actual_static_checks = {
+            check.code: frozenset(check.evidence) for check in static_validation.checks
+        }
+        _require_equal(
+            actual_static_checks,
+            expected_static_checks,
+            "static validation does not contain the required evidence-bound checks",
         )
         for check in static_validation.checks:
             for check_evidence in check.evidence:
