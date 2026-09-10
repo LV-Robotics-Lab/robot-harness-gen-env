@@ -193,6 +193,7 @@ async def _first_process(
             ) as client:
                 if client.protocol_version != "2026-07-28":
                     raise RuntimeError(f"unexpected MCP protocol: {client.protocol_version}")
+                protocol_version = client.protocol_version
                 listed = await client.list_tools()
                 names = tuple(tool.name for tool in listed.tools)
                 if names != _TOOLS:
@@ -357,7 +358,7 @@ async def _first_process(
         start_arguments,
         validate_arguments,
         {
-            "protocol_version": client.protocol_version,
+            "protocol_version": protocol_version,
             "tools": list(_TOOLS),
             "workflow": revision_three,
             "operations": [
