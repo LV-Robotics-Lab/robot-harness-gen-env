@@ -34,10 +34,19 @@ from self_improving.harness.schemas.text2env_validate_v2 import (
     Text2EnvValidateV2Output,
 )
 from self_improving.harness.schemas.workflow import (
+    OperationSnapshot,
+    RunCommandRequest,
     RunReadRequest,
     RunSnapshot,
     RunStartRequest,
     WorkflowStartReceipt,
+)
+from self_improving.harness.schemas.workflow_operation import (
+    QualifiedSkillExecutionV2,
+    StateDeltaV2,
+    ToolResultV2,
+    TrustedToolReceiptV2,
+    WorkflowOperationReceiptV2,
 )
 
 EXPECTED_SCHEMA_IDS = {
@@ -51,10 +60,13 @@ EXPECTED_SCHEMA_IDS = {
     "harness.blocker.v1",
     "harness.environment_package.v1",
     "harness.event.v1",
+    "harness.operation_snapshot.v1",
+    "harness.qualified_skill_execution.v2",
     "harness.replay_vlm_assessment_input.v1",
     "harness.replay_vlm_assessment_output.v1",
     "harness.replay_vlm_assessment_output.v2",
     "harness.registry_snapshot.v1",
+    "harness.run_command_request.v1",
     "harness.run_read_request.v1",
     "harness.run_state.v1",
     "harness.run_snapshot.v1",
@@ -64,6 +76,7 @@ EXPECTED_SCHEMA_IDS = {
     "harness.skill_invocation.v1",
     "harness.skill_qualification.v1",
     "harness.skill_qualification_report.v1",
+    "harness.state_delta.v2",
     "harness.text2env_compile_input.v1",
     "harness.text2env_compile_output.v1",
     "harness.text2env_replay_input.v1",
@@ -72,6 +85,9 @@ EXPECTED_SCHEMA_IDS = {
     "harness.text2env_validate_input.v2",
     "harness.text2env_validate_output.v1",
     "harness.text2env_validate_output.v2",
+    "harness.tool_result.v2",
+    "harness.trusted_tool_receipt.v2",
+    "harness.workflow_operation_receipt.v2",
     "harness.workflow_start_receipt.v1",
 }
 
@@ -87,6 +103,13 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert schema_model("harness.workflow_start_receipt.v1") is WorkflowStartReceipt
     assert schema_model("harness.registry_snapshot.v1") is RegistrySnapshot
     assert schema_model("harness.run_read_request.v1") is RunReadRequest
+    assert schema_model("harness.run_command_request.v1") is RunCommandRequest
+    assert schema_model("harness.operation_snapshot.v1") is OperationSnapshot
+    assert schema_model("harness.qualified_skill_execution.v2") is QualifiedSkillExecutionV2
+    assert schema_model("harness.state_delta.v2") is StateDeltaV2
+    assert schema_model("harness.tool_result.v2") is ToolResultV2
+    assert schema_model("harness.trusted_tool_receipt.v2") is TrustedToolReceiptV2
+    assert schema_model("harness.workflow_operation_receipt.v2") is WorkflowOperationReceiptV2
     assert schema_model("harness.skill_qualification_report.v1") is PublicQualificationReportV1
     assert schema_model("harness.asset_debt_inventory.v1") is AssetDebtInventory
     assert schema_model("harness.asset_repair_plan_request.v1") is AssetRepairPlanRequest
@@ -130,11 +153,18 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.asset_stage_request.v1",
             "harness.asset_stage_result.v1",
             "harness.run_start_request.v1",
+            "harness.run_command_request.v1",
             "harness.run_snapshot.v1",
+            "harness.operation_snapshot.v1",
             "harness.registry_snapshot.v1",
             "harness.run_read_request.v1",
             "harness.skill_qualification_report.v1",
             "harness.workflow_start_receipt.v1",
+            "harness.qualified_skill_execution.v2",
+            "harness.state_delta.v2",
+            "harness.tool_result.v2",
+            "harness.trusted_tool_receipt.v2",
+            "harness.workflow_operation_receipt.v2",
         }:
             assert document["properties"]["schema_version"]["const"] == schema_id
             assert "schema_version" in document["required"]
