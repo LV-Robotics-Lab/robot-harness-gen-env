@@ -935,7 +935,7 @@ class GoldenRunHarness:
         }
         if command.source_prompt_revision is not None:
             required_access_identities.add(_artifact_identity(command.source_prompt_revision))
-        if accessed_identities and accessed_identities != required_access_identities:
+        if accessed_identities != required_access_identities:
             raise GoldenRunNotFoundError(
                 "resource access receipts do not exactly cover the advisory sources"
             )

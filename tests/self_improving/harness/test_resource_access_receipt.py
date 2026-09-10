@@ -366,7 +366,7 @@ def test_receipt_uses_dedicated_lookup_and_enters_closure_only_when_control_cite
     assert receipt_ref == delivery.access_receipt
     assert receipt_payload == delivery.access_receipt_payload
 
-    command_values = control._advisory_command(case).model_dump(mode="python")
+    command_values = control._advisory_command(case, audit_accesses=False).model_dump(mode="python")
     command_values["resource_access_receipts"] = access_refs
     command = AdvisoryRecordCommand.model_validate(command_values)
     with pytest.raises(ValidationError, match="sorted and unique"):
@@ -411,7 +411,7 @@ def test_advisory_rejects_access_receipts_that_do_not_cover_every_claimed_source
         ),
     )
     before = case.harness.read(request)
-    command_values = control._advisory_command(case).model_dump(mode="python")
+    command_values = control._advisory_command(case, audit_accesses=False).model_dump(mode="python")
     command_values["resource_access_receipts"] = (unrelated_delivery.access_receipt,)
     command = AdvisoryRecordCommand.model_validate(command_values)
 
@@ -429,7 +429,7 @@ def test_advisory_rejects_zero_access_receipts_without_advancing_the_workflow(
     case = control._case(tmp_path)
     request = _request(case.head)
     command = AdvisoryRecordCommand.model_validate(
-        control._advisory_command(case).model_dump(mode="python")
+        control._advisory_command(case, audit_accesses=False).model_dump(mode="python")
     )
     assert command.resource_access_receipts == ()
     before = case.harness.read(request)

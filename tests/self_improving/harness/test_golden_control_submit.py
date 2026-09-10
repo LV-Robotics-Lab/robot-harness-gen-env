@@ -580,9 +580,45 @@ def _replace_model(value: BaseModel, **updates: object) -> BaseModel:
     return type(value).model_validate({**value.model_dump(mode="json"), **updates})
 
 
-def _advisory_command(case: _Case, *, command_id: UUID = _ADVISORY_ID) -> BaseModel:
+def _advisory_command(
+    case: _Case,
+    *,
+    command_id: UUID = _ADVISORY_ID,
+    audit_accesses: bool = True,
+) -> BaseModel:
     advisory_model, _, _ = _models()
     assert case.failure_result.trusted_receipt is not None
+    request = RunReadRequest(
+        schema_version="harness.run_read_request.v1",
+        principal_id=case.head.principal_id,
+        workflow_run_id=case.head.workflow_run_id,
+    )
+    source_refs = (
+        case.source_prompt,
+        case.failure_receipt,
+        case.observation,
+        case.diagnostic,
+    )
+    access_refs = (
+        tuple(
+            sorted(
+                (
+                    case.harness.read_workflow_artifact_audited(
+                        request,
+                        sha256=ref.sha256,
+                        resource_uri=(
+                            f"harness://workflows/{case.head.workflow_run_id}/artifacts/"
+                            f"{ref.sha256}"
+                        ),
+                    ).access_receipt
+                    for ref in source_refs
+                ),
+                key=lambda ref: (ref.sha256, ref.schema_version or "", ref.media_type),
+            )
+        )
+        if audit_accesses
+        else ()
+    )
     return advisory_model.model_validate(
         {
             "schema_version": "harness.advisory_record_command.v1",
@@ -601,6 +637,7 @@ def _advisory_command(case: _Case, *, command_id: UUID = _ADVISORY_ID) -> BaseMo
             "source_prompt_revision": None,
             "failure_receipts": [case.failure_receipt.model_dump(mode="json")],
             "diagnostic_refs": [case.diagnostic.model_dump(mode="json")],
+            "resource_access_receipts": [ref.model_dump(mode="json") for ref in access_refs],
             "observation_citations": [
                 {
                     "receipt": case.observation.model_dump(mode="json"),
