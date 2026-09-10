@@ -590,6 +590,16 @@ class GoldenRunHarness:
                 workflow_run_id=request.workflow_run_id,
             )
         )
+        if current.receipt_head.schema_version == PROMPT_REVISION_SCHEMA_ID:
+            revision = cast(
+                PromptRevision,
+                self._resolve_canonical_model(current.receipt_head, PromptRevision),
+            )
+            raise GoldenRunRegistryError(
+                "HARN_HISTORY_MISMATCH",
+                "workflow prompt revision must be explicitly consumed by "
+                f"{revision.next_compile_skill_ref} before another Skill can run",
+            )
         policy, qualified = self._resolve_live_execution(
             current.registry_snapshot,
             request.skill_ref,
