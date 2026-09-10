@@ -57,12 +57,17 @@ _EXPORT_GROUPS = (
     (
         ".golden_execution",
         (
+            "GoldenExecutionBinding",
             "GoldenExecutionCatalog",
             "QualifiedApplicationAdapter",
             "QualifiedApplicationRunPendingError",
             "SkillEvidencePolicy",
             "create_golden_execution_catalog",
         ),
+    ),
+    (
+        ".golden_compile_execution",
+        ("create_text2env_compile_execution_binding",),
     ),
     (".golden_store", ("SQLiteGoldenRunStore",)),
     (
@@ -269,6 +274,7 @@ _PUBLIC_NAMES = (
     "RegisteredSkillDescriptor",
     "InvocationSink",
     "GeneratedAssetAdmitter",
+    "GoldenExecutionBinding",
     "GoldenExecutionCatalog",
     "GoldenRunConflictError",
     "GoldenRunCorruptionError",
@@ -363,6 +369,7 @@ _PUBLIC_NAMES = (
     "WorkflowStartReceipt",
     "create_compile_application",
     "create_golden_execution_catalog",
+    "create_text2env_compile_execution_binding",
     "create_replay_application",
     "generate_compile_qualification",
     "generate_replay_qualification",

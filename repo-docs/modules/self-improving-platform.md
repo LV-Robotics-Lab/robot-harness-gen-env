@@ -24,14 +24,15 @@
 `ab03859`。之后当时观察到的并发 commits `c365874`、`8d9a01c`、`587b49f`、`0e6716a`
 未进入那次历史研究复核；该锚点不限定其后明确标为 2026-09-10 或“当前”的集成状态。
 
-2026-09-10 当前态以 P0+P2 集成 distribution
-`2841d0a17c9df12c434178969544dc7ed8e87fc9` 加本次 compile qualification 文档提交为准；
-下述 32-schema 计数不归属于 `ab03859` 的 14-schema 历史快照。
+2026-09-10 当前态以固定绿色起点
+`e67b656ea97044da5b09ee8323c48e752cd88c76` 加 P2 compile-only submit 候选为准；
+下述 39-schema 计数不归属于 `ab03859` 的 14-schema 历史快照。
 
-Harness 当前公开 32 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
+Harness 当前公开 39 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
 descriptor v2、validate v2 input/output，以及 qualification report、资产债务/修复、registry snapshot、
 replay VLM、run start/read/snapshot 和 workflow start receipt 等 12 个入口，再加上 asset source snapshot、stage
-request 与 stage result 三个入口；descriptor v2 明确区分
+request 与 stage result 三个入口；P2 再增加 command、operation snapshot、qualified execution、trusted
+tool receipt、ToolResult、StateDelta 与 workflow operation receipt 七个 actor-neutral 入口。descriptor v2 明确区分
 内容位级确定性与证据不变量可复验。descriptor v1 保持冻结，
 compile 仍用 v1，replay 用 v2；两版不能静默转换。`ArtifactRef.schema_version` 仍指向既有
 `robotwin.*` 权威载荷，Harness 不重新定义其内部格式。schema 之外已有本地 digest-checking artifact
@@ -46,6 +47,15 @@ strict reload。证据与 deployment-local 边界见
 `python script/export_harness_schemas.py --check` 锁住 committed snapshot；核心资格模块强制 100%
 语句与分支覆盖。compile 的 asset admission 仍发生在 solve 前且失败不回滚；跨 run promotion、
 identity-frozen resumable EvaluationRun 与 MCP adapter 仍未闭合，契约保持 `Status: Proposed`。
+
+P2 的公共 `GoldenRunHarness.submit` 当前只调度 exact qualified `text2env.compile@1.0.0`。它从同一
+RegistrySnapshot、live production descriptor/qualification 和 Skill-owned evidence policy 冻结执行；
+command、controlled child、ToolResult、唯一 StateDelta、workflow receipt 与 revision 0→1 head 都进入
+同一 CAS/SQLite closure。generic execution catalog 不含 compile 分支，compile binding 与 policy 各自拥有
+模块和稳定 identity。operation 幂等域包含 exact Skill；ToolResult 与 workflow receipt 只引用同一份
+StateDelta CAS。parent reservation 后且 child intent 前可以继续执行；只有 intent 或只有 invocation 时
+保守保持 running；已有 child terminal 时只提交 parent。这些边界不证明任意外部副作用 exactly-once，
+也没有接通 replay/validate、MCP、Genesis 或 promotion。
 
 System 2 的 compile 竖切不再只信模型自报或 artifact 外形：planner prompt/raw decision/receipt、
 精确 base world state、PlannerContext、Skill qualification、Invocation/RunState、effective catalog、
@@ -117,7 +127,7 @@ closed。
 这仍不是完整 Stage 7：接口是同步 compile，不是异步 durable queue；没有 replay、validate、System
 2、artifact 内容 viewer 或拖拽编排。compile `succeeded` 也不表示物理 validation、资产 settle 或
 publishable。A047 的 `harness.workbench_compile_submission.v1` 是工作台投影，不新增 Harness 公共
-schema snapshot；仓库当前总数为 32。A047 切片当时 `tests/demo` 为 84 passed，其中 18 项
+schema snapshot；仓库当前总数为 39。A047 切片当时 `tests/demo` 为 84 passed，其中 18 项
 使用真 Flask + headless Chrome。
 
 A048 在此之上增加 terminal compile 的只读依赖审计。`WorkbenchCompile.audit(run_id)` 从同一
@@ -189,7 +199,7 @@ replay、validate 或 System 2。
 compile `succeeded` 仍不表示物理 validation、资产 settle 或 publishable。A047/A048 的两份
 `harness.workbench_*`（含 A049 audit v2、A050 scene preview v1 与 A051 static-validation preview v1）
 都是工作台投影，不新增 Harness
-公共 schema snapshot；仓库当前总数为 32。
+公共 schema snapshot；仓库当前总数为 39。
 
 Stage 5 的视觉评审状态是三态而非布尔值。在 `--run-smoke`/视觉评审路径中，只有 visual pass
 才把 candidate 原子晋升为 `final_placement.json` 并退出 0；`pending_visual_review` 只写

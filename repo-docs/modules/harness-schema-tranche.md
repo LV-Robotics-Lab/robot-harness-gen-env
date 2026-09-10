@@ -42,6 +42,9 @@ Registry follow-on 以本页和 `self_improving/harness/IMPLEMENTATION_LOG.md` �
 调用方 / 未来 MCP
         |
         v
+当前 GoldenRun.submit：父 workflow、CAS head、exact Skill 幂等域、受信状态推进
+        |
+        v
 当前通用 SkillRegistry：exact version、qualification、类型、依赖、摘要、attempt、审计
         |
         v
@@ -51,12 +54,13 @@ Registry follow-on 以本页和 `self_improving/harness/IMPLEMENTATION_LOG.md` �
 现有 schema + scene_gen：类型、解析、grounding、求解、包、回放、物理验证
 ```
 
-MCP 未来只能把已注册 descriptor 映射成工具；它不能再发明类型或默认值。Registry 已负责通用
+MCP 未来只能把已注册 descriptor 映射成工具；它不能再发明类型或默认值。P2 GoldenRun 当前只把
+exact qualified compile 接成 revision 0→1；Registry 已负责通用
 执行与审计，但不把 Text2Env 分支写进通用核心。PR1 schema 通过 `ArtifactRef` 与
 `EnvironmentPackage` 指向 `scene_gen` 已有载荷；compile 已由专用 adapter 组装，完整发布闭环仍
 需要 replay/validate adapters。
 
-## PR1 的 14 个公共入口与当前 32 个版本化入口
+## PR1 的 14 个公共入口与当前 39 个版本化入口
 
 下表是 PR1 冻结的 14 个入口。A042 没有修改其中的 `SkillDescriptor` v1，而是新增第 15 个
 `SkillDescriptorV2`：v1 只允许 `deterministic=true`；v2 用
@@ -66,6 +70,8 @@ version，不放宽既有 validate v1。
 后续 qualification report、资产债务/修复、registry snapshot、replay VLM、run start/read/snapshot 与
 workflow start receipt 再增加 12 个独立 `$id`；asset source snapshot manifest、stage request 与
 stage result 另增 3 个独立 `$id`。这些 follow-on 不回写 PR1 的 14 个入口。
+P2 再增加 command、operation snapshot、qualified execution、trusted tool receipt、ToolResult、
+StateDelta 与 workflow operation receipt 七个 actor-neutral `$id`。
 
 | 分组 | Schema | 读者模型 |
 | --- | --- | --- |
@@ -77,7 +83,7 @@ stage result 另增 3 个独立 `$id`。这些 follow-on 不回写 PR1 的 14 �
 
 `CompileConfig`、`RuntimeConfig`、`DependencyRef` 和 `UnknownField` 是嵌套 `$defs`，不是新的
 公共 `$id`，所以 PR1 总数是 14；descriptor v2 与 validate v2 两份文档把当时总数增至 17，计入后续
-12 个独立入口与 3 个 asset staging 入口后，仓库当前总数是 32。
+12 个独立入口、3 个 asset staging 入口与 P2 的 7 个 workflow-operation 入口后，仓库当前总数是 39。
 
 ## 严格不只是“不多字段”
 
@@ -188,8 +194,9 @@ replay、qualification、包验证和全部物理 gate 的最终“当且仅当�
 
 ## JSON Schema 快照能锁什么
 
-`schema_catalog.py` 当前从 Pydantic 模型生成 32 份 Draft 2020-12 文档；PR1 14 份、descriptor v2 与
-validate v2 input/output 的 3 份、后续 12 份，以及 asset staging 的 3 份均有独立 `$id`。
+`schema_catalog.py` 当前从 Pydantic 模型生成 39 份 Draft 2020-12 文档；PR1 14 份、descriptor v2 与
+validate v2 input/output 的 3 份、后续 12 份、asset staging 的 3 份，以及 P2 workflow-operation 的
+7 份均有独立 `$id`。
 committed snapshot 让字段、
 required/default、正则和范围的变化进入普通 code review：
 
@@ -216,6 +223,7 @@ Pydantic 校验为准。这符合“Registry 是唯一类型和执行权威”�
 | 通用 Skill 注册/调用 | `registry.py` | `tests/self_improving/harness/test_registry.py` |
 | package CAS 发布/重物化 | `package_store.py` | `test_package_store.py` |
 | Text2Env compile 竖切 | `handlers/text2env_compile.py` | `test_text2env_compile_handler.py` |
+| 父 workflow compile submit | `golden_run.py`、`golden_store.py`、`golden_execution.py`、`golden_compile_*` | `test_golden_run.py`、`test_golden_submit.py` |
 | 安装包内容 | `pyproject.toml` | wheel 内容检查 |
 
 统一入口同时强制 Harness 语句和分支覆盖率 100%：
@@ -239,7 +247,8 @@ coverage，而是 collection 与行为契约仍未闭合。
 
 ## 现在还不能做什么
 
-通用 Registry 已能调用注入的、资格身份匹配的 `text2env.compile@1.0.0` handler；但这只是一条
+P2 `GoldenRunHarness.submit` 已能从同一 RegistrySnapshot/live application 交集调用资格身份匹配的
+`text2env.compile@1.0.0`，并用唯一 StateDelta CAS 原子推进父 workflow revision 0→1；但这只是一条
 compile 竖切，不是可信的三 Skill spine。它还缺：
 
 - asset admission 与 solve/package failure 间的 rollback/transaction；当前 solve blocked 后已入库

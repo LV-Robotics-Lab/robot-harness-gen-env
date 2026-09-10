@@ -280,7 +280,7 @@ class ToolResultV2(HarnessModel):
     invocation: ArtifactRef | None
     run_state: ArtifactRef
     typed_output: JsonObject | None
-    state_delta: StateDeltaV2 | None
+    state_delta: ArtifactRef | None
     diagnostics: tuple[ArtifactRef, ...]
     trusted_receipt: ArtifactRef
     fresh_observations: tuple[WorldFact, ...]
@@ -316,10 +316,11 @@ class ToolResultV2(HarnessModel):
                 or self.blocker is not None
             ):
                 raise ValueError("successful ToolResult is incomplete")
-            if self.state_delta.receipt != self.trusted_receipt:
-                raise ValueError("state delta and ToolResult must share a trusted receipt")
-            if not self.started_at <= self.state_delta.effective_at <= self.ended_at:
-                raise ValueError("state delta effective_at must fall within the execution window")
+            _require_cas(
+                self.state_delta,
+                label="state_delta",
+                schema_version=STATE_DELTA_V2_SCHEMA_ID,
+            )
         elif self.typed_output is not None or self.state_delta is not None or self.blocker is None:
             raise ValueError("blocked or failed ToolResult is contradictory")
         diagnostic_identities = []

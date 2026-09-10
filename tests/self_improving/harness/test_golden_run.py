@@ -478,9 +478,7 @@ def test_submit_exact_qualified_compile_advances_one_durable_workflow_revision(
         workflow_store=workflow_store,
         execution_catalog=public_harness.create_golden_execution_catalog(
             bindings=(
-                public_harness.create_text2env_compile_execution_binding(
-                    application=application
-                ),
+                public_harness.create_text2env_compile_execution_binding(application=application),
             )
         ),
         clock=lambda: NOW,

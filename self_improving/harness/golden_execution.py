@@ -1,8 +1,7 @@
-"""Exact application adapters and per-Skill evidence policies for GoldenRun."""
+"""Actor-neutral catalog for exact qualified GoldenRun execution bindings."""
 
 from __future__ import annotations
 
-import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
@@ -11,11 +10,9 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from .application import CompileApplication, CompileApplicationRunPendingError
 from .run_store import SQLiteRunStore
 from .schema_catalog import schema_model
-from .schemas.common import ArtifactRef, Invocation, RegisteredSkillDescriptor, RunState, RunStatus
-from .schemas.text2env import Text2EnvCompileInput, Text2EnvCompileOutput
+from .schemas.common import ArtifactRef, Invocation, RegisteredSkillDescriptor, RunState
 from .schemas.workflow import RunCommandRequest
 from .schemas.workflow_operation import ReceiptDerivedFactClaimV2, ToolResultV2
 from .trusted_state import TrustedWorldState
@@ -76,120 +73,6 @@ class QualifiedApplicationAdapter(Protocol):
     def run_state(self, run_id: UUID) -> RunState | None: ...
 
 
-def _artifact_sort_key(ref: ArtifactRef) -> tuple[str, str, str]:
-    return (ref.sha256, ref.schema_version or "", ref.media_type)
-
-
-@dataclass(frozen=True)
-class _Text2EnvCompileEvidencePolicy:
-    skill_ref: str = "text2env.compile@1.0.0"
-    input_model: type[BaseModel] = Text2EnvCompileInput
-    evidence_policy_id: str = "text2env.compile.evidence"
-    evidence_policy_version: str = "1.0.0"
-
-    @property
-    def evidence_policy_implementation_sha256(self) -> str:
-        return hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-
-    def normalize(self, request: RunCommandRequest) -> tuple[RunCommandRequest, BaseModel]:
-        if request.skill_ref != self.skill_ref:
-            raise ValueError(f"policy does not own {request.skill_ref}")
-        typed = Text2EnvCompileInput.model_validate(request.parameters)
-        normalized = RunCommandRequest.model_validate(
-            {
-                **request.model_dump(mode="python"),
-                "parameters": typed.model_dump(mode="json"),
-            }
-        )
-        return normalized, typed
-
-    def authorize(self, state: TrustedWorldState, parameters: BaseModel) -> None:
-        if type(parameters) is not Text2EnvCompileInput:
-            raise TypeError("compile policy requires Text2EnvCompileInput")
-        objectives = tuple(fact for fact in state.facts if fact.key == "request.objective")
-        if len(objectives) != 1 or type(objectives[0].value) is not str:
-            raise ValueError("compile requires one trusted request.objective fact")
-        if objectives[0].value != parameters.request:
-            raise ValueError("compile request must equal the trusted request.objective fact")
-
-    def claims(self, state: RunState) -> tuple[ReceiptDerivedFactClaimV2, ...]:
-        if state.status is not RunStatus.SUCCEEDED:
-            return ()
-        output = Text2EnvCompileOutput.model_validate(state.output)
-        return (
-            ReceiptDerivedFactClaimV2(
-                key="assets.catalog",
-                value=output.environment_package.asset_catalog.model_dump(mode="json"),
-            ),
-            ReceiptDerivedFactClaimV2(
-                key="environment.package",
-                value=output.environment_package.model_dump(mode="json"),
-            ),
-        )
-
-    def diagnostics(self, state: RunState) -> tuple[ArtifactRef, ...]:
-        if state.status is RunStatus.SUCCEEDED:
-            return ()
-        assert state.blocker is not None
-        return tuple(sorted(state.blocker.artifact_refs, key=_artifact_sort_key))
-
-    def verify_result(
-        self,
-        *,
-        state: RunState,
-        claims: tuple[ReceiptDerivedFactClaimV2, ...],
-        result: ToolResultV2,
-        supporting: tuple[ArtifactRef, ...],
-    ) -> None:
-        if result.fresh_observations:
-            raise ValueError("compile cannot claim fresh observations")
-        if result.typed_output != state.output:
-            raise ValueError("compile ToolResult output does not equal its terminal child")
-        if claims != self.claims(state):
-            raise ValueError("compile claims do not equal the exact typed output")
-        if result.diagnostics != self.diagnostics(state):
-            raise ValueError("compile diagnostics do not equal terminal diagnostic evidence")
-        if not set(result.diagnostics).issubset(supporting):
-            raise ValueError("compile diagnostics are absent from supporting evidence")
-
-
-@dataclass(frozen=True)
-class _Text2EnvCompileApplicationAdapter:
-    application: CompileApplication
-    policy: _Text2EnvCompileEvidencePolicy = _Text2EnvCompileEvidencePolicy()
-    skill_ref: str = "text2env.compile@1.0.0"
-
-    def __post_init__(self) -> None:
-        if type(self.application) is not CompileApplication:
-            raise TypeError("application must be the exact CompileApplication")
-
-    @property
-    def artifact_root(self) -> Path:
-        return self.application.artifact_root
-
-    @property
-    def authority_path(self) -> Path:
-        return self.application.journal_path
-
-    @property
-    def skills(self) -> tuple[RegisteredSkillDescriptor, ...]:
-        return self.application.skills
-
-    def invoke(self, parameters: BaseModel, *, run_id: UUID) -> RunState:
-        if type(parameters) is not Text2EnvCompileInput:
-            raise TypeError("compile adapter requires Text2EnvCompileInput")
-        try:
-            return self.application.invoke_typed(parameters, run_id=run_id)
-        except CompileApplicationRunPendingError as error:
-            raise QualifiedApplicationRunPendingError(str(error)) from error
-
-    def invocation(self, run_id: UUID) -> Invocation | None:
-        return self.application.invocation(run_id)
-
-    def run_state(self, run_id: UUID) -> RunState | None:
-        return self.application.run_state(run_id)
-
-
 @dataclass(frozen=True)
 class _CatalogEntry:
     policy: SkillEvidencePolicy
@@ -198,6 +81,55 @@ class _CatalogEntry:
 
 
 _CATALOG_TOKEN = object()
+_BINDING_TOKEN = object()
+
+
+@dataclass(frozen=True)
+class GoldenExecutionBinding:
+    """Sealed exact Skill binding assembled by one Skill-owned factory."""
+
+    _token: object
+    skill_ref: str
+    policy: SkillEvidencePolicy
+    application: QualifiedApplicationAdapter | None
+    child_authority: SQLiteRunStore | None
+
+
+def _create_golden_execution_binding(
+    *,
+    policy: SkillEvidencePolicy,
+    application: QualifiedApplicationAdapter | None,
+    child_authority: SQLiteRunStore | None,
+) -> GoldenExecutionBinding:
+    """Validate one Skill-owned binding without knowing its concrete application type."""
+
+    if child_authority is not None and type(child_authority) is not SQLiteRunStore:
+        raise TypeError("child_authority must be the exact SQLiteRunStore")
+    if application is not None:
+        if application.skill_ref != policy.skill_ref or application.policy is not policy:
+            raise ValueError("application and evidence policy are not exactly bound")
+        matching = tuple(
+            descriptor
+            for descriptor in application.skills
+            if f"{descriptor.skill_id}@{descriptor.version}" == policy.skill_ref
+        )
+        if len(matching) != 1:
+            raise ValueError("application does not expose its one exact Skill")
+        if schema_model(matching[0].input_schema) is not policy.input_model:
+            raise ValueError("application and evidence policy are not exactly bound")
+        application_authority = SQLiteRunStore(application.authority_path)
+        if child_authority is not None and (
+            child_authority.path.resolve() != application_authority.path.resolve()
+        ):
+            raise ValueError("application and child authority do not match")
+        child_authority = application_authority
+    return GoldenExecutionBinding(
+        _token=_BINDING_TOKEN,
+        skill_ref=policy.skill_ref,
+        policy=policy,
+        application=application,
+        child_authority=child_authority,
+    )
 
 
 class GoldenExecutionCatalog:
@@ -241,47 +173,29 @@ class GoldenExecutionCatalog:
 
 def create_golden_execution_catalog(
     *,
-    compile_application: CompileApplication | None = None,
-    compile_child_authority: SQLiteRunStore | None = None,
+    bindings: tuple[GoldenExecutionBinding, ...] = (),
 ) -> GoldenExecutionCatalog:
-    """Assemble P2 authority; only the exact production compile application is admitted."""
+    """Assemble a sealed catalog from independently owned exact Skill bindings."""
 
-    policy = _Text2EnvCompileEvidencePolicy()
-    if compile_child_authority is not None and type(compile_child_authority) is not SQLiteRunStore:
-        raise TypeError("compile_child_authority must be the exact SQLiteRunStore")
-    application: _Text2EnvCompileApplicationAdapter | None = None
-    if compile_application is not None:
-        if type(compile_application) is not CompileApplication:
-            raise TypeError("compile_application must be the exact CompileApplication")
-        application = _Text2EnvCompileApplicationAdapter(compile_application, policy=policy)
-        matching = tuple(
-            descriptor
-            for descriptor in application.skills
-            if f"{descriptor.skill_id}@{descriptor.version}" == policy.skill_ref
+    if type(bindings) is not tuple:
+        raise TypeError("bindings must be an exact tuple")
+    entries: dict[str, _CatalogEntry] = {}
+    for binding in bindings:
+        if type(binding) is not GoldenExecutionBinding or binding._token is not _BINDING_TOKEN:
+            raise TypeError("bindings must come from an exact Skill binding factory")
+        if binding.skill_ref in entries:
+            raise ValueError(f"duplicate Golden execution binding: {binding.skill_ref}")
+        entries[binding.skill_ref] = _CatalogEntry(
+            policy=binding.policy,
+            application=binding.application,
+            child_authority=binding.child_authority,
         )
-        if len(matching) != 1:
-            raise ValueError("compile application does not expose its one exact Skill")
-        descriptor = matching[0]
-        if schema_model(descriptor.input_schema) is not policy.input_model:
-            raise ValueError("compile application and evidence policy are not exactly bound")
-        application_authority = SQLiteRunStore(application.authority_path)
-        if compile_child_authority is not None and (
-            compile_child_authority.path.resolve() != application_authority.path.resolve()
-        ):
-            raise ValueError("compile application and child authority do not match")
-        compile_child_authority = application_authority
-    entries = {
-        policy.skill_ref: _CatalogEntry(
-            policy=policy,
-            application=application,
-            child_authority=compile_child_authority,
-        )
-    }
     return GoldenExecutionCatalog(_token=_CATALOG_TOKEN, entries=entries)
 
 
 __all__ = [
     "GoldenExecutionCatalog",
+    "GoldenExecutionBinding",
     "QualifiedApplicationAdapter",
     "QualifiedApplicationRunPendingError",
     "SkillEvidencePolicy",

@@ -15,7 +15,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from .schemas.base import Sha256
+from .schemas.base import CanonicalSkillRef, Sha256
 from .schemas.workflow import IdempotencyKey, OperationSnapshot, PrincipalId, RunSnapshot
 
 _CURRENT_COLUMNS = (
@@ -79,11 +79,12 @@ _OPERATION_COLUMNS = (
     (0, "operation_id", "TEXT", 1, None, 1, 0),
     (1, "workflow_run_id", "TEXT", 1, None, 0, 0),
     (2, "principal_id", "TEXT", 1, None, 0, 0),
-    (3, "idempotency_key", "TEXT", 1, None, 0, 0),
-    (4, "command_sha256", "TEXT", 1, None, 0, 0),
-    (5, "base_revision", "INTEGER", 1, None, 0, 0),
-    (6, "operation_json", "BLOB", 1, None, 0, 0),
-    (7, "operation_sha256", "TEXT", 1, None, 0, 0),
+    (3, "skill_ref", "TEXT", 1, None, 0, 0),
+    (4, "idempotency_key", "TEXT", 1, None, 0, 0),
+    (5, "command_sha256", "TEXT", 1, None, 0, 0),
+    (6, "base_revision", "INTEGER", 1, None, 0, 0),
+    (7, "operation_json", "BLOB", 1, None, 0, 0),
+    (8, "operation_sha256", "TEXT", 1, None, 0, 0),
 )
 _OPERATION_INDEXES = (
     (
@@ -98,8 +99,9 @@ _OPERATION_INDEXES = (
         0,
         (
             (0, 1, "workflow_run_id", 0, "BINARY", 1),
-            (1, 3, "idempotency_key", 0, "BINARY", 1),
-            (2, -1, None, 0, "BINARY", 0),
+            (1, 3, "skill_ref", 0, "BINARY", 1),
+            (2, 4, "idempotency_key", 0, "BINARY", 1),
+            (3, -1, None, 0, "BINARY", 0),
         ),
     ),
     (
@@ -108,7 +110,7 @@ _OPERATION_INDEXES = (
         0,
         (
             (0, 1, "workflow_run_id", 0, "BINARY", 1),
-            (1, 5, "base_revision", 0, "BINARY", 1),
+            (1, 6, "base_revision", 0, "BINARY", 1),
             (2, -1, None, 0, "BINARY", 0),
         ),
     ),
@@ -148,6 +150,7 @@ class _CurrentOperation(BaseModel):
     operation_id: str
     workflow_run_id: str
     principal_id: PrincipalId
+    skill_ref: CanonicalSkillRef
     idempotency_key: IdempotencyKey
     command_sha256: Sha256
     base_revision: int
@@ -338,6 +341,7 @@ class SQLiteGoldenRunStore:
         *,
         principal_id: str,
         workflow_run_id: UUID,
+        skill_ref: str,
         idempotency_key: str,
     ) -> _StoredOperation | None:
         """Read one operation idempotency slot without disclosing another principal."""
@@ -354,12 +358,12 @@ class SQLiteGoldenRunStore:
                 return None
             row = connection.execute(
                 """
-                SELECT operation_id, workflow_run_id, principal_id, idempotency_key,
+                SELECT operation_id, workflow_run_id, principal_id, skill_ref, idempotency_key,
                        command_sha256, base_revision, operation_json, operation_sha256
                 FROM golden_workflow_operations
-                WHERE workflow_run_id = ? AND idempotency_key = ?
+                WHERE workflow_run_id = ? AND skill_ref = ? AND idempotency_key = ?
                 """,
-                (str(workflow_run_id), idempotency_key),
+                (str(workflow_run_id), skill_ref, idempotency_key),
             ).fetchone()
         return None if row is None else _decode_operation(row)
 
@@ -368,6 +372,7 @@ class SQLiteGoldenRunStore:
         *,
         principal_id: str,
         workflow_run_id: UUID,
+        skill_ref: str,
         idempotency_key: str,
         command_sha256: str,
         expected_workflow_revision: int,
@@ -391,12 +396,12 @@ class SQLiteGoldenRunStore:
             current = start.snapshot
             row = connection.execute(
                 """
-                SELECT operation_id, workflow_run_id, principal_id, idempotency_key,
+                SELECT operation_id, workflow_run_id, principal_id, skill_ref, idempotency_key,
                        command_sha256, base_revision, operation_json, operation_sha256
                 FROM golden_workflow_operations
-                WHERE workflow_run_id = ? AND idempotency_key = ?
+                WHERE workflow_run_id = ? AND skill_ref = ? AND idempotency_key = ?
                 """,
-                (str(workflow_run_id), idempotency_key),
+                (str(workflow_run_id), skill_ref, idempotency_key),
             ).fetchone()
             if row is not None:
                 existing = _decode_operation(row)
@@ -417,6 +422,7 @@ class SQLiteGoldenRunStore:
             if (
                 operation.workflow_run_id != workflow_run_id
                 or operation.principal_id != principal_id
+                or operation.skill_ref != skill_ref
                 or operation.idempotency_key != idempotency_key
                 or operation.command.sha256 != command_sha256
                 or operation.base_revision != expected_workflow_revision
@@ -437,14 +443,15 @@ class SQLiteGoldenRunStore:
                 connection.execute(
                     """
                     INSERT OR ABORT INTO golden_workflow_operations (
-                        operation_id, workflow_run_id, principal_id, idempotency_key,
+                        operation_id, workflow_run_id, principal_id, skill_ref, idempotency_key,
                         command_sha256, base_revision, operation_json, operation_sha256
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         str(operation.operation_id),
                         str(workflow_run_id),
                         principal_id,
+                        skill_ref,
                         idempotency_key,
                         command_sha256,
                         operation.base_revision,
@@ -610,7 +617,7 @@ class SQLiteGoldenRunStore:
                 return ()
             rows = connection.execute(
                 """
-                SELECT operation_id, workflow_run_id, principal_id, idempotency_key,
+                SELECT operation_id, workflow_run_id, principal_id, skill_ref, idempotency_key,
                        command_sha256, base_revision, operation_json, operation_sha256
                 FROM golden_workflow_operations
                 WHERE workflow_run_id = ?
@@ -748,6 +755,7 @@ def _decode_operation(row: sqlite3.Row) -> _StoredOperation:
         str(operation.operation_id) != authority.operation_id
         or str(operation.workflow_run_id) != authority.workflow_run_id
         or operation.principal_id != authority.principal_id
+        or operation.skill_ref != authority.skill_ref
         or operation.idempotency_key != authority.idempotency_key
         or operation.command.sha256 != authority.command_sha256
         or operation.base_revision != authority.base_revision
@@ -804,12 +812,13 @@ def _create_operation_table(connection: sqlite3.Connection) -> None:
             operation_id TEXT NOT NULL PRIMARY KEY,
             workflow_run_id TEXT NOT NULL,
             principal_id TEXT NOT NULL,
+            skill_ref TEXT NOT NULL,
             idempotency_key TEXT NOT NULL,
             command_sha256 TEXT NOT NULL,
             base_revision INTEGER NOT NULL,
             operation_json BLOB NOT NULL,
             operation_sha256 TEXT NOT NULL,
-            UNIQUE (workflow_run_id, idempotency_key),
+            UNIQUE (workflow_run_id, skill_ref, idempotency_key),
             UNIQUE (workflow_run_id, base_revision)
         )
         """
@@ -846,7 +855,7 @@ def _select_operation(
 ) -> sqlite3.Row | None:
     return connection.execute(
         """
-        SELECT operation_id, workflow_run_id, principal_id, idempotency_key,
+        SELECT operation_id, workflow_run_id, principal_id, skill_ref, idempotency_key,
                command_sha256, base_revision, operation_json, operation_sha256
         FROM golden_workflow_operations
         WHERE operation_id = ?
@@ -886,10 +895,6 @@ def _read_named_column_layout(
         tuple(row[key] for key in ("cid", "name", "type", "notnull", "dflt_value", "pk", "hidden"))
         for row in connection.execute("SELECT * FROM pragma_table_xinfo(?)", (table_name,))
     )
-
-
-def _read_index_layouts(connection: sqlite3.Connection) -> tuple[tuple[object, ...], ...]:
-    return _read_named_index_layouts(connection, "golden_workflow_starts")
 
 
 def _read_named_index_layouts(

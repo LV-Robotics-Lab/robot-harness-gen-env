@@ -2,6 +2,12 @@
 
 ## 2026-09-10
 
+- 增加 P2 compile-only `GoldenRunHarness.submit`：同一 workflow 内真实调用 checked qualified
+  production compile，把 command、frozen execution/policy identity、controlled child、ToolResult、
+  唯一 StateDelta、workflow receipt 与 revision 0→1 head 收入同一 CAS/SQLite closure。generic catalog
+  与 compile binding/policy 分模块；operation 幂等域包含 exact Skill；四个公开重启窗口锁住安全继续、
+  保守等待和 terminal-only parent commit。Harness 公共 schema 当前为 39 份。本切片不包含 replay/
+  validate dispatch、MCP、Genesis、promotion 或任意外部副作用的 exactly-once 声明。
 - 从固定 compile 重签提交 `13f654e` 独立恢复 replay qualification：旧 bundle 先按
   `self_improving/harness/__init__.py` identity 漂移拒绝；随后在全新外部 bundle/scratch/CAS 与临时
   delegated scope 中真实执行 direct/kernel 两条 0/900/120/120/12 路径。物理 pass、120/100/114

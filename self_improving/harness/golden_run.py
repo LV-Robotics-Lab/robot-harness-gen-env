@@ -188,6 +188,7 @@ class GoldenRunHarness:
         existing = self._workflow_store.read_operation(
             principal_id=request.principal_id,
             workflow_run_id=request.workflow_run_id,
+            skill_ref=request.skill_ref,
             idempotency_key=request.idempotency_key,
         )
         if existing is not None:
@@ -221,8 +222,6 @@ class GoldenRunHarness:
             request.skill_ref,
         )
         normalized, parameters = self._normalize_command(policy, request)
-        if normalized.command_id != request.command_id:
-            raise GoldenRunCorruptionError("command normalization changed its identity")
         base_state = self._resolve_canonical_model(current.state_ref, TrustedWorldState)
         self._authorize(policy, base_state, parameters)
         command_ref = self._publish_model(
@@ -257,6 +256,7 @@ class GoldenRunHarness:
         reserved = self._workflow_store.reserve_operation(
             principal_id=normalized.principal_id,
             workflow_run_id=normalized.workflow_run_id,
+            skill_ref=normalized.skill_ref,
             idempotency_key=normalized.idempotency_key,
             command_sha256=command_ref.sha256,
             expected_workflow_revision=normalized.expected_workflow_revision,
@@ -302,20 +302,15 @@ class GoldenRunHarness:
         entry = entries[0]
         frozen = self._resolve_descriptor(entry.descriptor_ref)
         descriptor = live[0]
-        if type(frozen) is not type(descriptor) or frozen.model_dump(
-            mode="json"
-        ) != descriptor.model_dump(mode="json"):
-            raise GoldenRunRegistryError(
-                "HARN_DEPENDENCY_DRIFT",
-                f"live descriptor differs from the frozen registry: {skill_ref}",
+        if _values_differ(
+            (
+                (type(frozen), type(descriptor)),
+                (frozen.model_dump(mode="json"), descriptor.model_dump(mode="json")),
             )
-        if (
-            descriptor.qualification_artifact != entry.qualification_ref
-            or schema_model(descriptor.input_schema) is not policy.input_model
         ):
             raise GoldenRunRegistryError(
                 "HARN_DEPENDENCY_DRIFT",
-                f"live handler, schema, and qualification do not intersect: {skill_ref}",
+                f"live descriptor differs from the frozen registry: {skill_ref}",
             )
         qualified = QualifiedSkillExecutionV2(
             schema_version="harness.qualified_skill_execution.v2",
@@ -352,19 +347,23 @@ class GoldenRunHarness:
             raise GoldenRunCorruptionError("operation no longer has one frozen qualified Skill")
         entry = entries[0]
         descriptor = self._resolve_descriptor(entry.descriptor_ref)
-        if (
-            qualified.skill_ref != operation.skill_ref
-            or qualified.descriptor != entry.descriptor_ref
-            or qualified.input_schema != descriptor.input_schema
-            or qualified.output_schema != descriptor.output_schema
-            or qualified.implementation_sha256 != descriptor.implementation_sha256
-            or qualified.qualification_artifact != entry.qualification_ref
-            or qualified.qualification_report != entry.qualification_report_ref
-            or qualified.max_attempts != descriptor.max_attempts
-            or qualified.evidence_policy_id != policy.evidence_policy_id
-            or qualified.evidence_policy_version != policy.evidence_policy_version
-            or qualified.evidence_policy_implementation_sha256
-            != policy.evidence_policy_implementation_sha256
+        if _values_differ(
+            (
+                (qualified.skill_ref, operation.skill_ref),
+                (qualified.descriptor, entry.descriptor_ref),
+                (qualified.input_schema, descriptor.input_schema),
+                (qualified.output_schema, descriptor.output_schema),
+                (qualified.implementation_sha256, descriptor.implementation_sha256),
+                (qualified.qualification_artifact, entry.qualification_ref),
+                (qualified.qualification_report, entry.qualification_report_ref),
+                (qualified.max_attempts, descriptor.max_attempts),
+                (qualified.evidence_policy_id, policy.evidence_policy_id),
+                (qualified.evidence_policy_version, policy.evidence_policy_version),
+                (
+                    qualified.evidence_policy_implementation_sha256,
+                    policy.evidence_policy_implementation_sha256,
+                ),
+            )
         ):
             raise GoldenRunCorruptionError("operation frozen execution binding is inconsistent")
         return policy, qualified
@@ -476,28 +475,34 @@ class GoldenRunHarness:
         skill_id, version = operation.skill_ref.split("@", maxsplit=1)
         parameters_digest = _canonical_json_sha256(command.parameters)
         descriptor = self._resolve_descriptor(qualified.descriptor)
-        if (
-            intent.run_id != operation.child_run_id
-            or intent.skill_id != skill_id
-            or intent.skill_version != version
-            or intent.input_schema != qualified.input_schema
-            or intent.raw_parameters_sha256 != parameters_digest
-            or intent.effective_parameters_sha256 != parameters_digest
-            or intent.descriptor_sha256
-            != _canonical_json_sha256(descriptor.model_dump(mode="json"))
-            or intent.implementation_sha256 != qualified.implementation_sha256
-            or intent.qualification_sha256 != qualified.qualification_artifact.sha256
-            or intent.max_attempts != qualified.max_attempts
-            or state.run_id != operation.child_run_id
-            or state.skill_id != skill_id
-            or state.skill_version != version
-            or state.max_attempts != qualified.max_attempts
+        if _values_differ(
+            (
+                (intent.run_id, operation.child_run_id),
+                (intent.skill_id, skill_id),
+                (intent.skill_version, version),
+                (intent.input_schema, qualified.input_schema),
+                (intent.raw_parameters_sha256, parameters_digest),
+                (intent.effective_parameters_sha256, parameters_digest),
+                (
+                    intent.descriptor_sha256,
+                    _canonical_json_sha256(descriptor.model_dump(mode="json")),
+                ),
+                (intent.implementation_sha256, qualified.implementation_sha256),
+                (intent.qualification_sha256, qualified.qualification_artifact.sha256),
+                (intent.max_attempts, qualified.max_attempts),
+                (state.run_id, operation.child_run_id),
+                (state.skill_id, skill_id),
+                (state.skill_version, version),
+                (state.max_attempts, qualified.max_attempts),
+            )
         ):
             raise GoldenRunCorruptionError("terminal child differs from its frozen execution")
         invocation = lifecycle.invocation
-        if invocation is not None and (
-            invocation.effective_parameters != command.parameters
-            or invocation.dependencies != intent.dependencies
+        if invocation is not None and _values_differ(
+            (
+                (invocation.effective_parameters, command.parameters),
+                (invocation.dependencies, intent.dependencies),
+            )
         ):
             raise GoldenRunCorruptionError("child invocation differs from its frozen command")
 
@@ -616,7 +621,7 @@ class GoldenRunHarness:
             invocation=invocation_ref,
             run_state=run_state_ref,
             typed_output=state.output,
-            state_delta=delta,
+            state_delta=delta_ref,
             diagnostics=policy.diagnostics(state),
             trusted_receipt=receipt_ref,
             fresh_observations=(),
@@ -707,14 +712,18 @@ class GoldenRunHarness:
         )
         terminal = tuple(op for op in operations if op.status is not RunStatus.RUNNING)
         running = tuple(op for op in operations if op.status is RunStatus.RUNNING)
-        if (
-            len(terminal) != snapshot.revision
-            or len(running) > 1
-            or tuple(op.base_revision for op in operations) != tuple(range(len(operations)))
-            or snapshot.turn_seq != snapshot.revision
-            or snapshot.child_runs != tuple(op.child_run_id for op in terminal)
-            or (snapshot.active_operation is None) != (not running)
-            or (running and running[0].operation_id != snapshot.active_operation)
+        expected_active = None if not running else running[0].operation_id
+        if len(running) > 1 or _values_differ(
+            (
+                (len(terminal), snapshot.revision),
+                (
+                    tuple(op.base_revision for op in operations),
+                    tuple(range(len(operations))),
+                ),
+                (snapshot.turn_seq, snapshot.revision),
+                (snapshot.child_runs, tuple(op.child_run_id for op in terminal)),
+                (snapshot.active_operation, expected_active),
+            )
         ):
             raise GoldenRunCorruptionError("workflow operation journal and head disagree")
 
@@ -786,15 +795,19 @@ class GoldenRunHarness:
         command = self._resolve_canonical_model(operation.command, RunCommandRequest)
         self._resolve_frozen_execution(operation)
         if (
-            command.command_id != operation.operation_id
-            or command.workflow_run_id != prior.workflow_run_id
-            or command.principal_id != prior.principal_id
-            or command.idempotency_key != operation.idempotency_key
-            or command.skill_ref != operation.skill_ref
-            or command.expected_workflow_revision != prior.revision
-            or command.expected_state_sha256 != prior.state_sha256
-            or command.expected_receipt_head_sha256 != prior.receipt_head.sha256
-            or operation.base_revision != prior.revision
+            _values_differ(
+                (
+                    (command.command_id, operation.operation_id),
+                    (command.workflow_run_id, prior.workflow_run_id),
+                    (command.principal_id, prior.principal_id),
+                    (command.idempotency_key, operation.idempotency_key),
+                    (command.skill_ref, operation.skill_ref),
+                    (command.expected_workflow_revision, prior.revision),
+                    (command.expected_state_sha256, prior.state_sha256),
+                    (command.expected_receipt_head_sha256, prior.receipt_head.sha256),
+                    (operation.base_revision, prior.revision),
+                )
+            )
             or operation.started_at < prior.updated_at
         ):
             raise GoldenRunCorruptionError("running operation differs from its reserved head")
@@ -843,41 +856,43 @@ class GoldenRunHarness:
             result=result,
             supporting=supporting,
         )
-        common_invalid = (
-            result.workflow_run_id != operation.workflow_run_id
-            or result.operation_id != operation.operation_id
-            or result.skill_ref != operation.skill_ref
-            or result.status != operation.status
-            or result.started_at != operation.started_at
-            or result.ended_at != operation.ended_at
-            or result.child_run_id != operation.child_run_id
-            or result.typed_output != child_state.output
-            or result.blocker != child_state.blocker
-            or child_state.run_id != operation.child_run_id
-            or result.invocation != tool_receipt.invocation
-            or result.run_state != tool_receipt.run_state
-            or tool_receipt.workflow_run_id != operation.workflow_run_id
-            or tool_receipt.operation_id != operation.operation_id
-            or tool_receipt.principal_id != operation.principal_id
-            or tool_receipt.command != operation.command
-            or tool_receipt.base_revision != operation.base_revision
-            or tool_receipt.base_state_sha256 != prior.state_sha256
-            or tool_receipt.base_state != prior.state_ref
-            or tool_receipt.registry_snapshot != prior.registry_snapshot
-            or tool_receipt.skill != qualified
-            or tool_receipt.status != operation.status
-            or tool_receipt.started_at != operation.started_at
-            or tool_receipt.ended_at != operation.ended_at
-            or tool_receipt.child_run_id != operation.child_run_id
-            or tool_receipt.invocation_digest != child_state.invocation_digest
-            or tool_receipt.typed_output != child_state.output
-            or tool_receipt.blocker != child_state.blocker
-            or tool_receipt.supporting_artifacts != supporting
-            or tool_receipt.derived_fact_claims != claims
-            or (invocation is None) != (child_state.invocation_digest is None)
-            or (
-                invocation is not None
-                and invocation.invocation_digest != child_state.invocation_digest
+        common_invalid = _values_differ(
+            (
+                (result.workflow_run_id, operation.workflow_run_id),
+                (result.operation_id, operation.operation_id),
+                (result.skill_ref, operation.skill_ref),
+                (result.status, operation.status),
+                (result.started_at, operation.started_at),
+                (result.ended_at, operation.ended_at),
+                (result.child_run_id, operation.child_run_id),
+                (result.typed_output, child_state.output),
+                (result.blocker, child_state.blocker),
+                (child_state.run_id, operation.child_run_id),
+                (result.invocation, tool_receipt.invocation),
+                (result.run_state, tool_receipt.run_state),
+                (tool_receipt.workflow_run_id, operation.workflow_run_id),
+                (tool_receipt.operation_id, operation.operation_id),
+                (tool_receipt.principal_id, operation.principal_id),
+                (tool_receipt.command, operation.command),
+                (tool_receipt.base_revision, operation.base_revision),
+                (tool_receipt.base_state_sha256, prior.state_sha256),
+                (tool_receipt.base_state, prior.state_ref),
+                (tool_receipt.registry_snapshot, prior.registry_snapshot),
+                (tool_receipt.skill, qualified),
+                (tool_receipt.status, operation.status),
+                (tool_receipt.started_at, operation.started_at),
+                (tool_receipt.ended_at, operation.ended_at),
+                (tool_receipt.child_run_id, operation.child_run_id),
+                (tool_receipt.invocation_digest, child_state.invocation_digest),
+                (tool_receipt.typed_output, child_state.output),
+                (tool_receipt.blocker, child_state.blocker),
+                (tool_receipt.supporting_artifacts, supporting),
+                (tool_receipt.derived_fact_claims, claims),
+                ((invocation is None), (child_state.invocation_digest is None)),
+                (
+                    None if invocation is None else invocation.invocation_digest,
+                    child_state.invocation_digest,
+                ),
             )
         )
         if common_invalid:
@@ -888,10 +903,15 @@ class GoldenRunHarness:
         delta_ref: ArtifactRef | None = None
         if operation.status is RunStatus.SUCCEEDED:
             assert result.state_delta is not None
-            if receipt.state_delta is None:
-                raise GoldenRunCorruptionError("successful receipt omits its state delta")
-            delta = self._resolve_canonical_model(receipt.state_delta, StateDeltaV2)
-            if delta != result.state_delta or delta.base_state_sha256 != prior.state_sha256:
+            if receipt.state_delta != result.state_delta:
+                raise GoldenRunCorruptionError("state delta differs across result evidence")
+            delta = self._resolve_canonical_model(result.state_delta, StateDeltaV2)
+            if (
+                delta.delta_sha256 != state_delta_v2_sha256(delta)
+                or delta.base_state_sha256 != prior.state_sha256
+                or delta.receipt != result.trusted_receipt
+                or not result.started_at <= delta.effective_at <= result.ended_at
+            ):
                 raise GoldenRunCorruptionError("state delta differs across result evidence")
             base_state = self._resolve_canonical_model(prior.state_ref, TrustedWorldState)
             expected_mutations = _mutations_from_claims(
@@ -914,27 +934,29 @@ class GoldenRunHarness:
                 self._artifact_store.resolve(fact.source_artifact)
             resulting_state = receipt.resulting_state
             resulting_sha = published.state_sha256
-            delta_ref = receipt.state_delta
+            delta_ref = result.state_delta
         elif result.state_delta is not None or receipt.state_delta is not None:
             raise GoldenRunCorruptionError("non-successful operation cannot advance state")
 
-        if (
-            receipt_ref.schema_version != "harness.workflow_operation_receipt.v2"
-            or receipt.workflow_run_id != operation.workflow_run_id
-            or receipt.operation_id != operation.operation_id
-            or receipt.principal_id != operation.principal_id
-            or receipt.command != operation.command
-            or receipt.predecessor_receipt != prior.receipt_head
-            or receipt.tool_receipt != result.trusted_receipt
-            or receipt.tool_result != operation.tool_result
-            or receipt.state_delta != delta_ref
-            or receipt.base_revision != operation.base_revision
-            or receipt.committed_revision != operation.committed_revision
-            or receipt.base_state_sha256 != prior.state_sha256
-            or receipt.resulting_state_sha256 != resulting_sha
-            or receipt.resulting_state != resulting_state
-            or receipt.status != operation.status
-            or receipt.committed_at != operation.ended_at
+        if _values_differ(
+            (
+                (receipt_ref.schema_version, "harness.workflow_operation_receipt.v2"),
+                (receipt.workflow_run_id, operation.workflow_run_id),
+                (receipt.operation_id, operation.operation_id),
+                (receipt.principal_id, operation.principal_id),
+                (receipt.command, operation.command),
+                (receipt.predecessor_receipt, prior.receipt_head),
+                (receipt.tool_receipt, result.trusted_receipt),
+                (receipt.tool_result, operation.tool_result),
+                (receipt.state_delta, delta_ref),
+                (receipt.base_revision, operation.base_revision),
+                (receipt.committed_revision, operation.committed_revision),
+                (receipt.base_state_sha256, prior.state_sha256),
+                (receipt.resulting_state_sha256, resulting_sha),
+                (receipt.resulting_state, resulting_state),
+                (receipt.status, operation.status),
+                (receipt.committed_at, operation.ended_at),
+            )
         ):
             raise GoldenRunCorruptionError("workflow operation receipt is inconsistently bound")
         return RunSnapshot.model_validate(
@@ -1239,6 +1261,10 @@ def _canonical_json_sha256(value: object) -> str:
         separators=(",", ":"),
     ).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def _values_differ(pairs: tuple[tuple[object, object], ...]) -> bool:
+    return any(actual != expected for actual, expected in pairs)
 
 
 def _require_utc_clock(value: datetime) -> None:

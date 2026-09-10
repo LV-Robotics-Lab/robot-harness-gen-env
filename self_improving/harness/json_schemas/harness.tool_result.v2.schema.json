@@ -129,104 +129,6 @@
       "title": "RunStatus",
       "type": "string"
     },
-    "StateDeltaV2": {
-      "$id": "harness.state_delta.v2",
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "additionalProperties": false,
-      "description": "An actor-neutral receipt-bound compare-and-swap state change.",
-      "properties": {
-        "base_state_sha256": {
-          "pattern": "^[0-9a-f]{64}$",
-          "title": "Base State Sha256",
-          "type": "string"
-        },
-        "delta_sha256": {
-          "pattern": "^[0-9a-f]{64}$",
-          "title": "Delta Sha256",
-          "type": "string"
-        },
-        "effective_at": {
-          "format": "date-time",
-          "title": "Effective At",
-          "type": "string"
-        },
-        "mutations": {
-          "items": {
-            "$ref": "#/$defs/StateMutation"
-          },
-          "title": "Mutations",
-          "type": "array"
-        },
-        "receipt": {
-          "$ref": "#/$defs/ArtifactRef"
-        },
-        "schema_version": {
-          "const": "harness.state_delta.v2",
-          "title": "Schema Version",
-          "type": "string"
-        }
-      },
-      "required": [
-        "schema_version",
-        "base_state_sha256",
-        "effective_at",
-        "receipt",
-        "mutations",
-        "delta_sha256"
-      ],
-      "title": "StateDeltaV2",
-      "type": "object"
-    },
-    "StateMutation": {
-      "additionalProperties": false,
-      "description": "One compare-and-swap fact mutation.",
-      "properties": {
-        "expected_fact_sha256": {
-          "anyOf": [
-            {
-              "pattern": "^[0-9a-f]{64}$",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Expected Fact Sha256"
-        },
-        "fact": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/WorldFact"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "key": {
-          "maxLength": 255,
-          "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+$",
-          "title": "Key",
-          "type": "string"
-        },
-        "operation": {
-          "enum": [
-            "upsert",
-            "retract"
-          ],
-          "title": "Operation",
-          "type": "string"
-        }
-      },
-      "required": [
-        "operation",
-        "key",
-        "expected_fact_sha256",
-        "fact"
-      ],
-      "title": "StateMutation",
-      "type": "object"
-    },
     "UnknownField": {
       "additionalProperties": false,
       "properties": {
@@ -394,7 +296,7 @@
     "state_delta": {
       "anyOf": [
         {
-          "$ref": "#/$defs/StateDeltaV2"
+          "$ref": "#/$defs/ArtifactRef"
         },
         {
           "type": "null"

@@ -4,8 +4,9 @@
 
 ## Doing
 
-- P0+P2 隔离集成候选已完成真实 compile 与 replay 资格重签，当前等待主线审阅。本切片不实现
-  `GoldenRunHarness.submit`、replay/validate workflow dispatch、MCP、Genesis 或 promotion。
+- P2 `GoldenRunHarness.submit` 首个 compile-only 候选已完成实现与本地门禁，等待固定差异双轴审阅和
+  主线集成。该候选只把 exact qualified `text2env.compile@1.0.0` 从 workflow revision 0 推进到 1；
+  不实现 replay/validate workflow dispatch、MCP、Genesis 或 promotion。
 
 ## Next
 
@@ -13,8 +14,9 @@
   evidence policy；用 `Place a can on top of a plate.`、seed 7、`0/900/120/120/12` 让同一 workflow
   从 compile revision 1 推进到 replay revision 2。replay input package 必须来自当前可信 state，完整
   child/receipt/CAS chain 必须连续；该 tracer 只证明 legacy RoboTwin/SAPIEN 编排，不是 Genesis。
-- P2：在 actor-neutral v2 receipt/state-delta 上接入 exact qualified compile → replay 两步调度；不得复用
-  planner-specific v1 receipt 字段冒充外部 Codex/MCP 调用。
+- P3：在 P2 actor-neutral v2 receipt/state-delta 上新增 replay-owned binding，完成 exact qualified
+  compile → replay 两步调度；不得修改 compile evidence-policy identity，也不得复用 planner-specific
+  v1 receipt 字段冒充外部 Codex/MCP 调用。
 - P4：S1 的 `submit/read`、OperationSnapshot 和真实 Registry handler 绑定完成后，接入 MCP 2.2 的
   low-level Server/Client；在同一切片冻结 dependency/runtime lock，不在实验循环中安装依赖。
 - P6：在已合入的 exact-byte staging 后，单独实现 collision provenance、settle 与 Genesis
@@ -33,6 +35,18 @@
   `RegistrySnapshot` 目前不能单独作为生产 trust root。
 
 ## Done
+
+- P2 首个真实 submit 纵切：公开 `GoldenRunHarness.submit` 在同一父 workflow 中调用 production
+  `CompileApplication`，以 exact RegistrySnapshot/live descriptor/qualification/policy 交集冻结执行，
+  把 command、qualified execution、controlled child、ToolResult v2、StateDelta v2、workflow receipt
+  与 revision 0→1 head 全部绑定到同一 CAS/SQLite authority。generic catalog 与 compile binding/policy
+  分模块，compile policy digest 只覆盖自身稳定闭包；operation 幂等域为
+  `(workflow_run_id, exact skill_ref, idempotency_key)`；ToolResult 与 workflow receipt 指向同一份
+  StateDelta CAS。四个公开重启窗口均已锁定：reservation-before-intent 可安全继续；intent-only 与
+  invocation-only 保守保持 running、不重复 handler；child terminal 可只提交父 head。focused 179
+  tests，1,354 statements / 392 branches 均为 100%；39 份 schema snapshot 和 compile/replay/application
+  三个资格身份节点通过。该结果不声称 exactly-once 外部副作用，也不证明 replay、MCP、Genesis、
+  promotion 或真机能力。
 
 - 固定基线 `461b05d` 的两项 root demo 失败已修复为测试兼容切片：原测试在 submit 前安装
   `harness_run_states` trigger，P2 exact-layout 门会按设计在 Invocation/handler 前拒绝，因而无法再

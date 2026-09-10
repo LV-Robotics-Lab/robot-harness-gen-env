@@ -1,5 +1,34 @@
 # 进度与结果
 
+## 2026-09-10 P2 GoldenRun.submit compile-only 纵切
+
+- 从固定绿色起点 `e67b656ea97044da5b09ee8323c48e752cd88c76` 建立独立 worktree，先以公共
+  `GoldenRunHarness.submit` tracer 冻结 revision 0→1：真实调用 checked qualified
+  `text2env.compile@1.0.0` 的 production `CompileApplication`，返回 terminal OperationSnapshot，随后
+  从 CAS 重建 ToolResult、唯一 StateDelta、workflow receipt 与 resulting trusted state，并在重启后
+  不重执行已提交 child。
+- actor-neutral catalog kernel 与 compile-owned binding/adapter/policy 已分离。generic factory 不导入或
+  硬编码 `CompileApplication`；compile evidence-policy digest 使用独立稳定源码闭包，所以后续新增
+  replay binding 不会只因修改中央 catalog 而改变既有 compile operation 的 frozen policy identity。
+- operation SQLite authority 显式持久化 `skill_ref`，lookup/唯一域改为
+  `(workflow_run_id, skill_ref, idempotency_key)`，decode 再与 OperationSnapshot 交叉对账；同一 workflow
+  的不同 exact Skill 可复用同一 key，同一 Skill/key 的不同 command 仍拒绝。
+- `ToolResultV2.state_delta` 只保存 `ArtifactRef | None`，与 workflow receipt 指向同一 CAS delta；读路径
+  从 ToolResult 的 ref 解析一次，重算 delta digest，再校验 base state、trusted receipt、有效时间、
+  mutations 与 resulting state。发布顺序保持无环：command/qualified execution → child receipt → delta →
+  resulting state → ToolResult → workflow receipt → SQLite 原子 terminal/head。
+- 四个公开恢复窗口已固定：parent reservation 后、child intent 前可安全继续；intent-only 和
+  invocation-only 因无法证明 handler 外部副作用边界而保守保持 running；child terminal 后、parent
+  commit 前可只重建 CAS closure 并提交父 head，不再次调用 handler。这里只声明持久边界已证明的恢复
+  语义，不扩大为跨任意外部副作用的 exactly-once。
+- focused：`test_golden_run.py` + `test_golden_submit.py` 为 `179 passed`；7 个相关模块共
+  1,354 statements / 392 branches，语句与分支均为 100%。39 份 Harness schema snapshot 通过；compile
+  checked qualification、replay checked qualification 与 production compile application 三个固定身份
+  节点为 `3 passed`。Harness 全套为 `2601 passed, 20 skipped`，完整 root 为
+  `3614 passed, 20 skipped`。Dashboard 三个约定入口仍返回 HTTP 404，无法同步控制面。
+- 明确边界：本切片没有接 replay/observe/validate dispatch、MCP、System 2 model loop、Genesis、
+  promotion、VLM fallback 或真机；compile 的 succeeded 也不等于物理 validation 或 publishable。
+
 ## 2026-09-10 root demo 兼容失败修复
 
 - 固定起点 `461b05d9efea11803ce5f35c3d7f2a089653d54f` 的完整 root 首轮稳定得到
