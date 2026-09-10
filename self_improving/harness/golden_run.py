@@ -8,6 +8,7 @@ import tempfile
 from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import cast
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ValidationError
@@ -190,6 +191,116 @@ class GoldenRunHarness:
                 f"persisted workflow failed its CAS closure: {error}"
             ) from error
         return snapshot
+
+    def read_workflow_artifact(
+        self,
+        request: RunReadRequest,
+        *,
+        sha256: str,
+    ) -> tuple[ArtifactRef, bytes]:
+        """Read one artifact explicitly reachable from a verified workflow closure."""
+
+        snapshot = self.read(request)
+        reachable = self._reachable_workflow_artifacts(snapshot)
+        ref = next((item for item in reachable if item.sha256 == sha256), None)
+        if ref is None:
+            raise GoldenRunNotFoundError("workflow artifact was not found for this principal")
+        return ref, self._artifact_store.resolve(ref).path.read_bytes()
+
+    def _reachable_workflow_artifacts(
+        self,
+        snapshot: RunSnapshot,
+    ) -> tuple[ArtifactRef, ...]:
+        refs: list[ArtifactRef] = [
+            snapshot.state_ref,
+            snapshot.start_request_ref,
+            snapshot.registry_snapshot,
+            snapshot.receipt_head,
+        ]
+        start = self._resolve_canonical_model(snapshot.start_request_ref, RunStartRequest)
+        refs.extend(start.initial_fact_evidence)
+        registry = self._resolve_canonical_model(snapshot.registry_snapshot, RegistrySnapshot)
+        for entry in registry.qualified_skills:
+            refs.extend(
+                (
+                    entry.descriptor_ref,
+                    entry.qualification_ref,
+                    entry.qualification_report_ref,
+                )
+            )
+        state = self._resolve_canonical_model(snapshot.state_ref, TrustedWorldState)
+        refs.extend(fact.source_artifact for fact in state.facts)
+
+        operations = tuple(
+            stored.operation
+            for stored in self._workflow_store.read_operations(
+                principal_id=snapshot.principal_id,
+                workflow_run_id=snapshot.workflow_run_id,
+            )
+        )
+        receipt_ref = snapshot.receipt_head
+        for operation in reversed(
+            tuple(item for item in operations if item.status is not RunStatus.RUNNING)
+        ):
+            receipt = self._resolve_canonical_model(
+                receipt_ref,
+                WorkflowOperationReceiptV2,
+            )
+            refs.extend(
+                (
+                    receipt_ref,
+                    receipt.predecessor_receipt,
+                    receipt.tool_receipt,
+                    receipt.tool_result,
+                    receipt.resulting_state,
+                )
+            )
+            refs.extend(filter(None, (receipt.state_delta,)))
+            receipt_ref = receipt.predecessor_receipt
+        refs.append(receipt_ref)
+
+        for operation in operations:
+            refs.extend((operation.command, operation.qualified_execution))
+            qualified = self._resolve_canonical_model(
+                operation.qualified_execution,
+                QualifiedSkillExecutionV2,
+            )
+            refs.extend(
+                (
+                    qualified.descriptor,
+                    qualified.qualification_artifact,
+                    qualified.qualification_report,
+                )
+            )
+        terminal_operations = tuple(
+            item for item in operations if item.status is not RunStatus.RUNNING
+        )
+        for operation in terminal_operations:
+            result_ref = cast(ArtifactRef, operation.tool_result)
+            refs.append(result_ref)
+            result = self._resolve_canonical_model(result_ref, ToolResultV2)
+            refs.extend((result.run_state, result.trusted_receipt, *result.fresh_observations))
+            refs.extend(filter(None, (result.invocation, result.state_delta)))
+            tool_receipt = self._resolve_canonical_model(
+                result.trusted_receipt,
+                TrustedToolReceiptV2,
+            )
+            refs.extend(
+                (
+                    tool_receipt.command,
+                    tool_receipt.base_state,
+                    tool_receipt.registry_snapshot,
+                    tool_receipt.skill.descriptor,
+                    tool_receipt.skill.qualification_artifact,
+                    tool_receipt.skill.qualification_report,
+                    tool_receipt.run_state,
+                    *tool_receipt.supporting_artifacts,
+                )
+            )
+            refs.extend(filter(None, (tool_receipt.invocation,)))
+            child_state = self._resolve_canonical_model(result.run_state, RunState)
+            refs.extend(child_state.artifacts)
+        return tuple(dict.fromkeys(refs))
 
     def submit(self, request: RunCommandRequest) -> OperationSnapshot:
         """Reserve, execute, and durably commit one exact qualified Skill command."""

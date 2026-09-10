@@ -67,15 +67,22 @@ def create_harness_mcp_server(adapter: HarnessMCPAdapter) -> Server:
             result = adapter.read_resource(MCPResourceRead(uri=str(params.uri)))
         except HarnessMCPProtocolError as error:
             raise MCPError(-32602, str(error)) from error
-        return types.ReadResourceResult(
-            contents=[
+        if result.text is not None:
+            content: types.TextResourceContents | types.BlobResourceContents = (
                 types.TextResourceContents(
                     uri=result.uri,
                     mime_type=result.media_type,
                     text=result.text,
                 )
-            ]
-        )
+            )
+        else:
+            assert result.blob is not None
+            content = types.BlobResourceContents(
+                uri=result.uri,
+                mime_type=result.media_type,
+                blob=result.blob,
+            )
+        return types.ReadResourceResult(contents=[content])
 
     return Server(
         "robot-harness-golden",

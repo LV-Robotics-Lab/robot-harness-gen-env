@@ -12,6 +12,9 @@ class GoldenRunHarness:
     def start(self, request: RunStartRequest) -> RunSnapshot: ...
     def submit(self, request: RunCommandRequest) -> OperationSnapshot: ...
     def read(self, request: RunReadRequest) -> RunSnapshot: ...
+    def read_workflow_artifact(
+        self, request: RunReadRequest, *, sha256: str
+    ) -> tuple[ArtifactRef, bytes]: ...
 ```
 
 可观察行为：workflow/child-run identity、revision/state/receipt CAS、幂等、连续 attempt history、
@@ -29,7 +32,9 @@ class HarnessMCPAdapter:
 
 可观察行为：只导出 exact qualified Skill；committed schema/tool snapshot；command envelope；
 structuredContent/TextContent/ImageContent/ResourceLink；协议错误与领域错误映射；stdout 零污染；
-official MCP client lifecycle。真实 stdio/HTTP server 是此 seam 的 transport adapter，不复制业务逻辑。
+official MCP client lifecycle。artifact resource 必须带 workflow identity，并只允许读取经完整历史重建
+可达的 typed refs；不能把裸 CAS digest 当授权。真实 stdio/HTTP server 是此 seam 的 transport adapter，
+不复制业务逻辑。
 
 ## S3 — Genesis runtime verification
 

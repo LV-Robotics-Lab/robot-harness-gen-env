@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import re
+from base64 import b64encode
+from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Literal, Mapping
@@ -34,6 +36,7 @@ from .schemas.workflow import (
     IdempotencyKey,
     RunCommandRequest,
     RunReadRequest,
+    RunSnapshot,
     RunStartRequest,
 )
 from .trusted_state import FactKey, WorldFactEvidence
@@ -99,7 +102,16 @@ class MCPResourceResult:
 
     uri: str
     media_type: str
-    text: str
+    text: str | None
+    blob: str | None = None
+
+
+@dataclass(frozen=True)
+class MCPWorkflowSkillInputProvider:
+    """One server-owned projection from a verified workflow head to Skill input."""
+
+    skill_ref: str
+    build: Callable[[RunSnapshot], BaseModel]
 
 
 class HarnessMCPAdapterError(ValueError):
@@ -149,12 +161,29 @@ _WORKFLOW_CREATE_TOOL = "harness_workflow_create_v1"
 _WORKFLOW_RESOURCE = re.compile(
     r"^harness://workflows/([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$"
 )
+_WORKFLOW_ARTIFACT_RESOURCE = re.compile(
+    r"^harness://workflows/"
+    r"([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})"
+    r"/artifacts/([0-9a-f]{64})$"
+)
+_WORKFLOW_SKILL_INPUT_RESOURCE = re.compile(
+    r"^harness://workflows/"
+    r"([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})"
+    r"/skill-inputs/([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)/"
+    r"((?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*))$"
+)
 
 
 class HarnessMCPAdapter:
     """Expose a small transport-neutral interface over the authoritative Harness."""
 
-    __slots__ = ("_harness", "_principal_id", "_registry_snapshot", "_token")
+    __slots__ = (
+        "_harness",
+        "_principal_id",
+        "_registry_snapshot",
+        "_skill_input_providers",
+        "_token",
+    )
 
     def __init__(
         self,
@@ -163,6 +192,7 @@ class HarnessMCPAdapter:
         harness: GoldenRunHarness,
         principal_id: str,
         registry_snapshot: ArtifactRef,
+        skill_input_providers: Mapping[str, Callable[[RunSnapshot], BaseModel]],
     ) -> None:
         if _token is not _ADAPTER_TOKEN:
             raise TypeError("HarnessMCPAdapter must be created by its authority factory")
@@ -170,6 +200,7 @@ class HarnessMCPAdapter:
         self._harness = harness
         self._principal_id = principal_id
         self._registry_snapshot = registry_snapshot
+        self._skill_input_providers = dict(skill_input_providers)
 
     def list_tools(self, snapshot: ArtifactRef) -> tuple[MCPTool, ...]:
         """Return exact, qualified and live tools in canonical MCP-name order."""
@@ -191,9 +222,7 @@ class HarnessMCPAdapter:
                         "Create one durable Golden Workflow under this server's frozen authority."
                     ),
                     input_schema=_workflow_start_schema(),
-                    output_schema=_tool_result_schema(
-                        documents["harness.run_snapshot.v1"]
-                    ),
+                    output_schema=_tool_result_schema(documents["harness.run_snapshot.v1"]),
                 )
             ]
             for entry in registry.qualified_skills:
@@ -362,9 +391,7 @@ class HarnessMCPAdapter:
         workflow_uri = f"harness://workflows/{snapshot.workflow_run_id}"
         return MCPToolResult(
             content=(
-                MCPTextContent(
-                    text=f"Golden Workflow {snapshot.workflow_run_id} is revision 0."
-                ),
+                MCPTextContent(text=f"Golden Workflow {snapshot.workflow_run_id} is revision 0."),
                 MCPResourceLink(
                     name=f"workflow-{snapshot.workflow_run_id}",
                     uri=workflow_uri,
@@ -379,6 +406,12 @@ class HarnessMCPAdapter:
         """Read a workflow only through the authorized S1 interface."""
 
         match = _WORKFLOW_RESOURCE.fullmatch(request.uri)
+        artifact_match = _WORKFLOW_ARTIFACT_RESOURCE.fullmatch(request.uri)
+        skill_input_match = _WORKFLOW_SKILL_INPUT_RESOURCE.fullmatch(request.uri)
+        if artifact_match is not None:
+            return self._read_workflow_artifact_resource(request, artifact_match.groups())
+        if skill_input_match is not None:
+            return self._read_skill_input_resource(request, skill_input_match.groups())
         if match is None:
             raise HarnessMCPProtocolError(f"unknown Harness resource: {request.uri}")
         try:
@@ -391,14 +424,77 @@ class HarnessMCPAdapter:
             )
         except (GoldenRunNotFoundError, ValueError) as error:
             raise HarnessMCPProtocolError(f"unknown Harness resource: {request.uri}") from error
-        text = json.dumps(
-            snapshot.model_dump(mode="json"),
-            ensure_ascii=False,
-            allow_nan=False,
-            sort_keys=True,
-            separators=(",", ":"),
-        ) + "\n"
+        text = (
+            json.dumps(
+                snapshot.model_dump(mode="json"),
+                ensure_ascii=False,
+                allow_nan=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            + "\n"
+        )
         return MCPResourceResult(uri=request.uri, media_type="application/json", text=text)
+
+    def _read_skill_input_resource(
+        self,
+        request: MCPResourceRead,
+        identity: tuple[str, str, str],
+    ) -> MCPResourceResult:
+        workflow_id, skill_id, version = identity
+        provider = self._skill_input_providers.get(f"{skill_id}@{version}")
+        if provider is None:
+            raise HarnessMCPProtocolError(f"unknown Harness resource: {request.uri}")
+        try:
+            snapshot = self._harness.read(
+                RunReadRequest(
+                    schema_version="harness.run_read_request.v1",
+                    principal_id=self._principal_id,
+                    workflow_run_id=UUID(workflow_id),
+                )
+            )
+            value = provider(snapshot)
+        except (GoldenRunNotFoundError, TypeError, ValueError) as error:
+            raise HarnessMCPProtocolError(f"unknown Harness resource: {request.uri}") from error
+        text = (
+            json.dumps(
+                value.model_dump(mode="json"),
+                ensure_ascii=False,
+                allow_nan=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            + "\n"
+        )
+        return MCPResourceResult(uri=request.uri, media_type="application/json", text=text)
+
+    def _read_workflow_artifact_resource(
+        self,
+        request: MCPResourceRead,
+        identity: tuple[str, str],
+    ) -> MCPResourceResult:
+        workflow_id, digest = identity
+        read_request = RunReadRequest(
+            schema_version="harness.run_read_request.v1",
+            principal_id=self._principal_id,
+            workflow_run_id=UUID(workflow_id),
+        )
+        try:
+            ref, payload = self._harness.read_workflow_artifact(
+                read_request,
+                sha256=digest,
+            )
+        except GoldenRunNotFoundError as error:
+            raise HarnessMCPProtocolError(f"unknown Harness resource: {request.uri}") from error
+        if ref.media_type in {"application/json", "application/x-ndjson"}:
+            text = payload.decode("utf-8")
+            return MCPResourceResult(uri=request.uri, media_type=ref.media_type, text=text)
+        return MCPResourceResult(
+            uri=request.uri,
+            media_type=ref.media_type,
+            text=None,
+            blob=b64encode(payload).decode("ascii"),
+        )
 
 
 def create_harness_mcp_adapter(
@@ -406,6 +502,7 @@ def create_harness_mcp_adapter(
     harness: GoldenRunHarness,
     principal_id: str,
     registry_snapshot: ArtifactRef,
+    skill_input_providers: tuple[MCPWorkflowSkillInputProvider, ...] = (),
 ) -> HarnessMCPAdapter:
     """Bind S2 to one exact S1 authority and frozen Registry snapshot."""
 
@@ -413,13 +510,25 @@ def create_harness_mcp_adapter(
         raise TypeError("harness must be the exact GoldenRunHarness")
     if type(principal_id) is not str or not principal_id:
         raise TypeError("principal_id must be a non-empty exact string")
+    if any(type(item) is not MCPWorkflowSkillInputProvider for item in skill_input_providers):
+        raise TypeError("skill_input_providers must contain exact provider records")
+    provider_refs = tuple(item.skill_ref for item in skill_input_providers)
+    if len(provider_refs) != len(set(provider_refs)):
+        raise ValueError("skill_input_providers must use unique Skill refs")
     adapter = HarnessMCPAdapter(
         _token=_ADAPTER_TOKEN,
         harness=harness,
         principal_id=principal_id,
         registry_snapshot=registry_snapshot,
+        skill_input_providers={item.skill_ref: item.build for item in skill_input_providers},
     )
-    adapter.list_tools(registry_snapshot)
+    live_refs = {
+        tool.skill_ref
+        for tool in adapter.list_tools(registry_snapshot)
+        if tool.skill_ref is not None
+    }
+    if not set(provider_refs).issubset(live_refs):
+        raise ValueError("skill_input_providers must target exact live Skills")
     return adapter
 
 

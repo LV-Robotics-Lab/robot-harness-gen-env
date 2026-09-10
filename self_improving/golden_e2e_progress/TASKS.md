@@ -25,11 +25,12 @@
 - [ ] qualified compile 的 Codex 调用与可信 ToolResult。
 - [ ] qualified replay/validate 的同 run 调度。
   - [x] qualified compile → replay 已在同 run 调度，并验证同一 replay bundle 跨代码安装绝对路径复用。
-  - [ ] replay → validate 尚未接入同一 run。
+  - [x] replay → validate 已在同一 Golden run 接入；MCP 受控链也已推进到 revision 3。
 - [ ] fresh observation 获取及回执绑定。
 - [ ] Codex 诊断、受限修复、状态增量与可续跑 history。
 - [ ] promotion gate 与 publishability 唯一授权。
-- [ ] 真正 MCP adapter：schema discovery、typed invocation、ToolResult 返回及错误映射。
+- [x] 真正 MCP adapter：exact schema discovery、typed invocation、ToolResult、workflow-scoped
+  state/receipt/media resources、错误映射与 stdio restart 已实现；真实三 Skill simulator 验收另列。
 - [ ] 一个 text-only golden case 完成同 run 证据闭包。
 
 ## G3：资产债务与 x2env Skills

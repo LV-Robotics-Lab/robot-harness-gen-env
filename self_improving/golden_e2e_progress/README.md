@@ -53,5 +53,7 @@ application/dependency 五模块的 statement/branch 门均已达到 100%。Imag
 已经过两轴功能验收；55 份公共
 schema 现在既能整目录注册，也能逐文件独立校验。Gujie 现存 evidence 仍只证明 image-derived
 existing reconstruction 的 legacy Genesis 候选，不证明 fresh image、video 或 Harness runtime。
-P5 下一步接 exact MCP adapter；P6 继续修复资产 staging；autoresearch 只在其冻结
-benchmark 可以真实运行后开始。
+P5 exact MCP adapter 现已在官方 MCP 2.2 受控路径完成 raw-text create、compile、replay、
+validate revision 0→1→2→3，并加入三 Skill production assembly、workflow-scoped 证据/媒体读取与
+validate input materialization；真实 RoboTwin/SAPIEN MCP stdio 复跑仍是下一门。P6 继续修复资产
+staging；autoresearch 只在其冻结 benchmark 可以真实运行后开始。

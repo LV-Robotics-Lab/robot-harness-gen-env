@@ -8,20 +8,39 @@ import contextlib
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
+from typing import Annotated
 
 from mcp.server.stdio import stdio_server
+from pydantic import Discriminator, TypeAdapter
 
 from .mcp_adapter import HarnessMCPAdapter
-from .mcp_assembly import CompileMCPServerSettings, create_compile_mcp_adapter
+from .mcp_assembly import (
+    CompileMCPServerSettings,
+    GoldenMCPServerSettings,
+    create_compile_mcp_adapter,
+    create_golden_mcp_adapter,
+)
 from .mcp_server import create_harness_mcp_server
+
+MCPServerSettings = CompileMCPServerSettings | GoldenMCPServerSettings
+_SETTINGS = TypeAdapter(Annotated[MCPServerSettings, Discriminator("schema_version")])
+
+
+def load_mcp_settings(path: Path) -> MCPServerSettings:
+    """Load either exact production assembly from one strict settings document."""
+
+    if not isinstance(path, Path):
+        raise TypeError("settings path must be an exact Path")
+    return _SETTINGS.validate_json(path.read_bytes(), strict=True)
 
 
 def load_compile_mcp_settings(path: Path) -> CompileMCPServerSettings:
     """Load one strict operator settings document."""
 
-    if not isinstance(path, Path):
-        raise TypeError("settings path must be an exact Path")
-    return CompileMCPServerSettings.model_validate_json(path.read_bytes())
+    settings = load_mcp_settings(path)
+    if type(settings) is not CompileMCPServerSettings:
+        raise ValueError("settings document is not compile-only")
+    return settings
 
 
 async def _serve_stdio(adapter_factory: Callable[[], HarnessMCPAdapter]) -> None:
@@ -54,16 +73,21 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     args = _parser().parse_args(argv)
     settings_path = args.settings.resolve(strict=True)
-    asyncio.run(
-        _serve_stdio(
-            lambda: create_compile_mcp_adapter(load_compile_mcp_settings(settings_path))
-        )
-    )
+    settings = load_mcp_settings(settings_path)
+    asyncio.run(_serve_stdio(lambda: _create_mcp_adapter(settings)))
     return 0
+
+
+def _create_mcp_adapter(settings: MCPServerSettings) -> HarnessMCPAdapter:
+    if type(settings) is CompileMCPServerSettings:
+        return create_compile_mcp_adapter(settings)
+    if type(settings) is GoldenMCPServerSettings:
+        return create_golden_mcp_adapter(settings)
+    raise TypeError("settings must be one exact MCP server settings model")
 
 
 if __name__ == "__main__":  # pragma: no cover - exercised as a real subprocess
     raise SystemExit(main())
 
 
-__all__ = ["load_compile_mcp_settings", "main"]
+__all__ = ["load_compile_mcp_settings", "load_mcp_settings", "main"]

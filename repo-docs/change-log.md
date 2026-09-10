@@ -1,5 +1,15 @@
 # Change Log
 
+## 2026-09-11 three-Skill MCP controlled Golden line
+
+- 三 Skill production assembly 现从同一 CAS/Golden SQLite 重开 exact compile/replay/validate applications；
+  资格 CAS 导入和 locator/内容异常 fail closed。
+- 增加 workflow-scoped artifact resource：先由 Harness 重建 receipt/state 全历史，再开放可达 JSON、
+  NDJSON 与二进制媒体；foreign principal、错误 workflow、不可达 digest 不可见，裸 CAS digest 不授权。
+- validate input builder 从 revision-2 trusted lineage 生成两份 portable receipt、package、media wrapper 与
+  provenance。官方 MCP 2.2 受控路径已完成 raw text revision 0→1→2→3、validate retry 幂等和 MP4
+  BlobResourceContents 字节核验。真实 simulator stdio 与外部 Codex planner 回合仍待单独验收。
+
 ## 2026-09-11 raw-text MCP workflow create
 
 - 新增 exact `harness_workflow_create_v1`：只收 inline `request.*` user facts，server 注入

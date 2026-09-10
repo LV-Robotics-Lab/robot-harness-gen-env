@@ -24,6 +24,7 @@ from self_improving.harness.mcp_adapter import (
     HarnessMCPProtocolError,
     MCPResourceRead,
     MCPToolCall,
+    MCPWorkflowSkillInputProvider,
     create_harness_mcp_adapter,
 )
 from self_improving.harness.schemas.common import SkillDescriptor
@@ -206,6 +207,15 @@ def test_adapter_lists_only_the_exact_qualified_live_tool(tmp_path: Path) -> Non
         adapter.read_resource(
             MCPResourceRead(uri="harness://workflows/10000000-0000-4000-8000-000000000099")
         )
+    with pytest.raises(HarnessMCPProtocolError, match="unknown Harness resource"):
+        adapter.read_resource(
+            MCPResourceRead(
+                uri=(
+                    f"harness://workflows/{started.workflow_run_id}/skill-inputs/"
+                    "text2env.validate/2.0.0"
+                )
+            )
+        )
 
     with pytest.raises(TypeError, match="authority factory"):
         HarnessMCPAdapter(
@@ -213,6 +223,7 @@ def test_adapter_lists_only_the_exact_qualified_live_tool(tmp_path: Path) -> Non
             harness=harness,
             principal_id=started.principal_id,
             registry_snapshot=started.registry_snapshot,
+            skill_input_providers={},
         )
     with pytest.raises(TypeError, match="exact GoldenRunHarness"):
         create_harness_mcp_adapter(
@@ -225,6 +236,60 @@ def test_adapter_lists_only_the_exact_qualified_live_tool(tmp_path: Path) -> Non
             harness=harness,
             principal_id="",
             registry_snapshot=started.registry_snapshot,
+        )
+    with pytest.raises(TypeError, match="exact provider records"):
+        create_harness_mcp_adapter(
+            harness=harness,
+            principal_id=started.principal_id,
+            registry_snapshot=started.registry_snapshot,
+            skill_input_providers=(object(),),  # type: ignore[arg-type]
+        )
+    provider = MCPWorkflowSkillInputProvider(
+        skill_ref="text2env.compile@1.0.0",
+        build=lambda snapshot: snapshot,
+    )
+    with pytest.raises(ValueError, match="unique Skill refs"):
+        create_harness_mcp_adapter(
+            harness=harness,
+            principal_id=started.principal_id,
+            registry_snapshot=started.registry_snapshot,
+            skill_input_providers=(provider, provider),
+        )
+    with pytest.raises(ValueError, match="target exact live Skills"):
+        create_harness_mcp_adapter(
+            harness=harness,
+            principal_id=started.principal_id,
+            registry_snapshot=started.registry_snapshot,
+            skill_input_providers=(
+                MCPWorkflowSkillInputProvider(
+                    skill_ref="text2env.validate@2.0.0",
+                    build=lambda snapshot: snapshot,
+                ),
+            ),
+        )
+
+    def rejected_input(_snapshot):
+        raise ValueError("input is not available")
+
+    rejecting_adapter = create_harness_mcp_adapter(
+        harness=harness,
+        principal_id=started.principal_id,
+        registry_snapshot=started.registry_snapshot,
+        skill_input_providers=(
+            MCPWorkflowSkillInputProvider(
+                skill_ref="text2env.compile@1.0.0",
+                build=rejected_input,
+            ),
+        ),
+    )
+    with pytest.raises(HarnessMCPProtocolError, match="unknown Harness resource"):
+        rejecting_adapter.read_resource(
+            MCPResourceRead(
+                uri=(
+                    f"harness://workflows/{started.workflow_run_id}/skill-inputs/"
+                    "text2env.compile/1.0.0"
+                )
+            )
         )
     with pytest.raises(HarnessMCPAdapterError, match="not the adapter's frozen authority"):
         adapter.list_tools(objective)
@@ -251,9 +316,7 @@ def test_adapter_lists_only_the_exact_qualified_live_tool(tmp_path: Path) -> Non
     descriptor = SkillDescriptor.model_validate_json(
         artifact_store.resolve(entry.descriptor_ref).path.read_bytes()
     )
-    drifted_descriptor = descriptor.model_copy(
-        update={"max_attempts": descriptor.max_attempts + 1}
-    )
+    drifted_descriptor = descriptor.model_copy(update={"max_attempts": descriptor.max_attempts + 1})
     drifted_descriptor_ref = base._put(
         artifact_store,
         tmp_path,
@@ -265,9 +328,9 @@ def test_adapter_lists_only_the_exact_qualified_live_tool(tmp_path: Path) -> Non
         artifact_store,
         tmp_path,
         QualifiedSkillSnapshot.model_validate(
-            entry.model_copy(
-                update={"descriptor_ref": drifted_descriptor_ref}
-            ).model_dump(mode="python")
+            entry.model_copy(update={"descriptor_ref": drifted_descriptor_ref}).model_dump(
+                mode="python"
+            )
         ),
         name="drifted-registry.json",
     )
@@ -299,9 +362,7 @@ def test_adapter_lists_only_the_exact_qualified_live_tool(tmp_path: Path) -> Non
     corrupt_call = adapter.call_tool(MCPToolCall(name=tool.name, arguments=arguments))
     assert corrupt_call.is_error is True
     assert corrupt_call.structured_content["code"] == "HARN_ARTIFACT_UNAVAILABLE"
-    Draft202012Validator(dict(tool.output_schema)).validate(
-        dict(corrupt_call.structured_content)
-    )
+    Draft202012Validator(dict(tool.output_schema)).validate(dict(corrupt_call.structured_content))
     with pytest.raises(HarnessMCPAdapterError) as corrupt:
         adapter.list_tools(started.registry_snapshot)
     assert corrupt.value.code == "HARN_ARTIFACT_UNAVAILABLE"

@@ -1,5 +1,32 @@
 # 进度与结果
 
+## 2026-09-11 P5 三 Skill MCP 受控全链与 production assembly
+
+- 新增 `GoldenMCPServerSettings/create_golden_mcp_adapter`：从 operator-owned settings 重开
+  Compile/Replay/Validate 三个 production application，共用 compile CAS 与 Golden SQLite；资格 CAS
+  按内容导入，目录缺失、空 CAS、symlink/目录/错 digest member 均 fail closed。目录只列
+  `harness_workflow_create_v1` 与三个 exact text2env tools，无 generic invoke。
+- 首轮 RED 证明外部 MCP caller 在 compile revision 1 后只能得到 `state_ref`，不能构造 replay；新增
+  workflow-scoped artifact resource，由 `GoldenRunHarness.read_workflow_artifact` 先完整重建当前历史，
+  再只开放 typed workflow closure 中可达的 state/receipt/ToolResult/RunState/StateDelta/媒体引用。
+  foreign principal、错误 workflow 与不可达 digest 统一不可见；裸 `artifact://` 不作为授权。
+- 第二轮 RED 证明 validate v2 的 12 项 lineage 输入不能由 caller 从 OperationSnapshot 拼出；新增
+  `Text2EnvValidateV2InputBuilder`，从 revision-2 receipt chain 与两个 durable child authority生成并深验
+  compile/replay portable receipts、package、media verification 与 request provenance，再由只读
+  `.../skill-inputs/text2env.validate/2.0.0` resource 返回 exact input。外部 caller 随后仍显式调用
+  `text2env.validate@2.0.0`，没有新增通用执行工具。
+- 官方 `mcp==2.2.0` Client 在受控 simulator boundary 下真实完成 inline text create revision 0、compile
+  revision 1、900/120/120/12 replay revision 2、validate revision 3；validate 为 publishable/pass，重复
+  validate 返回同一 operation 且 CAS 不增长。final receipt→ToolResult→StateDelta/TrustedReceipt 的字节
+  SHA 全匹配，delta 只有 `environment.validation`，fresh observations 为空。MP4 经同一 workflow closure
+  返回官方 BlobResourceContents，base64 解码后 length/SHA/CAS bytes 精确一致。
+- 独立三 Skill tool snapshot 固定四工具的 name/skill/schema digest，文件 SHA-256 为
+  `6ec3461f63ecc1a36740ff6a154aa22214005dfe39b06b8d68da4733bb7de4a5`。受控全链 1 pass；builder
+  联同相邻 validate 路径 23 pass，81 statements/18 branches 100%；Golden workflow 213 pass，
+  469/150 为 100%；MCP adapter focused 3 pass，246/46 为 100%；三 Skill assembly 89/22 为 100%。
+- 边界：本节尚未执行真实 RoboTwin/SAPIEN MCP stdio replay，也未运行外部 Codex planner 回合；
+  inline image/video 仍是不受信 claim，media ingest、poll/cancel、Genesis、promotion 与 robot-policy未完成。
+
 ## 2026-09-11 P5 raw text workflow create 纵切
 
 - MCP 目录新增 exact control tool `harness_workflow_create_v1`（不是可选 `skill_ref` 的
