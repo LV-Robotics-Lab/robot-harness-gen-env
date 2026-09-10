@@ -27,8 +27,9 @@
   三份文档或 expected hash。
 - 基于固定实现 `8e45bd9d755ca68001f3372286cbaff265bbc461`，官方 generator 随后在全新外部
   bundle/scratch/CAS 与临时 delegated scope 中真实执行 direct/kernel 两条 0/900/120/120/12：两者
-  均单 attempt succeeded，物理 `pass`、120/100/114 顺序媒体、23-member runtime assets、62-ref
-  closure。把 66 个 CAS 对象逐一按摘要复制到另一个全新 CAS 后，strict verifier/loader 均为 `pass`。
+  均单 attempt succeeded，物理 `pass`、120/100/114 顺序媒体、23-member runtime assets。P3b tracer
+  随后暴露并修复 typed output 的 CAS 身份重复，最终重新资格化 closure 为 63 refs；把 67 个 CAS 对象
+  逐一按摘要复制到另一个全新 CAS 后，strict verifier/loader 均为 `pass`。
   三份 generator 原始文档及 49-file implementation identity 已独立安装；详见
   `docs/evidence/replay-qualification-refresh-p3a-20260910.md`。本结论仍不覆盖 validate、Genesis、
   promotion 或真机。

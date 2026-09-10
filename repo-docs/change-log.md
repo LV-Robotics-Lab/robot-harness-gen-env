@@ -4,8 +4,9 @@
 
 - 在 P3a 固定实现 `8e45bd9` 上再次独立真实重签 replay qualification：官方 generator 使用全新外部
   bundle/scratch/CAS 与临时 delegated scope，direct/kernel 各单次完成 0/900/120/120/12；物理 pass、
-  120/100/114 顺序媒体、23-member runtime assets、62-ref closure、14-schema gate 和 fresh-CAS strict
-  reload 全过。安装的是 generator 原始三文档，不是只更新 expected hash；仍不表示 validate、Genesis、
+  120/100/114 顺序媒体、23-member runtime assets、63-ref closure、14-schema gate 和 fresh-CAS strict
+  reload 全过。P3b tracer 暴露的 typed-output CAS 重复修复后又完整重签；安装的是最终 generator 原始
+  三文档，不是只更新 expected hash；仍不表示 validate、Genesis、
   promotion 或真机能力。
 - 增加 P3a durable production ReplayApplication：只有 production factory 可签发受信 seal，每次调用前
   重验 CAS、同库 SQLite authorities、Registry、qualification policy、唯一 replay descriptor 与

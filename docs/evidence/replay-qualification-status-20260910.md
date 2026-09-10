@@ -1,8 +1,9 @@
 # Text2Env replay qualification status — 2026-09-10
 
 > Superseded later the same day: P0+P2 qualification was restored, then P3a changed
-> `replay_application.py` and correctly made that bundle stale again. The fixed P3a implementation
-> has now been requalified by real direct/kernel 0/900/120/120/12 executions and a fresh-CAS strict
+> `replay_application.py` and correctly made that bundle stale again. The P3b tracer then found one
+> typed-output CAS deduplication gap. The fixed implementation has now been requalified by real
+> direct/kernel 0/900/120/120/12 executions and a fresh-CAS strict
 > reload. Current evidence is
 > [`replay-qualification-refresh-p3a-20260910.md`](replay-qualification-refresh-p3a-20260910.md).
 
