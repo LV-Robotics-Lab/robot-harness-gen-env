@@ -1394,3 +1394,244 @@ def test_real_controlled_observe_runs_inside_one_golden_revision_two_to_three(
     assert _sqlite_counts(workflow_store.path) == golden_rows
     assert _sqlite_counts(fixture_store.path) == fixture_rows
     assert _sqlite_counts(observe_application.authority_path) == observe_rows
+
+
+@dataclass(frozen=True)
+class _ControlledFactoryCase:
+    store: LocalArtifactStore
+    application: object
+    descriptor: SkillDescriptor
+    request: GenesisObserveInput
+
+
+def _controlled_factory_case(tmp_path: Path) -> _ControlledFactoryCase:
+    store = LocalArtifactStore(tmp_path / "cas")
+    descriptor, _ = _qualified_fixture(
+        store,
+        tmp_path,
+        skill_id="genesis.observe",
+        input_schema="harness.genesis_observe_input.v1",
+        output_schema="harness.genesis_observe_output.v1",
+        implementation_sha256="8" * 64,
+    )
+    request = GenesisObserveInput(
+        schema_version="harness.genesis_observe_input.v1",
+        environment_package=_put(
+            store,
+            tmp_path,
+            name="factory-package.json",
+            value={"package": True},
+            schema_version="harness.x2env_environment_package.v1",
+        ),
+        replay_workflow_receipt=_put(
+            store,
+            tmp_path,
+            name="factory-workflow.json",
+            value={"workflow": True},
+            schema_version="harness.workflow_operation_receipt.v2",
+        ),
+        replay_runtime_receipt=_put(
+            store,
+            tmp_path,
+            name="factory-runtime.json",
+            value={"runtime": True},
+            schema_version="harness.x2env_runtime_receipt.v1",
+        ),
+        checkpoint=None,
+        capture_plan=GenesisObservationCapturePlan(
+            camera_ids=("observer",),
+            stills_per_camera=1,
+            video_frames=0,
+            fps=None,
+            post_restore_steps=1,
+        ),
+        requested_observation_keys=("observation.scene_visible",),
+        ttl_seconds=60,
+    )
+    application = create_controlled_genesis_observe_application(
+        ControlledObserveApplicationSettings(tmp_path / "state", store.root),
+        capture_adapter=_ControlledCapture(),
+        clock=_Clock(),
+        run_id_factory=lambda: pytest.fail(
+            "bound controlled application must receive its child identity from the caller"
+        ),
+    )
+    return _ControlledFactoryCase(store, application, descriptor, request)
+
+
+def test_controlled_observe_binding_factory_enforces_exact_live_and_restart_inputs(
+    tmp_path: Path,
+) -> None:
+    from self_improving.harness.golden_observe_execution import (
+        create_controlled_genesis_observe_execution_binding,
+    )
+
+    case = _controlled_factory_case(tmp_path)
+    with pytest.raises(TypeError, match="application must be the exact"):
+        create_controlled_genesis_observe_execution_binding(application=object())  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="qualified_descriptor must be the exact"):
+        create_controlled_genesis_observe_execution_binding(
+            application=case.application,  # type: ignore[arg-type]
+            qualified_descriptor=object(),  # type: ignore[arg-type]
+        )
+    with pytest.raises(TypeError, match="child_authority must be the exact"):
+        create_controlled_genesis_observe_execution_binding(
+            application=None,
+            child_authority=object(),  # type: ignore[arg-type]
+            artifact_store=case.store,
+        )
+    with pytest.raises(TypeError, match="artifact_store must be the exact"):
+        create_controlled_genesis_observe_execution_binding(
+            application=None,
+            artifact_store=object(),  # type: ignore[arg-type]
+        )
+    with pytest.raises(ValueError, match="live binding requires"):
+        create_controlled_genesis_observe_execution_binding(
+            application=case.application,  # type: ignore[arg-type]
+        )
+    with pytest.raises(ValueError, match="restart binding cannot install"):
+        create_controlled_genesis_observe_execution_binding(
+            application=None,
+            qualified_descriptor=case.descriptor,
+            artifact_store=case.store,
+        )
+    with pytest.raises(ValueError, match="restart binding requires"):
+        create_controlled_genesis_observe_execution_binding(application=None)
+    foreign_store = LocalArtifactStore(tmp_path / "foreign-cas")
+    with pytest.raises(ValueError, match="differs from controlled observe application CAS"):
+        create_controlled_genesis_observe_execution_binding(
+            application=case.application,  # type: ignore[arg-type]
+            qualified_descriptor=case.descriptor,
+            artifact_store=foreign_store,
+        )
+
+    live = create_controlled_genesis_observe_execution_binding(
+        application=case.application,  # type: ignore[arg-type]
+        qualified_descriptor=case.descriptor,
+        child_authority=SQLiteRunStore(case.application.authority_path),  # type: ignore[union-attr]
+        artifact_store=case.store,
+    )
+    assert live.skill_ref == "genesis.observe@1.0.0"
+    assert live.application is not None
+    assert live.child_authority is not None
+    restart = create_controlled_genesis_observe_execution_binding(
+        application=None,
+        child_authority=SQLiteRunStore(case.application.authority_path),  # type: ignore[union-attr]
+        artifact_store=case.store,
+    )
+    assert restart.skill_ref == live.skill_ref
+    assert restart.application is None
+    assert restart.child_authority is not None
+
+
+@pytest.mark.parametrize(
+    "update",
+    [
+        {"skill_id": "genesis.other"},
+        {"version": "2.0.0"},
+        {"input_schema": "harness.artifact_ref.v1"},
+        {"output_schema": "harness.artifact_ref.v1"},
+        {"mcp_tool_name": "genesis_other_v1_0_0"},
+    ],
+)
+def test_controlled_observe_binding_rejects_non_exact_descriptor(
+    tmp_path: Path,
+    update: dict[str, object],
+) -> None:
+    from self_improving.harness.golden_observe_execution import (
+        create_controlled_genesis_observe_execution_binding,
+    )
+
+    case = _controlled_factory_case(tmp_path)
+    wrong = case.descriptor.model_copy(update=update)
+    with pytest.raises(ValueError, match="does not describe exact genesis.observe"):
+        create_controlled_genesis_observe_execution_binding(
+            application=case.application,  # type: ignore[arg-type]
+            qualified_descriptor=wrong,
+        )
+    assert case.application.skills == ()  # type: ignore[union-attr]
+
+
+def test_controlled_observe_binding_is_single_identity_and_disables_candidate_mode(
+    tmp_path: Path,
+) -> None:
+    from self_improving.harness.golden_observe_execution import (
+        create_controlled_genesis_observe_execution_binding,
+    )
+
+    case = _controlled_factory_case(tmp_path)
+    first = create_controlled_genesis_observe_execution_binding(
+        application=case.application,  # type: ignore[arg-type]
+        qualified_descriptor=case.descriptor,
+    )
+    second = create_controlled_genesis_observe_execution_binding(
+        application=case.application,  # type: ignore[arg-type]
+        qualified_descriptor=case.descriptor,
+    )
+    assert first.skill_ref == second.skill_ref
+    assert case.application.skills == (case.descriptor,)  # type: ignore[union-attr]
+    with pytest.raises(RuntimeError, match="not a candidate evaluator"):
+        case.application.evaluate(case.request)  # type: ignore[union-attr]
+
+    other_descriptor, _ = _qualified_fixture(
+        case.store,
+        tmp_path / "other",
+        skill_id="genesis.observe",
+        input_schema="harness.genesis_observe_input.v1",
+        output_schema="harness.genesis_observe_output.v1",
+        implementation_sha256="9" * 64,
+    )
+    with pytest.raises(ValueError, match="already bound to another qualification"):
+        create_controlled_genesis_observe_execution_binding(
+            application=case.application,  # type: ignore[arg-type]
+            qualified_descriptor=other_descriptor,
+        )
+
+
+def test_controlled_observe_live_adapter_enforces_input_identity_and_pending_recovery(
+    tmp_path: Path,
+) -> None:
+    from self_improving.harness.genesis_observe import (
+        ControlledObserveApplicationRunIdentityError,
+    )
+    from self_improving.harness.golden_observe_execution import (
+        create_controlled_genesis_observe_execution_binding,
+    )
+
+    unbound = _controlled_factory_case(tmp_path / "unbound")
+    with pytest.raises(RuntimeError, match="no Golden-bound qualification"):
+        unbound.application.invoke_typed(  # type: ignore[union-attr]
+            unbound.request,
+            run_id=UUID("66000000-0000-4000-8000-000000000001"),
+        )
+
+    case = _controlled_factory_case(tmp_path / "bound")
+    binding = create_controlled_genesis_observe_execution_binding(
+        application=case.application,  # type: ignore[arg-type]
+        qualified_descriptor=case.descriptor,
+    )
+    adapter = binding.application
+    assert adapter is not None
+    missing = UUID("66000000-0000-4000-8000-000000000002")
+    assert adapter.invocation(missing) is None
+    assert adapter.run_state(missing) is None
+    with pytest.raises(TypeError, match="adapter requires GenesisObserveInput"):
+        adapter.invoke(object(), run_id=missing)  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="requires exact GenesisObserveInput"):
+        case.application.invoke_typed(object(), run_id=missing)  # type: ignore[union-attr,arg-type]
+
+    completed_id = UUID("66000000-0000-4000-8000-000000000003")
+    completed = adapter.invoke(case.request, run_id=completed_id)
+    assert completed.status is RunStatus.SUCCEEDED
+    changed = case.request.model_copy(update={"ttl_seconds": 59})
+    with pytest.raises(ControlledObserveApplicationRunIdentityError, match="another intent"):
+        case.application.invoke_typed(changed, run_id=completed_id)  # type: ignore[union-attr]
+
+    authority = SQLiteRunStore(case.application.authority_path)  # type: ignore[union-attr]
+    lifecycle = authority.read_controlled_lifecycle(completed_id)
+    assert lifecycle.intent is not None
+    pending_id = UUID("66000000-0000-4000-8000-000000000004")
+    pending_intent = lifecycle.intent.model_copy(update={"run_id": pending_id})
+    assert authority.reserve_controlled_intent(pending_intent) is True
+    with pytest.raises(QualifiedApplicationRunPendingError, match="no durable invocation"):
+        adapter.invoke(case.request, run_id=pending_id)
