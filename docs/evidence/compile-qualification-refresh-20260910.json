@@ -1,0 +1,69 @@
+{
+  "schema_version": "harness.compile_qualification_refresh_evidence.v1",
+  "recorded_date": "2026-09-10",
+  "skill_ref": "text2env.compile@1.0.0",
+  "distribution_commit": "2841d0a17c9df12c434178969544dc7ed8e87fc9",
+  "interpreter": {
+    "executable": "/home/jingxiang/miniconda3/bin/python",
+    "version": "Python 3.13.12",
+    "sha256": "e537ecc7a9aa3a863106ee9ec81e519424c23e700590aa0ea1e59016ec0f1be9"
+  },
+  "red": {
+    "reason": "implementation_file_mismatch",
+    "first_mismatch": "self_improving/harness/qualification.py"
+  },
+  "generator": {
+    "official_generator": "self_improving.harness.generate_compile_qualification",
+    "real_candidate_runs": 3,
+    "fresh_bundle_scratch_and_cas": true,
+    "request": "Place a purple hexagonal pedestal on the table.",
+    "seed": 77,
+    "admission_date_input": "2026-08-31",
+    "observed_lifecycle": ["admitted", "reused", "reused"],
+    "asset_id": "900_gen_hexagonal_pedestal_5695f4e5"
+  },
+  "verification": {
+    "read_only_verifier_passed": true,
+    "strict_loader_fresh_cas_passed": true,
+    "checked_in_loader_gate_passed": true,
+    "source_changed_during_qualification": false,
+    "checks": [
+      "admission.lifecycle",
+      "artifacts.cas_resolution",
+      "invocation.stability",
+      "ledger.v3_files",
+      "package.binding",
+      "source.stability",
+      "static_validation.boundary"
+    ],
+    "ledger_file_records": 3,
+    "ledger_violations": 0,
+    "ledger_sha256": "badb6609bb422040b61e3ac3241f135be13ad56e854de1d3a025e7213cfc9bf8",
+    "second_and_third_invocation_sha256": "77f46513252c6cd99f141c34f6991078fdd23402817d4afb5877fe2894f37385",
+    "second_and_third_output_sha256": "c39b1ca9fd64f7aa673ef62f7fc01f36ad4bc1034a4a17d6f7ab9c76d2ec3524",
+    "package_id": "0c546491da6b9f44309da9f2ea40e9a3d895a90099fb55933bc5fafee45c0e85"
+  },
+  "bindings": {
+    "implementation_file_count": 11,
+    "implementation_sha256": "0394575ff26f8da601507416573656b3fb04d7ca06fc45ff3f8195005f470b7f",
+    "scene_gen_tree_sha256": "e2fe9fd66d917dc6dea40e8990248206e180e3a086c1619b9f40558c3efec330",
+    "ledger_contract_tree_sha256": "1d52584d44ca5f5d759f5e72d327fed282f0bdb4adaf763387b2fda2467ef489",
+    "report_sha256": "d3232f1aa28520c3aebd47b67cb0eab88e078af580d6b95e0f8f7d1bee1d2c66",
+    "documents": {
+      "manifest.json": {
+        "bytes": 1944,
+        "sha256": "0da43faa711d265ecd78c55170a583c6500f159afd346e5fdad4aab599d85f90"
+      },
+      "qualification.json": {
+        "bytes": 294,
+        "sha256": "f8685f3258fb0953969b09a62b0d584f97572ea87200b7e4224ecf1f218665d7"
+      },
+      "report.json": {
+        "bytes": 6990,
+        "sha256": "d3232f1aa28520c3aebd47b67cb0eab88e078af580d6b95e0f8f7d1bee1d2c66"
+      }
+    }
+  },
+  "claim_boundary": "Compile generation, strict ledger admission, stable reuse, package/CAS binding, source stability, fresh-CAS strict load, and the checked-in loader gate passed. Static validation remains incomplete and physical qualification remains pending_settle; no replay or publishability is claimed.",
+  "bundle_host_paths_present": false
+}

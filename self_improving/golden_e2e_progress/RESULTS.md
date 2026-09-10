@@ -1,5 +1,25 @@
 # 进度与结果
 
+## 2026-09-10 当前集成树 compile qualification 独立重签
+
+- 固定 distribution 为干净
+  `2841d0a17c9df12c434178969544dc7ed8e87fc9`。旧 checked-in gate 先真实 RED：
+  `implementation_file_mismatch: self_improving/harness/qualification.py`。
+- 用 `/home/jingxiang/miniconda3/bin/python`（Python 3.13.12）在全新外部
+  bundle/scratch/CAS 运行官方 generator；固定 purple pedestal、seed 77、admission date
+  2026-08-31 的三轮处置为 `admitted -> reused -> reused`。同一 asset id、package、ledger；
+  第二/三轮 Invocation 与 typed output 相同，第一到第二轮只改变 `asset-library-state` dependency。
+- 生成器报告绑定当前 11 个实现文件，implementation SHA-256 为
+  `0394575ff26f8da601507416573656b3fb04d7ca06fc45ff3f8195005f470b7f`；执行前后 source
+  snapshot 相同。只读 verifier 与全新外部 CAS strict loader 均 pass，生成的三件套逐字安装后
+  checked-in loader gate 为 `1 passed`。
+- compile qualification 两个专项文件为 `93 passed`；32 份 Harness schema snapshot、相关四个
+  Python 文件的 Ruff/format 和 `git diff --check` 均通过。正式证据见
+  `docs/evidence/compile-qualification-refresh-20260910.{md,json}`。
+- ClawCross 与 dashboard 三个必读状态地址均返回 HTTP 404，无法同步控制面。本切片没有修改实现
+  源码，没有启动 replay；static validation 仍 incomplete、资产仍 pending_settle，replay
+  qualification 仍为下一独立工作。
+
 ## 2026-09-10 P0+P2 隔离集成
 
 - 从主仓库固定 `ea26524cae7b4a18b5576150376eb6ec1ddddf7b` 新建隔离 worktree，依次合入

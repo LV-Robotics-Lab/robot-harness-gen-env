@@ -49,7 +49,7 @@
 | 重要代码 | 功能 | 关键符号 | 调用方 / 使用方 |
 | --- | --- | --- | --- |
 | `demo/app.py` | Flask 控制面：保留旧 text2env job，并增加可选的 Harness compile submit、event replay、terminal audit 与固定 SceneSpec/static-validation 预览。 | `create_app`、`POST /api/harness/compile`、四个 `GET /api/harness/*` 路由、`HARNESS_WORKBENCH` | submit 只收 request/seed；audit/preview 只收 canonical v4 run id，preview 还拒绝 query/body/Transfer-Encoding/Range；同一 Workbench 优先拥有写入与读取 |
-| `demo/harness_compile.py` | 把固定资格绑定的 `CompileApplication` 隐藏在同步工作台 seam 后，并重读 terminal closure、Invocation、artifact metadata 与两个 succeeded compile 内容投影。 | `WorkbenchCompile.submit`、`audit`、`scene_preview`、`static_validation_preview`、`page`、`WorkbenchCompileAuthorityError` | 当前 checked compile bundle 已因 P2 源码 identity 变化而 fail closed，重签前不能把该工作台写成 current qualified；两个 preview 都复用完整终态 closure，不重跑 validator |
+| `demo/harness_compile.py` | 把固定资格绑定的 `CompileApplication` 隐藏在同步工作台 seam 后，并重读 terminal closure、Invocation、artifact metadata 与两个 succeeded compile 内容投影。 | `WorkbenchCompile.submit`、`audit`、`scene_preview`、`static_validation_preview`、`page`、`WorkbenchCompileAuthorityError` | 当前 checked compile bundle 已在固定集成 distribution 上真实三轮重签并通过 strict loader；两个 preview 都复用完整终态 closure，不重跑 validator |
 | `demo/harness_feed.py` | 把 `SQLiteEventJournal` 的 `EventPage` 投影成浏览器可消费、可恢复的全局 cursor 页。 | `HarnessEventFeed.page`、`HarnessEventFeedCorruptionError` | 只读 seam；保留 run/Skill/Event 信封与 artifact metadata，不增加任意路径读取 |
 | `demo/static/` | 无构建步骤的 Event Timeline + compile-only 提交、依赖/artifact metadata 审计与两个固定字段预览 UI。 | `harness-compile-button`、`loadHarnessEvents`、`loadHarnessAuditIfEligible`、`loadHarnessScenePreview`、`loadHarnessStaticValidationPreview` | preview 只在 succeeded audit v2 精确绑定后由用户点击读取；独立 generation/abort、防缓存、响应上限与 exact-key 校验后用 `textContent` 渲染；static checks 可按任意契约有效顺序到达，且明示未运行物理 replay、不代表 publishable |
 | `demo/__init__.py` | 包标记使 `demo` 可被导入。 | — | `python -m demo.app` |
@@ -122,7 +122,7 @@ PR1 的 21 个专项测试是历史基线；当前验证边界见模块页与
 
 | 重要代码 | 功能 | 关键符号 | 调用方 / 使用方 |
 | --- | --- | --- | --- |
-| `tests/demo/test_harness_compile.py`、`test_app.py`、`test_harness_feed.py` | compile qualification current 时的真实 application、SQLite terminal/Invocation closure、Flask exact payload、SceneSpec 内容 authority 与 feed 公共 seam。 |—| 当前 checked compile bundle stale，重签前相关 assembly 应 fail closed；历史专项覆盖声明/读取越界、symlink/FIFO、同 FD 漂移、字节/SHA、严格 JSON/SceneSpec、语义/post-read authority binding 与 HTTP 脱敏 |
+| `tests/demo/test_harness_compile.py`、`test_app.py`、`test_harness_feed.py` | compile qualification current 时的真实 application、SQLite terminal/Invocation closure、Flask exact payload、SceneSpec 内容 authority 与 feed 公共 seam。 |—| 当前 checked compile bundle 已真实重签并由 production loader 复核；历史专项覆盖声明/读取越界、symlink/FIFO、同 FD 漂移、字节/SHA、严格 JSON/SceneSpec、语义/post-read authority binding 与 HTTP 脱敏 |
 | `tests/demo/test_workbench_browser.py` | 真 Flask + 本机 headless Chrome 的事件、提交、审计与按需 SceneSpec 预览端到端门。 |—| 覆盖不自动请求、成功投影、非成功不提供按钮、迟到 abort、XSS/locator、响应漂移/额外字段及关闭后重读；`pytest -q tests/demo` 当前 232 passed（47 Chrome） |
 
 ## 覆盖范围

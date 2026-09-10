@@ -2,10 +2,15 @@
 
 ## 2026-09-10
 
+- 在干净 P0+P2 集成 distribution `2841d0a` 上独立重签 compile qualification：旧 bundle 先按
+  `qualification.py` identity 漂移拒绝，再在全新外部 bundle/scratch/CAS 用官方 generator 真实运行
+  固定三轮，观测 `admitted -> reused -> reused`；只读 verifier、全新 CAS strict loader 与
+  checked-in gate 均通过。static validation 仍 incomplete；本切片没有启动 replay。
 - 在隔离集成树合并 P0 replay 显式 source closure 与 P2 controlled child identity；公共 lazy
-  facade 同时保留 asset staging 的 3 份 schema，当前总数为 32。compile checked gate 与依赖它的
-  production import tracer 同因 compile bundle stale 而拒绝，replay checked gate 因 replay bundle stale 而拒绝；
-  三者必须在下一阶段真实统一重签后不排除通过。本集成没有重签或运行真实 runtime。
+  facade 同时保留 asset staging 的 3 份 schema，当前总数为 32。该集成提交当时的 compile checked
+  gate 与依赖它的 production import tracer 同因 compile bundle stale 而拒绝，replay checked gate 因
+  replay bundle stale 而拒绝；集成本身没有重签或运行真实 runtime。compile 的后续真实重签见上一条，
+  replay 仍待单独执行。
   平台页的 `ab03859` 锚点现只限定历史 PR1/post-close 研究段；当前 32-schema 状态绑定
   `c39397b` 集成树与本纯文档修正。
 - 修正 replay qualification 的时态：2026-09-02 checked-in bundle 与真实 900/120 证据作为历史记录

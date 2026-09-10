@@ -192,10 +192,10 @@ def test_checked_in_compile_qualification_matches_current_implementation(
     )
 
     assert loaded.implementation_sha256 == (
-        "07501791e56e555e3b70c6a93dfd2e24ba00945fc3a27395e09b4faf17cb5e2d"
+        "0394575ff26f8da601507416573656b3fb04d7ca06fc45ff3f8195005f470b7f"
     )
     assert loaded.qualification.report_sha256 == (
-        "eb3282cb671a134574b7ae1a565573b86a03e4fe9dd13310b52e930da5b8fdb9"
+        "d3232f1aa28520c3aebd47b67cb0eab88e078af580d6b95e0f8f7d1bee1d2c66"
     )
     assert [check.name for check in loaded.report.checks] == [
         "admission.lifecycle",

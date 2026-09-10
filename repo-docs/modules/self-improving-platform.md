@@ -24,8 +24,9 @@
 `ab03859`。之后当时观察到的并发 commits `c365874`、`8d9a01c`、`587b49f`、`0e6716a`
 未进入那次历史研究复核；该锚点不限定其后明确标为 2026-09-10 或“当前”的集成状态。
 
-2026-09-10 当前态以 P0+P2 集成 HEAD `c39397ba0ea2b5ccff972218aeb3b7ecef5ae6a7` 加本次纯文档
-时态修正为准；下述 32-schema 计数不归属于 `ab03859` 的 14-schema 历史快照。
+2026-09-10 当前态以 P0+P2 集成 distribution
+`2841d0a17c9df12c434178969544dc7ed8e87fc9` 加本次 compile qualification 文档提交为准；
+下述 32-schema 计数不归属于 `ab03859` 的 14-schema 历史快照。
 
 Harness 当前公开 32 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
 descriptor v2、validate v2 input/output，以及 qualification report、资产债务/修复、registry snapshot、
@@ -87,8 +88,10 @@ MP4/H.264/8bit-420/SAR 语义）复核后才晋升 typed artifacts。两组专�
 statement/branch 100%。descriptor 已用 v2 诚实声明 `evidence_invariant_repeatable`；固定 loader、
 generator 与 production application 会重读完整 CAS evidence closure；历史 pass bundle 和 900/120
 handler receipt 已因当前源码 identity 漂移而失效，尚未基于当前 closure 重新执行和重签。
-P2 controlled-child 集成后，checked compile bundle 也因当前 `qualification.py` identity 漂移而严格失效；
-compile/replay 必须在当前固定树上真实统一重签。VLM fallback、
+P2 controlled-child 集成后，旧 checked compile bundle 曾因当前 `qualification.py` identity 漂移而
+严格失效；当前固定树已用全新外部 scratch/CAS 真实重跑固定三轮，观测
+`admitted -> reused -> reused`，并通过只读 verifier、全新 CAS strict loader 与 checked-in gate。
+replay 仍须单独真实重签。VLM fallback、
 LLM orchestration 和工作台不能从这些
 候选底座推断为完成。
 
