@@ -1717,7 +1717,7 @@ def test_start_retry_rejects_invalid_or_inconsistent_snapshot_authority(
         store,
         _canonical_bytes(snapshot.model_copy(update={"revision": 1})),
     )
-    with pytest.raises(GoldenRunCorruptionError, match="operation journal and head disagree"):
+    with pytest.raises(GoldenRunCorruptionError, match="turn journal and head disagree"):
         _golden_harness(artifact_store=store).start(request)
 
 
@@ -2126,8 +2126,17 @@ def test_run_snapshot_rejects_temporal_attacks(
         RunSnapshot.model_validate(payload)
 
 
-def test_run_snapshot_accepts_a_versioned_workflow_operation_receipt_head(
+@pytest.mark.parametrize(
+    "schema_version",
+    [
+        "harness.workflow_operation_receipt.v1",
+        "harness.external_agent_advisory_receipt.v1",
+        "harness.prompt_revision.v1",
+    ],
+)
+def test_run_snapshot_accepts_a_versioned_workflow_receipt_head(
     tmp_path: Path,
+    schema_version: str,
 ) -> None:
     store = LocalArtifactStore(tmp_path / "cas")
     objective = _put(
@@ -2143,15 +2152,13 @@ def test_run_snapshot_accepts_a_versioned_workflow_operation_receipt_head(
         clock=lambda: NOW,
         workflow_id_factory=lambda: WORKFLOW_ID,
     ).start(_request(objective, registry))
-    operation_receipt = snapshot.receipt_head.model_copy(
-        update={"schema_version": "harness.workflow_operation_receipt.v1"}
-    )
+    operation_receipt = snapshot.receipt_head.model_copy(update={"schema_version": schema_version})
     payload = snapshot.model_dump(mode="python")
     payload.update({"receipt_head": operation_receipt, "revision": 1})
 
     advanced = RunSnapshot.model_validate(payload)
 
-    assert advanced.receipt_head.schema_version == "harness.workflow_operation_receipt.v1"
+    assert advanced.receipt_head.schema_version == schema_version
     assert advanced.revision == 1
 
 

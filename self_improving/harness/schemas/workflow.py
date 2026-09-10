@@ -28,7 +28,10 @@ WORKFLOW_START_RECEIPT_SCHEMA_ID = "harness.workflow_start_receipt.v1"
 
 _CAPABILITY_PROFILE_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+@(?:0|[1-9][0-9]*)$"
 _CAS_URI = re.compile(r"^artifact://sha256/([0-9a-f]{64})$")
-_WORKFLOW_RECEIPT_SCHEMA = re.compile(r"^harness\.workflow_[a-z][a-z0-9_]*_receipt\.v[1-9][0-9]*$")
+_WORKFLOW_RECEIPT_SCHEMA = re.compile(
+    r"^harness\.(?:workflow_[a-z][a-z0-9_]*_receipt|"
+    r"external_agent_advisory_receipt|prompt_revision)\.v[1-9][0-9]*$"
+)
 
 CapabilityProfileRef = Annotated[
     str,
