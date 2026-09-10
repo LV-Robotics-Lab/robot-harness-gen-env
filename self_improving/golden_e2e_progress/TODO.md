@@ -37,6 +37,13 @@
   120/114 帧且无 live application 重启恢复同一 terminal。证据见
   `docs/evidence/golden-portable-replay-20260910.{md,json}`；不包含 validate、Genesis 或 promotion。
 
+- Image2Env/Video2Env 正式合同切片完成：新增 12 个 exact Skill I/O、Image/Video source media、asset
+  decision 与 x2env environment package 共 16 个严格公共 schema，Harness snapshot 总数 39→55；六项
+  descriptor metadata 保持 contract-only/unqualified/unregistered。Gujie 固定来源已逐真实入口映射，
+  两份 raw media manifest fixture 明确 sample-only 缺口；逐 namespace 的 compile/replay/validate 三 lane、
+  adapter/qualification/Genesis runtime/System2/Golden catalog 条件已有实施计划。本切片没有 handler、
+  Registry entry、MCP tool、真实 Genesis run 或 publishable 结果。
+
 - P3 exact qualified replay operation 已完成：replay-owned policy/adapter 没有向 generic catalog 增加
   Skill 分支；同一 actor-neutral workflow 真实提交 compile rev1→replay rev2。replay 只接受同一 compile
   trusted receipt 的 package/catalog，只晋升 `replay.runtime_evidence`，fresh observations 为空。四个恢复

@@ -60,7 +60,7 @@ exact qualified compile 接成 revision 0→1；Registry 已负责通用
 `EnvironmentPackage` 指向 `scene_gen` 已有载荷；compile 已由专用 adapter 组装，完整发布闭环仍
 需要 replay/validate adapters。
 
-## PR1 的 14 个公共入口与当前 39 个版本化入口
+## PR1 的 14 个公共入口与当前 55 个版本化入口
 
 下表是 PR1 冻结的 14 个入口。A042 没有修改其中的 `SkillDescriptor` v1，而是新增第 15 个
 `SkillDescriptorV2`：v1 只允许 `deterministic=true`；v2 用
@@ -72,6 +72,9 @@ workflow start receipt 再增加 12 个独立 `$id`；asset source snapshot mani
 stage result 另增 3 个独立 `$id`。这些 follow-on 不回写 PR1 的 14 个入口。
 P2 再增加 command、operation snapshot、qualified execution、trusted tool receipt、ToolResult、
 StateDelta 与 workflow operation receipt 七个 actor-neutral `$id`。
+Image2Env/Video2Env contract tranche 再增加 12 个 exact Skill I/O、image/video source media、asset
+decision 与 candidate environment package 共 16 个 `$id`；这些只是未注册、未资格化的合同，不是可执行
+runtime。
 
 | 分组 | Schema | 读者模型 |
 | --- | --- | --- |
@@ -83,7 +86,8 @@ StateDelta 与 workflow operation receipt 七个 actor-neutral `$id`。
 
 `CompileConfig`、`RuntimeConfig`、`DependencyRef` 和 `UnknownField` 是嵌套 `$defs`，不是新的
 公共 `$id`，所以 PR1 总数是 14；descriptor v2 与 validate v2 两份文档把当时总数增至 17，计入后续
-12 个独立入口、3 个 asset staging 入口与 P2 的 7 个 workflow-operation 入口后，仓库当前总数是 39。
+12 个独立入口、3 个 asset staging 入口、P2 的 7 个 workflow-operation 入口和 x2env 的 16 个合同
+入口后，仓库当前总数是 55。
 
 ## 严格不只是“不多字段”
 
@@ -194,9 +198,9 @@ replay、qualification、包验证和全部物理 gate 的最终“当且仅当�
 
 ## JSON Schema 快照能锁什么
 
-`schema_catalog.py` 当前从 Pydantic 模型生成 39 份 Draft 2020-12 文档；PR1 14 份、descriptor v2 与
+`schema_catalog.py` 当前从 Pydantic 模型生成 55 份 Draft 2020-12 文档；PR1 14 份、descriptor v2 与
 validate v2 input/output 的 3 份、后续 12 份、asset staging 的 3 份，以及 P2 workflow-operation 的
-7 份均有独立 `$id`。
+7 份和 x2env contract tranche 的 16 份均有独立 `$id`。
 committed snapshot 让字段、
 required/default、正则和范围的变化进入普通 code review：
 

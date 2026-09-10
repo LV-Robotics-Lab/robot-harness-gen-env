@@ -26,13 +26,15 @@
 
 2026-09-10 当前态以固定绿色起点
 `e67b656ea97044da5b09ee8323c48e752cd88c76` 加 P2 compile-only submit 候选为准；
-下述 39-schema 计数不归属于 `ab03859` 的 14-schema 历史快照。
+下述 55-schema 计数不归属于 `ab03859` 的 14-schema 历史快照。
 
-Harness 当前公开 39 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
+Harness 当前公开 55 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
 descriptor v2、validate v2 input/output，以及 qualification report、资产债务/修复、registry snapshot、
 replay VLM、run start/read/snapshot 和 workflow start receipt 等 12 个入口，再加上 asset source snapshot、stage
 request 与 stage result 三个入口；P2 再增加 command、operation snapshot、qualified execution、trusted
-tool receipt、ToolResult、StateDelta 与 workflow operation receipt 七个 actor-neutral 入口。descriptor v2 明确区分
+tool receipt、ToolResult、StateDelta 与 workflow operation receipt 七个 actor-neutral 入口；当前
+Image2Env/Video2Env contract tranche 又增加 12 个 Skill I/O、两种 source media、asset decision 与
+candidate environment package 共 16 个入口。descriptor v2 明确区分
 内容位级确定性与证据不变量可复验。descriptor v1 保持冻结，
 compile 仍用 v1，replay 用 v2；两版不能静默转换。`ArtifactRef.schema_version` 仍指向既有
 `robotwin.*` 权威载荷，Harness 不重新定义其内部格式。schema 之外已有本地 digest-checking artifact
@@ -50,6 +52,13 @@ bytes/file/tree hash；同一 bundle 已在第二个绝对安装路径 strict lo
 checkout 并锁住 committed snapshot；核心资格模块强制 100%
 语句与分支覆盖。compile 的 asset admission 仍发生在 solve 前且失败不回滚；跨 run promotion、
 identity-frozen resumable EvaluationRun 与 MCP adapter 仍未闭合，契约保持 `Status: Proposed`。
+
+Image2Env/Video2Env 的六项 `@1.0.0` exact metadata 当前只存在于 contract catalog：没有 handler、
+qualification 或 Registry entry。compile schema 固定不执行仿真且不可发布；replay schema要求真实
+Genesis collision、非零 steps 和顺序媒体；validate 才能给 publishability。Gujie `genenv.*` 只能经
+legacy adapter 映射为 non-ready candidate，旧 physics/render/status 不能直接晋升。正式字段见
+[Image/Video exact Skill 合同](../../docs/contracts/X2ENV_IMAGE_VIDEO_SKILL_CONTRACT_V1.md)，来源映射见
+[Gujie adapter mapping](../../docs/contracts/GUJIE_GENENV_ADAPTER_MAPPING_V1.md)。
 
 P3 的公共 `GoldenRunHarness.submit` 当前可在同一 workflow 依次调度 exact qualified
 `text2env.compile@1.0.0` 与 `text2env.replay@1.0.0`。两者都从同一 RegistrySnapshot、live production
@@ -133,7 +142,7 @@ closed。
 这仍不是完整 Stage 7：接口是同步 compile，不是异步 durable queue；没有 replay、validate、System
 2、artifact 内容 viewer 或拖拽编排。compile `succeeded` 也不表示物理 validation、资产 settle 或
 publishable。A047 的 `harness.workbench_compile_submission.v1` 是工作台投影，不新增 Harness 公共
-schema snapshot；仓库当前总数为 39。A047 切片当时 `tests/demo` 为 84 passed，其中 18 项
+schema snapshot；仓库当前总数为 55。A047 切片当时 `tests/demo` 为 84 passed，其中 18 项
 使用真 Flask + headless Chrome。
 
 A048 在此之上增加 terminal compile 的只读依赖审计。`WorkbenchCompile.audit(run_id)` 从同一
@@ -205,7 +214,7 @@ replay、validate 或 System 2。
 compile `succeeded` 仍不表示物理 validation、资产 settle 或 publishable。A047/A048 的两份
 `harness.workbench_*`（含 A049 audit v2、A050 scene preview v1 与 A051 static-validation preview v1）
 都是工作台投影，不新增 Harness
-公共 schema snapshot；仓库当前总数为 39。
+公共 schema snapshot；仓库当前总数为 55。
 
 Stage 5 的视觉评审状态是三态而非布尔值。在 `--run-smoke`/视觉评审路径中，只有 visual pass
 才把 candidate 原子晋升为 `final_placement.json` 并退出 0；`pending_visual_review` 只写

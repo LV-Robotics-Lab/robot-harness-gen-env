@@ -16,6 +16,8 @@
 - `AUTORESEARCH_SETUP.md`：实验目标、指标、范围、预算和隔离策略。
 - `ACCEPTANCE.md`：E0–E4 证据等级和最终验收门。
 - `IMPLEMENTATION_PLAN.md`：按 TDD 和独立提交组织的纵向实施顺序。
+- `X2ENV_IMAGE_VIDEO_IMPLEMENTATION_PLAN.md`：六个 image/video exact Skills 的逐 namespace
+  compile/replay/validate golden line、adapter/资格/真实运行门和 catalog 路由条件。
 - `RESULTS.md`：命令、通过/失败数字、运行证据和不可扩张主张。
 - `../../docs/integration-provenance/LEDGER.md`：三方能力来源、固定版本、整合责任和验证状态台账。
 

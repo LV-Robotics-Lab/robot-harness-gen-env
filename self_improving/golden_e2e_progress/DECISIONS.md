@@ -90,3 +90,15 @@
   local source root 时才映射成逻辑身份，其他值仍保持部署敏感。
 - 边界：这只保证同一源码字节/资格包跨代码安装绝对路径复用，不提供跨机器 provisioning，也不扩大为
   validate、Genesis 或 promotion。
+
+## D010 — Image 与 Video 保持不同身份，legacy 输出先适配再重跑
+
+- 日期：2026-09-10
+- 状态：accepted_by_contract_implementation
+- 决策：`image2env.*@1.0.0` 与 `video2env.*@1.0.0` 使用不同 source-media schema 和 exact
+  compile/replay/validate codec。Video 必须持久化完整 ordered frame manifest、总/唯一帧数、FPS、时长
+  与 sequence digest；抽帧不能降格成 Image 输入或完整视频证据。Gujie `genenv.*` 只经
+  anti-corruption adapter 进入 `legacy_genenv_adapted` candidate，随后在当前 Harness run 重做真实
+  Genesis replay/validate。
+- 边界：合同与旧输出中的 `passed`、render、文件格式或 process success 均不授予 simulator-ready、
+  physical pass 或 publishable。External Codex 提供 proposal/advisory，不在 exact Skill 内调用模型。

@@ -1,5 +1,15 @@
 # Change Log
 
+## 2026-09-10 Image2Env / Video2Env contract tranche
+
+- 新增 image2env/video2env 六个 `@1.0.0` exact Skill 的严格 Pydantic 与 committed JSON Schema，
+  Image/Video source identity、四种资产 lane、candidate Genesis package、runtime evidence 和 validate
+  publishability 边界；公共 schema 总数 39→55。
+- 新增 contract-only descriptor catalog：没有真实 qualification 时不能构造可注册 descriptor；本切片
+  没有 handler、MCP 或 Genesis runtime。
+- 按固定 Gujie ref 核对媒体、URDF、scene import、physics/steps/tests，增加 legacy adapter mapping、
+  两份 raw manifest fixture 和逐 namespace 实施计划；dirty 来源字节与旧 runtime status 不计入完成。
+
 ## 2026-09-10
 
 - replay qualification 的源码身份改为逻辑 `replay_distribution` 根 + relative exact bytes/file/tree

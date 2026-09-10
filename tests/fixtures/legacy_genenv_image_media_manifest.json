@@ -1,0 +1,17 @@
+{
+  "schema_version": "genenv.media_reconstruction.v1",
+  "mode": "image",
+  "original_path": "/legacy/input/scene.jpg",
+  "original_name": "scene.jpg",
+  "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "size_bytes": 12345,
+  "width": 640,
+  "height": 480,
+  "decoded_frame_count": 1,
+  "unique_frame_count": 1,
+  "sampled_frame_indices": [
+    0
+  ],
+  "sampled_frame_count": 1,
+  "sampled_unique_frame_count": 1
+}

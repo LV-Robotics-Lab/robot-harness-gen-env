@@ -17,6 +17,8 @@
 - [x] 起草 Codex external-agent/advisory 与 MCP adapter 合同，等待确认冻结。
 - [x] 用户确认 `SEAMS.md` 中的公共测试 seam。
 - [x] 用户确认 `AUTORESEARCH_SETUP.md` 的指标、范围、约束和实验预算。
+- [x] 落实 image2env/video2env 六个 exact Skill 的严格 Pydantic/JSON Schema、contract-only
+  descriptor namespace、Gujie adapter mapping fixtures 和逐链路实施计划；不注册虚假 runtime。
 
 ## G2：Codex 中枢与 MCP 证据链
 

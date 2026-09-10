@@ -51,6 +51,24 @@ from self_improving.harness.schemas.workflow_operation import (
     TrustedToolReceiptV2,
     WorkflowOperationReceiptV2,
 )
+from self_improving.harness.schemas.x2env import (
+    Image2EnvCompileInput,
+    Image2EnvCompileOutput,
+    Image2EnvReplayInput,
+    Image2EnvReplayOutput,
+    Image2EnvValidateInput,
+    Image2EnvValidateOutput,
+    ImageSourceMedia,
+    Video2EnvCompileInput,
+    Video2EnvCompileOutput,
+    Video2EnvReplayInput,
+    Video2EnvReplayOutput,
+    Video2EnvValidateInput,
+    Video2EnvValidateOutput,
+    VideoSourceMedia,
+    X2EnvAssetDecision,
+    X2EnvEnvironmentPackage,
+)
 
 EXPECTED_SCHEMA_IDS = {
     "harness.asset_debt_inventory.v1",
@@ -63,6 +81,13 @@ EXPECTED_SCHEMA_IDS = {
     "harness.blocker.v1",
     "harness.environment_package.v1",
     "harness.event.v1",
+    "harness.image2env_compile_input.v1",
+    "harness.image2env_compile_output.v1",
+    "harness.image2env_replay_input.v1",
+    "harness.image2env_replay_output.v1",
+    "harness.image2env_validate_input.v1",
+    "harness.image2env_validate_output.v1",
+    "harness.image_source_media.v1",
     "harness.operation_snapshot.v1",
     "harness.qualified_skill_execution.v2",
     "harness.replay_vlm_assessment_input.v1",
@@ -89,9 +114,18 @@ EXPECTED_SCHEMA_IDS = {
     "harness.text2env_validate_output.v1",
     "harness.text2env_validate_output.v2",
     "harness.tool_result.v2",
+    "harness.video2env_compile_input.v1",
+    "harness.video2env_compile_output.v1",
+    "harness.video2env_replay_input.v1",
+    "harness.video2env_replay_output.v1",
+    "harness.video2env_validate_input.v1",
+    "harness.video2env_validate_output.v1",
+    "harness.video_source_media.v1",
     "harness.trusted_tool_receipt.v2",
     "harness.workflow_operation_receipt.v2",
     "harness.workflow_start_receipt.v1",
+    "harness.x2env_asset_decision.v1",
+    "harness.x2env_environment_package.v1",
 }
 
 
@@ -120,6 +154,22 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert schema_model("harness.asset_source_snapshot_manifest.v1") is AssetSourceSnapshotManifest
     assert schema_model("harness.asset_stage_request.v1") is AssetStageRequest
     assert schema_model("harness.asset_stage_result.v1") is AssetStageResult
+    assert schema_model("harness.image_source_media.v1") is ImageSourceMedia
+    assert schema_model("harness.video_source_media.v1") is VideoSourceMedia
+    assert schema_model("harness.x2env_asset_decision.v1") is X2EnvAssetDecision
+    assert schema_model("harness.x2env_environment_package.v1") is X2EnvEnvironmentPackage
+    assert schema_model("harness.image2env_compile_input.v1") is Image2EnvCompileInput
+    assert schema_model("harness.image2env_compile_output.v1") is Image2EnvCompileOutput
+    assert schema_model("harness.image2env_replay_input.v1") is Image2EnvReplayInput
+    assert schema_model("harness.image2env_replay_output.v1") is Image2EnvReplayOutput
+    assert schema_model("harness.image2env_validate_input.v1") is Image2EnvValidateInput
+    assert schema_model("harness.image2env_validate_output.v1") is Image2EnvValidateOutput
+    assert schema_model("harness.video2env_compile_input.v1") is Video2EnvCompileInput
+    assert schema_model("harness.video2env_compile_output.v1") is Video2EnvCompileOutput
+    assert schema_model("harness.video2env_replay_input.v1") is Video2EnvReplayInput
+    assert schema_model("harness.video2env_replay_output.v1") is Video2EnvReplayOutput
+    assert schema_model("harness.video2env_validate_input.v1") is Video2EnvValidateInput
+    assert schema_model("harness.video2env_validate_output.v1") is Video2EnvValidateOutput
     with pytest.raises(KeyError):
         schema_model("harness.missing.v1")
     with pytest.raises(TypeError):
@@ -168,6 +218,22 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.tool_result.v2",
             "harness.trusted_tool_receipt.v2",
             "harness.workflow_operation_receipt.v2",
+            "harness.image_source_media.v1",
+            "harness.video_source_media.v1",
+            "harness.x2env_asset_decision.v1",
+            "harness.x2env_environment_package.v1",
+            "harness.image2env_compile_input.v1",
+            "harness.image2env_compile_output.v1",
+            "harness.image2env_replay_input.v1",
+            "harness.image2env_replay_output.v1",
+            "harness.image2env_validate_input.v1",
+            "harness.image2env_validate_output.v1",
+            "harness.video2env_compile_input.v1",
+            "harness.video2env_compile_output.v1",
+            "harness.video2env_replay_input.v1",
+            "harness.video2env_replay_output.v1",
+            "harness.video2env_validate_input.v1",
+            "harness.video2env_validate_output.v1",
         }:
             assert document["properties"]["schema_version"]["const"] == schema_id
             assert "schema_version" in document["required"]
@@ -377,6 +443,18 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
         "qualification_artifact",
     ]
     assert "deterministic" not in descriptor_v2["properties"]
+
+    image_media = documents["harness.image_source_media.v1"]
+    assert image_media["properties"]["decoded_frame_count"]["const"] == 1
+    video_media = documents["harness.video_source_media.v1"]
+    assert "frame_sequence_sha256" in video_media["required"]
+    for route in ("image2env", "video2env"):
+        compile_output = documents[f"harness.{route}_compile_output.v1"]
+        assert compile_output["properties"]["simulator_executed"]["const"] is False
+        assert compile_output["properties"]["publishable"]["const"] is False
+        replay_output = documents[f"harness.{route}_replay_output.v1"]
+        assert replay_output["properties"]["simulator_executed"]["const"] is True
+        assert replay_output["properties"]["collisions_enabled"]["const"] is True
 
 
 def test_schema_rendering_and_snapshot_names_are_canonical() -> None:

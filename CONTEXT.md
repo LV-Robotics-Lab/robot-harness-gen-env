@@ -24,6 +24,16 @@ _Avoid_: exact asset、unverified look-alike
 当受允许的复用层都无法满足请求时，产生带完整来源记录并须经过准入验证的新资产。
 _Avoid_: asset reuse、unbounded text-to-3D
 
+**Source Media Identity（源媒体身份）**:
+由原始媒体字节摘要、解码后可核事实和规范化产物共同确定的图像或视频身份；图像与视频是不同
+类型，视频身份包含完整有序帧序列而不只是抽帧。
+_Avoid_: filename、MIME claim、sampled frames
+
+**Legacy-adapted Environment Candidate（旧格式适配环境候选）**:
+由固定旧产物经 anti-corruption adapter 映射出的非就绪环境候选；它保留来源但不继承旧系统的运行
+通过或发布状态。
+_Avoid_: Genesis-native proof、sim-ready environment、promoted output
+
 **Static Validation（静态验证）**:
 只根据类型化场景、resolved scene、资产与包内容执行的确定性检查；缺少真实运行时证据时，其结论可以是 `incomplete`。
 _Avoid_: replay、physical proof

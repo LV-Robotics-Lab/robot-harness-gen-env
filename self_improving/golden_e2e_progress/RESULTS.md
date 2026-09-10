@@ -626,3 +626,29 @@
 - 边界：该独立候选未改 qualification 三份文档或 expected hash，未执行真实 replay
   requalification，未声称当前 simulator、Genesis 或真机能力。P2 当时尚会修改 closure 内
   `registry.py` / `application.py`；当前集成状态及后续重签门见本页顶部的 P0+P2 集成记录。
+## 2026-09-10 Image2Env / Video2Env contract tranche
+
+- Source audit：仓库内 `worktree/gujie@a25bc58853db1988aafafe88b544e0573eacbb3c` 是旧且
+  prunable 的记录；实际多模态/Genesis 固定来源为独立仓库
+  `/home/jingxiang/gujie/gen-env@eb0b710581fd7794bc01b447b0f77cb871c8a711`，重点祖先
+  `9e8d28c` / `a8ced27`。来源工作树 dirty 项未计入固定 ref。
+- Source behavior：已核 `probe_media` 的 input hash、image decode/dimensions、video ffprobe 全计帧、
+  ffmpeg framemd5、FPS/duration/total/unique 和 15-frame sample；并核 `TaskOutput`、URDF/scene import、
+  position/stabilization、Genesis step/contact/penetration、baseline/half-dt 的入口和来源测试/证据边界。
+- RED 1：新 public contract 测试首次收集失败，`self_improving.harness.x2env_contracts` 不存在。
+- GREEN 1：新增 Image/Video source identity、asset acquisition decision、candidate environment package、
+  两组 compile/replay/validate strict models 和六项 guarded contract descriptor metadata；focused 首轮
+  `13 passed`。
+- RED 2：schema catalog 尚为 39 份，新增 16 个预期 `$id` 时 `6 failed, 2 passed`。
+- GREEN 2：catalog 接入并导出 55 份 committed snapshots；补齐跨字段和跨模态攻击用例后，schema +
+  contract focused 为 `24 passed`，新增两个模块 438 statements / 110 branches 均为 100%。
+- Contract boundaries：compile 固定 `simulator_executed=false/publishable=false`；replay 要求真实
+  collision/nonzero steps/顺序媒体，robot-policy 另要 probe+trajectory；validate 是唯一
+  publishability seam。Gujie legacy 输出适配后仍固定 candidate，不导入旧 runtime/pass 状态。
+- Artifacts：`docs/contracts/X2ENV_IMAGE_VIDEO_SKILL_CONTRACT_V1.md`、
+  `docs/contracts/GUJIE_GENENV_ADAPTER_MAPPING_V1.md`、
+  `X2ENV_IMAGE_VIDEO_IMPLEMENTATION_PLAN.md` 与两份 committed raw media mapping fixtures。
+- Verification：55 份 committed schema snapshot check 通过；root 为
+  `3692 passed, 20 skipped in 173.34s`；该 contract-only tranche 未改写既有资格包。
+- 限定：该切片没有 handler/application、qualification bundle、Registry/System2/Golden executable entry、
+  MCP tool、真实 Genesis replay/validate 或 promotion；runtime 状态仍为未实现。

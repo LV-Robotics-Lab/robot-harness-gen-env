@@ -33,6 +33,31 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
         "harness.blocker.v1": (".schemas.common", "Blocker"),
         "harness.environment_package.v1": (".schemas.text2env", "EnvironmentPackage"),
         "harness.event.v1": (".schemas.common", "Event"),
+        "harness.image2env_compile_input.v1": (
+            ".schemas.x2env",
+            "Image2EnvCompileInput",
+        ),
+        "harness.image2env_compile_output.v1": (
+            ".schemas.x2env",
+            "Image2EnvCompileOutput",
+        ),
+        "harness.image2env_replay_input.v1": (
+            ".schemas.x2env",
+            "Image2EnvReplayInput",
+        ),
+        "harness.image2env_replay_output.v1": (
+            ".schemas.x2env",
+            "Image2EnvReplayOutput",
+        ),
+        "harness.image2env_validate_input.v1": (
+            ".schemas.x2env",
+            "Image2EnvValidateInput",
+        ),
+        "harness.image2env_validate_output.v1": (
+            ".schemas.x2env",
+            "Image2EnvValidateOutput",
+        ),
+        "harness.image_source_media.v1": (".schemas.x2env", "ImageSourceMedia"),
         "harness.operation_snapshot.v1": (".schemas.workflow", "OperationSnapshot"),
         "harness.qualified_skill_execution.v2": (
             ".schemas.workflow_operation",
@@ -93,6 +118,31 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
             ".schemas.workflow_operation",
             "TrustedToolReceiptV2",
         ),
+        "harness.video2env_compile_input.v1": (
+            ".schemas.x2env",
+            "Video2EnvCompileInput",
+        ),
+        "harness.video2env_compile_output.v1": (
+            ".schemas.x2env",
+            "Video2EnvCompileOutput",
+        ),
+        "harness.video2env_replay_input.v1": (
+            ".schemas.x2env",
+            "Video2EnvReplayInput",
+        ),
+        "harness.video2env_replay_output.v1": (
+            ".schemas.x2env",
+            "Video2EnvReplayOutput",
+        ),
+        "harness.video2env_validate_input.v1": (
+            ".schemas.x2env",
+            "Video2EnvValidateInput",
+        ),
+        "harness.video2env_validate_output.v1": (
+            ".schemas.x2env",
+            "Video2EnvValidateOutput",
+        ),
+        "harness.video_source_media.v1": (".schemas.x2env", "VideoSourceMedia"),
         "harness.workflow_operation_receipt.v2": (
             ".schemas.workflow_operation",
             "WorkflowOperationReceiptV2",
@@ -100,6 +150,11 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
         "harness.workflow_start_receipt.v1": (
             ".schemas.workflow",
             "WorkflowStartReceipt",
+        ),
+        "harness.x2env_asset_decision.v1": (".schemas.x2env", "X2EnvAssetDecision"),
+        "harness.x2env_environment_package.v1": (
+            ".schemas.x2env",
+            "X2EnvEnvironmentPackage",
         ),
     }
 )

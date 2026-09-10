@@ -15,7 +15,7 @@ SimFoundry、WorldComposer、媒体工具以及输入资产仍归各自上游。
 
 | Gujie 模块 | Gujie 完成的具体功能 | Harness 拟复用/改造方式 | 当前状态 |
 |---|---|---|---|
-| `reconstruct_media.py` | `a8ced27` 建立图片/视频文件 hash、media probe、输入规范化、外部 reconstruction/SimFoundry 编排、抽帧复核和上游重建导入；`eb0b710` 又加固物理判据/有界修复相关路径 | 把输入、逐帧事实、外部命令身份和产物转成 CAS ArtifactRef/ToolResult；外部命令不能直接推进 Harness 状态 | candidate |
+| `reconstruct_media.py` | `a8ced27` 建立图片/视频文件 hash、media probe、输入规范化、外部 reconstruction/SimFoundry 编排、抽帧复核和上游重建导入；`eb0b710` 又加固物理判据/有界修复相关路径 | 媒体与 `genenv.*` mapping 已进入 formal contract/fixtures；后续 importer 把输入、完整逐帧事实、外部命令身份和产物转成 CAS ArtifactRef/ToolResult，外部命令不能直接推进 Harness 状态 | contract mapped；runtime candidate |
 | `media_support.py` | 提取场景观测；执行 mesh geometry gate；对资产候选 rank/choose；用颜色差异辅助匹配；按 footprint 物化并把支撑物加入场景 | 作为 image/video asset-resolution 内部实现；候选、拒绝原因、selected asset 与视觉证据分别入 receipt | candidate |
 | `media_checkpoints.py` | 对媒体流程各阶段保存 snapshot/config；按配置变化失效下游 checkpoint；判断上游结果能否复用 | 映射为 durable operation checkpoint，配置和输入 digest 进入 Harness idempotency/receipt | candidate |
 | `task_output.py` | 由 request hash 生成任务身份和安全输出目录；`TaskOutput` 管理阶段产物、manifest 与 `verify()` | `genenv.*` 保留为外部格式，anti-corruption adapter 转为 Harness RunSnapshot/ArtifactRef，不直接成为信任根 | candidate |
@@ -41,6 +41,11 @@ SimFoundry、WorldComposer、媒体工具以及输入资产仍归各自上游。
 当前仓库的 `worktree/gujie@a25bc58853db1988aafafe88b544e0573eacbb3c` 已落后。独立仓库还含
 modified `external/SimFoundry` 与 untracked `external/WorldComposer/`；这些未提交字节只有生成内容
 manifest/hash 后才能成为可整合来源。
+
+2026-09-10 已按上述 fixed ref 完成 `docs/contracts/GUJIE_GENENV_ADAPTER_MAPPING_V1.md` 和
+`X2ENV_IMAGE_VIDEO_SKILL_CONTRACT_V1.md`：Image/Video identity、六个 exact Skill I/O、资产 lane 和
+legacy non-ready candidate 边界已经 strict schema 化。该 contract integration 不复制 runtime，也不把
+本来源档案中的候选状态提升为 `runtime_pass`。
 
 ## Gujie 与 Bingsheng 的接力边界
 

@@ -1,0 +1,143 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "$id": "harness.artifact_ref.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.video_source_media.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "decoded_frame_count": {
+      "minimum": 1,
+      "title": "Decoded Frame Count",
+      "type": "integer"
+    },
+    "duration_ms": {
+      "minimum": 1,
+      "title": "Duration Ms",
+      "type": "integer"
+    },
+    "fps_denominator": {
+      "minimum": 1,
+      "title": "Fps Denominator",
+      "type": "integer"
+    },
+    "fps_numerator": {
+      "minimum": 1,
+      "title": "Fps Numerator",
+      "type": "integer"
+    },
+    "frame_sequence_manifest": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "frame_sequence_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Frame Sequence Sha256",
+      "type": "string"
+    },
+    "height": {
+      "minimum": 1,
+      "title": "Height",
+      "type": "integer"
+    },
+    "probe": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.video_source_media.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "source_media_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Media Sha256",
+      "type": "string"
+    },
+    "unique_frame_count": {
+      "minimum": 1,
+      "title": "Unique Frame Count",
+      "type": "integer"
+    },
+    "width": {
+      "minimum": 1,
+      "title": "Width",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "source_media_sha256",
+    "source",
+    "probe",
+    "frame_sequence_manifest",
+    "width",
+    "height",
+    "duration_ms",
+    "fps_numerator",
+    "fps_denominator",
+    "decoded_frame_count",
+    "unique_frame_count",
+    "frame_sequence_sha256"
+  ],
+  "title": "VideoSourceMedia",
+  "type": "object"
+}

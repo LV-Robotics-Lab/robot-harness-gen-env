@@ -2,6 +2,10 @@
 
 状态：`accepted_2026-09-09`
 
+实现注记（2026-09-10）：image2env/video2env 的六个 v1 exact Skill 已按本文语义落实为 strict
+Pydantic、committed JSON Schema 与 contract-only descriptor metadata；正式字段和不可扩张边界见
+`../../docs/contracts/X2ENV_IMAGE_VIDEO_SKILL_CONTRACT_V1.md`。当前仍无 runtime handler、资格或注册。
+
 本页冻结公共语义；具体 Pydantic 字段在 RED 测试切片中按此实现。现有
 `text2env.compile/replay@1.0.0` 保持兼容，不原地改变其 SAPIEN 语义。
 

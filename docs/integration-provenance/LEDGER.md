@@ -18,6 +18,7 @@
 | INT-GJ-001 | 媒体输入、逐帧完整性与 `genenv.*` 输出 | Gujie | candidate | not_run | 固定为候选，尚未进入 Harness Golden run |
 | INT-GJ-002 | 标准 URDF closure 与 SimFoundry 导入 | Gujie + third-party | candidate | not_run | 需经 anti-corruption adapter 和资产资格门 |
 | INT-GJ-003 | Genesis 构建、物理判据、回放与最终媒体 | Gujie + Genesis | candidate | not_run | 有独立工作区证据，尚非当前 Harness sim-ready 证据 |
+| INT-GJ-004 | Image/Video exact Skill 合同与 legacy adapter mapping | Gujie source + Bingsheng integration | integrated | contract_pass | 16 个 schema 与六项 contract-only descriptor 已落地；runtime 仍未实现 |
 
 ## INT-BS-001 — Harness 与总体整合基线
 
@@ -249,3 +250,46 @@ Bingsheng。任何进入 Harness 的资产必须单独固定来源、许可和�
 Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支撑/穿透判据和 physics 后媒体门是
 重要候选实现。它们只有在当前 Harness run 中由固定输入和资产哈希驱动、真实 Genesis 执行并通过
 最终能力门后，才能把验证状态改为 `runtime_pass`。
+
+## INT-GJ-004 — Image/Video exact Skill 合同与 legacy adapter mapping
+
+- `lifecycle`：`integrated`
+- `verification`：`contract_pass`
+- `origin_owner`：Gujie（被映射的媒体/URDF/scene/physics adapter 候选行为）；Bingsheng（Harness 合同
+  与映射整合）
+- `recorded_git_authors`：来源固定提交实际记录 yuhang5090 `<1205492990@qq.com>`、LV-Robotics Lab
+  `<lv.robotics.lab@gmail.com>`；与自然人 Gujie 的 identity 映射未由仓库证据确认
+- `upstream_owner`：输入媒体各自权利人、SimFoundry、Genesis World 及被引用资产原作者
+- `integration_owner`：Bingsheng
+- `source_repository`：仓库内旧 `worktree/gujie` ref 与独立 `/home/jingxiang/gujie/gen-env`
+- `source_ref`：旧 ref `a25bc58853db1988aafafe88b544e0573eacbb3c`；实际固定实现
+  `eb0b710581fd7794bc01b447b0f77cb871c8a711`；重点祖先
+  `9e8d28c24ca72ebf4001c2460dc4b174cef603c0`、
+  `a8ced2732b48d3eb89e5c40d6cd7fd71b275f178`；SimFoundry gitlink `9e34ebef`；Genesis World
+  gitlink `0e74bf39`
+- `dirty_snapshot`：独立来源有 modified `external/SimFoundry`、untracked `external/WorldComposer/`
+  及其他本地项；均未计入固定 ref 或 mapping fixture
+- `source_paths`：`reconstruct_media.py`、`media_support.py`、`media_checkpoints.py`、`task_output.py`、
+  `standard_urdf.py`、`import_simfoundry_scene.py`、`position_solver.py`、`scene_stabilization.py`、
+  `validate_imported_scene.py`、`physics_criteria.py`、`scene_physics_workflow.py`、
+  `replay_text_half_dt.py` 及来源 tests/evidence
+- `target_paths`：`self_improving/harness/schemas/x2env.py`、`x2env_contracts.py`、16 份 schema
+  snapshot、`docs/contracts/X2ENV_IMAGE_VIDEO_SKILL_CONTRACT_V1.md`、
+  `docs/contracts/GUJIE_GENENV_ADAPTER_MAPPING_V1.md`、两份 legacy media fixtures
+- `integration_method`：只实现 strict contract 与 anti-corruption mapping；不复制来源 runtime，不把
+  `genenv.*` 设为 Harness 权威，不注册无 qualification handler
+- `contract_spec`：上述两份正式 contract，以及
+  `self_improving/golden_e2e_progress/X2ENV_IMAGE_VIDEO_IMPLEMENTATION_PLAN.md`
+- `verification_evidence`：`tests/self_improving/harness/test_x2env_contracts.py`、
+  `tests/self_improving/harness/test_schema_catalog.py`、55 份 committed schema snapshots；真实 runtime
+  evidence 为 `none`
+- `golden_run`：`none`
+- `known_gaps`：legacy importer、六个 handler/application、qualification、Registry/System2/Golden
+  executable catalog、MCP、真实 Genesis replay/validate、robot-policy 与 promotion 均未实现
+- `last_verified`：`2026-09-10`
+
+### 核对结论
+
+本条只把 Gujie 固定来源中的媒体/资产/场景/物理语义映射进 Harness contract。Image 与 Video identity
+不混用；legacy output 适配后固定为 non-ready candidate；compile、replay、validate 三段及三种资产
+lane 均已写入实施计划，但没有从 contract pass 扩大为 runtime pass。
