@@ -1,5 +1,33 @@
 # 进度与结果
 
+## 2026-09-10 当前集成树 replay qualification 独立重签
+
+- 固定起点 `13f654e72e0204993355fa098e240698e1d8b085`。旧 replay bundle 先以
+  `implementation_file_mismatch: self_improving/harness/__init__.py` RED；同次 preflight 中
+  production import tracer 已随 compile 重签恢复。
+- Python 3.10.20 在全新外部 bundle/scratch/CAS 与临时 delegated scope 中执行官方 fixed
+  can-on-plate。candidate-direct 和 production-kernel candidate 均单 attempt succeeded，各有 14 个
+  完整 runtime events，完成 `0/900/120/120/12`。
+- 两次物理 validation 都为 pass、`fail=0/not_run=0`；视频均为 120 sequential frames、100 个
+  source-unique frames、114 个 decoded-unique frames。23 个 runtime asset members 全部复核；
+  evidence closure manifest 含 62 refs。
+- 49-file implementation SHA-256 为
+  `f6bc59e628bd72ff3b5195915a6bea53c7656154d6c71bd135eb6dd39347c604`，三阶段 source snapshot
+  无变化；14 个 replay-bound model↔schema exact gate 通过。66 个新 CAS 对象逐摘要复制到另一个
+  fresh CAS 后，严格 verifier/load 均 pass。
+- 首次 scope 包装在生成器前因换行转义失败；首次 scope 外 reload 又按设计因 operator locator
+  不存在而拒绝。两次均未改资格文档，最终在活动的同名 delegated scope 完成 strict reload。
+- 三个原 deselect 节点不排除为 `3 passed`；P0 replay/loader/schema 加 checked bundle 为
+  `172 passed`；完整 Harness 为 `2505 passed, 20 skipped`。32-schema、Ruff、replay 相关文件
+  format 与 `git diff --check` 均通过；扩大到既有 `test_golden_run.py` 整文件的 format check 在
+  HEAD 与工作树都返回 1，本切片未机械重排两个 expected digest 之外的基线代码。
+- 完整 root 为 `3516 passed, 20 skipped, 2 failed`。两项失败是既有 demo 负向用例先安装 SQLite
+  trigger，而 P2 RunStore 当前会在 Invocation 前拒绝 trigger-bearing authority；旧断言期待后续
+  terminal reload/history mismatch。本 replay 切片不改实现、不弱化测试，按实际结果保留。
+- 证据：
+  `docs/evidence/replay-qualification-refresh-20260910.{md,json}`。该结果不扩大为 validate v2、
+  MCP、Genesis、promotion、portable install 或真机资格。
+
 ## 2026-09-10 当前集成树 compile qualification 独立重签
 
 - 固定 distribution 为干净

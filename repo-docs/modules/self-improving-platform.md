@@ -39,9 +39,10 @@ resolver、callback-driven `RunRecorder`、SQLite WAL append-only `SQLiteEventJo
 `PackageStore`、通用 qualified-version `SkillRegistry` 与 `Text2EnvCompileHandler`。固定 `ab03859`
 关于 replay/validate 未接通的描述只是历史快照；当前 replay 已有 candidate handler、固定资格深验证与
 production-only registration policy。仓库保留 2026-09-02 的历史 checked-in pass bundle 与真实
-900/120 replay 记录，但当前源码 identity 已漂移，严格 loader 会拒绝旧 bundle；因此当前没有有效的
-replay qualification；当前状态见
-[`docs/evidence/replay-qualification-status-20260910.md`](../../docs/evidence/replay-qualification-status-20260910.md)。
+900/120 replay 记录；P0+P2 集成后旧 bundle 先因源码 identity 漂移被严格拒绝，当前固定树随后已用
+全新外部资源真实重签，并通过 direct/kernel 0/900/120/120/12、14-schema exact gate 与 fresh-CAS
+strict reload。证据与 deployment-local 边界见
+[`docs/evidence/replay-qualification-refresh-20260910.md`](../../docs/evidence/replay-qualification-refresh-20260910.md)。
 `python script/export_harness_schemas.py --check` 锁住 committed snapshot；核心资格模块强制 100%
 语句与分支覆盖。compile 的 asset admission 仍发生在 solve 前且失败不回滚；跨 run promotion、
 identity-frozen resumable EvaluationRun 与 MCP adapter 仍未闭合，契约保持 `Status: Proposed`。
@@ -87,11 +88,11 @@ assets 五项依赖，worker 输出先作为 untrusted bytes 保存，只有 evi
 MP4/H.264/8bit-420/SAR 语义）复核后才晋升 typed artifacts。两组专项为 185 passed 且两个模块
 statement/branch 100%。descriptor 已用 v2 诚实声明 `evidence_invariant_repeatable`；固定 loader、
 generator 与 production application 会重读完整 CAS evidence closure；历史 pass bundle 和 900/120
-handler receipt 已因当前源码 identity 漂移而失效，尚未基于当前 closure 重新执行和重签。
+handler receipt 曾因集成后的源码 identity 漂移而失效；当前固定 closure 已重新执行并重签。
 P2 controlled-child 集成后，旧 checked compile bundle 曾因当前 `qualification.py` identity 漂移而
 严格失效；当前固定树已用全新外部 scratch/CAS 真实重跑固定三轮，观测
 `admitted -> reused -> reused`，并通过只读 verifier、全新 CAS strict loader 与 checked-in gate。
-replay 仍须单独真实重签。VLM fallback、
+replay 随后的独立真实重签也已完成。VLM fallback、
 LLM orchestration 和工作台不能从这些
 候选底座推断为完成。
 

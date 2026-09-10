@@ -1,0 +1,160 @@
+{
+  "schema_version": "harness.replay_qualification_refresh_evidence.v1",
+  "recorded_date": "2026-09-10",
+  "status": "qualified_deployment_local",
+  "distribution_commit": "13f654e72e0204993355fa098e240698e1d8b085",
+  "skill_ref": "text2env.replay@1.0.0",
+  "red": {
+    "reason": "implementation_file_mismatch",
+    "first_mismatch": "self_improving/harness/__init__.py",
+    "production_import_tracer_passed_after_compile_resign": true
+  },
+  "case": {
+    "case_id": "can-on-plate-seed-7-900-120-120-12",
+    "request": "Place a can on top of a plate.",
+    "seed": 7,
+    "task_config": "demo_clean",
+    "precheck_steps": 0,
+    "settle_steps": 900,
+    "contact_window_steps": 120,
+    "video_frame_count": 120,
+    "fps": 12
+  },
+  "executions": [
+    {
+      "mode": "candidate_direct",
+      "run_id": "71000000-0000-4000-8000-000000000001",
+      "attempt_count": 1,
+      "status": "succeeded",
+      "runtime_event_count": 14,
+      "all_artifacts_verified": true,
+      "cas_reread_verified": true,
+      "output_sha256": "e1478c182364e4566b2ba2beb3573e7286cb32d9e72b684ed6a77b766fc20767"
+    },
+    {
+      "mode": "qualification_candidate",
+      "run_id": "71000000-0000-4000-8000-000000000002",
+      "attempt_count": 1,
+      "status": "succeeded",
+      "runtime_event_count": 14,
+      "all_artifacts_verified": true,
+      "cas_reread_verified": true,
+      "output_sha256": "16dfe445c61e8e27d4bade4927909682fe24fe49b810b18e8af3c6c662a56904"
+    }
+  ],
+  "physics_and_media": {
+    "validation_status": "pass",
+    "validation_fail_count": 0,
+    "validation_not_run_count": 0,
+    "runtime_evidence_sha256": "1c74e310fff651ef7ca562f8e57b66fdf6f4e2c7a0e14abc8d2c878435351f1f",
+    "validation_report_sha256": "01e85c898631343c46df50ecb2fb26dd0b4e9c2e424424553004f19b2ef09d75",
+    "video_sha256": "a41d05366050ba0c2af635e69299a12a4b2a0e78ed27490517d27b122fa12a4e",
+    "video_frame_count": 120,
+    "source_unique_frame_count": 100,
+    "decoded_unique_frame_count": 114,
+    "fully_decoded": true,
+    "format": "iso-bmff/mp4",
+    "codec": "h264",
+    "pixel_format": "8bit-420",
+    "width": 320,
+    "height": 240
+  },
+  "runtime_assets_and_closure": {
+    "runtime_asset_manifest_sha256": "43df37804b8e8c6dcb807f2f803e0d591dee18b7d5bbb8863b476f12144b43d4",
+    "runtime_asset_member_count": 23,
+    "all_members_verified": true,
+    "evidence_closure_ref_count": 62,
+    "evidence_closure_manifest_sha256": "e175b1dc77c1cb4b24edbc068d8a996e84a688ca5a444af68fdac78a01f83464"
+  },
+  "source": {
+    "implementation_file_count": 49,
+    "implementation_sha256": "f6bc59e628bd72ff3b5195915a6bea53c7656154d6c71bd135eb6dd39347c604",
+    "harness_tree_sha256": "973a358e592093e9cbe346671c42c6e5e7a1f4fa8517ebc7020ecf00bd964780",
+    "scene_gen_tree_sha256": "e2fe9fd66d917dc6dea40e8990248206e180e3a086c1619b9f40558c3efec330",
+    "ledger_contract_tree_sha256": "1d52584d44ca5f5d759f5e72d327fed282f0bdb4adaf763387b2fda2467ef489",
+    "changed_during_qualification": false,
+    "replay_schema_exact_pairs": 14
+  },
+  "operator_identities": {
+    "interpreter_sha256": "ff0d9976054ea10aee690d9f04293889907ddfe84e41f9ab262af8810e537b5e",
+    "runner_sha256": "2c21b18668d080297919d6dbc8b767c0f5aa1de84799cd57d331a7b960046392",
+    "runtime_capability_sha256": "c9e32cc356b6c01ee4daa5691e97e87b43bf021ac5ac452dda25703978ea0d0f",
+    "launcher_sha256": "092597d14624759011d8c3f53d4f203ea6a345541bac1e2075b263247694d7ec",
+    "ffmpeg_sha256": "74f0443e5d684e051726fc39546c77b18b031395c30a5d5764b95af8e3a86780"
+  },
+  "fresh_cas_reload": {
+    "copied_source_objects": 66,
+    "loaded_object_count": 68,
+    "read_only_verifier_passed": true,
+    "strict_loader_passed": true,
+    "active_delegated_scope_required": true
+  },
+  "qualification_bundle": {
+    "report_sha256": "003e6e01ac51bf1deafb73a21511a1bd68252749a9cf419cd7f4e9ba68550c73",
+    "files": {
+      "manifest.json": {
+        "bytes": 7839,
+        "sha256": "9c2df8b0da668917df4ba3c870bc553c1b842188f3eba0c875374fdab8d0b69f"
+      },
+      "qualification.json": {
+        "bytes": 315,
+        "sha256": "8da49335dfbee9040ab5c93df7e45cea30d84a15d0a95b450b6e4d0173ff4bdb"
+      },
+      "report.json": {
+        "bytes": 13535,
+        "sha256": "003e6e01ac51bf1deafb73a21511a1bd68252749a9cf419cd7f4e9ba68550c73"
+      }
+    },
+    "checked_in_bundle_has_host_absolute_locators": false
+  },
+  "recorded_failures": [
+    {
+      "stage": "prelaunch",
+      "candidate_execution_started": false,
+      "reason": "outer command newline escaping failed before the generator started"
+    },
+    {
+      "stage": "first_strict_reload",
+      "qualification_documents_changed": false,
+      "reason": "operator directory locator was unavailable after the delegated scope exited"
+    }
+  ],
+  "verification": {
+    "previously_deselected_nodes": {
+      "passed": 3,
+      "failed": 0
+    },
+    "replay_focused": {
+      "passed": 172,
+      "failed": 0
+    },
+    "harness_full": {
+      "passed": 2505,
+      "skipped": 20,
+      "failed": 0
+    },
+    "root_full": {
+      "passed": 3516,
+      "skipped": 20,
+      "failed": 2,
+      "failures": [
+        "tests/demo/test_harness_compile.py::test_submit_fails_closed_when_the_terminal_run_state_cannot_be_reloaded",
+        "tests/demo/test_harness_compile.py::test_submit_fails_closed_when_committed_history_does_not_match_run_state"
+      ],
+      "reason": "P2 RunStore rejects a trigger-bearing authority at its layout gate before the older demo negative cases reach their expected post-run terminal reload or history mismatch. This replay feature did not change that implementation or weaken those tests."
+    },
+    "schema_snapshot_count": 32,
+    "schema_check_passed": true,
+    "ruff_passed": true,
+    "replay_format_check_passed": true,
+    "expanded_changed_python_format_check_passed": false,
+    "expanded_format_check_reason": "Including test_golden_run.py reports pre-existing formatting changes outside the two expected digest lines; the same check against the HEAD version returns 1, so this replay feature did not mechanically rewrite that baseline file.",
+    "diff_check_passed": true,
+    "golden_expected_refs_updated": {
+      "reason": "The compile requalification changed the Registry snapshot embedded in the canonical start request; the two expected digests were normalized downstream values, not qualification inputs.",
+      "start_request_sha256": "a0d30998afdd7da2e1f3c572e2ac36ffaec73383209d2d86833dfd4e9333ae1b",
+      "start_receipt_sha256": "0aada891737d2a397afe2ebbb231cf38f16dbd99f8426bf431dddbdc1fe7d457"
+    }
+  },
+  "claim_boundary": "This evidence qualifies the fixed replay candidate for the recorded source and deployment-local operator identities. It does not qualify validate v2, MCP, Genesis, promotion, portable installation, or a robot deployment."
+}

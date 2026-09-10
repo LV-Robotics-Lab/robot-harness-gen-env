@@ -339,7 +339,7 @@ def test_start_builds_trusted_state_and_receipt_chain_from_cas_inputs(tmp_path: 
     )
     assert snapshot.state_ref.schema_version == "harness.trusted_world_state.v1"
     assert snapshot.start_request_ref.sha256 == (
-        "2d464fc29e42dfd14d38104fca9811270c875351e2a42dfeb79b1963dd1f232e"
+        "a0d30998afdd7da2e1f3c572e2ac36ffaec73383209d2d86833dfd4e9333ae1b"
     )
     assert snapshot.start_request_ref.schema_version == "harness.run_start_request.v1"
     assert store.resolve(snapshot.start_request_ref).path.read_bytes() == _canonical_bytes(request)
@@ -349,7 +349,7 @@ def test_start_builds_trusted_state_and_receipt_chain_from_cas_inputs(tmp_path: 
     )
     assert start_receipt.request_ref == snapshot.start_request_ref
     assert snapshot.receipt_head.sha256 == (
-        "4979e9073562e71b76276264a024114ed0d7f57bf7a1c62dab61d118fb7ea18d"
+        "0aada891737d2a397afe2ebbb231cf38f16dbd99f8426bf431dddbdc1fe7d457"
     )
     assert snapshot.receipt_head.schema_version == "harness.workflow_start_receipt.v1"
     assert snapshot.active_operation is None

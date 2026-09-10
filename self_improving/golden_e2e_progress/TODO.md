@@ -4,14 +4,11 @@
 
 ## Doing
 
-- P0+P2 隔离集成候选已完成真实 compile 资格重签；当前等待主线审阅与单独的 900/120 replay
-  重签。本切片不实现 `GoldenRunHarness.submit`、replay/validate dispatch、MCP、Genesis 或
-  promotion，也没有启动 replay。
+- P0+P2 隔离集成候选已完成真实 compile 与 replay 资格重签，当前等待主线审阅。本切片不实现
+  `GoldenRunHarness.submit`、replay/validate workflow dispatch、MCP、Genesis 或 promotion。
 
 ## Next
 
-- 在当前 P0+P2 固定树上单独执行真实 900/120 replay 资格生成、严格 reload 与重签；随后依赖两份
-  qualification 的 production import tracer 和 replay checked gate 必须不排除通过。
 - P3-R：P2 actor-neutral aggregate 固定后，新增真实 `Text2EnvReplayApplicationAdapter` 与 replay
   evidence policy；用 `Place a can on top of a plate.`、seed 7、`0/900/120/120/12` 让同一 workflow
   从 compile revision 1 推进到 replay revision 2。replay input package 必须来自当前可信 state，完整
@@ -34,16 +31,16 @@
 - Autoresearch 的 benchmark/真实 MCP/Genesis 前置尚未实现；设置已确认但尚不能建立诚实 baseline。
 - exact MCP adapter 仍缺 `submit/read` 和真实 Registry handler 交集；caller 提供的内部一致
   `RegistrySnapshot` 目前不能单独作为生产 trust root。
-- compile checked gate 已由全新外部 scratch/CAS 中的三轮真实 generator 与严格 reload 恢复。
-  replay checked gate 仍因 `self_improving/harness/__init__.py` identity 不匹配而拒绝；依赖两份
-  qualification 的 production import tracer 留待 replay 重签后一并不排除验证。旧 replay settings/CAS
-  尚在，旧 delegated cgroup 已不存在。
-- 2026-09-10 的完整相机 replay 第一次因本机 GPU 被无关训练进程占满，在 observer camera 创建 buffer
-  时失败；第二次强制 Lavapipe 因 Vulkan 扩展缺失失败。两次都不是 runtime pass，且不得终止不属于
-  本任务的 GPU 进程；当前用无渲染真实 SAPIEN probe 验证 loader/physics，媒体门留待资源可用时补跑。
 
 ## Done
 
+- 当前集成树 replay qualification 已独立重签：旧 bundle 先以
+  `implementation_file_mismatch: self_improving/harness/__init__.py` RED；全新外部
+  bundle/scratch/CAS、重新探测 capability 和临时 delegated scope 中，fixed can-on-plate 的 direct 与
+  production-kernel candidate 均真实完成 0/900/120/120/12。物理报告 pass、120 帧顺序媒体完整解码、
+  23-member runtime assets 与 62-ref closure 均通过；14-schema exact gate 和 fresh-CAS strict reload
+  通过，三个原 deselect 节点现为 `3 passed`，完整 Harness 为 `2505 passed, 20 skipped`。完整 root
+  的两项既有 demo trigger/layout 负向用例失败已在本轮 evidence/RESULTS 如实记录，未改实现或弱化测试。
 - 当前集成树的 compile qualification 已独立重签：旧 bundle 先以
   `implementation_file_mismatch: self_improving/harness/qualification.py` RED；固定 purple pedestal、
   seed 77、admission date 2026-08-31 的官方 generator 在全新外部 bundle/scratch/CAS 中真实运行三次，
