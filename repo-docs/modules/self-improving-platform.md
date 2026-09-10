@@ -20,9 +20,12 @@
 
 `python -m self_improving --json` 只检查这些源码是否到位以及子模块是否初始化，不导入 GPU 框架、不启动仿真器。来源工作区、提交、归档分支和排除项在 `self_improving/source_inventory.json`，它是清理旧副本前的审计入口。
 
-下面的 Harness 集成状态固定到 clean commit `ab03859`。之后观察到的并发 commits `c365874`、
-`8d9a01c`、`587b49f`、`0e6716a` 未进入本研究复核；“当前/未接线”均只描述这个固定快照，不认证
-移动 HEAD。
+下文中以 PR1、post-close 封存研究或 `ab03859` 为主语的历史结论，只固定到 clean commit
+`ab03859`。之后当时观察到的并发 commits `c365874`、`8d9a01c`、`587b49f`、`0e6716a`
+未进入那次历史研究复核；该锚点不限定其后明确标为 2026-09-10 或“当前”的集成状态。
+
+2026-09-10 当前态以 P0+P2 集成 HEAD `c39397ba0ea2b5ccff972218aeb3b7ecef5ae6a7` 加本次纯文档
+时态修正为准；下述 32-schema 计数不归属于 `ab03859` 的 14-schema 历史快照。
 
 Harness 当前公开 32 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
 descriptor v2、validate v2 input/output，以及 qualification report、资产债务/修复、registry snapshot、

@@ -6,6 +6,8 @@
   facade 同时保留 asset staging 的 3 份 schema，当前总数为 32。compile checked gate 与依赖它的
   production import tracer 同因 compile bundle stale 而拒绝，replay checked gate 因 replay bundle stale 而拒绝；
   三者必须在下一阶段真实统一重签后不排除通过。本集成没有重签或运行真实 runtime。
+  平台页的 `ab03859` 锚点现只限定历史 PR1/post-close 研究段；当前 32-schema 状态绑定
+  `c39397b` 集成树与本纯文档修正。
 - 修正 replay qualification 的时态：2026-09-02 checked-in bundle 与真实 900/120 证据作为历史记录
   保留，但当前源码 identity 已变化，严格 loader 会拒绝旧 bundle；新的 current qualification 尚未
   重新执行或重签。新增 2026-09-10 状态页，同步代码地图、runtime gate、System 2 replay acquisition、
