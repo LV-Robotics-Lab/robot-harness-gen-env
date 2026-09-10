@@ -173,6 +173,56 @@ def _qualified_registry(store: LocalArtifactStore, root: Path):
     )
 
 
+def _qualified_registry_for_application(
+    store: LocalArtifactStore,
+    root: Path,
+    application,
+):
+    descriptor = application.skills[0]
+    bundle = (
+        PROJECT_ROOT
+        / "self_improving"
+        / "harness"
+        / "qualified_skills"
+        / "text2env.compile"
+        / "1.0.0"
+    )
+    report_ref = _put(
+        store,
+        root,
+        name="live-compile-qualification-report.json",
+        payload=(bundle / "report.json").read_bytes(),
+        schema_version="harness.skill_qualification_report.v1",
+    )
+    descriptor_ref = _put(
+        store,
+        root,
+        name="live-compile-descriptor.json",
+        payload=_canonical_bytes(descriptor),
+        schema_version="harness.skill_descriptor.v1",
+    )
+    return _put(
+        store,
+        root,
+        name="live-registry.json",
+        payload=_canonical_bytes(
+            RegistrySnapshot(
+                schema_version="harness.registry_snapshot.v1",
+                qualified_skills=(
+                    QualifiedSkillSnapshot(
+                        skill_ref="text2env.compile@1.0.0",
+                        mcp_tool_name="text2env_compile_v1_0_0",
+                        descriptor_ref=descriptor_ref,
+                        qualification_ref=descriptor.qualification_artifact,
+                        qualification_report_ref=report_ref,
+                    ),
+                ),
+            )
+        ),
+        schema_version="harness.registry_snapshot.v1",
+    )
+
+
 def _compile_settings(tmp_path: Path) -> CompileApplicationSettings:
     catalogs = tmp_path / "catalogs"
     external_assets = tmp_path / "external-assets"
@@ -418,7 +468,7 @@ def test_submit_exact_qualified_compile_advances_one_durable_workflow_revision(
         payload=GENERATED_OBJECTIVE_EVIDENCE,
         schema_version="harness.world_fact_evidence.v1",
     )
-    registry = _qualified_registry(store, tmp_path)
+    registry = _qualified_registry_for_application(store, tmp_path, application)
     catalog_path = settings.external_catalog_roots[0] / "empty.json"
     _empty_catalog(catalog_path, objects_root=settings.allowed_asset_roots[0] / "objects")
     asset_catalog = application.snapshot_asset_catalog(catalog_path)
@@ -433,18 +483,18 @@ def test_submit_exact_qualified_compile_advances_one_durable_workflow_revision(
         ),
         clock=lambda: NOW,
         workflow_id_factory=lambda: WORKFLOW_ID,
-        operation_id_factory=lambda: operation_id,
         child_run_id_factory=lambda: child_run_id,
     )
     started = harness.start(_request(objective, registry))
     command = public_harness.RunCommandRequest(
         schema_version="harness.run_command_request.v1",
+        command_id=operation_id,
         principal_id=started.principal_id,
         workflow_run_id=started.workflow_run_id,
         idempotency_key="compile-001",
-        expected_revision=started.revision,
+        expected_workflow_revision=started.revision,
         expected_state_sha256=started.state_sha256,
-        expected_receipt_head=started.receipt_head,
+        expected_receipt_head_sha256=started.receipt_head.sha256,
         skill_ref="text2env.compile@1.0.0",
         parameters=Text2EnvCompileInput(
             request=GENERATED_OBJECTIVE,
@@ -463,16 +513,11 @@ def test_submit_exact_qualified_compile_advances_one_durable_workflow_revision(
     assert operation.base_revision == 0
     assert operation.committed_revision == 1
     assert operation.tool_result is not None
-    assert operation.trusted_receipt is not None
-    assert operation.state_delta is not None
-    assert operation.receipt is not None
     result = public_harness.ToolResultV2.model_validate_json(
         store.resolve(operation.tool_result).path.read_bytes()
     )
-    delta = public_harness.StateDeltaV2.model_validate_json(
-        store.resolve(operation.state_delta).path.read_bytes()
-    )
-    assert result.state_delta == delta
+    assert result.state_delta is not None
+    delta = result.state_delta
     assert result.fresh_observations == ()
     assert result.diagnostics == ()
     assert tuple(mutation.key for mutation in delta.mutations) == (
@@ -490,7 +535,15 @@ def test_submit_exact_qualified_compile_advances_one_durable_workflow_revision(
     assert current.turn_seq == 1
     assert current.active_operation is None
     assert current.child_runs == (child_run_id,)
-    assert current.receipt_head == operation.receipt
+    workflow_receipt = public_harness.WorkflowOperationReceiptV2.model_validate_json(
+        store.resolve(current.receipt_head).path.read_bytes()
+    )
+    assert workflow_receipt.operation_id == operation.operation_id
+    assert workflow_receipt.tool_result == operation.tool_result
+    assert workflow_receipt.state_delta is not None
+    assert public_harness.StateDeltaV2.model_validate_json(
+        store.resolve(workflow_receipt.state_delta).path.read_bytes()
+    ) == delta
     trusted_state = TrustedWorldState.model_validate_json(
         store.resolve(current.state_ref).path.read_bytes()
     )
