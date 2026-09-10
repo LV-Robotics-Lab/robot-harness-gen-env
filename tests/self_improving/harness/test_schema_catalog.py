@@ -30,6 +30,11 @@ from self_improving.harness.schemas.asset_staging import (
     AssetStageResult,
 )
 from self_improving.harness.schemas.common import ArtifactRef, SkillDescriptorV2
+from self_improving.harness.schemas.genesis_observe import (
+    GenesisObservationReceipt,
+    GenesisObserveInput,
+    GenesisObserveOutput,
+)
 from self_improving.harness.schemas.qualification_report import PublicQualificationReportV1
 from self_improving.harness.schemas.registry_snapshot import RegistrySnapshot
 from self_improving.harness.schemas.text2env_validate_v2 import (
@@ -81,6 +86,9 @@ EXPECTED_SCHEMA_IDS = {
     "harness.blocker.v1",
     "harness.environment_package.v1",
     "harness.event.v1",
+    "harness.genesis_observation_receipt.v1",
+    "harness.genesis_observe_input.v1",
+    "harness.genesis_observe_output.v1",
     "harness.image2env_compile_input.v1",
     "harness.image2env_compile_output.v1",
     "harness.image2env_replay_input.v1",
@@ -154,6 +162,9 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert schema_model("harness.asset_source_snapshot_manifest.v1") is AssetSourceSnapshotManifest
     assert schema_model("harness.asset_stage_request.v1") is AssetStageRequest
     assert schema_model("harness.asset_stage_result.v1") is AssetStageResult
+    assert schema_model("harness.genesis_observe_input.v1") is GenesisObserveInput
+    assert schema_model("harness.genesis_observe_output.v1") is GenesisObserveOutput
+    assert schema_model("harness.genesis_observation_receipt.v1") is GenesisObservationReceipt
     assert schema_model("harness.image_source_media.v1") is ImageSourceMedia
     assert schema_model("harness.video_source_media.v1") is VideoSourceMedia
     assert schema_model("harness.x2env_asset_decision.v1") is X2EnvAssetDecision
@@ -218,6 +229,9 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.tool_result.v2",
             "harness.trusted_tool_receipt.v2",
             "harness.workflow_operation_receipt.v2",
+            "harness.genesis_observation_receipt.v1",
+            "harness.genesis_observe_input.v1",
+            "harness.genesis_observe_output.v1",
             "harness.image_source_media.v1",
             "harness.video_source_media.v1",
             "harness.x2env_asset_decision.v1",

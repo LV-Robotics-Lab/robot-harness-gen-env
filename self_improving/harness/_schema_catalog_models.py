@@ -33,6 +33,18 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
         "harness.blocker.v1": (".schemas.common", "Blocker"),
         "harness.environment_package.v1": (".schemas.text2env", "EnvironmentPackage"),
         "harness.event.v1": (".schemas.common", "Event"),
+        "harness.genesis_observation_receipt.v1": (
+            ".schemas.genesis_observe",
+            "GenesisObservationReceipt",
+        ),
+        "harness.genesis_observe_input.v1": (
+            ".schemas.genesis_observe",
+            "GenesisObserveInput",
+        ),
+        "harness.genesis_observe_output.v1": (
+            ".schemas.genesis_observe",
+            "GenesisObserveOutput",
+        ),
         "harness.image2env_compile_input.v1": (
             ".schemas.x2env",
             "Image2EnvCompileInput",

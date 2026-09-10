@@ -1,0 +1,177 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "GenesisObservationCapturePlan": {
+      "additionalProperties": false,
+      "description": "Bounded capture request; a production adapter must execute the requested steps.",
+      "properties": {
+        "camera_ids": {
+          "items": {
+            "pattern": "^[a-z][a-z0-9_]{0,63}$",
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Camera Ids",
+          "type": "array"
+        },
+        "fps": {
+          "anyOf": [
+            {
+              "maximum": 120,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fps"
+        },
+        "post_restore_steps": {
+          "maximum": 10000,
+          "minimum": 1,
+          "title": "Post Restore Steps",
+          "type": "integer"
+        },
+        "stills_per_camera": {
+          "const": 1,
+          "default": 1,
+          "title": "Stills Per Camera",
+          "type": "integer"
+        },
+        "video_frames": {
+          "default": 0,
+          "maximum": 300,
+          "minimum": 0,
+          "title": "Video Frames",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "camera_ids",
+        "post_restore_steps"
+      ],
+      "title": "GenesisObservationCapturePlan",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_observe_input.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Exact source lineage and bounded capture plan for ``genesis.observe@1.0.0``.",
+  "properties": {
+    "capture_plan": {
+      "$ref": "#/$defs/GenesisObservationCapturePlan"
+    },
+    "checkpoint": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "environment_package": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "replay_runtime_receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "replay_workflow_receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "requested_observation_keys": {
+      "items": {
+        "maxLength": 255,
+        "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+$",
+        "type": "string"
+      },
+      "maxItems": 32,
+      "minItems": 1,
+      "title": "Requested Observation Keys",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "harness.genesis_observe_input.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "ttl_seconds": {
+      "maximum": 300,
+      "minimum": 1,
+      "title": "Ttl Seconds",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "environment_package",
+    "replay_workflow_receipt",
+    "replay_runtime_receipt",
+    "checkpoint",
+    "capture_plan",
+    "requested_observation_keys",
+    "ttl_seconds"
+  ],
+  "title": "GenesisObserveInput",
+  "type": "object"
+}
