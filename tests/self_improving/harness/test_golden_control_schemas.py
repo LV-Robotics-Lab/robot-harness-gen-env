@@ -23,8 +23,12 @@ from self_improving.harness.schemas.golden_control import (
     AdvisoryRecordCommand,
     ControlCommitSnapshot,
     ExternalAgentAdvisoryReceipt,
+    NoPromptFallback,
+    ObservationCitation,
     PromptRevision,
     PromptRevisionCommand,
+    ReplacePromptPatch,
+    VideoFrameToImageFallback,
     external_agent_advisory_receipt_sha256,
     prompt_revision_sha256,
 )
@@ -195,7 +199,14 @@ def _advisory_receipt_values(kind: str = "diagnosis") -> dict[str, Any]:
         "grants_publishability": False,
         "receipt_sha256": "0" * 64,
     }
-    unhashed = ExternalAgentAdvisoryReceipt.model_construct(**values)
+    unhashed = ExternalAgentAdvisoryReceipt.model_construct(
+        **{
+            **values,
+            "observation_citations": tuple(
+                ObservationCitation.model_validate(item) for item in values["observation_citations"]
+            ),
+        }
+    )
     values["receipt_sha256"] = _canonical_identity(
         "harness.external_agent_advisory_receipt.identity.v1",
         "receipt",
@@ -285,7 +296,19 @@ def _prompt_revision_values(*, fallback: str = "none") -> dict[str, Any]:
         "external_agent_executed": False,
         "revision_sha256": "0" * 64,
     }
-    unhashed = PromptRevision.model_construct(**values)
+    fallback_model = (
+        NoPromptFallback if values["fallback"]["kind"] == "none" else VideoFrameToImageFallback
+    )
+    unhashed = PromptRevision.model_construct(
+        **{
+            **values,
+            "observation_citations": tuple(
+                ObservationCitation.model_validate(item) for item in values["observation_citations"]
+            ),
+            "patch": ReplacePromptPatch.model_validate(values["patch"]),
+            "fallback": fallback_model.model_validate(values["fallback"]),
+        }
+    )
     values["revision_sha256"] = _canonical_identity(
         "harness.prompt_revision.identity.v1",
         "revision",
@@ -655,7 +678,16 @@ def test_prompt_revision_number_and_observation_ttl_are_closed() -> None:
         "prompt_revision_number": 1,
         "predecessor_prompt_revision": None,
     }
-    unhashed = PromptRevision.model_construct(**first)
+    unhashed = PromptRevision.model_construct(
+        **{
+            **first,
+            "observation_citations": tuple(
+                ObservationCitation.model_validate(item) for item in first["observation_citations"]
+            ),
+            "patch": ReplacePromptPatch.model_validate(first["patch"]),
+            "fallback": NoPromptFallback.model_validate(first["fallback"]),
+        }
+    )
     first["revision_sha256"] = _canonical_identity(
         "harness.prompt_revision.identity.v1",
         "revision",
@@ -726,7 +758,16 @@ def test_prompt_revision_evidence_refs_are_sorted_unique() -> None:
         _ref("failed-replay", "harness.workflow_operation_receipt.v2"),
     )
     values["failure_receipts"] = failures
-    unhashed = PromptRevision.model_construct(**values)
+    unhashed = PromptRevision.model_construct(
+        **{
+            **values,
+            "observation_citations": tuple(
+                ObservationCitation.model_validate(item) for item in values["observation_citations"]
+            ),
+            "patch": ReplacePromptPatch.model_validate(values["patch"]),
+            "fallback": NoPromptFallback.model_validate(values["fallback"]),
+        }
+    )
     values["revision_sha256"] = _canonical_identity(
         "harness.prompt_revision.identity.v1",
         "revision",
