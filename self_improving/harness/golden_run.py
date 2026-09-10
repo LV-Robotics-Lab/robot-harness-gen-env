@@ -28,6 +28,7 @@ from .golden_store import (
     GoldenRunHeadConflictError,
     SQLiteGoldenRunStore,
 )
+from .prompt_revision_consumption import verify_prompt_revision_compile_consumption
 from .qualification import QualificationReportV1
 from .run_store import ControlledRunLifecycle
 from .schema_catalog import schema_model
@@ -590,21 +591,37 @@ class GoldenRunHarness:
                 workflow_run_id=request.workflow_run_id,
             )
         )
+        prompt_revision = None
         if current.receipt_head.schema_version == PROMPT_REVISION_SCHEMA_ID:
-            revision = cast(
+            prompt_revision = cast(
                 PromptRevision,
                 self._resolve_canonical_model(current.receipt_head, PromptRevision),
             )
-            raise GoldenRunRegistryError(
-                "HARN_HISTORY_MISMATCH",
-                "workflow prompt revision must be explicitly consumed by "
-                f"{revision.next_compile_skill_ref} before another Skill can run",
-            )
+            if request.skill_ref != prompt_revision.next_compile_skill_ref:
+                raise GoldenRunRegistryError(
+                    "HARN_HISTORY_MISMATCH",
+                    "workflow prompt revision must be explicitly consumed by "
+                    f"{prompt_revision.next_compile_skill_ref} before another Skill can run",
+                )
         policy, qualified = self._resolve_live_execution(
             current.registry_snapshot,
             request.skill_ref,
         )
         normalized, parameters = self._normalize_command(policy, request)
+        if prompt_revision is not None:
+            try:
+                verify_prompt_revision_compile_consumption(
+                    prompt_revision_ref=current.receipt_head,
+                    prompt_revision=prompt_revision,
+                    snapshot=current,
+                    skill_ref=normalized.skill_ref,
+                    parameters=parameters,
+                )
+            except (TypeError, ValueError) as error:
+                raise GoldenRunRegistryError(
+                    "HARN_HISTORY_MISMATCH",
+                    f"compile input does not consume the current prompt revision: {error}",
+                ) from error
         base_state = self._resolve_canonical_model(current.state_ref, TrustedWorldState)
         self._authorize(policy, base_state, parameters, snapshot=current)
         command_ref = self._publish_model(
