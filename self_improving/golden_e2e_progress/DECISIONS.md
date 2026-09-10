@@ -148,3 +148,17 @@
 - 边界：`delivery_scope=server_response_payload` 只证明 server 为该 principal 的读取请求交付了相应
   bytes。`transport_acknowledged=false` 与 `model_understanding_claimed=false` 固定为 false；真实 Codex
   tool-call transcript 可以证明请求发生和响应被送入 client 事件流，仍不能证明隐藏推理或认知。
+
+## D014 — Prompt revision 必须由版本化 compile attempt 显式消费
+
+- 日期：2026-09-11
+- 状态：accepted_by_implementation
+- 决策：当前 receipt head 是 `harness.prompt_revision.v1` 时，下一次 Skill 只能是 receipt 中指定的 exact
+  compile Skill，并必须通过 discriminated `prompt_revision` attempt 显式提交 revision、effective prompt、
+  全部 failure receipts 与 predecessor package；video→image fallback 还必须精确使用 receipt 选定的 frame。
+  Harness 在发布 command CAS 或分配 child 前重验这些字段，禁止 adapter 选择 latest revision 或静默 fallback。
+- 版本：已资格化的 `text2env.compile@1.0.0` 保持冻结，不改 schema/handler/qualification。尚未资格化的
+  `image2env.compile@1.0.0` 与 `video2env.compile@1.0.0` 在首次资格前将 descriptor input 切到 v2；旧 v1
+  schema 保留 parse-only。未来 text retry 使用新的 exact `text2env.compile@2.0.0`，不能借 v1 暗中改 prompt。
+- 边界：当前只完成受控 image compile preflight/blocked 纵切；production handler、qualification、Genesis
+  runtime 和成功 environment package 仍待实现。

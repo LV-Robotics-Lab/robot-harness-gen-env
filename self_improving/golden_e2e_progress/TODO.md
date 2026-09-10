@@ -8,9 +8,11 @@
   Golden execution binding 已在同一 revision 2→3 中闭合 receipt/state/restart；下一切片是 production
   runtime binding。当前受控路径固定 `simulator_executed=false`，真实 Genesis capture、qualification 与
   MCP exposure 尚未开始。
-- P10 diagnosis/prompt revision：durable resource-access receipt、两个 exact MCP control tools 和受控
-  external Codex 回合已闭合；下一切片让新的 exact compile input 强制消费 prompt revision、失败 receipt
-  与 predecessor package。不得静默选择 latest/fallback，也不得把 server 已交付 bytes 夸成模型理解。
+- P10 diagnosis/prompt revision：durable resource-access receipt、两个 exact MCP control tools、受控
+  external Codex 回合和下一次受控 exact image compile 已闭合。image/video compile v2 input 强制消费
+  prompt revision、effective prompt、失败 receipt、predecessor package 与选定 fallback frame；下一切片
+  实现 production image/video handler/qualification。不得静默选择 latest/fallback，也不得把 server 已交付
+  bytes 夸成模型理解。
 
 ## Next
 
@@ -18,8 +20,8 @@
   commit 前 fail closed。
 - P10：production policy 稳定后，用真实 Genesis sealed checkpoint 做 capture/qualification；只有该门
   通过后才把 `genesis_observe_v1_0_0` 加入 exact MCP catalog 与 workflow-scoped resource。
-- P5：把已完成的受控 external Codex diagnosis 接到下一次 exact compile，并补 operation polling/cancel；
-  当前 control-only 回合没有调用 compile/replay/validate。
+- P5：把已完成的受控 PromptRevision consumption 接到 production exact compile，并补 operation
+  polling/cancel；当前 rev4→5 只调用受控 image compile application，没有 image runtime 或 Genesis。
 - P6：在已合入的 exact-byte staging 后，单独实现 collision provenance、settle 与 Genesis
   qualification；stage result 仍不得直接触发历史 ledger promotion，也不得把 headless ground-contact
   probe 写成 can-on-plate、媒体或 Genesis 证据。
@@ -39,6 +41,14 @@
   revision 继续调用 compile/replay/validate。
 
 ## Done
+
+- PromptRevision compile consumption 受控纵切完成：新增 initial/revised 两种严格 attempt schema 与
+  image/video compile v2 input；两个尚未资格化的 x2env `@1.0.0` exact contracts 在首次资格前切到 v2，
+  v1 保留 parse-only。GoldenRun 在任何 command CAS/child reservation 前重验 current head、target Skill、
+  effective prompt、失败 receipts、predecessor package 与 video→image selected frame。官方 MCP 正向让
+  exact image compile application 恰调用一次并推进 revision 4→5；target/revision/prompt/failure/package/
+  frame 漂移与旧 v1 均零副作用拒绝。公共 snapshot 64→68，新 guard 37 statements/26 branches 100%；
+  本切片仍无 image handler、qualification、真实 Genesis runtime 或 publishability。
 
 - durable MCP resource delivery 与受控 external Codex diagnosis 完成：`ResourceAccessReceipt` 在独立
   append-only journal 中绑定 principal/workflow/full observed snapshot/resource/bytes/representation，读取

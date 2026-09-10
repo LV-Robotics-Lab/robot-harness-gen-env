@@ -1,0 +1,89 @@
+{
+  "schema_version": "harness.golden_prompt_revision_compile_consumption_evidence.v1",
+  "recorded_at": "2026-09-11",
+  "implementation_commit": "9239ba3ae7134ecdc7196c90a01aa63195d2c4f2",
+  "schema_commit": "5e6ef4eee54d54dd1869ba12c03655bcfffd1393",
+  "skill_ref": "image2env.compile@1.0.0",
+  "mcp_tool_name": "image2env_compile_v1_0_0",
+  "input_schema": "harness.image2env_compile_input.v2",
+  "result": {
+    "status": "blocked",
+    "base_revision": 4,
+    "committed_revision": 5,
+    "application_calls": 1,
+    "child_allocations": 1,
+    "state_changed": false,
+    "predecessor_is_prompt_revision": true
+  },
+  "integrity": {
+    "cas_objects": 55,
+    "cas_digest_mismatches": 0,
+    "unique_reachable_artifacts": 49,
+    "unresolved_reachable_artifacts": 0,
+    "workflow_sqlite_integrity": "ok",
+    "child_sqlite_integrity": "ok",
+    "restart_same_terminal_operation": true,
+    "restart_database_rows_changed": false,
+    "restart_cas_manifest_changed": false
+  },
+  "negative_cases": {
+    "history_mismatch": [
+      "target_skill",
+      "prompt_revision",
+      "effective_prompt",
+      "failure_receipts",
+      "predecessor_package",
+      "fallback_frame"
+    ],
+    "input_schema_invalid": [
+      "legacy_image_compile_v1"
+    ],
+    "application_calls": 0,
+    "child_allocations": 0,
+    "durable_side_effects": false
+  },
+  "tests": {
+    "schema_snapshots": 68,
+    "schema_x2env_focused_passed": 45,
+    "consumption_and_branch_passed": 20,
+    "guard_statements": 37,
+    "guard_branches": 26,
+    "guard_statement_percent": 100,
+    "guard_branch_percent": 100,
+    "adjacent_passed": 337,
+    "root_passed": 3984,
+    "root_skipped": 20
+  },
+  "independent_acceptance": {
+    "root": "/tmp/golden-prompt-consumption-9239ba3.RjqmXH/evidence",
+    "summary_sha256": "2e324dd48b8b0fcb0c89528522b22d5845e6cc501032bec955757c42e4e6347c",
+    "pytest_xml_sha256": "f1c19b0cba1cd1ab7d0200d265ebbeb9f60938f111b7ad56f12fd40909157087",
+    "mcp_version": "2.2.0",
+    "second_axis_consumption_tests_passed": 20,
+    "second_axis_schema_snapshots": 68,
+    "text2env_compile_v1_implementation_sha256": "0394575ff26f8da601507416573656b3fb04d7ca06fc45ff3f8195005f470b7f",
+    "text2env_compile_v1_implementation_files": 11,
+    "text2env_compile_v1_qualification_checks": 7,
+    "text2env_compile_v1_qualification_status": "pass",
+    "verdict": "pass"
+  },
+  "dashboard": {
+    "portfolio_http_status": 404,
+    "tasks_http_status": 404,
+    "project_http_status": 404,
+    "synced": false
+  },
+  "boundaries": {
+    "controlled_preflight_only": true,
+    "image_video_handler_implemented": false,
+    "image_video_qualified": false,
+    "genesis_executed": false,
+    "gpu_executed": false,
+    "environment_package_produced": false,
+    "media_produced": false,
+    "publishable": false,
+    "promotion_executed": false,
+    "robot_policy_ready": false,
+    "text2env_compile_v1_changed": false
+  }
+}

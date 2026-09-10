@@ -28,7 +28,7 @@
 `e67b656ea97044da5b09ee8323c48e752cd88c76` 加 P2 compile-only submit 候选为准；
 下述 55-schema 计数不归属于 `ab03859` 的 14-schema 历史快照。
 
-Harness 当前公开 55 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
+Harness 当前公开 68 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
 descriptor v2、validate v2 input/output，以及 qualification report、资产债务/修复、registry snapshot、
 replay VLM、run start/read/snapshot 和 workflow start receipt 等 12 个入口，再加上 asset source snapshot、stage
 request 与 stage result 三个入口；P2 再增加 command、operation snapshot、qualified execution、trusted
@@ -93,6 +93,15 @@ artifact read 返回原资源和 server-owned receipt，但不推进 revision/st
 receipts 精确覆盖 source prompt、failure、observation 和 diagnostic。Codex CLI `0.153.4` 已实际发起四项
 读取并提交 advisory/prompt controls，第二进程重提无 SQLite/CAS 增长。receipt 只能证明 server delivery，
 `transport_acknowledged=false` 与 `model_understanding_claimed=false`，不能冒充模型理解或 trusted fact。
+
+PromptRevision 之后不能再直接调用旧式 Skill。image/video compile 现在有 v2 输入：`initial` attempt 与
+`prompt_revision` attempt 是严格 discriminated union；后者必须携带 current revision、effective revised
+prompt、完整 failure receipts 与 predecessor package。Golden aggregate 在 command CAS、turn reservation
+和 child 分配前再核对 target Skill、workflow authority 及 video→image selected frame。受控 MCP 纵切已让
+exact image compile 从 revision 4 推进到 5，六类 lineage 漂移与旧 v1 输入均零副作用拒绝。两个 x2env
+compile Skill 尚未资格化，故 descriptor 在首次资格前切到 v2；旧 v1 仅保留历史解析。该 preflight
+application 最终受控 blocked，不是 image runtime、Genesis 或 publishability 证据；已资格 text compile v1
+也没有被改写。
 
 ASPIRE E0–E2 快照 `1180aef` 的离线、自包含回归是 595 passed、6 skipped；这不是后续 Registry/compiler/asset/Stage 5 follow-on 的当前绿灯。该快照的 skip 只对应未纳入 Git 的 Isaac/SceneAgent/媒体/报告原始包或本机未安装的 SAPIEN 物理运行时。完整命令与时间边界见 `self_improving/README.md`。
 

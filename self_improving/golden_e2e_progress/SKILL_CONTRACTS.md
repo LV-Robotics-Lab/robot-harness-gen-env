@@ -107,6 +107,13 @@ attempt history。读取回执证明 server delivery，不证明 transport ackno
 `harness_prompt_revision_record_v1` 从原 prompt + advisory + patch 生成不可变 `PromptRevision`。下一次
 compile 必须显式引用 predecessor package、失败 receipt 和 revision；禁止隐式覆盖或静默 fallback。
 
+compile attempt 使用 discriminated union：`harness.initial_compile_attempt.v1` 只表示初次构建；
+`harness.prompt_revision_compile_attempt.v1` 必须携带 current PromptRevision、该 revision 的 revised prompt、
+非空排序唯一 failure receipts 与 predecessor package。image/video compile 的首次 executable input 使用
+`harness.image2env_compile_input.v2` / `harness.video2env_compile_input.v2`；旧 v1 只保留历史解析。当前 head
+为 PromptRevision 时，Harness 在 child 前还会重验 target Skill 与 video→image selected frame，任何缺失、
+漂移或 initial attempt 都返回 history mismatch，不得落成新的 operation。
+
 ## 5. Compile contracts
 
 三类 compile input 共享：

@@ -1,5 +1,29 @@
 # 进度与结果
 
+## 2026-09-11 P10 PromptRevision → exact compile consumption
+
+- 新增 `harness.initial_compile_attempt.v1`、`harness.prompt_revision_compile_attempt.v1` 与 image/video
+  compile input v2。revised attempt 明确携带 current PromptRevision、effective prompt、非空排序唯一失败
+  receipts 和 predecessor package；旧 v1 输入模型继续 parse-only。尚未资格化的 image/video
+  `compile@1.0.0` contract descriptor 在首次 qualification 前切到 v2，exact Skill/MCP 名不变。
+- `GoldenRunHarness.submit` 在 command CAS 写入、parent turn reservation 和 child UUID 分配前重验：current
+  head/workflow/principal/revision/state、`next_compile_skill_ref`、revision ArtifactRef、revised prompt、失败
+  lineage、top-level/attempt predecessor package，以及 video→image selected frame/source identity。当前 head
+  是 PromptRevision 时，initial、旧 v1、错误 target 或任何未消费 lineage 的 Skill 都 fail closed。
+- 官方 MCP 2.2 public-seam 测试真实构造 controlled observation→blocked failure→四项 audited reads→
+  advisory rev3→prompt rev4；正确 v2 image attempt 让 tracking application 恰调用一次并以 controlled
+  blocked terminal 推进 rev5，workflow operation predecessor 精确等于 PromptRevision receipt，可信 state
+  保持不变。target、revision、effective prompt、failure receipts、predecessor package、fallback frame 六类
+  漂移以及旧 v1 输入均在 application/child/CAS/SQLite reservation 前拒绝。
+- schema snapshot 总数 64→68；schema/x2env focused 45 pass，消费 seam 20 pass且新 guard
+  37 statements/26 branches 100%，相邻 schema/Golden/MCP 回归 337 pass，完整 root 3984 pass/20 skip。
+  第一轴独立验收闭合 55 个 CAS objects、49 个 unique reachable refs、两库 integrity 与 no-live restart；
+  第二轴独立 archive 复核 68 schemas、100% guard 和未变的 text compile v1 qualification identity。证据见
+  `docs/evidence/golden-prompt-revision-compile-consumption-20260911.{md,json}`。
+- 边界：该链的 image compile application 是受控 preflight/blocked fixture，没有 image2env handler、
+  qualification、资产生成/复用/digital-cousin、Genesis runtime、媒体输出或 publishability；也没有修改或
+  重签已资格化的 `text2env.compile@1.0.0`。
+
 ## 2026-09-11 P10 audited resource delivery 与 external Codex diagnosis
 
 - 新增 `harness.resource_access_receipt.v1` 与 SQLite append-only access journal。workflow artifact 的 MCP

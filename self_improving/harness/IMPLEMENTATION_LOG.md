@@ -1064,3 +1064,20 @@
 - 边界：受控 observation 为 `simulator_executed=false`，controls 为
   `external_agent_executed=false`；没有 Genesis/GPU、模型理解、physical/publishability/promotion 授权，
   也尚未让 prompt revision 被下一次 compile 强制消费。
+
+### 2026-09-11 / A056：PromptRevision 只能由显式版本化 compile attempt 消费
+
+- RED：PromptRevision 成为 head 后，旧 image compile input 会越过 aggregate，写 command CAS、占用 parent
+  turn、分配 child 并到达 application；没有证据证明 revised prompt、失败 receipt、package 或 fallback frame
+  被实际消费。
+- 合同：新增 initial/revised 两种 discriminated compile attempt 与 image/video compile input v2；旧 v1 保留
+  parse-only。两个 x2env compile `@1.0.0` 尚未资格化，因此在首次 qualification 前把 descriptor input 切到
+  v2，exact Skill/MCP 名不变；已资格化 text compile v1 完全不动。
+- GREEN：`GoldenRunHarness.submit` 在 command CAS/turn/child 前重验 PromptRevision 的 current workflow
+  authority、target Skill、effective prompt、全部 failure receipts、predecessor package 与 video→image selected
+  frame。正确受控 image attempt 调 application 一次并推进 rev4→5；六类漂移与旧 v1 零副作用拒绝。
+- 验证：公共 schema 64→68；新 guard 37 statements/26 branches 100%；相邻 schema/Golden/MCP 337 pass，
+  完整 root 3984 pass/20 skip。固定 `9239ba3` 的第一轴独立验收闭合 55 CAS objects、49 unique reachable
+  refs、两库 integrity 与 no-live application restart 零增长。
+- 边界：application 是受控 blocked preflight；没有 image/video handler、qualification、Genesis runtime、
+  资产路径、媒体或 publishability。未来 text retry 必须新增 exact compile v2，不能改变已资格 v1。

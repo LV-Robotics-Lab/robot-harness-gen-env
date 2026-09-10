@@ -2,7 +2,7 @@
 
 - 状态：Contract implemented；runtime unimplemented；unqualified；unregistered
 - 集成基线：`2bdeafd836d641b4f14aef316a21fbcd736f55e1`
-- 合同日期：2026-09-10
+- 合同日期：2026-09-10；compile attempt 修订：2026-09-11
 - Pydantic：`self_improving/harness/schemas/x2env.py`
 - exact namespace：`self_improving/harness/x2env_contracts.py`
 - JSON Schema：`self_improving/harness/json_schemas/harness.{image2env,video2env}_*.schema.json`
@@ -15,10 +15,10 @@ bundle，因此六个 Skill 当前不能注册或执行。
 
 | Exact Skill ref | MCP tool | input `$id` | output `$id` | repeatability | attempts |
 |---|---|---|---|---|---:|
-| `image2env.compile@1.0.0` | `image2env_compile_v1_0_0` | `harness.image2env_compile_input.v1` | `harness.image2env_compile_output.v1` | evidence invariant | 2 |
+| `image2env.compile@1.0.0` | `image2env_compile_v1_0_0` | `harness.image2env_compile_input.v2` | `harness.image2env_compile_output.v1` | evidence invariant | 2 |
 | `image2env.replay@1.0.0` | `image2env_replay_v1_0_0` | `harness.image2env_replay_input.v1` | `harness.image2env_replay_output.v1` | evidence invariant | 2 |
 | `image2env.validate@1.0.0` | `image2env_validate_v1_0_0` | `harness.image2env_validate_input.v1` | `harness.image2env_validate_output.v1` | content bitwise | 1 |
-| `video2env.compile@1.0.0` | `video2env_compile_v1_0_0` | `harness.video2env_compile_input.v1` | `harness.video2env_compile_output.v1` | evidence invariant | 2 |
+| `video2env.compile@1.0.0` | `video2env_compile_v1_0_0` | `harness.video2env_compile_input.v2` | `harness.video2env_compile_output.v1` | evidence invariant | 2 |
 | `video2env.replay@1.0.0` | `video2env_replay_v1_0_0` | `harness.video2env_replay_input.v1` | `harness.video2env_replay_output.v1` | evidence invariant | 2 |
 | `video2env.validate@1.0.0` | `video2env_validate_v1_0_0` | `harness.video2env_validate_input.v1` | `harness.video2env_validate_output.v1` | content bitwise | 1 |
 
@@ -26,6 +26,8 @@ bundle，因此六个 Skill 当前不能注册或执行。
 `handler_registered=false`、`qualification_available=false`。只有调用方已经核实真实资格时，
 `build_x2env_skill_descriptor(..., qualification_verified=True)` 才能组装 `SkillDescriptorV2`；该 helper
 不安装 handler，也不把合同存在解释成资格通过。禁止 alias、`latest`、version range 和跨模态参数兼容。
+两个 compile Skill 尚未资格化，因此在首次资格前把 executable descriptor input 切到 v2；原 v1 schema
+仍保留为历史 parse-only 合同，不能用于新 operation。exact Skill ref 与 MCP tool name 没有变化。
 
 ## 2. Source media identity
 
@@ -52,6 +54,16 @@ manifest。Image schema 与 Video schema 以不同 `schema_version` 作 discrimi
 `harness.scene_interpretation_proposal.v1`、目标 Genesis profile、资产目录、seed、可选 predecessor 和
 repair evidence。`model_execution_allowed=false` 是常量：外部 Codex 可先生成 proposal，但 Skill 内部
 不得再调用 planner/VLM，也不得把 proposal 当物理事实。
+
+v2 另外要求 `attempt` discriminated union：
+
+- `harness.initial_compile_attempt.v1` 只声明 `kind=initial`；
+- `harness.prompt_revision_compile_attempt.v1` 必须携带 current `PromptRevision`、该 revision 的
+  `effective_prompt`、非空排序唯一 failure receipts 与 predecessor package。
+
+当前 workflow head 为 PromptRevision 时，Harness 还会在 command CAS/child allocation 前核对 target
+exact Skill、workflow/principal/revision/state、revised prompt、完整失败 lineage、top-level package 与
+video→image selected frame；initial attempt、旧 v1 或任何漂移都不能生成新 operation。
 
 资产 acquisition policy 为 `auto`、`exact_only`、`digital_cousin_allowed` 或 `generate_on_miss`。
 每个对象输出一个 `harness.x2env_asset_decision.v1`，lane 必须是：

@@ -46,8 +46,11 @@
   - [x] 增加 durable resource-access receipt 与两个 exact MCP control tools；真实 external Codex 已
     请求 source prompt、失败 receipt、controlled observation 与 diagnostic，并提交 advisory/prompt
     revision。回执只证明 server delivery，且仍保留 `external_agent_executed=false`。
-  - [ ] 让下一次 exact compile 明确消费 prompt revision、失败 receipt 和 predecessor package；再把
-    同一回合接到 production Genesis observation，不得静默取 latest 或 fallback。
+  - [x] 为 image/video compile 冻结 v2 attempt 合同，并让受控 exact image compile 明确消费当前
+    prompt revision、effective prompt、失败 receipt、predecessor package 与 video fallback frame；旧 v1
+    和六类漂移在 child/CAS/SQLite reservation 前拒绝。
+  - [ ] 把同一消费合同接到 production image/video handler、资格和真实 Genesis observation；不得静默
+    取 latest 或 fallback。
 - [ ] promotion gate 与 publishability 唯一授权。
 - [x] 真正 MCP adapter：exact schema discovery、typed invocation、ToolResult、workflow-scoped
   state/receipt/media resources、错误映射与 stdio restart 已实现；真实三 Skill simulator 已验收。

@@ -1,5 +1,16 @@
 # Change Log
 
+## 2026-09-11 explicit PromptRevision compile consumption
+
+- 新增 initial/revised compile-attempt schema 与 image/video compile input v2，公共 schema 64→68；旧 v1
+  保留 parse-only。尚未资格化的 x2env `compile@1.0.0` descriptor 在首次 qualification 前切到 v2，
+  exact Skill/MCP 名不变；已资格化的 text compile v1 未修改。
+- Golden aggregate 现在只允许 PromptRevision 指定的 exact compile，并在 command CAS/child 前逐项核对
+  revised prompt、failure receipts、predecessor package 与 video→image frame。正确受控 image attempt 推进
+  rev4→5；六类漂移及旧 v1 都零副作用拒绝。
+- 新 guard statement/branch 100%，相邻回归 337 pass，完整 root 3984 pass/20 skip。该路径仍只是受控
+  blocked preflight，不是 image handler、qualification 或 Genesis runtime。
+
 ## 2026-09-11 audited MCP reads and external Codex diagnosis
 
 - 新增第 64 份 public schema `harness.resource_access_receipt.v1` 和独立 append-only SQLite read

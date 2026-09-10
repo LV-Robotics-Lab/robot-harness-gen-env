@@ -126,8 +126,10 @@ Codex经 MCP读取当前 ImageContent/keyframes 和 diagnostics；advisory 不�
 与 video→image fallback 均产生新 turn/package，完整保留失败。
 
 当前已完成 durable resource delivery、exact advisory/prompt MCP controls 与受控 external Codex
-revision 2→3→4 回合；下一切片必须升级 exact compile input，使其显式消费 PromptRevision、失败 receipt
-与 predecessor package。受控 observation 仍不可替代 production Genesis capture/qualification。
+revision 2→3→4 回合；image/video compile v2 attempt 也已在受控 exact image compile 中显式消费
+PromptRevision、失败 receipt、predecessor package 与 video fallback frame，并推进至 revision 5。下一切片
+把同一合同接到 production image/video handler 和资格；受控 observation/compile 仍不可替代 production
+Genesis capture/qualification。
 
 ## P11 — Golden runner、真实 Codex 与案例
 

@@ -60,7 +60,7 @@ exact qualified compile 接成 revision 0→1；Registry 已负责通用
 `EnvironmentPackage` 指向 `scene_gen` 已有载荷；compile 已由专用 adapter 组装，完整发布闭环仍
 需要 replay/validate adapters。
 
-## PR1 的 14 个公共入口与当前 55 个版本化入口
+## PR1 的 14 个公共入口与当前 68 个版本化入口
 
 下表是 PR1 冻结的 14 个入口。A042 没有修改其中的 `SkillDescriptor` v1，而是新增第 15 个
 `SkillDescriptorV2`：v1 只允许 `deterministic=true`；v2 用
@@ -75,6 +75,10 @@ StateDelta 与 workflow operation receipt 七个 actor-neutral `$id`。
 Image2Env/Video2Env contract tranche 再增加 12 个 exact Skill I/O、image/video source media、asset
 decision 与 candidate environment package 共 16 个 `$id`；这些只是未注册、未资格化的合同，不是可执行
 runtime。
+其后 controlled Genesis observation 增加 3 个入口，advisory/prompt workflow controls 增加 5 个，
+resource-access receipt 增加 1 个，initial/revised compile attempt 与 image/video compile v2 input 再增加
+4 个，因此当前总数为 68。后四份让 PromptRevision consumption 具备可冻结的显式 lineage；它们仍不等于
+image/video handler、qualification 或 Genesis runtime。
 
 | 分组 | Schema | 读者模型 |
 | --- | --- | --- |
