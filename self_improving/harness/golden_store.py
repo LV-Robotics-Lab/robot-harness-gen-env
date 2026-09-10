@@ -11,11 +11,13 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from .schemas.base import CanonicalSkillRef, Sha256
+from .schemas.golden_control import ControlCommitSnapshot
 from .schemas.workflow import IdempotencyKey, OperationSnapshot, PrincipalId, RunSnapshot
 
 _CURRENT_COLUMNS = (
@@ -115,6 +117,85 @@ _OPERATION_INDEXES = (
         ),
     ),
 )
+_TURN_COLUMNS = (
+    (0, "entry_id", "TEXT", 1, None, 1, 0),
+    (1, "workflow_run_id", "TEXT", 1, None, 0, 0),
+    (2, "entry_kind", "TEXT", 1, None, 0, 0),
+    (3, "action_ref", "TEXT", 1, None, 0, 0),
+    (4, "idempotency_key", "TEXT", 1, None, 0, 0),
+    (5, "request_sha256", "TEXT", 1, None, 0, 0),
+    (6, "base_revision", "INTEGER", 1, None, 0, 0),
+)
+_TURN_INDEXES = (
+    (
+        "pk",
+        1,
+        0,
+        ((0, 0, "entry_id", 0, "BINARY", 1), (1, -1, None, 0, "BINARY", 0)),
+    ),
+    (
+        "u",
+        1,
+        0,
+        (
+            (0, 1, "workflow_run_id", 0, "BINARY", 1),
+            (1, 2, "entry_kind", 0, "BINARY", 1),
+            (2, 3, "action_ref", 0, "BINARY", 1),
+            (3, 4, "idempotency_key", 0, "BINARY", 1),
+            (4, -1, None, 0, "BINARY", 0),
+        ),
+    ),
+    (
+        "u",
+        1,
+        0,
+        (
+            (0, 1, "workflow_run_id", 0, "BINARY", 1),
+            (1, 6, "base_revision", 0, "BINARY", 1),
+            (2, -1, None, 0, "BINARY", 0),
+        ),
+    ),
+)
+_CONTROL_COLUMNS = (
+    (0, "control_id", "TEXT", 1, None, 1, 0),
+    (1, "workflow_run_id", "TEXT", 1, None, 0, 0),
+    (2, "principal_id", "TEXT", 1, None, 0, 0),
+    (3, "control_kind", "TEXT", 1, None, 0, 0),
+    (4, "idempotency_key", "TEXT", 1, None, 0, 0),
+    (5, "command_sha256", "TEXT", 1, None, 0, 0),
+    (6, "base_revision", "INTEGER", 1, None, 0, 0),
+    (7, "control_json", "BLOB", 1, None, 0, 0),
+    (8, "control_sha256", "TEXT", 1, None, 0, 0),
+)
+_CONTROL_INDEXES = (
+    (
+        "pk",
+        1,
+        0,
+        ((0, 0, "control_id", 0, "BINARY", 1), (1, -1, None, 0, "BINARY", 0)),
+    ),
+    (
+        "u",
+        1,
+        0,
+        (
+            (0, 1, "workflow_run_id", 0, "BINARY", 1),
+            (1, 3, "control_kind", 0, "BINARY", 1),
+            (2, 4, "idempotency_key", 0, "BINARY", 1),
+            (3, -1, None, 0, "BINARY", 0),
+        ),
+    ),
+    (
+        "u",
+        1,
+        0,
+        (
+            (0, 1, "workflow_run_id", 0, "BINARY", 1),
+            (1, 6, "base_revision", 0, "BINARY", 1),
+            (2, -1, None, 0, "BINARY", 0),
+        ),
+    ),
+)
 _SQL_QUOTED_OR_COMMENT = re.compile(
     r"'(?:''|[^'])*'|\"(?:\"\"|[^\"])*\"|`(?:``|[^`])*`|\[(?:\]\]|[^\]])*\]|"
     r"--[^\r\n]*|/\*.*?\*/",
@@ -158,6 +239,32 @@ class _CurrentOperation(BaseModel):
     operation_sha256: object
 
 
+class _CurrentTurn(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    entry_id: str
+    workflow_run_id: str
+    entry_kind: Literal["skill_operation", "control_record"]
+    action_ref: str
+    idempotency_key: IdempotencyKey
+    request_sha256: Sha256
+    base_revision: int
+
+
+class _CurrentControl(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    control_id: str
+    workflow_run_id: str
+    principal_id: PrincipalId
+    control_kind: Literal["advisory", "prompt_revision"]
+    idempotency_key: IdempotencyKey
+    command_sha256: Sha256
+    base_revision: int
+    control_json: object
+    control_sha256: object
+
+
 @dataclass(frozen=True, slots=True)
 class _StoredStart:
     snapshot: RunSnapshot
@@ -171,6 +278,29 @@ class _StoredStart:
 class _StoredOperation:
     operation: OperationSnapshot
     command_sha256: str
+
+
+@dataclass(frozen=True, slots=True)
+class StoredControlRecord:
+    """One terminal workflow control record recovered from durable authority."""
+
+    control: ControlCommitSnapshot
+    command_sha256: str
+
+
+@dataclass(frozen=True, slots=True)
+class StoredWorkflowEntry:
+    """One ordered Skill or control entry in the shared workflow turn journal."""
+
+    entry_id: UUID
+    workflow_run_id: UUID
+    entry_kind: Literal["skill_operation", "control_record"]
+    action_ref: str
+    idempotency_key: str
+    request_sha256: str
+    base_revision: int
+    operation: OperationSnapshot | None
+    control: ControlCommitSnapshot | None
 
 
 class GoldenRunConflictError(RuntimeError):
@@ -347,12 +477,7 @@ class SQLiteGoldenRunStore:
         """Read one operation idempotency slot without disclosing another principal."""
 
         with self._connection() as connection:
-            _require_table_layout(
-                connection,
-                columns=_CURRENT_COLUMNS,
-                indexes=_CURRENT_INDEXES,
-            )
-            _require_operation_table_layout(connection)
+            _require_all_current_layouts(connection)
             start = _select_start(connection, workflow_run_id)
             if start is None or start.snapshot.principal_id != principal_id:
                 return None
@@ -365,7 +490,13 @@ class SQLiteGoldenRunStore:
                 """,
                 (str(workflow_run_id), skill_ref, idempotency_key),
             ).fetchone()
-        return None if row is None else _decode_operation(row)
+            if row is None:
+                return None
+            stored = _decode_operation(row)
+            if stored.operation.principal_id != principal_id:
+                raise GoldenRunCorruptionError("Skill operation is outside its workflow authority")
+            _select_and_decode_entry(connection, stored.operation.operation_id)
+            return stored
 
     def reserve_operation(
         self,
@@ -384,12 +515,7 @@ class SQLiteGoldenRunStore:
 
         with self._connection() as connection:
             connection.execute("BEGIN IMMEDIATE")
-            _require_table_layout(
-                connection,
-                columns=_CURRENT_COLUMNS,
-                indexes=_CURRENT_INDEXES,
-            )
-            _require_operation_table_layout(connection)
+            _require_all_current_layouts(connection)
             start = _select_start(connection, workflow_run_id)
             if start is None or start.snapshot.principal_id != principal_id:
                 return None
@@ -405,6 +531,11 @@ class SQLiteGoldenRunStore:
             ).fetchone()
             if row is not None:
                 existing = _decode_operation(row)
+                if existing.operation.principal_id != principal_id:
+                    raise GoldenRunCorruptionError(
+                        "Skill operation is outside its workflow authority"
+                    )
+                _select_and_decode_entry(connection, existing.operation.operation_id)
                 if existing.command_sha256 != command_sha256:
                     raise GoldenRunConflictError(
                         "operation idempotency key is already bound to a different command"
@@ -459,6 +590,16 @@ class SQLiteGoldenRunStore:
                         hashlib.sha256(payload).hexdigest(),
                     ),
                 )
+                _insert_turn(
+                    connection,
+                    entry_id=operation.operation_id,
+                    workflow_run_id=workflow_run_id,
+                    entry_kind="skill_operation",
+                    action_ref=skill_ref,
+                    idempotency_key=idempotency_key,
+                    request_sha256=command_sha256,
+                    base_revision=operation.base_revision,
+                )
             except sqlite3.IntegrityError as error:
                 raise GoldenRunConflictError(
                     "operation identity is already bound to another command"
@@ -487,12 +628,7 @@ class SQLiteGoldenRunStore:
 
         with self._connection() as connection:
             connection.execute("BEGIN IMMEDIATE")
-            _require_table_layout(
-                connection,
-                columns=_CURRENT_COLUMNS,
-                indexes=_CURRENT_INDEXES,
-            )
-            _require_operation_table_layout(connection)
+            _require_all_current_layouts(connection)
             start = _select_start(connection, running.workflow_run_id)
             if start is None or start.snapshot.principal_id != principal_id:
                 return None
@@ -500,6 +636,7 @@ class SQLiteGoldenRunStore:
             if row is None:
                 raise GoldenRunCorruptionError("reserved operation is absent")
             persisted = _decode_operation(row)
+            _select_and_decode_entry(connection, running.operation_id)
             if persisted.operation.status.value != "running":
                 if persisted.operation != terminal or start.snapshot != snapshot:
                     raise GoldenRunCorruptionError(
@@ -606,12 +743,7 @@ class SQLiteGoldenRunStore:
         """Read the ordered operation journal visible to one principal."""
 
         with self._connection() as connection:
-            _require_table_layout(
-                connection,
-                columns=_CURRENT_COLUMNS,
-                indexes=_CURRENT_INDEXES,
-            )
-            _require_operation_table_layout(connection)
+            _require_all_current_layouts(connection)
             start = _select_start(connection, workflow_run_id)
             if start is None or start.snapshot.principal_id != principal_id:
                 return ()
@@ -625,7 +757,221 @@ class SQLiteGoldenRunStore:
                 """,
                 (str(workflow_run_id),),
             ).fetchall()
-        return tuple(_decode_operation(row) for row in rows)
+            stored = tuple(_decode_operation(row) for row in rows)
+            for operation in stored:
+                _select_and_decode_entry(connection, operation.operation.operation_id)
+            return stored
+
+    def read_control_record(
+        self,
+        *,
+        principal_id: str,
+        workflow_run_id: UUID,
+        control_kind: Literal["advisory", "prompt_revision"],
+        idempotency_key: str,
+    ) -> StoredControlRecord | None:
+        """Read one terminal control idempotency slot for its owning principal."""
+
+        with self._connection() as connection:
+            _require_all_current_layouts(connection)
+            start = _select_start(connection, workflow_run_id)
+            if start is None or start.snapshot.principal_id != principal_id:
+                return None
+            row = _select_control_by_identity(
+                connection,
+                workflow_run_id=workflow_run_id,
+                control_kind=control_kind,
+                idempotency_key=idempotency_key,
+            )
+            if row is None:
+                return None
+            stored = _decode_control(row)
+            if stored.control.principal_id != principal_id:
+                raise GoldenRunCorruptionError("control record is outside its workflow authority")
+            _select_and_decode_entry(connection, stored.control.command_id)
+            return stored
+
+    def commit_control_record(
+        self,
+        *,
+        principal_id: str,
+        expected_workflow_revision: int,
+        expected_state_sha256: str,
+        expected_receipt_head_sha256: str,
+        control: ControlCommitSnapshot,
+        snapshot: RunSnapshot,
+    ) -> StoredControlRecord | None:
+        """Atomically append one terminal-only control and advance the shared head."""
+
+        with self._connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            _require_all_current_layouts(connection)
+            start = _select_start(connection, control.workflow_run_id)
+            if start is None or start.snapshot.principal_id != principal_id:
+                return None
+            existing_row = _select_control_by_identity(
+                connection,
+                workflow_run_id=control.workflow_run_id,
+                control_kind=control.control_kind,
+                idempotency_key=control.idempotency_key,
+            )
+            if existing_row is not None:
+                existing = _decode_control(existing_row)
+                if existing.command_sha256 != control.command.sha256:
+                    raise GoldenRunConflictError(
+                        "control idempotency key is already bound to a different command"
+                    )
+                if existing.control != control:
+                    raise GoldenRunCorruptionError(
+                        "control retry differs from its committed durable record"
+                    )
+                return existing
+
+            current = start.snapshot
+            if (
+                current.revision != expected_workflow_revision
+                or current.state_sha256 != expected_state_sha256
+                or current.receipt_head.sha256 != expected_receipt_head_sha256
+                or current.active_operation is not None
+            ):
+                raise GoldenRunHeadConflictError(
+                    "workflow head changed before the control could commit"
+                )
+            if (
+                control.principal_id != principal_id
+                or control.base_revision != current.revision
+                or control.committed_revision != current.revision + 1
+                or control.base_turn_seq != current.turn_seq
+                or control.committed_turn_seq != current.turn_seq + 1
+                or control.predecessor_receipt != current.receipt_head
+                or control.base_state_sha256 != current.state_sha256
+                or control.base_state != current.state_ref
+                or control.resulting_state_sha256 != current.state_sha256
+                or control.resulting_state != current.state_ref
+                or control.committed_at < current.updated_at
+            ):
+                raise GoldenRunCorruptionError(
+                    "new control has inconsistent workflow authority metadata"
+                )
+            immutable_snapshot = (
+                "workflow_run_id",
+                "principal_id",
+                "workspace",
+                "requested_profile",
+                "status",
+                "state_sha256",
+                "state_ref",
+                "start_request_ref",
+                "registry_snapshot",
+                "active_operation",
+                "child_runs",
+                "started_at",
+            )
+            if (
+                any(
+                    getattr(current, field) != getattr(snapshot, field)
+                    for field in immutable_snapshot
+                )
+                or snapshot.revision != control.committed_revision
+                or snapshot.turn_seq != control.committed_turn_seq
+                or snapshot.receipt_head != control.receipt_head
+                or snapshot.updated_at != control.committed_at
+            ):
+                raise GoldenRunCorruptionError(
+                    "terminal workflow head is not the exact control transition"
+                )
+
+            payload = _canonical_model_bytes(control)
+            try:
+                connection.execute(
+                    """
+                    INSERT OR ABORT INTO golden_workflow_control_records (
+                        control_id, workflow_run_id, principal_id, control_kind,
+                        idempotency_key, command_sha256, base_revision,
+                        control_json, control_sha256
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        str(control.command_id),
+                        str(control.workflow_run_id),
+                        principal_id,
+                        control.control_kind,
+                        control.idempotency_key,
+                        control.command.sha256,
+                        control.base_revision,
+                        payload,
+                        hashlib.sha256(payload).hexdigest(),
+                    ),
+                )
+                _insert_turn(
+                    connection,
+                    entry_id=control.command_id,
+                    workflow_run_id=control.workflow_run_id,
+                    entry_kind="control_record",
+                    action_ref=control.control_kind,
+                    idempotency_key=control.idempotency_key,
+                    request_sha256=control.command.sha256,
+                    base_revision=control.base_revision,
+                )
+            except sqlite3.IntegrityError as error:
+                raise GoldenRunConflictError(
+                    "control identity is already bound to another workflow transition"
+                ) from error
+            _update_snapshot(connection, snapshot)
+            return StoredControlRecord(
+                control=control,
+                command_sha256=control.command.sha256,
+            )
+
+    def read_entries(
+        self,
+        *,
+        principal_id: str,
+        workflow_run_id: UUID,
+    ) -> tuple[StoredWorkflowEntry, ...]:
+        """Read the single ordered journal shared by Skill and control transitions."""
+
+        with self._connection() as connection:
+            _require_all_current_layouts(connection)
+            start = _select_start(connection, workflow_run_id)
+            if start is None or start.snapshot.principal_id != principal_id:
+                return ()
+            rows = connection.execute(
+                """
+                SELECT entry_id, workflow_run_id, entry_kind, action_ref,
+                       idempotency_key, request_sha256, base_revision
+                FROM golden_workflow_turns
+                WHERE workflow_run_id = ?
+                ORDER BY base_revision, entry_id
+                """,
+                (str(workflow_run_id),),
+            ).fetchall()
+            operation_count = connection.execute(
+                "SELECT COUNT(*) FROM golden_workflow_operations WHERE workflow_run_id = ?",
+                (str(workflow_run_id),),
+            ).fetchone()[0]
+            control_count = connection.execute(
+                "SELECT COUNT(*) FROM golden_workflow_control_records WHERE workflow_run_id = ?",
+                (str(workflow_run_id),),
+            ).fetchone()[0]
+            if len(rows) != operation_count + control_count:
+                raise GoldenRunCorruptionError(
+                    "workflow detail records and shared turn journal disagree"
+                )
+            entries = tuple(_decode_entry(connection, row) for row in rows)
+            if any(
+                (
+                    entry.operation.principal_id
+                    if entry.operation is not None
+                    else entry.control.principal_id
+                )
+                != principal_id
+                for entry in entries
+            ):
+                raise GoldenRunCorruptionError(
+                    "workflow turn detail is outside its workflow authority"
+                )
+            return entries
 
     @contextmanager
     def _connection(self) -> Iterator[sqlite3.Connection]:
@@ -685,6 +1031,7 @@ class SQLiteGoldenRunStore:
                     "golden workflow database has an unsupported table layout"
                 )
             _initialize_operation_table(connection)
+            _initialize_turn_tables(connection)
 
 
 def _decode_start(row: sqlite3.Row) -> _StoredStart:
@@ -769,6 +1116,104 @@ def _decode_operation(row: sqlite3.Row) -> _StoredOperation:
     )
 
 
+def _decode_control(row: sqlite3.Row) -> StoredControlRecord:
+    try:
+        authority = _CurrentControl.model_validate(dict(row))
+    except ValidationError as error:
+        raise GoldenRunCorruptionError(
+            f"stored control has invalid authority metadata: {error}"
+        ) from error
+    label = authority.control_id
+    payload = _snapshot_bytes(authority.control_json, label=label)
+    if type(authority.control_sha256) is not str or not re.fullmatch(
+        r"[0-9a-f]{64}", authority.control_sha256
+    ):
+        raise GoldenRunCorruptionError(f"stored control {label} has an invalid payload checksum")
+    if hashlib.sha256(payload).hexdigest() != authority.control_sha256:
+        raise GoldenRunCorruptionError(f"stored control {label} failed its payload checksum")
+    try:
+        control = ControlCommitSnapshot.model_validate_json(payload)
+    except (ValidationError, TypeError, ValueError) as error:
+        raise GoldenRunCorruptionError(
+            f"cannot reconstruct stored control {label}: {error}"
+        ) from error
+    if payload != _canonical_model_bytes(control):
+        raise GoldenRunCorruptionError(f"stored control {label} is not canonical JSON bytes")
+    if (
+        str(control.command_id) != authority.control_id
+        or str(control.workflow_run_id) != authority.workflow_run_id
+        or control.principal_id != authority.principal_id
+        or control.control_kind != authority.control_kind
+        or control.idempotency_key != authority.idempotency_key
+        or control.command.sha256 != authority.command_sha256
+        or control.base_revision != authority.base_revision
+    ):
+        raise GoldenRunCorruptionError(
+            f"stored control {label} has inconsistent authority metadata"
+        )
+    return StoredControlRecord(control=control, command_sha256=authority.command_sha256)
+
+
+def _decode_entry(connection: sqlite3.Connection, row: sqlite3.Row) -> StoredWorkflowEntry:
+    try:
+        authority = _CurrentTurn.model_validate(dict(row))
+        entry_id = UUID(authority.entry_id)
+        workflow_run_id = UUID(authority.workflow_run_id)
+    except (ValidationError, TypeError, ValueError) as error:
+        raise GoldenRunCorruptionError(
+            f"stored workflow turn has invalid authority metadata: {error}"
+        ) from error
+    if authority.entry_kind == "skill_operation":
+        operation_row = _select_operation(connection, entry_id)
+        if operation_row is None:
+            raise GoldenRunCorruptionError("workflow turn is missing its Skill operation")
+        stored = _decode_operation(operation_row)
+        operation = stored.operation
+        if (
+            operation.workflow_run_id != workflow_run_id
+            or operation.skill_ref != authority.action_ref
+            or operation.idempotency_key != authority.idempotency_key
+            or stored.command_sha256 != authority.request_sha256
+            or operation.base_revision != authority.base_revision
+        ):
+            raise GoldenRunCorruptionError("workflow turn differs from its Skill operation")
+        return StoredWorkflowEntry(
+            entry_id=entry_id,
+            workflow_run_id=workflow_run_id,
+            entry_kind=authority.entry_kind,
+            action_ref=authority.action_ref,
+            idempotency_key=authority.idempotency_key,
+            request_sha256=authority.request_sha256,
+            base_revision=authority.base_revision,
+            operation=operation,
+            control=None,
+        )
+    control_row = _select_control(connection, entry_id)
+    if control_row is None:
+        raise GoldenRunCorruptionError("workflow turn is missing its control record")
+    stored_control = _decode_control(control_row)
+    control = stored_control.control
+    if (
+        control.workflow_run_id != workflow_run_id
+        or control.control_kind != authority.action_ref
+        or control.idempotency_key != authority.idempotency_key
+        or stored_control.command_sha256 != authority.request_sha256
+        or control.base_revision != authority.base_revision
+    ):
+        raise GoldenRunCorruptionError("workflow turn differs from its control record")
+    return StoredWorkflowEntry(
+        entry_id=entry_id,
+        workflow_run_id=workflow_run_id,
+        entry_kind=authority.entry_kind,
+        action_ref=authority.action_ref,
+        idempotency_key=authority.idempotency_key,
+        request_sha256=authority.request_sha256,
+        base_revision=authority.base_revision,
+        operation=None,
+        control=control,
+    )
+
+
 def _snapshot_bytes(payload: object, *, label: str) -> bytes:
     if type(payload) is not bytes:
         raise GoldenRunCorruptionError(f"stored workflow {label} is not canonical JSON bytes")
@@ -825,11 +1270,123 @@ def _create_operation_table(connection: sqlite3.Connection) -> None:
     )
 
 
+def _create_turn_table(connection: sqlite3.Connection) -> None:
+    connection.execute(
+        """
+        CREATE TABLE golden_workflow_turns (
+            entry_id TEXT NOT NULL PRIMARY KEY,
+            workflow_run_id TEXT NOT NULL,
+            entry_kind TEXT NOT NULL,
+            action_ref TEXT NOT NULL,
+            idempotency_key TEXT NOT NULL,
+            request_sha256 TEXT NOT NULL,
+            base_revision INTEGER NOT NULL,
+            UNIQUE (workflow_run_id, entry_kind, action_ref, idempotency_key),
+            UNIQUE (workflow_run_id, base_revision)
+        )
+        """
+    )
+
+
+def _create_control_table(connection: sqlite3.Connection) -> None:
+    connection.execute(
+        """
+        CREATE TABLE golden_workflow_control_records (
+            control_id TEXT NOT NULL PRIMARY KEY,
+            workflow_run_id TEXT NOT NULL,
+            principal_id TEXT NOT NULL,
+            control_kind TEXT NOT NULL,
+            idempotency_key TEXT NOT NULL,
+            command_sha256 TEXT NOT NULL,
+            base_revision INTEGER NOT NULL,
+            control_json BLOB NOT NULL,
+            control_sha256 TEXT NOT NULL,
+            UNIQUE (workflow_run_id, control_kind, idempotency_key),
+            UNIQUE (workflow_run_id, base_revision)
+        )
+        """
+    )
+
+
 def _initialize_operation_table(connection: sqlite3.Connection) -> None:
     columns = _read_named_column_layout(connection, "golden_workflow_operations")
     if not columns:
         _create_operation_table(connection)
     _require_operation_table_layout(connection)
+
+
+def _initialize_turn_tables(connection: sqlite3.Connection) -> None:
+    turn_columns = _read_named_column_layout(connection, "golden_workflow_turns")
+    control_columns = _read_named_column_layout(connection, "golden_workflow_control_records")
+    if not turn_columns and not control_columns:
+        _create_turn_table(connection)
+        _create_control_table(connection)
+        _backfill_operation_turns(connection)
+    elif not turn_columns or not control_columns:
+        raise GoldenRunCorruptionError(
+            "golden workflow database has an unsupported shared turn layout"
+        )
+    _require_turn_table_layout(connection)
+    _require_control_table_layout(connection)
+
+
+def _backfill_operation_turns(connection: sqlite3.Connection) -> None:
+    rows = connection.execute(
+        """
+        SELECT operation_id, workflow_run_id, principal_id, skill_ref, idempotency_key,
+               command_sha256, base_revision, operation_json, operation_sha256
+        FROM golden_workflow_operations
+        ORDER BY workflow_run_id, base_revision, operation_id
+        """
+    ).fetchall()
+    for row in rows:
+        stored = _decode_operation(row)
+        operation = stored.operation
+        start = _select_start(connection, operation.workflow_run_id)
+        if start is None or start.snapshot.principal_id != operation.principal_id:
+            raise GoldenRunCorruptionError(
+                "cannot backfill an operation outside its workflow authority"
+            )
+        _insert_turn(
+            connection,
+            entry_id=operation.operation_id,
+            workflow_run_id=operation.workflow_run_id,
+            entry_kind="skill_operation",
+            action_ref=operation.skill_ref,
+            idempotency_key=operation.idempotency_key,
+            request_sha256=stored.command_sha256,
+            base_revision=operation.base_revision,
+        )
+
+
+def _insert_turn(
+    connection: sqlite3.Connection,
+    *,
+    entry_id: UUID,
+    workflow_run_id: UUID,
+    entry_kind: Literal["skill_operation", "control_record"],
+    action_ref: str,
+    idempotency_key: str,
+    request_sha256: str,
+    base_revision: int,
+) -> None:
+    connection.execute(
+        """
+        INSERT OR ABORT INTO golden_workflow_turns (
+            entry_id, workflow_run_id, entry_kind, action_ref,
+            idempotency_key, request_sha256, base_revision
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            str(entry_id),
+            str(workflow_run_id),
+            entry_kind,
+            action_ref,
+            idempotency_key,
+            request_sha256,
+            base_revision,
+        ),
+    )
 
 
 def _select_start(
@@ -862,6 +1419,59 @@ def _select_operation(
         """,
         (str(operation_id),),
     ).fetchone()
+
+
+def _select_control(
+    connection: sqlite3.Connection,
+    control_id: UUID,
+) -> sqlite3.Row | None:
+    return connection.execute(
+        """
+        SELECT control_id, workflow_run_id, principal_id, control_kind,
+               idempotency_key, command_sha256, base_revision,
+               control_json, control_sha256
+        FROM golden_workflow_control_records
+        WHERE control_id = ?
+        """,
+        (str(control_id),),
+    ).fetchone()
+
+
+def _select_control_by_identity(
+    connection: sqlite3.Connection,
+    *,
+    workflow_run_id: UUID,
+    control_kind: Literal["advisory", "prompt_revision"],
+    idempotency_key: str,
+) -> sqlite3.Row | None:
+    return connection.execute(
+        """
+        SELECT control_id, workflow_run_id, principal_id, control_kind,
+               idempotency_key, command_sha256, base_revision,
+               control_json, control_sha256
+        FROM golden_workflow_control_records
+        WHERE workflow_run_id = ? AND control_kind = ? AND idempotency_key = ?
+        """,
+        (str(workflow_run_id), control_kind, idempotency_key),
+    ).fetchone()
+
+
+def _select_and_decode_entry(
+    connection: sqlite3.Connection,
+    entry_id: UUID,
+) -> StoredWorkflowEntry:
+    row = connection.execute(
+        """
+        SELECT entry_id, workflow_run_id, entry_kind, action_ref,
+               idempotency_key, request_sha256, base_revision
+        FROM golden_workflow_turns
+        WHERE entry_id = ?
+        """,
+        (str(entry_id),),
+    ).fetchone()
+    if row is None:
+        raise GoldenRunCorruptionError("workflow detail record is missing its shared turn")
+    return _decode_entry(connection, row)
 
 
 def _update_snapshot(connection: sqlite3.Connection, snapshot: RunSnapshot) -> None:
@@ -925,6 +1535,35 @@ def _require_operation_table_layout(connection: sqlite3.Connection) -> None:
         columns=_OPERATION_COLUMNS,
         indexes=_OPERATION_INDEXES,
     )
+
+
+def _require_turn_table_layout(connection: sqlite3.Connection) -> None:
+    _require_named_table_layout(
+        connection,
+        table_name="golden_workflow_turns",
+        columns=_TURN_COLUMNS,
+        indexes=_TURN_INDEXES,
+    )
+
+
+def _require_control_table_layout(connection: sqlite3.Connection) -> None:
+    _require_named_table_layout(
+        connection,
+        table_name="golden_workflow_control_records",
+        columns=_CONTROL_COLUMNS,
+        indexes=_CONTROL_INDEXES,
+    )
+
+
+def _require_all_current_layouts(connection: sqlite3.Connection) -> None:
+    _require_table_layout(
+        connection,
+        columns=_CURRENT_COLUMNS,
+        indexes=_CURRENT_INDEXES,
+    )
+    _require_operation_table_layout(connection)
+    _require_turn_table_layout(connection)
+    _require_control_table_layout(connection)
 
 
 def _require_table_layout(
