@@ -37,6 +37,7 @@ from self_improving.harness.handlers.text2env_replay import (
     Text2EnvReplayHandler,
     Text2EnvReplayWiring,
 )
+from self_improving.harness.package_store import PackageStore
 from self_improving.harness.qualification import QualificationCheckV1
 from self_improving.harness.qualify_replay import (
     ReplayQualificationGenerationError,
@@ -1606,32 +1607,49 @@ def test_generated_true_evidence_issues_the_exact_production_registration(
         ).encode("ascii")
         return SimpleNamespace(canonical_bytes=payload, sha256=hashlib.sha256(payload).hexdigest())
 
-    def assemble(*, artifact_store, **_kwargs):
+    def assemble(*, artifact_store, state_root=None, allowed_roots=None, **_kwargs):
+        state_root = state_root or (tmp_path / "application-state")
+        allowed_roots = allowed_roots or settings.allowed_asset_roots
+        package_store = PackageStore(artifact_store)
+        executor_identity = identity(EXECUTOR_IDENTITY_DOCUMENT)
+        media_identity = identity(MEDIA_IDENTITY_DOCUMENT)
+        capability_sha256 = next(
+            item.sha256 for item in dependencies if item.name.endswith("capability")
+        )
+        handler_config_sha256 = next(
+            item.sha256 for item in dependencies if item.name.endswith("handler_config")
+        )
         resolver = object.__new__(Text2EnvReplayDependencyResolver)
         object.__setattr__(resolver, "artifact_store", artifact_store)
+        object.__setattr__(resolver, "package_store", package_store)
+        object.__setattr__(resolver, "allowed_asset_roots", allowed_roots)
+        object.__setattr__(resolver, "runtime_executor_identity", executor_identity)
+        object.__setattr__(resolver, "media_verifier_identity", media_identity)
+        object.__setattr__(resolver, "handler_config_sha256", handler_config_sha256)
+        object.__setattr__(resolver, "expected_capability_sha256", capability_sha256)
+        object.__setattr__(resolver, "work_root", state_root / "replay-dependencies")
         handler = object.__new__(Text2EnvReplayHandler)
         object.__setattr__(handler, "artifact_store", artifact_store)
+        object.__setattr__(handler, "package_store", package_store)
         object.__setattr__(handler, "dependency_resolver", resolver)
+        object.__setattr__(handler, "allowed_asset_roots", allowed_roots)
+        object.__setattr__(handler, "work_root", state_root / "replay-handler")
         object.__setattr__(
             handler,
             "runtime_executor",
-            SimpleNamespace(identity=identity(EXECUTOR_IDENTITY_DOCUMENT)),
+            SimpleNamespace(identity=executor_identity),
         )
         object.__setattr__(
             handler,
             "media_verifier",
-            SimpleNamespace(identity=identity(MEDIA_IDENTITY_DOCUMENT)),
+            SimpleNamespace(identity=media_identity),
         )
-        object.__setattr__(
-            handler,
-            "expected_capability_sha256",
-            next(item.sha256 for item in dependencies if item.name.endswith("capability")),
-        )
-        object.__setattr__(
-            handler,
-            "expected_handler_config_sha256",
-            next(item.sha256 for item in dependencies if item.name.endswith("handler_config")),
-        )
+        object.__setattr__(handler, "expected_capability_sha256", capability_sha256)
+        object.__setattr__(handler, "expected_handler_config_sha256", handler_config_sha256)
+        object.__setattr__(handler, "expected_runtime_asset_snapshot_sha256", None)
+        object.__setattr__(handler, "task_config", "demo_clean")
+        object.__setattr__(handler, "min_visible_pixels", 64)
+        object.__setattr__(handler, "checkpoint_steps", 120)
         return Text2EnvReplayWiring(handler=handler, dependency_resolver=resolver)
 
     monkeypatch.setattr(replay_application_module, "_assemble_live_wiring", assemble)

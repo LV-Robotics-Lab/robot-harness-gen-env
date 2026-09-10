@@ -39,9 +39,9 @@ from self_improving.harness.schemas import (
     Invocation,
     RuntimeConfig,
     Text2EnvReplayInput,
+    Text2EnvReplayOutput,
 )
 from tests.self_improving.harness import test_text2env_replay_handler as replay_fixture
-
 
 ROOT = Path(__file__).resolve().parents[3]
 REPLAY_BUNDLE = ROOT / "self_improving/harness/qualified_skills/text2env.replay/1.0.0"
@@ -195,7 +195,7 @@ def _factory_boundary_patches(
 
     def assemble(*, settings, state_root, artifact_store, allowed_roots):
         del settings
-        assert artifact_store is store
+        assert artifact_store.root == store.root
         assert allowed_roots == (robotwin_root.resolve(),)
         executor = replay_fixture.RecordingExecutor(
             runtime_root / f"executor-{len(executors)}",
@@ -229,9 +229,7 @@ def _controlled_factory_fixture(root: Path):
     source = replay_fixture._fixture(root / "source")
     value = source.value.model_copy(
         update={
-            "runtime_config": source.value.runtime_config.model_copy(
-                update={"settle_steps": 120}
-            )
+            "runtime_config": source.value.runtime_config.model_copy(update={"settle_steps": 120})
         }
     )
     settings = _factory_settings(
@@ -299,6 +297,7 @@ def test_public_constructor_cannot_issue_factory_authority(
     replay_input = Text2EnvReplayInput.model_validate(
         loaded.kernel_evaluation.invocation.effective_parameters
     )
+
     class Registry:
         descriptors = (loaded.descriptor,)
 
@@ -307,6 +306,7 @@ def test_public_constructor_cannot_issue_factory_authority(
 
     class Journal:
         path = tmp_path / "events.sqlite3"
+
         def read(self, **_kwargs):
             return "page"
 
@@ -326,6 +326,17 @@ def test_public_constructor_cannot_issue_factory_authority(
 
     with pytest.raises(ReplayApplicationConfigurationError, match="factory-issued"):
         application._assert_golden_execution_ready()
+    with pytest.raises(ReplayApplicationConfigurationError, match="production factory"):
+        ReplayApplication._from_verified_assembly(
+            authority=object(),
+            settings=object(),  # type: ignore[arg-type]
+            state_root=tmp_path,
+            artifact_store=object(),  # type: ignore[arg-type]
+            event_journal=object(),  # type: ignore[arg-type]
+            run_store=object(),  # type: ignore[arg-type]
+            registry=object(),  # type: ignore[arg-type]
+            registration_policy=object(),  # type: ignore[arg-type]
+        )
     for operation in (
         lambda: application.skills,
         lambda: application.artifact_root,
@@ -357,8 +368,9 @@ def test_factory_issues_exact_controlled_authority_and_recovers_without_repeat(
         assert application._registry._event_sink is application._event_journal
         assert application._registry._run_store is application._run_store
         assert application._registry._dependency_resolver is (
-            application._registry._registrations[("text2env.replay", "1.0.0")]
-            .handler.dependency_resolver
+            application._registry._registrations[
+                ("text2env.replay", "1.0.0")
+            ].handler.dependency_resolver
         )
 
         first = application.invoke_typed(value, run_id=run_id)
@@ -372,7 +384,12 @@ def test_factory_issues_exact_controlled_authority_and_recovers_without_repeat(
         assert lifecycle.intent is not None
         assert lifecycle.invocation is not None
         assert lifecycle.terminal == first
-        assert application.resolve_artifact(first.output.runtime_evidence).is_file()
+        output = Text2EnvReplayOutput.model_validate(first.output)
+        assert application.resolve_artifact(output.runtime_evidence).is_file()
+        assert application.journal_path == settings.state_root / "harness.sqlite3"
+        assert application.events(run_id=run_id).events
+        assert application.invocation(run_id) == lifecycle.invocation
+        assert application.run_state(run_id) == first
         assert [len(executor.calls) for executor in executors] == [1, 0]
         assert source.store.root == application.artifact_root
 
@@ -430,6 +447,119 @@ def test_controlled_boundary_rejects_invalid_or_changed_identity_and_drift(
         assert len(executors[0].calls) == 2
 
 
+@pytest.mark.parametrize(
+    "drift",
+    [
+        "state_root",
+        "artifact_type",
+        "artifact_root",
+        "event_journal",
+        "run_store",
+        "database_path",
+        "registry_type",
+        "registry_authority",
+        "policy",
+        "registration",
+        "descriptor",
+        "handler",
+        "resolver",
+        "handler_resolver",
+        "shared_cas",
+        "mutable_roots",
+        "dependency_identity",
+        "assembly_identity",
+        "listed_descriptor",
+    ],
+)
+def test_application_rechecks_every_factory_authority_before_use(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    drift: str,
+) -> None:
+    _source, _value, settings, stack, _executors = _controlled_factory_fixture(tmp_path)
+    with stack:
+        application = create_replay_application(settings)
+        registration = application._registry._registrations[("text2env.replay", "1.0.0")]
+        handler = registration.handler
+        resolver = application._registry._dependency_resolver
+        assert resolver is not None
+        if drift == "state_root":
+            application._state_root = tmp_path / "missing-state"
+        elif drift == "artifact_type":
+            application._artifact_store = object()  # type: ignore[assignment]
+        elif drift == "artifact_root":
+            application._artifact_store = module.LocalArtifactStore(tmp_path / "foreign-cas")
+        elif drift == "event_journal":
+            application._event_journal = object()  # type: ignore[assignment]
+        elif drift == "run_store":
+            application._run_store = object()  # type: ignore[assignment]
+        elif drift == "database_path":
+            application._event_journal.path = tmp_path / "foreign.sqlite3"
+        elif drift == "registry_type":
+            application._registry = object()  # type: ignore[assignment]
+        elif drift == "registry_authority":
+            application._registry._artifact_resolver = object()
+        elif drift == "policy":
+            object.__setattr__(application._registration_policy, "allowed_roots", (tmp_path,))
+        elif drift == "registration":
+            application._registry._registrations.clear()
+        elif drift == "descriptor":
+            object.__setattr__(
+                registration,
+                "descriptor",
+                registration.descriptor.model_copy(update={"max_attempts": 3}),
+            )
+        elif drift == "handler":
+            object.__setattr__(registration, "handler", object())
+        elif drift == "resolver":
+            application._registry._dependency_resolver = object()
+        elif drift == "handler_resolver":
+            object.__setattr__(handler, "dependency_resolver", object())
+        elif drift == "shared_cas":
+            object.__setattr__(resolver, "artifact_store", module.LocalArtifactStore(tmp_path))
+        elif drift == "mutable_roots":
+            object.__setattr__(handler, "work_root", tmp_path / "other-work")
+        elif drift == "dependency_identity":
+            object.__setattr__(resolver, "handler_config_sha256", "f" * 64)
+        elif drift == "assembly_identity":
+            application._assembly_identity = ()
+        else:
+            monkeypatch.setattr(module.SkillRegistry, "list", lambda _self: (object(),))
+
+        with pytest.raises(
+            (ReplayApplicationConfigurationError, RuntimeError),
+            match="production assembly|another descriptor",
+        ):
+            _ = application.skills
+
+
+def test_typed_boundary_rejects_corrupt_model_or_cas_reference(tmp_path: Path) -> None:
+    _source, value, settings, stack, _executors = _controlled_factory_fixture(tmp_path)
+    with stack:
+        application = create_replay_application(settings)
+        malformed = value.model_copy()
+        object.__setattr__(malformed, "runtime_config", object())
+        with pytest.warns(UserWarning, match="Pydantic serializer warnings"):
+            with pytest.raises(ReplayApplicationInputError, match="typed replay input"):
+                application.invoke_typed(malformed)
+
+        foreign_ref = value.environment_package.asset_catalog.model_copy(
+            update={"uri": f"file://{tmp_path}/foreign.json"}
+        )
+        foreign_package = value.environment_package.model_copy(
+            update={"asset_catalog": foreign_ref}
+        )
+        with pytest.raises(ReplayApplicationInputError, match="application CAS"):
+            application.invoke_typed(
+                value.model_copy(update={"environment_package": foreign_package})
+            )
+
+        missing_ref = value.environment_package.package_manifest
+        application._artifact_store.resolve(missing_ref).path.unlink()
+        with pytest.raises(ReplayApplicationInputError, match="unavailable or corrupt"):
+            application.invoke_typed(value)
+
+
 def test_factory_rejects_corrupt_nonempty_state_without_clearing_it(tmp_path: Path) -> None:
     source = replay_fixture._fixture(tmp_path / "source")
     settings = _factory_settings(
@@ -446,6 +576,56 @@ def test_factory_rejects_corrupt_nonempty_state_without_clearing_it(tmp_path: Pa
 
     assert marker.read_text(encoding="utf-8") == "preserve"
     assert tuple(settings.state_root.iterdir()) == (marker,)
+
+
+@pytest.mark.parametrize("kind", ["symlink", "replay_file", "database_directory"])
+def test_factory_rejects_unsafe_owned_state_entry(tmp_path: Path, kind: str) -> None:
+    source = replay_fixture._fixture(tmp_path / "source")
+    settings = _factory_settings(
+        tmp_path,
+        evidence_root=source.store.root,
+        allowed_asset_root=source.robotwin_root,
+    )
+    settings.state_root.mkdir()
+    if kind == "symlink":
+        target = tmp_path / "outside"
+        target.mkdir()
+        (settings.state_root / "replay-handler").symlink_to(target, target_is_directory=True)
+    elif kind == "replay_file":
+        (settings.state_root / "replay-handler").write_text("wrong type", encoding="utf-8")
+    else:
+        (settings.state_root / "harness.sqlite3").mkdir()
+
+    with pytest.raises(ReplayApplicationConfigurationError, match="unsafe|wrong type"):
+        create_replay_application(settings)
+
+
+def test_factory_rejects_non_path_state_root_and_rolls_back_only_new_entries(
+    tmp_path: Path,
+) -> None:
+    source = replay_fixture._fixture(tmp_path / "source")
+    settings = _factory_settings(
+        tmp_path,
+        evidence_root=source.store.root,
+        allowed_asset_root=source.robotwin_root,
+    )
+    with pytest.raises(ReplayApplicationConfigurationError, match="state_root must be a Path"):
+        create_replay_application(replace(settings, state_root="not-a-path"))  # type: ignore[arg-type]
+
+    root = tmp_path / "rollback-new"
+    root.mkdir()
+    preserved = root / "harness.sqlite3"
+    preserved.write_text("preserved", encoding="utf-8")
+    created = root / "replay-handler"
+    created.mkdir()
+    (created / "partial").write_text("partial", encoding="utf-8")
+    module._rollback_new_state_entries(
+        root,
+        preexisting_names=frozenset({preserved.name}),
+        remove_root=False,
+    )
+    assert preserved.read_text(encoding="utf-8") == "preserved"
+    assert tuple(root.iterdir()) == (preserved,)
 
 
 def test_controlled_terminal_recovers_in_a_fresh_process(tmp_path: Path) -> None:
@@ -673,6 +853,14 @@ def test_application_failure_leaves_no_pass_documents_or_partial_database(
         runtime_timeout_seconds=1.0,
         capability_timeout_seconds=1.0,
     )
+    for path in (
+        settings.interpreter,
+        settings.runtime_runner,
+        settings.runtime_capability_path,
+        settings.media_launcher,
+        settings.static_ffmpeg,
+    ):
+        path.write_text(path.name, encoding="utf-8")
     publication_calls = 0
     if failure == "nonempty":
         settings.state_root.mkdir()

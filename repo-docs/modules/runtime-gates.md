@@ -87,7 +87,9 @@ fresh-CAS strict reload 全过。当前资格绑定该固定源码与本机 oper
 [`docs/evidence/replay-qualification-refresh-20260910.md`](../../docs/evidence/replay-qualification-refresh-20260910.md)，
 旧资格失效与恢复时序见
 [`docs/evidence/replay-qualification-status-20260910.md`](../../docs/evidence/replay-qualification-status-20260910.md)。
-两次历史/当前成功都不替代独立 validate 与 promotion evidence，不能由 replay 成功推出
+该次重签随后又因 P3a 修改 `replay_application.py` 而按 source identity 门变为 stale；P3a 提交不刷新
+expected hash，新的 current replay qualification 必须在该实现通过 review 后独立执行。
+两次已记录成功都不替代独立 validate 与 promotion evidence，不能由 replay 成功推出
 `publishable=true`。
 
 ## 固定资格回放怎样启动
@@ -106,8 +108,10 @@ console entry 只提供稳定、可发现的调用名，不让普通 wheel 变�
 设置以同一 FD 做最多 64 KiB 的稳定读取；state leaf 由 `mkdirat` 线性化竞争，并持有父目录与目录
 FD，在 application 交接前及终态摘要前复核路径身份。state claim 成功后的后续失败会把该 root
 作为 one-shot failure evidence 保留，CLI 自身不做路径删除。这个 claim 是 cooperative launcher 的检测/占用 guard，
-不是 pathname lease：既有 `ReplayApplication` 仍按路径访问和回滚，交接后主动进行的同 UID rename
-不在该接口的防护主张内。
+不是 pathname lease：既有 `ReplayApplication` 仍按路径访问，交接后主动进行的同 UID rename 不在该
+接口的防护主张内。P3a 之后，application factory 可以重开结构合法的非空 state root，并只在组装失败时
+清理本次新增成员；既有 SQLite authority 与 work roots 不再被整根回滚。unknown entry、符号链接或成员
+类型不符仍在 Registry/handler 前拒绝。
 
 只有 returned state、两次持久化 RunState/Invocation 读取和完整 EventPage 全部对账，并且 `succeeded`
 分支的类型化 output 或 `blocked` / `failed` 分支的 null output + 类型化 blocker 通过后，stdout 才输出

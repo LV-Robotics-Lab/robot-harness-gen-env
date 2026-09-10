@@ -2,6 +2,12 @@
 
 ## 2026-09-10
 
+- 增加 P3a durable production ReplayApplication：只有 production factory 可签发受信 seal，每次调用前
+  重验 CAS、同库 SQLite authorities、Registry、qualification policy、唯一 replay descriptor 与
+  handler/resolver/dependency/settings identity；`invoke_typed` 以 caller UUID4 复用 controlled lifecycle。
+  合法非空 state root 可跨新 factory 实例和独立进程恢复 terminal 而不重复 handler，失败组装也不再
+  清空既有 authority。该实现使上一份 replay qualification 按 source identity 门变为 stale，提交本身
+  不刷新资格 hash，也不声称真实仿真或 Genesis 运行。
 - 增加 P2 compile-only `GoldenRunHarness.submit`：同一 workflow 内真实调用 checked qualified
   production compile，把 command、frozen execution/policy identity、controlled child、ToolResult、
   唯一 StateDelta、workflow receipt 与 revision 0→1 head 收入同一 CAS/SQLite closure。generic catalog

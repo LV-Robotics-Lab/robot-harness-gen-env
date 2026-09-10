@@ -3,35 +3,29 @@
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import UUID
 
-from self_improving.harness.application import CompileApplicationSettings, create_compile_application
+from self_improving.harness.golden_replay_execution import (
+    create_text2env_replay_execution_binding,
+)
+
+from self_improving.harness.application import (
+    CompileApplicationSettings,
+    create_compile_application,
+)
 from self_improving.harness.artifacts import LocalArtifactStore
-from self_improving.harness.event_journal import SQLiteEventJournal
 from self_improving.harness.golden_compile_execution import (
     create_text2env_compile_execution_binding,
 )
 from self_improving.harness.golden_execution import create_golden_execution_catalog
-from self_improving.harness.golden_replay_execution import (
-    create_text2env_replay_execution_binding,
-)
 from self_improving.harness.golden_run import GoldenRunHarness
 from self_improving.harness.golden_store import SQLiteGoldenRunStore
-from self_improving.harness.handlers.text2env_replay import (
-    build_text2env_replay_wiring,
-    text2env_replay_descriptor,
+from self_improving.harness.replay_application import (
+    ReplayApplication,
+    create_replay_application,
 )
-from self_improving.harness.package_store import PackageStore
-from self_improving.harness.qualification import ImplementationManifestV1
-from self_improving.harness.registry import (
-    SkillRegistry,
-    _EvidenceInvariantRegistration,
-)
-from self_improving.harness.replay_application import ReplayApplication
-from self_improving.harness.run_store import SQLiteRunStore
 from self_improving.harness.schemas.common import ArtifactRef, RunStatus
 from self_improving.harness.schemas.registry_snapshot import (
     QualifiedSkillSnapshot,
@@ -56,32 +50,13 @@ from self_improving.harness.schemas.workflow_operation import (
 )
 from self_improving.harness.trusted_state import TrustedWorldState
 from tests.self_improving.harness import test_golden_run as base
+from tests.self_improving.harness import test_replay_application as replay_application_fixture
 from tests.self_improving.harness import test_text2env_replay_handler as replay_fixture
-
 
 ROOT = Path(__file__).resolve().parents[3]
 REQUEST = "Place a can on top of a plate."
 COMPILE_RUN_ID = UUID("30000000-0000-4000-8000-000000000001")
 REPLAY_RUN_ID = UUID("30000000-0000-4000-8000-000000000002")
-
-
-@dataclass(frozen=True)
-class _ReplayRegistrationTestAdapter:
-    descriptor: object
-    handler: object
-    dependency_resolver: object
-    qualification_bytes: bytes
-    report_bytes: bytes
-
-    def verify_and_build(self, request: object, *, artifact_resolver: object):
-        del request, artifact_resolver
-        return _EvidenceInvariantRegistration(
-            descriptor=self.descriptor,
-            handler=self.handler,
-            dependency_resolver=self.dependency_resolver,
-            qualification_bytes=self.qualification_bytes,
-            report_bytes=self.report_bytes,
-        )
 
 
 def _put_json(
@@ -107,73 +82,19 @@ def _replay_application(
     store: LocalArtifactStore,
     source: replay_fixture.Fixture,
 ) -> tuple[ReplayApplication, replay_fixture.RecordingExecutor]:
-    executor = replay_fixture.RecordingExecutor(
-        tmp_path / "runtime-test-adapter",
-        replay_fixture._capability_document(),
-    )
-    media = replay_fixture.RecordingMediaVerifier()
-    wiring = build_text2env_replay_wiring(
-        artifact_store=store,
-        package_store=PackageStore(store),
-        runtime_executor=executor,
-        media_verifier=media,
-        work_root=tmp_path / "replay-work",
-        dependency_work_root=tmp_path / "replay-dependencies",
-        allowed_asset_roots=(source.robotwin_root,),
-        expected_capability_sha256=executor.capability_sha256,
-        checkpoint_steps=120,
-    )
-    bundle = ROOT / "self_improving/harness/qualified_skills/text2env.replay/1.0.0"
-    qualification_bytes = (bundle / "qualification.json").read_bytes()
-    report_bytes = (bundle / "report.json").read_bytes()
-    qualification = _put_json(
-        store,
+    settings = replay_application_fixture._factory_settings(
         tmp_path,
-        name="replay-qualification.json",
-        payload=qualification_bytes,
-        schema_version="harness.skill_qualification.v1",
+        evidence_root=store.root,
+        allowed_asset_root=source.robotwin_root,
     )
-    _put_json(
-        store,
-        tmp_path,
-        name="replay-qualification-report.json",
-        payload=report_bytes,
-        schema_version="harness.skill_qualification_report.v1",
+    patches, executors = replay_application_fixture._factory_boundary_patches(
+        store=store,
+        robotwin_root=source.robotwin_root,
+        runtime_root=tmp_path / "runtime-test-adapter",
     )
-    manifest = ImplementationManifestV1.model_validate_json((bundle / "manifest.json").read_bytes())
-    descriptor = text2env_replay_descriptor(
-        qualification_artifact=qualification,
-        implementation_sha256=manifest.bundle_sha256,
-    )
-    database = tmp_path / "replay.sqlite3"
-    journal = SQLiteEventJournal(database)
-    runs = SQLiteRunStore(database)
-    policy = _ReplayRegistrationTestAdapter(
-        descriptor=descriptor,
-        handler=wiring.handler,
-        dependency_resolver=wiring.dependency_resolver,
-        qualification_bytes=qualification_bytes,
-        report_bytes=report_bytes,
-    )
-    registry = SkillRegistry(
-        artifact_resolver=store,
-        dependency_resolver=None,
-        event_sink=journal,
-        clock=lambda: base.NOW,
-        run_id_factory=uuid4,
-        run_store=runs,
-        evidence_invariant_policy=policy,
-    )
-    registry.register_evidence_invariant(object())
-    return (
-        ReplayApplication(
-            artifact_store=store,
-            event_journal=journal,
-            run_store=runs,
-            registry=registry,
-        ),
-        executor,
-    )
+    with patches:
+        application = create_replay_application(settings)
+    return application, executors[0]
 
 
 def _registry_snapshot(
@@ -312,6 +233,10 @@ def test_same_golden_workflow_runs_qualified_compile_then_replay(tmp_path: Path)
     assert revision_one.revision == 1
     trusted = _read(store, revision_one.state_ref, TrustedWorldState)
     package_fact = next(fact for fact in trusted.facts if fact.key == "environment.package")
+    catalog_fact = next(fact for fact in trusted.facts if fact.key == "assets.catalog")
+    assert package_fact.source_kind == catalog_fact.source_kind == "trusted_receipt"
+    assert package_fact.source_artifact == catalog_fact.source_artifact
+    assert package_fact.value["asset_catalog"] == catalog_fact.value
     replay_input = Text2EnvReplayInput(
         environment_package=package_fact.value,
         runtime_config=RuntimeConfig(
@@ -355,24 +280,27 @@ def test_same_golden_workflow_runs_qualified_compile_then_replay(tmp_path: Path)
     result = _read(store, replay_operation.tool_result, ToolResultV2)
     output = Text2EnvReplayOutput.model_validate(result.typed_output)
     assert result.fresh_observations == ()
-    assert len({(ref.sha256, ref.media_type, ref.schema_version) for ref in output.replay_artifacts}) == len(
-        output.replay_artifacts
-    )
+    assert len(
+        {(ref.sha256, ref.media_type, ref.schema_version) for ref in output.replay_artifacts}
+    ) == len(output.replay_artifacts)
     tool_receipt = _read(store, result.trusted_receipt, TrustedToolReceiptV2)
     base_state = _read(store, tool_receipt.base_state, TrustedWorldState)
     linked_package = next(fact for fact in base_state.facts if fact.key == "environment.package")
     assert linked_package.value == replay_input.environment_package.model_dump(mode="json")
-    assert linked_package.source_artifact == _read(
-        store,
-        revision_one.receipt_head,
-        WorkflowOperationReceiptV2,
-    ).tool_receipt
+    assert (
+        linked_package.source_artifact
+        == _read(
+            store,
+            revision_one.receipt_head,
+            WorkflowOperationReceiptV2,
+        ).tool_receipt
+    )
     assert result.state_delta is not None
     delta = _read(store, result.state_delta, StateDeltaV2)
     assert len(delta.mutations) == 1
-    assert delta.mutations[0].key == "environment.replay.result"
+    assert delta.mutations[0].key == "replay.runtime_evidence"
     assert delta.mutations[0].fact is not None
-    assert delta.mutations[0].fact.value == output.model_dump(mode="json")
+    assert delta.mutations[0].fact.value == output.runtime_evidence.model_dump(mode="json")
     assert hashlib.sha256(store.resolve(result.state_delta).path.read_bytes()).hexdigest() == (
         result.state_delta.sha256
     )

@@ -4,11 +4,16 @@
 
 ## Doing
 
-- P3 exact replay operation 正在独立 worktree 以 S1 公共 seam 做纵向 TDD：首个 tracer 固定
+- P3a durable production ReplayApplication 已在独立 worktree 完成 RED→GREEN，等待双轴 review 与真实
+  replay 重签：factory-issued private seal 在每次公开读取/调用前重验 CAS、同库 journal/run-store、
+  Registry、资格 policy、descriptor、handler/resolver、依赖与 operator settings；`invoke_typed` 接受调用方
+  UUID4 并复用 Registry controlled lifecycle。非空但结构合法的 state root 可由新 factory 实例和独立
+  Python 进程恢复 exact terminal，受控 runtime fixture 没有重复执行。实现改动使旧 replay qualification
+  按设计只因 `replay_application.py` bytes/hash 漂移而拒绝；资格文档未在本提交刷新。
+- P3 exact replay operation 的首个公共 tracer 仍保持 RED，待 P3a 真实重签后再做 P3b：目标继续是
   `start rev0 -> qualified compile rev1 -> qualified replay rev2`，两个 operation 由同一 actor-neutral
-  `GoldenRunHarness.submit` 与 sealed catalog 执行。replay 只接受 revision-1 可信状态中的 exact
-  environment package/compile receipt 关联；外部 runtime/media 使用明确的 test adapter，不计作真实
-  RoboTwin/SAPIEN 或 Genesis 运行证据。
+  `GoldenRunHarness.submit` 与 sealed catalog 执行；replay 必须只接受 revision-1 可信状态中的 exact
+  environment package/compile receipt 关联。
 
 ## Next
 

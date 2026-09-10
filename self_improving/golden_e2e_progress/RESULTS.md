@@ -1,5 +1,28 @@
 # 进度与结果
 
+## 2026-09-10 P3a durable production ReplayApplication
+
+- 从固定起点 `7fe5c7e76fd9300014195c3af836f2d08bcd9c92` 建立独立 worktree。公共 Golden replay
+  tracer 先以 `17e535d` 固定 compile revision 1 → replay revision 2 目标，但评审发现可直接构造的
+  `ReplayApplication` 尚不能充当受信 child authority，因此保持该 tracer 为 RED，先拆出 P3a。
+- P3a 的独立 RED `3d26088` 要求 production factory 才能签发 private seal；应用在每次公开读取与
+  `invoke_typed` 前重验 exact Local CAS、同一 `harness.sqlite3` 的 journal/run store、Registry authority、
+  evidence-invariant registration policy、唯一 replay v2 descriptor、同源 handler/resolver/PackageStore、
+  operator roots 与 dependency/config identities。直接构造的 facade 不能通过受信断言。
+- `invoke_typed(Text2EnvReplayInput, run_id=UUID4)` 复用 Registry 的 controlled intent → Invocation →
+  terminal/event lifecycle；同输入、同 dependency 与同 descriptor identity 返回原 terminal，不再次调用
+  handler。UUID 版本错误、ordinary-run 占用、不同输入、依赖漂移、pending lifecycle、异 CAS 或组装漂移
+  都映射为稳定 application 错误。
+- factory 现在只接受空 root，或只含 exact SQLite authority 与三个 replay-owned work directory 的合法
+  非空 root；未知成员、符号链接与成员类型错误均拒绝。失败清理只删除本次新建成员，绝不清空既有
+  authority。测试在同实例、新 factory 实例和独立 Python 进程中恢复同一 terminal，受控外部
+  runtime/media fixture 总计只执行一次；这不冒充真实 RoboTwin/SAPIEN、Genesis 或真机运行。
+- ReplayApplication 与资格组装专项为 `100 passed`；该模块 387 statements / 120 branches 均为 100%。
+  compile application、Golden compile 与 compile qualification 回归为 `236 passed`。checked compile
+  qualification 通过；checked replay qualification 唯一按预期以
+  `implementation_file_mismatch: self_improving/harness/replay_application.py` 拒绝。P3a 未改 qualification
+  三份文档或 expected hash，必须先双轴 review、再用真实固定案例独立重签，之后才恢复 P3b binding。
+
 ## 2026-09-10 P2 GoldenRun.submit compile-only 纵切
 
 - 从固定绿色起点 `e67b656ea97044da5b09ee8323c48e752cd88c76` 建立独立 worktree，先以公共

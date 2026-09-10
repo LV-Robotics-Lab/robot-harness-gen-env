@@ -18,7 +18,9 @@ from pathlib import Path
 from typing import ClassVar, Literal
 from uuid import UUID, uuid4
 
-from .artifacts import LocalArtifactStore
+from pydantic import UUID4, TypeAdapter, ValidationError
+
+from .artifacts import ArtifactResolutionError, LocalArtifactStore
 from .event_journal import EventPage, SQLiteEventJournal
 from .handlers.text2env_replay import (
     Text2EnvReplayHandler,
@@ -28,12 +30,19 @@ from .handlers.text2env_replay import (
 from .media_sandbox import NativeCgroupSandbox
 from .media_verifier import SubprocessReplayMediaVerifier
 from .package_store import PackageStore
-from .registry import RegistryRegistrationError, SkillRegistry, _EvidenceInvariantRegistration
+from .registry import (
+    ControlledRunIdentityError,
+    ControlledRunPendingError,
+    RegistryRegistrationError,
+    SkillRegistry,
+    _EvidenceInvariantRegistration,
+)
 from .replay_dependencies import (
     REPLAY_HANDLER_CONFIG_DEPENDENCY,
     REPLAY_RUNTIME_ASSET_DEPENDENCY,
     TEXT2ENV_REPLAY_SKILL_REF,
     Text2EnvReplayDependencyResolver,
+    canonical_identity_sha256,
     replay_dependency_set,
 )
 from .replay_qualification import (
@@ -48,7 +57,14 @@ from .runtime_capability import (
     validate_runtime_capability_document,
 )
 from .runtime_executor import SubprocessRoboTwinRuntimeExecutor
-from .schemas import Invocation, RunState, SkillDescriptorV2, Text2EnvReplayInput
+from .schemas import (
+    ArtifactRef,
+    ExecutionReproducibility,
+    Invocation,
+    RunState,
+    SkillDescriptorV2,
+    Text2EnvReplayInput,
+)
 
 _DISTRIBUTION_ROOT = Path(__file__).resolve().parents[2]
 _SCENE_GEN_ROOT = _DISTRIBUTION_ROOT / "scene_gen"
@@ -58,6 +74,24 @@ _LEDGER_CONTRACT_ROOT = (
 _TASK_CONFIG = "demo_clean"
 _MIN_VISIBLE_PIXELS = 64
 _CHECKPOINT_STEPS = 120
+_REPLAY_SKILL_ID = "text2env.replay"
+_REPLAY_VERSION = "1.0.0"
+_REPLAY_INPUT_SCHEMA = "harness.text2env_replay_input.v1"
+_REPLAY_OUTPUT_SCHEMA = "harness.text2env_replay_output.v1"
+_REPLAY_MCP_TOOL_NAME = "text2env_replay_v1_0_0"
+_REPLAY_APPLICATION_FACTORY_AUTHORITY = object()
+_UUID4_ADAPTER = TypeAdapter(UUID4)
+_REOPENABLE_STATE_DIRECTORIES = frozenset(
+    {"replay-dependencies", "replay-handler", "runtime-executor"}
+)
+_REOPENABLE_STATE_FILES = frozenset(
+    {
+        "harness.sqlite3",
+        "harness.sqlite3-journal",
+        "harness.sqlite3-shm",
+        "harness.sqlite3-wal",
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,6 +120,18 @@ class ReplayApplicationConfigurationError(ValueError):
     """Production replay wiring differs from its loaded qualification evidence."""
 
 
+class ReplayApplicationInputError(ValueError):
+    """Typed replay input is invalid or unavailable in the application CAS."""
+
+
+class ReplayApplicationRunIdentityError(RuntimeError):
+    """A controlled child identity is already bound to another replay intent."""
+
+
+class ReplayApplicationRunPendingError(RuntimeError):
+    """A controlled replay child started but has no terminal record to recover."""
+
+
 class ReplayApplication:
     """A fixed qualified replay facade over the normal Registry execution kernel."""
 
@@ -103,9 +149,184 @@ class ReplayApplication:
         self._event_journal = event_journal
         self._run_store = run_store
         self._registry = registry
+        self._factory_authority: object | None = None
+        self._settings: ReplayApplicationSettings | None = None
+        self._state_root: Path | None = None
+        self._registration_policy: _ReplayRegistrationPolicy | None = None
+        self._assembly_identity: tuple[object, ...] | None = None
+
+    @classmethod
+    def _from_verified_assembly(
+        cls,
+        *,
+        authority: object,
+        settings: ReplayApplicationSettings,
+        state_root: Path,
+        artifact_store: LocalArtifactStore,
+        event_journal: SQLiteEventJournal,
+        run_store: SQLiteRunStore,
+        registry: SkillRegistry,
+        registration_policy: _ReplayRegistrationPolicy,
+    ) -> ReplayApplication:
+        if authority is not _REPLAY_APPLICATION_FACTORY_AUTHORITY:
+            raise ReplayApplicationConfigurationError(
+                "replay application authority was not issued by the production factory"
+            )
+        application = cls(
+            artifact_store=artifact_store,
+            event_journal=event_journal,
+            run_store=run_store,
+            registry=registry,
+        )
+        application._factory_authority = authority
+        application._settings = settings
+        application._state_root = state_root
+        application._registration_policy = registration_policy
+        application._assert_golden_execution_ready()
+        return application
+
+    def _assert_golden_execution_ready(self) -> None:
+        """Revalidate the complete factory-issued authority before every trusted use."""
+
+        def invalid(detail: str) -> None:
+            raise ReplayApplicationConfigurationError(
+                f"replay production assembly is invalid: {detail}"
+            )
+
+        settings = self._settings
+        state_root = self._state_root
+        policy = self._registration_policy
+        if (
+            self._factory_authority is not _REPLAY_APPLICATION_FACTORY_AUTHORITY
+            or type(settings) is not ReplayApplicationSettings
+            or not isinstance(state_root, Path)
+            or type(policy) is not _ReplayRegistrationPolicy
+        ):
+            invalid("factory-issued authority is absent")
+        assert settings is not None
+        assert state_root is not None
+        assert policy is not None
+        if not state_root.is_dir() or state_root.is_symlink():
+            invalid("state_root is not an existing canonical directory")
+        if type(self._artifact_store) is not LocalArtifactStore:
+            invalid("artifact store is not the exact local CAS")
+        if self._artifact_store.root != settings.evidence_artifact_root:
+            invalid("artifact store differs from the configured evidence CAS")
+        if type(self._event_journal) is not SQLiteEventJournal:
+            invalid("event journal is not the exact SQLite authority")
+        if type(self._run_store) is not SQLiteRunStore:
+            invalid("run store is not the exact SQLite authority")
+        database_path = (state_root / "harness.sqlite3").resolve()
+        if (
+            self._event_journal.path.resolve() != database_path
+            or self._run_store.path.resolve() != database_path
+        ):
+            invalid("event journal and run store do not share the state database")
+        if type(self._registry) is not SkillRegistry:
+            invalid("registry is not the exact production Registry")
+        registry = self._registry
+        if (
+            registry._artifact_resolver is not self._artifact_store
+            or registry._event_sink is not self._event_journal
+            or registry._run_store is not self._run_store
+            or registry._clock is not _utc_now
+            or registry._run_id_factory is not uuid4
+            or registry._evidence_invariant_policy is not policy
+        ):
+            invalid("Registry authorities are not the factory authority set")
+        if (
+            policy.settings is not settings
+            or policy.state_root != state_root
+            or policy.qualification_root != settings.qualification_bundle_root
+            or policy.artifact_store is not self._artifact_store
+            or policy.allowed_roots != settings.allowed_asset_roots
+            or policy.implementation_root != settings.implementation_root
+            or policy.scene_gen_root != settings.scene_gen_root
+            or policy.ledger_contract_root != settings.ledger_contract_root
+        ):
+            invalid("registration policy differs from factory settings")
+        registrations = registry._registrations
+        registration = registrations.get((_REPLAY_SKILL_ID, _REPLAY_VERSION))
+        if len(registrations) != 1 or registration is None:
+            invalid("Registry does not contain the one exact replay Skill")
+        descriptor = registration.descriptor
+        if (
+            type(descriptor) is not SkillDescriptorV2
+            or descriptor.skill_id != _REPLAY_SKILL_ID
+            or descriptor.version != _REPLAY_VERSION
+            or descriptor.mcp_tool_name != _REPLAY_MCP_TOOL_NAME
+            or descriptor.input_schema != _REPLAY_INPUT_SCHEMA
+            or descriptor.output_schema != _REPLAY_OUTPUT_SCHEMA
+            or descriptor.reproducibility
+            is not ExecutionReproducibility.EVIDENCE_INVARIANT_REPEATABLE
+            or descriptor.max_attempts != 2
+        ):
+            invalid("Registry descriptor differs from the fixed replay contract")
+        handler = registration.handler
+        resolver = registry._dependency_resolver
+        if type(handler) is not Text2EnvReplayHandler:
+            invalid("replay handler is not the exact production handler")
+        if type(resolver) is not Text2EnvReplayDependencyResolver:
+            invalid("dependency resolver is not the exact replay resolver")
+        if handler.dependency_resolver is not resolver:
+            invalid("handler and Registry do not share the replay resolver")
+        if (
+            handler.artifact_store is not self._artifact_store
+            or resolver.artifact_store is not self._artifact_store
+            or type(handler.package_store) is not PackageStore
+            or type(resolver.package_store) is not PackageStore
+            or handler.package_store.artifact_store is not self._artifact_store
+            or resolver.package_store.artifact_store is not self._artifact_store
+        ):
+            invalid("handler and resolver do not share the application CAS")
+        if (
+            handler.allowed_asset_roots != settings.allowed_asset_roots
+            or resolver.allowed_asset_roots != settings.allowed_asset_roots
+            or handler.work_root.expanduser().resolve() != (state_root / "replay-handler").resolve()
+            or resolver.work_root.expanduser().resolve()
+            != (state_root / "replay-dependencies").resolve()
+        ):
+            invalid("replay mutable or asset roots differ from factory settings")
+        try:
+            handler._require_configuration_unchanged()
+            executor_identity = canonical_identity_sha256(
+                handler.runtime_executor.identity,
+                label="runtime executor",
+            )
+            media_identity = canonical_identity_sha256(
+                handler.media_verifier.identity,
+                label="media verifier",
+            )
+        except Exception as error:
+            raise ReplayApplicationConfigurationError(
+                "replay production assembly is invalid: handler configuration changed"
+            ) from error
+        if (
+            resolver.runtime_executor_identity != handler.runtime_executor.identity
+            or resolver.media_verifier_identity != handler.media_verifier.identity
+            or resolver.handler_config_sha256 != handler.expected_handler_config_sha256
+            or resolver.expected_capability_sha256 != handler.expected_capability_sha256
+            or handler.task_config != _TASK_CONFIG
+            or handler.min_visible_pixels != _MIN_VISIBLE_PIXELS
+            or handler.checkpoint_steps != _CHECKPOINT_STEPS
+        ):
+            invalid("handler and dependency identities differ")
+        live_identity: tuple[object, ...] = (
+            _settings_identity(settings),
+            descriptor.model_dump_json(),
+            executor_identity,
+            media_identity,
+            handler.expected_handler_config_sha256,
+            handler.expected_runtime_asset_snapshot_sha256,
+        )
+        if self._assembly_identity is None:
+            self._assembly_identity = live_identity
+        elif self._assembly_identity != live_identity:
+            invalid("production handler, dependency, or settings identity changed")
 
     @property
     def skills(self) -> tuple[SkillDescriptorV2, ...]:
+        self._assert_golden_execution_ready()
         skills = self._registry.list()
         if any(type(item) is not SkillDescriptorV2 for item in skills):
             raise RuntimeError("replay application registry contains another descriptor type")
@@ -113,20 +334,79 @@ class ReplayApplication:
 
     @property
     def artifact_root(self) -> Path:
+        self._assert_golden_execution_ready()
         return self._artifact_store.root
 
     @property
     def journal_path(self) -> Path:
+        self._assert_golden_execution_ready()
         return self._event_journal.path.resolve()
 
     def replay(self, value: Text2EnvReplayInput) -> RunState:
-        if not isinstance(value, Text2EnvReplayInput):
-            raise TypeError("replay requires Text2EnvReplayInput")
-        return self._registry.invoke(
-            "text2env.replay",
-            "1.0.0",
-            value.model_dump(mode="json"),
-        )
+        return self.invoke_typed(value)
+
+    def invoke_typed(
+        self,
+        parameters: Text2EnvReplayInput,
+        *,
+        run_id: UUID | None = None,
+    ) -> RunState:
+        """Invoke replay once under an optional caller-owned durable UUID4 identity."""
+
+        self._assert_golden_execution_ready()
+        if run_id is not None:
+            try:
+                run_id = _UUID4_ADAPTER.validate_python(run_id, strict=True)
+            except ValidationError as error:
+                raise ReplayApplicationRunIdentityError(
+                    "controlled run_id must be an exact UUID4"
+                ) from error
+        if type(parameters) is not Text2EnvReplayInput:
+            raise ReplayApplicationInputError(
+                "typed replay input is invalid: expected Text2EnvReplayInput"
+            )
+        try:
+            trusted = Text2EnvReplayInput.model_validate(parameters.model_dump(mode="python"))
+        except (TypeError, ValueError) as error:
+            raise ReplayApplicationInputError("typed replay input is invalid") from error
+        for artifact in (
+            trusted.environment_package.asset_catalog,
+            trusted.environment_package.package_manifest,
+        ):
+            if artifact.uri != f"artifact://sha256/{artifact.sha256}":
+                raise ReplayApplicationInputError(
+                    "typed replay input is invalid: package inputs must be in application CAS"
+                )
+            try:
+                self._artifact_store.resolve(artifact)
+            except ArtifactResolutionError as error:
+                raise ReplayApplicationInputError(
+                    "typed replay input package is unavailable or corrupt in application CAS"
+                ) from error
+        effective_parameters = trusted.model_dump(mode="json")
+        if run_id is None:
+            return self._registry.invoke(
+                _REPLAY_SKILL_ID,
+                _REPLAY_VERSION,
+                effective_parameters,
+            )
+        try:
+            return self._registry.invoke_with_run_id(
+                _REPLAY_SKILL_ID,
+                _REPLAY_VERSION,
+                effective_parameters,
+                run_id=run_id,
+            )
+        except ControlledRunIdentityError as error:
+            raise ReplayApplicationRunIdentityError(str(error)) from error
+        except ControlledRunPendingError as error:
+            raise ReplayApplicationRunPendingError(str(error)) from error
+
+    def resolve_artifact(self, artifact: ArtifactRef) -> Path:
+        """Resolve and reverify one replay artifact from the application CAS."""
+
+        self._assert_golden_execution_ready()
+        return self._artifact_store.resolve(artifact).path
 
     def events(
         self,
@@ -135,6 +415,7 @@ class ReplayApplication:
         run_id: UUID | None = None,
         limit: int = 200,
     ) -> EventPage:
+        self._assert_golden_execution_ready()
         return self._event_journal.read(
             after_event_id=after_event_id,
             run_id=run_id,
@@ -142,9 +423,11 @@ class ReplayApplication:
         )
 
     def invocation(self, run_id: UUID) -> Invocation | None:
+        self._assert_golden_execution_ready()
         return self._run_store.read_invocation(run_id)
 
     def run_state(self, run_id: UUID) -> RunState | None:
+        self._assert_golden_execution_ready()
         return self._run_store.read_run_state(run_id)
 
 
@@ -153,24 +436,52 @@ def create_replay_application(settings: ReplayApplicationSettings) -> ReplayAppl
 
     if not isinstance(settings, ReplayApplicationSettings):
         raise TypeError("settings must be ReplayApplicationSettings")
-    qualification_root = _directory(
-        settings.qualification_bundle_root,
-        label="qualification_bundle_root",
-    )
-    evidence_root = _directory(
-        settings.evidence_artifact_root,
-        label="evidence_artifact_root",
-    )
+    qualification_root = _directory(settings.qualification_bundle_root, label="qualification_root")
+    evidence_root = _directory(settings.evidence_artifact_root, label="evidence_artifact_root")
     allowed_roots = _directories(settings.allowed_asset_roots, label="allowed_asset_roots")
     implementation_root, scene_gen_root, ledger_contract_root = _source_roots(settings)
+    interpreter = _file(settings.interpreter, label="interpreter")
+    runtime_runner = _file(settings.runtime_runner, label="runtime_runner")
+    runtime_module_root = _directory(settings.runtime_module_root, label="runtime_module_root")
+    runtime_capability_path = _file(
+        settings.runtime_capability_path,
+        label="runtime_capability_path",
+    )
+    media_launcher = _file(settings.media_launcher, label="media_launcher")
+    static_ffmpeg = _file(settings.static_ffmpeg, label="static_ffmpeg")
+    delegated_cgroup_root = _directory(
+        settings.delegated_cgroup_root,
+        label="delegated_cgroup_root",
+    )
+    runtime_timeout_seconds = _positive_timeout(settings.runtime_timeout_seconds)
+    capability_timeout_seconds = _positive_timeout(settings.capability_timeout_seconds)
+    if not isinstance(settings.state_root, Path):
+        raise ReplayApplicationConfigurationError("state_root must be a Path")
     state_existed = settings.state_root.exists()
     state_root = _directory(settings.state_root, label="state_root", create=True)
-    if any(state_root.iterdir()):
-        raise ReplayApplicationConfigurationError("state_root must be empty for atomic assembly")
+    preexisting_names = frozenset(child.name for child in state_root.iterdir())
+    normalized_settings = ReplayApplicationSettings(
+        state_root=state_root,
+        qualification_bundle_root=qualification_root,
+        evidence_artifact_root=evidence_root,
+        implementation_root=implementation_root,
+        scene_gen_root=scene_gen_root,
+        ledger_contract_root=ledger_contract_root,
+        allowed_asset_roots=allowed_roots,
+        interpreter=interpreter,
+        runtime_runner=runtime_runner,
+        runtime_module_root=runtime_module_root,
+        runtime_capability_path=runtime_capability_path,
+        media_launcher=media_launcher,
+        static_ffmpeg=static_ffmpeg,
+        delegated_cgroup_root=delegated_cgroup_root,
+        runtime_timeout_seconds=runtime_timeout_seconds,
+        capability_timeout_seconds=capability_timeout_seconds,
+    )
     artifact_store = LocalArtifactStore(evidence_root)
     database_path = state_root / "harness.sqlite3"
     policy = _ReplayRegistrationPolicy(
-        settings=settings,
+        settings=normalized_settings,
         state_root=state_root,
         qualification_root=qualification_root,
         artifact_store=artifact_store,
@@ -180,6 +491,7 @@ def create_replay_application(settings: ReplayApplicationSettings) -> ReplayAppl
         ledger_contract_root=ledger_contract_root,
     )
     try:
+        _validate_reopenable_state_root(state_root)
         event_journal = SQLiteEventJournal(database_path)
         run_store = SQLiteRunStore(database_path)
         registry = SkillRegistry(
@@ -192,7 +504,7 @@ def create_replay_application(settings: ReplayApplicationSettings) -> ReplayAppl
             evidence_invariant_policy=policy,
         )
         try:
-            registry.register_evidence_invariant(settings)
+            registry.register_evidence_invariant(normalized_settings)
         except RegistryRegistrationError as error:
             raise ReplayApplicationConfigurationError(str(error)) from error
         publish_replay_qualification_bundle(
@@ -202,14 +514,22 @@ def create_replay_application(settings: ReplayApplicationSettings) -> ReplayAppl
             scene_gen_root=scene_gen_root,
             ledger_contract_root=ledger_contract_root,
         )
-        return ReplayApplication(
+        return ReplayApplication._from_verified_assembly(
+            authority=_REPLAY_APPLICATION_FACTORY_AUTHORITY,
+            settings=normalized_settings,
+            state_root=state_root,
             artifact_store=artifact_store,
             event_journal=event_journal,
             run_store=run_store,
             registry=registry,
+            registration_policy=policy,
         )
     except Exception:
-        _rollback_state_root(state_root, remove_root=not state_existed)
+        _rollback_new_state_entries(
+            state_root,
+            preexisting_names=preexisting_names,
+            remove_root=not state_existed,
+        )
         raise
 
 
@@ -482,6 +802,74 @@ def _source_roots(settings: ReplayApplicationSettings) -> tuple[Path, Path, Path
             "production source roots must be the actual replay distribution roots"
         )
     return implementation, scene_gen, ledger
+
+
+def _settings_identity(settings: ReplayApplicationSettings) -> tuple[object, ...]:
+    """Return the canonical operator policy identity rechecked by a sealed facade."""
+
+    return (
+        str(_directory(settings.state_root, label="state_root")),
+        str(_directory(settings.qualification_bundle_root, label="qualification_root")),
+        str(_directory(settings.evidence_artifact_root, label="evidence_artifact_root")),
+        tuple(str(path) for path in _source_roots(settings)),
+        tuple(
+            str(path)
+            for path in _directories(settings.allowed_asset_roots, label="allowed_asset_roots")
+        ),
+        str(_file(settings.interpreter, label="interpreter")),
+        str(_file(settings.runtime_runner, label="runtime_runner")),
+        str(_directory(settings.runtime_module_root, label="runtime_module_root")),
+        str(_file(settings.runtime_capability_path, label="runtime_capability_path")),
+        str(_file(settings.media_launcher, label="media_launcher")),
+        str(_file(settings.static_ffmpeg, label="static_ffmpeg")),
+        str(_directory(settings.delegated_cgroup_root, label="delegated_cgroup_root")),
+        _positive_timeout(settings.runtime_timeout_seconds),
+        _positive_timeout(settings.capability_timeout_seconds),
+    )
+
+
+def _validate_reopenable_state_root(root: Path) -> None:
+    """Admit only the database and exact replay-owned work directories on reopen."""
+
+    for child in root.iterdir():
+        if child.is_symlink():
+            raise ReplayApplicationConfigurationError(
+                f"state_root contains an unsafe entry: {child.name}"
+            )
+        if child.name in _REOPENABLE_STATE_DIRECTORIES:
+            if not child.is_dir():
+                raise ReplayApplicationConfigurationError(
+                    f"state_root replay directory has the wrong type: {child.name}"
+                )
+            continue
+        if child.name in _REOPENABLE_STATE_FILES:
+            if not child.is_file():
+                raise ReplayApplicationConfigurationError(
+                    f"state_root database entry has the wrong type: {child.name}"
+                )
+            continue
+        raise ReplayApplicationConfigurationError(
+            f"state_root contains an unexpected entry: {child.name}"
+        )
+
+
+def _rollback_new_state_entries(
+    root: Path,
+    *,
+    preexisting_names: frozenset[str],
+    remove_root: bool,
+) -> None:
+    """Remove only entries created by the failed assembly, never recovered authority."""
+
+    for child in tuple(root.iterdir()):
+        if child.name in preexisting_names:
+            continue
+        if child.is_dir() and not child.is_symlink():
+            shutil.rmtree(child)
+        else:
+            child.unlink(missing_ok=True)
+    if remove_root and not any(root.iterdir()):
+        root.rmdir()
 
 
 def _rollback_state_root(root: Path, *, remove_root: bool) -> None:
