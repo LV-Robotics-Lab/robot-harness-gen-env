@@ -1,5 +1,17 @@
 # 进度与结果
 
+## 2026-09-10 revision-3 integration replay 重新资格化
+
+- 固定 integration implementation `b020be3182a7d0d264a633a91c3cbc7fdddc5212` 上重新探测 capability，
+  官方 generator 在全新的外部 bundle/scratch/CAS 与 `golden-r3-q-h6ng8i.scope` 中真实执行 direct 与
+  production-kernel 两条 `0/900/120/120/12`；物理、事件、23-member runtime assets 与顺序媒体均通过。
+- 新 replay 三文档摘要为 manifest `f76ebd64…60b5`、qualification `3bafdfc90…7bf0`、report
+  `64506f60…16e5`，implementation `2f8f2879…0974`，62-ref closure。将 66 个 generator CAS 对象逐摘要
+  导入 fresh CAS 后得到 68 个对象；同一 bundle 在 integration root 和独立 archive 安装路径
+  `/home/jingxiang/bingsheng/golden-r3-relocated-20260910.ZjLUfl/worktree` 均 strict verify/load pass，source
+  manifest 不含任一本地绝对源码根。
+- 本条只完成最终树上的 replay 重新资格化；validate 资格与 relocated revision 0→1→2→3 仍须随后执行。
+
 ## 2026-09-10 Golden portable replay
 
 - 固定起点 `2bdeafd836d641b4f14aef316a21fbcd736f55e1`。首个公共 RED 把同一 qualification
