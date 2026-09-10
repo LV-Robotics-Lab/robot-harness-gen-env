@@ -109,11 +109,12 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
   `tests/fixtures/asset_repair_tracer_source_snapshot.json`；
   `tests/self_improving/harness/test_asset_repair.py`（2-ledger E0 plan tracer）；
   `tests/self_improving/harness/test_asset_staging.py`、
-  `tests/self_improving/harness/test_staged_robotwin_probe.py`；integration commits
+  `tests/self_improving/harness/test_staged_robotwin_probe.py`；fixed source commits
   `9760a0349864964a527c04d32dfa607455ff8a97`、
   `292d09b7775f75576063f40969c2de078d1c45ab`、
   `bd61a9e1504b1462c1bb24799a38e76f5cdf26e4`、
-  `8c1c94afae8292dc94ee1d2b08fb7fb08a94bc06`；
+  `8c1c94afae8292dc94ee1d2b08fb7fb08a94bc06`；主分支逐功能整合提交
+  `8bd0d33`、`5b5ae78`、`d9df27b`、`16eb232`，证据/来源同步提交 `52a21ac`；
   `docs/evidence/asset-repair-exact-stage-20260910.md` 绑定 stage result
   `a2e786131bb33a3eacd7afd0403dca45a6353a2f6d54aebc100ecb19fda09f23`、stage binding
   `fcf73ec7851e42654a2264d818bfcc60d091ad3669429ecee7f5b7ccd7e0eb89` 与外部 runtime report
@@ -125,7 +126,8 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
   仍有 4,082 条 v3 违规。此次 runtime 只证明真实 `create_actor` 的 CAS-only loader closure 与地面接触；
   can-on-plate、settle/runtime qualification、rendered replay、Genesis、robot policy 和原子 promotion
   均未实现
-- `last_verified`：`2026-09-10`；feature `8c1c94afae8292dc94ee1d2b08fb7fb08a94bc06`
+- `last_verified`：`2026-09-10`；fixed source feature
+  `8c1c94afae8292dc94ee1d2b08fb7fb08a94bc06`；integrated root feature `16eb232`
 
 ### 核对结论
 
