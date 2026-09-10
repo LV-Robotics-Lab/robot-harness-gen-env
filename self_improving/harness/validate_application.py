@@ -330,16 +330,14 @@ def _create_validate_application_locked(
         ledger_contract_root=ledger_contract_root,
     )
     resolver = Text2EnvValidateV2DependencyResolver(distribution_root=implementation_root)
-    dependencies = resolver.resolve(
+    (policy_dependency,) = resolver.resolve(
         TEXT2ENV_VALIDATE_V2_SKILL_REF,
         Text2EnvValidateV2Input.model_construct(),
     )
-    if len(dependencies) != 1:
-        raise ValidateApplicationConfigurationError("validate dependency closure is invalid")
     handler = Text2EnvValidateV2Handler(
         artifact_store=store,
         scratch_parent=scratch,
-        policy_dependency=dependencies[0],
+        policy_dependency=policy_dependency,
     )
     database = state_root / "harness.sqlite3"
     journal = SQLiteEventJournal(database)

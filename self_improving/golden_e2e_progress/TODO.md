@@ -6,11 +6,10 @@
 
 - portable replay 已通过两轴独立功能验收：第三绝对源码路径、fresh CAS、真实 production
   compile→replay、证据闭包、MP4、物理、重启幂等与三个完整性失效模式均通过。
-- P4 validate v2 候选已完成真实 revision 0→1→2→3；当前补齐新增 production
-  application/policy/handler 的 statement/branch 100% 门并整理证据提交。
-- portable replay 与 x2env contracts 将在新的干净 integration worktree 依次接入；最终固定实现上须
-  重新生成 replay/validate qualification，不能复用 P4 旧 operator identity。
-- 主窗口正在以 portable replay 为底座构造干净的 revision-3 integration worktree；x2env runtime
+- P4 validate v2 候选已完成真实 revision 0→1→2→3 与新增五模块 statement/branch 100% 门；等待
+  integration 固定实现后重新生成 replay/validate qualification 并重跑 relocated revision 3。
+- portable replay、x2env contracts 与 validate v2 已进入干净的 revision-3 integration worktree；最终
+  固定实现上须重新生成 replay/validate qualification，不能复用 P4 旧 operator identity。x2env runtime
   handlers/qualification 尚未开始。
 
 ## Next

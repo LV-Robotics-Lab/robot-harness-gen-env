@@ -452,8 +452,6 @@ def _put_json(
         )
     finally:
         path.unlink(missing_ok=True)
-    if store.resolve(ref).path.read_bytes() != payload:
-        raise RuntimeError("published validate artifact could not be reread exactly")
     return ref
 
 

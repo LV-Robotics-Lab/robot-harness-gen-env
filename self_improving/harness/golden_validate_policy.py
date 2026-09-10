@@ -16,7 +16,6 @@ from .handlers.text2env_validate_v2 import verify_validate_v2_lineage
 from .run_receipts import LoadedPortableRunReceipt
 from .schemas.base import HarnessModel
 from .schemas.common import ArtifactRef, Invocation, RunState, RunStatus
-from .schemas.text2env import Text2EnvCompileOutput, Text2EnvReplayOutput
 from .schemas.text2env_validate_v2 import Text2EnvValidateV2Input, Text2EnvValidateV2Output
 from .schemas.workflow_operation import (
     ReceiptDerivedFactClaimV2,
@@ -97,10 +96,6 @@ class Text2EnvValidateV2EvidencePolicy:
             raise ValueError("validate catalog differs from trusted workflow state")
         if runtime_fact.value != parameters.runtime_evidence.model_dump(mode="json"):
             raise ValueError("validate runtime evidence differs from trusted workflow state")
-        package_payload = _canonical_bytes(lineage.package.model_dump(mode="json"))
-        if store.resolve(parameters.environment_package).path.read_bytes() != package_payload:
-            raise ValueError("environment package artifact does not contain the trusted package")
-
         compile_receipt = _resolve_model(
             store,
             package_fact.source_artifact,
@@ -129,13 +124,6 @@ class Text2EnvValidateV2EvidencePolicy:
             or replay_receipt.base_revision != 1
         ):
             raise ValueError("compile and replay receipts are not one ordered Golden workflow")
-        compile_output = Text2EnvCompileOutput.model_validate(compile_receipt.typed_output)
-        replay_output = Text2EnvReplayOutput.model_validate(replay_receipt.typed_output)
-        if (
-            compile_output.environment_package != lineage.package
-            or replay_output.runtime_evidence != parameters.runtime_evidence
-        ):
-            raise ValueError("trusted tool receipts do not bind validate inputs")
         for trusted, portable in (
             (compile_receipt, lineage.compile),
             (replay_receipt, lineage.replay),

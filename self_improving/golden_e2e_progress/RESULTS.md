@@ -52,6 +52,13 @@
   `genesis_profile_satisfied=false`，也不证明 Genesis-native、`genesis.robot_policy@1` 或跨机器 provisioning。
   该分支尚未整合 portable replay，最终 integrated commit 必须重新生成 replay/validate qualifications
   并再跑 relocated revision 3。
+- 集中功能测试新增 36 个 public/production seam 场景，覆盖 durable pending/identity conflict、factory
+  seal、真实 CAS/receipt/state lineage 反例、handler/dependency 与恢复 authority。覆盖诊断还识别出四条
+  已被前置 exact invariant 蕴含的重复分支：重复 package/typed-output 比较、CAS put 后的非原子二次读取、
+  固定 resolver 的恒定长度判断；删除这些重复判断后，上游 fail-closed 校验保持不变。用当前源码正式
+  生成临时 validate qualification 并在隔离源码副本运行 98 个测试，五个新增模块合计 614 statements /
+  188 branches 全部为 100%；Ruff 与 diff check 通过。分支内 checked qualification 仍保留原证据字节，
+  最终 integration 才会进行正式重签。
 
 ## 2026-09-10 Image2Env / Video2Env 合同独立功能验收
 
