@@ -2,20 +2,33 @@ from __future__ import annotations
 
 import hashlib
 import inspect
+import json
+import subprocess
+import sys
+from contextlib import ExitStack
+from dataclasses import replace
 from datetime import timezone
 from pathlib import Path
 from types import SimpleNamespace
-from uuid import UUID
+from unittest.mock import patch
+from uuid import UUID, uuid1, uuid4
 
 import pytest
 
 import self_improving.harness.replay_application as module
 from self_improving.harness.handlers.text2env_replay import text2env_replay_descriptor
+from self_improving.harness.package_store import PackageStore
 from self_improving.harness.qualification import QualificationBundleError
-from self_improving.harness.registry import RegistryRegistrationError
+from self_improving.harness.registry import (
+    ControlledRunPendingError,
+    RegistryRegistrationError,
+)
 from self_improving.harness.replay_application import (
     ReplayApplication,
     ReplayApplicationConfigurationError,
+    ReplayApplicationInputError,
+    ReplayApplicationRunIdentityError,
+    ReplayApplicationRunPendingError,
     ReplayApplicationSettings,
     create_replay_application,
 )
@@ -27,6 +40,11 @@ from self_improving.harness.schemas import (
     RuntimeConfig,
     Text2EnvReplayInput,
 )
+from tests.self_improving.harness import test_text2env_replay_handler as replay_fixture
+
+
+ROOT = Path(__file__).resolve().parents[3]
+REPLAY_BUNDLE = ROOT / "self_improving/harness/qualified_skills/text2env.replay/1.0.0"
 
 
 def _ref(name: str, sha256: str, schema_version: str) -> ArtifactRef:
@@ -110,6 +128,156 @@ def _loaded(dependencies: tuple[DependencyRef, ...]) -> SimpleNamespace:
     )
 
 
+def _factory_settings(
+    root: Path,
+    *,
+    evidence_root: Path,
+    allowed_asset_root: Path,
+) -> ReplayApplicationSettings:
+    operator = root / "operator"
+    operator.mkdir(exist_ok=True)
+    files: dict[str, Path] = {}
+    for name in ("interpreter", "runner", "capability", "launcher", "ffmpeg"):
+        path = operator / name
+        path.write_text(name, encoding="utf-8")
+        files[name] = path
+    module_root = operator / "module"
+    delegated_root = operator / "delegated"
+    module_root.mkdir(exist_ok=True)
+    delegated_root.mkdir(exist_ok=True)
+    return ReplayApplicationSettings(
+        state_root=root / "state",
+        qualification_bundle_root=REPLAY_BUNDLE,
+        evidence_artifact_root=evidence_root,
+        implementation_root=module._DISTRIBUTION_ROOT,
+        scene_gen_root=module._SCENE_GEN_ROOT,
+        ledger_contract_root=module._LEDGER_CONTRACT_ROOT,
+        allowed_asset_roots=(allowed_asset_root,),
+        interpreter=files["interpreter"],
+        runtime_runner=files["runner"],
+        runtime_module_root=module_root,
+        runtime_capability_path=files["capability"],
+        media_launcher=files["launcher"],
+        static_ffmpeg=files["ffmpeg"],
+        delegated_cgroup_root=delegated_root,
+        runtime_timeout_seconds=10.0,
+        capability_timeout_seconds=2.0,
+    )
+
+
+def _factory_boundary_patches(
+    *,
+    store: module.LocalArtifactStore,
+    robotwin_root: Path,
+    runtime_root: Path,
+) -> tuple[ExitStack, list[replay_fixture.RecordingExecutor]]:
+    qualification_bytes = (REPLAY_BUNDLE / "qualification.json").read_bytes()
+    report_bytes = (REPLAY_BUNDLE / "report.json").read_bytes()
+    qualification_ref = store.put_file(
+        REPLAY_BUNDLE / "qualification.json",
+        name="qualification",
+        media_type="application/json",
+        schema_version="harness.skill_qualification.v1",
+    )
+    manifest = json.loads((REPLAY_BUNDLE / "manifest.json").read_text(encoding="utf-8"))
+    descriptor = text2env_replay_descriptor(
+        qualification_artifact=qualification_ref,
+        implementation_sha256=manifest["bundle_sha256"],
+    )
+    inspected = SimpleNamespace(
+        descriptor=descriptor,
+        generic=SimpleNamespace(
+            qualification_bytes=qualification_bytes,
+            report_bytes=report_bytes,
+        ),
+    )
+    executors: list[replay_fixture.RecordingExecutor] = []
+
+    def assemble(*, settings, state_root, artifact_store, allowed_roots):
+        del settings
+        assert artifact_store is store
+        assert allowed_roots == (robotwin_root.resolve(),)
+        executor = replay_fixture.RecordingExecutor(
+            runtime_root / f"executor-{len(executors)}",
+            replay_fixture._capability_document(),
+        )
+        executors.append(executor)
+        return replay_fixture.build_text2env_replay_wiring(
+            artifact_store=artifact_store,
+            package_store=PackageStore(artifact_store),
+            runtime_executor=executor,
+            media_verifier=replay_fixture.RecordingMediaVerifier(),
+            work_root=state_root / "replay-handler",
+            dependency_work_root=state_root / "replay-dependencies",
+            allowed_asset_roots=allowed_roots,
+            expected_capability_sha256=executor.capability_sha256,
+            checkpoint_steps=120,
+        )
+
+    stack = ExitStack()
+    stack.enter_context(
+        patch.object(module, "verify_replay_qualification_bundle", return_value=inspected)
+    )
+    stack.enter_context(patch.object(module, "_verify_settings_match_evidence"))
+    stack.enter_context(patch.object(module, "_assemble_live_wiring", side_effect=assemble))
+    stack.enter_context(patch.object(module, "_verify_live_wiring"))
+    stack.enter_context(patch.object(module, "publish_replay_qualification_bundle"))
+    return stack, executors
+
+
+def _controlled_factory_fixture(root: Path):
+    source = replay_fixture._fixture(root / "source")
+    value = source.value.model_copy(
+        update={
+            "runtime_config": source.value.runtime_config.model_copy(
+                update={"settle_steps": 120}
+            )
+        }
+    )
+    settings = _factory_settings(
+        root,
+        evidence_root=source.store.root,
+        allowed_asset_root=source.robotwin_root,
+    )
+    stack, executors = _factory_boundary_patches(
+        store=source.store,
+        robotwin_root=source.robotwin_root,
+        runtime_root=root / "runtime-test-adapter",
+    )
+    return source, value, settings, stack, executors
+
+
+def _child_recover(root_value: str, run_id_value: str) -> None:
+    root = Path(root_value)
+    store = module.LocalArtifactStore(root / "source/cas")
+    value = Text2EnvReplayInput.model_validate_json(
+        (root / "replay-input.json").read_text(encoding="utf-8")
+    )
+    settings = _factory_settings(
+        root,
+        evidence_root=store.root,
+        allowed_asset_root=root / "source/RoboTwin",
+    )
+    stack, executors = _factory_boundary_patches(
+        store=store,
+        robotwin_root=root / "source/RoboTwin",
+        runtime_root=root / "child-runtime-test-adapter",
+    )
+    with stack:
+        application = create_replay_application(settings)
+        state = application.invoke_typed(value, run_id=UUID(run_id_value))
+    print(
+        json.dumps(
+            {
+                "run_id": str(state.run_id),
+                "status": state.status.value,
+                "executor_calls": len(executors[0].calls),
+            },
+            sort_keys=True,
+        )
+    )
+
+
 def test_public_factory_exposes_no_handler_descriptor_or_qualification_injection() -> None:
     fields = set(ReplayApplicationSettings.__dataclass_fields__)
     assert not ({"handler", "descriptor", "qualification", "registration"} & fields)
@@ -123,7 +291,7 @@ def test_public_factory_exposes_no_handler_descriptor_or_qualification_injection
     assert not hasattr(module, "VerifiedReplayQualification")
 
 
-def test_application_facade_exposes_real_registry_journal_and_run_store_surfaces(
+def test_public_constructor_cannot_issue_factory_authority(
     tmp_path: Path,
 ) -> None:
     dependencies = _dependencies()
@@ -131,25 +299,15 @@ def test_application_facade_exposes_real_registry_journal_and_run_store_surfaces
     replay_input = Text2EnvReplayInput.model_validate(
         loaded.kernel_evaluation.invocation.effective_parameters
     )
-    state = SimpleNamespace(run_id=loaded.kernel_evaluation.invocation.run_id)
-
     class Registry:
         descriptors = (loaded.descriptor,)
-        invocation_args = None
 
         def list(self):
             return self.descriptors
 
-        def invoke(self, *args):
-            self.invocation_args = args
-            return state
-
     class Journal:
         path = tmp_path / "events.sqlite3"
-        read_args = None
-
-        def read(self, **kwargs):
-            self.read_args = kwargs
+        def read(self, **_kwargs):
             return "page"
 
     class Runs:
@@ -159,35 +317,168 @@ def test_application_facade_exposes_real_registry_journal_and_run_store_surfaces
         def read_run_state(self, run_id):
             return ("state", run_id)
 
-    registry = Registry()
-    journal = Journal()
     application = ReplayApplication(
         artifact_store=SimpleNamespace(root=tmp_path / "cas"),  # type: ignore[arg-type]
-        event_journal=journal,  # type: ignore[arg-type]
+        event_journal=Journal(),  # type: ignore[arg-type]
         run_store=Runs(),  # type: ignore[arg-type]
-        registry=registry,  # type: ignore[arg-type]
+        registry=Registry(),  # type: ignore[arg-type]
     )
 
-    assert application.skills == (loaded.descriptor,)
-    assert application.artifact_root == tmp_path / "cas"
-    assert application.journal_path == journal.path.resolve()
-    assert application.replay(replay_input) is state
-    assert registry.invocation_args == (
-        "text2env.replay",
-        "1.0.0",
-        replay_input.model_dump(mode="json"),
-    )
-    with pytest.raises(TypeError, match="Text2EnvReplayInput"):
-        application.replay({})  # type: ignore[arg-type]
-    run_id = loaded.kernel_evaluation.invocation.run_id
-    assert application.events(after_event_id=3, run_id=run_id, limit=7) == "page"
-    assert journal.read_args == {"after_event_id": 3, "run_id": run_id, "limit": 7}
-    assert application.invocation(run_id) == ("invocation", run_id)
-    assert application.run_state(run_id) == ("state", run_id)
+    with pytest.raises(ReplayApplicationConfigurationError, match="factory-issued"):
+        application._assert_golden_execution_ready()
+    for operation in (
+        lambda: application.skills,
+        lambda: application.artifact_root,
+        lambda: application.journal_path,
+        lambda: application.replay(replay_input),
+        lambda: application.events(),
+        lambda: application.invocation(loaded.kernel_evaluation.invocation.run_id),
+        lambda: application.run_state(loaded.kernel_evaluation.invocation.run_id),
+    ):
+        with pytest.raises(ReplayApplicationConfigurationError, match="factory-issued"):
+            operation()
 
-    registry.descriptors = (SimpleNamespace(),)
-    with pytest.raises(RuntimeError, match="another descriptor type"):
-        _ = application.skills
+
+def test_factory_issues_exact_controlled_authority_and_recovers_without_repeat(
+    tmp_path: Path,
+) -> None:
+    source, value, settings, stack, executors = _controlled_factory_fixture(tmp_path)
+    run_id = UUID("12345678-1234-4234-9234-123456789abc")
+
+    with stack:
+        application = create_replay_application(settings)
+        application._assert_golden_execution_ready()
+        assert type(application._artifact_store) is module.LocalArtifactStore
+        assert type(application._event_journal) is module.SQLiteEventJournal
+        assert type(application._run_store) is module.SQLiteRunStore
+        assert type(application._registry) is module.SkillRegistry
+        assert application._event_journal.path == application._run_store.path
+        assert application._registry._artifact_resolver is application._artifact_store
+        assert application._registry._event_sink is application._event_journal
+        assert application._registry._run_store is application._run_store
+        assert application._registry._dependency_resolver is (
+            application._registry._registrations[("text2env.replay", "1.0.0")]
+            .handler.dependency_resolver
+        )
+
+        first = application.invoke_typed(value, run_id=run_id)
+        recovered = application.invoke_typed(value, run_id=run_id)
+        reopened = create_replay_application(settings)
+        recovered_after_reopen = reopened.invoke_typed(value, run_id=run_id)
+
+        assert first == recovered == recovered_after_reopen
+        assert first.status.value == "succeeded"
+        lifecycle = reopened._run_store.read_controlled_lifecycle(run_id)
+        assert lifecycle.intent is not None
+        assert lifecycle.invocation is not None
+        assert lifecycle.terminal == first
+        assert application.resolve_artifact(first.output.runtime_evidence).is_file()
+        assert [len(executor.calls) for executor in executors] == [1, 0]
+        assert source.store.root == application.artifact_root
+
+
+def test_controlled_boundary_rejects_invalid_or_changed_identity_and_drift(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source, value, settings, stack, executors = _controlled_factory_fixture(tmp_path)
+    run_id = uuid4()
+
+    with stack:
+        application = create_replay_application(settings)
+        with pytest.raises(ReplayApplicationRunIdentityError, match="UUID4"):
+            application.invoke_typed(value, run_id=uuid1())
+        with pytest.raises(ReplayApplicationInputError, match="Text2EnvReplayInput"):
+            application.invoke_typed({})  # type: ignore[arg-type]
+
+        ordinary = application.invoke_typed(value)
+        with pytest.raises(ReplayApplicationRunIdentityError, match="ordinary run"):
+            application.invoke_typed(value, run_id=ordinary.run_id)
+
+        first = application.invoke_typed(value, run_id=run_id)
+        changed = value.model_copy(
+            update={"runtime_config": value.runtime_config.model_copy(update={"fps": 13})}
+        )
+        with pytest.raises(ReplayApplicationRunIdentityError, match="another intent"):
+            application.invoke_typed(changed, run_id=run_id)
+
+        selected = source.selected_files[0]
+        original = selected.read_bytes()
+        selected.write_bytes(b"changed-after-terminal")
+        with pytest.raises(ReplayApplicationRunIdentityError, match="dependencies"):
+            application.invoke_typed(value, run_id=run_id)
+        selected.write_bytes(original)
+
+        registration = application._registry._registrations[("text2env.replay", "1.0.0")]
+        object.__setattr__(registration.handler, "checkpoint_steps", 121)
+        with pytest.raises(ReplayApplicationConfigurationError, match="configuration"):
+            application.invoke_typed(value, run_id=uuid4())
+
+        object.__setattr__(registration.handler, "checkpoint_steps", 120)
+        with monkeypatch.context() as mapping:
+            mapping.setattr(
+                module.SkillRegistry,
+                "invoke_with_run_id",
+                lambda *_args, **_kwargs: (_ for _ in ()).throw(
+                    ControlledRunPendingError("controlled run is pending")
+                ),
+            )
+            with pytest.raises(ReplayApplicationRunPendingError, match="pending"):
+                application.invoke_typed(value, run_id=uuid4())
+
+        assert first.status.value == "succeeded"
+        assert len(executors[0].calls) == 2
+
+
+def test_factory_rejects_corrupt_nonempty_state_without_clearing_it(tmp_path: Path) -> None:
+    source = replay_fixture._fixture(tmp_path / "source")
+    settings = _factory_settings(
+        tmp_path,
+        evidence_root=source.store.root,
+        allowed_asset_root=source.robotwin_root,
+    )
+    settings.state_root.mkdir()
+    marker = settings.state_root / "unowned"
+    marker.write_text("preserve", encoding="utf-8")
+
+    with pytest.raises(ReplayApplicationConfigurationError, match="unexpected entry"):
+        create_replay_application(settings)
+
+    assert marker.read_text(encoding="utf-8") == "preserve"
+    assert tuple(settings.state_root.iterdir()) == (marker,)
+
+
+def test_controlled_terminal_recovers_in_a_fresh_process(tmp_path: Path) -> None:
+    _source, value, settings, stack, executors = _controlled_factory_fixture(tmp_path)
+    run_id = uuid4()
+    (tmp_path / "replay-input.json").write_text(
+        value.model_dump_json(),
+        encoding="utf-8",
+    )
+
+    with stack:
+        first = create_replay_application(settings).invoke_typed(value, run_id=run_id)
+    assert first.status.value == "succeeded"
+    assert len(executors[0].calls) == 1
+
+    command = (
+        "from tests.self_improving.harness.test_replay_application "
+        "import _child_recover; "
+        f"_child_recover({str(tmp_path)!r}, {str(run_id)!r})"
+    )
+    completed = subprocess.run(
+        [sys.executable, "-c", command],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(completed.stdout) == {
+        "executor_calls": 0,
+        "run_id": str(run_id),
+        "status": "succeeded",
+    }
 
 
 def test_application_path_timeout_and_capability_helpers_fail_closed(
