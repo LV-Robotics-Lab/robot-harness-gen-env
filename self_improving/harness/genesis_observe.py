@@ -22,6 +22,8 @@ from pydantic import JsonValue, TypeAdapter, ValidationError
 from .artifacts import LocalArtifactStore
 from .event_journal import SQLiteEventJournal
 from .registry import (
+    ControlledRunIdentityError,
+    ControlledRunPendingError,
     HandlerResult,
     QualificationCandidate,
     QualificationCandidateEvaluation,
@@ -36,7 +38,9 @@ from .schemas.common import (
     Blocker,
     DependencyRef,
     Invocation,
+    RegisteredSkillDescriptor,
     RunState,
+    SkillDescriptor,
 )
 from .schemas.genesis_observe import (
     GENESIS_OBSERVATION_RECEIPT_SCHEMA_ID,
@@ -131,6 +135,14 @@ class ControlledObserveApplicationSettings:
     evidence_artifact_root: Path
 
 
+class ControlledObserveApplicationRunIdentityError(RuntimeError):
+    """A caller-selected controlled child identity conflicts with durable state."""
+
+
+class ControlledObserveApplicationRunPendingError(RuntimeError):
+    """A controlled child was reserved but has no recoverable terminal state yet."""
+
+
 class ControlledGenesisObserveApplication:
     """Unqualified candidate facade using the normal Registry execution kernel."""
 
@@ -161,10 +173,10 @@ class ControlledGenesisObserveApplication:
         )
 
     @property
-    def skills(self) -> tuple[()]:
-        """Expose no live Skill: this controlled candidate is not qualified."""
+    def skills(self) -> tuple[RegisteredSkillDescriptor, ...]:
+        """Expose only an explicitly bound controlled qualification, if present."""
 
-        return ()
+        return self._registry.list()  # type: ignore[return-value]
 
     @property
     def artifact_root(self) -> Path:
@@ -177,6 +189,8 @@ class ControlledGenesisObserveApplication:
     def evaluate(self, parameters: GenesisObserveInput) -> QualificationCandidateEvaluation:
         """Exercise the exact candidate without registering production authority."""
 
+        if self.skills:
+            raise RuntimeError("a Golden-bound controlled application is not a candidate evaluator")
         if type(parameters) is not GenesisObserveInput:
             raise TypeError("controlled observe requires exact GenesisObserveInput")
         trusted = GenesisObserveInput.model_validate(parameters.model_dump(mode="python"))
@@ -185,6 +199,45 @@ class ControlledGenesisObserveApplication:
             self._capture,
             trusted.model_dump(mode="json"),
         )
+
+    def invoke_typed(self, parameters: GenesisObserveInput, *, run_id: UUID) -> RunState:
+        """Execute or recover one explicitly qualified controlled Golden child."""
+
+        if type(parameters) is not GenesisObserveInput:
+            raise TypeError("controlled observe requires exact GenesisObserveInput")
+        if len(self.skills) != 1:
+            raise RuntimeError("controlled observe has no Golden-bound qualification")
+        try:
+            return self._registry.invoke_with_run_id(
+                "genesis.observe",
+                "1.0.0",
+                parameters.model_dump(mode="json"),
+                run_id=run_id,
+            )
+        except ControlledRunIdentityError as error:
+            raise ControlledObserveApplicationRunIdentityError(str(error)) from error
+        except ControlledRunPendingError as error:
+            raise ControlledObserveApplicationRunPendingError(str(error)) from error
+
+    def _bind_controlled_descriptor(self, descriptor: SkillDescriptor) -> None:
+        """Install one test-controlled qualification without entering production assembly."""
+
+        if (
+            descriptor.skill_id != "genesis.observe"
+            or descriptor.version != "1.0.0"
+            or descriptor.input_schema != GENESIS_OBSERVE_INPUT_SCHEMA_ID
+            or descriptor.output_schema != GENESIS_OBSERVE_OUTPUT_SCHEMA_ID
+            or descriptor.mcp_tool_name != GENESIS_OBSERVE_MCP_TOOL_NAME
+        ):
+            raise ValueError(
+                "controlled qualification does not describe exact genesis.observe@1.0.0"
+            )
+        current = self.skills
+        if current:
+            if current != (descriptor,):
+                raise ValueError("controlled observe is already bound to another qualification")
+            return
+        self._registry.register(descriptor, self._capture)
 
     def invocation(self, run_id: UUID) -> Invocation | None:
         return self._run_store.read_invocation(run_id)
@@ -445,5 +498,7 @@ __all__ = [
     "ControlledObservationCaptureAdapter",
     "ControlledObservationValue",
     "ControlledObserveApplicationSettings",
+    "ControlledObserveApplicationRunIdentityError",
+    "ControlledObserveApplicationRunPendingError",
     "create_controlled_genesis_observe_application",
 ]
