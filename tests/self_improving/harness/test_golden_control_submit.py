@@ -62,6 +62,7 @@ from self_improving.harness.schemas.workflow import (
 from self_improving.harness.schemas.workflow_operation import (
     ReceiptDerivedFactClaimV2,
     ToolResultV2,
+    WorkflowOperationReceiptV2,
 )
 from self_improving.harness.trusted_state import TrustedWorldState, WorldFact, WorldFactEvidence
 from tests.self_improving.harness import test_golden_observation_submit as observe_base
@@ -745,6 +746,17 @@ def test_failure_advisory_and_prompt_revision_advance_history_not_world_state(
     }
     assert revision["next_compile_skill_ref"] == "image2env.compile@1.0.0"
     assert revision["external_agent_executed"] is False
+    revised_prompt = ArtifactRef.model_validate(revision["revised_prompt"])
+    served_ref, served_bytes = case.harness.read_workflow_artifact(
+        RunReadRequest(
+            schema_version="harness.run_read_request.v1",
+            principal_id=current.principal_id,
+            workflow_run_id=current.workflow_run_id,
+        ),
+        sha256=revised_prompt.sha256,
+    )
+    assert served_ref == revised_prompt
+    assert served_bytes == revision["patch"]["replacement_text"].encode("utf-8")
 
 
 @_requires_control_seam
@@ -790,7 +802,10 @@ def test_control_submit_is_idempotent_and_reopens_without_a_live_application(
     )
     changed = _replace_model(
         prompt_command,
-        next_compile_skill_ref="video2env.compile@1.0.0",
+        patch={
+            **prompt_command.patch.model_dump(mode="json"),
+            "replacement_text": "Build a distinct frame-derived scene.",
+        },
     )
     with pytest.raises(GoldenRunConflictError, match="idempotency"):
         reopened.submit_control(changed)  # type: ignore[attr-defined]
@@ -800,6 +815,8 @@ def test_control_submit_is_idempotent_and_reopens_without_a_live_application(
 def test_advisory_rejects_stale_foreign_unbound_and_expired_evidence(tmp_path: Path) -> None:
     case = _case(tmp_path)
     command = _advisory_command(case)
+    with pytest.raises(TypeError, match="exact Golden control command"):
+        case.harness.submit_control(case.head)  # type: ignore[arg-type]
     stale = _replace_model(command, expected_workflow_revision=1)
     with pytest.raises(GoldenRunHeadConflictError):
         case.harness.submit_control(stale)  # type: ignore[attr-defined]
@@ -819,6 +836,36 @@ def test_advisory_rejects_stale_foreign_unbound_and_expired_evidence(tmp_path: P
     )
     with pytest.raises((GoldenRunNotFoundError, GoldenRunRegistryError), match="reachable|history"):
         case.harness.submit_control(unbound_command)  # type: ignore[attr-defined]
+
+    wrong_diagnostic = _replace_model(
+        command,
+        diagnostic_refs=[case.observation.model_dump(mode="json")],
+    )
+    with pytest.raises(GoldenRunNotFoundError, match="diagnostic.*failure history"):
+        case.harness.submit_control(wrong_diagnostic)  # type: ignore[attr-defined]
+
+    failure = _read_model(
+        case.store,
+        case.failure_receipt,
+        WorkflowOperationReceiptV2,
+    )
+    assert type(failure) is WorkflowOperationReceiptV2
+    succeeded_as_failure = _replace_model(
+        command,
+        failure_receipts=[failure.predecessor_receipt.model_dump(mode="json")],
+    )
+    with pytest.raises(GoldenRunRegistryError, match="blocked or failed"):
+        case.harness.submit_control(succeeded_as_failure)  # type: ignore[attr-defined]
+
+    citation = command.observation_citations[0]
+    mismatched_citation = {
+        **citation.model_dump(mode="json"),
+        "captured_at": (citation.captured_at - timedelta(seconds=1)).isoformat(),
+        "valid_until": (citation.valid_until - timedelta(seconds=1)).isoformat(),
+    }
+    wrong_window = _replace_model(command, observation_citations=[mismatched_citation])
+    with pytest.raises(GoldenRunRegistryError, match="window differs"):
+        case.harness.submit_control(wrong_window)  # type: ignore[attr-defined]
 
     expired_harness = GoldenRunHarness(
         artifact_store=case.store,

@@ -40,6 +40,22 @@ from .schemas.common import (
     SkillDescriptorV2,
     SkillQualification,
 )
+from .schemas.genesis_observe import GenesisObservationReceipt
+from .schemas.golden_control import (
+    ADVISORY_RECORD_COMMAND_SCHEMA_ID,
+    CONTROL_COMMIT_SNAPSHOT_SCHEMA_ID,
+    EXTERNAL_AGENT_ADVISORY_RECEIPT_SCHEMA_ID,
+    PROMPT_REVISION_COMMAND_SCHEMA_ID,
+    PROMPT_REVISION_SCHEMA_ID,
+    AdvisoryRecordCommand,
+    ControlCommitSnapshot,
+    ExternalAgentAdvisoryReceipt,
+    PromptRevision,
+    PromptRevisionCommand,
+    VideoFrameToImageFallback,
+    external_agent_advisory_receipt_sha256,
+    prompt_revision_sha256,
+)
 from .schemas.registry_snapshot import RegistrySnapshot
 from .schemas.workflow import (
     OperationSnapshot,
@@ -233,32 +249,59 @@ class GoldenRunHarness:
         state = self._resolve_canonical_model(snapshot.state_ref, TrustedWorldState)
         refs.extend(fact.source_artifact for fact in state.facts)
 
-        operations = tuple(
-            stored.operation
-            for stored in self._workflow_store.read_operations(
+        entries = tuple(
+            entry
+            for entry in self._workflow_store.read_entries(
                 principal_id=snapshot.principal_id,
                 workflow_run_id=snapshot.workflow_run_id,
             )
+            if entry.base_revision < snapshot.revision
+            or (
+                entry.operation is not None
+                and entry.operation.operation_id == snapshot.active_operation
+            )
+        )
+        operations = tuple(
+            cast(OperationSnapshot, entry.operation)
+            for entry in entries
+            if entry.operation is not None
         )
         receipt_ref = snapshot.receipt_head
-        for operation in reversed(
-            tuple(item for item in operations if item.status is not RunStatus.RUNNING)
-        ):
-            receipt = self._resolve_canonical_model(
-                receipt_ref,
-                WorkflowOperationReceiptV2,
-            )
-            refs.extend(
-                (
-                    receipt_ref,
-                    receipt.predecessor_receipt,
-                    receipt.tool_receipt,
-                    receipt.tool_result,
-                    receipt.resulting_state,
+        terminal_entries = tuple(
+            entry
+            for entry in entries
+            if entry.control is not None
+            or (entry.operation is not None and entry.operation.status is not RunStatus.RUNNING)
+        )
+        for entry in reversed(terminal_entries):
+            if entry.operation is not None:
+                receipt = cast(
+                    WorkflowOperationReceiptV2,
+                    self._resolve_canonical_model(
+                        receipt_ref,
+                        WorkflowOperationReceiptV2,
+                    ),
                 )
-            )
-            refs.extend(filter(None, (receipt.state_delta,)))
-            receipt_ref = receipt.predecessor_receipt
+                refs.extend(
+                    (
+                        receipt_ref,
+                        receipt.predecessor_receipt,
+                        receipt.tool_receipt,
+                        receipt.tool_result,
+                        receipt.resulting_state,
+                    )
+                )
+                refs.extend(filter(None, (receipt.state_delta,)))
+                receipt_ref = receipt.predecessor_receipt
+            else:
+                control = cast(ControlCommitSnapshot, entry.control)
+                if receipt_ref != control.receipt:
+                    raise GoldenRunCorruptionError(
+                        "control receipt chain differs from the durable turn ledger"
+                    )
+                control_receipt = self._resolve_control_receipt(receipt_ref)
+                refs.extend(self._control_artifact_refs(control, control_receipt))
+                receipt_ref = control_receipt.predecessor_receipt
         refs.append(receipt_ref)
 
         for operation in operations:
@@ -304,6 +347,63 @@ class GoldenRunHarness:
             child_state = self._resolve_canonical_model(result.run_state, RunState)
             refs.extend(child_state.artifacts)
         return tuple(dict.fromkeys(refs))
+
+    def _resolve_control_receipt(
+        self,
+        artifact: ArtifactRef,
+    ) -> ExternalAgentAdvisoryReceipt | PromptRevision:
+        if artifact.schema_version == EXTERNAL_AGENT_ADVISORY_RECEIPT_SCHEMA_ID:
+            model: type[ExternalAgentAdvisoryReceipt | PromptRevision] = (
+                ExternalAgentAdvisoryReceipt
+            )
+        elif artifact.schema_version == PROMPT_REVISION_SCHEMA_ID:
+            model = PromptRevision
+        else:
+            raise GoldenRunCorruptionError("control receipt has an unsupported schema")
+        return cast(
+            ExternalAgentAdvisoryReceipt | PromptRevision,
+            self._resolve_canonical_model(artifact, model),
+        )
+
+    @staticmethod
+    def _control_artifact_refs(
+        control: ControlCommitSnapshot,
+        receipt: ExternalAgentAdvisoryReceipt | PromptRevision,
+    ) -> tuple[ArtifactRef, ...]:
+        refs = [
+            control.command,
+            control.payload,
+            control.receipt,
+            control.receipt_head,
+            receipt.command,
+            receipt.predecessor_receipt,
+            receipt.base_state,
+            receipt.resulting_state,
+            receipt.source_prompt,
+            *receipt.failure_receipts,
+            *(citation.receipt for citation in receipt.observation_citations),
+        ]
+        if type(receipt) is ExternalAgentAdvisoryReceipt:
+            refs.extend(receipt.diagnostic_refs)
+            refs.extend(filter(None, (receipt.source_prompt_revision,)))
+        else:
+            refs.extend(
+                (
+                    receipt.advisory_receipt,
+                    receipt.predecessor_package,
+                    receipt.revised_prompt,
+                )
+            )
+            refs.extend(filter(None, (receipt.predecessor_prompt_revision,)))
+            if isinstance(receipt.fallback, VideoFrameToImageFallback):
+                refs.extend(
+                    (
+                        receipt.fallback.source_video,
+                        receipt.fallback.selected_frame,
+                        receipt.fallback.frame_sequence_manifest,
+                    )
+                )
+        return tuple(refs)
 
     def submit(self, request: RunCommandRequest) -> OperationSnapshot:
         """Reserve, execute, and durably commit one exact qualified Skill command."""
@@ -400,6 +500,579 @@ class GoldenRunHarness:
                 )
             operation = reserved.operation
         return self._resume_operation(operation, normalized)
+
+    def submit_control(
+        self,
+        request: AdvisoryRecordCommand | PromptRevisionCommand,
+    ) -> ControlCommitSnapshot:
+        """Commit one advisory-only record without changing trusted world state."""
+
+        if type(request) not in {AdvisoryRecordCommand, PromptRevisionCommand}:
+            raise TypeError("request must be an exact Golden control command")
+        control_kind = "advisory" if type(request) is AdvisoryRecordCommand else "prompt_revision"
+        existing = self._workflow_store.read_control_record(
+            principal_id=request.principal_id,
+            workflow_run_id=request.workflow_run_id,
+            control_kind=control_kind,
+            idempotency_key=request.idempotency_key,
+        )
+        if existing is not None:
+            persisted = self._resolve_control_command(existing.control.command)
+            if persisted != request:
+                raise GoldenRunConflictError(
+                    "control idempotency key is already bound to a different command"
+                )
+            self.read(
+                RunReadRequest(
+                    schema_version="harness.run_read_request.v1",
+                    principal_id=request.principal_id,
+                    workflow_run_id=request.workflow_run_id,
+                )
+            )
+            return existing.control
+
+        current = self.read(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id=request.principal_id,
+                workflow_run_id=request.workflow_run_id,
+            )
+        )
+        if (
+            request.expected_workflow_revision != current.revision
+            or request.expected_state_sha256 != current.state_sha256
+            or request.expected_receipt_head_sha256 != current.receipt_head.sha256
+            or current.active_operation is not None
+        ):
+            raise GoldenRunHeadConflictError(
+                "workflow head changed before the control record could commit"
+            )
+        committed_at = self._clock()
+        _require_utc_clock(committed_at)
+        reachable = self._reachable_workflow_artifacts(current)
+        reachable_identities = {_artifact_identity(ref) for ref in reachable}
+        if type(request) is AdvisoryRecordCommand:
+            self._verify_advisory_lineage(
+                request,
+                current=current,
+                at=committed_at,
+                reachable_identities=reachable_identities,
+            )
+        else:
+            self._verify_prompt_lineage(
+                request,
+                current=current,
+                at=committed_at,
+                reachable_identities=reachable_identities,
+            )
+        command_ref = self._publish_model(
+            request,
+            name=f"{control_kind}_command.json",
+            schema_version=(
+                ADVISORY_RECORD_COMMAND_SCHEMA_ID
+                if type(request) is AdvisoryRecordCommand
+                else PROMPT_REVISION_COMMAND_SCHEMA_ID
+            ),
+        )
+        if type(request) is AdvisoryRecordCommand:
+            receipt = self._build_advisory_receipt(
+                request,
+                command_ref=command_ref,
+                current=current,
+                committed_at=committed_at,
+                reachable_identities=reachable_identities,
+            )
+            receipt_schema = EXTERNAL_AGENT_ADVISORY_RECEIPT_SCHEMA_ID
+            receipt_name = "external_agent_advisory_receipt.json"
+        else:
+            receipt = self._build_prompt_revision(
+                request,
+                command_ref=command_ref,
+                current=current,
+                committed_at=committed_at,
+                reachable_identities=reachable_identities,
+            )
+            receipt_schema = PROMPT_REVISION_SCHEMA_ID
+            receipt_name = "prompt_revision.json"
+        receipt_ref = self._publish_model(
+            receipt,
+            name=receipt_name,
+            schema_version=receipt_schema,
+        )
+        control = ControlCommitSnapshot(
+            schema_version=CONTROL_COMMIT_SNAPSHOT_SCHEMA_ID,
+            control_kind=control_kind,
+            idempotency_key=request.idempotency_key,
+            command_id=request.command_id,
+            workflow_run_id=request.workflow_run_id,
+            principal_id=request.principal_id,
+            command=command_ref,
+            predecessor_receipt=current.receipt_head,
+            base_revision=current.revision,
+            committed_revision=current.revision + 1,
+            base_turn_seq=current.turn_seq,
+            committed_turn_seq=current.turn_seq + 1,
+            base_state_sha256=current.state_sha256,
+            base_state=current.state_ref,
+            resulting_state_sha256=current.state_sha256,
+            resulting_state=current.state_ref,
+            committed_at=committed_at,
+            payload=receipt_ref,
+            receipt=receipt_ref,
+            receipt_head=receipt_ref,
+        )
+        next_snapshot = RunSnapshot.model_validate(
+            current.model_copy(
+                update={
+                    "revision": current.revision + 1,
+                    "turn_seq": current.turn_seq + 1,
+                    "receipt_head": receipt_ref,
+                    "updated_at": committed_at,
+                }
+            ).model_dump(mode="python")
+        )
+        persisted = self._workflow_store.commit_control_record(
+            principal_id=request.principal_id,
+            expected_workflow_revision=request.expected_workflow_revision,
+            expected_state_sha256=request.expected_state_sha256,
+            expected_receipt_head_sha256=request.expected_receipt_head_sha256,
+            control=control,
+            snapshot=next_snapshot,
+        )
+        if persisted is None:
+            raise GoldenRunNotFoundError("golden workflow was not found for this principal")
+        if persisted.control != control:
+            persisted_command = self._resolve_control_command(persisted.control.command)
+            if persisted_command != request:
+                raise GoldenRunConflictError("control identity is already bound to another command")
+        self.read(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id=request.principal_id,
+                workflow_run_id=request.workflow_run_id,
+            )
+        )
+        return persisted.control
+
+    def _build_advisory_receipt(
+        self,
+        command: AdvisoryRecordCommand,
+        *,
+        command_ref: ArtifactRef,
+        current: RunSnapshot,
+        committed_at: datetime,
+        reachable_identities: set[tuple[str, str, str]],
+    ) -> ExternalAgentAdvisoryReceipt:
+        self._verify_advisory_lineage(
+            command,
+            current=current,
+            at=committed_at,
+            reachable_identities=reachable_identities,
+        )
+        unhashed = ExternalAgentAdvisoryReceipt.model_construct(
+            schema_version=EXTERNAL_AGENT_ADVISORY_RECEIPT_SCHEMA_ID,
+            command_id=command.command_id,
+            workflow_run_id=command.workflow_run_id,
+            principal_id=command.principal_id,
+            command=command_ref,
+            predecessor_receipt=current.receipt_head,
+            base_revision=current.revision,
+            committed_revision=current.revision + 1,
+            base_turn_seq=current.turn_seq,
+            committed_turn_seq=current.turn_seq + 1,
+            base_state_sha256=current.state_sha256,
+            base_state=current.state_ref,
+            resulting_state_sha256=current.state_sha256,
+            resulting_state=current.state_ref,
+            committed_at=committed_at,
+            advisory_kind=command.advisory_kind,
+            disposition=command.disposition,
+            summary=command.summary,
+            recommended_action=command.recommended_action,
+            source_prompt=command.source_prompt,
+            source_prompt_revision=command.source_prompt_revision,
+            failure_receipts=command.failure_receipts,
+            observation_citations=command.observation_citations,
+            diagnostic_refs=command.diagnostic_refs,
+            authority="advisory_only",
+            external_agent_executed=False,
+            grants_physical_validity=False,
+            grants_publishability=False,
+            receipt_sha256="0" * 64,
+        )
+        return ExternalAgentAdvisoryReceipt(
+            **unhashed.model_dump(mode="python", exclude={"receipt_sha256"}),
+            receipt_sha256=external_agent_advisory_receipt_sha256(unhashed),
+        )
+
+    def _verify_advisory_lineage(
+        self,
+        command: AdvisoryRecordCommand,
+        *,
+        current: RunSnapshot,
+        at: datetime,
+        reachable_identities: set[tuple[str, str, str]],
+    ) -> None:
+        self._require_reachable(
+            command.source_prompt,
+            label="source prompt",
+            reachable_identities=reachable_identities,
+        )
+        if command.source_prompt_revision is not None:
+            self._require_reachable(
+                command.source_prompt_revision,
+                label="source prompt revision",
+                reachable_identities=reachable_identities,
+            )
+            self._resolve_canonical_model(command.source_prompt_revision, PromptRevision)
+        failure_artifacts = self._verify_control_failures(
+            command.failure_receipts,
+            current=current,
+            reachable_identities=reachable_identities,
+        )
+        for diagnostic in command.diagnostic_refs:
+            self._require_reachable(
+                diagnostic,
+                label="diagnostic history",
+                reachable_identities=reachable_identities,
+            )
+            if _artifact_identity(diagnostic) not in failure_artifacts:
+                raise GoldenRunNotFoundError(
+                    "diagnostic is not reachable from the cited failure history"
+                )
+        for citation in command.observation_citations:
+            self._verify_observation_citation(
+                citation.receipt,
+                captured_at=citation.captured_at,
+                valid_until=citation.valid_until,
+                at=at,
+                current=current,
+                reachable_identities=reachable_identities,
+            )
+
+    def _build_prompt_revision(
+        self,
+        command: PromptRevisionCommand,
+        *,
+        command_ref: ArtifactRef,
+        current: RunSnapshot,
+        committed_at: datetime,
+        reachable_identities: set[tuple[str, str, str]],
+    ) -> PromptRevision:
+        advisory, predecessor_prompt, prompt_revision_number, _ = self._verify_prompt_lineage(
+            command,
+            current=current,
+            at=committed_at,
+            reachable_identities=reachable_identities,
+        )
+        revised_prompt = self._publish_bytes(
+            command.patch.replacement_text.encode("utf-8"),
+            name="revised_prompt.txt",
+            media_type="text/plain",
+            schema_version="harness.prompt_text.v1",
+        )
+        unhashed = PromptRevision.model_construct(
+            schema_version=PROMPT_REVISION_SCHEMA_ID,
+            command_id=command.command_id,
+            workflow_run_id=command.workflow_run_id,
+            principal_id=command.principal_id,
+            command=command_ref,
+            predecessor_receipt=current.receipt_head,
+            base_revision=current.revision,
+            committed_revision=current.revision + 1,
+            base_turn_seq=current.turn_seq,
+            committed_turn_seq=current.turn_seq + 1,
+            base_state_sha256=current.state_sha256,
+            base_state=current.state_ref,
+            resulting_state_sha256=current.state_sha256,
+            resulting_state=current.state_ref,
+            committed_at=committed_at,
+            prompt_revision_number=prompt_revision_number,
+            source_prompt=command.source_prompt,
+            predecessor_prompt_revision=predecessor_prompt,
+            advisory_receipt=command.advisory_receipt,
+            failure_receipts=command.failure_receipts,
+            observation_citations=advisory.observation_citations,
+            predecessor_package=command.predecessor_package,
+            patch=command.patch,
+            revised_prompt=revised_prompt,
+            fallback=command.fallback,
+            next_compile_skill_ref=command.next_compile_skill_ref,
+            external_agent_executed=False,
+            revision_sha256="0" * 64,
+        )
+        return PromptRevision(
+            **unhashed.model_dump(mode="python", exclude={"revision_sha256"}),
+            revision_sha256=prompt_revision_sha256(unhashed),
+        )
+
+    def _verify_prompt_lineage(
+        self,
+        command: PromptRevisionCommand,
+        *,
+        current: RunSnapshot,
+        at: datetime,
+        reachable_identities: set[tuple[str, str, str]],
+    ) -> tuple[
+        ExternalAgentAdvisoryReceipt,
+        ArtifactRef | None,
+        int,
+        set[tuple[str, str, str]],
+    ]:
+        if command.advisory_receipt != current.receipt_head:
+            raise GoldenRunRegistryError(
+                "HARN_HISTORY_MISMATCH",
+                "prompt revision must immediately follow its advisory receipt",
+            )
+        self._require_reachable(
+            command.advisory_receipt,
+            label="advisory history",
+            reachable_identities=reachable_identities,
+        )
+        advisory = cast(
+            ExternalAgentAdvisoryReceipt,
+            self._resolve_canonical_model(
+                command.advisory_receipt,
+                ExternalAgentAdvisoryReceipt,
+            ),
+        )
+        if (
+            command.source_prompt != advisory.source_prompt
+            or command.failure_receipts != advisory.failure_receipts
+        ):
+            raise GoldenRunRegistryError(
+                "HARN_HISTORY_MISMATCH",
+                "prompt revision must preserve advisory prompt and failure lineage",
+            )
+        failure_artifacts = self._verify_control_failures(
+            command.failure_receipts,
+            current=current,
+            reachable_identities=reachable_identities,
+        )
+        if _artifact_identity(command.predecessor_package) not in failure_artifacts:
+            raise GoldenRunNotFoundError(
+                "predecessor package is not reachable from the cited failure history"
+            )
+        for citation in advisory.observation_citations:
+            self._verify_observation_citation(
+                citation.receipt,
+                captured_at=citation.captured_at,
+                valid_until=citation.valid_until,
+                at=at,
+                current=current,
+                reachable_identities=reachable_identities,
+            )
+        if advisory.recommended_action == "fallback_image" and not isinstance(
+            command.fallback,
+            VideoFrameToImageFallback,
+        ):
+            raise GoldenRunRegistryError(
+                "HARN_HISTORY_MISMATCH",
+                "advisory requires an explicit video-to-image fallback",
+            )
+        if isinstance(command.fallback, VideoFrameToImageFallback):
+            self._verify_video_frame_fallback(
+                command.fallback,
+                allowed_artifacts=failure_artifacts,
+                reachable_identities=reachable_identities,
+            )
+        predecessor_prompt = advisory.source_prompt_revision
+        prompt_revision_number = 1
+        if predecessor_prompt is not None:
+            prior = cast(
+                PromptRevision,
+                self._resolve_canonical_model(predecessor_prompt, PromptRevision),
+            )
+            if command.source_prompt != prior.revised_prompt:
+                raise GoldenRunRegistryError(
+                    "HARN_HISTORY_MISMATCH",
+                    "prompt revision does not continue the prior revised prompt",
+                )
+            prompt_revision_number = prior.prompt_revision_number + 1
+        return advisory, predecessor_prompt, prompt_revision_number, failure_artifacts
+
+    def _verify_control_failures(
+        self,
+        receipts: tuple[ArtifactRef, ...],
+        *,
+        current: RunSnapshot,
+        reachable_identities: set[tuple[str, str, str]],
+    ) -> set[tuple[str, str, str]]:
+        artifacts: set[tuple[str, str, str]] = set()
+        for ref in receipts:
+            self._require_reachable(
+                ref,
+                label="failure history",
+                reachable_identities=reachable_identities,
+            )
+            receipt = cast(
+                WorkflowOperationReceiptV2,
+                self._resolve_canonical_model(ref, WorkflowOperationReceiptV2),
+            )
+            if (
+                receipt.workflow_run_id != current.workflow_run_id
+                or receipt.principal_id != current.principal_id
+                or receipt.status not in {RunStatus.BLOCKED, RunStatus.FAILED}
+            ):
+                raise GoldenRunRegistryError(
+                    "HARN_HISTORY_MISMATCH",
+                    "cited failure receipt is not a blocked or failed workflow operation",
+                )
+            result = cast(
+                ToolResultV2,
+                self._resolve_canonical_model(receipt.tool_result, ToolResultV2),
+            )
+            tool_receipt = cast(
+                TrustedToolReceiptV2,
+                self._resolve_canonical_model(receipt.tool_receipt, TrustedToolReceiptV2),
+            )
+            child_state = cast(
+                RunState,
+                self._resolve_canonical_model(result.run_state, RunState),
+            )
+            for artifact in (
+                ref,
+                receipt.tool_result,
+                receipt.tool_receipt,
+                *result.diagnostics,
+                *tool_receipt.supporting_artifacts,
+                *child_state.artifacts,
+            ):
+                artifacts.add(_artifact_identity(artifact))
+        return artifacts
+
+    def _verify_observation_citation(
+        self,
+        receipt_ref: ArtifactRef,
+        *,
+        captured_at: datetime,
+        valid_until: datetime,
+        at: datetime,
+        current: RunSnapshot,
+        reachable_identities: set[tuple[str, str, str]],
+    ) -> None:
+        self._require_reachable(
+            receipt_ref,
+            label="observation history",
+            reachable_identities=reachable_identities,
+        )
+        receipt = cast(
+            GenesisObservationReceipt,
+            self._resolve_canonical_model(receipt_ref, GenesisObservationReceipt),
+        )
+        if receipt.captured_at != captured_at or receipt.valid_until != valid_until:
+            raise GoldenRunRegistryError(
+                "HARN_HISTORY_MISMATCH",
+                "observation citation window differs from its receipt",
+            )
+        if not captured_at <= at <= valid_until:
+            raise GoldenRunRegistryError(
+                "HARN_OBSERVATION_EXPIRED",
+                "observation citation expired before the control commit",
+            )
+        state = cast(
+            TrustedWorldState,
+            self._resolve_canonical_model(current.state_ref, TrustedWorldState),
+        )
+        state_facts = {fact.key: fact for fact in state.facts}
+        for observation in receipt.observations:
+            fact = state_facts.get(observation.key)
+            if (
+                fact is None
+                or fact.value != observation.value
+                or fact.observed_at != observation.captured_at
+                or fact.valid_until != observation.valid_until
+            ):
+                raise GoldenRunRegistryError(
+                    "HARN_HISTORY_MISMATCH",
+                    "observation citation is not present in the current trusted state",
+                )
+
+    def _verify_video_frame_fallback(
+        self,
+        fallback: VideoFrameToImageFallback,
+        *,
+        allowed_artifacts: set[tuple[str, str, str]],
+        reachable_identities: set[tuple[str, str, str]],
+    ) -> None:
+        for label, ref in (
+            ("source video", fallback.source_video),
+            ("selected frame", fallback.selected_frame),
+            ("frame lineage", fallback.frame_sequence_manifest),
+        ):
+            self._require_reachable(
+                ref,
+                label=label,
+                reachable_identities=reachable_identities,
+            )
+            if _artifact_identity(ref) not in allowed_artifacts:
+                raise GoldenRunNotFoundError(
+                    f"{label} is not reachable from the cited failure lineage"
+                )
+        payload = self._artifact_store.resolve(fallback.frame_sequence_manifest).path.read_bytes()
+        try:
+            manifest = json.loads(payload)
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise GoldenRunRegistryError(
+                "HARN_INPUT_SCHEMA_INVALID",
+                "frame lineage manifest is not canonical JSON",
+            ) from error
+        if (
+            type(manifest) is not dict
+            or payload != _canonical_json_bytes(manifest)
+            or set(manifest) != {"schema_version", "source_video", "frames"}
+            or manifest.get("schema_version") != "harness.video_frame_sequence.v1"
+        ):
+            raise GoldenRunRegistryError(
+                "HARN_INPUT_SCHEMA_INVALID",
+                "frame lineage manifest is not strict canonical JSON",
+            )
+        try:
+            source_video = ArtifactRef.model_validate(manifest["source_video"])
+            frames = manifest["frames"]
+            matches = tuple(
+                ArtifactRef.model_validate(item["artifact"])
+                for item in frames
+                if type(item) is dict
+                and set(item) == {"index", "artifact"}
+                and item["index"] == fallback.frame_index
+            )
+        except (KeyError, TypeError, ValidationError, ValueError) as error:
+            raise GoldenRunRegistryError(
+                "HARN_INPUT_SCHEMA_INVALID",
+                "frame lineage manifest has invalid typed entries",
+            ) from error
+        if source_video != fallback.source_video or matches != (fallback.selected_frame,):
+            raise GoldenRunRegistryError(
+                "HARN_HISTORY_MISMATCH",
+                "selected frame is not bound to the source video frame lineage",
+            )
+
+    def _require_reachable(
+        self,
+        ref: ArtifactRef,
+        *,
+        label: str,
+        reachable_identities: set[tuple[str, str, str]],
+    ) -> None:
+        if _artifact_identity(ref) not in reachable_identities:
+            raise GoldenRunNotFoundError(f"{label} is not reachable from workflow history")
+        self._artifact_store.resolve(ref)
+
+    def _resolve_control_command(
+        self,
+        artifact: ArtifactRef,
+    ) -> AdvisoryRecordCommand | PromptRevisionCommand:
+        if artifact.schema_version == ADVISORY_RECORD_COMMAND_SCHEMA_ID:
+            model: type[AdvisoryRecordCommand | PromptRevisionCommand] = AdvisoryRecordCommand
+        elif artifact.schema_version == PROMPT_REVISION_COMMAND_SCHEMA_ID:
+            model = PromptRevisionCommand
+        else:
+            raise GoldenRunCorruptionError("control command has an unsupported schema")
+        return cast(
+            AdvisoryRecordCommand | PromptRevisionCommand,
+            self._resolve_canonical_model(artifact, model),
+        )
 
     def _resolve_live_execution(
         self,
@@ -858,41 +1531,69 @@ class GoldenRunHarness:
         persisted_idempotency_key: str,
         persisted_request_sha256: str,
     ) -> None:
-        operations = tuple(
-            stored.operation
-            for stored in self._workflow_store.read_operations(
-                principal_id=snapshot.principal_id,
-                workflow_run_id=snapshot.workflow_run_id,
-            )
+        entries = self._workflow_store.read_entries(
+            principal_id=snapshot.principal_id,
+            workflow_run_id=snapshot.workflow_run_id,
         )
-        terminal = tuple(op for op in operations if op.status is not RunStatus.RUNNING)
-        running = tuple(op for op in operations if op.status is RunStatus.RUNNING)
+        terminal_entries = tuple(
+            entry
+            for entry in entries
+            if entry.control is not None
+            or (entry.operation is not None and entry.operation.status is not RunStatus.RUNNING)
+        )
+        running = tuple(
+            cast(OperationSnapshot, entry.operation)
+            for entry in entries
+            if entry.operation is not None and entry.operation.status is RunStatus.RUNNING
+        )
+        terminal_operations = tuple(
+            cast(OperationSnapshot, entry.operation)
+            for entry in terminal_entries
+            if entry.operation is not None
+        )
         expected_active = None if not running else running[0].operation_id
         if len(running) > 1 or _values_differ(
             (
-                (len(terminal), snapshot.revision),
+                (len(terminal_entries), snapshot.revision),
                 (
-                    tuple(op.base_revision for op in operations),
-                    tuple(range(len(operations))),
+                    tuple(entry.base_revision for entry in entries),
+                    tuple(range(len(entries))),
                 ),
                 (snapshot.turn_seq, snapshot.revision),
-                (snapshot.child_runs, tuple(op.child_run_id for op in terminal)),
+                (
+                    snapshot.child_runs,
+                    tuple(op.child_run_id for op in terminal_operations),
+                ),
                 (snapshot.active_operation, expected_active),
             )
         ):
-            raise GoldenRunCorruptionError("workflow operation journal and head disagree")
+            raise GoldenRunCorruptionError("workflow turn journal and head disagree")
 
-        receipts: dict[UUID, tuple[ArtifactRef, WorkflowOperationReceiptV2]] = {}
+        receipts: dict[UUID, tuple[ArtifactRef, BaseModel]] = {}
         predecessor = snapshot.receipt_head
-        for operation in reversed(terminal):
-            receipt = self._resolve_canonical_model(
-                predecessor,
-                WorkflowOperationReceiptV2,
-            )
-            if receipt.operation_id != operation.operation_id:
-                raise GoldenRunCorruptionError("workflow receipt chain is not operation ordered")
-            receipts[operation.operation_id] = (predecessor, receipt)
-            predecessor = receipt.predecessor_receipt
+        for entry in reversed(terminal_entries):
+            if entry.operation is not None:
+                operation = entry.operation
+                receipt = cast(
+                    WorkflowOperationReceiptV2,
+                    self._resolve_canonical_model(
+                        predecessor,
+                        WorkflowOperationReceiptV2,
+                    ),
+                )
+                if receipt.operation_id != operation.operation_id:
+                    raise GoldenRunCorruptionError("workflow receipt chain is not turn ordered")
+                receipts[entry.entry_id] = (predecessor, receipt)
+                predecessor = receipt.predecessor_receipt
+            else:
+                control = cast(ControlCommitSnapshot, entry.control)
+                if predecessor != control.receipt:
+                    raise GoldenRunCorruptionError(
+                        "workflow control receipt chain is not turn ordered"
+                    )
+                receipt = self._resolve_control_receipt(predecessor)
+                receipts[entry.entry_id] = (predecessor, receipt)
+                predecessor = receipt.predecessor_receipt
         start_receipt = self._resolve_canonical_model(predecessor, WorkflowStartReceipt)
         initial = RunSnapshot(
             schema_version="harness.run_snapshot.v1",
@@ -921,14 +1622,32 @@ class GoldenRunHarness:
             persisted_request_sha256=persisted_request_sha256,
         )
         prior = initial
-        for operation in terminal:
-            receipt_ref, receipt = receipts[operation.operation_id]
-            prior = self._verify_terminal_evidence(
-                prior,
-                operation,
-                receipt_ref=receipt_ref,
-                receipt=receipt,
-            )
+        for entry in terminal_entries:
+            receipt_ref, receipt = receipts[entry.entry_id]
+            if entry.operation is not None:
+                if type(receipt) is not WorkflowOperationReceiptV2:
+                    raise GoldenRunCorruptionError(
+                        "skill turn does not have a workflow operation receipt"
+                    )
+                prior = self._verify_terminal_evidence(
+                    prior,
+                    entry.operation,
+                    receipt_ref=receipt_ref,
+                    receipt=receipt,
+                )
+            else:
+                control = cast(ControlCommitSnapshot, entry.control)
+                if type(receipt) not in {ExternalAgentAdvisoryReceipt, PromptRevision}:
+                    raise GoldenRunCorruptionError("control turn does not have a control receipt")
+                prior = self._verify_control_evidence(
+                    prior,
+                    control,
+                    receipt_ref=receipt_ref,
+                    receipt=cast(
+                        ExternalAgentAdvisoryReceipt | PromptRevision,
+                        receipt,
+                    ),
+                )
         if running:
             self._verify_running_operation(prior, running[0])
             prior = RunSnapshot.model_validate(
@@ -966,6 +1685,132 @@ class GoldenRunHarness:
             or operation.started_at < prior.updated_at
         ):
             raise GoldenRunCorruptionError("running operation differs from its reserved head")
+
+    def _verify_control_evidence(
+        self,
+        prior: RunSnapshot,
+        control: ControlCommitSnapshot,
+        *,
+        receipt_ref: ArtifactRef,
+        receipt: ExternalAgentAdvisoryReceipt | PromptRevision,
+    ) -> RunSnapshot:
+        command = self._resolve_control_command(control.command)
+        common_invalid = _values_differ(
+            (
+                (control.command_id, command.command_id),
+                (control.workflow_run_id, prior.workflow_run_id),
+                (control.principal_id, prior.principal_id),
+                (control.idempotency_key, command.idempotency_key),
+                (control.predecessor_receipt, prior.receipt_head),
+                (control.base_revision, prior.revision),
+                (control.committed_revision, prior.revision + 1),
+                (control.base_turn_seq, prior.turn_seq),
+                (control.committed_turn_seq, prior.turn_seq + 1),
+                (control.base_state_sha256, prior.state_sha256),
+                (control.base_state, prior.state_ref),
+                (control.resulting_state_sha256, prior.state_sha256),
+                (control.resulting_state, prior.state_ref),
+                (control.payload, receipt_ref),
+                (control.receipt, receipt_ref),
+                (control.receipt_head, receipt_ref),
+                (command.workflow_run_id, prior.workflow_run_id),
+                (command.principal_id, prior.principal_id),
+                (command.expected_workflow_revision, prior.revision),
+                (command.expected_state_sha256, prior.state_sha256),
+                (command.expected_receipt_head_sha256, prior.receipt_head.sha256),
+                (receipt.command_id, command.command_id),
+                (receipt.workflow_run_id, prior.workflow_run_id),
+                (receipt.principal_id, prior.principal_id),
+                (receipt.command, control.command),
+                (receipt.predecessor_receipt, prior.receipt_head),
+                (receipt.base_revision, prior.revision),
+                (receipt.committed_revision, prior.revision + 1),
+                (receipt.base_turn_seq, prior.turn_seq),
+                (receipt.committed_turn_seq, prior.turn_seq + 1),
+                (receipt.base_state_sha256, prior.state_sha256),
+                (receipt.base_state, prior.state_ref),
+                (receipt.resulting_state_sha256, prior.state_sha256),
+                (receipt.resulting_state, prior.state_ref),
+                (receipt.committed_at, control.committed_at),
+            )
+        )
+        if common_invalid or control.committed_at < prior.updated_at:
+            raise GoldenRunCorruptionError("workflow control receipt is inconsistently bound")
+
+        reachable_identities = {
+            _artifact_identity(ref) for ref in self._reachable_workflow_artifacts(prior)
+        }
+        if control.control_kind == "advisory":
+            if (
+                type(command) is not AdvisoryRecordCommand
+                or type(receipt) is not ExternalAgentAdvisoryReceipt
+            ):
+                raise GoldenRunCorruptionError("advisory turn has the wrong typed evidence")
+            advisory_invalid = _values_differ(
+                (
+                    (receipt.advisory_kind, command.advisory_kind),
+                    (receipt.disposition, command.disposition),
+                    (receipt.summary, command.summary),
+                    (receipt.recommended_action, command.recommended_action),
+                    (receipt.source_prompt, command.source_prompt),
+                    (receipt.source_prompt_revision, command.source_prompt_revision),
+                    (receipt.failure_receipts, command.failure_receipts),
+                    (receipt.observation_citations, command.observation_citations),
+                    (receipt.diagnostic_refs, command.diagnostic_refs),
+                    (receipt.external_agent_executed, command.external_agent_executed),
+                )
+            )
+            if advisory_invalid:
+                raise GoldenRunCorruptionError("advisory receipt differs from its exact command")
+            self._verify_advisory_lineage(
+                command,
+                current=prior,
+                at=control.committed_at,
+                reachable_identities=reachable_identities,
+            )
+        else:
+            if type(command) is not PromptRevisionCommand or type(receipt) is not PromptRevision:
+                raise GoldenRunCorruptionError("prompt revision turn has the wrong typed evidence")
+            advisory, predecessor_prompt, revision_number, _ = self._verify_prompt_lineage(
+                command,
+                current=prior,
+                at=control.committed_at,
+                reachable_identities=reachable_identities,
+            )
+            revision_invalid = _values_differ(
+                (
+                    (receipt.prompt_revision_number, revision_number),
+                    (receipt.source_prompt, command.source_prompt),
+                    (receipt.predecessor_prompt_revision, predecessor_prompt),
+                    (receipt.advisory_receipt, command.advisory_receipt),
+                    (receipt.failure_receipts, command.failure_receipts),
+                    (receipt.observation_citations, advisory.observation_citations),
+                    (receipt.predecessor_package, command.predecessor_package),
+                    (receipt.patch, command.patch),
+                    (receipt.fallback, command.fallback),
+                    (receipt.next_compile_skill_ref, command.next_compile_skill_ref),
+                    (receipt.external_agent_executed, command.external_agent_executed),
+                )
+            )
+            if revision_invalid:
+                raise GoldenRunCorruptionError(
+                    "prompt revision differs from its exact command and advisory lineage"
+                )
+            revised_payload = self._artifact_store.resolve(receipt.revised_prompt).path.read_bytes()
+            if revised_payload != command.patch.replacement_text.encode("utf-8"):
+                raise GoldenRunCorruptionError(
+                    "revised prompt bytes differ from the full-replacement patch"
+                )
+        return RunSnapshot.model_validate(
+            prior.model_copy(
+                update={
+                    "revision": control.committed_revision,
+                    "turn_seq": control.committed_turn_seq,
+                    "receipt_head": receipt_ref,
+                    "updated_at": control.committed_at,
+                }
+            ).model_dump(mode="python")
+        )
 
     def _verify_terminal_evidence(
         self,
@@ -1402,11 +2247,42 @@ class GoldenRunHarness:
                 schema_version=schema_version,
             )
 
+    def _publish_bytes(
+        self,
+        payload: bytes,
+        *,
+        name: str,
+        media_type: str,
+        schema_version: str | None,
+    ) -> ArtifactRef:
+        with tempfile.TemporaryDirectory(prefix="harness-golden-control-") as temporary_root:
+            source = Path(temporary_root) / name
+            source.write_bytes(payload)
+            return self._artifact_store.put_file(
+                source,
+                name=name,
+                media_type=media_type,
+                schema_version=schema_version,
+            )
+
 
 def _canonical_model_bytes(model: BaseModel) -> bytes:
     return (
         json.dumps(
             model.model_dump(mode="json"),
+            ensure_ascii=False,
+            allow_nan=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    ).encode("utf-8")
+
+
+def _canonical_json_bytes(value: object) -> bytes:
+    return (
+        json.dumps(
+            value,
             ensure_ascii=False,
             allow_nan=False,
             sort_keys=True,
