@@ -6,7 +6,8 @@
   重验 CAS、同库 SQLite authorities、Registry、qualification policy、唯一 replay descriptor 与
   handler/resolver/dependency/settings identity；`invoke_typed` 以 caller UUID4 复用 controlled lifecycle。
   合法非空 state root 可跨新 factory 实例和独立进程恢复 terminal 而不重复 handler，失败组装也不再
-  清空既有 authority。该实现使上一份 replay qualification 按 source identity 门变为 stale，提交本身
+  清空既有 authority；同 state root 的并发 factory 由 sibling lock 线性化，损坏 SQLite 统一成为
+  application 配置错误。该实现使上一份 replay qualification 按 source identity 门变为 stale，提交本身
   不刷新资格 hash，也不声称真实仿真或 Genesis 运行。
 - 增加 P2 compile-only `GoldenRunHarness.submit`：同一 workflow 内真实调用 checked qualified
   production compile，把 command、frozen execution/policy identity、controlled child、ToolResult、

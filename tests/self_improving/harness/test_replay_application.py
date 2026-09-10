@@ -630,6 +630,60 @@ def test_factory_rejects_non_path_state_root_and_rolls_back_only_new_entries(
     assert tuple(root.iterdir()) == (preserved,)
 
 
+def test_state_root_assembly_lock_rejects_invalid_identity(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with pytest.raises(ReplayApplicationConfigurationError, match="named directory leaf"):
+        with module._state_root_assembly_lock(Path("/")):
+            pass
+
+    with monkeypatch.context() as changed_parent:
+        changed_parent.setattr(module, "_directory", lambda *_args, **_kwargs: tmp_path / "other")
+        with pytest.raises(ReplayApplicationConfigurationError, match="parent is not canonical"):
+            with module._state_root_assembly_lock(tmp_path / "state"):
+                pass
+
+    lock_path = tmp_path / ".state.replay-application.lock"
+    lock_path.mkdir()
+    with pytest.raises(ReplayApplicationConfigurationError, match="lock is unavailable"):
+        with module._state_root_assembly_lock(tmp_path / "state"):
+            pass
+    lock_path.rmdir()
+
+    lock_path.touch()
+    second_link = tmp_path / "second-lock-link"
+    module.os.link(lock_path, second_link)
+    with pytest.raises(ReplayApplicationConfigurationError, match="not one regular file"):
+        with module._state_root_assembly_lock(tmp_path / "state"):
+            pass
+    second_link.unlink()
+
+    actual_stat = module.os.stat
+
+    def changed_stat(path, *args, **kwargs):
+        result = actual_stat(path, *args, **kwargs)
+        if Path(path) == lock_path:
+            return SimpleNamespace(
+                st_mode=result.st_mode,
+                st_nlink=result.st_nlink,
+                st_dev=result.st_dev,
+                st_ino=result.st_ino + 1,
+            )
+        return result
+
+    with monkeypatch.context() as changed_lock:
+        changed_lock.setattr(module.os, "stat", changed_stat)
+        with pytest.raises(ReplayApplicationConfigurationError, match="identity changed"):
+            with module._state_root_assembly_lock(tmp_path / "state"):
+                pass
+
+    with monkeypatch.context() as without_nofollow:
+        without_nofollow.delattr(module.os, "O_NOFOLLOW")
+        with module._state_root_assembly_lock(tmp_path / "state"):
+            pass
+
+
 def test_controlled_terminal_recovers_in_a_fresh_process(tmp_path: Path) -> None:
     _source, value, settings, stack, executors = _controlled_factory_fixture(tmp_path)
     run_id = uuid4()
@@ -670,7 +724,9 @@ def test_concurrent_factory_failure_cannot_delete_successful_authority(tmp_path:
         (settings.state_root / name).mkdir()
     original_validate = module._validate_reopenable_state_root
     both_snapshotted = threading.Barrier(2)
-    winner_done = threading.Event()
+    successful_factory_done = threading.Event()
+    publication_lock = threading.Lock()
+    successful_name: list[str] = []
     applications: dict[str, ReplayApplication] = {}
     errors: dict[str, Exception] = {}
 
@@ -682,9 +738,11 @@ def test_concurrent_factory_failure_cannot_delete_successful_authority(tmp_path:
         original_validate(root)
 
     def publish(*_args, **_kwargs) -> None:
-        if threading.current_thread().name == "winner":
-            return
-        assert winner_done.wait(timeout=5)
+        with publication_lock:
+            if not successful_name:
+                successful_name.append(threading.current_thread().name)
+                return
+        assert successful_factory_done.wait(timeout=5)
         raise QualificationBundleError("deliberate_loser", "second factory publication failed")
 
     def assemble(name: str) -> None:
@@ -693,24 +751,25 @@ def test_concurrent_factory_failure_cannot_delete_successful_authority(tmp_path:
         except Exception as error:
             errors[name] = error
         finally:
-            if name == "winner":
-                winner_done.set()
+            if successful_name and name == successful_name[0]:
+                successful_factory_done.set()
 
     with stack:
         with patch.object(module, "_validate_reopenable_state_root", synchronized_validate):
             with patch.object(module, "publish_replay_qualification_bundle", publish):
-                winner = threading.Thread(target=assemble, args=("winner",), name="winner")
-                loser = threading.Thread(target=assemble, args=("loser",), name="loser")
-                winner.start()
-                loser.start()
-                winner.join(timeout=10)
-                loser.join(timeout=10)
+                first = threading.Thread(target=assemble, args=("first",), name="first")
+                second = threading.Thread(target=assemble, args=("second",), name="second")
+                first.start()
+                second.start()
+                first.join(timeout=10)
+                second.join(timeout=10)
 
-    assert not winner.is_alive() and not loser.is_alive()
-    assert "winner" in applications
-    assert type(errors.get("loser")) is QualificationBundleError
+    assert not first.is_alive() and not second.is_alive()
+    assert tuple(applications) == (successful_name[0],)
+    loser_name = next(name for name in ("first", "second") if name != successful_name[0])
+    assert type(errors.get(loser_name)) is QualificationBundleError
     assert (settings.state_root / "harness.sqlite3").is_file()
-    assert applications["winner"].skills[0].skill_id == "text2env.replay"
+    assert applications[successful_name[0]].skills[0].skill_id == "text2env.replay"
 
 
 def test_corrupt_reopened_sqlite_is_one_application_configuration_error(tmp_path: Path) -> None:

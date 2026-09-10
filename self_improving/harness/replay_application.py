@@ -8,20 +8,25 @@ closure, and only then installs that same handler object.
 
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
 import math
+import os
 import shutil
+import sqlite3
+import stat
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import ClassVar, Literal
+from typing import ClassVar, Iterator, Literal
 from uuid import UUID, uuid4
 
 from pydantic import UUID4, TypeAdapter, ValidationError
 
 from .artifacts import ArtifactResolutionError, LocalArtifactStore
-from .event_journal import EventPage, SQLiteEventJournal
+from .event_journal import EventJournalCorruptionError, EventPage, SQLiteEventJournal
 from .handlers.text2env_replay import (
     Text2EnvReplayHandler,
     Text2EnvReplayWiring,
@@ -50,7 +55,7 @@ from .replay_qualification import (
     publish_replay_qualification_bundle,
     verify_replay_qualification_bundle,
 )
-from .run_store import SQLiteRunStore
+from .run_store import RunStoreCorruptionError, SQLiteRunStore
 from .runtime_capability import (
     RuntimeCapabilityError,
     canonical_capability_bytes,
@@ -432,10 +437,26 @@ class ReplayApplication:
 
 
 def create_replay_application(settings: ReplayApplicationSettings) -> ReplayApplication:
-    """Verify evidence and live wiring in one call, then register the exact handler."""
+    """Serialize assembly, then verify evidence and register the exact handler."""
 
     if not isinstance(settings, ReplayApplicationSettings):
         raise TypeError("settings must be ReplayApplicationSettings")
+    try:
+        with _state_root_assembly_lock(settings.state_root):
+            return _create_replay_application_locked(settings)
+    except ReplayApplicationConfigurationError:
+        raise
+    except (EventJournalCorruptionError, RunStoreCorruptionError, sqlite3.Error) as error:
+        raise ReplayApplicationConfigurationError(
+            "replay SQLite authority is invalid or corrupt"
+        ) from error
+
+
+def _create_replay_application_locked(
+    settings: ReplayApplicationSettings,
+) -> ReplayApplication:
+    """Assemble while holding the unique lock for this canonical state root."""
+
     qualification_root = _directory(settings.qualification_bundle_root, label="qualification_root")
     evidence_root = _directory(settings.evidence_artifact_root, label="evidence_artifact_root")
     allowed_roots = _directories(settings.allowed_asset_roots, label="allowed_asset_roots")
@@ -455,8 +476,6 @@ def create_replay_application(settings: ReplayApplicationSettings) -> ReplayAppl
     )
     runtime_timeout_seconds = _positive_timeout(settings.runtime_timeout_seconds)
     capability_timeout_seconds = _positive_timeout(settings.capability_timeout_seconds)
-    if not isinstance(settings.state_root, Path):
-        raise ReplayApplicationConfigurationError("state_root must be a Path")
     state_existed = settings.state_root.exists()
     state_root = _directory(settings.state_root, label="state_root", create=True)
     preexisting_names = frozenset(child.name for child in state_root.iterdir())
@@ -826,6 +845,53 @@ def _settings_identity(settings: ReplayApplicationSettings) -> tuple[object, ...
         _positive_timeout(settings.runtime_timeout_seconds),
         _positive_timeout(settings.capability_timeout_seconds),
     )
+
+
+@contextmanager
+def _state_root_assembly_lock(value: Path) -> Iterator[None]:
+    """Linearize all factory ownership decisions for one canonical state leaf."""
+
+    if not isinstance(value, Path):
+        raise ReplayApplicationConfigurationError("state_root must be a Path")
+    candidate = value.expanduser().absolute()
+    if not candidate.name:
+        raise ReplayApplicationConfigurationError("state_root must be a named directory leaf")
+    candidate.parent.mkdir(parents=True, exist_ok=True)
+    parent = _directory(candidate.parent, label="state_root parent")
+    if candidate.parent != parent:
+        raise ReplayApplicationConfigurationError("state_root parent is not canonical")
+    lock_path = parent / f".{candidate.name}.replay-application.lock"
+    flags = os.O_CREAT | os.O_RDWR | os.O_CLOEXEC
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    try:
+        file_descriptor = os.open(lock_path, flags, 0o600)
+    except OSError as error:
+        raise ReplayApplicationConfigurationError(
+            "state_root assembly lock is unavailable"
+        ) from error
+    try:
+        opened = os.fstat(file_descriptor)
+        if not stat.S_ISREG(opened.st_mode) or opened.st_nlink != 1:
+            raise ReplayApplicationConfigurationError(
+                "state_root assembly lock is not one regular file"
+            )
+        fcntl.flock(file_descriptor, fcntl.LOCK_EX)
+        current = os.stat(lock_path, follow_symlinks=False)
+        if (
+            not stat.S_ISREG(current.st_mode)
+            or current.st_nlink != 1
+            or (current.st_dev, current.st_ino) != (opened.st_dev, opened.st_ino)
+        ):
+            raise ReplayApplicationConfigurationError(
+                "state_root assembly lock identity changed while acquiring it"
+            )
+        yield
+    finally:
+        try:
+            fcntl.flock(file_descriptor, fcntl.LOCK_UN)
+        finally:
+            os.close(file_descriptor)
 
 
 def _validate_reopenable_state_root(root: Path) -> None:

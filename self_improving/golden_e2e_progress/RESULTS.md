@@ -15,7 +15,10 @@
   都映射为稳定 application 错误。
 - factory 现在只接受空 root，或只含 exact SQLite authority 与三个 replay-owned work directory 的合法
   非空 root；未知成员、符号链接与成员类型错误均拒绝。失败清理只删除本次新建成员，绝不清空既有
-  authority。测试在同实例、新 factory 实例和独立 Python 进程中恢复同一 terminal，受控外部
+  authority。同 state root 的 factory 组装由 canonical sibling lock 线性化；确定性并发用例证明第二个
+  factory 在 publication 失败时不会删除首个成功 factory 的数据库。损坏 SQLite 的底层异常统一封装为
+  `ReplayApplicationConfigurationError` 并保留原 cause。测试在同实例、新 factory 实例和独立 Python
+  进程中恢复同一 terminal，受控外部
   runtime/media fixture 总计只执行一次；这不冒充真实 RoboTwin/SAPIEN、Genesis 或真机运行。
 - ReplayApplication 与资格组装专项为 `100 passed`；该模块 387 statements / 120 branches 均为 100%。
   compile application、Golden compile 与 compile qualification 回归为 `236 passed`。checked compile

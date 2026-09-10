@@ -9,7 +9,9 @@
   Registry、资格 policy、descriptor、handler/resolver、依赖与 operator settings；`invoke_typed` 接受调用方
   UUID4 并复用 Registry controlled lifecycle。非空但结构合法的 state root 可由新 factory 实例和独立
   Python 进程恢复 exact terminal，受控 runtime fixture 没有重复执行。实现改动使旧 replay qualification
-  按设计只因 `replay_application.py` bytes/hash 漂移而拒绝；资格文档未在本提交刷新。
+  按设计只因 `replay_application.py` bytes/hash 漂移而拒绝；同 state root 的 factory assembly 已用 sibling
+  file lock 线性化，失败者不能删除成功者 authority，损坏 SQLite 统一映射为 application 配置错误。
+  资格文档未在本提交刷新。
 - P3 exact replay operation 的首个公共 tracer 仍保持 RED，待 P3a 真实重签后再做 P3b：目标继续是
   `start rev0 -> qualified compile rev1 -> qualified replay rev2`，两个 operation 由同一 actor-neutral
   `GoldenRunHarness.submit` 与 sealed catalog 执行；replay 必须只接受 revision-1 可信状态中的 exact
