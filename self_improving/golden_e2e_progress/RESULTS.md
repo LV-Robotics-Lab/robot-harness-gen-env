@@ -344,3 +344,28 @@
 - 边界：本切片没有定义 `RunCommandRequest`、`OperationSnapshot`、`submit`、handler dispatch、MCP、
   Genesis 或 promotion，也没有把 caller 提供的 RegistrySnapshot 提升为生产 trust root；这些仍属于
   P1 后续与 P2/P4。纯持久化切片不产生真实仿真或真机能力主张。
+
+## 2026-09-10 P2 controlled child-run identity 纵切
+
+- 首轮 RED 固定 caller-reserved UUID4 的身份语义：相同 run id 但不同 canonical input、依赖树、
+  descriptor、implementation 或 qualification identity 必须拒绝；只完成 preflight 的 intent 与已验证
+  Invocation 使用不同 phase，且输入只 strict normalize 一次，避免可变 Mapping 在摘要与执行之间改变。
+- Registry/Application 新增受控 child-run seam。validated intent、Invocation、terminal 和事件链由同一
+  SQLite authority 绑定；同 intent 并发只允许一个 handler 执行，精确 terminal 可恢复，只有 invocation
+  而没有 terminal 时返回稳定 pending，不把未知外部副作用冒充成可重试成功。普通 run UUID 再用于
+  controlled 调用时稳定报 identity 冲突；只有在完整 ordinary lifecycle 已验证后才做该分类，损坏的
+  metadata、payload anchor 或事件链仍报 persistence error。
+- SQLiteRunStore 对 controlled intent、Invocation、terminal 采用一次只读事务的 lifecycle snapshot，
+  并精确校验 current/known-legacy table、index、constraint、trigger、foreign-key、conflict policy、
+  metadata 与 payload anchor。SQLiteEventJournal 同样在 publish 前后校验布局、插入后同事务重读 exact
+  envelope/metadata，并确认前序链未改变；fresh-path 的 RunStore/EventJournal/双 Application 并发构造
+  已有有界用例。
+- 固定复审点 `cb3235f` 的 focused 四文件为 `192 passed`；Harness 明确排除 compile/replay 两份待统一
+  重签的 qualification identity case 后为 `2294 passed, 19 skipped, 2 deselected`，五个受影响核心模块
+  语句/分支为 100%。补齐普通生命周期占用与损坏不重分类用例后的本提交为 focused `197 passed`；
+  相同 Harness 门为 `2299 passed, 19 skipped, 2 deselected`，五模块合计 1,592 statements、484 branches，
+  均为 100%；Ruff、format 与 diff 完整性门均通过。
+- 两份 qualification 尚未在本纵切重签；它们必须等待相关实现树稳定后用既有真实固定案例、settings
+  与 CAS 统一生成，不能仅修改 expected hash。本结果也没有实现 `RunCommandRequest`、
+  `OperationSnapshot`、`GoldenRunHarness.submit`、workflow operation journal、replay/validate dispatch、
+  MCP transport、Genesis runtime 或 promotion，因此不声称 S1 submit 闭环或 golden E2E 已完成。

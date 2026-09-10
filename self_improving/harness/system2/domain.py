@@ -19,21 +19,21 @@ from ..artifacts import ArtifactResolutionError, LocalArtifactStore
 from ..schemas import ArtifactRef, Blocker, RunStatus
 from ..schemas.base import HarnessModel, JsonObject, Sha256
 from ..trusted_state import (
-    WORLD_FACT_EVIDENCE_SCHEMA,
-    WORLD_FACT_SCHEMA,
-    WORLD_STATE_SCHEMA,
-    FactKey,
+    WORLD_FACT_EVIDENCE_SCHEMA,  # noqa: F401 - compatibility re-export
+    WORLD_FACT_SCHEMA,  # noqa: F401 - compatibility re-export
+    WORLD_STATE_SCHEMA,  # noqa: F401 - compatibility re-export
+    FactKey,  # noqa: F401 - compatibility re-export
     StateMutation,
     TrustedWorldState,
     WorldFact,
-    WorldFactEvidence,
-    _build_world_state_version,
+    WorldFactEvidence,  # noqa: F401 - compatibility re-export
+    _build_world_state_version,  # noqa: F401 - compatibility re-export
     _canonical_json_bytes,
     _require_cas_artifact,
     _require_utc,
     advance_trusted_world_state,
-    build_world_state,
-    fact_sha256,
+    build_world_state,  # noqa: F401 - compatibility re-export
+    fact_sha256,  # noqa: F401 - compatibility re-export
 )
 
 STATE_DELTA_SCHEMA = "harness.state_delta.v1"

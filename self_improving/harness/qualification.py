@@ -560,14 +560,19 @@ def _publish_verified_snapshot(
         schema_version=schema_version,
     )
     incoming = artifact_store.root / ".incoming"
-    temporary_path: Path | None = None
     try:
         incoming.mkdir(parents=True, exist_ok=True)
         file_descriptor, temporary_name = tempfile.mkstemp(
             dir=incoming,
             prefix=".qualification.",
         )
-        temporary_path = Path(temporary_name)
+    except OSError as error:
+        raise QualificationBundleError(
+            "artifact_publish_failed",
+            f"qualification artifact publish failed: {error}",
+        ) from error
+    temporary_path = Path(temporary_name)
+    try:
         with os.fdopen(file_descriptor, "wb") as stream:
             stream.write(raw_bytes)
             stream.flush()
@@ -597,13 +602,8 @@ def _publish_verified_snapshot(
             f"qualification artifact publish failed: {error}",
         ) from error
     finally:
-        if temporary_path is not None:
-            try:
-                temporary_path.unlink(missing_ok=True)
-            except OSError:
-                pass
         try:
-            incoming.rmdir()
+            temporary_path.unlink(missing_ok=True)
         except OSError:
             pass
     return artifact

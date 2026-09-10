@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
@@ -10,6 +11,7 @@ from uuid import UUID
 
 import pytest
 
+import self_improving.harness.event_journal as event_journal_module
 from self_improving.harness import Event, RunEvent, RunStatus
 from self_improving.harness.event_journal import (
     EventJournalConflictError,
@@ -20,6 +22,23 @@ from self_improving.harness.event_journal import (
 RUN_ID = UUID("12345678-1234-4234-9234-123456789abc")
 OTHER_RUN_ID = UUID("22345678-1234-4234-9234-123456789abc")
 START = datetime(2026, 8, 31, 5, 0, tzinfo=timezone.utc)
+EXACT_TABLE_SQL = """
+CREATE TABLE run_events (
+    event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id TEXT NOT NULL,
+    seq INTEGER NOT NULL,
+    skill_id TEXT NOT NULL,
+    skill_version TEXT NOT NULL,
+    timestamp TEXT NOT NULL,
+    stage TEXT NOT NULL,
+    attempt INTEGER NOT NULL,
+    from_status TEXT,
+    to_status TEXT NOT NULL,
+    envelope_json TEXT NOT NULL,
+    UNIQUE(run_id, seq) ON CONFLICT ABORT
+)
+"""
+EXACT_INDEX_SQL = "CREATE INDEX run_events_by_run ON run_events(run_id, event_id)"
 
 
 def _envelope(
@@ -205,8 +224,6 @@ def test_sqlite_event_journal_validates_queries_and_detects_corruption(
     with pytest.raises(ValueError, match="timeout_s"):
         journal.wait(after_event_id=0, timeout_s=-0.1)
 
-    import sqlite3
-
     with closing(sqlite3.connect(path)) as connection, connection:
         connection.execute(
             "UPDATE run_events SET envelope_json = ? WHERE event_id = 1",
@@ -214,3 +231,167 @@ def test_sqlite_event_journal_validates_queries_and_detects_corruption(
         )
     with pytest.raises(EventJournalCorruptionError, match="event_id 1"):
         journal.read()
+
+
+@pytest.mark.parametrize(
+    ("attack", "table_sql", "index_sql", "extra_sql"),
+    [
+        (
+            "column",
+            EXACT_TABLE_SQL.replace("stage TEXT NOT NULL", "stage BLOB NOT NULL"),
+            EXACT_INDEX_SQL,
+            None,
+        ),
+        (
+            "index",
+            EXACT_TABLE_SQL,
+            "CREATE INDEX run_events_by_run ON run_events(run_id DESC, event_id)",
+            None,
+        ),
+        ("flags", EXACT_TABLE_SQL + " STRICT", EXACT_INDEX_SQL, None),
+        (
+            "trigger",
+            EXACT_TABLE_SQL,
+            EXACT_INDEX_SQL,
+            "CREATE TRIGGER reject_events BEFORE INSERT ON run_events BEGIN SELECT 1; END",
+        ),
+        (
+            "foreign-key",
+            EXACT_TABLE_SQL.replace(
+                "skill_id TEXT NOT NULL",
+                "skill_id TEXT NOT NULL REFERENCES admitted_skills(skill_id)",
+            ),
+            EXACT_INDEX_SQL,
+            None,
+        ),
+        (
+            "conflict-policy",
+            EXACT_TABLE_SQL.replace("ON CONFLICT ABORT", "ON CONFLICT REPLACE"),
+            EXACT_INDEX_SQL,
+            None,
+        ),
+        (
+            "constraint",
+            EXACT_TABLE_SQL.replace(
+                "UNIQUE(run_id, seq) ON CONFLICT ABORT",
+                "UNIQUE(run_id, seq) ON CONFLICT ABORT, CHECK(stage = 'never.valid')",
+            ),
+            EXACT_INDEX_SQL,
+            None,
+        ),
+    ],
+)
+def test_sqlite_event_journal_rejects_nonexact_authority_layouts(
+    tmp_path: Path,
+    attack: str,
+    table_sql: str,
+    index_sql: str,
+    extra_sql: str | None,
+) -> None:
+    path = tmp_path / f"events-{attack}.sqlite3"
+    with closing(sqlite3.connect(path)) as connection, connection:
+        connection.execute(table_sql)
+        connection.execute(index_sql)
+        if extra_sql is not None:
+            connection.execute(extra_sql)
+
+    with pytest.raises(EventJournalCorruptionError, match="unsupported authority layout"):
+        SQLiteEventJournal(path)
+
+
+@pytest.mark.parametrize(
+    "trigger_body",
+    [
+        "DELETE FROM run_events WHERE event_id = NEW.event_id;",
+        "UPDATE run_events SET stage = 'rewritten' WHERE event_id = NEW.event_id;",
+    ],
+    ids=("delete", "rewrite"),
+)
+def test_event_publish_rejects_late_layout_trigger_before_writing(
+    tmp_path: Path,
+    trigger_body: str,
+) -> None:
+    path = tmp_path / "events.sqlite3"
+    journal = SQLiteEventJournal(path)
+    with closing(sqlite3.connect(path)) as connection, connection:
+        connection.execute(
+            f"CREATE TRIGGER late_event_change AFTER INSERT ON run_events BEGIN {trigger_body} END"
+        )
+
+    with pytest.raises(EventJournalCorruptionError, match="unsupported authority layout"):
+        journal.publish(_envelope(1))
+
+    with closing(sqlite3.connect(path)) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM run_events").fetchone()[0] == 0
+
+
+def test_event_publish_rejects_metadata_rewrite_of_an_exact_envelope(tmp_path: Path) -> None:
+    path = tmp_path / "events.sqlite3"
+    journal = SQLiteEventJournal(path)
+    first = _envelope(1)
+    journal.publish(first)
+    with closing(sqlite3.connect(path)) as connection, connection:
+        connection.execute("UPDATE run_events SET stage = 'rewritten' WHERE event_id = 1")
+
+    with pytest.raises(EventJournalCorruptionError, match="inconsistent metadata"):
+        journal.publish(first)
+
+
+def test_event_read_rejects_noncanonical_envelope_bytes(tmp_path: Path) -> None:
+    path = tmp_path / "events.sqlite3"
+    journal = SQLiteEventJournal(path)
+    journal.publish(_envelope(1))
+    with closing(sqlite3.connect(path)) as connection, connection:
+        original = connection.execute(
+            "SELECT envelope_json FROM run_events WHERE event_id = 1"
+        ).fetchone()[0]
+        connection.execute(
+            "UPDATE run_events SET envelope_json = ? WHERE event_id = 1",
+            (original.replace('"event":', '"event" :', 1),),
+        )
+
+    with pytest.raises(EventJournalCorruptionError, match="not canonical JSON"):
+        journal.read()
+
+
+@pytest.mark.parametrize("attack", ["delete-new", "rekey-predecessor"])
+def test_event_publish_rejects_post_insert_storage_change(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    attack: str,
+) -> None:
+    path = tmp_path / "events.sqlite3"
+    journal = SQLiteEventJournal(path)
+    if attack == "rekey-predecessor":
+        journal.publish(_envelope(1))
+    original_connect = sqlite3.connect
+
+    class MutatingConnection(sqlite3.Connection):
+        def execute(self, sql: str, parameters=(), /):
+            cursor = super().execute(sql, parameters)
+            if "INSERT OR ABORT INTO run_events" in sql:
+                if attack == "delete-new":
+                    super().execute("DELETE FROM run_events WHERE event_id = last_insert_rowid()")
+                else:
+                    super().execute(
+                        "UPDATE run_events SET event_id = event_id + 100 "
+                        "WHERE run_id = ? AND seq = 1",
+                        (str(RUN_ID),),
+                    )
+            return cursor
+
+    def mutating_connect(*args, **kwargs):
+        return original_connect(*args, **kwargs, factory=MutatingConnection)
+
+    monkeypatch.setattr(event_journal_module.sqlite3, "connect", mutating_connect)
+    event = (
+        _envelope(1)
+        if attack == "delete-new"
+        else _envelope(
+            2,
+            from_status=RunStatus.RUNNING,
+        )
+    )
+
+    with pytest.raises(EventJournalCorruptionError, match="event (changed|chain changed)"):
+        journal.publish(event)

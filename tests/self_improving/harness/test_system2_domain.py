@@ -279,6 +279,49 @@ def test_public_trusted_state_kernel_applies_one_validated_cas_transition() -> N
     assert advanced.facts == (replacement,)
 
 
+def test_public_trusted_state_kernel_revalidates_caller_owned_models() -> None:
+    original = _fact("scene.object", {"asset": "can"})
+    state = build_world_state((original,), as_of=_T0)
+    forged_state = state.model_copy(update={"state_sha256": "0" * 64})
+    mutation = StateMutation(
+        operation="upsert",
+        key="scene.object",
+        expected_fact_sha256=fact_sha256(original),
+        fact=original,
+    )
+    forged_mutation = mutation.model_copy(update={"key": "scene.other"})
+
+    with pytest.raises(ValueError, match="current world state.*integrity"):
+        advance_trusted_world_state(forged_state, effective_at=_T0, mutations=())
+    with pytest.raises(ValueError, match="state mutations.*integrity"):
+        advance_trusted_world_state(state, effective_at=_T0, mutations=(forged_mutation,))
+
+
+def test_public_trusted_state_kernel_requires_sorted_unique_mutations() -> None:
+    left = _fact("scene.left", 1, digest="1" * 64)
+    right = _fact("scene.right", 2, digest="2" * 64)
+    state = build_world_state((left, right), as_of=_T0)
+    mutations = (
+        StateMutation(
+            operation="retract",
+            key="scene.left",
+            expected_fact_sha256=fact_sha256(left),
+            fact=None,
+        ),
+        StateMutation(
+            operation="retract",
+            key="scene.right",
+            expected_fact_sha256=fact_sha256(right),
+            fact=None,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="sorted and unique"):
+        advance_trusted_world_state(state, effective_at=_T0, mutations=tuple(reversed(mutations)))
+    with pytest.raises(ValueError, match="sorted and unique"):
+        advance_trusted_world_state(state, effective_at=_T0, mutations=(mutations[0],) * 2)
+
+
 @pytest.mark.parametrize(
     "facts,as_of,message",
     [

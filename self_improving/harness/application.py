@@ -17,6 +17,8 @@ from pathlib import Path
 from typing import ClassVar, Literal
 from uuid import UUID, uuid4
 
+from pydantic import UUID4, TypeAdapter, ValidationError
+
 from .artifacts import ArtifactResolutionError, LocalArtifactStore
 from .event_journal import EventPage, SQLiteEventJournal
 from .handlers.text2env_compile import (
@@ -27,7 +29,11 @@ from .handlers.text2env_compile_dependencies import (
     Text2EnvCompileDependencyResolver,
 )
 from .qualification import load_qualification_bundle
-from .registry import SkillRegistry
+from .registry import (
+    ControlledRunIdentityError,
+    ControlledRunPendingError,
+    SkillRegistry,
+)
 from .run_store import SQLiteRunStore
 from .schemas import (
     ArtifactRef,
@@ -53,6 +59,7 @@ DEFAULT_PRODUCTION_ASSET_LIBRARY_ROOT = (
 _COMPILE_SKILL_ID = "text2env.compile"
 _COMPILE_VERSION = "1.0.0"
 _ASSET_CATALOG_SCHEMA = "robotwin.asset_catalog.v1"
+_UUID4_ADAPTER = TypeAdapter(UUID4)
 
 
 @dataclass(frozen=True)
@@ -76,6 +83,14 @@ class ExternalCatalogError(ValueError):
 
 class CompileApplicationInputError(ValueError):
     """Typed compile input is invalid or not wholly available in application CAS."""
+
+
+class CompileApplicationRunIdentityError(RuntimeError):
+    """A controlled child identity is already bound to another invocation."""
+
+
+class CompileApplicationRunPendingError(RuntimeError):
+    """A controlled child started but has no recoverable terminal state yet."""
 
 
 class CompileApplication:
@@ -268,16 +283,28 @@ class CompileApplication:
             )
         )
 
-    def invoke_typed(self, parameters: Text2EnvCompileInput) -> RunState:
+    def invoke_typed(
+        self,
+        parameters: Text2EnvCompileInput,
+        *,
+        run_id: UUID | None = None,
+    ) -> RunState:
         """Invoke compile from an exact typed input whose catalog is already in this CAS.
 
-        This is the application boundary used by a System 2 dispatcher.  It does
-        not accept mutable ``file://`` locators or content identities from a
-        different store, even though the generic artifact resolver can support
-        those locators at lower-trust integration boundaries.
+        This is the application boundary used by GoldenRun and an external
+        Codex caller.  It does not accept mutable ``file://`` locators or
+        content identities from a different store, even though the generic
+        artifact resolver can support those locators at lower-trust boundaries.
         """
 
         self._assert_production_assembly()
+        if run_id is not None:
+            try:
+                run_id = _UUID4_ADAPTER.validate_python(run_id, strict=True)
+            except ValidationError as error:
+                raise CompileApplicationRunIdentityError(
+                    "controlled run_id must be an exact UUID4"
+                ) from error
         if type(parameters) is not Text2EnvCompileInput:
             raise CompileApplicationInputError(
                 "typed compile input is invalid: expected Text2EnvCompileInput"
@@ -297,11 +324,24 @@ class CompileApplication:
             raise CompileApplicationInputError(
                 "typed compile input asset catalog is unavailable or corrupt in application CAS"
             ) from error
-        return self._registry.invoke(
-            _COMPILE_SKILL_ID,
-            _COMPILE_VERSION,
-            trusted.model_dump(mode="json"),
-        )
+        effective_parameters = trusted.model_dump(mode="json")
+        if run_id is None:
+            return self._registry.invoke(
+                _COMPILE_SKILL_ID,
+                _COMPILE_VERSION,
+                effective_parameters,
+            )
+        try:
+            return self._registry.invoke_with_run_id(
+                _COMPILE_SKILL_ID,
+                _COMPILE_VERSION,
+                effective_parameters,
+                run_id=run_id,
+            )
+        except ControlledRunIdentityError as error:
+            raise CompileApplicationRunIdentityError(str(error)) from error
+        except ControlledRunPendingError as error:
+            raise CompileApplicationRunPendingError(str(error)) from error
 
     def resolve_artifact(self, artifact: ArtifactRef) -> Path:
         """Resolve and reverify a compile artifact from application CAS."""

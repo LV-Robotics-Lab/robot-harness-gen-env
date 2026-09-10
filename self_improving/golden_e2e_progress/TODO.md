@@ -40,8 +40,10 @@
   `RegistrySnapshot` 目前不能单独作为生产 trust root。
 - 三份 reader-facing repo-docs 仍把 Harness schema 数写成 17；当前主分支实际为 32。文件已有用户修改，
   本切片不覆盖或暂存，P14 必须在可安全协调时同步。
-- clean root suite 的旧 replay qualification source identity 仍有 1 个失败；原始真实 qualification
-  settings/CAS 尚在，但旧 delegated cgroup 已不存在，且后续 Harness 实现还会继续改变源码身份。
+- compile/replay 两份 checked-in qualification 都需要在 P0/P2 实现树稳定后统一真实重签；本纵切
+  修改了其受信源码闭包，测试只把这两个已登记的 stale identity case 明确 deselect，不能把其余
+  2,299 个 Harness 通过项写成资格已恢复。原始 qualification settings/CAS 尚在，但旧 delegated
+  cgroup 已不存在。
 - 2026-09-10 的完整相机 replay 第一次因本机 GPU 被无关训练进程占满，在 observer camera 创建 buffer
   时失败；第二次强制 Lavapipe 因 Vulkan 扩展缺失失败。两次都不是 runtime pass，且不得终止不属于
   本任务的 GPU 进程；当前用无渲染真实 SAPIEN probe 验证 loader/physics，媒体门留待资源可用时补跑。
