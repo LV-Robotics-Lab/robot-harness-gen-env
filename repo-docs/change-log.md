@@ -2,13 +2,17 @@
 
 ## 2026-09-10
 
+- 在 P3a 固定实现 `8e45bd9` 上再次独立真实重签 replay qualification：官方 generator 使用全新外部
+  bundle/scratch/CAS 与临时 delegated scope，direct/kernel 各单次完成 0/900/120/120/12；物理 pass、
+  120/100/114 顺序媒体、23-member runtime assets、62-ref closure、14-schema gate 和 fresh-CAS strict
+  reload 全过。安装的是 generator 原始三文档，不是只更新 expected hash；仍不表示 validate、Genesis、
+  promotion 或真机能力。
 - 增加 P3a durable production ReplayApplication：只有 production factory 可签发受信 seal，每次调用前
   重验 CAS、同库 SQLite authorities、Registry、qualification policy、唯一 replay descriptor 与
   handler/resolver/dependency/settings identity；`invoke_typed` 以 caller UUID4 复用 controlled lifecycle。
   合法非空 state root 可跨新 factory 实例和独立进程恢复 terminal 而不重复 handler，失败组装也不再
   清空既有 authority；同 state root 的并发 factory 由 sibling lock 线性化，损坏 SQLite 统一成为
-  application 配置错误。该实现使上一份 replay qualification 按 source identity 门变为 stale，提交本身
-  不刷新资格 hash，也不声称真实仿真或 Genesis 运行。
+  application 配置错误。该实现提交没有刷新资格 hash；随后独立真实重签见上一条。
 - 增加 P2 compile-only `GoldenRunHarness.submit`：同一 workflow 内真实调用 checked qualified
   production compile，把 command、frozen execution/policy identity、controlled child、ToolResult、
   唯一 StateDelta、workflow receipt 与 revision 0→1 head 收入同一 CAS/SQLite closure。generic catalog

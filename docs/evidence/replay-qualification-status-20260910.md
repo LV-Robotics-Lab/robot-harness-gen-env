@@ -1,10 +1,16 @@
 # Text2Env replay qualification status — 2026-09-10
 
+> Superseded later the same day: P0+P2 qualification was restored, then P3a changed
+> `replay_application.py` and correctly made that bundle stale again. The fixed P3a implementation
+> has now been requalified by real direct/kernel 0/900/120/120/12 executions and a fresh-CAS strict
+> reload. Current evidence is
+> [`replay-qualification-refresh-p3a-20260910.md`](replay-qualification-refresh-p3a-20260910.md).
+
 本页记录当前源码相对 2026-09-02 历史资格的状态变化，不修改或扩大
 [`replay-production-qualification-20260902.md`](replay-production-qualification-20260902.md)
 中的历史运行结论。
 
-## 当前状态
+## 当时状态（已被后续真实重签取代）
 
 - 仓库仍保存 2026-09-02 固定源码下生成的 `text2env.replay@1.0.0` 三份资格文档；该次
   candidate-direct、Registry candidate 与后续 application 900/120 运行仍只属于其原固定源码。
@@ -46,5 +52,6 @@ schema snapshot 通过。这三个节点是真实统一重签后必须不排除�
 
 ## 能力边界
 
-本状态页不证明当前源码已取得 replay qualification，不证明 Genesis、RoboTwin/SAPIEN 或真机部署可用，
-也不把 compile success、可解码媒体或单元测试替代物理 validation、`publishable=true` 或 promotion。
+本状态页自身不证明当前源码已取得 replay qualification；后续独立证据恢复了固定 P3a 源码的
+deployment-local replay qualification。两份记录都不证明 Genesis、promotion 或真机，也不把 compile
+success、可解码媒体或单元测试替代物理 validation 或 `publishable=true`。

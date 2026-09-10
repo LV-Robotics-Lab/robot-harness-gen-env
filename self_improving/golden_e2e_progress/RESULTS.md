@@ -20,11 +20,18 @@
   `ReplayApplicationConfigurationError` 并保留原 cause。测试在同实例、新 factory 实例和独立 Python
   进程中恢复同一 terminal，受控外部
   runtime/media fixture 总计只执行一次；这不冒充真实 RoboTwin/SAPIEN、Genesis 或真机运行。
-- ReplayApplication 与资格组装专项为 `100 passed`；该模块 387 statements / 120 branches 均为 100%。
+- ReplayApplication 与资格组装专项为 `103 passed`；该模块 429 statements / 130 branches 均为 100%。
   compile application、Golden compile 与 compile qualification 回归为 `236 passed`。checked compile
   qualification 通过；checked replay qualification 唯一按预期以
   `implementation_file_mismatch: self_improving/harness/replay_application.py` 拒绝。P3a 未改 qualification
-  三份文档或 expected hash，必须先双轴 review、再用真实固定案例独立重签，之后才恢复 P3b binding。
+  三份文档或 expected hash。
+- 基于固定实现 `8e45bd9d755ca68001f3372286cbaff265bbc461`，官方 generator 随后在全新外部
+  bundle/scratch/CAS 与临时 delegated scope 中真实执行 direct/kernel 两条 0/900/120/120/12：两者
+  均单 attempt succeeded，物理 `pass`、120/100/114 顺序媒体、23-member runtime assets、62-ref
+  closure。把 66 个 CAS 对象逐一按摘要复制到另一个全新 CAS 后，strict verifier/loader 均为 `pass`。
+  三份 generator 原始文档及 49-file implementation identity 已独立安装；详见
+  `docs/evidence/replay-qualification-refresh-p3a-20260910.md`。本结论仍不覆盖 validate、Genesis、
+  promotion 或真机。
 
 ## 2026-09-10 P2 GoldenRun.submit compile-only 纵切
 

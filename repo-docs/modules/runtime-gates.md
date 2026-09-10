@@ -87,8 +87,10 @@ fresh-CAS strict reload 全过。当前资格绑定该固定源码与本机 oper
 [`docs/evidence/replay-qualification-refresh-20260910.md`](../../docs/evidence/replay-qualification-refresh-20260910.md)，
 旧资格失效与恢复时序见
 [`docs/evidence/replay-qualification-status-20260910.md`](../../docs/evidence/replay-qualification-status-20260910.md)。
-该次重签随后又因 P3a 修改 `replay_application.py` 而按 source identity 门变为 stale；P3a 提交不刷新
-expected hash，新的 current replay qualification 必须在该实现通过 review 后独立执行。
+该次重签随后因 P3a 修改 `replay_application.py` 而按 source identity 门变为 stale；固定 P3a 实现又以
+官方 generator 独立重跑 direct/kernel 0/900/120/120/12，并通过 fresh-CAS strict reload。当前三文档
+摘要与边界见
+[`docs/evidence/replay-qualification-refresh-p3a-20260910.md`](../../docs/evidence/replay-qualification-refresh-p3a-20260910.md)。
 两次已记录成功都不替代独立 validate 与 promotion evidence，不能由 replay 成功推出
 `publishable=true`。
 
