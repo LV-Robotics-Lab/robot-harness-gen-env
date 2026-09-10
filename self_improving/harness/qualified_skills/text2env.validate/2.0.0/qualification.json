@@ -1,0 +1,1 @@
+{"deterministic_case_id":"real-can-on-plate-replay-evidence","regression_command":"pytest -q tests/self_improving/harness/test_golden_validate_submit.py","report_sha256":"e2e06f9c34a8cc77f7026e507e1aebccf2e67ddb24b42135fd349e9dadc30ad9","skill_ref":"text2env.validate@2.0.0","status":"pass"}
