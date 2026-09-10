@@ -1,5 +1,13 @@
 # Change Log
 
+## 2026-09-11 exact MCP in-process tranche
+
+- 以固定 RegistrySnapshot 与 exact live GoldenExecutionCatalog 的交集生成工具目录；
+  caller 不能切换 trust root，principal/Skill identity 由 server 注入，不存在 generic invoke。
+- 官方 `mcp==2.2.0` 进程内 Client 已实测 exact compile list/call 与 workflow resource
+  read；调用真实进入 `GoldenRunHarness.submit/read`，重复请求返回同一 operation。
+- 本切片尚不包含 stdio、跨进程重启、workflow create/poll/cancel 或 MCP 三段真实链。
+
 ## 2026-09-10 integrated revision 3
 
 - 在 portable replay、x2env contract 与 validate v2 的最终合并实现上重新生成 replay/validate
@@ -11,7 +19,7 @@
   120/114 decoded-unique MP4 经三轴功能验收闭合；重启重提不产生第四 child。
 - 这里的 `publishable=true` 仅属 legacy RoboTwin/SAPIEN profile。operator identity 仍是本机
   部署绑定；temporary delegated scope 消失后 deep gate 按合同拒绝，不表示跨机器自动
-  provisioning。Genesis、promotion、robot-policy、x2env runtime 和 MCP 均未完成。
+  provisioning。Genesis、promotion、robot-policy 和 x2env runtime 均未完成；MCP 后续进度见上方。
 
 ## 2026-09-10 Image2Env / Video2Env contract tranche
 

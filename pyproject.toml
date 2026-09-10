@@ -25,6 +25,7 @@ robot-harness-run-qualified-replay = "self_improving.qualified_replay_cli:main"
 
 [project.optional-dependencies]
 demo = ["Flask>=3.0,<4"]
+mcp = ["mcp>=2.2,<3"]
 vlm = [
   "accelerate>=1.2,<2",
   "qwen-vl-utils>=0.0.8,<0.1",

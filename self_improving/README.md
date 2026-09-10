@@ -8,7 +8,7 @@ runtime assumptions into the core trust boundary.
 
 | Path | Status | Responsibility |
 | --- | --- | --- |
-| `harness/` | active core tranche | Strict Harness records and Text2Env contracts, 14-version schema catalog, artifact/event/package stores, generic qualified-version `SkillRegistry`, and one explicit `text2env.compile` adapter. Replay/validate handlers, promotion transaction, and MCP adaptation remain absent. |
+| `harness/` | active core tranche | 55 strict public schemas; qualified Text2Env compile/replay/legacy-validate applications and Golden revision 0→1→2→3; plus the first exact-tool MCP in-process adapter. Stdio/restart acceptance, promotion, Genesis, and robot-policy remain absent. |
 | `stage5/` | active | Multi-agent scene design, grounding, critique, MCP-lite tools, prompts, and tests recovered from the stage-05 validation tree. |
 | `alchedata/` | active | `/gen-env -> /collect -> /train -> /evaluate -> /diagnose -> /transfer`, failure memory, promotion gates, schemas, tests, and curated structured evidence. |
 | `asset_pipeline/active/` | active | Asset discovery, ingest, ledger, catalog integration, Web Studio, and simulator-migration adapters from `env-gen-dev`. |
@@ -47,8 +47,8 @@ current HEAD. Historical presentation output never defined acceptance gates.
 `self_improving/harness/` defines the Harness-owned records without duplicating
 the authoritative `scene_gen` payloads. Public schema identifiers are JSON
 Schema `$id` values; only `ArtifactRef.schema_version` is a payload field. The
-catalog contains the six common records, `SkillQualification`,
-`EnvironmentPackage`, and the six Text2Env input/output schemas. Regenerate or
+catalog currently contains 55 common, Text2Env, workflow, validation, and
+Image2Env/Video2Env contract schemas. Regenerate or
 verify their committed snapshots with:
 
 ```bash

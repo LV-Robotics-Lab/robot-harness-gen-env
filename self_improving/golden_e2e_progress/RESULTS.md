@@ -1,5 +1,23 @@
 # 进度与结果
 
+## 2026-09-11 P5 exact MCP 进程内纵切
+
+- 新增 transport-neutral `HarnessMCPAdapter` 与官方 MCP 2.2 server bridge。工具目录只取
+  adapter 冻结的 `RegistrySnapshot` 与当前 exact live `GoldenExecutionCatalog` 的交集，
+  并再次对账 descriptor；不暴露 generic `skill.invoke`，也不允许 caller 替换 trust root。
+- MCP 输入由类型化 `RunCommandRequest` envelope 与 exact Skill input schema 机械合成；
+  `principal_id` 和 `skill_ref` 均由 server authority 注入。成功路径只调用
+  `GoldenRunHarness.submit`，重复调用恢复同一 terminal operation；workflow resource 只通过
+  `GoldenRunHarness.read` 读取。已知领域失败返回稳定结构化 code，unknown tool/resource
+  保留协议层错误。
+- 在独立环境安装真实 `mcp==2.2.0`/`mcp-types==2.2.0`，用官方进程内
+  `Client` 完成 negotiate/list/call/read，并确认 `TextContent`/`ResourceLink` discriminator 在 wire
+  上保留。最终相邻回归 229 tests 通过；两个新模块合计 183 statements/34 branches 为
+  100%。项目增加 optional extra `mcp>=2.2,<3` 并在 CI 安装；base Python 未安装 MCP
+  时 SDK 测试按可选依赖跳过。
+- 边界：本纵切只证明进程内 compile exact tool 与 workflow read；stdio、跨进程重启、
+  workflow create、operation polling/cancel 与 MCP 上的 compile→replay→validate 尚未验收。
+
 ## 2026-09-10 integrated revision 3 最终真实闭环
 
 - 固定实现 commit `eec1976bdd71578e43b606ef3b88f3bd7d5975e9`。官方 generator 在该
