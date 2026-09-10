@@ -1,5 +1,10 @@
 # Change Log
 
+- 2026-09-11：fresh observation 受控纵切增加 `ControlledGenesisObserveEvidencePolicy` 与
+  `SkillAuthorizationContext`：首次提交及无 live application 重启均重算 Invocation 和 exact
+  workflow/principal/revision/state/head，避免相同 state content hash 的跨 workflow receipt 混用；仍不
+  构成 production binding、Genesis capture 或 qualification。
+
 ## 2026-09-11 controlled Genesis observation vertical slice
 
 - 新增 exact `genesis.observe@1.0.0` 的三份公共 schema：输入绑定 environment package、replay

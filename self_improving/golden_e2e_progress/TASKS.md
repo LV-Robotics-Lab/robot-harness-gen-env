@@ -32,7 +32,9 @@
   - [x] exact Skill、受控证据链、TTL 和历史截图失效模式已冻结。
   - [x] 通过 S1 TDD 实现受控 application/policy/receipt/state 纵切，结果标注
     `simulator_executed=false`。
-  - [ ] 实现可写 production evidence policy/binding；再使用真实 Genesis sealed checkpoint 完成
+  - [x] 实现 controlled evidence policy，并把 Invocation 与 exact workflow authorization context 纳入
+    首次提交和重启恢复验证；相同 state hash 不允许跨 workflow 混用 receipt。
+  - [ ] 实现 production execution binding/runtime；再使用真实 Genesis sealed checkpoint 完成
     production qualification，之后才加入 production MCP。
 - [ ] Codex 诊断、受限修复、状态增量与可续跑 history。
 - [ ] promotion gate 与 publishability 唯一授权。

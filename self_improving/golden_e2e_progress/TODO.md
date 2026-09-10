@@ -4,14 +4,14 @@
 
 ## Doing
 
-- P10 fresh observation：strict schema、controlled candidate application 与 Golden receipt/state/restart
-  seam 已完成；下一切片是可写 production evidence policy/binding。当前受控路径固定
+- P10 fresh observation：strict schema、controlled candidate application/evidence policy 与 Golden
+  receipt/state/restart seam 已完成；下一切片是 production execution binding/runtime。当前受控路径固定
   `simulator_executed=false`，真实 Genesis capture、qualification 与 MCP exposure 尚未开始。
 
 ## Next
 
-- P10：实现只从受信 `GenesisObservationReceipt` 投影 claims/fresh observations 的 production
-  policy/binding；保持过期、缺 key、时间或 payload 漂移在 parent commit 前 fail closed。
+- P10：实现 production execution binding/runtime；保持过期、缺 key、时间或 payload 漂移在 parent
+  commit 前 fail closed。
 - P10：production policy 稳定后，用真实 Genesis sealed checkpoint 做 capture/qualification；只有该门
   通过后才把 `genesis_observe_v1_0_0` 加入 exact MCP catalog 与 workflow-scoped resource。
 - P5：受控 observation 与 diagnosis seam 闭合后，真实 external Codex 只经 exact MCP 完成同一 text
@@ -39,8 +39,10 @@
   把 replay lineage、requested keys、`1..300` 秒 TTL、typed values 和 payload CAS 闭合；controlled
   candidate 使用 Registry + SQLiteEventJournal/SQLiteRunStore，显式值、可解码 PNG 和
   `simulator_executed=false`/0 steps。Golden policy seam 将 fresh observations 与 trusted claims、唯一
-  StateDelta、resulting state 和 restart recovery 绑定。专项 40 passed，新 schema/application 为
-  331 statements / 96 branches 100%，公共 snapshot 55→58；没有运行 GPU，也没有 production
+  StateDelta、resulting state 和 restart recovery 绑定；controlled evidence policy 还拒绝跨 workflow/
+  principal/revision/state/head 的 lineage 混用。专项 47 passed，新 schema/application 为
+  331 statements / 96 branches 100%，policy 为 153 statements / 70 branches 100%，公共 snapshot
+  55→58；没有运行 GPU，也没有 production
   qualification、真实 Genesis capture 或 MCP exposure。
 
 - 最终 revision-3 integration 已完成：固定实现 `eec1976bdd71578e43b606ef3b88f3bd7d5975e9`

@@ -6,13 +6,15 @@
   `GoldenRunHarness.submit/read`；不新增通用 invoke 或旁路状态写接口。
 - 受控纵切的完成条件是 `GenesisObservationReceipt`、`ToolResult.fresh_observations`、
   `TrustedToolReceipt.derived_fact_claims`、StateDelta mutations 与 resulting TrustedWorldState 对
-  key/value/source/capture time/TTL 逐项闭合。缺少、额外、重排或漂移均不得推进 revision。
+  key/value/capture time/TTL 逐项闭合；inner receipt 与外层 trusted receipt 的 provenance 关系也必须
+  精确。缺少、额外、重排或漂移均不得推进 revision。
 - TTL 冻结为 `1..300` 秒闭区间 `[captured_at, valid_until]`，且
   `valid_until == captured_at + ttl_seconds`。过期 receipt 仍作为审计资源可读，但不能被后续操作作为
   fresh 输入；在 terminal commit 前已经过期的 observe 只能产生 blocker。
 - 历史 replay PNG、旧截图和既有媒体 receipt 只能作为历史 supporting artifacts，重新贴标签不构成
   fresh capture。首轮 test adapter 必须记录 `simulator_executed=false`。
-- 提交链 `9b0e86a` / `0cde87d` / `77a3510` / `0d38d42` / `69bc2db` / `bd00a1d`
+- 提交链 `9b0e86a` / `0cde87d` / `77a3510` / `0d38d42` / `69bc2db` / `bd00a1d` /
+  `b13cef2` / `fe802df` / `2950e71`
   依次冻结合同与 RED、增加 strict schema/controlled application，并把 receipt-bound fresh observations
   接入 Golden evidence policy seam。三个新公共 schema 把 environment package、replay workflow/runtime
   receipts、可选 checkpoint、capture plan、requested FactKeys、TTL、typed values、capture window 与
@@ -25,12 +27,17 @@
   trusted receipt 的 upsert claim、source artifact 属于 supporting closure、存在有效 TTL；StateDelta
   仍以 trusted receipt 作为事实来源，同时保留 observation 的 observed/valid 时间。revision 2→3、
   terminal failure、receipt/projection/CAS 篡改、同实例重提和无 live application 重开均有受控用例。
-- 验证：observation/schema/Golden projection focused 为 `40 passed`；schema/application 两模块
+- `ControlledGenesisObserveEvidencePolicy` 又从当前 workflow authorization context 逐项绑定
+  principal/workflow/revision/state ref/receipt head，并在首次提交和重启恢复时用持久 Invocation 重算
+  source package、replay child、runtime receipt、checkpoint、capture plan、requested keys 与 TTL；两个
+  workflow 即使具有相同 state content hash 也不能混用 receipt。
+- 验证：observation schema/application/policy/Golden projection focused 为 `47 passed`；schema/application 两模块
   331 statements / 96 branches 均为 100%；`python -m script.export_harness_schemas --check` 验证 58 份
-  snapshot。Registry/RunStore/receipt 相邻回归另为 `199 passed`，Ruff 与 diff check 通过。本轮未运行
-  GPU。
+  snapshot，controlled policy 为 153 statements / 70 branches 100%，Golden 相邻六模块合计
+  1010 statements / 358 branches 100%。Registry/RunStore/receipt 相邻回归另为 `199 passed`，Ruff 与
+  diff check 通过。本轮未运行 GPU。
 - 边界：本切片实现的是受控 fresh-observation 证据与持久状态 seam，不是 Genesis runtime pass。
-  可写 production policy/binding、真实 sealed checkpoint capture、production qualification、Registry
+  production execution binding、真实 sealed checkpoint capture、production qualification、Registry
   entry 和 `genesis_observe_v1_0_0` MCP exposure 均未完成。
 
 ## 2026-09-11 P5 真实 MCP compile→replay→validate
