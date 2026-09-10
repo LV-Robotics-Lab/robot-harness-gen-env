@@ -14,12 +14,13 @@
   child identity 的 RED，正在以 canonical ControlledRunIntent、原子 reserve 与并发攻击补齐。operation
   evidence correlation 和 child-terminal/live-unavailable 恢复矩阵未绿前不得重签或提交 aggregate。
 - P6：14 个 GLB + 7 个 `model_data*.json` 已组成 21-member、57,290,434-byte CAS closure，且真实
-  RoboTwin `create_actor` 已从 staged-only bytes 对 7 个模型各执行 900 个 SAPIEN steps。fixed-commit
-  双轴审查仍拒绝合入：探针尚可因弱 JSON/self-hash 验证造成 ledger/input 解绑与路径逃逸，per-
-  representation closure hash 也未绑定成员字节，零写回执存在 symlink/TOCTOU 缺口。正在先补攻击测试、
-  共享深验证、nofollow materialization/attestation 和实际 loader helper 源码闭包，再重跑真实探针。
-  当前修复候选的 166 个 focused cases 已达到相关 3 个模块 100% statement/branch；统一回归、固定提交、
-  固定 SHA 后的 7×900-step 重跑与新一轮双轴审查仍是合入前硬门。
+  RoboTwin `create_actor` 已从 staged-only bytes 对 7 个模型各执行 900 个 SAPIEN steps。候选
+  `bd61a9e1504b1462c1bb24799a38e76f5cdf26e4` 已补 strict typed authority、成员字节 closure、nofollow
+  materialization 与 loader/helper source closure；固定 SHA 后的真实重跑为 21 members、7×900 steps，
+  每个模型均 finite/contact/nonzero impulse。主窗口随后又复现两个 P1 阻断：失败清理仍可在 parent
+  rename/replacement 竞态下删除替换路径并遗留 partial，且 deep verifier 尚未从 CAS GLB bytes 重新推导
+  document dependency closure，内部一致的遗漏依赖伪造仍可通过。当前只针对这两个已冻结攻击做
+  RED→GREEN；修复、固定 SHA 真实重跑和完整审查通过前仍不合入或升级证据等级。
 
 ## Next
 
@@ -34,6 +35,9 @@
 
 - ClawCross/dashboard 的 portfolio、tasks、project 三个状态 URL 均返回 HTTP 404；无法同步 TODO
   控制面，也没有可用 task id 写回进度。
+- 2026-09-10 一名 P6 fixed-diff 只读审查 agent 被 OpenAI 安全系统标记为潜在网络安全风险。按仓库
+  规则已立即停止该审查，未重试、改写或重新委派；用户随后允许继续其余工作。该具体审查永久保留
+  为 blocked，不作为通过结论，也不妨碍修复主窗口已经独立复现的功能阻断。
 - Autoresearch 的 benchmark/真实 MCP/Genesis 前置尚未实现；设置已确认但尚不能建立诚实 baseline。
 - exact MCP adapter 仍缺 `submit/read` 和真实 Registry handler 交集；caller 提供的内部一致
   `RegistrySnapshot` 目前不能单独作为生产 trust root。

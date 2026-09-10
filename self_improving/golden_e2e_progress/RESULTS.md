@@ -1,5 +1,32 @@
 # 进度与结果
 
+## 2026-09-10 P6 staged-loader 候选与未通过门
+
+- 固定候选 `bd61a9e1504b1462c1bb24799a38e76f5cdf26e4` 在独立 worktree 中完成 166 个 focused
+  cases；三个相关生产模块合计 744 statements/260 branches，均为 100%。根套件显式排除既有 stale
+  replay qualification 单项后为 `3293 passed, 20 skipped, 1 deselected`。该候选尚未合入。
+- 从固定提交重建的 source/CAS stage 为 21 members、57,290,434 bytes、14 representation
+  closures；真实 RoboTwin `create_actor`/SAPIEN 无渲染 probe 对 7 个模型各运行 900 steps，共 6,300
+  steps，均记录 finite pose、contact 和 nonzero impulse。外部 report SHA-256 为
+  `6e9ec1c6b294ab389c5579a4f9695c966dd2019ac2754130280b8ffd788cfb9e`；它明确没有执行 Genesis、
+  runtime qualification、promotion 或 can-on-plate golden case。
+- 主窗口在固定提交后独立复现两个 P1 阻断：`write_new_report` 的失败清理在 parent directory 被替换时
+  会删除替换路径并遗留原 partial；deep verifier 可接受重新计算全部自洽 hash、但从 representation
+  closure 中删去一个 GLB 引用 member 的伪造结果。两项均已冻结为下一轮 RED；修复并复审前，真实
+  SAPIEN 运行只证明候选 loader/physics path 曾执行，不能升级为可信 stage gate。
+- 一名 fixed-diff 只读审查 agent 被 OpenAI 安全系统拒绝。该具体审查已按仓库规则永久保留为
+  blocked，没有重试、改写或重新委派；用户随后允许继续其他工作。此事件不是通过结论，也不改变
+  上述两个主窗口阻断。
+
+## 2026-09-10 P0 replay source-closure 候选
+
+- 候选 `d664b046f7868ecce5e0ecd0fc6574d8dcc911da` 把 replay qualification 从整个 Harness 树改为
+  显式实现闭包，并用 fresh-process 的真实 application/replay 装配与 qualification-generation 路径
+  检查 import trace；旧 checked-in bundle 继续 fail closed，没有刷新 expected hash 或资格文档。
+- 候选基于 `660ae49`，而 P1/P2 后续会继续修改 Registry/Application、schema catalog 与公共 façade，
+  因此当前只作为待重放设计，不直接合入；最终必须在 P2 固定实现之后重新审查闭包并运行真实固定
+  replay 后一次性重签。
+
 ## 2026-09-09 初始化
 
 - Dashboard/ClawCross 项目状态读取：失败，三个公开状态 URL 和 Harness dashboard 均返回 HTTP 404。
