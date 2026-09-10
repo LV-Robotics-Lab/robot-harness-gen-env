@@ -1085,6 +1085,34 @@ def test_sqlite_golden_run_store_rejects_an_unknown_table_layout(tmp_path: Path)
         SQLiteGoldenRunStore(database)
 
 
+def test_sqlite_golden_run_store_rejects_temporary_eight_column_operation_layout(
+    tmp_path: Path,
+) -> None:
+    database = tmp_path / "temporary-eight-column-operation-layout.sqlite3"
+    with closing(sqlite3.connect(database)) as connection, connection:
+        connection.executescript(_current_store_layout_ddl())
+        connection.execute(
+            """
+            CREATE TABLE golden_workflow_operations (
+                operation_id TEXT NOT NULL PRIMARY KEY,
+                workflow_run_id TEXT NOT NULL,
+                principal_id TEXT NOT NULL,
+                idempotency_key TEXT NOT NULL,
+                command_sha256 TEXT NOT NULL,
+                base_revision INTEGER NOT NULL,
+                operation_json BLOB NOT NULL,
+                operation_sha256 TEXT NOT NULL,
+                UNIQUE (workflow_run_id, idempotency_key),
+                UNIQUE (workflow_run_id, base_revision)
+            )
+            """
+        )
+
+    with pytest.raises(GoldenRunCorruptionError, match="unsupported table layout") as raised:
+        SQLiteGoldenRunStore(database)
+    assert raised.value.code == "HARN_PERSISTENCE_CONFLICT"
+
+
 @pytest.mark.parametrize(
     "ddl",
     [

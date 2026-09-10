@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -414,3 +417,23 @@ def test_snapshot_check_reports_missing_changed_and_unexpected(tmp_path: Path) -
 def test_committed_snapshots_have_no_drift() -> None:
     paths = export_schema_snapshots(DEFAULT_SCHEMA_ROOT, check=True)
     assert len(paths) == len(EXPECTED_SCHEMA_IDS)
+
+
+def test_direct_schema_export_script_is_bound_to_its_own_checkout(tmp_path: Path) -> None:
+    repository_root = Path(__file__).resolve().parents[3]
+    environment = dict(os.environ)
+    environment["PYTHONPATH"] = ""
+
+    completed = subprocess.run(
+        [sys.executable, str(repository_root / "script/export_harness_schemas.py"), "--check"],
+        cwd=tmp_path,
+        env=environment,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    assert completed.stdout.strip() == (
+        f"verified {len(EXPECTED_SCHEMA_IDS)} Harness schema snapshots in {DEFAULT_SCHEMA_ROOT}"
+    )

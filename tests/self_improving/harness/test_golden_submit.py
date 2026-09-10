@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 from contextlib import closing
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, is_dataclass, replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import UUID
@@ -307,15 +307,12 @@ def test_generic_catalog_admits_only_sealed_independent_skill_bindings(
     assert compile_binding.policy.evidence_policy_implementation_sha256 == compile_digest
     with pytest.raises(TypeError, match="exact tuple"):
         create_golden_execution_catalog(bindings=[])  # type: ignore[arg-type]
-    unsealed = GoldenExecutionBinding(
-        _token=object(),
-        skill_ref=compile_binding.skill_ref,
-        policy=compile_binding.policy,
-        application=compile_binding.application,
-        child_authority=compile_binding.child_authority,
-    )
+    assert not is_dataclass(compile_binding)
+    with pytest.raises(TypeError, match="Protocols cannot be instantiated"):
+        GoldenExecutionBinding()  # type: ignore[misc]
+    unsealed = object()
     with pytest.raises(TypeError, match="exact Skill binding factory"):
-        create_golden_execution_catalog(bindings=(unsealed,))
+        create_golden_execution_catalog(bindings=(unsealed,))  # type: ignore[arg-type]
     with pytest.raises(ValueError, match="duplicate"):
         create_golden_execution_catalog(bindings=(compile_binding, compile_binding))
     with pytest.raises(TypeError, match="exact SQLiteRunStore"):
@@ -331,6 +328,69 @@ def test_generic_catalog_admits_only_sealed_independent_skill_bindings(
             application=compile_binding.application,
             child_authority=compile_binding.child_authority,
         )
+
+
+def test_opaque_execution_binding_rejects_dataclass_field_replacement(
+    golden_case: GoldenCase,
+) -> None:
+    binding = create_text2env_compile_execution_binding(application=golden_case.application)
+    replacements = (
+        {"skill_ref": "text2env.replay@1.0.0"},
+        {"policy": Text2EnvCompileEvidencePolicy()},
+        {"application": None},
+        {"child_authority": None},
+    )
+    for replacement in replacements:
+        with pytest.raises(TypeError, match="dataclass"):
+            replace(binding, **replacement)
+
+
+def test_catalog_revalidates_an_opaque_binding_at_consumption(
+    golden_case: GoldenCase,
+    tmp_path: Path,
+) -> None:
+    policy_binding = create_text2env_compile_execution_binding(application=golden_case.application)
+    object.__setattr__(policy_binding.policy, "skill_ref", "text2env.replay@1.0.0")
+    with pytest.raises(ValueError, match="binding and evidence policy"):
+        create_golden_execution_catalog(bindings=(policy_binding,))
+
+    application_binding = create_text2env_compile_execution_binding(
+        application=golden_case.application
+    )
+    assert application_binding.application is not None
+    object.__setattr__(application_binding.application, "skill_ref", "text2env.replay@1.0.0")
+    with pytest.raises(ValueError, match="application and evidence policy"):
+        create_golden_execution_catalog(bindings=(application_binding,))
+
+    authority_binding = create_text2env_compile_execution_binding(
+        application=golden_case.application
+    )
+    object.__setattr__(
+        authority_binding,
+        "_child_authority",
+        SQLiteRunStore(tmp_path / "different-child.sqlite3"),
+    )
+    with pytest.raises(ValueError, match="application and child authority"):
+        create_golden_execution_catalog(bindings=(authority_binding,))
+
+
+def test_catalog_revalidates_policy_input_model_and_application_policy(
+    golden_case: GoldenCase,
+) -> None:
+    input_binding = create_text2env_compile_execution_binding(application=golden_case.application)
+    object.__setattr__(input_binding.policy, "input_model", TrustedWorldState)
+    with pytest.raises(ValueError, match="input model"):
+        create_golden_execution_catalog(bindings=(input_binding,))
+
+    policy_binding = create_text2env_compile_execution_binding(application=golden_case.application)
+    assert policy_binding.application is not None
+    object.__setattr__(
+        policy_binding.application,
+        "policy",
+        Text2EnvCompileEvidencePolicy(),
+    )
+    with pytest.raises(ValueError, match="application and evidence policy"):
+        create_golden_execution_catalog(bindings=(policy_binding,))
 
 
 @pytest.mark.parametrize("field", ["application", "child_authority"])
@@ -654,21 +714,17 @@ def test_adapter_translates_a_pending_controlled_child(
         )
 
 
-def test_compile_policy_rejects_wrong_owner_state_and_result_claims(
+def test_compile_policy_accepts_only_parameters_and_rejects_wrong_state_and_result_claims(
     golden_case: GoldenCase,
 ) -> None:
     catalog = _compile_catalog(application=golden_case.application)
     policy = catalog.policy_for("text2env.compile@1.0.0")
     assert policy is not None
-    with pytest.raises(ValueError, match="does not own"):
-        policy.normalize(
-            RunCommandRequest.model_validate(
-                golden_case.command.model_copy(
-                    update={"skill_ref": "text2env.replay@1.0.0"}
-                ).model_dump(mode="python")
-            )
-        )
-    parameters = Text2EnvCompileInput.model_validate(golden_case.command.parameters)
+    assert not hasattr(policy, "normalize")
+    parameters = policy.normalize_parameters(golden_case.command.parameters)
+    assert type(parameters) is Text2EnvCompileInput
+    with pytest.raises(ValidationError):
+        policy.normalize_parameters(golden_case.command.model_dump(mode="json"))
     with pytest.raises(TypeError, match="Text2EnvCompileInput"):
         policy.authorize(
             build_world_state((), as_of=base.NOW), build_world_state((), as_of=base.NOW)
