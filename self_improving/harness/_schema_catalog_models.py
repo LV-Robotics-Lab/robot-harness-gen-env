@@ -45,6 +45,26 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
             ".schemas.genesis_observe",
             "GenesisObserveOutput",
         ),
+        "harness.advisory_record_command.v1": (
+            ".schemas.golden_control",
+            "AdvisoryRecordCommand",
+        ),
+        "harness.control_commit_snapshot.v1": (
+            ".schemas.golden_control",
+            "ControlCommitSnapshot",
+        ),
+        "harness.external_agent_advisory_receipt.v1": (
+            ".schemas.golden_control",
+            "ExternalAgentAdvisoryReceipt",
+        ),
+        "harness.prompt_revision_command.v1": (
+            ".schemas.golden_control",
+            "PromptRevisionCommand",
+        ),
+        "harness.prompt_revision.v1": (
+            ".schemas.golden_control",
+            "PromptRevision",
+        ),
         "harness.image2env_compile_input.v1": (
             ".schemas.x2env",
             "Image2EnvCompileInput",

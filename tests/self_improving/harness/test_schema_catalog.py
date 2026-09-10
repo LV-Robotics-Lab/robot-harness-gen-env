@@ -35,6 +35,13 @@ from self_improving.harness.schemas.genesis_observe import (
     GenesisObserveInput,
     GenesisObserveOutput,
 )
+from self_improving.harness.schemas.golden_control import (
+    AdvisoryRecordCommand,
+    ControlCommitSnapshot,
+    ExternalAgentAdvisoryReceipt,
+    PromptRevision,
+    PromptRevisionCommand,
+)
 from self_improving.harness.schemas.qualification_report import PublicQualificationReportV1
 from self_improving.harness.schemas.registry_snapshot import RegistrySnapshot
 from self_improving.harness.schemas.text2env_validate_v2 import (
@@ -76,6 +83,7 @@ from self_improving.harness.schemas.x2env import (
 )
 
 EXPECTED_SCHEMA_IDS = {
+    "harness.advisory_record_command.v1",
     "harness.asset_debt_inventory.v1",
     "harness.asset_repair_plan.v1",
     "harness.asset_repair_plan_request.v1",
@@ -84,8 +92,10 @@ EXPECTED_SCHEMA_IDS = {
     "harness.asset_stage_result.v1",
     "harness.artifact_ref.v1",
     "harness.blocker.v1",
+    "harness.control_commit_snapshot.v1",
     "harness.environment_package.v1",
     "harness.event.v1",
+    "harness.external_agent_advisory_receipt.v1",
     "harness.genesis_observation_receipt.v1",
     "harness.genesis_observe_input.v1",
     "harness.genesis_observe_output.v1",
@@ -97,6 +107,8 @@ EXPECTED_SCHEMA_IDS = {
     "harness.image2env_validate_output.v1",
     "harness.image_source_media.v1",
     "harness.operation_snapshot.v1",
+    "harness.prompt_revision.v1",
+    "harness.prompt_revision_command.v1",
     "harness.qualified_skill_execution.v2",
     "harness.replay_vlm_assessment_input.v1",
     "harness.replay_vlm_assessment_output.v1",
@@ -165,6 +177,14 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert schema_model("harness.genesis_observe_input.v1") is GenesisObserveInput
     assert schema_model("harness.genesis_observe_output.v1") is GenesisObserveOutput
     assert schema_model("harness.genesis_observation_receipt.v1") is GenesisObservationReceipt
+    assert schema_model("harness.advisory_record_command.v1") is AdvisoryRecordCommand
+    assert schema_model("harness.control_commit_snapshot.v1") is ControlCommitSnapshot
+    assert (
+        schema_model("harness.external_agent_advisory_receipt.v1")
+        is ExternalAgentAdvisoryReceipt
+    )
+    assert schema_model("harness.prompt_revision_command.v1") is PromptRevisionCommand
+    assert schema_model("harness.prompt_revision.v1") is PromptRevision
     assert schema_model("harness.image_source_media.v1") is ImageSourceMedia
     assert schema_model("harness.video_source_media.v1") is VideoSourceMedia
     assert schema_model("harness.x2env_asset_decision.v1") is X2EnvAssetDecision
@@ -232,6 +252,11 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.genesis_observation_receipt.v1",
             "harness.genesis_observe_input.v1",
             "harness.genesis_observe_output.v1",
+            "harness.advisory_record_command.v1",
+            "harness.control_commit_snapshot.v1",
+            "harness.external_agent_advisory_receipt.v1",
+            "harness.prompt_revision_command.v1",
+            "harness.prompt_revision.v1",
             "harness.image_source_media.v1",
             "harness.video_source_media.v1",
             "harness.x2env_asset_decision.v1",

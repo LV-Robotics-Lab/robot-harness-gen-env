@@ -1,0 +1,237 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "ObservationCitation": {
+      "additionalProperties": false,
+      "description": "Fresh observation receipt and its exact bounded validity window.",
+      "properties": {
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "receipt": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "ttl_seconds": {
+          "maximum": 300,
+          "minimum": 1,
+          "title": "Ttl Seconds",
+          "type": "integer"
+        },
+        "valid_until": {
+          "format": "date-time",
+          "title": "Valid Until",
+          "type": "string"
+        }
+      },
+      "required": [
+        "receipt",
+        "captured_at",
+        "valid_until",
+        "ttl_seconds"
+      ],
+      "title": "ObservationCitation",
+      "type": "object"
+    }
+  },
+  "$id": "harness.advisory_record_command.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Record one bounded, non-authoritative external-agent advisory.",
+  "properties": {
+    "advisory_kind": {
+      "enum": [
+        "visual_assessment",
+        "diagnosis",
+        "repair_proposal"
+      ],
+      "title": "Advisory Kind",
+      "type": "string"
+    },
+    "command_id": {
+      "format": "uuid4",
+      "title": "Command Id",
+      "type": "string"
+    },
+    "diagnostic_refs": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Diagnostic Refs",
+      "type": "array"
+    },
+    "disposition": {
+      "enum": [
+        "recommend",
+        "abstain"
+      ],
+      "title": "Disposition",
+      "type": "string"
+    },
+    "expected_receipt_head_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Expected Receipt Head Sha256",
+      "type": "string"
+    },
+    "expected_state_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Expected State Sha256",
+      "type": "string"
+    },
+    "expected_workflow_revision": {
+      "minimum": 0,
+      "title": "Expected Workflow Revision",
+      "type": "integer"
+    },
+    "external_agent_executed": {
+      "const": false,
+      "title": "External Agent Executed",
+      "type": "boolean"
+    },
+    "failure_receipts": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Failure Receipts",
+      "type": "array"
+    },
+    "idempotency_key": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "observation_citations": {
+      "items": {
+        "$ref": "#/$defs/ObservationCitation"
+      },
+      "title": "Observation Citations",
+      "type": "array"
+    },
+    "principal_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Principal Id",
+      "type": "string"
+    },
+    "recommended_action": {
+      "enum": [
+        "none",
+        "retry",
+        "revise_prompt",
+        "fallback_image",
+        "repair_assets",
+        "stop"
+      ],
+      "title": "Recommended Action",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.advisory_record_command.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_prompt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "source_prompt_revision": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "summary": {
+      "maxLength": 4096,
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "workflow_run_id": {
+      "format": "uuid4",
+      "title": "Workflow Run Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "command_id",
+    "principal_id",
+    "workflow_run_id",
+    "idempotency_key",
+    "expected_workflow_revision",
+    "expected_state_sha256",
+    "expected_receipt_head_sha256",
+    "schema_version",
+    "advisory_kind",
+    "disposition",
+    "summary",
+    "recommended_action",
+    "source_prompt",
+    "source_prompt_revision",
+    "failure_receipts",
+    "observation_citations",
+    "diagnostic_refs",
+    "external_agent_executed"
+  ],
+  "title": "AdvisoryRecordCommand",
+  "type": "object"
+}

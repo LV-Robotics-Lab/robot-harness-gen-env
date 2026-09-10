@@ -9,8 +9,10 @@ from typing import Any
 from uuid import UUID
 
 import pytest
+from jsonschema import Draft202012Validator
 from pydantic import ValidationError
 
+from self_improving.harness.schema_catalog import schema_documents
 from self_improving.harness.schemas.common import ArtifactRef
 from self_improving.harness.schemas.golden_control import (
     ADVISORY_RECORD_COMMAND_SCHEMA_ID,
@@ -234,9 +236,7 @@ def _prompt_command_values(*, fallback: str = "none") -> dict[str, Any]:
             "advisory-receipt",
             "harness.external_agent_advisory_receipt.v1",
         ),
-        "failure_receipts": (
-            _ref("failed-replay", "harness.workflow_operation_receipt.v2"),
-        ),
+        "failure_receipts": (_ref("failed-replay", "harness.workflow_operation_receipt.v2"),),
         "predecessor_package": _ref(
             "failed-package",
             "harness.x2env_environment_package.v1",
@@ -341,8 +341,26 @@ def test_advisory_command_accepts_exact_three_kinds(kind: str, action: str) -> N
     assert command.advisory_kind == kind
 
     with pytest.raises(ValidationError):
+        AdvisoryRecordCommand.model_validate({**values, "advisory_kind": "physical_validation"})
+
+
+def test_advisory_command_binds_optional_prompt_revision() -> None:
+    values = _advisory_command_values()
+    values["source_prompt_revision"] = _ref(
+        "prior-prompt-revision",
+        PROMPT_REVISION_SCHEMA_ID,
+    )
+    AdvisoryRecordCommand.model_validate(values)
+
+    with pytest.raises(ValidationError, match="source_prompt_revision"):
         AdvisoryRecordCommand.model_validate(
-            {**values, "advisory_kind": "physical_validation"}
+            {
+                **values,
+                "source_prompt_revision": _ref(
+                    "prior-prompt-revision",
+                    "harness.run_state.v1",
+                ),
+            }
         )
 
 
@@ -387,9 +405,7 @@ def test_advisory_command_references_are_typed_sorted_and_unique(field: str) -> 
     if field == "failure_receipts":
         wrong = _ref("failed-replay", "harness.run_state.v1")
         with pytest.raises(ValidationError, match="failure_receipts.*schema_version"):
-            AdvisoryRecordCommand.model_validate(
-                {**values, "failure_receipts": (wrong,)}
-            )
+            AdvisoryRecordCommand.model_validate({**values, "failure_receipts": (wrong,)})
 
 
 def test_observation_citations_are_typed_sorted_unique_and_ttl_bound() -> None:
@@ -400,9 +416,7 @@ def test_observation_citations_are_typed_sorted_unique_and_ttl_bound() -> None:
 
     for changed in (tuple(reversed(citations)), (citations[0], citations[0])):
         with pytest.raises(ValidationError, match="observation_citations.*sorted.*unique"):
-            AdvisoryRecordCommand.model_validate(
-                {**values, "observation_citations": changed}
-            )
+            AdvisoryRecordCommand.model_validate({**values, "observation_citations": changed})
 
     for changes, message in (
         ({"ttl_seconds": 0}, "greater than or equal to 1"),
@@ -415,21 +429,24 @@ def test_observation_citations_are_typed_sorted_unique_and_ttl_bound() -> None:
     ):
         changed = {**citations[0], **changes}
         with pytest.raises(ValidationError, match=message):
-            AdvisoryRecordCommand.model_validate(
-                {**values, "observation_citations": (changed,)}
-            )
+            AdvisoryRecordCommand.model_validate({**values, "observation_citations": (changed,)})
+
+    offset = timezone(timedelta(hours=1))
+    non_utc = {
+        **citations[0],
+        "captured_at": (NOW - timedelta(seconds=30)).astimezone(offset),
+        "valid_until": NOW.astimezone(offset),
+    }
+    with pytest.raises(ValidationError, match="captured_at.*UTC"):
+        AdvisoryRecordCommand.model_validate({**values, "observation_citations": (non_utc,)})
 
 
 def test_advisory_disposition_cannot_claim_execution_authority() -> None:
     values = _advisory_command_values()
     with pytest.raises(ValidationError, match="abstain.*none"):
-        AdvisoryRecordCommand.model_validate(
-            {**values, "disposition": "abstain"}
-        )
+        AdvisoryRecordCommand.model_validate({**values, "disposition": "abstain"})
     with pytest.raises(ValidationError, match="recommend.*non-none"):
-        AdvisoryRecordCommand.model_validate(
-            {**values, "recommended_action": "none"}
-        )
+        AdvisoryRecordCommand.model_validate({**values, "recommended_action": "none"})
 
 
 def test_advisory_receipt_is_self_hashed_state_unchanged_and_fresh_at_closed_boundary() -> None:
@@ -463,9 +480,7 @@ def test_advisory_receipt_is_self_hashed_state_unchanged_and_fresh_at_closed_bou
     stale = _observation()
     stale["valid_until"] = NOW - timedelta(microseconds=1)
     with pytest.raises(ValidationError, match="observation.*expired"):
-        ExternalAgentAdvisoryReceipt.model_validate(
-            {**values, "observation_citations": (stale,)}
-        )
+        ExternalAgentAdvisoryReceipt.model_validate({**values, "observation_citations": (stale,)})
 
 
 def test_advisory_receipt_authority_refs_are_exact_and_cas_bound() -> None:
@@ -499,9 +514,7 @@ def test_prompt_revision_command_has_discriminated_fallback(fallback: str) -> No
     with pytest.raises(ValidationError, match="extra_forbidden"):
         PromptRevisionCommand.model_validate(invalid)
     with pytest.raises(ValidationError, match="False"):
-        PromptRevisionCommand.model_validate(
-            {**values, "external_agent_executed": True}
-        )
+        PromptRevisionCommand.model_validate({**values, "external_agent_executed": True})
 
 
 def test_video_frame_fallback_routes_only_to_image_compile() -> None:
@@ -561,6 +574,13 @@ def test_prompt_revision_command_authority_refs_are_exact() -> None:
         with pytest.raises(ValidationError, match=field):
             PromptRevisionCommand.model_validate({**values, field: replacement})
 
+    with pytest.raises(ValidationError, match="failure_receipts"):
+        PromptRevisionCommand.model_validate({**values, "failure_receipts": ()})
+    with pytest.raises(ValidationError, match="exact compile Skill"):
+        PromptRevisionCommand.model_validate(
+            {**values, "next_compile_skill_ref": "text2env.replay@1.0.0"}
+        )
+
 
 def test_prompt_patch_is_a_hash_bound_full_replacement() -> None:
     values = _prompt_command_values()
@@ -580,9 +600,7 @@ def test_prompt_patch_is_a_hash_bound_full_replacement() -> None:
         ({"reason": ""}, "reason"),
     ):
         with pytest.raises(ValidationError, match=message):
-            PromptRevisionCommand.model_validate(
-                {**values, "patch": {**patch, **changes}}
-            )
+            PromptRevisionCommand.model_validate({**values, "patch": {**patch, **changes}})
 
 
 def test_prompt_revision_is_self_hashed_state_unchanged_and_lineage_bound() -> None:
@@ -613,6 +631,22 @@ def test_prompt_revision_is_self_hashed_state_unchanged_and_lineage_bound() -> N
         with pytest.raises(ValidationError, match=message):
             PromptRevision.model_validate({**values, **changes})
 
+    with pytest.raises(ValidationError, match="base_text_sha256.*source_prompt"):
+        PromptRevision.model_validate(
+            {
+                **values,
+                "patch": {**values["patch"], "base_text_sha256": "e" * 64},
+            }
+        )
+    with pytest.raises(ValidationError, match="exact compile Skill"):
+        PromptRevision.model_validate({**values, "next_compile_skill_ref": "text2env.replay@1.0.0"})
+
+    video_values = _prompt_revision_values(fallback="video_frame_to_image")
+    with pytest.raises(ValidationError, match="image2env.compile@1.0.0"):
+        PromptRevision.model_validate(
+            {**video_values, "next_compile_skill_ref": "video2env.compile@1.0.0"}
+        )
+
 
 def test_prompt_revision_number_and_observation_ttl_are_closed() -> None:
     values = _prompt_revision_values()
@@ -631,9 +665,7 @@ def test_prompt_revision_number_and_observation_ttl_are_closed() -> None:
     PromptRevision.model_validate(first)
 
     with pytest.raises(ValidationError, match="predecessor_prompt_revision"):
-        PromptRevision.model_validate(
-            {**values, "prompt_revision_number": 1}
-        )
+        PromptRevision.model_validate({**values, "prompt_revision_number": 1})
     with pytest.raises(ValidationError, match="predecessor_prompt_revision"):
         PromptRevision.model_validate(
             {**values, "prompt_revision_number": 2, "predecessor_prompt_revision": None}
@@ -641,11 +673,50 @@ def test_prompt_revision_number_and_observation_ttl_are_closed() -> None:
     with pytest.raises(ValidationError, match="failure_receipts"):
         PromptRevision.model_validate({**values, "failure_receipts": ()})
     stale = _observation()
-    stale["valid_until"] = NOW - timedelta(microseconds=1)
+    stale["captured_at"] -= timedelta(microseconds=1)
+    stale["valid_until"] -= timedelta(microseconds=1)
     with pytest.raises(ValidationError, match="observation.*expired"):
-        PromptRevision.model_validate(
-            {**values, "observation_citations": (stale,)}
-        )
+        PromptRevision.model_validate({**values, "observation_citations": (stale,)})
+
+
+def test_control_documents_are_standalone_draft_2020_12_and_accept_examples() -> None:
+    documents = schema_documents()
+    examples = {
+        ADVISORY_RECORD_COMMAND_SCHEMA_ID: AdvisoryRecordCommand.model_validate(
+            _advisory_command_values()
+        ),
+        EXTERNAL_AGENT_ADVISORY_RECEIPT_SCHEMA_ID: ExternalAgentAdvisoryReceipt.model_validate(
+            _advisory_receipt_values()
+        ),
+        PROMPT_REVISION_COMMAND_SCHEMA_ID: PromptRevisionCommand.model_validate(
+            _prompt_command_values(fallback="video_frame_to_image")
+        ),
+        PROMPT_REVISION_SCHEMA_ID: PromptRevision.model_validate(_prompt_revision_values()),
+        CONTROL_COMMIT_SNAPSHOT_SCHEMA_ID: ControlCommitSnapshot.model_validate(
+            {
+                "schema_version": CONTROL_COMMIT_SNAPSHOT_SCHEMA_ID,
+                "control_kind": "advisory",
+                "idempotency_key": "control-command-001",
+                **_control_authority(command_schema=ADVISORY_RECORD_COMMAND_SCHEMA_ID),
+                "payload": _ref(
+                    "control-receipt",
+                    EXTERNAL_AGENT_ADVISORY_RECEIPT_SCHEMA_ID,
+                ),
+                "receipt": _ref(
+                    "control-receipt",
+                    EXTERNAL_AGENT_ADVISORY_RECEIPT_SCHEMA_ID,
+                ),
+                "receipt_head": _ref(
+                    "control-receipt",
+                    EXTERNAL_AGENT_ADVISORY_RECEIPT_SCHEMA_ID,
+                ),
+            }
+        ),
+    }
+    for schema_id, example in examples.items():
+        document = documents[schema_id]
+        Draft202012Validator.check_schema(document)
+        Draft202012Validator(document).validate(example.model_dump(mode="json"))
 
 
 def test_prompt_revision_evidence_refs_are_sorted_unique() -> None:
