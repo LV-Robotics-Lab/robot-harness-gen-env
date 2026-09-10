@@ -50,6 +50,14 @@
 
 ## Done
 
+- P0 replay qualification source-closure 修复：fresh-process trace 覆盖整个 `self_improving/` 并纳入
+  `self_improving/registry.py`；真实 `_execute_fixed_case` 测试在只替代外部 runtime/media/native 边界时
+  执行 production compile、direct replay 与 Registry candidate，并检查执行期第一方 import closure。
+  源码 snapshot 对每条目录链和成员做三轮独立 nofollow 重走与 identity/bytes 对账，另做最终 root
+  重开；14-schema 路径和模型门由单一冻结表生成并有独立集合一致性校验。旧 checked bundle 继续因
+  当前源码 identity 不匹配而拒绝，未刷新 hash、未重签；真实重签等待 P2 后 closure 稳定。2026-09-02
+  历史 evidence 保持原字节，当前失效状态写入独立 2026-09-10 页面；四份 repo-docs 的 replay 时态和
+  当前 29-schema 计数已同步。
 - 接受 Codex 同时承担中枢 agent 与视觉判读职责的稳定架构决定。
 - 建立本进度目录和根 `AGENTS.md` 触发入口。
 - 完成 Gujie committed/dirty/runtime 三层 x2env 与 Genesis 审计。

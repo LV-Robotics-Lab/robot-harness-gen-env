@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import shutil
+import subprocess
 import sys
 from dataclasses import fields, replace
 from datetime import datetime, timezone
@@ -13,9 +14,14 @@ from uuid import UUID
 
 import pytest
 
+import self_improving.harness as harness_package
+import self_improving.harness.handlers as handler_package
 import self_improving.harness.qualify_replay as module
 import self_improving.harness.replay_application as replay_application_module
 import self_improving.harness.replay_qualification as replay_qualification_module
+import self_improving.harness.replay_schema_contract as replay_schema_contract_module
+import self_improving.harness.schemas as schemas_package
+import self_improving.harness.schemas._qualified_exports as qualified_schema_exports
 from scene_gen import CompileRequest, compile_scene
 from scene_gen.builder import build_scene_package
 from scene_gen.catalog import AssetCatalog, load_catalog
@@ -100,6 +106,22 @@ EVENT_KINDS = (
 CHECKPOINTS = (120, 240, 360, 480, 600, 720, 840)
 MEDIA_IDENTITY_DOCUMENT = {"schema_version": "test.media_verifier_identity.v1"}
 EXECUTOR_IDENTITY_DOCUMENT = {"schema_version": "test.runtime_executor_identity.v1"}
+REPLAY_SCHEMA_SNAPSHOT_NAMES = (
+    "harness.artifact_ref.v1.schema.json",
+    "harness.blocker.v1.schema.json",
+    "harness.environment_package.v1.schema.json",
+    "harness.event.v1.schema.json",
+    "harness.run_state.v1.schema.json",
+    "harness.skill_descriptor.v1.schema.json",
+    "harness.skill_descriptor.v2.schema.json",
+    "harness.skill_invocation.v1.schema.json",
+    "harness.skill_qualification.v1.schema.json",
+    "harness.skill_qualification_report.v1.schema.json",
+    "harness.text2env_compile_input.v1.schema.json",
+    "harness.text2env_compile_output.v1.schema.json",
+    "harness.text2env_replay_input.v1.schema.json",
+    "harness.text2env_replay_output.v1.schema.json",
+)
 
 
 def _identity_sha256(document: dict[str, object]) -> str:
@@ -1422,17 +1444,26 @@ def test_generates_strict_loadable_three_document_bundle_from_fixed_case(
         "08.candidate_kernel_executions",
     )
     assert result.qualification.deterministic_case_id == ("can-on-plate-seed-7-900-120-120-12")
-    manifest_paths = {item.path for item in result.manifest.files}
+    manifest_paths = tuple(item.path for item in result.manifest.files)
+    assert manifest_paths == module.REPLAY_IMPLEMENTATION_PATHS
     assert {
         "self_improving/harness/__init__.py",
         "self_improving/harness/handlers/__init__.py",
-        "self_improving/harness/schemas/__init__.py",
-        "self_improving/harness/qualify_compile.py",
+        "self_improving/harness/handlers/text2env_replay.py",
+        "self_improving/harness/replay_application.py",
         "self_improving/harness/qualify_replay.py",
         "self_improving/harness/replay_qualification.py",
+        "self_improving/harness/schemas/text2env.py",
+        "self_improving/harness/schemas/__init__.py",
+        "self_improving/harness/json_schemas/harness.text2env_replay_input.v1.schema.json",
+        "self_improving/harness/json_schemas/harness.text2env_replay_output.v1.schema.json",
+    } <= set(manifest_paths)
+    assert {
+        "self_improving/harness/IMPLEMENTATION_LOG.md",
+        "self_improving/harness/asset_repair.py",
         "self_improving/harness/handlers/text2env_validate.py",
-    } <= manifest_paths
-    assert not any("qualified_skills" in path or "__pycache__" in path for path in manifest_paths)
+        "self_improving/harness/system2/dispatcher.py",
+    }.isdisjoint(manifest_paths)
     for item in result.manifest.files:
         payload = (ROOT / item.path).read_bytes()
         assert item.bytes == len(payload)
@@ -1453,6 +1484,85 @@ def test_generates_strict_loadable_three_document_bundle_from_fixed_case(
         "robotwin.resolved_scene.v1",
     } <= closure_schemas
     assert {"request", "generated_scene"} <= closure_names
+
+
+@pytest.mark.parametrize("failure_mode", ["changed", "missing"])
+def test_generation_rejects_replay_schema_snapshot_drift_before_execution(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failure_mode: str,
+) -> None:
+    distribution = tmp_path / "distribution"
+    schema_root = distribution / "self_improving/harness/json_schemas"
+    schema_root.mkdir(parents=True)
+    for name in REPLAY_SCHEMA_SNAPSHOT_NAMES:
+        shutil.copy2(ROOT / "self_improving/harness/json_schemas" / name, schema_root / name)
+    changed = schema_root / "harness.skill_qualification_report.v1.schema.json"
+    if failure_mode == "changed":
+        changed.write_bytes(changed.read_bytes() + b" \n")
+    else:
+        changed.unlink()
+    settings_root = tmp_path / "settings"
+    settings_root.mkdir()
+    settings = replace(
+        _settings(settings_root),
+        distribution_root=distribution,
+    )
+    executed = False
+
+    def unexpected_execution(*_args) -> None:
+        nonlocal executed
+        executed = True
+
+    monkeypatch.setattr(module, "_execute_fixed_case", unexpected_execution)
+    with pytest.raises(ReplayQualificationGenerationError) as captured:
+        generate_replay_qualification(settings)
+
+    assert captured.value.reason == "schema_snapshot_mismatch"
+    assert executed is False
+
+
+def test_replay_schema_model_gate_and_implementation_paths_are_exactly_consistent() -> None:
+    expected_ids = tuple(
+        name.removesuffix(".schema.json") for name in REPLAY_SCHEMA_SNAPSHOT_NAMES
+    )
+    expected_paths = tuple(
+        f"self_improving/harness/json_schemas/{name}"
+        for name in REPLAY_SCHEMA_SNAPSHOT_NAMES
+    )
+
+    assert tuple(
+        binding.schema_id for binding in replay_schema_contract_module.REPLAY_SCHEMA_BINDINGS
+    ) == expected_ids
+    assert tuple(
+        binding.snapshot_path
+        for binding in replay_schema_contract_module.REPLAY_SCHEMA_BINDINGS
+    ) == expected_paths
+    assert replay_qualification_module.REPLAY_SCHEMA_SNAPSHOT_PATHS == expected_paths
+    assert set(expected_paths) <= set(module.REPLAY_IMPLEMENTATION_PATHS)
+
+
+def test_loader_rejects_replay_schema_snapshot_drift_before_bundle_parsing(
+    tmp_path: Path,
+) -> None:
+    distribution = tmp_path / "distribution"
+    schema_root = distribution / "self_improving/harness/json_schemas"
+    schema_root.mkdir(parents=True)
+    for name in REPLAY_SCHEMA_SNAPSHOT_NAMES:
+        shutil.copy2(ROOT / "self_improving/harness/json_schemas" / name, schema_root / name)
+    changed = schema_root / "harness.text2env_replay_output.v1.schema.json"
+    changed.write_bytes(changed.read_bytes() + b" \n")
+
+    with pytest.raises(module.ReplayQualificationError) as captured:
+        replay_qualification_module.verify_replay_qualification_documents(
+            {},
+            artifact_store=LocalArtifactStore(tmp_path / "cas"),
+            implementation_root=distribution,
+            scene_gen_root=SCENE_GEN,
+            ledger_contract_root=LEDGER,
+        )
+
+    assert captured.value.reason == "schema_snapshot_mismatch"
 
 
 def test_success_never_writes_temporary_pass_documents(
@@ -2893,7 +3003,12 @@ def test_source_snapshot_rejects_invalid_root_symlink_missing_and_directory(
     distribution = tmp_path / "distribution"
     harness = distribution / "self_improving/harness"
     harness.mkdir(parents=True)
-    first = harness / "linked.py"
+    for relative in module.REPLAY_IMPLEMENTATION_PATHS:
+        path = distribution / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"{relative}\n", encoding="utf-8")
+    first = distribution / module.REPLAY_IMPLEMENTATION_PATHS[0]
+    first.unlink()
     outside = tmp_path / "outside.py"
     outside.write_text("outside = True\n", encoding="utf-8")
     first.symlink_to(outside)
@@ -2907,10 +3022,639 @@ def test_source_snapshot_rejects_invalid_root_symlink_missing_and_directory(
     assert captured.value.reason == "implementation_path_invalid"
 
     first.mkdir()
-    regular = harness / "__init__.py"
-    regular.write_text("\n", encoding="utf-8")
+    with pytest.raises(module.ReplayQualificationError) as captured:
+        module._snapshot_harness_source(distribution, phase="before_execution")
+    assert captured.value.reason == "implementation_path_invalid"
+
+    first.rmdir()
+    first.write_text("APPLICATION = 1\n", encoding="utf-8")
     snapshot = module._snapshot_harness_source(distribution, phase="before_execution")
-    assert tuple(item.path for item in snapshot.files) == ("self_improving/harness/__init__.py",)
+    assert tuple(item.path for item in snapshot.files) == module.REPLAY_IMPLEMENTATION_PATHS
+
+
+def test_replay_source_snapshot_is_the_explicit_implementation_closure(
+    tmp_path: Path,
+) -> None:
+    expected = (
+        "self_improving/__init__.py",
+        "self_improving/registry.py",
+        "self_improving/harness/__init__.py",
+        "self_improving/harness/application.py",
+        "self_improving/harness/artifacts.py",
+        "self_improving/harness/assets.py",
+        "self_improving/harness/event_journal.py",
+        "self_improving/harness/events.py",
+        "self_improving/harness/handlers/__init__.py",
+        "self_improving/harness/handlers/text2env_compile.py",
+        "self_improving/harness/handlers/text2env_compile_dependencies.py",
+        "self_improving/harness/handlers/text2env_replay.py",
+        *(
+            f"self_improving/harness/json_schemas/{name}"
+            for name in REPLAY_SCHEMA_SNAPSHOT_NAMES
+        ),
+        "self_improving/harness/media_sandbox.py",
+        "self_improving/harness/media_verifier.py",
+        "self_improving/harness/native/media_sandbox.c",
+        "self_improving/harness/package_store.py",
+        "self_improving/harness/qualification.py",
+        "self_improving/harness/qualify_replay.py",
+        "self_improving/harness/registry.py",
+        "self_improving/harness/replay_application.py",
+        "self_improving/harness/replay_dependencies.py",
+        "self_improving/harness/replay_qualification.py",
+        "self_improving/harness/replay_schema_contract.py",
+        "self_improving/harness/run_store.py",
+        "self_improving/harness/runtime_assets.py",
+        "self_improving/harness/runtime_capability.py",
+        "self_improving/harness/runtime_events.py",
+        "self_improving/harness/runtime_executor.py",
+        "self_improving/harness/schema_catalog.py",
+        "self_improving/harness/schemas/__init__.py",
+        "self_improving/harness/schemas/_qualified_exports.py",
+        "self_improving/harness/schemas/base.py",
+        "self_improving/harness/schemas/common.py",
+        "self_improving/harness/schemas/qualification_report.py",
+        "self_improving/harness/schemas/text2env.py",
+    )
+    distribution = tmp_path / "distribution"
+    for relative in expected:
+        path = distribution / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"{relative}\n", encoding="utf-8")
+
+    unrelated = distribution / "self_improving/harness/system2/dispatcher.py"
+    unrelated.parent.mkdir(parents=True)
+    unrelated.write_text("UNRELATED = 1\n", encoding="utf-8")
+    before = module._snapshot_harness_source(distribution, phase="before_execution")
+
+    assert tuple(item.path for item in before.files) == expected
+    unrelated.write_text("UNRELATED = 2\n", encoding="utf-8")
+    after_unrelated_change = module._snapshot_harness_source(
+        distribution,
+        phase="after_execution",
+    )
+    assert before.files == after_unrelated_change.files
+    assert before.tree_sha256 == after_unrelated_change.tree_sha256
+
+    for relative in expected:
+        included = distribution / relative
+        original = included.read_bytes()
+        included.write_bytes(original + b"drift\n")
+        after_included_change = module._snapshot_harness_source(
+            distribution,
+            phase="after_execution",
+        )
+        assert after_included_change.files != before.files, relative
+        assert after_included_change.tree_sha256 != before.tree_sha256, relative
+        included.write_bytes(original)
+
+
+def test_global_facade_and_schema_catalog_extensions_do_not_change_replay_identity(
+    tmp_path: Path,
+) -> None:
+    distribution = tmp_path / "distribution"
+    for relative in module.REPLAY_IMPLEMENTATION_PATHS:
+        path = distribution / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"qualified:{relative}\n", encoding="utf-8")
+    extension_paths = (
+        "self_improving/harness/_public_exports.py",
+        "self_improving/harness/_schema_catalog_models.py",
+        "self_improving/harness/handlers/_public_exports.py",
+        "self_improving/harness/schemas/_public_exports.py",
+    )
+    for relative in extension_paths:
+        path = distribution / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if not path.exists():
+            path.write_text("IMAGE2ENV_EXPORT = 1\n", encoding="utf-8")
+    before = module._snapshot_harness_source(distribution, phase="before_execution")
+
+    for relative in extension_paths:
+        extension = distribution / relative
+        original = extension.read_bytes()
+        extension.write_bytes(original + b"VIDEO2ENV_EXPORT = 1\n")
+        after = module._snapshot_harness_source(distribution, phase="after_execution")
+        assert after.files == before.files, relative
+        assert after.tree_sha256 == before.tree_sha256, relative
+        extension.write_bytes(original)
+
+
+def test_replay_implementation_closure_contains_fresh_import_trace() -> None:
+    program = """
+import json
+import sys
+from pathlib import Path
+import self_improving.harness.qualify_replay
+
+root = Path.cwd().resolve()
+self_improving_root = root / "self_improving"
+paths = set()
+for loaded in tuple(sys.modules.values()):
+    value = getattr(loaded, "__file__", None)
+    if not isinstance(value, str):
+        continue
+    path = Path(value).resolve()
+    if path.suffix == ".py" and path.is_relative_to(self_improving_root):
+        paths.add(path.relative_to(root).as_posix())
+print(json.dumps(sorted(paths), separators=(",", ":")))
+"""
+    completed = subprocess.run(
+        [sys.executable, "-c", program],
+        cwd=ROOT,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    traced = set(json.loads(completed.stdout))
+
+    assert "self_improving/harness/_schema_catalog_models.py" not in traced
+    assert traced <= set(module.REPLAY_IMPLEMENTATION_PATHS), sorted(
+        traced - set(module.REPLAY_IMPLEMENTATION_PATHS)
+    )
+
+
+def test_production_fixed_case_execution_imports_stay_within_qualified_source_closure() -> None:
+    program = r'''
+import json
+import runpy
+import sys
+import tempfile
+from dataclasses import replace
+from pathlib import Path
+from types import SimpleNamespace
+
+root = Path.cwd().resolve()
+namespace = runpy.run_path(
+    str(root / "tests/self_improving/harness/test_qualify_replay.py")
+)
+replay_test_namespace = runpy.run_path(
+    str(root / "tests/self_improving/harness/test_text2env_replay_handler.py")
+)
+# The test module imports one convenience symbol through the global package
+# facade. Evict that bootstrap-only catalog so the trace below records whether
+# the production execution path itself reloads it.
+sys.modules.pop("self_improving.harness._public_exports", None)
+with tempfile.TemporaryDirectory() as temporary:
+    temporary_root = Path(temporary)
+    settings = namespace["_settings"](temporary_root)
+    fixture = replay_test_namespace["_fixture"](temporary_root / "production-input")
+    settings = replace(
+        settings,
+        asset_catalog_path=temporary_root / "production-input/catalog.json",
+        allowed_asset_roots=(fixture.robotwin_root,),
+    )
+    settings.scratch_root.mkdir()
+    monkeypatch = namespace["pytest"].MonkeyPatch()
+    try:
+        capability_document = json.loads(settings.runtime_capability_path.read_bytes())
+        runtime_executor = replay_test_namespace["RecordingExecutor"](
+            temporary_root / "external-runtime",
+            capability_document,
+        )
+        media_verifier = replay_test_namespace["RecordingMediaVerifier"]()
+        monkeypatch.setattr(
+            namespace["module"],
+            "SubprocessRoboTwinRuntimeExecutor",
+            lambda **_values: runtime_executor,
+        )
+        monkeypatch.setattr(
+            namespace["module"],
+            "NativeCgroupSandbox",
+            lambda **_values: SimpleNamespace(),
+        )
+        monkeypatch.setattr(
+            namespace["module"],
+            "SubprocessReplayMediaVerifier",
+            lambda **_values: media_verifier,
+        )
+        execution = namespace["module"]._execute_fixed_case(
+            settings,
+            settings.scratch_root,
+        )
+        assert execution.direct.handler_call_count == 1
+        assert execution.kernel.handler_call_count == 1
+        assert len(runtime_executor.calls) == 2
+    finally:
+        monkeypatch.undo()
+
+self_improving_root = root / "self_improving"
+paths = set()
+for loaded in tuple(sys.modules.values()):
+    value = getattr(loaded, "__file__", None)
+    if not isinstance(value, str):
+        continue
+    path = Path(value).resolve()
+    if path.suffix == ".py" and path.is_relative_to(self_improving_root):
+        paths.add(path.relative_to(root).as_posix())
+print("__REPLAY_TRACE__" + json.dumps(sorted(paths), separators=(",", ":")))
+'''
+    completed = subprocess.run(
+        [sys.executable, "-c", program],
+        cwd=ROOT,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    trace_line = next(
+        line
+        for line in completed.stdout.splitlines()
+        if line.startswith("__REPLAY_TRACE__")
+    )
+    traced = set(json.loads(trace_line.removeprefix("__REPLAY_TRACE__")))
+    ledger_prefix = "self_improving/asset_pipeline/active/1_asset_reuse/lib/"
+    ledger_traced = {path for path in traced if path.startswith(ledger_prefix)}
+    implementation_traced = traced - ledger_traced
+    ledger_sources = {
+        path.relative_to(ROOT).as_posix()
+        for path in LEDGER.rglob("*.py")
+    }
+    unrelated_schema_families = {
+        "self_improving/harness/schemas/asset_repair.py",
+        "self_improving/harness/schemas/registry_snapshot.py",
+        "self_improving/harness/schemas/replay_vlm.py",
+        "self_improving/harness/schemas/text2env_validate_v2.py",
+        "self_improving/harness/schemas/workflow.py",
+    }
+
+    assert unrelated_schema_families.isdisjoint(traced), sorted(
+        unrelated_schema_families & traced
+    )
+    assert {
+        "self_improving/harness/assets.py",
+        "self_improving/harness/handlers/text2env_compile.py",
+        "self_improving/harness/handlers/text2env_replay.py",
+        "self_improving/harness/registry.py",
+    } <= implementation_traced
+    assert implementation_traced <= set(module.REPLAY_IMPLEMENTATION_PATHS), sorted(
+        implementation_traced - set(module.REPLAY_IMPLEMENTATION_PATHS)
+    )
+    assert ledger_traced <= ledger_sources, sorted(ledger_traced - ledger_sources)
+
+
+def test_lazy_package_exports_preserve_the_public_api_without_eager_side_effects() -> None:
+    for package in (harness_package, handler_package, schemas_package):
+        assert package.__all__
+        assert len(package.__all__) == len(set(package.__all__))
+        for name in package.__all__:
+            assert getattr(package, name) is not None
+
+    assert harness_package.__getattr__("LocalArtifactStore") is LocalArtifactStore
+    assert "LocalArtifactStore" in harness_package.__dir__()
+    with pytest.raises(AttributeError, match="has no attribute"):
+        harness_package.__getattr__("not_a_harness_export")
+
+    handler = handler_package.__getattr__("Text2EnvCompileHandler")
+    assert handler.__name__ == "Text2EnvCompileHandler"
+    assert "Text2EnvCompileHandler" in handler_package.__dir__()
+    with pytest.raises(AttributeError, match="has no attribute"):
+        handler_package.__getattr__("not_a_handler_export")
+
+    assert schemas_package.__getattr__("ArtifactRef") is ArtifactRef
+    assert "ArtifactRef" in schemas_package.__dir__()
+    with pytest.raises(AttributeError, match="has no attribute"):
+        schemas_package.__getattr__("not_a_schema_export")
+
+
+def test_qualified_schema_resolver_is_frozen_to_the_legacy_replay_v1_family() -> None:
+    assert "Text2EnvCompileInput" in qualified_schema_exports._LEGACY_V1_EXPORT_MODULES
+    assert "Text2EnvReplayOutput" in qualified_schema_exports._LEGACY_V1_EXPORT_MODULES
+    assert "Text2EnvValidateInput" not in qualified_schema_exports._LEGACY_V1_EXPORT_MODULES
+    assert (
+        "harness.text2env_validate_input.v1"
+        not in qualified_schema_exports._LEGACY_V1_SCHEMA_MODELS
+    )
+    with pytest.raises(TypeError):
+        qualified_schema_exports._LEGACY_V1_EXPORT_MODULES["Image2EnvInput"] = ".image2env"  # type: ignore[index]
+    with pytest.raises(TypeError):
+        qualified_schema_exports._LEGACY_V1_SCHEMA_MODELS["harness.text2env_input.v2"] = (  # type: ignore[index]
+            ".text2env_v2",
+            "Text2EnvInputV2",
+        )
+
+
+def test_replay_source_snapshot_rejects_resolve_to_open_replacement_across_three_scans(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    distribution = tmp_path / "distribution"
+    for relative in module.REPLAY_IMPLEMENTATION_PATHS:
+        path = distribution / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(f"trusted:{relative}\n".encode())
+    relative = module.REPLAY_IMPLEMENTATION_PATHS[0]
+    target = distribution / relative
+    parked = tmp_path / "parked"
+    replacement = tmp_path / "replacement"
+    replacement.write_bytes(b"stable replacement bytes\n")
+    trusted_sha256 = hashlib.sha256(target.read_bytes()).hexdigest()
+    replacement_sha256 = hashlib.sha256(replacement.read_bytes()).hexdigest()
+    real_resolve = Path.resolve
+
+    def swap_after_resolve(path: Path, *args, **kwargs) -> Path:
+        resolved = real_resolve(path, *args, **kwargs)
+        if path == target:
+            target.rename(parked)
+            target.symlink_to(replacement)
+        return resolved
+
+    monkeypatch.setattr(Path, "resolve", swap_after_resolve)
+    snapshots = []
+    for scan in range(3):
+        if target.is_symlink():
+            target.unlink()
+            parked.rename(target)
+        snapshots.append(
+            module._snapshot_harness_source(distribution, phase="before_execution")
+        )
+
+    identities = [
+        next(item for item in snapshot.files if item.path == relative).sha256
+        for snapshot in snapshots
+    ]
+    assert identities == [trusted_sha256] * 3
+    assert replacement_sha256 not in identities
+
+
+def test_replay_source_snapshot_rejects_symlink_in_distribution_root_ancestry(
+    tmp_path: Path,
+) -> None:
+    real_parent = tmp_path / "real-parent"
+    distribution = real_parent / "distribution"
+    for relative in module.REPLAY_IMPLEMENTATION_PATHS:
+        path = distribution / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(f"trusted:{relative}\n".encode())
+    aliased_parent = tmp_path / "aliased-parent"
+    aliased_parent.symlink_to(real_parent, target_is_directory=True)
+
+    with pytest.raises(module.ReplayQualificationError) as captured:
+        module._snapshot_harness_source(
+            aliased_parent / "distribution",
+            phase="before_execution",
+        )
+
+    assert captured.value.reason == "implementation_path_invalid"
+
+
+def test_replay_source_snapshot_rejects_distribution_root_replacement_after_open(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    distribution = tmp_path / "distribution"
+    for relative in module.REPLAY_IMPLEMENTATION_PATHS:
+        path = distribution / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(f"trusted:{relative}\n".encode())
+    parked = tmp_path / "parked-distribution"
+    replacement = tmp_path / "replacement-distribution"
+    shutil.copytree(distribution, replacement)
+    real_open = module.os.open
+    root_replaced = False
+
+    def replace_root_after_open(path, flags, *args, **kwargs):
+        nonlocal root_replaced
+        descriptor = real_open(path, flags, *args, **kwargs)
+        if not root_replaced and path == distribution.name and flags & module.os.O_DIRECTORY:
+            root_replaced = True
+            distribution.rename(parked)
+            replacement.rename(distribution)
+        return descriptor
+
+    monkeypatch.setattr(module.os, "open", replace_root_after_open)
+    with pytest.raises(module.ReplayQualificationError) as captured:
+        module._snapshot_harness_source(distribution, phase="before_execution")
+
+    assert root_replaced is True
+    assert captured.value.reason == "implementation_path_invalid"
+
+
+@pytest.mark.parametrize("failure", ["reopen", "identity"])
+def test_replay_source_snapshot_rejects_final_root_recheck_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failure: str,
+) -> None:
+    distribution = tmp_path / "distribution"
+    for relative in module.REPLAY_IMPLEMENTATION_PATHS:
+        path = distribution / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(f"trusted:{relative}\n".encode())
+    real_open = module.os.open
+    real_fstat = module.os.fstat
+    root_open_count = 0
+    final_root_descriptor: int | None = None
+
+    def fail_selected_root_open(path, flags, *args, **kwargs):
+        nonlocal root_open_count, final_root_descriptor
+        if path == distribution.name and flags & module.os.O_DIRECTORY:
+            root_open_count += 1
+            if root_open_count == 4 and failure == "reopen":
+                raise OSError("simulated final root reopen failure")
+        descriptor = real_open(path, flags, *args, **kwargs)
+        if root_open_count == 4 and path == distribution.name:
+            final_root_descriptor = descriptor
+        return descriptor
+
+    def fail_selected_root_identity(descriptor: int):
+        if failure == "identity" and descriptor == final_root_descriptor:
+            raise OSError("simulated final root identity failure")
+        return real_fstat(descriptor)
+
+    monkeypatch.setattr(module.os, "open", fail_selected_root_open)
+    monkeypatch.setattr(module.os, "fstat", fail_selected_root_identity)
+    with pytest.raises(module.ReplayQualificationError) as captured:
+        module._snapshot_harness_source(distribution, phase="before_execution")
+
+    assert root_open_count == 4
+    assert captured.value.reason == "implementation_path_invalid"
+
+
+@pytest.mark.parametrize(
+    "replaced_directory",
+    ["self_improving", "self_improving/harness/schemas"],
+)
+def test_replay_source_snapshot_rejects_intermediate_directory_replacement_after_second_scan(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    replaced_directory: str,
+) -> None:
+    distribution = tmp_path / "distribution"
+    for relative in module.REPLAY_IMPLEMENTATION_PATHS:
+        path = distribution / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(f"trusted:{relative}\n".encode())
+    target = distribution / replaced_directory
+    parked = tmp_path / f"parked-{target.name}"
+    replacement = tmp_path / f"replacement-{target.name}"
+    shutil.copytree(target, replacement)
+    final_member_name = Path(module.REPLAY_IMPLEMENTATION_PATHS[-1]).name
+    real_open = module.os.open
+    final_member_open_count = 0
+    replaced = False
+
+    def replace_directory_after_final_member_open(path, flags, *args, **kwargs):
+        nonlocal final_member_open_count, replaced
+        descriptor = real_open(path, flags, *args, **kwargs)
+        if path == final_member_name and not flags & module.os.O_DIRECTORY:
+            final_member_open_count += 1
+            if final_member_open_count == 2:
+                replaced = True
+                target.rename(parked)
+                replacement.rename(target)
+        return descriptor
+
+    monkeypatch.setattr(module.os, "open", replace_directory_after_final_member_open)
+    with pytest.raises(module.ReplayQualificationError) as captured:
+        module._snapshot_harness_source(distribution, phase="before_execution")
+
+    assert final_member_open_count == 3
+    assert replaced is True
+    assert captured.value.reason == "implementation_path_invalid"
+
+
+@pytest.mark.parametrize("failed_anchor_check", [1, 2])
+def test_replay_source_snapshot_rejects_unreadable_root_anchor_identity(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failed_anchor_check: int,
+) -> None:
+    distribution = tmp_path / "distribution"
+    for relative in module.REPLAY_IMPLEMENTATION_PATHS:
+        path = distribution / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(f"trusted:{relative}\n".encode())
+    real_identity = replay_qualification_module._directory_anchor_identity
+    calls = 0
+
+    def fail_selected_check(descriptor: int) -> tuple[int, int, int]:
+        nonlocal calls
+        calls += 1
+        if calls == failed_anchor_check:
+            raise OSError("simulated root anchor failure")
+        return real_identity(descriptor)
+
+    monkeypatch.setattr(
+        replay_qualification_module,
+        "_directory_anchor_identity",
+        fail_selected_check,
+    )
+    with pytest.raises(module.ReplayQualificationError) as captured:
+        module._snapshot_harness_source(distribution, phase="before_execution")
+
+    assert captured.value.reason == "implementation_path_invalid"
+
+
+def test_directory_anchor_identity_rejects_non_directory_descriptor(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        replay_qualification_module.os,
+        "fstat",
+        lambda _descriptor: SimpleNamespace(st_mode=replay_qualification_module.stat.S_IFREG),
+    )
+
+    with pytest.raises(OSError, match="not a directory"):
+        replay_qualification_module._directory_anchor_identity(-1)
+
+
+def test_replay_source_snapshot_rejects_parent_escape_in_relative_root(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    working = tmp_path / "working"
+    working.mkdir()
+    monkeypatch.chdir(working)
+
+    with pytest.raises(module.ReplayQualificationError) as captured:
+        module._snapshot_harness_source(Path("../distribution"), phase="before_execution")
+
+    assert captured.value.reason == "implementation_path_invalid"
+
+
+def test_replay_source_snapshot_rejects_non_descendant_closure_member(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    distribution = tmp_path / "distribution"
+    distribution.mkdir()
+    monkeypatch.setattr(
+        replay_qualification_module,
+        "REPLAY_IMPLEMENTATION_PATHS",
+        ("../outside.py",),
+    )
+
+    with pytest.raises(module.ReplayQualificationError) as captured:
+        module._snapshot_harness_source(distribution, phase="before_execution")
+
+    assert captured.value.reason == "implementation_path_invalid"
+
+
+def test_replay_source_snapshot_rejects_rename_after_nofollow_open(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    distribution = tmp_path / "distribution"
+    for relative in module.REPLAY_IMPLEMENTATION_PATHS:
+        path = distribution / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(f"trusted:{relative}\n".encode())
+    target = distribution / module.REPLAY_IMPLEMENTATION_PATHS[0]
+    parked = tmp_path / "parked"
+    replacement = tmp_path / "replacement"
+    replacement.write_bytes(b"replacement\n")
+    real_open = module.os.open
+    replaced = False
+
+    def rename_after_open(path, flags, *args, **kwargs):
+        nonlocal replaced
+        descriptor = real_open(path, flags, *args, **kwargs)
+        if not replaced and path == target.name and not flags & module.os.O_DIRECTORY:
+            replaced = True
+            target.rename(parked)
+            target.symlink_to(replacement)
+        return descriptor
+
+    monkeypatch.setattr(module.os, "open", rename_after_open)
+    with pytest.raises(module.ReplayQualificationError) as captured:
+        module._snapshot_harness_source(distribution, phase="before_execution")
+
+    assert replaced is True
+    assert captured.value.reason == "implementation_path_invalid"
+
+
+def test_replay_source_snapshot_rejects_in_place_change_during_streaming_hash(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    distribution = tmp_path / "distribution"
+    for relative in module.REPLAY_IMPLEMENTATION_PATHS:
+        path = distribution / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(f"trusted:{relative}\n".encode())
+    target = distribution / module.REPLAY_IMPLEMENTATION_PATHS[0]
+    target_inode = target.stat().st_ino
+    real_read = module.os.read
+    modified = False
+
+    def mutate_after_read(descriptor: int, count: int) -> bytes:
+        nonlocal modified
+        chunk = real_read(descriptor, count)
+        if not modified and chunk and module.os.fstat(descriptor).st_ino == target_inode:
+            modified = True
+            target.write_bytes(b"changed while open\n")
+        return chunk
+
+    monkeypatch.setattr(module.os, "read", mutate_after_read)
+    with pytest.raises(module.ReplayQualificationError) as captured:
+        module._snapshot_harness_source(distribution, phase="before_execution")
+
+    assert modified is True
+    assert captured.value.reason == "implementation_path_invalid"
 
 
 def test_atomic_writer_rejects_existing_and_removes_post_publish_uncertainty(

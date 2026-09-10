@@ -55,6 +55,7 @@ from .registry import (
 )
 from .replay_dependencies import REPLAY_DEPENDENCY_NAMES, TEXT2ENV_REPLAY_SKILL_REF
 from .replay_qualification import (
+    REPLAY_IMPLEMENTATION_PATHS,
     REPLAY_QUALIFICATION_CASE_ID,
     REPLAY_QUALIFICATION_CHECK_NAMES,
     REPLAY_QUALIFICATION_REQUEST,
@@ -83,6 +84,7 @@ from .replay_qualification import (
     _snapshot_harness_source,
     verify_replay_qualification_documents,
 )
+from .replay_schema_contract import ReplaySchemaContractError, verify_replay_schema_contract
 from .run_store import SQLiteRunStore
 from .runtime_capability import (
     RUNTIME_ARTIFACT_PATHS,
@@ -130,34 +132,7 @@ _RUNTIME_CONFIG = RuntimeConfig(
 _DIRECT_RUN_ID = UUID("71000000-0000-4000-8000-000000000001")
 _KERNEL_RUN_ID = UUID("71000000-0000-4000-8000-000000000002")
 _QUALIFICATION_DATE = date(2026, 8, 31)
-_IMPLEMENTATION_PATHS = (
-    "self_improving/harness/application.py",
-    "self_improving/harness/artifacts.py",
-    "self_improving/harness/assets.py",
-    "self_improving/harness/event_journal.py",
-    "self_improving/harness/events.py",
-    "self_improving/harness/handlers/text2env_compile.py",
-    "self_improving/harness/handlers/text2env_compile_dependencies.py",
-    "self_improving/harness/handlers/text2env_replay.py",
-    "self_improving/harness/media_sandbox.py",
-    "self_improving/harness/media_verifier.py",
-    "self_improving/harness/native/media_sandbox.c",
-    "self_improving/harness/package_store.py",
-    "self_improving/harness/qualification.py",
-    "self_improving/harness/qualify_replay.py",
-    "self_improving/harness/registry.py",
-    "self_improving/harness/replay_dependencies.py",
-    "self_improving/harness/replay_qualification.py",
-    "self_improving/harness/run_store.py",
-    "self_improving/harness/runtime_assets.py",
-    "self_improving/harness/runtime_capability.py",
-    "self_improving/harness/runtime_events.py",
-    "self_improving/harness/runtime_executor.py",
-    "self_improving/harness/schema_catalog.py",
-    "self_improving/harness/schemas/base.py",
-    "self_improving/harness/schemas/common.py",
-    "self_improving/harness/schemas/text2env.py",
-)
+_IMPLEMENTATION_PATHS = REPLAY_IMPLEMENTATION_PATHS
 
 
 class ReplayQualificationGenerationError(RuntimeError):
@@ -319,6 +294,13 @@ def generate_replay_qualification(
     scratch_root = _new_output_root(settings.scratch_root, label="scratch")
     _positive_timeout(settings.runtime_timeout_seconds, label="runtime_timeout_seconds")
     _positive_timeout(settings.capability_timeout_seconds, label="capability_timeout_seconds")
+    try:
+        verify_replay_schema_contract(settings.distribution_root)
+    except ReplaySchemaContractError as error:
+        raise ReplayQualificationGenerationError(
+            "schema_snapshot_mismatch",
+            str(error),
+        ) from error
 
     scratch_root.mkdir(parents=True)
     execution = _execute_fixed_case(settings, scratch_root)

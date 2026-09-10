@@ -369,3 +369,34 @@
   与 CAS 统一生成，不能仅修改 expected hash。本结果也没有实现 `RunCommandRequest`、
   `OperationSnapshot`、`GoldenRunHarness.submit`、workflow operation journal、replay/validate dispatch、
   MCP transport、Genesis runtime 或 promotion，因此不声称 S1 submit 闭环或 golden E2E 已完成。
+## 2026-09-10 P0 replay qualification 显式闭包修复
+
+- RED：fresh-process import trace 原先只统计 `harness/`，遗漏 `self_improving/__init__.py` 实际加载的
+  `self_improving/registry.py`；扩展到整个 `self_improving/` 后以唯一额外路径精确失败。该顶层 registry
+  已进入 replay implementation closure，import-only trace 不再过滤它。
+- RED：保持 distribution root 不变，在第二轮最后一个成员已打开时分别把 `self_improving/` 和
+  `self_improving/harness/schemas/` 换成字节完全相同的完整副本，两轮实现仍返回旧摘要。GREEN 现在从
+  绝对 root 独立打开三次，每次逐组件 nofollow 重走每条目录链并流式重读成员；逐项比较目录与文件
+  identity、bytes、SHA-256，并最终再次重开 root。换根、中间目录替换、member rename/symlink、读取中
+  原地变化、父级逃逸和非普通文件均 fail closed。
+- fresh-process production tracer 不再替换 `_execute_fixed_case`：真实 compile application/handler、
+  direct replay handler 与 Registry candidate 都执行，只替代外部 RoboTwin runtime、native sandbox 和
+  media decoder 边界。实际加载的 `assets.py`、compile/replay handler、Harness Registry 均在显式
+  implementation closure；若 ledger contract 动态 import，则必须落在独立 tree-hash 绑定的 ledger root。
+- 14 个 replay 绑定 schema 的 `schema_id + model` 现由 frozen `REPLAY_SCHEMA_BINDINGS` 单表定义；
+  implementation snapshot paths 与 exact model/snapshot gate 都从该表派生。测试保留独立 14-ID literal
+  并要求模型集合、路径集合和 implementation closure 精确一致；qualification-report projection 仍是
+  真实依赖。任一 snapshot 内容变化或缺失会在生成执行或 loader 解析前拒绝。
+- package façade 兼容不变：root/handlers/schemas 为稳定惰性 seam；全局公开 export/schema family 目录
+  仍在 replay closure 外；`SCHEMA_MODELS.copy()`、左右 `|` 与不可赋值行为保持。
+- focused replay/loader/schema：`171 passed`；12 个变更模块合计 1,807 statements、372 branches，
+  statement/branch coverage 均为 100%。29 份 Harness schema snapshot、Ruff、`git diff --check` 与
+  checked compile qualification 均通过。
+- root：`3206 passed, 19 skipped, 1 failed in 153.28s`。唯一失败仍是旧 checked replay bundle 对当前
+  `harness/__init__.py` 的 `implementation_file_mismatch`；这是预期的 fail-closed 结果，不是重签。
+- reader-facing repo-docs 已统一时态和当前 29-schema 计数：2026-09-02 bundle/真实 900/120 是固定旧
+  源码下的历史证据；当前 loader 会拒绝，新的 current qualification 尚未执行。历史 evidence 页恢复
+  原字节，当前失效和未重签状态记录在独立 `replay-qualification-status-20260910.md`。
+- 边界：未改 qualification 三份文档或 expected hash，未执行真实 replay requalification，未声称当前
+  simulator、Genesis 或真机能力。P2 仍会修改 closure 内 `registry.py` / `application.py`；只有其固定
+  实现合入后才可执行真实 900/120、严格 reload 和重签。

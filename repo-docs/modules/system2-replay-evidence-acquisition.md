@@ -27,10 +27,12 @@ destination 必须直接指向部署侧 replay evidence CAS，不能先推广到
 
 ## 固定资格与动态运行不是同一主张
 
-checked-in replay qualification 的固定 can-on-plate 案例证明既定源码、依赖下的 factory wiring 与
-`text2env.replay@1.0.0` descriptor 可用。它不自动证明当前动态 `PromotedSystem2ReplayInput` 已 qualification，
-也不证明这个动态结果已 qualification。本 seam 只在同一 application contract 下执行并对账当前输入与
-本地持久记录；它不重新计算 Registry 私有的 Invocation digest，也不把动态依赖摘要冒充固定资格事实。
+checked-in replay qualification 只证明 2026-09-02 固定源码、依赖下的 can-on-plate factory wiring 与
+`text2env.replay@1.0.0` descriptor 当时可用。当前源码身份已变化，严格 loader 会拒绝这份旧 bundle，
+所以它不能授权当前动态 `PromotedSystem2ReplayInput`，也不证明这个动态结果已 qualification。本 seam
+只在同一 application contract 下执行并对账当前输入与本地持久记录；它不重新计算 Registry 私有的
+Invocation digest，也不把动态依赖摘要冒充固定资格事实。旧 bundle 的当前失效记录与重新资格化前置见
+[`docs/evidence/replay-qualification-status-20260910.md`](../../docs/evidence/replay-qualification-status-20260910.md)。
 
 真实部署的正向运行仍须同时提供固定资格所依赖的外部 63-ref CAS closure、解释器与运行工具、RoboTwin
 资产、runtime capability、delegated cgroup 和新的 state root。package-only promotion 没有搬运 request

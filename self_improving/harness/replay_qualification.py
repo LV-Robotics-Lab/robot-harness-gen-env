@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import stat
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -42,6 +44,11 @@ from .replay_dependencies import (
     REPLAY_MEDIA_VERIFIER_DEPENDENCY,
     REPLAY_RUNTIME_ASSET_DEPENDENCY,
     TEXT2ENV_REPLAY_SKILL_REF,
+)
+from .replay_schema_contract import (
+    REPLAY_SCHEMA_SNAPSHOT_PATHS,
+    ReplaySchemaContractError,
+    verify_replay_schema_contract,
 )
 from .runtime_assets import canonical_runtime_asset_manifest_bytes
 from .runtime_capability import (
@@ -85,6 +92,44 @@ REPLAY_QUALIFICATION_CHECK_NAMES = (
     "06.physics_validation",
     "07.source_stability",
     "08.candidate_kernel_executions",
+)
+REPLAY_IMPLEMENTATION_PATHS = (
+    "self_improving/__init__.py",
+    "self_improving/registry.py",
+    "self_improving/harness/__init__.py",
+    "self_improving/harness/application.py",
+    "self_improving/harness/artifacts.py",
+    "self_improving/harness/assets.py",
+    "self_improving/harness/event_journal.py",
+    "self_improving/harness/events.py",
+    "self_improving/harness/handlers/__init__.py",
+    "self_improving/harness/handlers/text2env_compile.py",
+    "self_improving/harness/handlers/text2env_compile_dependencies.py",
+    "self_improving/harness/handlers/text2env_replay.py",
+    *REPLAY_SCHEMA_SNAPSHOT_PATHS,
+    "self_improving/harness/media_sandbox.py",
+    "self_improving/harness/media_verifier.py",
+    "self_improving/harness/native/media_sandbox.c",
+    "self_improving/harness/package_store.py",
+    "self_improving/harness/qualification.py",
+    "self_improving/harness/qualify_replay.py",
+    "self_improving/harness/registry.py",
+    "self_improving/harness/replay_application.py",
+    "self_improving/harness/replay_dependencies.py",
+    "self_improving/harness/replay_qualification.py",
+    "self_improving/harness/replay_schema_contract.py",
+    "self_improving/harness/run_store.py",
+    "self_improving/harness/runtime_assets.py",
+    "self_improving/harness/runtime_capability.py",
+    "self_improving/harness/runtime_events.py",
+    "self_improving/harness/runtime_executor.py",
+    "self_improving/harness/schema_catalog.py",
+    "self_improving/harness/schemas/__init__.py",
+    "self_improving/harness/schemas/_qualified_exports.py",
+    "self_improving/harness/schemas/base.py",
+    "self_improving/harness/schemas/common.py",
+    "self_improving/harness/schemas/qualification_report.py",
+    "self_improving/harness/schemas/text2env.py",
 )
 _DEPENDENCY_NAMES = (
     REPLAY_CAPABILITY_DEPENDENCY,
@@ -489,6 +534,7 @@ def verify_replay_qualification_bundle(
 ) -> _ReplayQualificationInspection:
     """Strictly verify generic and replay evidence without publishing pass documents."""
 
+    _verify_replay_schema_contract(implementation_root)
     try:
         verified = verify_qualification_bundle(
             bundle_root,
@@ -517,6 +563,7 @@ def verify_replay_qualification_documents(
 ) -> _ReplayQualificationInspection:
     """Strictly verify in-memory replay documents without staging pass receipts."""
 
+    _verify_replay_schema_contract(implementation_root)
     try:
         verified = verify_qualification_documents(
             documents,
@@ -532,6 +579,13 @@ def verify_replay_qualification_documents(
         artifact_store=artifact_store,
         implementation_root=implementation_root,
     )
+
+
+def _verify_replay_schema_contract(implementation_root: Path) -> None:
+    try:
+        verify_replay_schema_contract(implementation_root)
+    except ReplaySchemaContractError as error:
+        raise ReplayQualificationError("schema_snapshot_mismatch", str(error)) from error
 
 
 def _verify_verified_replay_qualification(
@@ -2199,33 +2253,38 @@ def _snapshot_harness_source(
     *,
     phase: Literal["before_execution", "after_execution", "before_publish"],
 ) -> ReplayHarnessSourceManifest:
-    root = distribution_root.expanduser().resolve(strict=True)
+    root = Path(distribution_root).expanduser()
+    if not root.is_absolute():
+        root = root.absolute()
     harness_root = root / "self_improving" / "harness"
-    files: list[ImplementationFileV1] = []
-    for path in sorted(harness_root.rglob("*"), key=lambda item: item.as_posix()):
-        relative_to_harness = path.relative_to(harness_root)
-        if (
-            "qualified_skills" in relative_to_harness.parts
-            or "__pycache__" in relative_to_harness.parts
-            or path.suffix in {".pyc", ".pyo"}
-        ):
-            continue
-        relative = path.relative_to(root).as_posix()
-        if path.is_symlink():
-            raise ReplayQualificationError(
-                "implementation_path_invalid",
-                f"Harness source tree contains a symlink: {relative}",
-            )
-        if not path.is_file():
-            continue
-        size, sha256 = _file_identity(path)
-        files.append(ImplementationFileV1(path=relative, bytes=size, sha256=sha256))
-    if not files:
+    directory_flags = os.O_RDONLY | os.O_CLOEXEC | os.O_DIRECTORY | os.O_NOFOLLOW
+    first = _read_implementation_closure(root, directory_flags=directory_flags)
+    second = _read_implementation_closure(root, directory_flags=directory_flags)
+    third = _read_implementation_closure(root, directory_flags=directory_flags)
+    final_root = _read_directory_anchor(root, directory_flags=directory_flags)
+    root_identities = (
+        first.root_before,
+        first.root_after,
+        second.root_before,
+        second.root_after,
+        third.root_before,
+        third.root_after,
+        final_root,
+    )
+    if len(set(root_identities)) != 1:
         raise ReplayQualificationError(
             "implementation_path_invalid",
-            "Harness source tree is empty",
+            "replay implementation root changed while its members were read",
         )
-    records = tuple(files)
+    if first.members != second.members or second.members != third.members:
+        raise ReplayQualificationError(
+            "implementation_path_invalid",
+            "replay implementation directory chain or member changed between reads",
+        )
+    records = tuple(
+        ImplementationFileV1(path=relative, bytes=member.bytes, sha256=member.sha256)
+        for relative, member in zip(REPLAY_IMPLEMENTATION_PATHS, first.members, strict=True)
+    )
     return ReplayHarnessSourceManifest(
         schema_version="harness.replay_qualification.harness_source_manifest.v1",
         phase=phase,
@@ -2237,6 +2296,184 @@ def _snapshot_harness_source(
             {"files": [item.model_dump(mode="json") for item in records]}
         ),
     )
+
+
+_DirectoryIdentity = tuple[int, int, int]
+_FileIdentity = tuple[int, int, int, int, int, int, int]
+
+
+@dataclass(frozen=True, slots=True)
+class _OpenatFileSnapshot:
+    directories: tuple[tuple[str, _DirectoryIdentity], ...]
+    file_identity: _FileIdentity
+    bytes: int
+    sha256: str
+
+
+@dataclass(frozen=True, slots=True)
+class _OpenatClosureSnapshot:
+    root_before: _DirectoryIdentity
+    root_after: _DirectoryIdentity
+    members: tuple[_OpenatFileSnapshot, ...]
+
+
+def _read_implementation_closure(
+    root: Path,
+    *,
+    directory_flags: int,
+) -> _OpenatClosureSnapshot:
+    try:
+        root_fd = _open_nofollow_directory(root, directory_flags=directory_flags)
+    except OSError as error:
+        raise ReplayQualificationError(
+            "implementation_path_invalid",
+            "replay implementation root is inaccessible or not a real directory",
+        ) from error
+    try:
+        try:
+            root_before = _directory_anchor_identity(root_fd)
+            members = tuple(
+                _openat_file_identity(
+                    root_fd,
+                    relative,
+                    directory_flags=directory_flags,
+                )
+                for relative in REPLAY_IMPLEMENTATION_PATHS
+            )
+            root_after = _directory_anchor_identity(root_fd)
+        except OSError as error:
+            raise ReplayQualificationError(
+                "implementation_path_invalid",
+                "replay implementation root is not a stable directory",
+            ) from error
+    finally:
+        os.close(root_fd)
+    return _OpenatClosureSnapshot(
+        root_before=root_before,
+        root_after=root_after,
+        members=members,
+    )
+
+
+def _read_directory_anchor(path: Path, *, directory_flags: int) -> _DirectoryIdentity:
+    try:
+        descriptor = _open_nofollow_directory(path, directory_flags=directory_flags)
+    except OSError as error:
+        raise ReplayQualificationError(
+            "implementation_path_invalid",
+            "replay implementation root changed or became inaccessible during snapshot",
+        ) from error
+    try:
+        try:
+            return _directory_anchor_identity(descriptor)
+        except OSError as error:
+            raise ReplayQualificationError(
+                "implementation_path_invalid",
+                "replay implementation root is not a stable directory",
+            ) from error
+    finally:
+        os.close(descriptor)
+
+
+def _directory_anchor_identity(descriptor: int) -> tuple[int, int, int]:
+    status = os.fstat(descriptor)
+    if not stat.S_ISDIR(status.st_mode):
+        raise OSError("implementation root is not a directory")
+    return status.st_dev, status.st_ino, status.st_mode
+
+
+def _open_nofollow_directory(path: Path, *, directory_flags: int) -> int:
+    """Open an absolute directory by walking every component without following links."""
+
+    if not path.is_absolute() or any(part in {"", ".", ".."} for part in path.parts[1:]):
+        raise OSError("directory path is not an absolute normalized path")
+    directory_fd = os.open(path.anchor, directory_flags)
+    try:
+        for part in path.parts[1:]:
+            next_fd = os.open(part, directory_flags, dir_fd=directory_fd)
+            os.close(directory_fd)
+            directory_fd = next_fd
+        return directory_fd
+    except BaseException:
+        os.close(directory_fd)
+        raise
+
+
+def _openat_file_identity(
+    root_fd: int,
+    relative: str,
+    *,
+    directory_flags: int,
+) -> _OpenatFileSnapshot:
+    """Hash one regular descendant through no-follow directory/file descriptors."""
+
+    path = PurePosixPath(relative)
+    if path.is_absolute() or not path.parts or any(part in {"", ".", ".."} for part in path.parts):
+        raise ReplayQualificationError(
+            "implementation_path_invalid",
+            f"replay implementation closure path is invalid: {relative}",
+        )
+    directory_fd = os.dup(root_fd)
+    file_fd: int | None = None
+    directory_parts: list[str] = []
+    directory_identities: list[tuple[str, _DirectoryIdentity]] = []
+    try:
+        for part in path.parts[:-1]:
+            next_fd = os.open(part, directory_flags, dir_fd=directory_fd)
+            os.close(directory_fd)
+            directory_fd = next_fd
+            directory_parts.append(part)
+            directory_identities.append(
+                ("/".join(directory_parts), _directory_anchor_identity(directory_fd))
+            )
+        file_flags = os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK
+        file_fd = os.open(path.parts[-1], file_flags, dir_fd=directory_fd)
+        before = os.fstat(file_fd)
+        if not stat.S_ISREG(before.st_mode):
+            raise OSError("implementation member is not a regular file")
+        digest = hashlib.sha256()
+        size = 0
+        while True:
+            chunk = os.read(file_fd, 1024 * 1024)
+            if not chunk:
+                break
+            size += len(chunk)
+            digest.update(chunk)
+        after = os.fstat(file_fd)
+        linked = os.stat(path.parts[-1], dir_fd=directory_fd, follow_symlinks=False)
+        stable_fields = (
+            "st_dev",
+            "st_ino",
+            "st_mode",
+            "st_nlink",
+            "st_size",
+            "st_mtime_ns",
+            "st_ctime_ns",
+        )
+        before_identity = tuple(getattr(before, field) for field in stable_fields)
+        after_identity = tuple(getattr(after, field) for field in stable_fields)
+        linked_identity = tuple(getattr(linked, field) for field in stable_fields)
+        if (
+            size != before.st_size
+            or before_identity != after_identity
+            or after_identity != linked_identity
+        ):
+            raise OSError("implementation member changed while it was read")
+        return _OpenatFileSnapshot(
+            directories=tuple(directory_identities),
+            file_identity=before_identity,
+            bytes=size,
+            sha256=digest.hexdigest(),
+        )
+    except OSError as error:
+        raise ReplayQualificationError(
+            "implementation_path_invalid",
+            f"replay implementation closure file is inaccessible or unstable: {relative}",
+        ) from error
+    finally:
+        if file_fd is not None:
+            os.close(file_fd)
+        os.close(directory_fd)
 
 
 def _checked_machine_file(value: str, *, label: str) -> Path:

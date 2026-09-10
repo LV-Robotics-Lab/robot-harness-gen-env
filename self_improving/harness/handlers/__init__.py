@@ -1,20 +1,19 @@
-"""Qualified Harness Skill handler Adapters."""
+"""Stable package seam for qualified Skill handler public exports."""
 
-from .text2env_compile import Text2EnvCompileHandler, text2env_compile_descriptor
-from .text2env_compile_dependencies import Text2EnvCompileDependencyResolver
-from .text2env_validate import (
-    EligibilityVerifier,
-    RequirePromotionEvidence,
-    Text2EnvValidateHandler,
-    text2env_validate_descriptor,
-)
+from __future__ import annotations
 
-__all__ = [
-    "Text2EnvCompileDependencyResolver",
-    "Text2EnvCompileHandler",
-    "EligibilityVerifier",
-    "RequirePromotionEvidence",
-    "Text2EnvValidateHandler",
-    "text2env_compile_descriptor",
-    "text2env_validate_descriptor",
-]
+from typing import Any
+
+
+def __getattr__(name: str) -> Any:
+    from ._public_exports import public_names, resolve
+
+    value = list(public_names()) if name == "__all__" else resolve(name, __name__)
+    globals()[name] = value
+    return value
+
+
+def __dir__() -> list[str]:
+    from ._public_exports import public_names
+
+    return sorted(set(globals()) | set(public_names()) | {"__all__"})

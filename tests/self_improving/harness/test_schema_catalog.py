@@ -106,6 +106,21 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
         SCHEMA_MODELS["harness.other.v1"] = ArtifactRef  # type: ignore[index]
 
 
+def test_lazy_schema_catalog_preserves_mappingproxy_copy_and_union_behavior() -> None:
+    copied = SCHEMA_MODELS.copy()
+    assert type(copied) is dict
+    assert copied["harness.artifact_ref.v1"] is ArtifactRef
+
+    marker = {"harness.other.v1": ArtifactRef}
+    merged = SCHEMA_MODELS | marker
+    reverse_merged = marker | SCHEMA_MODELS
+    assert type(merged) is type(reverse_merged) is dict
+    assert merged["harness.artifact_ref.v1"] is ArtifactRef
+    assert merged["harness.other.v1"] is ArtifactRef
+    assert reverse_merged["harness.artifact_ref.v1"] is ArtifactRef
+    assert reverse_merged["harness.other.v1"] is ArtifactRef
+
+
 def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
     documents = schema_documents()
     assert list(documents) == sorted(EXPECTED_SCHEMA_IDS)

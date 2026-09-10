@@ -56,13 +56,15 @@ MCP 未来只能把已注册 descriptor 映射成工具；它不能再发明类�
 `EnvironmentPackage` 指向 `scene_gen` 已有载荷；compile 已由专用 adapter 组装，完整发布闭环仍
 需要 replay/validate adapters。
 
-## PR1 的 14 个公共入口与当前 17 个版本化入口
+## PR1 的 14 个公共入口与当前 29 个版本化入口
 
 下表是 PR1 冻结的 14 个入口。A042 没有修改其中的 `SkillDescriptor` v1，而是新增第 15 个
 `SkillDescriptorV2`：v1 只允许 `deterministic=true`；v2 用
 `content_bitwise_deterministic` / `evidence_invariant_repeatable` 明确声明可复现语义。Registry
 保留精确模型、不在两版之间转换。validate v2 的 input/output 是第 16、17 个入口；它们另起 major
 version，不放宽既有 validate v1。
+后续 qualification report、资产债务/修复、registry snapshot、replay VLM、run start/read/snapshot 与
+workflow start receipt 再增加 12 个独立 `$id`；这些 follow-on 不回写 PR1 的 14 个入口。
 
 | 分组 | Schema | 读者模型 |
 | --- | --- | --- |
@@ -73,7 +75,8 @@ version，不放宽既有 validate v1。
 | Text2Env 边界 | compile/replay/validate v1 六个输入输出 + validate v2 输入输出 | 三个 Skill 各收什么、产什么；v2 先表达完整 CAS evidence 和 decision receipt 边界 |
 
 `CompileConfig`、`RuntimeConfig`、`DependencyRef` 和 `UnknownField` 是嵌套 `$defs`，不是新的
-公共 `$id`，所以 PR1 总数是 14；计入 descriptor v2 与 validate v2 两份文档后，当前总数是 17。
+公共 `$id`，所以 PR1 总数是 14；descriptor v2 与 validate v2 两份文档把当时总数增至 17，计入后续
+12 个独立入口后，仓库当前总数是 29。
 
 ## 严格不只是“不多字段”
 
@@ -184,8 +187,8 @@ replay、qualification、包验证和全部物理 gate 的最终“当且仅当�
 
 ## JSON Schema 快照能锁什么
 
-`schema_catalog.py` 当前从 Pydantic 模型生成 17 份 Draft 2020-12 文档（PR1 14 份 + descriptor v2 +
-validate v2 input/output），
+`schema_catalog.py` 当前从 Pydantic 模型生成 29 份 Draft 2020-12 文档；PR1 14 份、descriptor v2 与
+validate v2 input/output 的 3 份，以及后续 12 份均有独立 `$id`。
 committed snapshot 让字段、
 required/default、正则和范围的变化进入普通 code review：
 

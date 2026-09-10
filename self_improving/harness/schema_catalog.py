@@ -1,119 +1,45 @@
-"""Immutable catalog and reproducible snapshots for public Harness schemas."""
+"""Stable lazy interface for extensible public Harness schema snapshots."""
 
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator, Mapping
 from pathlib import Path
-from types import MappingProxyType
-from typing import Mapping
 
-from .schemas import (
-    ARTIFACT_REF_SCHEMA_ID,
-    ASSET_DEBT_INVENTORY_SCHEMA_ID,
-    ASSET_REPAIR_PLAN_REQUEST_SCHEMA_ID,
-    ASSET_REPAIR_PLAN_SCHEMA_ID,
-    ASSET_SOURCE_SNAPSHOT_MANIFEST_SCHEMA_ID,
-    ASSET_STAGE_REQUEST_SCHEMA_ID,
-    ASSET_STAGE_RESULT_SCHEMA_ID,
-    BLOCKER_SCHEMA_ID,
-    ENVIRONMENT_PACKAGE_SCHEMA_ID,
-    EVENT_SCHEMA_ID,
-    REGISTRY_SNAPSHOT_SCHEMA_ID,
-    REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID,
-    REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID,
-    REPLAY_VLM_ASSESSMENT_OUTPUT_V2_SCHEMA_ID,
-    RUN_READ_REQUEST_SCHEMA_ID,
-    RUN_SNAPSHOT_SCHEMA_ID,
-    RUN_START_REQUEST_SCHEMA_ID,
-    RUN_STATE_SCHEMA_ID,
-    SKILL_DESCRIPTOR_SCHEMA_ID,
-    SKILL_DESCRIPTOR_V2_SCHEMA_ID,
-    SKILL_INVOCATION_SCHEMA_ID,
-    SKILL_QUALIFICATION_SCHEMA_ID,
-    TEXT2ENV_COMPILE_INPUT_SCHEMA_ID,
-    TEXT2ENV_COMPILE_OUTPUT_SCHEMA_ID,
-    TEXT2ENV_REPLAY_INPUT_SCHEMA_ID,
-    TEXT2ENV_REPLAY_OUTPUT_SCHEMA_ID,
-    TEXT2ENV_VALIDATE_INPUT_SCHEMA_ID,
-    TEXT2ENV_VALIDATE_OUTPUT_SCHEMA_ID,
-    TEXT2ENV_VALIDATE_V2_INPUT_SCHEMA_ID,
-    TEXT2ENV_VALIDATE_V2_OUTPUT_SCHEMA_ID,
-    WORKFLOW_START_RECEIPT_SCHEMA_ID,
-    ArtifactRef,
-    AssetDebtInventory,
-    AssetRepairPlan,
-    AssetRepairPlanRequest,
-    AssetSourceSnapshotManifest,
-    AssetStageRequest,
-    AssetStageResult,
-    Blocker,
-    EnvironmentPackage,
-    Event,
-    Invocation,
-    RegistrySnapshot,
-    ReplayVlmAssessmentInput,
-    ReplayVlmAssessmentOutput,
-    ReplayVlmAssessmentOutputV2,
-    RunReadRequest,
-    RunSnapshot,
-    RunStartRequest,
-    RunState,
-    SkillDescriptor,
-    SkillDescriptorV2,
-    SkillQualification,
-    Text2EnvCompileInput,
-    Text2EnvCompileOutput,
-    Text2EnvReplayInput,
-    Text2EnvReplayOutput,
-    Text2EnvValidateInput,
-    Text2EnvValidateOutput,
-    Text2EnvValidateV2Input,
-    Text2EnvValidateV2Output,
-    WorkflowStartReceipt,
-)
 from .schemas.base import HarnessModel
-from .schemas.qualification_report import (
-    QUALIFICATION_REPORT_SCHEMA_ID,
-    PublicQualificationReportV1,
-)
 
 DEFAULT_SCHEMA_ROOT = Path(__file__).with_name("json_schemas")
 
-_SCHEMA_MODELS: dict[str, type[HarnessModel]] = {
-    ARTIFACT_REF_SCHEMA_ID: ArtifactRef,
-    ASSET_DEBT_INVENTORY_SCHEMA_ID: AssetDebtInventory,
-    ASSET_REPAIR_PLAN_REQUEST_SCHEMA_ID: AssetRepairPlanRequest,
-    ASSET_REPAIR_PLAN_SCHEMA_ID: AssetRepairPlan,
-    ASSET_SOURCE_SNAPSHOT_MANIFEST_SCHEMA_ID: AssetSourceSnapshotManifest,
-    ASSET_STAGE_REQUEST_SCHEMA_ID: AssetStageRequest,
-    ASSET_STAGE_RESULT_SCHEMA_ID: AssetStageResult,
-    BLOCKER_SCHEMA_ID: Blocker,
-    ENVIRONMENT_PACKAGE_SCHEMA_ID: EnvironmentPackage,
-    EVENT_SCHEMA_ID: Event,
-    RUN_STATE_SCHEMA_ID: RunState,
-    RUN_SNAPSHOT_SCHEMA_ID: RunSnapshot,
-    RUN_START_REQUEST_SCHEMA_ID: RunStartRequest,
-    REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID: ReplayVlmAssessmentInput,
-    REPLAY_VLM_ASSESSMENT_OUTPUT_SCHEMA_ID: ReplayVlmAssessmentOutput,
-    REPLAY_VLM_ASSESSMENT_OUTPUT_V2_SCHEMA_ID: ReplayVlmAssessmentOutputV2,
-    REGISTRY_SNAPSHOT_SCHEMA_ID: RegistrySnapshot,
-    RUN_READ_REQUEST_SCHEMA_ID: RunReadRequest,
-    SKILL_DESCRIPTOR_SCHEMA_ID: SkillDescriptor,
-    SKILL_DESCRIPTOR_V2_SCHEMA_ID: SkillDescriptorV2,
-    SKILL_INVOCATION_SCHEMA_ID: Invocation,
-    SKILL_QUALIFICATION_SCHEMA_ID: SkillQualification,
-    QUALIFICATION_REPORT_SCHEMA_ID: PublicQualificationReportV1,
-    TEXT2ENV_COMPILE_INPUT_SCHEMA_ID: Text2EnvCompileInput,
-    TEXT2ENV_COMPILE_OUTPUT_SCHEMA_ID: Text2EnvCompileOutput,
-    TEXT2ENV_REPLAY_INPUT_SCHEMA_ID: Text2EnvReplayInput,
-    TEXT2ENV_REPLAY_OUTPUT_SCHEMA_ID: Text2EnvReplayOutput,
-    TEXT2ENV_VALIDATE_INPUT_SCHEMA_ID: Text2EnvValidateInput,
-    TEXT2ENV_VALIDATE_OUTPUT_SCHEMA_ID: Text2EnvValidateOutput,
-    TEXT2ENV_VALIDATE_V2_INPUT_SCHEMA_ID: Text2EnvValidateV2Input,
-    TEXT2ENV_VALIDATE_V2_OUTPUT_SCHEMA_ID: Text2EnvValidateV2Output,
-    WORKFLOW_START_RECEIPT_SCHEMA_ID: WorkflowStartReceipt,
-}
-SCHEMA_MODELS: Mapping[str, type[HarnessModel]] = MappingProxyType(_SCHEMA_MODELS)
+
+class _LazySchemaModels(Mapping[str, type[HarnessModel]]):
+    """Mapping-compatible facade whose extensible directory loads only on demand."""
+
+    def __getitem__(self, schema_id: str) -> type[HarnessModel]:
+        from ._schema_catalog_models import schema_model as resolve
+
+        return resolve(schema_id, __package__)
+
+    def __iter__(self) -> Iterator[str]:
+        from ._schema_catalog_models import schema_ids
+
+        return iter(schema_ids())
+
+    def __len__(self) -> int:
+        from ._schema_catalog_models import schema_ids
+
+        return len(schema_ids())
+
+    def copy(self) -> dict[str, type[HarnessModel]]:
+        return dict(self.items())
+
+    def __or__(self, other: object) -> dict[str, type[HarnessModel]]:
+        return self.copy() | other  # type: ignore[operator]
+
+    def __ror__(self, other: object) -> dict[str, type[HarnessModel]]:
+        return other | self.copy()  # type: ignore[operator]
+
+
+SCHEMA_MODELS: Mapping[str, type[HarnessModel]] = _LazySchemaModels()
 
 
 class SchemaSnapshotMismatch(RuntimeError):
@@ -125,9 +51,14 @@ class SchemaSnapshotMismatch(RuntimeError):
 
 
 def schema_model(schema_id: str) -> type[HarnessModel]:
-    """Resolve one exact public schema identifier."""
+    """Resolve qualified Text2Env schemas without loading the global directory."""
 
-    return SCHEMA_MODELS[schema_id]
+    from .schemas._qualified_exports import schema_model as resolve_qualified
+
+    try:
+        return resolve_qualified(schema_id, f"{__package__}.schemas")
+    except KeyError:
+        return SCHEMA_MODELS[schema_id]
 
 
 def schema_documents() -> dict[str, dict[str, object]]:

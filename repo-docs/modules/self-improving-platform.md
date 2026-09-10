@@ -24,15 +24,19 @@
 `8d9a01c`、`587b49f`、`0e6716a` 未进入本研究复核；“当前/未接线”均只描述这个固定快照，不认证
 移动 HEAD。
 
-Harness 当前公开 17 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，另加
-`harness.skill_descriptor.v2`，本切片再加 validate v2 input/output 两项；descriptor v2 明确区分
+Harness 当前公开 29 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
+descriptor v2、validate v2 input/output，以及 qualification report、资产债务/修复、registry snapshot、
+replay VLM、run start/read/snapshot 和 workflow start receipt 等 12 个入口；descriptor v2 明确区分
 内容位级确定性与证据不变量可复验。descriptor v1 保持冻结，
 compile 仍用 v1，replay 用 v2；两版不能静默转换。`ArtifactRef.schema_version` 仍指向既有
 `robotwin.*` 权威载荷，Harness 不重新定义其内部格式。schema 之外已有本地 digest-checking artifact
 resolver、callback-driven `RunRecorder`、SQLite WAL append-only `SQLiteEventJournal`、CAS
 `PackageStore`、通用 qualified-version `SkillRegistry` 与 `Text2EnvCompileHandler`。固定 `ab03859`
 关于 replay/validate 未接通的描述只是历史快照；当前 replay 已有 candidate handler、固定资格深验证与
-production-only registration policy，但尚无 checked-in pass bundle 或真实 900/120 replay。
+production-only registration policy。仓库保留 2026-09-02 的历史 checked-in pass bundle 与真实
+900/120 replay 记录，但当前源码 identity 已漂移，严格 loader 会拒绝旧 bundle；因此当前没有有效的
+replay qualification；当前状态见
+[`docs/evidence/replay-qualification-status-20260910.md`](../../docs/evidence/replay-qualification-status-20260910.md)。
 `python script/export_harness_schemas.py --check` 锁住 committed snapshot；核心资格模块强制 100%
 语句与分支覆盖。compile 的 asset admission 仍发生在 solve 前且失败不回滚；跨 run promotion、
 identity-frozen resumable EvaluationRun 与 MCP adapter 仍未闭合，契约保持 `Status: Proposed`。
@@ -77,8 +81,9 @@ Invocation 必须精确带 capability、executor、handler config、media verifi
 assets 五项依赖，worker 输出先作为 untrusted bytes 保存，只有 evidence 与媒体（含固定
 MP4/H.264/8bit-420/SAR 语义）复核后才晋升 typed artifacts。两组专项为 185 passed 且两个模块
 statement/branch 100%。descriptor 已用 v2 诚实声明 `evidence_invariant_repeatable`；固定 loader、
-generator 与 production application 会重读完整 CAS evidence closure，但仍没有生成 pass bundle，
-也没有新的真实 900/120 handler receipt。VLM fallback、LLM orchestration 和工作台不能从这些
+generator 与 production application 会重读完整 CAS evidence closure；历史 pass bundle 和 900/120
+handler receipt 已因当前源码 identity 漂移而失效，尚未基于当前 closure 重新执行和重签。VLM fallback、
+LLM orchestration 和工作台不能从这些
 候选底座推断为完成。
 
 A044 只完成前端工作台的第一个竖切：`demo/` 可注入只读 `HarnessEventFeed`，通过
@@ -102,7 +107,7 @@ closed。
 这仍不是完整 Stage 7：接口是同步 compile，不是异步 durable queue；没有 replay、validate、System
 2、artifact 内容 viewer 或拖拽编排。compile `succeeded` 也不表示物理 validation、资产 settle 或
 publishable。A047 的 `harness.workbench_compile_submission.v1` 是工作台投影，不新增 Harness 公共
-schema snapshot；当前 17 份 schema 计数不变。A047 切片当时 `tests/demo` 为 84 passed，其中 18 项
+schema snapshot；仓库当前总数为 29。A047 切片当时 `tests/demo` 为 84 passed，其中 18 项
 使用真 Flask + headless Chrome。
 
 A048 在此之上增加 terminal compile 的只读依赖审计。`WorkbenchCompile.audit(run_id)` 从同一
@@ -174,7 +179,7 @@ replay、validate 或 System 2。
 compile `succeeded` 仍不表示物理 validation、资产 settle 或 publishable。A047/A048 的两份
 `harness.workbench_*`（含 A049 audit v2、A050 scene preview v1 与 A051 static-validation preview v1）
 都是工作台投影，不新增 Harness
-公共 schema snapshot；当前 17 份计数不变。
+公共 schema snapshot；仓库当前总数为 29。
 
 Stage 5 的视觉评审状态是三态而非布尔值。在 `--run-smoke`/视觉评审路径中，只有 visual pass
 才把 candidate 原子晋升为 `final_placement.json` 并退出 0；`pending_visual_review` 只写

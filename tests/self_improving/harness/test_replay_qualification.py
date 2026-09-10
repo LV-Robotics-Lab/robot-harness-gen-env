@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -58,6 +59,7 @@ EVENT_KINDS = (
     "worker.completed",
 )
 CHECKPOINTS = (120, 240, 360, 480, 600, 720, 840)
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_recursive_evidence_reference_discovery_rejects_artifact_shaped_supersets() -> None:
@@ -408,6 +410,10 @@ def _write_bundle(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
     bundle.mkdir()
     implementation = tmp_path / "implementation"
     implementation.mkdir()
+    shutil.copytree(
+        REPO_ROOT / "self_improving/harness/json_schemas",
+        implementation / "self_improving/harness/json_schemas",
+    )
     implementation_file = implementation / "handler.py"
     implementation_file.write_text("HANDLER = 1\n", encoding="utf-8")
     scene_gen = tmp_path / "scene_gen"

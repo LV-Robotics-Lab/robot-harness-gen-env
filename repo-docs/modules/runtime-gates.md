@@ -75,11 +75,15 @@ fail closed，不退回宿主 Pillow/动态 FFmpeg。资格化工具链使用最
 夸大成具体 yuv420p layout。完整尝试链、摘要、资源峰值和攻击结果见
 [`docs/evidence/replay-media-verifier-qualification-20260831.md`](../../docs/evidence/replay-media-verifier-qualification-20260831.md)。
 
-媒体工具资格本身仍只证明 consumer 边界。当前 checked-in `text2env.replay@1.0.0` 另有正式的
-900 settle / 120 video 固定案例资格：direct 与 Registry candidate 各执行一次，8 项资格检查全过，
-并把 63 个精确 artifact refs 闭合在部署侧 CAS；精确摘要见
+媒体工具资格本身仍只证明 consumer 边界。checked-in `text2env.replay@1.0.0` 保存的是
+2026-09-02 固定源码下的历史资格：direct 与 Registry candidate 当时各执行一次 900 settle / 120
+video，8 项资格检查全过，并把 63 个精确 artifact refs 闭合在部署侧 CAS；精确摘要见
 [`docs/evidence/replay-production-qualification-20260902.md`](../../docs/evidence/replay-production-qualification-20260902.md)。
-它仍不替代独立 validate 与 promotion evidence，不能由 replay 成功推出 `publishable=true`。
+当前源码身份已经变化，严格 loader 会以 `implementation_file_mismatch` 拒绝这份旧 bundle；因此它不是
+当前可调用资格。新的真实资格须等实现 closure 稳定后重新执行并重签，不能只刷新 hash。历史成功也仍不
+替代独立 validate 与 promotion evidence，不能由 replay 成功推出 `publishable=true`。当前失效原因、
+闭包修复与未重签边界见
+[`docs/evidence/replay-qualification-status-20260910.md`](../../docs/evidence/replay-qualification-status-20260910.md)。
 
 ## 固定资格回放怎样启动
 
