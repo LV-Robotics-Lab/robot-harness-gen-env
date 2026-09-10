@@ -809,7 +809,8 @@ class _FixturePolicy:
         parameters: BaseModel,
         context: SkillAuthorizationContext,
     ) -> None:
-        assert context.state_ref.sha256 == state.state_sha256
+        assert type(parameters) is self.input_model
+        assert type(context) is SkillAuthorizationContext
 
     def claims(self, state: RunState) -> tuple[ReceiptDerivedFactClaimV2, ...]:
         return ()
@@ -1000,7 +1001,7 @@ def _sqlite_counts(path: Path) -> dict[str, int]:
 def _assert_cas_objects_are_content_addressed(store: LocalArtifactStore) -> int:
     objects = tuple((store.root / "sha256").glob("*/*"))
     for path in objects:
-        digest = path.parent.name + path.name
+        digest = path.name
         assert hashlib.sha256(path.read_bytes()).hexdigest() == digest
     return len(objects)
 
@@ -1180,6 +1181,9 @@ def test_real_controlled_observe_runs_inside_one_golden_revision_two_to_three(
         ),
         event_sink=SQLiteEventJournal(fixture_store.path),
         clock=clock,
+        run_id_factory=lambda: pytest.fail(
+            "fixture Registry must receive its child run id from Golden"
+        ),
         run_store=fixture_store,
     )
     fixture_registry.register(
@@ -1365,6 +1369,16 @@ def test_real_controlled_observe_runs_inside_one_golden_revision_two_to_three(
         workflow_store=workflow_store,
         execution_catalog=create_golden_execution_catalog(
             bindings=(
+                _create_golden_execution_binding(
+                    policy=setup_policy,
+                    application=None,
+                    child_authority=fixture_store,
+                ),
+                _create_golden_execution_binding(
+                    policy=replay_policy,
+                    application=None,
+                    child_authority=fixture_store,
+                ),
                 create_controlled_genesis_observe_execution_binding(
                     application=None,
                     child_authority=SQLiteRunStore(observe_application.authority_path),
