@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from .schema_catalog import _make_schema_document_standalone, render_schema_document
 from .schemas.base import HarnessModel
 from .schemas.common import (
     ArtifactRef,
@@ -68,14 +68,10 @@ def verify_replay_schema_contract(implementation_root: Path) -> None:
 
     root = Path(implementation_root)
     for binding in REPLAY_SCHEMA_BINDINGS:
-        expected = (
-            json.dumps(
-                binding.model.model_json_schema(mode="validation"),
-                indent=2,
-                ensure_ascii=False,
-                sort_keys=True,
+        expected = render_schema_document(
+            _make_schema_document_standalone(
+                binding.model.model_json_schema(mode="validation")
             )
-            + "\n"
         ).encode()
         path = root / binding.snapshot_path
         try:

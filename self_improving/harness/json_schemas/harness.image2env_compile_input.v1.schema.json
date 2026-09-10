@@ -11,8 +11,6 @@
       "type": "string"
     },
     "ArtifactRef": {
-      "$id": "harness.artifact_ref.v1",
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
         "bytes": {
@@ -69,8 +67,6 @@
       "type": "object"
     },
     "ImageSourceMedia": {
-      "$id": "harness.image_source_media.v1",
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
         "canonical_image": {

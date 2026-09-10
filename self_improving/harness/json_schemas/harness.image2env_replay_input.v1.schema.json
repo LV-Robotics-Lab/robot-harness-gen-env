@@ -1,8 +1,6 @@
 {
   "$defs": {
     "ArtifactRef": {
-      "$id": "harness.artifact_ref.v1",
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
         "bytes": {
@@ -104,8 +102,6 @@
       "type": "object"
     },
     "ImageSourceMedia": {
-      "$id": "harness.image_source_media.v1",
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
         "canonical_image": {
@@ -189,8 +185,6 @@
       "type": "string"
     },
     "VideoSourceMedia": {
-      "$id": "harness.video_source_media.v1",
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
         "decoded_frame_count": {
@@ -272,8 +266,6 @@
       "type": "object"
     },
     "X2EnvEnvironmentPackage": {
-      "$id": "harness.x2env_environment_package.v1",
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
         "asset_closure_manifest": {

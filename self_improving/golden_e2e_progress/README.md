@@ -47,5 +47,7 @@ bytes/tree identity 跨代码安装路径复用：同一 bundle 在第二个绝�
 同一 workflow、同一 Harness 与同一冻结 RegistrySnapshot 中调用 exact qualified
 `text2env.validate@2.0.0`，从 revision 2 的受信 replay lineage 独立重算物理报告并推进至 revision 3；
 真实 can-on-plate 运行和无 live application 重启幂等均通过。该结果仍只是 legacy RoboTwin/SAPIEN
-publishability，不是 promotion、Genesis 或 robot-policy。P6 继续修复资产 staging；autoresearch 只在
-其冻结 benchmark 可以真实运行后开始。
+publishability，不是 promotion、Genesis 或 robot-policy。Image2Env/Video2Env 的六个合同已经过两轴功能验收；55 份公共
+schema 现在既能整目录注册，也能逐文件独立校验。Gujie 现存 evidence 仍只证明 image-derived
+existing reconstruction 的 legacy Genesis 候选，不证明 fresh image、video 或 Harness runtime。
+P6 继续修复资产 staging；autoresearch 只在其冻结 benchmark 可以真实运行后开始。

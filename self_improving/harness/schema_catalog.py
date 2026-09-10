@@ -65,9 +65,27 @@ def schema_documents() -> dict[str, dict[str, object]]:
     """Build every public JSON Schema document in stable identifier order."""
 
     return {
-        schema_id: SCHEMA_MODELS[schema_id].model_json_schema(mode="validation")
+        schema_id: _make_schema_document_standalone(
+            SCHEMA_MODELS[schema_id].model_json_schema(mode="validation")
+        )
         for schema_id in sorted(SCHEMA_MODELS)
     }
+
+
+def _make_schema_document_standalone(document: dict[str, object]) -> dict[str, object]:
+    """Keep resource identifiers only on the root of a bundled schema document."""
+
+    definitions = document.get("$defs")
+    pending = list(definitions.values()) if isinstance(definitions, dict) else []
+    while pending:
+        value = pending.pop()
+        if isinstance(value, dict):
+            value.pop("$id", None)
+            value.pop("$schema", None)
+            pending.extend(value.values())
+        elif isinstance(value, list):
+            pending.extend(value)
+    return document
 
 
 def schema_snapshot_name(schema_id: str) -> str:

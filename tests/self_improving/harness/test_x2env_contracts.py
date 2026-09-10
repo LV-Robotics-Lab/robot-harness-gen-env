@@ -5,8 +5,10 @@ from copy import deepcopy
 from pathlib import Path
 
 import pytest
+from jsonschema import Draft202012Validator
 from pydantic import ValidationError
 
+from self_improving.harness.schema_catalog import DEFAULT_SCHEMA_ROOT
 from self_improving.harness.schemas.x2env import (
     AssetAcquisitionLane,
     Image2EnvCompileInput,
@@ -313,6 +315,92 @@ def validate_output(route_id: str, *, publishable: bool = True) -> dict[str, obj
         "portable_closure_reloaded": True,
         "evidence_recomputed": True,
     }
+
+
+@pytest.mark.parametrize(
+    ("model", "example"),
+    (
+        pytest.param(ImageSourceMedia, image_media(), id="image-source-media"),
+        pytest.param(VideoSourceMedia, video_media(), id="video-source-media"),
+        pytest.param(X2EnvAssetDecision, decision(), id="asset-decision"),
+        pytest.param(
+            X2EnvEnvironmentPackage,
+            package("image2env"),
+            id="environment-package",
+        ),
+        pytest.param(
+            Image2EnvCompileInput,
+            compile_input("image2env"),
+            id="image-compile-input",
+        ),
+        pytest.param(
+            Image2EnvCompileOutput,
+            compile_output("image2env"),
+            id="image-compile-output",
+        ),
+        pytest.param(
+            Image2EnvReplayInput,
+            replay_input("image2env"),
+            id="image-replay-input",
+        ),
+        pytest.param(
+            Image2EnvReplayOutput,
+            replay_output("image2env"),
+            id="image-replay-output",
+        ),
+        pytest.param(
+            Image2EnvValidateInput,
+            validate_input("image2env"),
+            id="image-validate-input",
+        ),
+        pytest.param(
+            Image2EnvValidateOutput,
+            validate_output("image2env"),
+            id="image-validate-output",
+        ),
+        pytest.param(
+            Video2EnvCompileInput,
+            compile_input("video2env"),
+            id="video-compile-input",
+        ),
+        pytest.param(
+            Video2EnvCompileOutput,
+            compile_output("video2env"),
+            id="video-compile-output",
+        ),
+        pytest.param(
+            Video2EnvReplayInput,
+            replay_input("video2env"),
+            id="video-replay-input",
+        ),
+        pytest.param(
+            Video2EnvReplayOutput,
+            replay_output("video2env"),
+            id="video-replay-output",
+        ),
+        pytest.param(
+            Video2EnvValidateInput,
+            validate_input("video2env"),
+            id="video-validate-input",
+        ),
+        pytest.param(
+            Video2EnvValidateOutput,
+            validate_output("video2env"),
+            id="video-validate-output",
+        ),
+    ),
+)
+def test_x2env_public_schema_documents_validate_canonical_examples_standalone(
+    model: type,
+    example: dict[str, object],
+) -> None:
+    canonical_json = json.loads(model.model_validate(example).model_dump_json())
+    schema_id = canonical_json["schema_version"]
+    snapshot = json.loads(
+        (DEFAULT_SCHEMA_ROOT / f"{schema_id}.schema.json").read_text(encoding="utf-8")
+    )
+
+    Draft202012Validator(snapshot).validate(canonical_json)
 
 
 def test_image_and_video_source_media_are_distinct_hash_bound_identities() -> None:

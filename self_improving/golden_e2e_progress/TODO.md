@@ -10,6 +10,8 @@
   application/policy/handler 的 statement/branch 100% 门并整理证据提交。
 - portable replay 与 x2env contracts 将在新的干净 integration worktree 依次接入；最终固定实现上须
   重新生成 replay/validate qualification，不能复用 P4 旧 operator identity。
+- 主窗口正在以 portable replay 为底座构造干净的 revision-3 integration worktree；x2env runtime
+  handlers/qualification 尚未开始。
 
 ## Next
 
@@ -48,6 +50,11 @@
   两份 raw media manifest fixture 明确 sample-only 缺口；逐 namespace 的 compile/replay/validate 三 lane、
   adapter/qualification/Genesis runtime/System2/Golden catalog 条件已有实施计划。本切片没有 handler、
   Registry entry、MCP tool、真实 Genesis run 或 publishable 结果。
+- 两个独立验收轴已完成：固定 `eb0b710…` 来源逐入口与现存 output 核对通过，确认 fresh-image output
+  的 manifest closure 失效、只有 existing-reconstruction image output 的 legacy Genesis baseline 可验；
+  video/dual-dt/Harness/robot-policy 仍无证据。schema 执行验收先复现 11/16 standalone snapshot 失败，
+  随后统一移除根 `$defs` 以下的嵌套资源标识；现在新增 schema 的 standalone/catalog 验证均为 16/16，
+  六 Skill I/O 为 12/12，55-schema snapshot gate 通过，相关 438 statements/110 branches 为 100%。
 
 - P4 legacy validate v2 候选已真实闭合：同一 actor-neutral Golden workflow、同一 Harness、同一
   RegistrySnapshot 依次执行 exact qualified compile/replay/validate，revision `0→1→2→3`；validate
@@ -55,7 +62,7 @@
   `fresh_observations=[]`。真实运行输出 120 帧 MP4（114 decoded-unique），187 个 CAS 文件与 3,735 个
   递归 ArtifactRef occurrence 全闭合；无 live application 重启重复提交返回同一 terminal operation。
   证据见 `docs/evidence/golden-compile-replay-validate-p4-20260910.{md,json}`。该候选尚未整合 portable
-   replay；最终整合必须重签并重跑，且此处 publishable 不表示 promotion/Genesis/robot-policy。
+  replay；最终整合必须重签并重跑，且此处 publishable 不表示 promotion/Genesis/robot-policy。
 
 - P3 exact qualified replay operation 已完成：replay-owned policy/adapter 没有向 generic catalog 增加
   Skill 分支；同一 actor-neutral workflow 真实提交 compile rev1→replay rev2。replay 只接受同一 compile

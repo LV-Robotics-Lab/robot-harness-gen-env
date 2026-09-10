@@ -19,7 +19,7 @@ SimFoundry、WorldComposer、媒体工具以及输入资产仍归各自上游。
 | `media_support.py` | 提取场景观测；执行 mesh geometry gate；对资产候选 rank/choose；用颜色差异辅助匹配；按 footprint 物化并把支撑物加入场景 | 作为 image/video asset-resolution 内部实现；候选、拒绝原因、selected asset 与视觉证据分别入 receipt | candidate |
 | `media_checkpoints.py` | 对媒体流程各阶段保存 snapshot/config；按配置变化失效下游 checkpoint；判断上游结果能否复用 | 映射为 durable operation checkpoint，配置和输入 digest 进入 Harness idempotency/receipt | candidate |
 | `task_output.py` | 由 request hash 生成任务身份和安全输出目录；`TaskOutput` 管理阶段产物、manifest 与 `verify()` | `genenv.*` 保留为外部格式，anti-corruption adapter 转为 Harness RunSnapshot/ArtifactRef，不直接成为信任根 | candidate |
-| `standard_urdf.py` | `9e8d28c` 建立标准 URDF 的 link/joint/mesh closure、portable package 检查、Genesis morph 及 collision/friction/预览审计；`eb0b710` 后续加固 | 用于资产 closure 检查和 Genesis loader adapter；Harness 重新绑定每个文件 hash、许可与 representation identity | candidate |
+| `standard_urdf.py` | `9e8d28c` 建立标准 URDF 的单 rigid link/mesh closure（明确拒绝任何 joint）、portable package 检查、Genesis morph 及 collision/friction/预览审计；`eb0b710` 后续加固 | 用于资产 closure 检查和 Genesis loader adapter；Harness 重新绑定每个文件 hash、许可与 representation identity；不能从该入口推断 articulated-joint 支持 | candidate |
 | `import_simfoundry_assets.py` | 将 SimFoundry 资产库转换为可消费资产目录并生成 previews | 作为第三方 asset importer；保留 SimFoundry gitlink、原资产来源和许可，不能把第三方字节记为 Gujie 原创 | candidate |
 | `import_simfoundry_scene.py` | 读取环境/对象/pose，转换 scene package，复核转换结果，并生成 reference/orbit preview | 将 `genenv.*` scene 映射到完整 SceneIR/portable bundle；pose、坐标系和绝对 locator 需要显式规范化 | candidate |
 | `position_solver.py` | 用 polygon/half-plane/closest-point 约束做 bounded position solve；从 scene package 生成布局解 | 可复用为 Genesis 布局后端，但必须把 seed、输入约束、尝试次数、失败原因和最终位姿写入 Harness evidence | candidate |

@@ -281,8 +281,10 @@ Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支
 - `contract_spec`：上述两份正式 contract，以及
   `self_improving/golden_e2e_progress/X2ENV_IMAGE_VIDEO_IMPLEMENTATION_PLAN.md`
 - `verification_evidence`：`tests/self_improving/harness/test_x2env_contracts.py`、
-  `tests/self_improving/harness/test_schema_catalog.py`、55 份 committed schema snapshots；真实 runtime
-  evidence 为 `none`
+  `tests/self_improving/harness/test_schema_catalog.py`、55 份 committed schema snapshots；16 个新增
+  snapshot 已用标准 Draft 2020-12 validator 分别 standalone 与 catalog 模式执行。固定来源入口和两份
+  现存 output 已独立核对：fresh-image manifest closure 失败，existing-reconstruction image output 只作为
+  legacy Genesis baseline candidate；Harness runtime evidence 为 `none`
 - `golden_run`：`none`
 - `known_gaps`：legacy importer、六个 handler/application、qualification、Registry/System2/Golden
   executable catalog、MCP、真实 Genesis replay/validate、robot-policy 与 promotion 均未实现
@@ -292,4 +294,5 @@ Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支
 
 本条只把 Gujie 固定来源中的媒体/资产/场景/物理语义映射进 Harness contract。Image 与 Video identity
 不混用；legacy output 适配后固定为 non-ready candidate；compile、replay、validate 三段及三种资产
-lane 均已写入实施计划，但没有从 contract pass 扩大为 runtime pass。
+lane 均已写入实施计划，但没有从 contract pass 扩大为 runtime pass。`standard_urdf.py` 的当前能力是
+单 rigid link 并明确拒绝 joint，不能据此宣称 articulated support。

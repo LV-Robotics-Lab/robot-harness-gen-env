@@ -50,8 +50,29 @@
   进入 exact qualified supervisor 后整链通过，未弱化任何门禁。
 - 能力边界：这是 legacy RoboTwin/SAPIEN validation profile 的 publishability，不是 promotion，
   `genesis_profile_satisfied=false`，也不证明 Genesis-native、`genesis.robot_policy@1` 或跨机器 provisioning。
-   该分支尚未整合 portable replay，最终 integrated commit 必须重新生成 replay/validate qualifications
-   并再跑 relocated revision 3。
+  该分支尚未整合 portable replay，最终 integrated commit 必须重新生成 replay/validate qualifications
+  并再跑 relocated revision 3。
+
+## 2026-09-10 Image2Env / Video2Env 合同独立功能验收
+
+- 固定合同提交 `71a19eddbf8a9567eda95f876fc3978a42827d1c` 与权威来源
+  `/home/jingxiang/gujie/gen-env@eb0b710581fd7794bc01b447b0f77cb871c8a711` 分开验收。来源的媒体
+  probe、单 rigid-link/no-joint URDF、SimFoundry import、Genesis load/build/step/contact/penetration、
+  baseline/half-dt 候选入口均真实存在；但 full ordered frame hashes 未持久化，原 pipeline 内部调用模型，
+  legacy absolute locator/status 不能成为 Harness 信任根。
+- 现存 fresh-image output 的报告虽为 `scene_built`，exact `TaskOutput.verify()` 因 29 个 post-manifest
+  physics 文件而失败；existing-reconstruction image output 的 170-file closure 与 legacy Genesis
+  baseline 1000 steps、101-frame MP4 通过。后者仍没有 Harness CAS/receipt/qualification、video input、
+  当前 dual-dt closure 或 robot-policy，只能作为 image-derived reuse candidate。
+- 标准 Draft 2020-12 validator 首轮暴露 16 个新增 snapshot 中 11 个不能 standalone 消费；原因是根
+  `$defs` 内子模型的 `$id/$schema` 改变 fragment resource scope。公共 schema 生成现在只保留文档根的
+  resource identifiers，并递归移除嵌套定义的 identifiers；47 份受影响 snapshot 的机械比较只删除
+  89 对嵌套字段，无其他语义差异。
+- 最终新增 16 schema 的 Pydantic/standalone/catalog 验证均为 16/16，六 Skill 的 12 个 I/O 均为
+  12/12；focused `40 passed`，相关 438 statements / 110 branches 为 100%，replay schema/qualification
+  回归 `164 passed`，55-schema snapshot、Ruff 与 diff check 通过。Harness 全域为 `2694 passed,
+  20 skipped, 1 failed`；唯一失败是 checked replay qualification 正确拒绝 schema/source 字节变化，
+  没有在合同分支伪造重签，留待最终固定 integration commit 真实执行。
 
 ## 2026-09-10 P3 GoldenRun qualified compile → replay
 
