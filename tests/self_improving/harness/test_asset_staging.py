@@ -1149,6 +1149,120 @@ def _verifier_arguments(
     }
 
 
+def _rebind_plate_loader_authority(
+    case: _StageCase,
+    tmp_path: Path,
+    *,
+    loader_payload: bytes,
+    keep_declared_mesh: bool,
+) -> tuple[_StageCase, dict[str, object]]:
+    result = case.application().stage(case.request()).model_dump(mode="json")
+    root_logical_path = "objects/003_plate/visual/base0.glb"
+    mesh_logical_path = "objects/003_plate/visual/mesh.bin"
+    source = tmp_path / f"forged-loader-{_sha256(loader_payload)[:12]}.glb"
+    source.write_bytes(loader_payload)
+    root_ref = case.store.put_file(
+        source,
+        name="forged-plate-loader.glb",
+        media_type="model/gltf-binary",
+        schema_version=None,
+    )
+
+    rebound_files = dict(case.files)
+    rebound_files[root_logical_path] = loader_payload
+    if not keep_declared_mesh:
+        rebound_files.pop(mesh_logical_path)
+    inventory = _inventory_payload(rebound_files)
+    inventory_ref = _put_json(
+        case.store,
+        tmp_path,
+        name=f"forged-inventory-{_sha256(loader_payload)[:12]}",
+        schema_version="harness.asset_debt_inventory.v1",
+        value=inventory,
+    )
+    plan = AssetRepairApplication(
+        artifact_store=case.store,
+        trusted_inventory_refs=(inventory_ref,),
+    ).plan(
+        AssetRepairPlanRequest(
+            schema_version="harness.asset_repair_plan_request.v1",
+            inventory_ref=inventory_ref,
+            selected_asset_ids=("robotwin_003_plate", "robotwin_071_can"),
+        )
+    )
+    plan_ref = _put_json(
+        case.store,
+        tmp_path,
+        name=f"forged-plan-{_sha256(loader_payload)[:12]}",
+        schema_version="harness.asset_repair_plan.v1",
+        value=plan.model_dump(mode="json"),
+    )
+    manifest = deepcopy(case.source_manifest)
+    manifest["inventory_ref"] = inventory_ref.model_dump(mode="json")
+    manifest_asset = manifest["assets"][0]
+    manifest_root = next(
+        member
+        for member in manifest_asset["members"]
+        if member["logical_path"] == root_logical_path
+    )
+    manifest_root.update(sha256=root_ref.sha256, bytes=root_ref.bytes)
+    if not keep_declared_mesh:
+        manifest_asset["members"] = [
+            member
+            for member in manifest_asset["members"]
+            if member["logical_path"] != mesh_logical_path
+        ]
+    manifest_ref = _put_json(
+        case.store,
+        tmp_path,
+        name=f"forged-manifest-{_sha256(loader_payload)[:12]}",
+        schema_version="harness.asset_source_snapshot_manifest.v1",
+        value=manifest,
+    )
+
+    result["inventory_ref"] = inventory_ref.model_dump(mode="json")
+    result["repair_plan_ref"] = plan_ref.model_dump(mode="json")
+    result["source_snapshot_manifest_ref"] = manifest_ref.model_dump(mode="json")
+    result_asset = result["assets"][0]
+    result_root = next(
+        member
+        for member in result_asset["members"]
+        if member["logical_path"] == root_logical_path
+    )
+    result["staged_total_bytes"] += root_ref.bytes - result_root["source_bytes"]
+    result_root.update(
+        source_sha256=root_ref.sha256,
+        source_bytes=root_ref.bytes,
+        artifact_ref=root_ref.model_dump(mode="json"),
+    )
+    closure = result_asset["loader_closures"][0]
+    if not keep_declared_mesh:
+        mesh = next(
+            member
+            for member in result_asset["members"]
+            if member["logical_path"] == mesh_logical_path
+        )
+        result_asset["members"].remove(mesh)
+        closure["member_logical_paths"].remove(mesh_logical_path)
+        result["staged_member_count"] -= 1
+        result["staged_total_bytes"] -= mesh["source_bytes"]
+    _rehash_loader_closure(result_asset, closure)
+    _rehash_asset(result_asset)
+    _rehash_result(result)
+    return (
+        replace(
+            case,
+            files=rebound_files,
+            inventory_ref=inventory_ref,
+            plan=plan,
+            plan_ref=plan_ref,
+            source_manifest=manifest,
+            source_manifest_ref=manifest_ref,
+        ),
+        result,
+    )
+
+
 def test_loader_closure_digest_commits_member_content_identity(tmp_path: Path) -> None:
     result = _result_payload(tmp_path)
     plate = result["assets"][0]
@@ -1433,6 +1547,120 @@ def test_stage_authority_verifier_reparses_exact_cas_sidecar_semantics(
 
     with pytest.raises(AssetStageVerificationError, match="sidecar"):
         _verify_result(case, result)
+
+
+@pytest.mark.parametrize(
+    ("loader_payload", "keep_declared_mesh", "expected_message"),
+    [
+        (_glb(external_buffer="missing.bin"), False, "absent"),
+        (_glb(binary=b"mesh"), True, "differs"),
+        (_glb(external_buffer="../../../../escape.bin"), False, "unsafe"),
+        (_glb(external_buffer="../../escape.bin"), False, "unsafe"),
+        (b"not a glb loader document", False, "invalid"),
+    ],
+)
+def test_stage_authority_verifier_recomputes_exact_cas_glb_loader_closure(
+    tmp_path: Path,
+    loader_payload: bytes,
+    keep_declared_mesh: bool,
+    expected_message: str,
+) -> None:
+    case = _stage_case(tmp_path)
+    case, result = _rebind_plate_loader_authority(
+        case,
+        tmp_path,
+        loader_payload=loader_payload,
+        keep_declared_mesh=keep_declared_mesh,
+    )
+
+    with pytest.raises(AssetStageVerificationError, match=expected_message):
+        _verify_result(case, result)
+
+
+@pytest.mark.parametrize(
+    "loader_payload",
+    [
+        _glb(external_buffer="base0.glb"),
+        _glb(external_buffer="data:application/octet-stream;base64,bWVzaA=="),
+    ],
+)
+def test_stage_authority_verifier_safely_closes_cycles_and_embedded_data_uris(
+    tmp_path: Path,
+    loader_payload: bytes,
+) -> None:
+    case = _stage_case(tmp_path)
+    case, result = _rebind_plate_loader_authority(
+        case,
+        tmp_path,
+        loader_payload=loader_payload,
+        keep_declared_mesh=False,
+    )
+
+    authority = _verify_result(case, result)
+
+    assert authority.result.assets[0].loader_closures[0].member_logical_paths == (
+        "objects/003_plate/model_data0.json",
+        "objects/003_plate/visual/base0.glb",
+    )
+
+
+def test_stage_authority_verifier_deduplicates_repeated_exact_cas_references(
+    tmp_path: Path,
+) -> None:
+    case = _stage_case(tmp_path, repeat_external_reference=True)
+    result = case.application().stage(case.request()).model_dump(mode="json")
+
+    authority = _verify_result(case, result)
+
+    assert authority.result.assets[0].loader_closures[0].member_logical_paths == (
+        "objects/003_plate/model_data0.json",
+        "objects/003_plate/visual/base0.glb",
+        "objects/003_plate/visual/mesh.bin",
+    )
+
+
+@pytest.mark.parametrize(
+    ("attack", "expected_code"),
+    [
+        ("missing", "HARN_ASSET_STAGE_ARTIFACT_UNAVAILABLE"),
+        ("changed", "HARN_ASSET_STAGE_AUTHORITY_MISMATCH"),
+    ],
+)
+def test_stage_authority_verifier_rechecks_cas_during_loader_enumeration(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    attack: str,
+    expected_code: str,
+) -> None:
+    case = _stage_case(tmp_path)
+    result = case.application().stage(case.request())
+    root_member = next(
+        member
+        for member in result.assets[0].members
+        if member.logical_path == "objects/003_plate/visual/base0.glb"
+    )
+    cas_path = case.store.resolve(root_member.artifact_ref).path
+    saved_path = cas_path.with_name(cas_path.name + ".saved")
+    real_open = stage_verification.os.open
+    matching_opens = 0
+
+    def change_before_second_open(path: object, *args: object, **kwargs: object) -> int:
+        nonlocal matching_opens
+        if path == root_member.source_sha256:
+            matching_opens += 1
+            if matching_opens == 2:
+                cas_path.rename(saved_path)
+                if attack == "changed":
+                    cas_path.write_bytes(b"forged after the first exact CAS attestation")
+        return real_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(stage_verification.os, "open", change_before_second_open)
+
+    with pytest.raises(AssetStageVerificationError) as caught:
+        _verify_result(case, result.model_dump(mode="json"))
+
+    assert matching_opens == 2
+    assert caught.value.code == expected_code
 
 
 def test_stage_authority_verifier_requires_a_sidecar_for_each_planned_model(

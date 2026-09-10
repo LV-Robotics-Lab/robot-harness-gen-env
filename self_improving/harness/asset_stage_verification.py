@@ -15,9 +15,15 @@ from pydantic import BaseModel, ValidationError
 
 from .artifacts import LocalArtifactStore
 from .asset_repair import AssetRepairApplication, AssetRepairError
-from .runtime_assets import RuntimeAssetSnapshotError, robotwin_rigid_model_sidecar_scale
+from .runtime_assets import (
+    RuntimeAssetSnapshotError,
+    loader_document_references,
+    normalize_loader_reference,
+    robotwin_rigid_model_sidecar_scale,
+)
 from .schemas.asset_repair import AssetDebtInventory, AssetRepairPlan, AssetRepairPlanRequest
 from .schemas.asset_staging import (
+    AssetLoaderClosure,
     AssetSourceSnapshotManifest,
     AssetStageResult,
     StagedAssetMember,
@@ -276,6 +282,12 @@ def verify_asset_stage_result_authority(
                 or root_member.source_bytes != representation.observed_bytes
             ):
                 _authority_mismatch(f"loader root identity differs for {closure.root_logical_path}")
+            _verify_exact_loader_closure(
+                artifact_store=artifact_store,
+                closure=closure,
+                asset_logical_root=manifest_asset.logical_root,
+                members_by_path=result_members_by_path,
+            )
 
     return VerifiedAssetStageAuthority(
         result=result,
@@ -412,6 +424,60 @@ def _authority_mismatch(message: str) -> None:
         "HARN_ASSET_STAGE_AUTHORITY_MISMATCH",
         f"asset stage authority mismatch: {message}",
     )
+
+
+def _verify_exact_loader_closure(
+    *,
+    artifact_store: LocalArtifactStore,
+    closure: AssetLoaderClosure,
+    asset_logical_root: str,
+    members_by_path: dict[str, StagedAssetMember],
+) -> None:
+    pending = [closure.root_logical_path, closure.model_sidecar_logical_path]
+    visited: set[str] = set()
+    while pending:
+        logical_path = pending.pop(0)
+        if logical_path in visited:
+            continue
+        member = members_by_path[logical_path]
+        try:
+            payload, attestation = read_rooted_regular_file(
+                root=artifact_store.root,
+                logical_path=f"sha256/{member.source_sha256[:2]}/{member.source_sha256}",
+            )
+        except AssetStageVerificationError as error:
+            raise AssetStageVerificationError(
+                "HARN_ASSET_STAGE_ARTIFACT_UNAVAILABLE",
+                f"asset stage loader closure member is unavailable: {logical_path}",
+            ) from error
+        if (
+            attestation.sha256 != member.source_sha256
+            or attestation.bytes != member.source_bytes
+        ):
+            _authority_mismatch(f"loader closure member identity differs for {logical_path}")
+        visited.add(logical_path)
+        try:
+            references = loader_document_references(logical_path, payload)
+        except RuntimeAssetSnapshotError as error:
+            _authority_mismatch(f"loader document is invalid: {logical_path}/{error.reason}")
+        for reference in references:
+            if reference.startswith("data:"):
+                continue
+            try:
+                dependency = normalize_loader_reference(logical_path, reference)
+            except RuntimeAssetSnapshotError as error:
+                _authority_mismatch(f"loader reference is unsafe: {logical_path}/{error.reason}")
+            if not dependency.startswith(asset_logical_root + "/"):
+                _authority_mismatch(f"loader reference is unsafe: {logical_path}/asset escape")
+            if dependency not in members_by_path:
+                _authority_mismatch(f"loader dependency is absent: {dependency}")
+            if dependency not in visited:
+                pending.append(dependency)
+        pending.sort()
+    if tuple(sorted(visited)) != closure.member_logical_paths:
+        _authority_mismatch(
+            f"loader closure differs from exact CAS references for {closure.root_logical_path}"
+        )
 
 
 def _is_sha256(value: object) -> bool:

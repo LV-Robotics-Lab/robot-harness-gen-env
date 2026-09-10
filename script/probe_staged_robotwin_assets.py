@@ -63,6 +63,19 @@ def canonical_bytes(value: object) -> bytes:
 def require_external_report_path(*, feature_root: Path, requested_path: Path) -> Path:
     """Resolve one new report path that cannot dirty the feature checkout."""
 
+    return _resolve_external_report_path(
+        feature_root=feature_root,
+        requested_path=requested_path,
+        require_new=True,
+    )
+
+
+def _resolve_external_report_path(
+    *,
+    feature_root: Path,
+    requested_path: Path,
+    require_new: bool,
+) -> Path:
     if not isinstance(feature_root, Path) or not isinstance(requested_path, Path):
         raise TypeError("feature_root and requested_path must be Paths")
     resolved_feature_root = feature_root.expanduser().resolve(strict=True)
@@ -75,21 +88,47 @@ def require_external_report_path(*, feature_root: Path, requested_path: Path) ->
         raise ValueError("probe report must resolve outside feature_root")
     if not resolved_path.parent.is_dir():
         raise ValueError("probe report parent must already exist")
-    if resolved_path.exists() or resolved_path.is_symlink():
+    if require_new and (resolved_path.exists() or resolved_path.is_symlink()):
         raise ValueError("probe report must use a new output path")
     return resolved_path
 
 
-def write_new_report(path: Path, payload: bytes) -> None:
+def write_new_report(*, feature_root: Path, path: Path, payload: bytes) -> None:
     """Publish one new report with no-follow/exclusive creation and complete writes."""
 
+    if (
+        not isinstance(feature_root, Path)
+        or not isinstance(path, Path)
+        or type(payload) is not bytes
+    ):
+        raise TypeError("feature root and report path must be Paths and payload exact bytes")
+    if not feature_root.is_absolute() or not path.is_absolute():
+        raise ValueError("feature root and probe report path must be absolute")
+    if path.name in {"", ".", ".."} or any(part == ".." for part in path.parts):
+        raise ValueError("probe report path must name one contained file")
+    if (
+        _resolve_external_report_path(
+            feature_root=feature_root,
+            requested_path=path,
+            require_new=False,
+        )
+        != path
+    ):
+        raise ValueError("probe report path must already be normalized")
+    feature_descriptor = _open_directory_no_follow(feature_root)
+    try:
+        parent_descriptor = _open_directory_no_follow(path.parent)
+    except BaseException:
+        os.close(feature_descriptor)
+        raise
     file_descriptor: int | None = None
     created = False
     try:
         file_descriptor = os.open(
-            path,
+            path.name,
             os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC,
             0o600,
+            dir_fd=parent_descriptor,
         )
         created = True
         pending = memoryview(payload)
@@ -99,16 +138,93 @@ def write_new_report(path: Path, payload: bytes) -> None:
                 raise OSError("short report write")
             pending = pending[written:]
         os.fsync(file_descriptor)
+        os.fsync(parent_descriptor)
+        if _directory_is_within(
+            directory_descriptor=parent_descriptor,
+            ancestor_descriptor=feature_descriptor,
+        ) or not _directory_matches_path(
+            directory_descriptor=parent_descriptor,
+            path=path.parent,
+        ):
+            raise OSError("probe report parent moved or entered feature_root")
     except OSError:
         if created:
             try:
-                path.unlink()
+                os.unlink(path.name, dir_fd=parent_descriptor)
+                os.fsync(parent_descriptor)
             except OSError:
                 pass
         raise
     finally:
         if file_descriptor is not None:
             os.close(file_descriptor)
+        os.close(parent_descriptor)
+        os.close(feature_descriptor)
+
+
+def _open_directory_no_follow(path: Path) -> int:
+    """Open an absolute directory through one stable no-follow descriptor chain."""
+
+    if not isinstance(path, Path):
+        raise TypeError("directory path must be a Path")
+    if not path.is_absolute() or any(part == ".." for part in path.parts):
+        raise ValueError("directory path must be absolute and normalized")
+    directory_descriptor = os.open(
+        path.anchor,
+        os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC,
+    )
+    try:
+        for component in path.parts[1:]:
+            next_descriptor = os.open(
+                component,
+                os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC,
+                dir_fd=directory_descriptor,
+            )
+            os.close(directory_descriptor)
+            directory_descriptor = next_descriptor
+    except BaseException:
+        os.close(directory_descriptor)
+        raise
+    return directory_descriptor
+
+
+def _directory_is_within(*, directory_descriptor: int, ancestor_descriptor: int) -> bool:
+    """Compare stable directory ancestry by descriptor identity, never by a mutable path."""
+
+    ancestor_identity = _descriptor_identity(ancestor_descriptor)
+    current_descriptor = os.dup(directory_descriptor)
+    try:
+        while True:
+            current_identity = _descriptor_identity(current_descriptor)
+            if current_identity == ancestor_identity:
+                return True
+            parent_descriptor = os.open(
+                "..",
+                os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC,
+                dir_fd=current_descriptor,
+            )
+            parent_identity = _descriptor_identity(parent_descriptor)
+            os.close(current_descriptor)
+            current_descriptor = parent_descriptor
+            if parent_identity == current_identity:
+                return False
+    finally:
+        os.close(current_descriptor)
+
+
+def _directory_matches_path(*, directory_descriptor: int, path: Path) -> bool:
+    expected_descriptor = _open_directory_no_follow(path)
+    try:
+        return _descriptor_identity(directory_descriptor) == _descriptor_identity(
+            expected_descriptor
+        )
+    finally:
+        os.close(expected_descriptor)
+
+
+def _descriptor_identity(file_descriptor: int) -> tuple[int, int]:
+    value = os.fstat(file_descriptor)
+    return value.st_dev, value.st_ino
 
 
 def git_output(root: Path, *args: str) -> str:
@@ -624,7 +740,11 @@ def main() -> None:
         "genesis_executed": False,
         "promotion_executed": False,
     }
-    write_new_report(output_path, canonical_bytes(report))
+    write_new_report(
+        feature_root=args.feature_root,
+        path=output_path,
+        payload=canonical_bytes(report),
+    )
     print(
         f"PASS variants={len(rows)} members={len(member_records)} "
         f"steps={report['total_scene_steps']}"
