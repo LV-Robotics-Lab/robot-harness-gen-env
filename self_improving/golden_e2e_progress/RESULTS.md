@@ -1,5 +1,29 @@
 # 进度与结果
 
+## 2026-09-11 P5 exact MCP stdio 与重启幂等
+
+- 新增 strict local settings、compile-only production assembly 与
+  `robot-harness-golden-mcp` stdio entry。每次进程启动均从同一 CAS、compile child
+  SQLite、Golden SQLite 与冻结 RegistrySnapshot 重组真实 application/catalog/Harness，
+  不从配置注入 handler、descriptor 或 qualification。
+- 官方 MCP 2.2 stdio Client 真实连接 A/B 两个独立 Python 进程，两次均完成
+  negotiate/list/call/read。A 执行 compile 后退出，B 用相同 command/idempotency 重提；
+  OperationSnapshot/resource 完全一致，Golden/child SQLite 全表行数与 CAS path/bytes/SHA
+  均不增长，operation/intent/invocation/run-state 各恰好 1 份。
+- stdio context 内同时用 Python stdout redirect 包围 assembly 与 server run。故障注入的
+  assembly/handler 普通 `print` sentinel 各只出现在 child stderr，官方 client 无
+  `Failed to parse JSONRPC message`；这一真实 wire 验收同时证明 text/resource
+  discriminator 没有被 `exclude_unset` 丢失。
+- 补充失效模式：Registry/CAS 在已建立 adapter 后漂移，exact call 现返回
+  `isError=true` + 稳定 `HARN_ARTIFACT_UNAVAILABLE`，不再泄漏为 MCP `-32603`。加入
+  committed compile tool schema digest snapshot，绑定 exact name/Skill 与 input/output schema 字节身份。
+- Registry/Golden/schema 相邻回归含四份 MCP tracer 为 231 passed；adapter/server/assembly 三个
+  核心模块合计 217 statements/38 branches 为 100%。stdio 入口另由真实双进程协议
+  tracer 覆盖，没有用 mock transport 代替。
+- 边界：此处是“预置 workflow + 预置 catalog”的 compile-only stdio 验收。尚无 MCP
+  workflow create/catalog ingest、replay/validate production assembly、operation polling/cancel，不声称
+  外部 Codex 已能从零启动三段链。
+
 ## 2026-09-11 P5 exact MCP 进程内纵切
 
 - 新增 transport-neutral `HarnessMCPAdapter` 与官方 MCP 2.2 server bridge。工具目录只取
@@ -15,7 +39,7 @@
   上保留。最终相邻回归 229 tests 通过；两个新模块合计 183 statements/34 branches 为
   100%。项目增加 optional extra `mcp>=2.2,<3` 并在 CI 安装；base Python 未安装 MCP
   时 SDK 测试按可选依赖跳过。
-- 边界：本纵切只证明进程内 compile exact tool 与 workflow read；stdio、跨进程重启、
+- 边界：本纵切在当时只证明进程内 compile exact tool 与 workflow read；stdio、跨进程重启、
   workflow create、operation polling/cancel 与 MCP 上的 compile→replay→validate 尚未验收。
 
 ## 2026-09-10 integrated revision 3 最终真实闭环

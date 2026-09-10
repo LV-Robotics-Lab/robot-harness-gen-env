@@ -42,6 +42,7 @@ commit `9b72090` 补充。
 | Pass 29 | 检查 legacy validate 能否只从 revision-2 受信 lineage 重新验证，并在同一 Golden workflow 推进 revision 3。 | `handlers/text2env_validate_v2.py`、`validate_application.py`、`golden_validate_{policy,execution}.py`、`test_golden_validate_submit.py` 与 `docs/evidence/golden-compile-replay-validate-p4-20260910.*`。 | policy 在 child intent 前闭合 compile/replay receipts、package/catalog、runtime/report/assets、媒体、事件与 provenance；handler 从 snapshot 重算物理报告，只提交 `environment.validation` 且 fresh observations 为空。真实 production run 完成 0→1→2→3，187 CAS files / 3,735 ArtifactRef occurrences 全闭合，MP4 120/114 decoded-unique，无 live application 重启返回同一 terminal operation。`publishable=true` 只适用于 legacy RoboTwin/SAPIEN profile，不表示 promotion、Genesis 或 robot-policy。 |
 | Pass 30 | 在 portable replay、x2env contracts 与 validate v2 合并后，检查最终固定实现是否重签资格并从另一代码路径真实闭合 revision 3。 | `eec1976`、replay/validate checked qualification 三文档、`run_golden_compile_replay_validate.py`、四个 SQLite authority、终局 CAS 与 `docs/evidence/golden-revision3-integration-20260910.*`。 | compile/replay/validate 资格 7/7、8/8、6/6 pass；同一 Harness/RegistrySnapshot 真实完成 0→1→2→3。159 CAS objects 和 3,407 个 ArtifactRef occurrence 全闭合，validate 重算物理报告，MP4 独立解码 120/114 帧，重启重提不产生第四 child。operator 仍为本机部署绑定，temporary delegated scope 消失后 deep gate 按合同拒绝；仅证明 legacy publishability。 |
 | Pass 31 | 检查 MCP 是否只暴露冻结且可执行的 exact qualified Skill，并且不绕过 Harness 权威。 | `mcp_adapter.py`、`mcp_server.py`、两份 MCP 测试、`mcp==2.2.0` 官方进程内 Client。 | 冻结 RegistrySnapshot ∩ exact live catalog 只列出 compile tool，无 generic invoke；server 注入 principal/Skill identity，真实 list/call/read 通过，重复 call 返回同一 terminal operation。本 pass 未涉及 stdio、跨进程重启、workflow create/poll/cancel 或 MCP 上的三段真实链。 |
+| Pass 32 | 检查 stdio JSON-RPC transport 是否在普通 stdout 噪声和整进程重启后仍保留 Harness 权威。 | `mcp_assembly.py`、`mcp_stdio.py`、`test_mcp_stdio.py`、compile/Golden SQLite 与 CAS manifest、committed `mcp_tool_snapshots/catalog.v1.json`。 | 官方 MCP 2.2 stdio Client 连接 A/B 真实 Python 进程，重启重提返回同一 operation，全表行数和 CAS 不增长；assembly/handler print 只进 stderr，协议无解析错误。Registry/CAS 漂移映射为稳定 HARN error。当前仍是预置 workflow/catalog 的 compile-only 路径，无 workflow create、三 Skill assembly 或 polling/cancel。 |
 
 Coverage note：本证据图覆盖在范围内的 `scene_gen/`、`script/`、`demo/`、`tests/`
 主路径，以及 `self_improving/harness/` 的 PR1 schema tranche。已检查但不追踪的相邻路径——
@@ -57,7 +58,7 @@ production Golden 0→1→2。最终 integration 已在固定实现上重新生�
 并从另一代码安装路径闭合 legacy compile/replay/validate 0→1→2→3。外部 runtime/operator
 仍为部署绑定，临时 delegated scope 需运行前显式 provision。当前证据见
 [`docs/evidence/golden-revision3-integration-20260910.md`](../../docs/evidence/golden-revision3-integration-20260910.md)。
-promotion transaction 与完整 MCP stdio/三段链仍未闭合；不能从 `publishable=true`、一段
+promotion transaction 与完整 MCP 三段链仍未闭合；不能从 `publishable=true`、一段
 可解码视频或单元绿灯反推 promotion、Genesis 或最终 Text2Env robot-policy 行为。
 
 | Claim | Evidence | Confidence | Caveat | Used by |

@@ -21,6 +21,7 @@ dependencies = [
 [project.scripts]
 self-improving-audit = "self_improving.__main__:main"
 robot-harness-compile = "self_improving.harness.compile_cli:main"
+robot-harness-golden-mcp = "self_improving.harness.mcp_stdio:main"
 robot-harness-run-qualified-replay = "self_improving.qualified_replay_cli:main"
 
 [project.optional-dependencies]
@@ -52,6 +53,7 @@ scene_gen = ["AGENTS.md", "asset_overrides.yml", "envs/AGENTS.md", "prompts/*.md
 "self_improving.harness" = [
   "IMPLEMENTATION_LOG.md",
   "json_schemas/*.json",
+  "mcp_tool_snapshots/*.json",
   "native/*.c",
   "qualified_skills/**/*.json",
 ]

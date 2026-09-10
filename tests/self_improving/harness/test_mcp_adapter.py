@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from hashlib import sha256
 from pathlib import Path
 from uuid import UUID
 
@@ -29,6 +30,16 @@ from self_improving.harness.schemas.common import SkillDescriptor
 from self_improving.harness.schemas.registry_snapshot import QualifiedSkillSnapshot
 from self_improving.harness.schemas.text2env import CompileConfig, Text2EnvCompileInput
 from tests.self_improving.harness import test_golden_run as base
+
+
+def _canonical_json_bytes(value: object) -> bytes:
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
 
 
 def test_adapter_lists_only_the_exact_qualified_live_tool(tmp_path: Path) -> None:
@@ -71,6 +82,26 @@ def test_adapter_lists_only_the_exact_qualified_live_tool(tmp_path: Path) -> Non
     assert "principal_id" not in tool.input_schema["properties"]
     assert "skill_ref" not in tool.input_schema["properties"]
     assert tool.output_schema["$id"] == "harness.mcp_exact_tool_result.v1"
+    snapshot_path = (
+        Path(__file__).resolve().parents[3]
+        / "self_improving/harness/mcp_tool_snapshots/catalog.v1.json"
+    )
+    snapshot = json.loads(snapshot_path.read_bytes())
+    assert snapshot == {
+        "schema_version": "harness.mcp_tool_catalog_snapshot.v1",
+        "tools": [
+            {
+                "name": tool.name,
+                "skill_ref": tool.skill_ref,
+                "input_schema_sha256": sha256(
+                    _canonical_json_bytes(tool.input_schema)
+                ).hexdigest(),
+                "output_schema_sha256": sha256(
+                    _canonical_json_bytes(tool.output_schema)
+                ).hexdigest(),
+            }
+        ],
+    }
     Draft202012Validator.check_schema(dict(tool.input_schema))
     catalog_path = settings.external_catalog_roots[0] / "empty.json"
     base._empty_catalog(
@@ -261,6 +292,12 @@ def test_adapter_lists_only_the_exact_qualified_live_tool(tmp_path: Path) -> Non
     registry_path = artifact_store.resolve(registry).path
     registry_path.chmod(0o600)
     registry_path.write_bytes(b"corrupt registry\n")
+    corrupt_call = adapter.call_tool(MCPToolCall(name=tool.name, arguments=arguments))
+    assert corrupt_call.is_error is True
+    assert corrupt_call.structured_content["code"] == "HARN_ARTIFACT_UNAVAILABLE"
+    Draft202012Validator(dict(tool.output_schema)).validate(
+        dict(corrupt_call.structured_content)
+    )
     with pytest.raises(HarnessMCPAdapterError) as corrupt:
         adapter.list_tools(started.registry_snapshot)
     assert corrupt.value.code == "HARN_ARTIFACT_UNAVAILABLE"

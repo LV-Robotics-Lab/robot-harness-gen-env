@@ -29,6 +29,7 @@ class MCPTool:
 
     name: str
     skill_ref: str
+    input_schema_id: str
     description: str
     input_schema: Mapping[str, object]
     output_schema: Mapping[str, object]
@@ -133,51 +134,56 @@ class HarnessMCPAdapter:
             )
         try:
             registry = self._harness._verify_registry_snapshot(snapshot)
+            documents = schema_documents()
+            tools: list[MCPTool] = []
+            for entry in registry.qualified_skills:
+                live = self._harness._execution_catalog.live_descriptors_for(entry.skill_ref)
+                if len(live) != 1:
+                    raise HarnessMCPAdapterError(
+                        "HARN_SKILL_UNQUALIFIED",
+                        "Registry Skill does not have one exact live application: "
+                        f"{entry.skill_ref}",
+                    )
+                descriptor = self._harness._resolve_descriptor(entry.descriptor_ref)
+                if live[0] != descriptor:
+                    raise HarnessMCPAdapterError(
+                        "HARN_DEPENDENCY_DRIFT",
+                        f"Registry and live descriptor differ: {entry.skill_ref}",
+                    )
+                input_model = schema_model(descriptor.input_schema)
+                tools.append(
+                    MCPTool(
+                        name=entry.mcp_tool_name,
+                        skill_ref=entry.skill_ref,
+                        input_schema_id=descriptor.input_schema,
+                        description=(
+                            f"Submit exact qualified {entry.skill_ref} "
+                            "to the durable Golden Workflow."
+                        ),
+                        input_schema=_command_envelope_schema(entry.mcp_tool_name, input_model),
+                        output_schema=_tool_result_schema(
+                            documents["harness.operation_snapshot.v1"]
+                        ),
+                    )
+                )
         except GoldenRunRegistryError as error:
             raise HarnessMCPAdapterError(error.code, str(error)) from error
-
-        documents = schema_documents()
-        tools: list[MCPTool] = []
-        for entry in registry.qualified_skills:
-            live = self._harness._execution_catalog.live_descriptors_for(entry.skill_ref)
-            if len(live) != 1:
-                raise HarnessMCPAdapterError(
-                    "HARN_SKILL_UNQUALIFIED",
-                    f"Registry Skill does not have one exact live application: {entry.skill_ref}",
-                )
-            descriptor = self._harness._resolve_descriptor(entry.descriptor_ref)
-            if live[0] != descriptor:
-                raise HarnessMCPAdapterError(
-                    "HARN_DEPENDENCY_DRIFT",
-                    f"Registry and live descriptor differ: {entry.skill_ref}",
-                )
-            input_model = schema_model(descriptor.input_schema)
-            tools.append(
-                MCPTool(
-                    name=entry.mcp_tool_name,
-                    skill_ref=entry.skill_ref,
-                    description=(
-                        f"Submit exact qualified {entry.skill_ref} to the durable Golden Workflow."
-                    ),
-                    input_schema=_command_envelope_schema(entry.mcp_tool_name, input_model),
-                    output_schema=_tool_result_schema(
-                        documents["harness.operation_snapshot.v1"]
-                    ),
-                )
-            )
         return tuple(tools)
 
     def call_tool(self, request: MCPToolCall) -> MCPToolResult:
         """Validate one exact command and delegate all mutation to S1."""
 
-        tools = {tool.name: tool for tool in self.list_tools(self._registry_snapshot)}
+        try:
+            tools = {tool.name: tool for tool in self.list_tools(self._registry_snapshot)}
+        except HarnessMCPAdapterError as error:
+            return _error_result(error.code, str(error))
         tool = tools.get(request.name)
         if tool is None:
             raise HarnessMCPProtocolError(f"unknown exact MCP tool: {request.name}")
-        registry = self._harness._verify_registry_snapshot(self._registry_snapshot)
-        entry = next(item for item in registry.qualified_skills if item.mcp_tool_name == tool.name)
-        descriptor = self._harness._resolve_descriptor(entry.descriptor_ref)
-        envelope_model = _command_envelope_model(tool.name, schema_model(descriptor.input_schema))
+        envelope_model = _command_envelope_model(
+            tool.name,
+            schema_model(tool.input_schema_id),
+        )
         try:
             wire_payload = json.dumps(
                 dict(request.arguments),

@@ -1,5 +1,14 @@
 # Change Log
 
+## 2026-09-11 exact MCP stdio/restart tranche
+
+- 新增 compile-only 可重建 production assembly 与 stdio entry；官方 MCP 2.2 Client 先后
+  连接两个真实进程，重启后相同命令返回同一 operation，SQLite/CAS 不增长。
+- assembly 与 handler 的 stdout 故障注入均被定向 stderr，JSON-RPC 协议无污染；
+  committed tool snapshot 锁定 compile exact name/Skill 与输入输出 schema digest。
+- 漂移 Registry/CAS 的已注册 tool call 改为结构化 `HARN_ARTIFACT_UNAVAILABLE`，不再
+  泄漏 internal MCP error。边界仍是预置 workflow/catalog 的 compile-only 路径。
+
 ## 2026-09-11 exact MCP in-process tranche
 
 - 以固定 RegistrySnapshot 与 exact live GoldenExecutionCatalog 的交集生成工具目录；

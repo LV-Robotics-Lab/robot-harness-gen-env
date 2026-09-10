@@ -1,0 +1,1 @@
+{"schema_version":"harness.mcp_tool_catalog_snapshot.v1","tools":[{"input_schema_sha256":"9cb929863a5615511c1716bac40ee87e105e44359b9681754a67ca70c3c5348f","name":"text2env_compile_v1_0_0","output_schema_sha256":"618eeeeacc2ce7c0113a9dce71732e9bc307d4a85738221e3042b3465196e4ad","skill_ref":"text2env.compile@1.0.0"}]}
