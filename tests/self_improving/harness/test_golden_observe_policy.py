@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import UUID
@@ -12,6 +12,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from self_improving.harness.artifacts import LocalArtifactStore
+from self_improving.harness.golden_execution import SkillAuthorizationContext
 from self_improving.harness.golden_observe_policy import (
     ControlledGenesisObserveEvidencePolicy,
 )
@@ -678,6 +679,43 @@ def test_authorize_closes_exact_image_or_video_replay_lineage(
 ) -> None:
     case = _case(tmp_path, route=route, checkpoint=checkpoint)
     case.policy.authorize(case.world, case.request)
+
+
+def test_workflow_authorization_rejects_foreign_context_despite_equal_state_hash(
+    tmp_path: Path,
+) -> None:
+    case = _case(tmp_path)
+    context = SkillAuthorizationContext(
+        workflow_run_id=case.replay_workflow.workflow_run_id,
+        principal_id=case.replay_workflow.principal_id,
+        receipt_head=case.request.replay_workflow_receipt,
+        revision=case.replay_workflow.committed_revision,
+        state_ref=case.replay_workflow.resulting_state,
+    )
+
+    case.policy.authorize_workflow(case.world, case.request, context)
+
+    foreign_values = (
+        replace(
+            context,
+            workflow_run_id=UUID("71000000-0000-4000-8000-000000000099"),
+        ),
+        replace(context, principal_id="tests/foreign-workflow"),
+        replace(
+            context,
+            receipt_head=context.receipt_head.model_copy(
+                update={"name": "foreign-receipt-head.json"}
+            ),
+        ),
+        replace(context, revision=context.revision + 1),
+        replace(
+            context,
+            state_ref=context.state_ref.model_copy(update={"name": "foreign-state.json"}),
+        ),
+    )
+    for foreign in foreign_values:
+        with pytest.raises(ValueError, match="workflow authorization context"):
+            case.policy.authorize_workflow(case.world, case.request, foreign)
 
 
 def _replace_replay_receipt(case: _Case, receipt: TrustedToolReceiptV2) -> GenesisObserveInput:
