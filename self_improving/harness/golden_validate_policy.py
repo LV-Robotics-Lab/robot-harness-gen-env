@@ -169,7 +169,11 @@ class Text2EnvValidateV2EvidencePolicy:
         assert state.blocker is not None
         return tuple(sorted(state.blocker.artifact_refs, key=_artifact_sort_key))
 
-    def fresh_observations(self, state: RunState) -> tuple[WorldFact, ...]:
+    def fresh_observations(
+        self,
+        state: RunState,
+        invocation: Invocation | None,
+    ) -> tuple[WorldFact, ...]:
         return ()
 
     def verify_result(

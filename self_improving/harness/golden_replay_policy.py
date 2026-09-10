@@ -9,7 +9,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from .schemas.common import ArtifactRef, RunState, RunStatus
+from .schemas.common import ArtifactRef, Invocation, RunState, RunStatus
 from .schemas.text2env import Text2EnvReplayInput, Text2EnvReplayOutput
 from .schemas.workflow_operation import ReceiptDerivedFactClaimV2, ToolResultV2
 from .trusted_state import TrustedWorldState, WorldFact
@@ -76,7 +76,11 @@ class Text2EnvReplayEvidencePolicy:
         assert state.blocker is not None
         return tuple(sorted(state.blocker.artifact_refs, key=_artifact_sort_key))
 
-    def fresh_observations(self, state: RunState) -> tuple[WorldFact, ...]:
+    def fresh_observations(
+        self,
+        state: RunState,
+        invocation: Invocation | None,
+    ) -> tuple[WorldFact, ...]:
         return ()
 
     def verify_result(

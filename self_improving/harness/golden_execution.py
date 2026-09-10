@@ -40,7 +40,11 @@ class SkillEvidencePolicy(Protocol):
 
     def diagnostics(self, state: RunState) -> tuple[ArtifactRef, ...]: ...
 
-    def fresh_observations(self, state: RunState) -> tuple[WorldFact, ...]: ...
+    def fresh_observations(
+        self,
+        state: RunState,
+        invocation: Invocation | None,
+    ) -> tuple[WorldFact, ...]: ...
 
     def verify_result(
         self,

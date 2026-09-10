@@ -171,7 +171,11 @@ class _ObservationPolicy:
     def diagnostics(self, state: RunState) -> tuple[ArtifactRef, ...]:
         return ()
 
-    def fresh_observations(self, state: RunState) -> tuple[WorldFact, ...]:
+    def fresh_observations(
+        self,
+        state: RunState,
+        invocation: Invocation | None,
+    ) -> tuple[WorldFact, ...]:
         if state.run_id != CHILD_IDS[2] or (
             state.status is not RunStatus.SUCCEEDED
             and self.projection_attack != "non_success_observation"
@@ -217,7 +221,7 @@ class _ObservationPolicy:
         assert claims == self.claims(state)
         if state.status is RunStatus.SUCCEEDED:
             assert self.observation in supporting
-        if result.fresh_observations != self.fresh_observations(state):
+        if result.fresh_observations != self.fresh_observations(state, None):
             raise ValueError("observe ToolResult omitted its policy-projected fresh observations")
 
 

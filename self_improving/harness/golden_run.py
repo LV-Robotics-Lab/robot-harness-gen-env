@@ -674,7 +674,7 @@ class GoldenRunHarness:
         for artifact in supporting:
             self._artifact_store.resolve(artifact)
         claims = policy.claims(state)
-        fresh_observations = policy.fresh_observations(state)
+        fresh_observations = policy.fresh_observations(state, lifecycle.invocation)
         _verify_observation_projection(
             state=state,
             claims=claims,
@@ -989,7 +989,7 @@ class GoldenRunHarness:
         for artifact in supporting:
             self._artifact_store.resolve(artifact)
         claims = policy.claims(child_state)
-        fresh_observations = policy.fresh_observations(child_state)
+        fresh_observations = policy.fresh_observations(child_state, invocation)
         _verify_observation_projection(
             state=child_state,
             claims=claims,
