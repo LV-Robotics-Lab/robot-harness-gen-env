@@ -356,9 +356,7 @@ def test_official_client_exposes_exact_control_tools_and_commits_only_through_ha
             assert str(advisory.content[1].uri) == workflow_uri
             advisory_resource = await client.read_resource(workflow_uri)
             assert json.loads(advisory_resource.contents[0].text)["revision"] == 3
-            Draft202012Validator(advisory_tool.output_schema).validate(
-                advisory.structured_content
-            )
+            Draft202012Validator(advisory_tool.output_schema).validate(advisory.structured_content)
 
             for forged in (
                 {**advisory_arguments, "principal_id": "caller/forged"},
@@ -381,9 +379,59 @@ def test_official_client_exposes_exact_control_tools_and_commits_only_through_ha
                 await client.call_tool(ADVISORY_TOOL, changed),
                 "HARN_IDEMPOTENCY_CONFLICT",
             )
+            foreign_uri = (
+                "harness://workflows/"
+                "71000000-0000-4000-8000-000000000099/artifacts/"
+                f"{case.source_prompt.sha256}"
+            )
+            _assert_error(
+                await client.call_tool(
+                    ADVISORY_TOOL,
+                    {
+                        **advisory_arguments,
+                        "command_id": "73000000-0000-4000-8000-000000000004",
+                        "idempotency_key": "diagnosis-foreign-uri-004",
+                        "source_prompt_uri": foreign_uri,
+                    },
+                ),
+                "HARN_INPUT_SCHEMA_INVALID",
+            )
+            _assert_error(
+                await client.call_tool(
+                    ADVISORY_TOOL,
+                    {
+                        **advisory_arguments,
+                        "command_id": "73000000-0000-4000-8000-000000000005",
+                        "idempotency_key": "diagnosis-unbound-uri-005",
+                        "source_prompt_uri": (
+                            f"harness://workflows/{case.head.workflow_run_id}/artifacts/{'0' * 64}"
+                        ),
+                    },
+                ),
+                "HARN_WORKFLOW_NOT_FOUND",
+            )
 
             prompt_arguments = _prompt_arguments(case, advisory.structured_content)
             Draft202012Validator(prompt_tool.input_schema).validate(prompt_arguments)
+            _assert_error(
+                await client.call_tool(
+                    PROMPT_TOOL,
+                    {**prompt_arguments, "principal_id": "caller/forged"},
+                ),
+                "HARN_INPUT_SCHEMA_INVALID",
+            )
+            _assert_error(
+                await client.call_tool(
+                    PROMPT_TOOL,
+                    {
+                        **prompt_arguments,
+                        "command_id": "73000000-0000-4000-8000-000000000006",
+                        "idempotency_key": "prompt-revision-no-fallback-006",
+                        "fallback": {"kind": "none"},
+                    },
+                ),
+                "HARN_HISTORY_MISMATCH",
+            )
             prompt = await client.call_tool(PROMPT_TOOL, prompt_arguments)
             prompt_retry = await client.call_tool(PROMPT_TOOL, prompt_arguments)
             assert prompt_retry == prompt

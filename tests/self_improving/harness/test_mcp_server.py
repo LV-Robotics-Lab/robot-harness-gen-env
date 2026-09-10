@@ -82,15 +82,20 @@ def test_official_client_lists_and_calls_the_exact_tool_in_process(tmp_path: Pat
             }
         ],
     }
+    tool_name = "text2env_compile_v1_0_0"
 
     async def exercise() -> None:
         async with Client(server, raise_exceptions=True, cache=None) as client:
             listed = await client.list_tools()
             assert tuple(tool.name for tool in listed.tools) == (
                 "harness_workflow_create_v1",
+                "harness_advisory_record_v1",
+                "harness_prompt_revision_record_v1",
                 "text2env_compile_v1_0_0",
             )
-            assert listed.tools[1].input_schema == adapter.list_tools(registry)[1].input_schema
+            listed_by_name = {tool.name: tool for tool in listed.tools}
+            adapter_by_name = {tool.name: tool for tool in adapter.list_tools(registry)}
+            assert listed_by_name[tool_name].input_schema == adapter_by_name[tool_name].input_schema
             created = await client.call_tool(listed.tools[0].name, start_arguments)
             assert created.is_error is False
             assert created.structured_content["revision"] == 0
@@ -106,7 +111,7 @@ def test_official_client_lists_and_calls_the_exact_tool_in_process(tmp_path: Pat
                 ],
                 "parameters": compile_parameters,
             }
-            result = await client.call_tool(listed.tools[1].name, arguments)
+            result = await client.call_tool(tool_name, arguments)
             assert result.is_error is False
             assert result.structured_content["status"] == "succeeded"
             assert [content.type for content in result.content] == ["text", "resource_link"]

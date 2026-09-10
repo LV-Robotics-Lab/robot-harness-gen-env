@@ -8,15 +8,17 @@ from base64 import b64encode
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Literal, Mapping
+from typing import Annotated, Literal, Mapping
 from uuid import UUID
 
 from pydantic import (
+    UUID4,
     AwareDatetime,
     BaseModel,
     ConfigDict,
     Field,
     JsonValue,
+    ValidationError,
     create_model,
     model_validator,
 )
@@ -30,7 +32,17 @@ from .golden_run import (
     GoldenRunRegistryError,
 )
 from .schema_catalog import schema_documents, schema_model
+from .schemas.base import CanonicalSkillRef, NonNegativeInt, Sha256
 from .schemas.common import ArtifactRef
+from .schemas.golden_control import (
+    AdvisoryRecordCommand,
+    ControlCommitSnapshot,
+    NoPromptFallback,
+    ObservationCitation,
+    PromptRevisionCommand,
+    ReplacePromptPatch,
+    VideoFrameToImageFallback,
+)
 from .schemas.workflow import (
     CapabilityProfileRef,
     IdempotencyKey,
@@ -156,8 +168,97 @@ class MCPWorkflowCreateRequest(BaseModel):
         return self
 
 
+_WORKFLOW_ARTIFACT_URI_PATTERN = (
+    r"^harness://workflows/"
+    r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
+    r"/artifacts/[0-9a-f]{64}$"
+)
+WorkflowArtifactUri = Annotated[str, Field(pattern=_WORKFLOW_ARTIFACT_URI_PATTERN)]
+
+
+class MCPObservationCitation(BaseModel):
+    """Caller-visible citation using only a workflow-scoped resource URI."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    receipt_uri: WorkflowArtifactUri
+    captured_at: AwareDatetime
+    valid_until: AwareDatetime
+    ttl_seconds: Annotated[int, Field(strict=True, ge=1, le=300)]
+
+
+class MCPAdvisoryRecordRequest(BaseModel):
+    """Caller-owned portion of one advisory-only workflow control."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    schema_version: Literal["harness.mcp_advisory_record_request.v1"]
+    command_id: UUID4
+    workflow_run_id: UUID4
+    idempotency_key: IdempotencyKey
+    expected_workflow_revision: NonNegativeInt
+    expected_state_sha256: Sha256
+    expected_receipt_head_sha256: Sha256
+    advisory_kind: Literal["visual_assessment", "diagnosis", "repair_proposal"]
+    disposition: Literal["recommend", "abstain"]
+    summary: Annotated[str, Field(min_length=1)]
+    recommended_action: Literal[
+        "none", "retry", "revise_prompt", "fallback_image", "repair_assets", "stop"
+    ]
+    source_prompt_uri: WorkflowArtifactUri
+    source_prompt_revision_uri: WorkflowArtifactUri | None
+    failure_receipt_uris: tuple[WorkflowArtifactUri, ...]
+    observation_citations: tuple[MCPObservationCitation, ...]
+    diagnostic_uris: tuple[WorkflowArtifactUri, ...]
+
+
+class MCPNoPromptFallback(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    kind: Literal["none"]
+
+
+class MCPVideoFrameToImageFallback(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    kind: Literal["video_frame_to_image"]
+    source_video_uri: WorkflowArtifactUri
+    selected_frame_uri: WorkflowArtifactUri
+    frame_index: NonNegativeInt
+    frame_sequence_manifest_uri: WorkflowArtifactUri
+
+
+MCPPromptFallback = Annotated[
+    MCPNoPromptFallback | MCPVideoFrameToImageFallback,
+    Field(discriminator="kind"),
+]
+
+
+class MCPPromptRevisionRecordRequest(BaseModel):
+    """Caller-owned portion of one explicit prompt-revision workflow control."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    schema_version: Literal["harness.mcp_prompt_revision_record_request.v1"]
+    command_id: UUID4
+    workflow_run_id: UUID4
+    idempotency_key: IdempotencyKey
+    expected_workflow_revision: NonNegativeInt
+    expected_state_sha256: Sha256
+    expected_receipt_head_sha256: Sha256
+    source_prompt_uri: WorkflowArtifactUri
+    advisory_receipt_uri: WorkflowArtifactUri
+    failure_receipt_uris: tuple[WorkflowArtifactUri, ...]
+    predecessor_package_uri: WorkflowArtifactUri | None
+    patch: ReplacePromptPatch
+    fallback: MCPPromptFallback
+    next_compile_skill_ref: CanonicalSkillRef
+
+
 _ADAPTER_TOKEN = object()
 _WORKFLOW_CREATE_TOOL = "harness_workflow_create_v1"
+_ADVISORY_RECORD_TOOL = "harness_advisory_record_v1"
+_PROMPT_REVISION_RECORD_TOOL = "harness_prompt_revision_record_v1"
 _WORKFLOW_RESOURCE = re.compile(
     r"^harness://workflows/([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$"
 )
@@ -223,7 +324,32 @@ class HarnessMCPAdapter:
                     ),
                     input_schema=_workflow_start_schema(),
                     output_schema=_tool_result_schema(documents["harness.run_snapshot.v1"]),
-                )
+                ),
+                MCPTool(
+                    name=_ADVISORY_RECORD_TOOL,
+                    skill_ref=None,
+                    input_schema_id="harness.mcp_advisory_record_request.v1",
+                    description=(
+                        "Record one advisory-only diagnosis under the current Golden Workflow head."
+                    ),
+                    input_schema=_control_request_schema(MCPAdvisoryRecordRequest),
+                    output_schema=_tool_result_schema(
+                        documents["harness.control_commit_snapshot.v1"]
+                    ),
+                ),
+                MCPTool(
+                    name=_PROMPT_REVISION_RECORD_TOOL,
+                    skill_ref=None,
+                    input_schema_id="harness.mcp_prompt_revision_record_request.v1",
+                    description=(
+                        "Record one explicit prompt revision under the current "
+                        "Golden Workflow head."
+                    ),
+                    input_schema=_control_request_schema(MCPPromptRevisionRecordRequest),
+                    output_schema=_tool_result_schema(
+                        documents["harness.control_commit_snapshot.v1"]
+                    ),
+                ),
             ]
             for entry in registry.qualified_skills:
                 live = self._harness._execution_catalog.live_descriptors_for(entry.skill_ref)
@@ -271,6 +397,10 @@ class HarnessMCPAdapter:
             raise HarnessMCPProtocolError(f"unknown exact MCP tool: {request.name}")
         if tool.name == _WORKFLOW_CREATE_TOOL:
             return self._call_workflow_create(request)
+        if tool.name == _ADVISORY_RECORD_TOOL:
+            return self._call_advisory_record(request)
+        if tool.name == _PROMPT_REVISION_RECORD_TOOL:
+            return self._call_prompt_revision_record(request)
         assert tool.skill_ref is not None
         envelope_model = _command_envelope_model(
             tool.name,
@@ -401,6 +531,169 @@ class HarnessMCPAdapter:
             structured_content=structured,
             is_error=False,
         )
+
+    def _call_advisory_record(self, request: MCPToolCall) -> MCPToolResult:
+        try:
+            envelope = _parse_exact_request(request.arguments, MCPAdvisoryRecordRequest)
+            workflow_id = envelope.workflow_run_id
+            command = AdvisoryRecordCommand(
+                schema_version="harness.advisory_record_command.v1",
+                command_id=envelope.command_id,
+                principal_id=self._principal_id,
+                workflow_run_id=workflow_id,
+                idempotency_key=envelope.idempotency_key,
+                expected_workflow_revision=envelope.expected_workflow_revision,
+                expected_state_sha256=envelope.expected_state_sha256,
+                expected_receipt_head_sha256=envelope.expected_receipt_head_sha256,
+                advisory_kind=envelope.advisory_kind,
+                disposition=envelope.disposition,
+                summary=envelope.summary,
+                recommended_action=envelope.recommended_action,
+                source_prompt=self._resolve_workflow_artifact_uri(
+                    envelope.source_prompt_uri,
+                    workflow_id=workflow_id,
+                ),
+                source_prompt_revision=(
+                    None
+                    if envelope.source_prompt_revision_uri is None
+                    else self._resolve_workflow_artifact_uri(
+                        envelope.source_prompt_revision_uri,
+                        workflow_id=workflow_id,
+                    )
+                ),
+                failure_receipts=tuple(
+                    self._resolve_workflow_artifact_uri(uri, workflow_id=workflow_id)
+                    for uri in envelope.failure_receipt_uris
+                ),
+                observation_citations=tuple(
+                    ObservationCitation(
+                        receipt=self._resolve_workflow_artifact_uri(
+                            citation.receipt_uri,
+                            workflow_id=workflow_id,
+                        ),
+                        captured_at=citation.captured_at,
+                        valid_until=citation.valid_until,
+                        ttl_seconds=citation.ttl_seconds,
+                    )
+                    for citation in envelope.observation_citations
+                ),
+                diagnostic_refs=tuple(
+                    self._resolve_workflow_artifact_uri(uri, workflow_id=workflow_id)
+                    for uri in envelope.diagnostic_uris
+                ),
+                external_agent_executed=False,
+            )
+            control = self._harness.submit_control(command)
+        except ValidationError as error:
+            return _error_result("HARN_INPUT_SCHEMA_INVALID", str(error))
+        except HarnessMCPAdapterError as error:
+            return _error_result(error.code, str(error))
+        except (
+            ArtifactResolutionError,
+            GoldenRunConflictError,
+            GoldenRunCorruptionError,
+            GoldenRunNotFoundError,
+            GoldenRunRegistryError,
+        ) as error:
+            return _error_result(_domain_error_code(error), str(error))
+        return _control_result(control)
+
+    def _call_prompt_revision_record(self, request: MCPToolCall) -> MCPToolResult:
+        try:
+            envelope = _parse_exact_request(request.arguments, MCPPromptRevisionRecordRequest)
+            workflow_id = envelope.workflow_run_id
+            if type(envelope.fallback) is MCPNoPromptFallback:
+                fallback: NoPromptFallback | VideoFrameToImageFallback = NoPromptFallback(
+                    kind="none"
+                )
+            else:
+                assert type(envelope.fallback) is MCPVideoFrameToImageFallback
+                fallback = VideoFrameToImageFallback(
+                    kind="video_frame_to_image",
+                    source_video=self._resolve_workflow_artifact_uri(
+                        envelope.fallback.source_video_uri,
+                        workflow_id=workflow_id,
+                    ),
+                    selected_frame=self._resolve_workflow_artifact_uri(
+                        envelope.fallback.selected_frame_uri,
+                        workflow_id=workflow_id,
+                    ),
+                    frame_index=envelope.fallback.frame_index,
+                    frame_sequence_manifest=self._resolve_workflow_artifact_uri(
+                        envelope.fallback.frame_sequence_manifest_uri,
+                        workflow_id=workflow_id,
+                    ),
+                )
+            command = PromptRevisionCommand(
+                schema_version="harness.prompt_revision_command.v1",
+                command_id=envelope.command_id,
+                principal_id=self._principal_id,
+                workflow_run_id=workflow_id,
+                idempotency_key=envelope.idempotency_key,
+                expected_workflow_revision=envelope.expected_workflow_revision,
+                expected_state_sha256=envelope.expected_state_sha256,
+                expected_receipt_head_sha256=envelope.expected_receipt_head_sha256,
+                source_prompt=self._resolve_workflow_artifact_uri(
+                    envelope.source_prompt_uri,
+                    workflow_id=workflow_id,
+                ),
+                advisory_receipt=self._resolve_workflow_artifact_uri(
+                    envelope.advisory_receipt_uri,
+                    workflow_id=workflow_id,
+                ),
+                failure_receipts=tuple(
+                    self._resolve_workflow_artifact_uri(uri, workflow_id=workflow_id)
+                    for uri in envelope.failure_receipt_uris
+                ),
+                predecessor_package=(
+                    None
+                    if envelope.predecessor_package_uri is None
+                    else self._resolve_workflow_artifact_uri(
+                        envelope.predecessor_package_uri,
+                        workflow_id=workflow_id,
+                    )
+                ),
+                patch=envelope.patch,
+                fallback=fallback,
+                next_compile_skill_ref=envelope.next_compile_skill_ref,
+                external_agent_executed=False,
+            )
+            control = self._harness.submit_control(command)
+        except ValidationError as error:
+            return _error_result("HARN_INPUT_SCHEMA_INVALID", str(error))
+        except HarnessMCPAdapterError as error:
+            return _error_result(error.code, str(error))
+        except (
+            ArtifactResolutionError,
+            GoldenRunConflictError,
+            GoldenRunCorruptionError,
+            GoldenRunNotFoundError,
+            GoldenRunRegistryError,
+        ) as error:
+            return _error_result(_domain_error_code(error), str(error))
+        return _control_result(control)
+
+    def _resolve_workflow_artifact_uri(
+        self,
+        uri: str,
+        *,
+        workflow_id: UUID,
+    ) -> ArtifactRef:
+        match = _WORKFLOW_ARTIFACT_RESOURCE.fullmatch(uri)
+        if match is None or UUID(match.group(1)) != workflow_id:
+            raise HarnessMCPAdapterError(
+                "HARN_INPUT_SCHEMA_INVALID",
+                "resource URI is outside the command workflow",
+            )
+        ref, _payload = self._harness.read_workflow_artifact(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id=self._principal_id,
+                workflow_run_id=workflow_id,
+            ),
+            sha256=match.group(2),
+        )
+        return ref
 
     def read_resource(self, request: MCPResourceRead) -> MCPResourceResult:
         """Read a workflow only through the authorized S1 interface."""
@@ -548,6 +841,59 @@ def _workflow_start_schema() -> dict[str, object]:
     return document
 
 
+def _control_request_schema(model: type[BaseModel]) -> dict[str, object]:
+    document = model.model_json_schema(mode="validation")
+    _strip_nested_resource_identifiers(document)
+    return document
+
+
+def _parse_exact_request(
+    arguments: Mapping[str, object],
+    model: type[BaseModel],
+) -> MCPAdvisoryRecordRequest | MCPPromptRevisionRecordRequest:
+    try:
+        wire_payload = json.dumps(
+            dict(arguments),
+            ensure_ascii=False,
+            allow_nan=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    except (TypeError, ValueError) as error:
+        raise HarnessMCPAdapterError("HARN_INPUT_SCHEMA_INVALID", str(error)) from error
+    value = model.model_validate_json(wire_payload)
+    return value
+
+
+def _domain_error_code(error: Exception) -> str:
+    return getattr(
+        error,
+        "code",
+        {ArtifactResolutionError: "HARN_ARTIFACT_UNAVAILABLE"}.get(type(error), "HARN_INTERNAL"),
+    )
+
+
+def _control_result(control: ControlCommitSnapshot) -> MCPToolResult:
+    workflow_uri = f"harness://workflows/{control.workflow_run_id}"
+    return MCPToolResult(
+        content=(
+            MCPTextContent(
+                text=(
+                    f"{control.control_kind} control {control.command_id} committed revision "
+                    f"{control.committed_revision}."
+                )
+            ),
+            MCPResourceLink(
+                name=f"workflow-{control.workflow_run_id}",
+                uri=workflow_uri,
+                media_type="application/json",
+            ),
+        ),
+        structured_content=control.model_dump(mode="json"),
+        is_error=False,
+    )
+
+
 def _workflow_start_model() -> type[BaseModel]:
     return MCPWorkflowCreateRequest
 
@@ -623,6 +969,9 @@ __all__ = [
     "MCPResourceLink",
     "MCPResourceRead",
     "MCPResourceResult",
+    "MCPAdvisoryRecordRequest",
+    "MCPObservationCitation",
+    "MCPPromptRevisionRecordRequest",
     "MCPWorkflowCreateRequest",
     "MCPTextContent",
     "MCPTool",

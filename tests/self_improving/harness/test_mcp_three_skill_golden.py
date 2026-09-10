@@ -189,12 +189,15 @@ def test_official_client_prepares_validate_input_after_exact_compile_and_replay(
             listed = await client.list_tools()
             assert tuple(tool.name for tool in listed.tools) == (
                 "harness_workflow_create_v1",
+                "harness_advisory_record_v1",
+                "harness_prompt_revision_record_v1",
                 "text2env_compile_v1_0_0",
                 "text2env_replay_v1_0_0",
                 "text2env_validate_v2_0_0",
             )
+            tools = {tool.name: tool for tool in listed.tools}
             created = await client.call_tool(
-                listed.tools[0].name,
+                tools["harness_workflow_create_v1"].name,
                 {
                     "schema_version": "harness.mcp_workflow_create_request.v1",
                     "idempotency_key": "mcp-three-skill-start-001",
@@ -213,7 +216,7 @@ def test_official_client_prepares_validate_input_after_exact_compile_and_replay(
             assert created.is_error is False
             assert created.structured_content["revision"] == 0
             compiled = await client.call_tool(
-                listed.tools[1].name,
+                tools["text2env_compile_v1_0_0"].name,
                 {
                     "schema_version": "harness.run_command_request.v1",
                     "command_id": "42000000-0000-4000-8000-000000000001",
@@ -307,7 +310,7 @@ def test_official_client_prepares_validate_input_after_exact_compile_and_replay(
                 }
             )
             replayed = await client.call_tool(
-                listed.tools[2].name,
+                tools["text2env_replay_v1_0_0"].name,
                 {
                     "schema_version": "harness.run_command_request.v1",
                     "command_id": "42000000-0000-4000-8000-000000000002",
@@ -369,7 +372,10 @@ def test_official_client_prepares_validate_input_after_exact_compile_and_replay(
                 "expected_receipt_head_sha256": revision_two["receipt_head"]["sha256"],
                 "parameters": validate_input.model_dump(mode="json"),
             }
-            validated = await client.call_tool(listed.tools[3].name, validate_arguments)
+            validated = await client.call_tool(
+                tools["text2env_validate_v2_0_0"].name,
+                validate_arguments,
+            )
             assert validated.is_error is False
             assert validated.structured_content["status"] == "succeeded"
             assert validated.structured_content["committed_revision"] == 3
@@ -379,7 +385,10 @@ def test_official_client_prepares_validate_input_after_exact_compile_and_replay(
                     for path in store.root.glob("sha256/*/*")
                 )
             )
-            repeated = await client.call_tool(listed.tools[3].name, validate_arguments)
+            repeated = await client.call_tool(
+                tools["text2env_validate_v2_0_0"].name,
+                validate_arguments,
+            )
             assert repeated.structured_content == validated.structured_content
             assert (
                 tuple(

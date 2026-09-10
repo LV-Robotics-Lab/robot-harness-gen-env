@@ -57,7 +57,9 @@ def test_compile_mcp_assembly_reopens_the_same_durable_authorities(tmp_path: Pat
         golden_database_path=golden_database,
     )
     adapter = create_compile_mcp_adapter(settings)
-    start_tool, tool = adapter.list_tools(settings.registry_snapshot)
+    tools = {tool.name: tool for tool in adapter.list_tools(settings.registry_snapshot)}
+    start_tool = tools["harness_workflow_create_v1"]
+    tool = tools["text2env_compile_v1_0_0"]
     start_arguments = {
         "schema_version": "harness.mcp_workflow_create_request.v1",
         "idempotency_key": "start-through-reopened-mcp",
@@ -180,6 +182,8 @@ def test_golden_mcp_assembly_reopens_three_exact_live_applications(tmp_path: Pat
 
     expected = (
         "harness_workflow_create_v1",
+        "harness_advisory_record_v1",
+        "harness_prompt_revision_record_v1",
         "text2env_compile_v1_0_0",
         "text2env_replay_v1_0_0",
         "text2env_validate_v2_0_0",

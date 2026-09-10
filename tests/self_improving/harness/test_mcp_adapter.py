@@ -77,10 +77,12 @@ def test_adapter_lists_only_the_exact_qualified_live_tool(tmp_path: Path) -> Non
 
     assert tuple(tool.name for tool in tools) == (
         "harness_workflow_create_v1",
+        "harness_advisory_record_v1",
+        "harness_prompt_revision_record_v1",
         "text2env_compile_v1_0_0",
     )
     assert all(tool.name != "skill.invoke" for tool in tools)
-    tool = tools[1]
+    tool = next(item for item in tools if item.name == "text2env_compile_v1_0_0")
     assert tool.skill_ref == "text2env.compile@1.0.0"
     assert tool.input_schema["additionalProperties"] is False
     assert "principal_id" not in tool.input_schema["properties"]

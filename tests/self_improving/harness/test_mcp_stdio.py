@@ -90,15 +90,17 @@ async def _roundtrip(
                 listed = await client.list_tools()
                 assert tuple(tool.name for tool in listed.tools) == (
                     "harness_workflow_create_v1",
+                    "harness_advisory_record_v1",
+                    "harness_prompt_revision_record_v1",
                     tool_name,
                 )
-                assert listed.tools[1].input_schema["additionalProperties"] is False
+                listed_by_name = {tool.name: tool for tool in listed.tools}
+                assert listed_by_name[tool_name].input_schema["additionalProperties"] is False
                 created = await client.call_tool(listed.tools[0].name, start_arguments)
                 assert created.is_error is False
                 assert created.structured_content is not None
-                workflow_uri = (
-                    "harness://workflows/"
-                    + str(created.structured_content["workflow_run_id"])
+                workflow_uri = "harness://workflows/" + str(
+                    created.structured_content["workflow_run_id"]
                 )
                 if command_arguments is None:
                     assert created.structured_content["revision"] == 0
@@ -109,9 +111,9 @@ async def _roundtrip(
                         "idempotency_key": "compile-through-stdio-restart-001",
                         "expected_workflow_revision": created.structured_content["revision"],
                         "expected_state_sha256": created.structured_content["state_sha256"],
-                        "expected_receipt_head_sha256": created.structured_content[
-                            "receipt_head"
-                        ]["sha256"],
+                        "expected_receipt_head_sha256": created.structured_content["receipt_head"][
+                            "sha256"
+                        ],
                         "parameters": compile_parameters,
                     }
                 else:
@@ -283,9 +285,7 @@ def test_official_stdio_client_reuses_one_operation_after_server_restart(
 
     assert first[:2] == second[:2]
     assert first[3] == second[3]
-    assert first[0]["structuredContent"]["operation_id"] == (
-        "20000000-0000-4000-8000-000000000001"
-    )
+    assert first[0]["structuredContent"]["operation_id"] == ("20000000-0000-4000-8000-000000000001")
     assert database_before[0] != database_after_first[0]
     assert database_after_first == database_after_second
     assert cas_after_first == cas_after_second
