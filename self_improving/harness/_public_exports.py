@@ -128,6 +128,15 @@ _EXPORT_GROUPS = (
             "canonical_evidence_sha256",
         ),
     ),
+    (
+        ".x2env_compile_closure",
+        (
+            "ExactReuseCompileClosureVerifier",
+            "VerifiedExactReuseCompileClosure",
+            "X2EnvCompileClosureError",
+            "x2env_environment_package_sha256",
+        ),
+    ),
     (".package_store", ("PackageStore", "PackageStoreError", "PublishedPackage")),
     (
         ".qualification",
@@ -354,6 +363,7 @@ _PUBLIC_NAMES = (
     "EnvironmentPackage",
     "Event",
     "ExecutionReproducibility",
+    "ExactReuseCompileClosureVerifier",
     "EventJournalConflictError",
     "EventJournalCorruptionError",
     "EventPage",
@@ -478,6 +488,7 @@ _PUBLIC_NAMES = (
     "StaticDependencyResolver",
     "UnknownField",
     "ValidationStatus",
+    "VerifiedExactReuseCompileClosure",
     "Video2EnvCompileInput",
     "Video2EnvCompileOutput",
     "Video2EnvCompileV2Input",
@@ -503,6 +514,7 @@ _PUBLIC_NAMES = (
     "X2EnvAssetSelectionV1",
     "X2EnvBindingManifestV1",
     "X2EnvCompileReceiptV1",
+    "X2EnvCompileClosureError",
     "X2EnvEnvironmentPackage",
     "X2EnvStaticValidationV1",
     "X2EnvSkillContract",
@@ -528,6 +540,7 @@ _PUBLIC_NAMES = (
     "verify_replay_qualification_bundle",
     "verify_replay_qualification_documents",
     "x2env_skill_contract",
+    "x2env_environment_package_sha256",
 )
 
 
