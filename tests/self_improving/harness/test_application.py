@@ -15,6 +15,7 @@ from scene_gen.catalog import AssetCatalog
 from self_improving.harness.application import (
     CompileApplicationConfigurationError,
     CompileApplicationInputError,
+    CompileApplicationRunIdentityError,
     CompileApplicationSettings,
     ExternalCatalogError,
     create_compile_application,
@@ -349,6 +350,82 @@ def test_typed_compile_input_invokes_only_from_the_application_cas(
     assert invocation is not None
     assert invocation.effective_parameters == parameters.model_dump(mode="json")
     assert app.resolve_artifact(snapshot).is_relative_to(app.artifact_root)
+
+
+def test_controlled_compile_run_identity_recovers_without_reexecution_and_rejects_rebinding(
+    tmp_path: Path,
+    fixed_qualification: Path,
+) -> None:
+    settings = _settings(tmp_path)
+    catalog_path = _empty_catalog(
+        settings.external_catalog_roots[0] / "controlled.json",
+        settings.allowed_asset_roots[0] / "objects",
+    )
+    app = create_compile_application(settings)
+    catalog = app.snapshot_asset_catalog(catalog_path)
+    parameters = Text2EnvCompileInput(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+        asset_catalog=catalog,
+        config=CompileConfig(generate_missing_assets=True),
+    )
+    run_id = UUID("30000000-0000-4000-8000-000000000001")
+
+    assert app.invoke_typed(parameters).status is RunStatus.SUCCEEDED
+    first = app.invoke_typed(parameters, run_id=run_id)
+    event_count = len(app.events(run_id=run_id, limit=100).events)
+    recovered = create_compile_application(settings).invoke_typed(parameters, run_id=run_id)
+
+    assert recovered == first
+    assert len(app.events(run_id=run_id, limit=100).events) == event_count
+    dependency_drift = settings.asset_library_root / "generated" / "dependency-drift.txt"
+    dependency_drift.write_text("changed after the immutable invocation", encoding="utf-8")
+    with pytest.raises(CompileApplicationRunIdentityError, match="another invocation"):
+        app.invoke_typed(parameters, run_id=run_id)
+    changed = parameters.model_copy(update={"seed": 78})
+    with pytest.raises(CompileApplicationRunIdentityError, match="another intent"):
+        app.invoke_typed(changed, run_id=run_id)
+
+
+def test_controlled_compile_preflight_failure_is_durable_under_the_reserved_identity(
+    tmp_path: Path,
+    fixed_qualification: Path,
+) -> None:
+    settings = _settings(tmp_path)
+    invalid_catalog_path = settings.external_catalog_roots[0] / "invalid.json"
+    invalid_catalog_path.write_bytes(b"{}\n")
+    app = create_compile_application(settings)
+    catalog = app.snapshot_asset_catalog(invalid_catalog_path)
+    parameters = Text2EnvCompileInput(
+        request="Place a purple hexagonal pedestal on the table.",
+        seed=77,
+        asset_catalog=catalog,
+        config=CompileConfig(generate_missing_assets=False),
+    )
+    run_id = UUID("30000000-0000-4000-8000-000000000002")
+
+    first = app.invoke_typed(parameters, run_id=run_id)
+    event_count = len(app.events(run_id=run_id, limit=100).events)
+    recovered = create_compile_application(settings).invoke_typed(parameters, run_id=run_id)
+
+    assert first.run_id == run_id
+    assert first.status is RunStatus.BLOCKED
+    assert first.attempt == 0
+    assert first.blocker is not None
+    assert first.blocker.code == "HARN_DEPENDENCY_UNAVAILABLE"
+    assert app.invocation(run_id) is None
+    assert app.run_state(run_id) == first
+    assert recovered == first
+    assert len(app.events(run_id=run_id, limit=100).events) == event_count
+
+    changed = parameters.model_copy(
+        update={
+            "request": "Place a green cube on the table.",
+            "seed": 78,
+        }
+    )
+    with pytest.raises(CompileApplicationRunIdentityError, match="another intent"):
+        app.invoke_typed(changed, run_id=run_id)
 
 
 def test_typed_compile_input_rejects_file_locator_even_when_bytes_match(

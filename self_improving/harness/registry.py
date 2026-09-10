@@ -11,11 +11,11 @@ from datetime import datetime
 from typing import Any, Literal, Protocol
 from uuid import UUID
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from .artifacts import ArtifactResolutionError, ArtifactResolver
 from .events import EventSink, RunRecorder
-from .run_store import RunStore
+from .run_store import ControlledRunIntent, RunStore, RunStoreConflictError
 from .schema_catalog import schema_model
 from .schemas import (
     ArtifactRef,
@@ -188,6 +188,14 @@ class RunPersistenceError(RuntimeError):
         self.state = state
         self.cause = cause
         super().__init__(f"failed to persist {operation} for run {run_id}: {cause}")
+
+
+class ControlledRunIdentityError(RuntimeError):
+    """A caller-selected run identity is already bound to different immutable intent."""
+
+
+class ControlledRunPendingError(RuntimeError):
+    """A caller-selected run started but has no terminal record to recover."""
 
 
 class SkillRegistry:
@@ -402,12 +410,87 @@ class SkillRegistry:
             )
         return self._execute(registration, parameters, stage_prefix="")
 
+    def invoke_with_run_id(
+        self,
+        skill_id: str,
+        exact_version: str,
+        parameters: Mapping[str, Any],
+        *,
+        run_id: UUID,
+    ) -> RunState:
+        """Execute once under a caller-reserved identity or recover its exact terminal state.
+
+        An invocation without a terminal state is deliberately not repeated: the
+        Registry cannot prove where the interrupted handler stopped producing
+        external side effects.
+        """
+
+        registration = self._registration(skill_id, exact_version)
+        if self._run_store is None:
+            raise ControlledRunPendingError(
+                "controlled run identity requires a durable RunStore"
+            )
+        normalized_parameters, raw_parameters_sha256 = _normalize_controlled_parameters(parameters)
+        try:
+            preview = registration.input_model.model_validate(normalized_parameters)
+        except ValidationError:
+            phase: Literal["input_validation", "validated_input"] = "input_validation"
+            effective_parameters_sha256 = None
+        else:
+            phase = "validated_input"
+            effective_parameters_sha256 = _canonical_json_sha256(
+                preview.model_dump(mode="json")
+            )
+        descriptor = registration.descriptor
+        intent = ControlledRunIntent(
+            run_id=run_id,
+            skill_id=descriptor.skill_id,
+            skill_version=descriptor.version,
+            input_schema=descriptor.input_schema,
+            phase=phase,
+            raw_parameters_sha256=raw_parameters_sha256,
+            effective_parameters_sha256=effective_parameters_sha256,
+            dependencies=None,
+            descriptor_sha256=_canonical_json_sha256(descriptor.model_dump(mode="json")),
+            implementation_sha256=descriptor.implementation_sha256,
+            qualification_sha256=descriptor.qualification_artifact.sha256,
+            max_attempts=descriptor.max_attempts,
+        )
+        try:
+            reserved = self._run_store.reserve_controlled_intent(intent)
+        except RunStoreConflictError as error:
+            raise ControlledRunIdentityError(
+                f"controlled run identity is bound to another intent: {run_id}"
+            ) from error
+        except Exception as error:
+            raise RunPersistenceError(
+                operation="controlled run intent",
+                run_id=run_id,
+                state=None,
+                cause=error,
+            ) from error
+        if not reserved:
+            existing_intent = self._run_store.read_controlled_intent(run_id)
+            if existing_intent != intent:
+                raise ControlledRunIdentityError(
+                    f"controlled run identity is bound to another intent: {run_id}"
+                )
+            if self._run_store.read_invocation(run_id) is None:
+                return self._recover_controlled_preflight(intent)
+        return self._execute(
+            registration,
+            normalized_parameters,
+            stage_prefix="",
+            controlled_intent=intent,
+        )
+
     def _execute(
         self,
         registration: _Registration,
         parameters: Mapping[str, Any],
         *,
         stage_prefix: str,
+        controlled_intent: ControlledRunIntent | None = None,
     ) -> RunState:
         descriptor = registration.descriptor
         skill_id = descriptor.skill_id
@@ -423,7 +506,9 @@ class SkillRegistry:
                 message="Skill input failed strict schema validation",
                 details={"errors": _json_safe(error.errors())},
                 stage_prefix=stage_prefix,
+                controlled_intent=controlled_intent,
             )
+        effective_parameters = typed_input.model_dump(mode="json")
         for artifact in _artifact_refs(typed_input):
             try:
                 self._artifact_resolver.resolve(artifact)
@@ -437,6 +522,7 @@ class SkillRegistry:
                     details={"reason": error.reason},
                     artifact_refs=(artifact,),
                     stage_prefix=stage_prefix,
+                    controlled_intent=controlled_intent,
                 )
         skill_ref = f"{skill_id}@{exact_version}"
         try:
@@ -455,6 +541,7 @@ class SkillRegistry:
                 message=str(error),
                 details={},
                 stage_prefix=stage_prefix,
+                controlled_intent=controlled_intent,
             )
         except Exception as error:
             return self._preflight_terminal(
@@ -468,8 +555,8 @@ class SkillRegistry:
                     "error": str(error),
                 },
                 stage_prefix=stage_prefix,
+                controlled_intent=controlled_intent,
             )
-        effective_parameters = typed_input.model_dump(mode="json")
         invocation_digest = _invocation_digest(
             skill_id=skill_id,
             skill_version=exact_version,
@@ -477,7 +564,11 @@ class SkillRegistry:
             dependencies=dependencies,
             max_attempts=descriptor.max_attempts,
         )
-        run_id = self._run_id_factory()
+        run_id = (
+            controlled_intent.run_id
+            if controlled_intent is not None
+            else self._run_id_factory()
+        )
         invocation = Invocation(
             run_id=run_id,
             skill_id=skill_id,
@@ -487,7 +578,19 @@ class SkillRegistry:
             max_attempts=descriptor.max_attempts,
             invocation_digest=invocation_digest,
         )
-        self._persist_invocation(invocation)
+        if controlled_intent is not None:
+            recovered = self._recover_controlled_run(invocation, controlled_intent)
+            if recovered is not None:
+                return recovered
+        try:
+            self._persist_invocation(invocation)
+        except RunPersistenceError:
+            if controlled_intent is None:
+                raise
+            recovered = self._recover_controlled_run(invocation, controlled_intent)
+            if recovered is None:  # pragma: no cover - conflicting write guarantees a record
+                raise
+            return recovered
         self._invocations[run_id] = invocation
         recorder = RunRecorder(
             run_id=run_id,
@@ -579,6 +682,68 @@ class SkillRegistry:
                     stage_prefix=stage_prefix,
                 )
 
+    def _recover_controlled_run(
+        self,
+        wanted: Invocation,
+        intent: ControlledRunIntent,
+    ) -> RunState | None:
+        assert self._run_store is not None
+        existing_intent = self._run_store.read_controlled_intent(wanted.run_id)
+        existing = self._run_store.read_invocation(wanted.run_id)
+        terminal = self._run_store.read_run_state(wanted.run_id)
+        if existing_intent != intent:
+            raise ControlledRunIdentityError(
+                f"controlled run identity is bound to another intent: {wanted.run_id}"
+            )
+        if existing is None and terminal is None:
+            return None
+        if existing != wanted:
+            raise ControlledRunIdentityError(
+                f"controlled run identity is bound to another invocation: {wanted.run_id}"
+            )
+        if terminal is None:
+            raise ControlledRunPendingError(
+                "controlled run has no terminal state and will not be repeated: "
+                f"{wanted.run_id}"
+            )
+        if (
+            terminal.run_id != existing.run_id
+            or terminal.skill_id != existing.skill_id
+            or terminal.skill_version != existing.skill_version
+            or terminal.invocation_digest != existing.invocation_digest
+        ):
+            raise ControlledRunIdentityError(
+                f"controlled run terminal is not bound to its invocation: {wanted.run_id}"
+            )
+        return terminal
+
+    def _recover_controlled_preflight(self, wanted: ControlledRunIntent) -> RunState:
+        assert self._run_store is not None
+        existing = self._run_store.read_controlled_intent(wanted.run_id)
+        invocation = self._run_store.read_invocation(wanted.run_id)
+        terminal = self._run_store.read_run_state(wanted.run_id)
+        if existing != wanted or invocation is not None:
+            raise ControlledRunIdentityError(
+                f"controlled run identity is bound to another preflight intent: {wanted.run_id}"
+            )
+        if terminal is None:
+            raise ControlledRunPendingError(
+                "controlled preflight has no terminal state and will not be repeated: "
+                f"{wanted.run_id}"
+            )
+        if (
+            terminal.run_id != wanted.run_id
+            or terminal.skill_id != wanted.skill_id
+            or terminal.skill_version != wanted.skill_version
+            or terminal.invocation_digest is not None
+            or terminal.attempt != 0
+            or terminal.max_attempts != 0
+        ):
+            raise ControlledRunIdentityError(
+                f"controlled run terminal is not bound to its preflight intent: {wanted.run_id}"
+            )
+        return terminal
+
     def _internal_failure(
         self,
         *,
@@ -638,16 +803,8 @@ class SkillRegistry:
         details: JsonObject,
         artifact_refs: tuple[ArtifactRef, ...] = (),
         stage_prefix: str = "",
+        controlled_intent: ControlledRunIntent | None = None,
     ) -> RunState:
-        run_id = self._run_id_factory()
-        recorder = RunRecorder(
-            run_id=run_id,
-            skill_id=skill_id,
-            skill_version=skill_version,
-            clock=self._clock,
-            sink=self._event_sink,
-        )
-        recorder.start(stage=f"{stage_prefix}preflight", attempt=0)
         blocker = Blocker(
             code=code,
             message=message,
@@ -657,6 +814,28 @@ class SkillRegistry:
             unknowns=(),
             artifact_refs=artifact_refs,
         )
+        run_id = (
+            controlled_intent.run_id
+            if controlled_intent is not None
+            else self._run_id_factory()
+        )
+        if controlled_intent is not None:
+            assert self._run_store is not None
+            if (
+                self._run_store.read_controlled_intent(run_id) != controlled_intent
+                or self._run_store.read_invocation(run_id) is not None
+            ):
+                raise ControlledRunIdentityError(
+                    f"controlled run identity is bound to another intent: {run_id}"
+                )
+        recorder = RunRecorder(
+            run_id=run_id,
+            skill_id=skill_id,
+            skill_version=skill_version,
+            clock=self._clock,
+            sink=self._event_sink,
+        )
+        recorder.start(stage=f"{stage_prefix}preflight", attempt=0)
         recorder.finish(
             status=status,
             stage=f"{stage_prefix}preflight",
@@ -722,6 +901,37 @@ def _invocation_digest(
         separators=(",", ":"),
     )
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _normalize_controlled_parameters(value: Mapping[str, Any]) -> tuple[JsonObject, str]:
+    try:
+        snapshot = dict(value)
+        validated = TypeAdapter(JsonObject).validate_python(snapshot, strict=True)
+        canonical = json.dumps(
+            validated,
+            sort_keys=True,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+        normalized = json.loads(canonical)
+        assert isinstance(normalized, dict)
+        return normalized, hashlib.sha256(canonical).hexdigest()
+    except (TypeError, ValueError, ValidationError) as error:
+        raise ControlledRunIdentityError(
+            "controlled run parameters must be a finite canonical JSON object"
+        ) from error
+
+
+def _canonical_json_sha256(value: JsonObject) -> str:
+    canonical = json.dumps(
+        value,
+        sort_keys=True,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
 
 
 def _content_identity(value: Any) -> Any:

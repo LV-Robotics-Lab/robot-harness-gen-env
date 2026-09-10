@@ -14,6 +14,7 @@ import pytest
 from self_improving.harness.event_journal import SQLiteEventJournal
 from self_improving.harness.events import RunEvent
 from self_improving.harness.run_store import (
+    ControlledRunIntent,
     InvocationSink,
     RunStateSink,
     RunStore,
@@ -126,12 +127,12 @@ def _running_state() -> RunState:
     )
 
 
-def _preflight_state() -> RunState:
+def _preflight_state(*, skill_id: str = "text2env.missing") -> RunState:
     ended = START + timedelta(seconds=1)
     return RunState(
         run_id=RUN_ID,
         invocation_digest=None,
-        skill_id="text2env.missing",
+        skill_id=skill_id,
         skill_version="1.0.0",
         status=RunStatus.BLOCKED,
         attempt=0,
@@ -172,6 +173,27 @@ def _preflight_state() -> RunState:
     )
 
 
+def _controlled_intent(
+    *,
+    raw_parameters_sha256: str = "d" * 64,
+    descriptor_sha256: str = "e" * 64,
+) -> ControlledRunIntent:
+    return ControlledRunIntent(
+        run_id=RUN_ID,
+        skill_id="text2env.compile",
+        skill_version="1.0.0",
+        input_schema="harness.artifact_ref.v1",
+        phase="input_validation",
+        raw_parameters_sha256=raw_parameters_sha256,
+        effective_parameters_sha256=None,
+        dependencies=None,
+        descriptor_sha256=descriptor_sha256,
+        implementation_sha256="f" * 64,
+        qualification_sha256="1" * 64,
+        max_attempts=1,
+    )
+
+
 def _publish_state(path: Path, state: RunState) -> SQLiteEventJournal:
     journal = SQLiteEventJournal(path)
     for event in state.events:
@@ -200,6 +222,37 @@ def _canonical_envelope(state: RunState, event: Event) -> str:
     )
 
 
+def _create_legacy_run_tables(connection: sqlite3.Connection) -> None:
+    connection.execute(
+        """
+        CREATE TABLE harness_invocations (
+            run_id TEXT PRIMARY KEY,
+            invocation_digest TEXT NOT NULL,
+            skill_id TEXT NOT NULL,
+            skill_version TEXT NOT NULL,
+            max_attempts INTEGER NOT NULL,
+            payload_json BLOB NOT NULL,
+            payload_sha256 TEXT NOT NULL
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE harness_run_states (
+            run_id TEXT PRIMARY KEY,
+            invocation_digest TEXT,
+            skill_id TEXT NOT NULL,
+            skill_version TEXT NOT NULL,
+            max_attempts INTEGER NOT NULL,
+            status TEXT NOT NULL,
+            invocation_payload_sha256 TEXT,
+            payload_json BLOB NOT NULL,
+            payload_sha256 TEXT NOT NULL
+        )
+        """
+    )
+
+
 def test_sqlite_run_store_recovers_records_alongside_event_journal(tmp_path: Path) -> None:
     path = tmp_path / "harness.sqlite3"
     store = SQLiteRunStore(path)
@@ -216,6 +269,257 @@ def test_sqlite_run_store_recovers_records_alongside_event_journal(tmp_path: Pat
     assert tuple(item.envelope.event for item in journal.read(run_id=RUN_ID).events) == (
         terminal.events
     )
+
+
+def test_controlled_intent_is_atomic_immutable_and_hash_anchors_its_terminal(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "controlled.sqlite3"
+    store = SQLiteRunStore(path)
+    intent = _controlled_intent()
+    terminal = _preflight_state(skill_id=intent.skill_id)
+
+    assert store.reserve_controlled_intent(intent) is True
+    assert store.reserve_controlled_intent(intent) is False
+    with pytest.raises(RunStoreConflictError, match="different controlled run intent"):
+        store.reserve_controlled_intent(
+            _controlled_intent(raw_parameters_sha256="2" * 64)
+        )
+    _publish_state(path, terminal)
+    store.put_run_state(terminal)
+
+    restarted = SQLiteRunStore(path)
+    assert restarted.read_controlled_intent(RUN_ID) == intent
+    assert restarted.read_run_state(RUN_ID) == terminal
+
+    changed = _controlled_intent(descriptor_sha256="3" * 64)
+    changed_payload = json.dumps(
+        changed.model_dump(mode="json"),
+        sort_keys=True,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode()
+    with closing(sqlite3.connect(path)) as connection, connection:
+        connection.execute(
+            """
+            UPDATE harness_controlled_run_intents
+            SET descriptor_sha256 = ?, payload_json = ?, payload_sha256 = ?
+            WHERE run_id = ?
+            """,
+            (
+                changed.descriptor_sha256,
+                changed_payload,
+                sha256(changed_payload).hexdigest(),
+                str(RUN_ID),
+            ),
+        )
+    assert store.read_controlled_intent(RUN_ID) == changed
+    with pytest.raises(RunStoreCorruptionError, match="controlled intent payload"):
+        store.read_run_state(RUN_ID)
+
+
+def test_run_store_migrates_only_the_exact_known_legacy_layout(tmp_path: Path) -> None:
+    path = tmp_path / "legacy.sqlite3"
+    invocation = _invocation()
+    payload = json.dumps(
+        invocation.model_dump(mode="json"),
+        sort_keys=True,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode()
+    with closing(sqlite3.connect(path)) as connection, connection:
+        connection.row_factory = sqlite3.Row
+        _create_legacy_run_tables(connection)
+        connection.execute(
+            """
+            INSERT INTO harness_invocations (
+                run_id, invocation_digest, skill_id, skill_version,
+                max_attempts, payload_json, payload_sha256
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(invocation.run_id),
+                invocation.invocation_digest,
+                invocation.skill_id,
+                invocation.skill_version,
+                invocation.max_attempts,
+                payload,
+                sha256(payload).hexdigest(),
+            ),
+        )
+
+    migrated = SQLiteRunStore(path)
+    assert migrated.read_invocation(RUN_ID) == invocation
+    with closing(sqlite3.connect(path)) as connection:
+        invocation_notnull = connection.execute(
+            "SELECT \"notnull\" FROM pragma_table_xinfo('harness_invocations') "
+            "WHERE name = 'run_id'"
+        ).fetchone()[0]
+        state_notnull = connection.execute(
+            "SELECT \"notnull\" FROM pragma_table_xinfo('harness_run_states') "
+            "WHERE name = 'run_id'"
+        ).fetchone()[0]
+        intent_columns = connection.execute(
+            "SELECT count(*) FROM pragma_table_xinfo('harness_controlled_run_intents')"
+        ).fetchone()[0]
+    assert (invocation_notnull, state_notnull, intent_columns) == (1, 1, 13)
+
+
+@pytest.mark.parametrize("attack", ["missing_pk", "extra_index", "conflict_policy", "trigger"])
+def test_run_store_rejects_legacy_layouts_that_can_weaken_immutable_identity(
+    tmp_path: Path,
+    attack: str,
+) -> None:
+    path = tmp_path / f"legacy-{attack}.sqlite3"
+    with closing(sqlite3.connect(path)) as connection, connection:
+        if attack == "missing_pk":
+            connection.execute(
+                """
+                CREATE TABLE harness_invocations (
+                    run_id TEXT,
+                    invocation_digest TEXT NOT NULL,
+                    skill_id TEXT NOT NULL,
+                    skill_version TEXT NOT NULL,
+                    max_attempts INTEGER NOT NULL,
+                    payload_json BLOB NOT NULL,
+                    payload_sha256 TEXT NOT NULL
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE harness_run_states (
+                    run_id TEXT PRIMARY KEY,
+                    invocation_digest TEXT,
+                    skill_id TEXT NOT NULL,
+                    skill_version TEXT NOT NULL,
+                    max_attempts INTEGER NOT NULL,
+                    status TEXT NOT NULL,
+                    invocation_payload_sha256 TEXT,
+                    payload_json BLOB NOT NULL,
+                    payload_sha256 TEXT NOT NULL
+                )
+                """
+            )
+        else:
+            _create_legacy_run_tables(connection)
+            if attack == "extra_index":
+                connection.execute(
+                    "CREATE UNIQUE INDEX weakened_identity ON harness_invocations(skill_id)"
+                )
+            elif attack == "conflict_policy":
+                connection.execute("ALTER TABLE harness_invocations RENAME TO bad_invocations")
+                connection.execute(
+                    """
+                    CREATE TABLE harness_invocations (
+                        run_id TEXT PRIMARY KEY ON CONFLICT REPLACE,
+                        invocation_digest TEXT NOT NULL,
+                        skill_id TEXT NOT NULL,
+                        skill_version TEXT NOT NULL,
+                        max_attempts INTEGER NOT NULL,
+                        payload_json BLOB NOT NULL,
+                        payload_sha256 TEXT NOT NULL
+                    )
+                    """
+                )
+                connection.execute("DROP TABLE bad_invocations")
+            else:
+                connection.execute(
+                    """
+                    CREATE TRIGGER rewrite_invocation AFTER INSERT ON harness_invocations
+                    BEGIN
+                        UPDATE harness_invocations SET skill_id = 'text2env.replay';
+                    END
+                    """
+                )
+
+    with pytest.raises(RunStoreCorruptionError, match="unsupported authority"):
+        SQLiteRunStore(path)
+
+
+def test_run_store_rejects_a_same_named_current_intent_table_without_pk_authority(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "malformed-current.sqlite3"
+    SQLiteRunStore(path)
+    with closing(sqlite3.connect(path)) as connection, connection:
+        connection.execute("DROP TABLE harness_controlled_run_intents")
+        connection.execute(
+            """
+            CREATE TABLE harness_controlled_run_intents (
+                run_id TEXT NOT NULL,
+                skill_id TEXT NOT NULL,
+                skill_version TEXT NOT NULL,
+                input_schema TEXT NOT NULL,
+                phase TEXT NOT NULL,
+                raw_parameters_sha256 TEXT NOT NULL,
+                effective_parameters_sha256 TEXT,
+                descriptor_sha256 TEXT NOT NULL,
+                implementation_sha256 TEXT NOT NULL,
+                qualification_sha256 TEXT NOT NULL,
+                max_attempts INTEGER NOT NULL,
+                payload_json BLOB NOT NULL,
+                payload_sha256 TEXT NOT NULL
+            )
+            """
+        )
+
+    with pytest.raises(RunStoreCorruptionError, match="unsupported authority"):
+        SQLiteRunStore(path)
+
+
+@pytest.mark.parametrize("attack", ["insert", "update", "delete"])
+def test_controlled_intent_reservation_detects_late_trigger_mutation(
+    tmp_path: Path,
+    attack: str,
+) -> None:
+    path = tmp_path / f"late-{attack}.sqlite3"
+    store = SQLiteRunStore(path)
+    with closing(sqlite3.connect(path)) as connection, connection:
+        if attack == "insert":
+            connection.execute(
+                """
+                CREATE TRIGGER late_insert AFTER INSERT ON harness_controlled_run_intents
+                BEGIN
+                    INSERT INTO harness_invocations (
+                        run_id, invocation_digest, skill_id, skill_version,
+                        max_attempts, payload_json, payload_sha256
+                    ) VALUES (
+                        NEW.run_id,
+                        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                        NEW.skill_id, NEW.skill_version, NEW.max_attempts,
+                        CAST('{}' AS BLOB),
+                        'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+                    );
+                END
+                """
+            )
+        elif attack == "update":
+            connection.execute(
+                """
+                CREATE TRIGGER late_update AFTER INSERT ON harness_controlled_run_intents
+                BEGIN
+                    UPDATE harness_controlled_run_intents
+                    SET raw_parameters_sha256 =
+                        '9999999999999999999999999999999999999999999999999999999999999999'
+                    WHERE run_id = NEW.run_id;
+                END
+                """
+            )
+        else:
+            connection.execute(
+                """
+                CREATE TRIGGER late_delete AFTER INSERT ON harness_controlled_run_intents
+                BEGIN
+                    DELETE FROM harness_controlled_run_intents WHERE run_id = NEW.run_id;
+                END
+                """
+            )
+
+    with pytest.raises(RunStoreCorruptionError):
+        store.reserve_controlled_intent(_controlled_intent())
+    assert store.read_controlled_intent(RUN_ID) is None
+    assert store.read_invocation(RUN_ID) is None
 
 
 def test_sqlite_run_store_is_idempotent_but_run_records_are_immutable(tmp_path: Path) -> None:

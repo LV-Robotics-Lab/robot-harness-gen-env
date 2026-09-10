@@ -27,7 +27,11 @@ from .handlers.text2env_compile_dependencies import (
     Text2EnvCompileDependencyResolver,
 )
 from .qualification import load_qualification_bundle
-from .registry import SkillRegistry
+from .registry import (
+    ControlledRunIdentityError,
+    ControlledRunPendingError,
+    SkillRegistry,
+)
 from .run_store import SQLiteRunStore
 from .schemas import (
     ArtifactRef,
@@ -76,6 +80,14 @@ class ExternalCatalogError(ValueError):
 
 class CompileApplicationInputError(ValueError):
     """Typed compile input is invalid or not wholly available in application CAS."""
+
+
+class CompileApplicationRunIdentityError(RuntimeError):
+    """A controlled child identity is already bound to another invocation."""
+
+
+class CompileApplicationRunPendingError(RuntimeError):
+    """A controlled child started but has no recoverable terminal state yet."""
 
 
 class CompileApplication:
@@ -268,13 +280,18 @@ class CompileApplication:
             )
         )
 
-    def invoke_typed(self, parameters: Text2EnvCompileInput) -> RunState:
+    def invoke_typed(
+        self,
+        parameters: Text2EnvCompileInput,
+        *,
+        run_id: UUID | None = None,
+    ) -> RunState:
         """Invoke compile from an exact typed input whose catalog is already in this CAS.
 
-        This is the application boundary used by a System 2 dispatcher.  It does
-        not accept mutable ``file://`` locators or content identities from a
-        different store, even though the generic artifact resolver can support
-        those locators at lower-trust integration boundaries.
+        This is the application boundary used by GoldenRun and an external
+        Codex caller.  It does not accept mutable ``file://`` locators or
+        content identities from a different store, even though the generic
+        artifact resolver can support those locators at lower-trust boundaries.
         """
 
         self._assert_production_assembly()
@@ -297,11 +314,28 @@ class CompileApplication:
             raise CompileApplicationInputError(
                 "typed compile input asset catalog is unavailable or corrupt in application CAS"
             ) from error
-        return self._registry.invoke(
-            _COMPILE_SKILL_ID,
-            _COMPILE_VERSION,
-            trusted.model_dump(mode="json"),
-        )
+        effective_parameters = trusted.model_dump(mode="json")
+        if run_id is None:
+            return self._registry.invoke(
+                _COMPILE_SKILL_ID,
+                _COMPILE_VERSION,
+                effective_parameters,
+            )
+        try:
+            return self._registry.invoke_with_run_id(
+                _COMPILE_SKILL_ID,
+                _COMPILE_VERSION,
+                effective_parameters,
+                run_id=run_id,
+            )
+        except ControlledRunIdentityError as error:
+            raise CompileApplicationRunIdentityError(
+                str(error)
+            ) from error
+        except ControlledRunPendingError as error:
+            raise CompileApplicationRunPendingError(
+                str(error)
+            ) from error
 
     def resolve_artifact(self, artifact: ArtifactRef) -> Path:
         """Resolve and reverify a compile artifact from application CAS."""
