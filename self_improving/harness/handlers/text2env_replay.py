@@ -430,10 +430,12 @@ class Text2EnvReplayHandler:
             media_verification=media_verification,
             invocation_dependencies=invocation_dependencies,
         )
-        replay_artifacts = tuple(
-            sorted(
-                (*_published_typed_refs(published), *asset_artifacts, receipt_ref),
-                key=lambda item: (item.name, item.sha256),
+        replay_artifacts = _unique_refs(
+            tuple(
+                sorted(
+                    (*_published_typed_refs(published), *asset_artifacts, receipt_ref),
+                    key=lambda item: (item.name, item.sha256),
+                )
             )
         )
         output = Text2EnvReplayOutput(
