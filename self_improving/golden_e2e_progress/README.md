@@ -39,5 +39,7 @@
 `genesis.robot_policy@1` 最终门、MCP optional dependency 与 autoresearch 设置。P1/P2 已建立 durable
 start/read 与第一个 exact compile operation；P3 候选又在同一 actor-neutral workflow 中完成 exact
 qualified replay operation，并以真实 RoboTwin/SAPIEN 把 revision 推进为 0→1→2。该结果仍不是
-validate、Genesis 或 promotion。P6 继续修复资产 staging；autoresearch 只在其冻结 benchmark 可以
-真实运行后开始。
+validate、Genesis 或 promotion。replay qualification 现进一步以逻辑源码根与 exact relative
+bytes/tree identity 跨代码安装路径复用：同一 bundle 在第二个绝对路径 strict load 后又真实完成一次
+0→1→2；外部 runtime/operator 依赖仍为部署绑定。P6 继续修复资产 staging；autoresearch 只在其冻结
+benchmark 可以真实运行后开始。

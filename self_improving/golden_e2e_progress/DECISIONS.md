@@ -76,3 +76,17 @@
   `text2env.validate@3.0.0` / `text2env_validate_v3_0_0`；不得原地改变 v2。
 - 依据：D003 的唯一晋升权威，以及 `SKILL_CONTRACTS.md` 已接受的“不兼容则升 v3”条款。
 - 边界：本决定只冻结版本语义，不表示 v2 或 v3 已实现、资格化或运行通过。
+
+## D009 — replay 源码资格使用逻辑安装根，部署依赖继续物理绑定
+
+- 日期：2026-09-10
+- 状态：accepted
+- 决策：`text2env.replay@1.0.0` qualification 的源码 identity 由逻辑根
+  `replay_distribution`、相对路径、exact bytes/file hash 与 closure tree hash 构成；绝对源码安装路径
+  只作为 load 时的本地 mapping，不进入资格身份。loader 必须在该 mapping 上重新执行完整的三轮
+  nofollow closure，不能跳过 source identity。
+- 部署分账：RoboTwin 资产、解释器、media launcher、静态 FFmpeg、runtime capability 与 delegated
+  cgroup 继续作为 machine-local operator binding 记录和复验。worker `PYTHONPATH` 只有精确等于已声明
+  local source root 时才映射成逻辑身份，其他值仍保持部署敏感。
+- 边界：这只保证同一源码字节/资格包跨代码安装绝对路径复用，不提供跨机器 provisioning，也不扩大为
+  validate、Genesis 或 promotion。

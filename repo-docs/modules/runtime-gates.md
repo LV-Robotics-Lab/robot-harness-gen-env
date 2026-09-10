@@ -91,6 +91,12 @@ fresh-CAS strict reload 全过。当前资格绑定该固定源码与本机 oper
 官方 generator 独立重跑 direct/kernel 0/900/120/120/12，并通过 fresh-CAS strict reload。当前三文档
 摘要与边界见
 [`docs/evidence/replay-qualification-refresh-p3a-20260910.md`](../../docs/evidence/replay-qualification-refresh-p3a-20260910.md)。
+当前进一步把 qualification 的代码安装路径从源码 identity 中分离：逻辑根
+`replay_distribution` 下的 relative path、exact bytes/file/tree hash 仍完整签名，strict loader 收到
+本地 root mapping 后仍按三轮 nofollow 规则重验；runner 也进入该源码闭包。RoboTwin 资产、解释器、
+media launcher、静态 FFmpeg、capability 与 delegated cgroup 继续作为部署绑定。相同 bundle 已在两个
+绝对源码路径通过，并从第二路径真实完成 production Golden compile→replay；见
+[`docs/evidence/golden-portable-replay-20260910.md`](../../docs/evidence/golden-portable-replay-20260910.md)。
 两次已记录成功都不替代独立 validate 与 promotion evidence，不能由 replay 成功推出
 `publishable=true`。
 

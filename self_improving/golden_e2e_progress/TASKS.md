@@ -22,6 +22,8 @@
 
 - [ ] qualified compile 的 Codex 调用与可信 ToolResult。
 - [ ] qualified replay/validate 的同 run 调度。
+  - [x] qualified compile → replay 已在同 run 调度，并验证同一 replay bundle 跨代码安装绝对路径复用。
+  - [ ] replay → validate 尚未接入同一 run。
 - [ ] fresh observation 获取及回执绑定。
 - [ ] Codex 诊断、受限修复、状态增量与可续跑 history。
 - [ ] promotion gate 与 publishability 唯一授权。

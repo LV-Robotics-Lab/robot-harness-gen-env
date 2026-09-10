@@ -4,7 +4,8 @@
 
 ## Doing
 
-- 当前 P3 候选已完成，等待主窗口按固定提交审阅并决定集成顺序。
+- portable replay 目标已完成，等待主窗口在最终固定 HEAD 上安排功能验收；验收重点为同一 bundle
+  跨安装路径 strict load、production factory 和真实 compile rev1→replay rev2 全链路，不做代码风格型复核。
 
 ## Next
 
@@ -26,6 +27,15 @@
   `RegistrySnapshot` 目前不能单独作为生产 trust root。
 
 ## Done
+
+- replay qualification 与 production replay 已跨代码安装绝对路径：源码身份改为逻辑
+  `replay_distribution` 根 + 50 个 relative exact-byte members + tree hash，loader 在调用方映射本地根后
+  仍保留 P0 的三轮 nofollow closure；runner 与 module root 不再混入 deployment file list。只有精确等于
+  映射源码根的 worker `PYTHONPATH` 会逻辑归一，其他环境与 RoboTwin/解释器/media/cgroup 仍按部署身份
+  拒绝漂移。全新 direct/kernel 资格均真实完成 0/900/120/120/12；同一 bundle 在 A/B 路径 strict
+  verify/load 后，由 B 路径 production factory 在全新证据根完成 Golden 0→1→2，MP4 独立解码
+  120/114 帧且无 live application 重启恢复同一 terminal。证据见
+  `docs/evidence/golden-portable-replay-20260910.{md,json}`；不包含 validate、Genesis 或 promotion。
 
 - P3 exact qualified replay operation 已完成：replay-owned policy/adapter 没有向 generic catalog 增加
   Skill 分支；同一 actor-neutral workflow 真实提交 compile rev1→replay rev2。replay 只接受同一 compile

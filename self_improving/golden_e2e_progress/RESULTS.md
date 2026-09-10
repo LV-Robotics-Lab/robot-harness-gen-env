@@ -1,5 +1,34 @@
 # 进度与结果
 
+## 2026-09-10 Golden portable replay
+
+- 固定起点 `2bdeafd836d641b4f14aef316a21fbcd736f55e1`。首个公共 RED 把同一 qualification
+  bundle 与 exact 源码 tree 复制到不同绝对路径；旧 loader/factory 因绝对 distribution root 拒绝。
+  `0ef1eb17fd9e66126764436077400419c1d79266` 将资格源码改为逻辑 `replay_distribution` root，runner
+  纳入 50-file implementation closure，module/runner 与 external operator 文件分账；当前根 mapping 上
+  仍逐成员、逐目录链做三轮 nofollow 重走与最终 root 重开。字节漂移、缺/多成员、目录/链接异常、
+  不同 tree、schema drift 与错误 external dependency 的负例继续拒绝。
+- 第一次真实 relocated Golden 在 production factory 与 compile rev1 后精确暴露 capability 仍哈希绝对
+  `PYTHONPATH`；没有复用该失败目录。`487bcfc189e31784461ae0dc43fae5955dbf0d19` 只在
+  `PYTHONPATH == local mapped source root` 时把它归一到逻辑根，其他值仍按原字节哈希。capability +
+  worker 契约 `197 passed`，`runtime_capability.py` 602 statements / 246 branches 为 100%；replay/P3
+  focused `233 passed`。
+- 在全新 bundle/scratch/CAS 与 `portable-replay-53vbg3.scope` 中重新探测 capability 并运行官方
+  generator。direct 与 production kernel 各一次真实完成 0/900/120/120/12，物理均 pass，23-member
+  runtime asset closure、完整事件流与 120/100/114 媒体通过。新 bundle 三文档为
+  `9553bf10…041a` / `9315394c…cf03` / `feb70567…c681`，implementation 为
+  `990b9dbf…5779`，62-ref closure 为 `92457468…9110`。
+- 将同一 bundle 原样复制，并把资格 CAS 逐 digest 写入 68-object fresh CAS；A/B 两个绝对源码路径的
+  strict verifier/loader 均 pass，source manifest 不含任一本地 root。随后从 B 路径构造 production
+  `ReplayApplication`，在新的 Golden evidence root 真实执行 compile rev1→replay rev2；runtime
+  evidence `ddb1cf26…673d` 为 pass。MP4 `a41d0536…12a4e` 独立解码为 120 帧、114 个 decoded
+  unique、320×240、12 fps。无 live application 的新进程恢复 revision 2 并幂等返回同一 terminal。
+- 正式证据：`docs/evidence/golden-portable-replay-20260910.{md,json}`。该范围仍不包含 validate Skill、
+  Genesis native、`genesis.robot_policy@1`、promotion 或跨机器 provisioning；dashboard 三个状态 URL
+  仍为 HTTP 404，未伪报同步。最终 focused `431 passed`、Harness `2671 passed, 20 skipped`、root
+  `3684 passed, 20 skipped`、39-schema、变更 Python Ruff 与 diff check 通过；仓库级 Ruff 仍有
+  2,463 个既有、范围外问题，未在本功能提交批量改写。
+
 ## 2026-09-10 P3 GoldenRun qualified compile → replay
 
 - 公共 RED `17e535d` 先固定同一 actor-neutral workflow 的第二个 exact operation：rev0 经真实 qualified

@@ -1,0 +1,177 @@
+{
+  "schema_version": "golden.portable_replay_acceptance.v1",
+  "date": "2026-09-10",
+  "base_commit": "2bdeafd836d641b4f14aef316a21fbcd736f55e1",
+  "implementation_commits": [
+    "0ef1eb17fd9e66126764436077400419c1d79266",
+    "487bcfc189e31784461ae0dc43fae5955dbf0d19"
+  ],
+  "qualification": {
+    "source_commit": "487bcfc189e31784461ae0dc43fae5955dbf0d19",
+    "source_root_label": "replay_distribution",
+    "source_roots_verified": [
+      "/home/jingxiang/bingsheng/worktrees/golden-portable-replay-agent",
+      "/home/jingxiang/bingsheng/worktrees/golden-portable-replay-relocated-20260910"
+    ],
+    "source_manifest_contains_local_root": false,
+    "implementation_file_count": 50,
+    "implementation_sha256": "990b9dbff32060a3f1dbb48303d119d9f0ad2768eb38f6ca5849238cee5a5779",
+    "harness_tree_sha256": "65352d166a06ca0ca4ac8d6380b333b7c75a6b451ed0c252a8f41e5017b4b35a",
+    "scene_gen_tree_sha256": "e2fe9fd66d917dc6dea40e8990248206e180e3a086c1619b9f40558c3efec330",
+    "ledger_contract_tree_sha256": "1d52584d44ca5f5d759f5e72d327fed282f0bdb4adaf763387b2fda2467ef489",
+    "documents": {
+      "manifest.json": "9553bf10cd695eeaa911c31e0954c0870f8de26464b3098e0ec0f4fe2fb0041a",
+      "qualification.json": "9315394c0788c4e364228e40b7c663e38a1c88ef84b56abe565d55e1fa52cf03",
+      "report.json": "feb70567b8e204987c67a05bf9186be9563237787277b3ab7b113cd88a6ec681"
+    },
+    "strict_reload": {
+      "status_at_source_root_a": "pass",
+      "status_at_source_root_b": "pass",
+      "same_bundle_without_resigning": true,
+      "fresh_cas_object_count": 68,
+      "evidence_closure_ref_count": 62,
+      "evidence_closure_sha256": "9245746808ad040d9379bcf4acbc32b3c624636bd27b90cdfcdf373a5c719110"
+    },
+    "runtime_config": {
+      "precheck_steps": 0,
+      "settle_steps": 900,
+      "contact_window_steps": 120,
+      "video_frames": 120,
+      "fps": 12
+    },
+    "direct": {
+      "status": "succeeded",
+      "runtime_evidence_sha256": "711096539921bce4cabb08311af3b5216398cc332a668285cf01cf4c2f8c6589",
+      "execution_receipt_sha256": "1c8c1a57798bc776a96d4ac957851784e219c103bb7cb8fee7b0fa9fa6d2d7e4"
+    },
+    "production_kernel": {
+      "status": "succeeded",
+      "runtime_evidence_sha256": "711096539921bce4cabb08311af3b5216398cc332a668285cf01cf4c2f8c6589",
+      "execution_receipt_sha256": "14ba962922e3fe08365f6cb64f81246444e19d2995f75c8c035c72214b1035c6",
+      "evaluation_receipt_sha256": "e16e2c54a27cbc135766b77e48c6a3ec2039c1625e445be4fe38f70eaa6538ac"
+    },
+    "validation_report_sha256": "01e85c898631343c46df50ecb2fb26dd0b4e9c2e424424553004f19b2ef09d75",
+    "runtime_asset_manifest_sha256": "43df37804b8e8c6dcb807f2f803e0d591dee18b7d5bbb8863b476f12144b43d4",
+    "runtime_asset_member_count": 23,
+    "video_sha256": "a41d05366050ba0c2af635e69299a12a4b2a0e78ed27490517d27b122fa12a4e"
+  },
+  "deployment_bindings": {
+    "source_code_is_not_deployment_bound": true,
+    "runtime_module": {
+      "root": "replay_distribution",
+      "path": "."
+    },
+    "runtime_runner": {
+      "root": "replay_distribution",
+      "path": "script/run_scene_runtime.py",
+      "bytes": 51130,
+      "sha256": "cd4e3a19e13df99f0f17e7ba409359a776e189c00b01cffb6b55eeeae7431202"
+    },
+    "external_files": [
+      {
+        "label": "asset_catalog",
+        "bytes": 791365,
+        "sha256": "8c29cf4c2dc759bd4bd55243ccd4a2688deef40601d153553d61757c96e65364"
+      },
+      {
+        "label": "interpreter",
+        "bytes": 17467520,
+        "sha256": "ff0d9976054ea10aee690d9f04293889907ddfe84e41f9ab262af8810e537b5e"
+      },
+      {
+        "label": "media_launcher",
+        "bytes": 790240,
+        "sha256": "092597d14624759011d8c3f53d4f203ea6a345541bac1e2075b263247694d7ec"
+      },
+      {
+        "label": "runtime_capability",
+        "bytes": 13033,
+        "sha256": "a462f4857f8ee06511eae033342596b8ebf8dd07c186e8f940a27728f634beec"
+      },
+      {
+        "label": "static_ffmpeg",
+        "bytes": 4337384,
+        "sha256": "74f0443e5d684e051726fc39546c77b18b031395c30a5d5764b95af8e3a86780"
+      }
+    ],
+    "asset_root_and_delegated_cgroup_remain_machine_local": true
+  },
+  "relocated_golden_workflow": {
+    "source_root": "/home/jingxiang/bingsheng/worktrees/golden-portable-replay-relocated-20260910",
+    "evidence_root": "/home/jingxiang/bingsheng/golden-portable-replay-20260910.m9L950",
+    "workflow_run_id": "81000000-0000-4000-8000-000000000001",
+    "revisions": [0, 1, 2],
+    "compile": {
+      "status": "succeeded",
+      "child_run_id": "83000000-0000-4000-8000-000000000001",
+      "command_sha256": "1d57be1f192b91a57c6116c92c5f15211a24adf743a932e3fa65d7e37e717dda",
+      "tool_result_sha256": "4160f12f7d2659bbf9876901d4bbe37495f3858421ab783060274ab12dcf4b27",
+      "receipt_sha256": "f776e8b4c2618b1af98c8920169c0c42b198093a17357eb89a1171d24bdd4fef"
+    },
+    "replay": {
+      "status": "succeeded",
+      "child_run_id": "83000000-0000-4000-8000-000000000002",
+      "command_sha256": "380e7d1a87a1b86379584cd28596b2f8aaab8ce66fd00b98abec3a63af925855",
+      "tool_result_sha256": "da0f650f8976c603ece48fb653c3448a86e0899b1bad141558e4d3a02502888c",
+      "receipt_sha256": "4e8de4760234564aa5d6b5e4b9795c557fcbc964db5f3ac8314ae8dc1883d65f",
+      "trusted_tool_receipt_sha256": "db3c5b2665783e927b914e2c0ae050923269a1e51a598d0b17dd26db0c2b21fb",
+      "runtime_evidence_sha256": "ddb1cf26bb3d9ad0d904519dbe4f0b506918131b13ab1678854e537e68b7673d"
+    },
+    "terminal_state": {
+      "artifact_sha256": "a11095bac1b22ad5814f2ffcadec3fc7662a2dfa4cf18359e9e0a49ecbe9f42a",
+      "state_sha256": "6c718bdcc551b91aed5fecd8d712fe75770252b406f14de5edacc95079da1b8b"
+    },
+    "runtime": {
+      "status": "pass",
+      "simulation_step_count": 900,
+      "contact_window_steps": 120,
+      "video_frame_count": 120,
+      "source_unique_video_frame_count": 100
+    },
+    "decoded_media": {
+      "video_sha256": "a41d05366050ba0c2af635e69299a12a4b2a0e78ed27490517d27b122fa12a4e",
+      "bytes": 61285,
+      "decoded_frame_count": 120,
+      "decoded_unique_frame_count": 114,
+      "width": 320,
+      "height": 240,
+      "fps": 12,
+      "view_path": "/home/jingxiang/bingsheng/golden-portable-replay-20260910.m9L950/view/observer_runtime-a41d05366050.mp4"
+    },
+    "restart": {
+      "revision": 2,
+      "recovered_operation_equal": true,
+      "replay_child_terminal_status": "succeeded",
+      "application_present_during_recovery": false
+    },
+    "external_summary_sha256": "3cba34cda5f07559ff8ca851ed0e8ee322f2f2dbab0534deb935f4dd9bdd3796",
+    "external_restart_verification_sha256": "0c75caec4d7d51193042670dea5a64ccb468ef703be1284ce90342fc6598fab1",
+    "external_video_decode_verification_sha256": "cf0f9c062e0473db7f3d0a5942b176fc2fd25eeac41e1da5c4ca41c9234ac3ec"
+  },
+  "negative_contracts": [
+    "source byte drift is rejected",
+    "missing or extra implementation closure member is rejected",
+    "directory or symlink anomaly is rejected",
+    "different source tree identity is rejected",
+    "schema drift is rejected",
+    "wrong external dependency identity is rejected",
+    "unmapped PYTHONPATH remains deployment-sensitive"
+  ],
+  "verification": {
+    "focused": "431 passed",
+    "runtime_capability_coverage": "602 statements, 246 branches, 100%",
+    "harness": "2671 passed, 20 skipped",
+    "root": "3684 passed, 20 skipped",
+    "schema_snapshots": 39,
+    "changed_python_ruff": "pass",
+    "git_diff_check": "pass",
+    "repository_wide_ruff": "not green: 2463 pre-existing findings in historical and out-of-scope files"
+  },
+  "boundaries": {
+    "validate_skill_called": false,
+    "genesis_native_claim": false,
+    "robot_policy_promotion_claim": false,
+    "cross_machine_provisioning_claim": false,
+    "dashboard_sync": "blocked: portfolio, tasks, and project URLs returned HTTP 404"
+  }
+}

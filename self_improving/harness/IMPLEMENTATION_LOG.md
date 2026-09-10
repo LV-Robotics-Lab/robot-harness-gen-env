@@ -996,3 +996,21 @@
 - 边界：这只是 compile 时静态检查报告的窄化投影；`runtime_evidence:not_run` 明确表示未运行物理
   replay。页面和接口均不据此声明 validate pass、asset settle 或 publishable，也不新增 Harness 公共
   schema snapshot。
+
+### 2026-09-10 / A052：replay 资格源码身份必须跨安装绝对路径复用
+
+- RED：同一 clean source tree 与同一 qualification bundle 复制到第二个绝对路径后，旧 strict loader
+  因签名中的 distribution root 拒绝；去掉该检查后，真实 Golden 又在 replay preflight 暴露 capability
+  的 `PYTHONPATH` 仍哈希绝对源码根。
+- GREEN：资格源码 manifest 使用逻辑 `replay_distribution` 根，50 个实现成员以 relative path + exact
+  bytes/SHA-256 + tree hash 绑定；runtime runner 纳入闭包，module/runner 不再混入 machine-local
+  operator file list。loader 对调用方 root mapping 仍执行三轮独立 nofollow closure、最终 root 重开与
+  exact member set 对账。capability 只在 `PYTHONPATH` 精确等于该 local source root 时逻辑归一，任意
+  其他值继续按原字节哈希。
+- 真机证据：全新 direct/kernel qualification 各一次完成 0/900/120/120/12；同一 bundle 在 A/B 两路径
+  strict verify/load，B 路径 production `ReplayApplication` 再于全新 root 完成 Golden compile rev1 →
+  replay rev2。MP4 独立解码 120 帧、114 个 decoded unique、12 fps；无 live application 重启恢复
+  同一 terminal。详见 `docs/evidence/golden-portable-replay-20260910.{md,json}`。
+- 边界：RoboTwin 资产、解释器、media launcher、静态 FFmpeg、capability 文档与 delegated cgroup
+  继续作为 deployment binding 精确复验。没有调用 validate，也不声明 Genesis、promotion 或跨机器
+  provisioning。

@@ -42,8 +42,10 @@ resolver、callback-driven `RunRecorder`、SQLite WAL append-only `SQLiteEventJo
 production-only registration policy。仓库保留 2026-09-02 的历史 checked-in pass bundle 与真实
 900/120 replay 记录；P0+P2 集成后旧 bundle 先因源码 identity 漂移被严格拒绝，当前固定树随后已用
 全新外部资源真实重签，并通过 direct/kernel 0/900/120/120/12、14-schema exact gate 与 fresh-CAS
-strict reload。证据与 deployment-local 边界见
-[`docs/evidence/replay-qualification-refresh-20260910.md`](../../docs/evidence/replay-qualification-refresh-20260910.md)。
+strict reload。随后 qualification source identity 改为逻辑 `replay_distribution` 根、relative exact
+bytes/file/tree hash；同一 bundle 已在第二个绝对安装路径 strict load，并由 production application
+真实重跑 Golden 0→1→2。RoboTwin/解释器/media/cgroup 仍是 deployment-local binding；证据见
+[`docs/evidence/golden-portable-replay-20260910.md`](../../docs/evidence/golden-portable-replay-20260910.md)。
 从 repo root 执行 `PYTHONPATH=. python -m script.export_harness_schemas --check`，显式绑定当前
 checkout 并锁住 committed snapshot；核心资格模块强制 100%
 语句与分支覆盖。compile 的 asset admission 仍发生在 solve 前且失败不回滚；跨 run promotion、
@@ -57,7 +59,9 @@ catalog 不含具体 Skill 分支，compile/replay 各有独立 binding 与 poli
 消费时重验交叉绑定。replay 只接受当前受信 state 中由同一个 compile receipt 产生且与 parameters 完全一致
 的 package/catalog，只晋升 `replay.runtime_evidence`，媒体不是 fresh observation。四个 child/parent 恢复
 窗口保持与 compile 相同的保守语义。真实同-run 证据完成 0/900/120/120/12，但这些边界不证明任意外部
-副作用 exactly-once，也没有接通 validate、MCP、Genesis 或 promotion。
+副作用 exactly-once，也没有接通 validate、MCP、Genesis 或 promotion。当前 replay bundle 的源码
+资格可跨代码安装绝对路径复用：loader 以调用方 local root mapping 重走三轮 nofollow closure；只有
+精确等于该映射根的 worker `PYTHONPATH` 会逻辑归一，其他环境与外部 operator 依赖仍严格绑定。
 
 System 2 的 compile 竖切不再只信模型自报或 artifact 外形：planner prompt/raw decision/receipt、
 精确 base world state、PlannerContext、Skill qualification、Invocation/RunState、effective catalog、
