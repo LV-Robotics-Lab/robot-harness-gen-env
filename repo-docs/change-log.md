@@ -18,6 +18,12 @@
   映射根时逻辑归一。全新 direct/kernel 资格各完成 0/900/120/120/12；同一 bundle 在两个绝对安装路径
   strict load，并从第二路径由 production factory 完成 Golden 0→1→2。MP4 独立解码 120/114 帧，
   重启恢复同一 terminal；仍不表示 validate、Genesis、promotion 或跨机器 provisioning。
+
+- 接通 exact qualified `text2env.validate@2.0.0` 的 production application、Golden binding 与完整
+  compile/replay lineage policy；真实 can-on-plate 在同一 workflow 推进 revision 0→1→2→3，validate
+  重算物理报告、只写 `environment.validation`、不产生 fresh observation，并通过无 live application
+  重启幂等。证据 CAS 187 files / 3,735 ArtifactRef occurrences 全闭合，MP4 120/114 decoded-unique；
+  该 publishability 仍严格限于 legacy RoboTwin/SAPIEN，不表示 promotion、Genesis 或 robot-policy。
 - 增加 P3 exact replay Golden operation：replay-owned policy/adapter 通过同一 actor-neutral
   `GoldenRunHarness.submit` 与 sealed catalog，把 qualified compile revision 1 推进到 qualified replay
   revision 2。package/catalog 必须来自同一个 compile trusted receipt；只晋升 runtime evidence，媒体不算

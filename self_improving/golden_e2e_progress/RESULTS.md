@@ -29,6 +29,30 @@
   `3684 passed, 20 skipped`、39-schema、变更 Python Ruff 与 diff check 通过；仓库级 Ruff 仍有
   2,463 个既有、范围外问题，未在本功能提交批量改写。
 
+## 2026-09-10 P4 exact validate revision 3 真实闭环
+
+- 固定实现 commit `63dfac7f0b84c4208bc3731cd4f6fca5cb0a4142` 的 production Golden Harness
+  在 `/home/jingxiang/bingsheng/golden-p4-real-20260910.v8` 真实完成
+  `compile revision 1 → replay revision 2 → validate revision 3`；三个 operation 均为 `succeeded`。
+- validate 从 revision 2 的受信 compile/replay receipt、portable child receipt、package/catalog、runtime
+  evidence/report/assets、media verification、event transcript 与 provenance 重建完整 lineage；独立重算
+  报告 `054bb519…713b` 为 pass，decision `f5a36aaf…785c` 给出 `publishable=true`、零 blocker。
+- validate ToolResult 的 `fresh_observations=[]`，StateDelta 只写 `environment.validation`；无 live
+  applications 的重启重复提交恢复完全相同的 terminal validate operation，没有预留第四个 child。
+- 单一 workflow CAS 有 187 个文件；逐文件摘要与路径复算通过，3,735 次递归 ArtifactRef occurrence、
+  176 个 distinct digest 的 URI/bytes/SHA 全部闭合。资格证据先导入同一 CAS：replay 66 objects、
+  validate 114 objects。
+- 真 replay 参数为 `0/900/120/120/12`；MP4 `a41d0536…12a4e` 独立解码 120 帧、114 unique、
+  320×240、12 fps。完整证据为
+  `docs/evidence/golden-compile-replay-validate-p4-20260910.{md,json}`。
+- 保留失效模式：错误环境触发 capability mismatch；未处于 delegated supervisor 时物理执行虽成功但
+  media verifier 以 `sandbox_unavailable` 拒绝；替换新 operator root 又被资格 identity 拒绝。只有进程
+  进入 exact qualified supervisor 后整链通过，未弱化任何门禁。
+- 能力边界：这是 legacy RoboTwin/SAPIEN validation profile 的 publishability，不是 promotion，
+  `genesis_profile_satisfied=false`，也不证明 Genesis-native、`genesis.robot_policy@1` 或跨机器 provisioning。
+   该分支尚未整合 portable replay，最终 integrated commit 必须重新生成 replay/validate qualifications
+   并再跑 relocated revision 3。
+
 ## 2026-09-10 P3 GoldenRun qualified compile → replay
 
 - 公共 RED `17e535d` 先固定同一 actor-neutral workflow 的第二个 exact operation：rev0 经真实 qualified

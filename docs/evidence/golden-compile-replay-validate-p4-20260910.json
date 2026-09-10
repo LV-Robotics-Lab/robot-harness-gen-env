@@ -1,0 +1,51 @@
+{
+  "cas": {
+    "files": 187,
+    "recursive_artifact_ref_occurrences": 3735,
+    "unique_referenced_digests": 176,
+    "verified": true
+  },
+  "evidence_root": "/home/jingxiang/bingsheng/golden-p4-real-20260910.v8",
+  "fresh_observations": [],
+  "limits": {
+    "genesis_native_claim": false,
+    "portable_replay_integrated": false,
+    "promotion_executed": false,
+    "robot_policy_claim": false
+  },
+  "media": {
+    "decoded_frames": 120,
+    "decoded_unique_frames": 114,
+    "fps": 12.0,
+    "height": 240,
+    "path": "/home/jingxiang/bingsheng/golden-p4-real-20260910.v8/view/observer_runtime-a41d05366050.mp4",
+    "sha256": "a41d05366050ba0c2af635e69299a12a4b2a0e78ed27490517d27b122fa12a4e",
+    "width": 320
+  },
+  "qualification_cas_imports": {
+    "replay": 66,
+    "validate": 114
+  },
+  "revisions": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "schema_version": "golden.p4.compile_replay_validate_acceptance.v1",
+  "source_commit_at_execution": "63dfac7f0b84c4208bc3731cd4f6fca5cb0a4142",
+  "summary_sha256": "dd43c3d7e7e84e5b9e006b7265e3b0e27c875a31cec3b123dc574dc5d6606a72",
+  "validate": {
+    "blockers": [],
+    "decision_receipt_sha256": "f5a36aaf1abf6f556c343b7c5e486b9d5c4c7669a6545f67e1cc428bacf5785c",
+    "publishable": true,
+    "recomputed_report_sha256": "054bb51927c95308a182773870cb2ccd68e07eb47233a0d031b8a989b94c713b",
+    "status": "pass"
+  },
+  "workflow": {
+    "compile_status": "succeeded",
+    "replay_status": "succeeded",
+    "validate_status": "succeeded",
+    "workflow_run_id": "91000000-0000-4000-8000-000000000001"
+  }
+}

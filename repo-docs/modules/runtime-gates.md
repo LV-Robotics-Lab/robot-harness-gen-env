@@ -142,11 +142,14 @@ CAS 副本和 scratch root 的真实复算得到相同的 8,788-byte 报告、`p
 zero lookup。精确输入、报告摘要、访问边界与复核模板见
 [`docs/evidence/validate-v2-snapshot-recompute-20260902.md`](../../docs/evidence/validate-v2-snapshot-recompute-20260902.md)。
 
-这个 adapter 只是 report recomputer，不是 `text2env.validate@2` handler/output，也不生成 decision、
-publishability、run provenance、qualification 或 promotion。输入没有独立 RuntimeConfig receipt，因此
-报告中的 900/120/120/100 只能证明 runtime evidence 的观测，不能证明 requested-video contract。
-它直接核对 SceneSpec 与已提交 ResolvedSceneSpec 的稳定语义字段，不重新执行 solver；因此也不证明
-grounding、solver 执行或 compile provenance。
+这个 adapter 本身只是 report recomputer；P4 又把它接入 exact qualified
+`text2env.validate@2.0.0` handler/application 与 Golden evidence policy。该 Skill 只有在 compile/replay
+portable receipts、qualified Tool receipts、package/catalog、runtime config/evidence/report/assets、媒体
+verification、event transcript 和 request provenance 全部闭合时，才用重算报告生成 decision，并在
+legacy profile pass 时表达 `publishable=true`。真实 revision 0→1→2→3 证据见
+[`docs/evidence/golden-compile-replay-validate-p4-20260910.md`](../../docs/evidence/golden-compile-replay-validate-p4-20260910.md)。
+它不重新执行 solver，也不执行 promotion；`publishable=true` 仍不表示 Genesis profile 或
+`genesis.robot_policy@1` 已满足。
 
 ## contact 怎么分类
 
@@ -174,8 +177,9 @@ digest。缺字段或未改写的错值都会 fail。它不对整份 evidence、
 若搬运另一次回放的物理字段并重写这两项声明，validator 仍无法识别。因此这是输入声明一致性门，
 不是不可伪造的 run provenance，也不替代下面的物理门控。Replay handler 已在 consumer 侧重验
 package/catalog/runtime-assets、运行事件、evidence 配置/时间线与完整媒体身份，并把五项 Invocation
-依赖写入 path-free receipt；随后固定 qualification 与新的 900/120 handler 真跑也已完成。独立
-validate/promotion 仍缺，所以这条链仍不能被写成已晋升或 `publishable` 的跨 run provenance。
+依赖写入 path-free receipt；随后固定 qualification 与新的 900/120 handler 真跑也已完成。P4 exact
+validate 已在同一 Golden workflow 中消费这条 replay lineage 并独立重算报告；promotion 仍缺，所以
+该链只能表达 legacy validation profile 的 `publishable`，不能写成已晋升或 Genesis-ready。
 
 每物体的门控按 `is_static` 分两种模式：
 

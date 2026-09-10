@@ -4,13 +4,18 @@
 
 ## Doing
 
-- portable replay 目标已完成，等待主窗口在最终固定 HEAD 上安排功能验收；验收重点为同一 bundle
-  跨安装路径 strict load、production factory 和真实 compile rev1→replay rev2 全链路，不做代码风格型复核。
+- portable replay 已通过两轴独立功能验收：第三绝对源码路径、fresh CAS、真实 production
+  compile→replay、证据闭包、MP4、物理、重启幂等与三个完整性失效模式均通过。
+- P4 validate v2 候选已完成真实 revision 0→1→2→3；当前补齐新增 production
+  application/policy/handler 的 statement/branch 100% 门并整理证据提交。
+- portable replay 与 x2env contracts 将在新的干净 integration worktree 依次接入；最终固定实现上须
+  重新生成 replay/validate qualification，不能复用 P4 旧 operator identity。
 
 ## Next
 
-- P4：S1 的 `submit/read`、OperationSnapshot 和真实 Registry handler 绑定完成后，接入 MCP 2.2 的
-  low-level Server/Client；在同一切片冻结 dependency/runtime lock，不在实验循环中安装依赖。
+- P4 integration：以已独立验收的 portable replay HEAD 为基线，接入 x2env contracts 与 validate v2，
+  重新资格化并完成 relocated revision-3 真跑后，再接 MCP 2.2 low-level Server/Client；同一切片冻结
+  dependency/runtime lock，不在实验循环中安装依赖。
 - P6：在已合入的 exact-byte staging 后，单独实现 collision provenance、settle 与 Genesis
   qualification；stage result 仍不得直接触发历史 ledger promotion，也不得把 headless ground-contact
   probe 写成 can-on-plate、媒体或 Genesis 证据。
@@ -43,6 +48,14 @@
   两份 raw media manifest fixture 明确 sample-only 缺口；逐 namespace 的 compile/replay/validate 三 lane、
   adapter/qualification/Genesis runtime/System2/Golden catalog 条件已有实施计划。本切片没有 handler、
   Registry entry、MCP tool、真实 Genesis run 或 publishable 结果。
+
+- P4 legacy validate v2 候选已真实闭合：同一 actor-neutral Golden workflow、同一 Harness、同一
+  RegistrySnapshot 依次执行 exact qualified compile/replay/validate，revision `0→1→2→3`；validate
+  输入来自 revision 2 的受信 receipt/state，重新计算物理报告并只用 `environment.validation` 推进状态，
+  `fresh_observations=[]`。真实运行输出 120 帧 MP4（114 decoded-unique），187 个 CAS 文件与 3,735 个
+  递归 ArtifactRef occurrence 全闭合；无 live application 重启重复提交返回同一 terminal operation。
+  证据见 `docs/evidence/golden-compile-replay-validate-p4-20260910.{md,json}`。该候选尚未整合 portable
+   replay；最终整合必须重签并重跑，且此处 publishable 不表示 promotion/Genesis/robot-policy。
 
 - P3 exact qualified replay operation 已完成：replay-owned policy/adapter 没有向 generic catalog 增加
   Skill 分支；同一 actor-neutral workflow 真实提交 compile rev1→replay rev2。replay 只接受同一 compile
