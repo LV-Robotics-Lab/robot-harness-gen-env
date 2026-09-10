@@ -1,5 +1,27 @@
 # 进度与结果
 
+## 2026-09-10 root demo 兼容失败修复
+
+- 固定起点 `461b05d9efea11803ce5f35c3d7f2a089653d54f` 的完整 root 首轮稳定得到
+  `3516 passed, 20 skipped, 2 failed`。失败节点为
+  `test_submit_fails_closed_when_the_terminal_run_state_cannot_be_reloaded` 与
+  `test_submit_fails_closed_when_committed_history_does_not_match_run_state`；秒级复现为
+  `2 failed in 0.35s`。
+- 两项测试在调用 `WorkbenchCompile.submit` 之前向 `harness_run_states` 安装 trigger。P2 的
+  `SQLiteRunStore` exact-layout/zero-trigger 门会在写入 Invocation 和调用 handler 之前拒绝该布局，
+  所以 observed exception 已提前为 `RunPersistenceError(RunStoreCorruptionError)`，demo 只会投影为
+  unavailable；旧测试不再到达其名称声明的 terminal missing/history mismatch seam。
+- 修复选择更新过时测试，不改生产代码：每个测试都先穿过真实 `CompileApplication.compile`，再在其
+  返回 terminal state 后、Workbench 二次读取前删除该 run 的 terminal row 或最后一个 committed
+  event。第一纵切形成 `1 passed, 1 failed`，第二纵切完成后为 `2 passed`；两项后置完整性语义仍由
+  公共 submit seam 直接验证，P2 的 pre-Invocation layout 拒绝保持不变，既有 Registry/RunStore
+  负向用例继续保护该边界。
+- focused：`tests/demo/test_harness_compile.py` 为 `192 passed`；
+  `demo/harness_compile.py` 为 531/531 statements、214/214 branches，均为 100%。Harness 全套为
+  `2505 passed, 20 skipped`；完整 root 不排除节点为 `3518 passed, 20 skipped in 151.50s`。
+- 本切片没有稳定生产行为变化，因此 reader-facing repo-docs 无需修改；compile/replay 资格文档、
+  hash、签名、settings 和 evidence 均未触碰。
+
 ## 2026-09-10 当前集成树 replay qualification 独立重签
 
 - 固定起点 `13f654e72e0204993355fa098e240698e1d8b085`。旧 replay bundle 先以

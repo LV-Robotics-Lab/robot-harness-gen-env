@@ -1376,18 +1376,21 @@ def test_submit_accepts_exact_public_input_boundaries_and_persists_them(
 
 def test_submit_fails_closed_when_the_terminal_run_state_cannot_be_reloaded(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     workbench, application = _workbench(tmp_path)
-    with closing(sqlite3.connect(application.journal_path)) as connection, connection:
-        connection.execute(
-            """
-            CREATE TRIGGER remove_new_terminal_state
-            AFTER INSERT ON harness_run_states
-            BEGIN
-                DELETE FROM harness_run_states WHERE run_id = NEW.run_id;
-            END
-            """
-        )
+    compile_scene = application.compile
+
+    def remove_terminal_before_return(**kwargs):
+        returned = compile_scene(**kwargs)
+        with closing(sqlite3.connect(application.journal_path)) as connection, connection:
+            connection.execute(
+                "DELETE FROM harness_run_states WHERE run_id = ?",
+                (str(returned.run_id),),
+            )
+        return returned
+
+    monkeypatch.setattr(application, "compile", remove_terminal_before_return)
 
     with pytest.raises(WorkbenchCompileAuthorityError, match="missing"):
         workbench.submit(
@@ -1398,21 +1401,26 @@ def test_submit_fails_closed_when_the_terminal_run_state_cannot_be_reloaded(
 
 def test_submit_fails_closed_when_committed_history_does_not_match_run_state(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     workbench, application = _workbench(tmp_path)
-    with closing(sqlite3.connect(application.journal_path)) as connection, connection:
-        connection.execute(
-            """
-            CREATE TRIGGER remove_new_terminal_event
-            AFTER INSERT ON harness_run_states
-            BEGIN
+    compile_scene = application.compile
+
+    def remove_terminal_event_before_return(**kwargs):
+        returned = compile_scene(**kwargs)
+        with closing(sqlite3.connect(application.journal_path)) as connection, connection:
+            connection.execute(
+                """
                 DELETE FROM run_events
                 WHERE event_id = (
-                    SELECT MAX(event_id) FROM run_events WHERE run_id = NEW.run_id
-                );
-            END
-            """
-        )
+                    SELECT MAX(event_id) FROM run_events WHERE run_id = ?
+                )
+                """,
+                (str(returned.run_id),),
+            )
+        return returned
+
+    monkeypatch.setattr(application, "compile", remove_terminal_event_before_return)
 
     with pytest.raises(WorkbenchCompileAuthorityError, match="integrity checks"):
         workbench.submit(

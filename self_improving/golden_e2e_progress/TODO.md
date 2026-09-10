@@ -34,6 +34,13 @@
 
 ## Done
 
+- 固定基线 `461b05d` 的两项 root demo 失败已修复为测试兼容切片：原测试在 submit 前安装
+  `harness_run_states` trigger，P2 exact-layout 门会按设计在 Invocation/handler 前拒绝，因而无法再
+  到达测试命名的 terminal missing/history mismatch 场景。测试现在让真实 compile 完整提交后、
+  Workbench 二次读取前删除对应 terminal row/event，原有后置完整性语义继续直接受保护；生产
+  RunStore、Registry 和 Workbench 均未修改。demo focused 为 `192 passed`，`demo.harness_compile`
+  531 statements / 214 branches 100%；Harness 为 `2505 passed, 20 skipped`；完整 root 不排除节点为
+  `3518 passed, 20 skipped`。本切片未触碰 compile/replay 资格材料。
 - 当前集成树 replay qualification 已独立重签：旧 bundle 先以
   `implementation_file_mismatch: self_improving/harness/__init__.py` RED；全新外部
   bundle/scratch/CAS、重新探测 capability 和临时 delegated scope 中，fixed can-on-plate 的 direct 与
