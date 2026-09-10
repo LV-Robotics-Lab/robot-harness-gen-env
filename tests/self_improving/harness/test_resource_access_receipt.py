@@ -423,6 +423,25 @@ def test_advisory_rejects_access_receipts_that_do_not_cover_every_claimed_source
     assert _row_count(case.workflow_store.path, "golden_workflow_resource_accesses") == 1
 
 
+def test_advisory_rejects_zero_access_receipts_without_advancing_the_workflow(
+    tmp_path: Path,
+) -> None:
+    case = control._case(tmp_path)
+    request = _request(case.head)
+    command = AdvisoryRecordCommand.model_validate(
+        control._advisory_command(case).model_dump(mode="python")
+    )
+    assert command.resource_access_receipts == ()
+    before = case.harness.read(request)
+
+    with pytest.raises(GoldenRunNotFoundError, match="resource access.*cover"):
+        case.harness.submit_control(command)
+
+    assert case.harness.read(request) == before
+    assert _row_count(case.workflow_store.path, "golden_workflow_turns") == before.turn_seq
+    assert _row_count(case.workflow_store.path, "golden_workflow_resource_accesses") == 0
+
+
 def test_receipt_resource_lookup_does_not_recursively_create_a_read_receipt(
     tmp_path: Path,
 ) -> None:
