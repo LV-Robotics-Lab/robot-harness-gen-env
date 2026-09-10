@@ -130,6 +130,7 @@ def _put_payload(
 class _ObservationPolicy:
     store: LocalArtifactStore
     observation: ArtifactRef
+    projection_attack: str | None = None
     skill_ref: str = SKILL_REF
     input_model: type[BaseModel] = ArtifactRef
     evidence_policy_id: str = "genesis.observe.evidence"
@@ -153,13 +154,28 @@ class _ObservationPolicy:
             return (ReceiptDerivedFactClaimV2(key="setup.revision_one", value=True),)
         if state.run_id == CHILD_IDS[1]:
             return (ReceiptDerivedFactClaimV2(key="setup.revision_two", value=True),)
+        if self.projection_attack == "missing_claim":
+            return ()
+        if self.projection_attack == "retract_claim":
+            return (
+                ReceiptDerivedFactClaimV2(
+                    operation="retract",
+                    key="observation.scene_visible",
+                    value=None,
+                ),
+            )
+        if self.projection_attack == "wrong_value":
+            return (ReceiptDerivedFactClaimV2(key="observation.scene_visible", value=False),)
         return (ReceiptDerivedFactClaimV2(key="observation.scene_visible", value=True),)
 
     def diagnostics(self, state: RunState) -> tuple[ArtifactRef, ...]:
         return ()
 
     def fresh_observations(self, state: RunState) -> tuple[WorldFact, ...]:
-        if state.status is not RunStatus.SUCCEEDED or state.run_id != CHILD_IDS[2]:
+        if state.run_id != CHILD_IDS[2] or (
+            state.status is not RunStatus.SUCCEEDED
+            and self.projection_attack != "non_success_observation"
+        ):
             return ()
         assert state.ended_at is not None
         payload = self.store.resolve(self.observation).path.read_bytes()
@@ -170,14 +186,23 @@ class _ObservationPolicy:
             raise ValueError("fresh observation receipt has the wrong source kind")
         if evidence.valid_until is None or evidence.valid_until <= evidence.observed_at:
             raise ValueError("fresh observation receipt must have positive TTL")
+        source_artifact = self.observation
+        if self.projection_attack == "unsupported_source":
+            source_artifact = self.observation.model_copy(
+                update={"schema_version": "harness.unbound_observation.v1"}
+            )
         return (
             WorldFact(
                 key=evidence.key,
                 value=evidence.value,
                 source_kind="fresh_observation",
-                source_artifact=self.observation,
+                source_artifact=source_artifact,
                 observed_at=evidence.observed_at,
-                valid_until=evidence.valid_until,
+                valid_until=(
+                    None
+                    if self.projection_attack == "missing_valid_until"
+                    else evidence.valid_until
+                ),
             ),
         )
 
@@ -243,6 +268,7 @@ def _case(
     *,
     terminal_status: RunStatus = RunStatus.SUCCEEDED,
     observation_attack: str | None = None,
+    projection_attack: str | None = None,
 ) -> _Case:
     store = LocalArtifactStore(tmp_path / "cas")
     report = QualificationReportV1(
@@ -367,7 +393,11 @@ def _case(
         return HandlerResult(output=value, artifacts=(value,))
 
     registry.register(descriptor, observe)
-    policy = _ObservationPolicy(store=store, observation=observation)
+    policy = _ObservationPolicy(
+        store=store,
+        observation=observation,
+        projection_attack=projection_attack,
+    )
     application = _ObservationApplication(
         artifact_root=store.root,
         authority_path=run_store.path,
@@ -615,6 +645,47 @@ def test_observe_rejects_invalid_inner_receipt_without_advancing_trusted_state(
     case = _case(tmp_path, observation_attack=observation_attack)
 
     with pytest.raises(ValueError, match=message):
+        case.harness.submit(case.command)
+
+    stored = case.workflow_store.read_snapshot(
+        principal_id=case.command.principal_id,
+        workflow_run_id=case.command.workflow_run_id,
+    )
+    assert stored is not None
+    assert stored.snapshot.revision == 2
+    assert stored.snapshot.state_ref == case.revision_two.state_ref
+    assert stored.snapshot.state_sha256 == case.revision_two.state_sha256
+    assert stored.snapshot.receipt_head == case.revision_two.receipt_head
+
+
+@pytest.mark.parametrize(
+    ("projection_attack", "terminal_status", "message"),
+    [
+        (
+            "non_success_observation",
+            RunStatus.FAILED,
+            "non-successful child cannot project fresh observations",
+        ),
+        ("missing_claim", RunStatus.SUCCEEDED, "does not equal a receipt claim"),
+        ("retract_claim", RunStatus.SUCCEEDED, "does not equal a receipt claim"),
+        ("wrong_value", RunStatus.SUCCEEDED, "does not equal a receipt claim"),
+        ("missing_valid_until", RunStatus.SUCCEEDED, "does not equal a receipt claim"),
+        ("unsupported_source", RunStatus.SUCCEEDED, "does not equal a receipt claim"),
+    ],
+)
+def test_observe_rejects_invalid_projection_without_advancing_trusted_state(
+    tmp_path: Path,
+    projection_attack: str,
+    terminal_status: RunStatus,
+    message: str,
+) -> None:
+    case = _case(
+        tmp_path,
+        terminal_status=terminal_status,
+        projection_attack=projection_attack,
+    )
+
+    with pytest.raises(GoldenRunCorruptionError, match=message):
         case.harness.submit(case.command)
 
     stored = case.workflow_store.read_snapshot(
