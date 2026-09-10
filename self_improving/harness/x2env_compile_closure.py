@@ -426,6 +426,21 @@ class ExactReuseCompileClosureVerifier:
                 ),
                 "catalog entry is not backed by trusted complete asset evidence",
             )
+            required_qualification_evidence = {
+                entry.representation,
+                self.expected_runtime_lock,
+            }
+            _require_equal(
+                (
+                    {item.code for item in qualification.checks},
+                    tuple(
+                        required_qualification_evidence.issubset(set(item.evidence))
+                        for item in qualification.checks
+                    ),
+                ),
+                ({"backend_load", "collision_probe"}, (True, True)),
+                "catalog qualification checks do not bind load and collision evidence",
+            )
             for member in representation.members:
                 self._verify_artifact(member.artifact, "catalog asset representation member")
             for check in qualification.checks:
@@ -528,21 +543,6 @@ class ExactReuseCompileClosureVerifier:
                 ),
                 "selected asset qualification is not trusted for this representation",
             )
-            required_evidence = {selection.representation, self.expected_runtime_lock}
-            _require_equal(
-                (
-                    {item.code for item in qualification.checks},
-                    tuple(
-                        required_evidence.issubset(set(item.evidence))
-                        for item in qualification.checks
-                    ),
-                ),
-                ({"backend_load", "collision_probe"}, (True, True)),
-                "asset qualification checks do not bind load and collision evidence",
-            )
-            for check in qualification.checks:
-                for check_evidence in check.evidence:
-                    self._verify_artifact(check_evidence, "asset qualification check evidence")
             _require_equal(
                 (
                     catalog_entry.representation,
