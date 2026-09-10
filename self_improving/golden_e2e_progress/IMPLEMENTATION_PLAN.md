@@ -103,7 +103,7 @@ mismatch 与 4 个缺文件资产必须新 identity 重建或明确退休。不�
 ## P9 — 共享 IR 与三组 x2env Skills
 
 1. `feat(x2env): add shared input scene task package contracts`
-2. `feat(text2env): qualify Genesis compile replay validate v2`
+2. `feat(text2env): qualify Genesis compile/replay v2 and validate v3`
 3. `feat(image2env): qualify compile replay validate v1`
 4. `feat(video2env): qualify compile replay validate v1`
 

@@ -65,3 +65,14 @@
   台账更新必须同一提交。
 - 边界：目录所有者或整合者不自动成为被整合代码的原作者；`integrated` 不等于
   `runtime_pass`；未固定的 dirty workspace 字节不能计入完成来源。
+
+## D008 — 保留 legacy validate v2，Genesis validate 升为 v3
+
+- 日期：2026-09-10
+- 状态：accepted_by_existing_upgrade_clause
+- 决策：既有 `harness.text2env_validate_input/output.v2` 明确绑定 `EnvironmentPackageV1`、RoboTwin
+  receipt 与 `robotwin.scene_validation.v1`，因此只用于 legacy RoboTwin/SAPIEN validator。Genesis
+  `EnvironmentPackageV2` 与 `genesis.robot_policy@1` 的 text validation Skill 固定为
+  `text2env.validate@3.0.0` / `text2env_validate_v3_0_0`；不得原地改变 v2。
+- 依据：D003 的唯一晋升权威，以及 `SKILL_CONTRACTS.md` 已接受的“不兼容则升 v3”条款。
+- 边界：本决定只冻结版本语义，不表示 v2 或 v3 已实现、资格化或运行通过。

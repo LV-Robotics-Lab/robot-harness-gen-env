@@ -38,6 +38,22 @@
   因此当前只作为待重放设计，不直接合入；最终必须在 P2 固定实现之后重新审查闭包并运行真实固定
   replay 后一次性重签。
 
+## 2026-09-10 P3 同-run 链只读审计
+
+- 第一条后续 tracer 已收敛为 `start → text2env.compile@1.0.0 → text2env.replay@1.0.0 → read`，同一
+  workflow 依次推进 revision 0/1/2。replay 的 package 必须逐字来自 revision 1 的可信 state；两个
+  child run 使用不同 identity，但 command、qualified execution、Invocation、RunState、ToolResult、
+  StateDelta 与 operation receipt 必须形成一条连续 predecessor/CAS 链。
+- P2 aggregate 内核必须以 `QualifiedApplicationAdapter` + per-Skill evidence policy 泛化；P2 可以只
+  注册 compile，但不能在 submit/恢复/验证内硬编码 Text2Env 类型。P3 第一笔只增加真实 replay
+  adapter，不复制旧 System2 dispatcher 分支，也不提前实现 MCP。
+- fresh observation 可以与同 key 的 state upsert 共存，但只有 observation receipt、
+  `ToolResult.fresh_observations` 与 StateDelta 中 `source_kind=fresh_observation` 的 key/value/source/time/
+  TTL 全等时才能推进状态；仅移除“不允许重叠”规则不构成信任证明。
+- 现有 portable run receipt 是证据可携带闭包，不是新机器可重新执行的完整环境包。最终 portability
+  仍须屏蔽原资产根、从新随机根/新进程只用 CAS materialize 并重新执行。当前 replay v1 的 backend
+  是 RoboTwin/SAPIEN，不能计作 Genesis 或 `genesis.robot_policy@1`。
+
 ## 2026-09-09 初始化
 
 - Dashboard/ClawCross 项目状态读取：失败，三个公开状态 URL 和 Harness dashboard 均返回 HTTP 404。

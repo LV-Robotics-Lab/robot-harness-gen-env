@@ -11,7 +11,7 @@
 | --- | --- | --- |
 | `text2env.compile@2.0.0` | `text2env_compile_v2_0_0` | text-primary 输入到 Genesis candidate package |
 | `text2env.replay@2.0.0` | `text2env_replay_v2_0_0` | 对 text lineage package 做真实 Genesis replay |
-| `text2env.validate@2.0.0` | `text2env_validate_v2_0_0` | 重算证据与 profile satisfaction |
+| `text2env.validate@3.0.0` | `text2env_validate_v3_0_0` | 重算 Genesis 证据与 profile satisfaction |
 | `image2env.compile@1.0.0` | `image2env_compile_v1_0_0` | image-primary，可带 text/image 补充 |
 | `image2env.replay@1.0.0` | `image2env_replay_v1_0_0` | 对 image lineage package 做真实 Genesis replay |
 | `image2env.validate@1.0.0` | `image2env_validate_v1_0_0` | 重算证据与 profile satisfaction |
@@ -21,9 +21,10 @@
 | `genesis.observe@1.0.0` | `genesis_observe_v1_0_0` | 在当前执行边界后捕获 fresh visual/runtime observation |
 | `environment.promote@1.0.0` | `environment_promote_v1_0_0` | 消费已 publishable 的 validate receipt并原子晋升 |
 
-validate Skill 的版本与既有 `harness.text2env_validate_input.v2` schema 名相同并不代表旧未实现路径
-自动获得资格；实现时必须为新 handler/application 单独出 descriptor、qualification 和 decision
-receipt。若字段审查表明语义不兼容，则在 RED 切片中升为 `text2env.validate@3.0.0`，不得静默改 v2。
+字段审查已确认既有 `harness.text2env_validate_input.v2` 绑定 `EnvironmentPackageV1`、RoboTwin
+receipts 与 `robotwin.scene_validation.v1`，因此保留为 legacy RoboTwin/SAPIEN validator；Genesis
+目标已按原合同升级条款固定为 `text2env.validate@3.0.0`。v2/v3 都必须分别拥有 handler/application、
+descriptor、qualification 和 decision receipt，不能因 schema 或代码存在而自动获得资格。
 
 ## 2. Workflow command envelope
 

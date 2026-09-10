@@ -24,6 +24,10 @@
 
 ## Next
 
+- P3-R：P2 actor-neutral aggregate 固定后，新增真实 `Text2EnvReplayApplicationAdapter` 与 replay
+  evidence policy；用 `Place a can on top of a plate.`、seed 7、`0/900/120/120/12` 让同一 workflow
+  从 compile revision 1 推进到 replay revision 2。replay input package 必须来自当前可信 state，完整
+  child/receipt/CAS chain 必须连续；该 tracer 只证明 legacy RoboTwin/SAPIEN 编排，不是 Genesis。
 - P2：在 actor-neutral v2 receipt/state-delta 上接入 exact qualified compile → replay 两步调度；不得复用
   planner-specific v1 receipt 字段冒充外部 Codex/MCP 调用。
 - P4：S1 的 `submit/read`、OperationSnapshot 和真实 Registry handler 绑定完成后，接入 MCP 2.2 的
