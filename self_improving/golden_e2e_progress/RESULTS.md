@@ -1,8 +1,8 @@
 # 进度与结果
 
-## 2026-09-10 P6 staged-loader 候选与未通过门
+## 2026-09-10 P6 staged-loader 合入与未完成边界
 
-- 固定候选 `bd61a9e1504b1462c1bb24799a38e76f5cdf26e4` 在独立 worktree 中完成 166 个 focused
+- 早期固定候选 `bd61a9e1504b1462c1bb24799a38e76f5cdf26e4` 在独立 worktree 中完成 166 个 focused
   cases；三个相关生产模块合计 744 statements/260 branches，均为 100%。根套件显式排除既有 stale
   replay qualification 单项后为 `3293 passed, 20 skipped, 1 deselected`。该候选尚未合入。
 - 从固定提交重建的 source/CAS stage 为 21 members、57,290,434 bytes、14 representation
@@ -20,14 +20,21 @@
 - 两个反例的独立 follow-up 固定提交为
   `8c1c94afae8292dc94ee1d2b08fb7fb08a94bc06`。focused 为 `183 passed, 1 skipped`，相关三个
   生产模块合计 780 statements/278 branches 均为 100%；根套件显式排除同一个 stale replay
-  qualification 项后为 `3310 passed, 20 skipped, 1 deselected`。Ruff、31 份 schema snapshot 与
+  qualification 项后为 `3310 passed, 20 skipped, 1 deselected`。Ruff、31 份分支基线 schema snapshot 与
   diff check 通过。
 - 从 `8c1c94a` 新建外部 evidence root 后重跑，stage result SHA-256 仍为
   `a2e786131bb33a3eacd7afd0403dca45a6353a2f6d54aebc100ecb19fda09f23`，stage binding 为
   `fcf73ec7851e42654a2264d818bfcc60d091ad3669429ecee7f5b7ccd7e0eb89`；真实 7×900-step report
   SHA-256 为 `c7a0ac85e1425b12041ab0d91833a0bfb15d57ba04f2b5549ff2fe9d1ecafc5d`。报告无已知本机
-  absolute-path 泄漏，source/CAS/ledger 未变化。该 follow-up 尚待合入审阅，且仍明确不证明
-  can-on-plate、runtime qualification、Genesis 或 promotion。
+  absolute-path 泄漏，source/CAS/ledger 未变化。主窗口逐项复核新增 fixed diff 后未发现新的同级
+  blocker，并按顺序合入为 `8bd0d33`、`5b5ae78`、`d9df27b`、`16eb232`、`52a21ac`；先前被安全
+  系统拒绝的那一份审查仍不作为通过证据。
+- 合并后的主分支 schema gate 为 32 snapshots；focused 为 `256 passed, 1 skipped`，四个核心模块
+  845 statements/296 branches 全部 100%，Ruff 通过。完整根套件为
+  `3360 passed, 20 skipped, 1 failed in 145.88s`；唯一失败仍是已登记的旧 replay qualification source
+  identity，首个报错文件是用户修改的 `IMPLEMENTATION_LOG.md`，且 P0 最终仍需在新实现树上真实重签。
+- 该切片仍明确不证明 can-on-plate、runtime qualification、Genesis 或 promotion；下一资产纵切是
+  collision provenance/settle，不能由 exact bytes 与 ground contact 直接推断。
 
 ## 2026-09-10 P0 replay source-closure 候选
 

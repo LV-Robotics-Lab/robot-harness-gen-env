@@ -13,14 +13,6 @@
   kernel 已独立提交为 `6570c82`；签名前审查已复现不同输入产生相同 preflight blocker 时错误复用保留
   child identity 的 RED，正在以 canonical ControlledRunIntent、原子 reserve 与并发攻击补齐。operation
   evidence correlation 和 child-terminal/live-unavailable 恢复矩阵未绿前不得重签或提交 aggregate。
-- P6：14 个 GLB + 7 个 `model_data*.json` 已组成 21-member、57,290,434-byte CAS closure，且真实
-  RoboTwin `create_actor` 已从 staged-only bytes 对 7 个模型各执行 900 个 SAPIEN steps。候选链
-  `9760a03` → `292d09b` → `bd61a9e` → `8c1c94a` 现已补 strict typed authority、成员字节 closure、
-  sidecar、从 exact CAS loader bytes 重建 document dependency closure、nofollow materialization，以及
-  对成功/失败 report publication 都适用的稳定 parent-dirfd containment/cleanup。最后两个主窗口 P1
-  反例已 RED→GREEN；固定 `8c1c94a` 后的真实重跑仍为 21 members、7×900 steps，全部 finite/contact/
-  nonzero impulse。当前等待新增 fixed diff 的合入审阅、来源/证据文档同步和主分支回归；完成前不合入或
-  升级为 qualification/Genesis 证据。
 
 ## Next
 
@@ -32,8 +24,9 @@
   planner-specific v1 receipt 字段冒充外部 Codex/MCP 调用。
 - P4：S1 的 `submit/read`、OperationSnapshot 和真实 Registry handler 绑定完成后，接入 MCP 2.2 的
   low-level Server/Client；在同一切片冻结 dependency/runtime lock，不在实验循环中安装依赖。
-- P6：sidecar closure + staged-only SAPIEN replay 通过并完成 fixed-commit 双轴复审后才可合入；仍不得
-  就地修改历史 ledger，也不得把 headless physics probe 写成媒体或 Genesis qualification。
+- P6：在已合入的 exact-byte staging 后，单独实现 collision provenance、settle 与 Genesis
+  qualification；stage result 仍不得直接触发历史 ledger promotion，也不得把 headless ground-contact
+  probe 写成 can-on-plate、媒体或 Genesis 证据。
 
 ## Blocked
 
@@ -45,13 +38,10 @@
 - Autoresearch 的 benchmark/真实 MCP/Genesis 前置尚未实现；设置已确认但尚不能建立诚实 baseline。
 - exact MCP adapter 仍缺 `submit/read` 和真实 Registry handler 交集；caller 提供的内部一致
   `RegistrySnapshot` 目前不能单独作为生产 trust root。
-- 三份 reader-facing repo-docs 仍把 Harness schema 数写成 17；本 feature checkout 当前实际为 31。文件已有用户修改，
+- 三份 reader-facing repo-docs 仍把 Harness schema 数写成 17；当前主分支实际为 32。文件已有用户修改，
   本切片不覆盖或暂存，P14 必须在可安全协调时同步。
 - clean root suite 的旧 replay qualification source identity 仍有 1 个失败；原始真实 qualification
   settings/CAS 尚在，但旧 delegated cgroup 已不存在，且后续 Harness 实现还会继续改变源码身份。
-- P6 第一版 sidecar fixed commit `292d09b7775f75576063f40969c2de078d1c45ab` 的 7×900-step
-  headless 物理探针是真实运行，但其 attestation/portable-path/closure identity 尚未通过双轴审查；该
-  report 只能作为被拒绝迭代的运行记录，修复并复审前不得升级为最终 stage 证据或合入主分支。
 - 2026-09-10 的完整相机 replay 第一次因本机 GPU 被无关训练进程占满，在 observer camera 创建 buffer
   时失败；第二次强制 Lavapipe 因 Vulkan 扩展缺失失败。两次都不是 runtime pass，且不得终止不属于
   本任务的 GPU 进程；当前用无渲染真实 SAPIEN probe 验证 loader/physics，媒体门留待资源可用时补跑。
@@ -93,8 +83,11 @@
   `probe_bytes_in_cas=false`、`writes_performed=false`、`runtime_qualification_executed=false`。这只是
   2/162 的 E0 tracer，来源总体与 inventory/selection totals 已分层绑定，不能改 scope 冒充全量；尚未
   覆盖 4,082 条全量清单或建立 portable byte closure。
-- P6 第二个 S5 exact-stage 纵切：以 trusted inventory + rebuilt canonical plan + path-free source
+- P6 第二个 S5 exact-stage 纵切已合入：以 trusted inventory + rebuilt canonical plan + path-free source
   manifest + deployment-only local-root binding，从本机未版本化 RoboTwin 来源逐 member 重算 hash/bytes，
-  把 `003_plate`/`071_can` 的 14 个 GLB（57,226,572 bytes）写入新 CAS，并枚举每个 representation 的
-  loader closure。结果 hash-bind 三个输入 ref，且明确 simulator/runtime qualification/promotion/
-  authoritative-ledger-write 均为 false；未改历史 ledger 或来源资产。
+  把 `003_plate`/`071_can` 的 14 个 GLB 与 7 个 model sidecar（21 members、57,290,434 bytes）写入新
+  CAS；从 exact CAS loader bytes 重建 14 个 representation closure，并由 strict typed authority 绑定
+  inventory/plan/manifest/result。真实 staged-only RoboTwin/SAPIEN probe 对 7 个模型各执行 900 steps，
+  全部 finite/contact/nonzero impulse。主分支 focused 为 256 passed/1 skipped，四个核心模块 845
+  statements/296 branches 100%；根套件为 3360 passed/20 skipped/1 个既有 replay qualification identity
+  failure。该纵切仍明确没有 can-on-plate、runtime qualification、Genesis、promotion 或历史 ledger 写入。
