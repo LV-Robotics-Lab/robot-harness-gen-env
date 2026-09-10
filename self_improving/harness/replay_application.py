@@ -739,7 +739,6 @@ def _verify_settings_match_evidence(
             settings.runtime_capability_path,
             label="runtime_capability_path",
         ),
-        "runtime_runner": _file(settings.runtime_runner, label="runtime_runner"),
         "static_ffmpeg": _file(settings.static_ffmpeg, label="static_ffmpeg"),
     }
     if any(str(path) != identities[label].path for label, path in actual_files.items()):
@@ -748,13 +747,26 @@ def _verify_settings_match_evidence(
         )
     if (
         tuple(str(item) for item in allowed_roots) != evidence.operator_before.allowed_asset_roots
-        or str(_directory(settings.runtime_module_root, label="runtime_module_root"))
-        != evidence.operator_before.runtime_module_root
         or str(_directory(settings.delegated_cgroup_root, label="delegated_cgroup_root"))
         != evidence.operator_before.delegated_cgroup_root
     ):
         raise ReplayApplicationConfigurationError(
             "production operator roots differ from qualification"
+        )
+    implementation_root = _directory(settings.implementation_root, label="implementation_root")
+    runtime_module_root = _directory(settings.runtime_module_root, label="runtime_module_root")
+    runtime_runner = _file(settings.runtime_runner, label="runtime_runner")
+    source_runner = evidence.operator_before.runtime_runner
+    expected_runtime_runner = implementation_root / source_runner.path
+    if (
+        evidence.operator_before.runtime_module.root != "replay_distribution"
+        or evidence.operator_before.runtime_module.path != "."
+        or source_runner.root != "replay_distribution"
+        or runtime_module_root != implementation_root
+        or runtime_runner != expected_runtime_runner
+    ):
+        raise ReplayApplicationConfigurationError(
+            "production runtime source mapping differs from the local replay distribution"
         )
 
 

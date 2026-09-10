@@ -277,12 +277,12 @@ def _valid_checks(
                 "operator_before_manifest": _ref(
                     SHA_1,
                     name="operator_before",
-                    schema_version="harness.replay_qualification.operator_inputs.v1",
+                    schema_version="harness.replay_qualification.operator_inputs.v2",
                 ),
                 "operator_after_manifest": _ref(
                     SHA_2,
                     name="operator_after",
-                    schema_version="harness.replay_qualification.operator_inputs.v1",
+                    schema_version="harness.replay_qualification.operator_inputs.v2",
                 ),
             },
         },
@@ -342,7 +342,7 @@ def _valid_checks(
             "name": CHECK_NAMES[6],
             "status": "pass",
             "evidence": {
-                "schema_version": "harness.replay_qualification.source_stability.v1",
+                "schema_version": "harness.replay_qualification.source_stability.v2",
                 "changed_during_qualification": False,
                 "implementation_sha256": implementation_sha256,
                 "implementation_file_count": 1,
@@ -352,17 +352,17 @@ def _valid_checks(
                 "before_manifest": _ref(
                     SHA_3,
                     name="source_before",
-                    schema_version=("harness.replay_qualification.harness_source_manifest.v1"),
+                    schema_version=("harness.replay_qualification.harness_source_manifest.v2"),
                 ),
                 "after_execution_manifest": _ref(
                     SHA_4,
                     name="source_after_execution",
-                    schema_version=("harness.replay_qualification.harness_source_manifest.v1"),
+                    schema_version=("harness.replay_qualification.harness_source_manifest.v2"),
                 ),
                 "before_publish_manifest": _ref(
                     SHA_5,
                     name="source_before_publish",
-                    schema_version=("harness.replay_qualification.harness_source_manifest.v1"),
+                    schema_version=("harness.replay_qualification.harness_source_manifest.v2"),
                 ),
             },
         },

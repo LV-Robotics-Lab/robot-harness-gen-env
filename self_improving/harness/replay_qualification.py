@@ -94,6 +94,7 @@ REPLAY_QUALIFICATION_CHECK_NAMES = (
     "08.candidate_kernel_executions",
 )
 REPLAY_IMPLEMENTATION_PATHS = (
+    "script/run_scene_runtime.py",
     "self_improving/__init__.py",
     "self_improving/registry.py",
     "self_improving/harness/__init__.py",
@@ -263,7 +264,7 @@ class ReplayPhysicsValidationClaim(HarnessModel):
 
 
 class ReplaySourceStabilityClaim(HarnessModel):
-    schema_version: Literal["harness.replay_qualification.source_stability.v1"]
+    schema_version: Literal["harness.replay_qualification.source_stability.v2"]
     changed_during_qualification: StrictBool
     implementation_sha256: Sha256
     implementation_file_count: PositiveInt
@@ -333,8 +334,20 @@ class ReplayOperatorFileIdentity(HarnessModel):
     sha256: Sha256
 
 
+class ReplaySourceFileBinding(HarnessModel):
+    root: Literal["replay_distribution"]
+    path: Literal["script/run_scene_runtime.py"]
+    bytes: NonNegativeInt
+    sha256: Sha256
+
+
+class ReplaySourceDirectoryBinding(HarnessModel):
+    root: Literal["replay_distribution"]
+    path: Literal["."]
+
+
 class ReplayOperatorInputsManifest(HarnessModel):
-    schema_version: Literal["harness.replay_qualification.operator_inputs.v1"]
+    schema_version: Literal["harness.replay_qualification.operator_inputs.v2"]
     phase: Literal["before_execution", "before_publish"]
     machine_local: Literal[True]
     skill_ref: Literal["text2env.replay@1.0.0"]
@@ -346,20 +359,19 @@ class ReplayOperatorInputsManifest(HarnessModel):
     min_visible_pixels: Literal[64]
     checkpoint_steps: Literal[120]
     allowed_asset_roots: tuple[NonEmptyString, ...] = Field(min_length=1)
-    runtime_module_root: NonEmptyString
+    runtime_module: ReplaySourceDirectoryBinding
+    runtime_runner: ReplaySourceFileBinding
     delegated_cgroup_root: NonEmptyString
-    files: tuple[ReplayOperatorFileIdentity, ...] = Field(min_length=6, max_length=6)
+    files: tuple[ReplayOperatorFileIdentity, ...] = Field(min_length=5, max_length=5)
     input_asset_catalog: ArtifactRef
     runtime_capability: ArtifactRef
     inputs_sha256: Sha256
 
 
 class ReplayHarnessSourceManifest(HarnessModel):
-    schema_version: Literal["harness.replay_qualification.harness_source_manifest.v1"]
+    schema_version: Literal["harness.replay_qualification.harness_source_manifest.v2"]
     phase: Literal["before_execution", "after_execution", "before_publish"]
-    machine_local: Literal[True]
-    distribution_root: NonEmptyString
-    harness_root: NonEmptyString
+    source_root: Literal["replay_distribution"]
     files: tuple[ImplementationFileV1, ...] = Field(min_length=1)
     tree_sha256: Sha256
 
@@ -463,9 +475,9 @@ _KNOWN_JSON_MODELS: dict[str, type[HarnessModel]] = {
     "harness.replay_qualification.direct_supervisor_receipt.v1": (ReplayDirectSupervisorReceipt),
     "harness.replay_qualification.evidence_closure.v1": ReplayEvidenceClosureManifest,
     "harness.replay_qualification.harness_event_transcript.v1": ReplayHarnessEventTranscript,
-    "harness.replay_qualification.harness_source_manifest.v1": ReplayHarnessSourceManifest,
+    "harness.replay_qualification.harness_source_manifest.v2": ReplayHarnessSourceManifest,
     "harness.replay_qualification.kernel_evaluation_receipt.v1": (ReplayKernelEvaluationReceipt),
-    "harness.replay_qualification.operator_inputs.v1": ReplayOperatorInputsManifest,
+    "harness.replay_qualification.operator_inputs.v2": ReplayOperatorInputsManifest,
 }
 _KNOWN_JSON_SCHEMAS = frozenset(
     {
@@ -879,7 +891,6 @@ def _load_and_verify_evidence_closure(
         ReplayEvidenceClosureManifest,
         label="replay evidence closure",
     )
-    _require_actual_distribution_root(implementation_root)
     operator_before = _load_evidence_model(
         artifact_store,
         case_binding.operator_before_manifest,
@@ -927,6 +938,7 @@ def _load_and_verify_evidence_closure(
         artifact_store,
         before=operator_before,
         after=operator_after,
+        implementation_root=implementation_root,
         case_binding=case_binding,
         exact_dependencies=exact_dependencies,
         media_decode=media_decode,
@@ -1282,6 +1294,7 @@ def _verify_operator_manifests(
     *,
     before: ReplayOperatorInputsManifest,
     after: ReplayOperatorInputsManifest,
+    implementation_root: Path,
     case_binding: ReplayCaseBindingClaim,
     exact_dependencies: ReplayExactDependenciesClaim,
     media_decode: ReplayMediaDecodeClaim,
@@ -1307,7 +1320,6 @@ def _verify_operator_manifests(
         "interpreter",
         "media_launcher",
         "runtime_capability",
-        "runtime_runner",
         "static_ffmpeg",
     )
     if labels != expected_labels:
@@ -1317,12 +1329,22 @@ def _verify_operator_manifests(
         size, sha256 = _file_identity(path)
         if (size, sha256) != (identity.bytes, identity.sha256):
             _evidence_mismatch(f"operator file changed: {identity.label}")
-    for root in (
-        *before.allowed_asset_roots,
-        before.runtime_module_root,
-        before.delegated_cgroup_root,
-    ):
+    for root in (*before.allowed_asset_roots, before.delegated_cgroup_root):
         _checked_machine_directory(root)
+    current_source = _snapshot_harness_source(implementation_root, phase="before_publish")
+    runner = next(
+        (item for item in current_source.files if item.path == before.runtime_runner.path),
+        None,
+    )
+    if (
+        before.runtime_module.root != current_source.source_root
+        or before.runtime_module.path != "."
+        or before.runtime_runner.root != current_source.source_root
+        or runner is None
+        or (runner.bytes, runner.sha256)
+        != (before.runtime_runner.bytes, before.runtime_runner.sha256)
+    ):
+        _evidence_mismatch("operator runtime source mapping differs from qualified source bytes")
     catalog_path = _resolve_evidence_ref(
         store,
         before.input_asset_catalog,
@@ -1379,13 +1401,8 @@ def _verify_source_manifests(
     ):
         _evidence_mismatch("Harness source manifests have wrong phases")
     manifests = (before, after_execution, before_publish)
-    expected_root = implementation_root.resolve(strict=True)
-    expected_harness = expected_root / "self_improving" / "harness"
-    if any(
-        Path(item.distribution_root) != expected_root or Path(item.harness_root) != expected_harness
-        for item in manifests
-    ):
-        _evidence_mismatch("Harness source manifests are not bound to the actual source root")
+    if any(item.source_root != "replay_distribution" for item in manifests):
+        _evidence_mismatch("Harness source manifests use an unknown logical source root")
     if not (
         before.files == after_execution.files == before_publish.files == generic.manifest.files
         and before.tree_sha256
@@ -2256,7 +2273,6 @@ def _snapshot_harness_source(
     root = Path(distribution_root).expanduser()
     if not root.is_absolute():
         root = root.absolute()
-    harness_root = root / "self_improving" / "harness"
     directory_flags = os.O_RDONLY | os.O_CLOEXEC | os.O_DIRECTORY | os.O_NOFOLLOW
     first = _read_implementation_closure(root, directory_flags=directory_flags)
     second = _read_implementation_closure(root, directory_flags=directory_flags)
@@ -2286,11 +2302,9 @@ def _snapshot_harness_source(
         for relative, member in zip(REPLAY_IMPLEMENTATION_PATHS, first.members, strict=True)
     )
     return ReplayHarnessSourceManifest(
-        schema_version="harness.replay_qualification.harness_source_manifest.v1",
+        schema_version="harness.replay_qualification.harness_source_manifest.v2",
         phase=phase,
-        machine_local=True,
-        distribution_root=str(root),
-        harness_root=str(harness_root),
+        source_root="replay_distribution",
         files=records,
         tree_sha256=_canonical_sha256(
             {"files": [item.model_dump(mode="json") for item in records]}

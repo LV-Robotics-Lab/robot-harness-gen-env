@@ -79,6 +79,8 @@ from .replay_qualification import (
     ReplayQualificationCandidateExecutionClaim,
     ReplayQualificationError,
     ReplayRuntimeAssetSnapshotClaim,
+    ReplaySourceDirectoryBinding,
+    ReplaySourceFileBinding,
     _discover_evidence_closure,
     _require_actual_distribution_root,
     _snapshot_harness_source,
@@ -383,7 +385,7 @@ def generate_replay_qualification(
         name="07.source_stability",
         status="pass",
         evidence={
-            "schema_version": "harness.replay_qualification.source_stability.v1",
+            "schema_version": "harness.replay_qualification.source_stability.v2",
             "changed_during_qualification": False,
             "implementation_sha256": manifest.bundle_sha256,
             "implementation_file_count": len(before_publish.files),
@@ -1563,13 +1565,24 @@ def _snapshot_operator_inputs(
             settings.runtime_capability_path,
             label="runtime_capability_path",
         ),
-        "runtime_runner": _regular_file(settings.runtime_runner, label="runtime_runner"),
         "static_ffmpeg": _regular_file(settings.static_ffmpeg, label="static_ffmpeg"),
     }
     roots = _trusted_roots(settings.allowed_asset_roots)
+    distribution_root = _require_actual_distribution_root(settings.distribution_root)
     runtime_module_root = _operator_directory(
         settings.runtime_module_root,
         label="runtime_module_root",
+    )
+    runtime_runner_path = _regular_file(settings.runtime_runner, label="runtime_runner")
+    expected_runner_path = distribution_root / "script/run_scene_runtime.py"
+    _gate(
+        runtime_module_root == distribution_root and runtime_runner_path == expected_runner_path,
+        "runtime_source_mapping_invalid",
+        "runtime module and runner must map to the qualified replay distribution",
+    )
+    source_snapshot = _snapshot_harness_source(distribution_root, phase=phase)
+    runner_identity = next(
+        item for item in source_snapshot.files if item.path == "script/run_scene_runtime.py"
     )
     delegated_cgroup_root = _operator_directory(
         settings.delegated_cgroup_root,
@@ -1609,7 +1622,7 @@ def _snapshot_operator_inputs(
         "operator catalog or capability changed while its manifest was captured",
     )
     provisional = ReplayOperatorInputsManifest(
-        schema_version="harness.replay_qualification.operator_inputs.v1",
+        schema_version="harness.replay_qualification.operator_inputs.v2",
         phase=phase,
         machine_local=True,
         skill_ref=_SKILL_REF,
@@ -1621,7 +1634,16 @@ def _snapshot_operator_inputs(
         min_visible_pixels=_MIN_VISIBLE_PIXELS,
         checkpoint_steps=_CHECKPOINT_STEPS,
         allowed_asset_roots=tuple(str(item) for item in roots),
-        runtime_module_root=str(runtime_module_root),
+        runtime_module=ReplaySourceDirectoryBinding(
+            root="replay_distribution",
+            path=".",
+        ),
+        runtime_runner=ReplaySourceFileBinding(
+            root="replay_distribution",
+            path="script/run_scene_runtime.py",
+            bytes=runner_identity.bytes,
+            sha256=runner_identity.sha256,
+        ),
         delegated_cgroup_root=str(delegated_cgroup_root),
         files=identities,
         input_asset_catalog=catalog_ref,
@@ -1637,7 +1659,7 @@ def _snapshot_operator_inputs(
         scratch_root,
         manifest,
         name=f"replay_qualification_operator_{phase}",
-        schema_version="harness.replay_qualification.operator_inputs.v1",
+        schema_version="harness.replay_qualification.operator_inputs.v2",
     )
     return manifest, ref
 
@@ -1723,7 +1745,7 @@ def _publish_source_manifest(
         scratch_root,
         snapshot.harness,
         name=f"replay_qualification_source_{snapshot.harness.phase}",
-        schema_version="harness.replay_qualification.harness_source_manifest.v1",
+        schema_version="harness.replay_qualification.harness_source_manifest.v2",
     )
 
 

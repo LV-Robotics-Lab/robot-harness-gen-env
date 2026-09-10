@@ -412,6 +412,19 @@ def _install_execution(
     monkeypatch.setattr(module, "_execute_fixed_case", lambda settings, scratch_root: execution)
 
 
+def _copy_replay_source_mapping(destination: Path) -> tuple[Path, Path, Path]:
+    for relative in module.REPLAY_IMPLEMENTATION_PATHS:
+        source = ROOT / relative
+        target = destination / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+    scene_gen = destination / "scene_gen"
+    ledger = destination / "self_improving/asset_pipeline/active/1_asset_reuse/lib"
+    shutil.copytree(SCENE_GEN, scene_gen)
+    shutil.copytree(LEDGER, ledger)
+    return destination, scene_gen, ledger
+
+
 def _put_bytes(
     store: LocalArtifactStore,
     root: Path,
@@ -1487,6 +1500,82 @@ def test_generates_strict_loadable_three_document_bundle_from_fixed_case(
     assert {"request", "generated_scene"} <= closure_names
 
 
+def test_same_qualification_loads_from_an_identical_source_tree_at_another_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    settings = _settings(tmp_path)
+    _install_execution(monkeypatch, _valid_execution(tmp_path / "execution", settings))
+    result = generate_replay_qualification(settings)
+    relocated_root, relocated_scene_gen, relocated_ledger = _copy_replay_source_mapping(
+        tmp_path / "relocated-distribution"
+    )
+
+    loaded = load_replay_qualification_bundle(
+        result.bundle_root,
+        artifact_store=LocalArtifactStore(result.artifact_root),
+        implementation_root=relocated_root,
+        scene_gen_root=relocated_scene_gen,
+        ledger_contract_root=relocated_ledger,
+    )
+
+    assert loaded.generic.report == result.report
+    assert loaded.source_before.files == loaded.generic.manifest.files
+    assert str(ROOT) not in loaded.source_before.model_dump_json()
+    assert str(relocated_root) not in loaded.source_before.model_dump_json()
+    assert loaded.source_before.source_root == "replay_distribution"
+    assert loaded.operator_before.runtime_module.model_dump() == {
+        "root": "replay_distribution",
+        "path": ".",
+    }
+    assert loaded.operator_before.runtime_runner.path == "script/run_scene_runtime.py"
+    assert "runtime_runner" not in {item.label for item in loaded.operator_before.files}
+
+
+@pytest.mark.parametrize(
+    "attack",
+    ["changed_runner", "missing_runner", "linked_runner", "changed_source_tree", "schema_drift"],
+)
+def test_portable_qualification_rejects_a_different_mapped_source_tree(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    attack: str,
+) -> None:
+    settings = _settings(tmp_path)
+    _install_execution(monkeypatch, _valid_execution(tmp_path / "execution", settings))
+    result = generate_replay_qualification(settings)
+    relocated_root, relocated_scene_gen, relocated_ledger = _copy_replay_source_mapping(
+        tmp_path / "attacked-distribution"
+    )
+    runner = relocated_root / "script/run_scene_runtime.py"
+    if attack == "changed_runner":
+        runner.write_bytes(runner.read_bytes() + b"\n")
+    elif attack == "missing_runner":
+        runner.unlink()
+    elif attack == "linked_runner":
+        duplicate = relocated_root / "script/runner-copy.py"
+        shutil.copy2(runner, duplicate)
+        runner.unlink()
+        runner.symlink_to(duplicate.name)
+    elif attack == "changed_source_tree":
+        (relocated_scene_gen / "different_git_tree.py").write_text("DIFFERENT = True\n")
+    else:
+        schema = (
+            relocated_root
+            / "self_improving/harness/json_schemas/harness.text2env_replay_output.v1.schema.json"
+        )
+        schema.write_bytes(schema.read_bytes() + b" \n")
+
+    with pytest.raises(replay_qualification_module.ReplayQualificationError):
+        verify_replay_qualification_bundle(
+            result.bundle_root,
+            artifact_store=LocalArtifactStore(result.artifact_root),
+            implementation_root=relocated_root,
+            scene_gen_root=relocated_scene_gen,
+            ledger_contract_root=relocated_ledger,
+        )
+
+
 @pytest.mark.parametrize("failure_mode", ["changed", "missing"])
 def test_generation_rejects_replay_schema_snapshot_drift_before_execution(
     tmp_path: Path,
@@ -1706,6 +1795,14 @@ def test_generated_true_evidence_issues_the_exact_production_registration(
                 application_settings,
                 state_root=tmp_path / "application-state-root-drift",
                 allowed_asset_roots=(settings.runtime_module_root.resolve(),),
+            )
+        )
+    with pytest.raises(ReplayApplicationConfigurationError, match="runtime source mapping"):
+        create_replay_application(
+            replace(
+                application_settings,
+                state_root=tmp_path / "application-state-runtime-source-drift",
+                runtime_runner=settings.interpreter.resolve(),
             )
         )
 
@@ -2061,6 +2158,7 @@ def test_strict_evidence_deep_failure_branches_are_all_fail_closed(
         "store": store,
         "before": evidence.operator_before,
         "after": evidence.operator_after,
+        "implementation_root": ROOT,
         "case_binding": verified.case_binding,
         "exact_dependencies": verified.exact_dependencies,
         "media_decode": verified.media_decode,
@@ -2088,6 +2186,18 @@ def test_strict_evidence_deep_failure_branches_are_all_fail_closed(
     before, after = paired_operator_update(request="wrong")
     reject_operator(before=before, after=after)
     before, after = paired_operator_update(files=tuple(reversed(evidence.operator_before.files)))
+    reject_operator(before=before, after=after)
+    before, after = paired_operator_update(
+        runtime_runner=evidence.operator_before.runtime_runner.model_copy(
+            update={"sha256": SHA_A}
+        )
+    )
+    reject_operator(before=before, after=after)
+    before, after = paired_operator_update(
+        runtime_module=evidence.operator_before.runtime_module.model_copy(
+            update={"root": "another_distribution"}
+        )
+    )
     reject_operator(before=before, after=after)
     with monkeypatch.context() as scoped:
         scoped.setattr(replay_qualification_module, "_file_identity", lambda path: (0, SHA_A))
@@ -2142,7 +2252,7 @@ def test_strict_evidence_deep_failure_branches_are_all_fail_closed(
 
     reject_source(before=evidence.source_before.model_copy(update={"phase": "before_publish"}))
     reject_source(
-        before=evidence.source_before.model_copy(update={"distribution_root": str(tmp_path)})
+        before=evidence.source_before.model_copy(update={"source_root": "another_distribution"})
     )
     reject_source(
         after_execution=evidence.source_after_execution.model_copy(update={"tree_sha256": SHA_A})
@@ -3055,6 +3165,7 @@ def test_replay_source_snapshot_is_the_explicit_implementation_closure(
     tmp_path: Path,
 ) -> None:
     expected = (
+        "script/run_scene_runtime.py",
         "self_improving/__init__.py",
         "self_improving/registry.py",
         "self_improving/harness/__init__.py",
