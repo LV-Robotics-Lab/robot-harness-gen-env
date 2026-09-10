@@ -50,11 +50,15 @@ bytes/tree identity 跨代码安装路径复用：同一 bundle 在第二个绝�
 revision 0→1→2→3 和无 live application 重启幂等。该结果仍只是 legacy RoboTwin/SAPIEN
 publishability，不是 promotion、Genesis 或 robot-policy。新增 validate execution/policy/handler/
 application/dependency 五模块的 statement/branch 门均已达到 100%。Image2Env/Video2Env 的六个合同
-已经过两轴功能验收；55 份公共
-schema 现在既能整目录注册，也能逐文件独立校验。Gujie 现存 evidence 仍只证明 image-derived
+已经过两轴功能验收；新增 observation 三份合同后，58 份公共 schema 现在既能整目录注册，也能逐文件
+独立校验。Gujie 现存 evidence 仍只证明 image-derived
 existing reconstruction 的 legacy Genesis 候选，不证明 fresh image、video 或 Harness runtime。
 P5 exact MCP adapter 现已由官方 MCP 2.2 stdio Client 在真实 RoboTwin/SAPIEN 上完成 raw-text
 create、compile、replay、validate revision 0→1→2→3，并在第二个 server 进程重提 validate 而无
 SQLite/CAS 增长；workflow-scoped 证据、媒体和 validate input 都只来自 Harness 权威。下一门是外部
 Codex planner 回合、fresh observation/diagnosis/promotion，而不是把 transport client 误称为 LLM
-路由。P6 继续修复资产 staging；autoresearch 只在其冻结 benchmark 可以真实运行后开始。
+路由。P10 已完成 `genesis.observe@1.0.0` strict schema、controlled candidate，以及 receipt → fresh
+ToolResult → trusted claim → StateDelta → resulting state 和无 live application 重开的受控 seam；所有
+受控输出均明确 `simulator_executed=false`。可写 production policy、真实 Genesis sealed checkpoint
+capture、qualification 和 MCP exposure 仍未完成。P6 继续修复资产 staging；autoresearch 只在其冻结
+benchmark 可以真实运行后开始。

@@ -30,9 +30,10 @@
   - [x] replay → validate 已在同一 Golden run 接入；MCP 受控链也已推进到 revision 3。
 - [ ] fresh observation 获取及回执绑定。
   - [x] exact Skill、受控证据链、TTL 和历史截图失效模式已冻结。
-  - [ ] 通过 S1 TDD 实现受控 application/policy/receipt/state 纵切，结果标注
+  - [x] 通过 S1 TDD 实现受控 application/policy/receipt/state 纵切，结果标注
     `simulator_executed=false`。
-  - [ ] 使用真实 Genesis sealed checkpoint 完成 production qualification，之后才加入 production MCP。
+  - [ ] 实现可写 production evidence policy/binding；再使用真实 Genesis sealed checkpoint 完成
+    production qualification，之后才加入 production MCP。
 - [ ] Codex 诊断、受限修复、状态增量与可续跑 history。
 - [ ] promotion gate 与 publishability 唯一授权。
 - [x] 真正 MCP adapter：exact schema discovery、typed invocation、ToolResult、workflow-scoped

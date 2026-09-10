@@ -1,10 +1,10 @@
 # 进度与结果
 
-## 2026-09-11 P10 fresh observation 受控合同冻结
+## 2026-09-11 P10 fresh observation 受控纵切
 
 - 冻结 exact `genesis.observe@1.0.0`，复用既有 Golden command envelope 与 S1
   `GoldenRunHarness.submit/read`；不新增通用 invoke 或旁路状态写接口。
-- 受控纵切的完成条件是 FreshObservationReceipt、`ToolResult.fresh_observations`、
+- 受控纵切的完成条件是 `GenesisObservationReceipt`、`ToolResult.fresh_observations`、
   `TrustedToolReceipt.derived_fact_claims`、StateDelta mutations 与 resulting TrustedWorldState 对
   key/value/source/capture time/TTL 逐项闭合。缺少、额外、重排或漂移均不得推进 revision。
 - TTL 冻结为 `1..300` 秒闭区间 `[captured_at, valid_until]`，且
@@ -12,9 +12,26 @@
   fresh 输入；在 terminal commit 前已经过期的 observe 只能产生 blocker。
 - 历史 replay PNG、旧截图和既有媒体 receipt 只能作为历史 supporting artifacts，重新贴标签不构成
   fresh capture。首轮 test adapter 必须记录 `simulator_executed=false`。
-- 本节只记录合同与 public seam 冻结，没有修改或运行 observe 代码/测试，也没有执行 Genesis。
-  production qualification、production Registry entry 和 `genesis_observe_v1_0_0` MCP exposure 均未完成，
-  不声明 fresh observation 已实现或 runtime pass。
+- 提交链 `9b0e86a` / `0cde87d` / `77a3510` / `0d38d42` / `69bc2db` / `bd00a1d`
+  依次冻结合同与 RED、增加 strict schema/controlled application，并把 receipt-bound fresh observations
+  接入 Golden evidence policy seam。三个新公共 schema 把 environment package、replay workflow/runtime
+  receipts、可选 checkpoint、capture plan、requested FactKeys、TTL、typed values、capture window 与
+  payload CAS 精确闭合；公共 snapshot 总数 55→58。
+- `ControlledGenesisObserveApplication` 不注册、不资格化 Skill；它复用 `SkillRegistry.evaluate_candidate`、
+  SQLiteEventJournal、SQLiteRunStore 和共享 CAS。adapter 返回显式 observation value，不从图片摘要推断；
+  PNG 完整解码后入 CAS，receipt/output 固定 `simulator_executed=false`、0 executed steps。输入 source CAS
+  缺失、camera/key/time 不匹配、无效 PNG 与受控 video 请求均产生稳定 blocker。
+- Golden submit 内核现从 invocation-bound evidence policy 取得 fresh observations，并验证每项都等于
+  trusted receipt 的 upsert claim、source artifact 属于 supporting closure、存在有效 TTL；StateDelta
+  仍以 trusted receipt 作为事实来源，同时保留 observation 的 observed/valid 时间。revision 2→3、
+  terminal failure、receipt/projection/CAS 篡改、同实例重提和无 live application 重开均有受控用例。
+- 验证：observation/schema/Golden projection focused 为 `40 passed`；schema/application 两模块
+  331 statements / 96 branches 均为 100%；`python -m script.export_harness_schemas --check` 验证 58 份
+  snapshot。Registry/RunStore/receipt 相邻回归另为 `199 passed`，Ruff 与 diff check 通过。本轮未运行
+  GPU。
+- 边界：本切片实现的是受控 fresh-observation 证据与持久状态 seam，不是 Genesis runtime pass。
+  可写 production policy/binding、真实 sealed checkpoint capture、production qualification、Registry
+  entry 和 `genesis_observe_v1_0_0` MCP exposure 均未完成。
 
 ## 2026-09-11 P5 真实 MCP compile→replay→validate
 

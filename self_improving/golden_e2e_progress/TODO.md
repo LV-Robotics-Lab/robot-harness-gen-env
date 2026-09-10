@@ -4,15 +4,16 @@
 
 ## Doing
 
-- P10 fresh observation：已冻结 exact `genesis.observe@1.0.0` 的受控合同和下一条 S1 RED：
-  FreshObservationReceipt、`ToolResult.fresh_observations`、trusted receipt claims、StateDelta 与
-  resulting state 必须逐项绑定；TTL 为 `1..300` 秒闭区间。当前尚未实现 application/handler、运行
-  测试或 qualification，`simulator_executed=false`。
+- P10 fresh observation：strict schema、controlled candidate application 与 Golden receipt/state/restart
+  seam 已完成；下一切片是可写 production evidence policy/binding。当前受控路径固定
+  `simulator_executed=false`，真实 Genesis capture、qualification 与 MCP exposure 尚未开始。
 
 ## Next
 
-- P10：先通过 S1 public seam 写受控 observation RED/GREEN，覆盖回执、TTL、StateDelta、重启幂等与
-  workflow-scoped resource；test adapter 始终标注 `simulator_executed=false`。
+- P10：实现只从受信 `GenesisObservationReceipt` 投影 claims/fresh observations 的 production
+  policy/binding；保持过期、缺 key、时间或 payload 漂移在 parent commit 前 fail closed。
+- P10：production policy 稳定后，用真实 Genesis sealed checkpoint 做 capture/qualification；只有该门
+  通过后才把 `genesis_observe_v1_0_0` 加入 exact MCP catalog 与 workflow-scoped resource。
 - P5：受控 observation 与 diagnosis seam 闭合后，真实 external Codex 只经 exact MCP 完成同一 text
   workflow；operation polling/cancel 仍单独实现。
 - P6：在已合入的 exact-byte staging 后，单独实现 collision provenance、settle 与 Genesis
@@ -26,7 +27,7 @@
 - 2026-09-10 一名 P6 fixed-diff 只读审查 agent 被 OpenAI 安全系统标记为潜在网络安全风险。按仓库
   规则已立即停止该审查，未重试、改写或重新委派；用户随后允许继续其余工作。该具体审查永久保留
   为 blocked，不作为通过结论，也不妨碍修复主窗口已经独立复现的功能阻断。
-- Autoresearch 的 benchmark/真实 MCP/Genesis 前置尚未实现；设置已确认但尚不能建立诚实 baseline。
+- Autoresearch 的 benchmark/Genesis 前置尚未实现；设置已确认但尚不能建立诚实 baseline。
 - 当前没有 qualified Genesis observe runtime 或 sealed checkpoint capture 证据；历史 replay 图片不能作为
   fresh observation。production qualification 与 `genesis_observe_v1_0_0` MCP exposure 因此前置未完成。
 - MCP 尚无 image/video media ingest 或公开 operation polling/cancel seam；当前 text-only 三 Skill
@@ -34,9 +35,13 @@
 
 ## Done
 
-- 冻结 fresh observation 受控合同：exact Skill 为 `genesis.observe@1.0.0`；TTL 为 `1..300` 秒闭区间；
-  FreshObservationReceipt → fresh ToolResult → trusted claim → StateDelta → resulting state 必须逐项绑定。
-  本项是合同/实施 seam 完成，不含代码、测试、Genesis simulator、qualification 或 production MCP tool。
+- fresh observation 受控纵切完成：exact Skill 为 `genesis.observe@1.0.0`；三份 strict public schema
+  把 replay lineage、requested keys、`1..300` 秒 TTL、typed values 和 payload CAS 闭合；controlled
+  candidate 使用 Registry + SQLiteEventJournal/SQLiteRunStore，显式值、可解码 PNG 和
+  `simulator_executed=false`/0 steps。Golden policy seam 将 fresh observations 与 trusted claims、唯一
+  StateDelta、resulting state 和 restart recovery 绑定。专项 40 passed，新 schema/application 为
+  331 statements / 96 branches 100%，公共 snapshot 55→58；没有运行 GPU，也没有 production
+  qualification、真实 Genesis capture 或 MCP exposure。
 
 - 最终 revision-3 integration 已完成：固定实现 `eec1976bdd71578e43b606ef3b88f3bd7d5975e9`
   的 compile/replay/validate 资格报告分别 7/7、8/8、6/6 通过；同一 bundle 在另一绝对
