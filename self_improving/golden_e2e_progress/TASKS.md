@@ -39,6 +39,12 @@
   - [ ] 实现 production execution binding/runtime；再使用真实 Genesis sealed checkpoint 完成
     production qualification，之后才加入 production MCP。
 - [ ] Codex 诊断、受限修复、状态增量与可续跑 history。
+  - [x] 冻结并实现 advisory/prompt revision 两类不可变 workflow control receipt；统一 shared-turn
+    authority、mixed receipt reconstruction、CAS reachability 与重启幂等已通过独立验收。
+  - [x] control 只推进 revision/turn/head，state 与 child runs 不变；advisory 固定为
+    `advisory_only`，不授予 physics/publishability。
+  - [ ] 增加 durable resource-access receipt 与两个 exact MCP control tools，再由真实 external Codex
+    完成读取、诊断和 prompt revision；不得把 controlled `external_agent_executed=false` 当作完成。
 - [ ] promotion gate 与 publishability 唯一授权。
 - [x] 真正 MCP adapter：exact schema discovery、typed invocation、ToolResult、workflow-scoped
   state/receipt/media resources、错误映射与 stdio restart 已实现；真实三 Skill simulator 已验收。

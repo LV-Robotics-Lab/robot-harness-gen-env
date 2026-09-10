@@ -117,3 +117,18 @@
 - 边界：受控 test adapter 必须记录 `simulator_executed=false`。真实 Genesis sealed-checkpoint capture、
   production qualification 与 production Registry/MCP exposure 未通过前，不得把受控结果写成 Genesis
   runtime pass，也不得在 production MCP 目录列出 `genesis_observe_v1_0_0`。
+
+## D012 — Advisory 与 prompt revision 是不改可信状态的 workflow controls
+
+- 日期：2026-09-11
+- 状态：accepted_by_implementation
+- 决策：external-agent advisory 与 prompt revision 不伪装成 qualified Skill、ToolResult 或可信世界事实。
+  它们通过 `GoldenRunHarness.submit_control` 形成两类不可变 workflow receipt；与 Skill 共用唯一 turn
+  仲裁，推进 revision、turn sequence 和 receipt head，但保持 state ref/hash 与 child runs 不变。
+- 权限：advisory 固定 `authority=advisory_only`、`external_agent_executed=false`，且不得授予 physical
+  validity 或 publishability。prompt revision 必须显式绑定 source prompt、advisory、失败 receipt、
+  predecessor package 和 fallback lineage；不能由 adapter 静默选择 fallback。
+- 读取边界：workflow resource 可达不等于 external agent 实际读取。后续必须用 server-owned durable
+  resource-access receipt 记录向哪个 principal/workflow 交付了哪些 bytes；它仍只能证明交付，不能证明
+  模型理解或隐藏推理。两个 MCP control tools 完成且真实 Codex 回合运行前，所有记录继续保持
+  `external_agent_executed=false`。

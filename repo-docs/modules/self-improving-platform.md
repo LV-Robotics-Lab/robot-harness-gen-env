@@ -83,6 +83,14 @@ assembly 的本地生成资产路径，但使用临时 qualification，不能替
 字段边界、状态机、快照与未实现范围见 [Harness Schema Tranche](harness-schema-tranche.md)；
 逐项实现和验证证据见 [PR1 实现报告](../../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)。
 
+当前 Golden history 还支持两类不改可信状态的 control entry：external-agent advisory 和 prompt revision。
+它们不伪装成 Skill/ToolResult，也不生成 StateDelta；与 Skill 共用同一个 SQLite turn 仲裁，提交后只推进
+revision、turn sequence 和 receipt head，state ref/hash 与 child runs 保持不变。advisory 只能引用本
+workflow 的失败 receipt、diagnostic 与仍新鲜的 Genesis observation，且固定为 `advisory_only`；prompt
+revision 必须显式绑定原 prompt、advisory、失败/package lineage 与 fallback frame manifest。该受控纵切
+仍记录 `external_agent_executed=false`：当前资源可达只表示 server 可以读取，尚没有 durable read receipt
+证明资源已经交付给 external Codex，也没有 exact advisory/prompt MCP tools。
+
 ASPIRE E0–E2 快照 `1180aef` 的离线、自包含回归是 595 passed、6 skipped；这不是后续 Registry/compiler/asset/Stage 5 follow-on 的当前绿灯。该快照的 skip 只对应未纳入 Git 的 Isaac/SceneAgent/媒体/报告原始包或本机未安装的 SAPIEN 物理运行时。完整命令与时间边界见 `self_improving/README.md`。
 
 后续只读诊断快照 `28333de` 的默认 pytest 因两个同名 `test_registry.py` collection error；

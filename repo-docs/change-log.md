@@ -1,5 +1,18 @@
 # Change Log
 
+## 2026-09-11 Golden advisory and prompt-revision controls
+
+- 新增五份 strict public schema：advisory/prompt command、两类不可变 workflow receipt 和 control
+  commit snapshot；公共 schema 总数 58→63。advisory 固定为 `advisory_only` 与
+  `external_agent_executed=false`，不授予 physics 或 publishability。
+- Skill operations 与 control records 现在共用 SQLite turn ledger，同一 workflow/base revision 只能有
+  一个胜者；旧 operation-only 数据库事务性回填。`GoldenRunHarness.submit_control` 深验失败 receipt、
+  diagnostic、fresh observation TTL、source prompt/package 与 video-frame fallback lineage，随后只推进
+  revision/turn/head，state 与 child runs 不变。
+- 三轴独立验收覆盖 41 个 CAS 对象、mixed receipt reconstruction、frame manifest、TTL 闭区间、并发
+  仲裁、CAS 篡改和无 live application 重启。该切片尚无 resource-access receipt、exact MCP control
+  tools 或真实 external Codex 执行；完整根套件为3929 passed/20 skipped。
+
 - 2026-09-11：fresh observation 受控纵切增加 `ControlledGenesisObserveEvidencePolicy` 与
   `SkillAuthorizationContext`：首次提交及无 live application 重启均重算 Invocation 和 exact
   workflow/principal/revision/state/head，避免相同 state content hash 的跨 workflow receipt 混用；仍不

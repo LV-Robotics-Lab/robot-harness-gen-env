@@ -1014,3 +1014,22 @@
 - 边界：RoboTwin 资产、解释器、media launcher、静态 FFmpeg、capability 文档与 delegated cgroup
   继续作为 deployment binding 精确复验。没有调用 validate，也不声明 Genesis、promotion 或跨机器
   provisioning。
+
+### 2026-09-11 / A053：advisory 与 prompt revision 使用共享 turn authority
+
+- RED：独立 schema、store 与 aggregate 测试先冻结五份 strict control 合同，并证明把 controls 放进独立
+  revision 表会允许 Skill/control 同时占用同一 base revision；已有 operation receipt predecessor 也会拒绝
+  control head。
+- 实现：SQLite 增加共享 turn ledger，Skill operation 与 control record 都必须在同一事务占用唯一
+  `(workflow_run_id, base_revision)`；旧 operation-only 数据库精确回填。`GoldenRunHarness.submit_control`
+  深验失败 receipt、diagnostic、fresh observation TTL、source prompt/package 与 frame manifest，生成
+  domain-separated self-hashed advisory/prompt receipt，并以 mixed entry chain 重建历史。
+- 权限边界：control 只推进 revision、turn sequence 与 receipt head；state ref/hash 和 child runs 原样。
+  advisory 固定 `authority=advisory_only`、`external_agent_executed=false`、不授予 physical validity 或
+  publishability。prompt revision 只允许 full replacement，fallback 必须显式并闭合 video→frame lineage。
+- 验证：固定 `e9d9fcb` 的三轴独立验收均 PASS；受控 observation→blocked Skill→advisory→prompt 后还能
+  继续 qualified Skill。41 个 CAS objects、143 个递归 refs、TTL 闭区间、SQLite integrity、同 revision
+  竞争、CAS 篡改与 no-live restart 均闭合。新增 schema 272 statements/72 branches、新 store diff
+  210 statements/62 branches均100%；公共 schema 总数为63。
+- 未完成：durable resource-access receipt、exact advisory/prompt MCP tools 和真实 external Codex 回合。
+  server 交付 bytes 最多证明交付，不能证明模型理解；该边界不得用可达 CAS 或测试 fixture 替代。

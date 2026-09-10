@@ -1,5 +1,34 @@
 # 进度与结果
 
+## 2026-09-11 P10 diagnosis/prompt revision control 纵切
+
+- 新增 `AdvisoryRecordCommand`、`ExternalAgentAdvisoryReceipt`、`PromptRevisionCommand`、
+  `PromptRevision`、`ControlCommitSnapshot` 五份 strict public schema，公共 snapshot 总数 58→63。
+  advisory 固定 `authority=advisory_only`、`external_agent_executed=false`，并显式禁止授予 physical
+  validity 或 publishability；prompt revision 只接受 full replacement，并把 base prompt、失败 receipt、
+  predecessor package、advisory 与显式 fallback lineage 哈希绑定。
+- `SQLiteGoldenRunStore` 新增共享 Skill/control turn ledger。Skill operation 与 control detail 都必须先
+  占用同一 `(workflow_run_id, base_revision)`，因此不能在两个表中同时赢得同一个 revision；旧 operation-only
+  数据库在事务内精确回填，active child 阻止 control，任何部分布局、双 detail 或次序破坏均 fail closed。
+- `GoldenRunHarness.submit_control` 只接受两种 exact command。提交前重建 workflow reachability，验证
+  blocked/failed receipt、diagnostic、Genesis observation citation、TTL、source prompt/package 和 video
+  frame manifest；accepted control 只推进 revision/turn/head，state ref/hash 与 child runs 字节级不变。
+  后续 qualified Skill 的 predecessor 可精确接受这两种 control receipt，mixed history 可重启重建。
+- 固定 `e9d9fcb6337779c6bd0415dd6b8e451d53fe7496` 的三轴独立验收均 PASS：受控链完成
+  observation succeeded → Skill blocked → advisory → prompt revision；CAS 41 objects、143 个递归
+  ArtifactRef occurrences/39 unique identities 全闭合，frame index 7 的 video/frame/manifest lineage 与
+  advisory/prompt 自哈希重算一致。TTL 60 秒闭区间上界接受、+1 秒拒绝；无 live application 重提返回
+  同一 terminal，CAS/SQLite 零增长；CAS 篡改和未绑定 frame 均 fail closed。
+- store/control/schema/aggregate 的验收分别覆盖 55、174、243 与较宽 331 个测试节点；新增 schema
+  272 statements/72 branches 100%，新增 store diff 210 statements/62 branch arcs 100%。整个既有
+  `golden_run.py` 在聚焦套件约 93%，未被误报为新模块 100%。带 platform/MCP/demo/dev extras 与
+  构建工具的完整根套件为 `3929 passed, 20 skipped`。本切片 13 个 Python 文件的 Ruff
+  check/format 与 diff check 通过；全仓 `ruff check .` 仍暴露 2,463 个既有 style violations，未在本
+  功能提交中顺手改写无关文件。
+- 边界：本纵切只证明 controlled S1 receipt/state/history，不证明真实 external Codex。当前没有 durable
+  resource-access receipt、exact advisory/prompt MCP tools 或模型执行；server 交付资源也只能证明交付，
+  不能证明模型理解。真实 Genesis capture、promotion 与 robot-policy 同样未完成。
+
 ## 2026-09-11 P10 fresh observation 受控纵切
 
 - 冻结 exact `genesis.observe@1.0.0`，复用既有 Golden command envelope 与 S1

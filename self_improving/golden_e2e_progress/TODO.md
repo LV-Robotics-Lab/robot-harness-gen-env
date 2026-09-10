@@ -8,8 +8,9 @@
   Golden execution binding 已在同一 revision 2→3 中闭合 receipt/state/restart；下一切片是 production
   runtime binding。当前受控路径固定 `simulator_executed=false`，真实 Genesis capture、qualification 与
   MCP exposure 尚未开始。
-- P10 diagnosis/prompt revision：先实现独立 workflow control records、资源读取回执和持久 authority，
-  再加两个 exact MCP control tools；不得把 advisory 伪装成 qualified Skill 或 trusted world fact。
+- P10 diagnosis/prompt revision：S1 的共享 turn authority 与两类 immutable control receipt 已完成；当前
+  实现 durable resource-access receipt 与两个 exact MCP control tools。不得把 advisory 伪装成
+  qualified Skill/trusted world fact，也不得把 server 已交付 bytes 夸成模型已经理解。
 
 ## Next
 
@@ -37,6 +38,17 @@
   已通过真实 MCP simulator 闭合，但 external Codex planner 回合仍待执行。
 
 ## Done
+
+- diagnosis/prompt revision 的 S1 纵切完成：五份 strict public schema、共享 Skill/control turn ledger、
+  `GoldenRunHarness.submit_control` 与 mixed receipt reconstruction 已实现。受控链真实完成 fresh
+  observation → blocked Skill → advisory → prompt revision，并可在 prompt control 后继续 exact Skill；
+  control 每次只让 revision/turn/head +1，state ref/hash 与 child runs 不变。advisory 绑定 blocked/failed
+  receipts、diagnostics 与仍新鲜的 Genesis observation citation；prompt 绑定 source prompt、advisory、
+  failure/package lineage 与显式 video-frame→image fallback。固定 `e9d9fcb` 的三轴验收核对 41 个 CAS
+  对象、共享 turn/detail 双射、frame manifest、TTL 闭区间、SQLite integrity、CAS 篡改与无 live app
+  restart；174/243/331 组测试均通过。新增 schema 272 statements/72 branches、新 store diff
+  210 statements/62 branches均为100%，完整根套件为3929 pass/20 skip。该结果固定
+  `external_agent_executed=false`，尚无资源读取回执、MCP control tools 或真实 external Codex 回合。
 
 - fresh observation 受控纵切完成：exact Skill 为 `genesis.observe@1.0.0`；三份 strict public schema
   把 replay lineage、requested keys、`1..300` 秒 TTL、typed values 和 payload CAS 闭合；controlled
