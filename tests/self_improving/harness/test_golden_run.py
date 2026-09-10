@@ -477,7 +477,11 @@ def test_submit_exact_qualified_compile_advances_one_durable_workflow_revision(
         artifact_store=store,
         workflow_store=workflow_store,
         execution_catalog=public_harness.create_golden_execution_catalog(
-            compile_application=application
+            bindings=(
+                public_harness.create_text2env_compile_execution_binding(
+                    application=application
+                ),
+            )
         ),
         clock=lambda: NOW,
         workflow_id_factory=lambda: WORKFLOW_ID,
@@ -515,7 +519,9 @@ def test_submit_exact_qualified_compile_advances_one_durable_workflow_revision(
         store.resolve(operation.tool_result).path.read_bytes()
     )
     assert result.state_delta is not None
-    delta = result.state_delta
+    delta = public_harness.StateDeltaV2.model_validate_json(
+        store.resolve(result.state_delta).path.read_bytes()
+    )
     assert result.fresh_observations == ()
     assert result.diagnostics == ()
     assert tuple(mutation.key for mutation in delta.mutations) == (
@@ -538,7 +544,7 @@ def test_submit_exact_qualified_compile_advances_one_durable_workflow_revision(
     )
     assert workflow_receipt.operation_id == operation.operation_id
     assert workflow_receipt.tool_result == operation.tool_result
-    assert workflow_receipt.state_delta is not None
+    assert workflow_receipt.state_delta == result.state_delta
     assert (
         public_harness.StateDeltaV2.model_validate_json(
             store.resolve(workflow_receipt.state_delta).path.read_bytes()
@@ -564,7 +570,11 @@ def test_submit_exact_qualified_compile_advances_one_durable_workflow_revision(
         artifact_store=LocalArtifactStore(recovered_application.artifact_root),
         workflow_store=SQLiteGoldenRunStore(tmp_path / "golden.sqlite3"),
         execution_catalog=public_harness.create_golden_execution_catalog(
-            compile_application=recovered_application
+            bindings=(
+                public_harness.create_text2env_compile_execution_binding(
+                    application=recovered_application
+                ),
+            )
         ),
         clock=unexpected_clock,
     ).submit(command)
