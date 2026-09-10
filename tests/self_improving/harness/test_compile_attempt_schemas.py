@@ -230,3 +230,20 @@ def test_compile_attempt_and_x2env_v2_documents_are_standalone_draft_2020_12() -
         assert document["additionalProperties"] is False
         Draft202012Validator.check_schema(document)
         Draft202012Validator(document).validate(json.loads(json.dumps(example)))
+
+
+def test_compile_attempt_and_x2env_v2_models_are_public_lazy_facades() -> None:
+    import self_improving.harness as harness
+    import self_improving.harness.schemas as schemas
+
+    expected = {
+        "InitialCompileAttemptV1": InitialCompileAttemptV1,
+        "PromptRevisionCompileAttemptV1": PromptRevisionCompileAttemptV1,
+        "Image2EnvCompileV2Input": Image2EnvCompileV2Input,
+        "Video2EnvCompileV2Input": Video2EnvCompileV2Input,
+    }
+    for name, model in expected.items():
+        assert getattr(schemas, name) is model
+        assert getattr(harness, name) is model
+        assert name in schemas.__all__
+        assert name in harness.__all__
