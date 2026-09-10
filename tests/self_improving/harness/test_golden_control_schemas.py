@@ -10,22 +10,22 @@ from uuid import UUID
 
 import pytest
 from pydantic import ValidationError
+
+from self_improving.harness.schemas.common import ArtifactRef
 from self_improving.harness.schemas.golden_control import (
+    ADVISORY_RECORD_COMMAND_SCHEMA_ID,
     CONTROL_COMMIT_SNAPSHOT_SCHEMA_ID,
-    EXTERNAL_AGENT_ADVISORY_COMMAND_SCHEMA_ID,
     EXTERNAL_AGENT_ADVISORY_RECEIPT_SCHEMA_ID,
     PROMPT_REVISION_COMMAND_SCHEMA_ID,
     PROMPT_REVISION_SCHEMA_ID,
+    AdvisoryRecordCommand,
     ControlCommitSnapshot,
-    ExternalAgentAdvisoryCommand,
     ExternalAgentAdvisoryReceipt,
     PromptRevision,
     PromptRevisionCommand,
     external_agent_advisory_receipt_sha256,
     prompt_revision_sha256,
 )
-
-from self_improving.harness.schemas.common import ArtifactRef
 
 NOW = datetime(2026, 9, 11, 3, 0, tzinfo=timezone.utc)
 WORKFLOW_ID = UUID("10000000-0000-4000-8000-000000000001")
@@ -52,6 +52,19 @@ def _ref(
         sha256=digest,
         bytes=100 + len(label),
         schema_version=schema_version,
+    )
+
+
+def _text_ref(label: str, value: str) -> ArtifactRef:
+    encoded = value.encode("utf-8")
+    digest = hashlib.sha256(encoded).hexdigest()
+    return ArtifactRef(
+        name=f"{label}.txt",
+        uri=f"artifact://sha256/{digest}",
+        media_type="text/plain",
+        sha256=digest,
+        bytes=len(encoded),
+        schema_version="harness.prompt_text.v1",
     )
 
 
@@ -82,7 +95,7 @@ def _ordered_observations(*labels: str) -> tuple[dict[str, Any], ...]:
 def _command_authority(schema_version: str) -> dict[str, Any]:
     return {
         "schema_version": schema_version,
-        "control_id": CONTROL_ID,
+        "command_id": CONTROL_ID,
         "principal_id": "tests/golden-control",
         "workflow_run_id": WORKFLOW_ID,
         "idempotency_key": "control-command-001",
@@ -96,16 +109,20 @@ def _advisory_command_values(kind: str = "diagnosis") -> dict[str, Any]:
     failure = _ref("failed-replay", "harness.workflow_operation_receipt.v2")
     diagnostic = _ref("penetration-diagnostic", "robotwin.scene_validation.v1")
     values = {
-        **_command_authority("harness.external_agent_advisory_command.v1"),
+        **_command_authority("harness.advisory_record_command.v1"),
         "advisory_kind": kind,
         "disposition": "recommend",
         "summary": "The replay failed because the can penetrated the plate.",
         "recommended_action": "revise_prompt",
-        "source_prompt": _ref("source-prompt", "harness.prompt_text.v1", media_type="text/plain"),
+        "source_prompt": _text_ref(
+            "source-prompt",
+            "Use the source video to build a stable robot-policy scene.",
+        ),
         "source_prompt_revision": None,
         "failure_receipts": (failure,),
         "observation_citations": (_observation(),),
         "diagnostic_refs": (diagnostic,),
+        "external_agent_executed": False,
     }
     if kind == "visual_assessment":
         values["failure_receipts"] = ()
@@ -118,7 +135,7 @@ def _advisory_command_values(kind: str = "diagnosis") -> dict[str, Any]:
 def _control_authority(*, command_schema: str) -> dict[str, Any]:
     state_ref = _ref("state", "harness.trusted_world_state.v1")
     return {
-        "control_id": CONTROL_ID,
+        "command_id": CONTROL_ID,
         "workflow_run_id": WORKFLOW_ID,
         "principal_id": "tests/golden-control",
         "command": _ref("control-command", command_schema),
@@ -160,7 +177,7 @@ def _advisory_receipt_values(kind: str = "diagnosis") -> dict[str, Any]:
     command = _advisory_command_values(kind)
     values = {
         "schema_version": "harness.external_agent_advisory_receipt.v1",
-        **_control_authority(command_schema="harness.external_agent_advisory_command.v1"),
+        **_control_authority(command_schema="harness.advisory_record_command.v1"),
         "advisory_kind": command["advisory_kind"],
         "disposition": command["disposition"],
         "summary": command["summary"],
@@ -171,6 +188,9 @@ def _advisory_receipt_values(kind: str = "diagnosis") -> dict[str, Any]:
         "observation_citations": command["observation_citations"],
         "diagnostic_refs": command["diagnostic_refs"],
         "authority": "advisory_only",
+        "external_agent_executed": False,
+        "grants_physical_validity": False,
+        "grants_publishability": False,
         "receipt_sha256": "0" * 64,
     }
     unhashed = ExternalAgentAdvisoryReceipt.model_construct(**values)
@@ -184,29 +204,48 @@ def _advisory_receipt_values(kind: str = "diagnosis") -> dict[str, Any]:
 
 
 def _prompt_command_values(*, fallback: str = "none") -> dict[str, Any]:
+    source_text = "Use the source video to build a stable robot-policy scene."
+    replacement_text = "Place the can upright at the center of the plate."
+    source_prompt = _text_ref("source-prompt", source_text)
     fallback_value: dict[str, Any] = {"kind": "none"}
     if fallback == "video_frame_to_image":
         fallback_value = {
             "kind": "video_frame_to_image",
-            "frame": _ref(
+            "source_video": _ref(
+                "source-video",
+                None,
+                media_type="video/mp4",
+            ),
+            "selected_frame": _ref(
                 "selected-video-frame",
-                "harness.video_frame.v1",
+                None,
                 media_type="image/png",
+            ),
+            "frame_index": 7,
+            "frame_sequence_manifest": _ref(
+                "frame-sequence-manifest",
+                "harness.video_frame_sequence.v1",
             ),
         }
     return {
         **_command_authority("harness.prompt_revision_command.v1"),
+        "source_prompt": source_prompt,
         "advisory_receipt": _ref(
             "advisory-receipt",
             "harness.external_agent_advisory_receipt.v1",
+        ),
+        "failure_receipts": (
+            _ref("failed-replay", "harness.workflow_operation_receipt.v2"),
         ),
         "predecessor_package": _ref(
             "failed-package",
             "harness.x2env_environment_package.v1",
         ),
         "patch": {
-            "kind": "replace",
-            "replacement": "Place the can upright at the center of the plate.",
+            "kind": "full_replace",
+            "base_text_sha256": source_prompt.sha256,
+            "replacement_text": replacement_text,
+            "reason": "The failed video route requires an explicit frame-derived retry.",
         },
         "fallback": fallback_value,
         "next_compile_skill_ref": (
@@ -214,6 +253,7 @@ def _prompt_command_values(*, fallback: str = "none") -> dict[str, Any]:
             if fallback == "video_frame_to_image"
             else "video2env.compile@1.0.0"
         ),
+        "external_agent_executed": False,
     }
 
 
@@ -226,25 +266,23 @@ def _prompt_revision_values(*, fallback: str = "none") -> dict[str, Any]:
         "schema_version": "harness.prompt_revision.v1",
         **authority,
         "prompt_revision_number": 2,
-        "source_prompt": _ref("source-prompt", "harness.prompt_text.v1", media_type="text/plain"),
+        "source_prompt": command["source_prompt"],
         "predecessor_prompt_revision": _ref(
             "prompt-revision-1",
             "harness.prompt_revision.v1",
         ),
         "advisory_receipt": advisory,
-        "failure_receipts": (
-            _ref("failed-replay", "harness.workflow_operation_receipt.v2"),
-        ),
+        "failure_receipts": command["failure_receipts"],
         "observation_citations": (_observation(),),
         "predecessor_package": command["predecessor_package"],
         "patch": command["patch"],
-        "revised_prompt": _ref(
+        "revised_prompt": _text_ref(
             "revised-prompt",
-            "harness.prompt_text.v1",
-            media_type="text/plain",
+            command["patch"]["replacement_text"],
         ),
         "fallback": command["fallback"],
         "next_compile_skill_ref": command["next_compile_skill_ref"],
+        "external_agent_executed": False,
         "revision_sha256": "0" * 64,
     }
     unhashed = PromptRevision.model_construct(**values)
@@ -258,9 +296,7 @@ def _prompt_revision_values(*, fallback: str = "none") -> dict[str, Any]:
 
 
 def test_control_models_publish_exact_strict_schema_ids() -> None:
-    assert EXTERNAL_AGENT_ADVISORY_COMMAND_SCHEMA_ID == (
-        "harness.external_agent_advisory_command.v1"
-    )
+    assert ADVISORY_RECORD_COMMAND_SCHEMA_ID == "harness.advisory_record_command.v1"
     assert EXTERNAL_AGENT_ADVISORY_RECEIPT_SCHEMA_ID == (
         "harness.external_agent_advisory_receipt.v1"
     )
@@ -268,16 +304,24 @@ def test_control_models_publish_exact_strict_schema_ids() -> None:
     assert PROMPT_REVISION_SCHEMA_ID == "harness.prompt_revision.v1"
     assert CONTROL_COMMIT_SNAPSHOT_SCHEMA_ID == "harness.control_commit_snapshot.v1"
 
-    command = ExternalAgentAdvisoryCommand.model_validate(_advisory_command_values())
-    assert command.model_json_schema()["$id"] == EXTERNAL_AGENT_ADVISORY_COMMAND_SCHEMA_ID
+    command = AdvisoryRecordCommand.model_validate(_advisory_command_values())
+    assert command.model_json_schema()["$id"] == ADVISORY_RECORD_COMMAND_SCHEMA_ID
     with pytest.raises(ValidationError, match="extra_forbidden"):
-        ExternalAgentAdvisoryCommand.model_validate(
+        AdvisoryRecordCommand.model_validate(
             {**_advisory_command_values(), "untrusted_authority": True}
         )
     with pytest.raises(ValidationError, match="valid integer"):
-        ExternalAgentAdvisoryCommand.model_validate(
+        AdvisoryRecordCommand.model_validate(
             {**_advisory_command_values(), "expected_workflow_revision": True}
         )
+    for invalid_flag in (True, 0, "false"):
+        with pytest.raises(ValidationError):
+            AdvisoryRecordCommand.model_validate(
+                {
+                    **_advisory_command_values(),
+                    "external_agent_executed": invalid_flag,
+                }
+            )
     with pytest.raises(ValidationError, match="frozen"):
         command.summary = "mutated"  # type: ignore[misc]
 
@@ -293,11 +337,11 @@ def test_control_models_publish_exact_strict_schema_ids() -> None:
 def test_advisory_command_accepts_exact_three_kinds(kind: str, action: str) -> None:
     values = _advisory_command_values(kind)
     values["recommended_action"] = action
-    command = ExternalAgentAdvisoryCommand.model_validate(values)
+    command = AdvisoryRecordCommand.model_validate(values)
     assert command.advisory_kind == kind
 
     with pytest.raises(ValidationError):
-        ExternalAgentAdvisoryCommand.model_validate(
+        AdvisoryRecordCommand.model_validate(
             {**values, "advisory_kind": "physical_validation"}
         )
 
@@ -314,14 +358,14 @@ def test_advisory_kind_requires_its_minimum_evidence(kind: str, missing_field: s
     values = _advisory_command_values(kind)
     values[missing_field] = ()
     with pytest.raises(ValidationError, match=missing_field):
-        ExternalAgentAdvisoryCommand.model_validate(values)
+        AdvisoryRecordCommand.model_validate(values)
 
     if kind != "visual_assessment":
         values = _advisory_command_values(kind)
         values["observation_citations"] = ()
         values["diagnostic_refs"] = ()
         with pytest.raises(ValidationError, match="observation_citations.*diagnostic_refs"):
-            ExternalAgentAdvisoryCommand.model_validate(values)
+            AdvisoryRecordCommand.model_validate(values)
 
 
 @pytest.mark.parametrize("field", ["failure_receipts", "diagnostic_refs"])
@@ -334,16 +378,16 @@ def test_advisory_command_references_are_typed_sorted_and_unique(field: str) -> 
     )
     refs = _ordered(_ref(f"{field}-a", schema), _ref(f"{field}-b", schema))
     values[field] = refs
-    ExternalAgentAdvisoryCommand.model_validate(values)
+    AdvisoryRecordCommand.model_validate(values)
 
     for changed in (tuple(reversed(refs)), (refs[0], refs[0])):
         with pytest.raises(ValidationError, match=f"{field}.*sorted.*unique"):
-            ExternalAgentAdvisoryCommand.model_validate({**values, field: changed})
+            AdvisoryRecordCommand.model_validate({**values, field: changed})
 
     if field == "failure_receipts":
         wrong = _ref("failed-replay", "harness.run_state.v1")
         with pytest.raises(ValidationError, match="failure_receipts.*schema_version"):
-            ExternalAgentAdvisoryCommand.model_validate(
+            AdvisoryRecordCommand.model_validate(
                 {**values, "failure_receipts": (wrong,)}
             )
 
@@ -352,11 +396,11 @@ def test_observation_citations_are_typed_sorted_unique_and_ttl_bound() -> None:
     values = _advisory_command_values()
     citations = _ordered_observations("fresh-observation-a", "fresh-observation-b")
     values["observation_citations"] = citations
-    ExternalAgentAdvisoryCommand.model_validate(values)
+    AdvisoryRecordCommand.model_validate(values)
 
     for changed in (tuple(reversed(citations)), (citations[0], citations[0])):
         with pytest.raises(ValidationError, match="observation_citations.*sorted.*unique"):
-            ExternalAgentAdvisoryCommand.model_validate(
+            AdvisoryRecordCommand.model_validate(
                 {**values, "observation_citations": changed}
             )
 
@@ -364,10 +408,14 @@ def test_observation_citations_are_typed_sorted_unique_and_ttl_bound() -> None:
         ({"ttl_seconds": 0}, "greater than or equal to 1"),
         ({"ttl_seconds": 301}, "less than or equal to 300"),
         ({"valid_until": NOW - timedelta(seconds=1)}, "captured_at.*ttl_seconds"),
+        (
+            {"receipt": _ref("fresh-observation-a", "harness.fresh_observation.v1")},
+            "observation_citations.*receipt.*schema_version",
+        ),
     ):
         changed = {**citations[0], **changes}
         with pytest.raises(ValidationError, match=message):
-            ExternalAgentAdvisoryCommand.model_validate(
+            AdvisoryRecordCommand.model_validate(
                 {**values, "observation_citations": (changed,)}
             )
 
@@ -375,11 +423,11 @@ def test_observation_citations_are_typed_sorted_unique_and_ttl_bound() -> None:
 def test_advisory_disposition_cannot_claim_execution_authority() -> None:
     values = _advisory_command_values()
     with pytest.raises(ValidationError, match="abstain.*none"):
-        ExternalAgentAdvisoryCommand.model_validate(
+        AdvisoryRecordCommand.model_validate(
             {**values, "disposition": "abstain"}
         )
     with pytest.raises(ValidationError, match="recommend.*non-none"):
-        ExternalAgentAdvisoryCommand.model_validate(
+        AdvisoryRecordCommand.model_validate(
             {**values, "recommended_action": "none"}
         )
 
@@ -388,6 +436,9 @@ def test_advisory_receipt_is_self_hashed_state_unchanged_and_fresh_at_closed_bou
     values = _advisory_receipt_values()
     receipt = ExternalAgentAdvisoryReceipt.model_validate(values)
     assert receipt.authority == "advisory_only"
+    assert receipt.external_agent_executed is False
+    assert receipt.grants_physical_validity is False
+    assert receipt.grants_publishability is False
     assert receipt.base_state_sha256 == receipt.resulting_state_sha256
     assert receipt.base_state == receipt.resulting_state
     assert receipt.committed_at == receipt.observation_citations[0].valid_until
@@ -402,6 +453,9 @@ def test_advisory_receipt_is_self_hashed_state_unchanged_and_fresh_at_closed_bou
         ),
         ({"committed_revision": 9}, "advance exactly one"),
         ({"committed_turn_seq": 6}, "turn.*advance exactly one"),
+        ({"external_agent_executed": True}, "False"),
+        ({"grants_physical_validity": True}, "False"),
+        ({"grants_publishability": True}, "False"),
     ):
         with pytest.raises(ValidationError, match=message):
             ExternalAgentAdvisoryReceipt.model_validate({**values, **changes})
@@ -441,12 +495,13 @@ def test_prompt_revision_command_has_discriminated_fallback(fallback: str) -> No
     assert command.fallback.kind == fallback
     assert command.model_json_schema()["$id"] == PROMPT_REVISION_COMMAND_SCHEMA_ID
 
-    invalid = {**values, "fallback": {"kind": "video_frame_to_image"}}
-    with pytest.raises(ValidationError, match="frame"):
-        PromptRevisionCommand.model_validate(invalid)
-    invalid = {**values, "fallback": {"kind": "none", "frame": _ref("frame", None)}}
+    invalid = {**values, "fallback": {"kind": "none", "source_video": _ref("video", None)}}
     with pytest.raises(ValidationError, match="extra_forbidden"):
         PromptRevisionCommand.model_validate(invalid)
+    with pytest.raises(ValidationError, match="False"):
+        PromptRevisionCommand.model_validate(
+            {**values, "external_agent_executed": True}
+        )
 
 
 def test_video_frame_fallback_routes_only_to_image_compile() -> None:
@@ -456,14 +511,39 @@ def test_video_frame_fallback_routes_only_to_image_compile() -> None:
             {**values, "next_compile_skill_ref": "video2env.compile@1.0.0"}
         )
 
-    fallback = dict(values["fallback"])
-    fallback["frame"] = _ref(
-        "selected-video-frame",
-        "harness.video_frame.v1",
-        media_type="video/mp4",
+    for missing in (
+        "source_video",
+        "selected_frame",
+        "frame_index",
+        "frame_sequence_manifest",
+    ):
+        fallback = dict(values["fallback"])
+        del fallback[missing]
+        with pytest.raises(ValidationError, match=missing):
+            PromptRevisionCommand.model_validate({**values, "fallback": fallback})
+
+    attacks = (
+        (
+            "source_video",
+            _ref("source-video", None, media_type="image/png"),
+            "source_video.*video",
+        ),
+        (
+            "selected_frame",
+            _ref("selected-video-frame", None, media_type="video/mp4"),
+            "selected_frame.*image",
+        ),
+        ("frame_index", -1, "frame_index"),
+        (
+            "frame_sequence_manifest",
+            _ref("frame-sequence-manifest", "harness.run_state.v1"),
+            "frame_sequence_manifest",
+        ),
     )
-    with pytest.raises(ValidationError, match="frame.*image"):
-        PromptRevisionCommand.model_validate({**values, "fallback": fallback})
+    for field, replacement, message in attacks:
+        fallback = {**values["fallback"], field: replacement}
+        with pytest.raises(ValidationError, match=message):
+            PromptRevisionCommand.model_validate({**values, "fallback": fallback})
 
 
 def test_prompt_revision_command_authority_refs_are_exact() -> None:
@@ -482,12 +562,36 @@ def test_prompt_revision_command_authority_refs_are_exact() -> None:
             PromptRevisionCommand.model_validate({**values, field: replacement})
 
 
+def test_prompt_patch_is_a_hash_bound_full_replacement() -> None:
+    values = _prompt_command_values()
+    patch = values["patch"]
+    assert patch == {
+        "kind": "full_replace",
+        "base_text_sha256": values["source_prompt"].sha256,
+        "replacement_text": "Place the can upright at the center of the plate.",
+        "reason": "The failed video route requires an explicit frame-derived retry.",
+    }
+    PromptRevisionCommand.model_validate(values)
+
+    for changes, message in (
+        ({"kind": "replace"}, "full_replace"),
+        ({"base_text_sha256": "e" * 64}, "base_text_sha256.*source_prompt"),
+        ({"replacement_text": ""}, "replacement_text"),
+        ({"reason": ""}, "reason"),
+    ):
+        with pytest.raises(ValidationError, match=message):
+            PromptRevisionCommand.model_validate(
+                {**values, "patch": {**patch, **changes}}
+            )
+
+
 def test_prompt_revision_is_self_hashed_state_unchanged_and_lineage_bound() -> None:
     values = _prompt_revision_values()
     revision = PromptRevision.model_validate(values)
     assert revision.predecessor_receipt == revision.advisory_receipt
     assert revision.base_state_sha256 == revision.resulting_state_sha256
     assert revision.base_state == revision.resulting_state
+    assert revision.external_agent_executed is False
     assert prompt_revision_sha256(revision) == values["revision_sha256"]
     assert revision.model_json_schema()["$id"] == PROMPT_REVISION_SCHEMA_ID
 
@@ -504,6 +608,7 @@ def test_prompt_revision_is_self_hashed_state_unchanged_and_lineage_bound() -> N
             "predecessor_receipt.*advisory_receipt",
         ),
         ({"committed_revision": 9}, "advance exactly one"),
+        ({"external_agent_executed": True}, "False"),
     ):
         with pytest.raises(ValidationError, match=message):
             PromptRevision.model_validate({**values, **changes})
@@ -565,11 +670,11 @@ def test_prompt_revision_evidence_refs_are_sorted_unique() -> None:
 
 
 @pytest.mark.parametrize(
-    ("control_kind", "command_schema", "record_schema"),
+    ("control_kind", "command_schema", "receipt_schema"),
     [
         (
-            "external_agent_advisory",
-            "harness.external_agent_advisory_command.v1",
+            "advisory",
+            "harness.advisory_record_command.v1",
             "harness.external_agent_advisory_receipt.v1",
         ),
         (
@@ -582,32 +687,41 @@ def test_prompt_revision_evidence_refs_are_sorted_unique() -> None:
 def test_control_commit_snapshot_advances_history_but_not_state(
     control_kind: str,
     command_schema: str,
-    record_schema: str,
+    receipt_schema: str,
 ) -> None:
     authority = _control_authority(command_schema=command_schema)
-    record = _ref("control-record", record_schema)
+    receipt = _ref("control-receipt", receipt_schema)
     values = {
         "schema_version": "harness.control_commit_snapshot.v1",
         "control_kind": control_kind,
         "idempotency_key": "control-command-001",
         **authority,
-        "record": record,
-        "receipt_head": record,
+        "payload": receipt,
+        "receipt": receipt,
+        "receipt_head": receipt,
     }
     snapshot = ControlCommitSnapshot.model_validate(values)
     assert snapshot.committed_revision == snapshot.base_revision + 1
     assert snapshot.committed_turn_seq == snapshot.base_turn_seq + 1
     assert snapshot.resulting_state_sha256 == snapshot.base_state_sha256
     assert snapshot.resulting_state == snapshot.base_state
-    assert snapshot.receipt_head == snapshot.record
+    assert snapshot.payload == snapshot.receipt
+    assert snapshot.receipt_head == snapshot.receipt
     assert snapshot.model_json_schema()["$id"] == CONTROL_COMMIT_SNAPSHOT_SCHEMA_ID
 
     for changes, message in (
         ({"resulting_state_sha256": "e" * 64}, "state.*unchanged"),
         ({"committed_revision": 9}, "advance exactly one"),
         ({"committed_turn_seq": 6}, "turn.*advance exactly one"),
-        ({"receipt_head": _ref("other-head", record_schema)}, "receipt_head.*record"),
-        ({"record": _ref("wrong-record", "harness.run_state.v1")}, "record"),
+        (
+            {"payload": _ref("other-payload", receipt_schema)},
+            "payload.*receipt",
+        ),
+        (
+            {"receipt_head": _ref("other-head", receipt_schema)},
+            "receipt_head.*receipt",
+        ),
+        ({"receipt": _ref("wrong-receipt", "harness.run_state.v1")}, "receipt"),
     ):
         with pytest.raises(ValidationError, match=message):
             ControlCommitSnapshot.model_validate({**values, **changes})
