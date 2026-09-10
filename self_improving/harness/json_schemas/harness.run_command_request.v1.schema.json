@@ -1,0 +1,79 @@
+{
+  "$defs": {
+    "JsonValue": {}
+  },
+  "$id": "harness.run_command_request.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Submit one exact Skill command against an observed workflow head.",
+  "properties": {
+    "command_id": {
+      "format": "uuid4",
+      "title": "Command Id",
+      "type": "string"
+    },
+    "expected_receipt_head_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Expected Receipt Head Sha256",
+      "type": "string"
+    },
+    "expected_state_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Expected State Sha256",
+      "type": "string"
+    },
+    "expected_workflow_revision": {
+      "minimum": 0,
+      "title": "Expected Workflow Revision",
+      "type": "integer"
+    },
+    "idempotency_key": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "parameters": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Parameters",
+      "type": "object"
+    },
+    "principal_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Principal Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.run_command_request.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "skill_ref": {
+      "pattern": "^[a-z][a-z0-9_]{0,31}\\.[a-z][a-z0-9_]{0,31}@(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$",
+      "title": "Skill Ref",
+      "type": "string"
+    },
+    "workflow_run_id": {
+      "format": "uuid4",
+      "title": "Workflow Run Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "command_id",
+    "principal_id",
+    "workflow_run_id",
+    "idempotency_key",
+    "expected_workflow_revision",
+    "expected_state_sha256",
+    "expected_receipt_head_sha256",
+    "skill_ref",
+    "parameters"
+  ],
+  "title": "RunCommandRequest",
+  "type": "object"
+}

@@ -1,0 +1,220 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "$id": "harness.artifact_ref.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "StateMutation": {
+      "additionalProperties": false,
+      "description": "One compare-and-swap fact mutation.",
+      "properties": {
+        "expected_fact_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expected Fact Sha256"
+        },
+        "fact": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorldFact"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "key": {
+          "maxLength": 255,
+          "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+$",
+          "title": "Key",
+          "type": "string"
+        },
+        "operation": {
+          "enum": [
+            "upsert",
+            "retract"
+          ],
+          "title": "Operation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "operation",
+        "key",
+        "expected_fact_sha256",
+        "fact"
+      ],
+      "title": "StateMutation",
+      "type": "object"
+    },
+    "WorldFact": {
+      "additionalProperties": false,
+      "description": "One trusted, time-bounded fact available to an orchestration caller.",
+      "properties": {
+        "key": {
+          "maxLength": 255,
+          "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+$",
+          "title": "Key",
+          "type": "string"
+        },
+        "observed_at": {
+          "format": "date-time",
+          "title": "Observed At",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.world_fact.v1",
+          "default": "harness.world_fact.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source_artifact": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "source_kind": {
+          "enum": [
+            "user_input",
+            "fresh_observation",
+            "trusted_receipt",
+            "derived"
+          ],
+          "title": "Source Kind",
+          "type": "string"
+        },
+        "valid_until": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid Until"
+        },
+        "value": {
+          "$ref": "#/$defs/JsonValue"
+        }
+      },
+      "required": [
+        "key",
+        "value",
+        "source_kind",
+        "source_artifact",
+        "observed_at",
+        "valid_until"
+      ],
+      "title": "WorldFact",
+      "type": "object"
+    }
+  },
+  "$id": "harness.state_delta.v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "An actor-neutral receipt-bound compare-and-swap state change.",
+  "properties": {
+    "base_state_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Base State Sha256",
+      "type": "string"
+    },
+    "delta_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Delta Sha256",
+      "type": "string"
+    },
+    "effective_at": {
+      "format": "date-time",
+      "title": "Effective At",
+      "type": "string"
+    },
+    "mutations": {
+      "items": {
+        "$ref": "#/$defs/StateMutation"
+      },
+      "title": "Mutations",
+      "type": "array"
+    },
+    "receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.state_delta.v2",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "base_state_sha256",
+    "effective_at",
+    "receipt",
+    "mutations",
+    "delta_sha256"
+  ],
+  "title": "StateDeltaV2",
+  "type": "object"
+}

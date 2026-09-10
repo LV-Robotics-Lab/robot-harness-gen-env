@@ -1,0 +1,139 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "$id": "harness.artifact_ref.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.qualified_skill_execution.v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "The live qualified Skill identity intersected with the frozen registry.",
+  "properties": {
+    "descriptor": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "evidence_policy_id": {
+      "maxLength": 255,
+      "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+$",
+      "title": "Evidence Policy Id",
+      "type": "string"
+    },
+    "evidence_policy_implementation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Evidence Policy Implementation Sha256",
+      "type": "string"
+    },
+    "evidence_policy_version": {
+      "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$",
+      "title": "Evidence Policy Version",
+      "type": "string"
+    },
+    "implementation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Implementation Sha256",
+      "type": "string"
+    },
+    "input_schema": {
+      "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+\\.v(?:0|[1-9][0-9]*)$",
+      "title": "Input Schema",
+      "type": "string"
+    },
+    "max_attempts": {
+      "minimum": 1,
+      "title": "Max Attempts",
+      "type": "integer"
+    },
+    "output_schema": {
+      "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+\\.v(?:0|[1-9][0-9]*)$",
+      "title": "Output Schema",
+      "type": "string"
+    },
+    "qualification_artifact": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "qualification_report": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.qualified_skill_execution.v2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "skill_ref": {
+      "pattern": "^[a-z][a-z0-9_]{0,31}\\.[a-z][a-z0-9_]{0,31}@(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$",
+      "title": "Skill Ref",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "skill_ref",
+    "descriptor",
+    "input_schema",
+    "output_schema",
+    "implementation_sha256",
+    "qualification_artifact",
+    "qualification_report",
+    "max_attempts",
+    "evidence_policy_id",
+    "evidence_policy_version",
+    "evidence_policy_implementation_sha256"
+  ],
+  "title": "QualifiedSkillExecutionV2",
+  "type": "object"
+}

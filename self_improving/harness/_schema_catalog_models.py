@@ -33,6 +33,11 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
         "harness.blocker.v1": (".schemas.common", "Blocker"),
         "harness.environment_package.v1": (".schemas.text2env", "EnvironmentPackage"),
         "harness.event.v1": (".schemas.common", "Event"),
+        "harness.operation_snapshot.v1": (".schemas.workflow", "OperationSnapshot"),
+        "harness.qualified_skill_execution.v2": (
+            ".schemas.workflow_operation",
+            "QualifiedSkillExecutionV2",
+        ),
         "harness.registry_snapshot.v1": (".schemas.registry_snapshot", "RegistrySnapshot"),
         "harness.replay_vlm_assessment_input.v1": (
             ".schemas.replay_vlm",
@@ -46,6 +51,7 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
             ".schemas.replay_vlm",
             "ReplayVlmAssessmentOutputV2",
         ),
+        "harness.run_command_request.v1": (".schemas.workflow", "RunCommandRequest"),
         "harness.run_read_request.v1": (".schemas.workflow", "RunReadRequest"),
         "harness.run_snapshot.v1": (".schemas.workflow", "RunSnapshot"),
         "harness.run_start_request.v1": (".schemas.workflow", "RunStartRequest"),
@@ -58,6 +64,7 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
             ".schemas.qualification_report",
             "PublicQualificationReportV1",
         ),
+        "harness.state_delta.v2": (".schemas.workflow_operation", "StateDeltaV2"),
         "harness.text2env_compile_input.v1": (".schemas.text2env", "Text2EnvCompileInput"),
         "harness.text2env_compile_output.v1": (
             ".schemas.text2env",
@@ -80,6 +87,15 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
         "harness.text2env_validate_output.v2": (
             ".schemas.text2env_validate_v2",
             "Text2EnvValidateV2Output",
+        ),
+        "harness.tool_result.v2": (".schemas.workflow_operation", "ToolResultV2"),
+        "harness.trusted_tool_receipt.v2": (
+            ".schemas.workflow_operation",
+            "TrustedToolReceiptV2",
+        ),
+        "harness.workflow_operation_receipt.v2": (
+            ".schemas.workflow_operation",
+            "WorkflowOperationReceiptV2",
         ),
         "harness.workflow_start_receipt.v1": (
             ".schemas.workflow",

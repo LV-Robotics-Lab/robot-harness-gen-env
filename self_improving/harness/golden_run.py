@@ -13,31 +13,56 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ValidationError
 
 from .artifacts import ArtifactResolutionError, LocalArtifactStore
+from .golden_execution import (
+    GoldenExecutionCatalog,
+    QualifiedApplicationRunPendingError,
+    SkillEvidencePolicy,
+    create_golden_execution_catalog,
+)
 from .golden_store import (
     GoldenRunConflictError,
     GoldenRunCorruptionError,
+    GoldenRunHeadConflictError,
     SQLiteGoldenRunStore,
 )
 from .qualification import QualificationReportV1
+from .run_store import ControlledRunLifecycle
 from .schema_catalog import schema_model
 from .schemas.common import (
     ArtifactRef,
+    Invocation,
+    RegisteredSkillDescriptor,
+    RunState,
+    RunStatus,
     SkillDescriptor,
     SkillDescriptorV2,
     SkillQualification,
 )
 from .schemas.registry_snapshot import RegistrySnapshot
 from .schemas.workflow import (
+    OperationSnapshot,
+    RunCommandRequest,
     RunReadRequest,
     RunSnapshot,
     RunStartRequest,
     WorkflowStartReceipt,
 )
-from .system2.domain import (
+from .schemas.workflow_operation import (
+    QualifiedSkillExecutionV2,
+    StateDeltaV2,
+    ToolResultV2,
+    TrustedToolReceiptV2,
+    WorkflowOperationReceiptV2,
+    state_delta_v2_sha256,
+)
+from .trusted_state import (
+    StateMutation,
     TrustedWorldState,
     WorldFact,
     WorldFactEvidence,
+    advance_trusted_world_state,
     build_world_state,
+    fact_sha256,
 )
 
 
@@ -63,8 +88,10 @@ class GoldenRunHarness:
         *,
         artifact_store: LocalArtifactStore,
         workflow_store: SQLiteGoldenRunStore,
+        execution_catalog: GoldenExecutionCatalog | None = None,
         clock: Callable[[], datetime] = lambda: datetime.now(timezone.utc),
         workflow_id_factory: Callable[[], UUID] = uuid4,
+        child_run_id_factory: Callable[[], UUID] = uuid4,
     ) -> None:
         if type(artifact_store) is not LocalArtifactStore:
             raise TypeError("artifact_store must be the exact LocalArtifactStore")
@@ -72,8 +99,18 @@ class GoldenRunHarness:
             raise TypeError("workflow_store must be the exact SQLiteGoldenRunStore")
         self._artifact_store = artifact_store
         self._workflow_store = workflow_store
+        if execution_catalog is None:
+            execution_catalog = create_golden_execution_catalog()
+        if type(execution_catalog) is not GoldenExecutionCatalog:
+            raise TypeError("execution_catalog must be the exact GoldenExecutionCatalog")
+        if execution_catalog.artifact_roots and execution_catalog.artifact_roots != {
+            artifact_store.root
+        }:
+            raise ValueError("execution catalog and GoldenRun must share one exact CAS")
+        self._execution_catalog = execution_catalog
         self._clock = clock
         self._workflow_id_factory = workflow_id_factory
+        self._child_run_id_factory = child_run_id_factory
 
     def start(self, request: RunStartRequest) -> RunSnapshot:
         """Build the first trusted state and its actor-neutral receipt head."""
@@ -83,9 +120,7 @@ class GoldenRunHarness:
             principal_id=request.principal_id,
             idempotency_key=request.idempotency_key,
             request_sha256=request_sha256,
-            start_request_sha256=hashlib.sha256(
-                _canonical_model_bytes(request)
-            ).hexdigest(),
+            start_request_sha256=hashlib.sha256(_canonical_model_bytes(request)).hexdigest(),
             factory=lambda: self._create_start(request, request_sha256=request_sha256),
         )
         snapshot = stored.snapshot
@@ -99,16 +134,14 @@ class GoldenRunHarness:
         return snapshot
 
     def read(self, request: RunReadRequest) -> RunSnapshot:
-        """Recover an authorized revision-zero start and reverify its closure."""
+        """Recover an authorized workflow and reverify its current CAS closure."""
 
         stored = self._workflow_store.read_snapshot(
             principal_id=request.principal_id,
             workflow_run_id=request.workflow_run_id,
         )
         if stored is None:
-            raise GoldenRunNotFoundError(
-                "golden workflow was not found for this principal"
-            )
+            raise GoldenRunNotFoundError("golden workflow was not found for this principal")
         snapshot = stored.snapshot
         try:
             start_request = self._resolve_canonical_model(
@@ -119,14 +152,804 @@ class GoldenRunHarness:
             raise GoldenRunCorruptionError(
                 f"persisted workflow start failed its CAS closure: {error}"
             ) from error
-        self._verify_start_snapshot(
-            snapshot,
-            request=start_request,
-            request_sha256=_request_sha256(start_request),
-            persisted_idempotency_key=stored.idempotency_key,
-            persisted_request_sha256=stored.request_sha256,
-        )
+        try:
+            if snapshot.revision == 0 and snapshot.active_operation is None:
+                self._verify_start_snapshot(
+                    snapshot,
+                    request=start_request,
+                    request_sha256=_request_sha256(start_request),
+                    persisted_idempotency_key=stored.idempotency_key,
+                    persisted_request_sha256=stored.request_sha256,
+                )
+            else:
+                self._verify_advanced_snapshot(
+                    snapshot,
+                    request=start_request,
+                    persisted_idempotency_key=stored.idempotency_key,
+                    persisted_request_sha256=stored.request_sha256,
+                )
+        except GoldenRunCorruptionError:
+            raise
+        except (
+            ArtifactResolutionError,
+            GoldenRunRegistryError,
+            ValidationError,
+            TypeError,
+            ValueError,
+        ) as error:
+            raise GoldenRunCorruptionError(
+                f"persisted workflow failed its CAS closure: {error}"
+            ) from error
         return snapshot
+
+    def submit(self, request: RunCommandRequest) -> OperationSnapshot:
+        """Reserve, execute, and durably commit one exact qualified Skill command."""
+
+        existing = self._workflow_store.read_operation(
+            principal_id=request.principal_id,
+            workflow_run_id=request.workflow_run_id,
+            idempotency_key=request.idempotency_key,
+        )
+        if existing is not None:
+            policy, _ = self._resolve_frozen_execution(existing.operation)
+            command = self._resolve_canonical_model(existing.operation.command, RunCommandRequest)
+            normalized, _ = self._normalize_command(policy, request)
+            if command != normalized:
+                raise GoldenRunConflictError(
+                    "operation idempotency key is already bound to a different command"
+                )
+            if existing.operation.status is not RunStatus.RUNNING:
+                self.read(
+                    RunReadRequest(
+                        schema_version="harness.run_read_request.v1",
+                        principal_id=request.principal_id,
+                        workflow_run_id=request.workflow_run_id,
+                    )
+                )
+                return existing.operation
+            return self._resume_operation(existing.operation, request)
+
+        current = self.read(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id=request.principal_id,
+                workflow_run_id=request.workflow_run_id,
+            )
+        )
+        policy, qualified = self._resolve_live_execution(
+            current.registry_snapshot,
+            request.skill_ref,
+        )
+        normalized, parameters = self._normalize_command(policy, request)
+        if normalized.command_id != request.command_id:
+            raise GoldenRunCorruptionError("command normalization changed its identity")
+        base_state = self._resolve_canonical_model(current.state_ref, TrustedWorldState)
+        self._authorize(policy, base_state, parameters)
+        command_ref = self._publish_model(
+            normalized,
+            name="run_command_request.json",
+            schema_version="harness.run_command_request.v1",
+        )
+        qualified_ref = self._publish_model(
+            qualified,
+            name="qualified_skill_execution.json",
+            schema_version="harness.qualified_skill_execution.v2",
+        )
+        started_at = self._clock()
+        _require_utc_clock(started_at)
+        operation = OperationSnapshot(
+            schema_version="harness.operation_snapshot.v1",
+            operation_id=normalized.command_id,
+            workflow_run_id=normalized.workflow_run_id,
+            principal_id=normalized.principal_id,
+            idempotency_key=normalized.idempotency_key,
+            command=command_ref,
+            qualified_execution=qualified_ref,
+            skill_ref=normalized.skill_ref,
+            status=RunStatus.RUNNING,
+            base_revision=normalized.expected_workflow_revision,
+            committed_revision=None,
+            child_run_id=self._child_run_id_factory(),
+            tool_result=None,
+            started_at=started_at,
+            ended_at=None,
+        )
+        reserved = self._workflow_store.reserve_operation(
+            principal_id=normalized.principal_id,
+            workflow_run_id=normalized.workflow_run_id,
+            idempotency_key=normalized.idempotency_key,
+            command_sha256=command_ref.sha256,
+            expected_workflow_revision=normalized.expected_workflow_revision,
+            expected_state_sha256=normalized.expected_state_sha256,
+            expected_receipt_head_sha256=normalized.expected_receipt_head_sha256,
+            operation=operation,
+        )
+        if reserved is None:
+            raise GoldenRunNotFoundError("golden workflow was not found for this principal")
+        if reserved.operation != operation:
+            persisted_command = self._resolve_canonical_model(
+                reserved.operation.command,
+                RunCommandRequest,
+            )
+            if persisted_command != normalized:
+                raise GoldenRunConflictError(
+                    "operation identity is already bound to another command"
+                )
+            operation = reserved.operation
+        return self._resume_operation(operation, normalized)
+
+    def _resolve_live_execution(
+        self,
+        registry_ref: ArtifactRef,
+        skill_ref: str,
+    ) -> tuple[SkillEvidencePolicy, QualifiedSkillExecutionV2]:
+        registry = self._verify_registry_snapshot(registry_ref)
+        entries = tuple(
+            entry for entry in registry.qualified_skills if entry.skill_ref == skill_ref
+        )
+        if len(entries) != 1:
+            raise GoldenRunRegistryError(
+                "HARN_SKILL_UNQUALIFIED",
+                f"registry snapshot does not admit one exact Skill: {skill_ref}",
+            )
+        policy = self._execution_catalog.policy_for(skill_ref)
+        live = self._execution_catalog.live_descriptors_for(skill_ref)
+        if policy is None or len(live) != 1:
+            raise GoldenRunRegistryError(
+                "HARN_SKILL_UNQUALIFIED",
+                f"no live qualified application intersects {skill_ref}",
+            )
+        entry = entries[0]
+        frozen = self._resolve_descriptor(entry.descriptor_ref)
+        descriptor = live[0]
+        if type(frozen) is not type(descriptor) or frozen.model_dump(
+            mode="json"
+        ) != descriptor.model_dump(mode="json"):
+            raise GoldenRunRegistryError(
+                "HARN_DEPENDENCY_DRIFT",
+                f"live descriptor differs from the frozen registry: {skill_ref}",
+            )
+        if (
+            descriptor.qualification_artifact != entry.qualification_ref
+            or schema_model(descriptor.input_schema) is not policy.input_model
+        ):
+            raise GoldenRunRegistryError(
+                "HARN_DEPENDENCY_DRIFT",
+                f"live handler, schema, and qualification do not intersect: {skill_ref}",
+            )
+        qualified = QualifiedSkillExecutionV2(
+            schema_version="harness.qualified_skill_execution.v2",
+            skill_ref=skill_ref,
+            descriptor=entry.descriptor_ref,
+            input_schema=descriptor.input_schema,
+            output_schema=descriptor.output_schema,
+            implementation_sha256=descriptor.implementation_sha256,
+            qualification_artifact=entry.qualification_ref,
+            qualification_report=entry.qualification_report_ref,
+            max_attempts=descriptor.max_attempts,
+            evidence_policy_id=policy.evidence_policy_id,
+            evidence_policy_version=policy.evidence_policy_version,
+            evidence_policy_implementation_sha256=(policy.evidence_policy_implementation_sha256),
+        )
+        return policy, qualified
+
+    def _resolve_frozen_execution(
+        self,
+        operation: OperationSnapshot,
+    ) -> tuple[SkillEvidencePolicy, QualifiedSkillExecutionV2]:
+        qualified = self._resolve_canonical_model(
+            operation.qualified_execution,
+            QualifiedSkillExecutionV2,
+        )
+        registry = self._verify_registry_snapshot(
+            self._read_visible_snapshot(operation).registry_snapshot
+        )
+        entries = tuple(
+            entry for entry in registry.qualified_skills if entry.skill_ref == operation.skill_ref
+        )
+        policy = self._execution_catalog.policy_for(operation.skill_ref)
+        if len(entries) != 1 or policy is None:
+            raise GoldenRunCorruptionError("operation no longer has one frozen qualified Skill")
+        entry = entries[0]
+        descriptor = self._resolve_descriptor(entry.descriptor_ref)
+        if (
+            qualified.skill_ref != operation.skill_ref
+            or qualified.descriptor != entry.descriptor_ref
+            or qualified.input_schema != descriptor.input_schema
+            or qualified.output_schema != descriptor.output_schema
+            or qualified.implementation_sha256 != descriptor.implementation_sha256
+            or qualified.qualification_artifact != entry.qualification_ref
+            or qualified.qualification_report != entry.qualification_report_ref
+            or qualified.max_attempts != descriptor.max_attempts
+            or qualified.evidence_policy_id != policy.evidence_policy_id
+            or qualified.evidence_policy_version != policy.evidence_policy_version
+            or qualified.evidence_policy_implementation_sha256
+            != policy.evidence_policy_implementation_sha256
+        ):
+            raise GoldenRunCorruptionError("operation frozen execution binding is inconsistent")
+        return policy, qualified
+
+    def _read_visible_snapshot(self, operation: OperationSnapshot) -> RunSnapshot:
+        stored = self._workflow_store.read_snapshot(
+            principal_id=operation.principal_id,
+            workflow_run_id=operation.workflow_run_id,
+        )
+        if stored is None:
+            raise GoldenRunNotFoundError("golden workflow was not found for this principal")
+        return stored.snapshot
+
+    def _normalize_command(
+        self,
+        policy: SkillEvidencePolicy,
+        request: RunCommandRequest,
+    ) -> tuple[RunCommandRequest, BaseModel]:
+        try:
+            return policy.normalize(request)
+        except (TypeError, ValueError, ValidationError) as error:
+            raise GoldenRunRegistryError(
+                "HARN_INPUT_SCHEMA_INVALID",
+                f"command parameters are invalid for {request.skill_ref}: {error}",
+            ) from error
+
+    @staticmethod
+    def _authorize(
+        policy: SkillEvidencePolicy,
+        state: TrustedWorldState,
+        parameters: BaseModel,
+    ) -> None:
+        try:
+            policy.authorize(state, parameters)
+        except (TypeError, ValueError) as error:
+            raise GoldenRunRegistryError(
+                "HARN_INPUT_SCHEMA_INVALID",
+                f"command is not authorized by trusted world state: {error}",
+            ) from error
+
+    def _resume_operation(
+        self,
+        operation: OperationSnapshot,
+        request: RunCommandRequest,
+    ) -> OperationSnapshot:
+        policy, qualified = self._resolve_frozen_execution(operation)
+        command = self._resolve_canonical_model(operation.command, RunCommandRequest)
+        normalized, parameters = self._normalize_command(policy, request)
+        if command != normalized or command.command_id != operation.operation_id:
+            raise GoldenRunConflictError("reserved operation command identity differs")
+        child_authority = self._execution_catalog.child_authority_for(operation.skill_ref)
+        if child_authority is None:
+            return operation
+        lifecycle = child_authority.read_controlled_lifecycle(operation.child_run_id)
+        if lifecycle.terminal is None:
+            if lifecycle.invocation is not None:
+                return operation
+            application = self._execution_catalog.application_for(operation.skill_ref)
+            if application is None:
+                return operation
+            snapshot = self._read_visible_snapshot(operation)
+            base_state = self._resolve_canonical_model(snapshot.state_ref, TrustedWorldState)
+            if snapshot.active_operation != operation.operation_id:
+                raise GoldenRunHeadConflictError(
+                    "reserved operation is not the active workflow head"
+                )
+            live_policy, live_qualified = self._resolve_live_execution(
+                snapshot.registry_snapshot,
+                operation.skill_ref,
+            )
+            if live_qualified != qualified or live_policy is not policy:
+                raise GoldenRunRegistryError(
+                    "HARN_DEPENDENCY_DRIFT",
+                    "live qualified execution changed after reservation",
+                )
+            self._authorize(policy, base_state, parameters)
+            try:
+                self._execution_catalog.invoke(
+                    operation.skill_ref,
+                    parameters,
+                    run_id=operation.child_run_id,
+                )
+            except QualifiedApplicationRunPendingError:
+                pass
+            lifecycle = child_authority.read_controlled_lifecycle(operation.child_run_id)
+            if lifecycle.terminal is None:
+                return operation
+        self._verify_child_lifecycle(lifecycle, operation, command, qualified)
+        assert lifecycle.terminal is not None
+        return self._commit_terminal_operation(
+            operation,
+            command,
+            policy,
+            qualified,
+            lifecycle,
+        )
+
+    def _verify_child_lifecycle(
+        self,
+        lifecycle: ControlledRunLifecycle,
+        operation: OperationSnapshot,
+        command: RunCommandRequest,
+        qualified: QualifiedSkillExecutionV2,
+    ) -> None:
+        intent = lifecycle.intent
+        state = lifecycle.terminal
+        if intent is None or state is None:
+            raise GoldenRunCorruptionError("terminal child lacks its controlled execution intent")
+        skill_id, version = operation.skill_ref.split("@", maxsplit=1)
+        parameters_digest = _canonical_json_sha256(command.parameters)
+        descriptor = self._resolve_descriptor(qualified.descriptor)
+        if (
+            intent.run_id != operation.child_run_id
+            or intent.skill_id != skill_id
+            or intent.skill_version != version
+            or intent.input_schema != qualified.input_schema
+            or intent.raw_parameters_sha256 != parameters_digest
+            or intent.effective_parameters_sha256 != parameters_digest
+            or intent.descriptor_sha256
+            != _canonical_json_sha256(descriptor.model_dump(mode="json"))
+            or intent.implementation_sha256 != qualified.implementation_sha256
+            or intent.qualification_sha256 != qualified.qualification_artifact.sha256
+            or intent.max_attempts != qualified.max_attempts
+            or state.run_id != operation.child_run_id
+            or state.skill_id != skill_id
+            or state.skill_version != version
+            or state.max_attempts != qualified.max_attempts
+        ):
+            raise GoldenRunCorruptionError("terminal child differs from its frozen execution")
+        invocation = lifecycle.invocation
+        if invocation is not None and (
+            invocation.effective_parameters != command.parameters
+            or invocation.dependencies != intent.dependencies
+        ):
+            raise GoldenRunCorruptionError("child invocation differs from its frozen command")
+
+    def _commit_terminal_operation(
+        self,
+        operation: OperationSnapshot,
+        command: RunCommandRequest,
+        policy: SkillEvidencePolicy,
+        qualified: QualifiedSkillExecutionV2,
+        lifecycle: ControlledRunLifecycle,
+    ) -> OperationSnapshot:
+        state = lifecycle.terminal
+        assert state is not None and state.ended_at is not None
+        current = self._read_visible_snapshot(operation)
+        if (
+            current.active_operation != operation.operation_id
+            or current.revision != command.expected_workflow_revision
+            or current.state_sha256 != command.expected_state_sha256
+            or current.receipt_head.sha256 != command.expected_receipt_head_sha256
+        ):
+            raise GoldenRunHeadConflictError("workflow head changed before terminal commit")
+        base_state = self._resolve_canonical_model(current.state_ref, TrustedWorldState)
+        invocation_ref = (
+            None
+            if lifecycle.invocation is None
+            else self._publish_model(
+                lifecycle.invocation,
+                name="skill_invocation.json",
+                schema_version="harness.skill_invocation.v1",
+            )
+        )
+        run_state_ref = self._publish_model(
+            state,
+            name="run_state.json",
+            schema_version="harness.run_state.v1",
+        )
+        supporting = _canonical_artifacts(state.artifacts)
+        for artifact in supporting:
+            self._artifact_store.resolve(artifact)
+        claims = policy.claims(state)
+        receipt = TrustedToolReceiptV2(
+            schema_version="harness.trusted_tool_receipt.v2",
+            workflow_run_id=operation.workflow_run_id,
+            operation_id=operation.operation_id,
+            principal_id=operation.principal_id,
+            command=operation.command,
+            base_revision=operation.base_revision,
+            base_state_sha256=base_state.state_sha256,
+            base_state=current.state_ref,
+            registry_snapshot=current.registry_snapshot,
+            skill=qualified,
+            status=state.status,
+            started_at=operation.started_at,
+            ended_at=state.ended_at,
+            child_run_id=operation.child_run_id,
+            invocation=invocation_ref,
+            run_state=run_state_ref,
+            invocation_digest=state.invocation_digest,
+            typed_output=state.output,
+            blocker=state.blocker,
+            supporting_artifacts=supporting,
+            derived_fact_claims=claims,
+        )
+        receipt_ref = self._publish_model(
+            receipt,
+            name="trusted_tool_receipt.json",
+            schema_version="harness.trusted_tool_receipt.v2",
+        )
+        delta: StateDeltaV2 | None = None
+        delta_ref: ArtifactRef | None = None
+        resulting_state = base_state
+        resulting_state_ref = current.state_ref
+        if state.status is RunStatus.SUCCEEDED:
+            mutations = _mutations_from_claims(
+                base_state,
+                claims,
+                receipt_ref=receipt_ref,
+                observed_at=state.ended_at,
+            )
+            unhashed = StateDeltaV2.model_construct(
+                schema_version="harness.state_delta.v2",
+                base_state_sha256=base_state.state_sha256,
+                effective_at=state.ended_at,
+                receipt=receipt_ref,
+                mutations=mutations,
+                delta_sha256="0" * 64,
+            )
+            delta = StateDeltaV2(
+                **unhashed.model_dump(mode="python", exclude={"delta_sha256"}),
+                delta_sha256=state_delta_v2_sha256(unhashed),
+            )
+            delta_ref = self._publish_model(
+                delta,
+                name="state_delta.json",
+                schema_version="harness.state_delta.v2",
+            )
+            resulting_state = advance_trusted_world_state(
+                base_state,
+                effective_at=delta.effective_at,
+                mutations=delta.mutations,
+            )
+            resulting_state_ref = self._publish_model(
+                resulting_state,
+                name="trusted_world_state.json",
+                schema_version="harness.trusted_world_state.v1",
+            )
+        result = ToolResultV2(
+            schema_version="harness.tool_result.v2",
+            workflow_run_id=operation.workflow_run_id,
+            operation_id=operation.operation_id,
+            skill_ref=operation.skill_ref,
+            status=state.status,
+            started_at=operation.started_at,
+            ended_at=state.ended_at,
+            child_run_id=operation.child_run_id,
+            invocation=invocation_ref,
+            run_state=run_state_ref,
+            typed_output=state.output,
+            state_delta=delta,
+            diagnostics=policy.diagnostics(state),
+            trusted_receipt=receipt_ref,
+            fresh_observations=(),
+            blocker=state.blocker,
+        )
+        policy.verify_result(
+            state=state,
+            claims=claims,
+            result=result,
+            supporting=supporting,
+        )
+        result_ref = self._publish_model(
+            result,
+            name="tool_result.json",
+            schema_version="harness.tool_result.v2",
+        )
+        workflow_receipt = WorkflowOperationReceiptV2(
+            schema_version="harness.workflow_operation_receipt.v2",
+            workflow_run_id=operation.workflow_run_id,
+            operation_id=operation.operation_id,
+            principal_id=operation.principal_id,
+            command=operation.command,
+            predecessor_receipt=current.receipt_head,
+            tool_receipt=receipt_ref,
+            tool_result=result_ref,
+            state_delta=delta_ref,
+            base_revision=operation.base_revision,
+            committed_revision=operation.base_revision + 1,
+            base_state_sha256=base_state.state_sha256,
+            resulting_state_sha256=resulting_state.state_sha256,
+            resulting_state=resulting_state_ref,
+            status=state.status,
+            committed_at=state.ended_at,
+        )
+        workflow_receipt_ref = self._publish_model(
+            workflow_receipt,
+            name="workflow_operation_receipt.json",
+            schema_version="harness.workflow_operation_receipt.v2",
+        )
+        terminal = OperationSnapshot.model_validate(
+            operation.model_copy(
+                update={
+                    "status": state.status,
+                    "committed_revision": operation.base_revision + 1,
+                    "tool_result": result_ref,
+                    "ended_at": state.ended_at,
+                }
+            ).model_dump(mode="python")
+        )
+        next_snapshot = RunSnapshot.model_validate(
+            current.model_copy(
+                update={
+                    "revision": operation.base_revision + 1,
+                    "turn_seq": current.turn_seq + 1,
+                    "state_sha256": resulting_state.state_sha256,
+                    "state_ref": resulting_state_ref,
+                    "receipt_head": workflow_receipt_ref,
+                    "active_operation": None,
+                    "child_runs": (*current.child_runs, operation.child_run_id),
+                    "updated_at": state.ended_at,
+                }
+            ).model_dump(mode="python")
+        )
+        persisted = self._workflow_store.commit_operation(
+            principal_id=operation.principal_id,
+            running=operation,
+            terminal=terminal,
+            snapshot=next_snapshot,
+        )
+        if persisted is None:
+            raise GoldenRunNotFoundError("golden workflow was not found for this principal")
+        return persisted.operation
+
+    def _verify_advanced_snapshot(
+        self,
+        snapshot: RunSnapshot,
+        *,
+        request: RunStartRequest,
+        persisted_idempotency_key: str,
+        persisted_request_sha256: str,
+    ) -> None:
+        operations = tuple(
+            stored.operation
+            for stored in self._workflow_store.read_operations(
+                principal_id=snapshot.principal_id,
+                workflow_run_id=snapshot.workflow_run_id,
+            )
+        )
+        terminal = tuple(op for op in operations if op.status is not RunStatus.RUNNING)
+        running = tuple(op for op in operations if op.status is RunStatus.RUNNING)
+        if (
+            len(terminal) != snapshot.revision
+            or len(running) > 1
+            or tuple(op.base_revision for op in operations) != tuple(range(len(operations)))
+            or snapshot.turn_seq != snapshot.revision
+            or snapshot.child_runs != tuple(op.child_run_id for op in terminal)
+            or (snapshot.active_operation is None) != (not running)
+            or (running and running[0].operation_id != snapshot.active_operation)
+        ):
+            raise GoldenRunCorruptionError("workflow operation journal and head disagree")
+
+        receipts: dict[UUID, tuple[ArtifactRef, WorkflowOperationReceiptV2]] = {}
+        predecessor = snapshot.receipt_head
+        for operation in reversed(terminal):
+            receipt = self._resolve_canonical_model(
+                predecessor,
+                WorkflowOperationReceiptV2,
+            )
+            if receipt.operation_id != operation.operation_id:
+                raise GoldenRunCorruptionError("workflow receipt chain is not operation ordered")
+            receipts[operation.operation_id] = (predecessor, receipt)
+            predecessor = receipt.predecessor_receipt
+        start_receipt = self._resolve_canonical_model(predecessor, WorkflowStartReceipt)
+        initial = RunSnapshot(
+            schema_version="harness.run_snapshot.v1",
+            workflow_run_id=snapshot.workflow_run_id,
+            principal_id=snapshot.principal_id,
+            workspace=snapshot.workspace,
+            requested_profile=snapshot.requested_profile,
+            revision=0,
+            status="active",
+            turn_seq=0,
+            state_sha256=start_receipt.state_sha256,
+            state_ref=start_receipt.state_ref,
+            start_request_ref=snapshot.start_request_ref,
+            registry_snapshot=snapshot.registry_snapshot,
+            receipt_head=predecessor,
+            active_operation=None,
+            child_runs=(),
+            started_at=snapshot.started_at,
+            updated_at=snapshot.started_at,
+        )
+        self._verify_start_snapshot(
+            initial,
+            request=request,
+            request_sha256=_request_sha256(request),
+            persisted_idempotency_key=persisted_idempotency_key,
+            persisted_request_sha256=persisted_request_sha256,
+        )
+        prior = initial
+        for operation in terminal:
+            receipt_ref, receipt = receipts[operation.operation_id]
+            prior = self._verify_terminal_evidence(
+                prior,
+                operation,
+                receipt_ref=receipt_ref,
+                receipt=receipt,
+            )
+        if running:
+            self._verify_running_operation(prior, running[0])
+            prior = RunSnapshot.model_validate(
+                prior.model_copy(
+                    update={
+                        "active_operation": running[0].operation_id,
+                        "updated_at": running[0].started_at,
+                    }
+                ).model_dump(mode="python")
+            )
+        if prior != snapshot:
+            raise GoldenRunCorruptionError("workflow head cannot be reconstructed from evidence")
+
+    def _verify_running_operation(
+        self,
+        prior: RunSnapshot,
+        operation: OperationSnapshot,
+    ) -> None:
+        command = self._resolve_canonical_model(operation.command, RunCommandRequest)
+        self._resolve_frozen_execution(operation)
+        if (
+            command.command_id != operation.operation_id
+            or command.workflow_run_id != prior.workflow_run_id
+            or command.principal_id != prior.principal_id
+            or command.idempotency_key != operation.idempotency_key
+            or command.skill_ref != operation.skill_ref
+            or command.expected_workflow_revision != prior.revision
+            or command.expected_state_sha256 != prior.state_sha256
+            or command.expected_receipt_head_sha256 != prior.receipt_head.sha256
+            or operation.base_revision != prior.revision
+            or operation.started_at < prior.updated_at
+        ):
+            raise GoldenRunCorruptionError("running operation differs from its reserved head")
+
+    def _verify_terminal_evidence(
+        self,
+        prior: RunSnapshot,
+        operation: OperationSnapshot,
+        *,
+        receipt_ref: ArtifactRef,
+        receipt: WorkflowOperationReceiptV2,
+    ) -> RunSnapshot:
+        self._verify_running_operation(
+            prior,
+            OperationSnapshot.model_validate(
+                operation.model_copy(
+                    update={
+                        "status": RunStatus.RUNNING,
+                        "committed_revision": None,
+                        "tool_result": None,
+                        "ended_at": None,
+                    }
+                ).model_dump(mode="python")
+            ),
+        )
+        policy, qualified = self._resolve_frozen_execution(operation)
+        assert operation.tool_result is not None and operation.ended_at is not None
+        result = self._resolve_canonical_model(operation.tool_result, ToolResultV2)
+        tool_receipt = self._resolve_canonical_model(
+            result.trusted_receipt,
+            TrustedToolReceiptV2,
+        )
+        child_state = self._resolve_canonical_model(result.run_state, RunState)
+        invocation = (
+            None
+            if result.invocation is None
+            else self._resolve_canonical_model(result.invocation, Invocation)
+        )
+        supporting = _canonical_artifacts(child_state.artifacts)
+        for artifact in supporting:
+            self._artifact_store.resolve(artifact)
+        claims = policy.claims(child_state)
+        policy.verify_result(
+            state=child_state,
+            claims=claims,
+            result=result,
+            supporting=supporting,
+        )
+        common_invalid = (
+            result.workflow_run_id != operation.workflow_run_id
+            or result.operation_id != operation.operation_id
+            or result.skill_ref != operation.skill_ref
+            or result.status != operation.status
+            or result.started_at != operation.started_at
+            or result.ended_at != operation.ended_at
+            or result.child_run_id != operation.child_run_id
+            or result.typed_output != child_state.output
+            or result.blocker != child_state.blocker
+            or child_state.run_id != operation.child_run_id
+            or result.invocation != tool_receipt.invocation
+            or result.run_state != tool_receipt.run_state
+            or tool_receipt.workflow_run_id != operation.workflow_run_id
+            or tool_receipt.operation_id != operation.operation_id
+            or tool_receipt.principal_id != operation.principal_id
+            or tool_receipt.command != operation.command
+            or tool_receipt.base_revision != operation.base_revision
+            or tool_receipt.base_state_sha256 != prior.state_sha256
+            or tool_receipt.base_state != prior.state_ref
+            or tool_receipt.registry_snapshot != prior.registry_snapshot
+            or tool_receipt.skill != qualified
+            or tool_receipt.status != operation.status
+            or tool_receipt.started_at != operation.started_at
+            or tool_receipt.ended_at != operation.ended_at
+            or tool_receipt.child_run_id != operation.child_run_id
+            or tool_receipt.invocation_digest != child_state.invocation_digest
+            or tool_receipt.typed_output != child_state.output
+            or tool_receipt.blocker != child_state.blocker
+            or tool_receipt.supporting_artifacts != supporting
+            or tool_receipt.derived_fact_claims != claims
+            or (invocation is None) != (child_state.invocation_digest is None)
+            or (
+                invocation is not None
+                and invocation.invocation_digest != child_state.invocation_digest
+            )
+        )
+        if common_invalid:
+            raise GoldenRunCorruptionError("terminal ToolResult closure is inconsistently bound")
+
+        resulting_state = prior.state_ref
+        resulting_sha = prior.state_sha256
+        delta_ref: ArtifactRef | None = None
+        if operation.status is RunStatus.SUCCEEDED:
+            assert result.state_delta is not None
+            if receipt.state_delta is None:
+                raise GoldenRunCorruptionError("successful receipt omits its state delta")
+            delta = self._resolve_canonical_model(receipt.state_delta, StateDeltaV2)
+            if delta != result.state_delta or delta.base_state_sha256 != prior.state_sha256:
+                raise GoldenRunCorruptionError("state delta differs across result evidence")
+            base_state = self._resolve_canonical_model(prior.state_ref, TrustedWorldState)
+            expected_mutations = _mutations_from_claims(
+                base_state,
+                claims,
+                receipt_ref=result.trusted_receipt,
+                observed_at=operation.ended_at,
+            )
+            if delta.mutations != expected_mutations:
+                raise GoldenRunCorruptionError("state delta does not implement receipt claims")
+            advanced = advance_trusted_world_state(
+                base_state,
+                effective_at=delta.effective_at,
+                mutations=delta.mutations,
+            )
+            published = self._resolve_canonical_model(receipt.resulting_state, TrustedWorldState)
+            if advanced != published:
+                raise GoldenRunCorruptionError("resulting state does not apply its exact delta")
+            for fact in published.facts:
+                self._artifact_store.resolve(fact.source_artifact)
+            resulting_state = receipt.resulting_state
+            resulting_sha = published.state_sha256
+            delta_ref = receipt.state_delta
+        elif result.state_delta is not None or receipt.state_delta is not None:
+            raise GoldenRunCorruptionError("non-successful operation cannot advance state")
+
+        if (
+            receipt_ref.schema_version != "harness.workflow_operation_receipt.v2"
+            or receipt.workflow_run_id != operation.workflow_run_id
+            or receipt.operation_id != operation.operation_id
+            or receipt.principal_id != operation.principal_id
+            or receipt.command != operation.command
+            or receipt.predecessor_receipt != prior.receipt_head
+            or receipt.tool_receipt != result.trusted_receipt
+            or receipt.tool_result != operation.tool_result
+            or receipt.state_delta != delta_ref
+            or receipt.base_revision != operation.base_revision
+            or receipt.committed_revision != operation.committed_revision
+            or receipt.base_state_sha256 != prior.state_sha256
+            or receipt.resulting_state_sha256 != resulting_sha
+            or receipt.resulting_state != resulting_state
+            or receipt.status != operation.status
+            or receipt.committed_at != operation.ended_at
+        ):
+            raise GoldenRunCorruptionError("workflow operation receipt is inconsistently bound")
+        return RunSnapshot.model_validate(
+            prior.model_copy(
+                update={
+                    "revision": operation.committed_revision,
+                    "turn_seq": prior.turn_seq + 1,
+                    "state_sha256": resulting_sha,
+                    "state_ref": resulting_state,
+                    "receipt_head": receipt_ref,
+                    "child_runs": (*prior.child_runs, operation.child_run_id),
+                    "updated_at": operation.ended_at,
+                }
+            ).model_dump(mode="python")
+        )
 
     def _create_start(self, request: RunStartRequest, *, request_sha256: str) -> RunSnapshot:
         started_at = self._clock()
@@ -136,8 +959,7 @@ class GoldenRunHarness:
         self._verify_registry_snapshot(request.registry_snapshot)
 
         facts = tuple(
-            self._fact_from_user_evidence(artifact)
-            for artifact in request.initial_fact_evidence
+            self._fact_from_user_evidence(artifact) for artifact in request.initial_fact_evidence
         )
         state = build_world_state(facts, as_of=started_at)
         state_ref = self._publish_model(
@@ -268,8 +1090,7 @@ class GoldenRunHarness:
             state.state_sha256 != snapshot.state_sha256
             or snapshot.state_ref.sha256
             != hashlib.sha256(_canonical_model_bytes(state)).hexdigest()
-            or tuple(fact.source_artifact for fact in state.facts)
-            != request.initial_fact_evidence
+            or tuple(fact.source_artifact for fact in state.facts) != request.initial_fact_evidence
             or persisted_request != request
             or receipt.workflow_run_id != snapshot.workflow_run_id
             or receipt.principal_id != snapshot.principal_id
@@ -358,6 +1179,14 @@ class GoldenRunHarness:
                 ) from error
         return snapshot
 
+    def _resolve_descriptor(self, artifact: ArtifactRef) -> RegisteredSkillDescriptor:
+        model = (
+            SkillDescriptor
+            if artifact.schema_version == "harness.skill_descriptor.v1"
+            else SkillDescriptorV2
+        )
+        return self._resolve_canonical_model(artifact, model)
+
     def _resolve_canonical_model(
         self,
         artifact: ArtifactRef,
@@ -401,6 +1230,74 @@ def _canonical_model_bytes(model: BaseModel) -> bytes:
     ).encode("utf-8")
 
 
+def _canonical_json_sha256(value: object) -> str:
+    payload = json.dumps(
+        value,
+        ensure_ascii=False,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _require_utc_clock(value: datetime) -> None:
+    if value.utcoffset() != timezone.utc.utcoffset(value):
+        raise ValueError("clock must return a UTC datetime")
+
+
+def _artifact_identity(ref: ArtifactRef) -> tuple[str, str, str]:
+    return (ref.sha256, ref.schema_version or "", ref.media_type)
+
+
+def _canonical_artifacts(artifacts: tuple[ArtifactRef, ...]) -> tuple[ArtifactRef, ...]:
+    ordered = tuple(sorted(artifacts, key=_artifact_identity))
+    identities = tuple(_artifact_identity(ref) for ref in ordered)
+    if len(identities) != len(set(identities)):
+        raise GoldenRunCorruptionError("terminal child repeats supporting artifact identity")
+    return ordered
+
+
+def _mutations_from_claims(
+    state: TrustedWorldState,
+    claims: tuple[object, ...],
+    *,
+    receipt_ref: ArtifactRef,
+    observed_at: datetime,
+) -> tuple[StateMutation, ...]:
+    current = {fact.key: fact for fact in state.facts}
+    mutations = []
+    for claim in claims:
+        key = claim.key
+        existing = current.get(key)
+        expected = None if existing is None else fact_sha256(existing)
+        if claim.operation == "retract":
+            if existing is None:
+                raise GoldenRunCorruptionError(f"cannot retract absent trusted fact: {key}")
+            mutation = StateMutation(
+                operation="retract",
+                key=key,
+                expected_fact_sha256=expected,
+                fact=None,
+            )
+        else:
+            mutation = StateMutation(
+                operation="upsert",
+                key=key,
+                expected_fact_sha256=expected,
+                fact=WorldFact(
+                    key=key,
+                    value=claim.value,
+                    source_kind="trusted_receipt",
+                    source_artifact=receipt_ref,
+                    observed_at=observed_at,
+                    valid_until=None,
+                ),
+            )
+        mutations.append(mutation)
+    return tuple(sorted(mutations, key=lambda item: item.key))
+
+
 def _request_sha256(request: RunStartRequest) -> str:
     payload = {
         "domain": "harness.run_start_request.identity.v1",
@@ -423,6 +1320,7 @@ def _request_sha256(request: RunStartRequest) -> str:
 __all__ = [
     "GoldenRunConflictError",
     "GoldenRunCorruptionError",
+    "GoldenRunHeadConflictError",
     "GoldenRunHarness",
     "GoldenRunNotFoundError",
     "GoldenRunRegistryError",

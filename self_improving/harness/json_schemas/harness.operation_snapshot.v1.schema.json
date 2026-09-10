@@ -1,0 +1,187 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "$id": "harness.artifact_ref.v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "RunStatus": {
+      "enum": [
+        "running",
+        "succeeded",
+        "blocked",
+        "failed"
+      ],
+      "title": "RunStatus",
+      "type": "string"
+    }
+  },
+  "$id": "harness.operation_snapshot.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Durable state of one workflow command and its controlled child run.",
+  "properties": {
+    "base_revision": {
+      "minimum": 0,
+      "title": "Base Revision",
+      "type": "integer"
+    },
+    "child_run_id": {
+      "format": "uuid4",
+      "title": "Child Run Id",
+      "type": "string"
+    },
+    "command": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "committed_revision": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Committed Revision"
+    },
+    "ended_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Ended At"
+    },
+    "idempotency_key": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "operation_id": {
+      "format": "uuid4",
+      "title": "Operation Id",
+      "type": "string"
+    },
+    "principal_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Principal Id",
+      "type": "string"
+    },
+    "qualified_execution": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.operation_snapshot.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "skill_ref": {
+      "pattern": "^[a-z][a-z0-9_]{0,31}\\.[a-z][a-z0-9_]{0,31}@(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$",
+      "title": "Skill Ref",
+      "type": "string"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/RunStatus"
+    },
+    "tool_result": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "workflow_run_id": {
+      "format": "uuid4",
+      "title": "Workflow Run Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "operation_id",
+    "workflow_run_id",
+    "principal_id",
+    "idempotency_key",
+    "command",
+    "qualified_execution",
+    "skill_ref",
+    "status",
+    "base_revision",
+    "committed_revision",
+    "child_run_id",
+    "tool_result",
+    "started_at",
+    "ended_at"
+  ],
+  "title": "OperationSnapshot",
+  "type": "object"
+}
