@@ -23,7 +23,7 @@ from .schemas.workflow_operation import (
     TrustedToolReceiptV2,
     WorkflowOperationReceiptV2,
 )
-from .trusted_state import TrustedWorldState
+from .trusted_state import TrustedWorldState, WorldFact
 
 _POLICY_DOMAIN = b"harness.text2env.validate.v2.evidence-policy.v1\0"
 _Model = TypeVar("_Model", bound=HarnessModel)
@@ -62,9 +62,7 @@ class Text2EnvValidateV2EvidencePolicy:
             raise ValueError("validate policy requires its exact evidence CAS")
         package_facts = tuple(fact for fact in state.facts if fact.key == "environment.package")
         catalog_facts = tuple(fact for fact in state.facts if fact.key == "assets.catalog")
-        runtime_facts = tuple(
-            fact for fact in state.facts if fact.key == "replay.runtime_evidence"
-        )
+        runtime_facts = tuple(fact for fact in state.facts if fact.key == "replay.runtime_evidence")
         validation_facts = tuple(
             fact for fact in state.facts if fact.key == "environment.validation"
         )
@@ -170,6 +168,9 @@ class Text2EnvValidateV2EvidencePolicy:
             return ()
         assert state.blocker is not None
         return tuple(sorted(state.blocker.artifact_refs, key=_artifact_sort_key))
+
+    def fresh_observations(self, state: RunState) -> tuple[WorldFact, ...]:
+        return ()
 
     def verify_result(
         self,

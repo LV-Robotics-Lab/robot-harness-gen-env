@@ -14,7 +14,7 @@ from .run_store import SQLiteRunStore
 from .schema_catalog import schema_model
 from .schemas.common import ArtifactRef, Invocation, RegisteredSkillDescriptor, RunState
 from .schemas.workflow_operation import ReceiptDerivedFactClaimV2, ToolResultV2
-from .trusted_state import TrustedWorldState
+from .trusted_state import TrustedWorldState, WorldFact
 
 
 class QualifiedApplicationRunPendingError(RuntimeError):
@@ -39,6 +39,8 @@ class SkillEvidencePolicy(Protocol):
     def claims(self, state: RunState) -> tuple[ReceiptDerivedFactClaimV2, ...]: ...
 
     def diagnostics(self, state: RunState) -> tuple[ArtifactRef, ...]: ...
+
+    def fresh_observations(self, state: RunState) -> tuple[WorldFact, ...]: ...
 
     def verify_result(
         self,

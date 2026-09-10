@@ -50,6 +50,7 @@ from .schemas.workflow import (
 )
 from .schemas.workflow_operation import (
     QualifiedSkillExecutionV2,
+    ReceiptDerivedFactClaimV2,
     StateDeltaV2,
     ToolResultV2,
     TrustedToolReceiptV2,
@@ -279,7 +280,8 @@ class GoldenRunHarness:
             result_ref = cast(ArtifactRef, operation.tool_result)
             refs.append(result_ref)
             result = self._resolve_canonical_model(result_ref, ToolResultV2)
-            refs.extend((result.run_state, result.trusted_receipt, *result.fresh_observations))
+            refs.extend((result.run_state, result.trusted_receipt))
+            refs.extend(observation.source_artifact for observation in result.fresh_observations)
             refs.extend(filter(None, (result.invocation, result.state_delta)))
             tool_receipt = self._resolve_canonical_model(
                 result.trusted_receipt,
@@ -672,6 +674,13 @@ class GoldenRunHarness:
         for artifact in supporting:
             self._artifact_store.resolve(artifact)
         claims = policy.claims(state)
+        fresh_observations = policy.fresh_observations(state)
+        _verify_observation_projection(
+            state=state,
+            claims=claims,
+            observations=fresh_observations,
+            supporting=supporting,
+        )
         receipt = TrustedToolReceiptV2(
             schema_version="harness.trusted_tool_receipt.v2",
             workflow_run_id=operation.workflow_run_id,
@@ -710,6 +719,7 @@ class GoldenRunHarness:
                 claims,
                 receipt_ref=receipt_ref,
                 observed_at=state.ended_at,
+                observations=fresh_observations,
             )
             unhashed = StateDeltaV2.model_construct(
                 schema_version="harness.state_delta.v2",
@@ -753,7 +763,7 @@ class GoldenRunHarness:
             state_delta=delta_ref,
             diagnostics=policy.diagnostics(state),
             trusted_receipt=receipt_ref,
-            fresh_observations=(),
+            fresh_observations=fresh_observations,
             blocker=state.blocker,
         )
         policy.verify_result(
@@ -979,6 +989,13 @@ class GoldenRunHarness:
         for artifact in supporting:
             self._artifact_store.resolve(artifact)
         claims = policy.claims(child_state)
+        fresh_observations = policy.fresh_observations(child_state)
+        _verify_observation_projection(
+            state=child_state,
+            claims=claims,
+            observations=fresh_observations,
+            supporting=supporting,
+        )
         policy.verify_result(
             state=child_state,
             claims=claims,
@@ -1017,6 +1034,7 @@ class GoldenRunHarness:
                 (tool_receipt.blocker, child_state.blocker),
                 (tool_receipt.supporting_artifacts, supporting),
                 (tool_receipt.derived_fact_claims, claims),
+                (result.fresh_observations, fresh_observations),
                 ((invocation is None), (child_state.invocation_digest is None)),
                 (
                     None if invocation is None else invocation.invocation_digest,
@@ -1048,6 +1066,7 @@ class GoldenRunHarness:
                 claims,
                 receipt_ref=result.trusted_receipt,
                 observed_at=operation.ended_at,
+                observations=fresh_observations,
             )
             if delta.mutations != expected_mutations:
                 raise GoldenRunCorruptionError("state delta does not implement receipt claims")
@@ -1415,12 +1434,14 @@ def _canonical_artifacts(artifacts: tuple[ArtifactRef, ...]) -> tuple[ArtifactRe
 
 def _mutations_from_claims(
     state: TrustedWorldState,
-    claims: tuple[object, ...],
+    claims: tuple[ReceiptDerivedFactClaimV2, ...],
     *,
     receipt_ref: ArtifactRef,
     observed_at: datetime,
+    observations: tuple[WorldFact, ...] = (),
 ) -> tuple[StateMutation, ...]:
     current = {fact.key: fact for fact in state.facts}
+    observation_by_key = {observation.key: observation for observation in observations}
     mutations = []
     for claim in claims:
         key = claim.key
@@ -1436,6 +1457,7 @@ def _mutations_from_claims(
                 fact=None,
             )
         else:
+            observation = observation_by_key.get(key)
             mutation = StateMutation(
                 operation="upsert",
                 key=key,
@@ -1445,12 +1467,39 @@ def _mutations_from_claims(
                     value=claim.value,
                     source_kind="trusted_receipt",
                     source_artifact=receipt_ref,
-                    observed_at=observed_at,
-                    valid_until=None,
+                    observed_at=(observed_at if observation is None else observation.observed_at),
+                    valid_until=None if observation is None else observation.valid_until,
                 ),
             )
         mutations.append(mutation)
     return tuple(sorted(mutations, key=lambda item: item.key))
+
+
+def _verify_observation_projection(
+    *,
+    state: RunState,
+    claims: tuple[ReceiptDerivedFactClaimV2, ...],
+    observations: tuple[WorldFact, ...],
+    supporting: tuple[ArtifactRef, ...],
+) -> None:
+    if not observations:
+        return
+    if state.status is not RunStatus.SUCCEEDED:
+        raise GoldenRunCorruptionError("non-successful child cannot project fresh observations")
+    supporting_identities = {_artifact_identity(ref) for ref in supporting}
+    claims_by_key = {claim.key: claim for claim in claims}
+    for observation in observations:
+        claim = claims_by_key.get(observation.key)
+        if (
+            claim is None
+            or claim.operation != "upsert"
+            or claim.value != observation.value
+            or observation.valid_until is None
+            or _artifact_identity(observation.source_artifact) not in supporting_identities
+        ):
+            raise GoldenRunCorruptionError(
+                "fresh observation does not equal a receipt claim with supporting evidence"
+            )
 
 
 def _request_sha256(request: RunStartRequest) -> str:

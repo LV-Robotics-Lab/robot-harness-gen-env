@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from .schemas.common import ArtifactRef, RunState, RunStatus
 from .schemas.text2env import Text2EnvCompileInput, Text2EnvCompileOutput
 from .schemas.workflow_operation import ReceiptDerivedFactClaimV2, ToolResultV2
-from .trusted_state import TrustedWorldState
+from .trusted_state import TrustedWorldState, WorldFact
 
 _POLICY_DIGEST_DOMAIN = b"harness.text2env.compile.evidence-policy.v1\0"
 
@@ -66,6 +66,9 @@ class Text2EnvCompileEvidencePolicy:
             return ()
         assert state.blocker is not None
         return tuple(sorted(state.blocker.artifact_refs, key=_artifact_sort_key))
+
+    def fresh_observations(self, state: RunState) -> tuple[WorldFact, ...]:
+        return ()
 
     def verify_result(
         self,
