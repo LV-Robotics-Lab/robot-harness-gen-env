@@ -46,6 +46,11 @@ from self_improving.harness.schemas.common import (
     RunState,
     RunStatus,
 )
+from self_improving.harness.schemas.genesis_observe import (
+    GenesisObservationCapturePlan,
+    GenesisObservationReceipt,
+    GenesisObservationValue,
+)
 from self_improving.harness.schemas.registry_snapshot import RegistrySnapshot
 from self_improving.harness.schemas.workflow import (
     OperationSnapshot,
@@ -134,6 +139,7 @@ def _put_binary(
     name: str,
     payload: bytes,
     media_type: str,
+    schema_version: str | None = None,
 ) -> ArtifactRef:
     source = root / name
     source.parent.mkdir(parents=True, exist_ok=True)
@@ -142,7 +148,7 @@ def _put_binary(
         source,
         name=name,
         media_type=media_type,
-        schema_version=None,
+        schema_version=schema_version,
     )
 
 
@@ -188,16 +194,17 @@ class _EvidencePolicy:
     ) -> tuple[WorldFact, ...]:
         if state.status is not RunStatus.SUCCEEDED:
             return ()
-        evidence = WorldFactEvidence.model_validate_json(
+        receipt = GenesisObservationReceipt.model_validate_json(
             self.store.resolve(self.observation).path.read_bytes()
         )
+        evidence = receipt.observations[0]
         return (
             WorldFact(
                 key=evidence.key,
                 value=evidence.value,
                 source_kind="fresh_observation",
                 source_artifact=self.observation,
-                observed_at=evidence.observed_at,
+                observed_at=evidence.captured_at,
                 valid_until=evidence.valid_until,
             ),
         )
@@ -259,7 +266,7 @@ class _Case:
     policy: _EvidencePolicy
     harness: GoldenRunHarness
     clock: _Clock
-    objective: ArtifactRef
+    source_prompt: ArtifactRef
     observation: ArtifactRef
     diagnostic: ArtifactRef
     predecessor_package: ArtifactRef
@@ -268,6 +275,7 @@ class _Case:
     frame_manifest: ArtifactRef
     observation_operation: OperationSnapshot
     failure_operation: OperationSnapshot
+    failure_receipt: ArtifactRef
     observation_result: ToolResultV2
     failure_result: ToolResultV2
     head: RunSnapshot
@@ -280,10 +288,10 @@ def _read_model(store: LocalArtifactStore, ref: ArtifactRef, model: type[BaseMod
 def _case(tmp_path: Path) -> _Case:
     store = LocalArtifactStore(tmp_path / "cas")
     objective_value = "Use the source video to build a stable robot-policy scene."
-    objective = _put_json(
+    objective_evidence = _put_json(
         store,
         tmp_path,
-        name="objective.json",
+        name="objective-evidence.json",
         value=WorldFactEvidence(
             source_kind="user_input",
             key="request.objective",
@@ -293,18 +301,13 @@ def _case(tmp_path: Path) -> _Case:
         ),
         schema_version="harness.world_fact_evidence.v1",
     )
-    observation = _put_json(
+    source_prompt = _put_binary(
         store,
         tmp_path,
-        name="fresh-observation.json",
-        value=WorldFactEvidence(
-            source_kind="fresh_observation",
-            key="observation.scene_visible",
-            value=True,
-            observed_at=_T0,
-            valid_until=_T0 + timedelta(seconds=60),
-        ),
-        schema_version="harness.fresh_observation.v1",
+        name="source-prompt.txt",
+        payload=objective_value.encode("utf-8"),
+        media_type="text/plain",
+        schema_version="harness.prompt_text.v1",
     )
     diagnostic = _put_json(
         store,
@@ -344,6 +347,67 @@ def _case(tmp_path: Path) -> _Case:
             "frames": [{"index": 7, "artifact": frame.model_dump(mode="json")}],
         },
         schema_version="harness.video_frame_sequence.v1",
+    )
+    replay_workflow_receipt = _put_json(
+        store,
+        tmp_path,
+        name="replay-workflow-receipt.json",
+        value={"fixture": "replay workflow receipt"},
+        schema_version="harness.workflow_operation_receipt.v2",
+    )
+    replay_runtime_receipt = _put_json(
+        store,
+        tmp_path,
+        name="replay-runtime-receipt.json",
+        value={"fixture": "replay runtime receipt"},
+        schema_version="harness.x2env_runtime_receipt.v1",
+    )
+    media_verification = _put_json(
+        store,
+        tmp_path,
+        name="observation-media-verification.json",
+        value={"fixture": "controlled media verification"},
+        schema_version="harness.genesis_observation_media_verification.v1",
+    )
+    capture_plan = GenesisObservationCapturePlan(
+        camera_ids=("observer",),
+        stills_per_camera=1,
+        video_frames=0,
+        fps=None,
+        post_restore_steps=1,
+    )
+    observation = _put_json(
+        store,
+        tmp_path,
+        name="genesis-observation-receipt.json",
+        value=GenesisObservationReceipt(
+            schema_version="harness.genesis_observation_receipt.v1",
+            observation_child_run_id=_OBSERVE_CHILD,
+            environment_package=predecessor_package,
+            replay_workflow_receipt=replay_workflow_receipt,
+            replay_runtime_receipt=replay_runtime_receipt,
+            checkpoint=None,
+            capture_plan=capture_plan,
+            requested_observation_keys=("observation.scene_visible",),
+            captured_at=_T0,
+            valid_until=_T0 + timedelta(seconds=60),
+            ttl_seconds=60,
+            images=(frame,),
+            video=None,
+            media_verification=media_verification,
+            observations=(
+                GenesisObservationValue(
+                    key="observation.scene_visible",
+                    value=True,
+                    captured_at=_T0,
+                    valid_until=_T0 + timedelta(seconds=60),
+                    payload_refs=(frame,),
+                ),
+            ),
+            simulator_executed=False,
+            post_restore_steps_executed=0,
+        ),
+        schema_version="harness.genesis_observation_receipt.v1",
     )
     descriptor, entry = observe_base._qualified_fixture(
         store,
@@ -389,7 +453,14 @@ def _case(tmp_path: Path) -> _Case:
             return HandlerResult(output=value, artifacts=(value,))
         artifacts = tuple(
             sorted(
-                (diagnostic, predecessor_package, video, frame, frame_manifest),
+                (
+                    diagnostic,
+                    predecessor_package,
+                    source_prompt,
+                    video,
+                    frame,
+                    frame_manifest,
+                ),
                 key=lambda ref: (ref.sha256, ref.schema_version or "", ref.media_type),
             )
         )
@@ -436,7 +507,7 @@ def _case(tmp_path: Path) -> _Case:
             idempotency_key="control-start",
             workspace="ephemeral",
             requested_profile="genesis.robot_policy@1",
-            initial_fact_evidence=(objective,),
+            initial_fact_evidence=(objective_evidence,),
             registry_snapshot=registry_ref,
         )
     )
@@ -482,7 +553,7 @@ def _case(tmp_path: Path) -> _Case:
         policy=policy,
         harness=harness,
         clock=clock,
-        objective=objective,
+        source_prompt=source_prompt,
         observation=observation,
         diagnostic=diagnostic,
         predecessor_package=predecessor_package,
@@ -491,6 +562,7 @@ def _case(tmp_path: Path) -> _Case:
         frame_manifest=frame_manifest,
         observation_operation=observation_operation,
         failure_operation=failure_operation,
+        failure_receipt=head.receipt_head,
         observation_result=observation_result,
         failure_result=failure_result,
         head=head,
@@ -499,6 +571,10 @@ def _case(tmp_path: Path) -> _Case:
 
 def _models() -> tuple[type[BaseModel], type[BaseModel], type[BaseModel]]:
     return tuple(getattr(public_schemas, name) for name in _CONTROL_SCHEMA_NAMES)  # type: ignore[return-value]
+
+
+def _replace_model(value: BaseModel, **updates: object) -> BaseModel:
+    return type(value).model_validate({**value.model_dump(mode="json"), **updates})
 
 
 def _advisory_command(case: _Case, *, command_id: UUID = _ADVISORY_ID) -> BaseModel:
@@ -515,10 +591,21 @@ def _advisory_command(case: _Case, *, command_id: UUID = _ADVISORY_ID) -> BaseMo
             "expected_state_sha256": case.head.state_sha256,
             "expected_receipt_head_sha256": case.head.receipt_head.sha256,
             "advisory_kind": "diagnosis",
+            "disposition": "recommend",
             "summary": "The video route failed; reuse the cited frame through image2env.",
-            "failure_receipt": case.failure_result.trusted_receipt.model_dump(mode="json"),
+            "recommended_action": "fallback_image",
+            "source_prompt": case.source_prompt.model_dump(mode="json"),
+            "source_prompt_revision": None,
+            "failure_receipts": [case.failure_receipt.model_dump(mode="json")],
             "diagnostic_refs": [case.diagnostic.model_dump(mode="json")],
-            "observation_refs": [case.observation.model_dump(mode="json")],
+            "observation_citations": [
+                {
+                    "receipt": case.observation.model_dump(mode="json"),
+                    "captured_at": _T0.isoformat().replace("+00:00", "Z"),
+                    "valid_until": (_T0 + timedelta(seconds=60)).isoformat().replace("+00:00", "Z"),
+                    "ttl_seconds": 60,
+                }
+            ],
             "external_agent_executed": False,
         }
     )
@@ -537,9 +624,9 @@ def _prompt_command(case: _Case, advisory: BaseModel) -> BaseModel:
             "expected_workflow_revision": case.head.revision,
             "expected_state_sha256": case.head.state_sha256,
             "expected_receipt_head_sha256": case.head.receipt_head.sha256,
-            "source_prompt": case.objective.model_dump(mode="json"),
+            "source_prompt": case.source_prompt.model_dump(mode="json"),
             "advisory_receipt": advisory.payload.model_dump(mode="json"),
-            "failure_receipt": case.failure_result.trusted_receipt.model_dump(mode="json"),
+            "failure_receipts": [case.failure_receipt.model_dump(mode="json")],
             "predecessor_package": case.predecessor_package.model_dump(mode="json"),
             "patch": {
                 "kind": "full_replace",
@@ -557,6 +644,7 @@ def _prompt_command(case: _Case, advisory: BaseModel) -> BaseModel:
                 "frame_sequence_manifest": case.frame_manifest.model_dump(mode="json"),
             },
             "next_compile_skill_ref": "image2env.compile@1.0.0",
+            "external_agent_executed": False,
         }
     )
 
@@ -598,6 +686,7 @@ def test_failure_advisory_and_prompt_revision_advance_history_not_world_state(
     assert advisory.base_revision == 2
     assert advisory.committed_revision == 3
     assert advisory.predecessor_receipt == failure_head
+    assert advisory.payload == advisory.receipt == advisory.receipt_head
     assert case.head.revision == 3
     assert case.head.turn_seq == turn_before + 1
     assert case.head.receipt_head == advisory.receipt
@@ -609,11 +698,17 @@ def test_failure_advisory_and_prompt_revision_advance_history_not_world_state(
     assert advisory_payload["authority"] == "advisory_only"
     assert advisory_payload["grants_physical_validity"] is False
     assert advisory_payload["grants_publishability"] is False
-    assert advisory_payload["failure_receipt"] == case.failure_result.trusted_receipt.model_dump(
-        mode="json"
-    )
+    assert advisory_payload["source_prompt"] == case.source_prompt.model_dump(mode="json")
+    assert advisory_payload["failure_receipts"] == [case.failure_receipt.model_dump(mode="json")]
     assert advisory_payload["diagnostic_refs"] == [case.diagnostic.model_dump(mode="json")]
-    assert advisory_payload["observation_refs"] == [case.observation.model_dump(mode="json")]
+    assert advisory_payload["observation_citations"] == [
+        {
+            "receipt": case.observation.model_dump(mode="json"),
+            "captured_at": _T0.isoformat().replace("+00:00", "Z"),
+            "valid_until": (_T0 + timedelta(seconds=60)).isoformat().replace("+00:00", "Z"),
+            "ttl_seconds": 60,
+        }
+    ]
     assert advisory_payload["external_agent_executed"] is False
 
     prompt_command = _prompt_command(case, advisory)
@@ -628,6 +723,7 @@ def test_failure_advisory_and_prompt_revision_advance_history_not_world_state(
     assert prompt.control_kind == "prompt_revision"
     assert (prompt.base_revision, prompt.committed_revision) == (3, 4)
     assert prompt.predecessor_receipt == advisory.receipt
+    assert prompt.payload == prompt.receipt == prompt.receipt_head
     assert current.receipt_head == prompt.receipt
     assert current.turn_seq == turn_before + 2
     assert current.state_ref == state_before
@@ -635,6 +731,9 @@ def test_failure_advisory_and_prompt_revision_advance_history_not_world_state(
     assert current.child_runs == children_before
     revision = json.loads(case.store.resolve(prompt.payload).path.read_bytes())
     assert revision["schema_version"] == "harness.prompt_revision.v1"
+    assert revision["source_prompt"] == case.source_prompt.model_dump(mode="json")
+    assert revision["failure_receipts"] == [case.failure_receipt.model_dump(mode="json")]
+    assert revision["observation_citations"] == advisory_payload["observation_citations"]
     assert revision["patch"]["kind"] == "full_replace"
     assert revision["patch"]["replacement_text"].startswith("Build the scene from cited frame 7")
     assert revision["fallback"] == {
@@ -645,6 +744,7 @@ def test_failure_advisory_and_prompt_revision_advance_history_not_world_state(
         "frame_sequence_manifest": case.frame_manifest.model_dump(mode="json"),
     }
     assert revision["next_compile_skill_ref"] == "image2env.compile@1.0.0"
+    assert revision["external_agent_executed"] is False
 
 
 @_requires_control_seam
@@ -688,8 +788,9 @@ def test_control_submit_is_idempotent_and_reopens_without_a_live_application(
         )
         == terminal
     )
-    changed = prompt_command.model_copy(
-        update={"next_compile_skill_ref": "video2env.compile@1.0.0"}
+    changed = _replace_model(
+        prompt_command,
+        next_compile_skill_ref="video2env.compile@1.0.0",
     )
     with pytest.raises(GoldenRunConflictError, match="idempotency"):
         reopened.submit_control(changed)  # type: ignore[attr-defined]
@@ -699,10 +800,10 @@ def test_control_submit_is_idempotent_and_reopens_without_a_live_application(
 def test_advisory_rejects_stale_foreign_unbound_and_expired_evidence(tmp_path: Path) -> None:
     case = _case(tmp_path)
     command = _advisory_command(case)
-    stale = command.model_copy(update={"expected_workflow_revision": 1})
+    stale = _replace_model(command, expected_workflow_revision=1)
     with pytest.raises(GoldenRunHeadConflictError):
         case.harness.submit_control(stale)  # type: ignore[attr-defined]
-    foreign = command.model_copy(update={"principal_id": "tests/foreign-principal"})
+    foreign = _replace_model(command, principal_id="tests/foreign-principal")
     with pytest.raises(GoldenRunNotFoundError):
         case.harness.submit_control(foreign)  # type: ignore[attr-defined]
     unbound = _put_json(
@@ -712,7 +813,10 @@ def test_advisory_rejects_stale_foreign_unbound_and_expired_evidence(tmp_path: P
         value={"unbound": True},
         schema_version="harness.failure_diagnostic.v1",
     )
-    unbound_command = command.model_copy(update={"diagnostic_refs": (unbound,)})
+    unbound_command = _replace_model(
+        command,
+        diagnostic_refs=[unbound.model_dump(mode="json")],
+    )
     with pytest.raises((GoldenRunNotFoundError, GoldenRunRegistryError), match="reachable|history"):
         case.harness.submit_control(unbound_command)  # type: ignore[attr-defined]
 
@@ -740,7 +844,7 @@ def test_prompt_revision_rejects_silent_or_unbound_video_frame_fallback(tmp_path
     case = _case(tmp_path)
     _, advisory = _submit_advisory(case)
     command = _prompt_command(case, advisory)
-    silent = command.model_copy(update={"fallback": {"kind": "none"}})
+    silent = _replace_model(command, fallback={"kind": "none"})
     with pytest.raises(GoldenRunRegistryError, match="explicit.*fallback"):
         case.harness.submit_control(silent)  # type: ignore[attr-defined]
     foreign_frame = _put_binary(
@@ -754,7 +858,7 @@ def test_prompt_revision_rejects_silent_or_unbound_video_frame_fallback(tmp_path
         **command.fallback.model_dump(mode="json"),
         "selected_frame": foreign_frame.model_dump(mode="json"),
     }
-    unbound = command.model_copy(update={"fallback": bad_fallback})
+    unbound = _replace_model(command, fallback=bad_fallback)
     with pytest.raises((GoldenRunNotFoundError, GoldenRunRegistryError), match="frame|lineage"):
         case.harness.submit_control(unbound)  # type: ignore[attr-defined]
 
