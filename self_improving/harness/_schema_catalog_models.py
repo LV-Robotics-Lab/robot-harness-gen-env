@@ -105,6 +105,10 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
             ".schemas.x2env",
             "Image2EnvValidateOutput",
         ),
+        "harness.image_media_probe.v1": (
+            ".schemas.media_ingest",
+            "ImageMediaProbeV1",
+        ),
         "harness.image_source_media.v1": (".schemas.x2env", "ImageSourceMedia"),
         "harness.operation_snapshot.v1": (".schemas.workflow", "OperationSnapshot"),
         "harness.qualified_skill_execution.v2": (

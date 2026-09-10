@@ -1,0 +1,157 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.image_media_probe.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Decoder-derived identity binding a source image to its canonical PNG.",
+  "properties": {
+    "canonical_image": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "color_mode": {
+      "enum": [
+        "RGB",
+        "RGBA",
+        "L"
+      ],
+      "title": "Color Mode",
+      "type": "string"
+    },
+    "declared_media_type": {
+      "enum": [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+      ],
+      "title": "Declared Media Type",
+      "type": "string"
+    },
+    "decoded_frame_count": {
+      "const": 1,
+      "title": "Decoded Frame Count",
+      "type": "integer"
+    },
+    "decoder_name": {
+      "const": "Pillow",
+      "title": "Decoder Name",
+      "type": "string"
+    },
+    "decoder_version": {
+      "maxLength": 4096,
+      "minLength": 1,
+      "title": "Decoder Version",
+      "type": "string"
+    },
+    "detected_format": {
+      "enum": [
+        "JPEG",
+        "PNG",
+        "WEBP"
+      ],
+      "title": "Detected Format",
+      "type": "string"
+    },
+    "height": {
+      "minimum": 1,
+      "title": "Height",
+      "type": "integer"
+    },
+    "pixel_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Pixel Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.image_media_probe.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "unique_frame_count": {
+      "const": 1,
+      "title": "Unique Frame Count",
+      "type": "integer"
+    },
+    "width": {
+      "minimum": 1,
+      "title": "Width",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "source",
+    "detected_format",
+    "declared_media_type",
+    "width",
+    "height",
+    "color_mode",
+    "decoded_frame_count",
+    "unique_frame_count",
+    "canonical_image",
+    "pixel_sha256",
+    "decoder_name",
+    "decoder_version"
+  ],
+  "title": "ImageMediaProbeV1",
+  "type": "object"
+}

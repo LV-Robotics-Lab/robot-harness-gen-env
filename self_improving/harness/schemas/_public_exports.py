@@ -98,6 +98,13 @@ _EXPORT_GROUPS = (
         ),
     ),
     (
+        ".media_ingest",
+        (
+            "IMAGE_MEDIA_PROBE_SCHEMA_ID",
+            "ImageMediaProbeV1",
+        ),
+    ),
+    (
         ".registry_snapshot",
         ("REGISTRY_SNAPSHOT_SCHEMA_ID", "QualifiedSkillSnapshot", "RegistrySnapshot"),
     ),
@@ -303,6 +310,7 @@ _PUBLIC_NAMES = (
     "Image2EnvReplayOutput",
     "Image2EnvValidateInput",
     "Image2EnvValidateOutput",
+    "ImageMediaProbeV1",
     "ImageSourceMedia",
     "InitialCompileAttemptV1",
     "Invocation",

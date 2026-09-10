@@ -4,17 +4,20 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import struct
+import zlib
 from importlib.metadata import version
 from io import BytesIO
 from pathlib import Path
 
 import pytest
+from jsonschema import Draft202012Validator
 from PIL import Image
 from pydantic import ValidationError
 
 from self_improving.harness import schemas as public_schemas
 from self_improving.harness.artifacts import LocalArtifactStore
-from self_improving.harness.schema_catalog import schema_model
+from self_improving.harness.schema_catalog import schema_documents, schema_model
 from self_improving.harness.schemas.common import ArtifactRef
 
 try:
@@ -42,18 +45,17 @@ _requires_image_ingest = pytest.mark.skipif(
 )
 
 _FIXED_JPEG = base64.b64decode(
-    "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAIBAQEBAQIBAQECAgICAgQDAgICAgUEBAMEBgUGBgYF"
-    "BgYGBwkIBgcJBwYGCAsICQoKCgoKBggLDAsKDAkKCgr/2wBDAQICAgICAgUDAwUKBwYHCgoKCgoK"
-    "CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgr/wAARCAABAAIDAREAAhEB"
-    "AxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9"
-    "AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6"
-    "Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ip"
-    "qrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEB"
-    "AQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJB"
-    "UQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RV"
-    "VldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6"
-    "wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDs/gx/yR7w"
-    "n/2LVh/6TpX+Yeef8jvFf9fJ/wDpTP8AMj6UX/KTPG//AGN8y/8AU2sf/9k="
+    "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4R"
+    "DgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU"
+    "FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAABAAIDAREAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAA"
+    "AAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAk"
+    "M2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKT"
+    "lJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QA"
+    "HwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdh"
+    "cRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hp"
+    "anN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk"
+    "5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDovBn/ACJ+hf8AXhB/6LWv4tx3+91f8UvzZ/GHij/yXuf/APYZ"
+    "if8A09M//9k="
 )
 _ANIMATED_GIF = base64.b64decode(
     "R0lGODlhAgABAIEAAP8AAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQACgAAACwAAAAA"
@@ -63,6 +65,29 @@ _EIGHT_BY_EIGHT_PNG = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAFElEQVR4nGNkYPjPgA0wYRUdtBIA"
     "y0MBD1YkjLoAAAAASUVORK5CYII="
 )
+
+
+def _png_bytes(mode: str, *, transparency: bool = False) -> bytes:
+    image = Image.new(mode, (2, 1))
+    if mode == "L":
+        image.putdata([0, 255])
+    elif mode == "RGBA":
+        image.putdata([(255, 0, 0, 255), (0, 255, 0, 0)])
+    elif mode == "P":
+        image.putpalette([0, 0, 0, 255, 255, 255] + [0, 0, 0] * 254)
+        image.putdata([0, 1])
+        if transparency:
+            image.info["transparency"] = 0
+    target = BytesIO()
+    image.save(target, format="PNG")
+    return target.getvalue()
+
+
+def _decompression_bomb_png() -> bytes:
+    payload = bytearray(_EIGHT_BY_EIGHT_PNG)
+    payload[16:24] = struct.pack(">II", 10_000, 10_000)
+    payload[29:33] = struct.pack(">I", zlib.crc32(payload[12:29]))
+    return bytes(payload)
 
 
 def _put_source(
@@ -148,9 +173,7 @@ def test_image_ingest_decodes_cas_source_and_publishes_a_strict_canonical_closur
     assert media.canonical_image.schema_version is None
     assert media.probe.schema_version == _PROBE_SCHEMA_ID
     assert media.probe.media_type == "application/json"
-    assert media.canonical_image.uri == (
-        f"artifact://sha256/{media.canonical_image.sha256}"
-    )
+    assert media.canonical_image.uri == (f"artifact://sha256/{media.canonical_image.sha256}")
     assert media.probe.uri == f"artifact://sha256/{media.probe.sha256}"
 
     canonical_bytes = store.resolve(media.canonical_image).path.read_bytes()
@@ -164,6 +187,9 @@ def test_image_ingest_decodes_cas_source_and_publishes_a_strict_canonical_closur
 
     assert _PROBE_MODEL is not None
     probe = _PROBE_MODEL.model_validate_json(store.resolve(media.probe).path.read_bytes())
+    probe_document = schema_documents()[_PROBE_SCHEMA_ID]
+    Draft202012Validator.check_schema(probe_document)
+    Draft202012Validator(probe_document).validate(probe.model_dump(mode="json"))
     assert probe.schema_version == _PROBE_SCHEMA_ID
     assert probe.source == source
     assert probe.detected_format == "JPEG"
@@ -272,3 +298,156 @@ def test_image_ingest_retry_is_content_identical_and_does_not_grow_cas(
 
     assert recovered == first
     assert _cas_manifest(store) == after_first
+
+
+@pytest.mark.parametrize(
+    ("store", "max_source_bytes", "max_decoded_pixels", "expected"),
+    (
+        (object(), 1, 1, TypeError),
+        (None, True, 1, ValueError),
+        (None, 0, 1, ValueError),
+        (None, 1, False, ValueError),
+        (None, 1, -1, ValueError),
+    ),
+)
+@_requires_image_ingest
+def test_image_ingestor_constructor_rejects_non_production_or_unbounded_dependencies(
+    tmp_path: Path,
+    store: object | None,
+    max_source_bytes: object,
+    max_decoded_pixels: object,
+    expected: type[Exception],
+) -> None:
+    assert ImageMediaIngestor is not None
+    actual_store = LocalArtifactStore(tmp_path / "cas") if store is None else store
+
+    with pytest.raises(expected):
+        ImageMediaIngestor(
+            artifact_store=actual_store,  # type: ignore[arg-type]
+            max_source_bytes=max_source_bytes,  # type: ignore[arg-type]
+            max_decoded_pixels=max_decoded_pixels,  # type: ignore[arg-type]
+        )
+
+
+@_requires_image_ingest
+def test_image_ingestor_rejects_non_exact_or_typed_source_before_read(tmp_path: Path) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    source = _put_source(
+        store,
+        tmp_path,
+        name="typed-source.jpg",
+        payload=_FIXED_JPEG,
+        media_type="image/jpeg",
+    )
+    assert ImageMediaIngestError is not None
+
+    with pytest.raises(TypeError, match="exact ArtifactRef"):
+        _ingestor(store).ingest(source.model_dump(mode="python"))  # type: ignore[arg-type]
+    with pytest.raises(ImageMediaIngestError) as captured:
+        _ingestor(store).ingest(
+            source.model_copy(update={"schema_version": "harness.untrusted_image.v1"})
+        )
+
+    assert captured.value.code == "HARN_MEDIA_TYPE_MISMATCH"
+
+
+@pytest.mark.parametrize(
+    ("mode", "transparency", "expected_mode"),
+    (
+        ("L", False, "L"),
+        ("RGBA", False, "RGBA"),
+        ("P", True, "RGBA"),
+    ),
+)
+@_requires_image_ingest
+def test_image_ingest_normalizes_supported_pixel_modes_deterministically(
+    tmp_path: Path,
+    mode: str,
+    transparency: bool,
+    expected_mode: str,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    source = _put_source(
+        store,
+        tmp_path,
+        name=f"{mode}.png",
+        payload=_png_bytes(mode, transparency=transparency),
+        media_type="image/png",
+    )
+
+    media = _ingestor(store).ingest(source)
+
+    assert media.color_mode == expected_mode
+
+
+@_requires_image_ingest
+def test_image_ingest_maps_decoder_bomb_warning_to_the_bounded_failure(
+    tmp_path: Path,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    source = _put_source(
+        store,
+        tmp_path,
+        name="bomb.png",
+        payload=_decompression_bomb_png(),
+        media_type="image/png",
+    )
+    assert ImageMediaIngestError is not None
+
+    with pytest.raises(ImageMediaIngestError) as captured:
+        _ingestor(store, max_decoded_pixels=100_000_000).ingest(source)
+
+    assert captured.value.code == "HARN_IMAGE_LIMIT_EXCEEDED"
+
+
+@_requires_image_ingest
+def test_image_ingest_rejects_a_decodable_but_unsupported_static_format(tmp_path: Path) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    image = Image.new("P", (2, 1))
+    target = BytesIO()
+    image.save(target, format="GIF")
+    source = _put_source(
+        store,
+        tmp_path,
+        name="static.gif",
+        payload=target.getvalue(),
+        media_type="image/gif",
+    )
+    assert ImageMediaIngestError is not None
+
+    with pytest.raises(ImageMediaIngestError) as captured:
+        _ingestor(store).ingest(source)
+
+    assert captured.value.code == "HARN_MEDIA_TYPE_MISMATCH"
+
+
+@_requires_image_ingest
+def test_image_media_probe_rejects_identity_and_media_drift(tmp_path: Path) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    source = _put_source(
+        store,
+        tmp_path,
+        name="probe-source.jpg",
+        payload=_FIXED_JPEG,
+        media_type="image/jpeg",
+    )
+    media = _ingestor(store).ingest(source)
+    assert _PROBE_MODEL is not None
+    probe = _PROBE_MODEL.model_validate_json(store.resolve(media.probe).path.read_bytes())
+    zero_uri = f"artifact://sha256/{'0' * 64}"
+    mutations = (
+        {"source": source.model_copy(update={"uri": zero_uri})},
+        {"source": source.model_copy(update={"schema_version": "harness.fake.v1"})},
+        {"canonical_image": media.canonical_image.model_copy(update={"uri": zero_uri})},
+        {"canonical_image": media.canonical_image.model_copy(update={"media_type": "image/jpeg"})},
+        {
+            "canonical_image": media.canonical_image.model_copy(
+                update={"schema_version": "harness.fake.v1"}
+            )
+        },
+        {"detected_format": "PNG"},
+    )
+
+    for mutation in mutations:
+        with pytest.raises(ValidationError):
+            _PROBE_MODEL.model_validate({**probe.model_dump(mode="python"), **mutation})

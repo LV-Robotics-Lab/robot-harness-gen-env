@@ -46,6 +46,7 @@ from self_improving.harness.schemas.golden_control import (
     PromptRevision,
     PromptRevisionCommand,
 )
+from self_improving.harness.schemas.media_ingest import ImageMediaProbeV1
 from self_improving.harness.schemas.qualification_report import PublicQualificationReportV1
 from self_improving.harness.schemas.registry_snapshot import RegistrySnapshot
 from self_improving.harness.schemas.resource_access import ResourceAccessReceipt
@@ -113,6 +114,7 @@ EXPECTED_SCHEMA_IDS = {
     "harness.image2env_replay_output.v1",
     "harness.image2env_validate_input.v1",
     "harness.image2env_validate_output.v1",
+    "harness.image_media_probe.v1",
     "harness.image_source_media.v1",
     "harness.initial_compile_attempt.v1",
     "harness.operation_snapshot.v1",
@@ -203,6 +205,7 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
         is PromptRevisionCompileAttemptV1
     )
     assert schema_model("harness.image_source_media.v1") is ImageSourceMedia
+    assert schema_model("harness.image_media_probe.v1") is ImageMediaProbeV1
     assert schema_model("harness.video_source_media.v1") is VideoSourceMedia
     assert schema_model("harness.x2env_asset_decision.v1") is X2EnvAssetDecision
     assert schema_model("harness.x2env_environment_package.v1") is X2EnvEnvironmentPackage
@@ -280,6 +283,7 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.initial_compile_attempt.v1",
             "harness.prompt_revision_compile_attempt.v1",
             "harness.image_source_media.v1",
+            "harness.image_media_probe.v1",
             "harness.video_source_media.v1",
             "harness.x2env_asset_decision.v1",
             "harness.x2env_environment_package.v1",
