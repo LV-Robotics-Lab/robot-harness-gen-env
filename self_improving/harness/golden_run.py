@@ -17,6 +17,7 @@ from .artifacts import ArtifactResolutionError, LocalArtifactStore
 from .golden_execution import (
     GoldenExecutionCatalog,
     QualifiedApplicationRunPendingError,
+    SkillAuthorizationContext,
     SkillEvidencePolicy,
     create_golden_execution_catalog,
 )
@@ -345,7 +346,7 @@ class GoldenRunHarness:
         )
         normalized, parameters = self._normalize_command(policy, request)
         base_state = self._resolve_canonical_model(current.state_ref, TrustedWorldState)
-        self._authorize(policy, base_state, parameters)
+        self._authorize(policy, base_state, parameters, snapshot=current)
         command_ref = self._publish_model(
             normalized,
             name="run_command_request.json",
@@ -526,9 +527,24 @@ class GoldenRunHarness:
         policy: SkillEvidencePolicy,
         state: TrustedWorldState,
         parameters: BaseModel,
+        *,
+        snapshot: RunSnapshot,
     ) -> None:
         try:
             policy.authorize(state, parameters)
+            workflow_authorizer = getattr(policy, "authorize_workflow", None)
+            if workflow_authorizer is not None:
+                workflow_authorizer(
+                    state,
+                    parameters,
+                    SkillAuthorizationContext(
+                        workflow_run_id=snapshot.workflow_run_id,
+                        principal_id=snapshot.principal_id,
+                        receipt_head=snapshot.receipt_head,
+                        revision=snapshot.revision,
+                        state_ref=snapshot.state_ref,
+                    ),
+                )
         except (TypeError, ValueError) as error:
             raise GoldenRunRegistryError(
                 "HARN_INPUT_SCHEMA_INVALID",
@@ -570,7 +586,7 @@ class GoldenRunHarness:
                     "HARN_DEPENDENCY_DRIFT",
                     "live qualified execution changed after reservation",
                 )
-            self._authorize(policy, base_state, parameters)
+            self._authorize(policy, base_state, parameters, snapshot=snapshot)
             try:
                 self._execution_catalog.invoke(
                     operation.skill_ref,

@@ -16,6 +16,7 @@ from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.event_journal import SQLiteEventJournal
 from self_improving.harness.golden_execution import (
     QualifiedApplicationRunPendingError,
+    SkillAuthorizationContext,
     _create_golden_execution_binding,
     create_golden_execution_catalog,
 )
@@ -146,6 +147,18 @@ class _ObservationPolicy:
     def authorize(self, state: TrustedWorldState, parameters: BaseModel) -> None:
         assert type(parameters) is ArtifactRef
         assert state.facts
+
+    def authorize_workflow(
+        self,
+        state: TrustedWorldState,
+        parameters: BaseModel,
+        context: SkillAuthorizationContext,
+    ) -> None:
+        assert type(parameters) is ArtifactRef
+        persisted = TrustedWorldState.model_validate_json(
+            self.store.resolve(context.state_ref).path.read_bytes()
+        )
+        assert persisted == state
 
     def claims(self, state: RunState) -> tuple[ReceiptDerivedFactClaimV2, ...]:
         if state.status is not RunStatus.SUCCEEDED:

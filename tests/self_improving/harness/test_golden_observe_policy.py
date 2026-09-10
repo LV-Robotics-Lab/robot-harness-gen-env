@@ -120,9 +120,9 @@ def _package_value(route: str, *, package_id: str = SHA_D) -> dict[str, object]:
         "source": _fake_ref("source.jpg", None, SHA_A, media_type="image/jpeg").model_dump(
             mode="json"
         ),
-        "canonical_image": _fake_ref(
-            "source.png", None, SHA_B, media_type="image/png"
-        ).model_dump(mode="json"),
+        "canonical_image": _fake_ref("source.png", None, SHA_B, media_type="image/png").model_dump(
+            mode="json"
+        ),
         "probe": _fake_ref("probe.json", "harness.image_media_probe.v1", SHA_C).model_dump(
             mode="json"
         ),
@@ -186,9 +186,7 @@ def _replay_input(route: str, package: X2EnvEnvironmentPackage) -> BaseModel:
     return model(
         schema_version=f"harness.{route}_replay_input.v1",
         environment_package=package,
-        compile_receipt=_fake_ref(
-            "compile.json", "harness.x2env_compile_receipt.v1", SHA_A
-        ),
+        compile_receipt=_fake_ref("compile.json", "harness.x2env_compile_receipt.v1", SHA_A),
         requested_profile="genesis.rigid_scene@1",
         runtime_attestation=_fake_ref(
             "attestation.json", "harness.genesis_runtime_attestation.v1", SHA_B
@@ -219,22 +217,14 @@ def _replay_output(
         runtime_evidence=_fake_ref(
             "runtime-evidence.json", "harness.genesis_runtime_evidence.v1", SHA_A
         ),
-        physics_report=_fake_ref(
-            "physics.json", "harness.genesis_physics_report.v1", SHA_B
-        ),
+        physics_report=_fake_ref("physics.json", "harness.genesis_physics_report.v1", SHA_B),
         robot_probe_report=None,
         trajectory=None,
         video=_fake_ref("replay.mp4", None, SHA_C, media_type="video/mp4"),
-        frame_sequence_manifest=_fake_ref(
-            "frames.json", "harness.video_frame_sequence.v1", SHA_D
-        ),
-        media_verification=_fake_ref(
-            "media.json", "harness.x2env_media_verification.v1", SHA_A
-        ),
+        frame_sequence_manifest=_fake_ref("frames.json", "harness.video_frame_sequence.v1", SHA_D),
+        media_verification=_fake_ref("media.json", "harness.x2env_media_verification.v1", SHA_A),
         runtime_receipt=runtime_receipt,
-        fresh_observation_refs=(
-            _fake_ref("fresh.json", "harness.fresh_observation.v1", SHA_C),
-        ),
+        fresh_observation_refs=(_fake_ref("fresh.json", "harness.fresh_observation.v1", SHA_C),),
         steps_executed=4,
         total_frame_count=2,
         unique_frame_count=2,
@@ -395,9 +385,7 @@ def _case(tmp_path: Path, *, route: str = "image2env", checkpoint: bool = False)
         base_revision=1,
         base_state_sha256=SHA_A,
         base_state=_fake_ref("base.json", "harness.trusted_world_state.v1", SHA_B),
-        registry_snapshot=_fake_ref(
-            "registry.json", "harness.registry_snapshot.v1", SHA_C
-        ),
+        registry_snapshot=_fake_ref("registry.json", "harness.registry_snapshot.v1", SHA_C),
         skill=QualifiedSkillExecutionV2(
             schema_version="harness.qualified_skill_execution.v2",
             skill_ref=f"{route}.replay@1.0.0",
@@ -588,9 +576,7 @@ def _case(tmp_path: Path, *, route: str = "image2env", checkpoint: bool = False)
         typed_output=state.output,
         state_delta=_fake_ref("observe-delta.json", "harness.state_delta.v2", SHA_A),
         diagnostics=(),
-        trusted_receipt=_fake_ref(
-            "observe-receipt.json", "harness.trusted_tool_receipt.v2", SHA_B
-        ),
+        trusted_receipt=_fake_ref("observe-receipt.json", "harness.trusted_tool_receipt.v2", SHA_B),
         fresh_observations=observations,
         blocker=None,
     )
@@ -716,6 +702,11 @@ def test_workflow_authorization_rejects_foreign_context_despite_equal_state_hash
     for foreign in foreign_values:
         with pytest.raises(ValueError, match="workflow authorization context"):
             case.policy.authorize_workflow(case.world, case.request, foreign)
+
+    with pytest.raises(TypeError, match="GenesisObserveInput"):
+        case.policy.authorize_workflow(case.world, case.request.capture_plan, context)
+    with pytest.raises(TypeError, match="SkillAuthorizationContext"):
+        case.policy.authorize_workflow(case.world, case.request, object())
 
 
 def _replace_replay_receipt(case: _Case, receipt: TrustedToolReceiptV2) -> GenesisObserveInput:
@@ -892,9 +883,7 @@ def test_claims_and_fresh_observations_come_from_one_canonical_receipt(tmp_path:
     case = _case(tmp_path)
     claims = case.policy.claims(case.state)
     fresh = case.policy.fresh_observations(case.state, case.invocation)
-    assert claims == (
-        ReceiptDerivedFactClaimV2(key="observation.scene_visible", value=True),
-    )
+    assert claims == (ReceiptDerivedFactClaimV2(key="observation.scene_visible", value=True),)
     assert fresh == (
         WorldFact(
             key="observation.scene_visible",
@@ -918,9 +907,7 @@ def test_fresh_observations_reject_invocation_identity_and_input_mismatches(tmp_
         {"invocation_digest": "f" * 64},
     ):
         with pytest.raises(ValueError, match="invocation differs"):
-            case.policy.fresh_observations(
-                case.state, case.invocation.model_copy(update=update)
-            )
+            case.policy.fresh_observations(case.state, case.invocation.model_copy(update=update))
 
     alternate = _put(
         case.store,
@@ -987,8 +974,7 @@ def test_fresh_observations_recheck_every_receipt_request_field(tmp_path: Path) 
             "observations": (
                 case.observation_receipt.observations[0].model_copy(
                     update={
-                        "valid_until": case.observation_receipt.captured_at
-                        + timedelta(seconds=61)
+                        "valid_until": case.observation_receipt.captured_at + timedelta(seconds=61)
                     }
                 ),
             ),
@@ -1052,9 +1038,7 @@ def test_fresh_observations_reject_open_child_output_time_and_supporting_closure
 
     missing_media = case.state.model_copy(
         update={
-            "artifacts": tuple(
-                ref for ref in case.state.artifacts if ref != case.output.images[0]
-            )
+            "artifacts": tuple(ref for ref in case.state.artifacts if ref != case.output.images[0])
         }
     )
     with pytest.raises(ValueError, match="absent from supporting"):

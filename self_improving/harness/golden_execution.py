@@ -21,6 +21,17 @@ class QualifiedApplicationRunPendingError(RuntimeError):
     """The exact application started a child whose terminal state is not recoverable yet."""
 
 
+@dataclass(frozen=True)
+class SkillAuthorizationContext:
+    """Current parent authority supplied only by the Golden aggregate."""
+
+    workflow_run_id: UUID
+    principal_id: str
+    receipt_head: ArtifactRef
+    revision: int
+    state_ref: ArtifactRef
+
+
 class SkillEvidencePolicy(Protocol):
     """Skill-owned interpretation of typed input and terminal output evidence."""
 

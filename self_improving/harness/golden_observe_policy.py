@@ -17,6 +17,7 @@ from typing import ClassVar, Literal, TypeVar
 from pydantic import BaseModel
 
 from .artifacts import LocalArtifactStore
+from .golden_execution import SkillAuthorizationContext
 from .schemas.base import HarnessModel
 from .schemas.common import ArtifactRef, Invocation, RunState, RunStatus
 from .schemas.genesis_observe import (
@@ -168,6 +169,33 @@ class ControlledGenesisObserveEvidencePolicy:
             if parameters.checkpoint not in supporting:
                 raise ValueError("observe checkpoint is absent from replay supporting evidence")
             self.artifact_store.resolve(parameters.checkpoint)
+
+    def authorize_workflow(
+        self,
+        state: TrustedWorldState,
+        parameters: BaseModel,
+        context: SkillAuthorizationContext,
+    ) -> None:
+        """Bind a replay receipt to the exact visible parent workflow head."""
+
+        if type(parameters) is not GenesisObserveInput:
+            raise TypeError("observe policy requires GenesisObserveInput")
+        if type(context) is not SkillAuthorizationContext:
+            raise TypeError("observe policy requires exact SkillAuthorizationContext")
+        workflow = _resolve_model(
+            self.artifact_store,
+            parameters.replay_workflow_receipt,
+            WorkflowOperationReceiptV2,
+        )
+        if (
+            context.workflow_run_id != workflow.workflow_run_id
+            or context.principal_id != workflow.principal_id
+            or context.receipt_head != parameters.replay_workflow_receipt
+            or context.revision != workflow.committed_revision
+            or context.state_ref != workflow.resulting_state
+            or state.state_sha256 != workflow.resulting_state_sha256
+        ):
+            raise ValueError("replay receipt differs from the exact workflow authorization context")
 
     def claims(self, state: RunState) -> tuple[ReceiptDerivedFactClaimV2, ...]:
         if state.status is not RunStatus.SUCCEEDED:
