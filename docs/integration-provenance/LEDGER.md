@@ -13,7 +13,7 @@
 |---|---|---|---|---|---|
 | INT-BS-001 | Harness、Registry、证据链与总体整合基线 | Bingsheng/current history | integrated | blocked | 已有正式组件，当前共享工作树基线仍有资格哈希失败 |
 | INT-BS-002 | Golden E2E 合同、门禁与实施审计 | Bingsheng | integrated | contract_pass | 合同已确认，真实 Golden run 未完成 |
-| INT-YX-001 | 历史资产检索/复用/入库管线 | Yuxin/HYX | integrated | blocked | 代码与历史已整合，162 份 ledger 有 4,082 条 v3 违规 |
+| INT-YX-001 | 历史资产检索/复用/入库管线 | Yuxin/HYX | integrated | blocked | 两资产 tracer 已通过 exact-stage 与 headless loader runtime；162 份 ledger 总体仍有 4,082 条 v3 违规 |
 | INT-YX-002 | 新 x2env Skills 的检索与复用能力 | Yuxin/HYX | candidate | not_run | 等待按新 Skill/receipt 合同接入 |
 | INT-GJ-001 | 媒体输入、逐帧完整性与 `genenv.*` 输出 | Gujie | candidate | not_run | 固定为候选，尚未进入 Harness Golden run |
 | INT-GJ-002 | 标准 URDF closure 与 SimFoundry 导入 | Gujie + third-party | candidate | not_run | 需经 anti-corruption adapter 和资产资格门 |
@@ -88,36 +88,55 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
 - `dirty_snapshot`：归档快照身份由 `self_improving/source_inventory.json` 固定
 - `source_paths`：资产 provider、selection gate、fetch、coverage、conversion、materialization、ledger、
   catalog admission 与 simulator verification 历史
-- `target_paths`：`self_improving/asset_pipeline/active/` 及其 archive/overlay 记录；只读修复规划落点
-  `self_improving/harness/asset_repair.py`、`self_improving/harness/asset_staging.py` 及对应 schemas
+- `target_paths`：`self_improving/asset_pipeline/active/` 及其 archive/overlay 记录；只读修复规划与
+  staging 落点 `self_improving/harness/asset_repair.py`、`asset_staging.py`、
+  `asset_stage_verification.py` 及对应 schemas；真实 staged-only probe 位于
+  `script/probe_staged_robotwin_assets.py`
 - `integration_method`：保留来源历史后整合；active tree 为当前规范落点。首个 P6 切片只从组装时
   显式受信且 strict-canonical 的 inventory CAS 分类 observation disposition，不修改历史 ledger，也不
   放松 validator；source population、inventory sample、planned selection 三层 totals 分别绑定，只有
   full scope + 完整 inventory + 完整 selection 才产生 `full_baseline_evaluated=true`。第二个 P6 切片
-  只对这两个 tracer asset 建立 path-free source manifest，经 deployment-only root
-  binding 逐 member 重算 identity、枚举 GLB loader closure 并写入新 Harness CAS；不写旧 ledger
-- `contract_spec`：`self_improving/source_inventory.json`、资产管线内合同与 README
+  对这两个 tracer asset 建立 path-free source manifest，经 deployment-only root binding 逐 member
+  重算 identity，并把 14 个 GLB roots 与 7 个 `model_dataN.json` sidecars 组成 21-member union 写入新
+  Harness CAS。deep verifier 以显式 expected refs 重建 plan、重验 CAS/sidecar/GLB 引用图；固定 runner
+  仅从 CAS 物化后调用真实 RoboTwin `create_actor`，执行 7×900 headless SAPIEN ground-contact steps。
+  整条切片不写来源资产或旧 ledger
+- `contract_spec`：`self_improving/source_inventory.json`、资产管线内合同与 README；
+  `self_improving/harness/schemas/asset_staging.py`、
+  `self_improving/harness/asset_stage_verification.py`
 - `verification_evidence`：`self_improving/golden_e2e_progress/AUDIT.md`、`RESULTS.md`；
   `tests/fixtures/asset_repair_tracer_inventory.json`；
   `tests/fixtures/asset_repair_tracer_source_snapshot.json`；
   `tests/self_improving/harness/test_asset_repair.py`（2-ledger E0 plan tracer）；
-  `tests/self_improving/harness/test_asset_staging.py` 与
-  `docs/evidence/asset-repair-exact-stage-20260910.md`（14-GLB exact-stage tracer）
+  `tests/self_improving/harness/test_asset_staging.py`、
+  `tests/self_improving/harness/test_staged_robotwin_probe.py`；integration commits
+  `9760a0349864964a527c04d32dfa607455ff8a97`、
+  `292d09b7775f75576063f40969c2de078d1c45ab`、
+  `bd61a9e1504b1462c1bb24799a38e76f5cdf26e4`、
+  `8c1c94afae8292dc94ee1d2b08fb7fb08a94bc06`；
+  `docs/evidence/asset-repair-exact-stage-20260910.md` 绑定 stage result
+  `a2e786131bb33a3eacd7afd0403dca45a6353a2f6d54aebc100ecb19fda09f23`、stage binding
+  `fcf73ec7851e42654a2264d818bfcc60d091ad3669429ecee7f5b7ccd7e0eb89` 与外部 runtime report
+  `c7a0ac85e1425b12041ab0d91833a0bfb15d57ba04f2b5549ff2fe9d1ecafc5d`
 - `golden_run`：`none`
-- `known_gaps`：只完成 2/162 ledger 的 classification 与 14/1,101 primary probes 的本机 exact-stage；
-  14 份 probe bytes 已进入本次保留的本机 CAS，但来源仍没有 fixed dataset revision，不能泛化为可移植
-  全量来源。162/4,082/1,101 虽已独立扫描复核，但还没有全量 scanner/manifest attestation；历史全量
-  仍有 4,082 条 v3 违规，collision/settle/Genesis qualification 和原子 promotion 均未实现
-- `last_verified`：`2026-09-10`
+- `known_gaps`：只完成 2/162 ledger 的 classification 与 14/1,101 primary GLB probes；7 份 loader
+  sidecar 使本次 exact-stage union 为 21 members，但来源仍没有 fixed dataset revision，不能泛化为全量
+  portability。162/4,082/1,101 虽已独立扫描复核，仍没有全量 scanner/manifest attestation；历史全量
+  仍有 4,082 条 v3 违规。此次 runtime 只证明真实 `create_actor` 的 CAS-only loader closure 与地面接触；
+  can-on-plate、settle/runtime qualification、rendered replay、Genesis、robot policy 和原子 promotion
+  均未实现
+- `last_verified`：`2026-09-10`；feature `8c1c94afae8292dc94ee1d2b08fb7fb08a94bc06`
 
 ### 核对结论
 
 Yuxin 的资产检索与复用工作已经保留并整合，但历史资产证据债务使其不能整体获得 runtime
 qualification。Bingsheng 新增的 plan/stage adapter 先把受信 audit observations 映射为 repair
-disposition，再把两个 tracer asset 的 14 个已匹配 GLB 逐字节重验并写入新 CAS；它不是 Yuxin 原始
-字节，也没有改变任何权威 ledger。该本机未版本化 source manifest 只证明固定 byte closure，不证明
-collision、settle、Genesis qualification 或全量 portability。原工作区已不再作为可读取的当前来源，
-后续核对应以 source inventory、path-free manifest 和归档 ref 为准。
+disposition，再把两个 tracer asset 的 14 个 GLB 与 7 个 sidecar 逐字节重验并写入新 CAS；这些
+Harness adapter/verifier/runner 是 Bingsheng 的整合工作，不改变 Yuxin 来源能力、RoboTwin 上游归属或
+任何权威 ledger。当前最强主张是该 21-member closure 已由真实 RoboTwin `create_actor` 从 CAS-only
+物化目录读取并完成 7×900 headless SAPIEN ground-contact probe；它不证明 can-on-plate、qualification、
+Genesis、promotion 或全量 portability。原工作区已不再作为可读取的当前来源，后续核对应以 source
+inventory、path-free manifest、归档 ref 与固定 runtime report 为准。
 
 ## INT-YX-002 — 新 x2env Skills 的资产检索与复用能力
 
