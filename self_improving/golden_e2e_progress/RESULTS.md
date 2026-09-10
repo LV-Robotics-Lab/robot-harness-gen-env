@@ -1,5 +1,30 @@
 # 进度与结果
 
+## 2026-09-10 P0+P2 隔离集成
+
+- 从主仓库固定 `ea26524cae7b4a18b5576150376eb6ec1ddddf7b` 新建隔离 worktree，依次合入
+  `6570c82`、`b24c827`、`2ac283f`。主工作树的用户修改未被暂存、覆盖或提交；
+  `docs/evidence/replay-production-qualification-20260902.md` 保持基线字节。
+- 公共 root/schemas facade 保留 P0 的 lazy seam，并在 closure 外的全局映射中合并 P6 的
+  `AssetSourceSnapshotManifest` / `AssetStageRequest` / `AssetStageResult` 三份 schema 与 stage 公开符号；
+  P2 的 Registry/Application/RunStore/EventJournal/actor-neutral domain 实现保持不变。schema gate 为
+  `verified 32 Harness schema snapshots`。
+- P0 focused 在精确排除依赖 stale compile bundle 的 production import tracer 后为
+  `170 passed, 1 deselected`；P2 focused 四文件为 `197 passed`。compile checked gate 按预期以
+  `implementation_file_mismatch: self_improving/harness/qualification.py` 拒绝；production import
+  tracer 在进入 trace 前因同一 compile qualification 原因拒绝；replay checked gate 按预期以
+  `implementation_file_mismatch: self_improving/harness/__init__.py` 拒绝。
+- Harness 在精确排除上述 3 个节点后为 `2502 passed, 20 skipped, 3 deselected`；
+  `application.py`、`event_journal.py`、`registry.py`、`run_store.py`、`system2/domain.py`
+  合计 1,447 statements / 478 branches，语句与分支覆盖均为 100%。fixed-range Ruff、format 与
+  integration diff 完整性门通过。
+- 无边界 `ruff check .` 仍报 2,463 个基线问题，主要位于本 fixed range 之外的历史
+  `validation_evidence/`、`demo/` 与 `scene_gen/`；本集成的 28 个变更 Python 文件逐个通过
+  `ruff check` 与 `ruff format --check`，未扩展修改基线文件。
+- 本切片不重签、不执行真实 runtime。下一阶段必须在当前固定树上真实重新生成 compile
+  与 900/120 replay 资格、严格 reload，然后不排除地跑通三个节点。当前结果不证明新的
+  RoboTwin/SAPIEN、Genesis 或真机能力。
+
 ## 2026-09-10 P6 staged-loader 合入与未完成边界
 
 - 早期固定候选 `bd61a9e1504b1462c1bb24799a38e76f5cdf26e4` 在独立 worktree 中完成 166 个 focused
@@ -394,9 +419,10 @@
   checked compile qualification 均通过。
 - root：`3206 passed, 19 skipped, 1 failed in 153.28s`。唯一失败仍是旧 checked replay bundle 对当前
   `harness/__init__.py` 的 `implementation_file_mismatch`；这是预期的 fail-closed 结果，不是重签。
-- reader-facing repo-docs 已统一时态和当前 29-schema 计数：2026-09-02 bundle/真实 900/120 是固定旧
+- 在该独立 P0 候选上，reader-facing repo-docs 统一了时态和当时的 29-schema 计数：
+  2026-09-02 bundle/真实 900/120 是固定旧
   源码下的历史证据；当前 loader 会拒绝，新的 current qualification 尚未执行。历史 evidence 页恢复
   原字节，当前失效和未重签状态记录在独立 `replay-qualification-status-20260910.md`。
-- 边界：未改 qualification 三份文档或 expected hash，未执行真实 replay requalification，未声称当前
-  simulator、Genesis 或真机能力。P2 仍会修改 closure 内 `registry.py` / `application.py`；只有其固定
-  实现合入后才可执行真实 900/120、严格 reload 和重签。
+- 边界：该独立候选未改 qualification 三份文档或 expected hash，未执行真实 replay
+  requalification，未声称当前 simulator、Genesis 或真机能力。P2 当时尚会修改 closure 内
+  `registry.py` / `application.py`；当前集成状态及后续重签门见本页顶部的 P0+P2 集成记录。

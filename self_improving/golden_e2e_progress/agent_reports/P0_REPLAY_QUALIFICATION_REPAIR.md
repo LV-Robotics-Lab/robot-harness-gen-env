@@ -1,6 +1,6 @@
 # P0 Replay Qualification Identity Repair
 
-状态：`implementation_ready; old_bundle_fail_closed; real_requalification_pending_p2`
+状态：`standalone_implementation_ready; integrated_with_p2; real_requalification_pending`
 
 - 基线：`660ae4900eed4fba0fce59fb0d26fe0610735df8`
 - 实现提交：本报告所在的单一 superseding feature commit；固定 SHA 由主审回执记录。
@@ -63,12 +63,14 @@ asset 或 VLM family 的公开导出变化也使资格失效。初版显式列�
 ## 边界与下一步
 
 本切片没有刷新 expected hashes、没有改 checked qualification bundle，也没有把旧资格标成 current。
-P2 将修改 closure 内的 `registry.py` 与 `application.py`，所以真实 900/120 replay、bundle regeneration、
-严格 reload、验证和重签必须基于 P2 固定提交（以及届时所有其他 closure 依赖变化）执行。若真实运行受
+该独立候选当时预期 P2 将修改 closure 内的 `registry.py` 与 `application.py`；P2 现已进入隔离集成树。
+真实 compile 与 900/120 replay、bundle regeneration、严格 reload、验证和统一重签必须基于当前
+集成树（以及届时所有其他 closure 依赖变化）执行。若真实运行受
 GPU、delegated cgroup、runtime 或资产 closure 阻塞，继续保持旧资格失效，不以 hash-only 更新绕过
 执行证据。
 
 Repo-docs sync gate 已同步：四个 reader-facing 入口把 2026-09-02 bundle/900/120 明确标成历史证据，
-注明当前源码会严格拒绝，并把当前 committed schema 数更正为 29。append-only 的 2026-09-02 evidence
+注明当前源码会严格拒绝，并把该独立候选的 committed schema 数更正为 29；集成已在主线的
+3 份 asset staging schema 后，当前总数为 32。append-only 的 2026-09-02 evidence
 保持原字节；失效原因、闭包修复和未重签边界写入独立 2026-09-10 状态页。本切片尚未产生新的 current
 资格，最终 P2 后真实重签时再补新的运行 evidence。

@@ -87,17 +87,11 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert schema_model("harness.workflow_start_receipt.v1") is WorkflowStartReceipt
     assert schema_model("harness.registry_snapshot.v1") is RegistrySnapshot
     assert schema_model("harness.run_read_request.v1") is RunReadRequest
-    assert (
-        schema_model("harness.skill_qualification_report.v1")
-        is PublicQualificationReportV1
-    )
+    assert schema_model("harness.skill_qualification_report.v1") is PublicQualificationReportV1
     assert schema_model("harness.asset_debt_inventory.v1") is AssetDebtInventory
     assert schema_model("harness.asset_repair_plan_request.v1") is AssetRepairPlanRequest
     assert schema_model("harness.asset_repair_plan.v1") is AssetRepairPlan
-    assert (
-        schema_model("harness.asset_source_snapshot_manifest.v1")
-        is AssetSourceSnapshotManifest
-    )
+    assert schema_model("harness.asset_source_snapshot_manifest.v1") is AssetSourceSnapshotManifest
     assert schema_model("harness.asset_stage_request.v1") is AssetStageRequest
     assert schema_model("harness.asset_stage_result.v1") is AssetStageResult
     with pytest.raises(KeyError):
@@ -156,9 +150,10 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
         "schema_version",
     ]
     assert "from_status" in documents["harness.event.v1"]["required"]
-    assert documents["harness.asset_repair_plan.v1"]["properties"][
-        "writes_performed"
-    ]["const"] is False
+    assert (
+        documents["harness.asset_repair_plan.v1"]["properties"]["writes_performed"]["const"]
+        is False
+    )
     stage_result = documents["harness.asset_stage_result.v1"]
     for field in {
         "authoritative_ledger_writes_performed",
@@ -169,22 +164,25 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
         assert stage_result["properties"][field]["const"] is False
     assert stage_result["properties"]["exact_source_bytes_staged"]["const"] is True
     assert stage_result["properties"]["loader_closure_enumerated"]["const"] is True
-    assert documents["harness.asset_repair_plan.v1"]["properties"][
-        "runtime_qualification_executed"
-    ]["const"] is False
-    assert documents["harness.asset_repair_plan.v1"]["properties"][
-        "full_baseline_evaluated"
-    ]["type"] == "boolean"
-    assert documents["harness.asset_repair_plan.v1"]["properties"][
-        "probe_bytes_in_cas"
-    ]["const"] is False
+    assert (
+        documents["harness.asset_repair_plan.v1"]["properties"]["runtime_qualification_executed"][
+            "const"
+        ]
+        is False
+    )
+    assert (
+        documents["harness.asset_repair_plan.v1"]["properties"]["full_baseline_evaluated"]["type"]
+        == "boolean"
+    )
+    assert (
+        documents["harness.asset_repair_plan.v1"]["properties"]["probe_bytes_in_cas"]["const"]
+        is False
+    )
     for schema_id in {
         "harness.asset_repair_plan.v1",
         "harness.asset_repair_plan_request.v1",
     }:
-        constraints = documents[schema_id]["properties"]["inventory_ref"]["allOf"][1][
-            "properties"
-        ]
+        constraints = documents[schema_id]["properties"]["inventory_ref"]["allOf"][1]["properties"]
         assert constraints == {
             "uri": {
                 "maxLength": 82,
@@ -211,9 +209,7 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
     }
     for schema_id, fields in staging_ref_contracts.items():
         for field, schema_version in fields.items():
-            constraints = documents[schema_id]["properties"][field]["allOf"][1][
-                "properties"
-            ]
+            constraints = documents[schema_id]["properties"][field]["allOf"][1]["properties"]
             assert constraints == {
                 "uri": {
                     "maxLength": 82,
@@ -229,15 +225,20 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
         r"(?:/(?!\.{1,2}(?:/|$))[^/\\\u0000-\u001f\u007f\u2028\u2029]+)*$"
     )
     inventory_defs = documents["harness.asset_debt_inventory.v1"]["$defs"]
-    assert inventory_defs["AssetDebtEntry"]["properties"]["ledger_path"][
-        "pattern"
-    ] == portable_path_pattern
-    assert inventory_defs["RepresentationRecoveryProbe"]["properties"][
-        "logical_path"
-    ]["pattern"] == portable_path_pattern
-    assert documents["harness.asset_repair_plan.v1"]["$defs"][
-        "RepresentationRepairPlan"
-    ]["properties"]["logical_path"]["pattern"] == portable_path_pattern
+    assert (
+        inventory_defs["AssetDebtEntry"]["properties"]["ledger_path"]["pattern"]
+        == portable_path_pattern
+    )
+    assert (
+        inventory_defs["RepresentationRecoveryProbe"]["properties"]["logical_path"]["pattern"]
+        == portable_path_pattern
+    )
+    assert (
+        documents["harness.asset_repair_plan.v1"]["$defs"]["RepresentationRepairPlan"][
+            "properties"
+        ]["logical_path"]["pattern"]
+        == portable_path_pattern
+    )
     run_required = documents["harness.run_state.v1"]["required"]
     assert {"invocation_digest", "ended_at", "output", "blocker"} <= set(run_required)
     assert documents["harness.run_read_request.v1"]["required"] == [

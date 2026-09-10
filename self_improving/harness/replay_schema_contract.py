@@ -56,9 +56,7 @@ REPLAY_SCHEMA_BINDINGS: tuple[ReplaySchemaBinding, ...] = (
     ReplaySchemaBinding("harness.text2env_replay_input.v1", Text2EnvReplayInput),
     ReplaySchemaBinding("harness.text2env_replay_output.v1", Text2EnvReplayOutput),
 )
-REPLAY_SCHEMA_SNAPSHOT_PATHS = tuple(
-    binding.snapshot_path for binding in REPLAY_SCHEMA_BINDINGS
-)
+REPLAY_SCHEMA_SNAPSHOT_PATHS = tuple(binding.snapshot_path for binding in REPLAY_SCHEMA_BINDINGS)
 
 
 class ReplaySchemaContractError(RuntimeError):

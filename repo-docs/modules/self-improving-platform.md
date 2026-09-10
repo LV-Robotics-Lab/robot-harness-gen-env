@@ -24,9 +24,10 @@
 `8d9a01c`、`587b49f`、`0e6716a` 未进入本研究复核；“当前/未接线”均只描述这个固定快照，不认证
 移动 HEAD。
 
-Harness 当前公开 29 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
+Harness 当前公开 32 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
 descriptor v2、validate v2 input/output，以及 qualification report、资产债务/修复、registry snapshot、
-replay VLM、run start/read/snapshot 和 workflow start receipt 等 12 个入口；descriptor v2 明确区分
+replay VLM、run start/read/snapshot 和 workflow start receipt 等 12 个入口，再加上 asset source snapshot、stage
+request 与 stage result 三个入口；descriptor v2 明确区分
 内容位级确定性与证据不变量可复验。descriptor v1 保持冻结，
 compile 仍用 v1，replay 用 v2；两版不能静默转换。`ArtifactRef.schema_version` 仍指向既有
 `robotwin.*` 权威载荷，Harness 不重新定义其内部格式。schema 之外已有本地 digest-checking artifact
@@ -82,7 +83,9 @@ assets 五项依赖，worker 输出先作为 untrusted bytes 保存，只有 evi
 MP4/H.264/8bit-420/SAR 语义）复核后才晋升 typed artifacts。两组专项为 185 passed 且两个模块
 statement/branch 100%。descriptor 已用 v2 诚实声明 `evidence_invariant_repeatable`；固定 loader、
 generator 与 production application 会重读完整 CAS evidence closure；历史 pass bundle 和 900/120
-handler receipt 已因当前源码 identity 漂移而失效，尚未基于当前 closure 重新执行和重签。VLM fallback、
+handler receipt 已因当前源码 identity 漂移而失效，尚未基于当前 closure 重新执行和重签。
+P2 controlled-child 集成后，checked compile bundle 也因当前 `qualification.py` identity 漂移而严格失效；
+compile/replay 必须在当前固定树上真实统一重签。VLM fallback、
 LLM orchestration 和工作台不能从这些
 候选底座推断为完成。
 
@@ -107,7 +110,7 @@ closed。
 这仍不是完整 Stage 7：接口是同步 compile，不是异步 durable queue；没有 replay、validate、System
 2、artifact 内容 viewer 或拖拽编排。compile `succeeded` 也不表示物理 validation、资产 settle 或
 publishable。A047 的 `harness.workbench_compile_submission.v1` 是工作台投影，不新增 Harness 公共
-schema snapshot；仓库当前总数为 29。A047 切片当时 `tests/demo` 为 84 passed，其中 18 项
+schema snapshot；仓库当前总数为 32。A047 切片当时 `tests/demo` 为 84 passed，其中 18 项
 使用真 Flask + headless Chrome。
 
 A048 在此之上增加 terminal compile 的只读依赖审计。`WorkbenchCompile.audit(run_id)` 从同一
@@ -179,7 +182,7 @@ replay、validate 或 System 2。
 compile `succeeded` 仍不表示物理 validation、资产 settle 或 publishable。A047/A048 的两份
 `harness.workbench_*`（含 A049 audit v2、A050 scene preview v1 与 A051 static-validation preview v1）
 都是工作台投影，不新增 Harness
-公共 schema snapshot；仓库当前总数为 29。
+公共 schema snapshot；仓库当前总数为 32。
 
 Stage 5 的视觉评审状态是三态而非布尔值。在 `--run-smoke`/视觉评审路径中，只有 visual pass
 才把 candidate 原子晋升为 `final_placement.json` 并退出 0；`pending_visual_review` 只写

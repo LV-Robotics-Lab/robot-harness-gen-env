@@ -2,10 +2,15 @@
 
 ## 2026-09-10
 
+- 在隔离集成树合并 P0 replay 显式 source closure 与 P2 controlled child identity；公共 lazy
+  facade 同时保留 asset staging 的 3 份 schema，当前总数为 32。compile checked gate 与依赖它的
+  production import tracer 同因 compile bundle stale 而拒绝，replay checked gate 因 replay bundle stale 而拒绝；
+  三者必须在下一阶段真实统一重签后不排除通过。本集成没有重签或运行真实 runtime。
 - 修正 replay qualification 的时态：2026-09-02 checked-in bundle 与真实 900/120 证据作为历史记录
   保留，但当前源码 identity 已变化，严格 loader 会拒绝旧 bundle；新的 current qualification 尚未
   重新执行或重签。新增 2026-09-10 状态页，同步代码地图、runtime gate、System 2 replay acquisition、
-  平台概览与证据索引，并把当前公共 schema 数修正为 29；不回改 2026-09-02 历史 evidence。
+  平台概览与证据索引；隔离 P0 候选当时为 29 份 schema，合并已在主线的 3 份 asset
+  staging schema 后当前为 32 份。不回改 2026-09-02 历史 evidence。
 
 ## 2026-09-01
 

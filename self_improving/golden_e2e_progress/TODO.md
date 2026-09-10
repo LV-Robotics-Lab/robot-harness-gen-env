@@ -4,18 +4,16 @@
 
 ## Doing
 
-- P0：把 `text2env.replay@1.0.0` qualification 从过宽的整棵 Harness source snapshot 收窄为显式、
-  完备、fail-closed 的 replay 实现闭包；候选实现已固定在 `d664b04`，真实装配/资格生成 trace 仅加载
-  common/text2env schema 家族，旧资格包仍按预期 fail-closed。当前等待 fixed-diff 双轴审查；最终资格刷新
-  必须等 P2 的 Registry/Application 固定后重新执行真实固定案例，不能只改 expected hash。
-- P2：以单条 RED→GREEN tracer 实现 actor-neutral `submit`，让同一 S1 run 调用真实 qualified compile
-  并原子提交 ToolResult、StateDelta、operation receipt、revision/state head。actor-neutral trusted-state
-  kernel 已独立提交为 `6570c82`；签名前审查已复现不同输入产生相同 preflight blocker 时错误复用保留
-  child identity 的 RED，正在以 canonical ControlledRunIntent、原子 reserve 与并发攻击补齐。operation
-  evidence correlation 和 child-terminal/live-unavailable 恢复矩阵未绿前不得重签或提交 aggregate。
+- P0+P2 隔离集成候选已从 `ea26524` 依次合入 actor-neutral trusted-state、controlled
+  child identity 与 replay 显式 source closure；当前等待主线审阅与后续真实 compile/replay
+  统一重签。本集成切片不实现 `GoldenRunHarness.submit`、replay/validate dispatch、MCP、
+  Genesis 或 promotion。
 
 ## Next
 
+- 在当前 P0+P2 固定树上执行真实 compile 与 900/120 replay 资格生成、严格 reload 和统一重签；
+  重签后 compile checked gate、依赖它的 production import tracer 与 replay checked gate 三个精确
+  节点均必须不排除通过。
 - P3-R：P2 actor-neutral aggregate 固定后，新增真实 `Text2EnvReplayApplicationAdapter` 与 replay
   evidence policy；用 `Place a can on top of a plate.`、seed 7、`0/900/120/120/12` 让同一 workflow
   从 compile revision 1 推进到 replay revision 2。replay input package 必须来自当前可信 state，完整
@@ -38,12 +36,11 @@
 - Autoresearch 的 benchmark/真实 MCP/Genesis 前置尚未实现；设置已确认但尚不能建立诚实 baseline。
 - exact MCP adapter 仍缺 `submit/read` 和真实 Registry handler 交集；caller 提供的内部一致
   `RegistrySnapshot` 目前不能单独作为生产 trust root。
-- 三份 reader-facing repo-docs 仍把 Harness schema 数写成 17；当前主分支实际为 32。文件已有用户修改，
-  本切片不覆盖或暂存，P14 必须在可安全协调时同步。
-- compile/replay 两份 checked-in qualification 都需要在 P0/P2 实现树稳定后统一真实重签；本纵切
-  修改了其受信源码闭包，测试只把这两个已登记的 stale identity case 明确 deselect，不能把其余
-  2,299 个 Harness 通过项写成资格已恢复。原始 qualification settings/CAS 尚在，但旧 delegated
-  cgroup 已不存在。
+- compile checked gate 当前因 `self_improving/harness/qualification.py` identity 不匹配而拒绝；依赖它的
+  P0 production import tracer 在进入 trace 前同源拒绝。replay checked gate 因
+  `self_improving/harness/__init__.py` identity 不匹配而拒绝。本 integration-only tranche 精确
+  deselect 这 3 个节点；它们是下一阶段真实 compile→replay 统一重签后的必过门，不能用
+  expected-hash-only 更新绕过。原始 settings/CAS 尚在，旧 delegated cgroup 已不存在。
 - 2026-09-10 的完整相机 replay 第一次因本机 GPU 被无关训练进程占满，在 observer camera 创建 buffer
   时失败；第二次强制 Lavapipe 因 Vulkan 扩展缺失失败。两次都不是 runtime pass，且不得终止不属于
   本任务的 GPU 进程；当前用无渲染真实 SAPIEN probe 验证 loader/physics，媒体门留待资源可用时补跑。
@@ -56,8 +53,12 @@
   源码 snapshot 对每条目录链和成员做三轮独立 nofollow 重走与 identity/bytes 对账，另做最终 root
   重开；14-schema 路径和模型门由单一冻结表生成并有独立集合一致性校验。旧 checked bundle 继续因
   当前源码 identity 不匹配而拒绝，未刷新 hash、未重签；真实重签等待 P2 后 closure 稳定。2026-09-02
-  历史 evidence 保持原字节，当前失效状态写入独立 2026-09-10 页面；四份 repo-docs 的 replay 时态和
-  当前 29-schema 计数已同步。
+  历史 evidence 保持原字节，当前失效状态写入独立 2026-09-10 页面；repo-docs 的 replay 时态和
+  集成树 32-schema 计数已同步。
+- P2 controlled child-run identity 纵切已完成并合入本集成候选：canonical input、exact dependency、
+  descriptor/implementation/qualification identity、Invocation、terminal 与事件链由同一 SQLite
+  authority 绑定；同 intent 可恢复，冲突 intent、ordinary-run identity 占用与损坏 lifecycle
+  均 fail closed。该纵切仍不包含 workflow `submit` 或 operation commit。
 - 接受 Codex 同时承担中枢 agent 与视觉判读职责的稳定架构决定。
 - 建立本进度目录和根 `AGENTS.md` 触发入口。
 - 完成 Gujie committed/dirty/runtime 三层 x2env 与 Genesis 审计。

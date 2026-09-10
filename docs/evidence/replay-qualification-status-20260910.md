@@ -11,10 +11,13 @@
 - 当前实现 identity 已变化。严格 loader 对旧 bundle 返回
   `implementation_file_mismatch: self_improving/harness/__init__.py`，因此旧 bundle 不能授权当前
   replay application。
+- P2 controlled-child 实现也使旧 compile bundle 对当前源码以
+  `implementation_file_mismatch: self_improving/harness/qualification.py` 拒绝；依赖该 checked
+  compile bundle 的 P0 production import tracer 在进入 trace 前同源拒绝。
 - 本轮没有修改 `qualified_skills/text2env.replay/1.0.0/`、expected hash 或签名，也没有把旧资格标为
   current。
-- P2 还会修改 replay closure 内的 `registry.py` 与 `application.py`。新的真实 900/120 执行、完整
-  evidence closure、严格 reload 与重签必须在这些实现固定后统一进行；若运行依赖不可用，继续保持
+- P2 已合入本隔离集成树。新的真实 compile 与 900/120 replay 执行、完整 evidence
+  closure、严格 reload 与统一重签必须基于该固定树进行；若运行依赖不可用，继续保持
   fail closed。
 
 ## 本轮实现与测试证据
@@ -36,9 +39,10 @@ handler、dependency resolver、direct candidate 与 Registry candidate 执行�
 属于显式 implementation closure，要么属于由 `ledger_contract_tree_sha256` 独立绑定的 ledger contract
 tree。它不是部署仿真或新的物理资格证据。
 
-验证结果以本轮进度台账为准。完整 Harness 与根套件都只有旧 replay bundle 的上述预期拒绝；compile
-qualification、29 份 committed schema snapshot、Ruff、diff hygiene 和变更模块 statement/branch
-coverage 门通过。
+验证结果以本轮进度台账为准。隔离集成树精确排除 compile checked gate、依赖它的
+production import tracer 和 replay checked gate 后，其余 Harness 为 `2502 passed, 20 skipped,
+3 deselected`；五个核心模块 1,447 statements / 478 branches 均为 100%，32 份 committed
+schema snapshot 通过。这三个节点是真实统一重签后必须不排除重跑的门，当前不是资格恢复。
 
 ## 能力边界
 

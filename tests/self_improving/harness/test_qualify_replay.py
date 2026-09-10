@@ -1523,21 +1523,22 @@ def test_generation_rejects_replay_schema_snapshot_drift_before_execution(
 
 
 def test_replay_schema_model_gate_and_implementation_paths_are_exactly_consistent() -> None:
-    expected_ids = tuple(
-        name.removesuffix(".schema.json") for name in REPLAY_SCHEMA_SNAPSHOT_NAMES
-    )
+    expected_ids = tuple(name.removesuffix(".schema.json") for name in REPLAY_SCHEMA_SNAPSHOT_NAMES)
     expected_paths = tuple(
-        f"self_improving/harness/json_schemas/{name}"
-        for name in REPLAY_SCHEMA_SNAPSHOT_NAMES
+        f"self_improving/harness/json_schemas/{name}" for name in REPLAY_SCHEMA_SNAPSHOT_NAMES
     )
 
-    assert tuple(
-        binding.schema_id for binding in replay_schema_contract_module.REPLAY_SCHEMA_BINDINGS
-    ) == expected_ids
-    assert tuple(
-        binding.snapshot_path
-        for binding in replay_schema_contract_module.REPLAY_SCHEMA_BINDINGS
-    ) == expected_paths
+    assert (
+        tuple(binding.schema_id for binding in replay_schema_contract_module.REPLAY_SCHEMA_BINDINGS)
+        == expected_ids
+    )
+    assert (
+        tuple(
+            binding.snapshot_path
+            for binding in replay_schema_contract_module.REPLAY_SCHEMA_BINDINGS
+        )
+        == expected_paths
+    )
     assert replay_qualification_module.REPLAY_SCHEMA_SNAPSHOT_PATHS == expected_paths
     assert set(expected_paths) <= set(module.REPLAY_IMPLEMENTATION_PATHS)
 
@@ -3048,10 +3049,7 @@ def test_replay_source_snapshot_is_the_explicit_implementation_closure(
         "self_improving/harness/handlers/text2env_compile.py",
         "self_improving/harness/handlers/text2env_compile_dependencies.py",
         "self_improving/harness/handlers/text2env_replay.py",
-        *(
-            f"self_improving/harness/json_schemas/{name}"
-            for name in REPLAY_SCHEMA_SNAPSHOT_NAMES
-        ),
+        *(f"self_improving/harness/json_schemas/{name}" for name in REPLAY_SCHEMA_SNAPSHOT_NAMES),
         "self_improving/harness/media_sandbox.py",
         "self_improving/harness/media_verifier.py",
         "self_improving/harness/native/media_sandbox.c",
@@ -3177,7 +3175,7 @@ print(json.dumps(sorted(paths), separators=(",", ":")))
 
 
 def test_production_fixed_case_execution_imports_stay_within_qualified_source_closure() -> None:
-    program = r'''
+    program = r"""
 import json
 import runpy
 import sys
@@ -3250,7 +3248,7 @@ for loaded in tuple(sys.modules.values()):
     if path.suffix == ".py" and path.is_relative_to(self_improving_root):
         paths.add(path.relative_to(root).as_posix())
 print("__REPLAY_TRACE__" + json.dumps(sorted(paths), separators=(",", ":")))
-'''
+"""
     completed = subprocess.run(
         [sys.executable, "-c", program],
         cwd=ROOT,
@@ -3261,18 +3259,13 @@ print("__REPLAY_TRACE__" + json.dumps(sorted(paths), separators=(",", ":")))
         env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
     )
     trace_line = next(
-        line
-        for line in completed.stdout.splitlines()
-        if line.startswith("__REPLAY_TRACE__")
+        line for line in completed.stdout.splitlines() if line.startswith("__REPLAY_TRACE__")
     )
     traced = set(json.loads(trace_line.removeprefix("__REPLAY_TRACE__")))
     ledger_prefix = "self_improving/asset_pipeline/active/1_asset_reuse/lib/"
     ledger_traced = {path for path in traced if path.startswith(ledger_prefix)}
     implementation_traced = traced - ledger_traced
-    ledger_sources = {
-        path.relative_to(ROOT).as_posix()
-        for path in LEDGER.rglob("*.py")
-    }
+    ledger_sources = {path.relative_to(ROOT).as_posix() for path in LEDGER.rglob("*.py")}
     unrelated_schema_families = {
         "self_improving/harness/schemas/asset_repair.py",
         "self_improving/harness/schemas/registry_snapshot.py",
@@ -3281,9 +3274,7 @@ print("__REPLAY_TRACE__" + json.dumps(sorted(paths), separators=(",", ":")))
         "self_improving/harness/schemas/workflow.py",
     }
 
-    assert unrelated_schema_families.isdisjoint(traced), sorted(
-        unrelated_schema_families & traced
-    )
+    assert unrelated_schema_families.isdisjoint(traced), sorted(unrelated_schema_families & traced)
     assert {
         "self_improving/harness/assets.py",
         "self_improving/harness/handlers/text2env_compile.py",
@@ -3368,9 +3359,7 @@ def test_replay_source_snapshot_rejects_resolve_to_open_replacement_across_three
         if target.is_symlink():
             target.unlink()
             parked.rename(target)
-        snapshots.append(
-            module._snapshot_harness_source(distribution, phase="before_execution")
-        )
+        snapshots.append(module._snapshot_harness_source(distribution, phase="before_execution"))
 
     identities = [
         next(item for item in snapshot.files if item.path == relative).sha256
