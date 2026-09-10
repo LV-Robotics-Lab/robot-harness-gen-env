@@ -1,5 +1,15 @@
 # Change Log
 
+## 2026-09-11 real three-Skill MCP Golden line
+
+- 固定 `b6f7796` 使用官方 MCP 2.2 stdio Client 与两个独立 server 进程，真实完成 text workflow
+  create→compile→RoboTwin/SAPIEN replay→validate revision 3；重启重提返回同一 operation，SQLite/CAS
+  无增长。
+- 三轴只读验收闭合 201 CAS objects、3,928 refs、receipt/state/delta、13/50 portable closures、23 个
+  runtime asset members 与可解码 120-frame MP4。证据见
+  `docs/evidence/golden-mcp-three-skill-real-20260911.md`。
+- 此结果不包含 external Codex planner、Genesis、promotion、robot-policy 或 image/video runtime。
+
 ## 2026-09-11 three-Skill MCP controlled Golden line
 
 - 三 Skill production assembly 现从同一 CAS/Golden SQLite 重开 exact compile/replay/validate applications；

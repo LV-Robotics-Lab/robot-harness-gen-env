@@ -1,0 +1,112 @@
+{
+  "schema_version": "golden.mcp_three_skill_real_evidence.v1",
+  "date": "2026-09-11",
+  "implementation_commit": "b6f779659606fb3b91b7a6a2c98ff6a03970c83c",
+  "evidence_root": "/home/jingxiang/bingsheng/golden-mcp-real-20260911.3CZQqP/evidence",
+  "summary_sha256": "b0bced244cad3192cc02ffd2c0b7a0fd96eaa2bc072595fabdb915b6d34f32f9",
+  "failed_attempt": {
+    "evidence_root": "/home/jingxiang/bingsheng/golden-mcp-real-20260911.BCRFXA/evidence",
+    "stage": "post_revision_3_runner_summary",
+    "reason": "protocol property accessed after MCP client context closed",
+    "fixed_by": "b6f779659606fb3b91b7a6a2c98ff6a03970c83c"
+  },
+  "mcp": {
+    "sdk": "mcp==2.2.0",
+    "protocol_version": "2026-07-28",
+    "tools": [
+      "harness_workflow_create_v1",
+      "text2env_compile_v1_0_0",
+      "text2env_replay_v1_0_0",
+      "text2env_validate_v2_0_0"
+    ],
+    "generic_invoke": false,
+    "registry_snapshot_sha256": "f723d8be740d859e91cef1b37bbf01d528a596a58ae22f7f476be7b4cea2aa8b"
+  },
+  "workflow": {
+    "workflow_run_id": "4d187cf1-e19f-4489-b0cb-b168380da25d",
+    "revisions": [0, 1, 2, 3],
+    "operation_statuses": ["succeeded", "succeeded", "succeeded"],
+    "receipt_sha256": [
+      "7608ade6b56ab6e116604922bcaf4f09b4df1c52dbfb2a803faeb6a61d575d4b",
+      "b1b917f2a39a8a0724d75182c99ba83515290989b5a86ceb31a6d13e2ac908d4",
+      "4266afc0f093bb1d18e7c49a56656ad5fde8b2c26d0c49349b752cf18a15e1d1",
+      "43cdf8ddac83ac24d17831d1edfead929837ae5c508d572cf77d9fd5dfff0f64"
+    ],
+    "state_sha256": [
+      "64bc3b589e0016926ee6bbdd9d2834746303a94e05676b861000e24bd0406f94",
+      "95014c0082e9a317a9c80a9c7b6c5bc6efeea301aaaa0195f9083136c64180e5",
+      "91cdf7477afad67850fc163cbd5084e7601116eb77e0a24fedead7e35b59d25e",
+      "ededf7a1a259c49b7bf59379edd2aec2f2ee2d0f2e2a7134890af1e44c3b3381"
+    ],
+    "state_delta_keys": [
+      ["assets.catalog", "environment.package"],
+      ["replay.runtime_evidence"],
+      ["environment.validation"]
+    ],
+    "fresh_observations": [0, 0, 0],
+    "restart_validate_operation_equal": true,
+    "golden_starts": 1,
+    "golden_operations": 3,
+    "child_runs_per_skill": [1, 1, 1]
+  },
+  "portable_receipts": {
+    "strict_closure_objects": {"compile": 13, "replay": 50},
+    "run_state_semantics_equal": true,
+    "artifact_refs_equal": false
+  },
+  "cas": {
+    "objects": 201,
+    "bytes": 61836772,
+    "manifest_sha256": "d4aa557ed869cd9583ce1d406f07dcc70949f2edf0ee8a72c68e8f2b192b9205",
+    "artifact_ref_occurrences": 3928,
+    "unique_artifact_identities": 189,
+    "integrity_failures": 0
+  },
+  "runtime": {
+    "runtime_evidence_sha256": "82317c09c39b8bbf51f5e2a13e5eb3374bb43780633f149727156d24cfb9072c",
+    "runtime_validation_report_sha256": "01e85c898631343c46df50ecb2fb26dd0b4e9c2e424424553004f19b2ef09d75",
+    "recomputed_validation_report_sha256": "054bb51927c95308a182773870cb2ccd68e07eb47233a0d031b8a989b94c713b",
+    "validation_decision_sha256": "70c7dacff6547c0644b25e352b6efc349a82a853c103fc67f0bbbde50f044357",
+    "publishable": true,
+    "steps": {"precheck": 0, "base": 900, "total": 900, "contact_window": 120},
+    "source_frames": 120,
+    "source_unique_frames": 100,
+    "fps": 12,
+    "asset_members": 23,
+    "asset_bytes": 57291124,
+    "nonfatal_renderer_diagnostics": {
+      "oidn_cuda_unsupported": 1,
+      "oidn_invalid_handle": 123,
+      "pytorch_warning": 1
+    }
+  },
+  "media": {
+    "path": "/home/jingxiang/bingsheng/golden-mcp-real-20260911.3CZQqP/evidence/view/observer_runtime-a41d05366050.mp4",
+    "sha256": "a41d05366050ba0c2af635e69299a12a4b2a0e78ed27490517d27b122fa12a4e",
+    "bytes": 61285,
+    "codec": "H.264 High",
+    "pixel_format": "yuv420p",
+    "width": 320,
+    "height": 240,
+    "fps": 12,
+    "decoded_frames": 120,
+    "decoded_unique_frames": 114,
+    "decoded_stream_sha256": "634793034997be99789ec6f0f05fbaee0263ff75d3b34631a02e6c6584f54c6e"
+  },
+  "gates": {
+    "new_core_coverage": "919 statements / 244 branches, 100%",
+    "focused": "238 passed",
+    "qualification": "61 passed",
+    "root": "3782 passed, 20 skipped",
+    "ruff_format_diff": "pass"
+  },
+  "limits": {
+    "external_codex_planner": false,
+    "genesis_native": false,
+    "promotion_executed": false,
+    "robot_policy_ready": false,
+    "image2env_runtime": false,
+    "video2env_runtime": false,
+    "cross_machine_provisioning": false
+  }
+}

@@ -1,5 +1,33 @@
 # 进度与结果
 
+## 2026-09-11 P5 真实 MCP compile→replay→validate
+
+- 固定提交 `b6f779659606fb3b91b7a6a2c98ff6a03970c83c` 的正式 runner 使用官方
+  `mcp==2.2.0` stdio Client/两个独立 server 进程，在资格绑定的 exact delegated scope 内完成
+  raw text workflow create 与三个 exact Skills；协商协议 `2026-07-28`，目录只有四个 exact tools。
+- 真实结果为 revision 0→1→2→3，compile/replay/validate 均 succeeded。B 进程重提同一 start 与
+  validate command 后返回完全相同的 terminal operation；Golden SQLite 仍只有 1 start/3 operations，
+  三个 child 各只有 1 intent、1 invocation、1 RunState，事件为 14/19/4，CAS 不增长。
+- 首次真实运行保留在 `golden-mcp-real-20260911.BCRFXA/evidence`：它已到 revision 3 和媒体读取，
+  但 runner 在 client context 关闭后访问协议属性，导致 summary/restart gate 未执行。`b6f7796` 修复后
+  使用全新 root 重跑成功，没有覆盖或晋升失败目录。
+- 成功 evidence root 为
+  `/home/jingxiang/bingsheng/golden-mcp-real-20260911.3CZQqP/evidence`；summary SHA-256
+  `b0bced244cad3192cc02ffd2c0b7a0fd96eaa2bc072595fabdb915b6d34f32f9`。独立三轴验收均 PASS：
+  201 个 CAS 对象/61,836,772 bytes、3,928 个递归 ArtifactRef/189 个 unique digest 全闭合；四段
+  receipt/state 与三段 delta 重算精确；compile/replay portable closure 为 13/50；validate 的 12 个输入
+  来自 revision-2 durable lineage。
+- replay 是真实 `0/900/120/120/12`，runtime report 37 checks pass，validate 重算 39 checks pass，
+  fail/not-run 均 0；23 个资产成员/57,291,124 bytes 闭合。MP4 为 H.264 320×240/12fps/120 帧，
+  114 decoded-unique，与 MCP Blob/CAS 字节一致。renderer stderr 的 1 条 OIDN CUDA unsupported、
+  123 条 invalid-handle 与 1 条 PyTorch warning 作为非致命诊断保留，未被物理/媒体结果掩盖。
+- 正式证据：`docs/evidence/golden-mcp-three-skill-real-20260911.{md,json}`。门禁：新 core
+  919 statements/244 branches 100%，focused 238 pass，qualification 61 pass，root 3,782 pass/
+  20 skip，Ruff/format/diff pass。Dashboard 三 URL 仍 HTTP 404，未声称同步。
+- 边界：这是 legacy RoboTwin/SAPIEN 的真实 MCP transport 闭环，不是 external Codex planner、
+  Genesis、promotion、robot-policy、image/video 或跨机 provisioning；scope 消失后再次 replay 前仍须
+  重建同名 cgroup locator。
+
 ## 2026-09-11 P5 三 Skill MCP 受控全链与 production assembly
 
 - 新增 `GoldenMCPServerSettings/create_golden_mcp_adapter`：从 operator-owned settings 重开

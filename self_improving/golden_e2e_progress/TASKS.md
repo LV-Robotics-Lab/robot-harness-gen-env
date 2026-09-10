@@ -30,8 +30,10 @@
 - [ ] Codex 诊断、受限修复、状态增量与可续跑 history。
 - [ ] promotion gate 与 publishability 唯一授权。
 - [x] 真正 MCP adapter：exact schema discovery、typed invocation、ToolResult、workflow-scoped
-  state/receipt/media resources、错误映射与 stdio restart 已实现；真实三 Skill simulator 验收另列。
+  state/receipt/media resources、错误映射与 stdio restart 已实现；真实三 Skill simulator 已验收。
 - [ ] 一个 text-only golden case 完成同 run 证据闭包。
+  - [x] 官方 MCP stdio Client 已真实完成 legacy RoboTwin/SAPIEN revision 0→1→2→3 和重启幂等。
+  - [ ] external Codex planner 仍需只经 exact MCP 完成同一闭环。
 
 ## G3：资产债务与 x2env Skills
 
