@@ -331,14 +331,28 @@ def test_receipt_uses_dedicated_lookup_and_enters_closure_only_when_control_cite
 ) -> None:
     case = control._case(tmp_path)
     request = _request(case.head)
-    observation_uri = (
-        f"harness://workflows/{case.head.workflow_run_id}/artifacts/{case.observation.sha256}"
+    deliveries = tuple(
+        case.harness.read_workflow_artifact_audited(
+            request,
+            sha256=artifact.sha256,
+            resource_uri=(
+                f"harness://workflows/{case.head.workflow_run_id}/artifacts/{artifact.sha256}"
+            ),
+        )
+        for artifact in (
+            case.source_prompt,
+            case.failure_receipt,
+            case.observation,
+            case.diagnostic,
+        )
     )
-    delivery = case.harness.read_workflow_artifact_audited(
-        request,
-        sha256=case.observation.sha256,
-        resource_uri=observation_uri,
+    access_refs = tuple(
+        sorted(
+            (delivery.access_receipt for delivery in deliveries),
+            key=lambda ref: (ref.sha256, ref.schema_version or "", ref.media_type),
+        )
     )
+    delivery = next(item for item in deliveries if item.resource == case.observation)
 
     with pytest.raises(GoldenRunNotFoundError, match="workflow artifact"):
         case.harness.read_workflow_artifact(
@@ -353,7 +367,7 @@ def test_receipt_uses_dedicated_lookup_and_enters_closure_only_when_control_cite
     assert receipt_payload == delivery.access_receipt_payload
 
     command_values = control._advisory_command(case).model_dump(mode="python")
-    command_values["resource_access_receipts"] = (delivery.access_receipt,)
+    command_values["resource_access_receipts"] = access_refs
     command = AdvisoryRecordCommand.model_validate(command_values)
     with pytest.raises(ValidationError, match="sorted and unique"):
         AdvisoryRecordCommand.model_validate(
@@ -371,13 +385,42 @@ def test_receipt_uses_dedicated_lookup_and_enters_closure_only_when_control_cite
 
     committed = case.harness.submit_control(command)
     advisory = json.loads(case.store.resolve(committed.receipt).path.read_bytes())
-    assert advisory["resource_access_receipts"] == [receipt_ref.model_dump(mode="json")]
-    served_ref, served_payload = case.harness.read_workflow_artifact(
+    assert advisory["resource_access_receipts"] == [
+        access_ref.model_dump(mode="json") for access_ref in access_refs
+    ]
+    for access_ref in access_refs:
+        served_ref, served_payload = case.harness.read_workflow_artifact(
+            request,
+            sha256=access_ref.sha256,
+        )
+        assert served_ref == access_ref
+        assert hashlib.sha256(served_payload).hexdigest() == access_ref.sha256
+
+
+def test_advisory_rejects_access_receipts_that_do_not_cover_every_claimed_source(
+    tmp_path: Path,
+) -> None:
+    case = control._case(tmp_path)
+    request = _request(case.head)
+    unrelated = case.head.state_ref
+    unrelated_delivery = case.harness.read_workflow_artifact_audited(
         request,
-        sha256=receipt_ref.sha256,
+        sha256=unrelated.sha256,
+        resource_uri=(
+            f"harness://workflows/{case.head.workflow_run_id}/artifacts/{unrelated.sha256}"
+        ),
     )
-    assert served_ref == receipt_ref
-    assert served_payload == receipt_payload
+    before = case.harness.read(request)
+    command_values = control._advisory_command(case).model_dump(mode="python")
+    command_values["resource_access_receipts"] = (unrelated_delivery.access_receipt,)
+    command = AdvisoryRecordCommand.model_validate(command_values)
+
+    with pytest.raises(GoldenRunNotFoundError, match="resource access.*cover"):
+        case.harness.submit_control(command)
+
+    assert case.harness.read(request) == before
+    assert _row_count(case.workflow_store.path, "golden_workflow_turns") == before.turn_seq
+    assert _row_count(case.workflow_store.path, "golden_workflow_resource_accesses") == 1
 
 
 def test_receipt_resource_lookup_does_not_recursively_create_a_read_receipt(
