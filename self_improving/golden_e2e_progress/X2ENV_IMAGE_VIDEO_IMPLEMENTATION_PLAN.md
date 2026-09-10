@@ -23,8 +23,10 @@ qualification/feature commit 执行。本文不把合同模块当成 runtime 实
    `ImageSourceMedia`；纯读 consumer 再从实际 source/canonical/probe bytes 重算所有镜像字段。伪 MIME、
    错 SHA、解码失败、超限尺寸、动画图、unsupported static format、非规范 probe 与 ICC/text/EXIF
    identity 漂移均 fail closed。固定实现提交 `fe271db`；该完成项仍不等于 image compile/qualification。
-2. Video ingest：完整解码容器，生成 ordered frame manifest、FPS fraction、duration ms、total/unique 和
-   sequence digest；测试空视频、计数分歧、重复帧、乱序、只有 15 帧 sample。
+2. [x] Video ingest：完整解码容器，生成 source-specific ordered decoded-frame manifest、FPS fraction、
+   duration ms、total/unique 和 sequence digest；空视频、计数分歧、重复帧、乱序、只有 15 帧 sample
+   均已测试。固定实现 `13e8f01`；受控 decoder protocol 和 system-FFmpeg 验收不等于 production sealed
+   decoder、sandbox 或 qualification。既有 `harness.video_frame_sequence.v1` 继续只服务 fallback 抽帧。
 3. `LegacyGenenvImporter.import_snapshot`：只收 CAS directory snapshot；按 mapping spec 转 SceneIR、
    TaskIR、asset closure 和 candidate package，保存 compatibility report。绝对 locator、missing member、
    unknown schema/status conflict 全部 fail closed。

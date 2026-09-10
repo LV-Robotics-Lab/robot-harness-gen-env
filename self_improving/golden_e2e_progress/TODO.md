@@ -4,9 +4,9 @@
 
 ## Doing
 
-- X1 shared ingest：image path 已完成 CAS source→metadata-free canonical PNG→strict probe→
-  `ImageSourceMedia`，并由纯读 consumer 重解码/重算；当前集中验收与账本收口后转入 video path 的完整
-  ordered-frame ingest。该切片不注册 Skill，不运行模型/Genesis/GPU，也不授予 compile/publishability。
+- X2 typed compile evidence：X1 image/video ingest 与两条纯读 consumer 已完成；当前先实体化
+  SceneIR/TaskIR/catalog/selection/qualification/closure/binding/runtime-lock/static-validation/compile-receipt，
+  再实现 exact-reuse image compile。不得让任意 JSON 冒充 IR 或 qualification closure。
 - P10 fresh observation：strict schema、controlled candidate application/evidence policy 与 test-controlled
   Golden execution binding 已在同一 revision 2→3 中闭合 receipt/state/restart；下一切片是 production
   runtime binding。当前受控路径固定 `simulator_executed=false`，真实 Genesis capture、qualification 与
@@ -19,8 +19,6 @@
 
 ## Next
 
-- X1：冻结并实现 video ingest 的完整解码、ordered frame manifest、FPS fraction、duration、total/unique
-  frame count 与 sequence digest；禁止 15 帧 sample 代替全视频身份。
 - X2：先实体化 SceneIR/TaskIR/catalog/selection/qualification/closure/binding/runtime-lock/static-validation/
   compile-receipt 等 opaque artifact schema，再实现 exact-reuse image compile；不得让任意 JSON 冒充 IR。
 - P10：实现 production execution binding/runtime；保持过期、缺 key、时间或 payload 漂移在 parent
@@ -48,6 +46,14 @@
   revision 继续调用 compile/replay/validate。
 
 ## Done
+
+- X1 complete-sequence video ingest 完成：受控 `VideoContainerDecoder` 必须报告完整解码；ingestor 发布
+  `VideoDecodedFrameSequenceV1`、`VideoMediaProbeV1` 与 `VideoSourceMediaV2`，逐帧绑定 index/DTS/PTS/
+  duration/raw bytes hash，并闭合 FPS fraction、timebase、duration、total/unique 与 sequence digest。
+  consumer 全量重解码且纯读；18-frame/6-unique H.264 样例通过，15-frame sample、乱序、时序/计数/
+  MIME/上限/CAS 漂移均拒绝。公共 schema 69→72，新模块 343 statements/104 branches 100%，根套件
+  4080 passed/20 skipped。existing `harness.video_frame_sequence.v1` fallback schema 与 v1 source media
+  未改写；system FFmpeg 只用于独立验收，尚无 production decoder/factory/qualification/Genesis/GPU。
 
 - X1 deterministic image ingest 完成：真实 JPEG/PNG/WEBP source 由 exact CAS 完整解码，输出只由
   decoded pixels/size/mode 决定的 canonical PNG、strict `ImageMediaProbeV1` 与 `ImageSourceMedia`。

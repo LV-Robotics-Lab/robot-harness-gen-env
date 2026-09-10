@@ -18,7 +18,7 @@
 | INT-GJ-001 | 媒体输入、逐帧完整性与 `genenv.*` 输出 | Gujie | candidate | not_run | 固定为候选，尚未进入 Harness Golden run |
 | INT-GJ-002 | 标准 URDF closure 与 SimFoundry 导入 | Gujie + third-party | candidate | not_run | 需经 anti-corruption adapter 和资产资格门 |
 | INT-GJ-003 | Genesis 构建、物理判据、回放与最终媒体 | Gujie + Genesis | candidate | not_run | 有独立工作区证据，尚非当前 Harness sim-ready 证据 |
-| INT-GJ-004 | Image/Video exact Skill 合同、legacy mapping 与 Harness-native image ingest | Gujie source + Bingsheng integration | integrated | contract_pass | 六项 contract-only descriptor 与 CPU image ingest/consumer 已落地；compile runtime 仍未实现 |
+| INT-GJ-004 | Image/Video exact Skill 合同、legacy mapping 与 Harness-native media ingest | Gujie source + Bingsheng integration | integrated | contract_pass | 六项 contract-only descriptor 与 CPU image/video ingest consumers 已落地；compile runtime 仍未实现 |
 
 ## INT-BS-001 — Harness 与总体整合基线
 
@@ -275,33 +275,39 @@ Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支
   `replay_text_half_dt.py` 及来源 tests/evidence
 - `target_paths`：`self_improving/harness/schemas/x2env.py`、
   `self_improving/harness/schemas/media_ingest.py`、`self_improving/harness/image_ingest.py`、
+  `self_improving/harness/schemas/video_ingest.py`、`self_improving/harness/video_ingest.py`、
   `self_improving/harness/x2env_contracts.py`、相关 schema
   snapshot、`docs/contracts/X2ENV_IMAGE_VIDEO_SKILL_CONTRACT_V1.md`、
   `docs/contracts/GUJIE_GENENV_ADAPTER_MAPPING_V1.md`、两份 legacy media fixtures
 - `integration_method`：strict contract 与 anti-corruption mapping 不复制来源 runtime，不把 `genenv.*`
-  设为 Harness 权威，也不注册无 qualification handler。后续 X1 image ingest 是独立 Harness/Pillow
-  实现：exact CAS source 经完整解码生成 metadata-free canonical PNG/probe，并由 pure-read consumer
-  重算闭包；没有复制 Gujie 实现字节或调用其内部模型/orchestrator
+  设为 Harness 权威，也不注册无 qualification handler。后续 X1 media ingest 是独立 Harness 实现：
+  image 由 Pillow 完整解码生成 metadata-free canonical PNG/probe；video 由 injected complete-decoder
+  protocol 生成逐帧 ordered manifest/probe；两者均有 pure-read consumer 重算闭包。没有复制 Gujie
+  实现字节或调用其内部模型/orchestrator
 - `contract_spec`：上述两份正式 contract，以及
   `self_improving/golden_e2e_progress/X2ENV_IMAGE_VIDEO_IMPLEMENTATION_PLAN.md`
 - `verification_evidence`：`tests/self_improving/harness/test_x2env_contracts.py`、
   `tests/self_improving/harness/test_schema_catalog.py`、
-  `tests/self_improving/harness/test_image_media_{ingest,consumer}.py`、69 份 committed schema snapshots；
+  `tests/self_improving/harness/test_image_media_{ingest,consumer}.py`、
+  `tests/self_improving/harness/test_video_media_ingest.py`、72 份 committed schema snapshots；
   原 16 个 x2env
   snapshot 已用标准 Draft 2020-12 validator 分别 standalone 与 catalog 模式执行。固定来源入口和两份
   现存 output 已独立核对：fresh-image manifest closure 失败，existing-reconstruction image output 只作为
   legacy Genesis baseline candidate。固定 `fe271db55992c6d0880ba2a8903dc233bce2bb3d` 的 CPU image
-  ingest/consumer 验收为 focused 38 pass、178 statements/44 branches 100%，但 Harness compile runtime
-  evidence 仍为 `none`
+  ingest/consumer 验收为 focused 38 pass、178 statements/44 branches 100%；固定
+  `13e8f01bd963375bdf65d8940434b240cbbb6117` 的 video ingest/consumer 为 focused 74 pass、
+  343 statements/104 branches 100%，并以 system FFmpeg 6.1.1 独立完成 18-frame full decode。system
+  binary 未进入 qualification，Harness compile runtime evidence 仍为 `none`
 - `golden_run`：`none`
-- `known_gaps`：video ingest、legacy importer、六个 handler/application、qualification、Registry/System2/Golden
+- `known_gaps`：sealed production video decoder、legacy importer、六个 handler/application、qualification、Registry/System2/Golden
   executable catalog、MCP、真实 Genesis replay/validate、robot-policy 与 promotion 均未实现
-- `last_verified`：`2026-09-10`
+- `last_verified`：`2026-09-11`
 
 ### 核对结论
 
 本条先把 Gujie 固定来源中的媒体/资产/场景/物理语义映射进 Harness contract，随后独立实现了
-Harness-native CPU image ingest/consumer。Image 与 Video identity 不混用；legacy output 适配后固定为
-non-ready candidate；image ingest 的 pass 不能扩大为 compile runtime pass。compile、replay、validate
+Harness-native CPU image/video ingest consumers。Image 与 Video identity 不混用；legacy output 适配后固定为
+non-ready candidate；media ingest 的 pass 不能扩大为 compile runtime pass。Gujie 的 15-frame sample
+也不能替代完整 source-video identity。compile、replay、validate
 三段及三种资产 lane 均已写入实施计划，但尚未执行。`standard_urdf.py` 的当前能力是单 rigid link 并
 明确拒绝 joint，不能据此宣称 articulated support。

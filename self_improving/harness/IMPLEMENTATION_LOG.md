@@ -1096,3 +1096,18 @@
   CAS。
 - 边界：公共 schema 68→69；本切片纯 CPU、无模型、无 handler/qualification/Registry/MCP、无 Genesis/
   GPU/物理或 publishability。compile 前还必须实体化当前 opaque 的 IR、资产、binding 与 receipt schemas。
+
+### 2026-09-11 / A058：Video source identity 必须覆盖完整有序解码序列
+
+- RED：existing `harness.video_frame_sequence.v1` 已被 prompt fallback 严格解释为抽帧 lineage，不能被
+  静默扩成全视频 manifest；仅 15-frame sample、容器计数或 inline `VideoSourceMedia` 也不能证明完整
+  source identity。
+- GREEN：新增 source-specific `VideoDecodedFrameSequenceV1`、`VideoMediaProbeV1`、
+  `VideoSourceMediaV2`。`VideoMediaIngestor` 通过 injected complete decoder 绑定每帧 index/DTS/PTS/
+  duration/bytes/SHA、CFR timebase/FPS、duration、total/unique 与 sequence digest；pure-read consumer
+  全量重解码并重算 source/manifest/probe closure。
+- 验证：固定 18-frame/6-unique H.264 样例与 system FFmpeg 6.1.1 独立 full-decode 验收通过；15-frame
+  sample、乱序、时序/计数/MIME/limit/CAS 漂移 fail closed。公共 schema 69→72，新模块 343
+  statements/104 branches 100%，完整 root 4080 pass/20 skip。
+- 边界：decoder protocol 仍是受控 seam，system FFmpeg 只用于 acceptance；无 sealed production
+  decoder/factory/qualification、video compile、Registry/MCP、Genesis/GPU、物理或 publishability。

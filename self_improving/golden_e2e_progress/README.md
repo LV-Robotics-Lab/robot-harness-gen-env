@@ -50,8 +50,8 @@ bytes/tree identity 跨代码安装路径复用：同一 bundle 在第二个绝�
 revision 0→1→2→3 和无 live application 重启幂等。该结果仍只是 legacy RoboTwin/SAPIEN
 publishability，不是 promotion、Genesis 或 robot-policy。新增 validate execution/policy/handler/
 application/dependency 五模块的 statement/branch 门均已达到 100%。Image2Env/Video2Env 的六个合同
-已经过两轴功能验收；加入 observation、control、resource-access、compile-attempt 与 image ingest probe
-合同后，69 份公共 schema 现在既能整目录注册，也能逐文件
+已经过两轴功能验收；加入 observation、control、resource-access、compile-attempt 与 image/video ingest
+证据合同后，72 份公共 schema 现在既能整目录注册，也能逐文件
 独立校验。Gujie 现存 evidence 仍只证明 image-derived
 existing reconstruction 的 legacy Genesis 候选，不证明 fresh image、video 或 Harness runtime。
 P5 exact MCP adapter 现已由官方 MCP 2.2 stdio Client 在真实 RoboTwin/SAPIEN 上完成 raw-text
@@ -73,6 +73,9 @@ prompt、失败 receipts 与 predecessor package；受控 exact image compile �
 推进 revision 4→5，六类漂移和旧 v1 输入在 child 前拒绝。该证据只证明受控合同/aggregate/MCP 路径，不证明
 模型理解、image runtime 或 Genesis/GPU。X1 image ingest 已能从 CAS 原图完整解码并生成 metadata-free
 canonical PNG、严格 probe 与 ImageSourceMedia；独立 consumer 会纯读重算全部字节和镜像字段。它仍不是
-image compile handler、qualification 或 Genesis runtime。P6 继续修复资产 staging；autoresearch 只在其
+image compile handler、qualification 或 Genesis runtime。X1 video ingest 也已用完整 18-frame H.264
+样例生成 ordered decoded-frame manifest、probe 与 `VideoSourceMediaV2`，并由纯读 consumer 全量重解码；
+15-frame sample、乱序、时序/计数/证据漂移全部 fail closed。该 slice 的 system FFmpeg 只用于独立验收，
+没有 production sealed decoder、qualification、Registry/MCP、Genesis/GPU 或视频 compile 主张。P6 继续修复资产 staging；autoresearch 只在其
 冻结 benchmark 可以
 真实运行后开始。

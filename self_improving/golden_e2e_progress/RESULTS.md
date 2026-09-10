@@ -1,5 +1,27 @@
 # 进度与结果
 
+## 2026-09-11 X1 complete-sequence video ingest 与 strict consumer
+
+- 提交链 `506ad84` → `13e8f01bd963375bdf65d8940434b240cbbb6117` 以 public-seam RED/GREEN
+  建立完整视频身份。实现没有改写既有 `harness.video_frame_sequence.v1`：该 v1 仍是 prompt fallback
+  的抽帧 lineage；source identity 使用新的 `harness.video_decoded_frame_sequence.v1`、
+  `harness.video_media_probe.v1` 与 `harness.video_source_media.v2`。
+- `VideoMediaIngestor` 要求 injected decoder 报告 full decode，并为每帧绑定 index/DTS/PTS/duration/
+  raw-byte size+SHA；同时重算 CFR timebase/FPS、duration、total/unique frame count 与 domain-separated
+  sequence digest。`VideoMediaConsumerVerifier` 从 source/manifest/probe CAS 全量重解码并逐项重算，
+  且不写 CAS。
+- 门禁：focused 74 pass；`schemas/video_ingest.py` 与 `video_ingest.py` 合计 343 statements/104 branches
+  为 100%；相邻 x2env/prompt/compile/replay qualification 回归 155 pass；公共 schema 69→72；完整 root
+  `4080 passed, 20 skipped in 261.29s`。
+- 第一条独立 archive 验收用 system FFmpeg 6.1.1 实际生成并完整解码 H.264/yuv420p MP4：2517 bytes、
+  18 total/6 unique frames、6/1 FPS、1/6 timebase、3000 ms，sequence digest
+  `a70265aea01ec383f2975dacba11f2d331bc885893292e3b701f03293e7a31b8`。fresh ingestor 重试与
+  consumer 纯读均 CAS 零增长；15/18 sample、逆序、duration 漂移、`fully_decoded=false` 及七类
+  consumer evidence 漂移全部拒绝。
+- 证据见 `docs/evidence/golden-video-ingest-consumer-20260911.{md,json}`。system FFmpeg 仅是独立
+  acceptance adapter，不是 pinned production decoder、sandbox 或 qualification。没有 video compile
+  handler/application、production Registry/MCP、Genesis/GPU/物理、publishability 或 robot-policy 主张。
+
 ## 2026-09-11 X1 deterministic image ingest 与 strict consumer
 
 - 提交链 `45e0153` → `ae05517` 先以 public-seam RED/GREEN 建立 exact CAS image ingest；第一次

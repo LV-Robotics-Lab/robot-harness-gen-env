@@ -28,7 +28,7 @@
 `e67b656ea97044da5b09ee8323c48e752cd88c76` 加 P2 compile-only submit 候选为准；
 下述 55-schema 计数不归属于 `ab03859` 的 14-schema 历史快照。
 
-Harness 当前公开 69 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
+Harness 当前公开 72 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
 descriptor v2、validate v2 input/output，以及 qualification report、资产债务/修复、registry snapshot、
 replay VLM、run start/read/snapshot 和 workflow start receipt 等 12 个入口，再加上 asset source snapshot、stage
 request 与 stage result 三个入口；P2 再增加 command、operation snapshot、qualified execution、trusted
@@ -59,6 +59,13 @@ Genesis collision、非零 steps 和顺序媒体；validate 才能给 publishabi
 legacy adapter 映射为 non-ready candidate，旧 physics/render/status 不能直接晋升。正式字段见
 [Image/Video exact Skill 合同](../../docs/contracts/X2ENV_IMAGE_VIDEO_SKILL_CONTRACT_V1.md)，来源映射见
 [Gujie adapter mapping](../../docs/contracts/GUJIE_GENENV_ADAPTER_MAPPING_V1.md)。
+
+X1 media ingress 已分别闭合 image 与 video 的消费前证据。image 路径用 Pillow 从 exact CAS 完整解码
+JPEG/PNG/WEBP，生成 metadata-free canonical PNG/probe，并由 pure-read consumer 重算；video 路径用
+injected complete-decoder protocol 生成逐帧 index/DTS/PTS/duration/bytes 绑定的
+`VideoDecodedFrameSequenceV1`、probe 与 `VideoSourceMediaV2`，consumer 再全量重解码。新 video schema
+不复用 fallback 专用 `harness.video_frame_sequence.v1`。受控 18-frame H.264 及 system-FFmpeg 独立验收
+已通过，但系统 binary 没有进入 sealed dependency/qualification，v2 media 也尚未接入 video compile。
 
 P3 的公共 `GoldenRunHarness.submit` 当前可在同一 workflow 依次调度 exact qualified
 `text2env.compile@1.0.0` 与 `text2env.replay@1.0.0`。两者都从同一 RegistrySnapshot、live production

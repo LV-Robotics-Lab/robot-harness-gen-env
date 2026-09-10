@@ -1,5 +1,14 @@
 # Change Log
 
+## 2026-09-11 complete-sequence video media ingest
+
+- 新增 source-specific `VideoDecodedFrameSequenceV1`、`VideoMediaProbeV1` 与 `VideoSourceMediaV2`，
+  公共 schema 69→72；既有 fallback `harness.video_frame_sequence.v1` 与 v1 source media 保持不变。
+- `VideoMediaIngestor` 要求完整 ordered decode 并绑定逐帧时序/bytes、FPS/timebase、duration、
+  total/unique 与 sequence digest；纯读 consumer 从 source/manifest/probe 重解码闭包。
+- 新模块 statement/branch 100%，完整 root 4080 pass/20 skip。system FFmpeg 只用于独立验收；没有
+  production decoder、qualification、video compile 或 Genesis/GPU 主张。
+
 ## 2026-09-11 deterministic image media ingest
 
 - 新增 `ImageMediaIngestor`：从 exact CAS 完整解码 JPEG/PNG/WEBP，按 EXIF orientation 后将像素规范为

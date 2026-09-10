@@ -1,0 +1,90 @@
+{
+  "schema_version": "golden.video_ingest_consumer_evidence.v1",
+  "result": "pass",
+  "implementation_commit": "13e8f01bd963375bdf65d8940434b240cbbb6117",
+  "tdd_commits": [
+    "506ad84",
+    "13e8f01"
+  ],
+  "schema_boundary": {
+    "decoded_sequence_schema": "harness.video_decoded_frame_sequence.v1",
+    "probe_schema": "harness.video_media_probe.v1",
+    "source_media_schema": "harness.video_source_media.v2",
+    "fallback_video_frame_sequence_v1_changed": false,
+    "video_source_media_v1_changed": false,
+    "x2env_contracts_changed": false,
+    "qualified_skills_tree_changed": false,
+    "video_compile_consumes_v2_media": false
+  },
+  "implementation": {
+    "accepted_container": "MP4",
+    "accepted_media_type": "video/mp4",
+    "accepted_codec": "h264",
+    "accepted_pixel_format": "yuv420p",
+    "complete_decode_required": true,
+    "consumer_writes_cas": false,
+    "database_used": false,
+    "simulator_executed": false
+  },
+  "gates": {
+    "focused_passed": 74,
+    "adjacent_passed": 155,
+    "checked_qualification_gates_passed": 3,
+    "new_core_statements": 343,
+    "new_core_statement_coverage_percent": 100,
+    "new_core_branches": 104,
+    "new_core_branch_coverage_percent": 100,
+    "schema_snapshots": 72,
+    "root_passed": 4080,
+    "root_skipped": 20,
+    "root_seconds": 261.29
+  },
+  "independent_actual_decoder_acceptance": {
+    "result": "pass",
+    "evidence_root": "/tmp/golden-video-ingest-13e8f01.6jezas/evidence",
+    "decoder": "system FFmpeg/ffprobe 6.1.1 acceptance adapter",
+    "source_bytes": 2517,
+    "source_sha256": "9aad9a27be8d91a4f7f68dbf447e1bfa18974cc21ff67675466604fe8d170e97",
+    "total_frames": 18,
+    "unique_frames": 6,
+    "fps": "6/1",
+    "time_base": "1/6",
+    "duration_ms": 3000,
+    "sequence_sha256": "a70265aea01ec383f2975dacba11f2d331bc885893292e3b701f03293e7a31b8",
+    "cas_files": 5,
+    "cas_bytes": 12853,
+    "cas_growth_on_retry": 0,
+    "cas_growth_during_consumer_verification": 0,
+    "summary_sha256": "b1c8b05ad031c89e11bf6d6db20198288e0b6dceae53fa8d8d367294bfe0cc4b",
+    "pytest_xml_sha256": "195cc9e2e3c483878e519f7a09199d2ae050565e283e283ebcbda8eb723d40d0",
+    "coverage_json_sha256": "a8182f2a9676c7e4d38aeed212f47811511f9bb81da3ad7e2ba437e259c1944c"
+  },
+  "independent_compatibility_acceptance": {
+    "result": "pass",
+    "schema_documents": 72,
+    "schema_snapshots": 72,
+    "focused_passed": 74,
+    "checked_qualification_gates_passed": 3,
+    "legacy_fallback_identity_changed": false,
+    "legacy_video_source_identity_changed": false,
+    "production_decoder_available": false,
+    "video_compile_handler_available": false,
+    "qualification_available": false
+  },
+  "provenance": {
+    "implementation": "Harness-native complete-sequence video evidence",
+    "gujie_runtime_source_copied": false,
+    "gujie_sample_count_sufficient": false
+  },
+  "not_proven": [
+    "sealed production decoder or sandbox",
+    "video2env compile handler or application",
+    "qualification",
+    "production Registry or MCP exposure",
+    "Genesis or GPU execution",
+    "physics validity",
+    "publishability",
+    "promotion",
+    "robot policy readiness"
+  ]
+}
