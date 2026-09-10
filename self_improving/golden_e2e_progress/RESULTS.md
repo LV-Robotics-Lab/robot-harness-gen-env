@@ -10,7 +10,14 @@
   导入 fresh CAS 后得到 68 个对象；同一 bundle 在 integration root 和独立 archive 安装路径
   `/home/jingxiang/bingsheng/golden-r3-relocated-20260910.ZjLUfl/worktree` 均 strict verify/load pass，source
   manifest 不含任一本地绝对源码根。
-- 本条只完成最终树上的 replay 重新资格化；validate 资格与 relocated revision 0→1→2→3 仍须随后执行。
+- 随后先在 relocated source 以新 replay 资格真实执行 compile revision 1→replay revision 2，再以这条
+  受信 lineage 运行官方 validate generator。validate 两次独立重算、完整 lineage、负向用例、candidate
+  repeatability、source stability 与 generator 内 fresh-CAS reload 全部 pass；三文档摘要为 manifest
+  `fa324e58…c8fe`、qualification `86aa8c4f…5842`、report `2f3ef5d8…18d6`，15-file implementation
+  `a36fb7d9…a683`。将 108 个资格 CAS 对象逐摘要导入新的 CAS 后共 110 个对象；integration 与 relocated
+  两个源码根的 public loader 均为 pass。新增 checked validate bundle gate 固定三文档、实现摘要和六个
+  无排除通过的 qualification checks。
+- 本条已完成最终树上的 replay/validate 重新资格化；完整 relocated revision 0→1→2→3 仍须随后执行。
 
 ## 2026-09-10 Golden portable replay
 

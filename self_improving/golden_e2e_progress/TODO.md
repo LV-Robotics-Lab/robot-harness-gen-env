@@ -9,8 +9,8 @@
 - P4 validate v2 候选已完成真实 revision 0→1→2→3 与新增五模块 statement/branch 100% 门；等待
   integration 固定实现后重新生成 replay/validate qualification 并重跑 relocated revision 3。
 - portable replay、x2env contracts 与 validate v2 已进入干净的 revision-3 integration worktree；最终
-  固定实现的 replay qualification 已真实重签并跨 archive 安装路径 strict load；下一步生成 validate
-  qualification 并重跑 relocated revision 3。x2env runtime handlers/qualification 尚未开始。
+  固定实现的 replay/validate qualification 已真实重签并跨 archive 安装路径 strict load；下一步重跑
+  relocated revision 3。x2env runtime handlers/qualification 尚未开始。
 
 ## Next
 
