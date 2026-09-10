@@ -125,6 +125,10 @@ exact reuse、digital cousin、fresh generation 三条 golden line，再进入�
 Codex经 MCP读取当前 ImageContent/keyframes 和 diagnostics；advisory 不推进可信世界事实。prompt revision
 与 video→image fallback 均产生新 turn/package，完整保留失败。
 
+当前已完成 durable resource delivery、exact advisory/prompt MCP controls 与受控 external Codex
+revision 2→3→4 回合；下一切片必须升级 exact compile input，使其显式消费 PromptRevision、失败 receipt
+与 predecessor package。受控 observation 仍不可替代 production Genesis capture/qualification。
+
 ## P11 — Golden runner、真实 Codex 与案例
 
 提交建议：`feat(golden-e2e): run Codex MCP Genesis workflows`
@@ -133,6 +137,8 @@ Codex经 MCP读取当前 ImageContent/keyframes 和 diagnostics；advisory 不�
 - scripted client 的 deterministic golden lines 必须 100%。
 - 真实 `codex exec --ephemeral --json --sandbox read-only` 只经项目 MCP 操作，同一 workflow 完成路由、
   compile/replay/observe/diagnose/revise/validate/promotion。
+- 已完成的 external Codex diagnosis 只覆盖读取、diagnose/revise controls；它不满足本阶段要求的
+  compile/replay/production-observe/validate/promotion 全链。
 - 每个成功 case 保存小型 evidence index、可观看图片/视频链接和 portable verification command；bulk
   runtime output 不进 Git。
 

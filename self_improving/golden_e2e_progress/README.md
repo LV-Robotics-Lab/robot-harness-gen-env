@@ -63,7 +63,9 @@ StateDelta → resulting state 和无 live application 重开；所有受控输�
 `simulator_executed=false`。controlled evidence policy 还把 Invocation 与 exact
 workflow/principal/revision/state/head 绑定。该 binding 未进入 production assembly；真实 Genesis sealed
 checkpoint capture、production qualification 和 MCP exposure 仍未完成。下一项 P10 是 advisory/prompt
-revision 的 exact MCP 外观和资源读取回执：S1 已用共享 turn ledger 实现不可变 advisory/prompt
+revision 后的 production Genesis runtime 与下一次 compile 消费：S1 已用共享 turn ledger 实现不可变 advisory/prompt
 control receipt，control 只推进 revision/turn/head，可信 state 与 child runs 字节级不变；受控记录固定
-`external_agent_executed=false` 且不授予物理或 publishability。真实 external Codex 读取/推理尚未发生，
-P6 继续修复资产 staging；autoresearch 只在其冻结 benchmark 可以真实运行后开始。
+`external_agent_executed=false` 且不授予物理或 publishability。durable resource-access receipt 和两个 exact
+MCP control tools 已实现；Codex CLI `0.153.4` 已只经 MCP 实际请求四项受控证据，并提交 advisory revision 3
+与 prompt revision 4。该证据只证明 server delivery 与 control history，不证明模型理解，也没有运行
+Genesis/GPU。P6 继续修复资产 staging；autoresearch 只在其冻结 benchmark 可以真实运行后开始。

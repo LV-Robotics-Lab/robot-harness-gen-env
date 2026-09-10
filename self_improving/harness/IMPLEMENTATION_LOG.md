@@ -1033,3 +1033,34 @@
   210 statements/62 branches均100%；公共 schema 总数为63。
 - 未完成：durable resource-access receipt、exact advisory/prompt MCP tools 和真实 external Codex 回合。
   server 交付 bytes 最多证明交付，不能证明模型理解；该边界不得用可达 CAS 或测试 fixture 替代。
+
+### 2026-09-11 / A054：MCP resource delivery 使用独立审计账，不占 workflow turn
+
+- RED：原 workflow artifact resource 能证明 CAS 可达，却不留下哪个 principal 在哪个 head 请求了哪些
+  bytes；advisory 因此不能区分“来源存在”与“来源已由 server 交付”。
+- 实现：新增 self-hashed `ResourceAccessReceipt` 与 SQLite append-only access journal，绑定 principal、
+  workflow、完整 observed RunSnapshot、resource URI/ArtifactRef、delivered bytes/hash、representation 与
+  served time。audited read 返回原资源与 receipt；receipt lookup 不递归记账。读取不进入 shared turn，
+  不改变 revision/state/head/updated time/child runs。
+- authority：advisory 无条件要求 access receipt targets 与 source prompt、可选 source prompt revision、
+  全部 failure、observation receipts 和 diagnostics 集合精确相等。zero、partial、extra、unrelated、foreign、
+  unreachable、过期或篡改都 fail closed；合法 receipt 只有被 control 引用后才进入主 workflow closure。
+- 边界：receipt 的 `delivery_scope=server_response_payload` 仅表达 server delivery；
+  `transport_acknowledged=false` 与 `model_understanding_claimed=false` 不允许被 caller 改成 true。
+
+### 2026-09-11 / A055：兼容 Codex handshake-era MCP schema，并保留真实 control 回合
+
+- 真实 RED：官方 Python MCP 2.2 Client 协商 `2026-07-28` 时可列工具，但 Codex CLI `0.153.4` 协商
+  `2025-06-18` 后在 `tools/list` 返回 `-32603`。透明 stdio wire 与 SDK versioned serializer 把错误定位为
+  Tool `outputSchema` 根缺少 `type: object`，不是 resource discovery 或 framing。
+- GREEN：MCP ToolResult union schema 增加 object root，并以真实 stdio 子进程重放 Codex 的
+  initialize→initialized→带 `progressToken: 0` 的 tools/list；exact tools 可见、无 generic invoke。
+- 真实回合：Codex 实际请求 prompt、blocked receipt、controlled observation receipt 与 diagnostic；首次
+  advisory 因 receipt 顺序不 canonical 被拒，排序同一四项后提交 advisory revision 3，再提交 prompt
+  revision 4。state hash 与两个 child runs 不变。
+- restart：无 live application 的第二 server 重提两 control，SQLite
+  starts/operations/accesses/controls/turns=`1/2/4/2/4` 与 45 CAS files/75,985 bytes 均零增长。证据见
+  `docs/evidence/golden-external-codex-diagnosis-20260911.{md,json}`。
+- 边界：受控 observation 为 `simulator_executed=false`，controls 为
+  `external_agent_executed=false`；没有 Genesis/GPU、模型理解、physical/publishability/promotion 授权，
+  也尚未让 prompt revision 被下一次 compile 强制消费。

@@ -99,8 +99,10 @@ Harness 只验证 schema、引用、状态和允许范围；它不把 Codex 的�
 可信事实。compile 的确定性输出必须绑定这份 proposal 和原始输入。
 
 `harness_advisory_record_v1` 接受三种 advisory：`visual_assessment`、`diagnosis`、`repair_proposal`。
-advisory 必须引用 Codex 实际读取的 fresh observation/diagnostic refs，并生成
-`ExternalAgentAdvisoryReceipt`；它只进入 attempt history。
+workflow artifact read 先生成 server-owned `ResourceAccessReceipt`；advisory 必须用这些回执无条件精确
+覆盖 source prompt、可选 source prompt revision、全部 failure receipts、fresh observation receipts 与
+diagnostics，并生成 `ExternalAgentAdvisoryReceipt`。zero/partial/extra/unrelated reads 都拒绝；它只进入
+attempt history。读取回执证明 server delivery，不证明 transport acknowledgement、模型理解或隐藏推理。
 
 `harness_prompt_revision_record_v1` 从原 prompt + advisory + patch 生成不可变 `PromptRevision`。下一次
 compile 必须显式引用 predecessor package、失败 receipt 和 revision；禁止隐式覆盖或静默 fallback。

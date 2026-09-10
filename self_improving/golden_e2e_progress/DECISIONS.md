@@ -132,3 +132,19 @@
   resource-access receipt 记录向哪个 principal/workflow 交付了哪些 bytes；它仍只能证明交付，不能证明
   模型理解或隐藏推理。两个 MCP control tools 完成且真实 Codex 回合运行前，所有记录继续保持
   `external_agent_executed=false`。
+
+## D013 — Resource access 只证明 server delivery，且 advisory 必须精确覆盖来源
+
+- 日期：2026-09-11
+- 状态：accepted_by_implementation
+- 决策：外部 MCP 的 workflow artifact 读取必须在同一 Golden SQLite authority 的独立 append-only
+  journal 中产生 `ResourceAccessReceipt`。读取不是 workflow turn，不推进 revision、turn、state、head、
+  active operation、child runs 或 updated time。回执绑定 server principal、workflow、完整 observed
+  snapshot、resource URI、ArtifactRef、delivered bytes/hash、representation 与 served time。
+- 精确覆盖：每个 advisory 必须提供 server-owned receipts，其 resource targets 与 source prompt、可选
+  source prompt revision、全部 failure receipts、observation receipts 和 diagnostics 无条件集合相等；
+  zero、partial、extra 或 unrelated reads 都不能提交 control。receipt 自身只有在被 control 引用后才进入
+  workflow 主闭包。
+- 边界：`delivery_scope=server_response_payload` 只证明 server 为该 principal 的读取请求交付了相应
+  bytes。`transport_acknowledged=false` 与 `model_understanding_claimed=false` 固定为 false；真实 Codex
+  tool-call transcript 可以证明请求发生和响应被送入 client 事件流，仍不能证明隐藏推理或认知。

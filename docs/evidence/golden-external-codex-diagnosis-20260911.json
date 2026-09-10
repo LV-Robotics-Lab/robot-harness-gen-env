@@ -1,0 +1,105 @@
+{
+  "schema_version": "harness.golden_external_codex_diagnosis_evidence.v1",
+  "status": "pass_controlled",
+  "date": "2026-09-11",
+  "execution_commit": "6e0314461c536215a3d66e42781f67e397b260fa",
+  "verification_commit": "bff09d2cba072f5fec73a972c069c4f2a7042169",
+  "evidence_root": "/home/jingxiang/bingsheng/golden-codex-diagnosis-20260911.jyB0nn",
+  "client": {
+    "name": "codex-cli",
+    "version": "0.153.4",
+    "negotiated_protocol": "2025-06-18"
+  },
+  "server": {
+    "sdk": "mcp",
+    "version": "2.2.0",
+    "generic_invoke_exposed": false
+  },
+  "workflow": {
+    "workflow_run_id": "71000000-0000-4000-8000-000000000001",
+    "base_revision": 2,
+    "final_revision": 4,
+    "final_turn_seq": 4,
+    "child_run_count": 2,
+    "state_sha256_before": "34f7a8216a05a0894a2349721b03938f59eedc02921c7db73c24f7647e60ed1d",
+    "state_sha256_after": "34f7a8216a05a0894a2349721b03938f59eedc02921c7db73c24f7647e60ed1d",
+    "advisory_receipt_sha256": "a7aff8bd46d994397097ac32448aba1b63cbf60b0940ae00e432b3d003c7b43e",
+    "prompt_revision_sha256": "75353517f00af4c8af159f9310aff7739dde6fb5739ab6b9e51bce5bb4b2be37"
+  },
+  "resource_delivery": {
+    "receipt_count": 4,
+    "required_sources": [
+      "source_prompt",
+      "failure_receipt",
+      "genesis_observation_receipt",
+      "diagnostic"
+    ],
+    "exact_coverage": true,
+    "transport_acknowledged": false,
+    "model_understanding_claimed": false
+  },
+  "restart_verification": {
+    "python_mcp_protocol": "2026-07-28",
+    "same_rows": true,
+    "same_cas": true,
+    "cas_files": 45,
+    "cas_bytes": 75985,
+    "row_counts": {
+      "golden_workflow_starts": 1,
+      "golden_workflow_operations": 2,
+      "golden_workflow_resource_accesses": 4,
+      "golden_workflow_control_records": 2,
+      "golden_workflow_turns": 4
+    }
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "result": "failed",
+      "reason": "MCP handler returned an invalid result before resource reads"
+    },
+    {
+      "attempt": 2,
+      "result": "failed",
+      "reason": "resource discovery was present but tools/list still returned an invalid result"
+    },
+    {
+      "attempt": 3,
+      "result": "diagnosed",
+      "reason": "Codex 2025-06-18 tools/list required outputSchema.type=object"
+    },
+    {
+      "attempt": 4,
+      "result": "blocked",
+      "reason": "four resources were delivered but the client approval policy rejected mutation"
+    },
+    {
+      "attempt": 5,
+      "result": "failed",
+      "reason": "incompatible Codex CLI approval and sandbox flags"
+    },
+    {
+      "attempt": 6,
+      "result": "pass",
+      "reason": "four audited reads, one rejected unsorted advisory, then advisory revision 3 and prompt revision 4"
+    }
+  ],
+  "artifact_sha256": {
+    "attempt_06_events": "d9b4108007412194703bd4c69feb0b9c1ac6938d541a7071a26ca4d6df4cc1f3",
+    "attempt_06_last_message": "5ea874900834a4ba356bebd2bb17537095a89c21f68bc524aa52ba11693ee134",
+    "attempt_06_prompt": "1461f41b694932fe8b3af821a433974e9896ee4afb64b526b1ccf082722ccfcb",
+    "attempt_06_client_to_server": "6e5989906d2b8bcd0daa3461c80b6de6abb31ca684bb7138fde2e7a4f7180b98",
+    "attempt_06_server_to_client": "2f75058c8dc4e4fa740692031182b01d75dbd2c7e333a25faf0929a5cf5d6550",
+    "attempt_06_server_stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "restart_verification": "2595885c2037de6d9e0a792e06b0435c4946334ab832eff20706fa726046c04a"
+  },
+  "boundaries": {
+    "simulator_executed": false,
+    "external_agent_execution_receipt_claimed": false,
+    "genesis_native": false,
+    "physical_validity_granted": false,
+    "publishability_granted": false,
+    "promotion_executed": false,
+    "robot_policy_ready": false
+  }
+}

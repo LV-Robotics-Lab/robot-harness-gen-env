@@ -48,6 +48,7 @@ commit `9b72090` 补充。
 | Pass 35 | 检查三项 exact text2env Skill 的 production stdio assembly 是否能执行真实 simulator 并在 server 重启后保持唯一状态权威。 | 固定 `b6f7796`、`run_golden_mcp_compile_replay_validate.py`、`golden-mcp-real-20260911.3CZQqP/evidence`、三轴独立只读验收。 | 官方 MCP 2.2 两进程完成 raw text revision 0→1→2→3，真实 RoboTwin/SAPIEN 900/120/120/12、validate重算、201 CAS objects/3,928 refs、23 assets与120-frame MP4闭合；B重提同validate operation且SQLite/CAS不增长。保留首次 runner生命周期失败和renderer诊断。仍不是external Codex、Genesis、promotion或image/video runtime。 |
 | Pass 36 | 检查 fresh observation 是否能从 exact receipt 投影为可恢复的可信状态，而不把历史图片或受控 fixture 冒充 Genesis runtime。 | `schemas/genesis_observe.py`、`genesis_observe.py`、`golden_observe_{policy,execution}.py`、`golden_execution.py`、`golden_run.py`、三个 Golden policies、三个 observation tests 与 58 份 schema snapshots。 | exact `genesis.observe@1.0.0` 输入/输出/receipt 绑定 replay lineage、排序唯一 requested keys、`1..300` 秒 TTL、typed values 与 payload CAS；显式 test-controlled descriptor 让真实 candidate receipt 在同一 workflow rev2→3 中成为 fresh ToolResult、trusted claim、唯一 delta/state，并在无 live application 重启后幂等恢复。固定 `55b28bd` 独立验收核对 61 CAS objects/268 ArtifactRef occurrences 与三套 SQLite；57 focused tests、application/binding 258 statements/74 branches 100%。所有输出仍为 `simulator_executed=false`，binding 不进 production assembly/qualification/MCP；尚无真实 Genesis capture。 |
 | Pass 37 | 检查 external-agent advisory 与 prompt revision 能否成为不改可信状态、但可续跑和可重启的 workflow controls。 | `schemas/golden_control.py`、`golden_{run,store}.py`、`workflow_operation.py`、五份 control snapshots、`test_golden_{control_schemas,control_submit,store_turns}.py`。 | 固定 `e9d9fcb` 三轴独立验收：fresh observation→blocked Skill→advisory→prompt revision，control 只推进 revision/turn/head，state ref/hash 与 child runs不变；共享 turn ledger裁决Skill/control同revision竞争。41个CAS对象、frame manifest、TTL、自哈希、mixed reconstruction和no-live restart闭合；新增schema 272/72、新store diff 210/62均100%。记录固定 `external_agent_executed=false`，尚无resource-access receipt、MCP control tool或真实Codex执行。 |
+| Pass 38 | 检查 external Codex 是否确实经项目 MCP 请求 advisory 所引用的证据，并让 delivery/control 在重启后仍可审计。 | `schemas/resource_access.py`、`golden_{run,store}.py`、`mcp_{adapter,server}.py`、`test_{resource_access_receipt,mcp_control_tools,mcp_protocol_compat}.py`、`docs/evidence/golden-external-codex-diagnosis-20260911.*`。 | Codex CLI 0.153.4 经 2025-06-18 stdio 实际请求 prompt/failure/controlled observation/diagnostic；server 为四项写 durable receipt，advisory 要求 exact target coverage，zero/partial/unrelated拒绝。advisory rev3、prompt rev4后，第二进程重提保持45 CAS/75,985 bytes与SQLite 1/2/4/2/4不增长。receipt只证明server delivery，acknowledgement/understanding均false；controlled observation simulator=false，无Genesis/physics/publishability或prompt→compile续跑。 |
 
 Coverage note：本证据图覆盖在范围内的 `scene_gen/`、`script/`、`demo/`、`tests/`
 主路径，以及 `self_improving/harness/` 的 PR1 schema tranche。已检查但不追踪的相邻路径——
@@ -63,8 +64,9 @@ production Golden 0→1→2。最终 integration 已在固定实现上重新生�
 并从另一代码安装路径闭合 legacy compile/replay/validate 0→1→2→3。外部 runtime/operator
 仍为部署绑定，临时 delegated scope 需运行前显式 provision。当前证据见
 [`docs/evidence/golden-revision3-integration-20260910.md`](../../docs/evidence/golden-revision3-integration-20260910.md)。
-三项 exact text2env Skill 的真实 MCP 三段链已闭合，但 promotion transaction、production observation
-policy 与 Genesis capture 仍未闭合；不能从 `publishable=true`、一段可解码视频或受控 observation
+三项 exact text2env Skill 的真实 MCP 三段链已闭合；external Codex 的 audited-read/advisory/prompt-control
+回合也已单独闭合，但两者尚未串成 prompt revision→下一次 compile。promotion transaction、production
+observation policy 与 Genesis capture 仍未闭合；不能从 `publishable=true`、一段可解码视频或受控 observation
 绿灯反推 promotion、Genesis 或最终 Text2Env robot-policy 行为。
 
 | Claim | Evidence | Confidence | Caveat | Used by |

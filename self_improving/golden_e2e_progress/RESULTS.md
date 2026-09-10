@@ -1,5 +1,39 @@
 # 进度与结果
 
+## 2026-09-11 P10 audited resource delivery 与 external Codex diagnosis
+
+- 新增 `harness.resource_access_receipt.v1` 与 SQLite append-only access journal。workflow artifact 的 MCP
+  读取返回原 text/blob 和第二份 server-owned receipt；receipt 绑定 principal、workflow、完整 observed
+  RunSnapshot、URI、ArtifactRef、delivered bytes/hash、representation 与 served time。读取与专用 receipt
+  lookup 都不进入 shared turn，前者幂等、后者不递归记账；公共 schema snapshot 总数 63→64。
+- 两个 exact MCP control tools `harness_advisory_record_v1` 与
+  `harness_prompt_revision_record_v1` 已接到唯一 `GoldenRunHarness.submit_control` 权威；无 generic invoke。
+  advisory 必须用 durable receipt 无条件精确覆盖 source prompt、全部 failure、observation receipt 与
+  diagnostic sources。complete 接受；zero、3/4 partial 和 unrelated state-only 均拒绝，revision/turn/head
+  与 control rows 不变。
+- 真实 Codex CLI `0.153.4` 通过项目 stdio MCP 协商 `2025-06-18`。前两次启动失败后，raw wire 定位到
+  MCP 2.2 新协议会容忍、Codex handshake-era serializer 会拒绝缺少根 `type: object` 的 output schema；
+  `6e03144` 修复并以真实 `2025-06-18` initialize→initialized→tools/list 回归锁定 exact tools/no generic。
+- 运行保留六次尝试：attempt 4 已读取四项但被 client approval policy 阻止 mutation；attempt 5 是互斥
+  CLI flags；attempt 6 实际读取 source prompt、blocked receipt、controlled Genesis observation receipt 与
+  diagnostic。首次 advisory 因 receipt URI 未排序被拒；Codex 保留同四份回执排序重提，提交 advisory
+  revision 3，再提交显式 video-frame→image prompt revision 4。state SHA 始终
+  `34f7a821…ed1d`，child runs 保持 2。
+- 无 live application 的新 MCP server 重提两个 exact control，SQLite rows 保持
+  starts/operations/accesses/controls/turns=`1/2/4/2/4`，CAS 保持 45 files/75,985 bytes；四份 access
+  target 与四类 cited sources 集合精确相等。独立验收 complete/zero/partial/unrelated 四类均 PASS。
+- 门禁：64 schema snapshots；MCP/control/resource focused 113 pass。仅用项目 `.venv` 的首次完整门
+  得到 Harness `2942 passed, 20 skipped, 1 failed`、root `3955 passed, 20 skipped, 1 failed`，唯一失败
+  都是该 venv 没有 `pip`，发生在 packaging wheel 构建启动前；系统 Python 单跑 packaging 为 2 pass。
+  最终以系统 Python 的构建工具并通过 `PYTHONPATH` 复用项目 MCP 2.2 dependencies 重跑当前完整 root，
+  得到 `3957 passed, 20 skipped`。Ruff check/format 对本切片文件与 diff check 通过。
+- 证据：`docs/evidence/golden-external-codex-diagnosis-20260911.{md,json}`；外部原始 root 为
+  `/home/jingxiang/bingsheng/golden-codex-diagnosis-20260911.jyB0nn`。
+- 边界：observation/controls 仍明确 `simulator_executed=false` / `external_agent_executed=false`；delivery
+  receipt 的 acknowledgement/understanding 标志均 false。该切片不证明 Genesis runtime、模型理解、
+  physical validity、publishability、promotion、robot-policy，也没有让 prompt revision 被下一次 compile
+  强制消费。
+
 ## 2026-09-11 P10 diagnosis/prompt revision control 纵切
 
 - 新增 `AdvisoryRecordCommand`、`ExternalAgentAdvisoryReceipt`、`PromptRevisionCommand`、

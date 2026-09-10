@@ -8,9 +8,9 @@
   Golden execution binding 已在同一 revision 2→3 中闭合 receipt/state/restart；下一切片是 production
   runtime binding。当前受控路径固定 `simulator_executed=false`，真实 Genesis capture、qualification 与
   MCP exposure 尚未开始。
-- P10 diagnosis/prompt revision：S1 的共享 turn authority 与两类 immutable control receipt 已完成；当前
-  实现 durable resource-access receipt 与两个 exact MCP control tools。不得把 advisory 伪装成
-  qualified Skill/trusted world fact，也不得把 server 已交付 bytes 夸成模型已经理解。
+- P10 diagnosis/prompt revision：durable resource-access receipt、两个 exact MCP control tools 和受控
+  external Codex 回合已闭合；下一切片让新的 exact compile input 强制消费 prompt revision、失败 receipt
+  与 predecessor package。不得静默选择 latest/fallback，也不得把 server 已交付 bytes 夸成模型理解。
 
 ## Next
 
@@ -18,8 +18,8 @@
   commit 前 fail closed。
 - P10：production policy 稳定后，用真实 Genesis sealed checkpoint 做 capture/qualification；只有该门
   通过后才把 `genesis_observe_v1_0_0` 加入 exact MCP catalog 与 workflow-scoped resource。
-- P5：受控 observation 与 diagnosis seam 闭合后，真实 external Codex 只经 exact MCP 完成同一 text
-  workflow；operation polling/cancel 仍单独实现。
+- P5：把已完成的受控 external Codex diagnosis 接到下一次 exact compile，并补 operation polling/cancel；
+  当前 control-only 回合没有调用 compile/replay/validate。
 - P6：在已合入的 exact-byte staging 后，单独实现 collision provenance、settle 与 Genesis
   qualification；stage result 仍不得直接触发历史 ledger promotion，也不得把 headless ground-contact
   probe 写成 can-on-plate、媒体或 Genesis 证据。
@@ -35,9 +35,23 @@
 - 当前没有 qualified Genesis observe runtime 或 sealed checkpoint capture 证据；历史 replay 图片不能作为
   fresh observation。production qualification 与 `genesis_observe_v1_0_0` MCP exposure 因此前置未完成。
 - MCP 尚无 image/video media ingest 或公开 operation polling/cancel seam；当前 text-only 三 Skill
-  已通过真实 MCP simulator 闭合，但 external Codex planner 回合仍待执行。
+  已通过真实 MCP simulator 闭合，external Codex 已完成受控读取/诊断/prompt revision，但尚未从该
+  revision 继续调用 compile/replay/validate。
 
 ## Done
+
+- durable MCP resource delivery 与受控 external Codex diagnosis 完成：`ResourceAccessReceipt` 在独立
+  append-only journal 中绑定 principal/workflow/full observed snapshot/resource/bytes/representation，读取
+  不推进 revision/state/head；MCP 返回原资源和第二份 receipt，专用 receipt URI 不递归记账。advisory
+  现在无条件要求 source prompt、每个 failure、observation receipt 与 diagnostic 的读取目标精确覆盖，
+  zero/partial/unrelated 均拒绝且不推进 workflow。Codex CLI `0.153.4` 经 `2025-06-18` stdio 协议实际
+  读取四项证据；首次乱序 receipt 负向用例被拒后，提交 advisory revision 3 与 prompt revision 4。
+  无 live application 的第二进程重提保持 starts/operations/accesses/controls/turns=`1/2/4/2/4`，CAS
+  45 files/75,985 bytes 零增长。64 schema snapshots、focused 113 tests 通过；使用系统构建工具并复用
+  项目 MCP 2.2 依赖的完整 root 套件为 3,957 passed/20 skipped。证据见
+  `docs/evidence/golden-external-codex-diagnosis-20260911.{md,json}`。该切片固定
+  `simulator_executed=false`、`transport_acknowledged=false`、`model_understanding_claimed=false`，无
+  Genesis/GPU/physical/publishability/promotion 主张。
 
 - diagnosis/prompt revision 的 S1 纵切完成：五份 strict public schema、共享 Skill/control turn ledger、
   `GoldenRunHarness.submit_control` 与 mixed receipt reconstruction 已实现。受控链真实完成 fresh

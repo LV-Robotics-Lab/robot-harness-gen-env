@@ -1,5 +1,20 @@
 # Change Log
 
+## 2026-09-11 audited MCP reads and external Codex diagnosis
+
+- 新增第 64 份 public schema `harness.resource_access_receipt.v1` 和独立 append-only SQLite read
+  journal。workflow artifact 的 MCP 响应同时返回原 bytes 与 server-owned delivery receipt；读取不占
+  shared turn、不推进 workflow，专用 receipt URI 也不会递归记账。
+- `harness_advisory_record_v1` 与 `harness_prompt_revision_record_v1` 成为 exact MCP controls。advisory
+  必须用 receipts 无条件精确覆盖 source prompt、failure receipts、observation receipts 与 diagnostics；
+  complete 接受，zero/partial/unrelated 均 fail closed。
+- Codex CLI `0.153.4` 经 `2025-06-18` stdio 协议实际读取四项受控 evidence，并在一次 canonical-order
+  失败后提交 advisory revision 3 与 prompt revision 4。无 live application 的第二进程重提不增加
+  SQLite/CAS。证据见 `docs/evidence/golden-external-codex-diagnosis-20260911.md`。
+- 边界：receipt 只证明 server delivery；`transport_acknowledged`、`model_understanding_claimed`、
+  `simulator_executed` 和 control 的 `external_agent_executed` 均为 false。没有 Genesis runtime、物理/
+  publishability 授权，也尚未让下一次 compile 强制消费 prompt revision。
+
 ## 2026-09-11 Golden advisory and prompt-revision controls
 
 - 新增五份 strict public schema：advisory/prompt command、两类不可变 workflow receipt 和 control

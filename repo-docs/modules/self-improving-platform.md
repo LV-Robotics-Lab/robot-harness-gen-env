@@ -88,8 +88,11 @@ assembly 的本地生成资产路径，但使用临时 qualification，不能替
 revision、turn sequence 和 receipt head，state ref/hash 与 child runs 保持不变。advisory 只能引用本
 workflow 的失败 receipt、diagnostic 与仍新鲜的 Genesis observation，且固定为 `advisory_only`；prompt
 revision 必须显式绑定原 prompt、advisory、失败/package lineage 与 fallback frame manifest。该受控纵切
-仍记录 `external_agent_executed=false`：当前资源可达只表示 server 可以读取，尚没有 durable read receipt
-证明资源已经交付给 external Codex，也没有 exact advisory/prompt MCP tools。
+仍记录 `external_agent_executed=false`。后续已增加独立 append-only `ResourceAccessReceipt` journal：MCP
+artifact read 返回原资源和 server-owned receipt，但不推进 revision/state/head；advisory 必须用这些
+receipts 精确覆盖 source prompt、failure、observation 和 diagnostic。Codex CLI `0.153.4` 已实际发起四项
+读取并提交 advisory/prompt controls，第二进程重提无 SQLite/CAS 增长。receipt 只能证明 server delivery，
+`transport_acknowledged=false` 与 `model_understanding_claimed=false`，不能冒充模型理解或 trusted fact。
 
 ASPIRE E0–E2 快照 `1180aef` 的离线、自包含回归是 595 passed、6 skipped；这不是后续 Registry/compiler/asset/Stage 5 follow-on 的当前绿灯。该快照的 skip 只对应未纳入 Git 的 Isaac/SceneAgent/媒体/报告原始包或本机未安装的 SAPIEN 物理运行时。完整命令与时间边界见 `self_improving/README.md`。
 
