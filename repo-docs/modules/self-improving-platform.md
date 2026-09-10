@@ -28,7 +28,7 @@
 `e67b656ea97044da5b09ee8323c48e752cd88c76` 加 P2 compile-only submit 候选为准；
 下述 55-schema 计数不归属于 `ab03859` 的 14-schema 历史快照。
 
-Harness 当前公开 68 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
+Harness 当前公开 69 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
 descriptor v2、validate v2 input/output，以及 qualification report、资产债务/修复、registry snapshot、
 replay VLM、run start/read/snapshot 和 workflow start receipt 等 12 个入口，再加上 asset source snapshot、stage
 request 与 stage result 三个入口；P2 再增加 command、operation snapshot、qualified execution、trusted

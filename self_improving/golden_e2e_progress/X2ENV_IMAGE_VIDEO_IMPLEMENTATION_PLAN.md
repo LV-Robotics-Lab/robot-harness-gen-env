@@ -19,8 +19,10 @@ qualification/feature commit 执行。本文不把合同模块当成 runtime 实
 
 ## X1 — Shared ingest 与 legacy anti-corruption adapter
 
-1. Image ingest：从 CAS 原图重新解码，生成 canonical PNG、probe 与 `ImageSourceMedia`；测试伪 MIME、
-   错 SHA、解码失败、超限尺寸、动画图冒充单图。
+1. [x] Image ingest：从 CAS 原图重新解码，生成 metadata-free canonical PNG、strict probe 与
+   `ImageSourceMedia`；纯读 consumer 再从实际 source/canonical/probe bytes 重算所有镜像字段。伪 MIME、
+   错 SHA、解码失败、超限尺寸、动画图、unsupported static format、非规范 probe 与 ICC/text/EXIF
+   identity 漂移均 fail closed。固定实现提交 `fe271db`；该完成项仍不等于 image compile/qualification。
 2. Video ingest：完整解码容器，生成 ordered frame manifest、FPS fraction、duration ms、total/unique 和
    sequence digest；测试空视频、计数分歧、重复帧、乱序、只有 15 帧 sample。
 3. `LegacyGenenvImporter.import_snapshot`：只收 CAS directory snapshot；按 mapping spec 转 SceneIR、

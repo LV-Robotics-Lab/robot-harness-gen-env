@@ -1,5 +1,16 @@
 # Change Log
 
+## 2026-09-11 deterministic image media ingest
+
+- 新增 `ImageMediaIngestor`：从 exact CAS 完整解码 JPEG/PNG/WEBP，按 EXIF orientation 后将像素规范为
+  metadata-free L/RGB/RGBA PNG，并发布 strict `ImageMediaProbeV1` 与 `ImageSourceMedia`；公共 schema
+  68→69。
+- 新增纯读 `ImageMediaConsumerVerifier`，从 source/canonical/probe 实际 bytes 重算 canonical PNG、pixel
+  digest、Pillow identity、canonical JSON 与全部镜像字段。相同像素的 ICC/text/EXIF 不再改变 canonical
+  image identity；换靶、坏/缺 CAS、动画、超限和损坏输入 fail closed。
+- 新模块 statement/branch 100%。这是 CPU ingest/consumer，不是 image compile handler、qualification、
+  Genesis/GPU runtime 或 publishability。
+
 ## 2026-09-11 explicit PromptRevision compile consumption
 
 - 新增 initial/revised compile-attempt schema 与 image/video compile input v2，公共 schema 64→68；旧 v1

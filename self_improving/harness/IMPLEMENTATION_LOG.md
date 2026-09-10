@@ -1081,3 +1081,18 @@
   refs、两库 integrity 与 no-live application restart 零增长。
 - 边界：application 是受控 blocked preflight；没有 image/video handler、qualification、Genesis runtime、
   资产路径、媒体或 publishability。未来 text retry 必须新增 exact compile v2，不能改变已资格 v1。
+
+### 2026-09-11 / A057：Image ingest identity 必须由实际像素和纯读 consumer 闭合
+
+- RED：首个 ingest 测试先冻结 CAS source→canonical PNG→probe→`ImageSourceMedia`，但集中验收又证明
+  probe 未绑定 source media type，Pillow 会把 ICC/text/EXIF 带进所谓 canonical PNG，而且仅 parse inline
+  `ImageSourceMedia` 不能证明下游实际消费了 probe/CAS。
+- GREEN：`ImageMediaIngestor` 完整解码 JPEG/PNG/WEBP、应用 EXIF transpose、规范到 L/RGB/RGBA 后用
+  新建 pixel-only image 写 deterministic PNG；`ImageMediaProbeV1` 绑定 source/declaration/detected format。
+  `ImageMediaConsumerVerifier` 纯读重解码 source，重算 canonical bytes、pixel digest 与 canonical probe JSON，
+  再与全部 refs/width/height/mode/counts 精确对账。
+- 失效模式：伪 MIME、缺失或损坏 CAS、动画、source/pixel 超限、损坏输入、static GIF、非规范/错误
+  probe、canonical/source/字段换靶及 metadata identity 漂移均在下游使用前拒绝；重复 ingest/verify 不增长
+  CAS。
+- 边界：公共 schema 68→69；本切片纯 CPU、无模型、无 handler/qualification/Registry/MCP、无 Genesis/
+  GPU/物理或 publishability。compile 前还必须实体化当前 opaque 的 IR、资产、binding 与 receipt schemas。

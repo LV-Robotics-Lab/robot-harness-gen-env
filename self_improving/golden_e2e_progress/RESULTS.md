@@ -1,5 +1,32 @@
 # 进度与结果
 
+## 2026-09-11 X1 deterministic image ingest 与 strict consumer
+
+- 提交链 `45e0153` → `ae05517` 先以 public-seam RED/GREEN 建立 exact CAS image ingest；第一次
+  集中功能验收随后真实发现三项缺口：public probe 未绑定 source/declared MIME、Pillow 会把 ICC 等
+  metadata 带入所谓 canonical PNG、下游没有纯读重验 inline `ImageSourceMedia` 的 deep consumer。
+  `3fd03f4` 将这些问题固化为 RED，`fe271db55992c6d0880ba2a8903dc233bce2bb3d`
+  完成修复，未把第一次验收的失败隐藏为通过。
+- `ImageMediaIngestor` 对 exact CAS JPEG/PNG/WEBP 做完整 Pillow 解码、EXIF transpose、尺寸/单帧/
+  byte limit 检查，并从规范化像素创建新的 metadata-free image，再发布 deterministic PNG 与 strict
+  `harness.image_media_probe.v1`。重复 ingest 同源得到同一 refs，CAS 不增长。
+- `ImageMediaConsumerVerifier` 是 pure-read deep consumer：重新 resolve/hash source、canonical 与 probe，
+  完整解码 source，重算 canonical PNG、pixel hash、decoder identity 和 canonical probe JSON，再逐项
+  绑定 `ImageSourceMedia` 镜像字段；MIME/CAS/动画/上限/损坏/非规范 JSON/字段换靶均 fail closed。
+- 门禁：公共 schema snapshot 总数 68→69；focused 38 pass，新 `image_ingest.py` 与
+  `schemas/media_ingest.py` 合计 178 statements/44 branches 为 100%；相邻 image/schema 回归 76 pass；
+  完整 root 为 `4014 passed, 20 skipped in 258.63s`。第一条独立 archive 验收对 L/RGB/RGBA 的
+  clean/ICC/text/EXIF/combined 输入证明逐模式 canonical identity 唯一，PNG 仅含 IHDR/IDAT/IEND；
+  JPEG/PNG/WEBP consumer 前后 CAS manifest 字节级不变，8 类漂移全部拒绝。
+- 第二条独立 archive 验收同样 PASS：38 项 image tests 与 192 项 x2env/compile/replay qualification
+  回归通过，69 份 Draft 2020-12 schema/catalog identity 一致；项目 venv 排除 packaging 的宽回归为
+  `4012 passed, 20 skipped`，同机带 pip 的 Python 将 2 项 packaging 单独跑过，与完整 root 4014 项吻合。
+  两个未资格化 x2env compile descriptor 仍为 `handler_registered=false`、
+  `qualification_available=false`，既有 text compile/replay qualification 未被改写。
+- 证据见 `docs/evidence/golden-image-ingest-consumer-20260911.{md,json}`。实现为当前 Harness/Pillow
+  原生切片，没有复制 Gujie runtime 源码。边界仍是纯 CPU X1 ingest/consumer：没有 image compile
+  handler、qualification、production Registry/MCP、Genesis/GPU/物理、publishability 或 robot-policy。
+
 ## 2026-09-11 P10 PromptRevision → exact compile consumption
 
 - 新增 `harness.initial_compile_attempt.v1`、`harness.prompt_revision_compile_attempt.v1` 与 image/video

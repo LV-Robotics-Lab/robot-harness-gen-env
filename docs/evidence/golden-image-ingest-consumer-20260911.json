@@ -1,0 +1,96 @@
+{
+  "schema_version": "golden.image_ingest_consumer_evidence.v1",
+  "result": "pass",
+  "implementation_commit": "fe271db55992c6d0880ba2a8903dc233bce2bb3d",
+  "tdd_commits": [
+    "45e0153",
+    "ae05517",
+    "3fd03f4",
+    "fe271db"
+  ],
+  "initial_acceptance_findings": [
+    "probe did not bind source media type to declared media type",
+    "canonical PNG retained metadata that changed content identity",
+    "no pure-read consumer revalidated the complete ImageSourceMedia closure"
+  ],
+  "implementation": {
+    "accepted_formats": [
+      "JPEG",
+      "PNG",
+      "WEBP"
+    ],
+    "canonical_media_type": "image/png",
+    "canonical_png_chunks": [
+      "IHDR",
+      "IDAT",
+      "IEND"
+    ],
+    "consumer_writes_cas": false,
+    "database_used": false,
+    "simulator_executed": false
+  },
+  "gates": {
+    "focused_passed": 38,
+    "adjacent_passed": 76,
+    "new_core_statements": 178,
+    "new_core_statement_coverage_percent": 100,
+    "new_core_branches": 44,
+    "new_core_branch_coverage_percent": 100,
+    "schema_snapshots": 69,
+    "root_passed": 4014,
+    "root_skipped": 20,
+    "root_seconds": 258.63
+  },
+  "independent_acceptance": {
+    "result": "pass",
+    "source_archive_root": "/tmp/golden-image-consumer-fe271db.FwjByH/src",
+    "evidence_root": "/tmp/golden-image-consumer-fe271db.FwjByH/evidence",
+    "focused_passed": 30,
+    "metadata_color_modes": [
+      "L",
+      "RGB",
+      "RGBA"
+    ],
+    "metadata_variants_per_mode": 5,
+    "consumer_formats": [
+      "JPEG",
+      "PNG",
+      "WEBP"
+    ],
+    "drift_cases": 8,
+    "cas_files": 41,
+    "cas_bytes": 21992,
+    "cas_growth_during_consumer_verification": 0,
+    "summary_sha256": "0092b1d3b1aa1ab6c237642003dca3bf1745604cb83c1211e52c7ebf37eb96d0",
+    "pytest_xml_sha256": "87b7be4472b5853b26633caea06b751a4601e2d930c513fc1b889ace2a9b848a",
+    "coverage_json_sha256": "f5b2647c382247a72d3c43ac9f07a50207670e046fee812d38b6766abd46ff62"
+  },
+  "independent_contract_acceptance": {
+    "result": "pass",
+    "image_tests_passed": 38,
+    "x2env_and_qualification_tests_passed": 192,
+    "root_without_packaging_passed": 4012,
+    "root_without_packaging_skipped": 20,
+    "packaging_tests_passed_separately": 2,
+    "schema_documents": 69,
+    "schema_snapshots": 69,
+    "x2env_handler_registered": false,
+    "x2env_qualification_available": false,
+    "qualified_text_skill_identity_changed": false
+  },
+  "provenance": {
+    "implementation": "Harness-native Pillow/CAS implementation",
+    "gujie_runtime_source_copied": false
+  },
+  "not_proven": [
+    "video ingest",
+    "image2env compile handler",
+    "qualification",
+    "production Registry or MCP exposure",
+    "Genesis or GPU execution",
+    "physics validity",
+    "publishability",
+    "promotion",
+    "robot policy readiness"
+  ]
+}

@@ -4,6 +4,9 @@
 
 ## Doing
 
+- X1 shared ingest：image path 已完成 CAS source→metadata-free canonical PNG→strict probe→
+  `ImageSourceMedia`，并由纯读 consumer 重解码/重算；当前集中验收与账本收口后转入 video path 的完整
+  ordered-frame ingest。该切片不注册 Skill，不运行模型/Genesis/GPU，也不授予 compile/publishability。
 - P10 fresh observation：strict schema、controlled candidate application/evidence policy 与 test-controlled
   Golden execution binding 已在同一 revision 2→3 中闭合 receipt/state/restart；下一切片是 production
   runtime binding。当前受控路径固定 `simulator_executed=false`，真实 Genesis capture、qualification 与
@@ -16,6 +19,10 @@
 
 ## Next
 
+- X1：冻结并实现 video ingest 的完整解码、ordered frame manifest、FPS fraction、duration、total/unique
+  frame count 与 sequence digest；禁止 15 帧 sample 代替全视频身份。
+- X2：先实体化 SceneIR/TaskIR/catalog/selection/qualification/closure/binding/runtime-lock/static-validation/
+  compile-receipt 等 opaque artifact schema，再实现 exact-reuse image compile；不得让任意 JSON 冒充 IR。
 - P10：实现 production execution binding/runtime；保持过期、缺 key、时间或 payload 漂移在 parent
   commit 前 fail closed。
 - P10：production policy 稳定后，用真实 Genesis sealed checkpoint 做 capture/qualification；只有该门
@@ -41,6 +48,13 @@
   revision 继续调用 compile/replay/validate。
 
 ## Done
+
+- X1 deterministic image ingest 完成：真实 JPEG/PNG/WEBP source 由 exact CAS 完整解码，输出只由
+  decoded pixels/size/mode 决定的 canonical PNG、strict `ImageMediaProbeV1` 与 `ImageSourceMedia`。
+  consumer 纯读重验 source/canonical/probe 实际 bytes、canonical JSON、Pillow identity 与所有镜像字段；
+  伪 MIME、坏/缺 CAS、动画、source/pixel 超限、损坏、静态不支持格式、字段换靶及 ICC/text/EXIF
+  identity 漂移全部 fail closed。公共 schema 68→69；新模块 statement/branch 100%。仍无 image compile
+  handler、qualification、asset lane、Genesis/GPU 或 MCP exposure。
 
 - PromptRevision compile consumption 受控纵切完成：新增 initial/revised 两种严格 attempt schema 与
   image/video compile v2 input；两个尚未资格化的 x2env `@1.0.0` exact contracts 在首次资格前切到 v2，

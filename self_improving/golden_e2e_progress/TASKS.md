@@ -63,6 +63,9 @@
 - [ ] 历史 ledger 迁移/隔离并逐类消除完整性违规。
 - [ ] text2env 的生成、精确复用、digital-cousin 复用分别形成 golden line。
 - [ ] image2env 三个 Skill 实现、资格和三类资产路径。
+  - [x] X1 image ingest：CAS 原图完整解码、metadata-free canonical PNG、strict probe、
+    ImageSourceMedia 与纯读 consumer closure；不计作 compile/qualification。
+  - [ ] X1 video ingest：完整 ordered frame manifest、全帧计数/摘要、FPS/duration 与纯读 consumer。
 - [ ] video2env 三个 Skill 实现、资格和三类资产路径。
 - [ ] 输出 sim-ready Genesis 环境，并保留可观看图像/视频和机器可验证报告。
 
