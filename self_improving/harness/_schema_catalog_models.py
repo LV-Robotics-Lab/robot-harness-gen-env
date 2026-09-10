@@ -65,6 +65,10 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
             ".schemas.golden_control",
             "PromptRevision",
         ),
+        "harness.resource_access_receipt.v1": (
+            ".schemas.resource_access",
+            "ResourceAccessReceipt",
+        ),
         "harness.image2env_compile_input.v1": (
             ".schemas.x2env",
             "Image2EnvCompileInput",

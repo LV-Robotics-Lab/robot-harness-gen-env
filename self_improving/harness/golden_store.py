@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 from .schemas.base import CanonicalSkillRef, Sha256
 from .schemas.golden_control import ControlCommitSnapshot
+from .schemas.resource_access import ResourceAccessReceipt, resource_access_request_sha256
 from .schemas.workflow import IdempotencyKey, OperationSnapshot, PrincipalId, RunSnapshot
 
 _CURRENT_COLUMNS = (
@@ -196,6 +197,44 @@ _CONTROL_INDEXES = (
         ),
     ),
 )
+_RESOURCE_ACCESS_COLUMNS = (
+    (0, "access_id", "TEXT", 1, None, 1, 0),
+    (1, "workflow_run_id", "TEXT", 1, None, 0, 0),
+    (2, "principal_id", "TEXT", 1, None, 0, 0),
+    (3, "access_identity_sha256", "TEXT", 1, None, 0, 0),
+    (4, "observed_snapshot_sha256", "TEXT", 1, None, 0, 0),
+    (5, "resource_sha256", "TEXT", 1, None, 0, 0),
+    (6, "receipt_json", "BLOB", 1, None, 0, 0),
+    (7, "receipt_payload_sha256", "TEXT", 1, None, 0, 0),
+)
+_RESOURCE_ACCESS_INDEXES = (
+    (
+        "pk",
+        1,
+        0,
+        ((0, 0, "access_id", 0, "BINARY", 1), (1, -1, None, 0, "BINARY", 0)),
+    ),
+    (
+        "u",
+        1,
+        0,
+        (
+            (0, 1, "workflow_run_id", 0, "BINARY", 1),
+            (1, 3, "access_identity_sha256", 0, "BINARY", 1),
+            (2, -1, None, 0, "BINARY", 0),
+        ),
+    ),
+    (
+        "u",
+        1,
+        0,
+        (
+            (0, 1, "workflow_run_id", 0, "BINARY", 1),
+            (1, 7, "receipt_payload_sha256", 0, "BINARY", 1),
+            (2, -1, None, 0, "BINARY", 0),
+        ),
+    ),
+)
 _SQL_QUOTED_OR_COMMENT = re.compile(
     r"'(?:''|[^'])*'|\"(?:\"\"|[^\"])*\"|`(?:``|[^`])*`|\[(?:\]\]|[^\]])*\]|"
     r"--[^\r\n]*|/\*.*?\*/",
@@ -265,6 +304,19 @@ class _CurrentControl(BaseModel):
     control_sha256: object
 
 
+class _CurrentResourceAccess(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    access_id: str
+    workflow_run_id: str
+    principal_id: PrincipalId
+    access_identity_sha256: Sha256
+    observed_snapshot_sha256: Sha256
+    resource_sha256: Sha256
+    receipt_json: object
+    receipt_payload_sha256: object
+
+
 @dataclass(frozen=True, slots=True)
 class _StoredStart:
     snapshot: RunSnapshot
@@ -301,6 +353,15 @@ class StoredWorkflowEntry:
     base_revision: int
     operation: OperationSnapshot | None
     control: ControlCommitSnapshot | None
+
+
+@dataclass(frozen=True, slots=True)
+class StoredResourceAccess:
+    """One append-only resource delivery receipt outside workflow turns."""
+
+    receipt: ResourceAccessReceipt
+    access_identity_sha256: str
+    receipt_payload_sha256: str
 
 
 class GoldenRunConflictError(RuntimeError):
@@ -973,6 +1034,107 @@ class SQLiteGoldenRunStore:
                 )
             return entries
 
+    def read_resource_access(
+        self,
+        *,
+        principal_id: str,
+        workflow_run_id: UUID,
+        access_identity_sha256: str | None = None,
+        receipt_payload_sha256: str | None = None,
+    ) -> StoredResourceAccess | None:
+        """Read one delivery receipt by its stable request or receipt identity."""
+
+        if (access_identity_sha256 is None) == (receipt_payload_sha256 is None):
+            raise ValueError("exactly one resource access identity must be supplied")
+        with self._connection() as connection:
+            _require_all_current_layouts(connection)
+            start = _select_start(connection, workflow_run_id)
+            if start is None or start.snapshot.principal_id != principal_id:
+                return None
+            row = _select_resource_access(
+                connection,
+                workflow_run_id=workflow_run_id,
+                access_identity_sha256=access_identity_sha256,
+                receipt_payload_sha256=receipt_payload_sha256,
+            )
+            if row is None:
+                return None
+            stored = _decode_resource_access(row)
+            if stored.receipt.principal_id != principal_id:
+                raise GoldenRunCorruptionError(
+                    "resource access receipt is outside its workflow authority"
+                )
+            return stored
+
+    def commit_resource_access(
+        self,
+        *,
+        principal_id: str,
+        access_identity_sha256: str,
+        expected_snapshot_sha256: str,
+        receipt: ResourceAccessReceipt,
+    ) -> StoredResourceAccess | None:
+        """Append one delivery receipt without advancing the workflow turn or head."""
+
+        with self._connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            _require_all_current_layouts(connection)
+            start = _select_start(connection, receipt.workflow_run_id)
+            if start is None or start.snapshot.principal_id != principal_id:
+                return None
+            existing_row = _select_resource_access(
+                connection,
+                workflow_run_id=receipt.workflow_run_id,
+                access_identity_sha256=access_identity_sha256,
+                receipt_payload_sha256=None,
+            )
+            if existing_row is not None:
+                return _decode_resource_access(existing_row)
+            current_payload = _canonical_model_bytes(start.snapshot)
+            if hashlib.sha256(current_payload).hexdigest() != expected_snapshot_sha256:
+                raise GoldenRunHeadConflictError(
+                    "workflow snapshot changed before resource delivery could be recorded"
+                )
+            if (
+                receipt.principal_id != principal_id
+                or receipt.observed_snapshot != start.snapshot
+                or receipt.observed_snapshot_sha256 != expected_snapshot_sha256
+            ):
+                raise GoldenRunCorruptionError(
+                    "resource access receipt differs from current workflow authority"
+                )
+            payload = _canonical_model_bytes(receipt)
+            payload_sha256 = hashlib.sha256(payload).hexdigest()
+            try:
+                connection.execute(
+                    """
+                    INSERT OR ABORT INTO golden_workflow_resource_accesses (
+                        access_id, workflow_run_id, principal_id,
+                        access_identity_sha256, observed_snapshot_sha256,
+                        resource_sha256, receipt_json, receipt_payload_sha256
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        str(receipt.access_id),
+                        str(receipt.workflow_run_id),
+                        principal_id,
+                        access_identity_sha256,
+                        expected_snapshot_sha256,
+                        receipt.resource.sha256,
+                        payload,
+                        payload_sha256,
+                    ),
+                )
+            except sqlite3.IntegrityError as error:
+                raise GoldenRunConflictError(
+                    "resource access identity is already bound to another delivery"
+                ) from error
+            return StoredResourceAccess(
+                receipt=receipt,
+                access_identity_sha256=access_identity_sha256,
+                receipt_payload_sha256=payload_sha256,
+            )
+
     @contextmanager
     def _connection(self) -> Iterator[sqlite3.Connection]:
         try:
@@ -1032,6 +1194,7 @@ class SQLiteGoldenRunStore:
                 )
             _initialize_operation_table(connection)
             _initialize_turn_tables(connection)
+            _initialize_resource_access_table(connection)
 
 
 def _decode_start(row: sqlite3.Row) -> _StoredStart:
@@ -1152,6 +1315,51 @@ def _decode_control(row: sqlite3.Row) -> StoredControlRecord:
             f"stored control {label} has inconsistent authority metadata"
         )
     return StoredControlRecord(control=control, command_sha256=authority.command_sha256)
+
+
+def _decode_resource_access(row: sqlite3.Row) -> StoredResourceAccess:
+    try:
+        authority = _CurrentResourceAccess.model_validate(dict(row))
+    except ValidationError as error:
+        raise GoldenRunCorruptionError(
+            f"stored resource access has invalid authority metadata: {error}"
+        ) from error
+    payload = _snapshot_bytes(authority.receipt_json, label=authority.access_id)
+    if type(authority.receipt_payload_sha256) is not str or not re.fullmatch(
+        r"[0-9a-f]{64}", authority.receipt_payload_sha256
+    ):
+        raise GoldenRunCorruptionError("stored resource access has an invalid payload checksum")
+    if hashlib.sha256(payload).hexdigest() != authority.receipt_payload_sha256:
+        raise GoldenRunCorruptionError("stored resource access failed its payload checksum")
+    try:
+        receipt = ResourceAccessReceipt.model_validate_json(payload)
+    except (ValidationError, TypeError, ValueError) as error:
+        raise GoldenRunCorruptionError(
+            f"cannot reconstruct stored resource access {authority.access_id}: {error}"
+        ) from error
+    if payload != _canonical_model_bytes(receipt):
+        raise GoldenRunCorruptionError("stored resource access is not canonical JSON bytes")
+    if (
+        str(receipt.access_id) != authority.access_id
+        or str(receipt.workflow_run_id) != authority.workflow_run_id
+        or receipt.principal_id != authority.principal_id
+        or receipt.observed_snapshot_sha256 != authority.observed_snapshot_sha256
+        or receipt.resource.sha256 != authority.resource_sha256
+        or resource_access_request_sha256(
+            principal_id=receipt.principal_id,
+            workflow_run_id=receipt.workflow_run_id,
+            resource_uri=receipt.resource_uri,
+            resource=receipt.resource,
+            observed_snapshot_sha256=receipt.observed_snapshot_sha256,
+        )
+        != authority.access_identity_sha256
+    ):
+        raise GoldenRunCorruptionError("stored resource access has inconsistent authority metadata")
+    return StoredResourceAccess(
+        receipt=receipt,
+        access_identity_sha256=authority.access_identity_sha256,
+        receipt_payload_sha256=authority.receipt_payload_sha256,
+    )
 
 
 def _decode_entry(connection: sqlite3.Connection, row: sqlite3.Row) -> StoredWorkflowEntry:
@@ -1308,6 +1516,25 @@ def _create_control_table(connection: sqlite3.Connection) -> None:
     )
 
 
+def _create_resource_access_table(connection: sqlite3.Connection) -> None:
+    connection.execute(
+        """
+        CREATE TABLE golden_workflow_resource_accesses (
+            access_id TEXT NOT NULL PRIMARY KEY,
+            workflow_run_id TEXT NOT NULL,
+            principal_id TEXT NOT NULL,
+            access_identity_sha256 TEXT NOT NULL,
+            observed_snapshot_sha256 TEXT NOT NULL,
+            resource_sha256 TEXT NOT NULL,
+            receipt_json BLOB NOT NULL,
+            receipt_payload_sha256 TEXT NOT NULL,
+            UNIQUE (workflow_run_id, access_identity_sha256),
+            UNIQUE (workflow_run_id, receipt_payload_sha256)
+        )
+        """
+    )
+
+
 def _initialize_operation_table(connection: sqlite3.Connection) -> None:
     columns = _read_named_column_layout(connection, "golden_workflow_operations")
     if not columns:
@@ -1328,6 +1555,13 @@ def _initialize_turn_tables(connection: sqlite3.Connection) -> None:
         )
     _require_turn_table_layout(connection)
     _require_control_table_layout(connection)
+
+
+def _initialize_resource_access_table(connection: sqlite3.Connection) -> None:
+    columns = _read_named_column_layout(connection, "golden_workflow_resource_accesses")
+    if not columns:
+        _create_resource_access_table(connection)
+    _require_resource_access_table_layout(connection)
 
 
 def _backfill_operation_turns(connection: sqlite3.Connection) -> None:
@@ -1456,6 +1690,32 @@ def _select_control_by_identity(
     ).fetchone()
 
 
+def _select_resource_access(
+    connection: sqlite3.Connection,
+    *,
+    workflow_run_id: UUID,
+    access_identity_sha256: str | None,
+    receipt_payload_sha256: str | None,
+) -> sqlite3.Row | None:
+    if access_identity_sha256 is not None:
+        column = "access_identity_sha256"
+        identity = access_identity_sha256
+    else:
+        assert receipt_payload_sha256 is not None
+        column = "receipt_payload_sha256"
+        identity = receipt_payload_sha256
+    return connection.execute(
+        f"""
+        SELECT access_id, workflow_run_id, principal_id,
+               access_identity_sha256, observed_snapshot_sha256,
+               resource_sha256, receipt_json, receipt_payload_sha256
+        FROM golden_workflow_resource_accesses
+        WHERE workflow_run_id = ? AND {column} = ?
+        """,
+        (str(workflow_run_id), identity),
+    ).fetchone()
+
+
 def _select_and_decode_entry(
     connection: sqlite3.Connection,
     entry_id: UUID,
@@ -1555,6 +1815,15 @@ def _require_control_table_layout(connection: sqlite3.Connection) -> None:
     )
 
 
+def _require_resource_access_table_layout(connection: sqlite3.Connection) -> None:
+    _require_named_table_layout(
+        connection,
+        table_name="golden_workflow_resource_accesses",
+        columns=_RESOURCE_ACCESS_COLUMNS,
+        indexes=_RESOURCE_ACCESS_INDEXES,
+    )
+
+
 def _require_all_current_layouts(connection: sqlite3.Connection) -> None:
     _require_table_layout(
         connection,
@@ -1564,6 +1833,7 @@ def _require_all_current_layouts(connection: sqlite3.Connection) -> None:
     _require_operation_table_layout(connection)
     _require_turn_table_layout(connection)
     _require_control_table_layout(connection)
+    _require_resource_access_table_layout(connection)
 
 
 def _require_table_layout(
@@ -1695,4 +1965,5 @@ __all__ = [
     "GoldenRunCorruptionError",
     "GoldenRunHeadConflictError",
     "SQLiteGoldenRunStore",
+    "StoredResourceAccess",
 ]

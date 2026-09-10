@@ -43,6 +43,7 @@ from self_improving.harness.mcp_adapter import (  # noqa: E402
 )
 from self_improving.harness.mcp_server import create_harness_mcp_server  # noqa: E402
 from self_improving.harness.schemas.common import ArtifactRef, RunState  # noqa: E402
+from self_improving.harness.schemas.resource_access import ResourceAccessReceipt  # noqa: E402
 from self_improving.harness.schemas.text2env import (  # noqa: E402
     CompileConfig,
     RuntimeConfig,
@@ -186,6 +187,19 @@ def test_official_client_prepares_validate_input_after_exact_compile_and_replay(
 
     async def exercise() -> None:
         async with Client(server, raise_exceptions=True, cache=None) as client:
+
+            def require_audited_resource(
+                resource: types.ReadResourceResult,
+                expected: ArtifactRef,
+            ) -> ResourceAccessReceipt:
+                assert len(resource.contents) == 2
+                assert isinstance(resource.contents[1], types.TextResourceContents)
+                receipt = ResourceAccessReceipt.model_validate_json(resource.contents[1].text)
+                assert receipt.resource == expected
+                assert receipt.delivered_sha256 == expected.sha256
+                assert receipt.delivered_bytes == expected.bytes
+                return receipt
+
             listed = await client.list_tools()
             assert tuple(tool.name for tool in listed.tools) == (
                 "harness_workflow_create_v1",
@@ -244,7 +258,10 @@ def test_official_client_prepares_validate_input_after_exact_compile_and_replay(
                 f"{created.structured_content['workflow_run_id']}/artifacts/"
                 f"{revision_one['state_ref']['sha256']}"
             )
-            assert len(state_resource.contents) == 1
+            require_audited_resource(
+                state_resource,
+                ArtifactRef.model_validate(revision_one["state_ref"]),
+            )
             assert isinstance(state_resource.contents[0], types.TextResourceContents)
             state = TrustedWorldState.model_validate_json(state_resource.contents[0].text)
             assert [fact.key for fact in state.facts] == [
@@ -335,6 +352,10 @@ def test_official_client_prepares_validate_input_after_exact_compile_and_replay(
                 f"{revision_two['workflow_run_id']}/artifacts/"
                 f"{revision_two['state_ref']['sha256']}"
             )
+            require_audited_resource(
+                state_resource,
+                ArtifactRef.model_validate(revision_two["state_ref"]),
+            )
             state = TrustedWorldState.model_validate_json(state_resource.contents[0].text)
             assert [fact.key for fact in state.facts] == [
                 "assets.catalog",
@@ -410,6 +431,10 @@ def test_official_client_prepares_validate_input_after_exact_compile_and_replay(
                 f"{revision_three['workflow_run_id']}/artifacts/"
                 f"{revision_three['state_ref']['sha256']}"
             )
+            require_audited_resource(
+                state_resource,
+                ArtifactRef.model_validate(revision_three["state_ref"]),
+            )
             state_payload = state_resource.contents[0].text.encode()
             assert (
                 hashlib.sha256(state_payload).hexdigest() == revision_three["state_ref"]["sha256"]
@@ -427,6 +452,10 @@ def test_official_client_prepares_validate_input_after_exact_compile_and_replay(
                 "harness://workflows/"
                 f"{revision_three['workflow_run_id']}/artifacts/"
                 f"{revision_three['receipt_head']['sha256']}"
+            )
+            require_audited_resource(
+                receipt_resource,
+                ArtifactRef.model_validate(revision_three["receipt_head"]),
             )
             receipt_payload = receipt_resource.contents[0].text.encode()
             assert (
@@ -446,6 +475,7 @@ def test_official_client_prepares_validate_input_after_exact_compile_and_replay(
                     "harness://workflows/"
                     f"{revision_three['workflow_run_id']}/artifacts/{ref.sha256}"
                 )
+                require_audited_resource(resource, ref)
                 assert isinstance(resource.contents[0], types.TextResourceContents)
                 payload = resource.contents[0].text.encode()
                 assert hashlib.sha256(payload).hexdigest() == ref.sha256
@@ -477,7 +507,7 @@ def test_official_client_prepares_validate_input_after_exact_compile_and_replay(
             video_resource = await client.read_resource(
                 f"harness://workflows/{revision_three['workflow_run_id']}/artifacts/{video.sha256}"
             )
-            assert len(video_resource.contents) == 1
+            require_audited_resource(video_resource, video)
             assert isinstance(video_resource.contents[0], types.BlobResourceContents)
             video_bytes = base64.b64decode(video_resource.contents[0].blob, validate=True)
             assert len(video_bytes) == video.bytes

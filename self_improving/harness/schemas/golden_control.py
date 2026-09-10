@@ -148,6 +148,7 @@ class AdvisoryRecordCommand(_ControlCommand):
     failure_receipts: tuple[ArtifactRef, ...]
     observation_citations: tuple[ObservationCitation, ...]
     diagnostic_refs: tuple[ArtifactRef, ...]
+    resource_access_receipts: tuple[ArtifactRef, ...] = ()
     external_agent_executed: ExactFalse
 
     @model_validator(mode="after")
@@ -170,6 +171,11 @@ class AdvisoryRecordCommand(_ControlCommand):
             schema="harness.workflow_operation_receipt.v2",
         )
         _require_sorted_refs(self.diagnostic_refs, label="diagnostic_refs")
+        _require_sorted_refs(
+            self.resource_access_receipts,
+            label="resource_access_receipts",
+            schema="harness.resource_access_receipt.v1",
+        )
         _require_sorted_citations(self.observation_citations)
         if self.advisory_kind == "visual_assessment" and not self.observation_citations:
             raise ValueError("visual_assessment requires observation_citations")
@@ -245,6 +251,7 @@ class ExternalAgentAdvisoryReceipt(_ControlReceipt):
     failure_receipts: tuple[ArtifactRef, ...]
     observation_citations: tuple[ObservationCitation, ...]
     diagnostic_refs: tuple[ArtifactRef, ...]
+    resource_access_receipts: tuple[ArtifactRef, ...] = ()
     authority: Literal["advisory_only"]
     external_agent_executed: ExactFalse
     grants_physical_validity: ExactFalse
@@ -274,6 +281,7 @@ class ExternalAgentAdvisoryReceipt(_ControlReceipt):
                 "failure_receipts": self.failure_receipts,
                 "observation_citations": self.observation_citations,
                 "diagnostic_refs": self.diagnostic_refs,
+                "resource_access_receipts": self.resource_access_receipts,
             }
         )
         _require_citations_fresh(self.observation_citations, at=self.committed_at)
@@ -515,7 +523,9 @@ def _require_sorted_refs(
         if ref.media_type != "application/json" or (
             schema is not None and ref.schema_version != schema
         ):
-            raise ValueError(f"{label} has the wrong schema_version or media type")
+            if schema is None:
+                raise ValueError(f"{label} must use application/json media type")
+            raise ValueError(f"{label} must use schema_version {schema} and application/json")
 
 
 def _require_sorted_citations(citations: tuple[ObservationCitation, ...]) -> None:

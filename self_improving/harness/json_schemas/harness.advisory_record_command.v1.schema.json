@@ -182,6 +182,14 @@
       "title": "Recommended Action",
       "type": "string"
     },
+    "resource_access_receipts": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Resource Access Receipts",
+      "type": "array"
+    },
     "schema_version": {
       "const": "harness.advisory_record_command.v1",
       "title": "Schema Version",

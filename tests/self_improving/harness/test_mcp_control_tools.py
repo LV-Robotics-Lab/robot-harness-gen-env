@@ -80,6 +80,7 @@ _ADVISORY_INPUT_FIELDS = _COMMON_INPUT_FIELDS | {
     "failure_receipt_uris",
     "observation_citations",
     "diagnostic_uris",
+    "resource_access_receipt_uris",
 }
 _PROMPT_INPUT_FIELDS = _COMMON_INPUT_FIELDS | {
     "source_prompt_uri",
@@ -207,7 +208,11 @@ def _artifact_uri(case: control_base._Case, ref: ArtifactRef) -> str:
     return f"harness://workflows/{case.head.workflow_run_id}/artifacts/{ref.sha256}"
 
 
-def _advisory_arguments(case: control_base._Case) -> dict[str, object]:
+def _advisory_arguments(
+    case: control_base._Case,
+    *,
+    resource_access_receipt_uri: str | None = None,
+) -> dict[str, object]:
     return {
         "schema_version": "harness.mcp_advisory_record_request.v1",
         "command_id": str(control_base._ADVISORY_ID),
@@ -232,6 +237,9 @@ def _advisory_arguments(case: control_base._Case) -> dict[str, object]:
             }
         ],
         "diagnostic_uris": [_artifact_uri(case, case.diagnostic)],
+        "resource_access_receipt_uris": (
+            [] if resource_access_receipt_uri is None else [resource_access_receipt_uri]
+        ),
     }
 
 
@@ -326,7 +334,13 @@ def test_official_client_exposes_exact_control_tools_and_commits_only_through_ha
                 assert "registry_snapshot" not in tool.input_schema["properties"]
                 assert "external_agent_executed" not in tool.input_schema["properties"]
 
-            advisory_arguments = _advisory_arguments(case)
+            source_delivery = await client.read_resource(_artifact_uri(case, case.source_prompt))
+            assert len(source_delivery.contents) == 2
+            resource_access_receipt_uri = str(source_delivery.contents[1].uri)
+            advisory_arguments = _advisory_arguments(
+                case,
+                resource_access_receipt_uri=resource_access_receipt_uri,
+            )
             Draft202012Validator(advisory_tool.input_schema).validate(advisory_arguments)
             with pytest.raises(ValidationError):
                 Draft202012Validator(advisory_tool.input_schema).validate(
@@ -487,7 +501,8 @@ async def _stdio_roundtrip(
     server: StdioServerParameters,
     *,
     case: control_base._Case,
-) -> tuple[dict[str, object], dict[str, object], dict[str, object], str]:
+    resource_access_receipt_uri: str | None = None,
+) -> tuple[dict[str, object], dict[str, object], dict[str, object], str, str]:
     with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as errlog:
         try:
             async with Client(
@@ -500,7 +515,20 @@ async def _stdio_roundtrip(
                 names = tuple(tool.name for tool in listed.tools)
                 assert set(CONTROL_TOOLS) <= set(names)
                 assert "skill.invoke" not in names
-                advisory = await client.call_tool(ADVISORY_TOOL, _advisory_arguments(case))
+                if resource_access_receipt_uri is None:
+                    delivery = await client.read_resource(_artifact_uri(case, case.source_prompt))
+                    assert len(delivery.contents) == 2
+                    resource_access_receipt_uri = str(delivery.contents[1].uri)
+                else:
+                    receipt = await client.read_resource(resource_access_receipt_uri)
+                    assert len(receipt.contents) == 1
+                advisory = await client.call_tool(
+                    ADVISORY_TOOL,
+                    _advisory_arguments(
+                        case,
+                        resource_access_receipt_uri=resource_access_receipt_uri,
+                    ),
+                )
                 assert advisory.is_error is False and advisory.structured_content is not None
                 prompt = await client.call_tool(
                     PROMPT_TOOL,
@@ -521,6 +549,7 @@ async def _stdio_roundtrip(
         prompt.model_dump(mode="json", by_alias=True, exclude_none=True),
         resource.model_dump(mode="json", by_alias=True, exclude_none=True),
         stderr,
+        resource_access_receipt_uri,
     )
 
 
@@ -576,7 +605,11 @@ def test_official_stdio_restart_reuses_both_control_commits(tmp_path: Path) -> N
         database_after_first = _database_rows(case.workflow_store.path)
         cas_after_first = _cas_manifest(case.store.root)
         with anyio.fail_after(30):
-            second = await _stdio_roundtrip(server, case=case)
+            second = await _stdio_roundtrip(
+                server,
+                case=case,
+                resource_access_receipt_uri=first[4],
+            )
         return (
             first,
             second,
@@ -606,6 +639,7 @@ def test_official_stdio_restart_reuses_both_control_commits(tmp_path: Path) -> N
     assert counts["golden_workflow_turns"] == 4
     assert not first[3]
     assert not second[3]
+    assert first[4] == second[4]
 
 
 def _load_stdio_adapter(config_path: Path):

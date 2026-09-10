@@ -7,6 +7,7 @@ from mcp.server import Server
 
 from .mcp_adapter import (
     HarnessMCPAdapter,
+    HarnessMCPAdapterError,
     HarnessMCPProtocolError,
     MCPResourceLink,
     MCPResourceRead,
@@ -67,6 +68,10 @@ def create_harness_mcp_server(adapter: HarnessMCPAdapter) -> Server:
             result = adapter.read_resource(MCPResourceRead(uri=str(params.uri)))
         except HarnessMCPProtocolError as error:
             raise MCPError(-32602, str(error)) from error
+        except HarnessMCPAdapterError as error:
+            raise MCPError(
+                -32603, f"{error.code}: Harness resource delivery failed closed"
+            ) from error
         if result.text is not None:
             content: types.TextResourceContents | types.BlobResourceContents = (
                 types.TextResourceContents(
@@ -82,7 +87,17 @@ def create_harness_mcp_server(adapter: HarnessMCPAdapter) -> Server:
                 mime_type=result.media_type,
                 blob=result.blob,
             )
-        return types.ReadResourceResult(contents=[content])
+        contents: list[types.TextResourceContents | types.BlobResourceContents] = [content]
+        if result.access_receipt_text is not None:
+            assert result.access_receipt_uri is not None
+            contents.append(
+                types.TextResourceContents(
+                    uri=result.access_receipt_uri,
+                    mime_type="application/json",
+                    text=result.access_receipt_text,
+                )
+            )
+        return types.ReadResourceResult(contents=contents)
 
     return Server(
         "robot-harness-golden",

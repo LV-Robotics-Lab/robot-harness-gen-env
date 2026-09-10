@@ -6,6 +6,7 @@ import hashlib
 import json
 import tempfile
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import cast
@@ -57,6 +58,12 @@ from .schemas.golden_control import (
     prompt_revision_sha256,
 )
 from .schemas.registry_snapshot import RegistrySnapshot
+from .schemas.resource_access import (
+    RESOURCE_ACCESS_RECEIPT_SCHEMA_ID,
+    ResourceAccessReceipt,
+    resource_access_receipt_sha256,
+    resource_access_request_sha256,
+)
 from .schemas.workflow import (
     OperationSnapshot,
     RunCommandRequest,
@@ -99,6 +106,16 @@ class GoldenRunNotFoundError(LookupError):
     code = "HARN_WORKFLOW_NOT_FOUND"
 
 
+@dataclass(frozen=True, slots=True)
+class WorkflowResourceAccess:
+    """Verified resource bytes and their separately journaled delivery receipt."""
+
+    resource: ArtifactRef
+    payload: bytes
+    access_receipt: ArtifactRef
+    access_receipt_payload: bytes
+
+
 class GoldenRunHarness:
     """Create and recover auditable revision-zero workflows through the S1 seam."""
 
@@ -111,6 +128,7 @@ class GoldenRunHarness:
         clock: Callable[[], datetime] = lambda: datetime.now(timezone.utc),
         workflow_id_factory: Callable[[], UUID] = uuid4,
         child_run_id_factory: Callable[[], UUID] = uuid4,
+        resource_access_id_factory: Callable[[], UUID] = uuid4,
     ) -> None:
         if type(artifact_store) is not LocalArtifactStore:
             raise TypeError("artifact_store must be the exact LocalArtifactStore")
@@ -130,6 +148,7 @@ class GoldenRunHarness:
         self._clock = clock
         self._workflow_id_factory = workflow_id_factory
         self._child_run_id_factory = child_run_id_factory
+        self._resource_access_id_factory = resource_access_id_factory
 
     def start(self, request: RunStartRequest) -> RunSnapshot:
         """Build the first trusted state and its actor-neutral receipt head."""
@@ -224,6 +243,136 @@ class GoldenRunHarness:
         if ref is None:
             raise GoldenRunNotFoundError("workflow artifact was not found for this principal")
         return ref, self._artifact_store.resolve(ref).path.read_bytes()
+
+    def read_workflow_artifact_audited(
+        self,
+        request: RunReadRequest,
+        *,
+        sha256: str,
+        resource_uri: str,
+    ) -> WorkflowResourceAccess:
+        """Deliver one reachable artifact and append a non-mutating read receipt."""
+
+        snapshot = self.read(request)
+        reachable = self._reachable_workflow_artifacts(snapshot)
+        resource = next((item for item in reachable if item.sha256 == sha256), None)
+        if resource is None:
+            raise GoldenRunNotFoundError("workflow artifact was not found for this principal")
+        expected_uri = f"harness://workflows/{snapshot.workflow_run_id}/artifacts/{resource.sha256}"
+        if resource_uri != expected_uri:
+            raise ValueError("resource_uri does not name the requested workflow artifact")
+        payload = self._artifact_store.resolve(resource).path.read_bytes()
+        snapshot_payload = _canonical_model_bytes(snapshot)
+        snapshot_sha256 = hashlib.sha256(snapshot_payload).hexdigest()
+        access_identity = resource_access_request_sha256(
+            principal_id=request.principal_id,
+            workflow_run_id=request.workflow_run_id,
+            resource_uri=resource_uri,
+            resource=resource,
+            observed_snapshot_sha256=snapshot_sha256,
+        )
+        existing = self._workflow_store.read_resource_access(
+            principal_id=request.principal_id,
+            workflow_run_id=request.workflow_run_id,
+            access_identity_sha256=access_identity,
+        )
+        if existing is not None:
+            return self._materialize_resource_access(existing.receipt, payload=payload)
+
+        served_at = self._clock()
+        _require_utc_clock(served_at)
+        unhashed = ResourceAccessReceipt.model_construct(
+            schema_version=RESOURCE_ACCESS_RECEIPT_SCHEMA_ID,
+            access_id=self._resource_access_id_factory(),
+            principal_id=request.principal_id,
+            workflow_run_id=request.workflow_run_id,
+            resource_uri=resource_uri,
+            resource=resource,
+            delivered_sha256=resource.sha256,
+            delivered_bytes=len(payload),
+            representation=(
+                "text_utf8"
+                if resource.media_type in {"application/json", "application/x-ndjson"}
+                else "blob_base64"
+            ),
+            observed_snapshot=snapshot,
+            observed_snapshot_sha256=snapshot_sha256,
+            served_at=served_at,
+            delivery_scope="server_response_payload",
+            transport_acknowledged=False,
+            model_understanding_claimed=False,
+            receipt_sha256="0" * 64,
+        )
+        receipt = ResourceAccessReceipt(
+            **unhashed.model_dump(mode="python", exclude={"receipt_sha256"}),
+            receipt_sha256=resource_access_receipt_sha256(unhashed),
+        )
+        receipt_ref = self._publish_model(
+            receipt,
+            name="resource_access_receipt.json",
+            schema_version=RESOURCE_ACCESS_RECEIPT_SCHEMA_ID,
+        )
+        persisted = self._workflow_store.commit_resource_access(
+            principal_id=request.principal_id,
+            access_identity_sha256=access_identity,
+            expected_snapshot_sha256=snapshot_sha256,
+            receipt=receipt,
+        )
+        if persisted is None:
+            raise GoldenRunNotFoundError("golden workflow was not found for this principal")
+        result = self._materialize_resource_access(persisted.receipt, payload=payload)
+        if persisted.receipt == receipt and result.access_receipt != receipt_ref:
+            raise GoldenRunCorruptionError(
+                "resource access receipt CAS identity changed during durable commit"
+            )
+        return result
+
+    def read_resource_access_receipt(
+        self,
+        request: RunReadRequest,
+        *,
+        sha256: str,
+    ) -> tuple[ArtifactRef, bytes]:
+        """Read one journaled access receipt without recursively recording another read."""
+
+        self.read(request)
+        stored = self._workflow_store.read_resource_access(
+            principal_id=request.principal_id,
+            workflow_run_id=request.workflow_run_id,
+            receipt_payload_sha256=sha256,
+        )
+        if stored is None:
+            raise GoldenRunNotFoundError(
+                "workflow resource access receipt was not found for this principal"
+            )
+        result = self._materialize_resource_access(stored.receipt, payload=b"")
+        return result.access_receipt, result.access_receipt_payload
+
+    def _materialize_resource_access(
+        self,
+        receipt: ResourceAccessReceipt,
+        *,
+        payload: bytes,
+    ) -> WorkflowResourceAccess:
+        receipt_payload = _canonical_model_bytes(receipt)
+        digest = hashlib.sha256(receipt_payload).hexdigest()
+        receipt_ref = ArtifactRef(
+            name="resource_access_receipt.json",
+            uri=f"artifact://sha256/{digest}",
+            sha256=digest,
+            bytes=len(receipt_payload),
+            media_type="application/json",
+            schema_version=RESOURCE_ACCESS_RECEIPT_SCHEMA_ID,
+        )
+        resolved = self._artifact_store.resolve(receipt_ref).path.read_bytes()
+        if resolved != receipt_payload:
+            raise GoldenRunCorruptionError("resource access receipt CAS bytes changed")
+        return WorkflowResourceAccess(
+            resource=receipt.resource,
+            payload=payload,
+            access_receipt=receipt_ref,
+            access_receipt_payload=receipt_payload,
+        )
 
     def _reachable_workflow_artifacts(
         self,
@@ -385,6 +534,7 @@ class GoldenRunHarness:
         ]
         if type(receipt) is ExternalAgentAdvisoryReceipt:
             refs.extend(receipt.diagnostic_refs)
+            refs.extend(receipt.resource_access_receipts)
             refs.extend(filter(None, (receipt.source_prompt_revision,)))
         else:
             refs.extend(
@@ -694,6 +844,7 @@ class GoldenRunHarness:
             failure_receipts=command.failure_receipts,
             observation_citations=command.observation_citations,
             diagnostic_refs=command.diagnostic_refs,
+            resource_access_receipts=command.resource_access_receipts,
             authority="advisory_only",
             external_agent_executed=False,
             grants_physical_validity=False,
@@ -749,6 +900,31 @@ class GoldenRunHarness:
                 current=current,
                 reachable_identities=reachable_identities,
             )
+        for access_ref in command.resource_access_receipts:
+            access = self._resolve_canonical_model(access_ref, ResourceAccessReceipt)
+            stored = self._workflow_store.read_resource_access(
+                principal_id=current.principal_id,
+                workflow_run_id=current.workflow_run_id,
+                receipt_payload_sha256=access_ref.sha256,
+            )
+            if (
+                stored is None
+                or stored.receipt != access
+                or access.principal_id != current.principal_id
+                or access.workflow_run_id != current.workflow_run_id
+                or access.served_at > at
+            ):
+                raise GoldenRunNotFoundError(
+                    "resource access receipt is not bound to this workflow history"
+                )
+            observed_reachable = {
+                _artifact_identity(ref)
+                for ref in self._reachable_workflow_artifacts(access.observed_snapshot)
+            }
+            if _artifact_identity(access.resource) not in observed_reachable:
+                raise GoldenRunNotFoundError(
+                    "resource access receipt targets an unreachable workflow artifact"
+                )
 
     def _build_prompt_revision(
         self,
@@ -2420,4 +2596,5 @@ __all__ = [
     "GoldenRunHarness",
     "GoldenRunNotFoundError",
     "GoldenRunRegistryError",
+    "WorkflowResourceAccess",
 ]

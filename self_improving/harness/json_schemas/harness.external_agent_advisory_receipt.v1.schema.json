@@ -220,6 +220,14 @@
       "title": "Recommended Action",
       "type": "string"
     },
+    "resource_access_receipts": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Resource Access Receipts",
+      "type": "array"
+    },
     "resulting_state": {
       "$ref": "#/$defs/ArtifactRef"
     },

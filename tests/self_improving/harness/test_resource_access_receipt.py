@@ -12,18 +12,18 @@ from uuid import UUID
 
 import pytest
 from pydantic import ValidationError
-from self_improving.harness.schemas.resource_access import (
-    RESOURCE_ACCESS_RECEIPT_SCHEMA_ID,
-    ResourceAccessReceipt,
-    resource_access_receipt_sha256,
-)
 
 from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.golden_run import (
     GoldenRunHarness,
     GoldenRunNotFoundError,
 )
-from self_improving.harness.golden_store import SQLiteGoldenRunStore
+from self_improving.harness.golden_store import (
+    GoldenRunConflictError,
+    GoldenRunCorruptionError,
+    GoldenRunHeadConflictError,
+    SQLiteGoldenRunStore,
+)
 from self_improving.harness.mcp_adapter import (
     HarnessMCPAdapterError,
     HarnessMCPProtocolError,
@@ -32,6 +32,12 @@ from self_improving.harness.mcp_adapter import (
 )
 from self_improving.harness.schemas.golden_control import AdvisoryRecordCommand
 from self_improving.harness.schemas.registry_snapshot import RegistrySnapshot
+from self_improving.harness.schemas.resource_access import (
+    RESOURCE_ACCESS_RECEIPT_SCHEMA_ID,
+    ResourceAccessReceipt,
+    resource_access_receipt_sha256,
+    resource_access_request_sha256,
+)
 from self_improving.harness.schemas.workflow import RunReadRequest, RunSnapshot
 from tests.self_improving.harness import test_golden_control_submit as control
 from tests.self_improving.harness import test_golden_run as base
@@ -184,9 +190,7 @@ def test_artifact_resource_returns_exact_bytes_and_a_bounded_receipt(tmp_path: P
     assert receipt.delivered_bytes == result.resource.bytes
     assert receipt.representation == "text_utf8"
     assert receipt.observed_snapshot == before
-    assert receipt.observed_snapshot_sha256 == hashlib.sha256(
-        _canonical_bytes(before)
-    ).hexdigest()
+    assert receipt.observed_snapshot_sha256 == hashlib.sha256(_canonical_bytes(before)).hexdigest()
     assert receipt.observed_snapshot.active_operation == before.active_operation
     assert receipt.served_at == SERVED_AT
     assert receipt.delivery_scope == "server_response_payload"
@@ -208,6 +212,25 @@ def test_artifact_resource_returns_exact_bytes_and_a_bounded_receipt(tmp_path: P
         ({"observed_snapshot_sha256": "f" * 64}, "observed_snapshot_sha256"),
         ({"principal_id": "foreign-principal"}, "principal"),
         ({"workflow_run_id": UUID("10000000-0000-4000-8000-000000000099")}, "workflow"),
+        ({"resource_uri": "artifact://sha256/" + "f" * 64}, "workflow-scoped"),
+        (
+            {
+                "resource_uri": (
+                    "harness://workflows/10000000-0000-4000-8000-000000000001/artifacts/" + "f" * 64
+                )
+            },
+            "differs from workflow or resource",
+        ),
+        ({"representation": "blob_base64"}, "representation"),
+        (
+            {"served_at": datetime.fromisoformat("2026-09-11T09:00:00+01:00")},
+            "served_at must use UTC",
+        ),
+        (
+            {"served_at": datetime(2026, 9, 11, 7, 59, 59, tzinfo=timezone.utc)},
+            "predates",
+        ),
+        ({"receipt_sha256": "f" * 64}, "receipt_sha256"),
         ({"delivery_scope": "model_context"}, "delivery_scope"),
         ({"transport_acknowledged": True}, "transport_acknowledged"),
         ({"transport_acknowledged": 0}, "transport_acknowledged"),
@@ -221,12 +244,28 @@ def test_resource_access_receipt_rejects_unbound_or_overclaimed_values(
 ) -> None:
     case = _case(tmp_path)
     result = _adapter(case).read_resource(MCPResourceRead(uri=case.resource_uri))
-    values = ResourceAccessReceipt.model_validate_json(
-        result.access_receipt_text
-    ).model_dump(mode="python")
+    values = ResourceAccessReceipt.model_validate_json(result.access_receipt_text).model_dump(
+        mode="python"
+    )
     values.update(changes)
 
     with pytest.raises(ValidationError, match=message):
+        ResourceAccessReceipt.model_validate(values)
+
+
+def test_resource_access_receipt_rejects_an_observed_snapshot_from_another_workflow(
+    tmp_path: Path,
+) -> None:
+    case = _case(tmp_path)
+    result = _adapter(case).read_resource(MCPResourceRead(uri=case.resource_uri))
+    values = ResourceAccessReceipt.model_validate_json(result.access_receipt_text).model_dump(
+        mode="python"
+    )
+    observed = dict(values["observed_snapshot"])
+    observed["workflow_run_id"] = UUID("10000000-0000-4000-8000-000000000099")
+    values["observed_snapshot"] = observed
+
+    with pytest.raises(ValidationError, match="workflow differs from observed snapshot"):
         ResourceAccessReceipt.model_validate(values)
 
 
@@ -273,10 +312,7 @@ def test_foreign_unreachable_and_tampered_resources_fail_closed_without_journali
     with pytest.raises(HarnessMCPProtocolError, match="unknown Harness resource"):
         _adapter(foreign).read_resource(
             MCPResourceRead(
-                uri=(
-                    f"harness://workflows/{foreign.snapshot.workflow_run_id}/artifacts/"
-                    f"{'f' * 64}"
-                )
+                uri=(f"harness://workflows/{foreign.snapshot.workflow_run_id}/artifacts/{'f' * 64}")
             )
         )
     assert _row_count(foreign.database, "golden_workflow_resource_accesses") == 0
@@ -296,8 +332,7 @@ def test_receipt_uses_dedicated_lookup_and_enters_closure_only_when_control_cite
     case = control._case(tmp_path)
     request = _request(case.head)
     observation_uri = (
-        f"harness://workflows/{case.head.workflow_run_id}/artifacts/"
-        f"{case.observation.sha256}"
+        f"harness://workflows/{case.head.workflow_run_id}/artifacts/{case.observation.sha256}"
     )
     delivery = case.harness.read_workflow_artifact_audited(
         request,
@@ -363,3 +398,112 @@ def test_receipt_resource_lookup_does_not_recursively_create_a_read_receipt(
     assert looked_up.access_receipt_uri is None
     assert looked_up.access_receipt_text is None
     assert _row_count(case.database, "golden_workflow_resource_accesses") == 1
+
+
+def test_resource_access_store_rejects_invalid_queries_and_stale_authority(
+    tmp_path: Path,
+) -> None:
+    case = _case(tmp_path)
+    delivery = case.harness.read_workflow_artifact_audited(
+        _request(case.snapshot),
+        sha256=case.resource_uri.rsplit("/", 1)[1],
+        resource_uri=case.resource_uri,
+    )
+    receipt = ResourceAccessReceipt.model_validate_json(delivery.access_receipt_payload)
+    snapshot_sha256 = hashlib.sha256(_canonical_bytes(case.snapshot)).hexdigest()
+    identity = resource_access_request_sha256(
+        principal_id=receipt.principal_id,
+        workflow_run_id=receipt.workflow_run_id,
+        resource_uri=receipt.resource_uri,
+        resource=receipt.resource,
+        observed_snapshot_sha256=receipt.observed_snapshot_sha256,
+    )
+
+    with pytest.raises(ValueError, match="exactly one"):
+        case.workflow_store.read_resource_access(
+            principal_id=receipt.principal_id,
+            workflow_run_id=receipt.workflow_run_id,
+        )
+    with pytest.raises(ValueError, match="exactly one"):
+        case.workflow_store.read_resource_access(
+            principal_id=receipt.principal_id,
+            workflow_run_id=receipt.workflow_run_id,
+            access_identity_sha256=identity,
+            receipt_payload_sha256=delivery.access_receipt.sha256,
+        )
+    assert (
+        case.workflow_store.read_resource_access(
+            principal_id="foreign-principal",
+            workflow_run_id=receipt.workflow_run_id,
+            access_identity_sha256=identity,
+        )
+        is None
+    )
+    assert (
+        case.workflow_store.read_resource_access(
+            principal_id=receipt.principal_id,
+            workflow_run_id=receipt.workflow_run_id,
+            access_identity_sha256="f" * 64,
+        )
+        is None
+    )
+    assert (
+        case.workflow_store.commit_resource_access(
+            principal_id="foreign-principal",
+            access_identity_sha256=identity,
+            expected_snapshot_sha256=snapshot_sha256,
+            receipt=receipt,
+        )
+        is None
+    )
+    assert (
+        case.workflow_store.commit_resource_access(
+            principal_id=receipt.principal_id,
+            access_identity_sha256=identity,
+            expected_snapshot_sha256=snapshot_sha256,
+            receipt=receipt,
+        ).receipt
+        == receipt
+    )
+    with pytest.raises(GoldenRunHeadConflictError, match="snapshot changed"):
+        case.workflow_store.commit_resource_access(
+            principal_id=receipt.principal_id,
+            access_identity_sha256="e" * 64,
+            expected_snapshot_sha256="f" * 64,
+            receipt=receipt,
+        )
+    with pytest.raises(GoldenRunCorruptionError, match="current workflow authority"):
+        case.workflow_store.commit_resource_access(
+            principal_id=receipt.principal_id,
+            access_identity_sha256="e" * 64,
+            expected_snapshot_sha256=snapshot_sha256,
+            receipt=receipt.model_copy(update={"principal_id": "foreign-principal"}),
+        )
+    with pytest.raises(GoldenRunConflictError, match="already bound"):
+        case.workflow_store.commit_resource_access(
+            principal_id=receipt.principal_id,
+            access_identity_sha256="e" * 64,
+            expected_snapshot_sha256=snapshot_sha256,
+            receipt=receipt,
+        )
+
+
+def test_resource_access_store_rejects_a_tampered_request_identity(tmp_path: Path) -> None:
+    case = _case(tmp_path)
+    delivery = case.harness.read_workflow_artifact_audited(
+        _request(case.snapshot),
+        sha256=case.resource_uri.rsplit("/", 1)[1],
+        resource_uri=case.resource_uri,
+    )
+    with sqlite3.connect(case.database) as connection:
+        connection.execute(
+            "UPDATE golden_workflow_resource_accesses SET access_identity_sha256 = ?",
+            ("f" * 64,),
+        )
+
+    with pytest.raises(GoldenRunCorruptionError, match="inconsistent authority metadata"):
+        case.workflow_store.read_resource_access(
+            principal_id=case.snapshot.principal_id,
+            workflow_run_id=case.snapshot.workflow_run_id,
+            receipt_payload_sha256=delivery.access_receipt.sha256,
+        )

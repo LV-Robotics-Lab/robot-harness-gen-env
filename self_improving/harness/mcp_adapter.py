@@ -116,6 +116,10 @@ class MCPResourceResult:
     media_type: str
     text: str | None
     blob: str | None = None
+    resource: ArtifactRef | None = None
+    access_receipt: ArtifactRef | None = None
+    access_receipt_uri: str | None = None
+    access_receipt_text: str | None = None
 
 
 @dataclass(frozen=True)
@@ -174,6 +178,15 @@ _WORKFLOW_ARTIFACT_URI_PATTERN = (
     r"/artifacts/[0-9a-f]{64}$"
 )
 WorkflowArtifactUri = Annotated[str, Field(pattern=_WORKFLOW_ARTIFACT_URI_PATTERN)]
+_WORKFLOW_RESOURCE_ACCESS_URI_PATTERN = (
+    r"^harness://workflows/"
+    r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
+    r"/resource-access/[0-9a-f]{64}$"
+)
+WorkflowResourceAccessUri = Annotated[
+    str,
+    Field(pattern=_WORKFLOW_RESOURCE_ACCESS_URI_PATTERN),
+]
 
 
 class MCPObservationCitation(BaseModel):
@@ -210,6 +223,7 @@ class MCPAdvisoryRecordRequest(BaseModel):
     failure_receipt_uris: tuple[WorkflowArtifactUri, ...]
     observation_citations: tuple[MCPObservationCitation, ...]
     diagnostic_uris: tuple[WorkflowArtifactUri, ...]
+    resource_access_receipt_uris: tuple[WorkflowResourceAccessUri, ...] = ()
 
 
 class MCPNoPromptFallback(BaseModel):
@@ -266,6 +280,11 @@ _WORKFLOW_ARTIFACT_RESOURCE = re.compile(
     r"^harness://workflows/"
     r"([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})"
     r"/artifacts/([0-9a-f]{64})$"
+)
+_WORKFLOW_RESOURCE_ACCESS = re.compile(
+    r"^harness://workflows/"
+    r"([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})"
+    r"/resource-access/([0-9a-f]{64})$"
 )
 _WORKFLOW_SKILL_INPUT_RESOURCE = re.compile(
     r"^harness://workflows/"
@@ -581,6 +600,10 @@ class HarnessMCPAdapter:
                     self._resolve_workflow_artifact_uri(uri, workflow_id=workflow_id)
                     for uri in envelope.diagnostic_uris
                 ),
+                resource_access_receipts=tuple(
+                    self._resolve_resource_access_uri(uri, workflow_id=workflow_id)
+                    for uri in envelope.resource_access_receipt_uris
+                ),
                 external_agent_executed=False,
             )
             control = self._harness.submit_control(command)
@@ -695,12 +718,40 @@ class HarnessMCPAdapter:
         )
         return ref
 
+    def _resolve_resource_access_uri(
+        self,
+        uri: str,
+        *,
+        workflow_id: UUID,
+    ) -> ArtifactRef:
+        match = _WORKFLOW_RESOURCE_ACCESS.fullmatch(uri)
+        if match is None or UUID(match.group(1)) != workflow_id:
+            raise HarnessMCPAdapterError(
+                "HARN_INPUT_SCHEMA_INVALID",
+                "resource access URI is outside the command workflow",
+            )
+        ref, _payload = self._harness.read_resource_access_receipt(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id=self._principal_id,
+                workflow_run_id=workflow_id,
+            ),
+            sha256=match.group(2),
+        )
+        return ref
+
     def read_resource(self, request: MCPResourceRead) -> MCPResourceResult:
         """Read a workflow only through the authorized S1 interface."""
 
         match = _WORKFLOW_RESOURCE.fullmatch(request.uri)
         artifact_match = _WORKFLOW_ARTIFACT_RESOURCE.fullmatch(request.uri)
+        resource_access_match = _WORKFLOW_RESOURCE_ACCESS.fullmatch(request.uri)
         skill_input_match = _WORKFLOW_SKILL_INPUT_RESOURCE.fullmatch(request.uri)
+        if resource_access_match is not None:
+            return self._read_resource_access_receipt(
+                request,
+                resource_access_match.groups(),
+            )
         if artifact_match is not None:
             return self._read_workflow_artifact_resource(request, artifact_match.groups())
         if skill_input_match is not None:
@@ -773,20 +824,66 @@ class HarnessMCPAdapter:
             workflow_run_id=UUID(workflow_id),
         )
         try:
-            ref, payload = self._harness.read_workflow_artifact(
+            delivery = self._harness.read_workflow_artifact_audited(
                 read_request,
                 sha256=digest,
+                resource_uri=request.uri,
             )
         except GoldenRunNotFoundError as error:
             raise HarnessMCPProtocolError(f"unknown Harness resource: {request.uri}") from error
+        except (ArtifactResolutionError, GoldenRunCorruptionError) as error:
+            raise HarnessMCPAdapterError("HARN_PERSISTENCE_CONFLICT", str(error)) from error
+        ref = delivery.resource
+        payload = delivery.payload
+        receipt_uri = (
+            f"harness://workflows/{workflow_id}/resource-access/{delivery.access_receipt.sha256}"
+        )
+        common = {
+            "resource": ref,
+            "access_receipt": delivery.access_receipt,
+            "access_receipt_uri": receipt_uri,
+            "access_receipt_text": delivery.access_receipt_payload.decode("utf-8"),
+        }
         if ref.media_type in {"application/json", "application/x-ndjson"}:
             text = payload.decode("utf-8")
-            return MCPResourceResult(uri=request.uri, media_type=ref.media_type, text=text)
+            return MCPResourceResult(
+                uri=request.uri,
+                media_type=ref.media_type,
+                text=text,
+                **common,
+            )
         return MCPResourceResult(
             uri=request.uri,
             media_type=ref.media_type,
             text=None,
             blob=b64encode(payload).decode("ascii"),
+            **common,
+        )
+
+    def _read_resource_access_receipt(
+        self,
+        request: MCPResourceRead,
+        identity: tuple[str, str],
+    ) -> MCPResourceResult:
+        workflow_id, digest = identity
+        try:
+            ref, payload = self._harness.read_resource_access_receipt(
+                RunReadRequest(
+                    schema_version="harness.run_read_request.v1",
+                    principal_id=self._principal_id,
+                    workflow_run_id=UUID(workflow_id),
+                ),
+                sha256=digest,
+            )
+        except GoldenRunNotFoundError as error:
+            raise HarnessMCPProtocolError(f"unknown Harness resource: {request.uri}") from error
+        except (ArtifactResolutionError, GoldenRunCorruptionError) as error:
+            raise HarnessMCPAdapterError("HARN_PERSISTENCE_CONFLICT", str(error)) from error
+        return MCPResourceResult(
+            uri=request.uri,
+            media_type=ref.media_type,
+            text=payload.decode("utf-8"),
+            resource=ref,
         )
 
 

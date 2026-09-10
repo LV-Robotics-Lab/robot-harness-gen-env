@@ -94,6 +94,14 @@ _EXPORT_GROUPS = (
         ("REGISTRY_SNAPSHOT_SCHEMA_ID", "QualifiedSkillSnapshot", "RegistrySnapshot"),
     ),
     (
+        ".resource_access",
+        (
+            "RESOURCE_ACCESS_RECEIPT_SCHEMA_ID",
+            "ResourceAccessReceipt",
+            "resource_access_receipt_sha256",
+        ),
+    ),
+    (
         ".replay_vlm",
         (
             "REPLAY_VLM_ASSESSMENT_INPUT_SCHEMA_ID",
@@ -221,6 +229,7 @@ _PUBLIC_NAMES = (
     "OPERATION_SNAPSHOT_SCHEMA_ID",
     "PROMPT_REVISION_COMMAND_SCHEMA_ID",
     "PROMPT_REVISION_SCHEMA_ID",
+    "RESOURCE_ACCESS_RECEIPT_SCHEMA_ID",
     "QUALIFIED_SKILL_EXECUTION_V2_SCHEMA_ID",
     "RUN_COMMAND_REQUEST_SCHEMA_ID",
     "RUN_STATE_SCHEMA_ID",
@@ -304,6 +313,7 @@ _PUBLIC_NAMES = (
     "RepresentationOrigin",
     "PromptRevision",
     "PromptRevisionCommand",
+    "ResourceAccessReceipt",
     "ReplacePromptPatch",
     "RequestedGenesisProfile",
     "RuntimeConfig",
@@ -338,6 +348,7 @@ _PUBLIC_NAMES = (
     "X2EnvEnvironmentPackage",
     "external_agent_advisory_receipt_sha256",
     "prompt_revision_sha256",
+    "resource_access_receipt_sha256",
     "state_delta_v2_sha256",
 )
 
