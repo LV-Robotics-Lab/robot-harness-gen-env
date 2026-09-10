@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
+import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -14,6 +16,14 @@ from pydantic import BaseModel
 
 from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.event_journal import SQLiteEventJournal
+from self_improving.harness.genesis_observe import (
+    ControlledImageCapture,
+    ControlledObservationCapture,
+    ControlledObservationCaptureAdapter,
+    ControlledObservationValue,
+    ControlledObserveApplicationSettings,
+    create_controlled_genesis_observe_application,
+)
 from self_improving.harness.golden_execution import (
     QualifiedApplicationRunPendingError,
     SkillAuthorizationContext,
@@ -34,11 +44,18 @@ from self_improving.harness.run_store import SQLiteRunStore
 from self_improving.harness.schemas.common import (
     ArtifactRef,
     Blocker,
+    DependencyRef,
     Invocation,
     RunState,
     RunStatus,
     SkillDescriptor,
     SkillQualification,
+)
+from self_improving.harness.schemas.genesis_observe import (
+    GenesisObservationCapturePlan,
+    GenesisObservationReceipt,
+    GenesisObserveInput,
+    GenesisObserveOutput,
 )
 from self_improving.harness.schemas.registry_snapshot import (
     QualifiedSkillSnapshot,
@@ -55,6 +72,11 @@ from self_improving.harness.schemas.workflow_operation import (
     ToolResultV2,
     TrustedToolReceiptV2,
     WorkflowOperationReceiptV2,
+)
+from self_improving.harness.schemas.x2env import (
+    Image2EnvReplayInput,
+    Image2EnvReplayOutput,
+    X2EnvEnvironmentPackage,
 )
 from self_improving.harness.trusted_state import TrustedWorldState, WorldFact, WorldFactEvidence
 
@@ -753,3 +775,608 @@ def test_observe_reopen_rejects_tampered_observation_receipt_in_cas_closure(
     )
     assert stored is not None
     assert stored.operation == operation
+
+
+_INTEGRATION_CHILD_IDS = tuple(
+    UUID(f"64000000-0000-4000-8000-{index:012d}") for index in range(1, 4)
+)
+_PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+)
+
+
+@dataclass(frozen=True)
+class _FixturePolicy:
+    skill_ref: str
+    input_model: type[BaseModel]
+
+    evidence_policy_id: str = "tests.fixture.evidence"
+    evidence_policy_version: str = "1.0.0"
+
+    @property
+    def evidence_policy_implementation_sha256(self) -> str:
+        return hashlib.sha256(self.skill_ref.encode()).hexdigest()
+
+    def normalize_parameters(self, parameters):
+        return self.input_model.model_validate(parameters)
+
+    def authorize(self, state: TrustedWorldState, parameters: BaseModel) -> None:
+        assert type(parameters) is self.input_model
+
+    def authorize_workflow(
+        self,
+        state: TrustedWorldState,
+        parameters: BaseModel,
+        context: SkillAuthorizationContext,
+    ) -> None:
+        assert context.state_ref.sha256 == state.state_sha256
+
+    def claims(self, state: RunState) -> tuple[ReceiptDerivedFactClaimV2, ...]:
+        return ()
+
+    def diagnostics(self, state: RunState) -> tuple[ArtifactRef, ...]:
+        return ()
+
+    def fresh_observations(
+        self,
+        state: RunState,
+        invocation: Invocation | None,
+    ) -> tuple[WorldFact, ...]:
+        return ()
+
+    def verify_result(
+        self,
+        *,
+        state: RunState,
+        claims: tuple[ReceiptDerivedFactClaimV2, ...],
+        result: ToolResultV2,
+        supporting: tuple[ArtifactRef, ...],
+    ) -> None:
+        assert claims == ()
+        assert result.typed_output == state.output
+        assert result.fresh_observations == ()
+
+
+@dataclass(frozen=True)
+class _FixtureApplication:
+    artifact_root: Path
+    authority_path: Path
+    registry: SkillRegistry
+    descriptor: SkillDescriptor
+    policy: _FixturePolicy
+    skill_ref: str
+
+    @property
+    def skills(self):
+        return (self.descriptor,)
+
+    def invoke(self, parameters: BaseModel, *, run_id: UUID) -> RunState:
+        skill_id, version = self.skill_ref.split("@", 1)
+        return self.registry.invoke_with_run_id(
+            skill_id,
+            version,
+            parameters.model_dump(mode="json"),
+            run_id=run_id,
+        )
+
+    def invocation(self, run_id: UUID) -> Invocation | None:
+        return self.registry.invocation(run_id)
+
+    def run_state(self, run_id: UUID) -> RunState | None:
+        return SQLiteRunStore(self.authority_path).read_run_state(run_id)
+
+
+class _ControlledCapture(ControlledObservationCaptureAdapter):
+    identity = DependencyRef(
+        name="genesis.observe.controlled_capture",
+        version="1",
+        sha256="5" * 64,
+    )
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def capture(
+        self,
+        request: GenesisObserveInput,
+        *,
+        captured_at: datetime,
+    ) -> ControlledObservationCapture:
+        self.calls += 1
+        return ControlledObservationCapture(
+            captured_at=captured_at,
+            images=(ControlledImageCapture(camera_id="observer", payload=_PNG),),
+            observations=(ControlledObservationValue(key="observation.scene_visible", value=True),),
+        )
+
+
+def _put_binary(
+    store: LocalArtifactStore,
+    root: Path,
+    *,
+    name: str,
+    payload: bytes,
+    media_type: str,
+    schema_version: str | None,
+) -> ArtifactRef:
+    source = root / f"source-{name}"
+    source.write_bytes(payload)
+    return store.put_file(
+        source,
+        name=name,
+        media_type=media_type,
+        schema_version=schema_version,
+    )
+
+
+def _qualified_fixture(
+    store: LocalArtifactStore,
+    root: Path,
+    *,
+    skill_id: str,
+    input_schema: str,
+    output_schema: str,
+    implementation_sha256: str,
+) -> tuple[SkillDescriptor, QualifiedSkillSnapshot]:
+    skill_ref = f"{skill_id}@1.0.0"
+    report = QualificationReportV1(
+        schema_version="harness.skill_qualification_report.v1",
+        skill_ref=skill_ref,
+        status="pass",
+        deterministic_case_id=f"controlled-{skill_id}",
+        regression_command=(
+            "pytest -q tests/self_improving/harness/test_golden_observation_submit.py"
+        ),
+        implementation_sha256=implementation_sha256,
+        scene_gen_tree_sha256="6" * 64,
+        ledger_contract_tree_sha256="7" * 64,
+        checks=(QualificationCheckV1(name="controlled", status="pass", evidence={}),),
+    )
+    report_ref = _put(
+        store,
+        root,
+        name=f"{skill_id}-report.json",
+        value=report,
+        schema_version="harness.skill_qualification_report.v1",
+    )
+    qualification = SkillQualification(
+        skill_ref=skill_ref,
+        status="pass",
+        deterministic_case_id=report.deterministic_case_id,
+        regression_command=report.regression_command,
+        report_sha256=report_ref.sha256,
+    )
+    qualification_ref = _put(
+        store,
+        root,
+        name=f"{skill_id}-qualification.json",
+        value=qualification,
+        schema_version="harness.skill_qualification.v1",
+    )
+    descriptor = SkillDescriptor(
+        skill_id=skill_id,
+        version="1.0.0",
+        mcp_tool_name=skill_id.replace(".", "_") + "_v1_0_0",
+        input_schema=input_schema,
+        output_schema=output_schema,
+        implementation_name=f"tests.{skill_id}",
+        implementation_version="1",
+        implementation_sha256=implementation_sha256,
+        deterministic=True,
+        max_attempts=1,
+        qualification_artifact=qualification_ref,
+    )
+    descriptor_ref = _put(
+        store,
+        root,
+        name=f"{skill_id}-descriptor.json",
+        value=descriptor,
+        schema_version="harness.skill_descriptor.v1",
+    )
+    return descriptor, QualifiedSkillSnapshot(
+        skill_ref=skill_ref,
+        mcp_tool_name=descriptor.mcp_tool_name,
+        descriptor_ref=descriptor_ref,
+        qualification_ref=qualification_ref,
+        qualification_report_ref=report_ref,
+    )
+
+
+def _sqlite_counts(path: Path) -> dict[str, int]:
+    with sqlite3.connect(path) as connection:
+        tables = tuple(
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master "
+                "WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
+            )
+        )
+        return {
+            table: connection.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0]
+            for table in tables
+        }
+
+
+def _assert_cas_objects_are_content_addressed(store: LocalArtifactStore) -> int:
+    objects = tuple((store.root / "sha256").glob("*/*"))
+    for path in objects:
+        digest = path.parent.name + path.name
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == digest
+    return len(objects)
+
+
+def test_real_controlled_observe_runs_inside_one_golden_revision_two_to_three(
+    tmp_path: Path,
+) -> None:
+    from self_improving.harness.golden_observe_execution import (
+        create_controlled_genesis_observe_execution_binding,
+    )
+
+    store = LocalArtifactStore(tmp_path / "cas")
+    clock = _Clock()
+    setup_descriptor, setup_entry = _qualified_fixture(
+        store,
+        tmp_path,
+        skill_id="tests.setup",
+        input_schema="harness.artifact_ref.v1",
+        output_schema="harness.artifact_ref.v1",
+        implementation_sha256="1" * 64,
+    )
+    replay_descriptor, replay_entry = _qualified_fixture(
+        store,
+        tmp_path,
+        skill_id="image2env.replay",
+        input_schema="harness.image2env_replay_input.v1",
+        output_schema="harness.image2env_replay_output.v1",
+        implementation_sha256="2" * 64,
+    )
+    observe_descriptor, observe_entry = _qualified_fixture(
+        store,
+        tmp_path,
+        skill_id="genesis.observe",
+        input_schema="harness.genesis_observe_input.v1",
+        output_schema="harness.genesis_observe_output.v1",
+        implementation_sha256="3" * 64,
+    )
+    registry_ref = _put(
+        store,
+        tmp_path,
+        name="integration-registry.json",
+        value=RegistrySnapshot(
+            schema_version="harness.registry_snapshot.v1",
+            qualified_skills=(observe_entry, replay_entry, setup_entry),
+        ),
+        schema_version="harness.registry_snapshot.v1",
+    )
+
+    json_refs = {
+        name: _put(
+            store, tmp_path, name=f"{name}.json", value={"name": name}, schema_version=schema
+        )
+        for name, schema in (
+            ("probe", "harness.image_media_probe.v1"),
+            ("scene", "harness.scene_ir.v1"),
+            ("task", "harness.task_ir.v1"),
+            ("assets", "harness.asset_closure_manifest.v1"),
+            ("bindings", "harness.x2env_binding_manifest.v1"),
+            ("runtime-lock", "harness.genesis_runtime_lock.v1"),
+            ("compile", "harness.x2env_compile_receipt.v1"),
+            ("attestation", "harness.genesis_runtime_attestation.v1"),
+            ("runtime-evidence", "harness.genesis_runtime_evidence.v1"),
+            ("physics", "harness.genesis_physics_report.v1"),
+            ("frames", "harness.video_frame_sequence.v1"),
+            ("media", "harness.x2env_media_verification.v1"),
+            ("runtime", "harness.x2env_runtime_receipt.v1"),
+            ("replay-fresh", "harness.fresh_observation.v1"),
+        )
+    }
+    source = _put_binary(
+        store,
+        tmp_path,
+        name="source.jpg",
+        payload=b"controlled-jpeg",
+        media_type="image/jpeg",
+        schema_version=None,
+    )
+    canonical_image = _put_binary(
+        store,
+        tmp_path,
+        name="source.png",
+        payload=_PNG,
+        media_type="image/png",
+        schema_version=None,
+    )
+    video = _put_binary(
+        store,
+        tmp_path,
+        name="replay.mp4",
+        payload=b"controlled-video",
+        media_type="video/mp4",
+        schema_version=None,
+    )
+    package = X2EnvEnvironmentPackage.model_validate(
+        {
+            "schema_version": "harness.x2env_environment_package.v1",
+            "package_id": "4" * 64,
+            "route_id": "image2env",
+            "producer_skill_ref": "image2env.compile@1.0.0",
+            "source_media": {
+                "schema_version": "harness.image_source_media.v1",
+                "source_media_sha256": source.sha256,
+                "source": source,
+                "canonical_image": canonical_image,
+                "probe": json_refs["probe"],
+                "width": 1,
+                "height": 1,
+                "color_mode": "RGB",
+                "decoded_frame_count": 1,
+                "unique_frame_count": 1,
+            },
+            "requested_profile": "genesis.rigid_scene@1",
+            "environment_format": "harness.genesis_portable.v1",
+            "backend": "genesis",
+            "representation_origin": "harness_native",
+            "legacy_adapter_receipt": None,
+            "scene_ir": json_refs["scene"],
+            "task_ir": json_refs["task"],
+            "asset_closure_manifest": json_refs["assets"],
+            "binding_manifest": json_refs["bindings"],
+            "runtime_lock": json_refs["runtime-lock"],
+            "simulator_ready": False,
+            "collision_qualified": False,
+        }
+    )
+    package_ref = _put(
+        store,
+        tmp_path,
+        name="environment-package.json",
+        value=package,
+        schema_version="harness.x2env_environment_package.v1",
+    )
+    replay_input = Image2EnvReplayInput(
+        schema_version="harness.image2env_replay_input.v1",
+        environment_package=package,
+        compile_receipt=json_refs["compile"],
+        requested_profile="genesis.rigid_scene@1",
+        runtime_attestation=json_refs["attestation"],
+        seed=17,
+        physics_plan={
+            "collision_enabled": True,
+            "settle_steps": 1,
+            "observation_steps": 1,
+            "video_frames": 1,
+            "fps": 1,
+            "robot_probe_steps": 0,
+        },
+    )
+    replay_output = Image2EnvReplayOutput(
+        schema_version="harness.image2env_replay_output.v1",
+        environment_package=package,
+        package_id=package.package_id,
+        requested_profile="genesis.rigid_scene@1",
+        runtime_evidence=json_refs["runtime-evidence"],
+        physics_report=json_refs["physics"],
+        robot_probe_report=None,
+        trajectory=None,
+        video=video,
+        frame_sequence_manifest=json_refs["frames"],
+        media_verification=json_refs["media"],
+        runtime_receipt=json_refs["runtime"],
+        fresh_observation_refs=(json_refs["replay-fresh"],),
+        steps_executed=2,
+        total_frame_count=1,
+        unique_frame_count=1,
+        collisions_enabled=True,
+        simulator_executed=True,
+    )
+
+    setup_policy = _FixturePolicy("tests.setup@1.0.0", ArtifactRef)
+    replay_policy = _FixturePolicy("image2env.replay@1.0.0", Image2EnvReplayInput)
+    fixture_store = SQLiteRunStore(tmp_path / "fixture.sqlite3")
+    fixture_registry = SkillRegistry(
+        artifact_resolver=store,
+        dependency_resolver=StaticDependencyResolver(
+            {"tests.setup@1.0.0": (), "image2env.replay@1.0.0": ()}
+        ),
+        event_sink=SQLiteEventJournal(fixture_store.path),
+        clock=clock,
+        run_store=fixture_store,
+    )
+    fixture_registry.register(
+        setup_descriptor,
+        lambda value, context: HandlerResult(output=value, artifacts=(value,)),
+    )
+    replay_artifacts = tuple(
+        sorted(
+            (*json_refs.values(), source, canonical_image, video),
+            key=lambda ref: (ref.sha256, ref.schema_version or "", ref.media_type),
+        )
+    )
+    fixture_registry.register(
+        replay_descriptor,
+        lambda value, context: HandlerResult(
+            output=replay_output,
+            artifacts=replay_artifacts,
+        ),
+    )
+    setup_application = _FixtureApplication(
+        store.root,
+        fixture_store.path,
+        fixture_registry,
+        setup_descriptor,
+        setup_policy,
+        setup_policy.skill_ref,
+    )
+    replay_application = _FixtureApplication(
+        store.root,
+        fixture_store.path,
+        fixture_registry,
+        replay_descriptor,
+        replay_policy,
+        replay_policy.skill_ref,
+    )
+
+    capture = _ControlledCapture()
+    observe_application = create_controlled_genesis_observe_application(
+        ControlledObserveApplicationSettings(tmp_path / "observe-state", store.root),
+        capture_adapter=capture,
+        clock=clock,
+        run_id_factory=lambda: _INTEGRATION_CHILD_IDS[2],
+    )
+    observe_binding = create_controlled_genesis_observe_execution_binding(
+        application=observe_application,
+        qualified_descriptor=observe_descriptor,
+    )
+    workflow_store = SQLiteGoldenRunStore(tmp_path / "golden.sqlite3")
+    child_ids = iter(_INTEGRATION_CHILD_IDS)
+    harness = GoldenRunHarness(
+        artifact_store=store,
+        workflow_store=workflow_store,
+        execution_catalog=create_golden_execution_catalog(
+            bindings=(
+                _create_golden_execution_binding(
+                    policy=setup_policy,
+                    application=setup_application,
+                    child_authority=fixture_store,
+                ),
+                _create_golden_execution_binding(
+                    policy=replay_policy,
+                    application=replay_application,
+                    child_authority=fixture_store,
+                ),
+                observe_binding,
+            )
+        ),
+        clock=clock,
+        workflow_id_factory=lambda: WORKFLOW_ID,
+        child_run_id_factory=lambda: next(child_ids),
+    )
+    objective = WorldFactEvidence(
+        source_kind="user_input",
+        key="request.objective",
+        value="Capture a fresh controlled Genesis observation.",
+        observed_at=START,
+        valid_until=None,
+    )
+    objective_ref = _put(
+        store,
+        tmp_path,
+        name="integration-objective.json",
+        value=objective,
+        schema_version="harness.world_fact_evidence.v1",
+    )
+    snapshot = harness.start(
+        RunStartRequest(
+            schema_version="harness.run_start_request.v1",
+            principal_id="tests/real-controlled-observe",
+            idempotency_key="real-observe-start",
+            workspace="ephemeral",
+            requested_profile="genesis.robot_policy@1",
+            initial_fact_evidence=(objective_ref,),
+            registry_snapshot=registry_ref,
+        )
+    )
+
+    def submit(skill_ref: str, parameters: BaseModel, index: int):
+        nonlocal snapshot
+        command = RunCommandRequest(
+            schema_version="harness.run_command_request.v1",
+            command_id=UUID(f"65000000-0000-4000-8000-{index:012d}"),
+            principal_id=snapshot.principal_id,
+            workflow_run_id=snapshot.workflow_run_id,
+            idempotency_key=f"real-observe-{index}",
+            expected_workflow_revision=snapshot.revision,
+            expected_state_sha256=snapshot.state_sha256,
+            expected_receipt_head_sha256=snapshot.receipt_head.sha256,
+            skill_ref=skill_ref,
+            parameters=parameters.model_dump(mode="json"),
+        )
+        operation = harness.submit(command)
+        snapshot = harness.read(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id=snapshot.principal_id,
+                workflow_run_id=snapshot.workflow_run_id,
+            )
+        )
+        return command, operation
+
+    submit("tests.setup@1.0.0", objective_ref, 1)
+    submit("image2env.replay@1.0.0", replay_input, 2)
+    assert snapshot.revision == 2
+    observe_input = GenesisObserveInput(
+        schema_version="harness.genesis_observe_input.v1",
+        environment_package=package_ref,
+        replay_workflow_receipt=snapshot.receipt_head,
+        replay_runtime_receipt=json_refs["runtime"],
+        checkpoint=None,
+        capture_plan=GenesisObservationCapturePlan(
+            camera_ids=("observer",),
+            stills_per_camera=1,
+            video_frames=0,
+            fps=None,
+            post_restore_steps=1,
+        ),
+        requested_observation_keys=("observation.scene_visible",),
+        ttl_seconds=60,
+    )
+    observe_command, observe_operation = submit("genesis.observe@1.0.0", observe_input, 3)
+
+    assert observe_operation.status is RunStatus.SUCCEEDED
+    assert snapshot.revision == 3
+    assert capture.calls == 1
+    result = ToolResultV2.model_validate_json(
+        store.resolve(observe_operation.tool_result).path.read_bytes()
+    )
+    output = GenesisObserveOutput.model_validate(result.typed_output)
+    inner = GenesisObservationReceipt.model_validate_json(
+        store.resolve(output.observation_receipt).path.read_bytes()
+    )
+    observation = result.fresh_observations[0]
+    receipt = TrustedToolReceiptV2.model_validate_json(
+        store.resolve(result.trusted_receipt).path.read_bytes()
+    )
+    claim = receipt.derived_fact_claims[0]
+    assert output.observation_receipt in receipt.supporting_artifacts
+    assert observation.source_artifact == output.observation_receipt
+    assert (claim.key, claim.value) == (observation.key, observation.value)
+    assert observation.observed_at == inner.captured_at
+    assert observation.valid_until == inner.valid_until
+    delta = StateDeltaV2.model_validate_json(store.resolve(result.state_delta).path.read_bytes())
+    fact = delta.mutations[0].fact
+    assert fact is not None
+    assert fact.source_artifact == result.trusted_receipt
+    assert (fact.key, fact.value) == (observation.key, observation.value)
+    assert (fact.observed_at, fact.valid_until) == (
+        observation.observed_at,
+        observation.valid_until,
+    )
+    state = TrustedWorldState.model_validate_json(
+        store.resolve(snapshot.state_ref).path.read_bytes()
+    )
+    assert next(item for item in state.facts if item.key == observation.key) == fact
+
+    cas_count = _assert_cas_objects_are_content_addressed(store)
+    golden_rows = _sqlite_counts(workflow_store.path)
+    fixture_rows = _sqlite_counts(fixture_store.path)
+    observe_rows = _sqlite_counts(observe_application.authority_path)
+    reopened = GoldenRunHarness(
+        artifact_store=store,
+        workflow_store=workflow_store,
+        execution_catalog=create_golden_execution_catalog(
+            bindings=(
+                create_controlled_genesis_observe_execution_binding(
+                    application=None,
+                    child_authority=SQLiteRunStore(observe_application.authority_path),
+                    artifact_store=store,
+                ),
+            )
+        ),
+        clock=lambda: pytest.fail("terminal observe retry must not read the clock"),
+        child_run_id_factory=lambda: pytest.fail("terminal observe retry must not reserve a child"),
+    )
+    assert reopened.submit(observe_command) == observe_operation
+    assert _assert_cas_objects_are_content_addressed(store) == cas_count
+    assert _sqlite_counts(workflow_store.path) == golden_rows
+    assert _sqlite_counts(fixture_store.path) == fixture_rows
+    assert _sqlite_counts(observe_application.authority_path) == observe_rows
