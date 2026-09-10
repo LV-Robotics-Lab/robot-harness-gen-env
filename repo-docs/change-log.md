@@ -1,5 +1,15 @@
 # Change Log
 
+## 2026-09-11 raw-text MCP workflow create
+
+- 新增 exact `harness_workflow_create_v1`：只收 inline `request.*` user facts，server 注入
+  principal/Registry/provenance 并把 canonical evidence 写入同一 Harness CAS；不接受 caller
+  路径、URI、摘要、outer ArtifactRef 或自报 Registry。
+- 官方 MCP 2.2 进程内与 stdio 真实完成 raw text facts→revision 0→compile revision 1；
+  stdio B 进程重提 start 返回当前 revision 1，再恢复同一 compile operation。
+- 修复 `GoldenRunHarness.start` 对已推进 workflow 的幂等 retry：已推进 head 改经完整
+  `read()` 历史重建。inline media 仍是不受信 claim，media ingest/receipt 尚未实现。
+
 ## 2026-09-11 exact MCP stdio/restart tranche
 
 - 新增 compile-only 可重建 production assembly 与 stdio entry；官方 MCP 2.2 Client 先后

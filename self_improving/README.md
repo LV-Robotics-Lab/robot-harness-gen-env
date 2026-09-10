@@ -8,7 +8,7 @@ runtime assumptions into the core trust boundary.
 
 | Path | Status | Responsibility |
 | --- | --- | --- |
-| `harness/` | active core tranche | 55 strict public schemas; qualified Text2Env compile/replay/legacy-validate applications and Golden revision 0→1→2→3; plus exact-tool MCP in-process and compile-only stdio/restart adapters. Workflow create, three-Skill MCP assembly, promotion, Genesis, and robot-policy remain absent. |
+| `harness/` | active core tranche | 55 strict public schemas; qualified Text2Env compile/replay/legacy-validate applications and Golden revision 0→1→2→3; plus raw-text workflow create and exact-tool MCP in-process/compile-only stdio-restart adapters. Media ingest, three-Skill MCP assembly, promotion, Genesis, and robot-policy remain absent. |
 | `stage5/` | active | Multi-agent scene design, grounding, critique, MCP-lite tools, prompts, and tests recovered from the stage-05 validation tree. |
 | `alchedata/` | active | `/gen-env -> /collect -> /train -> /evaluate -> /diagnose -> /transfer`, failure memory, promotion gates, schemas, tests, and curated structured evidence. |
 | `asset_pipeline/active/` | active | Asset discovery, ingest, ledger, catalog integration, Web Studio, and simulator-migration adapters from `env-gen-dev`. |

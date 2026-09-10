@@ -124,13 +124,22 @@ class GoldenRunHarness:
             factory=lambda: self._create_start(request, request_sha256=request_sha256),
         )
         snapshot = stored.snapshot
-        self._verify_start_snapshot(
-            snapshot,
-            request=request,
-            request_sha256=request_sha256,
-            persisted_idempotency_key=stored.idempotency_key,
-            persisted_request_sha256=stored.request_sha256,
-        )
+        if snapshot.revision == 0 and snapshot.active_operation is None:
+            self._verify_start_snapshot(
+                snapshot,
+                request=request,
+                request_sha256=request_sha256,
+                persisted_idempotency_key=stored.idempotency_key,
+                persisted_request_sha256=stored.request_sha256,
+            )
+        else:
+            snapshot = self.read(
+                RunReadRequest(
+                    schema_version="harness.run_read_request.v1",
+                    principal_id=request.principal_id,
+                    workflow_run_id=snapshot.workflow_run_id,
+                )
+            )
         return snapshot
 
     def read(self, request: RunReadRequest) -> RunSnapshot:

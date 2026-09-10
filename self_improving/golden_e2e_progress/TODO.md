@@ -5,12 +5,13 @@
 ## Doing
 
 - P5 exact MCP adapter：进程内与 stdio A/B 进程重启纵切已通过官方
-  `mcp==2.2.0` 真实 Client；当前继续实现 workflow create 与三 Skill production
-  assembly。Harness 仍是唯一状态权威，不提供 generic `skill.invoke`。
+  `mcp==2.2.0` 真实 Client，raw inline text facts 也已能创建 workflow；当前继续实现
+  三 Skill production assembly。Harness 仍是唯一状态权威，不提供 generic
+  `skill.invoke`。
 
 ## Next
 
-- P5 完成真实三 Skill 目录与工作流创建入口；
+- P5 完成真实三 Skill production assembly 与目录；
   同一切片冻结 dependency/runtime lock，不在实验循环中变更依赖。
 - P6：在已合入的 exact-byte staging 后，单独实现 collision provenance、settle 与 Genesis
   qualification；stage result 仍不得直接触发历史 ledger promotion，也不得把 headless ground-contact
@@ -24,8 +25,8 @@
   规则已立即停止该审查，未重试、改写或重新委派；用户随后允许继续其余工作。该具体审查永久保留
   为 blocked，不作为通过结论，也不妨碍修复主窗口已经独立复现的功能阻断。
 - Autoresearch 的 benchmark/真实 MCP/Genesis 前置尚未实现；设置已确认但尚不能建立诚实 baseline。
-- MCP 尚无 workflow create exact tool、三 Skill production assembly 或公开 operation
-  polling/cancel seam；当前不声称外部 Codex 已可启动完整三段链。
+- MCP 尚无三 Skill production assembly、media ingest 或公开 operation polling/cancel seam；
+  当前不声称外部 Codex 已可启动完整三段链。
 
 ## Done
 

@@ -1708,9 +1708,16 @@ def test_start_retry_rejects_invalid_or_inconsistent_snapshot_authority(
 
     _replace_persisted_snapshot(
         store,
-        _canonical_bytes(snapshot.model_copy(update={"revision": 1})),
+        _canonical_bytes(snapshot.model_copy(update={"updated_at": NOW + timedelta(seconds=1)})),
     )
     with pytest.raises(GoldenRunCorruptionError, match="request receipt binding"):
+        _golden_harness(artifact_store=store).start(request)
+
+    _replace_persisted_snapshot(
+        store,
+        _canonical_bytes(snapshot.model_copy(update={"revision": 1})),
+    )
+    with pytest.raises(GoldenRunCorruptionError, match="operation journal and head disagree"):
         _golden_harness(artifact_store=store).start(request)
 
 

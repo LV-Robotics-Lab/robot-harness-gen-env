@@ -12,7 +12,6 @@ from contextlib import closing
 from hashlib import sha256
 from importlib.metadata import version
 from pathlib import Path
-from uuid import UUID
 
 import anyio
 import pytest
@@ -25,13 +24,6 @@ from mcp.client.stdio import stdio_client  # noqa: E402
 
 from self_improving.harness.application import create_compile_application  # noqa: E402
 from self_improving.harness.artifacts import LocalArtifactStore  # noqa: E402
-from self_improving.harness.golden_compile_execution import (  # noqa: E402
-    create_text2env_compile_execution_binding,
-)
-from self_improving.harness.golden_execution import (  # noqa: E402
-    create_golden_execution_catalog,
-)
-from self_improving.harness.golden_run import GoldenRunHarness  # noqa: E402
 from self_improving.harness.golden_store import SQLiteGoldenRunStore  # noqa: E402
 from self_improving.harness.schemas.text2env import (  # noqa: E402
     CompileConfig,
@@ -83,9 +75,10 @@ async def _roundtrip(
     server: StdioServerParameters,
     *,
     tool_name: str,
-    arguments: dict[str, object],
-    workflow_uri: str,
-) -> tuple[dict[str, object], dict[str, object], str]:
+    start_arguments: dict[str, object],
+    compile_parameters: dict[str, object],
+    command_arguments: dict[str, object] | None = None,
+) -> tuple[dict[str, object], dict[str, object], str, dict[str, object]]:
     with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as errlog:
         try:
             async with Client(
@@ -95,8 +88,35 @@ async def _roundtrip(
             ) as client:
                 assert client.protocol_version == "2026-07-28"
                 listed = await client.list_tools()
-                assert tuple(tool.name for tool in listed.tools) == (tool_name,)
-                assert listed.tools[0].input_schema["additionalProperties"] is False
+                assert tuple(tool.name for tool in listed.tools) == (
+                    "harness_workflow_create_v1",
+                    tool_name,
+                )
+                assert listed.tools[1].input_schema["additionalProperties"] is False
+                created = await client.call_tool(listed.tools[0].name, start_arguments)
+                assert created.is_error is False
+                assert created.structured_content is not None
+                workflow_uri = (
+                    "harness://workflows/"
+                    + str(created.structured_content["workflow_run_id"])
+                )
+                if command_arguments is None:
+                    assert created.structured_content["revision"] == 0
+                    arguments = {
+                        "schema_version": "harness.run_command_request.v1",
+                        "command_id": "20000000-0000-4000-8000-000000000001",
+                        "workflow_run_id": created.structured_content["workflow_run_id"],
+                        "idempotency_key": "compile-through-stdio-restart-001",
+                        "expected_workflow_revision": created.structured_content["revision"],
+                        "expected_state_sha256": created.structured_content["state_sha256"],
+                        "expected_receipt_head_sha256": created.structured_content[
+                            "receipt_head"
+                        ]["sha256"],
+                        "parameters": compile_parameters,
+                    }
+                else:
+                    assert created.structured_content["revision"] == 1
+                    arguments = command_arguments
                 result = await client.call_tool(tool_name, arguments)
                 assert result.is_error is False
                 assert result.structured_content is not None
@@ -120,6 +140,7 @@ async def _roundtrip(
         result.model_dump(mode="json", by_alias=True, exclude_none=True),
         resource.model_dump(mode="json", by_alias=True, exclude_none=True),
         stderr,
+        arguments,
     )
 
 
@@ -132,58 +153,46 @@ def test_official_stdio_client_reuses_one_operation_after_server_restart(
     settings = base._compile_settings(tmp_path)
     application = create_compile_application(settings)
     artifact_store = LocalArtifactStore(application.artifact_root)
-    objective = base._put(
-        artifact_store,
-        tmp_path,
-        name="objective.json",
-        payload=base.GENERATED_OBJECTIVE_EVIDENCE,
-        schema_version="harness.world_fact_evidence.v1",
-    )
     registry = base._qualified_registry_for_application(
         artifact_store,
         tmp_path,
         application,
     )
     golden_database = tmp_path / "golden.sqlite3"
-    harness = GoldenRunHarness(
-        artifact_store=artifact_store,
-        workflow_store=SQLiteGoldenRunStore(golden_database),
-        execution_catalog=create_golden_execution_catalog(
-            bindings=(create_text2env_compile_execution_binding(application=application),)
-        ),
-        clock=lambda: base.NOW,
-        workflow_id_factory=lambda: base.WORKFLOW_ID,
-        child_run_id_factory=lambda: UUID("30000000-0000-4000-8000-000000000001"),
-    )
-    started = harness.start(base._request(objective, registry))
+    SQLiteGoldenRunStore(golden_database)
     catalog_path = settings.external_catalog_roots[0] / "empty.json"
     base._empty_catalog(
         catalog_path,
         objects_root=settings.allowed_asset_roots[0] / "objects",
     )
     tool_name = "text2env_compile_v1_0_0"
-    arguments: dict[str, object] = {
-        "schema_version": "harness.run_command_request.v1",
-        "command_id": "20000000-0000-4000-8000-000000000001",
-        "workflow_run_id": str(started.workflow_run_id),
-        "idempotency_key": "compile-through-stdio-restart-001",
-        "expected_workflow_revision": started.revision,
-        "expected_state_sha256": started.state_sha256,
-        "expected_receipt_head_sha256": started.receipt_head.sha256,
-        "parameters": Text2EnvCompileInput(
-            request=base.GENERATED_OBJECTIVE,
-            seed=77,
-            asset_catalog=application.snapshot_asset_catalog(catalog_path),
-            config=CompileConfig(generate_missing_assets=True),
-        ).model_dump(mode="json"),
+    compile_parameters = Text2EnvCompileInput(
+        request=base.GENERATED_OBJECTIVE,
+        seed=77,
+        asset_catalog=application.snapshot_asset_catalog(catalog_path),
+        config=CompileConfig(generate_missing_assets=True),
+    ).model_dump(mode="json")
+    start_arguments: dict[str, object] = {
+        "schema_version": "harness.mcp_workflow_create_request.v1",
+        "idempotency_key": "start-through-stdio-restart-001",
+        "workspace": "ephemeral",
+        "requested_profile": "legacy.robotwin_validation@2",
+        "initial_user_facts": [
+            {
+                "key": "request.objective",
+                "value": base.GENERATED_OBJECTIVE,
+                "observed_at": "2026-09-09T00:00:00Z",
+                "valid_until": None,
+            }
+        ],
     }
     config_path = tmp_path / "mcp-stdio-settings.json"
     config_path.write_text(
         json.dumps(
             {
                 "schema_version": "harness.compile_mcp_server_settings.v1",
-                "principal_id": started.principal_id,
-                "registry_snapshot": started.registry_snapshot.model_dump(mode="json"),
+                "principal_id": "tests/golden-e2e",
+                "registry_snapshot": registry.model_dump(mode="json"),
                 "compile_state_root": str(settings.state_root),
                 "external_catalog_roots": [str(path) for path in settings.external_catalog_roots],
                 "allowed_asset_roots": [str(path) for path in settings.allowed_asset_roots],
@@ -198,7 +207,6 @@ def test_official_stdio_client_reuses_one_operation_after_server_restart(
         + "\n",
         encoding="utf-8",
     )
-    workflow_uri = f"harness://workflows/{started.workflow_run_id}"
     database_before = (
         _database_rows(golden_database),
         _database_rows(application.journal_path),
@@ -226,8 +234,8 @@ def test_official_stdio_client_reuses_one_operation_after_server_restart(
                     ]
                 ),
                 tool_name=tool_name,
-                arguments=arguments,
-                workflow_uri=workflow_uri,
+                start_arguments=start_arguments,
+                compile_parameters=compile_parameters,
             )
         database_after_first = (
             _database_rows(golden_database),
@@ -246,8 +254,9 @@ def test_official_stdio_client_reuses_one_operation_after_server_restart(
                     ]
                 ),
                 tool_name=tool_name,
-                arguments=arguments,
-                workflow_uri=workflow_uri,
+                start_arguments=start_arguments,
+                compile_parameters=compile_parameters,
+                command_arguments=first[3],
             )
         database_after_second = (
             _database_rows(golden_database),
@@ -273,19 +282,23 @@ def test_official_stdio_client_reuses_one_operation_after_server_restart(
     ) = anyio.run(exercise)
 
     assert first[:2] == second[:2]
-    assert first[0]["structuredContent"]["operation_id"] == str(arguments["command_id"])
+    assert first[3] == second[3]
+    assert first[0]["structuredContent"]["operation_id"] == (
+        "20000000-0000-4000-8000-000000000001"
+    )
+    assert database_before[0] != database_after_first[0]
     assert database_after_first == database_after_second
     assert cas_after_first == cas_after_second
-    assert database_before != database_after_first
     assert cas_before != cas_after_first
     golden_counts = dict(database_after_second[0])
     child_counts = dict(database_after_second[1])
+    assert golden_counts["golden_workflow_starts"] == 1
     assert golden_counts["golden_workflow_operations"] == 1
     assert child_counts["harness_controlled_run_intents"] == 1
     assert child_counts["harness_invocations"] == 1
     assert child_counts["harness_run_states"] == 1
     assert first[2].count(ASSEMBLY_SENTINEL) == 1
-    assert first[2].count(HANDLER_SENTINEL) == 1
+    assert first[2].count(HANDLER_SENTINEL) == 2
     assert ASSEMBLY_SENTINEL not in second[2]
     assert HANDLER_SENTINEL not in second[2]
     client_logs = "\n".join(record.getMessage() for record in caplog.records)

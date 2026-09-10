@@ -9,8 +9,17 @@ from dataclasses import dataclass
 from typing import Literal, Mapping
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, create_model
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    JsonValue,
+    create_model,
+    model_validator,
+)
 
+from .artifacts import ArtifactResolutionError
 from .golden_run import (
     GoldenRunConflictError,
     GoldenRunCorruptionError,
@@ -20,7 +29,14 @@ from .golden_run import (
 )
 from .schema_catalog import schema_documents, schema_model
 from .schemas.common import ArtifactRef
-from .schemas.workflow import RunCommandRequest, RunReadRequest
+from .schemas.workflow import (
+    CapabilityProfileRef,
+    IdempotencyKey,
+    RunCommandRequest,
+    RunReadRequest,
+    RunStartRequest,
+)
+from .trusted_state import FactKey, WorldFactEvidence
 
 
 @dataclass(frozen=True)
@@ -28,7 +44,7 @@ class MCPTool:
     """One exact MCP tool projected from a frozen qualified Registry snapshot."""
 
     name: str
-    skill_ref: str
+    skill_ref: str | None
     input_schema_id: str
     description: str
     input_schema: Mapping[str, object]
@@ -98,7 +114,38 @@ class HarnessMCPProtocolError(LookupError):
     """Unknown MCP method target that must remain a protocol-level failure."""
 
 
+class MCPInitialUserFact(BaseModel):
+    """One untrusted inline fact that the adapter will freeze into Harness CAS."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    key: FactKey
+    value: JsonValue
+    observed_at: AwareDatetime
+    valid_until: AwareDatetime | None
+
+
+class MCPWorkflowCreateRequest(BaseModel):
+    """Caller-owned portion of a durable workflow start request."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    schema_version: Literal["harness.mcp_workflow_create_request.v1"]
+    idempotency_key: IdempotencyKey
+    workspace: Literal["ephemeral", "production"]
+    requested_profile: CapabilityProfileRef
+    initial_user_facts: tuple[MCPInitialUserFact, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def fact_keys_are_unique(self) -> "MCPWorkflowCreateRequest":
+        keys = tuple(fact.key for fact in self.initial_user_facts)
+        if len(keys) != len(set(keys)):
+            raise ValueError("initial_user_facts must use unique keys")
+        return self
+
+
 _ADAPTER_TOKEN = object()
+_WORKFLOW_CREATE_TOOL = "harness_workflow_create_v1"
 _WORKFLOW_RESOURCE = re.compile(
     r"^harness://workflows/([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$"
 )
@@ -135,7 +182,20 @@ class HarnessMCPAdapter:
         try:
             registry = self._harness._verify_registry_snapshot(snapshot)
             documents = schema_documents()
-            tools: list[MCPTool] = []
+            tools: list[MCPTool] = [
+                MCPTool(
+                    name=_WORKFLOW_CREATE_TOOL,
+                    skill_ref=None,
+                    input_schema_id="harness.run_start_request.v1",
+                    description=(
+                        "Create one durable Golden Workflow under this server's frozen authority."
+                    ),
+                    input_schema=_workflow_start_schema(),
+                    output_schema=_tool_result_schema(
+                        documents["harness.run_snapshot.v1"]
+                    ),
+                )
+            ]
             for entry in registry.qualified_skills:
                 live = self._harness._execution_catalog.live_descriptors_for(entry.skill_ref)
                 if len(live) != 1:
@@ -180,6 +240,9 @@ class HarnessMCPAdapter:
         tool = tools.get(request.name)
         if tool is None:
             raise HarnessMCPProtocolError(f"unknown exact MCP tool: {request.name}")
+        if tool.name == _WORKFLOW_CREATE_TOOL:
+            return self._call_workflow_create(request)
+        assert tool.skill_ref is not None
         envelope_model = _command_envelope_model(
             tool.name,
             schema_model(tool.input_schema_id),
@@ -230,6 +293,86 @@ class HarnessMCPAdapter:
             ),
             structured_content=structured,
             is_error=operation.status.value in {"blocked", "failed"},
+        )
+
+    def _call_workflow_create(self, request: MCPToolCall) -> MCPToolResult:
+        try:
+            wire_payload = json.dumps(
+                dict(request.arguments),
+                ensure_ascii=False,
+                allow_nan=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+            envelope = _workflow_start_model().model_validate_json(wire_payload)
+            evidence = tuple(
+                self._harness._publish_model(
+                    WorldFactEvidence(
+                        source_kind="user_input",
+                        key=fact.key,
+                        value=fact.value,
+                        observed_at=fact.observed_at,
+                        valid_until=fact.valid_until,
+                    ),
+                    name="mcp_user_fact.json",
+                    schema_version="harness.world_fact_evidence.v1",
+                )
+                for fact in envelope.initial_user_facts
+            )
+            start = RunStartRequest(
+                schema_version="harness.run_start_request.v1",
+                principal_id=self._principal_id,
+                idempotency_key=envelope.idempotency_key,
+                workspace=envelope.workspace,
+                requested_profile=envelope.requested_profile,
+                initial_fact_evidence=tuple(
+                    sorted(
+                        evidence,
+                        key=lambda artifact: (
+                            artifact.sha256,
+                            artifact.bytes,
+                            artifact.media_type,
+                            artifact.schema_version or "",
+                        ),
+                    )
+                ),
+                registry_snapshot=self._registry_snapshot,
+            )
+        except (TypeError, ValueError) as error:
+            return _error_result("HARN_INPUT_SCHEMA_INVALID", str(error))
+        try:
+            snapshot = self._harness.start(start)
+        except (
+            ArtifactResolutionError,
+            GoldenRunConflictError,
+            GoldenRunCorruptionError,
+            GoldenRunRegistryError,
+            ValueError,
+        ) as error:
+            code = getattr(
+                error,
+                "code",
+                {
+                    ArtifactResolutionError: "HARN_ARTIFACT_UNAVAILABLE",
+                    ValueError: "HARN_INPUT_SCHEMA_INVALID",
+                }.get(type(error), "HARN_INTERNAL"),
+            )
+            return _error_result(code, str(error))
+        structured = snapshot.model_dump(mode="json")
+        workflow_uri = f"harness://workflows/{snapshot.workflow_run_id}"
+        return MCPToolResult(
+            content=(
+                MCPTextContent(
+                    text=f"Golden Workflow {snapshot.workflow_run_id} is revision 0."
+                ),
+                MCPResourceLink(
+                    name=f"workflow-{snapshot.workflow_run_id}",
+                    uri=workflow_uri,
+                    media_type="application/json",
+                ),
+            ),
+            structured_content=structured,
+            is_error=False,
         )
 
     def read_resource(self, request: MCPResourceRead) -> MCPResourceResult:
@@ -288,6 +431,16 @@ def _command_envelope_schema(
     document = model.model_json_schema(mode="validation")
     _strip_nested_resource_identifiers(document)
     return document
+
+
+def _workflow_start_schema() -> dict[str, object]:
+    document = _workflow_start_model().model_json_schema(mode="validation")
+    _strip_nested_resource_identifiers(document)
+    return document
+
+
+def _workflow_start_model() -> type[BaseModel]:
+    return MCPWorkflowCreateRequest
 
 
 def _command_envelope_model(
@@ -361,6 +514,7 @@ __all__ = [
     "MCPResourceLink",
     "MCPResourceRead",
     "MCPResourceResult",
+    "MCPWorkflowCreateRequest",
     "MCPTextContent",
     "MCPTool",
     "MCPToolCall",

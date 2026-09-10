@@ -1,5 +1,29 @@
 # 进度与结果
 
+## 2026-09-11 P5 raw text workflow create 纵切
+
+- MCP 目录新增 exact control tool `harness_workflow_create_v1`（不是可选 `skill_ref` 的
+  generic dispatcher）。caller 只提供 idempotency/workspace/profile 和 inline `request.*`
+  user facts；principal、RegistrySnapshot、`source_kind=user_input`、evidence schema、CAS identity、
+  workflow UUID/state/receipt 均由 server/Harness 注入。caller 不能提供路径、URI、摘要或
+  outer ArtifactRef。
+- adapter 先用 strict typed model 校验 inline facts，构造 canonical `WorldFactEvidence` 并写入与
+  GoldenRunHarness 完全相同的 CAS，再按 content identity 排序 refs 并唯一调用
+  `GoldenRunHarness.start`。重复 fact key、非 `request.*`、伪造 authority 字段和同幂等键不同
+  request 都在受信 state 之前拒绝。
+- 真实官方 MCP 2.2 进程内 Client 从 inline text 创建 revision 0，紧接 exact
+  compile 到 revision 1。stdio A 进程也从空 Golden DB 完成 create→compile；B 进程重提
+  start 返回当前 revision 1 authoritative head，再以原 command envelope 恢复同一 compile
+  operation，SQLite/CAS 不增长。
+- 该路径暴露并修复 S1 缺陷：旧 `GoldenRunHarness.start` 把已推进 workflow 的同请求
+  retry 当成 revision-0 snapshot 验证，误报持久层冲突。现在 revision 0 仍校验 start
+  receipt，已推进/有 active operation 则经公开 `read()` 完整重建历史并返回当前 head。
+  GoldenRun 回归 213 passed，427 statements/140 branches 100%；三份 checked qualification
+  门 61 passed，无需伪造重签。
+- committed MCP tool snapshot 现精确包含 workflow-create 与 compile 两个工具的 name/
+  Skill-boundary/input/output schema digest。边界：inline media 仅是不受信 JSON claim；尚无
+  media ingest/receipt，不能把图像或视频引用写成已验真资产。
+
 ## 2026-09-11 P5 exact MCP stdio 与重启幂等
 
 - 新增 strict local settings、compile-only production assembly 与
@@ -16,7 +40,8 @@
   discriminator 没有被 `exclude_unset` 丢失。
 - 补充失效模式：Registry/CAS 在已建立 adapter 后漂移，exact call 现返回
   `isError=true` + 稳定 `HARN_ARTIFACT_UNAVAILABLE`，不再泄漏为 MCP `-32603`。加入
-  committed compile tool schema digest snapshot，绑定 exact name/Skill 与 input/output schema 字节身份。
+  committed compile tool schema digest snapshot，绑定 exact name/Skill 与 input/output schema 字节身份；
+  后续 workflow-create 更新见上方。
 - Registry/Golden/schema 相邻回归含四份 MCP tracer 为 231 passed；adapter/server/assembly 三个
   核心模块合计 217 statements/38 branches 为 100%。stdio 入口另由真实双进程协议
   tracer 覆盖，没有用 mock transport 代替。

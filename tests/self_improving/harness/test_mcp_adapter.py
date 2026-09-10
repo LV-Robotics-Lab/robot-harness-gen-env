@@ -74,9 +74,12 @@ def test_adapter_lists_only_the_exact_qualified_live_tool(tmp_path: Path) -> Non
     )
     tools = adapter.list_tools(started.registry_snapshot)
 
-    assert tuple(tool.name for tool in tools) == ("text2env_compile_v1_0_0",)
+    assert tuple(tool.name for tool in tools) == (
+        "harness_workflow_create_v1",
+        "text2env_compile_v1_0_0",
+    )
     assert all(tool.name != "skill.invoke" for tool in tools)
-    tool = tools[0]
+    tool = tools[1]
     assert tool.skill_ref == "text2env.compile@1.0.0"
     assert tool.input_schema["additionalProperties"] is False
     assert "principal_id" not in tool.input_schema["properties"]
@@ -91,15 +94,16 @@ def test_adapter_lists_only_the_exact_qualified_live_tool(tmp_path: Path) -> Non
         "schema_version": "harness.mcp_tool_catalog_snapshot.v1",
         "tools": [
             {
-                "name": tool.name,
-                "skill_ref": tool.skill_ref,
+                "name": listed_tool.name,
+                "skill_ref": listed_tool.skill_ref,
                 "input_schema_sha256": sha256(
-                    _canonical_json_bytes(tool.input_schema)
+                    _canonical_json_bytes(listed_tool.input_schema)
                 ).hexdigest(),
                 "output_schema_sha256": sha256(
-                    _canonical_json_bytes(tool.output_schema)
+                    _canonical_json_bytes(listed_tool.output_schema)
                 ).hexdigest(),
             }
+            for listed_tool in tools
         ],
     }
     Draft202012Validator.check_schema(dict(tool.input_schema))

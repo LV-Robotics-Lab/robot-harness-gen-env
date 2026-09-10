@@ -38,13 +38,6 @@ def test_official_client_lists_and_calls_the_exact_tool_in_process(tmp_path: Pat
     settings = base._compile_settings(tmp_path)
     application = create_compile_application(settings)
     artifact_store = LocalArtifactStore(application.artifact_root)
-    objective = base._put(
-        artifact_store,
-        tmp_path,
-        name="objective.json",
-        payload=base.GENERATED_OBJECTIVE_EVIDENCE,
-        schema_version="harness.world_fact_evidence.v1",
-    )
     registry = base._qualified_registry_for_application(artifact_store, tmp_path, application)
     harness = GoldenRunHarness(
         artifact_store=artifact_store,
@@ -56,11 +49,10 @@ def test_official_client_lists_and_calls_the_exact_tool_in_process(tmp_path: Pat
         workflow_id_factory=lambda: base.WORKFLOW_ID,
         child_run_id_factory=lambda: UUID("30000000-0000-4000-8000-000000000001"),
     )
-    started = harness.start(base._request(objective, registry))
     adapter = create_harness_mcp_adapter(
         harness=harness,
-        principal_id=started.principal_id,
-        registry_snapshot=started.registry_snapshot,
+        principal_id="tests/golden-e2e",
+        registry_snapshot=registry,
     )
     server = create_harness_mcp_server(adapter)
     with pytest.raises(TypeError, match="exact HarnessMCPAdapter"):
@@ -70,37 +62,56 @@ def test_official_client_lists_and_calls_the_exact_tool_in_process(tmp_path: Pat
         catalog_path,
         objects_root=settings.allowed_asset_roots[0] / "objects",
     )
-    arguments = {
-        "schema_version": "harness.run_command_request.v1",
-        "command_id": "20000000-0000-4000-8000-000000000001",
-        "workflow_run_id": str(started.workflow_run_id),
-        "idempotency_key": "compile-through-official-client-001",
-        "expected_workflow_revision": started.revision,
-        "expected_state_sha256": started.state_sha256,
-        "expected_receipt_head_sha256": started.receipt_head.sha256,
-        "parameters": Text2EnvCompileInput(
-            request=base.GENERATED_OBJECTIVE,
-            seed=77,
-            asset_catalog=application.snapshot_asset_catalog(catalog_path),
-            config=CompileConfig(generate_missing_assets=True),
-        ).model_dump(mode="json"),
+    compile_parameters = Text2EnvCompileInput(
+        request=base.GENERATED_OBJECTIVE,
+        seed=77,
+        asset_catalog=application.snapshot_asset_catalog(catalog_path),
+        config=CompileConfig(generate_missing_assets=True),
+    ).model_dump(mode="json")
+    start_arguments = {
+        "schema_version": "harness.mcp_workflow_create_request.v1",
+        "idempotency_key": "start-through-official-client-001",
+        "workspace": "ephemeral",
+        "requested_profile": "genesis.robot_policy@1",
+        "initial_user_facts": [
+            {
+                "key": "request.objective",
+                "value": base.GENERATED_OBJECTIVE,
+                "observed_at": "2026-09-09T00:00:00Z",
+                "valid_until": None,
+            }
+        ],
     }
 
     async def exercise() -> None:
         async with Client(server, raise_exceptions=True, cache=None) as client:
             listed = await client.list_tools()
             assert tuple(tool.name for tool in listed.tools) == (
+                "harness_workflow_create_v1",
                 "text2env_compile_v1_0_0",
             )
-            assert listed.tools[0].input_schema == adapter.list_tools(
-                started.registry_snapshot
-            )[0].input_schema
-            result = await client.call_tool(listed.tools[0].name, arguments)
+            assert listed.tools[1].input_schema == adapter.list_tools(registry)[1].input_schema
+            created = await client.call_tool(listed.tools[0].name, start_arguments)
+            assert created.is_error is False
+            assert created.structured_content["revision"] == 0
+            arguments = {
+                "schema_version": "harness.run_command_request.v1",
+                "command_id": "20000000-0000-4000-8000-000000000001",
+                "workflow_run_id": created.structured_content["workflow_run_id"],
+                "idempotency_key": "compile-through-official-client-001",
+                "expected_workflow_revision": created.structured_content["revision"],
+                "expected_state_sha256": created.structured_content["state_sha256"],
+                "expected_receipt_head_sha256": created.structured_content["receipt_head"][
+                    "sha256"
+                ],
+                "parameters": compile_parameters,
+            }
+            result = await client.call_tool(listed.tools[1].name, arguments)
             assert result.is_error is False
             assert result.structured_content["status"] == "succeeded"
             assert [content.type for content in result.content] == ["text", "resource_link"]
             resource = await client.read_resource(
-                f"harness://workflows/{started.workflow_run_id}"
+                f"harness://workflows/{created.structured_content['workflow_run_id']}"
             )
             assert json.loads(resource.contents[0].text)["revision"] == 1
             with pytest.raises(MCPError, match="unknown exact MCP tool"):

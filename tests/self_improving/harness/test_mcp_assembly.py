@@ -8,8 +8,6 @@ import pytest
 
 from self_improving.harness.application import create_compile_application
 from self_improving.harness.artifacts import LocalArtifactStore
-from self_improving.harness.golden_run import GoldenRunHarness
-from self_improving.harness.golden_store import SQLiteGoldenRunStore
 from self_improving.harness.mcp_adapter import MCPToolCall
 from self_improving.harness.mcp_assembly import (
     CompileMCPServerSettings,
@@ -23,20 +21,8 @@ def test_compile_mcp_assembly_reopens_the_same_durable_authorities(tmp_path: Pat
     application_settings = base._compile_settings(tmp_path)
     application = create_compile_application(application_settings)
     store = LocalArtifactStore(application.artifact_root)
-    objective = base._put(
-        store,
-        tmp_path,
-        name="objective.json",
-        payload=base.GENERATED_OBJECTIVE_EVIDENCE,
-        schema_version="harness.world_fact_evidence.v1",
-    )
     registry = base._qualified_registry_for_application(store, tmp_path, application)
     golden_database = tmp_path / "golden.sqlite3"
-    started = GoldenRunHarness(
-        artifact_store=store,
-        workflow_store=SQLiteGoldenRunStore(golden_database),
-        workflow_id_factory=lambda: base.WORKFLOW_ID,
-    ).start(base._request(objective, registry))
     catalog_path = application_settings.external_catalog_roots[0] / "empty.json"
     base._empty_catalog(
         catalog_path,
@@ -44,8 +30,8 @@ def test_compile_mcp_assembly_reopens_the_same_durable_authorities(tmp_path: Pat
     )
     settings = CompileMCPServerSettings(
         schema_version="harness.compile_mcp_server_settings.v1",
-        principal_id=started.principal_id,
-        registry_snapshot=started.registry_snapshot,
+        principal_id="operator/system2",
+        registry_snapshot=registry,
         compile_state_root=application_settings.state_root,
         external_catalog_roots=application_settings.external_catalog_roots,
         allowed_asset_roots=application_settings.allowed_asset_roots,
@@ -54,15 +40,33 @@ def test_compile_mcp_assembly_reopens_the_same_durable_authorities(tmp_path: Pat
         golden_database_path=golden_database,
     )
     adapter = create_compile_mcp_adapter(settings)
-    tool = adapter.list_tools(settings.registry_snapshot)[0]
+    start_tool, tool = adapter.list_tools(settings.registry_snapshot)
+    start_arguments = {
+        "schema_version": "harness.mcp_workflow_create_request.v1",
+        "idempotency_key": "start-through-reopened-mcp",
+        "workspace": "ephemeral",
+        "requested_profile": "legacy.robotwin_validation@2",
+        "initial_user_facts": [
+            {
+                "key": "request.objective",
+                "value": base.GENERATED_OBJECTIVE,
+                "observed_at": "2026-09-09T00:00:00Z",
+                "valid_until": None,
+            }
+        ],
+    }
+    started = adapter.call_tool(MCPToolCall(name=start_tool.name, arguments=start_arguments))
+    assert started.is_error is False
     arguments = {
         "schema_version": "harness.run_command_request.v1",
         "command_id": "20000000-0000-4000-8000-000000000001",
-        "workflow_run_id": str(started.workflow_run_id),
+        "workflow_run_id": started.structured_content["workflow_run_id"],
         "idempotency_key": "compile-through-reopened-mcp",
         "expected_workflow_revision": 0,
-        "expected_state_sha256": started.state_sha256,
-        "expected_receipt_head_sha256": started.receipt_head.sha256,
+        "expected_state_sha256": started.structured_content["state_sha256"],
+        "expected_receipt_head_sha256": started.structured_content["receipt_head"][
+            "sha256"
+        ],
         "parameters": Text2EnvCompileInput(
             request=base.GENERATED_OBJECTIVE,
             seed=77,
@@ -73,9 +77,13 @@ def test_compile_mcp_assembly_reopens_the_same_durable_authorities(tmp_path: Pat
 
     first = adapter.call_tool(MCPToolCall(name=tool.name, arguments=arguments))
     reopened = create_compile_mcp_adapter(settings)
+    recovered_start = reopened.call_tool(
+        MCPToolCall(name=start_tool.name, arguments=start_arguments)
+    )
     second = reopened.call_tool(MCPToolCall(name=tool.name, arguments=arguments))
 
     assert first == second
+    assert recovered_start.structured_content["revision"] == 1
     assert first.structured_content["status"] == "succeeded"
     assert first.structured_content["committed_revision"] == 1
 
