@@ -57,9 +57,10 @@ P5 exact MCP adapter 现已由官方 MCP 2.2 stdio Client 在真实 RoboTwin/SAP
 create、compile、replay、validate revision 0→1→2→3，并在第二个 server 进程重提 validate 而无
 SQLite/CAS 增长；workflow-scoped 证据、媒体和 validate input 都只来自 Harness 权威。下一门是外部
 Codex planner 回合、fresh observation/diagnosis/promotion，而不是把 transport client 误称为 LLM
-路由。P10 已完成 `genesis.observe@1.0.0` strict schema、controlled candidate，以及 receipt → fresh
-ToolResult → trusted claim → StateDelta → resulting state 和无 live application 重开的受控 seam；所有
-受控输出均明确 `simulator_executed=false`；controlled evidence policy 还把 Invocation 与 exact
-workflow/principal/revision/state/head 绑定。production execution binding、真实 Genesis sealed checkpoint
-capture、qualification 和 MCP exposure 仍未完成。P6 继续修复资产 staging；autoresearch 只在其冻结
-benchmark 可以真实运行后开始。
+路由。P10 已完成 `genesis.observe@1.0.0` strict schema、controlled candidate，并以显式 test-controlled
+qualification 在同一 Golden revision 2→3 中闭合 Genesis receipt → fresh ToolResult → trusted claim →
+StateDelta → resulting state 和无 live application 重开；所有受控输出均明确
+`simulator_executed=false`。controlled evidence policy 还把 Invocation 与 exact
+workflow/principal/revision/state/head 绑定。该 binding 未进入 production assembly；真实 Genesis sealed
+checkpoint capture、production qualification 和 MCP exposure 仍未完成。下一项 P10 是 advisory/prompt
+revision control record，P6 继续修复资产 staging；autoresearch 只在其冻结 benchmark 可以真实运行后开始。

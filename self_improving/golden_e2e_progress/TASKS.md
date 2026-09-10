@@ -34,6 +34,8 @@
     `simulator_executed=false`。
   - [x] 实现 controlled evidence policy，并把 Invocation 与 exact workflow authorization context 纳入
     首次提交和重启恢复验证；相同 state hash 不允许跨 workflow 混用 receipt。
+  - [x] 用显式 test-controlled qualification 把真实 controlled application 接入同一 Golden
+    revision 2→3，并验证 CAS/SQLite/no-live restart；该 binding 不进入 production assembly。
   - [ ] 实现 production execution binding/runtime；再使用真实 Genesis sealed checkpoint 完成
     production qualification，之后才加入 production MCP。
 - [ ] Codex 诊断、受限修复、状态增量与可续跑 history。

@@ -4,9 +4,12 @@
 
 ## Doing
 
-- P10 fresh observation：strict schema、controlled candidate application/evidence policy 与 Golden
-  receipt/state/restart seam 已完成；下一切片是 production execution binding/runtime。当前受控路径固定
-  `simulator_executed=false`，真实 Genesis capture、qualification 与 MCP exposure 尚未开始。
+- P10 fresh observation：strict schema、controlled candidate application/evidence policy 与 test-controlled
+  Golden execution binding 已在同一 revision 2→3 中闭合 receipt/state/restart；下一切片是 production
+  runtime binding。当前受控路径固定 `simulator_executed=false`，真实 Genesis capture、qualification 与
+  MCP exposure 尚未开始。
+- P10 diagnosis/prompt revision：先实现独立 workflow control records、资源读取回执和持久 authority，
+  再加两个 exact MCP control tools；不得把 advisory 伪装成 qualified Skill 或 trusted world fact。
 
 ## Next
 
@@ -38,11 +41,12 @@
 - fresh observation 受控纵切完成：exact Skill 为 `genesis.observe@1.0.0`；三份 strict public schema
   把 replay lineage、requested keys、`1..300` 秒 TTL、typed values 和 payload CAS 闭合；controlled
   candidate 使用 Registry + SQLiteEventJournal/SQLiteRunStore，显式值、可解码 PNG 和
-  `simulator_executed=false`/0 steps。Golden policy seam 将 fresh observations 与 trusted claims、唯一
+  `simulator_executed=false`/0 steps。显式 test-controlled execution binding 让同一 workflow 的真实
+  controlled child receipt 进入 fresh observations、trusted claims、唯一
   StateDelta、resulting state 和 restart recovery 绑定；controlled evidence policy 还拒绝跨 workflow/
-  principal/revision/state/head 的 lineage 混用。专项 47 passed，新 schema/application 为
-  331 statements / 96 branches 100%，policy 为 153 statements / 70 branches 100%，公共 snapshot
-  55→58；没有运行 GPU，也没有 production
+  principal/revision/state/head 的 lineage 混用。专项 57 passed，新 binding/application 为
+  258 statements / 74 branches 100%，根套件 3830 pass/20 skip，公共 snapshot 55→58；没有运行 GPU，
+  也没有 production
   qualification、真实 Genesis capture 或 MCP exposure。
 
 - 最终 revision-3 integration 已完成：固定实现 `eec1976bdd71578e43b606ef3b88f3bd7d5975e9`

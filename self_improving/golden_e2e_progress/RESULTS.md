@@ -14,7 +14,7 @@
 - 历史 replay PNG、旧截图和既有媒体 receipt 只能作为历史 supporting artifacts，重新贴标签不构成
   fresh capture。首轮 test adapter 必须记录 `simulator_executed=false`。
 - 提交链 `9b0e86a` / `0cde87d` / `77a3510` / `0d38d42` / `69bc2db` / `bd00a1d` /
-  `b13cef2` / `fe802df` / `2950e71`
+  `b13cef2` / `fe802df` / `2950e71` / `af9d6e8` / `dd3e161` / `6cc6482` / `55b28bd`
   依次冻结合同与 RED、增加 strict schema/controlled application，并把 receipt-bound fresh observations
   接入 Golden evidence policy seam。三个新公共 schema 把 environment package、replay workflow/runtime
   receipts、可选 checkpoint、capture plan、requested FactKeys、TTL、typed values、capture window 与
@@ -31,14 +31,26 @@
   principal/workflow/revision/state ref/receipt head，并在首次提交和重启恢复时用持久 Invocation 重算
   source package、replay child、runtime receipt、checkpoint、capture plan、requested keys 与 TTL；两个
   workflow 即使具有相同 state content hash 也不能混用 receipt。
-- 验证：observation schema/application/policy/Golden projection focused 为 `47 passed`；schema/application 两模块
+- 首轮固定提交三轴验收发现 application receipt 与 Golden projection 虽分别通过，但尚未在同一个
+  child execution 中相接，因此没有把该结果算作完整纵切。后续增加显式
+  `create_controlled_genesis_observe_execution_binding`：只有 caller 提供已由同一 CAS 验证的受控
+  descriptor 时才注册 test-controlled Skill，并使用 Golden 分配的 child UUID 进入 durable controlled
+  intent；restart binding 只读 SQLite/CAS，不能安装 live qualification。它没有进入 production assembly、
+  qualified exports 或 MCP catalog。
+- 固定 `55b28bd482e0892989ec1caddfe4ef4483d2eb95` 的独立 archive 验收真实完成同一 workflow 的
+  setup revision 1 → image replay revision 2 → controlled observe revision 3。61 个 CAS 对象/
+  105,261 bytes、268 次递归 ArtifactRef/61 个 unique identity 全部闭合；Golden、fixture、observe
+  SQLite 分别为 1 start/3 operations、2 intents/invocations/states/4 events、1 intent/invocation/state/
+  3 events。无 live application 重开后重提返回相同 terminal，CAS 与所有表行数零增长。
+- 验证：observation schema/application/policy/Golden projection focused 为 `57 passed`；schema/application 两模块
   331 statements / 96 branches 均为 100%；`python -m script.export_harness_schemas --check` 验证 58 份
   snapshot，controlled policy 为 153 statements / 70 branches 100%，Golden 相邻六模块合计
-  1010 statements / 358 branches 100%。Registry/RunStore/receipt 相邻回归另为 `199 passed`，Ruff 与
-  diff check 通过。本轮未运行 GPU。
+  1010 statements / 358 branches 100%；新增 application/binding 为 258 statements / 74 branches
+  100%。最终根套件为 `3830 passed, 20 skipped`，Ruff/format/diff check 通过。本轮未运行 GPU。
 - 边界：本切片实现的是受控 fresh-observation 证据与持久状态 seam，不是 Genesis runtime pass。
-  production execution binding、真实 sealed checkpoint capture、production qualification、Registry
-  entry 和 `genesis_observe_v1_0_0` MCP exposure 均未完成。
+  已完成的 binding 仅接受 test-controlled qualification；production runtime binding、真实 sealed
+  checkpoint capture、production qualification、Registry entry 和 `genesis_observe_v1_0_0` MCP
+  exposure 均未完成。
 
 ## 2026-09-11 P5 真实 MCP compile→replay→validate
 
