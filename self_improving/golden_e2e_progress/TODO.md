@@ -4,9 +4,11 @@
 
 ## Doing
 
-- P2 `GoldenRunHarness.submit` 首个 compile-only 候选已完成实现与本地门禁，等待固定差异双轴审阅和
-  主线集成。该候选只把 exact qualified `text2env.compile@1.0.0` 从 workflow revision 0 推进到 1；
-  不实现 replay/validate workflow dispatch、MCP、Genesis 或 promotion。
+- P3 exact replay operation 正在独立 worktree 以 S1 公共 seam 做纵向 TDD：首个 tracer 固定
+  `start rev0 -> qualified compile rev1 -> qualified replay rev2`，两个 operation 由同一 actor-neutral
+  `GoldenRunHarness.submit` 与 sealed catalog 执行。replay 只接受 revision-1 可信状态中的 exact
+  environment package/compile receipt 关联；外部 runtime/media 使用明确的 test adapter，不计作真实
+  RoboTwin/SAPIEN 或 Genesis 运行证据。
 
 ## Next
 
