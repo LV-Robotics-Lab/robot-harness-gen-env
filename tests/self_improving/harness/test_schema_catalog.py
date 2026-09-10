@@ -54,6 +54,11 @@ from self_improving.harness.schemas.text2env_validate_v2 import (
     Text2EnvValidateV2Input,
     Text2EnvValidateV2Output,
 )
+from self_improving.harness.schemas.video_ingest import (
+    VideoDecodedFrameSequenceV1,
+    VideoMediaProbeV1,
+    VideoSourceMediaV2,
+)
 from self_improving.harness.schemas.workflow import (
     OperationSnapshot,
     RunCommandRequest,
@@ -154,7 +159,10 @@ EXPECTED_SCHEMA_IDS = {
     "harness.video2env_replay_output.v1",
     "harness.video2env_validate_input.v1",
     "harness.video2env_validate_output.v1",
+    "harness.video_decoded_frame_sequence.v1",
+    "harness.video_media_probe.v1",
     "harness.video_source_media.v1",
+    "harness.video_source_media.v2",
     "harness.trusted_tool_receipt.v2",
     "harness.workflow_operation_receipt.v2",
     "harness.workflow_start_receipt.v1",
@@ -201,12 +209,14 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert schema_model("harness.prompt_revision.v1") is PromptRevision
     assert schema_model("harness.initial_compile_attempt.v1") is InitialCompileAttemptV1
     assert (
-        schema_model("harness.prompt_revision_compile_attempt.v1")
-        is PromptRevisionCompileAttemptV1
+        schema_model("harness.prompt_revision_compile_attempt.v1") is PromptRevisionCompileAttemptV1
     )
     assert schema_model("harness.image_source_media.v1") is ImageSourceMedia
     assert schema_model("harness.image_media_probe.v1") is ImageMediaProbeV1
     assert schema_model("harness.video_source_media.v1") is VideoSourceMedia
+    assert schema_model("harness.video_decoded_frame_sequence.v1") is VideoDecodedFrameSequenceV1
+    assert schema_model("harness.video_media_probe.v1") is VideoMediaProbeV1
+    assert schema_model("harness.video_source_media.v2") is VideoSourceMediaV2
     assert schema_model("harness.x2env_asset_decision.v1") is X2EnvAssetDecision
     assert schema_model("harness.x2env_environment_package.v1") is X2EnvEnvironmentPackage
     assert schema_model("harness.image2env_compile_input.v1") is Image2EnvCompileInput
@@ -285,6 +295,9 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.image_source_media.v1",
             "harness.image_media_probe.v1",
             "harness.video_source_media.v1",
+            "harness.video_source_media.v2",
+            "harness.video_decoded_frame_sequence.v1",
+            "harness.video_media_probe.v1",
             "harness.x2env_asset_decision.v1",
             "harness.x2env_environment_package.v1",
             "harness.image2env_compile_input.v1",

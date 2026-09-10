@@ -1,0 +1,233 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "VideoDecodedFrameV1": {
+      "additionalProperties": false,
+      "description": "One decoded raw-frame identity in presentation order.",
+      "properties": {
+        "bytes": {
+          "minimum": 1,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "dts": {
+          "minimum": 0,
+          "title": "Dts",
+          "type": "integer"
+        },
+        "duration": {
+          "minimum": 1,
+          "title": "Duration",
+          "type": "integer"
+        },
+        "index": {
+          "minimum": 0,
+          "title": "Index",
+          "type": "integer"
+        },
+        "pts": {
+          "minimum": 0,
+          "title": "Pts",
+          "type": "integer"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "index",
+        "dts",
+        "pts",
+        "duration",
+        "bytes",
+        "sha256"
+      ],
+      "title": "VideoDecodedFrameV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.video_decoded_frame_sequence.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Canonical manifest for every frame decoded from one source container.",
+  "properties": {
+    "codec_name": {
+      "const": "h264",
+      "title": "Codec Name",
+      "type": "string"
+    },
+    "decoded_frame_count": {
+      "minimum": 1,
+      "title": "Decoded Frame Count",
+      "type": "integer"
+    },
+    "decoded_frame_sequence_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Decoded Frame Sequence Sha256",
+      "type": "string"
+    },
+    "decoder_name": {
+      "maxLength": 4096,
+      "minLength": 1,
+      "title": "Decoder Name",
+      "type": "string"
+    },
+    "decoder_version": {
+      "maxLength": 4096,
+      "minLength": 1,
+      "title": "Decoder Version",
+      "type": "string"
+    },
+    "detected_format": {
+      "const": "MP4",
+      "title": "Detected Format",
+      "type": "string"
+    },
+    "duration_ms": {
+      "minimum": 1,
+      "title": "Duration Ms",
+      "type": "integer"
+    },
+    "fps_denominator": {
+      "minimum": 1,
+      "title": "Fps Denominator",
+      "type": "integer"
+    },
+    "fps_numerator": {
+      "minimum": 1,
+      "title": "Fps Numerator",
+      "type": "integer"
+    },
+    "frames": {
+      "items": {
+        "$ref": "#/$defs/VideoDecodedFrameV1"
+      },
+      "minItems": 1,
+      "title": "Frames",
+      "type": "array"
+    },
+    "full_decode": {
+      "const": true,
+      "title": "Full Decode",
+      "type": "boolean"
+    },
+    "height": {
+      "minimum": 1,
+      "title": "Height",
+      "type": "integer"
+    },
+    "pixel_format": {
+      "const": "yuv420p",
+      "title": "Pixel Format",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.video_decoded_frame_sequence.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "time_base_denominator": {
+      "minimum": 1,
+      "title": "Time Base Denominator",
+      "type": "integer"
+    },
+    "time_base_numerator": {
+      "minimum": 1,
+      "title": "Time Base Numerator",
+      "type": "integer"
+    },
+    "unique_frame_count": {
+      "minimum": 1,
+      "title": "Unique Frame Count",
+      "type": "integer"
+    },
+    "width": {
+      "minimum": 1,
+      "title": "Width",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "source",
+    "detected_format",
+    "codec_name",
+    "pixel_format",
+    "width",
+    "height",
+    "time_base_numerator",
+    "time_base_denominator",
+    "fps_numerator",
+    "fps_denominator",
+    "duration_ms",
+    "frames",
+    "decoded_frame_count",
+    "unique_frame_count",
+    "decoded_frame_sequence_sha256",
+    "decoder_name",
+    "decoder_version",
+    "full_decode"
+  ],
+  "title": "VideoDecodedFrameSequenceV1",
+  "type": "object"
+}

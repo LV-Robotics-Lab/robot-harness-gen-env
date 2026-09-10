@@ -162,6 +162,19 @@ _EXPORT_GROUPS = (
         ),
     ),
     (
+        ".video_ingest",
+        (
+            "VIDEO_DECODED_FRAME_SEQUENCE_SCHEMA_ID",
+            "VIDEO_MEDIA_PROBE_SCHEMA_ID",
+            "VIDEO_SOURCE_MEDIA_V2_SCHEMA_ID",
+            "VideoDecodedFrameSequenceV1",
+            "VideoDecodedFrameV1",
+            "VideoMediaProbeV1",
+            "VideoSourceMediaV2",
+            "decoded_frame_sequence_sha256",
+        ),
+    ),
+    (
         ".workflow",
         (
             "OPERATION_SNAPSHOT_SCHEMA_ID",
@@ -274,6 +287,9 @@ _PUBLIC_NAMES = (
     "TEXT2ENV_VALIDATE_V2_OUTPUT_SCHEMA_ID",
     "TOOL_RESULT_V2_SCHEMA_ID",
     "TRUSTED_TOOL_RECEIPT_V2_SCHEMA_ID",
+    "VIDEO_DECODED_FRAME_SEQUENCE_SCHEMA_ID",
+    "VIDEO_MEDIA_PROBE_SCHEMA_ID",
+    "VIDEO_SOURCE_MEDIA_V2_SCHEMA_ID",
     "VALIDATE_V2_GATE_PROFILE",
     "VALIDATION_DECISION_SCHEMA_VERSION",
     "WORKFLOW_START_RECEIPT_SCHEMA_ID",
@@ -362,7 +378,11 @@ _PUBLIC_NAMES = (
     "Video2EnvReplayOutput",
     "Video2EnvValidateInput",
     "Video2EnvValidateOutput",
+    "VideoDecodedFrameSequenceV1",
+    "VideoDecodedFrameV1",
+    "VideoMediaProbeV1",
     "VideoSourceMedia",
+    "VideoSourceMediaV2",
     "VideoFrameToImageFallback",
     "WorkflowStartReceipt",
     "WorkflowOperationReceiptV2",
@@ -372,6 +392,7 @@ _PUBLIC_NAMES = (
     "external_agent_advisory_receipt_sha256",
     "prompt_revision_sha256",
     "resource_access_receipt_sha256",
+    "decoded_frame_sequence_sha256",
     "state_delta_v2_sha256",
 )
 

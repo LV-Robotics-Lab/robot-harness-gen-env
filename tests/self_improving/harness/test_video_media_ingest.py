@@ -537,3 +537,204 @@ def test_video_evidence_schemas_forbid_extra_fields_at_every_level(tmp_path: Pat
         VideoDecodedFrameSequenceV1.model_validate(nested_extra)
     with pytest.raises(ValidationError):
         VideoMediaProbeV1.model_validate({**probe, "legacy_probe_passed": True})
+
+
+def _set_path(document: dict[str, object], path: str, value: object) -> dict[str, object]:
+    changed = json.loads(json.dumps(document))
+    current: object = changed
+    segments = path.split(".")
+    for segment in segments[:-1]:
+        if isinstance(current, list):
+            current = current[int(segment)]
+        else:
+            assert isinstance(current, dict)
+            current = current[segment]
+    if isinstance(current, list):
+        current[int(segments[-1])] = value
+    else:
+        assert isinstance(current, dict)
+        current[segments[-1]] = value
+    return changed
+
+
+@_requires_video_ingest
+@pytest.mark.parametrize(
+    ("model_name", "path", "value"),
+    (
+        ("sequence", "source.uri", "artifact://sha256/" + "f" * 64),
+        ("sequence", "source.media_type", "video/webm"),
+        ("sequence", "source.schema_version", "harness.fake.v1"),
+        ("sequence", "width", 17),
+        ("sequence", "time_base_numerator", 2),
+        ("sequence", "fps_numerator", 12),
+        ("sequence", "fps_numerator", 5),
+        ("sequence", "frames.0.index", 1),
+        ("sequence", "frames.0.bytes", 383),
+        ("sequence", "decoded_frame_count", 17),
+        ("sequence", "unique_frame_count", 7),
+        ("sequence", "duration_ms", 2999),
+        ("sequence", "decoded_frame_sequence_sha256", "f" * 64),
+        ("probe", "source.schema_version", "harness.fake.v1"),
+        ("probe", "width", 17),
+        ("probe", "decoded_frame_sequence_manifest.uri", "artifact://sha256/" + "f" * 64),
+        ("probe", "decoded_frame_sequence_manifest.media_type", "text/plain"),
+        ("probe", "decoded_frame_sequence_manifest.schema_version", "harness.fake.v1"),
+        ("probe", "unique_frame_count", 19),
+        ("probe", "time_base_numerator", 2),
+        ("probe", "duration_ms", 2999),
+        ("media", "source.schema_version", "harness.fake.v1"),
+        ("media", "width", 17),
+        ("media", "probe.uri", "artifact://sha256/" + "f" * 64),
+        ("media", "probe.media_type", "text/plain"),
+        ("media", "probe.schema_version", "harness.fake.v1"),
+        ("media", "decoded_frame_sequence_manifest.media_type", "text/plain"),
+        ("media", "decoded_frame_sequence_manifest.schema_version", "harness.fake.v1"),
+        ("media", "source_media_sha256", "f" * 64),
+        ("media", "unique_frame_count", 19),
+        ("media", "time_base_numerator", 2),
+        ("media", "duration_ms", 2999),
+    ),
+)
+def test_video_public_models_reject_nonlocal_identity_drift(
+    tmp_path: Path,
+    model_name: str,
+    path: str,
+    value: object,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    source = _put_source(store, tmp_path)
+    media = _ingestor(store).ingest(source)
+    models = {
+        "sequence": (
+            VideoDecodedFrameSequenceV1,
+            json.loads(store.resolve(media.decoded_frame_sequence_manifest).path.read_bytes()),
+        ),
+        "probe": (
+            VideoMediaProbeV1,
+            json.loads(store.resolve(media.probe).path.read_bytes()),
+        ),
+        "media": (VideoSourceMediaV2, media.model_dump(mode="json")),
+    }
+    model, document = models[model_name]
+
+    with pytest.raises(ValidationError):
+        model.model_validate(_set_path(document, path, value))
+
+
+@_requires_video_ingest
+def test_video_ingest_constructor_and_exact_public_types_fail_closed(tmp_path: Path) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    decoder = ControlledCompleteDecoder()
+    assert VideoMediaIngestor is not None
+    assert VideoMediaConsumerVerifier is not None
+    with pytest.raises(TypeError, match="artifact_store"):
+        VideoMediaIngestor(object(), decoder, 1, 1, 1)
+    with pytest.raises(TypeError, match="decoder"):
+        VideoMediaIngestor(store, object(), 1, 1, 1)
+    for field in ("max_source_bytes", "max_decoded_pixels", "max_decoded_frames"):
+        values = {
+            "artifact_store": store,
+            "decoder": decoder,
+            "max_source_bytes": 1,
+            "max_decoded_pixels": 1,
+            "max_decoded_frames": 1,
+        }
+        values[field] = False
+        with pytest.raises(ValueError, match=field):
+            VideoMediaIngestor(**values)
+    ingestor = VideoMediaIngestor(store, decoder, 1, 1, 1)
+    consumer = VideoMediaConsumerVerifier(store, decoder, 1, 1, 1)
+    with pytest.raises(TypeError, match="source"):
+        ingestor.ingest(object())
+    with pytest.raises(TypeError, match="media"):
+        consumer.verify(object())
+
+
+@_requires_video_ingest
+@pytest.mark.parametrize(
+    ("result", "code"),
+    (
+        (RuntimeError("decoder failed"), "HARN_VIDEO_DECODE_FAILED"),
+        (object(), "HARN_VIDEO_DECODE_FAILED"),
+        (_stream(detected_format="WEBM"), "HARN_MEDIA_TYPE_MISMATCH"),
+        (_stream(codec_name="vp9"), "HARN_VIDEO_DECODE_FAILED"),
+        (_stream(pixel_format="rgb24"), "HARN_VIDEO_DECODE_FAILED"),
+        (_stream(width=False), "HARN_VIDEO_LIMIT_EXCEEDED"),
+        (_stream(height=-1), "HARN_VIDEO_LIMIT_EXCEEDED"),
+        (_stream(width=17), "HARN_VIDEO_DECODE_FAILED"),
+        (_stream(fps_numerator=6.0), "HARN_VIDEO_TIMING_INVALID"),
+        (_stream(fps_numerator=12, fps_denominator=2), "HARN_VIDEO_TIMING_INVALID"),
+        (
+            _stream(frames=(object(),), probed_frame_count=1, duration_ms=167),
+            "HARN_VIDEO_SEQUENCE_INVALID",
+        ),
+        (_stream(decoder_name=""), "HARN_VIDEO_DECODE_FAILED"),
+    ),
+)
+def test_video_ingest_normalizes_external_decoder_failures(
+    tmp_path: Path,
+    result: object,
+    code: str,
+) -> None:
+    class Decoder:
+        def decode(self, source: ArtifactRef, payload: bytes):
+            if isinstance(result, Exception):
+                raise result
+            return result
+
+    store = LocalArtifactStore(tmp_path / "cas")
+    source = _put_source(store, tmp_path)
+    before = _manifest(store)
+    with pytest.raises(VideoMediaIngestError) as captured:
+        _ingestor(store, Decoder()).ingest(source)
+    assert captured.value.code == code
+    assert _manifest(store) == before
+
+
+@_requires_video_ingest
+def test_video_ingest_preserves_typed_decoder_failure(tmp_path: Path) -> None:
+    class Decoder:
+        def decode(self, source: ArtifactRef, payload: bytes):
+            raise VideoMediaIngestError("HARN_VIDEO_SANDBOX_FAILED", "decoder sandbox failed")
+
+    store = LocalArtifactStore(tmp_path / "cas")
+    source = _put_source(store, tmp_path)
+    with pytest.raises(VideoMediaIngestError) as captured:
+        _ingestor(store, Decoder()).ingest(source)
+    assert captured.value.code == "HARN_VIDEO_SANDBOX_FAILED"
+
+
+@_requires_video_ingest
+def test_video_sequence_schema_rejects_unreduced_fps_fraction(tmp_path: Path) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    source = _put_source(store, tmp_path)
+    media = _ingestor(store).ingest(source)
+    sequence = json.loads(store.resolve(media.decoded_frame_sequence_manifest).path.read_bytes())
+    sequence.update({"fps_numerator": 12, "fps_denominator": 2})
+    with pytest.raises(ValidationError, match="fps must be a reduced"):
+        VideoDecodedFrameSequenceV1.model_validate(sequence)
+
+
+@_requires_video_ingest
+def test_video_consumer_rejects_invalid_typed_manifest_and_probe_json(tmp_path: Path) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    source = _put_source(store, tmp_path)
+    media = _ingestor(store).ingest(source)
+    invalid_path = tmp_path / "invalid.json"
+    invalid_path.write_bytes(b"{}\n")
+    invalid_manifest = store.put_file(
+        invalid_path,
+        name="invalid-manifest.json",
+        media_type="application/json",
+        schema_version=_SEQUENCE_SCHEMA_ID,
+    )
+    invalid_probe = invalid_manifest.model_copy(
+        update={"name": "invalid-probe.json", "schema_version": _PROBE_SCHEMA_ID}
+    )
+    for drifted in (
+        media.model_copy(update={"decoded_frame_sequence_manifest": invalid_manifest}),
+        media.model_copy(update={"probe": invalid_probe}),
+    ):
+        with pytest.raises(VideoMediaIngestError) as captured:
+            _consumer(store).verify(drifted)
+        assert captured.value.code == "HARN_VIDEO_EVIDENCE_MISMATCH"

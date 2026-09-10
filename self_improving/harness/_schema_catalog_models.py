@@ -198,7 +198,19 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
             ".schemas.x2env",
             "Video2EnvValidateOutput",
         ),
+        "harness.video_decoded_frame_sequence.v1": (
+            ".schemas.video_ingest",
+            "VideoDecodedFrameSequenceV1",
+        ),
+        "harness.video_media_probe.v1": (
+            ".schemas.video_ingest",
+            "VideoMediaProbeV1",
+        ),
         "harness.video_source_media.v1": (".schemas.x2env", "VideoSourceMedia"),
+        "harness.video_source_media.v2": (
+            ".schemas.video_ingest",
+            "VideoSourceMediaV2",
+        ),
         "harness.workflow_operation_receipt.v2": (
             ".schemas.workflow_operation",
             "WorkflowOperationReceiptV2",
