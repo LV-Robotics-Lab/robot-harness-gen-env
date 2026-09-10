@@ -86,6 +86,8 @@ _OBSERVE_CHILD = UUID("72000000-0000-4000-8000-000000000001")
 _FAILURE_CHILD = UUID("72000000-0000-4000-8000-000000000002")
 _ADVISORY_ID = UUID("73000000-0000-4000-8000-000000000001")
 _PROMPT_REVISION_ID = UUID("73000000-0000-4000-8000-000000000002")
+_POST_CONTROL_COMMAND = UUID("73000000-0000-4000-8000-000000000003")
+_POST_CONTROL_CHILD = UUID("72000000-0000-4000-8000-000000000003")
 _PNG = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
 )
@@ -937,3 +939,65 @@ def test_reopen_fails_closed_when_a_control_payload_is_tampered(tmp_path: Path) 
                 workflow_run_id=case.head.workflow_run_id,
             )
         )
+
+
+@_requires_control_seam
+def test_qualified_skill_can_continue_from_a_prompt_revision_head(tmp_path: Path) -> None:
+    case = _case(tmp_path)
+    _, advisory = _submit_advisory(case)
+    prompt = case.harness.submit_control(_prompt_command(case, advisory))  # type: ignore[attr-defined]
+    current = case.harness.read(
+        RunReadRequest(
+            schema_version="harness.run_read_request.v1",
+            principal_id=case.head.principal_id,
+            workflow_run_id=case.head.workflow_run_id,
+        )
+    )
+    resumed = GoldenRunHarness(
+        artifact_store=case.store,
+        workflow_store=case.workflow_store,
+        execution_catalog=create_golden_execution_catalog(
+            bindings=(
+                _create_golden_execution_binding(
+                    policy=case.policy,
+                    application=case.application,
+                    child_authority=case.child_store,
+                ),
+            )
+        ),
+        clock=case.clock,
+        child_run_id_factory=lambda: _POST_CONTROL_CHILD,
+    )
+    operation = resumed.submit(
+        RunCommandRequest(
+            schema_version="harness.run_command_request.v1",
+            command_id=_POST_CONTROL_COMMAND,
+            principal_id=current.principal_id,
+            workflow_run_id=current.workflow_run_id,
+            idempotency_key="post-prompt-revision",
+            expected_workflow_revision=current.revision,
+            expected_state_sha256=current.state_sha256,
+            expected_receipt_head_sha256=current.receipt_head.sha256,
+            skill_ref=_SKILL_REF,
+            parameters=case.diagnostic.model_dump(mode="json"),
+        )
+    )
+    final = resumed.read(
+        RunReadRequest(
+            schema_version="harness.run_read_request.v1",
+            principal_id=current.principal_id,
+            workflow_run_id=current.workflow_run_id,
+        )
+    )
+
+    assert operation.status is RunStatus.BLOCKED
+    assert operation.base_revision == 4
+    assert operation.committed_revision == 5
+    assert final.revision == final.turn_seq == 5
+    assert final.receipt_head.schema_version == "harness.workflow_operation_receipt.v2"
+    receipt = _read_model(case.store, final.receipt_head, WorkflowOperationReceiptV2)
+    assert type(receipt) is WorkflowOperationReceiptV2
+    assert receipt.predecessor_receipt == prompt.receipt
+    assert final.state_ref == current.state_ref
+    assert final.state_sha256 == current.state_sha256
+    assert final.child_runs == (*current.child_runs, _POST_CONTROL_CHILD)
