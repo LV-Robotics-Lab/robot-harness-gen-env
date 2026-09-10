@@ -56,10 +56,14 @@ def describe_runtime_capabilities(
     robotwin_root: Path,
     task_config: str,
 ) -> dict[str, Any]:
+    runner_path = Path(__file__).resolve()
     return describe_runtime_capability(
         robotwin_root=robotwin_root,
         task_config=task_config,
-        runner_path=Path(__file__).resolve(),
+        runner_path=runner_path,
+        runtime_source_root=(
+            runner_path.parents[1] if runner_path.parent.name == "script" else None
+        ),
     )
 
 

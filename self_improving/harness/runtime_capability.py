@@ -45,6 +45,7 @@ RUNTIME_CAPABILITY_PROTOCOL_VERSION = 1
 RUNTIME_BACKEND_ID = "robotwin.sapien"
 RUNTIME_EVIDENCE_SCHEMA = "robotwin.scene_runtime_evidence.v2"
 RUNTIME_VALIDATION_SCHEMA = "robotwin.scene_validation.v1"
+RUNTIME_SOURCE_ROOT_LOGICAL_NAME = "replay_distribution"
 
 REQUIRED_RUNTIME_DISTRIBUTIONS = (
     "Pillow",
@@ -227,6 +228,7 @@ def describe_runtime_capability(
     robotwin_root: Path,
     task_config: str,
     runner_path: Path,
+    runtime_source_root: Path | None = None,
 ) -> dict[str, Any]:
     """Describe one runnable worker configuration or fail closed."""
 
@@ -240,11 +242,16 @@ def describe_runtime_capability(
     # capability fails on the actual Base_Task import boundary, including any
     # transitive module or import-time resource dependency.
     bootstrap = _bootstrap_identity(root)
+    runner = Path(runner_path)
+    mapped_source_root = _mapped_runtime_source_root(
+        runner_path=runner,
+        runtime_source_root=runtime_source_root,
+    )
     document = {
         "schema_version": RUNTIME_CAPABILITY_SCHEMA,
         "protocol_version": RUNTIME_CAPABILITY_PROTOCOL_VERSION,
         "backend_id": RUNTIME_BACKEND_ID,
-        "runner_sha256": _regular_file_sha256(Path(runner_path), label="runtime runner"),
+        "runner_sha256": _regular_file_sha256(runner, label="runtime runner"),
         "python": {
             "implementation": platform.python_implementation(),
             "version": platform.python_version(),
@@ -255,7 +262,7 @@ def describe_runtime_capability(
         },
         "packages": _distribution_identities(),
         "runtime_binaries": _runtime_binary_identities(),
-        "accelerator": _accelerator_identity(),
+        "accelerator": _accelerator_identity(runtime_source_root=mapped_source_root),
         "bootstrap": bootstrap,
         "source_modules": {
             "scene_gen": {
@@ -423,7 +430,7 @@ def _runtime_binary_identities() -> dict[str, dict[str, Any]]:
     return {"ffmpeg": _binary_identity(Path(raw_path), label="FFmpeg executable")}
 
 
-def _accelerator_identity() -> dict[str, Any]:
+def _accelerator_identity(*, runtime_source_root: Path | None = None) -> dict[str, Any]:
     raw_executable = shutil.which("nvidia-smi")
     if not isinstance(raw_executable, str) or not raw_executable:
         raise RuntimeCapabilityError("nvidia-smi executable is missing")
@@ -466,9 +473,17 @@ def _accelerator_identity() -> dict[str, Any]:
     environment: dict[str, dict[str, Any]] = {}
     for name in ACCELERATOR_ENVIRONMENT_KEYS:
         present = name in os.environ
+        value = os.environ[name] if present else None
+        if (
+            name == "PYTHONPATH"
+            and value is not None
+            and runtime_source_root is not None
+            and value == str(runtime_source_root)
+        ):
+            value = RUNTIME_SOURCE_ROOT_LOGICAL_NAME
         environment[name] = {
             "present": present,
-            "value_sha256": (_sha256_bytes(os.environ[name].encode("utf-8")) if present else None),
+            "value_sha256": (_sha256_bytes(value.encode("utf-8")) if value is not None else None),
         }
     return {
         "probe": {
@@ -478,6 +493,32 @@ def _accelerator_identity() -> dict[str, Any]:
         "gpus": gpus,
         "selection_environment": environment,
     }
+
+
+def _mapped_runtime_source_root(
+    *,
+    runner_path: Path,
+    runtime_source_root: Path | None,
+) -> Path | None:
+    if runtime_source_root is None:
+        return None
+    candidate = Path(runtime_source_root).expanduser()
+    try:
+        resolved = candidate.resolve(strict=True)
+        runner_candidate = Path(runner_path).expanduser()
+        runner_resolved = runner_candidate.resolve(strict=True)
+    except OSError as error:
+        raise RuntimeCapabilityError("runtime source mapping does not exist") from error
+    if (
+        candidate.is_symlink()
+        or not resolved.is_dir()
+        or candidate.absolute() != resolved
+        or runner_candidate.is_symlink()
+        or runner_candidate.absolute() != runner_resolved
+        or runner_resolved != resolved / "script" / "run_scene_runtime.py"
+    ):
+        raise RuntimeCapabilityError("runtime source mapping does not identify the runner")
+    return resolved
 
 
 def _bootstrap_identity(root: Path) -> dict[str, str]:

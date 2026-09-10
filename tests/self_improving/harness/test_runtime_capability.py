@@ -255,6 +255,98 @@ def test_description_binds_full_dependency_and_selected_embodiment_closures(
     runtime_capability.validate_runtime_capability_document(document)
 
 
+def test_description_maps_only_the_declared_runtime_source_root_portably(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runner_fixture = _source_inputs(tmp_path, monkeypatch)
+    robotwin = _runtime_checkout(tmp_path / "robotwin")
+    install_a = tmp_path / "install-a"
+    install_b = tmp_path / "nested" / "install-b"
+    runner_a = install_a / "script" / "run_scene_runtime.py"
+    runner_b = install_b / "script" / "run_scene_runtime.py"
+    runner_a.parent.mkdir(parents=True)
+    runner_b.parent.mkdir(parents=True)
+    runner_a.write_bytes(runner_fixture.read_bytes())
+    runner_b.write_bytes(runner_fixture.read_bytes())
+
+    monkeypatch.setenv("PYTHONPATH", str(install_a))
+    first = runtime_capability.describe_runtime_capability(
+        robotwin_root=robotwin,
+        task_config="demo_clean",
+        runner_path=runner_a,
+        runtime_source_root=install_a,
+    )
+    monkeypatch.setenv("PYTHONPATH", str(install_b))
+    relocated = runtime_capability.describe_runtime_capability(
+        robotwin_root=robotwin,
+        task_config="demo_clean",
+        runner_path=runner_b,
+        runtime_source_root=install_b,
+    )
+
+    assert relocated == first
+    assert first["accelerator"]["selection_environment"]["PYTHONPATH"] == {
+        "present": True,
+        "value_sha256": hashlib.sha256(
+            runtime_capability.RUNTIME_SOURCE_ROOT_LOGICAL_NAME.encode("utf-8")
+        ).hexdigest(),
+    }
+
+    foreign_pythonpath = str(tmp_path / "external-pythonpath")
+    monkeypatch.setenv("PYTHONPATH", foreign_pythonpath)
+    mismatched = runtime_capability.describe_runtime_capability(
+        robotwin_root=robotwin,
+        task_config="demo_clean",
+        runner_path=runner_b,
+        runtime_source_root=install_b,
+    )
+
+    assert mismatched != relocated
+    assert mismatched["accelerator"]["selection_environment"]["PYTHONPATH"] == {
+        "present": True,
+        "value_sha256": hashlib.sha256(foreign_pythonpath.encode("utf-8")).hexdigest(),
+    }
+
+
+def test_description_rejects_an_invalid_runtime_source_mapping(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runner = _source_inputs(tmp_path, monkeypatch)
+    robotwin = _runtime_checkout(tmp_path / "robotwin")
+    source_root = tmp_path / "install"
+    mapped_runner = source_root / "script" / "run_scene_runtime.py"
+    mapped_runner.parent.mkdir(parents=True)
+    mapped_runner.write_bytes(runner.read_bytes())
+
+    with pytest.raises(runtime_capability.RuntimeCapabilityError, match="does not exist"):
+        runtime_capability.describe_runtime_capability(
+            robotwin_root=robotwin,
+            task_config="demo_clean",
+            runner_path=mapped_runner,
+            runtime_source_root=tmp_path / "missing",
+        )
+
+    with pytest.raises(runtime_capability.RuntimeCapabilityError, match="identify the runner"):
+        runtime_capability.describe_runtime_capability(
+            robotwin_root=robotwin,
+            task_config="demo_clean",
+            runner_path=runner,
+            runtime_source_root=source_root,
+        )
+
+    source_link = tmp_path / "source-link"
+    source_link.symlink_to(source_root, target_is_directory=True)
+    with pytest.raises(runtime_capability.RuntimeCapabilityError, match="identify the runner"):
+        runtime_capability.describe_runtime_capability(
+            robotwin_root=robotwin,
+            task_config="demo_clean",
+            runner_path=source_link / "script" / "run_scene_runtime.py",
+            runtime_source_root=source_link,
+        )
+
+
 @pytest.fixture
 def capability_document(
     tmp_path: Path,
