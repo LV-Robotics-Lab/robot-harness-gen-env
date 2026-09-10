@@ -1,0 +1,24 @@
+{
+  "$id": "harness.initial_compile_attempt.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "An initial compile with no retry or repair lineage.",
+  "properties": {
+    "kind": {
+      "const": "initial",
+      "title": "Kind",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.initial_compile_attempt.v1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind"
+  ],
+  "title": "InitialCompileAttemptV1",
+  "type": "object"
+}

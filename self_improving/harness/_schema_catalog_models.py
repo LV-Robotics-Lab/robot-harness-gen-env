@@ -45,6 +45,10 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
             ".schemas.genesis_observe",
             "GenesisObserveOutput",
         ),
+        "harness.initial_compile_attempt.v1": (
+            ".schemas.compile_attempt",
+            "InitialCompileAttemptV1",
+        ),
         "harness.advisory_record_command.v1": (
             ".schemas.golden_control",
             "AdvisoryRecordCommand",
@@ -65,6 +69,10 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
             ".schemas.golden_control",
             "PromptRevision",
         ),
+        "harness.prompt_revision_compile_attempt.v1": (
+            ".schemas.compile_attempt",
+            "PromptRevisionCompileAttemptV1",
+        ),
         "harness.resource_access_receipt.v1": (
             ".schemas.resource_access",
             "ResourceAccessReceipt",
@@ -72,6 +80,10 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
         "harness.image2env_compile_input.v1": (
             ".schemas.x2env",
             "Image2EnvCompileInput",
+        ),
+        "harness.image2env_compile_input.v2": (
+            ".schemas.x2env",
+            "Image2EnvCompileV2Input",
         ),
         "harness.image2env_compile_output.v1": (
             ".schemas.x2env",
@@ -157,6 +169,10 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
         "harness.video2env_compile_input.v1": (
             ".schemas.x2env",
             "Video2EnvCompileInput",
+        ),
+        "harness.video2env_compile_input.v2": (
+            ".schemas.x2env",
+            "Video2EnvCompileV2Input",
         ),
         "harness.video2env_compile_output.v1": (
             ".schemas.x2env",

@@ -30,6 +30,10 @@ from self_improving.harness.schemas.asset_staging import (
     AssetStageResult,
 )
 from self_improving.harness.schemas.common import ArtifactRef, SkillDescriptorV2
+from self_improving.harness.schemas.compile_attempt import (
+    InitialCompileAttemptV1,
+    PromptRevisionCompileAttemptV1,
+)
 from self_improving.harness.schemas.genesis_observe import (
     GenesisObservationReceipt,
     GenesisObserveInput,
@@ -67,6 +71,7 @@ from self_improving.harness.schemas.workflow_operation import (
 from self_improving.harness.schemas.x2env import (
     Image2EnvCompileInput,
     Image2EnvCompileOutput,
+    Image2EnvCompileV2Input,
     Image2EnvReplayInput,
     Image2EnvReplayOutput,
     Image2EnvValidateInput,
@@ -74,6 +79,7 @@ from self_improving.harness.schemas.x2env import (
     ImageSourceMedia,
     Video2EnvCompileInput,
     Video2EnvCompileOutput,
+    Video2EnvCompileV2Input,
     Video2EnvReplayInput,
     Video2EnvReplayOutput,
     Video2EnvValidateInput,
@@ -101,14 +107,17 @@ EXPECTED_SCHEMA_IDS = {
     "harness.genesis_observe_input.v1",
     "harness.genesis_observe_output.v1",
     "harness.image2env_compile_input.v1",
+    "harness.image2env_compile_input.v2",
     "harness.image2env_compile_output.v1",
     "harness.image2env_replay_input.v1",
     "harness.image2env_replay_output.v1",
     "harness.image2env_validate_input.v1",
     "harness.image2env_validate_output.v1",
     "harness.image_source_media.v1",
+    "harness.initial_compile_attempt.v1",
     "harness.operation_snapshot.v1",
     "harness.prompt_revision.v1",
+    "harness.prompt_revision_compile_attempt.v1",
     "harness.prompt_revision_command.v1",
     "harness.qualified_skill_execution.v2",
     "harness.replay_vlm_assessment_input.v1",
@@ -137,6 +146,7 @@ EXPECTED_SCHEMA_IDS = {
     "harness.text2env_validate_output.v2",
     "harness.tool_result.v2",
     "harness.video2env_compile_input.v1",
+    "harness.video2env_compile_input.v2",
     "harness.video2env_compile_output.v1",
     "harness.video2env_replay_input.v1",
     "harness.video2env_replay_output.v1",
@@ -187,17 +197,24 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     )
     assert schema_model("harness.prompt_revision_command.v1") is PromptRevisionCommand
     assert schema_model("harness.prompt_revision.v1") is PromptRevision
+    assert schema_model("harness.initial_compile_attempt.v1") is InitialCompileAttemptV1
+    assert (
+        schema_model("harness.prompt_revision_compile_attempt.v1")
+        is PromptRevisionCompileAttemptV1
+    )
     assert schema_model("harness.image_source_media.v1") is ImageSourceMedia
     assert schema_model("harness.video_source_media.v1") is VideoSourceMedia
     assert schema_model("harness.x2env_asset_decision.v1") is X2EnvAssetDecision
     assert schema_model("harness.x2env_environment_package.v1") is X2EnvEnvironmentPackage
     assert schema_model("harness.image2env_compile_input.v1") is Image2EnvCompileInput
+    assert schema_model("harness.image2env_compile_input.v2") is Image2EnvCompileV2Input
     assert schema_model("harness.image2env_compile_output.v1") is Image2EnvCompileOutput
     assert schema_model("harness.image2env_replay_input.v1") is Image2EnvReplayInput
     assert schema_model("harness.image2env_replay_output.v1") is Image2EnvReplayOutput
     assert schema_model("harness.image2env_validate_input.v1") is Image2EnvValidateInput
     assert schema_model("harness.image2env_validate_output.v1") is Image2EnvValidateOutput
     assert schema_model("harness.video2env_compile_input.v1") is Video2EnvCompileInput
+    assert schema_model("harness.video2env_compile_input.v2") is Video2EnvCompileV2Input
     assert schema_model("harness.video2env_compile_output.v1") is Video2EnvCompileOutput
     assert schema_model("harness.video2env_replay_input.v1") is Video2EnvReplayInput
     assert schema_model("harness.video2env_replay_output.v1") is Video2EnvReplayOutput
@@ -260,17 +277,21 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.external_agent_advisory_receipt.v1",
             "harness.prompt_revision_command.v1",
             "harness.prompt_revision.v1",
+            "harness.initial_compile_attempt.v1",
+            "harness.prompt_revision_compile_attempt.v1",
             "harness.image_source_media.v1",
             "harness.video_source_media.v1",
             "harness.x2env_asset_decision.v1",
             "harness.x2env_environment_package.v1",
             "harness.image2env_compile_input.v1",
+            "harness.image2env_compile_input.v2",
             "harness.image2env_compile_output.v1",
             "harness.image2env_replay_input.v1",
             "harness.image2env_replay_output.v1",
             "harness.image2env_validate_input.v1",
             "harness.image2env_validate_output.v1",
             "harness.video2env_compile_input.v1",
+            "harness.video2env_compile_input.v2",
             "harness.video2env_compile_output.v1",
             "harness.video2env_replay_input.v1",
             "harness.video2env_replay_output.v1",

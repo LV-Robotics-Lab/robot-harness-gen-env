@@ -22,6 +22,7 @@ from .base import (
     public_schema_config,
 )
 from .common import ArtifactRef, Blocker, ValidationStatus
+from .compile_attempt import CompileAttemptV1
 
 IMAGE_SOURCE_MEDIA_SCHEMA_ID = "harness.image_source_media.v1"
 VIDEO_SOURCE_MEDIA_SCHEMA_ID = "harness.video_source_media.v1"
@@ -29,12 +30,14 @@ X2ENV_ASSET_DECISION_SCHEMA_ID = "harness.x2env_asset_decision.v1"
 X2ENV_ENVIRONMENT_PACKAGE_SCHEMA_ID = "harness.x2env_environment_package.v1"
 
 IMAGE2ENV_COMPILE_INPUT_SCHEMA_ID = "harness.image2env_compile_input.v1"
+IMAGE2ENV_COMPILE_V2_INPUT_SCHEMA_ID = "harness.image2env_compile_input.v2"
 IMAGE2ENV_COMPILE_OUTPUT_SCHEMA_ID = "harness.image2env_compile_output.v1"
 IMAGE2ENV_REPLAY_INPUT_SCHEMA_ID = "harness.image2env_replay_input.v1"
 IMAGE2ENV_REPLAY_OUTPUT_SCHEMA_ID = "harness.image2env_replay_output.v1"
 IMAGE2ENV_VALIDATE_INPUT_SCHEMA_ID = "harness.image2env_validate_input.v1"
 IMAGE2ENV_VALIDATE_OUTPUT_SCHEMA_ID = "harness.image2env_validate_output.v1"
 VIDEO2ENV_COMPILE_INPUT_SCHEMA_ID = "harness.video2env_compile_input.v1"
+VIDEO2ENV_COMPILE_V2_INPUT_SCHEMA_ID = "harness.video2env_compile_input.v2"
 VIDEO2ENV_COMPILE_OUTPUT_SCHEMA_ID = "harness.video2env_compile_output.v1"
 VIDEO2ENV_REPLAY_INPUT_SCHEMA_ID = "harness.video2env_replay_input.v1"
 VIDEO2ENV_REPLAY_OUTPUT_SCHEMA_ID = "harness.video2env_replay_output.v1"
@@ -356,6 +359,26 @@ class Video2EnvCompileInput(_CompileInput):
 
     schema_version: Literal[VIDEO2ENV_COMPILE_INPUT_SCHEMA_ID]
     source_media: VideoSourceMedia
+
+
+class Image2EnvCompileV2Input(_CompileInput):
+    """First executable image compile input with explicit attempt lineage."""
+
+    model_config = public_schema_config(IMAGE2ENV_COMPILE_V2_INPUT_SCHEMA_ID)
+
+    schema_version: Literal[IMAGE2ENV_COMPILE_V2_INPUT_SCHEMA_ID]
+    source_media: ImageSourceMedia
+    attempt: CompileAttemptV1
+
+
+class Video2EnvCompileV2Input(_CompileInput):
+    """First executable video compile input with explicit attempt lineage."""
+
+    model_config = public_schema_config(VIDEO2ENV_COMPILE_V2_INPUT_SCHEMA_ID)
+
+    schema_version: Literal[VIDEO2ENV_COMPILE_V2_INPUT_SCHEMA_ID]
+    source_media: VideoSourceMedia
+    attempt: CompileAttemptV1
 
 
 class _CompileOutput(HarnessModel):
