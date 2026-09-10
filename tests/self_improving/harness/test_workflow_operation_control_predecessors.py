@@ -70,14 +70,10 @@ def _receipt_values(predecessor: ArtifactRef) -> dict[str, Any]:
 def test_public_workflow_operation_accepts_exact_control_receipt_predecessors(
     schema_version: str,
 ) -> None:
-    assert public_harness.WorkflowOperationReceiptV2 is (
-        public_schemas.WorkflowOperationReceiptV2
-    )
+    assert public_harness.WorkflowOperationReceiptV2 is (public_schemas.WorkflowOperationReceiptV2)
     predecessor = _ref("control-receipt", schema_version)
 
-    receipt = public_harness.WorkflowOperationReceiptV2.model_validate(
-        _receipt_values(predecessor)
-    )
+    receipt = public_harness.WorkflowOperationReceiptV2.model_validate(_receipt_values(predecessor))
 
     assert receipt.predecessor_receipt == predecessor
     assert receipt.model_json_schema()["$id"] == "harness.workflow_operation_receipt.v2"
@@ -121,6 +117,4 @@ def test_public_workflow_operation_rejects_non_receipt_or_unbound_predecessors(
     message: str,
 ) -> None:
     with pytest.raises(ValidationError, match=message):
-        public_harness.WorkflowOperationReceiptV2.model_validate(
-            _receipt_values(predecessor)
-        )
+        public_harness.WorkflowOperationReceiptV2.model_validate(_receipt_values(predecessor))

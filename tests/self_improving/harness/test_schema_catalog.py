@@ -180,8 +180,7 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert schema_model("harness.advisory_record_command.v1") is AdvisoryRecordCommand
     assert schema_model("harness.control_commit_snapshot.v1") is ControlCommitSnapshot
     assert (
-        schema_model("harness.external_agent_advisory_receipt.v1")
-        is ExternalAgentAdvisoryReceipt
+        schema_model("harness.external_agent_advisory_receipt.v1") is ExternalAgentAdvisoryReceipt
     )
     assert schema_model("harness.prompt_revision_command.v1") is PromptRevisionCommand
     assert schema_model("harness.prompt_revision.v1") is PromptRevision
