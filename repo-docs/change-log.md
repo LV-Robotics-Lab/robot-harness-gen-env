@@ -2,6 +2,12 @@
 
 ## 2026-09-10
 
+- 增加 P3 exact replay Golden operation：replay-owned policy/adapter 通过同一 actor-neutral
+  `GoldenRunHarness.submit` 与 sealed catalog，把 qualified compile revision 1 推进到 qualified replay
+  revision 2。package/catalog 必须来自同一个 compile trusted receipt；只晋升 runtime evidence，媒体不算
+  fresh observation。四恢复窗口、关联/漂移/顺序/幂等边界完成测试，两个新增模块 statement/branch
+  100%。真实 production compile→RoboTwin/SAPIEN replay 完成 0/900/120/120/12 并在无 live application
+  重启后返回同一 terminal operation；不表示 validate、Genesis、promotion 或真机能力。
 - 在 P3a 固定实现 `8e45bd9` 上再次独立真实重签 replay qualification：官方 generator 使用全新外部
   bundle/scratch/CAS 与临时 delegated scope，direct/kernel 各单次完成 0/900/120/120/12；物理 pass、
   120/100/114 顺序媒体、23-member runtime assets、63-ref closure、14-schema gate 和 fresh-CAS strict

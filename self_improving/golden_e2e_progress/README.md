@@ -36,7 +36,8 @@
 `p1_p6_implementation`
 
 只读审计和第一版契约设计已经完成；用户于 2026-09-09 确认公共 seam、exact Skill MCP、
-`genesis.robot_policy@1` 最终门、MCP optional dependency 与 autoresearch 设置。当前按 P0/P1 的
-纵向 TDD 切片实施。P1 的 revision-0 durable start/read 已合入；P6 正在修复 asset staging 的
-RoboTwin loader sidecar 闭包，并以 staged-only 的真实 SAPIEN 回放验收。autoresearch 只在其冻结
-benchmark 可以真实运行后开始。
+`genesis.robot_policy@1` 最终门、MCP optional dependency 与 autoresearch 设置。P1/P2 已建立 durable
+start/read 与第一个 exact compile operation；P3 候选又在同一 actor-neutral workflow 中完成 exact
+qualified replay operation，并以真实 RoboTwin/SAPIEN 把 revision 推进为 0→1→2。该结果仍不是
+validate、Genesis 或 promotion。P6 继续修复资产 staging；autoresearch 只在其冻结 benchmark 可以
+真实运行后开始。

@@ -49,16 +49,15 @@ checkout 并锁住 committed snapshot；核心资格模块强制 100%
 语句与分支覆盖。compile 的 asset admission 仍发生在 solve 前且失败不回滚；跨 run promotion、
 identity-frozen resumable EvaluationRun 与 MCP adapter 仍未闭合，契约保持 `Status: Proposed`。
 
-P2 的公共 `GoldenRunHarness.submit` 当前只调度 exact qualified `text2env.compile@1.0.0`。它从同一
-RegistrySnapshot、live production descriptor/qualification 和 Skill-owned evidence policy 冻结执行；
-command、controlled child、ToolResult、唯一 StateDelta、workflow receipt 与 revision 0→1 head 都进入
-同一 CAS/SQLite closure。generic execution catalog 不含 compile 分支，compile binding 与 policy 各自拥有
-模块和稳定 identity；public binding 是只读 Protocol，opaque factory product 在 catalog 消费时重验
-skill/policy/application/input model/live descriptor/child authority。policy 只接收 parameters，command
-identity 始终由 aggregate 保留。operation 幂等域包含 exact Skill；ToolResult 与 workflow receipt 只引用同一份
-StateDelta CAS。parent reservation 后且 child intent 前可以继续执行；只有 intent 或只有 invocation 时
-保守保持 running；已有 child terminal 时只提交 parent。这些边界不证明任意外部副作用 exactly-once，
-也没有接通 replay/validate、MCP、Genesis 或 promotion。
+P3 的公共 `GoldenRunHarness.submit` 当前可在同一 workflow 依次调度 exact qualified
+`text2env.compile@1.0.0` 与 `text2env.replay@1.0.0`。两者都从同一 RegistrySnapshot、live production
+descriptor/qualification 和 Skill-owned evidence policy 冻结执行；command、controlled child、ToolResult、
+唯一 StateDelta、workflow receipt 与 revision 0→1→2 head 进入同一 CAS/SQLite closure。generic execution
+catalog 不含具体 Skill 分支，compile/replay 各有独立 binding 与 policy；opaque factory product 在 catalog
+消费时重验交叉绑定。replay 只接受当前受信 state 中由同一个 compile receipt 产生且与 parameters 完全一致
+的 package/catalog，只晋升 `replay.runtime_evidence`，媒体不是 fresh observation。四个 child/parent 恢复
+窗口保持与 compile 相同的保守语义。真实同-run 证据完成 0/900/120/120/12，但这些边界不证明任意外部
+副作用 exactly-once，也没有接通 validate、MCP、Genesis 或 promotion。
 
 System 2 的 compile 竖切不再只信模型自报或 artifact 外形：planner prompt/raw decision/receipt、
 精确 base world state、PlannerContext、Skill qualification、Invocation/RunState、effective catalog、

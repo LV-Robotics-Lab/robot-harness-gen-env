@@ -1,5 +1,37 @@
 # 进度与结果
 
+## 2026-09-10 P3 GoldenRun qualified compile → replay
+
+- 公共 RED `17e535d` 先固定同一 actor-neutral workflow 的第二个 exact operation：rev0 经真实 qualified
+  compile 到 rev1，再从该受信状态中的 EnvironmentPackage/asset catalog 和同一 compile receipt 关联
+  构造 replay input，最后经 `GoldenRunHarness.submit` 到 rev2。P3a durable application 与两轮真实 replay
+  重签完成后，P3b 功能提交为 `b51bf5783f9ea5cd8e0e4559bef020d934d15d30`。
+- 新增 replay-owned `golden_replay_policy.py` 与 `golden_replay_execution.py`；generic aggregate/catalog
+  没有新增 replay 分支。policy 只读 parameters 与 base trusted state，只从 terminal typed output 重建
+  `replay.runtime_evidence` 一项 claim；媒体留作 supporting artifacts，`fresh_observations=()`。production
+  adapter 在构造和每次访问前重验 factory seal，并把 application pending 映射到 actor-neutral pending。
+- 用例覆盖 succeeded/blocked/failed、reservation/intent/invocation/terminal 四个恢复窗口、cross-workflow
+  与 stale package 在 child intent 前拒绝、typed output/supporting CAS 关联、policy/application authority
+  漂移、两个 binding 的顺序/重复、跨 exact Skill 共用 idempotency key，以及 replay 加入后 compile policy
+  digest 与既有 compile operation 不变。focused `23 passed`，两个新增模块 125 statements / 34 branches
+  均为 100%；compile/replay/qualification 邻接回归 `448 passed`。
+- 真实运行第 1 次在任何 child 前因 objective 的 UTC 文本不是模型规范 JSON 而拒绝；第 2 次由类型化
+  evidence 生成字节后，同一 `GoldenRunHarness` 真正提交 production compile 与 production
+  RoboTwin/SAPIEN replay，revision 为 `0→1→2`。runtime evidence
+  `ddb1cf26bb3d9ad0d904519dbe4f0b506918131b13ab1678854e537e68b7673d` 为 pass，900 steps、120-step
+  contact window；MP4 `a41d05366050ba0c2af635e69299a12a4b2a0e78ed27490517d27b122fa12a4e`
+  为 120/100/114 frames、12 fps。无 live application 的新 Harness 实例重读并重提交原 command，返回
+  同一 terminal operation，没有再次执行运行时。
+- 正式证据：`docs/evidence/golden-compile-replay-p3-20260910.{md,json}`；外部可观看媒体目录在该页记录。
+  本切片不调用 validate Skill，不证明 Genesis native 环境、`genesis.robot_policy@1` 最终门、promotion
+  或真机。
+- 最终标准 root 为 `3676 passed, 20 skipped in 172.25s`；39 份 Harness schema snapshot、P3 Python
+  Ruff/format 与 diff check 通过。全 root 带 coverage 的诊断运行中，两个既有 0.1 秒 capability 大输出
+  用例在 coverage 开销下被分类为 timeout，完整结束为 `3674 passed, 20 skipped, 2 failed`；同一 4-case
+  节点脱离 coverage 立即 `4 passed`，随后标准 root 全绿。P3 两个新增模块的独立 statement/branch
+  coverage 均为 100%。统一平台脚本还在测试前因此独立 worktree 的 OpenReal2Sim 与 digital-cousins
+  未初始化而返回 `ready=false`；没有把该环境前置写成 P3 功能通过。
+
 ## 2026-09-10 P3a durable production ReplayApplication
 
 - 从固定起点 `7fe5c7e76fd9300014195c3af836f2d08bcd9c92` 建立独立 worktree。公共 Golden replay

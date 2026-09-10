@@ -250,22 +250,22 @@ coverage，而是 collection 与行为契约仍未闭合。
 
 ## 现在还不能做什么
 
-P2 `GoldenRunHarness.submit` 已能从同一 RegistrySnapshot/live application 交集调用资格身份匹配的
-`text2env.compile@1.0.0`，并用唯一 StateDelta CAS 原子推进父 workflow revision 0→1；但这只是一条
-compile 竖切，不是可信的三 Skill spine。它还缺：
+P3 `GoldenRunHarness.submit` 已能从同一 RegistrySnapshot/live application 交集依次调用资格身份匹配的
+`text2env.compile@1.0.0` 与 `text2env.replay@1.0.0`，并用各 operation 的唯一 StateDelta CAS 原子推进父
+workflow revision 0→1→2；但这仍不是可信的三 Skill spine。它还缺：
 
 - asset admission 与 solve/package failure 间的 rollback/transaction；当前 solve blocked 后已入库
   资产仍会留下；
-- replay/validate handlers 与 `max_attempts=1/2/1` 的完整静态组装；
-- 完整 package→run→media 内容复核；
+- validate handler 的 Golden binding 与 compile/replay/validate `max_attempts=1/2/1` 全链；
+- 可移植的新根 package→run→media 重执行复核；
 - `5915315` 已把 asset-library、selected asset bytes、ledger contract、scene_gen 与 trust config 记入
   invocation dependencies；但 referenced asset files 仍从外部目录消费，receipt 不能自动把这些
   payload bytes 变成 CAS snapshot；
 - 跨 run 的 qualification/promotion transaction；
 - MCP 工具生成与调用适配。
 
-因此看到 `SkillRegistry` 与 compile handler 存在，只能得出“compile 竖切可调用、catalog JSON
-snapshot 已用于执行”，不能得出“Text2Env 三个 Skill 已接通”“所有引用资产 bytes 已冻结”
+因此看到 `SkillRegistry` 与 compile/replay handler 存在，只能得出“compile→replay 两段可调用、catalog
+JSON snapshot 已用于执行”，不能得出“Text2Env 三个 Skill 已接通”“所有引用资产 bytes 已冻结”
 “资产晋升具事务性”“物理发布闭环已完成”或“RFC 已 Accepted”。
 
 要回到平台总边界，读 [Self-Improving 平台](self-improving-platform.md)；要审计具体实现和

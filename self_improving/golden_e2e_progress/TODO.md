@@ -4,29 +4,10 @@
 
 ## Doing
 
-- P3a durable production ReplayApplication 已完成 RED→GREEN 与独立真实 replay 重签：factory-issued
-  private seal 在每次公开读取/调用前重验 CAS、同库 journal/run-store、
-  Registry、资格 policy、descriptor、handler/resolver、依赖与 operator settings；`invoke_typed` 接受调用方
-  UUID4 并复用 Registry controlled lifecycle。非空但结构合法的 state root 可由新 factory 实例和独立
-  Python 进程恢复 exact terminal，受控 runtime fixture 没有重复执行。实现改动使旧 replay qualification
-  按设计只因 `replay_application.py` bytes/hash 漂移而拒绝；同 state root 的 factory assembly 已用 sibling
-  file lock 线性化，失败者不能删除成功者 authority，损坏 SQLite 统一映射为 application 配置错误。
-  官方 generator 在全新外部 bundle/scratch/CAS 与临时 delegated scope 中让 direct/kernel 各一次跑通
-  0/900/120/120/12，物理 pass、fresh-CAS strict reload 与 checked bundle 均通过。
-- P3 exact replay operation 的首个公共 tracer 仍保持 RED，当前进入 P3b：目标继续是
-  `start rev0 -> qualified compile rev1 -> qualified replay rev2`，两个 operation 由同一 actor-neutral
-  `GoldenRunHarness.submit` 与 sealed catalog 执行；replay 必须只接受 revision-1 可信状态中的 exact
-  environment package/compile receipt 关联。
+- 当前 P3 候选已完成，等待主窗口按固定提交审阅并决定集成顺序。
 
 ## Next
 
-- P3-R：P2 actor-neutral aggregate 固定后，新增真实 `Text2EnvReplayApplicationAdapter` 与 replay
-  evidence policy；用 `Place a can on top of a plate.`、seed 7、`0/900/120/120/12` 让同一 workflow
-  从 compile revision 1 推进到 replay revision 2。replay input package 必须来自当前可信 state，完整
-  child/receipt/CAS chain 必须连续；该 tracer 只证明 legacy RoboTwin/SAPIEN 编排，不是 Genesis。
-- P3：在 P2 actor-neutral v2 receipt/state-delta 上新增 replay-owned binding，完成 exact qualified
-  compile → replay 两步调度；不得修改 compile evidence-policy identity，也不得复用 planner-specific
-  v1 receipt 字段冒充外部 Codex/MCP 调用。
 - P4：S1 的 `submit/read`、OperationSnapshot 和真实 Registry handler 绑定完成后，接入 MCP 2.2 的
   low-level Server/Client；在同一切片冻结 dependency/runtime lock，不在实验循环中安装依赖。
 - P6：在已合入的 exact-byte staging 后，单独实现 collision provenance、settle 与 Genesis
@@ -45,6 +26,13 @@
   `RegistrySnapshot` 目前不能单独作为生产 trust root。
 
 ## Done
+
+- P3 exact qualified replay operation 已完成：replay-owned policy/adapter 没有向 generic catalog 增加
+  Skill 分支；同一 actor-neutral workflow 真实提交 compile rev1→replay rev2。replay 只接受同一 compile
+  trusted receipt 的 package/catalog，只晋升 `replay.runtime_evidence`，fresh observations 为空。四个恢复
+  窗口、blocked/failed/succeeded、关联/漂移/顺序/幂等边界全有用例；新增两模块 statement/branch 100%，
+  邻接回归 448 pass，完整 root 3676 pass/20 skip。真实 RoboTwin/SAPIEN 运行完成
+  0/900/120/120/12 与无 live application 重启恢复；没有调用 validate，也不声称 Genesis/promotion。
 
 - P2 首个真实 submit 纵切：公开 `GoldenRunHarness.submit` 在同一父 workflow 中调用 production
   `CompileApplication`，以 exact RegistrySnapshot/live descriptor/qualification/policy 交集冻结执行，

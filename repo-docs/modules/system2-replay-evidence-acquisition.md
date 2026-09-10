@@ -27,8 +27,10 @@ destination 必须直接指向部署侧 replay evidence CAS，不能先推广到
 
 P3a 已让底层 `ReplayApplication.invoke_typed` 支持 caller UUID4，并让 production factory 从结构合法的
 非空 state root 恢复 controlled terminal；但本页的旧 `System2ReplayEvidenceAcquirer` 尚未改用该入口，
-它自己的 fresh-root/one-shot 限制仍然成立。Golden P3b 必须走新 seam，不能把这里的旧 adapter 当作已
-完成的 workflow replay binding。
+它自己的 fresh-root/one-shot 限制仍然成立。Golden P3b 已另行增加 replay-owned evidence policy 与
+production application adapter：同一 `GoldenRunHarness.submit` 可以从 qualified compile revision 1
+推进到 qualified replay revision 2；generic catalog 没有 replay 特判。这里的旧 adapter 仍不能当作该
+workflow binding，也没有因此获得状态推进权威。
 
 ## 固定资格与动态运行不是同一主张
 
@@ -38,6 +40,8 @@ checked-in replay qualification 只证明其固定源码、依赖下的 can-on-p
 只在同一 application contract 下执行并对账当前输入与本地持久记录；它不重新计算 Registry 私有的
 Invocation digest，也不把动态依赖摘要冒充固定资格事实。P3a 后重签证据见
 [`docs/evidence/replay-qualification-refresh-p3a-20260910.md`](../../docs/evidence/replay-qualification-refresh-p3a-20260910.md)。
+同 workflow 的真实 compile→replay 证据见
+[`docs/evidence/golden-compile-replay-p3-20260910.md`](../../docs/evidence/golden-compile-replay-p3-20260910.md)。
 
 真实部署的正向运行仍须同时提供固定资格所依赖的外部 63-ref CAS closure、解释器与运行工具、RoboTwin
 资产、runtime capability、delegated cgroup 和新的 state root。package-only promotion 没有搬运 request

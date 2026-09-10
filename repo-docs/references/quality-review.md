@@ -41,6 +41,6 @@
 | `demo/app.py` 队列层只做摘要 | demo 复用同一 `scene_gen` 流水线；本指南只说它是薄编排，未给独立 module | demo 模块若扩大其队列/产物注册职责到值得单说，再加一个 demo 控制面专属模块页 |
 | `rendered_critic` 排除在详述之外 | VLM 判是可选 extra + 非物理证据；若它将来变成主流评判，会被误导性 | 在 [运行时门控](../modules/runtime-gates.md) 开场已显式说「渲染不是物理证据」；若 VLM 升为门控须立即改写本指南 |
 | Threading 后端动态注入 | 解析器 / grounding / solver 都没并发；本指南沉默 | 未发现证据表明该方向有改动；如引入，新增一个并发与哈希专属模块页 |
-| Harness 只有 compile 竖切，尚无完整 Text2Env spine | 读者可能把 catalog JSON snapshot-use 修复误读成 compile/replay/validate 全部可用、所有 asset payload 已冻结或完整发布判定已闭合 | [Harness Schema Tranche](../modules/harness-schema-tranche.md) 记录 `ef5e29e`/`910ccb1` 已锁住 catalog mutation，同时明确 asset admission 不回滚、外部 asset bytes 非 snapshot，以及仍缺 replay/validate、完整 run/media 复核、promotion transaction 和 MCP |
+| Harness 已有 compile→replay 两段，尚无完整 Text2Env spine | 读者可能把真实 RoboTwin/SAPIEN replay 误读成 validate/Genesis/promotion 已闭合或 portable package 已完成 | [Harness Schema Tranche](../modules/harness-schema-tranche.md) 明确 replay 只晋升 runtime evidence、媒体不是 fresh observation，并继续登记 validate Golden binding、可移植新根重执行、promotion transaction 和 MCP 缺口 |
 
 证据状态：除特别标注外，本页基于当前源码已确认。
