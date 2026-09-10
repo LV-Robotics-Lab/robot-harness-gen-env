@@ -211,7 +211,7 @@ def _artifact_uri(case: control_base._Case, ref: ArtifactRef) -> str:
 def _advisory_arguments(
     case: control_base._Case,
     *,
-    resource_access_receipt_uri: str | None = None,
+    resource_access_receipt_uris: tuple[str, ...] = (),
 ) -> dict[str, object]:
     return {
         "schema_version": "harness.mcp_advisory_record_request.v1",
@@ -237,9 +237,7 @@ def _advisory_arguments(
             }
         ],
         "diagnostic_uris": [_artifact_uri(case, case.diagnostic)],
-        "resource_access_receipt_uris": (
-            [] if resource_access_receipt_uri is None else [resource_access_receipt_uri]
-        ),
+        "resource_access_receipt_uris": list(resource_access_receipt_uris),
     }
 
 
@@ -334,12 +332,24 @@ def test_official_client_exposes_exact_control_tools_and_commits_only_through_ha
                 assert "registry_snapshot" not in tool.input_schema["properties"]
                 assert "external_agent_executed" not in tool.input_schema["properties"]
 
-            source_delivery = await client.read_resource(_artifact_uri(case, case.source_prompt))
-            assert len(source_delivery.contents) == 2
-            resource_access_receipt_uri = str(source_delivery.contents[1].uri)
+            source_deliveries = tuple(
+                [
+                    await client.read_resource(_artifact_uri(case, artifact))
+                    for artifact in (
+                        case.source_prompt,
+                        case.failure_receipt,
+                        case.observation,
+                        case.diagnostic,
+                    )
+                ]
+            )
+            assert all(len(delivery.contents) == 2 for delivery in source_deliveries)
+            resource_access_receipt_uris = tuple(
+                sorted(str(delivery.contents[1].uri) for delivery in source_deliveries)
+            )
             advisory_arguments = _advisory_arguments(
                 case,
-                resource_access_receipt_uri=resource_access_receipt_uri,
+                resource_access_receipt_uris=resource_access_receipt_uris,
             )
             Draft202012Validator(advisory_tool.input_schema).validate(advisory_arguments)
             with pytest.raises(ValidationError):
@@ -501,8 +511,8 @@ async def _stdio_roundtrip(
     server: StdioServerParameters,
     *,
     case: control_base._Case,
-    resource_access_receipt_uri: str | None = None,
-) -> tuple[dict[str, object], dict[str, object], dict[str, object], str, str]:
+    resource_access_receipt_uris: tuple[str, ...] = (),
+) -> tuple[dict[str, object], dict[str, object], dict[str, object], str, tuple[str, ...]]:
     with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as errlog:
         try:
             async with Client(
@@ -515,18 +525,31 @@ async def _stdio_roundtrip(
                 names = tuple(tool.name for tool in listed.tools)
                 assert set(CONTROL_TOOLS) <= set(names)
                 assert "skill.invoke" not in names
-                if resource_access_receipt_uri is None:
-                    delivery = await client.read_resource(_artifact_uri(case, case.source_prompt))
-                    assert len(delivery.contents) == 2
-                    resource_access_receipt_uri = str(delivery.contents[1].uri)
+                if not resource_access_receipt_uris:
+                    deliveries = tuple(
+                        [
+                            await client.read_resource(_artifact_uri(case, artifact))
+                            for artifact in (
+                                case.source_prompt,
+                                case.failure_receipt,
+                                case.observation,
+                                case.diagnostic,
+                            )
+                        ]
+                    )
+                    assert all(len(delivery.contents) == 2 for delivery in deliveries)
+                    resource_access_receipt_uris = tuple(
+                        sorted(str(delivery.contents[1].uri) for delivery in deliveries)
+                    )
                 else:
-                    receipt = await client.read_resource(resource_access_receipt_uri)
-                    assert len(receipt.contents) == 1
+                    for resource_access_receipt_uri in resource_access_receipt_uris:
+                        receipt = await client.read_resource(resource_access_receipt_uri)
+                        assert len(receipt.contents) == 1
                 advisory = await client.call_tool(
                     ADVISORY_TOOL,
                     _advisory_arguments(
                         case,
-                        resource_access_receipt_uri=resource_access_receipt_uri,
+                        resource_access_receipt_uris=resource_access_receipt_uris,
                     ),
                 )
                 assert advisory.is_error is False and advisory.structured_content is not None
@@ -549,7 +572,7 @@ async def _stdio_roundtrip(
         prompt.model_dump(mode="json", by_alias=True, exclude_none=True),
         resource.model_dump(mode="json", by_alias=True, exclude_none=True),
         stderr,
-        resource_access_receipt_uri,
+        resource_access_receipt_uris,
     )
 
 
@@ -608,7 +631,7 @@ def test_official_stdio_restart_reuses_both_control_commits(tmp_path: Path) -> N
             second = await _stdio_roundtrip(
                 server,
                 case=case,
-                resource_access_receipt_uri=first[4],
+                resource_access_receipt_uris=first[4],
             )
         return (
             first,

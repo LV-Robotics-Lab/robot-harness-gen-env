@@ -900,6 +900,7 @@ class GoldenRunHarness:
                 current=current,
                 reachable_identities=reachable_identities,
             )
+        accessed_identities: set[tuple[str, str, str]] = set()
         for access_ref in command.resource_access_receipts:
             access = self._resolve_canonical_model(access_ref, ResourceAccessReceipt)
             stored = self._workflow_store.read_resource_access(
@@ -925,6 +926,19 @@ class GoldenRunHarness:
                 raise GoldenRunNotFoundError(
                     "resource access receipt targets an unreachable workflow artifact"
                 )
+            accessed_identities.add(_artifact_identity(access.resource))
+        required_access_identities = {
+            _artifact_identity(command.source_prompt),
+            *(_artifact_identity(ref) for ref in command.failure_receipts),
+            *(_artifact_identity(citation.receipt) for citation in command.observation_citations),
+            *(_artifact_identity(ref) for ref in command.diagnostic_refs),
+        }
+        if command.source_prompt_revision is not None:
+            required_access_identities.add(_artifact_identity(command.source_prompt_revision))
+        if accessed_identities and accessed_identities != required_access_identities:
+            raise GoldenRunNotFoundError(
+                "resource access receipts do not exactly cover the advisory sources"
+            )
 
     def _build_prompt_revision(
         self,
