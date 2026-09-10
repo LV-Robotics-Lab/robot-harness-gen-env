@@ -30,7 +30,12 @@ WORKFLOW_OPERATION_RECEIPT_V2_SCHEMA_ID = "harness.workflow_operation_receipt.v2
 
 _DESCRIPTOR_SCHEMAS = frozenset({"harness.skill_descriptor.v1", "harness.skill_descriptor.v2"})
 _WORKFLOW_RECEIPT_SCHEMAS = frozenset(
-    {"harness.workflow_start_receipt.v1", WORKFLOW_OPERATION_RECEIPT_V2_SCHEMA_ID}
+    {
+        "harness.external_agent_advisory_receipt.v1",
+        "harness.prompt_revision.v1",
+        "harness.workflow_start_receipt.v1",
+        WORKFLOW_OPERATION_RECEIPT_V2_SCHEMA_ID,
+    }
 )
 
 
