@@ -385,13 +385,19 @@ def _alternate_prompt_revision(
     tmp_path: Path,
     prompt: PromptRevision,
 ) -> ArtifactRef:
-    values = prompt.model_dump(mode="python")
-    values["command_id"] = _ALTERNATE_PROMPT_COMMAND
-    values["receipt_sha256"] = "0" * 64
-    unhashed = PromptRevision.model_construct(**values)
+    unhashed = prompt.model_copy(
+        update={
+            "command_id": _ALTERNATE_PROMPT_COMMAND,
+            "revision_sha256": "0" * 64,
+        }
+    )
     alternate = PromptRevision(
-        **unhashed.model_dump(mode="python", exclude={"receipt_sha256"}),
-        receipt_sha256=prompt_revision_sha256(unhashed),
+        **{
+            name: getattr(unhashed, name)
+            for name in PromptRevision.model_fields
+            if name != "revision_sha256"
+        },
+        revision_sha256=prompt_revision_sha256(unhashed),
     )
     return _put_json_ref(
         case,
