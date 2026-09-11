@@ -15,10 +15,12 @@ from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.limited_image_preview_bootstrap import (
     BootstrapCheckpoint,
     LimitedImagePreviewBootstrapPlan,
+    _canonical,
     _native_projection_objects,
     _publish_candidate,
     _record_checkpoint,
     _revised_projection_object,
+    _shared_registry_entry,
     bootstrap_limited_image_preview,
     check_limited_image_preview_bootstrap,
     run_cli,
@@ -344,6 +346,93 @@ def test_publish_candidate_uses_real_library_manifest_ref(saved_m1_preview, tmp_
         _publish_candidate(shared, verified.manifest, saved_run_id=candidate.state.run_id)
         == candidate.state.run_id
     )
+
+
+def test_shared_registry_entry_publishes_a_canonical_qualification_closure(tmp_path):
+    from self_improving.harness.qualification import QualificationCheckV1, QualificationReportV1
+    from self_improving.harness.schemas.common import SkillDescriptorV2, SkillQualification
+
+    store = LocalArtifactStore(tmp_path / "cas")
+    report = QualificationReportV1(
+        schema_version="harness.skill_qualification_report.v1",
+        skill_ref="image2env.preview_publish@1.0.0",
+        status="pass",
+        deterministic_case_id="canonical-publication",
+        regression_command="pytest -q",
+        implementation_sha256="a" * 64,
+        scene_gen_tree_sha256="b" * 64,
+        ledger_contract_tree_sha256="c" * 64,
+        checks=(QualificationCheckV1(name="canonical", status="pass", evidence={}),),
+    )
+    report_ref = _put(
+        store,
+        tmp_path,
+        "report.json",
+        _canonical(report),
+        "harness.skill_qualification_report.v1",
+    )
+    qualification = SkillQualification(
+        skill_ref=report.skill_ref,
+        status="pass",
+        deterministic_case_id=report.deterministic_case_id,
+        regression_command=report.regression_command,
+        report_sha256=report_ref.sha256,
+    )
+    qualification_ref = _put(
+        store,
+        tmp_path,
+        "qualification.json",
+        _canonical(qualification),
+        "harness.skill_qualification.v1",
+    )
+    descriptor = SkillDescriptorV2(
+        skill_id="image2env.preview_publish",
+        version="1.0.0",
+        mcp_tool_name="image2env_preview_publish_v1_0_0",
+        input_schema="harness.limited_image_preview_manifest.v1",
+        output_schema="harness.limited_image_preview_manifest.v1",
+        implementation_name="limited_image_preview",
+        implementation_version="1",
+        implementation_sha256=report.implementation_sha256,
+        reproducibility="evidence_invariant_repeatable",
+        max_attempts=1,
+        qualification_artifact=qualification_ref,
+    )
+
+    class Shared:
+        artifact_store = store
+        skills = (descriptor,)
+
+        def bind(self, ref):
+            assert ref == qualification_ref
+            return descriptor
+
+        def put(self, value, name):
+            payload = json.dumps(
+                value.model_dump(mode="json"),
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            ).encode()
+            return _put(
+                store,
+                tmp_path,
+                name,
+                payload,
+                value.model_config["json_schema_extra"]["$id"],
+            )
+
+        def read_artifact(self, ref, model):
+            return model.model_validate_json(store.resolve(ref).path.read_bytes())
+
+    entry = _shared_registry_entry(Shared(), report.skill_ref, qualification_ref)
+    models = (descriptor, qualification, report)
+    for ref, model in zip(
+        (entry.descriptor_ref, entry.qualification_ref, entry.qualification_report_ref),
+        models,
+        strict=True,
+    ):
+        assert store.resolve(ref).path.read_bytes() == _canonical(model)
 
 
 def test_execute_checkpoints_exact_imports_before_application_restore(bootstrap_plan):

@@ -1,5 +1,9 @@
 """Shared runtime skills must not grow separate authorities or accept caller runners."""
 
+import json
+from types import SimpleNamespace
+from uuid import uuid4
+
 import pytest
 
 from self_improving.harness.limited_image_preview_application import LimitedImagePreviewApplication
@@ -10,6 +14,102 @@ def test_shared_application_rejects_unqualified_compiler_before_state_creation(t
     with pytest.raises(TypeError, match="exact"):
         LimitedImagePreviewApplication(root, object(), object(), roots={})
     assert not root.exists()
+
+
+def test_shared_qualification_producer_writes_golden_canonical_bytes(tmp_path, monkeypatch):
+    from self_improving.harness import limited_image_preview_application as application
+    from self_improving.harness.artifacts import LocalArtifactStore
+    from self_improving.harness.qualification import QualificationCheckV1
+    from self_improving.harness.schemas.common import SkillQualification
+
+    store = LocalArtifactStore(tmp_path / "cas")
+    shared = object.__new__(LimitedImagePreviewApplication)
+    shared.artifact_store = store
+    shared._qualifications = {}
+    monkeypatch.setattr(application, "_source_tree_sha256", lambda *args, **kwargs: "a" * 64)
+    shared._checks = lambda *args: (
+        QualificationCheckV1(
+            name="fresh_replay_and_saved_validation",
+            status="pass",
+            evidence={"saved": True},
+        ),
+    )
+
+    def bind(ref):
+        value = SkillQualification.model_validate_json(store.resolve(ref).path.read_bytes())
+        shared._qualifications[value.skill_ref] = ref
+
+    shared.bind = bind
+    qualifications = shared.qualify(uuid4(), uuid4())
+    manifest = SimpleNamespace(preview_id="canonical-preview")
+    shared.library = SimpleNamespace(get=lambda preview_id: SimpleNamespace(manifest=manifest))
+    shared._candidate = lambda run_id, skill_ref: (None, manifest)
+    publication = shared.qualify_publish(uuid4())
+
+    for ref in (*qualifications.values(), publication):
+        payload = store.resolve(ref).path.read_bytes()
+        qualification = SkillQualification.model_validate_json(payload)
+        expected = (
+            json.dumps(
+                qualification.model_dump(mode="json"),
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            )
+            + "\n"
+        ).encode()
+        assert payload == expected
+        report_payload = store.resolve_digest(qualification.report_sha256).read_bytes()
+        assert report_payload.endswith(b"\n")
+
+
+def test_saved_candidate_is_deeply_reverified_after_qualification_writer_change(
+    tmp_path, monkeypatch
+):
+    from self_improving.harness import limited_image_preview_library as library
+    from self_improving.harness.artifacts import LocalArtifactStore
+    from self_improving.harness.schemas.common import DependencyRef, RunStatus
+    from tests.self_improving.harness.test_limited_image_preview_library import _normal_manifest
+
+    store = LocalArtifactStore(tmp_path / "cas")
+    manifest, _ = _normal_manifest(store, tmp_path)
+    shared = object.__new__(LimitedImagePreviewApplication)
+    shared.artifact_store = store
+    manifest_ref = shared.put(manifest, "candidate-manifest.json")
+    invocation = SimpleNamespace(
+        skill_id="image2env.preview_publish",
+        skill_version="1.0.0",
+        dependencies=(DependencyRef(name="limited_image_preview", version="1", sha256="b" * 64),),
+        effective_parameters=manifest.model_dump(mode="json"),
+    )
+    terminal = SimpleNamespace(
+        status=RunStatus.SUCCEEDED,
+        events=(SimpleNamespace(stage="qualification_candidate.succeeded"),),
+        output=manifest.model_dump(mode="json"),
+        artifacts=(manifest_ref,),
+    )
+    shared.run_store = SimpleNamespace(
+        read_controlled_lifecycle=lambda run_id: SimpleNamespace(
+            invocation=invocation,
+            terminal=terminal,
+        )
+    )
+    shared._resolver = SimpleNamespace(
+        resolve=lambda skill_ref, version: (
+            DependencyRef(name="limited_image_preview", version="1", sha256="c" * 64),
+        )
+    )
+    shared.compiler_application = SimpleNamespace(compiler=object())
+    verified = []
+
+    def admit(**values):
+        verified.append(values["manifest"])
+        return SimpleNamespace(manifest=manifest)
+
+    monkeypatch.setattr(library, "admit_limited_image_preview", admit)
+    _, restored = shared._candidate(uuid4(), "image2env.preview_publish@1.0.0")
+    assert restored == manifest
+    assert verified == [manifest_ref]
 
 
 def test_replay_candidate_missing_evidence_is_durably_blocked(tmp_path):
