@@ -107,6 +107,61 @@ def test_manifest_timings_are_exact_nonoverlapping_controller_measurements() -> 
     assert overlap_error.value.reason == "timing_overlap"
 
 
+def test_failed_attempt_wall_is_retained_before_a_complete_successful_attempt() -> None:
+    workflow_id = UUID("10000000-0000-4000-8000-000000000002")
+    actions = (
+        "image2env.compile@2.0.0",
+        "image2env.replay@2.0.0",
+        "genesis.observe@3.0.0",
+        "image2env.validate@3.0.0",
+    )
+    entries = tuple(
+        StoredWorkflowEntry(
+            entry_id=UUID(f"30000000-0000-4000-8000-{index:012d}"),
+            workflow_run_id=workflow_id,
+            entry_kind="skill_operation",
+            action_ref=action,
+            idempotency_key=f"stage-{index}",
+            request_sha256=f"{index}" * 64,
+            base_revision=index - 1,
+            operation=None,
+            control=None,
+        )
+        for index, action in enumerate(actions, start=1)
+    )
+    failed = {
+        "backend_elapsed_ns": 250,
+        "calls": [],
+        "attribution_complete": False,
+        "failure": "timeout",
+        "valid": True,
+        "input_elapsed_ns": 50,
+        "wall_basis": "controller_started_to_observed_owned_exit",
+    }
+    completed = {
+        "backend_elapsed_ns": 600,
+        "calls": [
+            _call("image2env_preview_status_v1", "start", 10, None),
+            _call("image2env_preview_asset_lookup_v1", "asset_lookup", 20, None),
+            _call("image2env_compile_v2_0_0", "compile", 100, 80),
+            _call("image2env_replay_v2_0_0", "replay", 200, 180),
+            _call("genesis_observe_v3_0_0", "observe", 100, 80),
+            _call("image2env_validate_v3_0_0", "validate", 100, 90),
+        ],
+        "attribution_complete": True,
+        "failure": None,
+        "valid": True,
+        "input_elapsed_ns": None,
+    }
+
+    timings = _timings(entries, (failed, completed))
+
+    by_segment = {item.segment: item.duration_ns for item in timings}
+    assert by_segment["codex_mcp"] == 320
+    assert by_segment["input_asset"] == 50
+    assert sum(by_segment.values()) == 900
+
+
 def _call(tool: str, stage: str, transport: int, service: int | None) -> dict[str, object]:
     return {
         "tool": tool,
