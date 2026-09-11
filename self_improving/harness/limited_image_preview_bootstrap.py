@@ -967,6 +967,12 @@ def check_limited_image_preview_bootstrap(plan_path: Path) -> BootstrapCheckResu
     """Pure-read verification of the operator plan and all pre-existing identities."""
 
     plan, raw = _read_plan(Path(plan_path))
+    plan_sha256 = hashlib.sha256(raw).hexdigest()
+    checkpoint = (
+        _load_checkpoint(plan, plan_sha256=plan_sha256) if plan.checkpoint_path.exists() else None
+    )
+    if plan.library_root.exists() and (checkpoint is None or checkpoint.stage != "complete"):
+        raise ValueError("production library_root must not exist before bootstrap completes")
     repository_commit = _git_value(plan.repository_root, "rev-parse", "HEAD")
     if repository_commit != plan.expected_repository_commit:
         raise ValueError("bootstrap repository commit differs from the operator plan")
@@ -1037,25 +1043,21 @@ def check_limited_image_preview_bootstrap(plan_path: Path) -> BootstrapCheckResu
             raise ValueError("bootstrap release directory is not strict canonical JSON")
         if deployment.service_settings != plan.output_directory / "service-settings.json":
             raise ValueError("bootstrap release deployment points at another service settings file")
-        if plan.checkpoint_path.exists():
-            checkpoint = _load_checkpoint(plan, plan_sha256=hashlib.sha256(raw).hexdigest())
-            if checkpoint.stage == "complete":
-                if (
-                    checkpoint.service_settings_sha256
-                    != hashlib.sha256(settings_payload).hexdigest()
-                    or checkpoint.deployment_sha256
-                    != hashlib.sha256(deployment_payload).hexdigest()
-                ):
-                    raise ValueError("bootstrap release directory differs from its checkpoint")
-                status = "complete"
+        if checkpoint is not None and checkpoint.stage == "complete":
+            if (
+                checkpoint.service_settings_sha256 != hashlib.sha256(settings_payload).hexdigest()
+                or checkpoint.deployment_sha256 != hashlib.sha256(deployment_payload).hexdigest()
+            ):
+                raise ValueError("bootstrap release directory differs from its checkpoint")
+            status = "complete"
     return BootstrapCheckResult(
         schema_version="harness.limited_image_preview_bootstrap_check.v1",
         status=status,
-        plan_sha256=hashlib.sha256(raw).hexdigest(),
+        plan_sha256=plan_sha256,
         repository_commit=repository_commit,
         source_objects_verified=10,
         missing_target_imports=missing,
-        existing_checkpoint=plan.checkpoint_path.exists(),
+        existing_checkpoint=checkpoint is not None,
         existing_output=existing_output,
     )
 
