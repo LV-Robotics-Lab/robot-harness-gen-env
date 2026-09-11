@@ -241,6 +241,18 @@ def test_verified_probe_graph_is_reusable_and_supports_only_cas_artifacts(
     assert verified.rows[0].phase == "initial"
     assert verified.rows[-1].step_index == 1000
     assert verified.contact_trace.total_normal_impulse_ns == pytest.approx(2.4528)
+    assert verified.contact_trace.final_linear_speed_m_s == 0.0
+    assert verified.contact_trace.final_angular_speed_rad_s == 0.0
+    assert verified.contact_trace.settled is True
+    assert tuple(check.code for check in verified.probe_report.checks) == (
+        "backend_load",
+        "closure_identity",
+        "collision_shapes",
+        "contact_observed",
+        "dynamic_release",
+        "penetration_bounded",
+        "settled",
+    )
     assert len(verified.supporting_artifacts) == 23
     assert all(
         ref.uri == f"artifact://sha256/{ref.sha256}"
@@ -895,3 +907,94 @@ def test_initial_row_contact_and_loaded_collision_member_drift_are_invalid(
     )
     with pytest.raises(ValidationError, match="representation collision members"):
         type(artifacts.load_observation).model_validate(observation_payload)
+
+
+def test_contacts_without_positive_normal_force_or_impulse_are_physical_failure(
+    tmp_path: Path,
+) -> None:
+    class ZeroNormalForceBackend(ControlledCpuGenesisBackend):
+        def _observation(self, step_index: int, phase: str) -> Any:
+            observed = super()._observation(step_index, phase)
+            contacts = tuple(
+                replace(
+                    contact,
+                    force_on_asset_n=(0.0, 0.0, 0.0),
+                    force_on_ground_n=(0.0, 0.0, 0.0),
+                    normal_force_n=0.0,
+                )
+                for contact in observed.asset_ground_contacts
+            )
+            return replace(observed, asset_ground_contacts=contacts)
+
+    store = LocalArtifactStore(tmp_path / "cas")
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    _, representation_ref = _representation(store, scratch)
+    _, runtime_lock_ref = _runtime_lock(store, scratch)
+
+    with pytest.raises(GenesisAssetProbeError) as caught:
+        GenesisAssetProbeProducer(
+            artifact_store=store,
+            backend=ZeroNormalForceBackend(),
+        ).produce(
+            representation_ref=representation_ref,
+            runtime_lock_ref=runtime_lock_ref,
+        )
+    assert caught.value.code == "HARN_GENESIS_ASSET_PROBE_FAILED"
+    assert "normal force" in str(caught.value)
+    assert not _cas_contains_schema(store, "harness.genesis_asset_probe_report.v1")
+
+
+@pytest.mark.parametrize(
+    ("linear_velocity", "angular_velocity"),
+    (
+        ((0.010001, 0.0, 0.0), (0.0, 0.0, 0.0)),
+        ((0.0, 0.0, 0.0), (0.050001, 0.0, 0.0)),
+    ),
+)
+def test_unsettled_final_velocity_is_physical_failure_and_never_publishes_report(
+    tmp_path: Path,
+    linear_velocity: tuple[float, float, float],
+    angular_velocity: tuple[float, float, float],
+) -> None:
+    class UnsettledBackend(ControlledCpuGenesisBackend):
+        def _observation(self, step_index: int, phase: str) -> Any:
+            observed = super()._observation(step_index, phase)
+            if step_index != 1000:
+                return observed
+            return replace(
+                observed,
+                linear_velocity_m_s=linear_velocity,
+                angular_velocity_rad_s=angular_velocity,
+            )
+
+    store = LocalArtifactStore(tmp_path / "cas")
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    _, representation_ref = _representation(store, scratch)
+    _, runtime_lock_ref = _runtime_lock(store, scratch)
+
+    with pytest.raises(GenesisAssetProbeError) as caught:
+        GenesisAssetProbeProducer(
+            artifact_store=store,
+            backend=UnsettledBackend(),
+        ).produce(
+            representation_ref=representation_ref,
+            runtime_lock_ref=runtime_lock_ref,
+        )
+    assert caught.value.code == "HARN_GENESIS_ASSET_PROBE_FAILED"
+    assert "settle" in str(caught.value)
+    assert not _cas_contains_schema(store, "harness.genesis_asset_probe_report.v1")
+
+
+def _cas_contains_schema(store: LocalArtifactStore, schema_version: str) -> bool:
+    for path in store.root.glob("sha256/*/*"):
+        if not path.is_file():
+            continue
+        try:
+            value = json.loads(path.read_bytes())
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            continue
+        if type(value) is dict and value.get("schema_version") == schema_version:
+            return True
+    return False
