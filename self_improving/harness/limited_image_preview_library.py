@@ -29,7 +29,10 @@ from .schemas.genesis_scene_execution_v3 import (
     GenesisSceneExecutionRequestV3,
 )
 from .schemas.genesis_scene_replay import GenesisSceneReportV1, GenesisSceneSpecV1
-from .schemas.image2env_genesis_compile import Image2EnvGenesisCompileReceiptV1
+from .schemas.image2env_genesis_compile import (
+    Image2EnvGenesisCompileReceiptV1,
+    Image2EnvGenesisCompileRequestV1,
+)
 from .schemas.limited_image_preview import (
     LIMITED_IMAGE_PREVIEW_LIBRARY_INDEX_SCHEMA_ID,
     LimitedImagePreviewIndexEntryV1,
@@ -39,7 +42,11 @@ from .schemas.limited_image_preview import (
     limited_image_preview_library_index_sha256,
 )
 from .schemas.limited_image_preview_execution import LimitedSceneValidateInputV1
-from .schemas.native_prompt_revision import Image2EnvGenesisCompileReceiptV2, PromptRevisionV3
+from .schemas.native_prompt_revision import (
+    Image2EnvGenesisCompileReceiptV2,
+    Image2EnvGenesisCompileRequestV2,
+    PromptRevisionV3,
+)
 from .schemas.x2env import ImageSourceMedia
 from .schemas.x2env_compile_evidence import (
     AssetRepresentationV1,
@@ -369,9 +376,21 @@ def admit_limited_image_preview(
         for check in qualification.checks:
             for evidence in check.evidence:
                 _resolve(artifact_store, evidence, f"asset qualification check {check.code}")
-        _verify_stage(artifact_store, compiler, checked, checked.initial_stage)
+        _verify_stage(
+            artifact_store,
+            compiler,
+            checked,
+            source_media,
+            checked.initial_stage,
+        )
         if checked.revised_stage is not None:
-            _verify_stage(artifact_store, compiler, checked, checked.revised_stage)
+            _verify_stage(
+                artifact_store,
+                compiler,
+                checked,
+                source_media,
+                checked.revised_stage,
+            )
         return VerifiedLimitedImagePreview(
             artifact_root=artifact_store.root,
             compiler=compiler,
@@ -440,6 +459,7 @@ def _verify_stage(
     store: LocalArtifactStore,
     compiler: RevisedImage2EnvGenesisCompiler,
     manifest: LimitedImagePreviewManifestV1,
+    source_media: ImageSourceMedia,
     stage: LimitedImagePreviewStageV1,
 ) -> None:
     for ref, label in (
@@ -513,9 +533,20 @@ def _verify_stage(
         if stage.phase == "initial"
         else Image2EnvGenesisCompileReceiptV2
     )
+    compile_request_model = (
+        Image2EnvGenesisCompileRequestV1
+        if stage.phase == "initial"
+        else Image2EnvGenesisCompileRequestV2
+    )
     receipt = _read_model(store, stage.replay_receipt, receipt_model, "replay receipt")
     request = _read_model(store, receipt.request, request_model, "replay request")
     compiled = _read_model(store, stage.compile_receipt, compile_model, "compile receipt")
+    compile_request = _read_model(
+        store,
+        stage.compile_request,
+        compile_request_model,
+        "compile request",
+    )
     if (
         request.compile_receipt != stage.compile_receipt
         or request.scene != stage.scene
@@ -547,10 +578,24 @@ def _verify_stage(
             "validation_binding_mismatch",
             "inline validation differs from its immutable artifact",
         )
-    if scene.source != manifest.raw_image or scene.representation != manifest.asset_representation:
+    expected_scene_source = (
+        compile_request.source_scene if stage.phase == "initial" else compiled.derived_source_scene
+    )
+    if (
+        compile_request.compile_input.source_media != source_media
+        or source_media.source != manifest.raw_image
+    ):
+        raise LimitedImagePreviewLibraryError(
+            "input_binding_mismatch",
+            "native compile input differs from the admitted image source media",
+        )
+    if (
+        scene.source != expected_scene_source
+        or scene.representation != manifest.asset_representation
+    ):
         raise LimitedImagePreviewLibraryError(
             "scene_binding_mismatch",
-            "scene differs from the admitted image or representation",
+            "scene differs from the typed native source envelope or representation",
         )
     _verify_layout(scene, decision)
     if report.status != "passed":
