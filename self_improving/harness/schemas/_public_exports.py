@@ -20,6 +20,15 @@ _EXPORT_GROUPS = (
         ),
     ),
     (
+        ".typed_qualification_admission",
+        (
+            "TYPED_QUALIFICATION_ADMISSION_SCHEMA_ID",
+            "QualificationCandidateIntentV1",
+            "QualificationImplementationMemberV1",
+            "TypedQualificationAdmissionV1",
+        ),
+    ),
+    (
         ".genesis_fresh_capture",
         (
             "GenesisFreshCaptureInputV1",
@@ -431,6 +440,7 @@ _PUBLIC_NAMES = (
     "ControlCommitSnapshotV2",
     "external_agent_advisory_receipt_v2_sha256",
     "prompt_revision_v2_sha256",
+    "TYPED_QUALIFICATION_ADMISSION_SCHEMA_ID",
     "ADVISORY_RECORD_COMMAND_SCHEMA_ID",
     "ARTIFACT_REF_SCHEMA_ID",
     "ASSET_DEBT_INVENTORY_SCHEMA_ID",
@@ -506,6 +516,9 @@ _PUBLIC_NAMES = (
     "X2ENV_COMPILE_RECEIPT_SCHEMA_ID",
     "X2ENV_STATIC_VALIDATION_SCHEMA_ID",
     "ArtifactRef",
+    "QualificationCandidateIntentV1",
+    "QualificationImplementationMemberV1",
+    "TypedQualificationAdmissionV1",
     "AdvisoryRecordCommand",
     "AssetDebtInventory",
     "AssetClosureManifestV1",

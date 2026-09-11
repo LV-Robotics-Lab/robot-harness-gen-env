@@ -68,6 +68,9 @@ from self_improving.harness.schemas.text2env_validate_v2 import (
     Text2EnvValidateV2Input,
     Text2EnvValidateV2Output,
 )
+from self_improving.harness.schemas.typed_qualification_admission import (
+    TypedQualificationAdmissionV1,
+)
 from self_improving.harness.schemas.video_ingest import (
     VideoDecodedFrameSequenceV1,
     VideoMediaProbeV1,
@@ -130,6 +133,7 @@ EXPECTED_SCHEMA_IDS = {
     "harness.prompt_revision_command.v2",
     "harness.prompt_revision.v2",
     "harness.control_commit_snapshot.v2",
+    "harness.typed_qualification_admission.v1",
     "harness.genesis_scene_skill_qualification_report.v1",
     "harness.genesis_fresh_capture_input.v1",
     "harness.genesis_fresh_capture_request.v1",
@@ -263,6 +267,7 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert set(SCHEMA_MODELS) == EXPECTED_SCHEMA_IDS
     assert schema_model("harness.artifact_ref.v1") is ArtifactRef
     assert schema_model("harness.skill_descriptor.v2") is SkillDescriptorV2
+    assert schema_model("harness.typed_qualification_admission.v1") is TypedQualificationAdmissionV1
     assert schema_model("harness.text2env_validate_input.v2") is Text2EnvValidateV2Input
     assert schema_model("harness.text2env_validate_output.v2") is Text2EnvValidateV2Output
     assert schema_model("harness.run_start_request.v1") is RunStartRequest
@@ -389,6 +394,7 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.prompt_revision.v2",
             "harness.control_commit_snapshot.v2",
             "harness.asset_debt_inventory.v1",
+            "harness.typed_qualification_admission.v1",
             "harness.asset_repair_plan.v1",
             "harness.asset_repair_plan_request.v1",
             "harness.asset_source_snapshot_manifest.v1",

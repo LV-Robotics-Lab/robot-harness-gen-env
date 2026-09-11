@@ -59,6 +59,7 @@ from self_improving.harness.schemas.typed_qualification_admission import (
 )
 from self_improving.harness.typed_qualification_admission import (
     TypedQualificationAdmissionError,
+    VerifiedTypedQualificationAdmission,
     freeze_typed_qualification_admission,
     verify_typed_qualification_admission,
 )
@@ -235,6 +236,7 @@ def _parameters(kind: str, index: int, store: LocalArtifactStore, root: Path):
         from tests.self_improving.harness.test_x2env_compile_closure import _case
 
         case = _case(root / f"compile-input-{index}")
+        shutil.copytree(case.store.root, store.root, dirs_exist_ok=True)
         return Image2EnvGenesisCompileRequestV1(
             schema_version="harness.image2env_genesis_compile_request.v1",
             compile_input=case.compile_input,
@@ -361,9 +363,7 @@ def _fixture(tmp_path: Path, kind: str) -> AdmissionFixture:
     dependency = DependencyRef(name="fixture_implementation", version="1", sha256="d" * 64)
     registry = SkillRegistry(
         artifact_resolver=store,
-        dependency_resolver=StaticDependencyResolver(
-            {f"{skill_id}@{version}": (dependency,)}
-        ),
+        dependency_resolver=StaticDependencyResolver({f"{skill_id}@{version}": (dependency,)}),
         event_sink=SQLiteEventJournal(authority_path),
         clock=lambda: STAMP,
         run_id_factory=lambda: next(run_ids),
@@ -428,13 +428,9 @@ def _fixture(tmp_path: Path, kind: str) -> AdmissionFixture:
             cases=tuple(
                 GenesisSceneSkillCaseV2(
                     candidate_run_id=item.state.run_id,
-                    compile_run_id=UUID(
-                        f"83000000-0000-4000-8000-{index:012d}"
-                    ),
+                    compile_run_id=UUID(f"83000000-0000-4000-8000-{index:012d}"),
                     invocation_digest=item.invocation.invocation_digest,
-                    execution_request=_parameters(
-                        kind, index, store, tmp_path
-                    ).execution_request,
+                    execution_request=_parameters(kind, index, store, tmp_path).execution_request,
                     execution_receipt=output,
                 )
                 for index, (item, output) in enumerate(
@@ -578,26 +574,34 @@ def test_freezes_each_native_m1_report_without_generic_translation(
     )
 
     admission = verified.admission
+    assert fixture.store.resolve(verified.admission_ref).path.read_bytes() == _canonical(admission)
     assert admission.qualification_report == fixture.report
     assert admission.qualification_report.schema_version != (
         "harness.skill_qualification_report.v1"
     )
     assert admission.descriptor == fixture.descriptor
     assert admission.qualification == fixture.qualification
-    assert tuple(item.run_id for item in admission.candidate_intents) == RUN_IDS[
-        : len(admission.candidate_intents)
-    ]
-    assert verify_typed_qualification_admission(
-        artifact_store=fixture.store,
-        admission=admission,
-    ).admission == admission
+    assert (
+        tuple(item.run_id for item in admission.candidate_intents)
+        == RUN_IDS[: len(admission.candidate_intents)]
+    )
+    assert (
+        verify_typed_qualification_admission(
+            artifact_store=fixture.store,
+            admission=admission,
+        ).admission
+        == admission
+    )
 
     relocated_root = tmp_path / f"{kind}-relocated-cas"
     shutil.copytree(fixture.store.root, relocated_root)
-    assert verify_typed_qualification_admission(
-        artifact_store=LocalArtifactStore(relocated_root),
-        admission=admission,
-    ).admission == admission
+    assert (
+        verify_typed_qualification_admission(
+            artifact_store=LocalArtifactStore(relocated_root),
+            admission=admission,
+        ).admission
+        == admission
+    )
 
 
 def test_rejects_extra_implementation_and_child_intent_drift(tmp_path: Path) -> None:
@@ -653,6 +657,48 @@ def test_rejects_generic_report_substitution_and_missing_cas_bytes(tmp_path: Pat
             qualification_ref=fixture.qualification,
             qualification_report_ref=generic,
             implementation_members=fixture.implementation,
+        )
+
+
+def test_capability_and_public_boundaries_fail_closed(tmp_path: Path) -> None:
+    fixture = _fixture(tmp_path / "replay", "replay")
+    verified = freeze_typed_qualification_admission(
+        artifact_store=fixture.store,
+        child_authority=fixture.authority,
+        descriptor_ref=fixture.descriptor,
+        qualification_ref=fixture.qualification,
+        qualification_report_ref=fixture.report,
+        implementation_members=fixture.implementation,
+    )
+    with pytest.raises(TypeError, match="issued only"):
+        VerifiedTypedQualificationAdmission(
+            verified.admission,
+            verified.admission_ref,
+            _token=object(),
+        )
+
+    invalid_descriptor = _put(
+        fixture.store,
+        tmp_path,
+        name="invalid-descriptor.json",
+        payload=b"{}",
+        schema_version="harness.skill_descriptor.v2",
+    )
+    with pytest.raises(TypedQualificationAdmissionError, match="admission failed"):
+        freeze_typed_qualification_admission(
+            artifact_store=fixture.store,
+            child_authority=fixture.authority,
+            descriptor_ref=invalid_descriptor,
+            qualification_ref=fixture.qualification,
+            qualification_report_ref=fixture.report,
+            implementation_members=fixture.implementation,
+        )
+
+    structurally_invalid = verified.admission.model_copy(update={"candidate_intents": ()})
+    with pytest.raises(TypedQualificationAdmissionError, match="verification failed"):
+        verify_typed_qualification_admission(
+            artifact_store=fixture.store,
+            admission=structurally_invalid,
         )
 
     fixture.store.resolve(fixture.implementation[0].artifact).path.unlink()

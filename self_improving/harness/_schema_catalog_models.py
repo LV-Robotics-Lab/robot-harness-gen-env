@@ -26,6 +26,10 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
             ".schemas.golden_control_v2",
             "ControlCommitSnapshotV2",
         ),
+        "harness.typed_qualification_admission.v1": (
+            ".schemas.typed_qualification_admission",
+            "TypedQualificationAdmissionV1",
+        ),
         "harness.genesis_fresh_capture_input.v1": (
             ".schemas.genesis_fresh_capture",
             "GenesisFreshCaptureInputV1",
