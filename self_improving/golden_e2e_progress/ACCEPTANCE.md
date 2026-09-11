@@ -1,6 +1,16 @@
 # Golden E2E 验收合同草案
 
-状态：`accepted_2026-09-09`
+状态：原合同于2026-09-09确认；本阶段范围按用户批准的`SIM_READY_RELEASE_PLAN.md`调整。
+
+## 当前阶段优先适用的交付门
+
+第一阶段交付sim-ready环境服务：E2完整Genesis环境回放、物理/连续媒体门，加真实Codex同workflow
+compile/replay/observe/diagnose/revise/validate/promotion、三模态三资产路径、入库、迁移恢复及服务
+入口真实验收。profile从`genesis.rigid_scene@1`起步，支持范围显式声明；单资产probe仍不能替代E2。
+
+本阶段不要求E3 robot-policy/trajectory/data-collection，不以缺少机器人接口阻断环境发布。旧E3/E4
+等级不改名也不降低定义；下文涉及最终E4及robot-policy的要求后置至跨项目联调阶段。本阶段环境
+promotion须明确profile，不能声称E4/policy-ready。全部其他环境、媒体、CAS/状态与失败记录门保留。
 
 ## 证据等级
 
@@ -12,7 +22,7 @@
 | E3 | Genesis robot-policy ready | reset/action/observation/termination/trajectory 真实 probe 通过 | 训练 policy 成功或真机能力 |
 | E4 | promoted golden | E3 + validate publishable + promotion receipt + portable restart/replay | 未测试模态/任务/机器泛化 |
 
-最终 golden case 必须达到 E4。E2 只是接入 Gujie 物理底座的中间结果。
+后续包含policy联调的最终case须达到E4；当前服务交付按上方第一阶段门验收，完成后暂停。
 
 ## 每条 standalone modality golden line
 

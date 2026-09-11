@@ -6,7 +6,7 @@
 
 ## 文件地图
 
-- `SIM_READY_RELEASE_PLAN.md`：最新分阶段交付计划（待批准）；先开放sim-ready服务并暂停，P8/E3后置。
+- `SIM_READY_RELEASE_PLAN.md`：最新已批准交付计划；以Gujie实现为重要整合来源，先开放sim-ready服务并暂停，P8/E3后置。
 
 - `TASKS.md`：阶段验收清单。
 - `TODO.md`：当前 doing/next/blocked/done。

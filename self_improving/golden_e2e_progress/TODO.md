@@ -4,6 +4,11 @@
 
 ## Doing
 
+- 用户已批准M1–M5，并指定Gujie接入审计为重要整合依据。当前主目标M1：image exact-reuse完整
+  Genesis环境线；三agent分别实现Gujie场景/布局适配、环境replay/validate证据、真实CPU场景与
+  媒体。先table+ground+mouse tracer再接生产compile，不能以手工scene独立运行替代最终M1。
+  P8/E3后置，M5服务开放后暂停。新计划见`SIM_READY_RELEASE_PLAN.md`。
+
 - 当前功能目标收口：`fd50576`固定CPU execution已在两部署真实通过，`5ceead3`记录其集中验收和
   失败材料；`5f78e62`durable单资产qualification已真实签发、executed恢复、第二CAS/SQLite无Genesis
   纯读通过。资格CAS坏字节与真实executed并发恢复也通过；新core覆盖尚有缺口，不能称全部100%。

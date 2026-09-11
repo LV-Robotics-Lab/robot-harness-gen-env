@@ -1,5 +1,14 @@
 # 进度与结果
 
+## M1启动：Gujie场景与完整Genesis环境线
+
+- 用户批准sim-ready服务计划，并明确把Gujie审计作为实际整合参考。审计原件从用户主工作树读取，
+  原样收录至候选树`docs/research/gujie-x2env-integration-audit-20260911.md`；其固定历史结论保留，
+  当前runtime/qualification进展另记，不回写或提交用户主工作树其他修改。
+- 新M1按scene adapter、环境证据/判据、CPU runner/media三条独占实现并行；机器人P8不启动。
+- 真实相机可行性已验证：固定Genesis CPU在mouse+有限Box桌面build/50steps后输出640×480 RGB。
+  首次URDF文件名错误日志保留，修正后成功；这仅为renderer smoke，尚无完整M1或scene资格。
+
 ## 2026-09-11 固定归档完整测试
 
 - 固定`5f78e6267b0c21167a1ab743bbeda945ce80735d`归档完整pytest：2 failed、4,297 passed、26 skipped，

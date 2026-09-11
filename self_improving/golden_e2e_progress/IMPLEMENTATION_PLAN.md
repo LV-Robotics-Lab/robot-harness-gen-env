@@ -2,7 +2,7 @@
 
 状态：`active`
 
-最新用户指令后置P8/E3，先完成sim-ready服务并暂停。新的顺序和阶段验收以待批准的
+最新用户指令后置P8/E3，先完成sim-ready服务并暂停。新的顺序和阶段验收以已批准的
 `SIM_READY_RELEASE_PLAN.md`为准；下方保留原P0–P14编号以追踪已完成工作，不再代表执行先后。
 
 每个切片遵循：更新 TODO → 通过公共 seam 写 RED → 记录失败 → 最小 GREEN → focused tests + 100%

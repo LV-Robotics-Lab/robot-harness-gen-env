@@ -1,5 +1,13 @@
 # Change Log
 
+## Sim-ready阶段计划批准与Gujie整合启动
+
+- 用户批准先交付sim-ready环境服务、后置P8/E3，并指定Gujie接入审计作为重要整合依据；
+  `SIM_READY_RELEASE_PLAN.md`现为当前顺序，旧E3/E4语义保留，阶段验收和benchmark终点同步。
+- 将用户提供的固定历史审计原样纳入候选树，SHA256为
+  `ccee1e0b66f6c7662aaf5d4445cd5a63a68c17ccfca7b7f6d18630ee68dd8071`；原件和用户修改不动。
+  M1开始整合Gujie场景转换、布局、支撑与双dt回放；真实renderer smoke不代表M1完成。
+
 ## 2026-09-11 Durable 单资产资格
 
 - 新增`GenesisAssetQualificationApplication`，固定issuer实现和批准manifest；reserve/execute/invoke/

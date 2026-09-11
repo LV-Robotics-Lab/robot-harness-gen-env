@@ -1,6 +1,6 @@
 # Autoresearch Setup 草案
 
-状态：`accepted_2026-09-09`
+状态：原设置2026-09-09确认；用户批准sim-ready服务优先后调整本阶段profile，预算/比例门不变。
 
 按 `autoresearch` skill，以下参数在循环开始前必须由用户整体确认。功能/物理 bug 先按普通 TDD 修复；
 只有基线可执行后才启动评分实验，避免把“修到能跑”误计成模型路由提升。
@@ -8,7 +8,7 @@
 ## Goal
 
 提高外部真实 Codex 只经 Harness MCP 对 text/image/video/multimodal 输入进行路由、观察、诊断和
-fallback 后，完成 Genesis robot-policy golden E2E 的稳定成功率，同时保持零不安全晋升和完整证据
+fallback 后，完成 Genesis sim-ready环境发布闭环的稳定成功率，同时保持零错误晋升和完整证据
 绑定。
 
 ## Frozen suites
@@ -47,7 +47,7 @@ Codex/MCP/Genesis receipts 和资源计数保存在 run-owned evidence 目录，
 ## Metric extraction and direction
 
 - Primary JSON pointer：`/metrics/closed_loop_success_rate`
-- 定义：`eligible attempts` 中同时满足 route、exact qualified Skill chain、Genesis robot-policy replay、
+- 定义：`eligible attempts` 中同时满足 route、exact qualified Skill chain、Genesis rigid-scene replay、
   validate publishable 和 ephemeral promotion commit 的 attempts 比例。
 - Direction：higher is better。
 - crash、timeout、early stop、缺失 ToolResult、未晋升和证据无效均计 0；case 不得静默跳过。

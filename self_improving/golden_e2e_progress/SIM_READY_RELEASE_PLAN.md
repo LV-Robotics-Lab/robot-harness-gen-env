@@ -1,6 +1,20 @@
 # Sim-ready 服务交付计划
 
-状态：实施顺序与policy后置由用户确认；本详细任务计划待批准。批准前不启动新功能实现。
+状态：用户已批准，开始M1；policy后置，M5开放服务后暂停。
+
+## Gujie整合主线
+
+本计划明确以[Gujie接入审计](../../docs/research/gujie-x2env-integration-audit-20260911.md)为参考。
+该报告固定于旧候选`7e145274`，其中“尚无runtime lock/资产资格”等历史状态已被后续证据更新；
+其固定来源、能力拆分与尚未接入的scene/import/position/dual-dt等清单仍指导本次整合。
+
+- M1实际适配固定`eb0b710`中的URDF/scene import、有限布局、支撑图、baseline/half-dt与物理判据；
+  保留Gujie实现归属及Genesis/SimFoundry各自上游归属，不只将其当作背景资料。
+- M2把其阶段化执行、诊断与最终媒体行为接到Harness同workflow回执，原checkpoint/pass不直接迁移。
+- M3接入重建结果与资产生成路径，保留SimFoundry为独立上游；外部Codex继续承担规划/视觉决策。
+  video补足完整帧identity与真实执行，不以15帧sample或旧成功记录替代Golden line。
+- 每项整合记录固定源码、采用/适配/补齐的具体内容、当前运行证据和限制。优先复用可分离的确定性
+  实现；不复制整个vendor，不放宽Harness证据门，不改动同事dirty工作区。
 
 ## 本阶段终点
 

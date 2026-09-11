@@ -118,6 +118,12 @@ issuer身份固定，相同UUID的不同输入拒绝。terminal重试只读，SQ
 
 ## S4 — Legacy Gujie anti-corruption import
 
+M1已批准整合纵切：S4把固定Gujie source scene、representation、测得完整geometry及显式有限桌面
+转成portable场景；首条保留source XY/orientation，显式计算Z/clearance，超范围/倾斜/articulation
+明确拒绝。S3消费同一typed scene作baseline/half-dt环境replay，输出逐步state/contact、实际媒体与
+固定判据；pure-read重算target-local footprint、向上支撑、穿透/稳定性/终态agreement。真实runner
+与纯读一致性分账；M1最后必须绑定production image compile的同一个输入/package，而非孤立scene。
+
 ```python
 class LegacyGenenvImporter:
     def import_snapshot(self, request: LegacyImportRequest) -> LegacyImportResult: ...
@@ -163,5 +169,6 @@ scripted MCP client 可用于 deterministic integration；只有 `agent_mode=cod
 
 - [x] 接受 S1–S6 为公共测试 seam。
 - [x] 接受 exact Skill MCP tools，而不是 public generic `skill.invoke`。
-- [x] 接受 `genesis.robot_policy@1` 作为最终完成指标，`genesis.rigid_scene@1` 只作中间门。
+- [x] 原最终指标`genesis.robot_policy@1`保留至后续联调；用户新批准的本阶段交付以rigid-scene
+  sim-ready环境、Codex闭环及服务发布为门，完成后暂停。
 - [x] 允许新增 optional dependency `mcp>=2.2,<3`，并用官方 Python client/server 做真协议测试。

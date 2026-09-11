@@ -1,7 +1,11 @@
 # Image2Env / Video2Env 实施计划
 
-状态：合同、media ingest、typed exact-reuse closure、controlled image compile与首个legacy representation
-staging与typed asset-probe evidence完成；production runner/asset qualification待实现
+状态：合同、media ingest、typed exact-reuse closure、controlled image compile、legacy representation、
+固定CPU asset runner与durable单资产qualification完成。当前M1实际整合Gujie场景/布局/双dt运行。
+
+最新执行顺序以已批准`SIM_READY_RELEASE_PLAN.md`为准。此文件中robot-policy/trajectory条款后置至
+P8/E3联调，当前image/video环境资格按rigid-scene环境门交付并发布服务，不要求policy接口。
+来源参考为`docs/research/gujie-x2env-integration-audit-20260911.md`；其历史ref不冒充当前进度。
 
 本计划从 `2bdeafd836d641b4f14aef316a21fbcd736f55e1` 的真实 Harness 基线和
 `/home/jingxiang/gujie/gen-env@eb0b710581fd7794bc01b447b0f77cb871c8a711` 的固定来源出发。
