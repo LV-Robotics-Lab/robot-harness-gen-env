@@ -33,6 +33,8 @@ _WORKFLOW_RECEIPT_SCHEMAS = frozenset(
     {
         "harness.external_agent_advisory_receipt.v1",
         "harness.prompt_revision.v1",
+        "harness.external_agent_advisory_receipt.v2",
+        "harness.prompt_revision.v2",
         "harness.workflow_start_receipt.v1",
         WORKFLOW_OPERATION_RECEIPT_V2_SCHEMA_ID,
     }

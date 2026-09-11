@@ -65,6 +65,8 @@ def _receipt_values(predecessor: ArtifactRef) -> dict[str, Any]:
     [
         "harness.external_agent_advisory_receipt.v1",
         "harness.prompt_revision.v1",
+        "harness.external_agent_advisory_receipt.v2",
+        "harness.prompt_revision.v2",
     ],
 )
 def test_public_workflow_operation_accepts_exact_control_receipt_predecessors(
@@ -82,6 +84,14 @@ def test_public_workflow_operation_accepts_exact_control_receipt_predecessors(
 @pytest.mark.parametrize(
     ("predecessor", "message"),
     [
+        (
+            _ref("future-control", "harness.prompt_revision.v3"),
+            "unsupported schema_version",
+        ),
+        (
+            _ref("v2-command", "harness.advisory_record_command.v2"),
+            "unsupported schema_version",
+        ),
         (
             _ref("control-snapshot", "harness.control_commit_snapshot.v1"),
             "unsupported schema_version",

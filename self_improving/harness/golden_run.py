@@ -22,6 +22,7 @@ from .golden_execution import (
     SkillEvidencePolicy,
     create_golden_execution_catalog,
 )
+from .golden_fresh_citation import verify_fresh_citation
 from .golden_store import (
     GoldenRunConflictError,
     GoldenRunCorruptionError,
@@ -45,7 +46,6 @@ from .schemas.common import (
 from .schemas.genesis_observe import GenesisObservationReceipt
 from .schemas.golden_control import (
     ADVISORY_RECORD_COMMAND_SCHEMA_ID,
-    CONTROL_COMMIT_SNAPSHOT_SCHEMA_ID,
     EXTERNAL_AGENT_ADVISORY_RECEIPT_SCHEMA_ID,
     PROMPT_REVISION_COMMAND_SCHEMA_ID,
     PROMPT_REVISION_SCHEMA_ID,
@@ -57,6 +57,15 @@ from .schemas.golden_control import (
     VideoFrameToImageFallback,
     external_agent_advisory_receipt_sha256,
     prompt_revision_sha256,
+)
+from .schemas.golden_control_v2 import (
+    AdvisoryRecordCommandV2,
+    ControlCommitSnapshotV2,
+    ExternalAgentAdvisoryReceiptV2,
+    PromptRevisionCommandV2,
+    PromptRevisionV2,
+    external_agent_advisory_receipt_v2_sha256,
+    prompt_revision_v2_sha256,
 )
 from .schemas.registry_snapshot import RegistrySnapshot
 from .schemas.resource_access import (
@@ -506,6 +515,10 @@ class GoldenRunHarness:
             model: type[ExternalAgentAdvisoryReceipt | PromptRevision] = (
                 ExternalAgentAdvisoryReceipt
             )
+        elif artifact.schema_version == "harness.external_agent_advisory_receipt.v2":
+            model = ExternalAgentAdvisoryReceiptV2
+        elif artifact.schema_version == "harness.prompt_revision.v2":
+            model = PromptRevisionV2
         elif artifact.schema_version == PROMPT_REVISION_SCHEMA_ID:
             model = PromptRevision
         else:
@@ -533,7 +546,7 @@ class GoldenRunHarness:
             *receipt.failure_receipts,
             *(citation.receipt for citation in receipt.observation_citations),
         ]
-        if type(receipt) is ExternalAgentAdvisoryReceipt:
+        if type(receipt) in {ExternalAgentAdvisoryReceipt, ExternalAgentAdvisoryReceiptV2}:
             refs.extend(receipt.diagnostic_refs)
             refs.extend(receipt.resource_access_receipts)
             refs.extend(filter(None, (receipt.source_prompt_revision,)))
@@ -541,7 +554,11 @@ class GoldenRunHarness:
             refs.extend(
                 (
                     receipt.advisory_receipt,
-                    receipt.predecessor_package,
+                    (
+                        receipt.predecessor_environment
+                        if type(receipt) is PromptRevisionV2
+                        else receipt.predecessor_package
+                    ),
                     receipt.revised_prompt,
                 )
             )
@@ -592,6 +609,11 @@ class GoldenRunHarness:
             )
         )
         prompt_revision = None
+        if current.receipt_head.schema_version == "harness.prompt_revision.v2":
+            raise GoldenRunRegistryError(
+                "HARN_PROMPT_REVISION_CONSUMPTION_REQUIRED",
+                "v2 prompt revision requires a versioned compile consumer before any Skill runs",
+            )
         if current.receipt_head.schema_version == PROMPT_REVISION_SCHEMA_ID:
             prompt_revision = cast(
                 PromptRevision,
@@ -680,13 +702,25 @@ class GoldenRunHarness:
 
     def submit_control(
         self,
-        request: AdvisoryRecordCommand | PromptRevisionCommand,
-    ) -> ControlCommitSnapshot:
+        request: AdvisoryRecordCommand
+        | PromptRevisionCommand
+        | AdvisoryRecordCommandV2
+        | PromptRevisionCommandV2,
+    ) -> ControlCommitSnapshot | ControlCommitSnapshotV2:
         """Commit one advisory-only record without changing trusted world state."""
 
-        if type(request) not in {AdvisoryRecordCommand, PromptRevisionCommand}:
+        if type(request) not in {
+            AdvisoryRecordCommand,
+            PromptRevisionCommand,
+            AdvisoryRecordCommandV2,
+            PromptRevisionCommandV2,
+        }:
             raise TypeError("request must be an exact Golden control command")
-        control_kind = "advisory" if type(request) is AdvisoryRecordCommand else "prompt_revision"
+        control_kind = (
+            "advisory"
+            if type(request) in {AdvisoryRecordCommand, AdvisoryRecordCommandV2}
+            else "prompt_revision"
+        )
         existing = self._workflow_store.read_control_record(
             principal_id=request.principal_id,
             workflow_run_id=request.workflow_run_id,
@@ -728,7 +762,7 @@ class GoldenRunHarness:
         _require_utc_clock(committed_at)
         reachable = self._reachable_workflow_artifacts(current)
         reachable_identities = {_artifact_identity(ref) for ref in reachable}
-        if type(request) is AdvisoryRecordCommand:
+        if type(request) in {AdvisoryRecordCommand, AdvisoryRecordCommandV2}:
             self._verify_advisory_lineage(
                 request,
                 current=current,
@@ -745,13 +779,9 @@ class GoldenRunHarness:
         command_ref = self._publish_model(
             request,
             name=f"{control_kind}_command.json",
-            schema_version=(
-                ADVISORY_RECORD_COMMAND_SCHEMA_ID
-                if type(request) is AdvisoryRecordCommand
-                else PROMPT_REVISION_COMMAND_SCHEMA_ID
-            ),
+            schema_version=request.schema_version,
         )
-        if type(request) is AdvisoryRecordCommand:
+        if type(request) in {AdvisoryRecordCommand, AdvisoryRecordCommandV2}:
             receipt = self._build_advisory_receipt(
                 request,
                 command_ref=command_ref,
@@ -759,7 +789,7 @@ class GoldenRunHarness:
                 committed_at=committed_at,
                 reachable_identities=reachable_identities,
             )
-            receipt_schema = EXTERNAL_AGENT_ADVISORY_RECEIPT_SCHEMA_ID
+            receipt_schema = receipt.schema_version
             receipt_name = "external_agent_advisory_receipt.json"
         else:
             receipt = self._build_prompt_revision(
@@ -769,15 +799,20 @@ class GoldenRunHarness:
                 committed_at=committed_at,
                 reachable_identities=reachable_identities,
             )
-            receipt_schema = PROMPT_REVISION_SCHEMA_ID
+            receipt_schema = receipt.schema_version
             receipt_name = "prompt_revision.json"
         receipt_ref = self._publish_model(
             receipt,
             name=receipt_name,
             schema_version=receipt_schema,
         )
-        control = ControlCommitSnapshot(
-            schema_version=CONTROL_COMMIT_SNAPSHOT_SCHEMA_ID,
+        snapshot_model = (
+            ControlCommitSnapshotV2
+            if request.schema_version.endswith(".v2")
+            else ControlCommitSnapshot
+        )
+        control = snapshot_model(
+            schema_version=snapshot_model.model_fields["schema_version"].annotation.__args__[0],
             control_kind=control_kind,
             idempotency_key=request.idempotency_key,
             command_id=request.command_id,
@@ -808,6 +843,17 @@ class GoldenRunHarness:
                 }
             ).model_dump(mode="python")
         )
+        if request.schema_version.endswith(".v2"):
+            commit_clock = self._clock()
+            _require_utc_clock(commit_clock)
+            if any(
+                not citation.captured_at <= commit_clock <= citation.expires_at
+                for citation in receipt.observation_citations
+            ):
+                raise GoldenRunRegistryError(
+                    "HARN_OBSERVATION_EXPIRED",
+                    "fresh capture expired before durable control commit",
+                )
         persisted = self._workflow_store.commit_control_record(
             principal_id=request.principal_id,
             expected_workflow_revision=request.expected_workflow_revision,
@@ -846,8 +892,13 @@ class GoldenRunHarness:
             at=committed_at,
             reachable_identities=reachable_identities,
         )
-        unhashed = ExternalAgentAdvisoryReceipt.model_construct(
-            schema_version=EXTERNAL_AGENT_ADVISORY_RECEIPT_SCHEMA_ID,
+        receipt_model = (
+            ExternalAgentAdvisoryReceiptV2
+            if type(command) is AdvisoryRecordCommandV2
+            else ExternalAgentAdvisoryReceipt
+        )
+        unhashed = receipt_model.model_construct(
+            schema_version=receipt_model.model_fields["schema_version"].annotation.__args__[0],
             command_id=command.command_id,
             workflow_run_id=command.workflow_run_id,
             principal_id=command.principal_id,
@@ -878,9 +929,13 @@ class GoldenRunHarness:
             grants_publishability=False,
             receipt_sha256="0" * 64,
         )
-        return ExternalAgentAdvisoryReceipt(
+        return receipt_model(
             **unhashed.model_dump(mode="python", exclude={"receipt_sha256"}),
-            receipt_sha256=external_agent_advisory_receipt_sha256(unhashed),
+            receipt_sha256=(
+                external_agent_advisory_receipt_v2_sha256(unhashed)
+                if type(command) is AdvisoryRecordCommandV2
+                else external_agent_advisory_receipt_sha256(unhashed)
+            ),
         )
 
     def _verify_advisory_lineage(
@@ -902,7 +957,7 @@ class GoldenRunHarness:
                 label="source prompt revision",
                 reachable_identities=reachable_identities,
             )
-            self._resolve_canonical_model(command.source_prompt_revision, PromptRevision)
+            self._resolve_control_receipt(command.source_prompt_revision)
         failure_artifacts = self._verify_control_failures(
             command.failure_receipts,
             current=current,
@@ -919,6 +974,9 @@ class GoldenRunHarness:
                     "diagnostic is not reachable from the cited failure history"
                 )
         for citation in command.observation_citations:
+            if type(command) is AdvisoryRecordCommandV2:
+                self._verify_fresh_capture_citation(citation, current=current, at=at)
+                continue
             self._verify_observation_citation(
                 citation.receipt,
                 captured_at=citation.captured_at,
@@ -988,8 +1046,21 @@ class GoldenRunHarness:
             media_type="text/plain",
             schema_version="harness.prompt_text.v1",
         )
-        unhashed = PromptRevision.model_construct(
-            schema_version=PROMPT_REVISION_SCHEMA_ID,
+        revision_model = (
+            PromptRevisionV2 if type(command) is PromptRevisionCommandV2 else PromptRevision
+        )
+        extra = (
+            {
+                "authority": "advisory_only",
+                "grants_physical_validity": False,
+                "grants_publishability": False,
+                "predecessor_environment": command.predecessor_environment,
+            }
+            if type(command) is PromptRevisionCommandV2
+            else {"predecessor_package": command.predecessor_package}
+        )
+        unhashed = revision_model.model_construct(
+            schema_version=revision_model.model_fields["schema_version"].annotation.__args__[0],
             command_id=command.command_id,
             workflow_run_id=command.workflow_run_id,
             principal_id=command.principal_id,
@@ -1010,7 +1081,7 @@ class GoldenRunHarness:
             advisory_receipt=command.advisory_receipt,
             failure_receipts=command.failure_receipts,
             observation_citations=advisory.observation_citations,
-            predecessor_package=command.predecessor_package,
+            **extra,
             patch=command.patch,
             revised_prompt=revised_prompt,
             fallback=command.fallback,
@@ -1018,9 +1089,13 @@ class GoldenRunHarness:
             external_agent_executed=False,
             revision_sha256="0" * 64,
         )
-        return PromptRevision(
+        return revision_model(
             **unhashed.model_dump(mode="python", exclude={"revision_sha256"}),
-            revision_sha256=prompt_revision_sha256(unhashed),
+            revision_sha256=(
+                prompt_revision_v2_sha256(unhashed)
+                if type(command) is PromptRevisionCommandV2
+                else prompt_revision_sha256(unhashed)
+            ),
         )
 
     def _verify_prompt_lineage(
@@ -1050,7 +1125,9 @@ class GoldenRunHarness:
             ExternalAgentAdvisoryReceipt,
             self._resolve_canonical_model(
                 command.advisory_receipt,
-                ExternalAgentAdvisoryReceipt,
+                ExternalAgentAdvisoryReceiptV2
+                if type(command) is PromptRevisionCommandV2
+                else ExternalAgentAdvisoryReceipt,
             ),
         )
         if (
@@ -1066,11 +1143,19 @@ class GoldenRunHarness:
             current=current,
             reachable_identities=reachable_identities,
         )
-        if _artifact_identity(command.predecessor_package) not in failure_artifacts:
+        predecessor_environment = (
+            command.predecessor_environment
+            if type(command) is PromptRevisionCommandV2
+            else command.predecessor_package
+        )
+        if _artifact_identity(predecessor_environment) not in failure_artifacts:
             raise GoldenRunNotFoundError(
                 "predecessor package is not reachable from the cited failure history"
             )
         for citation in advisory.observation_citations:
+            if type(command) is PromptRevisionCommandV2:
+                self._verify_fresh_capture_citation(citation, current=current, at=at)
+                continue
             self._verify_observation_citation(
                 citation.receipt,
                 captured_at=citation.captured_at,
@@ -1098,7 +1183,7 @@ class GoldenRunHarness:
         if predecessor_prompt is not None:
             prior = cast(
                 PromptRevision,
-                self._resolve_canonical_model(predecessor_prompt, PromptRevision),
+                self._resolve_control_receipt(predecessor_prompt),
             )
             if command.source_prompt != prior.revised_prompt:
                 raise GoldenRunRegistryError(
@@ -1157,6 +1242,20 @@ class GoldenRunHarness:
             ):
                 artifacts.add(_artifact_identity(artifact))
         return artifacts
+
+    def _verify_fresh_capture_citation(self, citation, *, current, at):
+        try:
+            verify_fresh_citation(
+                citation=citation,
+                current=current,
+                at=at,
+                reachable=self._reachable_workflow_artifacts(current),
+                resolve=self._resolve_canonical_model,
+                store=self._artifact_store,
+                children=self._execution_catalog.child_authority_for,
+            )
+        except ValueError as error:
+            raise GoldenRunRegistryError("HARN_HISTORY_MISMATCH", str(error)) from error
 
     def _verify_observation_citation(
         self,
@@ -1282,6 +1381,10 @@ class GoldenRunHarness:
     ) -> AdvisoryRecordCommand | PromptRevisionCommand:
         if artifact.schema_version == ADVISORY_RECORD_COMMAND_SCHEMA_ID:
             model: type[AdvisoryRecordCommand | PromptRevisionCommand] = AdvisoryRecordCommand
+        elif artifact.schema_version == "harness.advisory_record_command.v2":
+            model = AdvisoryRecordCommandV2
+        elif artifact.schema_version == "harness.prompt_revision_command.v2":
+            model = PromptRevisionCommandV2
         elif artifact.schema_version == PROMPT_REVISION_COMMAND_SCHEMA_ID:
             model = PromptRevisionCommand
         else:
@@ -1854,7 +1957,12 @@ class GoldenRunHarness:
                 )
             else:
                 control = cast(ControlCommitSnapshot, entry.control)
-                if type(receipt) not in {ExternalAgentAdvisoryReceipt, PromptRevision}:
+                if type(receipt) not in {
+                    ExternalAgentAdvisoryReceipt,
+                    PromptRevision,
+                    ExternalAgentAdvisoryReceiptV2,
+                    PromptRevisionV2,
+                }:
                     raise GoldenRunCorruptionError("control turn does not have a control receipt")
                 prior = self._verify_control_evidence(
                     prior,
@@ -1958,10 +2066,9 @@ class GoldenRunHarness:
             _artifact_identity(ref) for ref in self._reachable_workflow_artifacts(prior)
         }
         if control.control_kind == "advisory":
-            if (
-                type(command) is not AdvisoryRecordCommand
-                or type(receipt) is not ExternalAgentAdvisoryReceipt
-            ):
+            if type(command) not in {AdvisoryRecordCommand, AdvisoryRecordCommandV2} or type(
+                receipt
+            ) not in {ExternalAgentAdvisoryReceipt, ExternalAgentAdvisoryReceiptV2}:
                 raise GoldenRunCorruptionError("advisory turn has the wrong typed evidence")
             advisory_invalid = _values_differ(
                 (
@@ -1974,6 +2081,7 @@ class GoldenRunHarness:
                     (receipt.failure_receipts, command.failure_receipts),
                     (receipt.observation_citations, command.observation_citations),
                     (receipt.diagnostic_refs, command.diagnostic_refs),
+                    (receipt.resource_access_receipts, command.resource_access_receipts),
                     (receipt.external_agent_executed, command.external_agent_executed),
                 )
             )
@@ -1986,7 +2094,9 @@ class GoldenRunHarness:
                 reachable_identities=reachable_identities,
             )
         else:
-            if type(command) is not PromptRevisionCommand or type(receipt) is not PromptRevision:
+            if type(command) not in {PromptRevisionCommand, PromptRevisionCommandV2} or type(
+                receipt
+            ) not in {PromptRevision, PromptRevisionV2}:
                 raise GoldenRunCorruptionError("prompt revision turn has the wrong typed evidence")
             advisory, predecessor_prompt, revision_number, _ = self._verify_prompt_lineage(
                 command,
@@ -2002,7 +2112,18 @@ class GoldenRunHarness:
                     (receipt.advisory_receipt, command.advisory_receipt),
                     (receipt.failure_receipts, command.failure_receipts),
                     (receipt.observation_citations, advisory.observation_citations),
-                    (receipt.predecessor_package, command.predecessor_package),
+                    (
+                        (
+                            receipt.predecessor_environment
+                            if type(receipt) is PromptRevisionV2
+                            else receipt.predecessor_package
+                        ),
+                        (
+                            command.predecessor_environment
+                            if type(command) is PromptRevisionCommandV2
+                            else command.predecessor_package
+                        ),
+                    ),
                     (receipt.patch, command.patch),
                     (receipt.fallback, command.fallback),
                     (receipt.next_compile_skill_ref, command.next_compile_skill_ref),

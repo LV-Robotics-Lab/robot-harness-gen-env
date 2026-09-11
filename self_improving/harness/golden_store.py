@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 from .schemas.base import CanonicalSkillRef, Sha256
 from .schemas.golden_control import ControlCommitSnapshot
+from .schemas.golden_control_v2 import ControlCommitSnapshotV2
 from .schemas.resource_access import ResourceAccessReceipt, resource_access_request_sha256
 from .schemas.workflow import IdempotencyKey, OperationSnapshot, PrincipalId, RunSnapshot
 
@@ -1295,7 +1296,12 @@ def _decode_control(row: sqlite3.Row) -> StoredControlRecord:
     if hashlib.sha256(payload).hexdigest() != authority.control_sha256:
         raise GoldenRunCorruptionError(f"stored control {label} failed its payload checksum")
     try:
-        control = ControlCommitSnapshot.model_validate_json(payload)
+        model = (
+            ControlCommitSnapshotV2
+            if json.loads(payload).get("schema_version") == "harness.control_commit_snapshot.v2"
+            else ControlCommitSnapshot
+        )
+        control = model.model_validate_json(payload)
     except (ValidationError, TypeError, ValueError) as error:
         raise GoldenRunCorruptionError(
             f"cannot reconstruct stored control {label}: {error}"
