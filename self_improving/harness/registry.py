@@ -1150,6 +1150,8 @@ def _canonical_json_sha256(value: JsonObject) -> str:
 
 
 def _content_identity(value: Any) -> Any:
+    if isinstance(value, UUID):
+        return str(value)
     if isinstance(value, ArtifactRef):
         return {
             "media_type": value.media_type,

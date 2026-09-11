@@ -1,5 +1,11 @@
 # Change Log
 
+## Harness 请求中的 UUID 身份
+
+- 新 native compile 请求在 handler 前因 UUID 无法 JSON 序列化而失败。Registry 现在把 UUID
+  规范化为标准字符串，保留既有无 UUID 请求身份；公共 Registry/SQLite roundtrip 与旧回归
+  8 passed。这项修复不授予任何新 Skill 资格。
+
 ## Gujie 有限桌面与真实软件双时间步回放
 
 - 坐标、单刚体完整几何、有限支撑及物理判据已适配到 Harness；真实 mouse 场景完成双 dt，
