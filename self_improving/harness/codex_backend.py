@@ -165,45 +165,10 @@ def inspect_assigned_transcript(transcript: bytes, wire: bytes, assignment: Code
             del pending[identity]
     if pending or not calls:
         raise ValueError("missing completed assigned calls")
-    frames = [json.loads(line) for line in wire.splitlines() if line.strip()]
-    requests, actual, reads = {}, [], []
-    # Replay the same guard with the original deadline relaxed only for historical
-    # inspection. Actual dispatch already applied the real deadline.
-    import io
-
-    guard = AssignedMCPInput(
-        io.BytesIO(), assignment.model_copy(update={"deadline": datetime.max.replace(tzinfo=UTC)})
-    )
-    for frame in frames:
-        message = frame["message"]
-        if frame["direction"] == "request":
-            guard.source = io.BytesIO(json.dumps(message).encode() + b"\n")
-            guard.readline()
-            if "id" in message:
-                if message["id"] in requests:
-                    raise ValueError("duplicate wire request")
-                requests[message["id"]] = (message, frame["monotonic_ns"])
-        elif frame["direction"] == "response":
-            request, started = requests.pop(message.get("id"))
-            elapsed = (frame["monotonic_ns"] - started) / 1e9
-            if elapsed < 0:
-                raise ValueError("wire timing drift")
-            if request["method"] == "tools/call":
-                actual.append(("tools/call", request["params"], message.get("result"), elapsed))
-            elif request["method"] == "resources/read":
-                reads.append({"uri": request["params"]["uri"], "result": message.get("result")})
-                actual.append(("resources/read", request["params"], message.get("result"), elapsed))
-        else:
-            raise ValueError("unexpected wire direction")
-    if requests or len(actual) != len(calls):
-        raise ValueError("incomplete wire calls")
-    first = actual[0][2]
-    if (first or {}).get("structuredContent", {}).get("snapshot") != assignment.snapshot.model_dump(
-        mode="json"
-    ):
-        raise ValueError("initial status differs from assigned snapshot")
-    decisions = []
-    for item, (method, params, result, elapsed) in zip(calls, actual, strict=True):
+    evidence, actual = _inspect_assigned_transport(wire, assignment)
+    if len(actual) != len(calls):
+        raise ValueError("assistant calls differ from complete wire calls")
+    for item, (method, params, result, _elapsed) in zip(calls, actual, strict=True):
         observed = item.get("result") or {}
         if method == "resources/read":
             contents = observed.get("content", [])
@@ -228,30 +193,124 @@ def inspect_assigned_transcript(transcript: bytes, wire: bytes, assignment: Code
             or observed.get("content") != result.get("content")
         ):
             raise ValueError("assistant/wire output drift")
-        decisions.append(
-            {
-                "tool": item["tool"],
-                "arguments": params["arguments"],
-                "result": result,
-                "elapsed_seconds": elapsed,
-            }
-        )
     if final_item is None or final_item.get("type") != "agent_message":
         raise ValueError("missing strict terminal decision")
     terminal = validate_terminal_decision(
         json.loads(final_item.get("text", "")), assignment.snapshot.workflow_run_id
     )
     if terminal["decision"] == "unsupported" and any(
-        call["tool"] not in {STATUS, "image2env_preview_asset_lookup_v1"} for call in decisions
+        call["tool"] not in {STATUS, "image2env_preview_asset_lookup_v1"}
+        for call in evidence["calls"]
     ):
         raise ValueError("unsupported decision followed business execution")
-    return {
-        "workflow_id": str(assignment.snapshot.workflow_run_id),
-        "calls": decisions,
-        "resource_reads": reads,
-        "terminal_decision": terminal,
-        "business_state_authority": False,
-    }
+    return {**evidence, "terminal_decision": terminal}
+
+
+def inspect_assigned_transport(wire: bytes, assignment: CodexAssignment):
+    """Recover complete assigned calls from the Harness-recorded JSON-RPC transport."""
+    evidence, _actual = _inspect_assigned_transport(wire, assignment)
+    return evidence
+
+
+def _inspect_assigned_transport(wire: bytes, assignment: CodexAssignment):
+    import io
+
+    if not wire.strip():
+        raise ValueError("missing assigned transport")
+    try:
+        frames = [json.loads(line) for line in wire.splitlines() if line.strip()]
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise ValueError("invalid assigned transport JSON") from error
+    requests, actual, decisions, reads = {}, [], [], []
+    guard = AssignedMCPInput(
+        io.BytesIO(), assignment.model_copy(update={"deadline": datetime.max.replace(tzinfo=UTC)})
+    )
+    previous_time = None
+    for expected_sequence, frame in enumerate(frames):
+        if not isinstance(frame, dict) or set(frame) != {
+            "sequence",
+            "monotonic_ns",
+            "direction",
+            "message",
+        }:
+            raise ValueError("assigned transport frame shape differs")
+        moment = frame["monotonic_ns"]
+        if (
+            type(frame["sequence"]) is not int
+            or frame["sequence"] != expected_sequence
+            or type(moment) is not int
+            or moment < 0
+            or (previous_time is not None and moment < previous_time)
+        ):
+            raise ValueError("assigned transport sequence or timing differs")
+        previous_time = moment
+        message = frame["message"]
+        if not isinstance(message, dict) or message.get("jsonrpc") != "2.0":
+            raise ValueError("invalid assigned JSON-RPC frame")
+        direction = frame["direction"]
+        if direction == "request":
+            if not isinstance(message.get("params", {}), dict):
+                raise ValueError("assigned request params must be an object")
+            guard.source = io.BytesIO(
+                json.dumps(message, sort_keys=True, separators=(",", ":")).encode() + b"\n"
+            )
+            try:
+                guard.readline()
+            except (AttributeError, KeyError, TypeError) as error:
+                raise ValueError("invalid assigned request") from error
+            if "id" in message:
+                identity = message["id"]
+                if type(identity) not in (int, str) or identity in requests:
+                    raise ValueError("duplicate or invalid wire request")
+                requests[identity] = (message, moment)
+        elif direction == "response":
+            identity = message.get("id")
+            if type(identity) not in (int, str) or identity not in requests:
+                raise ValueError("wire response lacks one pending request")
+            if ("result" in message) == ("error" in message) or "error" in message:
+                raise ValueError("wire response does not contain one attributable result")
+            request, started = requests.pop(identity)
+            elapsed_ns = moment - started
+            if elapsed_ns <= 0:
+                raise ValueError("wire timing drift")
+            method, params, result = request["method"], request.get("params", {}), message["result"]
+            if method in {"tools/call", "resources/read"}:
+                if not isinstance(result, dict):
+                    raise ValueError("assigned call result must be an object")
+                actual.append((method, params, result, elapsed_ns / 1e9))
+            if method == "tools/call":
+                decisions.append(
+                    {
+                        "tool": params["name"],
+                        "arguments": params.get("arguments", {}),
+                        "result": result,
+                        "elapsed_seconds": elapsed_ns / 1e9,
+                    }
+                )
+            elif method == "resources/read":
+                reads.append({"uri": params["uri"], "result": result})
+        else:
+            raise ValueError("unexpected wire direction")
+    if requests:
+        raise ValueError("incomplete wire calls")
+    if not decisions or decisions[0]["tool"] != STATUS:
+        raise ValueError("missing initial status call")
+    first = decisions[0]["result"]
+    if first.get("structuredContent", {}).get("snapshot") != assignment.snapshot.model_dump(
+        mode="json"
+    ):
+        raise ValueError("initial status differs from assigned snapshot")
+    return (
+        {
+            "workflow_id": str(assignment.snapshot.workflow_run_id),
+            "calls": decisions,
+            "resource_reads": reads,
+            "terminal_decision": None,
+            "attribution_complete": True,
+            "business_state_authority": False,
+        },
+        actual,
+    )
 
 
 @dataclass(frozen=True)
@@ -472,6 +531,11 @@ class CodexBackend:
                 status, failure = "invalid_transcript", str(error)
         else:
             failure = status
+        if status != "completed":
+            try:
+                decision = inspect_assigned_transport(wire, assignment)
+            except (ValueError, KeyError, TypeError):
+                decision = None
         return CodexBackendResult(
             status,
             output_root,

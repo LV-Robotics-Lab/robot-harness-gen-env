@@ -525,9 +525,7 @@ def test_failed_attempt_keeps_complete_transport_call_attribution(tmp_path):
                 {
                     "tool": "image2env_compile_v2_0_0",
                     "elapsed_seconds": 1.0,
-                    "result": {
-                        "structuredContent": {"stage": "compile", "elapsed_seconds": 0.5}
-                    },
+                    "result": {"structuredContent": {"stage": "compile", "elapsed_seconds": 0.5}},
                 }
             ],
             "attribution_complete": True,

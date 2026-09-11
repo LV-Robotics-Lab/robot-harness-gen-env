@@ -107,7 +107,7 @@ def read_codex_attempts(golden_database_path, workflow_id):
 
 
 def timing_samples(result):
-    """Keep failure wall time as unattributed residual, never invented child time."""
+    """Keep exact call spans and leave only the remaining wall as Codex/MCP time."""
 
     def ns(value):
         if type(value) not in (int, float) or not math.isfinite(value) or value < 0:
@@ -116,8 +116,9 @@ def timing_samples(result):
 
     backend = ns(result.elapsed_seconds)
     calls, valid = [], True
-    complete = result.decision_evidence is not None
-    for call in (result.decision_evidence or {}).get("calls", []):
+    evidence = result.decision_evidence or {}
+    complete = evidence.get("attribution_complete", result.status == "completed") is True
+    for call in evidence.get("calls", []):
         transport = ns(call["elapsed_seconds"])
         output = (call.get("result") or {}).get("structuredContent") or {}
         stage = output.get("stage")
@@ -141,7 +142,9 @@ def timing_samples(result):
         calls=calls,
         attribution_complete=complete,
         failure=result.failure,
-        valid=valid and backend >= sum(call["transport_elapsed_ns"] for call in calls),
+        valid=valid
+        and (complete or not calls)
+        and backend >= sum(call["transport_elapsed_ns"] for call in calls),
     )
 
 

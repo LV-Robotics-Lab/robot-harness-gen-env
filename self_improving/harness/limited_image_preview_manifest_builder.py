@@ -726,11 +726,14 @@ def _timings(entries: Sequence[StoredWorkflowEntry], samples: Sequence[Mapping[s
             _fail("timing_shape", "controller calls must be one measured list")
         failure = sample["failure"]
         complete = sample["attribution_complete"]
-        if failure is not None or complete is not True:
+        if failure is None:
+            if complete is not True or "wall_basis" in sample or not calls:
+                _fail("timing_incomplete", "completed attempt requires exact attributed calls")
+        elif type(failure) is not str or not failure:
+            _fail("timing_incomplete", "failed attempt requires its recorded failure")
+        elif complete is not True:
             if (
-                type(failure) is not str
-                or not failure
-                or complete is not False
+                complete is not False
                 or calls
                 or (
                     "wall_basis" in sample
@@ -745,8 +748,8 @@ def _timings(entries: Sequence[StoredWorkflowEntry], samples: Sequence[Mapping[s
             # the unattributed Codex/MCP residual.  No stage split is manufactured.
             codex_ns += backend
             continue
-        if "wall_basis" in sample or not calls:
-            _fail("timing_incomplete", "completed attempt requires exact attributed calls")
+        elif "wall_basis" in sample or not calls:
+            _fail("timing_incomplete", "failed attributed attempt requires exact calls")
         transport_total = 0
         for call in calls:
             if not isinstance(call, Mapping) or set(call) != {

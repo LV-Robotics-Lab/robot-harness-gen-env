@@ -308,6 +308,8 @@ def test_codex_01534_resource_call_maps_to_wire_read_without_action_budget(assig
 
 
 def test_complete_assigned_transport_is_recoverable_without_a_terminal_transcript(assignment):
+    import copy
+
     workflow = str(assignment.snapshot.workflow_run_id)
     assignment = assignment.model_copy(
         update={
@@ -400,6 +402,29 @@ def test_complete_assigned_transport_is_recoverable_without_a_terminal_transcrip
         inspect_assigned_transport(
             b"\n".join(json.dumps(frame).encode() for frame in first_business), assignment
         )
+    foreign = copy.deepcopy(frames)
+    foreign[2]["message"]["params"]["arguments"]["workflow_id"] = "foreign"
+    with pytest.raises(ValueError, match="foreign workflow"):
+        inspect_assigned_transport(
+            b"\n".join(json.dumps(frame).encode() for frame in foreign), assignment
+        )
+    with pytest.raises(ValueError, match="budget"):
+        inspect_assigned_transport(
+            b"\n".join(json.dumps(frame).encode() for frame in frames),
+            assignment.model_copy(update={"call_budget": 1}),
+        )
+    wrong_snapshot = copy.deepcopy(frames)
+    wrong_snapshot[1]["message"]["result"]["structuredContent"]["snapshot"] = {}
+    with pytest.raises(ValueError, match="assigned snapshot"):
+        inspect_assigned_transport(
+            b"\n".join(json.dumps(frame).encode() for frame in wrong_snapshot), assignment
+        )
+    zero_duration = copy.deepcopy(frames)
+    zero_duration[1]["monotonic_ns"] = zero_duration[0]["monotonic_ns"]
+    with pytest.raises(ValueError, match="timing drift"):
+        inspect_assigned_transport(
+            b"\n".join(json.dumps(frame).encode() for frame in zero_duration), assignment
+        )
 
 
 @pytest.mark.parametrize("exit_code,expected", [(0, "invalid_transcript"), (17, "exit_failure")])
@@ -446,9 +471,7 @@ def test_backend_failure_retains_complete_assigned_transport_calls(
                 "id": 1,
                 "result": {
                     "content": [],
-                    "structuredContent": {
-                        "snapshot": assignment.snapshot.model_dump(mode="json")
-                    },
+                    "structuredContent": {"snapshot": assignment.snapshot.model_dump(mode="json")},
                 },
             },
         ),
@@ -491,10 +514,8 @@ def test_backend_failure_retains_complete_assigned_transport_calls(
         "#include <stdio.h>\n"
         "int main(void){unsigned char wire[]={"
         + ",".join(str(value) for value in wire)
-        + "};FILE *f=fopen(\"transport.jsonl\",\"wb\");"
-        "fwrite(wire,1,sizeof(wire),f);fclose(f);puts(\"{}\");return "
-        + str(exit_code)
-        + ";}"
+        + '};FILE *f=fopen("transport.jsonl","wb");'
+        'fwrite(wire,1,sizeof(wire),f);fclose(f);puts("{}");return ' + str(exit_code) + ";}"
     )
     executable = tmp_path / f"fixture-{exit_code}"
     subprocess.run([compiler, str(source), "-o", str(executable)], check=True)
