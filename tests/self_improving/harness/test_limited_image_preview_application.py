@@ -124,8 +124,7 @@ def test_formal_semantic_mismatch_retains_diagnostic_in_shared_registry():
     assert outcome.state.blocker.retryable is False
     refs = [
         ref
-        for event in outcome.state.events
-        for ref in event.artifact_refs
+        for ref in outcome.state.blocker.artifact_refs
         if ref.schema_version == "harness.limited_scene_validation.v1"
     ]
     assert len(refs) == 1

@@ -58,6 +58,7 @@ class PreviewServiceResult(HarnessModel):
     failure_message: NonEmptyString | None = None
     elapsed_seconds: float = Field(default=0.0, ge=0, allow_inf_nan=False)
     ttl_remaining_seconds: float | None = Field(default=None, allow_inf_nan=False)
+    library_publish_ns: NonNegativeInt | None = None
 
     @model_validator(mode="after")
     def failure_is_visible(self):

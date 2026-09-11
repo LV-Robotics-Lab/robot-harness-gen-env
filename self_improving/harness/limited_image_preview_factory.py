@@ -186,6 +186,24 @@ class LimitedPreviewRuntime:
                 compile_app,
                 GenesisSceneExecutionProducerV3(self.store, compile_app.compiler, s.scene_manifest),
                 roots=s.scene_roots,
+                library=self.application("library"),
+            )
+        elif key == "library":
+            from .limited_image_preview_library import (
+                create_limited_image_preview_library,
+                load_limited_image_preview_library,
+            )
+
+            factory = (
+                load_limited_image_preview_library
+                if s.library_root.exists()
+                else create_limited_image_preview_library
+            )
+            app = factory(
+                artifact_store=self.store,
+                compiler=self.application("revised").compiler,
+                root=s.library_root,
+                project_id=s.project_id,
             )
         else:
             raise ValueError("unsupported exact preview application")
@@ -219,9 +237,22 @@ class LimitedPreviewRuntime:
                 child_authority=authority,
             )
             refs = self.settings.native_projections[skill]
-            projection = load_native_skill_projection(
-                artifact_store=self.store, native_binding=binding, **refs.model_dump(mode="python")
-            )
+            if key == "observe":
+                from .limited_observation_registry_projection import (
+                    load_limited_observation_registry_projection,
+                )
+
+                projection = load_limited_observation_registry_projection(
+                    application=app,
+                    replay_authority=self.application("replay").run_store,
+                    **refs.model_dump(mode="python"),
+                )
+            else:
+                projection = load_native_skill_projection(
+                    artifact_store=self.store,
+                    native_binding=binding,
+                    **refs.model_dump(mode="python"),
+                )
             self.bindings[skill] = projection.binding
         elif skill == "image2env.compile@3.0.0":
             from .limited_image_preview_policy import LimitedImagePreviewPolicy
@@ -239,7 +270,11 @@ class LimitedPreviewRuntime:
                 **refs.model_dump(mode="python"),
             )
             self.bindings[skill] = projection.binding
-        elif skill in {"image2env.replay@3.0.0", "image2env.validate@3.0.0"}:
+        elif skill in {
+            "image2env.replay@3.0.0",
+            "image2env.validate@3.0.0",
+            "image2env.preview_publish@1.0.0",
+        }:
             from .limited_image_preview_policy import create_shared_preview_bindings
             from .limited_image_preview_workflow_policies import create_limited_validation_binding
 
@@ -253,7 +288,13 @@ class LimitedPreviewRuntime:
                 "image2env.replay@3.0.0": app.run_store,
                 "image2env.replay@2.0.0": self.application("replay").run_store,
             }
-            if skill == "image2env.validate@3.0.0":
+            if skill == "image2env.preview_publish@1.0.0":
+                from .limited_image_preview_publication_policy import (
+                    create_limited_publication_binding,
+                )
+
+                binding = create_limited_publication_binding(app)
+            elif skill == "image2env.validate@3.0.0":
                 authorities["genesis.observe@3.0.0"] = self.application("observe").run_store
                 binding = create_limited_validation_binding(
                     app, predecessor_authorities=authorities

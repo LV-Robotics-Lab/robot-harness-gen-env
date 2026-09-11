@@ -105,9 +105,7 @@ class LimitedImagePreviewService:
             bindings[skill] = self.runtime.bindings[skill]
         from .golden_execution import create_golden_execution_catalog
 
-        self.execution_catalog = create_golden_execution_catalog(
-            bindings=tuple(bindings.values())
-        )
+        self.execution_catalog = create_golden_execution_catalog(bindings=tuple(bindings.values()))
         self.harness = self._harness()
 
     def _harness(self, workflow_id=None):
@@ -278,6 +276,11 @@ class LimitedImagePreviewService:
             principal_id=self.principal_id, workflow_run_id=snapshot.workflow_run_id
         )
         if entries:
+            if (
+                entries[-1].operation.skill_ref == "image2env.preview_publish@1.0.0"
+                and entries[-1].operation.status.value == "succeeded"
+            ):
+                return self._published(snapshot, entries[-1].operation, "status")
             result = self._stage(entries[-1].operation, "status")
             if snapshot.receipt_head.schema_version in {
                 "harness.external_agent_advisory_receipt.v2",
@@ -290,12 +293,151 @@ class LimitedImagePreviewService:
                     )
                 )
                 if snapshot.receipt_head.schema_version == "harness.prompt_revision.v3":
-                    result["source_prompt"] = self._read_model(
+                    prompt = self._read_model(
                         snapshot.receipt_head, PromptRevisionV3
-                    ).revised_prompt.model_dump(mode="json")
+                    ).revised_prompt
+                    result["source_prompt"] = prompt.model_dump(mode="json")
+                    result["resource_links"].append(
+                        self._link(snapshot.workflow_run_id, prompt).model_dump(mode="json")
+                    )
                 return PreviewServiceResult.model_validate(result).model_dump(mode="json")
             return result
         return self._projection(snapshot, "status")
+
+    def _published(self, snapshot, operation, stage):
+        from .schemas.limited_image_preview import LimitedImagePreviewManifestV1
+
+        if self.runtime is None or operation.committed_revision != snapshot.revision:
+            raise ValueError("published preview requires its current durable library association")
+        result = self._read_model(operation.tool_result, ToolResultV2)
+        manifest = LimitedImagePreviewManifestV1.model_validate(result.typed_output)
+        verified = self.runtime.application("library").get(manifest.preview_id)
+        child = self._read_model(result.run_state, RunState)
+        if (
+            verified.manifest != manifest
+            or verified.manifest_ref not in child.artifacts
+            or manifest.workflow_run_id != snapshot.workflow_run_id
+            or manifest.principal_id != self.principal_id
+        ):
+            raise ValueError("published preview differs from its workflow and library")
+        final = manifest.revised_stage or manifest.initial_stage
+        observed = self._read_model(
+            manifest.initial_stage.fresh_observation, GenesisFreshCaptureReceiptV1
+        )
+        refs = (
+            verified.manifest_ref,
+            final.baseline_preview,
+            final.half_dt_preview,
+            observed.image,
+        )
+        timing_refs = [
+            ref
+            for event in child.events
+            if event.stage == "preview.library_published"
+            for ref in event.artifact_refs
+            if ref.name == "library-publication-timing.json" and ref.schema_version is None
+        ]
+        if len(timing_refs) != 1 or timing_refs[0] not in child.artifacts:
+            raise ValueError("published preview lost its measured library timing")
+        timing = json.loads(self.store.resolve(timing_refs[0]).path.read_bytes())
+        if (
+            set(timing)
+            != {
+                "kind",
+                "manifest",
+                "preview_id",
+                "project_id",
+                "index_sha256",
+                "index_revision",
+                "library_publish_ns",
+            }
+            or timing["kind"] != "limited_preview_library_timing.v1"
+            or ArtifactRef.model_validate(timing["manifest"]) != verified.manifest_ref
+            or timing["preview_id"] != manifest.preview_id
+            or timing["project_id"] != manifest.project_id
+            or type(timing["library_publish_ns"]) is not int
+            or timing["library_publish_ns"] < 0
+        ):
+            raise ValueError("publication timing differs from its committed manifest")
+        return PreviewServiceResult(
+            workflow_id=snapshot.workflow_run_id,
+            revision=snapshot.revision,
+            snapshot=snapshot,
+            stage=stage,
+            status="published",
+            operation=operation,
+            source_prompt=manifest.input_text,
+            package=verified.manifest_ref,
+            artifacts=(*refs, timing_refs[0]),
+            resource_links=tuple(
+                self._link(snapshot.workflow_run_id, ref) for ref in (*refs, timing_refs[0])
+            ),
+            elapsed_seconds=(child.ended_at - child.started_at).total_seconds(),
+            library_publish_ns=timing["library_publish_ns"],
+        ).model_dump(mode="json")
+
+    def package_get(self, *, workflow_id):
+        self._prepare(workflow_id)
+        snapshot = self.harness.read(self._request(workflow_id))
+        entries = self.journal.read_operations(
+            principal_id=self.principal_id, workflow_run_id=snapshot.workflow_run_id
+        )
+        if (
+            not entries
+            or entries[-1].operation.skill_ref != "image2env.preview_publish@1.0.0"
+            or entries[-1].operation.status.value != "succeeded"
+        ):
+            raise ValueError("workflow has no successfully published package")
+        return self._published(snapshot, entries[-1].operation, "package_get")
+
+    def publish(self, *, workflow_id, idempotency_key, timing_samples=None):
+        """Harness-owned release after a persisted backend attempt and final validation."""
+        skill = "image2env.preview_publish@1.0.0"
+        previous = self._existing(workflow_id, skill, idempotency_key)
+        if previous is None and not timing_samples:
+            raise ValueError("publication requires persisted terminal Codex timing samples")
+        self._prepare(workflow_id)
+        snapshot = self.harness.read(self._request(workflow_id))
+        if timing_samples is not None:
+            from .limited_image_preview_controller import read_codex_attempts
+
+            rows = read_codex_attempts(self.journal.path, snapshot.workflow_run_id)
+            if (
+                not rows
+                or any(row["status"] != "terminal" for row in rows)
+                or timing_samples != [row["timing_samples"] for row in rows]
+            ):
+                raise ValueError(
+                    "publication timing differs from this workflow's terminal Codex journal"
+                )
+        if previous is not None:
+            if previous[0].status.value == "succeeded":
+                return self._published(snapshot, previous[0], "publish")
+            self._prepare(workflow_id, skill)
+            return self._stage(self.harness.submit(previous[1]), "publish")
+        parent, _ = self._parent(snapshot)
+        if parent.skill_ref != "image2env.validate@3.0.0" or self.runtime is None:
+            raise ValueError("publication requires current final validation and configured library")
+        from .limited_image_preview_manifest_builder import build_limited_image_preview_manifest
+
+        input_ref, _ = self._input(snapshot)
+        lookup = self.inputs.lookup(workflow_id=snapshot.workflow_run_id, input_ref=input_ref)
+        manifest = build_limited_image_preview_manifest(
+            artifact_store=self.store,
+            workflow_store=self.journal,
+            snapshot=snapshot,
+            input_record=input_ref,
+            lookup=lookup,
+            project_id=self.runtime.settings.project_id,
+            timing_samples=timing_samples,
+        )
+        self._prepare(workflow_id, skill)
+        result = self._submit(snapshot, skill, manifest, idempotency_key, "publish")
+        if result["status"] != "succeeded":
+            return result
+        current = self.harness.read(self._request(workflow_id))
+        operation = self._existing(workflow_id, skill, idempotency_key)[0]
+        return self._published(current, operation, "publish")
 
     def _receipts(self, snapshot):
         refs = {}
@@ -353,13 +495,16 @@ class LimitedImagePreviewService:
             else (operation.tool_result, result.trusted_receipt, *result.diagnostics)
         )
         status = operation.status.value
+        child = None if result is None else self._read_model(result.run_state, RunState)
         values = dict(
             operation=operation,
             artifacts=refs,
             resource_links=tuple(self._link(snapshot.workflow_run_id, r) for r in refs),
+            # Child interval excludes live projection/qualification restoration;
+            # transport minus this interval is measured integrity/protocol overhead.
             elapsed_seconds=0.0
-            if operation.ended_at is None
-            else (operation.ended_at - operation.started_at).total_seconds(),
+            if child is None
+            else (child.ended_at - child.started_at).total_seconds(),
         )
         if status in {"failed", "blocked"}:
             values["failure_code"] = (

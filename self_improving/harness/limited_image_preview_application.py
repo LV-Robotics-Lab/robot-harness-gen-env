@@ -11,6 +11,7 @@ import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from time import perf_counter_ns
 from uuid import UUID, uuid4
 
 from .event_journal import SQLiteEventJournal
@@ -24,6 +25,7 @@ from .qualification import QualificationCheckV1, QualificationReportV1, _source_
 from .registry import (
     HandlerResult,
     QualificationCandidate,
+    SkillBlocked,
     SkillRegistry,
     StaticDependencyResolver,
     _EvidenceInvariantRegistration,
@@ -31,6 +33,7 @@ from .registry import (
 from .revised_image_compile_application import RevisedImageCompileApplication
 from .run_store import SQLiteRunStore
 from .schemas.common import (
+    Blocker,
     DependencyRef,
     RunStatus,
     SkillDescriptorV2,
@@ -89,16 +92,42 @@ class _Handler:
 
             if app.library is None:
                 raise ValueError("preview publish requires its configured verified library")
+            if value.project_id != app.library.read_index().project_id:
+                raise ValueError("preview manifest belongs to another library project")
             ref = app.put(value, "limited-image-preview.json")
             verified = admit_limited_image_preview(
                 artifact_store=app.artifact_store,
                 compiler=app.compiler_application.compiler,
                 manifest=ref,
             )
+            publishing_started = perf_counter_ns()
             published = app.library.publish(verified)
-            if published.manifest != ref:
+            if published.manifest != ref or app.library.get(value.preview_id).manifest_ref != ref:
                 raise ValueError("published library entry differs from verified manifest")
-            return HandlerResult(value, (ref,))
+            library_publish_ns = perf_counter_ns() - publishing_started
+            index = app.library.read_index()
+            with tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "library-publication-timing.json"
+                path.write_bytes(
+                    json.dumps(
+                        {
+                            "kind": "limited_preview_library_timing.v1",
+                            "manifest": ref.model_dump(mode="json"),
+                            "preview_id": value.preview_id,
+                            "project_id": index.project_id,
+                            "index_sha256": index.index_sha256,
+                            "index_revision": index.revision,
+                            "library_publish_ns": library_publish_ns,
+                        },
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    ).encode()
+                )
+                timing = app.artifact_store.put_file(
+                    path, name=path.name, media_type="application/json", schema_version=None
+                )
+            context.emit("preview.library_published", artifact_refs=(ref, timing))
+            return HandlerResult(value, (ref, timing))
         if self.skill_ref == REPLAY:
             request = app.resolve_replay(value)
             try:
@@ -127,7 +156,17 @@ class _Handler:
         refs = (ref, result.execution_receipt, result.scene, result.physical_report)
         context.emit("preview.semantic_validation", artifact_refs=refs)
         if result.status != "passed":
-            raise ValueError("PREVIEW_LAYOUT_MISMATCH: actual scene differs from requested XY/yaw")
+            raise SkillBlocked(
+                Blocker(
+                    code="PREVIEW_LAYOUT_MISMATCH",
+                    message="Actual scene differs from requested XY/yaw",
+                    stage="preview.semantic_validation",
+                    retryable=False,
+                    details={},
+                    unknowns=(),
+                    artifact_refs=refs,
+                )
+            )
         return HandlerResult(result, refs)
 
 
@@ -278,10 +317,15 @@ class LimitedImagePreviewApplication:
                 self.artifact_store, self.producer.compiler
             ).read_receipt(refs[0])
         elif skill == PUBLISH:
-            if self.library is None:
-                raise ValueError("preview publication cannot reload without its library")
-            if self.library.get(output.preview_id).manifest != output:
-                raise ValueError("published candidate differs from durable library entry")
+            from .limited_image_preview_library import admit_limited_image_preview
+
+            verified = admit_limited_image_preview(
+                artifact_store=self.artifact_store,
+                compiler=self.compiler_application.compiler,
+                manifest=refs[0],
+            )
+            if verified.manifest != output:
+                raise ValueError("publication differs from its deep CAS evidence")
             if (
                 LimitedImagePreviewManifestV1.model_validate(life.invocation.effective_parameters)
                 != output
@@ -364,6 +408,9 @@ class LimitedImagePreviewApplication:
 
     def qualify_publish(self, candidate_run_id):
         """Qualify publication from one saved verified bootstrap workflow, without Genesis."""
+        _, output = self._candidate(candidate_run_id, PUBLISH)
+        if self.library is None or self.library.get(output.preview_id).manifest != output:
+            raise ValueError("publication candidate was not saved in its qualification library")
         checks = self._publication_checks(candidate_run_id)
         root = Path(__file__).resolve().parents[2]
         report = QualificationReportV1(
