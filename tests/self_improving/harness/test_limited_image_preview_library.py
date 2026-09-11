@@ -465,7 +465,7 @@ def _normal_manifest(
         execution_receipt=replay_receipt,
         scene=scene,
         physical_report=report,
-        expected_layout=layout,
+        expected_layout=None,
         actual_layout=layout,
         position_tolerance_m=0.001,
         yaw_tolerance_rad=0.001,
@@ -619,6 +619,12 @@ def test_normal_preview_preserves_the_deep_actual_layout_without_inventing_a_tar
 
     assert normal.initial_stage.validation_result.expected_layout is None
     assert normal.requested_layout == normal.initial_stage.validation_result.actual_layout
+
+    invented = normal.model_dump(mode="python")
+    invented["initial_stage"]["validation_result"]["expected_layout"] = invented["requested_layout"]
+    invented["preview_id"] = limited_image_preview_manifest_sha256(invented)
+    with pytest.raises(ValueError, match="cannot invent"):
+        LimitedImagePreviewManifestV1.model_validate(invented)
 
     changed = normal.model_dump(mode="python")
     changed["requested_layout"]["x_m"] += 0.01

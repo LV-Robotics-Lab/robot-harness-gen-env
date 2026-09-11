@@ -265,11 +265,13 @@ class LimitedImagePreviewManifestV1(HarnessModel):
         if self.initial_stage.phase != "initial":
             raise ValueError("initial_stage must have phase=initial")
         initial = self.initial_stage.validation_result
-        if initial.expected_layout != self.requested_layout:
-            raise ValueError("initial validation must use the requested layout")
         if self.mode == "normal":
             if self.revised_stage is not None:
                 raise ValueError("normal preview may contain only the initial stage")
+            if initial.expected_layout is not None:
+                raise ValueError("normal preview cannot invent an absolute requested layout")
+            if initial.actual_layout != self.requested_layout:
+                raise ValueError("normal preview must preserve its deep-verified actual layout")
             if initial.semantic_status != "pass" or initial.status != "passed":
                 raise ValueError("normal preview requires physical and semantic pass")
         else:
@@ -277,6 +279,8 @@ class LimitedImagePreviewManifestV1(HarnessModel):
             if revised_stage is None or revised_stage.phase != "revised":
                 raise ValueError("repair preview requires an exact revised stage")
             revised = revised_stage.validation_result
+            if initial.expected_layout != self.requested_layout:
+                raise ValueError("repair initial validation must use the requested layout")
             if initial.semantic_status != "mismatch" or initial.status != "failed":
                 raise ValueError("repair initial stage must preserve semantic mismatch")
             if revised.semantic_status != "pass" or revised.status != "passed":

@@ -490,7 +490,7 @@ def _verify_stage(
         LimitedSceneValidateInputV1(
             schema_version="harness.limited_scene_validate_input.v1",
             execution_receipt=stage.replay_receipt,
-            expected_layout=manifest.requested_layout,
+            expected_layout=stage.validation_result.expected_layout,
         ),
     )
     if recalculated != stage.validation_result:
@@ -590,7 +590,13 @@ def _verify_layout(scene: GenesisSceneSpecV1, decision: BaseModel) -> None:
             "scene position/yaw differs from the allowed requested-layout fields",
         )
     expected = decision.expected_layout
-    assert expected is not None
+    if expected is None:
+        if decision.semantic_status != "pass" or decision.status != "passed":
+            raise LimitedImagePreviewLibraryError(
+                "semantic_validation_mismatch",
+                "source-layout preservation must pass the semantic gate",
+            )
+        return
     position_delta = math.hypot(actual.x_m - expected.x_m, actual.y_m - expected.y_m)
     yaw_delta = abs(
         math.atan2(
