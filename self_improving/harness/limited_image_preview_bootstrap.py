@@ -545,7 +545,10 @@ def _native_projection_objects(
                 projection = load_limited_observation_registry_projection(
                     application=native.observe,
                     replay_authority=native.replay.run_store,
-                    **saved.model_dump(mode="python"),
+                    admission_ref=saved.admission_ref,
+                    descriptor_ref=saved.descriptor_ref,
+                    qualification_ref=saved.qualification_ref,
+                    qualification_report_ref=saved.qualification_report_ref,
                 )
         elif saved is None:
             projection = issue_native_skill_projection(
@@ -557,7 +560,10 @@ def _native_projection_objects(
             projection = load_native_skill_projection(
                 artifact_store=native.store,
                 native_binding=bindings[skill_ref],
-                **saved.model_dump(mode="python"),
+                admission_ref=saved.admission_ref,
+                descriptor_ref=saved.descriptor_ref,
+                qualification_ref=saved.qualification_ref,
+                qualification_report_ref=saved.qualification_report_ref,
             )
         projections[skill_ref] = projection
     return projections
@@ -581,7 +587,10 @@ def _revised_projection_object(checkpoint, revised, admission):
     return load_revised_compile_registry_projection(
         application=revised,
         policy=policy,
-        **saved.model_dump(mode="python"),
+        admission_ref=saved.admission_ref,
+        descriptor_ref=saved.descriptor_ref,
+        qualification_ref=saved.qualification_ref,
+        qualification_report_ref=saved.qualification_report_ref,
     )
 
 

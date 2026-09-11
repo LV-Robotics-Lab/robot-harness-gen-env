@@ -245,13 +245,19 @@ class LimitedPreviewRuntime:
                 projection = load_limited_observation_registry_projection(
                     application=app,
                     replay_authority=self.application("replay").run_store,
-                    **refs.model_dump(mode="python"),
+                    admission_ref=refs.admission_ref,
+                    descriptor_ref=refs.descriptor_ref,
+                    qualification_ref=refs.qualification_ref,
+                    qualification_report_ref=refs.qualification_report_ref,
                 )
             else:
                 projection = load_native_skill_projection(
                     artifact_store=self.store,
                     native_binding=binding,
-                    **refs.model_dump(mode="python"),
+                    admission_ref=refs.admission_ref,
+                    descriptor_ref=refs.descriptor_ref,
+                    qualification_ref=refs.qualification_ref,
+                    qualification_report_ref=refs.qualification_report_ref,
                 )
             self.bindings[skill] = projection.binding
         elif skill == "image2env.compile@3.0.0":
@@ -267,7 +273,10 @@ class LimitedPreviewRuntime:
             projection = load_revised_compile_registry_projection(
                 application=app,
                 policy=LimitedImagePreviewPolicy(app, skill, {}),
-                **refs.model_dump(mode="python"),
+                admission_ref=refs.admission_ref,
+                descriptor_ref=refs.descriptor_ref,
+                qualification_ref=refs.qualification_ref,
+                qualification_report_ref=refs.qualification_report_ref,
             )
             self.bindings[skill] = projection.binding
         elif skill in {
