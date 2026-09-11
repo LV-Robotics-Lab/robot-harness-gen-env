@@ -107,7 +107,25 @@ class GoldenExecutionEvidenceHook(Protocol):
         child_run_id: UUID,
         command_parameters: Mapping[str, object],
         qualified: QualifiedSkillExecutionV2,
+    ) -> tuple[ArtifactRef, ...]: ...
+
+    def verify_committed_evidence(
+        self,
+        *,
+        lifecycle: ControlledRunLifecycle,
+        skill_ref: str,
+        child_run_id: UUID,
+        evidence: tuple[ArtifactRef, ...],
     ) -> None: ...
+
+    def resolve_artifact_member(
+        self,
+        *,
+        skill_ref: str,
+        child_run_id: UUID,
+        evidence: tuple[ArtifactRef, ...],
+        sha256: str,
+    ) -> ArtifactRef | None: ...
 
 
 @dataclass(frozen=True)
@@ -148,13 +166,43 @@ class _SealedGoldenExecutionEvidenceHook:
         child_run_id: UUID,
         command_parameters: Mapping[str, object],
         qualified: QualifiedSkillExecutionV2,
-    ) -> None:
-        self._delegate.verify_child_lifecycle(
+    ) -> tuple[ArtifactRef, ...]:
+        return self._delegate.verify_child_lifecycle(
             lifecycle=lifecycle,
             skill_ref=skill_ref,
             child_run_id=child_run_id,
             command_parameters=command_parameters,
             qualified=qualified,
+        )
+
+    def verify_committed_evidence(
+        self,
+        *,
+        lifecycle: ControlledRunLifecycle,
+        skill_ref: str,
+        child_run_id: UUID,
+        evidence: tuple[ArtifactRef, ...],
+    ) -> None:
+        self._delegate.verify_committed_evidence(
+            lifecycle=lifecycle,
+            skill_ref=skill_ref,
+            child_run_id=child_run_id,
+            evidence=evidence,
+        )
+
+    def resolve_artifact_member(
+        self,
+        *,
+        skill_ref: str,
+        child_run_id: UUID,
+        evidence: tuple[ArtifactRef, ...],
+        sha256: str,
+    ) -> ArtifactRef | None:
+        return self._delegate.resolve_artifact_member(
+            skill_ref=skill_ref,
+            child_run_id=child_run_id,
+            evidence=evidence,
+            sha256=sha256,
         )
 
     def _is_factory_hook(self) -> bool:

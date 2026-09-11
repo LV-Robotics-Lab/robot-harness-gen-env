@@ -53,6 +53,19 @@ _TYPES = {
         "image.validation",
     ),
 }
+_TERMINAL_EVIDENCE_SCHEMAS = {
+    "harness.native_read_closure.v1",
+    "harness.native_terminal_admission.v1",
+}
+
+
+def _native_supporting(supporting):
+    evidence = tuple(ref for ref in supporting if ref.schema_version in _TERMINAL_EVIDENCE_SCHEMAS)
+    if evidence and (
+        len(evidence) != 2 or {ref.schema_version for ref in evidence} != _TERMINAL_EVIDENCE_SCHEMAS
+    ):
+        raise ValueError("native predecessor has an incomplete terminal evidence pair")
+    return tuple(ref for ref in supporting if ref.schema_version not in _TERMINAL_EVIDENCE_SCHEMAS)
 
 
 @dataclass(frozen=True)
@@ -179,13 +192,13 @@ class NativeImageEvidencePolicy:
             or invocation != self._read(parent.invocation, Invocation)
             or terminal.status != RunStatus.SUCCEEDED
             or (terminal.skill_id, terminal.skill_version) != tuple(expected.split("@"))
-            or tuple(
+            or _native_supporting(parent.supporting_artifacts)
+            != tuple(
                 sorted(
                     terminal.artifacts,
                     key=lambda ref: (ref.sha256, ref.schema_version or "", ref.media_type),
                 )
             )
-            != parent.supporting_artifacts
         ):
             raise ValueError("predecessor differs from its trusted child journal")
         if self.skill_ref == "image2env.replay@2.0.0":

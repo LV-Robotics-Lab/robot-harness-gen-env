@@ -258,8 +258,7 @@ class GoldenRunHarness:
         """Read one artifact explicitly reachable from a verified workflow closure."""
 
         snapshot = self.read(request)
-        reachable = self._reachable_workflow_artifacts(snapshot)
-        ref = next((item for item in reachable if item.sha256 == sha256), None)
+        ref = self._find_workflow_artifact(snapshot, sha256=sha256)
         if ref is None:
             raise GoldenRunNotFoundError("workflow artifact was not found for this principal")
         return ref, self._artifact_store.resolve(ref).path.read_bytes()
@@ -274,8 +273,7 @@ class GoldenRunHarness:
         """Deliver one reachable artifact and append a non-mutating read receipt."""
 
         snapshot = self.read(request)
-        reachable = self._reachable_workflow_artifacts(snapshot)
-        resource = next((item for item in reachable if item.sha256 == sha256), None)
+        resource = self._find_workflow_artifact(snapshot, sha256=sha256)
         if resource is None:
             raise GoldenRunNotFoundError("workflow artifact was not found for this principal")
         expected_uri = f"harness://workflows/{snapshot.workflow_run_id}/artifacts/{resource.sha256}"
@@ -516,6 +514,63 @@ class GoldenRunHarness:
             child_state = self._resolve_canonical_model(result.run_state, RunState)
             refs.extend(child_state.artifacts)
         return tuple(dict.fromkeys(refs))
+
+    def _find_workflow_artifact(
+        self,
+        snapshot: RunSnapshot,
+        *,
+        sha256: str,
+    ) -> ArtifactRef | None:
+        direct = tuple(
+            ref for ref in self._reachable_workflow_artifacts(snapshot) if ref.sha256 == sha256
+        )
+        if direct:
+            if len(set(direct)) != 1:
+                raise GoldenRunCorruptionError(
+                    "workflow SHA has ambiguous direct artifact metadata"
+                )
+            return direct[0]
+        matches: list[ArtifactRef] = []
+        for entry in self._workflow_store.read_entries(
+            principal_id=snapshot.principal_id,
+            workflow_run_id=snapshot.workflow_run_id,
+        ):
+            operation = entry.operation
+            if operation is None or operation.status is RunStatus.RUNNING:
+                continue
+            evidence_hook = self._execution_catalog.evidence_hook_for(operation.skill_ref)
+            if evidence_hook is None or operation.tool_result is None:
+                continue
+            result = self._resolve_canonical_model(operation.tool_result, ToolResultV2)
+            receipt = self._resolve_canonical_model(
+                result.trusted_receipt,
+                TrustedToolReceiptV2,
+            )
+            child_state = self._resolve_canonical_model(result.run_state, RunState)
+            native = {_artifact_identity(ref) for ref in child_state.artifacts}
+            evidence = tuple(
+                ref for ref in receipt.supporting_artifacts if _artifact_identity(ref) not in native
+            )
+            try:
+                member = evidence_hook.resolve_artifact_member(
+                    skill_ref=operation.skill_ref,
+                    child_run_id=operation.child_run_id,
+                    evidence=evidence,
+                    sha256=sha256,
+                )
+            except LookupError:
+                continue
+            except (ArtifactResolutionError, TypeError, ValueError) as error:
+                raise GoldenRunCorruptionError(
+                    f"native closure member authorization failed: {error}"
+                ) from error
+            if member is not None:
+                matches.append(member)
+        if not matches:
+            return None
+        if len(set(matches)) != 1:
+            raise GoldenRunCorruptionError("workflow SHA has ambiguous indexed artifact metadata")
+        return matches[0]
 
     def _resolve_control_receipt(
         self,
@@ -1601,7 +1656,12 @@ class GoldenRunHarness:
             lifecycle = child_authority.read_controlled_lifecycle(operation.child_run_id)
             if lifecycle.terminal is None:
                 return operation
-        self._verify_child_lifecycle(lifecycle, operation, command, qualified)
+        terminal_evidence = self._verify_child_lifecycle(
+            lifecycle,
+            operation,
+            command,
+            qualified,
+        )
         assert lifecycle.terminal is not None
         return self._commit_terminal_operation(
             operation,
@@ -1609,6 +1669,7 @@ class GoldenRunHarness:
             policy,
             qualified,
             lifecycle,
+            terminal_evidence,
         )
 
     def _verify_child_lifecycle(
@@ -1617,7 +1678,7 @@ class GoldenRunHarness:
         operation: OperationSnapshot,
         command: RunCommandRequest,
         qualified: QualifiedSkillExecutionV2,
-    ) -> None:
+    ) -> tuple[ArtifactRef, ...]:
         intent = lifecycle.intent
         state = lifecycle.terminal
         if intent is None or state is None:
@@ -1625,7 +1686,7 @@ class GoldenRunHarness:
         evidence_hook = self._execution_catalog.evidence_hook_for(operation.skill_ref)
         if evidence_hook is not None:
             try:
-                evidence_hook.verify_child_lifecycle(
+                evidence = evidence_hook.verify_child_lifecycle(
                     lifecycle=lifecycle,
                     skill_ref=operation.skill_ref,
                     child_run_id=operation.child_run_id,
@@ -1636,7 +1697,7 @@ class GoldenRunHarness:
                 raise GoldenRunCorruptionError(
                     f"native child failed its admitted execution identity: {error}"
                 ) from error
-            return
+            return self._verify_hook_evidence_roots(evidence)
         skill_id, version = operation.skill_ref.split("@", maxsplit=1)
         parameters_digest = _canonical_json_sha256(command.parameters)
         descriptor = self._resolve_descriptor(qualified.descriptor)
@@ -1670,6 +1731,7 @@ class GoldenRunHarness:
             )
         ):
             raise GoldenRunCorruptionError("child invocation differs from its frozen command")
+        return ()
 
     def _commit_terminal_operation(
         self,
@@ -1678,6 +1740,7 @@ class GoldenRunHarness:
         policy: SkillEvidencePolicy,
         qualified: QualifiedSkillExecutionV2,
         lifecycle: ControlledRunLifecycle,
+        terminal_evidence: tuple[ArtifactRef, ...],
     ) -> OperationSnapshot:
         state = lifecycle.terminal
         assert state is not None and state.ended_at is not None
@@ -1704,7 +1767,8 @@ class GoldenRunHarness:
             name="run_state.json",
             schema_version="harness.run_state.v1",
         )
-        supporting = _canonical_artifacts(state.artifacts)
+        native_supporting = _canonical_artifacts(state.artifacts)
+        supporting = _canonical_artifacts((*native_supporting, *terminal_evidence))
         for artifact in supporting:
             self._artifact_store.resolve(artifact)
         claims = policy.claims(state)
@@ -1713,7 +1777,7 @@ class GoldenRunHarness:
             state=state,
             claims=claims,
             observations=fresh_observations,
-            supporting=supporting,
+            supporting=native_supporting,
         )
         receipt = TrustedToolReceiptV2(
             schema_version="harness.trusted_tool_receipt.v2",
@@ -1804,7 +1868,7 @@ class GoldenRunHarness:
             state=state,
             claims=claims,
             result=result,
-            supporting=supporting,
+            supporting=native_supporting,
         )
         result_ref = self._publish_model(
             result,
@@ -1867,6 +1931,19 @@ class GoldenRunHarness:
         if persisted is None:
             raise GoldenRunNotFoundError("golden workflow was not found for this principal")
         return persisted.operation
+
+    def _verify_hook_evidence_roots(
+        self,
+        evidence: tuple[ArtifactRef, ...],
+    ) -> tuple[ArtifactRef, ...]:
+        if type(evidence) is not tuple:
+            raise GoldenRunCorruptionError("execution evidence hook returned a non-tuple value")
+        canonical = _canonical_artifacts(evidence)
+        if canonical != evidence:
+            raise GoldenRunCorruptionError("execution evidence roots are not canonical")
+        for artifact in canonical:
+            self._artifact_store.resolve(artifact)
+        return canonical
 
     def _verify_advanced_snapshot(
         self,
@@ -2209,7 +2286,36 @@ class GoldenRunHarness:
             if result.invocation is None
             else self._resolve_canonical_model(result.invocation, Invocation)
         )
-        supporting = _canonical_artifacts(child_state.artifacts)
+        native_supporting = _canonical_artifacts(child_state.artifacts)
+        native_identities = {_artifact_identity(ref) for ref in native_supporting}
+        terminal_evidence = tuple(
+            ref
+            for ref in tool_receipt.supporting_artifacts
+            if _artifact_identity(ref) not in native_identities
+        )
+        evidence_hook = self._execution_catalog.evidence_hook_for(operation.skill_ref)
+        if evidence_hook is None:
+            if terminal_evidence:
+                raise GoldenRunCorruptionError(
+                    "terminal receipt has evidence roots without an admitted hook"
+                )
+        else:
+            child_authority = self._execution_catalog.child_authority_for(operation.skill_ref)
+            if child_authority is None:
+                raise GoldenRunCorruptionError("native evidence hook lost its child authority")
+            lifecycle = child_authority.read_controlled_lifecycle(operation.child_run_id)
+            try:
+                evidence_hook.verify_committed_evidence(
+                    lifecycle=lifecycle,
+                    skill_ref=operation.skill_ref,
+                    child_run_id=operation.child_run_id,
+                    evidence=terminal_evidence,
+                )
+            except (ArtifactResolutionError, TypeError, ValueError) as error:
+                raise GoldenRunCorruptionError(
+                    f"native terminal evidence failed strict reload: {error}"
+                ) from error
+        supporting = _canonical_artifacts((*native_supporting, *terminal_evidence))
         for artifact in supporting:
             self._artifact_store.resolve(artifact)
         claims = policy.claims(child_state)
@@ -2218,13 +2324,13 @@ class GoldenRunHarness:
             state=child_state,
             claims=claims,
             observations=fresh_observations,
-            supporting=supporting,
+            supporting=native_supporting,
         )
         policy.verify_result(
             state=child_state,
             claims=claims,
             result=result,
-            supporting=supporting,
+            supporting=native_supporting,
         )
         common_invalid = _values_differ(
             (
@@ -2480,11 +2586,29 @@ class GoldenRunHarness:
             raise GoldenRunCorruptionError(
                 f"persisted workflow start failed its CAS closure: {error}"
             ) from error
+        state_evidence_identities = _canonical_unique_artifact_content_identities(
+            tuple(fact.source_artifact for fact in state.facts),
+            label="persisted world state initial evidence",
+        )
+        request_evidence_identities = _canonical_unique_artifact_content_identities(
+            request.initial_fact_evidence,
+            label="start request initial evidence",
+        )
+        if state_evidence_identities != request_evidence_identities:
+            state_identity_set = set(state_evidence_identities)
+            request_identity_set = set(request_evidence_identities)
+            differences = []
+            if request_identity_set - state_identity_set:
+                differences.append("missing content identities")
+            if state_identity_set - request_identity_set:
+                differences.append("extra content identities")
+            raise GoldenRunCorruptionError(
+                "persisted workflow state initial evidence has " + " and ".join(differences)
+            )
         if (
             state.state_sha256 != snapshot.state_sha256
             or snapshot.state_ref.sha256
             != hashlib.sha256(_canonical_model_bytes(state)).hexdigest()
-            or tuple(fact.source_artifact for fact in state.facts) != request.initial_fact_evidence
             or persisted_request != request
             or receipt.workflow_run_id != snapshot.workflow_run_id
             or receipt.principal_id != snapshot.principal_id
@@ -2691,6 +2815,27 @@ def _require_utc_clock(value: datetime) -> None:
 
 def _artifact_identity(ref: ArtifactRef) -> tuple[str, str, str]:
     return (ref.sha256, ref.schema_version or "", ref.media_type)
+
+
+def _artifact_content_identity(ref: ArtifactRef) -> tuple[str, int, str, str | None]:
+    return (ref.sha256, ref.bytes, ref.media_type, ref.schema_version)
+
+
+def _artifact_content_identity_sort_key(
+    identity: tuple[str, int, str, str | None],
+) -> tuple[str, int, str, str]:
+    return (identity[0], identity[1], identity[2], identity[3] or "")
+
+
+def _canonical_unique_artifact_content_identities(
+    artifacts: tuple[ArtifactRef, ...],
+    *,
+    label: str,
+) -> tuple[tuple[str, int, str, str | None], ...]:
+    identities = tuple(_artifact_content_identity(ref) for ref in artifacts)
+    if len(identities) != len(set(identities)):
+        raise GoldenRunCorruptionError(f"{label} repeats a content identity")
+    return tuple(sorted(identities, key=_artifact_content_identity_sort_key))
 
 
 def _canonical_artifacts(artifacts: tuple[ArtifactRef, ...]) -> tuple[ArtifactRef, ...]:

@@ -27,6 +27,10 @@ from .golden_execution import (
 )
 from .golden_image2env_execution import _require_native_image_execution_binding
 from .golden_image2env_policy import NativeImageEvidencePolicy
+from .golden_native_terminal_resolver import (
+    NativeTerminalEvidenceRoots,
+    NativeTerminalResolver,
+)
 from .qualification import QualificationCheckV1, QualificationReportV1
 from .registry import ControlledRunPendingError
 from .run_store import ControlledRunLifecycle, SQLiteRunStore
@@ -57,8 +61,14 @@ _SOURCE_FILES = (
     ("golden_execution.py", "golden-execution.py"),
     ("golden_image2env_execution.py", "golden-image2env-execution.py"),
     ("golden_image2env_policy.py", "golden-image2env-policy.py"),
+    ("golden_native_terminal_resolver.py", "golden-native-terminal-resolver.py"),
     ("golden_run.py", "golden-run.py"),
+    ("native_terminal_admission.py", "native-terminal-admission.py"),
     ("native_skill_projection.py", "native-skill-projection.py"),
+    (
+        "schemas/native_terminal_admission.py",
+        "native-terminal-admission-schema.py",
+    ),
     ("schemas/typed_qualification_admission.py", "typed-qualification-admission-schema.py"),
     ("typed_qualification_admission.py", "typed-qualification-admission.py"),
 )
@@ -101,6 +111,7 @@ class NativeSkillProjection:
         "_qualification_ref",
         "_qualification_report_ref",
         "_registry_entry",
+        "_terminal_admission_enabled",
         "_token",
     )
 
@@ -114,6 +125,7 @@ class NativeSkillProjection:
         implementation_sources: tuple[ArtifactRef, ...],
         registry_entry: QualifiedSkillSnapshot,
         binding: GoldenExecutionBinding,
+        terminal_admission_enabled: bool = False,
         _token: object,
     ) -> None:
         if _token is not _PROJECTION_TOKEN:
@@ -125,6 +137,7 @@ class NativeSkillProjection:
         object.__setattr__(self, "_implementation_sources", implementation_sources)
         object.__setattr__(self, "_registry_entry", registry_entry)
         object.__setattr__(self, "_binding", binding)
+        object.__setattr__(self, "_terminal_admission_enabled", terminal_admission_enabled)
         object.__setattr__(self, "_token", _token)
 
     def __setattr__(self, name: str, value: object) -> None:
@@ -158,6 +171,10 @@ class NativeSkillProjection:
     def binding(self) -> GoldenExecutionBinding:
         return self._binding
 
+    @property
+    def terminal_admission_enabled(self) -> bool:
+        return self._terminal_admission_enabled
+
     def _is_verified_projection(self) -> bool:
         return self._token is _PROJECTION_TOKEN
 
@@ -170,6 +187,7 @@ class _ProjectionAuthority:
     qualification_ref: ArtifactRef
     qualification_report_ref: ArtifactRef
     native_binding: GoldenExecutionBinding
+    terminal_resolver: NativeTerminalResolver | None
 
     def verify(self) -> _VerifiedProjectionDocuments:
         return _verify_projection_documents(
@@ -179,6 +197,7 @@ class _ProjectionAuthority:
             qualification_ref=self.qualification_ref,
             qualification_report_ref=self.qualification_report_ref,
             native_binding=self.native_binding,
+            terminal_resolver=self.terminal_resolver,
         )
 
 
@@ -245,7 +264,7 @@ class _NativeProjectionEvidenceHook:
         child_run_id: UUID,
         command_parameters: Mapping[str, object],
         qualified: QualifiedSkillExecutionV2,
-    ) -> None:
+    ) -> tuple[ArtifactRef, ...]:
         verified = self.authority.verify()
         admission = verified.admission.admission
         descriptor = verified.native_descriptor
@@ -297,6 +316,58 @@ class _NativeProjectionEvidenceHook:
             ),
             "native child invocation differs from its typed admission intent",
         )
+        resolver = self.authority.terminal_resolver
+        if resolver is None or state.status.value != "succeeded":
+            return ()
+        roots = resolver.admit(
+            lifecycle=lifecycle,
+            skill_ref=skill_ref,
+            child_run_id=child_run_id,
+        )
+        return roots.as_artifacts()
+
+    def verify_committed_evidence(
+        self,
+        *,
+        lifecycle: ControlledRunLifecycle,
+        skill_ref: str,
+        child_run_id: UUID,
+        evidence: tuple[ArtifactRef, ...],
+    ) -> None:
+        resolver = self.authority.terminal_resolver
+        if resolver is None:
+            _require(not evidence, "qualification-only projection has terminal evidence")
+            return
+        state = lifecycle.terminal
+        _require(state is not None, "committed native lifecycle lost its terminal")
+        if state.status.value != "succeeded":
+            _require(not evidence, "unsuccessful native terminal has admission evidence")
+            return
+        roots = _terminal_roots(evidence)
+        resolver.reload(
+            skill_ref=skill_ref,
+            child_run_id=child_run_id,
+            evidence=roots,
+        )
+
+    def resolve_artifact_member(
+        self,
+        *,
+        skill_ref: str,
+        child_run_id: UUID,
+        evidence: tuple[ArtifactRef, ...],
+        sha256: str,
+    ) -> ArtifactRef | None:
+        resolver = self.authority.terminal_resolver
+        if resolver is None:
+            _require(not evidence, "qualification-only projection has terminal evidence")
+            return None
+        return resolver.resolve_artifact_member(
+            skill_ref=skill_ref,
+            child_run_id=child_run_id,
+            evidence=_terminal_roots(evidence),
+            sha256=sha256,
+        )
 
 
 def issue_native_skill_projection(
@@ -304,10 +375,11 @@ def issue_native_skill_projection(
     artifact_store: LocalArtifactStore,
     admission: VerifiedTypedQualificationAdmission,
     native_binding: GoldenExecutionBinding,
+    terminal_resolver: NativeTerminalResolver | None = None,
 ) -> NativeSkillProjection:
     """Issue adapter documents only from one opaque, freshly reverified admission."""
 
-    _require_exact_inputs(artifact_store, native_binding)
+    _require_exact_inputs(artifact_store, native_binding, admission, terminal_resolver)
     if (
         type(admission) is not VerifiedTypedQualificationAdmission
         or not admission._is_verifier_issued()
@@ -334,6 +406,7 @@ def issue_native_skill_projection(
             native_descriptor,
             sources,
             cast(NativeImageEvidencePolicy, native_binding.policy),
+            terminal_resolver,
         )
         report_ref = _publish_model(
             artifact_store,
@@ -366,6 +439,7 @@ def issue_native_skill_projection(
             qualification_ref=qualification_ref,
             qualification_report_ref=report_ref,
             native_binding=native_binding,
+            terminal_resolver=terminal_resolver,
         )
     except (
         ArtifactResolutionError,
@@ -386,10 +460,11 @@ def load_native_skill_projection(
     qualification_ref: ArtifactRef,
     qualification_report_ref: ArtifactRef,
     native_binding: GoldenExecutionBinding,
+    terminal_resolver: NativeTerminalResolver | None = None,
 ) -> NativeSkillProjection:
     """Recover a projection from CAS by recomputing admission and source identities."""
 
-    _require_exact_inputs(artifact_store, native_binding)
+    _require_exact_inputs(artifact_store, native_binding, None, terminal_resolver)
     authority = _ProjectionAuthority(
         artifact_store=artifact_store,
         admission_ref=admission_ref,
@@ -397,6 +472,7 @@ def load_native_skill_projection(
         qualification_ref=qualification_ref,
         qualification_report_ref=qualification_report_ref,
         native_binding=native_binding,
+        terminal_resolver=terminal_resolver,
     )
     try:
         verified = authority.verify()
@@ -431,6 +507,7 @@ def load_native_skill_projection(
             implementation_sources=verified.implementation_sources,
             registry_entry=verified.registry_entry,
             binding=binding,
+            terminal_admission_enabled=terminal_resolver is not None,
             _token=_PROJECTION_TOKEN,
         )
     except (
@@ -487,6 +564,28 @@ def publish_native_registry_snapshot(
     )
 
 
+def publish_native_terminal_registry_snapshot(
+    *,
+    artifact_store: LocalArtifactStore,
+    projections: tuple[NativeSkillProjection, ...],
+) -> ArtifactRef:
+    """Freeze only projections whose successful terminals add deep admission roots."""
+
+    if type(projections) is not tuple or not projections:
+        raise TypeError("terminal Registry requires a non-empty exact projection tuple")
+    if any(
+        type(projection) is not NativeSkillProjection
+        or not projection._is_verified_projection()
+        or not projection.terminal_admission_enabled
+        for projection in projections
+    ):
+        raise TypeError("terminal Registry requires terminal-enabled native projections")
+    return publish_native_registry_snapshot(
+        artifact_store=artifact_store,
+        projections=projections,
+    )
+
+
 def _verify_projection_documents(
     *,
     artifact_store: LocalArtifactStore,
@@ -495,6 +594,7 @@ def _verify_projection_documents(
     qualification_ref: ArtifactRef,
     qualification_report_ref: ArtifactRef,
     native_binding: GoldenExecutionBinding,
+    terminal_resolver: NativeTerminalResolver | None,
 ) -> _VerifiedProjectionDocuments:
     _require_native_image_execution_binding(native_binding)
     admission = _read_native_admission(artifact_store, admission_ref)
@@ -505,6 +605,14 @@ def _verify_projection_documents(
     _require(
         verified_admission.admission_ref == admission_ref,
         "typed admission CAS identity changed",
+    )
+    _require(
+        terminal_resolver is None
+        or terminal_resolver.owns(
+            binding=native_binding,
+            qualification=verified_admission,
+        ),
+        "terminal resolver does not own this native binding and admission",
     )
     native_descriptor = _native_descriptor(
         verified_admission,
@@ -519,6 +627,7 @@ def _verify_projection_documents(
         native_descriptor,
         sources,
         cast(NativeImageEvidencePolicy, native_binding.policy),
+        terminal_resolver,
     )
     _require(
         descriptor_ref == expected.descriptor_ref
@@ -603,16 +712,19 @@ def _build_documents(
     native_descriptor: RegisteredSkillDescriptor,
     sources: tuple[ArtifactRef, ...],
     policy: NativeImageEvidencePolicy,
+    terminal_resolver: NativeTerminalResolver | None,
 ) -> _VerifiedProjectionDocuments:
     policy_identity = {
         "id": policy.evidence_policy_id,
         "version": policy.evidence_policy_version,
         "implementation_sha256": policy.evidence_policy_implementation_sha256,
     }
+    terminal_identity = None if terminal_resolver is None else terminal_resolver.identity_sha256
     implementation_sha256 = _canonical_sha256(
         {
             "typed_admission": admission.admission_ref.model_dump(mode="json"),
             "native_evidence_policy": policy_identity,
+            "native_terminal_resolver_sha256": terminal_identity,
             "sources": [source.model_dump(mode="json") for source in sources],
         }
     )
@@ -627,6 +739,7 @@ def _build_documents(
             admission.admission.qualification_report.model_dump(mode="json")
         ),
         "native_evidence_policy": policy_identity,
+        "native_terminal_resolver_sha256": terminal_identity,
         "implementation_sources": [source.model_dump(mode="json") for source in sources],
     }
     report = QualificationReportV1(
@@ -738,6 +851,8 @@ def _current_implementation_sources() -> tuple[ArtifactRef, ...]:
 def _require_exact_inputs(
     artifact_store: LocalArtifactStore,
     native_binding: GoldenExecutionBinding,
+    admission: VerifiedTypedQualificationAdmission | None,
+    terminal_resolver: NativeTerminalResolver | None,
 ) -> None:
     if type(artifact_store) is not LocalArtifactStore:
         raise TypeError("artifact_store must be the exact LocalArtifactStore")
@@ -745,6 +860,17 @@ def _require_exact_inputs(
     application = binding.application
     if application.artifact_root != artifact_store.root:
         raise TypeError("native binding and projection require the same exact CAS")
+    if terminal_resolver is None:
+        return
+    if type(terminal_resolver) is not NativeTerminalResolver:
+        raise TypeError("terminal resolver requires its exact sealed capability")
+    if terminal_resolver.artifact_store is not artifact_store:
+        raise TypeError("terminal resolver and projection require one exact CAS instance")
+    if admission is not None and not terminal_resolver.owns(
+        binding=binding,
+        qualification=admission,
+    ):
+        raise TypeError("terminal resolver does not own this native binding and admission")
 
 
 def _read_canonical_model(
@@ -822,6 +948,23 @@ def _canonical_bytes(value: object) -> bytes:
 
 def _canonical_sha256(value: object) -> str:
     return hashlib.sha256(_canonical_bytes(value)).hexdigest()
+
+
+def _terminal_roots(evidence: tuple[ArtifactRef, ...]) -> NativeTerminalEvidenceRoots:
+    if type(evidence) is not tuple or len(evidence) != 2:
+        raise ValueError("successful native terminal requires exactly two evidence roots")
+    admissions = tuple(
+        ref for ref in evidence if ref.schema_version == "harness.native_terminal_admission.v1"
+    )
+    indexes = tuple(
+        ref for ref in evidence if ref.schema_version == "harness.native_read_closure.v1"
+    )
+    if len(admissions) != 1 or len(indexes) != 1:
+        raise ValueError("native terminal evidence roots have the wrong typed schemas")
+    roots = NativeTerminalEvidenceRoots(admission=admissions[0], read_closure=indexes[0])
+    if roots.as_artifacts() != evidence:
+        raise ValueError("native terminal evidence roots are not canonical")
+    return roots
 
 
 def _descriptor_schema(descriptor: RegisteredSkillDescriptor) -> str:
