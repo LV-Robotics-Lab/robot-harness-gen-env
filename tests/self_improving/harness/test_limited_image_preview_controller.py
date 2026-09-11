@@ -20,6 +20,84 @@ from self_improving.harness.trusted_state import WorldFactEvidence
 from tests.self_improving.harness.test_golden_control_v2_runtime import native_case
 
 
+@pytest.mark.parametrize("capture_state", ["fresh", "expired", "missing"])
+def test_diagnosis_uses_fresh_capture_and_its_deadline(service, tmp_path, capture_state):
+    from datetime import timedelta
+
+    from self_improving.harness.schemas.genesis_fresh_capture import GenesisFreshCaptureReceiptV1
+
+    original = service.value
+    projected = original.status(workflow_id=str(service.workflow))
+    projected["failure_receipts"] = [projected["snapshot"]["receipt_head"]]
+    captured = datetime.now(UTC) - timedelta(seconds=90 if capture_state == "expired" else 0)
+    image_path = tmp_path / "actual-observation.png"
+    Image.new("RGB", (640, 480), (200, 30, 50)).save(image_path)
+    image = original.store.put_file(
+        image_path, name=image_path.name, media_type="image/png", schema_version=None
+    )
+    receipt = GenesisFreshCaptureReceiptV1(
+        schema_version="harness.genesis_fresh_capture_receipt.v1",
+        replay_run_id=uuid4(),
+        replay_receipt=image,
+        request=image,
+        capture_result=image,
+        image=image,
+        captured_at=captured,
+        checked_at=captured,
+        expires_at=captured + timedelta(seconds=60),
+        ttl_seconds=60,
+        authority="observed_restored_final_pose",
+        process_continuation=False,
+    )
+    path = tmp_path / "actual-capture.json"
+    path.write_bytes(
+        json.dumps(receipt.model_dump(mode="json"), sort_keys=True, separators=(",", ":")).encode()
+    )
+    ref = original.store.put_file(
+        path, name=path.name, media_type="application/json", schema_version=receipt.schema_version
+    )
+    if capture_state != "missing":
+        projected["observation"] = dict(
+            receipt=ref.model_dump(mode="json"),
+            image=image.model_dump(mode="json"),
+            captured_at=receipt.captured_at.isoformat(),
+            expires_at=receipt.expires_at.isoformat(),
+            authority=receipt.authority,
+        )
+
+    class Boundary:
+        store = original.store
+        journal = original.journal
+
+        def status(self, **kwargs):
+            return projected
+
+    class Backend:
+        calls = []
+
+        def run(self, assignment, *, output_root):
+            self.calls.append(assignment)
+            assert assignment.image_path.read_bytes() == image_path.read_bytes()
+            assert assignment.deadline <= receipt.expires_at
+            assert assignment.phase == "diagnosis"
+            output_root.mkdir()
+            return CodexBackendResult(
+                "exit_failure", output_root, 0.01, 1, None, None, None, "test"
+            )
+
+    backend = Backend()
+    controller = LimitedImagePreviewController(
+        Boundary(), backend, evidence_root=tmp_path / "attempts", attempt_seconds=300
+    )
+    if capture_state == "fresh":
+        assert controller.resume(service.workflow)["status"] == "exit_failure"
+        assert len(backend.calls) == 1
+    else:
+        with pytest.raises(ValueError, match="fresh observation"):
+            controller.resume(service.workflow)
+        assert not backend.calls
+
+
 @pytest.fixture
 def service(tmp_path):
     base = native_case(tmp_path / "seed")
