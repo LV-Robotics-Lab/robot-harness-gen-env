@@ -21,7 +21,8 @@ from tests.self_improving.harness.test_golden_control_v2_runtime import native_c
 
 
 @pytest.mark.parametrize("capture_state", ["fresh", "expired", "missing"])
-def test_diagnosis_uses_fresh_capture_and_its_deadline(service, tmp_path, capture_state):
+@pytest.mark.parametrize("phase", ["diagnosis", "repair"])
+def test_diagnosis_uses_fresh_capture_and_its_deadline(service, tmp_path, capture_state, phase):
     from datetime import timedelta
 
     from self_improving.harness.schemas.genesis_fresh_capture import GenesisFreshCaptureReceiptV1
@@ -29,6 +30,26 @@ def test_diagnosis_uses_fresh_capture_and_its_deadline(service, tmp_path, captur
     original = service.value
     projected = original.status(workflow_id=str(service.workflow))
     projected["failure_receipts"] = [projected["snapshot"]["receipt_head"]]
+    if phase == "repair":
+        # The external service boundary supplies its already-committed control head.
+        path = tmp_path / "committed-revision.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "workflow_run_id": str(service.workflow),
+                    "predecessor_receipt": projected["snapshot"]["receipt_head"],
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+        )
+        revision = original.store.put_file(
+            path,
+            name=path.name,
+            media_type="application/json",
+            schema_version="harness.prompt_revision.v3",
+        )
+        projected["snapshot"]["receipt_head"] = revision.model_dump(mode="json")
     captured = datetime.now(UTC) - timedelta(seconds=90 if capture_state == "expired" else 0)
     image_path = tmp_path / "actual-observation.png"
     Image.new("RGB", (640, 480), (200, 30, 50)).save(image_path)
@@ -77,9 +98,14 @@ def test_diagnosis_uses_fresh_capture_and_its_deadline(service, tmp_path, captur
 
         def run(self, assignment, *, output_root):
             self.calls.append(assignment)
-            assert assignment.image_path.read_bytes() == image_path.read_bytes()
-            assert assignment.deadline <= receipt.expires_at
-            assert assignment.phase == "diagnosis"
+            if phase == "diagnosis":
+                assert assignment.image_path.read_bytes() == image_path.read_bytes()
+                assert assignment.deadline <= receipt.expires_at
+            else:
+                assert assignment.image_path.read_bytes() == (tmp_path / "raw.png").read_bytes()
+                assert assignment.deadline > receipt.expires_at
+                assert assignment.deadline > datetime.now(UTC) + timedelta(seconds=290)
+            assert assignment.phase == phase
             output_root.mkdir()
             return CodexBackendResult(
                 "exit_failure", output_root, 0.01, 1, None, None, None, "test"
@@ -89,7 +115,7 @@ def test_diagnosis_uses_fresh_capture_and_its_deadline(service, tmp_path, captur
     controller = LimitedImagePreviewController(
         Boundary(), backend, evidence_root=tmp_path / "attempts", attempt_seconds=300
     )
-    if capture_state == "fresh":
+    if capture_state == "fresh" or phase == "repair":
         assert controller.resume(service.workflow)["status"] == "exit_failure"
         assert len(backend.calls) == 1
     else:
