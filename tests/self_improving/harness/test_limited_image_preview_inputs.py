@@ -184,6 +184,49 @@ def test_input_contract_and_declared_scope_fail_closed(inputs, tmp_path, variati
         )
 
 
+def test_real_fixed_mouse_catalog_builds_without_changing_historical_cas(tmp_path):
+    import os
+    from pathlib import Path
+    from self_improving.harness.artifacts import LocalArtifactStore
+    from self_improving.harness.schemas.common import ArtifactRef
+
+    config_path = os.environ.get("PREVIEW_REAL_INPUT_CONFIG")
+    if not config_path:
+        pytest.skip("requires fixed M1 input config; no simulator execution")
+    config = json.loads(Path(config_path).read_text())
+    original = LocalArtifactStore(Path(config["cas_root"]))
+    request = Image2EnvGenesisCompileRequestV1.model_validate_json(
+        original.resolve(ArtifactRef.model_validate(config["request_ref"])).path.read_bytes())
+    store = LocalArtifactStore(tmp_path / "isolated-cas")
+    def copy(ref):
+        actual = store.put_file(original.resolve(ref).path, name=ref.name,
+                                media_type=ref.media_type, schema_version=ref.schema_version)
+        assert actual == ref
+        return ref
+    catalog_ref = copy(request.compile_input.asset_catalog)
+    entry = json.loads(original.resolve(catalog_ref).path.read_bytes())["entries"][0]
+    representation_ref = copy(ArtifactRef.model_validate(entry["representation"]))
+    representation = AssetRepresentationV1.model_validate_json(original.resolve(representation_ref).path.read_bytes())
+    for member in representation.members:
+        copy(member.artifact)
+    copy(ArtifactRef.model_validate(entry["qualification"]))
+    source = copy(request.source_scene)
+    raw = copy(request.compile_input.source_media.source)
+    builder = LimitedImagePreviewInputs(store, asset_catalog=catalog_ref, source_scene=source,
+        qualification_run_id=request.qualification_run_id, table_center_m=request.table_center_m,
+        table_size_m=request.table_size_m, table_friction=request.table_friction)
+    workflow = uuid4()
+    initial = builder.start(workflow_id=workflow, raw_image_ref=raw, user_text="One mouse on table")
+    lookup = builder.lookup(workflow_id=workflow, input_ref=initial, query="mouse")
+    result = builder.build_initial(workflow_id=workflow, input_ref=initial, lookup_ref=lookup,
+                                  asset_id="simfoundry_pink_mouse_7915827ae4309660")
+    compiled = Image2EnvGenesisCompileRequestV1.model_validate_json(store.resolve(result).path.read_bytes())
+    proposal = SceneInterpretationProposalV1.model_validate_json(store.resolve(compiled.compile_input.interpretation_proposal).path.read_bytes())
+    assert proposal.objects[0].category == "pink_mouse"
+    assert proposal.objects[0].object_id == "iter_0"
+    assert original.resolve(catalog_ref).path.read_bytes() == store.resolve(catalog_ref).path.read_bytes()
+
+
 def test_public_input_builder_has_explicit_stages():
     assert all(
         callable(getattr(LimitedImagePreviewInputs, name))
