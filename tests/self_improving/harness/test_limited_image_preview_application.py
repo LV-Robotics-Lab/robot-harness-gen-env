@@ -119,7 +119,9 @@ def test_formal_semantic_mismatch_retains_diagnostic_in_shared_registry():
             expected_layout={"x_m": 9.0, "y_m": 9.0, "yaw_rad": 0.0},
         ),
     )
-    assert outcome.state.status.value == "failed"
+    assert outcome.state.status.value == "blocked"
+    assert outcome.state.blocker.code == "PREVIEW_LAYOUT_MISMATCH"
+    assert outcome.state.blocker.retryable is False
     refs = [
         ref
         for event in outcome.state.events
@@ -127,6 +129,7 @@ def test_formal_semantic_mismatch_retains_diagnostic_in_shared_registry():
         if ref.schema_version == "harness.limited_scene_validation.v1"
     ]
     assert len(refs) == 1
+    assert refs[0] in outcome.state.blocker.artifact_refs
     result = json.loads(store.resolve(refs[0]).path.read_bytes())
     assert result["semantic_status"] == "mismatch"
     assert any(refs[0] in event.artifact_refs for event in outcome.state.events)
