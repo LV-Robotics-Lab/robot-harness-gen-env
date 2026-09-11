@@ -15,6 +15,7 @@ from self_improving.harness.schemas.common import ArtifactRef
 from self_improving.harness.schemas.x2env import (
     Image2EnvCompileOutput,
     Image2EnvCompileV2Input,
+    Image2EnvCompileV2Output,
     X2EnvAssetDecision,
     X2EnvEnvironmentPackage,
 )
@@ -86,7 +87,7 @@ def _sorted_refs(*refs: ArtifactRef) -> list[ArtifactRef]:
 class _Case:
     store: LocalArtifactStore
     compile_input: Image2EnvCompileV2Input
-    compile_output: Image2EnvCompileOutput
+    compile_output: Image2EnvCompileOutput | Image2EnvCompileV2Output
     verifier: object
     refs: dict[str, ArtifactRef]
 
@@ -423,6 +424,19 @@ def _case(tmp_path: Path) -> _Case:
     )
     package = package.model_copy(update={"package_id": x2env_environment_package_sha256(package)})
     package_ref = _publish_model(store, staging, "package", package)
+    compile_input = Image2EnvCompileV2Input(
+        schema_version="harness.image2env_compile_input.v2",
+        source_media=media,
+        interpretation_proposal=proposal_ref,
+        requested_profile="genesis.rigid_scene@1",
+        acquisition_policy="exact_only",
+        asset_catalog=catalog_ref,
+        seed=7,
+        predecessor_package=None,
+        repair_evidence_refs=(),
+        model_execution_allowed=False,
+        attempt={"schema_version": "harness.initial_compile_attempt.v1", "kind": "initial"},
+    )
     receipt = _build(
         evidence.X2EnvCompileReceiptV1,
         "receipt_sha256",
@@ -457,19 +471,6 @@ def _case(tmp_path: Path) -> _Case:
         source_qualification=qualification_ref,
         digital_cousin_evidence=None,
         generation_receipt=None,
-    )
-    compile_input = Image2EnvCompileV2Input(
-        schema_version="harness.image2env_compile_input.v2",
-        source_media=media,
-        interpretation_proposal=proposal_ref,
-        requested_profile="genesis.rigid_scene@1",
-        acquisition_policy="exact_only",
-        asset_catalog=catalog_ref,
-        seed=7,
-        predecessor_package=None,
-        repair_evidence_refs=(),
-        model_execution_allowed=False,
-        attempt={"schema_version": "harness.initial_compile_attempt.v1", "kind": "initial"},
     )
     compile_output = Image2EnvCompileOutput(
         schema_version="harness.image2env_compile_output.v1",
@@ -515,6 +516,38 @@ def _case(tmp_path: Path) -> _Case:
     )
 
 
+def _v2_case(tmp_path: Path) -> _Case:
+    case = _case(tmp_path)
+    staging = tmp_path / "v2"
+    compile_input_ref = _publish_model(case.store, staging, "compile-input", case.compile_input)
+    receipt_v1 = evidence.X2EnvCompileReceiptV1.model_validate_json(
+        case.store.resolve(case.refs["receipt"]).path.read_bytes()
+    )
+    receipt_payload = receipt_v1.model_dump(mode="json")
+    receipt_payload.update(
+        {
+            "schema_version": "harness.x2env_compile_receipt.v2",
+            "compile_input": compile_input_ref,
+        }
+    )
+    receipt = _build(evidence.X2EnvCompileReceiptV2, "receipt_sha256", receipt_payload)
+    receipt_ref = _publish_model(case.store, staging, "compile-receipt", receipt)
+    output = Image2EnvCompileV2Output.model_validate(
+        {
+            **case.compile_output.model_dump(mode="json"),
+            "schema_version": "harness.image2env_compile_output.v2",
+            "compile_receipt": receipt_ref,
+        }
+    )
+    return _Case(
+        store=case.store,
+        compile_input=case.compile_input,
+        compile_output=output,
+        verifier=case.verifier,
+        refs={**case.refs, "receipt": receipt_ref, "compile_input": compile_input_ref},
+    )
+
+
 def _ref(digest: str = "1" * 64) -> ArtifactRef:
     return ArtifactRef(
         name="runtime-lock",
@@ -549,11 +582,13 @@ def test_exact_reuse_compile_closure_public_seam_is_frozen(tmp_path: Path) -> No
     assert verifier.expected_runtime_lock == _ref()
     with pytest.raises(TypeError, match="compile_input"):
         verifier.verify(object(), object())
+    with pytest.raises(TypeError, match="compile_input"):
+        verifier.preflight(object())
 
 
 @pytest.mark.skipif(ExactReuseCompileClosureVerifier is None, reason="verifier is absent")
 def test_exact_reuse_compile_closure_is_verified_without_writing_cas(tmp_path: Path) -> None:
-    case = _case(tmp_path)
+    case = _v2_case(tmp_path)
     before = sorted(
         path.relative_to(case.store.root) for path in case.store.root.rglob("*") if path.is_file()
     )
@@ -619,7 +654,7 @@ def test_verifier_constructor_and_exact_type_boundaries_are_fail_closed(tmp_path
         with pytest.raises(error, match=message):
             ExactReuseCompileClosureVerifier(**{**values, field: replacement})
 
-    case = _case(tmp_path / "exact-types")
+    case = _v2_case(tmp_path / "exact-types")
     with pytest.raises(TypeError, match="compile_output"):
         case.verifier.verify(case.compile_input, object())
     with pytest.raises(TypeError, match="value"):
@@ -628,13 +663,13 @@ def test_verifier_constructor_and_exact_type_boundaries_are_fail_closed(tmp_path
 
 @pytest.mark.skipif(ExactReuseCompileClosureVerifier is None, reason="verifier is absent")
 def test_input_source_and_semantic_drift_are_rejected_before_acceptance(tmp_path: Path) -> None:
-    unsupported = _case(tmp_path / "unsupported")
+    unsupported = _v2_case(tmp_path / "unsupported")
     wrong_input = unsupported.compile_input.model_copy(update={"acquisition_policy": "auto"})
     with pytest.raises(X2EnvCompileClosureError, match="first exact-only") as caught:
         unsupported.verifier.verify(wrong_input, unsupported.compile_output)
     assert caught.value.code == "HARN_X2ENV_COMPILE_EVIDENCE_MISMATCH"
 
-    missing_source = _case(tmp_path / "missing-source")
+    missing_source = _v2_case(tmp_path / "missing-source")
     missing_source.store.resolve_digest(
         missing_source.compile_input.source_media.source.sha256
     ).unlink()
@@ -642,7 +677,7 @@ def test_input_source_and_semantic_drift_are_rejected_before_acceptance(tmp_path
         missing_source.verifier.verify(missing_source.compile_input, missing_source.compile_output)
     assert caught.value.code == "HARN_ARTIFACT_UNAVAILABLE"
 
-    drift = _case(tmp_path / "proposal-drift")
+    drift = _v2_case(tmp_path / "proposal-drift")
     proposal = evidence.SceneInterpretationProposalV1.model_validate_json(
         drift.store.resolve(drift.refs["proposal"]).path.read_bytes()
     ).model_dump(mode="json")
@@ -660,7 +695,7 @@ def test_input_source_and_semantic_drift_are_rejected_before_acceptance(tmp_path
     with pytest.raises(X2EnvCompileClosureError, match="does not bind the image source"):
         drift.verifier.verify(drift_input, drift.compile_output)
 
-    untrusted = _case(tmp_path / "untrusted-qualification")
+    untrusted = _v2_case(tmp_path / "untrusted-qualification")
     verifier = ExactReuseCompileClosureVerifier(
         artifact_store=untrusted.store,
         max_source_bytes=4096,
@@ -677,7 +712,7 @@ def test_input_source_and_semantic_drift_are_rejected_before_acceptance(tmp_path
     with pytest.raises(X2EnvCompileClosureError, match="not backed by trusted"):
         verifier.verify(untrusted.compile_input, untrusted.compile_output)
 
-    missing_selected_representation = _case(tmp_path / "missing-selected-representation")
+    missing_selected_representation = _v2_case(tmp_path / "missing-selected-representation")
     selection = evidence.X2EnvAssetSelectionV1.model_validate_json(
         missing_selected_representation.store.resolve(
             missing_selected_representation.refs["selection"]
@@ -713,7 +748,7 @@ def test_input_source_and_semantic_drift_are_rejected_before_acceptance(tmp_path
             missing_selected_representation.compile_input, changed_output
         )
 
-    missing_catalog_subject = _case(tmp_path / "missing-catalog-subject")
+    missing_catalog_subject = _v2_case(tmp_path / "missing-catalog-subject")
     catalog = evidence.PortableAssetCatalogV1.model_validate_json(
         missing_catalog_subject.store.resolve(
             missing_catalog_subject.refs["catalog"]
@@ -763,13 +798,13 @@ def test_input_source_and_semantic_drift_are_rejected_before_acceptance(tmp_path
 
 @pytest.mark.skipif(ExactReuseCompileClosureVerifier is None, reason="verifier is absent")
 def test_typed_json_and_asset_member_integrity_are_recomputed(tmp_path: Path) -> None:
-    missing = _case(tmp_path / "missing")
+    missing = _v2_case(tmp_path / "missing")
     missing.store.resolve_digest(missing.refs["proposal"].sha256).unlink()
     with pytest.raises(X2EnvCompileClosureError, match="unavailable or corrupt") as caught:
         missing.verifier.verify(missing.compile_input, missing.compile_output)
     assert caught.value.code == "HARN_ARTIFACT_UNAVAILABLE"
 
-    invalid = _case(tmp_path / "invalid")
+    invalid = _v2_case(tmp_path / "invalid")
     invalid_ref = _put(
         invalid.store,
         tmp_path / "invalid" / "mutations",
@@ -785,7 +820,7 @@ def test_typed_json_and_asset_member_integrity_are_recomputed(tmp_path: Path) ->
         invalid.verifier.verify(invalid_input, invalid.compile_output)
     assert caught.value.code == "HARN_X2ENV_COMPILE_EVIDENCE_INVALID"
 
-    noncanonical = _case(tmp_path / "noncanonical")
+    noncanonical = _v2_case(tmp_path / "noncanonical")
     proposal = evidence.SceneInterpretationProposalV1.model_validate_json(
         noncanonical.store.resolve(noncanonical.refs["proposal"]).path.read_bytes()
     )
@@ -803,7 +838,7 @@ def test_typed_json_and_asset_member_integrity_are_recomputed(tmp_path: Path) ->
     with pytest.raises(X2EnvCompileClosureError, match="not canonical JSON"):
         noncanonical.verifier.verify(noncanonical_input, noncanonical.compile_output)
 
-    member = _case(tmp_path / "member")
+    member = _v2_case(tmp_path / "member")
     representation = evidence.AssetRepresentationV1.model_validate_json(
         member.store.resolve(member.refs["representation"]).path.read_bytes()
     )

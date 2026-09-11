@@ -14,9 +14,9 @@ from self_improving.harness.x2env_compile_closure import (
 )
 from tests.self_improving.harness.test_x2env_compile_closure import (
     _build,
-    _case,
     _publish_model,
     _put,
+    _v2_case,
 )
 
 
@@ -40,8 +40,9 @@ def _with_available_unselected_qualification(
     *,
     check_codes: tuple[str, ...],
     bind_required_evidence: bool,
+    semantic_name: str = "ghost",
 ) -> tuple[object, ExactReuseCompileClosureVerifier, object, object]:
-    case = _case(tmp_path)
+    case = _v2_case(tmp_path)
     staging = tmp_path / "unselected-qualification"
     subject = {
         "namespace": "robotwin",
@@ -144,7 +145,7 @@ def _with_available_unselected_qualification(
     catalog["entries"].append(
         {
             "subject": subject,
-            "semantic_name": "ghost",
+            "semantic_name": semantic_name,
             "aliases": [],
             "representation": representation_ref,
             "representation_sha256": representation.representation_sha256,
@@ -186,7 +187,7 @@ def _with_available_unselected_qualification(
         update={"package_id": x2env_environment_package_sha256(package_model)}
     )
     package_ref = _publish_model(case.store, staging, "package", package_model)
-    receipt = _load(case, "receipt", evidence.X2EnvCompileReceiptV1).model_dump(mode="json")
+    receipt = _load(case, "receipt", evidence.X2EnvCompileReceiptV2).model_dump(mode="json")
     receipt.update(
         {
             "asset_catalog": catalog_ref.model_dump(mode="json"),
@@ -197,7 +198,7 @@ def _with_available_unselected_qualification(
             "package_id": package_model.package_id,
         }
     )
-    receipt_model = _build(evidence.X2EnvCompileReceiptV1, "receipt_sha256", receipt)
+    receipt_model = _build(evidence.X2EnvCompileReceiptV2, "receipt_sha256", receipt)
     receipt_ref = _publish_model(case.store, staging, "receipt", receipt_model)
     decision = case.compile_output.asset_decisions[0].model_copy(
         update={"decision_evidence": selection_ref}
@@ -230,7 +231,7 @@ def _with_available_unselected_qualification(
 
 
 def test_available_catalog_entries_are_complete_even_when_not_selected(tmp_path: Path) -> None:
-    case = _case(tmp_path)
+    case = _v2_case(tmp_path)
     staging = tmp_path / "mutations"
     catalog = _load(case, "catalog", evidence.PortableAssetCatalogV1).model_dump(mode="json")
     ghost_subject = {
@@ -304,7 +305,7 @@ def test_available_catalog_entries_are_complete_even_when_not_selected(tmp_path:
     )
     package_ref = _publish_model(case.store, staging, "package", package_model)
 
-    receipt = _load(case, "receipt", evidence.X2EnvCompileReceiptV1).model_dump(mode="json")
+    receipt = _load(case, "receipt", evidence.X2EnvCompileReceiptV2).model_dump(mode="json")
     receipt.update(
         {
             "asset_catalog": catalog_ref.model_dump(mode="json"),
@@ -315,7 +316,7 @@ def test_available_catalog_entries_are_complete_even_when_not_selected(tmp_path:
             "package_id": package_model.package_id,
         }
     )
-    receipt_model = _build(evidence.X2EnvCompileReceiptV1, "receipt_sha256", receipt)
+    receipt_model = _build(evidence.X2EnvCompileReceiptV2, "receipt_sha256", receipt)
     receipt_ref = _publish_model(case.store, staging, "receipt", receipt_model)
     decision = case.compile_output.asset_decisions[0].model_copy(
         update={"decision_evidence": selection_ref}
@@ -339,15 +340,15 @@ def test_available_catalog_entries_are_complete_even_when_not_selected(tmp_path:
 
 
 def test_static_validation_pass_requires_qualified_checks_and_evidence(tmp_path: Path) -> None:
-    case = _case(tmp_path)
+    case = _v2_case(tmp_path)
     staging = tmp_path / "mutations"
     static = _load(case, "static", evidence.X2EnvStaticValidationV1).model_dump(mode="json")
     static["checks"] = [{"code": "noop", "status": "pass", "evidence": []}]
     static_model = _build(evidence.X2EnvStaticValidationV1, "validation_sha256", static)
     static_ref = _publish_model(case.store, staging, "static", static_model)
-    receipt = _load(case, "receipt", evidence.X2EnvCompileReceiptV1).model_dump(mode="json")
+    receipt = _load(case, "receipt", evidence.X2EnvCompileReceiptV2).model_dump(mode="json")
     receipt["static_validation"] = static_ref.model_dump(mode="json")
-    receipt_model = _build(evidence.X2EnvCompileReceiptV1, "receipt_sha256", receipt)
+    receipt_model = _build(evidence.X2EnvCompileReceiptV2, "receipt_sha256", receipt)
     receipt_ref = _publish_model(case.store, staging, "receipt", receipt_model)
     compile_output = case.compile_output.model_copy(
         update={"static_validation": static_ref, "compile_receipt": receipt_ref}
@@ -393,3 +394,17 @@ def test_available_unselected_qualification_checks_bind_representation_and_runti
 
     assert caught.value.code == "HARN_X2ENV_COMPILE_EVIDENCE_MISMATCH"
     assert _cas_manifest(case) == before
+
+
+def test_preflight_rejects_ambiguous_case_sensitive_catalog_matches(tmp_path: Path) -> None:
+    _, verifier, compile_input, _ = _with_available_unselected_qualification(
+        tmp_path,
+        check_codes=("backend_load", "collision_probe"),
+        bind_required_evidence=True,
+        semantic_name="can",
+    )
+
+    with pytest.raises(X2EnvCompileClosureError) as caught:
+        verifier.preflight(compile_input)
+
+    assert caught.value.code == "HARN_X2ENV_EXACT_ASSET_AMBIGUOUS"

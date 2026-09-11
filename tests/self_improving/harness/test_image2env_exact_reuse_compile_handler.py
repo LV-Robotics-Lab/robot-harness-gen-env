@@ -9,6 +9,7 @@ from typing import Any
 from uuid import UUID
 
 import pytest
+from pydantic import BaseModel
 
 import self_improving.harness as harness
 from self_improving.harness import (
@@ -70,7 +71,7 @@ class SequenceClock:
 def _refs(value: object) -> Iterator[ArtifactRef]:
     if isinstance(value, ArtifactRef):
         yield value
-    elif hasattr(value, "model_fields"):
+    elif isinstance(value, BaseModel):
         for name in value.__class__.model_fields:  # type: ignore[attr-defined]
             yield from _refs(getattr(value, name))
     elif isinstance(value, dict):
@@ -109,7 +110,9 @@ def _copy_input_closure(
         if ref.media_type == "application/json":
             payload = json.loads(resolved.path.read_bytes())
             pending.extend(_refs(payload))
-    return tuple(copied[key] for key in sorted(copied))
+    return tuple(
+        copied[key] for key in sorted(copied, key=lambda item: (item[0], item[1] or "", item[2]))
+    )
 
 
 def _cas_manifest(store: LocalArtifactStore) -> tuple[tuple[str, int, str], ...]:
@@ -325,3 +328,14 @@ def test_missing_category_is_blocked_before_any_derived_cas_publish(tmp_path: Pa
     assert result.state.blocker.code == "HARN_X2ENV_COMPILE_ASSET_SELECTION_FAILED"
     assert result.state.output is None
     assert _cas_manifest(store) == before
+
+
+@_requires_handler
+def test_handler_rejects_non_exact_public_arguments(tmp_path: Path) -> None:
+    store, compile_input, verifier, _ = _fresh_case(tmp_path)
+    handler = _handler(store, verifier)
+
+    with pytest.raises(TypeError, match="exact Image2EnvCompileV2Input"):
+        handler(object(), object())  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="exact RunContext"):
+        handler(compile_input, object())  # type: ignore[arg-type]

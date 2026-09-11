@@ -133,12 +133,16 @@ _EXPORT_GROUPS = (
     (
         ".x2env_compile_closure",
         (
+            "ExactCatalogMatch",
             "ExactReuseCompileClosureVerifier",
+            "VerifiedCatalogAsset",
             "VerifiedExactReuseCompileClosure",
+            "VerifiedImageExactReuseInputs",
             "X2EnvCompileClosureError",
             "x2env_environment_package_sha256",
         ),
     ),
+    (".image2env_compile", ("Image2EnvExactReuseCompileHandler",)),
     (".package_store", ("PackageStore", "PackageStoreError", "PublishedPackage")),
     (
         ".qualification",

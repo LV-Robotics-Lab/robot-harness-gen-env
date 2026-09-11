@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TypeVar
 
@@ -19,8 +19,8 @@ from .schemas.media_ingest import ImageMediaProbeV1
 from .schemas.x2env import (
     AcquisitionPolicy,
     AssetAcquisitionLane,
-    Image2EnvCompileOutput,
     Image2EnvCompileV2Input,
+    Image2EnvCompileV2Output,
     RepresentationOrigin,
     RequestedGenesisProfile,
     X2EnvEnvironmentPackage,
@@ -36,19 +36,20 @@ from .schemas.x2env_compile_evidence import (
     TASK_IR_SCHEMA_ID,
     X2ENV_ASSET_SELECTION_SCHEMA_ID,
     X2ENV_BINDING_MANIFEST_SCHEMA_ID,
-    X2ENV_COMPILE_RECEIPT_SCHEMA_ID,
+    X2ENV_COMPILE_V2_RECEIPT_SCHEMA_ID,
     X2ENV_STATIC_VALIDATION_SCHEMA_ID,
     AssetClosureManifestV1,
     AssetRepresentationV1,
     GenesisAssetQualificationV1,
     GenesisRuntimeLockV1,
+    PortableAssetCatalogEntryV1,
     PortableAssetCatalogV1,
     SceneInterpretationProposalV1,
     SceneIRV1,
     TaskIRV1,
     X2EnvAssetSelectionV1,
     X2EnvBindingManifestV1,
-    X2EnvCompileReceiptV1,
+    X2EnvCompileReceiptV2,
     X2EnvStaticValidationV1,
 )
 
@@ -83,7 +84,38 @@ class VerifiedExactReuseCompileClosure:
     binding_manifest: X2EnvBindingManifestV1
     static_validation: X2EnvStaticValidationV1
     environment_package: X2EnvEnvironmentPackage
-    compile_receipt: X2EnvCompileReceiptV1
+    compile_receipt: X2EnvCompileReceiptV2
+
+
+@dataclass(frozen=True, slots=True)
+class VerifiedCatalogAsset:
+    """One fully consumed catalog entry and its trusted reusable evidence."""
+
+    entry: PortableAssetCatalogEntryV1
+    representation_ref: ArtifactRef
+    representation: AssetRepresentationV1
+    qualification_ref: ArtifactRef
+    qualification: GenesisAssetQualificationV1
+
+
+@dataclass(frozen=True, slots=True)
+class ExactCatalogMatch:
+    """A case-sensitive proposal object to qualified catalog match."""
+
+    scene_object_id: str
+    asset: VerifiedCatalogAsset
+
+
+@dataclass(frozen=True, slots=True)
+class VerifiedImageExactReuseInputs:
+    """Pure-read result returned only after the entire input graph is consumed."""
+
+    source_probe: ImageMediaProbeV1
+    proposal: SceneInterpretationProposalV1
+    runtime_lock: GenesisRuntimeLockV1
+    asset_catalog: PortableAssetCatalogV1
+    catalog_assets: tuple[VerifiedCatalogAsset, ...]
+    object_matches: tuple[ExactCatalogMatch, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -138,52 +170,29 @@ class ExactReuseCompileClosureVerifier:
     def verify(
         self,
         compile_input: Image2EnvCompileV2Input,
-        compile_output: Image2EnvCompileOutput,
+        compile_output: Image2EnvCompileV2Output,
     ) -> VerifiedExactReuseCompileClosure:
         if type(compile_input) is not Image2EnvCompileV2Input:
             raise TypeError("compile_input must be the exact Image2EnvCompileV2Input")
-        if type(compile_output) is not Image2EnvCompileOutput:
-            raise TypeError("compile_output must be the exact Image2EnvCompileOutput")
-        self._verify_supported_input(compile_input)
-
-        try:
-            source_probe = ImageMediaConsumerVerifier(
-                artifact_store=self.artifact_store,
-                max_source_bytes=self.max_source_bytes,
-                max_decoded_pixels=self.max_decoded_pixels,
-            ).verify(compile_input.source_media)
-        except ImageMediaIngestError as error:
-            raise X2EnvCompileClosureError(
-                error.code, "source image evidence failed verification"
-            ) from error
-
-        proposal = self._read(
-            compile_input.interpretation_proposal,
-            SceneInterpretationProposalV1,
-            SCENE_INTERPRETATION_PROPOSAL_SCHEMA_ID,
-        )
+        if type(compile_output) is not Image2EnvCompileV2Output:
+            raise TypeError("compile_output must be the exact Image2EnvCompileV2Output")
+        verified_input = self.preflight(compile_input)
+        source_probe = verified_input.source_probe
+        proposal = verified_input.proposal
         scene_ir = self._read(compile_output.scene_ir, SceneIRV1, SCENE_IR_SCHEMA_ID)
         task_ir = self._read(compile_output.task_ir, TaskIRV1, TASK_IR_SCHEMA_ID)
-        runtime_lock = self._read(
-            self.expected_runtime_lock,
-            GenesisRuntimeLockV1,
-            GENESIS_RUNTIME_LOCK_SCHEMA_ID,
+        runtime_lock = verified_input.runtime_lock
+        asset_catalog = verified_input.asset_catalog
+        compile_receipt = self._read(
+            compile_output.compile_receipt,
+            X2EnvCompileReceiptV2,
+            X2ENV_COMPILE_V2_RECEIPT_SCHEMA_ID,
         )
-        asset_catalog = self._read(
-            compile_input.asset_catalog,
-            PortableAssetCatalogV1,
-            PORTABLE_ASSET_CATALOG_SCHEMA_ID,
-        )
-        environment_package_ref = self._find_package_ref(compile_output)
+        environment_package_ref = compile_receipt.environment_package
         environment_package = self._read(
             environment_package_ref,
             X2EnvEnvironmentPackage,
             "harness.x2env_environment_package.v1",
-        )
-        compile_receipt = self._read(
-            compile_output.compile_receipt,
-            X2EnvCompileReceiptV1,
-            X2ENV_COMPILE_RECEIPT_SCHEMA_ID,
         )
         asset_closure = self._read(
             environment_package.asset_closure_manifest,
@@ -205,16 +214,12 @@ class ExactReuseCompileClosureVerifier:
             self._read(ref, X2EnvAssetSelectionV1, X2ENV_ASSET_SELECTION_SCHEMA_ID)
             for ref in selection_refs
         )
-        representation_refs = _unique_refs(item.representation for item in asset_catalog.entries)
-        representations = tuple(
-            self._read(ref, AssetRepresentationV1, ASSET_REPRESENTATION_SCHEMA_ID)
-            for ref in representation_refs
+        representation_refs = tuple(
+            item.representation_ref for item in verified_input.catalog_assets
         )
-        qualification_refs = _unique_refs(item.qualification for item in asset_catalog.entries)
-        qualifications = tuple(
-            self._read(ref, GenesisAssetQualificationV1, ASSET_QUALIFICATION_SCHEMA_ID)
-            for ref in qualification_refs
-        )
+        representations = tuple(item.representation for item in verified_input.catalog_assets)
+        qualification_refs = tuple(item.qualification_ref for item in verified_input.catalog_assets)
+        qualifications = tuple(item.qualification for item in verified_input.catalog_assets)
 
         self._verify_semantics(
             compile_input=compile_input,
@@ -254,6 +259,165 @@ class ExactReuseCompileClosureVerifier:
             compile_receipt=compile_receipt,
         )
 
+    def preflight(
+        self,
+        compile_input: Image2EnvCompileV2Input,
+    ) -> VerifiedImageExactReuseInputs:
+        """Consume the complete exact-reuse input graph without writing derived CAS objects."""
+
+        if type(compile_input) is not Image2EnvCompileV2Input:
+            raise TypeError("compile_input must be the exact Image2EnvCompileV2Input")
+        self._verify_supported_input(compile_input)
+        try:
+            source_probe = ImageMediaConsumerVerifier(
+                artifact_store=self.artifact_store,
+                max_source_bytes=self.max_source_bytes,
+                max_decoded_pixels=self.max_decoded_pixels,
+            ).verify(compile_input.source_media)
+        except ImageMediaIngestError as error:
+            raise X2EnvCompileClosureError(
+                error.code, "source image evidence failed verification"
+            ) from error
+        proposal = self._read(
+            compile_input.interpretation_proposal,
+            SceneInterpretationProposalV1,
+            SCENE_INTERPRETATION_PROPOSAL_SCHEMA_ID,
+        )
+        _require_equal(
+            (proposal.route_id, proposal.source_media_sha256),
+            ("image2env", compile_input.source_media.source_media_sha256),
+            "interpretation proposal does not bind the image source",
+        )
+        _require_equal(
+            proposal.unknowns,
+            (),
+            "interpretation proposal has unresolved unknowns",
+        )
+        self._verify_artifact(proposal.effective_prompt, "effective prompt")
+        _require_equal(
+            (
+                len(proposal.objects),
+                proposal.objects[0].role,
+                tuple((item.relation, item.source, item.target) for item in proposal.relations),
+            ),
+            (
+                1,
+                "dynamic",
+                (("on_table", proposal.objects[0].object_id, "table"),),
+            ),
+            "first controlled image compile requires one dynamic object on the table",
+        )
+        runtime_lock = self._read(
+            self.expected_runtime_lock,
+            GenesisRuntimeLockV1,
+            GENESIS_RUNTIME_LOCK_SCHEMA_ID,
+        )
+        _require_equal(
+            runtime_lock.requested_profile,
+            compile_input.requested_profile,
+            "runtime lock does not satisfy the requested profile",
+        )
+        asset_catalog = self._read(
+            compile_input.asset_catalog,
+            PortableAssetCatalogV1,
+            PORTABLE_ASSET_CATALOG_SCHEMA_ID,
+        )
+        _require_equal(
+            asset_catalog.runtime_lock,
+            self.expected_runtime_lock,
+            "asset catalog does not bind the trusted runtime lock",
+        )
+        catalog_assets = tuple(
+            self._verify_catalog_asset(compile_input, entry) for entry in asset_catalog.entries
+        )
+        matches: list[ExactCatalogMatch] = []
+        for scene_object in proposal.objects:
+            candidates = tuple(
+                item
+                for item in catalog_assets
+                if scene_object.category == item.entry.semantic_name
+                or scene_object.category in item.entry.aliases
+            )
+            if not candidates:
+                raise X2EnvCompileClosureError(
+                    "HARN_X2ENV_EXACT_ASSET_NOT_FOUND",
+                    "no exact qualified catalog asset matches the interpreted category",
+                )
+            if len(candidates) != 1:
+                raise X2EnvCompileClosureError(
+                    "HARN_X2ENV_EXACT_ASSET_AMBIGUOUS",
+                    "multiple exact qualified catalog assets match the interpreted category",
+                )
+            matches.append(ExactCatalogMatch(scene_object.object_id, candidates[0]))
+        return VerifiedImageExactReuseInputs(
+            source_probe=source_probe,
+            proposal=proposal,
+            runtime_lock=runtime_lock,
+            asset_catalog=asset_catalog,
+            catalog_assets=catalog_assets,
+            object_matches=tuple(matches),
+        )
+
+    def _verify_catalog_asset(
+        self,
+        compile_input: Image2EnvCompileV2Input,
+        entry: PortableAssetCatalogEntryV1,
+    ) -> VerifiedCatalogAsset:
+        representation = self._read(
+            entry.representation, AssetRepresentationV1, ASSET_REPRESENTATION_SCHEMA_ID
+        )
+        qualification = self._read(
+            entry.qualification, GenesisAssetQualificationV1, ASSET_QUALIFICATION_SCHEMA_ID
+        )
+        _require_equal(
+            (
+                representation.subject,
+                representation.representation_sha256,
+                representation.loader_closure_sha256,
+                qualification.subject,
+                qualification.representation,
+                qualification.runtime_lock,
+                qualification.requested_profile,
+                qualification.issuer_implementation_sha256,
+                entry.qualification in self.trusted_asset_qualifications,
+            ),
+            (
+                entry.subject,
+                entry.representation_sha256,
+                entry.qualified_subject.loader_closure_sha256,
+                entry.qualified_subject,
+                entry.representation,
+                self.expected_runtime_lock,
+                compile_input.requested_profile,
+                self.trusted_qualification_issuer_sha256,
+                True,
+            ),
+            "catalog entry is not backed by trusted complete asset evidence",
+        )
+        required_evidence = {entry.representation, self.expected_runtime_lock}
+        _require_equal(
+            (
+                {item.code for item in qualification.checks},
+                tuple(
+                    required_evidence.issubset(set(item.evidence)) for item in qualification.checks
+                ),
+            ),
+            ({"backend_load", "collision_probe"}, (True, True)),
+            "catalog qualification checks do not bind load and collision evidence",
+        )
+        for member in representation.members:
+            self._verify_artifact(member.artifact, "catalog asset representation member")
+        for check in qualification.checks:
+            for evidence in check.evidence:
+                self._verify_artifact(evidence, "catalog qualification check evidence")
+        return VerifiedCatalogAsset(
+            entry=entry,
+            representation_ref=entry.representation,
+            representation=representation,
+            qualification_ref=entry.qualification,
+            qualification=qualification,
+        )
+
     def _verify_supported_input(self, value: Image2EnvCompileV2Input) -> None:
         _require_equal(
             (
@@ -274,14 +438,6 @@ class ExactReuseCompileClosureVerifier:
             ),
             "compile input is outside the first exact-only rigid-scene slice",
         )
-
-    def _find_package_ref(self, output: Image2EnvCompileOutput) -> ArtifactRef:
-        receipt = self._read(
-            output.compile_receipt,
-            X2EnvCompileReceiptV1,
-            X2ENV_COMPILE_RECEIPT_SCHEMA_ID,
-        )
-        return receipt.environment_package
 
     def _read(self, ref: ArtifactRef, model: type[_ModelT], schema_version: str) -> _ModelT:
         _require_ref(ref, model.__name__, schema_version)
@@ -318,7 +474,7 @@ class ExactReuseCompileClosureVerifier:
         self,
         *,
         compile_input: Image2EnvCompileV2Input,
-        compile_output: Image2EnvCompileOutput,
+        compile_output: Image2EnvCompileV2Output,
         proposal: SceneInterpretationProposalV1,
         scene_ir: SceneIRV1,
         task_ir: TaskIRV1,
@@ -335,7 +491,7 @@ class ExactReuseCompileClosureVerifier:
         static_validation: X2EnvStaticValidationV1,
         environment_package: X2EnvEnvironmentPackage,
         environment_package_ref: ArtifactRef,
-        compile_receipt: X2EnvCompileReceiptV1,
+        compile_receipt: X2EnvCompileReceiptV2,
     ) -> None:
         _require_equal(
             (proposal.route_id, proposal.source_media_sha256),
@@ -761,6 +917,16 @@ class ExactReuseCompileClosureVerifier:
             ),
             "compile receipt does not bind the exact output evidence graph",
         )
+        exact_input = self._read(
+            compile_receipt.compile_input,
+            Image2EnvCompileV2Input,
+            "harness.image2env_compile_input.v2",
+        )
+        _require_equal(
+            exact_input,
+            compile_input,
+            "compile receipt does not bind the exact compile input bytes",
+        )
 
     def _verify_artifact(self, ref: ArtifactRef, label: str) -> None:
         try:
@@ -806,11 +972,6 @@ def _require_ref(ref: ArtifactRef, field: str, schema_version: str) -> None:
         raise ValueError(f"{field} must identify {schema_version} JSON")
 
 
-def _unique_refs(values: Iterable[ArtifactRef]) -> tuple[ArtifactRef, ...]:
-    by_digest = {item.sha256: item for item in values}
-    return tuple(by_digest[digest] for digest in sorted(by_digest))
-
-
 def _required(
     values: Mapping[_KeyT, _ValueT],
     key: _KeyT,
@@ -832,8 +993,11 @@ def _mismatch(message: str) -> None:
 
 
 __all__ = [
+    "ExactCatalogMatch",
     "ExactReuseCompileClosureVerifier",
+    "VerifiedCatalogAsset",
     "VerifiedExactReuseCompileClosure",
+    "VerifiedImageExactReuseInputs",
     "X2EnvCompileClosureError",
     "x2env_environment_package_sha256",
 ]
