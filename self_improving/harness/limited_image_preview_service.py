@@ -245,7 +245,23 @@ class LimitedImagePreviewService:
             principal_id=self.principal_id, workflow_run_id=snapshot.workflow_run_id
         )
         if entries:
-            return self._stage(entries[-1].operation, "status")
+            result = self._stage(entries[-1].operation, "status")
+            if snapshot.receipt_head.schema_version in {
+                "harness.external_agent_advisory_receipt.v2",
+                "harness.prompt_revision.v3",
+            }:
+                result.update(status="active", failure_code=None, failure_message=None)
+                result["resource_links"].append(
+                    self._link(snapshot.workflow_run_id, snapshot.receipt_head).model_dump(
+                        mode="json"
+                    )
+                )
+                if snapshot.receipt_head.schema_version == "harness.prompt_revision.v3":
+                    result["source_prompt"] = self._read_model(
+                        snapshot.receipt_head, PromptRevisionV3
+                    ).revised_prompt.model_dump(mode="json")
+                return PreviewServiceResult.model_validate(result).model_dump(mode="json")
+            return result
         return self._projection(snapshot, "status")
 
     def _receipts(self, snapshot):
@@ -367,12 +383,20 @@ class LimitedImagePreviewService:
                 continue
             prior_result = self._read_model(prior.tool_result, ToolResultV2)
             context.extend(prior_result.diagnostics)
-            if prior.skill_ref == "image2env.replay@2.0.0" and prior.status.value == "succeeded":
+            if (
+                prior.skill_ref in {"image2env.compile@2.0.0", "image2env.replay@2.0.0"}
+                and prior.status.value == "succeeded"
+            ):
                 terminal = self._read_model(prior_result.run_state, RunState)
                 context.extend(
                     r
                     for r in terminal.artifacts
-                    if r.schema_version == "harness.genesis_scene_execution_receipt.v2"
+                    if r.schema_version
+                    == (
+                        "harness.image2env_genesis_compile_receipt.v1"
+                        if prior.skill_ref == "image2env.compile@2.0.0"
+                        else "harness.genesis_scene_execution_receipt.v2"
+                    )
                 )
         links = {link.uri: link for link in values["resource_links"]}
         for ref in context:
@@ -634,9 +658,20 @@ class LimitedImagePreviewService:
         if previous is not None:
             return self._stage(self.harness.submit(previous[1]), "observe")
         snapshot = self.harness.read(self._request(workflow_id))
-        parent, _ = self._parent(snapshot)
-        if parent.skill_ref != "image2env.replay@2.0.0":
-            raise ValueError("diagnosis observation requires the current initial replay")
+        sources = [
+            entry.operation
+            for entry in self.journal.read_operations(
+                principal_id=self.principal_id,
+                workflow_run_id=snapshot.workflow_run_id,
+            )
+            if entry.operation.skill_ref == "image2env.replay@2.0.0"
+            and entry.operation.status.value == "succeeded"
+        ]
+        if len(sources) != 1:
+            raise ValueError(
+                "diagnosis observation requires one committed predecessor initial replay"
+            )
+        parent = sources[0]
         return self._submit(
             snapshot,
             skill,
@@ -679,12 +714,17 @@ class LimitedImagePreviewService:
             receipt = GenesisFreshCaptureReceiptV1.model_validate(
                 result.typed_output
             ).replay_receipt
-        elif parent.skill_ref == "image2env.replay@3.0.0":
+        elif parent.skill_ref in {"image2env.replay@2.0.0", "image2env.replay@3.0.0"}:
             terminal = self._read_model(result.run_state, RunState)
             receipt = next(
                 r
                 for r in terminal.artifacts
-                if r.schema_version == "harness.genesis_scene_execution_receipt.v3"
+                if r.schema_version
+                == (
+                    "harness.genesis_scene_execution_receipt.v2"
+                    if parent.skill_ref == "image2env.replay@2.0.0"
+                    else "harness.genesis_scene_execution_receipt.v3"
+                )
             )
         else:
             raise ValueError("validation requires current observed initial or modified replay")

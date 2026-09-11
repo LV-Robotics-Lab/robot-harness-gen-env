@@ -3,6 +3,10 @@
 import pytest
 
 from self_improving.harness.limited_image_preview_policy import LimitedImagePreviewPolicy
+from tests.self_improving.harness.test_golden_image2env_policy import (  # noqa: F401
+    capture,
+    parent_capture,
+)
 
 
 def test_policy_rejects_callers_without_exact_shared_application():
@@ -13,6 +17,138 @@ def test_policy_rejects_callers_without_exact_shared_application():
 def test_policy_rejects_unknown_skill_before_creating_any_authority():
     with pytest.raises(ValueError, match="exact"):
         LimitedImagePreviewPolicy(object(), "skill.invoke@1.0.0", {})
+
+
+def test_observation_after_validation_requires_same_workflow_replay(parent_capture, policy):  # noqa: F811
+    from dataclasses import replace
+    from uuid import uuid4
+
+    from self_improving.harness.event_journal import SQLiteEventJournal
+    from self_improving.harness.events import RunRecorder
+    from self_improving.harness.limited_image_preview_workflow_policies import (
+        LimitedPreviewObservationPolicy,
+        LimitedPreviewValidationPolicy,
+    )
+    from self_improving.harness.schemas.common import Invocation, RunStatus
+    from self_improving.harness.schemas.genesis_scene_execution_v2 import (
+        GenesisSceneExecutionReceiptV2,
+    )
+    from self_improving.harness.trusted_state import WorldFact, build_world_state
+
+    shared_application = policy.application
+    original, _, _, context, old_head, parent, put = parent_capture
+    store = original.artifact_store
+    authority = original.child_authority
+    output = GenesisSceneExecutionReceiptV2(
+        schema_version="harness.genesis_scene_execution_receipt.v2",
+        authority="observed_execution_only",
+        request=put({}, "harness.genesis_scene_execution_request.v2"),
+        launch_result=put({}, "harness.genesis_scene_launch_result.v2"),
+        replay=put({}, "harness.genesis_scene_replay.v1"),
+        report=put({}, "harness.genesis_scene_report.v1"),
+        baseline_preview=put({}, media="video/mp4"),
+        half_dt_preview=put({}, media="video/mp4"),
+        retained_index=put({}),
+    )
+    ref = put(output.model_dump(mode="json"), output.schema_version)
+    old = authority.read_run_state(parent.child_run_id)
+    run_id = uuid4()
+    invocation = Invocation(
+        run_id=run_id,
+        skill_id="image2env.replay",
+        skill_version="2.0.0",
+        effective_parameters={},
+        dependencies=(),
+        max_attempts=1,
+        invocation_digest=old.invocation_digest,
+    )
+    authority.put_invocation(invocation)
+    recorder = RunRecorder(
+        run_id=run_id,
+        skill_id="image2env.replay",
+        skill_version="2.0.0",
+        clock=lambda: old.ended_at,
+        sink=SQLiteEventJournal(authority.path),
+    )
+    recorder.start(stage="preflight", attempt=1)
+    recorder.finish(status=RunStatus.SUCCEEDED, stage="complete", artifact_refs=(ref,))
+    terminal = recorder.build_state(
+        invocation_digest=invocation.invocation_digest,
+        max_attempts=1,
+        artifacts=(ref,),
+        output=output.model_dump(mode="json"),
+        blocker=None,
+    )
+    authority.put_run_state(terminal)
+    parent = parent.model_copy(
+        update={
+            "child_run_id": run_id,
+            "skill": parent.skill.model_copy(update={"skill_ref": "image2env.replay@2.0.0"}),
+            "typed_output": terminal.output,
+            "run_state": put(terminal.model_dump(mode="json"), "harness.run_state.v1"),
+            "invocation": put(invocation.model_dump(mode="json"), "harness.skill_invocation.v1"),
+            "supporting_artifacts": (ref,),
+        }
+    )
+    fact = WorldFact(
+        key="image.replay",
+        value={"run_id": str(run_id), "receipt": ref.model_dump(mode="json")},
+        source_kind="trusted_receipt",
+        source_artifact=put(parent.model_dump(mode="json"), parent.schema_version),
+        observed_at=terminal.ended_at,
+        valid_until=None,
+    )
+    world = build_world_state((fact,), as_of=terminal.ended_at)
+    policy = LimitedPreviewObservationPolicy(
+        store, authority, "genesis.observe@3.0.0", {"image2env.replay@2.0.0": authority}
+    )
+    parameters = policy.normalize_parameters(
+        {
+            "schema_version": "harness.genesis_fresh_capture_input.v1",
+            "replay_run_id": str(run_id),
+            "ttl_seconds": 300,
+        }
+    )
+    # Current head is deliberately later than replay; ownership comes from the trusted fact.
+    context = replace(context, revision=3)
+    policy.authorize_workflow(world, parameters, context)
+    with pytest.raises(ValueError, match="this workflow"):
+        policy.authorize_workflow(world, parameters, replace(context, workflow_run_id=uuid4()))
+    with pytest.raises(ValueError, match="trusted workflow"):
+        policy.authorize_workflow(
+            build_world_state((), as_of=terminal.ended_at), parameters, context
+        )
+    with pytest.raises(ValueError, match="this workflow"):
+        policy.authorize_workflow(
+            world, parameters.model_copy(update={"replay_run_id": uuid4()}), context
+        )
+    world_ref = put(world.model_dump(mode="json"), "harness.trusted_world_state.v1")
+    head = old_head.model_copy(
+        update={
+            "tool_receipt": fact.source_artifact,
+            "resulting_state": world_ref,
+            "resulting_state_sha256": world.state_sha256,
+        }
+    )
+    context = replace(
+        context,
+        revision=1,
+        receipt_head=put(head.model_dump(mode="json"), head.schema_version),
+        state_ref=world_ref,
+    )
+    validation = LimitedPreviewValidationPolicy(
+        shared_application, "image2env.validate@3.0.0", {"image2env.replay@2.0.0": authority}
+    )
+    requested = validation.normalize_parameters(
+        {
+            "schema_version": "harness.limited_scene_validate_input.v1",
+            "execution_receipt": ref.model_dump(mode="json"),
+            "expected_layout": None,
+        }
+    )
+    validation.authorize_workflow(world, requested, context)
+    with pytest.raises(ValueError, match="this workflow"):
+        validation.authorize_workflow(world, requested, replace(context, workflow_run_id=uuid4()))
 
 
 @pytest.fixture
