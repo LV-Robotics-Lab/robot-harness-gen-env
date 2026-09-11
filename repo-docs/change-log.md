@@ -1,5 +1,15 @@
 # Change Log
 
+## 2026-09-11 X2 typed exact-reuse compile evidence
+
+- 将 12 个 opaque x2env compile ArtifactRef schema 实体化为 self-hashed public records；公共 schema
+  72→84。单资产 qualification 与场景 closure 分层，使同一 qualification 可跨场景复用。
+- 新增纯读 `ExactReuseCompileClosureVerifier`：完整消费所有 available catalog entry、representation
+  members、trusted qualification 与 check evidence，并要求四项 exact static evidence set。
+- 集中验收先发现未选 catalog 坏引用、noop static 与 noop/unbound qualification 可假绿，随后以永久
+  RED 修复。最终核心 219 statements/52 branches 100%，根套件绿色；仍无 handler、production
+  qualification 或真实 Genesis runtime。
+
 ## 2026-09-11 complete-sequence video media ingest
 
 - 新增 source-specific `VideoDecodedFrameSequenceV1`、`VideoMediaProbeV1` 与 `VideoSourceMediaV2`，

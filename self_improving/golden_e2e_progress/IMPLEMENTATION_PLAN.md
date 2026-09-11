@@ -103,10 +103,12 @@ mismatch 与 4 个缺文件资产必须新 identity 重建或明确退休。不�
 ## P9 — 共享 IR 与三组 x2env Skills
 
 Image2Env/Video2Env 的字段级合同、Gujie adapter mapping 和逐 namespace runtime/qualification/catalog
-路线已拆到 `X2ENV_IMAGE_VIDEO_IMPLEMENTATION_PLAN.md`；P9 当前只完成该 contract tranche，以下真实
-Skill 实现与资格仍未完成。
+路线已拆到 `X2ENV_IMAGE_VIDEO_IMPLEMENTATION_PLAN.md`。contract tranche、X1 image/video ingest 和
+X2 typed exact-reuse compile evidence/deep verifier 已完成；controlled builder/handler、真实 asset
+qualification、production Skill application 与 replay/validate 仍未完成。
 
-1. `feat(x2env): add shared input scene task package contracts`
+1. [x] `feat(x2env): add shared input scene task package contracts`，并以 12 个 typed self-hashed records、
+   complete-catalog qualification consumption 和 exact static checks 关闭 opaque evidence 缺口。
 2. `feat(text2env): qualify Genesis compile/replay v2 and validate v3`
 3. `feat(image2env): qualify compile replay validate v1`
 4. `feat(video2env): qualify compile replay validate v1`

@@ -1,0 +1,77 @@
+{
+  "schema_version": "golden.x2_typed_compile_closure_evidence.v1",
+  "result": "pass",
+  "implementation_commit": "605f030cd271c090de14eb0115c28cd900de2f07",
+  "tdd_commits": [
+    "327dd80",
+    "33d0695",
+    "fd3d0e9",
+    "314639c",
+    "c2c6f57",
+    "7a992f9",
+    "f1aa527",
+    "605f030"
+  ],
+  "failed_acceptance_findings_preserved": [
+    "unselected catalog references were not consumed",
+    "static validation accepted noop/pass evidence",
+    "unselected qualification accepted noop checks",
+    "qualification checks accepted unrelated existing evidence"
+  ],
+  "schemas": {
+    "new_typed_records": 12,
+    "catalog_snapshots": 84,
+    "draft_2020_12_standalone": "pass",
+    "snapshot_exporter_match": "pass"
+  },
+  "gates": {
+    "focused_passed": 9,
+    "deep_verifier_statements": 219,
+    "deep_verifier_branches": 52,
+    "deep_verifier_coverage_percent": 100,
+    "adjacent_passed": 79,
+    "root_passed": 4098,
+    "root_skipped": 20
+  },
+  "catalog_qualification_acceptance": {
+    "result": "pass",
+    "evidence_root": "/tmp/golden-x2-catalog-final-605f030.Oa5Ppx/evidence",
+    "scenario_count": 15,
+    "positive_catalog_entries": 2,
+    "positive_representations_consumed": 2,
+    "positive_qualifications_consumed": 2,
+    "positive_cas_files": 31,
+    "positive_cas_bytes": 51900,
+    "negative_cases_rejected": 14,
+    "verifier_cas_writes": 0,
+    "summary_sha256": "4d0ce6634bdef60873bf6644192a52211d0669d0dc615b3fbbb196482c3cc032",
+    "sha256sums_sha256": "e9d24e78a7c4d3c15f42e541d68db76576f0a5e2ccd38ad76ebf79666a3eecaf"
+  },
+  "static_closure_acceptance": {
+    "result": "pass",
+    "archive_root": "/tmp/x2-final-audit-2RPcmZ",
+    "evidence_root": "/tmp/x2-final-audit-2RPcmZ-evidence",
+    "cas_files": 20,
+    "cas_bytes": 28236,
+    "artifact_ref_occurrences": 84,
+    "unique_artifact_identities": 20,
+    "resolved_identities": 20,
+    "negative_cases_rejected": 5,
+    "verifier_cas_writes": 0
+  },
+  "required_static_checks": {
+    "asset_closure_complete": ["selection_refs", "asset_closure_manifest"],
+    "binding_complete": ["binding_manifest"],
+    "runtime_lock_bound": ["runtime_lock"],
+    "scene_task_consistent": ["scene_ir", "task_ir"]
+  },
+  "not_proven": [
+    "image2env handler or application",
+    "production asset qualification issuer",
+    "Genesis or GPU execution",
+    "replay or validate",
+    "publishability or promotion",
+    "MCP exposure",
+    "robot policy readiness"
+  ]
+}

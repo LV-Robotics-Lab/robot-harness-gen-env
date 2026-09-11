@@ -162,3 +162,18 @@
   schema 保留 parse-only。未来 text retry 使用新的 exact `text2env.compile@2.0.0`，不能借 v1 暗中改 prompt。
 - 边界：当前只完成受控 image compile preflight/blocked 纵切；production handler、qualification、Genesis
   runtime 和成功 environment package 仍待实现。
+
+## D015 — Asset qualification 是跨场景单资产权威，scene closure 是 compile 聚合
+
+- 日期：2026-09-11
+- 状态：accepted_by_implementation
+- 决策：`GenesisAssetQualificationV1` 只绑定一个 `AssetRepresentationV1`、其 loader closure identity、
+  exact Genesis runtime lock、profile、issuer 与 `backend_load`/`collision_probe` evidence；它不引用场景级
+  `AssetClosureManifestV1`。因此同一 qualification 可以在多个不同 scene closure 中复用，不会因无关
+  共场资产、排序或场景重组而改变身份。
+- 消费门：compile deep verifier 必须解引用 portable catalog 的每个 available entry，而非只读 selected
+  entries；representation members、qualification evidence、trust set、runtime/profile/issuer/subject 均须
+  闭合。scene closure、selection、binding、package 与 compile receipt 再在 compile 层聚合。
+- static 门：首个 exact-reuse slice 固定四项 evidence-bound check：`asset_closure_complete`、
+  `binding_complete`、`runtime_lock_bound`、`scene_task_consistent`。任意 noop、缺项、多项或错 evidence
+  均拒绝。该 static 门不声称真实物理、sim-ready 或 publishability。

@@ -4,9 +4,10 @@
 
 ## Doing
 
-- X2 typed compile evidence：X1 image/video ingest 与两条纯读 consumer 已完成；当前先实体化
-  SceneIR/TaskIR/catalog/selection/qualification/closure/binding/runtime-lock/static-validation/compile-receipt，
-  再实现 exact-reuse image compile。不得让任意 JSON 冒充 IR 或 qualification closure。
+- X2 exact-reuse image compile：12 份 typed compile records 与完整 deep verifier 已完成；当前进入
+  controlled deterministic builder/handler TDD。builder 必须先用只读 preflight 消费 source、proposal、
+  完整 catalog 与 trusted qualifications，再发布 SceneIR/TaskIR/selection/closure/binding/static/package/
+  receipt；失败不得把半成品误作受信输出。
 - P10 fresh observation：strict schema、controlled candidate application/evidence policy 与 test-controlled
   Golden execution binding 已在同一 revision 2→3 中闭合 receipt/state/restart；下一切片是 production
   runtime binding。当前受控路径固定 `simulator_executed=false`，真实 Genesis capture、qualification 与
@@ -19,8 +20,8 @@
 
 ## Next
 
-- X2：先实体化 SceneIR/TaskIR/catalog/selection/qualification/closure/binding/runtime-lock/static-validation/
-  compile-receipt 等 opaque artifact schema，再实现 exact-reuse image compile；不得让任意 JSON 冒充 IR。
+- X2：实现 controlled exact-reuse image compile builder/handler/application，并用已完成 deep verifier 对
+  输出做返回前闭包；保持未注册、未资格化和 `simulator_ready=false`，直到真实 Genesis asset issuer 可用。
 - P10：实现 production execution binding/runtime；保持过期、缺 key、时间或 payload 漂移在 parent
   commit 前 fail closed。
 - P10：production policy 稳定后，用真实 Genesis sealed checkpoint 做 capture/qualification；只有该门
@@ -46,6 +47,16 @@
   revision 继续调用 compile/replay/validate。
 
 ## Done
+
+- X2 typed compile evidence 与 deep verifier 完成：12 个原 opaque artifact label 已成为严格、self-hashed
+  public models，公共 schema 72→84。`ExactReuseCompileClosureVerifier` 纯读解引用 source/proposal/
+  SceneIR/TaskIR/runtime/catalog/representation/qualification/selection/scene closure/binding/static/package/
+  receipt；所有 available catalog entry（包括未选项）的 members 与 qualification check evidence 都须在
+  CAS 中存在、匹配 trusted issuer/runtime/profile/subject，并且每份 qualification 恰有绑定自身
+  representation 与 runtime lock 的 `backend_load`/`collision_probe`。static validation 恰含四项 exact
+  evidence set。永久 RED 先暴露“未选坏 ref”“noop static”“noop qualification”三类假绿，再逐项修复。
+  最终 verifier 219 statements/52 branches 100%，两轴 fresh-CAS 验收均 PASS；仍无 handler、production
+  qualification、Genesis/GPU 或 publishability。
 
 - X1 complete-sequence video ingest 完成：受控 `VideoContainerDecoder` 必须报告完整解码；ingestor 发布
   `VideoDecodedFrameSequenceV1`、`VideoMediaProbeV1` 与 `VideoSourceMediaV2`，逐帧绑定 index/DTS/PTS/

@@ -1065,3 +1065,34 @@
   `3692 passed, 20 skipped in 173.34s`；该 contract-only tranche 未改写既有资格包。
 - 限定：该切片没有 handler/application、qualification bundle、Registry/System2/Golden executable entry、
   MCP tool、真实 Genesis replay/validate 或 promotion；runtime 状态仍为未实现。
+
+# 2026-09-11 X2 typed exact-reuse compile evidence
+
+- TDD 链：`327dd80`（12 个 typed schema RED）→ `33d0695`（schema GREEN）→ `fd3d0e9`
+  （deep verifier RED）→ `314639c`（首版 GREEN）→ `c2c6f57`（完整 catalog/static 反例）→
+  `7a992f9`（完整 CAS/static 修复）→ `f1aa527`（qualification 语义反例）→ `605f030`
+  （最终 qualification 修复）。每个行为切片独立提交。
+- 新增 proposal、portable catalog、representation、qualification、selection、SceneIR、TaskIR、scene
+  closure、binding、Genesis runtime lock、static validation 和 compile receipt 共 12 个 public
+  self-hashed schema；公共 snapshot 72→84，Draft 2020-12 standalone/catalog/exporter 全部一致。
+- `ExactReuseCompileClosureVerifier` 只接受 image initial attempt + exact_only +
+  `genesis.rigid_scene@1` + harness-native exact reuse。它纯读解引用完整 source/proposal/catalog/output
+  graph；所有 available catalog entry（含未选项）的 representation、member、qualification 与 check
+  evidence 都须在同 CAS 中存在，并绑定 trusted qualification allowlist、runtime lock、profile、issuer、
+  subject 与 loader closure。qualification 恰含 `backend_load`/`collision_probe`，每项 evidence 均同时
+  包含自身 representation 与 runtime lock。
+- Static validation 必须恰含四项及其 exact evidence set：`asset_closure_complete={selection,closure}`、
+  `binding_complete={binding}`、`runtime_lock_bound={runtime}`、
+  `scene_task_consistent={SceneIR,TaskIR}`。noop、缺项、多项、错 evidence 与额外无关 evidence 均拒绝。
+- 首轮集中验收真实发现两类 blocker：未选 catalog 坏 ref 可通过、noop/pass static validation 可通过；
+  修复后第二轮又发现未选 qualification 的 noop checks 或正确 code+无关 evidence 可通过。上述失败均
+  保留为 committed RED，没有从结果中删除。最终 focused 9 pass；核心 219 statements/52 branches
+  100%；相邻 schema/x2env/image regression 79 pass；完整 root 为 4098 pass/20 skip。
+- 最终两轴独立验收：catalog 矩阵 15 场景，双 available-entry 正向消费 2 representations/2
+  qualifications，31 CAS files/51,900 bytes；14 个 missing/tamper/trust/runtime/profile/issuer/subject/
+  check 反例全部拒绝且 verifier 零写。static 轴 20 CAS files/28,236 bytes，84 ArtifactRef occurrences/20
+  unique 全部 bytes/SHA 可解，五种 static 反例拒绝且零写。catalog summary SHA-256
+  `4d0ce6634bdef60873bf6644192a52211d0669d0dc615b3fbbb196482c3cc032`。
+- 边界：没有 handler/application、production asset issuer/qualification、真实 Genesis/GPU、replay、
+  publishability、MCP exposure 或 robot policy。测试 fixture 中的 qualification 只用于验证 typed/deep
+  consumer，不能被称为真实资产物理资格。

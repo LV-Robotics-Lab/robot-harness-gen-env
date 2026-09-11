@@ -67,6 +67,9 @@
     ImageSourceMedia 与纯读 consumer closure；不计作 compile/qualification。
   - [x] X1 video ingest：完整 ordered decoded-frame manifest、全帧计数/摘要、FPS/duration 与纯读
     consumer；受控 decoder seam 与 system-FFmpeg 独立验收不计作 production decoder/qualification。
+  - [x] X2 typed exact-reuse evidence：12 份 self-hashed compile records 与纯读 deep verifier；完整
+    catalog、qualification/member/check evidence 和四项 static checks 均 fail closed，但不计作 handler、
+    production qualification 或 Genesis runtime。
 - [ ] video2env 三个 Skill 实现、资格和三类资产路径。
 - [ ] 输出 sim-ready Genesis 环境，并保留可观看图像/视频和机器可验证报告。
 
