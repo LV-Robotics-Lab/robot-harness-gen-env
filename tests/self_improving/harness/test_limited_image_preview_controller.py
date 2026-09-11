@@ -155,11 +155,35 @@ def test_public_attempt_reader_does_not_create_database_and_reuses_record_checks
     with pytest.raises(ValueError, match="existing Golden database"):
         read_codex_attempts(missing, service.workflow)
     assert not missing.exists()
+    original_bytes = service.value.journal.path.read_bytes()
+    assert read_codex_attempts(service.value.journal.path, service.workflow) == []
+    assert service.value.journal.path.read_bytes() == original_bytes
     controller = LimitedImagePreviewController(
         service.value, object(), evidence_root=tmp_path / "attempts"
     )
     assert read_codex_attempts(service.value.journal.path, service.workflow) == []
     assert controller.attempts(service.workflow) == []
+
+
+def test_readonly_attempt_reader_rejects_a_self_consistent_missing_number(service, tmp_path):
+    import hashlib
+    import sqlite3
+
+    from self_improving.harness.limited_image_preview_controller import read_codex_attempts
+
+    LimitedImagePreviewController(service.value, object(), evidence_root=tmp_path / "attempts")
+    payload = json.dumps(
+        {"workflow_id": str(service.workflow), "number": 2}, sort_keys=True, separators=(",", ":")
+    ).encode()
+    with sqlite3.connect(service.value.journal.path) as connection:
+        connection.execute(
+            "INSERT INTO codex_preview_attempts VALUES(?,?,?,?)",
+            (str(service.workflow), 2, payload, hashlib.sha256(payload).hexdigest()),
+        )
+    before = service.value.journal.path.read_bytes()
+    with pytest.raises(ValueError, match="integrity"):
+        read_codex_attempts(service.value.journal.path, service.workflow)
+    assert service.value.journal.path.read_bytes() == before
 
 
 def test_completed_backend_without_validated_service_head_is_not_success(service, tmp_path):

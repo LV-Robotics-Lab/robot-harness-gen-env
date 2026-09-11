@@ -15,6 +15,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Protocol
+from uuid import UUID
 
 from .codex_backend import (
     CodexAssignment,
@@ -66,6 +67,42 @@ def _canonical(value):
     return json.dumps(
         value, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")
     ).encode()
+
+
+def read_codex_attempts(golden_database_path, workflow_id):
+    """Read diagnostics from an existing Golden database; never create a table or file."""
+    path = Path(golden_database_path)
+    if not path.is_file() or path.is_symlink():
+        raise ValueError("attempt reads require an existing Golden database")
+    workflow = str(UUID(str(workflow_id)))
+    try:
+        with sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True) as connection:
+            table = connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='codex_preview_attempts'"
+            ).fetchone()
+            if table is None:
+                return []
+            rows = connection.execute(
+                "SELECT number,payload,digest FROM codex_preview_attempts "
+                "WHERE workflow=? ORDER BY number",
+                (workflow,),
+            ).fetchall()
+        records = []
+        for expected_number, (number, raw, digest) in enumerate(rows, start=1):
+            value = json.loads(raw)
+            if (
+                raw != _canonical(value)
+                or hashlib.sha256(raw).hexdigest() != digest
+                or value["workflow_id"] != workflow
+                or type(value["number"]) is not int
+                or value["number"] != number
+                or number != expected_number
+            ):
+                raise ValueError("attempt diagnostic row integrity differs")
+            records.append(value)
+        return records
+    except (sqlite3.Error, KeyError, TypeError, json.JSONDecodeError) as error:
+        raise ValueError("attempt diagnostic row integrity differs") from error
 
 
 def timing_samples(result):
@@ -139,24 +176,7 @@ class LimitedImagePreviewController:
             )
 
     def attempts(self, workflow_id):
-        with sqlite3.connect(self.service.journal.path) as connection:
-            rows = connection.execute(
-                "SELECT number,payload,digest FROM codex_preview_attempts "
-                "WHERE workflow=? ORDER BY number",
-                (str(workflow_id),),
-            ).fetchall()
-        records = []
-        for number, raw, digest in rows:
-            value = json.loads(raw)
-            if (
-                raw != _canonical(value)
-                or hashlib.sha256(raw).hexdigest() != digest
-                or value["workflow_id"] != str(workflow_id)
-                or value["number"] != number
-            ):
-                raise ValueError("attempt diagnostic row integrity differs")
-            records.append(value)
-        return records
+        return read_codex_attempts(self.service.journal.path, workflow_id)
 
     def _write(self, record, *, previous=None):
         raw = _canonical(record)
