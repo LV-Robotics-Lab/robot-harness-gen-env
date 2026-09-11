@@ -5,8 +5,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Literal
 from uuid import UUID
@@ -192,6 +194,28 @@ class BootstrapCheckResult(BaseModel):
     existing_output: bool
 
 
+class BootstrapCheckpoint(BaseModel):
+    """Restart evidence; every referenced authority is re-read before use."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    schema_version: Literal["harness.limited_image_preview_bootstrap_result.v1"]
+    plan_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    repository_commit: str = Field(pattern=r"^[0-9a-f]{40}$")
+    stage: Literal["planned", "imports_complete"]
+    imported_objects: tuple[ArtifactRef, ...] = ()
+
+    @model_validator(mode="after")
+    def stage_is_complete(self):
+        if self.stage == "planned" and self.imported_objects:
+            raise ValueError("planned bootstrap cannot claim imported objects")
+        if self.stage == "imports_complete" and len(self.imported_objects) != 10:
+            raise ValueError("completed import stage requires exactly ten objects")
+        if len({item.sha256 for item in self.imported_objects}) != len(self.imported_objects):
+            raise ValueError("bootstrap imported object identities must be unique")
+        return self
+
+
 def _canonical(value: BaseModel) -> bytes:
     return (
         json.dumps(
@@ -211,6 +235,53 @@ def _read_plan(path: Path) -> tuple[LimitedImagePreviewBootstrapPlan, bytes]:
     if raw != _canonical(plan):
         raise ValueError("bootstrap operator plan must be canonical JSON with one final newline")
     return plan, raw
+
+
+def _atomic_write(path: Path, payload: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+        directory = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def _load_checkpoint(
+    plan: LimitedImagePreviewBootstrapPlan,
+    *,
+    plan_sha256: str,
+) -> BootstrapCheckpoint:
+    if not plan.checkpoint_path.exists():
+        return BootstrapCheckpoint(
+            schema_version="harness.limited_image_preview_bootstrap_result.v1",
+            plan_sha256=plan_sha256,
+            repository_commit=plan.expected_repository_commit,
+            stage="planned",
+        )
+    raw = plan.checkpoint_path.read_bytes()
+    checkpoint = BootstrapCheckpoint.model_validate_json(raw)
+    if raw != _canonical(checkpoint):
+        raise ValueError("bootstrap checkpoint is not canonical")
+    if (
+        checkpoint.plan_sha256 != plan_sha256
+        or checkpoint.repository_commit != plan.expected_repository_commit
+    ):
+        raise ValueError("bootstrap checkpoint belongs to another operator plan or source commit")
+    return checkpoint
+
+
+def _save_checkpoint(plan: LimitedImagePreviewBootstrapPlan, value: BootstrapCheckpoint) -> None:
+    _atomic_write(plan.checkpoint_path, _canonical(value))
 
 
 def _git_value(repository: Path, *arguments: str) -> str:
@@ -261,6 +332,20 @@ def _required_target_refs(plan: LimitedImagePreviewBootstrapPlan) -> tuple[Artif
     )
 
 
+def _imports(
+    plan: LimitedImagePreviewBootstrapPlan,
+) -> tuple[tuple[Path, ArtifactRef], ...]:
+    values = tuple(
+        (seed.source_cas_root, ref)
+        for seed in plan.native_projection_seeds
+        for ref in (seed.admission_ref, seed.descriptor_ref)
+    ) + tuple(
+        (plan.publish_seed.source_cas_root, ref)
+        for ref in (plan.publish_seed.manifest_ref, *plan.publish_seed.supporting_refs)
+    )
+    return tuple(sorted(values, key=lambda item: (item[1].sha256, item[1].name)))
+
+
 def check_limited_image_preview_bootstrap(plan_path: Path) -> BootstrapCheckResult:
     """Pure-read verification of the operator plan and all pre-existing identities."""
 
@@ -291,16 +376,8 @@ def check_limited_image_preview_bootstrap(plan_path: Path) -> BootstrapCheckResu
     for ref in _required_target_refs(plan):
         target.resolve(ref)
 
-    imports = tuple(
-        (seed.source_cas_root, ref)
-        for seed in plan.native_projection_seeds
-        for ref in (seed.admission_ref, seed.descriptor_ref)
-    ) + tuple(
-        (plan.publish_seed.source_cas_root, ref)
-        for ref in (plan.publish_seed.manifest_ref, *plan.publish_seed.supporting_refs)
-    )
     missing = 0
-    for root, ref in imports:
+    for root, ref in _imports(plan):
         _resolve_source(LocalArtifactStore(root), ref)
         missing += not _existing_target(target, ref)
 
@@ -339,6 +416,41 @@ def check_limited_image_preview_bootstrap(plan_path: Path) -> BootstrapCheckResu
     )
 
 
+def bootstrap_limited_image_preview(plan_path: Path):
+    """Execute the one-time bootstrap, resuming only from reverified CAS/SQLite state."""
+
+    checked = check_limited_image_preview_bootstrap(plan_path)
+    plan, _ = _read_plan(Path(plan_path))
+    checkpoint = _load_checkpoint(plan, plan_sha256=checked.plan_sha256)
+    target = LocalArtifactStore(plan.native_settings.cas_root)
+    imported = []
+    for source_root, ref in _imports(plan):
+        source = _resolve_source(LocalArtifactStore(source_root), ref)
+        actual = target.put_file(
+            source,
+            name=ref.name,
+            media_type=ref.media_type,
+            schema_version=ref.schema_version,
+        )
+        if actual != ref:
+            raise ValueError("bootstrap CAS import changed an object's declared identity")
+        imported.append(actual)
+    imported_refs = tuple(sorted(imported, key=lambda item: (item.sha256, item.name)))
+    if checkpoint.stage == "imports_complete" and checkpoint.imported_objects != imported_refs:
+        raise ValueError("bootstrap imported object checkpoint differs from verified target CAS")
+    checkpoint = checkpoint.model_copy(
+        update={"stage": "imports_complete", "imported_objects": imported_refs}
+    )
+    _save_checkpoint(plan, checkpoint)
+
+    # The next public restore is deliberately after the durable import checkpoint.
+    # Empty or corrupt operator SQLite files fail here without losing import progress.
+    from .mcp_native_assembly import restore_native_image_applications
+
+    restore_native_image_applications(plan.native_settings)
+    raise NotImplementedError("projection and qualification execution follows in the next slice")
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plan", required=True, type=Path)
@@ -349,9 +461,11 @@ def _parser() -> argparse.ArgumentParser:
 def run_cli(argv: list[str] | None = None) -> int:
     arguments = _parser().parse_args(argv)
     try:
-        if not arguments.check:
-            raise NotImplementedError("bootstrap execution is not implemented in this slice")
-        result = check_limited_image_preview_bootstrap(arguments.plan)
+        result = (
+            check_limited_image_preview_bootstrap(arguments.plan)
+            if arguments.check
+            else bootstrap_limited_image_preview(arguments.plan)
+        )
     except Exception as error:
         print(
             json.dumps(
@@ -383,10 +497,12 @@ if __name__ == "__main__":
 
 __all__ = [
     "BootstrapCheckResult",
+    "BootstrapCheckpoint",
     "BootstrapDeployment",
     "LimitedImagePreviewBootstrapPlan",
     "NativeProjectionSeed",
     "PublishQualificationSeed",
+    "bootstrap_limited_image_preview",
     "check_limited_image_preview_bootstrap",
     "run_cli",
 ]
