@@ -63,7 +63,7 @@ def _canonical(value):
 
 
 def timing_samples(result):
-    """Preserve measured samples; missing or overlapping measurements stay invalid."""
+    """Keep failure wall time as unattributed residual, never invented child time."""
 
     def ns(value):
         if type(value) not in (int, float) or not math.isfinite(value) or value < 0:
@@ -71,14 +71,17 @@ def timing_samples(result):
         return round(value * 1_000_000_000)
 
     backend = ns(result.elapsed_seconds)
-    calls, valid = [], result.decision_evidence is not None
+    calls, valid = [], True
+    complete = result.decision_evidence is not None
     for call in (result.decision_evidence or {}).get("calls", []):
         transport = ns(call["elapsed_seconds"])
         output = (call.get("result") or {}).get("structuredContent") or {}
         stage = output.get("stage")
         service = ns(output["elapsed_seconds"]) if "elapsed_seconds" in output else None
         if stage in {"compile", "replay", "observe", "validate"} and service is None:
-            valid = False
+            complete = False
+            if result.status == "completed":
+                valid = False
         if service is not None and transport < service:
             valid = False
         calls.append(
@@ -92,6 +95,8 @@ def timing_samples(result):
     return dict(
         backend_elapsed_ns=backend,
         calls=calls,
+        attribution_complete=complete,
+        failure=result.failure,
         valid=valid and backend >= sum(call["transport_elapsed_ns"] for call in calls),
     )
 
@@ -275,11 +280,33 @@ class LimitedImagePreviewController:
                     if time.monotonic() >= until:
                         return "recovering"
                     time.sleep(0.01)
-                terminal = {**row, "status": "terminal", "backend_status": "timeout"}
-                self._write(terminal, previous=row)
+                self._interrupt_terminal(row, "timeout")
                 return None
-        self._write({**row, "status": "terminal", "backend_status": "interrupted"}, previous=row)
+        self._interrupt_terminal(row, "interrupted")
         return None
+
+    def _interrupt_terminal(self, row, status):
+        ended = datetime.now(UTC)
+        wall = (ended - datetime.fromisoformat(row["started_at"])).total_seconds()
+        samples = timing_samples(
+            CodexBackendResult(
+                status, Path(row["output_root"]), wall, None, None, None, None, status
+            )
+        )
+        samples.update(
+            input_elapsed_ns=row.get("input_elapsed_ns"),
+            wall_basis="controller_started_to_observed_owned_exit",
+        )
+        self._write(
+            {
+                **row,
+                "status": "terminal",
+                "backend_status": status,
+                "ended_at": ended.isoformat(),
+                "timing_samples": samples,
+            },
+            previous=row,
+        )
 
     def _published(self, status):
         package = PreviewServiceResult.model_validate_json(

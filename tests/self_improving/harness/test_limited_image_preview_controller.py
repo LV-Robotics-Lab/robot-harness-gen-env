@@ -262,6 +262,15 @@ def test_timing_retains_samples_and_rejects_missing_or_overlapping(
     )
 
 
+def test_failed_attempt_keeps_measured_wall_without_inventing_attribution(tmp_path):
+    result = CodexBackendResult("timeout", tmp_path, 2.0, 124, None, None, None, "deadline")
+    samples = timing_samples(result)
+    assert samples["valid"] is True
+    assert samples["attribution_complete"] is False
+    assert samples["backend_elapsed_ns"] == 2_000_000_000
+    assert samples["calls"] == []
+
+
 def test_controller_exposes_harness_start_and_resume():
     assert callable(LimitedImagePreviewController.start)
     assert callable(LimitedImagePreviewController.resume)
