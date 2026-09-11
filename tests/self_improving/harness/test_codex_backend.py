@@ -140,54 +140,107 @@ def test_assigned_transcript_matches_actual_wire_and_rejects_shell_or_foreign(as
     wire[1]["message"]["result"]["structuredContent"]["snapshot"] = {}
     with pytest.raises(ValueError, match="assigned snapshot"):
         inspect_assigned_transcript(lines(events), lines(wire), assignment)
+    item["type"] = "command_execution"
+    with pytest.raises(ValueError, match="only assigned"):
+        inspect_assigned_transcript(lines(events), lines(wire), assignment)
 
 
-@pytest.mark.parametrize("variation", ["valid", "foreign_uri", "payload_drift", "wrong_server", "reordered"])
+@pytest.mark.parametrize(
+    "variation", ["valid", "foreign_uri", "payload_drift", "wrong_server", "reordered"]
+)
 def test_codex_01534_resource_call_maps_to_wire_read_without_action_budget(assignment, variation):
     """Small payload preserving observed attempt06's Codex 0.153.4 event shape."""
     from self_improving.harness.codex_backend import inspect_assigned_transcript
 
     assignment = assignment.model_copy(update={"call_budget": 1})
     workflow = str(assignment.snapshot.workflow_run_id)
-    uri = f"harness://workflows/{workflow}/artifacts/" + "a"*64
-    contents = [{"uri":uri,"mimeType":"text/plain","text":"small public fixture"}]
-    status = {"id":"status","type":"mcp_tool_call","server":"golden",
-        "tool":"image2env_preview_status_v1","arguments":{"workflow_id":workflow},
-        "status":"completed","result":{"content":[],"structured_content":{
-            "snapshot":assignment.snapshot.model_dump(mode="json")}}}
-    resource = {"id":"read","type":"mcp_tool_call","server":"golden",
-        "tool":"read_mcp_resource","arguments":{"server":"golden","uri":uri},
-        "status":"completed","result":{"structured_content":None,"content":[{
-            "type":"text","text":json.dumps({"server":"golden","uri":uri,"contents":contents},separators=(",",":"))}]}}
+    uri = f"harness://workflows/{workflow}/artifacts/" + "a" * 64
+    contents = [{"uri": uri, "mimeType": "text/plain", "text": "small public fixture"}]
+    status = {
+        "id": "status",
+        "type": "mcp_tool_call",
+        "server": "golden",
+        "tool": "image2env_preview_status_v1",
+        "arguments": {"workflow_id": workflow},
+        "status": "completed",
+        "result": {
+            "content": [],
+            "structured_content": {"snapshot": assignment.snapshot.model_dump(mode="json")},
+        },
+    }
+    resource = {
+        "id": "read",
+        "type": "mcp_tool_call",
+        "server": "golden",
+        "tool": "read_mcp_resource",
+        "arguments": {"server": "golden", "uri": uri},
+        "status": "completed",
+        "result": {
+            "structured_content": None,
+            "content": [
+                {
+                    "type": "text",
+                    "text": json.dumps(
+                        {"server": "golden", "uri": uri, "contents": contents},
+                        separators=(",", ":"),
+                    ),
+                }
+            ],
+        },
+    }
     if variation == "foreign_uri":
         resource["arguments"]["uri"] = "harness://workflows/foreign/artifacts/a"
     if variation == "wrong_server":
         resource["arguments"]["server"] = "other"
     if variation == "payload_drift":
-        resource["result"]["content"][0]["text"] = '{}'
+        resource["result"]["content"][0]["text"] = "{}"
     items = [status, resource] if variation != "reordered" else [resource, status]
-    events=[{"type":"thread.started"},{"type":"turn.started"}]
+    events = [{"type": "thread.started"}, {"type": "turn.started"}]
     for item in items:
-        events.extend([{"type":"item.started","item":item},{"type":"item.completed","item":item}])
-    events.append({"type":"turn.completed"})
-    messages=[("request",{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":status["tool"],"arguments":status["arguments"]}}),
-              ("response",{"jsonrpc":"2.0","id":1,"result":{"content":[],"structuredContent":status["result"]["structured_content"]}}),
-              ("request",{"jsonrpc":"2.0","id":2,"method":"resources/read","params":{"uri":uri}}),
-              ("response",{"jsonrpc":"2.0","id":2,"result":{"contents":contents}})]
-    frames=[{"direction":direction,"monotonic_ns":index*1000000,"message":message}
-            for index,(direction,message) in enumerate(messages)]
-    transcript=b"\n".join(json.dumps(item).encode() for item in events)
-    wire=b"\n".join(json.dumps(item).encode() for item in frames)
+        events.extend(
+            [{"type": "item.started", "item": item}, {"type": "item.completed", "item": item}]
+        )
+    events.append({"type": "turn.completed"})
+    messages = [
+        (
+            "request",
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "tools/call",
+                "params": {"name": status["tool"], "arguments": status["arguments"]},
+            },
+        ),
+        (
+            "response",
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "result": {
+                    "content": [],
+                    "structuredContent": status["result"]["structured_content"],
+                },
+            },
+        ),
+        (
+            "request",
+            {"jsonrpc": "2.0", "id": 2, "method": "resources/read", "params": {"uri": uri}},
+        ),
+        ("response", {"jsonrpc": "2.0", "id": 2, "result": {"contents": contents}}),
+    ]
+    frames = [
+        {"direction": direction, "monotonic_ns": index * 1000000, "message": message}
+        for index, (direction, message) in enumerate(messages)
+    ]
+    transcript = b"\n".join(json.dumps(item).encode() for item in events)
+    wire = b"\n".join(json.dumps(item).encode() for item in frames)
     if variation == "valid":
-        result=inspect_assigned_transcript(transcript,wire,assignment)
+        result = inspect_assigned_transcript(transcript, wire, assignment)
         assert len(result["calls"]) == 1
         assert result["resource_reads"][0]["uri"] == uri
     else:
         with pytest.raises(ValueError):
-            inspect_assigned_transcript(transcript,wire,assignment)
-    item["type"] = "command_execution"
-    with pytest.raises(ValueError, match="only assigned"):
-        inspect_assigned_transcript(lines(events), lines(wire), assignment)
+            inspect_assigned_transcript(transcript, wire, assignment)
 
 
 @pytest.mark.parametrize(

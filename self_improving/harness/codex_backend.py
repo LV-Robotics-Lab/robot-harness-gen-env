@@ -162,21 +162,37 @@ def inspect_assigned_transcript(transcript: bytes, wire: bytes, assignment: Code
             if elapsed < 0:
                 raise ValueError("wire timing drift")
             if request["method"] == "tools/call":
-                actual.append((request["params"], message.get("result"), elapsed))
+                actual.append(("tools/call", request["params"], message.get("result"), elapsed))
             elif request["method"] == "resources/read":
                 reads.append({"uri": request["params"]["uri"], "result": message.get("result")})
+                actual.append(("resources/read", request["params"], message.get("result"), elapsed))
         else:
             raise ValueError("unexpected wire direction")
     if requests or len(actual) != len(calls):
         raise ValueError("incomplete wire calls")
-    first = actual[0][1]
+    first = actual[0][2]
     if (first or {}).get("structuredContent", {}).get("snapshot") != assignment.snapshot.model_dump(
         mode="json"
     ):
         raise ValueError("initial status differs from assigned snapshot")
     decisions = []
-    for item, (params, result, elapsed) in zip(calls, actual, strict=True):
+    for item, (method, params, result, elapsed) in zip(calls, actual, strict=True):
         observed = item.get("result") or {}
+        if method == "resources/read":
+            contents = observed.get("content", [])
+            if (
+                item["tool"] != "read_mcp_resource"
+                or item["arguments"] != {"server": "golden", "uri": params["uri"]}
+                or observed.get("structured_content") is not None
+                or len(contents) != 1
+                or contents[0].get("type") != "text"
+                or result is None
+            ):
+                raise ValueError("assistant resource dispatch differs from wire read")
+            envelope = json.loads(contents[0]["text"])
+            if envelope != {"server": "golden", "uri": params["uri"], **result}:
+                raise ValueError("assistant resource delivery differs from wire result")
+            continue
         if (
             item["tool"] != params["name"]
             or item["arguments"] != params.get("arguments", {})
