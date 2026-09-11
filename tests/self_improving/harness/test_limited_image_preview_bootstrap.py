@@ -33,7 +33,9 @@ def _put(store: LocalArtifactStore, root: Path, name: str, payload: bytes, schem
 def _git_repository(path: Path) -> str:
     path.mkdir()
     subprocess.run(["git", "init", "-q", str(path)], check=True)
-    subprocess.run(["git", "-C", str(path), "config", "user.email", "test@example.invalid"], check=True)
+    subprocess.run(
+        ["git", "-C", str(path), "config", "user.email", "test@example.invalid"], check=True
+    )
     subprocess.run(["git", "-C", str(path), "config", "user.name", "Bootstrap Test"], check=True)
     (path / "source.py").write_text("VALUE = 1\n", encoding="utf-8")
     subprocess.run(["git", "-C", str(path), "add", "source.py"], check=True)
@@ -128,6 +130,9 @@ def bootstrap_plan(tmp_path):
             continue
         path.mkdir()
         (path / ("harness.sqlite3" if key == "compile_state_root" else "runs.sqlite")).touch()
+    revised_root = tmp_path / "state" / "revised"
+    revised_root.mkdir()
+    (revised_root / "runs.sqlite").touch()
     roots = {}
     for role in ("backend", "distributions", "genesis", "interpreter", "native", "stdlib"):
         roots[role] = tmp_path / "runtime" / role
@@ -172,7 +177,7 @@ def bootstrap_plan(tmp_path):
         "principal_id": "preview/operator",
         "project_id": "preview-project",
         "golden_database_path": str(tmp_path / "state" / "golden.sqlite"),
-        "revised_state_root": str(tmp_path / "state" / "revised"),
+        "revised_state_root": str(revised_root),
         "revised_qualification": qualifications["revised"].model_dump(mode="json"),
         "revised_admission_ref": revised_admission.model_dump(mode="json"),
         "revised_registered_run_id": "20000000-0000-4000-8000-000000000001",
@@ -204,8 +209,7 @@ def bootstrap_plan(tmp_path):
     }
     path = tmp_path / "bootstrap-plan.json"
     path.write_bytes(
-        json.dumps(plan, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
-        + b"\n"
+        json.dumps(plan, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode() + b"\n"
     )
     return path, plan
 
@@ -240,10 +244,17 @@ def test_check_is_strict_and_does_not_modify_target_or_authorities(bootstrap_pla
 def test_plan_rejects_unknown_fields_and_incomplete_exact_skill_set(bootstrap_plan):
     _, document = bootstrap_plan
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-        LimitedImagePreviewBootstrapPlan.model_validate({**document, "generic_backend": "forbidden"})
+        LimitedImagePreviewBootstrapPlan.model_validate_json(
+            json.dumps({**document, "generic_backend": "forbidden"})
+        )
     with pytest.raises(ValidationError, match="exactly three native projection seeds"):
-        LimitedImagePreviewBootstrapPlan.model_validate(
-            {**document, "native_projection_seeds": document["native_projection_seeds"][:-1]}
+        LimitedImagePreviewBootstrapPlan.model_validate_json(
+            json.dumps(
+                {
+                    **document,
+                    "native_projection_seeds": document["native_projection_seeds"][:-1],
+                }
+            )
         )
 
 
