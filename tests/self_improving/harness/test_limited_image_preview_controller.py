@@ -148,6 +148,20 @@ def test_attempt_failure_stays_in_shared_database_and_resume_reads_original_inpu
     assert service.harness.read(service.read) == before
 
 
+def test_public_attempt_reader_does_not_create_database_and_reuses_record_checks(service, tmp_path):
+    from self_improving.harness.limited_image_preview_controller import read_codex_attempts
+
+    missing = tmp_path / "missing.sqlite"
+    with pytest.raises(ValueError, match="existing Golden database"):
+        read_codex_attempts(missing, service.workflow)
+    assert not missing.exists()
+    controller = LimitedImagePreviewController(
+        service.value, object(), evidence_root=tmp_path / "attempts"
+    )
+    assert read_codex_attempts(service.value.journal.path, service.workflow) == []
+    assert controller.attempts(service.workflow) == []
+
+
 def test_completed_backend_without_validated_service_head_is_not_success(service, tmp_path):
     class Backend:
         def run(self, assignment, *, output_root):
