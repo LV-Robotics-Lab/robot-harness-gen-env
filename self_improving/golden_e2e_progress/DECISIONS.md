@@ -278,3 +278,23 @@
   定位，必须对应已声明成员并逐字节重验。缺少运行约束或发生依赖漂移时拒绝，不扩大目录允许范围。
 - 资格边界：CAS纯读证明完整性，不自动证明执行来源。后续issuer只接受固定producer的opaque live
   execution capability；重启后必须经durable intent/terminal对账恢复，不能把任意自洽报告转成资格。
+
+## D021 — 首个可用版本收敛为单一 image exact-reuse 预览闭环
+
+- 日期：2026-09-11
+- 状态：accepted_by_user_scope
+- 决策：当前唯一 active 交付是 `Codex → exact MCP → compile / Genesis replay / validate` 的有限
+  桌面鼠标闭环。观察、诊断、真实布局修改、重编译和隔离发布都进入同一 workflow journal；场景包
+  manifest 统一绑定输入、资产、布局、运行、媒体、验证和耗时。
+- 复用与简化：复用 M1 applications、修改后 compile application、Genesis execution v3 核心和真实
+  Codex/MCP wire 见证。M2 不为 replay、observe、validate 各自新增资格、SQLite authority、terminal
+  admission 或 receipt 框架。若旧 replay@2 无法消费 compile@3 receipt v2，只增加一层共享的受限
+  执行绑定，并把这个已复现的版本不兼容记录为理由。
+- 验收：至少一个正常案例和一个真实诊断修复案例；修复必须改变场景包中的实际位置、方向或其他
+  允许布局字段，并再次真实 Genesis replay/validate。最终 Codex 从原始图像与文本开始，不依赖人工
+  预填 proposal。超范围输入明确失败，不能替换为固定样例。
+- 性能与时效：先记录输入/资产、compile、runtime/完整性、仿真/渲染、CAS 深读、Codex/MCP、
+  validate/publish 分段耗时，再针对不可变闭包的重复验证优化；复用必须绑定不可变身份和明确失效条件。
+  观测紧邻 Codex 消费产生并实测 TTL 余量，不通过简单增大 TTL 掩盖重复开销。
+- 暂缓：三模态、三种资产路径、162 份历史债务、autoresearch、机器人 policy、通用插件与额外
+  backend 都保留但不阻塞本版本。预览固定、服务入口冒烟和文档收口后暂停供用户审阅。

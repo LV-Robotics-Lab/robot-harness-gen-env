@@ -37,11 +37,18 @@
 
 ## 当前阶段
 
-最新已批准主线为 M1→M5 sim-ready 服务交付，P8/E3 后置。M1 第一条完整图像 exact-reuse
-Genesis 有限桌面场景线已在固定 `1cf8908` 真实通过：registered compile → replay → 独立 fresh
-observe v3 → validate；集中功能验收完成，当前 126 份 schema。下一 active 是 M2 外部 Codex
-通过 exact MCP 在同一 workflow 调用这些已获资格的能力。详见最新 `RESULTS.md` 与
-`SIM_READY_RELEASE_PLAN.md`；下列长记录保留各历史切片的能力边界。
+最新 active 目标是一个范围有限、可实际使用的 image exact-reuse 预览：原始图像和文本进入同一
+workflow，外部真实 Codex 只经 exact MCP 调用 compile / Genesis replay / validate，读取刚产生的
+观测后修改真实桌面布局，再次编译、回放、验证并发布到隔离预览库。M1 已在固定 `1cf8908`
+真实通过有限桌面鼠标场景；M2 的修改后编译、修改后 Genesis 执行核心和真实 Codex/MCP 进程见证
+已经分别安全提交，当前共有 149 份 public schema。它们还没有组成两条真实 Codex→MCP→Genesis
+交付案例，因此 M2 仍在进行。
+
+本阶段只复用现有 workflow journal、场景证据和资产资格，不再为 replay、observe、validate 分别
+增加平行的资格、SQLite authority 或 terminal admission。先完成正常案例与诊断修复案例、阶段耗时、
+TTL 余量、隔离发布库和服务入口，再固定版本并暂停供审阅。三模态、三种资产路径、162 份历史
+ledger、autoresearch 和机器人 policy 保留为后续目标，不删除也不标记完成。详见最新 `RESULTS.md`
+与 `SIM_READY_RELEASE_PLAN.md`；下列长记录保留各历史切片的能力边界。
 
 `p1_p6_implementation`
 

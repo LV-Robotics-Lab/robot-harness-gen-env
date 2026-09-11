@@ -1,5 +1,17 @@
 # 进度与结果
 
+## M2 受限预览安全收敛点 — b2005da
+
+- 当前权威分支固定在 `b2005da`，工作树在本次进度更新前干净，public schema 为 **149**。
+- 已可复用但尚未组成最终闭环的三个切片：`c45ab01` 提供 durable
+  `image2env.compile@3.0.0` 修改后编译；`bb72dc5` 提供绑定 compile receipt v2 的 Genesis scene
+  execution v3 producer/verifier；`da00fa0` 提供真实 Codex ELF、逐 invocation MCP 配置、stdio wire
+  见证与 workflow evidence 对账。`ce0398a` 的 deep terminal resolver 仅保留为可选 M1 完整性层。
+- 当前仍没有真实 Codex 从原始图像与文本开始完成正常案例，也没有读取本次实际观测并修改真实
+  布局后再次 Genesis replay/validate 的修复案例；因此不能声称 M2 或预览服务完成。
+- 接下来只实现单一预览 manifest/隔离发布库、共享修改后 replay/validate 执行和受限 exact MCP
+  服务，并记录七段耗时及 TTL 余量。完成两条真实案例、服务入口冒烟和恢复测试后固定版本并暂停。
+
 ## M1 首条完整 Genesis rigid-scene line 收口 — 1cf8908
 
 - 固定 `1cf8908acb83b86b15a7ae8a7c96cb943cc39945`，attempt-2 正式测试 **1 passed / 1610.72s**。

@@ -1,12 +1,19 @@
 # Golden E2E 任务分解
 
-## M1 已完成首条完整线；当前 M2
+## M1 已完成首条完整线；当前 M2 受限预览
 
 - [x] 实际适配 Gujie 单刚体场景、完整几何与有限桌面。
 - [x] 真实 baseline/half_dt 场景回放及完整新媒体（研究运行，无生产场景 authority）。
 - [x] `1cf8908`：registered image compile → 固定双 dt replay → fresh observe v3 → validate，四 Skill 资格与终态闭合。
 - [x] M1 集中功能验收；第二路径输出闭包纯读通过（不包含 runtime member 部署或应用 SQLite 迁移）。
-- [ ] M2：外部 Codex 在同一 workflow 通过 exact qualified MCP 调用；无 generic invoke。
+- [ ] M2：外部真实 Codex 从原始图像与文本开始，在同一 workflow 只通过 exact MCP 完成正常
+  compile → Genesis replay → validate；不得用程序客户端或历史应用关联替代。
+- [ ] M2：外部真实 Codex 读取本次实际观测，提出有证据的受限布局修改；下一次 compile 必须消费
+  该修改并改变实际位置、方向或允许字段，随后真实 replay / validate。
+- [ ] M2：把通过门禁的环境 manifest 发布到隔离预览库，并验证查询、获取、复用、失败留痕与恢复。
+- [ ] M2：记录输入/资产、compile、runtime 完整性、仿真/渲染、CAS 深读、Codex/MCP、
+  validate/publish 的实测耗时和观测 TTL 余量；先测量再处理重复开销。
+- [ ] M2：固定干净集成提交和最小服务入口，完成一次从服务入口发起的真实冒烟后暂停供审阅。
 - [ ] 后续三模态、全新资产/digital cousins、历史债务与服务验收；M1 不授予这些能力，P8/E3 后置。
 
 ## G0：基线与审计
