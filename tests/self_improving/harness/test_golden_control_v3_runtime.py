@@ -16,27 +16,49 @@ def test_native_layout_revision_commits_and_retries_in_existing_journal(tmp_path
 
     command = PromptRevisionCommandV3(
         schema_version="harness.prompt_revision_command.v3",
-        command_id=uuid4(), workflow_run_id=head.workflow_run_id,
-        principal_id=head.principal_id, idempotency_key="native-layout",
-        expected_workflow_revision=head.revision, expected_state_sha256=head.state_sha256,
+        command_id=uuid4(),
+        workflow_run_id=head.workflow_run_id,
+        principal_id=head.principal_id,
+        idempotency_key="native-layout",
+        expected_workflow_revision=head.revision,
+        expected_state_sha256=head.state_sha256,
         expected_receipt_head_sha256=head.receipt_head.sha256,
-        source_prompt=case.command.source_prompt, advisory_receipt=advisory.receipt,
-        failure_receipts=case.command.failure_receipts, predecessor_environment=case.native,
-        patch=dict(kind="full_replace",base_text_sha256=case.command.source_prompt.sha256,
-                   replacement_text=text,reason="placement mismatch"),
-        fallback=dict(kind="none"),next_compile_skill_ref="image2env.compile@3.0.0",
+        source_prompt=case.command.source_prompt,
+        advisory_receipt=advisory.receipt,
+        failure_receipts=case.command.failure_receipts,
+        predecessor_environment=case.native,
+        patch=dict(
+            kind="full_replace",
+            base_text_sha256=case.command.source_prompt.sha256,
+            replacement_text=text,
+            reason="placement mismatch",
+        ),
+        fallback=dict(kind="none"),
+        next_compile_skill_ref="image2env.compile@3.0.0",
         external_agent_executed=False,
         layout_proposal=dict(
             schema_version="harness.tabletop_layout_revision.v1",
-            workflow_run_id=head.workflow_run_id,principal_id=head.principal_id,
-            base_revision=head.revision,state_sha256=head.state_sha256,
+            workflow_run_id=head.workflow_run_id,
+            principal_id=head.principal_id,
+            base_revision=head.revision,
+            state_sha256=head.state_sha256,
             receipt_head_sha256=head.receipt_head.sha256,
-            original_source=case.native.model_copy(update={"schema_version":None}),
-            source_object_id="mouse",replacement_text=text,
-            effective_prompt=dict(uri="artifact://sha256/"+digest,sha256=digest,bytes=len(text),
-                name="revised_prompt.txt",media_type="text/plain",schema_version="harness.prompt_text.v1"),
-            position_xy_m=(0.1,0.0),yaw_rad=0.3,table_center_m=(0.0,0.0,0.7),
-            table_size_m=(1.0,1.0,0.1),relation="on_table",
+            original_source=case.native.model_copy(update={"schema_version": None}),
+            source_object_id="mouse",
+            replacement_text=text,
+            effective_prompt=dict(
+                uri="artifact://sha256/" + digest,
+                sha256=digest,
+                bytes=len(text),
+                name="revised_prompt.txt",
+                media_type="text/plain",
+                schema_version="harness.prompt_text.v1",
+            ),
+            position_xy_m=(0.1, 0.0),
+            yaw_rad=0.3,
+            table_center_m=(0.0, 0.0, 0.7),
+            table_size_m=(1.0, 1.0, 0.1),
+            relation="on_table",
             physical_properties="preserve_qualified_asset",
         ),
     )
@@ -44,3 +66,33 @@ def test_native_layout_revision_commits_and_retries_in_existing_journal(tmp_path
     assert result.schema_version == "harness.control_commit_snapshot.v3"
     assert case.harness.submit_control(command) == result
     assert case.harness.read(case.read).receipt_head == result.receipt
+    from tests.self_improving.harness.test_golden_control_v2_runtime import base
+
+    reopened = base.GoldenRunHarness(
+        artifact_store=case.store,
+        workflow_store=case.workflow,
+        execution_catalog=base.create_golden_execution_catalog(
+            bindings=(
+                base._create_golden_execution_binding(
+                    policy=case.policy, application=None, child_authority=case.child
+                ),
+            )
+        ),
+        clock=case.clock,
+    )
+    assert reopened.submit_control(command) == result
+    with base.pytest.raises(base.GoldenRunRegistryError, match="consum"):
+        reopened.submit(
+            base.RunCommandRequest(
+                schema_version="harness.run_command_request.v1",
+                command_id=uuid4(),
+                principal_id=result.principal_id,
+                workflow_run_id=result.workflow_run_id,
+                idempotency_key="cannot-ignore-layout",
+                expected_workflow_revision=result.committed_revision,
+                expected_state_sha256=result.resulting_state_sha256,
+                expected_receipt_head_sha256=result.receipt.sha256,
+                skill_ref="genesis.observe@3.0.0",
+                parameters={},
+            )
+        )

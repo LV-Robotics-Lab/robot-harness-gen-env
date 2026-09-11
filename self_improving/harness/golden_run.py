@@ -67,6 +67,12 @@ from .schemas.golden_control_v2 import (
     external_agent_advisory_receipt_v2_sha256,
     prompt_revision_v2_sha256,
 )
+from .schemas.golden_control_v3_snapshot import ControlCommitSnapshotV3
+from .schemas.native_prompt_revision import (
+    PromptRevisionCommandV3,
+    PromptRevisionV3,
+    prompt_revision_v3_sha256,
+)
 from .schemas.registry_snapshot import RegistrySnapshot
 from .schemas.resource_access import (
     RESOURCE_ACCESS_RECEIPT_SCHEMA_ID,
@@ -582,6 +588,8 @@ class GoldenRunHarness:
             )
         elif artifact.schema_version == "harness.external_agent_advisory_receipt.v2":
             model = ExternalAgentAdvisoryReceiptV2
+        elif artifact.schema_version == "harness.prompt_revision.v3":
+            model = PromptRevisionV3
         elif artifact.schema_version == "harness.prompt_revision.v2":
             model = PromptRevisionV2
         elif artifact.schema_version == PROMPT_REVISION_SCHEMA_ID:
@@ -621,7 +629,7 @@ class GoldenRunHarness:
                     receipt.advisory_receipt,
                     (
                         receipt.predecessor_environment
-                        if type(receipt) is PromptRevisionV2
+                        if type(receipt) in {PromptRevisionV2, PromptRevisionV3}
                         else receipt.predecessor_package
                     ),
                     receipt.revised_prompt,
@@ -674,6 +682,14 @@ class GoldenRunHarness:
             )
         )
         prompt_revision = None
+        native_revision = None
+        if current.receipt_head.schema_version == "harness.prompt_revision.v3":
+            native_revision = self._resolve_canonical_model(current.receipt_head, PromptRevisionV3)
+            if request.skill_ref != native_revision.next_compile_skill_ref:
+                raise GoldenRunRegistryError(
+                    "HARN_PROMPT_REVISION_CONSUMPTION_REQUIRED",
+                    "native layout revision must be consumed by image2env.compile@3.0.0",
+                )
         if current.receipt_head.schema_version == "harness.prompt_revision.v2":
             raise GoldenRunRegistryError(
                 "HARN_PROMPT_REVISION_CONSUMPTION_REQUIRED",
@@ -695,6 +711,8 @@ class GoldenRunHarness:
             request.skill_ref,
         )
         normalized, parameters = self._normalize_command(policy, request)
+        if native_revision is not None:
+            self._verify_native_revision_consumption(current, native_revision, parameters)
         if prompt_revision is not None:
             try:
                 verify_prompt_revision_compile_consumption(
@@ -779,6 +797,7 @@ class GoldenRunHarness:
             PromptRevisionCommand,
             AdvisoryRecordCommandV2,
             PromptRevisionCommandV2,
+            PromptRevisionCommandV3,
         }:
             raise TypeError("request must be an exact Golden control command")
         control_kind = (
@@ -872,7 +891,9 @@ class GoldenRunHarness:
             schema_version=receipt_schema,
         )
         snapshot_model = (
-            ControlCommitSnapshotV2
+            ControlCommitSnapshotV3
+            if type(request) is PromptRevisionCommandV3
+            else ControlCommitSnapshotV2
             if request.schema_version.endswith(".v2")
             else ControlCommitSnapshot
         )
@@ -1112,7 +1133,11 @@ class GoldenRunHarness:
             schema_version="harness.prompt_text.v1",
         )
         revision_model = (
-            PromptRevisionV2 if type(command) is PromptRevisionCommandV2 else PromptRevision
+            PromptRevisionV3
+            if type(command) is PromptRevisionCommandV3
+            else PromptRevisionV2
+            if type(command) is PromptRevisionCommandV2
+            else PromptRevision
         )
         extra = (
             {
@@ -1121,9 +1146,11 @@ class GoldenRunHarness:
                 "grants_publishability": False,
                 "predecessor_environment": command.predecessor_environment,
             }
-            if type(command) is PromptRevisionCommandV2
+            if type(command) in {PromptRevisionCommandV2, PromptRevisionCommandV3}
             else {"predecessor_package": command.predecessor_package}
         )
+        if type(command) is PromptRevisionCommandV3:
+            extra["layout_proposal"] = command.layout_proposal
         unhashed = revision_model.model_construct(
             schema_version=revision_model.model_fields["schema_version"].annotation.__args__[0],
             command_id=command.command_id,
@@ -1157,11 +1184,37 @@ class GoldenRunHarness:
         return revision_model(
             **unhashed.model_dump(mode="python", exclude={"revision_sha256"}),
             revision_sha256=(
-                prompt_revision_v2_sha256(unhashed)
+                prompt_revision_v3_sha256(unhashed)
+                if type(command) is PromptRevisionCommandV3
+                else prompt_revision_v2_sha256(unhashed)
                 if type(command) is PromptRevisionCommandV2
                 else prompt_revision_sha256(unhashed)
             ),
         )
+
+    def _verify_native_revision_consumption(self, current, revision, parameters):
+        from .schemas.native_prompt_revision import Image2EnvGenesisCompileRequestV2
+        from .schemas.revised_image_compile_application import RevisedCompileInvocationV1
+
+        if type(parameters) is not RevisedCompileInvocationV1:
+            raise GoldenRunRegistryError(
+                "HARN_HISTORY_MISMATCH", "native compile needs exact envelope"
+            )
+        compiled = self._resolve_canonical_model(
+            parameters.request, Image2EnvGenesisCompileRequestV2
+        )
+        if (
+            compiled.compile_input.attempt.prompt_revision != current.receipt_head
+            or compiled.compile_input.attempt.revision != revision
+            or compiled.workflow_run_id != current.workflow_run_id
+            or compiled.principal_id != current.principal_id
+            or compiled.expected_workflow_revision != current.revision
+            or compiled.expected_state_sha256 != current.state_sha256
+        ):
+            raise GoldenRunRegistryError(
+                "HARN_HISTORY_MISMATCH",
+                "native compile must consume the exact current layout revision",
+            )
 
     def _verify_prompt_lineage(
         self,
@@ -1191,7 +1244,7 @@ class GoldenRunHarness:
             self._resolve_canonical_model(
                 command.advisory_receipt,
                 ExternalAgentAdvisoryReceiptV2
-                if type(command) is PromptRevisionCommandV2
+                if type(command) in {PromptRevisionCommandV2, PromptRevisionCommandV3}
                 else ExternalAgentAdvisoryReceipt,
             ),
         )
@@ -1210,7 +1263,7 @@ class GoldenRunHarness:
         )
         predecessor_environment = (
             command.predecessor_environment
-            if type(command) is PromptRevisionCommandV2
+            if type(command) in {PromptRevisionCommandV2, PromptRevisionCommandV3}
             else command.predecessor_package
         )
         if _artifact_identity(predecessor_environment) not in failure_artifacts:
@@ -1218,7 +1271,7 @@ class GoldenRunHarness:
                 "predecessor package is not reachable from the cited failure history"
             )
         for citation in advisory.observation_citations:
-            if type(command) is PromptRevisionCommandV2:
+            if type(command) in {PromptRevisionCommandV2, PromptRevisionCommandV3}:
                 self._verify_fresh_capture_citation(citation, current=current, at=at)
                 continue
             self._verify_observation_citation(
@@ -1448,6 +1501,8 @@ class GoldenRunHarness:
             model: type[AdvisoryRecordCommand | PromptRevisionCommand] = AdvisoryRecordCommand
         elif artifact.schema_version == "harness.advisory_record_command.v2":
             model = AdvisoryRecordCommandV2
+        elif artifact.schema_version == "harness.prompt_revision_command.v3":
+            model = PromptRevisionCommandV3
         elif artifact.schema_version == "harness.prompt_revision_command.v2":
             model = PromptRevisionCommandV2
         elif artifact.schema_version == PROMPT_REVISION_COMMAND_SCHEMA_ID:
@@ -2064,6 +2119,7 @@ class GoldenRunHarness:
                     PromptRevision,
                     ExternalAgentAdvisoryReceiptV2,
                     PromptRevisionV2,
+                    PromptRevisionV3,
                 }:
                     raise GoldenRunCorruptionError("control turn does not have a control receipt")
                 prior = self._verify_control_evidence(
@@ -2196,9 +2252,11 @@ class GoldenRunHarness:
                 reachable_identities=reachable_identities,
             )
         else:
-            if type(command) not in {PromptRevisionCommand, PromptRevisionCommandV2} or type(
-                receipt
-            ) not in {PromptRevision, PromptRevisionV2}:
+            if type(command) not in {
+                PromptRevisionCommand,
+                PromptRevisionCommandV2,
+                PromptRevisionCommandV3,
+            } or type(receipt) not in {PromptRevision, PromptRevisionV2, PromptRevisionV3}:
                 raise GoldenRunCorruptionError("prompt revision turn has the wrong typed evidence")
             advisory, predecessor_prompt, revision_number, _ = self._verify_prompt_lineage(
                 command,
@@ -2217,12 +2275,12 @@ class GoldenRunHarness:
                     (
                         (
                             receipt.predecessor_environment
-                            if type(receipt) is PromptRevisionV2
+                            if type(receipt) in {PromptRevisionV2, PromptRevisionV3}
                             else receipt.predecessor_package
                         ),
                         (
                             command.predecessor_environment
-                            if type(command) is PromptRevisionCommandV2
+                            if type(command) in {PromptRevisionCommandV2, PromptRevisionCommandV3}
                             else command.predecessor_package
                         ),
                     ),
@@ -2232,6 +2290,11 @@ class GoldenRunHarness:
                     (receipt.external_agent_executed, command.external_agent_executed),
                 )
             )
+            if type(command) is PromptRevisionCommandV3 and (
+                type(receipt) is not PromptRevisionV3
+                or receipt.layout_proposal != command.layout_proposal
+            ):
+                revision_invalid = True
             if revision_invalid:
                 raise GoldenRunCorruptionError(
                     "prompt revision differs from its exact command and advisory lineage"
