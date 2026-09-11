@@ -49,9 +49,12 @@ def _parser():
     text.add_argument("--text")
     text.add_argument("--text-file", type=Path)
     submit.add_argument("--idempotency-key", required=True)
-    for name in ("resume", "status", "package"):
+    for name in ("resume", "status"):
         command = commands.add_parser(name)
         command.add_argument("--workflow-id", required=True, type=UUID)
+    package = commands.add_parser("package")
+    package.add_argument("--workflow-id", required=True, type=UUID)
+    package.add_argument("--output", type=Path)
     return parser
 
 
@@ -60,6 +63,54 @@ def _service_factory(path):
     from .limited_image_preview_service import create_limited_image_preview_service
 
     return create_limited_image_preview_service(path)
+
+
+def _new_absolute_directory(path):
+    if not path.is_absolute() or ".." in path.parts or path.exists() or path.is_symlink():
+        raise ValueError("package output must be an absolute new directory")
+    return path
+
+
+def _one_materialized_file(root, pattern, label):
+    matches = tuple(
+        path for path in sorted(root.glob(pattern)) if path.is_file() and not path.is_symlink()
+    )
+    if len(matches) != 1:
+        raise ValueError(f"materialized package has no unique {label}")
+    return matches[0].relative_to(root).as_posix()
+
+
+def _materialized_entrypoints(root, mode):
+    entries = {
+        "manifest": "manifest.json",
+        "input_image": _one_materialized_file(root, "inputs/raw-image*", "input image"),
+        "input_text": "inputs/prompt.txt",
+        "asset_closure": "asset",
+        "initial_scene": "stages/initial/scene.json",
+        "initial_report": "stages/initial/replay-report.json",
+        "initial_validation": "stages/initial/limited-validation.json",
+        "initial_observation_image": _one_materialized_file(
+            root, "stages/initial/observation*", "initial observation image"
+        ),
+        "initial_baseline_video": "stages/initial/baseline.mp4",
+        "initial_half_dt_video": "stages/initial/half-dt.mp4",
+    }
+    if mode == "repair":
+        entries.update(
+            {
+                "revised_scene": "stages/revised/scene.json",
+                "revised_report": "stages/revised/replay-report.json",
+                "revised_validation": "stages/revised/limited-validation.json",
+                "revised_baseline_video": "stages/revised/baseline.mp4",
+                "revised_half_dt_video": "stages/revised/half-dt.mp4",
+            }
+        )
+    for key, relative in entries.items():
+        path = root / relative
+        expected_directory = key == "asset_closure"
+        if path.is_symlink() or (not path.is_dir() if expected_directory else not path.is_file()):
+            raise ValueError(f"materialized package is missing {key}")
+    return entries
 
 
 def run_cli(argv=None, *, service_factory=_service_factory, backend_factory=CodexBackend):
@@ -132,6 +183,9 @@ def run_cli(argv=None, *, service_factory=_service_factory, backend_factory=Code
                 ],
             )
         else:
+            output = (
+                _new_absolute_directory(arguments.output) if arguments.output is not None else None
+            )
             package = PreviewServiceResult.model_validate_json(
                 json.dumps(service.package_get(workflow_id=str(arguments.workflow_id)))
             )
@@ -141,8 +195,27 @@ def run_cli(argv=None, *, service_factory=_service_factory, backend_factory=Code
                 or package.package is None
             ):
                 raise ValueError("workflow has no published package")
-            service.store.resolve(package.package)
             result = package.model_dump(mode="json")
+            manifest_path = service.store.resolve(package.package).path
+            if output is not None:
+                manifest = json.loads(manifest_path.read_bytes())
+                preview_id, mode = manifest.get("preview_id"), manifest.get("mode")
+                if (
+                    not isinstance(preview_id, str)
+                    or len(preview_id) != 64
+                    or mode not in {"normal", "repair"}
+                    or service.runtime is None
+                ):
+                    raise ValueError("published package cannot be materialized by this deployment")
+                materialized = Path(
+                    service.runtime.application("library").materialize(preview_id, output)
+                )
+                if not materialized.is_absolute() or not materialized.is_dir():
+                    raise ValueError("preview library returned an invalid materialized directory")
+                result.update(
+                    materialized_path=str(materialized),
+                    entrypoints=_materialized_entrypoints(materialized, mode),
+                )
         print(json.dumps(result, ensure_ascii=False, allow_nan=False, sort_keys=True))
         if arguments.command in {"status", "package"} or result.get("status") == "published":
             return 0

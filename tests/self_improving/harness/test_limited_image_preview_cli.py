@@ -3,6 +3,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from self_improving.harness.codex_backend import CodexBackendResult
 from self_improving.harness.limited_image_preview_cli import run_cli
 from tests.self_improving.harness import test_limited_image_preview_controller as controller_tests
@@ -147,8 +149,9 @@ def test_submit_runs_owned_backend_and_reports_unsupported_without_manual_resume
     capsys.readouterr()
 
 
+@pytest.mark.parametrize("mode", ["normal", "repair"])
 def test_package_can_materialize_a_published_preview_with_review_entrypoints(
-    service, tmp_path, capsys
+    service, tmp_path, capsys, mode
 ):
     settings = tmp_path / "service.json"
     settings.write_text("{}")
@@ -170,7 +173,7 @@ def test_package_can_materialize_a_published_preview_with_review_entrypoints(
         )
     )
     manifest_path = tmp_path / "published-manifest.json"
-    manifest_path.write_text(json.dumps({"preview_id": "b" * 64, "mode": "repair"}))
+    manifest_path.write_text(json.dumps({"preview_id": "b" * 64, "mode": mode}))
     manifest = service.value.store.put_file(
         manifest_path,
         name="published-manifest.json",
@@ -178,11 +181,14 @@ def test_package_can_materialize_a_published_preview_with_review_entrypoints(
         schema_version="harness.limited_image_preview_manifest.v1",
     )
     calls = []
+    trace = []
 
     class Library:
         def materialize(self, preview_id, destination):
+            assert trace == ["package_get"]
+            trace.append("materialize")
             calls.append((preview_id, destination))
-            for relative in (
+            relatives = (
                 "manifest.json",
                 "inputs/raw-image.png",
                 "inputs/prompt.txt",
@@ -193,12 +199,16 @@ def test_package_can_materialize_a_published_preview_with_review_entrypoints(
                 "stages/initial/observation.png",
                 "stages/initial/baseline.mp4",
                 "stages/initial/half-dt.mp4",
-                "stages/revised/scene.json",
-                "stages/revised/replay-report.json",
-                "stages/revised/limited-validation.json",
-                "stages/revised/baseline.mp4",
-                "stages/revised/half-dt.mp4",
-            ):
+            )
+            if mode == "repair":
+                relatives += (
+                    "stages/revised/scene.json",
+                    "stages/revised/replay-report.json",
+                    "stages/revised/limited-validation.json",
+                    "stages/revised/baseline.mp4",
+                    "stages/revised/half-dt.mp4",
+                )
+            for relative in relatives:
                 path = destination / relative
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_bytes(b"materialized by existing library seam")
@@ -210,14 +220,19 @@ def test_package_can_materialize_a_published_preview_with_review_entrypoints(
             return Library()
 
     service.value.runtime = Runtime()
-    service.value.package_get = lambda **kwargs: dict(
-        workflow_id=str(service.workflow),
-        revision=0,
-        stage="package_get",
-        status="published",
-        package=manifest.model_dump(mode="json"),
-    )
-    output = tmp_path / "review-package"
+
+    def package_get(**kwargs):
+        trace.append("package_get")
+        return dict(
+            workflow_id=str(service.workflow),
+            revision=0,
+            stage="package_get",
+            status="published",
+            package=manifest.model_dump(mode="json"),
+        )
+
+    service.value.package_get = package_get
+    output = tmp_path / f"review-package-{mode}"
 
     assert (
         run_cli(
@@ -237,7 +252,7 @@ def test_package_can_materialize_a_published_preview_with_review_entrypoints(
     )
     result = json.loads(capsys.readouterr().out)
     assert result["materialized_path"] == str(output)
-    assert result["entrypoints"] == {
+    expected = {
         "asset_closure": "asset",
         "initial_baseline_video": "stages/initial/baseline.mp4",
         "initial_half_dt_video": "stages/initial/half-dt.mp4",
@@ -248,13 +263,20 @@ def test_package_can_materialize_a_published_preview_with_review_entrypoints(
         "input_image": "inputs/raw-image.png",
         "input_text": "inputs/prompt.txt",
         "manifest": "manifest.json",
-        "revised_baseline_video": "stages/revised/baseline.mp4",
-        "revised_half_dt_video": "stages/revised/half-dt.mp4",
-        "revised_report": "stages/revised/replay-report.json",
-        "revised_scene": "stages/revised/scene.json",
-        "revised_validation": "stages/revised/limited-validation.json",
     }
+    if mode == "repair":
+        expected.update(
+            {
+                "revised_baseline_video": "stages/revised/baseline.mp4",
+                "revised_half_dt_video": "stages/revised/half-dt.mp4",
+                "revised_report": "stages/revised/replay-report.json",
+                "revised_scene": "stages/revised/scene.json",
+                "revised_validation": "stages/revised/limited-validation.json",
+            }
+        )
+    assert result["entrypoints"] == expected
     assert calls == [("b" * 64, output)]
+    assert trace == ["package_get", "materialize"]
 
 
 def test_package_output_rejects_relative_and_existing_destinations(service, tmp_path, capsys):
