@@ -1,0 +1,75 @@
+{
+  "schema_version": "harness.golden_runtime_manifest_acceptance.v1",
+  "fixed_commit": "3662ba6e5c740089458338e5eb48a111ab123946",
+  "verification_kind": "independent_fixed_commit_public_seam",
+  "manifest": {
+    "sha256": "06ed1a2fe2322903c35caceefcf2f504558c32eee0ae628ea72aa1c25deba927",
+    "bytes": 79598134,
+    "members": 166141,
+    "declared_member_bytes": 8542495955,
+    "authority": "declared_byte_closure_only",
+    "capture_summary_sha256": "d41813a7e9177aede0fc4c034fdc5908cca1f337e1caf899c3ea38ce8a4ac1d7",
+    "source_cas_all_members_verified": true,
+    "second_cas_all_members_verified": true,
+    "relocated_deployment_all_members_verified": true,
+    "source_relocated_models_equal": true,
+    "source_absolute_locator_in_manifest": false,
+    "genesis_imported_by_independent_verifier": false,
+    "supporting_cas_objects": 82070,
+    "supporting_cas_bytes": 4567960119,
+    "total_cas_objects": 82072,
+    "total_cas_bytes": 4567968119,
+    "unreachable_previous_capture_objects": 2,
+    "unreachable_previous_capture_bytes": 8000,
+    "entire_cas_is_exact_supporting_closure": false
+  },
+  "fresh_relocated_process": {
+    "verification_sha256": "4ba1a82e74002b5bcfa1902313c8fa66ea58b9702baf32f8e73259e8979378dc",
+    "cas_only_pass": true,
+    "mapped_byte_verification_pass": true,
+    "process_identity_equal": true,
+    "source_worktree_or_genesis_imported": false,
+    "identity_acquisition": "external launcher reads process facts and normalizes deployment locators; manifest API compares supplied identity only"
+  },
+  "fresh_asset_probe": {
+    "summary_sha256": "5e42cf8045dfaecf1ff55e61088e3aeac2bdd3b6ef0fa58832c105bd9c85cfba",
+    "report_sha256": "9e46011ecfb6364aeeed3d58ffd7d0ac81b35f4d61880a3909f88a60d866f5b9",
+    "independent_deep_verifier_pass": true,
+    "cas_objects": 23,
+    "cas_bytes": 7711609,
+    "exact_supporting_closure": true,
+    "rows": 1001,
+    "contact_steps": 989,
+    "contacts": 4040,
+    "settled": true,
+    "genesis_imported_by_independent_verifier": false,
+    "runtime_lock": "v1-unqualified",
+    "new_manifest_bound_into_probe": false,
+    "external_runtime_maps": [
+      "/usr/lib/x86_64-linux-gnu/libGLX.so.0.0.0",
+      "/usr/lib/x86_64-linux-gnu/libOpenGL.so.0.0.0"
+    ]
+  },
+  "failure_records": {
+    "staging_failures_sha256": "d779c5550a77e8b6ceb26d6e52bbf712b331b17702a3b9e69d66abf4a575a94d",
+    "recorded_kinds": [
+      "incomplete_import_closure",
+      "incomplete_native_locator_closure",
+      "missing_staged_backend_module",
+      "namespace_unavailable",
+      "capture_superseded"
+    ],
+    "independent_probe_reader_initial_failure": "TypeError: probe evidence references must be exact ArtifactRef values",
+    "independent_probe_reader_resolution": "reconstructed exact public ArtifactRef inputs from immutable nested records; no implementation changed"
+  },
+  "limits": {
+    "complete_runtime_dependency_or_execution_closure_proven": false,
+    "genesis_archive_bound_to_actual_probe_checkout": false,
+    "automatic_import_or_record_closure_discovery": false,
+    "running_process_identity_attested_by_manifest_api": false,
+    "execution_confinement_proven": false,
+    "durable_production_qualification_issued": false,
+    "production_registry_or_mcp_exposure": false,
+    "environment_replay_robot_policy_or_promotion_proven": false
+  }
+}

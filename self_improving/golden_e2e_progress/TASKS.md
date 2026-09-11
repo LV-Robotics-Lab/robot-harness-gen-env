@@ -86,6 +86,7 @@
       issuer 签发 `GenesisAssetQualificationV1`。
       - [x] 声明根的 canonical CAS runtime manifest：流式 capture、纯读、独立 deployment mapping、
         drift 拒绝与 fresh-process relocation；该前置不等于完整运行闭包或资格。
+        已由166,141成员真实部署、第二CAS/绝对映射和固定`3662ba6`独立功能验收确认。
       - [ ] 固定 fresh process 的实际 import/native/RECORD/env closure 与 sealed runner binding。
 - [ ] video2env 三个 Skill 实现、资格和三类资产路径。
 - [ ] 输出 sim-ready Genesis 环境，并保留可观看图像/视频和机器可验证报告。

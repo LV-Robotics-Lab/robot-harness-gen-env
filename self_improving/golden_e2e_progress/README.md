@@ -104,6 +104,10 @@ root 严格复验。证据见
 新增 runtime manifest 前置已把声明根的完整字节写入 CAS，并提供纯读与显式部署重验三方法；94份
 公共 schema。它的 `declared_byte_closure_only` 不证明实际运行进程只使用这些根，完整 runtime lock
 和 sealed runner 仍是下一门。
+固定`3662ba6`已真实capture166,141成员/8.54GB声明内容，并在第二独立绝对路径/CAS的新进程全量
+重验；staged fresh Genesis probe另完成1,000steps，但仍绑定旧v1 lock。运行记录见
+[`runtime closure`](../../docs/research/genesis-runtime-closure-audit-20260911.md)。下一步必须将manifest、
+实际运行入口与probe回执显式绑定，不能把两次各自通过的执行拼成尚不存在的资格链。
 P6 继续修复资产 staging；autoresearch 只在其
 冻结 benchmark 可以
 真实运行后开始。

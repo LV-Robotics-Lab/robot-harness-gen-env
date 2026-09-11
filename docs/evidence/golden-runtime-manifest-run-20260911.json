@@ -1,0 +1,100 @@
+{
+  "evidence_kind": "declared_genesis_cpu_runtime_byte_manifest_and_fresh_unqualified_probe",
+  "date": "2026-09-11",
+  "manifest_implementation_commit": "3662ba6e5c740089458338e5eb48a111ab123946",
+  "genesis_commit": "0e74bf392781884ccad765c3f344419c86b872ca",
+  "runtime_manifest_module_sha256": "5676fcb2cf8b70c7db905ce44569097e42f6666037694eb3b52540d2e8d2071d",
+  "runtime_manifest_schema_module_sha256": "79bf47a16b66455022dd3e6c664d0deb080f8196ac65796686ad7ec1f2e4b4b1",
+  "genesis_cpu_backend_module_sha256": "3d0eb26a31c009fa2a4ef46c2e4e6eb310004c0997f22ca436cab210c7681f4a",
+  "source_root": "/home/jingxiang/bingsheng/golden-runtime-seal-20260911.nt5e629u",
+  "relocated_root": "/home/jingxiang/bingsheng/golden-runtime-relocated-20260911.25kyjznz",
+  "manifest_ref": {
+    "name": "genesis-runtime-manifest.json",
+    "uri": "artifact://sha256/06ed1a2fe2322903c35caceefcf2f504558c32eee0ae628ea72aa1c25deba927",
+    "media_type": "application/json",
+    "sha256": "06ed1a2fe2322903c35caceefcf2f504558c32eee0ae628ea72aa1c25deba927",
+    "bytes": 79598134,
+    "schema_version": "harness.genesis_runtime_manifest.v1"
+  },
+  "external_artifacts": {
+    "manifest_summary": {
+      "relative_to": "source_root",
+      "path": "manifest-summary.json",
+      "sha256": "d41813a7e9177aede0fc4c034fdc5908cca1f337e1caf899c3ea38ce8a4ac1d7"
+    },
+    "relocated_verification": {
+      "relative_to": "relocated_root",
+      "path": "relocated-verification.json",
+      "sha256": "4ba1a82e74002b5bcfa1902313c8fa66ea58b9702baf32f8e73259e8979378dc"
+    },
+    "fresh_probe_summary": {
+      "relative_to": "source_root",
+      "path": "fresh-probe-summary.json",
+      "sha256": "5e42cf8045dfaecf1ff55e61088e3aeac2bdd3b6ef0fa58832c105bd9c85cfba"
+    },
+    "record_verification": {
+      "relative_to": "source_root",
+      "path": "record-verification.json",
+      "sha256": "75bbc6f7aeaf9f6a15458dceb009e6c13db3282d2fe65ce39808a6a1a2792534"
+    },
+    "failures": {
+      "relative_to": "source_root",
+      "path": "failures.json",
+      "sha256": "d779c5550a77e8b6ceb26d6e52bbf712b331b17702a3b9e69d66abf4a575a94d"
+    }
+  },
+  "manifest_results": {
+    "authority": "declared_byte_closure_only",
+    "member_count": 166141,
+    "declared_member_bytes": 8542495955,
+    "supporting_object_count_including_manifest": 82070,
+    "supporting_bytes_including_manifest": 4567960119,
+    "total_cas_object_count": 82072,
+    "total_cas_bytes": 4567968119,
+    "unreachable_objects_from_superseded_capture": 2,
+    "unreachable_bytes_from_superseded_capture": 8000,
+    "capture_and_source_verification_seconds": 311.743408203125,
+    "relocated_verification_seconds": 76.78831768035889,
+    "cas_only_pass": true,
+    "source_deployment_verification_pass": true,
+    "relocated_deployment_verification_pass": true,
+    "relocated_observed_process_identity_equal": true,
+    "relocated_verifier_imported_genesis": false
+  },
+  "record_results": {
+    "staged_distributions_visible_without_site_startup": 130,
+    "hash_checked_members": 49264,
+    "unhashed_members_bound_by_manifest": 32387,
+    "missing_or_hash_or_path_failures": 0
+  },
+  "fresh_probe_results": {
+    "simulator_executed": true,
+    "seeded_cas_contained_old_probe_outputs": false,
+    "runtime_lock": "harness.genesis_runtime_lock.v1, unqualified",
+    "steps": 1000,
+    "rows": 1001,
+    "deep_verification_pass": true,
+    "probe_report_sha256": "9e46011ecfb6364aeeed3d58ffd7d0ac81b35f4d61880a3909f88a60d866f5b9",
+    "torch_intraop_threads": 1,
+    "torch_interop_threads": 1,
+    "final_mapped_file_count": 309,
+    "remaining_system_mappings": [
+      "/usr/lib/x86_64-linux-gnu/libGLX.so.0.0.0",
+      "/usr/lib/x86_64-linux-gnu/libOpenGL.so.0.0.0"
+    ]
+  },
+  "boundaries": {
+    "qualification_issued": false,
+    "probe_is_bound_to_new_manifest": false,
+    "process_confinement_verified": false,
+    "namespace_command": "bwrap --ro-bind / / --unshare-user --unshare-pid --proc /proc -- /bin/true",
+    "namespace_exit_code": 1,
+    "namespace_error": "bwrap: setting up uid map: Permission denied",
+    "manifest_genesis_root": "fixed git archive",
+    "probe_genesis_root": "independent no-hardlinks git checkout of same fixed commit, separate from archive manifest root",
+    "process_identity_scope": "observed and locator-normalized by acceptance script; not a production execution seal",
+    "durable_qualification_application": false,
+    "production_image_skill_or_mcp": false,
+    "environment_replay_robot_policy_or_promotion": false
+  }
+}

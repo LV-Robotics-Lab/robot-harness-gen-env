@@ -4,11 +4,12 @@
 
 ## Doing
 
-- Runtime dependency lock 前置：在 `codex/golden-diagnosis-20260911` 独立工作树并行实现 public
-  manifest seam 与真实依赖审计。首个 manifest 只证明声明的完整目录/CAS 字节闭包；producer、pure-read
-  verifier 与部署重验明确分开，不授予 production authority。真实导入已发现 56 个 distributions、301
-  个 mapped files 和 Torch inter-op 16；独立固定目录、`-S` 启动与完整 native/import 检查正在执行。
-  上轮 probe 文档已独立提交 `a8cf4a4`，dashboard 与 ClawCross preferred read 均仍返回 HTTP 404。
+- Runtime dependency lock：`3662ba6` 已完成声明根的 canonical manifest；166,141成员/8,542,495,955
+  bytes 的真实 capture、CAS纯读、源部署及第二绝对路径 fresh-process 重验通过。独立目录 fresh
+  Genesis probe也已真实运行1,000steps，但仍引用旧v1 lock，未绑定manifest。下一门是manifest→实际
+  fixed-process/runner→probe回执的闭包与显式版本迁移；source archive/实际checkout、2项系统GL加载
+  位置及完整subprocess依赖须在该门处理。主机bwrap UID map命令拒绝已记录，不把事后maps当隔离。
+  production issuer/qualification仍未实现；dashboard与ClawCross preferred read仍返回HTTP404。
 
 - X2 exact-reuse image compile：controlled candidate handler 与 v2 input-bound receipt 已完成；当前进入
   production qualification。Gujie 指定 exact pass 输出现已缺失；最接近的 legacy 鼠标归档虽有 15-member

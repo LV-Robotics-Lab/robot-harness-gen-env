@@ -85,6 +85,9 @@ CAS，重读确认后最后发布 manifest；read 只重验 CAS，verify-deploym
 调用方提交的 process facts。换安装位置不改变清单身份。这个 interface 不负责发现漏掉的动态依赖，
 也没有证明运行进程只加载清单成员，因此其权威明确为 `declared_byte_closure_only`；下一门仍是
 固定启动、完整实际加载闭包和 sealed runner，而非直接签发资产资格。
+固定`3662ba6`的真实部署验证已覆盖166,141成员与第二独立绝对路径；独立目录另一次fresh probe完成
+1,000steps，但仍使用旧v1 lock，尚未由manifest绑定执行。两份结果之间的接线不能从相同文件或相同
+report hash推断，详见[运行时物化记录](../../docs/research/genesis-runtime-closure-audit-20260911.md)。
 
 P3 的公共 `GoldenRunHarness.submit` 当前可在同一 workflow 依次调度 exact qualified
 `text2env.compile@1.0.0` 与 `text2env.replay@1.0.0`。两者都从同一 RegistrySnapshot、live production

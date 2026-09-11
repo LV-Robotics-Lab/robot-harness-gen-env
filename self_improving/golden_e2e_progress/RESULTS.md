@@ -1,5 +1,29 @@
 # 进度与结果
 
+## 2026-09-11 Runtime manifest 大目录与独立部署实跑
+
+- 固定实现 `3662ba6` 的两份manifest源码与staged backend逐字节相同。真实capture耗时311.743s，
+  包含六个根、166,141成员、8,542,495,955声明bytes；canonical manifest本身79,598,134bytes，SHA为
+  `06ed1a2fe2322903c35caceefcf2f504558c32eee0ae628ea72aa1c25deba927`。
+- 源CAS-only和mapped验证通过；第二独立物化目录与第二CAS的新进程再次通过全部成员与过程事实
+  重验（76.788s），未import Genesis或原工作树。相同manifest身份不依赖原绝对路径。
+- 精确supporting CAS为82,070objects/4,567,960,119bytes；物理总CAS另有两份旧capture留下的
+  orphan（8,000bytes），没有把它们算入权威闭包。旧capture在最终不可读目录修复前主动终止并保留。
+- 独立staged环境另外fresh执行initial+1,000 Genesis CPU steps（47.96s），1,001rows与deep verifier
+  通过；Torch intraop/inter-op=1/1、989接触步、4,040contacts、末态settled。只从原CAS复制资产表示、
+  15members与旧v1 lock作为输入，没有复制旧report/trace；新report的确定性SHA与旧probe一致。
+- 真实执行最终加载309个映射文件，比import-only多出9项native；完整物化distribution包含其字节。
+  130个distribution的49,264个有hash RECORD项全部一致，32,387个无上游hash项另纳入逐字节清单。
+- 未完成的权威：probe仍引用旧runtime lock v1，未引用新manifest；manifest的Genesis archive与执行
+  checkout分账；两项GL库仍从系统位置加载。bwrap最小命令因UID map权限拒绝，详细命令/失败与其他
+  startup/source-import不足样本均保留。没有production qualification、MCP image或环境/policy晋升。
+- 运行与哈希索引见 `docs/research/genesis-runtime-closure-audit-20260911.md`；bulk目录/CAS未入Git。
+- 集中fixed-commit功能验收也通过：独立进程重读源/第二CAS及新部署映射，模型逐项相同；独立
+  deep verifier再闭合fresh probe的23objects/1,001rows。小型可审阅索引为
+  `docs/evidence/golden-runtime-manifest-run-20260911.json`，独立验收为
+  `docs/evidence/golden-runtime-manifest-acceptance-20260911.json`。独立验收入口第一次误传嵌套frozen
+  ref被exact ArtifactRef合同拒绝；重建正确公共输入后通过，未修改实现或删除失败记录。
+
 ## 2026-09-11 Runtime content manifest 公共纵切
 
 - 新增 `capture_runtime_manifest` / `read_runtime_manifest` / `verify_runtime_deployment` 三个公共

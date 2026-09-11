@@ -6,6 +6,9 @@
   身份分离，缺失/额外/变化成员、非规范记录和 symlink 拒绝，换路径新进程纯读通过。
 - 新增一份版本化 schema（当前94份），没有改写旧runtime lock。声明范围的字节验证不等于实际依赖
   发现或执行隔离；production asset qualification 仍未获得权威。
+- 固定`3662ba6`随后真实处理166,141成员/8.54GB声明内容，第二独立绝对映射/CAS新进程重验通过。
+  独立目录fresh Genesis probe也完成1,000steps，但其回执仍绑定旧v1 lock；manifest与执行回执接线
+  仍须下一切片完成。详细执行和失败依据见新增runtime closure记录。
 
 ## 2026-09-11 Genesis CPU asset probe 与 relocated deep verification
 

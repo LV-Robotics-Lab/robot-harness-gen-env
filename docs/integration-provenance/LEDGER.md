@@ -76,7 +76,7 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
 ## INT-BS-003 — Runtime content manifest 前置
 
 - `lifecycle`：`integrated`
-- `verification`：`contract_pass`
+- `verification`：`runtime_pass`（仅本条声明的内容清单capture/部署重验）
 - `origin_owner`：Bingsheng（Harness 合同与整合责任）
 - `recorded_git_authors`：本切片以提交实际 git author 为准，不由目录推断自然人身份
 - `upstream_owner`：Python、Genesis World、Torch、Quadrants 等运行依赖仍归各自上游；本切片不复制其实现
@@ -91,7 +91,10 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
   不改变旧 runtime lock/probe v1 语义，不签发资格
 - `contract_spec`：`self_improving/golden_e2e_progress/SEAMS.md` 的 S3 前置与 `DECISIONS.md` D019
 - `verification_evidence`：公共测试27 pass，147 statements/52 branches 100%；catalog8 pass、94 schema
-  snapshots、Ruff/format/diff通过。真实运行依赖验证另记，不能由合同测试替代
+  snapshots、Ruff/format/diff通过。固定`3662ba6`已真实capture六根166,141成员/8,542,495,955bytes，
+  并在第二独立绝对映射和CAS的新进程中重验；精确supporting closure为82,070objects。
+  详见`docs/research/genesis-runtime-closure-audit-20260911.md`。另一个staged Genesis probe完成1,000steps，
+  但仍使用旧v1 lock；不可把它宣称为新manifest驱动的production execution
 - `golden_run`：`none`
 - `known_gaps`：只验证声明的成员范围及调用方提供的 process identity；实际 import/native discovery、
   fixed-process binding、production runtime lock/asset qualification 仍未闭合
