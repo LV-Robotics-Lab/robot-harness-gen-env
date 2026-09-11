@@ -10,10 +10,15 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from .run_store import SQLiteRunStore
+from .run_store import ControlledRunLifecycle, SQLiteRunStore
 from .schema_catalog import schema_model
 from .schemas.common import ArtifactRef, Invocation, RegisteredSkillDescriptor, RunState
-from .schemas.workflow_operation import ReceiptDerivedFactClaimV2, ToolResultV2
+from .schemas.registry_snapshot import QualifiedSkillSnapshot
+from .schemas.workflow_operation import (
+    QualifiedSkillExecutionV2,
+    ReceiptDerivedFactClaimV2,
+    ToolResultV2,
+)
 from .trusted_state import TrustedWorldState, WorldFact
 
 
@@ -89,15 +94,79 @@ class QualifiedApplicationAdapter(Protocol):
     def run_state(self, run_id: UUID) -> RunState | None: ...
 
 
+class GoldenExecutionEvidenceHook(Protocol):
+    """Optional deeper authority checks for an honestly projected native Skill."""
+
+    def verify_registry_entry(self, entry: QualifiedSkillSnapshot) -> None: ...
+
+    def verify_child_lifecycle(
+        self,
+        *,
+        lifecycle: ControlledRunLifecycle,
+        skill_ref: str,
+        child_run_id: UUID,
+        command_parameters: Mapping[str, object],
+        qualified: QualifiedSkillExecutionV2,
+    ) -> None: ...
+
+
 @dataclass(frozen=True)
 class _CatalogEntry:
     policy: SkillEvidencePolicy
     application: QualifiedApplicationAdapter | None
     child_authority: SQLiteRunStore | None
+    evidence_hook: GoldenExecutionEvidenceHook | None
 
 
 _CATALOG_TOKEN = object()
 _BINDING_TOKEN = object()
+_HOOK_TOKEN = object()
+
+
+class _SealedGoldenExecutionEvidenceHook:
+    """Opaque hook accepted only through the Harness-owned hook factory."""
+
+    __slots__ = ("_delegate", "_token")
+
+    def __init__(self, delegate: GoldenExecutionEvidenceHook, *, _token: object) -> None:
+        if _token is not _HOOK_TOKEN:
+            raise TypeError("execution evidence hooks must be created by their authority factory")
+        object.__setattr__(self, "_delegate", delegate)
+        object.__setattr__(self, "_token", _token)
+
+    def __setattr__(self, name: str, value: object) -> None:
+        raise AttributeError("execution evidence hooks are immutable")
+
+    def verify_registry_entry(self, entry: QualifiedSkillSnapshot) -> None:
+        self._delegate.verify_registry_entry(entry)
+
+    def verify_child_lifecycle(
+        self,
+        *,
+        lifecycle: ControlledRunLifecycle,
+        skill_ref: str,
+        child_run_id: UUID,
+        command_parameters: Mapping[str, object],
+        qualified: QualifiedSkillExecutionV2,
+    ) -> None:
+        self._delegate.verify_child_lifecycle(
+            lifecycle=lifecycle,
+            skill_ref=skill_ref,
+            child_run_id=child_run_id,
+            command_parameters=command_parameters,
+            qualified=qualified,
+        )
+
+    def _is_factory_hook(self) -> bool:
+        return self._token is _HOOK_TOKEN
+
+
+def _create_golden_execution_evidence_hook(
+    delegate: GoldenExecutionEvidenceHook,
+) -> GoldenExecutionEvidenceHook:
+    """Seal one deeper verifier for consumption by GoldenRun."""
+
+    return _SealedGoldenExecutionEvidenceHook(delegate, _token=_HOOK_TOKEN)
 
 
 class GoldenExecutionBinding(Protocol):
@@ -115,11 +184,21 @@ class GoldenExecutionBinding(Protocol):
     @property
     def child_authority(self) -> SQLiteRunStore | None: ...
 
+    @property
+    def evidence_hook(self) -> GoldenExecutionEvidenceHook | None: ...
+
 
 class _SealedGoldenExecutionBinding:
     """Opaque concrete binding accepted only after factory and consumption checks."""
 
-    __slots__ = ("_application", "_child_authority", "_policy", "_skill_ref", "_token")
+    __slots__ = (
+        "_application",
+        "_child_authority",
+        "_evidence_hook",
+        "_policy",
+        "_skill_ref",
+        "_token",
+    )
 
     def __init__(
         self,
@@ -129,6 +208,7 @@ class _SealedGoldenExecutionBinding:
         policy: SkillEvidencePolicy,
         application: QualifiedApplicationAdapter | None,
         child_authority: SQLiteRunStore | None,
+        evidence_hook: GoldenExecutionEvidenceHook | None,
     ) -> None:
         if _token is not _BINDING_TOKEN:
             raise TypeError("execution bindings must be created by an exact Skill factory")
@@ -137,6 +217,7 @@ class _SealedGoldenExecutionBinding:
         object.__setattr__(self, "_policy", policy)
         object.__setattr__(self, "_application", application)
         object.__setattr__(self, "_child_authority", child_authority)
+        object.__setattr__(self, "_evidence_hook", evidence_hook)
 
     def __setattr__(self, name: str, value: object) -> None:
         raise AttributeError("execution bindings are immutable")
@@ -157,6 +238,10 @@ class _SealedGoldenExecutionBinding:
     def child_authority(self) -> SQLiteRunStore | None:
         return self._child_authority
 
+    @property
+    def evidence_hook(self) -> GoldenExecutionEvidenceHook | None:
+        return self._evidence_hook
+
     def _is_factory_binding(self) -> bool:
         return self._token is _BINDING_TOKEN
 
@@ -167,12 +252,18 @@ def _validate_binding_components(
     policy: SkillEvidencePolicy,
     application: QualifiedApplicationAdapter | None,
     child_authority: SQLiteRunStore | None,
+    evidence_hook: GoldenExecutionEvidenceHook | None,
     require_application_authority: bool,
 ) -> SQLiteRunStore | None:
     if child_authority is not None and type(child_authority) is not SQLiteRunStore:
         raise TypeError("child_authority must be the exact SQLiteRunStore")
     if skill_ref != policy.skill_ref:
         raise ValueError("binding and evidence policy are not exactly bound")
+    if evidence_hook is not None and (
+        type(evidence_hook) is not _SealedGoldenExecutionEvidenceHook
+        or not evidence_hook._is_factory_hook()
+    ):
+        raise TypeError("evidence_hook must come from the Harness hook factory")
     input_model = policy.input_model
     if not isinstance(input_model, type) or not issubclass(input_model, BaseModel):
         raise TypeError("evidence policy input model must be a BaseModel type")
@@ -204,6 +295,7 @@ def _create_golden_execution_binding(
     policy: SkillEvidencePolicy,
     application: QualifiedApplicationAdapter | None,
     child_authority: SQLiteRunStore | None,
+    evidence_hook: GoldenExecutionEvidenceHook | None = None,
 ) -> GoldenExecutionBinding:
     """Validate one Skill-owned binding without knowing its concrete application type."""
 
@@ -212,6 +304,7 @@ def _create_golden_execution_binding(
         policy=policy,
         application=application,
         child_authority=child_authority,
+        evidence_hook=evidence_hook,
         require_application_authority=False,
     )
     return _SealedGoldenExecutionBinding(
@@ -220,6 +313,7 @@ def _create_golden_execution_binding(
         policy=policy,
         application=application,
         child_authority=child_authority,
+        evidence_hook=evidence_hook,
     )
 
 
@@ -251,6 +345,10 @@ class GoldenExecutionCatalog:
         entry = self._entries.get(skill_ref)
         return None if entry is None else entry.child_authority
 
+    def evidence_hook_for(self, skill_ref: str) -> GoldenExecutionEvidenceHook | None:
+        entry = self._entries.get(skill_ref)
+        return None if entry is None else entry.evidence_hook
+
     def live_descriptors_for(self, skill_ref: str) -> tuple[RegisteredSkillDescriptor, ...]:
         application = self.application_for(skill_ref)
         return () if application is None else application.skills
@@ -279,6 +377,7 @@ def create_golden_execution_catalog(
             policy=binding.policy,
             application=binding.application,
             child_authority=binding.child_authority,
+            evidence_hook=binding.evidence_hook,
             require_application_authority=True,
         )
         if binding.skill_ref in entries:
@@ -287,6 +386,7 @@ def create_golden_execution_catalog(
             policy=binding.policy,
             application=binding.application,
             child_authority=binding.child_authority,
+            evidence_hook=binding.evidence_hook,
         )
     return GoldenExecutionCatalog(_token=_CATALOG_TOKEN, entries=entries)
 

@@ -1622,6 +1622,21 @@ class GoldenRunHarness:
         state = lifecycle.terminal
         if intent is None or state is None:
             raise GoldenRunCorruptionError("terminal child lacks its controlled execution intent")
+        evidence_hook = self._execution_catalog.evidence_hook_for(operation.skill_ref)
+        if evidence_hook is not None:
+            try:
+                evidence_hook.verify_child_lifecycle(
+                    lifecycle=lifecycle,
+                    skill_ref=operation.skill_ref,
+                    child_run_id=operation.child_run_id,
+                    command_parameters=command.parameters,
+                    qualified=qualified,
+                )
+            except (ArtifactResolutionError, TypeError, ValueError) as error:
+                raise GoldenRunCorruptionError(
+                    f"native child failed its admitted execution identity: {error}"
+                ) from error
+            return
         skill_id, version = operation.skill_ref.split("@", maxsplit=1)
         parameters_digest = _canonical_json_sha256(command.parameters)
         descriptor = self._resolve_descriptor(qualified.descriptor)
@@ -2556,6 +2571,20 @@ class GoldenRunHarness:
                     "HARN_DEPENDENCY_DRIFT",
                     f"registry descriptor references an unavailable schema: {entry.skill_ref}",
                 ) from error
+            evidence_hook = self._execution_catalog.evidence_hook_for(entry.skill_ref)
+            if evidence_hook is not None:
+                try:
+                    evidence_hook.verify_registry_entry(entry)
+                except ArtifactResolutionError as error:
+                    raise GoldenRunRegistryError(
+                        "HARN_ARTIFACT_UNAVAILABLE",
+                        f"native projection artifact is unavailable: {entry.skill_ref}",
+                    ) from error
+                except (ValidationError, TypeError, ValueError) as error:
+                    raise GoldenRunRegistryError(
+                        "HARN_SKILL_UNQUALIFIED",
+                        f"native projection is not admitted: {entry.skill_ref}: {error}",
+                    ) from error
         return snapshot
 
     def _resolve_descriptor(self, artifact: ArtifactRef) -> RegisteredSkillDescriptor:

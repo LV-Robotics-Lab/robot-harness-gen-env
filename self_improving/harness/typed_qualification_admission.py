@@ -62,7 +62,7 @@ class TypedQualificationAdmissionError(ValueError):
 class VerifiedTypedQualificationAdmission:
     """Opaque result issued only after complete admission verification."""
 
-    __slots__ = ("_admission", "_admission_ref")
+    __slots__ = ("_admission", "_admission_ref", "_token")
 
     def __init__(
         self,
@@ -75,6 +75,7 @@ class VerifiedTypedQualificationAdmission:
             raise TypeError("verified admission capabilities are issued only by the verifier")
         self._admission = admission
         self._admission_ref = admission_ref
+        self._token = _token
 
     @property
     def admission(self) -> TypedQualificationAdmissionV1:
@@ -83,6 +84,9 @@ class VerifiedTypedQualificationAdmission:
     @property
     def admission_ref(self) -> ArtifactRef:
         return self._admission_ref
+
+    def _is_verifier_issued(self) -> bool:
+        return self._token is _CAPABILITY_TOKEN
 
 
 def freeze_typed_qualification_admission(
