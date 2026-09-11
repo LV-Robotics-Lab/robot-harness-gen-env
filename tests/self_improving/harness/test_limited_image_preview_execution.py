@@ -160,3 +160,58 @@ def test_foreign_runner_request_is_rejected(saved_run):  # noqa: F811
 
     with pytest.raises(PreviewExecutionError, match="foreign"):
         LimitedImagePreviewExecution(store, ForeignRunner()).replay(request)
+
+
+def test_physical_pass_can_fail_explicit_user_layout(execution):
+    from self_improving.harness.limited_image_preview_execution import compare_preview_layout
+    from self_improving.harness.schemas.limited_image_preview_execution import PreviewLayout
+
+    module, replayed = execution
+    physical = module.validate(replayed)
+    assert physical.report.status == "passed"
+    actual = PreviewLayout(x_m=0.0, y_m=0.0, yaw_rad=0.0)
+    desired = PreviewLayout(x_m=0.1, y_m=0.0, yaw_rad=0.3)
+    assert compare_preview_layout(actual, desired) == "mismatch"
+    assert compare_preview_layout(actual, None) == "pass"
+
+
+def test_formal_saved_m1_physics_pass_reports_real_layout_mismatch():
+    import json
+    import os
+    from pathlib import Path
+
+    from self_improving.harness.artifacts import LocalArtifactStore
+    from self_improving.harness.genesis_asset_qualification_application import (
+        GenesisAssetQualificationApplication,
+    )
+    from self_improving.harness.image2env_genesis_compile import Image2EnvGenesisCompiler
+    from self_improving.harness.limited_image_preview_execution import validate_preview_receipt
+    from self_improving.harness.schemas.common import ArtifactRef
+    from self_improving.harness.schemas.limited_image_preview_execution import (
+        LimitedSceneValidateInputV1,
+    )
+
+    configured = os.environ.get("LIMITED_PREVIEW_VALIDATION_CONFIG")
+    if not configured:
+        pytest.skip("requires isolated saved M1 CAS and trusted asset SQLite")
+    config = json.loads(Path(configured).read_bytes())
+    store = LocalArtifactStore(Path(config["cas_root"]))
+    asset = GenesisAssetQualificationApplication(
+        Path(config["asset_state_path"]),
+        store,
+        ArtifactRef.model_validate(config["asset_manifest"]),
+    )
+    compiler = Image2EnvGenesisCompiler(store, asset)
+    result = validate_preview_receipt(
+        store,
+        compiler,
+        LimitedSceneValidateInputV1(
+            schema_version="harness.limited_scene_validate_input.v1",
+            execution_receipt=config["execution_receipt"],
+            expected_layout={"x_m": 9.0, "y_m": 9.0, "yaw_rad": 0.0},
+        ),
+    )
+    assert result.status == "failed" and result.semantic_status == "mismatch"
+    assert result.physical_scope == "dual_dt_trace_contact_settling_and_media"
+    assert abs(result.actual_layout.x_m) < 1.0 and abs(result.actual_layout.y_m) < 1.0
+    Path(config["result_path"]).write_text(result.model_dump_json())

@@ -8,6 +8,7 @@ come from the final half-dt capture, never from the time a reader opened it.
 
 import hashlib
 import json
+import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from time import monotonic
@@ -26,6 +27,68 @@ from .schemas.genesis_scene_execution_v3 import (
     GenesisSceneLaunchResultV3,
     GenesisSceneProcessObservationV3,
 )
+
+
+def compare_preview_layout(actual, expected):
+    """One millimetre/radian gate; yaw uses shortest world-Z angular distance."""
+    if expected is None:
+        return "pass"
+    distance = math.hypot(actual.x_m - expected.x_m, actual.y_m - expected.y_m)
+    yaw_delta = math.atan2(
+        math.sin(actual.yaw_rad - expected.yaw_rad),
+        math.cos(actual.yaw_rad - expected.yaw_rad),
+    )
+    return "pass" if distance <= 0.001 and abs(yaw_delta) <= 0.001 else "mismatch"
+
+
+def validate_preview_receipt(store, compiler, parameters):
+    """Deep native physics/media plus separate explicit user-layout semantics.
+
+    The selected public verifier rechecks the declared scene's full measured
+    geometry and the terminal trace/contact/settling/media evidence. Layout
+    comparison uses the requested initial placement, not an invented final pose.
+    """
+    from .genesis_scene_execution_v2 import GenesisSceneExecutionVerifierV2
+    from .gujie_scene_adapter import read_gujie_tabletop_scene
+    from .schemas.genesis_scene_execution_v2 import GenesisSceneExecutionReceiptV2
+    from .schemas.limited_image_preview_execution import (
+        LimitedSceneValidateInputV1,
+        LimitedSceneValidationV1,
+        PreviewLayout,
+    )
+
+    if type(parameters) is not LimitedSceneValidateInputV1:
+        raise TypeError("preview validation requires exact typed input")
+    native_v3 = parameters.execution_receipt.schema_version.endswith(".v3")
+    model = GenesisSceneExecutionReceiptV3 if native_v3 else GenesisSceneExecutionReceiptV2
+    receipt = _read(store, parameters.execution_receipt, model)
+    verifier = (GenesisSceneExecutionVerifierV3 if native_v3 else GenesisSceneExecutionVerifierV2)(
+        store, compiler
+    )
+    closure = verifier.read_receipt(parameters.execution_receipt)
+    if closure.report.status != "passed":
+        raise ValueError("physical scene validation did not pass")
+    scene = read_gujie_tabletop_scene(store, closure.request.scene)
+    w, x, y, z = scene.orientation_wxyz
+    actual = PreviewLayout(
+        x_m=scene.position_m[0],
+        y_m=scene.position_m[1],
+        yaw_rad=math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)),
+    )
+    semantic = compare_preview_layout(actual, parameters.expected_layout)
+    return LimitedSceneValidationV1(
+        schema_version="harness.limited_scene_validation.v1",
+        execution_receipt=parameters.execution_receipt,
+        scene=closure.request.scene,
+        physical_report=receipt.report,
+        expected_layout=parameters.expected_layout,
+        actual_layout=actual,
+        position_tolerance_m=0.001,
+        yaw_tolerance_rad=0.001,
+        semantic_status=semantic,
+        status="passed" if semantic == "pass" else "failed",
+        physical_scope="dual_dt_trace_contact_settling_and_media",
+    )
 
 
 def _read(store, ref, model):
