@@ -16,8 +16,11 @@ from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.event_journal import SQLiteEventJournal
 from self_improving.harness.golden_execution import (
     QualifiedApplicationRunPendingError,
+    _create_golden_execution_binding,
     create_golden_execution_catalog,
 )
+from self_improving.harness.golden_image2env_execution import _NativeApplicationAdapter
+from self_improving.harness.golden_image2env_policy import NativeImageEvidencePolicy
 from self_improving.harness.golden_run import GoldenRunHarness
 from self_improving.harness.golden_store import SQLiteGoldenRunStore
 from self_improving.harness.mcp_adapter import MCPToolCall, create_harness_mcp_adapter
@@ -78,6 +81,27 @@ def _admission(tmp_path: Path, kind: str):
         qualification_ref=fixture.qualification,
         qualification_report_ref=fixture.report,
         implementation_members=fixture.implementation,
+    )
+
+
+def _native_image_binding(
+    *,
+    store: LocalArtifactStore,
+    authority: SQLiteRunStore,
+    skill_ref: str,
+    application: object,
+    predecessors: dict[str, SQLiteRunStore] | None = None,
+):
+    policy = NativeImageEvidencePolicy(
+        store,
+        authority,
+        skill_ref,
+        {} if predecessors is None else predecessors,
+    )
+    return _create_golden_execution_binding(
+        policy=policy,
+        application=_NativeApplicationAdapter(application, policy),
+        child_authority=authority,
     )
 
 
@@ -200,6 +224,31 @@ class _KernelNativeApplication:
         )
 
     invoke_typed = invoke
+
+
+def test_projection_accepts_only_a_sealed_rich_native_image_binding(tmp_path: Path) -> None:
+    fixture, admission = _admission(tmp_path, "replay")
+    authority = SQLiteRunStore(tmp_path / "production.sqlite3")
+    application = _KernelNativeApplication(
+        store=fixture.store,
+        authority=authority,
+        admission=admission,
+    )
+    native_binding = _native_image_binding(
+        store=fixture.store,
+        authority=authority,
+        skill_ref=admission.admission.skill_ref,
+        application=application,
+    )
+
+    projection = issue_native_skill_projection(
+        artifact_store=fixture.store,
+        admission=admission,
+        native_binding=native_binding,
+    )
+
+    assert projection.binding.policy is native_binding.policy
+    assert projection.binding.child_authority is native_binding.child_authority
 
 
 def _start_harness(
