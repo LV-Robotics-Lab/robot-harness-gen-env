@@ -12,6 +12,98 @@ from tests.self_improving.harness import test_limited_image_preview_controller a
 service = controller_tests.service
 
 
+def _deployment(tmp_path):
+    settings = tmp_path / "service.json"
+    settings.write_text("{}")
+    deployment = tmp_path / "deployment.json"
+    deployment.write_text(
+        json.dumps(
+            dict(
+                service_settings=str(settings),
+                codex_executable="/operator/codex",
+                approved_executable_sha256="a" * 64,
+                server_python="/operator/python",
+                server_workdir=str(tmp_path),
+                model="operator-model",
+                evidence_root=str(tmp_path / "evidence"),
+                max_attempts=2,
+                call_budget=15,
+                attempt_seconds=90,
+            )
+        )
+    )
+    return deployment, settings
+
+
+def test_submit_persists_workflow_before_constructing_codex_backend(
+    service, tmp_path, capsys
+):
+    deployment, _ = _deployment(tmp_path)
+    image = tmp_path / "raw.png"
+    image.write_bytes(b"service fixture owns image validation")
+    original_start = service.value.start
+    trace = []
+
+    def start(**arguments):
+        result = original_start(**arguments)
+        trace.append(("start", result["workflow_id"]))
+        return result
+
+    def unavailable_backend(**_arguments):
+        trace.append(("backend", None))
+        raise ValueError("Codex backend is unavailable")
+
+    service.value.start = start
+    code = run_cli(
+        [
+            "--deployment",
+            str(deployment),
+            "submit",
+            "--image",
+            str(image),
+            "--text",
+            "mouse on table",
+            "--idempotency-key",
+            "persist-first",
+        ],
+        service_factory=lambda _path: service.value,
+        backend_factory=unavailable_backend,
+    )
+
+    assert code == 2
+    assert trace == [("start", str(service.workflow)), ("backend", None)]
+    assert service.harness.read(service.read).workflow_run_id == service.workflow
+    assert "Codex backend is unavailable" in capsys.readouterr().err
+
+
+def test_status_and_package_do_not_construct_codex_backend(service, tmp_path, capsys):
+    deployment, _ = _deployment(tmp_path)
+
+    def forbidden_backend(**_arguments):
+        raise AssertionError("read-only Harness commands must not construct Codex")
+
+    common = ["--deployment", str(deployment)]
+    factories = dict(
+        service_factory=lambda _path: service.value,
+        backend_factory=forbidden_backend,
+    )
+    assert run_cli(common + ["status", "--workflow-id", str(service.workflow)], **factories) == 0
+    status = json.loads(capsys.readouterr().out)
+    assert status["service"]["workflow_id"] == str(service.workflow)
+    assert status["attempts"] == []
+
+    package = service.value.status(workflow_id=str(service.workflow))["source_prompt"]
+    service.value.package_get = lambda **_arguments: dict(
+        workflow_id=str(service.workflow),
+        revision=0,
+        stage="package_get",
+        status="published",
+        package=package,
+    )
+    assert run_cli(common + ["package", "--workflow-id", str(service.workflow)], **factories) == 0
+    assert json.loads(capsys.readouterr().out)["package"] == package
+
+
 def test_submit_runs_owned_backend_and_reports_unsupported_without_manual_resume(
     service, tmp_path, capsys
 ):
