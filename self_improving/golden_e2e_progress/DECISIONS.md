@@ -298,3 +298,18 @@
   观测紧邻 Codex 消费产生并实测 TTL 余量，不通过简单增大 TTL 掩盖重复开销。
 - 暂缓：三模态、三种资产路径、162 份历史债务、autoresearch、机器人 policy、通用插件与额外
   backend 都保留但不阻塞本版本。预览固定、服务入口冒烟和文档收口后暂停供用户审阅。
+
+## D022 — Harness 是用户入口，Codex 是受管理的内部智能中枢
+
+- 日期：2026-09-11
+- 状态：accepted_by_user_scope；覆盖 D021 中“外部 Codex 作为入口”的调用关系，不改变其受限
+  image exact-reuse 功能范围与真实证据门。
+- 决策：用户、前端或 API 只向 Harness 提交任务。Harness 创建 workflow、构造有界上下文、调用
+  `CodexBackend`、校验其解释/动作/引用、执行 exact Skills、保存结果、有限重试、恢复和结束任务。
+  Codex 负责文本/图像理解、规划、视觉判断、诊断和修改建议，不授予物理有效性或发布资格。
+- 实现边界：本阶段继续封装已有无交互 `codex exec`，不迁移模型 API/SDK，不引入通用模型框架。
+  exact MCP、wire recorder、Skills、Genesis、CAS、workflow journal 与发布门原样复用；若 Codex 直接
+  使用 MCP，只能访问 Harness 分配的 workflow、动作和预算，所有执行仍经同一服务边界校验和记录。
+- 恢复边界：Codex timeout、进程退出或无效输出必须在当前任务留下明确失败和重试状态；下一次调用
+  从 Harness 的持久 head 重建上下文，不能依赖 Codex 会话记忆，也不能另建平行 workflow/receipt/
+  qualification 权威。

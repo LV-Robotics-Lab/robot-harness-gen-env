@@ -37,12 +37,14 @@
 
 ## 当前阶段
 
-最新 active 目标是一个范围有限、可实际使用的 image exact-reuse 预览：原始图像和文本进入同一
-workflow，外部真实 Codex 只经 exact MCP 调用 compile / Genesis replay / validate，读取刚产生的
-观测后修改真实桌面布局，再次编译、回放、验证并发布到隔离预览库。M1 已在固定 `1cf8908`
-真实通过有限桌面鼠标场景；M2 的修改后编译、修改后 Genesis 执行核心和真实 Codex/MCP 进程见证
-已经分别安全提交，当前共有 149 份 public schema。它们还没有组成两条真实 Codex→MCP→Genesis
-交付案例，因此 M2 仍在进行。
+最新 active 目标是一个范围有限、可实际使用的 image exact-reuse 预览：用户从 Harness 服务入口
+提交原始图像和文本，Harness 创建并持久化 workflow，再把真实 `codex exec` 封装成内部
+`CodexBackend`，用于理解、视觉判断、诊断和布局建议。Harness 负责校验决定、调用 exact Skills、
+状态提交、有限重试、恢复和发布；用户无须启动 Codex 或配置 MCP。现有 exact MCP 可继续作为内部
+Codex 的受限媒体/工具通道，但不拥有第二套业务状态。M1 已在固定 `1cf8908` 真实通过有限桌面鼠标
+场景；M2 的修改后编译、修改后 Genesis 执行核心、真实 Codex/MCP 进程见证、受限输入构建和发布
+门已经分别安全提交，当前共有 154 份 public schema。它们还没有组成两条从 Harness 入口发起的
+真实交付案例，因此 M2 仍在进行。
 
 本阶段只复用现有 workflow journal、场景证据和资产资格，不再为 replay、observe、validate 分别
 增加平行的资格、SQLite authority 或 terminal admission。先完成正常案例与诊断修复案例、阶段耗时、

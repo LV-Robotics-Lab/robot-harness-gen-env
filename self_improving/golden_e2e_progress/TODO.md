@@ -4,17 +4,16 @@
 
 ## Doing
 
-- M2：交付受限 image exact-reuse 预览。原始图像与文本进入同一 workflow，外部真实 Codex
-  只经 exact MCP 完成正常 compile → Genesis replay → validate，以及读取本次实际观测后的真实
-  布局修改 → recompile → replay → validate。最终通过现有门禁发布到隔离预览库，并从最小服务
-  入口真实冒烟。Harness workflow journal 是唯一状态权威；程序客户端、历史运行关联和人工预填
-  proposal 均不能替代最终验收。
-- 当前安全集成点 `b2005da`，149 schema，工作树干净。可复用切片包括：`c45ab01` 修改后
-  compile@3 application、`bb72dc5` 修改后 Genesis execution v3 核心、`da00fa0` 真实
-  Codex/MCP 进程与 wire 见证。`ce0398a` native terminal resolver 保留为可选 M1 完整性层，
-  不再作为受限预览的新增前置。
-- 本轮先实现单一预览 manifest/发布库、共享修改后 replay/validate 执行和受限 exact MCP 服务，
-  添加分阶段耗时与 TTL 余量；完成一个可观察功能单元后再做集中真实验收。
+- M2：交付受限 image exact-reuse 预览。用户从 Harness API/CLI 提交图像和文本；Harness 创建并
+  持久化 workflow，内部调用真实 CodexBackend 做理解、视觉判断和诊断，再由 Harness 校验决定并
+  驱动 compile → Genesis replay → observe → validate、真实布局修改、重编译和发布。用户无须操作
+  Codex CLI/MCP；workflow journal 仍是唯一状态权威。
+- 当前安全集成点 `0509faf`，154 schema，工作树在本次决定更新前干净。受限输入构建、exact MCP、
+  共享 replay/validate Registry、深物理/媒体发布门和隔离部署数据根均已开始收拢；尚缺 Harness-owned
+  service/controller、内部 CodexBackend 接线、shared qualification 和两条真实运行。
+- 本轮先把现有 `codex exec`/wire recorder 封装为内部 backend，并让 Harness 在调用前后保存任务、
+  当前 head、预算和明确失败；不建立第二个状态机。随后完成服务入口、七段耗时与 TTL 余量，并按
+  可观察功能单元集中真实验收。
 
 ## Deferred（保留，当前不启动）
 

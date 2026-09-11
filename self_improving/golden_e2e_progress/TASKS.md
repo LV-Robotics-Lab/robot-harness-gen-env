@@ -6,10 +6,13 @@
 - [x] 真实 baseline/half_dt 场景回放及完整新媒体（研究运行，无生产场景 authority）。
 - [x] `1cf8908`：registered image compile → 固定双 dt replay → fresh observe v3 → validate，四 Skill 资格与终态闭合。
 - [x] M1 集中功能验收；第二路径输出闭包纯读通过（不包含 runtime member 部署或应用 SQLite 迁移）。
-- [ ] M2：外部真实 Codex 从原始图像与文本开始，在同一 workflow 只通过 exact MCP 完成正常
-  compile → Genesis replay → validate；不得用程序客户端或历史应用关联替代。
-- [ ] M2：外部真实 Codex 读取本次实际观测，提出有证据的受限布局修改；下一次 compile 必须消费
-  该修改并改变实际位置、方向或允许字段，随后真实 replay / validate。
+- [ ] M2：用户从 Harness API/CLI 提交原始图像与文本；Harness 先创建可恢复 workflow，再调用内部
+  真实 CodexBackend，并驱动 exact compile → Genesis replay → observe → validate。用户不操作 Codex
+  CLI/MCP；不得用程序客户端或历史应用关联替代端到端验收。
+- [ ] M2：内部真实 Codex 读取本次实际观测并返回有证据的受限布局修改；Harness 校验并消费该决定，
+  下一次 compile 必须改变实际位置、方向或允许字段，随后真实 replay / validate。
+- [ ] M2：Codex timeout、进程退出或无效决定必须写入同一任务记录，执行有限重试并可从当前 head
+  恢复；不能依赖原 Codex 会话保存业务进度。
 - [ ] M2：把通过门禁的环境 manifest 发布到隔离预览库，并验证查询、获取、复用、失败留痕与恢复。
 - [ ] M2：记录输入/资产、compile、runtime 完整性、仿真/渲染、CAS 深读、Codex/MCP、
   validate/publish 的实测耗时和观测 TTL 余量；先测量再处理重复开销。
