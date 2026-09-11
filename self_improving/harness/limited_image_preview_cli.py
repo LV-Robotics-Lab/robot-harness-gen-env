@@ -10,7 +10,10 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from .codex_backend import CodexBackend
-from .limited_image_preview_controller import LimitedImagePreviewController
+from .limited_image_preview_controller import (
+    LimitedImagePreviewController,
+    read_codex_attempts,
+)
 from .schemas.limited_image_preview_service import PreviewServiceResult
 
 
@@ -119,22 +122,6 @@ def run_cli(argv=None, *, service_factory=_service_factory, backend_factory=Code
     try:
         deployment = PreviewDeployment.model_validate_json(arguments.deployment.read_bytes())
         service = service_factory(deployment.service_settings)
-        backend = backend_factory(
-            executable=deployment.codex_executable,
-            approved_executable_sha256=deployment.approved_executable_sha256,
-            server_python=deployment.server_python,
-            server_settings=deployment.service_settings,
-            server_workdir=deployment.server_workdir,
-            model=deployment.model,
-        )
-        controller = LimitedImagePreviewController(
-            service,
-            backend,
-            evidence_root=deployment.evidence_root,
-            max_attempts=deployment.max_attempts,
-            call_budget=deployment.call_budget,
-            attempt_seconds=deployment.attempt_seconds,
-        )
         if arguments.command == "submit":
             text = (
                 arguments.text
@@ -153,8 +140,27 @@ def run_cli(argv=None, *, service_factory=_service_factory, backend_factory=Code
                     )
                 )
             )
+            input_elapsed_ns = time.monotonic_ns() - started
+        if arguments.command in {"submit", "resume"}:
+            backend = backend_factory(
+                executable=deployment.codex_executable,
+                approved_executable_sha256=deployment.approved_executable_sha256,
+                server_python=deployment.server_python,
+                server_settings=deployment.service_settings,
+                server_workdir=deployment.server_workdir,
+                model=deployment.model,
+            )
+            controller = LimitedImagePreviewController(
+                service,
+                backend,
+                evidence_root=deployment.evidence_root,
+                max_attempts=deployment.max_attempts,
+                call_budget=deployment.call_budget,
+                attempt_seconds=deployment.attempt_seconds,
+            )
+        if arguments.command == "submit":
             result = controller.run_to_terminal(
-                output.workflow_id, input_elapsed_ns=time.monotonic_ns() - started
+                output.workflow_id, input_elapsed_ns=input_elapsed_ns
             )
         elif arguments.command == "resume":
             result = controller.run_to_terminal(arguments.workflow_id)
@@ -179,7 +185,7 @@ def run_cli(argv=None, *, service_factory=_service_factory, backend_factory=Code
                             "terminal_decision",
                         )
                     }
-                    for row in controller.attempts(arguments.workflow_id)
+                    for row in read_codex_attempts(service.journal.path, arguments.workflow_id)
                 ],
             )
         else:

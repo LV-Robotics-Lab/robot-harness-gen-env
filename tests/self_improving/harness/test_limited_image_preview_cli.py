@@ -35,9 +35,7 @@ def _deployment(tmp_path):
     return deployment, settings
 
 
-def test_submit_persists_workflow_before_constructing_codex_backend(
-    service, tmp_path, capsys
-):
+def test_submit_persists_workflow_before_constructing_codex_backend(service, tmp_path, capsys):
     deployment, _ = _deployment(tmp_path)
     image = tmp_path / "raw.png"
     image.write_bytes(b"service fixture owns image validation")
