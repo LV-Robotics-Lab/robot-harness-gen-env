@@ -12,8 +12,10 @@ from pydantic import ValidationError
 
 from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.limited_image_preview_bootstrap import (
+    BootstrapCheckpoint,
     LimitedImagePreviewBootstrapPlan,
     _publish_candidate,
+    _record_checkpoint,
     bootstrap_limited_image_preview,
     check_limited_image_preview_bootstrap,
     run_cli,
@@ -351,3 +353,100 @@ def test_execute_checkpoints_exact_imports_before_application_restore(bootstrap_
     assert checkpoint["schema_version"] == "harness.limited_image_preview_bootstrap_result.v1"
     assert checkpoint["stage"] == "imports_complete"
     assert check_limited_image_preview_bootstrap(path).missing_target_imports == 0
+
+
+def _publish_candidate_checkpoint(plan):
+    imported = tuple(
+        ref
+        for seed in plan.native_projection_seeds
+        for ref in (seed.admission_ref, seed.descriptor_ref)
+    ) + (plan.publish_seed.manifest_ref, *plan.publish_seed.supporting_refs)
+    projections = {
+        seed.skill_ref: {
+            "admission_ref": seed.admission_ref,
+            "descriptor_ref": seed.descriptor_ref,
+            "qualification_ref": plan.native_settings.compile_qualification,
+            "qualification_report_ref": plan.native_settings.compile_qualification,
+        }
+        for seed in plan.native_projection_seeds
+    }
+    revised_projection = {
+        "admission_ref": plan.revised_admission_ref,
+        "descriptor_ref": plan.revised_registered_receipt,
+        "qualification_ref": plan.revised_qualification,
+        "qualification_report_ref": plan.revised_qualification,
+    }
+    return BootstrapCheckpoint(
+        schema_version="harness.limited_image_preview_bootstrap_result.v1",
+        plan_sha256="a" * 64,
+        repository_commit=plan.expected_repository_commit,
+        stage="publish_candidate_complete",
+        imported_objects=imported,
+        native_projections=projections,
+        revised_projection=revised_projection,
+        replay_execution_request=plan.revised_registered_request,
+        replay_candidate_run_id=plan.revised_registered_run_id,
+        replay_receipt=plan.revised_registered_receipt,
+        validation_candidate_run_id=plan.qualification_run_id,
+        validation_result=plan.native_settings.validation_qualification,
+        shared_qualifications={
+            "image2env.replay@3.0.0": plan.native_settings.scene_qualification,
+            "image2env.validate@3.0.0": plan.native_settings.validation_qualification,
+        },
+        publish_candidate_run_id=plan.qualification_run_id,
+    )
+
+
+def test_checkpoint_accepts_exact_shared_qualification_extension(bootstrap_plan):
+    path, _ = bootstrap_plan
+    plan = LimitedImagePreviewBootstrapPlan.model_validate_json(path.read_bytes())
+    checkpoint = _publish_candidate_checkpoint(plan)
+    extended = {
+        **checkpoint.shared_qualifications,
+        "image2env.preview_publish@1.0.0": plan.native_settings.compile_qualification,
+    }
+
+    updated = _record_checkpoint(
+        plan,
+        checkpoint,
+        "publish_qualification_complete",
+        shared_qualifications=extended,
+    )
+
+    assert updated.stage == "publish_qualification_complete"
+    assert updated.shared_qualifications == extended
+    assert BootstrapCheckpoint.model_validate_json(plan.checkpoint_path.read_bytes()) == updated
+
+
+def test_checkpoint_rejects_shared_qualification_loss_replacement_and_other_drift(
+    bootstrap_plan,
+):
+    path, _ = bootstrap_plan
+    plan = LimitedImagePreviewBootstrapPlan.model_validate_json(path.read_bytes())
+    checkpoint = _publish_candidate_checkpoint(plan)
+    current = checkpoint.shared_qualifications
+
+    with pytest.raises(ValueError, match="shared_qualifications differs"):
+        _record_checkpoint(
+            plan,
+            checkpoint,
+            checkpoint.stage,
+            shared_qualifications={"image2env.replay@3.0.0": current["image2env.replay@3.0.0"]},
+        )
+    with pytest.raises(ValueError, match="shared_qualifications differs"):
+        _record_checkpoint(
+            plan,
+            checkpoint,
+            checkpoint.stage,
+            shared_qualifications={
+                **current,
+                "image2env.replay@3.0.0": plan.native_settings.compile_qualification,
+            },
+        )
+    with pytest.raises(ValueError, match="replay_receipt differs"):
+        _record_checkpoint(
+            plan,
+            checkpoint,
+            checkpoint.stage,
+            replay_receipt=plan.revised_registered_request,
+        )
