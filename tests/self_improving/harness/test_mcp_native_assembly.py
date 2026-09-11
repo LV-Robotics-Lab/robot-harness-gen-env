@@ -61,3 +61,64 @@ def test_production_settings_reject_caller_execution_or_time_overrides(tmp_path,
     document[field] = "caller-controlled"
     with pytest.raises(ValidationError):
         NativeImageMCPServerSettings.model_validate_json(json.dumps(document))
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    (
+        ("cas_root", "relative/cas"),
+        ("golden_database_path", "relative/golden.sqlite"),
+        ("principal_id", ""),
+        ("scene_roots", {"arbitrary": "/native"}),
+        (
+            "capture_roots",
+            {
+                role: "relative"
+                for role in (
+                    "backend",
+                    "distributions",
+                    "genesis",
+                    "interpreter",
+                    "native",
+                    "stdlib",
+                )
+            },
+        ),
+        ("scene_manifest", "wrong_schema"),
+        ("compile_qualification", "wrong_schema"),
+    ),
+)
+def test_settings_reject_ambiguous_deployment_and_authority_types(tmp_path, field, value):
+    document = settings_document(tmp_path)
+    if value == "wrong_schema":
+        document[field]["schema_version"] = "harness.run_state.v1"
+    else:
+        document[field] = value
+    with pytest.raises(ValidationError):
+        NativeImageMCPServerSettings.model_validate_json(json.dumps(document))
+
+
+def test_restore_requires_existing_native_authority_before_any_creation(tmp_path):
+    from self_improving.harness.mcp_native_assembly import restore_native_image_applications
+
+    with pytest.raises(TypeError, match="exact"):
+        restore_native_image_applications(object())
+    settings = NativeImageMCPServerSettings.model_validate_json(
+        json.dumps(settings_document(tmp_path))
+    )
+    with pytest.raises(ValueError, match="existing"):
+        restore_native_image_applications(settings)
+    assert list(tmp_path.iterdir()) == []
+    (tmp_path / "cas" / "sha256").mkdir(parents=True)
+    with pytest.raises(ValueError, match="journals"):
+        restore_native_image_applications(settings)
+
+
+def test_complete_absolute_deployment_mapping_is_preserved(tmp_path):
+    document = settings_document(tmp_path)
+    document["scene_roots"] = {
+        role: str(tmp_path / role)
+        for role in ("backend", "distributions", "genesis", "interpreter", "native", "stdlib")
+    }
+    settings = NativeImageMCPServerSettings.model_validate_json(json.dumps(document))
+    assert settings.model_dump(mode="json") == document

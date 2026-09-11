@@ -20,9 +20,12 @@ from .mcp_assembly import (
     create_compile_mcp_adapter,
     create_golden_mcp_adapter,
 )
+from .mcp_native_assembly import NativeImageMCPServerSettings
 from .mcp_server import create_harness_mcp_server
 
-MCPServerSettings = CompileMCPServerSettings | GoldenMCPServerSettings
+MCPServerSettings = (
+    CompileMCPServerSettings | GoldenMCPServerSettings | NativeImageMCPServerSettings
+)
 _SETTINGS = TypeAdapter(Annotated[MCPServerSettings, Discriminator("schema_version")])
 
 
