@@ -332,7 +332,11 @@ def test_real_external_fixture_process_failure_is_structured(assignment, tmp_pat
         pytest.skip("external ELF fixture requires C compiler")
     source = tmp_path / "fixture.c"
     body = {"exit": "return 17;", "invalid": "return 0;", "timeout": "sleep(10); return 0;"}[mode]
-    source.write_text("#include <unistd.h>\nint main(){" + body + "}")
+    source.write_text(
+        "#include <unistd.h>\n#include <stdio.h>\nint main(int argc,char **argv){"
+        'FILE *f=fopen("argv.txt","w"); for(int i=0;i<argc;i++) fprintf(f,"%s\\n",argv[i]);'
+        "fclose(f);" + body + "}"
+    )
     executable = tmp_path / "fixture-elf"
     subprocess.run([compiler, str(source), "-o", str(executable)], check=True)
     settings = tmp_path / "settings.json"
@@ -353,3 +357,10 @@ def test_real_external_fixture_process_failure_is_structured(assignment, tmp_pat
     assert outcome.status == expected
     assert outcome.decision_evidence is None
     assert outcome.transcript_sha256
+    argv = (tmp_path / "record/argv.txt").read_text().splitlines()
+    schema_path = Path(argv[argv.index("--output-schema") + 1])
+    schema = json.loads(schema_path.read_bytes())
+    assert schema_path == tmp_path / "record/terminal-decision.schema.json"
+    assert schema["additionalProperties"] is False
+    assert schema["properties"]["decision"]["enum"] == ["phase_complete", "unsupported"]
+    assert set(schema["required"]) == {"workflow_id", "decision", "reason"}

@@ -318,6 +318,9 @@ class CodexBackend:
                 stream.write(data)
 
         write("assignment.json", assignment.model_dump_json().encode())
+        schema = CodexTerminalDecision.model_json_schema()
+        schema["properties"]["workflow_id"]["const"] = str(assignment.snapshot.workflow_run_id)
+        write("terminal-decision.schema.json", json.dumps(schema, sort_keys=True).encode())
         write(
             "inputs.json",
             json.dumps(
@@ -384,6 +387,8 @@ class CodexBackend:
             "exec",
             "--json",
             "--ephemeral",
+            "--output-schema",
+            str(output_root / "terminal-decision.schema.json"),
             "--ignore-user-config",
             "--ignore-rules",
             "--sandbox",
