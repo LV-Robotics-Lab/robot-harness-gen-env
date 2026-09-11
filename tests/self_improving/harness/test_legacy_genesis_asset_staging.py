@@ -405,4 +405,128 @@ def test_legacy_stage_rejects_absolute_manifest_locator_and_wrong_exact_types(
             source=_binding(_ARCHIVE_ROOT),
             subject=object(),
         )
+    with pytest.raises(TypeError, match="exact LegacyGenesisAssetSourceBinding"):
+        stage_legacy_genesis_asset_representation(
+            artifact_store=store,
+            source=object(),
+            subject=_subject(),
+        )
+    with pytest.raises(TypeError, match="root must be a pathlib Path"):
+        LegacyGenesisAssetSourceBinding(
+            root="not-a-path",  # type: ignore[arg-type]
+            manifest_relative_path="asset.json",
+            expected_manifest_sha256=_MANIFEST_SHA256,
+        )
+    with pytest.raises(ValueError, match="non-empty relative path"):
+        LegacyGenesisAssetSourceBinding(
+            root=_ARCHIVE_ROOT,
+            manifest_relative_path="",
+            expected_manifest_sha256=_MANIFEST_SHA256,
+        )
+    with pytest.raises(ValueError, match="64 lowercase hex"):
+        LegacyGenesisAssetSourceBinding(
+            root=_ARCHIVE_ROOT,
+            manifest_relative_path="asset.json",
+            expected_manifest_sha256="not-a-digest",
+        )
+    assert _cas_manifest(store) == ()
+
+
+@pytest.mark.parametrize("drift", ("source_record", "asset_key"))
+def test_legacy_stage_rejects_subject_not_bound_to_manifest_before_cas_write(
+    tmp_path: Path,
+    drift: str,
+) -> None:
+    _require_api()
+    store = LocalArtifactStore(tmp_path / "fresh-cas")
+    assert stage_legacy_genesis_asset_representation is not None
+    assert LegacyGenesisAssetStageError is not None
+
+    subject = (
+        _subject("0" * 64)
+        if drift == "source_record"
+        else _subject().model_copy(update={"asset_key": "another_mouse"})
+    )
+    with pytest.raises(LegacyGenesisAssetStageError) as captured:
+        stage_legacy_genesis_asset_representation(
+            artifact_store=store,
+            source=_binding(_ARCHIVE_ROOT),
+            subject=subject,
+        )
+
+    assert captured.value.code == "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"
+    assert _cas_manifest(store) == ()
+
+
+@pytest.mark.parametrize(
+    ("attack", "expected_code"),
+    (
+        ("missing_manifest", "HARN_LEGACY_ASSET_SOURCE_UNAVAILABLE"),
+        ("invalid_json", "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"),
+        ("extra_manifest_field", "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"),
+        ("wrong_asset_id_type", "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"),
+        ("empty_category", "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"),
+        ("wrong_physics_file", "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"),
+        ("missing_files", "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"),
+        ("empty_files", "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"),
+        ("invalid_member_shape", "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"),
+        ("invalid_member_digest", "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"),
+        ("non_string_member_digest", "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"),
+        ("invalid_member_size", "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"),
+        ("undeclared_entrypoint", "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"),
+        ("extra_symlink", "HARN_LEGACY_ASSET_SOURCE_UNAVAILABLE"),
+    ),
+)
+def test_legacy_stage_rejects_malformed_manifest_and_extra_symlink(
+    tmp_path: Path,
+    attack: str,
+    expected_code: str,
+) -> None:
+    _require_api()
+    root = _copy_source(tmp_path)
+    manifest = root / "asset.json"
+    if attack == "missing_manifest":
+        manifest.unlink()
+        expected_sha256 = _MANIFEST_SHA256
+    elif attack == "invalid_json":
+        payload = b"{not-json\n"
+        manifest.write_bytes(payload)
+        expected_sha256 = hashlib.sha256(payload).hexdigest()
+    elif attack == "extra_symlink":
+        (root / "extra-link").symlink_to(tmp_path / "missing-target")
+        expected_sha256 = _MANIFEST_SHA256
+    else:
+
+        def mutate(value: dict[str, Any]) -> None:
+            if attack == "missing_files":
+                del value["files"]
+            elif attack == "extra_manifest_field":
+                value["extra"] = "forbidden"
+            elif attack == "wrong_asset_id_type":
+                value["asset_id"] = 1
+            elif attack == "empty_category":
+                value["category"] = ""
+            elif attack == "wrong_physics_file":
+                value["physics_file"] = "urdf/bnjzzp.urdf"
+            elif attack == "empty_files":
+                value["files"] = []
+            elif attack == "invalid_member_shape":
+                value["files"][0]["extra"] = "forbidden"
+            elif attack == "invalid_member_digest":
+                value["files"][0]["sha256"] = "bad"
+            elif attack == "non_string_member_digest":
+                value["files"][0]["sha256"] = 1
+            elif attack == "invalid_member_size":
+                value["files"][0]["size_bytes"] = -1
+            else:
+                value["entrypoint"] = "urdf/not-declared.urdf"
+
+        expected_sha256 = _rewrite_manifest(root, mutate)
+    store = LocalArtifactStore(tmp_path / "fresh-cas")
+    assert LegacyGenesisAssetStageError is not None
+
+    with pytest.raises(LegacyGenesisAssetStageError) as captured:
+        _stage(store, root, expected_sha256=expected_sha256)
+
+    assert captured.value.code == expected_code
     assert _cas_manifest(store) == ()
