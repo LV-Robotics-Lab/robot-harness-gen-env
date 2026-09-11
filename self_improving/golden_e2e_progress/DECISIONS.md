@@ -177,3 +177,19 @@
 - static 门：首个 exact-reuse slice 固定四项 evidence-bound check：`asset_closure_complete`、
   `binding_complete`、`runtime_lock_bound`、`scene_task_consistent`。任意 noop、缺项、多项或错 evidence
   均拒绝。该 static 门不声称真实物理、sim-ready 或 publishability。
+
+## D016 — 首个 image compile 是 input-bound controlled candidate，不是生产资格
+
+- 日期：2026-09-11
+- 状态：accepted_by_implementation
+- 决策：`harness.x2env_compile_receipt.v2` 必须携带同一 CAS 中的 canonical compile input；image/video
+  compile output v2 只接受该 receipt。首个 image exact-reuse handler 必须先完成纯读 preflight，再发布
+  deterministic derived graph，并在 postflight deep verify 成功后一次 emit。preflight 只做大小写敏感的
+  semantic name/alias 唯一匹配，不做视觉相似、尺寸推断或静默 fallback。
+- 受控常量：首个 slice 限制为一个 dynamic object 和一个 `on_table` relation；candidate placement、
+  observation keys 与 termination steps 是 implementation-bound constants，不声称来自图像或物理求解。
+- CAS 边界：preflight 失败不得产生派生 CAS。首次 publish 后若发生本地写入/构造/postflight 故障，当前
+  append-only CAS 可能保留不可达 orphan；没有 batch transaction 时不得声称物理零 orphan。任何 orphan
+  都不能进入 HandlerResult、workflow state 或 receipt head。
+- 发布边界：candidate 始终 `simulator_executed=false`、`simulator_ready=false`、`publishable=false`，不注册
+  qualified Skill/MCP。只有真实 Genesis asset qualification 与 production bundle 通过后才能扩大主张。

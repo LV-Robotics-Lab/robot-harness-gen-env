@@ -70,6 +70,9 @@
   - [x] X2 typed exact-reuse evidence：12 份 self-hashed compile records 与纯读 deep verifier；完整
     catalog、qualification/member/check evidence 和四项 static checks 均 fail closed，但不计作 handler、
     production qualification 或 Genesis runtime。
+  - [x] X2 controlled exact-reuse image compile：v2 receipt 绑定完整 compile input；candidate handler 先做
+    纯读 preflight，再确定性发布 SceneIR/TaskIR/selection/closure/binding/static/package/receipt，并由
+    deep verifier postflight 后才返回。该项不计作 production qualification 或 Genesis runtime。
 - [ ] video2env 三个 Skill 实现、资格和三类资产路径。
 - [ ] 输出 sim-ready Genesis 环境，并保留可观看图像/视频和机器可验证报告。
 

@@ -4,16 +4,17 @@ PR1 schema tranche 先回答“进程内到底用什么类型说话”，还没�
 `self_improving/harness/` 把 Text2Env compile、replay、validate 的边界冻结为严格模型；
 `scene_gen/` 仍拥有 SceneSpec、resolved scene、包 manifest、运行时证据和验证报告的内部格式。
 
-本页对 qualification/RunStore 的执行状态固定到 `ab03859`；之后观察到的并发 Harness commits
-`c365874`、`8d9a01c`、`587b49f`、`0e6716a` 未纳入这次 clean-archive 审计。以下“未接线”边界
-只对固定快照负责，不冒充移动 HEAD 的现状认证。
+本页保留 PR1 的历史分层，同时把 follow-on 公共 schema 目录更新到固定 `c817ebf`。早期
+qualification/RunStore 段落描述的是 `ab03859` 的历史快照；当前可执行边界以 Golden progress ledger、
+source-evidence 表和固定验收提交为准。
 
 PR1 之后又增加相邻执行 seam：`LocalArtifactStore`/`ArtifactResolver` 会读取本地 bytes 并核对
 SHA-256/大小；`RunRecorder`/`EventSink` 由 callback 生成连续事件和 RunState；
 `SQLiteEventJournal` 以 SQLite WAL 持久化 append-only events；`PackageStore` 可把 manifest members
 发布到 CAS 并安全重物化；通用 `SkillRegistry` 按 exact version 注册有 qualification receipt 的
-descriptor，再调用注入 handler。`284ffb` 已接入首个 `Text2EnvCompileHandler`，但 replay、validate、
-跨 run promotion transaction 与 MCP 仍没有实现。
+descriptor，再调用注入 handler。后续 fixed commits 已接入 qualified text compile/replay/validate 与 exact
+MCP；image/video 仍未进入 production Registry。`c817ebf` 新增的 image exact-reuse handler只通过
+controlled candidate seam执行，不是 production qualification。
 
 固定 follow-on `ab03859` 又包含两个独立 adapter：`qualification.py` 严格核一份预制 pass bundle，
 `run_store.py` 保存 immutable Invocation/terminal RunState 并对账 event journal。前者在该树没有
@@ -48,19 +49,17 @@ Registry follow-on 以本页和 `self_improving/harness/IMPLEMENTATION_LOG.md` �
 当前通用 SkillRegistry：exact version、qualification、类型、依赖、摘要、attempt、审计
         |
         v
-当前 Compile handler；待实现 Replay / Validate handlers
+qualified text compile/replay/validate；controlled image compile candidate
         |
         v
 现有 schema + scene_gen：类型、解析、grounding、求解、包、回放、物理验证
 ```
 
-MCP 未来只能把已注册 descriptor 映射成工具；它不能再发明类型或默认值。P2 GoldenRun 当前只把
-exact qualified compile 接成 revision 0→1；Registry 已负责通用
-执行与审计，但不把 Text2Env 分支写进通用核心。PR1 schema 通过 `ArtifactRef` 与
-`EnvironmentPackage` 指向 `scene_gen` 已有载荷；compile 已由专用 adapter 组装，完整发布闭环仍
-需要 replay/validate adapters。
+MCP 只能把 frozen Registry 中已注册且已资格化的 exact descriptor 映射成工具；它不能发明类型或默认值。
+当前 text 路径已能在同一 Golden workflow 完成 compile/replay/validate revision 0→1→2→3；image/video
+descriptor 仍是 contract-only，因此 controlled image candidate 不会自动出现在 production MCP。
 
-## PR1 的 14 个公共入口与当前 72 个版本化入口
+## PR1 的 14 个公共入口与当前 87 个版本化入口
 
 下表是 PR1 冻结的 14 个入口。A042 没有修改其中的 `SkillDescriptor` v1，而是新增第 15 个
 `SkillDescriptorV2`：v1 只允许 `deterministic=true`；v2 用
@@ -82,7 +81,9 @@ resource-access receipt 增加 1 个，initial/revised compile attempt 与 image
 `harness.video_source_media.v2`，因此当前总数为 72。compile
 attempt 四份让 PromptRevision consumption 具备可冻结的显式 lineage；image probe 则只冻结 decoder
 derived source/canonical identity；video 三份则绑定完整 ordered decode，而不改写 fallback 专用
-`harness.video_frame_sequence.v1`。两者仍不等于 image/video handler、qualification 或 Genesis runtime。
+`harness.video_frame_sequence.v1`。X2 typed compile evidence 再增加 12 个入口，input-bound image/video
+output 与 receipt v2 再增加 3 个，因此当前总数为 87。controlled image handler 会消费这些模型，但仍
+不等于 production qualification 或 Genesis runtime。
 
 | 分组 | Schema | 读者模型 |
 | --- | --- | --- |
@@ -95,7 +96,7 @@ derived source/canonical identity；video 三份则绑定完整 ordered decode�
 `CompileConfig`、`RuntimeConfig`、`DependencyRef` 和 `UnknownField` 是嵌套 `$defs`，不是新的
 公共 `$id`，所以 PR1 总数是 14；descriptor v2 与 validate v2 两份文档把当时总数增至 17，计入后续
 12 个独立入口、3 个 asset staging 入口、P2 的 7 个 workflow-operation 入口和 x2env 的 16 个合同
-入口后，仓库当前总数是 55。
+入口后当时总数是 55；上述 observation/control/media/X2 follow-on 把当前目录增至 87。
 
 ## 严格不只是“不多字段”
 

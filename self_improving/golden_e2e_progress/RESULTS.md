@@ -1,5 +1,34 @@
 # 进度与结果
 
+## 2026-09-11 X2 controlled image exact-reuse compile candidate
+
+- TDD 提交链：`327c78a` 冻结 compile receipt/output v2 → `5b45673` 绑定 canonical compile input 并将
+  尚未资格化的 image/video compile descriptor 输出切到 v2 → `44f841a` 冻结 candidate handler RED →
+  `c817ebf7353d62b7e6fd5df8a65575e93adaa374` 完成 GREEN。v1 receipt/image output/video output schema 与
+  snapshot 保持 parse-only、字节不变；公共 schema 84→87。
+- `ExactReuseCompileClosureVerifier.preflight` 在任何派生 CAS 写入前完整消费 image source/probe、proposal、
+  prompt、runtime lock、portable catalog 的每个 available representation/member/qualification/check evidence，
+  并验证 trust allowlist、issuer、profile、subject 与 loader closure。首个 slice 限制为一个 dynamic object、
+  一个 `on_table` relation、无 unknowns，以及大小写敏感的 semantic name/alias 唯一匹配。
+- `Image2EnvExactReuseCompileHandler` 只通过 `SkillRegistry.evaluate_candidate` 执行；它确定性发布 compile
+  input、SceneIR、TaskIR、asset selection、scene closure、binding、四项 static validation、package 与 v2
+  receipt。deep postflight 成功后才发一次完成事件，并返回含完整递归 supporting refs 的 output。
+- focused 99 pass；handler+verifier 合计 375 statements/92 branches 100%；87 schema exporter 与 Ruff/diff
+  通过。完整根 `.venv` 为 4108 pass、20 skip、1 fail；唯一失败因该隔离环境没有 pip，导致 packaging
+  节点无法调用 `python -m pip wheel`。同一 packaging 用系统 Python单跑 2 pass，该项不是实现失败。
+- 第一轴独立 archive 验收：fresh CAS `12→21→21`，两次不同 candidate run 的 output/artifacts 完全相同；
+  21 个递归 ArtifactRef 与 RunState artifacts 精确相等，CAS 路径/bytes/SHA 全闭合；3×2 RGB PNG 实际
+  解码。missing/ambiguous category、missing source/catalog/member/qualification 六类反例全部在派生前零写。
+  summary SHA-256 `6e2191b5ee887925705b856cb68b8f3c851d69e09b5e6d7abf6d6c261efd52b5`。
+- 第二轴独立 archive 验收覆盖 exact alias、大小写漂移、unknowns、多对象、非 `on_table`、未受信未选
+  catalog entry、input receipt 和 postflight graph 漂移，均 fail closed。故障注入使 handler 在 publish
+  之后 postflight 失败时，terminal 为 failed、无 output、RunState artifacts 为空，但 append-only CAS 保留
+  9 个不可达对象；这是当前没有 batch transaction 的显式边界，不把它误报为零 orphan。
+- 证据：`docs/evidence/golden-image2env-exact-reuse-candidate-20260911.{md,json}`。
+- 边界：所有输出固定 `simulator_executed=false`、`simulator_ready=false`、`collision_qualified=false`、
+  `publishable=false`。没有 production asset issuer/qualification、Genesis/GPU、replay/validate、MCP image
+  exposure 或 robot-policy；implementation-bound placement 也不表示图像推理或物理正确。
+
 ## 2026-09-11 X1 complete-sequence video ingest 与 strict consumer
 
 - 提交链 `506ad84` → `13e8f01bd963375bdf65d8940434b240cbbb6117` 以 public-seam RED/GREEN

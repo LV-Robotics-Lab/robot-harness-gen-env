@@ -1,5 +1,16 @@
 # Change Log
 
+## 2026-09-11 controlled image exact-reuse compile candidate
+
+- image/video compile output 与 compile receipt 增加 v2：receipt 通过 canonical CAS input 绑定 seed、attempt、
+  acquisition policy 和全部输入引用；三个 v1 schema/snapshot 保持 parse-only 与字节不变，公共 schema
+  84→87。
+- `Image2EnvExactReuseCompileHandler` 在 Registry candidate 模式先纯读消费完整 image/proposal/catalog/
+  qualification graph，再确定性发布 8 份派生文档，并由 v2 deep verifier postflight 后一次返回完整 supporting
+  closure。category 只允许大小写敏感的 semantic name/alias 唯一匹配。
+- focused 99 pass；handler+verifier 375 statements/92 branches 100%。它仍未注册 production qualification，
+  没有运行 Genesis/GPU，也不授予 simulator-ready、physics 或 publishability。
+
 ## 2026-09-11 X2 typed exact-reuse compile evidence
 
 - 将 12 个 opaque x2env compile ArtifactRef schema 实体化为 self-hashed public records；公共 schema

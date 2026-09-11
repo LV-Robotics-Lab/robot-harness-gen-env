@@ -1,0 +1,53 @@
+{
+  "boundaries": {
+    "controlled_candidate_only": true,
+    "genesis_executed": false,
+    "gpu_executed": false,
+    "mcp_exposed": false,
+    "production_qualification_present": false,
+    "publishable": false
+  },
+  "cas": {
+    "after_first": 21,
+    "after_second": 21,
+    "before": 12,
+    "manifest_sha256": "e94d1428fb73b45c92fb5f275e8b3a9990c94a8c80b097b33799adf48749ac4c",
+    "recursive_artifact_refs": 21,
+    "run_state_artifacts": 21
+  },
+  "fixed_commit": "c817ebf7353d62b7e6fd5df8a65575e93adaa374",
+  "identity": {
+    "compile_input_sha256": "c71d1e207e66bb2a4217f25ad590eec99ac97f5506f73732cf08511d16bb5244",
+    "output_sha256": "f755f2e5f96cf367707869c631cb8eca921f7f8fdebfbed2507d19127edd8926",
+    "package_id": "059219fcf496e2f631474c6f07801aec6f54ed5acd7816923d6318b085080f62",
+    "receipt_sha256": "71167565b28fd90b30c7cbb4c57f4617112931d9215c88eface3397114ae7029"
+  },
+  "negative_cases": [
+    "ambiguous_category",
+    "missing_catalog",
+    "missing_category",
+    "missing_member",
+    "missing_qualification",
+    "missing_source"
+  ],
+  "positive": {
+    "decoded_image": "PNG 3x2 RGB, one frame",
+    "derived_documents": 8,
+    "deterministic_second_candidate": true,
+    "status": "pass"
+  },
+  "schema_version": "harness.image2env_exact_reuse_acceptance.v1",
+  "source_acceptance_summary_sha256": "6e2191b5ee887925705b856cb68b8f3c851d69e09b5e6d7abf6d6c261efd52b5",
+  "verification": {
+    "focused_tests": 99,
+    "new_core_branches": 92,
+    "new_core_branches_covered": 92,
+    "new_core_statements": 375,
+    "new_core_statements_covered": 375,
+    "root_environment_failure": "project .venv has no pip; packaging test cannot invoke python -m pip wheel",
+    "root_failed": 1,
+    "root_passed": 4108,
+    "root_skipped": 20,
+    "schema_snapshots": 87
+  }
+}

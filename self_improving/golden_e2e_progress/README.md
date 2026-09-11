@@ -51,7 +51,8 @@ revision 0→1→2→3 和无 live application 重启幂等。该结果仍只是
 publishability，不是 promotion、Genesis 或 robot-policy。新增 validate execution/policy/handler/
 application/dependency 五模块的 statement/branch 门均已达到 100%。Image2Env/Video2Env 的六个合同
 已经过两轴功能验收；加入 observation、control、resource-access、compile-attempt 与 image/video ingest
-证据合同与 X2 typed compile evidence 后，84 份公共 schema 现在既能整目录注册，也能逐文件
+证据合同、X2 typed compile evidence 与 input-bound compile v2 后，87 份公共 schema 现在既能整目录
+注册，也能逐文件
 独立校验。Gujie 现存 evidence 仍只证明 image-derived
 existing reconstruction 的 legacy Genesis 候选，不证明 fresh image、video 或 Harness runtime。
 P5 exact MCP adapter 现已由官方 MCP 2.2 stdio Client 在真实 RoboTwin/SAPIEN 上完成 raw-text
@@ -80,7 +81,11 @@ image compile handler、qualification 或 Genesis runtime。X1 video ingest 也�
 已把 proposal、SceneIR、TaskIR、portable catalog、representation、asset qualification、selection、
 scene closure、binding、runtime lock、static validation 与 compile receipt 从 opaque schema label
 实体化为 self-hashed typed records；纯读 verifier 会消费完整 catalog 和所有 qualification/member/check
-evidence，并要求四项 exact static checks。它尚不是 handler、production qualification 或 Genesis runtime。
+evidence，并要求四项 exact static checks。compile receipt/output v2 又绑定 canonical input；controlled
+image handler 已在 Registry candidate 中确定性生成单对象 exact-reuse 静态 package，并在 postflight
+重验全部闭包；验收记录见
+[`docs/evidence/golden-image2env-exact-reuse-candidate-20260911.md`](../../docs/evidence/golden-image2env-exact-reuse-candidate-20260911.md)。
+它尚不是 production qualification、Genesis runtime/replay 或 MCP image path。
 P6 继续修复资产 staging；autoresearch 只在其
 冻结 benchmark 可以
 真实运行后开始。

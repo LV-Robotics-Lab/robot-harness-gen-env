@@ -4,10 +4,9 @@
 
 ## Doing
 
-- X2 exact-reuse image compile：12 份 typed compile records 与完整 deep verifier 已完成；当前进入
-  controlled deterministic builder/handler TDD。builder 必须先用只读 preflight 消费 source、proposal、
-  完整 catalog 与 trusted qualifications，再发布 SceneIR/TaskIR/selection/closure/binding/static/package/
-  receipt；失败不得把半成品误作受信输出。
+- X2 exact-reuse image compile：controlled candidate handler 与 v2 input-bound receipt 已完成；当前进入
+  production qualification 设计。必须取得真实 Genesis asset issuer/runtime evidence，且资格生成器要复用
+  同一 preflight/postflight，不得把 controlled catalog fixture 当生产资产资格。
 - P10 fresh observation：strict schema、controlled candidate application/evidence policy 与 test-controlled
   Golden execution binding 已在同一 revision 2→3 中闭合 receipt/state/restart；下一切片是 production
   runtime binding。当前受控路径固定 `simulator_executed=false`，真实 Genesis capture、qualification 与
@@ -20,8 +19,9 @@
 
 ## Next
 
-- X2：实现 controlled exact-reuse image compile builder/handler/application，并用已完成 deep verifier 对
-  输出做返回前闭包；保持未注册、未资格化和 `simulator_ready=false`，直到真实 Genesis asset issuer 可用。
+- X2：为 exact-reuse image compile 实现 production application/qualification；先生成真实 Genesis asset
+  issuer、runtime lock 与 qualification bundle，再允许 Registry/MCP 曝光。controlled handler 继续保持
+  未注册、`simulator_ready=false`。
 - P10：实现 production execution binding/runtime；保持过期、缺 key、时间或 payload 漂移在 parent
   commit 前 fail closed。
 - P10：production policy 稳定后，用真实 Genesis sealed checkpoint 做 capture/qualification；只有该门
@@ -47,6 +47,15 @@
   revision 继续调用 compile/replay/validate。
 
 ## Done
+
+- X2 controlled exact-reuse image compile 完成：image/video compile descriptor 输出切到 v2，compile receipt
+  v2 以 CAS `compile_input` 绑定 seed、attempt、acquisition policy 和完整输入字节，v1 继续 parse-only 且
+  snapshot 不变。`Image2EnvExactReuseCompileHandler` 仅走 Registry candidate：纯读 preflight 完整消费
+  image/proposal/runtime/catalog 及所有 available qualification/member/check evidence，首个切片严格限制为
+  单一 dynamic object + `on_table` + case-sensitive exact/alias 唯一匹配；随后确定性发布 8 份派生文档，
+  postflight deep verifier 通过后才 emit/return。重复 candidate 输出相同且 CAS 零增长；missing/ambiguous
+  category 与证据缺失在派生前 fail closed。公共 schema 84→87；新 handler+verifier 375 statements/92
+  branches 100%。仍无 production qualification、真实 Genesis/GPU、replay、MCP 或 publishability。
 
 - X2 typed compile evidence 与 deep verifier 完成：12 个原 opaque artifact label 已成为严格、self-hashed
   public models，公共 schema 72→84。`ExactReuseCompileClosureVerifier` 纯读解引用 source/proposal/

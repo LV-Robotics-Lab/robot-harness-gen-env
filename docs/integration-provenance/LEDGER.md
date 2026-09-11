@@ -276,7 +276,8 @@ Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支
 - `target_paths`：`self_improving/harness/schemas/x2env.py`、
   `self_improving/harness/schemas/media_ingest.py`、`self_improving/harness/image_ingest.py`、
   `self_improving/harness/schemas/video_ingest.py`、`self_improving/harness/video_ingest.py`、
-  `self_improving/harness/x2env_contracts.py`、相关 schema
+  `self_improving/harness/x2env_contracts.py`、`self_improving/harness/schemas/x2env_compile_evidence.py`、
+  `self_improving/harness/x2env_compile_closure.py`、`self_improving/harness/image2env_compile.py`、相关 schema
   snapshot、`docs/contracts/X2ENV_IMAGE_VIDEO_SKILL_CONTRACT_V1.md`、
   `docs/contracts/GUJIE_GENENV_ADAPTER_MAPPING_V1.md`、两份 legacy media fixtures
 - `integration_method`：strict contract 与 anti-corruption mapping 不复制来源 runtime，不把 `genenv.*`
@@ -297,10 +298,14 @@ Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支
   ingest/consumer 验收为 focused 38 pass、178 statements/44 branches 100%；固定
   `13e8f01bd963375bdf65d8940434b240cbbb6117` 的 video ingest/consumer 为 focused 74 pass、
   343 statements/104 branches 100%，并以 system FFmpeg 6.1.1 独立完成 18-frame full decode。system
-  binary 未进入 qualification，Harness compile runtime evidence 仍为 `none`
+  binary 未进入 qualification。固定 `c817ebf7353d62b7e6fd5df8a65575e93adaa374` 又以 controlled Registry
+  candidate 两次生成相同 input-bound exact-reuse package：fresh CAS `12→21→21`，21 个递归 ArtifactRef
+  全闭合，handler/verifier 375 statements/92 branches 100%；该执行没有调用或复制 Gujie runtime，Harness
+  production compile runtime evidence 仍为 `none`
 - `golden_run`：`none`
-- `known_gaps`：sealed production video decoder、legacy importer、六个 handler/application、qualification、Registry/System2/Golden
-  executable catalog、MCP、真实 Genesis replay/validate、robot-policy 与 promotion 均未实现
+- `known_gaps`：sealed production video decoder、legacy importer、production image/video
+  handler/application/qualification、Registry/System2/Golden executable catalog、MCP、真实 Genesis
+  replay/validate、robot-policy 与 promotion 均未实现；现有 image handler 仅为未注册 controlled candidate
 - `last_verified`：`2026-09-11`
 
 ### 核对结论
