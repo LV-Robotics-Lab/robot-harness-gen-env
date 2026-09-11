@@ -51,7 +51,7 @@ def _canonical(value) -> bytes:
 def _put(store: LocalArtifactStore, root: Path, value, name: str) -> ArtifactRef:
     path = root / name
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(_canonical(value))
+    path.write_bytes(_canonical(value) + b"\n")
     return store.put_file(
         path,
         name=name,
@@ -158,7 +158,8 @@ def test_formal_typed_j3_projects_into_registry_and_delegates_existing_terminal(
     ]
     assert projection.registry_entry.skill_ref == "image2env.compile@3.0.0"
     assert projection.registry_entry.mcp_tool_name == "image2env_compile_v3_0_0"
-    assert projection.binding.child_authority is application.run_store
+    assert projection.binding.application.child_authority is application.run_store
+    assert projection.binding.child_authority.path.resolve() == application.run_store.path.resolve()
     assert projection.binding.policy is policy
     catalog = create_golden_execution_catalog(bindings=(projection.binding,))
     assert catalog.application_for("image2env.compile@3.0.0") is projection.binding.application
