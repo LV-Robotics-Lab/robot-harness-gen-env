@@ -605,6 +605,10 @@ def test_diagnosis_prompt_requires_new_head_reads_after_advisory(assignment, tmp
 
     assert result.status == "exit_failure"
     prompt = (tmp_path / "record/prompt.txt").read_text()
+    assert (
+        "For revised compile, take the exact asset_id from the current status asset field; "
+        "never guess or reconstruct an asset identifier."
+    ) in prompt
     required_in_order = (
         "Diagnosis is a two-head sequence.",
         "At the pre-advisory current head, first call image2env_preview_status_v1, then read "
