@@ -1,5 +1,18 @@
 # 进度与结果
 
+## M2 Harness-owned Codex 调用关系纠偏 — 73e836b
+
+- 已定位外部入口假设只集中在 `codex_mcp_acceptance.prepare_*` 的“NEW/start”提示、
+  `_preview_progression` 对整条 start 链的固定要求，以及 `codex_mcp_process` 对旧提示和历史 start
+  时间窗的复核。它们是调用封装与验收逻辑，不是 Genesis、Skill 或 Golden 状态权威。
+- 可原样复用：13 个受限 exact MCP 工具及资源读取、compile/replay/observe/validate 执行器、Gujie
+  鼠标资产及资格、CAS、Golden workflow journal、PromptRevisionV3 和隔离发布门。
+- 最小改动：Harness 服务先创建并保存任务；新增小型内部 `CodexBackend`，以 assigned workflow、
+  当前 snapshot、允许动作、调用预算和截止时间启动既有 `codex exec`/wire recorder；MCP relay 拒绝
+  start、外来 workflow 和超预算调用。Harness 保存 backend 请求/响应/失败，再从当前 head 决定继续、
+  有限重试或恢复。业务执行和状态提交仍只有现有服务/Golden 一套。
+- 这只是架构纠偏和实施边界记录；尚未证明 Harness 入口、CodexBackend 或两条真实案例通过。
+
 ## M2 受限预览安全收敛点 — b2005da
 
 - 当前权威分支固定在 `b2005da`，工作树在本次进度更新前干净，public schema 为 **149**。
