@@ -201,6 +201,11 @@ class LimitedImagePreviewLibrary:
             published.append(_published(entry))
         return tuple(published)
 
+    def read_index(self) -> LimitedImagePreviewLibraryIndexV1:
+        """Read the small canonical project index without reloading every preview."""
+
+        return self._read_index()
+
     def get(self, preview_id: str) -> VerifiedLimitedImagePreview:
         """Deeply reload one indexed preview as a fresh verified capability."""
 
