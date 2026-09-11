@@ -106,6 +106,16 @@ def test_manifest_timings_are_exact_nonoverlapping_controller_measurements() -> 
         _timings(entries, (overlap,))
     assert overlap_error.value.reason == "timing_overlap"
 
+    invalid = {**sample, "valid": False}
+    with pytest.raises(LimitedImagePreviewManifestBuildError) as invalid_error:
+        _timings(entries, (invalid,))
+    assert invalid_error.value.reason == "timing_incomplete"
+
+    negative = {**sample, "backend_elapsed_ns": -1}
+    with pytest.raises(LimitedImagePreviewManifestBuildError) as negative_error:
+        _timings(entries, (negative,))
+    assert negative_error.value.reason == "timing_value"
+
 
 def test_failed_attempt_wall_is_retained_before_a_complete_successful_attempt() -> None:
     workflow_id = UUID("10000000-0000-4000-8000-000000000002")

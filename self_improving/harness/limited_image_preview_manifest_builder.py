@@ -705,22 +705,39 @@ def _timings(entries: Sequence[StoredWorkflowEntry], samples: Sequence[Mapping[s
         }
         if set(sample) - allowed or set(sample) < allowed - {"wall_basis"}:
             _fail("timing_shape", "timing sample has unexpected or missing fields")
-        if (
-            sample["valid"] is not True
-            or sample["attribution_complete"] is not True
-            or sample["failure"] is not None
-        ):
-            _fail("timing_incomplete", "preview timings require complete successful attribution")
-        if "wall_basis" in sample:
-            _fail("timing_incomplete", "recovered-process wall time is not fully attributable")
+        if sample["valid"] is not True:
+            _fail("timing_incomplete", "preview timings require valid measured wall time")
         backend = _positive_ns(sample["backend_elapsed_ns"], "backend_elapsed_ns")
         value = sample["input_elapsed_ns"]
         if value is not None:
             input_ns += _positive_ns(value, "input_elapsed_ns")
             input_count += 1
         calls = sample["calls"]
-        if not isinstance(calls, list) or not calls:
-            _fail("timing_missing", "each completed controller attempt requires tool calls")
+        if not isinstance(calls, list):
+            _fail("timing_shape", "controller calls must be one measured list")
+        failure = sample["failure"]
+        complete = sample["attribution_complete"]
+        if failure is not None or complete is not True:
+            if (
+                type(failure) is not str
+                or not failure
+                or complete is not False
+                or calls
+                or (
+                    "wall_basis" in sample
+                    and sample["wall_basis"] != "controller_started_to_observed_owned_exit"
+                )
+            ):
+                _fail(
+                    "timing_incomplete",
+                    "failed controller wall has no trustworthy stage attribution",
+                )
+            # A pre-business failed attempt contributes its complete measured wall to
+            # the unattributed Codex/MCP residual.  No stage split is manufactured.
+            codex_ns += backend
+            continue
+        if "wall_basis" in sample or not calls:
+            _fail("timing_incomplete", "completed attempt requires exact attributed calls")
         transport_total = 0
         for call in calls:
             if not isinstance(call, Mapping) or set(call) != {
