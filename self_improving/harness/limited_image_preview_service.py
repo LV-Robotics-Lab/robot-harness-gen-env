@@ -62,6 +62,7 @@ class LimitedImagePreviewService:
         principal_id,
         execution_catalog=None,
         scene_manifest=None,
+        runtime=None,
     ):
         if (
             type(artifact_store) is not LocalArtifactStore
@@ -81,6 +82,29 @@ class LimitedImagePreviewService:
         self.principal_id = principal_id
         self.execution_catalog = execution_catalog
         self.scene_manifest = scene_manifest
+        if runtime is not None:
+            from .limited_image_preview_factory import LimitedPreviewRuntime
+
+            if type(runtime) is not LimitedPreviewRuntime or runtime.store is not artifact_store:
+                raise TypeError("preview runtime must own this exact shared CAS")
+        self.runtime = runtime
+        self.harness = self._harness()
+
+    def _prepare(self, workflow_id, skill=None):
+        if self.runtime is None:
+            return
+        entries = self.journal.read_operations(
+            principal_id=self.principal_id, workflow_run_id=UUID(str(workflow_id))
+        )
+        for item in entries:
+            self.runtime.ensure(item.operation.skill_ref)
+        if skill is not None:
+            self.runtime.ensure(skill)
+        from .golden_execution import create_golden_execution_catalog
+
+        self.execution_catalog = create_golden_execution_catalog(
+            bindings=tuple(self.runtime.bindings.values())
+        )
         self.harness = self._harness()
 
     def _harness(self, workflow_id=None):
@@ -95,7 +119,10 @@ class LimitedImagePreviewService:
 
     def _put(self, value, name, schema):
         raw = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
-        if schema == "harness.world_fact_evidence.v1":
+        if schema in {
+            "harness.world_fact_evidence.v1",
+            "harness.scene_interpretation_proposal.v1",
+        }:
             raw += b"\n"
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / name
@@ -166,6 +193,7 @@ class LimitedImagePreviewService:
         workflow_id = UUID(
             bytes=hashlib.sha256(b"limited-preview-start\0" + identity).digest()[:16], version=4
         )
+        self._prepare(workflow_id)
         ref = self.inputs.start(
             workflow_id=workflow_id, raw_image_ref=raw_image_ref, user_text=user_text
         )
@@ -214,6 +242,7 @@ class LimitedImagePreviewService:
         return self._projection(snapshot, "start")
 
     def asset_lookup(self, *, workflow_id, query="mouse"):
+        self._prepare(workflow_id)
         snapshot = self.harness.read(self._request(workflow_id))
         ref, document = self._input(snapshot)
         catalog = ArtifactRef.model_validate(document["catalog_ref"])
@@ -240,6 +269,7 @@ class LimitedImagePreviewService:
         )
 
     def status(self, *, workflow_id):
+        self._prepare(workflow_id)
         snapshot = self.harness.read(self._request(workflow_id))
         entries = self.journal.read_operations(
             principal_id=self.principal_id, workflow_run_id=snapshot.workflow_run_id
@@ -455,6 +485,8 @@ class LimitedImagePreviewService:
         position_y_m=None,
         yaw_rad=None,
     ):
+        if expected_skill_ref in {"image2env.compile@2.0.0", "image2env.compile@3.0.0"}:
+            self._prepare(workflow_id, expected_skill_ref)
         if expected_skill_ref == "image2env.compile@3.0.0":
             return self._compile_revised(
                 workflow_id, asset_id, idempotency_key, position_x_m, position_y_m, yaw_rad
@@ -604,6 +636,7 @@ class LimitedImagePreviewService:
         return self._submit(snapshot, "image2env.compile@3.0.0", envelope, key, "compile")
 
     def replay(self, *, workflow_id, idempotency_key, expected_skill_ref):
+        self._prepare(workflow_id, expected_skill_ref)
         if expected_skill_ref not in {"image2env.replay@2.0.0", "image2env.replay@3.0.0"}:
             raise ValueError("preview requires exact replay identity")
         previous = self._existing(workflow_id, expected_skill_ref, idempotency_key)
@@ -654,6 +687,7 @@ class LimitedImagePreviewService:
 
     def observe(self, *, workflow_id, idempotency_key):
         skill = "genesis.observe@3.0.0"
+        self._prepare(workflow_id, skill)
         previous = self._existing(workflow_id, skill, idempotency_key)
         if previous is not None:
             return self._stage(self.harness.submit(previous[1]), "observe")
@@ -702,6 +736,7 @@ class LimitedImagePreviewService:
             else PreviewLayout(x_m=coordinates[0], y_m=coordinates[1], yaw_rad=coordinates[2])
         )
         skill = "image2env.validate@3.0.0"
+        self._prepare(workflow_id, skill)
         previous = self._existing(workflow_id, skill, idempotency_key)
         if previous is not None:
             parameters = LimitedSceneValidateInputV1.model_validate(previous[1].parameters)
@@ -741,6 +776,7 @@ class LimitedImagePreviewService:
         )
 
     def read_resource(self, workflow_id, uri):
+        self._prepare(workflow_id)
         access_prefix = f"harness://workflows/{UUID(str(workflow_id))}/resource-access/"
         if uri.startswith(access_prefix) and len(uri.removeprefix(access_prefix)) == 64:
             _, payload = self.harness.read_resource_access_receipt(
@@ -780,6 +816,7 @@ class LimitedImagePreviewService:
         }
 
     def submit_control(self, wire):
+        self._prepare(wire.workflow_run_id)
         from .limited_image_preview_mcp import MCPPromptRevisionRecordRequestV3
         from .mcp_adapter import MCPToolCall
         from .mcp_control_v2 import MCPAdvisoryRecordRequestV2, create_native_harness_mcp_adapter
@@ -916,3 +953,10 @@ class LimitedImagePreviewService:
         if used != set(deliveries):
             raise ValueError("control resource reads must exactly match consumed sources")
         return self.harness.submit_control(command).model_dump(mode="json")
+
+
+def create_limited_image_preview_service(settings_path):
+    """Fixed CLI entry; deployment construction remains in the operator factory."""
+    from .limited_image_preview_factory import create_limited_image_preview_service as create
+
+    return create(settings_path)
