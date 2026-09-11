@@ -604,3 +604,24 @@ def test_unverified_json_cannot_enter_the_isolated_preview_library(
     assert reopened.list() == ()
     with pytest.raises(LimitedImagePreviewLibraryError, match="not indexed"):
         reopened.get(manifest.preview_id)
+
+
+def test_normal_preview_preserves_the_deep_actual_layout_without_inventing_a_target(
+    tmp_path: Path,
+) -> None:
+    store = LocalArtifactStore(tmp_path / "cas")
+    manifest, _ = _normal_manifest(store, tmp_path / "sources")
+    data = manifest.model_dump(mode="python")
+    data["initial_stage"]["validation_result"]["expected_layout"] = None
+    data["preview_id"] = limited_image_preview_manifest_sha256(data)
+
+    normal = LimitedImagePreviewManifestV1.model_validate(data)
+
+    assert normal.initial_stage.validation_result.expected_layout is None
+    assert normal.requested_layout == normal.initial_stage.validation_result.actual_layout
+
+    changed = normal.model_dump(mode="python")
+    changed["requested_layout"]["x_m"] += 0.01
+    changed["preview_id"] = limited_image_preview_manifest_sha256(changed)
+    with pytest.raises(ValueError, match="actual layout"):
+        LimitedImagePreviewManifestV1.model_validate(changed)
