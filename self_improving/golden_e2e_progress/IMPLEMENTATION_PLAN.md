@@ -2,6 +2,11 @@
 
 状态：`active`
 
+当前里程碑：M1 第一条完整 image exact-reuse Genesis rigid-scene line 在 `1cf8908` 真实通过，
+attempt-2 四 registered Skill 与集中功能验收完成。active 切到 M2：外部 Codex same-workflow
+exact qualified MCP（无 generic invoke）。M1 不扩张成三模态/新资产/digital cousins、MCP 或
+robot policy；新 core 覆盖率缺口继续记录，不以功能通过替代 100% 目标。126 schema 为当前门。
+
 最新用户指令后置P8/E3，先完成sim-ready服务并暂停。新的顺序和阶段验收以已批准的
 `SIM_READY_RELEASE_PLAN.md`为准；下方保留原P0–P14编号以追踪已完成工作，不再代表执行先后。
 

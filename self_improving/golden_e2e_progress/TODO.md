@@ -4,6 +4,22 @@
 
 ## Doing
 
+- M2：把 M1 已获资格的 `image2env.compile@2.0.0`、`image2env.replay@2.0.0`、
+  `genesis.observe@3.0.0`、`image2env.validate@2.0.0` 接入外部 Codex 同一 workflow 的 exact MCP。
+  Harness 保持唯一状态权威；不得用本地 Python assembly 的成功代替真实 Codex/MCP 调用。
+
+## M1 收口结果
+
+- `1cf8908` 的 attempt-2 完整真实线 1 passed / 1610.72s，summary `46f21368…`；四个
+  registered 终态、34 项物理/媒体检查和集中验收通过。当前 126 schema，focused 162 passed、
+  4 skipped、8 deselected。新 core 覆盖率仍有缺口，不称 100%。
+- attempt-1 旧 observe v2 在 314.40631s 拒绝过期帧，失败终态不改；v3 独立恢复末态、零速度、
+  零物理步的新采集修复交付路径。attempt-2 交付时 TTL 剩余 34.50027s。
+- 第二 CAS 新进程只复验 4,115 个输出证据对象 / 1,970,263,053 bytes；不含 runtime member
+  payload、部署根或应用 SQLite，不称完整 runtime relocation。详细证据见 `RESULTS.md` 顶部。
+
+## 历史切片待办快照（已由上述 M1 收口覆盖的状态不再作为 active）
+
 - M1：Gujie 场景适配与软件双 dt 实跑已形成切片；继续 image native compile、固定场景执行
   authority/持久应用和新 renderer runtime lock。证据见 `golden-gujie-scene-software-20260911.md`。
 
@@ -41,7 +57,7 @@
   实现 production image/video handler/qualification。不得静默选择 latest/fallback，也不得把 server 已交付
   bytes 夸成模型理解。
 
-## Next
+## 历史 Next（按 M1→M5 新顺序重新选择，不直接作为执行队列）
 
 - X2：收口新core覆盖与资格最终测试后，为exact-reuse image compile实现production application和
   execution binding，再做冻结Registry descriptor/Skill qualification与exact MCP投影。单资产资格

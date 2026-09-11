@@ -1,5 +1,26 @@
 # Change Log
 
+## 2026-09-11 首条 production Image2Env → Genesis rigid-scene workflow
+
+- 固定 `1cf8908acb83b86b15a7ae8a7c96cb943cc39945` 将已注册
+  `image2env.compile@2.0.0`、`image2env.replay@2.0.0`、`genesis.observe@3.0.0` 和
+  `image2env.validate@2.0.0` 串成一次 production assembly；当前 committed public schema 为126份。
+- 第一次正式运行保留必要失败：replay 成功，旧 observe v2 在 capture 后 `314.40631s` 拒绝，超过
+  原始 `300s` TTL；observe 没有 artifact，validate 没有预留，也没有成功 summary。第二次以全新
+  UUID 完成真实 baseline/half-dt Genesis 执行、fresh capture、validation 和 delivery，正式用例
+  `1 passed in 1610.72s`，delivery 距过期仍有 `34.50027s`。
+- 直接 CAS 媒体为 baseline MP4 `f3da017b…`、half-dt MP4 `a7f1bad1…` 和 fresh PNG
+  `4cb9b4af…`。Observe v3 在独立固定进程恢复已验证末态、清零速度并执行0个physics steps；它证明
+  `observed_restored_final_pose`，不证明原 replay 的同进程连续性。
+- 新绝对 CAS 根以 fresh process 重验4,115个输出证据对象、1,970,263,053 bytes，并恢复四阶段
+  receipt/validation和媒体；三个 runtime manifest 索引已复制，但约8.5GB deployment member closure
+  未复制，所以这是输出证据迁移，不是完整 runtime relocation。证据见
+  [M1运行记录](../docs/evidence/golden-image2env-genesis-rigid-scene-workflow-20260911.md)。
+- 场景/几何/有限支撑/双时间步语义来自固定 Gujie x2env 来源；Harness 的 Skill、资格、固定进程、
+  CAS、receipt、SQLite terminal 和 lineage 属于 Bingsheng 集成；Genesis、SimFoundry、Mesa/LLVM
+  保留各自上游归属。SimFoundry/VLM 的质量和摩擦值仍是 estimate，不是物理测量。Video、三种
+  资产路径、Codex/MCP 同-workflow、promotion 与 robot policy 尚未由本次完成。
+
 ## Production image exact-reuse compile
 
 - 三份 Gujie mouse 仿真视角已通过已注册 `image2env.compile@2.0.0`，并在重启、成员损坏、

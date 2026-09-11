@@ -12,13 +12,14 @@
 | ID | 能力 | 原始来源 | 生命周期 | 验证 | 当前结论 |
 |---|---|---|---|---|---|
 | INT-BS-001 | Harness、Registry、证据链与总体整合基线 | Bingsheng/current history | integrated | blocked | 已有正式组件，当前共享工作树基线仍有资格哈希失败 |
-| INT-BS-002 | Golden E2E 合同、门禁与实施审计 | Bingsheng | integrated | contract_pass | 合同已确认，真实 Golden run 未完成 |
+| INT-BS-002 | Golden E2E 合同、门禁与实施审计 | Bingsheng | integrated | contract_pass | 整体多模态 Golden 尚未完成；首条 production image rigid-scene run 见 INT-BS-006 |
+| INT-BS-006 | Image exact-reuse 到 Genesis rigid-scene 的首条生产 workflow | Gujie 场景语义 + Genesis/SimFoundry upstream + Bingsheng integration | integrated | runtime_pass | 固定 `1cf8908` 的四个已注册 Skill 在一次 workflow 中完成 replay、fresh observe 与 validate；权限止于 `genesis.rigid_scene@1` |
 | INT-YX-001 | 历史资产检索/复用/入库管线 | Yuxin/HYX | integrated | blocked | 两资产 tracer 已通过 exact-stage 与 headless loader runtime；162 份 ledger 总体仍有 4,082 条 v3 违规 |
 | INT-YX-002 | 新 x2env Skills 的检索与复用能力 | Yuxin/HYX | candidate | not_run | 等待按新 Skill/receipt 合同接入 |
 | INT-GJ-001 | 媒体输入、逐帧完整性与 `genenv.*` 输出 | Gujie | candidate | not_run | 固定为候选，尚未进入 Harness Golden run |
 | INT-GJ-002 | 标准 URDF closure 与 SimFoundry 导入 | Gujie + third-party | candidate | not_run | 需经 anti-corruption adapter 和资产资格门 |
-| INT-GJ-003 | Genesis 构建、物理判据、回放与最终媒体 | Gujie + Genesis | candidate | not_run | 有独立工作区证据，尚非当前 Harness sim-ready 证据 |
-| INT-GJ-004 | Image/Video exact Skill 合同、legacy mapping 与 Harness-native media ingest | Gujie source + Bingsheng integration | integrated | contract_pass | 六项 contract-only descriptor 与 CPU image/video ingest consumers 已落地；compile runtime 仍未实现 |
+| INT-GJ-003 | Genesis 构建、物理判据、回放与最终媒体 | Gujie + Genesis | integrating | runtime_pass（固定刚性场景子集） | Gujie 的有限桌面/双时间步语义已由 Harness 独立实现并进入首条生产 rigid-scene workflow；不泛化为其余场景 |
+| INT-GJ-004 | Image/Video exact Skill 合同、legacy mapping 与 Harness-native media ingest | Gujie source + Bingsheng integration | integrating | runtime_pass（image exact-reuse 子集） | Image exact-reuse 已闭合首条 production line；Video 与其余资产路径仍未实现 |
 
 ## INT-BS-001 — Harness 与总体整合基线
 
@@ -152,6 +153,61 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
 - `known_gaps`：仅单资产给定物性参数的backend_load/collision_probe；不授予production Skill、
   MCP、environment replay、robot-policy或promotion。全部新core 100%覆盖目标尚待收口
 - `last_verified`：`2026-09-11`
+
+## INT-BS-006 — 首条 production image → Genesis rigid-scene workflow
+
+- `lifecycle`：`integrated`
+- `verification`：`runtime_pass`，仅限固定 mouse exact-reuse 与 `genesis.rigid_scene@1`
+- `origin_owner`：Gujie x2env 提供被适配的 scene import、单刚体几何、有限桌面支撑、双时间步和
+  physics criteria 语义；固定来源提交的 git author 记录仍归其来源历史
+- `recorded_git_authors`：Harness 集成提交 `1cf8908acb83b86b15a7ae8a7c96cb943cc39945`
+  记录 Bingsheng Xie `<xieziyin_shangshu@outlook.com>`；不由目录或邮箱推断自然人映射
+- `upstream_owner`：Genesis World、SimFoundry、Mesa/LLVM、Python/Torch/NumPy 等各自保留上游归属
+- `integration_owner`：Bingsheng Harness workstream
+- `source_repository`：Gujie 固定来源 `/home/jingxiang/gujie/gen-env` 与当前
+  `robot-harness-gen-env`
+- `source_ref`：Gujie `eb0b710581fd7794bc01b447b0f77cb871c8a711`；SimFoundry
+  `9e34ebefcd020583fbb755a8b57268dce78eca26`；Genesis World
+  `0e74bf392781884ccad765c3f344419c86b872ca`；Harness 集成链 `c68aedc`、`2b07885`、
+  `872401b`、`1cf8908acb83b86b15a7ae8a7c96cb943cc39945`
+- `dirty_snapshot`：不采用 Gujie dirty runner、modified SimFoundry 或 untracked WorldComposer；正式运行
+  只使用固定来源与 Harness 自有冻结 backend/runtime manifest
+- `source_paths`：Gujie 的 `self_improving/sim_adapters/genesis/` 场景/布局/物理路径及三份历史
+  mouse 仿真视角；这些视角配合 operator-authored exact-reuse proposal，不是 fresh reconstruction
+- `target_paths`：`self_improving/harness/{gujie_scene_adapter,genesis_scene_execution_v2,
+  genesis_scene_application_v2,genesis_fresh_capture,genesis_fresh_capture_application,
+  genesis_scene_assessment,genesis_scene_validation_application,image2env_golden_workflow}.py`、
+  对应 schemas、冻结 contracts 与 tests
+- `integration_method`：Harness 独立拥有 exact registered Skill、typed request/receipt、CAS、SQLite
+  terminal、固定进程、runtime/deployment 验证与跨阶段 lineage；它适配来源语义而不复制 Gujie runner，
+  也不把 Genesis 或 SimFoundry 第三方代码改记为 Harness 原创
+- `contract_spec`：`self_improving/harness/IMAGE2ENV_GOLDEN_WORKFLOW_CONTRACT.md`、
+  `GENESIS_SCENE_EXECUTION_V2_CONTRACT.md`、`GENESIS_FRESH_CAPTURE_CONTRACT.md`、
+  `GENESIS_SCENE_ASSESSMENT_CONTRACT.md`
+- `verification_evidence`：
+  [`golden-image2env-genesis-rigid-scene-workflow-20260911.md`](../evidence/golden-image2env-genesis-rigid-scene-workflow-20260911.md)；
+  当前 126 份 committed public schema snapshots；正式 attempt 2 为 `1 passed in 1610.72s`
+- `golden_run`：复用已注册 compile UUID `a42a3a83-98ea-4c01-a35f-3003a9109c49`，新 replay
+  `bfc30903-0a69-478b-94ed-3ad2c9bbea03`、observe v3
+  `90af3aa7-6d77-4c5e-87d8-185b3bea36ea`、validate
+  `510c3c7d-c020-4623-b2bc-67e0dd045212` 均为 durable `succeeded`；summary CAS
+  `46f21368f0b7dadb0491809b164fa1dac585f79691d68961001f2c928394f5b6`
+- `known_gaps`：`genesis.observe@3.0.0` 在独立进程恢复已验证末态、清零速度并执行 0 physics steps；
+  它证明 `observed_restored_final_pose`，不证明原 replay 的同进程连续观测。SimFoundry/VLM 提供的质量、
+  摩擦等值仍是 estimate；本次运行只验证环境在这些参数下的行为，不是实物测量。输出级迁移在新 CAS
+  路径重验 4,115 objects / 1,970,263,053 bytes，但只复制 runtime manifest 索引，未复制约 8.5GB
+  deployment member closure，因此不构成完整 runtime relocation。MCP/Codex 同-workflow、Video、三种
+  资产路径、promotion 与 robot policy 均未由本条完成
+- `last_verified`：`2026-09-11`
+
+### 真实失败与成功边界
+
+Attempt 1 保留了必要失败：replay `00668101-6976-4d45-9c52-c35f78814e19` 成功，旧
+`genesis.observe@2.0.0` 在 capture 后 `314.40631s` 才拒绝，超过未修改的 `300s` TTL；observe
+terminal 为 failed、零 artifacts，validate UUID 从未进入 intent/invocation/state，且没有 success summary。
+Attempt 2 使用全新 UUID，经实际 baseline/half-dt Genesis 执行、v3 fresh capture、validate 和 delivery
+成功；delivery 比 expiry 早 `34.50027s`。两段直接 CAS MP4 为 `f3da017b…`、`a7f1bad1…`，fresh
+PNG 为 `4cb9b4af…`；相同确定性像素摘要不替代新的 capture event/timestamp lineage。
 
 ## INT-YX-001 — 历史资产检索、复用与入库管线
 
@@ -303,8 +359,8 @@ Bingsheng。任何进入 Harness 的资产必须单独固定来源、许可和�
 
 ## INT-GJ-003 — Genesis 构建、物理验证、回放与最终媒体
 
-- `lifecycle`：`candidate`
-- `verification`：`not_run`
+- `lifecycle`：`integrating`
+- `verification`：`runtime_pass`，仅限已经适配的固定 mouse 单刚体/有限桌面子集
 - `origin_owner`：Gujie（adapter/workflow）
 - `recorded_git_authors`：yuhang5090、LV-Robotics Lab；与自然人 Gujie 的 identity 映射未确认
 - `upstream_owner`：Genesis World
@@ -315,26 +371,32 @@ Bingsheng。任何进入 Harness 的资产必须单独固定来源、许可和�
 - `dirty_snapshot`：除已声明 dirty 项外，不以工作树状态代替 commit
 - `source_paths`：`position_solver*`、`scene_stabilization*`、`scene_physics_workflow*`、
   `validate_imported_scene*`、`replay_text_half_dt*`、`physics_criteria*`
-- `target_paths`：待建立的 Genesis replay/validate Skills、portable receipt、promotion gate
-- `integration_method`：移植物理判据与工作流，通过 Harness adapter 调真实 Genesis API
+- `target_paths`：Harness 自有 `gujie_scene_adapter.py`、scene execution/replay/assessment/fresh-capture
+  producer/application、版本化 schema、qualification 与 workflow assembly
+- `integration_method`：移植并收窄物理判据与工作流，通过 Harness adapter 和固定进程调用真实 Genesis
+  API；来源代码不成为 Harness runtime authority
 - `contract_spec`：`genesis.rigid_scene@1` 中间门、`genesis.robot_policy@1` 最终门；见
   `self_improving/golden_e2e_progress/CONTRACTS.md`
-- `verification_evidence`：独立工作区存在真实物理产物，但尚未绑定当前 Harness run；见 `AUDIT.md`
-- `golden_run`：`none`
-- `known_gaps`：同-run compile/replay/validate/observation/diagnosis/promotion、可移植闭包和 robot action
-  probe 尚未完成
-- `last_verified`：`2026-09-09`
+- `verification_evidence`：固定 `1cf8908` 的首条 production rigid-scene workflow 与
+  [`golden-image2env-genesis-rigid-scene-workflow-20260911.md`](../evidence/golden-image2env-genesis-rigid-scene-workflow-20260911.md)
+- `golden_run`：Image exact-reuse compile → Genesis replay → restored-final-pose observe v3 → validate
+  已在一次 assembly 中真实通过；不包含诊断、状态推进或 promotion
+- `known_gaps`：完成的是单 mouse、单刚体、axis-aligned 有限桌面和给定 estimate 参数；通用场景、
+  新资产/digital-cousin、Video、Codex/MCP 闭环、完整 runtime deployment relocation 与 robot action
+  probe 仍未完成
+- `last_verified`：`2026-09-11`
 
 ### 核对结论
 
-Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支撑/穿透判据和 physics 后媒体门是
-重要候选实现。它们只有在当前 Harness run 中由固定输入和资产哈希驱动、真实 Genesis 执行并通过
-最终能力门后，才能把验证状态改为 `runtime_pass`。
+Gujie 的场景构建、有限支撑、half-dt 回放、接触/支撑/穿透判据和 physics 后媒体门已有一个收窄
+子集进入 Harness 的真实 production workflow。`runtime_pass` 只属于该固定输入、固定资产与固定
+`genesis.rigid_scene@1` profile；Gujie 其余 x2env 能力仍按候选处理。Harness 的状态、CAS、资格和
+执行封闭属于 Bingsheng 集成工作，Genesis/SimFoundry 仍归各自上游。
 
 ## INT-GJ-004 — Image/Video exact Skill 合同与 legacy adapter mapping
 
-- `lifecycle`：`integrated`
-- `verification`：`contract_pass`
+- `lifecycle`：`integrating`
+- `verification`：`runtime_pass`，仅限 image exact-reuse 的首条刚性场景生产线；Video 仍为合同/ingest 状态
 - `origin_owner`：Gujie（被映射的媒体/URDF/scene/physics adapter 候选行为）；Bingsheng（Harness 合同
   与映射整合）
 - `recorded_git_authors`：来源固定提交实际记录 yuhang5090 `<1205492990@qq.com>`、LV-Robotics Lab
@@ -398,27 +460,29 @@ Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支
   collision members在Genesis中实际合并为1个loaded geom，1,001 rows重算989 contact steps/4,040 contacts、
   最大穿透0.487 mm、正force/impulse与settled；23-object CAS复制到第二绝对路径后无需Genesis/source root
   可strict reload。证据见 `docs/evidence/golden-genesis-cpu-asset-probe-20260911.{md,json}`。该 pass 尚未
-  签发issuer/qualification
-- `golden_run`：`none`
-- `known_gaps`：当前 probe runtime lock 未封闭 Python/Torch/Quadrants/NumPy/native dependency closure，
-  所以 production asset issuer/qualification 尚未实现；sealed production video decoder、production
-  image/video Registry/System2/Golden catalog、MCP、完整 Genesis environment replay/validate、robot-policy
-  与 promotion 也未实现；现有 image handler 仅为未注册 controlled candidate
+  签发issuer/qualification。后续 Harness 切片已经独立封闭 runtime manifest、固定 execution、durable
+  asset qualification、registered image compile，以及 scene replay/observe v3/validate；固定
+  `1cf8908` 的当前公共 schema 总数为126，完整证据见 INT-BS-006
+- `golden_run`：Image exact-reuse 子集已完成首条 production rigid-scene workflow；Video 与新资产/
+  digital-cousin 路径仍为 `none`
+- `known_gaps`：sealed production video decoder、Video Registry/runtime、三种资产路径、MCP/Codex
+  同-workflow、promotion、完整 runtime deployment relocation 与 robot policy 尚未实现；Image 当前输入是
+  Gujie 历史仿真视角加 operator-authored proposal，不是自主视觉重建
 - `last_verified`：`2026-09-11`
 
 ### 核对结论
 
 本条先把 Gujie 固定来源中的媒体/资产/场景/物理语义映射进 Harness contract，随后独立实现了
 Harness-native CPU image/video ingest consumers。Image 与 Video identity 不混用；legacy output 适配后固定为
-non-ready candidate；media ingest 的 pass 不能扩大为 compile runtime pass。Gujie 的 15-frame sample
-也不能替代完整 source-video identity。compile、replay、validate
-三段及三种资产 lane 均已写入实施计划，但尚未执行。`standard_urdf.py` 的当前能力是单 rigid link 并
-明确拒绝 joint，不能据此宣称 articulated support。
+non-ready candidate；media ingest 的 pass 不能扩大为 compile runtime pass。此后只有 image exact-reuse
+的固定 mouse 子集进一步完成了 production compile/replay/observe/validate；不得把它泛化为 Video 或三种
+资产 lane。Gujie 的 15-frame sample 也不能替代完整 source-video identity。`standard_urdf.py` 的当前能力
+是单 rigid link 并明确拒绝 joint，不能据此宣称 articulated support。
 
 ## INT-GUJIE-SCENE-001 — 有限桌面与双时间步实际接入
 
-- `lifecycle`：`integrating`
-- `verification`：`runtime_pass`，仅限研究运行，不代表生产资格
+- `lifecycle`：`integrated`
+- `verification`：`runtime_pass`，仅限固定 mouse exact-reuse 的 production rigid-scene 子集
 - `origin_owner`：Gujie x2env
 - `recorded_git_authors`：`LV-Robotics Lab <lv.robotics.lab@gmail.com>`，不推断自然人映射
 - `upstream_owner`：Genesis、SimFoundry；软件 renderer 为 Mesa/LLVM
@@ -431,17 +495,19 @@ non-ready candidate；media ingest 的 pass 不能扩大为 compile runtime pass
   `standard_urdf.py`、`position_solver.py`、`physics_criteria.py`、`validate_imported_scene.py`、
   `scene_physics_workflow.py` 及近码合同中的判据来源
 - `target_paths`：`self_improving/harness/gujie_scene_adapter.py`、`genesis_scene_replay.py`、
-  `schemas/genesis_scene_replay.py`、`genesis_scene_cpu_backend.py`、`_genesis_scene_child.py`、
-  `genesis_scene_launcher.py` 与对应测试
+  `genesis_scene_execution_v2.py`、`genesis_scene_application_v2.py`、`genesis_fresh_capture.py`、
+  `genesis_scene_assessment.py`、`image2env_golden_workflow.py`、对应 schemas、runner 与 tests
 - `integration_method`：适配坐标转换、单刚体完整几何、有限桌面支撑和双 dt 判据；Harness 新增
   CAS、typed scene、纯读重算及连续媒体。当前仅单对象/axis-aligned Box，不声称通用布局搜索、
   多物体重建或 articulated support；不复制 vendor、不沿用历史 pass。
 - `contract_spec`：`GUJIE_SCENE_ADAPTER_CONTRACT.md`、`GENESIS_SCENE_REPLAY_CONTRACT.md`
-- `verification_evidence`：`docs/evidence/golden-gujie-scene-software-20260911.md`；真实 Gujie mouse
-  在有限桌面完成 baseline/half_dt、1,001/2,001 行轨迹、各 41 帧及逐像素核对无损视频。
-- `golden_run`：`none`；真实图像 compile 到权威场景回执正在接入
-- `known_gaps`：新 renderer runtime manifest、固定场景进程约束、生产资格及 M1 完整链尚未完成。
-  此条不继承旧资产 lock 的资格，不代表 MCP、promotion 或 policy。
+- `verification_evidence`：`docs/evidence/golden-gujie-scene-software-20260911.md` 与
+  [`golden-image2env-genesis-rigid-scene-workflow-20260911.md`](../evidence/golden-image2env-genesis-rigid-scene-workflow-20260911.md)；
+  baseline/half_dt 为1,001/2,001行并各保留41帧和直接MP4
+- `golden_run`：固定 `1cf8908` 的 attempt 2 已把 registered image compile、实际 Genesis replay、
+  observe v3 和 validate 串在一次 workflow；权限止于 `genesis.rigid_scene@1`
+- `known_gaps`：当前是单对象/axis-aligned Box 与 operator-authored exact reuse；不代表通用布局、
+  fresh reconstruction、Video、MCP/Codex、promotion、完整 runtime deployment relocation 或 policy
 - `last_verified`：`2026-09-11`
 
 ### v1 受约束执行增量
@@ -461,4 +527,14 @@ proposal、现有 durable asset qualification 和本条有限桌面 adapter，�
 `image2env.compile@2.0.0`。三条 registered terminal、第二CAS/SQLite搬迁及源码/成员漂移拒绝见
 `docs/evidence/golden-production-image-compile-20260911.md`。Gujie提供场景/几何/视角来源，Harness
 负责typed request/receipt、资格、Registry与恢复。当前不将这些历史仿真视角称为 fresh reconstruction
-或自主视觉理解；lifecycle仍为integrating，直到production replay/observe/validate闭合。
+或自主视觉理解；后续 production replay/observe/validate 闭合只适用于这条 exact-reuse 子集。
+
+### Production replay、observe v3 与 validate 增量
+
+固定 `1cf8908` 新增注册的 `image2env.replay@2.0.0`、`genesis.observe@3.0.0` 与
+`image2env.validate@2.0.0`，并由 assembly 消费已注册 `image2env.compile@2.0.0` 终态。Attempt 1
+保留旧 observe v2 在 `314.40631s > 300s` 的真实 TTL 失败；attempt 2 以全新 UUID 完成两次时间步
+物理执行、独立 fresh capture、validation 与限时 delivery。Observe v3 在单独进程恢复 final pose、速度
+清零、0 physics steps，权威为 `observed_restored_final_pose`，不是 replay 进程连续性。Harness 拥有
+runtime/qualification/CAS/receipt/state 实现；Gujie 拥有被适配的场景语义来源，Genesis、SimFoundry 与
+Mesa/LLVM 保留上游归属。SimFoundry/VLM 的质量和摩擦字段仍是 estimate，不是测量。

@@ -1,11 +1,13 @@
 # Golden E2E 任务分解
 
-## 已批准 M1 当前纵切
+## M1 已完成首条完整线；当前 M2
 
 - [x] 实际适配 Gujie 单刚体场景、完整几何与有限桌面。
 - [x] 真实 baseline/half_dt 场景回放及完整新媒体（研究运行，无生产场景 authority）。
-- [ ] image compile → 固定场景执行 → observe/validate 完整闭包、生产资格及迁移恢复。
-- [ ] M1 完成后集中功能验收；再进入 M2 Codex 同 workflow。
+- [x] `1cf8908`：registered image compile → 固定双 dt replay → fresh observe v3 → validate，四 Skill 资格与终态闭合。
+- [x] M1 集中功能验收；第二路径输出闭包纯读通过（不包含 runtime member 部署或应用 SQLite 迁移）。
+- [ ] M2：外部 Codex 在同一 workflow 通过 exact qualified MCP 调用；无 generic invoke。
+- [ ] 后续三模态、全新资产/digital cousins、历史债务与服务验收；M1 不授予这些能力，P8/E3 后置。
 
 ## G0：基线与审计
 

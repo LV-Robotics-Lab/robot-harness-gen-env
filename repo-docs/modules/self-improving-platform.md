@@ -1,21 +1,35 @@
 # Self-Improving 平台边界
 
-M1 的 native image compile 与低层场景执行已有真实证据：Gujie mouse 图像绑定资产资格生成有限
-桌面 scene，固定软件 renderer 的 baseline/half-dt 产出完整轨迹、PNG/无损视频并通过34项检查。
-细节见[scene execution v1](../../docs/evidence/golden-genesis-scene-execution-v1-20260911.md)。v1
-仍是低层 candidate：MP4与fresh capture尚未进入可搬迁回执，且最终 replay 必须绑定registered
-compile终态，因此本页不把它称为完整sim-ready服务。
+固定 `1cf8908acb83b86b15a7ae8a7c96cb943cc39945` 已闭合首条 production image exact-reuse →
+Genesis rigid-scene workflow。Assembly 消费已注册 `image2env.compile@2.0.0` 终态，随后在同一次
+workflow 调用已注册 `image2env.replay@2.0.0`、`genesis.observe@3.0.0` 和
+`image2env.validate@2.0.0`。Attempt 2 真实执行 baseline/half-dt Genesis、fresh capture、validate
+和限时 delivery，四个 durable terminal 均为 succeeded，最终 profile 为 `genesis.rigid_scene@1`。
+完整记录见[M1运行证据](../../docs/evidence/golden-image2env-genesis-rigid-scene-workflow-20260911.md)。
 
-Gujie 的固定场景导入、完整刚体几何和有限支撑判据现已实际适配；mouse + 有限桌面在 Genesis
-完成双时间步回放，各生成 41 帧和连续视频。见[本次运行证据](../../docs/evidence/golden-gujie-scene-software-20260911.md)。
-这一切片尚未连接完整 image compile 与受约束场景执行凭据，仍不能声明生产环境资格或 M1 完成。
+Attempt 1 没有被抹去：replay 成功后，旧 observe v2 在原 capture 后 `314.40631s` 拒绝，超过未修改
+的 `300s` TTL；observe 零 artifacts，validate 未预留，success summary 未签发。Attempt 2 使用全新
+UUID，正式用例 `1 passed in 1610.72s`，delivery 距 expiry 还有 `34.50027s`。两段直接 CAS MP4、
+fresh PNG、完整轨迹、report、receipt 与跨阶段 lineage 都进入 summary。新 CAS 绝对路径又以 fresh
+process 重验4,115个输出证据对象、1,970,263,053 bytes；三个 runtime manifest 索引虽已复制，其约
+8.5GB member deployment 未复制，所以该结果证明输出证据迁移，不证明完整 runtime relocation。
 
-2026-09-11新增的固定Genesis CPU执行已把manifest、新runtime lock、实际观测与fresh probe绑定，
-两套独立部署各运行1,000steps并strict reload通过。`GenesisAssetQualificationApplication`进一步
-完成真实单资产资格签发、UUID幂等和executed断点恢复；第二CAS/可信SQLite在无Genesis进程中
-纯读通过。证据见[单资产资格](../../docs/evidence/golden-genesis-asset-qualification-20260911.md)。
-这是给定物性参数的load/contact资格；production image/video Skill/MCP、完整环境和机器人策略
-仍未因此获得权威。新核心全分支覆盖目标也尚未全部完成。
+Observe v3 不是旧帧换时间：独立固定进程重载场景，恢复已验证 final pose、将六自由度速度清零，
+执行0个physics steps后实际渲染，并在 render 返回后记录 UTC capture event。其权威明确为
+`observed_restored_final_pose`、`process_continuation=false`；确定性姿态可能生成与旧帧相同的像素
+摘要，但新的 capture result、时间和 replay lineage 必须独立闭合。
+
+场景导入、单刚体完整几何、有限桌面支撑、双时间步和 physics criteria 语义来自固定 Gujie x2env
+来源。Harness 独立拥有 Skill/qualification、typed schema、固定进程、CAS、SQLite terminal、receipt
+与 workflow lineage；Genesis、SimFoundry、Mesa/LLVM 仍归各自上游。SimFoundry/VLM 给出的质量、
+摩擦等参数是 estimate，本次物理执行只验证场景在这些输入值下的行为，不是实物测量。当前图像也是
+Gujie 历史仿真视角配合 operator-authored exact-reuse proposal，不是自主视觉重建。
+
+底层证据仍可分别追溯到[scene execution v1](../../docs/evidence/golden-genesis-scene-execution-v1-20260911.md)、
+[Gujie scene software run](../../docs/evidence/golden-gujie-scene-software-20260911.md)和
+[单资产资格](../../docs/evidence/golden-genesis-asset-qualification-20260911.md)。首条 rigid-scene
+workflow 不等于已开放服务：Video、三种资产路径、Codex/MCP 同-workflow、状态推进、promotion 与
+robot policy 仍未由 M1 完成。
 
 `scene_gen/` 是稳定信任边界，负责把受限文本编译成可验证、可回放、哈希绑定的场景包。`self_improving/` 是消费者和编排层：它可以选择环境、组织采集与训练、评估失败、写诊断和记忆、决定是否晋升，也可以调用资产与仿真适配器；它不能伪造或跳过 `/gen-env` 的物理门控。
 
@@ -45,12 +59,13 @@ Gujie 的固定场景导入、完整刚体几何和有限支撑判据现已实�
 `e67b656ea97044da5b09ee8323c48e752cd88c76` 加 P2 compile-only submit 候选为准；
 下述 55-schema 计数不归属于 `ab03859` 的 14-schema 历史快照。
 
-Harness 当前公开97个以`$id`标识的JSON Schema，完整目录见[schema说明](harness-schema-tranche.md)。
-其中早期x2env合同阶段的72个入口构成为：PR1 的 14 个入口保持不变，随后增加
+Harness 在固定 `1cf8908` 公开126个以`$id`标识的JSON Schema，完整目录见
+[schema说明](harness-schema-tranche.md)。下述14、55、72、91、93、94、97均是相应固定提交的历史
+计数，不代表当前目录。其中早期x2env合同阶段的72个入口构成为：PR1 的 14 个入口保持不变，随后增加
 descriptor v2、validate v2 input/output，以及 qualification report、资产债务/修复、registry snapshot、
 replay VLM、run start/read/snapshot 和 workflow start receipt 等 12 个入口，再加上 asset source snapshot、stage
 request 与 stage result 三个入口；P2 再增加 command、operation snapshot、qualified execution、trusted
-tool receipt、ToolResult、StateDelta 与 workflow operation receipt 七个 actor-neutral 入口；当前
+tool receipt、ToolResult、StateDelta 与 workflow operation receipt 七个 actor-neutral 入口；当时的
 Image2Env/Video2Env contract tranche 又增加 12 个 Skill I/O、两种 source media、asset decision 与
 candidate environment package 共 16 个入口。descriptor v2 明确区分
 内容位级确定性与证据不变量可复验。descriptor v1 保持冻结，
@@ -71,12 +86,13 @@ checkout 并锁住 committed snapshot；核心资格模块强制 100%
 语句与分支覆盖。compile 的 asset admission 仍发生在 solve 前且失败不回滚；跨 run promotion、
 identity-frozen resumable EvaluationRun 与 MCP adapter 仍未闭合，契约保持 `Status: Proposed`。
 
-Image2Env/Video2Env 的六项 `@1.0.0` exact metadata 尚未进入 production Registry。image compile 已有
-input-bound exact-reuse controlled handler/application，可生成并跨重启恢复 non-ready candidate，但它的
-controlled qualification 不进入 production assembly/MCP。compile schema 固定不执行仿真且不可发布；replay schema要求真实
-Genesis collision、非零 steps 和顺序媒体；validate 才能给 publishability。Gujie `genenv.*` 只能经
-legacy adapter 映射为 non-ready candidate；固定审计又确认旧 mouse pass 的定位、threshold和runtime源码
-身份不满足当前 asset qualification，旧 physics/render/status 不能直接晋升。正式字段见
+Image2Env/Video2Env 最初六项 `@1.0.0` exact metadata 仍是合同入口，不能与当前 native image v2
+运行线静默互换。固定 `1cf8908` 的 image exact-reuse 子集已注册 `image2env.compile@2.0.0`、
+`image2env.replay@2.0.0`、`genesis.observe@3.0.0` 与 `image2env.validate@2.0.0`，并完成一次
+production assembly。Compile 只生成绑定已资格资产的静态 scene；replay 才执行真实 Genesis collision、
+baseline/half-dt steps 和顺序媒体；validate 只授予 `genesis.rigid_scene@1`。Gujie `genenv.*` 仍须经
+legacy adapter 映射，旧 physics/render/status 不能直接晋升。Video 的 production decoder、Registry、
+replay 和 validate 仍未实现。正式字段见
 [Image/Video exact Skill 合同](../../docs/contracts/X2ENV_IMAGE_VIDEO_SKILL_CONTRACT_V1.md)，来源映射见
 [Gujie adapter mapping](../../docs/contracts/GUJIE_GENENV_ADAPTER_MAPPING_V1.md)。
 
@@ -93,19 +109,22 @@ camera/renderer：初态后执行 1,000 个 CPU/Newton steps，产出 raw load o
 contact trace 与七项 report checks。源端的 8 个 collision OBJ 在 Genesis 中实际合并成 1 个 loaded geom；
 不能把 source member 数当 runtime shape 数。989 contact steps、4,040 contacts、最大穿透 0.487 mm、正
 normal force/impulse 与末态 settling 均由 pure-read verifier 从 23-object CAS 重算；同一 CAS 在第二绝对
-路径、无 Genesis/source root 的进程中再次通过。该 pass 仍不是 `GenesisAssetQualificationV1`：当前
-runtime lock 尚未封闭 interpreter、Python/Torch/Quadrants/NumPy/native 完整依赖，因而 production issuer、
-Registry/MCP 与环境级 Genesis replay 仍关闭。证据见
-[Genesis CPU asset probe](../../docs/evidence/golden-genesis-cpu-asset-probe-20260911.md)。
+路径、无 Genesis/source root 的进程中再次通过。该固定 `7e145274` pass 本身不是
+`GenesisAssetQualificationV1`；后续 manifest-bound execution 和 durable application 已用 fresh run
+补签给定物性参数下的单资产资格，并由当前 image line 消费。质量、摩擦等来源字段仍是 estimate，
+load/contact pass 不是实物测量。证据见
+[Genesis CPU asset probe](../../docs/evidence/golden-genesis-cpu-asset-probe-20260911.md)和
+[单资产资格](../../docs/evidence/golden-genesis-asset-qualification-20260911.md)。
 
 `genesis_runtime_manifest.py` 现在提供运行时内容清单：capture 对六个声明根完整枚举，逐文件流式写入
 CAS，重读确认后最后发布 manifest；read 只重验 CAS，verify-deployment 则额外重验显式部署映射及
 调用方提交的 process facts。换安装位置不改变清单身份。这个 interface 不负责发现漏掉的动态依赖，
-也没有证明运行进程只加载清单成员，因此其权威明确为 `declared_byte_closure_only`；下一门仍是
-固定启动、完整实际加载闭包和 sealed runner，而非直接签发资产资格。
-固定`3662ba6`的真实部署验证已覆盖166,141成员与第二独立绝对路径；独立目录另一次fresh probe完成
-1,000steps，但仍使用旧v1 lock，尚未由manifest绑定执行。两份结果之间的接线不能从相同文件或相同
-report hash推断，详见[运行时物化记录](../../docs/research/genesis-runtime-closure-audit-20260911.md)。
+也没有单独证明运行进程只加载清单成员，因此其权威明确为 `declared_byte_closure_only`，不能直接
+签发资产资格。固定`3662ba6`的早期部署验证覆盖166,141成员与第二独立绝对路径；随后固定 launcher、
+实际 module/native observation、asset qualification、scene replay v2 和 fresh-capture runtime 分别建立
+自己的执行与资格闭包。M1 输出证据能换 CAS 根重验，但完整 runtime member deployment 没有在本次
+输出迁移中复制。历史物化边界见
+[运行时物化记录](../../docs/research/genesis-runtime-closure-audit-20260911.md)。
 
 P3 的公共 `GoldenRunHarness.submit` 当前可在同一 workflow 依次调度 exact qualified
 `text2env.compile@1.0.0` 与 `text2env.replay@1.0.0`。两者都从同一 RegistrySnapshot、live production

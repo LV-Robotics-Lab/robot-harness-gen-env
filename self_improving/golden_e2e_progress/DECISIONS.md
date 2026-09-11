@@ -1,5 +1,16 @@
 # 稳定决策
 
+## M1 收口与 fresh observe v3
+
+- `1cf8908` 的首条完整 rigid-scene line 已真实通过并集中验收，下一 active 为 M2 外部 Codex
+  same-workflow exact MCP。M1 只覆盖已知鼠标图像 exact reuse、有限桌面与 ground；不代表三模态、
+  全新资产生成、digital cousins、MCP 或机器人策略完成。
+- attempt-1 的 `genesis.observe@2.0.0` 保留原纯读帧与 TTL 语义，过期失败不得补写时间。
+  新 `genesis.observe@3.0.0` 使用独立固定 runtime 恢复可信 replay 的最终 pose、归零速度、
+  零物理步后实际 render；权威为 `observed_restored_final_pose`，`process_continuation=false`。
+- asset、scene replay、fresh capture 三个 runtime 身份分账；原 replay 资格不因新 observer 重签。
+  完整链交付仍需 captured ≤ checked ≤ delivered ≤ expires，TTL 上限 300s。
+
 ## M1 场景执行与资产资格分账
 
 - 资产资格仅证明它绑定的 asset runtime；新增 renderer 场景 runtime 单独固定、实际执行并核对。
@@ -12,7 +23,7 @@
 
 ## 本阶段优先级调整 — sim-ready服务先交付，policy后置
 
-- 状态：用户已批准详细计划并要求实际整合Gujie工作；M1开始执行。
+- 状态：用户已批准详细计划并要求实际整合Gujie工作；M1首条完整线已验收，当前M2。
 - 顺序：完整Genesis环境线→Codex同workflow闭环→三模态/三资产路径→入库/历史债务→系统验收、
   仓库整理与开放服务→暂停；P8/E3机器人联调留待其他项目组参与后重新启动。
 - 第一阶段不再以前述`genesis.robot_policy@1`作为交付阻断；旧E3/E4与历史证据保持原义，不把E2

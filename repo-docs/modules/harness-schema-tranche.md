@@ -49,17 +49,18 @@ Registry follow-on 以本页和 `self_improving/harness/IMPLEMENTATION_LOG.md` �
 当前通用 SkillRegistry：exact version、qualification、类型、依赖、摘要、attempt、审计
         |
         v
-qualified text compile/replay/validate；controlled image compile candidate
+qualified text compile/replay/validate；qualified image exact-reuse rigid-scene assembly
         |
         v
 现有 schema + scene_gen：类型、解析、grounding、求解、包、回放、物理验证
 ```
 
 MCP 只能把 frozen Registry 中已注册且已资格化的 exact descriptor 映射成工具；它不能发明类型或默认值。
-当前 text 路径已能在同一 Golden workflow 完成 compile/replay/validate revision 0→1→2→3；image/video
-descriptor 仍是 contract-only，因此 controlled image candidate 不会自动出现在 production MCP。
+当前 text 路径已能在同一 Golden workflow 完成 compile/replay/validate revision 0→1→2→3；早期
+image/video `@1.0.0` descriptor 仍是 contract-only。另一个 native image v2 assembly 已注册四个精确
+Skill并完成 `genesis.rigid_scene@1`，但没有因此进入 MCP/Codex 或 GoldenRun 状态推进。
 
-## PR1 的 14 个公共入口与当前 97 个版本化入口
+## PR1 的 14 个公共入口与当前 126 个版本化入口
 
 下表是 PR1 冻结的 14 个入口。A042 没有修改其中的 `SkillDescriptor` v1，而是新增第 15 个
 `SkillDescriptorV2`：v1 只允许 `deterministic=true`；v2 用
@@ -78,11 +79,11 @@ runtime。
 resource-access receipt 增加 1 个，initial/revised compile attempt 与 image/video compile v2 input 再增加
 4 个，deterministic image ingest 再增加 `harness.image_media_probe.v1`；complete-sequence video ingest
 增加 `harness.video_decoded_frame_sequence.v1`、`harness.video_media_probe.v1` 与
-`harness.video_source_media.v2`，因此当前总数为 72。compile
+`harness.video_source_media.v2`，因此当时总数为 72。compile
 attempt 四份让 PromptRevision consumption 具备可冻结的显式 lineage；image probe 则只冻结 decoder
 derived source/canonical identity；video 三份则绑定完整 ordered decode，而不改写 fallback 专用
 `harness.video_frame_sequence.v1`。X2 typed compile evidence 再增加 12 个入口，input-bound image/video
-output 与 receipt v2 再增加 3 个，因此当前总数为 87。controlled image handler 会消费这些模型，但仍
+output 与 receipt v2 再增加 3 个，因此当时总数为 87。controlled image handler 会消费这些模型，但仍
 不等于 production qualification 或 Genesis runtime。Genesis asset-probe input/load/contact-trace/report
 先增加 4 个入口，把当时总数增至 91；随后 raw load observation 与逐行 contact schema 增加 2 个入口，
 该 probe tranche 总数为 93。Harness-owned CPU producer/backend 与 pure-read deep verifier 已完成 mouse 的真实
@@ -101,7 +102,11 @@ output 与 receipt v2 再增加 3 个，因此当前总数为 87。controlled im
 公共 `$id`，所以 PR1 总数是 14；descriptor v2 与 validate v2 两份文档把当时总数增至 17，计入后续
 12 个独立入口、3 个 asset staging 入口、P2 的 7 个 workflow-operation 入口和 x2env 的 16 个合同
 入口后当时总数是 55；上述 observation/control/media/X2 follow-on 把目录增至 87，asset-probe
-四层证据合同先增至 91，raw load observation 与 contact row 再把该阶段目录增至 93。runtime content manifest 入口增至 94；固定 execution 的 request、observation、receipt 使当前目录增至 97。清单验证声明字节闭包；execution 纯读证明回执一致性，不能签发生产资产资格。
+四层证据合同先增至 91，raw load observation 与 contact row 再把该阶段目录增至 93。runtime content
+manifest 入口增至 94；固定 asset execution 的 request、observation、receipt 使该阶段目录增至97。
+后续 native image compile、scene execution v2、assessment 和 fresh capture 增至当前126。固定
+`1cf8908` 已闭合 image exact-reuse 的 registered compile/replay、observe v3 与 validate；Video、MCP/Codex
+同-workflow和robot policy不在这126个 schema 的存在性中自动成立。
 
 ## 严格不只是“不多字段”
 

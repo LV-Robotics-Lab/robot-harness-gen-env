@@ -37,9 +37,10 @@
 
 ## 当前阶段
 
-最新已批准主线为 M1→M5 sim-ready 服务交付，P8/E3 后置。M1 已提交 Gujie 有限桌面适配与
-双时间步证据（`c68aedc`）；overview 图像的 native compile 已真实通过。当前正在连接固定场景
-producer、生产 Skill 资格与持久应用，M1 尚未完成。详见最新 `RESULTS.md` 与
+最新已批准主线为 M1→M5 sim-ready 服务交付，P8/E3 后置。M1 第一条完整图像 exact-reuse
+Genesis 有限桌面场景线已在固定 `1cf8908` 真实通过：registered compile → replay → 独立 fresh
+observe v3 → validate；集中功能验收完成，当前 126 份 schema。下一 active 是 M2 外部 Codex
+通过 exact MCP 在同一 workflow 调用这些已获资格的能力。详见最新 `RESULTS.md` 与
 `SIM_READY_RELEASE_PLAN.md`；下列长记录保留各历史切片的能力边界。
 
 `p1_p6_implementation`

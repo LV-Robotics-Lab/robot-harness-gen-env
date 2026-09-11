@@ -5,6 +5,18 @@
 按仓库 `tdd` skill，以下是功能测试唯一允许跨越的公共 seam。每个切片先从这些 seam 观察 RED，
 再做最小 GREEN，不围绕 private helper 建测试。
 
+## M1 已验证组合 seam 与 M2 下一门
+
+`Image2EnvGoldenWorkflow.run` 在 `1cf8908` 以可信 registered compile UUID 为入口，调用
+`GenesisSceneApplication.invoke`、`GenesisFreshCaptureApplication.invoke` 和
+`GenesisSceneValidationApplication.invoke`，复用 Registry/SQLite 的 intent、Invocation 与终态。
+四个 exact Skill 分别为 image compile/replay/validate `@2.0.0` 与 `genesis.observe@3.0.0`。
+fresh producer 在采集前深读历史 replay，采集后核对固定新 capture 闭包与 TTL；纯读恢复不授 live
+capability，也不能把历史 captured_at 更新为当前时间。结果 scope 为 `genesis.rigid_scene@1`。
+
+M2 必须用外部 Codex 的真实 exact MCP 调用把此组合接回同一 workflow；本地 assembly 的正式
+通过只证明 M1。保留无 generic invoke、Harness 唯一 authority、失败不推进的门。
+
 ## S1 — Workflow aggregate
 
 ```python

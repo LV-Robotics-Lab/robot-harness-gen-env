@@ -1,5 +1,33 @@
 # 进度与结果
 
+## M1 首条完整 Genesis rigid-scene line 收口 — 1cf8908
+
+- 固定 `1cf8908acb83b86b15a7ae8a7c96cb943cc39945`，attempt-2 正式测试 **1 passed / 1610.72s**。
+  side 图像 seed 41 的 registered compile `a42a3a83-98ea-4c01-a35f-3003a9109c49` → replay
+  `bfc30903-0a69-478b-94ed-3ad2c9bbea03` → fresh observe
+  `90af3aa7-6d77-4c5e-87d8-185b3bea36ea` → validate `510c3c7d-c020-4623-b2bc-67e0dd045212`。
+  四个终态均 registered、非 qualification candidate，复用同一 trusted Registry/SQLite 权威。
+- canonical summary SHA `46f21368f0b7dadb0491809b164fa1dac585f79691d68961001f2c928394f5b6`。
+  四项 Skill 资格依次为 `57dff640…`、`fd87ecc1…`、`e05500d5…`、`e12e9589…`；完整 refs、
+  UUID、配置与日志位于 `/home/jingxiang/bingsheng/golden-four-skill-workflow-20260911/acceptance-index-2.json`。
+- attempt-1 的 replay 成功，但旧 `genesis.observe@2.0.0` 深读后帧龄 314.40631s 超过 TTL300，
+  正确失败、无成功 summary、validation 未预留。原日志和终态完整保留。修复新增独立
+  `genesis.observe@3.0.0`，两次真实 capture candidate、资格和 roots={} 重启通过；不改 v2 语义。
+- 新 capture 实际时间 `2026-09-11T10:57:29.934580Z`，checked `10:58:48.881502Z`，
+  delivered `11:01:55.434310Z`，expires `11:02:29.934580Z`，交付剩余 **34.50027s**。
+  这是恢复可信 half_dt 最终 pose、归零速度、零物理步的独立进程新帧；不是原仿真进程延续。
+- 鼠标完整几何、有限桌面与 ground，baseline/half_dt 各 4s、1,001/2,001 trace rows；
+  每 profile 41 PNG、无损 FFV1 MKV 和浏览器 MP4，另新 fresh PNG。34 项检查重新计算通过。
+  集中验收分别核对 lineage（56/56）、媒体/CAS、失败及迁移；报告同目录
+  `acceptance-lineage.json`、`acceptance-media-cas.json`、`acceptance-failure-relocation.json`。
+- 第二路径新进程无 Genesis、无源路径读取，验证 **4,115 objects / 1,970,263,053 bytes** 的输出
+  证据及 manifest 索引；未复制/复验 runtime member payload、部署根或应用 SQLite。因此这是
+  output recovery，不是本次四应用完整 runtime deployment relocation。
+- 代码集中门 **162 passed / 4 skipped / 8 deselected**，126 schema，Ruff/format/diff 均通过。
+  覆盖率仍未达全部新 core 100%；历史失败、测试断言修正和未覆盖范围保留，不拼成一次全绿。
+- M1 只授 `genesis.rigid_scene@1`；`robot_policy_evaluated=false`。未证明三模态、全新资产生成、
+  digital cousins、物性实测或外部 Codex/MCP；当前 active **M2：same-workflow exact MCP**。
+
 ## M1 production image compile 完成
 
 - `image2env.compile@2.0.0` 已以 v2 evidence qualification 注册；Gujie mouse overview/top/side
