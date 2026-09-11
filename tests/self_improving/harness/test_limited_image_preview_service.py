@@ -27,7 +27,9 @@ def test_start_retry_lookup_and_audited_resources_share_one_workflow(inputs, tmp
     )
     with pytest.raises(ValueError, match="audited lookup"):
         service.compile(
-            workflow_id=started["workflow_id"], asset_id="mouse", idempotency_key="compile",
+            workflow_id=started["workflow_id"],
+            asset_id="mouse",
+            idempotency_key="compile",
             expected_skill_ref="image2env.compile@2.0.0",
         )
     assert started["snapshot"]["workflow_run_id"] == started["workflow_id"]
@@ -66,6 +68,46 @@ def test_start_retry_lookup_and_audited_resources_share_one_workflow(inputs, tmp
         service.read_resource(inputs.workflow, image_uri)
     with pytest.raises(ValueError, match="exactly one"):
         service.start(user_text="mouse", idempotency_key="missing")
+    with pytest.raises(ValueError, match="explicit XY"):
+        service.compile(
+            workflow_id=started["workflow_id"],
+            asset_id="mouse",
+            idempotency_key="revise",
+            expected_skill_ref="image2env.compile@3.0.0",
+        )
+    with pytest.raises(ValueError, match="current committed"):
+        service.compile(
+            workflow_id=started["workflow_id"],
+            asset_id="mouse",
+            idempotency_key="revise",
+            expected_skill_ref="image2env.compile@3.0.0",
+            position_x_m=0.0,
+            position_y_m=0.0,
+            yaw_rad=0.0,
+        )
+    with pytest.raises(ValueError, match="exact replay"):
+        service.replay(
+            workflow_id=started["workflow_id"],
+            idempotency_key="replay",
+            expected_skill_ref="other@1.0.0",
+        )
+    with pytest.raises(ValueError, match="committed predecessor"):
+        service.observe(workflow_id=started["workflow_id"], idempotency_key="observe")
+    with pytest.raises(ValueError, match="three explicit"):
+        service.validate(
+            workflow_id=started["workflow_id"],
+            idempotency_key="validate",
+            expected_position_x_m=0.0,
+        )
+    from self_improving.harness.golden_run import GoldenRunRegistryError
+
+    with pytest.raises(GoldenRunRegistryError):
+        service.compile(
+            workflow_id=started["workflow_id"],
+            asset_id="mouse",
+            idempotency_key="compile",
+            expected_skill_ref="image2env.compile@2.0.0",
+        )
 
 
 @pytest.mark.parametrize("change", ["workflow", "extra", "prompt", "catalog", "missing"])
