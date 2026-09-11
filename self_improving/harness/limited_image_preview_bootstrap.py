@@ -378,8 +378,15 @@ def _record_checkpoint(
         raise ValueError("bootstrap checkpoint stages cannot be skipped")
     data = checkpoint.model_dump(mode="python")
     for name, value in changes.items():
-        current = data[name]
-        if current not in (None, {}, ()) and current != value:
+        current = getattr(checkpoint, name)
+        extends_shared_qualifications = (
+            name == "shared_qualifications"
+            and type(current) is dict
+            and type(value) is dict
+            and current.keys() <= value.keys()
+            and all(value[key] == item for key, item in current.items())
+        )
+        if current not in (None, {}, ()) and current != value and not extends_shared_qualifications:
             raise ValueError(f"bootstrap checkpoint {name} differs from reverified authority")
         data[name] = value
     if wanted_rank > current_rank:
