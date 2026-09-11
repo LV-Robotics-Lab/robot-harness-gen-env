@@ -314,6 +314,72 @@ def test_public_assignment_rejects_ambiguous_scope(assignment, field, value):
         CodexAssignment.model_validate_json(json.dumps(data))
 
 
+def test_diagnosis_prompt_requires_new_head_reads_after_advisory(assignment, tmp_path):
+    import hashlib
+    import shutil
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    from self_improving.harness.codex_backend import CodexBackend
+
+    compiler = shutil.which("cc")
+    if not compiler:
+        pytest.skip("external ELF fixture requires C compiler")
+    source = tmp_path / "prompt-fixture.c"
+    source.write_text(
+        "#include <stdio.h>\n"
+        "int main(void){FILE *f=fopen(\"prompt.txt\",\"wb\"); int c; "
+        "while((c=fgetc(stdin))!=EOF) fputc(c,f); fclose(f); return 17;}"
+    )
+    executable = tmp_path / "prompt-fixture-elf"
+    subprocess.run([compiler, str(source), "-o", str(executable)], check=True)
+    settings = tmp_path / "settings.json"
+    settings.write_text("{}")
+    backend = CodexBackend(
+        executable=executable,
+        approved_executable_sha256=hashlib.sha256(executable.read_bytes()).hexdigest(),
+        server_python=Path(sys.executable),
+        server_settings=settings,
+        server_workdir=tmp_path,
+        model="fixture-not-codex",
+    )
+    diagnosis = assignment.model_copy(
+        update={
+            "phase": "diagnosis",
+            "allowed_actions": (
+                "image2env_preview_status_v1",
+                "harness_advisory_record_v2",
+                "harness_prompt_revision_record_v3",
+            ),
+            "call_budget": 8,
+        }
+    )
+
+    result = backend.run(diagnosis, output_root=tmp_path / "record")
+
+    assert result.status == "exit_failure"
+    prompt = (tmp_path / "record/prompt.txt").read_text()
+    required_in_order = (
+        "Diagnosis is a two-head sequence.",
+        "At the pre-advisory current head, first call image2env_preview_status_v1, then read "
+        "the current effective prompt, preserved validation failure, fresh observation, "
+        "diagnostics, and initial replay evidence before calling harness_advisory_record_v2.",
+        "The advisory commit advances the Golden head.",
+        "After harness_advisory_record_v2 commits, call image2env_preview_status_v1 again and "
+        "use its post-advisory current head.",
+        "At that post-advisory head, re-read every artifact "
+        "harness_prompt_revision_record_v3 will reference: the current source prompt, new "
+        "advisory receipt, preserved failure receipts, and predecessor environment.",
+        "Use only the new post-advisory resource-access receipts from those reads.",
+        "Pre-advisory resource-access receipts are invalid for "
+        "harness_prompt_revision_record_v3; never reuse them or rely on session memory.",
+        "Only after those reads call harness_prompt_revision_record_v3.",
+    )
+    positions = [prompt.index(fragment) for fragment in required_in_order]
+    assert positions == sorted(positions)
+
+
 @pytest.mark.parametrize(
     "mode,expected",
     [("exit", "exit_failure"), ("invalid", "invalid_transcript"), ("timeout", "timeout")],
