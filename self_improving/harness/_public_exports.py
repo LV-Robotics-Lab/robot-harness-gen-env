@@ -110,6 +110,7 @@ _EXPORT_GROUPS = (
     (
         ".schemas.x2env_compile_evidence",
         (
+            "X2ENV_COMPILE_V2_RECEIPT_SCHEMA_ID",
             "AssetClosureManifestV1",
             "AssetModelSubjectV1",
             "AssetRepresentationV1",
@@ -123,6 +124,7 @@ _EXPORT_GROUPS = (
             "X2EnvAssetSelectionV1",
             "X2EnvBindingManifestV1",
             "X2EnvCompileReceiptV1",
+            "X2EnvCompileReceiptV2",
             "X2EnvStaticValidationV1",
             "asset_loader_closure_sha256",
             "canonical_evidence_sha256",
@@ -255,6 +257,8 @@ _EXPORT_GROUPS = (
     (
         ".schemas",
         (
+            "IMAGE2ENV_COMPILE_V2_OUTPUT_SCHEMA_ID",
+            "VIDEO2ENV_COMPILE_V2_OUTPUT_SCHEMA_ID",
             "AcquisitionPolicy",
             "ArtifactRef",
             "AssetAcquisitionLane",
@@ -274,6 +278,7 @@ _EXPORT_GROUPS = (
             "Image2EnvCompileInput",
             "Image2EnvCompileOutput",
             "Image2EnvCompileV2Input",
+            "Image2EnvCompileV2Output",
             "Image2EnvReplayInput",
             "Image2EnvReplayOutput",
             "Image2EnvValidateInput",
@@ -314,6 +319,7 @@ _EXPORT_GROUPS = (
             "Video2EnvCompileInput",
             "Video2EnvCompileOutput",
             "Video2EnvCompileV2Input",
+            "Video2EnvCompileV2Output",
             "Video2EnvReplayInput",
             "Video2EnvReplayOutput",
             "Video2EnvValidateInput",

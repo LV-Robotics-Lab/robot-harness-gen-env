@@ -201,11 +201,20 @@ def test_receipt_v2_binds_the_exact_route_compile_input_and_self_hash(tmp_path: 
     wrong_hash = dict(valid)
     wrong_hash["receipt_sha256"] = "4" * 64
     mutations.append(wrong_hash)
+    wrong_skill = dict(valid)
+    wrong_skill["skill_ref"] = "text2env.compile@1.0.0"
+    mutations.append(_rehash(wrong_skill))
     extra = {**valid, "unexpected": True}
     mutations.append(extra)
     for mutation in mutations:
         with pytest.raises(ValidationError):
             X2EnvCompileReceiptV2.model_validate(mutation)
+
+    predecessor = dict(valid)
+    predecessor["predecessor_package"] = _artifact(
+        "harness.x2env_environment_package.v1", digest="5" * 64
+    ).model_dump(mode="json")
+    assert X2EnvCompileReceiptV2.model_validate(_rehash(predecessor)).predecessor_package
 
 
 @_requires_v2
@@ -224,6 +233,48 @@ def test_output_v2_requires_the_v2_receipt_and_preserves_route(tmp_path: Path) -
     )
     output = Image2EnvCompileV2Output.model_validate(image_payload)
     assert output.compile_receipt == receipt_ref
+
+    video_source = schemas.VideoSourceMedia(
+        schema_version="harness.video_source_media.v1",
+        source_media_sha256="5" * 64,
+        source=_artifact("harness.video_bytes.v1", digest="5" * 64, media_type="video/mp4"),
+        probe=_artifact("harness.video_media_probe.v1", digest="6" * 64),
+        frame_sequence_manifest=_artifact("harness.video_frame_sequence.v1", digest="7" * 64),
+        width=64,
+        height=48,
+        duration_ms=600,
+        fps_numerator=30,
+        fps_denominator=1,
+        decoded_frame_count=18,
+        unique_frame_count=16,
+        frame_sequence_sha256="8" * 64,
+    )
+    video_package = case.compile_output.environment_package.model_copy(
+        update={
+            "route_id": "video2env",
+            "producer_skill_ref": "video2env.compile@1.0.0",
+            "source_media": video_source,
+        }
+    )
+    with pytest.raises(ValidationError, match="image2env"):
+        Image2EnvCompileV2Output.model_validate(
+            {**image_payload, "environment_package": video_package.model_dump(mode="json")}
+        )
+
+    _, video_receipt_payload = _receipt_v2_payload(tmp_path / "video", route="video2env")
+    video_receipt = X2EnvCompileReceiptV2.model_validate(video_receipt_payload)
+    video_receipt_ref = _publish_model(
+        case.store, tmp_path / "v2", "video-compile-receipt", video_receipt
+    )
+    video_output = Video2EnvCompileV2Output.model_validate(
+        {
+            **image_payload,
+            "schema_version": VIDEO2ENV_COMPILE_V2_OUTPUT_SCHEMA_ID,
+            "environment_package": video_package.model_dump(mode="json"),
+            "compile_receipt": video_receipt_ref.model_dump(mode="json"),
+        }
+    )
+    assert video_output.environment_package.route_id == "video2env"
 
     old_receipt = {
         **image_payload,

@@ -89,6 +89,10 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
             ".schemas.x2env",
             "Image2EnvCompileOutput",
         ),
+        "harness.image2env_compile_output.v2": (
+            ".schemas.x2env",
+            "Image2EnvCompileV2Output",
+        ),
         "harness.image2env_replay_input.v1": (
             ".schemas.x2env",
             "Image2EnvReplayInput",
@@ -147,6 +151,10 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
         "harness.x2env_compile_receipt.v1": (
             ".schemas.x2env_compile_evidence",
             "X2EnvCompileReceiptV1",
+        ),
+        "harness.x2env_compile_receipt.v2": (
+            ".schemas.x2env_compile_evidence",
+            "X2EnvCompileReceiptV2",
         ),
         "harness.x2env_static_validation.v1": (
             ".schemas.x2env_compile_evidence",
@@ -223,6 +231,10 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
         "harness.video2env_compile_output.v1": (
             ".schemas.x2env",
             "Video2EnvCompileOutput",
+        ),
+        "harness.video2env_compile_output.v2": (
+            ".schemas.x2env",
+            "Video2EnvCompileV2Output",
         ),
         "harness.video2env_replay_input.v1": (
             ".schemas.x2env",

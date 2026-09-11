@@ -27,7 +27,11 @@ from .base import (
     public_schema_config,
 )
 from .common import ArtifactRef, Blocker, DependencyRef, ValidationStatus
-from .x2env import RequestedGenesisProfile
+from .x2env import (
+    IMAGE2ENV_COMPILE_V2_INPUT_SCHEMA_ID,
+    VIDEO2ENV_COMPILE_V2_INPUT_SCHEMA_ID,
+    RequestedGenesisProfile,
+)
 
 SCENE_INTERPRETATION_PROPOSAL_SCHEMA_ID = "harness.scene_interpretation_proposal.v1"
 PORTABLE_ASSET_CATALOG_SCHEMA_ID = "harness.portable_asset_catalog.v1"
@@ -41,6 +45,7 @@ X2ENV_BINDING_MANIFEST_SCHEMA_ID = "harness.x2env_binding_manifest.v1"
 GENESIS_RUNTIME_LOCK_SCHEMA_ID = "harness.genesis_runtime_lock.v1"
 X2ENV_STATIC_VALIDATION_SCHEMA_ID = "harness.x2env_static_validation.v1"
 X2ENV_COMPILE_RECEIPT_SCHEMA_ID = "harness.x2env_compile_receipt.v1"
+X2ENV_COMPILE_V2_RECEIPT_SCHEMA_ID = "harness.x2env_compile_receipt.v2"
 
 ObjectId = Annotated[str, Field(strict=True, pattern=r"^[a-z][a-z0-9_]{0,63}$")]
 AssetNamespace = Annotated[
@@ -728,6 +733,84 @@ class X2EnvCompileReceiptV1(_SelfHashedEvidence):
         return self
 
 
+class X2EnvCompileReceiptV2(_SelfHashedEvidence):
+    """Compile receipt whose exact input bytes are part of the portable closure."""
+
+    model_config = public_schema_config(X2ENV_COMPILE_V2_RECEIPT_SCHEMA_ID)
+    _digest_field = "receipt_sha256"
+
+    schema_version: Literal[X2ENV_COMPILE_V2_RECEIPT_SCHEMA_ID]
+    receipt_sha256: Sha256
+    skill_ref: CanonicalSkillRef
+    compile_input: ArtifactRef
+    source_media_sha256: Sha256
+    interpretation_proposal: ArtifactRef
+    asset_catalog: ArtifactRef
+    scene_ir: ArtifactRef
+    task_ir: ArtifactRef
+    asset_selections: tuple[ArtifactRef, ...] = Field(min_length=1, max_length=64)
+    asset_closure_manifest: ArtifactRef
+    binding_manifest: ArtifactRef
+    runtime_lock: ArtifactRef
+    static_validation: ArtifactRef
+    environment_package: ArtifactRef
+    package_id: Sha256
+    predecessor_package: ArtifactRef | None
+    implementation_sha256: Sha256
+    simulator_executed: Literal[False]
+    publishable: Literal[False]
+
+    @model_validator(mode="after")
+    def receipt_is_input_bound(self) -> "X2EnvCompileReceiptV2":
+        input_schemas = {
+            "image2env.compile@1.0.0": IMAGE2ENV_COMPILE_V2_INPUT_SCHEMA_ID,
+            "video2env.compile@1.0.0": VIDEO2ENV_COMPILE_V2_INPUT_SCHEMA_ID,
+        }
+        expected_input_schema = input_schemas.get(self.skill_ref)
+        if expected_input_schema is None:
+            raise ValueError("skill_ref must identify an exact x2env compile Skill")
+        _require_json_ref(self.compile_input, "compile_input", expected_input_schema)
+        for ref, field, schema in (
+            (
+                self.interpretation_proposal,
+                "interpretation_proposal",
+                SCENE_INTERPRETATION_PROPOSAL_SCHEMA_ID,
+            ),
+            (self.asset_catalog, "asset_catalog", PORTABLE_ASSET_CATALOG_SCHEMA_ID),
+            (self.scene_ir, "scene_ir", SCENE_IR_SCHEMA_ID),
+            (self.task_ir, "task_ir", TASK_IR_SCHEMA_ID),
+            (
+                self.asset_closure_manifest,
+                "asset_closure_manifest",
+                ASSET_CLOSURE_MANIFEST_SCHEMA_ID,
+            ),
+            (self.binding_manifest, "binding_manifest", X2ENV_BINDING_MANIFEST_SCHEMA_ID),
+            (self.runtime_lock, "runtime_lock", GENESIS_RUNTIME_LOCK_SCHEMA_ID),
+            (
+                self.static_validation,
+                "static_validation",
+                X2ENV_STATIC_VALIDATION_SCHEMA_ID,
+            ),
+            (
+                self.environment_package,
+                "environment_package",
+                "harness.x2env_environment_package.v1",
+            ),
+        ):
+            _require_json_ref(ref, field, schema)
+        selection_keys = tuple(ref.sha256 for ref in self.asset_selections)
+        _require_sorted_unique(self.asset_selections, selection_keys, "asset_selections")
+        for index, ref in enumerate(self.asset_selections):
+            _require_json_ref(ref, f"asset_selections[{index}]", X2ENV_ASSET_SELECTION_SCHEMA_ID)
+        if self.predecessor_package is not None:
+            _require_json_ref(
+                self.predecessor_package,
+                "predecessor_package",
+                "harness.x2env_environment_package.v1",
+            )
+        return self
+
+
 __all__ = [
     "ASSET_CLOSURE_MANIFEST_SCHEMA_ID",
     "ASSET_QUALIFICATION_SCHEMA_ID",
@@ -740,6 +823,7 @@ __all__ = [
     "X2ENV_ASSET_SELECTION_SCHEMA_ID",
     "X2ENV_BINDING_MANIFEST_SCHEMA_ID",
     "X2ENV_COMPILE_RECEIPT_SCHEMA_ID",
+    "X2ENV_COMPILE_V2_RECEIPT_SCHEMA_ID",
     "X2ENV_STATIC_VALIDATION_SCHEMA_ID",
     "AssetClosureManifestV1",
     "AssetModelSubjectV1",
@@ -754,6 +838,7 @@ __all__ = [
     "X2EnvAssetSelectionV1",
     "X2EnvBindingManifestV1",
     "X2EnvCompileReceiptV1",
+    "X2EnvCompileReceiptV2",
     "X2EnvStaticValidationV1",
     "asset_loader_closure_sha256",
     "canonical_evidence_sha256",

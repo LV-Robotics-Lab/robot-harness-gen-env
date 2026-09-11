@@ -1,0 +1,484 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "AssetAcquisitionLane": {
+      "enum": [
+        "environment_reuse",
+        "exact_asset_reuse",
+        "digital_cousin_reuse",
+        "fresh_asset_generation"
+      ],
+      "title": "AssetAcquisitionLane",
+      "type": "string"
+    },
+    "ImageSourceMedia": {
+      "additionalProperties": false,
+      "properties": {
+        "canonical_image": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "color_mode": {
+          "enum": [
+            "RGB",
+            "RGBA",
+            "L"
+          ],
+          "title": "Color Mode",
+          "type": "string"
+        },
+        "decoded_frame_count": {
+          "const": 1,
+          "title": "Decoded Frame Count",
+          "type": "integer"
+        },
+        "height": {
+          "minimum": 1,
+          "title": "Height",
+          "type": "integer"
+        },
+        "probe": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "schema_version": {
+          "const": "harness.image_source_media.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "source_media_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Media Sha256",
+          "type": "string"
+        },
+        "unique_frame_count": {
+          "const": 1,
+          "title": "Unique Frame Count",
+          "type": "integer"
+        },
+        "width": {
+          "minimum": 1,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema_version",
+        "source_media_sha256",
+        "source",
+        "canonical_image",
+        "probe",
+        "width",
+        "height",
+        "color_mode",
+        "decoded_frame_count",
+        "unique_frame_count"
+      ],
+      "title": "ImageSourceMedia",
+      "type": "object"
+    },
+    "RepresentationOrigin": {
+      "enum": [
+        "harness_native",
+        "legacy_genenv_adapted"
+      ],
+      "title": "RepresentationOrigin",
+      "type": "string"
+    },
+    "RequestedGenesisProfile": {
+      "enum": [
+        "genesis.rigid_scene@1",
+        "genesis.robot_policy@1"
+      ],
+      "title": "RequestedGenesisProfile",
+      "type": "string"
+    },
+    "VideoSourceMedia": {
+      "additionalProperties": false,
+      "properties": {
+        "decoded_frame_count": {
+          "minimum": 1,
+          "title": "Decoded Frame Count",
+          "type": "integer"
+        },
+        "duration_ms": {
+          "minimum": 1,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "fps_denominator": {
+          "minimum": 1,
+          "title": "Fps Denominator",
+          "type": "integer"
+        },
+        "fps_numerator": {
+          "minimum": 1,
+          "title": "Fps Numerator",
+          "type": "integer"
+        },
+        "frame_sequence_manifest": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "frame_sequence_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Frame Sequence Sha256",
+          "type": "string"
+        },
+        "height": {
+          "minimum": 1,
+          "title": "Height",
+          "type": "integer"
+        },
+        "probe": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "schema_version": {
+          "const": "harness.video_source_media.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "source_media_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Media Sha256",
+          "type": "string"
+        },
+        "unique_frame_count": {
+          "minimum": 1,
+          "title": "Unique Frame Count",
+          "type": "integer"
+        },
+        "width": {
+          "minimum": 1,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema_version",
+        "source_media_sha256",
+        "source",
+        "probe",
+        "frame_sequence_manifest",
+        "width",
+        "height",
+        "duration_ms",
+        "fps_numerator",
+        "fps_denominator",
+        "decoded_frame_count",
+        "unique_frame_count",
+        "frame_sequence_sha256"
+      ],
+      "title": "VideoSourceMedia",
+      "type": "object"
+    },
+    "X2EnvAssetDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "decision_evidence": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "digital_cousin_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "generation_receipt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lane": {
+          "$ref": "#/$defs/AssetAcquisitionLane"
+        },
+        "object_id": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Object Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.x2env_asset_decision.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "selected_artifact": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "source_qualification": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "object_id",
+        "lane",
+        "selected_artifact",
+        "decision_evidence",
+        "source_qualification",
+        "digital_cousin_evidence",
+        "generation_receipt"
+      ],
+      "title": "X2EnvAssetDecision",
+      "type": "object"
+    },
+    "X2EnvEnvironmentPackage": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_closure_manifest": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "backend": {
+          "const": "genesis",
+          "title": "Backend",
+          "type": "string"
+        },
+        "binding_manifest": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "collision_qualified": {
+          "const": false,
+          "default": false,
+          "title": "Collision Qualified",
+          "type": "boolean"
+        },
+        "environment_format": {
+          "const": "harness.genesis_portable.v1",
+          "title": "Environment Format",
+          "type": "string"
+        },
+        "legacy_adapter_receipt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "package_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Package Id",
+          "type": "string"
+        },
+        "producer_skill_ref": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}\\.[a-z][a-z0-9_]{0,31}@(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$",
+          "title": "Producer Skill Ref",
+          "type": "string"
+        },
+        "representation_origin": {
+          "$ref": "#/$defs/RepresentationOrigin"
+        },
+        "requested_profile": {
+          "$ref": "#/$defs/RequestedGenesisProfile"
+        },
+        "route_id": {
+          "enum": [
+            "image2env",
+            "video2env"
+          ],
+          "title": "Route Id",
+          "type": "string"
+        },
+        "runtime_lock": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "scene_ir": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "schema_version": {
+          "const": "harness.x2env_environment_package.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "simulator_ready": {
+          "const": false,
+          "default": false,
+          "title": "Simulator Ready",
+          "type": "boolean"
+        },
+        "source_media": {
+          "discriminator": {
+            "mapping": {
+              "harness.image_source_media.v1": "#/$defs/ImageSourceMedia",
+              "harness.video_source_media.v1": "#/$defs/VideoSourceMedia"
+            },
+            "propertyName": "schema_version"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ImageSourceMedia"
+            },
+            {
+              "$ref": "#/$defs/VideoSourceMedia"
+            }
+          ],
+          "title": "Source Media"
+        },
+        "task_ir": {
+          "$ref": "#/$defs/ArtifactRef"
+        }
+      },
+      "required": [
+        "schema_version",
+        "package_id",
+        "route_id",
+        "producer_skill_ref",
+        "source_media",
+        "requested_profile",
+        "environment_format",
+        "backend",
+        "representation_origin",
+        "legacy_adapter_receipt",
+        "scene_ir",
+        "task_ir",
+        "asset_closure_manifest",
+        "binding_manifest",
+        "runtime_lock"
+      ],
+      "title": "X2EnvEnvironmentPackage",
+      "type": "object"
+    }
+  },
+  "$id": "harness.video2env_compile_output.v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "First executable video output with a complete-input-bound receipt.",
+  "properties": {
+    "asset_decisions": {
+      "items": {
+        "$ref": "#/$defs/X2EnvAssetDecision"
+      },
+      "minItems": 1,
+      "title": "Asset Decisions",
+      "type": "array"
+    },
+    "compile_receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "environment_package": {
+      "$ref": "#/$defs/X2EnvEnvironmentPackage"
+    },
+    "publishable": {
+      "const": false,
+      "default": false,
+      "title": "Publishable",
+      "type": "boolean"
+    },
+    "scene_ir": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.video2env_compile_output.v2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "simulator_executed": {
+      "const": false,
+      "default": false,
+      "title": "Simulator Executed",
+      "type": "boolean"
+    },
+    "staged_assets": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Staged Assets",
+      "type": "array"
+    },
+    "static_validation": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "task_ir": {
+      "$ref": "#/$defs/ArtifactRef"
+    }
+  },
+  "required": [
+    "environment_package",
+    "scene_ir",
+    "task_ir",
+    "asset_decisions",
+    "staged_assets",
+    "static_validation",
+    "compile_receipt",
+    "schema_version"
+  ],
+  "title": "Video2EnvCompileV2Output",
+  "type": "object"
+}

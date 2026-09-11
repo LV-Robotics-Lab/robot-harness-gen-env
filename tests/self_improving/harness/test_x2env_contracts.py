@@ -649,7 +649,7 @@ def test_exact_skill_namespace_has_six_contract_only_descriptors() -> None:
         "image2env.compile@1.0.0": (
             "image2env_compile_v1_0_0",
             "harness.image2env_compile_input.v2",
-            "harness.image2env_compile_output.v1",
+            "harness.image2env_compile_output.v2",
         ),
         "image2env.replay@1.0.0": (
             "image2env_replay_v1_0_0",
@@ -664,7 +664,7 @@ def test_exact_skill_namespace_has_six_contract_only_descriptors() -> None:
         "video2env.compile@1.0.0": (
             "video2env_compile_v1_0_0",
             "harness.video2env_compile_input.v2",
-            "harness.video2env_compile_output.v1",
+            "harness.video2env_compile_output.v2",
         ),
         "video2env.replay@1.0.0": (
             "video2env_replay_v1_0_0",

@@ -1,0 +1,179 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.x2env_compile_receipt.v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Compile receipt whose exact input bytes are part of the portable closure.",
+  "properties": {
+    "asset_catalog": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "asset_closure_manifest": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "asset_selections": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "maxItems": 64,
+      "minItems": 1,
+      "title": "Asset Selections",
+      "type": "array"
+    },
+    "binding_manifest": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "compile_input": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "environment_package": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "implementation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Implementation Sha256",
+      "type": "string"
+    },
+    "interpretation_proposal": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "package_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Package Id",
+      "type": "string"
+    },
+    "predecessor_package": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "publishable": {
+      "const": false,
+      "title": "Publishable",
+      "type": "boolean"
+    },
+    "receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Receipt Sha256",
+      "type": "string"
+    },
+    "runtime_lock": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "scene_ir": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.x2env_compile_receipt.v2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "simulator_executed": {
+      "const": false,
+      "title": "Simulator Executed",
+      "type": "boolean"
+    },
+    "skill_ref": {
+      "pattern": "^[a-z][a-z0-9_]{0,31}\\.[a-z][a-z0-9_]{0,31}@(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$",
+      "title": "Skill Ref",
+      "type": "string"
+    },
+    "source_media_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Media Sha256",
+      "type": "string"
+    },
+    "static_validation": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "task_ir": {
+      "$ref": "#/$defs/ArtifactRef"
+    }
+  },
+  "required": [
+    "schema_version",
+    "receipt_sha256",
+    "skill_ref",
+    "compile_input",
+    "source_media_sha256",
+    "interpretation_proposal",
+    "asset_catalog",
+    "scene_ir",
+    "task_ir",
+    "asset_selections",
+    "asset_closure_manifest",
+    "binding_manifest",
+    "runtime_lock",
+    "static_validation",
+    "environment_package",
+    "package_id",
+    "predecessor_package",
+    "implementation_sha256",
+    "simulator_executed",
+    "publishable"
+  ],
+  "title": "X2EnvCompileReceiptV2",
+  "type": "object"
+}

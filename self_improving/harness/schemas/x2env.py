@@ -7,7 +7,7 @@ or claim that the legacy Gujie output has passed a current Harness replay.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated, Literal
+from typing import Annotated, ClassVar, Literal
 
 from pydantic import Field, StrictBool, model_validator
 
@@ -32,6 +32,7 @@ X2ENV_ENVIRONMENT_PACKAGE_SCHEMA_ID = "harness.x2env_environment_package.v1"
 IMAGE2ENV_COMPILE_INPUT_SCHEMA_ID = "harness.image2env_compile_input.v1"
 IMAGE2ENV_COMPILE_V2_INPUT_SCHEMA_ID = "harness.image2env_compile_input.v2"
 IMAGE2ENV_COMPILE_OUTPUT_SCHEMA_ID = "harness.image2env_compile_output.v1"
+IMAGE2ENV_COMPILE_V2_OUTPUT_SCHEMA_ID = "harness.image2env_compile_output.v2"
 IMAGE2ENV_REPLAY_INPUT_SCHEMA_ID = "harness.image2env_replay_input.v1"
 IMAGE2ENV_REPLAY_OUTPUT_SCHEMA_ID = "harness.image2env_replay_output.v1"
 IMAGE2ENV_VALIDATE_INPUT_SCHEMA_ID = "harness.image2env_validate_input.v1"
@@ -39,6 +40,7 @@ IMAGE2ENV_VALIDATE_OUTPUT_SCHEMA_ID = "harness.image2env_validate_output.v1"
 VIDEO2ENV_COMPILE_INPUT_SCHEMA_ID = "harness.video2env_compile_input.v1"
 VIDEO2ENV_COMPILE_V2_INPUT_SCHEMA_ID = "harness.video2env_compile_input.v2"
 VIDEO2ENV_COMPILE_OUTPUT_SCHEMA_ID = "harness.video2env_compile_output.v1"
+VIDEO2ENV_COMPILE_V2_OUTPUT_SCHEMA_ID = "harness.video2env_compile_output.v2"
 VIDEO2ENV_REPLAY_INPUT_SCHEMA_ID = "harness.video2env_replay_input.v1"
 VIDEO2ENV_REPLAY_OUTPUT_SCHEMA_ID = "harness.video2env_replay_output.v1"
 VIDEO2ENV_VALIDATE_INPUT_SCHEMA_ID = "harness.video2env_validate_input.v1"
@@ -382,6 +384,8 @@ class Video2EnvCompileV2Input(_CompileInput):
 
 
 class _CompileOutput(HarnessModel):
+    _compile_receipt_schema: ClassVar[str] = COMPILE_RECEIPT_SCHEMA
+
     environment_package: X2EnvEnvironmentPackage
     scene_ir: ArtifactRef
     task_ir: ArtifactRef
@@ -398,7 +402,7 @@ class _CompileOutput(HarnessModel):
             (self.scene_ir, "scene_ir", SCENE_IR_SCHEMA),
             (self.task_ir, "task_ir", TASK_IR_SCHEMA),
             (self.static_validation, "static_validation", STATIC_VALIDATION_SCHEMA),
-            (self.compile_receipt, "compile_receipt", COMPILE_RECEIPT_SCHEMA),
+            (self.compile_receipt, "compile_receipt", self._compile_receipt_schema),
         ):
             _require_cas_ref(
                 value,
@@ -434,6 +438,21 @@ class Image2EnvCompileOutput(_CompileOutput):
         return self
 
 
+class Image2EnvCompileV2Output(_CompileOutput):
+    """First executable image output with a complete-input-bound receipt."""
+
+    model_config = public_schema_config(IMAGE2ENV_COMPILE_V2_OUTPUT_SCHEMA_ID)
+    _compile_receipt_schema = "harness.x2env_compile_receipt.v2"
+
+    schema_version: Literal[IMAGE2ENV_COMPILE_V2_OUTPUT_SCHEMA_ID]
+
+    @model_validator(mode="after")
+    def package_route_matches(self) -> "Image2EnvCompileV2Output":
+        if self.environment_package.route_id != "image2env":
+            raise ValueError("image2env output requires an image2env package")
+        return self
+
+
 class Video2EnvCompileOutput(_CompileOutput):
     model_config = public_schema_config(VIDEO2ENV_COMPILE_OUTPUT_SCHEMA_ID)
 
@@ -441,6 +460,21 @@ class Video2EnvCompileOutput(_CompileOutput):
 
     @model_validator(mode="after")
     def package_route_matches(self) -> "Video2EnvCompileOutput":
+        if self.environment_package.route_id != "video2env":
+            raise ValueError("video2env output requires a video2env package")
+        return self
+
+
+class Video2EnvCompileV2Output(_CompileOutput):
+    """First executable video output with a complete-input-bound receipt."""
+
+    model_config = public_schema_config(VIDEO2ENV_COMPILE_V2_OUTPUT_SCHEMA_ID)
+    _compile_receipt_schema = "harness.x2env_compile_receipt.v2"
+
+    schema_version: Literal[VIDEO2ENV_COMPILE_V2_OUTPUT_SCHEMA_ID]
+
+    @model_validator(mode="after")
+    def package_route_matches(self) -> "Video2EnvCompileV2Output":
         if self.environment_package.route_id != "video2env":
             raise ValueError("video2env output requires a video2env package")
         return self
