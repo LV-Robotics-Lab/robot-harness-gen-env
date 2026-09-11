@@ -1,6 +1,23 @@
 import pytest
 
 
+def test_scene_v2_rejects_a_v1_request_reference_before_execution(tmp_path):
+    from self_improving.harness.artifacts import LocalArtifactStore
+    from self_improving.harness.genesis_scene_launcher import execute_genesis_scene_request_v2
+
+    store = LocalArtifactStore(tmp_path / "cas")
+    source = tmp_path / "request.json"
+    source.write_text("{}")
+    ref = store.put_file(
+        source,
+        name=source.name,
+        media_type="application/json",
+        schema_version="harness.genesis_scene_execution_request.v1",
+    )
+    with pytest.raises(ValueError, match="v2"):
+        execute_genesis_scene_request_v2(store=store, request_ref=ref, roots={})
+
+
 def test_real_constrained_scene_request_keeps_two_processes(tmp_path):
     import json
     import os
@@ -77,3 +94,53 @@ def test_scene_launcher_rejects_missing_manifest_before_creating_output(tmp_path
     with pytest.raises(ValueError, match="manifest"):
         launch_genesis_scene_replay(None, None, None, roots={}, output_dir=tmp_path / "output")
     assert not (tmp_path / "output").exists()
+
+
+def test_retained_output_index_uses_logical_posix_string_order(tmp_path):
+    import json
+
+    from self_improving.harness.artifacts import LocalArtifactStore
+    from self_improving.harness.genesis_scene_launcher import retain_scene_outputs_v2
+
+    output = tmp_path / "outputs"
+    names = [
+        "baseline-job.json",
+        "baseline-observation.json",
+        "baseline-stderr.txt",
+        "baseline-stdout.txt",
+    ]
+    names += [f"baseline/frames/step-{step:04}.png" for step in range(0, 1001, 25)]
+    names += [
+        "half_dt-job.json",
+        "half_dt-observation.json",
+        "half_dt-stderr.txt",
+        "half_dt-stdout.txt",
+    ]
+    names += [f"half_dt/frames/step-{step:04}.png" for step in range(0, 2001, 50)]
+    for profile in ("baseline", "half_dt"):
+        names += [
+            f"{profile}/{name}"
+            for name in (
+                "loaded.json",
+                "media.json",
+                "preview.mp4",
+                "renderer-runtime.json",
+                "result.json",
+                "simulation.mkv",
+                "trace.ndjson",
+            )
+        ]
+    from pathlib import PurePosixPath
+
+    assert sum(a != b for a, b in zip(sorted(names), sorted(names, key=PurePosixPath))) == 104
+    for name in names:
+        path = output / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(name.encode())
+    store = LocalArtifactStore(tmp_path / "cas")
+    ref = retain_scene_outputs_v2(store, output)
+    result = json.loads(store.resolve(ref).path.read_bytes())
+    assert [item["name"] for item in result["files"]] == sorted(names)
+    assert len(result["files"]) == len(set(names))
+    assert result["execution_authority"] is False
+    assert result["qualified"] is False

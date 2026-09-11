@@ -13,6 +13,11 @@ import traceback
 from pathlib import Path
 
 
+def run_genesis_scene_cpu_v2(scene_spec, urdf_path, output_dir, **kwargs):
+    """Capture wall-clock events at real render completion, in addition to v1 evidence."""
+    return run_genesis_scene_cpu(scene_spec, urdf_path, output_dir, _capture_events=True, **kwargs)
+
+
 def run_genesis_scene_cpu(
     scene_spec,
     urdf_path: Path,
@@ -21,6 +26,7 @@ def run_genesis_scene_cpu(
     profile: str,
     runtime_observer=None,
     cpu_facts=None,
+    _capture_events=False,
 ):
     """Execute exactly one fresh four-second profile; never repair input poses."""
     if profile not in ("baseline", "half_dt"):
@@ -231,6 +237,10 @@ def run_genesis_scene_cpu(
                 result["rows"] += 1
                 if step % stride == 0:
                     rgb = np.asarray(camera.render(rgb=True, force_render=True)[0], dtype=np.uint8)
+                    if _capture_events:
+                        from datetime import datetime, timezone
+
+                        captured_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
                     if step == 0:
                         from OpenGL.GL import GL_RENDERER, GL_VENDOR, GL_VERSION, glGetString
 
@@ -261,6 +271,10 @@ def run_genesis_scene_cpu(
                             "png_sha256": hashlib.sha256(frame_path.read_bytes()).hexdigest(),
                         }
                     )
+                    if _capture_events:
+                        sampled[-1].update(
+                            captured_at=captured_at, width=rgb.shape[1], height=rgb.shape[0]
+                        )
         for writer in writers:
             writer.close()
         writers.clear()

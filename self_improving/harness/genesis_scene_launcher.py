@@ -69,7 +69,64 @@ def execute_genesis_scene_request(*, store, request_ref, roots):
         raise error from cause
 
 
-def _publish_scene_launch_result(store, request_ref, request, roots, run, replay):
+def execute_genesis_scene_request_v2(*, store, request_ref, roots):
+    """Run the explicit capture-event revision; v1 requests cannot gain v2 evidence."""
+    if request_ref.schema_version != "harness.genesis_scene_execution_request.v2":
+        raise GenesisSceneLaunchError("scene execution v2 requires an exact v2 request")
+    from .schemas.genesis_scene_execution_v2 import GenesisSceneExecutionRequestV2
+
+    request = GenesisSceneExecutionRequestV2.model_validate_json(
+        store.resolve(request_ref).path.read_bytes()
+    )
+    roots = {key: Path(value) for key, value in roots.items()}
+    run = Path(tempfile.mkdtemp(prefix="golden-scene-execution-v2-")) / "outputs"
+    replay = launch_genesis_scene_replay(
+        store,
+        request.scene,
+        request.runtime_manifest,
+        roots=roots,
+        output_dir=run,
+        runtime_version=2,
+    )
+    try:
+        return _publish_scene_launch_result(
+            store, request_ref, request, roots, run, replay, version=2
+        )
+    except Exception as cause:
+        error = GenesisSceneLaunchError(str(cause))
+        error.failure_artifacts = (retain_scene_outputs_v2(store, run),)
+        raise error from cause
+
+
+def retain_scene_outputs_v2(store, run):
+    """Retain diagnostic bytes in logical POSIX order without granting execution authority."""
+    files = []
+    for path in sorted(run.rglob("*"), key=lambda member: member.relative_to(run).as_posix()):
+        if (
+            path.is_file()
+            and not path.is_relative_to(run / "asset")
+            and path.name not in ("retained-output.json", "launch-result.json")
+        ):
+            files.append(
+                store.put_file(
+                    path,
+                    name=path.relative_to(run).as_posix(),
+                    media_type="application/octet-stream",
+                    schema_version=None,
+                ).model_dump(mode="json")
+            )
+    path = run / "retained-output.json"
+    path.write_text(
+        json.dumps(
+            {"execution_authority": False, "qualified": False, "files": files},
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    return store.put_file(path, name=path.name, media_type="application/json", schema_version=None)
+
+
+def _publish_scene_launch_result(store, request_ref, request, roots, run, replay, *, version=1):
     from .genesis_runtime_manifest import read_runtime_manifest
     from .schemas.genesis_scene_execution import (
         GenesisSceneLaunchResultV1,
@@ -79,6 +136,11 @@ def _publish_scene_launch_result(store, request_ref, request, roots, run, replay
     manifest = read_runtime_manifest(store, request.runtime_manifest)
     declared = {(item.root, item.path): item for item in manifest.members}
     observations = {}
+    if version == 2:
+        from .schemas.genesis_scene_execution_v2 import (
+            GenesisSceneLaunchResultV2,
+            GenesisSceneProcessObservationV2,
+        )
     for profile in ("baseline", "half_dt"):
         raw_path = run / profile / "renderer-runtime.json"
         raw = json.loads(raw_path.read_bytes())
@@ -108,8 +170,41 @@ def _publish_scene_launch_result(store, request_ref, request, roots, run, replay
             )
             for stream in ("stdout", "stderr")
         }
-        observation = GenesisSceneProcessObservationV1(
-            schema_version="harness.genesis_scene_process_observation.v1",
+        captures = {}
+        if version == 2:
+            from PIL import Image
+
+            events = []
+            for event in raw["capture_events"]:
+                path = run / profile / event["image_path"]
+                if (
+                    Path(event["image_path"]).is_absolute()
+                    or not path.is_relative_to(run / profile)
+                    or ".." in Path(event["image_path"]).parts
+                ):
+                    raise GenesisSceneLaunchError("capture image path escapes its profile")
+                with Image.open(path) as image:
+                    image.load()
+                    if (
+                        image.format != "PNG"
+                        or image.mode != "RGB"
+                        or list(image.size) != [event["width"], event["height"]]
+                        or hashlib.sha256(image.tobytes()).hexdigest() != event["pixels_sha256"]
+                    ):
+                        raise GenesisSceneLaunchError(
+                            "capture event does not match actual PNG pixels"
+                        )
+                value = {key: item for key, item in event.items() if key != "image_path"}
+                value["image"] = store.put_file(
+                    path, name=path.name, media_type="image/png", schema_version=None
+                )
+                events.append(value)
+            captures = {"captures": events}
+        observation_type = (
+            GenesisSceneProcessObservationV2 if version == 2 else GenesisSceneProcessObservationV1
+        )
+        observation = observation_type(
+            schema_version=f"harness.genesis_scene_process_observation.v{version}",
             request=request_ref,
             profile=profile,
             process_identity=manifest.process_identity,
@@ -130,6 +225,7 @@ def _publish_scene_launch_result(store, request_ref, request, roots, run, replay
                 schema_version=None,
             ),
             **streams,
+            **captures,
         )
         path = run / (profile + "-observation.json")
         path.write_text(
@@ -141,11 +237,25 @@ def _publish_scene_launch_result(store, request_ref, request, roots, run, replay
             media_type="application/json",
             schema_version=observation.schema_version,
         )
-    result = GenesisSceneLaunchResultV1(
-        schema_version="harness.genesis_scene_launch_result.v1",
+    media = {}
+    if version == 2:
+        media = {
+            profile + "_preview": store.put_file(
+                run / profile / "preview.mp4",
+                name=profile + "-preview.mp4",
+                media_type="video/mp4",
+                schema_version=None,
+            )
+            for profile in ("baseline", "half_dt")
+        }
+        media["retained_index"] = retain_scene_outputs_v2(store, run)
+    result_type = GenesisSceneLaunchResultV2 if version == 2 else GenesisSceneLaunchResultV1
+    result = result_type(
+        schema_version=f"harness.genesis_scene_launch_result.v{version}",
         request=request_ref,
         replay=replay,
         **observations,
+        **media,
     )
     path = run / "launch-result.json"
     path.write_text(
@@ -156,7 +266,9 @@ def _publish_scene_launch_result(store, request_ref, request, roots, run, replay
     )
 
 
-def launch_genesis_scene_replay(store, scene_ref, runtime_manifest_ref, *, roots, output_dir):
+def launch_genesis_scene_replay(
+    store, scene_ref, runtime_manifest_ref, *, roots, output_dir, runtime_version=1
+):
     """Run two fixed fresh children and publish CAS evidence for a pure-read consumer."""
     if type(runtime_manifest_ref) is not ArtifactRef:
         raise ValueError("scene execution requires an explicit runtime manifest")
@@ -208,6 +320,8 @@ def launch_genesis_scene_replay(store, scene_ref, runtime_manifest_ref, *, roots
                 "output_dir": str(profile_dir),
                 "roots": {k: str(v) for k, v in roots.items()},
             }
+            if runtime_version == 2:
+                job["runtime_version"] = 2
             job_path = output_dir / (profile + "-job.json")
             job_path.write_text(json.dumps(job, sort_keys=True, separators=(",", ":")))
             environment = dict(manifest.process_identity.environment)
@@ -254,7 +368,12 @@ def launch_genesis_scene_replay(store, scene_ref, runtime_manifest_ref, *, roots
                 raise ValueError(f"scene {profile} child failed with status {completed.returncode}")
             observation = json.loads((profile_dir / "renderer-runtime.json").read_bytes())
             if (
-                observation["schema_version"] != "harness.genesis_scene_process_observation.v1"
+                observation["schema_version"]
+                != (
+                    "harness.genesis_scene_raw_observation.v2"
+                    if runtime_version == 2
+                    else "harness.genesis_scene_process_observation.v1"
+                )
                 or observation["landlock_abi"] < 6
                 or observation["network_denied"] is not True
                 or observation["runtime_write_denied"] is not True

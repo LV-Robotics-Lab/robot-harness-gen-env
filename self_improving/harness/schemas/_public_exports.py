@@ -7,6 +7,45 @@ from typing import Any
 
 _EXPORT_GROUPS = (
     (
+        ".genesis_fresh_capture",
+        (
+            "GenesisFreshCaptureInputV1",
+            "GenesisFreshCaptureRequestV1",
+            "GenesisFreshCaptureResultV1",
+            "GenesisFreshCaptureReceiptV1",
+            "GenesisFreshCaptureQualificationV1",
+        ),
+    ),
+    (
+        ".genesis_scene_assessment",
+        ("GenesisSceneObserveInputV1", "GenesisSceneObserveQualificationV1"),
+    ),
+    (
+        ".genesis_scene_execution_v2",
+        (
+            "GenesisSceneExecutionRequestV2",
+            "GenesisSceneProcessObservationV2",
+            "GenesisSceneLaunchResultV2",
+            "GenesisSceneExecutionReceiptV2",
+        ),
+    ),
+    (
+        ".genesis_scene_application_v2",
+        (
+            "GenesisSceneReplayInputV2",
+            "GenesisSceneSkillQualificationReportV2",
+        ),
+    ),
+    (
+        ".genesis_scene_assessment",
+        (
+            "GenesisSceneValidateInputV1",
+            "GenesisSceneValidationV1",
+            "GenesisSceneValidationQualificationV1",
+            "GenesisSceneFreshObservationV1",
+        ),
+    ),
+    (
         ".genesis_scene_application",
         ("GenesisSceneSkillQualificationReportV1", "SCENE_SKILL_REPORT_ID"),
     ),

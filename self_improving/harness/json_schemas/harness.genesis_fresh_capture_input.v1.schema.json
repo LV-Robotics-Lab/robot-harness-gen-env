@@ -1,0 +1,30 @@
+{
+  "$id": "harness.genesis_fresh_capture_input.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "replay_run_id": {
+      "format": "uuid4",
+      "title": "Replay Run Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.genesis_fresh_capture_input.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "ttl_seconds": {
+      "maximum": 300,
+      "minimum": 1,
+      "title": "Ttl Seconds",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "replay_run_id",
+    "ttl_seconds"
+  ],
+  "title": "GenesisFreshCaptureInputV1",
+  "type": "object"
+}

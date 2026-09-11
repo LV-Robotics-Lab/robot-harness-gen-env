@@ -1,0 +1,136 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_fresh_capture_qualification.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "candidate_runs": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "format": "uuid4",
+          "type": "string"
+        },
+        {
+          "format": "uuid4",
+          "type": "string"
+        }
+      ],
+      "title": "Candidate Runs",
+      "type": "array"
+    },
+    "capture_manifest": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "implementation": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "minItems": 1,
+      "title": "Implementation",
+      "type": "array"
+    },
+    "implementation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Implementation Sha256",
+      "type": "string"
+    },
+    "receipts": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        }
+      ],
+      "title": "Receipts",
+      "type": "array"
+    },
+    "replay_qualification": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.genesis_fresh_capture_qualification.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "skill_ref": {
+      "const": "genesis.observe@3.0.0",
+      "title": "Skill Ref",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "skill_ref",
+    "candidate_runs",
+    "receipts",
+    "capture_manifest",
+    "replay_qualification",
+    "implementation",
+    "implementation_sha256"
+  ],
+  "title": "GenesisFreshCaptureQualificationV1",
+  "type": "object"
+}

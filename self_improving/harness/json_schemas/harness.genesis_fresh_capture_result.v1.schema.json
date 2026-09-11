@@ -1,0 +1,301 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "RuntimeManifestMemberV1": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "path": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "root": {
+          "enum": [
+            "backend",
+            "distributions",
+            "genesis",
+            "interpreter",
+            "native",
+            "stdlib"
+          ],
+          "title": "Root",
+          "type": "string"
+        }
+      },
+      "required": [
+        "root",
+        "path",
+        "artifact"
+      ],
+      "title": "RuntimeManifestMemberV1",
+      "type": "object"
+    },
+    "RuntimeProcessIdentityV1": {
+      "additionalProperties": false,
+      "properties": {
+        "abi": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Abi",
+          "type": "string"
+        },
+        "environment": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Environment",
+          "type": "array"
+        },
+        "implementation": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Implementation",
+          "type": "string"
+        },
+        "platform": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Platform",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "implementation",
+        "version",
+        "abi",
+        "platform",
+        "environment"
+      ],
+      "title": "RuntimeProcessIdentityV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_fresh_capture_result.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "captured_at": {
+      "format": "date-time",
+      "title": "Captured At",
+      "type": "string"
+    },
+    "environment_delta": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "propertyNames": {
+        "const": "LD_LIBRARY_PATH"
+      },
+      "title": "Environment Delta",
+      "type": "object"
+    },
+    "height": {
+      "const": 480,
+      "title": "Height",
+      "type": "integer"
+    },
+    "image": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "landlock_abi": {
+      "minimum": 6,
+      "title": "Landlock Abi",
+      "type": "integer"
+    },
+    "modules": {
+      "items": {
+        "$ref": "#/$defs/RuntimeManifestMemberV1"
+      },
+      "minItems": 1,
+      "title": "Modules",
+      "type": "array"
+    },
+    "native_files": {
+      "items": {
+        "$ref": "#/$defs/RuntimeManifestMemberV1"
+      },
+      "minItems": 1,
+      "title": "Native Files",
+      "type": "array"
+    },
+    "network_denied": {
+      "title": "Network Denied",
+      "type": "boolean"
+    },
+    "physics_steps": {
+      "const": 0,
+      "title": "Physics Steps",
+      "type": "integer"
+    },
+    "pixels_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Pixels Sha256",
+      "type": "string"
+    },
+    "process_continuation": {
+      "const": false,
+      "title": "Process Continuation",
+      "type": "boolean"
+    },
+    "process_identity": {
+      "$ref": "#/$defs/RuntimeProcessIdentityV1"
+    },
+    "raw_load": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "raw_observation": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "request": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "restore_velocity_policy": {
+      "const": "zero",
+      "title": "Restore Velocity Policy",
+      "type": "string"
+    },
+    "retained_index": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "runtime_write_denied": {
+      "title": "Runtime Write Denied",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "const": "harness.genesis_fresh_capture_result.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "stderr": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "stdout": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "torch_threads": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "const": 1,
+          "type": "integer"
+        },
+        {
+          "const": 1,
+          "type": "integer"
+        }
+      ],
+      "title": "Torch Threads",
+      "type": "array"
+    },
+    "width": {
+      "const": 640,
+      "title": "Width",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "request",
+    "image",
+    "captured_at",
+    "pixels_sha256",
+    "width",
+    "height",
+    "raw_load",
+    "raw_observation",
+    "process_identity",
+    "environment_delta",
+    "modules",
+    "native_files",
+    "landlock_abi",
+    "network_denied",
+    "runtime_write_denied",
+    "torch_threads",
+    "physics_steps",
+    "restore_velocity_policy",
+    "process_continuation",
+    "stdout",
+    "stderr",
+    "retained_index"
+  ],
+  "title": "GenesisFreshCaptureResultV1",
+  "type": "object"
+}

@@ -1,0 +1,134 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_fresh_capture_receipt.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "authority": {
+      "const": "observed_restored_final_pose",
+      "title": "Authority",
+      "type": "string"
+    },
+    "capture_result": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "captured_at": {
+      "format": "date-time",
+      "title": "Captured At",
+      "type": "string"
+    },
+    "checked_at": {
+      "format": "date-time",
+      "title": "Checked At",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "image": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "process_continuation": {
+      "const": false,
+      "title": "Process Continuation",
+      "type": "boolean"
+    },
+    "replay_receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "replay_run_id": {
+      "format": "uuid4",
+      "title": "Replay Run Id",
+      "type": "string"
+    },
+    "request": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.genesis_fresh_capture_receipt.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "ttl_seconds": {
+      "maximum": 300,
+      "minimum": 1,
+      "title": "Ttl Seconds",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "replay_run_id",
+    "replay_receipt",
+    "request",
+    "capture_result",
+    "image",
+    "captured_at",
+    "checked_at",
+    "expires_at",
+    "ttl_seconds",
+    "authority",
+    "process_continuation"
+  ],
+  "title": "GenesisFreshCaptureReceiptV1",
+  "type": "object"
+}

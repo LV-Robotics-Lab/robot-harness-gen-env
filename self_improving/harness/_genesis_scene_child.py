@@ -162,7 +162,7 @@ def main():
 
         import torch
 
-        return {
+        result = {
             "schema_version": "harness.genesis_scene_process_observation.v1",
             "process_identity": identity,
             "deployment_roots": job["roots"],
@@ -175,12 +175,34 @@ def main():
             "modules": members(modules),
             "native_files": members(native),
         }
+        if job.get("runtime_version", 1) == 2:
+            media = json.loads((Path(job["output_dir"]) / "media.json").read_bytes())
+            result["schema_version"] = "harness.genesis_scene_raw_observation.v2"
+            result["capture_events"] = [
+                {
+                    "step": frame["step"],
+                    "time_s": frame["time_s"],
+                    "captured_at": frame["captured_at"],
+                    "pixels_sha256": frame["rgb_sha256"],
+                    "width": frame["width"],
+                    "height": frame["height"],
+                    "image_path": frame["path"],
+                }
+                for frame in media["frames"]
+            ]
+        return result
 
-    from self_improving.harness.genesis_scene_cpu_backend import run_genesis_scene_cpu
+    from self_improving.harness.genesis_scene_cpu_backend import (
+        run_genesis_scene_cpu,
+        run_genesis_scene_cpu_v2,
+    )
     from self_improving.harness.schemas.genesis_scene_replay import GenesisSceneSpecV1
 
     spec = GenesisSceneSpecV1.model_validate(job["scene_spec"])
-    run_genesis_scene_cpu(
+    runner = (
+        run_genesis_scene_cpu_v2 if job.get("runtime_version", 1) == 2 else run_genesis_scene_cpu
+    )
+    runner(
         spec.model_dump(mode="json"),
         Path(job["urdf_path"]),
         Path(job["output_dir"]),

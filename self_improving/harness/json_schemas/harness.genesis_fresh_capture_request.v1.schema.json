@@ -1,0 +1,203 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "GenesisSceneBodyStateV1": {
+      "additionalProperties": false,
+      "properties": {
+        "angular_velocity": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Angular Velocity",
+          "type": "array"
+        },
+        "orientation_wxyz": {
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Orientation Wxyz",
+          "type": "array"
+        },
+        "position": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Position",
+          "type": "array"
+        },
+        "velocity": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Velocity",
+          "type": "array"
+        }
+      },
+      "required": [
+        "position",
+        "orientation_wxyz",
+        "velocity",
+        "angular_velocity"
+      ],
+      "title": "GenesisSceneBodyStateV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_fresh_capture_request.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "capture_runtime_manifest": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "final_state": {
+      "$ref": "#/$defs/GenesisSceneBodyStateV1"
+    },
+    "half_dt_rows": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "replay_receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "replay_run_id": {
+      "format": "uuid4",
+      "title": "Replay Run Id",
+      "type": "string"
+    },
+    "restoration": {
+      "const": "restored_final_pose_zero_velocity",
+      "title": "Restoration",
+      "type": "string"
+    },
+    "scene": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.genesis_fresh_capture_request.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_step": {
+      "const": 2000,
+      "title": "Source Step",
+      "type": "integer"
+    },
+    "source_time_s": {
+      "const": 4.0,
+      "title": "Source Time S",
+      "type": "number"
+    }
+  },
+  "required": [
+    "schema_version",
+    "replay_run_id",
+    "replay_receipt",
+    "scene",
+    "half_dt_rows",
+    "final_state",
+    "source_step",
+    "source_time_s",
+    "capture_runtime_manifest",
+    "restoration"
+  ],
+  "title": "GenesisFreshCaptureRequestV1",
+  "type": "object"
+}

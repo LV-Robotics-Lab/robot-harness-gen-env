@@ -1,0 +1,174 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "GenesisSceneSkillCaseV2": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_run_id": {
+          "format": "uuid4",
+          "title": "Candidate Run Id",
+          "type": "string"
+        },
+        "compile_run_id": {
+          "format": "uuid4",
+          "title": "Compile Run Id",
+          "type": "string"
+        },
+        "execution_receipt": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "execution_request": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "invocation_digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Invocation Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "candidate_run_id",
+        "compile_run_id",
+        "invocation_digest",
+        "execution_request",
+        "execution_receipt"
+      ],
+      "title": "GenesisSceneSkillCaseV2",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_scene_skill_qualification_report.v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "approved_manifest": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "cases": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/GenesisSceneSkillCaseV2"
+        },
+        {
+          "$ref": "#/$defs/GenesisSceneSkillCaseV2"
+        }
+      ],
+      "title": "Cases",
+      "type": "array"
+    },
+    "compile_qualification": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "implementation": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "minItems": 1,
+      "title": "Implementation",
+      "type": "array"
+    },
+    "implementation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Implementation Sha256",
+      "type": "string"
+    },
+    "invariant": {
+      "const": "registered_compile_dual_profile_34_checks_and_41_exact_decoded_frames_each",
+      "title": "Invariant",
+      "type": "string"
+    },
+    "numpy_version": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Numpy Version",
+      "type": "string"
+    },
+    "python_abi": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Python Abi",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.genesis_scene_skill_qualification_report.v2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "skill_ref": {
+      "const": "image2env.replay@2.0.0",
+      "title": "Skill Ref",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "skill_ref",
+    "cases",
+    "approved_manifest",
+    "compile_qualification",
+    "implementation",
+    "implementation_sha256",
+    "numpy_version",
+    "python_abi",
+    "invariant"
+  ],
+  "title": "GenesisSceneSkillQualificationReportV2",
+  "type": "object"
+}

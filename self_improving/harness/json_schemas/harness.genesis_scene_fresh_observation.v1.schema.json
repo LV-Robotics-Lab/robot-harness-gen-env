@@ -1,0 +1,143 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_scene_fresh_observation.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "An existing actual camera event whose freshness was checked when read.",
+  "properties": {
+    "candidate_only": {
+      "default": false,
+      "title": "Candidate Only",
+      "type": "boolean"
+    },
+    "captured_at": {
+      "format": "date-time",
+      "title": "Captured At",
+      "type": "string"
+    },
+    "checked_at": {
+      "format": "date-time",
+      "title": "Checked At",
+      "type": "string"
+    },
+    "execution_receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "image": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "process_observation": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "profile": {
+      "const": "half_dt",
+      "title": "Profile",
+      "type": "string"
+    },
+    "replay_run_id": {
+      "format": "uuid",
+      "title": "Replay Run Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.genesis_scene_fresh_observation.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "simulation_time_s": {
+      "maximum": 4.0,
+      "minimum": 4.0,
+      "title": "Simulation Time S",
+      "type": "number"
+    },
+    "simulator_rerun": {
+      "const": false,
+      "title": "Simulator Rerun",
+      "type": "boolean"
+    },
+    "step": {
+      "maximum": 2000,
+      "minimum": 2000,
+      "title": "Step",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "replay_run_id",
+    "execution_receipt",
+    "process_observation",
+    "image",
+    "captured_at",
+    "checked_at",
+    "expires_at",
+    "simulation_time_s",
+    "step",
+    "profile",
+    "simulator_rerun"
+  ],
+  "title": "GenesisSceneFreshObservationV1",
+  "type": "object"
+}

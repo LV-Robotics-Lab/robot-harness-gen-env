@@ -8,6 +8,74 @@ from typing import Any
 
 _SCHEMA_MODEL_LOCATORS = MappingProxyType(
     {
+        "harness.genesis_fresh_capture_input.v1": (
+            ".schemas.genesis_fresh_capture",
+            "GenesisFreshCaptureInputV1",
+        ),
+        "harness.genesis_fresh_capture_request.v1": (
+            ".schemas.genesis_fresh_capture",
+            "GenesisFreshCaptureRequestV1",
+        ),
+        "harness.genesis_fresh_capture_result.v1": (
+            ".schemas.genesis_fresh_capture",
+            "GenesisFreshCaptureResultV1",
+        ),
+        "harness.genesis_fresh_capture_receipt.v1": (
+            ".schemas.genesis_fresh_capture",
+            "GenesisFreshCaptureReceiptV1",
+        ),
+        "harness.genesis_fresh_capture_qualification.v1": (
+            ".schemas.genesis_fresh_capture",
+            "GenesisFreshCaptureQualificationV1",
+        ),
+        "harness.genesis_scene_observe_input.v1": (
+            ".schemas.genesis_scene_assessment",
+            "GenesisSceneObserveInputV1",
+        ),
+        "harness.genesis_scene_observe_qualification.v1": (
+            ".schemas.genesis_scene_assessment",
+            "GenesisSceneObserveQualificationV1",
+        ),
+        "harness.genesis_scene_execution_request.v2": (
+            ".schemas.genesis_scene_execution_v2",
+            "GenesisSceneExecutionRequestV2",
+        ),
+        "harness.genesis_scene_process_observation.v2": (
+            ".schemas.genesis_scene_execution_v2",
+            "GenesisSceneProcessObservationV2",
+        ),
+        "harness.genesis_scene_launch_result.v2": (
+            ".schemas.genesis_scene_execution_v2",
+            "GenesisSceneLaunchResultV2",
+        ),
+        "harness.genesis_scene_execution_receipt.v2": (
+            ".schemas.genesis_scene_execution_v2",
+            "GenesisSceneExecutionReceiptV2",
+        ),
+        "harness.genesis_scene_replay_input.v2": (
+            ".schemas.genesis_scene_application_v2",
+            "GenesisSceneReplayInputV2",
+        ),
+        "harness.genesis_scene_skill_qualification_report.v2": (
+            ".schemas.genesis_scene_application_v2",
+            "GenesisSceneSkillQualificationReportV2",
+        ),
+        "harness.genesis_scene_validate_input.v1": (
+            ".schemas.genesis_scene_assessment",
+            "GenesisSceneValidateInputV1",
+        ),
+        "harness.genesis_scene_validation.v1": (
+            ".schemas.genesis_scene_assessment",
+            "GenesisSceneValidationV1",
+        ),
+        "harness.genesis_scene_validation_qualification.v1": (
+            ".schemas.genesis_scene_assessment",
+            "GenesisSceneValidationQualificationV1",
+        ),
+        "harness.genesis_scene_fresh_observation.v1": (
+            ".schemas.genesis_scene_assessment",
+            "GenesisSceneFreshObservationV1",
+        ),
         "harness.genesis_scene_skill_qualification_report.v1": (
             ".schemas.genesis_scene_application",
             "GenesisSceneSkillQualificationReportV1",

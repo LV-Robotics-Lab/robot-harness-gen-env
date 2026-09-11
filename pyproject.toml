@@ -25,6 +25,7 @@ robot-harness-golden-mcp = "self_improving.harness.mcp_stdio:main"
 robot-harness-run-qualified-replay = "self_improving.qualified_replay_cli:main"
 
 [project.optional-dependencies]
+genesis-scene = ["numpy>=2,<3"]
 demo = ["Flask>=3.0,<4"]
 mcp = ["mcp>=2.2,<3"]
 vlm = [
