@@ -238,7 +238,9 @@ class LimitedImagePreviewInputs:
         proposal["proposal_sha256"] = canonical_evidence_sha256(proposal, "proposal_sha256")
         typed = SceneInterpretationProposalV1.model_validate(proposal)
         proposal_ref = self._publish(
-            typed.model_dump(mode="json"), name="preview-proposal.json", schema=typed.schema_version
+            _canonical(typed.model_dump(mode="json")) + b"\n",
+            name="preview-proposal.json",
+            schema=typed.schema_version,
         )
         compile_input = Image2EnvCompileV2Input(
             schema_version="harness.image2env_compile_input.v2",

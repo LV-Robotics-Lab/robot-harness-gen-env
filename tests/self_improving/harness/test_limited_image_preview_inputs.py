@@ -92,9 +92,20 @@ def test_real_ingest_lookup_and_geometry_build_initial_request(inputs):
     )
     # Existing X2 evidence consumer requires exactly one trailing newline.
     # This is a byte-level producer contract, not a relaxed JSON-equivalence check.
-    expected = (json.dumps(proposal.model_dump(mode="json"), ensure_ascii=False,
-                           allow_nan=False, sort_keys=True, separators=(",", ":")) + "\n").encode()
-    assert case.store.resolve(request.compile_input.interpretation_proposal).path.read_bytes() == expected
+    expected = (
+        json.dumps(
+            proposal.model_dump(mode="json"),
+            ensure_ascii=False,
+            allow_nan=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    ).encode()
+    assert (
+        case.store.resolve(request.compile_input.interpretation_proposal).path.read_bytes()
+        == expected
+    )
     assert proposal.objects[0].dimensions_m == pytest.approx((0.10, 0.06, 0.04))
     assert proposal.objects[0].object_id == "mouse_001"
     assert case.store.resolve(proposal.effective_prompt).path.read_bytes() == prompt.encode()
