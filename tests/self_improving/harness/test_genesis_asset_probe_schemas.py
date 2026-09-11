@@ -247,6 +247,11 @@ def documents() -> dict[str, Any]:
             "max_normal_force_n": 2.1,
             "mean_contact_normal_force_n": 0.687,
             "total_normal_impulse_ns": 5.49,
+            "final_linear_speed_m_s": 0.0001,
+            "final_angular_speed_rad_s": 0.0002,
+            "settled_linear_speed_threshold_m_s": 0.01,
+            "settled_angular_speed_threshold_rad_s": 0.05,
+            "settled": True,
             "collisions_enabled": True,
             "simulator_executed": True,
         },
@@ -263,6 +268,7 @@ def documents() -> dict[str, Any]:
             sorted((probe_input_ref, trace_ref), key=lambda item: item.sha256)
         ),
         "penetration_bounded": (trace_ref,),
+        "settled": (trace_ref,),
     }
     report = _self_hashed(
         GenesisAssetProbeReportV1,
@@ -560,6 +566,7 @@ def test_probe_report_binds_all_layers_without_claiming_qualification(
         "contact_observed",
         "dynamic_release",
         "penetration_bounded",
+        "settled",
     ]
     assert values["status"] == "pass"
     assert values["member_closure_verified"] is True

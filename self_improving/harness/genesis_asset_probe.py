@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 import tempfile
 from dataclasses import dataclass
@@ -660,7 +661,21 @@ def _build_contact_trace(
             "probe penetration exceeded the accepted threshold",
         )
     forces = tuple(contact.normal_force_n for contact in contacts)
+    total_normal_impulse = sum(row.total_normal_force_n for row in rows[1:]) * 0.004
+    if max(forces) <= 0 or total_normal_impulse <= 0:
+        raise GenesisAssetProbeError(
+            "HARN_GENESIS_ASSET_PROBE_FAILED",
+            "probe contacts did not carry positive normal force and impulse",
+        )
     pairs = {contact.asset_collision_index for contact in contacts}
+    final = rows[-1]
+    final_linear_speed = math.sqrt(sum(value * value for value in final.linear_velocity_m_s))
+    final_angular_speed = math.sqrt(sum(value * value for value in final.angular_velocity_rad_s))
+    if final_linear_speed > 0.01 or final_angular_speed > 0.05:
+        raise GenesisAssetProbeError(
+            "HARN_GENESIS_ASSET_PROBE_FAILED",
+            "probe asset did not settle within the accepted velocity thresholds",
+        )
     return _self_hashed(
         GenesisAssetContactTraceV1,
         "contact_trace_sha256",
@@ -686,7 +701,12 @@ def _build_contact_trace(
             "penetration_violation_count": 0,
             "max_normal_force_n": max(forces),
             "mean_contact_normal_force_n": sum(forces) / len(forces),
-            "total_normal_impulse_ns": sum(row.total_normal_force_n for row in rows[1:]) * 0.004,
+            "total_normal_impulse_ns": total_normal_impulse,
+            "final_linear_speed_m_s": final_linear_speed,
+            "final_angular_speed_rad_s": final_angular_speed,
+            "settled_linear_speed_threshold_m_s": 0.01,
+            "settled_angular_speed_threshold_rad_s": 0.05,
+            "settled": True,
             "collisions_enabled": True,
             "simulator_executed": True,
         },
@@ -710,6 +730,7 @@ def _build_report(
         "contact_observed": (trace_rows_ref, contact_trace_ref),
         "dynamic_release": (probe_input_ref, load_observation_ref, trace_rows_ref),
         "penetration_bounded": (trace_rows_ref, contact_trace_ref),
+        "settled": (trace_rows_ref, contact_trace_ref),
     }
     return _self_hashed(
         GenesisAssetProbeReportV1,

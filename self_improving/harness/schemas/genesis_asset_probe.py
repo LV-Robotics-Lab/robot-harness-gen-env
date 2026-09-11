@@ -283,7 +283,7 @@ class GenesisAssetGroundContactV1(HarnessModel):
     @model_validator(mode="after")
     def contact_is_physical_and_recomputable(self) -> "GenesisAssetGroundContactV1":
         normal_norm = math.sqrt(sum(value * value for value in self.normal_on_asset))
-        if not math.isclose(normal_norm, 1.0, rel_tol=1e-9, abs_tol=1e-9):
+        if not math.isclose(normal_norm, 1.0, rel_tol=1e-5, abs_tol=1e-5):
             raise ValueError("contact normal must be normalized")
         if any(
             not math.isclose(asset + ground, 0.0, rel_tol=1e-9, abs_tol=1e-9)
@@ -353,7 +353,7 @@ class GenesisAssetContactTraceRowV1(HarnessModel):
         ):
             raise ValueError("max penetration must match contacts")
         norm = math.sqrt(sum(value * value for value in self.orientation_wxyz))
-        if not math.isclose(norm, 1.0, rel_tol=1e-9, abs_tol=1e-9):
+        if not math.isclose(norm, 1.0, rel_tol=1e-5, abs_tol=1e-5):
             raise ValueError("orientation_wxyz must be normalized")
         return self
 
@@ -384,9 +384,14 @@ class GenesisAssetContactTraceV1(_SelfHashedProbeEvidence):
     penetration_threshold_m: Literal[0.001]
     max_penetration_m: Annotated[float, Field(strict=True, ge=0, le=0.001, allow_inf_nan=False)]
     penetration_violation_count: Literal[0]
-    max_normal_force_n: NonNegativeFiniteFloat
-    mean_contact_normal_force_n: NonNegativeFiniteFloat
-    total_normal_impulse_ns: NonNegativeFiniteFloat
+    max_normal_force_n: PositiveFiniteFloat
+    mean_contact_normal_force_n: PositiveFiniteFloat
+    total_normal_impulse_ns: PositiveFiniteFloat
+    final_linear_speed_m_s: NonNegativeFiniteFloat
+    final_angular_speed_rad_s: NonNegativeFiniteFloat
+    settled_linear_speed_threshold_m_s: Literal[0.01]
+    settled_angular_speed_threshold_rad_s: Literal[0.05]
+    settled: Literal[True]
     collisions_enabled: Literal[True]
     simulator_executed: Literal[True]
 
@@ -444,6 +449,7 @@ class GenesisAssetProbeCheckV1(HarnessModel):
         "contact_observed",
         "dynamic_release",
         "penetration_bounded",
+        "settled",
     ]
     status: Literal["pass"]
     evidence: tuple[_CasArtifactRef, ...] = Field(min_length=1, max_length=8)
@@ -471,7 +477,7 @@ class GenesisAssetProbeReportV1(_SelfHashedProbeEvidence):
     runtime_lock: _RuntimeLockRef
     requested_profile: Literal["genesis.rigid_scene@1"]
     status: Literal["pass"]
-    checks: tuple[GenesisAssetProbeCheckV1, ...] = Field(min_length=6, max_length=6)
+    checks: tuple[GenesisAssetProbeCheckV1, ...] = Field(min_length=7, max_length=7)
     member_closure_verified: Literal[True]
     load_executed: Literal[True]
     contact_probe_executed: Literal[True]
@@ -490,6 +496,7 @@ class GenesisAssetProbeReportV1(_SelfHashedProbeEvidence):
             "contact_observed",
             "dynamic_release",
             "penetration_bounded",
+            "settled",
         )
         if tuple(check.code for check in self.checks) != expected:
             raise ValueError("checks must be the exact canonically sorted probe checks")

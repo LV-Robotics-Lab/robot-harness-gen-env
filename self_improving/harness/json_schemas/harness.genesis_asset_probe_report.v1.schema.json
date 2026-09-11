@@ -11,7 +11,8 @@
             "collision_shapes",
             "contact_observed",
             "dynamic_release",
-            "penetration_bounded"
+            "penetration_bounded",
+            "settled"
           ],
           "title": "Code",
           "type": "string"
@@ -334,8 +335,8 @@
       "items": {
         "$ref": "#/$defs/GenesisAssetProbeCheckV1"
       },
-      "maxItems": 6,
-      "minItems": 6,
+      "maxItems": 7,
+      "minItems": 7,
       "title": "Checks",
       "type": "array"
     },

@@ -151,8 +151,14 @@ class GenesisCpuAssetProbeBackend:
         )
         scene.build()
         before_mass = self._scalar(asset.get_mass())
-        if not math.isclose(before_mass, physics["mass_kg"], rel_tol=1e-8, abs_tol=1e-12):
-            asset.set_mass(physics["mass_kg"])
+        requested_mass = physics["mass_kg"]
+        if requested_mass is not None and not math.isclose(
+            before_mass,
+            requested_mass,
+            rel_tol=1e-8,
+            abs_tol=1e-12,
+        ):
+            asset.set_mass(requested_mass)
         mass = self._scalar(asset.get_mass())
         inertia = self._matrix(asset.get_links_inertia())
         friction_values = tuple(self._scalar(geom.get_friction()) for geom in asset.geoms)
@@ -302,11 +308,11 @@ class GenesisCpuAssetProbeBackend:
             if geom_a in self._asset_geom_indices and geom_b == self._ground_geom_index:
                 asset_geom = geom_a
                 force = -self._array(raw["force"][index]).reshape(3)
-                normal = -self._array(raw["normal"][index]).reshape(3)
+                normal = self._array(raw["normal"][index]).reshape(3)
             elif geom_b in self._asset_geom_indices and geom_a == self._ground_geom_index:
                 asset_geom = geom_b
                 force = self._array(raw["force"][index]).reshape(3)
-                normal = self._array(raw["normal"][index]).reshape(3)
+                normal = -self._array(raw["normal"][index]).reshape(3)
             else:
                 raise GenesisAssetProbeError(
                     "HARN_GENESIS_ASSET_PROBE_EVIDENCE_MISMATCH",
@@ -345,10 +351,10 @@ class GenesisCpuAssetProbeBackend:
         )
 
     @staticmethod
-    def _read_physics(path: Path) -> dict[str, float]:
+    def _read_physics(path: Path) -> dict[str, float | None]:
         try:
             value = json.loads(path.read_bytes())
-            mass = value["mass_kg"]
+            mass = value.get("mass_kg")
             friction = value["friction"]
         except (OSError, json.JSONDecodeError, KeyError, TypeError) as error:
             raise GenesisAssetProbeError(
@@ -356,18 +362,21 @@ class GenesisCpuAssetProbeBackend:
                 "the staged physics metadata is invalid",
             ) from error
         if (
-            type(mass) not in (int, float)
+            (mass is not None and type(mass) not in (int, float))
             or type(friction) not in (int, float)
-            or not math.isfinite(mass)
+            or (mass is not None and not math.isfinite(mass))
             or not math.isfinite(friction)
-            or mass <= 0
+            or (mass is not None and mass <= 0)
             or friction < 0
         ):
             raise GenesisAssetProbeError(
                 "HARN_GENESIS_ASSET_PROBE_EVIDENCE_MISMATCH",
                 "the staged physical parameters are invalid",
             )
-        return {"mass_kg": float(mass), "friction": float(friction)}
+        return {
+            "mass_kg": None if mass is None else float(mass),
+            "friction": float(friction),
+        }
 
     @staticmethod
     def _read_urdf_counts(path: Path) -> tuple[int, int]:
