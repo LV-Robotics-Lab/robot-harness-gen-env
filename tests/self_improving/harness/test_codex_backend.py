@@ -329,7 +329,7 @@ def test_diagnosis_prompt_requires_new_head_reads_after_advisory(assignment, tmp
     source = tmp_path / "prompt-fixture.c"
     source.write_text(
         "#include <stdio.h>\n"
-        "int main(void){FILE *f=fopen(\"prompt.txt\",\"wb\"); int c; "
+        'int main(void){FILE *f=fopen("prompt.txt","wb"); int c; '
         "while((c=fgetc(stdin))!=EOF) fputc(c,f); fclose(f); return 17;}"
     )
     executable = tmp_path / "prompt-fixture-elf"
