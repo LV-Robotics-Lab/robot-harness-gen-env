@@ -741,6 +741,8 @@ def test_controlled_binding_and_factory_fail_closed_at_public_boundaries(tmp_pat
         {"input_schema": "harness.image2env_compile_input.v1"},
         {"output_schema": "harness.image2env_compile_output.v1"},
         {"mcp_tool_name": "image2env_compile_v2_0_0"},
+        {"implementation_name": "controlled.another_name"},
+        {"implementation_version": "2"},
         {"implementation_sha256": "f" * 64},
         {"deterministic": False},
         {"max_attempts": 2},
@@ -751,7 +753,11 @@ def test_controlled_binding_and_factory_fail_closed_at_public_boundaries(tmp_pat
     application.bind_controlled_qualification(descriptor)
     application.bind_controlled_qualification(descriptor)
     compatible_but_different = descriptor.model_copy(
-        update={"implementation_name": "controlled.another_name"}
+        update={
+            "qualification_artifact": descriptor.qualification_artifact.model_copy(
+                update={"name": "another-controlled-qualification.json"}
+            )
+        }
     )
     with pytest.raises(ValueError, match="already bound"):
         application.bind_controlled_qualification(compatible_but_different)
@@ -852,3 +858,20 @@ def test_controlled_binding_rejects_unbound_or_drifted_candidate_evidence(
     )
     with pytest.raises(ValueError, match="does not bind its candidate run"):
         application.bind_controlled_qualification(drifted_closure)
+
+
+def test_controlled_binding_re_resolves_and_deep_verifies_candidate_closure(
+    tmp_path: Path,
+) -> None:
+    _require_application_api()
+    case = _controlled_case(tmp_path)
+    application = _create(_settings(tmp_path, case), case.handler())
+    evaluation = application.evaluate(case.compile_input)
+    descriptor = _controlled_qualification(case, evaluation, tmp_path / "qualification")
+    output = Image2EnvCompileV2Output.model_validate(evaluation.state.output)
+    store = LocalArtifactStore(case.evidence_root)
+    receipt_path = store.resolve(output.compile_receipt).path
+    receipt_path.write_bytes(b"{}\n")
+
+    with pytest.raises(ValueError, match="candidate closure is unavailable or invalid"):
+        application.bind_controlled_qualification(descriptor)

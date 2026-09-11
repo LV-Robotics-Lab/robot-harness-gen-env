@@ -41,12 +41,19 @@ from .schemas.common import (
     SkillQualification,
 )
 from .schemas.x2env import Image2EnvCompileV2Input, Image2EnvCompileV2Output
+from .schemas.x2env_compile_evidence import X2EnvCompileReceiptV2
+from .x2env_compile_closure import ExactReuseCompileClosureVerifier, X2EnvCompileClosureError
 
 _SKILL_REF = "image2env.compile@1.0.0"
 _INPUT_SCHEMA = "harness.image2env_compile_input.v2"
 _OUTPUT_SCHEMA = "harness.image2env_compile_output.v2"
 _MCP_TOOL_NAME = "image2env_compile_v1_0_0"
 _CONTROLLED_CASE_ID = "controlled-image-exact-reuse-candidate"
+_CONTROLLED_IMPLEMENTATION_NAME = "controlled.image2env_exact_reuse"
+_CONTROLLED_IMPLEMENTATION_VERSION = "1"
+_CONTROLLED_REGRESSION_COMMAND = (
+    "pytest -q tests/self_improving/harness/test_image2env_compile_application.py"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,6 +180,8 @@ class ControlledImage2EnvCompileApplication:
             or descriptor.input_schema != _INPUT_SCHEMA
             or descriptor.output_schema != _OUTPUT_SCHEMA
             or descriptor.mcp_tool_name != _MCP_TOOL_NAME
+            or descriptor.implementation_name != _CONTROLLED_IMPLEMENTATION_NAME
+            or descriptor.implementation_version != _CONTROLLED_IMPLEMENTATION_VERSION
             or descriptor.implementation_sha256 != self._handler.expected_implementation_sha256
             or not descriptor.deterministic
             or descriptor.max_attempts != 1
@@ -195,11 +204,18 @@ class ControlledImage2EnvCompileApplication:
             qualification.skill_ref != _SKILL_REF
             or qualification.status != "pass"
             or qualification.deterministic_case_id != _CONTROLLED_CASE_ID
+            or qualification.regression_command != _CONTROLLED_REGRESSION_COMMAND
             or qualification.regression_command != report.regression_command
             or report.skill_ref != _SKILL_REF
             or report.status != "pass"
             or report.deterministic_case_id != _CONTROLLED_CASE_ID
+            or report.regression_command != _CONTROLLED_REGRESSION_COMMAND
             or report.implementation_sha256 != descriptor.implementation_sha256
+            or report.scene_gen_tree_sha256 != _tree_sha256(_repository_root() / "scene_gen")
+            or report.ledger_contract_tree_sha256
+            != hashlib.sha256(
+                (_repository_root() / "docs/integration-provenance/LEDGER.md").read_bytes()
+            ).hexdigest()
         ):
             raise ValueError("controlled qualification evidence has the wrong authority")
         checks = {check.name: check for check in report.checks}
@@ -215,7 +231,36 @@ class ControlledImage2EnvCompileApplication:
         state = self._run_store.read_run_state(run_id)
         if invocation is None or state is None or state.status is not RunStatus.SUCCEEDED:
             raise ValueError("controlled qualification candidate run is unavailable")
-        output = Image2EnvCompileV2Output.model_validate(state.output)
+        try:
+            for artifact in state.artifacts:
+                self._artifact_store.resolve(artifact)
+            output = Image2EnvCompileV2Output.model_validate(state.output)
+            receipt = X2EnvCompileReceiptV2.model_validate_json(
+                self._artifact_store.resolve(output.compile_receipt).path.read_bytes()
+            )
+            compile_input = Image2EnvCompileV2Input.model_validate_json(
+                self._artifact_store.resolve(receipt.compile_input).path.read_bytes()
+            )
+            ExactReuseCompileClosureVerifier(
+                artifact_store=self._artifact_store,
+                max_source_bytes=self._handler.max_source_bytes,
+                max_decoded_pixels=self._handler.max_decoded_pixels,
+                expected_implementation_sha256=(self._handler.expected_implementation_sha256),
+                trusted_qualification_issuer_sha256=(
+                    self._handler.trusted_qualification_issuer_sha256
+                ),
+                expected_runtime_lock=self._handler.expected_runtime_lock,
+                trusted_asset_qualifications=(self._handler.trusted_asset_qualifications),
+            ).verify(compile_input, output)
+        except (
+            ArtifactResolutionError,
+            OSError,
+            ValidationError,
+            X2EnvCompileClosureError,
+        ) as error:
+            raise ValueError(
+                "controlled qualification candidate closure is unavailable or invalid"
+            ) from error
         expected_artifacts = sorted(artifact.sha256 for artifact in state.artifacts)
         expected_output_sha256 = hashlib.sha256(_canonical_json_bytes(state.output)).hexdigest()
         if (
@@ -301,6 +346,22 @@ def _canonical_json_bytes(value: object) -> bytes:
         )
         + "\n"
     ).encode("utf-8")
+
+
+def _repository_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _tree_sha256(root: Path) -> str:
+    digest = hashlib.sha256()
+    for path in sorted(candidate for candidate in root.rglob("*") if candidate.is_file()):
+        relative = path.relative_to(root).as_posix().encode("utf-8")
+        payload = path.read_bytes()
+        digest.update(len(relative).to_bytes(8, "big"))
+        digest.update(relative)
+        digest.update(len(payload).to_bytes(8, "big"))
+        digest.update(payload)
+    return digest.hexdigest()
 
 
 __all__ = [
