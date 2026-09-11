@@ -1,0 +1,180 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.control_commit_snapshot.v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "base_revision": {
+      "minimum": 0,
+      "title": "Base Revision",
+      "type": "integer"
+    },
+    "base_state": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "base_state_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Base State Sha256",
+      "type": "string"
+    },
+    "base_turn_seq": {
+      "minimum": 0,
+      "title": "Base Turn Seq",
+      "type": "integer"
+    },
+    "command": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "command_id": {
+      "format": "uuid4",
+      "title": "Command Id",
+      "type": "string"
+    },
+    "committed_at": {
+      "format": "date-time",
+      "title": "Committed At",
+      "type": "string"
+    },
+    "committed_revision": {
+      "minimum": 1,
+      "title": "Committed Revision",
+      "type": "integer"
+    },
+    "committed_turn_seq": {
+      "minimum": 1,
+      "title": "Committed Turn Seq",
+      "type": "integer"
+    },
+    "control_kind": {
+      "enum": [
+        "advisory",
+        "prompt_revision"
+      ],
+      "title": "Control Kind",
+      "type": "string"
+    },
+    "idempotency_key": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "payload": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "predecessor_receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "principal_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Principal Id",
+      "type": "string"
+    },
+    "receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "receipt_head": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "resulting_state": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "resulting_state_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Resulting State Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.control_commit_snapshot.v2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "workflow_run_id": {
+      "format": "uuid4",
+      "title": "Workflow Run Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "command_id",
+    "workflow_run_id",
+    "principal_id",
+    "command",
+    "predecessor_receipt",
+    "base_revision",
+    "committed_revision",
+    "base_turn_seq",
+    "committed_turn_seq",
+    "base_state_sha256",
+    "base_state",
+    "resulting_state_sha256",
+    "resulting_state",
+    "committed_at",
+    "schema_version",
+    "control_kind",
+    "idempotency_key",
+    "payload",
+    "receipt",
+    "receipt_head"
+  ],
+  "title": "ControlCommitSnapshotV2",
+  "type": "object"
+}

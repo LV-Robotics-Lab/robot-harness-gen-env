@@ -8,6 +8,24 @@ from typing import Any
 
 _SCHEMA_MODEL_LOCATORS = MappingProxyType(
     {
+        "harness.observation_citation.v2": (".schemas.golden_control_v2", "ObservationCitationV2"),
+        "harness.advisory_record_command.v2": (
+            ".schemas.golden_control_v2",
+            "AdvisoryRecordCommandV2",
+        ),
+        "harness.external_agent_advisory_receipt.v2": (
+            ".schemas.golden_control_v2",
+            "ExternalAgentAdvisoryReceiptV2",
+        ),
+        "harness.prompt_revision_command.v2": (
+            ".schemas.golden_control_v2",
+            "PromptRevisionCommandV2",
+        ),
+        "harness.prompt_revision.v2": (".schemas.golden_control_v2", "PromptRevisionV2"),
+        "harness.control_commit_snapshot.v2": (
+            ".schemas.golden_control_v2",
+            "ControlCommitSnapshotV2",
+        ),
         "harness.genesis_fresh_capture_input.v1": (
             ".schemas.genesis_fresh_capture",
             "GenesisFreshCaptureInputV1",

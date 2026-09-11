@@ -7,6 +7,19 @@ from typing import Any
 
 _EXPORT_GROUPS = (
     (
+        ".golden_control_v2",
+        (
+            "ObservationCitationV2",
+            "AdvisoryRecordCommandV2",
+            "ExternalAgentAdvisoryReceiptV2",
+            "PromptRevisionCommandV2",
+            "PromptRevisionV2",
+            "ControlCommitSnapshotV2",
+            "external_agent_advisory_receipt_v2_sha256",
+            "prompt_revision_v2_sha256",
+        ),
+    ),
+    (
         ".genesis_fresh_capture",
         (
             "GenesisFreshCaptureInputV1",
@@ -410,6 +423,14 @@ _EXPORT_GROUPS = (
 )
 _EXPORT_MODULES = {name: module for module, names in _EXPORT_GROUPS for name in names}
 _PUBLIC_NAMES = (
+    "ObservationCitationV2",
+    "AdvisoryRecordCommandV2",
+    "ExternalAgentAdvisoryReceiptV2",
+    "PromptRevisionCommandV2",
+    "PromptRevisionV2",
+    "ControlCommitSnapshotV2",
+    "external_agent_advisory_receipt_v2_sha256",
+    "prompt_revision_v2_sha256",
     "ADVISORY_RECORD_COMMAND_SCHEMA_ID",
     "ARTIFACT_REF_SCHEMA_ID",
     "ASSET_DEBT_INVENTORY_SCHEMA_ID",
