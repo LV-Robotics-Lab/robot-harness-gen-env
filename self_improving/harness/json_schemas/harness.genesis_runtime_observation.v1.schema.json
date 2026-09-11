@@ -1,0 +1,378 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "GenesisRuntimeKernelFactsV1": {
+      "additionalProperties": false,
+      "description": "Observed kernel facts, distinct from manifest file membership.",
+      "properties": {
+        "cpu_name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Cpu Name",
+          "type": "string"
+        },
+        "kernel_machine": {
+          "const": "x86_64",
+          "title": "Kernel Machine",
+          "type": "string"
+        },
+        "kernel_release": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Kernel Release",
+          "type": "string"
+        },
+        "memory_bytes": {
+          "exclusiveMinimum": 0,
+          "title": "Memory Bytes",
+          "type": "integer"
+        },
+        "process_maps_preopened": {
+          "const": true,
+          "title": "Process Maps Preopened",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "cpu_name",
+        "memory_bytes",
+        "kernel_release",
+        "kernel_machine",
+        "process_maps_preopened"
+      ],
+      "title": "GenesisRuntimeKernelFactsV1",
+      "type": "object"
+    },
+    "RuntimeManifestMemberV1": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "path": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "root": {
+          "enum": [
+            "backend",
+            "distributions",
+            "genesis",
+            "interpreter",
+            "native",
+            "stdlib"
+          ],
+          "title": "Root",
+          "type": "string"
+        }
+      },
+      "required": [
+        "root",
+        "path",
+        "artifact"
+      ],
+      "title": "RuntimeManifestMemberV1",
+      "type": "object"
+    },
+    "RuntimeProcessIdentityV1": {
+      "additionalProperties": false,
+      "properties": {
+        "abi": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Abi",
+          "type": "string"
+        },
+        "environment": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Environment",
+          "type": "array"
+        },
+        "implementation": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Implementation",
+          "type": "string"
+        },
+        "platform": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Platform",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "implementation",
+        "version",
+        "abi",
+        "platform",
+        "environment"
+      ],
+      "title": "RuntimeProcessIdentityV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_runtime_observation.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "builtin_modules": {
+      "items": {
+        "maxLength": 255,
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Builtin Modules",
+      "type": "array"
+    },
+    "contact_trace": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "external_native_files": {
+      "items": {
+        "$ref": "#/$defs/RuntimeManifestMemberV1"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "External Native Files",
+      "type": "array"
+    },
+    "filesystem_policy": {
+      "const": "runtime_roots_readonly_two_verified_gl_files_kernel_devices_run_output_write",
+      "title": "Filesystem Policy",
+      "type": "string"
+    },
+    "frozen_modules": {
+      "items": {
+        "maxLength": 255,
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Frozen Modules",
+      "type": "array"
+    },
+    "generated_namespaces": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "const": "torch.classes",
+          "type": "string"
+        },
+        {
+          "const": "torch.ops",
+          "type": "string"
+        }
+      ],
+      "title": "Generated Namespaces",
+      "type": "array"
+    },
+    "kernel_devices": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "const": "/dev/null",
+          "type": "string"
+        },
+        {
+          "const": "/dev/urandom",
+          "type": "string"
+        }
+      ],
+      "title": "Kernel Devices",
+      "type": "array"
+    },
+    "kernel_facts": {
+      "$ref": "#/$defs/GenesisRuntimeKernelFactsV1"
+    },
+    "landlock_abi": {
+      "minimum": 1,
+      "title": "Landlock Abi",
+      "type": "integer"
+    },
+    "load_evidence": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "load_observation": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "modules": {
+      "items": {
+        "$ref": "#/$defs/RuntimeManifestMemberV1"
+      },
+      "minItems": 1,
+      "title": "Modules",
+      "type": "array"
+    },
+    "native_files": {
+      "items": {
+        "$ref": "#/$defs/RuntimeManifestMemberV1"
+      },
+      "minItems": 1,
+      "title": "Native Files",
+      "type": "array"
+    },
+    "network_policy": {
+      "const": "socket_syscalls_denied",
+      "title": "Network Policy",
+      "type": "string"
+    },
+    "other_non_file_modules": {
+      "items": {
+        "maxLength": 255,
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Other Non File Modules",
+      "type": "array"
+    },
+    "probe_input": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "probe_report": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "process_identity": {
+      "$ref": "#/$defs/RuntimeProcessIdentityV1"
+    },
+    "request": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.genesis_runtime_observation.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "stderr": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "stdout": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "torch_threads": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "const": 1,
+          "type": "integer"
+        },
+        {
+          "const": 1,
+          "type": "integer"
+        }
+      ],
+      "title": "Torch Threads",
+      "type": "array"
+    },
+    "trace_rows": {
+      "$ref": "#/$defs/ArtifactRef"
+    }
+  },
+  "required": [
+    "schema_version",
+    "request",
+    "process_identity",
+    "torch_threads",
+    "modules",
+    "native_files",
+    "external_native_files",
+    "landlock_abi",
+    "filesystem_policy",
+    "kernel_devices",
+    "network_policy",
+    "kernel_facts",
+    "generated_namespaces",
+    "frozen_modules",
+    "builtin_modules",
+    "other_non_file_modules",
+    "probe_input",
+    "load_observation",
+    "load_evidence",
+    "trace_rows",
+    "contact_trace",
+    "probe_report",
+    "stdout",
+    "stderr"
+  ],
+  "title": "GenesisRuntimeObservationV1",
+  "type": "object"
+}

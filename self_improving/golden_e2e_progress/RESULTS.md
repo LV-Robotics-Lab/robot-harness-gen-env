@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-11 固定 CPU execution 实现（正式验收进行中）
+
+- 冻结manifest批准配置、固定launcher、archive CPU child、版本化request/observation/receipt公共seam。
+  相关离线gate 37 passed/2 formal skips，97 schemas；真实成功路径覆盖单独采集，不称全模块100%。
+- 受Landlock与socket限制的真实tracer完成initial+1,000steps及完整观测：3,146文件模块、275原生
+  maps；另分类2个Torch动态模块、5 frozen、51 builtin、48其他无文件模块。仅两个精确GL别名
+  位于声明根外。正式Producer、第二部署和集中功能验收仍进行中。
+- 失败stdout/stderr、partial-probe索引与可用CAS材料在临时目录清理前保存；尚无qualification。
+
 ## 2026-09-11 Runtime manifest 大目录与独立部署实跑
 
 - 固定实现 `3662ba6` 的两份manifest源码与staged backend逐字节相同。真实capture耗时311.743s，

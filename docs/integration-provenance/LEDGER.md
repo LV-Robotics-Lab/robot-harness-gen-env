@@ -100,6 +100,30 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
   fixed-process binding、production runtime lock/asset qualification 仍未闭合
 - `last_verified`：`2026-09-11`
 
+## INT-BS-004 — Manifest 驱动的固定 CPU execution
+
+- `lifecycle`：`integrated`
+- `verification`：`unit_pass`（正式Producer与第二部署验收进行中）
+- `origin_owner`：Bingsheng（Harness合同与整合责任）
+- `recorded_git_authors`：以本功能提交的实际git author为准
+- `upstream_owner`：Genesis World、Python、Torch、Quadrants及其他依赖保留各自归属
+- `integration_owner`：Bingsheng
+- `source_repository`：当前robot-harness-gen-env
+- `source_ref`：Harness基线`92ae72f`；Genesis固定`0e74bf392781884ccad765c3f344419c86b872ca`
+- `dirty_snapshot`：不采用Gujie dirty源码作为执行入口
+- `source_paths`：现有Genesis asset probe合同与Harness-owned CPU backend
+- `target_paths`：`self_improving/harness/genesis_runtime_execution.py`、
+  `genesis_runtime_launcher.py`、`_genesis_cpu_child.py`及版本化execution schemas和公共测试
+- `integration_method`：独立固定launcher执行声明归档；Landlock只读运行根、独立输出与seccomp socket
+  限制；实际module/native/process observation绑定同一次fresh probe，成功receipt最后写入
+- `contract_spec`：`self_improving/harness/GENESIS_RUNTIME_EXECUTION_CONTRACT.md`、SEAMS S3、D020
+- `verification_evidence`：相关离线gate 37 passed/2 formal skips；97 snapshots。真实受约束tracer已
+  完成1,000 CPU steps和完整observation；正式Producer验收尚未完成，不以tracer替代权威回执
+- `golden_run`：`none`
+- `known_gaps`：真实执行覆盖收集中；durable asset qualification、production Skill/MCP、environment
+  replay、robot-policy和promotion均未获得本切片权威。CAS纯读只证明内容一致，不产生live capability
+- `last_verified`：`2026-09-11`
+
 ## INT-YX-001 — 历史资产检索、复用与入库管线
 
 - `lifecycle`：`integrated`

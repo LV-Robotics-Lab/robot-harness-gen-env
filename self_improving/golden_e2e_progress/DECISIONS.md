@@ -236,3 +236,15 @@
 - 实测原因：只读依赖审计发现 headless CPU import 仍加载系统 EGL/GL/native libraries，且 Torch
   inter-op 线程未被现有七项变量固定；普通 venv 启动还会执行指向其他工作树的 editable `.pth`。
   独立物化目录与 `-S` 的固定 import 路径验证必须先于资格签发。
+
+## D020 — Runtime execution receipt 必须由固定执行产生
+
+- 日期：2026-09-11
+- 状态：accepted_by_user_scope
+- 决策：在声明内容清单之上增加新execution request/observation/receipt，而不修改已提交probe v1
+  语义。既有runtime lock的dependency字段显式绑定manifest，新lock驱动fresh probe；receipt绑定
+  manifest、固定runner身份、真实child观测和probe全部证据，最后发布。
+- 执行：Genesis从manifest包含的归档源码运行，不借用Git checkout；精确系统native别名是独立部署
+  定位，必须对应已声明成员并逐字节重验。缺少运行约束或发生依赖漂移时拒绝，不扩大目录允许范围。
+- 资格边界：CAS纯读证明完整性，不自动证明执行来源。后续issuer只接受固定producer的opaque live
+  execution capability；重启后必须经durable intent/terminal对账恢复，不能把任意自洽报告转成资格。

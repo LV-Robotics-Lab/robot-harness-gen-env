@@ -88,6 +88,21 @@ symlink、路径越界、native bytes 或 process environment 漂移拒绝；读
 process identity 当前是调用方提供的事实，不能把它与 manifest 相等解释为已自动验证运行中进程；
 真实验收必须另从 fresh process 采集环境、解释器和实际加载来源。
 
+### S3 manifest 驱动的 CPU execution 纵切
+
+新增的执行producer必须调用固定launcher实际运行child，并在执行前后重验部署与实际观测；最后才
+发布执行receipt。新request/observation/receipt将manifest、runtime lock、runner成员身份与asset probe
+input/raw-load/load/rows/trace/report精确交叉绑定。runtime lock v1可使用其既有dependency字段明确
+携带manifest identity，旧记录的语义和schema保持不变；新lock须驱动fresh probe，不能复用旧report。
+
+可观察行为：固定归档源码能真实运行，不再借用旁边checkout；解释器/ABI/env/thread/实际加载成员与
+声明一致；只读运行根与单独可写run目录的约束不静默放宽；精确native部署别名逐字节绑定；失败留下
+诊断但不发布pass receipt；第二部署的新进程与CAS-only纯读都能重建相同逻辑闭包。
+
+authority区分：纯读verifier只证明所给证据的闭包一致性，不能从调用方可构造的JSON单独证明执行
+发生。供后续issuer使用的opaque live capability只能来自固定producer的成功真实执行；无live restart
+的资格恢复另须由durable application对账可信intent/terminal，不能公开`issue(arbitrary report)`。
+
 ## S4 — Legacy Gujie anti-corruption import
 
 ```python

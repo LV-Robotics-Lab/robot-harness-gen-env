@@ -1,5 +1,13 @@
 # Change Log
 
+## 2026-09-11 固定 CPU execution 接线
+
+- 新增固定launcher、archive CPU child和execution producer/verifier。请求把manifest精确绑定到新的
+  runtime lock；运行根只读，网络socket禁用，记录实际module/native/kernel facts与同次probe闭包。
+- 三份新增schema使当前目录增至97。失败保留输出流和已生成probe材料；成功receipt最后写入。
+  纯读一致性不产生live执行能力，durable asset qualification仍待实现。
+- 离线相关gate为37 passed/2 formal skips；正式Producer和第二部署验收正在进行，尚未宣称完成。
+
 ## 2026-09-11 Runtime 内容清单
 
 - 新增 capture/read/verify-deployment 三方法，固定六个声明根的完整成员与 CAS 字节；部署路径与内容

@@ -59,7 +59,7 @@ MCP 只能把 frozen Registry 中已注册且已资格化的 exact descriptor �
 当前 text 路径已能在同一 Golden workflow 完成 compile/replay/validate revision 0→1→2→3；image/video
 descriptor 仍是 contract-only，因此 controlled image candidate 不会自动出现在 production MCP。
 
-## PR1 的 14 个公共入口与当前 94 个版本化入口
+## PR1 的 14 个公共入口与当前 97 个版本化入口
 
 下表是 PR1 冻结的 14 个入口。A042 没有修改其中的 `SkillDescriptor` v1，而是新增第 15 个
 `SkillDescriptorV2`：v1 只允许 `deterministic=true`；v2 用
@@ -101,7 +101,7 @@ output 与 receipt v2 再增加 3 个，因此当前总数为 87。controlled im
 公共 `$id`，所以 PR1 总数是 14；descriptor v2 与 validate v2 两份文档把当时总数增至 17，计入后续
 12 个独立入口、3 个 asset staging 入口、P2 的 7 个 workflow-operation 入口和 x2env 的 16 个合同
 入口后当时总数是 55；上述 observation/control/media/X2 follow-on 把目录增至 87，asset-probe
-四层证据合同先增至 91，raw load observation 与 contact row 再把该阶段目录增至 93。新的 runtime content manifest 入口把当前目录增至 94；它只验证声明字节闭包，不授予生产运行资格。
+四层证据合同先增至 91，raw load observation 与 contact row 再把该阶段目录增至 93。runtime content manifest 入口增至 94；固定 execution 的 request、observation、receipt 使当前目录增至 97。清单验证声明字节闭包；execution 纯读证明回执一致性，不能签发生产资产资格。
 
 ## 严格不只是“不多字段”
 

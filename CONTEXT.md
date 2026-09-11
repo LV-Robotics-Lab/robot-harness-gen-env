@@ -53,6 +53,11 @@ _Avoid_: production runtime qualification、deployment path、import closure pro
 把运行时内容清单的逻辑位置映射到某次部署中的实际位置；位置可以变化，已验证内容身份不能变化。
 _Avoid_: runtime identity、qualification、implicit source lookup
 
+**Runtime Execution Receipt（运行时执行回执）**:
+把固定运行时、一次具体请求、实际过程观测与该次产物绑定起来的不可变记录。回执的内容完整性与
+回执的可信执行来源是不同事实；单独持有一份自洽记录不等于有权签发资产资格。
+_Avoid_: content manifest、self-reported execution、asset qualification
+
 **Asset Binding（资产绑定）**:
 把每个 Scene IR 实体一一映射到选定且已资格化的资产表示、闭包和场景角色的显式清单；它是语义场景
 与可物化环境包之间的桥梁。
