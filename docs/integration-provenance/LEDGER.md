@@ -280,7 +280,8 @@ Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支
   `self_improving/harness/x2env_compile_closure.py`、`self_improving/harness/image2env_compile.py`、
   `self_improving/harness/image2env_compile_application.py`、
   `self_improving/harness/legacy_genesis_asset_staging.py`、
-  `self_improving/harness/schemas/genesis_asset_probe.py`、相关 schema
+  `self_improving/harness/schemas/genesis_asset_probe.py`、
+  `self_improving/harness/genesis_asset_probe.py`、`self_improving/harness/genesis_cpu_backend.py`、相关 schema
   snapshot、`docs/contracts/X2ENV_IMAGE_VIDEO_SKILL_CONTRACT_V1.md`、
   `docs/contracts/GUJIE_GENENV_ADAPTER_MAPPING_V1.md`、两份 legacy media fixtures
 - `integration_method`：strict contract 与 anti-corruption mapping 不复制来源 runtime，不把 `genenv.*`
@@ -311,12 +312,18 @@ Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支
   controlled application 只从同一 CAS/SQLite 重验 candidate、exact qualification ArtifactRef 与 deep closure；
   无 live application 重启恢复通过，但没有纳入任何 Gujie runtime 或 production authority。固定 `2ddd5e6`
   只读取 legacy `asset.json`/15 members并经 stable snapshot发布unqualified representation；没有复制 Gujie
-  执行代码、旧pass状态或runtime/qualification权威。四层asset-probe schema只据固定来源行为重新定义
-  Harness证据合同，没有复制来源实现，尚无runner/issuer
+  执行代码、旧pass状态或runtime/qualification权威。asset-probe schema只据固定来源行为重新定义
+  Harness证据合同；Harness-owned backend 直接调用固定 Genesis public API，不复制 Gujie runner。固定
+  `7e145274...` 已对 staged mouse representation fresh 执行无相机 CPU/Newton 1,000-step probe：源8个
+  collision members在Genesis中实际合并为1个loaded geom，1,001 rows重算989 contact steps/4,040 contacts、
+  最大穿透0.487 mm、正force/impulse与settled；23-object CAS复制到第二绝对路径后无需Genesis/source root
+  可strict reload。证据见 `docs/evidence/golden-genesis-cpu-asset-probe-20260911.{md,json}`。该 pass 尚未
+  签发issuer/qualification
 - `golden_run`：`none`
-- `known_gaps`：sealed production video decoder、legacy importer、production image/video
-  handler/application/qualification、Registry/System2/Golden executable catalog、MCP、真实 Genesis
-  replay/validate、robot-policy 与 promotion 均未实现；现有 image handler 仅为未注册 controlled candidate
+- `known_gaps`：当前 probe runtime lock 未封闭 Python/Torch/Quadrants/NumPy/native dependency closure，
+  所以 production asset issuer/qualification 尚未实现；sealed production video decoder、production
+  image/video Registry/System2/Golden catalog、MCP、完整 Genesis environment replay/validate、robot-policy
+  与 promotion 也未实现；现有 image handler 仅为未注册 controlled candidate
 - `last_verified`：`2026-09-11`
 
 ### 核对结论

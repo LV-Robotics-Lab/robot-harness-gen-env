@@ -207,3 +207,18 @@
 - 后续门：当前 implementation/issuer 必须生成 sealed runtime lock，并 fresh 执行 asset-scoped dynamic load、
   collision-enabled contact probe与 typed report；relocated fresh-CAS strict reload 后才能进入 production
   catalog/Skill qualification/MCP。
+
+## D018 — Asset probe pass 与 production qualification 分账
+
+- 日期：2026-09-11
+- 状态：accepted_by_evidence
+- 决策：asset-level Genesis probe 由 Harness-owned、无相机 CPU backend 产生原始 load observation、
+  1,001 行 contact trace 和七项 typed report checks；deep verifier 必须仅从 CAS 重算 source/loaded identity、
+  contact/penetration/force/impulse 与 settling。源 collision member 数与 Genesis loaded geom 数是不同事实，
+  不允许从 8 个源 OBJ 推断 8 个 runtime shapes。
+- 证据：legacy mouse fresh run 实际得到 8 个 source collision members、1 个 merged loaded geom、989 个
+  contact steps、4,040 contacts、最大穿透 0.487 mm 和 settled pass；23-object CAS 在第二绝对路径、无
+  Genesis/source root 的进程中重验通过。
+- 资格边界：probe report 不是 qualification。只有 runtime lock 进一步封住 interpreter、Python、Torch
+  CPU、Quadrants、NumPy、native libraries 与 runner implementation，durable issuer 才能从 opaque verified
+  capability 最后签发 `GenesisAssetQualificationV1`。当前不得注册 production Skill/MCP。

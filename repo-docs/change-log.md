@@ -1,5 +1,14 @@
 # Change Log
 
+## 2026-09-11 Genesis CPU asset probe 与 relocated deep verification
+
+- 新增 Harness-owned、无相机的 Genesis CPU backend、typed producer 与 pure-read verifier；公共 schema
+  91→93，明确区分 source collision members 与 loaded Genesis shapes。
+- legacy mouse fresh run完成 initial + 1,000 steps：1,001 rows、989 contact steps、4,040 contacts、最大
+  穿透0.487 mm、正force/impulse与settled；23-object CAS在第二绝对路径且无Genesis/source root时仍可重验。
+- 该结果只授予asset-level probe pass。完整Python/Torch/Quadrants/native runtime lock、production issuer/
+  qualification、Registry/MCP和环境级Genesis replay仍未完成。
+
 ## 2026-09-11 typed Genesis asset-probe evidence
 
 - 增加四份 strict/self-hashed public schema，固定 CPU Newton执行输入、15-member load identity、完整contact

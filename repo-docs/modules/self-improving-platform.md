@@ -69,6 +69,17 @@ injected complete-decoder protocol 生成逐帧 index/DTS/PTS/duration/bytes 绑
 不复用 fallback 专用 `harness.video_frame_sequence.v1`。受控 18-frame H.264 及 system-FFmpeg 独立验收
 已通过，但系统 binary 没有进入 sealed dependency/qualification，v2 media 也尚未接入 video compile。
 
+Legacy mouse 的 15-member URDF closure 现可先冻结为 portable、unqualified `AssetRepresentationV1`，再由
+Harness-owned `GenesisCpuAssetProbeBackend` 做 asset-level 物理 probe。固定 `7e145274` 的真实运行不创建
+camera/renderer：初态后执行 1,000 个 CPU/Newton steps，产出 raw load observation、1,001 行 canonical
+contact trace 与七项 report checks。源端的 8 个 collision OBJ 在 Genesis 中实际合并成 1 个 loaded geom；
+不能把 source member 数当 runtime shape 数。989 contact steps、4,040 contacts、最大穿透 0.487 mm、正
+normal force/impulse 与末态 settling 均由 pure-read verifier 从 23-object CAS 重算；同一 CAS 在第二绝对
+路径、无 Genesis/source root 的进程中再次通过。该 pass 仍不是 `GenesisAssetQualificationV1`：当前
+runtime lock 尚未封闭 interpreter、Python/Torch/Quadrants/NumPy/native 完整依赖，因而 production issuer、
+Registry/MCP 与环境级 Genesis replay 仍关闭。证据见
+[Genesis CPU asset probe](../../docs/evidence/golden-genesis-cpu-asset-probe-20260911.md)。
+
 P3 的公共 `GoldenRunHarness.submit` 当前可在同一 workflow 依次调度 exact qualified
 `text2env.compile@1.0.0` 与 `text2env.replay@1.0.0`。两者都从同一 RegistrySnapshot、live production
 descriptor/qualification 和 Skill-owned evidence policy 冻结执行；command、controlled child、ToolResult、

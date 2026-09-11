@@ -117,8 +117,11 @@ qualification；真实 asset qualification、production Skill application 与 re
    - [ ] 当前 sealed issuer fresh 生成 Genesis runtime lock与 asset-scoped load/collision probe；legacy pass
      不可直接复用。
      - [x] 先把 15-member legacy mouse closure 迁为 stable-snapshot、unqualified representation。
-     - [x] 定义 typed input/load/contact-trace/report（91 schema snapshots）。
-     - [ ] 完成无相机 CPU issuer、deep verifier、qualification producer与 relocated strict reload。
+     - [x] 定义 typed input/raw-load/load/contact-row/contact-trace/report（93 schema snapshots）。
+     - [x] 完成 Harness-owned 无相机 CPU producer/backend、deep verifier、真实 1,000-step probe 与
+       relocated CAS strict reload；证据见 `docs/evidence/golden-genesis-cpu-asset-probe-20260911.md`。
+     - [ ] 封闭 interpreter、Python/Torch/Quadrants/native 完整 runtime dependency lock，随后实现 durable
+       production issuer/qualification；已有 asset probe pass 不授予 production Skill/MCP 权威。
 2. `feat(text2env): qualify Genesis compile/replay v2 and validate v3`
 3. `feat(image2env): qualify compile replay validate v1`
 4. `feat(video2env): qualify compile replay validate v1`

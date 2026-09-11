@@ -8,8 +8,10 @@
   production qualification。Gujie 指定 exact pass 输出现已缺失；最接近的 legacy 鼠标归档虽有 15-member
   URDF bytes，却有 stale absolute locators、current threshold fail 和 0/7 runtime source identity mismatch。
   必须由当前 sealed issuer 重跑 asset-scoped Genesis load/collision probe，不得迁移旧 pass 状态。
-  15-member bytes 已以 stable snapshot 迁为 unqualified representation；四层 typed probe schema 已冻结，
-  下一步实现 producer/deep verifier。
+  15-member bytes 已以 stable snapshot 迁为 unqualified representation；typed raw-load/contact-row/probe
+  schema、无相机 CPU producer/deep verifier 和 fresh 1,000-step Genesis run 已完成，并从第二绝对 CAS
+  路径在无 Genesis/source root 的进程中复验。下一步封闭完整 runtime dependency lock，再签 production
+  asset qualification。
 - P10 fresh observation：strict schema、controlled candidate application/evidence policy 与 test-controlled
   Golden execution binding 已在同一 revision 2→3 中闭合 receipt/state/restart；下一切片是 production
   runtime binding。当前受控路径固定 `simulator_executed=false`，真实 Genesis capture、qualification 与
@@ -26,9 +28,10 @@
   issuer、runtime lock 与 typed asset-probe evidence，再允许 Registry/MCP 曝光。第一步只把 legacy mouse
   的 15-member byte closure迁为 unqualified representation candidate；controlled handler/application继续
   保持未注册、`simulator_ready=false`。
-  四层 input/load/contact-trace/report schema 已完成（91 snapshots）；优先实现 Harness-owned 无相机 CPU
-  issuer/deep verifier；随后再独立生成
-  人审媒体，不能让渲染成为物理资格权威。
+  input/raw-load/load/contact-row/contact-trace/report schema 与 Harness-owned 无相机 CPU producer/deep
+  verifier 已完成（93 snapshots），真实 mouse drop/contact/settling 通过。下一步把 interpreter、Python、
+  Torch CPU、Quadrants、NumPy 与 native library closure 封成 production runtime lock，再由 durable issuer
+  生成 qualification；人审媒体仍应独立生成，不能让渲染成为物理资格权威。
 - P10：实现 production execution binding/runtime；保持过期、缺 key、时间或 payload 漂移在 parent
   commit 前 fail closed。
 - P10：production policy 稳定后，用真实 Genesis sealed checkpoint 做 capture/qualification；只有该门
@@ -59,9 +62,10 @@
   再写 16-object fresh CAS；relocated/retry确定性与 verify→put 四类 source mutation均通过。只生成
   `AssetRepresentationV1`，不生成 runtime lock/qualification。
 
-- Genesis asset-probe evidence合同完成：strict self-hashed input/load/contact-trace/report，固定 CPU Newton
-  0.004s、1000步、10mm release、完整member/load/contact/penetration/check闭包；190 statements/22 branches
-  100%，91 schema snapshots。尚无 runner/issuer/qualification。
+- Genesis asset-probe evidence 与真实 CPU runner 完成：strict self-hashed input/raw-load/load/contact-row/
+  contact-trace/report，固定 CPU Newton 0.004s、1,000 steps、10 mm release。fresh mouse run 为 1,001 rows、
+  989 contact steps、4,040 contacts、最大穿透 0.487 mm/settled，并通过 relocated CAS deep verify；93 schema
+  snapshots。尚无完整 runtime dependency lock、production issuer/qualification。
 
 - controlled durable image compile application 完成：未绑定时只运行 unregistered candidate；真实 succeeded
   candidate 的 Invocation/output/closure 被写入明确 controlled report 后，application 会从同一 CAS/SQLite

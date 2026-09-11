@@ -1,0 +1,84 @@
+{
+  "schema_version": "harness.golden_genesis_cpu_asset_probe_acceptance.v1",
+  "fixed_commit": "7e145274a10e8d80f3966b491e05a512294588fc",
+  "source": {
+    "genesis_commit": "0e74bf392781884ccad765c3f344419c86b872ca",
+    "backend_implementation_sha256": "3d0eb26a31c009fa2a4ef46c2e4e6eb310004c0997f22ca436cab210c7681f4a",
+    "camera_or_renderer_used": false
+  },
+  "asset": {
+    "representation_ref_sha256": "4e8b74a03ebd00b3a09f457880c5d89ca28d2f7bb8dde9707c0e862b8a740f43",
+    "runtime_lock_ref_sha256": "0a2eeba0b1cb1cfe6768c98e34700593d6cfa1ef5c4d918572b15f6cd534cfa0",
+    "source_links": 1,
+    "source_joints": 0,
+    "source_collision_members": 8,
+    "loaded_links": 1,
+    "loaded_joints": 1,
+    "loaded_dofs": 6,
+    "loaded_collision_shapes": 1,
+    "loaded_collision_merged": true,
+    "loaded_vertices": 502,
+    "loaded_faces": 1000,
+    "mass_kg": 0.07000000029802322,
+    "friction": 0.2
+  },
+  "probe": {
+    "status": "pass",
+    "steps": 1000,
+    "samples": 1001,
+    "contact_steps": 989,
+    "contacts": 4040,
+    "collision_pairs": 1,
+    "max_penetration_m": 0.0004873909056186676,
+    "max_normal_force_n": 1.4540600776672363,
+    "mean_normal_force_n": 0.1699752669797241,
+    "total_normal_impulse_ns": 2.7468003143923414,
+    "final_linear_speed_m_s": 6.854644206770141e-07,
+    "final_angular_speed_rad_s": 2.562796953528175e-05,
+    "settled": true,
+    "checks": [
+      "backend_load",
+      "closure_identity",
+      "collision_shapes",
+      "contact_observed",
+      "dynamic_release",
+      "penetration_bounded",
+      "settled"
+    ]
+  },
+  "artifacts": {
+    "cas_objects": 23,
+    "cas_bytes": 7711609,
+    "load_observation_sha256": "988d5e8e22d478aeca4122fbb7309b2dab741e6959f8f0d9e762d4c90f3df151",
+    "trace_rows_sha256": "b2e923dc09b1557303dcff07edca4f941058e855b31c8f8e63c772c8abffe759",
+    "contact_trace_sha256": "2436ff1cd35306cb793cebd20e148567f60ffd0700ffc6a91be59364514b39c7",
+    "probe_report_artifact_sha256": "9e46011ecfb6364aeeed3d58ffd7d0ac81b35f4d61880a3909f88a60d866f5b9",
+    "probe_report_semantic_sha256": "2ec845bfcaac19c0beb7d00de4d68caf545e8ece54aabd92b72e966d7d9b0988",
+    "acceptance_summary_sha256": "36fdcca8cdeafa31aba81ca521b61e214c42e1842529a7808f0d881cad338745"
+  },
+  "relocated_verification": {
+    "status": "pass",
+    "objects": 23,
+    "bytes": 7711609,
+    "supporting_artifacts": 23,
+    "rows": 1001,
+    "path_digest_mismatches": [],
+    "source_root_required": false,
+    "verification_sha256": "58682a8d6f29c9ca69a8bcc8a908dbdf839e092448b49fc5d15de8d378b91bed"
+  },
+  "verification": {
+    "focused_tests": "77 passed, 1 skipped",
+    "formal_genesis_environment_test": "1 passed",
+    "schema_snapshots": 93,
+    "qualification_created": false,
+    "production_registry_exposed": false,
+    "mcp_exposed": false
+  },
+  "limits": {
+    "runtime_dependency_lock_complete": false,
+    "genesis_asset_qualification_issued": false,
+    "environment_compile_or_replay_proven": false,
+    "robot_policy_or_promotion_proven": false,
+    "mass_and_friction_are_measured_real_world_properties": false
+  }
+}

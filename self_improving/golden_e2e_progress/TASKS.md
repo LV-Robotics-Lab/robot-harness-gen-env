@@ -79,8 +79,11 @@
     当前 issuer/runtime lock 与 asset-scoped load/collision probe 必须重跑。
     - [x] 15-member manifest/bytes 经 stable snapshot 写入 fresh CAS，并发布 unqualified
       `AssetRepresentationV1`；绝对路径、权限和 verify→put source mutation 不改变输出。
-    - [x] 四层 typed probe input/load/contact-trace/report schema，91份 public snapshots。
-    - [ ] 无相机 CPU issuer、deep verifier 与 fresh real run。
+    - [x] typed probe input/raw-load/load/contact-row/contact-trace/report schema，93份 public snapshots。
+    - [x] Harness-owned 无相机 CPU producer/deep verifier 与 fresh real 1,000-step run；第二绝对 CAS
+      路径可在无 Genesis/source root 的进程中严格重验。
+    - [ ] 封闭 Python/Torch/Quadrants/native 完整 runtime dependency lock，再由 durable production
+      issuer 签发 `GenesisAssetQualificationV1`。
 - [ ] video2env 三个 Skill 实现、资格和三类资产路径。
 - [ ] 输出 sim-ready Genesis 环境，并保留可观看图像/视频和机器可验证报告。
 

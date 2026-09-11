@@ -1,5 +1,29 @@
 # 进度与结果
 
+## 2026-09-11 Harness-owned Genesis CPU asset probe
+
+- 固定 `7e145274a10e8d80f3966b491e05a512294588fc` 实现无相机
+  `GenesisCpuAssetProbeBackend`、typed producer 与 pure-read deep verifier。backend 固定 Genesis
+  `0e74bf392781884ccad765c3f344419c86b872ca`、CPU/Newton、`dt=0.004`，显式执行 initial observation +
+  steps 1..1000；不创建 camera/renderer/rasterizer/media。
+- fresh legacy mouse run 得到 23 CAS objects / 7,711,609 bytes。源为 1 link/0 joints/8 collision members；
+  Genesis 实际 load 为 1 link/1 free joint/6 DOF/1 merged geom（502 vertices/1,000 faces），质量
+  `0.07000000029802322 kg`、摩擦 `0.2`。
+- 1,001 rows 重算为 989 contact steps、4,040 contacts、1 pair、最大穿透
+  `0.0004873909056186676 m`、累计法向冲量 `2.7468003143923414 N·s`、末态线/角速度
+  `6.854644206770141e-07 m/s` / `2.562796953528175e-05 rad/s`，七项 exact checks 全 pass。
+- CAS 复制到第二个绝对路径后，root Python 在不加载 Genesis、不读取 source root 的新进程中重建并
+  strict verify 23/23 supporting artifacts 与全部 rows；path/bytes/SHA mismatch 为零。运行摘要 SHA 为
+  `36fdcca8cdeafa31aba81ca521b61e214c42e1842529a7808f0d881cad338745`，relocated verification SHA 为
+  `58682a8d6f29c9ca69a8bcc8a908dbdf839e092448b49fc5d15de8d378b91bed`。
+- focused 为 `77 passed, 1 skipped`；固定 Genesis runtime 节点单跑 `1 passed`；93 schema snapshots 与
+  Ruff/diff gate 通过。首次真实长跑暴露 contact force 作用方符号错误并产生零 force/impulse 的失败样本；
+  修复后负向用例要求正 contact force/impulse 和末态 settling。
+- 边界：未签 `GenesisAssetQualificationV1`。当前 runtime lock 尚未封住 Python/Torch/Quadrants/NumPy/
+  native 完整依赖，不进入 production Registry/MCP；也不证明 environment compile/replay、robot policy、
+  promotion 或真实质量/摩擦测量。不可变证据见
+  `docs/evidence/golden-genesis-cpu-asset-probe-20260911.{md,json}`。
+
 ## 2026-09-11 Genesis asset-probe typed evidence
 
 - `5300ab2` 先冻结四层 schema RED，`04e96de4da74ab0fcd207b756203071d414c8a7d` 完成 strict

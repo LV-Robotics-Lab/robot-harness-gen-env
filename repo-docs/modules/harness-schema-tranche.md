@@ -59,7 +59,7 @@ MCP 只能把 frozen Registry 中已注册且已资格化的 exact descriptor �
 当前 text 路径已能在同一 Golden workflow 完成 compile/replay/validate revision 0→1→2→3；image/video
 descriptor 仍是 contract-only，因此 controlled image candidate 不会自动出现在 production MCP。
 
-## PR1 的 14 个公共入口与当前 91 个版本化入口
+## PR1 的 14 个公共入口与当前 93 个版本化入口
 
 下表是 PR1 冻结的 14 个入口。A042 没有修改其中的 `SkillDescriptor` v1，而是新增第 15 个
 `SkillDescriptorV2`：v1 只允许 `deterministic=true`；v2 用
@@ -84,7 +84,10 @@ derived source/canonical identity；video 三份则绑定完整 ordered decode�
 `harness.video_frame_sequence.v1`。X2 typed compile evidence 再增加 12 个入口，input-bound image/video
 output 与 receipt v2 再增加 3 个，因此当前总数为 87。controlled image handler 会消费这些模型，但仍
 不等于 production qualification 或 Genesis runtime。Genesis asset-probe input/load/contact-trace/report
-再增加 4 个入口，因此当前总数为 91；这四份同样只冻结证据合同，不代表已有 runner 或 issuer。
+先增加 4 个入口，把当时总数增至 91；随后 raw load observation 与逐行 contact schema 增加 2 个入口，
+当前总数为 93。Harness-owned CPU producer/backend 与 pure-read deep verifier 已完成 mouse 的真实
+1,000-step probe 和第二绝对 CAS 路径复验；完整 runtime dependency lock 与 production issuer/qualification
+尚未完成，不能据此授予 production Registry/MCP 或环境级 Genesis replay 权威。
 
 | 分组 | Schema | 读者模型 |
 | --- | --- | --- |
@@ -98,7 +101,7 @@ output 与 receipt v2 再增加 3 个，因此当前总数为 87。controlled im
 公共 `$id`，所以 PR1 总数是 14；descriptor v2 与 validate v2 两份文档把当时总数增至 17，计入后续
 12 个独立入口、3 个 asset staging 入口、P2 的 7 个 workflow-operation 入口和 x2env 的 16 个合同
 入口后当时总数是 55；上述 observation/control/media/X2 follow-on 把目录增至 87，asset-probe
-四层证据合同再把当前目录增至 91。
+四层证据合同先增至 91，raw load observation 与 contact row 再把当前目录增至 93。
 
 ## 严格不只是“不多字段”
 
