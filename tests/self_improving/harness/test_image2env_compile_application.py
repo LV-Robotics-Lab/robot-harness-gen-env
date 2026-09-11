@@ -541,7 +541,7 @@ def _rewrite_controlled_qualification(
     qualification_ref = _publish_model(
         store,
         root,
-        "rewritten-qualification",
+        "controlled-qualification",
         qualification,
         schema_version="harness.skill_qualification.v1",
     )
@@ -752,12 +752,11 @@ def test_controlled_binding_and_factory_fail_closed_at_public_boundaries(tmp_pat
 
     application.bind_controlled_qualification(descriptor)
     application.bind_controlled_qualification(descriptor)
-    compatible_but_different = descriptor.model_copy(
-        update={
-            "qualification_artifact": descriptor.qualification_artifact.model_copy(
-                update={"name": "another-controlled-qualification.json"}
-            )
-        }
+    compatible_but_different = _rewrite_controlled_qualification(
+        case,
+        descriptor,
+        tmp_path / "compatible-but-different",
+        closure_updates={"untrusted_note": "not authority-bearing"},
     )
     with pytest.raises(ValueError, match="already bound"):
         application.bind_controlled_qualification(compatible_but_different)
@@ -823,7 +822,7 @@ def test_controlled_binding_rejects_unbound_or_drifted_candidate_evidence(
     qualification_ref = _publish_model(
         store,
         tmp_path / "wrong-checks",
-        "qualification",
+        "controlled-qualification",
         qualification.model_copy(update={"report_sha256": report_ref.sha256}),
         schema_version="harness.skill_qualification.v1",
     )
@@ -875,3 +874,53 @@ def test_controlled_binding_re_resolves_and_deep_verifies_candidate_closure(
 
     with pytest.raises(ValueError, match="candidate closure is unavailable or invalid"):
         application.bind_controlled_qualification(descriptor)
+
+
+@pytest.mark.parametrize(
+    "updates",
+    (
+        {"name": "renamed-qualification.json"},
+        {"media_type": "text/plain"},
+        {"schema_version": "harness.other_qualification.v1"},
+    ),
+)
+def test_controlled_binding_rejects_qualification_artifact_metadata_drift(
+    tmp_path: Path,
+    updates: dict[str, object],
+) -> None:
+    _require_application_api()
+    case = _controlled_case(tmp_path)
+    application = _create(_settings(tmp_path, case), case.handler())
+    evaluation = application.evaluate(case.compile_input)
+    descriptor = _controlled_qualification(case, evaluation, tmp_path / "qualification")
+    drifted = descriptor.model_copy(
+        update={
+            "qualification_artifact": descriptor.qualification_artifact.model_copy(update=updates)
+        }
+    )
+
+    with pytest.raises(ValueError, match="qualification artifact has the wrong identity"):
+        application.bind_controlled_qualification(drifted)
+
+
+def test_controlled_binding_rejects_non_cas_qualification_locator(tmp_path: Path) -> None:
+    _require_application_api()
+    case = _controlled_case(tmp_path)
+    application = _create(_settings(tmp_path, case), case.handler())
+    evaluation = application.evaluate(case.compile_input)
+    descriptor = _controlled_qualification(case, evaluation, tmp_path / "qualification")
+    qualification_path = (
+        LocalArtifactStore(case.evidence_root).resolve(descriptor.qualification_artifact).path
+    )
+    external = tmp_path / "external-controlled-qualification.json"
+    external.write_bytes(qualification_path.read_bytes())
+    drifted = descriptor.model_copy(
+        update={
+            "qualification_artifact": descriptor.qualification_artifact.model_copy(
+                update={"uri": external.as_uri()}
+            )
+        }
+    )
+
+    with pytest.raises(ValueError, match="qualification artifact has the wrong identity"):
+        application.bind_controlled_qualification(drifted)

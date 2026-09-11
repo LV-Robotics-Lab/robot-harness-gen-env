@@ -54,6 +54,8 @@ _CONTROLLED_IMPLEMENTATION_VERSION = "1"
 _CONTROLLED_REGRESSION_COMMAND = (
     "pytest -q tests/self_improving/harness/test_image2env_compile_application.py"
 )
+_CONTROLLED_QUALIFICATION_NAME = "controlled-qualification.json"
+_CONTROLLED_QUALIFICATION_SCHEMA = "harness.skill_qualification.v1"
 
 
 @dataclass(frozen=True, slots=True)
@@ -189,10 +191,16 @@ class ControlledImage2EnvCompileApplication:
             raise ValueError(
                 "controlled qualification does not describe exact image2env.compile@1.0.0"
             )
+        qualification_artifact = descriptor.qualification_artifact
+        if (
+            qualification_artifact.name != _CONTROLLED_QUALIFICATION_NAME
+            or qualification_artifact.media_type != "application/json"
+            or qualification_artifact.schema_version != _CONTROLLED_QUALIFICATION_SCHEMA
+            or qualification_artifact.uri != f"artifact://sha256/{qualification_artifact.sha256}"
+        ):
+            raise ValueError("controlled qualification artifact has the wrong identity")
         try:
-            qualification_path = self._artifact_store.resolve(
-                descriptor.qualification_artifact
-            ).path
+            qualification_path = self._artifact_store.resolve(qualification_artifact).path
             qualification = SkillQualification.model_validate_json(qualification_path.read_bytes())
             report_path = self._artifact_store.resolve_digest(qualification.report_sha256)
             report = QualificationReportV1.model_validate_json(report_path.read_bytes())
