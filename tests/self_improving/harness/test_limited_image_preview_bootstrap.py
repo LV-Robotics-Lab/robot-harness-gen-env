@@ -13,6 +13,7 @@ from pydantic import ValidationError
 from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.limited_image_preview_bootstrap import (
     LimitedImagePreviewBootstrapPlan,
+    bootstrap_limited_image_preview,
     check_limited_image_preview_bootstrap,
     run_cli,
 )
@@ -276,3 +277,16 @@ def test_check_cli_returns_machine_readable_result(bootstrap_plan, capsys):
     payload = json.loads(capsys.readouterr().out)
     assert payload["schema_version"] == "harness.limited_image_preview_bootstrap_check.v1"
     assert payload["status"] == "ready"
+
+
+def test_execute_checkpoints_exact_imports_before_application_restore(bootstrap_plan):
+    path, _ = bootstrap_plan
+    plan = LimitedImagePreviewBootstrapPlan.model_validate_json(path.read_bytes())
+
+    with pytest.raises(Exception, match="SQLite|schema|table"):
+        bootstrap_limited_image_preview(path)
+
+    checkpoint = json.loads(plan.checkpoint_path.read_bytes())
+    assert checkpoint["schema_version"] == "harness.limited_image_preview_bootstrap_result.v1"
+    assert checkpoint["stage"] == "imports_complete"
+    assert check_limited_image_preview_bootstrap(path).missing_target_imports == 0
