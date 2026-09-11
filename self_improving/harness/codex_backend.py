@@ -30,6 +30,15 @@ STATUS = "image2env_preview_status_v1"
 START = "image2env_preview_start_v1"
 
 
+def process_start_ticks(pid):
+    """Linux process identity, including zombie detection, without reading arguments."""
+    try:
+        fields = Path(f"/proc/{pid}/stat").read_text().rsplit(") ", 1)[1].split()
+    except FileNotFoundError:
+        return None
+    return None if fields[0] == "Z" else fields[19]
+
+
 class CodexAssignment(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
     snapshot: RunSnapshot
@@ -322,6 +331,16 @@ class CodexBackend:
             "Use only allowed exact MCP actions and workflow resources; "
             "no shell, Python, file edits, other clients or session resume. "
             "Read evidence before diagnosis/revision; respect TTL. "
+            "Use status to skip already successful steps and reuse their displayed idempotency. "
+            "Initial progress is lookup, compile2, replay2, observe3, validate3. "
+            "Phase describes persisted progress, not the meaning of the user's objective. "
+            "If the objective requests preservation, omit validation target coordinates. "
+            "If it gives explicit XY/yaw targets, supply those to initial validation. "
+            "Preserve any semantic mismatch, then obtain fresh observation and read prompt, "
+            "failure, capture and diagnostic resources before advisory2 and prompt_revision3. "
+            "Revised progress is compile3, replay3, validate3 against that same explicit target. "
+            "Only take actions allowed by this assignment; stop at a phase boundary. "
+            "The Harness handles publication after your turn; do not publish or fetch a package. "
             "Do not invent placements: derive explicit arguments from the original objective. "
             "Do not claim business success from prose. Assignment: " + assignment.model_dump_json()
         )
@@ -360,6 +379,20 @@ class CodexBackend:
                 stderr=err,
                 cwd=output_root,
                 start_new_session=True,
+            )
+            write(
+                "process.json",
+                json.dumps(
+                    {
+                        "pid": process.pid,
+                        "start_ticks": process_start_ticks(process.pid),
+                        "deadline": assignment.deadline.isoformat(),
+                        "executable_sha256": self.executable_sha,
+                        "output_root": str(output_root),
+                    },
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode(),
             )
             try:
                 process.communicate(prompt.encode(), timeout=remaining)
