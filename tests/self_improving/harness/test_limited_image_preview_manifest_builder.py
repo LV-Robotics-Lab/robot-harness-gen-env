@@ -7,6 +7,7 @@ from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.golden_store import SQLiteGoldenRunStore, StoredWorkflowEntry
 from self_improving.harness.limited_image_preview_manifest_builder import (
     LimitedImagePreviewManifestBuildError,
+    _repair_actions,
     _timings,
     build_limited_image_preview_manifest,
 )
@@ -172,7 +173,69 @@ def test_failed_attempt_wall_is_retained_before_a_complete_successful_attempt() 
     assert sum(by_segment.values()) == 900
 
 
-def _call(tool: str, stage: str, transport: int, service: int | None) -> dict[str, object]:
+def test_repair_timing_follows_mismatch_then_diagnostic_observation() -> None:
+    workflow_id = UUID("10000000-0000-4000-8000-000000000003")
+    actions = (
+        "image2env.compile@2.0.0",
+        "image2env.replay@2.0.0",
+        "image2env.validate@3.0.0",
+        "genesis.observe@3.0.0",
+        "advisory",
+        "prompt_revision",
+        "image2env.compile@3.0.0",
+        "image2env.replay@3.0.0",
+        "image2env.validate@3.0.0",
+    )
+    entries = tuple(
+        StoredWorkflowEntry(
+            entry_id=UUID(f"40000000-0000-4000-8000-{index:012d}"),
+            workflow_run_id=workflow_id,
+            entry_kind="control_record"
+            if action in {"advisory", "prompt_revision"}
+            else "skill_operation",
+            action_ref=action,
+            idempotency_key=f"stage-{index}",
+            request_sha256=f"{index}" * 64,
+            base_revision=index - 1,
+            operation=None,
+            control=None,
+        )
+        for index, action in enumerate(actions, start=1)
+    )
+    calls = [
+        _call("image2env_preview_status_v1", "start", 10, None),
+        _call("image2env_preview_asset_lookup_v1", "asset_lookup", 10, None),
+        _call("image2env_compile_v2_0_0", "compile", 20, 15),
+        _call("image2env_replay_v2_0_0", "replay", 30, 25),
+        _call("image2env_validate_v3_0_0", "validate", 20, 15),
+        _call("genesis_observe_v3_0_0", "observe", 30, 25),
+        _call("harness_advisory_record_v2", None, 10, None),
+        _call("harness_prompt_revision_record_v3", None, 10, None),
+        _call("image2env_compile_v3_0_0", "compile", 20, 15),
+        _call("image2env_replay_v3_0_0", "replay", 30, 25),
+        _call("image2env_validate_v3_0_0", "validate", 20, 15),
+    ]
+
+    _repair_actions(actions)
+    timings = _timings(
+        entries,
+        (
+            {
+                "backend_elapsed_ns": 310,
+                "calls": calls,
+                "attribution_complete": True,
+                "failure": None,
+                "valid": True,
+                "input_elapsed_ns": 10,
+            },
+        ),
+    )
+
+    assert sum(item.duration_ns for item in timings) == 320
+    _repair_actions((*actions[:4], "genesis.observe@3.0.0", *actions[4:]))
+
+
+def _call(tool: str, stage: str | None, transport: int, service: int | None) -> dict[str, object]:
     return {
         "tool": tool,
         "stage": stage,
