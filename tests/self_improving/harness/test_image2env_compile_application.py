@@ -504,6 +504,50 @@ def _controlled_qualification(
     )
 
 
+def _rewrite_controlled_qualification(
+    case: _ControlledCase,
+    descriptor: SkillDescriptor,
+    root: Path,
+    *,
+    qualification_updates: dict[str, object] | None = None,
+    report_updates: dict[str, object] | None = None,
+    execution_updates: dict[str, object] | None = None,
+    closure_updates: dict[str, object] | None = None,
+) -> SkillDescriptor:
+    store = LocalArtifactStore(case.evidence_root)
+    qualification = SkillQualification.model_validate_json(
+        store.resolve(descriptor.qualification_artifact).path.read_bytes()
+    )
+    report = QualificationReportV1.model_validate_json(
+        store.resolve_digest(qualification.report_sha256).read_bytes()
+    )
+    checks = []
+    for check in report.checks:
+        updates = None
+        if check.name == "candidate_execution":
+            updates = execution_updates
+        elif check.name == "output_closure":
+            updates = closure_updates
+        checks.append(
+            check
+            if not updates
+            else check.model_copy(update={"evidence": {**check.evidence, **updates}})
+        )
+    report = report.model_copy(update={"checks": tuple(checks), **(report_updates or {})})
+    report_ref = _publish_model(store, root, "rewritten-report", report)
+    qualification = qualification.model_copy(
+        update={"report_sha256": report_ref.sha256, **(qualification_updates or {})}
+    )
+    qualification_ref = _publish_model(
+        store,
+        root,
+        "rewritten-qualification",
+        qualification,
+        schema_version="harness.skill_qualification.v1",
+    )
+    return descriptor.model_copy(update={"qualification_artifact": qualification_ref})
+
+
 def test_controlled_factory_evaluates_an_unregistered_deterministic_candidate(
     tmp_path: Path,
 ) -> None:
@@ -675,3 +719,136 @@ def test_same_run_id_with_different_canonical_input_fails_before_handler_executi
     )
     assert SQLiteEventJournal(reopened.authority_path).read(run_id=_PENDING_RUN_ID) == before_events
     assert _cas_manifest(case.evidence_root) == before_cas
+
+
+def test_controlled_binding_and_factory_fail_closed_at_public_boundaries(tmp_path: Path) -> None:
+    _require_application_api()
+    case = _controlled_case(tmp_path)
+    settings = _settings(tmp_path, case)
+    application = _create(settings, case.handler())
+    evaluation = application.evaluate(case.compile_input)
+    descriptor = _controlled_qualification(case, evaluation, tmp_path / "qualification")
+
+    assert application.artifact_root == case.evidence_root
+    with pytest.raises(TypeError, match="exact SkillDescriptor"):
+        application.bind_controlled_qualification(object())  # type: ignore[arg-type]
+    with pytest.raises(RuntimeError, match="no bound qualification"):
+        application.invoke_typed(case.compile_input, run_id=_RUN_ID)
+
+    for updates in (
+        {"skill_id": "video2env.compile"},
+        {"version": "2.0.0"},
+        {"input_schema": "harness.image2env_compile_input.v1"},
+        {"output_schema": "harness.image2env_compile_output.v1"},
+        {"mcp_tool_name": "image2env_compile_v2_0_0"},
+        {"implementation_sha256": "f" * 64},
+        {"deterministic": False},
+        {"max_attempts": 2},
+    ):
+        with pytest.raises(ValueError, match="does not describe exact"):
+            application.bind_controlled_qualification(descriptor.model_copy(update=updates))
+
+    application.bind_controlled_qualification(descriptor)
+    application.bind_controlled_qualification(descriptor)
+    compatible_but_different = descriptor.model_copy(
+        update={"implementation_name": "controlled.another_name"}
+    )
+    with pytest.raises(ValueError, match="already bound"):
+        application.bind_controlled_qualification(compatible_but_different)
+    with pytest.raises(TypeError, match="exact Image2EnvCompileV2Input"):
+        application.invoke_typed(object(), run_id=_RUN_ID)  # type: ignore[arg-type]
+
+    assert create_controlled_image2env_compile_application is not None
+    with pytest.raises(TypeError, match="run_id_factory must be callable"):
+        create_controlled_image2env_compile_application(
+            settings,
+            handler=case.handler(),
+            clock=_SequenceClock(),
+            run_id_factory=None,  # type: ignore[arg-type]
+        )
+    invalid_state = tmp_path / "invalid-state"
+    invalid_state.write_text("not a directory", encoding="utf-8")
+    invalid_settings = ControlledImage2EnvCompileApplicationSettings(
+        state_root=invalid_state,
+        evidence_artifact_root=case.evidence_root,
+    )
+    with pytest.raises(ValueError, match="state_root.*directory"):
+        _create(invalid_settings, case.handler())
+
+
+def test_controlled_binding_rejects_unbound_or_drifted_candidate_evidence(
+    tmp_path: Path,
+) -> None:
+    _require_application_api()
+    case = _controlled_case(tmp_path)
+    application = _create(_settings(tmp_path, case), case.handler())
+    evaluation = application.evaluate(case.compile_input)
+    descriptor = _controlled_qualification(case, evaluation, tmp_path / "qualification")
+    store = LocalArtifactStore(case.evidence_root)
+
+    unavailable = descriptor.model_copy(
+        update={
+            "qualification_artifact": descriptor.qualification_artifact.model_copy(
+                update={"sha256": "0" * 64, "uri": f"artifact://sha256/{'0' * 64}"}
+            )
+        }
+    )
+    with pytest.raises(ValueError, match="unavailable or invalid"):
+        application.bind_controlled_qualification(unavailable)
+
+    wrong_authority = _rewrite_controlled_qualification(
+        case,
+        descriptor,
+        tmp_path / "wrong-authority",
+        qualification_updates={"deterministic_case_id": "another-case"},
+        report_updates={"deterministic_case_id": "another-case"},
+    )
+    with pytest.raises(ValueError, match="wrong authority"):
+        application.bind_controlled_qualification(wrong_authority)
+
+    qualification = SkillQualification.model_validate_json(
+        store.resolve(descriptor.qualification_artifact).path.read_bytes()
+    )
+    report = QualificationReportV1.model_validate_json(
+        store.resolve_digest(qualification.report_sha256).read_bytes()
+    )
+    report_without_closure = report.model_copy(update={"checks": report.checks[:1]})
+    report_ref = _publish_model(store, tmp_path / "wrong-checks", "report", report_without_closure)
+    qualification_ref = _publish_model(
+        store,
+        tmp_path / "wrong-checks",
+        "qualification",
+        qualification.model_copy(update={"report_sha256": report_ref.sha256}),
+        schema_version="harness.skill_qualification.v1",
+    )
+    with pytest.raises(ValueError, match="wrong checks"):
+        application.bind_controlled_qualification(
+            descriptor.model_copy(update={"qualification_artifact": qualification_ref})
+        )
+
+    invalid_identity = _rewrite_controlled_qualification(
+        case,
+        descriptor,
+        tmp_path / "invalid-identity",
+        execution_updates={"run_id": "not-a-uuid"},
+    )
+    with pytest.raises(ValueError, match="candidate identity is invalid"):
+        application.bind_controlled_qualification(invalid_identity)
+
+    missing_candidate = _rewrite_controlled_qualification(
+        case,
+        descriptor,
+        tmp_path / "missing-candidate",
+        execution_updates={"run_id": "52345678-1234-4234-9234-123456789abc"},
+    )
+    with pytest.raises(ValueError, match="candidate run is unavailable"):
+        application.bind_controlled_qualification(missing_candidate)
+
+    drifted_closure = _rewrite_controlled_qualification(
+        case,
+        descriptor,
+        tmp_path / "drifted-closure",
+        closure_updates={"output_sha256": "f" * 64},
+    )
+    with pytest.raises(ValueError, match="does not bind its candidate run"):
+        application.bind_controlled_qualification(drifted_closure)
