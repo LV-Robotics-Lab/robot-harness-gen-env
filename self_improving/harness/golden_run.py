@@ -421,6 +421,19 @@ class GoldenRunHarness:
             )
         state = self._resolve_canonical_model(snapshot.state_ref, TrustedWorldState)
         refs.extend(fact.source_artifact for fact in state.facts)
+        for fact in state.facts:
+            if fact.key == "request.preview_input" and fact.source_kind == "user_input":
+                from .limited_image_preview_input_evidence import read_limited_preview_input
+
+                evidence = self._resolve_canonical_model(fact.source_artifact, WorldFactEvidence)
+                if evidence.key != fact.key or evidence.value != fact.value:
+                    raise GoldenRunCorruptionError("preview input fact differs from user evidence")
+                _, declared = read_limited_preview_input(
+                    self._artifact_store,
+                    ArtifactRef.model_validate(fact.value),
+                    snapshot.workflow_run_id,
+                )
+                refs.extend(declared)
 
         entries = tuple(
             entry
@@ -498,6 +511,7 @@ class GoldenRunHarness:
             refs.append(result_ref)
             result = self._resolve_canonical_model(result_ref, ToolResultV2)
             refs.extend((result.run_state, result.trusted_receipt))
+            refs.extend(result.diagnostics)
             refs.extend(observation.source_artifact for observation in result.fresh_observations)
             refs.extend(filter(None, (result.invocation, result.state_delta)))
             tool_receipt = self._resolve_canonical_model(
