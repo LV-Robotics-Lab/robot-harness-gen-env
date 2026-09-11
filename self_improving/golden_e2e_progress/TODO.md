@@ -8,7 +8,8 @@
   production qualification。Gujie 指定 exact pass 输出现已缺失；最接近的 legacy 鼠标归档虽有 15-member
   URDF bytes，却有 stale absolute locators、current threshold fail 和 0/7 runtime source identity mismatch。
   必须由当前 sealed issuer 重跑 asset-scoped Genesis load/collision probe，不得迁移旧 pass 状态。
-  15-member bytes 已以 stable snapshot 迁为 unqualified representation；正在冻结 typed probe schema。
+  15-member bytes 已以 stable snapshot 迁为 unqualified representation；四层 typed probe schema 已冻结，
+  下一步实现 producer/deep verifier。
 - P10 fresh observation：strict schema、controlled candidate application/evidence policy 与 test-controlled
   Golden execution binding 已在同一 revision 2→3 中闭合 receipt/state/restart；下一切片是 production
   runtime binding。当前受控路径固定 `simulator_executed=false`，真实 Genesis capture、qualification 与
@@ -25,7 +26,8 @@
   issuer、runtime lock 与 typed asset-probe evidence，再允许 Registry/MCP 曝光。第一步只把 legacy mouse
   的 15-member byte closure迁为 unqualified representation candidate；controlled handler/application继续
   保持未注册、`simulator_ready=false`。
-  Gujie 现成 probe 强制 Rasterizer/视频/EGL，优先实现 Harness-owned 无相机 CPU issuer；随后再独立生成
+  四层 input/load/contact-trace/report schema 已完成（91 snapshots）；优先实现 Harness-owned 无相机 CPU
+  issuer/deep verifier；随后再独立生成
   人审媒体，不能让渲染成为物理资格权威。
 - P10：实现 production execution binding/runtime；保持过期、缺 key、时间或 payload 漂移在 parent
   commit 前 fail closed。
@@ -56,6 +58,10 @@
 - legacy mouse representation staging 完成：严格验证 manifest + 15-member closure 后先冻结 source snapshot，
   再写 16-object fresh CAS；relocated/retry确定性与 verify→put 四类 source mutation均通过。只生成
   `AssetRepresentationV1`，不生成 runtime lock/qualification。
+
+- Genesis asset-probe evidence合同完成：strict self-hashed input/load/contact-trace/report，固定 CPU Newton
+  0.004s、1000步、10mm release、完整member/load/contact/penetration/check闭包；190 statements/22 branches
+  100%，91 schema snapshots。尚无 runner/issuer/qualification。
 
 - controlled durable image compile application 完成：未绑定时只运行 unregistered candidate；真实 succeeded
   candidate 的 Invocation/output/closure 被写入明确 controlled report 后，application 会从同一 CAS/SQLite

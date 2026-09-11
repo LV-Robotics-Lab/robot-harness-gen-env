@@ -79,7 +79,8 @@
     当前 issuer/runtime lock 与 asset-scoped load/collision probe 必须重跑。
     - [x] 15-member manifest/bytes 经 stable snapshot 写入 fresh CAS，并发布 unqualified
       `AssetRepresentationV1`；绝对路径、权限和 verify→put source mutation 不改变输出。
-    - [ ] 四层 typed probe evidence、无相机 CPU issuer、deep verifier 与 fresh real run。
+    - [x] 四层 typed probe input/load/contact-trace/report schema，91份 public snapshots。
+    - [ ] 无相机 CPU issuer、deep verifier 与 fresh real run。
 - [ ] video2env 三个 Skill 实现、资格和三类资产路径。
 - [ ] 输出 sim-ready Genesis 环境，并保留可观看图像/视频和机器可验证报告。
 

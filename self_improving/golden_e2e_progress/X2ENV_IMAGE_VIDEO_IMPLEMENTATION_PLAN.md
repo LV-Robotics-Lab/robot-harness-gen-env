@@ -1,7 +1,7 @@
 # Image2Env / Video2Env 实施计划
 
 状态：合同、media ingest、typed exact-reuse closure、controlled image compile与首个legacy representation
-staging完成；production runtime/asset qualification待实现
+staging与typed asset-probe evidence完成；production runner/asset qualification待实现
 
 本计划从 `2bdeafd836d641b4f14aef316a21fbcd736f55e1` 的真实 Harness 基线和
 `/home/jingxiang/gujie/gen-env@eb0b710581fd7794bc01b447b0f77cb871c8a711` 的固定来源出发。

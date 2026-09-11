@@ -1,5 +1,16 @@
 # 进度与结果
 
+## 2026-09-11 Genesis asset-probe typed evidence
+
+- `5300ab2` 先冻结四层 schema RED，`04e96de4da74ab0fcd207b756203071d414c8a7d` 完成 strict
+  self-hashed `GenesisAssetProbeInputV1`、`GenesisAssetLoadEvidenceV1`、
+  `GenesisAssetContactTraceV1`、`GenesisAssetProbeReportV1`。
+- input 固定10mm release、CPU/Newton、dt=0.004、1000 steps、单环境/单线程/seed0、禁止模型/网络；load
+  绑定 representation/runtime/15 members/1 link/0 joint/8 collisions/质量惯量摩擦；trace绑定完整NDJSON与
+  contact/penetration/force summary；report要求六项exact pass checks且不含qualification/publishability字段。
+- 14 focused pass；新模块190 statements/22 branches 100%；91 Draft202012 snapshots。没有runner、issuer、
+  runtime execution或qualification，下一门是producer+deep verifier后再跑fresh Genesis。
+
 ## 2026-09-11 legacy mouse representation staging
 
 - TDD `6950af5` 冻结 15-member portable staging seam，`28eb805` 首版 GREEN；独立验收发现 verify→CAS put

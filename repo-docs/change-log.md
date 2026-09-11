@@ -1,5 +1,10 @@
 # Change Log
 
+## 2026-09-11 typed Genesis asset-probe evidence
+
+- 增加四份 strict/self-hashed public schema，固定 CPU Newton执行输入、15-member load identity、完整contact
+  trace summary与六项report checks；91 snapshots，190 statements/22 branches 100%。仍无runner/issuer/资格。
+
 ## 2026-09-11 legacy Genesis asset representation staging
 
 - 新增单一 portable staging seam：严格核 legacy manifest 与 15-member URDF closure，先冻结 byte snapshot，

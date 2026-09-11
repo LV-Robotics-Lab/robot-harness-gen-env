@@ -51,7 +51,7 @@ revision 0→1→2→3 和无 live application 重启幂等。该结果仍只是
 publishability，不是 promotion、Genesis 或 robot-policy。新增 validate execution/policy/handler/
 application/dependency 五模块的 statement/branch 门均已达到 100%。Image2Env/Video2Env 的六个合同
 已经过两轴功能验收；加入 observation、control、resource-access、compile-attempt 与 image/video ingest
-证据合同、X2 typed compile evidence 与 input-bound compile v2 后，87 份公共 schema 现在既能整目录
+证据合同、X2 typed compile evidence、input-bound compile v2 与 Genesis asset-probe evidence 后，91 份公共 schema 现在既能整目录
 注册，也能逐文件
 独立校验。Gujie 现存 evidence 仍只证明 image-derived
 existing reconstruction 的 legacy Genesis 候选，不证明 fresh image、video 或 Harness runtime。
@@ -93,6 +93,8 @@ runtime/replay 或 MCP image path；详见
 15-member mouse bytes 现已由 no-symlink/完整目录检查与稳定 snapshot 迁成 unqualified
 `AssetRepresentationV1`；不同绝对路径、重提和源目录并发变化均不改变已验证输出，见
 [`docs/evidence/golden-legacy-mouse-representation-staging-20260911.md`](../../docs/evidence/golden-legacy-mouse-representation-staging-20260911.md)。
+四层 Genesis asset-probe input/load/contact-trace/report schema也已冻结并把 public snapshot总数增至91；
+当前仍没有runner、issuer或资格。
 P6 继续修复资产 staging；autoresearch 只在其
 冻结 benchmark 可以
 真实运行后开始。
