@@ -50,6 +50,15 @@ def test_replay_candidate_missing_evidence_is_durably_blocked(tmp_path):
     assert (tmp_path / "shared/runs.sqlite").is_file()
     with pytest.raises(ValueError, match="successful candidate"):
         shared.qualify(evaluated.state.run_id, evaluated.state.run_id)
+    from tests.self_improving.harness.test_limited_image_preview_library import _normal_manifest
+
+    manifest, _ = _normal_manifest(store, tmp_path)
+    rejected = shared.evaluate("image2env.preview_publish@1.0.0", manifest)
+    assert rejected.state.status.value == "failed"
+    assert "configured verified library" in rejected.state.blocker.details["error"]
+    assert shared.run_state(rejected.state.run_id) == rejected.state
+    with pytest.raises(ValueError, match="successful candidate"):
+        shared.qualify_publish(rejected.state.run_id)
 
 
 def test_formal_semantic_mismatch_retains_diagnostic_in_shared_registry():

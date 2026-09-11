@@ -78,6 +78,49 @@ class LimitedPreviewRuntime:
         self.apps = {}
         self.bindings = {}
 
+    def history_binding(self, skill):
+        """No live app/qualification restore for native metadata and diagnosis reads.
+
+        Golden still checks the entire committed receipt chain and exact child
+        SQLite/CAS. Receipts carrying extra terminal roots require their hook and
+        are deliberately rejected by Golden instead of silently dropping roots.
+        """
+        from .limited_image_preview_workflow_policies import LimitedPreviewObservationPolicy
+        from .run_store import SQLiteRunStore
+
+        paths = {
+            "image2env.compile@2.0.0": self.settings.compile_state_root / "harness.sqlite3",
+            "image2env.replay@2.0.0": self.settings.scene_state_root / "runs.sqlite",
+            "genesis.observe@3.0.0": self.settings.observation_state_root / "runs.sqlite",
+        }
+        if skill in paths:
+            needed = {skill: paths[skill]}
+            if skill != "image2env.compile@2.0.0":
+                prior = (
+                    "image2env.compile@2.0.0"
+                    if skill == "image2env.replay@2.0.0"
+                    else "image2env.replay@2.0.0"
+                )
+                needed[prior] = paths[prior]
+            if any(not path.is_file() for path in needed.values()):
+                raise ValueError("history requires its existing child SQLite authority")
+            authorities = {name: SQLiteRunStore(path) for name, path in needed.items()}
+            policy_type = (
+                LimitedPreviewObservationPolicy
+                if skill == "genesis.observe@3.0.0"
+                else NativeImageEvidencePolicy
+            )
+            policy = policy_type(self.store, authorities[skill], skill, authorities)
+            return _create_golden_execution_binding(
+                policy=policy, application=None, child_authority=authorities[skill]
+            )
+        # Shared/J3 histories keep their existing exact policy; no substitute validator.
+        self.ensure(skill)
+        live = self.bindings[skill]
+        return _create_golden_execution_binding(
+            policy=live.policy, application=None, child_authority=live.child_authority
+        )
+
     def application(self, key):
         if key in self.apps:
             return self.apps[key]
@@ -105,7 +148,9 @@ class LimitedPreviewRuntime:
             compile_app = self.application("compile")
             app = GenesisSceneApplication(
                 s.scene_state_root,
-                GenesisSceneExecutionProducerV2(self.store, compile_app.compiler, s.scene_manifest),
+                GenesisSceneExecutionProducerV2(
+                    self.store, compile_app._compiler, s.scene_manifest
+                ),
                 roots=s.scene_roots,
                 compile_application=compile_app,
             )
@@ -128,7 +173,7 @@ class LimitedPreviewRuntime:
 
             app = RevisedImageCompileApplication(
                 s.revised_state_root,
-                RevisedImage2EnvGenesisCompiler(self.store, self.application("compile").compiler),
+                RevisedImage2EnvGenesisCompiler(self.store, self.application("compile")._compiler),
                 qualification=s.revised_qualification,
             )
         elif key == "shared":
@@ -162,12 +207,16 @@ class LimitedPreviewRuntime:
             predecessors = {}
             if key != "compile":
                 prior = "compile" if key == "replay" else "replay"
-                predecessors[f"image2env.{prior}@2.0.0"] = self.application(prior).run_store
-            policy = NativeImageEvidencePolicy(self.store, app.run_store, skill, predecessors)
+                prior_app = self.application(prior)
+                predecessors[f"image2env.{prior}@2.0.0"] = (
+                    prior_app._run_store if prior == "compile" else prior_app.run_store
+                )
+            authority = app._run_store if key == "compile" else app.run_store
+            policy = NativeImageEvidencePolicy(self.store, authority, skill, predecessors)
             binding = _create_golden_execution_binding(
                 policy=policy,
                 application=_NativeApplicationAdapter(app, policy),
-                child_authority=app.run_store,
+                child_authority=authority,
             )
             refs = self.settings.native_projections[skill]
             projection = load_native_skill_projection(

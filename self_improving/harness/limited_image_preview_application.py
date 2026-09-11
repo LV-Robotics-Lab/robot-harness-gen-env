@@ -41,6 +41,7 @@ from .schemas.genesis_scene_execution_v3 import (
     GenesisSceneExecutionReceiptV3,
     GenesisSceneExecutionRequestV3,
 )
+from .schemas.limited_image_preview import LimitedImagePreviewManifestV1
 from .schemas.limited_image_preview_execution import (
     LimitedSceneValidateInputV1,
     LimitedSceneValidationV1,
@@ -48,9 +49,11 @@ from .schemas.limited_image_preview_execution import (
 
 REPLAY = "image2env.replay@3.0.0"
 VALIDATE = "image2env.validate@3.0.0"
+PUBLISH = "image2env.preview_publish@1.0.0"
 _MODELS = {
     REPLAY: (GenesisSceneCompileBindingV2, GenesisSceneExecutionReceiptV3),
     VALIDATE: (LimitedSceneValidateInputV1, LimitedSceneValidationV1),
+    PUBLISH: (LimitedImagePreviewManifestV1, LimitedImagePreviewManifestV1),
 }
 _FILES = (
     "limited_image_preview_application.py",
@@ -63,6 +66,8 @@ _FILES = (
     "registry.py",
     "run_store.py",
     "event_journal.py",
+    "limited_image_preview_library.py",
+    "schemas/limited_image_preview.py",
 )
 
 
@@ -79,6 +84,21 @@ class _Handler:
 
     def __call__(self, value, context):
         app = self.application
+        if self.skill_ref == PUBLISH:
+            from .limited_image_preview_library import admit_limited_image_preview
+
+            if app.library is None:
+                raise ValueError("preview publish requires its configured verified library")
+            ref = app.put(value, "limited-image-preview.json")
+            verified = admit_limited_image_preview(
+                artifact_store=app.artifact_store,
+                compiler=app.compiler_application.compiler,
+                manifest=ref,
+            )
+            published = app.library.publish(verified)
+            if published.manifest != ref:
+                raise ValueError("published library entry differs from verified manifest")
+            return HandlerResult(value, (ref,))
         if self.skill_ref == REPLAY:
             request = app.resolve_replay(value)
             try:
@@ -114,17 +134,27 @@ class _Handler:
 class LimitedImagePreviewApplication:
     durable_run_state = True
 
-    def __init__(self, state_root, compiler_application, producer, *, roots):
+    def __init__(self, state_root, compiler_application, producer, *, roots, library=None):
         if type(compiler_application) is not RevisedImageCompileApplication or type(
             producer
         ) is not (GenesisSceneExecutionProducerV3):
             raise TypeError("shared preview requires exact registered compiler and producer")
         if producer.compiler is not compiler_application.compiler:
             raise ValueError("shared runtime must use the same verified compiler")
+        if library is not None:
+            from .limited_image_preview_library import LimitedImagePreviewLibrary
+
+            if (
+                type(library) is not LimitedImagePreviewLibrary
+                or library._artifact_store is not producer.artifact_store
+                or library._compiler is not compiler_application.compiler
+            ):
+                raise TypeError("publication requires this exact CAS and compiler library")
         self.compiler_application = compiler_application
         self.producer = producer
         self.artifact_store = producer.artifact_store
         self.roots = roots
+        self.library = library
         self.run_store = SQLiteRunStore(Path(state_root) / "runs.sqlite")
         self._source_identity = self.implementation_sha256
         self._resolver = StaticDependencyResolver(
@@ -206,7 +236,7 @@ class LimitedImagePreviewApplication:
         return self._registry.evaluate_candidate(
             QualificationCandidate(
                 skill_id=skill_ref.split("@")[0],
-                version="3.0.0",
+                version=skill_ref.split("@")[1],
                 input_schema=input_model.model_config["json_schema_extra"]["$id"],
                 output_schema=output_model.model_config["json_schema_extra"]["$id"],
                 max_attempts=1,
@@ -247,6 +277,16 @@ class LimitedImagePreviewApplication:
             GenesisSceneExecutionVerifierV3(
                 self.artifact_store, self.producer.compiler
             ).read_receipt(refs[0])
+        elif skill == PUBLISH:
+            if self.library is None:
+                raise ValueError("preview publication cannot reload without its library")
+            if self.library.get(output.preview_id).manifest != output:
+                raise ValueError("published candidate differs from durable library entry")
+            if (
+                LimitedImagePreviewManifestV1.model_validate(life.invocation.effective_parameters)
+                != output
+            ):
+                raise ValueError("publication input differs from its output")
         else:
             parameters = LimitedSceneValidateInputV1.model_validate(
                 life.invocation.effective_parameters
@@ -286,7 +326,7 @@ class LimitedImagePreviewApplication:
     def qualify(self, replay_candidate, validation_candidate):
         checks = self._checks(replay_candidate, validation_candidate)
         root = Path(__file__).resolve().parents[2]
-        for skill in _MODELS:
+        for skill in (REPLAY, VALIDATE):
             report = QualificationReportV1(
                 schema_version="harness.skill_qualification_report.v1",
                 skill_ref=skill,
@@ -312,6 +352,47 @@ class LimitedImagePreviewApplication:
             self.bind(ref)
         return dict(self._qualifications)
 
+    def _publication_checks(self, candidate_run_id):
+        _, manifest = self._candidate(candidate_run_id, PUBLISH)
+        return (
+            QualificationCheckV1(
+                name="verified_library_publication",
+                status="pass",
+                evidence={"candidate": str(candidate_run_id), "preview_id": manifest.preview_id},
+            ),
+        )
+
+    def qualify_publish(self, candidate_run_id):
+        """Qualify publication from one saved verified bootstrap workflow, without Genesis."""
+        checks = self._publication_checks(candidate_run_id)
+        root = Path(__file__).resolve().parents[2]
+        report = QualificationReportV1(
+            schema_version="harness.skill_qualification_report.v1",
+            skill_ref=PUBLISH,
+            status="pass",
+            deterministic_case_id="verified-preview-publication",
+            regression_command="pytest -q -k limited_image_preview_application",
+            implementation_sha256=self.implementation_sha256,
+            scene_gen_tree_sha256=_source_tree_sha256(root / "scene_gen", label="scene_gen"),
+            ledger_contract_tree_sha256=_source_tree_sha256(
+                root / "self_improving/asset_pipeline/active/1_asset_reuse/lib", label="ledger"
+            ),
+            checks=checks,
+        )
+        report_ref = self.put(report, "preview-publication-qualification-report.json")
+        ref = self.put(
+            SkillQualification(
+                skill_ref=PUBLISH,
+                status="pass",
+                deterministic_case_id=report.deterministic_case_id,
+                regression_command=report.regression_command,
+                report_sha256=report_ref.sha256,
+            ),
+            "preview-publication-qualification.json",
+        )
+        self.bind(ref)
+        return ref
+
     def verify_and_build(self, ref, *, artifact_resolver):
         if artifact_resolver is not self.artifact_store:
             raise TypeError("qualification must use the shared CAS")
@@ -324,7 +405,12 @@ class LimitedImagePreviewApplication:
             or report.skill_ref != qualification.skill_ref
             or (report.implementation_sha256 != self.implementation_sha256)
             or report.skill_ref not in _MODELS
-            or report.deterministic_case_id != "one-fresh-modified-scene"
+            or report.deterministic_case_id
+            != (
+                "verified-preview-publication"
+                if report.skill_ref == PUBLISH
+                else "one-fresh-modified-scene"
+            )
             or qualification.deterministic_case_id != report.deterministic_case_id
             or qualification.regression_command != report.regression_command
             or report.regression_command != "pytest -q -k limited_image_preview_application"
@@ -335,19 +421,31 @@ class LimitedImagePreviewApplication:
                 root / "self_improving/asset_pipeline/active/1_asset_reuse/lib", label="ledger"
             )
             or len(report.checks) != 1
-            or report.checks[0].name != "fresh_replay_and_saved_validation"
+            or report.checks[0].name
+            != (
+                "verified_library_publication"
+                if report.skill_ref == PUBLISH
+                else "fresh_replay_and_saved_validation"
+            )
         ):
             raise ValueError("shared preview qualification identity changed")
         evidence = report.checks[0].evidence
-        if report.checks != self._checks(
-            UUID(evidence["replay_candidate"]), UUID(evidence["validation_candidate"])
-        ):
+        expected_checks = (
+            self._publication_checks(UUID(evidence["candidate"]))
+            if report.skill_ref == PUBLISH
+            else self._checks(
+                UUID(evidence["replay_candidate"]), UUID(evidence["validation_candidate"])
+            )
+        )
+        if report.checks != expected_checks:
             raise ValueError("qualification candidate checks differ from actual saved evidence")
         input_model, output_model = _MODELS[qualification.skill_ref]
         descriptor = SkillDescriptorV2(
             skill_id=qualification.skill_ref.split("@")[0],
-            version="3.0.0",
-            mcp_tool_name=qualification.skill_ref.split("@")[0].replace(".", "_") + "_v3_0_0",
+            version=qualification.skill_ref.split("@")[1],
+            mcp_tool_name=qualification.skill_ref.split("@")[0].replace(".", "_")
+            + "_v"
+            + qualification.skill_ref.split("@")[1].replace(".", "_"),
             input_schema=input_model.model_config["json_schema_extra"]["$id"],
             output_schema=output_model.model_config["json_schema_extra"]["$id"],
             implementation_name="limited_image_preview",

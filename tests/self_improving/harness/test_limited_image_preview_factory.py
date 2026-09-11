@@ -2,6 +2,8 @@
 
 import json
 
+import pytest
+
 from self_improving.harness.limited_image_preview_factory import (
     create_limited_image_preview_service,
 )
@@ -42,6 +44,8 @@ def test_factory_raw_input_restart_does_not_create_runtime_databases(inputs, tmp
     assert service.asset_lookup(workflow_id=started["workflow_id"])["asset"]["asset_id"] == "mouse"
     reopened = create_limited_image_preview_service(path)
     assert reopened.status(workflow_id=started["workflow_id"])["snapshot"] == started["snapshot"]
+    with pytest.raises(ValueError, match="not yet qualified"):
+        reopened.observe(workflow_id=started["workflow_id"], idempotency_key="no-late-restore")
     for role in (
         "asset.sqlite",
         "compile",

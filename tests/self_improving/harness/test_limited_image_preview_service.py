@@ -273,7 +273,13 @@ def test_status_recovers_capture_and_remaining_ttl_from_existing_golden_operatio
         input_builder=inputs.builder,
         registry_snapshot=case.head.registry_snapshot,
         principal_id="test/status",
-        execution_catalog=catalog,
+        execution_catalog=create_golden_execution_catalog(
+            bindings=(
+                _create_golden_execution_binding(
+                    policy=case.policy, application=None, child_authority=child
+                ),
+            )
+        ),
     )
     status = restored.status(workflow_id=started["workflow_id"])
     assert status["stage"] == "status"
@@ -285,3 +291,8 @@ def test_status_recovers_capture_and_remaining_ttl_from_existing_golden_operatio
         item["uri"].endswith(started["source_prompt"]["sha256"])
         for item in status["resource_links"]
     )
+    # A new service reads the committed result and image using SQLite/CAS only.
+    image_uri = next(
+        item["uri"] for item in status["resource_links"] if item["uri"].endswith(inputs.raw.sha256)
+    )
+    assert restored.read_resource(started["workflow_id"], image_uri)["contents"][0]["blob"]

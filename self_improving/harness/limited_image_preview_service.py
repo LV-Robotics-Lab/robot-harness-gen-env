@@ -96,14 +96,17 @@ class LimitedImagePreviewService:
         entries = self.journal.read_operations(
             principal_id=self.principal_id, workflow_run_id=UUID(str(workflow_id))
         )
-        for item in entries:
-            self.runtime.ensure(item.operation.skill_ref)
+        bindings = {
+            item.operation.skill_ref: self.runtime.history_binding(item.operation.skill_ref)
+            for item in entries
+        }
         if skill is not None:
             self.runtime.ensure(skill)
+            bindings[skill] = self.runtime.bindings[skill]
         from .golden_execution import create_golden_execution_catalog
 
         self.execution_catalog = create_golden_execution_catalog(
-            bindings=tuple(self.runtime.bindings.values())
+            bindings=tuple(bindings.values())
         )
         self.harness = self._harness()
 
@@ -687,6 +690,8 @@ class LimitedImagePreviewService:
 
     def observe(self, *, workflow_id, idempotency_key):
         skill = "genesis.observe@3.0.0"
+        # Finish qualification/runtime loading before the camera starts its TTL.
+        self._prepare(workflow_id, "image2env.validate@3.0.0")
         self._prepare(workflow_id, skill)
         previous = self._existing(workflow_id, skill, idempotency_key)
         if previous is not None:
