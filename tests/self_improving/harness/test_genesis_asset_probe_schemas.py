@@ -35,6 +35,15 @@ except ImportError:
     GenesisAssetProbeInputV1 = None  # type: ignore[assignment,misc]
     GenesisAssetProbeReportV1 = None  # type: ignore[assignment,misc]
 
+try:
+    from self_improving.harness.schemas.genesis_asset_probe import (
+        GenesisAssetContactTraceRowV1,
+        GenesisAssetLoadObservationV1,
+    )
+except ImportError:
+    GenesisAssetContactTraceRowV1 = None  # type: ignore[assignment,misc]
+    GenesisAssetLoadObservationV1 = None  # type: ignore[assignment,misc]
+
 
 _SCHEMA_MODELS = {
     "harness.genesis_asset_probe_input.v1": GenesisAssetProbeInputV1,
@@ -295,6 +304,78 @@ def test_asset_probe_models_are_strict_self_hashed_public_documents(
             type(value).model_validate({**dumped, digest_field: "f" * 64})
 
 
+def test_raw_load_and_trace_row_schemas_remove_probe_recomputation_ambiguity() -> None:
+    assert GenesisAssetLoadObservationV1 is not None
+    assert GenesisAssetContactTraceRowV1 is not None
+    assert getattr(public_schemas, "GenesisAssetLoadObservationV1") is (
+        GenesisAssetLoadObservationV1
+    )
+    assert getattr(public_schemas, "GenesisAssetContactTraceRowV1") is (
+        GenesisAssetContactTraceRowV1
+    )
+    assert getattr(harness, "GenesisAssetLoadObservationV1") is GenesisAssetLoadObservationV1
+    assert getattr(harness, "GenesisAssetContactTraceRowV1") is GenesisAssetContactTraceRowV1
+
+    initial = GenesisAssetContactTraceRowV1(
+        schema_version="harness.genesis_asset_contact_trace_row.v1",
+        step_index=0,
+        phase="initial",
+        sim_time_us=0,
+        position_m=(0.0, 0.0, 0.01),
+        orientation_wxyz=(1.0, 0.0, 0.0, 0.0),
+        linear_velocity_mps=(0.0, 0.0, 0.0),
+        angular_velocity_radps=(0.0, 0.0, 0.0),
+        contacts=(),
+        contact_count=0,
+        total_normal_force_n=0.0,
+        max_penetration_m=0.0,
+    )
+    contact = {
+        "pair": "asset:ground",
+        "asset_collision_index": 3,
+        "ground_collision_index": 0,
+        "position_m": (0.0, 0.0, 0.0),
+        "normal_on_asset": (0.0, 0.0, 1.0),
+        "force_on_asset_n": (0.0, 0.0, 0.7),
+        "normal_force_n": 0.7,
+        "penetration_m": 0.0002,
+    }
+    post = GenesisAssetContactTraceRowV1(
+        schema_version="harness.genesis_asset_contact_trace_row.v1",
+        step_index=1,
+        phase="post_step",
+        sim_time_us=4000,
+        position_m=(0.0, 0.0, 0.0098),
+        orientation_wxyz=(1.0, 0.0, 0.0, 0.0),
+        linear_velocity_mps=(0.0, 0.0, -0.0392),
+        angular_velocity_radps=(0.0, 0.0, 0.0),
+        contacts=(contact,),
+        contact_count=1,
+        total_normal_force_n=0.7,
+        max_penetration_m=0.0002,
+    )
+    assert initial.step_index == 0 and post.step_index == 1
+    assert post.contacts[0].pair == "asset:ground"
+    for field, replacement, message in (
+        ("phase", "initial", "phase"),
+        ("sim_time_us", 0, "sim_time"),
+        ("contact_count", 0, "contact_count"),
+        ("total_normal_force_n", 0.6, "normal force"),
+        ("max_penetration_m", 0.0001, "penetration"),
+    ):
+        changed = post.model_dump(mode="json")
+        changed[field] = replacement
+        with pytest.raises(ValidationError, match=message):
+            GenesisAssetContactTraceRowV1.model_validate(changed)
+
+    assert GenesisAssetLoadObservationV1.model_json_schema()["$id"] == (
+        "harness.genesis_asset_load_observation.v1"
+    )
+    assert GenesisAssetContactTraceRowV1.model_json_schema()["$id"] == (
+        "harness.genesis_asset_contact_trace_row.v1"
+    )
+
+
 def test_probe_input_freezes_the_sealed_cpu_newton_execution_profile(
     documents: dict[str, Any],
 ) -> None:
@@ -508,7 +589,7 @@ def test_probe_schemas_are_standalone_draft202012_snapshots(
     documents: dict[str, Any],
 ) -> None:
     catalog = schema_documents()
-    assert len(catalog) == 91
+    assert len(catalog) == 93
     for value in documents.values():
         schema_id = value.model_json_schema()["$id"]
         document = catalog[schema_id]
