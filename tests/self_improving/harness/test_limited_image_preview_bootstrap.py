@@ -18,9 +18,8 @@ from self_improving.harness.limited_image_preview_bootstrap import (
     check_limited_image_preview_bootstrap,
     run_cli,
 )
-from tests.self_improving.harness.test_limited_image_preview_library_saved_m1 import (  # noqa: F401
-    saved_m1_preview,
-)
+
+pytest_plugins = ("tests.self_improving.harness.test_limited_image_preview_library_saved_m1",)
 
 
 def _put(store: LocalArtifactStore, root: Path, name: str, payload: bytes, schema: str | None):
@@ -302,9 +301,7 @@ def test_check_rejects_preexisting_production_library_before_bootstrap(bootstrap
         check_limited_image_preview_bootstrap(path)
 
 
-def test_publish_candidate_accepts_manifest_ref_from_real_qualification_library(
-    saved_m1_preview, tmp_path
-):
+def test_publish_candidate_uses_real_library_manifest_ref(saved_m1_preview, tmp_path):
     """Regression for the formal bootstrap failure after a successful library write."""
     from self_improving.harness.genesis_scene_execution_v3 import GenesisSceneExecutionProducerV3
     from self_improving.harness.limited_image_preview_application import (

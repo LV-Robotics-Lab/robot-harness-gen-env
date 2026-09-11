@@ -776,7 +776,7 @@ def _publish_candidate(shared, manifest, *, saved_run_id=None):
     state = _verify_candidate(shared, "image2env.preview_publish@1.0.0", manifest, run_id)
     ref = _candidate_output_ref(shared, state, "harness.limited_image_preview_manifest.v1")
     published = shared.library.get(manifest.preview_id)
-    if published.manifest != ref:
+    if published.manifest_ref != ref:
         raise ValueError("bootstrap publish candidate differs from qualification library")
     return run_id
 
