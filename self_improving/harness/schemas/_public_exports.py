@@ -7,6 +7,19 @@ from typing import Any
 
 _EXPORT_GROUPS = (
     (
+        ".native_prompt_revision",
+        (
+            "TabletopLayoutRevisionV1",
+            "PromptRevisionCommandV3",
+            "PromptRevisionV3",
+            "PromptRevisionCompileAttemptV2",
+            "Image2EnvCompileV3Input",
+            "Image2EnvGenesisCompileRequestV2",
+            "Image2EnvGenesisCompileReceiptV2",
+            "prompt_revision_v3_sha256",
+        ),
+    ),
+    (
         ".golden_control_v2",
         (
             "ObservationCitationV2",

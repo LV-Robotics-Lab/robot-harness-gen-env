@@ -8,6 +8,31 @@ from typing import Any
 
 _SCHEMA_MODEL_LOCATORS = MappingProxyType(
     {
+        "harness.tabletop_layout_revision.v1": (
+            ".schemas.native_prompt_revision",
+            "TabletopLayoutRevisionV1",
+        ),
+        "harness.prompt_revision_command.v3": (
+            ".schemas.native_prompt_revision",
+            "PromptRevisionCommandV3",
+        ),
+        "harness.prompt_revision.v3": (".schemas.native_prompt_revision", "PromptRevisionV3"),
+        "harness.prompt_revision_compile_attempt.v2": (
+            ".schemas.native_prompt_revision",
+            "PromptRevisionCompileAttemptV2",
+        ),
+        "harness.image2env_compile_input.v3": (
+            ".schemas.native_prompt_revision",
+            "Image2EnvCompileV3Input",
+        ),
+        "harness.image2env_genesis_compile_request.v2": (
+            ".schemas.native_prompt_revision",
+            "Image2EnvGenesisCompileRequestV2",
+        ),
+        "harness.image2env_genesis_compile_receipt.v2": (
+            ".schemas.native_prompt_revision",
+            "Image2EnvGenesisCompileReceiptV2",
+        ),
         "harness.observation_citation.v2": (".schemas.golden_control_v2", "ObservationCitationV2"),
         "harness.advisory_record_command.v2": (
             ".schemas.golden_control_v2",

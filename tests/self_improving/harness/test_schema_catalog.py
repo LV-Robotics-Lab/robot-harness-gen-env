@@ -127,6 +127,13 @@ from self_improving.harness.schemas.x2env_compile_evidence import (
 )
 
 EXPECTED_SCHEMA_IDS = {
+    "harness.tabletop_layout_revision.v1",
+    "harness.prompt_revision_command.v3",
+    "harness.prompt_revision.v3",
+    "harness.prompt_revision_compile_attempt.v2",
+    "harness.image2env_compile_input.v3",
+    "harness.image2env_genesis_compile_request.v2",
+    "harness.image2env_genesis_compile_receipt.v2",
     "harness.observation_citation.v2",
     "harness.advisory_record_command.v2",
     "harness.external_agent_advisory_receipt.v2",
@@ -387,6 +394,13 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
         assert document["$schema"] == "https://json-schema.org/draft/2020-12/schema"
         assert document["additionalProperties"] is False
         if schema_id in {
+            "harness.tabletop_layout_revision.v1",
+            "harness.prompt_revision_command.v3",
+            "harness.prompt_revision.v3",
+            "harness.prompt_revision_compile_attempt.v2",
+            "harness.image2env_compile_input.v3",
+            "harness.image2env_genesis_compile_request.v2",
+            "harness.image2env_genesis_compile_receipt.v2",
             "harness.observation_citation.v2",
             "harness.advisory_record_command.v2",
             "harness.external_agent_advisory_receipt.v2",

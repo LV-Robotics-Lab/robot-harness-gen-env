@@ -1,0 +1,369 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "NoPromptFallback": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "none",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "NoPromptFallback",
+      "type": "object"
+    },
+    "ReplacePromptPatch": {
+      "additionalProperties": false,
+      "properties": {
+        "base_text_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Base Text Sha256",
+          "type": "string"
+        },
+        "kind": {
+          "const": "full_replace",
+          "title": "Kind",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "replacement_text": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Replacement Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "base_text_sha256",
+        "replacement_text",
+        "reason"
+      ],
+      "title": "ReplacePromptPatch",
+      "type": "object"
+    },
+    "TabletopLayoutRevisionV1": {
+      "additionalProperties": false,
+      "description": "Absolute world XY and Z-axis yaw for an upright source, in metres/radians.\n\nA consumer must verify the original source is upright and preserve its qualified\nmass/friction/inertia. Table friction is inherited from the native predecessor.\nCoordinates are bounded to +/-10 m; table extents are (0.02, 10] m. These bounds\nand the centre margin do not replace measured all-vertex footprint validation.",
+      "properties": {
+        "base_revision": {
+          "minimum": 0,
+          "title": "Base Revision",
+          "type": "integer"
+        },
+        "effective_prompt": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "original_source": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "physical_properties": {
+          "const": "preserve_qualified_asset",
+          "title": "Physical Properties",
+          "type": "string"
+        },
+        "position_xy_m": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "maximum": 10,
+              "minimum": -10,
+              "type": "number"
+            },
+            {
+              "maximum": 10,
+              "minimum": -10,
+              "type": "number"
+            }
+          ],
+          "title": "Position Xy M",
+          "type": "array"
+        },
+        "principal_id": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Principal Id",
+          "type": "string"
+        },
+        "receipt_head_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Receipt Head Sha256",
+          "type": "string"
+        },
+        "relation": {
+          "const": "on_table",
+          "title": "Relation",
+          "type": "string"
+        },
+        "replacement_text": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Replacement Text",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.tabletop_layout_revision.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source_object_id": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Source Object Id",
+          "type": "string"
+        },
+        "state_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "State Sha256",
+          "type": "string"
+        },
+        "table_center_m": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "maximum": 10,
+              "minimum": -10,
+              "type": "number"
+            },
+            {
+              "maximum": 10,
+              "minimum": -10,
+              "type": "number"
+            },
+            {
+              "maximum": 10,
+              "minimum": -10,
+              "type": "number"
+            }
+          ],
+          "title": "Table Center M",
+          "type": "array"
+        },
+        "table_size_m": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "exclusiveMinimum": 0.02,
+              "maximum": 10,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0.02,
+              "maximum": 10,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0.02,
+              "maximum": 10,
+              "type": "number"
+            }
+          ],
+          "title": "Table Size M",
+          "type": "array"
+        },
+        "workflow_run_id": {
+          "format": "uuid4",
+          "title": "Workflow Run Id",
+          "type": "string"
+        },
+        "yaw_rad": {
+          "maximum": 3.141592653589793,
+          "minimum": -3.141592653589793,
+          "title": "Yaw Rad",
+          "type": "number"
+        }
+      },
+      "required": [
+        "schema_version",
+        "workflow_run_id",
+        "principal_id",
+        "base_revision",
+        "state_sha256",
+        "receipt_head_sha256",
+        "original_source",
+        "source_object_id",
+        "replacement_text",
+        "effective_prompt",
+        "position_xy_m",
+        "yaw_rad",
+        "table_center_m",
+        "table_size_m",
+        "relation",
+        "physical_properties"
+      ],
+      "title": "TabletopLayoutRevisionV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.prompt_revision_command.v3",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "advisory_receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "command_id": {
+      "format": "uuid4",
+      "title": "Command Id",
+      "type": "string"
+    },
+    "expected_receipt_head_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Expected Receipt Head Sha256",
+      "type": "string"
+    },
+    "expected_state_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Expected State Sha256",
+      "type": "string"
+    },
+    "expected_workflow_revision": {
+      "minimum": 0,
+      "title": "Expected Workflow Revision",
+      "type": "integer"
+    },
+    "external_agent_executed": {
+      "const": false,
+      "title": "External Agent Executed",
+      "type": "boolean"
+    },
+    "failure_receipts": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "minItems": 1,
+      "title": "Failure Receipts",
+      "type": "array"
+    },
+    "fallback": {
+      "$ref": "#/$defs/NoPromptFallback"
+    },
+    "idempotency_key": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "layout_proposal": {
+      "$ref": "#/$defs/TabletopLayoutRevisionV1"
+    },
+    "next_compile_skill_ref": {
+      "const": "image2env.compile@3.0.0",
+      "title": "Next Compile Skill Ref",
+      "type": "string"
+    },
+    "patch": {
+      "$ref": "#/$defs/ReplacePromptPatch"
+    },
+    "predecessor_environment": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "principal_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Principal Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.prompt_revision_command.v3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_prompt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "workflow_run_id": {
+      "format": "uuid4",
+      "title": "Workflow Run Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "command_id",
+    "principal_id",
+    "workflow_run_id",
+    "idempotency_key",
+    "expected_workflow_revision",
+    "expected_state_sha256",
+    "expected_receipt_head_sha256",
+    "source_prompt",
+    "advisory_receipt",
+    "failure_receipts",
+    "predecessor_environment",
+    "patch",
+    "fallback",
+    "next_compile_skill_ref",
+    "external_agent_executed",
+    "layout_proposal",
+    "schema_version"
+  ],
+  "title": "PromptRevisionCommandV3",
+  "type": "object"
+}

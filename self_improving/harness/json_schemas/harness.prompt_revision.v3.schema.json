@@ -1,0 +1,584 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "GenesisFreshCaptureReceiptV1": {
+      "additionalProperties": false,
+      "properties": {
+        "authority": {
+          "const": "observed_restored_final_pose",
+          "title": "Authority",
+          "type": "string"
+        },
+        "capture_result": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "checked_at": {
+          "format": "date-time",
+          "title": "Checked At",
+          "type": "string"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "image": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "process_continuation": {
+          "const": false,
+          "title": "Process Continuation",
+          "type": "boolean"
+        },
+        "replay_receipt": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "replay_run_id": {
+          "format": "uuid4",
+          "title": "Replay Run Id",
+          "type": "string"
+        },
+        "request": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "schema_version": {
+          "const": "harness.genesis_fresh_capture_receipt.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "ttl_seconds": {
+          "maximum": 300,
+          "minimum": 1,
+          "title": "Ttl Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema_version",
+        "replay_run_id",
+        "replay_receipt",
+        "request",
+        "capture_result",
+        "image",
+        "captured_at",
+        "checked_at",
+        "expires_at",
+        "ttl_seconds",
+        "authority",
+        "process_continuation"
+      ],
+      "title": "GenesisFreshCaptureReceiptV1",
+      "type": "object"
+    },
+    "NoPromptFallback": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "none",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "NoPromptFallback",
+      "type": "object"
+    },
+    "ObservationCitationV2": {
+      "additionalProperties": false,
+      "description": "Self-contained exact citation; it does not authenticate the cited producer.",
+      "properties": {
+        "authority": {
+          "const": "observed_restored_final_pose",
+          "title": "Authority",
+          "type": "string"
+        },
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "observation": {
+          "$ref": "#/$defs/GenesisFreshCaptureReceiptV1"
+        },
+        "process_continuation": {
+          "const": false,
+          "title": "Process Continuation",
+          "type": "boolean"
+        },
+        "receipt": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "schema_version": {
+          "const": "harness.observation_citation.v2",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "ttl_seconds": {
+          "maximum": 300,
+          "minimum": 1,
+          "title": "Ttl Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema_version",
+        "receipt",
+        "observation",
+        "captured_at",
+        "expires_at",
+        "ttl_seconds",
+        "authority",
+        "process_continuation"
+      ],
+      "title": "ObservationCitationV2",
+      "type": "object"
+    },
+    "ReplacePromptPatch": {
+      "additionalProperties": false,
+      "properties": {
+        "base_text_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Base Text Sha256",
+          "type": "string"
+        },
+        "kind": {
+          "const": "full_replace",
+          "title": "Kind",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "replacement_text": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Replacement Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "base_text_sha256",
+        "replacement_text",
+        "reason"
+      ],
+      "title": "ReplacePromptPatch",
+      "type": "object"
+    },
+    "TabletopLayoutRevisionV1": {
+      "additionalProperties": false,
+      "description": "Absolute world XY and Z-axis yaw for an upright source, in metres/radians.\n\nA consumer must verify the original source is upright and preserve its qualified\nmass/friction/inertia. Table friction is inherited from the native predecessor.\nCoordinates are bounded to +/-10 m; table extents are (0.02, 10] m. These bounds\nand the centre margin do not replace measured all-vertex footprint validation.",
+      "properties": {
+        "base_revision": {
+          "minimum": 0,
+          "title": "Base Revision",
+          "type": "integer"
+        },
+        "effective_prompt": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "original_source": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "physical_properties": {
+          "const": "preserve_qualified_asset",
+          "title": "Physical Properties",
+          "type": "string"
+        },
+        "position_xy_m": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "maximum": 10,
+              "minimum": -10,
+              "type": "number"
+            },
+            {
+              "maximum": 10,
+              "minimum": -10,
+              "type": "number"
+            }
+          ],
+          "title": "Position Xy M",
+          "type": "array"
+        },
+        "principal_id": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Principal Id",
+          "type": "string"
+        },
+        "receipt_head_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Receipt Head Sha256",
+          "type": "string"
+        },
+        "relation": {
+          "const": "on_table",
+          "title": "Relation",
+          "type": "string"
+        },
+        "replacement_text": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Replacement Text",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.tabletop_layout_revision.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source_object_id": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Source Object Id",
+          "type": "string"
+        },
+        "state_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "State Sha256",
+          "type": "string"
+        },
+        "table_center_m": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "maximum": 10,
+              "minimum": -10,
+              "type": "number"
+            },
+            {
+              "maximum": 10,
+              "minimum": -10,
+              "type": "number"
+            },
+            {
+              "maximum": 10,
+              "minimum": -10,
+              "type": "number"
+            }
+          ],
+          "title": "Table Center M",
+          "type": "array"
+        },
+        "table_size_m": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "exclusiveMinimum": 0.02,
+              "maximum": 10,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0.02,
+              "maximum": 10,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0.02,
+              "maximum": 10,
+              "type": "number"
+            }
+          ],
+          "title": "Table Size M",
+          "type": "array"
+        },
+        "workflow_run_id": {
+          "format": "uuid4",
+          "title": "Workflow Run Id",
+          "type": "string"
+        },
+        "yaw_rad": {
+          "maximum": 3.141592653589793,
+          "minimum": -3.141592653589793,
+          "title": "Yaw Rad",
+          "type": "number"
+        }
+      },
+      "required": [
+        "schema_version",
+        "workflow_run_id",
+        "principal_id",
+        "base_revision",
+        "state_sha256",
+        "receipt_head_sha256",
+        "original_source",
+        "source_object_id",
+        "replacement_text",
+        "effective_prompt",
+        "position_xy_m",
+        "yaw_rad",
+        "table_center_m",
+        "table_size_m",
+        "relation",
+        "physical_properties"
+      ],
+      "title": "TabletopLayoutRevisionV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.prompt_revision.v3",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "advisory_receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "authority": {
+      "const": "advisory_only",
+      "title": "Authority",
+      "type": "string"
+    },
+    "base_revision": {
+      "minimum": 0,
+      "title": "Base Revision",
+      "type": "integer"
+    },
+    "base_state": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "base_state_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Base State Sha256",
+      "type": "string"
+    },
+    "base_turn_seq": {
+      "minimum": 0,
+      "title": "Base Turn Seq",
+      "type": "integer"
+    },
+    "command": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "command_id": {
+      "format": "uuid4",
+      "title": "Command Id",
+      "type": "string"
+    },
+    "committed_at": {
+      "format": "date-time",
+      "title": "Committed At",
+      "type": "string"
+    },
+    "committed_revision": {
+      "minimum": 1,
+      "title": "Committed Revision",
+      "type": "integer"
+    },
+    "committed_turn_seq": {
+      "minimum": 1,
+      "title": "Committed Turn Seq",
+      "type": "integer"
+    },
+    "external_agent_executed": {
+      "const": false,
+      "title": "External Agent Executed",
+      "type": "boolean"
+    },
+    "failure_receipts": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "minItems": 1,
+      "title": "Failure Receipts",
+      "type": "array"
+    },
+    "fallback": {
+      "$ref": "#/$defs/NoPromptFallback"
+    },
+    "grants_physical_validity": {
+      "const": false,
+      "title": "Grants Physical Validity",
+      "type": "boolean"
+    },
+    "grants_publishability": {
+      "const": false,
+      "title": "Grants Publishability",
+      "type": "boolean"
+    },
+    "layout_proposal": {
+      "$ref": "#/$defs/TabletopLayoutRevisionV1"
+    },
+    "next_compile_skill_ref": {
+      "const": "image2env.compile@3.0.0",
+      "title": "Next Compile Skill Ref",
+      "type": "string"
+    },
+    "observation_citations": {
+      "items": {
+        "$ref": "#/$defs/ObservationCitationV2"
+      },
+      "title": "Observation Citations",
+      "type": "array"
+    },
+    "patch": {
+      "$ref": "#/$defs/ReplacePromptPatch"
+    },
+    "predecessor_environment": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "predecessor_prompt_revision": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "predecessor_receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "principal_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Principal Id",
+      "type": "string"
+    },
+    "prompt_revision_number": {
+      "minimum": 1,
+      "title": "Prompt Revision Number",
+      "type": "integer"
+    },
+    "resulting_state": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "resulting_state_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Resulting State Sha256",
+      "type": "string"
+    },
+    "revised_prompt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "revision_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Revision Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.prompt_revision.v3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_prompt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "workflow_run_id": {
+      "format": "uuid4",
+      "title": "Workflow Run Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "command_id",
+    "workflow_run_id",
+    "principal_id",
+    "command",
+    "predecessor_receipt",
+    "base_revision",
+    "committed_revision",
+    "base_turn_seq",
+    "committed_turn_seq",
+    "base_state_sha256",
+    "base_state",
+    "resulting_state_sha256",
+    "resulting_state",
+    "committed_at",
+    "source_prompt",
+    "advisory_receipt",
+    "failure_receipts",
+    "predecessor_environment",
+    "patch",
+    "fallback",
+    "next_compile_skill_ref",
+    "external_agent_executed",
+    "layout_proposal",
+    "schema_version",
+    "prompt_revision_number",
+    "predecessor_prompt_revision",
+    "observation_citations",
+    "revised_prompt",
+    "authority",
+    "grants_physical_validity",
+    "grants_publishability",
+    "revision_sha256"
+  ],
+  "title": "PromptRevisionV3",
+  "type": "object"
+}
