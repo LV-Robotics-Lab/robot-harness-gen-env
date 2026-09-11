@@ -255,7 +255,7 @@ class LimitedImagePreviewController:
             cursor = ArtifactRef.model_validate(body["predecessor_receipt"])
         now = datetime.now(UTC)
         deadline = now + timedelta(seconds=self.attempt_seconds)
-        if phase in {"diagnosis", "repair"}:
+        if phase == "diagnosis":
             observation = status.observation
             if observation is None:
                 raise ValueError("diagnosis requires a fresh observation; run observe first")
