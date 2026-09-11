@@ -512,6 +512,47 @@ def test_failed_attempt_keeps_measured_wall_without_inventing_attribution(tmp_pa
     assert samples["calls"] == []
 
 
+def test_failed_attempt_keeps_complete_transport_call_attribution(tmp_path):
+    result = CodexBackendResult(
+        "exit_failure",
+        tmp_path,
+        2.0,
+        17,
+        None,
+        None,
+        {
+            "calls": [
+                {
+                    "tool": "image2env_compile_v2_0_0",
+                    "elapsed_seconds": 1.0,
+                    "result": {
+                        "structuredContent": {"stage": "compile", "elapsed_seconds": 0.5}
+                    },
+                }
+            ],
+            "attribution_complete": True,
+        },
+        "exit_failure",
+    )
+
+    samples = timing_samples(result)
+
+    assert samples == {
+        "backend_elapsed_ns": 2_000_000_000,
+        "calls": [
+            {
+                "tool": "image2env_compile_v2_0_0",
+                "stage": "compile",
+                "transport_elapsed_ns": 1_000_000_000,
+                "service_elapsed_ns": 500_000_000,
+            }
+        ],
+        "attribution_complete": True,
+        "failure": "exit_failure",
+        "valid": True,
+    }
+
+
 def test_controller_exposes_harness_start_and_resume():
     assert callable(LimitedImagePreviewController.start)
     assert callable(LimitedImagePreviewController.resume)

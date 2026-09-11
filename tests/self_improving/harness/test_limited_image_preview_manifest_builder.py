@@ -173,6 +173,78 @@ def test_failed_attempt_wall_is_retained_before_a_complete_successful_attempt() 
     assert sum(by_segment.values()) == 900
 
 
+def test_complete_failed_attempt_calls_combine_with_retry_without_losing_lineage() -> None:
+    workflow_id = UUID("10000000-0000-4000-8000-000000000004")
+    actions = (
+        "image2env.compile@2.0.0",
+        "image2env.replay@2.0.0",
+        "genesis.observe@3.0.0",
+        "image2env.validate@3.0.0",
+    )
+    entries = tuple(
+        StoredWorkflowEntry(
+            entry_id=UUID(f"50000000-0000-4000-8000-{index:012d}"),
+            workflow_run_id=workflow_id,
+            entry_kind="skill_operation",
+            action_ref=action,
+            idempotency_key=f"stage-{index}",
+            request_sha256=f"{index}" * 64,
+            base_revision=index - 1,
+            operation=None,
+            control=None,
+        )
+        for index, action in enumerate(actions, start=1)
+    )
+    failed_after_compile = {
+        "backend_elapsed_ns": 200,
+        "calls": [
+            _call("image2env_preview_status_v1", "start", 10, None),
+            _call("image2env_preview_asset_lookup_v1", "asset_lookup", 10, None),
+            _call("image2env_compile_v2_0_0", "compile", 100, 80),
+        ],
+        "attribution_complete": True,
+        "failure": "invalid_transcript",
+        "valid": True,
+        "input_elapsed_ns": 50,
+    }
+    completed_retry = {
+        "backend_elapsed_ns": 500,
+        "calls": [
+            _call("image2env_preview_status_v1", "compile", 10, None),
+            _call("image2env_replay_v2_0_0", "replay", 200, 180),
+            _call("genesis_observe_v3_0_0", "observe", 100, 80),
+            _call("image2env_validate_v3_0_0", "validate", 100, 90),
+        ],
+        "attribution_complete": True,
+        "failure": None,
+        "valid": True,
+        "input_elapsed_ns": None,
+    }
+
+    timings = _timings(entries, (failed_after_compile, completed_retry))
+
+    by_segment = {item.segment: item.duration_ns for item in timings}
+    assert by_segment == {
+        "input_asset": 50,
+        "compile": 80,
+        "runtime_integrity": 60,
+        "simulation_render": 260,
+        "cas_deep_read": 30,
+        "codex_mcp": 170,
+        "validate_publish": 100,
+    }
+    assert sum(by_segment.values()) == 700 + 50
+
+    incomplete_after_compile = {
+        **failed_after_compile,
+        "calls": [],
+        "attribution_complete": False,
+    }
+    with pytest.raises(LimitedImagePreviewManifestBuildError) as error:
+        _timings(entries, (incomplete_after_compile, completed_retry))
+    assert error.value.reason == "timing_lineage"
+
+
 def test_repair_timing_follows_mismatch_then_diagnostic_observation() -> None:
     workflow_id = UUID("10000000-0000-4000-8000-000000000003")
     actions = (

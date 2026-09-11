@@ -6,7 +6,11 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from self_improving.harness.codex_backend import AssignedMCPInput, CodexAssignment
+from self_improving.harness.codex_backend import (
+    AssignedMCPInput,
+    CodexAssignment,
+    inspect_assigned_transport,
+)
 from tests.self_improving.harness.test_golden_control_v2_runtime import native_case
 
 
@@ -124,6 +128,7 @@ def test_assigned_transcript_matches_actual_wire_and_rejects_shell_or_foreign(as
     ]
     wire = [
         {
+            "sequence": 0,
             "direction": "request",
             "monotonic_ns": 0,
             "message": {
@@ -134,6 +139,7 @@ def test_assigned_transcript_matches_actual_wire_and_rejects_shell_or_foreign(as
             },
         },
         {
+            "sequence": 1,
             "direction": "response",
             "monotonic_ns": 1000000000,
             "message": {
@@ -282,7 +288,12 @@ def test_codex_01534_resource_call_maps_to_wire_read_without_action_budget(assig
         ("response", {"jsonrpc": "2.0", "id": 2, "result": {"contents": contents}}),
     ]
     frames = [
-        {"direction": direction, "monotonic_ns": index * 1000000, "message": message}
+        {
+            "sequence": index,
+            "direction": direction,
+            "monotonic_ns": index * 1000000,
+            "message": message,
+        }
         for index, (direction, message) in enumerate(messages)
     ]
     transcript = b"\n".join(json.dumps(item).encode() for item in events)
@@ -294,6 +305,219 @@ def test_codex_01534_resource_call_maps_to_wire_read_without_action_budget(assig
     else:
         with pytest.raises(ValueError):
             inspect_assigned_transcript(transcript, wire, assignment)
+
+
+def test_complete_assigned_transport_is_recoverable_without_a_terminal_transcript(assignment):
+    workflow = str(assignment.snapshot.workflow_run_id)
+    assignment = assignment.model_copy(
+        update={
+            "allowed_actions": (
+                "image2env_preview_status_v1",
+                "image2env_compile_v2_0_0",
+            )
+        }
+    )
+    status_result = {
+        "content": [],
+        "structuredContent": {"snapshot": assignment.snapshot.model_dump(mode="json")},
+    }
+    compile_result = {
+        "content": [],
+        "structuredContent": {"stage": "compile", "elapsed_seconds": 0.000000004},
+    }
+    messages = [
+        (
+            "request",
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "tools/call",
+                "params": {
+                    "name": "image2env_preview_status_v1",
+                    "arguments": {"workflow_id": workflow},
+                },
+            },
+        ),
+        ("response", {"jsonrpc": "2.0", "id": 1, "result": status_result}),
+        (
+            "request",
+            {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "tools/call",
+                "params": {
+                    "name": "image2env_compile_v2_0_0",
+                    "arguments": {"workflow_id": workflow},
+                },
+            },
+        ),
+        ("response", {"jsonrpc": "2.0", "id": 2, "result": compile_result}),
+    ]
+    frames = [
+        {
+            "sequence": index,
+            "direction": direction,
+            "monotonic_ns": index * 10 + 1,
+            "message": message,
+        }
+        for index, (direction, message) in enumerate(messages)
+    ]
+
+    evidence = inspect_assigned_transport(
+        b"\n".join(json.dumps(frame).encode() for frame in frames), assignment
+    )
+
+    assert evidence == {
+        "workflow_id": workflow,
+        "calls": [
+            {
+                "tool": "image2env_preview_status_v1",
+                "arguments": {"workflow_id": workflow},
+                "result": status_result,
+                "elapsed_seconds": 1e-08,
+            },
+            {
+                "tool": "image2env_compile_v2_0_0",
+                "arguments": {"workflow_id": workflow},
+                "result": compile_result,
+                "elapsed_seconds": 1e-08,
+            },
+        ],
+        "resource_reads": [],
+        "terminal_decision": None,
+        "attribution_complete": True,
+        "business_state_authority": False,
+    }
+
+    with pytest.raises(ValueError, match="incomplete wire"):
+        inspect_assigned_transport(
+            b"\n".join(json.dumps(frame).encode() for frame in frames[:-1]), assignment
+        )
+    first_business = [dict(frame) for frame in frames[2:]]
+    first_business[0] = {**first_business[0], "sequence": 0}
+    first_business[1] = {**first_business[1], "sequence": 1}
+    with pytest.raises(ValueError, match="initial status"):
+        inspect_assigned_transport(
+            b"\n".join(json.dumps(frame).encode() for frame in first_business), assignment
+        )
+
+
+@pytest.mark.parametrize("exit_code,expected", [(0, "invalid_transcript"), (17, "exit_failure")])
+def test_backend_failure_retains_complete_assigned_transport_calls(
+    assignment, tmp_path, exit_code, expected
+):
+    import hashlib
+    import shutil
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    from self_improving.harness.codex_backend import CodexBackend
+
+    compiler = shutil.which("cc")
+    if not compiler:
+        pytest.skip("external ELF fixture requires C compiler")
+    workflow = str(assignment.snapshot.workflow_run_id)
+    assignment = assignment.model_copy(
+        update={
+            "allowed_actions": (
+                "image2env_preview_status_v1",
+                "image2env_compile_v2_0_0",
+            )
+        }
+    )
+    messages = [
+        (
+            "request",
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "tools/call",
+                "params": {
+                    "name": "image2env_preview_status_v1",
+                    "arguments": {"workflow_id": workflow},
+                },
+            },
+        ),
+        (
+            "response",
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "result": {
+                    "content": [],
+                    "structuredContent": {
+                        "snapshot": assignment.snapshot.model_dump(mode="json")
+                    },
+                },
+            },
+        ),
+        (
+            "request",
+            {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "tools/call",
+                "params": {
+                    "name": "image2env_compile_v2_0_0",
+                    "arguments": {"workflow_id": workflow},
+                },
+            },
+        ),
+        (
+            "response",
+            {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "result": {
+                    "content": [],
+                    "structuredContent": {"stage": "compile", "elapsed_seconds": 0.000000004},
+                },
+            },
+        ),
+    ]
+    frames = [
+        {
+            "sequence": index,
+            "direction": direction,
+            "monotonic_ns": index * 10 + 1,
+            "message": message,
+        }
+        for index, (direction, message) in enumerate(messages)
+    ]
+    wire = b"\n".join(json.dumps(frame).encode() for frame in frames) + b"\n"
+    source = tmp_path / f"fixture-{exit_code}.c"
+    source.write_text(
+        "#include <stdio.h>\n"
+        "int main(void){unsigned char wire[]={"
+        + ",".join(str(value) for value in wire)
+        + "};FILE *f=fopen(\"transport.jsonl\",\"wb\");"
+        "fwrite(wire,1,sizeof(wire),f);fclose(f);puts(\"{}\");return "
+        + str(exit_code)
+        + ";}"
+    )
+    executable = tmp_path / f"fixture-{exit_code}"
+    subprocess.run([compiler, str(source), "-o", str(executable)], check=True)
+    settings = tmp_path / "settings.json"
+    settings.write_text("{}")
+    backend = CodexBackend(
+        executable=executable,
+        approved_executable_sha256=hashlib.sha256(executable.read_bytes()).hexdigest(),
+        server_python=Path(sys.executable),
+        server_settings=settings,
+        server_workdir=tmp_path,
+        model="fixture-not-codex",
+    )
+
+    outcome = backend.run(assignment, output_root=tmp_path / f"record-{exit_code}")
+
+    assert outcome.status == expected
+    assert outcome.decision_evidence["attribution_complete"] is True
+    assert [call["tool"] for call in outcome.decision_evidence["calls"]] == [
+        "image2env_preview_status_v1",
+        "image2env_compile_v2_0_0",
+    ]
+    assert outcome.decision_evidence["terminal_decision"] is None
 
 
 @pytest.mark.parametrize(
