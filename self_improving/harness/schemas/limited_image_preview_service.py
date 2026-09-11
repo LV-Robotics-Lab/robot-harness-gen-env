@@ -6,7 +6,7 @@ from pydantic import UUID4, AwareDatetime, Field, model_validator
 
 from .base import HarnessModel, NonEmptyString, NonNegativeInt
 from .common import ArtifactRef
-from .workflow import OperationSnapshot
+from .workflow import OperationSnapshot, RunSnapshot
 
 
 class PreviewResourceLink(HarnessModel):
@@ -46,6 +46,9 @@ class PreviewServiceResult(HarnessModel):
     ]
     status: Literal["active", "running", "succeeded", "failed", "waiting_input", "published"]
     operation: OperationSnapshot | None = None
+    snapshot: RunSnapshot | None = None
+    source_prompt: ArtifactRef | None = None
+    failure_receipts: tuple[ArtifactRef, ...] = ()
     asset: PreviewAsset | None = None
     observation: PreviewObservedMedia | None = None
     package: ArtifactRef | None = None
@@ -58,6 +61,13 @@ class PreviewServiceResult(HarnessModel):
 
     @model_validator(mode="after")
     def failure_is_visible(self):
+        if self.stage in {"start", "status"} and self.snapshot is None:
+            raise ValueError("start and status must expose the actual Golden snapshot")
+        if self.snapshot is not None and (
+            self.snapshot.workflow_run_id != self.workflow_id
+            or self.snapshot.revision != self.revision
+        ):
+            raise ValueError("projection differs from its actual workflow snapshot")
         if (self.failure_code is None) != (self.failure_message is None):
             raise ValueError("failure code and message must be paired")
         if self.status == "failed" and self.failure_code is None:
