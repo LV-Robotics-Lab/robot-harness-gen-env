@@ -160,6 +160,16 @@ class GoldenRunHarness:
         self._child_run_id_factory = child_run_id_factory
         self._resource_access_id_factory = resource_access_id_factory
 
+    @property
+    def artifact_root(self) -> Path:
+        """Immutable CAS locator for exact server-owned input builders."""
+        return self._artifact_store.root
+
+    @property
+    def execution_catalog(self) -> GoldenExecutionCatalog:
+        """The exact frozen execution catalog bound to this workflow authority."""
+        return self._execution_catalog
+
     def start(self, request: RunStartRequest) -> RunSnapshot:
         """Build the first trusted state and its actor-neutral receipt head."""
 
