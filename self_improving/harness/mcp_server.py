@@ -14,13 +14,14 @@ from .mcp_adapter import (
     MCPTextContent,
     MCPToolCall,
 )
+from .mcp_control_v2 import NativeHarnessMCPAdapter
 
 
-def create_harness_mcp_server(adapter: HarnessMCPAdapter) -> Server:
+def create_harness_mcp_server(adapter: HarnessMCPAdapter | NativeHarnessMCPAdapter) -> Server:
     """Create a protocol server without duplicating Harness business behavior."""
 
-    if type(adapter) is not HarnessMCPAdapter:
-        raise TypeError("adapter must be the exact HarnessMCPAdapter")
+    if type(adapter) not in (HarnessMCPAdapter, NativeHarnessMCPAdapter):
+        raise TypeError("adapter must be the exact HarnessMCPAdapter or NativeHarnessMCPAdapter")
 
     async def list_tools(_context, _params) -> types.ListToolsResult:
         projected = adapter.list_tools(adapter._registry_snapshot)
