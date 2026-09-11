@@ -322,7 +322,11 @@ class LimitedImagePreviewService:
                 else "Preview stage did not complete"
             )
             status = "failed"
-        if stage == "observe" and result is not None and status == "succeeded":
+        if (
+            operation.skill_ref == "genesis.observe@3.0.0"
+            and result is not None
+            and status == "succeeded"
+        ):
             observed = GenesisFreshCaptureReceiptV1.model_validate(result.typed_output)
             receipt = next(
                 r
@@ -351,6 +355,30 @@ class LimitedImagePreviewService:
                     failure_message="Observation expired before delivery",
                 )
         _, document = self._input(snapshot)
+        context = [
+            ArtifactRef.model_validate(document["effective_prompt"]),
+            *self._failures(snapshot),
+        ]
+        for entry in self.journal.read_operations(
+            principal_id=self.principal_id, workflow_run_id=snapshot.workflow_run_id
+        ):
+            prior = entry.operation
+            if prior.tool_result is None:
+                continue
+            prior_result = self._read_model(prior.tool_result, ToolResultV2)
+            context.extend(prior_result.diagnostics)
+            if prior.skill_ref == "image2env.replay@2.0.0" and prior.status.value == "succeeded":
+                terminal = self._read_model(prior_result.run_state, RunState)
+                context.extend(
+                    r
+                    for r in terminal.artifacts
+                    if r.schema_version == "harness.genesis_scene_execution_receipt.v2"
+                )
+        links = {link.uri: link for link in values["resource_links"]}
+        for ref in context:
+            link = self._link(snapshot.workflow_run_id, ref)
+            links[link.uri] = link
+        values["resource_links"] = tuple(links.values())
         return PreviewServiceResult(
             workflow_id=snapshot.workflow_run_id,
             revision=snapshot.revision,

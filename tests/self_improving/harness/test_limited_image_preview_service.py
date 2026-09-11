@@ -139,8 +139,10 @@ def test_preview_input_resource_reader_rejects_foreign_or_incomplete_roots(input
 
 @pytest.mark.parametrize("expired", [False, True])
 def test_status_recovers_capture_and_remaining_ttl_from_existing_golden_operation(
-    inputs, tmp_path, expired
-):  # noqa: F811
+    inputs,  # noqa: F811
+    tmp_path,
+    expired,
+):
     """External controlled camera output; real Registry, SQLite, CAS and Golden delivery."""
     from datetime import datetime, timedelta, timezone
     from uuid import uuid4
@@ -279,3 +281,7 @@ def test_status_recovers_capture_and_remaining_ttl_from_existing_golden_operatio
     assert (status["ttl_remaining_seconds"] < 0) is expired
     assert status["status"] == ("waiting_input" if expired else "succeeded")
     assert any(item["uri"].endswith(inputs.raw.sha256) for item in status["resource_links"])
+    assert any(
+        item["uri"].endswith(started["source_prompt"]["sha256"])
+        for item in status["resource_links"]
+    )
