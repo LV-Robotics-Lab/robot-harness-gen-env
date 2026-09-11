@@ -289,6 +289,15 @@ def test_check_fails_closed_on_partial_release_directory(bootstrap_plan):
         check_limited_image_preview_bootstrap(path)
 
 
+def test_check_rejects_preexisting_production_library_before_bootstrap(bootstrap_plan):
+    path, _ = bootstrap_plan
+    plan = LimitedImagePreviewBootstrapPlan.model_validate_json(path.read_bytes())
+    plan.library_root.mkdir()
+
+    with pytest.raises(ValueError, match="production library_root must not exist"):
+        check_limited_image_preview_bootstrap(path)
+
+
 def test_execute_checkpoints_exact_imports_before_application_restore(bootstrap_plan):
     path, _ = bootstrap_plan
     plan = LimitedImagePreviewBootstrapPlan.model_validate_json(path.read_bytes())
