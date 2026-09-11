@@ -19,10 +19,13 @@ from pathlib import Path
 
 from .codex_mcp_acceptance import (
     NORMAL_TOOLS,
+    PREVIEW_TOOLS,
     REVISED_TOOLS,
     CodexMCPInvocation,
     inspect_codex_transcript,
     prepare_codex_mcp_invocation,
+    prepare_limited_preview_codex_invocation,
+    preview_observation_consumption_margins,
     verify_transcript_authority,
 )
 
@@ -126,7 +129,15 @@ def run_codex_mcp_invocation(
     ):
         raise TypeError("requires exact invocation and positive integer timeout")
     executable = Path(invocation.argv[0])
-    expected = prepare_codex_mcp_invocation(
+    prepare = (
+        prepare_limited_preview_codex_invocation
+        if invocation.case.startswith("preview_")
+        else prepare_codex_mcp_invocation
+    )
+    image_kwargs = (
+        {"image_path": invocation.image_path} if invocation.case.startswith("preview_") else {}
+    )
+    expected = prepare(
         codex_executable=executable,
         server_python=server_python,
         server_settings=server_settings,
@@ -134,6 +145,7 @@ def run_codex_mcp_invocation(
         model=invocation.model,
         case=invocation.case,
         objective=objective,
+        **image_kwargs,
     )
     if expected != invocation:
         raise ValueError("invocation or frozen server settings changed")
@@ -159,8 +171,16 @@ def run_codex_mcp_invocation(
         str(server_settings),
         str(server_workdir),
         str(output_root),
+        "--server-module",
+        invocation.server_module,
     ]
-    tools = NORMAL_TOOLS if invocation.case == "normal" else REVISED_TOOLS
+    tools = (
+        PREVIEW_TOOLS
+        if invocation.case.startswith("preview_")
+        else NORMAL_TOOLS
+        if invocation.case == "normal"
+        else REVISED_TOOLS
+    )
     argv[config_index] = (
         "mcp_servers={golden={command="
         + json.dumps(str(server_python))
@@ -236,6 +256,7 @@ def run_codex_mcp_invocation(
             "authority": "operator_trusted_local_process_recording",
             "server_settings_sha256": invocation.server_settings_sha256,
             "case": invocation.case,
+            "image_sha256": invocation.image_sha256,
             "transcript_sha256": hashlib.sha256(
                 (output_root / "codex.jsonl").read_bytes()
             ).hexdigest(),
@@ -286,6 +307,42 @@ def verify_codex_process_recording(recording, *, harness, request):
     return result
 
 
+def inspect_preview_process_recording(recording):
+    """Inspect a recorded preview process without asserting service authority.
+
+    The service's durable workflow/package check remains a separate acceptance
+    gate. Neither model prose nor this transport witness grants physical authority.
+    """
+    if type(recording) is not CodexProcessRecording or recording._token is not _TOKEN:
+        raise TypeError("requires fixed-runner process recording")
+    if not recording.case.startswith("preview_"):
+        raise ValueError("requires preview recording")
+    if recording.exit_code != 0 or recording.transport_sha256 is None:
+        raise ValueError("Codex process did not complete a recorded MCP transport")
+    raw = (recording.output_root / "codex.jsonl").read_bytes()
+    wire = (recording.output_root / "transport.jsonl").read_bytes()
+    if (
+        hashlib.sha256(raw).hexdigest() != recording.transcript_sha256
+        or hashlib.sha256(wire).hexdigest() != recording.transport_sha256
+    ):
+        raise ValueError("recorded transcript bytes changed")
+    inspection = inspect_codex_transcript(raw, wire, case=recording.case)
+    result = preview_observation_consumption_margins(inspection)
+    result.update(
+        authority="operator_trusted_local_process_and_preview_transport_consistency_only",
+        actual_codex_execution_certified=False,
+        local_codex_process_observed=True,
+        durable_service_crosscheck_complete=False,
+        wall_elapsed_seconds=recording.elapsed_seconds,
+        model_requested=recording.model,
+        codex_version=recording.version,
+        codex_executable_sha256=recording.executable_sha256,
+        transcript_sha256=inspection.transcript_sha256,
+        transport_sha256=inspection.transport_sha256,
+    )
+    return result
+
+
 def _private_file(path):
     return os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "wb")
 
@@ -294,6 +351,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--relay", nargs=4, metavar=("PYTHON", "SETTINGS", "WORKDIR", "OUTPUT"), required=True
+    )
+    parser.add_argument(
+        "--server-module",
+        default="self_improving.harness.mcp_stdio",
+        choices=(
+            "self_improving.harness.mcp_stdio",
+            "self_improving.harness.limited_image_preview_mcp",
+        ),
     )
     args = parser.parse_args()
     python, settings, workdir, output = map(Path, args.relay)
@@ -311,7 +376,7 @@ def main():
                 str(python),
                 "-B",
                 "-m",
-                "self_improving.harness.mcp_stdio",
+                args.server_module,
                 "--settings",
                 str(settings),
             ],

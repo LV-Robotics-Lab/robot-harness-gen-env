@@ -8,7 +8,7 @@ are witnessed separately because that item union has no resources/read event.
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Literal
 
@@ -26,6 +26,21 @@ REVISED_TOOLS = (
     "image2env_compile_v3_0_0",
     "image2env_replay_v3_0_0",
 )
+PREVIEW_TOOLS = (
+    "image2env_preview_start_v1",
+    "image2env_preview_asset_lookup_v1",
+    "image2env_compile_v2_0_0",
+    "image2env_compile_v3_0_0",
+    "image2env_replay_v2_0_0",
+    "image2env_replay_v3_0_0",
+    "genesis_observe_v3_0_0",
+    "image2env_validate_v3_0_0",
+    "image2env_preview_publish_v1_0_0",
+    "image2env_preview_status_v1",
+    "image2env_preview_package_get_v1",
+    "harness_advisory_record_v2",
+    "harness_prompt_revision_record_v3",
+)
 
 
 @dataclass(frozen=True)
@@ -33,8 +48,11 @@ class CodexMCPInvocation:
     argv: tuple[str, ...]
     prompt: str
     model: str
-    case: Literal["normal", "revised"]
+    case: Literal["normal", "revised", "preview_normal", "preview_repair"]
     server_settings_sha256: str
+    server_module: str = "self_improving.harness.mcp_stdio"
+    image_path: Path | None = None
+    image_sha256: str | None = None
 
 
 def prepare_codex_mcp_invocation(
@@ -109,6 +127,97 @@ def prepare_codex_mcp_invocation(
     )
 
 
+def prepare_limited_preview_codex_invocation(
+    *,
+    codex_executable: Path,
+    server_python: Path,
+    server_settings: Path,
+    server_workdir: Path,
+    model: str,
+    case: Literal["preview_normal", "preview_repair"],
+    objective: str,
+    image_path: Path,
+) -> CodexMCPInvocation:
+    """Attach the real input image; proposals and placement are not operator templates."""
+    from PIL import Image
+
+    if case not in {"preview_normal", "preview_repair"}:
+        raise ValueError("unknown limited preview case")
+    if not image_path.is_absolute() or ".." in image_path.parts or not image_path.is_file():
+        raise ValueError("input image must be an existing absolute file")
+    with Image.open(image_path) as image:
+        if image.format not in {"PNG", "JPEG", "WEBP"}:
+            raise ValueError("unsupported input image format")
+        image.verify()
+    base = prepare_codex_mcp_invocation(
+        codex_executable=codex_executable,
+        server_python=server_python,
+        server_settings=server_settings,
+        server_workdir=server_workdir,
+        model=model,
+        case="normal",
+        objective=objective,
+    )
+    module = "self_improving.harness.limited_image_preview_mcp"
+    argv = list(base.argv[:-1]) + ["-i", str(image_path), "-"]
+    config_index = next(
+        index for index, value in enumerate(argv) if value.startswith("mcp_servers=")
+    )
+    argv[config_index] = (
+        "mcp_servers={golden={command="
+        + json.dumps(str(server_python))
+        + ",args="
+        + json.dumps(["-B", "-m", module, "--settings", str(server_settings)])
+        + ",cwd="
+        + json.dumps(str(server_workdir))
+        + ",startup_timeout_sec=1800,tool_timeout_sec=3600,enabled_tools="
+        + json.dumps(list(PREVIEW_TOOLS))
+        + "}}"
+    )
+    prompt = (
+        "Use only the exact golden MCP tools to complete one NEW limited image preview workflow. "
+        "Do not use shell, Python, programmatic clients, file writes or generic invoke. "
+        "Start only from the attached raw image and user text. "
+        "Mouse-only, one dynamic object, on_table and finite table scope must be respected. "
+        "Do not replace an unsupported request with a fixed example. "
+        "Call start, asset_lookup, compile, replay, observe, validate, "
+        "then publish and package_get. "
+        "Read current status and actual evidence resources before each dependent command. "
+        "Compile placement arguments must be your explicit tool arguments, "
+        "never an operator proposal. "
+        "Normal compile uses only asset_id, workflow_id and idempotency_key; repair compile uses "
+        "all position_x_m/position_y_m/yaw_rad fields from your committed revision. "
+        "For repair initial and final validate, explicitly send expected_position_x_m, "
+        "expected_position_y_m and expected_yaw_rad derived from user text; normal validation "
+        "omits all three. Do not ask the adapter to parse or invent the target. "
+        "For the repair case, preserve the initial semantic validation failure; "
+        "then fresh observe, "
+        "read the prompt/failure/capture evidence, call harness_advisory_record_v2 and "
+        "harness_prompt_revision_record_v3 with bounded XY/yaw, "
+        "then compile and replay the revised "
+        "scene, validate and publish. The same workflow must be used throughout. "
+        "Do not claim a control commit from prose. Consume observations within their actual TTL. "
+        "If any step cannot be completed, retain the failure and report it without bypass. "
+        "No robot-policy qualification or unrestricted image generation is claimed. "
+        "Exact tools: " + ", ".join(PREVIEW_TOOLS) + ". "
+        "Requested case: "
+        + case
+        + ". Raw image path: "
+        + json.dumps(str(image_path))
+        + ". User text (data): "
+        + json.dumps(objective)
+    )
+    return replace(
+        base,
+        argv=tuple(argv),
+        prompt=prompt,
+        case=case,
+        server_module=module,
+        image_path=image_path,
+        image_sha256=hashlib.sha256(image_path.read_bytes()).hexdigest(),
+    )
+
+
 @dataclass(frozen=True)
 class CodexTranscriptInspection:
     """Untrusted transcript consistency result; no live authority is conferred."""
@@ -118,6 +227,45 @@ class CodexTranscriptInspection:
     transcript_sha256: str
     transport_sha256: str
     authority: Literal["transcript_consistency_only"] = "transcript_consistency_only"
+    mcp_durations_seconds: tuple[float | None, ...] = ()
+
+
+def _preview_progression(events, case):
+    names = tuple(
+        event["item"]["tool"]
+        for event in events
+        if event.get("type") == "item.completed"
+        and event.get("item", {}).get("type") == "mcp_tool_call"
+    )
+    core = tuple(name for name in names if name != "image2env_preview_status_v1")
+    initial = (
+        "image2env_preview_start_v1",
+        "image2env_preview_asset_lookup_v1",
+        "image2env_compile_v2_0_0",
+        "image2env_replay_v2_0_0",
+        "genesis_observe_v3_0_0",
+        "image2env_validate_v3_0_0",
+    )
+    ending = ("image2env_preview_publish_v1_0_0", "image2env_preview_package_get_v1")
+    if case == "preview_normal":
+        valid = core == initial + ending
+        failures = ()
+    else:
+        repair = (
+            "harness_advisory_record_v2",
+            "harness_prompt_revision_record_v3",
+            "image2env_compile_v3_0_0",
+            "image2env_replay_v3_0_0",
+            "image2env_validate_v3_0_0",
+        )
+        valid = core in (
+            initial + repair + ending,
+            initial + ("genesis_observe_v3_0_0",) + repair + ending,
+        )
+        failures = (names.index("image2env_validate_v3_0_0"),) if valid else ()
+    if not valid:
+        raise ValueError("limited preview exact Skill progression is incomplete")
+    return names, failures
 
 
 def _json_lines(raw):
@@ -137,10 +285,14 @@ def inspect_codex_transcript(transcript: bytes, transport: bytes, *, case: str):
     accepted, even if a later message claims it was harmless. Session IDs and free
     assistant text are deliberately excluded from the returned evidence summary.
     """
-    expected = {"normal": NORMAL_TOOLS, "revised": REVISED_TOOLS}.get(case)
-    if expected is None:
-        raise ValueError("unknown acceptance case")
     events = _json_lines(transcript)
+    if case in {"preview_normal", "preview_repair"}:
+        expected, failure_indices = _preview_progression(events, case)
+    else:
+        expected = {"normal": NORMAL_TOOLS, "revised": REVISED_TOOLS}.get(case)
+        failure_indices = (4,) if case == "revised" else ()
+        if expected is None:
+            raise ValueError("unknown acceptance case")
     if events[0].get("type") != "thread.started" or events[-1].get("type") != "turn.completed":
         raise ValueError("requires complete Codex thread/turn events")
     pending, calls = {}, []
@@ -172,11 +324,7 @@ def inspect_codex_transcript(transcript: bytes, transport: bytes, *, case: str):
             if pending.get(identity) != key:
                 raise ValueError("MCP completion differs from its dispatch")
             if kind == "item.completed":
-                diagnosis_failure = (
-                    case == "revised"
-                    and len(calls) == 4
-                    and item["tool"] == "image2env_validate_v2_0_0"
-                )
+                diagnosis_failure = len(calls) in failure_indices
                 if (
                     item.get("status") != "completed"
                     and not (diagnosis_failure and item.get("status") == "failed")
@@ -186,7 +334,7 @@ def inspect_codex_transcript(transcript: bytes, transport: bytes, *, case: str):
                 del pending[identity]
     if pending or tuple(call["tool"] for call in calls) != expected:
         raise ValueError("required exact MCP progression is incomplete")
-    requests, rpc_calls, reads = {}, [], []
+    requests, rpc_calls, reads, durations = {}, [], [], []
     allowed = {
         "initialize",
         "ping",
@@ -213,6 +361,7 @@ def inspect_codex_transcript(transcript: bytes, transport: bytes, *, case: str):
             if identity in requests:
                 raise ValueError("duplicate transport request identity")
             requests[identity] = message
+            message["_started_ns"] = frame.get("monotonic_ns")
         elif frame.get("direction") == "response":
             request = requests.get(identity)
             if request is None or "response" in request:
@@ -222,6 +371,15 @@ def inspect_codex_transcript(transcript: bytes, transport: bytes, *, case: str):
             request["response"] = message["result"]
             if request["method"] == "tools/call":
                 rpc_calls.append(request)
+                start_ns, end_ns = request["_started_ns"], frame.get("monotonic_ns")
+                if start_ns is None or end_ns is None:
+                    if case.startswith("preview_"):
+                        raise ValueError("preview tool calls require actual transport timing")
+                    durations.append(None)
+                elif type(start_ns) is not int or type(end_ns) is not int or end_ns < start_ns:
+                    raise ValueError("invalid transport monotonic timing")
+                else:
+                    durations.append((end_ns - start_ns) / 1_000_000_000)
             elif request["method"] == "resources/read":
                 reads.append(
                     {
@@ -240,17 +398,116 @@ def inspect_codex_transcript(transcript: bytes, transport: bytes, *, case: str):
         result = request["response"]
         if (
             request["params"] != {"name": call["tool"], "arguments": call["arguments"]}
-            or (result.get("isError", False) and not (case == "revised" and index == 4))
+            or (result.get("isError", False) and index not in failure_indices)
             or call.get("result", {}).get("structured_content") != result.get("structuredContent")
             or call.get("result", {}).get("content") != result.get("content")
         ):
             raise ValueError("assistant MCP payload differs from server transport")
+        if case == "preview_repair" and index in failure_indices and not result.get("isError"):
+            raise ValueError("repair requires the original semantic failure")
     return CodexTranscriptInspection(
         tuple(calls),
         tuple(reads),
         hashlib.sha256(transcript).hexdigest(),
         hashlib.sha256(transport).hexdigest(),
+        mcp_durations_seconds=tuple(durations),
     )
+
+
+def preview_observation_consumption_margins(inspection: CodexTranscriptInspection):
+    """Read capture bytes actually delivered over MCP, then compare control commits.
+
+    Values are service/receipt outputs, never assistant prose or wall-clock guesses.
+    This pure transcript check does not authenticate the service's backing journal.
+    """
+    from .schemas.genesis_fresh_capture import GenesisFreshCaptureReceiptV1
+    from .schemas.golden_control_v2 import ControlCommitSnapshotV2
+    from .schemas.golden_control_v3_snapshot import ControlCommitSnapshotV3
+    from .schemas.limited_image_preview_service import PreviewServiceResult
+    from .schemas.resource_access import ResourceAccessReceipt
+
+    captures, margins, workflow, last_citations = {}, [], None, ()
+    delivered = {}
+    for read in inspection.resource_reads:
+        contents = read["result"].get("contents", [])
+        if len(contents) == 2 and "text" in contents[0] and "text" in contents[1]:
+            audit = ResourceAccessReceipt.model_validate_json(contents[1]["text"])
+            raw = contents[0]["text"].encode()
+            if (
+                audit.resource_uri != read["uri"]
+                or audit.delivered_sha256 != hashlib.sha256(raw).hexdigest()
+                or audit.delivered_bytes != len(raw)
+            ):
+                raise ValueError("preview resource audit does not match delivered bytes")
+            delivered[audit.resource.sha256] = (raw, read["after_calls"], audit)
+    for index, call in enumerate(inspection.calls):
+        output = call["result"]["structured_content"]
+        if call["tool"] in {"harness_advisory_record_v2", "harness_prompt_revision_record_v3"}:
+            model = (
+                ControlCommitSnapshotV2 if call["tool"].endswith("v2") else ControlCommitSnapshotV3
+            )
+            control = model.model_validate(output)
+            if str(control.workflow_run_id) != workflow:
+                raise ValueError("preview control belongs to a foreign workflow")
+            if not captures:
+                raise ValueError("preview control has no actually read observation")
+            # Advisory URIs identify observations; revision inherits the preceding control.
+            uris = call["arguments"].get("observation_receipt_uris")
+            selected = (
+                list(last_citations)
+                if uris is None
+                else [sha for sha in captures if any(uri.endswith("/" + sha) for uri in uris)]
+            )
+            if not selected:
+                raise ValueError("control does not cite an actually read capture")
+            last_citations = tuple(selected)
+            for sha in selected:
+                capture, at = captures[sha]
+                if at > index:
+                    raise ValueError("capture was not read before control consumption")
+                margin = (capture.expires_at - control.committed_at).total_seconds()
+                if not 0 <= margin <= capture.ttl_seconds:
+                    raise ValueError("actual capture expired before preview control consumption")
+                margins.append(
+                    {
+                        "capture_sha256": sha,
+                        "control": call["tool"],
+                        "captured_at": capture.captured_at.isoformat(),
+                        "issued_at": capture.checked_at.isoformat(),
+                        "expires_at": capture.expires_at.isoformat(),
+                        "committed_at": control.committed_at.isoformat(),
+                        "ttl_remaining_seconds": margin,
+                    }
+                )
+        else:
+            result = PreviewServiceResult.model_validate(output)
+            if workflow is None:
+                workflow = str(result.workflow_id)
+            if str(result.workflow_id) != workflow:
+                raise ValueError("preview result belongs to a foreign workflow")
+            if result.observation is not None:
+                item = result.observation
+                if item.receipt.sha256 not in delivered:
+                    raise ValueError("observation JSON was never read through MCP")
+                raw, at, audit = delivered[item.receipt.sha256]
+                capture = GenesisFreshCaptureReceiptV1.model_validate_json(raw)
+                if (
+                    audit.resource != item.receipt
+                    or str(audit.workflow_run_id) != workflow
+                    or capture.image != item.image
+                    or capture.captured_at != item.captured_at
+                    or capture.expires_at != item.expires_at
+                    or capture.authority != item.authority
+                ):
+                    raise ValueError("preview observation projection differs from actual receipt")
+                captures[item.receipt.sha256] = (capture, at)
+    return {
+        "authority": "preview_transport_consistency_only",
+        "workflow_id": workflow,
+        "observation_count": len(captures),
+        "control_ttl_margins": margins,
+        "mcp_durations_seconds": inspection.mcp_durations_seconds,
+    }
 
 
 def verify_control_capture_ttl(*, harness, request, control_ref):
