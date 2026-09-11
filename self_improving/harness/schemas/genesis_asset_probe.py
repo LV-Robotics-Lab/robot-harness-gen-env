@@ -166,10 +166,17 @@ class GenesisAssetLoadObservationV1(_SelfHashedProbeEvidence):
     loader_closure_sha256: Sha256
     members: tuple[AssetRepresentationMemberV1, ...] = Field(min_length=15, max_length=15)
     member_count: Literal[15]
-    root_link_count: Literal[1]
-    joint_count: Literal[0]
-    collision_shape_count: Literal[8]
-    collision_shape_members: tuple[ShortString, ...] = Field(min_length=8, max_length=8)
+    source_link_count: Literal[1]
+    source_joint_count: Literal[0]
+    loaded_link_count: Literal[1]
+    loaded_joint_count: Annotated[int, Field(strict=True, ge=1, le=8)]
+    loaded_dof_count: Literal[6]
+    source_collision_member_count: Literal[8]
+    source_collision_members: tuple[ShortString, ...] = Field(min_length=8, max_length=8)
+    loaded_collision_shape_count: Annotated[int, Field(strict=True, ge=1, le=256)]
+    loaded_collision_shapes_merged: bool = Field(strict=True)
+    loaded_collision_vertex_count: Annotated[int, Field(strict=True, ge=1)]
+    loaded_collision_face_count: Annotated[int, Field(strict=True, ge=1)]
     dynamic: Literal[True]
     fixed: Literal[False]
     mass_kg: PositiveFiniteFloat
@@ -192,7 +199,7 @@ class GenesisAssetLoadObservationV1(_SelfHashedProbeEvidence):
             root_logical_path=self.root_logical_path,
             loader_closure_sha256=self.loader_closure_sha256,
             members=self.members,
-            collision_shape_members=self.collision_shape_members,
+            source_collision_members=self.source_collision_members,
         )
         expected_translation_z = self.release_height_m - self.loaded_collision_min_z_m
         if self.test_translation_m[:2] != (0.0, 0.0) or not math.isclose(
@@ -229,10 +236,17 @@ class GenesisAssetLoadEvidenceV1(_SelfHashedProbeEvidence):
     loader_closure_sha256: Sha256
     members: tuple[AssetRepresentationMemberV1, ...] = Field(min_length=15, max_length=15)
     member_count: Literal[15]
-    root_link_count: Literal[1]
-    joint_count: Literal[0]
-    collision_shape_count: Literal[8]
-    collision_shape_members: tuple[ShortString, ...] = Field(min_length=8, max_length=8)
+    source_link_count: Literal[1]
+    source_joint_count: Literal[0]
+    loaded_link_count: Literal[1]
+    loaded_joint_count: Annotated[int, Field(strict=True, ge=1, le=8)]
+    loaded_dof_count: Literal[6]
+    source_collision_member_count: Literal[8]
+    source_collision_members: tuple[ShortString, ...] = Field(min_length=8, max_length=8)
+    loaded_collision_shape_count: Annotated[int, Field(strict=True, ge=1, le=256)]
+    loaded_collision_shapes_merged: bool = Field(strict=True)
+    loaded_collision_vertex_count: Annotated[int, Field(strict=True, ge=1)]
+    loaded_collision_face_count: Annotated[int, Field(strict=True, ge=1)]
     dynamic: Literal[True]
     fixed: Literal[False]
     mass_kg: PositiveFiniteFloat
@@ -248,7 +262,7 @@ class GenesisAssetLoadEvidenceV1(_SelfHashedProbeEvidence):
             root_logical_path=self.root_logical_path,
             loader_closure_sha256=self.loader_closure_sha256,
             members=self.members,
-            collision_shape_members=self.collision_shape_members,
+            source_collision_members=self.source_collision_members,
         )
         return self
 
@@ -398,7 +412,7 @@ def _verify_loader_identity(
     root_logical_path: str,
     loader_closure_sha256: str,
     members: tuple[AssetRepresentationMemberV1, ...],
-    collision_shape_members: tuple[str, ...],
+    source_collision_members: tuple[str, ...],
 ) -> None:
     paths = tuple(member.logical_path for member in members)
     if paths != tuple(sorted(set(paths))):
@@ -406,10 +420,10 @@ def _verify_loader_identity(
     if root_logical_path not in paths:
         raise ValueError("root_logical_path must be a member")
     if sum(member.role == "collision" for member in members) != 8:
-        raise ValueError("collision_shape_count must match collision members")
+        raise ValueError("source collision member count must be exactly eight")
     collision_paths = tuple(member.logical_path for member in members if member.role == "collision")
-    if collision_shape_members != collision_paths:
-        raise ValueError("collision_shape_members must match loaded collision members")
+    if source_collision_members != collision_paths:
+        raise ValueError("source_collision_members must match representation collision members")
     if source_record_sha256 != subject.source_record_sha256:
         raise ValueError("source_record_sha256 must match subject source_record_sha256")
     if loader_closure_sha256 != asset_loader_closure_sha256(

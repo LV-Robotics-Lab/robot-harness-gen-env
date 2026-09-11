@@ -261,14 +261,20 @@ class ControlledCpuGenesisBackend:
         assert request.root_path.read_bytes() == b"audited-mouse-member:urdf/mouse.urdf\n"
         return GenesisAssetBackendLoad(
             source="urdf",
-            root_link_count=1,
-            joint_count=0,
-            collision_shape_count=8,
-            collision_shape_members=tuple(
+            source_link_count=1,
+            source_joint_count=0,
+            loaded_link_count=1,
+            loaded_joint_count=1,
+            loaded_dof_count=6,
+            source_collision_members=tuple(
                 member.logical_path
                 for member in request.representation.members
                 if member.role == "collision"
             ),
+            loaded_collision_shape_count=1,
+            loaded_collision_shapes_merged=True,
+            loaded_collision_vertex_count=502,
+            loaded_collision_face_count=1000,
             dynamic=True,
             fixed=False,
             mass_kg=0.07,

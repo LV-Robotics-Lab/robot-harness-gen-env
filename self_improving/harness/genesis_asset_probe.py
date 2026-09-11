@@ -76,10 +76,16 @@ class GenesisAssetBackendStep:
 @dataclass(frozen=True, slots=True)
 class GenesisAssetBackendLoad:
     source: str
-    root_link_count: int
-    joint_count: int
-    collision_shape_count: int
-    collision_shape_members: tuple[str, ...]
+    source_link_count: int
+    source_joint_count: int
+    loaded_link_count: int
+    loaded_joint_count: int
+    loaded_dof_count: int
+    source_collision_members: tuple[str, ...]
+    loaded_collision_shape_count: int
+    loaded_collision_shapes_merged: bool
+    loaded_collision_vertex_count: int
+    loaded_collision_face_count: int
     dynamic: bool
     fixed: bool
     mass_kg: float
@@ -465,7 +471,7 @@ def _verify_cross_layer(
         or load_observation.source_record_sha256 != representation.subject.source_record_sha256
         or load_observation.root_logical_path != representation.root_logical_path
         or load_observation.loader_closure_sha256 != representation.loader_closure_sha256
-        or load_observation.collision_shape_members != representation.collision_member_paths
+        or load_observation.source_collision_members != representation.collision_member_paths
     ):
         _mismatch("raw load observation differs from representation or runtime authority")
     expected_load = _build_load_evidence(load_observation, artifacts.load_observation_ref)
@@ -527,10 +533,17 @@ def _build_load_observation(
             "loader_closure_sha256": representation.loader_closure_sha256,
             "members": representation.members,
             "member_count": 15,
-            "root_link_count": load.root_link_count,
-            "joint_count": load.joint_count,
-            "collision_shape_count": load.collision_shape_count,
-            "collision_shape_members": load.collision_shape_members,
+            "source_link_count": load.source_link_count,
+            "source_joint_count": load.source_joint_count,
+            "loaded_link_count": load.loaded_link_count,
+            "loaded_joint_count": load.loaded_joint_count,
+            "loaded_dof_count": load.loaded_dof_count,
+            "source_collision_member_count": 8,
+            "source_collision_members": load.source_collision_members,
+            "loaded_collision_shape_count": load.loaded_collision_shape_count,
+            "loaded_collision_shapes_merged": load.loaded_collision_shapes_merged,
+            "loaded_collision_vertex_count": load.loaded_collision_vertex_count,
+            "loaded_collision_face_count": load.loaded_collision_face_count,
             "dynamic": load.dynamic,
             "fixed": load.fixed,
             "mass_kg": load.mass_kg,
@@ -760,10 +773,20 @@ def _verify_backend_load(
     expected_collisions = representation.collision_member_paths
     if (
         load.source != "urdf"
-        or load.root_link_count != 1
-        or load.joint_count != 0
-        or load.collision_shape_count != 8
-        or load.collision_shape_members != expected_collisions
+        or load.source_link_count != 1
+        or load.source_joint_count != 0
+        or load.loaded_link_count != 1
+        or type(load.loaded_joint_count) is not int
+        or load.loaded_joint_count <= 0
+        or load.loaded_dof_count != 6
+        or load.source_collision_members != expected_collisions
+        or type(load.loaded_collision_shape_count) is not int
+        or load.loaded_collision_shape_count <= 0
+        or type(load.loaded_collision_shapes_merged) is not bool
+        or type(load.loaded_collision_vertex_count) is not int
+        or load.loaded_collision_vertex_count <= 0
+        or type(load.loaded_collision_face_count) is not int
+        or load.loaded_collision_face_count <= 0
         or load.dynamic is not True
         or load.fixed is not False
     ):

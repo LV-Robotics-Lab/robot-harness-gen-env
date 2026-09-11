@@ -382,22 +382,6 @@
       "title": "Backend Version",
       "type": "string"
     },
-    "collision_shape_count": {
-      "const": 8,
-      "title": "Collision Shape Count",
-      "type": "integer"
-    },
-    "collision_shape_members": {
-      "items": {
-        "maxLength": 255,
-        "minLength": 1,
-        "type": "string"
-      },
-      "maxItems": 8,
-      "minItems": 8,
-      "title": "Collision Shape Members",
-      "type": "array"
-    },
     "dynamic": {
       "const": true,
       "title": "Dynamic",
@@ -416,11 +400,6 @@
     "inertia_kg_m2": {
       "$ref": "#/$defs/GenesisInertiaTensorV1"
     },
-    "joint_count": {
-      "const": 0,
-      "title": "Joint Count",
-      "type": "integer"
-    },
     "load_evidence_sha256": {
       "pattern": "^[0-9a-f]{64}$",
       "title": "Load Evidence Sha256",
@@ -433,6 +412,42 @@
       "const": true,
       "title": "Loaded",
       "type": "boolean"
+    },
+    "loaded_collision_face_count": {
+      "minimum": 1,
+      "title": "Loaded Collision Face Count",
+      "type": "integer"
+    },
+    "loaded_collision_shape_count": {
+      "maximum": 256,
+      "minimum": 1,
+      "title": "Loaded Collision Shape Count",
+      "type": "integer"
+    },
+    "loaded_collision_shapes_merged": {
+      "title": "Loaded Collision Shapes Merged",
+      "type": "boolean"
+    },
+    "loaded_collision_vertex_count": {
+      "minimum": 1,
+      "title": "Loaded Collision Vertex Count",
+      "type": "integer"
+    },
+    "loaded_dof_count": {
+      "const": 6,
+      "title": "Loaded Dof Count",
+      "type": "integer"
+    },
+    "loaded_joint_count": {
+      "maximum": 8,
+      "minimum": 1,
+      "title": "Loaded Joint Count",
+      "type": "integer"
+    },
+    "loaded_link_count": {
+      "const": 1,
+      "title": "Loaded Link Count",
+      "type": "integer"
     },
     "loader_closure_sha256": {
       "pattern": "^[0-9a-f]{64}$",
@@ -479,11 +494,6 @@
       "title": "Requested Profile",
       "type": "string"
     },
-    "root_link_count": {
-      "const": 1,
-      "title": "Root Link Count",
-      "type": "integer"
-    },
     "root_logical_path": {
       "maxLength": 255,
       "minLength": 1,
@@ -497,6 +507,32 @@
       "const": "harness.genesis_asset_load_evidence.v1",
       "title": "Schema Version",
       "type": "string"
+    },
+    "source_collision_member_count": {
+      "const": 8,
+      "title": "Source Collision Member Count",
+      "type": "integer"
+    },
+    "source_collision_members": {
+      "items": {
+        "maxLength": 255,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 8,
+      "minItems": 8,
+      "title": "Source Collision Members",
+      "type": "array"
+    },
+    "source_joint_count": {
+      "const": 0,
+      "title": "Source Joint Count",
+      "type": "integer"
+    },
+    "source_link_count": {
+      "const": 1,
+      "title": "Source Link Count",
+      "type": "integer"
     },
     "source_record_sha256": {
       "pattern": "^[0-9a-f]{64}$",
@@ -526,10 +562,17 @@
     "loader_closure_sha256",
     "members",
     "member_count",
-    "root_link_count",
-    "joint_count",
-    "collision_shape_count",
-    "collision_shape_members",
+    "source_link_count",
+    "source_joint_count",
+    "loaded_link_count",
+    "loaded_joint_count",
+    "loaded_dof_count",
+    "source_collision_member_count",
+    "source_collision_members",
+    "loaded_collision_shape_count",
+    "loaded_collision_shapes_merged",
+    "loaded_collision_vertex_count",
+    "loaded_collision_face_count",
     "dynamic",
     "fixed",
     "mass_kg",

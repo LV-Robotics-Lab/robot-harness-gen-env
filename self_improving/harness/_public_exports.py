@@ -82,6 +82,13 @@ _EXPORT_GROUPS = (
         ),
     ),
     (
+        ".genesis_cpu_backend",
+        (
+            "GenesisCpuAssetProbeBackend",
+            "GenesisCpuBackendUnavailableError",
+        ),
+    ),
+    (
         ".golden_execution",
         (
             "GoldenExecutionBinding",
@@ -472,6 +479,8 @@ _PUBLIC_NAMES = (
     "GenesisAssetProbeInputV1",
     "GenesisAssetProbeReportV1",
     "VerifiedGenesisAssetProbeEvidence",
+    "GenesisCpuAssetProbeBackend",
+    "GenesisCpuBackendUnavailableError",
     "GenesisAssetQualificationV1",
     "GenesisRuntimeLockV1",
     "HandlerResult",

@@ -187,12 +187,19 @@ def documents() -> dict[str, Any]:
             "loader_closure_sha256": loader_closure_sha256,
             "members": members,
             "member_count": 15,
-            "root_link_count": 1,
-            "joint_count": 0,
-            "collision_shape_count": 8,
-            "collision_shape_members": tuple(
+            "source_link_count": 1,
+            "source_joint_count": 0,
+            "loaded_link_count": 1,
+            "loaded_joint_count": 1,
+            "loaded_dof_count": 6,
+            "source_collision_member_count": 8,
+            "source_collision_members": tuple(
                 item["logical_path"] for item in members if item["role"] == "collision"
             ),
+            "loaded_collision_shape_count": 1,
+            "loaded_collision_shapes_merged": True,
+            "loaded_collision_vertex_count": 502,
+            "loaded_collision_face_count": 1000,
             "dynamic": True,
             "fixed": False,
             "mass_kg": 0.07,
@@ -432,9 +439,14 @@ def test_load_evidence_binds_complete_mouse_loader_and_physical_properties(
     load = documents["load"]
     values = load.model_dump(mode="json")
     assert values["member_count"] == len(values["members"]) == 15
-    assert values["root_link_count"] == 1
-    assert values["joint_count"] == 0
-    assert values["collision_shape_count"] == 8
+    assert values["source_link_count"] == 1
+    assert values["source_joint_count"] == 0
+    assert values["loaded_link_count"] == 1
+    assert values["loaded_joint_count"] == 1
+    assert values["loaded_dof_count"] == 6
+    assert values["source_collision_member_count"] == 8
+    assert values["loaded_collision_shape_count"] == 1
+    assert values["loaded_collision_shapes_merged"] is True
     assert sum(item["role"] == "collision" for item in values["members"]) == 8
     assert values["dynamic"] is True and values["fixed"] is False
     assert values["mass_kg"] == 0.07
@@ -447,7 +459,7 @@ def test_load_evidence_binds_complete_mouse_loader_and_physical_properties(
 
     for field, replacement, message in (
         ("member_count", 14, "member_count"),
-        ("collision_shape_count", 7, "collision_shape_count"),
+        ("source_collision_member_count", 7, "source_collision_member_count"),
         ("dynamic", False, "dynamic"),
         ("fixed", True, "fixed"),
         ("source_record_sha256", "f" * 64, "source_record"),
@@ -459,8 +471,8 @@ def test_load_evidence_binds_complete_mouse_loader_and_physical_properties(
         with pytest.raises(ValidationError, match=message):
             _rehash(type(load), changed)
     for field, replacement in (
-        ("root_link_count", -1),
-        ("joint_count", -1),
+        ("loaded_link_count", -1),
+        ("loaded_joint_count", 0),
         ("mass_kg", 0.0),
         ("friction", -0.1),
     ):
@@ -479,7 +491,7 @@ def test_load_evidence_binds_complete_mouse_loader_and_physical_properties(
     changed = json.loads(json.dumps(values))
     collision = next(item for item in changed["members"] if item["role"] == "collision")
     collision["role"] = "visual"
-    with pytest.raises(ValidationError, match="collision_shape_count"):
+    with pytest.raises(ValidationError, match="source collision member count"):
         _rehash(type(load), changed)
     changed = json.loads(json.dumps(values))
     changed["inertia_kg_m2"]["ixx"] = -1.0
