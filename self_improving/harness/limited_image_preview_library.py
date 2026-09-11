@@ -19,6 +19,7 @@ from .artifacts import ArtifactResolutionError, LocalArtifactStore
 from .limited_image_preview_execution import validate_preview_receipt
 from .revised_image_compiler import RevisedImage2EnvGenesisCompiler
 from .schemas.common import ArtifactRef
+from .schemas.genesis_fresh_capture import GenesisFreshCaptureReceiptV1
 from .schemas.genesis_runtime_manifest import GenesisRuntimeManifestV1
 from .schemas.genesis_scene_execution_v2 import (
     GenesisSceneExecutionReceiptV2,
@@ -467,10 +468,21 @@ def _verify_stage(
         (stage.compile_receipt, "compile receipt"),
         (stage.replay_receipt, "replay receipt"),
         (stage.replay, "replay evidence"),
-        (stage.fresh_observation, "fresh observation"),
         (stage.workflow_head, "workflow head"),
     ):
         _read_json(store, ref, label)
+    if stage.fresh_observation is not None:
+        observation = _read_model(
+            store,
+            stage.fresh_observation,
+            GenesisFreshCaptureReceiptV1,
+            "fresh observation",
+        )
+        if observation.replay_receipt != stage.replay_receipt:
+            raise LimitedImagePreviewLibraryError(
+                "observation_binding_mismatch",
+                "fresh observation belongs to another native replay receipt",
+            )
     runtime = _read_model(
         store,
         stage.runtime_manifest,
@@ -900,6 +912,18 @@ def _materialized_members(
         members.extend((prefix / name, ref) for name, ref in stage_members)
         if stage.fresh_observation is not None:
             members.append((prefix / "fresh-observation.json", stage.fresh_observation))
+            observation = _read_model(
+                store,
+                stage.fresh_observation,
+                GenesisFreshCaptureReceiptV1,
+                "fresh observation",
+            )
+            observation_suffix = {
+                "image/png": ".png",
+                "image/jpeg": ".jpg",
+                "image/webp": ".webp",
+            }.get(observation.image.media_type, ".image")
+            members.append((prefix / f"observation{observation_suffix}", observation.image))
         if stage.prompt_revision is not None:
             members.append((prefix / "prompt-revision.json", stage.prompt_revision))
     paths = tuple(relative.as_posix() for relative, _ in members)
