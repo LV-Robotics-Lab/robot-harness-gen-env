@@ -6,6 +6,8 @@
 
 ## 文件地图
 
+- `SIM_READY_RELEASE_PLAN.md`：最新分阶段交付计划（待批准）；先开放sim-ready服务并暂停，P8/E3后置。
+
 - `TASKS.md`：阶段验收清单。
 - `TODO.md`：当前 doing/next/blocked/done。
 - `DECISIONS.md`：已经接受的稳定架构决定。

@@ -1,5 +1,14 @@
 # 稳定决策
 
+## 本阶段优先级调整 — sim-ready服务先交付，policy后置
+
+- 状态：用户已确认顺序；详细任务计划待批准。
+- 顺序：完整Genesis环境线→Codex同workflow闭环→三模态/三资产路径→入库/历史债务→系统验收、
+  仓库整理与开放服务→暂停；P8/E3机器人联调留待其他项目组参与后重新启动。
+- 第一阶段不再以前述`genesis.robot_policy@1`作为交付阻断；旧E3/E4与历史证据保持原义，不把E2
+  环境服务冒称旧E4。正式新验收/benchmark与promotion profile合同将在计划批准后同步。
+- 详细计划：[SIM_READY_RELEASE_PLAN.md](SIM_READY_RELEASE_PLAN.md)。
+
 ## D001 — Codex 是认知中枢与视觉判读者
 
 - 日期：2026-09-09
