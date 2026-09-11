@@ -282,6 +282,8 @@ class LimitedImagePreviewService:
             ):
                 return self._published(snapshot, entries[-1].operation, "status")
             result = self._stage(entries[-1].operation, "status")
+            asset = self._compiled_asset(snapshot, entries)
+            result["asset"] = None if asset is None else asset.model_dump(mode="json")
             if snapshot.receipt_head.schema_version in {
                 "harness.external_agent_advisory_receipt.v2",
                 "harness.prompt_revision.v3",
@@ -303,6 +305,37 @@ class LimitedImagePreviewService:
                 return PreviewServiceResult.model_validate(result).model_dump(mode="json")
             return result
         return self._projection(snapshot, "status")
+
+    def _compiled_asset(self, snapshot, entries):
+        initial = [
+            entry.operation
+            for entry in entries
+            if entry.operation.skill_ref == "image2env.compile@2.0.0"
+            and entry.operation.status.value == "succeeded"
+        ]
+        if not initial:
+            return None
+        if len(initial) != 1:
+            raise ValueError("status requires this workflow's unique original compile")
+        input_ref, _ = self._input(snapshot)
+        lookup_ref = self.inputs.lookup(workflow_id=snapshot.workflow_run_id, input_ref=input_ref)
+        selected = json.loads(self.store.resolve(lookup_ref).path.read_bytes())
+        expected_ref = self.inputs.build_initial(
+            workflow_id=snapshot.workflow_run_id,
+            input_ref=input_ref,
+            lookup_ref=lookup_ref,
+            asset_id=selected["asset_id"],
+        )
+        expected = self._read_model(expected_ref, Image2EnvGenesisCompileRequestV1)
+        command = self._read_model(initial[0].command, RunCommandRequest)
+        if Image2EnvGenesisCompileRequestV1.model_validate(command.parameters) != expected:
+            raise ValueError("status compile differs from the original selected asset input")
+        return PreviewAsset(
+            asset_id=selected["asset_id"],
+            label="mouse",
+            representation=selected["representation"],
+            qualification=selected["qualification"],
+        )
 
     def _published(self, snapshot, operation, stage):
         from .schemas.limited_image_preview import LimitedImagePreviewManifestV1

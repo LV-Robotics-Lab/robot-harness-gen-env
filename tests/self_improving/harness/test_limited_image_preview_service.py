@@ -161,8 +161,8 @@ def test_restarted_status_restores_asset_after_successful_initial_compile(inputs
         verify_typed_qualification_admission,
     )
     from tests.self_improving.harness.test_native_skill_projection import (
-        _ControlledV1NativeApplication,
         _admission,
+        _ControlledV1NativeApplication,
         _native_image_binding,
         _put_model,
     )
@@ -188,12 +188,12 @@ def test_restarted_status_restores_asset_after_successful_initial_compile(inputs
     admission = verify_typed_qualification_admission(
         artifact_store=inputs.store, admission=issued.admission
     )
-    candidate = Image2EnvGenesisCompileReceiptV1.model_validate(
+    compiled_receipt = Image2EnvGenesisCompileReceiptV1.model_validate(
         admission.admission.candidate_intents[0].run_state.output
     )
     output = Image2EnvGenesisCompileReceiptV1.model_validate(
         {
-            **candidate.model_dump(mode="json"),
+            **compiled_receipt.model_dump(mode="json"),
             "request": request_ref.model_dump(mode="json"),
             "qualification": selected["qualification"],
             "source_object_id": "mouse_001",

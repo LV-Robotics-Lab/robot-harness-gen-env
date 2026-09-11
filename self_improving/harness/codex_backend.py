@@ -443,6 +443,8 @@ class CodexBackend:
             "harness_prompt_revision_record_v3; never reuse them or rely on session memory. "
             "Only after those reads call harness_prompt_revision_record_v3. "
             "Revised progress is compile3, replay3, validate3 against that same explicit target. "
+            "For revised compile, take the exact asset_id from the current status asset field; "
+            "never guess or reconstruct an asset identifier. "
             "Only take actions allowed by this assignment; stop at a phase boundary. "
             "The Harness handles publication after your turn; do not publish or fetch a package. "
             'End with exactly one JSON object: {"workflow_id":"the assigned UUID",'
