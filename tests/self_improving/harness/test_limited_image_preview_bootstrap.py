@@ -13,9 +13,13 @@ from pydantic import ValidationError
 from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.limited_image_preview_bootstrap import (
     LimitedImagePreviewBootstrapPlan,
+    _publish_candidate,
     bootstrap_limited_image_preview,
     check_limited_image_preview_bootstrap,
     run_cli,
+)
+from tests.self_improving.harness.test_limited_image_preview_library_saved_m1 import (  # noqa: F401
+    saved_m1_preview,
 )
 
 
@@ -296,6 +300,47 @@ def test_check_rejects_preexisting_production_library_before_bootstrap(bootstrap
 
     with pytest.raises(ValueError, match="production library_root must not exist"):
         check_limited_image_preview_bootstrap(path)
+
+
+def test_publish_candidate_accepts_manifest_ref_from_real_qualification_library(
+    saved_m1_preview, tmp_path
+):
+    """Regression for the formal bootstrap failure after a successful library write."""
+    from self_improving.harness.genesis_scene_execution_v3 import GenesisSceneExecutionProducerV3
+    from self_improving.harness.limited_image_preview_application import (
+        LimitedImagePreviewApplication,
+    )
+    from self_improving.harness.limited_image_preview_library import (
+        create_limited_image_preview_library,
+    )
+    from self_improving.harness.revised_image_compile_application import (
+        RevisedImageCompileApplication,
+    )
+
+    _, store, compiler, verified = saved_m1_preview
+    library = create_limited_image_preview_library(
+        artifact_store=store,
+        compiler=compiler,
+        root=tmp_path / "qualification-library",
+        project_id=verified.manifest.project_id,
+    )
+    revised = RevisedImageCompileApplication(tmp_path / "revised", compiler)
+    shared = LimitedImagePreviewApplication(
+        tmp_path / "shared",
+        revised,
+        GenesisSceneExecutionProducerV3(
+            store, compiler, verified.manifest.initial_stage.runtime_manifest
+        ),
+        roots={},
+        library=library,
+    )
+    candidate = shared.evaluate("image2env.preview_publish@1.0.0", verified.manifest)
+    assert candidate.state.status.value == "succeeded"
+
+    assert (
+        _publish_candidate(shared, verified.manifest, saved_run_id=candidate.state.run_id)
+        == candidate.state.run_id
+    )
 
 
 def test_execute_checkpoints_exact_imports_before_application_restore(bootstrap_plan):
