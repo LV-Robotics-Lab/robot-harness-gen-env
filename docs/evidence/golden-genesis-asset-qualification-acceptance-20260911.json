@@ -1,0 +1,74 @@
+{
+  "schema_version": "harness.golden_genesis_asset_qualification_acceptance.v1",
+  "fixed_commit": "5f78e6267b0c21167a1ab743bbeda945ce80735d",
+  "scope": "durable_single_asset_qualification",
+  "issuer_sha256": "b0da423a3f9dc304b0adac98d81cf1c0f9c1cd0c80df3c0f9dfde9ab06c07ef2",
+  "issuer_fixed_source_and_cas_bytes_match": true,
+  "qualification": {
+    "sha256": "2800480e74027a963190bd32c7c986bcd790ec53ac600f2b11842996084e34f2",
+    "bytes": 8694,
+    "status": "pass",
+    "qualified": true,
+    "checks": [
+      {"code": "backend_load", "evidence_members": 10},
+      {"code": "collision_probe", "evidence_members": 13}
+    ],
+    "checks_bind_issuer_manifest_request_execution_observation_representation_runtime_input_and_load": true,
+    "collision_check_adds_exact_rows_trace_report": true,
+    "qualification_written_after_all_check_evidence": true,
+    "qualification_is_last_source_cas_object_at_review": true
+  },
+  "real_execution_and_recovery": {
+    "formal_log_sha256": "f317758e92869220bfb8d1d04b8a51561aeb7915822f81e3e695187af15ecc5b",
+    "formal_result": "3 passed in 865.35s",
+    "direct_invoke_uuid": "78eb9832-8697-449a-b3cb-9034143cea99",
+    "executed_restart_uuid": "bbd31ac0-a453-4d9a-b154-e0560504757b",
+    "direct_summary_sha256": "9c6b69f85cb1636f63c36d0eca420c837231100fffefe80d20b86437d173e8dd",
+    "executed_summary_sha256": "1a748fbca10300bbc7e959c5d43e633984b045466e8050163dcd22fe3d4eb07b",
+    "fresh_execute_persisted_without_qualification": true,
+    "new_application_finished_trusted_executed_journal_with_empty_roots": true,
+    "qualified_retry_with_empty_roots_returned_same_ref": true,
+    "both_real_runs_produced_same_qualification": true
+  },
+  "independent_pure_read_acceptance": {
+    "source_direct_run_read_pass": true,
+    "second_cas_trusted_sqlite_executed_run_read_pass": true,
+    "genesis_import_available": false,
+    "genesis_reexecuted": false,
+    "sqlite_bytes_unchanged_on_both_reads": true,
+    "sqlite_rows_each": 2,
+    "sqlite_record_digests_verified": true,
+    "all_check_artifact_bytes_recomputed": true,
+    "second_relocation_summary_sha256": "c517901d1d4ae9f37ee3059e18ba673dfbfa29bd5b32ee239ad82d2e2ca31c5d"
+  },
+  "refusal_evidence": {
+    "pending_retry_no_execution": "offline public application tests and fixed implementation",
+    "same_uuid_different_input_rejected": "offline public application tests and fixed implementation",
+    "real_terminal_reference_drift": "trusted SQLite copied; qualification ref name changed with record digest recomputed; read rejected qualification terminal differs",
+    "physical_terminal_cas_byte_corruption_in_real_qualification": "isolated negative snapshot was refused by the SHA-256 gate; source qualification retained original bytes and a distinct inode",
+    "physical_cas_negative_result": "1 passed in 21.54s",
+    "physical_cas_negative_log_sha256": "0d5b48ad4934cf9db1323d5cd039a8fdaf0f0e44fc0ec78ee26ec7ea0ec99fde",
+    "physical_cas_negative_identity_sha256": "f8336c8a4b076b368b8674bd4327b2212e0e8900a3f8621affffa438249603d3",
+    "initial_negative_test_failure": "expected byte-count error text, but SHA-256 validation rejected earlier; only assertion text corrected",
+    "failed_diagnostic_cas_corruption": "offline public application tests"
+  },
+  "concurrent_recovery_evidence": {
+    "summary_sha256": "3b25efb7eb52a6b9d556c1cf23c789a512a72ef94bdbec5a158ba7dd6682b413",
+    "run_id": "f5b658f7-83eb-4711-83db-e70fb66d9955",
+    "raw_executed_checkpoint_independently_read": true,
+    "checkpoint_record_digest_valid": true,
+    "checkpoint_has_execution_and_no_qualification": true,
+    "outcome": "one caller publishes qualification; the other rejects changed execution journal; terminal retry returns same qualification",
+    "fresh_genesis_was_not_reexecuted_for_recovery": true,
+    "evidence_source": "runtime_lock formal execution and concurrent recovery test; no extra simulator run by reviewer"
+  },
+  "limits": {
+    "registry_or_mcp_registration_accepted": false,
+    "environment_compile_replay_or_policy_proven": false,
+    "promotion_proven": false,
+    "media_output_proven": false,
+    "complete_new_core_statement_and_branch_100_percent_claimed": false,
+    "cas_only_evidence_without_trusted_journal_grants_qualification": false,
+    "local_cas_mtimes_are_portable_execution_timestamps": false
+  }
+}

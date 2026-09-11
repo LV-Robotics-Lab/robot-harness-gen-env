@@ -99,8 +99,8 @@ Genesis asset probe 现已增加 raw load observation 与逐行 contact schema�
 最大穿透 0.487 mm 与末态 settling 已由 deep verifier 重算，并在第二绝对 CAS 路径不依赖 Genesis/source
 root 严格复验。证据见
 [`docs/evidence/golden-genesis-cpu-asset-probe-20260911.md`](../../docs/evidence/golden-genesis-cpu-asset-probe-20260911.md)。
-当前仍没有 production issuer/资格：runtime lock 尚未封住 Python/Torch/Quadrants/native 完整依赖闭包，
-因此不能加入 production Registry/MCP。
+该93-schema阶段尚没有production issuer/资格；后续运行封闭和单资产签发结果如下。资产资格仍不能
+直接替代production Registry/MCP的Skill资格。
 runtime manifest 前置已把声明根的完整字节写入 CAS，并提供纯读与显式部署重验三方法；其阶段有94份
 公共 schema。它的 `declared_byte_closure_only` 不证明实际运行进程只使用这些根。
 固定`3662ba6`已真实capture166,141成员/8.54GB声明内容，并在第二独立绝对路径/CAS的新进程全量
@@ -109,8 +109,10 @@ runtime manifest 前置已把声明根的完整字节写入 CAS，并提供纯�
 实际运行入口与probe回执显式绑定，不能把两次各自通过的执行拼成尚不存在的资格链。
 固定`fd50576`新增受约束CPU launcher与execution request/observation/receipt，当前97份schemas。
 正式Producer已在两套独立部署完成1,000steps及strict reload，固定提交集中功能验收通过；
-launcher/child覆盖目标仍在收口。durable qualification application正在运行真实签发/重启用例，
-当前尚未宣称资产资格通过。证据见
+launcher/child覆盖目标仍有明确缺口。固定`5f78e62`的durable qualification application已通过真实
+签发/重启/幂等及executed恢复三项formal（865.35s），第二CAS/SQLite无Genesis纯读通过；独立
+集中验收通过，真实并发恢复与CAS坏字节拒绝也通过。证据见
+[`单资产资格`](../../docs/evidence/golden-genesis-asset-qualification-20260911.md)与
 [`runtime execution`](../../docs/evidence/golden-runtime-execution-20260911.md)。公共合同见
 [`固定 CPU execution`](../harness/GENESIS_RUNTIME_EXECUTION_CONTRACT.md)。
 P6 继续修复资产 staging；autoresearch 只在其

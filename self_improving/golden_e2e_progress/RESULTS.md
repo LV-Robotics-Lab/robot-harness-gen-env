@@ -1,11 +1,27 @@
 # 进度与结果
 
+## 2026-09-11 固定归档完整测试
+
+- 固定`5f78e6267b0c21167a1ab743bbeda945ce80735d`归档完整pytest：2 failed、4,297 passed、26 skipped，
+  263.73s。失败是`test_genesis_asset_probe_schemas.py:619`与`test_x2env_compile_receipt_v2.py:301`
+  两处过时93-schema总数断言；实际97份snapshot独立check通过，非依赖环境问题。
+- 原始日志保留于`/home/jingxiang/bingsheng/golden-full-suite-5f78e62-20260911.Ezoby6/pytest.log`。
+  两断言已修正为97，两个focused文件14 passed/0.69s；97schemas、Ruff/format/diff通过。
+  没有重跑整套，不把原始完整运行改记为全绿。原始log SHA256
+  `6f01fc40d2fa70c50a8ed7c85b0f77198c0eb7ff570989ba47a63d8381f4a894`。
+
 ## 2026-09-11 Durable asset qualification TDD
+
+- 固定提交独立资格验收通过：两精确checks各10/13项evidence，issuer固定、qualification-last，
+  第二CAS/可信SQLite无Genesis纯读61.60s，真实qualified CAS坏字节拒绝（修正后纯读1pass/21.54s）。
+  另一次真实execute保留断点后并发恢复通过：一方签发、一方拒绝journal已变化，重试同ref。
+  该收口组原1 failed/1 passed401.84s必须保留；失败只因测试误预期长度错误而实际为SHA拒绝，
+  不与后续纯读重跑合称一次全绿。证据见`docs/evidence/golden-genesis-asset-qualification-20260911.md`。
 
 - 正式GREEN已全部通过：3 passed/865.35s，覆盖修正坏XML失败闭包、fresh live签发及重启幂等、
   真实execute→持久executed→新应用恢复签发。两条真实状态均为qualified；源码固定SHA
   `b0da423a3f9dc304b0adac98d81cf1c0f9c1cd0c80df3c0f9dfde9ab06c07ef2`。
-  原始日志`qualification-green.log`与SQLite均保留；第二CAS/SQLite纯读及集中验收进行中。
+  原始日志`qualification-green.log`与SQLite均保留；第二CAS/SQLite纯读及集中验收已通过。
 
 - 新application复用既有`GenesisAssetQualificationV1`，无schema语义修改；固定issuer独立源码摘要，
   SQLite intent/executed/qualified与failed状态，公开reserve/execute/invoke/read。

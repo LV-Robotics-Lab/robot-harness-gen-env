@@ -165,6 +165,70 @@ def test_operator_configuration_is_read_only(execution_request, tmp_path):  # no
         app.approved_manifest_ref = request.manifest.model_copy(update={"bytes": 0})
 
 
+def test_sqlite_integrity_failure_is_detected_before_read(execution_request, tmp_path):  # noqa: F811
+    store, _, _, _, request, request_ref = execution_request
+    path = tmp_path / "state.sqlite"
+    app = GenesisAssetQualificationApplication(path, store, request.manifest)
+    run_id = uuid4()
+    app.reserve(request_ref, run_id=run_id)
+    with closing(sqlite3.connect(path)) as connection, connection:
+        connection.execute("CREATE TABLE damaged(value INTEGER CHECK(value=0))")
+        connection.execute("PRAGMA ignore_check_constraints=ON")
+        connection.execute("INSERT INTO damaged VALUES (1)")
+    with pytest.raises(GenesisAssetQualificationApplicationError, match="SQLite integrity"):
+        app.read(run_id)
+
+
+def test_pending_journal_runtime_cannot_differ_from_operator(execution_request, tmp_path):  # noqa: F811
+    from self_improving.harness.genesis_runtime_manifest import capture_runtime_manifest
+    from self_improving.harness.schemas.x2env_compile_evidence import (
+        GenesisRuntimeLockV1,
+        canonical_evidence_sha256,
+    )
+    from tests.self_improving.harness.test_genesis_runtime_execution import publish
+
+    store, roots, manifest, runtime, request, request_ref = execution_request
+    path = tmp_path / "state.sqlite"
+    app = GenesisAssetQualificationApplication(path, store, request.manifest)
+    run_id = uuid4()
+    app.reserve(request_ref, run_id=run_id)
+    (roots["stdlib"] / "member").write_bytes(b"different declared runtime")
+    manifest_ref = capture_runtime_manifest(
+        store, roots=roots, process_identity=manifest.process_identity
+    )
+    payload = runtime.model_dump(mode="json")
+    payload["dependencies"][0]["sha256"] = manifest_ref.sha256
+    payload["runtime_lock_sha256"] = canonical_evidence_sha256(payload, "runtime_lock_sha256")
+    runtime_ref = publish(
+        store,
+        tmp_path,
+        GenesisRuntimeLockV1.model_validate(payload),
+        name="genesis-runtime-lock.json",
+        legacy=True,
+    )
+    changed = request.model_copy(update={"manifest": manifest_ref, "runtime_lock": runtime_ref})
+    payload = tmp_path / "different-request.json"
+    payload.write_text(
+        json.dumps(changed.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+    )
+    reference = store.put_file(
+        payload,
+        name=request_ref.name,
+        media_type=request_ref.media_type,
+        schema_version=request_ref.schema_version,
+    )
+    with closing(sqlite3.connect(path)) as connection, connection:
+        row = json.loads(connection.execute("SELECT record FROM runs").fetchone()[0])
+        row["request_ref"] = reference.model_dump(mode="json")
+        record = json.dumps(row, sort_keys=True, separators=(",", ":"))
+        connection.execute(
+            "UPDATE runs SET record=?,sha256=?",
+            (record, hashlib.sha256(record.encode()).hexdigest()),
+        )
+    with pytest.raises(GenesisAssetQualificationApplicationError, match="record runtime"):
+        app.read(run_id)
+
+
 def test_execute_does_not_consume_reserved_intent(execution_request, tmp_path):  # noqa: F811
     store, roots, _, _, request, request_ref = execution_request
     app = GenesisAssetQualificationApplication(tmp_path / "state.sqlite", store, request.manifest)
@@ -239,6 +303,143 @@ def test_unapproved_runtime_cannot_reserve(execution_request, tmp_path):  # noqa
     with pytest.raises(GenesisAssetQualificationApplicationError, match="approved"):
         app.reserve(request_ref, run_id=run_id)
     assert app.read(run_id) is None
+
+
+@pytest.mark.skipif(
+    not os.environ.get("GOLDEN_RUNTIME_EXECUTION_CONFIG"),
+    reason="requires approved real Genesis execution",
+)
+def test_formal_trusted_terminal_rejects_request_rebinding(tmp_path):
+    from uuid import UUID
+
+    from self_improving.harness.artifacts import LocalArtifactStore
+    from self_improving.harness.schemas.common import ArtifactRef
+
+    config_path = Path(os.environ["GOLDEN_RUNTIME_EXECUTION_CONFIG"])
+    config = json.loads(config_path.read_text())
+    summary = json.loads((config_path.parent / "qualification-summary.json").read_text())
+    path = tmp_path / "altered-request.sqlite"
+    with closing(sqlite3.connect(summary["state_path"])) as origin:
+        with closing(sqlite3.connect(path)) as destination:
+            origin.backup(destination)
+    with closing(sqlite3.connect(path)) as connection, connection:
+        row = json.loads(
+            connection.execute(
+                "SELECT record FROM runs WHERE run_id=?", (summary["run_id"],)
+            ).fetchone()[0]
+        )
+        row["request_ref"]["name"] = "different-request.json"
+        record = json.dumps(row, sort_keys=True, separators=(",", ":"))
+        connection.execute(
+            "UPDATE runs SET record=?,sha256=? WHERE run_id=?",
+            (record, hashlib.sha256(record.encode()).hexdigest(), summary["run_id"]),
+        )
+    app = GenesisAssetQualificationApplication(
+        path,
+        LocalArtifactStore(Path(config["cas_root"])),
+        ArtifactRef.model_validate(config["approved_manifest_ref"]),
+    )
+    with pytest.raises(
+        GenesisAssetQualificationApplicationError, match="execution journal identity"
+    ):
+        app.read(UUID(summary["run_id"]))
+
+
+@pytest.mark.skipif(
+    not os.environ.get("GOLDEN_RUNTIME_EXECUTION_CONFIG"),
+    reason="requires approved real Genesis execution",
+)
+def test_formal_qualification_cas_bytes_corruption_is_rejected(tmp_path):
+    import shutil
+    from uuid import UUID
+
+    from self_improving.harness.artifacts import LocalArtifactStore
+    from self_improving.harness.schemas.common import ArtifactRef
+
+    config_path = Path(os.environ["GOLDEN_RUNTIME_EXECUTION_CONFIG"])
+    config = json.loads(config_path.read_text())
+    summary = json.loads((config_path.parent / "qualification-summary.json").read_text())
+    origin_store = LocalArtifactStore(Path(config["cas_root"]))
+    reference = ArtifactRef.model_validate(summary["qualification_ref"])
+    original = origin_store.resolve(reference).path
+    copied_cas = tmp_path / "negative-cas-snapshot"
+    shutil.copytree(origin_store.root / "sha256", copied_cas / "sha256", copy_function=os.link)
+    damaged = copied_cas / original.relative_to(origin_store.root)
+    damaged.unlink()
+    damaged.write_bytes(b"corrupt qualification bytes in isolated negative snapshot")
+    state_path = tmp_path / "state.sqlite"
+    with closing(sqlite3.connect(summary["state_path"])) as origin:
+        with closing(sqlite3.connect(state_path)) as destination:
+            origin.backup(destination)
+    app = GenesisAssetQualificationApplication(
+        state_path,
+        LocalArtifactStore(copied_cas),
+        ArtifactRef.model_validate(config["approved_manifest_ref"]),
+    )
+    with pytest.raises(ValueError, match="SHA-256"):
+        app.read(UUID(summary["run_id"]))
+    assert hashlib.sha256(original.read_bytes()).hexdigest() == reference.sha256
+
+
+@pytest.mark.skipif(
+    not os.environ.get("GOLDEN_RUNTIME_EXECUTION_CONFIG"),
+    reason="requires approved real Genesis execution",
+)
+def test_formal_concurrent_recovery_uses_real_executed_checkpoint():
+    from self_improving.harness.artifacts import LocalArtifactStore
+    from self_improving.harness.schemas.common import ArtifactRef
+
+    config_path = Path(os.environ["GOLDEN_RUNTIME_EXECUTION_CONFIG"])
+    config = json.loads(config_path.read_text())
+    store = LocalArtifactStore(Path(config["cas_root"]))
+    manifest = ArtifactRef.model_validate(config["approved_manifest_ref"])
+    request = ArtifactRef.model_validate(config["request_ref"])
+    path = config_path.parent / "qualification-concurrent.sqlite"
+    checkpoint = config_path.parent / "qualification-executed-checkpoint.sqlite"
+    app = GenesisAssetQualificationApplication(path, store, manifest)
+    run_id = uuid4()
+    executed = app.execute(
+        request, run_id=run_id, roots={key: Path(value) for key, value in config["roots"].items()}
+    )
+    assert executed.status == "executed"
+    assert executed.qualification_ref is None
+    with closing(sqlite3.connect(path)) as origin:
+        with closing(sqlite3.connect(checkpoint)) as destination:
+            origin.backup(destination)
+    barrier = Barrier(2)
+
+    def invoke():
+        application = GenesisAssetQualificationApplication(path, store, manifest)
+        barrier.wait(timeout=10)
+        try:
+            return application.invoke(request, run_id=run_id, roots={})
+        except GenesisAssetQualificationApplicationError as error:
+            assert str(error) == "execution journal changed before issue"
+            return str(error)
+
+    with ThreadPoolExecutor(max_workers=2) as workers:
+        results = list(workers.map(lambda _: invoke(), range(2)))
+    references = [result for result in results if isinstance(result, ArtifactRef)]
+    assert references
+    assert all(reference == references[0] for reference in references)
+    assert app.invoke(request, run_id=run_id, roots={}) == references[0]
+    (config_path.parent / "qualification-concurrent-summary.json").write_text(
+        json.dumps(
+            {
+                "run_id": str(run_id),
+                "state_path": str(path),
+                "executed_checkpoint": str(checkpoint),
+                "qualification_ref": references[0].model_dump(mode="json"),
+                "results": [
+                    value.model_dump(mode="json") if isinstance(value, ArtifactRef) else value
+                    for value in results
+                ],
+                "issuer_sha256": app.issuer_sha256,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
 
 
 @pytest.mark.skipif(

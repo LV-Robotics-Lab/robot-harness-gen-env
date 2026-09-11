@@ -5,8 +5,12 @@
 - 新增`GenesisAssetQualificationApplication`，固定issuer实现和批准manifest；reserve/execute/invoke/
   read区分意图、执行与签发。相同UUID绑定canonical输入，pending不补运行，trusted executed可在
   新应用中重验CAS后签发。qualification沿用v1 schema，精确两checks，且为最后权威CAS写入。
-- 真实RED后GREEN为3 passed/865.35s，直接签发/终态幂等/执行断点恢复均通过；第二路径纯读验收
-  正在收口。该能力只覆盖单资产load/contact，不等于production Skill或完整环境资格。
+- 真实RED后GREEN为3 passed/865.35s，直接签发/终态幂等/执行断点恢复均通过；第二路径纯读、
+  真实CAS损坏拒绝与并发executed恢复、固定提交集中功能验收也通过。该能力只覆盖单资产
+  load/contact，不等于production Skill或完整环境资格。
+- 固定归档完整测试4,297 passed/26 skipped/2 failed；两处旧93-schema计数断言已改为97，相关
+  文件14 passed。原完整失败日志保留，未把局部重跑合称一次全绿。application原始覆盖217/220
+  statements、57/60 branches；其余防御分支说明和runtime剩余缺口均已入库。
 
 ## 2026-09-11 固定 CPU execution 接线
 

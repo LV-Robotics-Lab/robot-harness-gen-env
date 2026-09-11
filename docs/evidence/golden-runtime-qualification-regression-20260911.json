@@ -1,0 +1,17 @@
+{
+  "red_fixed_commit": "5f78e6267b0c21167a1ab743bbeda945ce80735d",
+  "red": {"failed": 2, "passed": 4297, "skipped": 26, "elapsed_seconds": 263.73, "log_sha256": "6f01fc40d2fa70c50a8ed7c85b0f77198c0eb7ff570989ba47a63d8381f4a894"},
+  "change": "Two test catalog-count assertions updated from 93 to 97; production code unchanged",
+  "files": ["tests/self_improving/harness/test_genesis_asset_probe_schemas.py", "tests/self_improving/harness/test_x2env_compile_receipt_v2.py"],
+  "retained_contract_checks": ["exact public schema count", "expected schema IDs", "Draft 2020-12 validation", "real model payload validation", "byte-exact committed snapshots", "export_schema_snapshots(check=True)"],
+  "focused_passed": 14,
+  "focused_elapsed_seconds": 0.69,
+  "focused_log_sha256": "8edfea0b85713a8505b637548627abd93d64fd8a6ed0fb4aa789f65e43bf640e",
+  "schema_snapshots_verified": 97,
+  "schema_log_sha256": "84b61e8c52bf68dad4f6da9d6b0be029ba398cf11a8002b88e27969f00107b0e",
+  "ruff_check": "pass",
+  "ruff_format_check": "2 files already formatted",
+  "git_diff_check": "pass",
+  "full_suite_rerun": false,
+  "source_changes_committed_by_this_agent": false
+}

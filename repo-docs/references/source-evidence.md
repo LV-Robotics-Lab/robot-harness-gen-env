@@ -1,5 +1,11 @@
 # Source Evidence For /gen-env、Harness PR1 与 ASPIRE 研究落点
 
+2026-09-11固定`fd50576`的manifest-bound Genesis CPU execution与`5f78e62`的durable单资产资格已
+真实运行：两部署execution、3项资格formal、无Genesis的第二CAS/SQLite纯读通过。来源见
+[execution](../../docs/evidence/golden-runtime-execution-20260911.md)与
+[单资产资格](../../docs/evidence/golden-genesis-asset-qualification-20260911.md)。这些证据不替代
+production Skill/MCP、环境或策略门；新核心100%覆盖目标仍有明确缺口。
+
 这是一份审计材料，不是读者首页。如果行为还看不清楚，先读 [一条真实路径](../walkthroughs/one-real-run.md)。
 
 核心 `/gen-env` 路径证据基于 commit `60a2597` 收集；Harness PR1 schema 证据基于实现
@@ -115,6 +121,6 @@ observation policy 与 Genesis capture 仍未闭合；不能从 `publishable=tru
 
 ## 证伪检查
 
-若 `python script/run_prompt_matrix.py --matrix tests/fixtures/prompt_matrix.json --runtime --robotwin-root /path/to/RoboTwin --out-root data/prompt_matrix --report data/prompt_matrix/report.json` 在某次主路径改动后不再 33/33 编译 + 10/10 SAPIEN 通过，本指南中「真实路径」字面通过率就不再对应当前源码——重跑该命令即可证伪。若 `pytest -q` 在改 `scene_gen/schema.py` / `parser.py` / `solver.py` 后出现新 fail，对应步骤里描述的契约已不准确，需回到主路径或对应模块同步源码反证。又一层反证：根 `AGENTS.md` 显式列出已被攻击测试锁住的误报模式（通过 `is_static` 堆叠、无接触 pose、外层 AABB 重叠、起止截图验收），若任一在 validator 改动后通过，则该误报保护已被反转，本指南 [运行时门控](../modules/runtime-gates.md) 攻击表也需同步更新。Harness 侧，从 repo root 执行 `PYTHONPATH=. python -m script.export_harness_schemas --check` 后出现任何漂移，或 Harness 覆盖率门失败，都会直接证伪“当前 94 个 committed schema、x2env v2 attempt/receipt、PromptRevision consumption guard、image/video ingest/consumer、controlled image compile 与 asset-probe evidence 目标模块覆盖门”的声明。
+若 `python script/run_prompt_matrix.py --matrix tests/fixtures/prompt_matrix.json --runtime --robotwin-root /path/to/RoboTwin --out-root data/prompt_matrix --report data/prompt_matrix/report.json` 在某次主路径改动后不再 33/33 编译 + 10/10 SAPIEN 通过，本指南中「真实路径」字面通过率就不再对应当前源码——重跑该命令即可证伪。若 `pytest -q` 在改 `scene_gen/schema.py` / `parser.py` / `solver.py` 后出现新 fail，对应步骤里描述的契约已不准确，需回到主路径或对应模块同步源码反证。又一层反证：根 `AGENTS.md` 显式列出已被攻击测试锁住的误报模式（通过 `is_static` 堆叠、无接触 pose、外层 AABB 重叠、起止截图验收），若任一在 validator 改动后通过，则该误报保护已被反转，本指南 [运行时门控](../modules/runtime-gates.md) 攻击表也需同步更新。Harness 侧，从 repo root 执行 `PYTHONPATH=. python -m script.export_harness_schemas --check` 后出现任何漂移，或 Harness 覆盖率门失败，都会直接证伪“当前 97 个 committed schema、x2env v2 attempt/receipt、PromptRevision consumption guard、image/video ingest/consumer、controlled image compile 与 asset-probe evidence 目标模块覆盖门”的声明。
 
 证据状态：除特别标注外，本页基于当前源码已确认。

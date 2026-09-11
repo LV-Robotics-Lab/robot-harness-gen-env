@@ -114,14 +114,16 @@ qualification；真实 asset qualification、production Skill application 与 re
      单对象 exact-reuse 静态 package；保持未资格化与全部 runtime/publishability flags false。
    - [x] candidate report 经同一 CAS/SQLite 重验后，controlled application 支持 caller UUID 与 no-live restart；
      该 test qualification 不进入 production assembly。
-   - [ ] 当前 sealed issuer fresh 生成 Genesis runtime lock与 asset-scoped load/collision probe；legacy pass
+   - [x] 当前 sealed issuer fresh 生成 Genesis runtime lock与 asset-scoped load/collision probe；legacy pass
      不可直接复用。
      - [x] 先把 15-member legacy mouse closure 迁为 stable-snapshot、unqualified representation。
      - [x] 定义 typed input/raw-load/load/contact-row/contact-trace/report（93 schema snapshots）。
      - [x] 完成 Harness-owned 无相机 CPU producer/backend、deep verifier、真实 1,000-step probe 与
        relocated CAS strict reload；证据见 `docs/evidence/golden-genesis-cpu-asset-probe-20260911.md`。
-     - [ ] 封闭 interpreter、Python/Torch/Quadrants/native 完整 runtime dependency lock，随后实现 durable
+     - [x] 封闭 interpreter、Python/Torch/Quadrants/native 完整 runtime dependency lock，随后实现 durable
        production issuer/qualification；已有 asset probe pass 不授予 production Skill/MCP 权威。
+       `5f78e62`单资产真实签发、executed恢复/并发与第二CAS纯读已通过；全新core原始100%覆盖
+       仍有明示缺口，不能把单资产完成扩大为production image Skill/环境/策略完成。
        - [x] `fd50576`：固定CPU launcher、archive child、manifest-bound execution producer/verifier，
          当前97 schemas；正式Producer/第二部署运行与覆盖收口仍进行中，不等于qualification完成。
        - [x] `3662ba6`：canonical runtime content manifest、逐文件流式CAS、read/deployment verification；

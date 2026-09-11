@@ -1,0 +1,59 @@
+{
+  "status": "pass",
+  "mode": "trusted_journal_cas_only_reload",
+  "execution_started": false,
+  "issuer_sha256": "b0da423a3f9dc304b0adac98d81cf1c0f9c1cd0c80df3c0f9dfde9ab06c07ef2",
+  "genesis_import_available": false,
+  "state_path": "/home/jingxiang/bingsheng/golden-runtime-bound-relocated-20260911.i7zlos7a/qualification-relocated.sqlite",
+  "cas_root": "/home/jingxiang/bingsheng/golden-runtime-bound-relocated-20260911.i7zlos7a/cas",
+  "elapsed_seconds": 61.60155262798071,
+  "copied_objects": [
+    {
+      "sha256": "2800480e74027a963190bd32c7c986bcd790ec53ac600f2b11842996084e34f2",
+      "bytes": 8694
+    },
+    {
+      "sha256": "39d8b97c2c95560053cd546fca25e4a6bf356a114580245ccdb31919a5706830",
+      "bytes": 9817
+    },
+    {
+      "sha256": "b0da423a3f9dc304b0adac98d81cf1c0f9c1cd0c80df3c0f9dfde9ab06c07ef2",
+      "bytes": 19007
+    },
+    {
+      "sha256": "b29d17a8d9d19254592570ec321aff1e13cc60071dd4935c87831f53d1970356",
+      "bytes": 1191
+    },
+    {
+      "sha256": "f70b7c2231c535e66fbfb4539912fe272fc052de58daa84b5e5b232f6a0d4b42",
+      "bytes": 2174
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "78eb9832-8697-449a-b3cb-9034143cea99",
+      "qualification_ref": {
+        "name": "genesis-asset-qualification.json",
+        "uri": "artifact://sha256/2800480e74027a963190bd32c7c986bcd790ec53ac600f2b11842996084e34f2",
+        "media_type": "application/json",
+        "sha256": "2800480e74027a963190bd32c7c986bcd790ec53ac600f2b11842996084e34f2",
+        "bytes": 8694,
+        "schema_version": "harness.asset_qualification.v1"
+      }
+    },
+    {
+      "run_id": "bbd31ac0-a453-4d9a-b154-e0560504757b",
+      "qualification_ref": {
+        "name": "genesis-asset-qualification.json",
+        "uri": "artifact://sha256/2800480e74027a963190bd32c7c986bcd790ec53ac600f2b11842996084e34f2",
+        "media_type": "application/json",
+        "sha256": "2800480e74027a963190bd32c7c986bcd790ec53ac600f2b11842996084e34f2",
+        "bytes": 8694,
+        "schema_version": "harness.asset_qualification.v1"
+      }
+    }
+  ],
+  "last_source_cas_object": "2800480e74027a963190bd32c7c986bcd790ec53ac600f2b11842996084e34f2",
+  "qualification_written_after_all_check_evidence": true,
+  "terminal_reference_drift_rejection": "qualification terminal differs"
+}

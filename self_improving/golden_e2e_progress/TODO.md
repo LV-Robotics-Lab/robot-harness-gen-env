@@ -4,17 +4,15 @@
 
 ## Doing
 
-- 当前功能目标：实现manifest驱动的固定CPU launcher、真实child观测与版本化执行回执；以新runtime
-  lock显式引用manifest，fresh probe全部refs进入同一新receipt。执行与纯读验算分账；先跑完整真实
-  闭包与换路径，再集中验收。实现已固定`fd50576`；运行agent负责正式实跑与搬迁，另一agent并行
-  TDD实现durable qualification application机制，实际签发仍等待正式execution门。主窗口维护计划和验收。
+- 当前功能目标收口：`fd50576`固定CPU execution已在两部署真实通过，`5ceead3`记录其集中验收和
+  失败材料；`5f78e62`durable单资产qualification已真实签发、executed恢复、第二CAS/SQLite无Genesis
+  纯读通过。资格CAS坏字节与真实executed并发恢复也通过；新core覆盖尚有缺口，不能称全部100%。
+  固定归档全套4,297pass/26skip/2旧计数fail；两处已修，相关文件14pass，原全套日志保留。
+  后续production image compile/Registry/MCP仍须独立Skill资格门，不从资产资格直接推导。
 
-- Runtime dependency lock：`3662ba6` 已完成声明根的 canonical manifest；166,141成员/8,542,495,955
-  bytes 的真实 capture、CAS纯读、源部署及第二绝对路径 fresh-process 重验通过。独立目录 fresh
-  Genesis probe也已真实运行1,000steps，但仍引用旧v1 lock，未绑定manifest。下一门是manifest→实际
-  fixed-process/runner→probe回执的闭包与显式版本迁移；source archive/实际checkout、2项系统GL加载
-  位置及完整subprocess依赖须在该门处理。主机bwrap UID map命令拒绝已记录，不把事后maps当隔离。
-  production issuer/qualification仍未实现；dashboard与ClawCross preferred read仍返回HTTP404。
+- Runtime dependency lock：早期`3662ba6`的声明清单已由`fd50576`固定归档执行闭合；两套部署实际
+  运行、native别名精确校验与受约束child通过。`5f78e62`已完成durable单资产签发。剩余100%覆盖
+  缺口逐条记录，不扩张为production Skill资格；dashboard/ClawCross读取HTTP404的外部阻断仍保留。
 
 - X2 exact-reuse image compile：controlled candidate handler 与 v2 input-bound receipt 已完成；当前进入
   production qualification。Gujie 指定 exact pass 输出现已缺失；最接近的 legacy 鼠标归档虽有 15-member
@@ -22,8 +20,9 @@
   必须由当前 sealed issuer 重跑 asset-scoped Genesis load/collision probe，不得迁移旧 pass 状态。
   15-member bytes 已以 stable snapshot 迁为 unqualified representation；typed raw-load/contact-row/probe
   schema、无相机 CPU producer/deep verifier 和 fresh 1,000-step Genesis run 已完成，并从第二绝对 CAS
-  路径在无 Genesis/source root 的进程中复验。下一步封闭完整 runtime dependency lock，再签 production
-  asset qualification。
+  路径在无 Genesis/source root 的进程中复验。之后封闭 runtime dependency lock并签发单资产
+  asset qualification；该单资产门现由`5f78e62`真实签发和第二CAS恢复通过，production image Skill
+  application/execution binding、Registry descriptor和exact MCP仍是下一步。
 - P10 fresh observation：strict schema、controlled candidate application/evidence policy 与 test-controlled
   Golden execution binding 已在同一 revision 2→3 中闭合 receipt/state/restart；下一切片是 production
   runtime binding。当前受控路径固定 `simulator_executed=false`，真实 Genesis capture、qualification 与
@@ -36,14 +35,10 @@
 
 ## Next
 
-- X2：为 exact-reuse image compile 实现 production application/qualification；先生成真实 Genesis asset
-  issuer、runtime lock 与 typed asset-probe evidence，再允许 Registry/MCP 曝光。第一步只把 legacy mouse
-  的 15-member byte closure迁为 unqualified representation candidate；controlled handler/application继续
-  保持未注册、`simulator_ready=false`。
-  input/raw-load/load/contact-row/contact-trace/report schema 与 Harness-owned 无相机 CPU producer/deep
-  verifier 已完成（93 snapshots），真实 mouse drop/contact/settling 通过。下一步把 interpreter、Python、
-  Torch CPU、Quadrants、NumPy 与 native library closure 封成 production runtime lock，再由 durable issuer
-  生成 qualification；人审媒体仍应独立生成，不能让渲染成为物理资格权威。
+- X2：收口新core覆盖与资格最终测试后，为exact-reuse image compile实现production application和
+  execution binding，再做冻结Registry descriptor/Skill qualification与exact MCP投影。单资产资格
+  已有真实证据，但controlled handler/application仍未注册，`simulator_ready=false`；人审媒体仍须
+  单独生成，不能让渲染替代物理资格。
 - P10：实现 production execution binding/runtime；保持过期、缺 key、时间或 payload 漂移在 parent
   commit 前 fail closed。
 - P10：production policy 稳定后，用真实 Genesis sealed checkpoint 做 capture/qualification；只有该门

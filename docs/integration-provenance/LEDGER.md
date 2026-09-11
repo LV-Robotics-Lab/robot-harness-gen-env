@@ -130,7 +130,7 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
 ## INT-BS-005 — Durable Genesis 单资产资格
 
 - `lifecycle`：`integrated`
-- `verification`：`runtime_pass`（真实单资产签发及executed恢复；第二CAS独立验收进行中）
+- `verification`：`runtime_pass`（真实单资产签发及executed恢复；第二CAS独立验收通过）
 - `origin_owner`：Bingsheng（Harness合同与整合责任）
 - `recorded_git_authors`：以本功能提交实际git author为准
 - `upstream_owner`：Genesis World及Python/Torch等依赖保留各自归属；资产来源仍按INT-GJ记录
@@ -145,7 +145,8 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
 - `contract_spec`：`self_improving/harness/GENESIS_ASSET_QUALIFICATION_APPLICATION_CONTRACT.md`
 - `verification_evidence`：真实RED252.56s已保留；19离线用例通过。正式3 passed/865.35s，覆盖真实
   坏XML失败闭包、直接live资格与无live app重启/UUID幂等、executed断点新app恢复签发；第二CAS
-  独立验证仍进行中。issuer源码SHA
+  独立验证通过（61.60s、无Genesis）。真实executed并发恢复与CAS坏字节拒绝也通过；固定提交
+  集中验收见`docs/evidence/golden-genesis-asset-qualification-acceptance-20260911.json`。issuer源码SHA
   `b0da423a3f9dc304b0adac98d81cf1c0f9c1cd0c80df3c0f9dfde9ab06c07ef2`
 - `golden_run`：`none`
 - `known_gaps`：仅单资产给定物性参数的backend_load/collision_probe；不授予production Skill、

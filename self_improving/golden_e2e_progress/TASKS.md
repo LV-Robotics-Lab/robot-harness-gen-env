@@ -82,8 +82,10 @@
     - [x] typed probe input/raw-load/load/contact-row/contact-trace/report schema，93份 public snapshots。
     - [x] Harness-owned 无相机 CPU producer/deep verifier 与 fresh real 1,000-step run；第二绝对 CAS
       路径可在无 Genesis/source root 的进程中严格重验。
-    - [ ] 封闭 Python/Torch/Quadrants/native 完整 runtime dependency lock，再由 durable production
+    - [x] 封闭 Python/Torch/Quadrants/native 完整 runtime dependency lock，再由 durable production
       issuer 签发 `GenesisAssetQualificationV1`。
+      `5f78e62`已真实签发/重启/并发恢复和第二CAS验收；只授单资产两checks，不授Skill/MCP权威。
+      - [ ] 新core原始statement/branch 100%门；已记录运行环境失效与公开前置不变量遮蔽的剩余分支。
       - [x] 声明根的 canonical CAS runtime manifest：流式 capture、纯读、独立 deployment mapping、
         drift 拒绝与 fresh-process relocation；该前置不等于完整运行闭包或资格。
         已由166,141成员真实部署、第二CAS/绝对映射和固定`3662ba6`独立功能验收确认。

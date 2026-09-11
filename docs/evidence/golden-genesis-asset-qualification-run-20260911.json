@@ -1,0 +1,159 @@
+{
+  "feature_commit": "5f78e62",
+  "issuer_sha256": "b0da423a3f9dc304b0adac98d81cf1c0f9c1cd0c80df3c0f9dfde9ab06c07ef2",
+  "authority": "genesis single-asset backend_load and collision_probe only",
+  "qualification": {
+    "run_id": "78eb9832-8697-449a-b3cb-9034143cea99",
+    "state_path": "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification.sqlite",
+    "qualification_ref": {
+      "name": "genesis-asset-qualification.json",
+      "uri": "artifact://sha256/2800480e74027a963190bd32c7c986bcd790ec53ac600f2b11842996084e34f2",
+      "media_type": "application/json",
+      "sha256": "2800480e74027a963190bd32c7c986bcd790ec53ac600f2b11842996084e34f2",
+      "bytes": 8694,
+      "schema_version": "harness.asset_qualification.v1"
+    },
+    "issuer_sha256": "b0da423a3f9dc304b0adac98d81cf1c0f9c1cd0c80df3c0f9dfde9ab06c07ef2"
+  },
+  "executed_restart": {
+    "run_id": "bbd31ac0-a453-4d9a-b154-e0560504757b",
+    "state_path": "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification.sqlite",
+    "qualification_ref": {
+      "name": "genesis-asset-qualification.json",
+      "uri": "artifact://sha256/2800480e74027a963190bd32c7c986bcd790ec53ac600f2b11842996084e34f2",
+      "media_type": "application/json",
+      "sha256": "2800480e74027a963190bd32c7c986bcd790ec53ac600f2b11842996084e34f2",
+      "bytes": 8694,
+      "schema_version": "harness.asset_qualification.v1"
+    },
+    "issuer_sha256": "b0da423a3f9dc304b0adac98d81cf1c0f9c1cd0c80df3c0f9dfde9ab06c07ef2"
+  },
+  "concurrent_recovery": {
+    "run_id": "f5b658f7-83eb-4711-83db-e70fb66d9955",
+    "state_path": "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification-concurrent.sqlite",
+    "executed_checkpoint": "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification-executed-checkpoint.sqlite",
+    "qualification_ref": {
+      "name": "genesis-asset-qualification.json",
+      "uri": "artifact://sha256/2800480e74027a963190bd32c7c986bcd790ec53ac600f2b11842996084e34f2",
+      "media_type": "application/json",
+      "sha256": "2800480e74027a963190bd32c7c986bcd790ec53ac600f2b11842996084e34f2",
+      "bytes": 8694,
+      "schema_version": "harness.asset_qualification.v1"
+    },
+    "results": [
+      {
+        "name": "genesis-asset-qualification.json",
+        "uri": "artifact://sha256/2800480e74027a963190bd32c7c986bcd790ec53ac600f2b11842996084e34f2",
+        "media_type": "application/json",
+        "sha256": "2800480e74027a963190bd32c7c986bcd790ec53ac600f2b11842996084e34f2",
+        "bytes": 8694,
+        "schema_version": "harness.asset_qualification.v1"
+      },
+      "execution journal changed before issue"
+    ],
+    "issuer_sha256": "b0da423a3f9dc304b0adac98d81cf1c0f9c1cd0c80df3c0f9dfde9ab06c07ef2"
+  },
+  "validation_runs": [
+    {
+      "log": "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification-red.log",
+      "result": "failed: qualification commit not implemented after actual fixed execution",
+      "seconds": 252.56
+    },
+    {
+      "log": "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification-green.log",
+      "result": "3 passed: child failure closure, live qualification, executed restart qualification",
+      "seconds": 865.35
+    },
+    {
+      "log": "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification-offline.log",
+      "result": "21 passed, 5 skipped"
+    },
+    {
+      "log": "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification-journalnegative.log",
+      "result": "1 passed: actual receipt/request journal identity rejection",
+      "seconds": 19.79
+    },
+    {
+      "log": "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification-finalformal.log",
+      "result": "1 failed, 1 passed: CAS SHA rejected but test expected byte count; actual fresh executed checkpoint and concurrent recovery passed",
+      "seconds": 401.84
+    },
+    {
+      "log": "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification-casbytes-green.log",
+      "result": "1 passed: corrected SHA expectation, pure read only; no repeated execution",
+      "seconds": 21.54
+    }
+  ],
+  "relocated_summary": "/home/jingxiang/bingsheng/golden-runtime-bound-relocated-20260911.i7zlos7a/qualification-relocated-summary.json",
+  "negative_object_identity": "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification-cas-negative-identity.json",
+  "coverage": {
+    "summary": {
+      "covered_lines": 217,
+      "num_statements": 220,
+      "percent_covered": 97.85714285714286,
+      "percent_covered_display": "98",
+      "missing_lines": 3,
+      "excluded_lines": 0,
+      "percent_statements_covered": 98.63636363636364,
+      "percent_statements_covered_display": "99",
+      "num_branches": 60,
+      "num_partial_branches": 3,
+      "covered_branches": 57,
+      "missing_branches": 3,
+      "percent_branches_covered": 95.0,
+      "percent_branches_covered_display": "95"
+    },
+    "missing_lines": [
+      304,
+      429,
+      457
+    ],
+    "missing_branches": [
+      [
+        303,
+        304
+      ],
+      [
+        425,
+        429
+      ],
+      [
+        456,
+        457
+      ]
+    ],
+    "report": "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification-coverage.json",
+    "measurement": "combined actual execution, pure read, offline and retained initial assertion-failure runs; no excluded core branches"
+  },
+  "defensive_branch_explanations": [
+    {
+      "line": 304,
+      "classification": "public producer invariant",
+      "reason": "App constructs fixed GenesisRuntimeExecutionProducer directly; every GenesisRuntimeExecutionError escaping its produce catch has diagnostic_ref assigned after durable publication. CAS publication failure escapes as its original storage error. No public injector can return a diagnostic-free execution error."
+    },
+    {
+      "line": 429,
+      "classification": "private issuer invariant",
+      "reason": "Only invoke fresh calls _finish with live. _execute_reserved receives the fixed producer LiveGenesisRuntimeExecution and copies that same receipt_ref to executed state; no public issue/live argument exists. Restart passes None and uses its trusted journal path."
+    },
+    {
+      "line": 457,
+      "classification": "unmeasured external-writer guard; unreachable through permitted public transitions",
+      "reason": "BEGIN IMMEDIATE reservation grants fresh status to one caller. Existing pending callers reserve/read or reject; none can mutate pending. Only the fresh owner transitions pending to executed/failed. Two actual concurrent public callers were tested. Direct external SQLite mutation during execution could reach this guard and was not tested."
+    }
+  ],
+  "not_claimed": [
+    "raw statement/branch 100%",
+    "environment replay",
+    "robot policy",
+    "image Skill registration",
+    "MCP qualification",
+    "measured real material parameters"
+  ],
+  "artifact_sha256": {
+    "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification-green.log": "f317758e92869220bfb8d1d04b8a51561aeb7915822f81e3e695187af15ecc5b",
+    "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification-finalformal.log": "3d350a5cb1c89e916d69c2187e9d5edc1aff2bfddc0966d3fc623b8d014ec4a6",
+    "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification-casbytes-green.log": "0d5b48ad4934cf9db1323d5cd039a8fdaf0f0e44fc0ec78ee26ec7ea0ec99fde",
+    "/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/qualification-coverage.json": "4f61de5173749c6830b1e6a868e8aa7b604d3daa20b947b835c05a5f58e6daa2"
+  }
+}

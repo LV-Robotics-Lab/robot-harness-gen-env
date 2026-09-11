@@ -1,5 +1,12 @@
 # Self-Improving 平台边界
 
+2026-09-11新增的固定Genesis CPU执行已把manifest、新runtime lock、实际观测与fresh probe绑定，
+两套独立部署各运行1,000steps并strict reload通过。`GenesisAssetQualificationApplication`进一步
+完成真实单资产资格签发、UUID幂等和executed断点恢复；第二CAS/可信SQLite在无Genesis进程中
+纯读通过。证据见[单资产资格](../../docs/evidence/golden-genesis-asset-qualification-20260911.md)。
+这是给定物性参数的load/contact资格；production image/video Skill/MCP、完整环境和机器人策略
+仍未因此获得权威。新核心全分支覆盖目标也尚未全部完成。
+
 `scene_gen/` 是稳定信任边界，负责把受限文本编译成可验证、可回放、哈希绑定的场景包。`self_improving/` 是消费者和编排层：它可以选择环境、组织采集与训练、评估失败、写诊断和记忆、决定是否晋升，也可以调用资产与仿真适配器；它不能伪造或跳过 `/gen-env` 的物理门控。
 
 | 层 | 目录 | 写什么 | 不写什么 |
@@ -28,7 +35,8 @@
 `e67b656ea97044da5b09ee8323c48e752cd88c76` 加 P2 compile-only submit 候选为准；
 下述 55-schema 计数不归属于 `ab03859` 的 14-schema 历史快照。
 
-Harness 当前公开 72 个以 `$id` 标识的 JSON Schema：PR1 的 14 个入口保持不变，随后增加
+Harness 当前公开97个以`$id`标识的JSON Schema，完整目录见[schema说明](harness-schema-tranche.md)。
+其中早期x2env合同阶段的72个入口构成为：PR1 的 14 个入口保持不变，随后增加
 descriptor v2、validate v2 input/output，以及 qualification report、资产债务/修复、registry snapshot、
 replay VLM、run start/read/snapshot 和 workflow start receipt 等 12 个入口，再加上 asset source snapshot、stage
 request 与 stage result 三个入口；P2 再增加 command、operation snapshot、qualified execution、trusted
