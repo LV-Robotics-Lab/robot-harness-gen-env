@@ -1,5 +1,13 @@
 # Change Log
 
+## 2026-09-11 Durable 单资产资格
+
+- 新增`GenesisAssetQualificationApplication`，固定issuer实现和批准manifest；reserve/execute/invoke/
+  read区分意图、执行与签发。相同UUID绑定canonical输入，pending不补运行，trusted executed可在
+  新应用中重验CAS后签发。qualification沿用v1 schema，精确两checks，且为最后权威CAS写入。
+- 真实RED后GREEN为3 passed/865.35s，直接签发/终态幂等/执行断点恢复均通过；第二路径纯读验收
+  正在收口。该能力只覆盖单资产load/contact，不等于production Skill或完整环境资格。
+
 ## 2026-09-11 固定 CPU execution 接线
 
 - 新增固定launcher、archive CPU child和execution producer/verifier。请求把manifest精确绑定到新的

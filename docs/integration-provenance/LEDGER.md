@@ -127,6 +127,31 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
   replay、robot-policy和promotion均未获得本切片权威。CAS纯读只证明内容一致，不产生live capability
 - `last_verified`：`2026-09-11`
 
+## INT-BS-005 — Durable Genesis 单资产资格
+
+- `lifecycle`：`integrated`
+- `verification`：`runtime_pass`（真实单资产签发及executed恢复；第二CAS独立验收进行中）
+- `origin_owner`：Bingsheng（Harness合同与整合责任）
+- `recorded_git_authors`：以本功能提交实际git author为准
+- `upstream_owner`：Genesis World及Python/Torch等依赖保留各自归属；资产来源仍按INT-GJ记录
+- `integration_owner`：Bingsheng
+- `source_repository`：当前robot-harness-gen-env
+- `source_ref`：运行实现`fd50576`，测试与运行证据`5ceead3`；issuer为新增独立Harness实现
+- `dirty_snapshot`：未使用Gujie dirty runner或历史pass作为资格来源
+- `source_paths`：冻结的`GenesisAssetQualificationV1`与manifest-bound固定execution producer
+- `target_paths`：`self_improving/harness/genesis_asset_qualification_application.py`及对应公共测试
+- `integration_method`：固定producer成功的live capability才建立trusted executed记录；SQLite幂等与
+  恢复重验完整CAS，不注入任意producer/report。独立issuer源码作为CAS证据，qualification最后写入
+- `contract_spec`：`self_improving/harness/GENESIS_ASSET_QUALIFICATION_APPLICATION_CONTRACT.md`
+- `verification_evidence`：真实RED252.56s已保留；19离线用例通过。正式3 passed/865.35s，覆盖真实
+  坏XML失败闭包、直接live资格与无live app重启/UUID幂等、executed断点新app恢复签发；第二CAS
+  独立验证仍进行中。issuer源码SHA
+  `b0da423a3f9dc304b0adac98d81cf1c0f9c1cd0c80df3c0f9dfde9ab06c07ef2`
+- `golden_run`：`none`
+- `known_gaps`：仅单资产给定物性参数的backend_load/collision_probe；不授予production Skill、
+  MCP、environment replay、robot-policy或promotion。全部新core 100%覆盖目标尚待收口
+- `last_verified`：`2026-09-11`
+
 ## INT-YX-001 — 历史资产检索、复用与入库管线
 
 - `lifecycle`：`integrated`

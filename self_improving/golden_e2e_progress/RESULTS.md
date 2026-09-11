@@ -1,6 +1,11 @@
 # 进度与结果
 
-## 2026-09-11 Durable asset qualification TDD（真实GREEN进行中）
+## 2026-09-11 Durable asset qualification TDD
+
+- 正式GREEN已全部通过：3 passed/865.35s，覆盖修正坏XML失败闭包、fresh live签发及重启幂等、
+  真实execute→持久executed→新应用恢复签发。两条真实状态均为qualified；源码固定SHA
+  `b0da423a3f9dc304b0adac98d81cf1c0f9c1cd0c80df3c0f9dfde9ab06c07ef2`。
+  原始日志`qualification-green.log`与SQLite均保留；第二CAS/SQLite纯读及集中验收进行中。
 
 - 新application复用既有`GenesisAssetQualificationV1`，无schema语义修改；固定issuer独立源码摘要，
   SQLite intent/executed/qualified与failed状态，公开reserve/execute/invoke/read。
