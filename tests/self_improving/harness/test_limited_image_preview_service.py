@@ -44,6 +44,7 @@ def test_start_retry_lookup_and_audited_resources_share_one_workflow(inputs, tmp
     assert resource["contents"]
     status = service.status(workflow_id=started["workflow_id"])
     assert status["snapshot"] == started["snapshot"]
+    assert status["asset"] is None
     snapshot = journal.read_snapshot(principal_id="test/preview", workflow_run_id=inputs.workflow)
     assert snapshot is None  # The fixture's unrelated UUID cannot be selected by the caller.
     state_ref = started["snapshot"]["state_ref"]
@@ -135,6 +136,128 @@ def test_preview_input_resource_reader_rejects_foreign_or_incomplete_roots(input
     invalid = inputs.publish(payload, "invalid-preview-input.json", None)
     with pytest.raises(ValueError):
         read_limited_preview_input(inputs.store, invalid, inputs.workflow)
+
+
+def test_restarted_status_restores_asset_after_successful_initial_compile(inputs, tmp_path):  # noqa: F811
+    """The repository's sealed native projection supplies the successful compile."""
+    import hashlib
+    import shutil
+    from datetime import datetime, timezone
+    from uuid import UUID
+
+    from self_improving.harness.golden_execution import (
+        _create_golden_execution_binding,
+        create_golden_execution_catalog,
+    )
+    from self_improving.harness.native_skill_projection import (
+        issue_native_skill_projection,
+        publish_native_registry_snapshot,
+    )
+    from self_improving.harness.run_store import SQLiteRunStore
+    from self_improving.harness.schemas.image2env_genesis_compile import (
+        Image2EnvGenesisCompileReceiptV1,
+    )
+    from self_improving.harness.typed_qualification_admission import (
+        verify_typed_qualification_admission,
+    )
+    from tests.self_improving.harness.test_native_skill_projection import (
+        _ControlledV1NativeApplication,
+        _admission,
+        _native_image_binding,
+        _put_model,
+    )
+
+    principal, key = "test/repair-asset", "repair-asset"
+    identity = json.dumps([principal, key], separators=(",", ":")).encode()
+    workflow_id = UUID(
+        bytes=hashlib.sha256(b"limited-preview-start\0" + identity).digest()[:16], version=4
+    )
+    input_ref = inputs.builder.start(
+        workflow_id=workflow_id, raw_image_ref=inputs.raw, user_text="mouse on table"
+    )
+    lookup_ref = inputs.builder.lookup(workflow_id=workflow_id, input_ref=input_ref)
+    request_ref = inputs.builder.build_initial(
+        workflow_id=workflow_id,
+        input_ref=input_ref,
+        lookup_ref=lookup_ref,
+        asset_id="mouse",
+    )
+    selected = json.loads(inputs.store.resolve(lookup_ref).path.read_bytes())
+    fixture, issued = _admission(tmp_path / "native", "compile")
+    shutil.copytree(fixture.store.root, inputs.store.root, dirs_exist_ok=True)
+    admission = verify_typed_qualification_admission(
+        artifact_store=inputs.store, admission=issued.admission
+    )
+    candidate = Image2EnvGenesisCompileReceiptV1.model_validate(
+        admission.admission.candidate_intents[0].run_state.output
+    )
+    output = Image2EnvGenesisCompileReceiptV1.model_validate(
+        {
+            **candidate.model_dump(mode="json"),
+            "request": request_ref.model_dump(mode="json"),
+            "qualification": selected["qualification"],
+            "source_object_id": "mouse_001",
+            "proposal_object_id": "mouse_001",
+        }
+    )
+    output_ref = _put_model(inputs.store, tmp_path, "mouse-compile.json", output)
+    child = SQLiteRunStore(tmp_path / "compile.sqlite")
+    application = _ControlledV1NativeApplication(
+        store=inputs.store,
+        authority=child,
+        admission=admission,
+        output=output,
+        output_ref=output_ref,
+        clock=lambda: datetime.now(timezone.utc),
+    )
+    binding = _native_image_binding(
+        store=inputs.store,
+        authority=child,
+        skill_ref="image2env.compile@2.0.0",
+        application=application,
+    )
+    projection = issue_native_skill_projection(
+        artifact_store=inputs.store, admission=admission, native_binding=binding
+    )
+    registry = publish_native_registry_snapshot(
+        artifact_store=inputs.store, projections=(projection,)
+    )
+    journal = SQLiteGoldenRunStore(tmp_path / "golden.sqlite")
+    service = LimitedImagePreviewService(
+        artifact_store=inputs.store,
+        workflow_store=journal,
+        input_builder=inputs.builder,
+        registry_snapshot=registry,
+        principal_id=principal,
+        execution_catalog=create_golden_execution_catalog(bindings=(projection.binding,)),
+    )
+    started = service.start(
+        raw_image_ref=inputs.raw, user_text="mouse on table", idempotency_key=key
+    )
+    looked = service.asset_lookup(workflow_id=started["workflow_id"])
+    compiled = service.compile(
+        workflow_id=started["workflow_id"],
+        asset_id=looked["asset"]["asset_id"],
+        idempotency_key="compile",
+        expected_skill_ref="image2env.compile@2.0.0",
+    )
+    assert compiled["status"] == "succeeded"
+    restored = LimitedImagePreviewService(
+        artifact_store=inputs.store,
+        workflow_store=SQLiteGoldenRunStore(journal.path),
+        input_builder=inputs.builder,
+        registry_snapshot=registry,
+        principal_id=principal,
+        execution_catalog=create_golden_execution_catalog(
+            bindings=(
+                _create_golden_execution_binding(
+                    policy=binding.policy, application=None, child_authority=child
+                ),
+            )
+        ),
+    )
+
+    assert restored.status(workflow_id=started["workflow_id"])["asset"] == looked["asset"]
 
 
 @pytest.mark.parametrize("expired", [False, True])
