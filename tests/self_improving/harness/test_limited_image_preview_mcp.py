@@ -63,8 +63,14 @@ def test_validate_forwards_explicit_target_and_preserves_semantic_failure():
     asyncio.run(exercise())
 
 
-def test_public_mcp_lists_only_named_preview_tools_and_delegates_start():
+def test_public_mcp_lists_only_named_preview_tools_and_delegates_start(tmp_path):
     from mcp import Client, MCPError
+    from tests.self_improving.harness.test_golden_control_v2_runtime import native_case
+
+    head = native_case(tmp_path).head
+    payload = {"workflow_id": str(head.workflow_run_id), "status": "active",
+               "revision": head.revision, "stage": "start",
+               "snapshot": head.model_dump(mode="json")}
 
     class Service:
         def __init__(self):
@@ -72,7 +78,11 @@ def test_public_mcp_lists_only_named_preview_tools_and_delegates_start():
 
         def start(self, **arguments):
             self.received.append(arguments)
-            return {"workflow_id": WORKFLOW, "status": "active", "revision": 0, "stage": "start"}
+            return payload
+
+        def status(self, **arguments):
+            assert arguments == {"workflow_id": str(head.workflow_run_id)}
+            return {**payload, "stage": "status"}
 
     service = Service()
     server = create_limited_image_preview_mcp_server(service)
@@ -105,12 +115,11 @@ def test_public_mcp_lists_only_named_preview_tools_and_delegates_start():
                     "idempotency_key": "fresh",
                 },
             )
-            assert result.structured_content == {
-                "workflow_id": WORKFLOW,
-                "status": "active",
-                "revision": 0,
-                "stage": "start",
-            }
+            assert result.structured_content == payload
+            result = await client.call_tool("image2env_preview_status_v1", {
+                "workflow_id": str(head.workflow_run_id),
+            })
+            assert result.structured_content == {**payload, "stage": "status"}
             assert service.received == [
                 {
                     "raw_image_path": "/operator/mouse.png",
