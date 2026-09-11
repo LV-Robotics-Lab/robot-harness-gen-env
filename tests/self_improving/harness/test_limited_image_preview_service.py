@@ -25,6 +25,11 @@ def test_start_retry_lookup_and_audited_resources_share_one_workflow(inputs, tmp
     started = service.start(
         raw_image_ref=inputs.raw, user_text="mouse on table", idempotency_key="one"
     )
+    with pytest.raises(ValueError, match="audited lookup"):
+        service.compile(
+            workflow_id=started["workflow_id"], asset_id="mouse", idempotency_key="compile",
+            expected_skill_ref="image2env.compile@2.0.0",
+        )
     assert started["snapshot"]["workflow_run_id"] == started["workflow_id"]
     assert (
         service.start(raw_image_ref=inputs.raw, user_text="mouse on table", idempotency_key="one")
