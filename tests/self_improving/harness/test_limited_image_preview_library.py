@@ -594,6 +594,10 @@ def test_unverified_json_cannot_enter_the_isolated_preview_library(
         project_id=manifest.project_id,
     )
     assert library.list() == ()
+    index = library.read_index()
+    assert index.project_id == manifest.project_id
+    assert index.revision == 0
+    assert index.entries == ()
 
     reopened = load_limited_image_preview_library(
         artifact_store=store,
