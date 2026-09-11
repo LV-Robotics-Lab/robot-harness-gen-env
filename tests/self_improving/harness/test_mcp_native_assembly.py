@@ -122,3 +122,34 @@ def test_complete_absolute_deployment_mapping_is_preserved(tmp_path):
     }
     settings = NativeImageMCPServerSettings.model_validate_json(json.dumps(document))
     assert settings.model_dump(mode="json") == document
+
+
+@pytest.mark.parametrize(
+    "mode",
+    (
+        "uri",
+        "media_type",
+        "database",
+        "parent",
+        "snapshot",
+        "template",
+    ),
+)
+def test_settings_authority_configuration_is_exact_without_projection_requirements(tmp_path, mode):
+    document = settings_document(tmp_path)
+    if mode == "uri":
+        document["scene_manifest"]["uri"] = "file:///outside/authority.json"
+    elif mode == "media_type":
+        document["compile_qualification"]["media_type"] = "text/plain"
+    elif mode == "database":
+        document["golden_database_path"] = document["asset_state_path"]
+    elif mode == "parent":
+        document["cas_root"] = str(tmp_path) + "/child/../cas"
+    elif mode == "snapshot":
+        document["registry_snapshot"]["schema_version"] = "harness.skill_qualification.v1"
+    else:
+        document["compile_template_ref"]["schema_version"] = (
+            "harness.image2env_genesis_compile_request.v2"
+        )
+    with pytest.raises(ValidationError):
+        NativeImageMCPServerSettings.model_validate_json(json.dumps(document))

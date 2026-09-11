@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .artifacts import LocalArtifactStore
 from .genesis_asset_qualification_application import GenesisAssetQualificationApplication
@@ -18,6 +18,16 @@ from .golden_image2env_execution import create_native_image_execution_bindings
 from .image2env_genesis_compile import Image2EnvGenesisCompiler
 from .image2env_genesis_compile_application import Image2EnvGenesisCompileApplication
 from .schemas.common import ArtifactRef
+
+
+def _exact_json_ref(value: ArtifactRef, schema: str) -> ArtifactRef:
+    if (
+        value.schema_version != schema
+        or value.media_type != "application/json"
+        or value.uri != f"artifact://sha256/{value.sha256}"
+    ):
+        raise ValueError("operator evidence requires its exact JSON schema and CAS identity")
+    return value
 
 
 class NativeImageApplicationSettings(BaseModel):
@@ -56,7 +66,7 @@ class NativeImageApplicationSettings(BaseModel):
     )
     @classmethod
     def absolute_authority(cls, value: Path) -> Path:
-        if not value.is_absolute():
+        if not value.is_absolute() or ".." in value.parts:
             raise ValueError("native authority paths must be absolute")
         return value
 
@@ -72,16 +82,14 @@ class NativeImageApplicationSettings(BaseModel):
             "stdlib",
         }:
             raise ValueError("native deployments require all six exact runtime roles")
-        if any(not path.is_absolute() for path in value.values()):
+        if any(not path.is_absolute() or ".." in path.parts for path in value.values()):
             raise ValueError("native deployment paths must be absolute")
         return value
 
     @field_validator("asset_manifest", "scene_manifest", "capture_manifest")
     @classmethod
     def runtime_identity(cls, value: ArtifactRef) -> ArtifactRef:
-        if value.schema_version != "harness.genesis_runtime_manifest.v1":
-            raise ValueError("runtime authority requires the exact manifest schema")
-        return value
+        return _exact_json_ref(value, "harness.genesis_runtime_manifest.v1")
 
     @field_validator(
         "compile_qualification",
@@ -91,9 +99,7 @@ class NativeImageApplicationSettings(BaseModel):
     )
     @classmethod
     def qualification_identity(cls, value: ArtifactRef) -> ArtifactRef:
-        if value.schema_version != "harness.skill_qualification.v1":
-            raise ValueError("native authority requires the exact Skill qualification schema")
-        return value
+        return _exact_json_ref(value, "harness.skill_qualification.v1")
 
 
 class NativeImageMCPServerSettings(NativeImageApplicationSettings):
@@ -108,9 +114,25 @@ class NativeImageMCPServerSettings(NativeImageApplicationSettings):
     @field_validator("golden_database_path")
     @classmethod
     def absolute_golden_authority(cls, value: Path) -> Path:
-        if not value.is_absolute():
+        if not value.is_absolute() or ".." in value.parts:
             raise ValueError("Golden authority path must be absolute")
         return value
+
+    @model_validator(mode="after")
+    def exact_server_authority(self):
+        _exact_json_ref(self.compile_template_ref, "harness.image2env_genesis_compile_request.v1")
+        _exact_json_ref(self.registry_snapshot, "harness.registry_snapshot.v1")
+        databases = (
+            self.asset_state_path,
+            self.golden_database_path,
+            self.compile_state_root / "harness.sqlite3",
+            self.scene_state_root / "runs.sqlite",
+            self.observation_state_root / "runs.sqlite",
+            self.validation_state_root / "runs.sqlite",
+        )
+        if len({path.resolve() for path in databases}) != len(databases):
+            raise ValueError("native applications and Golden require distinct SQLite authorities")
+        return self
 
 
 @dataclass(frozen=True)
