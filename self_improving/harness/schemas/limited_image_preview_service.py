@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import UUID4, AwareDatetime
+from pydantic import UUID4, AwareDatetime, Field, model_validator
 
 from .base import HarnessModel, NonEmptyString, NonNegativeInt
 from .common import ArtifactRef
@@ -51,3 +51,17 @@ class PreviewServiceResult(HarnessModel):
     package: ArtifactRef | None = None
     artifacts: tuple[ArtifactRef, ...] = ()
     resource_links: tuple[PreviewResourceLink, ...] = ()
+    failure_code: NonEmptyString | None = None
+    failure_message: NonEmptyString | None = None
+    elapsed_seconds: float = Field(default=0.0, ge=0, allow_inf_nan=False)
+    ttl_remaining_seconds: float | None = Field(default=None, allow_inf_nan=False)
+
+    @model_validator(mode="after")
+    def failure_is_visible(self):
+        if (self.failure_code is None) != (self.failure_message is None):
+            raise ValueError("failure code and message must be paired")
+        if self.status == "failed" and self.failure_code is None:
+            raise ValueError("failed result must expose its concrete cause")
+        if self.failure_code is not None and self.status not in {"failed", "waiting_input"}:
+            raise ValueError("successful result cannot carry failure metadata")
+        return self
