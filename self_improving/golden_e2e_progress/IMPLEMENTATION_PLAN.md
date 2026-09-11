@@ -105,12 +105,17 @@ mismatch 与 4 个缺文件资产必须新 identity 重建或明确退休。不�
 Image2Env/Video2Env 的字段级合同、Gujie adapter mapping 和逐 namespace runtime/qualification/catalog
 路线已拆到 `X2ENV_IMAGE_VIDEO_IMPLEMENTATION_PLAN.md`。contract tranche、X1 image/video ingest、
 X2 typed exact-reuse compile evidence/deep verifier，以及 input-bound controlled image candidate handler 已
-完成；真实 asset qualification、production Skill application 与 replay/validate 仍未完成。
+完成；controlled durable application/restart 也已闭合。legacy Gujie 鼠标证据经审计不足以签当前 asset
+qualification；真实 asset qualification、production Skill application 与 replay/validate 仍未完成。
 
 1. [x] `feat(x2env): add shared input scene task package contracts`，并以 12 个 typed self-hashed records、
    complete-catalog qualification consumption 和 exact static checks 关闭 opaque evidence 缺口。
    - [x] compile receipt/output v2 绑定 canonical input，并以 controlled candidate handler 生成/复核首个
      单对象 exact-reuse 静态 package；保持未资格化与全部 runtime/publishability flags false。
+   - [x] candidate report 经同一 CAS/SQLite 重验后，controlled application 支持 caller UUID 与 no-live restart；
+     该 test qualification 不进入 production assembly。
+   - [ ] 当前 sealed issuer fresh 生成 Genesis runtime lock与 asset-scoped load/collision probe；legacy pass
+     不可直接复用。
 2. `feat(text2env): qualify Genesis compile/replay v2 and validate v3`
 3. `feat(image2env): qualify compile replay validate v1`
 4. `feat(video2env): qualify compile replay validate v1`

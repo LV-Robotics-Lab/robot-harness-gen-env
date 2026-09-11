@@ -1,5 +1,16 @@
 # Change Log
 
+## 2026-09-11 durable controlled image compile 与 asset qualification 审计
+
+- 新增 controlled application：真实 candidate closure 先生成受控 report，application 从同一 CAS/SQLite
+  重验后才接受 caller UUID；terminal 可跨无 live application 重启恢复。集中验收发现 receipt CAS换靶后，
+  又增加所有 RunState artifacts 摘要复核与 compile deep verifier；第二轮验收发现 qualification locator/
+  metadata 未冻结，再强制 exact CAS URI、name、media 与 schema。新模块 166 statements/46 branches 100%，
+  但不进入 production Registry/MCP。
+- 固定 Gujie source/output 审计确认，legacy mouse 归档只能提供 15-member representation candidate；其绝对
+  locator、physics threshold 与 0/7 runtime source identity mismatch 阻止 production asset qualification。
+  下一步必须用当前 sealed Genesis issuer fresh 重跑 asset-scoped load/collision probe。
+
 ## 2026-09-11 controlled image exact-reuse compile candidate
 
 - image/video compile output 与 compile receipt 增加 v2：receipt 通过 canonical CAS input 绑定 seed、attempt、

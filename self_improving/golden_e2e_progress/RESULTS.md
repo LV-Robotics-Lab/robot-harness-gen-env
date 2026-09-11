@@ -1,5 +1,34 @@
 # 进度与结果
 
+## 2026-09-11 controlled durable image compile 与 production qualification 审计
+
+- TDD `39823de` 冻结 public application seam，`97a6fad` 完成首版 GREEN；独立完整性验收随后发现 candidate
+  receipt CAS 可在绑定前被换靶，`69a269b` 增加所有 RunState artifacts 当前摘要复核、v2 input/receipt 解析
+  和 exact deep verifier。第二轮又发现 qualification 可改用 CAS 外相同字节或漂移元数据，最终修复
+  `40bfa213c8dace7e99de6d96980d3431f3d87735` 强制 exact CAS URI/name/media/schema。application 未绑定时只能 `evaluate`
+  unregistered candidate；绑定前会从同一 CAS/SQLite 重新核对 controlled report 中的 candidate run、
+  Invocation、output、21-ref closure、implementation/source tree 与 qualification identity，之后才允许
+  caller-owned UUID4 invoke。
+- 同实例重提与无 live application 重建都返回同一 terminal；same UUID 的 input/seed 漂移在 handler 前
+  identity-fail，intent-only 状态按 pending 拒绝，CAS、events 与 durable rows 不增长。十一项 application pass；
+  新模块 166 statements/46 branches 100%；相关 handler/verifier/Registry/RunStore 回归 121 pass。两次独立
+  验收分别为 31/40 pass，后者逐项破坏 21/21 closure artifacts与 qualification/report/descriptor/SQLite，
+  全部 fail closed。
+- 固定 `40bfa213...` 根套件为 4,119 passed / 20 skipped / 1 failed；唯一失败是项目 `.venv` 无 `pip`
+  导致 packaging 子进程无法启动。同一 packaging 文件用有 `pip` 的系统 Python 为 2 passed。
+- Gujie 指定 exact pass 输出 `/home/jingxiang/gujie/gen-env/output/鼠标_原始平面_物理与渲染` 当前不存在。
+  最接近的历史归档有 479/479 manifest、15-member mouse URDF 与 CPU static inspect，但 TaskOutput/workflow
+  absolute locator 已失效，两份 physics evidence 被当前 verifier 以 threshold mismatch 拒绝，且记录的 7 个
+  runtime module SHA 与固定 `eb0b710` 为 0/7 匹配；可达 Git 历史不存在闭合该实现集的 commit。
+- 因此旧 bytes 最多可生成 unqualified `AssetRepresentationV1` candidate。旧 physics pass/contact/render/video
+  均不能签当前 runtime lock 或 asset qualification。production 下一门必须由当前 sealed issuer fresh 执行
+  asset-scoped dynamic load + collision/contact probe，并在 relocated fresh CAS strict reload。
+- 证据：`docs/evidence/golden-image2env-controlled-application-20260911.{md,json}`；JSON SHA-256
+  `6a7c804df9e5dcc2bfd32e6dc0b772787508a09afb0a392f307d91b91b404ee3`，Markdown SHA-256
+  `42f5608c09ac07d39a5393938d71bf53c1b28ca21ac2aa3844cbbad868c926fa`。
+- 边界：controlled qualification 只证明 application durability，不进入 production Registry/MCP；没有运行新
+  Genesis/GPU，也没有 simulator-ready、publishability、replay/validate 或 robot-policy。
+
 ## 2026-09-11 X2 controlled image exact-reuse compile candidate
 
 - TDD 提交链：`327c78a` 冻结 compile receipt/output v2 → `5b45673` 绑定 canonical compile input 并将

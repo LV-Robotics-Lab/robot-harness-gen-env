@@ -193,3 +193,17 @@
   都不能进入 HandlerResult、workflow state 或 receipt head。
 - 发布边界：candidate 始终 `simulator_executed=false`、`simulator_ready=false`、`publishable=false`，不注册
   qualified Skill/MCP。只有真实 Genesis asset qualification 与 production bundle 通过后才能扩大主张。
+
+## D017 — legacy Genesis pass 不可迁移为当前 asset qualification
+
+- 日期：2026-09-11
+- 状态：accepted_by_evidence
+- 决策：Gujie 历史输出中的 asset bytes 可以作为 staged representation candidate 来源，但旧 scene/task/
+  physics status、截图、视频和退出码不能直接产生 `GenesisRuntimeLockV1` 或
+  `GenesisAssetQualificationV1`。
+- 证据：指定 exact pass 目录已不存在；最接近归档虽有 479/479 manifest 和 15-member mouse URDF closure，
+  但 TaskOutput/workflow absolute locator 已失效、两份 physics evidence 不满足当前 threshold contract，且
+  记录的 7 个 runtime module SHA 与固定 `eb0b710` 为 0/7 匹配，也不存在可重建该实现集的 Git commit。
+- 后续门：当前 implementation/issuer 必须生成 sealed runtime lock，并 fresh 执行 asset-scoped dynamic load、
+  collision-enabled contact probe与 typed report；relocated fresh-CAS strict reload 后才能进入 production
+  catalog/Skill qualification/MCP。

@@ -1,0 +1,73 @@
+{
+  "application": {
+    "candidate_remains_unregistered": true,
+    "controlled_qualification_required_before_caller_uuid": true,
+    "durable_restart_same_terminal": true,
+    "fixed_commit": "40bfa213c8dace7e99de6d96980d3431f3d87735",
+    "independent_acceptance": {
+      "integrity_focused_tests_passed": 40,
+      "qualification_artifact_identity_bound": true,
+      "restart_cas_objects": 23,
+      "restart_events": 6,
+      "restart_focused_tests_passed": 31,
+      "restart_intents": 1,
+      "restart_invocations": 2,
+      "restart_run_states": 2,
+      "restart_summary_sha256": "67c86a2e58fba74ecb19831a47e5c59347546d6354461dea2d21445b676e0a2a"
+    },
+    "mcp_exposed": false,
+    "new_core_branches": 46,
+    "new_core_branches_covered": 46,
+    "new_core_statements": 166,
+    "new_core_statements_covered": 166,
+    "production_qualification": false,
+    "root_gate": {
+      "environment_failure": ".venv has no pip for packaging wheel subprocess",
+      "failed": 1,
+      "passed": 4119,
+      "packaging_with_system_python_passed": 2,
+      "skipped": 20
+    },
+    "tests_passed": 11
+  },
+  "gujie_audit": {
+    "archived_candidate_path": "/home/jingxiang/gujie/gen-env/data/genesis_history/output_before_retest_20260908_011810/场景图物理_mouse_001",
+    "archived_runtime_modules_matching_fixed_source": "0/7",
+    "asset_manifest_members_verified": "479/479",
+    "fixed_source_commit": "eb0b710581fd7794bc01b447b0f77cb871c8a711",
+    "production_asset_qualification_allowed": false,
+    "specified_pass_output_exists": false,
+    "specified_pass_output_path": "/home/jingxiang/gujie/gen-env/output/鼠标_原始平面_物理与渲染",
+    "urdf_package_members": 15,
+    "urdf_static_inspect": {
+      "collision_parts": 8,
+      "joints": 0,
+      "mass_kg": 0.07,
+      "rigid_links": 1,
+      "visual_parts": 1
+    },
+    "verifier_results": {
+      "baseline_physics": "fail: unexpected physics thresholds",
+      "half_dt_physics": "fail: unexpected physics thresholds",
+      "scene_package": "pass; physics_status=not_run",
+      "task_output": "fail: stale absolute directory",
+      "workflow": "fail: stale absolute source scene"
+    }
+  },
+  "legacy_artifact_sha256": {
+    "baseline_report": "c66d46a448dc599918d70c146f087fca4102103475e3c9f485c2e722c55f942e",
+    "half_dt_report": "bf144308fedac8138e2d9eac2e8f2327e066bc8f37aae110799a597f9b148a60",
+    "mouse_asset_json": "a7d20cc64d171f1a720fdeefe0d38130a4d85eef3b90b9300241bc790592f21c",
+    "verification_summary": "5cb46fd77236a64fdbf73720fc1dc983bbd6d8fd1f35cccab974c04f055f4b66",
+    "workflow_input": "0d0423a0450bb2a563bd8fb5d775549a0772457aeb2f49d4e241f3b2b93ffa99",
+    "workflow_report": "75f8c9cfeccc5799876c6b7a34439ee78f6638e0a1394ece6ebfb3f8b8eff95f"
+  },
+  "next_required_gate": [
+    "CAS-stage the 15-member mouse representation as an unqualified candidate",
+    "create a current sealed Genesis runtime and issuer implementation lock",
+    "run a fresh asset-scoped dynamic load and collision/contact probe",
+    "publish typed probe evidence and strict-load it from a relocated fresh CAS",
+    "only then add the asset qualification to a production catalog and Skill qualification"
+  ],
+  "schema_version": "harness.image2env_controlled_application_acceptance.v1"
+}

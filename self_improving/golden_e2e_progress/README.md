@@ -85,7 +85,11 @@ evidence，并要求四项 exact static checks。compile receipt/output v2 又�
 image handler 已在 Registry candidate 中确定性生成单对象 exact-reuse 静态 package，并在 postflight
 重验全部闭包；验收记录见
 [`docs/evidence/golden-image2env-exact-reuse-candidate-20260911.md`](../../docs/evidence/golden-image2env-exact-reuse-candidate-20260911.md)。
-它尚不是 production qualification、Genesis runtime/replay 或 MCP image path。
+controlled durable application 进一步闭合 caller UUID、SQLite terminal 与无 live application 重启。Gujie
+legacy 鼠标证据经复核只能作为 representation candidate：指定 pass 目录缺失，最接近归档的 runtime source
+identity 为 0/7 匹配且当前 verifier 拒绝旧 physics thresholds。它尚不是 production qualification、Genesis
+runtime/replay 或 MCP image path；详见
+[`docs/evidence/golden-image2env-controlled-application-20260911.md`](../../docs/evidence/golden-image2env-controlled-application-20260911.md)。
 P6 继续修复资产 staging；autoresearch 只在其
 冻结 benchmark 可以
 真实运行后开始。

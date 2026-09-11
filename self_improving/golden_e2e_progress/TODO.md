@@ -5,8 +5,9 @@
 ## Doing
 
 - X2 exact-reuse image compile：controlled candidate handler 与 v2 input-bound receipt 已完成；当前进入
-  production qualification 设计。必须取得真实 Genesis asset issuer/runtime evidence，且资格生成器要复用
-  同一 preflight/postflight，不得把 controlled catalog fixture 当生产资产资格。
+  production qualification。Gujie 指定 exact pass 输出现已缺失；最接近的 legacy 鼠标归档虽有 15-member
+  URDF bytes，却有 stale absolute locators、current threshold fail 和 0/7 runtime source identity mismatch。
+  必须由当前 sealed issuer 重跑 asset-scoped Genesis load/collision probe，不得迁移旧 pass 状态。
 - P10 fresh observation：strict schema、controlled candidate application/evidence policy 与 test-controlled
   Golden execution binding 已在同一 revision 2→3 中闭合 receipt/state/restart；下一切片是 production
   runtime binding。当前受控路径固定 `simulator_executed=false`，真实 Genesis capture、qualification 与
@@ -20,8 +21,9 @@
 ## Next
 
 - X2：为 exact-reuse image compile 实现 production application/qualification；先生成真实 Genesis asset
-  issuer、runtime lock 与 qualification bundle，再允许 Registry/MCP 曝光。controlled handler 继续保持
-  未注册、`simulator_ready=false`。
+  issuer、runtime lock 与 typed asset-probe evidence，再允许 Registry/MCP 曝光。第一步只把 legacy mouse
+  的 15-member byte closure迁为 unqualified representation candidate；controlled handler/application继续
+  保持未注册、`simulator_ready=false`。
 - P10：实现 production execution binding/runtime；保持过期、缺 key、时间或 payload 漂移在 parent
   commit 前 fail closed。
 - P10：production policy 稳定后，用真实 Genesis sealed checkpoint 做 capture/qualification；只有该门
@@ -47,6 +49,13 @@
   revision 继续调用 compile/replay/validate。
 
 ## Done
+
+- controlled durable image compile application 完成：未绑定时只运行 unregistered candidate；真实 succeeded
+  candidate 的 Invocation/output/closure 被写入明确 controlled report 后，application 会从同一 CAS/SQLite
+  重验并才允许 caller UUID4 invoke。同实例与无 live application 重开均返回同一 terminal；输入 identity
+  漂移和 intent-only pending 在 handler 前拒绝；绑定时逐一重验 CAS artifacts 与完整 compile deep closure。
+  qualification同时强制 exact CAS URI/name/media/schema；新模块 166 statements/46 branches 100%，不进入
+  production Registry/MCP。
 
 - X2 controlled exact-reuse image compile 完成：image/video compile descriptor 输出切到 v2，compile receipt
   v2 以 CAS `compile_input` 绑定 seed、attempt、acquisition policy 和完整输入字节，v1 继续 parse-only 且

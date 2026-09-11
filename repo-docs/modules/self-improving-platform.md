@@ -53,10 +53,12 @@ checkout 并锁住 committed snapshot；核心资格模块强制 100%
 语句与分支覆盖。compile 的 asset admission 仍发生在 solve 前且失败不回滚；跨 run promotion、
 identity-frozen resumable EvaluationRun 与 MCP adapter 仍未闭合，契约保持 `Status: Proposed`。
 
-Image2Env/Video2Env 的六项 `@1.0.0` exact metadata 当前只存在于 contract catalog：没有 handler、
-qualification 或 Registry entry。compile schema 固定不执行仿真且不可发布；replay schema要求真实
+Image2Env/Video2Env 的六项 `@1.0.0` exact metadata 尚未进入 production Registry。image compile 已有
+input-bound exact-reuse controlled handler/application，可生成并跨重启恢复 non-ready candidate，但它的
+controlled qualification 不进入 production assembly/MCP。compile schema 固定不执行仿真且不可发布；replay schema要求真实
 Genesis collision、非零 steps 和顺序媒体；validate 才能给 publishability。Gujie `genenv.*` 只能经
-legacy adapter 映射为 non-ready candidate，旧 physics/render/status 不能直接晋升。正式字段见
+legacy adapter 映射为 non-ready candidate；固定审计又确认旧 mouse pass 的定位、threshold和runtime源码
+身份不满足当前 asset qualification，旧 physics/render/status 不能直接晋升。正式字段见
 [Image/Video exact Skill 合同](../../docs/contracts/X2ENV_IMAGE_VIDEO_SKILL_CONTRACT_V1.md)，来源映射见
 [Gujie adapter mapping](../../docs/contracts/GUJIE_GENENV_ADAPTER_MAPPING_V1.md)。
 

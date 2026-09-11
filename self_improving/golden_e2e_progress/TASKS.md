@@ -73,6 +73,10 @@
   - [x] X2 controlled exact-reuse image compile：v2 receipt 绑定完整 compile input；candidate handler 先做
     纯读 preflight，再确定性发布 SceneIR/TaskIR/selection/closure/binding/static/package/receipt，并由
     deep verifier postflight 后才返回。该项不计作 production qualification 或 Genesis runtime。
+  - [x] controlled durable image compile application：candidate run、controlled report、caller-owned UUID、
+    SQLite terminal 与无 live application restart 闭合；不计作 production qualification 或 MCP exposure。
+  - [ ] fresh Genesis asset qualification：legacy 鼠标输出只能迁移 15-member representation candidate；
+    当前 issuer/runtime lock 与 asset-scoped load/collision probe 必须重跑。
 - [ ] video2env 三个 Skill 实现、资格和三类资产路径。
 - [ ] 输出 sim-ready Genesis 环境，并保留可观看图像/视频和机器可验证报告。
 
