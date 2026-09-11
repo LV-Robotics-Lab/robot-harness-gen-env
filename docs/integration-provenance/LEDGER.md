@@ -453,3 +453,12 @@ CAS pure reader。固定 Gujie 场景在 manifest `e37a013b…` 下真实通过 
 进程封闭、CAS、执行回执和媒体完整性为 Harness integration；Mesa/LLVM/Genesis 保留各自上游归属。
 生命周期仍为 `integrating`：v1缺可达MP4和fresh capture event，且只绑定早期compile candidate，
 不能据此改成最终Skill或M1完成。
+
+### Production image compile 增量
+
+Harness 已把固定 Gujie mouse 的三份真实仿真视角图像，通过 deterministic media ingest、operator-authored
+proposal、现有 durable asset qualification 和本条有限桌面 adapter，接入已注册
+`image2env.compile@2.0.0`。三条 registered terminal、第二CAS/SQLite搬迁及源码/成员漂移拒绝见
+`docs/evidence/golden-production-image-compile-20260911.md`。Gujie提供场景/几何/视角来源，Harness
+负责typed request/receipt、资格、Registry与恢复。当前不将这些历史仿真视角称为 fresh reconstruction
+或自主视觉理解；lifecycle仍为integrating，直到production replay/observe/validate闭合。

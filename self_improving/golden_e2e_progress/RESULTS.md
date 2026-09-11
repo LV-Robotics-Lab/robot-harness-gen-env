@@ -1,5 +1,15 @@
 # 进度与结果
 
+## M1 production image compile 完成
+
+- `image2env.compile@2.0.0` 已以 v2 evidence qualification 注册；Gujie mouse overview/top/side
+  三视角、seed 17/23/41 均真实 production invoke，产出各自receipt和同一确定性有限桌面scene。
+- same-live/restart深读、UUID冲突、nested member缺失、candidate/report/terminal漂移、独立代码目录
+  漂移及第二CAS/SQLite搬迁均通过。完整索引及98%原始覆盖边界见
+  `docs/evidence/golden-production-image-compile-20260911.md`。
+- 此目标只授予static scene candidate；M1继续用两个registered compile终态资格化replay v2，
+  第三个终态跑production replay，再接fresh observe和environment validate。
+
 ## M1 受约束 Genesis scene producer v1 实跑
 
 - manifest `e37a013b…` 封闭 165,812 members / 8.57 GB logical bytes / 19 backend files，

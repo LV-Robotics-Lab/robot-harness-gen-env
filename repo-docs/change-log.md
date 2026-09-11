@@ -1,5 +1,11 @@
 # Change Log
 
+## Production image exact-reuse compile
+
+- 三份 Gujie mouse 仿真视角已通过已注册 `image2env.compile@2.0.0`，并在重启、成员损坏、
+  源码漂移与第二CAS/SQLite路径中验证。输出权限止于static scene candidate；production replay
+  必须继续读取可信compile终态。
+
 ## Native image compile 与受约束 Genesis scene producer v1
 
 - Gujie mouse overview 的真实 image exact-reuse compile 生成 typed scene；受约束 OSMesa/llvmpipe
