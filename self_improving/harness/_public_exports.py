@@ -7,6 +7,28 @@ from typing import Any
 
 _EXPORT_GROUPS = (
     (
+        ".schemas.golden_control_v3_snapshot",
+        ("ControlCommitSnapshotV3",),
+    ),
+    (
+        ".schemas.limited_image_preview_execution",
+        ("LimitedSceneValidateInputV1", "LimitedSceneValidationV1", "PreviewLayout"),
+    ),
+    (
+        ".schemas.limited_image_preview",
+        (
+            "LIMITED_IMAGE_PREVIEW_LIBRARY_INDEX_SCHEMA_ID",
+            "LIMITED_IMAGE_PREVIEW_MANIFEST_SCHEMA_ID",
+            "LimitedImagePreviewIndexEntryV1",
+            "LimitedImagePreviewLibraryIndexV1",
+            "LimitedImagePreviewManifestV1",
+            "LimitedImagePreviewStageV1",
+            "LimitedImagePreviewTimingV1",
+            "limited_image_preview_library_index_sha256",
+            "limited_image_preview_manifest_sha256",
+        ),
+    ),
+    (
         ".application",
         (
             "CompileApplication",

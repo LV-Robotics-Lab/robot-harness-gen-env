@@ -127,6 +127,11 @@ from self_improving.harness.schemas.x2env_compile_evidence import (
 )
 
 EXPECTED_SCHEMA_IDS = {
+    "harness.control_commit_snapshot.v3",
+    "harness.limited_image_preview_library_index.v1",
+    "harness.limited_image_preview_manifest.v1",
+    "harness.limited_scene_validate_input.v1",
+    "harness.limited_scene_validation.v1",
     "harness.revised_compile_qualification_report.v1",
     "harness.revised_compile_invocation.v1",
     "harness.tabletop_layout_revision.v1",
@@ -427,6 +432,11 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.genesis_scene_process_observation.v3",
             "harness.genesis_scene_launch_result.v3",
             "harness.genesis_scene_execution_receipt.v3",
+            "harness.control_commit_snapshot.v3",
+            "harness.limited_image_preview_library_index.v1",
+            "harness.limited_image_preview_manifest.v1",
+            "harness.limited_scene_validate_input.v1",
+            "harness.limited_scene_validation.v1",
             "harness.asset_repair_plan.v1",
             "harness.asset_repair_plan_request.v1",
             "harness.asset_source_snapshot_manifest.v1",

@@ -1,0 +1,162 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "PreviewLayout": {
+      "additionalProperties": false,
+      "properties": {
+        "x_m": {
+          "title": "X M",
+          "type": "number"
+        },
+        "y_m": {
+          "title": "Y M",
+          "type": "number"
+        },
+        "yaw_rad": {
+          "title": "Yaw Rad",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x_m",
+        "y_m",
+        "yaw_rad"
+      ],
+      "title": "PreviewLayout",
+      "type": "object"
+    }
+  },
+  "$id": "harness.limited_scene_validation.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actual_layout": {
+      "$ref": "#/$defs/PreviewLayout"
+    },
+    "execution_receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "expected_layout": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PreviewLayout"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "physical_report": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "physical_scope": {
+      "const": "dual_dt_trace_contact_settling_and_media",
+      "title": "Physical Scope",
+      "type": "string"
+    },
+    "position_tolerance_m": {
+      "const": 0.001,
+      "title": "Position Tolerance M",
+      "type": "number"
+    },
+    "scene": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.limited_scene_validation.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "semantic_status": {
+      "enum": [
+        "pass",
+        "mismatch"
+      ],
+      "title": "Semantic Status",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "yaw_tolerance_rad": {
+      "const": 0.001,
+      "title": "Yaw Tolerance Rad",
+      "type": "number"
+    }
+  },
+  "required": [
+    "schema_version",
+    "execution_receipt",
+    "scene",
+    "physical_report",
+    "expected_layout",
+    "actual_layout",
+    "position_tolerance_m",
+    "yaw_tolerance_rad",
+    "semantic_status",
+    "status",
+    "physical_scope"
+  ],
+  "title": "LimitedSceneValidationV1",
+  "type": "object"
+}

@@ -1,0 +1,136 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "LimitedImagePreviewIndexEntryV1": {
+      "additionalProperties": false,
+      "properties": {
+        "final_scene_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Final Scene Sha256",
+          "type": "string"
+        },
+        "manifest": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "mode": {
+          "enum": [
+            "normal",
+            "repair"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "preview_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Preview Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "preview_id",
+        "manifest",
+        "mode",
+        "final_scene_sha256"
+      ],
+      "title": "LimitedImagePreviewIndexEntryV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.limited_image_preview_library_index.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Canonical project-local index; the library owns its atomic replacement.",
+  "properties": {
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/LimitedImagePreviewIndexEntryV1"
+      },
+      "title": "Entries",
+      "type": "array"
+    },
+    "index_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Index Sha256",
+      "type": "string"
+    },
+    "project_id": {
+      "pattern": "^[a-z][a-z0-9-]{0,62}[a-z0-9]$",
+      "title": "Project Id",
+      "type": "string"
+    },
+    "revision": {
+      "minimum": 0,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "harness.limited_image_preview_library_index.v1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "index_sha256",
+    "project_id",
+    "revision",
+    "entries"
+  ],
+  "title": "LimitedImagePreviewLibraryIndexV1",
+  "type": "object"
+}

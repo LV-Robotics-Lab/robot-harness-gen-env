@@ -1,0 +1,427 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "LimitedImagePreviewStageV1": {
+      "additionalProperties": false,
+      "description": "One existing native compile/replay/validate stage bound for preview.",
+      "properties": {
+        "baseline_preview": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "compile_receipt": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "compile_request": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "compile_skill_ref": {
+          "enum": [
+            "image2env.compile@2.0.0",
+            "image2env.compile@3.0.0"
+          ],
+          "title": "Compile Skill Ref",
+          "type": "string"
+        },
+        "fresh_observation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "half_dt_preview": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "phase": {
+          "enum": [
+            "initial",
+            "revised"
+          ],
+          "title": "Phase",
+          "type": "string"
+        },
+        "prompt_revision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "replay": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "replay_receipt": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "replay_report": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "retained_media_index": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "runtime_manifest": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "scene": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "validation": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "validation_result": {
+          "$ref": "#/$defs/LimitedSceneValidationV1"
+        },
+        "workflow_head": {
+          "$ref": "#/$defs/ArtifactRef"
+        }
+      },
+      "required": [
+        "phase",
+        "compile_skill_ref",
+        "compile_request",
+        "compile_receipt",
+        "prompt_revision",
+        "scene",
+        "runtime_manifest",
+        "replay_receipt",
+        "replay",
+        "replay_report",
+        "baseline_preview",
+        "half_dt_preview",
+        "retained_media_index",
+        "fresh_observation",
+        "validation",
+        "validation_result",
+        "workflow_head"
+      ],
+      "title": "LimitedImagePreviewStageV1",
+      "type": "object"
+    },
+    "LimitedImagePreviewTimingV1": {
+      "additionalProperties": false,
+      "description": "One measured monotonic duration in the fixed seven-segment vocabulary.",
+      "properties": {
+        "duration_ns": {
+          "minimum": 1,
+          "title": "Duration Ns",
+          "type": "integer"
+        },
+        "segment": {
+          "enum": [
+            "input_asset",
+            "compile",
+            "runtime_integrity",
+            "simulation_render",
+            "cas_deep_read",
+            "codex_mcp",
+            "validate_publish"
+          ],
+          "title": "Segment",
+          "type": "string"
+        }
+      },
+      "required": [
+        "segment",
+        "duration_ns"
+      ],
+      "title": "LimitedImagePreviewTimingV1",
+      "type": "object"
+    },
+    "LimitedSceneValidationV1": {
+      "additionalProperties": false,
+      "properties": {
+        "actual_layout": {
+          "$ref": "#/$defs/PreviewLayout"
+        },
+        "execution_receipt": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "expected_layout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PreviewLayout"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "physical_report": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "physical_scope": {
+          "const": "dual_dt_trace_contact_settling_and_media",
+          "title": "Physical Scope",
+          "type": "string"
+        },
+        "position_tolerance_m": {
+          "const": 0.001,
+          "title": "Position Tolerance M",
+          "type": "number"
+        },
+        "scene": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "schema_version": {
+          "const": "harness.limited_scene_validation.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "semantic_status": {
+          "enum": [
+            "pass",
+            "mismatch"
+          ],
+          "title": "Semantic Status",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "yaw_tolerance_rad": {
+          "const": 0.001,
+          "title": "Yaw Tolerance Rad",
+          "type": "number"
+        }
+      },
+      "required": [
+        "schema_version",
+        "execution_receipt",
+        "scene",
+        "physical_report",
+        "expected_layout",
+        "actual_layout",
+        "position_tolerance_m",
+        "yaw_tolerance_rad",
+        "semantic_status",
+        "status",
+        "physical_scope"
+      ],
+      "title": "LimitedSceneValidationV1",
+      "type": "object"
+    },
+    "PreviewLayout": {
+      "additionalProperties": false,
+      "properties": {
+        "x_m": {
+          "title": "X M",
+          "type": "number"
+        },
+        "y_m": {
+          "title": "Y M",
+          "type": "number"
+        },
+        "yaw_rad": {
+          "title": "Yaw Rad",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x_m",
+        "y_m",
+        "yaw_rad"
+      ],
+      "title": "PreviewLayout",
+      "type": "object"
+    }
+  },
+  "$id": "harness.limited_image_preview_manifest.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "One publishable normal or semantic-repair image workflow.",
+  "properties": {
+    "asset_qualification": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "asset_query": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "asset_representation": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "authority": {
+      "const": "validated_limited_preview_only",
+      "title": "Authority",
+      "type": "string"
+    },
+    "initial_stage": {
+      "$ref": "#/$defs/LimitedImagePreviewStageV1"
+    },
+    "input_text": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "mode": {
+      "enum": [
+        "normal",
+        "repair"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "preview_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Preview Id",
+      "type": "string"
+    },
+    "principal_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Principal Id",
+      "type": "string"
+    },
+    "project_id": {
+      "pattern": "^[a-z][a-z0-9-]{0,62}[a-z0-9]$",
+      "title": "Project Id",
+      "type": "string"
+    },
+    "raw_image": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "requested_layout": {
+      "$ref": "#/$defs/PreviewLayout"
+    },
+    "requested_profile": {
+      "const": "genesis.rigid_scene@1",
+      "title": "Requested Profile",
+      "type": "string"
+    },
+    "revised_stage": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LimitedImagePreviewStageV1"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "robot_policy_evaluated": {
+      "const": false,
+      "title": "Robot Policy Evaluated",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "const": "harness.limited_image_preview_manifest.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope": {
+      "const": "limited_image_exact_reuse_rigid_scene",
+      "title": "Scope",
+      "type": "string"
+    },
+    "source_media": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "timings": {
+      "items": {
+        "$ref": "#/$defs/LimitedImagePreviewTimingV1"
+      },
+      "maxItems": 7,
+      "minItems": 7,
+      "title": "Timings",
+      "type": "array"
+    },
+    "total_duration_ns": {
+      "minimum": 0,
+      "title": "Total Duration Ns",
+      "type": "integer"
+    },
+    "workflow_run_id": {
+      "format": "uuid4",
+      "title": "Workflow Run Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "preview_id",
+    "project_id",
+    "workflow_run_id",
+    "principal_id",
+    "mode",
+    "scope",
+    "requested_profile",
+    "requested_layout",
+    "source_media",
+    "raw_image",
+    "input_text",
+    "asset_query",
+    "asset_representation",
+    "asset_qualification",
+    "initial_stage",
+    "revised_stage",
+    "timings",
+    "total_duration_ns",
+    "authority",
+    "robot_policy_evaluated"
+  ],
+  "title": "LimitedImagePreviewManifestV1",
+  "type": "object"
+}

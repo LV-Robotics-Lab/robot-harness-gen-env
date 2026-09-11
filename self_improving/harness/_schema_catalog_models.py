@@ -8,6 +8,26 @@ from typing import Any
 
 _SCHEMA_MODEL_LOCATORS = MappingProxyType(
     {
+        "harness.control_commit_snapshot.v3": (
+            ".schemas.golden_control_v3_snapshot",
+            "ControlCommitSnapshotV3",
+        ),
+        "harness.limited_scene_validate_input.v1": (
+            ".schemas.limited_image_preview_execution",
+            "LimitedSceneValidateInputV1",
+        ),
+        "harness.limited_scene_validation.v1": (
+            ".schemas.limited_image_preview_execution",
+            "LimitedSceneValidationV1",
+        ),
+        "harness.limited_image_preview_manifest.v1": (
+            ".schemas.limited_image_preview",
+            "LimitedImagePreviewManifestV1",
+        ),
+        "harness.limited_image_preview_library_index.v1": (
+            ".schemas.limited_image_preview",
+            "LimitedImagePreviewLibraryIndexV1",
+        ),
         "harness.genesis_scene_compile_binding.v2": (
             ".schemas.genesis_scene_execution_v3",
             "GenesisSceneCompileBindingV2",
