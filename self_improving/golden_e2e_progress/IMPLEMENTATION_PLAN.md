@@ -106,7 +106,8 @@ Image2Env/Video2Env 的字段级合同、Gujie adapter mapping 和逐 namespace 
 路线已拆到 `X2ENV_IMAGE_VIDEO_IMPLEMENTATION_PLAN.md`。contract tranche、X1 image/video ingest、
 X2 typed exact-reuse compile evidence/deep verifier，以及 input-bound controlled image candidate handler 已
 完成；controlled durable application/restart 也已闭合。legacy Gujie 鼠标证据经审计不足以签当前 asset
-qualification；真实 asset qualification、production Skill application 与 replay/validate 仍未完成。
+qualification；后续`5f78e62`已fresh签发单资产qualification并通过持久恢复。production Skill application
+与完整Genesis环境replay/validate仍未完成，单资产门不等于整条P9完成。
 
 1. [x] `feat(x2env): add shared input scene task package contracts`，并以 12 个 typed self-hashed records、
    complete-catalog qualification consumption 和 exact static checks 关闭 opaque evidence 缺口。
@@ -125,7 +126,7 @@ qualification；真实 asset qualification、production Skill application 与 re
        `5f78e62`单资产真实签发、executed恢复/并发与第二CAS纯读已通过；全新core原始100%覆盖
        仍有明示缺口，不能把单资产完成扩大为production image Skill/环境/策略完成。
        - [x] `fd50576`：固定CPU launcher、archive child、manifest-bound execution producer/verifier，
-         当前97 schemas；正式Producer/第二部署运行与覆盖收口仍进行中，不等于qualification完成。
+         当前97 schemas；正式Producer/第二部署运行已通过，原始100%覆盖仍有缺口。
        - [x] `3662ba6`：canonical runtime content manifest、逐文件流式CAS、read/deployment verification；
          166,141个真实成员已在第二绝对路径fresh process中全量重验。
        - [x] `fd50576`已把manifest绑定实际fixed-process/runner与fresh probe回执，处理archive、精确
