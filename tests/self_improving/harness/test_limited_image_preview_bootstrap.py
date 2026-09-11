@@ -279,6 +279,16 @@ def test_check_cli_returns_machine_readable_result(bootstrap_plan, capsys):
     assert payload["status"] == "ready"
 
 
+def test_check_fails_closed_on_partial_release_directory(bootstrap_plan):
+    path, _ = bootstrap_plan
+    plan = LimitedImagePreviewBootstrapPlan.model_validate_json(path.read_bytes())
+    plan.output_directory.mkdir()
+    (plan.output_directory / "service-settings.json").write_text("{}\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="release directory"):
+        check_limited_image_preview_bootstrap(path)
+
+
 def test_execute_checkpoints_exact_imports_before_application_restore(bootstrap_plan):
     path, _ = bootstrap_plan
     plan = LimitedImagePreviewBootstrapPlan.model_validate_json(path.read_bytes())
