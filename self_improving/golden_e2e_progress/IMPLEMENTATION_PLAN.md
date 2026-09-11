@@ -116,6 +116,9 @@ qualification；真实 asset qualification、production Skill application 与 re
      该 test qualification 不进入 production assembly。
    - [ ] 当前 sealed issuer fresh 生成 Genesis runtime lock与 asset-scoped load/collision probe；legacy pass
      不可直接复用。
+     - [x] 先把 15-member legacy mouse closure 迁为 stable-snapshot、unqualified representation。
+     - [ ] 定义 typed input/load/contact-trace/report，完成无相机 CPU issuer、qualification producer与 relocated
+       strict reload。
 2. `feat(text2env): qualify Genesis compile/replay v2 and validate v3`
 3. `feat(image2env): qualify compile replay validate v1`
 4. `feat(video2env): qualify compile replay validate v1`

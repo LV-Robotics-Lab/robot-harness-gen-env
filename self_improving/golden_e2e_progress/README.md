@@ -90,6 +90,9 @@ legacy 鼠标证据经复核只能作为 representation candidate：指定 pass 
 identity 为 0/7 匹配且当前 verifier 拒绝旧 physics thresholds。它尚不是 production qualification、Genesis
 runtime/replay 或 MCP image path；详见
 [`docs/evidence/golden-image2env-controlled-application-20260911.md`](../../docs/evidence/golden-image2env-controlled-application-20260911.md)。
+15-member mouse bytes 现已由 no-symlink/完整目录检查与稳定 snapshot 迁成 unqualified
+`AssetRepresentationV1`；不同绝对路径、重提和源目录并发变化均不改变已验证输出，见
+[`docs/evidence/golden-legacy-mouse-representation-staging-20260911.md`](../../docs/evidence/golden-legacy-mouse-representation-staging-20260911.md)。
 P6 继续修复资产 staging；autoresearch 只在其
 冻结 benchmark 可以
 真实运行后开始。

@@ -1,5 +1,11 @@
 # Change Log
 
+## 2026-09-11 legacy Genesis asset representation staging
+
+- 新增单一 portable staging seam：严格核 legacy manifest 与 15-member URDF closure，先冻结 byte snapshot，
+  再发布 canonical `AssetRepresentationV1`。首版被独立验收找到 verify→put 源变化窗口，修后四类竞态均
+  保留原验证身份；37 pass，184 statements/64 branches 100%。输出明确不含 runtime/qualification authority。
+
 ## 2026-09-11 durable controlled image compile 与 asset qualification 审计
 
 - 新增 controlled application：真实 candidate closure 先生成受控 report，application 从同一 CAS/SQLite

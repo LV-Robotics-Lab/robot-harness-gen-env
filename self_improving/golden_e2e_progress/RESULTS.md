@@ -1,5 +1,21 @@
 # 进度与结果
 
+## 2026-09-11 legacy mouse representation staging
+
+- TDD `6950af5` 冻结 15-member portable staging seam，`28eb805` 首版 GREEN；独立验收发现 verify→CAS put
+  之间重读可变 source 的竞态，`2ddd5e619edf074b80b6563a134b549fba4cc97d` 改为先冻结受控 byte
+  snapshot再发布，并增加 member/manifest/extra/symlink 在首次 put 时变化的永久测试。
+- 真实输出 16 CAS objects / 5,334,039 bytes；representation self-hash `ebf0f616...693f2e`、CAS ref
+  `bf71acba...add1e9`、loader closure `0c23bb38...50904`。relocated source 与重提完全相同。
+- 37项独立验收通过；新模块 184 statements/64 branches 100%。静态完整性失效均首写前拒绝；竞态四例
+  发布的15-member tuple仍与冻结 manifest逐项相同。
+- Gujie `eb0b710` 现成最小真实入口仍强制 Rasterizer/101帧视频/EGL；当前 editable Genesis/runtime lock
+  漂移。下一切片先冻结四层 typed probe evidence，再实现无相机 CPU issuer与 fresh 1000-step run。
+- 证据：`docs/evidence/golden-legacy-mouse-representation-staging-20260911.{md,json}`；JSON SHA-256
+  `fd550e84eb250c4d02e11fe24871fcf9285456807967317a245df9ead1b45d3f`，Markdown SHA-256
+  `e90fec459ff286de47116338358d9a33d8f0f9694eb0084dca0f180ef0414544`。
+- 边界：仅 unqualified representation；无 runtime lock、asset qualification、Registry/MCP 或 Genesis run。
+
 ## 2026-09-11 controlled durable image compile 与 production qualification 审计
 
 - TDD `39823de` 冻结 public application seam，`97a6fad` 完成首版 GREEN；独立完整性验收随后发现 candidate

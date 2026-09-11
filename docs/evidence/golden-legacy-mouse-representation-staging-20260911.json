@@ -1,0 +1,35 @@
+{
+  "fixed_commit": "2ddd5e619edf074b80b6563a134b549fba4cc97d",
+  "independent_acceptance": {
+    "focused_tests_passed": 37,
+    "source_mutation_cases": [
+      "member",
+      "manifest",
+      "extra_file",
+      "symlink"
+    ],
+    "source_mutation_manifest_mismatches": 0
+  },
+  "legacy_source": {
+    "manifest_sha256": "a7d20cc64d171f1a720fdeefe0d38130a4d85eef3b90b9300241bc790592f21c",
+    "member_bytes": 5326332,
+    "members": 15,
+    "path": "/home/jingxiang/gujie/gen-env/data/genesis_history/output_before_retest_20260908_011810/场景图物理_mouse_001/02_scene/assets/iter_0"
+  },
+  "new_core_coverage": {
+    "branches": 64,
+    "branches_covered": 64,
+    "statements": 184,
+    "statements_covered": 184
+  },
+  "output": {
+    "cas_bytes": 5334039,
+    "cas_objects": 16,
+    "loader_closure_sha256": "0c23bb38487aa48fa734734d97fbaa847c05b0976a40fb97eb0b6e76d9d50904",
+    "qualification_created": false,
+    "representation_ref_sha256": "bf71acba05d383593b287ed1bce0efd31e8bbc13a46d35801c7e7e2189add1e9",
+    "representation_sha256": "ebf0f616e4336f4ad2272e6150c166a2686e60b3154b9cf50a3e403cc4693f2e",
+    "runtime_lock_created": false
+  },
+  "schema_version": "harness.legacy_mouse_representation_staging_acceptance.v1"
+}

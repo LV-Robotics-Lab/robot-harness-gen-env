@@ -278,7 +278,8 @@ Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支
   `self_improving/harness/schemas/video_ingest.py`、`self_improving/harness/video_ingest.py`、
   `self_improving/harness/x2env_contracts.py`、`self_improving/harness/schemas/x2env_compile_evidence.py`、
   `self_improving/harness/x2env_compile_closure.py`、`self_improving/harness/image2env_compile.py`、
-  `self_improving/harness/image2env_compile_application.py`、相关 schema
+  `self_improving/harness/image2env_compile_application.py`、
+  `self_improving/harness/legacy_genesis_asset_staging.py`、相关 schema
   snapshot、`docs/contracts/X2ENV_IMAGE_VIDEO_SKILL_CONTRACT_V1.md`、
   `docs/contracts/GUJIE_GENENV_ADAPTER_MAPPING_V1.md`、两份 legacy media fixtures
 - `integration_method`：strict contract 与 anti-corruption mapping 不复制来源 runtime，不把 `genenv.*`
@@ -307,7 +308,9 @@ Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支
   absolute locator失效、physics threshold不合当前合同，且 7 个 recorded runtime module SHA 与 `eb0b710`
   0/7匹配，因此不得迁移为当前 Genesis runtime lock或asset qualification。固定 `40bfa213...` 的
   controlled application 只从同一 CAS/SQLite 重验 candidate、exact qualification ArtifactRef 与 deep closure；
-  无 live application 重启恢复通过，但没有纳入任何 Gujie runtime 或 production authority
+  无 live application 重启恢复通过，但没有纳入任何 Gujie runtime 或 production authority。固定 `2ddd5e6`
+  只读取 legacy `asset.json`/15 members并经 stable snapshot发布unqualified representation；没有复制 Gujie
+  执行代码、旧pass状态或runtime/qualification权威
 - `golden_run`：`none`
 - `known_gaps`：sealed production video decoder、legacy importer、production image/video
   handler/application/qualification、Registry/System2/Golden executable catalog、MCP、真实 Genesis

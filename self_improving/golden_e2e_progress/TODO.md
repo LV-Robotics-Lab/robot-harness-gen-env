@@ -8,6 +8,7 @@
   production qualification。Gujie 指定 exact pass 输出现已缺失；最接近的 legacy 鼠标归档虽有 15-member
   URDF bytes，却有 stale absolute locators、current threshold fail 和 0/7 runtime source identity mismatch。
   必须由当前 sealed issuer 重跑 asset-scoped Genesis load/collision probe，不得迁移旧 pass 状态。
+  15-member bytes 已以 stable snapshot 迁为 unqualified representation；正在冻结 typed probe schema。
 - P10 fresh observation：strict schema、controlled candidate application/evidence policy 与 test-controlled
   Golden execution binding 已在同一 revision 2→3 中闭合 receipt/state/restart；下一切片是 production
   runtime binding。当前受控路径固定 `simulator_executed=false`，真实 Genesis capture、qualification 与
@@ -24,6 +25,8 @@
   issuer、runtime lock 与 typed asset-probe evidence，再允许 Registry/MCP 曝光。第一步只把 legacy mouse
   的 15-member byte closure迁为 unqualified representation candidate；controlled handler/application继续
   保持未注册、`simulator_ready=false`。
+  Gujie 现成 probe 强制 Rasterizer/视频/EGL，优先实现 Harness-owned 无相机 CPU issuer；随后再独立生成
+  人审媒体，不能让渲染成为物理资格权威。
 - P10：实现 production execution binding/runtime；保持过期、缺 key、时间或 payload 漂移在 parent
   commit 前 fail closed。
 - P10：production policy 稳定后，用真实 Genesis sealed checkpoint 做 capture/qualification；只有该门
@@ -49,6 +52,10 @@
   revision 继续调用 compile/replay/validate。
 
 ## Done
+
+- legacy mouse representation staging 完成：严格验证 manifest + 15-member closure 后先冻结 source snapshot，
+  再写 16-object fresh CAS；relocated/retry确定性与 verify→put 四类 source mutation均通过。只生成
+  `AssetRepresentationV1`，不生成 runtime lock/qualification。
 
 - controlled durable image compile application 完成：未绑定时只运行 unregistered candidate；真实 succeeded
   candidate 的 Invocation/output/closure 被写入明确 controlled report 后，application 会从同一 CAS/SQLite
