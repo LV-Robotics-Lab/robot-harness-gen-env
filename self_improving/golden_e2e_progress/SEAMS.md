@@ -124,6 +124,12 @@ M1已批准整合纵切：S4把固定Gujie source scene、representation、测�
 固定判据；pure-read重算target-local footprint、向上支撑、穿透/稳定性/终态agreement。真实runner
 与纯读一致性分账；M1最后必须绑定production image compile的同一个输入/package，而非孤立scene。
 
+M1执行应用复用现有`SQLiteRunStore`与`SkillRegistry`的UUID/intent/Invocation/terminal恢复，
+不新建通用状态权威。新固定scene producer消费approved renderer manifest和typed scene，产出
+live capability、双profile过程观测、完整trace/media及execution receipt；pure reader不能自行
+提升为live来源。asset资格lock与scene renderer lock分别验证，explicit新Skill I/O版本与资格
+消费新receipt，不能继承旧asset资格或把内部receipt冒充Registry qualification。
+
 ```python
 class LegacyGenenvImporter:
     def import_snapshot(self, request: LegacyImportRequest) -> LegacyImportResult: ...

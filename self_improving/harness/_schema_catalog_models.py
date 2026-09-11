@@ -8,6 +8,38 @@ from typing import Any
 
 _SCHEMA_MODEL_LOCATORS = MappingProxyType(
     {
+        "harness.genesis_scene_skill_qualification_report.v1": (
+            ".schemas.genesis_scene_application",
+            "GenesisSceneSkillQualificationReportV1",
+        ),
+        "harness.image2env_genesis_skill_qualification_report.v1": (
+            ".schemas.image2env_genesis_compile_application",
+            "Image2EnvGenesisSkillQualificationReportV1",
+        ),
+        "harness.genesis_scene_execution_request.v1": (
+            ".schemas.genesis_scene_execution",
+            "GenesisSceneExecutionRequestV1",
+        ),
+        "harness.genesis_scene_process_observation.v1": (
+            ".schemas.genesis_scene_execution",
+            "GenesisSceneProcessObservationV1",
+        ),
+        "harness.genesis_scene_launch_result.v1": (
+            ".schemas.genesis_scene_execution",
+            "GenesisSceneLaunchResultV1",
+        ),
+        "harness.genesis_scene_execution_receipt.v1": (
+            ".schemas.genesis_scene_execution",
+            "GenesisSceneExecutionReceiptV1",
+        ),
+        "harness.image2env_genesis_compile_request.v1": (
+            ".schemas.image2env_genesis_compile",
+            "Image2EnvGenesisCompileRequestV1",
+        ),
+        "harness.image2env_genesis_compile_receipt.v1": (
+            ".schemas.image2env_genesis_compile",
+            "Image2EnvGenesisCompileReceiptV1",
+        ),
         "harness.genesis_scene_spec.v1": (".schemas.genesis_scene_replay", "GenesisSceneSpecV1"),
         "harness.genesis_scene_trace_row.v1": (
             ".schemas.genesis_scene_replay",

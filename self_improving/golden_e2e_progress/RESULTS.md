@@ -1,5 +1,26 @@
 # 进度与结果
 
+## M1 受约束 Genesis scene producer v1 实跑
+
+- manifest `e37a013b…` 封闭 165,812 members / 8.57 GB logical bytes / 19 backend files，
+  逐CAS与部署bytes重验。首次正式运行因宿主诊断产生8个pyc而失败，缓存隔离保留、根因RED/GREEN
+  实证后，同manifest/request完整门恢复；旧failed terminal未改写。
+- 新UUID正式双dt 712.26s通过：1,001+2,001 rows、各41 PNG+逐像素一致无损MKV，34checks全过；
+  两进程Landlock8、network/write实际拒绝、0 external native。详见
+  `docs/evidence/golden-genesis-scene-execution-v1-20260911.md`。
+- v1只证明低层observed execution，未签最终replay Skill；MP4尚未直接可达，且没有fresh capture
+  wall-clock event。runtime v2会一次补这两项，并绑定已注册production compile终态后重新资格化。
+
+## M1 native image compile 实际 RED→GREEN
+
+- Gujie mouse overview 仿真图像 + 人工固定 proposal + seed 17 + 真实 durable asset qualification
+  已生成 native compile receipt `2777c9a2…` 与 scene `e543ef65…`，输入和来源不是占位数据。
+- 首次真实 RED 1 failed / 17.69 s，GREEN 3 passed / 35.46 s，focused 12 passed / 145.81 s，
+  另 6 项 schema 反例通过。原始记录、哈希和 98% core 覆盖边界见
+  `docs/evidence/golden-native-image-compile-20260911.md`；不声称 core 全部 100%。
+- top/side 仍仅备妥请求，生产 Skill application、fresh scene execution 和 M1 全链路继续实现。
+  新正式双 dt 直接由最终 producer 发起以获得 live capability，避免先重复低层 launcher 验收。
+
 ## M1 真实 Gujie 有限桌面双 dt 切片
 
 - Gujie 来源坐标/完整几何/有限支撑已实际适配，真实 mouse + Box 桌面完成 1,000 与 2,000 steps，

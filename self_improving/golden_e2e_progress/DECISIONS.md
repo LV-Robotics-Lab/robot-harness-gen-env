@@ -1,5 +1,15 @@
 # 稳定决策
 
+## M1 场景执行与资产资格分账
+
+- 资产资格仅证明它绑定的 asset runtime；新增 renderer 场景 runtime 单独固定、实际执行并核对。
+  两个 lock 可以不同，不能把旧 asset qualification 当成新 scene runtime 的证明，也不要求无关的
+  重复资产签发。只有 consumer 显式要求相同运行身份时才补 fresh qualification。
+- 场景生产执行先由固定 producer 建立不可任意构造的 live capability 与完整 execution receipt；
+  持久调用复用 `SQLiteRunStore`/`SkillRegistry`，不另建第二套通用状态库。
+- 内部 execution receipt 不等于 Skill qualification。真实 candidate 执行、固定 descriptor/资格、
+  production durable invoke 是分开的必要步骤；新增 native I/O 显式版本化，不静默改旧合同。
+
 ## 本阶段优先级调整 — sim-ready服务先交付，policy后置
 
 - 状态：用户已批准详细计划并要求实际整合Gujie工作；M1开始执行。

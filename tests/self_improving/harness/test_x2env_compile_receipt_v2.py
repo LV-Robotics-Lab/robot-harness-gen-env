@@ -298,7 +298,7 @@ def test_three_v2_schemas_are_standalone_snapshotted_and_catalogued() -> None:
         "harness.video2env_compile_output.v2",
     }
     documents = schema_documents()
-    assert len(documents) == 101
+    assert len(documents) == 109
     assert expected_ids.issubset(documents)
     for schema_id in expected_ids:
         assert schema_model(schema_id).model_json_schema()["$id"] == schema_id

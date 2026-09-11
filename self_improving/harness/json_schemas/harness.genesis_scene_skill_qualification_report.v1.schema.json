@@ -1,0 +1,155 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_scene_skill_qualification_report.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "approved_manifest": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "candidate_runs": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "format": "uuid",
+          "type": "string"
+        }
+      ],
+      "title": "Candidate Runs",
+      "type": "array"
+    },
+    "implementation": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "minItems": 1,
+      "title": "Implementation",
+      "type": "array"
+    },
+    "implementation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Implementation Sha256",
+      "type": "string"
+    },
+    "invariant": {
+      "const": "same_request_dual_profile_34_checks_and_41_exact_decoded_frames_each",
+      "title": "Invariant",
+      "type": "string"
+    },
+    "invocation_digests": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      ],
+      "title": "Invocation Digests",
+      "type": "array"
+    },
+    "receipts": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        }
+      ],
+      "title": "Receipts",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "harness.genesis_scene_skill_qualification_report.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "skill_ref": {
+      "const": "image2env.replay@2.0.0",
+      "title": "Skill Ref",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "skill_ref",
+    "candidate_runs",
+    "receipts",
+    "invocation_digests",
+    "approved_manifest",
+    "implementation",
+    "implementation_sha256",
+    "invariant"
+  ],
+  "title": "GenesisSceneSkillQualificationReportV1",
+  "type": "object"
+}

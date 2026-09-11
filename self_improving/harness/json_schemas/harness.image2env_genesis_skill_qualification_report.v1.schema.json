@@ -1,0 +1,153 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "NativeCompileQualificationCaseV1": {
+      "additionalProperties": false,
+      "properties": {
+        "compile_receipt": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "invocation_digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Invocation Digest",
+          "type": "string"
+        },
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "run_id",
+        "invocation_digest",
+        "compile_receipt"
+      ],
+      "title": "NativeCompileQualificationCaseV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.image2env_genesis_skill_qualification_report.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "application_source": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "cases": {
+      "items": {
+        "$ref": "#/$defs/NativeCompileQualificationCaseV1"
+      },
+      "maxItems": 64,
+      "minItems": 3,
+      "title": "Cases",
+      "type": "array"
+    },
+    "compile_implementation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Compile Implementation Sha256",
+      "type": "string"
+    },
+    "implementation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Implementation Sha256",
+      "type": "string"
+    },
+    "implementation_sources": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "minItems": 1,
+      "title": "Implementation Sources",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "harness.image2env_genesis_skill_qualification_report.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope": {
+      "const": "static_scene_candidate",
+      "title": "Scope",
+      "type": "string"
+    },
+    "skill_ref": {
+      "const": "image2env.compile@2.0.0",
+      "title": "Skill Ref",
+      "type": "string"
+    },
+    "status": {
+      "const": "pass",
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "skill_ref",
+    "status",
+    "scope",
+    "cases",
+    "application_source",
+    "implementation_sources",
+    "compile_implementation_sha256",
+    "implementation_sha256"
+  ],
+  "title": "Image2EnvGenesisSkillQualificationReportV1",
+  "type": "object"
+}

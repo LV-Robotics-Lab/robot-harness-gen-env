@@ -1,0 +1,368 @@
+{
+  "$defs": {
+    "AcquisitionPolicy": {
+      "enum": [
+        "auto",
+        "exact_only",
+        "digital_cousin_allowed",
+        "generate_on_miss"
+      ],
+      "title": "AcquisitionPolicy",
+      "type": "string"
+    },
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "Image2EnvCompileV2Input": {
+      "additionalProperties": false,
+      "description": "First executable image compile input with explicit attempt lineage.",
+      "properties": {
+        "acquisition_policy": {
+          "$ref": "#/$defs/AcquisitionPolicy"
+        },
+        "asset_catalog": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "attempt": {
+          "discriminator": {
+            "mapping": {
+              "harness.initial_compile_attempt.v1": "#/$defs/InitialCompileAttemptV1",
+              "harness.prompt_revision_compile_attempt.v1": "#/$defs/PromptRevisionCompileAttemptV1"
+            },
+            "propertyName": "schema_version"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/InitialCompileAttemptV1"
+            },
+            {
+              "$ref": "#/$defs/PromptRevisionCompileAttemptV1"
+            }
+          ],
+          "title": "Attempt"
+        },
+        "interpretation_proposal": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "model_execution_allowed": {
+          "const": false,
+          "default": false,
+          "title": "Model Execution Allowed",
+          "type": "boolean"
+        },
+        "predecessor_package": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repair_evidence_refs": {
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "title": "Repair Evidence Refs",
+          "type": "array"
+        },
+        "requested_profile": {
+          "$ref": "#/$defs/RequestedGenesisProfile"
+        },
+        "schema_version": {
+          "const": "harness.image2env_compile_input.v2",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "seed": {
+          "maximum": 2147483647,
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "source_media": {
+          "$ref": "#/$defs/ImageSourceMedia"
+        }
+      },
+      "required": [
+        "interpretation_proposal",
+        "requested_profile",
+        "acquisition_policy",
+        "asset_catalog",
+        "seed",
+        "predecessor_package",
+        "repair_evidence_refs",
+        "schema_version",
+        "source_media",
+        "attempt"
+      ],
+      "title": "Image2EnvCompileV2Input",
+      "type": "object"
+    },
+    "ImageSourceMedia": {
+      "additionalProperties": false,
+      "properties": {
+        "canonical_image": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "color_mode": {
+          "enum": [
+            "RGB",
+            "RGBA",
+            "L"
+          ],
+          "title": "Color Mode",
+          "type": "string"
+        },
+        "decoded_frame_count": {
+          "const": 1,
+          "title": "Decoded Frame Count",
+          "type": "integer"
+        },
+        "height": {
+          "minimum": 1,
+          "title": "Height",
+          "type": "integer"
+        },
+        "probe": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "schema_version": {
+          "const": "harness.image_source_media.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "source_media_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Media Sha256",
+          "type": "string"
+        },
+        "unique_frame_count": {
+          "const": 1,
+          "title": "Unique Frame Count",
+          "type": "integer"
+        },
+        "width": {
+          "minimum": 1,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema_version",
+        "source_media_sha256",
+        "source",
+        "canonical_image",
+        "probe",
+        "width",
+        "height",
+        "color_mode",
+        "decoded_frame_count",
+        "unique_frame_count"
+      ],
+      "title": "ImageSourceMedia",
+      "type": "object"
+    },
+    "InitialCompileAttemptV1": {
+      "additionalProperties": false,
+      "description": "An initial compile with no retry or repair lineage.",
+      "properties": {
+        "kind": {
+          "const": "initial",
+          "title": "Kind",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.initial_compile_attempt.v1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind"
+      ],
+      "title": "InitialCompileAttemptV1",
+      "type": "object"
+    },
+    "PromptRevisionCompileAttemptV1": {
+      "additionalProperties": false,
+      "description": "A compile that must consume one immutable prompt-revision control receipt.",
+      "properties": {
+        "effective_prompt": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "failure_receipts": {
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "minItems": 1,
+          "title": "Failure Receipts",
+          "type": "array"
+        },
+        "kind": {
+          "const": "prompt_revision",
+          "title": "Kind",
+          "type": "string"
+        },
+        "predecessor_package": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "prompt_revision": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "schema_version": {
+          "const": "harness.prompt_revision_compile_attempt.v1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "prompt_revision",
+        "effective_prompt",
+        "failure_receipts",
+        "predecessor_package"
+      ],
+      "title": "PromptRevisionCompileAttemptV1",
+      "type": "object"
+    },
+    "RequestedGenesisProfile": {
+      "enum": [
+        "genesis.rigid_scene@1",
+        "genesis.robot_policy@1"
+      ],
+      "title": "RequestedGenesisProfile",
+      "type": "string"
+    }
+  },
+  "$id": "harness.image2env_genesis_compile_request.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "compile_input": {
+      "$ref": "#/$defs/Image2EnvCompileV2Input"
+    },
+    "qualification_run_id": {
+      "format": "uuid",
+      "title": "Qualification Run Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.image2env_genesis_compile_request.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_scene": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "table_center_m": {
+      "maxItems": 3,
+      "minItems": 3,
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "title": "Table Center M",
+      "type": "array"
+    },
+    "table_friction": {
+      "minimum": 0,
+      "title": "Table Friction",
+      "type": "number"
+    },
+    "table_size_m": {
+      "maxItems": 3,
+      "minItems": 3,
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "title": "Table Size M",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "compile_input",
+    "qualification_run_id",
+    "source_scene",
+    "table_center_m",
+    "table_size_m",
+    "table_friction"
+  ],
+  "title": "Image2EnvGenesisCompileRequestV1",
+  "type": "object"
+}

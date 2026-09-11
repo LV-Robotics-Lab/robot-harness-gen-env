@@ -7,6 +7,41 @@ from typing import Any
 
 _EXPORT_GROUPS = (
     (
+        ".genesis_scene_application",
+        ("GenesisSceneSkillQualificationReportV1", "SCENE_SKILL_REPORT_ID"),
+    ),
+    (
+        ".image2env_genesis_compile_application",
+        (
+            "Image2EnvGenesisSkillQualificationReportV1",
+            "NativeCompileQualificationCaseV1",
+            "NATIVE_COMPILE_QUALIFICATION_REPORT_ID",
+        ),
+    ),
+    (
+        ".genesis_scene_execution",
+        (
+            "GenesisSceneExecutionRequestV1",
+            "GenesisSceneProcessObservationV1",
+            "GenesisSceneLaunchResultV1",
+            "GenesisSceneExecutionReceiptV1",
+            "SCENE_EXECUTION_REQUEST_ID",
+            "SCENE_PROCESS_OBSERVATION_ID",
+            "SCENE_LAUNCH_RESULT_ID",
+            "SCENE_EXECUTION_RECEIPT_ID",
+            "SCENE_FILESYSTEM_POLICY",
+        ),
+    ),
+    (
+        ".image2env_genesis_compile",
+        (
+            "Image2EnvGenesisCompileRequestV1",
+            "Image2EnvGenesisCompileReceiptV1",
+            "IMAGE_GENESIS_COMPILE_REQUEST_ID",
+            "IMAGE_GENESIS_COMPILE_RECEIPT_ID",
+        ),
+    ),
+    (
         ".genesis_scene_replay",
         (
             "GenesisSceneSpecV1",

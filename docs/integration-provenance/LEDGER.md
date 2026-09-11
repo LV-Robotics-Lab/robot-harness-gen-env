@@ -443,3 +443,13 @@ non-ready candidate；media ingest 的 pass 不能扩大为 compile runtime pass
 - `known_gaps`：新 renderer runtime manifest、固定场景进程约束、生产资格及 M1 完整链尚未完成。
   此条不继承旧资产 lock 的资格，不代表 MCP、promotion 或 policy。
 - `last_verified`：`2026-09-11`
+
+### v1 受约束执行增量
+
+Harness 后续新增固定 OSMesa/llvmpipe scene producer、双 profile 进程限制、完整运行成员观测与
+CAS pure reader。固定 Gujie 场景在 manifest `e37a013b…` 下真实通过 1,001/2,001 行、各41帧和
+34项检查；详细成功与一次缓存污染失败见
+`docs/evidence/golden-genesis-scene-execution-v1-20260911.md`。该增量的来源适配仍归 Gujie，
+进程封闭、CAS、执行回执和媒体完整性为 Harness integration；Mesa/LLVM/Genesis 保留各自上游归属。
+生命周期仍为 `integrating`：v1缺可达MP4和fresh capture event，且只绑定早期compile candidate，
+不能据此改成最终Skill或M1完成。

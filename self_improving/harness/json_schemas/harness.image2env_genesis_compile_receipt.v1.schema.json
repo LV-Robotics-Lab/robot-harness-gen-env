@@ -1,0 +1,133 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.image2env_genesis_compile_receipt.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "implementation": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "minItems": 1,
+      "title": "Implementation",
+      "type": "array"
+    },
+    "implementation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Implementation Sha256",
+      "type": "string"
+    },
+    "proposal_object_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Proposal Object Id",
+      "type": "string"
+    },
+    "qualification": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "request": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "scene": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "scene_object_id": {
+      "const": "object",
+      "title": "Scene Object Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "harness.image2env_genesis_compile_receipt.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope": {
+      "const": "static_scene_candidate",
+      "title": "Scope",
+      "type": "string"
+    },
+    "simulator_executed": {
+      "title": "Simulator Executed",
+      "type": "boolean"
+    },
+    "source_object_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Source Object Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "request",
+    "scene",
+    "qualification",
+    "source_object_id",
+    "proposal_object_id",
+    "scene_object_id",
+    "implementation_sha256",
+    "implementation",
+    "scope",
+    "simulator_executed"
+  ],
+  "title": "Image2EnvGenesisCompileReceiptV1",
+  "type": "object"
+}

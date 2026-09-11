@@ -1,5 +1,11 @@
 # Self-Improving 平台边界
 
+M1 的 native image compile 与低层场景执行已有真实证据：Gujie mouse 图像绑定资产资格生成有限
+桌面 scene，固定软件 renderer 的 baseline/half-dt 产出完整轨迹、PNG/无损视频并通过34项检查。
+细节见[scene execution v1](../../docs/evidence/golden-genesis-scene-execution-v1-20260911.md)。v1
+仍是低层 candidate：MP4与fresh capture尚未进入可搬迁回执，且最终 replay 必须绑定registered
+compile终态，因此本页不把它称为完整sim-ready服务。
+
 Gujie 的固定场景导入、完整刚体几何和有限支撑判据现已实际适配；mouse + 有限桌面在 Genesis
 完成双时间步回放，各生成 41 帧和连续视频。见[本次运行证据](../../docs/evidence/golden-gujie-scene-software-20260911.md)。
 这一切片尚未连接完整 image compile 与受约束场景执行凭据，仍不能声明生产环境资格或 M1 完成。

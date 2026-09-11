@@ -1,5 +1,13 @@
 # Change Log
 
+## Native image compile 与受约束 Genesis scene producer v1
+
+- Gujie mouse overview 的真实 image exact-reuse compile 生成 typed scene；受约束 OSMesa/llvmpipe
+  producer 随后完成 baseline/half-dt、1,001/2,001 行、各41帧和34项检查。
+- 第一次正式 candidate 因宿主诊断产生8个额外pyc而失败；缓存隔离、根因复现、完整部署恢复和
+  新UUID成功均保留。v1只证明低层执行，最终生产链仍等runtime v2绑定registered compile、MP4和
+  fresh capture event。
+
 ## Harness 请求中的 UUID 身份
 
 - 新 native compile 请求在 handler 前因 UUID 无法 JSON 序列化而失败。Registry 现在把 UUID
