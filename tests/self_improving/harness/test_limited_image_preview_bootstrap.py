@@ -423,7 +423,17 @@ def test_shared_registry_entry_publishes_a_canonical_qualification_closure(tmp_p
             )
 
         def read_artifact(self, ref, model):
-            return model.model_validate_json(store.resolve(ref).path.read_bytes())
+            payload = store.resolve(ref).path.read_bytes()
+            value = model.model_validate_json(payload)
+            expected = json.dumps(
+                value.model_dump(mode="json"),
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            ).encode()
+            if payload != expected:
+                raise ValueError("shared preview requires exact canonical typed CAS")
+            return value
 
     entry = _shared_registry_entry(Shared(), report.skill_ref, qualification_ref)
     models = (descriptor, qualification, report)

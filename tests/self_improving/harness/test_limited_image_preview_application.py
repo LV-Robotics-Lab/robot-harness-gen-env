@@ -19,7 +19,7 @@ def test_shared_application_rejects_unqualified_compiler_before_state_creation(t
 def test_shared_qualification_producer_writes_golden_canonical_bytes(tmp_path, monkeypatch):
     from self_improving.harness import limited_image_preview_application as application
     from self_improving.harness.artifacts import LocalArtifactStore
-    from self_improving.harness.qualification import QualificationCheckV1
+    from self_improving.harness.qualification import QualificationCheckV1, QualificationReportV1
     from self_improving.harness.schemas.common import SkillQualification
 
     store = LocalArtifactStore(tmp_path / "cas")
@@ -46,26 +46,44 @@ def test_shared_qualification_producer_writes_golden_canonical_bytes(tmp_path, m
     shared._candidate = lambda run_id, skill_ref: (None, manifest)
     publication = shared.qualify_publish(uuid4())
 
-    for ref in (*qualifications.values(), publication):
-        payload = store.resolve(ref).path.read_bytes()
-        qualification = SkillQualification.model_validate_json(payload)
-        expected = (
+    def canonical(value):
+        return (
             json.dumps(
-                qualification.model_dump(mode="json"),
+                value.model_dump(mode="json"),
                 sort_keys=True,
                 separators=(",", ":"),
                 ensure_ascii=False,
             )
             + "\n"
         ).encode()
-        assert payload == expected
+
+    for ref in (*qualifications.values(), publication):
+        payload = store.resolve(ref).path.read_bytes()
+        qualification = SkillQualification.model_validate_json(payload)
+        assert payload == canonical(qualification)
         report_payload = store.resolve_digest(qualification.report_sha256).read_bytes()
-        assert report_payload.endswith(b"\n")
+        report = QualificationReportV1.model_validate_json(report_payload)
+        assert report_payload == canonical(report)
+
+    shared._handlers = {
+        "image2env.preview_publish@1.0.0": lambda value, context: None,
+    }
+    shared._resolver = object()
+    registration = shared.verify_and_build(publication, artifact_resolver=store)
+    assert registration.descriptor.qualification_artifact == publication
+    noncanonical_path = tmp_path / "noncanonical-qualification.json"
+    noncanonical_path.write_bytes(store.resolve(publication).path.read_bytes().rstrip(b"\n"))
+    noncanonical = store.put_file(
+        noncanonical_path,
+        name=noncanonical_path.name,
+        media_type="application/json",
+        schema_version="harness.skill_qualification.v1",
+    )
+    with pytest.raises(ValueError, match="qualification identity"):
+        shared.verify_and_build(noncanonical, artifact_resolver=store)
 
 
-def test_saved_candidate_is_deeply_reverified_after_qualification_writer_change(
-    tmp_path, monkeypatch
-):
+def test_saved_candidate_dependency_drift_is_rejected_before_requalification(tmp_path, monkeypatch):
     from self_improving.harness import limited_image_preview_library as library
     from self_improving.harness.artifacts import LocalArtifactStore
     from self_improving.harness.schemas.common import DependencyRef, RunStatus
@@ -107,9 +125,9 @@ def test_saved_candidate_is_deeply_reverified_after_qualification_writer_change(
         return SimpleNamespace(manifest=manifest)
 
     monkeypatch.setattr(library, "admit_limited_image_preview", admit)
-    _, restored = shared._candidate(uuid4(), "image2env.preview_publish@1.0.0")
-    assert restored == manifest
-    assert verified == [manifest_ref]
+    with pytest.raises(ValueError, match="implementation"):
+        shared._candidate(uuid4(), "image2env.preview_publish@1.0.0")
+    assert verified == []
 
 
 def test_replay_candidate_missing_evidence_is_durably_blocked(tmp_path):

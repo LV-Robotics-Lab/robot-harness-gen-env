@@ -80,6 +80,10 @@ def _bytes(value):
     ).encode()
 
 
+def _registry_bytes(value):
+    return _bytes(value) + b"\n"
+
+
 @dataclass(frozen=True)
 class _Handler:
     application: object
@@ -243,6 +247,19 @@ class LimitedImagePreviewApplication:
                 ),
             )
 
+    def _put_registry_document(self, value, name):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / name
+            path.write_bytes(_registry_bytes(value))
+            return self.artifact_store.put_file(
+                path,
+                name=name,
+                media_type="application/json",
+                schema_version=value.model_config.get("json_schema_extra", {}).get(
+                    "$id", getattr(value, "schema_version", None)
+                ),
+            )
+
     def read_artifact(self, ref, model):
         raw = self.artifact_store.resolve(ref).path.read_bytes()
         result = model.model_validate_json(raw)
@@ -384,7 +401,7 @@ class LimitedImagePreviewApplication:
                 ),
                 checks=checks,
             )
-            report_ref = self.put(report, "preview-qualification-report.json")
+            report_ref = self._put_registry_document(report, "preview-qualification-report.json")
             qualification = SkillQualification(
                 skill_ref=skill,
                 status="pass",
@@ -392,7 +409,7 @@ class LimitedImagePreviewApplication:
                 regression_command=report.regression_command,
                 report_sha256=report_ref.sha256,
             )
-            ref = self.put(qualification, "preview-qualification.json")
+            ref = self._put_registry_document(qualification, "preview-qualification.json")
             self.bind(ref)
         return dict(self._qualifications)
 
@@ -426,8 +443,10 @@ class LimitedImagePreviewApplication:
             ),
             checks=checks,
         )
-        report_ref = self.put(report, "preview-publication-qualification-report.json")
-        ref = self.put(
+        report_ref = self._put_registry_document(
+            report, "preview-publication-qualification-report.json"
+        )
+        ref = self._put_registry_document(
             SkillQualification(
                 skill_ref=PUBLISH,
                 status="pass",
@@ -443,12 +462,15 @@ class LimitedImagePreviewApplication:
     def verify_and_build(self, ref, *, artifact_resolver):
         if artifact_resolver is not self.artifact_store:
             raise TypeError("qualification must use the shared CAS")
-        qualification = self.read_artifact(ref, SkillQualification)
+        qualification_payload = self.artifact_store.resolve(ref).path.read_bytes()
+        qualification = SkillQualification.model_validate_json(qualification_payload)
         raw = self.artifact_store.resolve_digest(qualification.report_sha256).read_bytes()
         report = QualificationReportV1.model_validate_json(raw)
         root = Path(__file__).resolve().parents[2]
         if (
-            raw != _bytes(report)
+            qualification_payload != _registry_bytes(qualification)
+            or ref.schema_version != "harness.skill_qualification.v1"
+            or raw != _registry_bytes(report)
             or report.skill_ref != qualification.skill_ref
             or (report.implementation_sha256 != self.implementation_sha256)
             or report.skill_ref not in _MODELS
@@ -506,7 +528,7 @@ class LimitedImagePreviewApplication:
             descriptor,
             self._handlers[qualification.skill_ref],
             self._resolver,
-            _bytes(qualification),
+            qualification_payload,
             raw,
         )
 

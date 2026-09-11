@@ -819,11 +819,23 @@ def _shared_registry_entry(shared, skill_ref: str, qualification_ref: ArtifactRe
         raise ValueError("bootstrap shared descriptor differs from its qualification")
     descriptor = descriptors[0]
     slug = skill_ref.replace("@", "-").replace(".", "-")
-    descriptor_ref = shared.put(descriptor, f"{slug}-descriptor.json")
-    qualification = shared.read_artifact(qualification_ref, SkillQualification)
+    with tempfile.TemporaryDirectory(prefix="preview-bootstrap-descriptor-") as directory:
+        descriptor_path = Path(directory) / f"{slug}-descriptor.json"
+        descriptor_path.write_bytes(_canonical(descriptor))
+        descriptor_ref = shared.artifact_store.put_file(
+            descriptor_path,
+            name=descriptor_path.name,
+            media_type="application/json",
+            schema_version=descriptor.model_config["json_schema_extra"]["$id"],
+        )
+    qualification_payload = shared.artifact_store.resolve(qualification_ref).path.read_bytes()
+    qualification = SkillQualification.model_validate_json(qualification_payload)
+    if qualification_payload != _canonical(qualification):
+        raise ValueError("bootstrap shared qualification is not canonical JSON")
     report_path = shared.artifact_store.resolve_digest(qualification.report_sha256)
-    report = QualificationReportV1.model_validate_json(report_path.read_bytes())
-    if report.skill_ref != skill_ref:
+    report_payload = report_path.read_bytes()
+    report = QualificationReportV1.model_validate_json(report_payload)
+    if report_payload != _canonical(report) or report.skill_ref != skill_ref:
         raise ValueError("bootstrap shared qualification report names another Skill")
     report_ref = shared.artifact_store.put_file(
         report_path,
@@ -831,7 +843,6 @@ def _shared_registry_entry(shared, skill_ref: str, qualification_ref: ArtifactRe
         media_type="application/json",
         schema_version="harness.skill_qualification_report.v1",
     )
-    shared.read_artifact(report_ref, QualificationReportV1)
     return QualifiedSkillSnapshot(
         skill_ref=skill_ref,
         mcp_tool_name=descriptor.mcp_tool_name,
