@@ -162,6 +162,33 @@ def test_completed_backend_without_validated_service_head_is_not_success(service
     assert controller.resume(service.workflow)["status"] == "waiting"
 
 
+def test_explicit_unsupported_is_terminal_diagnostic_without_workflow_change(service, tmp_path):
+    class Backend:
+        count = 0
+
+        def run(self, assignment, *, output_root):
+            self.count += 1
+            output_root.mkdir()
+            return CodexBackendResult(
+                "completed", output_root, 1.0, 0, None, None,
+                {"calls": [], "terminal_decision": {
+                    "workflow_id": str(service.workflow),
+                    "decision": "unsupported", "reason": "Only one mouse on a finite table is supported.",
+                }}, None,
+            )
+
+    backend = Backend()
+    controller = LimitedImagePreviewController(
+        service.value, backend, evidence_root=tmp_path / "attempts"
+    )
+    before = service.harness.read(service.read)
+    assert controller.run_to_terminal(service.workflow)["status"] == "unsupported"
+    assert controller.resume(service.workflow)["status"] == "unsupported"
+    assert backend.count == 1
+    assert controller.attempts(service.workflow)[0]["terminal_decision"]["decision"] == "unsupported"
+    assert service.harness.read(service.read) == before
+
+
 def test_interrupted_attempt_waits_for_exact_live_process_then_resumes(service, tmp_path):
     import os
     import signal
