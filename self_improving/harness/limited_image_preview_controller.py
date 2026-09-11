@@ -25,6 +25,7 @@ from .codex_backend import (
 )
 from .golden_store import SQLiteGoldenRunStore
 from .schemas.common import ArtifactRef
+from .schemas.genesis_fresh_capture import GenesisFreshCaptureReceiptV1
 from .schemas.limited_image_preview_service import PreviewServiceResult
 from .trusted_state import TrustedWorldState
 
@@ -252,6 +253,32 @@ class LimitedImagePreviewController:
                 phase = "repair"
                 break
             cursor = ArtifactRef.model_validate(body["predecessor_receipt"])
+        now = datetime.now(UTC)
+        deadline = now + timedelta(seconds=self.attempt_seconds)
+        if phase in {"diagnosis", "repair"}:
+            observation = status.observation
+            if observation is None:
+                raise ValueError("diagnosis requires a fresh observation; run observe first")
+            ref = observation.receipt
+            if (
+                ref.schema_version != "harness.genesis_fresh_capture_receipt.v1"
+                or ref.media_type != "application/json"
+            ):
+                raise ValueError("diagnosis requires an exact fresh observation receipt")
+            capture = GenesisFreshCaptureReceiptV1.model_validate_json(
+                self.service.store.resolve(ref).path.read_bytes()
+            )
+            if (
+                capture.image != observation.image
+                or capture.captured_at != observation.captured_at
+                or capture.expires_at != observation.expires_at
+                or capture.authority != observation.authority
+                or capture.image.media_type != "image/png"
+                or not capture.captured_at <= now < capture.expires_at
+            ):
+                raise ValueError("fresh observation is expired or differs from its receipt")
+            image = self.service.store.resolve(capture.image).path
+            deadline = min(deadline, capture.expires_at)
         return CodexAssignment(
             snapshot=snapshot,
             image_path=image,
@@ -259,7 +286,7 @@ class LimitedImagePreviewController:
             phase=phase,
             allowed_actions=ACTIONS[phase],
             call_budget=self.call_budget,
-            deadline=datetime.now(UTC) + timedelta(seconds=self.attempt_seconds),
+            deadline=deadline,
         )
 
     def _recover(self, row):
