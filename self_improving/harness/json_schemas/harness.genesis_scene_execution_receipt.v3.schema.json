@@ -1,0 +1,109 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_scene_execution_receipt.v3",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "authority": {
+      "const": "observed_execution_only",
+      "title": "Authority",
+      "type": "string"
+    },
+    "baseline_preview": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "half_dt_preview": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "launch_result": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "replay": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "report": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "request": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "retained_index": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.genesis_scene_execution_receipt.v3",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "authority",
+    "request",
+    "launch_result",
+    "replay",
+    "report",
+    "baseline_preview",
+    "half_dt_preview",
+    "retained_index"
+  ],
+  "title": "GenesisSceneExecutionReceiptV3",
+  "type": "object"
+}

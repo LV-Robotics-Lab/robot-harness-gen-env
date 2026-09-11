@@ -1,0 +1,100 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_scene_compile_binding.v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Declared binding; only the future exact application can admit its authority.",
+  "properties": {
+    "compile_receipt": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "compile_request": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "compile_run_id": {
+      "format": "uuid4",
+      "title": "Compile Run Id",
+      "type": "string"
+    },
+    "compile_skill_ref": {
+      "const": "image2env.compile@3.0.0",
+      "title": "Compile Skill Ref",
+      "type": "string"
+    },
+    "execution_request": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.genesis_scene_compile_binding.v2",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "compile_skill_ref",
+    "compile_run_id",
+    "compile_request",
+    "compile_receipt",
+    "execution_request"
+  ],
+  "title": "GenesisSceneCompileBindingV2",
+  "type": "object"
+}

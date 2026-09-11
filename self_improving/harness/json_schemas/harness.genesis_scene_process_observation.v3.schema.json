@@ -1,0 +1,351 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "GenesisSceneCaptureEventV2": {
+      "additionalProperties": false,
+      "properties": {
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "integer"
+        },
+        "image": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "pixels_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Pixels Sha256",
+          "type": "string"
+        },
+        "step": {
+          "minimum": 0,
+          "title": "Step",
+          "type": "integer"
+        },
+        "time_s": {
+          "minimum": 0,
+          "title": "Time S",
+          "type": "number"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "step",
+        "time_s",
+        "captured_at",
+        "pixels_sha256",
+        "width",
+        "height",
+        "image"
+      ],
+      "title": "GenesisSceneCaptureEventV2",
+      "type": "object"
+    },
+    "RuntimeManifestMemberV1": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "path": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "root": {
+          "enum": [
+            "backend",
+            "distributions",
+            "genesis",
+            "interpreter",
+            "native",
+            "stdlib"
+          ],
+          "title": "Root",
+          "type": "string"
+        }
+      },
+      "required": [
+        "root",
+        "path",
+        "artifact"
+      ],
+      "title": "RuntimeManifestMemberV1",
+      "type": "object"
+    },
+    "RuntimeProcessIdentityV1": {
+      "additionalProperties": false,
+      "properties": {
+        "abi": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Abi",
+          "type": "string"
+        },
+        "environment": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Environment",
+          "type": "array"
+        },
+        "implementation": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Implementation",
+          "type": "string"
+        },
+        "platform": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Platform",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "implementation",
+        "version",
+        "abi",
+        "platform",
+        "environment"
+      ],
+      "title": "RuntimeProcessIdentityV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_scene_process_observation.v3",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "captures": {
+      "items": {
+        "$ref": "#/$defs/GenesisSceneCaptureEventV2"
+      },
+      "maxItems": 41,
+      "minItems": 41,
+      "title": "Captures",
+      "type": "array"
+    },
+    "environment_delta": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "propertyNames": {
+        "const": "LD_LIBRARY_PATH"
+      },
+      "title": "Environment Delta",
+      "type": "object"
+    },
+    "external_native_files": {
+      "maxItems": 0,
+      "minItems": 0,
+      "title": "External Native Files",
+      "type": "array"
+    },
+    "filesystem_policy": {
+      "const": "runtime_roots_readonly_kernel_devices_run_output_write_inherited_children",
+      "title": "Filesystem Policy",
+      "type": "string"
+    },
+    "kernel_devices": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "const": "/dev/null",
+          "type": "string"
+        },
+        {
+          "const": "/dev/urandom",
+          "type": "string"
+        }
+      ],
+      "title": "Kernel Devices",
+      "type": "array"
+    },
+    "landlock_abi": {
+      "minimum": 6,
+      "title": "Landlock Abi",
+      "type": "integer"
+    },
+    "modules": {
+      "items": {
+        "$ref": "#/$defs/RuntimeManifestMemberV1"
+      },
+      "minItems": 1,
+      "title": "Modules",
+      "type": "array"
+    },
+    "native_files": {
+      "items": {
+        "$ref": "#/$defs/RuntimeManifestMemberV1"
+      },
+      "minItems": 1,
+      "title": "Native Files",
+      "type": "array"
+    },
+    "network_denied": {
+      "title": "Network Denied",
+      "type": "boolean"
+    },
+    "network_policy": {
+      "const": "socket_syscalls_denied",
+      "title": "Network Policy",
+      "type": "string"
+    },
+    "process_identity": {
+      "$ref": "#/$defs/RuntimeProcessIdentityV1"
+    },
+    "profile": {
+      "enum": [
+        "baseline",
+        "half_dt"
+      ],
+      "title": "Profile",
+      "type": "string"
+    },
+    "raw_observation": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "request": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "runtime_write_denied": {
+      "title": "Runtime Write Denied",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "const": "harness.genesis_scene_process_observation.v3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "stderr": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "stdout": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "torch_threads": {
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "const": 1,
+          "type": "integer"
+        },
+        {
+          "const": 1,
+          "type": "integer"
+        }
+      ],
+      "title": "Torch Threads",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "request",
+    "profile",
+    "process_identity",
+    "environment_delta",
+    "modules",
+    "native_files",
+    "external_native_files",
+    "torch_threads",
+    "landlock_abi",
+    "network_denied",
+    "runtime_write_denied",
+    "kernel_devices",
+    "network_policy",
+    "filesystem_policy",
+    "stdout",
+    "stderr",
+    "raw_observation",
+    "captures"
+  ],
+  "title": "GenesisSceneProcessObservationV3",
+  "type": "object"
+}

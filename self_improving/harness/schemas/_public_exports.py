@@ -7,6 +7,16 @@ from typing import Any
 
 _EXPORT_GROUPS = (
     (
+        ".genesis_scene_execution_v3",
+        (
+            "GenesisSceneCompileBindingV2",
+            "GenesisSceneExecutionRequestV3",
+            "GenesisSceneProcessObservationV3",
+            "GenesisSceneLaunchResultV3",
+            "GenesisSceneExecutionReceiptV3",
+        ),
+    ),
+    (
         ".native_prompt_revision",
         (
             "TabletopLayoutRevisionV1",
@@ -539,6 +549,11 @@ _PUBLIC_NAMES = (
     "NativeDigestMemberV1",
     "NativeReadClosureV1",
     "NativeTerminalAdmissionV1",
+    "GenesisSceneCompileBindingV2",
+    "GenesisSceneExecutionRequestV3",
+    "GenesisSceneProcessObservationV3",
+    "GenesisSceneLaunchResultV3",
+    "GenesisSceneExecutionReceiptV3",
     "AdvisoryRecordCommand",
     "AssetDebtInventory",
     "AssetClosureManifestV1",
