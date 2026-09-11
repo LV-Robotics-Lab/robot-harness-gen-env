@@ -71,6 +71,23 @@ Observe 的新鲜度时间区间冻结为闭区间 `[captured_at, valid_until]`�
 `valid_until == captured_at + TTL`。capture timestamp 由 runtime 生成；已存在的 replay 图片或历史截图
 只能作为旧 supporting artifact，不能重新包装成 FreshObservationReceipt。
 
+### S3 runtime dependency lock 前置纵切（2026-09-11 用户授权）
+
+公共 interface 为 `capture_runtime_manifest`、`read_runtime_manifest` 与
+`verify_runtime_deployment`：从明确的逻辑根、部署映射与类型化 process identity 生成 canonical、
+CAS-backed 内容清单；read 只从 CAS 重算清单成员，deployment verification 另外重算整个目录集合并
+核对显式提交的 process identity。部署映射不进入清单内容身份。
+
+可观察行为：相同字节在两个绝对根得到相同逻辑身份；全部成员逐 bytes/SHA 可核；缺成员、多成员、
+symlink、路径越界、native bytes 或 process environment 漂移拒绝；读取过程中成员/目录身份变化也
+拒绝。CAS-only 验证与部署验证必须在 interface 中明确区分，不用 optional 参数暗示未发生的验证。
+
+该前置切片新增版本化 runtime manifest，不改变已提交 `GenesisRuntimeLockV1` 的语义。声明根的字节
+完整性不是实际 import/native dependency discovery 的完整性，也不授予 asset qualification；后续须
+由独立依赖发现、固定 fresh process 与 sealed runner binding 证明完整运行闭包。
+process identity 当前是调用方提供的事实，不能把它与 manifest 相等解释为已自动验证运行中进程；
+真实验收必须另从 fresh process 采集环境、解释器和实际加载来源。
+
 ## S4 — Legacy Gujie anti-corruption import
 
 ```python

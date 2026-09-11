@@ -1,5 +1,12 @@
 # Change Log
 
+## 2026-09-11 Runtime 内容清单
+
+- 新增 capture/read/verify-deployment 三方法，固定六个声明根的完整成员与 CAS 字节；部署路径与内容
+  身份分离，缺失/额外/变化成员、非规范记录和 symlink 拒绝，换路径新进程纯读通过。
+- 新增一份版本化 schema（当前94份），没有改写旧runtime lock。声明范围的字节验证不等于实际依赖
+  发现或执行隔离；production asset qualification 仍未获得权威。
+
 ## 2026-09-11 Genesis CPU asset probe 与 relocated deep verification
 
 - 新增 Harness-owned、无相机的 Genesis CPU backend、typed producer 与 pure-read verifier；公共 schema

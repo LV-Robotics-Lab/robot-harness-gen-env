@@ -80,6 +80,12 @@ runtime lock 尚未封闭 interpreter、Python/Torch/Quadrants/NumPy/native 完�
 Registry/MCP 与环境级 Genesis replay 仍关闭。证据见
 [Genesis CPU asset probe](../../docs/evidence/golden-genesis-cpu-asset-probe-20260911.md)。
 
+`genesis_runtime_manifest.py` 现在提供运行时内容清单：capture 对六个声明根完整枚举，逐文件流式写入
+CAS，重读确认后最后发布 manifest；read 只重验 CAS，verify-deployment 则额外重验显式部署映射及
+调用方提交的 process facts。换安装位置不改变清单身份。这个 interface 不负责发现漏掉的动态依赖，
+也没有证明运行进程只加载清单成员，因此其权威明确为 `declared_byte_closure_only`；下一门仍是
+固定启动、完整实际加载闭包和 sealed runner，而非直接签发资产资格。
+
 P3 的公共 `GoldenRunHarness.submit` 当前可在同一 workflow 依次调度 exact qualified
 `text2env.compile@1.0.0` 与 `text2env.replay@1.0.0`。两者都从同一 RegistrySnapshot、live production
 descriptor/qualification 和 Skill-owned evidence policy 冻结执行；command、controlled child、ToolResult、

@@ -8,6 +8,10 @@ from typing import Any
 
 _SCHEMA_MODEL_LOCATORS = MappingProxyType(
     {
+        "harness.genesis_runtime_manifest.v1": (
+            ".schemas.genesis_runtime_manifest",
+            "GenesisRuntimeManifestV1",
+        ),
         "harness.artifact_ref.v1": (".schemas.common", "ArtifactRef"),
         "harness.asset_debt_inventory.v1": (
             ".schemas.asset_repair",

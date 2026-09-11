@@ -222,3 +222,17 @@
 - 资格边界：probe report 不是 qualification。只有 runtime lock 进一步封住 interpreter、Python、Torch
   CPU、Quadrants、NumPy、native libraries 与 runner implementation，durable issuer 才能从 opaque verified
   capability 最后签发 `GenesisAssetQualificationV1`。当前不得注册 production Skill/MCP。
+
+## D019 — Runtime 内容清单与完整执行闭包分账
+
+- 日期：2026-09-11
+- 状态：accepted_by_user_scope
+- 决策：先新增版本化 runtime content manifest，固定逻辑根、完整成员的 CAS bytes 与 process identity；
+  deployment mapping 单独提供，不进入内容身份。CAS-only 验证不得称为部署验证；部署目录重验也
+  不单独证明实际 import/native dependency discovery 完整。
+- 后续门：完整 runtime lock 必须另封住固定解释器/ABI、实际 distribution RECORD 与成员、Genesis
+  source、backend、系统 native libraries、启动方式、线程和进程环境。现有 v1 schema 语义保留，不能
+  用新 manifest 的通过状态暗中授予 production qualification。
+- 实测原因：只读依赖审计发现 headless CPU import 仍加载系统 EGL/GL/native libraries，且 Torch
+  inter-op 线程未被现有七项变量固定；普通 venv 启动还会执行指向其他工作树的 editable `.pth`。
+  独立物化目录与 `-S` 的固定 import 路径验证必须先于资格签发。

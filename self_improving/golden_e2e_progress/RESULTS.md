@@ -1,5 +1,26 @@
 # 进度与结果
 
+## 2026-09-11 Runtime content manifest 公共纵切
+
+- 新增 `capture_runtime_manifest` / `read_runtime_manifest` / `verify_runtime_deployment` 三个公共
+  interface。六个声明根（backend/distributions/genesis/interpreter/native/stdlib）完整枚举，逐文件
+  流式冻结、写 CAS，第二遍重读确认后最后发布 manifest；绝对部署映射不进入内容身份。
+- RED→GREEN：首次新模块缺失→1 pass；deployment drift 错误合同缺失→7 pass；canonical JSON、
+  路径越界、重复/乱序与 file URI 五个实际未拒绝用例→12 pass；扩展真实并发变化与 fresh subprocess
+  换 CAS、删除源目录后纯读重验→27 pass。新模块/schema 合计 147 statements、52 branches 均为100%。
+  测试通过 public interface，不 mock Harness 核心或调用 private helper。
+- 新增 `harness.genesis_runtime_manifest.v1`，94 snapshots verified；一次集中 Ruff check、format check
+  与 diff check 通过。旧 `GenesisRuntimeLockV1` 和 probe v1 未改语义。
+- 实际完整枚举测试又发现 `os.fwalk` 默认静默跳过不可读子目录；真实权限反例先未拒绝，补 error
+  callback 后拒绝。catalog 相关回归先以旧93项独立清单6 failed/2 passed，更新新入口后8 passed。
+- 明确边界：`authority=declared_byte_closure_only`。deployment verification 比较调用方提交的 process
+  facts，不自动证明运行中进程、实际 import/native 发现完整性或 process confinement；没有签发资格。
+  真实 staged runtime 与大目录 CAS 运行另行记录，不能由这27项测试代替。
+- 固定 `a8cf4a4` 全套基线为4218 passed/21 skipped/1 failed（250.10s）；失败节点为 packaging
+  environment 缺 pip，补 pip 后又暴露缺 setuptools.build_meta。只补缺失 pip25.3、setuptools84.0.0、
+  wheel0.48.0 后，该唯一节点1 passed（0.71s），没有重跑其余通过项或把分次结果写成全套一次绿。
+  原始与修复日志保留在 `/tmp/golden-runtime-baseline-*.log`。
+
 ## 2026-09-11 Harness-owned Genesis CPU asset probe
 
 - 固定 `7e145274a10e8d80f3966b491e05a512294588fc` 实现无相机

@@ -101,6 +101,9 @@ root 严格复验。证据见
 [`docs/evidence/golden-genesis-cpu-asset-probe-20260911.md`](../../docs/evidence/golden-genesis-cpu-asset-probe-20260911.md)。
 当前仍没有 production issuer/资格：runtime lock 尚未封住 Python/Torch/Quadrants/native 完整依赖闭包，
 因此不能加入 production Registry/MCP。
+新增 runtime manifest 前置已把声明根的完整字节写入 CAS，并提供纯读与显式部署重验三方法；94份
+公共 schema。它的 `declared_byte_closure_only` 不证明实际运行进程只使用这些根，完整 runtime lock
+和 sealed runner 仍是下一门。
 P6 继续修复资产 staging；autoresearch 只在其
 冻结 benchmark 可以
 真实运行后开始。

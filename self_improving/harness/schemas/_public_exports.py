@@ -7,6 +7,15 @@ from typing import Any
 
 _EXPORT_GROUPS = (
     (
+        ".genesis_runtime_manifest",
+        (
+            "GENESIS_RUNTIME_MANIFEST_SCHEMA_ID",
+            "GenesisRuntimeManifestV1",
+            "RuntimeProcessIdentityV1",
+            "RuntimeManifestMemberV1",
+        ),
+    ),
+    (
         ".asset_repair",
         (
             "ASSET_DEBT_INVENTORY_SCHEMA_ID",
@@ -321,6 +330,7 @@ _PUBLIC_NAMES = (
     "GENESIS_ASSET_PROBE_INPUT_SCHEMA_ID",
     "GENESIS_ASSET_PROBE_REPORT_SCHEMA_ID",
     "GENESIS_RUNTIME_LOCK_SCHEMA_ID",
+    "GENESIS_RUNTIME_MANIFEST_SCHEMA_ID",
     "OPERATION_SNAPSHOT_SCHEMA_ID",
     "PROMPT_REVISION_COMMAND_SCHEMA_ID",
     "PROMPT_REVISION_SCHEMA_ID",
@@ -402,6 +412,9 @@ _PUBLIC_NAMES = (
     "GenesisAssetProbeReportV1",
     "GenesisAssetQualificationV1",
     "GenesisRuntimeLockV1",
+    "GenesisRuntimeManifestV1",
+    "RuntimeProcessIdentityV1",
+    "RuntimeManifestMemberV1",
     "AcquisitionPolicy",
     "AssetAcquisitionLane",
     "Image2EnvCompileInput",

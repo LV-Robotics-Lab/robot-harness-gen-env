@@ -73,6 +73,30 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
 
 合同和验收边界已落库，但 `contract_pass` 只表示设计材料可核对，不是运行时完成证明。
 
+## INT-BS-003 — Runtime content manifest 前置
+
+- `lifecycle`：`integrated`
+- `verification`：`contract_pass`
+- `origin_owner`：Bingsheng（Harness 合同与整合责任）
+- `recorded_git_authors`：本切片以提交实际 git author 为准，不由目录推断自然人身份
+- `upstream_owner`：Python、Genesis World、Torch、Quadrants 等运行依赖仍归各自上游；本切片不复制其实现
+- `integration_owner`：Bingsheng
+- `source_repository`：当前 robot-harness-gen-env
+- `source_ref`：基线 `a8cf4a4c62011b901bf35793f4e218afae8299c6`；本切片新增独立 Harness 实现
+- `dirty_snapshot`：没有从 Gujie dirty worktree 纳入实现或依赖权威
+- `source_paths`：既有 `self_improving/harness/artifacts.py` 与 strict schema 合同
+- `target_paths`：`self_improving/harness/genesis_runtime_manifest.py`、
+  `self_improving/harness/schemas/genesis_runtime_manifest.py`、catalog/export/snapshot 与公共测试
+- `integration_method`：独立实现声明根的流式 byte capture、CAS-only read、显式 deployment verification；
+  不改变旧 runtime lock/probe v1 语义，不签发资格
+- `contract_spec`：`self_improving/golden_e2e_progress/SEAMS.md` 的 S3 前置与 `DECISIONS.md` D019
+- `verification_evidence`：公共测试27 pass，147 statements/52 branches 100%；catalog8 pass、94 schema
+  snapshots、Ruff/format/diff通过。真实运行依赖验证另记，不能由合同测试替代
+- `golden_run`：`none`
+- `known_gaps`：只验证声明的成员范围及调用方提供的 process identity；实际 import/native discovery、
+  fixed-process binding、production runtime lock/asset qualification 仍未闭合
+- `last_verified`：`2026-09-11`
+
 ## INT-YX-001 — 历史资产检索、复用与入库管线
 
 - `lifecycle`：`integrated`

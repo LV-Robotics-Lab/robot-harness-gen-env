@@ -47,6 +47,7 @@ from self_improving.harness.schemas.genesis_observe import (
     GenesisObserveInput,
     GenesisObserveOutput,
 )
+from self_improving.harness.schemas.genesis_runtime_manifest import GenesisRuntimeManifestV1
 from self_improving.harness.schemas.golden_control import (
     AdvisoryRecordCommand,
     ControlCommitSnapshot,
@@ -141,6 +142,7 @@ EXPECTED_SCHEMA_IDS = {
     "harness.genesis_asset_load_observation.v1",
     "harness.genesis_asset_probe_input.v1",
     "harness.genesis_asset_probe_report.v1",
+    "harness.genesis_runtime_manifest.v1",
     "harness.genesis_observe_input.v1",
     "harness.genesis_observe_output.v1",
     "harness.genesis_runtime_lock.v1",
@@ -253,6 +255,7 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert schema_model("harness.genesis_asset_load_evidence.v1") is GenesisAssetLoadEvidenceV1
     assert schema_model("harness.genesis_asset_probe_input.v1") is GenesisAssetProbeInputV1
     assert schema_model("harness.genesis_asset_probe_report.v1") is GenesisAssetProbeReportV1
+    assert schema_model("harness.genesis_runtime_manifest.v1") is GenesisRuntimeManifestV1
     assert schema_model("harness.advisory_record_command.v1") is AdvisoryRecordCommand
     assert schema_model("harness.control_commit_snapshot.v1") is ControlCommitSnapshot
     assert (
@@ -360,6 +363,7 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.genesis_observe_input.v1",
             "harness.genesis_observe_output.v1",
             "harness.genesis_runtime_lock.v1",
+            "harness.genesis_runtime_manifest.v1",
             "harness.advisory_record_command.v1",
             "harness.control_commit_snapshot.v1",
             "harness.external_agent_advisory_receipt.v1",

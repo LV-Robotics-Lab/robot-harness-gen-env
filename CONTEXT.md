@@ -44,6 +44,15 @@ _Avoid_: Skill qualification、catalog membership、visual similarity
 不属于闭包。
 _Avoid_: asset directory path、partial manifest、download hint
 
+**Runtime Content Manifest（运行时内容清单）**:
+把明确声明的运行时成员、逻辑位置和逐字节身份固定下来的可移植清单；清单完整性只针对声明的
+成员范围，不单独证明实际执行所需的依赖已经全部纳入。
+_Avoid_: production runtime qualification、deployment path、import closure proof
+
+**Runtime Deployment Mapping（运行时部署映射）**:
+把运行时内容清单的逻辑位置映射到某次部署中的实际位置；位置可以变化，已验证内容身份不能变化。
+_Avoid_: runtime identity、qualification、implicit source lookup
+
 **Asset Binding（资产绑定）**:
 把每个 Scene IR 实体一一映射到选定且已资格化的资产表示、闭包和场景角色的显式清单；它是语义场景
 与可物化环境包之间的桥梁。
