@@ -57,6 +57,27 @@ def _canonical(value):
     ).encode()
 
 
+def _mouse_entry(entry):
+    # Exact compatibility identity; never substring or category similarity.
+    return entry.semantic_name == "mouse" or (
+        entry.semantic_name,
+        entry.subject.namespace,
+        entry.subject.asset_key,
+        entry.subject.ledger_asset_id,
+        entry.subject.model_id,
+        entry.subject.source_record_sha256,
+        entry.representation_sha256,
+    ) == (
+        "pink_mouse",
+        "gujie.legacy",
+        "simfoundry_pink_mouse_7915827ae4309660",
+        "mouse_001",
+        0,
+        "a7d20cc64d171f1a720fdeefe0d38130a4d85eef3b90b9300241bc790592f21c",
+        "5c35efde1c50cdeee04b3529abe5f136b48eaa592a0cf037ac45fe13bad85564",
+    )
+
+
 class LimitedImagePreviewInputs:
     """Build initial exact-reuse requests; never executes or qualifies an asset."""
 
@@ -150,14 +171,14 @@ class LimitedImagePreviewInputs:
         if query != "mouse":
             raise ValueError("unsupported asset query: only mouse is available")
         self._input(workflow_id, input_ref)
-        matches = [item for item in self._catalog().entries if item.semantic_name == query]
+        matches = [item for item in self._catalog().entries if _mouse_entry(item)]
         if len(matches) != 1:
             raise ValueError("mouse lookup requires one exact catalog entry")
         entry = matches[0]
         self.store.resolve(entry.representation)
         self.store.resolve(entry.qualification)
         source = self._read(self.source_scene)
-        if source.get("metadata", {}).get("category") != "mouse" or source.get(
+        if source.get("metadata", {}).get("category") != entry.semantic_name or source.get(
             "representation"
         ) != entry.representation.model_dump(mode="json"):
             raise ValueError("mouse source and catalog representation differ")
@@ -196,14 +217,20 @@ class LimitedImagePreviewInputs:
             - min(row[i] for row in scene.local_vertices_m)
             for i in range(3)
         ]
-        object_id = self._read(self.source_scene)["metadata"]["name"]
+        metadata = self._read(self.source_scene)["metadata"]
+        object_id = metadata["name"]
         proposal = dict(
             schema_version="harness.scene_interpretation_proposal.v1",
             route_id="image2env",
             source_media_sha256=initial.source_media.source.sha256,
             effective_prompt=initial.effective_prompt.model_dump(mode="json"),
             objects=[
-                dict(object_id=object_id, category="mouse", role="dynamic", dimensions_m=dimensions)
+                dict(
+                    object_id=object_id,
+                    category=metadata["category"],
+                    role="dynamic",
+                    dimensions_m=dimensions,
+                )
             ],
             relations=[dict(relation="on_table", source=object_id, target="table")],
             unknowns=[],

@@ -137,7 +137,16 @@ def test_input_lineage_rejects_foreign_or_missing_selection(inputs, variation):
 
 @pytest.mark.parametrize(
     "variation",
-    ["blank", "ref_type", "noncanonical", "prompt_type", "no_mouse", "source_mismatch", "layout"],
+    [
+        "blank",
+        "ref_type",
+        "noncanonical",
+        "prompt_type",
+        "no_mouse",
+        "unverified_pink_mouse",
+        "source_mismatch",
+        "layout",
+    ],
 )
 def test_input_contract_and_declared_scope_fail_closed(inputs, tmp_path, variation):
     case = inputs
@@ -162,8 +171,10 @@ def test_input_contract_and_declared_scope_fail_closed(inputs, tmp_path, variati
         payload = json.loads(case.store.resolve(initial).path.read_bytes())
         payload["effective_prompt"] = case.raw.model_dump(mode="json")
         initial = case.publish(payload, "wrong-prompt.json")
-    if variation == "no_mouse":
-        case.catalog["entries"][0]["semantic_name"] = "cup"
+    if variation in ("no_mouse", "unverified_pink_mouse"):
+        case.catalog["entries"][0]["semantic_name"] = (
+            "cup" if variation == "no_mouse" else "pink_mouse"
+        )
         case.catalog["catalog_sha256"] = canonical_evidence_sha256(case.catalog, "catalog_sha256")
         case.builder.asset_catalog = case.publish(
             case.catalog, "cup-catalog.json", "harness.portable_asset_catalog.v1"
@@ -187,6 +198,7 @@ def test_input_contract_and_declared_scope_fail_closed(inputs, tmp_path, variati
 def test_real_fixed_mouse_catalog_builds_without_changing_historical_cas(tmp_path):
     import os
     from pathlib import Path
+
     from self_improving.harness.artifacts import LocalArtifactStore
     from self_improving.harness.schemas.common import ArtifactRef
 
@@ -196,35 +208,61 @@ def test_real_fixed_mouse_catalog_builds_without_changing_historical_cas(tmp_pat
     config = json.loads(Path(config_path).read_text())
     original = LocalArtifactStore(Path(config["cas_root"]))
     request = Image2EnvGenesisCompileRequestV1.model_validate_json(
-        original.resolve(ArtifactRef.model_validate(config["request_ref"])).path.read_bytes())
+        original.resolve(ArtifactRef.model_validate(config["request_ref"])).path.read_bytes()
+    )
     store = LocalArtifactStore(tmp_path / "isolated-cas")
+
     def copy(ref):
-        actual = store.put_file(original.resolve(ref).path, name=ref.name,
-                                media_type=ref.media_type, schema_version=ref.schema_version)
+        actual = store.put_file(
+            original.resolve(ref).path,
+            name=ref.name,
+            media_type=ref.media_type,
+            schema_version=ref.schema_version,
+        )
         assert actual == ref
         return ref
+
     catalog_ref = copy(request.compile_input.asset_catalog)
     entry = json.loads(original.resolve(catalog_ref).path.read_bytes())["entries"][0]
     representation_ref = copy(ArtifactRef.model_validate(entry["representation"]))
-    representation = AssetRepresentationV1.model_validate_json(original.resolve(representation_ref).path.read_bytes())
+    representation = AssetRepresentationV1.model_validate_json(
+        original.resolve(representation_ref).path.read_bytes()
+    )
     for member in representation.members:
         copy(member.artifact)
     copy(ArtifactRef.model_validate(entry["qualification"]))
     source = copy(request.source_scene)
     raw = copy(request.compile_input.source_media.source)
-    builder = LimitedImagePreviewInputs(store, asset_catalog=catalog_ref, source_scene=source,
-        qualification_run_id=request.qualification_run_id, table_center_m=request.table_center_m,
-        table_size_m=request.table_size_m, table_friction=request.table_friction)
+    builder = LimitedImagePreviewInputs(
+        store,
+        asset_catalog=catalog_ref,
+        source_scene=source,
+        qualification_run_id=request.qualification_run_id,
+        table_center_m=request.table_center_m,
+        table_size_m=request.table_size_m,
+        table_friction=request.table_friction,
+    )
     workflow = uuid4()
     initial = builder.start(workflow_id=workflow, raw_image_ref=raw, user_text="One mouse on table")
     lookup = builder.lookup(workflow_id=workflow, input_ref=initial, query="mouse")
-    result = builder.build_initial(workflow_id=workflow, input_ref=initial, lookup_ref=lookup,
-                                  asset_id="simfoundry_pink_mouse_7915827ae4309660")
-    compiled = Image2EnvGenesisCompileRequestV1.model_validate_json(store.resolve(result).path.read_bytes())
-    proposal = SceneInterpretationProposalV1.model_validate_json(store.resolve(compiled.compile_input.interpretation_proposal).path.read_bytes())
+    result = builder.build_initial(
+        workflow_id=workflow,
+        input_ref=initial,
+        lookup_ref=lookup,
+        asset_id="simfoundry_pink_mouse_7915827ae4309660",
+    )
+    compiled = Image2EnvGenesisCompileRequestV1.model_validate_json(
+        store.resolve(result).path.read_bytes()
+    )
+    proposal = SceneInterpretationProposalV1.model_validate_json(
+        store.resolve(compiled.compile_input.interpretation_proposal).path.read_bytes()
+    )
     assert proposal.objects[0].category == "pink_mouse"
     assert proposal.objects[0].object_id == "iter_0"
-    assert original.resolve(catalog_ref).path.read_bytes() == store.resolve(catalog_ref).path.read_bytes()
+    assert (
+        original.resolve(catalog_ref).path.read_bytes()
+        == store.resolve(catalog_ref).path.read_bytes()
+    )
 
 
 def test_public_input_builder_has_explicit_stages():
