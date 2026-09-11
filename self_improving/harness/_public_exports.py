@@ -55,6 +55,15 @@ _EXPORT_GROUPS = (
         ),
     ),
     (
+        ".schemas.genesis_asset_probe",
+        (
+            "GenesisAssetContactTraceV1",
+            "GenesisAssetLoadEvidenceV1",
+            "GenesisAssetProbeInputV1",
+            "GenesisAssetProbeReportV1",
+        ),
+    ),
+    (
         ".golden_execution",
         (
             "GoldenExecutionBinding",
@@ -428,6 +437,10 @@ _PUBLIC_NAMES = (
     "GoldenRunHeadConflictError",
     "GoldenRunNotFoundError",
     "GoldenRunRegistryError",
+    "GenesisAssetContactTraceV1",
+    "GenesisAssetLoadEvidenceV1",
+    "GenesisAssetProbeInputV1",
+    "GenesisAssetProbeReportV1",
     "GenesisAssetQualificationV1",
     "GenesisRuntimeLockV1",
     "HandlerResult",

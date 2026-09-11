@@ -1,0 +1,480 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "AssetModelSubjectV1": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_key": {
+          "pattern": "^[a-z0-9][a-z0-9_.-]{0,127}$",
+          "title": "Asset Key",
+          "type": "string"
+        },
+        "backend": {
+          "const": "genesis",
+          "title": "Backend",
+          "type": "string"
+        },
+        "ledger_asset_id": {
+          "pattern": "^[a-z0-9][a-z0-9_]{0,127}$",
+          "title": "Ledger Asset Id",
+          "type": "string"
+        },
+        "model_id": {
+          "minimum": 0,
+          "title": "Model Id",
+          "type": "integer"
+        },
+        "namespace": {
+          "pattern": "^[a-z][a-z0-9_.-]{0,63}$",
+          "title": "Namespace",
+          "type": "string"
+        },
+        "source_record_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Record Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "namespace",
+        "asset_key",
+        "ledger_asset_id",
+        "model_id",
+        "backend",
+        "source_record_sha256"
+      ],
+      "title": "AssetModelSubjectV1",
+      "type": "object"
+    },
+    "AssetRepresentationMemberV1": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "logical_path": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "pattern": "^(?![A-Za-z]:)(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\\\u0000-\\u001f\\u007f\\u2028\\u2029]+)*$",
+          "title": "Logical Path",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "collision",
+            "metadata",
+            "urdf",
+            "visual"
+          ],
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logical_path",
+        "role",
+        "artifact"
+      ],
+      "title": "AssetRepresentationMemberV1",
+      "type": "object"
+    },
+    "GenesisInertiaTensorV1": {
+      "additionalProperties": false,
+      "description": "URDF inertia tensor copied from the loaded dynamic link.",
+      "properties": {
+        "ixx": {
+          "exclusiveMinimum": 0,
+          "title": "Ixx",
+          "type": "number"
+        },
+        "ixy": {
+          "title": "Ixy",
+          "type": "number"
+        },
+        "ixz": {
+          "title": "Ixz",
+          "type": "number"
+        },
+        "iyy": {
+          "exclusiveMinimum": 0,
+          "title": "Iyy",
+          "type": "number"
+        },
+        "iyz": {
+          "title": "Iyz",
+          "type": "number"
+        },
+        "izz": {
+          "exclusiveMinimum": 0,
+          "title": "Izz",
+          "type": "number"
+        }
+      },
+      "required": [
+        "ixx",
+        "ixy",
+        "ixz",
+        "iyy",
+        "iyz",
+        "izz"
+      ],
+      "title": "GenesisInertiaTensorV1",
+      "type": "object"
+    },
+    "_ProbeInputRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.genesis_asset_probe_input.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_ProbeInputRef",
+      "type": "object"
+    },
+    "_RepresentationRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.asset_representation.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_RepresentationRef",
+      "type": "object"
+    },
+    "_RuntimeLockRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.genesis_runtime_lock.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_RuntimeLockRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_asset_load_evidence.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Exact loader closure and physical properties observed after Genesis load.",
+  "properties": {
+    "backend": {
+      "const": "genesis",
+      "title": "Backend",
+      "type": "string"
+    },
+    "backend_implementation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Backend Implementation Sha256",
+      "type": "string"
+    },
+    "backend_version": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Backend Version",
+      "type": "string"
+    },
+    "collision_shape_count": {
+      "const": 8,
+      "title": "Collision Shape Count",
+      "type": "integer"
+    },
+    "dynamic": {
+      "const": true,
+      "title": "Dynamic",
+      "type": "boolean"
+    },
+    "fixed": {
+      "const": false,
+      "title": "Fixed",
+      "type": "boolean"
+    },
+    "friction": {
+      "minimum": 0,
+      "title": "Friction",
+      "type": "number"
+    },
+    "inertia_kg_m2": {
+      "$ref": "#/$defs/GenesisInertiaTensorV1"
+    },
+    "joint_count": {
+      "const": 0,
+      "title": "Joint Count",
+      "type": "integer"
+    },
+    "load_evidence_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Load Evidence Sha256",
+      "type": "string"
+    },
+    "loaded": {
+      "const": true,
+      "title": "Loaded",
+      "type": "boolean"
+    },
+    "loader_closure_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Loader Closure Sha256",
+      "type": "string"
+    },
+    "loader_contract": {
+      "const": "harness.genesis_rigid_loader.v1",
+      "title": "Loader Contract",
+      "type": "string"
+    },
+    "mass_kg": {
+      "exclusiveMinimum": 0,
+      "title": "Mass Kg",
+      "type": "number"
+    },
+    "member_count": {
+      "const": 15,
+      "title": "Member Count",
+      "type": "integer"
+    },
+    "members": {
+      "items": {
+        "$ref": "#/$defs/AssetRepresentationMemberV1"
+      },
+      "maxItems": 15,
+      "minItems": 15,
+      "title": "Members",
+      "type": "array"
+    },
+    "probe_input": {
+      "$ref": "#/$defs/_ProbeInputRef"
+    },
+    "representation": {
+      "$ref": "#/$defs/_RepresentationRef"
+    },
+    "representation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Representation Sha256",
+      "type": "string"
+    },
+    "requested_profile": {
+      "const": "genesis.rigid_scene@1",
+      "title": "Requested Profile",
+      "type": "string"
+    },
+    "root_link_count": {
+      "const": 1,
+      "title": "Root Link Count",
+      "type": "integer"
+    },
+    "root_logical_path": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Root Logical Path",
+      "type": "string"
+    },
+    "runtime_lock": {
+      "$ref": "#/$defs/_RuntimeLockRef"
+    },
+    "schema_version": {
+      "const": "harness.genesis_asset_load_evidence.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_record_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Record Sha256",
+      "type": "string"
+    },
+    "subject": {
+      "$ref": "#/$defs/AssetModelSubjectV1"
+    }
+  },
+  "required": [
+    "schema_version",
+    "load_evidence_sha256",
+    "probe_input",
+    "representation",
+    "runtime_lock",
+    "requested_profile",
+    "backend",
+    "backend_version",
+    "backend_implementation_sha256",
+    "loader_contract",
+    "subject",
+    "source_record_sha256",
+    "representation_sha256",
+    "root_logical_path",
+    "loader_closure_sha256",
+    "members",
+    "member_count",
+    "root_link_count",
+    "joint_count",
+    "collision_shape_count",
+    "dynamic",
+    "fixed",
+    "mass_kg",
+    "inertia_kg_m2",
+    "friction",
+    "loaded"
+  ],
+  "title": "GenesisAssetLoadEvidenceV1",
+  "type": "object"
+}

@@ -1,0 +1,192 @@
+{
+  "$defs": {
+    "_RepresentationRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.asset_representation.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_RepresentationRef",
+      "type": "object"
+    },
+    "_RuntimeLockRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.genesis_runtime_lock.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_RuntimeLockRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_asset_probe_input.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Sealed CPU/Newton parameters and source identities for a candidate probe.",
+  "properties": {
+    "collisions_enabled": {
+      "const": true,
+      "title": "Collisions Enabled",
+      "type": "boolean"
+    },
+    "cpu_threads": {
+      "const": 1,
+      "title": "Cpu Threads",
+      "type": "integer"
+    },
+    "dt_seconds": {
+      "const": 0.004,
+      "title": "Dt Seconds",
+      "type": "number"
+    },
+    "environment_count": {
+      "const": 1,
+      "title": "Environment Count",
+      "type": "integer"
+    },
+    "model_execution_allowed": {
+      "const": false,
+      "title": "Model Execution Allowed",
+      "type": "boolean"
+    },
+    "network_access_allowed": {
+      "const": false,
+      "title": "Network Access Allowed",
+      "type": "boolean"
+    },
+    "probe_input_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Probe Input Sha256",
+      "type": "string"
+    },
+    "release_height_m": {
+      "const": 0.01,
+      "title": "Release Height M",
+      "type": "number"
+    },
+    "representation": {
+      "$ref": "#/$defs/_RepresentationRef"
+    },
+    "requested_profile": {
+      "const": "genesis.rigid_scene@1",
+      "title": "Requested Profile",
+      "type": "string"
+    },
+    "runtime_lock": {
+      "$ref": "#/$defs/_RuntimeLockRef"
+    },
+    "schema_version": {
+      "const": "harness.genesis_asset_probe_input.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "seed": {
+      "const": 0,
+      "title": "Seed",
+      "type": "integer"
+    },
+    "solver": {
+      "const": "newton",
+      "title": "Solver",
+      "type": "string"
+    },
+    "steps": {
+      "const": 1000,
+      "title": "Steps",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "probe_input_sha256",
+    "representation",
+    "runtime_lock",
+    "requested_profile",
+    "release_height_m",
+    "dt_seconds",
+    "solver",
+    "steps",
+    "cpu_threads",
+    "environment_count",
+    "seed",
+    "collisions_enabled",
+    "model_execution_allowed",
+    "network_access_allowed"
+  ],
+  "title": "GenesisAssetProbeInputV1",
+  "type": "object"
+}

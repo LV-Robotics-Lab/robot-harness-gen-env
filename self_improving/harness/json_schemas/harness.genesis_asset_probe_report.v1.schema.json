@@ -1,0 +1,440 @@
+{
+  "$defs": {
+    "GenesisAssetProbeCheckV1": {
+      "additionalProperties": false,
+      "description": "One non-qualification probe check and its exact evidence references.",
+      "properties": {
+        "code": {
+          "enum": [
+            "backend_load",
+            "closure_identity",
+            "collision_shapes",
+            "contact_observed",
+            "dynamic_release",
+            "penetration_bounded"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/_CasArtifactRef"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "status": {
+          "const": "pass",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "status",
+        "evidence"
+      ],
+      "title": "GenesisAssetProbeCheckV1",
+      "type": "object"
+    },
+    "_CasArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_CasArtifactRef",
+      "type": "object"
+    },
+    "_ContactTraceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.genesis_asset_contact_trace.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_ContactTraceRef",
+      "type": "object"
+    },
+    "_LoadEvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.genesis_asset_load_evidence.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_LoadEvidenceRef",
+      "type": "object"
+    },
+    "_ProbeInputRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.genesis_asset_probe_input.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_ProbeInputRef",
+      "type": "object"
+    },
+    "_RepresentationRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.asset_representation.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_RepresentationRef",
+      "type": "object"
+    },
+    "_RuntimeLockRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.genesis_runtime_lock.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_RuntimeLockRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_asset_probe_report.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Closed candidate probe report; it intentionally makes no qualification claim.",
+  "properties": {
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/GenesisAssetProbeCheckV1"
+      },
+      "maxItems": 6,
+      "minItems": 6,
+      "title": "Checks",
+      "type": "array"
+    },
+    "collisions_enabled": {
+      "const": true,
+      "title": "Collisions Enabled",
+      "type": "boolean"
+    },
+    "contact_probe_executed": {
+      "const": true,
+      "title": "Contact Probe Executed",
+      "type": "boolean"
+    },
+    "contact_trace": {
+      "$ref": "#/$defs/_ContactTraceRef"
+    },
+    "load_evidence": {
+      "$ref": "#/$defs/_LoadEvidenceRef"
+    },
+    "load_executed": {
+      "const": true,
+      "title": "Load Executed",
+      "type": "boolean"
+    },
+    "member_closure_verified": {
+      "const": true,
+      "title": "Member Closure Verified",
+      "type": "boolean"
+    },
+    "model_call_count": {
+      "const": 0,
+      "title": "Model Call Count",
+      "type": "integer"
+    },
+    "network_call_count": {
+      "const": 0,
+      "title": "Network Call Count",
+      "type": "integer"
+    },
+    "probe_input": {
+      "$ref": "#/$defs/_ProbeInputRef"
+    },
+    "probe_report_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Probe Report Sha256",
+      "type": "string"
+    },
+    "representation": {
+      "$ref": "#/$defs/_RepresentationRef"
+    },
+    "requested_profile": {
+      "const": "genesis.rigid_scene@1",
+      "title": "Requested Profile",
+      "type": "string"
+    },
+    "runtime_lock": {
+      "$ref": "#/$defs/_RuntimeLockRef"
+    },
+    "schema_version": {
+      "const": "harness.genesis_asset_probe_report.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "simulator_executed": {
+      "const": true,
+      "title": "Simulator Executed",
+      "type": "boolean"
+    },
+    "status": {
+      "const": "pass",
+      "title": "Status",
+      "type": "string"
+    },
+    "steps_executed": {
+      "const": 1000,
+      "title": "Steps Executed",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "probe_report_sha256",
+    "probe_input",
+    "load_evidence",
+    "contact_trace",
+    "representation",
+    "runtime_lock",
+    "requested_profile",
+    "status",
+    "checks",
+    "member_closure_verified",
+    "load_executed",
+    "contact_probe_executed",
+    "steps_executed",
+    "collisions_enabled",
+    "simulator_executed",
+    "model_call_count",
+    "network_call_count"
+  ],
+  "title": "GenesisAssetProbeReportV1",
+  "type": "object"
+}

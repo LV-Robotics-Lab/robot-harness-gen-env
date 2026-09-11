@@ -37,6 +37,22 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
             ".schemas.genesis_observe",
             "GenesisObservationReceipt",
         ),
+        "harness.genesis_asset_contact_trace.v1": (
+            ".schemas.genesis_asset_probe",
+            "GenesisAssetContactTraceV1",
+        ),
+        "harness.genesis_asset_load_evidence.v1": (
+            ".schemas.genesis_asset_probe",
+            "GenesisAssetLoadEvidenceV1",
+        ),
+        "harness.genesis_asset_probe_input.v1": (
+            ".schemas.genesis_asset_probe",
+            "GenesisAssetProbeInputV1",
+        ),
+        "harness.genesis_asset_probe_report.v1": (
+            ".schemas.genesis_asset_probe",
+            "GenesisAssetProbeReportV1",
+        ),
         "harness.genesis_observe_input.v1": (
             ".schemas.genesis_observe",
             "GenesisObserveInput",

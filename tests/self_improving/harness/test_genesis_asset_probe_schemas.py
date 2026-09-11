@@ -73,7 +73,12 @@ def _ref(
 
 
 def _self_hashed(model: Any, digest_field: str, value: dict[str, object]) -> Any:
-    payload = json.loads(json.dumps(value))
+    payload = json.loads(
+        json.dumps(
+            value,
+            default=lambda item: item.model_dump(mode="json"),
+        )
+    )
     payload[digest_field] = canonical_evidence_sha256(payload, digest_field)
     return model.model_validate(payload)
 
@@ -101,7 +106,7 @@ def _members() -> list[dict[str, object]]:
                 ),
             ),
         }
-        for index, (path, role) in enumerate(paths_and_roles)
+        for index, (path, role) in enumerate(sorted(paths_and_roles))
     ]
 
 
@@ -326,6 +331,10 @@ def test_probe_input_freezes_the_sealed_cpu_newton_execution_profile(
         changed[field]["schema_version"] = schema_version
         with pytest.raises(ValidationError, match="schema_version"):
             _rehash(type(probe_input), changed)
+    changed = json.loads(json.dumps(values))
+    changed["representation"]["uri"] = f"artifact://sha256/{'f' * 64}"
+    with pytest.raises(ValidationError, match="content-addressed"):
+        _rehash(type(probe_input), changed)
 
 
 def test_load_evidence_binds_complete_mouse_loader_and_physical_properties(
@@ -375,6 +384,15 @@ def test_load_evidence_binds_complete_mouse_loader_and_physical_properties(
     with pytest.raises(ValidationError, match="sorted"):
         _rehash(type(load), changed)
     changed = json.loads(json.dumps(values))
+    changed["root_logical_path"] = "urdf/missing.urdf"
+    with pytest.raises(ValidationError, match="root_logical_path"):
+        _rehash(type(load), changed)
+    changed = json.loads(json.dumps(values))
+    collision = next(item for item in changed["members"] if item["role"] == "collision")
+    collision["role"] = "visual"
+    with pytest.raises(ValidationError, match="collision_shape_count"):
+        _rehash(type(load), changed)
+    changed = json.loads(json.dumps(values))
     changed["inertia_kg_m2"]["ixx"] = -1.0
     with pytest.raises(ValidationError, match="inertia"):
         _rehash(type(load), changed)
@@ -421,6 +439,11 @@ def test_contact_trace_requires_contiguous_steps_and_consistent_summaries(
     changed = json.loads(json.dumps(values))
     changed["max_normal_force_n"] = -0.1
     with pytest.raises(ValidationError):
+        _rehash(type(trace), changed)
+    changed = json.loads(json.dumps(values))
+    changed["first_contact_step"] = 999
+    changed["last_contact_step"] = 998
+    with pytest.raises(ValidationError, match="contact"):
         _rehash(type(trace), changed)
 
 
@@ -474,6 +497,10 @@ def test_probe_report_binds_all_layers_without_claiming_qualification(
     changed = json.loads(json.dumps(values))
     changed["checks"][0]["status"] = "fail"
     with pytest.raises(ValidationError, match="status|checks"):
+        _rehash(type(report), changed)
+    changed = json.loads(json.dumps(values))
+    changed["checks"][1]["evidence"] = list(reversed(changed["checks"][1]["evidence"]))
+    with pytest.raises(ValidationError, match="evidence.*sorted"):
         _rehash(type(report), changed)
 
 

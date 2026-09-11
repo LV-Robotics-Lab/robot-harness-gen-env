@@ -1,0 +1,388 @@
+{
+  "$defs": {
+    "_ContactTraceRowsRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/x-ndjson",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.genesis_asset_contact_trace_rows.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_ContactTraceRowsRef",
+      "type": "object"
+    },
+    "_LoadEvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.genesis_asset_load_evidence.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_LoadEvidenceRef",
+      "type": "object"
+    },
+    "_ProbeInputRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.genesis_asset_probe_input.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_ProbeInputRef",
+      "type": "object"
+    },
+    "_RepresentationRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.asset_representation.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_RepresentationRef",
+      "type": "object"
+    },
+    "_RuntimeLockRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.genesis_runtime_lock.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_RuntimeLockRef",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_asset_contact_trace.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "CAS-bound step/contact summary for the fixed one-thousand-step probe.",
+  "properties": {
+    "collision_pair_count": {
+      "minimum": 1,
+      "title": "Collision Pair Count",
+      "type": "integer"
+    },
+    "collisions_enabled": {
+      "const": true,
+      "title": "Collisions Enabled",
+      "type": "boolean"
+    },
+    "contact_observed": {
+      "const": true,
+      "title": "Contact Observed",
+      "type": "boolean"
+    },
+    "contact_step_count": {
+      "maximum": 1000,
+      "minimum": 1,
+      "title": "Contact Step Count",
+      "type": "integer"
+    },
+    "contact_trace_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Contact Trace Sha256",
+      "type": "string"
+    },
+    "first_contact_step": {
+      "maximum": 999,
+      "minimum": 0,
+      "title": "First Contact Step",
+      "type": "integer"
+    },
+    "first_step": {
+      "const": 0,
+      "title": "First Step",
+      "type": "integer"
+    },
+    "last_contact_step": {
+      "maximum": 999,
+      "minimum": 0,
+      "title": "Last Contact Step",
+      "type": "integer"
+    },
+    "last_step": {
+      "const": 999,
+      "title": "Last Step",
+      "type": "integer"
+    },
+    "load_evidence": {
+      "$ref": "#/$defs/_LoadEvidenceRef"
+    },
+    "max_normal_force_n": {
+      "minimum": 0,
+      "title": "Max Normal Force N",
+      "type": "number"
+    },
+    "max_penetration_m": {
+      "maximum": 0.001,
+      "minimum": 0,
+      "title": "Max Penetration M",
+      "type": "number"
+    },
+    "mean_contact_normal_force_n": {
+      "minimum": 0,
+      "title": "Mean Contact Normal Force N",
+      "type": "number"
+    },
+    "penetration_threshold_m": {
+      "const": 0.001,
+      "title": "Penetration Threshold M",
+      "type": "number"
+    },
+    "penetration_violation_count": {
+      "const": 0,
+      "title": "Penetration Violation Count",
+      "type": "integer"
+    },
+    "probe_input": {
+      "$ref": "#/$defs/_ProbeInputRef"
+    },
+    "representation": {
+      "$ref": "#/$defs/_RepresentationRef"
+    },
+    "runtime_lock": {
+      "$ref": "#/$defs/_RuntimeLockRef"
+    },
+    "sample_count": {
+      "const": 1000,
+      "title": "Sample Count",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "harness.genesis_asset_contact_trace.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "simulator_executed": {
+      "const": true,
+      "title": "Simulator Executed",
+      "type": "boolean"
+    },
+    "steps_contiguous": {
+      "const": true,
+      "title": "Steps Contiguous",
+      "type": "boolean"
+    },
+    "total_contact_count": {
+      "minimum": 1,
+      "title": "Total Contact Count",
+      "type": "integer"
+    },
+    "total_normal_impulse_ns": {
+      "minimum": 0,
+      "title": "Total Normal Impulse Ns",
+      "type": "number"
+    },
+    "trace_rows": {
+      "$ref": "#/$defs/_ContactTraceRowsRef"
+    }
+  },
+  "required": [
+    "schema_version",
+    "contact_trace_sha256",
+    "probe_input",
+    "load_evidence",
+    "representation",
+    "runtime_lock",
+    "trace_rows",
+    "first_step",
+    "last_step",
+    "sample_count",
+    "steps_contiguous",
+    "contact_observed",
+    "contact_step_count",
+    "first_contact_step",
+    "last_contact_step",
+    "total_contact_count",
+    "collision_pair_count",
+    "penetration_threshold_m",
+    "max_penetration_m",
+    "penetration_violation_count",
+    "max_normal_force_n",
+    "mean_contact_normal_force_n",
+    "total_normal_impulse_ns",
+    "collisions_enabled",
+    "simulator_executed"
+  ],
+  "title": "GenesisAssetContactTraceV1",
+  "type": "object"
+}
