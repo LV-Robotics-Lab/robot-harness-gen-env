@@ -20,6 +20,10 @@ _EXPORT_GROUPS = (
         ),
     ),
     (
+        ".native_terminal_admission",
+        ("NativeDigestMemberV1", "NativeReadClosureV1", "NativeTerminalAdmissionV1"),
+    ),
+    (
         ".golden_control_v2",
         (
             "ObservationCitationV2",
@@ -532,6 +536,9 @@ _PUBLIC_NAMES = (
     "QualificationCandidateIntentV1",
     "QualificationImplementationMemberV1",
     "TypedQualificationAdmissionV1",
+    "NativeDigestMemberV1",
+    "NativeReadClosureV1",
+    "NativeTerminalAdmissionV1",
     "AdvisoryRecordCommand",
     "AssetDebtInventory",
     "AssetClosureManifestV1",

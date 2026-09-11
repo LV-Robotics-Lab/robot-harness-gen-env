@@ -33,6 +33,14 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
             ".schemas.native_prompt_revision",
             "Image2EnvGenesisCompileReceiptV2",
         ),
+        "harness.native_read_closure.v1": (
+            ".schemas.native_terminal_admission",
+            "NativeReadClosureV1",
+        ),
+        "harness.native_terminal_admission.v1": (
+            ".schemas.native_terminal_admission",
+            "NativeTerminalAdmissionV1",
+        ),
         "harness.observation_citation.v2": (".schemas.golden_control_v2", "ObservationCitationV2"),
         "harness.advisory_record_command.v2": (
             ".schemas.golden_control_v2",
