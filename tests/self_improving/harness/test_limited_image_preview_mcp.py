@@ -65,12 +65,17 @@ def test_validate_forwards_explicit_target_and_preserves_semantic_failure():
 
 def test_public_mcp_lists_only_named_preview_tools_and_delegates_start(tmp_path):
     from mcp import Client, MCPError
+
     from tests.self_improving.harness.test_golden_control_v2_runtime import native_case
 
     head = native_case(tmp_path).head
-    payload = {"workflow_id": str(head.workflow_run_id), "status": "active",
-               "revision": head.revision, "stage": "start",
-               "snapshot": head.model_dump(mode="json")}
+    payload = {
+        "workflow_id": str(head.workflow_run_id),
+        "status": "active",
+        "revision": head.revision,
+        "stage": "start",
+        "snapshot": head.model_dump(mode="json"),
+    }
 
     class Service:
         def __init__(self):
@@ -116,9 +121,12 @@ def test_public_mcp_lists_only_named_preview_tools_and_delegates_start(tmp_path)
                 },
             )
             assert result.structured_content == payload
-            result = await client.call_tool("image2env_preview_status_v1", {
-                "workflow_id": str(head.workflow_run_id),
-            })
+            result = await client.call_tool(
+                "image2env_preview_status_v1",
+                {
+                    "workflow_id": str(head.workflow_run_id),
+                },
+            )
             assert result.structured_content == {**payload, "stage": "status"}
             assert service.received == [
                 {
@@ -154,6 +162,72 @@ def test_preview_codex_invocation_attaches_raw_image_and_does_not_need_proposal(
     assert "Compile placement arguments must be your explicit tool arguments" in invocation.prompt
     assert invocation.image_sha256 is not None
     assert invocation.server_module == "self_improving.harness.limited_image_preview_mcp"
+
+
+def test_nested_operation_output_and_public_schema_identity_are_preserved(tmp_path):
+    from mcp import Client
+
+    from self_improving.harness.schemas.limited_image_preview_service import PreviewServiceResult
+    from self_improving.harness.schemas.workflow import OperationSnapshot
+    from tests.self_improving.harness.test_golden_control_v2_runtime import native_case
+
+    head = native_case(tmp_path).head
+    original = PreviewServiceResult.model_json_schema()
+    operation = OperationSnapshot.model_validate_json(
+        __import__("json").dumps(
+            {
+                "schema_version": "harness.operation_snapshot.v1",
+                "operation_id": WORKFLOW,
+                "workflow_run_id": str(head.workflow_run_id),
+                "principal_id": head.principal_id,
+                "idempotency_key": "running",
+                "skill_ref": "image2env.replay@2.0.0",
+                "command": head.receipt_head.model_copy(
+                    update={"schema_version": "harness.run_command_request.v1"}
+                ).model_dump(mode="json"),
+                "qualified_execution": head.receipt_head.model_copy(
+                    update={"schema_version": "harness.qualified_skill_execution.v2"}
+                ).model_dump(mode="json"),
+                "status": "running",
+                "base_revision": head.revision,
+                "committed_revision": None,
+                "child_run_id": WORKFLOW,
+                "tool_result": None,
+                "started_at": head.started_at.isoformat(),
+                "ended_at": None,
+            }
+        )
+    )
+
+    class Service:
+        def replay(self, **arguments):
+            return {
+                "workflow_id": str(head.workflow_run_id),
+                "revision": head.revision,
+                "stage": "replay",
+                "status": "running",
+                "operation": operation.model_dump(mode="json"),
+            }
+
+    async def exercise():
+        async with Client(create_limited_image_preview_mcp_server(Service())) as client:
+            tools = (await client.list_tools()).tools
+            control = next(
+                item for item in tools if item.name == "harness_prompt_revision_record_v3"
+            )
+            assert control.output_schema["$id"] == "harness.control_commit_snapshot.v3"
+            result = await client.call_tool(
+                "image2env_replay_v2_0_0",
+                {
+                    "workflow_id": str(head.workflow_run_id),
+                    "idempotency_key": "running",
+                },
+            )
+            assert result.structured_content["operation"] == operation.model_dump(mode="json")
+
+    asyncio.run(exercise())
+    assert PreviewServiceResult.model_json_schema() == original
+    assert original["$defs"]["RunSnapshot"]["$id"] == "harness.run_snapshot.v1"
 
 
 @pytest.mark.parametrize(

@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 import contextlib
+import copy
 import json
 import math
 import sys
@@ -135,6 +136,24 @@ _CONTROL_OUTPUTS = {
 }
 
 
+def _mcp_schema(model):
+    """Keep generated root-local refs rooted at the tool's schema document."""
+    schema = copy.deepcopy(model.model_json_schema())
+
+    def visit(value, root=False):
+        if isinstance(value, dict):
+            if not root:
+                value.pop("$id", None)
+            for child in value.values():
+                visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+
+    visit(schema, root=True)
+    return schema
+
+
 def create_limited_image_preview_mcp_server(service: LimitedImagePreviewService) -> Server:
     """Convert strict JSON to explicit service functions without filling any proposal."""
 
@@ -144,12 +163,8 @@ def create_limited_image_preview_mcp_server(service: LimitedImagePreviewService)
                 types.Tool(
                     name=name,
                     description="Limited mouse-only exact-reuse preview: " + (skill or method),
-                    input_schema=model.model_json_schema(),
-                    output_schema=(
-                        _CONTROL_OUTPUTS[name].model_json_schema()
-                        if name in _CONTROL_OUTPUTS
-                        else PreviewServiceResult.model_json_schema()
-                    ),
+                    input_schema=_mcp_schema(model),
+                    output_schema=_mcp_schema(_CONTROL_OUTPUTS.get(name, PreviewServiceResult)),
                 )
                 for name, (method, model, skill) in _TOOLS.items()
             ]
