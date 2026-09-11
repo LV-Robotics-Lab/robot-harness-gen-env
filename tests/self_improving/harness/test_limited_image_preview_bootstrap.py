@@ -6,6 +6,7 @@ import hashlib
 import json
 import subprocess
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
@@ -14,12 +15,15 @@ from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.limited_image_preview_bootstrap import (
     BootstrapCheckpoint,
     LimitedImagePreviewBootstrapPlan,
+    _native_projection_objects,
     _publish_candidate,
     _record_checkpoint,
+    _revised_projection_object,
     bootstrap_limited_image_preview,
     check_limited_image_preview_bootstrap,
     run_cli,
 )
+from self_improving.harness.schemas.common import ArtifactRef
 
 pytest_plugins = ("tests.self_improving.harness.test_limited_image_preview_library_saved_m1",)
 
@@ -395,6 +399,60 @@ def _publish_candidate_checkpoint(plan):
         },
         publish_candidate_run_id=plan.qualification_run_id,
     )
+
+
+def test_saved_projection_loaders_receive_exact_artifact_refs(bootstrap_plan, monkeypatch):
+    from self_improving.harness import limited_image_preview_bootstrap as bootstrap
+    from self_improving.harness import limited_image_preview_policy as preview_policy
+    from self_improving.harness import limited_observation_registry_projection as observation
+    from self_improving.harness import native_skill_projection as native_projection
+    from self_improving.harness import revised_compile_registry_projection as revised_projection
+
+    path, _ = bootstrap_plan
+    plan = LimitedImagePreviewBootstrapPlan.model_validate_json(path.read_bytes())
+    checkpoint = _publish_candidate_checkpoint(plan)
+    loaded = []
+
+    def load_projection(**values):
+        refs = tuple(
+            values[name]
+            for name in (
+                "admission_ref",
+                "descriptor_ref",
+                "qualification_ref",
+                "qualification_report_ref",
+            )
+        )
+        assert all(type(ref) is ArtifactRef for ref in refs)
+        loaded.append(refs)
+        return SimpleNamespace(binding=object())
+
+    monkeypatch.setattr(bootstrap, "_verified_admission", lambda *args, **kwargs: object())
+    monkeypatch.setattr(
+        observation, "load_limited_observation_registry_projection", load_projection
+    )
+    monkeypatch.setattr(native_projection, "load_native_skill_projection", load_projection)
+    native = SimpleNamespace(
+        store=object(),
+        observe=object(),
+        replay=SimpleNamespace(run_store=object()),
+        execution_bindings=lambda: tuple(
+            SimpleNamespace(skill_ref=seed.skill_ref) for seed in plan.native_projection_seeds
+        ),
+    )
+
+    assert set(_native_projection_objects(plan, checkpoint, native)) == {
+        "genesis.observe@3.0.0",
+        "image2env.compile@2.0.0",
+        "image2env.replay@2.0.0",
+    }
+
+    monkeypatch.setattr(preview_policy, "LimitedImagePreviewPolicy", lambda *args: object())
+    monkeypatch.setattr(
+        revised_projection, "load_revised_compile_registry_projection", load_projection
+    )
+    _revised_projection_object(checkpoint, object(), object())
+    assert len(loaded) == 4
 
 
 def test_checkpoint_accepts_exact_shared_qualification_extension(bootstrap_plan):
