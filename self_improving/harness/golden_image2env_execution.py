@@ -5,7 +5,11 @@ from dataclasses import dataclass
 from .genesis_fresh_capture_application import GenesisFreshCaptureApplication
 from .genesis_scene_application_v2 import GenesisSceneApplication
 from .genesis_scene_validation_application import GenesisSceneValidationApplication
-from .golden_execution import _create_golden_execution_binding
+from .golden_execution import (
+    GoldenExecutionBinding,
+    _create_golden_execution_binding,
+    create_golden_execution_catalog,
+)
 from .golden_image2env_policy import NativeImageEvidencePolicy
 from .image2env_genesis_compile_application import Image2EnvGenesisCompileApplication
 from .schemas.common import SkillQualification
@@ -58,6 +62,31 @@ class _NativeApplicationAdapter:
 
     def run_state(self, run_id):
         return self.application.run_state(run_id)
+
+
+def _require_native_image_execution_binding(
+    binding: GoldenExecutionBinding,
+) -> GoldenExecutionBinding:
+    """Recover components only from this module's sealed rich native binding."""
+
+    try:
+        catalog = create_golden_execution_catalog(bindings=(binding,))
+    except (AttributeError, TypeError, ValueError) as error:
+        raise TypeError("native projection requires one sealed native image binding") from error
+    policy = catalog.policy_for(binding.skill_ref)
+    application = catalog.application_for(binding.skill_ref)
+    authority = catalog.child_authority_for(binding.skill_ref)
+    if (
+        type(policy) is not NativeImageEvidencePolicy
+        or type(application) is not _NativeApplicationAdapter
+        or application.policy is not policy
+        or authority.path.resolve() != policy.child_authority.path.resolve()
+        or application.artifact_root != policy.artifact_store.root
+        or application.authority_path.resolve() != authority.path.resolve()
+        or binding.evidence_hook is not None
+    ):
+        raise TypeError("native projection requires one sealed native image binding")
+    return binding
 
 
 def create_native_image_execution_bindings(

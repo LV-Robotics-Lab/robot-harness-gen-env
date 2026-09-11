@@ -25,28 +25,23 @@ from .golden_execution import (
     _create_golden_execution_binding,
     _create_golden_execution_evidence_hook,
 )
+from .golden_image2env_execution import _require_native_image_execution_binding
+from .golden_image2env_policy import NativeImageEvidencePolicy
 from .qualification import QualificationCheckV1, QualificationReportV1
 from .registry import ControlledRunPendingError
 from .run_store import ControlledRunLifecycle, SQLiteRunStore
-from .schema_catalog import schema_model
 from .schemas.common import (
     ArtifactRef,
     Invocation,
     RegisteredSkillDescriptor,
     RunState,
-    RunStatus,
     SkillDescriptor,
     SkillDescriptorV2,
     SkillQualification,
 )
 from .schemas.registry_snapshot import QualifiedSkillSnapshot, RegistrySnapshot
 from .schemas.typed_qualification_admission import TypedQualificationAdmissionV1
-from .schemas.workflow_operation import (
-    QualifiedSkillExecutionV2,
-    ReceiptDerivedFactClaimV2,
-    ToolResultV2,
-)
-from .trusted_state import TrustedWorldState, WorldFact
+from .schemas.workflow_operation import QualifiedSkillExecutionV2
 from .typed_qualification_admission import (
     VerifiedTypedQualificationAdmission,
     verify_typed_qualification_admission,
@@ -60,17 +55,21 @@ _ADAPTER_REGRESSION_COMMAND = (
 )
 _SOURCE_FILES = (
     ("golden_execution.py", "golden-execution.py"),
+    ("golden_image2env_execution.py", "golden-image2env-execution.py"),
+    ("golden_image2env_policy.py", "golden-image2env-policy.py"),
     ("golden_run.py", "golden-run.py"),
     ("native_skill_projection.py", "native-skill-projection.py"),
     ("schemas/typed_qualification_admission.py", "typed-qualification-admission-schema.py"),
     ("typed_qualification_admission.py", "typed-qualification-admission.py"),
 )
-_NATIVE_METHODS = {
-    "image2env.compile@2.0.0": "invoke_typed",
-    "image2env.replay@2.0.0": "invoke",
-    "genesis.observe@3.0.0": "invoke",
-    "image2env.validate@2.0.0": "invoke",
-}
+_NATIVE_SKILLS = frozenset(
+    {
+        "image2env.compile@2.0.0",
+        "image2env.replay@2.0.0",
+        "genesis.observe@3.0.0",
+        "image2env.validate@2.0.0",
+    }
+)
 
 
 class NativeSkillProjectionError(ValueError):
@@ -170,7 +169,7 @@ class _ProjectionAuthority:
     descriptor_ref: ArtifactRef
     qualification_ref: ArtifactRef
     qualification_report_ref: ArtifactRef
-    native_application: object
+    native_binding: GoldenExecutionBinding
 
     def verify(self) -> _VerifiedProjectionDocuments:
         return _verify_projection_documents(
@@ -179,70 +178,7 @@ class _ProjectionAuthority:
             descriptor_ref=self.descriptor_ref,
             qualification_ref=self.qualification_ref,
             qualification_report_ref=self.qualification_report_ref,
-            native_application=self.native_application,
-        )
-
-
-@dataclass(frozen=True)
-class _NativeTypedEvidencePolicy:
-    authority: _ProjectionAuthority
-    skill_ref: str
-    input_model: type[BaseModel]
-    output_model: type[BaseModel]
-    evidence_policy_implementation_sha256: str
-    evidence_policy_id: str = "harness.native_typed_admission"
-    evidence_policy_version: str = "1.0.0"
-
-    def normalize_parameters(self, parameters: Mapping[str, object]) -> BaseModel:
-        self.authority.verify()
-        return self.input_model.model_validate(parameters)
-
-    def authorize(self, state: TrustedWorldState, parameters: BaseModel) -> None:
-        del state
-        _require(type(parameters) is self.input_model, "native adapter input type changed")
-
-    def claims(self, state: RunState) -> tuple[ReceiptDerivedFactClaimV2, ...]:
-        del state
-        return ()
-
-    def diagnostics(self, state: RunState) -> tuple[ArtifactRef, ...]:
-        return () if state.blocker is None else state.blocker.artifact_refs
-
-    def fresh_observations(
-        self,
-        state: RunState,
-        invocation: Invocation | None,
-    ) -> tuple[WorldFact, ...]:
-        del state, invocation
-        return ()
-
-    def verify_result(
-        self,
-        *,
-        state: RunState,
-        claims: tuple[ReceiptDerivedFactClaimV2, ...],
-        result: ToolResultV2,
-        supporting: tuple[ArtifactRef, ...],
-    ) -> None:
-        self.authority.verify()
-        expected_supporting = tuple(sorted(state.artifacts, key=_artifact_identity))
-        _require(supporting == expected_supporting, "native supporting artifacts changed")
-        for artifact in supporting:
-            self.authority.artifact_store.resolve(artifact)
-        if state.status is RunStatus.SUCCEEDED:
-            self.output_model.model_validate(state.output)
-        expected_diagnostics = self.diagnostics(state)
-        _require(
-            not claims
-            and result.skill_ref == self.skill_ref
-            and result.child_run_id == state.run_id
-            and result.status is state.status
-            and result.ended_at == state.ended_at
-            and result.typed_output == state.output
-            and result.blocker == state.blocker
-            and result.diagnostics == expected_diagnostics
-            and not result.fresh_observations,
-            "native adapter result differs from the admitted child terminal",
+            native_binding=self.native_binding,
         )
 
 
@@ -272,12 +208,10 @@ class _NativeProjectedApplication:
         return (self.descriptor,)
 
     def invoke(self, parameters: BaseModel, *, run_id: UUID) -> RunState:
-        verified = self.authority.verify()
+        self.authority.verify()
         _require(type(parameters) is self.policy.input_model, "native adapter input type changed")
-        method_name = _NATIVE_METHODS[verified.admission.admission.skill_ref]
-        method = getattr(self.native_application, method_name)
         try:
-            returned = method(parameters, run_id=run_id)
+            returned = self.native_application.invoke(parameters, run_id=run_id)
         except ControlledRunPendingError as error:
             raise QualifiedApplicationRunPendingError(str(error)) from error
         persisted = self.child_authority.read_run_state(run_id)
@@ -329,6 +263,14 @@ class _NativeProjectionEvidenceHook:
             and qualified.qualification_report == verified.report_ref,
             "native child adapter execution identity changed",
         )
+        policy = self.authority.native_binding.policy
+        _require(
+            qualified.evidence_policy_id == policy.evidence_policy_id
+            and qualified.evidence_policy_version == policy.evidence_policy_version
+            and qualified.evidence_policy_implementation_sha256
+            == policy.evidence_policy_implementation_sha256,
+            "native child evidence policy identity changed",
+        )
         _require(
             intent.run_id == child_run_id
             and intent.skill_id == skill_id
@@ -361,12 +303,11 @@ def issue_native_skill_projection(
     *,
     artifact_store: LocalArtifactStore,
     admission: VerifiedTypedQualificationAdmission,
-    native_application: object,
-    child_authority: SQLiteRunStore,
+    native_binding: GoldenExecutionBinding,
 ) -> NativeSkillProjection:
     """Issue adapter documents only from one opaque, freshly reverified admission."""
 
-    _require_exact_inputs(artifact_store, native_application, child_authority)
+    _require_exact_inputs(artifact_store, native_binding)
     if (
         type(admission) is not VerifiedTypedQualificationAdmission
         or not admission._is_verifier_issued()
@@ -382,9 +323,18 @@ def issue_native_skill_projection(
             and reverified.admission_ref == admission.admission_ref,
             "verified typed admission changed during projection",
         )
-        native_descriptor = _native_descriptor(reverified, artifact_store, native_application)
+        native_descriptor = _native_descriptor(
+            reverified,
+            artifact_store,
+            native_binding.application,
+        )
         sources = _publish_implementation_sources(artifact_store)
-        documents = _build_documents(reverified, native_descriptor, sources)
+        documents = _build_documents(
+            reverified,
+            native_descriptor,
+            sources,
+            cast(NativeImageEvidencePolicy, native_binding.policy),
+        )
         report_ref = _publish_model(
             artifact_store,
             documents.adapter_report,
@@ -415,8 +365,7 @@ def issue_native_skill_projection(
             descriptor_ref=descriptor_ref,
             qualification_ref=qualification_ref,
             qualification_report_ref=report_ref,
-            native_application=native_application,
-            child_authority=child_authority,
+            native_binding=native_binding,
         )
     except (
         ArtifactResolutionError,
@@ -436,34 +385,31 @@ def load_native_skill_projection(
     descriptor_ref: ArtifactRef,
     qualification_ref: ArtifactRef,
     qualification_report_ref: ArtifactRef,
-    native_application: object,
-    child_authority: SQLiteRunStore,
+    native_binding: GoldenExecutionBinding,
 ) -> NativeSkillProjection:
     """Recover a projection from CAS by recomputing admission and source identities."""
 
-    _require_exact_inputs(artifact_store, native_application, child_authority)
+    _require_exact_inputs(artifact_store, native_binding)
     authority = _ProjectionAuthority(
         artifact_store=artifact_store,
         admission_ref=admission_ref,
         descriptor_ref=descriptor_ref,
         qualification_ref=qualification_ref,
         qualification_report_ref=qualification_report_ref,
-        native_application=native_application,
+        native_binding=native_binding,
     )
     try:
         verified = authority.verify()
-        policy = _NativeTypedEvidencePolicy(
-            authority=authority,
-            skill_ref=verified.admission.admission.skill_ref,
-            input_model=schema_model(verified.native_descriptor.input_schema),
-            output_model=schema_model(verified.native_descriptor.output_schema),
-            evidence_policy_implementation_sha256=(
-                verified.adapter_descriptor.implementation_sha256
-            ),
+        policy = native_binding.policy
+        source_application = native_binding.application
+        child_authority = native_binding.child_authority
+        _require(
+            source_application is not None and child_authority is not None,
+            "sealed native binding lost its execution authority",
         )
         application = _NativeProjectedApplication(
             authority=authority,
-            native_application=native_application,
+            native_application=source_application,
             child_authority=child_authority,
             descriptor=verified.adapter_descriptor,
             policy=policy,
@@ -548,8 +494,9 @@ def _verify_projection_documents(
     descriptor_ref: ArtifactRef,
     qualification_ref: ArtifactRef,
     qualification_report_ref: ArtifactRef,
-    native_application: object,
+    native_binding: GoldenExecutionBinding,
 ) -> _VerifiedProjectionDocuments:
+    _require_native_image_execution_binding(native_binding)
     admission = _read_native_admission(artifact_store, admission_ref)
     verified_admission = verify_typed_qualification_admission(
         artifact_store=artifact_store,
@@ -562,12 +509,17 @@ def _verify_projection_documents(
     native_descriptor = _native_descriptor(
         verified_admission,
         artifact_store,
-        native_application,
+        native_binding.application,
     )
     sources = _current_implementation_sources()
     for source in sources:
         artifact_store.resolve(source)
-    expected = _build_documents(verified_admission, native_descriptor, sources)
+    expected = _build_documents(
+        verified_admission,
+        native_descriptor,
+        sources,
+        cast(NativeImageEvidencePolicy, native_binding.policy),
+    )
     _require(
         descriptor_ref == expected.descriptor_ref
         and qualification_ref == expected.qualification_ref
@@ -639,10 +591,10 @@ def _native_descriptor(
         "foreign native application descriptor differs from typed admission",
     )
     _require(
-        admission.admission.skill_ref in _NATIVE_METHODS,
+        admission.admission.skill_ref in _NATIVE_SKILLS,
         "typed admission names an unsupported native projection",
     )
-    getattr(native_application, _NATIVE_METHODS[admission.admission.skill_ref])
+    getattr(native_application, "invoke")
     return descriptor
 
 
@@ -650,10 +602,17 @@ def _build_documents(
     admission: VerifiedTypedQualificationAdmission,
     native_descriptor: RegisteredSkillDescriptor,
     sources: tuple[ArtifactRef, ...],
+    policy: NativeImageEvidencePolicy,
 ) -> _VerifiedProjectionDocuments:
+    policy_identity = {
+        "id": policy.evidence_policy_id,
+        "version": policy.evidence_policy_version,
+        "implementation_sha256": policy.evidence_policy_implementation_sha256,
+    }
     implementation_sha256 = _canonical_sha256(
         {
             "typed_admission": admission.admission_ref.model_dump(mode="json"),
+            "native_evidence_policy": policy_identity,
             "sources": [source.model_dump(mode="json") for source in sources],
         }
     )
@@ -667,6 +626,7 @@ def _build_documents(
         "native_qualification_report": (
             admission.admission.qualification_report.model_dump(mode="json")
         ),
+        "native_evidence_policy": policy_identity,
         "implementation_sources": [source.model_dump(mode="json") for source in sources],
     }
     report = QualificationReportV1(
@@ -777,15 +737,14 @@ def _current_implementation_sources() -> tuple[ArtifactRef, ...]:
 
 def _require_exact_inputs(
     artifact_store: LocalArtifactStore,
-    native_application: object,
-    child_authority: SQLiteRunStore,
+    native_binding: GoldenExecutionBinding,
 ) -> None:
     if type(artifact_store) is not LocalArtifactStore:
         raise TypeError("artifact_store must be the exact LocalArtifactStore")
-    if native_application is None:
-        raise TypeError("native_application is required")
-    if type(child_authority) is not SQLiteRunStore:
-        raise TypeError("child_authority must be the exact SQLiteRunStore")
+    binding = _require_native_image_execution_binding(native_binding)
+    application = binding.application
+    if application.artifact_root != artifact_store.root:
+        raise TypeError("native binding and projection require the same exact CAS")
 
 
 def _read_canonical_model(
@@ -863,10 +822,6 @@ def _canonical_bytes(value: object) -> bytes:
 
 def _canonical_sha256(value: object) -> str:
     return hashlib.sha256(_canonical_bytes(value)).hexdigest()
-
-
-def _artifact_identity(ref: ArtifactRef) -> tuple[str, str, str]:
-    return ref.sha256, ref.schema_version or "", ref.media_type
 
 
 def _descriptor_schema(descriptor: RegisteredSkillDescriptor) -> str:

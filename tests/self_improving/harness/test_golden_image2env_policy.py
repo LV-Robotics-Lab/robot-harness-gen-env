@@ -81,7 +81,10 @@ def capture(tmp_path):
 def test_native_capture_projects_exact_sqlite_receipt_and_ttl(capture):
     policy, state, invocation, receipt, output, _ = capture
     claims = policy.claims(state)
-    assert claims[0].value["run_id"] == str(state.run_id)
+    assert tuple(claim.key for claim in claims) == ("image.fresh_capture", "image.observation")
+    assert next(claim for claim in claims if claim.key == "image.observation").value[
+        "run_id"
+    ] == str(state.run_id)
     assert policy.diagnostics(state) == ()
     (observed,) = policy.fresh_observations(state, invocation)
     assert observed.key == "image.fresh_capture"

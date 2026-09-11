@@ -256,7 +256,7 @@ class NativeImageEvidencePolicy:
             claims += tuple(
                 ReceiptDerivedFactClaimV2(key=item.key, value=item.value) for item in observations
             )
-        return claims
+        return tuple(sorted(claims, key=lambda claim: claim.key))
 
     def diagnostics(self, state):
         return (
