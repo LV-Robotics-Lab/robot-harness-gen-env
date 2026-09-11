@@ -1,5 +1,16 @@
 # 进度与结果
 
+## M1 真实 Gujie 有限桌面双 dt 切片
+
+- Gujie 来源坐标/完整几何/有限支撑已实际适配，真实 mouse + Box 桌面完成 1,000 与 2,000 steps，
+  轨迹分别 1,001/2,001 行，32 项当时格式物理检查通过；两条各生成 41 PNG、无损视频和 MP4。
+- 软件 renderer 为 Mesa llvmpipe；早期 EGL、OSMesa 失败保留。证据见
+  `docs/evidence/golden-gujie-scene-software-20260911.md`，不把 render 本身当物理证据。
+- adapter 公共测试 41 passed，152 statements / 62 branches 100%；scene replay 公共测试
+  46 passed，core 140/54 与 schema 126/26 均 100%。这些合同测试不授予执行权威。
+- 当前 M1 继续实现真实 image compile 与固定场景执行来源、持久回执和新 runtime lock；
+  尚未完成完整环境线，集中验收留到 M1 全链路闭合后。
+
 ## M1启动：Gujie场景与完整Genesis环境线
 
 - 用户批准sim-ready服务计划，并明确把Gujie审计作为实际整合参考。审计原件从用户主工作树读取，

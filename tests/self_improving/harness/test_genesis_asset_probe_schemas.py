@@ -616,7 +616,7 @@ def test_probe_schemas_are_standalone_draft202012_snapshots(
     documents: dict[str, Any],
 ) -> None:
     catalog = schema_documents()
-    assert len(catalog) == 97
+    assert len(catalog) == 101
     for value in documents.values():
         schema_id = value.model_json_schema()["$id"]
         document = catalog[schema_id]

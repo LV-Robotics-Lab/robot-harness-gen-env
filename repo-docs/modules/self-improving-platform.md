@@ -1,5 +1,9 @@
 # Self-Improving 平台边界
 
+Gujie 的固定场景导入、完整刚体几何和有限支撑判据现已实际适配；mouse + 有限桌面在 Genesis
+完成双时间步回放，各生成 41 帧和连续视频。见[本次运行证据](../../docs/evidence/golden-gujie-scene-software-20260911.md)。
+这一切片尚未连接完整 image compile 与受约束场景执行凭据，仍不能声明生产环境资格或 M1 完成。
+
 2026-09-11新增的固定Genesis CPU执行已把manifest、新runtime lock、实际观测与fresh probe绑定，
 两套独立部署各运行1,000steps并strict reload通过。`GenesisAssetQualificationApplication`进一步
 完成真实单资产资格签发、UUID幂等和executed断点恢复；第二CAS/可信SQLite在无Genesis进程中

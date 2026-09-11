@@ -7,6 +7,25 @@ from typing import Any
 
 _EXPORT_GROUPS = (
     (
+        ".genesis_scene_replay",
+        (
+            "GenesisSceneSpecV1",
+            "GenesisSceneTraceRowV1",
+            "GenesisSceneBodyStateV1",
+            "GenesisSceneContactV1",
+            "GenesisSceneFrameV1",
+            "GenesisSceneProfileEvidenceV1",
+            "GenesisSceneReplayV1",
+            "GenesisSceneCheckV1",
+            "GenesisSceneReportV1",
+            "GenesisSceneMediaSummaryV1",
+            "SCENE_SPEC_ID",
+            "SCENE_ROW_ID",
+            "SCENE_REPLAY_ID",
+            "SCENE_REPORT_ID",
+        ),
+    ),
+    (
         ".genesis_runtime_execution",
         (
             "GENESIS_RUNTIME_EXECUTION_REQUEST_SCHEMA_ID",

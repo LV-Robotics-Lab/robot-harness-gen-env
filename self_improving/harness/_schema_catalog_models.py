@@ -8,6 +8,19 @@ from typing import Any
 
 _SCHEMA_MODEL_LOCATORS = MappingProxyType(
     {
+        "harness.genesis_scene_spec.v1": (".schemas.genesis_scene_replay", "GenesisSceneSpecV1"),
+        "harness.genesis_scene_trace_row.v1": (
+            ".schemas.genesis_scene_replay",
+            "GenesisSceneTraceRowV1",
+        ),
+        "harness.genesis_scene_replay.v1": (
+            ".schemas.genesis_scene_replay",
+            "GenesisSceneReplayV1",
+        ),
+        "harness.genesis_scene_report.v1": (
+            ".schemas.genesis_scene_replay",
+            "GenesisSceneReportV1",
+        ),
         "harness.genesis_runtime_execution_request.v1": (
             ".schemas.genesis_runtime_execution",
             "GenesisRuntimeExecutionRequestV1",

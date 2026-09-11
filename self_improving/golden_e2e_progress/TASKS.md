@@ -1,5 +1,12 @@
 # Golden E2E 任务分解
 
+## 已批准 M1 当前纵切
+
+- [x] 实际适配 Gujie 单刚体场景、完整几何与有限桌面。
+- [x] 真实 baseline/half_dt 场景回放及完整新媒体（研究运行，无生产场景 authority）。
+- [ ] image compile → 固定场景执行 → observe/validate 完整闭包、生产资格及迁移恢复。
+- [ ] M1 完成后集中功能验收；再进入 M2 Codex 同 workflow。
+
 ## G0：基线与审计
 
 - [x] 记录 Codex 取代独立 System 2 中枢和独立 VLM 的架构决定。

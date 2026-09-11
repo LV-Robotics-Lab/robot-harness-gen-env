@@ -1,0 +1,150 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "GenesisSceneFrameV1": {
+      "additionalProperties": false,
+      "properties": {
+        "image": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "step": {
+          "minimum": 0,
+          "title": "Step",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "step",
+        "image"
+      ],
+      "title": "GenesisSceneFrameV1",
+      "type": "object"
+    },
+    "GenesisSceneProfileEvidenceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "frames": {
+          "items": {
+            "$ref": "#/$defs/GenesisSceneFrameV1"
+          },
+          "maxItems": 41,
+          "minItems": 41,
+          "title": "Frames",
+          "type": "array"
+        },
+        "loaded_scene": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "profile": {
+          "enum": [
+            "baseline",
+            "half_dt"
+          ],
+          "title": "Profile",
+          "type": "string"
+        },
+        "rows": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "video": {
+          "$ref": "#/$defs/ArtifactRef"
+        }
+      },
+      "required": [
+        "profile",
+        "rows",
+        "loaded_scene",
+        "frames",
+        "video"
+      ],
+      "title": "GenesisSceneProfileEvidenceV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_scene_replay.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "baseline": {
+      "$ref": "#/$defs/GenesisSceneProfileEvidenceV1"
+    },
+    "half_dt": {
+      "$ref": "#/$defs/GenesisSceneProfileEvidenceV1"
+    },
+    "runtime_manifest": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "scene": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "schema_version": {
+      "const": "harness.genesis_scene_replay.v1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "scene",
+    "runtime_manifest",
+    "baseline",
+    "half_dt"
+  ],
+  "title": "GenesisSceneReplayV1",
+  "type": "object"
+}

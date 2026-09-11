@@ -6,7 +6,8 @@
 
 本计划明确以[Gujie接入审计](../../docs/research/gujie-x2env-integration-audit-20260911.md)为参考。
 该报告固定于旧候选`7e145274`，其中“尚无runtime lock/资产资格”等历史状态已被后续证据更新；
-其固定来源、能力拆分与尚未接入的scene/import/position/dual-dt等清单仍指导本次整合。
+其固定来源、能力拆分与尚未接入的scene/import/position/dual-dt等清单仍指导本次整合。审计当时的
+policy-ready/最终Golden要求不作为新阶段的前置：本阶段环境sim-ready不要求机器人policy接口。
 
 - M1实际适配固定`eb0b710`中的URDF/scene import、有限布局、支撑图、baseline/half-dt与物理判据；
   保留Gujie实现归属及Genesis/SimFoundry各自上游归属，不只将其当作背景资料。

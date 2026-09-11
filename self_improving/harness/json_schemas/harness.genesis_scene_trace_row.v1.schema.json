@@ -1,0 +1,261 @@
+{
+  "$defs": {
+    "GenesisSceneBodyStateV1": {
+      "additionalProperties": false,
+      "properties": {
+        "angular_velocity": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Angular Velocity",
+          "type": "array"
+        },
+        "orientation_wxyz": {
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Orientation Wxyz",
+          "type": "array"
+        },
+        "position": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Position",
+          "type": "array"
+        },
+        "velocity": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Velocity",
+          "type": "array"
+        }
+      },
+      "required": [
+        "position",
+        "orientation_wxyz",
+        "velocity",
+        "angular_velocity"
+      ],
+      "title": "GenesisSceneBodyStateV1",
+      "type": "object"
+    },
+    "GenesisSceneContactV1": {
+      "additionalProperties": false,
+      "properties": {
+        "a": {
+          "enum": [
+            "object",
+            "table",
+            "ground"
+          ],
+          "title": "A",
+          "type": "string"
+        },
+        "b": {
+          "enum": [
+            "object",
+            "table",
+            "ground"
+          ],
+          "title": "B",
+          "type": "string"
+        },
+        "force_a": {
+          "anyOf": [
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Force A"
+        },
+        "force_b": {
+          "anyOf": [
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Force B"
+        },
+        "normal": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Normal",
+          "type": "array"
+        },
+        "penetration": {
+          "minimum": 0,
+          "title": "Penetration",
+          "type": "number"
+        },
+        "position": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Position",
+          "type": "array"
+        }
+      },
+      "required": [
+        "a",
+        "b",
+        "position",
+        "normal",
+        "penetration",
+        "force_a",
+        "force_b"
+      ],
+      "title": "GenesisSceneContactV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_scene_trace_row.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "contact_phase": {
+      "enum": [
+        "initial_detection",
+        "solved_step"
+      ],
+      "title": "Contact Phase",
+      "type": "string"
+    },
+    "contacts": {
+      "items": {
+        "$ref": "#/$defs/GenesisSceneContactV1"
+      },
+      "title": "Contacts",
+      "type": "array"
+    },
+    "objects": {
+      "additionalProperties": {
+        "$ref": "#/$defs/GenesisSceneBodyStateV1"
+      },
+      "title": "Objects",
+      "type": "object"
+    },
+    "schema_version": {
+      "const": "harness.genesis_scene_trace_row.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "step": {
+      "minimum": 0,
+      "title": "Step",
+      "type": "integer"
+    },
+    "time_s": {
+      "minimum": 0,
+      "title": "Time S",
+      "type": "number"
+    }
+  },
+  "required": [
+    "schema_version",
+    "step",
+    "time_s",
+    "contact_phase",
+    "objects",
+    "contacts"
+  ],
+  "title": "GenesisSceneTraceRowV1",
+  "type": "object"
+}

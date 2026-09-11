@@ -414,3 +414,32 @@ non-ready candidate；media ingest 的 pass 不能扩大为 compile runtime pass
 也不能替代完整 source-video identity。compile、replay、validate
 三段及三种资产 lane 均已写入实施计划，但尚未执行。`standard_urdf.py` 的当前能力是单 rigid link 并
 明确拒绝 joint，不能据此宣称 articulated support。
+
+## INT-GUJIE-SCENE-001 — 有限桌面与双时间步实际接入
+
+- `lifecycle`：`integrating`
+- `verification`：`runtime_pass`，仅限研究运行，不代表生产资格
+- `origin_owner`：Gujie x2env
+- `recorded_git_authors`：`LV-Robotics Lab <lv.robotics.lab@gmail.com>`，不推断自然人映射
+- `upstream_owner`：Genesis、SimFoundry；软件 renderer 为 Mesa/LLVM
+- `integration_owner`：Bingsheng Harness workstream
+- `source_repository`：`/home/jingxiang/gujie/gen-env`
+- `source_ref`：`eb0b710581fd7794bc01b447b0f77cb871c8a711`；Genesis
+  `0e74bf392781884ccad765c3f344419c86b872ca`
+- `dirty_snapshot`：`none`；不导入同事 dirty runner
+- `source_paths`：`self_improving/sim_adapters/genesis/` 下的 `import_simfoundry_scene.py`、
+  `standard_urdf.py`、`position_solver.py`、`physics_criteria.py`、`validate_imported_scene.py`、
+  `scene_physics_workflow.py` 及近码合同中的判据来源
+- `target_paths`：`self_improving/harness/gujie_scene_adapter.py`、`genesis_scene_replay.py`、
+  `schemas/genesis_scene_replay.py`、`genesis_scene_cpu_backend.py`、`_genesis_scene_child.py`、
+  `genesis_scene_launcher.py` 与对应测试
+- `integration_method`：适配坐标转换、单刚体完整几何、有限桌面支撑和双 dt 判据；Harness 新增
+  CAS、typed scene、纯读重算及连续媒体。当前仅单对象/axis-aligned Box，不声称通用布局搜索、
+  多物体重建或 articulated support；不复制 vendor、不沿用历史 pass。
+- `contract_spec`：`GUJIE_SCENE_ADAPTER_CONTRACT.md`、`GENESIS_SCENE_REPLAY_CONTRACT.md`
+- `verification_evidence`：`docs/evidence/golden-gujie-scene-software-20260911.md`；真实 Gujie mouse
+  在有限桌面完成 baseline/half_dt、1,001/2,001 行轨迹、各 41 帧及逐像素核对无损视频。
+- `golden_run`：`none`；真实图像 compile 到权威场景回执正在接入
+- `known_gaps`：新 renderer runtime manifest、固定场景进程约束、生产资格及 M1 完整链尚未完成。
+  此条不继承旧资产 lock 的资格，不代表 MCP、promotion 或 policy。
+- `last_verified`：`2026-09-11`

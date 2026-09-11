@@ -1,0 +1,160 @@
+{
+  "$defs": {
+    "GenesisSceneCheckV1": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "scene_truth",
+            "numerics_coupled",
+            "diagnostic"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "limit": {
+          "title": "Limit",
+          "type": "number"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "observed": {
+          "title": "Observed",
+          "type": "number"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "profile": {
+          "enum": [
+            "baseline",
+            "half_dt",
+            "agreement"
+          ],
+          "title": "Profile",
+          "type": "string"
+        }
+      },
+      "required": [
+        "profile",
+        "name",
+        "category",
+        "observed",
+        "limit",
+        "passed"
+      ],
+      "title": "GenesisSceneCheckV1",
+      "type": "object"
+    },
+    "GenesisSceneMediaSummaryV1": {
+      "additionalProperties": false,
+      "properties": {
+        "fps": {
+          "const": 10,
+          "title": "Fps",
+          "type": "integer"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "integer"
+        },
+        "last_frame_time_s": {
+          "const": 4.0,
+          "title": "Last Frame Time S",
+          "type": "number"
+        },
+        "profile": {
+          "enum": [
+            "baseline",
+            "half_dt"
+          ],
+          "title": "Profile",
+          "type": "string"
+        },
+        "total_frames": {
+          "const": 41,
+          "title": "Total Frames",
+          "type": "integer"
+        },
+        "unique_frames": {
+          "maximum": 41,
+          "minimum": 1,
+          "title": "Unique Frames",
+          "type": "integer"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "profile",
+        "total_frames",
+        "unique_frames",
+        "width",
+        "height",
+        "fps",
+        "last_frame_time_s"
+      ],
+      "title": "GenesisSceneMediaSummaryV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_scene_report.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "authority": {
+      "const": "trace_consistency_only",
+      "title": "Authority",
+      "type": "string"
+    },
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/GenesisSceneCheckV1"
+      },
+      "title": "Checks",
+      "type": "array"
+    },
+    "media": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/GenesisSceneMediaSummaryV1"
+      },
+      "title": "Media",
+      "type": "array"
+    },
+    "numerics_tunable": {
+      "title": "Numerics Tunable",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "const": "harness.genesis_scene_report.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "failed",
+        "inconclusive"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "authority",
+    "status",
+    "numerics_tunable",
+    "checks"
+  ],
+  "title": "GenesisSceneReportV1",
+  "type": "object"
+}

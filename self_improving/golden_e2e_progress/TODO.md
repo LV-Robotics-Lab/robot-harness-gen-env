@@ -4,6 +4,9 @@
 
 ## Doing
 
+- M1：Gujie 场景适配与软件双 dt 实跑已形成切片；继续 image native compile、固定场景执行
+  authority/持久应用和新 renderer runtime lock。证据见 `golden-gujie-scene-software-20260911.md`。
+
 - 用户已批准M1–M5，并指定Gujie接入审计为重要整合依据。当前主目标M1：image exact-reuse完整
   Genesis环境线；三agent分别实现Gujie场景/布局适配、环境replay/validate证据、真实CPU场景与
   媒体。先table+ground+mouse tracer再接生产compile，不能以手工scene独立运行替代最终M1。
