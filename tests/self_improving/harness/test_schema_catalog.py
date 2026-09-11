@@ -127,6 +127,8 @@ from self_improving.harness.schemas.x2env_compile_evidence import (
 )
 
 EXPECTED_SCHEMA_IDS = {
+    "harness.revised_compile_qualification_report.v1",
+    "harness.revised_compile_invocation.v1",
     "harness.tabletop_layout_revision.v1",
     "harness.prompt_revision_command.v3",
     "harness.prompt_revision.v3",
@@ -401,6 +403,8 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
         assert document["$schema"] == "https://json-schema.org/draft/2020-12/schema"
         assert document["additionalProperties"] is False
         if schema_id in {
+            "harness.revised_compile_qualification_report.v1",
+            "harness.revised_compile_invocation.v1",
             "harness.tabletop_layout_revision.v1",
             "harness.prompt_revision_command.v3",
             "harness.prompt_revision.v3",

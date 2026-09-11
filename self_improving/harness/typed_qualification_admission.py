@@ -28,6 +28,8 @@ from .schemas.genesis_scene_assessment import GenesisSceneValidationQualificatio
 from .schemas.image2env_genesis_compile_application import (
     Image2EnvGenesisSkillQualificationReportV1,
 )
+from .schemas.native_prompt_revision import Image2EnvGenesisCompileRequestV2
+from .schemas.revised_image_compile_application import RevisedCompileQualificationReportV1
 from .schemas.typed_qualification_admission import (
     TYPED_QUALIFICATION_ADMISSION_SCHEMA_ID,
     QualificationCandidateIntentV1,
@@ -36,6 +38,7 @@ from .schemas.typed_qualification_admission import (
 )
 
 _REPORT_TYPES = {
+    "harness.revised_compile_qualification_report.v1": RevisedCompileQualificationReportV1,
     "harness.image2env_genesis_skill_qualification_report.v1": (
         Image2EnvGenesisSkillQualificationReportV1
     ),
@@ -300,7 +303,9 @@ def _verify_implementation(
             raise TypedQualificationAdmissionError(
                 f"implementation member is unavailable: {error}"
             ) from error
-    if isinstance(report, Image2EnvGenesisSkillQualificationReportV1):
+    if isinstance(
+        report, (Image2EnvGenesisSkillQualificationReportV1, RevisedCompileQualificationReportV1)
+    ):
         _require(
             refs == report.implementation_sources,
             "implementation closure differs from report",
@@ -343,7 +348,9 @@ def _verify_implementation(
 
 
 def _candidate_bindings(report: BaseModel) -> tuple[_CandidateBinding, ...]:
-    if isinstance(report, Image2EnvGenesisSkillQualificationReportV1):
+    if isinstance(
+        report, (Image2EnvGenesisSkillQualificationReportV1, RevisedCompileQualificationReportV1)
+    ):
         return tuple(
             _CandidateBinding((case.run_id, case.invocation_digest, case.compile_receipt))
             for case in report.cases
@@ -486,7 +493,43 @@ def _verify_typed_case(
     typed_input: BaseModel,
     typed_output: BaseModel,
 ) -> None:
-    if isinstance(report, Image2EnvGenesisSkillQualificationReportV1):
+    if isinstance(report, RevisedCompileQualificationReportV1):
+        case = next(case for case in report.cases if case.run_id == binding.run_id)
+        request_ref = getattr(typed_input, "request")
+        request = _read_canonical(
+            artifact_store, request_ref, Image2EnvGenesisCompileRequestV2, "revised request"
+        )
+        _require(
+            getattr(typed_output, "request") == request_ref
+            and getattr(typed_output, "implementation_sha256")
+            == report.compile_implementation_sha256,
+            "revised compile request or implementation differs from typed report",
+        )
+        _require(
+            (
+                case.prompt_revision,
+                case.predecessor_environment,
+                case.original_source,
+                case.asset_qualification,
+                case.scene,
+            )
+            == (
+                request.compile_input.attempt.prompt_revision,
+                request.compile_input.attempt.predecessor_environment,
+                getattr(typed_output, "original_source"),
+                getattr(typed_output, "qualification"),
+                getattr(typed_output, "scene"),
+            ),
+            "revised candidate lineage differs from typed report",
+        )
+        _require(
+            all(
+                ref in report.implementation_sources
+                for ref in getattr(typed_output, "implementation")
+            ),
+            "revised compiler sources are absent from qualification closure",
+        )
+    elif isinstance(report, Image2EnvGenesisSkillQualificationReportV1):
         _require(
             getattr(typed_output, "implementation_sha256") == report.compile_implementation_sha256,
             "compile candidate implementation differs from typed report",

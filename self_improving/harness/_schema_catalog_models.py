@@ -28,6 +28,14 @@ _SCHEMA_MODEL_LOCATORS = MappingProxyType(
             ".schemas.genesis_scene_execution_v3",
             "GenesisSceneExecutionReceiptV3",
         ),
+        "harness.revised_compile_qualification_report.v1": (
+            ".schemas.revised_image_compile_application",
+            "RevisedCompileQualificationReportV1",
+        ),
+        "harness.revised_compile_invocation.v1": (
+            ".schemas.revised_image_compile_application",
+            "RevisedCompileInvocationV1",
+        ),
         "harness.tabletop_layout_revision.v1": (
             ".schemas.native_prompt_revision",
             "TabletopLayoutRevisionV1",

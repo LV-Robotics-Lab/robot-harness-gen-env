@@ -107,6 +107,14 @@ _EXPORT_GROUPS = (
         ),
     ),
     (
+        ".revised_image_compile_application",
+        (
+            "RevisedCompileInvocationV1",
+            "RevisedCompileQualificationCaseV1",
+            "RevisedCompileQualificationReportV1",
+        ),
+    ),
+    (
         ".genesis_scene_execution",
         (
             "GenesisSceneExecutionRequestV1",

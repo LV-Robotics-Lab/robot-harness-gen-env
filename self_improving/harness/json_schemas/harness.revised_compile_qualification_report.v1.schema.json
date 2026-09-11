@@ -1,0 +1,169 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "RevisedCompileQualificationCaseV1": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_qualification": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "compile_receipt": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "invocation_digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Invocation Digest",
+          "type": "string"
+        },
+        "original_source": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "predecessor_environment": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "prompt_revision": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "run_id": {
+          "format": "uuid4",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "scene": {
+          "$ref": "#/$defs/ArtifactRef"
+        }
+      },
+      "required": [
+        "run_id",
+        "invocation_digest",
+        "compile_receipt",
+        "prompt_revision",
+        "predecessor_environment",
+        "original_source",
+        "asset_qualification",
+        "scene"
+      ],
+      "title": "RevisedCompileQualificationCaseV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.revised_compile_qualification_report.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "items": {
+        "$ref": "#/$defs/RevisedCompileQualificationCaseV1"
+      },
+      "maxItems": 64,
+      "minItems": 2,
+      "title": "Cases",
+      "type": "array"
+    },
+    "compile_implementation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Compile Implementation Sha256",
+      "type": "string"
+    },
+    "implementation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Implementation Sha256",
+      "type": "string"
+    },
+    "implementation_sources": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "minItems": 1,
+      "title": "Implementation Sources",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "harness.revised_compile_qualification_report.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope": {
+      "const": "static_scene_candidate",
+      "title": "Scope",
+      "type": "string"
+    },
+    "skill_ref": {
+      "const": "image2env.compile@3.0.0",
+      "title": "Skill Ref",
+      "type": "string"
+    },
+    "status": {
+      "const": "pass",
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "skill_ref",
+    "status",
+    "scope",
+    "cases",
+    "implementation_sources",
+    "compile_implementation_sha256",
+    "implementation_sha256"
+  ],
+  "title": "RevisedCompileQualificationReportV1",
+  "type": "object"
+}
