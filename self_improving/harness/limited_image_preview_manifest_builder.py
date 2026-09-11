@@ -64,6 +64,12 @@ _NORMAL_ACTIONS = (
     "genesis.observe@3.0.0",
     "image2env.validate@3.0.0",
 )
+_REPAIR_PREFIX = (
+    "image2env.compile@2.0.0",
+    "image2env.replay@2.0.0",
+    "image2env.validate@3.0.0",
+    "genesis.observe@3.0.0",
+)
 _MCP_FOR_ACTION = {
     "image2env.compile@2.0.0": "image2env_compile_v2_0_0",
     "image2env.replay@2.0.0": "image2env_replay_v2_0_0",
@@ -582,8 +588,11 @@ def _inputs(snapshot, input_ref, lookup_ref, input_value, lookup_value):
 
 
 def _repair_actions(actions: tuple[str, ...]) -> None:
-    if len(actions) < 9 or actions[:4] != _NORMAL_ACTIONS:
-        _fail("journal_shape", "repair must retain the complete initial four-stage line")
+    if len(actions) < 9 or actions[:4] != _REPAIR_PREFIX:
+        _fail(
+            "journal_shape",
+            "repair must validate the initial replay before diagnostic observation",
+        )
     tail = (
         "advisory",
         "prompt_revision",
