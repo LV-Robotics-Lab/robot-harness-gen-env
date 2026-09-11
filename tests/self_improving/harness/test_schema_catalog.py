@@ -35,8 +35,10 @@ from self_improving.harness.schemas.compile_attempt import (
     PromptRevisionCompileAttemptV1,
 )
 from self_improving.harness.schemas.genesis_asset_probe import (
+    GenesisAssetContactTraceRowV1,
     GenesisAssetContactTraceV1,
     GenesisAssetLoadEvidenceV1,
+    GenesisAssetLoadObservationV1,
     GenesisAssetProbeInputV1,
     GenesisAssetProbeReportV1,
 )
@@ -134,7 +136,9 @@ EXPECTED_SCHEMA_IDS = {
     "harness.external_agent_advisory_receipt.v1",
     "harness.genesis_observation_receipt.v1",
     "harness.genesis_asset_contact_trace.v1",
+    "harness.genesis_asset_contact_trace_row.v1",
     "harness.genesis_asset_load_evidence.v1",
+    "harness.genesis_asset_load_observation.v1",
     "harness.genesis_asset_probe_input.v1",
     "harness.genesis_asset_probe_report.v1",
     "harness.genesis_observe_input.v1",
@@ -240,6 +244,12 @@ def test_schema_catalog_is_exact_and_immutable() -> None:
     assert schema_model("harness.genesis_observe_output.v1") is GenesisObserveOutput
     assert schema_model("harness.genesis_observation_receipt.v1") is GenesisObservationReceipt
     assert schema_model("harness.genesis_asset_contact_trace.v1") is GenesisAssetContactTraceV1
+    assert (
+        schema_model("harness.genesis_asset_contact_trace_row.v1") is GenesisAssetContactTraceRowV1
+    )
+    assert (
+        schema_model("harness.genesis_asset_load_observation.v1") is GenesisAssetLoadObservationV1
+    )
     assert schema_model("harness.genesis_asset_load_evidence.v1") is GenesisAssetLoadEvidenceV1
     assert schema_model("harness.genesis_asset_probe_input.v1") is GenesisAssetProbeInputV1
     assert schema_model("harness.genesis_asset_probe_report.v1") is GenesisAssetProbeReportV1
@@ -342,7 +352,9 @@ def test_public_documents_are_strict_draft_2020_12_schemas() -> None:
             "harness.workflow_operation_receipt.v2",
             "harness.genesis_observation_receipt.v1",
             "harness.genesis_asset_contact_trace.v1",
+            "harness.genesis_asset_contact_trace_row.v1",
             "harness.genesis_asset_load_evidence.v1",
+            "harness.genesis_asset_load_observation.v1",
             "harness.genesis_asset_probe_input.v1",
             "harness.genesis_asset_probe_report.v1",
             "harness.genesis_observe_input.v1",

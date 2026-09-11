@@ -176,6 +176,52 @@
       "title": "GenesisInertiaTensorV1",
       "type": "object"
     },
+    "_LoadObservationRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "const": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "harness.genesis_asset_load_observation.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "pattern": "^artifact://sha256/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "_LoadObservationRef",
+      "type": "object"
+    },
     "_ProbeInputRef": {
       "additionalProperties": false,
       "properties": {
@@ -341,6 +387,17 @@
       "title": "Collision Shape Count",
       "type": "integer"
     },
+    "collision_shape_members": {
+      "items": {
+        "maxLength": 255,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 8,
+      "minItems": 8,
+      "title": "Collision Shape Members",
+      "type": "array"
+    },
     "dynamic": {
       "const": true,
       "title": "Dynamic",
@@ -368,6 +425,9 @@
       "pattern": "^[0-9a-f]{64}$",
       "title": "Load Evidence Sha256",
       "type": "string"
+    },
+    "load_observation": {
+      "$ref": "#/$defs/_LoadObservationRef"
     },
     "loaded": {
       "const": true,
@@ -451,6 +511,7 @@
     "schema_version",
     "load_evidence_sha256",
     "probe_input",
+    "load_observation",
     "representation",
     "runtime_lock",
     "requested_profile",
@@ -468,6 +529,7 @@
     "root_link_count",
     "joint_count",
     "collision_shape_count",
+    "collision_shape_members",
     "dynamic",
     "fixed",
     "mass_kg",

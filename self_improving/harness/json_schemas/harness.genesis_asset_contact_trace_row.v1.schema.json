@@ -1,0 +1,259 @@
+{
+  "$defs": {
+    "GenesisAssetGroundContactV1": {
+      "additionalProperties": false,
+      "description": "One solver-reported contact between the candidate asset and fixed ground.",
+      "properties": {
+        "asset_collision_index": {
+          "maximum": 7,
+          "minimum": 0,
+          "title": "Asset Collision Index",
+          "type": "integer"
+        },
+        "force_on_asset_n": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Force On Asset N",
+          "type": "array"
+        },
+        "force_on_ground_n": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Force On Ground N",
+          "type": "array"
+        },
+        "ground_collision_index": {
+          "const": 0,
+          "title": "Ground Collision Index",
+          "type": "integer"
+        },
+        "normal_force_n": {
+          "minimum": 0,
+          "title": "Normal Force N",
+          "type": "number"
+        },
+        "normal_on_asset": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Normal On Asset",
+          "type": "array"
+        },
+        "pair": {
+          "const": "asset:ground",
+          "title": "Pair",
+          "type": "string"
+        },
+        "penetration_m": {
+          "minimum": 0,
+          "title": "Penetration M",
+          "type": "number"
+        },
+        "position_m": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Position M",
+          "type": "array"
+        }
+      },
+      "required": [
+        "pair",
+        "asset_collision_index",
+        "ground_collision_index",
+        "position_m",
+        "normal_on_asset",
+        "force_on_asset_n",
+        "force_on_ground_n",
+        "penetration_m",
+        "normal_force_n"
+      ],
+      "title": "GenesisAssetGroundContactV1",
+      "type": "object"
+    }
+  },
+  "$id": "harness.genesis_asset_contact_trace_row.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "One canonical initial or post-integration row in the probe NDJSON stream.",
+  "properties": {
+    "angular_velocity_rad_s": {
+      "maxItems": 3,
+      "minItems": 3,
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "title": "Angular Velocity Rad S",
+      "type": "array"
+    },
+    "contact_count": {
+      "maximum": 512,
+      "minimum": 0,
+      "title": "Contact Count",
+      "type": "integer"
+    },
+    "contacts": {
+      "items": {
+        "$ref": "#/$defs/GenesisAssetGroundContactV1"
+      },
+      "maxItems": 512,
+      "title": "Contacts",
+      "type": "array"
+    },
+    "linear_velocity_m_s": {
+      "maxItems": 3,
+      "minItems": 3,
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "title": "Linear Velocity M S",
+      "type": "array"
+    },
+    "max_penetration_m": {
+      "minimum": 0,
+      "title": "Max Penetration M",
+      "type": "number"
+    },
+    "orientation_wxyz": {
+      "maxItems": 4,
+      "minItems": 4,
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "title": "Orientation Wxyz",
+      "type": "array"
+    },
+    "phase": {
+      "enum": [
+        "initial",
+        "post_step"
+      ],
+      "title": "Phase",
+      "type": "string"
+    },
+    "position_m": {
+      "maxItems": 3,
+      "minItems": 3,
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "title": "Position M",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "harness.genesis_asset_contact_trace_row.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "sim_time_us": {
+      "maximum": 4000000,
+      "minimum": 0,
+      "title": "Sim Time Us",
+      "type": "integer"
+    },
+    "step_index": {
+      "maximum": 1000,
+      "minimum": 0,
+      "title": "Step Index",
+      "type": "integer"
+    },
+    "total_normal_force_n": {
+      "minimum": 0,
+      "title": "Total Normal Force N",
+      "type": "number"
+    }
+  },
+  "required": [
+    "schema_version",
+    "step_index",
+    "phase",
+    "sim_time_us",
+    "position_m",
+    "orientation_wxyz",
+    "linear_velocity_m_s",
+    "angular_velocity_rad_s",
+    "contacts",
+    "contact_count",
+    "total_normal_force_n",
+    "max_penetration_m"
+  ],
+  "title": "GenesisAssetContactTraceRowV1",
+  "type": "object"
+}

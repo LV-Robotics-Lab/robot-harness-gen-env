@@ -20,7 +20,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "harness.genesis_asset_contact_trace_rows.v1",
+          "const": "harness.genesis_asset_contact_trace_row.v1",
           "title": "Schema Version",
           "type": "string"
         },
@@ -263,7 +263,7 @@
       "type": "string"
     },
     "first_contact_step": {
-      "maximum": 999,
+      "maximum": 1000,
       "minimum": 0,
       "title": "First Contact Step",
       "type": "integer"
@@ -274,13 +274,13 @@
       "type": "integer"
     },
     "last_contact_step": {
-      "maximum": 999,
+      "maximum": 1000,
       "minimum": 0,
       "title": "Last Contact Step",
       "type": "integer"
     },
     "last_step": {
-      "const": 999,
+      "const": 1000,
       "title": "Last Step",
       "type": "integer"
     },
@@ -323,7 +323,7 @@
       "$ref": "#/$defs/_RuntimeLockRef"
     },
     "sample_count": {
-      "const": 1000,
+      "const": 1001,
       "title": "Sample Count",
       "type": "integer"
     },

@@ -169,6 +169,10 @@ def documents() -> dict[str, Any]:
         {
             "schema_version": "harness.genesis_asset_load_evidence.v1",
             "probe_input": probe_input_ref,
+            "load_observation": _ref(
+                "load-observation",
+                "harness.genesis_asset_load_observation.v1",
+            ),
             "representation": representation_ref,
             "runtime_lock": runtime_lock_ref,
             "requested_profile": "genesis.rigid_scene@1",
@@ -186,6 +190,9 @@ def documents() -> dict[str, Any]:
             "root_link_count": 1,
             "joint_count": 0,
             "collision_shape_count": 8,
+            "collision_shape_members": tuple(
+                item["logical_path"] for item in members if item["role"] == "collision"
+            ),
             "dynamic": True,
             "fixed": False,
             "mass_kg": 0.07,
@@ -204,7 +211,7 @@ def documents() -> dict[str, Any]:
     load_ref = _ref("load-evidence", "harness.genesis_asset_load_evidence.v1")
     trace_rows = _ref(
         "contact-trace",
-        "harness.genesis_asset_contact_trace_rows.v1",
+        "harness.genesis_asset_contact_trace_row.v1",
         media_type="application/x-ndjson",
     )
     trace = _self_hashed(
@@ -218,8 +225,8 @@ def documents() -> dict[str, Any]:
             "runtime_lock": runtime_lock_ref,
             "trace_rows": trace_rows,
             "first_step": 0,
-            "last_step": 999,
-            "sample_count": 1000,
+            "last_step": 1000,
+            "sample_count": 1001,
             "steps_contiguous": True,
             "contact_observed": True,
             "contact_step_count": 875,
@@ -323,8 +330,8 @@ def test_raw_load_and_trace_row_schemas_remove_probe_recomputation_ambiguity() -
         sim_time_us=0,
         position_m=(0.0, 0.0, 0.01),
         orientation_wxyz=(1.0, 0.0, 0.0, 0.0),
-        linear_velocity_mps=(0.0, 0.0, 0.0),
-        angular_velocity_radps=(0.0, 0.0, 0.0),
+        linear_velocity_m_s=(0.0, 0.0, 0.0),
+        angular_velocity_rad_s=(0.0, 0.0, 0.0),
         contacts=(),
         contact_count=0,
         total_normal_force_n=0.0,
@@ -337,6 +344,7 @@ def test_raw_load_and_trace_row_schemas_remove_probe_recomputation_ambiguity() -
         "position_m": (0.0, 0.0, 0.0),
         "normal_on_asset": (0.0, 0.0, 1.0),
         "force_on_asset_n": (0.0, 0.0, 0.7),
+        "force_on_ground_n": (0.0, 0.0, -0.7),
         "normal_force_n": 0.7,
         "penetration_m": 0.0002,
     }
@@ -347,15 +355,15 @@ def test_raw_load_and_trace_row_schemas_remove_probe_recomputation_ambiguity() -
         sim_time_us=4000,
         position_m=(0.0, 0.0, 0.0098),
         orientation_wxyz=(1.0, 0.0, 0.0, 0.0),
-        linear_velocity_mps=(0.0, 0.0, -0.0392),
-        angular_velocity_radps=(0.0, 0.0, 0.0),
+        linear_velocity_m_s=(0.0, 0.0, -0.0392),
+        angular_velocity_rad_s=(0.0, 0.0, 0.0),
         contacts=(contact,),
         contact_count=1,
         total_normal_force_n=0.7,
         max_penetration_m=0.0002,
     )
     assert initial.step_index == 0 and post.step_index == 1
-    assert post.contacts[0].pair == "asset:ground"
+    assert post.contacts[0].asset_collision_index == 3
     for field, replacement, message in (
         ("phase", "initial", "phase"),
         ("sim_time_us", 0, "sim_time"),
@@ -486,7 +494,7 @@ def test_contact_trace_requires_contiguous_steps_and_consistent_summaries(
     values = trace.model_dump(mode="json")
     assert values["sample_count"] == values["last_step"] - values["first_step"] + 1
     assert values["trace_rows"]["media_type"] == "application/x-ndjson"
-    assert values["trace_rows"]["schema_version"] == ("harness.genesis_asset_contact_trace_rows.v1")
+    assert values["trace_rows"]["schema_version"] == ("harness.genesis_asset_contact_trace_row.v1")
     assert values["contact_observed"] is True
     assert 0 < values["contact_step_count"] <= values["total_contact_count"]
     assert values["first_step"] <= values["first_contact_step"]

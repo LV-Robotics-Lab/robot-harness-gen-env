@@ -264,6 +264,11 @@ class ControlledCpuGenesisBackend:
             root_link_count=1,
             joint_count=0,
             collision_shape_count=8,
+            collision_shape_members=tuple(
+                member.logical_path
+                for member in request.representation.members
+                if member.role == "collision"
+            ),
             dynamic=True,
             fixed=False,
             mass_kg=0.07,
@@ -276,6 +281,8 @@ class ControlledCpuGenesisBackend:
                 "izz": 0.00016461930323691639,
             },
             friction=0.2,
+            loaded_collision_min_z_m=-0.02,
+            test_translation_m=(0.0, 0.0, 0.03),
         )
 
     def observe_initial(self) -> Any:
@@ -299,6 +306,11 @@ class ControlledCpuGenesisBackend:
             else (
                 GenesisAssetGroundContact(
                     asset_collision_index=step_index % 8,
+                    ground_collision_index=0,
+                    position_m=(0.0, 0.0, 0.0),
+                    normal_on_asset=(0.0, 0.0, 1.0),
+                    force_on_asset_n=(0.0, 0.0, 0.7),
+                    force_on_ground_n=(0.0, 0.0, -0.7),
                     penetration_m=penetration,
                     normal_force_n=0.7,
                 ),
@@ -377,8 +389,12 @@ def test_cpu_probe_produces_and_deep_verifies_full_canonical_cas_evidence(
     assert request.probe_input.dt_seconds == 0.004
     assert request.probe_input.release_height_m == 0.01
 
-    assert result.load_evidence.load_observation == result.load_observation_ref
-    assert result.contact_trace.trace_rows == result.trace_rows_ref
+    assert result.load_evidence.load_observation.model_dump(mode="json") == (
+        result.load_observation_ref.model_dump(mode="json")
+    )
+    assert result.contact_trace.trace_rows.model_dump(mode="json") == (
+        result.trace_rows_ref.model_dump(mode="json")
+    )
     assert result.trace_rows_ref.media_type == "application/x-ndjson"
     rows_payload = store.resolve(result.trace_rows_ref).path.read_bytes()
     assert rows_payload.endswith(b"\n")
@@ -415,9 +431,8 @@ def test_cpu_probe_produces_and_deep_verifies_full_canonical_cas_evidence(
     assert verified.representation == representation
     assert verified.runtime_lock == runtime_lock
 
-    foreign_rows_ref = replace(
-        result.trace_rows_ref,
-        name="foreign-trace.ndjson",
+    foreign_rows_ref = result.trace_rows_ref.model_copy(
+        update={"name": "foreign-trace.ndjson"},
     )
     with pytest.raises(GenesisAssetProbeError, match="trace|row|identity"):
         GenesisAssetProbeEvidenceVerifier(artifact_store=store).verify(
@@ -446,7 +461,9 @@ def test_probe_preflight_rejects_representation_runtime_and_profile_before_backe
 
     cases = (
         (
-            replace(representation_ref, schema_version="harness.other_representation.v1"),
+            representation_ref.model_copy(
+                update={"schema_version": "harness.other_representation.v1"}
+            ),
             runtime_lock_ref,
             _RUNTIME_IMPLEMENTATION_SHA256,
         ),
