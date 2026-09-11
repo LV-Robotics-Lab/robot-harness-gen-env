@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import stat
 import tempfile
@@ -71,7 +72,7 @@ class StagedLegacyGenesisAssetRepresentation:
 @dataclass(frozen=True, slots=True)
 class _VerifiedMember:
     logical_path: str
-    path: Path
+    payload: bytes
     size: int
     sha256: str
     role: str
@@ -101,19 +102,26 @@ def stage_legacy_genesis_asset_representation(
             "asset subject does not bind the legacy manifest",
         )
 
-    staged_members = tuple(
-        AssetRepresentationMemberV1(
-            logical_path=member.logical_path,
-            role=member.role,
-            artifact=artifact_store.put_file(
-                member.path,
-                name=member.logical_path,
-                media_type=_media_type(member.logical_path),
-                schema_version=None,
-            ),
-        )
-        for member in members
-    )
+    with tempfile.TemporaryDirectory(prefix="legacy-genesis-source-snapshot-") as directory:
+        snapshot_root = Path(directory)
+        staged_member_values: list[AssetRepresentationMemberV1] = []
+        for member in members:
+            snapshot_path = snapshot_root / member.logical_path
+            snapshot_path.parent.mkdir(parents=True, exist_ok=True)
+            snapshot_path.write_bytes(member.payload)
+            staged_member_values.append(
+                AssetRepresentationMemberV1(
+                    logical_path=member.logical_path,
+                    role=member.role,
+                    artifact=artifact_store.put_file(
+                        snapshot_path,
+                        name=member.logical_path,
+                        media_type=_media_type(member.logical_path),
+                        schema_version=None,
+                    ),
+                )
+            )
+    staged_members = tuple(staged_member_values)
     root_logical_path = manifest["entrypoint"]
     loader_closure = asset_loader_closure_sha256(
         subject,
@@ -166,7 +174,7 @@ def _verify_source(
     manifest_path = root / source.manifest_relative_path
     if _has_symlink_component(root, manifest_path) or not manifest_path.is_file():
         _source_unavailable("legacy asset manifest is unavailable or unsafe")
-    payload = manifest_path.read_bytes()
+    payload = _read_regular_file(manifest_path)
     if hashlib.sha256(payload).hexdigest() != source.expected_manifest_sha256:
         _closure_mismatch("legacy asset manifest digest changed")
     try:
@@ -209,15 +217,16 @@ def _verify_source(
         member_path = root / logical_path
         if _has_symlink_component(root, member_path) or not member_path.is_file():
             _source_unavailable("legacy asset member is unavailable or unsafe")
-        actual_size = member_path.stat().st_size
-        actual_sha256 = _sha256(member_path)
+        member_payload = _read_regular_file(member_path)
+        actual_size = len(member_payload)
+        actual_sha256 = hashlib.sha256(member_payload).hexdigest()
         if actual_size != declared_size or actual_sha256 != declared_sha256:
             _closure_mismatch("legacy asset member bytes changed")
         logical_paths.append(logical_path)
         members.append(
             _VerifiedMember(
                 logical_path=logical_path,
-                path=member_path,
+                payload=member_payload,
                 size=actual_size,
                 sha256=actual_sha256,
                 role=_role(logical_path),
@@ -230,12 +239,23 @@ def _verify_source(
 
     expected_files = {source.manifest_relative_path, *logical_paths}
     actual_files: set[str] = set()
+    actual_directories: set[str] = set()
     for path in root.rglob("*"):
         if path.is_symlink():
             _source_unavailable("legacy asset source contains a symlink")
         if path.is_file():
             actual_files.add(path.relative_to(root).as_posix())
-    if actual_files != expected_files:
+        elif path.is_dir():
+            actual_directories.add(path.relative_to(root).as_posix())
+        else:
+            _source_unavailable("legacy asset source contains a non-regular entry")
+    expected_directories = {
+        parent.as_posix()
+        for logical_path in expected_files
+        for parent in PurePosixPath(logical_path).parents
+        if parent.as_posix() != "."
+    }
+    if actual_files != expected_files or actual_directories != expected_directories:
         _closure_mismatch("legacy asset source has missing or extra members")
     return value, tuple(members)
 
@@ -315,12 +335,13 @@ def _canonical_json_bytes(value: object) -> bytes:
     ).encode("utf-8")
 
 
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+def _read_regular_file(path: Path) -> bytes:
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    try:
+        with os.fdopen(descriptor, "rb", closefd=False) as stream:
+            return stream.read()
+    finally:
+        os.close(descriptor)
 
 
 def _source_unavailable(message: str) -> None:

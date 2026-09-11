@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 from dataclasses import fields
 from pathlib import Path
@@ -11,6 +12,7 @@ import pytest
 
 import self_improving.harness as harness
 from self_improving.harness.artifacts import LocalArtifactStore
+from self_improving.harness.schemas.common import ArtifactRef
 from self_improving.harness.schemas.x2env_compile_evidence import (
     AssetModelSubjectV1,
     AssetRepresentationV1,
@@ -302,6 +304,8 @@ def test_real_legacy_mouse_bytes_stage_a_portable_unqualified_representation(
         ("member_hash", "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"),
         ("missing_member", "HARN_LEGACY_ASSET_SOURCE_UNAVAILABLE"),
         ("extra_member", "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"),
+        ("extra_directory", "HARN_LEGACY_ASSET_CLOSURE_MISMATCH"),
+        ("extra_fifo", "HARN_LEGACY_ASSET_SOURCE_UNAVAILABLE"),
         ("file_symlink", "HARN_LEGACY_ASSET_SOURCE_UNAVAILABLE"),
         ("directory_symlink", "HARN_LEGACY_ASSET_SOURCE_UNAVAILABLE"),
         ("root_symlink", "HARN_LEGACY_ASSET_SOURCE_UNAVAILABLE"),
@@ -354,6 +358,10 @@ def test_legacy_stage_rejects_nonportable_or_incomplete_source_before_cas_write(
         member.unlink()
     elif attack == "extra_member":
         (root / "unexpected.bin").write_bytes(b"extra")
+    elif attack == "extra_directory":
+        (root / "unexpected-directory").mkdir()
+    elif attack == "extra_fifo":
+        os.mkfifo(root / "unexpected-fifo")
     elif attack == "file_symlink":
         backing = tmp_path / "backing.urdf"
         shutil.copyfile(member, backing)
@@ -530,3 +538,55 @@ def test_legacy_stage_rejects_malformed_manifest_and_extra_symlink(
 
     assert captured.value.code == expected_code
     assert _cas_manifest(store) == ()
+
+
+@pytest.mark.parametrize("attack", ("member", "manifest", "extra", "symlink"))
+def test_legacy_stage_publishes_verified_snapshot_when_source_changes_at_first_put(
+    tmp_path: Path,
+    attack: str,
+) -> None:
+    _require_api()
+    root = _copy_source(tmp_path)
+    store = LocalArtifactStore(tmp_path / "fresh-cas")
+    original_put = store.put_file
+    mutated = False
+
+    def mutating_put(
+        source: Path,
+        *,
+        name: str,
+        media_type: str,
+        schema_version: str | None,
+    ) -> ArtifactRef:
+        nonlocal mutated
+        if not mutated:
+            mutated = True
+            if attack == "member":
+                (root / "physics.json").write_bytes(b"changed-after-verification\n")
+            elif attack == "manifest":
+                (root / "asset.json").write_bytes(b"changed-after-verification\n")
+            elif attack == "extra":
+                (root / "late-extra.bin").write_bytes(b"late-extra")
+            else:
+                member = root / "physics.json"
+                member.unlink()
+                member.symlink_to(tmp_path / "late-missing-target")
+        return original_put(
+            source,
+            name=name,
+            media_type=media_type,
+            schema_version=schema_version,
+        )
+
+    store.put_file = mutating_put  # type: ignore[method-assign]
+    staged = _stage(store, root)
+
+    assert mutated is True
+    assert len(_cas_manifest(store)) == 16
+    assert (
+        tuple(
+            (member.logical_path, member.artifact.bytes, member.artifact.sha256, member.role)
+            for member in staged.representation.members
+        )
+        == _MEMBERS
+    )
