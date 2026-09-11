@@ -103,6 +103,19 @@ authority区分：纯读verifier只证明所给证据的闭包一致性，不能
 发生。供后续issuer使用的opaque live capability只能来自固定producer的成功真实执行；无live restart
 的资格恢复另须由durable application对账可信intent/terminal，不能公开`issue(arbitrary report)`。
 
+### S3 durable asset qualification 纵切
+
+`GenesisAssetQualificationApplication(state_path, artifact_store, approved_manifest_ref)`以
+`invoke(request_ref, run_id=UUID, roots=...)`执行及签发，`execute(request_ref, run_id=UUID, roots=...)`
+显式执行并停在持久executed阶段，`read(run_id)`只读取持久状态。应用内部使用固定
+execution producer，不接收调用方注入的producer或任意report。既有qualification v1可复用，但
+应用必须精确签发`backend_load`与`collision_probe`两项检查，绑定整条运行证据及issuer实现身份。
+
+SQLite状态为intent→executed→qualified。intent/pending重试拒绝且不二次运行；executed只能来自
+live capability，重启恢复须重验可信应用记录和完整CAS。UUID与canonical输入、批准manifest及
+issuer身份固定，相同UUID的不同输入拒绝。terminal重试只读，SQLite/CAS损坏拒绝；qualification
+是最后一个权威CAS写入。机制可在真实运行等待期间先TDD，实际签发须等execution门通过。
+
 ## S4 — Legacy Gujie anti-corruption import
 
 ```python

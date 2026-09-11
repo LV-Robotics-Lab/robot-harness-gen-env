@@ -1,0 +1,86 @@
+{
+  "schema_version": "harness.golden_runtime_execution_acceptance.v1",
+  "fixed_commit": "fd5057625d7a5e986a49867fdf1d540f027c5431",
+  "verification_kind": "independent_fixed_commit_public_receipt_reader_and_recursive_cas",
+  "scope": "observed_execution_only",
+  "bindings": {
+    "manifest_sha256": "6d25b8e2359b343564bf7a2e845ad559b32bfb26c14a7f433633f3af6c25c14e",
+    "runtime_lock_sha256": "c8161be45db5bf11ff2901ac0502d9e9434bb4ca4ebb5be59887e14fbb22a8fe",
+    "request_sha256": "8770965aa0e9df56889e98009e04a261bd1e41994471abd497ec89d55157a69b",
+    "probe_report_sha256": "b5f82d4da861d21cf449963d5c22156faecdc87631977ce24100a5cf794a1e85",
+    "new_lock_binds_manifest_and_complete_backend_identity": true,
+    "probe_binds_new_lock_and_request_representation": true,
+    "source_and_relocated_manifest_request_probe_identical": true
+  },
+  "source": {
+    "summary_sha256": "9afc8700f2d1bfe195dba641cd26a8930b74113ea14425f6263a4949adb3cf1e",
+    "receipt_sha256": "bc6511ad9028fc2bcaa479d4cf8a9c5287b6d453d259cccf2f9ddd317bf65d78",
+    "independent_read_receipt_pass": true,
+    "recursive_supporting_objects": 81971,
+    "recursive_supporting_bytes": 4574140070,
+    "stdout_bytes": 0,
+    "stderr_bytes": 579
+  },
+  "second_deployment": {
+    "summary_sha256": "c701aada3e9a3c4ddb0e7e038be1efed4d6b293bb4763a55a48986cfbd977436",
+    "receipt_sha256": "f96fb80006ca8a14bb6c05e09a4ce45f19339cdab326fe04be3407973595a830",
+    "six_roots_use_second_absolute_deployment": true,
+    "fresh_producer_execution_pass": true,
+    "independent_fresh_process_read_receipt_pass": true,
+    "recursive_supporting_objects": 81971,
+    "recursive_supporting_bytes": 4574140092,
+    "stdout_bytes": 0,
+    "stderr_bytes": 601,
+    "receipt_is_byte_identical_to_first_execution": false,
+    "difference": "deployment paths in retained stderr produce a new observation and receipt; physical report remains identical"
+  },
+  "both_execution_closures": {
+    "rows": 1001,
+    "contact_steps": 989,
+    "contacts": 4040,
+    "probe_status": "pass",
+    "observed_module_members": 3148,
+    "observed_native_members": 273,
+    "verified_external_gl_alias_members": 2,
+    "landlock_abi": 8,
+    "torch_threads": [1, 1],
+    "read_execution_authority": false,
+    "genesis_imported_by_independent_readers": false,
+    "network_policy": "socket_syscalls_denied",
+    "filesystem_policy": "runtime_roots_readonly_two_verified_gl_files_kernel_devices_run_output_write"
+  },
+  "real_failure": {
+    "input": "hash-consistent representation containing malformed URDF XML",
+    "diagnostic_sha256": "ea66b07cdb8e743d3dbeb8f3f128c46f55e026ad20b1aca6a82f13092faf6d02",
+    "status": "failed",
+    "stdout_bytes": 2174,
+    "stderr_bytes": 504,
+    "partial_manifest_bytes": 5993,
+    "partial_cas_objects": 18,
+    "partial_probe_complete": false,
+    "all_failure_artifacts_resolved_and_hash_verified": true,
+    "stdout_contains_actual_urdf_parse_failure": true,
+    "initial_formal_test_failure": "test expected only stdout/stderr; producer also retained partial-cas evidence",
+    "independent_reader_script_failure": "review script referenced a nonexistent legacy input field after public read_receipt had passed; script corrected without implementation changes"
+  },
+  "ordering": {
+    "source_local_cas_mtime_order": "manifest < runtime_lock < request < probe_report < observation < receipt",
+    "source_local_order_verified": true,
+    "wall_clock_timestamps_bound_in_receipt_schema": false,
+    "limitation": "local filesystem times corroborate publication order but are not portable execution timestamps; unchanged physical CAS objects retain earlier write times on retry"
+  },
+  "coverage_boundary": {
+    "instrumented_child_statements": "129/145",
+    "instrumented_child_branches": "21/34",
+    "combined_percent": 83.79888268156425,
+    "new_core_statement_and_branch_100_percent_met": false,
+    "instrumented_measurement_replaces_formal_producer_evidence": false
+  },
+  "limits": {
+    "durable_asset_qualification_accepted_by_this_review": false,
+    "production_registry_or_mcp_accepted_by_this_review": false,
+    "environment_replay_robot_policy_or_promotion_proven": false,
+    "media_output_proven": false,
+    "cas_only_reader_reconstructs_live_execution_capability": false
+  }
+}

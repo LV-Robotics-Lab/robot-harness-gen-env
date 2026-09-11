@@ -6,7 +6,9 @@
   runtime lock；运行根只读，网络socket禁用，记录实际module/native/kernel facts与同次probe闭包。
 - 三份新增schema使当前目录增至97。失败保留输出流和已生成probe材料；成功receipt最后写入。
   纯读一致性不产生live执行能力，durable asset qualification仍待实现。
-- 离线相关gate为37 passed/2 formal skips；正式Producer和第二部署验收正在进行，尚未宣称完成。
+- 离线相关gate为37 passed/2 formal skips；固定`fd50576`正式Producer在两套独立部署完成1,000steps，
+  strict reload与独立集中功能验收通过。81,971个supporting对象各自闭合；坏XML失败材料完整保留。
+  launcher/child覆盖目标未全部达到，durable资格应用的真实用例继续运行。
 
 ## 2026-09-11 Runtime 内容清单
 

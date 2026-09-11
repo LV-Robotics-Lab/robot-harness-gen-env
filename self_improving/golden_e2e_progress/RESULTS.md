@@ -1,6 +1,38 @@
 # 进度与结果
 
+## 2026-09-11 Durable asset qualification TDD（真实GREEN进行中）
+
+- 新application复用既有`GenesisAssetQualificationV1`，无schema语义修改；固定issuer独立源码摘要，
+  SQLite intent/executed/qualified与failed状态，公开reserve/execute/invoke/read。
+- 10个离线用例通过，2个formal skip；真实RED用时252.56s：fresh固定Producer成功后，按预期在
+  `qualification commit is not implemented`失败。原始`qualification-red.log`与
+  `qualification-red.sqlite`保留于`golden-runtime-bound-20260911.ndky_vr0`。
+- GREEN已实现两精确checks、issuer CAS、trusted executed恢复和qualification-last；修正坏XML
+  测试、直接live签发、execute后销毁应用并重启签发三个formal用例正在顺序执行，尚未宣称通过。
+
 ## 2026-09-11 固定 CPU execution 实现（正式验收进行中）
+
+- 两部署固定提交集中功能验收通过，见`docs/evidence/golden-runtime-execution-acceptance-20260911.json`。
+  新增完整probe后的私有backend漂移真实用例1 passed/234.73s：后检拒绝且stdout/stderr、六refs和
+  1,001rows清理后仍可读。修正后的坏XML正式重跑也通过。最终launcher覆盖134/137 statements、
+  42/46 branches；child142/145 statements、31/34 branches，100%目标仍未达到，具体缺口见
+  `docs/evidence/golden-runtime-execution-20260911.md`。
+
+- 第二独立六根部署正式Producer+strict reload通过：1 passed，258.71s，位于
+  `/home/jingxiang/bingsheng/golden-runtime-bound-relocated-20260911.i7zlos7a/`；摘要SHA
+  `c701aada3e9a3c4ddb0e7e038be1efed4d6b293bb4763a55a48986cfbd977436`。
+  固定提交集中验收正在收口；durable qualification实际用例继续运行。
+
+- 固定`fd50576`的正式Producer已通过：新manifest
+  `6d25b8e2359b343564bf7a2e845ad559b32bfb26c14a7f433633f3af6c25c14e`，
+  166,015成员，manifest 79,543,751 bytes，capture 243.432s。正式execution receipt
+  `bc6511ad9028fc2bcaa479d4cf8a9c5287b6d453d259cccf2f9ddd317bf65d78`
+  已写入，live capability返回且CAS-only重读一致、1,001rows。真实坏XML与第二部署仍在验收中。
+  原始配置和回执位于`/home/jingxiang/bingsheng/golden-runtime-bound-20260911.ndky_vr0/`。
+- 正式双用例首轮364.39s：正常用例pass，坏XML被真实child拒绝且保留stdout/stderr和partial-CAS
+  索引。失败测试旧断言只允许两份输出，未允许新增索引，因此记录为1 passed/1 failed；不能把该轮
+  写成全绿。正在修正测试以严格验证三份证据，原始失败日志保留。launcher真实覆盖综合86%；child
+  独立诊断测量129/145 statements、21/34 branches，尚未达到全模块statement/branch 100%。
 
 - 冻结manifest批准配置、固定launcher、archive CPU child、版本化request/observation/receipt公共seam。
   相关离线gate 37 passed/2 formal skips，97 schemas；真实成功路径覆盖单独采集，不称全模块100%。

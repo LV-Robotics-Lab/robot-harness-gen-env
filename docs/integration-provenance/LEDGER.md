@@ -103,7 +103,7 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
 ## INT-BS-004 — Manifest 驱动的固定 CPU execution
 
 - `lifecycle`：`integrated`
-- `verification`：`unit_pass`（正式Producer与第二部署验收进行中）
+- `verification`：`runtime_pass`（固定CPU单资产execution，不授予其他权威）
 - `origin_owner`：Bingsheng（Harness合同与整合责任）
 - `recorded_git_authors`：以本功能提交的实际git author为准
 - `upstream_owner`：Genesis World、Python、Torch、Quadrants及其他依赖保留各自归属
@@ -117,8 +117,11 @@ Bingsheng 是 Harness 系统和最终代码整合责任人；这不自动把被�
 - `integration_method`：独立固定launcher执行声明归档；Landlock只读运行根、独立输出与seccomp socket
   限制；实际module/native/process observation绑定同一次fresh probe，成功receipt最后写入
 - `contract_spec`：`self_improving/harness/GENESIS_RUNTIME_EXECUTION_CONTRACT.md`、SEAMS S3、D020
-- `verification_evidence`：相关离线gate 37 passed/2 formal skips；97 snapshots。真实受约束tracer已
-  完成1,000 CPU steps和完整observation；正式Producer验收尚未完成，不以tracer替代权威回执
+- `verification_evidence`：相关离线gate 37 passed/2 formal skips；97 snapshots。固定`fd50576`正式
+  Producer已在两套独立部署完成1,000 CPU steps、完整observation和strict reload；同manifest、
+  new runtime lock、request与probe完整关联。独立新进程各重验81,971个supporting CAS对象。
+  坏XML真实拒绝且三份失败输出/索引与18partial对象闭合。详见
+  `docs/evidence/golden-runtime-execution-20260911.md`及对应acceptance JSON
 - `golden_run`：`none`
 - `known_gaps`：真实执行覆盖收集中；durable asset qualification、production Skill/MCP、environment
   replay、robot-policy和promotion均未获得本切片权威。CAS纯读只证明内容一致，不产生live capability

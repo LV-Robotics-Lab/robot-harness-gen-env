@@ -122,10 +122,12 @@ qualification；真实 asset qualification、production Skill application 与 re
        relocated CAS strict reload；证据见 `docs/evidence/golden-genesis-cpu-asset-probe-20260911.md`。
      - [ ] 封闭 interpreter、Python/Torch/Quadrants/native 完整 runtime dependency lock，随后实现 durable
        production issuer/qualification；已有 asset probe pass 不授予 production Skill/MCP 权威。
+       - [x] `fd50576`：固定CPU launcher、archive child、manifest-bound execution producer/verifier，
+         当前97 schemas；正式Producer/第二部署运行与覆盖收口仍进行中，不等于qualification完成。
        - [x] `3662ba6`：canonical runtime content manifest、逐文件流式CAS、read/deployment verification；
          166,141个真实成员已在第二绝对路径fresh process中全量重验。
-       - [ ] 把manifest绑定实际fixed-process/runner与probe回执，显式处理archive/checkout、系统native
-         加载定位和subprocess/config依赖；不能沿用旧v1 lock报告暗中获得新权威。
+       - [x] `fd50576`已把manifest绑定实际fixed-process/runner与fresh probe回执，处理archive、精确
+         系统native别名和进程配置；两部署正式运行与独立strict reload通过。覆盖目标尚待收口。
 2. `feat(text2env): qualify Genesis compile/replay v2 and validate v3`
 3. `feat(image2env): qualify compile replay validate v1`
 4. `feat(video2env): qualify compile replay validate v1`

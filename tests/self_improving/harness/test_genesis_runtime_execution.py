@@ -480,8 +480,14 @@ def test_formal_child_failure_retains_stderr_after_temporary_directory_cleanup(t
         )
     diagnostic = json.loads(store.resolve(failed.value.diagnostic_ref).path.read_bytes())
     streams = [ArtifactRef.model_validate(value) for value in diagnostic["failure_artifacts"]]
-    assert {ref.name for ref in streams} == {"stdout.txt", "stderr.txt"}
-    assert any(store.resolve(ref).path.read_bytes() for ref in streams if ref.name == "stderr.txt")
     (Path(configuration["cas_root"]).parent / "failed-execution-diagnostic-ref.json").write_text(
         failed.value.diagnostic_ref.model_dump_json() + "\n"
     )
+    assert {ref.name for ref in streams} == {"stdout.txt", "stderr.txt", "partial-cas.json"}
+    assert any(store.resolve(ref).path.read_bytes() for ref in streams if ref.name == "stderr.txt")
+    partial_ref = next(ref for ref in streams if ref.name == "partial-cas.json")
+    partial = json.loads(store.resolve(partial_ref).path.read_bytes())
+    assert partial["complete_probe"] is False
+    assert partial["available_artifacts"]
+    for value in partial["available_artifacts"]:
+        store.resolve(ArtifactRef.model_validate(value))

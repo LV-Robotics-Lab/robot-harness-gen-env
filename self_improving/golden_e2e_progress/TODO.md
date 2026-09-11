@@ -6,8 +6,8 @@
 
 - 当前功能目标：实现manifest驱动的固定CPU launcher、真实child观测与版本化执行回执；以新runtime
   lock显式引用manifest，fresh probe全部refs进入同一新receipt。执行与纯读验算分账；先跑完整真实
-  闭包与换路径，再集中验收，之后才启动durable qualification application。未提交实现由两个agent
-  分别独占execution合同/producer/verifier与launcher/child，主窗口维护计划和验收。
+  闭包与换路径，再集中验收。实现已固定`fd50576`；运行agent负责正式实跑与搬迁，另一agent并行
+  TDD实现durable qualification application机制，实际签发仍等待正式execution门。主窗口维护计划和验收。
 
 - Runtime dependency lock：`3662ba6` 已完成声明根的 canonical manifest；166,141成员/8,542,495,955
   bytes 的真实 capture、CAS纯读、源部署及第二绝对路径 fresh-process 重验通过。独立目录 fresh
