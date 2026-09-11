@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from typing import Literal
+from uuid import UUID
 
 from pydantic import UUID4, BaseModel, Field, model_validator
 
@@ -37,6 +38,8 @@ TimingSegment = Literal[
 
 
 def _json_value(value: object) -> object:
+    if isinstance(value, UUID):
+        return str(value)
     if isinstance(value, BaseModel):
         return value.model_dump(mode="json")
     if isinstance(value, dict):
@@ -185,11 +188,13 @@ class LimitedImagePreviewStageV1(HarnessModel):
             _require_ref(ref, label=label, media_type="video/mp4")
             if ref.schema_version is not None:
                 raise ValueError(f"{label} cannot claim a JSON schema")
-        _require_json_ref(
+        _require_ref(
             self.retained_media_index,
             label="retained_media_index",
-            schema_version="harness.retained_media_index.v1",
+            media_type="application/json",
         )
+        if self.retained_media_index.schema_version is not None:
+            raise ValueError("retained_media_index is the native untyped retained-output index")
         result = self.validation_result
         if (
             result.execution_receipt != self.replay_receipt

@@ -29,6 +29,18 @@ _EXPORT_GROUPS = (
         ),
     ),
     (
+        ".limited_image_preview_library",
+        (
+            "LimitedImagePreviewLibrary",
+            "LimitedImagePreviewLibraryError",
+            "PublishedLimitedImagePreview",
+            "VerifiedLimitedImagePreview",
+            "admit_limited_image_preview",
+            "create_limited_image_preview_library",
+            "load_limited_image_preview_library",
+        ),
+    ),
+    (
         ".application",
         (
             "CompileApplication",
