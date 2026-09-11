@@ -11,11 +11,17 @@ import os
 import signal
 import sqlite3
 import time
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Protocol
 
-from .codex_backend import CodexAssignment, CodexBackendResult, process_start_ticks
+from .codex_backend import (
+    CodexAssignment,
+    CodexBackendResult,
+    process_start_ticks,
+    validate_terminal_decision,
+)
 from .golden_store import SQLiteGoldenRunStore
 from .schemas.common import ArtifactRef
 from .schemas.limited_image_preview_service import PreviewServiceResult
@@ -330,6 +336,17 @@ class LimitedImagePreviewController:
         if status.status == "published":
             return self._published(status)
         rows = self.attempts(workflow_id)
+        if rows and (rows[-1].get("terminal_decision") or {}).get("decision") == "unsupported":
+            last = rows[-1]
+            if (
+                last["snapshot_sha256"]
+                == hashlib.sha256(_canonical(status.snapshot.model_dump(mode="json"))).hexdigest()
+            ):
+                return dict(
+                    status="unsupported",
+                    workflow_id=str(workflow_id),
+                    reason=last["terminal_decision"]["reason"],
+                )
         published = self._try_publish(status, rows)
         if published is not None:
             return published
@@ -373,6 +390,14 @@ class LimitedImagePreviewController:
                 None,
                 str(error),
             )
+        terminal_decision = None
+        if result.status == "completed":
+            try:
+                terminal_decision = validate_terminal_decision(
+                    (result.decision_evidence or {}).get("terminal_decision"), workflow_id
+                )
+            except ValueError as error:
+                result = replace(result, status="invalid_transcript", failure=str(error))
         samples = timing_samples(result)
         samples["input_elapsed_ns"] = input_elapsed_ns
         evidence = [
@@ -389,9 +414,17 @@ class LimitedImagePreviewController:
             "call_count": len(samples["calls"]),
             "timing_samples": samples,
             "evidence": evidence,
+            "terminal_decision": terminal_decision,
         }
         self._write(terminal, previous=row)
         current = self._status(workflow_id)
+        if terminal_decision and terminal_decision["decision"] == "unsupported":
+            if current.snapshot == assignment.snapshot:
+                return dict(
+                    status="unsupported",
+                    workflow_id=str(workflow_id),
+                    reason=terminal_decision["reason"],
+                )
         published = self._try_publish(current, self.attempts(workflow_id))
         if published is not None:
             return published
@@ -401,6 +434,16 @@ class LimitedImagePreviewController:
             attempt=number,
             timing_valid=samples["valid"],
         )
+
+    def run_to_terminal(self, workflow_id, *, input_elapsed_ns=None):
+        """Run bounded phases automatically; a still-owned process remains a wait result."""
+        retryable = {"waiting", "timeout", "exit_failure", "invalid_transcript", "launch_failure"}
+        for _ in range(self.max_attempts + 1):
+            result = self.resume(workflow_id, input_elapsed_ns=input_elapsed_ns)
+            input_elapsed_ns = None
+            if result["status"] not in retryable:
+                return result
+        return dict(status="attempt_limit", workflow_id=str(workflow_id))
 
     def _try_publish(self, current, rows):
         operation = current.operation

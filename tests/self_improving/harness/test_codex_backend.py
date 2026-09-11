@@ -107,6 +107,19 @@ def test_assigned_transcript_matches_actual_wire_and_rejects_shell_or_foreign(as
         {"type": "turn.started"},
         {"type": "item.started", "item": item},
         {"type": "item.completed", "item": item},
+        {
+            "type": "item.completed",
+            "item": {
+                "type": "agent_message",
+                "text": json.dumps(
+                    {
+                        "workflow_id": args["workflow_id"],
+                        "decision": "phase_complete",
+                        "reason": "phase done",
+                    }
+                ),
+            },
+        },
         {"type": "turn.completed"},
     ]
     wire = [
@@ -137,6 +150,29 @@ def test_assigned_transcript_matches_actual_wire_and_rejects_shell_or_foreign(as
     output = inspect_assigned_transcript(lines(events), lines(wire), assignment)
     assert output["calls"][0]["elapsed_seconds"] == 1.0
     assert output["business_state_authority"] is False
+    assert output["terminal_decision"]["decision"] == "phase_complete"
+    final = events[-2]["item"]["text"]
+    for text in [
+        "The task succeeded!",
+        json.dumps({"workflow_id": args["workflow_id"], "decision": "success", "reason": "ok"}),
+        json.dumps({"workflow_id": "foreign", "decision": "unsupported", "reason": "no"}),
+        json.dumps({"workflow_id": args["workflow_id"], "decision": "unsupported", "reason": " "}),
+    ]:
+        events[-2]["item"]["text"] = text
+        with pytest.raises(ValueError):
+            inspect_assigned_transcript(lines(events), lines(wire), assignment)
+    events[-2]["item"]["text"] = json.dumps(
+        {"workflow_id": args["workflow_id"], "decision": "unsupported", "reason": "Only mouse"}
+    )
+    assert (
+        inspect_assigned_transcript(lines(events), lines(wire), assignment)["terminal_decision"][
+            "decision"
+        ]
+        == "unsupported"
+    )
+    with pytest.raises(ValueError, match="terminal decision"):
+        inspect_assigned_transcript(lines(events[:-2] + events[-1:]), lines(wire), assignment)
+    events[-2]["item"]["text"] = final
     wire[1]["message"]["result"]["structuredContent"]["snapshot"] = {}
     with pytest.raises(ValueError, match="assigned snapshot"):
         inspect_assigned_transcript(lines(events), lines(wire), assignment)
@@ -200,7 +236,24 @@ def test_codex_01534_resource_call_maps_to_wire_read_without_action_budget(assig
         events.extend(
             [{"type": "item.started", "item": item}, {"type": "item.completed", "item": item}]
         )
-    events.append({"type": "turn.completed"})
+    events.extend(
+        [
+            {
+                "type": "item.completed",
+                "item": {
+                    "type": "agent_message",
+                    "text": json.dumps(
+                        {
+                            "workflow_id": workflow,
+                            "decision": "phase_complete",
+                            "reason": "phase done",
+                        }
+                    ),
+                },
+            },
+            {"type": "turn.completed"},
+        ]
+    )
     messages = [
         (
             "request",

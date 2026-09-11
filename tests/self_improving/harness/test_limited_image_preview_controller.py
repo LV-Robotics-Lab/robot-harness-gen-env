@@ -153,7 +153,21 @@ def test_completed_backend_without_validated_service_head_is_not_success(service
         def run(self, assignment, *, output_root):
             output_root.mkdir()
             return CodexBackendResult(
-                "completed", output_root, 1.0, 0, None, None, {"calls": []}, None
+                "completed",
+                output_root,
+                1.0,
+                0,
+                None,
+                None,
+                {
+                    "calls": [],
+                    "terminal_decision": {
+                        "workflow_id": str(service.workflow),
+                        "decision": "phase_complete",
+                        "reason": "done",
+                    },
+                },
+                None,
             )
 
     controller = LimitedImagePreviewController(
@@ -170,11 +184,21 @@ def test_explicit_unsupported_is_terminal_diagnostic_without_workflow_change(ser
             self.count += 1
             output_root.mkdir()
             return CodexBackendResult(
-                "completed", output_root, 1.0, 0, None, None,
-                {"calls": [], "terminal_decision": {
-                    "workflow_id": str(service.workflow),
-                    "decision": "unsupported", "reason": "Only one mouse on a finite table is supported.",
-                }}, None,
+                "completed",
+                output_root,
+                1.0,
+                0,
+                None,
+                None,
+                {
+                    "calls": [],
+                    "terminal_decision": {
+                        "workflow_id": str(service.workflow),
+                        "decision": "unsupported",
+                        "reason": "Only one mouse on a finite table is supported.",
+                    },
+                },
+                None,
             )
 
     backend = Backend()
@@ -185,7 +209,55 @@ def test_explicit_unsupported_is_terminal_diagnostic_without_workflow_change(ser
     assert controller.run_to_terminal(service.workflow)["status"] == "unsupported"
     assert controller.resume(service.workflow)["status"] == "unsupported"
     assert backend.count == 1
-    assert controller.attempts(service.workflow)[0]["terminal_decision"]["decision"] == "unsupported"
+    assert (
+        controller.attempts(service.workflow)[0]["terminal_decision"]["decision"] == "unsupported"
+    )
+    assert service.harness.read(service.read) == before
+
+
+@pytest.mark.parametrize(
+    "decision",
+    [
+        None,
+        {"decision": "success"},
+        {
+            "workflow_id": "foreign",
+            "decision": "unsupported",
+            "reason": "wrong workflow",
+        },
+    ],
+)
+def test_invalid_or_missing_terminal_decision_retries_only_within_budget(
+    service, tmp_path, decision
+):
+    class Backend:
+        count = 0
+
+        def run(self, assignment, *, output_root):
+            self.count += 1
+            output_root.mkdir()
+            return CodexBackendResult(
+                "completed",
+                output_root,
+                1.0,
+                0,
+                None,
+                None,
+                {"calls": [], "terminal_decision": decision},
+                None,
+            )
+
+    backend = Backend()
+    controller = LimitedImagePreviewController(
+        service.value, backend, evidence_root=tmp_path / "attempts", max_attempts=2
+    )
+    before = service.harness.read(service.read)
+    assert controller.run_to_terminal(service.workflow)["status"] == "attempt_limit"
+    assert backend.count == 2
+    assert all(
+        row["backend_status"] == "invalid_transcript"
+        for row in controller.attempts(service.workflow)
+    )
     assert service.harness.read(service.read) == before
 
 

@@ -30,6 +30,22 @@ STATUS = "image2env_preview_status_v1"
 START = "image2env_preview_start_v1"
 
 
+class CodexTerminalDecision(BaseModel):
+    """A model diagnostic, never evidence that a business operation succeeded."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+    workflow_id: str
+    decision: Literal["phase_complete", "unsupported"]
+    reason: str = Field(min_length=1, max_length=2000)
+
+
+def validate_terminal_decision(value, workflow_id):
+    decision = CodexTerminalDecision.model_validate(value)
+    if decision.workflow_id != str(workflow_id) or not decision.reason.strip():
+        raise ValueError("terminal decision differs from assigned workflow or lacks reason")
+    return decision.model_dump(mode="json")
+
+
 def process_start_ticks(pid):
     """Linux process identity, including zombie detection, without reading arguments."""
     try:
@@ -121,13 +137,15 @@ def inspect_assigned_transcript(transcript: bytes, wire: bytes, assignment: Code
         or events[-1].get("type") != "turn.completed"
     ):
         raise ValueError("incomplete Codex turn")
-    pending, calls = {}, []
+    pending, calls, final_item = {}, [], None
     for event in events[1:-1]:
         kind, item = event.get("type"), event.get("item", {})
         if kind == "turn.started":
             continue
         if kind not in {"item.started", "item.updated", "item.completed"}:
             raise ValueError("unexpected Codex event")
+        if kind == "item.completed":
+            final_item = item
         if item.get("type") in {"agent_message", "reasoning", "todo_list"}:
             continue
         if item.get("type") != "mcp_tool_call" or item.get("server") != "golden":
@@ -218,10 +236,20 @@ def inspect_assigned_transcript(transcript: bytes, wire: bytes, assignment: Code
                 "elapsed_seconds": elapsed,
             }
         )
+    if final_item is None or final_item.get("type") != "agent_message":
+        raise ValueError("missing strict terminal decision")
+    terminal = validate_terminal_decision(
+        json.loads(final_item.get("text", "")), assignment.snapshot.workflow_run_id
+    )
+    if terminal["decision"] == "unsupported" and any(
+        call["tool"] not in {STATUS, "image2env_preview_asset_lookup_v1"} for call in decisions
+    ):
+        raise ValueError("unsupported decision followed business execution")
     return {
         "workflow_id": str(assignment.snapshot.workflow_run_id),
         "calls": decisions,
         "resource_reads": reads,
+        "terminal_decision": terminal,
         "business_state_authority": False,
     }
 
@@ -343,6 +371,11 @@ class CodexBackend:
             "Revised progress is compile3, replay3, validate3 against that same explicit target. "
             "Only take actions allowed by this assignment; stop at a phase boundary. "
             "The Harness handles publication after your turn; do not publish or fetch a package. "
+            'End with exactly one JSON object: {"workflow_id":"the assigned UUID",'
+            '"decision":"phase_complete" or "unsupported","reason":"concise reason"}. '
+            "Use unsupported only for an out-of-scope request before any business operation; "
+            "status and explicit asset lookup are allowed before that decision. "
+            "This final decision is diagnostic, not a declaration of business success. "
             "Do not invent placements: derive explicit arguments from the original objective. "
             "Do not claim business success from prose. Assignment: " + assignment.model_dump_json()
         )
