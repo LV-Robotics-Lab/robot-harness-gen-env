@@ -135,3 +135,147 @@ def test_preview_input_resource_reader_rejects_foreign_or_incomplete_roots(input
     invalid = inputs.publish(payload, "invalid-preview-input.json", None)
     with pytest.raises(ValueError):
         read_limited_preview_input(inputs.store, invalid, inputs.workflow)
+
+
+@pytest.mark.parametrize("expired", [False, True])
+def test_status_recovers_capture_and_remaining_ttl_from_existing_golden_operation(
+    inputs, tmp_path, expired
+):  # noqa: F811
+    """External controlled camera output; real Registry, SQLite, CAS and Golden delivery."""
+    from datetime import datetime, timedelta, timezone
+    from uuid import uuid4
+
+    from self_improving.harness.event_journal import SQLiteEventJournal
+    from self_improving.harness.golden_execution import (
+        _create_golden_execution_binding,
+        create_golden_execution_catalog,
+    )
+    from self_improving.harness.registry import (
+        HandlerResult,
+        SkillRegistry,
+        StaticDependencyResolver,
+    )
+    from self_improving.harness.run_store import SQLiteRunStore
+    from self_improving.harness.schemas.common import ArtifactRef, SkillDescriptor
+    from self_improving.harness.schemas.genesis_fresh_capture import GenesisFreshCaptureReceiptV1
+    from self_improving.harness.schemas.registry_snapshot import RegistrySnapshot
+    from self_improving.harness.schemas.workflow import RunCommandRequest
+    from tests.self_improving.harness.test_golden_control_v2_runtime import base, native_case
+
+    case = native_case(tmp_path)
+    frozen = RegistrySnapshot.model_validate_json(
+        inputs.store.resolve(case.head.registry_snapshot).path.read_bytes()
+    )
+    descriptor = SkillDescriptor.model_validate_json(
+        inputs.store.resolve(frozen.qualified_skills[0].descriptor_ref).path.read_bytes()
+    )
+    captured = datetime.now(timezone.utc) - timedelta(seconds=400 if expired else 0)
+    observation = GenesisFreshCaptureReceiptV1(
+        schema_version="harness.genesis_fresh_capture_receipt.v1",
+        replay_run_id=uuid4(),
+        replay_receipt=case.native,
+        request=case.native,
+        capture_result=case.native,
+        image=inputs.raw,
+        captured_at=captured,
+        checked_at=captured,
+        expires_at=captured + timedelta(seconds=300),
+        ttl_seconds=300,
+        authority="observed_restored_final_pose",
+        process_continuation=False,
+    )
+    ref = base._put_binary(
+        inputs.store,
+        tmp_path,
+        name="wall-capture.json",
+        payload=json.dumps(
+            observation.model_dump(mode="json"), sort_keys=True, separators=(",", ":")
+        ).encode(),
+        media_type="application/json",
+        schema_version=observation.schema_version,
+    )
+    child = SQLiteRunStore(tmp_path / "wall-camera.sqlite")
+    registry = SkillRegistry(
+        artifact_resolver=inputs.store,
+        dependency_resolver=StaticDependencyResolver({"genesis.observe@3.0.0": ()}),
+        event_sink=SQLiteEventJournal(child.path),
+        clock=lambda: datetime.now(timezone.utc),
+        run_id_factory=uuid4,
+        run_store=child,
+    )
+    registry.register(
+        descriptor, lambda parameters, context: HandlerResult(observation, (ref, inputs.raw))
+    )
+
+    class Camera:
+        skill_ref = "genesis.observe@3.0.0"
+        artifact_root = inputs.store.root
+        authority_path = child.path
+        policy = case.policy
+        skills = (descriptor,)
+
+        def invoke(self, parameters, *, run_id):
+            return registry.invoke_with_run_id(
+                "genesis.observe", "3.0.0", parameters.model_dump(mode="json"), run_id=run_id
+            )
+
+        def invocation(self, run_id):
+            return child.read_invocation(run_id)
+
+        def run_state(self, run_id):
+            return child.read_run_state(run_id)
+
+    catalog = create_golden_execution_catalog(
+        bindings=(
+            _create_golden_execution_binding(
+                policy=case.policy, application=Camera(), child_authority=child
+            ),
+        )
+    )
+    journal = SQLiteGoldenRunStore(tmp_path / "preview-wall.sqlite")
+    service = LimitedImagePreviewService(
+        artifact_store=inputs.store,
+        workflow_store=journal,
+        input_builder=inputs.builder,
+        registry_snapshot=case.head.registry_snapshot,
+        principal_id="test/status",
+        execution_catalog=catalog,
+    )
+    started = service.start(
+        raw_image_ref=inputs.raw, user_text="mouse", idempotency_key="status-capture"
+    )
+    snapshot = started["snapshot"]
+    service.harness.submit(
+        RunCommandRequest.model_validate(
+            {
+                "schema_version": "harness.run_command_request.v1",
+                "command_id": uuid4(),
+                "principal_id": snapshot["principal_id"],
+                "workflow_run_id": snapshot["workflow_run_id"],
+                "idempotency_key": "controlled-camera",
+                "expected_workflow_revision": snapshot["revision"],
+                "expected_state_sha256": snapshot["state_sha256"],
+                "expected_receipt_head_sha256": snapshot["receipt_head"]["sha256"],
+                "skill_ref": "genesis.observe@3.0.0",
+                "parameters": {
+                    "schema_version": "harness.genesis_fresh_capture_input.v1",
+                    "replay_run_id": str(observation.replay_run_id),
+                    "ttl_seconds": 300,
+                },
+            }
+        )
+    )
+    restored = LimitedImagePreviewService(
+        artifact_store=inputs.store,
+        workflow_store=journal,
+        input_builder=inputs.builder,
+        registry_snapshot=case.head.registry_snapshot,
+        principal_id="test/status",
+        execution_catalog=catalog,
+    )
+    status = restored.status(workflow_id=started["workflow_id"])
+    assert status["stage"] == "status"
+    assert ArtifactRef.model_validate(status["observation"]["receipt"]) == ref
+    assert (status["ttl_remaining_seconds"] < 0) is expired
+    assert status["status"] == ("waiting_input" if expired else "succeeded")
+    assert any(item["uri"].endswith(inputs.raw.sha256) for item in status["resource_links"])
