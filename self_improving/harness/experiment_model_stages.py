@@ -22,6 +22,7 @@ class VisualAssetPatch(BaseModel):
 class VisualAdvisory(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     status: Literal["passed", "failed", "not_run"]
+    visual_status: Literal["passed", "failed", "not_run"]
     reason: str = Field(min_length=1)
     input_sha256: str
     scene_sha256: str
@@ -33,6 +34,8 @@ class VisualAdvisory(BaseModel):
         patch = self.asset_patch.model_dump(exclude_none=True) if self.asset_patch else {}
         if self.status == "passed" and self.repair_kind != "none":
             raise ValueError("passed visual result cannot request repair")
+        if self.status == "passed" and self.visual_status != "passed":
+            raise ValueError("passed diagnosis requires visible intent passed")
         if (self.repair_kind == "asset") != bool(patch):
             raise ValueError("asset repair requires a nonempty explicit asset patch")
         if self.repair_kind != "asset" and self.asset_patch is not None:
@@ -215,9 +218,10 @@ def execute_model_stage(stage, parameters, *, store, root, settings, backend):
             "preceding images are user inputs. "
             "Judge visible object/category/color and requested arrangement "
             "only. Do not infer contacts, "
-            "stability or physical validity from pixels. Return failed for a "
-            "visible mismatch, not_run "
-            "if not visually decidable, otherwise passed with a concrete reason. "
+            "stability or physical validity from pixels. visual_status is failed for a "
+            "visible mismatch, not_run if not visually decidable, otherwise passed. "
+            "status is the combined diagnosis: failed if visual intent OR the supplied physical "
+            "diagnostics failed, passed only when both passed; do not alter physical findings. "
             "Keep visible-intent judgment separate from the supplied "
             "programmatic physical diagnostics. "
             "repair_kind is none for passed; otherwise suggest scene only for "
@@ -261,6 +265,11 @@ def execute_model_stage(stage, parameters, *, store, root, settings, backend):
         if checked.input_sha256 != identity or checked.scene_sha256 != scene_identity:
             raise ValueError("visual proposal input/scene identity differs")
         value = checked.model_dump(mode="json")
+        value["physical_status"] = physical["status"]
+        if physical["status"] == "failed":
+            value["status"] = "failed"
+            value["error_code"] = "physical_profile_failed"
+            value["diagnostic_summary"] = physical["failed_checks"]
         if checked.asset_patch is not None:
             value["asset_patch"] = checked.asset_patch.model_dump(exclude_none=True)
         return {**value, "observation": observation.get("receipt"), **base}

@@ -6,11 +6,13 @@
 - interpret从CAS ExperimentInputBundle消费文本、规范图像和视频。视频真实FFmpeg提取首/中/末
   帧，返回各frame_index/source_video/decoded_sequence/image引用；这只是视觉采样，已有完整解码
   ingest仍是视频身份。输出必须通过SceneIntentV1与input hash核验，source还受部署allowed_sources限制。
-- visual以最后附图明确标识实际Genesis observation，前面的图片是用户输入；输出status/reason、
+- visual以最后附图明确标识实际Genesis observation，前面的图片是用户输入；输出status/visual_status/reason、
   input_sha256/scene_sha256、repair_kind（none/scene/asset/numeric）和nullable asset_patch。
   patch只可有scale/mass_kg/friction；passed必须none，非asset不能有patch，asset必须非空。
   程序化physical report作为独立诊断给模型，不把视觉判断变成物理通过。scene数字仅传必要位姿/桌面，
   不把大规模geometry顶点堆进prompt。
+  visual_status只描述可见意图；status是联合诊断，实际物理failed由Harness强制保持failed。
+  成功执行但物理失败的replay仍可进入观察/诊断；最终validate继续独立重算，不能由模型覆盖。
 - revise_scene消费现有intent和dependencies，并读取由service核准的proposal.failure_receipt正文。
   返回完整新intent，但只允许xy_m/yaw_deg实际改变，其余字段完全一致。base_failure_receipt和
   base_dependencies显式记录。修订预算和最近失败验证归controller/service。

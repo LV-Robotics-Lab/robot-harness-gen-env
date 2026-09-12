@@ -150,6 +150,7 @@ def test_visual_asset_patch_comes_from_explicit_model_fields(tmp_path):
     )
     proposal = {
         "status": "failed",
+        "visual_status": "failed",
         "reason": "Visible size mismatch; no physical claim.",
         "input_sha256": reference.sha256,
         "scene_sha256": scene_ref.sha256,
@@ -169,3 +170,20 @@ def test_visual_asset_patch_comes_from_explicit_model_fields(tmp_path):
     )
     assert result["repair_kind"] == "asset"
     assert result["asset_patch"] == {"scale": 0.5}
+
+
+def test_visual_pass_can_accompany_programmatic_failure_advice():
+    from self_improving.harness.experiment_model_stages import VisualAdvisory
+
+    value = VisualAdvisory.model_validate(
+        {
+            "status": "failed",
+            "visual_status": "passed",
+            "reason": "Support margin failed.",
+            "input_sha256": "a" * 64,
+            "scene_sha256": "b" * 64,
+            "repair_kind": "scene",
+            "asset_patch": None,
+        }
+    )
+    assert value.visual_status == "passed"
