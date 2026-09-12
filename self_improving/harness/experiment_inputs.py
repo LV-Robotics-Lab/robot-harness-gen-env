@@ -138,9 +138,9 @@ class SceneIntentV1(BaseModel):
     color: str | None
     source: Literal["local", "web", "generated"]
     selection: Literal["exact", "cousin"]
-    dimensions_m: tuple[Annotated[float, Field(gt=0, le=0.4, allow_inf_nan=False)], ...] | None = Field(
-        min_length=3, max_length=3
-    )
+    dimensions_m: (
+        tuple[Annotated[float, Field(gt=0, le=0.4, allow_inf_nan=False)], ...] | None
+    ) = Field(min_length=3, max_length=3)
     xy_m: tuple[Annotated[float, Field(ge=-0.4, le=0.4, allow_inf_nan=False)], ...] = Field(
         min_length=2, max_length=2
     )
