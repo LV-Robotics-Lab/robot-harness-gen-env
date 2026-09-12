@@ -1,6 +1,7 @@
 """S1 development admission never confers release qualification."""
 
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 
@@ -69,7 +70,8 @@ def test_development_registry_requires_deployment_authority_and_ephemeral_worksp
         harness.start(request.model_copy(update={"idempotency_key": "dev-3"}))
 
 
-def test_development_child_commits_explicit_unqualified_receipt_and_reopens(tmp_path):
+@pytest.mark.parametrize("fail_handler", [False, True])
+def test_development_child_commits_explicit_unqualified_receipt_and_reopens(tmp_path, fail_handler):
     from uuid import uuid4
 
     from self_improving.harness.development_execution import (
@@ -102,7 +104,13 @@ def test_development_child_commits_explicit_unqualified_receipt_and_reopens(tmp_
             pass
 
         def claims(self, state):
-            return ()
+            from self_improving.harness.schemas.workflow_operation import ReceiptDerivedFactClaimV2
+
+            return (
+                (ReceiptDerivedFactClaimV2(key="development.echo_completed", value=True),)
+                if state.status.value == "succeeded"
+                else ()
+            )
 
         def diagnostics(self, state):
             return ()
@@ -119,7 +127,7 @@ def test_development_child_commits_explicit_unqualified_receipt_and_reopens(tmp_
     config = tmp_path / "config.json"
     config.write_text('{"execution_mode":"development","allow_changed_skill_closure":true}')
     authority = capture_development_authority(
-        artifact_store=store, source_files=(source,), configuration=config
+        artifact_store=store, source_files=(source, Path(__file__).resolve()), configuration=config
     )
     descriptor = DevelopmentSkillDescriptor(
         skill_id="development.echo",
@@ -138,9 +146,28 @@ def test_development_child_commits_explicit_unqualified_receipt_and_reopens(tmp_
         run_id_factory=uuid4,
         run_store=child,
     )
+    import operator
+
+    with pytest.raises(ValueError, match="source"):
+        create_development_execution_binding(
+            descriptor=descriptor,
+            handler=operator.add,
+            policy=Policy(),
+            registry=registry,
+            run_store=child,
+            authority=authority,
+        )
+    calls = []
+
+    def handler(parameters, context):
+        calls.append(context.run_id)
+        if fail_handler:
+            raise ValueError("controlled handler failure")
+        return HandlerResult(output=parameters)
+
     binding = create_development_execution_binding(
         descriptor=descriptor,
-        handler=lambda parameters, context: HandlerResult(output=parameters),
+        handler=handler,
         policy=Policy(),
         registry=registry,
         run_store=child,
@@ -188,7 +215,7 @@ def test_development_child_commits_explicit_unqualified_receipt_and_reopens(tmp_
         ),
     )
     operation = harness.submit(command)
-    assert operation.status.value == "succeeded"
+    assert operation.status.value == ("failed" if fail_handler else "succeeded")
     assert operation.qualified_execution.schema_version == "harness.development_skill_execution.v1"
     import json
 
@@ -197,6 +224,7 @@ def test_development_child_commits_explicit_unqualified_receipt_and_reopens(tmp_
     assert "qualification_artifact" not in execution
     reopened = GoldenRunHarness(**kwargs)
     assert reopened.submit(command) == operation
+    assert calls == [operation.child_run_id]
     assert (
         reopened.read(
             RunReadRequest(
@@ -227,6 +255,34 @@ def test_development_child_commits_explicit_unqualified_receipt_and_reopens(tmp_
 
     with pytest.raises(GoldenRunCorruptionError, match="development"):
         GoldenRunHarness(**authority_free).read(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id="tests/dev",
+                workflow_run_id=started.workflow_run_id,
+            )
+        )
+    from self_improving.harness.golden_run import GoldenRunConflictError
+
+    with pytest.raises(GoldenRunConflictError):
+        reopened.submit(
+            command.model_copy(
+                update={"parameters": {**command.parameters, "principal_id": "tests/other"}}
+            )
+        )
+    before = config.read_bytes()
+    config.write_text('{"execution_mode":"release"}')
+    with pytest.raises(GoldenRunCorruptionError, match="changed"):
+        reopened.read(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id="tests/dev",
+                workflow_run_id=started.workflow_run_id,
+            )
+        )
+    config.write_bytes(before)
+    store.resolve(started.registry_snapshot).path.write_bytes(b"{}\n")
+    with pytest.raises(GoldenRunCorruptionError):
+        reopened.read(
             RunReadRequest(
                 schema_version="harness.run_read_request.v1",
                 principal_id="tests/dev",

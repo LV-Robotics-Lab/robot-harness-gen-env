@@ -29,6 +29,10 @@ or production labels. The private existing SQLite `qualification_sha256` column 
 64 zeroes solely as a compatibility sentinel. It grants no authority and is never a
 qualification ArtifactRef or report.
 
+The actual handler and evidence-policy normalizer must resolve to Python source files in
+the declared closure. Builtins or callables defined outside that closure are refused before
+execution. Capturing an unrelated file cannot authorize an arbitrary replacement handler.
+
 The operation's historically named `qualified_execution` locator identifies
 `harness.development_skill_execution.v1` for this path. Its payload contains the actual
 descriptor, implementation and evidence-policy identity, development context and fixed
@@ -48,3 +52,8 @@ unqualified receipt, child terminal commit, restart idempotence and resource rea
 existing Registry persistence/candidate tests remain green. Changes to Registry source
 correctly invalidate old fixed compile qualification manifests; this feature does not
 re-sign or bypass those manifests.
+
+Additional adversarial S1 tests retain failed handler terminals, prove no repeat on restart,
+reject command identity changes, reject deployment configuration changes and corrupted
+registry CAS bytes, and check that the qualified execution model rejects development
+payloads. The success test also exercises a receipt-derived state mutation.

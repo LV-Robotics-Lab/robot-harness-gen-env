@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 import tempfile
 from pathlib import Path
@@ -141,6 +142,17 @@ class DevelopmentExecutionAuthority:
             if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
                 raise ValueError("development source or configuration changed")
 
+    def verify_callable(self, handler):
+        target = handler if inspect.isroutine(handler) else type(handler).__call__
+        try:
+            source = inspect.getsourcefile(target)
+        except TypeError:
+            source = None
+        if source is None or Path(source).resolve() not in {
+            path.resolve() for path, _ in self.files[:-1]
+        }:
+            raise ValueError("development callable source is outside declared source closure")
+
     def registry(self, descriptors):
         self.verify()
         entries = []
@@ -205,6 +217,8 @@ def create_development_execution_binding(
     from .golden_execution import _create_golden_execution_binding
 
     authority.verify()
+    authority.verify_callable(handler)
+    authority.verify_callable(policy.normalize_parameters)
     if descriptor.implementation_sha256 != authority.implementation_sha256:
         raise ValueError("development descriptor must bind the declared source closure")
 

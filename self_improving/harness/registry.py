@@ -455,6 +455,7 @@ class SkillRegistry:
         ):
             raise TypeError("development execution requires the exact deployment authority")
         development_authority.verify()
+        development_authority.verify_callable(handler)
         if type(descriptor) is not DevelopmentSkillDescriptor:
             raise TypeError("development execution requires an unqualified descriptor")
         if descriptor.implementation_sha256 != development_authority.implementation_sha256:
