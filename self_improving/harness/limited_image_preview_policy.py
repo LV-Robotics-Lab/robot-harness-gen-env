@@ -95,9 +95,10 @@ class LimitedImagePreviewPolicy:
         canonical = json.dumps(
             value.model_dump(mode="json"), sort_keys=True, separators=(",", ":"), ensure_ascii=False
         ).encode()
-        if raw != canonical or ref.schema_version != value.model_dump().get(
-            "schema_version", ref.schema_version
-        ):
+        if raw not in (
+            canonical,
+            canonical + b"\n",
+        ) or ref.schema_version != value.model_dump().get("schema_version", ref.schema_version):
             raise ValueError("preview evidence must be canonical typed CAS")
         return value
 
