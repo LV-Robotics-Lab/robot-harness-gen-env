@@ -358,6 +358,9 @@ class LimitedPreviewRuntime:
             self.bindings[skill] = binding
         else:
             raise ValueError("preview Skill lacks an exact configured registered binding")
+        from .development_diagnostics import note_qualified_skill_binding
+
+        note_qualified_skill_binding(self.store, skill)
 
 
 def create_limited_image_preview_service(settings_path):
@@ -371,11 +374,20 @@ def create_limited_image_preview_service(settings_path):
     development_context = None
     development_artifacts = None
     if settings.execution_mode == "development":
+        from .development_diagnostics import install_development_diagnostics
         from .limited_image_preview_development import (
             DevelopmentArtifactStore,
             capture_development_execution_context,
         )
 
+        install_development_diagnostics(
+            store,
+            runtime_manifests=(
+                settings.asset_manifest,
+                settings.scene_manifest,
+                settings.capture_manifest,
+            ),
+        )
         development_context = capture_development_execution_context(
             artifact_store=store,
             repository_root=settings.source_repository_root,

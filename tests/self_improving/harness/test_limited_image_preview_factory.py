@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from self_improving.harness.artifacts import LocalArtifactStore
+from self_improving.harness.development_diagnostics import install_development_diagnostics
 from self_improving.harness.limited_image_preview_factory import (
     LimitedImagePreviewSettings,
     LimitedPreviewRuntime,
@@ -110,7 +111,9 @@ def test_lazy_projection_loaders_receive_exact_artifact_refs(tmp_path, monkeypat
         shared_qualifications={},
     )
     settings = LimitedImagePreviewSettings.model_validate_json(json.dumps(document))
-    runtime = LimitedPreviewRuntime(settings, LocalArtifactStore(tmp_path / "cas"))
+    store = LocalArtifactStore(tmp_path / "cas")
+    diagnostics = install_development_diagnostics(store, runtime_manifests=())
+    runtime = LimitedPreviewRuntime(settings, store)
     authorities = {
         key: SQLiteRunStore(tmp_path / f"{key}.sqlite") for key in ("compile", "replay", "observe")
     }
@@ -155,6 +158,9 @@ def test_lazy_projection_loaders_receive_exact_artifact_refs(tmp_path, monkeypat
     ):
         runtime.ensure(skill)
     assert len(loaded) == 4
+    assert diagnostics.snapshot().qualified_skill_binding_count == 4
+    runtime.ensure("image2env.compile@2.0.0")
+    assert diagnostics.snapshot().qualified_skill_binding_count == 4
 
 
 def test_operator_development_settings_isolate_the_formal_library(tmp_path):

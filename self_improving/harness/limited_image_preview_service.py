@@ -617,6 +617,9 @@ class LimitedImagePreviewService:
         parent, _ = self._parent(snapshot)
         if parent.skill_ref != "image2env.validate@3.0.0":
             raise ValueError("development package requires current final validation")
+        from .development_diagnostics import (
+            publish_development_execution_metrics,
+        )
         from .limited_image_preview_controller import read_codex_attempts
         from .limited_image_preview_development import build_development_execution_record
 
@@ -630,6 +633,12 @@ class LimitedImagePreviewService:
             },
             "development-codex-attempt-log.json",
             None,
+        )
+        metrics_ref, _metrics = publish_development_execution_metrics(
+            self.store,
+            self.journal.path,
+            snapshot.workflow_run_id,
+            created_at=snapshot.updated_at,
         )
         input_ref, document = self._input(snapshot)
         lookup = self.inputs.lookup(workflow_id=snapshot.workflow_run_id, input_ref=input_ref)
@@ -675,7 +684,7 @@ class LimitedImagePreviewService:
             }:
                 physical.append(ref)
         output_refs = tuple(dict.fromkeys((*outputs, *media)))
-        log_refs = [log]
+        log_refs = [log, metrics_ref]
         for row in rows:
             log_refs.extend(ArtifactRef.model_validate(item) for item in row.get("evidence", ()))
         record = build_development_execution_record(

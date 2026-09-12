@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
-from types import SimpleNamespace
 from datetime import UTC, datetime
 from pathlib import Path
+from types import SimpleNamespace
 from uuid import UUID
 
 import pytest
@@ -17,6 +17,7 @@ from self_improving.harness.development_diagnostics import (
     build_development_execution_metrics,
     install_development_diagnostics,
     note_qualified_skill_binding,
+    publish_development_execution_metrics,
     read_development_diagnostic_samples,
 )
 from self_improving.harness.genesis_runtime_manifest import read_runtime_manifest
@@ -31,7 +32,9 @@ from self_improving.harness.schemas.genesis_runtime_manifest import (
 def _put(store: LocalArtifactStore, tmp_path: Path, name: str, payload: bytes) -> ArtifactRef:
     path = tmp_path / name.replace("/", "_")
     path.write_bytes(payload)
-    return store.put_file(path, name=name, media_type="application/octet-stream", schema_version=None)
+    return store.put_file(
+        path, name=name, media_type="application/octet-stream", schema_version=None
+    )
 
 
 def _runtime_manifest(store: LocalArtifactStore, tmp_path: Path) -> ArtifactRef:
@@ -87,7 +90,10 @@ def test_development_measurement_is_request_bounded_and_persisted(tmp_path: Path
     # baseline, not a claim that the duplicate scan has been removed.
     assert sample.counters.cas_full_hash_scan_count == 14
     assert sample.counters.cas_full_hash_logical_bytes == 2 * (
-        manifest_ref.bytes + sum(member.artifact.bytes for member in read_runtime_manifest(store, manifest_ref).members)
+        manifest_ref.bytes
+        + sum(
+            member.artifact.bytes for member in read_runtime_manifest(store, manifest_ref).members
+        )
     )
     assert sample.counters.runtime_manifest_deep_read_count == 1
     assert sample.counters.qualified_skill_binding_count == 1
@@ -109,6 +115,12 @@ def test_development_measurement_is_request_bounded_and_persisted(tmp_path: Path
     tracker.reset()
     assert tracker.snapshot().cas_full_hash_scan_count == 0
 
+    metrics_ref, published = publish_development_execution_metrics(
+        store, database, workflow_id, created_at=sample.ended_at
+    )
+    assert published == metrics
+    assert json.loads(store.resolve(metrics_ref).path.read_bytes()) == metrics.document()
+
 
 def test_development_diagnostic_rows_fail_closed_and_are_workflow_scoped(tmp_path: Path) -> None:
     store = LocalArtifactStore(tmp_path / "cas")
@@ -121,9 +133,10 @@ def test_development_diagnostic_rows_fail_closed_and_are_workflow_scoped(tmp_pat
     database = tmp_path / "golden.sqlite"
     append_development_diagnostic_sample(database, sample)
 
-    assert read_development_diagnostic_samples(
-        database, UUID("30000000-0000-4000-8000-000000000003")
-    ) == ()
+    assert (
+        read_development_diagnostic_samples(database, UUID("30000000-0000-4000-8000-000000000003"))
+        == ()
+    )
 
     import sqlite3
 

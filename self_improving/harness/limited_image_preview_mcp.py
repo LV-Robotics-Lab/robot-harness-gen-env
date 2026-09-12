@@ -16,6 +16,10 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from .development_diagnostics import (
+    begin_development_mcp_measurement,
+    finish_development_mcp_measurement,
+)
 from .mcp_control_v2 import MCPAdvisoryRecordRequestV2, MCPPromptRevisionRecordRequestV2
 from .schemas.common import ArtifactRef
 from .schemas.golden_control_v2 import ControlCommitSnapshotV2
@@ -178,43 +182,57 @@ def create_limited_image_preview_mcp_server(service: LimitedImagePreviewService)
             request = model.model_validate_json(json.dumps(params.arguments or {}, allow_nan=False))
         except (ValueError, TypeError) as error:
             raise MCPError(-32602, str(error)) from error
-        if method == "submit_control":
-            result = service.submit_control(request)
-        else:
-            arguments = request.model_dump(mode="python", exclude_none=True)
-            if skill is not None:
-                arguments["expected_skill_ref"] = skill
-            result = getattr(service, method)(**arguments)
-        if type(result) is not dict:
-            raise MCPError(-32603, "preview service must return a JSON object")
-        try:
-            output = _CONTROL_OUTPUTS.get(params.name, PreviewServiceResult).model_validate_json(
-                json.dumps(result)
-            )
-        except (ValueError, TypeError) as error:
-            raise MCPError(-32603, "service output does not match exact version") from error
-        try:
-            raw = json.dumps(result, allow_nan=False, sort_keys=True, separators=(",", ":"))
-        except (ValueError, TypeError) as error:
-            raise MCPError(-32603, "preview service returned non-JSON data") from error
-        content = [types.TextContent(type="text", text=raw)]
-        if isinstance(output, PreviewServiceResult):
-            if (
-                method in {"observe", "validate", "publish", "package_get"}
-                and not output.resource_links
-            ):
-                raise MCPError(-32603, "service evidence result requires actual resource links")
-            content.extend(
-                types.ResourceLink(
-                    type="resource_link", name=link.name, uri=link.uri, mime_type=link.mime_type
-                )
-                for link in output.resource_links
-            )
-        return types.CallToolResult(
-            content=content,
-            structured_content=result,
-            is_error=result.get("status") in {"failed", "blocked", "unsupported"},
+        workflow_id = getattr(request, "workflow_id", None) or getattr(
+            request, "workflow_run_id", None
         )
+        measurement = begin_development_mcp_measurement(service, workflow_id, params.name)
+        try:
+            if method == "submit_control":
+                result = service.submit_control(request)
+            else:
+                arguments = request.model_dump(mode="python", exclude_none=True)
+                if skill is not None:
+                    arguments["expected_skill_ref"] = skill
+                result = getattr(service, method)(**arguments)
+            if type(result) is not dict:
+                raise MCPError(-32603, "preview service must return a JSON object")
+            try:
+                output = _CONTROL_OUTPUTS.get(
+                    params.name, PreviewServiceResult
+                ).model_validate_json(json.dumps(result))
+            except (ValueError, TypeError) as error:
+                raise MCPError(-32603, "service output does not match exact version") from error
+            try:
+                raw = json.dumps(result, allow_nan=False, sort_keys=True, separators=(",", ":"))
+            except (ValueError, TypeError) as error:
+                raise MCPError(-32603, "preview service returned non-JSON data") from error
+            content = [types.TextContent(type="text", text=raw)]
+            if isinstance(output, PreviewServiceResult):
+                if (
+                    method in {"observe", "validate", "publish", "package_get"}
+                    and not output.resource_links
+                ):
+                    raise MCPError(-32603, "service evidence result requires actual resource links")
+                content.extend(
+                    types.ResourceLink(
+                        type="resource_link", name=link.name, uri=link.uri, mime_type=link.mime_type
+                    )
+                    for link in output.resource_links
+                )
+            response = types.CallToolResult(
+                content=content,
+                structured_content=result,
+                is_error=result.get("status") in {"failed", "blocked", "unsupported"},
+            )
+        except Exception as error:
+            finish_development_mcp_measurement(
+                service, measurement, f"exception:{type(error).__name__}"
+            )
+            raise
+        finish_development_mcp_measurement(
+            service, measurement, str(result.get("status", "returned"))
+        )
+        return response
 
     async def read_resource(_context, params):
         uri = str(params.uri)
