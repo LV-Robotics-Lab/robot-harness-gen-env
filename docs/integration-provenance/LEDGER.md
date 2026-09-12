@@ -1,5 +1,18 @@
 # 功能级整合台账
 
+## INT-USER-INTAKE-001 — 原始用户研究文档保护后独立吸收
+
+- `lifecycle`：`reference_only`；`verification`：`not_run`（仅 bytes 与保护快照比较）。
+- `source_ref` / `dirty_snapshot`：本地 archive `0993082727d55ea78b965439a19642e2c46d65f6`。
+- `origin_owner`：用户原未提交文档，实际作者未核实；`recorded_git_authors`：快照提交记录
+  `Bingsheng Xie <xieziyin_shangshu@outlook.com>`，不推断为全部文档原创作者。
+- `upstream_owner`：研究中引用的 ASPIRE/相关上游按原文；`integration_owner`：Bingsheng Harness。
+- `source_paths` / `target_paths`：`self_improving/studies/ASPIRE/` 的四份研究 Markdown，同路径原 bytes。
+- `integration_method`：独立保留研究，不导入策略代码，不将文档叙述计为 canonical 运行。
+- `contract_spec` / `verification_evidence`：C01 用户 dirty 分类；
+  `self_improving/golden_e2e_progress/CANONICAL_USER_INTAKE.md`。
+- `known_gaps`：研究内容未重新执行或重新审计；原 archive 保留。
+
 本文件是 Bingsheng、Gujie、Yuxin 三方工作进入 Golden E2E 的核对清单。状态定义与更新规则见
 [README](README.md)。以下是建账时已核实的基线，不把候选实现或历史测试扩大为完成主张。
 
