@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C08-COMPILE — 共享SceneIR到相对运行包输入
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream，新确定性编译seam。
+- `source_ref`：canonical contracts `4fddb17`、资产`38071da`、运行接口`013391c`。
+- `target_paths`：x2env/compile.py及其公共测试；不复制旧实验或核心scene_gen编译器。
+- `verification`：5项组件测试；固定已知布局、资产引用与真正bytes修订；运行资格尚未执行。
+
 ## INT-CANONICAL-C08-RUNTIME — 真实Genesis与受限资源引用
 
 - `origin_owner`：Bingsheng Harness执行内核与Gujie标准URDF审计；`upstream_owner`：Genesis。

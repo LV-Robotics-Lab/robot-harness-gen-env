@@ -17,6 +17,12 @@ CapabilityRegistry固定精确版本与digest；AssetRegistry只管理不可变�
 
 ## 外部adapter seams
 
+编译seam消费固定SceneIR artifact、ResolvedAssetSet、seed和显式StructuralPolicy，不获取资产。
+SceneIR坐标约定：foreground为几何中心，结构支撑frame为上表面中心；normalized URDF原点为
+XY中心/Z底面，编译器做显式偏移。仅未给出的结构厚度/世界原点可使用部署policy，并记录defaults；
+长宽必须来自SceneIR，foreground未知高度只由明确on关系与已测资产半高解析。
+不得修改用户已给轴/朝向，尺寸冲突拒绝；没有解析的关节/inside不静默简化。
+
 - CodexBackend.interpret / assess_asset_candidates / assess_and_diagnose只提供建议，不控制执行或物理通过。
 - YuxinProviderAdapter调用原provider engine，带真实local/web和许可门。
 - ReconstructionAdapter接受已验证媒体与SceneIR；Gujie原接口保留非默认，

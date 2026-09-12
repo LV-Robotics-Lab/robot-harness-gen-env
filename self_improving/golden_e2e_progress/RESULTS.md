@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C08 SceneIR到实际Genesis输入的确定性compile
+
+- compile消费固定SceneIR+完整ResolvedAssetSet，复制核验后的相对URDF/物性/mesh闭包，
+  保持seed、已知位置/朝向/尺寸；不搜索或生成资产，不重新使用旧controller。
+- 结构frame明确上表面中心；foreground几何中心到标准URDF底面origin显式转换。
+  未给结构厚度/世界原点来自显式部署policy并记defaults，on高度来自测量后的资产尺寸。
+- 5项测试通过，含尺寸冲突/跨scene依赖/缺资产/inside拒绝、位置修订使scene bytes实际改变，
+  旧资产版本不变。这是组件测试，尚未完成同workflow真实compile/Genesis闭环。
+
 ## 2026-09-13 C08 通用刚体Genesis运行内核
 
 - 真实operator probe：2个许可资产刚体+桌面+ground，25步/.004，64.109845s，6帧/6 unique，

@@ -35,6 +35,9 @@ Gujie重建通过`adapters/reconstruction.py`调用固定外部SAM2与TRELLIS接
 `genesis_runtime.py`接收已解析世界位姿、相对URDF/物性路径及完整成员摘要，子进程仅能读包与
 声明运行环境。新内核已有一次2刚体load/step/media冒烟；固定双dt物理profile仍待评估，不代表
 整条canonical或可移植包已通过。后续seed/实际顶点/净接触力增量与旧smoke证据分开记录。
+`compile.py`把共享SceneIR和已登记依赖转换为上述运行输入；foreground位置指几何中心，
+结构支撑坐标指上表面中心，编译时转为实际URDF底部origin。显式结构policy补齐的未知项
+逐项记录；已知尺寸冲突、未实现inside/关节拒绝，不用少实体场景代替请求。
 
 Python模型是唯一schema编辑源；`script/export_x2env_schemas.py --check`检测生成文件漂移。
 Codex输出另生成strict projection：可空字段仍必须出现；provenance是固定六字段对象，joint positions
