@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C06-PREVIEW — 不可变版本生成视觉预览
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream；`upstream_owner`：Genesis。
+- `source_ref`：AssetRegistry v2 `df8ee98`，runtime `013391c`，来源完整性`e14684f`。
+- `target_paths`：x2env/asset_preview.py、resolver.py和对应测试。
+- `verification`：20项preview/resolver/controller测试；真实preview现场及来源缺链另记RESULTS。
+- `known_gaps`：原真实preview并非来源完整资格，新的完整资产workflow尚未通过。
+
 ## INT-CANONICAL-C09-ASSESSMENT — 冻结双dt物理诊断
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream；`upstream_owner`：Genesis。

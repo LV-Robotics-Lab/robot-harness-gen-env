@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C06 版本绑定的真实资产preview接线
+
+- AssetPreviewRenderer复制已验证版本四成员，在受限Genesis子进程中生成实际PNG和连续媒体，
+  绑定源码身份、版本、runtime_scene与日志；不复用输入图片冒充生成资产预览。
+- local resolver现在消费完整AssetPreviewProof及递归证据图，拒绝裸图/错版本/缺receipt后才调用视觉模型。
+- preview/resolver/controller合计20 passed（1.08s）；已有真实Box预览与来源缺链失败见下文，
+  本提交不能追认旧state来源完整。新同workflow真实预览正在准备，不计矩阵成功。
+
 ## 2026-09-13 C09 固定物理断言评估组件
 
 - assess_scene独立核对SceneIR/input、两个profile进程/实际加载物性与几何、全部轨迹/contact/net force、

@@ -14,7 +14,9 @@ from typing import Literal
 
 from PIL import Image
 
+from .artifacts import artifact_closure
 from .asset_advisory import AssetVisualAssessment, VisualCandidate
+from .asset_preview import AssetPreviewProof
 from .compile import ResolvedAsset, ResolvedAssetSet
 from .contracts import ArtifactRef, Model, SceneIR, Source
 
@@ -127,11 +129,27 @@ class LocalAssetResolver:
                     if self.preview is None:
                         entry["error_code"] = "missing_preview"
                         continue
-                    preview = self.preview(version)
-                    if not isinstance(preview, ArtifactRef):
+                    proof = self.preview(version)
+                    if not isinstance(proof, AssetPreviewProof):
                         entry["error_code"] = "missing_preview"
                         continue
-                    preview = ArtifactRef.model_validate_json(preview.model_dump_json())
+                    proof = AssetPreviewProof.model_validate_json(proof.model_dump_json())
+                    entry["preview_proof"] = proof.model_dump(mode="json")
+                    artifact_closure(self.store, (proof.receipt,))
+                    receipt = json.loads(self.store.read_artifact(proof.receipt))
+                    if (
+                        proof.status != "passed"
+                        or proof.image is None
+                        or proof.version_sha256 != version.version_sha256
+                        or receipt.get("scope") != "asset_preview_scope"
+                        or receipt.get("status") != "passed"
+                        or receipt.get("version_sha256") != version.version_sha256
+                        or proof.image.model_dump(mode="json")
+                        not in receipt.get("outputs", {}).values()
+                    ):
+                        entry["error_code"] = "unbound_preview_evidence"
+                        continue
+                    preview = proof.image
                     data = self.store.read_artifact(preview)
                     with Image.open(BytesIO(data)) as image:
                         image.verify()

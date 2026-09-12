@@ -8,6 +8,7 @@ import trimesh
 from PIL import Image
 
 from self_improving.harness.x2env.asset_advisory import AssetVisualAssessment, VisualVerdict
+from self_improving.harness.x2env.asset_preview import AssetPreviewProof
 from self_improving.harness.x2env.assets import AssetLicense, AssetRegistry, AssetSource
 from self_improving.harness.x2env.normalization import normalize_mesh
 from self_improving.harness.x2env.store import Store
@@ -91,7 +92,8 @@ def test_local_reuse_preserves_origin_and_binds_known_version_preview(tmp_path):
 
     store, registry, version, scene, preview = inputs(tmp_path)
     backend = VisualDouble(store)
-    result = LocalAssetResolver(store, registry, backend, lambda v: preview).resolve(
+    proof = preview_proof(store, version, preview)
+    result = LocalAssetResolver(store, registry, backend, lambda v: proof).resolve(
         scene, allowed_sources=("local",), allow_cousin=False, output_root=tmp_path / "resolve"
     )
     assert result.status == "succeeded"
@@ -100,6 +102,47 @@ def test_local_reuse_preserves_origin_and_binds_known_version_preview(tmp_path):
     assert registry.inspect(version.version_sha256).source.kind == "web"
     assert len(backend.calls) == 1
     assert backend.calls[0].candidate_id == version.version_sha256
+    assert json.loads(store.read_artifact(result.receipt))["candidates"][0][
+        "preview_proof"
+    ] == proof.model_dump(mode="json")
+
+
+def preview_proof(store, version, image):
+    receipt = store.write_artifact(
+        json.dumps(
+            {
+                "scope": "asset_preview_scope",
+                "status": "passed",
+                "version_sha256": version.version_sha256,
+                "outputs": {"explicit-test.png": image.model_dump(mode="json")},
+                "test_double": True,
+            }
+        ).encode(),
+        "application/json",
+    )
+    return AssetPreviewProof(
+        status="passed", version_sha256=version.version_sha256, image=image, receipt=receipt
+    )
+
+
+@pytest.mark.parametrize("fault", ["unbound_version", "bare_image", "missing_receipt"])
+def test_unbound_render_proof_never_reaches_visual_backend(tmp_path, fault):
+    from self_improving.harness.x2env.resolver import LocalAssetResolver
+
+    store, registry, version, scene, image = inputs(tmp_path)
+    proof = preview_proof(store, version, image)
+    if fault == "unbound_version":
+        proof = proof.model_copy(update={"version_sha256": "0" * 64})
+    elif fault == "bare_image":
+        proof = image
+    else:
+        proof = proof.model_copy(update={"receipt": image.model_copy(update={"sha256": "0" * 64})})
+    backend = VisualDouble(store)
+    result = LocalAssetResolver(store, registry, backend, lambda v: proof).resolve(
+        scene, allowed_sources=("local",), allow_cousin=False, output_root=tmp_path / "resolve"
+    )
+    assert result.status == "blocked" and not result.resolved.assets
+    assert not backend.calls
 
 
 @pytest.mark.parametrize(
@@ -129,7 +172,10 @@ def test_unsuitable_candidate_is_not_selected_or_retried(tmp_path, fault):
         else VisualDouble(store, "mismatch" if fault == "visual" else "match")
     )
     result = LocalAssetResolver(
-        store, registry, backend, None if fault == "preview" else lambda v: preview
+        store,
+        registry,
+        backend,
+        None if fault == "preview" else lambda v: preview_proof(store, v, preview),
     ).resolve(
         scene,
         allowed_sources=("local", "web"),
@@ -152,7 +198,9 @@ def test_later_entity_miss_retains_partial_resolutions_and_next_source(tmp_path)
     from self_improving.harness.x2env.resolver import LocalAssetResolver
 
     store, registry, version, scene, preview = inputs(tmp_path, extra_entity=True)
-    result = LocalAssetResolver(store, registry, VisualDouble(store), lambda v: preview).resolve(
+    result = LocalAssetResolver(
+        store, registry, VisualDouble(store), lambda v: preview_proof(store, v, preview)
+    ).resolve(
         scene,
         allowed_sources=("local", "reconstruction"),
         allow_cousin=False,
@@ -181,7 +229,9 @@ def test_candidate_budget_is_eight_once_each(tmp_path):
             receipt=store.write_artifact(f"fixture variant {index}".encode(), "text/plain"),
         )
     backend = VisualDouble(store, "mismatch")
-    result = LocalAssetResolver(store, registry, backend, lambda v: preview).resolve(
+    result = LocalAssetResolver(
+        store, registry, backend, lambda v: preview_proof(store, v, preview)
+    ).resolve(
         scene, allowed_sources=("local",), allow_cousin=False, output_root=tmp_path / "resolve"
     )
     assert result.status == "blocked"
