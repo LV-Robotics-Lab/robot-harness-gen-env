@@ -340,6 +340,10 @@ class LimitedImagePreviewService:
         )
 
     def status(self, *, workflow_id):
+        if self.execution_mode == "development":
+            terminal = self._development_terminal_result(workflow_id, "status")
+            if terminal is not None:
+                return terminal
         self._prepare(workflow_id)
         snapshot = self.harness.read(self._request(workflow_id))
         if self.execution_mode == "development":
@@ -380,6 +384,21 @@ class LimitedImagePreviewService:
             return result
         return self._projection(snapshot, "status")
 
+    def _development_terminal_result(self, workflow_id, stage):
+        packaged = self.development_artifacts.try_read(workflow_id)
+        if packaged is None:
+            return None
+        stored = self.journal.read_snapshot(
+            principal_id=self.principal_id,
+            workflow_run_id=UUID(str(workflow_id)),
+        )
+        if stored is None:
+            raise GoldenRunNotFoundError("golden workflow was not found for this principal")
+        snapshot = stored.snapshot
+        if snapshot.workspace != "ephemeral":
+            raise ValueError("workflow execution mode differs from this operator deployment")
+        return self._development_result(snapshot, packaged, stage)
+
     def _development_result(self, snapshot, packaged, stage):
         ref, record = packaged
         if (
@@ -397,6 +416,18 @@ class LimitedImagePreviewService:
             operation is None
             or operation.skill_ref != "image2env.validate@3.0.0"
             or operation.status.value != "succeeded"
+            or operation.workflow_run_id != snapshot.workflow_run_id
+            or operation.principal_id != self.principal_id
+            or operation.committed_revision != snapshot.revision
+            or snapshot.active_operation is not None
+            or operation.command not in record.output_artifacts
+            or operation.tool_result not in record.output_artifacts
+            or operation.qualified_execution
+            not in next(
+                check.evidence
+                for check in record.checks
+                if check.name == "exact_skill_qualification"
+            )
         ):
             raise ValueError("development result requires the current successful validation")
         refs = tuple(
@@ -412,7 +443,18 @@ class LimitedImagePreviewService:
                 )
             )
         )
-        _, document = self._input(snapshot)
+        input_ref, document = self._input(snapshot)
+        from .schemas.x2env import ImageSourceMedia
+
+        media = ImageSourceMedia.model_validate(document["source_media"])
+        input_roots = (
+            input_ref,
+            media.source,
+            ArtifactRef.model_validate(document["effective_prompt"]),
+            ArtifactRef.model_validate(document["catalog_ref"]),
+        )
+        if any(ref not in record.input_artifacts for ref in input_roots):
+            raise ValueError("development result differs from its original input binding")
         return PreviewServiceResult(
             workflow_id=snapshot.workflow_run_id,
             revision=snapshot.revision,
@@ -535,6 +577,10 @@ class LimitedImagePreviewService:
         ).model_dump(mode="json")
 
     def package_get(self, *, workflow_id):
+        if self.execution_mode == "development":
+            terminal = self._development_terminal_result(workflow_id, "package_get")
+            if terminal is not None:
+                return terminal
         self._prepare(workflow_id)
         snapshot = self.harness.read(self._request(workflow_id))
         if self.execution_mode == "development":

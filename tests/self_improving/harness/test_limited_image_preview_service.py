@@ -682,7 +682,7 @@ def test_active_or_release_read_still_enters_deep_harness_path(inputs, tmp_path,
         ("context", "association is corrupt"),
         ("database_head", "payload checksum"),
         ("operation", "payload checksum"),
-        ("input", "artifact byte count"),
+        ("input", "artifact content"),
     ],
 )
 def test_terminal_development_shallow_read_fails_closed_without_deep_fallback(
