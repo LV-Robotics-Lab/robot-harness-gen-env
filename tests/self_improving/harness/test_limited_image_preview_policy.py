@@ -162,7 +162,10 @@ def test_observation_after_validation_requires_same_workflow_replay(
         state_ref=world_ref,
     )
     validation = LimitedPreviewValidationPolicy(
-        shared_application, "image2env.validate@3.0.0", {"image2env.replay@2.0.0": authority}
+        shared_application,
+        "image2env.validate@3.0.0",
+        {"image2env.replay@2.0.0": authority},
+        clock=lambda: pytest.fail("direct replay validation must not require a capture clock"),
     )
     requested = validation.normalize_parameters(
         {
@@ -175,6 +178,207 @@ def test_observation_after_validation_requires_same_workflow_replay(
     validation.authorize_workflow(world, requested, context)
     with pytest.raises(ValueError, match="this workflow"):
         validation.authorize_workflow(world, requested, replace(context, workflow_run_id=uuid4()))
+
+
+@pytest.mark.parametrize(
+    ("moment", "error"),
+    (
+        ("captured", None),
+        ("before_expiry", None),
+        ("before_capture", "fresh"),
+        ("at_expiry", "fresh"),
+        ("naive", "UTC"),
+    ),
+)
+def test_observed_validation_requires_fresh_capture_at_admission(
+    parent_capture,  # noqa: F811
+    policy,
+    moment,
+    error,
+):
+    """The public policy gate is the admission used before reserve and again before invoke."""
+    from datetime import timedelta
+    from uuid import uuid4
+
+    from self_improving.harness.limited_image_preview_workflow_policies import (
+        LimitedPreviewValidationPolicy,
+    )
+    from self_improving.harness.schemas.genesis_fresh_capture import GenesisFreshCaptureReceiptV1
+
+    original, world, _, context, _, parent, _ = parent_capture
+    terminal = original.child_authority.read_run_state(parent.child_run_id)
+    output = GenesisFreshCaptureReceiptV1.model_validate(terminal.output)
+    moments = {
+        "captured": output.captured_at,
+        "before_expiry": output.expires_at - timedelta(microseconds=1),
+        "before_capture": output.captured_at - timedelta(microseconds=1),
+        "at_expiry": output.expires_at,
+        "naive": output.captured_at.replace(tzinfo=None),
+    }
+    validation = LimitedPreviewValidationPolicy(
+        policy.application,
+        "image2env.validate@3.0.0",
+        {"genesis.observe@3.0.0": original.child_authority},
+        clock=lambda: moments[moment],
+    )
+    requested = validation.normalize_parameters(
+        {
+            "schema_version": "harness.limited_scene_validate_input.v1",
+            "execution_receipt": output.replay_receipt.model_dump(mode="json"),
+            "expected_layout": None,
+        }
+    )
+    child_run_id = uuid4()
+    assert validation.child_authority.read_controlled_lifecycle(child_run_id).invocation is None
+
+    if error is None:
+        validation.authorize_workflow(world, requested, context)
+    else:
+        with pytest.raises(ValueError, match=error):
+            validation.authorize_workflow(world, requested, context)
+        # Failed admission has not created or invoked a validation child.
+        lifecycle = validation.child_authority.read_controlled_lifecycle(child_run_id)
+        assert lifecycle.invocation is None and lifecycle.terminal is None
+
+
+def test_modified_replay_validation_does_not_invent_a_capture_requirement(
+    parent_capture,  # noqa: F811
+    policy,
+):
+    import json
+    from dataclasses import replace
+    from uuid import uuid4
+
+    from self_improving.harness.event_journal import SQLiteEventJournal
+    from self_improving.harness.events import RunRecorder
+    from self_improving.harness.limited_image_preview_workflow_policies import (
+        LimitedPreviewValidationPolicy,
+    )
+    from self_improving.harness.schemas.common import Invocation, RunStatus
+    from self_improving.harness.schemas.genesis_scene_execution_v3 import (
+        GenesisSceneExecutionReceiptV3,
+    )
+
+    original, world, _, context, head, parent, put = parent_capture
+    authority = original.child_authority
+    output = GenesisSceneExecutionReceiptV3(
+        schema_version="harness.genesis_scene_execution_receipt.v3",
+        authority="observed_execution_only",
+        request=put({}, "harness.genesis_scene_execution_request.v3"),
+        launch_result=put({}, "harness.genesis_scene_launch_result.v3"),
+        replay=put({}, "harness.genesis_scene_replay.v1"),
+        report=put({}, "harness.genesis_scene_report.v1"),
+        baseline_preview=put({}, media="video/mp4"),
+        half_dt_preview=put({}, media="video/mp4"),
+        retained_index=put({}),
+    )
+    receipt = put(output.model_dump(mode="json"), output.schema_version)
+    old = authority.read_run_state(parent.child_run_id)
+    run_id = uuid4()
+    invocation = Invocation(
+        run_id=run_id,
+        skill_id="image2env.replay",
+        skill_version="3.0.0",
+        effective_parameters={},
+        dependencies=(),
+        max_attempts=1,
+        invocation_digest="d" * 64,
+    )
+    authority.put_invocation(invocation)
+    recorder = RunRecorder(
+        run_id=run_id,
+        skill_id=invocation.skill_id,
+        skill_version=invocation.skill_version,
+        clock=lambda: old.ended_at,
+        sink=SQLiteEventJournal(authority.path),
+    )
+    recorder.start(stage="preflight", attempt=1)
+    recorder.finish(status=RunStatus.SUCCEEDED, stage="complete", artifact_refs=(receipt,))
+    terminal = recorder.build_state(
+        invocation_digest=invocation.invocation_digest,
+        max_attempts=1,
+        artifacts=(receipt,),
+        output=output.model_dump(mode="json"),
+        blocker=None,
+    )
+    authority.put_run_state(terminal)
+
+    def put_golden(value, schema):
+        path = policy.artifact_store.root.parent / str(uuid4())
+        path.write_bytes(
+            json.dumps(
+                value.model_dump(mode="json"),
+                ensure_ascii=False,
+                allow_nan=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode()
+            + b"\n"
+        )
+        return policy.artifact_store.put_file(
+            path,
+            name=path.name,
+            media_type="application/json",
+            schema_version=schema,
+        )
+
+    parent = parent.model_copy(
+        update={
+            "child_run_id": run_id,
+            "skill": parent.skill.model_copy(update={"skill_ref": "image2env.replay@3.0.0"}),
+            "typed_output": terminal.output,
+            "run_state": put_golden(terminal, "harness.run_state.v1"),
+            "invocation": put_golden(invocation, "harness.skill_invocation.v1"),
+            "supporting_artifacts": (receipt,),
+        }
+    )
+    head = head.model_copy(
+        update={"tool_receipt": put_golden(parent, "harness.trusted_tool_receipt.v2")}
+    )
+    validation = LimitedPreviewValidationPolicy(
+        policy.application,
+        "image2env.validate@3.0.0",
+        {"image2env.replay@3.0.0": authority},
+        clock=lambda: pytest.fail("modified replay validation has no capture TTL"),
+    )
+    requested = validation.normalize_parameters(
+        {
+            "schema_version": "harness.limited_scene_validate_input.v1",
+            "execution_receipt": receipt.model_dump(mode="json"),
+            "expected_layout": {"x_m": 0.2, "y_m": -0.1, "yaw_rad": -0.5},
+        }
+    )
+
+    validation.authorize_workflow(
+        world,
+        requested,
+        replace(context, receipt_head=put_golden(head, head.schema_version)),
+    )
+
+
+def test_validation_policy_identity_binds_base_and_specialized_source(policy, monkeypatch):
+    from pathlib import Path
+
+    from self_improving.harness import limited_image_preview_policy as base_module
+    from self_improving.harness import limited_image_preview_workflow_policies as workflow_module
+    from self_improving.harness.limited_image_preview_workflow_policies import (
+        LimitedPreviewValidationPolicy,
+    )
+
+    validation = LimitedPreviewValidationPolicy(policy.application, "image2env.validate@3.0.0", {})
+    baseline = validation.evidence_policy_implementation_sha256
+    original_read_bytes = Path.read_bytes
+    sources = (Path(base_module.__file__).resolve(), Path(workflow_module.__file__).resolve())
+
+    for changed in sources:
+        with monkeypatch.context() as patch:
+
+            def drifted_read_bytes(path):
+                raw = original_read_bytes(path)
+                return raw + b"\n# source drift" if path.resolve() == changed else raw
+
+            patch.setattr(Path, "read_bytes", drifted_read_bytes)
+            assert validation.evidence_policy_implementation_sha256 != baseline
 
 
 @pytest.mark.parametrize(
