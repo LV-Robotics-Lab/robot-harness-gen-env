@@ -357,6 +357,19 @@ class CodexBackend:
             model,
         )
 
+    def propose(self, *, prompt, output_model, images, output_root, timeout=120):
+        """Return a logged advisory for the controller to validate and execute."""
+        from .codex_experiment_proposal import run_proposal
+
+        return run_proposal(
+            self,
+            prompt=prompt,
+            output_model=output_model,
+            images=images,
+            output_root=output_root,
+            timeout=timeout,
+        )
+
     def run(self, assignment: CodexAssignment, *, output_root: Path) -> CodexBackendResult:
         started = time.monotonic()
         remaining = (assignment.deadline - datetime.now(UTC)).total_seconds()

@@ -1,5 +1,12 @@
 # 进度与结果
 
+## 2026-09-13 内部 Codex 结构化建议
+
+- `CodexBackend.propose` 新增无工具的解释/视觉建议回合；Harness保存输入、schema、逐行日志和结果，
+  不从模型文字推进物理状态。真实text interpretation RED→GREEN：1 passed/8.55秒。
+- 原Codex backend与统一输入相邻回归27 passed。此时尚未是同workflow E2E；下一接线使用现有
+  controller和Golden执行这些建议。video输入保留全帧身份，模型读取样本另注明。
+
 ## 2026-09-13 开发 execution 身份接线
 
 - `fbd0441`：同一 Golden start/submit/read 使用显式 development registry/execution/tool receipt，
