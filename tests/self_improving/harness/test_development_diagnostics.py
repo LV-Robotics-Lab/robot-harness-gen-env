@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from types import SimpleNamespace
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
@@ -147,3 +148,53 @@ def test_development_diagnostic_timestamps_are_real_utc_samples(tmp_path: Path) 
 
     assert before <= sample.started_at <= sample.ended_at <= after
     assert sample.sequence == 1
+
+
+def test_development_mcp_call_persists_one_bounded_measurement(tmp_path: Path) -> None:
+    from mcp import Client
+
+    from self_improving.harness.limited_image_preview_mcp import (
+        create_limited_image_preview_mcp_server,
+    )
+    from tests.self_improving.harness.test_golden_control_v2_runtime import native_case
+
+    store = LocalArtifactStore(tmp_path / "cas")
+    payload = _put(store, tmp_path, "payload.json", b"{}")
+    install_development_diagnostics(store, runtime_manifests=())
+    database = tmp_path / "golden.sqlite"
+    head = native_case(tmp_path / "state").head
+    workflow_id = head.workflow_run_id
+
+    class Service:
+        execution_mode = "development"
+        journal = SimpleNamespace(path=database)
+
+        def __init__(self):
+            self.store = store
+
+        def status(self, **arguments):
+            assert arguments == {"workflow_id": str(workflow_id)}
+            self.store.resolve(payload)
+            return {
+                "workflow_id": str(workflow_id),
+                "revision": head.revision,
+                "stage": "status",
+                "status": "active",
+                "snapshot": head.model_dump(mode="json"),
+            }
+
+    async def exercise():
+        async with Client(create_limited_image_preview_mcp_server(Service())) as client:
+            result = await client.call_tool(
+                "image2env_preview_status_v1", {"workflow_id": str(workflow_id)}
+            )
+            assert result.structured_content["status"] == "active"
+
+    import asyncio
+
+    asyncio.run(exercise())
+    samples = read_development_diagnostic_samples(database, workflow_id)
+    assert len(samples) == 1
+    assert samples[0].operation == "image2env_preview_status_v1"
+    assert samples[0].status == "active"
+    assert samples[0].counters.cas_full_hash_scan_count == 2
