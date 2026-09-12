@@ -78,3 +78,62 @@ def test_unknown_scale_is_pending_until_asset_anchored_design_commits(
     receipt = json.loads(store.read_artifact(result.grounding))
     assert receipt["real_world_scale_recovered"] is False
     assert original.proposal.unknowns[0].critical is True
+
+
+def test_recovered_dead_grounding_owner_does_not_become_permanent_design_failure(tmp_path):
+    from self_improving.harness.x2env.contracts import ToolResult
+
+    store, backend, bundle, proposal, assets = setup(tmp_path, measured=True)
+    pending = ResolvedAssetSet.model_validate_json(store.read_artifact(assets)).scene_ir
+    handle = store.submit(
+        X2EnvRequest(
+            images=(InputMedia(path=str(tmp_path / "input.png")),),
+            seed=23,
+            idempotency_key="ground",
+            output_dir=str(tmp_path / "out"),
+        )
+    )
+    snapshot = store.claim(handle.workflow_id)
+    for capability, refs, updates in [
+        ("ingest", (bundle,), {}),
+        (
+            "codex.interpret",
+            (proposal, pending),
+            {"proposal": proposal, "pending_scene_ir": pending},
+        ),
+        ("asset.resolve", (assets,), {"resolved_assets": assets}),
+    ]:
+        if capability != "ingest":
+            snapshot = store.begin_operation(snapshot, capability)
+        snapshot = store.complete_operation(
+            snapshot,
+            ToolResult(
+                operation_id=snapshot.operations[-1].operation_id,
+                status="succeeded",
+                outputs=refs,
+            ),
+            bundle,
+            status="active",
+            **updates,
+        )
+    snapshot = store.begin_operation(snapshot, "codex.ground")
+    snapshot = store.complete_operation(
+        snapshot,
+        ToolResult(
+            operation_id=snapshot.operations[-1].operation_id,
+            status="failed",
+            error_code="recoverable_dead_owner",
+        ),
+        bundle,
+        status="blocked",
+        reason="recoverable_dead_owner",
+    )
+    harness = Harness(
+        tmp_path / "state",
+        backend_factory=lambda _: backend,
+        scene_design_policy=SceneDesignPolicy(enabled=True),
+        compile_policy=StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5),
+    )
+    result = harness.resume(handle.workflow_id)
+    assert result.compiled_scene is not None
+    assert result.grounding is not None

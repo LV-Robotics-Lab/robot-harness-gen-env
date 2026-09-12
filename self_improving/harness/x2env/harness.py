@@ -111,7 +111,9 @@ class Harness:
         if existing.status in {"succeeded", "failed", "cancelled"}:
             return existing
         if existing.pending_scene_ir is not None and any(
-            op.capability == "codex.ground" and op.status in {"blocked", "failed", "cancelled"}
+            op.capability == "codex.ground"
+            and op.status in {"blocked", "failed", "cancelled"}
+            and (op.result is None or op.result.error_code != "recoverable_dead_owner")
             for op in existing.operations
         ):
             return existing

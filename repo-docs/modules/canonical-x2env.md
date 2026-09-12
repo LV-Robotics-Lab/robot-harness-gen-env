@@ -1,5 +1,8 @@
 # Canonical x2env（收敛实施中）
 
+生成设计的确定性失败不会因 resume 重新调用模型；已确认的 dead-owner 恢复原因另行处理，不将
+进程退出误当作用户意图或资产设计本身的失败。
+
 新构建 wheel 不再安装 robot-harness-compile / robot-harness-run-qualified-replay 两个旧命令。
 已有环境中的旧 launcher 需随正常部署迁移；保留的旧脚本和深模块尚不等于已完成全部退役。
 

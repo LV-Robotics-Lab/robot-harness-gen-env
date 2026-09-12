@@ -1,5 +1,11 @@
 # 进度与结果
 
+## 2026-09-13 grounding 恢复与确定性失败分流
+
+- 发现 grounding 的失败停止规则会同时挡住 recoverable_dead_owner。公共恢复测试 RED→GREEN 后，
+  仅该已识别恢复原因允许继续；缺少实测尺度等确定性失败仍不重复调用。9 项设计工作流测试通过。
+  此为状态 seam 测试，不代表新的真实恢复或仿真成功。
+
 ## 2026-09-13 C13 G2a 退出旧 console 安装映射
 
 - pyproject 移除 robot-harness-compile 与 robot-harness-run-qualified-replay 两项旧命令映射，
