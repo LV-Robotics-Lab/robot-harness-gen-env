@@ -1,5 +1,16 @@
 # 进度与结果
 
+## 2026-09-13 真实preview暴露来源闭包缺口（保留失败）
+
+- 新真实Registry→Genesis预览→Codex两问确已运行，候选cube图像match，总75.150294s；
+  现场`/home/jingxiang/bingsheng/canonical-asset-preview-20260913.OG1lLA/`，不是矩阵资格。
+- 主审发现seed只复制了原fetch receipt，未迁入其嵌套source refs；新完整检查实际失败于
+  `4478a25fcf14aa4fc14310018ba301f0195ac07a6f6a6c5a8e69ec00c59861ee`（engine_record）。
+  因此“预览/视觉通过”不代表资产来源完整，不能用这份旧state直接打成功包。原现场不补造。
+- 新artifact_closure只遍历完整typed ArtifactRef结构，核验全部必要JSON证据引用；设bytes/refs/node预算。
+  Registry register/inspect共用，缺链在写版本前拒绝。新增RED后GREEN；33项相关测试通过。
+- 新真实案例须从明确源CAS完整导入或在同一Store执行provider，保留原失败及修复来源，不回填旧回执。
+
 ## 2026-09-13 C04/C06/C08 同workflow接通到compile
 
 - controller接受解释后，实际调用local resolver和compile，四个内部operation记录在同一SQLite，

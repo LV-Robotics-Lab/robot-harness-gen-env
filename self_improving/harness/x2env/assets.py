@@ -12,6 +12,7 @@ from typing import Literal, Protocol
 
 from pydantic import Field, model_validator
 
+from .artifacts import artifact_closure
 from .contracts import ArtifactRef, Model, Sha256
 
 
@@ -207,8 +208,9 @@ class AssetRegistry:
             or sorted(report.get("files", []), key=lambda f: f["path"]) != expected
         ):
             raise ValueError("normalization report does not bind exact asset closure")
-        for ref in (license.evidence, source.evidence, receipt):
-            self.store.read_artifact(ref)
+        artifact_closure(
+            self.store, (normalization_report, license.evidence, source.evidence, receipt)
+        )
         if parent_version:
             parent = self.inspect(parent_version)
             if parent.asset_id != asset_id or parent.category != category:
@@ -250,13 +252,15 @@ class AssetRegistry:
             raise ValueError("asset version integrity mismatch")
         for member in version.files:
             self.store.read_artifact(member.artifact)
-        for ref in (
-            version.normalization_report,
-            version.license.evidence,
-            version.source.evidence,
-            version.receipt,
-        ):
-            self.store.read_artifact(ref)
+        artifact_closure(
+            self.store,
+            (
+                version.normalization_report,
+                version.license.evidence,
+                version.source.evidence,
+                version.receipt,
+            ),
+        )
         return version
 
     def find(self, category: str):

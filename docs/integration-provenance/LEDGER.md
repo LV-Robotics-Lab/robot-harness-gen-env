@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-ASSET-CLOSURE — 跨Store receipt缺链回归
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream，新完整性校验。
+- `source_ref`：真实preview scope `canonical-asset-preview-20260913.OG1lLA` 与Yuxin源CAS；
+  已复制receipt未复制全部引用的失败保留，不将原运行能力扩大到来源闭包通过。
+- `target_paths`：x2env/artifacts.py、assets.py及两个测试文件。
+- `verification`：实际缺少engine_record已复现；33项相关测试通过；旧state未修补或追认资格。
+
 ## INT-CANONICAL-C04-PIPELINE — 同workflow推进local解析与compile
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream，复用canonical独立组件。

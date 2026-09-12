@@ -43,6 +43,9 @@ AssetVersion v2用世界顶点/面摘要区分几何与属性变化，换色不�
 审批来源仍由controller保证；该组件不自行授予重试预算或物理通过。
 controller现已将local resolver与compile接到同一workflow journal，成功compile后仍在缺少replay
 执行器处blocked，不生成名为成功的用户包。集成测试的模型/预览是明确替身，真实整链仍待运行。
+跨Store复制一个receipt不代表来源完整；`artifacts.artifact_closure`按显式ArtifactRef递归核验JSON
+证据图，Registry与包导出共用。真实preview曾因此暴露缺失来源记录，原运行/视觉结果保留，
+但不能作为来源完整或成功包资格使用；新导入必须复制全部必要证据。
 
 Python模型是唯一schema编辑源；`script/export_x2env_schemas.py --check`检测生成文件漂移。
 Codex输出另生成strict projection：可空字段仍必须出现；provenance是固定六字段对象，joint positions

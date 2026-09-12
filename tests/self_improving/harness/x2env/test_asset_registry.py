@@ -58,6 +58,36 @@ def test_material_change_is_not_a_new_geometry_digest(tmp_path):
     assert versions[1].geometry_sha256 != versions[2].geometry_sha256
 
 
+def test_registry_rejects_copied_source_receipt_with_missing_transitive_evidence(tmp_path):
+    from self_improving.harness.x2env.assets import AssetLicense, AssetRegistry, AssetSource
+    from self_improving.harness.x2env.contracts import ArtifactRef
+
+    store = Store(tmp_path / "state")
+    root, files, report = prepared(tmp_path, store)
+    missing = ArtifactRef(sha256="b" * 64, size_bytes=100, media_type="application/json")
+    receipt = store.write_artifact(
+        json.dumps({"source": missing.model_dump()}).encode(), "application/json"
+    )
+    license = store.write_artifact(b"fixture license", "text/plain")
+    with pytest.raises(FileNotFoundError):
+        AssetRegistry(store).register(
+            "fixture",
+            "mouse",
+            root,
+            "model.urdf",
+            files=files,
+            normalization_report=report,
+            license=AssetLicense(
+                spdx="CC0-1.0", source_url="https://example.org/fixture", evidence=license
+            ),
+            source=AssetSource(
+                kind="web", provider="fixture", source_ref="fixed", evidence=receipt
+            ),
+            receipt=license,
+        )
+    assert not store.asset_versions("mouse")
+
+
 def prepared(tmp_path, store, mass="1"):
     root = tmp_path / f"normalized-{mass}"
     root.mkdir()
