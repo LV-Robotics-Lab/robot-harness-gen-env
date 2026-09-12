@@ -382,3 +382,106 @@ def test_semantic_failure_diagnostic_is_derived_from_durable_events(policy):
     policy.artifact_store.resolve(diagnostic).path.unlink()
     with pytest.raises(ValueError):
         policy.diagnostics(state)
+
+
+@pytest.mark.parametrize(
+    ("receipt_schema", "expected_layout", "expected_claims"),
+    (
+        (
+            "harness.genesis_scene_execution_receipt.v2",
+            None,
+            (("retract", "image.fresh_capture"), ("upsert", "image.validation")),
+        ),
+        (
+            "harness.genesis_scene_execution_receipt.v2",
+            {"x_m": 0.2, "y_m": -0.1, "yaw_rad": -0.5},
+            (("upsert", "image.validation"),),
+        ),
+        (
+            "harness.genesis_scene_execution_receipt.v3",
+            {"x_m": 0.2, "y_m": -0.1, "yaw_rad": -0.5},
+            (("upsert", "image.validation"),),
+        ),
+    ),
+    ids=("observed-normal", "initial-diagnostic", "modified-replay"),
+)
+def test_successful_validation_claims_exact_observation_consumption(
+    policy,
+    receipt_schema,
+    expected_layout,
+    expected_claims,
+):
+    """The normal no-target result consumes capture; diagnostic and repair results do not."""
+    from datetime import datetime, timezone
+    from uuid import uuid4
+
+    from self_improving.harness.event_journal import SQLiteEventJournal
+    from self_improving.harness.events import RunRecorder
+    from self_improving.harness.schemas.common import Invocation, RunStatus
+    from self_improving.harness.schemas.limited_image_preview_execution import (
+        LimitedSceneValidateInputV1,
+        LimitedSceneValidationV1,
+    )
+    from tests.self_improving.harness.test_genesis_scene_execution import reference
+
+    execution_receipt = reference(receipt_schema)
+    parameters = LimitedSceneValidateInputV1(
+        schema_version="harness.limited_scene_validate_input.v1",
+        execution_receipt=execution_receipt,
+        expected_layout=expected_layout,
+    )
+    result = LimitedSceneValidationV1(
+        schema_version="harness.limited_scene_validation.v1",
+        execution_receipt=execution_receipt,
+        scene=reference("harness.genesis_scene_spec.v1"),
+        physical_report=reference("harness.genesis_scene_report.v1"),
+        expected_layout=expected_layout,
+        actual_layout={"x_m": 0.2, "y_m": -0.1, "yaw_rad": -0.5},
+        semantic_status="pass",
+        status="passed",
+        position_tolerance_m=0.001,
+        yaw_tolerance_rad=0.001,
+        physical_scope="dual_dt_trace_contact_settling_and_media",
+    )
+    result_ref = policy.application.put(result, "limited-scene-validation.json")
+    now = datetime(2026, 9, 12, tzinfo=timezone.utc)
+    invocation = Invocation(
+        run_id=uuid4(),
+        skill_id="image2env.validate",
+        skill_version="3.0.0",
+        effective_parameters=parameters.model_dump(mode="json"),
+        dependencies=(),
+        max_attempts=1,
+        invocation_digest="c" * 64,
+    )
+    policy.child_authority.put_invocation(invocation)
+    recorder = RunRecorder(
+        run_id=invocation.run_id,
+        skill_id=invocation.skill_id,
+        skill_version=invocation.skill_version,
+        clock=lambda: now,
+        sink=SQLiteEventJournal(policy.child_authority.path),
+    )
+    recorder.start(stage="preflight", attempt=1)
+    recorder.finish(
+        status=RunStatus.SUCCEEDED,
+        stage="complete",
+        artifact_refs=(result_ref,),
+    )
+    state = recorder.build_state(
+        invocation_digest=invocation.invocation_digest,
+        max_attempts=1,
+        artifacts=(result_ref,),
+        output=result.model_dump(mode="json"),
+        blocker=None,
+    )
+    policy.child_authority.put_run_state(state)
+
+    claims = policy.claims(state)
+
+    assert tuple((claim.operation, claim.key) for claim in claims) == expected_claims
+    validation = next(claim for claim in claims if claim.key == "image.validation")
+    assert validation.value == {
+        "run_id": str(state.run_id),
+        "receipt": result_ref.model_dump(mode="json"),
+    }
