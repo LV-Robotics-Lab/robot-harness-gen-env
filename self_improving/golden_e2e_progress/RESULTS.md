@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C03a 类型化入口与能力注册
+
+- request、SceneIR、hash-only ArtifactRef与结构化ToolResult已实现；非法输入/图引用与错误状态拒绝。
+- 精确release SemVer、canonical命名空间、handler输入输出类型检查；schema生成/check和字段表。
+- 各新seam先RED再GREEN；39 passed，新增x2env范围188 statements/62 branches全覆盖，wall约1.14s。
+- 这是C03首个独立slice；stage运行时类型、完整descriptor及实际handler接线仍待后续垂直实现。
+- 无新Genesis qualification、完整copy-run或远端push。C02固定合同提交为`88b4885`。
+
 ## 2026-09-13 C02 冻结验收合同
 
 - 机读 `qualification-matrix-v1.json` 保留12条原prompt、seed、4+4+4分组、4/4与8/12门、

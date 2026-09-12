@@ -1,0 +1,53 @@
+# Canonical x2env API fields
+
+Generated; edit Python contracts, not this file.
+
+| Model | Field | Required |
+|---|---|---|
+| ArticulationState | state | true |
+| ArticulationState | joint_positions | false |
+| ArtifactRef | sha256 | true |
+| ArtifactRef | size_bytes | true |
+| ArtifactRef | media_type | true |
+| FieldProvenance | source | true |
+| FieldProvenance | input_sha256 | true |
+| FieldProvenance | kind | true |
+| FieldProvenance | media_index | false |
+| FieldProvenance | frame_index | false |
+| FieldProvenance | note | false |
+| InputMedia | path | true |
+| Pose | frame | true |
+| Pose | position | true |
+| Pose | yaw_degrees | true |
+| RequestConstraints | allow_cousin | false |
+| SceneEntity | id | true |
+| SceneEntity | category | true |
+| SceneEntity | role | false |
+| SceneEntity | color | true |
+| SceneEntity | dimensions | true |
+| SceneEntity | material | true |
+| SceneEntity | pose | true |
+| SceneEntity | articulation_state | true |
+| SceneEntity | provenance | true |
+| SceneIR | revision | true |
+| SceneIR | input_sha256 | true |
+| SceneIR | entities | true |
+| SceneIR | relations | false |
+| SceneRelation | source | true |
+| SceneRelation | relation | true |
+| SceneRelation | target | true |
+| SceneRelation | distance | false |
+| SceneRelation | provenance | true |
+| ToolResult | operation_id | true |
+| ToolResult | status | true |
+| ToolResult | outputs | false |
+| ToolResult | error_code | false |
+| ToolResult | message | false |
+| X2EnvRequest | text | false |
+| X2EnvRequest | images | false |
+| X2EnvRequest | video | false |
+| X2EnvRequest | seed | true |
+| X2EnvRequest | allowed_sources | false |
+| X2EnvRequest | constraints | false |
+| X2EnvRequest | idempotency_key | true |
+| X2EnvRequest | output_dir | true |

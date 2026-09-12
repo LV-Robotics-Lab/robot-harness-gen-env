@@ -1,0 +1,12 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "allow_cousin": {
+      "default": false,
+      "title": "Allow Cousin",
+      "type": "boolean"
+    }
+  },
+  "title": "RequestConstraints",
+  "type": "object"
+}

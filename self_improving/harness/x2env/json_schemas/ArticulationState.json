@@ -1,0 +1,26 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "joint_positions": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Joint Positions",
+      "type": "object"
+    },
+    "state": {
+      "enum": [
+        "open",
+        "closed",
+        "specified"
+      ],
+      "title": "State",
+      "type": "string"
+    }
+  },
+  "required": [
+    "state"
+  ],
+  "title": "ArticulationState",
+  "type": "object"
+}

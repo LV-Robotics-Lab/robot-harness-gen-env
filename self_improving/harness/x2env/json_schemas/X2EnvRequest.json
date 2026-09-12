@@ -1,0 +1,116 @@
+{
+  "$defs": {
+    "InputMedia": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "title": "InputMedia",
+      "type": "object"
+    },
+    "RequestConstraints": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_cousin": {
+          "default": false,
+          "title": "Allow Cousin",
+          "type": "boolean"
+        }
+      },
+      "title": "RequestConstraints",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "allowed_sources": {
+      "default": [
+        "local",
+        "web",
+        "reconstruction"
+      ],
+      "items": {
+        "enum": [
+          "local",
+          "web",
+          "reconstruction"
+        ],
+        "type": "string"
+      },
+      "maxItems": 3,
+      "minItems": 1,
+      "title": "Allowed Sources",
+      "type": "array"
+    },
+    "constraints": {
+      "$ref": "#/$defs/RequestConstraints",
+      "default": {
+        "allow_cousin": false
+      }
+    },
+    "idempotency_key": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "images": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/InputMedia"
+      },
+      "maxItems": 8,
+      "title": "Images",
+      "type": "array"
+    },
+    "output_dir": {
+      "minLength": 1,
+      "title": "Output Dir",
+      "type": "string"
+    },
+    "seed": {
+      "maximum": 2147483647,
+      "minimum": 0,
+      "title": "Seed",
+      "type": "integer"
+    },
+    "text": {
+      "anyOf": [
+        {
+          "maxLength": 32768,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Text"
+    },
+    "video": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/InputMedia"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "seed",
+    "idempotency_key",
+    "output_dir"
+  ],
+  "title": "X2EnvRequest",
+  "type": "object"
+}

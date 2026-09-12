@@ -1,0 +1,130 @@
+{
+  "$defs": {
+    "FieldProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "frame_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frame Index"
+        },
+        "input_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Input Sha256",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "explicit",
+            "inferred",
+            "override"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "media_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Media Index"
+        },
+        "note": {
+          "default": "",
+          "maxLength": 2048,
+          "title": "Note",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "text",
+            "image",
+            "video"
+          ],
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "input_sha256",
+        "kind"
+      ],
+      "title": "FieldProvenance",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "distance": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Distance"
+    },
+    "provenance": {
+      "items": {
+        "$ref": "#/$defs/FieldProvenance"
+      },
+      "minItems": 1,
+      "title": "Provenance",
+      "type": "array"
+    },
+    "relation": {
+      "enum": [
+        "on",
+        "inside",
+        "left_of",
+        "right_of",
+        "front_of",
+        "behind",
+        "near"
+      ],
+      "title": "Relation",
+      "type": "string"
+    },
+    "source": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z][\\w-]*$",
+      "title": "Source",
+      "type": "string"
+    },
+    "target": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z][\\w-]*$",
+      "title": "Target",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source",
+    "relation",
+    "target",
+    "provenance"
+  ],
+  "title": "SceneRelation",
+  "type": "object"
+}

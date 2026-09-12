@@ -295,3 +295,11 @@ Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支
 - verification_evidence：`tests/self_improving/harness/x2env/test_acceptance_contract.py`，4 passed。
 - runtime_verification：not_run；没有新的模型、Genesis或发布能力授予。
 - recorded_git_authors：以本提交Git元数据为准，不推断自然人身份映射。
+## INT-CANONICAL-C03A — 类型化入口与精确能力注册
+
+- source_ref：批准计划`0a8abc01839f2c37a64b9c08f643f48985fb4a79`与C02`88b4885`。
+- origin_owner / integration_owner：Bingsheng项目；本slice为新canonical实现，没有复制第三方执行代码。
+- target_paths：`self_improving/harness/x2env/{contracts,capabilities,schema_export}.py`及生成schema。
+- verification_evidence：四份contract/registry/export测试，39 passed；当前新包语句和分支100%。
+- runtime_verification：not_run；typed handoff测试handler不是实际compile/replay/validate。
+- recorded_git_authors：见本提交Git元数据，不据路径推断自然人。

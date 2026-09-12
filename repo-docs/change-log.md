@@ -1,5 +1,10 @@
 # Change Log
 
+## 2026-09-13 canonical C03a
+
+- 新增canonical输入/SceneIR/ToolResult与精确版本能力注册说明，明确仅组件实现。
+- schema生成/check来自Python模型；新增代码39项测试通过、语句与分支100%，不代表全仓或runtime验收。
+
 ## 2026-09-06
 
 - 增加 20 条 compile 完整环境实跑说明：每条从 Harness `EnvironmentPackage` 重建场景并由

@@ -1,0 +1,42 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "frame": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z][\\w-]*$",
+      "title": "Frame",
+      "type": "string"
+    },
+    "position": {
+      "maxItems": 3,
+      "minItems": 3,
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "title": "Position",
+      "type": "array"
+    },
+    "yaw_degrees": {
+      "maximum": 180,
+      "minimum": -180,
+      "title": "Yaw Degrees",
+      "type": "number"
+    }
+  },
+  "required": [
+    "frame",
+    "position",
+    "yaw_degrees"
+  ],
+  "title": "Pose",
+  "type": "object"
+}

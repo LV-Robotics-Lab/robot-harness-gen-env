@@ -1,5 +1,8 @@
 # Robot Harness /gen-env 中文 Repo Docs
 
+Canonical x2env正在收敛实施，当前能力与旧路径的区别见[Canonical x2env](modules/canonical-x2env.md)。
+以下旧System 2/MCP/Qwen页面不代表新的默认控制关系；最终文档清理仍待C14。
+
 这个仓库有两层。稳定核心是确定性的 `/gen-env` 编译器：一句受限的中英双语自然语言进来，被编译成 RoboTwin 可加载的场景包，然后才允许进入命令循环。它的路径是 `text -> 类型化 SceneSpec -> 资产 grounding -> 目标局部 support/containment 求解 -> 哈希绑定的 resolved 包 -> RoboTwin/SAPIEN 回放 -> 运行时门控`。外围 `self_improving/` 再组织选择、采集、训练、评估、诊断、记忆、资产复用与跨仿真适配，但不能绕过核心契约。看 [一条真实路径](walkthroughs/one-real-run.md) 可以走完稳定核心；平台边界见 [Self-Improving 平台](modules/self-improving-platform.md)。
 
 为什么这样一个东西值得有专门文档，不在「自然语言几分钟能理解」这一层。难点集中在两件事：一是文本到机器人的信任边界（prompt 不能携带代码、路径、pose，但还得表达丰富的语义），二是「看起来稳」和「物理稳」之间的差距（外层 AABB 能落不等于 plate 里侧 100 mm 那块能落；渲染图能过不等于 SAPIEN 终末接触能过）。每一阶段在某个具体信任塌方之前先挡住它——这就是 [一条真实路径](walkthroughs/one-real-run.md) 一步步想讲清楚的。
