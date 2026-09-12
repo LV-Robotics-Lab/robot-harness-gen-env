@@ -2,6 +2,14 @@
 
 更新时间：2026-09-13
 
+## 用户验收在途：开放柜子与粉红鼠标
+
+- 原样提交用户 prompt“在桌上生成一个打开的柜子，柜子上放着粉红色的鼠标”，使用新的
+  development workflow 和真实内部 Codex；不改写为单物体 prompt。
+- 该请求含两个对象、开放式柜体和 object-on-object 支撑，超出已验证单刚体 profile。若拒绝，
+  保留结构化失败和所有部分产物；只有真实 replay 才登记新图片/视频。
+- Dashboard 三入口本次仍为 HTTP 404，无 task id，不伪造状态同步。
+
 ## Review（本轮实验版本暂停供审阅）
 
 - 当前收口：固定536496e的image/local、centered video/generated与multimodal资产fallback B真实通过；
