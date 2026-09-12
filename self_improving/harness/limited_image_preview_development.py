@@ -433,7 +433,11 @@ class DevelopmentArtifactStore:
                 ref
                 for ref in review
                 if ref.schema_version
-                in {"harness.environment_package.v1", "harness.x2env_environment_package.v1"}
+                in {
+                    "harness.environment_package.v1",
+                    "harness.genesis_scene_spec.v1",
+                    "harness.x2env_environment_package.v1",
+                }
             ),
             "validation_reports": tuple(
                 ref for ref in review if ref.schema_version == "harness.limited_scene_validation.v1"
