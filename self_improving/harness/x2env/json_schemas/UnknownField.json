@@ -1,0 +1,106 @@
+{
+  "$defs": {
+    "FieldProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "frame_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frame Index"
+        },
+        "input_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Input Sha256",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "explicit",
+            "inferred",
+            "override"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "media_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Media Index"
+        },
+        "note": {
+          "default": "",
+          "maxLength": 2048,
+          "title": "Note",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "text",
+            "image",
+            "video"
+          ],
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "input_sha256",
+        "kind"
+      ],
+      "title": "FieldProvenance",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "critical": {
+      "title": "Critical",
+      "type": "boolean"
+    },
+    "field": {
+      "maxLength": 256,
+      "minLength": 1,
+      "title": "Field",
+      "type": "string"
+    },
+    "provenance": {
+      "items": {
+        "$ref": "#/$defs/FieldProvenance"
+      },
+      "minItems": 1,
+      "title": "Provenance",
+      "type": "array"
+    },
+    "reason": {
+      "maxLength": 2048,
+      "minLength": 1,
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "field",
+    "reason",
+    "critical",
+    "provenance"
+  ],
+  "title": "UnknownField",
+  "type": "object"
+}

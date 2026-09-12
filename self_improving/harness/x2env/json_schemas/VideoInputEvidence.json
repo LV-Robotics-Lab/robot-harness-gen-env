@@ -1,0 +1,116 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sha256",
+        "size_bytes",
+        "media_type"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "codec": {
+      "minLength": 1,
+      "title": "Codec",
+      "type": "string"
+    },
+    "decoder_version": {
+      "minLength": 1,
+      "title": "Decoder Version",
+      "type": "string"
+    },
+    "fps_den": {
+      "exclusiveMinimum": 0,
+      "title": "Fps Den",
+      "type": "integer"
+    },
+    "fps_num": {
+      "exclusiveMinimum": 0,
+      "title": "Fps Num",
+      "type": "integer"
+    },
+    "frame_count": {
+      "exclusiveMinimum": 0,
+      "title": "Frame Count",
+      "type": "integer"
+    },
+    "height": {
+      "exclusiveMinimum": 0,
+      "title": "Height",
+      "type": "integer"
+    },
+    "pixel_format": {
+      "const": "rgb24",
+      "default": "rgb24",
+      "title": "Pixel Format",
+      "type": "string"
+    },
+    "probe": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "sequence": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "source": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "time_base_den": {
+      "exclusiveMinimum": 0,
+      "title": "Time Base Den",
+      "type": "integer"
+    },
+    "time_base_num": {
+      "exclusiveMinimum": 0,
+      "title": "Time Base Num",
+      "type": "integer"
+    },
+    "unique_frame_count": {
+      "exclusiveMinimum": 0,
+      "title": "Unique Frame Count",
+      "type": "integer"
+    },
+    "width": {
+      "exclusiveMinimum": 0,
+      "title": "Width",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "source",
+    "probe",
+    "sequence",
+    "width",
+    "height",
+    "codec",
+    "fps_num",
+    "fps_den",
+    "time_base_num",
+    "time_base_den",
+    "frame_count",
+    "unique_frame_count",
+    "decoder_version"
+  ],
+  "title": "VideoInputEvidence",
+  "type": "object"
+}

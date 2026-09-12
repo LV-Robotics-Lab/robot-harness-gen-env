@@ -1,5 +1,10 @@
 # Change Log
 
+## 2026-09-13 canonical C04/C05
+
+- 同一SQLite/CAS接通持久handle、媒体ingest、managed Codex建议日志和未知项阻断；71小测试通过。
+- 新包阶段覆盖率约91%；模型测试使用外部传输替身，不把它记为真实模型或Genesis成功。
+
 ## 2026-09-13 canonical C06a
 
 - 资产复用包由`1_asset_reuse`单次移至`asset_reuse`，修复相对import与活跃路径消费者；107相关测试通过。

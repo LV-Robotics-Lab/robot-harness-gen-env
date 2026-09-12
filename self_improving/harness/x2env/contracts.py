@@ -71,6 +71,33 @@ class X2EnvRequest(Model):
         return self
 
 
+class WorkflowHandle(Model):
+    workflow_id: str = Field(min_length=1)
+
+
+class OperationRecord(Model):
+    operation_id: str
+    capability: str
+    version: str
+    status: Literal["running", "succeeded", "failed", "blocked", "cancelled"]
+    started_at: str
+    ended_at: str | None = None
+    result: ToolResult | None = None
+
+
+class WorkflowSnapshot(WorkflowHandle):
+    status: Literal["active", "succeeded", "failed", "blocked", "cancelled"]
+    revision: int = Field(ge=0)
+    request: X2EnvRequest
+    operations: tuple[OperationRecord, ...] = ()
+    owner: str | None = None
+    stop_reason: str | None = None
+    required_resources: tuple[str, ...] = ()
+    input_bundle: ArtifactRef | None = None
+    proposal: ArtifactRef | None = None
+    scene_ir: ArtifactRef | None = None
+
+
 class FieldProvenance(Model):
     source: Literal["text", "image", "video"]
     input_sha256: Sha256
@@ -165,4 +192,88 @@ class SceneIR(Model):
 
         for node in ids:
             visit(node, set())
+        return self
+
+
+class ImageInputEvidence(Model):
+    source: ArtifactRef
+    canonical: ArtifactRef
+    width: int = Field(gt=0)
+    height: int = Field(gt=0)
+    mode: Literal["RGB", "RGBA"]
+    decoder_version: str = Field(min_length=1)
+
+
+class VideoFrameEvidence(Model):
+    index: int = Field(ge=0)
+    pts: int
+    duration: int = Field(gt=0)
+    sha256: Sha256
+    size_bytes: int = Field(gt=0)
+
+
+class VideoInputEvidence(Model):
+    source: ArtifactRef
+    probe: ArtifactRef
+    sequence: ArtifactRef
+    width: int = Field(gt=0)
+    height: int = Field(gt=0)
+    codec: str = Field(min_length=1)
+    pixel_format: Literal["rgb24"] = "rgb24"
+    fps_num: int = Field(gt=0)
+    fps_den: int = Field(gt=0)
+    time_base_num: int = Field(gt=0)
+    time_base_den: int = Field(gt=0)
+    frame_count: int = Field(gt=0)
+    unique_frame_count: int = Field(gt=0)
+    decoder_version: str = Field(min_length=1)
+
+
+class InputBundle(Model):
+    schema_version: Literal["x2env.input_bundle.v1"] = "x2env.input_bundle.v1"
+    request_sha256: Sha256
+    text: ArtifactRef | None
+    images: tuple[ImageInputEvidence, ...] = Field(default=(), max_length=8)
+    video: VideoInputEvidence | None = None
+    modality: Literal["text", "image", "video", "multimodal"]
+    seed: int = Field(ge=0)
+    override_policy: Literal["explicit_text_over_media_with_provenance"] = (
+        "explicit_text_over_media_with_provenance"
+    )
+    resource_limits: dict[str, int]
+
+
+class UnknownField(Model):
+    field: str = Field(min_length=1, max_length=256)
+    reason: str = Field(min_length=1, max_length=2048)
+    critical: bool
+    provenance: tuple[FieldProvenance, ...] = Field(min_length=1)
+
+
+class SceneIntentProposal(Model):
+    scene: SceneIR | None
+    unknowns: tuple[UnknownField, ...] = Field(max_length=64)
+
+    @model_validator(mode="after")
+    def meaningful_proposal(self):
+        if self.scene is None and not self.unknowns:
+            raise ValueError("proposal requires a scene or explicit unknowns")
+        return self
+
+
+class BackendProposal(Model):
+    status: Literal["completed", "failed", "blocked"]
+    proposal: SceneIntentProposal | None
+    evidence: tuple[ArtifactRef, ...]
+    error_code: str | None
+    elapsed_seconds: float = Field(ge=0)
+    authority: Literal["advisory_only"] = "advisory_only"
+
+    @model_validator(mode="after")
+    def result_matches_status(self):
+        if self.status == "completed":
+            if self.proposal is None or self.error_code is not None:
+                raise ValueError("completed advisory requires a proposal without error")
+        elif self.proposal is not None or not self.error_code:
+            raise ValueError("unsuccessful advisory requires an error without proposal")
         return self

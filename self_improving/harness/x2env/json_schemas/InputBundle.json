@@ -1,0 +1,243 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sha256",
+        "size_bytes",
+        "media_type"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "ImageInputEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "canonical": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "decoder_version": {
+          "minLength": 1,
+          "title": "Decoder Version",
+          "type": "string"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "integer"
+        },
+        "mode": {
+          "enum": [
+            "RGB",
+            "RGBA"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source",
+        "canonical",
+        "width",
+        "height",
+        "mode",
+        "decoder_version"
+      ],
+      "title": "ImageInputEvidence",
+      "type": "object"
+    },
+    "VideoInputEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "codec": {
+          "minLength": 1,
+          "title": "Codec",
+          "type": "string"
+        },
+        "decoder_version": {
+          "minLength": 1,
+          "title": "Decoder Version",
+          "type": "string"
+        },
+        "fps_den": {
+          "exclusiveMinimum": 0,
+          "title": "Fps Den",
+          "type": "integer"
+        },
+        "fps_num": {
+          "exclusiveMinimum": 0,
+          "title": "Fps Num",
+          "type": "integer"
+        },
+        "frame_count": {
+          "exclusiveMinimum": 0,
+          "title": "Frame Count",
+          "type": "integer"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "integer"
+        },
+        "pixel_format": {
+          "const": "rgb24",
+          "default": "rgb24",
+          "title": "Pixel Format",
+          "type": "string"
+        },
+        "probe": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "sequence": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "source": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "time_base_den": {
+          "exclusiveMinimum": 0,
+          "title": "Time Base Den",
+          "type": "integer"
+        },
+        "time_base_num": {
+          "exclusiveMinimum": 0,
+          "title": "Time Base Num",
+          "type": "integer"
+        },
+        "unique_frame_count": {
+          "exclusiveMinimum": 0,
+          "title": "Unique Frame Count",
+          "type": "integer"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source",
+        "probe",
+        "sequence",
+        "width",
+        "height",
+        "codec",
+        "fps_num",
+        "fps_den",
+        "time_base_num",
+        "time_base_den",
+        "frame_count",
+        "unique_frame_count",
+        "decoder_version"
+      ],
+      "title": "VideoInputEvidence",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "images": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ImageInputEvidence"
+      },
+      "maxItems": 8,
+      "title": "Images",
+      "type": "array"
+    },
+    "modality": {
+      "enum": [
+        "text",
+        "image",
+        "video",
+        "multimodal"
+      ],
+      "title": "Modality",
+      "type": "string"
+    },
+    "override_policy": {
+      "const": "explicit_text_over_media_with_provenance",
+      "default": "explicit_text_over_media_with_provenance",
+      "title": "Override Policy",
+      "type": "string"
+    },
+    "request_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Request Sha256",
+      "type": "string"
+    },
+    "resource_limits": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Resource Limits",
+      "type": "object"
+    },
+    "schema_version": {
+      "const": "x2env.input_bundle.v1",
+      "default": "x2env.input_bundle.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "seed": {
+      "minimum": 0,
+      "title": "Seed",
+      "type": "integer"
+    },
+    "text": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "video": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/VideoInputEvidence"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "request_sha256",
+    "text",
+    "modality",
+    "seed",
+    "resource_limits"
+  ],
+  "title": "InputBundle",
+  "type": "object"
+}

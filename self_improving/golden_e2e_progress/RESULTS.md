@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-13 C04/C05 首个持久输入解释slice
+
+- 单`harness.sqlite`与CAS，submit先持久handle；重复/并发同key同workflow，异请求同key拒绝。
+- resume记录running operation后真实Pillow/FFmpeg处理；原图、完整视频逐帧RGB SHA/PTS/时长入CAS。
+- 活owner拒绝接管；真实外部decoder测试进程意外退出后，经同workflow resume留下dead-owner记录。
+- 错图保留raw ref并failed；缺decoder blocked并列资源。critical unknowns blocked且无新输入不反复问模型。
+- managed Codex adapter显式read-only、禁shell/MCP，输出只proposal；模型测试是外部传输替身。
+- 71 passed/3.52s。阶段性新包综合语句/分支约91%，不是最终100%；尚无新真实Codex/Genesis资格。
+- 已接解释之后仍明确缺asset_resolver；package未物化就不能成功。C04完整恢复/clarification/终态门未完成。
+
 ## 2026-09-13 C06a 单份Yuxin provider包迁移
 
 - `1_asset_reuse`的106个tracked文件单次git mv到`asset_reuse`，lib内部相对import，未复制第二引擎。

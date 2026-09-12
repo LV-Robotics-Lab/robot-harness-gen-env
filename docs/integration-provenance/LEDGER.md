@@ -314,3 +314,14 @@ Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支
 - target_paths：`self_improving/asset_pipeline/active/asset_reuse/`及明确旧路径消费者。
 - verification_evidence：packaging/asset_admission/新public import共107 passed/1.71s。
 - runtime_verification：not_run；没有将既有license_gate/tier0命中视为canonical资产通过。
+## INT-CANONICAL-C04C05 — 单工作流输入与模型建议
+
+- origin_owner / integration_owner：Bingsheng项目；新Store/ingest遵循批准canonical合同。
+- source_ref：Codex transport取自`aaf90244fd6edea29dab1cfa35ef11f1968d50ab`
+  的`self_improving/harness/codex_experiment_proposal.py`，不导入旧MCP/controller。
+- recorded_git_authors：该源记录Bingsheng Xie，身份归属不据邮箱自行扩大。
+- upstream_owner：Pillow、FFmpeg、OpenAI Codex，仍各自独立归属。
+- target_paths：canonical contracts/store/harness/input/codex与生成schema。
+- verification_evidence：71 public seam测试；真实Pillow/FFmpeg/CAS，模型process为明确替身。
+- runtime_verification：模型/Genesis尚not_run；从Harness的真实解释小运行在本提交后执行。
+- known_gaps：后续资产/compile/replay/validate/package未接，完整C04恢复与最终覆盖门未完成。

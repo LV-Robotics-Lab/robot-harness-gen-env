@@ -12,6 +12,9 @@
 - C04单SQLite handle/幂等与CAS已开始TDD；C05完整媒体ingest并行实现。
 - C06a单次Yuxin包搬迁与活跃消费者修复完成，107项相关测试通过；尚未接canonical资产解析器。
 - C07替代TRELLIS首次原图新geometry真实成功（45.453s），排除笔/M04/物理仍not_run；继续接Gujie接口。
+- C04/C05首个接通slice：真实ingest→同workflow journal→managed Codex advisory adapter；71小测试通过。
+  当前新增包综合覆盖率约91%，未达最终100%门。真实模型调用随后从Harness执行，不预填建议。
+  clarification提交、全pipeline成功原子门、孤立模型child恢复和全部stage descriptors仍待补齐。
 - Gujie 替代后端 TRELLIS 在外部隔离环境准备，保留原Hunyuan接口非默认；不是新geometry成功。
 - 下列 C01 暂停/待清理描述仅为历史过程，不再作为执行指令。
 
