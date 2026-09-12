@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C15-PUBLISHER — 无覆盖传输与下载核验
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream；GitHub接口为官方gh/REST，非拷贝第三方实现。
+- `source_ref`：canonical实施计划C15；GitHub release asset API文档链接在publisher模块说明。
+- `target_paths`：x2env/publisher.py、test_publisher.py。
+- `verification`：59项边界替身测试、100%定向语句/分支；未实际发布，组件不验证资格也不授权推进Git。
+
 ## INT-CANONICAL-C11-COMPLETION — 原子成功与证据包
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream；物理内核来源仍按原Gujie/Genesis台账。

@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C15 发布传输组件（未发布）
+
+- GitHubArtifactPublisher限定clean冻结HEAD、本地/远端同一annotated tag object及commit；draft prerelease
+  无clobber上传，实际下载逐bytes/hash核对，发布前后复核资产集/IDs和Git身份；失败保留现场，不回删远端。
+- TDD发现并修复仅比commit漏tag对象漂移、FIFO/设备阻塞、staging变化、异常远端结构和并发资产变更。
+- 59项public publisher测试通过（主复验0.30s），229 statements/118 branches定向100%。git/gh均为
+  显式外部替身；没有上传、发布、创建tag或push。资格仍由尚待实现的上层冻结验收门决定。
+
 ## 2026-09-13 C11 完成门、成功指针与可读导出
 
 - materialize_completion重核当前workflow的已提交最终refs、真实typed InputBundle/request digest/seed、

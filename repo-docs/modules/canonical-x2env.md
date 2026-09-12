@@ -1,5 +1,8 @@
 # Canonical x2env（收敛实施中）
 
+证据发布组件只负责固定tag/commit、无覆盖上传和下载hash核验，不负责授予资格。真正调用它之前
+仍须通过冻结案例与copy-run等上层验收门；目前仅组件测试完成，没有创建正式远端发布或push。
+
 完成门现核对请求/输入/seed、最终SceneIR、已提交运行与诊断证据，并重验物理和连续媒体；只有实际
 物化包和manifest核对后，Harness才提交succeeded及包指针。package出口支持只读查看、显式成员复制
 和严格只读复用。开发请求succeeded不等于正式资格：当前导出仍sim_ready=false、copy_run=not_run，
