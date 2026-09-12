@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-13 C07 Gujie替代接口adapter
+
+- 原Gujie固定源`eb0b710`的独立外部worktree现有清洁adapter提交
+  `ed3b7e2882b2f1eec0ead916d0377776aff93f7f`，保留原Hunyuan非默认接口。
+- canonical薄adapter调用原SAM2 segmentation和reconstruction-only CLI，绑定输入/提案、
+  Python/config源码/model refs与原回执；超时1770s内停止、保留部分产物。
+- 输入派生授权只来自部署，不能由模型填写；缺失时保留新geometry但`blocked_license`，
+  不从代码/模型许可推导产物许可。已发非阻塞媒体授权确认，其他开发继续。
+- 5项adapter测试通过；外部原链既有真实新geometry见研究报告，本薄adapter尚未真实GPU执行。
+
 ## 2026-09-13 C04 状态与孤立owner硬化
 
 - RED回归捕获错误operation id、并发begin、缺CAS、陈旧head、重复complete；

@@ -1,5 +1,16 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C07-TRELLIS — 保留原接口的外部重建接线
+
+- `origin_owner`：Gujie x2env；`upstream_owner`：Microsoft TRELLIS、Meta SAM2/DINO、FlexiCubes，
+  软件与权重许可分别记录于研究报告；不推断输入/产物授权。
+- `source_ref`：Gujie `eb0b710581fd7794bc01b447b0f77cb871c8a711` → 独立接口
+  `ed3b7e2882b2f1eec0ead916d0377776aff93f7f`；TRELLIS独立兼容补丁`750ccb6e7138b7592804148fa21d35961f51e036`。
+- `integration_owner`：Bingsheng Harness workstream；记录Git身份不等同于自然人归属。
+- `target_paths`：x2env/adapters/reconstruction.py；未复制外部模型实现或权重。
+- `verification`：5项adapter测试；原链真实几何/SAM2/规范化证据见研究报告。
+- `known_gaps`：canonical adapter GPU调用、同workflow/Genesis/包尚未完成；用户媒体授权待确认。
+
 ## INT-CANONICAL-C04-OWNER — 原子head与孤立进程门
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream，新实现，无第三方代码新增。
