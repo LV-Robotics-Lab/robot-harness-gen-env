@@ -6,7 +6,10 @@
 
 ## 文件地图
 
-- `SIM_READY_RELEASE_PLAN.md`：最新已批准交付计划；以Gujie实现为重要整合来源，先开放sim-ready服务并暂停，P8/E3后置。
+- `HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`：当前唯一 active 交接 prompt；记录安全停止现场、
+  已通过 normal、被中断 repair、三模态/三资产来源接线表、两类 fallback 和下一会话执行顺序。
+- `SIM_READY_RELEASE_PLAN.md`：历史已批准的 M1–M5 计划；2026-09-12 的执行顺序已被当前交接
+  prompt 替代，内容仅作范围和证据参考。
 
 - `TASKS.md`：阶段验收清单。
 - `TODO.md`：当前 doing/next/blocked/done。
@@ -37,20 +40,24 @@
 
 ## 当前阶段
 
-最新 active 目标是一个范围有限、可实际使用的 image exact-reuse 预览：用户从 Harness 服务入口
-提交原始图像和文本，Harness 创建并持久化 workflow，再把真实 `codex exec` 封装成内部
-`CodexBackend`，用于理解、视觉判断、诊断和布局建议。Harness 负责校验决定、调用 exact Skills、
-状态提交、有限重试、恢复和发布；用户无须启动 Codex 或配置 MCP。现有 exact MCP 可继续作为内部
-Codex 的受限媒体/工具通道，但不拥有第二套业务状态。M1 已在固定 `1cf8908` 真实通过有限桌面鼠标
-场景；M2 的修改后编译、修改后 Genesis 执行核心、真实 Codex/MCP 进程见证、受限输入构建和发布
-门已经分别安全提交，当前共有 154 份 public schema。它们还没有组成两条从 Harness 入口发起的
-真实交付案例，因此 M2 仍在进行。
+当前会话已按用户指令安全停止单鼠标 M2 收口，不再继续 repair、深验、bootstrap、资格重建或
+release 发布。固定 `cc6afa2` 的 normal 已从公共 Harness 入口真实调用内部 Codex、exact MCP 和
+Genesis，并以 `development_unqualified / validated_unreleased` 正确提交父 workflow；75-member
+开发包、图片、两段连续视频和双时间步 34/34 检查均保留。它没有写正式库，公共命令总 wall 约
+3107 秒，也尚未证明包能脱离原 workspace/CAS 在新目录独立运行。
 
-本阶段只复用现有 workflow journal、场景证据和资产资格，不再为 replay、observe、validate 分别
-增加平行的资格、SQLite authority 或 terminal admission。先完成正常案例与诊断修复案例、阶段耗时、
-TTL 余量、隔离发布库和服务入口，再固定版本并暂停供审阅。三模态、三种资产路径、162 份历史
-ledger、autoresearch 和机器人 policy 保留为后续目标，不删除也不标记完成。详见最新 `RESULTS.md`
-与 `SIM_READY_RELEASE_PLAN.md`；下列长记录保留各历史切片的能力边界。
+repair 在 compile/replay 已提交、首次 validate 正在执行时被可恢复中断；父 workflow 仍为 active
+revision 2，validate 只有 preflight→running，没有 terminal/result/commit。所有进程已经退出，原始
+日志、CAS、child runs、checkpoint 和 SQLite 保留，未手改或伪造状态。
+
+下一 active 目标改为“三模态输入＋local/web/generated 三种资产来源的通用实验管线实际接线”。
+优先复用现有 Harness controller/journal、CodexBackend、exact MCP、Gujie 固定 adapter、资产 provider
+和 Genesis compile/replay/observe/validate；不先重跑旧资格，不新建平行业务系统。每种模态和资产
+来源至少做一个小型真实案例，并完成场景/布局与资产版本两类有界 fallback，以及一次复制到新目录
+后的真实 Genesis load/step。正式 qualification、全矩阵、162 份历史债务、autoresearch 和 robot
+policy 后置。完整事实、入口和执行顺序以
+[`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)
+为准；下列长记录均是历史切片，不能覆盖该 active 状态。
 
 `p1_p6_implementation`
 

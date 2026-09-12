@@ -1,5 +1,41 @@
 # 进度与结果
 
+## 2026-09-12 安全停止与通用实验管线交接
+
+- 当前实现安全点为 `cc6afa236579f2360d808be68ae85e94fcfd81d8`；交接文档提交后的准确 branch
+  `HEAD` 以 `git rev-parse HEAD` 为准。用户主工作树仍有既有未提交改动，本会话未修改、暂存、提交
+  或清理它们。
+- normal workflow `2eaecc85-f73c-4c34-9646-8761d8744ba6` 已从公共 Harness CLI 真实调用一个
+  managed Codex attempt、8 个 exact MCP calls 和真实 Genesis compile/replay/observe/validate。父
+  workflow 正确提交为 `validated_unreleased`，execution 为 `development_unqualified`；没有 publish，
+  正式库前后相同。
+- normal review package 有 75 个成员、一个 `harness.genesis_scene_spec.v1` entrypoint、一张图片、
+  两段 41-frame 连续 MP4；baseline/half-dt 双时间步检查为 34/34。v4 验收 SHA-256
+  `74375a8b985dbc53f39e21fa4872007019303807922fa3ff3a904181ebb6e817`，绝对入口见接手 prompt。
+- normal 从 submit 到 materialized package 的公共命令 wall 为 3107.369648408 秒；后置深验另用
+  242.613330485 秒。TTL 准入和 child preflight 余量分别为 188.957408、188.931921 秒。当前证据仍有
+  21,027,007 次 CAS full-hash scan、约 1.114 TB logical CAS reads、63 次 runtime manifest deep read；
+  不把缓存敏感的 storage read 或旧 run 对比扩张为正式性能改善。
+- repair workflow `b57b603e-bf60-4f23-a9b6-1023c5fcbf38` 按用户改向被安全中断：compile/replay
+  已成功提交 revision 1/2；validate operation `3771480a-b088-441a-9fc4-6a384bc61eed` / child
+  `8e42d014-d88a-4bde-9c69-73578651d6d3` 只有 `preflight → running`，没有 terminal RunState、结果、
+  ended_at 或 committed revision。父仍 active revision 2，Codex attempt 仍 recorded `started`，其 owner
+  PID 已退出。没有手改 SQLite、伪造 terminal 或补跑 status/resume/package/deep verification。
+- repair 外层状态 254、内部 exit `-2`、wall 1741.124157161 秒，stderr 是等待内部 Codex 时收到的
+  `KeyboardInterrupt`。Harness/Codex/MCP/Genesis 所属进程均已退出；原始日志、CAS、child runs、
+  checkpoint、transport 和父状态完整保留。
+- development mode 仍固定 `exact_skills_qualified=true` 与
+  `changed_exact_skill_closure_allowed=false`。它真实运行 Codex/Skills/Genesis 且隔离正式库，但不能
+  直接执行修改后的 exact Skill closure；下一阶段可做已授权的最小开发契约调整，不得伪造资格或让
+  release 自动降级。
+- 当前包只是已深验的场景描述/资产/证据 closure。尚未做复制到新目录后、不读取原 workspace/CAS
+  绝对路径的 Genesis load/step；不授予 portable standalone、robot policy 或 data collection 能力。
+- 下一 active 是 text/image/video 和 local/web/generated 资产来源的实际接线，不再以单鼠标深度资格
+  为主。完整状态表、Gujie 固定来源、两类 fallback、包目标和执行顺序见
+  [`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)。
+
+下列章节是历史结果；若与上述交接状态冲突，以上述交接和实际 Git/日志为准。
+
 ## M2 Harness-owned Codex 调用关系纠偏 — 73e836b
 
 - 已定位外部入口假设只集中在 `codex_mcp_acceptance.prepare_*` 的“NEW/start”提示、

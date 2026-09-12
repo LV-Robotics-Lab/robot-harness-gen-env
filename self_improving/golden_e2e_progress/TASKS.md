@@ -1,6 +1,14 @@
 # Golden E2E 任务分解
 
-## M1 已完成首条完整线；当前 M2 受限预览
+## 2026-09-12 active 任务替换
+
+下列原 M2 和 G0–G4 清单保留为历史分解，不再是当前执行队列。当前会话已安全停止单鼠标 repair；
+下一 active 改为 text/image/video 统一输入、local/web/generated 资产来源、现有 Genesis 链、两类
+有界 fallback 和可迁移包的实际接线。直接执行清单以
+[`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)
+和 `TODO.md` 顶部为准；正式 release、历史债务、autoresearch 与 robot policy 继续后置。
+
+## 历史：M1 已完成首条完整线；原 M2 受限预览
 
 - [x] 实际适配 Gujie 单刚体场景、完整几何与有限桌面。
 - [x] 真实 baseline/half_dt 场景回放及完整新媒体（研究运行，无生产场景 authority）。

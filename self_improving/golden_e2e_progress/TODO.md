@@ -1,25 +1,38 @@
 # 当前 TODO
 
-更新时间：2026-09-11
+更新时间：2026-09-12
 
 ## Doing
 
-- M2：交付受限 image exact-reuse 预览。用户从 Harness API/CLI 提交图像和文本；Harness 创建并
-  持久化 workflow，内部调用真实 CodexBackend 做理解、视觉判断和诊断，再由 Harness 校验决定并
-  驱动 compile → Genesis replay → observe → validate、真实布局修改、重编译和发布。用户无须操作
-  Codex CLI/MCP；workflow journal 仍是唯一状态权威。
-- 当前安全集成点 `0509faf`，154 schema，工作树在本次决定更新前干净。受限输入构建、exact MCP、
-  共享 replay/validate Registry、深物理/媒体发布门和隔离部署数据根均已开始收拢；尚缺 Harness-owned
-  service/controller、内部 CodexBackend 接线、shared qualification 和两条真实运行。
-- 本轮先把现有 `codex exec`/wire recorder 封装为内部 backend，并让 Harness 在调用前后保存任务、
-  当前 head、预算和明确失败；不建立第二个状态机。随后完成服务入口、七段耗时与 TTL 余量，并按
-  可观察功能单元集中真实验收。
+- 本会话只执行安全停止与交接；不再启动 repair 验收、深验、bootstrap、资格重建或 release 发布。
+  接手 prompt 是
+  [`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)。
+- 下一会话 active：通用实验管线实际接线。顺序为三模态统一输入/共享场景意图 → local/web/generated
+  资产来源 → 规范化与不可变版本登记 → 复用 Genesis compile/replay/observe/validate → 场景/布局与
+  资产版本两类有界 fallback → 可迁移包 → 少量真实案例和 Harness 实验入口。
+- 每种模态至少一个真实成功案例，每种资产来源至少一个真实成功案例，允许交叉覆盖。外部资源缺失
+  时要标为 `受阻` 并列资源；不得以 adapter、mock 或固定回执冒充真实通过。
+- 实现基线为 `cc6afa236579f2360d808be68ae85e94fcfd81d8`；新会话应读取包含交接文档的实际 branch
+  `HEAD`。当前集成 worktree 在本次文档提交前只有交接文档改动。
 
-## Deferred（保留，当前不启动）
+## Paused（保留，当前不启动）
 
-- text/video 与三种资产路径全面扩展；162 份历史 ledger 清理；autoresearch 大规模实验；机器人
-  policy；通用插件化、任意组合、额外后端和非必要前端。
-- 这些目标仍属于 Golden E2E 总任务，只有 M2 受限预览固定并暂停供用户审阅后才重新排序。
+- 单鼠标 normal+repair 的正式收口：normal 已真实通过开发线；repair 在首次 validate 中断，保留现场，
+  不自动恢复；不创建新 release deployment，不把开发产物写入正式库。
+- `69aa6c2` 的旧资格与历史证据继续有效且只属于该固定版本，不作为新实现的资格。
+- 正式 release qualification、全矩阵稳定率、162 份历史 ledger 清理、autoresearch、大规模性能优化、
+  robot policy/data collection、通用插件化和无关前端。
+
+## 最新交接事实
+
+- normal workflow `2eaecc85-f73c-4c34-9646-8761d8744ba6`：真实 Codex/MCP/Genesis，父 workflow
+  `validated_unreleased`，75-member 包、1 图、2 段连续视频、双时间步 34/34；总 wall 约 3107 秒，
+  正式库未改。
+- repair workflow `b57b603e-bf60-4f23-a9b6-1023c5fcbf38`：compile/replay 已提交 revision 1/2；
+  validate child 仅有 running preflight，父仍 active revision 2。所有所属进程已退出，未手改 SQLite。
+- development record 仍为 `exact_skills_qualified=true`、
+  `changed_exact_skill_closure_allowed=false`。下一会话若要调试改动后的 core Skill，应做最小开发契约
+  调整，继续禁止开发结果冒充 release。
 
 ## M1 收口结果
 

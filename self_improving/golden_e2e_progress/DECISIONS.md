@@ -1,5 +1,29 @@
 # 稳定决策
 
+## 2026-09-12 安全停止与通用实验管线优先
+
+- 状态：`accepted`，替代此前“先完成 normal+repair，再建立新 release 部署并发布”的执行顺序。
+- 当前会话在最近安全边界停止：不再追加 repair 验收、深读、bootstrap、资格重建或 release。normal
+  已通过的开发证据、`69aa6c2` 的历史资格、repair 的非终态 SQLite/CAS/日志和所有失败材料原样保留。
+- 下一阶段优先把 text/image/video 及其组合、local/web/generated 三种资产来源实际接入 Harness
+  → CodexBackend → Skills → Genesis → observation/diagnosis → validate → portable package。每种模态
+  和每种资产来源至少一个小型真实案例；不要求此阶段全组合或高稳定率。
+- Harness 继续是唯一用户入口、状态和生命周期权威。Codex 是内部建议者；现有 MCP 只是协议/工具
+  边界。复用现有 controller、journal、CAS/SQLite 和 Skills，不增加第二套业务 authority。
+- development 可以在未取得新 release qualification 时真实执行 changed implementation，但必须由
+  部署配置显式启用、记录源码/环境/省略检查、与正式库隔离。当前 v1 record 的
+  `exact_skills_qualified=true`、`changed_exact_skill_closure_allowed=false` 仍是事实；需要时以最小、
+  显式升级调整，不能伪造资格、替换 verifier 或让 release 自动降级。
+- fallback 分为两类：场景/布局问题生成受控 Prompt/SceneIR revision 后回到 compile；资产问题在
+  隔离目录形成并检查新的不可变资产版本或重新获取，再重解依赖和 replay。数值配置另走白名单修订。
+  每类均有预算和确定性重复停止条件；视觉建议不替代物理指标。
+- 新包必须包含场景和资产、可迁移引用、Genesis loader、依赖说明、来源/修订/验证、图片与连续视频；
+  至少一次复制到新目录后真实 load/step。`sim-ready` 只授予实际验证 profile，robot policy/data
+  collection 继续后置。
+- 正式 qualification、全矩阵、autoresearch、162 份历史 ledger、全面性能优化、robot policy 和无关
+  前端保留但暂停。权威交接为
+  [`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)。
+
 ## M1 收口与 fresh observe v3
 
 - `1cf8908` 的首条完整 rigid-scene line 已真实通过并集中验收，下一 active 为 M2 Harness 入口、
