@@ -221,3 +221,57 @@ h.resume(handle.workflow_id)
     assert len(snapshot.operations) == 2
     assert snapshot.operations[0].result.error_code == "recoverable_dead_owner"
     assert snapshot.operations[1].result.error_code == "invalid_video"
+
+
+def test_dead_harness_owner_does_not_respawn_while_recorded_codex_is_alive(tmp_path):
+    import json
+    import os
+    import signal
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    state = tmp_path / "state"
+    code = """
+import os,sys,json,subprocess
+from pathlib import Path
+from self_improving.harness.x2env.harness import Harness
+from self_improving.harness.x2env.contracts import X2EnvRequest
+class ExternalModelDouble:
+    def interpret(self,bundle,*,output_root,timeout):
+        output_root.mkdir(parents=True)
+        argv=[sys.executable,'-c','import time;time.sleep(60)',str(output_root)]
+        process=subprocess.Popen(argv,
+            cwd=output_root,start_new_session=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        stat=Path(f'/proc/{process.pid}/stat').read_text().rsplit(')',1)[1].split()
+        (output_root/'process.json').write_text(json.dumps({'pid':process.pid,
+            'start_ticks':int(stat[19]),'attempt_root':str(output_root)}))
+        os._exit(0)
+h=Harness(Path(sys.argv[1]),backend_factory=lambda store:ExternalModelDouble())
+handle=h.submit(X2EnvRequest(text='mouse',seed=1,idempotency_key='orphan',output_dir=sys.argv[2]))
+print(handle.workflow_id,flush=True)
+h.resume(handle.workflow_id)
+"""
+    worker = subprocess.run(
+        [sys.executable, "-c", code, str(state), str(tmp_path / "package")],
+        env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[4])},
+        capture_output=True,
+        text=True,
+        timeout=10,
+        check=True,
+    )
+    workflow_id = worker.stdout.strip()
+    harness = Harness(state)
+    before = harness.status(workflow_id)
+    attempt = state / "attempts" / workflow_id / before.operations[-1].operation_id
+    metadata = json.loads((attempt / "process.json").read_text())
+    try:
+        stopped = harness.resume(workflow_id)
+        assert stopped.status == "blocked"
+        assert stopped.stop_reason == "orphaned_backend_still_running"
+        assert stopped.required_resources == (str(attempt / "process.json"),)
+        assert stopped.operations == before.operations
+        assert stopped.revision == before.revision
+        assert harness.resume(workflow_id) == stopped
+    finally:
+        os.kill(metadata["pid"], signal.SIGTERM)

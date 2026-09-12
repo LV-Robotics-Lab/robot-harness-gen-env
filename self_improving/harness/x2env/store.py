@@ -1,6 +1,7 @@
 """Single SQLite authority for workflow snapshots and idempotency."""
 
 import hashlib
+import json
 import os
 import sqlite3
 import tempfile
@@ -37,31 +38,39 @@ class Store:
                 version_sha256 TEXT PRIMARY KEY, asset_id TEXT NOT NULL,
                 category TEXT NOT NULL, record TEXT NOT NULL)""")
 
-    def register_asset(self, version_sha256: str, asset_id: str, category: str,
-                       record_json: str) -> None:
+    def register_asset(
+        self, version_sha256: str, asset_id: str, category: str, record_json: str
+    ) -> None:
         with closing(sqlite3.connect(self.database)) as db, db:
             db.execute("BEGIN IMMEDIATE")
-            row = db.execute("SELECT asset_id, category, record FROM asset_versions WHERE version_sha256=?",
-                             (version_sha256,)).fetchone()
+            row = db.execute(
+                "SELECT asset_id, category, record FROM asset_versions WHERE version_sha256=?",
+                (version_sha256,),
+            ).fetchone()
             if row:
                 if row != (asset_id, category, record_json):
                     raise ValueError("immutable asset version conflict")
                 return
-            db.execute("INSERT INTO asset_versions VALUES (?, ?, ?, ?)",
-                       (version_sha256, asset_id, category, record_json))
+            db.execute(
+                "INSERT INTO asset_versions VALUES (?, ?, ?, ?)",
+                (version_sha256, asset_id, category, record_json),
+            )
 
     def asset_version(self, version_sha256: str) -> str:
         with closing(sqlite3.connect(self.database)) as db:
-            row = db.execute("SELECT record FROM asset_versions WHERE version_sha256=?",
-                             (version_sha256,)).fetchone()
+            row = db.execute(
+                "SELECT record FROM asset_versions WHERE version_sha256=?", (version_sha256,)
+            ).fetchone()
         if row is None:
             raise KeyError(version_sha256)
         return row[0]
 
     def asset_versions(self, category: str) -> tuple[str, ...]:
         with closing(sqlite3.connect(self.database)) as db:
-            rows = db.execute("SELECT record FROM asset_versions WHERE category=? ORDER BY version_sha256",
-                              (category,)).fetchall()
+            rows = db.execute(
+                "SELECT record FROM asset_versions WHERE category=? ORDER BY version_sha256",
+                (category,),
+            ).fetchall()
         return tuple(row[0] for row in rows)
 
     def submit(self, request: X2EnvRequest) -> WorkflowSnapshot:
@@ -136,6 +145,23 @@ class Store:
             operations = list(snapshot.operations)
             if operations and operations[-1].status == "running":
                 old = operations[-1]
+                if old.capability.startswith("codex."):
+                    blocker = self._orphan_blocker(snapshot, old)
+                    if blocker is not None:
+                        reason, resource = blocker
+                        blocked = snapshot.model_copy(
+                            update={
+                                "status": "blocked",
+                                "owner": None,
+                                "stop_reason": reason,
+                                "required_resources": (resource,),
+                            }
+                        )
+                        db.execute(
+                            "UPDATE workflows SET snapshot=? WHERE workflow_id=?",
+                            (blocked.model_dump_json(), workflow_id),
+                        )
+                        return blocked
                 result = ToolResult(
                     operation_id=old.operation_id,
                     status="failed",
@@ -172,6 +198,33 @@ class Store:
             )
             return snapshot
 
+    def _orphan_blocker(self, snapshot, operation):
+        attempt = self.database.parent / "attempts" / snapshot.workflow_id / operation.operation_id
+        record = attempt / "process.json"
+        try:
+            if any(p.is_symlink() for p in (record, *record.parents)):
+                return "orphaned_backend_identity_unverified", str(record)
+            metadata = json.loads(record.read_bytes())
+            pid = metadata["pid"]
+            if type(pid) is not int or pid <= 0:
+                raise ValueError("invalid recorded PID")
+            live = process_identity(pid)
+            if live is None or live.split(":")[1] != str(metadata["start_ticks"]):
+                return None
+            if metadata.get("attempt_root", str(attempt)) != str(attempt):
+                return "orphaned_backend_identity_unverified", str(record)
+            command = (Path(f"/proc/{pid}") / "cmdline").read_bytes().split(b"\0")
+            matches = any(
+                arg.decode(errors="replace") == str(attempt)
+                or arg.decode(errors="replace").startswith(str(attempt) + "/")
+                for arg in command
+            )
+            if not matches:
+                return "orphaned_backend_identity_unverified", str(record)
+            return "orphaned_backend_still_running", str(record)
+        except (OSError, ValueError, KeyError, TypeError):
+            return "orphaned_backend_identity_unverified", str(record)
+
     def begin_operation(
         self, snapshot: WorkflowSnapshot, capability: str, *, version: str = "1.0.0"
     ) -> WorkflowSnapshot:
@@ -180,9 +233,12 @@ class Store:
             row = db.execute(
                 "SELECT snapshot FROM workflows WHERE workflow_id=?", (snapshot.workflow_id,)
             ).fetchone()
+            if row is None:
+                raise KeyError(snapshot.workflow_id)
             current = WorkflowSnapshot.model_validate_json(row[0])
-            if current.owner != snapshot.owner or current.revision != snapshot.revision:
-                raise ValueError("workflow owner or revision changed")
+            self._require_owned_head(current, snapshot)
+            if any(op.status == "running" for op in current.operations):
+                raise ValueError("workflow already has a running operation")
             operation = OperationRecord(
                 operation_id=str(uuid4()),
                 capability=capability,
@@ -196,6 +252,14 @@ class Store:
                 (updated.model_dump_json(), snapshot.workflow_id),
             )
             return updated
+
+    @staticmethod
+    def _require_owned_head(current, supplied):
+        owner = process_identity(os.getpid())
+        if not owner or current.owner != owner or current.status != "active":
+            raise ValueError("workflow owner must be the live current process")
+        if current != supplied:
+            raise ValueError("workflow owner, revision or operation head changed")
 
     def complete_operation(
         self,
@@ -214,11 +278,21 @@ class Store:
             row = db.execute(
                 "SELECT snapshot FROM workflows WHERE workflow_id=?", (snapshot.workflow_id,)
             ).fetchone()
+            if row is None:
+                raise KeyError(snapshot.workflow_id)
             current = WorkflowSnapshot.model_validate_json(row[0])
-            if current.owner != snapshot.owner or current.revision != snapshot.revision:
-                raise ValueError("workflow owner or revision changed")
+            self._require_owned_head(current, snapshot)
             operations = list(current.operations)
             if result is not None:
+                result = ToolResult.model_validate_json(result.model_dump_json())
+                if (
+                    not operations
+                    or operations[-1].status != "running"
+                    or operations[-1].operation_id != result.operation_id
+                ):
+                    raise ValueError("result must complete the current running operation")
+                for ref in result.outputs:
+                    self.read_artifact(ref)
                 operation = operations[-1]
                 operations[-1] = operation.model_copy(
                     update={
@@ -227,6 +301,11 @@ class Store:
                         "ended_at": datetime.now(timezone.utc).isoformat(),
                     }
                 )
+            elif any(op.status == "running" for op in operations):
+                raise ValueError("running operation requires its own result")
+            for ref in (bundle, proposal, scene_ir):
+                if ref is not None:
+                    self.read_artifact(ref)
             updated = current.model_copy(
                 update={
                     "status": status,

@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C04-OWNER — 原子head与孤立进程门
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream，新实现，无第三方代码新增。
+- `source_ref`：canonical `38071da` Store与`7dcb40c`受管理模型进程回执。
+- `target_paths`：x2env/store.py、harness.py及两份公共生命周期/产物测试。
+- `verification`：canonical快测151项通过；含真实外部测试进程，不计E2E资格。
+- `known_gaps`：包succeeded门、clarification提交尚待后续slice。
+
 ## INT-CANONICAL-C05-VISUAL — 原验证器注入managed Codex
 
 - `origin_owner`：Yuxin视觉验证seam；`integration_owner`：Bingsheng Harness workstream。

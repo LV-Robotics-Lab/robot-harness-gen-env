@@ -25,7 +25,7 @@ class Harness:
         if existing.stop_reason == "clarification_required" or existing.scene_ir is not None:
             return existing
         snapshot = self._store.claim(workflow_id)
-        if snapshot.status in {"succeeded", "failed", "cancelled"}:
+        if snapshot.status in {"succeeded", "failed", "cancelled", "blocked"}:
             return snapshot
         result = None
         bundle_ref = snapshot.input_bundle

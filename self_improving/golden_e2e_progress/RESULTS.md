@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C04 状态与孤立owner硬化
+
+- RED回归捕获错误operation id、并发begin、缺CAS、陈旧head、重复complete；
+  修复后要求当前活进程、完整snapshot与running operation严格匹配，产物先核验才原子推进。
+- dead-owner恢复先核准确attempt/process.json的PID/start_ticks/命令行；存活或无法证明身份时
+  blocked并列证据路径，不能重复启动模型，更不模糊杀进程。
+- 新增真实外部测试进程与两个并发线程检查；全部canonical阶段快测151 passed/6.32s。
+  仍未完成包成功门与clarification输入；测试不等于真实E2E资格。
+
 ## 2026-09-13 C05/C06 Codex资产视觉seam
 
 - `CodexBackend.assess_asset_candidates`通过原Yuxin `a6_verify.verify_candidate(infer=...)`

@@ -7,6 +7,8 @@
 已接通的开发slice是`Harness.submit`持久唯一handle，`resume`先处理原始媒体，再由受管理Codex
 给出SceneIR建议；controller决定接受或因关键未知项blocked。`status`从同一SQLite恢复，部分输入
 资产和模型日志保留在CAS。缺后续资产解析器时明确blocked；当前`package`尚不提供环境包。
+推进要求活进程身份、完整快照和当前running操作一致；产物先核CAS再推进。旧owner退出但
+对应模型子进程仍存活或身份不明时明确blocked，不能通过重复resume启动第二份模型。
 71项小测试通过不等于最终覆盖率门或真实模型/Genesis资格。生产部署、完整恢复与全部后续stage仍在实施。
 
 `contracts.py`拒绝第九实体、重复ID、未知关系、缺字段来源、悬空或循环支撑引用。
