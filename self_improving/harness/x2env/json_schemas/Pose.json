@@ -2,6 +2,7 @@
   "additionalProperties": false,
   "properties": {
     "frame": {
+      "description": "Exactly 'world' or another entity's id; never invent frame aliases. Structural supports use world.",
       "maxLength": 128,
       "minLength": 1,
       "pattern": "^[a-zA-Z][\\w-]*$",
@@ -9,8 +10,16 @@
       "type": "string"
     },
     "position": {
+      "description": "Intent x/y/z in metres in the declared frame. Use null for each unknown axis, including unresolved support height; do not invent coordinates.",
       "items": {
-        "type": "number"
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ]
       },
       "maxItems": 3,
       "minItems": 3,

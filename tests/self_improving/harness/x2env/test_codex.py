@@ -113,6 +113,16 @@ def test_untrusted_model_evidence_is_never_promoted(tmp_path, fault):
     assert result.status == "failed"
     assert result.proposal is None
     assert result.error_code is not None
+    if fault == "skill_success":
+        diagnostics = json.loads((tmp_path / "attempt" / "validation-errors.json").read_text())
+        assert diagnostics["errors"][0]["loc"] == ["skill_status"]
+        assert diagnostics["errors"][0]["type"] == "extra_forbidden"
+        assert all("input" not in item and "ctx" not in item for item in diagnostics["errors"])
+        assert any(
+            store.read_artifact(ref)
+            == (tmp_path / "attempt" / "validation-errors.json").read_bytes()
+            for ref in result.evidence
+        )
 
 
 def test_video_advisory_uses_verified_original_frames(tmp_path):

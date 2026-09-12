@@ -1,5 +1,17 @@
 # 进度与结果
 
+## 2026-09-13 第二次真实Codex解释：transport通过、SceneIR拒绝
+
+- 固定`85cc0af`、workflow `d1e03805-8373-4ff6-8cf0-4403325350dd`，61.945589s。
+  原S01 prompt/seed/local约束，仅解释smoke；不是矩阵通过。真实turn.completed证明strict schema被接受。
+- 模型输出`structural_support.category=tabletop`和不存在的`tabletop_center` frame，故
+  `failed/invalid_model_evidence`。原始失败保留在
+  `/home/jingxiang/bingsheng/canonical-managed-interpret-v2-20260913.RN84TR/`。
+- 另发现只给两轴尺寸时契约强制三个数，诱发补未知厚度。新增RED回归后允许意图轴为null，
+  并明确合法frame/category；规范化与运行时仍要求完全解析，不放松物理检查。
+- 校验错误现在保留最多64条位置/类型/原因的CAS报告（排除原输入/context），新增RED后GREEN。
+  31项模型/契约测试通过；新修复尚待固定提交后真实重跑。
+
 ## 2026-09-13 首次真实Codex解释失败与schema修复
 
 - 固定`19f7762`通过Harness提交S01原prompt/seed（仅解释smoke，不是完整scored case），workflow

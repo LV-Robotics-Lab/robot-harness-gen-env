@@ -2,6 +2,9 @@
 
 更新时间：2026-09-13
 
+- 最新C05：真实Codex strict transport已通过；第二次SceneIR因非法frame/category拒绝，未计S01成功。
+  正在修复部分轴未知的表达和可审计校验错误；下一步固定新代码重跑解释，再接资产解析。
+
 ## Doing：C03 类型化能力接线；C07 替代后端并行推进
 
 - 当前 authority：`codex/canonical-x2env-consolidation-20260913` 新 worktree；基于已吸收独立用户文档

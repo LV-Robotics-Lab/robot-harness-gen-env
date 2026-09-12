@@ -8,9 +8,9 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 Source = Literal["local", "web", "reconstruction"]
 Sha256 = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
 Name = Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[a-zA-Z][\w-]*$")]
-Vector3 = Annotated[tuple[float, ...], Field(min_length=3, max_length=3)]
+Vector3 = Annotated[tuple[float | None, ...], Field(min_length=3, max_length=3)]
 PositiveVector3 = Annotated[
-    tuple[Annotated[float, Field(gt=0)], ...], Field(min_length=3, max_length=3)
+    tuple[Annotated[float, Field(gt=0)] | None, ...], Field(min_length=3, max_length=3)
 ]
 
 
@@ -112,8 +112,14 @@ class FieldProvenance(Model):
 
 
 class Pose(Model):
-    frame: Name
-    position: Vector3
+    frame: Name = Field(
+        description="Exactly 'world' or another entity's id; never invent frame aliases. "
+        "Structural supports use world."
+    )
+    position: Vector3 = Field(
+        description="Intent x/y/z in metres in the declared frame. Use null for each unknown axis, "
+        "including unresolved support height; do not invent coordinates."
+    )
     yaw_degrees: float = Field(ge=-180, le=180)
 
 
@@ -144,10 +150,19 @@ class EntityProvenance(Model):
 
 class SceneEntity(Model):
     id: Name
-    category: str = Field(min_length=1, max_length=128)
+    category: str = Field(
+        min_length=1,
+        max_length=128,
+        description="Foreground object category. For structural_support, exactly table, worktop "
+        "or counter; tabletop is not a structural category.",
+    )
     role: Literal["foreground", "structural_support"] = "foreground"
     color: str | None
-    dimensions: PositiveVector3 | None
+    dimensions: PositiveVector3 | None = Field(
+        description="Intent x/y/z dimensions in metres. Preserve known axes and use null for unknown "
+        "axes (including unknown support thickness). Entirely unknown dimensions may be null. "
+        "Asset resolution must resolve dimensions before compilation."
+    )
     material: str | None
     pose: Pose
     articulation_state: ArticulationState | None

@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Protocol
 
 from PIL import Image
+from pydantic import ValidationError
 
 from .contracts import ArtifactRef, BackendProposal, InputBundle, SceneIntentProposal
 from .schema_export import structured_output_schema
@@ -317,6 +318,24 @@ class CodexBackend:
                 if not valid:
                     raise ValueError("proposal_input_mismatch")
             status = "completed"
+        except ValidationError as exc:
+            errors = exc.errors(include_url=False, include_context=False, include_input=False)
+            record(
+                "validation-errors.json",
+                json.dumps(
+                    {
+                        "error_code": "invalid_model_evidence",
+                        "errors": [
+                            {"loc": item["loc"], "type": item["type"], "msg": item["msg"][:1024]}
+                            for item in errors[:64]
+                        ],
+                        "total_errors": len(errors),
+                        "truncated": len(errors) > 64,
+                    },
+                    sort_keys=True,
+                ).encode(),
+            )
+            failure, proposal = "invalid_model_evidence", None
         except FileNotFoundError:
             status, failure = "blocked", "blocked_external_resource"
             proposal = None

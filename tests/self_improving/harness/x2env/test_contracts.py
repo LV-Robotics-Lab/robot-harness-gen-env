@@ -63,6 +63,19 @@ def test_scene_preserves_entity_attributes_reference_frame_and_field_provenance(
     assert scene.entities[1].provenance.color[0].input_sha256 == "a" * 64
 
 
+def test_partial_dimensions_and_relation_height_remain_unknown_not_invented():
+    import json
+
+    from self_improving.harness.x2env.contracts import SceneIR
+
+    document = scene_document()
+    document["entities"][0]["dimensions"] = [0.9, 0.7, None]
+    document["entities"][1]["pose"]["position"] = [0.1, -0.08, None]
+    scene = SceneIR.model_validate_json(json.dumps(document))
+    assert scene.entities[0].dimensions == (0.9, 0.7, None)
+    assert scene.entities[1].pose.position == (0.1, -0.08, None)
+
+
 @pytest.mark.parametrize(
     "fault",
     [

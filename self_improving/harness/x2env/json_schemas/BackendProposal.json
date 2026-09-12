@@ -208,6 +208,7 @@
       "additionalProperties": false,
       "properties": {
         "frame": {
+          "description": "Exactly 'world' or another entity's id; never invent frame aliases. Structural supports use world.",
           "maxLength": 128,
           "minLength": 1,
           "pattern": "^[a-zA-Z][\\w-]*$",
@@ -215,8 +216,16 @@
           "type": "string"
         },
         "position": {
+          "description": "Intent x/y/z in metres in the declared frame. Use null for each unknown axis, including unresolved support height; do not invent coordinates.",
           "items": {
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "maxItems": 3,
           "minItems": 3,
@@ -252,6 +261,7 @@
           ]
         },
         "category": {
+          "description": "Foreground object category. For structural_support, exactly table, worktop or counter; tabletop is not a structural category.",
           "maxLength": 128,
           "minLength": 1,
           "title": "Category",
@@ -272,8 +282,15 @@
           "anyOf": [
             {
               "items": {
-                "exclusiveMinimum": 0,
-                "type": "number"
+                "anyOf": [
+                  {
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "maxItems": 3,
               "minItems": 3,
@@ -283,6 +300,7 @@
               "type": "null"
             }
           ],
+          "description": "Intent x/y/z dimensions in metres. Preserve known axes and use null for unknown axes (including unknown support thickness). Entirely unknown dimensions may be null. Asset resolution must resolve dimensions before compilation.",
           "title": "Dimensions"
         },
         "id": {

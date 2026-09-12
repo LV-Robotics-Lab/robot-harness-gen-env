@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C05-PARTIAL-INTENT — 真实模型失败驱动修复
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream；新实现，无新增第三方代码。
+- `source_ref`：canonical `85cc0afb8d17b067c1c1e3d4768effa857bf282b`；Git记录作者不推断自然人身份。
+- `target_paths`：x2env/contracts.py、codex.py及对应测试/生成schema。
+- `verification`：31项契约/模型测试通过；固定85cc0af真实transport通过但SceneIR拒绝，原证据见RESULTS。
+- `known_gaps`：意图未知轴需资产/编译解析；本修复未证明Genesis、矩阵或可迁移包。
+
 ## INT-CANONICAL-C01 — Clean 来源基线
 
 - `lifecycle`：`integrating`；`verification`：`contract_pass`（仅Git保护核验，不是运行验收）。
