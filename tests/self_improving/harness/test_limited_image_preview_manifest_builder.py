@@ -118,7 +118,7 @@ def test_manifest_timings_are_exact_nonoverlapping_controller_measurements() -> 
     }
     with pytest.raises(LimitedImagePreviewManifestBuildError) as business_error:
         _timings(entries, (business_zero,))
-    assert business_error.value.reason in {"timing_missing", "timing_value"}
+    assert business_error.value.reason == "timing_value"
 
     wrong_stage = {
         **sample,

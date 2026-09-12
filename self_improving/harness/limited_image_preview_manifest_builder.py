@@ -96,6 +96,7 @@ _STAGES = {
 }
 _STATUS_STAGES = {
     "start",
+    "status",
     "asset_lookup",
     "compile",
     "replay",
@@ -764,16 +765,20 @@ def _timings(entries: Sequence[StoredWorkflowEntry], samples: Sequence[Mapping[s
                 _fail("timing_tool", "tool timing contains an unsupported exact tool")
             stage = call["stage"]
             expected_stage = _STAGES[tool]
+            service_value = call["service_elapsed_ns"]
+            read_only_zero = type(service_value) is int and service_value == 0
             if tool == _STATUS_TOOL:
-                if stage not in _STATUS_STAGES or call["service_elapsed_ns"] is not None:
+                if stage not in _STATUS_STAGES or not (service_value is None or read_only_zero):
                     _fail("timing_stage", "status timing has an invalid workflow stage")
             elif stage != expected_stage:
                 _fail("timing_stage", "tool timing differs from its exact service stage")
             transport = _positive_ns(call["transport_elapsed_ns"], "transport_elapsed_ns")
             transport_total += transport
-            service_value = call["service_elapsed_ns"]
             service = (
-                0 if service_value is None else _positive_ns(service_value, "service_elapsed_ns")
+                0
+                if service_value is None
+                or (tool in {_STATUS_TOOL, _LOOKUP_TOOL} and read_only_zero)
+                else _positive_ns(service_value, "service_elapsed_ns")
             )
             if service > transport:
                 _fail("timing_overlap", "service duration exceeds its enclosing transport")

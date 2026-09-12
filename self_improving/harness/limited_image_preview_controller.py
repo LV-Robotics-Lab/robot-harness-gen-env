@@ -30,6 +30,15 @@ from .schemas.limited_image_preview_service import PreviewServiceResult
 from .trusted_state import TrustedWorldState
 
 STATUS = "image2env_preview_status_v1"
+_READ_ONLY_TOOLS = {STATUS, "image2env_preview_asset_lookup_v1"}
+_MEASURED_CHILD_TOOLS = {
+    "image2env_compile_v2_0_0",
+    "image2env_compile_v3_0_0",
+    "image2env_replay_v2_0_0",
+    "image2env_replay_v3_0_0",
+    "genesis_observe_v3_0_0",
+    "image2env_validate_v3_0_0",
+}
 ACTIONS = {
     "normal": (
         STATUS,
@@ -123,7 +132,10 @@ def timing_samples(result):
         output = (call.get("result") or {}).get("structuredContent") or {}
         stage = output.get("stage")
         service = ns(output["elapsed_seconds"]) if "elapsed_seconds" in output else None
-        if stage in {"compile", "replay", "observe", "validate"} and service is None:
+        tool = call["tool"]
+        if tool in _READ_ONLY_TOOLS and service == 0:
+            service = None
+        if tool in _MEASURED_CHILD_TOOLS and service in {None, 0}:
             complete = False
             if result.status == "completed":
                 valid = False
@@ -131,7 +143,7 @@ def timing_samples(result):
             valid = False
         calls.append(
             dict(
-                tool=call["tool"],
+                tool=tool,
                 stage=stage,
                 transport_elapsed_ns=transport,
                 service_elapsed_ns=service,
