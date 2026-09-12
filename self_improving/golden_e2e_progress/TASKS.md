@@ -5,12 +5,14 @@
 - [x] Harness唯一CLI入口与原Golden journal、版本化开发Skill执行（真实文本revision0→7）。
 - [x] 文本完整线、真实生成资产、34项物理检查、新鲜Codex视觉与validate。
 - [x] 新文本包复制后在禁止原资源访问条件下真实load/1000step/新媒体。
-- [ ] image-only完整线：首试本地检索类别失配，保留失败，补有界目录上下文。
-- [ ] video-only完整线：e2391bd真实案例运行中。
-- [ ] web来源完整线：获取/轴向/许可已真实通过，尚待Genesis组合。
+- [x] image-only/local完整线：首试失配保留，修复实际目录上下文后centered案例7阶段通过。
+- [x] video-only完整线：旧offset失败保留；536496e centered案例7阶段通过。
+- [x] web来源完整线：固定来源Box实际搜索下载、Genesis及validate共7阶段通过。
 - [x] fallback A完整线：实际余量失败、Codex修改y和scene bytes，第二轮34/34及validate通过。
-- [ ] fallback B完整线：不可变asset patch组件已实现，待真实模型提议与重放。
-- [ ] 有限重试停止的真实证据、完整journal新包、最终测试覆盖说明与walkthrough收口。
+- [x] fallback B完整线：536496e真实模型scale=3.5新版本，12阶段/34项检查通过。
+- [x] 有限重试停止真实证据：offset视频两次修订后repair_budget_exhausted；完整失败journal保留。
+- [x] 完整journal新包输出（image/local 231-member等）；原文本隔离copy-run已通过。
+- [ ] 最新包额外copy-run、最终测试覆盖说明与walkthrough收口。
 - [ ] 最终逐功能提交干净，暂停供用户审阅；不继续release/历史债务/autoresearch/robot。
 
 ## 2026-09-12 active 任务替换

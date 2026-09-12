@@ -1,5 +1,30 @@
 # 功能级整合台账
 
+## INT-EXP-004 — 三模态/三来源小例与资产修订增量（2026-09-13）
+
+- `lifecycle`：`integrated`；`verification`：`runtime_pass`（有限单刚体实验案例）。
+- `origin_owner` / `upstream_owner`：沿用INT-EXP-001/003的Bingsheng Harness、Yuxin/HYX provider、
+  Gujie几何语义及Genesis/第三方资产归属；不将本轮修复记为原provider作者贡献。
+- `integration_owner`：Bingsheng Harness workstream；`recorded_git_authors`：catalog修复
+  `13b30b8`记录`Bingsheng Xie <xieziyin_shangshu@outlook.com>`，Git identity不推断自然人映射。
+- `source_repository`：本仓库；`source_ref`：真实新案例固定
+  `536496eac465503e4dfa5fa8270f22d0a3fb1b73`，catalog子agent实现`13b30b8`；既有provider/Gujie/web
+  固定refs见INT-EXP-003。`dirty_snapshot`：新案例invocation_identity均dirty=false，声明runtime未重新深验。
+- `source_paths` / `target_paths`：`experiment_model_stages.py`读取真实目录摘要/验证receipt尺寸；
+  既有`experiment_assets.py`不可变修订、controller与Genesis执行。`integration_method`：现有seam
+  中补实际资产上下文而非cube/block别名；无新vendor或新业务状态库。
+- `contract_spec`：`EXPERIMENT_MODEL_STAGES_CONTRACT.md`、`EXPERIMENT_ASSETS_CONTRACT.md`及003所列合同。
+- `verification_evidence` / `golden_run`：RESULTS顶部记录完整绝对根与command JSON：
+  image/local `eafcc7f0-3eb4-4401-9ddb-f8de1c178b2d` 7阶段159.306761908s、34/34；
+  centered video/generated `2d7703c6-46b8-41d6-b6e7-f182cef8df34` 7阶段160.627255317s；
+  multimodal B `4ef25a76-2e33-4d83-8df8-e71a62baa44c` 12阶段321.707607539s、34/34。
+  B由Codex提出scale3.5，版本`2c7f5004`→`4e7e5818`真实改变geometry且保留旧资产。
+  三者visual/validate passed；image包231成员，最新包额外copy-run尚待验，不冒称已通过。
+- `known_gaps`：003的image/视频“尚无成功”由此增量覆盖，原失败证据不撤销；offset视频仍为两修订
+  `repair_budget_exhausted`。三种模态和local/web/generated各有小例，不证明随机矩阵、高稳定率或
+  任意重建；cousin、numeric修订、新MCP命名空间、parent终态/晋升、正式资格、robot/data仍未授予。
+- `last_verified`：`2026-09-13`；最终测试/覆盖与walkthrough由收口验收另行追加。
+
 ## INT-EXP-003 — 通用服务真实接线与有界场景修订（2026-09-13 增量）
 
 - `lifecycle`：`integrated`；`verification`：`runtime_pass`（下列 text/generated、text/web 与场景修订子集）。

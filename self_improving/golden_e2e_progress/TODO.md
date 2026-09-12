@@ -4,6 +4,13 @@
 
 ## Doing
 
+- 当前收口：固定536496e的image/local、centered video/generated与multimodal资产fallback B真实通过；
+  加上既有text/generated、text/web、fallback A，模态与来源小案例均有成功证据。详见RESULTS顶部。
+- 旧image类别失配与offset视频repair_budget_exhausted原样保留；不以新简单案例洗掉失败。
+- 待独立最终测试、最新包额外copy-run和walkthrough整合；完成这些后暂停审阅，不进入正式release。
+
+### 历史推进快照（以下在途描述由顶部结果覆盖，不再作为待运行指令）
+
 - 已整合通用输入、三来源资产、共享意图编译、portable loader、开发execution身份、结构化Codex建议、
   stage handlers和evidence policy；当前主会话接同一Golden service/controller，尚无新三模态E2E成功。
 - 资产并发登记、Y-up规范化、cousin明确拒绝、颜色不匹配拒绝及qualified receipt实例重验已修复。

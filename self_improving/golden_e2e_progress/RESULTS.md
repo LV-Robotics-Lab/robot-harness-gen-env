@@ -1,6 +1,40 @@
 # 进度与结果
 
-## 2026-09-13 通用第二轮在途与失败
+## 2026-09-13 实验分支验收增量（固定536496e，待最终测试/新copy-run汇总）
+
+以下均由实际 command JSON 核对；v2根为
+`/home/jingxiang/bingsheng/generic-experiment-v2-20260913.1QrGYD`。前三例 invocation_identity
+记录 HEAD `536496eac465503e4dfa5fa8270f22d0a3fb1b73`、dirty=false；runtime身份仅声明路径，
+`declared_not_deep_verified`，不冒称重新深验runtime。阶段passed仍为development_unqualified、
+父snapshot active、parent_terminal=false；robot_policy_evaluated/data_collection_evaluated均false。
+
+| 分支 | 状态 | 实际workflow / 命令wall | 结果与证据 |
+|---|---|---|---|
+| image-only / local | 真实通过 | `eafcc7f0-3eb4-4401-9ddb-f8de1c178b2d` / 159.306761908s | 7阶段、34/34、visual/validate passed；`controller-local-v3/commands/5e60b94f-fa99-4832-8020-4a28df48114f.json` |
+| video-only / generated，centered | 真实通过 | `2d7703c6-46b8-41d6-b6e7-f182cef8df34` / 160.627255317s | 7阶段、physical/visual/validate passed；`controller-v3/commands/8e0b2f7b-f933-485b-a457-da755269ad84.json`；`newvideo-centered-package` |
+| multimodal / generated，asset fallback B | 真实通过 | `4ef25a76-2e33-4d83-8df8-e71a62baa44c` / 321.707607539s | 12阶段，一次真实scale修订，最终34/34与visual/validate passed；`controller-v3/commands/fff78fb4-a81b-44b7-b909-6b33c999f4dd.json` |
+| text / web，固定e2391bd | 真实通过 | `1b4ed241-59db-4fc4-9e57-01b60e82910a` / 157.955860407s | 7阶段，真实Box检索下载、物理/视觉/validate passed；`controller/commands/0db7940d-3b24-45ff-bdbe-e70030e211cd.json` |
+
+- image实际catalog上下文修复来源`13b30b8`：9测试passed，缺失配置在模型前blocked；不加cube别名。
+  实际检索候选`catalog:generated_red_block_2c7f5004`，规范化新版本
+  `c93ec51e77e5ddf5c26c6fd33f443908ed02a5c21f26b80da46adde9352a7f9c`；模型解释7.896959s、
+  visual9.400983s。导出`image-local-centered-package`有231成员，environment SHA
+  `26af1510e1ab24571ab7a4214fa04db9e2894cea33f1a29c8ddf0485bd5d7de6`，导出0.866869096s。
+  该图来自旧视频case第一次真实centered replay末帧，不把旧复杂位姿失败覆盖为成功。
+- B由真实Codex提出scale=3.5，旧版本
+  `2c7f500479d7a7145e53d5df6358f43499069555c13c4c579802c4777e0522bb`不覆盖，新版本
+  `4e7e58186d4d9d1bf0b32f3cd163e0adec89bec1e24bd68ee4044d3a679224bb`记录parent与patch，
+  尺寸实际改变为约[.1925,.1925,.14]m，再compile/replay/observe/visual/validate通过。
+- 旧offset视频`f6fe486a-68c1-4894-b210-6eba1359bf7f`最终失败保留：480.881527850s，
+  三次replay物理均passed、两次布局修订后第三次visual仍failed，`repair_budget_exhausted`；
+  revision16、active_operation null，未validate/导出包，不继续重试此input。命令
+  `controller/commands/ced4ee90-5672-4798-8901-48b8fb8436ba.json`是真实预算停止证据，不是video成功。
+- 各输入与local/web/generated来源至少一个小型真实成功例，A/B均有真实修订；不代表随机矩阵、
+  高成功率、任意重建或digital cousin。原文本132-member包copy-run已通过；最新包的新copy-run与
+  最终测试由独立验收继续，结果尚未计入本增量。正式qualification、新experiment MCP投影、父终态/
+  晋升、数值修订、robot/data、历史债务和autoresearch均未授予。
+
+## 历史快照：2026-09-13 通用第二轮在途与失败（终局见顶部增量）
 
 - 固定e2391bd，image-only/local首试workflow`6e8b3c50-1db4-4392-aac5-bda05f2f97d8`
   8.8598秒失败：真实解释7.8353秒选择cube，实际catalog只有block，本地检索零命中；未执行

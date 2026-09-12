@@ -2,6 +2,17 @@
 
 状态：`accepted_2026-09-09`
 
+## 2026-09-13 已实接的实验seam与未授予部分
+
+- 公共`experiment_cli` submit/status/resume/package→现有controller实验分支→ExperimentService→
+  GoldenRunHarness与原Registry/CAS/journal。真实案例由此入口完成，不新建业务authority。
+- 内部CodexBackend.propose消费原始媒体、有界catalog能力或本次观测/物理报告，返回建议；
+  acquire/revise、compile、replay、observe、visual和validate由Harness执行并提交版本化receipt。
+- scene/asset修订分别经既有受信依赖与预算门，真实A/B均通过；offset视频两次布局修订后预算耗尽。
+- `experiment.*@1.0.0`为开发descriptor，尚无新MCP投影或正式qualification。fresh observation在
+  本实验controller准入检查，不声称policy的fresh_observations字段已接通；父仍active不冒称晋升。
+- 具体验收与部分失败见RESULTS顶部；最终测试和最新包独立copy-run结果后续追加，不从seam存在推断通过。
+
 ## 2026-09-12 通用实验管线授权切片
 
 本次可执行交接明确要求直接实现并限定快速测试范围，沿用 S1/S2/S3/S4/S5/S6，具体 adapter

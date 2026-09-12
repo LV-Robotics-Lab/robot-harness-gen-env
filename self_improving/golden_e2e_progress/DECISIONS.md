@@ -1,5 +1,16 @@
 # 稳定决策
 
+## 2026-09-13 小型真实覆盖的验收口径
+
+- 模态text/image/video与source local/web/generated分别记账，允许案例交叉覆盖；centered成功不
+  撤销offset视频预算耗尽或旧image目录失配。不得用单一成功百分比掩盖布局/视觉能力差异。
+- 模型读取有界实际catalog摘要及digest；有可验证不可变receipt才提供尺寸。目录只是能力上下文，
+  不给类别造别名、不强迫匹配。缺资源在模型前结构化blocked，不浪费模型修订预算。
+- fallback A改变实际场景；B隔离产生新asset版本，本轮scale=3.5不改旧版本。视觉与物理分账，
+  有界失败停止保留全部已产出证据。数值配置修订未实现，不通过改成功阈值制造pass。
+- 此实验阶段完成门仍包括最后测试、可迁移包及walkthrough审阅；新experiment命名空间未投影MCP，
+  不从现有qualified MCP历史能力推导新工具可用；父terminal、晋升、robot/data均不授予。
+
 ## 2026-09-13 实验接线落实
 
 - 本阶段新阶段用`experiment.<stage>@1.0.0`开发descriptor，仍通过原SkillRegistry与Golden内核；
