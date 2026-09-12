@@ -69,3 +69,33 @@ def test_intent_unknown_fields_cannot_carry_hidden_controls(tmp_path):
     }
     with pytest.raises(ValueError, match="intent fields"):
         compile_scene(store, ref, intent, asset)
+
+
+def test_color_revision_requires_matching_asset_version(tmp_path):
+    asset = acquire(
+        AssetRequest(source="generated", category="block", color="red"), tmp_path / "assets"
+    )
+    original_asset_receipt = (asset.root / "receipt.json").read_bytes()
+    store = LocalArtifactStore(tmp_path / "cas")
+    source = tmp_path / "input.txt"
+    source.write_text("a red block")
+    ref = store.put_file(source, name="input.txt", media_type="text/plain", schema_version=None)
+    intent = dict(
+        category="block",
+        color="red",
+        source="generated",
+        selection="exact",
+        dimensions_m=None,
+        xy_m=[0.0, 0.0],
+        yaw_deg=0.0,
+        support="table",
+        object_count=1,
+        input_sha256=ref.sha256,
+        unknowns=[],
+    )
+    original = compile_scene(store, ref, intent, asset)
+    with pytest.raises(ValueError, match="color"):
+        compile_scene(store, ref, {**intent, "color": "blue"}, asset)
+    unspecified = compile_scene(store, ref, {**intent, "color": None}, asset)
+    assert unspecified.scene_ref == original.scene_ref
+    assert (asset.root / "receipt.json").read_bytes() == original_asset_receipt

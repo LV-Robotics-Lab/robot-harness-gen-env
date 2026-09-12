@@ -78,6 +78,8 @@ def compile_scene(store, input_ref, intent: dict, asset: AssetVersion) -> Compil
     receipt = json.loads(raw)
     if hashlib.sha256(raw).hexdigest() != asset.version_id:
         raise ValueError("asset receipt changed")
+    if intent["color"] is not None and intent["color"] != receipt.get("color"):
+        raise ValueError("intent color differs from acquired asset; reacquire the asset")
     if any(
         intent.get(k) != receipt.get(v)
         for k, v in (
