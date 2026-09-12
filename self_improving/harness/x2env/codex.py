@@ -162,6 +162,16 @@ class CodexBackend:
             error_code=error,
         )
 
+    def prepare_asset(
+        self, scene_ir, entity, candidate, fetched, *, output_root: Path, timeout: int = 600
+    ):
+        """Prepare bounded advisory parameters using this backend's sole restricted transport."""
+        from .asset_preparation import prepare_asset
+
+        return prepare_asset(
+            self, scene_ir, entity, candidate, fetched, output_root=output_root, timeout=timeout
+        )
+
     def interpret(self, bundle: InputBundle, *, output_root: Path, timeout: int = 600):
         if type(timeout) is not int or not 1 <= timeout <= 600:
             raise ValueError("deadline must be an integer within 1..600 seconds")

@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C06-WEB — 原provider与模型参数准备接线
+
+- `origin_owner`：Yuxin原检索/获取，Bingsheng Harness规范化与编排；`integration_owner`：Bingsheng。
+- `source_ref`：原provider固定来源见INT-CANONICAL资产条目；canonical adapter `38071da`、Codex `7dcb40c`。
+- `target_paths`：x2env/web_resolver.py、asset_preparation.py、codex.py及对应测试。
+- `verification`：24项受控测试；原provider真实search/fetch另记，完整web视觉/编译链尚not_run。
+
 ## INT-CANONICAL-C11-PACKAGE — 包自有loader与真实跨目录执行
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream；`upstream_owner`：Genesis、Cesium。

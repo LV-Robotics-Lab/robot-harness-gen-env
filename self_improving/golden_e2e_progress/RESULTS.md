@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C05/C06 Web规范化参数受管理模型接线
+
+- WebAssetResolver实际调用唯一Yuxin search/fetch→受限prepare→规范化/登记→真实版本preview→Codex视觉，
+  各stage保留partial receipt；不使用模型填写的许可、版本或成功回执。
+- prepare_asset复用唯一受限transport，已知尺寸轴不可变、GLB Y-up为格式事实，未知尺寸/质量/摩擦/
+  颜色数值转换明确codex_estimate，不能称实物测量。参数与source/fetch/SceneIR/实际模型日志绑定。
+- 24项相关测试通过，均为显式外部替身；真实原Yuxin search/fetch已有证据，但此完整web链尚未真实执行。
+
 ## 2026-09-13 C11 真实隔离copy/load/step冒烟（非物理通过）
 
 - 全新Store正常登记官方Cesium Box及完整typed来源图，compile→package→随机新目录复制后实际
