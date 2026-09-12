@@ -1,7 +1,7 @@
 # Canonical x2env 合并计划：澄清决策检查点
 
 - 日期：2026-09-13
-- 状态：`plan_generated_pending_user_review`
+- 状态：`accepted_matrix_v1_frozen`
 - 目标分支：`worktree/bingsheng`
 - 当前规划来源：`codex/golden-diagnosis-20260911`
 - 计数口径：Q01–Q64 是从本轮对话逐项确认的“澄清结论单元”，用于压缩上下文后稳定引用；
@@ -243,7 +243,7 @@
 - 当前没有会改变总体架构、分支策略、用户入口或验收门的已知未决问题。
 - 逐文件、逐提交、逐测试和逐真实案例的计划已生成在
   [`CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md`](CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md)。
-  当前等待用户审阅；用户批准该计划时，本文 Q01–Q64 和计划内 Qualification Matrix v1 一并冻结。
+  用户于 2026-09-13 批准开始实现；本文 Q01–Q64 和计划内 Qualification Matrix v1 一并冻结。
 
 ## 计划生成门
 

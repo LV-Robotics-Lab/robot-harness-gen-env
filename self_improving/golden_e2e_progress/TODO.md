@@ -2,17 +2,19 @@
 
 更新时间：2026-09-13
 
-## Review：canonical x2env 合并实施计划
+## Doing：C00/C01 canonical x2env 计划冻结与来源保护
 
 - Q01–Q64 已写入
   [`CANONICAL_X2ENV_MERGE_DECISIONS.md`](CANONICAL_X2ENV_MERGE_DECISIONS.md)，不再只依赖聊天上下文。
 - 完整计划已生成：
   [`CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md`](CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md)。
-  它固定一个 Harness/CLI、三个 Skills、Tools、C00–C15 提交序列和待批准的 4+4+4 matrix。
-- 当前等待用户审阅计划；尚未修改 canonical 功能、运行 qualification、合并或 push。用户批准计划后，
-  matrix v1 冻结，再进入 dirty-byte 保护、fetch 后全分支盘点、TDD consolidation、真实 qualification 和
+  它固定一个 Harness/CLI、三个 Skills、Tools、C00–C15 提交序列和已批准的 4+4+4 matrix。
+- 用户于 2026-09-13 批准开始实现，matrix v1 已冻结；当前登记批准并执行 fetch 后全分支盘点、
+  dirty-byte 保护。之后才进入 TDD consolidation、真实 qualification 和
   `origin/worktree/bingsheng` push；push 后等待用户批准 main PR。
 - Dashboard 的 portfolio/tasks/project 三个入口本次仍返回 HTTP 404，没有 task id，不伪造同步。
+- 文件所有权：主会话负责 C00/C01 记录和 Git 保护；Mill 只读分类 dirty 改动，Bacon 只读核对 Gujie
+  reconstruction seam/资源。两名子 agent 不修改任何工作树，不启动昂贵运行。
 
 ## 用户验收完成：开放柜子与粉红鼠标
 

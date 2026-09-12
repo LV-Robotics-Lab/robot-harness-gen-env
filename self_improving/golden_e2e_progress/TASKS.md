@@ -1,5 +1,27 @@
 # Golden E2E 任务分解
 
+## 2026-09-13 已批准 canonical 执行清单
+
+- [x] C00：用户批准 Q01–Q64、计划和 Qualification Matrix v1；登记不可降低的 push 门。
+- [ ] C01：fetch 后冻结 refs/worktrees，保护并复原验证 dirty bytes，分类形成 clean bingsheng 基线。
+- [ ] C02：权威 contracts、seams、acceptance、机读矩阵。
+- [ ] C03：typed models、生成 schema、CapabilityRegistry。
+- [ ] C04：单 Store、workflow 生命周期、Harness public interface。
+- [ ] C05：多模态 ingest 与受管理 Codex SceneIR/视觉建议。
+- [ ] C06：唯一 Yuxin local/web provider 与 AssetRegistry。
+- [ ] C07：固定 Gujie reconstruction-only seam 和真实新 geometry。
+- [ ] C08：多实体/支撑图/articulation Genesis compile。
+- [ ] C09：真实 replay/fresh observation/独立物理与视觉 validate。
+- [ ] C10：共享两次修订预算、A/B/numerics 和恢复。
+- [ ] C11：可迁移包、failure bundle、制品 publisher。
+- [ ] C12：唯一 x2env CLI。
+- [ ] C13：删除被替代 active graph，canonical core 100% statement/branch 与 active CI。
+- [ ] C14：完整中文接入文档、walkthrough、provenance。
+- [ ] C15：冻结 HEAD 后 12 cases、补充门、三个 copy-run、qualification/prerelease、普通 push。
+- [ ] 确认远端 bingsheng SHA 后暂停；main PR 仍需用户另行授权。
+
+细节以已批准实施计划为准；下列实验/旧计划清单只表示其历史版本。
+
 ## 2026-09-13 通用实验验收清单
 
 - [x] Harness唯一CLI入口与原Golden journal、版本化开发Skill执行（真实文本revision0→7）。

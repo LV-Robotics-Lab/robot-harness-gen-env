@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C00 批准与轻量确认
+
+- 用户明确批准 `0a8abc0` 的 C00–C15 计划；Q01–Q64、4+4+4 matrix 和 Physics Assertions v1 冻结。
+- 实际集成 HEAD `0a8abc01839f2c37a64b9c08f643f48985fb4a79`，开始时 clean；主目录仍为
+  `ea26524cae7b4a18b5576150376eb6ec1ddddf7b`，原 dirty 清单保留，未切换或清理。
+- `git fetch --prune origin` 实际 exit 0；dashboard 三个 JSON 均 HTTP 404，无 task id/写回。
+- 当前只登记批准与来源保护前置；没有新的 Codex/Genesis/qualification 成功或远端 push。
+
 ## 2026-09-13 canonical x2env 规划结果
 
 - Q01–Q64 已持久化，实施计划已生成：

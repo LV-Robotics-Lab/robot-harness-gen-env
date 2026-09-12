@@ -1,7 +1,8 @@
 # Canonical x2env 收敛、验收与 bingsheng 推送实施计划
 
 - 日期：2026-09-13
-- 状态：`proposed_pending_user_review`
+- 状态：`accepted_matrix_v1_frozen`
+- 批准：用户于 2026-09-13 明确批准开始实现；批准基线 `0a8abc01839f2c37a64b9c08f643f48985fb4a79`。
 - 目标分支：`worktree/bingsheng`
 - 规划来源：`codex/golden-diagnosis-20260911@3f7ec31bcc5839bec706892d438eb01a105aaf30`
 - 决策输入：[Q01–Q64](CANONICAL_X2ENV_MERGE_DECISIONS.md)

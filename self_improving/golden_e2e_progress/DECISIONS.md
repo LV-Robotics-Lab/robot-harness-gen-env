@@ -8,7 +8,7 @@
   4+4+4 验收矩阵、30 分钟核验上限、GitHub Release 制品路径、push 后等待 main PR 授权等计划输入。
 - 澄清已经结束，逐文件/逐提交/TDD/真实资格/branch-push 计划已生成在
   [`CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md`](CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md)。
-  当前状态为等待用户审阅；用户批准时 Qualification Matrix v1 才冻结。不把计划写成已实现、
+  用户于 2026-09-13 明确批准开始实现，Qualification Matrix v1 已冻结。不把批准写成已实现、
   qualification 或 push。
 
 ## 2026-09-13 本轮实验审阅停止点

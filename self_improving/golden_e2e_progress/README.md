@@ -6,12 +6,12 @@
 
 ## 文件地图
 
-- `CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md`：当前待审 canonical 实施计划；包含目标模块、
+- `CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md`：当前已批准 canonical 实施计划；包含目标模块、
   dirty-byte/全分支收敛、C00–C15 逐功能提交、4+4+4 固定矩阵、30 分钟预算、制品发布和 bingsheng
   push 停止点。
 - `CANONICAL_X2ENV_MERGE_DECISIONS.md`：当前 canonical x2env 收敛、开发分支整合、验证与
   `worktree/bingsheng` push 计划的 Q01–Q64 澄清检查点；实施计划以其中已确认决策为输入。
-- `HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`：当前唯一 active 交接 prompt；记录安全停止现场、
+- `HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`：历史实验交接 prompt；记录安全停止现场、
   已通过 normal、被中断 repair、三模态/三资产来源接线表、两类 fallback 和下一会话执行顺序。
 - `SIM_READY_RELEASE_PLAN.md`：历史已批准的 M1–M5 计划；2026-09-12 的执行顺序已被当前交接
   prompt 替代，内容仅作范围和证据参考。
@@ -45,13 +45,13 @@
 
 ## 当前阶段
 
-2026-09-13 canonical x2env 合并计划已经生成并等待用户审阅：目标收敛为三个 public Skills、同一
+2026-09-13 用户已批准 canonical x2env 合并计划，Qualification Matrix v1 冻结：目标收敛为三个 public Skills、同一
 Harness 和同一多模态入口，清理旧 experiment/limited-preview/MCP 活跃路径，并在保护
 `worktree/bingsheng` dirty bytes 后整合仍有效的分支能力。Q01–Q64 位于
 [`CANONICAL_X2ENV_MERGE_DECISIONS.md`](CANONICAL_X2ENV_MERGE_DECISIONS.md)，完整执行序列和
 Qualification Matrix v1 位于
 [`CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md`](CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md)。
-当前只完成规划，尚未修改 canonical 功能、运行 qualification、合并或 push。下列 2026-09-12 通用
+当前执行 C00/C01：批准登记、fetch 后全分支冻结与 dirty-byte 保护；尚未修改 canonical 功能、运行 qualification、合并或 push。下列 2026-09-12 通用
 实验管线状态保留为实现基线，但不再覆盖新的计划决策。
 
 当前会话已按用户指令安全停止单鼠标 M2 收口，不再继续 repair、深验、bootstrap、资格重建或

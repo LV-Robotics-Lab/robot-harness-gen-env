@@ -1,5 +1,10 @@
 # Change Log
 
+## 2026-09-13 canonical 计划批准
+
+- 用户批准 C00–C15、Q01–Q64、Qualification Matrix v1 和物理断言；启动全分支冻结和 dirty-byte
+  保护，不把旧单刚体成功计入新资格。新功能、资格、制品发布和 bingsheng push 均未完成。
+
 ## 2026-09-13 用户多对象 Prompt 实跑
 
 - 原样运行“打开柜子＋柜上粉红鼠标”，真实Codex将其错误压成单cabinet后在web资产获取失败；

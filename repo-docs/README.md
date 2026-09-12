@@ -6,6 +6,11 @@
 
 ## 阅读路径
 
+当前 canonical x2env 收敛实施已获用户批准，见
+[C00–C15 计划与冻结验收矩阵](../self_improving/golden_e2e_progress/CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md)。
+执行进度见[任务账本](../self_improving/golden_e2e_progress/TODO.md)；批准不表示 canonical runtime、
+qualification 或 bingsheng push 已完成。下表的旧路径说明仍按各自固定版本解读。
+
 | 读者目标 | 从这里开始 | 读完后获得什么 |
 | --- | --- | --- |
 | 一气走通编译 + 回放主路径 | [一条真实路径](walkthroughs/one-real-run.md) | 一条 prompt 从入口到 `runtime_validation_report.json` 的行为模型，含真实失败分支 |
