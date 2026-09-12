@@ -1,5 +1,20 @@
 # 进度与结果
 
+## 2026-09-13 C11 真实隔离copy/load/step冒烟（非物理通过）
+
+- 全新Store正常登记官方Cesium Box及完整typed来源图，compile→package→随机新目录复制后实际
+  Genesis加载/25步/生成新媒体通过，8个原目录拒读探针通过；62.860362s，6帧/6 unique。
+- 现场`/home/jingxiang/bingsheng/canonical-package-copy-probe-20260913.uGmcxx/`，
+  `probe-summary.json` SHA `ffce67b9fb93e3d248a7c4a9ed08a39d1c724c94f06d649028a68c746a289de7`；
+  copied manifest `c9d780c0674d66e941d9d63da14f305bf42970b089ccf65ca362dc6c7b14ca0a`。
+- 主审看图与loaded：operator显式center z=0导致初态25mm嵌入桌面，不能授物理通过。
+  MP4为6帧/10fps共0.6s，模拟0.1s，playback_matches_simulation_rate=false；不是冻结4s profile。
+  新review-with-media包本身copy_run仍not_run，不把旧copiedmanifest证据挪给新hash。
+- 前置两次失败保留：vbOC9T来源报告嵌套mouse ref未迁入；Q0WwcX操作脚本strict类型输入错误，
+  均未启动Genesis。uGmcxx修正完整来源和JSON消费者，原资产与旧失败现场未改。
+- package与runtime现共用stdlib launcher，typed runtime保留原强校验；43项相关测试通过。
+  这次真实smoke为共享launcher收敛前源码bytes；收敛后的真实整链仍待执行，不计三次资格copy-run。
+
 ## 2026-09-13 C06 版本绑定的真实资产preview接线
 
 - AssetPreviewRenderer复制已验证版本四成员，在受限Genesis子进程中生成实际PNG和连续媒体，

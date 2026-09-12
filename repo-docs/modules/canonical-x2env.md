@@ -51,6 +51,9 @@ controller现已将local resolver、compile和双profile replay接到同一workf
 跨Store复制一个receipt不代表来源完整；`artifacts.artifact_closure`按显式ArtifactRef递归核验JSON
 证据图，Registry与包导出共用。真实preview曾因此暴露缺失来源记录，原运行/视觉结果保留，
 但不能作为来源完整或成功包资格使用；新导入必须复制全部必要证据。
+`package.py`导出完整typed证据及父资产版本闭包、相对资产和包自有loader，外部运行环境单独声明。
+`package_loader.py`与在线runtime共用进程启动器。已有独立复制加载/步进/新媒体冒烟，但初态
+嵌入且未执行固定双dt物理门，因此review包一律sim_ready=false；最终workflow签发与三次资格仍待完成。
 
 Python模型是唯一schema编辑源；`script/export_x2env_schemas.py --check`检测生成文件漂移。
 Codex输出另生成strict projection：可空字段仍必须出现；provenance是固定六字段对象，joint positions

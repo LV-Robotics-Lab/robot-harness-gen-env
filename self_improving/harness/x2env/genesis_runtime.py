@@ -8,17 +8,15 @@ RuntimeScene contains resolved world poses: this adapter never repairs placement
 import hashlib
 import json
 import math
-import os
-import signal
-import shutil
 import struct
-import subprocess
 import time
 import xml.etree.ElementTree as ET
 from pathlib import Path, PurePosixPath
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from . import package_loader
 
 Sha = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
 Number = Annotated[float, Field(strict=True)]
@@ -174,199 +172,42 @@ def run_scene(
     denied_roots=(),
     timeout_seconds=600,
 ):
-    """Launch a fresh declared CPU runtime; result never grants physical qualification."""
+    """Validate typed inputs, then use the same launcher as portable packages."""
     output = Path(output_dir).absolute()
-    output.mkdir(parents=True, exist_ok=False)
+    if output == Path("/") or any(p.is_symlink() for p in (output, *output.parents)):
+        raise ValueError("unsafe execution output")
+    if output.exists():
+        raise FileExistsError(output)
     start = time.monotonic()
-    result = {
-        "status": "failed",
-        "simulator_executed": False,
-        "physical_profile": "not_run",
-        "robot_policy_evaluated": False,
-        "data_collection_evaluated": False,
-    }
     try:
         scene = RuntimeScene.model_validate(scene)
         root = Path(package_root).resolve()
         _verify(scene, root)
-        required = {"interpreter", "stdlib", "distributions", "native", "genesis"}
-        if not required <= runtime_roots.keys() or any(
-            not Path(runtime_roots[k]).is_dir() for k in required
-        ):
-            result["error_code"] = "missing_runtime_dependency"
-            raise ValueError("declared runtime roots unavailable")
-        if profile not in {"baseline", "half_dt", "load_step_smoke"}:
-            result["error_code"] = "unsupported_profile"
-            raise ValueError("unsupported profile")
-        roots = {k: str(Path(runtime_roots[k]).resolve()) for k in required}
-        denied = [str(Path(p).resolve()) for p in denied_roots]
-        allowed = [root, output.resolve(), *(Path(p) for p in roots.values())]
-        if any(
-            Path(d).is_relative_to(a) or a.is_relative_to(Path(d)) for d in denied for a in allowed
-        ):
-            raise ValueError("runtime/package/output overlaps denied root")
-        payload = scene.model_dump(mode="json")
-        digest = hashlib.sha256(
-            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
-        ).hexdigest()
-        job = {
-            "scene": payload,
-            "scene_sha256": digest,
-            "package_root": str(root),
-            "roots": roots,
-            "output": str(output),
-            "profile": profile,
-            "denied_roots": denied,
-        }
-        _write(output / "job.json", job)
-        shutil.copyfile(Path(__file__).with_name("genesis_child.py"), output / "genesis_child.py")
-        for name in ("home", "tmp", "cache"):
-            (output / name).mkdir()
-        env = _environment(roots, output)
-        native = Path(roots["native"]) / "usr/lib/x86_64-linux-gnu"
-        command = [
-            str(native / "ld-linux-x86-64.so.2"),
-            "--library-path",
-            str(native),
-            str(Path(roots["interpreter"]) / "python3.12"),
-            "-X",
-            "frozen_modules=off",
-            "-S",
-            "-B",
-            str(output / "genesis_child.py"),
-            str(output / "job.json"),
-        ]
-        _write(
-            output / "invocation.json",
-            {
-                "command": command,
-                "environment": env,
-                "child_sha256": hashlib.sha256(
-                    (output / "genesis_child.py").read_bytes()
-                ).hexdigest(),
-            },
-        )
-        with (
-            (output / "stdout.log").open("xb") as stdout,
-            (output / "stderr.log").open("xb") as stderr,
-        ):
-            process = subprocess.Popen(
-                command,
-                cwd=output,
-                env=env,
-                stdin=subprocess.DEVNULL,
-                stdout=stdout,
-                stderr=stderr,
-                close_fds=True,
-                start_new_session=True,
-            )
-            lifecycle = {
-                "pid": process.pid,
-                "pgid": process.pid,
-                "attempt_dir": str(output),
-                "command": command,
-                "signals": [],
-                "started_monotonic": time.monotonic(),
-            }
-            _write(output / "process.json", lifecycle)
-            try:
-                process.wait(timeout=timeout_seconds)
-            except (subprocess.TimeoutExpired, KeyboardInterrupt) as exc:
-                lifecycle["stop_reason"] = (
-                    "timed_out" if isinstance(exc, subprocess.TimeoutExpired) else "interrupted"
-                )
-                _stop_group(process, lifecycle, output)
-                raise
-            finally:
-                lifecycle["exit_code"] = process.poll()
-                lifecycle["ended_monotonic"] = time.monotonic()
-                _write(output / "process.json", lifecycle)
-        result["exit_code"] = process.returncode
-        if (output / "child-result.json").is_file():
-            result.update(json.loads((output / "child-result.json").read_bytes()))
-        if process.returncode:
-            result["error_code"] = "runtime_execution_failed"
-            raise ValueError("Genesis child failed; retained stderr and partial products")
-        if result.get("status") != "passed" or result.get("scene_sha256") != digest:
-            raise ValueError("missing or unbound child result")
-    except (subprocess.TimeoutExpired, KeyboardInterrupt) as exc:
-        result["status"] = "cancelled"
-        result["error_code"] = (
-            "timed_out" if isinstance(exc, subprocess.TimeoutExpired) else "interrupted"
-        )
-        result["reason"] = str(exc)
-        result["partial_products_retained"] = True
     except (ValueError, OSError) as exc:
-        result["status"] = "failed"
-        result.setdefault("error_code", "invalid_runtime_request")
-        result["reason"] = str(exc)
+        output.mkdir(parents=True, exist_ok=False)
+        result = {
+            "status": "failed",
+            "simulator_executed": False,
+            "physical_profile": "not_run",
+            "robot_policy_evaluated": False,
+            "data_collection_evaluated": False,
+            "error_code": "invalid_runtime_request",
+            "reason": str(exc),
+            "wall_seconds": time.monotonic() - start,
+        }
+        _write(output / "result.json", result)
+        return result
+    result = package_loader.launch_child(
+        scene.model_dump(mode="json"),
+        package_root=root,
+        child_path=Path(__file__).with_name("genesis_child.py"),
+        runtime_roots=runtime_roots,
+        output=output,
+        profile=profile,
+        denied_roots=denied_roots,
+        timeout_seconds=timeout_seconds,
+    )
+    result["launch_wall_seconds"] = result["wall_seconds"]
     result["wall_seconds"] = time.monotonic() - start
     _write(output / "result.json", result)
     return result
-
-
-def _stop_group(process, lifecycle, output):
-    """Signal only the session just created for this attempt; never fuzzy process matching."""
-    for sig, grace in [(signal.SIGINT, 10.0), (signal.SIGTERM, 10.0)]:
-        try:
-            os.killpg(process.pid, 0)
-        except ProcessLookupError:
-            lifecycle["group_exited"] = True
-            return
-        os.killpg(process.pid, sig)
-        lifecycle["signals"].append(
-            {"signal": sig.name, "pgid": process.pid, "monotonic": time.monotonic()}
-        )
-        _write(output / "process.json", lifecycle)
-        until = time.monotonic() + grace
-        while time.monotonic() < until:
-            process.poll()
-            try:
-                os.killpg(process.pid, 0)
-            except ProcessLookupError:
-                lifecycle["group_exited"] = True
-                return
-            time.sleep(0.05)
-    lifecycle["group_exited"] = False
-    lifecycle["cleanup_error"] = "owned_process_group_did_not_exit_after_INT_TERM"
-
-
-def _environment(roots, output):
-    distributions = roots["distributions"] + "/lib/python3.12/site-packages"
-    native = roots["native"] + "/usr/lib/x86_64-linux-gnu"
-    return {
-        "PATH": "/usr/bin:/bin",
-        "LANG": "C",
-        "LC_ALL": "C",
-        "PYTHONUTF8": "0",
-        "PYTHONHASHSEED": "0",
-        "PYTHONDONTWRITEBYTECODE": "1",
-        "PYTHONNOUSERSITE": "1",
-        "PYTHONPATH": roots["stdlib"] + ":" + roots["stdlib"] + "/lib-dynload",
-        "GS_HEADLESS": "1",
-        "PYGLET_HEADLESS": "1",
-        "GS_PARA_LEVEL": "0",
-        "OMP_NUM_THREADS": "1",
-        "MKL_NUM_THREADS": "1",
-        "OPENBLAS_NUM_THREADS": "1",
-        "NUMEXPR_NUM_THREADS": "1",
-        "QD_NUM_THREADS": "1",
-        "QD_OFFLINE_CACHE": "0",
-        "QD_ENABLE_PYBUF": "0",
-        "TMPDIR": str(output / "tmp"),
-        "GS_CACHE_FILE_PATH": str(output / "cache/genesis"),
-        "XDG_CACHE_HOME": str(output / "cache"),
-        "MPLCONFIGDIR": str(output / "cache/matplotlib"),
-        "PYGLFW_LIBRARY": distributions + "/glfw/x11/libglfw.so",
-        "LD_LIBRARY_PATH": native,
-        "LD_PRELOAD": native + "/libGLX.so.0.0.0:" + native + "/libOpenGL.so.0.0.0",
-        "HOME": str(output / "home"),
-        "MADRONA_ROOT_PATH": distributions + "/gs_madrona",
-        "MADRONA_ROOT_CACHE_DIR": str(output / "home/.cache/madrona"),
-        "PYOPENGL_PLATFORM": "osmesa",
-        "LIBGL_ALWAYS_SOFTWARE": "1",
-        "MESA_SHADER_CACHE_DISABLE": "true",
-        "__EGL_VENDOR_LIBRARY_FILENAMES": roots["native"]
-        + "/usr/share/glvnd/egl_vendor.d/50_mesa.json",
-        "IMAGEIO_FFMPEG_EXE": distributions + "/imageio_ffmpeg/binaries/ffmpeg-linux-x86_64-v7.0.2",
-    }

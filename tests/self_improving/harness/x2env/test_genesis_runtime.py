@@ -2,13 +2,55 @@
 
 import hashlib
 import json
-import struct
 import os
+import struct
 
 import pytest
 
-from self_improving.harness.x2env.genesis_runtime import RuntimeScene, run_scene
 from self_improving.harness.x2env.genesis_child import audit_geometry
+from self_improving.harness.x2env.genesis_runtime import RuntimeScene, run_scene
+
+
+def test_typed_runtime_delegates_verified_scene_to_shared_launcher(tmp_path, monkeypatch):
+    from self_improving.harness.x2env import package_loader
+    from self_improving.harness.x2env.genesis_runtime import RuntimeEntity
+
+    scene = RuntimeScene(
+        seed=37,
+        scene_ir_sha256="a" * 64,
+        entities=(
+            RuntimeEntity(
+                id="table",
+                kind="structural_box",
+                category="table",
+                position_m=(0.0, 0.0, 0.5),
+                orientation_wxyz=(1.0, 0.0, 0.0, 0.0),
+                size_m=(1.0, 1.0, 0.1),
+                friction=0.5,
+            ),
+        ),
+    )
+    calls = []
+
+    def launcher(payload, **kwargs):
+        calls.append((payload, kwargs))
+        kwargs["output"].mkdir()
+        return {"status": "failed", "error_code": "boundary_double", "wall_seconds": 0.01}
+
+    monkeypatch.setattr(package_loader, "launch_child", launcher)
+    result = run_scene(
+        scene,
+        package_root=tmp_path,
+        runtime_roots={},
+        output_dir=tmp_path / "out",
+        profile="half_dt",
+        denied_roots=[tmp_path / "denied"],
+        timeout_seconds=123,
+    )
+    assert result["error_code"] == "boundary_double"
+    payload, args = calls[0]
+    assert payload["seed"] == 37 and args["profile"] == "half_dt"
+    assert args["timeout_seconds"] == 123 and args["child_path"].name == "genesis_child.py"
 
 
 def scene():

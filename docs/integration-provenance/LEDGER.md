@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C11-PACKAGE — 包自有loader与真实跨目录执行
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream；`upstream_owner`：Genesis、Cesium。
+- `source_ref`：canonical `013391c`执行内核、`d881ccd`compile、`e14684f`typed来源图；
+  官方Khronos资产固定源与CC-BY证据保存在独立probe Store，不从软件许可推导资产许可。
+- `target_paths`：x2env/package.py、package_loader.py与genesis_runtime.py共享启动器。
+- `verification`：43项相关测试；uGmcxx真实copied load/step/media，精确源码/manifest见RESULTS。
+- `known_gaps`：operator初态嵌入，physical not_run；不计三项最终资格copy-run，不授sim-ready。
+
 ## INT-CANONICAL-C06-PREVIEW — 不可变版本生成视觉预览
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream；`upstream_owner`：Genesis。
