@@ -91,6 +91,10 @@ def test_unknown_is_advisory_and_logs_bound_input_and_model(tmp_path):
     assert result.status == "completed"
     assert result.authority == "advisory_only"
     assert result.proposal.unknowns[0].critical is True
+    assert result.proposal.unknowns[0].reason_kind == "unspecified"
+    prompt = (tmp_path / "attempt" / "prompt.txt").read_text()
+    assert "invent dimensions or silently resolve conflicting media" in prompt
+    assert "Unknown yaw is null, not zero" in prompt
     manifest = json.loads(store.read_artifact(result.evidence[-1]))
     assert manifest["model"] == "test-double"
     assert manifest["input_sha256"] == bundle.request_sha256

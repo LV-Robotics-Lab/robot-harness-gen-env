@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C05 资产锚定的显式生成设计
+
+- 新 grounding 使用同一 managed Codex transport；保留原 critical unknown，补全前 SceneIR 仅为
+  pending，解析资产后才提交已接受场景与重新绑定的 ResolvedAssetSet。未知 yaw 可为 null，compile 拒绝未解 yaw。
+- 所有已知数字轴、frame、实体与语义保留；缺测得资产尺寸、关键冲突、无授权策略均拒绝。
+  设计失败重提 resume 不再次调用模型；Store 原子门拒绝无 pending 意图的 grounding 提交。
+- adapter、controller、部署与状态攻击逐次 RED→GREEN；8 组 63 passed（4.89s）。模型 executable 与
+  resolver 为明确测试替身，不计真实案例成功。原 S02 失败不改写，grounding 的包完成链尚在独立核验。
+
 ## 2026-09-13 C06 单次受管检索词建议接通
 
 - 原类别不再兼任文件名查询：同一 CodexBackend 给出一条受限词法查询，SceneIR/category 保持不变；

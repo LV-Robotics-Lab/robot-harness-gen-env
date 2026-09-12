@@ -182,6 +182,23 @@ class CodexBackend:
             self, scene_ir, entity, candidate, fetched, output_root=output_root, timeout=timeout
         )
 
+    def ground_scene(
+        self, bundle_ref, proposal_ref, assets_ref, policy, *, output_root: Path, timeout: int = 600
+    ):
+        """One advisory simulation-design call, with no real-world scale claim."""
+        from .grounding import ground_scene
+
+        return ground_scene(
+            bundle_ref,
+            proposal_ref,
+            assets_ref,
+            policy,
+            store=self.store,
+            backend=self,
+            output_root=output_root,
+            timeout=timeout,
+        )
+
     def interpret(self, bundle: InputBundle, *, output_root: Path, timeout: int = 600):
         if type(timeout) is not int or not 1 <= timeout <= 600:
             raise ValueError("deadline must be an integer within 1..600 seconds")
@@ -305,7 +322,13 @@ class CodexBackend:
                 "must equal bundle.request_sha256 and revision must be 0. Preserve uncertainty "
                 "as explicit unknowns; critical conflicts require clarification. Explicit text "
                 "overrides media only with override provenance explaining the change. Do not "
-                "invent dimensions or silently resolve conflicting media. Coordinates use metres.\n"
+                "invent dimensions or silently resolve conflicting media. Coordinates use metres. "
+                "Classify unknown reason_kind truthfully: scale_unobservable for unavailable "
+                "metric "
+                "scale, pose_unobservable for unavailable metric pose, conflict for contradictory "
+                "inputs, unsupported for unsupported requirements, missing_required_semantics for "
+                "missing identity/relations, otherwise unspecified. Keep critical flags truthful; "
+                "never clear them to force execution. Unknown yaw is null, not zero.\n"
                 + json.dumps(
                     {
                         "bundle": bundle.model_dump(mode="json"),

@@ -8,6 +8,48 @@ from self_improving.harness.x2env.contracts import X2EnvRequest
 from self_improving.harness.x2env.deployment import build_harness, load_deployment
 
 
+def test_explicit_design_policy_reaches_controller_without_prompt_authorization(tmp_path):
+    import hashlib
+
+    from self_improving.harness.x2env.contracts import BackendProposal, InputMedia
+    from tests.self_improving.harness.x2env.test_codex import executable
+    from tests.self_improving.harness.x2env.test_grounding import setup
+
+    store, _, _, original, _ = setup(tmp_path, measured=True)
+    proposal = BackendProposal.model_validate_json(store.read_artifact(original)).proposal
+    executable_root = tmp_path / "interpret-double"
+    executable_root.mkdir()
+    model = executable(executable_root, proposal.model_dump(mode="json"))
+    path = tmp_path / "deployment.json"
+    path.write_text(
+        json.dumps(
+            {
+                "state_dir": str(tmp_path / "state"),
+                "local_enabled": False,
+                "scene_design_policy": {"enabled": True},
+                "codex": {
+                    "executable": str(model),
+                    "sha256": hashlib.sha256(model.read_bytes()).hexdigest(),
+                    "model": "gpt-6-astra",
+                },
+            }
+        )
+    )
+    harness = build_harness(load_deployment(path))
+    handle = harness.submit(
+        X2EnvRequest(
+            images=(InputMedia(path=str(tmp_path / "input.png")),),
+            seed=23,
+            idempotency_key="ground",
+            output_dir=str(tmp_path / "out"),
+        )
+    )
+    result = harness.resume(handle.workflow_id)
+    assert result.pending_scene_ir is not None and result.scene_ir is None
+    assert any(op.capability == "asset.resolve" for op in result.operations)
+    assert result.stop_reason != "clarification_required"
+
+
 def test_deployment_builds_one_real_harness_without_inventing_missing_model(tmp_path):
     path = tmp_path / "deployment.json"
     path.write_text(json.dumps({"state_dir": str(tmp_path / "state")}))

@@ -4,6 +4,9 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- 资产锚定生成设计已接 Harness pending→resolve→ground→compile；63 项定向测试通过。
+  completion 绑定单独核验中；之后固定新代码、新 key 执行 S02，原失败保持不变。
+
 - 单次 managed 检索词建议已接 deployment 与原 Yuxin 引擎；下一步固定代码执行 S04，不预设搜索成功。
 
 - C13 G1 已完成父入口轻量化及显式消费者迁移；继续 G2–G5，不把这一步写作旧路径全部退役。

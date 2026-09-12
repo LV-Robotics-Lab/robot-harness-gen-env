@@ -347,6 +347,8 @@ class Store:
         required_resources: tuple[str, ...] = (),
         proposal: ArtifactRef | None = None,
         scene_ir: ArtifactRef | None = None,
+        pending_scene_ir: ArtifactRef | None = None,
+        grounding: ArtifactRef | None = None,
         asset_resolution: ArtifactRef | None = None,
         resolved_assets: ArtifactRef | None = None,
         compiled_scene: ArtifactRef | None = None,
@@ -366,6 +368,21 @@ class Store:
                 raise KeyError(snapshot.workflow_id)
             current = WorkflowSnapshot.model_validate_json(row[0])
             self._require_owned_head(current, snapshot)
+            if grounding is not None and (
+                result is None
+                or result.status != "succeeded"
+                or status != "active"
+                or not current.operations
+                or current.operations[-1].capability != "codex.ground"
+                or current.pending_scene_ir is None
+                or current.scene_ir is not None
+                or scene_ir is None
+                or resolved_assets is None
+                or any(ref not in result.outputs for ref in (grounding, scene_ir, resolved_assets))
+                or pending_scene_ir is not None
+                or revision_receipt is not None
+            ):
+                raise ValueError("invalid grounding checkpoint")
             if environment_package is not None and (
                 result is None
                 or result.status != "succeeded"
@@ -411,6 +428,8 @@ class Store:
                 bundle,
                 proposal,
                 scene_ir,
+                pending_scene_ir,
+                grounding,
                 asset_resolution,
                 resolved_assets,
                 compiled_scene,
@@ -433,6 +452,10 @@ class Store:
                     "required_resources": required_resources,
                     "proposal": proposal or current.proposal,
                     "scene_ir": scene_ir or current.scene_ir,
+                    "pending_scene_ir": None
+                    if grounding
+                    else pending_scene_ir or current.pending_scene_ir,
+                    "grounding": grounding or current.grounding,
                     "asset_resolution": asset_resolution or current.asset_resolution,
                     "resolved_assets": resolved_assets or current.resolved_assets,
                     "compiled_scene": None

@@ -15,6 +15,7 @@ from pydantic import Field, model_validator
 
 from .compile import StructuralPolicy
 from .contracts import ArtifactRef, Model, Sha256
+from .grounding import SceneDesignPolicy
 
 
 class CodexConfig(Model):
@@ -109,6 +110,7 @@ class Deployment(Model):
     state_dir: str
     codex: CodexConfig | None = None
     compile_policy: StructuralPolicy | None = None
+    scene_design_policy: SceneDesignPolicy = SceneDesignPolicy()
     local_enabled: bool = True
     genesis: GenesisConfig | None = None
     web: WebConfig | None = None
@@ -162,6 +164,7 @@ def build_harness(config):
 
     return Harness(
         Path(config.state_dir),
+        scene_design_policy=config.scene_design_policy,
         backend_factory=backend,
         compile_policy=config.compile_policy,
         replay_factory=replay,

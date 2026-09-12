@@ -27,10 +27,17 @@
       "type": "array"
     },
     "yaw_degrees": {
-      "maximum": 180,
-      "minimum": -180,
-      "title": "Yaw Degrees",
-      "type": "number"
+      "anyOf": [
+        {
+          "maximum": 180,
+          "minimum": -180,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Yaw Degrees"
     }
   },
   "required": [

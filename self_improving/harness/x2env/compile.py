@@ -47,6 +47,8 @@ class CompiledScene(Model):
 
 def compile_scene(scene_ref, assets, *, registry, store, output_root, policy, seed):
     scene = SceneIR.model_validate_json(store.read_artifact(scene_ref))
+    if any(entity.pose.yaw_degrees is None for entity in scene.entities):
+        raise ValueError("unresolved scene yaw requires grounding")
     if assets.scene_ir != scene_ref:
         raise ValueError("resolved assets belong to another scene")
     foreground = {e.id for e in scene.entities if e.role == "foreground"}

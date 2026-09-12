@@ -21,7 +21,11 @@ class Harness:
         compile_policy=None,
         replay_factory=None,
         contextual_resolver_factory=None,
+        scene_design_policy=None,
     ):
+        from .grounding import SceneDesignPolicy
+
+        self._scene_design_policy = scene_design_policy or SceneDesignPolicy()
         self._store = Store(state_dir)
         self._state_dir = Path(state_dir)
         self._backend = backend_factory(self._store) if backend_factory else None
@@ -106,6 +110,11 @@ class Harness:
         existing = self.status(workflow_id)
         if existing.status in {"succeeded", "failed", "cancelled"}:
             return existing
+        if existing.pending_scene_ir is not None and any(
+            op.capability == "codex.ground" and op.status in {"blocked", "failed", "cancelled"}
+            for op in existing.operations
+        ):
+            return existing
         if existing.validation is not None and (
             existing.status == "active"
             or existing.stop_reason == "environment_package_materializer"
@@ -131,6 +140,8 @@ class Harness:
             return snapshot
         if snapshot.compiled_scene is not None:
             return self._replay(snapshot)
+        if snapshot.pending_scene_ir is not None:
+            return self._ground(snapshot) if snapshot.resolved_assets else self._resolve(snapshot)
         if snapshot.scene_ir is not None:
             return self._compile(snapshot) if snapshot.resolved_assets else self._resolve(snapshot)
         result = None
@@ -209,7 +220,16 @@ class Harness:
             operation_id=operation.operation_id, status="succeeded", outputs=outputs
         )
         proposal = advisory.proposal
-        if proposal.scene is None or any(unknown.critical for unknown in proposal.unknowns):
+        critical = [unknown for unknown in proposal.unknowns if unknown.critical]
+        design_pending = (
+            bool(critical)
+            and self._scene_design_policy.enabled
+            and all(
+                unknown.reason_kind in {"scale_unobservable", "pose_unobservable"}
+                for unknown in critical
+            )
+        )
+        if proposal.scene is None or (critical and not design_pending):
             return self._store.complete_operation(
                 snapshot,
                 result,
@@ -235,7 +255,8 @@ class Harness:
             if self._resolver or self._contextual_resolver_factory
             else "blocked_external_resource",
             proposal=proposal_ref,
-            scene_ir=scene_ref,
+            scene_ir=None if design_pending else scene_ref,
+            pending_scene_ir=scene_ref if design_pending else None,
             required_resources=()
             if self._resolver or self._contextual_resolver_factory
             else ("asset_resolver",),
@@ -263,7 +284,7 @@ class Harness:
                 else self._resolver
             )
             resolution = resolver.resolve(
-                snapshot.scene_ir,
+                snapshot.scene_ir or snapshot.pending_scene_ir,
                 allowed_sources=snapshot.request.allowed_sources,
                 allow_cousin=snapshot.request.constraints.allow_cousin,
                 output_root=self._state_dir
@@ -297,7 +318,68 @@ class Harness:
             )
         except (ValueError, OSError, KeyError, TypeError) as error:
             return self._stage_failure(snapshot, "asset_resolution_failed", error)
-        return self._compile(snapshot) if ready else snapshot
+        if not ready:
+            return snapshot
+        return self._ground(snapshot) if snapshot.pending_scene_ir else self._compile(snapshot)
+
+    def _ground(self, snapshot):
+        from .compile import ResolvedAssetSet
+
+        self._remaining()
+        snapshot = self._store.begin_operation(snapshot, "codex.ground")
+        operation = snapshot.operations[-1]
+        try:
+            grounded = self._backend.ground_scene(
+                snapshot.input_bundle,
+                snapshot.proposal,
+                snapshot.resolved_assets,
+                self._scene_design_policy,
+                output_root=self._state_dir
+                / "attempts"
+                / snapshot.workflow_id
+                / operation.operation_id,
+                timeout=self._remaining(),
+            )
+            if grounded.status != "completed" or grounded.proposed_scene is None:
+                code = grounded.error_code or "grounding_missing_scene"
+                return self._store.complete_operation(
+                    snapshot,
+                    ToolResult(
+                        operation_id=operation.operation_id,
+                        status="blocked",
+                        outputs=(grounded.receipt,),
+                        error_code=code,
+                    ),
+                    snapshot.input_bundle,
+                    status="blocked",
+                    reason=code,
+                )
+            scene = self._store.write_artifact(
+                grounded.proposed_scene.model_dump_json().encode(), "application/json"
+            )
+            assets = ResolvedAssetSet.model_validate_json(
+                self._store.read_artifact(snapshot.resolved_assets)
+            )
+            rebound = assets.model_copy(update={"scene_ir": scene})
+            assets_ref = self._store.write_artifact(
+                rebound.model_dump_json().encode(), "application/json"
+            )
+            snapshot = self._store.complete_operation(
+                snapshot,
+                ToolResult(
+                    operation_id=operation.operation_id,
+                    status="succeeded",
+                    outputs=(grounded.receipt, scene, assets_ref),
+                ),
+                snapshot.input_bundle,
+                status="active",
+                scene_ir=scene,
+                resolved_assets=assets_ref,
+                grounding=grounded.receipt,
+            )
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            return self._stage_failure(snapshot, "grounding_failed", error)
+        return self._compile(snapshot)
 
     def _compile(self, snapshot):
         from .compile import ResolvedAssetSet

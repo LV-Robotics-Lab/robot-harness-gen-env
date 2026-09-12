@@ -85,6 +85,7 @@ Generated; edit Python contracts, not this file.
 | UnknownField | field | true |
 | UnknownField | reason | true |
 | UnknownField | critical | true |
+| UnknownField | reason_kind | false |
 | UnknownField | provenance | true |
 | VideoFrameEvidence | index | true |
 | VideoFrameEvidence | pts | true |
@@ -117,6 +118,8 @@ Generated; edit Python contracts, not this file.
 | WorkflowSnapshot | input_bundle | false |
 | WorkflowSnapshot | proposal | false |
 | WorkflowSnapshot | scene_ir | false |
+| WorkflowSnapshot | pending_scene_ir | false |
+| WorkflowSnapshot | grounding | false |
 | WorkflowSnapshot | asset_resolution | false |
 | WorkflowSnapshot | resolved_assets | false |
 | WorkflowSnapshot | compiled_scene | false |

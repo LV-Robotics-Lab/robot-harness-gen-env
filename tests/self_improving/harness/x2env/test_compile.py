@@ -11,7 +11,7 @@ from self_improving.harness.x2env.normalization import normalize_mesh
 from self_improving.harness.x2env.store import Store
 
 
-@pytest.mark.parametrize("fault", [None, "dimensions", "scene_binding", "missing_asset", "inside"])
+@pytest.mark.parametrize("fault", [None, "dimensions", "scene_binding", "missing_asset", "inside", "yaw"])
 def test_compile_preserves_layout_and_copies_bound_asset_closure(tmp_path, fault):
     from self_improving.harness.x2env.compile import (
         ResolvedAsset,
@@ -102,12 +102,14 @@ def test_compile_preserves_layout_and_copies_bound_asset_closure(tmp_path, fault
         ),
     )
     output = tmp_path / "compiled"
-    if fault in {"dimensions", "inside"}:
+    if fault in {"dimensions", "inside", "yaw"}:
         document = scene.model_dump(mode="json")
         if fault == "dimensions":
             document["entities"][1]["dimensions"][0] = 0.09
-        else:
+        elif fault == "inside":
             document["relations"][0]["relation"] = "inside"
+        else:
+            document["entities"][1]["pose"]["yaw_degrees"] = None
         scene = SceneIR.model_validate_json(json.dumps(document))
         scene_ref = store.write_artifact(scene.model_dump_json().encode(), "application/json")
         assets = assets.model_copy(update={"scene_ir": scene_ref})

@@ -304,6 +304,17 @@
       ],
       "default": null
     },
+    "grounding": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "input_bundle": {
       "anyOf": [
         {
@@ -345,6 +356,17 @@
       ],
       "default": null,
       "title": "Owner"
+    },
+    "pending_scene_ir": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "proposal": {
       "anyOf": [

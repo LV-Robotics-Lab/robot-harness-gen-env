@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C05-DESIGN-GROUNDING — 资产锚定生成设计
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream；新设计接线不是 Gujie 原尺度重建能力。
+- `source_ref`：canonical `c3310b3` controller、既有 managed Codex transport；真实失败固定 `3ba0956`。
+- `target_paths`：x2env/grounding.py、codex.py、contracts.py、harness.py、store.py、deployment.py、compile.py。
+- `integration_method`：pending 意图与 accepted SceneIR 分离，保留 critical 和实际资产版本；仅填未知设计参数。
+- `verification`：contract_pass；63 项定向测试，真实模型/仿真新运行 not_run。
+- `upstream_owner`：OpenAI Codex 与资产原作者；`recorded_git_authors` 按本提交记录，不推断自然人。
+
 ## INT-CANONICAL-C06-SEARCH-QUERY — 保留类别的单次检索建议
 
 - `origin_owner`：Yuxin/HYX 原 provider 引擎；`integration_owner`：Bingsheng Harness workstream。

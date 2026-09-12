@@ -206,10 +206,17 @@
           "type": "array"
         },
         "yaw_degrees": {
-          "maximum": 180,
-          "minimum": -180,
-          "title": "Yaw Degrees",
-          "type": "number"
+          "anyOf": [
+            {
+              "maximum": 180,
+              "minimum": -180,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Yaw Degrees"
         }
       },
       "required": [
@@ -449,12 +456,25 @@
           "minLength": 1,
           "title": "Reason",
           "type": "string"
+        },
+        "reason_kind": {
+          "enum": [
+            "scale_unobservable",
+            "pose_unobservable",
+            "conflict",
+            "unsupported",
+            "missing_required_semantics",
+            "unspecified"
+          ],
+          "title": "Reason Kind",
+          "type": "string"
         }
       },
       "required": [
         "field",
         "reason",
         "critical",
+        "reason_kind",
         "provenance"
       ],
       "title": "UnknownField",

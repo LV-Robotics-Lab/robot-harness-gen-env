@@ -24,6 +24,8 @@ XY中心/Z底面，编译器做显式偏移。仅未给出的结构厚度/世界
 不得修改用户已给轴/朝向，尺寸冲突拒绝；没有解析的关节/inside不静默简化。
 
 - CodexBackend.interpret / assess_asset_candidates / assess_and_diagnose只提供建议，不控制执行或物理通过。
+- CodexBackend.ground_scene 补全显式部署允许的生成设计未知项；pending intent 只供查资产，
+  测得的不可变资产尺寸与原媒体共同形成设计依据，不是图像绝对尺度测量，未通过检查不得 compile。
 - YuxinProviderAdapter调用原provider engine，带真实local/web和许可门。
 - ReconstructionAdapter接受已验证媒体与SceneIR；Gujie原接口保留非默认，
   用户批准替代后端通过同一外部seam使用，要求固定来源、许可、真实新geometry。

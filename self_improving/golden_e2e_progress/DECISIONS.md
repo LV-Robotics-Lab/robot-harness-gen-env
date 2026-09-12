@@ -1,5 +1,15 @@
 # 稳定决策
 
+## 2026-09-13 图像尺度缺失与生成设计分离
+
+- S02 原失败证明图像不提供绝对米制尺度；不改冻结输入，不将 critical 改为 false。
+- 显式部署 SceneDesignPolicy 可允许结构化 scale_unobservable/pose_unobservable 进入待补全意图。
+  conflict、unsupported 和未分类关键未知仍要求澄清；待补全只查资产，不是 accepted SceneIR。
+- 已选不可变资产的实测 AABB 是生成尺度锚点，受管 Codex 只能补未知尺寸/坐标/朝向；保留已知轴、
+  实体、关系、frame 与原始未知记录。该片限定一个刚体与一个 on 结构支撑，超范围明确拒绝。
+- 补全结果记录 simulation design-choice 与 real_world_scale_recovered=false，经检查后才进入 compile；
+  不授物理通过，不修改成功阈值，不允许用户 prompt 自行开启部署策略。
+
 ## 2026-09-13 用户补充：替代后端与持续执行
 
 - 用户已批准先做替代重建后端，保留 Gujie 原接口方便后续联调协商；它不是默认第二工作流。

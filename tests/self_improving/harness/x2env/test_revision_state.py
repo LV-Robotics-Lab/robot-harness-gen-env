@@ -6,6 +6,36 @@ from self_improving.harness.x2env.contracts import ToolResult, X2EnvRequest
 from self_improving.harness.x2env.store import Store
 
 
+def test_grounding_cannot_create_an_accepted_scene_without_pending_intent(tmp_path):
+    store = Store(tmp_path)
+    snapshot = store.claim(
+        store.submit(
+            X2EnvRequest(
+                text="a table",
+                seed=1,
+                idempotency_key="ground",
+                output_dir=str(tmp_path / "out"),
+            )
+        ).workflow_id
+    )
+    ref = store.write_artifact(b"test grounding", "text/plain")
+    with pytest.raises(ValueError, match="grounding checkpoint"):
+        store.complete_operation(
+            snapshot,
+            ToolResult(
+                operation_id=snapshot.operations[-1].operation_id,
+                status="succeeded",
+                outputs=(ref,),
+            ),
+            ref,
+            status="active",
+            grounding=ref,
+            scene_ir=ref,
+            resolved_assets=ref,
+        )
+    assert store.status(snapshot.workflow_id) == snapshot
+
+
 def test_package_pointer_requires_its_successful_materialization_operation(tmp_path):
     store = Store(tmp_path)
     snapshot = store.claim(

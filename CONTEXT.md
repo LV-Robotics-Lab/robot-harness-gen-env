@@ -24,6 +24,14 @@ _Avoid_: 已验证场景、模型成功声明
 经过检查的命名实体与关系图，保留关键属性的来源和修订身份。
 _Avoid_: free-form prompt、隐式丢实体
 
+**Pending Intent（待补全意图）**:
+语义已识别但关键参数尚未解决的建议，可用于查找候选资产，不可直接编译或视为接受场景。
+_Avoid_: accepted SceneIR、悄悄忽略 critical unknown
+
+**Simulation Design Scale（仿真设计尺度）**:
+为生成场景选择的尺寸依据，可锚定已测资产并保留设计来源；不声称恢复了媒体中真实世界的绝对尺度。
+_Avoid_: 图像米制测量、真实重建尺度证明
+
 **Structural Support（结构支撑）**:
 承载前景对象的桌面、工作台或地面，不是重建得到的前景资产。
 _Avoid_: cabinet、basket、任意primitive替代物

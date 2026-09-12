@@ -100,6 +100,8 @@ class WorkflowSnapshot(WorkflowHandle):
     input_bundle: ArtifactRef | None = None
     proposal: ArtifactRef | None = None
     scene_ir: ArtifactRef | None = None
+    pending_scene_ir: ArtifactRef | None = None
+    grounding: ArtifactRef | None = None
     asset_resolution: ArtifactRef | None = None
     resolved_assets: ArtifactRef | None = None
     compiled_scene: ArtifactRef | None = None
@@ -129,7 +131,7 @@ class Pose(Model):
         description="Intent x/y/z in metres in the declared frame. Use null for each unknown axis, "
         "including unresolved support height; do not invent coordinates."
     )
-    yaw_degrees: float = Field(ge=-180, le=180)
+    yaw_degrees: float | None = Field(ge=-180, le=180)
 
 
 class JointPosition(Model):
@@ -286,6 +288,14 @@ class UnknownField(Model):
     field: str = Field(min_length=1, max_length=256)
     reason: str = Field(min_length=1, max_length=2048)
     critical: bool
+    reason_kind: Literal[
+        "scale_unobservable",
+        "pose_unobservable",
+        "conflict",
+        "unsupported",
+        "missing_required_semantics",
+        "unspecified",
+    ] = "unspecified"
     provenance: tuple[FieldProvenance, ...] = Field(min_length=1)
 
 
