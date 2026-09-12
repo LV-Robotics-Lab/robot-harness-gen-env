@@ -204,8 +204,30 @@ def test_single_workflow_advances_from_model_to_resolver_and_compile(
             output_dir=str(tmp_path / "package"),
         )
     )
+    assert {d.name for d in harness.describe_capabilities()} == {
+        "x2env.compile",
+        "x2env.replay",
+        "x2env.validate",
+    }
     snapshot = harness.resume(handle.workflow_id, timeout=10)
     assert snapshot.scene_ir in snapshot.operations[1].result.outputs
+    from self_improving.harness.x2env.store import Store
+
+    evidence_store = Store(tmp_path / "state")
+    for op in snapshot.operations:
+        if op.capability.startswith("x2env.") and op.status == "succeeded":
+            records = [
+                json.loads(evidence_store.read_artifact(ref))
+                for ref in op.result.outputs
+                if ref.media_type == "application/json"
+            ]
+            assert any(
+                isinstance(row, dict)
+                and row.get("name") == op.capability
+                and row.get("version") == op.version
+                and row.get("schema_sha256")
+                for row in records
+            )
     assert snapshot.workflow_id == handle.workflow_id
     expected = [
         "ingest",

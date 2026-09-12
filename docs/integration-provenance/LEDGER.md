@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C03-TYPED-EXECUTION — descriptor进入实际调用路径
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：CapabilityRegistry原C03实现，compiler `d881ccd`、replay `6d45403`、controller `3ba0956`。
+- `target_paths`：x2env/skill_execution.py、harness.py、test_skill_execution.py、test_pipeline.py。
+- `verification`：23项公开typed执行/controller测试；runtime失败与合成producer均明确，不计真实资格。
+
 ## INT-CANONICAL-C04-OPERATION-RECOVERY — 嵌套进程和残留进程组
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。

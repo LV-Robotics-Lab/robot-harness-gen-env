@@ -31,6 +31,23 @@ class Harness:
         if resolver_factory and contextual_resolver_factory:
             raise ValueError("choose one resolver assembly")
         self._contextual_resolver_factory = contextual_resolver_factory
+        from .skill_execution import build_capabilities
+
+        self._capabilities = build_capabilities(
+            self._store, compile_policy=compile_policy, replay_executor=self._replay_executor
+        )
+
+    def describe_capabilities(self):
+        return self._capabilities.describe()
+
+    def _binding_ref(self, name):
+        import json
+        from dataclasses import asdict
+
+        descriptor = next(d for d in self.describe_capabilities() if d.name == name)
+        return self._store.write_artifact(
+            json.dumps(asdict(descriptor), sort_keys=True).encode(), "application/json"
+        )
 
     def submit(self, request: X2EnvRequest) -> WorkflowHandle:
         snapshot = self._store.submit(request)
@@ -283,8 +300,8 @@ class Harness:
         return self._compile(snapshot) if ready else snapshot
 
     def _compile(self, snapshot):
-        from .assets import AssetRegistry
-        from .compile import ResolvedAssetSet, compile_scene
+        from .compile import ResolvedAssetSet
+        from .skill_execution import CompileCall
 
         if self._compile_policy is None:
             return self._store.complete_operation(
@@ -302,17 +319,17 @@ class Harness:
             assets = ResolvedAssetSet.model_validate_json(
                 self._store.read_artifact(snapshot.resolved_assets)
             )
-            compiled = compile_scene(
-                snapshot.scene_ir,
-                assets,
-                registry=AssetRegistry(self._store),
-                store=self._store,
-                output_root=self._state_dir
-                / "stages"
-                / snapshot.workflow_id
-                / operation.operation_id,
-                policy=self._compile_policy,
-                seed=snapshot.request.seed,
+            compiled = self._capabilities.invoke(
+                "x2env.compile",
+                "1.0.0",
+                CompileCall(
+                    scene_ir=snapshot.scene_ir,
+                    assets=assets,
+                    output_root=str(
+                        self._state_dir / "stages" / snapshot.workflow_id / operation.operation_id
+                    ),
+                    seed=snapshot.request.seed,
+                ),
             )
             ref = self._store.write_artifact(
                 compiled.model_dump_json().encode(), "application/json"
@@ -320,7 +337,7 @@ class Harness:
             result = ToolResult(
                 operation_id=operation.operation_id,
                 status="succeeded",
-                outputs=(compiled.receipt, ref),
+                outputs=(compiled.receipt, ref, self._binding_ref("x2env.compile")),
             )
             snapshot = self._store.complete_operation(
                 snapshot,
@@ -337,6 +354,7 @@ class Harness:
 
     def _replay(self, snapshot):
         from .compile import CompiledScene
+        from .skill_execution import ReplayCall
 
         compile_operation = next(
             op
@@ -349,17 +367,22 @@ class Harness:
             compiled = CompiledScene.model_validate_json(
                 self._store.read_artifact(snapshot.compiled_scene)
             )
-            replay = self._replay_executor.replay(
-                compiled.runtime_scene,
-                package_root=self._state_dir
-                / "stages"
-                / snapshot.workflow_id
-                / compile_operation.operation_id,
-                output_root=self._state_dir
-                / "attempts"
-                / snapshot.workflow_id
-                / operation.operation_id,
-                timeout=self._remaining(),
+            replay = self._capabilities.invoke(
+                "x2env.replay",
+                "1.0.0",
+                ReplayCall(
+                    scene=compiled.runtime_scene,
+                    package_root=str(
+                        self._state_dir
+                        / "stages"
+                        / snapshot.workflow_id
+                        / compile_operation.operation_id
+                    ),
+                    output_root=str(
+                        self._state_dir / "attempts" / snapshot.workflow_id / operation.operation_id
+                    ),
+                    timeout=self._remaining(),
+                ),
             )
             ref = self._store.write_artifact(replay.model_dump_json().encode(), "application/json")
             result = ToolResult(
@@ -368,6 +391,7 @@ class Harness:
                 outputs=(
                     replay.receipt,
                     ref,
+                    self._binding_ref("x2env.replay"),
                     *(f.artifact for p in replay.profiles for f in p.files),
                 ),
                 error_code=replay.error_code,
@@ -489,58 +513,30 @@ class Harness:
         return self._validate(snapshot) if status == "succeeded" else snapshot
 
     def _validate(self, snapshot):
-        import json
-
-        from .diagnosis import DiagnosisResult
-        from .observation import ObservationResult
+        from .skill_execution import ValidateCall
 
         self._remaining()
         snapshot = self._store.begin_operation(snapshot, "x2env.validate")
         try:
-            observed = ObservationResult.model_validate_json(
-                self._store.read_artifact(snapshot.observation)
+            validated = self._capabilities.invoke(
+                "x2env.validate",
+                "1.0.0",
+                ValidateCall(
+                    scene_ir=snapshot.scene_ir,
+                    observation=snapshot.observation,
+                    diagnosis=snapshot.diagnosis,
+                ),
             )
-            diagnosis = DiagnosisResult.model_validate_json(
-                self._store.read_artifact(snapshot.diagnosis)
-            )
-            physical = json.loads(self._store.read_artifact(observed.physics_report))
-            proposal = diagnosis.proposal
-            physical_pass = (
-                physical.get("physical_status") == "passed"
-                and physical.get("execution_evidence_bound") is True
-            )
-            visual_pass = proposal is not None and proposal.visual_intent == "passed"
-            patches = proposal is not None and (proposal.scene_patches or proposal.asset_patches)
-            repairable = bool(patches) and physical.get("execution_evidence_bound") is True
-            code = (
-                "revision_required"
-                if patches
-                else "physical_validation_not_passed"
-                if not physical_pass
-                else "visual_intent_not_passed"
-                if not visual_pass
-                else None
-            )
-            status = (
-                "failed" if patches else "succeeded" if physical_pass and visual_pass else "failed"
-            )
-            report = {
-                "physical_status": physical.get("physical_status", "not_run"),
-                "visual_status": proposal.visual_intent if proposal else "not_run",
-                "physics_report": observed.physics_report.model_dump(mode="json"),
-                "diagnosis": snapshot.diagnosis.model_dump(mode="json"),
-                "scene_ir": snapshot.scene_ir.model_dump(mode="json"),
-                "status": status,
-                "error_code": code,
-                "sim_ready": False,
-            }
-            ref = self._store.write_artifact(
-                json.dumps(report, sort_keys=True).encode(), "application/json"
+            ref, status, code, repairable = (
+                validated.report,
+                validated.status,
+                validated.error_code,
+                validated.repairable,
             )
             result = ToolResult(
                 operation_id=snapshot.operations[-1].operation_id,
                 status=status,
-                outputs=(ref,),
+                outputs=(ref, self._binding_ref("x2env.validate")),
                 error_code=code,
             )
             snapshot = self._store.complete_operation(

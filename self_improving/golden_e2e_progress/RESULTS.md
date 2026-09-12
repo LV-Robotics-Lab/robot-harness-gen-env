@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C03 三个Skill的实际typed执行绑定
+
+- 新skill_execution将CompileCall/ReplayCall/ValidateCall接唯一CapabilityRegistry，Harness实际经
+  exact 1.0.0 invoke调用原compiler/replay和验证判断；不是只有descriptor但绕过Registry执行。
+- 三个public Skills仍为compile/replay/validate，不新增workflow；controller保留状态/生命周期/修订预算。
+  成功ToolResult附name/version/schema_sha256绑定ref，describe只读不因status查询写CAS。
+- 三个public执行tracer和controller descriptor输出攻击先RED再GREEN；23项相关测试通过（3.58s）。
+  本片未新增真实运行；validate阶段判断仍不授sim-ready，完成门继续独立重核实际物理/媒体证据。
+
 ## 2026-09-13 C04 操作级进程恢复保护
 
 - 恢复不再只检查顶层codex operation：在精确operation目录内有界查找嵌套模型、重建、preview与replay

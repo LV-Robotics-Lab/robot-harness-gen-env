@@ -1,5 +1,9 @@
 # Canonical x2env（收敛实施中）
 
+三个public Skills现在实际通过唯一CapabilityRegistry的精确版本typed调用执行，不只是名称清单。
+对应ToolResult记录name/version/schema digest；状态推进仍由Harness控制。验证阶段判断不跳过
+最终完成门，也不授予尚未运行的复制、机器人策略或正式发布能力。
+
 dead-owner恢复还必须确认当前operation下已记录的子进程和原进程组均不再运行。仅leader退出不够；
 PID/start_ticks或目录绑定不可信时保持blocked。检查有界、只读，不按模糊进程名清理机器上的其它任务。
 
