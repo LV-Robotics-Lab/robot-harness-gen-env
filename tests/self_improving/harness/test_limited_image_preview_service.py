@@ -419,3 +419,313 @@ def test_status_recovers_capture_and_remaining_ttl_from_existing_golden_operatio
         item["uri"] for item in status["resource_links"] if item["uri"].endswith(inputs.raw.sha256)
     )
     assert restored.read_resource(started["workflow_id"], image_uri)["contents"][0]["blob"]
+
+
+def _new_development_service(preview_inputs, tmp_path):
+    from types import SimpleNamespace
+
+    from self_improving.harness.limited_image_preview_development import (
+        DevelopmentArtifactStore,
+        capture_development_execution_context,
+    )
+    from tests.self_improving.harness.test_golden_run import _qualified_registry
+    from tests.self_improving.harness.test_limited_image_preview_development import _git_repository
+
+    repository = _git_repository(tmp_path / "repository")
+    settings = tmp_path / "development-settings.json"
+    settings.write_text('{"execution_mode":"development"}\n')
+    context = capture_development_execution_context(
+        artifact_store=preview_inputs.store,
+        repository_root=repository,
+        settings_path=settings,
+    )
+    journal = SQLiteGoldenRunStore(tmp_path / "golden.sqlite")
+    artifacts = DevelopmentArtifactStore(
+        artifact_store=preview_inputs.store,
+        root=tmp_path / "development-artifacts",
+        context_ref=context.ref,
+    )
+    service = LimitedImagePreviewService(
+        artifact_store=preview_inputs.store,
+        workflow_store=journal,
+        input_builder=preview_inputs.builder,
+        registry_snapshot=_qualified_registry(preview_inputs.store, tmp_path),
+        principal_id="test/development-terminal-read",
+        execution_mode="development",
+        development_context=context,
+        development_artifacts=artifacts,
+    )
+    started = service.start(
+        raw_image_ref=preview_inputs.raw,
+        user_text="mouse on table",
+        idempotency_key="development-terminal-read",
+    )
+    return SimpleNamespace(
+        service=service,
+        journal=journal,
+        artifacts=artifacts,
+        context=context,
+        started=started,
+        workflow_id=started["workflow_id"],
+    )
+
+
+def _terminal_development_service(preview_inputs, tmp_path):
+    from datetime import timedelta
+
+    from self_improving.harness.limited_image_preview_development import (
+        build_development_execution_record,
+    )
+    from self_improving.harness.limited_image_preview_input_evidence import (
+        read_limited_preview_input,
+    )
+    from self_improving.harness.schemas.common import ArtifactRef, RunStatus
+    from self_improving.harness.schemas.workflow import OperationSnapshot, RunSnapshot
+    from self_improving.harness.trusted_state import TrustedWorldState
+    from tests.self_improving.harness.test_limited_image_preview_development import _artifact
+
+    case = _new_development_service(preview_inputs, tmp_path)
+    initial = RunSnapshot.model_validate(case.started["snapshot"])
+    command = _artifact(
+        preview_inputs.store,
+        tmp_path,
+        "terminal-command.json",
+        "harness.run_command_request.v1",
+    )
+    qualified = _artifact(
+        preview_inputs.store,
+        tmp_path,
+        "terminal-qualified.json",
+        "harness.qualified_skill_execution.v2",
+    )
+    tool_result = _artifact(
+        preview_inputs.store,
+        tmp_path,
+        "terminal-tool-result.json",
+        "harness.tool_result.v2",
+    )
+    receipt = _artifact(
+        preview_inputs.store,
+        tmp_path,
+        "terminal-receipt.json",
+        "harness.workflow_operation_receipt.v2",
+    )
+    log = _artifact(preview_inputs.store, tmp_path, "terminal-log.json", None)
+    physical = _artifact(
+        preview_inputs.store,
+        tmp_path,
+        "terminal-physical.json",
+        "harness.genesis_scene_report.v1",
+    )
+    from uuid import uuid4
+
+    child = uuid4()
+    operation_id = uuid4()
+    ended = initial.updated_at + timedelta(microseconds=1)
+    running = OperationSnapshot(
+        schema_version="harness.operation_snapshot.v1",
+        operation_id=operation_id,
+        workflow_run_id=initial.workflow_run_id,
+        principal_id=initial.principal_id,
+        idempotency_key="terminal-validate",
+        command=command,
+        qualified_execution=qualified,
+        skill_ref="image2env.validate@3.0.0",
+        status=RunStatus.RUNNING,
+        base_revision=0,
+        committed_revision=None,
+        child_run_id=child,
+        tool_result=None,
+        started_at=initial.updated_at,
+        ended_at=None,
+    )
+    case.journal.reserve_operation(
+        principal_id=initial.principal_id,
+        workflow_run_id=initial.workflow_run_id,
+        skill_ref=running.skill_ref,
+        idempotency_key=running.idempotency_key,
+        command_sha256=command.sha256,
+        expected_workflow_revision=0,
+        expected_state_sha256=initial.state_sha256,
+        expected_receipt_head_sha256=initial.receipt_head.sha256,
+        operation=running,
+    )
+    terminal = OperationSnapshot.model_validate(
+        running.model_copy(
+            update={
+                "status": RunStatus.SUCCEEDED,
+                "committed_revision": 1,
+                "tool_result": tool_result,
+                "ended_at": ended,
+            }
+        ).model_dump(mode="python")
+    )
+    snapshot = RunSnapshot.model_validate(
+        initial.model_copy(
+            update={
+                "revision": 1,
+                "turn_seq": 1,
+                "receipt_head": receipt,
+                "active_operation": None,
+                "child_runs": (*initial.child_runs, child),
+                "updated_at": ended,
+            }
+        ).model_dump(mode="python")
+    )
+    case.journal.commit_operation(
+        principal_id=initial.principal_id,
+        running=running,
+        terminal=terminal,
+        snapshot=snapshot,
+    )
+    state = TrustedWorldState.model_validate_json(
+        preview_inputs.store.resolve(initial.state_ref).path.read_bytes()
+    )
+    input_ref = ArtifactRef.model_validate(
+        next(fact.value for fact in state.facts if fact.key == "request.preview_input")
+    )
+    _document, input_roots = read_limited_preview_input(
+        preview_inputs.store, input_ref, initial.workflow_run_id
+    )
+    record = build_development_execution_record(
+        workflow_run_id=initial.workflow_run_id,
+        principal_id=initial.principal_id,
+        idempotency_key="terminal-development-package",
+        workflow_head=receipt,
+        context=case.context.context,
+        context_ref=case.context.ref,
+        input_artifacts=input_roots,
+        output_artifacts=(snapshot.state_ref, receipt, command, tool_result),
+        log_artifacts=(log,),
+        physical_evidence=(physical,),
+        exact_skill_evidence=(qualified,),
+        created_at=ended,
+    )
+    record_ref = case.artifacts.commit(record)
+    case.snapshot = snapshot
+    case.operation = terminal
+    case.record = record
+    case.record_ref = record_ref
+    case.input_ref = input_ref
+    case.association = case.artifacts.root / f"{initial.workflow_run_id}.json"
+    return case
+
+
+def test_terminal_development_status_and_package_get_use_shallow_durable_head(inputs, tmp_path):  # noqa: F811
+    from types import SimpleNamespace
+
+    case = _terminal_development_service(inputs, tmp_path)
+
+    def forbidden_deep_read(*args, **kwargs):
+        pytest.fail("terminal development read entered deployment readiness or deep Harness read")
+
+    case.service._prepare = forbidden_deep_read
+    case.service.harness = SimpleNamespace(read=forbidden_deep_read)
+    original_read_snapshot = case.journal.read_snapshot
+    snapshot_reads = 0
+
+    def counted_read_snapshot(**kwargs):
+        nonlocal snapshot_reads
+        snapshot_reads += 1
+        return original_read_snapshot(**kwargs)
+
+    case.journal.read_snapshot = counted_read_snapshot
+
+    status = case.service.status(workflow_id=case.workflow_id)
+    package = case.service.package_get(workflow_id=case.workflow_id)
+
+    assert status["status"] == package["status"] == "validated_unreleased"
+    assert status["stage"] == "status"
+    assert package["stage"] == "package_get"
+    assert status["package"] == package["package"] == case.record_ref.model_dump(mode="json")
+    assert snapshot_reads == 2
+
+
+@pytest.mark.parametrize("mode", ["development", "release"])
+@pytest.mark.parametrize("endpoint", ["status", "package_get"])
+def test_active_or_release_read_still_enters_deep_harness_path(inputs, tmp_path, mode, endpoint):  # noqa: F811
+    if mode == "development":
+        case = _new_development_service(inputs, tmp_path)
+        service, workflow_id = case.service, case.workflow_id
+    else:
+        from tests.self_improving.harness.test_golden_run import _qualified_registry
+
+        service = LimitedImagePreviewService(
+            artifact_store=inputs.store,
+            workflow_store=SQLiteGoldenRunStore(tmp_path / "release.sqlite"),
+            input_builder=inputs.builder,
+            registry_snapshot=_qualified_registry(inputs.store, tmp_path),
+            principal_id="test/release-terminal-read",
+        )
+        workflow_id = service.start(
+            raw_image_ref=inputs.raw,
+            user_text="mouse on table",
+            idempotency_key="release-terminal-read",
+        )["workflow_id"]
+
+    class DeepPathCalled(Exception):
+        pass
+
+    def deep_path(*args, **kwargs):
+        raise DeepPathCalled
+
+    service._prepare = deep_path
+    with pytest.raises(DeepPathCalled):
+        getattr(service, endpoint)(workflow_id=workflow_id)
+
+
+@pytest.mark.parametrize("endpoint", ["status", "package_get"])
+@pytest.mark.parametrize(
+    ("drift", "message"),
+    [
+        ("association", "association is corrupt"),
+        ("context", "association is corrupt"),
+        ("database_head", "payload checksum"),
+        ("operation", "payload checksum"),
+        ("input", "artifact byte count"),
+    ],
+)
+def test_terminal_development_shallow_read_fails_closed_without_deep_fallback(
+    inputs,  # noqa: F811
+    tmp_path,
+    endpoint,
+    drift,
+    message,
+):
+    import hashlib
+    import sqlite3
+    from types import SimpleNamespace
+
+    case = _terminal_development_service(inputs, tmp_path)
+    if drift == "association":
+        case.association.write_bytes(b"{}")
+    elif drift == "context":
+        value = json.loads(case.association.read_bytes())
+        value["context"] = value["record"]
+        case.association.write_bytes(
+            json.dumps(value, sort_keys=True, separators=(",", ":")).encode() + b"\n"
+        )
+    elif drift == "database_head":
+        with sqlite3.connect(case.journal.path) as connection:
+            connection.execute(
+                "UPDATE golden_workflow_starts SET snapshot_sha256=? WHERE workflow_run_id=?",
+                ("0" * 64, case.workflow_id),
+            )
+    elif drift == "operation":
+        with sqlite3.connect(case.journal.path) as connection:
+            connection.execute(
+                "UPDATE golden_workflow_operations SET operation_sha256=? WHERE workflow_run_id=?",
+                ("0" * 64, case.workflow_id),
+            )
+    else:
+        path = inputs.store.resolve(case.input_ref).path
+        path.write_bytes(b"{}")
+        assert hashlib.sha256(path.read_bytes()).hexdigest() != case.input_ref.sha256
+
+    def forbidden_deep_read(*args, **kwargs):
+        raise AssertionError("corrupt shallow terminal read fell back to deep execution")
+
+    case.service._prepare = forbidden_deep_read
+    case.service.harness = SimpleNamespace(read=forbidden_deep_read)
+    with pytest.raises((ValueError, RuntimeError), match=message):
+        getattr(case.service, endpoint)(workflow_id=case.workflow_id)
