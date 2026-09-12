@@ -216,6 +216,7 @@ class _RequestResolver:
 
         def web_factory():
             from .adapters.yuxin import YuxinProviderAdapter
+            from .search_advisory import plan_search
             from .web_resolver import WebAssetResolver
 
             provider_config = json.loads(config.web.provider_config.read())
@@ -237,7 +238,19 @@ class _RequestResolver:
                     timeout=remaining(),
                 )
 
-            return WebAssetResolver(self.store, registry, provider, self.backend, preview, prepare)
+            def query(entity):
+                return plan_search(
+                    self.backend,
+                    scene_ir,
+                    entity,
+                    store=self.store,
+                    output_root=root / "search-advisory" / str(uuid.uuid4()),
+                    timeout=remaining(),
+                )
+
+            return WebAssetResolver(
+                self.store, registry, provider, self.backend, preview, prepare, query_port=query
+            )
 
         web = _ConfiguredSource(self.store, web_factory) if config.web else None
 

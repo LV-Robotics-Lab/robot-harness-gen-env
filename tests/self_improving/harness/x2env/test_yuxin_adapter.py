@@ -14,6 +14,48 @@ import pytest
 from self_improving.harness.x2env.store import Store
 
 
+def test_web_query_changes_only_original_engine_query_not_entity(tmp_path, monkeypatch):
+    import urllib.request
+    from io import BytesIO
+
+    from self_improving.harness.x2env.adapters.yuxin import YuxinProviderAdapter
+
+    calls = []
+
+    def fetch(request, timeout):
+        url = request if isinstance(request, str) else request.full_url
+        calls.append(url)
+        payload = (
+            {"tree": [{"type": "blob", "path": "Models/Vessel/glTF-Binary/Vessel.glb"}]}
+            if "git/trees" in url
+            else {"legal": [{"spdx": "CC0-1.0", "owner": "Fixture creator", "text": "fixture"}]}
+        )
+        return BytesIO(json.dumps(payload).encode())
+
+    monkeypatch.setattr(urllib.request, "urlopen", fetch)
+    store = Store(tmp_path / "state")
+    provider = YuxinProviderAdapter(
+        {
+            "providers": {
+                "github_tree": {
+                    "enabled": True,
+                    "repositories": [{"repository": "fixture/models", "branch": "a" * 40}],
+                }
+            }
+        },
+        store,
+    )
+    entity = SimpleNamespace(id="cup", category="mug")
+    result = provider.search(entity, "web", query="vessel")
+    assert result.status == "succeeded" and result.candidates[0].entity_id == "cup"
+    assert entity.category == "mug"
+    receipt = json.loads(store.read_artifact(result.receipt))
+    assert receipt["category"] == "mug" and receipt["query"] == "vessel"
+    assert len([url for url in calls if "git/trees" in url]) == 1
+    with pytest.raises(ValueError):
+        provider.search(entity, "local", query="vessel")
+
+
 def test_registered_local_candidate_does_not_imply_permission(tmp_path):
     from self_improving.harness.x2env.adapters.yuxin import YuxinProviderAdapter
 

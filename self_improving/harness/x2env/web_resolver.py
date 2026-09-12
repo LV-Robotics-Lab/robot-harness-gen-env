@@ -9,6 +9,7 @@ from pathlib import Path
 
 from PIL import Image
 
+from .artifacts import artifact_closure
 from .asset_advisory import AssetVisualAssessment, VisualCandidate
 from .asset_preparation import NormalizationParameters, PreparationResult
 from .asset_preview import AssetPreviewProof
@@ -17,12 +18,14 @@ from .compile import ResolvedAsset, ResolvedAssetSet
 from .contracts import ArtifactRef, SceneIR
 from .normalization import normalize_mesh
 from .resolver import ResolutionResult
+from .search_advisory import SearchAdvisoryResult, SearchQuery
 
 
 class WebAssetResolver:
-    def __init__(self, store, registry, provider, backend, preview, prepare):
+    def __init__(self, store, registry, provider, backend, preview, prepare, *, query_port=None):
         self.store, self.registry, self.provider = store, registry, provider
         self.backend, self.preview, self.prepare = backend, preview, prepare
+        self.query_port = query_port
 
     def resolve(
         self, scene_ir, *, allowed_sources, allow_cousin, output_root, timeout=600, entity_ids=None
@@ -76,8 +79,58 @@ class WebAssetResolver:
                 error = "resolver_timeout"
                 continue
             try:
-                search = self.provider.search(entity, "web", limit=8)
+                query_args = {}
+                if self.query_port is not None:
+                    advisory = self.query_port(entity)
+                    advisory = SearchAdvisoryResult.model_validate_json(advisory.model_dump_json())
+                    records.append(
+                        {"entity_id": entity.id, "query_advisory": advisory.model_dump(mode="json")}
+                    )
+                    artifact_closure(self.store, (advisory.receipt,))
+                    query_record = json.loads(self.store.read_artifact(advisory.receipt))
+                    expected = {
+                        "schema_version": "x2env.search_advisory.v1",
+                        "authority": "search_query_advisory_only",
+                        "scene_ir": scene_ir.model_dump(),
+                        "entity": entity.model_dump(mode="json"),
+                        "original_category": entity.category,
+                        "status": advisory.status,
+                        "query": advisory.query,
+                        "error_code": advisory.error_code,
+                    }
+                    if advisory.original_category != entity.category or any(
+                        query_record.get(k) != v for k, v in expected.items()
+                    ):
+                        raise ValueError("unbound_search_advisory")
+                    if advisory.status != "completed":
+                        unresolved.append(entity.id)
+                        error = advisory.error_code or "search_advisory_failed"
+                        continue
+                    proposal = SearchQuery.model_validate_json(json.dumps(query_record["proposal"]))
+                    if (
+                        proposal.query != advisory.query
+                        or advisory.error_code is not None
+                        or query_record.get("external_agent_executed") is not True
+                    ):
+                        raise ValueError("invalid_search_advisory")
+                    query_args["query"] = advisory.query
+                if int(deadline - time.monotonic()) < 1:
+                    unresolved.append(entity.id)
+                    error = "resolver_timeout"
+                    continue
+                search = self.provider.search(entity, "web", limit=8, **query_args)
                 self.store.read_artifact(search.receipt)
+                if query_args:
+                    source_record = json.loads(self.store.read_artifact(search.receipt))
+                    if any(
+                        source_record.get(k) != v
+                        for k, v in {
+                            "entity_id": entity.id,
+                            "category": entity.category,
+                            "query": query_args["query"],
+                        }.items()
+                    ):
+                        raise ValueError("provider_query_binding_mismatch")
                 if search.status != "succeeded":
                     records.append(
                         {"entity_id": entity.id, "search": search.model_dump(mode="json")}
@@ -139,8 +192,6 @@ class WebAssetResolver:
                     if isinstance(params, PreparationResult):
                         prepared = PreparationResult.model_validate_json(params.model_dump_json())
                         entry["preparation_result"] = prepared.model_dump(mode="json")
-                        from .artifacts import artifact_closure
-
                         artifact_closure(self.store, (prepared.receipt,))
                         if prepared.status != "completed" or prepared.parameters is None:
                             raise ValueError(prepared.error_code or "asset_preparation_failed")

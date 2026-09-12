@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C06 单次受管检索词建议接通
+
+- 原类别不再兼任文件名查询：同一 CodexBackend 给出一条受限词法查询，SceneIR/category 保持不变；
+  原 Yuxin tiered_search 消费独立 query 参数。无 cube/Box 特例、无失败后换词重试。
+- deployment 已装配 query_port；每实体一次建议、一次检索，使用剩余预算。建议、原类别、实体、
+  SceneIR 与 provider receipt 绑定；非法 URL 建议留失败证据且零网络调用。
+- 公开部署测试先 RED 后 GREEN；检索/adapter/resolver/deployment 快测通过。模型与网络为明确外部
+  替身，不计 S04 或任何真实来源成功。真实新代码运行在固定提交后执行。
+
 ## 2026-09-13 C13 G1 退役父包隐式旧执行入口
 
 - fresh subprocess 导入 canonical 原先会加载旧 application，公共导入测试先 RED 后 GREEN。

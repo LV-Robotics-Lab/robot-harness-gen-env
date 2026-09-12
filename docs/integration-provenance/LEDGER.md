@@ -1,5 +1,16 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C06-SEARCH-QUERY — 保留类别的单次检索建议
+
+- `origin_owner`：Yuxin/HYX 原 provider 引擎；`integration_owner`：Bingsheng Harness workstream。
+- `upstream_owner`：OpenXSim/各来源平台及 OpenAI Codex；原许可与作者记录不变。
+- `source_ref`：原 provider 固定来源 `4982cc3660d82743b849fd0ba9cbdfd04933e895`、
+  `8c2f058215b4d69d10f15c269148397a9f14ccd2`；canonical adapter 基线 `c3310b3`。
+- `target_paths`：x2env/search_advisory.py、adapters/yuxin.py、web_resolver.py、deployment.py。
+- `integration_method`：受管模型建议 query，经部署装配进入原 tiered_search；不修改原类别与选择权限。
+- `verification`：contract_pass；外部替身测试，真实模型/网络与矩阵 not_run。
+- `recorded_git_authors`：沿用来源档案与本提交元数据，不自行映射自然人身份。
+
 ## INT-CANONICAL-C13-G1 — 父包隐式旧执行入口退役
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream；原模块归属不变。

@@ -369,3 +369,104 @@ def test_pinned_provider_bytes_and_symlink_ancestors_rejected(tmp_path):
     linked.symlink_to(tmp_path, target_is_directory=True)
     with pytest.raises(ValueError, match="nonsymbolic"):
         load_deployment(linked / "config.json")
+
+
+@pytest.mark.parametrize("query", ["vessel", "https://example.org/asset.glb"])
+def test_deployed_web_search_uses_one_managed_advisory_without_rewriting_category(
+    tmp_path, monkeypatch, query
+):
+    """Real Harness/transport/engine, explicit process and HTTP boundary doubles only."""
+    import hashlib
+    import io
+    import urllib.request
+
+    from self_improving.harness.x2env.artifacts import artifact_closure
+    from self_improving.harness.x2env.store import Store
+
+    provider = tmp_path / "provider.json"
+    provider.write_text(
+        json.dumps(
+            {
+                "providers": {
+                    "github_tree": {
+                        "enabled": True,
+                        "tier": 2,
+                        "repositories": [
+                            {
+                                "repository": "fixture/models",
+                                "branch": "a" * 40,
+                                "license": "per-model metadata required",
+                            }
+                        ],
+                    }
+                }
+            }
+        )
+    )
+    config, request = foreground_deployment(
+        tmp_path,
+        "web",
+        {
+            "web": {
+                "provider_config": {
+                    "path": str(provider),
+                    "sha256": hashlib.sha256(provider.read_bytes()).hexdigest(),
+                }
+            }
+        },
+    )
+    executable_path = tmp_path / "model-double"
+    script = executable_path.read_text()
+    line = next(line for line in script.splitlines() if line.startswith("pathlib.Path"))
+    advisory = json.dumps({"query": query, "reason": "Explicit lexical process double."})
+    script = script.replace(
+        line,
+        "schema=json.loads(pathlib.Path(sys.argv[sys.argv.index('--output-schema')+1]).read_text())\n"
+        "if 'query' in schema['properties']:\n"
+        " pathlib.Path(sys.argv[sys.argv.index('--output-last-message')+1]).write_text("
+        f"{advisory!r})\n"
+        "else:\n " + line,
+    )
+    executable_path.write_text(script)
+    config = config.model_copy(
+        update={
+            "codex": config.codex.model_copy(
+                update={"sha256": hashlib.sha256(executable_path.read_bytes()).hexdigest()}
+            )
+        }
+    )
+    calls = []
+
+    def http_double(request, **kwargs):
+        calls.append(request.full_url if hasattr(request, "full_url") else request)
+        return io.BytesIO(b'{"tree": []}')
+
+    monkeypatch.setattr(urllib.request, "urlopen", http_double)
+    harness = build_harness(config)
+    snapshot = harness.resume(harness.submit(request).workflow_id)
+    store = Store(tmp_path / "state")
+    records = [
+        json.loads(store.read_artifact(ref))
+        for ref in artifact_closure(store, (snapshot.asset_resolution,))
+        if ref.media_type == "application/json"
+    ]
+    advisory_records = [
+        r
+        for r in records
+        if isinstance(r, dict) and r.get("schema_version") == "x2env.search_advisory.v1"
+    ]
+    assert len(advisory_records) == 1
+    receipt = advisory_records[0]
+    assert receipt["original_category"] == "box"
+    assert receipt["external_agent_executed"] is True
+    assert snapshot.compiled_scene is None
+    if query == "vessel":
+        assert receipt["status"] == "completed" and receipt["query"] == query
+        assert len(calls) == 1
+        assert any(
+            isinstance(r, dict) and r.get("query") == query and r.get("category") == "box"
+            for r in records
+        )
+    else:
+        assert receipt["status"] == "failed"
+        assert calls == []

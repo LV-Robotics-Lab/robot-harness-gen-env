@@ -54,6 +54,81 @@ class ProviderDouble:
         return ProviderFetchResult(status="succeeded", source_path=str(path), receipt=ref)
 
 
+def test_managed_query_is_used_once_without_mutating_scene_or_entity(tmp_path):
+    from self_improving.harness.x2env.codex import CodexBackend
+    from self_improving.harness.x2env.search_advisory import plan_search
+    from self_improving.harness.x2env.web_resolver import WebAssetResolver
+    from tests.self_improving.harness.x2env.test_codex import executable
+
+    store, registry, _, scene, _ = inputs(tmp_path)
+    original = store.read_artifact(scene)
+    path = executable(
+        tmp_path, {"query": "rectangular block", "reason": "broad search description"}
+    )
+    backend = CodexBackend(path, hashlib.sha256(path.read_bytes()).hexdigest(), "double", store)
+    plans = []
+
+    def query_port(entity):
+        result = plan_search(
+            backend, scene, entity, store=store, output_root=tmp_path / "query", timeout=10
+        )
+        plans.append(result)
+        return result
+
+    class QueryProvider(ProviderDouble):
+        def search(self, entity, source, limit, *, query):
+            assert entity.category == "box" and query == "rectangular block"
+            result = super().search(entity, source, limit)
+            ref = store.write_artifact(
+                json.dumps(
+                    {"entity_id": entity.id, "category": entity.category, "query": query}
+                ).encode(),
+                "application/json",
+            )
+            return result.model_copy(update={"receipt": ref})
+
+    provider = QueryProvider(store, tmp_path)
+    result = WebAssetResolver(
+        store, registry, provider, backend, None, lambda *args: None, query_port=query_port
+    ).resolve(scene, allowed_sources=("web",), allow_cousin=False, output_root=tmp_path / "resolve")
+    assert result.error_code == "missing_physical_metadata"
+    assert len(plans) == len(provider.queries) == 1
+    receipt = json.loads(store.read_artifact(result.receipt))
+    assert receipt["candidates"][0]["query_advisory"] == plans[0].model_dump(mode="json")
+    assert store.read_artifact(scene) == original
+
+
+@pytest.mark.parametrize("fault", ["missing_backend", "changed_query", "changed_category"])
+def test_failed_or_rebound_query_never_falls_back_to_original_category(tmp_path, fault):
+    from self_improving.harness.x2env.search_advisory import plan_search
+    from self_improving.harness.x2env.web_resolver import WebAssetResolver
+
+    store, registry, _, scene, _ = inputs(tmp_path)
+    provider = ProviderDouble(store, tmp_path)
+    calls = []
+
+    def query(entity):
+        result = plan_search(
+            None, scene, entity, store=store, output_root=tmp_path / "query", timeout=10
+        )
+        calls.append(result)
+        if fault == "changed_query":
+            result = result.model_copy(update={"query": "another object"})
+        if fault == "changed_category":
+            result = result.model_copy(update={"original_category": "another"})
+        return result
+
+    result = WebAssetResolver(
+        store, registry, provider, None, None, None, query_port=query
+    ).resolve(scene, allowed_sources=("web",), allow_cousin=False, output_root=tmp_path / "resolve")
+    assert result.status == "blocked" and not result.resolved.assets
+    assert len(calls) == 1 and provider.queries == []
+    evidence = json.loads(store.read_artifact(result.receipt))
+    assert "query_advisory" in evidence["candidates"][0]
+    if fault == "missing_backend":
+        assert result.error_code == "blocked_external_resource"
+
+
 def test_failed_managed_preparation_preserves_actual_receipt_and_reason(tmp_path):
     from self_improving.harness.x2env.asset_preparation import PreparationResult
     from self_improving.harness.x2env.web_resolver import WebAssetResolver

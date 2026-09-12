@@ -6,6 +6,7 @@ OpenXSim must be supplied as a deployment dependency, never injected into sys.pa
 
 import hashlib
 import json
+import re
 import xml.etree.ElementTree as ET
 from dataclasses import asdict
 from pathlib import Path
@@ -216,12 +217,23 @@ class YuxinProviderAdapter:
                     raise ValueError("asset_integrity_mismatch")
         return name, contents
 
-    def search(self, entity, source: Literal["local", "web"], limit: int = 8):
+    def search(self, entity, source: Literal["local", "web"], limit: int = 8, *, query=None):
         if source not in {"local", "web"} or type(limit) is not int or not 1 <= limit <= 20:
             raise ValueError("invalid source or candidate limit")
+        if query is not None and (
+            source != "web"
+            or not isinstance(query, str)
+            or not 1 <= len(query) <= 160
+            or query != query.strip()
+            or not re.fullmatch(r"[\w -]+", query)
+            or not any(c.isalnum() for c in query)
+        ):
+            raise ValueError("invalid web lexical query")
         candidates = []
         status, error = "blocked", "asset_not_found"
         details = {"entity_id": entity.id, "category": entity.category, "source": source}
+        if query is not None:
+            details["query"] = query
         try:
             from self_improving.asset_pipeline.active.asset_reuse.lib.a1_providers import (
                 RoboTwinLocalProvider,
@@ -271,7 +283,12 @@ class YuxinProviderAdapter:
                     licenses[candidate.candidate_id] = self._web_license(candidate)
                     return _permitted(licenses[candidate.candidate_id])
 
-                result = tiered_search(tiers, entity.category, viable_fn=viable, limit=limit)
+                result = tiered_search(
+                    tiers,
+                    entity.category if query is None else query,
+                    viable_fn=viable,
+                    limit=limit,
+                )
                 details["tiers_consulted"] = result["tiers_consulted"]
                 details["provider_errors"] = result["provider_errors"]
                 details["provider_stats"] = result["provider_stats"]
