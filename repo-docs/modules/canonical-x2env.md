@@ -1,5 +1,9 @@
 # Canonical x2env（收敛实施中）
 
+本地复用现在通过原Yuxin检索引擎读取canonical Registry的精确类别投影，检索回执、许可和原版本
+映射进入证据链，再进行已有尺寸与真实预览判断。投影不是历史外部资产库，也不支持未登记raw目录
+直接当作可复用版本；跨类别和digital cousin检索尚未授予。
+
 统一实验入口现为 `x2env submit --deployment ... --text ... --seed ... --idempotency-key ... --output ...`，
 也可用 `python -m self_improving.harness.x2env.cli`。`--image`可重复，`--video`一次；status/resume/package
 使用workflow-id。部署只装配既有Harness与来源adapter；新入口尚未完成真实12案例验收。

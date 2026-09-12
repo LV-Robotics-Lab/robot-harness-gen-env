@@ -77,6 +77,7 @@ class LocalAssetResolver:
                 error_code="invalid_scene_evidence",
             )
         records, assets, unresolved = [], [], []
+        catalog_searches = []
         error, resources = None, ()
         selected = {e.id for e in scene.entities if e.role == "foreground"}
         if entity_ids is not None:
@@ -90,7 +91,18 @@ class LocalAssetResolver:
                 unresolved.append(entity.id)
                 continue
             try:
-                versions = self.registry.find(entity.category)
+                from .local_catalog import RegistryLocalCatalog
+
+                budget = int(deadline - time.monotonic())
+                if budget < 1:
+                    error = "resolver_timeout"
+                    unresolved.append(entity.id)
+                    continue
+                search = RegistryLocalCatalog(self.store, self.registry).search(
+                    entity, output_root=root / "catalogs" / entity.id, limit=8, timeout=budget
+                )
+                catalog_searches.append(search.model_dump(mode="json"))
+                versions = search.versions
             except (ValueError, OSError, KeyError):
                 records.append({"entity_id": entity.id, "error_code": "invalid_registry_evidence"})
                 unresolved.append(entity.id)
@@ -264,6 +276,7 @@ class LocalAssetResolver:
             "resolved": resolved.model_dump(mode="json"),
             "unresolved_entities": unresolved,
             "candidates": records,
+            "catalog_searches": catalog_searches,
             "next_source": next_source,
             "required_resources": resources,
             "wall_seconds": time.monotonic() - started,

@@ -118,6 +118,9 @@ def test_local_reuse_preserves_origin_and_binds_known_version_preview(tmp_path):
         scene, allowed_sources=("local",), allow_cousin=False, output_root=tmp_path / "resolve"
     )
     assert result.status == "succeeded"
+    catalog = json.loads(store.read_artifact(result.receipt))["catalog_searches"]
+    assert catalog[0]["status"] == "succeeded"
+    assert catalog[0]["candidates"][0]["provider"] == "robotwin_local"
     assert result.resolved.assets[0].version_sha256 == version.version_sha256
     assert result.resolved.assets[0].acquisition_source == "local"
     assert registry.inspect(version.version_sha256).source.kind == "web"
@@ -209,7 +212,10 @@ def test_unsuitable_candidate_is_not_selected_or_retried(tmp_path, fault):
     assert len(backend.calls) == (1 if fault in {"visual", "unknown_version"} else 0)
     receipt = json.loads(store.read_artifact(result.receipt))
     assert receipt["cousin_status"] == "not_implemented"
-    assert receipt["candidates"][0]["version_sha256"] == version.version_sha256
+    if fault == "short_budget":
+        assert receipt["candidates"] == [] and receipt["catalog_searches"] == []
+    else:
+        assert receipt["candidates"][0]["version_sha256"] == version.version_sha256
     assert result.next_source == (None if fault == "short_budget" else "web")
     if fault == "visual":
         assert receipt["candidates"][0]["advisory"]["verdicts"][0]["detail"]

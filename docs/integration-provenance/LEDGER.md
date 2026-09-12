@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C06-LOCAL-ENGINE — 原检索引擎消费不可变本地投影
+
+- `origin_owner`：Yuxin原local provider、Bingsheng Registry；`integration_owner`：Bingsheng Harness。
+- `source_ref`：原provider入口见adapters/yuxin.py，canonical resolver `dbf43a0`。
+- `target_paths`：x2env/local_catalog.py、resolver.py与对应测试。
+- `verification`：原search_phrases实际执行的组件测试；37项相关测试。不声称历史外部catalog已导入，
+  不映射自然人Git身份，不把测试fixture许可当真实资产许可。
+
 ## INT-CANONICAL-C12-CLI — 唯一公共入口与部署
 
 - `origin_owner`：Bingsheng Harness、Yuxin provider、Gujie重建接口；`integration_owner`：Bingsheng。

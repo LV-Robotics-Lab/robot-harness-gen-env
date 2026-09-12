@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-13 C06 本地复用实际经过原Yuxin检索
+
+- RegistryLocalCatalog对精确category的不可变版本生成有界、逐成员绑定的本地投影，真实调用原
+  YuxinProviderAdapter→RoboTwinLocalProvider.search_phrases；原asset_id/来源/许可/engine回执保留。
+- LocalAssetResolver默认消费这一候选集，再执行原尺寸/preview/视觉门；不再仅find后称provider接通。
+  原始目录资产仍requires_normalization_and_registration，不声称跨category或digital cousin支持。
+- 版本数量/bytes/typed闭包预算超限整体失败，不靠limit静默截断库；阶段过期不启动catalog/preview。
+  本地catalog/resolver/router/controller共37 passed（1.54s），模型/preview为显式替身，不计真实来源case。
+- dashboard三个JSON入口复查仍404，无task id；进度继续记本目录，未伪造公共dashboard更新。
+
 ## 2026-09-13 C12 统一CLI与部署装配
 
 - x2env入口提供submit/status/resume/package；重复图像、视频、文本及组合进入同一Harness，
