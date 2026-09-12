@@ -91,6 +91,35 @@ def test_manifest_timings_are_exact_nonoverlapping_controller_measurements() -> 
     }
     assert sum(item.duration_ns for item in timings) == 650
 
+    persisted_read_only_zero = {
+        **sample,
+        "calls": [
+            _call("image2env_preview_status_v1", "status", 10, 0),
+            _call("image2env_preview_asset_lookup_v1", "asset_lookup", 20, 0),
+            *calls[2:],
+        ],
+    }
+    assert _timings(entries, (persisted_read_only_zero,)) == timings
+
+    read_only_positive = {
+        **sample,
+        "calls": [
+            _call("image2env_preview_status_v1", "status", 10, 1),
+            *calls[1:],
+        ],
+    }
+    with pytest.raises(LimitedImagePreviewManifestBuildError) as read_only_error:
+        _timings(entries, (read_only_positive,))
+    assert read_only_error.value.reason == "timing_stage"
+
+    business_zero = {
+        **sample,
+        "calls": [*calls[:2], _call("image2env_compile_v2_0_0", "compile", 100, 0), *calls[3:]],
+    }
+    with pytest.raises(LimitedImagePreviewManifestBuildError) as business_error:
+        _timings(entries, (business_zero,))
+    assert business_error.value.reason in {"timing_missing", "timing_value"}
+
     wrong_stage = {
         **sample,
         "calls": [

@@ -467,6 +467,7 @@ def test_interrupted_attempt_waits_for_exact_live_process_then_resumes(service, 
     "backend,transport,child,valid",
     [
         (2.0, 1.0, 0.5, True),
+        (2.0, 1.0, 0.0, False),
         (1.0, 2.0, 0.5, False),
         (2.0, 1.0, 2.0, False),
         (2.0, 1.0, None, False),
@@ -501,6 +502,52 @@ def test_timing_retains_samples_and_rejects_missing_or_overlapping(
     assert values["calls"][0]["service_elapsed_ns"] == (
         None if child is None else round(child * 1e9)
     )
+
+
+@pytest.mark.parametrize(
+    ("tool", "stage"),
+    [
+        ("image2env_preview_status_v1", "status"),
+        ("image2env_preview_asset_lookup_v1", "asset_lookup"),
+    ],
+)
+def test_timing_normalizes_read_only_projection_default_to_no_child_service(
+    service, tmp_path, tool, stage
+):
+    from self_improving.harness.schemas.limited_image_preview_service import PreviewServiceResult
+
+    projection = service.value.status(workflow_id=str(service.workflow))
+    projection["stage"] = stage
+    output = PreviewServiceResult.model_validate(projection).model_dump(mode="json")
+    assert output["elapsed_seconds"] == 0.0
+    result = CodexBackendResult(
+        "completed",
+        tmp_path,
+        2.0,
+        0,
+        None,
+        None,
+        {
+            "calls": [
+                {
+                    "tool": tool,
+                    "elapsed_seconds": 1.0,
+                    "result": {"structuredContent": output},
+                }
+            ]
+        },
+        None,
+    )
+
+    values = timing_samples(result)
+
+    assert values["valid"] is True
+    assert values["calls"][0] == {
+        "tool": tool,
+        "stage": stage,
+        "transport_elapsed_ns": 1_000_000_000,
+        "service_elapsed_ns": None,
+    }
 
 
 def test_failed_attempt_keeps_measured_wall_without_inventing_attribution(tmp_path):
