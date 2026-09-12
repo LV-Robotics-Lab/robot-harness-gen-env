@@ -174,6 +174,33 @@ class _Handler:
         return HandlerResult(result, refs)
 
 
+@dataclass(frozen=True)
+class _QualificationDocuments:
+    qualification: SkillQualification
+    report: QualificationReportV1
+    qualification_bytes: bytes
+    report_bytes: bytes
+
+
+@dataclass(frozen=True)
+class _BoundQualification:
+    descriptor: SkillDescriptorV2
+    qualification_bytes: bytes
+    report_bytes: bytes
+    source_identity: str
+    dependencies: tuple[DependencyRef, ...]
+    registry: object
+    artifact_store: object
+    run_store: object
+    resolver: object
+    handler: object
+    compiler_application: object
+    compiler: object
+    producer: object
+    library: object
+    roots: tuple[tuple[str, str], ...]
+
+
 class LimitedImagePreviewApplication:
     durable_run_state = True
 
@@ -221,6 +248,7 @@ class LimitedImagePreviewApplication:
             evidence_invariant_policy=self,
         )
         self._qualifications = {}
+        self._bound_qualifications = {}
 
     @property
     def implementation_sha256(self):
@@ -459,9 +487,7 @@ class LimitedImagePreviewApplication:
         self.bind(ref)
         return ref
 
-    def verify_and_build(self, ref, *, artifact_resolver):
-        if artifact_resolver is not self.artifact_store:
-            raise TypeError("qualification must use the shared CAS")
+    def _qualification_documents(self, ref):
         qualification_payload = self.artifact_store.resolve(ref).path.read_bytes()
         qualification = SkillQualification.model_validate_json(qualification_payload)
         raw = self.artifact_store.resolve_digest(qualification.report_sha256).read_bytes()
@@ -498,6 +524,14 @@ class LimitedImagePreviewApplication:
             )
         ):
             raise ValueError("shared preview qualification identity changed")
+        return _QualificationDocuments(qualification, report, qualification_payload, raw)
+
+    def verify_and_build(self, ref, *, artifact_resolver):
+        if artifact_resolver is not self.artifact_store:
+            raise TypeError("qualification must use the shared CAS")
+        documents = self._qualification_documents(ref)
+        qualification = documents.qualification
+        report = documents.report
         evidence = report.checks[0].evidence
         expected_checks = (
             self._publication_checks(UUID(evidence["candidate"]))
@@ -528,13 +562,66 @@ class LimitedImagePreviewApplication:
             descriptor,
             self._handlers[qualification.skill_ref],
             self._resolver,
-            qualification_payload,
-            raw,
+            documents.qualification_bytes,
+            documents.report_bytes,
         )
 
     def bind(self, ref):
         descriptor = self._registry.register_evidence_invariant(ref)
-        self._qualifications[f"{descriptor.skill_id}@{descriptor.version}"] = ref
+        skill_ref = f"{descriptor.skill_id}@{descriptor.version}"
+        documents = self._qualification_documents(ref)
+        self._qualifications[skill_ref] = ref
+        self._bound_qualifications[skill_ref] = _BoundQualification(
+            descriptor=descriptor,
+            qualification_bytes=documents.qualification_bytes,
+            report_bytes=documents.report_bytes,
+            source_identity=self._source_identity,
+            dependencies=self._resolver.resolve(skill_ref, None),
+            registry=self._registry,
+            artifact_store=self.artifact_store,
+            run_store=self.run_store,
+            resolver=self._resolver,
+            handler=self._handlers[skill_ref],
+            compiler_application=self.compiler_application,
+            compiler=self.compiler_application.compiler,
+            producer=self.producer,
+            library=self.library,
+            roots=tuple(sorted((str(name), str(path)) for name, path in self.roots.items())),
+        )
+        return descriptor
+
+    def _require_bound(self, skill_ref):
+        ref = self._qualifications[skill_ref]
+        bound = self._bound_qualifications.get(skill_ref)
+        if bound is None:
+            self.bind(ref)
+            bound = self._bound_qualifications[skill_ref]
+        documents = self._qualification_documents(ref)
+        descriptor = self._registry.resolve(*skill_ref.split("@"))
+        roots = tuple(sorted((str(name), str(path)) for name, path in self.roots.items()))
+        if (
+            documents.qualification.skill_ref != skill_ref
+            or documents.qualification_bytes != bound.qualification_bytes
+            or documents.report_bytes != bound.report_bytes
+            or bound.descriptor != descriptor
+            or descriptor.qualification_artifact != ref
+            or descriptor.implementation_sha256 != self._source_identity
+            or bound.source_identity != self._source_identity
+            or bound.dependencies != self._resolver.resolve(skill_ref, None)
+            or bound.registry is not self._registry
+            or bound.artifact_store is not self.artifact_store
+            or bound.run_store is not self.run_store
+            or bound.resolver is not self._resolver
+            or bound.handler is not self._handlers.get(skill_ref)
+            or bound.compiler_application is not self.compiler_application
+            or bound.compiler is not self.compiler_application.compiler
+            or bound.producer is not self.producer
+            or self.producer.compiler is not bound.compiler
+            or self.producer.artifact_store is not self.artifact_store
+            or bound.library is not self.library
+            or bound.roots != roots
+        ):
+            raise ValueError("bound preview qualification identity changed")
         return descriptor
 
     def invoke(self, skill_ref, parameters, *, run_id):
@@ -544,7 +631,7 @@ class LimitedImagePreviewApplication:
             raise ValueError("shared preview skill requires registered qualification")
         if type(parameters) is not _MODELS[skill_ref][0]:
             raise TypeError("shared preview requires exact typed input")
-        self.bind(self._qualifications[skill_ref])
+        self._require_bound(skill_ref)
         state = self._registry.invoke_with_run_id(
             *skill_ref.split("@"), parameters.model_dump(mode="json"), run_id=run_id
         )
@@ -557,7 +644,7 @@ class LimitedImagePreviewApplication:
         skill = f"{invocation.skill_id}@{invocation.skill_version}"
         if skill not in self._qualifications:
             raise ValueError("shared preview skill requires registered qualification")
-        self.bind(self._qualifications[skill])
+        self._require_bound(skill)
         life, output = self._terminal(run_id, skill, candidate=False)
         refs = [r for r in life.terminal.artifacts if r.schema_version == output.schema_version]
         return refs[0], output

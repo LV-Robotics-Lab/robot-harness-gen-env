@@ -10,6 +10,8 @@ import pytest
 
 from self_improving.harness.limited_image_preview_application import LimitedImagePreviewApplication
 
+# Read from fixed workflow 7df77074-2b57-4d32-9baa-1e6921d335d3 at cbe5b3f.
+# The regression uses its stage durations as deterministic data, never as wall-time assertions.
 _SAVED_CBE5B3F_TTL_BOUNDARY = {
     "returned_ttl_seconds": 236.799554,
     "duplicate_qualification_seconds": 196.468709,
@@ -62,6 +64,11 @@ def _preloaded_validation_application(
     store = artifact_store or LocalArtifactStore(tmp_path / "cas")
     shared = object.__new__(LimitedImagePreviewApplication)
     shared.artifact_store = store
+    compiler = object()
+    shared.compiler_application = SimpleNamespace(compiler=compiler)
+    shared.producer = SimpleNamespace(compiler=compiler, artifact_store=store)
+    shared.library = None
+    shared.roots = {}
     shared._source_identity = shared.implementation_sha256
     shared._qualifications = {}
     shared._bound_qualifications = {}
@@ -104,7 +111,13 @@ def _preloaded_validation_application(
         evidence_invariant_policy=shared,
     )
     terminal_reads = []
-    shared._terminal = lambda *args, **kwargs: terminal_reads.append((args, kwargs))
+    output_ref = shared.put(output, "limited-scene-validation.json")
+
+    def terminal(*args, **kwargs):
+        terminal_reads.append((args, kwargs))
+        return SimpleNamespace(terminal=SimpleNamespace(artifacts=(output_ref,))), output
+
+    shared._terminal = terminal
     if qualification_ref is None:
         replay_candidate = uuid4()
         validation_candidate = uuid4()
@@ -432,11 +445,16 @@ def test_preloaded_exact_qualification_is_not_deep_verified_again_during_invoke(
     case = _preloaded_validation_application(tmp_path, monkeypatch)
     assert len(case.deep_checks) == 1
 
-    state = case.application.invoke(VALIDATE, case.parameters, run_id=uuid4())
+    run_id = uuid4()
+    state = case.application.invoke(VALIDATE, case.parameters, run_id=run_id)
 
     assert state.status.value == "succeeded"
     assert len(case.deep_checks) == 1
     assert len(case.terminal_reads) == 1
+    output_ref, output = case.application.read(run_id)
+    assert output_ref.schema_version == output.schema_version
+    assert len(case.deep_checks) == 1
+    assert len(case.terminal_reads) == 2
     boundary = _SAVED_CBE5B3F_TTL_BOUNDARY
     post_capture_seconds = (
         boundary["current_validation_seconds"]
@@ -449,10 +467,81 @@ def test_preloaded_exact_qualification_is_not_deep_verified_again_during_invoke(
     assert post_capture_seconds < boundary["returned_ttl_seconds"]
 
 
+def test_formal_saved_cbe5b3f_ttl_boundary_matches_counted_regression():
+    import os
+    import sqlite3
+    from pathlib import Path
+
+    root_value = os.environ.get("LIMITED_PREVIEW_TTL_EVIDENCE")
+    if not root_value:
+        pytest.skip("requires immutable saved cbe5b3f workflow evidence")
+    root = Path(root_value)
+    workflow_id = "7df77074-2b57-4d32-9baa-1e6921d335d3"
+    transport_path = root / "runs-cbe5b3f" / f"{workflow_id}-1" / "transport.jsonl"
+    requests = {}
+    returned_ttl = None
+    for line in transport_path.read_text().splitlines():
+        envelope = json.loads(line)
+        message = envelope["message"]
+        if envelope["direction"] == "request" and message.get("method") == "tools/call":
+            requests[message["id"]] = message["params"]["name"]
+        elif (
+            envelope["direction"] == "response"
+            and requests.get(message.get("id")) == "genesis_observe_v3_0_0"
+        ):
+            returned_ttl = message["result"]["structuredContent"]["ttl_remaining_seconds"]
+
+    golden = sqlite3.connect(
+        f"file:{root / 'state/golden-8271369.sqlite'}?mode=ro",
+        uri=True,
+    )
+    shared = sqlite3.connect(
+        f"file:{root / 'state/shared-bootstrap-cbe5b3f/runs.sqlite'}?mode=ro",
+        uri=True,
+    )
+    try:
+        operation = json.loads(
+            golden.execute(
+                "select operation_json from golden_workflow_operations "
+                "where workflow_run_id=? and skill_ref='image2env.validate@3.0.0'",
+                (workflow_id,),
+            ).fetchone()[0]
+        )
+        child = json.loads(
+            shared.execute(
+                "select payload_json from harness_run_states where run_id=?",
+                (operation["child_run_id"],),
+            ).fetchone()[0]
+        )
+    finally:
+        golden.close()
+        shared.close()
+
+    def timestamp(value):
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+    duplicate_seconds = (
+        timestamp(child["started_at"]) - timestamp(operation["started_at"])
+    ).total_seconds()
+    current_seconds = (
+        timestamp(child["ended_at"]) - timestamp(child["started_at"])
+    ).total_seconds()
+    assert returned_ttl == pytest.approx(_SAVED_CBE5B3F_TTL_BOUNDARY["returned_ttl_seconds"])
+    assert duplicate_seconds == pytest.approx(
+        _SAVED_CBE5B3F_TTL_BOUNDARY["duplicate_qualification_seconds"]
+    )
+    assert current_seconds == pytest.approx(
+        _SAVED_CBE5B3F_TTL_BOUNDARY["current_validation_seconds"]
+    )
+    assert duplicate_seconds + current_seconds > returned_ttl
+    assert current_seconds < returned_ttl
+
+
 @pytest.mark.parametrize("member", ["qualification", "report"])
 def test_preloaded_qualification_rechecks_top_level_canonical_cas_before_invoke(
     tmp_path, monkeypatch, member
 ):
+    from self_improving.harness.artifacts import ArtifactResolutionError
     from self_improving.harness.limited_image_preview_application import VALIDATE
     from self_improving.harness.schemas.common import SkillQualification
 
@@ -467,7 +556,7 @@ def test_preloaded_qualification_rechecks_top_level_canonical_cas_before_invoke(
     payload = path.read_bytes()
     path.write_bytes(payload[:-1] + bytes([payload[-1] ^ 1]))
 
-    with pytest.raises(Exception, match="qualification|SHA-256"):
+    with pytest.raises(ArtifactResolutionError, match="sha256|SHA-256"):
         case.application.invoke(VALIDATE, case.parameters, run_id=uuid4())
     assert len(case.deep_checks) == 1
     assert case.terminal_reads == []
@@ -477,6 +566,7 @@ def test_preloaded_qualification_rechecks_top_level_canonical_cas_before_invoke(
 def test_preloaded_qualification_identity_drift_fails_closed_before_handler(
     tmp_path, monkeypatch, member
 ):
+    from self_improving.harness.artifacts import ArtifactResolutionError
     from self_improving.harness.limited_image_preview_application import VALIDATE
 
     case = _preloaded_validation_application(tmp_path, monkeypatch)
@@ -497,11 +587,77 @@ def test_preloaded_qualification_identity_drift_fails_closed_before_handler(
     else:
         shared._source_identity = "f" * 64
 
-    with pytest.raises(
-        Exception, match="identity|immutable|implementation|byte count|verification"
-    ):
+    error = ArtifactResolutionError if member == "qualification_ref" else ValueError
+    message = "byte count" if member == "qualification_ref" else "identity|implementation"
+    with pytest.raises(error, match=message):
         shared.invoke(VALIDATE, case.parameters, run_id=uuid4())
     assert case.terminal_reads == []
+
+
+@pytest.mark.parametrize(
+    "member",
+    [
+        "registry",
+        "artifact_store",
+        "run_store",
+        "resolver",
+        "compiler_application",
+        "compiler",
+        "producer",
+        "library",
+        "roots",
+    ],
+)
+def test_preloaded_direct_runtime_identity_drift_fails_closed_before_handler(
+    tmp_path, monkeypatch, member
+):
+    from self_improving.harness.artifacts import LocalArtifactStore
+    from self_improving.harness.limited_image_preview_application import VALIDATE
+    from self_improving.harness.registry import StaticDependencyResolver
+
+    case = _preloaded_validation_application(tmp_path, monkeypatch)
+    shared = case.application
+    if member == "registry":
+        descriptor = shared._registry.resolve("image2env.validate", "3.0.0")
+        shared._registry = SimpleNamespace(resolve=lambda *args: descriptor)
+    elif member == "artifact_store":
+        shared.artifact_store = LocalArtifactStore(case.store.root)
+    elif member == "run_store":
+        shared.run_store = object()
+    elif member == "resolver":
+        shared._resolver = StaticDependencyResolver(
+            {VALIDATE: case.application._resolver.resolve(VALIDATE, None)}
+        )
+    elif member == "compiler_application":
+        shared.compiler_application = SimpleNamespace(compiler=shared.compiler_application.compiler)
+    elif member == "compiler":
+        shared.compiler_application.compiler = object()
+    elif member == "producer":
+        shared.producer = SimpleNamespace(
+            compiler=shared.compiler_application.compiler,
+            artifact_store=shared.artifact_store,
+        )
+    elif member == "library":
+        shared.library = object()
+    else:
+        shared.roots = {"backend": tmp_path / "different-backend"}
+
+    with pytest.raises(ValueError, match="bound preview qualification identity changed"):
+        shared.invoke(VALIDATE, case.parameters, run_id=uuid4())
+    assert case.terminal_reads == []
+
+
+def test_missing_process_local_binding_forces_full_qualification_again(tmp_path, monkeypatch):
+    from self_improving.harness.limited_image_preview_application import VALIDATE
+
+    case = _preloaded_validation_application(tmp_path, monkeypatch)
+    case.application._bound_qualifications.clear()
+
+    state = case.application.invoke(VALIDATE, case.parameters, run_id=uuid4())
+
+    assert state.status.value == "succeeded"
+    assert len(case.deep_checks) == 2
+    assert len(case.terminal_reads) == 1
 
 
 def test_new_application_process_must_deep_bind_the_same_qualification(tmp_path, monkeypatch):
@@ -515,3 +671,17 @@ def test_new_application_process_must_deep_bind_the_same_qualification(tmp_path,
 
     assert len(first.deep_checks) == 1
     assert len(second.deep_checks) == 1
+
+
+def test_full_bind_still_requires_exact_cas_and_saved_candidate_checks(tmp_path, monkeypatch):
+    case = _preloaded_validation_application(tmp_path, monkeypatch)
+
+    with pytest.raises(TypeError, match="shared CAS"):
+        case.application.verify_and_build(case.qualification, artifact_resolver=object())
+
+    case.application._checks = lambda *args: ()
+    with pytest.raises(ValueError, match="candidate checks"):
+        case.application.verify_and_build(
+            case.qualification,
+            artifact_resolver=case.store,
+        )
