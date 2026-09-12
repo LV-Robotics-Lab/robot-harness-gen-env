@@ -106,9 +106,16 @@ class ExperimentService:
         self.inputs = ExperimentInputs(self.store)
         self.backend = backend
         module_root = Path(__file__).absolute().parent
+        repository = module_root.parent.parent
         source_files = tuple(
             sorted(
-                set(module_root.glob("experiment*.py"))
+                set(module_root.rglob("*.py"))
+                | set((repository / "scene_gen").rglob("*.py"))
+                | set(
+                    (repository / "self_improving/asset_pipeline/active/1_asset_reuse/lib").glob(
+                        "*.py"
+                    )
+                )
                 | {
                     module_root / name
                     for name in (

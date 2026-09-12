@@ -20,6 +20,9 @@ class ExperimentDeployment(BaseModel):
     server_python: Path
     server_workdir: Path
     model: str = Field(min_length=1)
+    model_timeout: int = Field(default=120, gt=0, le=300, strict=True)
+    default_source: Literal["local", "web", "generated"] = "generated"
+    allowed_sources: tuple[Literal["local", "web", "generated"], ...] = ("local", "web", "generated")
     evidence_root: Path
     max_attempts: int = Field(default=3, gt=0, le=10, strict=True)
     call_budget: int = Field(default=30, gt=0, le=100, strict=True)

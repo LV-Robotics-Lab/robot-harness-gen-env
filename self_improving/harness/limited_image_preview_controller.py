@@ -293,6 +293,9 @@ class LimitedImagePreviewController:
 
     def start(self, **raw_input):
         started = time.monotonic_ns()
+        if getattr(self.service, "experiment", False):
+            value = self.service.start(**raw_input)
+            return self.resume(value["workflow_id"], input_elapsed_ns=time.monotonic_ns() - started)
         value = PreviewServiceResult.model_validate_json(
             json.dumps(self.service.start(**raw_input))
         )
@@ -455,6 +458,10 @@ class LimitedImagePreviewController:
         )
 
     def resume(self, workflow_id, *, input_elapsed_ns=None):
+        if getattr(self.service, "experiment", False):
+            from .experiment_controller import run_experiment
+
+            return run_experiment(self, workflow_id)
         status = self._status(workflow_id)
         if status.status in {"published", "validated_unreleased"}:
             return self._packaged(status)
