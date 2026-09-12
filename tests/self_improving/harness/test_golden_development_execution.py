@@ -246,10 +246,26 @@ def test_development_child_commits_explicit_unqualified_receipt_and_reopens(tmp_
     assert json.loads(payload) == execution
     from pydantic import ValidationError
 
-    from self_improving.harness.schemas.workflow_operation import QualifiedSkillExecutionV2
+    from self_improving.harness.schemas.workflow_operation import (
+        DevelopmentToolReceipt,
+        QualifiedSkillExecutionV2,
+        TrustedToolReceiptV2,
+    )
 
     with pytest.raises(ValidationError):
         QualifiedSkillExecutionV2.model_validate_json(payload)
+    result = json.loads(store.resolve(operation.tool_result).path.read_bytes())
+    _, receipt_payload = reopened.read_workflow_artifact(
+        RunReadRequest(
+            schema_version="harness.run_read_request.v1",
+            principal_id="tests/dev",
+            workflow_run_id=started.workflow_run_id,
+        ),
+        sha256=result["trusted_receipt"]["sha256"],
+    )
+    development_receipt = DevelopmentToolReceipt.model_validate_json(receipt_payload)
+    with pytest.raises(ValidationError):
+        TrustedToolReceiptV2.model_validate(development_receipt)
     authority_free = {key: value for key, value in kwargs.items() if key != "development_authority"}
     from self_improving.harness.golden_run import GoldenRunCorruptionError
 

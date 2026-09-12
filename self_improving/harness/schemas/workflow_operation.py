@@ -159,7 +159,10 @@ class QualifiedSkillExecutionV2(HarnessModel):
 class TrustedToolReceiptV2(HarnessModel):
     """Terminal qualified execution evidence, independent of workflow commit."""
 
-    model_config = public_schema_config(TRUSTED_TOOL_RECEIPT_V2_SCHEMA_ID)
+    model_config = {
+        **public_schema_config(TRUSTED_TOOL_RECEIPT_V2_SCHEMA_ID),
+        "revalidate_instances": "always",
+    }
 
     schema_version: Literal["harness.trusted_tool_receipt.v2"]
     workflow_run_id: UUID4
