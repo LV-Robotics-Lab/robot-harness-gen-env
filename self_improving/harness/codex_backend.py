@@ -465,8 +465,6 @@ class CodexBackend:
             "--ignore-user-config",
             "--ignore-rules",
             "--approve-for-me",
-            "--sandbox",
-            "read-only",
             "--skip-git-repo-check",
             "--model",
             self.model,
