@@ -54,6 +54,23 @@ class ProviderDouble:
         return ProviderFetchResult(status="succeeded", source_path=str(path), receipt=ref)
 
 
+def test_failed_managed_preparation_preserves_actual_receipt_and_reason(tmp_path):
+    from self_improving.harness.x2env.asset_preparation import PreparationResult
+    from self_improving.harness.x2env.web_resolver import WebAssetResolver
+
+    store, registry, _, scene, _ = inputs(tmp_path)
+    evidence = store.write_artifact(b"model timeout boundary double", "text/plain")
+    failure = PreparationResult(
+        status="failed", parameters=None, receipt=evidence, error_code="model_timeout"
+    )
+    result = WebAssetResolver(
+        store, registry, ProviderDouble(store, tmp_path), None, None, lambda *args: failure
+    ).resolve(scene, allowed_sources=("web",), allow_cousin=False, output_root=tmp_path / "resolve")
+    assert result.status == "blocked" and result.error_code == "model_timeout"
+    receipt = json.loads(store.read_artifact(result.receipt))
+    assert receipt["candidates"][0]["preparation_result"] == failure.model_dump(mode="json")
+
+
 def test_missing_physical_metadata_blocks_without_registering_or_resolving(tmp_path):
     from self_improving.harness.x2env.web_resolver import WebAssetResolver
 
@@ -107,7 +124,7 @@ def prepared(store, scene):
 
 
 def preview_double(store, image):
-    def render(version):
+    def render(version, **kwargs):
         from self_improving.harness.x2env.asset_preview import AssetPreviewProof
 
         ref = store.write_artifact(
@@ -156,7 +173,7 @@ def test_missing_preview_output_closure_cannot_resolve(tmp_path):
 
     store, registry, _, scene, image = inputs(tmp_path)
 
-    def incomplete(version):
+    def incomplete(version, **kwargs):
         proof = preview_double(store, image)(version)
         document = json.loads(store.read_artifact(proof.receipt))
         document["outputs"]["stdout.log"] = dict(

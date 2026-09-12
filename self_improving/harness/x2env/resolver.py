@@ -135,7 +135,11 @@ class LocalAssetResolver:
                     if self.preview is None:
                         entry["error_code"] = "missing_preview"
                         continue
-                    proof = self.preview(version)
+                    preview_budget = int(deadline - time.monotonic())
+                    if preview_budget < 1:
+                        error = entry["error_code"] = "resolver_timeout"
+                        break
+                    proof = self.preview(version, timeout=preview_budget)
                     if not isinstance(proof, AssetPreviewProof):
                         entry["error_code"] = "missing_preview"
                         continue

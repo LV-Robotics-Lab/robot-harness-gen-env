@@ -1,5 +1,12 @@
 # 进度与结果
 
+## 2026-09-13 C06 资产准备证据与预览剩余预算
+
+- local/web预览明确接收本次resolver剩余秒数，预算不足不启动新预览；web保留完整managed
+  PreparationResult及其typed证据闭包，准备失败不能丢失原因后伪装普通缺参数。
+- 跨来源测试发现旧preview替身未接timeout参数，修正替身后相关22 passed（0.97s）。
+  这不是实际来源失败，也没有新增真实来源成功；命令总期限另由controller/CLI落实。
+
 ## 2026-09-13 C04/C12 取消传播与终态证据
 
 - 公开CodexBackend短进程测试先RED：KeyboardInterrupt被转换成普通错误，可能触发后续fallback。

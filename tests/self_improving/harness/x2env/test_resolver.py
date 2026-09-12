@@ -87,13 +87,34 @@ class VisualDouble:
         )
 
 
+def test_local_preview_receives_remaining_resolver_deadline(tmp_path):
+    from self_improving.harness.x2env.resolver import LocalAssetResolver
+
+    store, registry, version, scene, image = inputs(tmp_path)
+    budgets = []
+
+    def render(candidate, *, timeout):
+        budgets.append(timeout)
+        return preview_proof(store, candidate, image)
+
+    result = LocalAssetResolver(store, registry, VisualDouble(store), render).resolve(
+        scene,
+        allowed_sources=("local",),
+        allow_cousin=False,
+        output_root=tmp_path / "resolve",
+        timeout=30,
+    )
+    assert result.status == "succeeded"
+    assert len(budgets) == 1 and 1 <= budgets[0] <= 30
+
+
 def test_local_reuse_preserves_origin_and_binds_known_version_preview(tmp_path):
     from self_improving.harness.x2env.resolver import LocalAssetResolver
 
     store, registry, version, scene, preview = inputs(tmp_path)
     backend = VisualDouble(store)
     proof = preview_proof(store, version, preview)
-    result = LocalAssetResolver(store, registry, backend, lambda v: proof).resolve(
+    result = LocalAssetResolver(store, registry, backend, lambda v, **kwargs: proof).resolve(
         scene, allowed_sources=("local",), allow_cousin=False, output_root=tmp_path / "resolve"
     )
     assert result.status == "succeeded"
@@ -138,7 +159,7 @@ def test_unbound_render_proof_never_reaches_visual_backend(tmp_path, fault):
     else:
         proof = proof.model_copy(update={"receipt": image.model_copy(update={"sha256": "0" * 64})})
     backend = VisualDouble(store)
-    result = LocalAssetResolver(store, registry, backend, lambda v: proof).resolve(
+    result = LocalAssetResolver(store, registry, backend, lambda v, **kwargs: proof).resolve(
         scene, allowed_sources=("local",), allow_cousin=False, output_root=tmp_path / "resolve"
     )
     assert result.status == "blocked" and not result.resolved.assets
@@ -175,7 +196,7 @@ def test_unsuitable_candidate_is_not_selected_or_retried(tmp_path, fault):
         store,
         registry,
         backend,
-        None if fault == "preview" else lambda v: preview_proof(store, v, preview),
+        None if fault == "preview" else lambda v, **kwargs: preview_proof(store, v, preview),
     ).resolve(
         scene,
         allowed_sources=("local", "web"),
@@ -199,7 +220,7 @@ def test_later_entity_miss_retains_partial_resolutions_and_next_source(tmp_path)
 
     store, registry, version, scene, preview = inputs(tmp_path, extra_entity=True)
     result = LocalAssetResolver(
-        store, registry, VisualDouble(store), lambda v: preview_proof(store, v, preview)
+        store, registry, VisualDouble(store), lambda v, **kwargs: preview_proof(store, v, preview)
     ).resolve(
         scene,
         allowed_sources=("local", "reconstruction"),
@@ -230,7 +251,7 @@ def test_candidate_budget_is_eight_once_each(tmp_path):
         )
     backend = VisualDouble(store, "mismatch")
     result = LocalAssetResolver(
-        store, registry, backend, lambda v: preview_proof(store, v, preview)
+        store, registry, backend, lambda v, **kwargs: preview_proof(store, v, preview)
     ).resolve(
         scene, allowed_sources=("local",), allow_cousin=False, output_root=tmp_path / "resolve"
     )

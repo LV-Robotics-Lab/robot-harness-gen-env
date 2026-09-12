@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C06-PORT-BUDGET — 准备结果和剩余预览预算
+
+- `origin_owner`：Yuxin provider、Bingsheng模型参数及resolver；`integration_owner`：Bingsheng。
+- `source_ref`：web `d1e320d`、三来源router `36a0c7f`。
+- `target_paths`：x2env/resolver.py、web_resolver.py与三个对应resolver测试。
+- `verification`：22项组件测试；网络、模型和preview在本片为显式替身。
+
 ## INT-CANONICAL-C04-CANCELLATION — 中断不再变成普通模型错误
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。

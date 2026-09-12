@@ -10,7 +10,7 @@ from pathlib import Path
 from PIL import Image
 
 from .asset_advisory import AssetVisualAssessment, VisualCandidate
-from .asset_preparation import NormalizationParameters
+from .asset_preparation import NormalizationParameters, PreparationResult
 from .asset_preview import AssetPreviewProof
 from .assets import AssetLicense, AssetSource
 from .compile import ResolvedAsset, ResolvedAssetSet
@@ -136,6 +136,15 @@ class WebAssetResolver:
                         raise ValueError("unsafe_provider_output")
                     source_sha = hashlib.sha256(source.read_bytes()).hexdigest()
                     params = self.prepare(entity, candidate, fetched) if self.prepare else None
+                    if isinstance(params, PreparationResult):
+                        prepared = PreparationResult.model_validate_json(params.model_dump_json())
+                        entry["preparation_result"] = prepared.model_dump(mode="json")
+                        from .artifacts import artifact_closure
+
+                        artifact_closure(self.store, (prepared.receipt,))
+                        if prepared.status != "completed" or prepared.parameters is None:
+                            raise ValueError(prepared.error_code or "asset_preparation_failed")
+                        params = prepared.parameters
                     if params is None:
                         raise ValueError("missing_physical_metadata")
                     params = NormalizationParameters.model_validate_json(params.model_dump_json())
@@ -197,7 +206,10 @@ class WebAssetResolver:
                         raise ValueError("missing_preview")
                     if int(deadline - time.monotonic()) < 1:
                         raise ValueError("resolver_timeout")
-                    preview = self.preview(version)
+                    preview_budget = int(deadline - time.monotonic())
+                    if preview_budget < 1:
+                        raise ValueError("resolver_timeout")
+                    preview = self.preview(version, timeout=preview_budget)
                     preview = AssetPreviewProof.model_validate_json(preview.model_dump_json())
                     entry["preview"] = preview.model_dump(mode="json")
                     proof = json.loads(self.store.read_artifact(preview.receipt))

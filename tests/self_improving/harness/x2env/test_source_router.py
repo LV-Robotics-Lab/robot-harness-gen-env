@@ -69,7 +69,7 @@ def test_local_and_web_filter_keep_original_scene_and_skip_other_entities(tmp_pa
     store, registry, version, scene, image = inputs(tmp_path, extra_entity=True)
     backend = VisualDouble(store)
     local = LocalAssetResolver(
-        store, registry, backend, lambda v: preview_proof(store, v, image)
+        store, registry, backend, lambda v, timeout: preview_proof(store, v, image)
     ).resolve(
         scene,
         allowed_sources=("local",),
