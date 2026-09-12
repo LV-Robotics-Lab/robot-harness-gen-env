@@ -39,14 +39,21 @@ def _git_repository(root: Path) -> Path:
     return root
 
 
-def _artifact(store: LocalArtifactStore, root: Path, name: str, schema: str | None) -> ArtifactRef:
+def _artifact(
+    store: LocalArtifactStore,
+    root: Path,
+    name: str,
+    schema: str | None,
+    *,
+    media_type: str = "application/json",
+) -> ArtifactRef:
     path = root / name
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(json.dumps({"name": name}, sort_keys=True, separators=(",", ":")).encode())
     return store.put_file(
         path,
         name=Path(name).name,
-        media_type="application/json",
+        media_type=media_type,
         schema_version=schema,
     )
 
@@ -98,6 +105,12 @@ def test_development_record_is_recoverable_and_never_writes_formal_library(tmp_p
             ("qualified.json", "harness.qualified_skill_execution.v2"),
         )
     )
+    review_refs = (
+        _artifact(store, tmp_path, "preview.png", None, media_type="image/png"),
+        _artifact(store, tmp_path, "preview.mp4", None, media_type="video/mp4"),
+        _artifact(store, tmp_path, "environment.json", "harness.x2env_environment_package.v1"),
+        _artifact(store, tmp_path, "validation.json", "harness.limited_scene_validation.v1"),
+    )
     workflow_id = UUID("10000000-0000-4000-8000-000000000001")
     record = build_development_execution_record(
         workflow_run_id=workflow_id,
@@ -107,9 +120,9 @@ def test_development_record_is_recoverable_and_never_writes_formal_library(tmp_p
         context=capture.context,
         context_ref=capture.ref,
         input_artifacts=(refs[1],),
-        output_artifacts=(refs[2],),
+        output_artifacts=(refs[2], *review_refs),
         log_artifacts=(refs[3],),
-        physical_evidence=(refs[4],),
+        physical_evidence=(refs[4], review_refs[3]),
         exact_skill_evidence=(refs[5],),
         created_at=datetime(2026, 9, 12, tzinfo=UTC),
     )
@@ -139,22 +152,37 @@ def test_development_record_is_recoverable_and_never_writes_formal_library(tmp_p
     assert materialized == tmp_path / "development-review"
     index_raw = (materialized / "index.json").read_bytes()
     index = json.loads(index_raw)
-    assert index_raw == json.dumps(
-        index, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")
-    ).encode() + b"\n"
+    assert (
+        index_raw
+        == json.dumps(
+            index, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")
+        ).encode()
+        + b"\n"
+    )
     assert index["kind"] == "limited_preview_development_materialization.v1"
     assert index["qualification_status"] == "development_unqualified"
+
+    def path_for(ref):
+        return (
+            f"objects/sha256/{ref.sha256[:2]}/{ref.sha256}"
+            + {
+                "application/json": ".json",
+                "image/png": ".png",
+                "video/mp4": ".mp4",
+            }[ref.media_type]
+        )
+
     assert index["entrypoints"] == {
         "context": "development-context.json",
-        "environment_packages": [],
-        "images": [],
-        "inputs": [f"objects/sha256/{refs[1].sha256[:2]}/{refs[1].sha256}"],
-        "logs": [f"objects/sha256/{refs[3].sha256[:2]}/{refs[3].sha256}"],
-        "outputs": [f"objects/sha256/{refs[2].sha256[:2]}/{refs[2].sha256}"],
-        "physical_evidence": [f"objects/sha256/{refs[4].sha256[:2]}/{refs[4].sha256}"],
+        "environment_packages": [path_for(review_refs[2])],
+        "images": [path_for(review_refs[0])],
+        "inputs": [f"objects/sha256/{refs[1].sha256[:2]}/{refs[1].sha256}.json"],
+        "logs": [f"objects/sha256/{refs[3].sha256[:2]}/{refs[3].sha256}.json"],
+        "outputs": sorted(path_for(ref) for ref in (refs[2], *review_refs)),
+        "physical_evidence": sorted(path_for(ref) for ref in (refs[4], review_refs[3])),
         "record": "development-record.json",
-        "validation_reports": [],
-        "videos": [],
+        "validation_reports": [path_for(review_refs[3])],
+        "videos": [path_for(review_refs[1])],
     }
     assert (materialized / "development-record.json").read_bytes() == store.resolve(
         committed
@@ -165,9 +193,10 @@ def test_development_record_is_recoverable_and_never_writes_formal_library(tmp_p
     for member in index["members"]:
         payload = materialized / member["path"]
         assert payload.is_file() and not payload.is_symlink()
-        assert payload.read_bytes() == store.resolve(
-            ArtifactRef.model_validate(member["refs"][0])
-        ).path.read_bytes()
+        assert (
+            payload.read_bytes()
+            == store.resolve(ArtifactRef.model_validate(member["refs"][0])).path.read_bytes()
+        )
     assert not formal_library.exists()
 
     with pytest.raises(ValueError, match="absolute new directory"):
@@ -181,9 +210,9 @@ def test_development_record_is_recoverable_and_never_writes_formal_library(tmp_p
         context=capture.context,
         context_ref=capture.ref,
         input_artifacts=(refs[1],),
-        output_artifacts=(refs[2],),
+        output_artifacts=(refs[2], *review_refs),
         log_artifacts=(refs[3],),
-        physical_evidence=(refs[4],),
+        physical_evidence=(refs[4], review_refs[3]),
         exact_skill_evidence=(refs[5],),
         created_at=datetime(2026, 9, 12, tzinfo=UTC),
     )

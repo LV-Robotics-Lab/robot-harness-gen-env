@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import platform
+import shutil
 import sys
 import tempfile
 from dataclasses import dataclass
@@ -63,6 +64,17 @@ def _sorted_refs(refs):
             key=lambda ref: (ref.sha256, ref.name, ref.media_type, ref.schema_version or ""),
         )
     )
+
+
+def _materialized_path(ref):
+    suffix = {
+        "application/json": ".json",
+        "image/jpeg": ".jpg",
+        "image/png": ".png",
+        "text/plain": ".txt",
+        "video/mp4": ".mp4",
+    }.get(ref.media_type, ".bin")
+    return f"objects/sha256/{ref.sha256[:2]}/{ref.sha256}{suffix}"
 
 
 def capture_git_source_identity(repository_root: Path) -> DevelopmentGitSourceIdentityV1:
@@ -370,6 +382,130 @@ class DevelopmentArtifactStore:
         ):
             raise ValueError("development artifact association is corrupt")
         return ref, record
+
+    def materialize(self, workflow_id, destination):
+        """Copy one debug closure for review without opening a release library."""
+
+        candidate = Path(destination).expanduser()
+        if (
+            not candidate.is_absolute()
+            or ".." in candidate.parts
+            or candidate.exists()
+            or candidate.is_symlink()
+        ):
+            raise ValueError("development output must be an absolute new directory")
+        target = candidate.resolve()
+        record_ref, record = self.read(workflow_id)
+        record_raw = self.store.resolve(record_ref).path.read_bytes()
+        context_raw = self.store.resolve(self.context_ref).path.read_bytes()
+        try:
+            context = DevelopmentExecutionContextV1.model_validate_json(context_raw)
+        except ValidationError as error:
+            raise ValueError("development context is corrupt") from error
+        if (
+            record_raw != _canonical(record)
+            or context_raw != _canonical(context)
+            or context.source_identity != record.source_identity
+            or context.environment != record.environment
+            or context.configuration != record.configuration
+        ):
+            raise ValueError("development context differs from its result")
+
+        groups = {
+            "inputs": record.input_artifacts,
+            "outputs": record.output_artifacts,
+            "logs": record.log_artifacts,
+            "physical_evidence": record.physical_evidence,
+        }
+        supporting = _sorted_refs(
+            (
+                record.workflow_head,
+                record.configuration,
+                *(ref for check in record.checks for ref in check.evidence),
+            )
+        )
+        grouped = {**groups, "supporting": supporting}
+        review = _sorted_refs((*record.output_artifacts, *record.physical_evidence))
+        categories = {
+            "images": tuple(ref for ref in review if ref.media_type.startswith("image/")),
+            "videos": tuple(ref for ref in review if ref.media_type.startswith("video/")),
+            "environment_packages": tuple(
+                ref
+                for ref in review
+                if ref.schema_version
+                in {"harness.environment_package.v1", "harness.x2env_environment_package.v1"}
+            ),
+            "validation_reports": tuple(
+                ref for ref in review if ref.schema_version == "harness.limited_scene_validation.v1"
+            ),
+        }
+        entrypoints = {
+            "record": "development-record.json",
+            "context": "development-context.json",
+            **{
+                name: sorted({_materialized_path(ref) for ref in refs})
+                for name, refs in {**groups, **categories}.items()
+            },
+        }
+
+        target.parent.mkdir(parents=True, exist_ok=True)
+        staging = Path(tempfile.mkdtemp(prefix=f".{target.name}.", dir=target.parent))
+        try:
+            (staging / "development-record.json").write_bytes(record_raw)
+            (staging / "development-context.json").write_bytes(context_raw)
+            members = {}
+            for role, refs in grouped.items():
+                for ref in refs:
+                    relative = _materialized_path(ref)
+                    member = members.setdefault(
+                        relative,
+                        {
+                            "path": relative,
+                            "sha256": ref.sha256,
+                            "bytes": ref.bytes,
+                            "refs": [],
+                            "roles": [],
+                        },
+                    )
+                    encoded = ref.model_dump(mode="json")
+                    if encoded not in member["refs"]:
+                        member["refs"].append(encoded)
+                    if role not in member["roles"]:
+                        member["roles"].append(role)
+                    output = staging / relative
+                    if not output.exists():
+                        output.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copyfile(self.store.resolve(ref).path, output)
+                    data = output.read_bytes()
+                    if len(data) != ref.bytes or hashlib.sha256(data).hexdigest() != ref.sha256:
+                        raise ValueError("materialized development member differs from CAS")
+            for member in members.values():
+                member["refs"].sort(
+                    key=lambda ref: (
+                        ref["sha256"],
+                        ref["name"],
+                        ref["media_type"],
+                        ref.get("schema_version") or "",
+                    )
+                )
+                member["roles"].sort()
+            index = {
+                "kind": "limited_preview_development_materialization.v1",
+                "workflow_run_id": str(record.workflow_run_id),
+                "qualification_status": "development_unqualified",
+                "record_ref": record_ref.model_dump(mode="json"),
+                "context_ref": self.context_ref.model_dump(mode="json"),
+                "entrypoints": entrypoints,
+                "members": [members[path] for path in sorted(members)],
+            }
+            (staging / "index.json").write_bytes(_canonical(index, newline=True))
+            if target.exists():
+                raise ValueError("development output must be an absolute new directory")
+            os.replace(staging, target)
+        except Exception:
+            shutil.rmtree(staging, ignore_errors=True)
+            raise
+        return target
 
 
 __all__ = [

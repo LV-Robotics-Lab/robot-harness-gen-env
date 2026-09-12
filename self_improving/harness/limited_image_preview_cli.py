@@ -118,6 +118,63 @@ def _materialized_entrypoints(root, mode):
     return entries
 
 
+def _development_materialized_entrypoints(root):
+    index_path = root / "index.json"
+    if index_path.is_symlink() or not index_path.is_file():
+        raise ValueError("development materialization has no canonical index")
+    raw = index_path.read_bytes()
+    try:
+        index = json.loads(raw)
+    except json.JSONDecodeError as error:
+        raise ValueError("development materialization index is corrupt") from error
+    if (
+        raw
+        != (
+            json.dumps(
+                index,
+                ensure_ascii=False,
+                allow_nan=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+            + b"\n"
+        )
+        or index.get("kind") != "limited_preview_development_materialization.v1"
+    ):
+        raise ValueError("development materialization index is corrupt")
+    entrypoints = index.get("entrypoints")
+    required = {
+        "record",
+        "context",
+        "inputs",
+        "outputs",
+        "logs",
+        "physical_evidence",
+        "images",
+        "videos",
+        "environment_packages",
+        "validation_reports",
+    }
+    if not isinstance(entrypoints, dict) or set(entrypoints) != required:
+        raise ValueError("development materialization has incomplete entrypoints")
+    for name, values in entrypoints.items():
+        paths = (values,) if name in {"record", "context"} else values
+        if not isinstance(paths, (list, tuple)):
+            raise ValueError("development materialization entrypoints are invalid")
+        for value in paths:
+            relative = Path(value) if isinstance(value, str) else Path("/")
+            path = root / relative
+            if (
+                not isinstance(value, str)
+                or relative.is_absolute()
+                or ".." in relative.parts
+                or path.is_symlink()
+                or not path.is_file()
+            ):
+                raise ValueError("development materialization entrypoint is invalid")
+    return entrypoints
+
+
 def run_cli(argv=None, *, service_factory=_service_factory, backend_factory=CodexBackend):
     """Public protocol seam; main always uses the fixed production factories."""
     arguments = _parser().parse_args(argv)
@@ -209,27 +266,33 @@ def run_cli(argv=None, *, service_factory=_service_factory, backend_factory=Code
             manifest_path = service.store.resolve(package.package).path
             if output is not None:
                 if package.execution_mode == "development":
-                    raise ValueError(
-                        "development package is an isolated CAS record; use its resource links"
+                    materialized = Path(
+                        service.development_artifacts.materialize(package.workflow_id, output)
                     )
-                manifest = json.loads(manifest_path.read_bytes())
-                preview_id, mode = manifest.get("preview_id"), manifest.get("mode")
-                if (
-                    not isinstance(preview_id, str)
-                    or len(preview_id) != 64
-                    or mode not in {"normal", "repair"}
-                    or service.runtime is None
-                ):
-                    raise ValueError("published package cannot be materialized by this deployment")
-                materialized = Path(
-                    service.runtime.application("library").materialize(preview_id, output)
-                )
-                if not materialized.is_absolute() or not materialized.is_dir():
-                    raise ValueError("preview library returned an invalid materialized directory")
-                result.update(
-                    materialized_path=str(materialized),
-                    entrypoints=_materialized_entrypoints(materialized, mode),
-                )
+                    if materialized != output or not materialized.is_absolute():
+                        raise ValueError("development store returned an invalid output directory")
+                    entrypoints = _development_materialized_entrypoints(materialized)
+                else:
+                    manifest = json.loads(manifest_path.read_bytes())
+                    preview_id, mode = manifest.get("preview_id"), manifest.get("mode")
+                    if (
+                        not isinstance(preview_id, str)
+                        or len(preview_id) != 64
+                        or mode not in {"normal", "repair"}
+                        or service.runtime is None
+                    ):
+                        raise ValueError(
+                            "published package cannot be materialized by this deployment"
+                        )
+                    materialized = Path(
+                        service.runtime.application("library").materialize(preview_id, output)
+                    )
+                    if not materialized.is_absolute() or not materialized.is_dir():
+                        raise ValueError(
+                            "preview library returned an invalid materialized directory"
+                        )
+                    entrypoints = _materialized_entrypoints(materialized, mode)
+                result.update(materialized_path=str(materialized), entrypoints=entrypoints)
         print(json.dumps(result, ensure_ascii=False, allow_nan=False, sort_keys=True))
         if arguments.command in {"status", "package"} or result.get("status") in {
             "published",
