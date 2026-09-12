@@ -124,6 +124,7 @@ Generated; edit Python contracts, not this file.
 | WorkflowSnapshot | observation | false |
 | WorkflowSnapshot | diagnosis | false |
 | WorkflowSnapshot | validation | false |
+| WorkflowSnapshot | revisions | false |
 | X2EnvRequest | text | false |
 | X2EnvRequest | images | false |
 | X2EnvRequest | video | false |

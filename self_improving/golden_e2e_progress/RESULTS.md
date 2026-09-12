@@ -1,5 +1,24 @@
 # 进度与结果
 
+## 2026-09-13 单workflow真实尝试：模型超时（不重跑）
+
+- 固定`1a0aefa`，workflow `09c540fd-2cd8-4185-b414-46ef6bfdbc65`，完整许可Box来源正常导入新Store。
+- 原样文本提交后ingest成功；Codex interpret在600秒内只有turn-start，无proposal，正常SIGINT退出。
+  父状态failed/model_timeout；不把尚未执行的category匹配、preview、compile或Genesis作为失败原因。
+- 用户请求wall为submit 0.001652710 + resume 600.176161420 = 600.177814130s；含准备脚本总600.966407080s。
+- 现场`/home/jingxiang/bingsheng/canonical-workflow-local-box-20260913.262WUk/summary.json`及snapshot/transport。
+  原版本未改，preview/resolve/compile/dual replay/assessment均not_run；不立即重试，不延预算。
+  正在只读对比此前成功模型传输，其他实施继续。
+
+## 2026-09-13 C10 共享修订预算和下游失效
+
+- apply_revision实际改变位置/朝向或生成immutable资产child；scene/asset共享总2次预算，重复failure
+  fingerprint提前停止，负预算/重复历史拒绝。不改变旧SceneIR、资产bytes或物理阈值。
+- controller从已绑定物理观测与诊断进入revise，成功后原子记录新SceneIR/依赖并清除旧compile/replay/
+  observation/diagnosis/validation指针，再compile/replay；历史证据仍保留。
+- 33项revision/state/controller/asset/lifecycle/schema测试通过（2.61s）。实际修订后的双profile与
+  有界停止仍待真实验证；关节/换frame/未支持asset字段明确拒绝，不授已实现。
+
 ## 2026-09-13 C09 controller消费观测、诊断和验证
 
 - 同workflow现由replay推进observe→codex.diagnose→x2env.validate；物理报告与原相机帧从受信

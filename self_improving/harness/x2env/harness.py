@@ -416,8 +416,9 @@ class Harness:
             )
             visual_pass = proposal is not None and proposal.visual_intent == "passed"
             patches = proposal is not None and (proposal.scene_patches or proposal.asset_patches)
+            repairable = bool(patches) and physical.get("execution_evidence_bound") is True
             code = (
-                "revision_executor"
+                "revision_required"
                 if patches
                 else "physical_validation_not_passed"
                 if not physical_pass
@@ -425,7 +426,9 @@ class Harness:
                 if not visual_pass
                 else "environment_package_materializer"
             )
-            status = "blocked" if patches or (physical_pass and visual_pass) else "failed"
+            status = (
+                "failed" if patches else "blocked" if physical_pass and visual_pass else "failed"
+            )
             report = {
                 "physical_status": physical.get("physical_status", "not_run"),
                 "visual_status": proposal.visual_intent if proposal else "not_run",
@@ -445,17 +448,90 @@ class Harness:
                 outputs=(ref,),
                 error_code=code,
             )
-            return self._store.complete_operation(
+            snapshot = self._store.complete_operation(
                 snapshot,
                 result,
                 snapshot.input_bundle,
-                status=status,
-                reason=code,
+                status="active" if repairable else status,
+                reason=None if repairable else code,
                 validation=ref,
                 required_resources=(code,) if status == "blocked" else (),
             )
         except (ValueError, OSError, KeyError, TypeError) as error:
             return self._stage_failure(snapshot, "scene_validation_failed", error)
+        return self._revise(snapshot) if repairable else snapshot
+
+    def _revise(self, snapshot):
+        import hashlib
+        import json
+
+        from .assets import AssetRegistry
+        from .compile import ResolvedAssetSet
+        from .observation import ObservationResult
+        from .revision import apply_revision
+
+        snapshot = self._store.begin_operation(snapshot, "revise")
+        try:
+            observed = ObservationResult.model_validate_json(
+                self._store.read_artifact(snapshot.observation)
+            )
+            report = json.loads(self._store.read_artifact(observed.physics_report))
+            if report.get("execution_evidence_bound") is not True:
+                raise ValueError("unbound_repair_evidence")
+            fingerprint = hashlib.sha256(
+                json.dumps(
+                    {
+                        "input": report["input_sha256"],
+                        "error_code": report.get("error_code"),
+                        "checks": [
+                            c for c in report.get("checks", []) if c.get("status") != "passed"
+                        ],
+                        "images": [f.image.sha256 for f in observed.observation.frames],
+                    },
+                    sort_keys=True,
+                ).encode()
+            ).hexdigest()
+            revised = apply_revision(
+                self._store,
+                AssetRegistry(self._store),
+                snapshot.scene_ir,
+                ResolvedAssetSet.model_validate_json(
+                    self._store.read_artifact(snapshot.resolved_assets)
+                ),
+                snapshot.diagnosis,
+                output_root=self._state_dir
+                / "stages"
+                / snapshot.workflow_id
+                / snapshot.operations[-1].operation_id,
+                history=snapshot.revisions,
+                failure_fingerprint=fingerprint,
+            )
+            assets_ref = self._store.write_artifact(
+                revised.assets.model_dump_json().encode(), "application/json"
+            )
+            result = ToolResult(
+                operation_id=snapshot.operations[-1].operation_id,
+                status="succeeded",
+                outputs=(revised.receipt, revised.scene_ir, assets_ref),
+            )
+            snapshot = self._store.complete_operation(
+                snapshot,
+                result,
+                snapshot.input_bundle,
+                status="active",
+                scene_ir=revised.scene_ir,
+                resolved_assets=assets_ref,
+                revision_receipt=revised.receipt,
+            )
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            code = (
+                str(error)
+                if str(error)
+                in {"repeated_failure", "revision_budget_exhausted", "revision_has_no_effect"}
+                else "scene_revision_failed"
+            )
+            return self._stage_failure(snapshot, code, error)
+        return self._compile(snapshot)
 
     def _stage_failure(self, snapshot, code, error):
         import json

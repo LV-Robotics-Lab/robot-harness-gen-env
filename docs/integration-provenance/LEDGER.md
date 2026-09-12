@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C10-REVISION — 共享预算、实际修改与证据失效
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream，新canonical修订执行。
+- `source_ref`：asset revision `df8ee98`、diagnosis `2aea1c7`、workflow `fbe1776`。
+- `target_paths`：x2env/revision.py、harness.py、store.py、contracts.py和相关测试/schema。
+- `verification`：33项相关测试，actual SceneIR bytes与child资产变化；真实fallback闭环尚not_run。
+
 ## INT-CANONICAL-C09-WORKFLOW — 同workflow消费相机/物理/模型判断
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream，新controller接线。

@@ -107,6 +107,7 @@ class WorkflowSnapshot(WorkflowHandle):
     observation: ArtifactRef | None = None
     diagnosis: ArtifactRef | None = None
     validation: ArtifactRef | None = None
+    revisions: tuple[ArtifactRef, ...] = ()
 
 
 class FieldProvenance(Model):

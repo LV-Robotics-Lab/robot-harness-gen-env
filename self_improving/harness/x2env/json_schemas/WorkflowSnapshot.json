@@ -384,6 +384,14 @@
       "title": "Revision",
       "type": "integer"
     },
+    "revisions": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Revisions",
+      "type": "array"
+    },
     "scene_ir": {
       "anyOf": [
         {

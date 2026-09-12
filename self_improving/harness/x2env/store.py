@@ -279,6 +279,7 @@ class Store:
         observation: ArtifactRef | None = None,
         diagnosis: ArtifactRef | None = None,
         validation: ArtifactRef | None = None,
+        revision_receipt: ArtifactRef | None = None,
     ) -> WorkflowSnapshot:
         with closing(sqlite3.connect(self.database)) as db, db:
             db.execute("BEGIN IMMEDIATE")
@@ -289,6 +290,16 @@ class Store:
                 raise KeyError(snapshot.workflow_id)
             current = WorkflowSnapshot.model_validate_json(row[0])
             self._require_owned_head(current, snapshot)
+            if revision_receipt is not None and (
+                result is None
+                or result.status != "succeeded"
+                or not current.operations
+                or current.operations[-1].capability != "revise"
+                or scene_ir is None
+                or scene_ir == current.scene_ir
+                or resolved_assets is None
+            ):
+                raise ValueError("invalid revision checkpoint")
             operations = list(current.operations)
             if result is not None:
                 result = ToolResult.model_validate_json(result.model_dump_json())
@@ -321,6 +332,7 @@ class Store:
                 observation,
                 diagnosis,
                 validation,
+                revision_receipt,
             ):
                 if ref is not None:
                     self.read_artifact(ref)
@@ -336,11 +348,18 @@ class Store:
                     "scene_ir": scene_ir or current.scene_ir,
                     "asset_resolution": asset_resolution or current.asset_resolution,
                     "resolved_assets": resolved_assets or current.resolved_assets,
-                    "compiled_scene": compiled_scene or current.compiled_scene,
-                    "replay_result": replay_result or current.replay_result,
-                    "observation": observation or current.observation,
-                    "diagnosis": diagnosis or current.diagnosis,
-                    "validation": validation or current.validation,
+                    "compiled_scene": None
+                    if revision_receipt
+                    else compiled_scene or current.compiled_scene,
+                    "replay_result": None
+                    if revision_receipt
+                    else replay_result or current.replay_result,
+                    "observation": None if revision_receipt else observation or current.observation,
+                    "diagnosis": None if revision_receipt else diagnosis or current.diagnosis,
+                    "validation": None if revision_receipt else validation or current.validation,
+                    "revisions": (*current.revisions, revision_receipt)
+                    if revision_receipt
+                    else current.revisions,
                     "operations": tuple(operations),
                 }
             )
