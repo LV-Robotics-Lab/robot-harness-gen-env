@@ -1,5 +1,15 @@
 # Change Log
 
+## 2026-09-13 通用实验组件与能力边界
+
+- 补充真实local/web/generated获取组件、共享意图静态编译及不可变资产修订；明确primitive生成
+  和未接通的图像重建不同，cousin返回unsupported_selection。记录8线程登记竞争修复与非对称
+  web资产的Y-up→Z-up实际转换。
+- 补充复制包在受限文件系统下真实1000步、41连续帧/24 unique、68.155秒运行；此证据不授予
+  双dt物理、机器人策略、数据采集或最终loader提交再次回放能力。
+- 区分原始来源、子agent实现提交及集成提交，更新功能来源台账。整个三模态服务、两类fallback
+  和正式发布尚未真实闭合；同步纠正旧受限normal已通过、repair未完成的状态。
+
 ## 2026-09-12 Harness-owned Codex lifecycle clarification
 
 - 当前受限 image preview 的用户入口统一为 Harness API/CLI。Harness controller 拥有任务生命周期、

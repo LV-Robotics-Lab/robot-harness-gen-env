@@ -95,6 +95,8 @@
 
 | ID | 能力 | 原始来源 | 生命周期 | 验证 | 当前结论 |
 |---|---|---|---|---|---|
+| INT-EXP-001 | 通用实验资产、共享意图与Skill阶段接线 | Yuxin资产provider、Bingsheng核心/编排、Gujie几何语义 | integrating | contract_pass | local/web/generated组件有实际字节结果；三模态服务同workflow尚未真实闭合 |
+| INT-EXP-002 | 包内独立Genesis loader与复制执行 | 既有Harness scene backend和Gujie/Genesis语义 | integrating | runtime_pass（固定复制包） | 单baseline 1000步、41帧/24 unique；不授予双dt或最终修改版再次回放 |
 | INT-BS-001 | Harness、Registry、证据链与总体整合基线 | Bingsheng/current history | integrated | blocked | 已有正式组件，当前共享工作树基线仍有资格哈希失败 |
 | INT-BS-002 | Golden E2E 合同、门禁与实施审计 | Bingsheng | integrated | contract_pass | 整体多模态 Golden 尚未完成；首条 production image rigid-scene run 见 INT-BS-006 |
 | INT-BS-006 | Image exact-reuse 到 Genesis rigid-scene 的首条生产 workflow | Gujie 场景语义 + Genesis/SimFoundry upstream + Bingsheng integration | integrated | runtime_pass | 固定 `1cf8908` 的四个已注册 Skill 在一次 workflow 中完成 replay、fresh observe 与 validate；权限止于 `genesis.rigid_scene@1` |
@@ -104,6 +106,78 @@
 | INT-GJ-002 | 标准 URDF closure 与 SimFoundry 导入 | Gujie + third-party | candidate | not_run | 需经 anti-corruption adapter 和资产资格门 |
 | INT-GJ-003 | Genesis 构建、物理判据、回放与最终媒体 | Gujie + Genesis | integrating | runtime_pass（固定刚性场景子集） | Gujie 的有限桌面/双时间步语义已由 Harness 独立实现并进入首条生产 rigid-scene workflow；不泛化为其余场景 |
 | INT-GJ-004 | Image/Video exact Skill 合同、legacy mapping 与 Harness-native media ingest | Gujie source + Bingsheng integration | integrating | runtime_pass（image exact-reuse 子集） | Image exact-reuse 已闭合首条 production line；Video 与其余资产路径仍未实现 |
+
+## INT-EXP-001 — 通用实验组件（2026-09-13）
+
+- `lifecycle`：`integrating`
+- `verification`：`contract_pass`；获取组件另有真实文件/联网结果，不等于Genesis物理通过
+- `origin_owner`：Yuxin/HYX的active资产检索与下载；Bingsheng既有scene_gen程序生成、Harness
+  CAS/Golden编排；Gujie固定来源的完整几何/桌面语义。新增experiment adapters属于本轮Harness实现
+- `recorded_git_authors`：本轮下表全部实现及集成提交实际记录
+  `Bingsheng Xie <xieziyin_shangshu@outlook.com>`；历史provider归属仍按INT-YX-001，
+  Gujie固定提交identity仍按INT-GJ-003，不能因cherry-pick记成整合者原创
+- `upstream_owner`：agenticsim/openxsim、trimesh/SciPy、Genesis、Khronos/Cesium与Microsoft/Public
+  各自保留归属；Box为CC-BY-4.0，Avocado为CC0-1.0
+- `integration_owner`：Bingsheng Harness workstream
+- `source_repository`：本仓库与既有固定Gujie来源
+- `source_ref`：资产provider `4982cc3660d82743b849fd0ba9cbdfd04933e895`、
+  `8c2f058215b4d69d10f15c269148397a9f14ccd2`；Gujie
+  `eb0b710581fd7794bc01b447b0f77cb871c8a711`；Harness开发基线`9460a4b`。
+  web样例固定`KhronosGroup/glTF-Sample-Assets@90d7ede14c7e280af263824604b427a1ca02cb66`
+- `dirty_snapshot`：未采用Gujie dirty/untracked源码；本条以集成`ec87279`核对，未提交通用服务
+  不计作固定实现来源
+- `source_paths`：active `a1_providers.py`、`a3_webfetch.py`、openxsim assets；
+  `scene_gen/asset_generator.py`；既有`gujie_scene_adapter.py`、Golden执行与scene backend
+- `target_paths`：`experiment_assets.py`、`experiment_scene_compile.py`、`experiment_skill_policy.py`、
+  `experiment_runtime.py`、`experiment_stage_handlers.py`与各自测试；具体以以下提交diff为准
+- `integration_method`：调用既有provider/generator/geometry seam，新增不可变资产版本、共享意图
+  与receipt facts。开发执行身份显式隔离qualification，不建立第二个业务workflow，不复制vendor
+- `contract_spec`：`EXPERIMENT_ASSETS_CONTRACT.md`、`EXPERIMENT_SCENE_COMPILE_CONTRACT.md`、
+  `PORTABLE_GENESIS_PACKAGE_CONTRACT.md`及当前交接
+- `verification_evidence`：progress RESULTS前部；资产首轮9项测试（真实local/web/generated），
+  修复轮12 passed/3.66秒，包含8线程竞争及非对称Avocado轴转换。证据根
+  `/home/jingxiang/bingsheng/generic-assets-evidence-20260912.xs7UnK/`；编译联合10 passed/1 web skip；
+  policy公共测试2 passed。stage/runtime后续整体验证以根会话RESULTS增量为准
+- `golden_run`：`none`（本轮通用三模态同workflow尚未真实闭合）
+- `known_gaps`：cousin明确unsupported_selection；primitive不替代重建；资产physics not_run；
+  policy鲜活观测为空；整套场景/资产fallback和三模态服务缺真实闭环；release/robot/data collection后置
+- `last_verified`：`2026-09-13`
+
+本轮独立实现提交与集成提交分别记录；表中的集成commit不是上游来源ref：
+
+| 能力 | 独立实现提交 | 当前集成提交 |
+|---|---|---|
+| experimental receipt policy | `895f0ff3fd41b4d09aac78accbde86b2d3d5e672` | `1fa98ddf299f3135832607171e733b8474d18d60` |
+| replay/observe/validate adapters | `9eb1c3de112c253a323b2909cfe8cfe2d50e85f6` | `7223da080f61bb1d5e5365a4f52165a5113a7d81` |
+| asset/runtime stage handlers | `9a73a70f20c6aff6b9fe56f7f2d46bd593d2bcb9` | `112f4f333aaef209f5e729de0ce294d0be86f7a6` |
+| qualified model instance revalidation | `ac4b77f42094b54f8adcd5055ab342bdef3a8aa7` | `b7c0e8a852bcbec829a5ec83275c4fa24c7a1daf` |
+| scene color revision binding | `082b397f2bf84ad4ac0039ccf02693f9c592788a` | `8462a06f2079c5748ec7a69d4740d0cf0b059ae1` |
+| asset race/axes/unsupported cousin fixes | `d85c2f4eacc6197b9a5fddb85189c04bb7f67367` | `ec872796fb827039061412344e6550e9aeea1daf` |
+
+## INT-EXP-002 — 包内loader复制执行
+
+- `lifecycle`：`integrating`
+- `verification`：`runtime_pass`，仅限此次固定复制包baseline的load/step/新媒体
+- `origin_owner`：既有Harness scene CPU backend；Gujie场景/几何语义按INT-GUJIE-SCENE-001保留
+- `recorded_git_authors`：集成`fe7e14aa1afac89f4526616fd81c4e8f2211f271`记录
+  `Bingsheng Xie <xieziyin_shangshu@outlook.com>`；不改记第三方引擎归属
+- `upstream_owner`：Genesis World、Python、Mesa/LLVM及各声明依赖
+- `integration_owner`：Bingsheng Harness workstream
+- `source_repository`：当前仓库
+- `source_ref`：既有Harness基线`9460a4b`；Genesis固定`0e74bf392781884ccad765c3f344419c86b872ca`；
+  loader候选`eff10bb`后整合为`fe7e14a`，实际运行源码以复制包内完整成员身份为准
+- `dirty_snapshot`：实际包内源码已随environment.json成员固定；不将后续离线修复混入该运行身份
+- `source_paths`：`genesis_scene_cpu_backend.py`、`_genesis_cpu_child.py`、`_genesis_scene_child.py`
+- `target_paths`：`portable_genesis_package.py`及包内run.py/runner闭包（以`fe7e14a`diff为准）
+- `integration_method`：完整相对资产引用、包内loader、小型执行源码、声明外部runtime，Landlock
+  实际拒绝原构建/CAS/源码根；不复制8.5GB运行环境，不解析原CAS路径加载资产
+- `contract_spec`：`PORTABLE_GENESIS_PACKAGE_CONTRACT.md`
+- `verification_evidence`：`/home/jingxiang/bingsheng/generic-portable-copy-nisz5oyp/execution/result.json`，
+  68.155秒、1000步、41连续帧/24 unique、ABI8；三次启动失败0.466/0.466/2.320秒按合同保留
+- `golden_run`：此次是既有normal包的独立copy-run，不是通用三模态工作流
+- `known_gaps`：双dt评估not_run；后续资源检查/双profile选项只离线验证；robot_policy和
+  data_collection均false；不能声称最终提交重跑或通用服务已可交付
+- `last_verified`：`2026-09-13`
 
 ## INT-BS-001 — Harness 与总体整合基线
 

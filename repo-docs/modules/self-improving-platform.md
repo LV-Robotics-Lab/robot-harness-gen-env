@@ -1,5 +1,30 @@
 # Self-Improving 平台边界
 
+## 通用实验管线的组件进度（2026-09-13）
+
+当前通用实验服务仍在接线，尚未证明文本、图像、视频分别从用户输入到最终验证闭环。
+已有组件可以复用，但以下证据各自有作用域，不能串接叙述成已完成的三模态E2E。
+
+- 资产组件真实通过local检索、web搜索/下载/许可核对及程序几何生成。web Box来自固定
+  Khronos/Cesium资产（CC-BY-4.0）；Avocado（CC0）验证了Y-up到Z-up的实际几何转换。
+  生成范围是明确的primitive proxy；不代表SimFoundry图像重建。资产参数修订创建新不可变版本，
+  8线程相同版本竞争复验后复用；cousin尚未实现，返回`unsupported_selection`。
+- 共享意图编译实际消费这些资产字节，生成完整CAS representation与Genesis场景；布局XY/yaw
+  修改改变场景摘要，保留资产身份。尺寸不明可用null；只允许统一比例缩放，完整顶点footprint
+  超出有限桌面时拒绝。这是单动态刚体static compile，物理检查仍为`not_run`。
+- 包内loader已对既有normal场景完成一次复制到新目录后的真实Genesis运行：1000步、41连续帧、
+  24 unique frames、68.155秒。Landlock实际拒绝原构建目录、CAS和源码树读取，声明的外部运行
+  环境可以复用。该结果证明此次包内源码的load/step/新媒体，未重做双dt物理评估，后续loader改动
+  尚未再次真实回放；机器人策略与数据采集仍未验证。
+
+内部Codex结构化建议已有一次真实文本解释；实验Skill policy将成功receipt写为受信事实，失败
+只形成诊断，fresh observations仍为空。replay/observe/validate与stage handler已有组件接线，
+尚无本通用服务同workflow的三模态成功、两类fallback全闭环或正式发布证据。
+实现与检验边界见[资产合同](../../self_improving/harness/EXPERIMENT_ASSETS_CONTRACT.md)、
+[编译合同](../../self_improving/harness/EXPERIMENT_SCENE_COMPILE_CONTRACT.md)、
+[可迁移包合同](../../self_improving/harness/PORTABLE_GENESIS_PACKAGE_CONTRACT.md)和
+[当前结果账本](../../self_improving/golden_e2e_progress/RESULTS.md)。
+
 ## 当前受限 image preview 的控制关系
 
 当前产品入口是 Harness，而不是 Codex 或 MCP：
@@ -15,8 +40,9 @@
 Harness 在调用 Codex 前持久化任务，每次从当前权威状态构造有界上下文、动作集合和预算。
 Codex 只提供输入理解、规划、视觉判断、诊断与修改建议；它不拥有业务状态、Skill 执行或发布资格。
 `codex_mcp_acceptance.py`、`codex_mcp_process.py` 和 scripted MCP client 仍可证明协议或组件行为，但属于
-历史/组件验收，不能替代从 Harness 入口发起的产品案例。受限 image exact-reuse 的正常案例和诊断修复
-案例仍需按当前里程碑真实跑通，本页不提前声明通过。
+历史/组件验收，不能替代从 Harness 入口发起的产品案例。固定`cc6afa2`的受限image+text、mouse
+exact正常案例已真实终态为`validated_unreleased`；repair在首次validate期间中断，仍无修复成功。
+二者准确现场见[交接记录](../../self_improving/golden_e2e_progress/HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)。
 
 固定 `1cf8908acb83b86b15a7ae8a7c96cb943cc39945` 已闭合首条 production image exact-reuse →
 Genesis rigid-scene workflow。Assembly 消费已注册 `image2env.compile@2.0.0` 终态，随后在同一次

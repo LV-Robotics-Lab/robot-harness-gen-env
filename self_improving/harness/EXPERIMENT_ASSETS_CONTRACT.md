@@ -4,14 +4,17 @@
 `revise(AssetVersion, patch, staging_root) -> AssetVersion`。调用者是 Harness controller；本模块
 不创建 workflow，不签发 qualification，不修改旧资产。结果是尚未物理验证的单刚体候选。
 
-`AssetRequest.source` 是 `local/web/generated` 获取来源，`selection` 独立记录 `exact/cousin`
-选用策略。selection 记录调用者的策略，并非本模块授予语义匹配资格。
+`AssetRequest.source` 是 `local/web/generated` 获取来源，`selection` 是独立的选用策略。
+本阶段只实现 `exact`；`cousin` 或其他值返回结构化 `unsupported_selection`，保留失败记录，
+不登记候选版本。exact 仍不等于语义匹配或物理资格。
 
 - local 使用已有 `RoboTwinLocalProvider.search_phrases` 查询调用者配置的 catalog；当前接受
   usable 条目的自包含 GLB。来源 mesh 必须在条目的 asset root 内；不直接信任 usable 为物理证据。
 - web 使用已有 GitHub tree provider、`download_candidate` 和 `stage_web_candidate`，仓库限定
   KhronosGroup/glTF-Sample-Assets。先把 main 解析为固定 commit，或接受调用者指定的完整 commit；
   同名 GLB 的逐模型许可只允许 CC0-1.0 / CC-BY-4.0，保留许可来源；下载上限20MB。
+  消费 web staging 的 Y-up 声明，实际绕X轴正向旋转90度成为右手Z-up；receipt 保存
+  source_up_axis、normalized_up_axis和4×4变换。非对称Avocado实测Y/Z尺寸交换，非仅修改标签。
 - generated 实际调用稳定 `ensure_assets_for_scene`，只接受 block/cube/cylinder/
   hexagonal_prism/octagonal_prism。其输出明确是 procedural proxy，不能替代任意语义物体重建。
 
@@ -21,7 +24,8 @@ z=0，XY中心归零。scale 表示调用者明确的单位/尺度转换，范�
 必须显式应用；URDF 不替代运行时的摩擦设置。
 
 不可变版本位于 `versions/<receipt digest>/`。receipt 绑定所有成员 SHA256/大小、来源、许可、
-参数、尺寸与 checks；引用是包内相对路径。重复版本必须重新比较全部字节。GLB 的外部引用与
+参数、尺寸与 checks；引用是包内相对路径。并发rename出现已存在目录时，输家重新比较receipt、
+精确成员集合和全部成员字节，完整相等才复用获胜版本；其他I/O失败照常返回错误。GLB 的外部引用与
 version symlink 均拒绝。`geometry/references=passed` 只证明该项静态检查，`physics=not_run`。
 
 revise 仅允许 scale/mass_kg/friction，先重验旧 receipt/member，输出新 digest 和 parent_version，
