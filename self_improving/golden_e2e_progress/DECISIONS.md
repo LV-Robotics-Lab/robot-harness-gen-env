@@ -1,5 +1,18 @@
 # 稳定决策
 
+## 2026-09-13 实验接线落实
+
+- 本阶段新阶段用`experiment.<stage>@1.0.0`开发descriptor，仍通过原SkillRegistry与Golden内核；
+  不把未取得qualification的新源码塞进旧qualified namespace。旧MCP路径不改，新开发工具尚未
+  投影到qualified MCP。内部Codex.propose不掌握shell/业务工具权限，Harness执行建议。
+- 源码/配置身份使用显式declared-files开发authority，旧authority遇源码改变拒绝恢复；结果不发布。
+- replay执行完整与物理判定分开：完整双profile轨迹才是执行passed，物理failed原样保留供诊断；
+  validate继续独立重算，visual_status独立报告，模型不能覆盖物理失败。
+- 资产source仍local/web/generated；generated当前是明确的procedural proxy，不是通用重建服务。
+  cousin没有实选实现，返回unsupported_selection而不是只记录cousin标签。
+- 有限桌面单刚体是当前实现范围；未执行机器人policy/数据收集；父workflow仍active与阶段序列passed
+  分别呈现，不用改SQLite或伪终态制造交付。
+
 ## 2026-09-12 安全停止与通用实验管线优先
 
 - 状态：`accepted`，替代此前“先完成 normal+repair，再建立新 release 部署并发布”的执行顺序。

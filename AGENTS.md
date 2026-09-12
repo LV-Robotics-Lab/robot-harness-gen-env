@@ -47,6 +47,8 @@ This repo's `repo-docs/` guide is reader-facing Chinese documentation. When upda
 When working on x2env Skills, Codex orchestration, MCP adaptation, asset-debt repair, or the
 Genesis golden line, read `self_improving/golden_e2e_progress/README.md` first and update its live
 task, TODO, decision, and result ledgers before reporting progress.
+For the generic experiment CLI, its bounded repairs, or portable package acceptance, read
+`repo-docs/walkthroughs/generic-experiment-20260913.md`; check its case evidence before claiming E2E success.
 
 When incorporating behavior from Bingsheng, Gujie, or Yuxin, also read
 `docs/integration-provenance/README.md` and update `docs/integration-provenance/LEDGER.md` in the

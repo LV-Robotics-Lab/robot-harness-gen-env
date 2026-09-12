@@ -1,5 +1,18 @@
 # Golden E2E 任务分解
 
+## 2026-09-13 通用实验验收清单
+
+- [x] Harness唯一CLI入口与原Golden journal、版本化开发Skill执行（真实文本revision0→7）。
+- [x] 文本完整线、真实生成资产、34项物理检查、新鲜Codex视觉与validate。
+- [x] 新文本包复制后在禁止原资源访问条件下真实load/1000step/新媒体。
+- [ ] image-only完整线：首试本地检索类别失配，保留失败，补有界目录上下文。
+- [ ] video-only完整线：e2391bd真实案例运行中。
+- [ ] web来源完整线：获取/轴向/许可已真实通过，尚待Genesis组合。
+- [x] fallback A完整线：实际余量失败、Codex修改y和scene bytes，第二轮34/34及validate通过。
+- [ ] fallback B完整线：不可变asset patch组件已实现，待真实模型提议与重放。
+- [ ] 有限重试停止的真实证据、完整journal新包、最终测试覆盖说明与walkthrough收口。
+- [ ] 最终逐功能提交干净，暂停供用户审阅；不继续release/历史债务/autoresearch/robot。
+
 ## 2026-09-12 active 任务替换
 
 下列原 M2 和 G0–G4 清单保留为历史分解，不再是当前执行队列。当前会话已安全停止单鼠标 repair；

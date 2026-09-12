@@ -1,5 +1,41 @@
 # 进度与结果
 
+## 2026-09-13 通用第二轮在途与失败
+
+- 固定e2391bd，image-only/local首试workflow`6e8b3c50-1db4-4392-aac5-bda05f2f97d8`
+  8.8598秒失败：真实解释7.8353秒选择cube，实际catalog只有block，本地检索零命中；未执行
+  compile/replay。原命令记录位于v2根`controller-local/commands/2c7793f5-9706-48f8-ab42-46226572d9dc.json`。
+  原因是模型只收到catalog路径没有库内容；修复在独立worktree进行，不修改失败现场或加虚假alias。
+- scene fallback A workflow`63968c2d-69d5-428d-80cd-7b156aa11790`真实首轮34项有两项
+  support_geometry失败（两profile各一次，observed .015m，原limit .02m）。Codex视觉判断passed、
+  联合诊断failed，真实修订只将y=.375变成.369，其余意图不变。
+  scene SHA从`a7e339cfc5663d75e16bc32ec646be3127ad9e23dd8041e7425c8e8d9dbad3eb`
+  变成`09444e2e162f036a1b73437d70403e3ba1c31bd6aebf939ea8aaa9ea1eb762a6`。
+  后续第二轮回放/observe/visual/validate全部通过，12个stage commit，command wall
+  308.774588622秒；命令记录`controller/commands/6f052943-d764-4557-891a-b6290d0e729e.json`。
+  完整journal与前后失败媒体已导出`scene-repair-package`，导出wall1.212777499秒。
+- v2证据根`/home/jingxiang/bingsheng/generic-experiment-v2-20260913.1QrGYD`；video-only另一个
+  workflow在途，两者共用immutable asset library但不共用workflow状态。
+- video-only workflow`f6fe486a-68c1-4894-b210-6eba1359bf7f`已真实解析41-frame源视频、
+  采样[0,20,40]、第一轮回放完成；真实视觉判断位姿不符→一次布局修订，目前第二轮回放在途。
+
+## 2026-09-13 首个通用文本完整线与新包copy-run
+
+- 固定`50eb2ec`：workflow `6c84535b-7c0f-467a-a182-2bcffabd3cde`，从Harness CLI输入自然语言，
+  7个真实阶段在同一Golden revision0→7通过。物理34/34、visual passed、validate passed；
+  父snapshot仍active，CLI阶段序列passed，不宣称父promoted/terminal。
+- workflow started_at→last ended_at约154.561299秒，是journal wall跨度，不冒充单命令精确计时。
+  首次解释模型9.235203516秒，baseline子进程65.213秒；完整原始receipt/媒体位于
+  `/home/jingxiang/bingsheng/generic-experiment-20260913.ZGPNcg`，包`text-package`。
+- 复制132-member约11MB包到`/home/jingxiang/bingsheng/generic-text-package-copy-omub915k/package`，
+  manifest SHA `ba4e5c1fb7129c48ef145cb8df29a136596dff3f1e7e0c3258cbf72560c94c3a`。
+  包内入口实际baseline1000步/65.366339564秒，41连续帧/4unique；Landlock ABI8拒绝原包、
+  集成repo、主repo、原state/CAS、assets五根。主窗口已查看新末帧；结果SHA
+  `340eb42ebefdb9df21b5e8729f45ad9ff119949ca0ce45cb7662539a8473bfb5`。
+- 本次copy-run只baseline，不把旧双dt记录说成新双dt；机器人/数据采集均false。
+- 图像/视频/联网完整线和两类真实fallback仍待验。开发源码改变后旧workflow按authority拒绝
+  用新实现恢复，已导出的旧包和旧SQLite不改；后续案例使用新隔离配置。
+
 ## 2026-09-13 接线边界与独立审阅修复
 
 - 后续真实模型纵切：Harness start→Codex interpret→generated acquire→compile在同一Golden中

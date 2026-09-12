@@ -7,8 +7,9 @@
 - 已整合通用输入、三来源资产、共享意图编译、portable loader、开发execution身份、结构化Codex建议、
   stage handlers和evidence policy；当前主会话接同一Golden service/controller，尚无新三模态E2E成功。
 - 资产并发登记、Y-up规范化、cousin明确拒绝、颜色不匹配拒绝及qualified receipt实例重验已修复。
-- 下一验证：真实模型interpret→同journal acquire/compile；继而双dt replay/observe/visual/validate，
-  两类fallback与最终包。旧normal/repair不恢复；正式release和大矩阵继续后置。
+- 首文本7stage、34/34和新包隔离copy-run已真实通过，证据见RESULTS顶部；父snapshot仍active。
+- 当前固定e2391bd并行运行image-only/local和真实support margin失败→场景修订A候选。
+  下一验证video-only、web完整线、资产修订B；旧normal/repair不恢复，release和大矩阵继续后置。
 
 - 2026-09-12 新接手已核对：集成 HEAD `9460a4b` clean，主目录用户改动保留，未发现旧 preview
   执行进程；dashboard 三入口仍 404，未同步。当前进入通用实验管线实现。
