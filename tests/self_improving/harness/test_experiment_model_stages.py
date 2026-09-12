@@ -1,3 +1,5 @@
+import hashlib
+import json
 import subprocess
 
 import pytest
@@ -5,6 +7,89 @@ import pytest
 from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.experiment_inputs import ExperimentInputs
 from self_improving.harness.experiment_model_stages import execute_model_stage
+
+
+def test_interpret_passes_bounded_actual_catalog_and_identity_to_model(tmp_path):
+    store = LocalArtifactStore(tmp_path / "cas")
+    inputs = ExperimentInputs(store)
+    ref = inputs.save(inputs.ingest(text="choose the matching local object"))
+    catalog = tmp_path / "catalog.json"
+    catalog.write_text(
+        json.dumps(
+            {
+                "entries": [
+                    {"asset_id": "real_block", "category": "block", "models": [{"usable": True}]},
+                    {"asset_id": "bad_mouse", "category": "mouse", "models": [{"usable": False}]},
+                ]
+            }
+        )
+    )
+
+    class Capture:
+        def propose(self, **kwargs):
+            assert '"category": "block"' in kwargs["prompt"]
+            assert '"usable": true' in kwargs["prompt"]
+            assert "choose only if" in kwargs["prompt"]
+            return {"status": "failed", "external_agent_executed": False}
+
+    result = execute_model_stage(
+        "interpret",
+        {"input_ref": ref},
+        store=store,
+        root=tmp_path / "operation",
+        settings={"default_source": "local", "catalog_path": str(catalog)},
+        backend=Capture(),
+    )
+    assert (
+        result["catalog_context"]["catalog_sha256"]
+        == hashlib.sha256(catalog.read_bytes()).hexdigest()
+    )
+    assert result["catalog_context"]["entry_count"] == 2
+
+
+def test_missing_catalog_blocks_without_calling_model(tmp_path):
+    store = LocalArtifactStore(tmp_path / "cas")
+    inputs = ExperimentInputs(store)
+    ref = inputs.save(inputs.ingest(text="local asset"))
+    result = execute_model_stage(
+        "interpret",
+        {"input_ref": ref},
+        store=store,
+        root=tmp_path / "operation",
+        settings={"default_source": "local", "catalog_path": str(tmp_path / "absent")},
+        backend=None,
+    )
+    assert result["status"] == "blocked"
+    assert result["error_code"] == "blocked_external_resource"
+    assert result["model_executed"] is False
+
+
+@pytest.mark.parametrize("members", [[42], [{"path": "../escape", "sha256": "a" * 64}]])
+def test_malformed_receipt_cannot_supply_dimensions(tmp_path, members):
+    from self_improving.harness.experiment_model_stages import _catalog_capabilities
+
+    store = LocalArtifactStore(tmp_path / "cas")
+    raw = json.dumps({"members": members, "dimensions_m": [1, 2, 3]}).encode()
+    asset = tmp_path / hashlib.sha256(raw).hexdigest()
+    asset.mkdir()
+    (asset / "receipt.json").write_bytes(raw)
+    catalog = tmp_path / "catalog.json"
+    catalog.write_text(
+        json.dumps(
+            {
+                "entries": [
+                    {
+                        "asset_id": "a",
+                        "category": "block",
+                        "models": [{"usable": True}],
+                        "asset_path": str(asset),
+                    }
+                ]
+            }
+        )
+    )
+    context = _catalog_capabilities({"catalog_path": str(catalog)}, store, tmp_path)
+    assert "dimensions_m" not in context["records"][0]
 
 
 class AdvisoryBackend:

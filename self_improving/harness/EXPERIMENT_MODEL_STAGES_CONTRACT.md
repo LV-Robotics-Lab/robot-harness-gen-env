@@ -6,6 +6,12 @@
 - interpret从CAS ExperimentInputBundle消费文本、规范图像和视频。视频真实FFmpeg提取首/中/末
   帧，返回各frame_index/source_video/decoded_sequence/image引用；这只是视觉采样，已有完整解码
   ingest仍是视频身份。输出必须通过SceneIntentV1与input hash核验，source还受部署allowed_sources限制。
+  本地catalog配置不再仅给模型路径：interpret先读取至多1MB/256 entries的实际catalog快照，
+  给出类别和usable记录，并把原始catalog SHA/CAS引用写入catalog_context。缺失、损坏或超限的
+  已配置catalog返回blocked_external_resource，模型不调用。未配置catalog且默认非local时明确
+  available=false。只有自哈希不可变asset receipt及完整成员字节检查相符时才附上已记录尺寸，
+  连同receipt CAS身份；不测量猜造尺寸，不把可用库条目视为视觉匹配资格。
+  模型仍自行比较原图与候选语义；只在确实匹配时采用实际category，不能增设cube别名或强制选block。
 - visual以最后附图明确标识实际Genesis observation，前面的图片是用户输入；输出status/visual_status/reason、
   input_sha256/scene_sha256、repair_kind（none/scene/asset/numeric）和nullable asset_patch。
   patch只可有scale/mass_kg/friction；passed必须none，非asset不能有patch，asset必须非空。
