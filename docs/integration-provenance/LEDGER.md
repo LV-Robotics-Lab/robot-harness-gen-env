@@ -1,5 +1,19 @@
 # 功能级整合台账
 
+## INT-EXPERIMENT-COMPILE-001 — 共享意图与真实资产组装
+
+- `lifecycle`：`integrating`；`verification`：`contract_pass`（static only）。
+- `origin_owner`：Gujie 场景几何语义、Bingsheng Harness adapter；`integration_owner`：Bingsheng workstream。
+- `recorded_git_authors`：固定 Git 记录；`upstream_owner`：trimesh、Genesis。
+- `source_repository`：本仓库；`source_ref`：`9460a4b` adapter、Gujie `eb0b710`，候选 `f786e44`。
+- `dirty_snapshot`：`none`；`source_paths`：`gujie_scene_adapter.py`；
+  `target_paths`：`experiment_scene_compile.py`；`integration_method`：调用现有完整几何/桌面adapter，
+  将不可变资产转换为CAS representation并以意图XY/yaw与受限uniform scale组装GenesisSceneSpec。
+- `contract_spec`：`self_improving/harness/EXPERIMENT_SCENE_COMPILE_CONTRACT.md`。
+- `verification_evidence`：联合10 passed、1联网opt-in skip；实际primitive闭包与布局修订摘要变化。
+- `golden_run`：`none`；`known_gaps`：只单刚体桌面，physics not_run，等待真实workflow replay。
+- `last_verified`：`2026-09-13`。
+
 ## INT-EXPERIMENT-EXECUTION-001 — 同一 Golden 的开发执行身份
 
 - `lifecycle`：`integrating`；`verification`：`contract_pass`。

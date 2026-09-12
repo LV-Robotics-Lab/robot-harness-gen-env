@@ -1,5 +1,12 @@
 # 进度与结果
 
+## 2026-09-13 共享意图编译组件
+
+- `f786e44`：复用 tabletop adapter，原始asset→完整CAS representation→GenesisSceneSpec；
+  intent XY/yaw改变scene SHA，representation不变；uniform scale与完整顶点footprint检查生效。
+- 联合10 passed、1联网opt-in skip；没有Genesis执行。dimensions_m允许null以保留实测尺寸，
+  未知图像尺寸不会被任意猜测拉伸为“精确重建”。
+
 ## 2026-09-13 内部 Codex 结构化建议
 
 - `CodexBackend.propose` 新增无工具的解释/视觉建议回合；Harness保存输入、schema、逐行日志和结果，
