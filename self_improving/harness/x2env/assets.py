@@ -98,7 +98,11 @@ def _geometry(contents):
             transform, key = scene.graph[node]
             mesh = scene.geometry[key]
             vertices = trimesh.transform_points(mesh.vertices, transform)
-            if not np.isfinite(vertices).all() or not len(mesh.faces):
+            if (
+                not isinstance(mesh, trimesh.Trimesh)
+                or not np.isfinite(vertices).all()
+                or not len(mesh.faces)
+            ):
                 raise ValueError("invalid mesh geometry")
             instances.append(
                 {

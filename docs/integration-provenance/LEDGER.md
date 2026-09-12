@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-ASSET-GEOMETRY — 非三角网格拒绝
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical AssetRegistry/AssetRevision，父实现 `36a0c7f`。
+- `target_paths`：x2env/assets.py、test_asset_registry.py、test_asset_revision.py。
+- `verification`：50项公开边界测试、两模块100%语句/分支覆盖；不授予资产物理资格。
+
 ## INT-CANONICAL-C12-FAILURE — 请求作用域与失败产物
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。

@@ -1,5 +1,12 @@
 # 进度与结果
 
+## 2026-09-13 C13 资产边界攻击覆盖
+
+- 真实PointCloud不是triangle mesh：Registry现明确ValueError拒绝，避免读取不存在faces时泄漏AttributeError。
+- 50项公开register/inspect/revise测试通过（主会话复验1.10s），包括公开Store.register_asset构造损坏
+  持久化记录、父版本不变和连续颜色修订；未直接写SQLite或mock Registry。
+- assets 155 statements/68 branches、asset_revision 132/64均100%定向覆盖；全canonical门仍未完成。
+
 ## 2026-09-13 C12 请求绑定与可审阅失败包
 
 - contextual resolver factory消费同workflow的已持久request/InputBundle，不依赖全局最近输入。

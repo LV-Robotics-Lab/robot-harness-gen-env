@@ -266,3 +266,152 @@ def test_real_normalizer_report_registers_complete_geometry_closure(tmp_path):
     )
     assert len(version.files) == 4
     assert AssetRegistry(store).inspect(version.version_sha256) == version
+
+
+def registration_args(tmp_path):
+    from self_improving.harness.x2env.assets import AssetLicense, AssetSource
+
+    store = Store(tmp_path / "store")
+    root, files, report = prepared(tmp_path, store)
+    evidence = store.write_artifact(b"explicit test provenance", "text/plain")
+    return store, dict(
+        asset_id="fixture",
+        category="box",
+        normalized_root=root,
+        entrypoint="model.urdf",
+        files=files,
+        normalization_report=report,
+        receipt=evidence,
+        license=AssetLicense(
+            spdx="CC0-1.0", source_url="https://example.org/fixture", evidence=evidence
+        ),
+        source=AssetSource(kind="local", provider="fixture", source_ref="test", evidence=evidence),
+    )
+
+
+def bind_report(store, args):
+    root = args["normalized_root"]
+    doc = {
+        "schema_version": "x2env.normalization.v1",
+        "status": "passed",
+        "entrypoint": args["entrypoint"],
+        "files": [
+            dict(
+                path=p,
+                sha256=hashlib.sha256((root / p).read_bytes()).hexdigest(),
+                size_bytes=(root / p).stat().st_size,
+            )
+            for p in args["files"]
+        ],
+    }
+    args["normalization_report"] = store.write_artifact(
+        json.dumps(doc).encode(), "application/json"
+    )
+
+
+def test_point_cloud_cannot_be_registered_as_rigid_mesh(tmp_path):
+    from self_improving.harness.x2env.assets import AssetRegistry
+
+    store, args = registration_args(tmp_path)
+    (args["normalized_root"] / "visual.obj").write_text("v 0 0 0\nv 1 0 0\nv 0 1 0\n")
+    bind_report(store, args)
+    with pytest.raises(ValueError, match="geometry"):
+        AssetRegistry(store).register(**args)
+    assert not AssetRegistry(store).find("box")
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "relative_root",
+        "empty_files",
+        "non_urdf",
+        "xml_entity",
+        "unsupported_mesh",
+        "bad_glb",
+        "bad_glb_header",
+        "empty_glb",
+        "no_mesh",
+        "texture_options",
+    ],
+)
+def test_registry_rejects_unsupported_and_malformed_declared_closure(tmp_path, fault):
+    import struct
+    from pathlib import Path
+
+    from self_improving.harness.x2env.assets import AssetRegistry
+
+    store, args = registration_args(tmp_path)
+    root = args["normalized_root"]
+    if fault == "relative_root":
+        args["normalized_root"] = Path("relative")
+    elif fault == "empty_files":
+        args["files"] = ()
+    elif fault == "non_urdf":
+        args["entrypoint"] = "visual.obj"
+    elif fault == "xml_entity":
+        (root / "model.urdf").write_text("<!DOCTYPE robot><robot/>")
+    elif fault == "unsupported_mesh":
+        (root / "extra.dae").write_text("fixture")
+        args["files"] += ("extra.dae",)
+    elif fault in {"bad_glb", "bad_glb_header", "empty_glb"}:
+        doc = json.dumps(
+            {"asset": {"version": "2.0"}, "scenes": [{"nodes": []}], "scene": 0, "nodes": []}
+        ).encode()
+        doc += b" " * ((-len(doc)) % 4)
+        raw = (
+            struct.pack(
+                "<4sIIII",
+                b"glTF",
+                1 if fault == "bad_glb_header" else 2,
+                20 + len(doc),
+                len(doc),
+                0x4E4F534A,
+            )
+            + doc
+        )
+        (root / "extra.glb").write_bytes(b"bad" if fault == "bad_glb" else raw)
+        args["files"] += ("extra.glb",)
+    elif fault == "no_mesh":
+        args["files"] = ("model.urdf",)
+        (root / "model.urdf").write_text('<robot name="empty"><link name="body"/></robot>')
+    elif fault == "texture_options":
+        (root / "texture.mtl").write_text("map_Kd -s 1 1 1 image.png\n")
+        args["files"] += ("texture.mtl",)
+    if fault not in {"relative_root", "empty_files"}:
+        bind_report(store, args)
+    with pytest.raises(ValueError):
+        AssetRegistry(store).register(**args)
+    assert not AssetRegistry(store).find("box")
+
+
+def test_complete_obj_material_texture_dependency_is_retained(tmp_path):
+    from PIL import Image
+
+    from self_improving.harness.x2env.assets import AssetRegistry
+
+    store, args = registration_args(tmp_path)
+    root = args["normalized_root"]
+    (root / "visual.obj").write_text(
+        "# fixture\n\nmtllib visual.mtl\n" + (root / "visual.obj").read_text()
+    )
+    (root / "visual.mtl").write_text("newmtl red\nmap_Kd texture.png\n")
+    Image.new("RGB", (1, 1), "red").save(root / "texture.png")
+    args["files"] += ("visual.mtl", "texture.png")
+    bind_report(store, args)
+    version = AssetRegistry(store).register(**args)
+    assert {m.path for m in version.files} == set(args["files"])
+
+
+def test_parent_must_belong_to_same_asset_and_persisted_hash_cannot_be_replaced(tmp_path):
+    from self_improving.harness.x2env.assets import AssetRegistry
+
+    store, args = registration_args(tmp_path)
+    registry = AssetRegistry(store)
+    parent = registry.register(**args)
+    with pytest.raises(ValueError, match="another asset"):
+        registry.register(**{**args, "asset_id": "another"}, parent_version=parent.version_sha256)
+    # Explicit malicious persisted record through the public opaque index, never SQLite edits.
+    store.register_asset("a" * 64, parent.asset_id, parent.category, parent.model_dump_json())
+    with pytest.raises(ValueError, match="integrity"):
+        registry.inspect("a" * 64)
