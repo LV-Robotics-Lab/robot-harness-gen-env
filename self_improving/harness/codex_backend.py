@@ -464,6 +464,7 @@ class CodexBackend:
             str(output_root / "terminal-decision.schema.json"),
             "--ignore-user-config",
             "--ignore-rules",
+            "--approve-for-me",
             "--sandbox",
             "read-only",
             "--skip-git-repo-check",
