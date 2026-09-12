@@ -33,6 +33,36 @@ class Store:
             db.execute("""CREATE TABLE IF NOT EXISTS workflows (
                 workflow_id TEXT PRIMARY KEY, idempotency_key TEXT UNIQUE NOT NULL,
                 request_sha256 TEXT NOT NULL, snapshot TEXT NOT NULL)""")
+            db.execute("""CREATE TABLE IF NOT EXISTS asset_versions (
+                version_sha256 TEXT PRIMARY KEY, asset_id TEXT NOT NULL,
+                category TEXT NOT NULL, record TEXT NOT NULL)""")
+
+    def register_asset(self, version_sha256: str, asset_id: str, category: str,
+                       record_json: str) -> None:
+        with closing(sqlite3.connect(self.database)) as db, db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT asset_id, category, record FROM asset_versions WHERE version_sha256=?",
+                             (version_sha256,)).fetchone()
+            if row:
+                if row != (asset_id, category, record_json):
+                    raise ValueError("immutable asset version conflict")
+                return
+            db.execute("INSERT INTO asset_versions VALUES (?, ?, ?, ?)",
+                       (version_sha256, asset_id, category, record_json))
+
+    def asset_version(self, version_sha256: str) -> str:
+        with closing(sqlite3.connect(self.database)) as db:
+            row = db.execute("SELECT record FROM asset_versions WHERE version_sha256=?",
+                             (version_sha256,)).fetchone()
+        if row is None:
+            raise KeyError(version_sha256)
+        return row[0]
+
+    def asset_versions(self, category: str) -> tuple[str, ...]:
+        with closing(sqlite3.connect(self.database)) as db:
+            rows = db.execute("SELECT record FROM asset_versions WHERE category=? ORDER BY version_sha256",
+                              (category,)).fetchall()
+        return tuple(row[0] for row in rows)
 
     def submit(self, request: X2EnvRequest) -> WorkflowSnapshot:
         digest = hashlib.sha256(request.model_dump_json().encode()).hexdigest()

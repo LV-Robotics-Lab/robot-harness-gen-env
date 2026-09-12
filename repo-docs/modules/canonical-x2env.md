@@ -18,7 +18,13 @@
 
 Yuxin检索实现现位于`self_improving/asset_pipeline/active/asset_reuse/lib/`（一次目录搬迁），
 canonical调用将复用这一份代码。搬迁仅完成可导入和消费者路径兼容，不代表许可强门、
-资产规范化、immutable登记或本地/联网业务路径已接通。
+资产规范化、immutable登记或完整本地/联网业务路径已接通。
+
+现在canonical adapter已经调用原分层检索与下载，实际web搜索/获取Box有独立证据。
+`normalization.py`显式烘焙节点变换、Y→Z与目标尺寸，产出单刚体四成员闭包；未知尺度、
+动画/关节或不支持材质拒绝，凸包不能代表容器内腔。`assets.py`在原Store中登记不可变版本，
+许可、来源、规范化、geometry摘要和父版本分别绑定；静态登记不是sim-ready。
+这些组件尚未全部进入同一workflow。真实Codex解释已通过，后续资产解析缺失仍明确blocked。
 
 Python模型是唯一schema编辑源；`script/export_x2env_schemas.py --check`检测生成文件漂移。
 Codex输出另生成strict projection：可空字段仍必须出现；provenance是固定六字段对象，joint positions

@@ -1,5 +1,26 @@
 # 进度与结果
 
+## 2026-09-13 第三次真实Codex解释通过（不是E2E）
+
+- 固定`4fddb17`，workflow `0d9dd28c-c82a-4b81-b6b9-0641bc2e7cd4`，60.739505s。
+  Harness实际接受SceneIR并提交revision2；父状态blocked，明确缺`asset_resolver`。
+- 证据：`/home/jingxiang/bingsheng/canonical-managed-interpret-v3-20260913.A4bXu1/`。
+  未执行资产、Genesis、包或copy-run，不计S01矩阵通过。
+
+## 2026-09-13 C06 provider、规范化与登记组件
+
+- Yuxin原GitHubTreeSearchProvider实际搜索固定Khronos`90d7ede14c7e280af263824604b427a1ca02cb66`，
+  返回4候选；从返回项选择Box后获取1664B，SHA `ed52f7192b8311d700ac0ce80644e3852cd01537e4d62241b9acba023da3d54e`。
+  原metadata CC-BY-4.0/Cesium保留；search2.296611s、fetch0.511125s、总2.825764s。
+  证据：`/home/jingxiang/bingsheng/canonical-yuxin-box-search-fetch-20260913.pGyaFc/`。
+  未做Codex视觉选择；开发dirty身份和执行模块前后SHA均保留，不称固定资格。
+- licensed mouse/cube与TRELLIS真实新geometry的静态规范化分别0.008755/0.002217/0.262392s，
+  源SHA不变；证据`/home/jingxiang/bingsheng/canonical-trellis1-20260913.1U7bmo/normalization-real-zgd_37gh/result.json`。
+- 四文件闭包为URDF/visualGLB/collisionOBJ/physicsJSON；凸包填平凹腔，不授inside能力。
+  质量/摩擦为明确供给值、惯量为凸包均匀密度估计，不冒充测量。
+- AssetRegistry复用唯一SQLite/CAS，父版本不可变，geometry摘要排除URDF物性/许可/report；
+  inspect重核CAS，源许可与receipt独立保存。44项相关测试通过；最终100%覆盖率门尚未达到。
+
 ## 2026-09-13 第二次真实Codex解释：transport通过、SceneIR拒绝
 
 - 固定`85cc0af`、workflow `d1e03805-8373-4ff6-8cf0-4403325350dd`，61.945589s。

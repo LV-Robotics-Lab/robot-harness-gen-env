@@ -1,5 +1,17 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C06-ASSETS — 单引擎provider与不可变资产组件
+
+- `origin_owner`：Yuxin资产管线；新规范化/登记为Bingsheng Harness整合实现。
+- `upstream_owner`：OpenXSim检索下载、Khronos/Cesium样本，按原文件与运行license evidence分别保留。
+- `source_ref`：provider固定来源`4982cc3660d82743b849fd0ba9cbdfd04933e895` /
+  `8c2f058215b4d69d10f15c269148397a9f14ccd2`，canonical单份迁移`e67f2c6`。
+- `integration_owner`：Bingsheng Harness workstream；`recorded_git_authors`按来源manifest，
+  不从Yuxin目录名推断自然人身份。
+- `target_paths`：x2env/adapters/yuxin.py、normalization.py、assets.py、store.py及对应测试。
+- `verification`：44项相关测试；实际web搜索获取、3真实静态规范化证据见RESULTS。
+- `known_gaps`：尚未全部接入同workflow；未跑Genesis、visual selection、copy-run；无新资格。
+
 ## INT-CANONICAL-C05-PARTIAL-INTENT — 真实模型失败驱动修复
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream；新实现，无新增第三方代码。
