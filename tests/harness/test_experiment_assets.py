@@ -2,6 +2,9 @@ import hashlib
 import json
 import os
 import struct
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+from threading import Barrier
 
 import pytest
 
@@ -121,3 +124,53 @@ def test_local_glb_external_resources_are_rejected_before_decode(tmp_path):
         acquire(
             AssetRequest(source="local", category="block", catalog_path=catalog), tmp_path / "out"
         )
+
+
+def test_concurrent_identical_asset_registration_reuses_verified_winner(tmp_path, monkeypatch):
+    acquire(AssetRequest(source="generated", category="block"), tmp_path / "warmup")
+    barrier = Barrier(8)
+    original = Path.rename
+
+    def together(path, target):
+        if path.name == "candidate":
+            barrier.wait(timeout=10)
+        return original(path, target)
+
+    monkeypatch.setattr(Path, "rename", together)
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        futures = [
+            pool.submit(
+                acquire, AssetRequest(source="generated", category="block"), tmp_path / "parallel"
+            )
+            for _ in range(8)
+        ]
+        assets = [future.result() for future in futures]
+    assert len({asset.version_id for asset in assets}) == 1
+    for asset in assets:
+        assert json.loads((asset.root / "receipt.json").read_bytes()) == asset.receipt
+
+
+def test_cousin_selection_is_explicitly_unsupported(tmp_path):
+    with pytest.raises(AssetAcquisitionError) as error:
+        acquire(AssetRequest(source="generated", category="block", selection="cousin"), tmp_path)
+    assert error.value.code == "unsupported_selection"
+    assert (
+        json.loads((error.value.partial_root / "failure.json").read_bytes())["code"]
+        == "unsupported_selection"
+    )
+    assert not (tmp_path / "versions").exists()
+
+
+@pytest.mark.skipif(
+    os.environ.get("EXPERIMENT_ASSETS_WEB") != "1", reason="explicit live web check"
+)
+def test_web_y_up_asymmetric_mesh_is_rotated_into_z_up(tmp_path):
+    import trimesh
+
+    asset = acquire(AssetRequest(source="web", category="Avocado"), tmp_path)
+    source = next(tmp_path.glob("acquire-*/download/*/Avocado.glb"))
+    old = trimesh.load(source, force="mesh").extents
+    assert abs(float(old[1] - old[2])) > 0.001
+    assert asset.receipt["dimensions_m"] == pytest.approx([old[0], old[2], old[1]])
+    assert asset.receipt["source_up_axis"] == "Y"
+    assert asset.receipt["normalized_up_axis"] == "Z"

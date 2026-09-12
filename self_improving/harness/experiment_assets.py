@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import hashlib
 import importlib.util
 import io
@@ -111,13 +112,7 @@ def _publish(mesh, root, provenance, mass, friction, parent=None):
     target = root / "versions" / version
     if target.is_symlink() or target.parent.is_symlink():
         raise ValueError("version directory symlink")
-    if target.exists():
-        if (target / "receipt.json").read_bytes() != _json(receipt):
-            raise ValueError("existing version receipt changed")
-        for name, data in files.items():
-            if (target / name).is_symlink() or (target / name).read_bytes() != data:
-                raise ValueError("existing version member changed")
-    else:
+    if not target.exists():
         target.parent.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=target.parent) as temp:
             directory = Path(temp) / "candidate"
@@ -125,7 +120,23 @@ def _publish(mesh, root, provenance, mass, friction, parent=None):
             for name, data in files.items():
                 (directory / name).write_bytes(data)
             (directory / "receipt.json").write_bytes(_json(receipt))
-            directory.rename(target)
+            try:
+                directory.rename(target)
+            except OSError as exc:
+                if exc.errno not in (errno.EEXIST, errno.ENOTEMPTY):
+                    raise
+                # A concurrent publisher may have won; trust only the complete bytes below.
+    if target.is_symlink() or target.parent.is_symlink():
+        raise ValueError("version directory symlink")
+    if (target / "receipt.json").is_symlink() or (target / "receipt.json").read_bytes() != _json(
+        receipt
+    ):
+        raise ValueError("existing version receipt changed")
+    if {p.name for p in target.iterdir()} != {*files, "receipt.json"}:
+        raise ValueError("existing version member set changed")
+    for name, data in files.items():
+        if (target / name).is_symlink() or (target / name).read_bytes() != data:
+            raise ValueError("existing version member changed")
     return AssetVersion(version, target, receipt)
 
 
@@ -241,6 +252,7 @@ def _web(request, attempt):
         "source_sha256": record["usd_sha256"],
         "license": license_info["spdx"],
         "license_evidence": license_info,
+        "source_up_axis": record["up_axis"],
     }
 
 
@@ -253,8 +265,10 @@ def acquire(request: AssetRequest, staging_root: Path) -> AssetVersion:
     started = time.monotonic()
     try:
         _parameters(request.mass_kg, request.friction, request.scale)
-        if request.selection not in {"exact", "cousin"}:
-            raise ValueError("unsupported selection strategy")
+        if request.selection != "exact":
+            raise AssetAcquisitionError(
+                "unsupported_selection", "only exact selection is implemented", attempt
+            )
         provenance = {
             "source_kind": request.source,
             "selection_strategy": request.selection,
@@ -269,6 +283,12 @@ def acquire(request: AssetRequest, staging_root: Path) -> AssetVersion:
             path, details = _web(request, attempt)
             provenance.update(details)
             mesh = _load_glb(path)
+            if details["source_up_axis"] != "Y":
+                raise ValueError("unsupported web source up axis")
+            # glTF right-handed Y-up -> Harness right-handed Z-up (+90 degrees about X).
+            transform = [[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]
+            mesh.apply_transform(transform)
+            provenance.update(normalized_up_axis="Z", source_to_normalized_transform=transform)
         elif request.source == "generated":
             mesh, details = _generate(request, attempt)
             provenance.update(details)
@@ -287,16 +307,17 @@ def acquire(request: AssetRequest, staging_root: Path) -> AssetVersion:
         )
         return result
     except Exception as exc:
+        code = exc.code if isinstance(exc, AssetAcquisitionError) else "asset_acquisition_failed"
         (attempt / "failure.json").write_bytes(
             _json(
                 {
-                    "code": "asset_acquisition_failed",
+                    "code": code,
                     "detail": str(exc),
                     "wall_seconds": time.monotonic() - started,
                 }
             )
         )
-        raise AssetAcquisitionError("asset_acquisition_failed", str(exc), attempt) from exc
+        raise AssetAcquisitionError(code, str(exc), attempt) from exc
 
 
 def _generate(request, attempt):
