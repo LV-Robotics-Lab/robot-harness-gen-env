@@ -661,7 +661,7 @@ def test_timing_uses_call_interval_union_and_never_attributes_status_readback(tm
     result = CodexBackendResult(
         "completed",
         tmp_path,
-        5.0,
+        6.0,
         0,
         None,
         None,
@@ -684,8 +684,8 @@ def test_timing_uses_call_interval_union_and_never_attributes_status_readback(tm
                 {
                     "tool": "image2env_preview_status_v1",
                     "elapsed_seconds": 2.0,
-                    "transport_started_monotonic_ns": 2_000_000_000,
-                    "transport_ended_monotonic_ns": 4_000_000_000,
+                    "transport_started_monotonic_ns": 4_000_000_000,
+                    "transport_ended_monotonic_ns": 6_000_000_000,
                     "result": {"structuredContent": {"stage": "status", "elapsed_seconds": 3.0}},
                 },
             ],
@@ -702,6 +702,7 @@ def test_timing_uses_call_interval_union_and_never_attributes_status_readback(tm
         3_000_000_000,
         None,
     ]
+    assert sum(call["transport_elapsed_ns"] for call in values["calls"]) == 6_000_000_000
 
 
 def test_failed_attempt_keeps_measured_wall_without_inventing_attribution(tmp_path):
@@ -882,10 +883,10 @@ def _phase_complete_result(workflow_id, output_root, *, valid_timing):
             ("image2env_preview_status_v1", "status", 0.0, 0.1, 0.8),
             ("image2env_compile_v2_0_0", "compile", 0.1, 0.5, 0.3),
             ("image2env_replay_v2_0_0", "replay", 0.5, 1.5, 0.7),
-            ("image2env_preview_status_v1", "status", 1.0, 1.4, 0.7),
-            ("genesis_observe_v3_0_0", "observe", 1.5, 2.5, 0.6),
-            ("image2env_preview_status_v1", "status", 2.0, 2.4, 0.6),
-            ("image2env_validate_v3_0_0", "validate", 2.5, 3.0, 0.3),
+            ("image2env_preview_status_v1", "status", 1.0, 1.6, 0.7),
+            ("genesis_observe_v3_0_0", "observe", 1.6, 2.6, 0.6),
+            ("image2env_preview_status_v1", "status", 2.0, 2.7, 0.6),
+            ("image2env_validate_v3_0_0", "validate", 2.7, 3.2, 0.3),
         ]
     else:
         specifications = [("image2env_validate_v3_0_0", "validate", 0.0, 1.0, None)]
@@ -906,7 +907,7 @@ def _phase_complete_result(workflow_id, output_root, *, valid_timing):
     return CodexBackendResult(
         "completed",
         output_root,
-        3.1 if valid_timing else 2.0,
+        3.3 if valid_timing else 2.0,
         0,
         None,
         None,
@@ -981,3 +982,5 @@ def test_terminal_phase_complete_with_invalid_timing_is_non_retryable(service, t
     }
     assert backend.count == 1
     assert len(controller.attempts(service.workflow)) == 1
+    assert controller.resume(service.workflow) == result
+    assert backend.count == 1

@@ -285,6 +285,8 @@ def _inspect_assigned_transport(wire: bytes, assignment: CodexAssignment):
                         "arguments": params.get("arguments", {}),
                         "result": result,
                         "elapsed_seconds": elapsed_ns / 1e9,
+                        "transport_started_monotonic_ns": started,
+                        "transport_ended_monotonic_ns": moment,
                     }
                 )
             elif method == "resources/read":

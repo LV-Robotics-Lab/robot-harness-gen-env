@@ -116,7 +116,7 @@ def read_codex_attempts(golden_database_path, workflow_id):
 
 
 def timing_samples(result):
-    """Keep exact call spans and leave only the remaining wall as Codex/MCP time."""
+    """Partition concurrent call spans once; the backend evidence retains their full intervals."""
 
     def ns(value):
         if type(value) not in (int, float) or not math.isfinite(value) or value < 0:
@@ -124,23 +124,39 @@ def timing_samples(result):
         return round(value * 1_000_000_000)
 
     backend = ns(result.elapsed_seconds)
-    calls, valid = [], True
+    calls, intervals, saw_interval, valid = [], [], False, True
     evidence = result.decision_evidence or {}
     complete = evidence.get("attribution_complete", result.status == "completed") is True
     for call in evidence.get("calls", []):
         transport = ns(call["elapsed_seconds"])
+        started = call.get("transport_started_monotonic_ns")
+        ended = call.get("transport_ended_monotonic_ns")
+        if started is None and ended is None:
+            interval = None
+        elif (
+            type(started) is not int
+            or type(ended) is not int
+            or started < 0
+            or ended <= started
+            or ended - started != transport
+        ):
+            saw_interval = True
+            interval = None
+            valid = False
+        else:
+            saw_interval = True
+            interval = (started, ended)
+        intervals.append(interval)
         output = (call.get("result") or {}).get("structuredContent") or {}
         stage = output.get("stage")
         service = ns(output["elapsed_seconds"]) if "elapsed_seconds" in output else None
         tool = call["tool"]
-        if tool in _READ_ONLY_TOOLS and service == 0:
+        if tool in _READ_ONLY_TOOLS:
             service = None
         if tool in _MEASURED_CHILD_TOOLS and service in {None, 0}:
             complete = False
             if result.status == "completed":
                 valid = False
-        if service is not None and transport < service:
-            valid = False
         calls.append(
             dict(
                 tool=tool,
@@ -149,14 +165,58 @@ def timing_samples(result):
                 service_elapsed_ns=service,
             )
         )
+    occupied = sum(call["transport_elapsed_ns"] for call in calls)
+    if saw_interval:
+        if any(interval is None for interval in intervals):
+            valid = False
+        else:
+            attributed = [0] * len(calls)
+            boundaries = sorted({moment for interval in intervals for moment in interval})
+            for left, right in zip(boundaries, boundaries[1:], strict=False):
+                active = [
+                    index
+                    for index, interval in enumerate(intervals)
+                    if interval[0] <= left and right <= interval[1]
+                ]
+                if not active:
+                    continue
+                business = [
+                    index for index in active if calls[index]["tool"] not in _READ_ONLY_TOOLS
+                ]
+                if len(business) > 1:
+                    valid = False
+                owner = min(
+                    active,
+                    key=lambda index: (
+                        2
+                        if calls[index]["tool"] == STATUS
+                        else 1
+                        if calls[index]["tool"] in _READ_ONLY_TOOLS
+                        else 0,
+                        index,
+                    ),
+                )
+                attributed[owner] += right - left
+            normalized = []
+            for call, transport in zip(calls, attributed, strict=True):
+                if transport == 0 and call["tool"] == STATUS:
+                    continue
+                call["transport_elapsed_ns"] = transport
+                normalized.append(call)
+            calls = normalized
+            occupied = sum(call["transport_elapsed_ns"] for call in calls)
+    for call in calls:
+        service = call["service_elapsed_ns"]
+        if call["transport_elapsed_ns"] <= 0 or (
+            service is not None and call["transport_elapsed_ns"] < service
+        ):
+            valid = False
     return dict(
         backend_elapsed_ns=backend,
         calls=calls,
         attribution_complete=complete,
         failure=result.failure,
-        valid=valid
-        and (complete or not calls)
-        and backend >= sum(call["transport_elapsed_ns"] for call in calls),
+        valid=valid and (complete or not calls) and backend >= occupied,
     )
 
 
@@ -413,6 +473,9 @@ class LimitedImagePreviewController:
         published = self._try_publish(status, rows)
         if published is not None:
             return published
+        invalid_timing = self._timing_invalid(workflow_id, rows)
+        if invalid_timing is not None:
+            return invalid_timing
         if rows and rows[-1]["status"] == "started":
             waiting = self._recover(rows[-1])
             if waiting:
@@ -474,7 +537,7 @@ class LimitedImagePreviewController:
             "backend_status": result.status,
             "elapsed_seconds": result.elapsed_seconds,
             "failure": result.failure,
-            "call_count": len(samples["calls"]),
+            "call_count": len((result.decision_evidence or {}).get("calls", [])),
             "timing_samples": samples,
             "evidence": evidence,
             "terminal_decision": terminal_decision,
@@ -491,11 +554,32 @@ class LimitedImagePreviewController:
         published = self._try_publish(current, self.attempts(workflow_id))
         if published is not None:
             return published
+        invalid_timing = self._timing_invalid(workflow_id, self.attempts(workflow_id))
+        if invalid_timing is not None:
+            return invalid_timing
         return dict(
             status="waiting" if result.status == "completed" else result.status,
             workflow_id=str(workflow_id),
             attempt=number,
             timing_valid=samples["valid"],
+        )
+
+    def _timing_invalid(self, workflow_id, rows):
+        if not rows:
+            return None
+        last = rows[-1]
+        if (
+            last.get("status") != "terminal"
+            or last.get("backend_status") != "completed"
+            or (last.get("terminal_decision") or {}).get("decision") != "phase_complete"
+            or (last.get("timing_samples") or {}).get("valid") is not False
+        ):
+            return None
+        return dict(
+            status="timing_invalid",
+            workflow_id=str(workflow_id),
+            attempt=last["number"],
+            reason="terminal Codex timing attribution is invalid",
         )
 
     def run_to_terminal(self, workflow_id, *, input_elapsed_ns=None):
