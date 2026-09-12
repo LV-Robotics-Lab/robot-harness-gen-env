@@ -1,6 +1,8 @@
 """Factory start/lookup do not restore unrelated runtime or qualification roots."""
 
 import json
+import shutil
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
@@ -14,8 +16,184 @@ from self_improving.harness.limited_image_preview_factory import (
 )
 from self_improving.harness.run_store import SQLiteRunStore
 from self_improving.harness.schemas.common import ArtifactRef
+from tests.self_improving.harness.test_golden_image2env_policy import (  # noqa: F401
+    capture,
+    parent_capture,
+)
 from tests.self_improving.harness.test_gujie_scene_adapter import candidate  # noqa: F401
 from tests.self_improving.harness.test_limited_image_preview_inputs import inputs  # noqa: F401
+from tests.self_improving.harness.test_limited_image_preview_policy import policy  # noqa: F401
+
+
+def _development_validation_history_case(tmp_path, shared_policy, captured_parent, monkeypatch):
+    from tests.self_improving.harness.test_mcp_native_assembly import settings_document
+
+    observed, world, _, context, head, parent, put = captured_parent
+    observation_root = tmp_path / "native-observation"
+    observation_root.mkdir()
+    observation_path = observation_root / "runs.sqlite"
+    shutil.copy2(observed.child_authority.path, observation_path)
+    scene_root = tmp_path / "native-scene"
+    replay_authority = SQLiteRunStore(scene_root / "runs.sqlite")
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    document = settings_document(tmp_path)
+    document.pop("compile_template_ref")
+    document.update(
+        schema_version="harness.limited_image_preview_settings.v2",
+        execution_mode="development",
+        source_repository_root=str(repository),
+        development_artifact_root=str(tmp_path / "development-artifacts"),
+        project_id="development-history",
+        asset_catalog=document["registry_snapshot"],
+        source_scene=document["registry_snapshot"],
+        qualification_run_id="10000000-0000-4000-8000-000000000001",
+        table_center_m=[0.0, 0.0, 0.4],
+        table_size_m=[1.0, 0.6, 0.1],
+        table_friction=0.5,
+        seed=0,
+        scene_state_root=str(scene_root),
+        observation_state_root=str(observation_root),
+        revised_state_root=str(tmp_path / "compile"),
+        revised_qualification=document["compile_qualification"],
+        shared_state_root=str(tmp_path / "shared"),
+        library_root=str(tmp_path / "formal-library"),
+        native_projections={},
+        shared_qualifications={"image2env.validate@3.0.0": document["validation_qualification"]},
+    )
+    settings = LimitedImagePreviewSettings.model_validate_json(json.dumps(document))
+    shared = shared_policy.application
+    monkeypatch.setattr(shared, "bind", lambda qualification: None)
+    runtime = LimitedPreviewRuntime(settings, shared.artifact_store)
+    application_calls = []
+
+    def application(key):
+        application_calls.append(key)
+        if key == "shared":
+            return shared
+        if key == "revised":
+            return shared.compiler_application
+        raise AssertionError(f"history restored the live {key} application")
+
+    monkeypatch.setattr(runtime, "application", application)
+    return SimpleNamespace(
+        runtime=runtime,
+        calls=application_calls,
+        observation_path=observation_path,
+        replay_authority=replay_authority,
+        observed=observed,
+        world=world,
+        context=context,
+        head=head,
+        parent=parent,
+        put=put,
+    )
+
+
+def test_development_validate_history_reads_revision_four_without_native_apps(
+    tmp_path,
+    policy,  # noqa: F811
+    parent_capture,  # noqa: F811
+    monkeypatch,
+):
+    from self_improving.harness.schemas.genesis_fresh_capture import (
+        GenesisFreshCaptureReceiptV1,
+    )
+
+    case = _development_validation_history_case(tmp_path, policy, parent_capture, monkeypatch)
+    binding = case.runtime.history_binding("image2env.validate@3.0.0")
+
+    assert binding.application is None
+    assert case.calls == ["shared", "revised"]
+    predecessors = binding.policy.predecessor_authorities
+    assert predecessors["image2env.replay@2.0.0"].path == case.replay_authority.path
+    assert predecessors["genesis.observe@3.0.0"].path == case.observation_path
+
+    observed_run_id = case.parent.child_run_id
+    observed_terminal = case.observed.child_authority.read_run_state(observed_run_id)
+    output = GenesisFreshCaptureReceiptV1.model_validate(observed_terminal.output)
+    head = case.head.model_copy(update={"base_revision": 3, "committed_revision": 4})
+    context = replace(
+        case.context,
+        revision=4,
+        receipt_head=case.put(head.model_dump(mode="json"), head.schema_version),
+    )
+    requested = binding.policy.normalize_parameters(
+        {
+            "schema_version": "harness.limited_scene_validate_input.v1",
+            "execution_receipt": output.replay_receipt.model_dump(mode="json"),
+            "expected_layout": None,
+        }
+    )
+    binding.policy.authorize_workflow(case.world, requested, context)
+
+    original = case.observation_path.with_suffix(".original")
+    case.observation_path.replace(original)
+    SQLiteRunStore(case.observation_path)
+    with pytest.raises(ValueError, match="durable child authority"):
+        binding.policy.authorize_workflow(case.world, requested, context)
+    with pytest.raises(AssertionError, match="live replay application"):
+        case.runtime.ensure("image2env.validate@3.0.0")
+
+
+def test_release_validate_history_still_delegates_to_live_restore(
+    tmp_path,
+    policy,  # noqa: F811
+    parent_capture,  # noqa: F811
+    monkeypatch,
+):
+    from self_improving.harness import limited_image_preview_factory as factory
+
+    case = _development_validation_history_case(tmp_path, policy, parent_capture, monkeypatch)
+    document = case.runtime.settings.model_dump(mode="json")
+    document.update(
+        schema_version="harness.limited_image_preview_settings.v1",
+        execution_mode="release",
+        source_repository_root=None,
+        development_artifact_root=None,
+    )
+    runtime = LimitedPreviewRuntime(
+        LimitedImagePreviewSettings.model_validate_json(json.dumps(document)), case.runtime.store
+    )
+    skill = "image2env.validate@3.0.0"
+    live = SimpleNamespace(policy=object(), child_authority=object())
+    runtime.bindings[skill] = live
+    calls = []
+    monkeypatch.setattr(runtime, "ensure", calls.append)
+    monkeypatch.setattr(factory, "_create_golden_execution_binding", lambda **values: values)
+
+    restored = runtime.history_binding(skill)
+
+    assert calls == [skill]
+    assert restored == {
+        "policy": live.policy,
+        "application": None,
+        "child_authority": live.child_authority,
+    }
+
+
+@pytest.mark.parametrize("failure", ("missing", "corrupt"))
+def test_development_validate_history_fails_closed_on_invalid_native_authority(
+    tmp_path,
+    policy,  # noqa: F811
+    parent_capture,  # noqa: F811
+    monkeypatch,
+    failure,
+):
+    import sqlite3
+
+    case = _development_validation_history_case(tmp_path, policy, parent_capture, monkeypatch)
+    if failure == "missing":
+        case.observation_path.unlink()
+        with pytest.raises(ValueError, match="existing child SQLite authority"):
+            case.runtime.history_binding("image2env.validate@3.0.0")
+        assert not case.observation_path.exists()
+    else:
+        case.observation_path.write_bytes(b"not a SQLite authority")
+        with pytest.raises(sqlite3.DatabaseError):
+            case.runtime.history_binding("image2env.validate@3.0.0")
+        assert case.observation_path.read_bytes() == b"not a SQLite authority"
+    assert case.calls == []
 
 
 def test_factory_raw_input_restart_does_not_create_runtime_databases(inputs, tmp_path):  # noqa: F811
