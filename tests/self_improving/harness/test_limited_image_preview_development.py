@@ -110,6 +110,7 @@ def test_development_record_is_recoverable_and_never_writes_formal_library(tmp_p
         _artifact(store, tmp_path, "preview.mp4", None, media_type="video/mp4"),
         _artifact(store, tmp_path, "environment.json", "harness.x2env_environment_package.v1"),
         _artifact(store, tmp_path, "validation.json", "harness.limited_scene_validation.v1"),
+        _artifact(store, tmp_path, "genesis-scene.json", "harness.genesis_scene_spec.v1"),
     )
     workflow_id = UUID("10000000-0000-4000-8000-000000000001")
     record = build_development_execution_record(
@@ -174,7 +175,7 @@ def test_development_record_is_recoverable_and_never_writes_formal_library(tmp_p
 
     assert index["entrypoints"] == {
         "context": "development-context.json",
-        "environment_packages": [path_for(review_refs[2])],
+        "environment_packages": sorted([path_for(review_refs[2]), path_for(review_refs[4])]),
         "images": [path_for(review_refs[0])],
         "inputs": [f"objects/sha256/{refs[1].sha256[:2]}/{refs[1].sha256}.json"],
         "logs": [f"objects/sha256/{refs[3].sha256[:2]}/{refs[3].sha256}.json"],
@@ -197,6 +198,14 @@ def test_development_record_is_recoverable_and_never_writes_formal_library(tmp_p
             payload.read_bytes()
             == store.resolve(ArtifactRef.model_validate(member["refs"][0])).path.read_bytes()
         )
+    scene_path = path_for(review_refs[4])
+    scene_member = next(member for member in index["members"] if member["path"] == scene_path)
+    assert scene_member["sha256"] == review_refs[4].sha256
+    assert scene_member["bytes"] == review_refs[4].bytes
+    assert (materialized / scene_path).read_bytes() == store.resolve(
+        review_refs[4]
+    ).path.read_bytes()
+    assert path_for(refs[2]) not in index["entrypoints"]["environment_packages"]
     assert not formal_library.exists()
 
     with pytest.raises(ValueError, match="absolute new directory"):
