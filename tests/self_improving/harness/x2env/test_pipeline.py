@@ -17,8 +17,9 @@ from self_improving.harness.x2env.harness import Harness
 @pytest.mark.parametrize("missing_width", [False, True])
 @pytest.mark.parametrize("with_replay", [False, True])
 @pytest.mark.parametrize("with_diagnosis", [False, True])
+@pytest.mark.parametrize("contextual", [False, True])
 def test_single_workflow_advances_from_model_to_resolver_and_compile(
-    tmp_path, missing_width, with_replay, with_diagnosis, monkeypatch
+    tmp_path, missing_width, with_replay, with_diagnosis, contextual, monkeypatch
 ):
     from self_improving.harness.x2env.assets import AssetRegistry
     from self_improving.harness.x2env.compile import StructuralPolicy
@@ -120,14 +121,22 @@ def test_single_workflow_advances_from_model_to_resolver_and_compile(
                 ),
             )
 
+    def context_factory(store, backend, request, bundle):
+        assert request.seed == 11 and bundle.text is not None
+        assert store.read_artifact(bundle.text).decode() == request.text
+        return LocalAssetResolver(store, AssetRegistry(store), backend, preview=None)
+
     harness = Harness(
         tmp_path / "state",
         backend_factory=lambda store: (
             DiagnosticDouble(store) if with_diagnosis else AdvisoryDouble()
         ),
-        resolver_factory=lambda store, backend: LocalAssetResolver(
+        resolver_factory=None
+        if contextual
+        else lambda store, backend: LocalAssetResolver(
             store, AssetRegistry(store), backend, preview=None
         ),
+        contextual_resolver_factory=context_factory if contextual else None,
         compile_policy=StructuralPolicy(thickness_m=0.04, surface_height_m=0.75, friction=0.5),
         replay_factory=(lambda store: GenesisReplayExecutor(store, runtime_roots={}))
         if with_replay

@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C12 请求绑定与可审阅失败包
+
+- contextual resolver factory消费同workflow的已持久request/InputBundle，不依赖全局最近输入。
+- Harness.package对failed/blocked/cancelled导出实际已完成CAS闭包、workflow、错误和可读说明；
+  未生成SceneIR时明确not_produced，无environment package，不伪造中间步骤。
+- 同请求重复物化仅在逐成员/manifest/result bytes一致时只读复用，默认拒绝已存在输出目录；
+  篡改拒绝。输入/闭包/controller/失败包/publisher合计64项测试通过，运行时验收仍未完成。
+
 ## 2026-09-13 C13 输入边界覆盖与视频时长修复
 
 - 视频流自身提供 duration 时，不再提前访问可能缺失的容器 duration；两种合法来源分别测试。

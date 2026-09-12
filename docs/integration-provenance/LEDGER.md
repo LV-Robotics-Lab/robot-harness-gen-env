@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C12-FAILURE — 请求作用域与失败产物
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：controller `36a0c7f`、typed artifact closure `e14684f`。
+- `target_paths`：x2env/harness.py、failure_bundle.py及public pipeline/failure测试。
+- `verification`：实际Store与CAS的请求绑定、停止态物化、只读重用与篡改拒绝；无新增真实矩阵pass。
+
 ## INT-CANONICAL-C13-INPUT — 合法流时长与输入闭包边界
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。

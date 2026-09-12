@@ -16,6 +16,7 @@ class Harness:
         resolver_factory=None,
         compile_policy=None,
         replay_factory=None,
+        contextual_resolver_factory=None,
     ):
         self._store = Store(state_dir)
         self._state_dir = Path(state_dir)
@@ -23,6 +24,9 @@ class Harness:
         self._resolver = resolver_factory(self._store, self._backend) if resolver_factory else None
         self._compile_policy = compile_policy
         self._replay_executor = replay_factory(self._store) if replay_factory else None
+        if resolver_factory and contextual_resolver_factory:
+            raise ValueError("choose one resolver assembly")
+        self._contextual_resolver_factory = contextual_resolver_factory
 
     def submit(self, request: X2EnvRequest) -> WorkflowHandle:
         snapshot = self._store.submit(request)
@@ -38,7 +42,10 @@ class Harness:
         if existing.compiled_scene is not None and self._replay_executor is None:
             return existing
         if existing.scene_ir is not None and (
-            (self._resolver is None or existing.asset_resolution is not None)
+            (
+                (self._resolver is None and self._contextual_resolver_factory is None)
+                or existing.asset_resolution is not None
+            )
             and existing.resolved_assets is None
         ):
             return existing
@@ -141,19 +148,39 @@ class Harness:
             snapshot,
             result,
             snapshot.input_bundle,
-            status="active" if self._resolver else "blocked",
-            reason=None if self._resolver else "blocked_external_resource",
+            status="active" if self._resolver or self._contextual_resolver_factory else "blocked",
+            reason=None
+            if self._resolver or self._contextual_resolver_factory
+            else "blocked_external_resource",
             proposal=proposal_ref,
             scene_ir=scene_ref,
-            required_resources=() if self._resolver else ("asset_resolver",),
+            required_resources=()
+            if self._resolver or self._contextual_resolver_factory
+            else ("asset_resolver",),
         )
-        return self._resolve(snapshot) if self._resolver else snapshot
+        return (
+            self._resolve(snapshot)
+            if self._resolver or self._contextual_resolver_factory
+            else snapshot
+        )
 
     def _resolve(self, snapshot):
         snapshot = self._store.begin_operation(snapshot, "asset.resolve")
         operation = snapshot.operations[-1]
         try:
-            resolution = self._resolver.resolve(
+            resolver = (
+                self._contextual_resolver_factory(
+                    self._store,
+                    self._backend,
+                    snapshot.request,
+                    InputBundle.model_validate_json(
+                        self._store.read_artifact(snapshot.input_bundle)
+                    ),
+                )
+                if self._contextual_resolver_factory
+                else self._resolver
+            )
+            resolution = resolver.resolve(
                 snapshot.scene_ir,
                 allowed_sources=snapshot.request.allowed_sources,
                 allow_cousin=snapshot.request.constraints.allow_cousin,
@@ -556,6 +583,10 @@ class Harness:
             snapshot, result, snapshot.input_bundle, status="failed", reason=code
         )
 
-    def package(self, workflow_id: str):
-        self.status(workflow_id)
+    def package(self, workflow_id: str, *, output: Path | None = None, reuse_existing=False):
+        snapshot = self.status(workflow_id)
+        if output is not None and snapshot.status in {"failed", "blocked", "cancelled"}:
+            from .failure_bundle import materialize_failure
+
+            return materialize_failure(snapshot, self._store, output, reuse_existing=reuse_existing)
         raise ValueError("no materialized environment package")

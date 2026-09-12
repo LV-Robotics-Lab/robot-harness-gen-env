@@ -9,7 +9,8 @@
   下一步有界revise→包与CLI。真实单workflow带资产probe在固定1a0aefa运行，不计后续接线真实通过。
 - 资产规范化/Registry v2、Yuxin search/fetch、Gujie外部adapter、Genesis运行内核、属性修订均有组件，
   但不等于完整workflow/矩阵通过；真实证据与每项缺口见RESULTS最新条目。
-- 子agent独占：三来源路由/重建resolver；真实单workflow纵向probe。主线程管controller/合同/集成。
+- 子agent独占：统一deployment/CLI；成功包物化completion模块。主线程管controller/时限/合同/集成。
+- 三来源resolver已提交；失败包和请求绑定已接公共Harness，成功包、严格总时限及真实矩阵仍待验收。
 - 媒体派生发布授权已异步确认请求；等待期间不停止其他实施，不擅自赋予CC0/CC-BY。
 
 - 最新C05：真实Codex strict transport已通过；第二次SceneIR因非法frame/category拒绝，未计S01成功。
