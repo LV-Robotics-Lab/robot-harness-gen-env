@@ -4,7 +4,7 @@
 
 - [x] C00：用户批准 Q01–Q64、计划和 Qualification Matrix v1；登记不可降低的 push 门。
 - [ ] C01：fetch 后冻结 refs/worktrees，保护并复原验证 dirty bytes，分类形成 clean bingsheng 基线。
-- [ ] C02：权威 contracts、seams、acceptance、机读矩阵。
+- [x] C02：权威 contracts、seams、acceptance、机读矩阵冻结；不代表矩阵执行通过。
 - [ ] C03：typed models、生成 schema、CapabilityRegistry。
 - [ ] C04：单 Store、workflow 生命周期、Harness public interface。
 - [ ] C05：多模态 ingest 与受管理 Codex SceneIR/视觉建议。
@@ -21,6 +21,9 @@
 - [ ] 确认远端 bingsheng SHA 后暂停；main PR 仍需用户另行授权。
 
 细节以已批准实施计划为准；下列实验/旧计划清单只表示其历史版本。
+
+当前子步骤：C03 三 Skill 实际 typed 调用、C05 pending 设计补全、C06 单次搜索建议、C13 G1 父入口
+与 G2a console 安装映射均已有独立提交及定向测试。上方阶段保持未勾选的部分仍有完整验收缺口。
 
 ## 2026-09-13 通用实验验收清单
 

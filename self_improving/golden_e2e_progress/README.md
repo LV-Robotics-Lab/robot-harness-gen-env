@@ -54,8 +54,14 @@ Qualification Matrix v1 位于
 当前 C00 已完成；C01 已冻结来源并保护/恢复核验 bingsheng dirty bytes，整合尚未完成。
 用户补充批准推进替代后端并保留 Gujie 原接口，[C07 许可/资源记录](CANONICAL_C07_RESOURCE_BLOCKER_20260913.md)
 保留为已发现待解决项，不再暂停主线；
-详见 [C01 记录](CANONICAL_C01_INTAKE_20260913.md)。尚未修改 canonical 功能、运行 qualification、合并或 push。下列 2026-09-12 通用
-实验管线状态保留为实现基线，但不再覆盖新的计划决策。
+详见 [C01 记录](CANONICAL_C01_INTAKE_20260913.md)。当前 canonical 已实现统一 CLI、三 public Skills 的
+实际 typed 调用、资产来源 adapter、Genesis 执行与开发包完成门，并逐功能提交；尚未完成冻结矩阵、
+正式 qualification/prerelease 或 push。最新真实 S02 仍为尺度未知的 blocked，后续显式生成设计补全
+已接通组件测试，不能据此升级该失败。当前执行细目与结果以 TODO/RESULTS 顶部为准。
+
+## 历史交接基线（下文不是当前停止指令）
+
+下列 2026-09-12 通用实验管线状态仅保留历史依据，不覆盖 2026-09-13 已批准 canonical 计划。
 
 当前会话已按用户指令安全停止单鼠标 M2 收口，不再继续 repair、深验、bootstrap、资格重建或
 release 发布。固定 `cc6afa2` 的 normal 已从公共 Harness 入口真实调用内部 Codex、exact MCP 和
