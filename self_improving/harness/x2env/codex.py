@@ -17,6 +17,7 @@ from typing import Protocol
 from PIL import Image
 
 from .contracts import ArtifactRef, BackendProposal, InputBundle, SceneIntentProposal
+from .schema_export import structured_output_schema
 
 
 class ArtifactStore(Protocol):
@@ -172,7 +173,8 @@ class CodexBackend:
             )
             record("prompt.txt", prompt.encode(), "text/plain")
             record(
-                "proposal.schema.json", json.dumps(SceneIntentProposal.model_json_schema()).encode()
+                "proposal.schema.json",
+                json.dumps(structured_output_schema(SceneIntentProposal)).encode(),
             )
             argv = [
                 str(self.executable),
@@ -280,10 +282,7 @@ class CodexBackend:
             provenance = [p for unknown in proposal.unknowns for p in unknown.provenance]
             if proposal.scene:
                 provenance += [
-                    p
-                    for entity in proposal.scene.entities
-                    for group in entity.provenance.values()
-                    for p in group
+                    p for entity in proposal.scene.entities for p in entity.provenance.records()
                 ]
                 provenance += [
                     p for relation in proposal.scene.relations for p in relation.provenance

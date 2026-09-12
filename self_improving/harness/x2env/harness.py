@@ -69,7 +69,7 @@ class Harness:
         )
 
     def _interpret(self, snapshot):
-        snapshot = self._store.begin_operation(snapshot, "codex.interpret")
+        snapshot = self._store.begin_operation(snapshot, "codex.interpret", version="2.0.0")
         operation = snapshot.operations[-1]
         bundle = InputBundle.model_validate_json(self._store.read_artifact(snapshot.input_bundle))
         advisory = self._backend.interpret(

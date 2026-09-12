@@ -325,3 +325,11 @@ Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支
 - verification_evidence：71 public seam测试；真实Pillow/FFmpeg/CAS，模型process为明确替身。
 - runtime_verification：模型/Genesis尚not_run；从Harness的真实解释小运行在本提交后执行。
 - known_gaps：后续资产/compile/replay/validate/package未接，完整C04恢复与最终覆盖门未完成。
+## INT-CANONICAL-C05-SCHEMA — 真实transport格式修复
+
+- source_ref：`19f7762`的首次Harness真实解释失败，workflow`0e1ab2dd-0f12-4566-843c-c79aa10627be`。
+- origin_owner / integration_owner：Bingsheng项目；upstream_owner：OpenAI结构化输出接口。
+- target_paths：canonical contracts/schema_export/codex与生成strict schema。
+- verification_evidence：真实400 invalid_json_schema与public schema RED→GREEN；新真实执行待后续记录。
+- integration_method：Python类型作为唯一编辑源，不手改输出JSON或伪造模型proposal。
+- recorded_git_authors：见Git提交元数据；runtime_verification：修复后真实模型待执行。

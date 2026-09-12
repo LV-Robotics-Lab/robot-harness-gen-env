@@ -60,7 +60,7 @@ def test_scene_preserves_entity_attributes_reference_frame_and_field_provenance(
     assert scene.entities[1].pose.frame == "table"
     assert scene.entities[1].pose.position == (0.1, -0.08, 0.0)
     assert scene.entities[1].pose.yaw_degrees == 30
-    assert scene.entities[1].provenance["color"][0].input_sha256 == "a" * 64
+    assert scene.entities[1].provenance.color[0].input_sha256 == "a" * 64
 
 
 @pytest.mark.parametrize(

@@ -4,7 +4,6 @@
       "additionalProperties": false,
       "properties": {
         "joint_positions": {
-          "default": [],
           "items": {
             "$ref": "#/$defs/JointPosition"
           },
@@ -22,7 +21,8 @@
         }
       },
       "required": [
-        "state"
+        "state",
+        "joint_positions"
       ],
       "title": "ArticulationState",
       "type": "object"
@@ -103,7 +103,6 @@
               "type": "null"
             }
           ],
-          "default": null,
           "title": "Frame Index"
         },
         "input_sha256": {
@@ -130,11 +129,9 @@
               "type": "null"
             }
           ],
-          "default": null,
           "title": "Media Index"
         },
         "note": {
-          "default": "",
           "maxLength": 2048,
           "title": "Note",
           "type": "string"
@@ -152,7 +149,10 @@
       "required": [
         "source",
         "input_sha256",
-        "kind"
+        "kind",
+        "media_index",
+        "frame_index",
+        "note"
       ],
       "title": "FieldProvenance",
       "type": "object"
@@ -283,7 +283,6 @@
           "$ref": "#/$defs/EntityProvenance"
         },
         "role": {
-          "default": "foreground",
           "enum": [
             "foreground",
             "structural_support"
@@ -295,6 +294,7 @@
       "required": [
         "id",
         "category",
+        "role",
         "color",
         "dimensions",
         "material",
@@ -323,7 +323,6 @@
           "type": "string"
         },
         "relations": {
-          "default": [],
           "items": {
             "$ref": "#/$defs/SceneRelation"
           },
@@ -339,7 +338,8 @@
       "required": [
         "revision",
         "input_sha256",
-        "entities"
+        "entities",
+        "relations"
       ],
       "title": "SceneIR",
       "type": "object"
@@ -357,7 +357,6 @@
               "type": "null"
             }
           ],
-          "default": null,
           "title": "Distance"
         },
         "provenance": {
@@ -400,6 +399,7 @@
         "source",
         "relation",
         "target",
+        "distance",
         "provenance"
       ],
       "title": "SceneRelation",
@@ -457,7 +457,6 @@
     },
     "schema_version": {
       "const": "x2env.scene_intent_proposal.v2",
-      "default": "x2env.scene_intent_proposal.v2",
       "title": "Schema Version",
       "type": "string"
     },
@@ -471,6 +470,7 @@
     }
   },
   "required": [
+    "schema_version",
     "scene",
     "unknowns"
   ],

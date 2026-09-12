@@ -9,19 +9,11 @@
       "type": "string"
     },
     "position": {
+      "items": {
+        "type": "number"
+      },
       "maxItems": 3,
       "minItems": 3,
-      "prefixItems": [
-        {
-          "type": "number"
-        },
-        {
-          "type": "number"
-        },
-        {
-          "type": "number"
-        }
-      ],
       "title": "Position",
       "type": "array"
     },

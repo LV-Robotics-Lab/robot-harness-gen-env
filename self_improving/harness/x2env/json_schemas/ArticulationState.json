@@ -1,12 +1,35 @@
 {
+  "$defs": {
+    "JointPosition": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "JointPosition",
+      "type": "object"
+    }
+  },
   "additionalProperties": false,
   "properties": {
     "joint_positions": {
-      "additionalProperties": {
-        "type": "number"
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/JointPosition"
       },
       "title": "Joint Positions",
-      "type": "object"
+      "type": "array"
     },
     "state": {
       "enum": [

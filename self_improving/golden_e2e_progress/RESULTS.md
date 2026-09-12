@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-13 首次真实Codex解释失败与schema修复
+
+- 固定`19f7762`通过Harness提交S01原prompt/seed（仅解释smoke，不是完整scored case），workflow
+  `0e1ab2dd-0f12-4566-843c-c79aa10627be`，2.754564s后`failed/model_exit_failure`。
+- 服务端400 `invalid_json_schema`：nullable `media_index`未列入required，模型尚未解释场景。
+  现场：`/home/jingxiang/bingsheng/canonical-managed-interpret-20260913.98GjUN/`；失败不覆写。
+- 公共schema回归先RED；严格transport projection显式required全部属性；字段provenance改固定六字段，
+  joint positions改命名记录数组，三维tuple改同质items+长度约束，消除动态字典/prefixItems。
+- 修复后32项相关快测通过；尚待固定新提交后真实重跑，不把测试替身GREEN称为服务端通过。
+
 ## 2026-09-13 C04/C05 首个持久输入解释slice
 
 - 单`harness.sqlite`与CAS，submit先持久handle；重复/并发同key同workflow，异请求同key拒绝。

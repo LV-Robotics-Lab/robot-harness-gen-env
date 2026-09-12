@@ -142,7 +142,9 @@ class Store:
             )
             return snapshot
 
-    def begin_operation(self, snapshot: WorkflowSnapshot, capability: str) -> WorkflowSnapshot:
+    def begin_operation(
+        self, snapshot: WorkflowSnapshot, capability: str, *, version: str = "1.0.0"
+    ) -> WorkflowSnapshot:
         with closing(sqlite3.connect(self.database)) as db, db:
             db.execute("BEGIN IMMEDIATE")
             row = db.execute(
@@ -154,7 +156,7 @@ class Store:
             operation = OperationRecord(
                 operation_id=str(uuid4()),
                 capability=capability,
-                version="1.0.0",
+                version=version,
                 status="running",
                 started_at=datetime.now(timezone.utc).isoformat(),
             )

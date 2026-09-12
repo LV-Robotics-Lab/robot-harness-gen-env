@@ -8,6 +8,10 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 Source = Literal["local", "web", "reconstruction"]
 Sha256 = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
 Name = Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[a-zA-Z][\w-]*$")]
+Vector3 = Annotated[tuple[float, ...], Field(min_length=3, max_length=3)]
+PositiveVector3 = Annotated[
+    tuple[Annotated[float, Field(gt=0)], ...], Field(min_length=3, max_length=3)
+]
 
 
 class Model(BaseModel):
@@ -109,13 +113,33 @@ class FieldProvenance(Model):
 
 class Pose(Model):
     frame: Name
-    position: tuple[float, float, float]
+    position: Vector3
     yaw_degrees: float = Field(ge=-180, le=180)
+
+
+class JointPosition(Model):
+    name: str = Field(min_length=1)
+    value: float
 
 
 class ArticulationState(Model):
     state: Literal["open", "closed", "specified"]
-    joint_positions: dict[str, float] = Field(default_factory=dict)
+    joint_positions: tuple[JointPosition, ...] = ()
+
+
+EvidenceList = Annotated[tuple[FieldProvenance, ...], Field(min_length=1)]
+
+
+class EntityProvenance(Model):
+    category: EvidenceList
+    color: EvidenceList
+    dimensions: EvidenceList
+    material: EvidenceList
+    pose: EvidenceList
+    articulation_state: EvidenceList
+
+    def records(self) -> tuple[FieldProvenance, ...]:
+        return tuple(record for name in type(self).model_fields for record in getattr(self, name))
 
 
 class SceneEntity(Model):
@@ -123,24 +147,14 @@ class SceneEntity(Model):
     category: str = Field(min_length=1, max_length=128)
     role: Literal["foreground", "structural_support"] = "foreground"
     color: str | None
-    dimensions: (
-        tuple[
-            Annotated[float, Field(gt=0)],
-            Annotated[float, Field(gt=0)],
-            Annotated[float, Field(gt=0)],
-        ]
-        | None
-    )
+    dimensions: PositiveVector3 | None
     material: str | None
     pose: Pose
     articulation_state: ArticulationState | None
-    provenance: dict[str, tuple[FieldProvenance, ...]]
+    provenance: EntityProvenance
 
     @model_validator(mode="after")
     def field_evidence(self):
-        fields = {"category", "color", "dimensions", "material", "pose", "articulation_state"}
-        if set(self.provenance) != fields or any(not v for v in self.provenance.values()):
-            raise ValueError("every semantic field requires provenance")
         if self.role == "structural_support" and self.category not in {
             "table",
             "worktop",
@@ -251,6 +265,7 @@ class UnknownField(Model):
 
 
 class SceneIntentProposal(Model):
+    schema_version: Literal["x2env.scene_intent_proposal.v2"] = "x2env.scene_intent_proposal.v2"
     scene: SceneIR | None
     unknowns: tuple[UnknownField, ...] = Field(max_length=64)
 

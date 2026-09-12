@@ -19,6 +19,9 @@ canonical调用将复用这一份代码。搬迁仅完成可导入和消费者�
 资产规范化、immutable登记或本地/联网业务路径已接通。
 
 Python模型是唯一schema编辑源；`script/export_x2env_schemas.py --check`检测生成文件漂移。
+Codex输出另生成strict projection：可空字段仍必须出现；provenance是固定六字段对象，joint positions
+使用name/value记录数组。此约束来自真实`invalid_json_schema`失败，非场景生成失败。
+参见[官方严格结构化输出要求](https://developers.openai.com/api/docs/guides/structured-outputs)。
 后续stage类型与descriptor会随真实执行接口补齐，不用空成功回执替代实现。
 
 验收与当前进度见[固定计划](../../self_improving/golden_e2e_progress/CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md)

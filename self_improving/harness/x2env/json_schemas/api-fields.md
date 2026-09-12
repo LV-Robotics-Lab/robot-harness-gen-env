@@ -15,6 +15,12 @@ Generated; edit Python contracts, not this file.
 | BackendProposal | error_code | true |
 | BackendProposal | elapsed_seconds | true |
 | BackendProposal | authority | false |
+| EntityProvenance | category | true |
+| EntityProvenance | color | true |
+| EntityProvenance | dimensions | true |
+| EntityProvenance | material | true |
+| EntityProvenance | pose | true |
+| EntityProvenance | articulation_state | true |
 | FieldProvenance | source | true |
 | FieldProvenance | input_sha256 | true |
 | FieldProvenance | kind | true |
@@ -37,6 +43,8 @@ Generated; edit Python contracts, not this file.
 | InputBundle | override_policy | false |
 | InputBundle | resource_limits | true |
 | InputMedia | path | true |
+| JointPosition | name | true |
+| JointPosition | value | true |
 | OperationRecord | operation_id | true |
 | OperationRecord | capability | true |
 | OperationRecord | version | true |
@@ -61,6 +69,7 @@ Generated; edit Python contracts, not this file.
 | SceneIR | input_sha256 | true |
 | SceneIR | entities | true |
 | SceneIR | relations | false |
+| SceneIntentProposal | schema_version | false |
 | SceneIntentProposal | scene | true |
 | SceneIntentProposal | unknowns | true |
 | SceneRelation | source | true |

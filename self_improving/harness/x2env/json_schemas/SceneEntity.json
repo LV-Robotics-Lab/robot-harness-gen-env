@@ -4,11 +4,12 @@
       "additionalProperties": false,
       "properties": {
         "joint_positions": {
-          "additionalProperties": {
-            "type": "number"
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/JointPosition"
           },
           "title": "Joint Positions",
-          "type": "object"
+          "type": "array"
         },
         "state": {
           "enum": [
@@ -24,6 +25,69 @@
         "state"
       ],
       "title": "ArticulationState",
+      "type": "object"
+    },
+    "EntityProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "articulation_state": {
+          "items": {
+            "$ref": "#/$defs/FieldProvenance"
+          },
+          "minItems": 1,
+          "title": "Articulation State",
+          "type": "array"
+        },
+        "category": {
+          "items": {
+            "$ref": "#/$defs/FieldProvenance"
+          },
+          "minItems": 1,
+          "title": "Category",
+          "type": "array"
+        },
+        "color": {
+          "items": {
+            "$ref": "#/$defs/FieldProvenance"
+          },
+          "minItems": 1,
+          "title": "Color",
+          "type": "array"
+        },
+        "dimensions": {
+          "items": {
+            "$ref": "#/$defs/FieldProvenance"
+          },
+          "minItems": 1,
+          "title": "Dimensions",
+          "type": "array"
+        },
+        "material": {
+          "items": {
+            "$ref": "#/$defs/FieldProvenance"
+          },
+          "minItems": 1,
+          "title": "Material",
+          "type": "array"
+        },
+        "pose": {
+          "items": {
+            "$ref": "#/$defs/FieldProvenance"
+          },
+          "minItems": 1,
+          "title": "Pose",
+          "type": "array"
+        }
+      },
+      "required": [
+        "category",
+        "color",
+        "dimensions",
+        "material",
+        "pose",
+        "articulation_state"
+      ],
+      "title": "EntityProvenance",
       "type": "object"
     },
     "FieldProvenance": {
@@ -93,6 +157,26 @@
       "title": "FieldProvenance",
       "type": "object"
     },
+    "JointPosition": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "JointPosition",
+      "type": "object"
+    },
     "Pose": {
       "additionalProperties": false,
       "properties": {
@@ -104,19 +188,11 @@
           "type": "string"
         },
         "position": {
+          "items": {
+            "type": "number"
+          },
           "maxItems": 3,
           "minItems": 3,
-          "prefixItems": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "number"
-            },
-            {
-              "type": "number"
-            }
-          ],
           "title": "Position",
           "type": "array"
         },
@@ -168,22 +244,12 @@
     "dimensions": {
       "anyOf": [
         {
+          "items": {
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
           "maxItems": 3,
           "minItems": 3,
-          "prefixItems": [
-            {
-              "exclusiveMinimum": 0,
-              "type": "number"
-            },
-            {
-              "exclusiveMinimum": 0,
-              "type": "number"
-            },
-            {
-              "exclusiveMinimum": 0,
-              "type": "number"
-            }
-          ],
           "type": "array"
         },
         {
@@ -214,14 +280,7 @@
       "$ref": "#/$defs/Pose"
     },
     "provenance": {
-      "additionalProperties": {
-        "items": {
-          "$ref": "#/$defs/FieldProvenance"
-        },
-        "type": "array"
-      },
-      "title": "Provenance",
-      "type": "object"
+      "$ref": "#/$defs/EntityProvenance"
     },
     "role": {
       "default": "foreground",
