@@ -19,7 +19,12 @@ def test_policy_rejects_unknown_skill_before_creating_any_authority():
         LimitedImagePreviewPolicy(object(), "skill.invoke@1.0.0", {})
 
 
-def test_observation_after_validation_requires_same_workflow_replay(parent_capture, policy):  # noqa: F811
+def test_observation_after_validation_requires_same_workflow_replay(
+    parent_capture,  # noqa: F811
+    policy,
+    tmp_path,
+):
+    import json
     from dataclasses import replace
     from uuid import uuid4
 
@@ -39,6 +44,26 @@ def test_observation_after_validation_requires_same_workflow_replay(parent_captu
     original, _, _, context, old_head, parent, put = parent_capture
     store = original.artifact_store
     authority = original.child_authority
+
+    def put_golden(value, schema):
+        path = tmp_path / str(uuid4())
+        path.write_bytes(
+            json.dumps(
+                value.model_dump(mode="json"),
+                ensure_ascii=False,
+                allow_nan=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode()
+            + b"\n"
+        )
+        return store.put_file(
+            path,
+            name=path.name,
+            media_type="application/json",
+            schema_version=schema,
+        )
+
     output = GenesisSceneExecutionReceiptV2(
         schema_version="harness.genesis_scene_execution_receipt.v2",
         authority="observed_execution_only",
@@ -85,8 +110,8 @@ def test_observation_after_validation_requires_same_workflow_replay(parent_captu
             "child_run_id": run_id,
             "skill": parent.skill.model_copy(update={"skill_ref": "image2env.replay@2.0.0"}),
             "typed_output": terminal.output,
-            "run_state": put(terminal.model_dump(mode="json"), "harness.run_state.v1"),
-            "invocation": put(invocation.model_dump(mode="json"), "harness.skill_invocation.v1"),
+            "run_state": put_golden(terminal, "harness.run_state.v1"),
+            "invocation": put_golden(invocation, "harness.skill_invocation.v1"),
             "supporting_artifacts": (ref,),
         }
     )
@@ -94,7 +119,7 @@ def test_observation_after_validation_requires_same_workflow_replay(parent_captu
         key="image.replay",
         value={"run_id": str(run_id), "receipt": ref.model_dump(mode="json")},
         source_kind="trusted_receipt",
-        source_artifact=put(parent.model_dump(mode="json"), parent.schema_version),
+        source_artifact=put_golden(parent, parent.schema_version),
         observed_at=terminal.ended_at,
         valid_until=None,
     )
@@ -133,7 +158,7 @@ def test_observation_after_validation_requires_same_workflow_replay(parent_captu
     context = replace(
         context,
         revision=1,
-        receipt_head=put(head.model_dump(mode="json"), head.schema_version),
+        receipt_head=put_golden(head, head.schema_version),
         state_ref=world_ref,
     )
     validation = LimitedPreviewValidationPolicy(
@@ -146,9 +171,115 @@ def test_observation_after_validation_requires_same_workflow_replay(parent_captu
             "expected_layout": None,
         }
     )
+    assert not store.resolve(ref).path.read_bytes().endswith(b"\n")
     validation.authorize_workflow(world, requested, context)
     with pytest.raises(ValueError, match="this workflow"):
         validation.authorize_workflow(world, requested, replace(context, workflow_run_id=uuid4()))
+
+
+@pytest.mark.parametrize(
+    ("prefix", "suffix"),
+    ((b"", b"\r\n"), (b"", b"\n\n"), (b" ", b""), (b"", b" ")),
+    ids=("crlf", "double-lf", "leading-space", "trailing-space"),
+)
+def test_validation_rejects_noncanonical_formal_head_bytes(
+    parent_capture,  # noqa: F811
+    policy,
+    tmp_path,
+    prefix,
+    suffix,
+):
+    import json
+    from dataclasses import replace
+    from uuid import uuid4
+
+    from self_improving.harness.limited_image_preview_workflow_policies import (
+        LimitedPreviewValidationPolicy,
+    )
+    from self_improving.harness.schemas.genesis_fresh_capture import GenesisFreshCaptureReceiptV1
+
+    original, world, _, context, head, parent, _ = parent_capture
+    terminal = original.child_authority.read_run_state(parent.child_run_id)
+    output = GenesisFreshCaptureReceiptV1.model_validate(terminal.output)
+    validation = LimitedPreviewValidationPolicy(
+        policy.application,
+        "image2env.validate@3.0.0",
+        {"genesis.observe@3.0.0": original.child_authority},
+    )
+    requested = validation.normalize_parameters(
+        {
+            "schema_version": "harness.limited_scene_validate_input.v1",
+            "execution_receipt": output.replay_receipt.model_dump(mode="json"),
+            "expected_layout": None,
+        }
+    )
+    canonical = json.dumps(
+        head.model_dump(mode="json"),
+        ensure_ascii=False,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    path = tmp_path / str(uuid4())
+    path.write_bytes(prefix + canonical + suffix)
+    ref = validation.artifact_store.put_file(
+        path,
+        name=path.name,
+        media_type="application/json",
+        schema_version=head.schema_version,
+    )
+    with pytest.raises(ValueError, match="canonical"):
+        validation.authorize_workflow(world, requested, replace(context, receipt_head=ref))
+
+
+def test_validation_rejects_canonical_formal_head_content_drift(
+    parent_capture,  # noqa: F811
+    policy,
+    tmp_path,
+):
+    import json
+    from dataclasses import replace
+    from uuid import uuid4
+
+    from self_improving.harness.limited_image_preview_workflow_policies import (
+        LimitedPreviewValidationPolicy,
+    )
+    from self_improving.harness.schemas.genesis_fresh_capture import GenesisFreshCaptureReceiptV1
+
+    original, world, _, context, head, parent, _ = parent_capture
+    terminal = original.child_authority.read_run_state(parent.child_run_id)
+    output = GenesisFreshCaptureReceiptV1.model_validate(terminal.output)
+    validation = LimitedPreviewValidationPolicy(
+        policy.application,
+        "image2env.validate@3.0.0",
+        {"genesis.observe@3.0.0": original.child_authority},
+    )
+    requested = validation.normalize_parameters(
+        {
+            "schema_version": "harness.limited_scene_validate_input.v1",
+            "execution_receipt": output.replay_receipt.model_dump(mode="json"),
+            "expected_layout": None,
+        }
+    )
+    changed = head.model_copy(update={"principal_id": "tests/drift"})
+    path = tmp_path / str(uuid4())
+    path.write_bytes(
+        json.dumps(
+            changed.model_dump(mode="json"),
+            ensure_ascii=False,
+            allow_nan=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode()
+    )
+    ref = validation.artifact_store.put_file(
+        path,
+        name=path.name,
+        media_type="application/json",
+        schema_version=changed.schema_version,
+    )
+    with pytest.raises(ValueError, match="predecessor"):
+        validation.authorize_workflow(world, requested, replace(context, receipt_head=ref))
 
 
 @pytest.fixture
