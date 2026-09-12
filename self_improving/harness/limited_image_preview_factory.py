@@ -123,6 +123,49 @@ class LimitedPreviewRuntime:
             "image2env.replay@2.0.0": self.settings.scene_state_root / "runs.sqlite",
             "genesis.observe@3.0.0": self.settings.observation_state_root / "runs.sqlite",
         }
+        if self.settings.execution_mode == "development" and skill == "image2env.validate@3.0.0":
+            from .development_diagnostics import note_qualified_skill_binding
+            from .limited_image_preview_workflow_policies import (
+                create_limited_validation_binding,
+            )
+
+            qualification = self.settings.shared_qualifications.get(skill)
+            if qualification is None:
+                raise ValueError("shared preview Skill is not yet qualified")
+            configured = {
+                "image2env.compile@3.0.0": self.settings.revised_state_root / "runs.sqlite",
+                "image2env.replay@3.0.0": self.settings.shared_state_root / "runs.sqlite",
+                "image2env.replay@2.0.0": paths["image2env.replay@2.0.0"],
+                "genesis.observe@3.0.0": paths["genesis.observe@3.0.0"],
+            }
+            if any(not path.is_file() for path in configured.values()):
+                raise ValueError("history requires its existing child SQLite authority")
+            native = {
+                name: SQLiteRunStore(configured[name])
+                for name in ("image2env.replay@2.0.0", "genesis.observe@3.0.0")
+            }
+            app = self.application("shared")
+            app.bind(qualification)
+            revised = self.application("revised")
+            if (
+                app.run_store.path != configured["image2env.replay@3.0.0"]
+                or revised.run_store.path != configured["image2env.compile@3.0.0"]
+            ):
+                raise ValueError("history application differs from its configured SQLite authority")
+            live = create_limited_validation_binding(
+                app,
+                predecessor_authorities={
+                    "image2env.compile@3.0.0": revised.run_store,
+                    "image2env.replay@3.0.0": app.run_store,
+                    **native,
+                },
+            )
+            note_qualified_skill_binding(self.store, skill)
+            return _create_golden_execution_binding(
+                policy=live.policy,
+                application=None,
+                child_authority=live.child_authority,
+            )
         if skill in paths:
             needed = {skill: paths[skill]}
             if skill != "image2env.compile@2.0.0":

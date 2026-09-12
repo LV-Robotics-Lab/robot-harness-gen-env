@@ -26,6 +26,8 @@ from tests.self_improving.harness.test_limited_image_preview_policy import polic
 
 
 def _development_validation_history_case(tmp_path, shared_policy, captured_parent, monkeypatch):
+    from self_improving.harness import limited_image_preview_workflow_policies as workflow_policies
+    from self_improving.harness.golden_execution import _create_golden_execution_binding
     from tests.self_improving.harness.test_mcp_native_assembly import settings_document
 
     observed, world, _, context, head, parent, put = captured_parent
@@ -64,6 +66,16 @@ def _development_validation_history_case(tmp_path, shared_policy, captured_paren
     settings = LimitedImagePreviewSettings.model_validate_json(json.dumps(document))
     shared = shared_policy.application
     monkeypatch.setattr(shared, "bind", lambda qualification: None)
+
+    def validation_binding(application, *, predecessor_authorities):
+        validation_policy = workflow_policies.LimitedPreviewValidationPolicy(
+            application, "image2env.validate@3.0.0", predecessor_authorities
+        )
+        return _create_golden_execution_binding(
+            policy=validation_policy, application=None, child_authority=application.run_store
+        )
+
+    monkeypatch.setattr(workflow_policies, "create_limited_validation_binding", validation_binding)
     runtime = LimitedPreviewRuntime(settings, shared.artifact_store)
     application_calls = []
 
@@ -125,13 +137,14 @@ def test_development_validate_history_reads_revision_four_without_native_apps(
             "expected_layout": None,
         }
     )
-    binding.policy.authorize_workflow(case.world, requested, context)
+    validation = replace(binding.policy, clock=lambda: output.captured_at)
+    validation.authorize_workflow(case.world, requested, context)
 
     original = case.observation_path.with_suffix(".original")
     case.observation_path.replace(original)
     SQLiteRunStore(case.observation_path)
     with pytest.raises(ValueError, match="durable child authority"):
-        binding.policy.authorize_workflow(case.world, requested, context)
+        validation.authorize_workflow(case.world, requested, context)
     with pytest.raises(AssertionError, match="live replay application"):
         case.runtime.ensure("image2env.validate@3.0.0")
 
@@ -172,27 +185,30 @@ def test_release_validate_history_still_delegates_to_live_restore(
     }
 
 
+@pytest.mark.parametrize("authority", ("replay", "observe"))
 @pytest.mark.parametrize("failure", ("missing", "corrupt"))
 def test_development_validate_history_fails_closed_on_invalid_native_authority(
     tmp_path,
     policy,  # noqa: F811
     parent_capture,  # noqa: F811
     monkeypatch,
+    authority,
     failure,
 ):
     import sqlite3
 
     case = _development_validation_history_case(tmp_path, policy, parent_capture, monkeypatch)
+    path = case.replay_authority.path if authority == "replay" else case.observation_path
     if failure == "missing":
-        case.observation_path.unlink()
+        path.unlink()
         with pytest.raises(ValueError, match="existing child SQLite authority"):
             case.runtime.history_binding("image2env.validate@3.0.0")
-        assert not case.observation_path.exists()
+        assert not path.exists()
     else:
-        case.observation_path.write_bytes(b"not a SQLite authority")
+        path.write_bytes(b"not a SQLite authority")
         with pytest.raises(sqlite3.DatabaseError):
             case.runtime.history_binding("image2env.validate@3.0.0")
-        assert case.observation_path.read_bytes() == b"not a SQLite authority"
+        assert path.read_bytes() == b"not a SQLite authority"
     assert case.calls == []
 
 
