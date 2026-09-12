@@ -1,6 +1,7 @@
 """Restricted workflow ancestry; original compile policy identity remains frozen."""
 
 import hashlib
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -17,7 +18,15 @@ class LimitedPreviewValidationPolicy(LimitedImagePreviewPolicy):
 
     @property
     def evidence_policy_implementation_sha256(self):
-        return hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+        root = Path(__file__).parent
+        members = tuple(
+            (name, hashlib.sha256((root / name).read_bytes()).hexdigest())
+            for name in (
+                "limited_image_preview_policy.py",
+                "limited_image_preview_workflow_policies.py",
+            )
+        )
+        return hashlib.sha256(json.dumps(members, separators=(",", ":")).encode()).hexdigest()
 
     def authorize_workflow(self, state, parameters, context):
         self.authorize(state, parameters)

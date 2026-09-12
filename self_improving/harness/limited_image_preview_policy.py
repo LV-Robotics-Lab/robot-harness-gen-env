@@ -2,7 +2,9 @@
 
 import hashlib
 import json
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from .golden_execution import SkillAuthorizationContext, _create_golden_execution_binding
@@ -49,12 +51,17 @@ def _ordered(refs):
     return tuple(sorted(refs, key=lambda r: (r.sha256, r.schema_version or "", r.media_type)))
 
 
+def _utc_now():
+    return datetime.now(timezone.utc)
+
+
 @dataclass(frozen=True)
 class LimitedImagePreviewPolicy:
     application: object
     skill_ref: str
     predecessor_authorities: dict
     evidence_policy_version: str = "1.0.0"
+    clock: Callable[[], datetime] = field(default=_utc_now, repr=False, compare=False)
 
     def __post_init__(self):
         if self.skill_ref not in _MODELS:
@@ -178,6 +185,11 @@ class LimitedImagePreviewPolicy:
             output = GenesisFreshCaptureReceiptV1.model_validate(terminal.output)
             if parameters.execution_receipt != output.replay_receipt:
                 raise ValueError("validation must consume observed initial replay")
+            now = self.clock()
+            if type(now) is not datetime or now.tzinfo is None or now.utcoffset() != timedelta(0):
+                raise ValueError("preview policy clock must return an aware UTC datetime")
+            if not output.captured_at <= now < output.expires_at:
+                raise ValueError("validation requires a fresh observation at admission")
         elif (
             parameters.execution_receipt not in terminal.artifacts
             or self._read(parameters.execution_receipt, GenesisSceneExecutionReceiptV3).model_dump(

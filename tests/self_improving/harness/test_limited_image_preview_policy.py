@@ -196,9 +196,8 @@ def test_observed_validation_requires_fresh_capture_at_admission(
     moment,
     error,
 ):
-    """The public policy gate is the admission used before reserve and again before invoke."""
+    """The policy gate supplies the capture-time half of Golden's two admission checks."""
     from datetime import timedelta
-    from uuid import uuid4
 
     from self_improving.harness.limited_image_preview_workflow_policies import (
         LimitedPreviewValidationPolicy,
@@ -228,17 +227,12 @@ def test_observed_validation_requires_fresh_capture_at_admission(
             "expected_layout": None,
         }
     )
-    child_run_id = uuid4()
-    assert validation.child_authority.read_controlled_lifecycle(child_run_id).invocation is None
 
     if error is None:
         validation.authorize_workflow(world, requested, context)
     else:
         with pytest.raises(ValueError, match=error):
             validation.authorize_workflow(world, requested, context)
-        # Failed admission has not created or invoked a validation child.
-        lifecycle = validation.child_authority.read_controlled_lifecycle(child_run_id)
-        assert lifecycle.invocation is None and lifecycle.terminal is None
 
 
 def test_modified_replay_validation_does_not_invent_a_capture_requirement(
