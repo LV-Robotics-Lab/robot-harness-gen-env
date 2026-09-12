@@ -42,7 +42,9 @@ class AssetPreviewRenderer:
         )
         self.runner = runner
 
-    def render(self, version: AssetVersion) -> AssetPreviewProof:
+    def render(self, version: AssetVersion, *, timeout: int = 600) -> AssetPreviewProof:
+        if type(timeout) is not int or not 1 <= timeout <= 600:
+            raise ValueError("invalid preview timeout")
         start = time.monotonic()
         attempt = self.root / str(uuid.uuid4())
         attempt.mkdir(parents=True, exist_ok=False)
@@ -121,6 +123,9 @@ class AssetPreviewRenderer:
             receipt["runtime_scene"] = scene_ref.model_dump(mode="json")
             # The child enforces an allowlist of this copied package, outputs and declared runtime.
             # Deny the workspace: build-time code/assets are not runtime inputs.
+            remaining = timeout - (time.monotonic() - start)
+            if remaining <= 0:
+                raise ValueError("preview_timeout")
             result = self.runner(
                 scene,
                 package_root=package,
@@ -128,7 +133,7 @@ class AssetPreviewRenderer:
                 output_dir=output,
                 profile="load_step_smoke",
                 denied_roots=(workspace,),
-                timeout_seconds=600,
+                timeout_seconds=remaining,
             )
             receipt["runtime_result"] = result
             if result.get("status") != "passed" or not result.get("simulator_executed"):

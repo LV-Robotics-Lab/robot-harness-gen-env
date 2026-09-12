@@ -90,3 +90,19 @@ def test_unbound_preview_or_corrupt_parent_never_yields_image(tmp_path, fault):
 
     proof = AssetPreviewRenderer(store, {}, tmp_path / "preview", 1, runner=runner).render(version)
     assert proof.status == "failed" and proof.image is None
+
+
+def test_preview_respects_caller_remaining_budget(tmp_path):
+    from self_improving.harness.x2env.asset_preview import AssetPreviewRenderer
+
+    store, _, version = fixture(tmp_path)
+
+    def runner(scene, **kwargs):
+        assert 0 < kwargs["timeout_seconds"] <= 2
+        kwargs["output_dir"].mkdir()
+        return {"status": "failed", "error_code": "intentional_double"}
+
+    result = AssetPreviewRenderer(store, {}, tmp_path / "preview", 1, runner=runner).render(
+        version, timeout=2
+    )
+    assert result.status == "failed"

@@ -24,7 +24,9 @@ class WebAssetResolver:
         self.store, self.registry, self.provider = store, registry, provider
         self.backend, self.preview, self.prepare = backend, preview, prepare
 
-    def resolve(self, scene_ir, *, allowed_sources, allow_cousin, output_root, timeout=600):
+    def resolve(
+        self, scene_ir, *, allowed_sources, allow_cousin, output_root, timeout=600, entity_ids=None
+    ):
         root = Path(output_root)
         if (
             not root.is_absolute()
@@ -56,8 +58,13 @@ class WebAssetResolver:
                 allowed_sources,
                 allow_cousin,
             )
+        selected = {e.id for e in scene.entities if e.role == "foreground"}
+        if entity_ids is not None:
+            if len(set(entity_ids)) != len(entity_ids) or not set(entity_ids) <= selected:
+                raise ValueError("invalid resolver entity filter")
+            selected = set(entity_ids)
         for entity in scene.entities:
-            if entity.role != "foreground":
+            if entity.role != "foreground" or entity.id not in selected:
                 continue
             accepted = False
             if "web" not in allowed_sources:

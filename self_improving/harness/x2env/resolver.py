@@ -42,6 +42,7 @@ class LocalAssetResolver:
         allow_cousin: bool,
         output_root: Path,
         timeout: int = 600,
+        entity_ids: tuple[str, ...] | None = None,
     ):
         if (
             not allowed_sources
@@ -77,8 +78,13 @@ class LocalAssetResolver:
             )
         records, assets, unresolved = [], [], []
         error, resources = None, ()
+        selected = {e.id for e in scene.entities if e.role == "foreground"}
+        if entity_ids is not None:
+            if len(set(entity_ids)) != len(entity_ids) or not set(entity_ids) <= selected:
+                raise ValueError("invalid resolver entity filter")
+            selected = set(entity_ids)
         for entity in scene.entities:
-            if entity.role != "foreground":
+            if entity.role != "foreground" or entity.id not in selected:
                 continue
             if "local" not in allowed_sources:
                 unresolved.append(entity.id)
@@ -227,6 +233,7 @@ class LocalAssetResolver:
                     e.id
                     for e in scene.entities
                     if e.role == "foreground"
+                    and e.id in selected
                     and e.id not in unresolved
                     and e.id not in {a.entity_id for a in assets}
                 )

@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C06/C07 三来源resolver接线
+
+- SourceRouter按冻结local→web→reconstruction顺序，仅处理仍缺的foreground IDs；同一SceneIR ref，
+  local已接受的版本不被后续来源重取。每来源partial与失败证据留CAS，完整覆盖才succeeded。
+- reconstruction resolver调用managed分割提案→原Gujie adapter→许可授权/geometry验证→规范化入库→
+  真实版本preview/Codex视觉；无图/无权限/不合法几何明确blocked，不生成primitive或预填receipt。
+- preview支持调用方剩余预算；31项source/reconstruction/local/web/preview测试通过（1.46s）。
+  三来源组件已相连，但deployment/Harness正式装配和真实重建入库场景尚未通过，不计矩阵。
+
 ## 2026-09-13 C07 模型分割与重建参数提案
 
 - plan_reconstruction通过唯一受管理transport实际消费图像/SceneIR，输出原Gujie SegmentationProposal

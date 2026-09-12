@@ -31,6 +31,8 @@ canonical调用将复用这一份代码。搬迁仅完成可导入和消费者�
 复用原开放/闭合身份问题和属性门；默认Qwen不被调用。判断绑定候选预览CAS，仍只属视觉建议。
 `web_resolver.py`通过原provider获取，再消费受管理Codex的有界规范化参数；已知尺寸不可改写，
 未知质量/摩擦/尺寸明确为模型估计。原web检索下载已有真实证据，完整web→视觉→编译链仍待运行。
+`SourceRouter`按固定来源顺序合并partial，只把未解决实体交给下一来源；`allowed_sources`不能重排
+许可/选择优先级。重建resolver消费实际提案、原adapter和部署派生授权再入库，缺图/许可不伪造成功。
 Gujie重建通过`adapters/reconstruction.py`调用固定外部SAM2与TRELLIS接口，原Hunyuan入口非默认保留。
 原链已生成真实新geometry，但canonical adapter尚未完成GPU/完整E2E验证；输入派生授权与软件/
 模型许可分离，缺授权不能入库为许可明确的新资产。

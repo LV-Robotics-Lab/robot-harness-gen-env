@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C06-C07-SOURCES — 三来源及partial合并
+
+- `origin_owner`：Yuxin provider、Gujie重建、Bingsheng Harness；`integration_owner`：Bingsheng。
+- `source_ref`：web `d1e320d`、local `2f5196f`、Gujie adapter `62b9e91`、planning `072bdcf`。
+- `target_paths`：x2env/source_router.py、reconstruction_resolver.py及local/web实体过滤和preview预算。
+- `verification`：31项相关测试；外部进程/GPU/网络为显式替身，真实三来源完整workflow尚not_run。
+
 ## INT-CANONICAL-C07-PLANNING — 模型到原分割接口
 
 - `origin_owner`：Gujie原分割seam、Bingsheng模型提案；`integration_owner`：Bingsheng Harness。
