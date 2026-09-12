@@ -8,6 +8,10 @@ from typing import Any
 
 _SCHEMA_MODEL_LOCATORS = MappingProxyType(
     {
+        "harness.development_execution_record.v1": (
+            ".schemas.limited_image_preview_development",
+            "DevelopmentExecutionRecordV1",
+        ),
         "harness.control_commit_snapshot.v3": (
             ".schemas.golden_control_v3_snapshot",
             "ControlCommitSnapshotV3",

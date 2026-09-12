@@ -376,27 +376,28 @@ class LimitedImagePreviewController:
             previous=row,
         )
 
-    def _published(self, status):
+    def _packaged(self, status):
         package = PreviewServiceResult.model_validate_json(
             json.dumps(self.service.package_get(workflow_id=str(status.workflow_id)))
         )
         if (
-            package.status != "published"
+            package.status != status.status
+            or package.status not in {"published", "validated_unreleased"}
             or package.package is None
             or package.package != status.package
         ):
-            raise ValueError("published status and readable package differ")
+            raise ValueError("terminal status and readable package differ")
         self.service.store.resolve(package.package)
         return dict(
-            status="published",
+            status=package.status,
             workflow_id=str(status.workflow_id),
             package=package.package.model_dump(mode="json"),
         )
 
     def resume(self, workflow_id, *, input_elapsed_ns=None):
         status = self._status(workflow_id)
-        if status.status == "published":
-            return self._published(status)
+        if status.status in {"published", "validated_unreleased"}:
+            return self._packaged(status)
         rows = self.attempts(workflow_id)
         if rows and (rows[-1].get("terminal_decision") or {}).get("decision") == "unsupported":
             last = rows[-1]
@@ -527,6 +528,6 @@ class LimitedImagePreviewController:
                     )
                 )
             )
-            if published.status == "published":
-                return self._published(published)
+            if published.status in {"published", "validated_unreleased"}:
+                return self._packaged(published)
         return None

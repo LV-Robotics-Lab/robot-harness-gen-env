@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .artifacts import LocalArtifactStore
 from .golden_execution import _create_golden_execution_binding
@@ -27,7 +27,13 @@ class PreviewProjectionReferences(BaseModel):
 class LimitedImagePreviewSettings(NativeImageApplicationSettings):
     """Deployment facts, never caller clocks, executable hooks or fabricated runtime results."""
 
-    schema_version: Literal["harness.limited_image_preview_settings.v1"]
+    schema_version: Literal[
+        "harness.limited_image_preview_settings.v1",
+        "harness.limited_image_preview_settings.v2",
+    ]
+    execution_mode: Literal["release", "development"] = "release"
+    source_repository_root: Path | None = None
+    development_artifact_root: Path | None = None
     principal_id: str = Field(min_length=1)
     project_id: str = Field(min_length=1)
     golden_database_path: Path
@@ -56,13 +62,37 @@ class LimitedImagePreviewSettings(NativeImageApplicationSettings):
     ]
 
     @field_validator(
-        "golden_database_path", "revised_state_root", "shared_state_root", "library_root"
+        "golden_database_path",
+        "revised_state_root",
+        "shared_state_root",
+        "library_root",
+        "source_repository_root",
+        "development_artifact_root",
     )
     @classmethod
     def absolute_storage(cls, value):
+        if value is None:
+            return value
         if not value.is_absolute() or ".." in value.parts:
             raise ValueError("preview storage must be absolute")
         return value
+
+    @model_validator(mode="after")
+    def development_mode_is_explicit_and_isolated(self):
+        development = (self.source_repository_root, self.development_artifact_root)
+        if self.execution_mode == "development":
+            if self.schema_version != "harness.limited_image_preview_settings.v2":
+                raise ValueError("development mode requires settings v2")
+            if any(path is None for path in development):
+                raise ValueError("development mode requires source and artifact roots")
+            assert self.development_artifact_root is not None
+            library = self.library_root.resolve()
+            artifacts = self.development_artifact_root.resolve()
+            if library == artifacts or library in artifacts.parents or artifacts in library.parents:
+                raise ValueError("development artifacts and release library must be isolated")
+        elif any(path is not None for path in development):
+            raise ValueError("release settings cannot configure development roots")
+        return self
 
 
 class LimitedPreviewRuntime:
@@ -186,9 +216,13 @@ class LimitedPreviewRuntime:
                 compile_app,
                 GenesisSceneExecutionProducerV3(self.store, compile_app.compiler, s.scene_manifest),
                 roots=s.scene_roots,
-                library=self.application("library"),
+                library=(
+                    None if s.execution_mode == "development" else self.application("library")
+                ),
             )
         elif key == "library":
+            if s.execution_mode == "development":
+                raise ValueError("development mode cannot open the formal preview library")
             from .limited_image_preview_library import (
                 create_limited_image_preview_library,
                 load_limited_image_preview_library,
@@ -211,6 +245,11 @@ class LimitedPreviewRuntime:
         return app
 
     def ensure(self, skill):
+        if (
+            self.settings.execution_mode == "development"
+            and skill == "image2env.preview_publish@1.0.0"
+        ):
+            raise ValueError("development mode cannot bind formal publication")
         if skill in self.bindings:
             return
         if skill in self.settings.native_projections:
@@ -329,6 +368,24 @@ def create_limited_image_preview_service(settings_path):
     if not (settings.cas_root / "sha256").is_dir():
         raise ValueError("preview requires its existing isolated CAS")
     store = LocalArtifactStore(settings.cas_root)
+    development_context = None
+    development_artifacts = None
+    if settings.execution_mode == "development":
+        from .limited_image_preview_development import (
+            DevelopmentArtifactStore,
+            capture_development_execution_context,
+        )
+
+        development_context = capture_development_execution_context(
+            artifact_store=store,
+            repository_root=settings.source_repository_root,
+            settings_path=Path(settings_path).absolute(),
+        )
+        development_artifacts = DevelopmentArtifactStore(
+            artifact_store=store,
+            root=settings.development_artifact_root,
+            context_ref=development_context.ref,
+        )
     inputs = LimitedImagePreviewInputs(
         store,
         asset_catalog=settings.asset_catalog,
@@ -345,6 +402,9 @@ def create_limited_image_preview_service(settings_path):
         input_builder=inputs,
         registry_snapshot=settings.registry_snapshot,
         principal_id=settings.principal_id,
+        execution_mode=settings.execution_mode,
+        development_context=development_context,
+        development_artifacts=development_artifacts,
         scene_manifest=settings.scene_manifest,
         runtime=LimitedPreviewRuntime(settings, store),
     )

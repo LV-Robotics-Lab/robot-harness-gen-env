@@ -63,6 +63,9 @@ class LimitedImagePreviewService:
         execution_catalog=None,
         scene_manifest=None,
         runtime=None,
+        execution_mode="release",
+        development_context=None,
+        development_artifacts=None,
     ):
         if (
             type(artifact_store) is not LocalArtifactStore
@@ -82,6 +85,26 @@ class LimitedImagePreviewService:
         self.principal_id = principal_id
         self.execution_catalog = execution_catalog
         self.scene_manifest = scene_manifest
+        if execution_mode not in {"release", "development"}:
+            raise ValueError("preview execution mode must be release or development")
+        if execution_mode == "development":
+            from .limited_image_preview_development import (
+                CapturedDevelopmentExecutionContext,
+                DevelopmentArtifactStore,
+            )
+
+            if (
+                type(development_context) is not CapturedDevelopmentExecutionContext
+                or type(development_artifacts) is not DevelopmentArtifactStore
+                or development_artifacts.store is not artifact_store
+                or development_artifacts.context_ref != development_context.ref
+            ):
+                raise TypeError("development mode requires its exact context and artifact store")
+        elif development_context is not None or development_artifacts is not None:
+            raise ValueError("release mode cannot receive development authorities")
+        self.execution_mode = execution_mode
+        self.development_context = development_context
+        self.development_artifacts = development_artifacts
         if runtime is not None:
             from .limited_image_preview_factory import LimitedPreviewRuntime
 
@@ -91,6 +114,7 @@ class LimitedImagePreviewService:
         self.harness = self._harness()
 
     def _prepare(self, workflow_id, skill=None):
+        self._assert_workflow_mode(workflow_id)
         if self.runtime is None:
             return
         entries = self.journal.read_operations(
@@ -107,6 +131,40 @@ class LimitedImagePreviewService:
 
         self.execution_catalog = create_golden_execution_catalog(bindings=tuple(bindings.values()))
         self.harness = self._harness()
+
+    def _assert_workflow_mode(self, workflow_id):
+        stored = self.journal.read_snapshot(
+            principal_id=self.principal_id, workflow_run_id=UUID(str(workflow_id))
+        )
+        if stored is None:
+            return
+        snapshot = stored.snapshot
+        expected = "ephemeral" if self.execution_mode == "development" else "production"
+        if snapshot.workspace != expected:
+            raise ValueError("workflow execution mode differs from this operator deployment")
+        state = TrustedWorldState.model_validate_json(
+            self.store.resolve(snapshot.state_ref).path.read_bytes()
+        )
+        contexts = [fact for fact in state.facts if fact.key == "request.development_context"]
+        if self.execution_mode == "release":
+            if contexts:
+                raise ValueError("release workflow cannot retain a development context")
+            return
+        if (
+            len(contexts) != 1
+            or ArtifactRef.model_validate(contexts[0].value) != self.development_context.ref
+        ):
+            raise ValueError("workflow development context differs from this source identity")
+
+    def _mode_values(self):
+        return {
+            "execution_mode": self.execution_mode,
+            "qualification_status": (
+                "development_unqualified"
+                if self.execution_mode == "development"
+                else "qualified_release"
+            ),
+        }
 
     def _harness(self, workflow_id=None):
         values = dict(
@@ -157,6 +215,13 @@ class LimitedImagePreviewService:
             mime_type=ref.media_type,
         )
 
+    def _development_link(self, workflow_id, ref):
+        return PreviewResourceLink(
+            uri=f"harness://development/{workflow_id}/artifacts/{ref.sha256}",
+            name=ref.name,
+            mime_type=ref.media_type,
+        )
+
     def _projection(self, snapshot, stage, **values):
         _, document = self._input(snapshot)
         prompt = ArtifactRef.model_validate(document["effective_prompt"])
@@ -169,6 +234,7 @@ class LimitedImagePreviewService:
             status="active",
             snapshot=snapshot,
             source_prompt=prompt,
+            **self._mode_values(),
             **values,
         ).model_dump(mode="json")
 
@@ -213,6 +279,10 @@ class LimitedImagePreviewService:
             "request.image_source": document["source_media"],
             "request.objective": user_text,
         }
+        if self.execution_mode == "development":
+            values["request.development_context"] = self.development_context.ref.model_dump(
+                mode="json"
+            )
         now = datetime.now(timezone.utc)
         facts = tuple(
             self._put(
@@ -232,7 +302,7 @@ class LimitedImagePreviewService:
             schema_version="harness.run_start_request.v1",
             principal_id=self.principal_id,
             idempotency_key=idempotency_key,
-            workspace="production",
+            workspace=("ephemeral" if self.execution_mode == "development" else "production"),
             requested_profile="genesis.rigid_scene@1",
             registry_snapshot=self.registry_snapshot,
             initial_fact_evidence=tuple(
@@ -272,6 +342,10 @@ class LimitedImagePreviewService:
     def status(self, *, workflow_id):
         self._prepare(workflow_id)
         snapshot = self.harness.read(self._request(workflow_id))
+        if self.execution_mode == "development":
+            packaged = self.development_artifacts.try_read(snapshot.workflow_run_id)
+            if packaged is not None:
+                return self._development_result(snapshot, packaged, "status")
         entries = self.journal.read_operations(
             principal_id=self.principal_id, workflow_run_id=snapshot.workflow_run_id
         )
@@ -305,6 +379,56 @@ class LimitedImagePreviewService:
                 return PreviewServiceResult.model_validate(result).model_dump(mode="json")
             return result
         return self._projection(snapshot, "status")
+
+    def _development_result(self, snapshot, packaged, stage):
+        ref, record = packaged
+        if (
+            record.workflow_run_id != snapshot.workflow_run_id
+            or record.principal_id != self.principal_id
+            or record.workflow_head != snapshot.receipt_head
+            or record.development_context != self.development_context.ref
+        ):
+            raise ValueError("development result differs from the current workflow head")
+        entries = self.journal.read_operations(
+            principal_id=self.principal_id, workflow_run_id=snapshot.workflow_run_id
+        )
+        operation = entries[-1].operation if entries else None
+        if (
+            operation is None
+            or operation.skill_ref != "image2env.validate@3.0.0"
+            or operation.status.value != "succeeded"
+        ):
+            raise ValueError("development result requires the current successful validation")
+        refs = tuple(
+            dict.fromkeys(
+                (
+                    ref,
+                    record.development_context,
+                    record.configuration,
+                    *record.input_artifacts,
+                    *record.output_artifacts,
+                    *record.log_artifacts,
+                    *record.physical_evidence,
+                )
+            )
+        )
+        _, document = self._input(snapshot)
+        return PreviewServiceResult(
+            workflow_id=snapshot.workflow_run_id,
+            revision=snapshot.revision,
+            stage=stage,
+            status="validated_unreleased",
+            operation=operation,
+            snapshot=snapshot,
+            source_prompt=document["effective_prompt"],
+            package=ref,
+            physical_evidence=record.physical_evidence,
+            artifacts=refs,
+            resource_links=tuple(
+                self._development_link(snapshot.workflow_run_id, item) for item in refs
+            ),
+            **self._mode_values(),
+        ).model_dump(mode="json")
 
     def _compiled_asset(self, snapshot, entries):
         initial = [
@@ -407,11 +531,17 @@ class LimitedImagePreviewService:
             ),
             elapsed_seconds=(child.ended_at - child.started_at).total_seconds(),
             library_publish_ns=timing["library_publish_ns"],
+            **self._mode_values(),
         ).model_dump(mode="json")
 
     def package_get(self, *, workflow_id):
         self._prepare(workflow_id)
         snapshot = self.harness.read(self._request(workflow_id))
+        if self.execution_mode == "development":
+            packaged = self.development_artifacts.try_read(snapshot.workflow_run_id)
+            if packaged is None:
+                raise ValueError("workflow has no validated development package")
+            return self._development_result(snapshot, packaged, "package_get")
         entries = self.journal.read_operations(
             principal_id=self.principal_id, workflow_run_id=snapshot.workflow_run_id
         )
@@ -426,7 +556,11 @@ class LimitedImagePreviewService:
     def publish(self, *, workflow_id, idempotency_key, timing_samples=None):
         """Harness-owned release after a persisted backend attempt and final validation."""
         skill = "image2env.preview_publish@1.0.0"
-        previous = self._existing(workflow_id, skill, idempotency_key)
+        previous = (
+            None
+            if self.execution_mode == "development"
+            else self._existing(workflow_id, skill, idempotency_key)
+        )
         if previous is None and not timing_samples:
             raise ValueError("publication requires persisted terminal Codex timing samples")
         self._prepare(workflow_id)
@@ -443,6 +577,12 @@ class LimitedImagePreviewService:
                 raise ValueError(
                     "publication timing differs from this workflow's terminal Codex journal"
                 )
+        if self.execution_mode == "development":
+            return self._publish_development(
+                snapshot,
+                idempotency_key=idempotency_key,
+                timing_samples=timing_samples,
+            )
         if previous is not None:
             if previous[0].status.value == "succeeded":
                 return self._published(snapshot, previous[0], "publish")
@@ -471,6 +611,89 @@ class LimitedImagePreviewService:
         current = self.harness.read(self._request(workflow_id))
         operation = self._existing(workflow_id, skill, idempotency_key)[0]
         return self._published(current, operation, "publish")
+
+    def _publish_development(self, snapshot, *, idempotency_key, timing_samples):
+        """Seal inspectable debug evidence without a publish Skill or formal library write."""
+        parent, _ = self._parent(snapshot)
+        if parent.skill_ref != "image2env.validate@3.0.0":
+            raise ValueError("development package requires current final validation")
+        from .limited_image_preview_controller import read_codex_attempts
+        from .limited_image_preview_development import build_development_execution_record
+
+        rows = read_codex_attempts(self.journal.path, snapshot.workflow_run_id)
+        log = self._put(
+            {
+                "kind": "limited_preview_codex_attempt_log.v1",
+                "workflow_run_id": str(snapshot.workflow_run_id),
+                "timing_samples": timing_samples,
+                "attempts": rows,
+            },
+            "development-codex-attempt-log.json",
+            None,
+        )
+        input_ref, document = self._input(snapshot)
+        lookup = self.inputs.lookup(workflow_id=snapshot.workflow_run_id, input_ref=input_ref)
+        selected = json.loads(self.store.resolve(lookup).path.read_bytes())
+        inputs = [
+            input_ref,
+            lookup,
+            ArtifactRef.model_validate(document["effective_prompt"]),
+            ArtifactRef.model_validate(document["catalog_ref"]),
+            ArtifactRef.model_validate(selected["representation"]),
+            ArtifactRef.model_validate(selected["qualification"]),
+        ]
+        source_media = document["source_media"]
+        inputs.append(ArtifactRef.model_validate(source_media["source"]))
+        outputs = [snapshot.state_ref, snapshot.receipt_head, parent.command, parent.tool_result]
+        exact_skills = []
+        physical = []
+        media = []
+        for entry in self.journal.read_operations(
+            principal_id=self.principal_id, workflow_run_id=snapshot.workflow_run_id
+        ):
+            operation = entry.operation
+            exact_skills.append(operation.qualified_execution)
+            outputs.extend((operation.command, operation.qualified_execution))
+            if operation.tool_result is None:
+                continue
+            outputs.append(operation.tool_result)
+            tool = self._read_model(operation.tool_result, ToolResultV2)
+            outputs.extend((tool.trusted_receipt, tool.run_state, *tool.diagnostics))
+            child = self._read_model(tool.run_state, RunState)
+            outputs.extend(child.artifacts)
+            for event in child.events:
+                outputs.extend(event.artifact_refs)
+        for ref in outputs:
+            if ref.media_type.startswith(("image/", "video/")):
+                media.append(ref)
+            if ref.schema_version in {
+                "harness.genesis_scene_execution_receipt.v2",
+                "harness.genesis_scene_execution_receipt.v3",
+                "harness.genesis_scene_report.v1",
+                "harness.limited_scene_validation.v1",
+                "harness.genesis_fresh_capture_receipt.v1",
+            }:
+                physical.append(ref)
+        output_refs = tuple(dict.fromkeys((*outputs, *media)))
+        log_refs = [log]
+        for row in rows:
+            log_refs.extend(ArtifactRef.model_validate(item) for item in row.get("evidence", ()))
+        record = build_development_execution_record(
+            workflow_run_id=snapshot.workflow_run_id,
+            principal_id=self.principal_id,
+            idempotency_key=idempotency_key,
+            workflow_head=snapshot.receipt_head,
+            context=self.development_context.context,
+            context_ref=self.development_context.ref,
+            input_artifacts=tuple(inputs),
+            output_artifacts=output_refs,
+            log_artifacts=tuple(log_refs),
+            physical_evidence=tuple(physical),
+            exact_skill_evidence=tuple(exact_skills),
+            created_at=snapshot.updated_at,
+        )
+        ref = self.development_artifacts.commit(record)
+        return self._development_result(snapshot, (ref, record), "publish")
 
     def _receipts(self, snapshot):
         refs = {}
@@ -622,6 +845,7 @@ class LimitedImagePreviewService:
             status=status,
             source_prompt=document["effective_prompt"],
             failure_receipts=self._failures(snapshot),
+            **self._mode_values(),
             **values,
         ).model_dump(mode="json")
 
@@ -960,6 +1184,34 @@ class LimitedImagePreviewService:
 
     def read_resource(self, workflow_id, uri):
         self._prepare(workflow_id)
+        development_prefix = f"harness://development/{UUID(str(workflow_id))}/artifacts/"
+        if uri.startswith(development_prefix) and len(uri.removeprefix(development_prefix)) == 64:
+            if self.execution_mode != "development":
+                raise ValueError("development resource requires development mode")
+            packaged = self.development_artifacts.read(workflow_id)
+            ref, record = packaged
+            reachable = {
+                item.sha256: item
+                for item in (
+                    ref,
+                    record.development_context,
+                    record.configuration,
+                    *record.input_artifacts,
+                    *record.output_artifacts,
+                    *record.log_artifacts,
+                    *record.physical_evidence,
+                )
+            }
+            resource = reachable.get(uri.removeprefix(development_prefix))
+            if resource is None:
+                raise ValueError("development resource is outside its isolated package")
+            payload = self.store.resolve(resource).path.read_bytes()
+            item = {"uri": uri, "mimeType": resource.media_type}
+            try:
+                item["text"] = payload.decode("utf-8")
+            except UnicodeDecodeError:
+                item["blob"] = base64.b64encode(payload).decode("ascii")
+            return {"contents": [item]}
         access_prefix = f"harness://workflows/{UUID(str(workflow_id))}/resource-access/"
         if uri.startswith(access_prefix) and len(uri.removeprefix(access_prefix)) == 64:
             _, payload = self.harness.read_resource_access_receipt(

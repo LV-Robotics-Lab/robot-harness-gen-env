@@ -5,6 +5,7 @@ import json
 import sys
 import time
 from pathlib import Path
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
@@ -21,6 +22,7 @@ class PreviewDeployment(BaseModel):
     """Operator configuration, never a model-supplied execution override."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+    execution_mode: Literal["release", "development"] = "release"
     service_settings: Path
     codex_executable: Path
     approved_executable_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -122,6 +124,8 @@ def run_cli(argv=None, *, service_factory=_service_factory, backend_factory=Code
     try:
         deployment = PreviewDeployment.model_validate_json(arguments.deployment.read_bytes())
         service = service_factory(deployment.service_settings)
+        if getattr(service, "execution_mode", "release") != deployment.execution_mode:
+            raise ValueError("deployment execution mode differs from service settings")
         if arguments.command == "submit":
             text = (
                 arguments.text
@@ -197,13 +201,17 @@ def run_cli(argv=None, *, service_factory=_service_factory, backend_factory=Code
             )
             if (
                 package.workflow_id != arguments.workflow_id
-                or package.status != "published"
+                or package.status not in {"published", "validated_unreleased"}
                 or package.package is None
             ):
                 raise ValueError("workflow has no published package")
             result = package.model_dump(mode="json")
             manifest_path = service.store.resolve(package.package).path
             if output is not None:
+                if package.execution_mode == "development":
+                    raise ValueError(
+                        "development package is an isolated CAS record; use its resource links"
+                    )
                 manifest = json.loads(manifest_path.read_bytes())
                 preview_id, mode = manifest.get("preview_id"), manifest.get("mode")
                 if (
@@ -223,7 +231,10 @@ def run_cli(argv=None, *, service_factory=_service_factory, backend_factory=Code
                     entrypoints=_materialized_entrypoints(materialized, mode),
                 )
         print(json.dumps(result, ensure_ascii=False, allow_nan=False, sort_keys=True))
-        if arguments.command in {"status", "package"} or result.get("status") == "published":
+        if arguments.command in {"status", "package"} or result.get("status") in {
+            "published",
+            "validated_unreleased",
+        }:
             return 0
         return 3 if result.get("status") in {"running", "recovering"} else 2
     except (ValueError, TypeError, OSError) as error:

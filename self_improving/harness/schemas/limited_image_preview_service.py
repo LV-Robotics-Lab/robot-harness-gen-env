@@ -44,7 +44,19 @@ class PreviewServiceResult(HarnessModel):
         "status",
         "package_get",
     ]
-    status: Literal["active", "running", "succeeded", "failed", "waiting_input", "published"]
+    status: Literal[
+        "active",
+        "running",
+        "succeeded",
+        "failed",
+        "waiting_input",
+        "published",
+        "validated_unreleased",
+    ]
+    execution_mode: Literal["release", "development"] = "release"
+    qualification_status: Literal["qualified_release", "development_unqualified"] = (
+        "qualified_release"
+    )
     operation: OperationSnapshot | None = None
     snapshot: RunSnapshot | None = None
     source_prompt: ArtifactRef | None = None
@@ -52,6 +64,7 @@ class PreviewServiceResult(HarnessModel):
     asset: PreviewAsset | None = None
     observation: PreviewObservedMedia | None = None
     package: ArtifactRef | None = None
+    physical_evidence: tuple[ArtifactRef, ...] = ()
     artifacts: tuple[ArtifactRef, ...] = ()
     resource_links: tuple[PreviewResourceLink, ...] = ()
     failure_code: NonEmptyString | None = None
@@ -75,4 +88,17 @@ class PreviewServiceResult(HarnessModel):
             raise ValueError("failed result must expose its concrete cause")
         if self.failure_code is not None and self.status not in {"failed", "waiting_input"}:
             raise ValueError("successful result cannot carry failure metadata")
+        expected_qualification = (
+            "development_unqualified"
+            if self.execution_mode == "development"
+            else "qualified_release"
+        )
+        if self.qualification_status != expected_qualification:
+            raise ValueError("preview qualification status differs from its execution mode")
+        if self.status == "validated_unreleased" and (
+            self.execution_mode != "development" or self.package is None
+        ):
+            raise ValueError("validated_unreleased requires one development package")
+        if self.status == "published" and self.execution_mode != "release":
+            raise ValueError("formal publication is available only in release mode")
         return self

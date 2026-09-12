@@ -9,15 +9,15 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
+
+from self_improving.harness.artifacts import LocalArtifactStore
+from self_improving.harness.golden_store import SQLiteGoldenRunStore
 from self_improving.harness.limited_image_preview_development import (
     DevelopmentArtifactStore,
     build_development_execution_record,
     capture_development_execution_context,
     capture_git_source_identity,
 )
-
-from self_improving.harness.artifacts import LocalArtifactStore
-from self_improving.harness.golden_store import SQLiteGoldenRunStore
 from self_improving.harness.limited_image_preview_service import LimitedImagePreviewService
 from self_improving.harness.schemas.common import ArtifactRef
 from self_improving.harness.trusted_state import TrustedWorldState
@@ -151,6 +151,34 @@ def test_development_record_is_recoverable_and_never_writes_formal_library(tmp_p
     )
     with pytest.raises(ValueError, match="already bound"):
         reopened.commit(changed)
+
+    (repository / "tracked.py").write_text("VALUE = 9\n")
+    other_capture = capture_development_execution_context(
+        artifact_store=store,
+        repository_root=repository,
+        settings_path=settings,
+    )
+    wrong_context = DevelopmentArtifactStore(
+        artifact_store=store,
+        root=tmp_path / "development-artifacts",
+        context_ref=other_capture.ref,
+    )
+    with pytest.raises(ValueError, match="another execution context"):
+        wrong_context.commit(record)
+    with pytest.raises(ValueError, match="association is corrupt"):
+        wrong_context.read(workflow_id)
+
+    association = tmp_path / "development-artifacts" / f"{workflow_id}.json"
+    original_association = association.read_bytes()
+    association.write_text(json.dumps(json.loads(original_association), indent=2))
+    with pytest.raises(ValueError, match="association is corrupt"):
+        reopened.read(workflow_id)
+    association.write_bytes(original_association)
+
+    record_path = store.resolve(committed).path
+    record_path.write_bytes(b"{}")
+    with pytest.raises(ValueError, match="association is corrupt"):
+        reopened.read(workflow_id)
 
 
 def test_development_workflow_mode_and_source_identity_survive_restart(inputs, tmp_path):  # noqa: F811
