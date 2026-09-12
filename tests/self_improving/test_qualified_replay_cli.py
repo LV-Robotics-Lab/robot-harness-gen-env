@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import importlib
 import json
 import os
 import re
@@ -325,13 +324,9 @@ def test_wrapper_import_is_inert_and_exposes_the_deep_main() -> None:
     assert namespace["main"] is cli.main
 
 
-def test_console_entry_maps_to_the_same_deep_main() -> None:
+def test_distribution_retires_legacy_qualified_replay_console() -> None:
     configuration = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    target = configuration["project"]["scripts"]["robot-harness-run-qualified-replay"]
-    module_name, attribute = target.split(":", maxsplit=1)
-
-    assert target == "self_improving.qualified_replay_cli:main"
-    assert getattr(importlib.import_module(module_name), attribute) is cli.main
+    assert "robot-harness-run-qualified-replay" not in configuration["project"]["scripts"]
 
 
 def test_checkout_bootstrap_precedes_a_conflicting_pythonpath_package(

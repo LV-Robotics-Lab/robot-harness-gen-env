@@ -26,9 +26,7 @@ QUALIFICATION_MEMBERS = ("manifest.json", "qualification.json", "report.json")
 MEDIA_NATIVE_PACKAGE = Path("self_improving/harness/native")
 MEDIA_NATIVE_MEMBERS = ("media_sandbox.c",)
 QUALIFIED_REPLAY_CLI = Path("self_improving/qualified_replay_cli.py")
-QUALIFIED_REPLAY_ENTRY = (
-    "robot-harness-run-qualified-replay = self_improving.qualified_replay_cli:main"
-)
+RETIRED_CONSOLES = {"robot-harness-compile", "robot-harness-run-qualified-replay"}
 MEDIA_NATIVE_SHA256 = hashlib.sha256(
     (REPO_ROOT / MEDIA_NATIVE_PACKAGE / MEDIA_NATIVE_MEMBERS[0]).read_bytes()
 ).hexdigest()
@@ -132,9 +130,13 @@ def test_wheel_installs_runtime_source_and_qualification_resources(tmp_path: Pat
         entry_points_member = next(
             name for name in members if name.endswith(".dist-info/entry_points.txt")
         )
-        assert (
-            QUALIFIED_REPLAY_ENTRY in archive.read(entry_points_member).decode("utf-8").splitlines()
-        )
+        entries = {
+            line.split("=", 1)[0].strip()
+            for line in archive.read(entry_points_member).decode("utf-8").splitlines()
+            if "=" in line
+        }
+        assert not RETIRED_CONSOLES & entries
+        assert "x2env" in entries
         for member in expected_qualifications:
             assert archive.read(member) == (REPO_ROOT / member).read_bytes()
         for member in expected_harness_resources:
@@ -205,7 +207,4 @@ def test_packaging_declares_qualified_skill_resources() -> None:
     assert "asset_pipeline/active/asset_reuse/lib/README.md" in package_data["self_improving"]
     assert "qualified_skills/**/*.json" in package_data["self_improving.harness"]
     assert "native/*.c" in package_data["self_improving.harness"]
-    assert (
-        configuration["project"]["scripts"]["robot-harness-run-qualified-replay"]
-        == "self_improving.qualified_replay_cli:main"
-    )
+    assert not RETIRED_CONSOLES & configuration["project"]["scripts"].keys()

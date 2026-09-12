@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-G2A — 旧 console 安装映射退役
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `b00b0fa` packaging；旧深模块及资格资源原归属不变。
+- `target_paths`：pyproject.toml、test_compile_cli.py、test_qualified_replay_cli.py、test_packaging.py。
+- `verification`：contract_pass；真实 wheel 构建与安装，89 passed；未删除既有 runtime 已装 launcher。
+- `recorded_git_authors`：本提交元数据；无第三方代码复制或新运行能力授予。
+
 ## INT-CANONICAL-C05-DESIGN-GROUNDING — 资产锚定生成设计
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream；新设计接线不是 Gujie 原尺度重建能力。

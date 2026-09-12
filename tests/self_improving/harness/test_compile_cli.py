@@ -586,9 +586,7 @@ def test_module_entrypoint_preserves_exit_78_without_a_traceback() -> None:
     assert "Traceback" not in completed.stderr
 
 
-def test_distribution_declares_the_fixed_console_entrypoint() -> None:
+def test_distribution_retires_legacy_compile_console_entrypoint() -> None:
     configuration = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
-    assert configuration["project"]["scripts"]["robot-harness-compile"] == (
-        "self_improving.harness.compile_cli:main"
-    )
+    assert "robot-harness-compile" not in configuration["project"]["scripts"]

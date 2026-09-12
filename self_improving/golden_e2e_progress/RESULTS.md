@@ -1,5 +1,12 @@
 # 进度与结果
 
+## 2026-09-13 C13 G2a 退出旧 console 安装映射
+
+- pyproject 移除 robot-harness-compile 与 robot-harness-run-qualified-replay 两项旧命令映射，
+  保留被消费的深模块、旧脚本与资格资源；新 wheel 只保留 canonical x2env 的业务入口。
+- 三项旧映射测试先 RED 后 GREEN；实际 wheel 构建/安装及原资源字节核对保留，89 passed（5.57s）。
+  此修改不会自动删除既有环境已安装的 launcher，不声称所有旧入口已退役。
+
 ## 2026-09-13 C05 资产锚定的显式生成设计
 
 - 新 grounding 使用同一 managed Codex transport；保留原 critical unknown，补全前 SceneIR 仅为

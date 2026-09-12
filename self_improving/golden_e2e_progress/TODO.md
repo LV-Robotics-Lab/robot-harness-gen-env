@@ -4,6 +4,8 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- C13 G2a 已撤两个旧 console 安装映射；旧脚本及仍被消费的深模块继续按实际消费者退役。
+
 - 资产锚定生成设计已接 Harness pending→resolve→ground→compile；63 项定向测试通过。
   completion 绑定单独核验中；之后固定新代码、新 key 执行 S02，原失败保持不变。
 
