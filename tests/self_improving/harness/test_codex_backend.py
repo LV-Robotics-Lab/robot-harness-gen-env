@@ -680,7 +680,7 @@ def test_real_external_fixture_process_failure_is_structured(assignment, tmp_pat
     assert schema["properties"]["decision"]["enum"] == ["phase_complete", "unsupported"]
     assert set(schema["required"]) == {"workflow_id", "decision", "reason"}
     assert "--approve-for-me" in argv
-    assert argv[argv.index("--sandbox") + 1] == "read-only"
+    assert "--sandbox" not in argv
     assert "--ignore-user-config" in argv
     assert "--ignore-rules" in argv
     assert "--dangerously-bypass-approvals-and-sandbox" not in argv
