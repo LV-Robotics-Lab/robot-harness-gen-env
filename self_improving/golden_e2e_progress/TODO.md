@@ -2,7 +2,12 @@
 
 更新时间：2026-09-13
 
-## Blocked：canonical C07 许可/资源方向；C01 已完成保护子集
+## Doing：C01 来源收敛；C07 替代后端并行推进
+
+- 用户补充批准先做替代、保留 Gujie 原接口供联调，并持续执行计划；可解决的单项阻断不再暂停全局。
+- 主会话负责用户 dirty hunk 归属、clean canonical 基线和 C02；Nietzsche 负责剩余 archive/ref disposition，
+  Bacon 使用 research 核对替代后端/版本/完整许可/资源，文件独占。不改冻结矩阵或降低 push 门。
+- 以下前次停止记录保留历史含义，已由本补充恢复执行。
 
 - Q01–Q64 已写入
   [`CANONICAL_X2ENV_MERGE_DECISIONS.md`](CANONICAL_X2ENV_MERGE_DECISIONS.md)，不再只依赖聊天上下文。

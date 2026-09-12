@@ -52,7 +52,8 @@ Harness 和同一多模态入口，清理旧 experiment/limited-preview/MCP 活�
 Qualification Matrix v1 位于
 [`CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md`](CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md)。
 当前 C00 已完成；C01 已冻结来源并保护/恢复核验 bingsheng dirty bytes，整合尚未完成。
-因 [C07 许可/资源方向](CANONICAL_C07_RESOURCE_BLOCKER_20260913.md) 触发计划 §17.3，暂停请求用户决定；
+用户补充批准推进替代后端并保留 Gujie 原接口，[C07 许可/资源记录](CANONICAL_C07_RESOURCE_BLOCKER_20260913.md)
+保留为已发现待解决项，不再暂停主线；
 详见 [C01 记录](CANONICAL_C01_INTAKE_20260913.md)。尚未修改 canonical 功能、运行 qualification、合并或 push。下列 2026-09-12 通用
 实验管线状态保留为实现基线，但不再覆盖新的计划决策。
 
