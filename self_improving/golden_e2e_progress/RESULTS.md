@@ -1,5 +1,18 @@
 # 进度与结果
 
+## 2026-09-13 接线边界与独立审阅修复
+
+- 后续真实模型纵切：Harness start→Codex interpret→generated acquire→compile在同一Golden中
+  revision 0→1→2→3，4测试通过/9.98秒（包含3离线服务测试）。未执行Genesis，不能计完整文本E2E。
+
+- stage handlers和policy已整合：真实生成→规范化→静态compile→新资产版本组件测试通过；
+  runtime adapter调用既有portable runner与物理评估，不把组件测试当仿真通过。
+- 独立审阅复现五项缺口并修复：qualified reader实例边界（30相关测试）、颜色意图不匹配（3编译测试）、
+  8线程同版本登记竞争、web Y-up未旋转、cousin只有标签。后三项12测试含真实Box/Avocado联网通过。
+- 非对称Avocado明确记录Y→Z变换；cousin现为unsupported_selection，不冒称近似选择接通。
+- service start/reopen/幂等与未知stage拒绝2测试通过；连同policy/stages为8通过。尚未实际调用模型推进workflow。
+- 原始修复证据 `/home/jingxiang/bingsheng/generic-assets-evidence-20260912.xs7UnK/review-fixes-20260913`。
+
 ## 2026-09-13 共享意图编译组件
 
 - `f786e44`：复用 tabletop adapter，原始asset→完整CAS representation→GenesisSceneSpec；

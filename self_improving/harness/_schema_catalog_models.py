@@ -8,6 +8,8 @@ from typing import Any
 
 _SCHEMA_MODEL_LOCATORS = MappingProxyType(
     {
+        "harness.experiment_skill_input.v1": (".schemas.experiment", "ExperimentSkillInput"),
+        "harness.experiment_skill_output.v1": (".schemas.experiment", "ExperimentSkillOutput"),
         "harness.development_skill_descriptor.v1": (
             ".development_execution",
             "DevelopmentSkillDescriptor",

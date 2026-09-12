@@ -1,8 +1,14 @@
 # 当前 TODO
 
-更新时间：2026-09-12
+更新时间：2026-09-13
 
 ## Doing
+
+- 已整合通用输入、三来源资产、共享意图编译、portable loader、开发execution身份、结构化Codex建议、
+  stage handlers和evidence policy；当前主会话接同一Golden service/controller，尚无新三模态E2E成功。
+- 资产并发登记、Y-up规范化、cousin明确拒绝、颜色不匹配拒绝及qualified receipt实例重验已修复。
+- 下一验证：真实模型interpret→同journal acquire/compile；继而双dt replay/observe/visual/validate，
+  两类fallback与最终包。旧normal/repair不恢复；正式release和大矩阵继续后置。
 
 - 2026-09-12 新接手已核对：集成 HEAD `9460a4b` clean，主目录用户改动保留，未发现旧 preview
   执行进程；dashboard 三入口仍 404，未同步。当前进入通用实验管线实现。
@@ -11,7 +17,7 @@
   `generic-assets-20260912` 负责来源 adapter/不可变版本；`generic-portable-loader` 负责包入口与 copy-run。
 - 先完成小型公共 seam 测试，再记录各分支真实调用。旧 normal/repair、release 和 runtime 大闭包不重跑。
 
-- 本会话只执行安全停止与交接；不再启动 repair 验收、深验、bootstrap、资格重建或 release 发布。
+- 历史交接会话只执行安全停止与交接；当前继续通用实验实现，不启动旧 repair 验收、深验、bootstrap、资格重建或 release 发布。
   接手 prompt 是
   [`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)。
 - 下一会话 active：通用实验管线实际接线。顺序为三模态统一输入/共享场景意图 → local/web/generated
