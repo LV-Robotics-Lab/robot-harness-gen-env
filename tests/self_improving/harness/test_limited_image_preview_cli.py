@@ -438,3 +438,46 @@ def test_operator_configuration_rejects_unknown_overrides_before_factory(tmp_pat
     error = capsys.readouterr().err
     assert json.loads(error)["status"] == "error"
     assert "secret-must-not-appear" not in error
+
+
+def test_operator_mode_mismatch_fails_before_codex_backend(service, tmp_path, capsys):
+    settings = tmp_path / "service.json"
+    settings.write_text("{}")
+    deployment = tmp_path / "deployment.json"
+    deployment.write_text(
+        json.dumps(
+            dict(
+                execution_mode="development",
+                service_settings=str(settings),
+                codex_executable="/operator/codex",
+                approved_executable_sha256="a" * 64,
+                server_python="/operator/python",
+                server_workdir=str(tmp_path),
+                model="operator-model",
+                evidence_root=str(tmp_path / "evidence"),
+                max_attempts=2,
+                call_budget=15,
+                attempt_seconds=90,
+            )
+        )
+    )
+    service.value.execution_mode = "release"
+
+    def forbidden(**kwargs):
+        raise AssertionError("mode mismatch must not start Codex")
+
+    assert (
+        run_cli(
+            [
+                "--deployment",
+                str(deployment),
+                "resume",
+                "--workflow-id",
+                str(service.workflow),
+            ],
+            service_factory=lambda path: service.value,
+            backend_factory=forbidden,
+        )
+        == 2
+    )
+    assert "execution mode" in json.loads(capsys.readouterr().err)["message"]

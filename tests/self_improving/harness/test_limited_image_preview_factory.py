@@ -155,3 +155,49 @@ def test_lazy_projection_loaders_receive_exact_artifact_refs(tmp_path, monkeypat
     ):
         runtime.ensure(skill)
     assert len(loaded) == 4
+
+
+def test_operator_development_settings_isolate_the_formal_library(tmp_path):
+    from tests.self_improving.harness.test_mcp_native_assembly import settings_document
+
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    document = settings_document(tmp_path)
+    document.pop("compile_template_ref")
+    document.update(
+        schema_version="harness.limited_image_preview_settings.v2",
+        execution_mode="development",
+        source_repository_root=str(repository),
+        development_artifact_root=str(tmp_path / "development-artifacts"),
+        project_id="development-preview",
+        asset_catalog=document["registry_snapshot"],
+        source_scene=document["registry_snapshot"],
+        qualification_run_id="10000000-0000-4000-8000-000000000001",
+        table_center_m=[0.0, 0.0, 0.4],
+        table_size_m=[1.0, 0.6, 0.1],
+        table_friction=0.5,
+        seed=0,
+        revised_state_root=str(tmp_path / "revised"),
+        revised_qualification=document["compile_qualification"],
+        shared_state_root=str(tmp_path / "shared"),
+        library_root=str(tmp_path / "formal-library"),
+        native_projections={},
+        shared_qualifications={},
+    )
+    settings = LimitedImagePreviewSettings.model_validate_json(json.dumps(document))
+    runtime = LimitedPreviewRuntime(settings, LocalArtifactStore(tmp_path / "cas"))
+
+    with pytest.raises(ValueError, match="development mode cannot open the formal preview library"):
+        runtime.application("library")
+    with pytest.raises(ValueError, match="development mode cannot bind formal publication"):
+        runtime.ensure("image2env.preview_publish@1.0.0")
+    assert not (tmp_path / "formal-library").exists()
+
+    with pytest.raises(ValueError, match="settings v2"):
+        LimitedImagePreviewSettings.model_validate_json(
+            json.dumps({**document, "schema_version": "harness.limited_image_preview_settings.v1"})
+        )
+    with pytest.raises(ValueError, match="release settings cannot configure development"):
+        LimitedImagePreviewSettings.model_validate_json(
+            json.dumps({**document, "execution_mode": "release"})
+        )

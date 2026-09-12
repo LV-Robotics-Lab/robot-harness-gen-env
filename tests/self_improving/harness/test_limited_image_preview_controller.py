@@ -601,3 +601,32 @@ def test_failed_attempt_keeps_complete_transport_call_attribution(tmp_path):
 def test_controller_exposes_harness_start_and_resume():
     assert callable(LimitedImagePreviewController.start)
     assert callable(LimitedImagePreviewController.resume)
+
+
+def test_validated_development_record_is_a_stable_terminal_without_more_codex(service, tmp_path):
+    projected = service.value.status(workflow_id=str(service.workflow))
+    projected.update(
+        status="validated_unreleased",
+        execution_mode="development",
+        qualification_status="development_unqualified",
+        package=projected["source_prompt"],
+    )
+
+    service.value.status = lambda **kwargs: projected
+    service.value.package_get = lambda **kwargs: {
+        **projected,
+        "stage": "package_get",
+    }
+
+    class Backend:
+        def run(self, assignment, *, output_root):
+            raise AssertionError("a recovered development terminal must not call Codex")
+
+    controller = LimitedImagePreviewController(
+        service.value, Backend(), evidence_root=tmp_path / "attempts"
+    )
+    assert controller.resume(service.workflow) == {
+        "status": "validated_unreleased",
+        "workflow_id": str(service.workflow),
+        "package": projected["source_prompt"],
+    }
