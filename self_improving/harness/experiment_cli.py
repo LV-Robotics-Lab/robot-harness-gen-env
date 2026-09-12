@@ -2,9 +2,10 @@
 
 import argparse
 import json
+import time
 from pathlib import Path
 from typing import Literal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
@@ -22,7 +23,11 @@ class ExperimentDeployment(BaseModel):
     model: str = Field(min_length=1)
     model_timeout: int = Field(default=120, gt=0, le=300, strict=True)
     default_source: Literal["local", "web", "generated"] = "generated"
-    allowed_sources: tuple[Literal["local", "web", "generated"], ...] = ("local", "web", "generated")
+    allowed_sources: tuple[Literal["local", "web", "generated"], ...] = (
+        "local",
+        "web",
+        "generated",
+    )
     evidence_root: Path
     max_attempts: int = Field(default=3, gt=0, le=10, strict=True)
     call_budget: int = Field(default=30, gt=0, le=100, strict=True)
@@ -98,8 +103,25 @@ def _emit(value):
     print(json.dumps(value, ensure_ascii=False, sort_keys=True, allow_nan=False, default=str))
 
 
+def record_command_result(root, command, result, wall_seconds):
+    """Private command diagnostics, never a workflow receipt or promotion authority."""
+    folder = Path(root) / "commands"
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / (str(uuid4()) + ".json")
+    value = {
+        **result,
+        "command": command,
+        "command_wall_seconds": wall_seconds,
+        "command_record": str(path),
+    }
+    with path.open("x") as stream:
+        json.dump(value, stream, ensure_ascii=False, sort_keys=True, allow_nan=False)
+    return value
+
+
 def run_cli(argv=None):
     """Return 0 for completed/read operations, 1 for execution failure, 2 for bad input."""
+    started = time.monotonic()
     try:
         request = parse_request(argv)
     except ValueError as error:
@@ -180,6 +202,10 @@ def run_cli(argv=None):
             result = package_workflow(service, request.workflow_id, request.output)
         if hasattr(result, "model_dump"):
             result = result.model_dump(mode="json")
+        if request.command != "status":
+            result = record_command_result(
+                deployment.evidence_root, request.command, result, time.monotonic() - started
+            )
         _emit(result)
         return (
             0
@@ -189,13 +215,16 @@ def run_cli(argv=None):
             else 1
         )
     except Exception as error:
-        _emit(
-            {
-                "status": "failed",
-                "error_code": getattr(error, "code", "execution_failed"),
-                "detail": str(error),
-            }
-        )
+        value = {
+            "status": "failed",
+            "error_code": getattr(error, "code", "execution_failed"),
+            "detail": str(error),
+        }
+        if request.command != "status":
+            value = record_command_result(
+                deployment.evidence_root, request.command, value, time.monotonic() - started
+            )
+        _emit(value)
         return 1
 
 

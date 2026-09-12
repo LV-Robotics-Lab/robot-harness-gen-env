@@ -18,6 +18,8 @@ CodexBackend的server_settings使用同一部署路径，用户不操作Codex/MC
 退出码：输入/配置错误2，执行错误或非passed结果1，passed及成功status读取0。passed仅指阶段
 序列；controller返回的parent_terminal/snapshot不得改写为父workflow已终态。
 失败JSON保留error_code/detail。模型/运行日志仍由既有backend/controller保存。
+submit/resume/package另保存`evidence_root/commands/<uuid>.json`私有命令诊断，包含
+command_wall_seconds和完整结果。它不是workflow receipt；status查询不增加命令诊断。
 
 当前验证是解析、无输入、release配置拒绝及显式布尔准入测试；不注入模拟运行成功来冒称
 CLI真实E2E。完整submit依赖集成Service、controller实验分支和package adapter，真实案例由

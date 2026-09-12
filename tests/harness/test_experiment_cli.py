@@ -69,3 +69,14 @@ def test_development_opt_in_requires_boolean_not_integer():
     }
     with pytest.raises(ValueError):
         ExperimentDeployment.model_validate_json(json.dumps(config))
+
+
+def test_command_diagnostics_preserve_wall_and_result(tmp_path):
+    import json
+    from pathlib import Path
+
+    from self_improving.harness.experiment_cli import record_command_result
+
+    value = record_command_result(tmp_path, "submit", {"status": "failed"}, 1.25)
+    assert value["command_wall_seconds"] == 1.25
+    assert json.loads(Path(value["command_record"]).read_text())["status"] == "failed"
