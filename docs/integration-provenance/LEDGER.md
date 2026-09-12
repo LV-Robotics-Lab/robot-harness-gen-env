@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C08-REPLAY — 同workflow双profile执行
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream，复用canonical Genesis内核。
+- `source_ref`：运行接口`013391c`、compile/controller `12b1c3a`、CAS完整性`e14684f`。
+- `target_paths`：x2env/replay.py、harness.py、store.py、contracts.py及对应测试。
+- `verification`：16项replay/生命周期/schema测试通过；显式runtime替身，不是Genesis整链资格。
+- `known_gaps`：实际dual replay、fresh observation/诊断与最终物理/包门尚未闭合。
+
 ## INT-CANONICAL-ASSET-CLOSURE — 跨Store receipt缺链回归
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream，新完整性校验。

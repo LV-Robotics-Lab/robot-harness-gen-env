@@ -275,6 +275,7 @@ class Store:
         asset_resolution: ArtifactRef | None = None,
         resolved_assets: ArtifactRef | None = None,
         compiled_scene: ArtifactRef | None = None,
+        replay_result: ArtifactRef | None = None,
     ) -> WorkflowSnapshot:
         with closing(sqlite3.connect(self.database)) as db, db:
             db.execute("BEGIN IMMEDIATE")
@@ -313,6 +314,7 @@ class Store:
                 asset_resolution,
                 resolved_assets,
                 compiled_scene,
+                replay_result,
             ):
                 if ref is not None:
                     self.read_artifact(ref)
@@ -329,6 +331,7 @@ class Store:
                     "asset_resolution": asset_resolution or current.asset_resolution,
                     "resolved_assets": resolved_assets or current.resolved_assets,
                     "compiled_scene": compiled_scene or current.compiled_scene,
+                    "replay_result": replay_result or current.replay_result,
                     "operations": tuple(operations),
                 }
             )

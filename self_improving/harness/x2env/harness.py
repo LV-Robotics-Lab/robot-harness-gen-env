@@ -9,13 +9,20 @@ from .store import Store
 
 class Harness:
     def __init__(
-        self, state_dir: Path, *, backend_factory=None, resolver_factory=None, compile_policy=None
+        self,
+        state_dir: Path,
+        *,
+        backend_factory=None,
+        resolver_factory=None,
+        compile_policy=None,
+        replay_factory=None,
     ):
         self._store = Store(state_dir)
         self._state_dir = Path(state_dir)
         self._backend = backend_factory(self._store) if backend_factory else None
         self._resolver = resolver_factory(self._store, self._backend) if resolver_factory else None
         self._compile_policy = compile_policy
+        self._replay_executor = replay_factory(self._store) if replay_factory else None
 
     def submit(self, request: X2EnvRequest) -> WorkflowHandle:
         snapshot = self._store.submit(request)
@@ -26,7 +33,9 @@ class Harness:
 
     def resume(self, workflow_id: str) -> WorkflowSnapshot:
         existing = self.status(workflow_id)
-        if existing.stop_reason == "clarification_required" or existing.compiled_scene is not None:
+        if existing.stop_reason == "clarification_required" or existing.replay_result is not None:
+            return existing
+        if existing.compiled_scene is not None and self._replay_executor is None:
             return existing
         if existing.scene_ir is not None and (
             (self._resolver is None or existing.asset_resolution is not None)
@@ -36,6 +45,8 @@ class Harness:
         snapshot = self._store.claim(workflow_id)
         if snapshot.status in {"succeeded", "failed", "cancelled", "blocked"}:
             return snapshot
+        if snapshot.compiled_scene is not None:
+            return self._replay(snapshot)
         if snapshot.scene_ir is not None:
             return self._compile(snapshot) if snapshot.resolved_assets else self._resolve(snapshot)
         result = None
@@ -218,17 +229,69 @@ class Harness:
                 status="succeeded",
                 outputs=(compiled.receipt, ref),
             )
+            snapshot = self._store.complete_operation(
+                snapshot,
+                result,
+                snapshot.input_bundle,
+                status="active" if self._replay_executor else "blocked",
+                reason=None if self._replay_executor else "blocked_external_resource",
+                compiled_scene=ref,
+                required_resources=() if self._replay_executor else ("genesis_replay_executor",),
+            )
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            return self._stage_failure(snapshot, "scene_compile_failed", error)
+        return self._replay(snapshot) if self._replay_executor else snapshot
+
+    def _replay(self, snapshot):
+        from .compile import CompiledScene
+
+        compile_operation = next(
+            op
+            for op in reversed(snapshot.operations)
+            if op.capability == "x2env.compile" and op.status == "succeeded"
+        )
+        snapshot = self._store.begin_operation(snapshot, "x2env.replay")
+        operation = snapshot.operations[-1]
+        try:
+            compiled = CompiledScene.model_validate_json(
+                self._store.read_artifact(snapshot.compiled_scene)
+            )
+            replay = self._replay_executor.replay(
+                compiled.runtime_scene,
+                package_root=self._state_dir
+                / "stages"
+                / snapshot.workflow_id
+                / compile_operation.operation_id,
+                output_root=self._state_dir
+                / "attempts"
+                / snapshot.workflow_id
+                / operation.operation_id,
+                timeout=600,
+            )
+            ref = self._store.write_artifact(replay.model_dump_json().encode(), "application/json")
+            result = ToolResult(
+                operation_id=operation.operation_id,
+                status=replay.status,
+                outputs=(
+                    replay.receipt,
+                    ref,
+                    *(f.artifact for p in replay.profiles for f in p.files),
+                ),
+                error_code=replay.error_code,
+            )
             return self._store.complete_operation(
                 snapshot,
                 result,
                 snapshot.input_bundle,
-                status="blocked",
-                reason="blocked_external_resource",
-                compiled_scene=ref,
-                required_resources=("genesis_replay_executor",),
+                status="blocked" if replay.status == "succeeded" else replay.status,
+                reason="blocked_external_resource"
+                if replay.status == "succeeded"
+                else replay.error_code,
+                replay_result=ref,
+                required_resources=("fresh_observation",) if replay.status == "succeeded" else (),
             )
         except (ValueError, OSError, KeyError, TypeError) as error:
-            return self._stage_failure(snapshot, "scene_compile_failed", error)
+            return self._stage_failure(snapshot, "scene_replay_failed", error)
 
     def _stage_failure(self, snapshot, code, error):
         import json

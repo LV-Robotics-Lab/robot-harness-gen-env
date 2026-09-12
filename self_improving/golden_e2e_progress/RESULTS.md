@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-13 C08 同workflow双profile replay接线
+
+- compile成功后同一controller调用GenesisReplayExecutor，baseline/half_dt共享一次有界预算，
+  每个profile原日志、媒体与结果进入CAS；运行异常也保留partial日志和结构化adapter error。
+- replay成功只说明执行完成，不授予物理通过；父workflow暂在fresh_observation缺口blocked，
+  不产生成功环境包。失败或取消保留原操作状态，resume不重复已完成执行。
+- 新异常回归先RED后GREEN；replay/controller/lifecycle/schema合计16 passed（1.92s）。
+  runtime在本组为显式替身；canonical双profile真实整链尚未运行。无效测试文件路径首次未运行测试，
+  修正到实际test_harness_lifecycle.py后完成本组，不计作产品失败或真实验收。
+
 ## 2026-09-13 真实preview暴露来源闭包缺口（保留失败）
 
 - 新真实Registry→Genesis预览→Codex两问确已运行，候选cube图像match，总75.150294s；

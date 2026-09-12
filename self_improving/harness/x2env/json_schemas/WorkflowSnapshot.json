@@ -324,6 +324,17 @@
       ],
       "default": null
     },
+    "replay_result": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "request": {
       "$ref": "#/$defs/X2EnvRequest"
     },

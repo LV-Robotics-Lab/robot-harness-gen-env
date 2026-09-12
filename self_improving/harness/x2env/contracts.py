@@ -103,6 +103,7 @@ class WorkflowSnapshot(WorkflowHandle):
     asset_resolution: ArtifactRef | None = None
     resolved_assets: ArtifactRef | None = None
     compiled_scene: ArtifactRef | None = None
+    replay_result: ArtifactRef | None = None
 
 
 class FieldProvenance(Model):

@@ -120,6 +120,7 @@ Generated; edit Python contracts, not this file.
 | WorkflowSnapshot | asset_resolution | false |
 | WorkflowSnapshot | resolved_assets | false |
 | WorkflowSnapshot | compiled_scene | false |
+| WorkflowSnapshot | replay_result | false |
 | X2EnvRequest | text | false |
 | X2EnvRequest | images | false |
 | X2EnvRequest | video | false |
