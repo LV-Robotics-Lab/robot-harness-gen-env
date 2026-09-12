@@ -657,6 +657,53 @@ def test_timing_normalizes_read_only_projection_default_to_no_child_service(
     }
 
 
+def test_timing_uses_call_interval_union_and_never_attributes_status_readback(tmp_path):
+    result = CodexBackendResult(
+        "completed",
+        tmp_path,
+        5.0,
+        0,
+        None,
+        None,
+        {
+            "calls": [
+                {
+                    "tool": "image2env_preview_status_v1",
+                    "elapsed_seconds": 1.0,
+                    "transport_started_monotonic_ns": 0,
+                    "transport_ended_monotonic_ns": 1_000_000_000,
+                    "result": {"structuredContent": {"stage": "status", "elapsed_seconds": 3.0}},
+                },
+                {
+                    "tool": "image2env_replay_v2_0_0",
+                    "elapsed_seconds": 4.0,
+                    "transport_started_monotonic_ns": 1_000_000_000,
+                    "transport_ended_monotonic_ns": 5_000_000_000,
+                    "result": {"structuredContent": {"stage": "replay", "elapsed_seconds": 3.0}},
+                },
+                {
+                    "tool": "image2env_preview_status_v1",
+                    "elapsed_seconds": 2.0,
+                    "transport_started_monotonic_ns": 2_000_000_000,
+                    "transport_ended_monotonic_ns": 4_000_000_000,
+                    "result": {"structuredContent": {"stage": "status", "elapsed_seconds": 3.0}},
+                },
+            ],
+            "attribution_complete": True,
+        },
+        None,
+    )
+
+    values = timing_samples(result)
+
+    assert values["valid"] is True
+    assert [call["service_elapsed_ns"] for call in values["calls"]] == [
+        None,
+        3_000_000_000,
+        None,
+    ]
+
+
 def test_failed_attempt_keeps_measured_wall_without_inventing_attribution(tmp_path):
     result = CodexBackendResult("timeout", tmp_path, 2.0, 124, None, None, None, "deadline")
     samples = timing_samples(result)
@@ -737,3 +784,200 @@ def test_validated_development_record_is_a_stable_terminal_without_more_codex(se
         "workflow_id": str(service.workflow),
         "package": projected["source_prompt"],
     }
+
+
+def _terminal_development_boundary(service, tmp_path):
+    from self_improving.harness.schemas.common import RunStatus
+    from self_improving.harness.schemas.workflow import OperationSnapshot
+
+    original = service.value
+    initial = original.status(workflow_id=str(service.workflow))
+
+    def put(name, schema):
+        path = tmp_path / name
+        path.write_text(json.dumps({"fixture": name}))
+        return original.store.put_file(
+            path, name=name, media_type="application/json", schema_version=schema
+        )
+
+    command = put("terminal-command.json", "harness.run_command_request.v1")
+    qualified = put("terminal-qualified.json", "harness.qualified_skill_execution.v2")
+    tool_result = put("terminal-tool-result.json", "harness.tool_result.v2")
+    child = uuid4()
+    ended = datetime.now(UTC)
+    operation = OperationSnapshot(
+        schema_version="harness.operation_snapshot.v1",
+        operation_id=uuid4(),
+        workflow_run_id=service.workflow,
+        principal_id=initial["snapshot"]["principal_id"],
+        idempotency_key="terminal-validate",
+        command=command,
+        qualified_execution=qualified,
+        skill_ref="image2env.validate@3.0.0",
+        status=RunStatus.SUCCEEDED,
+        base_revision=3,
+        committed_revision=4,
+        child_run_id=child,
+        tool_result=tool_result,
+        started_at=ended,
+        ended_at=ended,
+    )
+    snapshot = {
+        **initial["snapshot"],
+        "revision": 4,
+        "turn_seq": 4,
+        "active_operation": None,
+        "child_runs": [*initial["snapshot"]["child_runs"], str(child)],
+        "updated_at": ended.isoformat(),
+    }
+
+    class Boundary:
+        store = original.store
+        journal = original.journal
+
+        def __init__(self):
+            self.progressed = False
+            self.published = False
+            self.publish_samples = None
+
+        def _projection(self, stage, status, package=None):
+            return {
+                "workflow_id": str(service.workflow),
+                "revision": 4,
+                "stage": stage,
+                "status": status,
+                "execution_mode": "development",
+                "qualification_status": "development_unqualified",
+                "operation": operation.model_dump(mode="json"),
+                "snapshot": snapshot,
+                "source_prompt": initial["source_prompt"],
+                "package": package,
+            }
+
+        def status(self, *, workflow_id):
+            assert workflow_id == str(service.workflow)
+            if not self.progressed:
+                return initial
+            if self.published:
+                return self._projection("status", "validated_unreleased", initial["source_prompt"])
+            return self._projection("status", "active")
+
+        def publish(self, *, workflow_id, idempotency_key, timing_samples):
+            assert workflow_id == str(service.workflow)
+            assert idempotency_key == "controller-publish-4"
+            self.publish_samples = timing_samples
+            self.published = True
+            return self._projection("publish", "validated_unreleased", initial["source_prompt"])
+
+        def package_get(self, *, workflow_id):
+            assert self.published and workflow_id == str(service.workflow)
+            return self._projection("package_get", "validated_unreleased", initial["source_prompt"])
+
+    return Boundary()
+
+
+def _phase_complete_result(workflow_id, output_root, *, valid_timing):
+    if valid_timing:
+        specifications = [
+            ("image2env_preview_status_v1", "status", 0.0, 0.1, 0.8),
+            ("image2env_compile_v2_0_0", "compile", 0.1, 0.5, 0.3),
+            ("image2env_replay_v2_0_0", "replay", 0.5, 1.5, 0.7),
+            ("image2env_preview_status_v1", "status", 1.0, 1.4, 0.7),
+            ("genesis_observe_v3_0_0", "observe", 1.5, 2.5, 0.6),
+            ("image2env_preview_status_v1", "status", 2.0, 2.4, 0.6),
+            ("image2env_validate_v3_0_0", "validate", 2.5, 3.0, 0.3),
+        ]
+    else:
+        specifications = [("image2env_validate_v3_0_0", "validate", 0.0, 1.0, None)]
+    calls = []
+    for tool, stage, started, ended, child in specifications:
+        output = {"stage": stage}
+        if child is not None:
+            output["elapsed_seconds"] = child
+        calls.append(
+            {
+                "tool": tool,
+                "elapsed_seconds": ended - started,
+                "transport_started_monotonic_ns": round(started * 1e9),
+                "transport_ended_monotonic_ns": round(ended * 1e9),
+                "result": {"structuredContent": output},
+            }
+        )
+    return CodexBackendResult(
+        "completed",
+        output_root,
+        3.1 if valid_timing else 2.0,
+        0,
+        None,
+        None,
+        {
+            "calls": calls,
+            "attribution_complete": True,
+            "terminal_decision": {
+                "workflow_id": str(workflow_id),
+                "decision": "phase_complete",
+                "reason": "revision 4 validate succeeded",
+            },
+        },
+        None,
+    )
+
+
+def test_one_phase_complete_attempt_at_revision_four_publishes_development_package(
+    service, tmp_path
+):
+    boundary = _terminal_development_boundary(service, tmp_path)
+
+    class Backend:
+        count = 0
+
+        def run(self, assignment, *, output_root):
+            self.count += 1
+            boundary.progressed = True
+            output_root.mkdir()
+            return _phase_complete_result(service.workflow, output_root, valid_timing=True)
+
+    backend = Backend()
+    controller = LimitedImagePreviewController(
+        boundary, backend, evidence_root=tmp_path / "attempts", max_attempts=3
+    )
+
+    result = controller.run_to_terminal(service.workflow, input_elapsed_ns=17)
+
+    assert result["status"] == "validated_unreleased"
+    assert backend.count == 1
+    assert boundary.publish_samples == [controller.attempts(service.workflow)[0]["timing_samples"]]
+    assert [
+        call["service_elapsed_ns"]
+        for call in boundary.publish_samples[0]["calls"]
+        if call["stage"] == "status"
+    ] == [None, None, None]
+
+
+def test_terminal_phase_complete_with_invalid_timing_is_non_retryable(service, tmp_path):
+    boundary = _terminal_development_boundary(service, tmp_path)
+
+    class Backend:
+        count = 0
+
+        def run(self, assignment, *, output_root):
+            self.count += 1
+            boundary.progressed = True
+            output_root.mkdir()
+            return _phase_complete_result(service.workflow, output_root, valid_timing=False)
+
+    backend = Backend()
+    controller = LimitedImagePreviewController(
+        boundary, backend, evidence_root=tmp_path / "attempts", max_attempts=3
+    )
+
+    result = controller.run_to_terminal(service.workflow, input_elapsed_ns=17)
+
+    assert result == {
+        "status": "timing_invalid",
+        "workflow_id": str(service.workflow),
+        "attempt": 1,
+        "reason": "terminal Codex timing attribution is invalid",
+    }
+    assert backend.count == 1
+    assert len(controller.attempts(service.workflow)) == 1

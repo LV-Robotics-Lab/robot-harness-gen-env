@@ -377,12 +377,16 @@ def test_complete_assigned_transport_is_recoverable_without_a_terminal_transcrip
                 "arguments": {"workflow_id": workflow},
                 "result": status_result,
                 "elapsed_seconds": 1e-08,
+                "transport_started_monotonic_ns": 1,
+                "transport_ended_monotonic_ns": 11,
             },
             {
                 "tool": "image2env_compile_v2_0_0",
                 "arguments": {"workflow_id": workflow},
                 "result": compile_result,
                 "elapsed_seconds": 1e-08,
+                "transport_started_monotonic_ns": 21,
+                "transport_ended_monotonic_ns": 31,
             },
         ],
         "resource_reads": [],
@@ -425,6 +429,79 @@ def test_complete_assigned_transport_is_recoverable_without_a_terminal_transcrip
         inspect_assigned_transport(
             b"\n".join(json.dumps(frame).encode() for frame in zero_duration), assignment
         )
+
+
+def test_assigned_transport_retains_overlapping_call_intervals(assignment):
+    workflow = str(assignment.snapshot.workflow_run_id)
+    assignment = assignment.model_copy(
+        update={
+            "allowed_actions": (
+                "image2env_preview_status_v1",
+                "image2env_compile_v2_0_0",
+            ),
+            "call_budget": 3,
+        }
+    )
+    status = {
+        "content": [],
+        "structuredContent": {"snapshot": assignment.snapshot.model_dump(mode="json")},
+    }
+    compile_result = {
+        "content": [],
+        "structuredContent": {"stage": "compile", "elapsed_seconds": 20e-9},
+    }
+    frames = [
+        (0, "request", 0, "image2env_preview_status_v1", status),
+        (1, "response", 10, "image2env_preview_status_v1", status),
+        (2, "request", 20, "image2env_compile_v2_0_0", compile_result),
+        (3, "request", 30, "image2env_preview_status_v1", status),
+        (4, "response", 50, "image2env_compile_v2_0_0", compile_result),
+        (5, "response", 60, "image2env_preview_status_v1", status),
+    ]
+    request_ids = {
+        "image2env_preview_status_v1": iter((1, 3)),
+        "image2env_compile_v2_0_0": iter((2,)),
+    }
+    pending = {}
+    wire = []
+    for sequence, direction, moment, tool, result in frames:
+        if direction == "request":
+            identity = next(request_ids[tool])
+            pending[tool] = identity
+            message = {
+                "jsonrpc": "2.0",
+                "id": identity,
+                "method": "tools/call",
+                "params": {"name": tool, "arguments": {"workflow_id": workflow}},
+            }
+        else:
+            identity = pending.pop(tool)
+            message = {"jsonrpc": "2.0", "id": identity, "result": result}
+        wire.append(
+            {
+                "sequence": sequence,
+                "monotonic_ns": moment,
+                "direction": direction,
+                "message": message,
+            }
+        )
+
+    calls = inspect_assigned_transport(
+        b"\n".join(json.dumps(frame).encode() for frame in wire), assignment
+    )["calls"]
+
+    assert [
+        (
+            call["tool"],
+            call["transport_started_monotonic_ns"],
+            call["transport_ended_monotonic_ns"],
+        )
+        for call in calls
+    ] == [
+        ("image2env_preview_status_v1", 0, 10),
+        ("image2env_compile_v2_0_0", 20, 50),
+        ("image2env_preview_status_v1", 30, 60),
+    ]
 
 
 @pytest.mark.parametrize("exit_code,expected", [(0, "invalid_transcript"), (17, "exit_failure")])
