@@ -679,3 +679,16 @@ def test_real_external_fixture_process_failure_is_structured(assignment, tmp_pat
     assert schema["additionalProperties"] is False
     assert schema["properties"]["decision"]["enum"] == ["phase_complete", "unsupported"]
     assert set(schema["required"]) == {"workflow_id", "decision", "reason"}
+    assert "--approve-for-me" in argv
+    assert argv[argv.index("--sandbox") + 1] == "read-only"
+    assert "--ignore-user-config" in argv
+    assert "--ignore-rules" in argv
+    assert "--dangerously-bypass-approvals-and-sandbox" not in argv
+    assert "--dangerously-bypass-hook-trust" not in argv
+    overrides = [argv[index + 1] for index, value in enumerate(argv) if value == "-c"]
+    assert "features.shell_tool=false" in overrides
+    assert "features.multi_agent=false" in overrides
+    mcp_config = next(value for value in overrides if value.startswith("mcp_servers="))
+    assert "enabled_tools=" in mcp_config
+    assert all(action in mcp_config for action in assignment.allowed_actions)
+    assert "skill.invoke" not in mcp_config
