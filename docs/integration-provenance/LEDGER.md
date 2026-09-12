@@ -286,3 +286,12 @@ Bingsheng。任何进入 Harness 的资产必须单独固定来源、许可和�
 Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支撑/穿透判据和 physics 后媒体门是
 重要候选实现。它们只有在当前 Harness run 中由固定输入和资产哈希驱动、真实 Genesis 执行并通过
 最终能力门后，才能把验证状态改为 `runtime_pass`。
+## INT-CANONICAL-C02 — 批准验收合同冻结
+
+- origin_owner / integration_owner：Bingsheng 项目；第三方实现本提交未吸收。
+- source_ref：`0a8abc01839f2c37a64b9c08f643f48985fb4a79` 的批准实施计划与Q01–Q64。
+- target_paths：`CONTEXT.md`、golden progress的SEAMS/ACCEPTANCE/SKILL_CONTRACTS及两份v1 JSON。
+- integration_method：逐字固定prompt与数值判据；不改变来源策略或降低替代重建验收门。
+- verification_evidence：`tests/self_improving/harness/x2env/test_acceptance_contract.py`，4 passed。
+- runtime_verification：not_run；没有新的模型、Genesis或发布能力授予。
+- recorded_git_authors：以本提交Git元数据为准，不推断自然人身份映射。

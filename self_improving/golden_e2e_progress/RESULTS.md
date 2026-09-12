@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C02 冻结验收合同
+
+- 机读 `qualification-matrix-v1.json` 保留12条原prompt、seed、4+4+4分组、4/4与8/12门、
+  四份输入媒体摘要、补充门和copy-run优先级；`physics-assertions-v1.json`固定原数值阈值。
+- CONTEXT、SEAMS、ACCEPTANCE、SKILL_CONTRACTS 收敛为一个workflow、三个public Skills及内部tools。
+- 公开合同测试RED→GREEN，4 passed；四份真实媒体574134 bytes的size/SHA匹配。
+- C02只证明合同冻结，不证明compiler、provider、Genesis、copy-run或最终资格通过。
+
 ## 2026-09-13 C01 clean 基线与 canonical 开始
 
 - 全部6个dirty工作树和主目录子模块均已本地archive+独立恢复核验；原其他工作树未修改。

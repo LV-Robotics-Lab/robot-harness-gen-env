@@ -2,11 +2,12 @@
 
 更新时间：2026-09-13
 
-## Doing：C01 来源收敛；C07 替代后端并行推进
+## Doing：C03 类型化能力接线；C07 替代后端并行推进
 
 - 当前 authority：`codex/canonical-x2env-consolidation-20260913` 新 worktree；基于已吸收独立用户文档
   的 clean `worktree/bingsheng@46a2718`。C01保护和source intake完成；实际功能吸收尚待C03–C14。
-- C02 正在冻结机读矩阵/物理profile与新合同；C03 首request seam已RED→GREEN（9 tests）。
+- C02 已冻结机读矩阵、全部物理阈值与新合同，4项契约测试通过；不是runtime资格。
+- C03 request/SceneIR/CapabilityRegistry 已逐seam RED→GREEN；当前合并快测29 passed，尚未接运行时。
 - Gujie 替代后端 TRELLIS 在外部隔离环境准备，保留原Hunyuan接口非默认；不是新geometry成功。
 - 下列 C01 暂停/待清理描述仅为历史过程，不再作为执行指令。
 

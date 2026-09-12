@@ -1,0 +1,358 @@
+{
+  "schema_version": "x2env.qualification_matrix.v1",
+  "status": "accepted_matrix_v1_frozen",
+  "approval_commit": "0a8abc01839f2c37a64b9c08f643f48985fb4a79",
+  "plan": "CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md",
+  "prompt_assembly": "Remove Markdown '> ' prefix, concatenate consecutive quoted physical lines without added whitespace; separate quoted paragraphs with '\\n\\n'; empty prompt is null. No wording changes.",
+  "media": [
+    {
+      "logical_path": "inputs/centered-red-cube.png",
+      "staging_source": "/home/jingxiang/bingsheng/generic-experiment-v2-20260913.1QrGYD/inputs/centered-red-cube.png",
+      "bytes": 30643,
+      "sha256": "a4c62f05001d759a43aa0bf0964bde7e7ee5df08ae546e21d6ba2e182ef27202"
+    },
+    {
+      "logical_path": "inputs/centered-red-cube.mp4",
+      "staging_source": "/home/jingxiang/bingsheng/generic-experiment-v2-20260913.1QrGYD/inputs/centered-red-cube.mp4",
+      "bytes": 14899,
+      "sha256": "7400aa21cb455c6efb142d96d2f1632d5329cf759aeb01ba498ed39e21dc5df8"
+    },
+    {
+      "logical_path": "inputs/mouse-and-pen.jpg",
+      "staging_source": "/home/jingxiang/gujie/鼠标和笔.jpg",
+      "bytes": 134727,
+      "sha256": "044e68562224788ad4e395d9c7cae49c148eb509a15f9ff11eb4aa39bc467d48"
+    },
+    {
+      "logical_path": "inputs/mouse-video.mp4",
+      "staging_source": "/home/jingxiang/gujie/鼠标视频.mp4",
+      "bytes": 393865,
+      "sha256": "5c7aa9c809aaff9c5f4d3076502d99cba0f72e46754102184b9c5c9db8d88634"
+    }
+  ],
+  "cases": [
+    {
+      "id": "S01",
+      "difficulty": "simple",
+      "seed": 11,
+      "modality": "text",
+      "prompt": "在长90厘米、宽70厘米的桌面上放一个粉红色鼠标。以桌面中心为原点，鼠标中心位于x=10厘米、y=-8厘米，绕桌面z轴旋转30度。",
+      "media": [],
+      "source_policy": "local_only",
+      "assertions": [
+        "mouse 1 + table 1",
+        "pink binds mouse",
+        "table 0.90m by 0.70m",
+        "table-local x=0.10±0.01m, y=-0.08±0.01m, yaw=30±1deg",
+        "mouse contacts table and stable",
+        "material revise creates child version; parent unchanged"
+      ],
+      "common_assertions": "G",
+      "physics_profile": "physics-assertions-v1.json"
+    },
+    {
+      "id": "S02",
+      "difficulty": "simple",
+      "seed": 23,
+      "modality": "image",
+      "prompt": null,
+      "media": [
+        "inputs/centered-red-cube.png"
+      ],
+      "source_policy": "local_only",
+      "assertions": [
+        "block 1 + table 1",
+        "red",
+        "normalized table-center x/y error each <=0.05",
+        "real image interpretation; no hidden text proposal"
+      ],
+      "common_assertions": "G",
+      "physics_profile": "physics-assertions-v1.json"
+    },
+    {
+      "id": "S03",
+      "difficulty": "simple",
+      "seed": 37,
+      "modality": "video",
+      "prompt": null,
+      "media": [
+        "inputs/centered-red-cube.mp4"
+      ],
+      "source_policy": "local_only",
+      "assertions": [
+        "block 1 + table 1",
+        "red",
+        "center relation",
+        "decode all 41 frames in order with sequence digest",
+        "final static scene only; no action reconstruction claim"
+      ],
+      "common_assertions": "G",
+      "physics_profile": "physics-assertions-v1.json"
+    },
+    {
+      "id": "S04",
+      "difficulty": "simple",
+      "seed": 41,
+      "modality": "multimodal",
+      "prompt": "忽略参考图的颜色、尺寸和位置，只保留方块类别。生成一个蓝色、边长8厘米的方块，放在长80厘米、宽60厘米工作台顶面的局部坐标x=-15厘米、y=10厘米，绕z轴45度。",
+      "media": [
+        "inputs/centered-red-cube.png"
+      ],
+      "source_policy": "web_only",
+      "assertions": [
+        "blue cube 1 + worktop 1",
+        "cube side 0.08±0.002m",
+        "worktop 0.80m by 0.60m",
+        "x=-0.15±0.01m, y=0.10±0.01m, yaw=45±1deg",
+        "text overrides each image field with provenance",
+        "Yuxin download only; no local/generated substitute",
+        "CC0/CC-BY source URL bytes hash attribution"
+      ],
+      "common_assertions": "G",
+      "physics_profile": "physics-assertions-v1.json"
+    },
+    {
+      "id": "M01",
+      "difficulty": "medium",
+      "seed": 101,
+      "modality": "text",
+      "prompt": "在桌上生成一个打开的柜子，柜子上放着粉红色的鼠标。",
+      "media": [],
+      "source_policy": "local_then_cousin_then_web_then_reconstruction",
+      "assertions": [
+        "cabinet + mouse + table",
+        "pink binds mouse only",
+        "mouse on cabinet; cabinet on table",
+        "door real joint, finite limits, nonzero legal initial opening",
+        "no cabinet-specific generator",
+        "failure precisely attributed; not standalone hard gate"
+      ],
+      "common_assertions": "G",
+      "physics_profile": "physics-assertions-v1.json"
+    },
+    {
+      "id": "M02",
+      "difficulty": "medium",
+      "seed": 103,
+      "modality": "text",
+      "prompt": "在厨房操作台上放一个绿色购物篮，篮子里面竖直放一个银色易拉罐；篮子中心位于操作台中心左侧15厘米。",
+      "media": [],
+      "source_policy": "local_then_cousin_then_web_then_reconstruction",
+      "assertions": [
+        "basket + can + counter",
+        "green basket; silver can",
+        "can upright inside measured basket cavity with bottom contact",
+        "no outer AABB substitution; complete footprint inside",
+        "basket x=-0.15±0.01m"
+      ],
+      "common_assertions": "G",
+      "physics_profile": "physics-assertions-v1.json"
+    },
+    {
+      "id": "M03",
+      "difficulty": "medium",
+      "seed": 107,
+      "modality": "text",
+      "prompt": "在桌面中央放一个白色盘子，盘子中央竖直放一个红色易拉罐；在盘子右侧20厘米处放一个蓝色鼠标。",
+      "media": [],
+      "source_policy": "local_then_cousin_then_web_then_reconstruction",
+      "assertions": [
+        "plate + can + mouse + table",
+        "can on plate on table; mouse on table",
+        "white plate; red can; blue mouse",
+        "mouse.x - plate.x=0.20±0.01m",
+        "can cannot penetrate plate and contact table instead"
+      ],
+      "common_assertions": "G",
+      "physics_profile": "physics-assertions-v1.json"
+    },
+    {
+      "id": "M04",
+      "difficulty": "medium",
+      "seed": 109,
+      "modality": "multimodal",
+      "prompt": "只重建图片中的粉红色鼠标，忽略笔。保持鼠标外形与颜色，将鼠标放在水平桌面中心。",
+      "media": [
+        "inputs/mouse-and-pen.jpg"
+      ],
+      "source_policy": "reconstruction_only",
+      "assertions": [
+        "output geometry digest absent from AssetRegistry before run",
+        "no old mouse archive or procedural primitive",
+        "mouse 1 + table 1; pen excluded; pink",
+        "real fixed reconstruction seam",
+        "reconstruction source hard gate: M04 or other actual reconstruction success"
+      ],
+      "common_assertions": "G",
+      "physics_profile": "physics-assertions-v1.json"
+    },
+    {
+      "id": "H01",
+      "difficulty": "hard",
+      "seed": 211,
+      "modality": "text",
+      "prompt": "在厨房操作台上放一个蓝色购物篮，篮中并排放两个竖直易拉罐，红罐在银罐左侧10厘米；篮子右侧25厘米放一个白色盘子。",
+      "media": [],
+      "source_policy": "local_then_cousin_then_web_then_reconstruction",
+      "assertions": [
+        "basket + 2 cans + plate + counter",
+        "blue basket; red/silver distinct upright cans inside basket; white plate",
+        "silver_can.x - red_can.x=0.10±0.01m",
+        "plate.x - basket.x=0.25±0.01m",
+        "multi-contact, nonpenetration, stability"
+      ],
+      "common_assertions": "G",
+      "physics_profile": "physics-assertions-v1.json"
+    },
+    {
+      "id": "H02",
+      "difficulty": "hard",
+      "seed": 223,
+      "modality": "text",
+      "prompt": "在长120厘米、宽80厘米的桌面上放一个购物篮、两个盘子、两个易拉罐和两个鼠标。篮子中心在(-35,0)厘米；白盘在(0,15)厘米，蓝盘在(30,15)厘米；红罐在白盘中央，银罐在蓝盘中央；粉红鼠标在(0,-20)厘米，黑鼠标在(30,-20)厘米。",
+      "media": [],
+      "source_policy": "local_then_cousin_then_web_then_reconstruction",
+      "assertions": [
+        "7 foreground + table =8 entities",
+        "table 1.20m by 0.80m",
+        "distinct IDs for repeated categories",
+        "basket (-0.35,0)m; white plate (0,0.15)m; blue plate (0.30,0.15)m",
+        "red can on white plate; silver can on blue plate",
+        "pink mouse (0,-0.20)m; black mouse (0.30,-0.20)m",
+        "all coordinates tolerance 0.01m; full physics G"
+      ],
+      "common_assertions": "G",
+      "physics_profile": "physics-assertions-v1.json"
+    },
+    {
+      "id": "H03",
+      "difficulty": "hard",
+      "seed": 227,
+      "modality": "multimodal",
+      "prompt": "使用视频中的鼠标外形，以最后一帧为参考；忽略视频中的桌面位置。把鼠标放在桌面局部坐标(-15,10)厘米，在它右侧25厘米放一个橙色盘子，并在盘子中央竖直放一个银色易拉罐。",
+      "media": [
+        "inputs/mouse-video.mp4"
+      ],
+      "source_policy": "local_then_cousin_then_web_then_reconstruction",
+      "assertions": [
+        "mouse + plate + can + table",
+        "mouse shape final-frame provenance; text overrides pose",
+        "mouse (-0.15,0.10)m",
+        "orange plate; upright silver can on plate",
+        "plate.x - mouse.x=0.25±0.01m",
+        "mouse reconstruction allowed; others default order; each actual source/version reported"
+      ],
+      "common_assertions": "G",
+      "physics_profile": "physics-assertions-v1.json"
+    },
+    {
+      "id": "H04",
+      "difficulty": "hard",
+      "seed": 229,
+      "modality": "multimodal",
+      "prompt": "以图片中的鼠标和笔的位置关系为准，视频只补充鼠标外形。把笔改成黄色，其余颜色保持图片所示；保留笔跨放在鼠标与桌面上的关系。",
+      "media": [
+        "inputs/mouse-and-pen.jpg",
+        "inputs/mouse-video.mp4"
+      ],
+      "source_policy": "local_then_cousin_then_web_then_reconstruction",
+      "assertions": [
+        "mouse + pen + table",
+        "per-field image/video/text provenance; yellow binds pen only",
+        "pen simultaneously contacts mouse and table; do not flatten into pen-on-table",
+        "occlusion geometry and continuous physical/visual G",
+        "unsupported_relation failure if general support graph cannot express relation"
+      ],
+      "common_assertions": "G",
+      "physics_profile": "physics-assertions-v1.json"
+    }
+  ],
+  "scoring": {
+    "minimum_total": 8,
+    "required_simple": 4,
+    "denominator": 12,
+    "success_only": true,
+    "zero_score": [
+      "blocked",
+      "failed",
+      "cancelled",
+      "timed_out"
+    ],
+    "required_modalities": [
+      "text",
+      "image",
+      "video",
+      "multimodal"
+    ],
+    "required_sources": [
+      "local",
+      "licensed_web",
+      "reconstruction"
+    ],
+    "digital_cousin_required": false,
+    "all_cases_require_artifact": true
+  },
+  "common_assertions": {
+    "G": [
+      "Real managed Codex proposal with model, input, seed and per-field provenance; no omitted entities/attributes/relations",
+      "Harness executes asset.resolve, x2env.compile, x2env.replay, observe, x2env.validate; atomic succeeded only after readable package",
+      "Real Genesis build/load/reset/step; seed affects layout/reconstruction/simulator; all dynamic foreground collisions enabled",
+      "Independent baseline and half-dt, frozen trajectory/contact/penetration/support/containment/stability/final consistency assertions",
+      "Fresh observation bound to current SceneIR/replay revision; physical and Codex visual both passed, reported separately",
+      "Real image and sequential MP4, total/unique frame counts and timestamps; no repeated still-image fabrication",
+      "Complete relative-path asset closure, loader, runtime.lock.json, provenance/version/reports; robot_policy_evaluated=false, data_collection_evaluated=false"
+    ]
+  },
+  "supplementary_gates": [
+    "source-fallback",
+    "fallback-A",
+    "fallback-B",
+    "bounded-stop",
+    "dead-owner-resume",
+    "clarification-resume",
+    "idempotency"
+  ],
+  "copy_run_selection": {
+    "first": "S01",
+    "new_reconstruction_priority": [
+      "M04",
+      "H03",
+      "H04",
+      "M01",
+      "H02",
+      "H01",
+      "M02",
+      "M03"
+    ],
+    "rich_scene_priority": [
+      "M01",
+      "H04",
+      "H03",
+      "H02",
+      "H01",
+      "M03",
+      "M02",
+      "S04",
+      "S03",
+      "S02"
+    ],
+    "distinct_workflows": 3,
+    "deny_original_resources": true
+  },
+  "budget": {
+    "case_total_seconds": 1800,
+    "sigint_at_seconds": 1770,
+    "shutdown_grace_seconds": 30,
+    "combined_scene_asset_revisions": 2,
+    "provider_attempts_per_source": 1
+  },
+  "reconstruction_adapter_policy": {
+    "original_gujie_interface": "retained_nondefault",
+    "alternative_backend": "user_approved_fixed_external_reconstruction_seam",
+    "default_controller": "Harness",
+    "semantic_authority": "managed_Codex",
+    "new_geometry_required": true,
+    "primitive_substitution": false,
+    "assertions_unchanged": true
+  }
+}

@@ -1,102 +1,52 @@
-# Golden E2E 验收合同草案
+# canonical x2env 验收合同
 
-状态：`accepted_2026-09-09`
+状态：accepted_matrix_v1_frozen。权威为已批准实施计划和用户允许替代重建后端的补充。
 
-## 证据等级
+## 固定输入与计分
 
-| 等级 | 名称 | 可以声称 | 不可以声称 |
-| --- | --- | --- | --- |
-| E0 | contract-tested | schema/纯逻辑/攻击测试通过 | Codex、Genesis 或物理已运行 |
-| E1 | package-verified | portable closure、static validation、asset decision 完整 | replay 或 sim-ready |
-| E2 | Genesis rigid replay | 原生 load/build、collision、非零 step、物理与连续媒体门通过 | robot policy-ready |
-| E3 | Genesis robot-policy ready | reset/action/observation/termination/trajectory 真实 probe 通过 | 训练 policy 成功或真机能力 |
-| E4 | promoted golden | E3 + validate publishable + promotion receipt + portable restart/replay | 未测试模态/任务/机器泛化 |
+[qualification-matrix-v1.json](qualification-matrix-v1.json)包含12个唯一ID，simple/medium/hard各4。
+prompt移除Markdown引用前缀，同一引用自然段物理行无分隔连接，空prompt为null。
+媒体按固定bytes/SHA识别，路径只是staging locator；输入pack仍需MIME/尺寸/完整帧与上传授权。
+四份输入已轻量核对不等于重建通过。
 
-最终 golden case 必须达到 E4。E2 只是接入 Gujie 物理底座的中间结果。
+共同G与case附加断言都通过才计1分；blocked/failed/cancelled/timed_out均0分。
+必须simple4/4、总分≥8/12，text/image/video/multimodal与local/licensed web/真实重建各有成功；
+digital cousin可not_run。M01不是额外硬门，但成功必须真实articulation。
+所有12例均交付环境或不可变失败包。
+Gujie原接口保留非默认，用户批准的固定替代后端通过同一reconstruction seam接入，
+不能用primitive/旧资产复制代替新geometry，不能弱化M04或其他重建来源硬门。
 
-## 每条 standalone modality golden line
+## 冻结物理与视觉
 
-text/image/video 各自必须至少覆盖：
+[physics-assertions-v1.json](physics-assertions-v1.json)是数值权威。
+baseline .004s×1000、half-dt .002s×2000，均4s独立零初速。
+每动态实体末.5s translation≤.001m、rotation≤.5°、drift≤.002m/s、
+angular rate≤1°/s、excursion≤.001m。有效速度max(|v|,radius*|w|)≥1.5*g*dt连续行数<5。
+支撑末段dropout≤.05、contact中向上力>1e-6N比例≥.8；
+全轨迹penetration≤.001m、最低顶点≥-.001m；完整旋转visual+collision footprint margin≥.02m。
+inside必须测量内腔，clearance≥.005m、距内部底面≤.003m，同样contact/support/penetration门；
+多支撑每target有效contact fraction≥.5。跨dt终态position≤.01m、rotation≤5°。
+open revolute span≥30°，距closed≥max(15°,20%span)，初始处于20%–80%span；
+4s drift≤2°、末段speed≤1°/s、全程越limit≤.5°。
+缺内腔/关节metadata返回missing_physical_metadata，不估计宽松阈值。物理与视觉必须分别通过。
 
-- exact asset reuse；
-- task-affordance digital cousin reuse；
-- fresh asset generation；
-- environment/package reuse；
-- static validation 与完整 asset/CAS closure；
-- portable materialization 到新路径；
-- Genesis rigid replay；
-- robot-policy probe 与 trajectory/data manifest；
-- fresh image/video observation；
-- Codex visual assessment；
-- 至少一个诊断 + prompt revision 或显式 cross-modal fallback case；
-- validate publishable 与 ephemeral promotion；
-- 任何失败都保留 typed blocker/receipt，不得被最终成功覆盖或删除。
+## 补充、复制和执行门
 
-固定 deterministic golden cases 必须 100% 通过。随机输入是从 sealed case pool 通过记录 seed 的确定性
-采样，不是运行后挑成功样本；全部选中 case 均计入分母。
+source-fallback、fallback-A、fallback-B、bounded-stop、dead-owner-resume、
+clarification-resume、idempotency独立通过；fault只通过qualification外部adapter seam，
+不进入public request/Registry，不预填Codex proposal。scene+asset合计最多2修订，
+重复error+SceneIR/asset+evidence fingerprint立即停止；provider每来源一次。
+完整case总1800s，1770s精确owner SIGINT留30s收口，超时cancelled/timed_out。
+不立即换seed、缩小场景或删断言补跑。
 
-## 综合 Codex 路由
+每成功包静态闭包验证；三个不同包按matrix固定顺序复制：S01、首个新重建包、
+排除前两者的首个丰富场景。OS拒绝原workspace/CAS/资产/包，
+真实version check/load/reset/step/新观测contact/stability与新图/连续MP4。
+只复用声明外部runtime，不复制8.5GB运行环境。
 
-一个 workflow 输入可只有 text，也可含任意 text/image/video 组合。外部 Codex 必须：
-
-1. 创建/读取 workflow context；
-2. 选择正确 exact qualified compile façade；
-3. 等待并读取 ToolResult；
-4. 调用 replay 和 fresh observation；
-5. 对失败或视觉冲突提交引用充分的 diagnosis/prompt revision；
-6. 必要时显式 fallback，并保留 predecessor；
-7. 调用 matching validate；
-8. 仅在 publishable 时请求 promotion；
-9. 返回可由 Harness 独立重验的 workflow/evidence refs。
-
-真实 Codex 评分门见 `AUTORESEARCH_SETUP.md`：route >= 0.95、closed loop >= 0.90、每模态保护门、
-unsafe publication/evidence binding/unlogged failure 全为 0。
-
-## 物理和 robot-policy 门
-
-- Genesis runtime/adapter/source/dependencies 有精确身份与 capability attestation。
-- scene build 启用 collision；所有动态对象非 static，除明确 support/ground/robot base。
-- 非零 physics steps；支持、containment、穿透、稳定性使用 target-local 完整 footprint。
-- baseline/half-dt 或同等扰动重放满足冻结一致性门；intervention 后状态不能冒充自由 pass。
-- robot reset 可重复；bounded 非零 action 能引起符合 action contract 的 state change。
-- observation shape/dtype/time/frame 与执行 step 绑定；contact 不是从截图推断。
-- trajectory 逐 step 保存 action/observation/termination/hash；dataset manifest 可重读。
-- 请求视频保存实际连续帧、总/唯一帧数、FPS、容器/帧摘要；start/end 图不够。
-
-## Portable replay 门
-
-- package 只含 CAS refs 与逻辑相对路径；绝对路径扫描为 0。
-- 在新的随机 materialization root 可加载、replay、validate。
-- 关闭进程并重启后，从 workflow repository/event/receipt/CAS 恢复相同权威状态。
-- 所有 required artifact 可重读并复算 SHA/bytes/schema；缺一项 fail closed。
-- deployment-specific runtime locator 只进入 materialization/runtime receipt，不进入 package identity。
-
-## 资产门
-
-- exact reuse 的 bytes/closure/representation digest 和 Genesis qualification 全部匹配。
-- digital cousin 明确记录 exact 差异、任务相关等价维度和验证阈值。
-- fresh generation 先 staging；generation QC 或 render 不允许写权威 asset library。
-- collision provenance、scale、mass/inertia、stable pose/settle 与当前 representation digest 绑定。
-- promotion 原子写入；crash 不留下半发布 ledger/package。
-
-## MCP/Codex 门
-
-- 使用官方 MCP client/server 完成真实协议协商、tools/list/call 和 resources read。
-- tools catalog 只来自 frozen qualified RegistrySnapshot；schema/tool digest committed。
-- stdio stdout 只有协议 frame，日志走 stderr；timeout/cancel/断线恢复有测试。
-- 至少一个真实 `codex exec` run 的 JSONL 能与 MCP server call receipts 对账。
-- ExternalAgentReceipt 只声明可证明的 client/version/config/transcript/tool-call digests，不伪造模型权重
-  snapshot 或隐藏推理。
-- Codex 自报 physics pass/publishable、引用 stale media 或未读完整视频均被拒绝。
-
-## 代码与文档门
-
-- clean committed checkout 的 `pytest -q` 全绿。
-- 新 workflow/MCP/IR/asset-repair core statement + branch coverage 100%；真实 adapter另有 integration
-  test 和 runtime evidence。
-- schema exporter、ruff、format/compile、`git diff --check` 通过。
-- 每个 feature 独立提交，测试与证据同提交；不夹带现有用户修改。
-- walkthrough 的每一步链接 spec、主要代码、测试和运行证据；root `AGENTS.md` 链接 walkthrough 与
-  progress directory。
-- 最终 limitation 明列：未运行真机；未运行的 Genesis backend/profile、输入 family、机器人任务和
-  external asset generator 均不作完成主张。
+C15 clean HEAD固定schema/capability/code；任何源码fixture阈值变化重新冻结与资格。
+canonical core语句/分支100%，外部adapter边界和真实运行验收，不用exclude掩盖业务。
+所有active CI、schema、ruff、文档链接与diff gate通过。最终报告入evidence prerelease，
+候选身份不可回填qualified；默认qualified部署另做有界验收，远端下载verify。
+正常push origin/worktree/bingsheng后停止，不开main PR。
+robot_policy_evaluated/data_collection_evaluated均false。
