@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-S02-DEVELOPMENT — 图像入口真实阻断证据
+
+- `source_ref`：固定clean canonical `3ba0956`；原输入SHA `a4c62f05001d759a43aa0bf0964bde7e7ee5df08ae546e21d6ba2e182ef27202`。
+- `origin_owner`：Bingsheng生成输入与Harness；Cesium Box许可/归属按原资产版本记录，不由本probe改写。
+- `integration_owner`：Bingsheng Harness workstream。
+- `verification`：真实模型识别语义后critical尺度/位姿未知阻断；无资产检索或仿真。现场与SHA见RESULTS S02条目。
+
 ## INT-CANONICAL-C15-PUBLISHER — 无覆盖传输与下载核验
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream；GitHub接口为官方gh/REST，非拷贝第三方实现。

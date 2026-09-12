@@ -1,5 +1,19 @@
 # 进度与结果
 
+## 2026-09-13 S02真实开发案例：关键未知阻断
+
+- 固定clean `3ba0956e70746e09c0261e2f5435f20d7ae8fabf`，原样冻结S02图像、text=null、seed23、local_only，
+  新Store按完整12ref来源图登记原Cesium Box版本，未修改category/ID/许可或手填proposal。
+- workflow `514c8561-00f2-41f0-b41c-d96333967391`，一次真实Codex53.778866s，命令wall54.079854s；
+  correctly识别table/red cube/on，但绝对尺度和位姿被标critical unknown，父blocked/clarification_required revision2。
+- ingest/interpret已完成；SceneIR、资产检索、preview、compile、replay、新图片/视频/环境包均未产生。
+  失败包保留原图、3份文本日志和原proposal；没有重试/resume，进程已退出，旧资产与固定源码未变。
+- 现场 `/home/jingxiang/bingsheng/canonical-s02-image-20260913.qkk5CJ`；audit-summary SHA256
+  `fbbd79e2c89da22204d964d7797e354588e3fb23a9c3ad9f3cc7bd5ba57f3a90`；failure manifest
+  `9168b8c9ffc74e1f693e5f96569d51d764da9c334da3f7eab78916221a1bbbef`。
+- 主会话已读独立审计并看原图。此为明确阻断，不计S02资格通过；后续研究显式生成设计尺度grounding，
+  不把不可观测真实尺寸当测量、不覆盖本次失败、不静默取消critical门。
+
 ## 2026-09-13 C15 发布传输组件（未发布）
 
 - GitHubArtifactPublisher限定clean冻结HEAD、本地/远端同一annotated tag object及commit；draft prerelease
