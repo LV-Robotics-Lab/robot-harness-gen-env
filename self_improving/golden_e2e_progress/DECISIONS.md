@@ -1,5 +1,16 @@
 # 稳定决策
 
+## 2026-09-13 canonical x2env 合并实施计划
+
+- 用户已逐项确认 Q01–Q64，权威检查点为
+  [`CANONICAL_X2ENV_MERGE_DECISIONS.md`](CANONICAL_X2ENV_MERGE_DECISIONS.md)。它固定三个 public
+  Skills、统一多模态入口、Harness/Codex 控制关系、分支与 dirty-byte 保护、Registry/存储边界、
+  4+4+4 验收矩阵、30 分钟核验上限、GitHub Release 制品路径、push 后等待 main PR 授权等计划输入。
+- 澄清已经结束，逐文件/逐提交/TDD/真实资格/branch-push 计划已生成在
+  [`CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md`](CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md)。
+  当前状态为等待用户审阅；用户批准时 Qualification Matrix v1 才冻结。不把计划写成已实现、
+  qualification 或 push。
+
 ## 2026-09-13 本轮实验审阅停止点
 
 - 三模态、三来源、A/B修复与复制包运行已有小型真实证据；暂停供用户审阅，不扩大为正式release。
