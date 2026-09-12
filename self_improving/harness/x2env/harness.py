@@ -1,10 +1,14 @@
 """Canonical user interface; the Harness owns execution and durable lifecycle."""
 
+import time
+from contextvars import ContextVar
 from pathlib import Path
 
 from .contracts import InputBundle, ToolResult, WorkflowHandle, WorkflowSnapshot, X2EnvRequest
 from .input import InputIngestError, ingest
 from .store import Store
+
+_deadline = ContextVar("x2env_resume_deadline", default=None)
 
 
 class Harness:
@@ -35,7 +39,10 @@ class Harness:
     def status(self, workflow_id: str) -> WorkflowSnapshot:
         return self._store.status(workflow_id)
 
-    def resume(self, workflow_id: str) -> WorkflowSnapshot:
+    def resume(self, workflow_id: str, *, timeout: int = 1770) -> WorkflowSnapshot:
+        if type(timeout) is not int or not 1 <= timeout <= 1770:
+            raise ValueError("resume timeout must be 1..1770 seconds")
+        token = _deadline.set(time.monotonic() + timeout)
         try:
             return self._resume(workflow_id)
         except KeyboardInterrupt as error:
@@ -69,6 +76,14 @@ class Harness:
                     snapshot, result, snapshot.input_bundle, status="cancelled", reason=reason
                 )
             raise
+        finally:
+            _deadline.reset(token)
+
+    def _remaining(self):
+        remaining = int(_deadline.get() - time.monotonic())
+        if remaining < 1:
+            raise KeyboardInterrupt("command_deadline")
+        return min(600, remaining)
 
     def _resume(self, workflow_id: str) -> WorkflowSnapshot:
         existing = self.status(workflow_id)
@@ -142,7 +157,7 @@ class Harness:
             / "attempts"
             / snapshot.workflow_id
             / operation.operation_id,
-            timeout=600,
+            timeout=self._remaining(),
         )
         proposal_ref = self._store.write_artifact(
             advisory.model_dump_json().encode(), "application/json"
@@ -178,6 +193,11 @@ class Harness:
             )
         scene_ref = self._store.write_artifact(
             proposal.scene.model_dump_json().encode(), "application/json"
+        )
+        result = ToolResult(
+            operation_id=operation.operation_id,
+            status="succeeded",
+            outputs=(*outputs, scene_ref),
         )
         snapshot = self._store.complete_operation(
             snapshot,
@@ -223,7 +243,7 @@ class Harness:
                 / "attempts"
                 / snapshot.workflow_id
                 / operation.operation_id,
-                timeout=600,
+                timeout=self._remaining(),
             )
             resolution_ref = self._store.write_artifact(
                 resolution.model_dump_json().encode(), "application/json"
@@ -265,6 +285,7 @@ class Harness:
                 reason="blocked_external_resource",
                 required_resources=("compile_policy",),
             )
+        self._remaining()
         snapshot = self._store.begin_operation(snapshot, "x2env.compile")
         operation = snapshot.operations[-1]
         try:
@@ -328,7 +349,7 @@ class Harness:
                 / "attempts"
                 / snapshot.workflow_id
                 / operation.operation_id,
-                timeout=600,
+                timeout=self._remaining(),
             )
             ref = self._store.write_artifact(replay.model_dump_json().encode(), "application/json")
             result = ToolResult(
@@ -377,6 +398,7 @@ class Harness:
             for op in reversed(snapshot.operations)
             if op.capability == "x2env.compile" and op.status == "succeeded"
         )
+        self._remaining()
         snapshot = self._store.begin_operation(snapshot, "observe")
         try:
             compiled = CompiledScene.model_validate_json(
@@ -431,7 +453,7 @@ class Harness:
                 / "attempts"
                 / snapshot.workflow_id
                 / operation.operation_id,
-                timeout=600,
+                timeout=self._remaining(),
             )
             advisory = DiagnosisResult.model_validate_json(advisory.model_dump_json())
             ref = self._store.write_artifact(
@@ -462,6 +484,7 @@ class Harness:
         from .diagnosis import DiagnosisResult
         from .observation import ObservationResult
 
+        self._remaining()
         snapshot = self._store.begin_operation(snapshot, "x2env.validate")
         try:
             observed = ObservationResult.model_validate_json(
@@ -532,6 +555,7 @@ class Harness:
         from .observation import ObservationResult
         from .revision import apply_revision
 
+        self._remaining()
         snapshot = self._store.begin_operation(snapshot, "revise")
         try:
             observed = ObservationResult.model_validate_json(

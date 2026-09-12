@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C12-CLI — 唯一公共入口与部署
+
+- `origin_owner`：Bingsheng Harness、Yuxin provider、Gujie重建接口；`integration_owner`：Bingsheng。
+- `source_ref`：controller `4c6db2d`、三来源 `36a0c7f`、预算port `dbf43a0`。
+- `target_paths`：x2env/cli.py、deployment.py、harness.py、pyproject.toml及对应测试。
+- `verification`：34项组件测试，含实际小视频解码和CAS绑定；未计模型/Genesis完整真实请求通过。
+
 ## INT-CANONICAL-C06-PORT-BUDGET — 准备结果和剩余预览预算
 
 - `origin_owner`：Yuxin provider、Bingsheng模型参数及resolver；`integration_owner`：Bingsheng。

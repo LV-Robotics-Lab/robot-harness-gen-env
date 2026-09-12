@@ -1,5 +1,17 @@
 # 进度与结果
 
+## 2026-09-13 C12 统一CLI与部署装配
+
+- x2env入口提供submit/status/resume/package；重复图像、视频、文本及组合进入同一Harness，
+  不新增MCP或外部Codex主控。配置固定Codex、Genesis根、原provider与重建后端/pins。
+- 视频重建首帧实际FFmpeg解码并核对ingest完整sequence的RGB SHA；图像从CAS取原canonical图，
+  不因原输入路径变化替换媒体。缺图、依赖、派生授权保留明确来源失败。
+- CLI剩余预算从命令起点扣除前置耗时，Harness.resume向模型/解析/replay/诊断传同一剩余预算；
+  时钟测试证明10s扣2s后replay/诊断收到8s，命令alarm负责CPU阶段中断保护。
+- 成功解释产生的SceneIR现在也进入该operation ToolResult.outputs；completion核对发现原先仅snapshot
+  有指针，新增RED后修复。新入口安装声明RED→GREEN；CLI/deployment/controller合计34 passed。
+- 本片组件集成接通；真实canonical完整请求、严格退出清理矩阵和成功包出口仍待验收。
+
 ## 2026-09-13 C06 资产准备证据与预览剩余预算
 
 - local/web预览明确接收本次resolver剩余秒数，预算不足不启动新预览；web保留完整managed

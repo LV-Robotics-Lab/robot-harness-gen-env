@@ -1,5 +1,11 @@
 # Canonical x2env（收敛实施中）
 
+统一实验入口现为 `x2env submit --deployment ... --text ... --seed ... --idempotency-key ... --output ...`，
+也可用 `python -m self_improving.harness.x2env.cli`。`--image`可重复，`--video`一次；status/resume/package
+使用workflow-id。部署只装配既有Harness与来源adapter；新入口尚未完成真实12案例验收。
+命令预算包含前置工作，进入后续阶段不重置预算。停止后的失败包可单独导出；取消清理期间不会
+自动启动大包读取。成功SceneIR必须同时绑定snapshot与解释操作的输出列表。
+
 local/web资产预览使用当前解析阶段的剩余预算；web规范化参数准备保留完整模型结果与失败证据，
 不会只提取参数而丢失模型失败原因。此处阶段预算不等同于整个用户命令的总时限。
 

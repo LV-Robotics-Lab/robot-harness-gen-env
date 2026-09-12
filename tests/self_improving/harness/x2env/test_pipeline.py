@@ -37,6 +37,29 @@ def test_cancelled_backend_is_journaled_without_fallback(tmp_path, reason, expec
     assert harness.resume(handle.workflow_id) == stopped
 
 
+def test_resume_budget_reaches_managed_model(tmp_path, monkeypatch):
+    import time
+
+    clock = [100.0]
+    monkeypatch.setattr(time, "monotonic", lambda: clock[0])
+
+    class ExpiredBackend:
+        def interpret(self, bundle, *, timeout, **kwargs):
+            assert timeout == 5
+            clock[0] += 6
+            raise KeyboardInterrupt("command_deadline")
+
+    harness = Harness(tmp_path / "state", backend_factory=lambda store: ExpiredBackend())
+    handle = harness.submit(
+        X2EnvRequest(
+            text="a table", seed=1, idempotency_key="budget", output_dir=str(tmp_path / "out")
+        )
+    )
+    with pytest.raises(KeyboardInterrupt):
+        harness.resume(handle.workflow_id, timeout=5)
+    assert harness.status(handle.workflow_id).stop_reason == "timed_out"
+
+
 @pytest.mark.parametrize("missing_width", [False, True])
 @pytest.mark.parametrize("with_replay", [False, True])
 @pytest.mark.parametrize("with_diagnosis", [False, True])
@@ -44,12 +67,17 @@ def test_cancelled_backend_is_journaled_without_fallback(tmp_path, reason, expec
 def test_single_workflow_advances_from_model_to_resolver_and_compile(
     tmp_path, missing_width, with_replay, with_diagnosis, contextual, monkeypatch
 ):
+    import time
+
+    clock = [100.0]
+    monkeypatch.setattr(time, "monotonic", lambda: clock[0])
     from self_improving.harness.x2env.assets import AssetRegistry
     from self_improving.harness.x2env.compile import StructuralPolicy
     from self_improving.harness.x2env.replay import GenesisReplayExecutor
     from self_improving.harness.x2env.resolver import LocalAssetResolver
 
     def runtime_double(scene, **kwargs):
+        assert kwargs["timeout_seconds"] == 8
         out = kwargs["output_dir"]
         out.mkdir(parents=True)
         result = {"status": "passed", "simulator_executed": True}
@@ -80,6 +108,8 @@ def test_single_workflow_advances_from_model_to_resolver_and_compile(
 
     class AdvisoryDouble:
         def interpret(self, bundle, **kwargs):
+            assert kwargs["timeout"] == 10
+            clock[0] += 2
             fields = ("category", "color", "dimensions", "material", "pose", "articulation_state")
             evidence = [{"source": "text", "input_sha256": bundle.text.sha256, "kind": "explicit"}]
             proposal = SceneIntentProposal.model_validate_json(
@@ -124,6 +154,7 @@ def test_single_workflow_advances_from_model_to_resolver_and_compile(
             self.store = store
 
         def assess_and_diagnose(self, scene_ir, observation, physics_report, **kwargs):
+            assert kwargs["timeout"] == 8
             from self_improving.harness.x2env.diagnosis import DiagnosisProposal, DiagnosisResult
 
             assert observation.scene_ir == scene_ir
@@ -173,7 +204,8 @@ def test_single_workflow_advances_from_model_to_resolver_and_compile(
             output_dir=str(tmp_path / "package"),
         )
     )
-    snapshot = harness.resume(handle.workflow_id)
+    snapshot = harness.resume(handle.workflow_id, timeout=10)
+    assert snapshot.scene_ir in snapshot.operations[1].result.outputs
     assert snapshot.workflow_id == handle.workflow_id
     expected = [
         "ingest",
