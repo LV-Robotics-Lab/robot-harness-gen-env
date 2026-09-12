@@ -2,12 +2,14 @@
 
 更新时间：2026-09-13
 
-## 用户验收在途：开放柜子与粉红鼠标
+## 用户验收完成：开放柜子与粉红鼠标
 
 - 原样提交用户 prompt“在桌上生成一个打开的柜子，柜子上放着粉红色的鼠标”，使用新的
-  development workflow 和真实内部 Codex；不改写为单物体 prompt。
-- 该请求含两个对象、开放式柜体和 object-on-object 支撑，超出已验证单刚体 profile。若拒绝，
-  保留结构化失败和所有部分产物；只有真实 replay 才登记新图片/视频。
+  development workflow 和真实内部 Codex；没有改写为单物体 prompt。
+- workflow `14fb808f-da9c-4354-8390-00b9d18dafb1`在acquire失败：模型把请求压成单cabinet，
+  遗漏鼠标/粉红色/开放状态/层级支撑；web没有cabinet。未进入Genesis，正确地没有图片或视频。
+- 完整结果和哈希见`docs/evidence/user-open-cabinet-pink-mouse-20260913.md`；后续是否扩展多对象
+  SceneIntent与通用重建由用户审阅后决定，本轮不自动改变实现。
 - Dashboard 三入口本次仍为 HTTP 404，无 task id，不伪造状态同步。
 
 ## Review（本轮实验版本暂停供审阅）

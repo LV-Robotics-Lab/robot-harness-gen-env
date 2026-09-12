@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-13 用户多对象 Prompt 实跑失败
+
+- 原样输入“在桌上生成一个打开的柜子，柜子上放着粉红色的鼠标”；workflow
+  `14fb808f-da9c-4354-8390-00b9d18dafb1`，源码`55eafc8` clean，命令wall 11.225583937s。
+- 真实Codex 9.801852654s后错误输出单对象cabinet/web意图，遗漏鼠标、粉红色、开放状态和层级
+  支撑，unknowns为空；acquire随后`web_asset_not_found`。revision2停止，未compile/replay/validate。
+- 没有本次PNG/MP4/package；完整机器结果、模型JSONL、失败诊断和SHA见
+  [证据笔记](../../docs/evidence/user-open-cabinet-pink-mouse-20260913.md)。这证明当前不能处理该
+  多对象/关节场景，不能用旧媒体或单刚体成功案例替代。
+
 ## 2026-09-13 最终限定回归、完整包复制验收与审阅入口
 
 - [walkthrough](../../repo-docs/walkthroughs/generic-experiment-20260913.md)已逐阶段链接合同/代码、

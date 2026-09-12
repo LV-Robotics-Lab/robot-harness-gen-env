@@ -68,6 +68,10 @@ ToolResult、状态增量、receipt 在同一父 workflow 下提交。CLI `passe
 视频完整解码 41 帧，模型只观察 0/20/40；不证明全序列运动一致。居中视频来源是旧失败案例首次
 真实居中回放，SHA `7400aa21cb455c6efb142d96d2f1632d5329cf759aeb01ba498ed39e21dc5df8`。
 
+用户随后原样测试“打开的柜子＋柜子上的粉红鼠标”。真实模型错误压成单cabinet/web意图，遗漏
+第二物体、颜色、开放状态和层级支撑；资产阶段`web_asset_not_found`，11.225584秒后停止，未产生
+Genesis媒体。此结果是多对象语义完整性缺口，不是合理降级；详见[运行证据](../../docs/evidence/user-open-cabinet-pink-mouse-20260913.md)。
+
 web 实际下载 Khronos/Cesium Box（CC-BY-4.0），固定来源提交
 `90d7ede14c7e280af263824604b427a1ca02cb66`，源 GLB SHA
 `ed52f7192b8311d700ac0ce80644e3852cd01537e4d62241b9acba023da3d54e`。
