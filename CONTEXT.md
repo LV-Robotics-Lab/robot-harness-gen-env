@@ -91,6 +91,14 @@ _Avoid_: one-shot generation、untracked fallback
 
 ## Golden E2E 语言
 
+**Scene Intent（场景意图）**:
+由文本和源媒体解释出的对象、布局与支撑要求，属于待校验的建议；它不代表选定资产或物理有效场景。
+_Avoid_: validated scene、asset binding、physical evidence
+
+**Asset Source（资产获取来源）**:
+资产候选通过本地库、联网获取或新生成进入任务的来源类别；它独立于 exact 或 digital cousin 的选用关系。
+_Avoid_: selection strategy、qualification、asset similarity
+
 **Golden Workflow（黄金工作流）**:
 把一次文本、图像、视频或组合请求，与其全部 Skill 尝试、状态推进、证据和晋升决定关联在
 同一父级身份下的可恢复闭环。

@@ -2,6 +2,15 @@
 
 状态：`accepted_2026-09-09`
 
+## 2026-09-12 通用实验管线授权切片
+
+本次可执行交接明确要求直接实现并限定快速测试范围，沿用 S1/S2/S3/S4/S5/S6，具体 adapter
+接口由主会话审阅后记录：`ExperimentInputs.ingest/accept_intent` 负责三模态原始输入和受限共享意图；
+`acquire/revise` 负责真实资产获取和不可变候选版本；`export_package/load_package/run_package` 负责
+可迁移包及真实加载。Golden 开发执行继续经过 `GoldenRunHarness.start/submit/read`，新增显式
+unqualified 类型，不构造假 qualification。controller/CLI 测试保留重试预算、错误、幂等和恢复。
+这不是新的用户确认门；本次交接已授权这些必要实现及 TDD。
+
 按仓库 `tdd` skill，以下是功能测试唯一允许跨越的公共 seam。每个切片先从这些 seam 观察 RED，
 再做最小 GREEN，不围绕 private helper 建测试。
 

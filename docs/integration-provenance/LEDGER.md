@@ -1,5 +1,23 @@
 # 功能级整合台账
 
+## INT-EXPERIMENT-INPUT-001 — 通用实验输入与共享意图
+
+- `lifecycle`：`integrating`；`verification`：`contract_pass`。
+- `origin_owner`：Bingsheng Harness；`integration_owner`：Bingsheng workstream。
+- `recorded_git_authors`：本切片 Git 提交记录独立于团队责任名。
+- `upstream_owner`：Pillow、FFmpeg；Gujie 提供被参考的媒体完整性设计。
+- `source_repository`：本仓库；`source_ref`：`9460a4b9ac3825e44b6e6641d5fdafe3034a8a6e`；
+  Gujie 参考固定 `eb0b710581fd7794bc01b447b0f77cb871c8a711`，未复制 dirty bytes。
+- `source_paths`：`image_ingest.py`、`video_ingest.py`；`dirty_snapshot`：`none`。
+- `target_paths`：`self_improving/harness/experiment_inputs.py`。
+- `integration_method`：调用既有 ingest，新增 FFmpeg 完整解码 adapter 与共享建议校验。
+- `contract_spec`：`self_improving/harness/EXPERIMENT_INPUTS_CONTRACT.md`。
+- `verification_evidence`：`tests/self_improving/harness/test_experiment_inputs.py`，5 passed；
+  实际 FFmpeg 12-frame 解码。此数不是业务 E2E。
+- `golden_run`：`none`；`known_gaps`：controller、资产与 Genesis 尚未接入该输入；
+  解释仅单刚体桌面 profile，视频只支持 H.264/yuv420p/CFR。
+- `last_verified`：`2026-09-12`。
+
 本文件是 Bingsheng、Gujie、Yuxin 三方工作进入 Golden E2E 的核对清单。状态定义与更新规则见
 [README](README.md)。以下是建账时已核实的基线，不把候选实现或历史测试扩大为完成主张。
 

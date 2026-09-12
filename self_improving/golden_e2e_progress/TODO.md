@@ -4,6 +4,13 @@
 
 ## Doing
 
+- 2026-09-12 新接手已核对：集成 HEAD `9460a4b` clean，主目录用户改动保留，未发现旧 preview
+  执行进程；dashboard 三入口仍 404，未同步。当前进入通用实验管线实现。
+- 文件所有权：主会话负责统一输入/共享意图、现有 controller/service 接线、整合与验收；独立
+  `generic-development-execution-20260912` 负责同一 Golden 的显式开发执行身份；
+  `generic-assets-20260912` 负责来源 adapter/不可变版本；`generic-portable-loader` 负责包入口与 copy-run。
+- 先完成小型公共 seam 测试，再记录各分支真实调用。旧 normal/repair、release 和 runtime 大闭包不重跑。
+
 - 本会话只执行安全停止与交接；不再启动 repair 验收、深验、bootstrap、资格重建或 release 发布。
   接手 prompt 是
   [`HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md`](HANDOFF_GENERIC_EXPERIMENT_PIPELINE_20260912.md)。

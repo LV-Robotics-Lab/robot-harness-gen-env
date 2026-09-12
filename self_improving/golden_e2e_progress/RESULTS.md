@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-12 通用输入首切片
+
+- 轻量确认集成 `9460a4b` clean；主目录用户改动保留；Dashboard 三入口 HTTP 404，未同步。
+- `ExperimentInputs.ingest/accept_intent` 测试先 RED（缺模块、图片/视频参数、意图接口），逐切片 GREEN
+  为 5 passed。FFmpeg 真实生成/完整解码 12-frame 测试视频；未执行 Genesis 或模型，不计 E2E。
+- 共享 SceneIntent 绑定原输入 SHA，拒绝多对象、unknowns、非有限位置、未实现支撑和权限字段。
+- 当前真实资产、便携 loader 和显式开发 execution 由三个独占 worktree 并行实现，尚未合入。
+
 ## 2026-09-12 安全停止与通用实验管线交接
 
 - 当前实现安全点为 `cc6afa236579f2360d808be68ae85e94fcfd81d8`；交接文档提交后的准确 branch
