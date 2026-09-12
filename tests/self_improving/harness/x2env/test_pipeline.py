@@ -14,6 +14,29 @@ from self_improving.harness.x2env.contracts import (
 from self_improving.harness.x2env.harness import Harness
 
 
+@pytest.mark.parametrize(
+    "reason,expected", [("command_deadline", "timed_out"), ("stop", "interrupted")]
+)
+def test_cancelled_backend_is_journaled_without_fallback(tmp_path, reason, expected):
+    class CancelledBackend:
+        def interpret(self, bundle, **kwargs):
+            raise KeyboardInterrupt(reason)
+
+    harness = Harness(tmp_path / "state", backend_factory=lambda store: CancelledBackend())
+    handle = harness.submit(
+        X2EnvRequest(
+            text="a table", seed=1, idempotency_key="cancel", output_dir=str(tmp_path / "out")
+        )
+    )
+    with pytest.raises(KeyboardInterrupt):
+        harness.resume(handle.workflow_id)
+    stopped = harness.status(handle.workflow_id)
+    assert stopped.status == "cancelled" and stopped.stop_reason == expected
+    assert stopped.operations[-1].status == "cancelled"
+    assert stopped.operations[-1].result.error_code == expected
+    assert harness.resume(handle.workflow_id) == stopped
+
+
 @pytest.mark.parametrize("missing_width", [False, True])
 @pytest.mark.parametrize("with_replay", [False, True])
 @pytest.mark.parametrize("with_diagnosis", [False, True])

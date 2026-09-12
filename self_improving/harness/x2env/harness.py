@@ -36,6 +36,41 @@ class Harness:
         return self._store.status(workflow_id)
 
     def resume(self, workflow_id: str) -> WorkflowSnapshot:
+        try:
+            return self._resume(workflow_id)
+        except KeyboardInterrupt as error:
+            import json
+
+            snapshot = self.status(workflow_id)
+            if snapshot.status == "active":
+                reason = "timed_out" if str(error) == "command_deadline" else "interrupted"
+                receipt = self._store.write_artifact(
+                    json.dumps(
+                        {
+                            "workflow_id": workflow_id,
+                            "reason": reason,
+                            "partial_artifacts_retained": True,
+                        }
+                    ).encode(),
+                    "application/json",
+                )
+                running = snapshot.operations and snapshot.operations[-1].status == "running"
+                result = (
+                    ToolResult(
+                        operation_id=snapshot.operations[-1].operation_id,
+                        status="cancelled",
+                        outputs=(receipt,),
+                        error_code=reason,
+                    )
+                    if running
+                    else None
+                )
+                self._store.complete_operation(
+                    snapshot, result, snapshot.input_bundle, status="cancelled", reason=reason
+                )
+            raise
+
+    def _resume(self, workflow_id: str) -> WorkflowSnapshot:
         existing = self.status(workflow_id)
         if existing.stop_reason == "clarification_required" or existing.replay_result is not None:
             return existing

@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import signal
 import subprocess
 import sys
 
@@ -10,6 +11,37 @@ import pytest
 from self_improving.harness.x2env.contracts import X2EnvRequest
 from self_improving.harness.x2env.input import ingest
 from self_improving.harness.x2env.store import Store
+
+
+def test_external_cancellation_propagates_after_scoped_cleanup(tmp_path):
+    from self_improving.harness.x2env.codex import CodexBackend
+
+    store = Store(tmp_path / "state")
+    bundle = ingest(
+        X2EnvRequest(text="a table", seed=1, idempotency_key="cancel", output_dir=str(tmp_path)),
+        store,
+    )
+    path = tmp_path / "waiting-model-double"
+    path.write_text(f"#!{sys.executable}\nimport time\ntime.sleep(20)\n")
+    path.chmod(0o700)
+    backend = CodexBackend(path, hashlib.sha256(path.read_bytes()).hexdigest(), "double", store)
+
+    def cancel(signum, frame):
+        raise KeyboardInterrupt("explicit test cancellation")
+
+    old = signal.signal(signal.SIGALRM, cancel)
+    signal.setitimer(signal.ITIMER_REAL, 0.3)
+    try:
+        with pytest.raises(KeyboardInterrupt):
+            backend.interpret(bundle, output_root=tmp_path / "attempt", timeout=10)
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, old)
+    terminal = json.loads((tmp_path / "attempt" / "process-terminal.json").read_text())
+    assert terminal["failure"] == "model_interrupted"
+    assert terminal["signals"] == ["SIGINT"]
+    assert terminal["reaped"] is True and terminal["returncode"] is not None
+    assert (tmp_path / "attempt" / "codex.stderr").is_file()
 
 
 def executable(tmp_path, response, event="turn.completed", tool=False):

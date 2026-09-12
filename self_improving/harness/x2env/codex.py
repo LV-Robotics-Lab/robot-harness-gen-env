@@ -423,6 +423,8 @@ class CodexBackend:
     def _invoke(self, root, prompt, images, schema, record, timeout, started):
         """One restricted transport for all advisory schemas; no workflow authority."""
         failure = None
+        cancellation = None
+        signals_sent = []
         record("prompt.txt", prompt.encode(), "text/plain")
         record(
             "proposal.schema.json",
@@ -485,22 +487,39 @@ class CodexBackend:
                     prompt.encode(), timeout=max(0.01, timeout - (time.monotonic() - started))
                 )
             except (subprocess.TimeoutExpired, KeyboardInterrupt) as exc:
+                cancellation = exc if isinstance(exc, KeyboardInterrupt) else None
                 failure = (
                     "model_timeout"
                     if isinstance(exc, subprocess.TimeoutExpired)
                     else "model_interrupted"
                 )
                 os.killpg(process.pid, signal.SIGINT)
+                signals_sent.append("SIGINT")
                 try:
                     process.wait(timeout=5)
                 except subprocess.TimeoutExpired:
                     os.killpg(process.pid, signal.SIGTERM)
+                    signals_sent.append("SIGTERM")
                     process.wait(timeout=5)
+        record(
+            "process-terminal.json",
+            json.dumps(
+                {
+                    "pid": process.pid,
+                    "returncode": process.returncode,
+                    "reaped": process.returncode is not None,
+                    "signals": signals_sent,
+                    "failure": failure,
+                }
+            ).encode(),
+        )
         for name in ("codex.jsonl", "codex.stderr"):
             record(name, (root / name).read_bytes(), "text/plain")
         proposal_path = root / "proposal.json"
         if proposal_path.is_file():
             record("proposal.json", proposal_path.read_bytes())
+        if cancellation is not None:
+            raise cancellation
         if failure:
             raise ValueError(failure)
         if process.returncode != 0:

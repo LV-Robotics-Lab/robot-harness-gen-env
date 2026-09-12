@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C04-CANCELLATION — 中断不再变成普通模型错误
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：受管理transport `7dcb40c`及请求controller `59fb2aa`。
+- `target_paths`：x2env/codex.py、harness.py和公开Codex/controller测试。
+- `verification`：真实短进程替身SIGINT收尾与controller取消日志，28项测试；不代表真实模型stall修复。
+
 ## INT-CANONICAL-C13-ASSET-GEOMETRY — 非三角网格拒绝
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。

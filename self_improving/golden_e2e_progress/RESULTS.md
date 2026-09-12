@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-13 C04/C12 取消传播与终态证据
+
+- 公开CodexBackend短进程测试先RED：KeyboardInterrupt被转换成普通错误，可能触发后续fallback。
+  修复后精确进程组SIGINT/必要SIGTERM收尾，记录process-terminal的returncode/signals/reaped，
+  保留日志后重新抛原取消；不把上层期限中断当成可重试资产错误。
+- Harness在当前running operation原子记录cancelled；命令期限原因为timed_out，人工取消为interrupted。
+  两个公开controller取消测试先RED，再通过；Codex/controller合计28 passed（3.02s）。
+- 这是取消语义修复，不是600s真实模型stall根因修复，也未回写历史failed/model_timeout。
+  只读超时对比见docs/research/canonical-codex-timeout-audit-20260913.md；总1770+30时限仍待CLI验证。
+
 ## 2026-09-13 C13 资产边界攻击覆盖
 
 - 真实PointCloud不是triangle mesh：Registry现明确ValueError拒绝，避免读取不存在faces时泄漏AttributeError。
