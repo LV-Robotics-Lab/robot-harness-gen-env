@@ -467,7 +467,7 @@ def test_automatic_retry_does_not_classify_failures_across_snapshot_progress(ser
         def run(self, assignment, *, output_root):
             self.count += 1
             output_root.mkdir()
-            if self.count == 1:
+            if self.count == 2:
                 boundary.progressed = True
             if self.count < 3:
                 return CodexBackendResult(
@@ -506,7 +506,8 @@ def test_automatic_retry_does_not_classify_failures_across_snapshot_progress(ser
     assert controller.run_to_terminal(service.workflow)["status"] == "unsupported"
     assert backend.count == 3
     rows = controller.attempts(service.workflow)
-    assert rows[0]["snapshot_sha256"] != rows[1]["snapshot_sha256"]
+    assert rows[0]["snapshot_sha256"] == rows[1]["snapshot_sha256"]
+    assert rows[1]["snapshot_sha256"] != rows[2]["snapshot_sha256"]
 
 
 def test_interrupted_attempt_waits_for_exact_live_process_then_resumes(service, tmp_path):

@@ -501,12 +501,48 @@ class LimitedImagePreviewController:
     def run_to_terminal(self, workflow_id, *, input_elapsed_ns=None):
         """Run bounded phases automatically; a still-owned process remains a wait result."""
         retryable = {"waiting", "timeout", "exit_failure", "invalid_transcript", "launch_failure"}
+        starting_attempts = len(self.attempts(workflow_id))
         for _ in range(self.max_attempts + 1):
             result = self.resume(workflow_id, input_elapsed_ns=input_elapsed_ns)
             input_elapsed_ns = None
             if result["status"] not in retryable:
                 return result
+            rows = self.attempts(workflow_id)
+            if len(rows) > starting_attempts and self._is_repeated_invalid_transcript(
+                workflow_id, rows
+            ):
+                last = rows[-1]
+                return dict(
+                    status="repeated_failure",
+                    workflow_id=str(workflow_id),
+                    attempt=last["number"],
+                    backend_status=last["backend_status"],
+                    reason="invalid_transcript repeated on unchanged authoritative snapshot",
+                    failure=last["failure"],
+                )
         return dict(status="attempt_limit", workflow_id=str(workflow_id))
+
+    def _is_repeated_invalid_transcript(self, workflow_id, rows):
+        if len(rows) < 2:
+            return False
+        previous, current = rows[-2:]
+        failure = current.get("failure")
+        if not (
+            previous.get("status") == current.get("status") == "terminal"
+            and previous.get("backend_status")
+            == current.get("backend_status")
+            == "invalid_transcript"
+            and isinstance(failure, str)
+            and failure
+            and previous.get("failure") == failure
+            and previous.get("snapshot_sha256") == current.get("snapshot_sha256")
+        ):
+            return False
+        status = self._status(workflow_id)
+        snapshot_sha256 = hashlib.sha256(
+            _canonical(status.snapshot.model_dump(mode="json"))
+        ).hexdigest()
+        return snapshot_sha256 == current["snapshot_sha256"]
 
     def _try_publish(self, current, rows):
         operation = current.operation
