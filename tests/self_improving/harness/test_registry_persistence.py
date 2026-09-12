@@ -7,21 +7,23 @@ from uuid import UUID
 
 import pytest
 
-from self_improving.harness import (
-    ArtifactRef,
+from self_improving.harness.artifacts import LocalArtifactStore
+from self_improving.harness.event_journal import SQLiteEventJournal
+from self_improving.harness.events import RunEvent
+from self_improving.harness.registry import (
     HandlerResult,
-    LocalArtifactStore,
-    RunEvent,
-    RunState,
-    RunStatus,
-    SkillDescriptor,
+    RunPersistenceError,
     SkillRegistry,
     StaticDependencyResolver,
 )
-from self_improving.harness.event_journal import SQLiteEventJournal
-from self_improving.harness.registry import RunPersistenceError
 from self_improving.harness.run_store import SQLiteRunStore
-from self_improving.harness.schemas import Invocation
+from self_improving.harness.schemas import (
+    ArtifactRef,
+    Invocation,
+    RunState,
+    RunStatus,
+    SkillDescriptor,
+)
 
 RUN_ID = UUID("12345678-1234-4234-9234-123456789abc")
 

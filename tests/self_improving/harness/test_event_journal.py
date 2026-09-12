@@ -10,12 +10,13 @@ from uuid import UUID
 
 import pytest
 
-from self_improving.harness import Event, RunEvent, RunStatus
 from self_improving.harness.event_journal import (
     EventJournalConflictError,
     EventJournalCorruptionError,
     SQLiteEventJournal,
 )
+from self_improving.harness.events import RunEvent
+from self_improving.harness.schemas import Event, RunStatus
 
 RUN_ID = UUID("12345678-1234-4234-9234-123456789abc")
 OTHER_RUN_ID = UUID("22345678-1234-4234-9234-123456789abc")

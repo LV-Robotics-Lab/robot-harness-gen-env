@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C13 G1 退役父包隐式旧执行入口
+
+- fresh subprocess 导入 canonical 原先会加载旧 application，公共导入测试先 RED 后 GREEN。
+  父包现在只有说明；demo feed 和 18 个旧测试消费者显式导入原模块，不引入 lazy aliases。
+- 仅退休两项纯父 re-export 身份测试，旧业务断言保留；入口/CLI/deployment 测试 23 passed（1.08s），
+  18 个受影响文件 802 passed / 1 skipped（61.12s），ruff 和 diff 检查通过。
+- 未删除仍被 demo 直接消费的旧实现，G2–G5、完整 C13、全仓测试及最终资格仍未完成。
+
 ## 2026-09-13 C03 三个Skill的实际typed执行绑定
 
 - 新skill_execution将CompileCall/ReplayCall/ValidateCall接唯一CapabilityRegistry，Harness实际经

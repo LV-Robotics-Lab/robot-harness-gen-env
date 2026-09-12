@@ -18,7 +18,6 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-import self_improving.harness as public_harness
 from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.golden_run import (
     GoldenRunConflictError,
@@ -160,9 +159,7 @@ def _qualified_registry(store: LocalArtifactStore, root: Path):
 
 
 def _load_registry(store: LocalArtifactStore, registry_ref) -> RegistrySnapshot:
-    return RegistrySnapshot.model_validate_json(
-        store.resolve(registry_ref).path.read_bytes()
-    )
+    return RegistrySnapshot.model_validate_json(store.resolve(registry_ref).path.read_bytes())
 
 
 def _publish_registry_entry(
@@ -381,20 +378,6 @@ def test_harness_rejects_a_workflow_store_lookalike(tmp_path: Path) -> None:
         )
 
 
-def test_golden_workflow_contracts_are_available_from_the_public_harness_facade() -> None:
-    assert public_harness.GoldenRunHarness is GoldenRunHarness
-    assert public_harness.GoldenRunNotFoundError is GoldenRunNotFoundError
-    assert public_harness.GoldenRunConflictError is GoldenRunConflictError
-    assert public_harness.GoldenRunCorruptionError is GoldenRunCorruptionError
-    assert public_harness.GoldenRunRegistryError is GoldenRunRegistryError
-    assert public_harness.RunReadRequest is RunReadRequest
-    assert public_harness.RunStartRequest is RunStartRequest
-    assert public_harness.RunSnapshot is RunSnapshot
-    assert public_harness.RegistrySnapshot is RegistrySnapshot
-    assert public_harness.SQLiteGoldenRunStore is SQLiteGoldenRunStore
-    assert public_harness.WorkflowStartReceipt is WorkflowStartReceipt
-
-
 @pytest.mark.parametrize(
     ("changes", "message"),
     [
@@ -472,9 +455,7 @@ def test_start_retry_rejects_tampered_idempotency_lookup_metadata(tmp_path: Path
         workflow_id_factory=lambda: WORKFLOW_ID,
     ).start(request)
     with closing(sqlite3.connect(database)) as connection, connection:
-        connection.execute(
-            "UPDATE golden_workflow_starts SET idempotency_key = 'tampered-key'"
-        )
+        connection.execute("UPDATE golden_workflow_starts SET idempotency_key = 'tampered-key'")
 
     with pytest.raises(
         GoldenRunCorruptionError,
@@ -544,13 +525,16 @@ def test_legacy_private_start_store_is_migrated_for_retry_and_read(tmp_path: Pat
     )
 
     assert migrated.start(request) == snapshot
-    assert migrated.read(
-        RunReadRequest(
-            schema_version="harness.run_read_request.v1",
-            principal_id="tests/golden-e2e",
-            workflow_run_id=WORKFLOW_ID,
+    assert (
+        migrated.read(
+            RunReadRequest(
+                schema_version="harness.run_read_request.v1",
+                principal_id="tests/golden-e2e",
+                workflow_run_id=WORKFLOW_ID,
+            )
         )
-    ) == snapshot
+        == snapshot
+    )
 
 
 def test_legacy_migration_preserves_a_corrupt_logical_request_identity(
@@ -640,12 +624,10 @@ import sys
 from pathlib import Path
 from uuid import UUID
 
-from self_improving.harness import (
-    GoldenRunHarness,
-    LocalArtifactStore,
-    RunReadRequest,
-    SQLiteGoldenRunStore,
-)
+from self_improving.harness.golden_run import GoldenRunHarness
+from self_improving.harness.artifacts import LocalArtifactStore
+from self_improving.harness.schemas import RunReadRequest
+from self_improving.harness.golden_store import SQLiteGoldenRunStore
 
 snapshot = GoldenRunHarness(
     artifact_store=LocalArtifactStore(Path(sys.argv[1])),
@@ -667,9 +649,7 @@ print(json.dumps(snapshot.model_dump(mode="json"), sort_keys=True))
         cwd=PROJECT_ROOT,
         env={
             **os.environ,
-            "PYTHONPATH": str(PROJECT_ROOT)
-            + os.pathsep
-            + os.environ.get("PYTHONPATH", ""),
+            "PYTHONPATH": str(PROJECT_ROOT) + os.pathsep + os.environ.get("PYTHONPATH", ""),
         },
         capture_output=True,
         text=True,
@@ -826,9 +806,7 @@ def test_read_rejects_corrupt_sqlite_snapshot_storage(
         "mismatched_checksum": "UPDATE golden_workflow_starts SET snapshot_sha256 = '"
         + "f" * 64
         + "'",
-        "invalid_authority_digest": (
-            "UPDATE golden_workflow_starts SET request_sha256 = 'broken'"
-        ),
+        "invalid_authority_digest": ("UPDATE golden_workflow_starts SET request_sha256 = 'broken'"),
     }
     with closing(sqlite3.connect(database)) as connection, connection:
         connection.execute(statements[attack])
@@ -878,9 +856,7 @@ def test_sqlite_golden_run_store_rejects_an_unknown_table_layout(tmp_path: Path)
         _current_store_layout_ddl(snapshot_json="TEXT NOT NULL"),
         _current_store_layout_ddl(snapshot_sha256="TEXT NOT NULL DEFAULT ''"),
         _current_store_layout_ddl(
-            extra_definitions=(
-                "hidden_copy TEXT GENERATED ALWAYS AS (principal_id) VIRTUAL",
-            )
+            extra_definitions=("hidden_copy TEXT GENERATED ALWAYS AS (principal_id) VIRTUAL",)
         ),
     ],
     ids=[
@@ -974,9 +950,7 @@ def test_sqlite_golden_run_store_rejects_a_forged_legacy_layout(tmp_path: Path) 
         ),
         _current_store_layout_ddl(table_suffix=" STRICT"),
         _current_store_layout_ddl(table_suffix=" WITHOUT ROWID"),
-        _current_store_layout_ddl(
-            workflow_run_id="TEXT NOT NULL PRIMARY KEY ON CONFLICT REPLACE"
-        ),
+        _current_store_layout_ddl(workflow_run_id="TEXT NOT NULL PRIMARY KEY ON CONFLICT REPLACE"),
         _current_store_layout_ddl().replace(
             "UNIQUE (principal_id, idempotency_key)",
             "UNIQUE (principal_id, idempotency_key) ON/**/CONFLICT REPLACE",
@@ -1088,12 +1062,8 @@ def test_sqlite_golden_run_store_rejects_a_factory_outside_its_reservation(
     receipt = WorkflowStartReceipt.model_validate_json(
         artifact_store.resolve(snapshot.receipt_head).path.read_bytes()
     )
-    principal_id = (
-        "tests/another-principal" if attack == "principal" else snapshot.principal_id
-    )
-    start_request_sha256 = (
-        snapshot.start_request_ref.sha256 if attack == "principal" else "f" * 64
-    )
+    principal_id = "tests/another-principal" if attack == "principal" else snapshot.principal_id
+    start_request_sha256 = snapshot.start_request_ref.sha256 if attack == "principal" else "f" * 64
     target = SQLiteGoldenRunStore(tmp_path / f"factory-{attack}.sqlite3")
 
     with pytest.raises(GoldenRunCorruptionError, match="authority metadata"):
@@ -1214,9 +1184,7 @@ def test_concurrent_start_is_one_durable_idempotent_transition(tmp_path: Path) -
         UUID("20000000-0000-4000-8000-000000000002"),
     }
     with closing(sqlite3.connect(database)) as connection:
-        assert connection.execute(
-            "SELECT COUNT(*) FROM golden_workflow_starts"
-        ).fetchone()[0] == 1
+        assert connection.execute("SELECT COUNT(*) FROM golden_workflow_starts").fetchone()[0] == 1
 
 
 def test_start_rejects_a_workflow_identity_collision_across_principals(
@@ -1313,9 +1281,9 @@ def test_start_retry_rejects_noncanonical_persisted_snapshot(tmp_path: Path) -> 
     harness.start(request)
     database = store.root / "golden-workflows.sqlite3"
     with closing(sqlite3.connect(database)) as connection:
-        payload = connection.execute(
-            "SELECT snapshot_json FROM golden_workflow_starts"
-        ).fetchone()[0]
+        payload = connection.execute("SELECT snapshot_json FROM golden_workflow_starts").fetchone()[
+            0
+        ]
     _replace_persisted_snapshot(store, payload.replace(b"{", b"{ ", 1))
 
     with pytest.raises(GoldenRunCorruptionError, match="canonical JSON bytes"):
@@ -1604,9 +1572,7 @@ def test_start_rejects_a_target_skill_claim_not_bound_by_qualified_descriptor(
         schema_version="harness.world_fact_evidence.v1",
     )
     registry_ref = _qualified_registry(store, tmp_path)
-    registry = RegistrySnapshot.model_validate_json(
-        store.resolve(registry_ref).path.read_bytes()
-    )
+    registry = RegistrySnapshot.model_validate_json(store.resolve(registry_ref).path.read_bytes())
     entry = registry.qualified_skills[0].model_copy(
         update={
             "skill_ref": "text2env.compile@2.0.0",
@@ -1775,9 +1741,7 @@ def test_start_requires_uuid4_identity_and_rolls_back_failed_reservation(
         _golden_harness(
             artifact_store=store,
             clock=lambda: NOW,
-            workflow_id_factory=lambda: UUID(
-                "10000000-0000-1000-8000-000000000001"
-            ),
+            workflow_id_factory=lambda: UUID("10000000-0000-1000-8000-000000000001"),
         ).start(request)
 
     snapshot = _golden_harness(

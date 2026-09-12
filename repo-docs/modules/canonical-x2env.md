@@ -1,5 +1,8 @@
 # Canonical x2env（收敛实施中）
 
+导入 canonical 已不再通过父包隐式加载旧 application、资格与 planner。旧 demo 必需消费者改为
+显式模块导入；这只完成入口解耦，仍被消费的旧模块、其余旧 CLI 与资格清理需单独完成。
+
 三个public Skills现在实际通过唯一CapabilityRegistry的精确版本typed调用执行，不只是名称清单。
 对应ToolResult记录name/version/schema digest；状态推进仍由Harness控制。验证阶段判断不跳过
 最终完成门，也不授予尚未运行的复制、机器人策略或正式发布能力。

@@ -15,7 +15,7 @@ from scene_gen import CompileRequest, compile_scene
 from scene_gen.asset_generator import ensure_assets_for_scene
 from scene_gen.catalog import AssetCatalog
 from scene_gen.parser import parse_rule_based
-from self_improving.harness import AssetAdmissionError, GeneratedAssetAdmitter
+from self_improving.harness.assets import AssetAdmissionError, GeneratedAssetAdmitter
 
 
 def _empty_catalog(tmp_path: Path) -> Path:

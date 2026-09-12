@@ -8,7 +8,8 @@ from uuid import UUID
 import pytest
 
 from demo.harness_feed import HarnessEventFeed, HarnessEventFeedCorruptionError
-from self_improving.harness import RunRecorder, SQLiteEventJournal
+from self_improving.harness.event_journal import SQLiteEventJournal
+from self_improving.harness.events import RunRecorder
 
 RUN_ID = UUID("12345678-1234-4234-9234-123456789abc")
 STARTED_AT = datetime(2026, 8, 31, 5, 0, tzinfo=timezone.utc)

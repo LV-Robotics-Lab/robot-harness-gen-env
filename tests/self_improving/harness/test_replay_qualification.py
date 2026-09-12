@@ -8,18 +8,15 @@ from types import SimpleNamespace
 import pytest
 
 import self_improving.harness.replay_qualification as replay_qualification_module
-from self_improving.harness import (
-    ArtifactRef,
-    ExecutionReproducibility,
-    LoadedReplayQualification,
-    LocalArtifactStore,
-    ReplayQualificationError,
-    load_replay_qualification_bundle,
-)
+from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.replay_qualification import (
     REPLAY_QUALIFICATION_CASE_ID,
     REPLAY_QUALIFICATION_CHECK_NAMES,
+    LoadedReplayQualification,
+    ReplayQualificationError,
+    load_replay_qualification_bundle,
 )
+from self_improving.harness.schemas import ArtifactRef, ExecutionReproducibility
 
 SKILL_REF = "text2env.replay@1.0.0"
 CASE_ID = "can-on-plate-seed-7-900-120-120-12"

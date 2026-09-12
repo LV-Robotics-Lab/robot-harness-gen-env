@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-G1 — 父包隐式旧执行入口退役
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream；原模块归属不变。
+- `source_ref`：canonical `c3310b3` 父包、demo 与旧测试消费者。
+- `target_paths`：harness/__init__.py、demo/harness_feed.py、18 个显式消费者测试及 test_import_boundary.py。
+- `integration_method`：删除父 re-export，保留原模块；两项纯身份测试随旧接口明确退休，不设兼容 alias。
+- `verification`：contract_pass；23 个入口测试与 802 passed / 1 skipped 回归，无真实运行声明。
+- `recorded_git_authors`：见本功能提交元数据，不据目录推断自然人；第三方实现归属未变。
+
 ## INT-CANONICAL-C03-TYPED-EXECUTION — descriptor进入实际调用路径
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。

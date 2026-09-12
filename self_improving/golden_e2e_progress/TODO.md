@@ -4,6 +4,8 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- C13 G1 已完成父入口轻量化及显式消费者迁移；继续 G2–G5，不把这一步写作旧路径全部退役。
+
 - 实施authority保持canonical worktree，用户bingsheng仍未push；持续执行至固定验收/push条件。
 - S02真实开发probe已blocked/clarification_required（54.08s），原样证据保留；继续受控生成设计尺度grounding
   与S04web准备，不重试原失败、不宣称4/4或>=8/12已经达到。

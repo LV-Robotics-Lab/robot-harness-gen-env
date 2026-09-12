@@ -6,7 +6,8 @@ from pathlib import Path
 import pytest
 
 import self_improving.harness.artifacts as artifact_module
-from self_improving.harness import ArtifactRef, ArtifactResolutionError, LocalArtifactStore
+from self_improving.harness.artifacts import ArtifactResolutionError, LocalArtifactStore
+from self_improving.harness.schemas import ArtifactRef
 
 
 def test_local_artifact_store_round_trips_content_by_digest(tmp_path: Path) -> None:

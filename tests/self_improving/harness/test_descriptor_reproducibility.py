@@ -8,20 +8,22 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from self_improving.harness import (
-    ArtifactRef,
-    ExecutionReproducibility,
+from self_improving.harness.artifacts import LocalArtifactStore
+from self_improving.harness.events import RecordingEventSink
+from self_improving.harness.handlers.text2env_compile import text2env_compile_descriptor
+from self_improving.harness.handlers.text2env_replay import text2env_replay_descriptor
+from self_improving.harness.registry import (
     HandlerResult,
-    LocalArtifactStore,
-    RecordingEventSink,
     RegistryRegistrationError,
-    SkillDescriptor,
-    SkillDescriptorV2,
     SkillRegistry,
     StaticDependencyResolver,
 )
-from self_improving.harness.handlers.text2env_compile import text2env_compile_descriptor
-from self_improving.harness.handlers.text2env_replay import text2env_replay_descriptor
+from self_improving.harness.schemas import (
+    ArtifactRef,
+    ExecutionReproducibility,
+    SkillDescriptor,
+    SkillDescriptorV2,
+)
 
 SHA_A = "a" * 64
 SHA_B = "b" * 64

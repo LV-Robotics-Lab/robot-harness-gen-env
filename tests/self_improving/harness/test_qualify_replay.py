@@ -21,12 +21,7 @@ from scene_gen.builder import build_scene_package
 from scene_gen.catalog import AssetCatalog, load_catalog
 from scene_gen.schema import ResolvedSceneSpec
 from scene_gen.validator import validate_resolved_scene
-from self_improving.harness import (
-    LocalArtifactStore,
-    load_replay_qualification_bundle,
-    verify_replay_qualification_bundle,
-)
-from self_improving.harness.artifacts import ArtifactResolutionError
+from self_improving.harness.artifacts import ArtifactResolutionError, LocalArtifactStore
 from self_improving.harness.handlers.text2env_replay import (
     Text2EnvReplayHandler,
     Text2EnvReplayWiring,
@@ -44,6 +39,10 @@ from self_improving.harness.replay_application import (
     create_replay_application,
 )
 from self_improving.harness.replay_dependencies import Text2EnvReplayDependencyResolver
+from self_improving.harness.replay_qualification import (
+    load_replay_qualification_bundle,
+    verify_replay_qualification_bundle,
+)
 from self_improving.harness.runtime_capability import (
     EXPECTED_RUNTIME_PARAMETERS,
     REQUIRED_RUNTIME_DISTRIBUTIONS,

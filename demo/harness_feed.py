@@ -7,7 +7,7 @@ from collections.abc import Callable
 from typing import Any
 from uuid import UUID
 
-from self_improving.harness import (
+from self_improving.harness.event_journal import (
     EventJournalCorruptionError,
     EventPage,
     SQLiteEventJournal,

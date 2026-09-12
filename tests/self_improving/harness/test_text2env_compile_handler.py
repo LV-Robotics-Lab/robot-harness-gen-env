@@ -14,26 +14,28 @@ import self_improving.harness.handlers.text2env_compile_dependencies as dependen
 from scene_gen import CompileFailure
 from scene_gen.catalog import AssetCatalog, load_catalog
 from scene_gen.schema import ResolvedSceneSpec
-from self_improving.harness import (
-    ArtifactRef,
-    AssetAdmissionError,
-    CompileConfig,
-    DependencyRef,
-    DependencyResolutionError,
-    LocalArtifactStore,
-    RunStatus,
-    SkillRegistry,
-    SQLiteEventJournal,
-    StaticDependencyResolver,
-    Text2EnvCompileInput,
-    Text2EnvCompileOutput,
-)
+from self_improving.harness.artifacts import LocalArtifactStore
+from self_improving.harness.assets import AssetAdmissionError
+from self_improving.harness.event_journal import SQLiteEventJournal
 from self_improving.harness.handlers.text2env_compile import (
     Text2EnvCompileHandler,
     text2env_compile_descriptor,
 )
 from self_improving.harness.handlers.text2env_compile_dependencies import (
     Text2EnvCompileDependencyResolver,
+)
+from self_improving.harness.registry import (
+    DependencyResolutionError,
+    SkillRegistry,
+    StaticDependencyResolver,
+)
+from self_improving.harness.schemas import (
+    ArtifactRef,
+    CompileConfig,
+    DependencyRef,
+    RunStatus,
+    Text2EnvCompileInput,
+    Text2EnvCompileOutput,
 )
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -156,9 +158,7 @@ def _registry(
         ).hexdigest(),
     )
     journal = SQLiteEventJournal(tmp_path / "events.sqlite3")
-    selected_run_ids = run_ids or iter(
-        (UUID("12345678-1234-4234-9234-123456789abc"),)
-    )
+    selected_run_ids = run_ids or iter((UUID("12345678-1234-4234-9234-123456789abc"),))
     registry = SkillRegistry(
         artifact_resolver=store,
         dependency_resolver=dependency_resolver
@@ -233,9 +233,7 @@ def test_registry_compile_handler_runs_real_pipeline_into_cas_and_event_journal(
         store.resolve(output.resolved_scene).path.read_text(encoding="utf-8")
     )
     manifest = json.loads(
-        store.resolve(output.environment_package.package_manifest).path.read_text(
-            encoding="utf-8"
-        )
+        store.resolve(output.environment_package.package_manifest).path.read_text(encoding="utf-8")
     )
     assert resolved.digest() == output.environment_package.resolved_scene_sha256
     assert manifest["resolved_scene_sha256"] == resolved.digest()
@@ -305,9 +303,7 @@ def test_compile_handler_executes_the_cas_snapshot_after_external_catalog_mutati
 
     assert state.status == RunStatus.SUCCEEDED
     output = Text2EnvCompileOutput.model_validate(state.output)
-    effective_catalog = load_catalog(
-        store.resolve(output.environment_package.asset_catalog).path
-    )
+    effective_catalog = load_catalog(store.resolve(output.environment_package.asset_catalog).path)
     assert effective_catalog.digest() == original_digest
     assert catalog_path.read_bytes() != original_bytes
 
@@ -361,9 +357,9 @@ def test_compile_handler_generates_and_admits_missing_asset_with_honest_receipt(
     resolved = ResolvedSceneSpec.model_validate_json(
         store.resolve(output.resolved_scene).path.read_text(encoding="utf-8")
     )
-    assert str(tmp_path / "asset_library/generated" / asset_id) in resolved.objects[
-        0
-    ].source_files[0]
+    assert (
+        str(tmp_path / "asset_library/generated" / asset_id) in resolved.objects[0].source_files[0]
+    )
 
 
 @pytest.mark.parametrize(
@@ -721,11 +717,7 @@ def test_compile_handler_consumes_catalog_snapshot_after_original_locator_change
     resolved = ResolvedSceneSpec.model_validate_json(
         store.resolve(output.resolved_scene).path.read_text(encoding="utf-8")
     )
-    source_files = [
-        Path(path).resolve()
-        for item in resolved.objects
-        for path in item.source_files
-    ]
+    source_files = [Path(path).resolve() for item in resolved.objects for path in item.source_files]
     assert source_files
     assert all(path.is_relative_to(allowed_root.resolve()) for path in source_files)
     assert not any(path.is_relative_to(outside_root.resolve()) for path in source_files)
@@ -763,10 +755,7 @@ def test_compile_dependencies_bind_asset_library_state_and_stabilize_after_reuse
         artifact_store=store,
         handler=handler,
         scene_gen_root=ROOT / "scene_gen",
-        ledger_contract_root=(
-            ROOT
-            / "self_improving/asset_pipeline/active/asset_reuse/lib"
-        ),
+        ledger_contract_root=(ROOT / "self_improving/asset_pipeline/active/asset_reuse/lib"),
     )
     run_ids = iter(
         (
@@ -825,10 +814,7 @@ def test_compile_dependencies_detect_selected_asset_byte_changes(tmp_path: Path)
         artifact_store=store,
         handler=handler,
         scene_gen_root=ROOT / "scene_gen",
-        ledger_contract_root=(
-            ROOT
-            / "self_improving/asset_pipeline/active/asset_reuse/lib"
-        ),
+        ledger_contract_root=(ROOT / "self_improving/asset_pipeline/active/asset_reuse/lib"),
     )
     registry, _ = _registry(
         tmp_path,
@@ -879,9 +865,7 @@ def test_compile_dependency_resolver_rejects_wrong_inputs_and_wraps_artifact_err
         artifact_store=store,
         handler=handler,
         scene_gen_root=ROOT / "scene_gen",
-        ledger_contract_root=(
-            ROOT / "self_improving/asset_pipeline/active/asset_reuse/lib"
-        ),
+        ledger_contract_root=(ROOT / "self_improving/asset_pipeline/active/asset_reuse/lib"),
     )
 
     assert resolver.resolve("text2env.replay@1.0.0", CompileConfig()) == ()

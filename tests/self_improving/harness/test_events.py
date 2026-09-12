@@ -5,13 +5,13 @@ from uuid import UUID
 
 import pytest
 
-from self_improving.harness import (
+from self_improving.harness.events import (
     RecordingEventSink,
     RunEvent,
     RunRecorder,
     RunRecordingError,
-    RunStatus,
 )
+from self_improving.harness.schemas import RunStatus
 
 
 class SequenceClock:

@@ -9,7 +9,6 @@ import pytest
 from jsonschema import Draft202012Validator
 from pydantic import ValidationError
 
-from self_improving.harness import AssetRepairApplication as PublicAssetRepairApplication
 from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.asset_repair import AssetRepairApplication, AssetRepairError
 from self_improving.harness.schemas.asset_repair import (
@@ -46,10 +45,6 @@ def _single_plate_inventory() -> dict:
     payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
     payload["entries"] = payload["entries"][:1]
     return payload
-
-
-def test_asset_repair_application_is_exposed_by_the_public_facade() -> None:
-    assert PublicAssetRepairApplication is AssetRepairApplication
 
 
 def test_plan_classifies_real_plate_and_can_debt_without_writing(tmp_path: Path) -> None:
@@ -153,10 +148,7 @@ def test_plan_requires_new_identity_when_recovered_hash_differs(tmp_path: Path) 
 
     plan = _application(store, inventory_ref).plan(request)
 
-    assert (
-        plan.items[0].representations[0].disposition
-        == "hash_mismatch_new_identity_or_retire"
-    )
+    assert plan.items[0].representations[0].disposition == "hash_mismatch_new_identity_or_retire"
     assert plan.items[0].next_step == "build_new_identity_or_retire_asset"
 
 
@@ -653,9 +645,7 @@ def test_public_plan_rejects_forged_representation_and_followup_claims(
     elif attack == "partial_observation":
         valid["items"][0]["representations"][0]["observed_sha256"] = None
     elif attack == "duplicate_representation":
-        valid["items"][0]["representations"].append(
-            valid["items"][0]["representations"][0]
-        )
+        valid["items"][0]["representations"].append(valid["items"][0]["representations"][0])
     elif attack == "next_step":
         valid["items"][0]["next_step"] = "build_new_identity_or_retire_asset"
     else:

@@ -10,7 +10,7 @@ import pytest
 import self_improving.harness.package_store as package_module
 from scene_gen import CompileRequest, compile_scene
 from scene_gen.builder import verify_package
-from self_improving.harness import LocalArtifactStore
+from self_improving.harness.artifacts import LocalArtifactStore
 from self_improving.harness.package_store import PackageStore, PackageStoreError
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -38,18 +38,16 @@ def test_package_store_publishes_and_materializes_exact_manifest_members(
     published = package_store.publish(source)
     expected = {
         record["path"]: (source / record["path"]).read_bytes()
-        for record in json.loads(
-            (source / "package_manifest.json").read_text(encoding="utf-8")
-        )["files"]
+        for record in json.loads((source / "package_manifest.json").read_text(encoding="utf-8"))[
+            "files"
+        ]
     }
     shutil.rmtree(source)
     restored = package_store.materialize(published.manifest, tmp_path / "restored")
 
     assert restored == (tmp_path / "restored").resolve()
     assert verify_package(restored)["status"] == "pass"
-    assert {
-        path: (restored / path).read_bytes() for path in expected
-    } == expected
+    assert {path: (restored / path).read_bytes() for path in expected} == expected
     assert (restored / "package_manifest.json").read_bytes() == artifact_store.resolve(
         published.manifest
     ).path.read_bytes()

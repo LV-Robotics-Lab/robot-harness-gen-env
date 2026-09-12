@@ -7,26 +7,29 @@ from uuid import UUID
 
 import pytest
 
-from self_improving.harness import (
+from self_improving.harness.artifacts import LocalArtifactStore
+from self_improving.harness.events import RecordingEventSink
+from self_improving.harness.registry import (
+    DependencyResolutionError,
+    HandlerResult,
+    RegistryLookupError,
+    RegistryRegistrationError,
+    RunContext,
+    SkillBlocked,
+    SkillRegistry,
+    StaticDependencyResolver,
+    _artifact_refs,
+    _content_identity,
+)
+from self_improving.harness.schemas import (
     ArtifactRef,
     Blocker,
     CompileConfig,
     DependencyRef,
-    DependencyResolutionError,
-    HandlerResult,
-    LocalArtifactStore,
-    RecordingEventSink,
-    RegistryLookupError,
-    RegistryRegistrationError,
-    RunContext,
     RunStatus,
-    SkillBlocked,
     SkillDescriptor,
-    SkillRegistry,
-    StaticDependencyResolver,
     Text2EnvCompileInput,
 )
-from self_improving.harness.registry import _artifact_refs, _content_identity
 
 
 class SequenceClock:

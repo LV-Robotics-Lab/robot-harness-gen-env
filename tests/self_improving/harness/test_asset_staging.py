@@ -15,18 +15,15 @@ import pytest
 from pydantic import ValidationError
 
 import self_improving.harness.asset_stage_verification as stage_verification
-from self_improving.harness import (
-    AssetRepairApplication,
-    AssetStageError,
-    AssetStageRequest,
-    LocalAssetSourceSnapshotBinding,
-)
 from self_improving.harness.artifacts import LocalArtifactStore
+from self_improving.harness.asset_repair import AssetRepairApplication
 from self_improving.harness.asset_stage_verification import (
     AssetStageVerificationError,
     materialize_verified_asset_stage,
     verify_asset_stage_result_authority,
 )
+from self_improving.harness.asset_staging import AssetStageError, LocalAssetSourceSnapshotBinding
+from self_improving.harness.schemas import AssetStageRequest
 from self_improving.harness.schemas.asset_repair import AssetRepairPlan, AssetRepairPlanRequest
 from self_improving.harness.schemas.asset_staging import (
     AssetStageResult,
@@ -205,12 +202,8 @@ def _stage_case(
             else plate_payload
         ),
         "objects/071_can/visual/base0.glb": _glb(binary=b"can!"),
-        "objects/003_plate/model_data0.json": _canonical_bytes(
-            {"scale": [0.025, 0.025, 0.025]}
-        ),
-        "objects/071_can/model_data0.json": _canonical_bytes(
-            {"scale": [0.05, 0.05, 0.05]}
-        ),
+        "objects/003_plate/model_data0.json": _canonical_bytes({"scale": [0.025, 0.025, 0.025]}),
+        "objects/071_can/model_data0.json": _canonical_bytes({"scale": [0.05, 0.05, 0.05]}),
     }
     if include_mesh:
         files["objects/003_plate/visual/mesh.bin"] = b"mesh"
@@ -432,9 +425,7 @@ def test_stage_rejects_missing_or_inconsistent_model_sidecar_contracts(
             "zero": b'{"scale":[0,0.025,0.025]}',
             "negative": b'{"scale":[-0.025,0.025,0.025]}',
             "bool": b'{"scale":[true,0.025,0.025]}',
-            "json_model_id": _canonical_bytes(
-                {"model_id": 1, "scale": [0.025, 0.025, 0.025]}
-            ),
+            "json_model_id": _canonical_bytes({"model_id": 1, "scale": [0.025, 0.025, 0.025]}),
             "swapped_sidecar": case.files["objects/071_can/model_data0.json"],
         }
         payload = payloads[attack]
@@ -1225,9 +1216,7 @@ def _rebind_plate_loader_authority(
     result["source_snapshot_manifest_ref"] = manifest_ref.model_dump(mode="json")
     result_asset = result["assets"][0]
     result_root = next(
-        member
-        for member in result_asset["members"]
-        if member["logical_path"] == root_logical_path
+        member for member in result_asset["members"] if member["logical_path"] == root_logical_path
     )
     result["staged_total_bytes"] += root_ref.bytes - result_root["source_bytes"]
     result_root.update(
@@ -1390,9 +1379,7 @@ def test_stage_authority_verifier_rejects_rehashed_cross_contract_forgery(
         asset["loader_closures"][0]["loader_scale"] = [0.5, 0.5, 0.5]
     else:
         removed = next(
-            member
-            for member in asset["members"]
-            if member["logical_path"].endswith("mesh.bin")
+            member for member in asset["members"] if member["logical_path"].endswith("mesh.bin")
         )
         asset["members"].remove(removed)
         closure = asset["loader_closures"][0]
@@ -1769,9 +1756,7 @@ def test_stage_authority_verifier_rehashes_every_cas_member(
     case = _stage_case(tmp_path)
     result = case.application().stage(case.request())
     member = next(
-        value
-        for value in result.assets[0].members
-        if value.logical_path.endswith("mesh.bin")
+        value for value in result.assets[0].members if value.logical_path.endswith("mesh.bin")
     )
     cas_path = case.store.resolve(member.artifact_ref).path
     cas_path.unlink()
@@ -2089,6 +2074,7 @@ def test_materializer_rejects_nonregular_partial_or_drifting_cas_source(
 
         monkeypatch.setattr(stage_verification.os, "fstat", drifting_fstat)
     if attack.endswith("cleanup_failure"):
+
         def refuse_cleanup(*_args: object, **_kwargs: object) -> None:
             raise OSError("cleanup refused")
 
@@ -2153,9 +2139,7 @@ def test_public_stage_result_rejects_loader_closure_forgery(
         closure["member_logical_paths"].append(closure["member_logical_paths"][0])
     elif attack == "missing_root":
         closure["member_logical_paths"] = [
-            path
-            for path in closure["member_logical_paths"]
-            if path != closure["root_logical_path"]
+            path for path in closure["member_logical_paths"] if path != closure["root_logical_path"]
         ]
     elif attack == "wrong_sidecar":
         closure["model_sidecar_logical_path"] = "objects/003_plate/model_data1.json"

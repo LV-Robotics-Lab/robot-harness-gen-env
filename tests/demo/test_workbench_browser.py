@@ -18,7 +18,9 @@ from werkzeug.serving import make_server
 from demo.app import create_app
 from demo.harness_compile import WorkbenchCompileUnavailableError
 from demo.harness_feed import HarnessEventFeed
-from self_improving.harness import ArtifactRef, RunRecorder, RunStatus, SQLiteEventJournal
+from self_improving.harness.event_journal import SQLiteEventJournal
+from self_improving.harness.events import RunRecorder
+from self_improving.harness.schemas import ArtifactRef, RunStatus
 
 
 def _compile_dependency_rows() -> list[dict[str, str]]:
