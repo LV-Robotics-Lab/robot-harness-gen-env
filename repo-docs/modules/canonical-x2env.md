@@ -25,6 +25,8 @@ canonical调用将复用这一份代码。搬迁仅完成可导入和消费者�
 动画/关节或不支持材质拒绝，凸包不能代表容器内腔。`assets.py`在原Store中登记不可变版本，
 许可、来源、规范化、geometry摘要和父版本分别绑定；静态登记不是sim-ready。
 这些组件尚未全部进入同一workflow。真实Codex解释已通过，后续资产解析缺失仍明确blocked。
+资产视觉seam使用`CodexBackend.assess_asset_candidates`注入原`a6_verify.verify_candidate`，
+复用原开放/闭合身份问题和属性门；默认Qwen不被调用。判断绑定候选预览CAS，仍只属视觉建议。
 
 Python模型是唯一schema编辑源；`script/export_x2env_schemas.py --check`检测生成文件漂移。
 Codex输出另生成strict projection：可空字段仍必须出现；provenance是固定六字段对象，joint positions

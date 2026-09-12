@@ -39,6 +39,129 @@ class CodexBackend:
         self.model = model
         self.store = artifact_store
 
+    def assess_asset_candidates(self, candidates, *, output_root: Path, timeout: int = 600):
+        """Inject managed Codex into Yuxin's existing visual verification seam."""
+        from types import SimpleNamespace
+
+        from self_improving.asset_pipeline.active.asset_reuse.lib.a6_verify import (
+            verify_candidate,
+        )
+
+        from .asset_advisory import AssetVisualAssessment, VisualAnswer, VisualVerdict
+
+        if type(timeout) is not int or not 1 <= timeout <= 600 or not 1 <= len(candidates) <= 8:
+            raise ValueError("invalid assessment budget or candidate count")
+        if len({c.candidate_id for c in candidates}) != len(candidates):
+            raise ValueError("duplicate visual candidate")
+        root = Path(output_root)
+        if not root.is_absolute() or any(p.is_symlink() for p in (root, *root.parents)):
+            raise ValueError("assessment root must be absolute and non-symbolic")
+        root.mkdir(parents=True, exist_ok=False)
+        started, evidence, verdicts, calls = time.monotonic(), [], [], 0
+        error, status = None, "completed"
+
+        def record_at(directory, name, data, media_type="application/json"):
+            (directory / name).write_bytes(data)
+            ref = self.store.write_artifact(data, media_type)
+            evidence.append(ref)
+            return ref
+
+        try:
+            if (
+                not self.executable.is_absolute()
+                or hashlib.sha256(self.executable.read_bytes()).hexdigest() != self.executable_sha
+            ):
+                raise ValueError("executable_identity_mismatch")
+            for index, candidate in enumerate(candidates):
+                raw = self.store.read_artifact(candidate.preview)
+                with Image.open(BytesIO(raw)) as image:
+                    image.verify()
+                preview = root / f"candidate-{index}.png"
+                record_at(root, preview.name, raw, candidate.preview.media_type)
+
+                def infer(path, question):
+                    nonlocal calls
+                    if time.monotonic() - started >= timeout:
+                        raise ValueError("model_timeout")
+                    attempt = root / f"call-{calls}"
+                    attempt.mkdir()
+                    calls += 1
+                    prompt = (
+                        "You are the Harness advisory visual backend. Use no tools. Answer the "
+                        "following question about the attached actual candidate image. Return "
+                        "the supplied JSON schema, null for unasked scalar fields and empty "
+                        "lists for unasked list fields. Do not claim simulation or acquisition "
+                        "success. Candidate input SHA256: "
+                        + candidate.preview.sha256
+                        + "\n"
+                        + question
+                    )
+                    response = self._invoke(
+                        attempt,
+                        prompt,
+                        [{"path": str(path), "input_sha256": candidate.preview.sha256}],
+                        VisualAnswer,
+                        lambda name, data, media_type="application/json": record_at(
+                            attempt, name, data, media_type
+                        ),
+                        timeout,
+                        started,
+                    )
+                    return VisualAnswer.model_validate_json(response).model_dump_json()
+
+                detail = verify_candidate(
+                    SimpleNamespace(
+                        candidate_id=candidate.candidate_id,
+                        name=candidate.name,
+                        metadata={"thumbnail": str(preview)},
+                    ),
+                    candidate.category,
+                    aliases=candidate.aliases,
+                    infer=infer,
+                    model_name=self.model,
+                    want_color=candidate.want_color,
+                    want_material=candidate.want_material,
+                )
+                ref = record_at(root, f"verdict-{index}.json", json.dumps(detail).encode())
+                verdicts.append(
+                    VisualVerdict(
+                        candidate_id=candidate.candidate_id,
+                        preview=candidate.preview,
+                        verdict=detail["verdict"],
+                        detail=ref,
+                    )
+                )
+                if detail["verdict"] in {"unreadable", "no_thumbnail"}:
+                    status, error = "failed", "invalid_model_evidence"
+        except FileNotFoundError:
+            status, error = "blocked", "blocked_external_resource"
+        except (ValueError, OSError, TypeError):
+            status, error = "failed", "invalid_model_evidence"
+        receipt = record_at(
+            root,
+            "assessment.json",
+            json.dumps(
+                {
+                    "status": status,
+                    "error_code": error,
+                    "model": self.model,
+                    "executable_sha256": self.executable_sha,
+                    "verifier": "asset_reuse.lib.a6_verify.verify_candidate",
+                    "verdicts": [v.model_dump(mode="json") for v in verdicts],
+                    "evidence": [r.model_dump() for r in evidence],
+                    "elapsed_seconds": time.monotonic() - started,
+                    "physical_evaluated": False,
+                }
+            ).encode(),
+        )
+        return AssetVisualAssessment(
+            status=status,
+            verdicts=tuple(verdicts),
+            receipt=receipt,
+            evidence=tuple(evidence),
+            error_code=error,
+        )
+
     def interpret(self, bundle: InputBundle, *, output_root: Path, timeout: int = 600):
         if type(timeout) is not int or not 1 <= timeout <= 600:
             raise ValueError("deadline must be an integer within 1..600 seconds")
@@ -172,109 +295,7 @@ class CodexBackend:
                     ensure_ascii=False,
                 )
             )
-            record("prompt.txt", prompt.encode(), "text/plain")
-            record(
-                "proposal.schema.json",
-                json.dumps(structured_output_schema(SceneIntentProposal)).encode(),
-            )
-            argv = [
-                str(self.executable),
-                "exec",
-                "--json",
-                "--ephemeral",
-                "--ignore-user-config",
-                "--ignore-rules",
-                "--skip-git-repo-check",
-                "--sandbox",
-                "read-only",
-                "--model",
-                self.model,
-                "--output-schema",
-                str(root / "proposal.schema.json"),
-                "-c",
-                "features.shell_tool=false",
-                "-c",
-                "features.multi_agent=false",
-                "-c",
-                "mcp_servers={}",
-                "--output-last-message",
-                str(root / "proposal.json"),
-            ]
-            for image in images:
-                argv.extend(["-i", image["path"]])
-            argv.append("-")
-            record("invocation.json", json.dumps({"argv": argv, "media": images}).encode())
-            with (
-                (root / "codex.jsonl").open("wb") as stdout,
-                (root / "codex.stderr").open("wb") as stderr,
-            ):
-                process = subprocess.Popen(
-                    argv,
-                    stdin=subprocess.PIPE,
-                    stdout=stdout,
-                    stderr=stderr,
-                    cwd=root,
-                    start_new_session=True,
-                )
-                executed = True
-                process_stat = Path(f"/proc/{process.pid}/stat").read_text()
-                record(
-                    "process.json",
-                    json.dumps(
-                        {
-                            "pid": process.pid,
-                            "pgid": process.pid,
-                            "start_ticks": int(process_stat.rsplit(")", 1)[1].split()[19]),
-                            "attempt_root": str(root),
-                            "executable_sha256": self.executable_sha,
-                        }
-                    ).encode(),
-                )
-                try:
-                    process.communicate(
-                        prompt.encode(), timeout=max(0.01, timeout - (time.monotonic() - started))
-                    )
-                except (subprocess.TimeoutExpired, KeyboardInterrupt) as exc:
-                    failure = (
-                        "model_timeout"
-                        if isinstance(exc, subprocess.TimeoutExpired)
-                        else "model_interrupted"
-                    )
-                    os.killpg(process.pid, signal.SIGINT)
-                    try:
-                        process.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        os.killpg(process.pid, signal.SIGTERM)
-                        process.wait(timeout=5)
-            for name in ("codex.jsonl", "codex.stderr"):
-                record(name, (root / name).read_bytes(), "text/plain")
-            proposal_path = root / "proposal.json"
-            if proposal_path.is_file():
-                record("proposal.json", proposal_path.read_bytes())
-            if failure:
-                raise ValueError(failure)
-            if process.returncode != 0:
-                raise ValueError("model_exit_failure")
-            events = [
-                json.loads(line)
-                for line in (root / "codex.jsonl").read_bytes().splitlines()
-                if line.strip()
-            ]
-            if not any(event.get("type") == "turn.completed" for event in events):
-                raise ValueError("model_incomplete_turn")
-            if any(
-                event.get("item", {}).get("type")
-                in {
-                    "command_execution",
-                    "mcp_tool_call",
-                    "web_search",
-                    "collab_tool_call",
-                    "file_change",
-                }
-                for event in events
-            ):
-                raise ValueError("advisory_tool_violation")
-            raw = (root / "proposal.json").read_bytes()
+            raw = self._invoke(root, prompt, images, SceneIntentProposal, record, timeout, started)
             proposal = SceneIntentProposal.model_validate_json(raw)
             if proposal.scene and (
                 proposal.scene.input_sha256 != bundle.request_sha256 or proposal.scene.revision != 0
@@ -352,6 +373,7 @@ class CodexBackend:
             }
             failure = str(exc) if str(exc) in allowed else "invalid_model_evidence"
             proposal = None
+        executed = (root / "process.json").is_file()
         elapsed = time.monotonic() - started
         record(
             "result.json",
@@ -377,3 +399,109 @@ class CodexBackend:
             error_code=failure,
             elapsed_seconds=elapsed,
         )
+
+    def _invoke(self, root, prompt, images, schema, record, timeout, started):
+        """One restricted transport for all advisory schemas; no workflow authority."""
+        failure = None
+        record("prompt.txt", prompt.encode(), "text/plain")
+        record(
+            "proposal.schema.json",
+            json.dumps(structured_output_schema(schema)).encode(),
+        )
+        argv = [
+            str(self.executable),
+            "exec",
+            "--json",
+            "--ephemeral",
+            "--ignore-user-config",
+            "--ignore-rules",
+            "--skip-git-repo-check",
+            "--sandbox",
+            "read-only",
+            "--model",
+            self.model,
+            "--output-schema",
+            str(root / "proposal.schema.json"),
+            "-c",
+            "features.shell_tool=false",
+            "-c",
+            "features.multi_agent=false",
+            "-c",
+            "mcp_servers={}",
+            "--output-last-message",
+            str(root / "proposal.json"),
+        ]
+        for image in images:
+            argv.extend(["-i", image["path"]])
+        argv.append("-")
+        record("invocation.json", json.dumps({"argv": argv, "media": images}).encode())
+        with (
+            (root / "codex.jsonl").open("wb") as stdout,
+            (root / "codex.stderr").open("wb") as stderr,
+        ):
+            process = subprocess.Popen(
+                argv,
+                stdin=subprocess.PIPE,
+                stdout=stdout,
+                stderr=stderr,
+                cwd=root,
+                start_new_session=True,
+            )
+            process_stat = Path(f"/proc/{process.pid}/stat").read_text()
+            record(
+                "process.json",
+                json.dumps(
+                    {
+                        "pid": process.pid,
+                        "pgid": process.pid,
+                        "start_ticks": int(process_stat.rsplit(")", 1)[1].split()[19]),
+                        "attempt_root": str(root),
+                        "executable_sha256": self.executable_sha,
+                    }
+                ).encode(),
+            )
+            try:
+                process.communicate(
+                    prompt.encode(), timeout=max(0.01, timeout - (time.monotonic() - started))
+                )
+            except (subprocess.TimeoutExpired, KeyboardInterrupt) as exc:
+                failure = (
+                    "model_timeout"
+                    if isinstance(exc, subprocess.TimeoutExpired)
+                    else "model_interrupted"
+                )
+                os.killpg(process.pid, signal.SIGINT)
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    os.killpg(process.pid, signal.SIGTERM)
+                    process.wait(timeout=5)
+        for name in ("codex.jsonl", "codex.stderr"):
+            record(name, (root / name).read_bytes(), "text/plain")
+        proposal_path = root / "proposal.json"
+        if proposal_path.is_file():
+            record("proposal.json", proposal_path.read_bytes())
+        if failure:
+            raise ValueError(failure)
+        if process.returncode != 0:
+            raise ValueError("model_exit_failure")
+        events = [
+            json.loads(line)
+            for line in (root / "codex.jsonl").read_bytes().splitlines()
+            if line.strip()
+        ]
+        if not any(event.get("type") == "turn.completed" for event in events):
+            raise ValueError("model_incomplete_turn")
+        if any(
+            event.get("item", {}).get("type")
+            in {
+                "command_execution",
+                "mcp_tool_call",
+                "web_search",
+                "collab_tool_call",
+                "file_change",
+            }
+            for event in events
+        ):
+            raise ValueError("advisory_tool_violation")
+        return (root / "proposal.json").read_bytes()

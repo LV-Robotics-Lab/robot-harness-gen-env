@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C05/C06 Codex资产视觉seam
+
+- `CodexBackend.assess_asset_candidates`通过原Yuxin `a6_verify.verify_candidate(infer=...)`
+  执行闭问/开放问及属性验证；显式注入Codex，不加载默认Qwen。
+- 与interpret共用唯一受限transport；candidate预览bytes由CAS核验，调用/原输出/判断入CAS。
+- 13项相关传输测试通过，含错误颜色、模型越权工具、非法schema拒绝；测试为显式进程替身。
+  尚未进行真实候选视觉判断或同workflow资产接通，不授物理能力。
+
 ## 2026-09-13 第三次真实Codex解释通过（不是E2E）
 
 - 固定`4fddb17`，workflow `0d9dd28c-c82a-4b81-b6b9-0641bc2e7cd4`，60.739505s。

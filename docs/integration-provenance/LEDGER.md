@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C05-VISUAL — 原验证器注入managed Codex
+
+- `origin_owner`：Yuxin视觉验证seam；`integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：单份迁移`e67f2c6`中的a6_verify.py；原Git作者按来源manifest，不推断身份。
+- `target_paths`：x2env/codex.py、asset_advisory.py；复用verify_candidate而非复制验证算法。
+- `verification`：13项相关测试；只替身传输，真实视觉判断not_run，物理not_run。
+
 ## INT-CANONICAL-C06-ASSETS — 单引擎provider与不可变资产组件
 
 - `origin_owner`：Yuxin资产管线；新规范化/登记为Bingsheng Harness整合实现。
