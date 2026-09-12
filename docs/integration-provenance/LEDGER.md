@@ -1,5 +1,19 @@
 # 功能级整合台账
 
+## INT-EXP-005 — 最终包复制与审阅收口（2026-09-13）
+
+- 来源、上游与集成所有权沿用INT-EXP-004，未引入新第三方代码。最新真实执行源码固定536496e，
+  完整包manifest `490d6c574dfbe7ea4bfc4ca31436ad237897f8044d4108513ffacbe9926bc7f5`。
+- 复制后实际Genesis baseline1000步/66.166572秒，原包/两个源码树/state-v3/CAS/assets拒读；
+  `/home/jingxiang/bingsheng/generic-video-package-copy-fxqpws2h/execution/result.json`
+  SHA `42807bd71bc4b4f128a4fb46e68f0caee58fc261f56701fb23616be2e0bb91af`。
+- 合同与代码为EXPERIMENT_PACKAGE_CONTRACT.md、portable_genesis_package.py与包内runner；
+  运行只证明baseline新输出，未授予机器人、数据采集、正式qualification或跨OS可移植性。
+- 最终限定回归205通过/4跳过/1旧资格哈希拒绝，161 schema通过；72.98%限定综合覆盖率。
+- 后续`22ffed5`只换行输入注解，5项输入测试和161 schema重新检查通过，未重新执行Genesis；
+  不把该提交或后续文档提交说成536496e真实运行的源码身份。
+- 入口：[walkthrough](../../repo-docs/walkthroughs/generic-experiment-20260913.md)。本轮暂停审阅。
+
 ## INT-EXP-004 — 三模态/三来源小例与资产修订增量（2026-09-13）
 
 - `lifecycle`：`integrated`；`verification`：`runtime_pass`（有限单刚体实验案例）。

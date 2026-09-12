@@ -2,12 +2,14 @@
 
 更新时间：2026-09-13
 
-## Doing
+## Review（本轮实验版本暂停供审阅）
 
 - 当前收口：固定536496e的image/local、centered video/generated与multimodal资产fallback B真实通过；
   加上既有text/generated、text/web、fallback A，模态与来源小案例均有成功证据。详见RESULTS顶部。
 - 旧image类别失配与offset视频repair_budget_exhausted原样保留；不以新简单案例洗掉失败。
-- 待独立最终测试、最新包额外copy-run和walkthrough整合；完成这些后暂停审阅，不进入正式release。
+- 最终限定测试205 passed/4 skipped/1旧资格hash拒绝；161 schema通过，限定综合覆盖率72.98%。
+- 最新完整视频包额外隔离copy-run通过：1000步、41帧、66.166572秒；walkthrough已整合。
+- 本轮实验验收完成，暂停供用户审阅；不是长期目标全部完成，不进入正式release。
 
 ### 历史推进快照（以下在途描述由顶部结果覆盖，不再作为待运行指令）
 

@@ -1,5 +1,12 @@
 # Change Log
 
+## 2026-09-13 通用实验版本审阅收口
+
+- 三模态、local/web/generated、真实布局与资产修复均有小型成功证据；保留偏移视频预算耗尽失败。
+- 最新完整包在拒绝原源码/CAS/资产库的条件下复制后真实 load/step/新媒体通过。
+- [walkthrough](walkthroughs/generic-experiment-20260913.md)逐阶段链接合同和代码，分列实际耗时、
+  旧资格测试失败、72.98%限定覆盖率、父active、新MCP未投影与其他未完成项；暂停供审阅。
+
 ## 2026-09-13 通用实验服务接通与真实失败留痕
 
 - 补记同一 Golden journal 内的 service/controller、受管理 Codex 建议、Harness CLI、完整修订包、

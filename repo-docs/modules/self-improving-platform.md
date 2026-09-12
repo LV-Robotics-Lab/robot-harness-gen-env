@@ -1,8 +1,22 @@
 # Self-Improving 平台边界
 
-## 通用实验管线的组件进度（2026-09-13）
+## 通用实验管线验收（2026-09-13）
 
-当前通用实验服务仍在接线，尚未证明文本、图像、视频分别从用户输入到最终验证闭环。
+当前已从唯一 Harness CLI 真实完成 text/generated、image/local、video/generated、text/web
+和 image+text 资产修复小例；成功案例双 dt 34/34、视觉和 validate 分别通过。场景修复实际改变
+位置，资产修复登记新版本；另一个偏移视频两次修订后仍视觉失败，按预算停止并保留全部产物。
+完整视频包复制到新目录后独立运行 1000 步，Landlock 拒绝原包、源码、CAS 与资产库读取。
+准确命令、源码/契约、耗时、失败、包及媒体入口见[实施 walkthrough](../walkthroughs/generic-experiment-20260913.md)。
+
+这些能力限单动态刚体、有限桌面、程序几何或固定来源资产。新实验 stages 在同一 Golden journal
+提交，但尚未投影为 qualified MCP；CLI passed 不等于父终态或晋升，父 snapshot 仍 active。
+freshness 在运行 adapter 校验，不能声称新 policy 已填充旧 fresh_observations 协议。
+正式资格、cousin、通用重建、多物体、数值修订、机器人策略和数据采集未授予。
+以下是接线完成前的历史组件快照，不能覆盖本节最新结论。
+
+### 历史组件进度（本轮早期）
+
+当时通用实验服务仍在接线，尚未证明文本、图像、视频分别从用户输入到最终验证闭环。
 已有组件可以复用，但以下证据各自有作用域，不能串接叙述成已完成的三模态E2E。
 
 - 资产组件真实通过local检索、web搜索/下载/许可核对及程序几何生成。web Box来自固定

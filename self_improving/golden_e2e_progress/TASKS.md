@@ -12,8 +12,8 @@
 - [x] fallback B完整线：536496e真实模型scale=3.5新版本，12阶段/34项检查通过。
 - [x] 有限重试停止真实证据：offset视频两次修订后repair_budget_exhausted；完整失败journal保留。
 - [x] 完整journal新包输出（image/local 231-member等）；原文本隔离copy-run已通过。
-- [ ] 最新包额外copy-run、最终测试覆盖说明与walkthrough收口。
-- [ ] 最终逐功能提交干净，暂停供用户审阅；不继续release/历史债务/autoresearch/robot。
+- [x] 最新包额外copy-run、最终测试覆盖说明与walkthrough收口；旧资格测试失败明确记录。
+- [x] 最终逐功能提交，暂停供用户审阅；不继续release/历史债务/autoresearch/robot。
 
 ## 2026-09-12 active 任务替换
 

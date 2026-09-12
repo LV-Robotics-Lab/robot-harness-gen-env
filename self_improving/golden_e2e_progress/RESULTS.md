@@ -1,5 +1,25 @@
 # 进度与结果
 
+## 2026-09-13 最终限定回归、完整包复制验收与审阅入口
+
+- [walkthrough](../../repo-docs/walkthroughs/generic-experiment-20260913.md)已逐阶段链接合同/代码、
+  各分支命令与失败、包和媒体；AGENTS.md已指向该页。本轮有限实验版本暂停审阅。
+- 限定回归205 passed、4 skipped、1 failed，20.17秒；唯一失败是旧qualification manifest拒绝
+  已改变的registry.py，不重建资格、不宣称全仓通过。161 schema snapshots检查通过。
+- 16个实验/dev/portable模块语句1465/1902=77.02%、分支412/670=61.49%、综合72.98%；
+  包含本次未覆盖的真实模型调用和隔离子进程模块。证据根v2的final-regression-summary.json、
+  final-regression-coverage.json、final-regression-junit.xml，不与真实案例成功率混淆。
+- 最新完整视频包复制根 `/home/jingxiang/bingsheng/generic-video-package-copy-fxqpws2h`，
+  包内代码实际baseline1000步/66.166571731秒/41帧3unique；Landlock8拒绝原包、integration、
+  main、state-v3/CAS、assets五根。主窗口查看了新末帧。result SHA
+  `42807bd71bc4b4f128a4fb46e68f0caee58fc261f56701fb23616be2e0bb91af`，manifest SHA
+  `490d6c574dfbe7ea4bfc4ca31436ad237897f8044d4108513ffacbe9926bc7f5`。
+  新MP4与输入同SHA是确定性重跑，不是复制媒体；此次仅baseline，未再跑双dt/robot/data。
+- B运行后主窗口逐成员复查acquire/revise_asset版本SHA均匹配原receipt，旧资产未覆盖。
+  已导asset-repair-package，package命令b177f312-b09e-4b59-ac96-5c8c3de573aa，1.227715181秒。
+- 最后仅格式修正22ffed5；输入5测试、161 schema再次通过，10个主要实验模块ruff检查通过。
+  没有重新Genesis，真实案例源码保持536496e标注。主工作树用户未提交清单保留。
+
 ## 2026-09-13 实验分支验收增量（固定536496e，待最终测试/新copy-run汇总）
 
 以下均由实际 command JSON 核对；v2根为
