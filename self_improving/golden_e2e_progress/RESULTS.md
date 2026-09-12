@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C07 模型分割与重建参数提案
+
+- plan_reconstruction通过唯一受管理transport实际消费图像/SceneIR，输出原Gujie SegmentationProposal
+  所需像素框/点与受限尺寸/物性估计。框点越界、负点-only、未知实体、改写已知尺寸拒绝。
+- 缺原图明确blocked missing_reconstruction_image，不生成primitive；输入来源/派生授权由Harness部署
+  持有，模型不能填写资产许可或登记结果。未来mesh坐标轴不从源图臆断。
+- 22项planning/原adapter/Codex测试通过；8项planning为显式进程替身，真实分割提案尚未执行。
+
 ## 2026-09-13 单workflow真实尝试：模型超时（不重跑）
 
 - 固定`1a0aefa`，workflow `09c540fd-2cd8-4185-b414-46ef6bfdbc65`，完整许可Box来源正常导入新Store。

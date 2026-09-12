@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C07-PLANNING — 模型到原分割接口
+
+- `origin_owner`：Gujie原分割seam、Bingsheng模型提案；`integration_owner`：Bingsheng Harness。
+- `source_ref`：Gujie接口固定`ed3b7e2`；canonical adapter `62b9e91`与transport `7dcb40c`。
+- `target_paths`：x2env/reconstruction_planning.py和对应测试。
+- `verification`：22项相关测试；原图/模型/框点证据绑定，真实模型提案尚not_run。
+
 ## INT-CANONICAL-C10-REVISION — 共享预算、实际修改与证据失效
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream，新canonical修订执行。
