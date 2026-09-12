@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C11-COMPLETION — 原子成功与证据包
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream；物理内核来源仍按原Gujie/Genesis台账。
+- `source_ref`：package `1a0aefa`、assessment `97a45eb`、controller/CLI `4cf4ec0`、取消terminal `4c6db2d`。
+- `target_paths`：x2env/completion.py、delivery.py、harness.py、store.py、contracts/schema及对应测试。
+- `verification`：59项相关组件测试，含5项输入绑定攻击；模型/轨迹为显式合成producer，实际ffmpeg解码。
+  无正式资格、隔离运行或真实完整案例的新主张。
+
 ## INT-CANONICAL-C06-LOCAL-ENGINE — 原检索引擎消费不可变本地投影
 
 - `origin_owner`：Yuxin原local provider、Bingsheng Registry；`integration_owner`：Bingsheng Harness。

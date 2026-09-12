@@ -1,5 +1,10 @@
 # Canonical x2env（收敛实施中）
 
+完成门现核对请求/输入/seed、最终SceneIR、已提交运行与诊断证据，并重验物理和连续媒体；只有实际
+物化包和manifest核对后，Harness才提交succeeded及包指针。package出口支持只读查看、显式成员复制
+和严格只读复用。开发请求succeeded不等于正式资格：当前导出仍sim_ready=false、copy_run=not_run，
+机器人策略和数据采集均未评估。后续独立隔离运行必须以新证据单列，不能改写此处未执行状态。
+
 本地复用现在通过原Yuxin检索引擎读取canonical Registry的精确类别投影，检索回执、许可和原版本
 映射进入证据链，再进行已有尺寸与真实预览判断。投影不是历史外部资产库，也不支持未登记raw目录
 直接当作可复用版本；跨类别和digital cousin检索尚未授予。

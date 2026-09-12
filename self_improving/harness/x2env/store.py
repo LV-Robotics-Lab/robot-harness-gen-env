@@ -279,6 +279,7 @@ class Store:
         observation: ArtifactRef | None = None,
         diagnosis: ArtifactRef | None = None,
         validation: ArtifactRef | None = None,
+        environment_package: ArtifactRef | None = None,
         revision_receipt: ArtifactRef | None = None,
     ) -> WorkflowSnapshot:
         with closing(sqlite3.connect(self.database)) as db, db:
@@ -290,6 +291,16 @@ class Store:
                 raise KeyError(snapshot.workflow_id)
             current = WorkflowSnapshot.model_validate_json(row[0])
             self._require_owned_head(current, snapshot)
+            if environment_package is not None and (
+                result is None
+                or result.status != "succeeded"
+                or status != "succeeded"
+                or environment_package not in result.outputs
+                or not current.operations
+                or current.operations[-1].capability != "package.materialize"
+                or revision_receipt is not None
+            ):
+                raise ValueError("invalid package checkpoint")
             if revision_receipt is not None and (
                 result is None
                 or result.status != "succeeded"
@@ -332,6 +343,7 @@ class Store:
                 observation,
                 diagnosis,
                 validation,
+                environment_package,
                 revision_receipt,
             ):
                 if ref is not None:
@@ -357,6 +369,9 @@ class Store:
                     "observation": None if revision_receipt else observation or current.observation,
                     "diagnosis": None if revision_receipt else diagnosis or current.diagnosis,
                     "validation": None if revision_receipt else validation or current.validation,
+                    "environment_package": None
+                    if revision_receipt
+                    else environment_package or current.environment_package,
                     "revisions": (*current.revisions, revision_receipt)
                     if revision_receipt
                     else current.revisions,

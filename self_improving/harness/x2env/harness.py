@@ -87,6 +87,16 @@ class Harness:
 
     def _resume(self, workflow_id: str) -> WorkflowSnapshot:
         existing = self.status(workflow_id)
+        if existing.status in {"succeeded", "failed", "cancelled"}:
+            return existing
+        if existing.validation is not None and (
+            existing.status == "active"
+            or existing.stop_reason == "environment_package_materializer"
+        ):
+            snapshot = self._store.claim(workflow_id)
+            if snapshot.status != "active":
+                return snapshot
+            return self._validate(snapshot)
         if existing.stop_reason == "clarification_required" or existing.replay_result is not None:
             return existing
         if existing.compiled_scene is not None and self._replay_executor is None:
@@ -509,10 +519,10 @@ class Harness:
                 if not physical_pass
                 else "visual_intent_not_passed"
                 if not visual_pass
-                else "environment_package_materializer"
+                else None
             )
             status = (
-                "failed" if patches else "blocked" if physical_pass and visual_pass else "failed"
+                "failed" if patches else "succeeded" if physical_pass and visual_pass else "failed"
             )
             report = {
                 "physical_status": physical.get("physical_status", "not_run"),
@@ -537,14 +547,62 @@ class Harness:
                 snapshot,
                 result,
                 snapshot.input_bundle,
-                status="active" if repairable else status,
-                reason=None if repairable else code,
+                status="active" if repairable or status == "succeeded" else status,
+                reason=None if repairable or status == "succeeded" else code,
                 validation=ref,
                 required_resources=(code,) if status == "blocked" else (),
             )
         except (ValueError, OSError, KeyError, TypeError) as error:
             return self._stage_failure(snapshot, "scene_validation_failed", error)
-        return self._revise(snapshot) if repairable else snapshot
+        if repairable:
+            return self._revise(snapshot)
+        return self._materialize(snapshot) if status == "succeeded" else snapshot
+
+    def _materialize(self, snapshot):
+        from .completion import materialize_completion
+        from .package_loader import verify_package
+
+        self._remaining()
+        snapshot = self._store.begin_operation(snapshot, "package.materialize")
+        operation = snapshot.operations[-1]
+        try:
+            completed = materialize_completion(
+                snapshot,
+                self._store,
+                self._state_dir / "stages" / snapshot.workflow_id / operation.operation_id,
+            )
+            ref = self._store.write_artifact(
+                completed.model_dump_json().encode(), "application/json"
+            )
+            if completed.status != "materialized":
+                result = ToolResult(
+                    operation_id=operation.operation_id,
+                    status="failed",
+                    outputs=(ref, completed.receipt),
+                    error_code=completed.error_code,
+                )
+                return self._store.complete_operation(
+                    snapshot,
+                    result,
+                    snapshot.input_bundle,
+                    status="failed",
+                    reason=completed.error_code,
+                )
+            verify_package(Path(completed.package_path))
+            if (
+                Path(completed.package_path) / "manifest.json"
+            ).read_bytes() != self._store.read_artifact(completed.manifest):
+                raise ValueError("materialized_manifest_changed")
+            result = ToolResult(
+                operation_id=operation.operation_id,
+                status="succeeded",
+                outputs=(ref, completed.receipt, completed.manifest),
+            )
+            return self._store.complete_operation(
+                snapshot, result, snapshot.input_bundle, status="succeeded", environment_package=ref
+            )
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            return self._stage_failure(snapshot, "environment_materialization_failed", error)
 
     def _revise(self, snapshot):
         import hashlib
@@ -644,6 +702,10 @@ class Harness:
 
     def package(self, workflow_id: str, *, output: Path | None = None, reuse_existing=False):
         snapshot = self.status(workflow_id)
+        if snapshot.status == "succeeded":
+            from .delivery import export_completion
+
+            return export_completion(snapshot, self._store, output, reuse_existing=reuse_existing)
         if output is not None and snapshot.status in {"failed", "blocked", "cancelled"}:
             from .failure_bundle import materialize_failure
 

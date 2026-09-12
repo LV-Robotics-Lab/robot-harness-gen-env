@@ -1,5 +1,18 @@
 # 进度与结果
 
+## 2026-09-13 C11 完成门、成功指针与可读导出
+
+- materialize_completion重核当前workflow的已提交最终refs、真实typed InputBundle/request digest/seed、
+  SceneIR/runtime、原相机admission、模型process及terminal/proposal证据、双profile物理与连续媒体。
+  不接受报告里孤立passed字段；重新调用原assessment重验，不启动新的Genesis。
+- 主审发现畸形bundle、不同请求、自洽重哈希输入漂移、bundle/runtime seed漂移5类原本可放行；
+  全部先RED再修复，fixture也改为真实ingest。测试的运行轨迹/模型仍为明确合成producer，不计资格。
+- Harness经validate成功进入package.materialize，物化/manifest核对后原子succeeded并提交environment_package；
+  恢复已验证checkpoint不重复replay。导出只复制manifest显式成员，源/CAS/目的漂移与软链拒绝，重复只读。
+- schema自动导出同步；completion/delivery/controller/state/CLI/schema共59 passed（25.33s），ruff和diff检查通过。
+- 所有此类包仍development_review、sim_ready=false、copy_run=not_run、release_qualified=false；
+  不把组件测试或普通目录复制当隔离Genesis copy-run，真实S02将基于新固定提交独立执行。
+
 ## 2026-09-13 C06 本地复用实际经过原Yuxin检索
 
 - RegistryLocalCatalog对精确category的不可变版本生成有界、逐成员绑定的本地投影，真实调用原

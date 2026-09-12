@@ -5,6 +5,8 @@
 ## 当前执行焦点（优先于下列历史slice状态）
 
 - 实施authority保持canonical worktree，用户bingsheng仍未push；持续执行至固定验收/push条件。
+- 统一CLI、原Yuxin本地检索、完成门与成功包导出已接通组件；固定新HEAD后执行原样S02真实开发probe。
+- 成功包仍development_review/未copy-run；冻结12case、3隔离copy-run、全覆盖/旧active清理、正式资格和push均未完成。
 - 真实managed Codex解释已通过；当前controller接线到local resolve→compile→replay→observe→diagnosis→validate；
   下一步有界revise→包与CLI。真实单workflow带资产probe在固定1a0aefa运行，不计后续接线真实通过。
 - 资产规范化/Registry v2、Yuxin search/fetch、Gujie外部adapter、Genesis运行内核、属性修订均有组件，

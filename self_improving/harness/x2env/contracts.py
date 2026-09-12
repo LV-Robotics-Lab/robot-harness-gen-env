@@ -107,6 +107,7 @@ class WorkflowSnapshot(WorkflowHandle):
     observation: ArtifactRef | None = None
     diagnosis: ArtifactRef | None = None
     validation: ArtifactRef | None = None
+    environment_package: ArtifactRef | None = None
     revisions: tuple[ArtifactRef, ...] = ()
 
 
@@ -167,7 +168,8 @@ class SceneEntity(Model):
     role: Literal["foreground", "structural_support"] = "foreground"
     color: str | None
     dimensions: PositiveVector3 | None = Field(
-        description="Intent x/y/z dimensions in metres. Preserve known axes and use null for unknown "
+        description="Intent x/y/z dimensions in metres. Preserve known axes and use null "
+        "for unknown "
         "axes (including unknown support thickness). Entirely unknown dimensions may be null. "
         "Asset resolution must resolve dimensions before compilation."
     )

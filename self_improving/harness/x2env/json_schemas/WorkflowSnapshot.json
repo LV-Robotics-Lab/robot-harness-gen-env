@@ -293,6 +293,17 @@
       ],
       "default": null
     },
+    "environment_package": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "input_bundle": {
       "anyOf": [
         {
