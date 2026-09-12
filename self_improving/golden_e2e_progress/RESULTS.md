@@ -1,5 +1,12 @@
 # 进度与结果
 
+## 2026-09-13 开发 execution 身份接线
+
+- `fbd0441`：同一 Golden start/submit/read 使用显式 development registry/execution/tool receipt，
+  旧 qualified 不重解释；deployment需 execution_mode=development 且 allow_changed_skill_closure=true。
+- S1与Registry相关68 passed；新模块覆盖88%。另一次较宽131 passed、1旧资格hash失配，未重签。
+- 此结果来自受控echo journal，不声称模拟器/模型执行；下阶段真实业务adapter会经过该同一入口。
+
 ## 2026-09-12 包内 Genesis copy-run
 
 - `eff10bb` 候选 8 tests passed。实际归档包运行 68.155 秒，baseline 1000步、41连续帧、24 unique。

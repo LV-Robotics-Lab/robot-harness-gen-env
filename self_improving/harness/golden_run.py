@@ -145,6 +145,7 @@ class GoldenRunHarness:
         workflow_id_factory: Callable[[], UUID] = uuid4,
         child_run_id_factory: Callable[[], UUID] = uuid4,
         resource_access_id_factory: Callable[[], UUID] = uuid4,
+        development_authority=None,
     ) -> None:
         if type(artifact_store) is not LocalArtifactStore:
             raise TypeError("artifact_store must be the exact LocalArtifactStore")
@@ -165,6 +166,14 @@ class GoldenRunHarness:
         self._workflow_id_factory = workflow_id_factory
         self._child_run_id_factory = child_run_id_factory
         self._resource_access_id_factory = resource_access_id_factory
+        from .development_execution import DevelopmentExecutionAuthority
+
+        if development_authority is not None and (
+            type(development_authority) is not DevelopmentExecutionAuthority
+            or development_authority.store is not artifact_store
+        ):
+            raise TypeError("development authority must bind the exact deployment CAS")
+        self._development_authority = development_authority
 
     @property
     def artifact_root(self) -> Path:
@@ -411,6 +420,9 @@ class GoldenRunHarness:
         start = self._resolve_canonical_model(snapshot.start_request_ref, RunStartRequest)
         refs.extend(start.initial_fact_evidence)
         registry = self._resolve_canonical_model(snapshot.registry_snapshot, RegistrySnapshot)
+        if snapshot.registry_snapshot.schema_version == "harness.development_registry_snapshot.v1":
+            refs.append(registry.development_context)
+            refs.extend(entry.descriptor_ref for entry in registry.development_skills)
         for entry in registry.qualified_skills:
             refs.extend(
                 (
@@ -496,13 +508,7 @@ class GoldenRunHarness:
                 operation.qualified_execution,
                 QualifiedSkillExecutionV2,
             )
-            refs.extend(
-                (
-                    qualified.descriptor,
-                    qualified.qualification_artifact,
-                    qualified.qualification_report,
-                )
-            )
+            refs.extend(self._execution_refs(qualified))
         terminal_operations = tuple(
             item for item in operations if item.status is not RunStatus.RUNNING
         )
@@ -523,9 +529,7 @@ class GoldenRunHarness:
                     tool_receipt.command,
                     tool_receipt.base_state,
                     tool_receipt.registry_snapshot,
-                    tool_receipt.skill.descriptor,
-                    tool_receipt.skill.qualification_artifact,
-                    tool_receipt.skill.qualification_report,
+                    *self._execution_refs(tool_receipt.skill),
                     tool_receipt.run_state,
                     *tool_receipt.supporting_artifacts,
                 )
@@ -750,8 +754,10 @@ class GoldenRunHarness:
         )
         qualified_ref = self._publish_model(
             qualified,
-            name="qualified_skill_execution.json",
-            schema_version="harness.qualified_skill_execution.v2",
+            name="qualified_skill_execution.json"
+            if isinstance(qualified, QualifiedSkillExecutionV2)
+            else "development_skill_execution.json",
+            schema_version=qualified.schema_version,
         )
         started_at = self._clock()
         _require_utc_clock(started_at)
@@ -1532,8 +1538,40 @@ class GoldenRunHarness:
         self,
         registry_ref: ArtifactRef,
         skill_ref: str,
+        *,
+        require_live: bool = True,
     ) -> tuple[SkillEvidencePolicy, QualifiedSkillExecutionV2]:
         registry = self._verify_registry_snapshot(registry_ref)
+        if registry_ref.schema_version == "harness.development_registry_snapshot.v1":
+            from .development_execution import DevelopmentSkillExecution
+
+            entries = [
+                entry for entry in registry.development_skills if entry.skill_ref == skill_ref
+            ]
+            policy = self._execution_catalog.policy_for(skill_ref)
+            live = self._execution_catalog.live_descriptors_for(skill_ref)
+            if len(entries) != 1 or policy is None or (require_live and len(live) != 1):
+                raise GoldenRunRegistryError(
+                    "HARN_SKILL_UNQUALIFIED", "development skill is not admitted"
+                )
+            entry = entries[0]
+            descriptor = self._resolve_descriptor(entry.descriptor_ref)
+            if require_live and descriptor != live[0]:
+                raise GoldenRunRegistryError(
+                    "HARN_DEPENDENCY_DRIFT", "development implementation changed"
+                )
+            return policy, DevelopmentSkillExecution(
+                skill_ref=skill_ref,
+                descriptor=entry.descriptor_ref,
+                input_schema=descriptor.input_schema,
+                output_schema=descriptor.output_schema,
+                implementation_sha256=descriptor.implementation_sha256,
+                max_attempts=descriptor.max_attempts,
+                evidence_policy_id=policy.evidence_policy_id,
+                evidence_policy_version=policy.evidence_policy_version,
+                evidence_policy_implementation_sha256=policy.evidence_policy_implementation_sha256,
+                development_context=registry.development_context,
+            )
         entries = tuple(
             entry for entry in registry.qualified_skills if entry.skill_ref == skill_ref
         )
@@ -1586,6 +1624,15 @@ class GoldenRunHarness:
             operation.qualified_execution,
             QualifiedSkillExecutionV2,
         )
+        if operation.qualified_execution.schema_version == "harness.development_skill_execution.v1":
+            policy, expected = self._resolve_live_execution(
+                self._read_visible_snapshot(operation).registry_snapshot,
+                operation.skill_ref,
+                require_live=False,
+            )
+            if qualified != expected:
+                raise GoldenRunCorruptionError("development operation execution changed")
+            return policy, qualified
         registry = self._verify_registry_snapshot(
             self._read_visible_snapshot(operation).registry_snapshot
         )
@@ -1748,6 +1795,10 @@ class GoldenRunHarness:
         command: RunCommandRequest,
         qualified: QualifiedSkillExecutionV2,
     ) -> tuple[ArtifactRef, ...]:
+        if not isinstance(qualified, QualifiedSkillExecutionV2):
+            if self._development_authority is None:
+                raise GoldenRunCorruptionError("development execution has no deployment authority")
+            self._development_authority.verify()
         intent = lifecycle.intent
         state = lifecycle.terminal
         if intent is None or state is None:
@@ -1783,7 +1834,12 @@ class GoldenRunHarness:
                     _canonical_json_sha256(descriptor.model_dump(mode="json")),
                 ),
                 (intent.implementation_sha256, qualified.implementation_sha256),
-                (intent.qualification_sha256, qualified.qualification_artifact.sha256),
+                (
+                    intent.qualification_sha256,
+                    qualified.qualification_artifact.sha256
+                    if isinstance(qualified, QualifiedSkillExecutionV2)
+                    else "0" * 64,
+                ),
                 (intent.max_attempts, qualified.max_attempts),
                 (state.run_id, operation.child_run_id),
                 (state.skill_id, skill_id),
@@ -1848,8 +1904,20 @@ class GoldenRunHarness:
             observations=fresh_observations,
             supporting=native_supporting,
         )
-        receipt = TrustedToolReceiptV2(
-            schema_version="harness.trusted_tool_receipt.v2",
+        from .schemas.workflow_operation import DevelopmentToolReceipt
+
+        receipt_type = (
+            TrustedToolReceiptV2
+            if isinstance(qualified, QualifiedSkillExecutionV2)
+            else DevelopmentToolReceipt
+        )
+        receipt_schema = (
+            "harness.trusted_tool_receipt.v2"
+            if receipt_type is TrustedToolReceiptV2
+            else "harness.development_tool_receipt.v1"
+        )
+        receipt = receipt_type(
+            schema_version=receipt_schema,
             workflow_run_id=operation.workflow_run_id,
             operation_id=operation.operation_id,
             principal_id=operation.principal_id,
@@ -1874,7 +1942,7 @@ class GoldenRunHarness:
         receipt_ref = self._publish_model(
             receipt,
             name="trusted_tool_receipt.json",
-            schema_version="harness.trusted_tool_receipt.v2",
+            schema_version=receipt_schema,
         )
         delta: StateDeltaV2 | None = None
         delta_ref: ArtifactRef | None = None
@@ -2529,6 +2597,13 @@ class GoldenRunHarness:
         )
 
     def _create_start(self, request: RunStartRequest, *, request_sha256: str) -> RunSnapshot:
+        if (
+            request.registry_snapshot.schema_version == "harness.development_registry_snapshot.v1"
+            and request.workspace != "ephemeral"
+        ):
+            raise GoldenRunRegistryError(
+                "HARN_SKILL_UNQUALIFIED", "development requires ephemeral workspace"
+            )
         started_at = self._clock()
         if started_at.utcoffset() != timezone.utc.utcoffset(started_at):
             raise ValueError("clock must return a UTC datetime")
@@ -2706,6 +2781,47 @@ class GoldenRunHarness:
         self,
         artifact: ArtifactRef,
     ) -> RegistrySnapshot:
+        if artifact.schema_version == "harness.development_registry_snapshot.v1":
+            from .development_execution import (
+                DevelopmentRegistrySnapshot,
+                DevelopmentSkillDescriptor,
+            )
+
+            authority = self._development_authority
+            if authority is None:
+                raise GoldenRunRegistryError(
+                    "HARN_SKILL_UNQUALIFIED", "development registry requires deployment authority"
+                )
+            authority.verify()
+            snapshot = self._resolve_canonical_model(artifact, DevelopmentRegistrySnapshot)
+            if snapshot.development_context != authority.context:
+                raise GoldenRunRegistryError("HARN_DEPENDENCY_DRIFT", "development context changed")
+            names = tuple(entry.mcp_tool_name for entry in snapshot.development_skills)
+            if names != tuple(sorted(set(names))) or len(
+                {e.skill_ref for e in snapshot.development_skills}
+            ) != len(names):
+                raise GoldenRunRegistryError(
+                    "HARN_INPUT_SCHEMA_INVALID",
+                    "development registry entries must be unique and sorted",
+                )
+            for entry in snapshot.development_skills:
+                descriptor = self._resolve_canonical_model(
+                    entry.descriptor_ref, DevelopmentSkillDescriptor
+                )
+                if descriptor.implementation_sha256 != authority.implementation_sha256:
+                    raise GoldenRunRegistryError(
+                        "HARN_DEPENDENCY_DRIFT", "development source closure changed"
+                    )
+                if (
+                    f"{descriptor.skill_id}@{descriptor.version}" != entry.skill_ref
+                    or descriptor.mcp_tool_name != entry.mcp_tool_name
+                ):
+                    raise GoldenRunRegistryError(
+                        "HARN_DEPENDENCY_DRIFT", "development descriptor changed"
+                    )
+                schema_model(descriptor.input_schema)
+                schema_model(descriptor.output_schema)
+            return snapshot
         try:
             snapshot = self._resolve_canonical_model(artifact, RegistrySnapshot)
         except ArtifactResolutionError as error:
@@ -2789,6 +2905,10 @@ class GoldenRunHarness:
         return snapshot
 
     def _resolve_descriptor(self, artifact: ArtifactRef) -> RegisteredSkillDescriptor:
+        if artifact.schema_version == "harness.development_skill_descriptor.v1":
+            from .development_execution import DevelopmentSkillDescriptor
+
+            return self._resolve_canonical_model(artifact, DevelopmentSkillDescriptor)
         model = (
             SkillDescriptor
             if artifact.schema_version == "harness.skill_descriptor.v1"
@@ -2801,11 +2921,42 @@ class GoldenRunHarness:
         artifact: ArtifactRef,
         model: type[BaseModel],
     ) -> BaseModel:
+        if (
+            model is RegistrySnapshot
+            and artifact.schema_version == "harness.development_registry_snapshot.v1"
+        ):
+            from .development_execution import DevelopmentRegistrySnapshot
+
+            model = DevelopmentRegistrySnapshot
+        if (
+            model is QualifiedSkillExecutionV2
+            and artifact.schema_version == "harness.development_skill_execution.v1"
+        ):
+            from .development_execution import DevelopmentSkillExecution
+
+            model = DevelopmentSkillExecution
+        elif (
+            model is TrustedToolReceiptV2
+            and artifact.schema_version == "harness.development_tool_receipt.v1"
+        ):
+            from .schemas.workflow_operation import DevelopmentToolReceipt
+
+            model = DevelopmentToolReceipt
         payload = self._artifact_store.resolve(artifact).path.read_bytes()
         parsed = model.model_validate_json(payload)
         if payload != _canonical_model_bytes(parsed):
             raise ValueError("artifact does not use canonical JSON bytes")
         return parsed
+
+    @staticmethod
+    def _execution_refs(execution):
+        if isinstance(execution, QualifiedSkillExecutionV2):
+            return (
+                execution.descriptor,
+                execution.qualification_artifact,
+                execution.qualification_report,
+            )
+        return (execution.descriptor, execution.development_context)
 
     def _publish_model(
         self,

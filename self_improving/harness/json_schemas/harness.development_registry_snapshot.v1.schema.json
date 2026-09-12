@@ -1,0 +1,118 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "anyOf": [
+            {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Schema Version"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "media_type",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "DevelopmentSkillSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "descriptor_ref": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "mcp_tool_name": {
+          "title": "Mcp Tool Name",
+          "type": "string"
+        },
+        "skill_ref": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}\\.[a-z][a-z0-9_]{0,31}@(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$",
+          "title": "Skill Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "skill_ref",
+        "mcp_tool_name",
+        "descriptor_ref"
+      ],
+      "title": "DevelopmentSkillSnapshot",
+      "type": "object"
+    }
+  },
+  "$id": "harness.development_registry_snapshot.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "development_context": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "development_skills": {
+      "items": {
+        "$ref": "#/$defs/DevelopmentSkillSnapshot"
+      },
+      "title": "Development Skills",
+      "type": "array"
+    },
+    "qualified_skills": {
+      "default": [],
+      "maxItems": 0,
+      "minItems": 0,
+      "title": "Qualified Skills",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "harness.development_registry_snapshot.v1",
+      "default": "harness.development_registry_snapshot.v1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "development_context",
+    "development_skills"
+  ],
+  "title": "DevelopmentRegistrySnapshot",
+  "type": "object"
+}

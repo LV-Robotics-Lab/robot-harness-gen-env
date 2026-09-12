@@ -275,7 +275,12 @@ def _require_cas_ref(
         raise ValueError(f"{label} must use its content-addressed artifact URI")
     if artifact.media_type != "application/json":
         raise ValueError(f"{label} must use media_type='application/json'")
-    if artifact.schema_version != schema_version:
+    admitted = {schema_version}
+    if schema_version == "harness.registry_snapshot.v1":
+        admitted.add("harness.development_registry_snapshot.v1")
+    if schema_version == "harness.qualified_skill_execution.v2":
+        admitted.add("harness.development_skill_execution.v1")
+    if artifact.schema_version not in admitted:
         raise ValueError(f"{label} must have schema_version={schema_version}")
 
 

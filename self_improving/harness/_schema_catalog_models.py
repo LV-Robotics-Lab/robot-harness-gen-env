@@ -8,6 +8,22 @@ from typing import Any
 
 _SCHEMA_MODEL_LOCATORS = MappingProxyType(
     {
+        "harness.development_skill_descriptor.v1": (
+            ".development_execution",
+            "DevelopmentSkillDescriptor",
+        ),
+        "harness.development_skill_execution.v1": (
+            ".development_execution",
+            "DevelopmentSkillExecution",
+        ),
+        "harness.development_registry_snapshot.v1": (
+            ".development_execution",
+            "DevelopmentRegistrySnapshot",
+        ),
+        "harness.development_tool_receipt.v1": (
+            ".schemas.workflow_operation",
+            "DevelopmentToolReceipt",
+        ),
         "harness.development_execution_record.v1": (
             ".schemas.limited_image_preview_development",
             "DevelopmentExecutionRecordV1",

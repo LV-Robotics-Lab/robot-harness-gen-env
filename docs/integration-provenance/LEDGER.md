@@ -1,5 +1,21 @@
 # 功能级整合台账
 
+## INT-EXPERIMENT-EXECUTION-001 — 同一 Golden 的开发执行身份
+
+- `lifecycle`：`integrating`；`verification`：`contract_pass`。
+- `origin_owner`：Bingsheng Harness；`integration_owner`：Bingsheng workstream；
+  `recorded_git_authors`：来源固定 Git 记录；`upstream_owner`：Python/SQLite/Pydantic。
+- `source_repository`：本仓库；`source_ref`：`9460a4b`，候选 `fbd0441`；`dirty_snapshot`：`none`。
+- `source_paths`：Golden aggregate、execution catalog、Registry kernel；
+  `target_paths`：`development_execution.py` 与同一 aggregate/catalog/registry/schema。
+- `integration_method`：部署显式启用，声明实现/config哈希绑定；开发receipt无正式qualification refs，
+  复用同一 SQLite controlled child lifecycle 和父 journal；release不自动降级。
+- `contract_spec`：`self_improving/harness/DEVELOPMENT_EXECUTION_CONTRACT.md`。
+- `verification_evidence`：S1/Registry 68 passed；一次较宽回归131 passed、1旧compile资格hash失配，
+  registry.py变化后保持fail closed，未重签。新模块branch coverage 88%，未达到100%。
+- `golden_run`：受控echo仅测state/restart；`known_gaps`：真实实验Skill整合待完成，旧release固定版本保留。
+- `last_verified`：`2026-09-12`。
+
 ## INT-EXPERIMENT-PACKAGE-001 — 包内入口与隔离 copy-run
 
 - `lifecycle`：`integrating`；`verification`：`runtime_pass`（归档包内执行版本、单 baseline）。

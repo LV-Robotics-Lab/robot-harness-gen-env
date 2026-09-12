@@ -431,6 +431,43 @@ class SkillRegistry:
         """
 
         registration = self._registration(skill_id, exact_version)
+        return self._invoke_controlled(registration, parameters, run_id=run_id)
+
+    def invoke_development_with_run_id(
+        self,
+        descriptor,
+        handler,
+        parameters,
+        *,
+        run_id,
+        development_authority,
+    ):
+        """Execute a deployment-authorized unqualified handler through the durable kernel.
+
+        The zero qualification digest is solely an internal SQLite compatibility sentinel.
+        It is never an ArtifactRef, qualification document, or admissible release identity.
+        """
+        from .development_execution import DevelopmentExecutionAuthority, DevelopmentSkillDescriptor
+
+        if (
+            type(development_authority) is not DevelopmentExecutionAuthority
+            or development_authority.store is not self._artifact_resolver
+        ):
+            raise TypeError("development execution requires the exact deployment authority")
+        development_authority.verify()
+        if type(descriptor) is not DevelopmentSkillDescriptor:
+            raise TypeError("development execution requires an unqualified descriptor")
+        if descriptor.implementation_sha256 != development_authority.implementation_sha256:
+            raise ValueError("development implementation differs from declared source closure")
+        registration = _Registration(
+            descriptor=descriptor,
+            handler=handler,
+            input_model=schema_model(descriptor.input_schema),
+            output_model=schema_model(descriptor.output_schema),
+        )
+        return self._invoke_controlled(registration, parameters, run_id=run_id, development=True)
+
+    def _invoke_controlled(self, registration, parameters, *, run_id, development=False):
         if self._run_store is None:
             raise ControlledRunPendingError("controlled run identity requires a durable RunStore")
         normalized_parameters, raw_parameters_sha256 = _normalize_controlled_parameters(parameters)
@@ -453,7 +490,9 @@ class SkillRegistry:
             "raw_parameters_sha256": raw_parameters_sha256,
             "descriptor_sha256": _canonical_json_sha256(descriptor.model_dump(mode="json")),
             "implementation_sha256": descriptor.implementation_sha256,
-            "qualification_sha256": descriptor.qualification_artifact.sha256,
+            "qualification_sha256": "0" * 64
+            if development
+            else descriptor.qualification_artifact.sha256,
             "max_attempts": descriptor.max_attempts,
         }
         existing_lifecycle = self._read_controlled_lifecycle(run_id)
@@ -603,7 +642,7 @@ class SkillRegistry:
         return self._execute(
             registration,
             effective_parameters,
-            stage_prefix="",
+            stage_prefix="development." if development else "",
             controlled_intent=intent,
             controlled_owner=reserved,
             prepared_input=(preview, dependencies),

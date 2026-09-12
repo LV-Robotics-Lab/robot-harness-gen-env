@@ -9,6 +9,7 @@ from typing import Annotated, Literal
 
 from pydantic import UUID4, AwareDatetime, Field, JsonValue, model_validator
 
+from ..development_execution import DevelopmentSkillExecution
 from ..trusted_state import StateMutation, WorldFact
 from .base import (
     CanonicalSkillRef,
@@ -68,7 +69,12 @@ def _require_cas(
 ) -> None:
     if artifact.uri != f"artifact://sha256/{artifact.sha256}":
         raise ValueError(f"{label} must use its content-addressed artifact URI")
-    if schema_version is not None and artifact.schema_version != schema_version:
+    admitted = {schema_version}
+    if schema_version == "harness.registry_snapshot.v1":
+        admitted.add("harness.development_registry_snapshot.v1")
+    if schema_version == TRUSTED_TOOL_RECEIPT_V2_SCHEMA_ID:
+        admitted.add("harness.development_tool_receipt.v1")
+    if schema_version is not None and artifact.schema_version not in admitted:
         raise ValueError(f"{label} must have schema_version={schema_version}")
     if schema_versions is not None and artifact.schema_version not in schema_versions:
         raise ValueError(f"{label} has an unsupported schema_version")
@@ -241,6 +247,14 @@ def state_delta_v2_sha256(delta: "StateDeltaV2") -> str:
         "delta": delta.model_dump(mode="json", exclude={"delta_sha256"}),
     }
     return hashlib.sha256(_canonical_json_bytes(payload)).hexdigest()
+
+
+class DevelopmentToolReceipt(TrustedToolReceiptV2):
+    """Executed development evidence with no release qualification claim."""
+
+    model_config = public_schema_config("harness.development_tool_receipt.v1")
+    schema_version: Literal["harness.development_tool_receipt.v1"]
+    skill: DevelopmentSkillExecution
 
 
 class StateDeltaV2(HarnessModel):
