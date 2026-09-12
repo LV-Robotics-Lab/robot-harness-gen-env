@@ -21,7 +21,7 @@
 | 理解运行时物理通过到底验了什么 | [运行时门控](modules/runtime-gates.md) | 接触 fraction、drift、可见性、视频互异帧、嵌套未声明接触等门控 |
 | 理解 Harness 对外记录与 Text2Env Skill 边界 | [Harness Schema Tranche](modules/harness-schema-tranche.md) | 14 个严格 schema、状态机、权威载荷引用、快照漂移门与尚未实现的 Registry/MCP 边界 |
 | 理解 Image2Env / Video2Env 的正式合同与当前未实现边界 | [Image/Video exact Skill 合同](../docs/contracts/X2ENV_IMAGE_VIDEO_SKILL_CONTRACT_V1.md) | 六个 exact Skill、媒体身份、资产 lane、candidate package、replay/validate 门和 Gujie adapter 边界 |
-| 理解 System 2 如何完成一次真实 compile 回合 | [System 2 Compile 回合](modules/system2-compile-turn.md) | 受信输入、planner 证据、qualified compile、ToolResult、状态增量与 history authority 的闭环及失败边界 |
+| 理解历史 System 2 compile-only 组件如何闭合 | [System 2 Compile 回合](modules/system2-compile-turn.md) | 受信输入、planner 证据、qualified compile、ToolResult、状态增量与 history authority；该页不是当前产品入口 |
 | 理解 System 2 如何把成功 compile 安全交给 replay | [System 2 Compile → Replay 交接](modules/system2-replay-handoff.md) | history/receipt/state 交叉绑定、canonical 环境包与请求 provenance，以及 prepare-only 边界 |
 | 理解如何把受信 System 2 replay input 的 package closure 复制到独立 CAS | [System 2 Replay-Input Package Promotion](modules/system2-replay-input-promotion.md) | source authority 重验、七个 logical refs、commit-last、幂等失败语义与本地文件系统边界 |
 | 理解如何执行并对账一次动态 System 2 replay | [System 2 Replay Evidence Acquisition](modules/system2-replay-evidence-acquisition.md) | qualified factory wiring、动态输入、持久终态/Event/CAS 对账与仍缺的部署条件 |

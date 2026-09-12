@@ -117,14 +117,19 @@ _Avoid_: successful demo、validated render、unpromoted candidate
 规划器可以据此决策的当前世界事实集合；每项事实都来自类型化输入、新鲜观测或可验证回执，并带明确时效和来源。
 _Avoid_: chat context、unchecked memory、scene description
 
-**External Codex Agent（外部 Codex Agent）**:
-位于 Harness 受信边界之外，读取资格化能力与受信证据并提出规划、诊断和视觉判断的认知
-参与者；其输出是不受信建议，不能授予物理通过或发布资格。
-_Avoid_: internal model provider、Qwen planner、VLM authority、trusted executor
+**Harness Workflow Controller（Harness 工作流控制器）**:
+面向用户入口并拥有任务生命周期的控制者；它创建和恢复任务、校验建议、执行 Skill、记录状态与重试，
+并依据真实验证结果决定是否发布。
+_Avoid_: Codex session、external tool driver、chat-owned workflow
+
+**Managed Codex Backend（受管理 Codex 后端）**:
+由 Harness 在有界上下文、动作集合和预算内调用的智能组件；它提供理解、规划、视觉判断和诊断建议，
+但不拥有工作流状态、Skill 执行或发布权威。
+_Avoid_: external workflow owner、Qwen planner、VLM authority、trusted executor
 
 **System 2 Planner（系统二规划器）**:
 根据受信世界状态选择下一项版本化 Skill，并在失败后提议重试、修复、回放或停止的推理角色；
-在目标架构中该角色由 External Codex Agent 承担，而不是 Harness 内部的模型 provider。
+在目标架构中该角色由 Harness 管理的 CodexBackend 承担，工作流控制权仍属于 Harness。
 _Avoid_: internal Qwen planner、monolithic VLA、free-form chatbot、skill executor
 
 **Planner Context（规划上下文）**:

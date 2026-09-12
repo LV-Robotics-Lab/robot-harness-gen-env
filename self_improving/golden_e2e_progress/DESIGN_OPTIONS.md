@@ -2,12 +2,15 @@
 
 状态：`accepted_2026-09-09`
 
+调用关系更新：本页保留当时的方案比较；D022 已将“外部 Codex 作为产品入口”替换为
+`用户/API/CLI → Harness controller → managed CodexBackend → assigned exact MCP → Skills`。
+
 ## 问题空间与约束
 
-目标不是再造一个会“说成功”的 agent wrapper，而是建立一条可重建的父 workflow：外部 Codex 从
-已资格 Skill 中选择下一步，Harness 校验并执行，每次 compile/replay/validate/observation/diagnosis/
-promotion 都留下同一 receipt chain。最终产物必须达到冻结的 Genesis profile；render、模型判断和
-进程退出码都不能代替物理或 publication 证据。
+目标不是再造一个会“说成功”的 agent wrapper，而是建立一条可重建的父 workflow：Harness 调用
+受管理 CodexBackend 从已资格 Skill 中提出下一步，Harness 校验并执行。每次 compile、replay、
+validate、observation、diagnosis 和 promotion 都留下同一 receipt chain。最终产物必须达到冻结的
+Genesis profile；render、模型判断和进程退出码都不能代替物理或 publication 证据。
 
 任何设计都必须满足：
 
@@ -15,8 +18,8 @@ promotion 都留下同一 receipt chain。最终产物必须达到冻结的 Gene
 - 精确版本、已资格、未撤销的 Skill 才能执行；`latest`、候选和源文件扫描结果不可执行。
 - 每次 mutation 绑定 `expected_revision`、`expected_state_sha256`、receipt head 和 idempotency key。
 - blocked/failed 进入 attempt history，但不得写成可信世界事实；fallback 产生新 turn 和新 package。
-- Codex 是 MCP seam 外的 caller，不是 server 内 provider。Codex advisory 不授予 physics pass 或
-  publishability。
+- 用户只调用 Harness；CodexBackend 是 Harness 管理的智能组件，MCP 是分配 exact Skill 的协议 seam。
+  Codex advisory 不授予 physics pass 或 publishability。
 - 所有跨阶段输入输出进入可搬迁 CAS closure；绝对部署路径不进入 package identity。
 - 最终 robot-policy/data-collection 能力必须有 reset/action/observation/trajectory 的真实 Genesis
   probe，不能由 rigid load/step 自动推出。

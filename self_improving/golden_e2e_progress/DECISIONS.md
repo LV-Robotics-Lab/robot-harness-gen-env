@@ -2,8 +2,9 @@
 
 ## M1 收口与 fresh observe v3
 
-- `1cf8908` 的首条完整 rigid-scene line 已真实通过并集中验收，下一 active 为 M2 外部 Codex
-  same-workflow exact MCP。M1 只覆盖已知鼠标图像 exact reuse、有限桌面与 ground；不代表三模态、
+- `1cf8908` 的首条完整 rigid-scene line 已真实通过并集中验收，下一 active 为 M2 Harness 入口、
+  受管理 CodexBackend 与 same-workflow exact MCP。M1 只覆盖已知鼠标图像 exact reuse、有限桌面与
+  ground；不代表三模态、
   全新资产生成、digital cousins、MCP 或机器人策略完成。
 - attempt-1 的 `genesis.observe@2.0.0` 保留原纯读帧与 TTL 语义，过期失败不得补写时间。
   新 `genesis.observe@3.0.0` 使用独立固定 runtime 恢复可信 replay 的最终 pose、归零速度、
@@ -38,7 +39,7 @@
   fail-closed 的执行与证据权威；Codex 只能提出下一步、诊断和视觉判断，不能自报执行成功、物理通过
   或 publishable。
 - 影响：现有 Qwen planner/VLM 代码作为历史实验或可选 adapter 评估，不再决定目标架构。新接口优先
-  表达 `Codex proposal → Harness validation/execution → trusted ToolResult/observation → Codex next turn`。
+  表达 `Harness context → managed Codex proposal → Harness validation/execution → trusted result → next turn`。
 
 ## D002 — Golden output 是 sim-ready Genesis 环境
 
@@ -61,11 +62,11 @@
 
 - 日期：2026-09-09
 - 状态：accepted
-- 决策：workflow 业务通过 S1 `GoldenRunHarness.start/submit/read` 聚合；外部 Codex、benchmark 与
-  frontend 使用同一 S2 MCP adapter。MCP 公开精确版本、已资格的 x2env tools，而不是通用
-  `skill.invoke`；耗时执行以 durable operation/resource 呈现。
-- 边界：Codex 位于 MCP seam 外。它的 route、视觉判断和诊断是 advisory，Harness 对状态、执行、
-  validate 和 promotion 保持唯一权威。
+- 决策：workflow 业务通过 S1 `GoldenRunHarness.start/submit/read` 聚合；用户、frontend、API 与 CLI
+  只进入 Harness。Harness 内部管理 CodexBackend，并可给它分配经 S2 MCP adapter 暴露的当前任务
+  exact tools。MCP 不提供通用 `skill.invoke`；耗时执行以 durable operation/resource 呈现。
+- 边界：MCP 只做协议转换，Codex 的 route、视觉判断和诊断是 advisory。Harness 对生命周期、状态、
+  执行、重试、恢复、validate 和 promotion 保持唯一权威。
 
 ## D005 — Genesis 最终能力门
 
@@ -131,7 +132,8 @@
   anti-corruption adapter 进入 `legacy_genenv_adapted` candidate，随后在当前 Harness run 重做真实
   Genesis replay/validate。
 - 边界：合同与旧输出中的 `passed`、render、文件格式或 process success 均不授予 simulator-ready、
-  physical pass 或 publishable。External Codex 提供 proposal/advisory，不在 exact Skill 内调用模型。
+  physical pass 或 publishable。受管理 CodexBackend 提供 proposal/advisory，不在 exact Skill 内调用
+  模型。
 
 ## D011 — Fresh observation 先闭合受控证据链，再开放 production tool
 
@@ -282,9 +284,10 @@
 ## D021 — 首个可用版本收敛为单一 image exact-reuse 预览闭环
 
 - 日期：2026-09-11
-- 状态：accepted_by_user_scope
-- 决策：当前唯一 active 交付是 `Codex → exact MCP → compile / Genesis replay / validate` 的有限
-  桌面鼠标闭环。观察、诊断、真实布局修改、重编译和隔离发布都进入同一 workflow journal；场景包
+- 状态：accepted_by_user_scope；入口关系由 D022 更新。
+- 决策：当前唯一 active 交付的调用关系为
+  `Harness controller → managed CodexBackend → assigned exact MCP → compile / Genesis replay / validate`。
+  这是有限桌面鼠标闭环；观察、诊断、真实布局修改、重编译和隔离发布都进入同一 workflow journal；场景包
   manifest 统一绑定输入、资产、布局、运行、媒体、验证和耗时。
 - 复用与简化：复用 M1 applications、修改后 compile application、Genesis execution v3 核心和真实
   Codex/MCP wire 见证。M2 不为 replay、observe、validate 各自新增资格、SQLite authority、terminal
@@ -313,3 +316,6 @@
 - 恢复边界：Codex timeout、进程退出或无效输出必须在当前任务留下明确失败和重试状态；下一次调用
   从 Harness 的持久 head 重建上下文，不能依赖 Codex 会话记忆，也不能另建平行 workflow/receipt/
   qualification 权威。
+- 验收边界：`codex_mcp_acceptance.py`、`codex_mcp_process.py` 与 scripted MCP client 只保留为历史或
+  组件验收，不能替代从 Harness 用户入口发起的产品闭环。正常案例和诊断修复案例仍须从该入口
+  真实重跑；本决策不声明它们已经通过。

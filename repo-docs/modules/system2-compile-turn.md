@@ -1,5 +1,9 @@
 # System 2 的一次真实 Compile 回合
 
+> 本页记录 2026-09-02 的 compile-only 组件验收，不是当前受限 image preview 的产品入口。
+> 当前控制关系是用户进入 Harness、Harness 管理 CodexBackend 与 exact MCP；见
+> [Self-Improving 平台](self-improving-platform.md)。
+
 `self_improving.system2_compile_turn.System2CompileTurn` 把现有的 System 2 零件收进一个
 公开入口：调用方给出任务意图、seed、受信 catalog 路径和 generate-on-miss 策略，模块返回
 `System2CompileTurnResult`。调用方不需要自己拼 planner context、保存模型回执、调用 Registry、

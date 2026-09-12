@@ -3,9 +3,10 @@
 状态：`active`
 
 当前里程碑：M1 第一条完整 image exact-reuse Genesis rigid-scene line 在 `1cf8908` 真实通过，
-attempt-2 四 registered Skill 与集中功能验收完成。active 切到 M2：外部 Codex same-workflow
-exact qualified MCP（无 generic invoke）。M1 不扩张成三模态/新资产/digital cousins、MCP 或
-robot policy；新 core 覆盖率缺口继续记录，不以功能通过替代 100% 目标。126 schema 为当前门。
+attempt-2 四 registered Skill 与集中功能验收完成。active 切到 M2：Harness 用户入口管理真实
+CodexBackend，并在同一 workflow 使用 exact qualified MCP（无 generic invoke）。M1 不扩张成
+三模态/新资产/digital cousins、MCP 或 robot policy；新 core 覆盖率缺口继续记录，不以功能通过替代
+100% 目标。126 schema 为当前门。
 
 最新用户指令后置P8/E3，先完成sim-ready服务并暂停。新的顺序和阶段验收以已批准的
 `SIM_READY_RELEASE_PLAN.md`为准；下方保留原P0–P14编号以追踪已完成工作，不再代表执行先后。
@@ -154,25 +155,27 @@ exact reuse、digital cousin、fresh generation 三条 golden line，再进入�
 2. `feat(codex): record visual and diagnostic advisories`
 3. `feat(codex): version prompt repairs and cross-modal fallback`
 
-Codex经 MCP读取当前 ImageContent/keyframes 和 diagnostics；advisory 不推进可信世界事实。prompt revision
-与 video→image fallback 均产生新 turn/package，完整保留失败。
+Harness 从当前权威状态构造 assignment，并调用受管理 CodexBackend；Codex 可经分配的 exact MCP
+读取当前 ImageContent/keyframes 和 diagnostics。advisory 不推进可信世界事实。prompt revision 与
+video→image fallback 均产生新 turn/package，完整保留失败。
 
-当前已完成 durable resource delivery、exact advisory/prompt MCP controls 与受控 external Codex
+当前已完成 durable resource delivery、exact advisory/prompt MCP controls 与受控 external Codex 组件
 revision 2→3→4 回合；image/video compile v2 attempt 也已在受控 exact image compile 中显式消费
 PromptRevision、失败 receipt、predecessor package 与 video fallback frame，并推进至 revision 5。下一切片
 把同一合同接到 production image/video handler 和资格；受控 observation/compile 仍不可替代 production
 Genesis capture/qualification。
 
-## P11 — Golden runner、真实 Codex 与案例
+## P11 — Harness controller、受管理真实 Codex 与案例
 
 提交建议：`feat(golden-e2e): run Codex MCP Genesis workflows`
 
-- 实现 S6 统一 runner、case schema 和 canonical report。
-- scripted client 的 deterministic golden lines 必须 100%。
-- 真实 `codex exec --ephemeral --json --sandbox read-only` 只经项目 MCP 操作，同一 workflow 完成路由、
-  compile/replay/observe/diagnose/revise/validate/promotion。
-- 已完成的 external Codex diagnosis 只覆盖读取、diagnose/revise controls；它不满足本阶段要求的
-  compile/replay/production-observe/validate/promotion 全链。
+- 实现 S6 统一 controller/runner、case schema 和 canonical report；用户只调用 Harness API/CLI。
+- scripted client 的 deterministic golden lines 必须 100%，但只算 adapter/component evidence。
+- Harness controller 从持久 head 构造当前任务、动作和预算，内部以无交互 `codex exec` 调用
+  CodexBackend；Codex 通过分配的项目 MCP 建议路由和修改，Skill 执行、状态提交、重试、恢复与发布
+  仍由 Harness 完成。
+- 已完成的 external Codex diagnosis 只覆盖读取、diagnose/revise controls 的历史组件验收；它不满足
+  本阶段要求的 compile/replay/production-observe/validate/promotion 全链。
 - 每个成功 case 保存小型 evidence index、可观看图片/视频链接和 portable verification command；bulk
   runtime output 不进 Git。
 

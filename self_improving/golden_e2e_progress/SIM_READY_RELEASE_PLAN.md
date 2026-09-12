@@ -12,16 +12,18 @@ policy-ready/最终Golden要求不作为新阶段的前置：本阶段环境sim-
 - M1实际适配固定`eb0b710`中的URDF/scene import、有限布局、支撑图、baseline/half-dt与物理判据；
   保留Gujie实现归属及Genesis/SimFoundry各自上游归属，不只将其当作背景资料。
 - M2把其阶段化执行、诊断与最终媒体行为接到Harness同workflow回执，原checkpoint/pass不直接迁移。
-- M3接入重建结果与资产生成路径，保留SimFoundry为独立上游；外部Codex继续承担规划/视觉决策。
+- M3接入重建结果与资产生成路径，保留SimFoundry为独立上游；Harness管理的CodexBackend继续承担
+  规划/视觉决策。
   video补足完整帧identity与真实执行，不以15帧sample或旧成功记录替代Golden line。
 - 每项整合记录固定源码、采用/适配/补齐的具体内容、当前运行证据和限制。优先复用可分离的确定性
   实现；不复制整个vendor，不放宽Harness证据门，不改动同事dirty工作区。
 
 ## 本阶段终点
 
-用户输入text/image/video或组合prompt，由外部Codex通过exact qualified MCP驱动同一Harness workflow，
-输出可在固定Genesis中原生加载、真实步进、通过环境级验证并可搬迁重放的场景包、资产、图片/连续
-视频及完整回执；验证通过后原子入库/发布。完成可访问服务与文档交付，然后暂停。
+用户从Harness API/CLI提交text/image/video或组合prompt。Harness controller拥有workflow生命周期，
+内部调用受管理CodexBackend，并通过分配的exact qualified MCP执行Skill；输出可在固定Genesis中原生
+加载、真实步进、通过环境级验证并可搬迁重放的场景包、资产、图片/连续视频及完整回执。验证通过后
+由Harness原子入库/发布。完成可访问服务与文档交付，然后暂停。
 
 本阶段不要求机器人reset/action/termination/trajectory或policy成功率，不实现P8。旧E3/E4定义保持
 历史含义，不把缺少policy的发布称为旧E4。第一阶段验收改为E2环境门+完整Codex闭环+环境发布/服务
@@ -40,11 +42,13 @@ policy-ready/最终Golden要求不作为新阶段的前置：本阶段环境sim-
 ## M2 — Codex同workflow闭环（P4/P5/P10/P11）
 
 - 将M1的production compile/replay/observe/validate接入冻结Registry的exact MCP目录，无generic invoke。
-- 外部真实Codex在一个workflow中读取输入、选工具、读取新鲜观测、诊断、修改prompt、重新编译，
-  并在允许时显式fallback；失败predecessor、receipt和StateDelta完整关联。
+- Harness从当前持久状态自动调用真实CodexBackend；Codex在一个workflow中读取输入、选择建议动作、
+  读取新鲜观测、诊断、修改prompt，并在允许时显式fallback。Harness校验后执行重编译等exact Skill；
+  失败predecessor、receipt和StateDelta完整关联。
 - 补齐环境级promotion与发布receipt；本阶段先发布至独立受控库，后续M4完成共享入库全路径。
-- 验收：正常case和至少一个诊断修复case都真实闭环，Codex调用记录可与Harness逐项对账；
-  stdio/client/resource与恢复通过。Codex自报成功不能代替环境验证。
+- 验收：正常case和至少一个诊断修复case都从Harness用户入口真实闭环，Codex调用记录可与Harness逐项
+  对账；stdio/client/resource与恢复通过。用户无需操作Codex CLI或MCP配置；Codex自报成功不能代替
+  环境验证。
 
 ## M3 — 三模态×三资产路径（P9/P10/P11）
 
@@ -72,7 +76,8 @@ policy-ready/最终Golden要求不作为新阶段的前置：本阶段环境sim-
 - 在固定干净提交完成根测试、schema/格式、真实运行和迁移/恢复；新core覆盖目标保持，不以
   反复局部审计代替功能进展，剩余防御/环境分支逐条说明且不得宣称原始100%。
 - 交付最小可用工作台/服务：提交多模态输入、查看状态/失败原因、观看媒体、取得环境包与证据。
-  对外入口复用同一Harness权威与exact MCP；默认按项目组可访问的受控服务部署，不自动公开互联网。
+  对外入口只暴露同一Harness权威；exact MCP是内部协议适配，用户无需直接操作。默认按项目组可访问的
+  受控服务部署，不自动公开互联网。
 - 固定release源码、依赖、启动/停止/恢复说明、服务地址和健康检查；完成从服务入口提交到取得
   sim-ready产物的真实冒烟。部署地址或访问范围若现有配置无法确定，在部署准备完成后单独确认。
 - 整理本任务分支/工作树和临时产物归属，不reset/覆盖/顺手提交其他用户改动，不删除原始失败证据；

@@ -1,5 +1,13 @@
 # Change Log
 
+## 2026-09-12 Harness-owned Codex lifecycle clarification
+
+- 当前受限 image preview 的用户入口统一为 Harness API/CLI。Harness controller 拥有任务生命周期、
+  状态、有限重试、恢复、Skill 执行和发布；内部受管理 CodexBackend 只返回结构化理解、规划、视觉判断、
+  诊断与修改建议，exact MCP 只做当前 assignment 的协议适配。
+- 旧 `codex_mcp_acceptance.py`、`codex_mcp_process.py` 与 scripted MCP client 明确归为历史/组件验收，
+  不能替代 Harness-originated 产品 E2E。此次仅纠正文档，不声明正常案例或诊断修复案例已经通过。
+
 ## 2026-09-11 首条 production Image2Env → Genesis rigid-scene workflow
 
 - 固定 `1cf8908acb83b86b15a7ae8a7c96cb943cc39945` 将已注册

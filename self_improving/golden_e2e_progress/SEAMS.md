@@ -14,8 +14,10 @@
 fresh producer 在采集前深读历史 replay，采集后核对固定新 capture 闭包与 TTL；纯读恢复不授 live
 capability，也不能把历史 captured_at 更新为当前时间。结果 scope 为 `genesis.rigid_scene@1`。
 
-M2 必须用外部 Codex 的真实 exact MCP 调用把此组合接回同一 workflow；本地 assembly 的正式
-通过只证明 M1。保留无 generic invoke、Harness 唯一 authority、失败不推进的门。
+M2 必须从用户可见的 Harness 入口发起：Harness 先持久化 workflow，再调用受管理的真实
+CodexBackend，经当前任务分配的 exact MCP 把此组合接回同一 workflow。本地 assembly 与外部
+Codex/MCP helper 的正式通过都只证明组件能力。保留无 generic invoke、Harness 唯一 authority、
+失败不推进的门。
 
 ## S1 — Workflow aggregate
 
@@ -66,6 +68,10 @@ structuredContent/TextContent/ImageContent/ResourceLink；协议错误与领域�
 official MCP client lifecycle。artifact resource 必须带 workflow identity，并只允许读取经完整历史重建
 可达的 typed refs；不能把裸 CAS digest 当授权。真实 stdio/HTTP server 是此 seam 的 transport adapter，
 不复制业务逻辑。
+
+产品调用者是 Harness CLI/API，而不是 MCP client。Harness controller 只向 CodexBackend 分配当前
+workflow、当前阶段和预算内的 exact tools；Codex 不能创建产品任务、提交可信状态或发布 package。
+直接 MCP client 与旧 external-Codex runner 只能形成协议/组件证据，不能计为 Harness 产品 E2E。
 
 ## S3 — Genesis runtime verification
 
@@ -170,9 +176,10 @@ class GoldenE2ERunner:
     def run(self, case: GoldenE2ECase) -> GoldenE2EReport: ...
 ```
 
-可观察行为：输入 ingest、外部真实 Codex 启动、MCP negotiation/tool calls、同一 workflow receipt chain、
-Genesis package/replay/validate/observation/diagnosis/fallback/promotion、媒体、阶段成功率与最终证据闭包。
-scripted MCP client 可用于 deterministic integration；只有 `agent_mode=codex` 才能算真实 Codex 证据。
+可观察行为：用户从 Harness 入口提交、Harness 启动受管理的真实 Codex、MCP negotiation/tool calls、
+同一 workflow receipt chain、Genesis package/replay/validate/observation/diagnosis/fallback/promotion、
+媒体、阶段成功率与最终证据闭包。scripted MCP client 可用于 deterministic integration；只有从 Harness
+入口发起并由 controller 管理的真实 Codex 调用，才能算产品 Codex E2E 证据。
 
 ## 测试边界
 

@@ -1,5 +1,23 @@
 # Self-Improving 平台边界
 
+## 当前受限 image preview 的控制关系
+
+当前产品入口是 Harness，而不是 Codex 或 MCP：
+
+```text
+用户 / API / CLI
+  -> Harness service + workflow controller
+  -> managed CodexBackend
+  -> 当前任务分配的 exact MCP Skills
+  -> Harness 校验结果、提交状态、重试/恢复并决定发布
+```
+
+Harness 在调用 Codex 前持久化任务，每次从当前权威状态构造有界上下文、动作集合和预算。
+Codex 只提供输入理解、规划、视觉判断、诊断与修改建议；它不拥有业务状态、Skill 执行或发布资格。
+`codex_mcp_acceptance.py`、`codex_mcp_process.py` 和 scripted MCP client 仍可证明协议或组件行为，但属于
+历史/组件验收，不能替代从 Harness 入口发起的产品案例。受限 image exact-reuse 的正常案例和诊断修复
+案例仍需按当前里程碑真实跑通，本页不提前声明通过。
+
 固定 `1cf8908acb83b86b15a7ae8a7c96cb943cc39945` 已闭合首条 production image exact-reuse →
 Genesis rigid-scene workflow。Assembly 消费已注册 `image2env.compile@2.0.0` 终态，随后在同一次
 workflow 调用已注册 `image2env.replay@2.0.0`、`genesis.observe@3.0.0` 和
@@ -149,7 +167,8 @@ assembly 的本地生成资产路径，但使用临时 qualification，不能替
 字段边界、状态机、快照与未实现范围见 [Harness Schema Tranche](harness-schema-tranche.md)；
 逐项实现和验证证据见 [PR1 实现报告](../../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)。
 
-当前 Golden history 还支持两类不改可信状态的 control entry：external-agent advisory 和 prompt revision。
+早期 Golden control schema 仍以 external-agent advisory 和 prompt revision 命名，并支持两类不改可信
+状态的 control entry。
 它们不伪装成 Skill/ToolResult，也不生成 StateDelta；与 Skill 共用同一个 SQLite turn 仲裁，提交后只推进
 revision、turn sequence 和 receipt head，state ref/hash 与 child runs 保持不变。advisory 只能引用本
 workflow 的失败 receipt、diagnostic 与仍新鲜的 Genesis observation，且固定为 `advisory_only`；prompt
