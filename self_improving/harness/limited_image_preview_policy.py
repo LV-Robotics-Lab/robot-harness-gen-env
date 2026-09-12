@@ -200,7 +200,7 @@ class LimitedImagePreviewPolicy:
         return invocation
 
     def claims(self, state):
-        self._terminal(state)
+        invocation = self._terminal(state)
         if state.status != RunStatus.SUCCEEDED:
             return ()
         model = _MODELS[self.skill_ref][1]
@@ -220,6 +220,18 @@ class LimitedImagePreviewPolicy:
                     operation="retract", key="image.fresh_capture", value=None
                 ),
             )
+        elif self.skill_ref == "image2env.validate@3.0.0":
+            parameters = LimitedSceneValidateInputV1.model_validate(invocation.effective_parameters)
+            if (
+                parameters.execution_receipt.schema_version
+                == "harness.genesis_scene_execution_receipt.v2"
+                and parameters.expected_layout is None
+            ):
+                claims += (
+                    ReceiptDerivedFactClaimV2(
+                        operation="retract", key="image.fresh_capture", value=None
+                    ),
+                )
         return tuple(sorted(claims, key=lambda c: c.key))
 
     def diagnostics(self, state):
