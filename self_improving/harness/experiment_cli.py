@@ -155,8 +155,15 @@ def run_cli(argv=None):
     except (OSError, ValueError) as error:
         _emit({"status": "failed", "error_code": "invalid_request", "detail": str(error)})
         return 2
+    invocation_identity = None
     try:
+        from .experiment_invocation_identity import capture_invocation_identity
         from .experiment_service import ExperimentService
+
+        if request.command != "status":
+            invocation_identity = capture_invocation_identity(
+                deployment.server_workdir, request.deployment
+            )
 
         backend = None
         if request.command in {"submit", "resume"}:
@@ -203,6 +210,7 @@ def run_cli(argv=None):
         if hasattr(result, "model_dump"):
             result = result.model_dump(mode="json")
         if request.command != "status":
+            result = {**result, "invocation_identity": invocation_identity}
             result = record_command_result(
                 deployment.evidence_root, request.command, result, time.monotonic() - started
             )
@@ -219,6 +227,7 @@ def run_cli(argv=None):
             "status": "failed",
             "error_code": getattr(error, "code", "execution_failed"),
             "detail": str(error),
+            "invocation_identity": invocation_identity,
         }
         if request.command != "status":
             value = record_command_result(
