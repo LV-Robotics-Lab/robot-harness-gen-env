@@ -369,7 +369,7 @@ def test_explicit_unsupported_is_terminal_diagnostic_without_workflow_change(ser
         },
     ],
 )
-def test_invalid_or_missing_terminal_decision_retries_only_within_budget(
+def test_repeated_invalid_terminal_decision_stops_this_automatic_run_but_allows_resume(
     service, tmp_path, decision
 ):
     class Backend:
@@ -391,16 +391,122 @@ def test_invalid_or_missing_terminal_decision_retries_only_within_budget(
 
     backend = Backend()
     controller = LimitedImagePreviewController(
-        service.value, backend, evidence_root=tmp_path / "attempts", max_attempts=2
+        service.value, backend, evidence_root=tmp_path / "attempts", max_attempts=4
     )
     before = service.harness.read(service.read)
+    result = controller.run_to_terminal(service.workflow)
+    assert result == {
+        "status": "repeated_failure",
+        "workflow_id": str(service.workflow),
+        "attempt": 2,
+        "backend_status": "invalid_transcript",
+        "reason": "invalid_transcript repeated on unchanged authoritative snapshot",
+        "failure": controller.attempts(service.workflow)[-1]["failure"],
+    }
+    assert backend.count == 2
+    rows = controller.attempts(service.workflow)
+    assert [row["number"] for row in rows] == [1, 2]
+    assert all(row["status"] == "terminal" for row in rows)
+    assert all(row["backend_status"] == "invalid_transcript" for row in rows)
+    assert controller.resume(service.workflow)["status"] == "invalid_transcript"
+    assert backend.count == 3
+    assert service.harness.read(service.read) == before
+
+
+@pytest.mark.parametrize(
+    "failures",
+    [
+        (("timeout", "deadline"), ("timeout", "deadline")),
+        (("invalid_transcript", "missing decision"), ("invalid_transcript", "foreign decision")),
+    ],
+)
+def test_automatic_retry_does_not_classify_transient_or_different_failure_as_repeated(
+    service, tmp_path, failures
+):
+    class Backend:
+        count = 0
+
+        def run(self, assignment, *, output_root):
+            status, failure = failures[self.count]
+            self.count += 1
+            output_root.mkdir()
+            return CodexBackendResult(status, output_root, 1.0, 1, None, None, None, failure)
+
+    backend = Backend()
+    controller = LimitedImagePreviewController(
+        service.value, backend, evidence_root=tmp_path / "attempts", max_attempts=2
+    )
+
     assert controller.run_to_terminal(service.workflow)["status"] == "attempt_limit"
     assert backend.count == 2
-    assert all(
-        row["backend_status"] == "invalid_transcript"
-        for row in controller.attempts(service.workflow)
+
+
+def test_automatic_retry_does_not_classify_failures_across_snapshot_progress(service, tmp_path):
+    original = service.value
+    initial = original.status(workflow_id=str(service.workflow))
+    advanced = json.loads(json.dumps(initial))
+    advanced["snapshot"]["revision"] += 1
+    advanced["revision"] += 1
+
+    class Boundary:
+        store = original.store
+        journal = original.journal
+        progressed = False
+
+        def status(self, **kwargs):
+            return advanced if self.progressed else initial
+
+        def publish(self, **kwargs):
+            pytest.fail("an unvalidated workflow cannot publish")
+
+    boundary = Boundary()
+
+    class Backend:
+        count = 0
+
+        def run(self, assignment, *, output_root):
+            self.count += 1
+            output_root.mkdir()
+            if self.count == 1:
+                boundary.progressed = True
+            if self.count < 3:
+                return CodexBackendResult(
+                    "invalid_transcript",
+                    output_root,
+                    1.0,
+                    1,
+                    None,
+                    None,
+                    None,
+                    "same invalid terminal decision",
+                )
+            return CodexBackendResult(
+                "completed",
+                output_root,
+                1.0,
+                0,
+                None,
+                None,
+                {
+                    "calls": [],
+                    "terminal_decision": {
+                        "workflow_id": str(service.workflow),
+                        "decision": "unsupported",
+                        "reason": "fixture reached its terminal diagnostic",
+                    },
+                },
+                None,
+            )
+
+    backend = Backend()
+    controller = LimitedImagePreviewController(
+        boundary, backend, evidence_root=tmp_path / "attempts", max_attempts=3
     )
-    assert service.harness.read(service.read) == before
+
+    assert controller.run_to_terminal(service.workflow)["status"] == "unsupported"
+    assert backend.count == 3
+    rows = controller.attempts(service.workflow)
+    assert rows[0]["snapshot_sha256"] != rows[1]["snapshot_sha256"]
 
 
 def test_interrupted_attempt_waits_for_exact_live_process_then_resumes(service, tmp_path):
