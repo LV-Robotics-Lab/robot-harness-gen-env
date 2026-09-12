@@ -32,6 +32,9 @@ canonical调用将复用这一份代码。搬迁仅完成可导入和消费者�
 Gujie重建通过`adapters/reconstruction.py`调用固定外部SAM2与TRELLIS接口，原Hunyuan入口非默认保留。
 原链已生成真实新geometry，但canonical adapter尚未完成GPU/完整E2E验证；输入派生授权与软件/
 模型许可分离，缺授权不能入库为许可明确的新资产。
+`genesis_runtime.py`接收已解析世界位姿、相对URDF/物性路径及完整成员摘要，子进程仅能读包与
+声明运行环境。新内核已有一次2刚体load/step/media冒烟；固定双dt物理profile仍待评估，不代表
+整条canonical或可移植包已通过。后续seed/实际顶点/净接触力增量与旧smoke证据分开记录。
 
 Python模型是唯一schema编辑源；`script/export_x2env_schemas.py --check`检测生成文件漂移。
 Codex输出另生成strict projection：可空字段仍必须出现；provenance是固定六字段对象，joint positions

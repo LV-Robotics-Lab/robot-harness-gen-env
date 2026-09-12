@@ -1,5 +1,16 @@
 # 进度与结果
 
+## 2026-09-13 C08 通用刚体Genesis运行内核
+
+- 真实operator probe：2个许可资产刚体+桌面+ground，25步/.004，64.109845s，6帧/6 unique，
+  连续MP4/MKV；Landlock ABI8实际拒绝原资产与3工作区读取。质量/摩擦/COM/惯量实际加载审计通过。
+- 证据：`/home/jingxiang/bingsheng/canonical-trellis1-20260913.1U7bmo/canonical-runtime-smoke-3jjthx9f/execution/`。
+  运行时child SHA `0c0ecbb62b6af843eeac109461edf093bac7233bace802638bf2ceececea86d1`，
+  本probe明确非Registry/SceneIR资格身份；physical_profile=not_run。
+- 随后新增必填seed真实传入Genesis、进程组有界超时、实际加载visual/collision顶点与逐步净接触力。
+  13项runtime测试通过，含真实fork父子进程清理；这些增量尚未重跑Genesis，不回填旧probe。
+- baseline/half_dt仍为.004×1000/.002×2000，未降阈值；inside/articulation不支持即拒绝。
+
 ## 2026-09-13 C07 Gujie替代接口adapter
 
 - 原Gujie固定源`eb0b710`的独立外部worktree现有清洁adapter提交

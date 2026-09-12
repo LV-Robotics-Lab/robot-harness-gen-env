@@ -1,5 +1,16 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C08-RUNTIME — 真实Genesis与受限资源引用
+
+- `origin_owner`：Bingsheng Harness执行内核与Gujie标准URDF审计；`upstream_owner`：Genesis。
+- `source_ref`：Harness `c0236bd66e1988d786f36f61d90471d321d23224` 的
+  genesis_scene_cpu_backend/portable_genesis_package；Gujie `eb0b710` standard_urdf；
+  Genesis `0e74bf392781884ccad765c3f344419c86b872ca`（版本1.3.3）。
+- `integration_owner`：Bingsheng Harness；Git记录身份按原manifest，不推断自然人。
+- `target_paths`：x2env/genesis_runtime.py、genesis_child.py；无旧controller/资格导入。
+- `verification`：首个2刚体真实smoke和13项runtime测试见RESULTS，增量顶点/seed审计尚待真实重跑。
+- `known_gaps`：完整物理profile、canonical流程、独立包copy-run资格尚未完成。
+
 ## INT-CANONICAL-C07-TRELLIS — 保留原接口的外部重建接线
 
 - `origin_owner`：Gujie x2env；`upstream_owner`：Microsoft TRELLIS、Meta SAM2/DINO、FlexiCubes，
