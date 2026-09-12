@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-12 包内 Genesis copy-run
+
+- `eff10bb` 候选 8 tests passed。实际归档包运行 68.155 秒，baseline 1000步、41连续帧、24 unique。
+- Landlock ABI8 实际拒绝原构建目录、CAS和三处源码树；成功目录
+  `/home/jingxiang/bingsheng/generic-portable-copy-nisz5oyp`，新视频 `execution/baseline/preview.mp4`。
+- 三次启动失败（0.466、0.466、2.320秒）保留；最终使用已声明完整运行环境配方。
+- 双dt物理评估、机器人、数据采集均 not_run。执行版本以包内源码清单为准；后续参数和资源检查
+  只离线通过，不冒称最终提交再次回放。尚未完成通用工作流接线。
+
 ## 2026-09-12 资产获取组件
 
 - `dc08481` 候选审阅后整合：9 passed，真实本地检索、web搜索/许可/下载和程序几何生成。

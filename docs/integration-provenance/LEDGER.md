@@ -1,5 +1,23 @@
 # 功能级整合台账
 
+## INT-EXPERIMENT-PACKAGE-001 — 包内入口与隔离 copy-run
+
+- `lifecycle`：`integrating`；`verification`：`runtime_pass`（归档包内执行版本、单 baseline）。
+- `origin_owner`：Bingsheng Harness runner、Gujie 场景判据来源；`integration_owner`：Bingsheng workstream。
+- `recorded_git_authors`：固定 Git 来源记录独立保留；`upstream_owner`：Genesis、Mesa/LLVM、媒体工具。
+- `source_repository`：本仓库；`source_ref`：`9460a4b` runner，Gujie `eb0b710`；实现候选 `eff10bb`。
+- `source_paths`：`genesis_scene_cpu_backend.py`、`_genesis_cpu_child.py`、`_genesis_scene_child.py`；
+  `dirty_snapshot`：实际执行的小型源码闭包固定在输出包 manifest，不以随后提交冒充已执行字节。
+- `target_paths`：`portable_genesis_package.py`、`_portable_genesis_child.py`；
+  `integration_method`：包内固定 runner、相对资产闭包，外部声明 Python/Genesis 运行环境。
+- `contract_spec`：`self_improving/harness/PORTABLE_GENESIS_PACKAGE_CONTRACT.md`。
+- `verification_evidence`：8 tests passed；真实 copy-run
+  `/home/jingxiang/bingsheng/generic-portable-copy-nisz5oyp/execution/result.json`，SHA
+  `002846c88ee00379141c0a191c4658fce7542e6973e0f34ad47f74dc5f56a3e6`。
+- `golden_run`：`none`；`known_gaps`：双dt、controller整合、robot/data未运行；
+  profile选择/资源检查后续代码仅离线验证，最终集成 E2E 仍需真实运行。
+- `last_verified`：`2026-09-12`。
+
 ## INT-EXPERIMENT-ASSET-001 — 三种来源与新资产版本
 
 - `lifecycle`：`integrating`；`verification`：`contract_pass`（真实获取与规范化，physics not_run）。
