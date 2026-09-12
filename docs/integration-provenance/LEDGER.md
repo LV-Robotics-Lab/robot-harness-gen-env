@@ -1,5 +1,18 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C01 — Clean 来源基线
+
+- `lifecycle`：`integrating`；`verification`：`contract_pass`（仅Git保护核验，不是运行验收）。
+- `source_ref`：bingsheng `ea26524`、integration批准计划`0a8abc0`、补充决定`479388b`；
+  source-intake manifest记录全部92个固定refs，未机械merge。
+- `origin_owner` / `recorded_git_authors`：按逐ref manifest，不由branch推断身份；原dirty作者未核实。
+- `upstream_owner`：各原条目不变；`integration_owner`：Bingsheng Harness workstream。
+- `dirty_snapshot`：主目录`0993082727d55ea78b965439a19642e2c46d65f6`、子模块`65980ebf`，
+  其余五份见branch-manifests/20260913-other-dirty-protection.json。
+- `integration_method`：先保护并恢复核验，再拆用户文档为c94eecd/46a2718；其余过时hunks归档。
+- `contract_spec` / `verification_evidence`：progress/CANONICAL_C01_INTAKE_20260913.md。
+- `known_gaps`：64个absorb仅表示按C03–C14选择性采用，实际实现/验证/目标SHA待逐功能填入。
+
 ## INT-USER-INTAKE-002 — 用户历史证据与文档 hunk
 
 - `lifecycle`：`reference_only`；`verification`：`not_run`（未重跑历史实验）。

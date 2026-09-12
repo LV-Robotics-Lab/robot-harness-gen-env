@@ -1,0 +1,65 @@
+{
+  "schema_version": "harness.dirty_protection_index.v1",
+  "frozen_manifest": "20260912T201042Z-pre-consolidation.json",
+  "frozen_sha256": "5ef3a0c0bbf0d8c6f81bef1c9302f3795e780acb234804a4faecc19717f4c02a",
+  "external_receipts": "/home/jingxiang/bingsheng/canonical-other-dirty-20260913.yCBQaL/receipts.json",
+  "external_receipts_sha256": "05789caaa4a208ffccfc8a92af619a715541e9302aed2992f9c353a24854d58d",
+  "scope": "Five frozen dirty worktrees excluding separately protected bingsheng; no source cleanup or merge",
+  "reports": [
+    {
+      "source": "/home/jingxiang/bingsheng/replay-qualification-17427bc",
+      "status": "protected",
+      "snapshot_ref": "refs/archive/x2env-premerge/20260912T202145Z/replay-qualification-17427bc",
+      "snapshot_commit": "2c261c2c74c06b7a664b068b5a68e8906cb72cd6",
+      "index_ref": "refs/archive/x2env-premerge/20260912T202145Z/replay-qualification-17427bc-index",
+      "index_commit": "2581ecdce0075b88221662ecbc91964cdc808cea",
+      "restored_worktree": "/home/jingxiang/bingsheng/canonical-other-dirty-20260913.yCBQaL/replay-qualification-17427bc/restored",
+      "restore_verified": true,
+      "source_unchanged": true
+    },
+    {
+      "source": "/home/jingxiang/bingsheng/worktrees/generic-assets-20260912",
+      "status": "protected",
+      "snapshot_ref": "refs/archive/x2env-premerge/20260912T202145Z/generic-assets-20260912",
+      "snapshot_commit": "13892b4e19fd2c05f3ab1bfb06a1618bc2756f8b",
+      "index_ref": "refs/archive/x2env-premerge/20260912T202145Z/generic-assets-20260912-index",
+      "index_commit": "742c3c0055e9d02dbda7e41bf7588abbcf707e7b",
+      "restored_worktree": "/home/jingxiang/bingsheng/canonical-other-dirty-20260913.yCBQaL/generic-assets-20260912/restored",
+      "restore_verified": true,
+      "source_unchanged": true
+    },
+    {
+      "source": "/home/jingxiang/bingsheng/worktrees/golden-p2-submit-agent",
+      "status": "protected",
+      "snapshot_ref": "refs/archive/x2env-premerge/20260912T202145Z/golden-p2-submit-agent",
+      "snapshot_commit": "df719d8a456653348d31f4ab3806709f47276c23",
+      "index_ref": "refs/archive/x2env-premerge/20260912T202145Z/golden-p2-submit-agent-index",
+      "index_commit": "f13236cb40774a3925c9a73a42623276fd7e4bf0",
+      "restored_worktree": "/home/jingxiang/bingsheng/canonical-other-dirty-20260913.yCBQaL/golden-p2-submit-agent/restored",
+      "restore_verified": true,
+      "source_unchanged": true
+    },
+    {
+      "source": "/home/jingxiang/hyx/projects/robot-harness-gen-env",
+      "status": "protected",
+      "snapshot_ref": "refs/archive/x2env-premerge/20260912T202145Z/robot-harness-gen-env",
+      "snapshot_commit": "f7e930aa7211e1bfd7e6d0d0c9a764ed2e45d887",
+      "index_ref": "refs/archive/x2env-premerge/20260912T202145Z/robot-harness-gen-env-index",
+      "index_commit": "10b055d41c288e73fb534463021609d516433f8f",
+      "restored_worktree": "/home/jingxiang/bingsheng/canonical-other-dirty-20260913.yCBQaL/robot-harness-gen-env/restored",
+      "restore_verified": true,
+      "source_unchanged": true
+    },
+    {
+      "source": "/tmp/asset-reuse-first.YKVX8w",
+      "status": "protected",
+      "snapshot_ref": "refs/archive/x2env-premerge/20260912T202145Z/asset-reuse-first.YKVX8w",
+      "snapshot_commit": "5ab2418950535e471432221191ce437ad9c547bc",
+      "index_ref": "refs/archive/x2env-premerge/20260912T202145Z/asset-reuse-first.YKVX8w-index",
+      "index_commit": "e144993311988ad98857f5643d6e57d3bbf6ce5b",
+      "restored_worktree": "/home/jingxiang/bingsheng/canonical-other-dirty-20260913.yCBQaL/asset-reuse-first.YKVX8w/restored",
+      "restore_verified": true,
+      "source_unchanged": true
+    }
+  ]
+}
