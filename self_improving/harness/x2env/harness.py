@@ -279,19 +279,183 @@ class Harness:
                 ),
                 error_code=replay.error_code,
             )
+            can_observe = replay.status == "succeeded" and callable(
+                getattr(self._backend, "assess_and_diagnose", None)
+            )
+            snapshot = self._store.complete_operation(
+                snapshot,
+                result,
+                snapshot.input_bundle,
+                status="active"
+                if can_observe
+                else "blocked"
+                if replay.status == "succeeded"
+                else replay.status,
+                reason=None
+                if can_observe
+                else "blocked_external_resource"
+                if replay.status == "succeeded"
+                else replay.error_code,
+                replay_result=ref,
+                required_resources=("fresh_observation",)
+                if replay.status == "succeeded" and not can_observe
+                else (),
+            )
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            return self._stage_failure(snapshot, "scene_replay_failed", error)
+        return self._observe(snapshot) if can_observe else snapshot
+
+    def _observe(self, snapshot):
+        from .compile import CompiledScene
+        from .observation import observe_replay
+        from .replay import ReplayResult
+
+        compile_op = next(
+            op
+            for op in reversed(snapshot.operations)
+            if op.capability == "x2env.compile" and op.status == "succeeded"
+        )
+        snapshot = self._store.begin_operation(snapshot, "observe")
+        try:
+            compiled = CompiledScene.model_validate_json(
+                self._store.read_artifact(snapshot.compiled_scene)
+            )
+            runtime_ref = self._store.write_artifact(
+                compiled.runtime_scene.model_dump_json().encode(), "application/json"
+            )
+            replay = ReplayResult.model_validate_json(
+                self._store.read_artifact(snapshot.replay_result)
+            )
+            observed = observe_replay(
+                self._store,
+                snapshot.scene_ir,
+                runtime_ref,
+                replay,
+                package_root=self._state_dir
+                / "stages"
+                / snapshot.workflow_id
+                / compile_op.operation_id,
+            )
+            ref = self._store.write_artifact(
+                observed.model_dump_json().encode(), "application/json"
+            )
+            result = ToolResult(
+                operation_id=snapshot.operations[-1].operation_id,
+                status="succeeded",
+                outputs=(ref, observed.receipt, observed.physics_report, runtime_ref),
+            )
+            snapshot = self._store.complete_operation(
+                snapshot, result, snapshot.input_bundle, status="active", observation=ref
+            )
+        except (ValueError, OSError, KeyError, TypeError, IndexError) as error:
+            return self._stage_failure(snapshot, "scene_observation_failed", error)
+        return self._diagnose(snapshot)
+
+    def _diagnose(self, snapshot):
+        from .diagnosis import DiagnosisResult
+        from .observation import ObservationResult
+
+        snapshot = self._store.begin_operation(snapshot, "codex.diagnose")
+        operation = snapshot.operations[-1]
+        try:
+            observed = ObservationResult.model_validate_json(
+                self._store.read_artifact(snapshot.observation)
+            )
+            advisory = self._backend.assess_and_diagnose(
+                snapshot.scene_ir,
+                observed.observation,
+                observed.physics_report,
+                output_root=self._state_dir
+                / "attempts"
+                / snapshot.workflow_id
+                / operation.operation_id,
+                timeout=600,
+            )
+            advisory = DiagnosisResult.model_validate_json(advisory.model_dump_json())
+            ref = self._store.write_artifact(
+                advisory.model_dump_json().encode(), "application/json"
+            )
+            status = "succeeded" if advisory.status == "completed" else advisory.status
+            result = ToolResult(
+                operation_id=operation.operation_id,
+                status=status,
+                outputs=(ref, advisory.receipt),
+                error_code=advisory.error_code,
+            )
+            snapshot = self._store.complete_operation(
+                snapshot,
+                result,
+                snapshot.input_bundle,
+                status="active" if status == "succeeded" else status,
+                reason=advisory.error_code,
+                diagnosis=ref,
+            )
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            return self._stage_failure(snapshot, "scene_diagnosis_failed", error)
+        return self._validate(snapshot) if status == "succeeded" else snapshot
+
+    def _validate(self, snapshot):
+        import json
+
+        from .diagnosis import DiagnosisResult
+        from .observation import ObservationResult
+
+        snapshot = self._store.begin_operation(snapshot, "x2env.validate")
+        try:
+            observed = ObservationResult.model_validate_json(
+                self._store.read_artifact(snapshot.observation)
+            )
+            diagnosis = DiagnosisResult.model_validate_json(
+                self._store.read_artifact(snapshot.diagnosis)
+            )
+            physical = json.loads(self._store.read_artifact(observed.physics_report))
+            proposal = diagnosis.proposal
+            physical_pass = (
+                physical.get("physical_status") == "passed"
+                and physical.get("execution_evidence_bound") is True
+            )
+            visual_pass = proposal is not None and proposal.visual_intent == "passed"
+            patches = proposal is not None and (proposal.scene_patches or proposal.asset_patches)
+            code = (
+                "revision_executor"
+                if patches
+                else "physical_validation_not_passed"
+                if not physical_pass
+                else "visual_intent_not_passed"
+                if not visual_pass
+                else "environment_package_materializer"
+            )
+            status = "blocked" if patches or (physical_pass and visual_pass) else "failed"
+            report = {
+                "physical_status": physical.get("physical_status", "not_run"),
+                "visual_status": proposal.visual_intent if proposal else "not_run",
+                "physics_report": observed.physics_report.model_dump(mode="json"),
+                "diagnosis": snapshot.diagnosis.model_dump(mode="json"),
+                "scene_ir": snapshot.scene_ir.model_dump(mode="json"),
+                "status": status,
+                "error_code": code,
+                "sim_ready": False,
+            }
+            ref = self._store.write_artifact(
+                json.dumps(report, sort_keys=True).encode(), "application/json"
+            )
+            result = ToolResult(
+                operation_id=snapshot.operations[-1].operation_id,
+                status=status,
+                outputs=(ref,),
+                error_code=code,
+            )
             return self._store.complete_operation(
                 snapshot,
                 result,
                 snapshot.input_bundle,
-                status="blocked" if replay.status == "succeeded" else replay.status,
-                reason="blocked_external_resource"
-                if replay.status == "succeeded"
-                else replay.error_code,
-                replay_result=ref,
-                required_resources=("fresh_observation",) if replay.status == "succeeded" else (),
+                status=status,
+                reason=code,
+                validation=ref,
+                required_resources=(code,) if status == "blocked" else (),
             )
         except (ValueError, OSError, KeyError, TypeError) as error:
-            return self._stage_failure(snapshot, "scene_replay_failed", error)
+            return self._stage_failure(snapshot, "scene_validation_failed", error)
 
     def _stage_failure(self, snapshot, code, error):
         import json

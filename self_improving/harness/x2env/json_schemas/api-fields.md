@@ -121,6 +121,9 @@ Generated; edit Python contracts, not this file.
 | WorkflowSnapshot | resolved_assets | false |
 | WorkflowSnapshot | compiled_scene | false |
 | WorkflowSnapshot | replay_result | false |
+| WorkflowSnapshot | observation | false |
+| WorkflowSnapshot | diagnosis | false |
+| WorkflowSnapshot | validation | false |
 | X2EnvRequest | text | false |
 | X2EnvRequest | images | false |
 | X2EnvRequest | video | false |

@@ -1,8 +1,10 @@
 """Public controller wiring with an explicit model double, real Store and compiler."""
 
 import json
+from datetime import datetime, timezone
 
 import pytest
+from PIL import Image
 
 from self_improving.harness.x2env.contracts import (
     BackendProposal,
@@ -14,8 +16,9 @@ from self_improving.harness.x2env.harness import Harness
 
 @pytest.mark.parametrize("missing_width", [False, True])
 @pytest.mark.parametrize("with_replay", [False, True])
+@pytest.mark.parametrize("with_diagnosis", [False, True])
 def test_single_workflow_advances_from_model_to_resolver_and_compile(
-    tmp_path, missing_width, with_replay, monkeypatch
+    tmp_path, missing_width, with_replay, with_diagnosis, monkeypatch
 ):
     from self_improving.harness.x2env.assets import AssetRegistry
     from self_improving.harness.x2env.compile import StructuralPolicy
@@ -26,6 +29,26 @@ def test_single_workflow_advances_from_model_to_resolver_and_compile(
         out = kwargs["output_dir"]
         out.mkdir(parents=True)
         result = {"status": "passed", "simulator_executed": True}
+        if with_diagnosis:
+            import hashlib
+
+            (out / "frames").mkdir()
+            Image.new("RGB", (8, 8)).save(out / "frames/end.png")
+            (out / "media.json").write_text(
+                json.dumps(
+                    {
+                        "frames": [
+                            {
+                                "path": "frames/end.png",
+                                "captured_at": datetime.now(timezone.utc).isoformat(),
+                                "png_sha256": hashlib.sha256(
+                                    (out / "frames/end.png").read_bytes()
+                                ).hexdigest(),
+                            }
+                        ]
+                    }
+                )
+            )
         (out / "result.json").write_text(json.dumps(result))
         return result
 
@@ -72,9 +95,36 @@ def test_single_workflow_advances_from_model_to_resolver_and_compile(
                 error_code=None,
             )
 
+    class DiagnosticDouble(AdvisoryDouble):
+        def __init__(self, store):
+            self.store = store
+
+        def assess_and_diagnose(self, scene_ir, observation, physics_report, **kwargs):
+            from self_improving.harness.x2env.diagnosis import DiagnosisProposal, DiagnosisResult
+
+            assert observation.scene_ir == scene_ir
+            assert (
+                json.loads(self.store.read_artifact(physics_report))["physical_status"] == "not_run"
+            )
+            receipt = self.store.write_artifact(b"explicit diagnostic double", "text/plain")
+            return DiagnosisResult(
+                status="completed",
+                receipt=receipt,
+                proposal=DiagnosisProposal(
+                    base_revision=0,
+                    visual_intent="passed",
+                    reason="test-only table image",
+                    evidence_sha256=(physics_report.sha256,),
+                    scene_patches=(),
+                    asset_patches=(),
+                ),
+            )
+
     harness = Harness(
         tmp_path / "state",
-        backend_factory=lambda store: AdvisoryDouble(),
+        backend_factory=lambda store: (
+            DiagnosticDouble(store) if with_diagnosis else AdvisoryDouble()
+        ),
         resolver_factory=lambda store, backend: LocalAssetResolver(
             store, AssetRegistry(store), backend, preview=None
         ),
@@ -101,11 +151,22 @@ def test_single_workflow_advances_from_model_to_resolver_and_compile(
     ]
     if with_replay and not missing_width:
         expected.append("x2env.replay")
+        if with_diagnosis:
+            expected.extend(["observe", "codex.diagnose", "x2env.validate"])
     assert [op.capability for op in snapshot.operations] == expected
     if missing_width:
         assert snapshot.status == "failed" and snapshot.stop_reason == "scene_compile_failed"
         assert snapshot.operations[-1].result.outputs
         assert snapshot.compiled_scene is None
+        assert harness.resume(handle.workflow_id) == snapshot
+        assert not (tmp_path / "package").exists()
+        return
+    if with_replay and with_diagnosis:
+        assert (
+            snapshot.status == "failed" and snapshot.stop_reason == "physical_validation_not_passed"
+        )
+        assert snapshot.observation is not None and snapshot.diagnosis is not None
+        assert snapshot.operations[-1].result.outputs
         assert harness.resume(handle.workflow_id) == snapshot
         assert not (tmp_path / "package").exists()
         return

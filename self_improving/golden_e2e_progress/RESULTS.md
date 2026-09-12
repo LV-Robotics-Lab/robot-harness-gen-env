@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C09 controller消费观测、诊断和验证
+
+- 同workflow现由replay推进observe→codex.diagnose→x2env.validate；物理报告与原相机帧从受信
+  replay产物消费，保留原captured_at，不刷新TTL。profile包装漂移新增RED后拒绝。
+- 缺物理证据即使视觉passed也明确failed；有修订建议或缺最终包执行器暂blocked，绝不提前succeeded。
+- 32项observation/controller/lifecycle/schema/diagnosis测试通过（2.90s），外部边界为显式替身。
+  真实单workflowprobe在固定较早HEAD执行，不能用新接线能力扩大该运行主张。
+
 ## 2026-09-13 C09 新鲜观测与受管理视觉诊断
 
 - assess_and_diagnose与interpret/资产视觉共用受限transport。输入SceneIR、runtime、replay、物理报告

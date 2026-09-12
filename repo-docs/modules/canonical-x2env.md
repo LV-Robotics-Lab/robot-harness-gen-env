@@ -45,8 +45,8 @@ AssetVersion v2用世界顶点/面摘要区分几何与属性变化，换色不�
 审批来源仍由controller保证；该组件不自行授予重试预算或物理通过。
 `AssetPreviewRenderer`从版本内的真实资产重新渲染；local resolver保留版本/运行/图片完整回执，
 拒绝裸图或来源缺链。资产预览是身份与属性视觉判断输入，不等于用户完整场景或物理通过。
-controller现已将local resolver、compile和双profile replay接到同一workflow journal，部署缺少
-执行器时blocked；完成replay后尚待fresh observation/验证，不生成名为成功的用户包。
+controller现已将local resolver、compile、双profile replay、observe、diagnosis和validate接到同一workflow journal，部署缺少
+执行器时blocked；物理缺证不被视觉通过覆盖，修订/最终包消费仍待接，不生成名为成功的用户包。
 部分运行错误日志进入CAS；集成测试的模型/运行时是明确替身，真实整链仍待运行。
 `assessment.py`核两个独立profile的进程、实际加载几何/物性、连续轨迹和媒体后重算冻结断言。
 纯轨迹分析与执行证据分开；26项/动态刚体是当前限定profile，不是旧mouse 34项或机器人策略验证。

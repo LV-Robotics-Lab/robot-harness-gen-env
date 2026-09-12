@@ -282,7 +282,29 @@
       ],
       "default": null
     },
+    "diagnosis": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "input_bundle": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "observation": {
       "anyOf": [
         {
           "$ref": "#/$defs/ArtifactRef"
@@ -395,6 +417,17 @@
       ],
       "default": null,
       "title": "Stop Reason"
+    },
+    "validation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "workflow_id": {
       "minLength": 1,

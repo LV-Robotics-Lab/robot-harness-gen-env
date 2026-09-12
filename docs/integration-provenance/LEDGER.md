@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C09-WORKFLOW — 同workflow消费相机/物理/模型判断
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream，新controller接线。
+- `source_ref`：replay `6d45403`，assessment `97a45eb`，diagnosis `2aea1c7`。
+- `target_paths`：x2env/observation.py、harness.py、contracts.py、store.py和对应测试/schema。
+- `verification`：32项相关测试；缺物理不被视觉pass覆盖，包装漂移拒绝；真实闭环尚not_run。
+
 ## INT-CANONICAL-C09-DIAGNOSIS — 新鲜观测绑定的视觉建议
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream，新canonical模型诊断seam。

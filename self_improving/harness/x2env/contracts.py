@@ -104,6 +104,9 @@ class WorkflowSnapshot(WorkflowHandle):
     resolved_assets: ArtifactRef | None = None
     compiled_scene: ArtifactRef | None = None
     replay_result: ArtifactRef | None = None
+    observation: ArtifactRef | None = None
+    diagnosis: ArtifactRef | None = None
+    validation: ArtifactRef | None = None
 
 
 class FieldProvenance(Model):
