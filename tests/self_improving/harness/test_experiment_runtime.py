@@ -131,3 +131,53 @@ def test_validation_rejects_scene_or_report_substitution(tmp_path, scene, attack
     )
     assert result["status"] == "failed"
     assert result["error_code"] == "validation_binding_or_evidence_failed"
+
+
+@pytest.mark.parametrize(
+    "case", ["physical_failure", "passed", "truncated", "execution_failure", "not_executed"]
+)
+def test_replay_execution_is_separate_from_physical_assessment(tmp_path, scene, monkeypatch, case):
+    """Analytical traces and a runner double test orchestration, not Genesis execution."""
+    from self_improving.harness import experiment_runtime as runtime
+
+    store = LocalArtifactStore(tmp_path / "cas")
+    path = tmp_path / "scene.json"
+    path.write_text(scene.model_dump_json())
+    source = store.put_file(
+        path, name=path.name, media_type="application/json", schema_version=None
+    )
+    monkeypatch.setattr(runtime, "export_package", lambda *args, **kwargs: None)
+
+    def execute(*args, output, profile, **kwargs):
+        directory = output / profile
+        directory.mkdir(parents=True)
+        trace = rows(scene, profile)
+        if case == "physical_failure":
+            trace[-1]["contacts"][0]["penetration"] = 0.1
+        if case == "truncated" and profile == "half_dt":
+            trace = trace[:-1]
+        (directory / "trace.ndjson").write_text("\n".join(json.dumps(row) for row in trace))
+        return {
+            "status": "failed" if case == "execution_failure" else "passed",
+            "simulator_executed": case != "not_executed",
+        }
+
+    monkeypatch.setattr(runtime, "run_package", execute)
+    result = replay(store, source, tmp_path / "run", {})
+    complete = case in {"physical_failure", "passed"}
+    assert result["status"] == ("passed" if complete else "failed")
+    assert result["physical_status"] == (
+        "failed" if case == "physical_failure" else "passed" if case == "passed" else "not_run"
+    )
+    assert ("report" in result) == complete
+    if case == "physical_failure":
+        validation = validate(
+            store,
+            input_ref=source,
+            scene_ref=source,
+            replay_result=result,
+            visual_advisory={"status": "failed", "visual_status": "passed"},
+        )
+        assert validation["status"] == "failed"
+        assert validation["physical_status"] == "failed"
+        assert validation["visual_status"] == "passed"

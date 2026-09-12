@@ -174,7 +174,10 @@ def validate(store, *, input_ref, scene_ref, replay_result, visual_advisory=None
         if visual_advisory is not None:
             if visual_advisory.get("status") not in {"passed", "failed", "not_run"}:
                 raise ValueError("invalid visual advisory status")
-            result["visual_status"] = visual_advisory["status"]
+            visual_status = visual_advisory.get("visual_status", visual_advisory["status"])
+            if visual_status not in {"passed", "failed", "not_run"}:
+                raise ValueError("invalid visual intent status")
+            result["visual_status"] = visual_status
             result["visual_advisory"] = visual_advisory
         if "report" in replayed:
             scene = GenesisSceneSpecV1.model_validate(_json(store, scene_ref))
@@ -231,6 +234,7 @@ def replay(store, scene_ref, output_root, runtime_roots, denied_roots=()):
     result = {
         "schema_version": "harness.experiment_replay.v1",
         "status": "failed",
+        "physical_status": "not_run",
         "scene": _ref(scene_ref).model_dump(mode="json"),
         "profiles": {},
         "simulator_executed": False,
@@ -254,7 +258,7 @@ def replay(store, scene_ref, output_root, runtime_roots, denied_roots=()):
             members = _retain(store, root / profile)
             result["profiles"][profile] = {"execution": execution, "members": members}
             result["simulator_executed"] |= execution["simulator_executed"]
-            if execution["status"] != "passed":
+            if execution["status"] != "passed" or execution["simulator_executed"] is not True:
                 result["error_code"] = execution.get("error_code", "replay_profile_failed")
                 raise ValueError(f"{profile}: {execution.get('reason', 'profile failed')}")
             rows[profile] = [
@@ -267,9 +271,10 @@ def replay(store, scene_ref, output_root, runtime_roots, denied_roots=()):
         result["report"] = _put(
             store, report.model_dump(mode="json"), "physical-report.json", report.schema_version
         )
-        result["status"] = "passed" if report.status == "passed" else "failed"
-        if result["status"] == "failed":
-            result["error_code"] = "physical_profile_failed"
+        # Complete execution is useful diagnostic evidence even when physics fails.
+        # Only validate can grant the independently recomputed physical profile.
+        result["status"] = "passed"
+        result["physical_status"] = report.status
     except Exception as error:
         result.setdefault("error_code", "replay_input_or_execution_failed")
         result["reason"] = str(error)
