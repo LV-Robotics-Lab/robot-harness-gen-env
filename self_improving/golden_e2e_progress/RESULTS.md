@@ -1,5 +1,19 @@
 # 进度与结果
 
+## 2026-09-13 C01 保护结果与 C07 前置阻断
+
+- [C01 完整记录](CANONICAL_C01_INTAKE_20260913.md)：92 refs/87 worktrees 的固定清单，80 clean/
+  6 dirty/1 prunable；每 ref disposition 仍 pending，不把历史 patch-equivalence 当 canonical 吸收。
+- bingsheng 本地 archive `0993082727d55ea78b965439a19642e2c46d65f6`；OpenReal2Sim 本地 archive
+  `65980ebf86bd3df7884913c464e84909f801e677`。17 文件共 516,345 bytes，在两份新 detached worktree
+  实际恢复后逐文件 hash 通过；额外独立复查通过。源工作树 HEAD/index/status 和文件保持原样。
+- 操作约 0.405 秒、exit 0；capture helper ruff/Python compile 通过。没有 canonical 功能测试、
+  全仓 pytest、模型加载或新的 Genesis 运行；没有资格/发布/push。
+- [C07 固定源码/资源核对](CANONICAL_C07_RESOURCE_BLOCKER_20260913.md)：存在几何 seam 与本地
+  主要权重，但 Hunyuan 自定义输出限制需许可/部署方向，替代链需要新资源。按 §17.3 暂停。
+  不将模型许可等同输出资产许可，不用 Apache-2.0 上游声明覆盖第三方条款。
+- Dashboard 三入口依旧 404；没有 task id/状态更新。
+
 ## 2026-09-13 C00 批准与轻量确认
 
 - 用户明确批准 `0a8abc0` 的 C00–C15 计划；Q01–Q64、4+4+4 matrix 和 Physics Assertions v1 冻结。

@@ -1,5 +1,28 @@
 # 功能级整合台账
 
+## INT-CANONICAL-001 — 来源保护与 Gujie 前置（2026-09-13）
+
+- `lifecycle`：`candidate`；`verification`：`blocked`（canonical 尚未实施；本地 Git 恢复验证独立通过）。
+- `origin_owner`：既有 Bingsheng Harness / Gujie x2env / Yuxin provider 责任沿用原条目。
+- `recorded_git_authors`：Gujie `eb0b710` 记录 `LV-Robotics Lab <lv.robotics.lab@gmail.com>`；
+  SimFoundry `9e34ebe` 记录 `Nadun Ranawaka Arachchige <91701694+nadunRanawaka1@users.noreply.github.com>`；
+  不由分支/路径/邮箱推断自然人映射。
+- `upstream_owner`：Genesis、SimFoundry、Tencent Hunyuan 及各自第三方；Apache-2.0 不覆盖模型条款。
+- `integration_owner`：Bingsheng Harness workstream；主会话审阅，三个子 agent 只读核对/清单捕获。
+- `source_ref`：批准计划 `0a8abc0`，C00 `6e88985`；Gujie
+  `eb0b710581fd7794bc01b447b0f77cb871c8a711`，SimFoundry `9e34ebefcd020583fbb755a8b57268dce78eca26`，
+  Genesis `0e74bf392781884ccad765c3f344419c86b872ca`。不使用外部 dirty bytes。
+- `dirty_snapshot`：本仓库 local archive `0993082727d55ea78b965439a19642e2c46d65f6`，
+  OpenReal2Sim 仓库 local archive `65980ebf86bd3df7884913c464e84909f801e677`；原工作树不变。
+- `integration_method`：当前仅冻结来源/保护字节/核对窄 seam；没有复制外部实现或迁移 canonical runtime。
+- `contract_spec`：已批准 `CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md` §6/C01/§5.2/C07/§17.3。
+- `verification_evidence`：
+  [C01 清单与17文件恢复](../../self_improving/golden_e2e_progress/CANONICAL_C01_INTAKE_20260913.md)、
+  [C07 许可/资源](../../self_improving/golden_e2e_progress/CANONICAL_C07_RESOURCE_BLOCKER_20260913.md)。
+- `known_gaps`：refs disposition pending、其他 dirty archive/mixed hunk 未收口；自定义输出条款未获
+  本项目使用/发布依据，备用 backend 缺已确认资源；无 canonical E2E/qualification/push。
+- `last_verified`：`2026-09-13`，只读源核对与 Git restore，不是 Genesis runtime pass。
+
 ## INT-EXP-005 — 最终包复制与审阅收口（2026-09-13）
 
 - 来源、上游与集成所有权沿用INT-EXP-004，未引入新第三方代码。最新真实执行源码固定536496e，

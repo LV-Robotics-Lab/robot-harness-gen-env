@@ -51,7 +51,9 @@ Harness 和同一多模态入口，清理旧 experiment/limited-preview/MCP 活�
 [`CANONICAL_X2ENV_MERGE_DECISIONS.md`](CANONICAL_X2ENV_MERGE_DECISIONS.md)，完整执行序列和
 Qualification Matrix v1 位于
 [`CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md`](CANONICAL_X2ENV_MERGE_IMPLEMENTATION_PLAN.md)。
-当前执行 C00/C01：批准登记、fetch 后全分支冻结与 dirty-byte 保护；尚未修改 canonical 功能、运行 qualification、合并或 push。下列 2026-09-12 通用
+当前 C00 已完成；C01 已冻结来源并保护/恢复核验 bingsheng dirty bytes，整合尚未完成。
+因 [C07 许可/资源方向](CANONICAL_C07_RESOURCE_BLOCKER_20260913.md) 触发计划 §17.3，暂停请求用户决定；
+详见 [C01 记录](CANONICAL_C01_INTAKE_20260913.md)。尚未修改 canonical 功能、运行 qualification、合并或 push。下列 2026-09-12 通用
 实验管线状态保留为实现基线，但不再覆盖新的计划决策。
 
 当前会话已按用户指令安全停止单鼠标 M2 收口，不再继续 repair、深验、bootstrap、资格重建或

@@ -1,5 +1,12 @@
 # Change Log
 
+## 2026-09-13 canonical 来源保护与前置阻断
+
+- fetch 后冻结 92 refs/87 worktrees；用户 17 个 dirty 文件已建本地 archive 并实际恢复逐字核验，
+  原工作树不变。C01 全分支处置仍未完成，未开始 canonical 业务代码。
+- Gujie 固定重建链有可提取 seam 和本地主要资源，但第三方输出条款/新后端资源需用户方向；
+  按批准计划暂停，不降低重建/qualification/push 门。详情见进度目录的 C01/C07 记录。
+
 ## 2026-09-13 canonical 计划批准
 
 - 用户批准 C00–C15、Q01–Q64、Qualification Matrix v1 和物理断言；启动全分支冻结和 dirty-byte

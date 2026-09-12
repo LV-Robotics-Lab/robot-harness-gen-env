@@ -2,7 +2,7 @@
 
 更新时间：2026-09-13
 
-## Doing：C00/C01 canonical x2env 计划冻结与来源保护
+## Blocked：canonical C07 许可/资源方向；C01 已完成保护子集
 
 - Q01–Q64 已写入
   [`CANONICAL_X2ENV_MERGE_DECISIONS.md`](CANONICAL_X2ENV_MERGE_DECISIONS.md)，不再只依赖聊天上下文。
@@ -15,6 +15,15 @@
 - Dashboard 的 portfolio/tasks/project 三个入口本次仍返回 HTTP 404，没有 task id，不伪造同步。
 - 文件所有权：主会话负责 C00/C01 记录和 Git 保护；Mill 只读分类 dirty 改动，Bacon 只读核对 Gujie
   reconstruction seam/资源。两名子 agent 不修改任何工作树，不启动昂贵运行。
+- C00 已提交 `6e88985`。92 refs/87 worktrees 已冻结，bingsheng 普通 16 文件与 OpenReal2Sim 的
+  1 文件已保存 local Git archive 并在新 worktree 恢复逐字核验；原 HEAD/index/status 不变。
+- C01 尚欠其他 dirty 工作树 archive、逐 ref 最终 disposition、混合文档 hunk 拆分和 clean 基线；
+  没有清理用户主目录或创建 canonical 分支。详见
+  [C01 记录](CANONICAL_C01_INTAKE_20260913.md)。
+- Gujie 固定 Hunyuan 后端的自定义条款涉及输出用途/地域，缺少本项目使用/发布的明确依据；
+  替代后端所需完整依赖/权重未在已查目录找到。按计划 §17.3 停止新增实施并请求用户方向，
+  不安装、不重建、不 qualification、不 push。详见 [C07 阻断](CANONICAL_C07_RESOURCE_BLOCKER_20260913.md)。
+- 三名子 agent 的只读核对已结束，没有后台实现继续推进。
 
 ## 用户验收完成：开放柜子与粉红鼠标
 
