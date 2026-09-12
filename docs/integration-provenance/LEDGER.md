@@ -303,3 +303,14 @@ Gujie 的场景构建、bounded solver、稳定化、half-dt 回放、接触/支
 - verification_evidence：四份contract/registry/export测试，39 passed；当前新包语句和分支100%。
 - runtime_verification：not_run；typed handoff测试handler不是实际compile/replay/validate。
 - recorded_git_authors：见本提交Git元数据，不据路径推断自然人。
+## INT-CANONICAL-C06A — 单次资产复用包搬迁
+
+- origin_owner：Yuxin/HYX来源责任标签；upstream_owner：OpenXSim与各provider原作者，未重归属。
+- source_refs：`4982cc3660d82743b849fd0ba9cbdfd04933e895`、`8c2f058215b4d69d10f15c269148397a9f14ccd2`；
+  本次从canonical基线内已集成的单份代码搬迁，保留其后续历史。
+- recorded_git_authors：固定来源为LV-Robotics Lab；后续a1有BorisGuo、a6有yuhang5090记录，
+  不将Git identity映射为同一自然人。
+- integration_owner：Bingsheng项目；integration_method：git mv106文件、相对imports、活跃路径适配。
+- target_paths：`self_improving/asset_pipeline/active/asset_reuse/`及明确旧路径消费者。
+- verification_evidence：packaging/asset_admission/新public import共107 passed/1.71s。
+- runtime_verification：not_run；没有将既有license_gate/tier0命中视为canonical资产通过。

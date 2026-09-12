@@ -235,7 +235,7 @@ class VisualProvider:
         )
 
     def search(self, query, limit=20):
-        from lib.a1_providers import NON_OBJECT
+        from .a1_providers import NON_OBJECT
 
         self._ensure()
         if not self._keys:

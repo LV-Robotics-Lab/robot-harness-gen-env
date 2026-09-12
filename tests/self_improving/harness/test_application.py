@@ -76,7 +76,7 @@ def _qualification_bundle(tmp_path: Path) -> Path:
     bundle = tmp_path / "qualified_skills" / "text2env.compile" / "1.0.0"
     bundle.mkdir(parents=True)
     scene_gen_sha = _tree_sha(ROOT / "scene_gen")
-    ledger_sha = _tree_sha(ROOT / "self_improving/asset_pipeline/active/1_asset_reuse/lib")
+    ledger_sha = _tree_sha(ROOT / "self_improving/asset_pipeline/active/asset_reuse/lib")
     implementation_files = []
     for relative in (
         "self_improving/harness/handlers/text2env_compile.py",
@@ -269,7 +269,7 @@ def test_compile_application_runs_admit_reuse_reuse_and_replays_real_events(
     ledger_path = settings.asset_library_root / "generated" / asset_id / "ledger.json"
     ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
     contract = importlib.import_module(
-        "self_improving.asset_pipeline.active.1_asset_reuse.lib.ledger"
+        "self_improving.asset_pipeline.active.asset_reuse.lib.ledger"
     )
     assert contract.validate_ledger(ledger, check_files=True) == []
 

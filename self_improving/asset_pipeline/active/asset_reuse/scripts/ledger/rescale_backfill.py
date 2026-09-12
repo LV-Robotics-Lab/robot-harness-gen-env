@@ -34,7 +34,7 @@ from pathlib import Path
 
 # scripts/ledger/rescale_backfill.py -> active root is three levels up
 DEV = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(DEV / "1_asset_reuse"))
+sys.path.insert(0, str(DEV / "asset_reuse"))
 
 import trimesh  # noqa: E402
 import yaml  # noqa: E402
@@ -170,7 +170,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--library", default=str(DEV / "data/asset_library"))
     ap.add_argument("--shadow", default=str(DEV / "data/robotwin_shadow"))
-    ap.add_argument("--sizes", default=str(DEV / "1_asset_reuse/configs/category_sizes.yml"))
+    ap.add_argument("--sizes", default=str(DEV / "asset_reuse/configs/category_sizes.yml"))
     ap.add_argument("--apply", action="store_true")
     a = ap.parse_args()
 

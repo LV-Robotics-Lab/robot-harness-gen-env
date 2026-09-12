@@ -188,7 +188,7 @@ def test_checked_in_compile_qualification_matches_current_implementation(
         artifact_store=LocalArtifactStore(tmp_path / "cas"),
         implementation_root=ROOT,
         scene_gen_root=ROOT / "scene_gen",
-        ledger_contract_root=(ROOT / "self_improving/asset_pipeline/active/1_asset_reuse/lib"),
+        ledger_contract_root=(ROOT / "self_improving/asset_pipeline/active/asset_reuse/lib"),
     )
 
     assert loaded.implementation_sha256 == (

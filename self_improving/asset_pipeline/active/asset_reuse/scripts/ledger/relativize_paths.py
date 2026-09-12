@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 
 DEV = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(DEV / "1_asset_reuse"))
+sys.path.insert(0, str(DEV / "asset_reuse"))
 
 from lib import ledger as L  # noqa: E402
 from lib import ledger_writes  # noqa: E402
@@ -89,7 +89,7 @@ def walk(node, path, stats, problems):
             return None
         return new
     elif isinstance(node, str) and node.startswith("../"):
-        # pre-anchor era: scripts ran from 1_asset_reuse/ and wrote uris
+        # pre-anchor era: scripts ran from asset_reuse/ and wrote uris
         # relative to CWD ("../data/..."), which only ever resolved by
         # accident of the working directory. Normalize to the ACTIVE_ROOT
         # anchor -- but only when the target actually exists there; a dead

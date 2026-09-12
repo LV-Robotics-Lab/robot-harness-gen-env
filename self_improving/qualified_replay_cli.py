@@ -38,7 +38,7 @@ _CHECKOUT_ROOT = Path(__file__).resolve().parents[1]
 _DISTRIBUTION_ROOT = _CHECKOUT_ROOT
 _SCENE_GEN_ROOT = _DISTRIBUTION_ROOT / "scene_gen"
 _LEDGER_CONTRACT_ROOT = (
-    _DISTRIBUTION_ROOT / "self_improving/asset_pipeline/active/1_asset_reuse/lib"
+    _DISTRIBUTION_ROOT / "self_improving/asset_pipeline/active/asset_reuse/lib"
 )
 _QUALIFICATION_BUNDLE_ROOT = (
     _DISTRIBUTION_ROOT / "self_improving/harness/qualified_skills/text2env.replay/1.0.0"

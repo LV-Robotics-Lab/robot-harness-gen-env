@@ -1,5 +1,12 @@
 # 进度与结果
 
+## 2026-09-13 C06a 单份Yuxin provider包迁移
+
+- `1_asset_reuse`的106个tracked文件单次git mv到`asset_reuse`，lib内部相对import，未复制第二引擎。
+- 包装配置与活跃Python/测试消费者路径已修复；不可变证据、外部路径和历史Markdown保留原义。
+- packaging/import先RED后GREEN；packaging+asset admission+公开新import共107 passed/1.71s。
+- 此slice未进行网络/模型/Genesis；旧provider许可与tier0筛选缺口仍由canonical adapter负责修复。
+
 ## 2026-09-13 C03a 类型化入口与能力注册
 
 - request、SceneIR、hash-only ArtifactRef与结构化ToolResult已实现；非法输入/图引用与错误状态拒绝。

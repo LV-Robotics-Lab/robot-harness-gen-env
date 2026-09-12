@@ -51,10 +51,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from urllib.parse import urlsplit
 
-try:
-    from . import conventions
-except ImportError:  # Direct script/PYTHONPATH entry points retain ``lib`` imports.
-    from lib import conventions
+from . import conventions
 
 # representations[].frame / geometry_state are OPTIONAL on purpose, and their
 # absence carries meaning -- do not "helpfully" backfill them:
@@ -511,7 +508,7 @@ QUALIFIED_VERIFICATION_ISSUERS = {
     "asset.materialize_settle.v1": {
         "backend": "sapien",
         "check": "settle",
-        "script": "1_asset_reuse/scripts/3_materialize/import_materialize.py",
+        "script": "asset_reuse/scripts/3_materialize/import_materialize.py",
         "thresholds": {
             "max_late_drift_m": (0.002,),
             "min_support_z_m": (-0.005,),
@@ -535,7 +532,7 @@ QUALIFIED_VERIFICATION_ISSUERS = {
     "asset.settle_repair.v1": {
         "backend": "sapien",
         "check": "settle",
-        "script": "1_asset_reuse/scripts/ledger/settle_repair.py",
+        "script": "asset_reuse/scripts/ledger/settle_repair.py",
         "thresholds": {
             "max_late_drift_m": (0.002,),
             "min_support_z_m": (-0.005,),
@@ -558,7 +555,7 @@ QUALIFIED_VERIFICATION_ISSUERS = {
     "asset.s11_runtime_load.v1": {
         "backend": "sapien",
         "check": "runtime_load",
-        "script": "1_asset_reuse/scripts/4_validate/s11_runtime_load_sweep.py",
+        "script": "asset_reuse/scripts/4_validate/s11_runtime_load_sweep.py",
         "thresholds": {
             "max_late_drift_m": (0.002,),
             "min_final_z_m": (-0.005,),
@@ -581,7 +578,7 @@ QUALIFIED_VERIFICATION_ISSUERS = {
     "asset.s13b_joint_sweep.v1": {
         "backend": "sapien",
         "check": "joint_sweep",
-        "script": "1_asset_reuse/scripts/4_validate/s13b_validate_articulated.py",
+        "script": "asset_reuse/scripts/4_validate/s13b_validate_articulated.py",
         "thresholds": {
             "min_screenshot_std": (1.0,),
             "allow_free_joints": (False, True),

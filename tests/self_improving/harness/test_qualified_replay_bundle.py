@@ -10,7 +10,7 @@ from self_improving.harness.qualification import verify_qualification_bundle
 REPO_ROOT = Path(__file__).resolve().parents[3]
 REPLAY_BUNDLE = REPO_ROOT / "self_improving/harness/qualified_skills/text2env.replay/1.0.0"
 SCENE_GEN_ROOT = REPO_ROOT / "scene_gen"
-LEDGER_CONTRACT_ROOT = REPO_ROOT / "self_improving/asset_pipeline/active/1_asset_reuse/lib"
+LEDGER_CONTRACT_ROOT = REPO_ROOT / "self_improving/asset_pipeline/active/asset_reuse/lib"
 
 EXPECTED_DOCUMENT_SHA256 = {
     "manifest.json": "0bc3815ecb939b8488f4541ea4343ed5f332f5f130fcb47ea240a5a7f15a9e83",

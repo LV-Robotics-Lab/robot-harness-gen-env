@@ -20,7 +20,7 @@ for _p in (
     OX / "deps/metasim_core",
     OX / "third_party/MetaSim",
     DEV / "2_sim_migration" / "lib",
-    DEV / "1_asset_reuse",
+    DEV / "asset_reuse",
 ):
     sys.path.insert(0, str(_p))
 

@@ -412,7 +412,7 @@ def load_providers(config):
             )
         )
     if pc.get("nvidia_visual", {}).get("enabled"):
-        from lib.a5_visual import VisualProvider
+        from .a5_visual import VisualProvider
 
         v = pc["nvidia_visual"]
         tiers.append(
@@ -445,7 +445,7 @@ def load_providers(config):
                 )
             )
     if pc.get("objaverse", {}).get("enabled"):
-        from lib.a7_objaverse import ObjaverseLvisProvider
+        from .a7_objaverse import ObjaverseLvisProvider
 
         o = pc["objaverse"]
         tiers.append(
@@ -512,7 +512,7 @@ def tiered_search(tiers, query, *, viable_fn, limit=20, phrases=None, accept_fn=
             else:
                 cands = scout.search(query, limit=limit) if scout else []
             if visual:
-                from lib.a5_visual import rrf_merge
+                from .a5_visual import rrf_merge
 
                 vis_cands = visual[0].search(query, limit=limit)
                 provider_stats.append(

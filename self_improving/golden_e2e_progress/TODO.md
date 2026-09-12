@@ -8,6 +8,10 @@
   的 clean `worktree/bingsheng@46a2718`。C01保护和source intake完成；实际功能吸收尚待C03–C14。
 - C02 已冻结机读矩阵、全部物理阈值与新合同，4项契约测试通过；不是runtime资格。
 - C03 request/SceneIR/CapabilityRegistry 已逐seam RED→GREEN；当前合并快测29 passed，尚未接运行时。
+- C03a已提交`a1c130f`：39tests、新包语句/分支100%；stage类型/descriptor随真实接线继续补齐。
+- C04单SQLite handle/幂等与CAS已开始TDD；C05完整媒体ingest并行实现。
+- C06a单次Yuxin包搬迁与活跃消费者修复完成，107项相关测试通过；尚未接canonical资产解析器。
+- C07替代TRELLIS首次原图新geometry真实成功（45.453s），排除笔/M04/物理仍not_run；继续接Gujie接口。
 - Gujie 替代后端 TRELLIS 在外部隔离环境准备，保留原Hunyuan接口非默认；不是新geometry成功。
 - 下列 C01 暂停/待清理描述仅为历史过程，不再作为执行指令。
 

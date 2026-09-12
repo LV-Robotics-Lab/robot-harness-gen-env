@@ -765,7 +765,7 @@ def test_compile_dependencies_bind_asset_library_state_and_stabilize_after_reuse
         scene_gen_root=ROOT / "scene_gen",
         ledger_contract_root=(
             ROOT
-            / "self_improving/asset_pipeline/active/1_asset_reuse/lib"
+            / "self_improving/asset_pipeline/active/asset_reuse/lib"
         ),
     )
     run_ids = iter(
@@ -827,7 +827,7 @@ def test_compile_dependencies_detect_selected_asset_byte_changes(tmp_path: Path)
         scene_gen_root=ROOT / "scene_gen",
         ledger_contract_root=(
             ROOT
-            / "self_improving/asset_pipeline/active/1_asset_reuse/lib"
+            / "self_improving/asset_pipeline/active/asset_reuse/lib"
         ),
     )
     registry, _ = _registry(
@@ -880,7 +880,7 @@ def test_compile_dependency_resolver_rejects_wrong_inputs_and_wraps_artifact_err
         handler=handler,
         scene_gen_root=ROOT / "scene_gen",
         ledger_contract_root=(
-            ROOT / "self_improving/asset_pipeline/active/1_asset_reuse/lib"
+            ROOT / "self_improving/asset_pipeline/active/asset_reuse/lib"
         ),
     )
 

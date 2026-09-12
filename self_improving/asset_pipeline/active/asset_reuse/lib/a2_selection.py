@@ -7,7 +7,7 @@ import json
 import re
 from pathlib import Path
 
-from lib import ledger
+from . import ledger
 
 REJ_UNSUPPORTED = "unsupported_format"
 REJ_THUMBS = "thumbs_artifact"

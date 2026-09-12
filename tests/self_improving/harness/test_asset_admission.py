@@ -118,7 +118,7 @@ def test_generated_asset_is_ledger_validated_and_atomically_admitted(
     ledger_path = asset_dir / "ledger.json"
     ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
     contract = importlib.import_module(
-        "self_improving.asset_pipeline.active.1_asset_reuse.lib.ledger"
+        "self_improving.asset_pipeline.active.asset_reuse.lib.ledger"
     )
 
     assert contract.validate_ledger(ledger, check_files=True) == []
@@ -337,7 +337,7 @@ def test_generated_ledger_uses_portable_uris_inside_the_active_asset_tree(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     contract = importlib.import_module(
-        "self_improving.asset_pipeline.active.1_asset_reuse.lib.ledger"
+        "self_improving.asset_pipeline.active.asset_reuse.lib.ledger"
     )
     active_root = tmp_path / "active"
     monkeypatch.setattr(contract, "ACTIVE_ROOT", active_root)
@@ -429,7 +429,7 @@ def test_reuse_rejects_existing_provenance_with_absolute_staging_locators(
         encoding="utf-8",
     )
     contract = importlib.import_module(
-        "self_improving.asset_pipeline.active.1_asset_reuse.lib.ledger"
+        "self_improving.asset_pipeline.active.asset_reuse.lib.ledger"
     )
     legacy_ledger = assets_module._build_ledger(
         scene_spec=base.scene_spec,
@@ -806,7 +806,7 @@ def test_reuse_preserves_followup_receipts_but_still_requires_original_generatio
     destination = tmp_path / "asset_library" / "generated" / asset_id
     ledger_path = destination / "ledger.json"
     contract = importlib.import_module(
-        "self_improving.asset_pipeline.active.1_asset_reuse.lib.ledger"
+        "self_improving.asset_pipeline.active.asset_reuse.lib.ledger"
     )
     ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
     model = ledger["models"][0]
@@ -851,7 +851,7 @@ def test_reuse_rejects_generation_qc_drift_even_when_followup_receipts_are_valid
     destination = tmp_path / "asset_library" / "generated" / asset_id
     ledger_path = destination / "ledger.json"
     contract = importlib.import_module(
-        "self_improving.asset_pipeline.active.1_asset_reuse.lib.ledger"
+        "self_improving.asset_pipeline.active.asset_reuse.lib.ledger"
     )
     ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
     model = ledger["models"][0]
@@ -975,7 +975,7 @@ def test_failed_admission_never_leaves_an_unvalidated_asset_in_pool(
     )
     assert base.asset_generation_report is not None
     real_contract = importlib.import_module(
-        "self_improving.asset_pipeline.active.1_asset_reuse.lib.ledger"
+        "self_improving.asset_pipeline.active.asset_reuse.lib.ledger"
     )
     violation = SimpleNamespace(path="models.0", code="forced_failure")
 
@@ -1033,7 +1033,7 @@ def test_complete_file_gate_runs_before_destination_becomes_visible(
     library = tmp_path / "asset_library"
     destination = library / "generated" / asset_id
     real_contract = importlib.import_module(
-        "self_improving.asset_pipeline.active.1_asset_reuse.lib.ledger"
+        "self_improving.asset_pipeline.active.asset_reuse.lib.ledger"
     )
     observations = []
 
@@ -1139,7 +1139,7 @@ def test_mutation_after_full_file_gate_is_rejected_before_publish(
     )
     assert base.asset_generation_report is not None
     real_contract = importlib.import_module(
-        "self_improving.asset_pipeline.active.1_asset_reuse.lib.ledger"
+        "self_improving.asset_pipeline.active.asset_reuse.lib.ledger"
     )
     asset_id = base.asset_generation_report["generated"][0]["asset_id"]
     library = tmp_path / "asset_library"

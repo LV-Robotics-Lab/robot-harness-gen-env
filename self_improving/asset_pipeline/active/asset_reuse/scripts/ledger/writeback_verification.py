@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 DEV = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(DEV / "1_asset_reuse"))
+sys.path.insert(0, str(DEV / "asset_reuse"))
 
 from lib import ledger as L  # noqa: E402
 from lib import ledger_writes  # noqa: E402

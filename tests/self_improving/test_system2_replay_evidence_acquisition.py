@@ -101,7 +101,7 @@ def _settings(tmp_path: Path, artifact_root: Path) -> ReplayApplicationSettings:
         implementation_root=distribution,
         scene_gen_root=distribution / "scene_gen",
         ledger_contract_root=(
-            distribution / "self_improving/asset_pipeline/active/1_asset_reuse/lib"
+            distribution / "self_improving/asset_pipeline/active/asset_reuse/lib"
         ),
         allowed_asset_roots=(roots["assets"],),
         interpreter=files["python"],

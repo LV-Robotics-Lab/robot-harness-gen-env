@@ -62,7 +62,7 @@ def main():
     cfg = (
         pathlib.Path(a.configs)
         if a.configs
-        else lib.parents[1] / "1_asset_reuse/configs"
+        else lib.parents[1] / "asset_reuse/configs"
     )
 
     prefixes = {}

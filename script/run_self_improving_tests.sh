@@ -19,7 +19,7 @@ PYTHONPATH=self_improving/alchedata:self_improving/alchedata/scripts \
 PYTHONPATH=self_improving/sim_adapters/agenticsim_runtime \
   "$PYTHON_BIN" -m pytest -q self_improving/sim_adapters/agenticsim_runtime/tests
 
-cd "$REPO_ROOT/self_improving/asset_pipeline/active/1_asset_reuse"
+cd "$REPO_ROOT/self_improving/asset_pipeline/active/asset_reuse"
 PYTHONPATH=.:scripts:../shared/openxsim/source/agenticsim:../../../.. \
   "$PYTHON_BIN" -m pytest -q tests
 

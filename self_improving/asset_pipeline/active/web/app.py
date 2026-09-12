@@ -33,11 +33,11 @@ WEB_THUMBS = DEV / "results" / "web_thumbs"
 ASSET_LIB = DEV / "data" / "asset_library"
 HISTORY_ROOT = DEV / "results" / "_test"
 DEFAULT_CATALOG = DEV / "data" / "scene_gen_ext" / "asset_catalog.json"
-DEFAULT_PROVIDERS = DEV / "1_asset_reuse" / "configs" / "providers.json"
+DEFAULT_PROVIDERS = DEV / "asset_reuse" / "configs" / "providers.json"
 ROBOTWIN_ROOT = DEV / "data" / "robotwin_shadow"
 
 SGT = ZoneInfo("Asia/Singapore")
-PYTHONPATH = f"{DEV}/1_asset_reuse:{DEV}/shared/openxsim/source/agenticsim:{UP}"
+PYTHONPATH = f"{DEV}/asset_reuse:{DEV}/shared/openxsim/source/agenticsim:{UP}"
 
 ID_RE = re.compile(r"^[A-Za-z0-9_.-]{1,80}$")
 EXCLUDE_RE = re.compile(r"^[a-z][a-z0-9_-]{0,40}$")
@@ -139,7 +139,7 @@ def pipeline_worker(run_id, run_dir, prompt, seed, catalog_used, providers_used)
             str(run_dir),
         ]
         pipeline_rc = run_subprocess_logged(
-            cmd, DEV / "1_asset_reuse", env, run_dir, "pipeline"
+            cmd, DEV / "asset_reuse", env, run_dir, "pipeline"
         )
         write_state(run_dir, pipeline_rc=pipeline_rc)
 

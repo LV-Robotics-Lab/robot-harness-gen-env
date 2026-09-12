@@ -45,7 +45,7 @@ _COMPILE_QUALIFICATION_ROOT = (
 _IMPLEMENTATION_ROOT = _DISTRIBUTION_ROOT
 _SCENE_GEN_ROOT = _DISTRIBUTION_ROOT / "scene_gen"
 _LEDGER_CONTRACT_ROOT = (
-    _DISTRIBUTION_ROOT / "self_improving" / "asset_pipeline" / "active" / "1_asset_reuse" / "lib"
+    _DISTRIBUTION_ROOT / "self_improving" / "asset_pipeline" / "active" / "asset_reuse" / "lib"
 )
 DEFAULT_PRODUCTION_ASSET_LIBRARY_ROOT = (
     _DISTRIBUTION_ROOT / "self_improving" / "asset_pipeline" / "active" / "data" / "asset_library"

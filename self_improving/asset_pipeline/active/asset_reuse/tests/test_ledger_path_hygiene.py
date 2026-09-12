@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 ACTIVE_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ACTIVE_ROOT / "1_asset_reuse"))
+sys.path.insert(0, str(ACTIVE_ROOT / "asset_reuse"))
 
 from lib import ledger  # noqa: E402
 

@@ -21,7 +21,7 @@ from self_improving.harness.registry import HandlerResult
 
 ROOT = Path(__file__).resolve().parents[3]
 SCENE_GEN = ROOT / "scene_gen"
-LEDGER = ROOT / "self_improving/asset_pipeline/active/1_asset_reuse/lib"
+LEDGER = ROOT / "self_improving/asset_pipeline/active/asset_reuse/lib"
 
 
 def _settings(tmp_path: Path, *, suffix: str = "") -> CompileQualificationSettings:

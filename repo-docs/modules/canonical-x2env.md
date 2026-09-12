@@ -9,6 +9,10 @@
 `CapabilityRegistry`仅允许三个公开Skills与三个初始内部Tools，精确版本和输入输出类型必须匹配；
 注册一个handler不等于该handler取得仿真资格。
 
+Yuxin检索实现现位于`self_improving/asset_pipeline/active/asset_reuse/lib/`（一次目录搬迁），
+canonical调用将复用这一份代码。搬迁仅完成可导入和消费者路径兼容，不代表许可强门、
+资产规范化、immutable登记或本地/联网业务路径已接通。
+
 Python模型是唯一schema编辑源；`script/export_x2env_schemas.py --check`检测生成文件漂移。
 后续stage类型与descriptor会随真实执行接口补齐，不用空成功回执替代实现。
 

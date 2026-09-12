@@ -1,5 +1,10 @@
 # Change Log
 
+## 2026-09-13 canonical C06a
+
+- 资产复用包由`1_asset_reuse`单次移至`asset_reuse`，修复相对import与活跃路径消费者；107相关测试通过。
+- 无新网络/模型/仿真成功；历史证据路径保留，canonical许可与资产登记接线仍未完成。
+
 ## 2026-09-13 canonical C03a
 
 - 新增canonical输入/SceneIR/ToolResult与精确版本能力注册说明，明确仅组件实现。

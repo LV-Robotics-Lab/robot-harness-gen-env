@@ -9,8 +9,8 @@ import pytest
 yaml = pytest.importorskip("yaml")
 
 REPO = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO / "1_asset_reuse/scripts/ledger"))
-sys.path.insert(0, str(REPO / "1_asset_reuse"))
+sys.path.insert(0, str(REPO / "asset_reuse/scripts/ledger"))
+sys.path.insert(0, str(REPO / "asset_reuse"))
 import gen_fragment  # noqa: E402
 from lib import ledger, ledger_writes  # noqa: E402
 

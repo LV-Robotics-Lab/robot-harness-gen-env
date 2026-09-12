@@ -41,7 +41,7 @@ def test_runtime_paths_default_to_the_current_checkout(monkeypatch):
 
 def test_active_sources_do_not_embed_personal_home_paths():
     forbidden = ("/home/jingxiang", "/Users/borisguo")
-    source_root = ACTIVE_ROOT / "1_asset_reuse"
+    source_root = ACTIVE_ROOT / "asset_reuse"
 
     for suffix in ("*.py", "*.sh"):
         for path in source_root.rglob(suffix):

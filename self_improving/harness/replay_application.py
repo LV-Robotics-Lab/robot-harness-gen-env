@@ -53,7 +53,7 @@ from .schemas import Invocation, RunState, SkillDescriptorV2, Text2EnvReplayInpu
 _DISTRIBUTION_ROOT = Path(__file__).resolve().parents[2]
 _SCENE_GEN_ROOT = _DISTRIBUTION_ROOT / "scene_gen"
 _LEDGER_CONTRACT_ROOT = (
-    _DISTRIBUTION_ROOT / "self_improving" / "asset_pipeline" / "active" / "1_asset_reuse" / "lib"
+    _DISTRIBUTION_ROOT / "self_improving" / "asset_pipeline" / "active" / "asset_reuse" / "lib"
 )
 _TASK_CONFIG = "demo_clean"
 _MIN_VISIBLE_PIXELS = 64

@@ -1255,7 +1255,7 @@ def test_success_runs_only_the_verified_fixed_case_and_emits_a_sanitized_summary
     assert load_kwargs["implementation_root"] == ROOT
     assert load_kwargs["scene_gen_root"] == ROOT / "scene_gen"
     assert load_kwargs["ledger_contract_root"] == (
-        ROOT / "self_improving/asset_pipeline/active/1_asset_reuse/lib"
+        ROOT / "self_improving/asset_pipeline/active/asset_reuse/lib"
     )
     assert calls["application_settings"] == ReplayApplicationSettings(
         state_root=state_root,
@@ -1263,7 +1263,7 @@ def test_success_runs_only_the_verified_fixed_case_and_emits_a_sanitized_summary
         evidence_artifact_root=evidence_root,
         implementation_root=ROOT,
         scene_gen_root=ROOT / "scene_gen",
-        ledger_contract_root=(ROOT / "self_improving/asset_pipeline/active/1_asset_reuse/lib"),
+        ledger_contract_root=(ROOT / "self_improving/asset_pipeline/active/asset_reuse/lib"),
         allowed_asset_roots=(Path(str(document["allowed_asset_roots"][0])),),
         interpreter=Path(str(document["interpreter"])),
         runtime_runner=ROOT / "script/run_scene_runtime.py",

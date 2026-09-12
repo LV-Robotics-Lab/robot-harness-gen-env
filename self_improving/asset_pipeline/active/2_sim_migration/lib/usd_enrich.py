@@ -3,7 +3,7 @@
 The env-gen importer (`import_env_gen`) fills each asset with only its native
 SAPIEN mesh representation (GLB/URDF) — all that `resolved_scene.json` carries.
 To actually compile an env-gen scene to Isaac, each asset also needs an
-`isaacsim` USD representation. The asset pipeline (1_asset_reuse) converts the
+`isaacsim` USD representation. The asset pipeline (asset_reuse) converts the
 RoboTwin GLB → USD and knows where each USD lives; this module is the junction
 that *registers* those USD files onto the IR's asset bundles, so
 `IsaacSimCompiler` finds them instead of raising "no existing USD representation".
@@ -31,11 +31,11 @@ from typing import Iterable, Mapping
 
 from agenticsim.openxsim.ir import AssetRepresentation, EnvironmentPackage
 
-# `lib.ledger` (1_asset_reuse/lib) is only needed by the ledger-backed lookup
+# `lib.ledger` (asset_reuse/lib) is only needed by the ledger-backed lookup
 # path below (enrich_from_ledgers / _latest_isaac_pass); it is imported
 # locally in those two functions rather than at module level so that
 # enrich_isaac_usd -- and every existing caller of this module -- keeps no
-# import-time dependency on 1_asset_reuse being on sys.path.
+# import-time dependency on asset_reuse being on sys.path.
 
 
 def _apply_isaac_representations(

@@ -32,7 +32,7 @@ parser.add_argument("--library-dir", default="../data/asset_library")
 args = parser.parse_args()
 
 # Resolve before os.chdir(args.shadow) below -- the default is relative to
-# the invocation cwd (repo convention: run from 1_asset_reuse/), not to the
+# the invocation cwd (repo convention: run from asset_reuse/), not to the
 # shadow root the script chdirs into for create_actor's relative lookups.
 library_dir = Path(args.library_dir).resolve()
 catalog_path = Path(args.catalog).resolve()

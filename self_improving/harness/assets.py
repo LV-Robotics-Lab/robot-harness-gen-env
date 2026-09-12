@@ -457,7 +457,7 @@ def _make_private_directory(parent_fd: int, prefix: str) -> str:
 
 
 def _ledger_contract() -> ModuleType:
-    return importlib.import_module("self_improving.asset_pipeline.active.1_asset_reuse.lib.ledger")
+    return importlib.import_module("self_improving.asset_pipeline.active.asset_reuse.lib.ledger")
 
 
 def _build_ledger(

@@ -72,7 +72,7 @@ from self_improving.harness.schemas import (
 
 ROOT = Path(__file__).resolve().parents[3]
 SCENE_GEN = ROOT / "scene_gen"
-LEDGER = ROOT / "self_improving/asset_pipeline/active/1_asset_reuse/lib"
+LEDGER = ROOT / "self_improving/asset_pipeline/active/asset_reuse/lib"
 SHA_A = "a" * 64
 SHA_B = "b" * 64
 SHA_C = "c" * 64

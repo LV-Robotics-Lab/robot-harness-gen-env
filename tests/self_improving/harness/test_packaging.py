@@ -16,7 +16,7 @@ HARNESS_PACKAGE = Path("self_improving/harness")
 HARNESS_RESOURCE_MEMBERS = ("IMPLEMENTATION_LOG.md",)
 SCENE_GEN_PACKAGE = Path("scene_gen")
 SCENE_GEN_RESOURCE_MEMBERS = ("AGENTS.md", "envs/AGENTS.md")
-LEDGER_PACKAGE = Path("self_improving/asset_pipeline/active/1_asset_reuse/lib")
+LEDGER_PACKAGE = Path("self_improving/asset_pipeline/active/asset_reuse/lib")
 LEDGER_MEMBERS = ("__init__.py", "README.md", "conventions.py", "ledger.py")
 QUALIFICATION_PACKAGES = (
     Path("self_improving/harness/qualified_skills/text2env.compile/1.0.0"),
@@ -159,7 +159,7 @@ def test_wheel_installs_runtime_source_and_qualification_resources(tmp_path: Pat
         ],
         cwd=tmp_path,
     )
-    package_name = "self_improving.asset_pipeline.active.1_asset_reuse.lib"
+    package_name = "self_improving.asset_pipeline.active.asset_reuse.lib"
     probe = f"""
 import importlib
 import importlib.resources
@@ -202,7 +202,7 @@ def test_packaging_declares_qualified_skill_resources() -> None:
     assert "AGENTS.md" in package_data["scene_gen"]
     assert "envs/AGENTS.md" in package_data["scene_gen"]
     assert "IMPLEMENTATION_LOG.md" in package_data["self_improving.harness"]
-    assert "asset_pipeline/active/1_asset_reuse/lib/README.md" in package_data["self_improving"]
+    assert "asset_pipeline/active/asset_reuse/lib/README.md" in package_data["self_improving"]
     assert "qualified_skills/**/*.json" in package_data["self_improving.harness"]
     assert "native/*.c" in package_data["self_improving.harness"]
     assert (
