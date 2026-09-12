@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-12 compile 联网检索与数据路径答疑
+
+- 源码复核：当前 `Text2EnvCompileHandler → compile_scene` 使用输入 catalog 和
+  `ensure_assets_for_scene`；尚未调用资产管线的 `tiered_search/stage_web_candidate`。
+- 独立资产管线已包含 provider 分层检索、NVIDIA 索引缓存、GitHub/Objaverse 可选渠道及下载
+  staging。联网索引刷新、远端查询和候选字节下载是不同事件，不能把每次 search 都计为网络请求。
+- Golden 合同已定义 acquisition policy，但缺少独立 network policy、检索请求/结果与下载回执的
+  完整字段；本次解释中作为待补设计明确列出，未声称完成接线。repo-docs 本次采用 answer-only。
+- Dashboard 三个状态 URL 再次返回 HTTP 404，未同步远端 TODO。
+
 ## 2026-09-10 P6 staged-loader 合入与未完成边界
 
 - 早期固定候选 `bd61a9e1504b1462c1bb24799a38e76f5cdf26e4` 在独立 worktree 中完成 166 个 focused
@@ -344,3 +354,36 @@
 - 边界：本切片没有定义 `RunCommandRequest`、`OperationSnapshot`、`submit`、handler dispatch、MCP、
   Genesis 或 promotion，也没有把 caller 提供的 RegistrySnapshot 提升为生产 trust root；这些仍属于
   P1 后续与 P2/P4。纯持久化切片不产生真实仿真或真机能力主张。
+
+## 2026-09-10 P0/P2 fixed-diff 复审阻断
+
+- P0 replay closure 候选 `d664b04` 保持旧资格包 fail-closed，也证明固定装配/资格生成 import trace 没有
+  加载六个无关 schema 家族；但独立 Spec 审查复现 `_snapshot_harness_source` 在组件 symlink 检查和
+  `resolve()` 后再次按路径读取。若在 resolve→open 窗口把目标替换成外部 symlink，manifest 会接受内部
+  logical path，却记录外部 bytes/hash。现有 resolution-race 测试只攻击 `Path.resolve`，没有覆盖该
+  窗口，因此候选不得合入或据此重签。
+- Standards 复审进一步确认该闭包仍包含集中登记全部未来能力的根 façade、schema façade 与全局 catalog；
+  即使这些模块延迟加载，新增 image/video/asset/VLM export 或 schema 仍会改变文件 hash，使 replay
+  qualification 因无关演进失效。新 lazy `SCHEMA_MODELS` 也丢失原 MappingProxyType 的 `.copy()` 与 `|`
+  行为。稳定修复须把 package init 降为不随能力表增长而变化的边界，并保持公开 mapping 兼容。
+- Spec 复审确认 `schemas/qualification_report.py` 与 14 份 JSON Schema 当前只被加入 hash；真实 generator
+  和 ReplayApplication trace 没有加载 projection，也没有运行模型↔committed snapshot 一致性校验。exact
+  Skill 修复须定向验证本 Skill 所绑定 schema，使这些文件成为真实契约依赖，而不是未执行的附加 hash。
+- P2 controlled identity 候选 `70a20d8` 的固定 diff focused 为 `138 passed in 2.62s`，actor-neutral
+  trusted-state kernel、参数单次 snapshot 与既有并发 pending seam 未发现 Spec blocker；但这不抵消以下
+  fail-open，候选不得合入。
+- 无 Invocation 的 controlled preflight 恢复只核对 run/skill/version/attempt/digest，能接受
+  `status=succeeded`、`output={...}` 的伪造 terminal；这会让没有 qualified invocation 的记录推进为成功。
+- `ControlledRunIntent.dependencies` 在实际入口中保持 `None`，intent↔Invocation 校验也未比较 exact
+  dependencies；测试可把 intent 的 engine v1/sha=a 与 Invocation 的 v2/sha=b 同时写入。
+- `put_invocation()` INSERT 后不在同一事务回读并重验 authority。构造 store 后添加 late
+  `AFTER INSERT ... DELETE` trigger，可得到 handler 已调用、Invocation 已消失的状态；另外同列/PK/index
+  的表增加 `CHECK(skill_id='never.valid')` 仍会被 exact-layout 构造器接受。
+- 当前 Harness 复审还显示新增 `trusted_state.py` 只有 97% 覆盖，compatibility re-export 触发 Ruff F401；
+  compile qualification 因 `registry.py` 身份变化而 stale。修复必须产生替代 fixed commit、补 statement/
+  branch 100% 和 lint，再与 replay qualification 在稳定实现树上统一真实重签；不能把 254 个由 stale
+  qualification 引起的 root failures 写成通过。
+- 替代候选 `b6ade21` 的主窗口复核为 `213 passed`，完整 Harness 显式排除两份待统一重签资格包后为
+  `2264 passed, 19 skipped, 2 deselected`，`registry.py`、`run_store.py`、`trusted_state.py` statement/
+  branch 均为 100%，Ruff 通过；但 fresh SQLiteRunStore 路径上 80 轮双线程同时构造仍有 24 次
+  `OperationalError: database is locked`。因此该固定点仍不能合入，必须先补并发初始化恢复门。

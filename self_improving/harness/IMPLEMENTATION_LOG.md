@@ -793,6 +793,38 @@
   `docs/evidence/asset-ledger-v3-integrity-20260831.{md,json}`；能从现有 bytes 证明的字段才允许迁移，
   缺物理 pose/settle 证据的项继续 blocked，绝不由 source commit 或迁移日期猜测。
 
+### 2026-08-31 / A042：物理 replay 不能冒充位级确定性 Skill
+
+- RED：`SkillDescriptor` v1 把 `deterministic` 固定为 true；真实 replay receipt 又包含仿真、媒体和
+  资源观测，fake executor 的两次内容相同不能证明真机 bytes 可重复。沿用 v1 会迫使 qualification
+  在“说假话”和“永远无法注册”之间二选一。
+- 版本化方案：v1 模型和 `harness.skill_descriptor.v1` snapshot 完全冻结，只接受
+  `deterministic=true`。新增严格 v2，以 `reproducibility` 明确区分
+  `content_bitwise_deterministic` 与 `evidence_invariant_repeatable`；新旧模型互相拒绝对方字段，
+  Registry register/list/resolve 原样保存传入模型，不静默迁移。
+- 生产声明：compile 继续返回 v1 deterministic descriptor；replay factory 返回 v2
+  evidence-invariant descriptor，表示固定资格案例必须重过全部具名门，而不承诺物理/media/resource
+  bytes 相同。两个版本仍消费 v1 qualification artifact，本切片没有伪造 replay qualification。
+- 证据：v1 snapshot 前后 SHA 均为 `271ddb20…878ea2`；新增 v2 snapshot 为
+  `2e0bd92c…0fa90`。专项 `209 passed`，common/catalog/Registry/replay handler 共 1,127 statements、
+  358 branches 全覆盖；schema exporter 验证 15 份 snapshot。详见
+  `docs/evidence/harness-skill-descriptor-v2-20260831.{md,json}`。
+
+### 2026-08-31 / A043：生产生成资产必须脱离单次运行状态并留在项目资产库
+
+- RED：固定 application 只把生成资产写进 `<state_root>/asset-library`；清理一次运行状态会同时
+  删除可复用资产，而且生产资产与实验/qualification 资产没有独立配置边界。
+- 参数边界：新增 `CompileApplicationSettings.asset_library_root`，默认指向项目内
+  `self_improving/asset_pipeline/active/data/asset_library`；CLI 新增 `--asset-library-root`。SQLite/CAS、
+  work 与 generated staging 仍由 `state_root` 管理，资产 admission 则写
+  `<asset_library_root>/generated/<asset_id>/`。
+- 隔离：replay qualification 显式使用 scratch asset library，测试 helper 也只写 pytest 临时目录；
+  `self_improving/studies/` 的实验资产不进入生产库。
+- 数据：将资格案例同一确定性内容的 `900_gen_hexagonal_pedestal_5695f4e5` 通过当前
+  `GeneratedAssetAdmitter` 正式写入项目库；visual/collision 摘要与 A031/A036 证据一致，新的完整
+  v3 ledger `check_files=True` 为 0 violation，物理状态仍为 `pending_settle`。
+- 验证：application/CLI 专项 61 passed；后续验证结果以本切片最终检查为准。
+
 ### 2026-08-31 / A044：工作台进度只能来自已提交的 Harness 事件
 
 - RED：既有 `demo/` 只轮询自己的 `job.json`，资产 Web Studio 又从文件 mtime 与日志关键词推断阶段；

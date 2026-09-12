@@ -1,5 +1,16 @@
 # 功能级整合台账
 
+## INT-USER-INTAKE-002 — 用户历史证据与文档 hunk
+
+- `lifecycle`：`reference_only`；`verification`：`not_run`（未重跑历史实验）。
+- 原作者/记录身份/整合责任同 INT-USER-INTAKE-001；固定来源仍为 archive
+  `0993082727d55ea78b965439a19642e2c46d65f6`，没有改写历史证据 bytes。
+- 两份 `docs/evidence/` 20260906 dependency/replay-vlm 文档逐字保存；implementation log 的 A042/A043、
+  RESULTS 中具日期的两段、change-log 的 20260906 条目、code-map 中仍存在的 compile/receipt 索引及
+  platform 中 compile-only 历史段落按 hunk 保留。
+- 删除旧资格说明、资产根变化和其他过时状态回退未吸收；具体原 bytes 可从 archive 回查。
+- 此项不改变任何产品行为，不是当前 canonical、Genesis 或 qualification 通过证据。
+
 ## INT-USER-INTAKE-001 — 原始用户研究文档保护后独立吸收
 
 - `lifecycle`：`reference_only`；`verification`：`not_run`（仅 bytes 与保护快照比较）。

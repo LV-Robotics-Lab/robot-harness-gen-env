@@ -45,6 +45,13 @@ version 2 及后续 state 必须携带从 version 1 开始的完整 history auth
 它没有把 compile static pass 写成接触、稳定性或可见性证据。当前测试含真实 production compile
 assembly 的本地生成资产路径，但使用临时 qualification，不能替代 checked-in 资格或 SAPIEN replay。
 
+2026-09-06 又在当前 production `CompileApplication` 上做了一次独立 compile-only 批次：固定种子产生
+10 条空 catalog 新生成与入库，随后用其中前 5 个资产组成 catalog 并关闭生成，五次 resolved scene
+都直接选回同一资产编号；另 5 条 Digital Cousins 请求因当前无可用 catalog/完整环境而全部以
+`T2E_ASSET_UNAVAILABLE@solve` 阻断。20 条终态均可从目标 portable CAS 独立回读完整收据 closure。
+转台 PNG/MP4 只由入库 OBJ 生成，不是物理 replay；详细路径、摘要与后续缺口见
+[`compile-chain-acceptance-20260906.md`](../../docs/evidence/compile-chain-acceptance-20260906.md)。
+
 字段边界、状态机、快照与未实现范围见 [Harness Schema Tranche](harness-schema-tranche.md)；
 逐项实现和验证证据见 [PR1 实现报告](../../docs/contracts/HARNESS_MVP_PR1_IMPLEMENTATION_REPORT.zh-CN.md)。
 

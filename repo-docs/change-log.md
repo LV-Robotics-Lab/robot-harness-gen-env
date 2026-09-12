@@ -1,5 +1,24 @@
 # Change Log
 
+## 2026-09-06
+
+- 增加 20 条 compile 完整环境实跑说明：每条从 Harness `EnvironmentPackage` 重建场景并由
+  RoboTwin/SAPIEN 输出全场景图片与 36 帧视频；记录 10/10 新生成、5/5 精确复用、20/20 环境加载
+  和 portable CAS 回读。
+- 明确最后 5 条只是本地任务等价候选复用，上游 ACDC/BEHAVIOR 实际使用为 0/5；保留数据许可、
+  运行依赖和后端格式阻塞，不把本地 proxy 资产冒充 Digital Cousin 产物。
+
+- 新增 Text2Env compile 中文使用手册，并在正式 `data/text2env_acceptance/` 目录重新实跑
+  can-on-plate：独立 catalog、核心 compile、900 步/120 帧 SAPIEN replay 和单独
+  `validate --require-runtime` 全链路通过。证据报告明确区分 ASPIRE 历史材料、正式运行产物、
+  EmbodiedGen 未接入边界，以及当前 catalog 仍含本机资产 locator 的可移植性缺口。
+- 增加 compile-only 可重复验收批次与证据报告：10/10 新 proxy 生成并入库、5/5 从组合 catalog
+  直接复用同一资产编号、5/5 Digital Cousins 因无 catalog/完整环境而如实阻断；20/20 terminal run
+  从目标 portable CAS 独立回读。补记转台媒体不是物理 replay，Digital Cousins 仍是未完成项。
+- 修正 portable run receipt 与 production compile 的两项兼容边界：资格 JSON 可保留原始合法排版；
+  同一 CAS 内容在输入/输出使用不同显示名时按 SHA/bytes/media/schema 对账。保留缺内容、哈希漂移与
+  元数据冲突的 fail-closed 门，专项测试 45 passed。
+
 ## 2026-09-01
 
 - 为 succeeded compile 增加固定 static-validation 预览：
