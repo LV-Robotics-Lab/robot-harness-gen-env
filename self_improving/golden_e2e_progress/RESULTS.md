@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-12 资产获取组件
+
+- `dc08481` 候选审阅后整合：9 passed，真实本地检索、web搜索/许可/下载和程序几何生成。
+- 固定 web Box 来源 `90d7ede14c7e280af263824604b427a1ca02cb66`（Khronos/Cesium，CC-BY-4.0），
+  约 0.958 秒；生成红 block 约 0.356 秒；均只完成获取/规范化，physics not_run。
+- 持久证据 `/home/jingxiang/bingsheng/generic-assets-evidence-20260912.xs7UnK/cases`。
+- 已测 asset patch 新建不可变版本且旧成员不变；完整 controller retry/fallback 尚未接通。
+
 ## 2026-09-12 通用输入首切片
 
 - 轻量确认集成 `9460a4b` clean；主目录用户改动保留；Dashboard 三入口 HTTP 404，未同步。

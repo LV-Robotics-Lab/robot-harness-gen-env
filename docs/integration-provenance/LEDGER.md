@@ -1,5 +1,23 @@
 # 功能级整合台账
 
+## INT-EXPERIMENT-ASSET-001 — 三种来源与新资产版本
+
+- `lifecycle`：`integrating`；`verification`：`contract_pass`（真实获取与规范化，physics not_run）。
+- `origin_owner`：Yuxin/HYX active provider、Bingsheng procedural generator；
+  `integration_owner`：Bingsheng Harness workstream；`recorded_git_authors`：以来源 Git 记录为准。
+- `upstream_owner`：agenticsim/openxsim、trimesh/SciPy、Khronos/Cesium，各资产许可单独保留。
+- `source_repository`：本仓库；`source_ref`：`4982cc3660d82743b849fd0ba9cbdfd04933e895`、
+  `8c2f058215b4d69d10f15c269148397a9f14ccd2`；generator 基线 `9460a4b`；实现 `dc08481`。
+- `dirty_snapshot`：`none`；`source_paths`：active provider/web staging、`scene_gen/asset_generator.py`。
+- `target_paths`：`self_improving/harness/experiment_assets.py`；`integration_method`：调用现有获取/生成，
+  规范化相对路径 URDF/GLB/凸包，保存不可变版本；scale/mass/friction patch 产生新版本。
+- `contract_spec`：`self_improving/harness/EXPERIMENT_ASSETS_CONTRACT.md`。
+- `verification_evidence`：9 passed，包含真实 local/web/generated；
+  `/home/jingxiang/bingsheng/generic-assets-evidence-20260912.xs7UnK/cases`。
+- `golden_run`：`none`；`known_gaps`：尚未接 controller/Genesis，质量惯量/摩擦是估计；
+  generated 只支持明确的程序化几何，不代表任意图像重建；开发环境需要 SciPy。
+- `last_verified`：`2026-09-12`。
+
 ## INT-EXPERIMENT-INPUT-001 — 通用实验输入与共享意图
 
 - `lifecycle`：`integrating`；`verification`：`contract_pass`。
