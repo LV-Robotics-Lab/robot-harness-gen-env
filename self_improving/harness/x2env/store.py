@@ -145,23 +145,22 @@ class Store:
             operations = list(snapshot.operations)
             if operations and operations[-1].status == "running":
                 old = operations[-1]
-                if old.capability.startswith("codex."):
-                    blocker = self._orphan_blocker(snapshot, old)
-                    if blocker is not None:
-                        reason, resource = blocker
-                        blocked = snapshot.model_copy(
-                            update={
-                                "status": "blocked",
-                                "owner": None,
-                                "stop_reason": reason,
-                                "required_resources": (resource,),
-                            }
-                        )
-                        db.execute(
-                            "UPDATE workflows SET snapshot=? WHERE workflow_id=?",
-                            (blocked.model_dump_json(), workflow_id),
-                        )
-                        return blocked
+                blocker = self._orphan_blocker(snapshot, old)
+                if blocker is not None:
+                    reason, resource = blocker
+                    blocked = snapshot.model_copy(
+                        update={
+                            "status": "blocked",
+                            "owner": None,
+                            "stop_reason": reason,
+                            "required_resources": (resource,),
+                        }
+                    )
+                    db.execute(
+                        "UPDATE workflows SET snapshot=? WHERE workflow_id=?",
+                        (blocked.model_dump_json(), workflow_id),
+                    )
+                    return blocked
                 result = ToolResult(
                     operation_id=old.operation_id,
                     status="failed",
@@ -189,6 +188,7 @@ class Store:
                     "owner": process_identity(os.getpid()),
                     "status": "active",
                     "stop_reason": None,
+                    "required_resources": (),
                     "operations": tuple(operations),
                 }
             )
@@ -199,31 +199,106 @@ class Store:
             return snapshot
 
     def _orphan_blocker(self, snapshot, operation):
+        """Read operation-owned records; only exact-pgrp liveness may inspect /proc stat."""
         attempt = self.database.parent / "attempts" / snapshot.workflow_id / operation.operation_id
+        spawn_capability = operation.capability.startswith("codex.") or operation.capability in {
+            "asset.resolve",
+            "x2env.replay",
+        }
         record = attempt / "process.json"
         try:
-            if any(p.is_symlink() for p in (record, *record.parents)):
-                return "orphaned_backend_identity_unverified", str(record)
-            metadata = json.loads(record.read_bytes())
-            pid = metadata["pid"]
-            if type(pid) is not int or pid <= 0:
-                raise ValueError("invalid recorded PID")
-            live = process_identity(pid)
-            if live is None or live.split(":")[1] != str(metadata["start_ticks"]):
+            if any(p.is_symlink() for p in (attempt, *attempt.parents)):
+                raise ValueError("symbolic operation directory")
+            if not attempt.exists() and not spawn_capability:
                 return None
-            if metadata.get("attempt_root", str(attempt)) != str(attempt):
-                return "orphaned_backend_identity_unverified", str(record)
-            command = (Path(f"/proc/{pid}") / "cmdline").read_bytes().split(b"\0")
-            matches = any(
-                arg.decode(errors="replace") == str(attempt)
-                or arg.decode(errors="replace").startswith(str(attempt) + "/")
-                for arg in command
-            )
-            if not matches:
-                return "orphaned_backend_identity_unverified", str(record)
-            return "orphaned_backend_still_running", str(record)
+            directories = [(attempt, 0)]
+            records = []
+            visited = 0
+            while directories:
+                directory, depth = directories.pop()
+                if depth > 16:
+                    raise ValueError("operation process scan depth exceeded")
+                with os.scandir(directory) as entries:
+                    for entry in entries:
+                        visited += 1
+                        if visited > 8192 or entry.is_symlink():
+                            raise ValueError("unverifiable operation subtree")
+                        if entry.is_dir(follow_symlinks=False):
+                            directories.append((Path(entry.path), depth + 1))
+                        elif entry.name == "process.json" or entry.name.endswith("-process.json"):
+                            record = Path(entry.path)
+                            if (
+                                not entry.is_file(follow_symlinks=False)
+                                or entry.stat(follow_symlinks=False).st_size > 65536
+                            ):
+                                raise ValueError("invalid process record")
+                            records.append(record)
+            if not records and spawn_capability:
+                raise ValueError("missing operation process evidence")
+            for record in sorted(records):
+                metadata = json.loads(record.read_bytes())
+                pid = metadata["pid"]
+                if type(pid) is not int or pid <= 0:
+                    raise ValueError("invalid recorded PID")
+                pgid = metadata.get("pgid", pid)
+                if type(pgid) is not int or pgid != pid:
+                    raise ValueError("process group differs from recorded session leader")
+                live = process_identity(pid)
+                if live is None:
+                    if self._group_has_live_members(pgid):
+                        return "orphaned_backend_identity_unverified", str(record)
+                    continue
+                ticks = metadata["start_ticks"]
+                if isinstance(ticks, bool) or not str(ticks).isdigit() or int(ticks) < 1:
+                    raise ValueError("invalid process start identity")
+                if live.split(":")[1] != str(ticks):
+                    if self._group_has_live_members(pgid):
+                        return "orphaned_backend_identity_unverified", str(record)
+                    continue
+                directory = str(record.parent)
+                if any(
+                    metadata[key] != directory
+                    for key in ("attempt_root", "attempt_dir")
+                    if key in metadata
+                ):
+                    raise ValueError("process directory differs")
+                command = (Path(f"/proc/{pid}") / "cmdline").read_bytes().split(b"\0")
+                matches = any(
+                    arg.decode(errors="replace") == directory
+                    or arg.decode(errors="replace").startswith(directory + "/")
+                    for arg in command
+                )
+                if not matches:
+                    raise ValueError("live command is not operation-bound")
+                return "orphaned_backend_still_running", str(record)
+            return None
         except (OSError, ValueError, KeyError, TypeError):
             return "orphaned_backend_identity_unverified", str(record)
+
+    @staticmethod
+    def _group_has_live_members(pgid):
+        """Bounded read-only exact-pgrp check; never read unrelated argv/environment."""
+        visited = 0
+        with os.scandir("/proc") as processes:
+            for process in processes:
+                visited += 1
+                if visited > 32768:
+                    raise ValueError("process group scan budget exceeded")
+                if not process.name.isdigit():
+                    continue
+                try:
+                    raw = (Path(process.path) / "stat").read_text()
+                except FileNotFoundError:
+                    continue  # The process exited while enumerating this bounded view.
+                try:
+                    fields = raw.rsplit(")", 1)[1].split()
+                    group = int(fields[2])
+                    state = fields[0]
+                except (ValueError, IndexError) as exc:
+                    raise ValueError("unverifiable process group metadata") from exc
+                if group == pgid and state not in {"Z", "X"}:
+                    return True
+        return False
 
     def begin_operation(
         self, snapshot: WorkflowSnapshot, capability: str, *, version: str = "1.0.0"

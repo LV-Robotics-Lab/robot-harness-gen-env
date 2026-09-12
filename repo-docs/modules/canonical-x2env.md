@@ -1,5 +1,8 @@
 # Canonical x2env（收敛实施中）
 
+dead-owner恢复还必须确认当前operation下已记录的子进程和原进程组均不再运行。仅leader退出不够；
+PID/start_ticks或目录绑定不可信时保持blocked。检查有界、只读，不按模糊进程名清理机器上的其它任务。
+
 证据发布组件只负责固定tag/commit、无覆盖上传和下载hash核验，不负责授予资格。真正调用它之前
 仍须通过冻结案例与copy-run等上层验收门；目前仅组件测试完成，没有创建正式远端发布或push。
 

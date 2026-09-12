@@ -1,5 +1,12 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C04-OPERATION-RECOVERY — 嵌套进程和残留进程组
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：Store与package loader来自canonical `3ba0956`；精确process身份沿用managed Codex规则。
+- `target_paths`：x2env/store.py、package_loader.py、test_operation_recovery.py、test_genesis_runtime.py。
+- `verification`：真实短fork/进程替身恢复攻击，53项相关测试；无旧运行证据升级、无实际仿真执行。
+
 ## INT-CANONICAL-S02-DEVELOPMENT — 图像入口真实阻断证据
 
 - `source_ref`：固定clean canonical `3ba0956`；原输入SHA `a4c62f05001d759a43aa0bf0964bde7e7ee5df08ae546e21d6ba2e182ef27202`。

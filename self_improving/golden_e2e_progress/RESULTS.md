@@ -1,5 +1,16 @@
 # 进度与结果
 
+## 2026-09-13 C04 操作级进程恢复保护
+
+- 恢复不再只检查顶层codex operation：在精确operation目录内有界查找嵌套模型、重建、preview与replay
+  process记录，核PID/start_ticks/目录及命令绑定；身份不足或运行型operation缺记录保守blocked。
+- 原leader已退出也不直接重跑：有界只读/proc stat核精确PGID是否仍有非zombie成员；不读无关命令/env、
+  不按进程名操作、不向真实旧进程发信号。恢复成功清除旧required_resources。
+- 新launcher记录实际/proc start_ticks；获取身份失败先收尾刚创建的owned group再报错。
+  三类真实短进程攻击先RED再GREEN；主会话相关5组53 passed（7.05s），未执行Genesis或真实模型。
+- package_loader源码bytes已变化，旧copy-run不能代表新launcher已真实运行；未登记的任意外部进程
+  仍不能被本记录规则凭空证明已退出，保护范围按记录的adapter生命周期表述。
+
 ## 2026-09-13 S02真实开发案例：关键未知阻断
 
 - 固定clean `3ba0956e70746e09c0261e2f5435f20d7ae8fabf`，原样冻结S02图像、text=null、seed23、local_only，

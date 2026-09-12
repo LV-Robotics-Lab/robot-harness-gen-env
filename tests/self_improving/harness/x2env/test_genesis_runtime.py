@@ -255,6 +255,8 @@ def test_timeout_interrupts_owned_process_group_and_retains_lifecycle(tmp_path):
         " raise SystemExit(2)\n"
         "signal.signal(signal.SIGINT,stop)\n"
         'if child: open("probe-pids.json","w").write(str(os.getpid())+" "+str(child))\n'
+        'if child: open("probe-start-ticks.txt","w").write('
+        'open("/proc/self/stat").read().rsplit(")",1)[1].split()[19])\n'
         "while True: time.sleep(.05)\n"
     )
     loader.chmod(0o700)
@@ -271,6 +273,7 @@ def test_timeout_interrupts_owned_process_group_and_retains_lifecycle(tmp_path):
     assert result["error_code"] == "timed_out"
     lifecycle = json.loads((tmp_path / "out/process.json").read_bytes())
     assert lifecycle["pid"] == lifecycle["pgid"]
+    assert lifecycle["start_ticks"] == int((tmp_path / "out/probe-start-ticks.txt").read_text())
     assert lifecycle["signals"][0]["signal"] == "SIGINT"
     for pid in (tmp_path / "out/probe-pids.json").read_text().split():
         with pytest.raises(ProcessLookupError):

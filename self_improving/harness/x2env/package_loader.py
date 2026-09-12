@@ -252,6 +252,9 @@ def launch_child(
             }
             _write(output / "process.json", lifecycle)
             try:
+                process_stat = Path(f"/proc/{process.pid}/stat").read_text()
+                lifecycle["start_ticks"] = int(process_stat.rsplit(")", 1)[1].split()[19])
+                _write(output / "process.json", lifecycle)
                 process.wait(timeout=timeout_seconds)
             except (subprocess.TimeoutExpired, KeyboardInterrupt) as exc:
                 lifecycle["stop_reason"] = (
@@ -259,6 +262,10 @@ def launch_child(
                 )
                 _stop_group(process, lifecycle, output)
                 raise
+            except (OSError, ValueError, IndexError) as exc:
+                lifecycle["stop_reason"] = "process_identity_unavailable"
+                _stop_group(process, lifecycle, output)
+                raise ValueError("owned runtime process identity unavailable") from exc
             finally:
                 lifecycle["exit_code"] = process.poll()
                 lifecycle["ended_monotonic"] = time.monotonic()
