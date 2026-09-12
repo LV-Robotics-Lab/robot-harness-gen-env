@@ -44,6 +44,8 @@ AssetVersion v2用世界顶点/面摘要区分几何与属性变化，换色不�
 controller现已将local resolver、compile和双profile replay接到同一workflow journal，部署缺少
 执行器时blocked；完成replay后尚待fresh observation/验证，不生成名为成功的用户包。
 部分运行错误日志进入CAS；集成测试的模型/运行时是明确替身，真实整链仍待运行。
+`assessment.py`核两个独立profile的进程、实际加载几何/物性、连续轨迹和媒体后重算冻结断言。
+纯轨迹分析与执行证据分开；26项/动态刚体是当前限定profile，不是旧mouse 34项或机器人策略验证。
 跨Store复制一个receipt不代表来源完整；`artifacts.artifact_closure`按显式ArtifactRef递归核验JSON
 证据图，Registry与包导出共用。真实preview曾因此暴露缺失来源记录，原运行/视觉结果保留，
 但不能作为来源完整或成功包资格使用；新导入必须复制全部必要证据。

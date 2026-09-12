@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C09 固定物理断言评估组件
+
+- assess_scene独立核对SceneIR/input、两个profile进程/实际加载物性与几何、全部轨迹/contact/net force、
+  41帧与连续媒体，然后按冻结physics-assertions-v1重算26项/动态刚体检查；不使用旧34项数字。
+- 缺profile/媒体/错误初态/哈希/净接触力等攻击明确拒绝；物理与视觉各自报告，单独trace分析
+  不证明模拟器执行，缺视觉或不支持profile不授总体通过。
+- assessment/runtime合计31 passed（5.73s），评估组件18项；仍缺真实双profile完整评估与workflow闭环。
+
 ## 2026-09-13 C08 同workflow双profile replay接线
 
 - compile成功后同一controller调用GenesisReplayExecutor，baseline/half_dt共享一次有界预算，

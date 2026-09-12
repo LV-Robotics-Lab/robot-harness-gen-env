@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C09-ASSESSMENT — 冻结双dt物理诊断
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream；`upstream_owner`：Genesis。
+- `source_ref`：冻结断言`88b4885`、canonical执行内核`013391c`；不复用旧资格签发。
+- `target_paths`：x2env/assessment.py与test_assessment.py。
+- `verification`：18项assessment测试，连运行接口共31 passed；真实dual-profile assessment尚not_run。
+- `known_gaps`：目前刚体on结构支撑profile；inside/articulation不支持，视觉/物理分别报告。
+
 ## INT-CANONICAL-C08-REPLAY — 同workflow双profile执行
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream，复用canonical Genesis内核。
