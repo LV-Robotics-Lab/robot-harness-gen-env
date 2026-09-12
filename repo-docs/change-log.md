@@ -1,5 +1,17 @@
 # Change Log
 
+## 2026-09-13 通用实验服务接通与真实失败留痕
+
+- 补记同一 Golden journal 内的 service/controller、受管理 Codex 建议、Harness CLI、完整修订包、
+  物理/视觉状态分离和命令计时的固定提交；Git author、子 agent 实现、根会话整合与原始来源分别记录。
+- 文本/generated 在 `50eb2ec` 完成 7 阶段、34/34 物理检查；132-member 包复制后真实 baseline
+  1000 步、41 帧/4 unique。场景 fallback A 在 `e2391bd` 实际修改位置，一次修订后 12 阶段通过；
+  同版本 text/web 完成实际下载及 7 阶段，单命令 157.955860407 秒。
+- 保留 image/local 零命中失败。视频在文档核对期间完成命令，但两次布局修订仍视觉不符，
+  `repair_budget_exhausted`；不把物理 passed 合并成视觉成功。所有结果继续是开发未发布，
+  CLI 阶段 passed 不等于父 workflow terminal 或晋升，整体任务未完成。
+- 完整来源与运行入口见[本轮增量台账](../docs/integration-provenance/LEDGER.md#int-exp-003--通用服务真实接线与有界场景修订2026-09-13-增量)。
+
 ## 2026-09-13 通用实验组件与能力边界
 
 - 补充真实local/web/generated获取组件、共享意图静态编译及不可变资产修订；明确primitive生成

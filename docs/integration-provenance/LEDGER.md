@@ -1,5 +1,63 @@
 # 功能级整合台账
 
+## INT-EXP-003 — 通用服务真实接线与有界场景修订（2026-09-13 增量）
+
+- `lifecycle`：`integrated`；`verification`：`runtime_pass`（下列 text/generated、text/web 与场景修订子集）。
+- `origin_owner`：Bingsheng Harness 编排与既有核心生成，Yuxin/HYX 资产 provider，Gujie 场景语义；
+  `integration_owner`：Bingsheng Harness workstream。新增服务/控制器接线不是第三方原始实现。
+- `recorded_git_authors`：下表固定集成提交逐项 `git show` 均记录
+  `Bingsheng Xie <xieziyin_shangshu@outlook.com>`；这是 Git author 字段，不据此推断子 agent、
+  目录或历史第三方作者与自然人身份的映射。
+- `upstream_owner`：Genesis、trimesh/SciPy、FFmpeg、Khronos/Cesium 等原归属不变。
+- `source_repository`：本仓库；基础来源仍为 INT-EXP-001 的 provider
+  `4982cc3660d82743b849fd0ba9cbdfd04933e895` / `8c2f058215b4d69d10f15c269148397a9f14ccd2`、
+  Gujie `eb0b710581fd7794bc01b447b0f77cb871c8a711`、Harness `9460a4b`；
+  web Box 固定 `KhronosGroup/glTF-Sample-Assets@90d7ede14c7e280af263824604b427a1ca02cb66`，CC-BY-4.0。
+- `dirty_snapshot`：不纳入 Gujie dirty bytes；本轮运行绑定各自固定源码，不能用后续文档 HEAD 冒充执行版本。
+- `source_paths` / `target_paths`：既有 Golden aggregate/Registry/CAS、CodexBackend、limited preview
+  controller，以及下表 `self_improving/harness/` 模块；没有新增第二套业务数据库或外部 Codex 主控。
+
+| 固定集成提交 | 接入或修复 | 来源与责任边界 |
+|---|---|---|
+| `ac2f8c1749e06bea2a9cc81534d4d4697b49baa4` | `experiment_service.py` | 根会话整合现有 Golden journal 与开发 Skill 执行 |
+| `89e4171a0435835fcaabab4cdae2b5d3e7890488` | 现有 controller 的实验分支 | 根会话实现有界阶段循环、恢复与修订预算 |
+| `68d7c93ee07fd3e13c020a68ba3b0a61b092b6be` | `experiment_model_stages.py` | 根会话接受管理 Codex 解释、视觉和修订建议 |
+| `480303a4d7d850f565985913e43f7f1819c41e18` | `experiment_cli.py` | 子 agent 实现 `ca9ec5a` 的根会话集成，用户只操作 Harness |
+| `0d1581212e7b6e79efe1259ffaeb62f580f20b29` | `experiment_package.py` | 独立包实现的根会话整合，导出当前验证链和场景 |
+| `e2391bda942714f704c55853b21f1c5e886daf43` | 包内完整开发 journal | 根会话修复保留失败、修订和前后媒体，不只导出最终成功状态 |
+| `f6183c5e2a1bed08983a5be1f1e24abad4ddca79` | `experiment_runtime.py` | 根会话分离 replay 执行成功与 physical assessment 失败 |
+| `b4a05a7f5e4e07f4aaa9fd07ed193a109ea4f278` | 模型联合诊断 | 根会话保留 visual passed / physical failed，不以视觉意见覆盖物理结果 |
+| `174323d01d5acd9d097c6189a2a70ac2989d2362` | CLI 私有 command record | 根会话增加精确单命令 wall 与失败留痕 |
+
+- `contract_spec`：近码 `EXPERIMENT_SERVICE_CONTRACT.md`、`EXPERIMENT_MODEL_STAGES_CONTRACT.md`、
+  `EXPERIMENT_RUNTIME_CONTRACT.md`、`EXPERIMENT_CLI_CONTRACT.md`、`EXPERIMENT_PACKAGE_CONTRACT.md`。
+- `integration_method`：同一受信 Golden 状态/receipt 驱动阶段；模型仅建议，Harness 校验依赖、
+  修改预算和物理报告。CLI `passed` 是阶段序列结果，父 snapshot 仍 `active`、`parent_terminal=false`。
+- `verification_evidence` / `golden_run`：
+  - `50eb2ec` 文本/generated：`6c84535b-7c0f-467a-a182-2bcffabd3cde` 同 run 7 阶段通过，
+    双 dt 物理 34/34、视觉/validate passed。journal 跨度 154.561299 秒，不当作单命令精确计时。
+    `/home/jingxiang/bingsheng/generic-experiment-20260913.ZGPNcg/text-package` 导出 132-member 包；
+    复制至 `/home/jingxiang/bingsheng/generic-text-package-copy-omub915k/package` 后，拒绝原资产/CAS/
+    源码访问，真实 baseline 1000 步、41 帧/4 unique、65.366339564 秒。新结果 SHA
+    `340eb42ebefdb9df21b5e8729f45ad9ff119949ca0ce45cb7662539a8473bfb5`；copy-run 只证明 baseline。
+  - `e2391bd` 场景 fallback A：`63968c2d-69d5-428d-80cd-7b156aa11790`，首次支撑检查失败，
+    Codex 一次修订 y=.375→.369，scene bytes 改变，第二轮通过，12 阶段、308.774588622 秒。
+    v2 根 `controller/commands/6f052943-d764-4557-891a-b6290d0e729e.json` 与 `scene-repair-package` 保留前后证据。
+  - `e2391bd` text/web：`1b4ed241-59db-4fc4-9e57-01b60e82910a`，真实 Box 搜索下载与
+    7 阶段通过，157.955860407 秒；命令 `controller/commands/0db7940d-3b24-45ff-bdbe-e70030e211cd.json`。
+  - image/local 首试 `6e8b3c50-1db4-4392-aac5-bda05f2f97d8` 失败：模型选择 cube，实际目录只有
+    block，`local_asset_not_found`，8.859814560 秒；未 compile/replay，不改旧结果或添加虚假别名。
+  - video `f6fe486a-68c1-4894-b210-6eba1359bf7f` 在本次只读确认时已从在途变为命令 failed：
+    `repair_budget_exhausted`，480.881527850 秒、16 阶段、两次场景修订后仍视觉不符；三次 replay
+    物理均 passed，未执行 validate 或导出包。revision 16、active_operation null 是真实预算停止证据，
+    不是 video 成功；该输入不继续自动重试。
+    `controller/commands/ced4ee90-5672-4798-8901-48b8fb8436ba.json` 保留结果。父仍非终态，不计成功。
+  - 上述 v2 根为 `/home/jingxiang/bingsheng/generic-experiment-v2-20260913.1QrGYD`。
+- `known_gaps`：本地完整线与视频尚无成功验收；资产 fallback B 未有完整真实成功结果；
+  cousin 未实现；程序生成不代表任意图像重建；正式资格、晋升、机器人策略、数据采集均未授予。
+  后续 catalog 修复不回写这些历史结果；整体 Golden E2E 未完成。
+- `last_verified`：`2026-09-13`。下方组件条目保留其当时验证边界，通用后续状态以本增量为准。
+
 ## INT-EXPERIMENT-COMPILE-001 — 共享意图与真实资产组装
 
 - `lifecycle`：`integrating`；`verification`：`contract_pass`（static only）。
