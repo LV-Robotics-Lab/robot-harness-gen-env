@@ -1,12 +1,171 @@
 """Shared runtime skills must not grow separate authorities or accept caller runners."""
 
 import json
+from dataclasses import dataclass, replace
+from datetime import datetime, timezone
 from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
 
 from self_improving.harness.limited_image_preview_application import LimitedImagePreviewApplication
+
+_SAVED_CBE5B3F_TTL_BOUNDARY = {
+    "returned_ttl_seconds": 236.799554,
+    "duplicate_qualification_seconds": 196.468709,
+    "current_validation_seconds": 55.920832,
+}
+
+
+@dataclass(frozen=True)
+class _SavedValidationHandler:
+    output: object
+
+    def __call__(self, value, context):
+        from self_improving.harness.registry import HandlerResult
+
+        return HandlerResult(self.output)
+
+
+def _stored_reference(store, root, schema_version, marker):
+    path = root / f"evidence-{marker}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"marker": marker}))
+    return store.put_file(
+        path,
+        name=path.name,
+        media_type="application/json",
+        schema_version=schema_version,
+    )
+
+
+def _preloaded_validation_application(
+    tmp_path,
+    monkeypatch,
+    *,
+    artifact_store=None,
+    qualification_ref=None,
+):
+    from self_improving.harness import limited_image_preview_application as application
+    from self_improving.harness.artifacts import LocalArtifactStore
+    from self_improving.harness.event_journal import SQLiteEventJournal
+    from self_improving.harness.qualification import QualificationCheckV1, QualificationReportV1
+    from self_improving.harness.registry import SkillRegistry, StaticDependencyResolver
+    from self_improving.harness.run_store import SQLiteRunStore
+    from self_improving.harness.schemas.common import DependencyRef, SkillQualification
+    from self_improving.harness.schemas.limited_image_preview_execution import (
+        LimitedSceneValidateInputV1,
+        LimitedSceneValidationV1,
+        PreviewLayout,
+    )
+
+    store = artifact_store or LocalArtifactStore(tmp_path / "cas")
+    shared = object.__new__(LimitedImagePreviewApplication)
+    shared.artifact_store = store
+    shared._source_identity = shared.implementation_sha256
+    shared._qualifications = {}
+    shared._bound_qualifications = {}
+    dependency = DependencyRef(
+        name="limited_image_preview", version="1", sha256=shared._source_identity
+    )
+    shared._resolver = StaticDependencyResolver({application.VALIDATE: (dependency,)})
+    execution_receipt = _stored_reference(
+        store, tmp_path, "harness.genesis_scene_execution_receipt.v3", "1"
+    )
+    parameters = LimitedSceneValidateInputV1(
+        schema_version="harness.limited_scene_validate_input.v1",
+        execution_receipt=execution_receipt,
+        expected_layout=None,
+    )
+    output = LimitedSceneValidationV1(
+        schema_version="harness.limited_scene_validation.v1",
+        execution_receipt=execution_receipt,
+        scene=_stored_reference(store, tmp_path, "harness.genesis_scene_spec.v1", "2"),
+        physical_report=_stored_reference(store, tmp_path, "harness.genesis_scene_report.v1", "3"),
+        expected_layout=None,
+        actual_layout=PreviewLayout(x_m=0.0, y_m=0.0, yaw_rad=0.0),
+        position_tolerance_m=0.001,
+        yaw_tolerance_rad=0.001,
+        semantic_status="pass",
+        status="passed",
+        physical_scope="dual_dt_trace_contact_settling_and_media",
+    )
+    handler = _SavedValidationHandler(output)
+    shared._handlers = {application.VALIDATE: handler}
+    database = tmp_path / "runs.sqlite"
+    shared.run_store = SQLiteRunStore(database)
+    shared._registry = SkillRegistry(
+        artifact_resolver=store,
+        dependency_resolver=shared._resolver,
+        event_sink=SQLiteEventJournal(database),
+        clock=lambda: datetime(2026, 9, 12, tzinfo=timezone.utc),
+        run_id_factory=uuid4,
+        run_store=shared.run_store,
+        evidence_invariant_policy=shared,
+    )
+    terminal_reads = []
+    shared._terminal = lambda *args, **kwargs: terminal_reads.append((args, kwargs))
+    if qualification_ref is None:
+        replay_candidate = uuid4()
+        validation_candidate = uuid4()
+        check = QualificationCheckV1(
+            name="fresh_replay_and_saved_validation",
+            status="pass",
+            evidence={
+                "replay_candidate": str(replay_candidate),
+                "validation_candidate": str(validation_candidate),
+                "receipt": {"saved": True},
+            },
+        )
+    else:
+        qualification = SkillQualification.model_validate_json(
+            store.resolve(qualification_ref).path.read_bytes()
+        )
+        saved_report = QualificationReportV1.model_validate_json(
+            store.resolve_digest(qualification.report_sha256).read_bytes()
+        )
+        check = saved_report.checks[0]
+    deep_checks = []
+
+    def checks(replay_run_id, validation_run_id):
+        deep_checks.append((replay_run_id, validation_run_id))
+        return (check,)
+
+    shared._checks = checks
+    monkeypatch.setattr(application, "_source_tree_sha256", lambda *args, **kwargs: "a" * 64)
+    if qualification_ref is None:
+        report = QualificationReportV1(
+            schema_version="harness.skill_qualification_report.v1",
+            skill_ref=application.VALIDATE,
+            status="pass",
+            deterministic_case_id="one-fresh-modified-scene",
+            regression_command="pytest -q -k limited_image_preview_application",
+            implementation_sha256=shared.implementation_sha256,
+            scene_gen_tree_sha256="a" * 64,
+            ledger_contract_tree_sha256="a" * 64,
+            checks=(check,),
+        )
+        report_ref = shared._put_registry_document(report, "preview-qualification-report.json")
+        qualification_ref = shared._put_registry_document(
+            SkillQualification(
+                skill_ref=application.VALIDATE,
+                status="pass",
+                deterministic_case_id=report.deterministic_case_id,
+                regression_command=report.regression_command,
+                report_sha256=report_ref.sha256,
+            ),
+            "preview-qualification.json",
+        )
+    shared.bind(qualification_ref)
+    return SimpleNamespace(
+        application=shared,
+        store=store,
+        qualification=qualification_ref,
+        parameters=parameters,
+        deep_checks=deep_checks,
+        terminal_reads=terminal_reads,
+        handler=handler,
+    )
 
 
 def test_shared_application_rejects_unqualified_compiler_before_state_creation(tmp_path):
@@ -263,3 +422,96 @@ def test_formal_semantic_mismatch_retains_diagnostic_in_shared_registry():
         )
     )
     Path("/tmp/preview-semantic-registry-root.txt").write_text(str(root))
+
+
+def test_preloaded_exact_qualification_is_not_deep_verified_again_during_invoke(
+    tmp_path, monkeypatch
+):
+    from self_improving.harness.limited_image_preview_application import VALIDATE
+
+    case = _preloaded_validation_application(tmp_path, monkeypatch)
+    assert len(case.deep_checks) == 1
+
+    state = case.application.invoke(VALIDATE, case.parameters, run_id=uuid4())
+
+    assert state.status.value == "succeeded"
+    assert len(case.deep_checks) == 1
+    assert len(case.terminal_reads) == 1
+    boundary = _SAVED_CBE5B3F_TTL_BOUNDARY
+    post_capture_seconds = (
+        boundary["current_validation_seconds"]
+        + (len(case.deep_checks) - 1) * boundary["duplicate_qualification_seconds"]
+    )
+    assert (
+        boundary["duplicate_qualification_seconds"] + boundary["current_validation_seconds"]
+        > boundary["returned_ttl_seconds"]
+    )
+    assert post_capture_seconds < boundary["returned_ttl_seconds"]
+
+
+@pytest.mark.parametrize("member", ["qualification", "report"])
+def test_preloaded_qualification_rechecks_top_level_canonical_cas_before_invoke(
+    tmp_path, monkeypatch, member
+):
+    from self_improving.harness.limited_image_preview_application import VALIDATE
+    from self_improving.harness.schemas.common import SkillQualification
+
+    case = _preloaded_validation_application(tmp_path, monkeypatch)
+    qualification_path = case.store.resolve(case.qualification).path
+    qualification = SkillQualification.model_validate_json(qualification_path.read_bytes())
+    path = (
+        qualification_path
+        if member == "qualification"
+        else case.store.resolve_digest(qualification.report_sha256)
+    )
+    payload = path.read_bytes()
+    path.write_bytes(payload[:-1] + bytes([payload[-1] ^ 1]))
+
+    with pytest.raises(Exception, match="qualification|SHA-256"):
+        case.application.invoke(VALIDATE, case.parameters, run_id=uuid4())
+    assert len(case.deep_checks) == 1
+    assert case.terminal_reads == []
+
+
+@pytest.mark.parametrize("member", ["qualification_ref", "descriptor", "handler", "source"])
+def test_preloaded_qualification_identity_drift_fails_closed_before_handler(
+    tmp_path, monkeypatch, member
+):
+    from self_improving.harness.limited_image_preview_application import VALIDATE
+
+    case = _preloaded_validation_application(tmp_path, monkeypatch)
+    shared = case.application
+    if member == "qualification_ref":
+        shared._qualifications[VALIDATE] = case.qualification.model_copy(
+            update={"bytes": case.qualification.bytes + 1}
+        )
+    elif member == "descriptor":
+        key = ("image2env.validate", "3.0.0")
+        registered = shared._registry._registrations[key]
+        shared._registry._registrations[key] = replace(
+            registered,
+            descriptor=registered.descriptor.model_copy(update={"implementation_version": "2"}),
+        )
+    elif member == "handler":
+        shared._handlers[VALIDATE] = _SavedValidationHandler(case.handler.output)
+    else:
+        shared._source_identity = "f" * 64
+
+    with pytest.raises(
+        Exception, match="identity|immutable|implementation|byte count|verification"
+    ):
+        shared.invoke(VALIDATE, case.parameters, run_id=uuid4())
+    assert case.terminal_reads == []
+
+
+def test_new_application_process_must_deep_bind_the_same_qualification(tmp_path, monkeypatch):
+    first = _preloaded_validation_application(tmp_path / "first", monkeypatch)
+    second = _preloaded_validation_application(
+        tmp_path / "second",
+        monkeypatch,
+        artifact_store=first.store,
+        qualification_ref=first.qualification,
+    )
+
+    assert len(first.deep_checks) == 1
+    assert len(second.deep_checks) == 1
