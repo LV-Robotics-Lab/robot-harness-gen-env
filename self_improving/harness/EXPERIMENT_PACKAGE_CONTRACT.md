@@ -12,6 +12,12 @@ runtime目录或原资产库。当前representation资产成员由export_package
 原字节作为.evidence报告保存，避免旧URDF副本被当成现行入口。provenance保存完整引用→相对路径
 映射、workflow revision、修订history和当前事实；图像和连续MP4至少各一个，否则拒绝。
 
+审计闭包同时保留当前snapshot的state_ref/receipt_head/start_request_ref/registry_snapshot、每个
+operation的完整字段及可达command/development execution/tool_result/state delta/历史receipt。
+当前registry和各operation execution必须显式为development schema；终态operation缺tool_result
+或其他必需journal引用时拒绝。若图中意外出现Genesis runtime manifest，在读取其内容前拒绝，
+不展开旧8.5GB闭包。完整snapshot与operation均进入provenance，不再只保存operation_id。
+
 返回manifest_path/package_path及明确checks。member integrity可passed，relocated_execution与
 physical_profile仍not_run：package_workflow不运行Genesis。用户或调用方随后调用包内run.py或
 `run_package(package_path, output=NEW_DIR, runtime_roots=..., denied_roots=...)`验证复制后的执行；

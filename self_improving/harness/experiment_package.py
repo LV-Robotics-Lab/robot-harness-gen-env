@@ -20,6 +20,28 @@ def package_workflow(service, workflow_id, output):
     latest = history[-1]
     if latest["operation"].get("committed_revision") != status["snapshot"]["revision"]:
         raise ValueError("validation is not the current committed revision")
+    snapshot = status["snapshot"]
+    snapshot_keys = ("state_ref", "receipt_head", "start_request_ref", "registry_snapshot")
+    if any(snapshot.get(key) is None for key in snapshot_keys):
+        raise ValueError("validation snapshot is missing journal evidence")
+    if (
+        status.get("qualification_status") != "development_unqualified"
+        or snapshot["registry_snapshot"].get("schema_version")
+        != "harness.development_registry_snapshot.v1"
+    ):
+        raise ValueError("validation package requires development workflow journal")
+    for item in history:
+        operation = item["operation"]
+        keys = ["command", "qualified_execution"]
+        if item["status"] in {"passed", "failed", "blocked", "succeeded"}:
+            keys.append("tool_result")
+        if any(operation.get(key) is None for key in keys):
+            raise ValueError("operation is missing required journal evidence")
+        if (
+            operation["qualified_execution"].get("schema_version")
+            != "harness.development_skill_execution.v1"
+        ):
+            raise ValueError("operation journal is not a development execution")
     facts, store = status["facts"], service.store
     required = {
         "environment.scene",
@@ -55,6 +77,10 @@ def package_workflow(service, workflow_id, output):
         if isinstance(value, dict):
             if value.get("uri", "").startswith("artifact://sha256/"):
                 ref = ArtifactRef.model_validate(value)
+                if ref.schema_version == "harness.genesis_runtime_manifest.v1":
+                    raise ValueError(
+                        "runtime manifest is outside development package journal scope"
+                    )
                 key = (ref.sha256, ref.name, ref.media_type, ref.schema_version)
                 if key in refs:
                     return
@@ -70,6 +96,8 @@ def package_workflow(service, workflow_id, output):
                 collect(item)
 
     collect(input_ref)
+    for key in snapshot_keys:
+        collect(snapshot[key])
     for key in required:
         collect(facts[key])
     audit_history = []
@@ -80,8 +108,10 @@ def package_workflow(service, workflow_id, output):
             "operation_id": item["operation"].get("operation_id"),
             "committed_revision": item["operation"].get("committed_revision"),
             "receipt": item.get("receipt"),
+            "operation": item["operation"],
         }
         audit_history.append(entry)
+        collect(item["operation"])
         if item.get("receipt") is not None:
             collect(item["receipt"])
         child_id = item["operation"].get("child_run_id")
@@ -123,6 +153,7 @@ def package_workflow(service, workflow_id, output):
     provenance = {
         "workflow_id": str(workflow_id),
         "revision": status["snapshot"]["revision"],
+        "snapshot": snapshot,
         "qualification_status": "development_unqualified",
         "input": input_ref,
         "facts": {key: facts[key] for key in sorted(required)},
