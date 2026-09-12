@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C13 输入边界覆盖与视频时长修复
+
+- 视频流自身提供 duration 时，不再提前访问可能缺失的容器 duration；两种合法来源分别测试。
+- 输入、artifact closure、capability registry 与 schema export 的定向覆盖为100%语句/分支
+  （290 statements、118 branches、56 tests）；不代表全canonical或全仓覆盖完成。
+- 主会话复验输入/闭包及待提交失败包、controller、publisher切片共64 passed（1.63s）。
+  此处是组件验证，没有新增真实模型、Genesis或矩阵成功案例。
+
 ## 2026-09-13 C06/C07 三来源resolver接线
 
 - SourceRouter按冻结local→web→reconstruction顺序，仅处理仍缺的foreground IDs；同一SceneIR ref，

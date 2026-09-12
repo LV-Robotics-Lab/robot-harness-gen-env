@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C13-INPUT — 合法流时长与输入闭包边界
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical输入与证据闭包，固定父提交 `36a0c7f`。
+- `target_paths`：x2env/input.py、test_input.py、test_artifact_closure.py。
+- `verification`：合法stream/container时长、输入限制、partial与闭包攻击；四模块定向覆盖100%，
+  并非运行时或全仓验收。未引入第三方源码或改变原资产来源归属。
+
 ## INT-CANONICAL-C06-C07-SOURCES — 三来源及partial合并
 
 - `origin_owner`：Yuxin provider、Gujie重建、Bingsheng Harness；`integration_owner`：Bingsheng。

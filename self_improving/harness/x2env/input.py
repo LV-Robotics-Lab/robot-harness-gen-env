@@ -144,7 +144,9 @@ def _video(raw, source, store, limits, evidence):
             stream = streams[0]
             width, height = int(stream["width"]), int(stream["height"])
             fps = Fraction(stream["avg_frame_rate"])
-            duration = float(stream.get("duration", probe["format"]["duration"]))
+            duration = float(
+                stream["duration"] if "duration" in stream else probe["format"]["duration"]
+            )
             if width <= 0 or height <= 0 or fps <= 0 or not 0 < duration <= limits.video_seconds:
                 raise InputIngestError(
                     "input_limit_exceeded", "invalid or oversized video duration"
