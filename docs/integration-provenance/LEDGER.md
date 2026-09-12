@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C10-ASSET — 受限属性修订与geometry定义v2
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream，新不可变版本实现。
+- `source_ref`：canonical资产注册`38071da`；新geometry_basis为mesh_world_vertices_faces.v1。
+- `target_paths`：x2env/assets.py、asset_revision.py及对应测试。
+- `verification`：12项revision测试；换色非新geometry、尺度变化是新geometry回归通过；物理not_run。
+- `known_gaps`：仅base_color/mass/friction；其余patch字段明确unsupported；完整fallback仍待controller。
+
 ## INT-CANONICAL-C08-COMPILE — 共享SceneIR到相对运行包输入
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream，新确定性编译seam。

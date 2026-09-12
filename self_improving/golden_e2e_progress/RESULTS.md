@@ -1,5 +1,16 @@
 # 进度与结果
 
+## 2026-09-13 C10 不可变资产修订与真实geometry摘要
+
+- AssetVersion升v2：geometry摘要从mesh整文件改为实例world vertices/faces，排除颜色/材质。
+  颜色变化与uniform尺度变化的回归先RED后GREEN：换色版本变化但geometry不变，改变尺寸才变。
+  v1历史记录由旧固定源码读取，不回填、不冒充同一摘要定义。
+- AssetRevision支持base_color/mass/friction，白名单其他字段本片明确unsupported。
+  GLB只改无纹理/vertex-color的PBR JSON、BIN不变；mass同比更新URDF和physics惯量。
+  父许可/来源与旧bytes不变，controller审批ref和attribute provenance进入child receipt。
+- 无效修订4项RED已修复：同色/同质量/同摩擦不产生目录/receipt/version；混合真实变化仍执行。
+  12项revision测试通过；真实修订后视觉和Genesis验证尚待接线。
+
 ## 2026-09-13 C08 SceneIR到实际Genesis输入的确定性compile
 
 - compile消费固定SceneIR+完整ResolvedAssetSet，复制核验后的相对URDF/物性/mesh闭包，

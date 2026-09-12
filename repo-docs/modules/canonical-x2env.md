@@ -38,6 +38,9 @@ Gujie重建通过`adapters/reconstruction.py`调用固定外部SAM2与TRELLIS接
 `compile.py`把共享SceneIR和已登记依赖转换为上述运行输入；foreground位置指几何中心，
 结构支撑坐标指上表面中心，编译时转为实际URDF底部origin。显式结构policy补齐的未知项
 逐项记录；已知尺寸冲突、未实现inside/关节拒绝，不用少实体场景代替请求。
+`asset_revision.py`只创建不可变子版本，目前支持base_color、mass、friction；无实际变化拒绝。
+AssetVersion v2用世界顶点/面摘要区分几何与属性变化，换色不能被计作重建新geometry。
+审批来源仍由controller保证；该组件不自行授予重试预算或物理通过。
 
 Python模型是唯一schema编辑源；`script/export_x2env_schemas.py --check`检测生成文件漂移。
 Codex输出另生成strict projection：可空字段仍必须出现；provenance是固定六字段对象，joint positions

@@ -8,6 +8,56 @@ import pytest
 from self_improving.harness.x2env.store import Store
 
 
+def test_material_change_is_not_a_new_geometry_digest(tmp_path):
+    import trimesh
+
+    from self_improving.harness.x2env.assets import AssetLicense, AssetRegistry, AssetSource
+    from self_improving.harness.x2env.normalization import normalize_mesh
+
+    store = Store(tmp_path / "state")
+    registry = AssetRegistry(store)
+    source = tmp_path / "source.glb"
+    trimesh.creation.box().export(source)
+    proof = store.write_artifact(b"fixture source", "text/plain")
+    versions = []
+    for index, (color, scale) in enumerate(
+        [((1.0, 0.0, 0.0, 1.0), 1.0), ((0.0, 0.0, 1.0, 1.0), 1.0), ((0.0, 0.0, 1.0, 1.0), 2.0)]
+    ):
+        root = tmp_path / f"variant-{index}"
+        report = normalize_mesh(
+            source,
+            root,
+            dimensions_m=(scale, scale, scale),
+            up_axis="Z",
+            mass_kg=0.1,
+            friction=0.4,
+            color_rgba=color,
+        )
+        versions.append(
+            registry.register(
+                "box",
+                "box",
+                root,
+                "asset.urdf",
+                files=tuple(item["path"] for item in report["files"]),
+                normalization_report=store.write_artifact(
+                    json.dumps(report).encode(), "application/json"
+                ),
+                license=AssetLicense(
+                    spdx="CC0-1.0", source_url="https://example.org/fixture", evidence=proof
+                ),
+                source=AssetSource(
+                    kind="local", provider="fixture", source_ref="test", evidence=proof
+                ),
+                receipt=proof,
+                parent_version=versions[0].version_sha256 if versions else None,
+            )
+        )
+    assert versions[0].version_sha256 != versions[1].version_sha256
+    assert versions[0].geometry_sha256 == versions[1].geometry_sha256
+    assert versions[1].geometry_sha256 != versions[2].geometry_sha256
+
+
 def prepared(tmp_path, store, mass="1"):
     root = tmp_path / f"normalized-{mass}"
     root.mkdir()

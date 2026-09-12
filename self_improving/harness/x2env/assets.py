@@ -6,6 +6,7 @@ import mimetypes
 import shlex
 import struct
 import xml.etree.ElementTree as ET
+from io import BytesIO
 from pathlib import Path, PurePosixPath
 from typing import Literal, Protocol
 
@@ -50,13 +51,14 @@ class AssetFile(Model):
 
 
 class AssetVersion(Model):
-    schema_version: Literal["x2env.asset_version.v1"] = "x2env.asset_version.v1"
+    schema_version: Literal["x2env.asset_version.v2"] = "x2env.asset_version.v2"
     version_sha256: Sha256
     asset_id: str = Field(min_length=1)
     category: str = Field(min_length=1)
     entrypoint: str
     files: tuple[AssetFile, ...]
     geometry_sha256: Sha256
+    geometry_basis: Literal["mesh_world_vertices_faces.v1"] = "mesh_world_vertices_faces.v1"
     normalization_report: ArtifactRef
     license: AssetLicense
     source: AssetSource
@@ -77,6 +79,42 @@ def _logical(name):
     if not name or path.is_absolute() or ".." in path.parts or str(path) != name or "\\" in name:
         raise ValueError("invalid relative asset path")
     return path
+
+
+def _geometry(contents):
+    """Material and physical edits are not new geometry; member hashes still bind all bytes."""
+    import numpy as np
+    import trimesh
+
+    geometry = []
+    for name, raw in contents.items():
+        suffix = Path(name).suffix.lower()
+        if suffix not in {".obj", ".stl", ".ply", ".glb"}:
+            continue
+        scene = trimesh.load(BytesIO(raw), file_type=suffix[1:], force="scene", process=False)
+        instances = []
+        for node in scene.graph.nodes_geometry:
+            transform, key = scene.graph[node]
+            mesh = scene.geometry[key]
+            vertices = trimesh.transform_points(mesh.vertices, transform)
+            if not np.isfinite(vertices).all() or not len(mesh.faces):
+                raise ValueError("invalid mesh geometry")
+            instances.append(
+                {
+                    "vertices_sha256": hashlib.sha256(
+                        np.asarray(vertices, dtype="<f8").tobytes()
+                    ).hexdigest(),
+                    "faces_sha256": hashlib.sha256(
+                        np.asarray(mesh.faces, dtype="<i8").tobytes()
+                    ).hexdigest(),
+                }
+            )
+        if not instances:
+            raise ValueError("empty mesh geometry")
+        geometry.append({"path": name, "instances": sorted(instances, key=_digest)})
+    if not geometry:
+        raise ValueError("asset requires explicit mesh geometry")
+    return _digest(geometry)
 
 
 class AssetRegistry:
@@ -175,13 +213,7 @@ class AssetRegistry:
             parent = self.inspect(parent_version)
             if parent.asset_id != asset_id or parent.category != category:
                 raise ValueError("parent belongs to another asset")
-        geometry = [
-            row
-            for row in expected
-            if Path(row["path"]).suffix.lower() in {".obj", ".stl", ".ply", ".glb", ".gltf", ".dae"}
-        ]
-        if not geometry:
-            raise ValueError("asset requires explicit mesh geometry")
+        geometry_sha256 = _geometry(contents)
         members = tuple(
             AssetFile(
                 path=name,
@@ -197,7 +229,7 @@ class AssetRegistry:
             category=category,
             entrypoint=entrypoint,
             files=members,
-            geometry_sha256=_digest(geometry),
+            geometry_sha256=geometry_sha256,
             normalization_report=normalization_report,
             license=license,
             source=source,
