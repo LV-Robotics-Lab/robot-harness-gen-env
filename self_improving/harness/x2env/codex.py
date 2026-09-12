@@ -162,6 +162,16 @@ class CodexBackend:
             error_code=error,
         )
 
+    def assess_and_diagnose(
+        self, scene_ir, observation, physics_report, *, output_root: Path, timeout: int = 600
+    ):
+        """Advisory only; original camera times gate admission to the existing transport."""
+        from .diagnosis import assess_and_diagnose
+
+        return assess_and_diagnose(
+            self, scene_ir, observation, physics_report, output_root=output_root, timeout=timeout
+        )
+
     def prepare_asset(
         self, scene_ir, entity, candidate, fetched, *, output_root: Path, timeout: int = 600
     ):

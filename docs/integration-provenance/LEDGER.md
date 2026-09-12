@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C09-DIAGNOSIS — 新鲜观测绑定的视觉建议
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream，新canonical模型诊断seam。
+- `source_ref`：唯一受限Codex transport `7dcb40c`，物理报告`97a45eb`，资产patch `df8ee98`。
+- `target_paths`：x2env/diagnosis.py、codex.py和test_diagnosis.py。
+- `verification`：13项diagnosis测试，连Codex/preparation30 passed；真实模型诊断尚not_run。
+- `known_gaps`：controller场景/资产预算与revision消费仍待接；视觉不能覆盖物理失败。
+
 ## INT-CANONICAL-C06-WEB — 原provider与模型参数准备接线
 
 - `origin_owner`：Yuxin原检索/获取，Bingsheng Harness规范化与编排；`integration_owner`：Bingsheng。

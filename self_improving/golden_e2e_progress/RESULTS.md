@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C09 新鲜观测与受管理视觉诊断
+
+- assess_and_diagnose与interpret/资产视觉共用受限transport。输入SceneIR、runtime、replay、物理报告
+  和相机PNG逐项绑定；300s准入检查使用原camera captured_at，不允许包装回执更新时间续期。
+- 提案只包含visual_intent、有限scene/asset patches、base revision/version和证据引用；不能改变物理
+  断言或直接推进状态。结构patch未知轴null表示不修改，执行预算仍归controller。
+- 13项诊断测试、与Codex/preparation共30 passed；本片为显式进程替身，真实诊断闭环尚未运行。
+
 ## 2026-09-13 C05/C06 Web规范化参数受管理模型接线
 
 - WebAssetResolver实际调用唯一Yuxin search/fetch→受限prepare→规范化/登记→真实版本preview→Codex视觉，

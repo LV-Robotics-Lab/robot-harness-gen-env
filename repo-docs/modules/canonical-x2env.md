@@ -50,6 +50,8 @@ controller现已将local resolver、compile和双profile replay接到同一workf
 部分运行错误日志进入CAS；集成测试的模型/运行时是明确替身，真实整链仍待运行。
 `assessment.py`核两个独立profile的进程、实际加载几何/物性、连续轨迹和媒体后重算冻结断言。
 纯轨迹分析与执行证据分开；26项/动态刚体是当前限定profile，不是旧mouse 34项或机器人策略验证。
+`CodexBackend.assess_and_diagnose`消费实际相机时间与绑定replay，模型准入TTL为300秒；回执时间
+不能使旧图变新。输出仅为视觉意图判断和版本绑定的有限修订建议，预算和执行仍归controller。
 跨Store复制一个receipt不代表来源完整；`artifacts.artifact_closure`按显式ArtifactRef递归核验JSON
 证据图，Registry与包导出共用。真实preview曾因此暴露缺失来源记录，原运行/视觉结果保留，
 但不能作为来源完整或成功包资格使用；新导入必须复制全部必要证据。
