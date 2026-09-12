@@ -10,8 +10,8 @@ from typing import Literal
 from .artifacts import artifact_closure
 from .assessment import ASSERTIONS_SHA256, assess_scene
 from .assets import AssetRegistry
-from .compile import CompiledScene
-from .contracts import ArtifactRef, InputBundle, Model, SceneIR, WorkflowSnapshot
+from .compile import CompiledScene, ResolvedAssetSet
+from .contracts import ArtifactRef, BackendProposal, InputBundle, Model, SceneIR, WorkflowSnapshot
 from .diagnosis import DiagnosisResult
 from .observation import ObservationResult
 from .package import build_package
@@ -71,9 +71,12 @@ def materialize_completion(snapshot, store, output):
             "validation",
         )
         refs = {name: getattr(snapshot, name) for name in fields}
+        if snapshot.grounding is not None:
+            refs["grounding"] = snapshot.grounding
         capabilities = {
             "input_bundle": {"ingest"},
-            "scene_ir": {"codex.interpret", "revise"},
+            "scene_ir": {"codex.interpret", "revise", "codex.ground"},
+            "grounding": {"codex.ground"},
             "compiled_scene": {"x2env.compile"},
             "replay_result": {"x2env.replay"},
             "observation": {"observe"},
@@ -99,6 +102,13 @@ def materialize_completion(snapshot, store, output):
 
         scene = SceneIR.model_validate_json(store.read_artifact(snapshot.scene_ir))
         compiled = CompiledScene.model_validate_json(store.read_artifact(snapshot.compiled_scene))
+        if snapshot.grounding is not None:
+            _verify_grounding(snapshot, store, scene, compiled)
+        elif any(
+            op.capability == "codex.ground" and op.result and snapshot.scene_ir in op.result.outputs
+            for op in snapshot.operations
+        ):
+            raise ValueError("completion_missing_grounding_receipt")
         bundle = InputBundle.model_validate_json(store.read_artifact(snapshot.input_bundle))
         request = snapshot.request
         if (
@@ -400,6 +410,7 @@ def materialize_completion(snapshot, store, output):
                 "observation",
                 "diagnosis",
                 "validation",
+                "grounding",
             )
             if getattr(snapshot, name) is not None
         },
@@ -416,3 +427,171 @@ def materialize_completion(snapshot, store, output):
         receipt=store.write_artifact(raw, "application/json"),
         error_code=error,
     )
+
+
+def _verify_grounding(snapshot, store, scene, compiled):
+    """Audit the accepted design source and its original managed execution, never rerun it."""
+    from .grounding import GroundingValues, SceneDesignPolicy
+
+    if snapshot.proposal is None or snapshot.resolved_assets is None:
+        raise ValueError("completion_grounding_missing_original_binding")
+
+    def read(ref):
+        return json.loads(store.read_artifact(ref))
+
+    receipt = read(snapshot.grounding)
+    if receipt.get("proposed_scene", {}).get("revision") != scene.revision:
+        raise ValueError("completion_grounding_revision_chain_not_verified")
+    expected = {
+        "schema_version": "x2env.scene_grounding.v1",
+        "status": "completed",
+        "error_code": None,
+        "bundle_ref": snapshot.input_bundle.model_dump(),
+        "proposal_ref": snapshot.proposal.model_dump(),
+        "proposed_scene": scene.model_dump(mode="json"),
+        "real_world_scale_recovered": False,
+        "authority": "advisory_design_only",
+    }
+    if any(receipt.get(k) != v for k, v in expected.items()):
+        raise ValueError("completion_grounding_binding_mismatch")
+    if not SceneDesignPolicy.model_validate(receipt["policy"]).enabled:
+        raise ValueError("completion_grounding_policy_disabled")
+    original = BackendProposal.model_validate_json(store.read_artifact(snapshot.proposal))
+    if original.status != "completed" or original.proposal.scene is None:
+        raise ValueError("completion_grounding_original_proposal_missing")
+    base = original.proposal.scene
+    assets_ref = ArtifactRef.model_validate(receipt["assets_ref"])
+    assets = ResolvedAssetSet.model_validate_json(store.read_artifact(assets_ref))
+    rebound = ResolvedAssetSet.model_validate_json(store.read_artifact(snapshot.resolved_assets))
+    if (
+        SceneIR.model_validate_json(store.read_artifact(assets.scene_ir)) != base
+        or assets.assets != rebound.assets
+        or rebound.scene_ir != snapshot.scene_ir
+        or rebound != compiled.resolved_assets
+        or base.input_sha256 != scene.input_sha256
+        or base.revision != scene.revision
+    ):
+        raise ValueError("completion_grounding_asset_binding_mismatch")
+    ground_ops = [
+        (i, op)
+        for i, op in enumerate(snapshot.operations)
+        if op.capability == "codex.ground"
+        and op.status == "succeeded"
+        and op.result
+        and all(
+            ref in op.result.outputs
+            for ref in (snapshot.grounding, snapshot.scene_ir, snapshot.resolved_assets)
+        )
+    ]
+    if len(ground_ops) != 1:
+        raise ValueError("completion_grounding_not_committed")
+    before = snapshot.operations[: ground_ops[0][0]]
+    for capability, ref in [
+        ("codex.interpret", snapshot.proposal),
+        ("codex.interpret", assets.scene_ir),
+        ("asset.resolve", assets_ref),
+    ]:
+        if not any(
+            op.capability == capability
+            and op.status == "succeeded"
+            and op.result
+            and ref in op.result.outputs
+            for op in before
+        ):
+            raise ValueError("completion_grounding_missing_original_journal")
+    unknowns = original.proposal.unknowns
+    indices = receipt.get("resolved_unknowns")
+    if (
+        receipt.get("original_unknowns") != [u.model_dump(mode="json") for u in unknowns]
+        or not isinstance(indices, list)
+        or not indices
+        or any(type(i) is not int or not 0 <= i < len(unknowns) for i in indices)
+        or len(set(indices)) != len(indices)
+        or any(
+            unknowns[i].reason_kind not in {"scale_unobservable", "pose_unobservable"}
+            for i in indices
+        )
+        or any(u.critical and i not in indices for i, u in enumerate(unknowns))
+    ):
+        raise ValueError("completion_grounding_unknowns_mismatch")
+    records = [
+        read(ArtifactRef.model_validate(ref))
+        for ref in receipt["evidence"]
+        if ref.get("media_type") == "application/json"
+    ]
+
+    def valid_process(record):
+        return (
+            isinstance(record, dict)
+            and all(
+                type(record.get(k)) is int and record[k] > 0 for k in ("pid", "pgid", "start_ticks")
+            )
+            and record["pid"] == record["pgid"]
+            and isinstance(record.get("executable_sha256"), str)
+            and len(record["executable_sha256"]) == 64
+            and all(c in "0123456789abcdef" for c in record["executable_sha256"])
+        )
+
+    def reaped(process, evidence):
+        return any(
+            isinstance(t, dict)
+            and type(t.get("pid")) is int
+            and t["pid"] == process["pid"]
+            and t.get("reaped") is True
+            and type(t.get("returncode")) is int
+            and t["returncode"] == 0
+            and "failure" in t
+            and t["failure"] is None
+            for t in evidence
+        )
+
+    processes = [r for r in records if valid_process(r)]
+    original_records = [
+        read(ref) for ref in original.evidence if ref.media_type == "application/json"
+    ]
+    original_executables = {
+        item["executable_sha256"]
+        for item in original_records
+        if valid_process(item) and reaped(item, original_records)
+    }
+    if not any(
+        p["executable_sha256"] in original_executables and reaped(p, records) for p in processes
+    ):
+        raise ValueError("completion_grounding_missing_model_execution")
+    values = [
+        GroundingValues.model_validate_json(json.dumps(r))
+        for r in records
+        if isinstance(r, dict) and set(r) == {"entities"}
+    ]
+    if len(values) != 1 or {v.id for v in values[0].entities} != {e.id for e in scene.entities}:
+        raise ValueError("completion_grounding_model_output_mismatch")
+    by_id = {e.id: e for e in base.entities}
+    if set(by_id) != {e.id for e in scene.entities} or scene.relations != base.relations:
+        raise ValueError("completion_grounding_changed_semantics")
+    for entity in scene.entities:
+        old = by_id[entity.id]
+        value = next(v for v in values[0].entities if v.id == entity.id)
+        if (
+            value.dimensions != entity.dimensions
+            or value.position != entity.pose.position
+            or value.frame != entity.pose.frame
+            or value.yaw_degrees != entity.pose.yaw_degrees
+        ):
+            raise ValueError("completion_grounding_model_output_mismatch")
+        if any(
+            getattr(entity, k) != getattr(old, k)
+            for k in ("category", "role", "color", "material", "articulation_state")
+        ):
+            raise ValueError("completion_grounding_changed_semantics")
+        for before_values, after_values in (
+            (old.dimensions or (None, None, None), entity.dimensions),
+            (old.pose.position, entity.pose.position),
+        ):
+            if any(
+                a is not None and a != b for a, b in zip(before_values, after_values, strict=True)
+            ):
+                raise ValueError("completion_grounding_changed_explicit_axis")
+        if old.pose.frame != entity.pose.frame or (
+            old.pose.yaw_degrees is not None and old.pose.yaw_degrees != entity.pose.yaw_degrees
+        ):
+            raise ValueError("completion_grounding_changed_explicit_axis")

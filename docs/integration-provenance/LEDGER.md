@@ -1,5 +1,14 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C11-GROUNDING — 包完成门接设计来源
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream。
+- `source_ref`：canonical `24a3b97` grounding 与 `3ba0956` completion。
+- `target_paths`：x2env/completion.py、test_completion.py。
+- `verification`：contract_pass；25 项测试，明确短进程/合成运行替身，不授真实模型或仿真资格。
+- `integration_method`：原输入、proposal、资产与模型执行历史链核对；ground+revise 尚不接受。
+- `recorded_git_authors`：见本提交元数据；第三方与原资产归属未变。
+
 ## INT-CANONICAL-C13-G2A — 旧 console 安装映射退役
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream。

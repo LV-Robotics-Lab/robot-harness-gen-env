@@ -1,5 +1,15 @@
 # 进度与结果
 
+## 2026-09-13 C11 grounding 完成证据绑定
+
+- 完成门接受同一 workflow 的 codex.ground 场景来源，但同时核原 proposal/pending/asset.resolve、
+  grounding receipt、仅重绑 SceneIR 的原资产版本、模型原始值与 journal 输出；不只增一个允许名称。
+- 原 interpret 与 ground 的成功进程记录须具备有效 PID/PGID/start_ticks、64 位 SHA 和相同执行文件
+  身份；仅核已提交历史证据，不冒充实时部署资格。原 critical 与受限设计范围仍检查。
+- 正向和来源替换/不完整进程/布尔 ticks 攻击 RED→GREEN，25 passed（24.76s）。测试为显式合成
+  外部进程与运行数据，不计真实 Codex/Genesis。非 completion canonical 组另为 478 passed（30.01s）。
+- ground 后再 revise 暂明确拒绝 completion_grounding_revision_chain_not_verified，后续单独补修订链。
+
 ## 2026-09-13 grounding 恢复与确定性失败分流
 
 - 发现 grounding 的失败停止规则会同时挡住 recoverable_dead_owner。公共恢复测试 RED→GREEN 后，

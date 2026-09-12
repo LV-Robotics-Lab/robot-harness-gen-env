@@ -4,6 +4,8 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- grounding 已接开发包完成门；ground 后再 revise 的来源链暂明确拒绝，仍需独立补齐。
+
 - grounding 恢复已区分 recoverable_dead_owner 与确定性设计失败；真实 S02 新隔离目录已备但未启动。
 
 - C13 G2a 已撤两个旧 console 安装映射；旧脚本及仍被消费的深模块继续按实际消费者退役。

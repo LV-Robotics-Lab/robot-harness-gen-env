@@ -30,7 +30,7 @@ def test_unexecuted_workflow_cannot_materialize_success(tmp_path):
     assert store.status(snapshot.workflow_id) == snapshot
 
 
-def completed_fixture(tmp_path, input_fault=None):
+def completed_fixture(tmp_path, input_fault=None, grounding=False, grounding_fault=None):
     """Synthetic producer at external execution seam, not a real Genesis run."""
     from self_improving.harness.x2env.assets import AssetLicense, AssetRegistry, AssetSource
     from self_improving.harness.x2env.compile import (
@@ -39,7 +39,7 @@ def completed_fixture(tmp_path, input_fault=None):
         ResolvedAssetSet,
         StructuralPolicy,
     )
-    from self_improving.harness.x2env.contracts import SceneIR, ToolResult
+    from self_improving.harness.x2env.contracts import ArtifactRef, SceneIR, ToolResult
     from self_improving.harness.x2env.diagnosis import DiagnosisProposal, DiagnosisResult
     from self_improving.harness.x2env.genesis_runtime import RuntimeScene
     from self_improving.harness.x2env.observation import observe_replay
@@ -59,6 +59,37 @@ def completed_fixture(tmp_path, input_fault=None):
     ir = SceneIR.model_validate_json(store.read_artifact(scene_ref))
     entity = ir.entities[0].model_copy(update={"id": "item"})
     ir = ir.model_copy(update={"entities": (entity,), "input_sha256": input_bundle.request_sha256})
+    if grounding:
+        from self_improving.harness.x2env.contracts import Pose, SceneRelation
+
+        entity = entity.model_copy(
+            update={
+                "dimensions": (0.1, 0.1, 0.1),
+                "pose": Pose(frame="world", position=(0.0, 0.0, 0.45), yaw_degrees=0.0),
+            }
+        )
+        table = entity.model_copy(
+            update={
+                "id": "table",
+                "category": "table",
+                "role": "structural_support",
+                "dimensions": (1.0, 1.0, 0.1),
+                "pose": Pose(frame="world", position=(0.0, 0.0, 0.4), yaw_degrees=0.0),
+            }
+        )
+        ir = ir.model_copy(
+            update={
+                "entities": (entity, table),
+                "relations": (
+                    SceneRelation(
+                        source="item",
+                        target="table",
+                        relation="on",
+                        provenance=entity.provenance.pose,
+                    ),
+                ),
+            }
+        )
     if input_fault == "scene_input":
         ir = ir.model_copy(update={"input_sha256": "f" * 64})
 
@@ -259,6 +290,170 @@ def completed_fixture(tmp_path, input_fault=None):
         ("codex.diagnose", {"diagnosis": diagnosis_ref}, diagnosis_ref),
         ("x2env.validate", {"validation": validation}, validation),
     ]
+    if grounding:
+        from self_improving.harness.x2env.contracts import (
+            BackendProposal,
+            SceneIntentProposal,
+            UnknownField,
+        )
+
+        pending = ir.model_copy(
+            update={
+                "entities": tuple(
+                    e.model_copy(
+                        update={
+                            "dimensions": None,
+                            "pose": e.pose.model_copy(
+                                update={"position": (None, None, None), "yaw_degrees": None}
+                            ),
+                        }
+                    )
+                    for e in ir.entities
+                )
+            }
+        )
+        pending_ref = put(pending.model_dump(mode="json"))
+
+        def execution_double(value):
+            """Actual short external process, synthetic payload, not Codex qualification."""
+            import subprocess
+            import sys
+
+            process = subprocess.Popen(
+                [
+                    sys.executable,
+                    "-c",
+                    "import sys,time; print(sys.argv[1],flush=True); time.sleep(.05)",
+                    json.dumps(value),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                start_new_session=True,
+            )
+            stat = Path(f"/proc/{process.pid}/stat").read_text()
+            evidence = put(
+                {
+                    "pid": process.pid,
+                    "pgid": process.pid,
+                    "start_ticks": int(stat.rsplit(")", 1)[1].split()[19]),
+                    "executable_sha256": hashlib.sha256(
+                        Path(sys.executable).read_bytes()
+                    ).hexdigest(),
+                    "fixture_only": True,
+                }
+            )
+            output, errors = process.communicate(timeout=10)
+            assert process.returncode == 0 and not errors
+            terminal = put(
+                {
+                    "pid": process.pid,
+                    "returncode": process.returncode,
+                    "reaped": True,
+                    "failure": None,
+                    "fixture_only": True,
+                }
+            )
+            return (evidence, terminal, put(json.loads(output)))
+
+        original = BackendProposal(
+            status="completed",
+            proposal=SceneIntentProposal(
+                scene=pending,
+                unknowns=(
+                    UnknownField(
+                        field="scene.entities[*].dimensions",
+                        reason="fixture design scale unknown",
+                        critical=True,
+                        reason_kind="scale_unobservable",
+                        provenance=entity.provenance.dimensions,
+                    ),
+                ),
+            ),
+            evidence=execution_double({"fixture_original": True}),
+            error_code=None,
+            elapsed_seconds=0.0,
+        )
+        original_ref = put(original.model_dump(mode="json"))
+        initial_assets = resolved.model_copy(update={"scene_ir": pending_ref})
+        initial_ref = put(initial_assets.model_dump(mode="json"))
+        final_assets = put(resolved.model_dump(mode="json"))
+        values = {
+            "entities": [
+                {
+                    "id": e.id,
+                    "dimensions": e.dimensions,
+                    "frame": e.pose.frame,
+                    "position": e.pose.position,
+                    "yaw_degrees": e.pose.yaw_degrees,
+                }
+                for e in ir.entities
+            ]
+        }
+        ground_ref = put(
+            {
+                "schema_version": "x2env.scene_grounding.v1",
+                "status": "completed",
+                "error_code": None,
+                "bundle_ref": bundle.model_dump(),
+                "proposal_ref": original_ref.model_dump(),
+                "assets_ref": initial_ref.model_dump(),
+                "policy": {"enabled": True, "mode": "asset_anchored_simulation"},
+                "original_unknowns": [
+                    u.model_dump(mode="json") for u in original.proposal.unknowns
+                ],
+                "resolved_unknowns": [0],
+                "proposed_scene": ir.model_dump(mode="json"),
+                "real_world_scale_recovered": False,
+                "authority": "advisory_design_only",
+                "changes": [],
+                "evidence": [ref.model_dump() for ref in execution_double(values)],
+            }
+        )
+        if grounding_fault:
+            body = json.loads(store.read_artifact(ground_ref))
+            if grounding_fault == "model":
+                body["evidence"] = body["evidence"][-1:]
+            elif grounding_fault in {"executable", "pid", "ticks", "sha"}:
+                process = json.loads(
+                    store.read_artifact(ArtifactRef.model_validate(body["evidence"][0]))
+                )
+                if grounding_fault == "executable":
+                    process["executable_sha256"] = "b" * 64
+                elif grounding_fault == "pid":
+                    process["pid"] = process["pgid"] = None
+                elif grounding_fault == "ticks":
+                    process["start_ticks"] = True
+                else:
+                    process["executable_sha256"] = "invalid"
+                body["evidence"][0] = put(process).model_dump()
+            elif grounding_fault == "assets":
+                body["assets_ref"] = final_assets.model_dump()
+            elif grounding_fault == "original":
+                body["proposal_ref"] = pending_ref.model_dump()
+            elif grounding_fault == "unknowns":
+                body["original_unknowns"][0]["critical"] = False
+            elif grounding_fault == "revision":
+                body["proposed_scene"]["revision"] += 1
+            elif grounding_fault == "output":
+                wrong = json.loads(
+                    store.read_artifact(ArtifactRef.model_validate(body["evidence"][-1]))
+                )
+                wrong["entities"][0]["position"][0] = 0.2
+                body["evidence"][-1] = put(wrong).model_dump()
+            ground_ref = put(body)
+        stages[1:2] = [
+            (
+                "codex.interpret",
+                {"pending_scene_ir": pending_ref, "proposal": original_ref},
+                original_ref,
+            ),
+            ("asset.resolve", {"resolved_assets": initial_ref}, initial_ref),
+            (
+                "codex.ground",
+                {"scene_ir": scene_ref, "resolved_assets": final_assets, "grounding": ground_ref},
+                ground_ref,
+            ),
+        ]
     for index, (stage, fields, ref) in enumerate(stages):
         if index:
             snapshot = store.begin_operation(snapshot, stage)
@@ -268,13 +463,47 @@ def completed_fixture(tmp_path, input_fault=None):
             ToolResult(
                 operation_id=snapshot.operations[-1].operation_id,
                 status="succeeded",
-                outputs=(ref,),
+                outputs=tuple(dict.fromkeys((ref, *fields.values()))),
             ),
             bundle,
             status="active",
             **fields,
         )
     return store, snapshot
+
+
+def test_completion_accepts_bound_grounding(tmp_path):
+    from self_improving.harness.x2env.completion import materialize_completion
+
+    store, snapshot = completed_fixture(tmp_path, grounding=True)
+    result = materialize_completion(snapshot, store, tmp_path / "completion")
+    assert result.status == "materialized", result
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "model",
+        "assets",
+        "original",
+        "unknowns",
+        "output",
+        "executable",
+        "pid",
+        "ticks",
+        "sha",
+        "revision",
+    ],
+)
+def test_completion_rejects_grounding_source_chain_attacks(tmp_path, fault):
+    from self_improving.harness.x2env.completion import materialize_completion
+
+    store, snapshot = completed_fixture(tmp_path, grounding=True, grounding_fault=fault)
+    result = materialize_completion(snapshot, store, tmp_path / "completion")
+    assert result.status == "failed" and "grounding" in result.error_code
+    assert result.package_path is None and result.manifest is None
+    if fault == "revision":
+        assert result.error_code == "completion_grounding_revision_chain_not_verified"
 
 
 @pytest.mark.parametrize(
