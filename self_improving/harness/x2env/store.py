@@ -272,6 +272,9 @@ class Store:
         required_resources: tuple[str, ...] = (),
         proposal: ArtifactRef | None = None,
         scene_ir: ArtifactRef | None = None,
+        asset_resolution: ArtifactRef | None = None,
+        resolved_assets: ArtifactRef | None = None,
+        compiled_scene: ArtifactRef | None = None,
     ) -> WorkflowSnapshot:
         with closing(sqlite3.connect(self.database)) as db, db:
             db.execute("BEGIN IMMEDIATE")
@@ -303,7 +306,14 @@ class Store:
                 )
             elif any(op.status == "running" for op in operations):
                 raise ValueError("running operation requires its own result")
-            for ref in (bundle, proposal, scene_ir):
+            for ref in (
+                bundle,
+                proposal,
+                scene_ir,
+                asset_resolution,
+                resolved_assets,
+                compiled_scene,
+            ):
                 if ref is not None:
                     self.read_artifact(ref)
             updated = current.model_copy(
@@ -316,6 +326,9 @@ class Store:
                     "required_resources": required_resources,
                     "proposal": proposal or current.proposal,
                     "scene_ir": scene_ir or current.scene_ir,
+                    "asset_resolution": asset_resolution or current.asset_resolution,
+                    "resolved_assets": resolved_assets or current.resolved_assets,
+                    "compiled_scene": compiled_scene or current.compiled_scene,
                     "operations": tuple(operations),
                 }
             )

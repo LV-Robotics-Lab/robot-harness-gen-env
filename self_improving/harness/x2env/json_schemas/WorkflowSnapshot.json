@@ -260,6 +260,28 @@
   },
   "additionalProperties": false,
   "properties": {
+    "asset_resolution": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "compiled_scene": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "input_bundle": {
       "anyOf": [
         {
@@ -312,6 +334,17 @@
       },
       "title": "Required Resources",
       "type": "array"
+    },
+    "resolved_assets": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "revision": {
       "minimum": 0,

@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C04-PIPELINE — 同workflow推进local解析与compile
+
+- `origin_owner` / `integration_owner`：Bingsheng Harness workstream，复用canonical独立组件。
+- `source_ref`：Store `85a0c2b`、Codex `7dcb40c`、compile `d881ccd`、AssetRegistry `df8ee98`。
+- `target_paths`：x2env/harness.py、store.py、contracts.py、resolver.py与相关测试/生成schema。
+- `verification`：18项相关测试；实际controller调用resolver/compile，模型预览为显式替身。
+- `known_gaps`：真实带资产整链、web/reconstruction controller路由、replay及最终包尚未完成。
+
 ## INT-CANONICAL-C10-ASSET — 受限属性修订与geometry定义v2
 
 - `origin_owner` / `integration_owner`：Bingsheng Harness workstream，新不可变版本实现。

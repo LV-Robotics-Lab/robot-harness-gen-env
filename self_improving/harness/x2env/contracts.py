@@ -100,6 +100,9 @@ class WorkflowSnapshot(WorkflowHandle):
     input_bundle: ArtifactRef | None = None
     proposal: ArtifactRef | None = None
     scene_ir: ArtifactRef | None = None
+    asset_resolution: ArtifactRef | None = None
+    resolved_assets: ArtifactRef | None = None
+    compiled_scene: ArtifactRef | None = None
 
 
 class FieldProvenance(Model):

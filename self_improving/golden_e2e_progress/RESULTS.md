@@ -1,5 +1,14 @@
 # 进度与结果
 
+## 2026-09-13 C04/C06/C08 同workflow接通到compile
+
+- controller接受解释后，实际调用local resolver和compile，四个内部operation记录在同一SQLite，
+  不是新父子workflow。结构化partial resolution也保存，缺后续replay执行器明确blocked。
+- local resolver核Registry、尺寸与Codex返回candidate/preview绑定；每实体8候选、每个一次。
+  同时保留original source.kind与本次local复用；属性否决不丢原detail，供后续受限revise。
+- 18项相关测试通过；模型/预览仍为显式替身，尚未计真实带资产同workflow成功。
+  compiled scene不物化用户成功包，compile失败保持原操作和失败证据。
+
 ## 2026-09-13 C10 不可变资产修订与真实geometry摘要
 
 - AssetVersion升v2：geometry摘要从mesh整文件改为实例world vertices/faces，排除颜色/材质。

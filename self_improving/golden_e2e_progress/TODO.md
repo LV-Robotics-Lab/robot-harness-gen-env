@@ -2,6 +2,16 @@
 
 更新时间：2026-09-13
 
+## 当前执行焦点（优先于下列历史slice状态）
+
+- 实施authority保持canonical worktree，用户bingsheng仍未push；持续执行至固定验收/push条件。
+- 真实managed Codex解释已通过；当前controller接线到local resolve→compile，下一步真实版本preview、
+  replay→物理assessment→fresh observation/diagnosis→有界revise→包与CLI。
+- 资产规范化/Registry v2、Yuxin search/fetch、Gujie外部adapter、Genesis运行内核、属性修订均有组件，
+  但不等于完整workflow/矩阵通过；真实证据与每项缺口见RESULTS最新条目。
+- 子agent独占：资产preview与真实视觉小验；物理assessment/攻击测试。主线程管controller/合同/集成。
+- 媒体派生发布授权已异步确认请求；等待期间不停止其他实施，不擅自赋予CC0/CC-BY。
+
 - 最新C05：真实Codex strict transport已通过；第二次SceneIR因非法frame/category拒绝，未计S01成功。
   正在修复部分轴未知的表达和可审计校验错误；下一步固定新代码重跑解释，再接资产解析。
 

@@ -117,6 +117,9 @@ Generated; edit Python contracts, not this file.
 | WorkflowSnapshot | input_bundle | false |
 | WorkflowSnapshot | proposal | false |
 | WorkflowSnapshot | scene_ir | false |
+| WorkflowSnapshot | asset_resolution | false |
+| WorkflowSnapshot | resolved_assets | false |
+| WorkflowSnapshot | compiled_scene | false |
 | X2EnvRequest | text | false |
 | X2EnvRequest | images | false |
 | X2EnvRequest | video | false |
