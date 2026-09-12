@@ -135,6 +135,44 @@ def test_development_record_is_recoverable_and_never_writes_formal_library(tmp_p
     assert [check.status for check in record.checks[-3:]] == ["omitted"] * 3
     assert not formal_library.exists()
 
+    materialized = reopened.materialize(workflow_id, tmp_path / "development-review")
+    assert materialized == tmp_path / "development-review"
+    index_raw = (materialized / "index.json").read_bytes()
+    index = json.loads(index_raw)
+    assert index_raw == json.dumps(
+        index, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")
+    ).encode() + b"\n"
+    assert index["kind"] == "limited_preview_development_materialization.v1"
+    assert index["qualification_status"] == "development_unqualified"
+    assert index["entrypoints"] == {
+        "context": "development-context.json",
+        "environment_packages": [],
+        "images": [],
+        "inputs": [f"objects/sha256/{refs[1].sha256[:2]}/{refs[1].sha256}"],
+        "logs": [f"objects/sha256/{refs[3].sha256[:2]}/{refs[3].sha256}"],
+        "outputs": [f"objects/sha256/{refs[2].sha256[:2]}/{refs[2].sha256}"],
+        "physical_evidence": [f"objects/sha256/{refs[4].sha256[:2]}/{refs[4].sha256}"],
+        "record": "development-record.json",
+        "validation_reports": [],
+        "videos": [],
+    }
+    assert (materialized / "development-record.json").read_bytes() == store.resolve(
+        committed
+    ).path.read_bytes()
+    assert (materialized / "development-context.json").read_bytes() == store.resolve(
+        capture.ref
+    ).path.read_bytes()
+    for member in index["members"]:
+        payload = materialized / member["path"]
+        assert payload.is_file() and not payload.is_symlink()
+        assert payload.read_bytes() == store.resolve(
+            ArtifactRef.model_validate(member["refs"][0])
+        ).path.read_bytes()
+    assert not formal_library.exists()
+
+    with pytest.raises(ValueError, match="absolute new directory"):
+        reopened.materialize(workflow_id, materialized)
+
     changed = build_development_execution_record(
         workflow_run_id=workflow_id,
         principal_id="test/development",

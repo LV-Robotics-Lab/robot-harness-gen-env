@@ -369,6 +369,110 @@ def test_package_can_materialize_a_published_preview_with_review_entrypoints(
     assert trace == ["package_get", "materialize"]
 
 
+def test_package_materializes_development_evidence_without_formal_library(
+    service, tmp_path, capsys
+):
+    settings = tmp_path / "service.json"
+    settings.write_text("{}")
+    deployment = tmp_path / "deployment.json"
+    deployment.write_text(
+        json.dumps(
+            dict(
+                execution_mode="development",
+                service_settings=str(settings),
+                codex_executable="/operator/codex",
+                approved_executable_sha256="a" * 64,
+                server_python="/operator/python",
+                server_workdir=str(tmp_path),
+                model="operator-model",
+                evidence_root=str(tmp_path / "evidence"),
+                max_attempts=2,
+                call_budget=15,
+                attempt_seconds=90,
+            )
+        )
+    )
+    record_path = tmp_path / "development-record.json"
+    record_path.write_text("{}")
+    record = service.value.store.put_file(
+        record_path,
+        name="development-execution-record.json",
+        media_type="application/json",
+        schema_version="harness.development_execution_record.v1",
+    )
+    trace = []
+
+    class DevelopmentArtifacts:
+        def materialize(self, workflow_id, destination):
+            trace.append(("development", workflow_id, destination))
+            destination.mkdir()
+            (destination / "development-record.json").write_text("{}")
+            (destination / "development-context.json").write_text("{}")
+            (destination / "index.json").write_text(
+                json.dumps(
+                    {
+                        "kind": "limited_preview_development_materialization.v1",
+                        "entrypoints": {
+                            "record": "development-record.json",
+                            "context": "development-context.json",
+                            "inputs": [],
+                            "outputs": [],
+                            "logs": [],
+                            "physical_evidence": [],
+                            "images": [],
+                            "videos": [],
+                            "environment_packages": [],
+                            "validation_reports": [],
+                        },
+                    },
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+                + "\n"
+            )
+            return destination
+
+    class Runtime:
+        def application(self, key):
+            raise AssertionError("development materialization must not open the formal library")
+
+    service.value.execution_mode = "development"
+    service.value.development_artifacts = DevelopmentArtifacts()
+    service.value.runtime = Runtime()
+    service.value.package_get = lambda **kwargs: {
+        "workflow_id": str(service.workflow),
+        "revision": 0,
+        "stage": "package_get",
+        "status": "validated_unreleased",
+        "execution_mode": "development",
+        "qualification_status": "development_unqualified",
+        "package": record.model_dump(mode="json"),
+    }
+    output = tmp_path / "development-review"
+
+    assert (
+        run_cli(
+            [
+                "--deployment",
+                str(deployment),
+                "package",
+                "--workflow-id",
+                str(service.workflow),
+                "--output",
+                str(output),
+            ],
+            service_factory=lambda path: service.value,
+            backend_factory=lambda **kwargs: object(),
+        )
+        == 0
+    )
+    result = json.loads(capsys.readouterr().out)
+    assert result["materialized_path"] == str(output)
+    assert result["entrypoints"]["record"] == "development-record.json"
+    assert result["entrypoints"]["context"] == "development-context.json"
+    assert trace == [("development", service.workflow, output)]
+
+
 def test_package_output_rejects_relative_and_existing_destinations(service, tmp_path, capsys):
     settings = tmp_path / "service.json"
     settings.write_text("{}")
