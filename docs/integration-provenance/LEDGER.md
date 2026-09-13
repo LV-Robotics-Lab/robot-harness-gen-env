@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C05-FIXED-ARRAY — 严格输出数组兼容
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：OpenAI Codex/JSON Schema。
+- source_ref：`b487e32` 真实颜色HTTP400；target_paths：schema_export.py及公共schema/color测试。
+- integration_method：同型固定tuple等价投影，精确长度/范围不变，不放宽异型schema。
+- verification：root60项、agent177项、8角色投影检查；runtime_verification：旧S01预览后失败，新实现待真跑。
+- recorded_git_authors：原合同与当前修复分开，候选render不授最终仿真能力。
+
 ## INT-CANONICAL-C05-BOUND-IDENTITY — 模型输出身份有限选择
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：OpenAI Codex。

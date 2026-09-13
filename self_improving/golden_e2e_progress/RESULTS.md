@@ -1,5 +1,27 @@
 # 进度与结果
 
+## 2026-09-13 S01 请求绑定 schema：进入资产阶段后暴露颜色 transport 错误
+
+- 固定 `b487e32a36949ba25578d6374d40f16762e04d07`，同冻结S01/seed11/local-only与原policy。
+  workflow `aa64e0de-901c-4ea5-9cdb-2665fa7d1681`：interpret成功199.612725秒，asset.resolve
+  86.519409秒返回local_color_repair_pending；codex.asset_color在2.491751秒因HTTP400失败。
+  CLI288.835558秒、outer289.019109秒，failed/invalid_color_proposal_evidence、revision4。
+- 错误确切为rgba数组schema使用prefixItems但无items；模型服务明确invalid_json_schema。
+  当前候选有6PNG与MP4/MKV，MP4为640×480/10fps/6帧/0.6秒，仅asset_preview而非最终replay。
+  未生成颜色child/compile/最终环境包。源码与原父资产未变，无重试。
+- 证据根 `/home/jingxiang/bingsheng/canonical-s01-bound-schema-20260913.tBWgI7/`，
+  audit SHA `0d7f5ae7c49a672eee5dce379e81eaab05cbdc68c31524cf716cca779052d258`；
+  failure manifest `9ea8b8dd25c59e0073687d953dfc81ef992b7f8ad5da8e6148dceca257543b6e`。
+  83成员/803238B完整核验；输入身份约束真实被接受，不据单次运行断言超时根因已解决。
+
+## 2026-09-13 C05 同型固定数组的严格 transport 投影
+
+- 对实际ColorPatchProposal错误先RED，统一投影将严格同型固定tuple的prefixItems改为items，
+  保留精确min/max长度与每项数值范围；异型或可变tail明确拒绝，无RGBA特例。
+- 8种实际模型角色输出schema完成items/closed-object检查；主线程4模块60 passed/4.37s，
+  agent9模块177 passed/12.43s，static exporter/ruff通过。不改业务合同或成功阈值。
+  新实现真实S01仍待固定执行，不把测试替身当颜色修复成功。
+
 ## 2026-09-13 C05 请求绑定的模型身份约束
 
 - 一次固定624d493的完整schema/max探针仅把文本改为a table，98.831566秒exit0返回4947B JSON，

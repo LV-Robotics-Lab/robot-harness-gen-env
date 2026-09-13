@@ -4,6 +4,74 @@ from self_improving.harness.x2env.contracts import FieldProvenance, SceneIntentP
 from self_improving.harness.x2env.schema_export import structured_output_schema
 
 
+def test_real_color_proposal_fixed_tuple_has_items_and_preserves_bounds():
+    import jsonschema
+    import pytest
+
+    from self_improving.harness.x2env.local_color_advisory import ColorPatchProposal
+
+    schema = structured_output_schema(ColorPatchProposal)
+    rgba = schema["properties"]["rgba"]
+    assert rgba["items"] == {"type": "number", "minimum": 0, "maximum": 1}
+    assert "prefixItems" not in rgba
+    assert rgba["minItems"] == rgba["maxItems"] == 4
+    jsonschema.validate({"declared_color": "pink", "rgba": [0.9, 0.4, 0.6, 1]}, schema)
+    for bad in ([], [0, 0, 0], [0, 0, 0, 0, 0], [-0.01, 0, 0, 1], [0, 0, 0, 1.01]):
+        with pytest.raises(jsonschema.ValidationError):
+            jsonschema.validate({"declared_color": "pink", "rgba": bad}, schema)
+
+
+def test_heterogeneous_tuple_is_rejected_instead_of_weakened():
+    import pytest
+
+    from self_improving.harness.x2env.contracts import Model
+
+    class MixedTuple(Model):
+        pair: tuple[int, str]
+
+    with pytest.raises(ValueError, match="unsupported_tuple_output_schema"):
+        structured_output_schema(MixedTuple)
+
+
+def test_all_managed_role_schemas_have_supported_array_and_object_shapes():
+    import jsonschema
+
+    from self_improving.harness.x2env.asset_advisory import VisualAnswer
+    from self_improving.harness.x2env.asset_preparation import PreparationValues
+    from self_improving.harness.x2env.diagnosis import DiagnosisProposal
+    from self_improving.harness.x2env.grounding import GroundingValues
+    from self_improving.harness.x2env.local_color_advisory import ColorPatchProposal
+    from self_improving.harness.x2env.reconstruction_planning import ReconstructionValues
+    from self_improving.harness.x2env.search_advisory import SearchQuery
+
+    def check(node):
+        if isinstance(node, dict):
+            if node.get("type") == "array":
+                assert "items" in node and "prefixItems" not in node
+            if node.get("type") == "object":
+                assert node.get("additionalProperties") is False
+                assert set(node["required"]) == set(node["properties"])
+            for value in node.values():
+                check(value)
+        elif isinstance(node, list):
+            for value in node:
+                check(value)
+
+    for model in (
+        SceneIntentProposal,
+        VisualAnswer,
+        PreparationValues,
+        DiagnosisProposal,
+        GroundingValues,
+        ColorPatchProposal,
+        ReconstructionValues,
+        SearchQuery,
+    ):
+        schema = structured_output_schema(model)
+        jsonschema.Draft202012Validator.check_schema(schema)
+        check(schema)
+
+
 def test_request_bound_schema_rejects_transcribed_hash_without_changing_static_schema(tmp_path):
     import copy
 

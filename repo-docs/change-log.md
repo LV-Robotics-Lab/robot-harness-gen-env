@@ -2,6 +2,8 @@
 
 ## 2026-09-13 canonical 接线与退役进展
 
+- S01真实推进到候选资产预览后暴露rgba schema HTTP400；同型固定数组投影修复保原长度/范围，60项复核通过。
+
 - 真实短探针暴露模型抄错输入SHA；interpret输出schema限制为本请求已知身份，保留后置关联门，104项复核通过。
 
 - Yuxin来源asset_reuse/web范围44条lint清零，915项通过、2项缺SAPIEN跳过；不声称全仓lint完成。

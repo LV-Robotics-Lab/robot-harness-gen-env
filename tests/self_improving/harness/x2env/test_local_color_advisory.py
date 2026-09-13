@@ -145,6 +145,11 @@ def test_managed_color_proposal_binds_original_failure_and_actual_image(tmp_path
     assert receipt["executable_sha256"] == backend.executable_sha
     assert receipt["authority"] == "advisory_only" and receipt["model"] == "test-double"
     assert receipt["external_agent_executed"] is True
+    schema = json.loads((tmp_path / "proposal/proposal.schema.json").read_bytes())
+    rgba = schema["properties"]["rgba"]
+    assert "prefixItems" not in rgba
+    assert rgba["items"] == {"type": "number", "minimum": 0, "maximum": 1}
+    assert rgba["minItems"] == rgba["maxItems"] == 4
     assert "attribute_mismatch" in (tmp_path / "proposal/prompt.txt").read_text()
     invocation = json.loads((tmp_path / "proposal/invocation.json").read_text())
     assert invocation["media"][0]["input_sha256"] == proof.image.sha256

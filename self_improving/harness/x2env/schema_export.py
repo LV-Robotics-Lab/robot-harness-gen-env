@@ -14,6 +14,20 @@ def structured_output_schema(
 
     def visit(node):
         if isinstance(node, dict):
+            if "prefixItems" in node:
+                members = node["prefixItems"]
+                if (
+                    node.get("type") != "array"
+                    or not isinstance(members, list)
+                    or not members
+                    or any(member != members[0] for member in members)
+                    or node.get("minItems") != len(members)
+                    or node.get("maxItems") != len(members)
+                    or ("items" in node and node["items"] is not False)
+                ):
+                    raise ValueError("unsupported_tuple_output_schema")
+                node["items"] = members[0]
+                del node["prefixItems"]
             if node.get("type") == "object":
                 node["required"] = list(node.get("properties", {}))
             node.pop("default", None)
