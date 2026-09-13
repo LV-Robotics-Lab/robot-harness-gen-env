@@ -22,7 +22,7 @@ GROUPS = {
     "harness_repair_budget local_color_harness operation_recovery pipeline repair_reservations "
     "revision revision_reservation revision_state skill_execution store_contract_edges",
     "3": "artifact_closure artifact_store asset_advisory asset_index_store asset_preparation "
-    "asset_preview asset_registry asset_revision local_catalog local_color_advisory "
+    "asset_preview asset_registry asset_revision collision_decomposition local_catalog local_color_advisory "
     "local_color_execution normalization reconstruction_adapter reconstruction_planning "
     "reconstruction_resolver resolver search_advisory source_router web_resolver yuxin_adapter "
     "yuxin_package_migration",

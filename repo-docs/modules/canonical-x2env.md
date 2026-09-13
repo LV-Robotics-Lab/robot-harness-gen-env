@@ -1,7 +1,8 @@
 # Canonical x2env（收敛实施中）
 
 显式规范化颜色覆盖改为PBR材质：固定Genesis GLB导入器不消费COLOR_0顶点颜色，旧Box因此呈灰暗。
-无覆盖请求仍保原纹理/颜色，旧资产不改；95项相关测试通过，新不可变PBR资产的真实渲染尚待验证。
+无覆盖请求仍保原纹理/颜色，旧资产不改；95项相关测试通过。固定b2b63b7独立Genesis探针58.04秒
+实际呈红色，图片/连续视频已留存；这是operator组件验证，不把S02模型超时升级为成功。
 
 显式`generated_layout`模式增加最多8实体的生成设计：每前景独立绑定Registry尺寸，结构长宽与未知XY/yaw
 在部署授权范围内选择；已知数字/实体/关系/frame不改。v1默认及旧配置保持原行为。
@@ -28,6 +29,8 @@ QfcUxI保留真实双profile，拓扑/reset/物理26项通过；不称新仿真�
 `measured_support.py`已实现保孔洞共同面域与完整源投影的目标坐标检查，Shapely2.1.2属platform依赖。
 候选预览已支持单link多collision相对成员，仍核精确URDF闭包并拒绝混合geometry/外部材质；
 80项相关回归通过，不是新碰撞分解或真实仿真能力。
+新碰撞候选组件使用固定CoACD身份、controller授权、隔离执行和不可变child登记；67项相关测试通过。
+共同支撑面不是碰撞保真证明，保真与物理仍未运行；尚待真实CoACD探针，不授任何矩阵成功。
 70项相关测试通过；此处是authored几何组件，不授实际加载/动态接触。下一片接独立拓扑消费与动态物理；
 详见[增量契约](../../self_improving/golden_e2e_progress/CANONICAL_MULTI_ENTITY_SUPPORT_SPEC.md)。
 

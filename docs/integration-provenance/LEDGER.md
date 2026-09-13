@@ -1,5 +1,15 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C09-COLLISION-CANDIDATE — 受控不可变碰撞候选
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：CoACD、trimesh、Shapely独立保留。
+- source_ref：Harness dafad51；CoACD1.0.14仅通过固定外部包/原生库调用，不复制vendor。
+- target_paths：collision_decomposition.py、collision_child.py及公开测试；integration_method：授权/预算/成员检查、新版本登记。
+- verification：主线程67项相关测试通过，覆盖不足明确保留；runtime_verification：真实CoACD not_run。
+- recorded_git_authors：原生算法作者、输入资产归属与Harness整合分开；不将共有面判定当保真或物理通过。
+- PBR独立运行补充：固定b2b63b7、fZJ4PC真实Genesis红色画面58.04s通过；Cesium资产原署名保留，
+  证据及哈希见RESULTS；非S02，不影响其模型超时失败。
+
 ## INT-CANONICAL-C08-V2-COMPLETION-ATTACKS — 独立producer拒绝
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；source_ref：Harness b2b63b7及v2授权合同。

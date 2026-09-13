@@ -1,5 +1,21 @@
 # 进度与结果
 
+## 2026-09-13 有界碰撞新版本组件与真实PBR探针
+
+- 新collision_decomposition/collision_child要求controller精确授权、固定CoACD版本/库/解释器身份；
+  在隔离目录产生多凸块候选，逐块几何/引用核验后登记不可变child，保留原视觉、许可与物理来源。
+  非法原始索引、混合几何、超预算和异常backend输出先RED后拒绝。主线程相关67项通过/4.43s；
+  agent26项通过/3.96s，覆盖256/286语句、69/92分支，未到100%。加入第3组，不增加覆盖排除。
+- 真实CoACD尚未执行；shared surface不等于碰撞保真，collision_preservation_status=not_run，
+  physical_evaluated=false。证据`/var/tmp/canonical-collision-delivery.json`。
+- 固定b2b63b7的独立PBR Genesis探针58.04196s、25步成功；主线程亲看新帧为红色。
+  根`/home/jingxiang/bingsheng/canonical-pbr-probe-20260913.fZJ4PC`，summary SHA
+  `ae0ca174bc5c01c494d326f28b913a8c296082b6f59e03829baf1389609e9aca`；图片
+  `runtime/frames/step-0025.png` SHA `3059e22441a2726f96bfe1e907bcb216aaa9602503c058c249be37c6d06e03f0`，
+  连续视频`runtime/preview.mp4` SHA `0a501f8f1fbd2fa467f624b7b9171fcae2a6c821f2f710045ab71f2e13d0f048`。
+  initial reset通过，未做post-step reset或完整physical；operator fixture不是S02，原模型超时不升级。
+
+
 ## 2026-09-13 v2完成门结构化失败与独立producer攻击
 
 - evidence含非object、transport用同键list、event.item.type为list三项原始异常先RED；现v2前置
