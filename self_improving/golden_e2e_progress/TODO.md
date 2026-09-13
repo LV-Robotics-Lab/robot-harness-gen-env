@@ -4,6 +4,9 @@
 
 ## 当前执行焦点（优先于下列历史slice状态）
 
+- compact版S01已blocked/local_assets_unresolved：computer_mouse未命中mouse目录，且critical标记变化，不能称无损性能提升；保留新失败并诊断通用检索/准入。
+- completion新增14项准入攻击通过；整体core覆盖仍待补齐，不混合单文件和三模块测量。
+
 - 5fe0225六组1–6已通过，独立root/归并结果待收；新S01固定eaccbeb单次真实执行中。
 - assessment攻击59项通过，279/281语句、136/138分支；未到100%，不授仿真资格。
 

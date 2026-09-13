@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C11-COMPLETION-ATTACKS — 包准入绑定回归
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：不变。
+- source_ref：`0787f70`；target_paths：test_completion.py，生产与既有fixture未改。
+- integration_method：真实Store/CAS经公共materialize_completion测试路径、状态、操作和语义回执拒绝。
+- verification：新增14项主线程通过，完整单文件66项通过；runtime_verification：无新仿真或copy-run。
+- recorded_git_authors：原完成门及本次测试维护分开。
+
 ## INT-CANONICAL-C10-EVIDENCE-ATTACKS — 物理媒体拒绝证据
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：原Genesis/Gujie数学来源不变。

@@ -30,6 +30,33 @@ def test_unexecuted_workflow_cannot_materialize_success(tmp_path):
     assert store.status(snapshot.workflow_id) == snapshot
 
 
+@pytest.mark.parametrize("location", ["relative", "symbolic_output", "symbolic_parent"])
+def test_completion_refuses_unsafe_output_before_creating_a_package(tmp_path, location):
+    from self_improving.harness.x2env.completion import materialize_completion
+
+    store = Store(tmp_path / "state")
+    snapshot = store.submit(
+        X2EnvRequest(
+            text="box",
+            seed=1,
+            idempotency_key="unsafe-output",
+            output_dir=str(tmp_path / "requested"),
+        )
+    )
+    target = tmp_path / "real"
+    target.mkdir()
+    if location == "relative":
+        output = Path("relative-completion")
+    else:
+        link = tmp_path / "link"
+        link.symlink_to(target, target_is_directory=True)
+        output = link if location == "symbolic_output" else link / "child"
+    with pytest.raises(ValueError, match="new absolute nonsymbolic directory"):
+        materialize_completion(snapshot, store, output)
+    assert list(target.iterdir()) == []
+    assert store.status(snapshot.workflow_id) == snapshot
+
+
 def completed_fixture(
     tmp_path,
     input_fault=None,
@@ -1166,3 +1193,115 @@ def test_completion_rejects_forged_or_failed_evidence(tmp_path, fault):
     }
     assert result.error_code == expected[fault]
     assert store.status(snapshot.workflow_id) == (original if fault == "stale" else snapshot)
+
+
+@pytest.mark.parametrize("state", ["failed", "cancelled", "blocked"])
+def test_complete_evidence_does_not_override_terminal_or_unrelated_block_state(tmp_path, state):
+    from self_improving.harness.x2env.completion import materialize_completion
+    from self_improving.harness.x2env.contracts import ToolResult
+
+    store, snapshot = completed_fixture(tmp_path)
+    snapshot = store.begin_operation(snapshot, "x2env.validate")
+    snapshot = store.complete_operation(
+        snapshot,
+        ToolResult(
+            operation_id=snapshot.operations[-1].operation_id,
+            status=state,
+            error_code="explicit_fixture_stop",
+        ),
+        snapshot.input_bundle,
+        status=state,
+        reason="explicit_fixture_stop",
+    )
+    result = materialize_completion(snapshot, store, tmp_path / "rejected")
+    assert result.error_code == "invalid_completion_state"
+    assert result.package_path is None and result.manifest is None
+    assert store.status(snapshot.workflow_id) == snapshot
+
+
+@pytest.mark.parametrize(
+    "journal_fault", ["missing_output", "wrong_capability", "failed_operation"]
+)
+def test_cas_presence_cannot_replace_successful_committed_evidence(tmp_path, journal_fault):
+    from self_improving.harness.x2env.completion import materialize_completion
+    from self_improving.harness.x2env.contracts import ToolResult
+
+    store, snapshot = completed_fixture(tmp_path)
+    validation = json.loads(store.read_artifact(snapshot.validation))
+    validation["fixture_attack"] = journal_fault
+    ref = store.write_artifact(json.dumps(validation).encode(), "application/json")
+    snapshot = store.begin_operation(
+        snapshot, "observe" if journal_fault == "wrong_capability" else "x2env.validate"
+    )
+    snapshot = store.complete_operation(
+        snapshot,
+        ToolResult(
+            operation_id=snapshot.operations[-1].operation_id,
+            status="failed" if journal_fault == "failed_operation" else "succeeded",
+            outputs=() if journal_fault == "missing_output" else (ref,),
+            error_code="explicit_fixture_failure" if journal_fault == "failed_operation" else None,
+        ),
+        snapshot.input_bundle,
+        status="active",
+        validation=ref,
+    )
+    result = materialize_completion(snapshot, store, tmp_path / "rejected")
+    assert result.error_code == "uncommitted_completion_evidence"
+    assert result.package_path is None and result.manifest is None
+    assert store.status(snapshot.workflow_id) == snapshot
+
+
+@pytest.mark.parametrize(
+    "fault,expected",
+    [
+        ("observation_authority", "completion_observation_binding_mismatch"),
+        ("observation_camera_time", "completion_observation_binding_mismatch"),
+        ("validation_scene", "completion_validation_binding_mismatch"),
+        ("validation_visual", "completion_validation_binding_mismatch"),
+        ("validation_status", "completion_validation_not_passed"),
+    ],
+)
+def test_committed_rehashed_receipt_still_requires_semantic_binding(tmp_path, fault, expected):
+    from self_improving.harness.x2env.completion import materialize_completion
+    from self_improving.harness.x2env.contracts import ArtifactRef, ToolResult
+
+    store, snapshot = completed_fixture(tmp_path)
+
+    def put(value):
+        return store.write_artifact(json.dumps(value).encode(), "application/json")
+
+    if fault.startswith("observation"):
+        field, capability = "observation", "observe"
+        value = json.loads(store.read_artifact(snapshot.observation))
+        receipt = json.loads(store.read_artifact(ArtifactRef.model_validate(value["receipt"])))
+        if fault == "observation_authority":
+            receipt["authority"] = "external_claim"
+        else:
+            receipt["camera_time_renewed"] = True
+        value["receipt"] = put(receipt).model_dump()
+    else:
+        field, capability = "validation", "x2env.validate"
+        value = json.loads(store.read_artifact(snapshot.validation))
+        if fault == "validation_scene":
+            value["scene_ir"] = snapshot.input_bundle.model_dump()
+        elif fault == "validation_visual":
+            value["visual_status"] = "failed"
+        else:
+            value["status"] = "failed"
+    ref = put(value)
+    snapshot = store.begin_operation(snapshot, capability)
+    snapshot = store.complete_operation(
+        snapshot,
+        ToolResult(
+            operation_id=snapshot.operations[-1].operation_id,
+            status="succeeded",
+            outputs=(ref,),
+        ),
+        snapshot.input_bundle,
+        status="active",
+        **{field: ref},
+    )
+    result = materialize_completion(snapshot, store, tmp_path / "rejected")
+    assert result.error_code == expected
+    assert result.package_path is None and result.manifest is None
+    assert store.status(snapshot.workflow_id) == snapshot

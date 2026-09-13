@@ -1,5 +1,13 @@
 # 进度与结果
 
+## 2026-09-13 C11 完成包准入攻击测试
+
+- 新增14项公开materialize_completion攻击：相对/符号路径、非可完成状态、CAS存在但无成功操作、
+  observation/validation重哈希但语义不符。使用真实Store/CAS，保持fixture原签名与消费者。
+- 主线程新增14项 passed/10.21s；子agent完整单文件66 passed/80.19s（原52项/73.44s）。
+  同单文件coverage从394→400/551语句、184→190/314分支；不能与此前三模块测量混用。
+  没有生产改动或新物理运行；首次unsafe测试漏必填output_dir的setup错误已修正，不称生产bug。
+
 ## 2026-09-13 C10 物理及媒体证据攻击测试
 
 - 公开evaluate_physics/assess_scene由18增至59项：非法向量/接触力、加载物理/几何、缺少支撑、
