@@ -149,8 +149,22 @@ def build_harness(config):
         from .codex import CodexBackend
 
         def backend(store):
+            vocabulary, context_error = (), None
+            try:
+                vocabulary = store.asset_categories()
+            except ValueError as exc:
+                if str(exc) != "catalog_category_limit":
+                    raise
+                # Naming advice is optional for all sources, unlike resolver acceptance.
+                # Preserve this explicit unavailable snapshot; it is not an empty catalog.
+                context_error = "catalog_category_limit"
             return CodexBackend(
-                Path(config.codex.executable), config.codex.sha256, config.codex.model, store
+                Path(config.codex.executable),
+                config.codex.sha256,
+                config.codex.model,
+                store,
+                local_category_vocabulary=vocabulary,
+                local_category_context_error=context_error,
             )
 
     replay = preview = None

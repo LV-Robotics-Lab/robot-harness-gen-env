@@ -80,6 +80,19 @@ class Store:
             ).fetchall()
         return tuple(row[0] for row in rows)
 
+    def asset_categories(self, limit: int = 128) -> tuple[str, ...]:
+        """Bounded naming index, not a claim about licensed or usable assets."""
+        if type(limit) is not int or not 1 <= limit <= 128:
+            raise ValueError("invalid category limit")
+        with closing(sqlite3.connect(self.database)) as db:
+            rows = db.execute(
+                "SELECT DISTINCT category FROM asset_versions ORDER BY category LIMIT ?",
+                (limit + 1,),
+            ).fetchall()
+        if len(rows) > limit:
+            raise ValueError("catalog_category_limit")
+        return tuple(row[0] for row in rows)
+
     def submit(self, request: X2EnvRequest) -> WorkflowSnapshot:
         digest = hashlib.sha256(request.model_dump_json().encode()).hexdigest()
         with closing(sqlite3.connect(self.database)) as db, db:

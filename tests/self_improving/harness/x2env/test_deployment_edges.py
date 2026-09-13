@@ -16,6 +16,82 @@ from tests.self_improving.harness.x2env.test_deployment import foreground_deploy
 from tests.self_improving.harness.x2env.test_local_color_advisory import color_inputs
 
 
+@pytest.mark.parametrize("count", [2, 129])
+def test_deployment_records_registry_naming_snapshot_without_blocking_web(tmp_path, count):
+    from self_improving.harness.x2env.deployment import Deployment
+    from self_improving.harness.x2env.store import Store
+    from tests.self_improving.harness.x2env.test_codex import executable
+
+    store = Store(tmp_path / "state")
+    for i in range(count):
+        store.register_asset(str(i), str(i), f"category_{i:03}", "opaque naming index only")
+    request = X2EnvRequest(
+        text="an unfamiliar object",
+        seed=1,
+        allowed_sources=("web",),
+        idempotency_key="naming",
+        output_dir=str(tmp_path / "out"),
+    )
+    bundle = ingest(request, store)
+    program = executable(
+        tmp_path,
+        {
+            "scene": None,
+            "unknowns": [
+                {
+                    "field": "identity",
+                    "reason": "unfamiliar object",
+                    "critical": True,
+                    "provenance": [
+                        {"source": "text", "input_sha256": bundle.text.sha256, "kind": "explicit"}
+                    ],
+                }
+            ],
+        },
+    )
+    harness = build_harness(
+        Deployment(
+            state_dir=str(tmp_path / "state"),
+            codex={
+                "executable": str(program),
+                "sha256": hashlib.sha256(program.read_bytes()).hexdigest(),
+            },
+        )
+    )
+    # A constructor snapshot must not claim to contain a subsequent registration.
+    store.register_asset("later", "later", "new_after_construction", "opaque")
+    handle = harness.submit(request)
+    snapshot = harness.resume(handle.workflow_id, timeout=10)
+    assert snapshot.stop_reason == "clarification_required"
+    contexts = list((tmp_path / "state" / "attempts").rglob("local-category-context.json"))
+    assert len(contexts) == 1
+    context = json.loads(contexts[0].read_bytes())
+    assert context["snapshot_basis"] == "backend_construction_not_live_catalog"
+    if count == 2:
+        assert context["categories"] == ["category_000", "category_001"]
+        assert context["status"] == "available" and context["error_code"] is None
+    else:
+        assert context["categories"] == []
+        assert context["status"] == "unavailable"
+        assert context["error_code"] == "catalog_category_limit"
+
+
+def test_deployment_does_not_disguise_invalid_category_as_unavailable(tmp_path):
+    from self_improving.harness.x2env.deployment import Deployment
+    from self_improving.harness.x2env.store import Store
+
+    store = Store(tmp_path / "state")
+    # Opaque persistence is an approved input-attack seam, not an accepted asset version.
+    store.register_asset("bad", "bad", "invalid\ncategory", "opaque")
+    with pytest.raises(ValueError, match="invalid local category context"):
+        build_harness(
+            Deployment(
+                state_dir=str(tmp_path / "state"),
+                codex={"executable": str(tmp_path / "never-executed"), "sha256": "a" * 64},
+            )
+        )
+
+
 def color_deployment(tmp_path, *, bad_pin=False):
     store, _, scene_ref, _, parent, _, _ = color_inputs(tmp_path)
     request = X2EnvRequest(

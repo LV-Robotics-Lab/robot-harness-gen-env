@@ -32,6 +32,9 @@ XY中心/Z底面，编译器做显式偏移。仅未给出的结构厚度/世界
 不得修改用户已给轴/朝向，尺寸冲突拒绝；没有解析的关节/inside不静默简化。
 
 - CodexBackend.interpret / assess_asset_candidates / assess_and_diagnose只提供建议，不控制执行或物理通过。
+- Store.asset_categories提供有界排序命名索引，部署取构造时快照交给CodexBackend；每次interpret留证。
+  该上下文不是候选、实时catalog、许可或匹配证明；原whole-phrase/category门不变，不自动别名。
+  明确超限只使可选命名上下文unavailable，不伪称空库；其它无效数据错误不得吞掉。
 - interpret的请求级transport schema把SceneIR请求SHA/revision固定为已知值，出处SHA限制为
   本InputBundle原text/image/video来源集合；不使用派生帧PNG身份代替原来源。静态合同不变，
   模型仍选择内容和出处，后置来源类型/索引/帧/SHA关联检查保留；错误输出不得自动重写。

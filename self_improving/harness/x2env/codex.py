@@ -33,7 +33,35 @@ class CodexBackend:
         approved_executable_sha256: str,
         model: str,
         artifact_store: ArtifactStore,
+        *,
+        local_category_vocabulary: tuple[str, ...] = (),
+        local_category_context_error: str | None = None,
     ):
+        if (
+            not isinstance(local_category_vocabulary, tuple)
+            or len(local_category_vocabulary) > 128
+            or any(
+                not isinstance(item, str)
+                or not 1 <= len(item) <= 128
+                or item != item.strip()
+                or not item.isprintable()
+                or "/" in item
+                or "\\" in item
+                for item in local_category_vocabulary
+            )
+            or tuple(sorted(set(local_category_vocabulary))) != local_category_vocabulary
+            or len(json.dumps(local_category_vocabulary, ensure_ascii=False).encode()) > 16384
+            or local_category_context_error not in (None, "catalog_category_limit")
+            or (local_category_context_error is not None and local_category_vocabulary)
+        ):
+            raise ValueError("invalid local category context")
+        self.local_category_context = {
+            "scope": "naming_context_only",
+            "snapshot_basis": "backend_construction_not_live_catalog",
+            "status": "unavailable" if local_category_context_error else "available",
+            "error_code": local_category_context_error,
+            "categories": list(local_category_vocabulary),
+        }
         self.executable = Path(executable)
         self.executable_sha = approved_executable_sha256
         self.model = model
@@ -234,6 +262,12 @@ class CodexBackend:
             ):
                 raise ValueError("executable_identity_mismatch")
             record("bundle.json", bundle.model_dump_json().encode())
+            record(
+                "local-category-context.json",
+                json.dumps(
+                    self.local_category_context, ensure_ascii=False, sort_keys=True
+                ).encode(),
+            )
             text = self.store.read_artifact(bundle.text).decode() if bundle.text else ""
             images = []
             for index, image in enumerate(bundle.images):
@@ -346,12 +380,18 @@ class CodexBackend:
                 "Return compact JSON and keep each provenance note concise, avoiding repetition of "
                 "values already present in typed fields while retaining every required provenance "
                 "record and any explanation needed for ambiguity, conflict or an explicit "
-                "override.\n"
+                "override. "
+                "The local category snapshot is naming context only, not a match, license or "
+                "physical-validity claim. Reuse an existing key only when it denotes the same "
+                "semantic concept; never merge different concepts to obtain a catalog hit. "
+                "New categories remain unrestricted. An unavailable snapshot is not an empty "
+                "catalog.\n"
                 + json.dumps(
                     {
                         "bundle": bundle.model_dump(mode="json"),
                         "text": text,
                         "attached_media": images,
+                        "local_category_context": self.local_category_context,
                     },
                     ensure_ascii=False,
                 )

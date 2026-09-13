@@ -1,5 +1,22 @@
 # 进度与结果
 
+## 2026-09-13 C05/C06 库内类别命名上下文
+
+- 固定eaccbeb的S01一次运行155.395893s，workflow `d4c7d32a-e3d2-4742-a6aa-c787250d3a4e`
+  blocked/local_assets_unresolved/revision3：interpret154.831689s，resolve0.161044s。
+  category computer_mouse未命中登记mouse，未执行候选预览/颜色/Genesis；19refs/39802B核验，父资产与源码不变。
+  根目录 `/home/jingxiang/bingsheng/canonical-s01-compact-prompt-20260913.wcz86H/`，audit SHA
+  `fdbb7385e2e1367144eeaadc49b46d91bb72fa7dc076d32829094b966ee8c9d8`；performance-observation.json SHA
+  `a028b4e6e2fcedba1d066313708392d8b0acbe0f58dc9ae9e3f2d1dbeba22be7`。
+- 原输出9795→5911B、note1025→313字符、output6484→4993tokens、reasoning3795→3051，
+  interpret199.61→154.83s仅单次观察；类别变化阻断业务，不称无损提升或timeout根因已解。
+  更正初次比较：旧7unknown和新8unknown均全critical=false，不是本轮引入false标记。
+- 新部署从同Store读取最多128个distinct排序类别，backend构造时快照进入每次interpret CAS/receipt。
+  词表只作命名上下文，模型仅同义概念复用key；新类别仍自由，不硬编码别名，不改whole-phrase或类别接受门。
+  超限唯一精确错误明确unavailable，不称空库也不挡web请求；其它错误不吞。长度/路径/控制字符受限。
+- Store/构造器先RED后GREEN；主线程正确声明provider路径后44 passed/3.98s。
+  首次未声明provider路径的组合运行60pass/2fail保留为环境错误，不算生产回归或新case通过。
+
 ## 2026-09-13 C12 CLI 公共接口覆盖补齐
 
 - 新增参数、超大文本、缺失媒体、真实resume/package、系统时钟/信号超时与timer恢复测试；

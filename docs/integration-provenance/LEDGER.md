@@ -1,5 +1,13 @@
 # 功能级整合台账
 
+## INT-CANONICAL-C05-CATEGORY-CONTEXT — 词表提示不是资产匹配
+
+- origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Yuxin原whole-phrase engine不变。
+- source_ref：`1e06c47`，失败case固定`eaccbeb`；target_paths：store.py/codex.py/deployment.py及公开测试。
+- integration_method：读取真实登记类别作为有界命名快照并留证；没有computer_mouse→mouse硬编码，原检索/许可/接受门保留。
+- verification：主线程44项通过；runtime_verification：词表版真实case待跑，原155.40s失败不回填成功。
+- recorded_git_authors：原provider作者与本次Harness上下文接线分别保留。
+
 ## INT-CANONICAL-C12-CLI-COVERAGE — 真实用户入口边界
 
 - origin_owner / integration_owner：Bingsheng Harness workstream；upstream_owner：Python signal/argparse原作者。

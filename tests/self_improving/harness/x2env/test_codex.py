@@ -57,6 +57,112 @@ def executable(tmp_path, response, event="turn.completed", tool=False):
     return path
 
 
+@pytest.mark.parametrize("category", ["garbage_can", "computer_mouse", "unlisted_object"])
+def test_local_naming_snapshot_is_evidence_not_category_rewriting(tmp_path, category):
+    from self_improving.harness.x2env.codex import CodexBackend
+
+    store = Store(tmp_path / "state")
+    bundle = ingest(
+        X2EnvRequest(
+            text="a garbage can", seed=1, idempotency_key="vocabulary", output_dir=str(tmp_path)
+        ),
+        store,
+    )
+    provenance = [{"source": "text", "input_sha256": bundle.text.sha256, "kind": "explicit"}]
+    response = {
+        "scene": {
+            "input_sha256": bundle.request_sha256,
+            "revision": 0,
+            "entities": [
+                {
+                    "id": "object",
+                    "category": category,
+                    "role": "foreground",
+                    "color": None,
+                    "material": None,
+                    "dimensions": None,
+                    "pose": {"frame": "world", "position": [None, None, None], "yaw_degrees": None},
+                    "articulation_state": None,
+                    "provenance": {
+                        key: provenance
+                        for key in (
+                            "category",
+                            "color",
+                            "material",
+                            "dimensions",
+                            "pose",
+                            "articulation_state",
+                        )
+                    },
+                }
+            ],
+            "relations": [],
+        },
+        "unknowns": [
+            {
+                "field": "garbage_can.identity",
+                "reason": "new category absent from catalog",
+                "critical": True,
+                "provenance": [
+                    {"source": "text", "input_sha256": bundle.text.sha256, "kind": "explicit"}
+                ],
+            }
+        ],
+    }
+    path = executable(tmp_path, response)
+    result = CodexBackend(
+        path,
+        hashlib.sha256(path.read_bytes()).hexdigest(),
+        "double",
+        store,
+        local_category_vocabulary=("can", "mouse"),
+    ).interpret(bundle, output_root=tmp_path / "attempt", timeout=10)
+    assert result.status == "completed"
+    assert result.proposal.scene.entities[0].category == category
+    assert result.proposal.unknowns[0].field == "garbage_can.identity"
+    raw = (tmp_path / "attempt" / "local-category-context.json").read_bytes()
+    context = json.loads(raw)
+    assert context["categories"] == ["can", "mouse"]
+    assert context["scope"] == "naming_context_only"
+    assert context["snapshot_basis"] == "backend_construction_not_live_catalog"
+    assert context["status"] == "available"
+    assert raw in [store.read_artifact(ref) for ref in result.evidence]
+    prompt = (tmp_path / "attempt" / "prompt.txt").read_text()
+    assert '"categories": ["can", "mouse"]' in prompt
+    assert "only when it denotes the same semantic concept" in prompt
+    assert "New categories remain unrestricted" in prompt
+
+
+@pytest.mark.parametrize(
+    "vocabulary,error",
+    [
+        (("mouse", "can"), None),
+        (("mouse", "mouse"), None),
+        (("",), None),
+        (("a" * 129,), None),
+        (("mouse\n",), None),
+        (("/private/catalog",), None),
+        (("private\\catalog",), None),
+        ((1,), None),
+        (("mouse",), "catalog_category_limit"),
+        ((), "arbitrary_error"),
+        (tuple(f"{i:03}" + "界" * 125 for i in range(128)), None),
+    ],
+)
+def test_invalid_category_context_is_rejected_before_transport(tmp_path, vocabulary, error):
+    from self_improving.harness.x2env.codex import CodexBackend
+
+    with pytest.raises(ValueError, match="invalid local category context"):
+        CodexBackend(
+            tmp_path / "never-executed",
+            "a" * 64,
+            "double",
+            Store(tmp_path),
+            local_category_vocabulary=vocabulary,
+            local_category_context_error=error,
+        )
+
+
 @pytest.mark.parametrize("exit_code", [2, 17])
 def test_maximum_config_or_model_rejection_preserves_logs_without_retry(tmp_path, exit_code):
     from self_improving.harness.x2env.codex import CodexBackend

@@ -10,6 +10,9 @@
 回执记录请求值与实际argv，但不把CLI接受配置描述成服务端有效力度已验证；旧未指定回执不回填。
 interpret提示要求只抽取意图、返回紧凑JSON和简短出处说明；全部实体、未知项及来源关联校验仍保留。
 这是有界性能实验，不限制说明长度、不删出处或降低max，尚未证明能消除长尾超时。
+部署还提供真实Registry类别的有界命名词表，在backend构造时取快照并逐attempt留证。
+它不代表实时资产可用性、匹配或许可；模型仅语义相同时复用键，原整词检索和类别门仍保留。
+词表超限明确unavailable而非空库；不阻断仅需web来源的请求，也不自动把computer_mouse改为mouse。
 
 旧 System 2 planner/dispatcher、GoldenRun、独立 Qwen replay assessment，以及仅 Python 消费的
 Workbench assessment 链已退役（18 个源文件，Git 历史可恢复）。稳定 SAPIEN runtime 工具与只读
